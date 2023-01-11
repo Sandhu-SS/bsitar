@@ -1,0 +1,3427 @@
+
+
+#' Fit Bayesian SITAR (bsitar) growth curve model
+#'
+#' The super imposition by translation and rotation (SITAR) is a nonlinear
+#' mixed effects model that summaries the growth process (e.g., increase
+#' in height with age) by a set of fixed and random effect parameters. The
+#' model estimated parameters capture the individual-specific and
+#' population-average growth curves and helps in understanding how individual
+#' growth curves differ from the underlying population average curve.
+#' The univariate SITAR model can be fit within the frequntist framework
+#' by using the already avaibale R package, 'sitar'.
+#'
+#' The 'bsitar' package implements the Bayesian SITAR model and is is built
+#' as a wrapper around the [brms::brm()] function, which is a powerful Bayesian
+#' powerful Bayesian regression modeling engine using Stan and offers an
+#' excellent post-processing frameowrk.The only difference between 'sitar' and
+#' 'bsitar' is that former uses the B spline based design matrix for the
+#' natural cubic spline (also know as the restricted cubic spline) whereas
+#' the later constructs the natural cubic spline design matrix by using the
+#' truncated power basis function. The 'sitar' package uses the [splines::ns]
+#' function to construct the spline basis wheres the 'bsitar' package uses
+#' the custom Stan function to create the spline basis. This function utilizes
+#' the truncated power basis approach described by Harrel and implemented in
+#' his package, *Hmisc* (see [Hmisc::rcspline.eval]).
+#'
+#' The 'bsitar' greatly enhances the SITAR modelling capability as it can fit
+#' univariate-by-subgroup model and multivariate models. The
+#' univariate-by-subgroup model fits two or more separate models for an outcome
+#' defined by a factor variable (e.g, sex). The data is typically stacked
+#' and the factor variable is used to set-up the model by using the 'subset'
+#' option available in the [brms::brm] function. For both univariate-by-subgroup
+#' and multivariate model fitting, the 'bsitar' package allows full flexibility
+#' in specifying separate predictor (\code{x}), subject identifiers (\code{id}),
+#' degree of freedom (\code{df}) or knots (\code{knots}), and the priors and
+#' the initial values. Furthermore, to enhance the ease of specifying different
+#' options, the use need not to enclose the character option with single or
+#' double quote. For example to specify the univariate-by-subgroup model for
+#' sex, the \code{univariate_by = sex} is same as \code{univariate_by = 'sex'}
+#' or \code{univariate_by = "sex"}. The same applies for each and every
+#' character string option in the package.
+#'
+#' The SITAR model usually has up to three random effects (a, b and c), termed
+#' size, timing and intensity respectively. \code{df} sets the degrees of
+#' freedom for the mean spline curve. In addition, there is a slope parameter
+#' d that models the variability in the adult slope of the growth curve.
+#'
+#' @param x vector of predictor (typically age in years). For univariate-by-
+#' subgroup model (specified by using the \code{univariate_by} argument) and
+#' multivariate model (specified by using the \code{multivariate} argument),
+#' the \code{x} can be same or else specified separately as list(x1, x2)
+#' where x1 and x2 are predictor.
+#' @param y vector of outcome (i.e., repeated growth measurements). For
+#' univariate and univariate-by-subgroup model (specified by using the
+#'  \code{univariate_by} argument), y is specified as single varibale.
+#' For univariate-by-subgroup model, the outcome vectors are created internally
+#' based on the factor levels. For example when fitting univariate-by-subgroup
+#' model for sex (specified by \code{univariate_by} = list(by = sex) or
+#' simply \code{univariate_by} = sex), outcomes vectors Female and Male are
+#' created automatically where Female and Male are factor levels for sex
+#' variable. For multivariate model (specified by using the \code{multivariate}
+#' argument), the outcome vectors are specified by using list (e.g., y =
+#' list(y1, y2) where y1 and y2 are outcomes).
+#' @param id a factor variable identifying the groups (typically individuals).
+#' For univariate-by-subgroup (specified by using the \code{univariate_by})
+#' and multivariate (specified by using the \code{multivariate}) model,
+#' the \code{id} could be (and typically is) same or else specified
+#' separately as list(id1, id2) where id1 and id2 are subject identifiers.
+#' @param data data frame containing variables \code{x}, \code{y} and \code{id}.
+#' @param df degrees of freedom for natural cubic regression spline. For
+#' univariate-by-subgroup model (specified by using the \code{univariate_by}
+#' argument) and multivariate model (specified by using the \code{multivariate}
+#' argument), the \code{df} could be same \code{df = 4} or else specified
+#' separately as \code{df = list(4, 5)} where df = 4 is for the first outcome
+#' and df = 5 is for the second outcome.
+#' @param knots vector of values for knots (default \code{df} quantiles of
+#' \code{x} distribution). See \code{df} for specifying separate knots for
+#' univariate-by-subgroup and multivariate models.
+#' @param fixed character specifying a, b, c, d fixed effects. Typically
+#' specified as \code{fixed = a+b+c}. As mentioned earlier, there is no need to
+#' enclose character in quotes. I other words, \code{fixed = a+b+c},
+#' \code{fixed = 'a+b+c'}, and \code{fixed = "a+b+c"} are same. For specifying
+#' different fixed effect structures for univariate-by-subgroup and
+#' multivariate models, use list as follows: \code{fixed = list(a+b+c, a+b)}
+#' which implies that the fixed effect structure for the first outcome is
+#' \code{fixed = 'a+b+c'} and \code{fixed = 'a+b'} for the second outcome.
+#' @param random character specifying a, b, c, d random effects. See
+#' \code{fixed} for setting the random effects structure.
+#' @param xoffset optional value of offset for \code{x} allowing the
+#' origin of \code{x} to be varied (either mean, apv, or a numeric value). The
+#' default is mean.
+#' @param bstart optional value to set initial value for fixed effect \code{b}.
+#' Options are mean (default), apv, or a numeric value.
+#' @param xfun an optional argument to transform the predictor (i.e., age).
+#' Options are log and sqrt for the logarithmic and square root transformation.
+#' The default is NULL implying that no transformation is applied and the
+#' model is fit to the original scale of the predictor (e.g., years). Like
+#' other arguments, user can specify different xfun for univariate-by-subgroup
+#' (specified by using the \code{univariate_by} argument) and multivariate
+#' (specified by using the \code{multivariate} argument) models as a list i.e.,
+#' \code{xfun = list(log, sqrt)} or \code{xfun = list(NULL, sqrt)}.
+#' @param yfun an optional argument to transform the outcome (i.e., age).
+#' Options are log, sqrt or NULL (default). See \code{xfun} for details.
+#' @param bound span of \code{x} for regression spline, or a small extension
+#' of range (default 0.04). See package 'sitar' for details.
+#' @param a_formula formula for fixed effect a (default \code{~ 1}). User can
+#' specify different formula when fitting univariate-by-subgroup (specified by
+#' using the \code{univariate_by} argument) and the multivariate (specified
+#' by using the \code{multivariate} argument) models. As an example
+#' \code{a_formula = list(~1, ~1 + cov)} implies that the \code{a_formula} for
+#' the first outcome includes only an intercept whereas the \code{a_formula}
+#' for the second outcome includes an intercept plus a covariate. The covariate
+#' can be a continous variable or a factor variable (dummy variables will be
+#' created using the \code{model.matrix}). The formula can include a combination
+#' of continous and factor variables as covariate as well as their interactions.
+#' @param b_formula formula for fixed effect b (default \code{~ 1}). See
+#' \code{a_formula} for details.
+#' @param c_formula formula for fixed effect c (default \code{~ 1}). See
+#' \code{a_formula} for details.
+#' @param d_formula formula for fixed effect d (default \code{~ 1}). See
+#'  \code{a_formula} for details.
+#' @param s_formula formula for fixed effect b (default \code{~ 1}). See
+#' \code{a_formula} for details.
+#' @param a_formula_gr formula for random effect a (default \code{~ 1}). See
+#'  \code{a_formula} for details.
+#' @param b_formula_gr formula for random effect b (default \code{~ 1}). See
+#' \code{a_formula} for details.
+#' @param c_formula_gr formula for random effect c (default \code{~ 1}). See
+#' \code{a_formula} for details.
+#' @param d_formula_gr formula for random effect d (default \code{~ 1}). See
+#' \code{a_formula} for details.
+#' @param dpar_formula formula for distributional parameter sigma. This is only
+#' useful when modelling the sigma (i.e., residual standard deviation parameter)
+#' By default, the [brms::brm] function includes
+#' the intercept for the residual standard deviation parameter (i.e,, sigma).
+#' The default setting for \code{dpar_formula} is NULL which implements the
+#' default behaviour of the [brms::brm] function. The usefulness of
+#' \code{dpar_formula} is in including covariate(s) for sigam. For example,
+#' \code{dpar_formula = ~1 + cov}. See \code{a_formula} for inclusion of
+#' covariate(s) as well for different modelling structures for
+#' univariate-by-subgroup (specified by using the \code{univariate_by} argument)
+#' and the multivariate (specified by using the \code{multivariate} argument)
+#' models.
+#' @param autocor_formula formula for modelling autocorrelation. The default
+#' setting for \code{autocor_formula} is NULL i.e, not to model autocorrelation.
+#' Allowed options are autoregressive moving average (ARMA) of order (p, q),
+#' autoregressive (AR) of order (p) and moving average (MA) of order (q) which
+#' are specified as \code{autocor_formula = arms(p=1, q=1)},
+#' \code{autocor_formula = ar(p=1)}, and \code{autocor_formula = msq=1)}. See
+#' brms package for further details on order p and q and setting up
+#' autocorrelation structures.
+#' @param family response distribution and link function to be used in the
+#' model. The default is gaussian(). See [brms::brm] function for details.
+#' For univariate-by-subgroup model (specified by using the \code{univariate_by}
+#' argument) and multivariate model (specified by using the \code{multivariate}
+#' argument), the \code{family} could be same \code{family = gaussian()} or
+#' else different such as \code{family = list(gaussian(), student()} which
+#' sets gaussian for the first outcome and student_t for the second outcome.
+#' @param group_arg specify group-level effects when fitting univariate models.
+#' The subptions for the \code{group_arg} are groupvar, dist, cor and by.
+#' The suboption groupvar specifies the subject identifier (which is typically
+#' same as \code{id}) wheres the suboption dist sets the distribution of the
+#' random effects (options are gaussian, the default and student). The
+#' correlation structure is specified by using the suboption cor. The
+#' correlation structure allowed are unstructured (default) and the
+#' diagonal. The unstructured correlation structure (cor = un) models the full
+#' varinace covarinace structure whereas the diagonal correlation structure
+#' (cor = diagonal) estimates only the variance (i.e, standard deviation)
+#' parameters (correlation parameters are set to zero).
+#' For further details, see [brms::brm] function (\bold{Group-level terms}).
+#' Note that only the groupvar suboption is carried to the
+#' univariate-by-subgroup (specified by using the
+#' \code{univariate_by} and the multivariate (specified by using
+#' the \code{multivariate} model fittings.
+#' @param univariate_by specify univariate-by-subgroup model fitting arguments.
+#' Suboptions include the by argument to specify the variable (which must be
+#' a factor variable) and the cor suboption to specify the correlation
+#' structure. The unstructured correlation structure (cor = un) models the full
+#' varinace covarinace structure separately for each submodel (i.e., outcome)
+#' whereas the diagonal correlation structure estimates only the variance
+#' (i.e, standard deviation) for each submodel (i.e., all outcomes). The default
+#' settings for by and cor argument are NULL and un, respectively.
+#' @param multivariate specify multivariate model fitting arguments. Suboptions
+#' include the mvar argument (logical, default FALSE) to specify whether or not to fit a
+#' multivariate model, cor suboption to specify the correlation structure, and
+#' rescor option (logical, default TRUE) to specify whether or not to estimate
+#' the residual correlation parameter for the outcomes. The The unstructured
+#' correlation structure (cor = un) jointly estimates all the varinace
+#' covarinace parameters between the outcomes whereas diagonal correlation
+#' structure (cor = diagonal) estimates only the variance parameters for
+#' each outcomes. Another option (cor = un_s) allows for estimating
+#' unstructured correlation structure separately for each outcome. The default
+#' setting for correlation is un.
+#' @param a_prior_beta Set priors on the the fixed effect a parameter. The
+#' allowed distributions are normal, student_t, cauchy, lognormal, uniform,
+#' exponential, gamma, inverse gamma. See [brms::prior] function for details on
+#' priors. For each distibution, suboption allows for setting upper and
+#' lower bounds (default NA, i.e., lb = NA, ub = NA).
+#' For location scale based distributions which include the
+#' normal, student_t, cauchy and lognormal distributions, option autosclae
+#' (default FALSE) is provided to multiply the scale parameter as typically
+#' done in the rstanarm package. The rstanarm sets the autosclae as 2.5 whereas
+#' the brms package sets its to 1 or 2.5 depending on the standard deviation
+#' of the outcome (See [brms::prior] function for details). The 'bsitar'
+#' package offers the flexibility of choosing the value for the autosclae.
+#'  For convinience purposes, lower bound as zero is automatically
+#' set for the positive distributions (such as lognormal, exponential, gamma).
+#' For uniform distrubution, another option addrange is provided to
+#' symmetrically expand the lower and upper parameters specified as the
+#' uniforma prior. For example, uniform(a, b, addrange = 5) would be
+#' evaluated uniform(a-5, b+5). For exponential distribution, the rate
+#' parameter is evaluated as inverse. In other words, prior set as
+#' exponential(10)  would be translated to exponential(1/10).
+#' Examples of setting priors are shown below:
+#' \code{a_prior_beta = normal(location = 5, scale = 1, lb = NA, ub = NA,
+#' addrange = NA, autosclae = FALSE)}). This is same as as
+#' \code{a_prior_beta = normal(5, 1)})
+#' \code{a_prior_beta = student_t(df = 3, location = 5, scale = 1, lb = NA,
+#' ub = NA, addrange = NA, autosclae = FALSE)}) which can specified using
+#' shorthand as \code{a_prior_beta = student_t(3, 5, 1)}).
+#' For location scale based distributions, user can use specify the mean or the
+#' median of the outcome as location and the standard deviation (sd) or the
+#' median absolute deviation (mad) as scale as shown (any combination of these)
+#' \code{a_prior_beta = normal(ymean, ysd)}) and
+#' \code{a_prior_beta = normal(ymedian, ymad)})
+#' Another option available for setting the location parameter is the linear
+#' model fit  based intercept (i.e., the lm model fitted to the outcome) as
+#' \code{a_prior_beta = normal(lm, ysd)}).
+#' For univariate-by-subgroup model (specified by using the \code{univariate_by}
+#' argument) and multivariate model (specified by using the \code{multivariate}
+#' argument), priors specified for each outcome can be same specified as a
+#' single option i.e., \code{a_prior_beta = normal(5, 1)} or can be specified
+#' different by using list as shown here
+#' \code{a_prior_beta = list(normal(5, 1), normal(10, 5)} which
+#' @param b_prior_beta set priors on the the fixed effect b parameter.
+#' Specifying prior for the fixed effect b parameter is same as described
+#' above for the fixed effect a parameter \code{a_prior_beta} except for the
+#' fact that options ymean, ymedian, ysd and ymad are not allowed. Also, using
+#' lm as location parameter sets location as 0. (same behavior as the 'sitar'
+#' package)
+#' @param c_prior_beta set priors on the the fixed effect c parameter.
+#' Specifying prior for the fixed effect c parameter is exactly same as
+#' described above for the fixed effect b parameter (\code{b_prior_beta})
+#' @param d_prior_beta set priors on the the fixed effect c parameter.
+#' Specifying prior for the fixed effect d parameter is exactly same as
+#' described above for the fixed effect c parameter (\code{c_prior_beta})
+#' @param s_prior_beta set priors on the the fixed effect s parameter (i.e.,
+#' the spline coefficients). The general approach to set priors for the s
+#' parameter is same as described earlier for the fixed effect a parameter.
+#' The allowed option for location and scale are lm which would set location
+#' parameter for spline coefficient based on the spline coefficients from
+#' the linear model fit to the data. The lm option for the scale parameter sets
+#' the standard deviation of spline design matrix used to fiot the linear
+#' model.
+#' For s parameter, it make sense to use only location scale based priors
+#' (i.e, normal, student_t and cauchy) or uniform priors. For uniform priors,
+#' the addrange  option can be utilized to symettrically add range to the
+#' lm based spline coefiecnt).
+#' An additional option available for the location scale based priors is sethp
+#' (logical, default set as FALSE) which, when set as TRUE, allows for setting
+#' hierarchical priors for the s parameter. In other words, instead of setting
+#' prior as s ~ normal(0, lm), the hierarchical priors are set as
+#' s ~ normal(0, hp) where hp ~ normal(0, lm). Note that the scale parameter
+#' for the hp ~ normal(0, lm) is automatically taken from the s ~ normal(0, hp).
+#' Setting sethp = TRUE impllies that the scale for spline coeficients is
+#' estimated from the data itself. The distribution of hierarchical priors is
+#' automatically matched with the prior set for the s parameter or else can be
+#' set by the same sethp option. For example, \code{s_prior_beta =
+#' normal(0, lm, sethp = caucy)} will be translated to s ~ normal(0, lm);
+#' hp ~ caucy(0, lm).
+#' @param a_cov_prior_beta set priors on the covariates for the fixed effect
+#' a parameter. The approach is same as described for the \code{a_prior_beta}
+#' except that the options ymean, ymedian, ysd and ymad are not allowed.
+#' Option lm for location parameter for normal, student_t, cauchy prior would
+#' set location based on Intercept obtained from the lm model fit. Separate
+#' priors can be specified for outcomes when fitting univariate-by-subgroup
+#' (specified by using the \code{univariate_by} argument) and the
+#' multivariate (specified by using the \code{multivariate} argument)
+#' models (see \code{a_prior_beta}).
+#' @param b_cov_prior_beta set priors on the covariates for the fixed effect
+#' b parameter. The approach is same as described for the \code{a_prior_beta}
+#' except that the options ymean, ymedian, ysd and ymad are not allowed.
+#' Option lm for location parameter for normal, student_t, cauchy prior would
+#' set location as 0. Separate priors can be specified for outcomes when
+#' fitting univariate-by-subgroup (specified by using the \code{univariate_by})
+#' and the multivariate (specified by using the \code{multivariate})
+#' (see \code{b_prior_beta}).
+#' @param c_cov_prior_beta set priors on the covariates for the fixed effect
+#' c parameter. The approach is same as described for the \code{a_prior_beta}
+#' except that the options ymean, ymedian, ysd and ymad are not allowed.
+#' Option lm for location parameter for normal, student_t, cauchy prior would
+#' set location as 0. Separate priors can be specified for outcomes when
+#' fitting univariate-by-subgroup (specified by using the \code{univariate_by})
+#' and the multivariate (specified by using the \code{multivariate})
+#' (see \code{c_prior_beta}).
+#' @param d_cov_prior_beta set priors on the covariates for the fixed effect
+#' d parameter. The approach is same as described for the \code{a_prior_beta}
+#' except that the options ymean, ymedian, ysd and ymad are not allowed.
+#' Option lm for location parameter for normal, student_t, cauchy prior would
+#' set location as 0. Separate priors can be specified for outcomes when
+#' fitting univariate-by-subgroup (specified by using the \code{univariate_by})
+#' and the multivariate (specified by using the \code{multivariate})
+#' (see \code{d_prior_beta}).
+#' @param s_cov_prior_beta set priors on the covariates for the fixed effect
+#' s parameter. The approach is same as described for the \code{s_prior_beta}
+#' except that the options ymean, ymedian, ysd and ymad are not allowed.
+#' Option lm for location parameter for normal, student_t, cauchy prior would
+#' set location based on Intercept obtained from the lm model fit. Separate
+#' priors can be specified for outcomes when fitting univariate-by-subgroup
+#' (specified by using the \code{univariate_by} argument) and the
+#' multivariate (specified by using the \code{multivariate} argument)
+#' models (see \code{s_prior_beta}).
+#' @param a_prior_sd set priors on the the random effect a parameter. The
+#' allowed distributions are normal, student_t, cauchy, lognormal, uniform,
+#' exponential, gamma, inverse gamma.
+#' For location scale based distributions which include the
+#' normal, student_t, cauchy and lognormal distributions, option autosclae
+#' (default FALSE) is provided to multiply the scale parameter.
+#' For location scale based distributions, user can use specify the standard
+#' deviation (sd) or the median absolute deviation (mad) as scale parameter.
+#' For univariate-by-subgroup model (specified by using the \code{univariate_by}
+#' argument) and multivariate model (specified by using the \code{multivariate}
+#' argument), priors specified for each outcome can be same or else can be
+#' different for each outcome (see \code{a_prior_beta} for details).
+#' The lower bound as zero is automatically set by the \code{brms::brm}.
+#' @param b_prior_sd set priors on the the random effect b parameter.
+#' Specifying prior for the random effect b parameter is same as described
+#' above for the random effect a parameter \code{a_prior_sd} except for the
+#' fact that optionsysd and ymad are not allowed.
+#' @param c_prior_sd set priors on the the random effect c parameter.
+#' Specifying prior for the random effect c parameter is same as described
+#' above for the random effect b parameter \code{b_prior_sd}.
+#' @param d_prior_sd set priors on the the random effect d parameter.
+#' Specifying prior for the random effect d parameter is same as described
+#' above for the random effect c parameter \code{b_prior_sd}.
+#' @param a_cov_prior_sd set priors on the the covariate(s) for random effect a
+#' parameter. Approach is same as described earlier for the
+#' \code{a_cov_prior_beta}. No pre-defined option (e.g., lm) is allowed to
+#' set the scale for the location scale based priors.
+#' @param b_cov_prior_sd set priors on the the covariate(s) for random effect b
+#' parameter. Approach is same as described earlier for the
+#' \code{a_cov_prior_beta}.
+#' @param c_cov_prior_sd set priors on the the covariate(s) for random effect c
+#' parameter. Approach is same as described earlier for the
+#' \code{a_cov_prior_sd}.
+#' @param d_cov_prior_sd set priors on the the covariate(s) for random effect d
+#' parameter. Approach is same as described earlier for the
+#' \code{a_cov_prior_sd}.
+#' @param gr_prior_cor set priors on the the correlations of group-level
+#' ('random') effects. The allowed distribution is lkj which has a single
+#' parameter eta to control the priors on correlation parameters
+#' (see \code{brms::prior} for details).
+#' @param rsd_prior_sigma set priors on the the residual standard deviation
+#' parameter sigma. This argument will only be evaluated if \code{dpar_formual}
+#' is set to NULL. For location scale based distributions, user can use specify
+#' the standard deviation (sd) or the median absolute deviation (mad) as
+#' scale parameter.
+#' @param dpar_prior_sigma set priors on the the distributional parameter which
+#' is sigma for location scale based family (Gaussian and student). This
+#' argument is evaluated only when \code{dpar_formual} is not set to NULL.
+#' For location scale based distributions, user can use specify
+#' the standard deviation (sd) or the median absolute deviation (mad) as
+#' scale parameter.
+#' @param dpar_cov_prior_sigma set priors on the the covariate(s) for the
+#' distributional parameter (i.e., sigma). The approach is same as descibed
+#' above for the \code{dpar_prior_sigma} except that options
+#' standard deviation (sd) and the median absolute deviation (mad) are not
+#' allowed to set the scale parameter for the location scale based
+#' distributions.
+#' @param autocor_prior_acor set priors on the the autocorrelation parameters
+#' (i.e., ar and ma parameters, see \code{autocor_formula} for details).
+#' The only allowed distribution is uniform distribution bounded between -1 and
+#' + 1.
+#' @param mvr_prior_rescor set priors on the the residual correlations for
+#' multivariate model. The allowed distribution is lkj which has a single
+#' parameter eta to control the priors on correlation parameters
+#' (see \code{brms::prior} for details).
+#' @param init Initial values for the sampler. For \code{0}, all parameters are
+#' initialized to zero. If \code{random}, Stan will randomly generate
+#' initial values for parameters in a range specified by the \code{init_r} (see
+#' below). Another option is \code{prior} which allows setting initials based
+#' on the periors specified above. Lastly, for \code{NULL} (the default) initial
+#' value(s) for each parameter is set by the following initial argument
+#' specific for each model parameter.
+#' @param init_r Range for the random generatetion of initial values when
+#' \code{init} is set as \code{"random"} (see above).
+#' @param a_init_beta Initial values for fixed effect a parameter. Options are
+#' \code{0}, \code{random} and \code{prior}. Also, similar to the location
+#' parameter for \code{a_prior_beta}, user can specify ymean and ymedian to
+#' set initial as mean or median of the outcome. Furthermore, option
+#' \code{lm} would set initial based on the intercept of the lm model fit to
+#' the outome. Lastly, For univariate-by-subgroup model (specified by
+#' using the \code{univariate_by} argument) and multivariate model (specified
+#' by using the \code{multivariate} argument), the \code{a_init_beta} could be
+#' same \code{a_init_beta = 0} for each outcome or can be specified
+#' differently as \code{list(a_init_beta = 0, a_init_beta = lm)}.
+#' @param b_init_beta Initial values for fixed effect b parameter. The approach
+#' and options are same as described above for the \code{a_init_beta}. However,
+#' the option \code{lm} will set the initial as 0. An extra option for b
+#' parameter is \code{bstart} (see \code{bstart} argument for details).
+#' @param c_init_beta Initial values for fixed effect c parameter. The approach
+#' and options are same as described above for the \code{b_init_beta}.
+#' @param d_init_beta Initial values for fixed effect a parameter. The approach
+#' and options are same as described above for the \code{c_init_beta}.
+#' @param s_init_beta Initial values for fixed effect s parameter. The approach
+#' and options are same as described above for the \code{a_init_beta}. The
+#' option \code{lm} will set the initial based on the spline coeficients
+#' obtained from the lm model fit.
+#' @param a_cov_init_beta Initial values for covariate(s) for the fixed effect
+#' a parameter. The approach and options are same as described above for
+#' the \code{a_init_beta}. The option \code{lm} will set the initial based on
+#' the covariate intercepts obtained from the lm model fit.
+#' @param b_cov_init_beta Initial values for covariate(s) for the fixed effect
+#' b parameter. The approach and options are same as described above for
+#' the \code{a_cov_init_beta}. The option \code{lm} will set the initial as 0
+#' for the covariate parameters.
+#' @param c_cov_init_beta Initial values for covariate(s) for the fixed effect
+#' c parameter. The approach and options are same as described above for
+#' the \code{b_cov_init_beta}.
+#' @param d_cov_init_beta Initial values for covariate(s) for the fixed effect
+#' c parameter. The approach and options are same as described above for
+#' the \code{c_cov_init_beta}.
+#' @param s_cov_init_beta Initial values for covariate(s) for the fixed effect
+#' b parameter. The approach and options are same as described above for
+#' the \code{a_cov_init_beta}. The option \code{lm} will set the initial for
+#' the covariate spline coeficients based on the lm model fit.
+#' @param a_init_sd Initial values for random effect a parameter. Options
+#' \code{0}, \code{random} and \code{prior} are same as describe earlier for
+#' \code{a_init_beta}. Additionally user can specify \code{lme_sd_a} which sets
+#' the initial based on the random intercept standard deviation obtained from
+#' the nlme::lme model fit to the data. Another option is \code{lm_sd_a} which
+#' is based on the lm model fit and essentially same as the ysd. It is
+#' mentioned here because in case nlme::lme  model fails to for some reasons
+#' and user has specified the \code{lme_sd_a}, then the option \code{lm_sd_a}
+#' will be set automatically. Additional allowed options are ysd and ymad that
+#' can be used to set standard deviation or the median absolute deviation of 
+#' the outcome as initial values. See \code{a_init_beta} for specifying initials
+#' for univariate-by-subgroup (specified by using the \code{univariate_by})
+#' and multivariate (specified by using the \code{multivariate}) models.
+#' @param b_init_sd Initial values for random effect a parameter. Options
+#' \code{0}, \code{random} and \code{prior} are same as describe earlier for
+#' \code{a_init_beta}. No additional option is allowed for \code{b_init_sd}.
+#' @param c_init_sd Initial values for random effect b parameter. The approach
+#' and options are same as described above for \code{b_init_sd}.
+#' @param d_init_sd Initial values for random effect d parameter. The approach
+#' and options are same as described above for \code{c_init_sd}.
+#' @param a_cov_init_sd Initial values for covariate(s) for the random effect
+#' a parameter. Options \code{0}, \code{random} and \code{prior} are same as
+#' described earlier for \code{a_init_beta}. No additional option is allowed
+#' for \code{a_cov_init_beta}.
+#' @param b_cov_init_sd Initial values for covariate(s) for the random effect
+#' b parameter. The approach and options are same as described above for
+#' the \code{a_cov_init_sd}.
+#' @param c_cov_init_sd Initial values for covariate(s) for the random effect
+#' c parameter. The approach and options are same as described above for
+#' the \code{b_cov_init_sd}.
+#' @param d_cov_init_sd Initial values for covariate(s) for the random effect
+#' d parameter. The approach and options are same as described above for
+#' the \code{c_cov_init_sd}.
+#' @param gr_init_cor Initial values for correlations of group-level
+#' ('random') effects. Allowed options are \code{0}, \code{random} and
+#' \code{prior}.
+#' @param rsd_init_sigma Initial values for residual standard deviation
+#' parameter, sigma. Allowed options are \code{0}, \code{random}, and
+#' \code{prior}. Additionally user can specify \code{lme_rsd} to sets initials
+#' based on the residual standard deviation obtained from the nlme::lme model
+#' or else \code{lm_rsd} which sets the initial value based on the lm model fit.
+#' In case user specifies the \code{lme_rsd} but for some reason model fails to
+#' converge successfully, the option \code{lme_rsd} will be set automatically.
+#' This argument is evalauted when \code{dpar_formual} is set to NULL.
+#' @param dpar_init_sigma Initial values for distributional parameter (i.e.,
+#' sigma). The approach and options are same as described above for
+#' the \code{rsd_init_sigma}. This argument is evalauted only when
+#' \code{dpar_formual} is not set to NULL.
+#' @param dpar_cov_init_sigma Initial values for covariate(s) for the
+#' distributional parameter. Allowed options are \code{0}, \code{random}, and
+#' \code{prior}.
+#' @param autocor_init_acor Initial values for autocorrelation parameter. see
+#' \code{autocor_formula} for details). Allowed options are \code{0},
+#' \code{random}, and \code{prior}.
+#' @param mvr_init_rescor Initial values for residual correlations for
+#' multivariate (specified by using the \code{multivariate}) models. Allowed
+#' options are \code{0}, \code{random}, and \code{prior}.
+#' @param r_init_z Initial values for standardized group level effects. These
+#' parameters are part of the central parametrisation approach adopted by the
+#' the brms package (see package brms for details).
+#' @param jitter_init_beta A value as proportion (between 0 and 1) to
+#' perturb the initial values for fixed effect parameters. The default is
+#' \code{NULL} implying that same initials will be used for all chains.
+#' The option which looked good during early testing is to set it as 0.1.
+#' @param jitter_init_sd A value as proportion (between 0 and 1) to
+#' perturb the initial values for random effect parameters. The default is
+#' \code{NULL} implying that same initials will be used for all chains.
+#' The option which looked good during early testing is to set it as 0.01.
+#' @param jitter_init_cor A value as proportion (between 0 and 1) to
+#' perturb the initial values for correlation parameters. The default is
+#' \code{NULL} implying that same initials will be used for all chains.
+#' The option which looked good during early testing is to set it as 0.001.
+#' @param prior_data An optional argument as named list to pass value for prior
+#' setting. The default is \code{NULL}. This option is particularly helpful
+#' when passing a long vector for setting priors for covariate(s) effect or a
+#' matrix. These vectors and matrices can be created in the R framework and
+#' then passed using the \code{prior_data}. For example, to pass a vector of
+#' location parameters when setting priors for covariate  with 10 dummy
+#' variables, one can create a named object prior_a_cov_beta as
+#' \code{prior_a_cov_beta = rnorm(10, 0, 1)} and then specify it as a named
+#' list using \code{prior_data} as \code{prior_data = list(prior_a_cov_beta =
+#' prior_a_cov_beta)} and specifying that to the \code{a_cov_prior_beta} as
+#' \code{a_cov_prior_beta = normal(prior_a_cov_beta, 100)}.
+#' @param init_data An optional argument as named list to pass value for setting
+#' initials. The approach is same as described above for the \code{prior_data}.
+#' As an example, create vector of initials for \code{a_cov_prior_beta} as
+#' \code{init_a_cov_beta = rep(0, 10)} and then use \code{init_data =
+#' list(init_a_cov_beta = init_a_cov_beta)} to pass on initials as
+#' \code{a_cov_init_beta = init_a_cov_beta}.
+#' @param verbose An optional logical (default FALSE) argument to
+#' print step involved in preparing model formula,Stan function, priors,
+#' initials and also to report any relevant information during these processes.
+#' As an example, a user might be interested in knowing the outcomes created
+#' for the factor varibale that were used to specify the
+#' univariate-by-subgroup model. This is information then helps in matching
+#' the desired sequence of options used to pass on df, prior, initials etc.
+#' @param expose_function An optional logical (default TRUE) to
+#' expose Stan function used for model fitting. These functions are essential
+#' for post-processing.
+#' @inheritParams brms::brm
+#' @param ... Further arguments passed to [brms::brm]
+#'
+#' @return An object of class \code{brmsfit, bsiatr}, that contains the
+#' posterior draws and other useful information about the model.
+#'
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'
+#' @references
+#'
+#' Paul-Christian Buerkner (2017). brms: An R Package for Bayesian Multilevel
+#' Models Using Stan. \emph{Journal of Statistical Software}, 80(1), 1-28.
+#' \code{doi:10.18637/jss.v080.i01}
+#'
+#' Tim Cole (2010). brms: Sitar—a Useful Instrument for Growth Curve Analysis.
+#' \emph{International Journal of Epidemiology }, 39(6), 1558-1566.
+#' \code{doi: 10.1093/ije/dyq115}
+#'
+#' Tim Cole (2022). sitar: Super Imposition by Translation and
+#' Rotation Growth Curve Analysis. \emph{R package version 1.3.0}.
+#' \code{url:https://CRAN.R-project.org/package=sitar}
+#'
+#' R Core Team (2022). R: A Language and Environment for Statistical Computing.
+#' \emph{R Foundation for Statistical Computing}.
+#' \code{url:https://www.R-project.org/}
+#'
+#' Harrell Jr F (2022). Hmisc: Harrell Miscellaneous.
+#' \emph{R package version 4.7-2}.
+#' \code{url:https://CRAN.R-project.org/package=Hmisc}
+#'
+#' @seealso [brms::brm] [brms::brmsformula] [brms::prior]
+#'
+#'
+#' @examples
+#' \dontrun{
+#' # Examples below fit SITAR model to the Berkley height data obtained from
+#' # 66 males and 70 females
+#'
+#' # First tow examples demonstrate fitting two separate univariate models for
+#' # males and females and then a combined univariate-by-subgroup model. The
+#' # third example show multivariate model fitting.
+#'
+#' # As shown below, univariate-by-subgroup model internally fits two
+#' # sub-models, one for males and another for females. Advantage of fitting
+#' # univariate-by-subgroup model is that posterior samples for all outcomes
+#' # are contained in a single framework which can then be used for direct
+#' # comparisons during the post-processing (e.g., hypothesis testing). The
+#' # flexibility offered by the 'bsitar' package allows full control over
+#' # the sub-models (e.g. df for spline curve, priors, initials etc.).
+#' # Below we fit models with default setting with 4 chains and 2000 iter
+#' #
+#' # Fit 1 - Separate models for males and females with 5 df for males and
+#' # 4 df for females.
+#'
+#' # Prepare data
+#' data(heights)
+#' data_males <- heights %>% filter(sex == 'Male)
+#' data_females <- heights %>% filter(sex == 'Female)
+#'
+#' # Fit model
+#' fit_males <- bsitar(x=age, y=height, id=id, data=heights, df=5)
+#' fit_females <- bsitar(x=age, y=height, id=id, data=heights, df=4)
+#'
+#' # Generate a summary of results for males and females
+#' summary(fit_males)
+#' summary(fit_females)
+#'
+#' # Perform posterior predictive checks for males and females
+#' pp_check(fit_males)
+#' pp_check(fit_females)
+#'
+#' # plot distance and velocity curves for males and females
+#' # Distance
+#' plot(conditional_effects(fit_males, deriv = 0))
+#' plot(conditional_effects(fit_females, deriv = 0))
+#'
+#' # Velocity
+#' plot(conditional_effects(fit_males, deriv = 1))
+#' plot(conditional_effects(fit_females, deriv = 1))
+#'
+#' # Fit 2 - univariate-by-subgroup model for sex (males and females) with 5 df
+#' # for males and 4 df for females. Since factor variable sex is sorted
+#' # alphabatically, the first reponse vector created is for females and second
+#' # for males. As shown below for df, controlling any argument is as simple
+#' # as enclosing it in list and separate arguments by a comma. Same approach
+#' # applies for all argument including prior and initials.
+#'
+#' # Fit model
+#' fit_male_female <- bsitar(x=age, y=height, id=id, data=heights,
+#' univariate_by = sex, df=list(4,5))
+#'
+#' # Generate a summary of results for males and females
+#' summary(fit_male_female)
+#'
+#' # Perform posterior predictive checks (specify response option resp = )
+#' pp_check(fit_male_female, resp = 'Male')
+#' pp_check(fit_male_female, resp = 'Female')
+#'
+#' # plot distance and velocity curves for males and females
+#' # Distance
+#' plot(conditional_effects(fit_male_female, deriv = 0, resp = 'Male'))
+#' plot(conditional_effects(fit_male_female, deriv = 0, resp = 'Female'))
+#'
+#' # Velocity
+#' plot(conditional_effects(fit_male_female, deriv = 1, resp = 'Male'))
+#' plot(conditional_effects(fit_male_female, deriv = 1, resp = 'Female'))
+#'
+#'
+#' # Fit 3 - multivariate model
+#' # For demonstration purposes, we use the same heights data and artificially
+#' # create the second outcome (height2) by rescaling the original first
+#' # outcome (i.e., height). Again we use different degree of freedom (df) for
+#' # each outcome. Here we also show how to use different priors and initials
+#' # for some of the parameters.
+#' data_heights2 <- heights %>% mutate(height2 = (height - 10) * 0.1)
+#'
+#' # Fit model
+#' # We specified multivariate = TRUE for fitting multivariate model. By
+#' # default, the cor structure will be set to un for modelling unstructured
+#' # varinace covaraince with joint distribution of groop level random effects.
+#' # Also, option rescor for modelling residual correlation is set to TRUE
+#' # (default). These options can be modified by explicitly setting the
+#' # multivariate argument as a list, e.g., multivariate = list(mvar = TRUE,
+#' # cor = un, rescor = TRUE). This allows changing the cor suboptions to un_s
+#' # or diagonal, and rescor to FALSE (see \code{multivariate} for details).
+#'
+#' # In the example shown below, we set df = 4 for the first outcome, height
+#' # and df = 5 for the second outcome, height2. We set prior normal(ymean, ysd)
+#' # for outcome height and cauchy(ymedian, 100) for the second outcome height2.
+#' # Note data we set different autosclae values (2 for the first outcome and
+#' # default FALSE for the second outcome). Also, we have set random initial
+#' # for the first outcome and lm to the second outcome. Post-processing for
+#' # multivariate model is same as univariate-by-subgroup model i.e., by using
+#' # the resp = argument.
+#'
+#' # Fit model
+#' fit_mutivar <- bsitar(x=age, y=list(height, height2), id=id, data=heights,
+#' multivariate = TRUE,  df=list(4,5),
+#' a_prior_beta = list(normal(ymean, ysd, autosclae = 2), cauchy(ymedian, 100)),
+#' a_init_beta = list(random, lm))
+#'
+#' # Generate a summary of results for height and height2
+#' summary(fit_mutivar)
+#'
+#' # Perform posterior predictive checks for height and height2
+#' pp_check(fit_male_female, resp = 'height')
+#' pp_check(fit_male_female, resp = 'height2')
+#'
+#' # plot distance and velocity curves for height and height2
+#' # Distance
+#' plot(conditional_effects(fit_male_female, deriv = 0, resp = 'height'))
+#' plot(conditional_effects(fit_male_female, deriv = 0, resp = 'height2'))
+#'
+#' # Velocity
+#' plot(conditional_effects(fit_male_female, deriv = 1, resp = 'height'))
+#' plot(conditional_effects(fit_male_female, deriv = 1, resp = 'height2'))
+#'
+#' }
+#'
+#' @importFrom sitar getPeak
+#' @importFrom methods formalArgs
+#' @importFrom stats as.formula coef df dist filter fitted
+#' gaussian lm mad median model.matrix predict quantile rbeta
+#' sd setNames smooth.spline
+#' @importFrom utils combn head installed.packages packageVersion
+#' @import brms
+#'
+#' @export
+bsitar <- function(x,
+                   y,
+                   id,
+                   data,
+                   df = 4,
+                   knots = NA,
+                   fixed = a + b + c,
+                   random = a + b + c,
+                   xoffset = mean,
+                   bstart = mean,
+                   xfun = NULL,
+                   yfun = NULL,
+                   bound = 0.04,
+                   a_formula = ~ 1,
+                   b_formula = ~ 1,
+                   c_formula = ~ 1,
+                   d_formula = ~ 1,
+                   s_formula = ~ 1,
+                   a_formula_gr = ~ 1,
+                   b_formula_gr = ~ 1,
+                   c_formula_gr = ~ 1,
+                   d_formula_gr = ~ 1,
+                   dpar_formula = NULL,
+                   autocor_formula = NULL,
+                   family = gaussian(),
+                   group_arg = list(
+                     groupvar = NULL,
+                     by = NULL,
+                     cor = un,
+                     cov = NULL,
+                     dist = gaussian
+                   ),
+                   univariate_by = list(by = NA, cor = un),
+                   multivariate = list(mvar = FALSE,
+                                       cor = un,
+                                       rescor = TRUE),
+                   a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
+                   b_prior_beta = normal(0, 2.5, autoscale = FALSE),
+                   c_prior_beta = normal(0, 1, autoscale = FALSE),
+                   d_prior_beta = normal(0, 1, autoscale = FALSE),
+                   s_prior_beta = normal(0, lm, autoscale = 2.5),
+                   a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+                   b_cov_prior_beta = normal(0, 2, autoscale = FALSE),
+                   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                   d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                   s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+                   a_prior_sd = normal(0, ysd, autoscale = 1),
+                   b_prior_sd = normal(0, 1.5, autoscale = FALSE),
+                   c_prior_sd = normal(0, 0.5, autoscale = FALSE),
+                   d_prior_sd = normal(0, 1, autoscale = FALSE),
+                   a_cov_prior_sd = normal(0, 10, autoscale = FALSE),
+                   b_cov_prior_sd = normal(0, 2, autoscale = FALSE),
+                   c_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   d_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   gr_prior_cor = lkj(1),
+                   rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                   dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                   dpar_cov_prior_sigma = normal(0, 5, autoscale = FALSE),
+                   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
+                   mvr_prior_rescor = lkj(1),
+                   init = NULL,
+                   init_r = NULL,
+                   a_init_beta = lm,
+                   b_init_beta = 0.001,
+                   c_init_beta = 0.001,
+                   d_init_beta = 0.001,
+                   s_init_beta = lm,
+                   a_cov_init_beta = lm,
+                   b_cov_init_beta = lm,
+                   c_cov_init_beta = lm,
+                   d_cov_init_beta = lm,
+                   s_cov_init_beta = lm,
+                   a_init_sd = lme_sd_a,
+                   b_init_sd = 0.1,
+                   c_init_sd = 0.01,
+                   d_init_sd = 0.1,
+                   a_cov_init_sd = 0,
+                   b_cov_init_sd = 0,
+                   c_cov_init_sd = 0,
+                   d_cov_init_sd = 0,
+                   gr_init_cor = 0,
+                   rsd_init_sigma = 0.01,
+                   dpar_init_sigma = 0,
+                   dpar_cov_init_sigma = 0,
+                   autocor_init_acor = 0.5,
+                   mvr_init_rescor = 0,
+                   r_init_z = 0,
+                   jitter_init_beta = 0.01,
+                   jitter_init_sd = NULL,
+                   jitter_init_cor = NULL,
+                   prior_data = NULL,
+                   init_data = NULL,
+                   verbose = FALSE,
+                   expose_function = TRUE,
+                   
+                   chains = 4,
+                   iter = 2000,
+                   warmup = floor(iter / 2),
+                   thin = 1,
+                   cores = getOption("mc.cores", "optimize"),
+                   backend = getOption("brms.backend", "rstan"),
+                   threads = getOption("brms.threads", "optimize"),
+                   opencl = getOption("brms.opencl", NULL),
+                   normalize = getOption("brms.normalize", TRUE),
+                   algorithm = getOption("brms.algorithm", "sampling"),
+                   control = list(adapt_delta = 0.8, max_treedepth = 15),
+                   sample_prior = "no",
+                   save_pars = NULL,
+                   save_ranef = NULL,
+                   save_mevars = NULL,
+                   save_all_pars = NULL,
+                   drop_unused_levels = TRUE,
+                   stan_model_args = list(),
+                   empty = FALSE,
+                   rename = TRUE,
+                   silent = 1,
+                   seed = 123,
+                   save_model = NULL,
+                   fit = NA,
+                   file = NULL,
+                   file_refit = getOption("brms.file_refit", "never"),
+                   future = getOption("future", FALSE),
+                   ...) {
+  mcall <- match.call()
+  
+  # check and update if argument value taken from the global environment
+  # x,y,id and data are always taken from the data, thus excluded from checks
+  
+  no_default_args <- c("x", "y", "id", "data", "...")
+  
+  for (i in names(mcall)[-1]) {
+    if (!i %in% no_default_args) {
+      err. <- FALSE
+      tryCatch(
+        expr = {
+          # checks. <- eval(mcall[[i]])
+          if (is.function(eval(mcall[[i]]))) {
+            checks. <- deparse(mcall[[i]])
+          } else {
+            checks. <- eval(mcall[[i]])
+          }
+        },
+        error = function(e) {
+          err. <<- TRUE
+        }
+      )
+      if (err.) {
+        mcall[[i]] <- mcall[[i]]
+      } else if (!err.) {
+        if (is.list(checks.)) {
+          if (is.list(checks.[[1]])) {
+            mcall[[i]] <- checks.[[1]]
+          } else if (!is.list(checks.[[1]])) {
+            if (is.list(checks.)) {
+              # print(is.symbol(mcall[[i]])) # str2lang
+              if (is.symbol(mcall[[i]]))
+                mcall[[i]] <- eval(mcall[[i]])
+              temp <- str2lang(deparse((mcall[[i]])))
+              mcall[[i]] <- temp
+            } else if (!is.list(checks.)) {
+              mcall[[i]] <- checks.
+            }
+          }
+        } else {
+          mcall[[i]] <-  checks.
+        }
+      }
+    } else if (i %in% no_default_args) {
+      mcall[[i]] <-  mcall[[i]]
+    }
+  }
+  
+  
+  
+  arguments <- as.list(mcall)[-1]
+  
+  
+  
+  # combine user defined and default arguments
+  `%!in%` <- Negate(`%in%`)
+  f_bsitar_arg <- formals(bsitar)
+  nf_bsitar_arg_names <-
+    intersect(names(arguments), names(f_bsitar_arg))
+  arguments <-
+    c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
+  
+  
+  # separate OUT 'brms' arguments from 'bsitar' arguments for ease of handling
+  
+  brms_arguments_list <-
+    c(
+      'chains',
+      'iter',
+      'warmup',
+      'thin',
+      'cores',
+      'backend',
+      'threads',
+      'opencl',
+      'normalize',
+      'algorithm',
+      'control',
+      'sample_prior',
+      'save_pars',
+      'save_ranef',
+      'save_mevars',
+      'save_all_pars',
+      'drop_unused_levels',
+      'stan_model_args',
+      'empty',
+      'silent',
+      'seed',
+      'save_model',
+      'fit',
+      'file',
+      'file_refit',
+      'rename',
+      'future'
+    )
+  
+  
+  brms_arguments <- list()
+  for (brms_arguments_listi in brms_arguments_list) {
+    brms_arguments[[brms_arguments_listi]] <-
+      arguments[[brms_arguments_listi]]
+    arguments[[brms_arguments_listi]] <- NULL
+  }
+  
+  #### Note
+  brms_arguments <- list()
+  brms_arguments <- mget(brms_arguments_list)
+  
+  
+  
+  ept <- function(x)
+    eval(parse(text = x), envir = parent.frame())
+  
+  # Internal controls
+  
+  # 'd' formula control
+  # 1) Match with 'sitar' package (i.e., exclude 'd' from the fixed effects)
+  # 2) Or, like a,b,c parameters (i.e., include 'd' in fixed and random effects)
+  # Setting default to FALSE to match scenario 2 for now
+  # TODO
+  match_sitar_d_form <- FALSE
+  
+  # Display method - either message or custom color
+  # Can be moved to the arguments but not that worth
+  displayit <- 'col'
+  setcolh   <- 47 
+  setcolb   <- 3
+  
+  # Quote unquoted character (e.g., sex to 'sex') for user's convineinec
+  
+  list_to_quoted_if_not <- function(x) {
+    splitmvar <- x
+    splitmvar <- gsub("\\s", "", splitmvar)
+    splitmvar <- paste(splitmvar, collapse = "")
+    splitmvar_w <-
+      gsub("[\\(\\)]", "", regmatches(splitmvar, gregexpr("\\(.*?\\)",
+                                                          splitmvar))[[1]])
+    splitmvar_w2 <- strsplit(splitmvar_w, ",")[[1]]
+    splitmvar_w3 <- sub("=[^=]+$", "", splitmvar_w2)
+    gsubs_c_counter <- 0
+    for (i in splitmvar_w3) {
+      gsubs_c_counter <- gsubs_c_counter + 1
+      if (gsubs_c_counter < max(length(splitmvar_w3))) {
+        pattern <- paste0(i, "=", "\\s*(.*?)\\s*", ",")
+      } else {
+        pattern <- paste0(i, "=", "\\s*(.*?)\\s*", ")")
+      }
+      majors <- regmatches(splitmvar, regexec(pattern, splitmvar))
+      majors2 <- majors[[1]][2]
+      majors2 <- majors[[1]][2]
+      if (grepl("^T$", majors2)) {
+        majors2 <- gsub("^T$", "TRUE", majors2)
+      }
+      if (grepl("^F$", majors2)) {
+        majors2 <- gsub("^F$", "FALSE", majors2)
+      }
+      majors2 <- gsub("\"", "", majors2)
+      majors3 <- paste0("\"", majors2, "\"")
+      if (gsubs_c_counter == 1) {
+        splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar, fixed = F)
+      } else {
+        splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar2, fixed = F)
+      }
+    }
+    for (i in 1:length(splitmvar_w3))
+      splitmvar2 <- gsub("\"\"", "\"", splitmvar2)
+    splitmvar3 <- eval(parse(text = splitmvar2))
+    zzz <- splitmvar3
+    for (z in names(splitmvar3)) {
+      err. <- FALSE
+      tryCatch(
+        expr = {
+          eval(parse(text = zzz[[z]]), envir = parent.frame())
+        },
+        error = function(e) {
+          err. <<- TRUE
+        }
+      )
+      if (!err.) {
+        c_c_ <- eval(parse(text = zzz[[z]]))
+        checkclass <- class(c_c_)
+        if (checkclass == "NULL")
+          checkclass_ <- NULL
+        else
+          checkclass_ <- NA
+        if (is.logical(c_c_) | is.null(checkclass_))
+          zzz[[z]] <- c_c_
+      } else {
+        zzz[[z]] <- zzz[[z]]
+      }
+    }
+    return(zzz)
+  }
+  
+  
+  list_to_quoted_if_not_si <- function(xx) {
+    xx.o <- xx
+    prefix_ <- strsplit(xx, "\\(")[[1]][1]
+    prefix_by <- "list"
+    xx <- gsub(paste0("^", prefix_, ""), prefix_by, xx)
+    if (sub("\\).*", "", sub(".*\\(", "", xx)) != "") {
+      xxx <- list_to_quoted_if_not(xx)
+      xxx <- gsub("\"" , "'", deparse(xxx))
+      xxx <- gsub(paste0("^", prefix_by, ""), prefix_, xxx)
+      xxx <- gsub("\\s", "", xxx)
+    } else {
+      xxx <- xx.o
+    }
+    xxx
+  }
+  
+  
+  list_to_quoted_if_not_si_lf <- function(xx) {
+    xx.o <- xx
+    prefix_ <- strsplit(xx, "\\(")[[1]][1]
+    prefix_by <- "list"
+    xx <- gsub(paste0("^", prefix_, ""), prefix_by, xx)
+    if (sub("\\).*", "", sub(".*\\(", "", xx)) != "") {
+      xxt <- sub("\\).*", "", sub(".*\\(", "", xx))
+      xxtf <-
+        strsplit(xxt, ",")[[1]][grepl("~", strsplit(xxt, ",")[[1]])]
+      xxtnf <-
+        strsplit(xxt, ",")[[1]][!grepl("~", strsplit(xxt, ",")[[1]])]
+      xxtf <- gsub("\\s", "", xxtf)
+      xxtnf <- gsub("\\s", "", xxtnf)
+      xx <-
+        paste0(prefix_by, "(", paste(xxtnf, collapse = ","), ")")
+      xxx <- list_to_quoted_if_not(xx)
+      xxx <- gsub("\"" , "'", deparse(xxx))
+      xxx <- gsub(paste0("^", prefix_by, ""), prefix_, xxx)
+      xxx <-
+        gsub(paste0(prefix_, "\\("),
+             paste0(prefix_, "(", xxtf, ","),
+             xxx)
+      xxx <- gsub("\\s", "", xxx)
+    } else {
+      xxx <- xx.o
+    }
+    xxx
+  }
+  
+  
+  # set multivariate arguments
+  
+  if (gsub("\\s", "",
+           paste(deparse(substitute(multivariate)), collapse = "")) == "NULL" |
+      gsub("\\s", "",
+           paste(deparse(substitute(multivariate)), collapse = "")) == "NA" |
+      gsub("\\s", "",
+           paste(deparse(substitute(multivariate)), collapse = "")) == "FALSE" |
+      gsub("\\s", "",
+           paste(deparse(substitute(multivariate)), collapse = "")) == "F") {
+    multivariate <- list()
+    multivariate$mvar <- FALSE
+  } else if (gsub("\\s", "",
+                  paste(deparse(substitute(multivariate)),
+                        collapse = "")) == "TRUE" |
+             gsub("\\s", "",
+                  paste(deparse(substitute(multivariate)),
+                        collapse = "")) == "T") {
+    multivariate <- list()
+    multivariate$mvar <- TRUE
+  } else if (!grepl("^list", gsub("\\s", "", paste(deparse(
+    substitute(multivariate)
+  ), collapse = ""))) &
+  !is.null(gsub("\\s", "", paste(deparse(
+    substitute(multivariate)
+  ), collapse = "")))) {
+    if (is.symbol(substitute(multivariate))) {
+      multivariate <-
+        gsub("\\s", "", paste(deparse(substitute(multivariate)), collapse = ""))
+      if (multivariate == "T")
+        multivariate <- eval(parse(text = multivariate))
+      multivariate <- multivariate
+      multivariate <- as.list(multivariate)
+      names(multivariate) <- 'mvar'
+    } else if (is.character(substitute(multivariate))) {
+      multivariate <- multivariate
+      multivariate <- as.list(multivariate)
+      names(multivariate) <- 'mvar'
+    }
+  }
+  if (grepl("^list", gsub("\\s", "", paste(deparse(
+    substitute(multivariate)
+  ), collapse = ""))) &
+  length(strsplit(gsub("\\s", "", paste(
+    deparse(substitute(multivariate)), collapse = ""
+  )), ",")[[1]]) == 1) {
+    if (!is.null(gsub("\\s", "", paste(deparse(
+      substitute(multivariate)
+    ), collapse = "")))) {
+      if (is.language(substitute(multivariate))) {
+        ttt <-
+          gsub("\\s", "", paste(deparse(substitute(
+            multivariate
+          )), collapse = ""))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("mvar=", strsplit(temp, "=")[[1]]),
+                      ttt)
+        }
+        multivariate <- list_to_quoted_if_not(ttt)
+        
+      } else if (grepl("^list", multivariate)) {
+        ttt <- deparse(as.name(substitute(multivariate)))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("mvar=", strsplit(temp, "=")[[1]]),
+                      ttt)
+        }
+        multivariate <- list_to_quoted_if_not(ttt)
+        for (multivariatei in 1:length(multivariate)) {
+          if (!is.null(multivariate[[multivariatei]])) {
+            multivariate[[multivariatei]] <-
+              gsub("'", "", multivariate[[multivariatei]])
+          }
+        }
+      } else {
+        if (!is.null(multivariate)) {
+          if (!grepl("^list", multivariate)) {
+            multivariate <- multivariate
+            multivariate <- as.list(multivariate)
+            names(multivariate) <- 'mvar'
+          }
+        } else if (is.null(multivariate)) {
+          multivariate <- as.list(multivariate)
+        }
+      }
+    }
+  }
+  if (length(strsplit(gsub("\\s", "", paste(
+    deparse(substitute(multivariate)), collapse = ""
+  )), ",")[[1]]) > 1) {
+    ttt <-
+      gsub("\\s", "", paste(deparse(substitute(multivariate)), collapse = ""))
+    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    temp <- gsub("\\s", "", temp)
+    if (!grepl("^mvar=", temp[1])) {
+      temp[1] <- paste0("mvar=", temp[1])
+    }
+    temp <- paste(temp, collapse = ",")
+    temp <- paste0("list(", temp, ")")
+    multivariate <- list_to_quoted_if_not(temp)
+  }
+  
+  
+  # set univariate_by arguments (i.e., univariate-by=subgroup model fitting)
+  
+  if (gsub("\\s", "",
+           paste(deparse(substitute(univariate_by)), 
+                 collapse = "")) == "NULL" |
+      gsub("\\s", "",
+           paste(deparse(substitute(univariate_by)), 
+                 collapse = "")) == "NA" |
+      gsub("\\s", "",
+           paste(deparse(substitute(univariate_by)), 
+                 collapse = "")) == "FALSE" |
+      gsub("\\s", "",
+           paste(deparse(substitute(univariate_by)), 
+                 collapse = "")) == "F") {
+    univariate_by <- list()
+    univariate_by$by <- NA
+  } else if (!grepl("^list", gsub("\\s", "", paste(deparse(
+    substitute(univariate_by)
+  ), collapse = ""))) &
+  !is.null(gsub("\\s", "", paste(deparse(
+    substitute(univariate_by)
+  ), collapse = "")))) {
+    if (is.symbol(substitute(univariate_by))) {
+      univariate_by <-
+        gsub("\\s", "", paste(deparse(substitute(
+          univariate_by
+        )), collapse = ""))
+      univariate_by <- univariate_by
+      univariate_by <- as.list(univariate_by)
+      names(univariate_by) <- 'by'
+    } else if (is.character(substitute(univariate_by))) {
+      univariate_by <- univariate_by
+      univariate_by <- as.list(univariate_by)
+      names(univariate_by) <- 'by'
+    }
+  }
+  if (grepl("^list", gsub("\\s", "", paste(deparse(
+    substitute(univariate_by)
+  ), collapse = ""))) &
+  length(strsplit(gsub("\\s", "", paste(
+    deparse(substitute(univariate_by)), collapse = ""
+  )), ",")[[1]]) == 1) {
+    if (!is.null(gsub("\\s", "", paste(deparse(
+      substitute(univariate_by)
+    ), collapse = "")))) {
+      if (is.language(substitute(univariate_by))) {
+        ttt <-
+          gsub("\\s", "", paste(deparse(substitute(
+            univariate_by
+          )), collapse = ""))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("by=", strsplit(temp, "=")[[1]]), ttt)
+        }
+        univariate_by <- list_to_quoted_if_not(ttt)
+        
+      } else if (grepl("^list", univariate_by)) {
+        ttt <- deparse(as.name(substitute(univariate_by)))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("by=", strsplit(temp, "=")[[1]]), ttt)
+        }
+        univariate_by <- list_to_quoted_if_not(ttt)
+        for (univariate_byi in 1:length(univariate_by)) {
+          if (!is.null(univariate_by[[univariate_byi]])) {
+            univariate_by[[univariate_byi]] <-
+              gsub("'", "", univariate_by[[univariate_byi]])
+          }
+        }
+      } else {
+        if (!is.null(univariate_by)) {
+          if (!grepl("^list", univariate_by)) {
+            univariate_by <- univariate_by
+            univariate_by <- as.list(univariate_by)
+            names(univariate_by) <- 'by'
+          }
+        } else if (is.null(univariate_by)) {
+          univariate_by <- as.list(univariate_by)
+        }
+      }
+    }
+  }
+  if (length(strsplit(gsub("\\s", "", paste(
+    deparse(substitute(univariate_by)), collapse = ""
+  )), ",")[[1]]) > 1) {
+    ttt <-
+      gsub("\\s", "", paste(deparse(substitute(univariate_by)), collapse = ""))
+    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    temp <- gsub("\\s", "", temp)
+    if (!grepl("^by=", temp[1])) {
+      temp[1] <- paste0("by=", temp[1])
+    }
+    temp <- paste(temp, collapse = ",")
+    temp <- paste0("list(", temp, ")")
+    univariate_by <- list_to_quoted_if_not(temp)
+  }
+  
+  
+  
+  # set group_arg arguments (for univariate model fitting)
+  
+  if (!paste(deparse(substitute(group_arg)), collapse = "") == "NULL"  &
+      !any(grepl("^list", gsub("\\s", "", paste(
+        deparse(substitute(group_arg)), collapse = ""
+      )))) &
+      any(gsub("\\s", "", paste(deparse(
+        substitute(group_arg)
+      ), collapse = "")) == "NULL")) {
+    group_arg <- list()
+    group_arg$groupvar <- NULL
+  } else if (!any(grepl("^list", gsub("\\s", "", paste(
+    deparse(substitute(group_arg)), collapse = ""
+  )))) &
+  any(gsub("\\s", "", paste(deparse(
+    substitute(group_arg)
+  ), collapse = "")) != "NULL")) {
+    if (paste(deparse(substitute(group_arg)), collapse = "") == "T" |
+        paste(deparse(substitute(group_arg)), collapse = "") == "TRUE" |
+        paste(deparse(substitute(group_arg)), collapse = "") == "F" |
+        paste(deparse(substitute(group_arg)), collapse = "") == "FALSE" |
+        paste(deparse(substitute(group_arg)), collapse = "") == "NA") {
+      stop("group_arg should be either NULL or a character",
+           " denoting the group idetifier")
+    }
+    if (is.symbol(substitute(group_arg))) {
+      group_arg <-
+        gsub("\\s", "", paste(deparse(substitute(group_arg)), collapse = ""))
+      group_arg <- group_arg
+      group_arg <- as.list(group_arg)
+      names(group_arg) <- 'groupvar'
+    } else if (is.character(substitute(group_arg))) {
+      group_arg <- group_arg
+      group_arg <- as.list(group_arg)
+      names(group_arg) <- 'groupvar'
+    }
+  }
+  if (any(grepl("^list", gsub("\\s", "",
+                              paste(
+                                deparse(substitute(group_arg)),
+                                collapse = ""
+                              )))) &
+      length(strsplit(gsub("\\s", "",
+                           paste(
+                             deparse(substitute(group_arg)),
+                             collapse = ""
+                           )), ",")[[1]]) == 1) {
+    if (!is.null(gsub("\\s", "", paste(deparse(
+      substitute(group_arg)
+    ),
+    collapse = "")))) {
+      if (is.language(substitute(group_arg))) {
+        ttt <- gsub("\\s", "", paste(deparse(substitute(group_arg)),
+                                     collapse = ""))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "T" |
+            temp == "TRUE" |
+            temp == "F" |
+            temp == "FALSE") {
+          stop(
+            "group_arg should be either NULL or a character",
+            " denoting the group idetifier"
+          )
+        }
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("groupvar=", strsplit(temp, "=")[[1]]),
+                      ttt)
+        }
+        group_arg <- list_to_quoted_if_not(ttt)
+      } else if (grepl("^list", group_arg)) {
+        ttt <- deparse(as.name(substitute(group_arg)))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("groupvar=", strsplit(temp, "=")[[1]]),
+                      ttt)
+        }
+        group_arg <- list_to_quoted_if_not(ttt)
+        for (group_argi in 1:length(group_arg)) {
+          if (!is.null(group_arg[[group_argi]])) {
+            group_arg[[group_argi]] <- gsub("'", "", group_arg[[group_argi]])
+          }
+        }
+      } else {
+        if (!is.null(group_arg)) {
+          if (!grepl("^list", gsub("\\s", "",
+                                   paste(
+                                     deparse(substitute(group_arg)),
+                                     collapse = ""
+                                   )))) {
+            group_arg <- group_arg
+            group_arg <- as.list(group_arg)
+            names(group_arg) <- 'groupvar'
+          }
+        } else if (is.null(group_arg)) {
+          group_arg <- as.list(group_arg)
+        }
+      }
+    } else if (is.null(group_arg)) {
+      group_arg <- list()
+      group_arg$groupvar <- NULL
+    }
+  }
+  if (any(grepl("^list", gsub("\\s", "",
+                              paste(
+                                deparse(substitute(group_arg)),
+                                collapse = ""
+                              )))) &
+      length(strsplit(gsub("\\s", "",
+                           paste(
+                             deparse(substitute(group_arg)),
+                             collapse = ""
+                           )), ",")[[1]]) > 1) {
+    ttt <-
+      gsub("\\s", "", paste(deparse(substitute(group_arg)), collapse = ""))
+    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    temp <- gsub("\\s", "", temp)
+    if (!grepl("^groupvar=", temp[1])) {
+      temp[1] <- paste0("groupvar=", temp[1])
+    }
+    temp <- paste(temp, collapse = ",")
+    temp <- paste0("list(", temp, ")")
+    group_arg <- list_to_quoted_if_not(temp)
+  }
+  if (length(group_arg) == 0) {
+    group_arg <- list()
+    group_arg$groupvar <- NULL
+  }
+  if (!is.null(group_arg$groupvar) &
+      !is.character(group_arg$groupvar)) {
+    stop("group_arg should be either NULL or a character",
+         " denoting the group idetifier")
+  }
+  
+  
+  # If not already specified by the user, add default values to 
+  # univariate_by, multivariate, and group_arg arguments
+  
+  if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    univariate_by$by <- gsub("\\s", "", univariate_by$by)
+  }
+  if (identical(univariate_by$by, character(0))) {
+    univariate_by$by <- NA
+  }
+  
+  if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    if (univariate_by$by == "" |
+        univariate_by$by == FALSE | is.null(univariate_by$by)) {
+      univariate_by$by <- NA
+    }
+    if (univariate_by$by == TRUE) {
+      stop(
+        "For univeriate-by-subgroup model fitting (via univariate_by argument)",
+        "\n ",
+        "argument 'by' should be a variable name, '', NULL, or FALSE"
+      )
+    }
+  }
+  
+  
+  
+  if (multivariate$mvar &
+      !(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    stop(
+      "You have set multivariate as TRUE and also specified ",
+      "\n ",
+      " univeriate-by-subgroup model (see univariate_by argument)",
+      "\n ",
+      " Please specify either multivariate or univariate_by argument"
+    )
+  }
+  
+  
+  if (is.symbol(arguments[["y"]]) |
+      is.character(arguments[["y"]])) {
+    nys <- length(arguments[["y"]])
+  } else {
+    nys <- length(arguments[["y"]]) - 1
+  }
+  
+  
+  if (multivariate$mvar & nys == 1) {
+    stop(
+      "You have set multivariate as TRUE but provided only one outcome ",
+      "\n ",
+      " Please set y as list or vector of multiple outcomes such as ",
+      "\n ",
+      " list(outcome1, outcome2) or y = c(outcome1, outcome2)"
+    )
+  }
+  
+  if (!multivariate$mvar & nys > 1) {
+    stop(
+      "You have set multivariate as FALSE but provided more than one outcome",
+      "\n ",
+      " Please set y as a symbol / list / vector of single outcome such as",
+      "\n ",
+      " y = outcome, y = list(outcome1) or y = c(outcome1)"
+    )
+  }
+  
+  if (!(is.na(univariate_by$by) |
+        univariate_by$by == "NA") & nys > 1) {
+    stop(
+      "You have specified univariate_by model for ",
+      univariate_by$by,
+      "for which ",
+      "\n ",
+      " only one outcome varibale should be specified but have provided ",
+      nys,
+      " outcomes",
+      "\n ",
+      " Please set y as a symbol / list / vector of single outcome ",
+      "\n ",
+      " such as y = outcome, y = list(outcome1) or y = c(outcome1)"
+    )
+  }
+  
+  if (multivariate$mvar) {
+    if (is.null(multivariate$cor))
+      multivariate$cor <- "un"
+    if (is.null(multivariate$rescor))
+      multivariate$rescor <- TRUE
+  }
+  if (!multivariate$mvar) {
+    if (is.null(multivariate$cor))
+      multivariate$cor <- "un"
+    if (is.null(multivariate$rescor))
+      multivariate$rescor <- TRUE
+  }
+  
+  
+  
+  if (is.na(univariate_by$by)) {
+    if (is.null(univariate_by$cor))
+      univariate_by$cor <- "un"
+  }
+  if (!is.na(univariate_by$by)) {
+    if (is.null(univariate_by$cor))
+      univariate_by$cor <- "un"
+  }
+  
+  
+  
+  if (is.null(group_arg$groupvar))
+    group_arg$groupvar <- NULL
+  if (is.null(group_arg$by))
+    group_arg$by <- NULL
+  if (is.null(group_arg$cor))
+    group_arg$cor <- "un"
+  if (is.null(group_arg$dist))
+    group_arg$dist <- "gaussian"
+  
+  
+  
+  multivariate$verbose <-
+    univariate_by$verbose <- group_arg$verbose <- verbose
+  
+  
+  
+  # temporary placeholder for number of outcomes when fitting
+  # univariate-by-subgroup model (see univariate_by arg)
+  if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    temp_ <- univariate_by$by
+    if (!temp_ %in% colnames(data)) {
+      stop(
+        paste(
+          "\nvariable",
+          temp_,
+          "used for setting univariate_by-univariate submodels is missing"
+        )
+      )
+    }
+    if (!is.factor(data[[temp_]])) {
+      stop(temp_, "should be a factor variable")
+    }
+    nlevtemp_ <- nlevels(data[[temp_]])
+    nys <- nlevtemp_
+  }
+  
+  
+  
+  
+  # Perform checks and set-up to convert arguments to a required format if 
+  # not already set-up correctly by the user
+  
+  to_list_if_not <- function(.x, nys, arguments, ...) {
+    if (nys == 1) {
+      if (!is.symbol(arguments[[.x]]) & !is.character(arguments[[.x]])) {
+        arguments[[.x]] <- deparse(arguments[[.x]])
+      } else {
+        arguments[[.x]] <- arguments[[.x]]
+      }
+      if (is.symbol(arguments[[.x]]) &
+          !is.character(arguments[[.x]])) {
+        arguments[[.x]] <- deparse(arguments[[.x]])
+      } else {
+        arguments[[.x]] <- arguments[[.x]]
+      }
+      if (!is.character(.x)) {
+        .xx <- eval(parse(text = .x))
+      } else {
+        .xx <- .x
+      }
+    }
+    if (nys > 1) {
+      .xx <- .x
+    }
+    if (!is.character(.xx) & !is.list(.xx)) {
+      .xx <- deparse(.xx)
+    } else {
+      .xx <- .xx
+    }
+    . <- lapply(.xx, function(x)
+      if (is.list(x))
+        x <- x
+      else
+        x <- list(x)[[1]])
+    assign(.x, ., envir = parent.frame())
+  }
+  
+  eval_c_list_args <- function(.x, nys, arguments, ...) {
+    if (is.language(arguments[[.x]]) &
+        (strsplit(deparse(arguments[[.x]]), "\\(")[[1]][1] !=
+         "c" &
+         strsplit(deparse(arguments[[.x]]), "\\(")[[1]][1] != "list")) {
+      arguments[[.x]] <- deparse(arguments[[.x]])
+    } else {
+      arguments[[.x]] <- (arguments[[.x]])
+    }
+    if (is.logical(arguments[[.x]])) {
+      arguments[[.x]] <- deparse(arguments[[.x]])
+    } else {
+      arguments[[.x]] <- arguments[[.x]]
+    }
+    
+    if (is.numeric(arguments[[.x]])) {
+      arguments[[.x]] <- deparse(arguments[[.x]])
+    } else {
+      arguments[[.x]] <- (arguments[[.x]])
+    }
+    .xo <- .x
+    .x <- arguments[[.x]]
+    fun_ <- function(.x) {
+      if (!is.character(.x))
+        .x <- deparse(.x)
+      else
+        .x <- .x
+      .x <- gsub("\\s", "", .x)
+    }
+    if (is.symbol(arguments[[.xo]]))
+      .x <- deparse(.x)
+    else
+      .x <- .x
+    if (is.symbol(arguments[[.xo]]))
+      args_s <- mapply(fun_, .x)
+    if (!is.symbol(arguments[[.xo]]))
+      args_s <- mapply(fun_, .x)[-1]
+    if (is.character(arguments[[.xo]]))
+      args_s <- mapply(fun_, .x)
+    if (length(args_s) > 1)
+      args_s <- mapply(fun_, .x)[-1]
+    attr(args_s, "names") <- NULL
+    if (length(args_s) < nys)
+      args_s <- rep(args_s, nys)
+    if (length(args_s) > nys)
+      args_s <- args_s[1:nys]
+    assign(paste0(.xo, "s"), args_s, envir = parent.frame())
+  }
+  
+  
+  getArgNames <-
+    function(value)
+      formalArgs(deparse(substitute(value)[[1]]))
+  
+  convert_to_list <- getArgNames(bsitar())
+  
+  
+  for (ip in convert_to_list) {
+    if (grepl("_init_", ip)) {
+      err. <- FALSE
+      tryCatch(
+        expr = {
+          out <- suppressWarnings(ept(ip))
+        },
+        error = function(e) {
+          err. <<- TRUE
+        }
+      )
+      if (!err.) {
+        if (length(out) > 1 & !is.list(out)) {
+          stop(
+            "Initials specified as vector [e.g, c(1, 2)] but must be a list, ",
+            "\n ",
+            " Note, initials can also be specified by using a single character",
+            "\n ",
+            " such as 0, random, or an object defined in the init_data",
+            "\n ",
+            " please check the following init arg: ",
+            ip
+          )
+        }
+      }
+    }
+  }
+  
+  
+  # Converting arguments to the required format for setting sub-options for
+  # univariate-by-subgroup and multivariate model fitting
+  
+  single_args <- c(
+    "data",
+    "group_arg",
+    "univariate_by",
+    "multivariate",
+    "prior_data",
+    "init_data",
+    "jitter_init_beta",
+    "jitter_init_sd",
+    "jitter_init_cor",
+    "expose_function",
+    "verbose",
+    "normalize",
+    "seed",
+    "brms_arguments",
+    "..."
+  )
+  
+  
+  
+  for (i in convert_to_list) {
+    if (!i %in% single_args) {
+      to_list_if_not(i, nys, arguments)
+    }
+  }
+  
+  for (i in convert_to_list) {
+    if (!i %in% single_args) {
+      eval_c_list_args(i, nys, arguments)
+    }
+  }
+  
+  
+  less_args <- extra_args <- c()
+  outcomes_l <- paste0(" (", paste(ys, collapse = ", "), ")")
+  for (i in convert_to_list) {
+    .x <- i
+    if (is.call(arguments[[.x]]))
+      nl <- length(arguments[[.x]]) - 1
+    if (!is.call(arguments[[.x]]))
+      nl <- length(arguments[[.x]])
+    if (nl > nys)
+      extra_args <- c(extra_args, .x)
+    if (nl < nys)
+      less_args <- c(less_args, .x)
+  }
+  
+  
+  # prepare data for 'bsitar'
+  
+  make_bsitar_data <- function(data, univariate_by, ys, ...) {
+    org.ys <- ys
+    org.data <- data
+    if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+      uvarby <- univariate_by$by
+      if (!uvarby %in% colnames(data)) {
+        stop(
+          paste(
+            "\nvariable",
+            uvarby,
+            "used for setting univariate submodels is missing"
+          )
+        )
+      }
+      if (!is.factor(data[[uvarby]])) {
+        stop("subset by variable '",
+             uvarby,
+             "' should be a factor variable")
+      }
+      for (l in levels(data[[uvarby]])) {
+        data[[l]] <- data[[ys[1]]] # data[["y"]]
+      }
+      unibyimat <-
+        model.matrix( ~ 0 + eval(parse(text = uvarby)), data)
+      subindicators <- paste0(uvarby, levels(data[[uvarby]]))
+      colnames(unibyimat) <- subindicators
+      ys <- levels(data[[uvarby]])
+      data <- as.data.frame(cbind(data, unibyimat))
+      if (univariate_by$verbose) {
+        resvcts_ <- levels(data[[uvarby]])
+        resvcts <- paste0(resvcts_, collapse = " ")
+        setmsgtxt <- paste0(
+          "\n For univariate-by-subgroup model fitting for variable '",
+          uvarby,
+          "'",
+          " (specified via 'univariate_by' argument)",
+          "\n ",
+          resvcts,
+          " response vectors created based on the factor levels",
+          "\n\n ",
+          "Please check corresponding arguments list.",
+          " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
+          resvcts_[1],
+          ", and  df = 5 is for ",
+          resvcts_[2],
+          " (and similalry knots, priors, initials etc)",
+          "\n\n ",
+          "If it does't correspond correctly, then either reverse the list ",
+          "arguments\n such as df = list(5, 4),",
+          " or else reverse sort the order of factor levels"
+        )
+        if (displayit == 'msg') {
+          message(setmsgtxt)
+        } else if (displayit == 'col') {
+          col <- setcolb
+          cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+        }
+      }
+      attr(data, "ys") <- ys
+      attr(data, "uvarby") <- uvarby
+      attr(data, "subindicators") <- subindicators
+      data_out <- data
+    } else {
+      data_out <- org.data
+      attr(data, "ys") <- org.ys
+      attr(data, "uvarby") <- NULL
+      attr(data, "subindicators") <- NULL
+    }
+    return(data)
+  }
+  
+  if (verbose) {
+    setmsgtxt <- paste0("\n Preparing data")
+    if (displayit == 'msg') {
+      message(setmsgtxt)
+    } else if (displayit == 'col') {
+      col <- setcolh
+      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+    }
+  }
+  
+  data <- make_bsitar_data(data, univariate_by, ys)
+  ys <- attr(data, "ys")
+  subindicators <- attr(data, "subindicators")
+  
+  
+  # Initiate loop over outcome(s) First, create empty lists, vector etc. to
+  # collect elements
+  
+  dataout <- priorlist <- NULL
+  
+  bflist <- list()
+  bflist <- initialslist <- initialslist_s <- initsilist <- bflist
+  blanketinitslist <- prior_stanvarlist <- auxillary_stanvarlist <- bflist
+  
+  funlist <- c()
+  xoffsetvaluelist <- xoffsetnamelist <- knotsvaluelist <- funlist
+  knotsnamelist <- spfun_collect <- xfunvaluelist <- xfunnamelist <- funlist
+  yfunvaluelist <- yfunnamelist <- yyfunvaluelist <- yyfunnamelist <- funlist
+  xxfunvaluelist <- xxfunnamelist <- fixedvaluelist <- fixednamelist <- funlist
+  randomvaluelist <- randomnamelist <- groupvarvaluelist <- funlist
+  yvarvaluelist <- ynamelist <- covvaluelist <- covnamelist <- funlist
+  groupvarnamelist <- xvarvaluelist <- xnamelist <- funlist
+  
+  # Start loop over outcome(s)
+  
+  for (ii in 1:length(ys)) {
+    if (nys > 1)
+      resp <- ys[ii]
+    else
+      resp <- ""
+    subindicatorsi <- subindicators[ii]
+    
+    for (i in convert_to_list) {
+      if (!i %in% single_args) {
+        assign(paste0(i, "s", "i"), eval(parse(text = paste0(i, "s")))[ii])
+      }
+    }
+    
+    if (is.null(group_arg$groupvar))
+      group_arg$groupvar <- idsi
+    
+    
+    
+    if (!is.numeric(ept(dfsi)) & !is.numeric(ept(knotssi))) {
+      stop("either df or knots must be specified")
+    }
+    if (is.numeric(ept(dfsi)) & is.numeric(ept(knotssi))) {
+      stop("both df and knots specified. Specify one of them\n")
+    }
+    
+    if (!grepl("a", fixedsi, fixed = T) &
+        grepl("a", randomsi, fixed = T)) {
+      stop(
+        "Parameter 'a' is missing in the fixed effects part of the model ",
+        "\n ",
+        " but specified in the random effects part of the model ",
+        "\n ",
+        " Either include 'a' in the fixed effects too or else ",
+        "\n ",
+        " remove it from the random effect part of the model"
+      )
+    }
+    if (!grepl("b", fixedsi, fixed = T) &
+        grepl("b", randomsi, fixed = T)) {
+      stop(
+        "Parameter 'b' is missing in the fixed effects part of the model ",
+        "\n ",
+        " but specified in the random effects part of the model ",
+        "\n ",
+        " Either include 'b' in the fixed effects too or else ",
+        "\n ",
+        " remove it from the random effect part of the model"
+      )
+    }
+    if (!grepl("c", fixedsi, fixed = T) &
+        grepl("c", randomsi, fixed = T)) {
+      stop(
+        "Parameter 'c' is missing in the fixed effects part of the model ",
+        "\n ",
+        " but specified in the random effects part of the model ",
+        "\n ",
+        " Either include 'c' in the fixed effects too or else ",
+        "\n ",
+        " remove it from the random effect part of the model"
+      )
+    }
+    
+    # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter In
+    # fact for df > 1, it forces 'd' to be random parameter only
+    
+    if (!match_sitar_d_form) {
+      if (!grepl("d", fixedsi, fixed = T) &
+          grepl("d", randomsi, fixed = T)) {
+        stop(
+          "Parameter 'd' is missing in the fixed effects part of the model ",
+          "\n ",
+          " but specified in the random effects part of the model ",
+          "\n ",
+          " Either include 'd' in the fixed effects too or else ",
+          "\n ",
+          " remove it from the random effect part of the model"
+        )
+      }
+    }
+    
+    # covariate not allowed when matching to sitar d form
+    if (match_sitar_d_form) {
+      if ((grepl("d", fixedsi, fixed = T) |
+           grepl("d", randomsi, fixed = T)) &
+          (!grepl("^~1$", d_formulasi) |
+           !grepl("^~1$", d_formula_grsi))) {
+        stop(
+          "Parameter 'd' is missing in the fixed effects part of the model ",
+          "\n ",
+          " and is specified only in the random effects part of the model ",
+          "\n ",
+          " (This is to match with the 'sitar' package's formulation)",
+          "\n ",
+          " For this formulation (i.e., 'd' is missing in the fixed effects)",
+          "\n ",
+          " covariate(s) are not allowed"
+        )
+      }
+    }
+    
+    
+    # add missing parameters to the dpar_formula
+    
+    if (!is.null(dpar_formulasi)) {
+      if (grepl("^1$", dpar_formulasi)) {
+        dpar_formulasi <- paste0("lf(", "sigma", "~", dpar_formulasi, ")")
+      } else if (grepl("^~1$", dpar_formulasi)) {
+        dpar_formulasi <- paste0("lf(", "sigma", dpar_formulasi, ")")
+      } else if (grepl("^sigma~1$", dpar_formulasi)) {
+        dpar_formulasi <- paste0("lf(", "", dpar_formulasi, ")")
+      } else {
+        dpar_formulasi <- dpar_formulasi
+      }
+      if (grepl("lf\\(", dpar_formulasi) |
+          grepl("nlf\\(", dpar_formulasi)) {
+        if (grepl("^lf\\(", dpar_formulasi) &
+            !grepl("nlf\\(", dpar_formulasi)) {
+          lf_list <- c('flist',
+                       'dpar',
+                       'resp',
+                       'center',
+                       'cmc',
+                       'sparse',
+                       'decomp') #
+        } else if (!grepl("^lf\\(", dpar_formulasi) &
+                   grepl("^nlf\\(", dpar_formulasi)) {
+          lf_list <- c('flist', 'dpar', 'resp', 'loop ') #
+        }
+        lf_list_c <- c()
+        for (lf_listi in lf_list) {
+          if (!grepl(lf_listi, dpar_formulasi)) {
+            if (lf_listi == 'center') {
+              o. <- paste0(lf_listi, "=", 'TRUE')
+            } else if (lf_listi == 'cmc') {
+              o. <- paste0(lf_listi, "=", 'TRUE')
+            } else if (lf_listi == 'resp') {
+              if (nys > 1) {
+                o. <- paste0(lf_listi, "=", paste0("", ysi, ""))
+                # o. <- paste0(lf_listi, "=", 'NULL')
+              } else {
+                o. <- paste0(lf_listi, "=", 'NULL')
+              }
+            } else {
+              o. <- paste0(lf_listi, "=", 'NULL')
+            }
+            lf_list_c <- c(lf_list_c, o.)
+          }
+        }
+        lf_list_c <- paste(lf_list_c, collapse = ",")
+        if (lf_list_c != "")
+          lf_list_c <- paste0(",", lf_list_c)
+        dpar_formulasi <- gsub(")$", lf_list_c, dpar_formulasi)
+        dpar_formulasi <- paste0(dpar_formulasi, ")")
+      }
+    }
+    
+    
+    
+    
+    # add intercept ~ 1 if missing
+    
+    check_formuals <-
+      c(
+        "a_formulasi",
+        "b_formulasi",
+        "c_formulasi",
+        "d_formulasi",
+        "s_formulasi",
+        "a_formula_grsi",
+        "b_formula_grsi",
+        "c_formula_grsi",
+        "d_formula_grsi"
+      )
+    
+    for (check_formualsi in check_formuals) {
+      if (!grepl("~1", ept(check_formualsi)) &
+          !grepl("~0", ept(check_formualsi))) {
+        check_formualsi_with1 <-
+          gsub("^~", "~1+", ept(check_formualsi), fixed = F)
+        assign(check_formualsi, check_formualsi_with1)
+      }
+    }
+    
+    
+    if (is.null(dpar_formulasi[[1]][1]) |
+        dpar_formulasi == "NULL") {
+      dpar_formulasi <- NULL
+    }
+    
+    if (is.null(autocor_formulasi[[1]][1]) |
+        autocor_formulasi == "NULL") {
+      autocor_formi <- NULL
+    } else {
+      autocor_formi <- autocor_formulasi
+    }
+    
+    
+    if (is.null(familysi[[1]][1]) |
+        familysi == "NULL") {
+      familysi <- NULL
+    }
+    
+    if (!is.null(familysi)) {
+      familysi <- list_to_quoted_if_not_si(familysi)
+    }
+    
+    if (!is.null(dpar_formulasi)) {
+      if (grepl("^lf\\(", dpar_formulasi) |
+          grepl("^nlf\\(", dpar_formulasi)) {
+        dpar_formulasi <- list_to_quoted_if_not_si_lf(dpar_formulasi)
+      } else {
+        dpar_formulasi <- dpar_formulasi
+      }
+    }
+    
+    
+    
+    N_J_all <- length(unique(data[[idsi]]))
+    
+    if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+      datai <- data %>%
+        filter(eval(parse(text = subindicatorsi)) == 1) %>%
+        droplevels()
+      if (!subindicatorsi %in% colnames(datai)) {
+        stop("variable ", subindicatorsi, " not in the dataframe")
+      }
+      if (!xsi %in% colnames(datai))
+        stop("variable ", xsi, " not in the dataframe")
+      if (!idsi %in% colnames(datai))
+        stop("variable ", idsi, " not in the dataframe")
+    }
+    
+    if ((is.na(univariate_by$by) | univariate_by$by == "NA")) {
+      datai <- data %>%
+        droplevels()
+      if (!ysi %in% colnames(datai))
+        stop("variable ", ysi, " not in the dataframe")
+      if (!xsi %in% colnames(datai))
+        stop("variable ", xsi, " not in the dataframe")
+      if (!idsi %in% colnames(datai))
+        stop("variable ", idsi, " not in the dataframe")
+    }
+    
+    
+    
+    
+    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+      if (xfunsi != "log" & xfunsi != "sqrt") {
+        stop("only log and sqrt options allowed for xfun argument")
+      }
+    }
+    
+    
+    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+      if (xfunsi == "log") {
+        datai[[xsi]] <- log(datai[[xsi]])
+      } else if (xfunsi == "sqrt") {
+        datai[[xsi]] <- sqrt(datai[[xsi]])
+      } else {
+        stop("only log and sqrt options allowed for xfun argument")
+      }
+    }
+    
+    
+    
+    
+    if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+      if (yfunsi == "log") {
+        datai[[ysi]] <- log(datai[[ysi]])
+      } else if (yfunsi == "sqrt") {
+        datai[[ysi]] <- sqrt(datai[[ysi]])
+      } else {
+        stop("only log or sqrt tranformation allowed for yfun argument")
+      }
+    }
+    
+    
+    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+      xfunvalue <- xfunsi
+    } else {
+      xfunvalue <- NULL
+    }
+    
+    if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+      yfunvalue <- yfunsi
+    } else {
+      yfunvalue <- NULL
+    }
+    
+    
+    if (nys == 1) {
+      xfun_name <- "xfun"
+      yfun_name <- "yfun"
+      xxfun_name <- "xvar_xfun"
+      yyfun_name <- "yvar_yfun"
+    } else if (nys > 1) {
+      xfun_name <- paste0("xfun", "_", ysi)
+      yfun_name <- paste0("yfun", "_", ysi)
+      xxfun_name <- paste0("xvar_xfun", "_", ysi)
+      yyfun_name <- paste0("yvar_yfun", "_", ysi)
+    }
+    
+    
+    xfunvaluelist[[ii]] <- xfunvalue
+    xfunnamelist[[ii]] <- xfun_name
+    
+    yfunvaluelist[[ii]] <- yfunvalue
+    yfunnamelist[[ii]] <- yfun_name
+    
+    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+      xxfunvaluelist[[ii]] <- paste0(xfunsi, "(", xsi, ")")
+    } else {
+      xxfunvaluelist[[ii]] <- NULL
+    }
+    
+    
+    if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+      yyfunvaluelist[[ii]] <- paste0(yfunsi, "(", ysi, ")")
+    } else {
+      yyfunvaluelist[[ii]] <- NULL
+    }
+    
+    xxfunnamelist[[ii]] <- xxfun_name
+    yyfunnamelist[[ii]] <- xxfun_name
+    
+    
+    gkn <- function(x, df, bounds) {
+      c(min(x) - bounds * (max(x) - min(x)),
+        quantile(x, (1:(df - 1)) / df),
+        max(x) +
+          bounds * (max(x) - min(x)))
+    }
+    
+    if (is.numeric(ept(knotssi))) {
+      knots <- ept(knotssi)
+    }
+    if (is.numeric(ept(dfsi))) {
+      knots <- (unname(gkn(datai[[xsi]], ept(dfsi), ept(boundsi))))
+    }
+    
+    
+    ########### For some reasons, 'sitar' (Tim Cole) allows random only 'd'
+    ########### parameter In fact for df > 1, it forces 'd' to be random
+    ########### parameter only
+    
+    if (match_sitar_d_form) {
+      if (length(knots) > 2) {
+        itemp <- strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
+        itemp <- itemp[!grepl("d", itemp)]
+        fixedsi <- paste(itemp, collapse = "+")
+      }
+    }
+    
+    
+    ###########
+    
+    nabci <- length(strsplit(gsub("\\+", " ", fixedsi), " ")[[1]])
+    nabcrei <-
+      length(strsplit(gsub("\\+", " ", randomsi), " ")[[1]])
+    
+    
+    # define function to evaluate offset and bstart arguments
+    
+    make_spline_matrix <- function(x, knots) {
+      X <- x
+      N <- length(X)
+      nk <- length(knots)
+      basis_evals <- matrix(0, N, nk - 1)
+      basis_evals[, 1] <- X
+      basis_evals[, 1] <- X
+      Xx <- matrix(0, N, nk)
+      km1 <- nk - 1
+      j <- 1
+      knot1 <- knots[1]
+      knotnk <- knots[nk]
+      knotnk1 <- knots[nk - 1]
+      kd <- (knotnk - knot1) ^ (2)
+      for (ia in 1:N) {
+        for (ja in 1:nk) {
+          Xx[ia, ja] <- ifelse(X[ia] - knots[ja] > 0, X[ia] - knots[ja], 0)
+        }
+      }
+      while (j <= nk - 2) {
+        jp1 <- j + 1
+        basis_evals[, jp1] <-
+          (
+            Xx[, j] ^ 3 - (Xx[, km1] ^ 3) * (knots[nk] - knots[j]) /
+              (knots[nk] - knots[km1]) + (Xx[, nk] ^ 3) *
+              (knots[km1] - knots[j]) / (knots[nk] - knots[km1])
+          ) /
+          (knots[nk] - knots[1]) ^ 2
+        j <- j + 1
+      }
+      return(basis_evals)
+    }
+    
+    
+    
+    eval_xoffset_bstart_args <-
+      function(x, y, knots, data, eval_arg, xfunsi) {
+        if (eval_arg == "mean") {
+          eval_arg.o <- mean(data[[x]])
+        } else if (eval_arg == "apv") {
+          mat_s <- make_spline_matrix(data[[x]], knots)
+          lmform <- as.formula(paste0(y, "~1+", "mat_s"))
+          lmfit <- lm(lmform, data = data)
+          eval_arg.o <- sitar::getPeak(data[[x]],
+                                       predict(smooth.spline(data[[x]],
+                                                             fitted(lmfit)),
+                                               data[[x]], deriv = 1)$y)[1]
+        } else {
+          eval_arg.o <- ept(eval_arg)
+        }
+        return(as.numeric(eval_arg.o))
+      }
+    
+    xoffset <-
+      eval_xoffset_bstart_args(xsi, ysi, knots, datai, xoffsetsi, xfunsi)
+    bstart <-
+      eval_xoffset_bstart_args(xsi, ysi, knots, datai, bstartsi, xfunsi)
+    bstart <- bstart - xoffset
+    
+    xoffset <- round(xoffset, 4)
+    datai[[xsi]] <- datai[[xsi]] - xoffset
+    knots <- knots - xoffset
+    knots <- round(knots, 6)
+    nknots <- length(knots)
+    df <- length(knots) - 1
+    
+    mat_s <- make_spline_matrix(datai[[xsi]], knots)
+    
+    
+    
+    
+    SplineFun_name <- "SplineFun"
+    getX_name <- "getX"
+    getKnots_name <- "getKnots"
+    if (nys > 1) {
+      spfncname <- paste0(ysi, "_", SplineFun_name)
+      getxname <- paste0(ysi, "_", getX_name)
+      getknotsname <- paste0(ysi, "_", getKnots_name)
+    } else if (nys == 1) {
+      spfncname <- SplineFun_name
+      getxname <- getX_name
+      getknotsname <- getKnots_name
+    }
+    
+    
+    
+    spfun_collect <-
+      c(spfun_collect, c(spfncname, paste0(spfncname, "_", c("d1",
+                                                             "d2"))))
+    
+    internal_function_args_names <-
+      c(
+        "fixedsi",
+        "randomsi",
+        "spfncname",
+        "getxname",
+        "getknotsname",
+        'match_sitar_d_form',
+        'xfunsi',
+        'yfunsi',
+        'xoffset',
+        'brms_arguments',
+        "verbose"
+      )
+    
+    internal_function_args <- list()
+    internal_function_args <- mget(internal_function_args_names)
+    
+    if (verbose) {
+      if (ii == 1) {
+        setmsgtxt <- paste0("\n Preparing function")
+        if (displayit == 'msg') {
+          message(setmsgtxt)
+        } else if (displayit == 'col') {
+          col <- setcolh
+          cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+        }
+      }
+    }
+    
+    # print(ysi)
+    # print(xsi)
+    # print(idsi)
+    # print(nknots)
+    # print(knots)
+    # print(internal_function_args)
+    
+    
+    funlist[ii] <-
+      prepare_function(
+        x = xsi,
+        y = ysi,
+        id = idsi,
+        knots = knots,
+        nknots = nknots,
+        data = datai,
+        internal_function_args = internal_function_args
+      )
+    
+    
+    # print(funlist)
+    # stop()
+    
+    
+    
+    internal_formula_args_names <-
+      c(
+        "a_formulasi",
+        "b_formulasi",
+        "c_formulasi",
+        "d_formulasi",
+        "s_formulasi",
+        "a_formula_grsi",
+        "b_formula_grsi",
+        "c_formula_grsi",
+        "d_formula_grsi",
+        "dpar_formulasi",
+        "autocor_formi",
+        "subindicatorsi",
+        "fixedsi",
+        "randomsi",
+        "univariate_by",
+        "multivariate",
+        "group_arg",
+        "df",
+        "mat_s",
+        "spfncname",
+        'nys',
+        'ysi',
+        'familysi',
+        'xfunsi',
+        'xoffset',
+        'match_sitar_d_form',
+        "verbose"
+      )
+    
+    
+    internal_formula_args <- list()
+    internal_formula_args <- mget(internal_formula_args_names)
+    
+    if (verbose) {
+      if (ii == 1) {
+        setmsgtxt <- paste0("\n Preparing formula")
+        if (displayit == 'msg') {
+          message(setmsgtxt)
+        } else if (displayit == 'col') {
+          col <- setcolh
+          cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+        }
+      }
+    }
+    
+    formula_bf <-
+      prepare_formula(
+        x = xsi,
+        y = ysi,
+        id = idsi,
+        knots = knots,
+        nknots = nknots,
+        data = datai,
+        internal_formula_args = internal_formula_args
+      )
+    
+    
+    
+    list_out <- attr(formula_bf, "list_out")
+    
+    attributes(formula_bf) <- NULL
+    
+    eout <- list2env(list_out)
+    for (eoutii in names(eout)) {
+      assign(eoutii, eout[[eoutii]])
+    }
+    
+    
+    group_arg$groupvar <- group_arg_groupvar
+    multivariate$rescor <- multivariate_rescor
+    univariate_by$by <- univariate_by_by
+    covariates_ <- covariates_
+    
+    
+    lm_val_list <-
+      names(eout)[grep(pattern = "^lm_|^lme_", names(eout))]
+    lm_val_list <- sort(lm_val_list)
+    
+    lm_val_list_not <-
+      names(eout)[!names(eout) %in%
+                    names(eout)[grep(pattern = "^lm_|^lme_", names(eout))]]
+    lm_val_list_not <- sort(lm_val_list_not)
+    
+    
+    
+    cov_list_names <- ls()[grepl(pattern = "_cov", ls())]
+    cov_list_names <-
+      cov_list_names[!grepl(pattern = "_init_", cov_list_names)]
+    cov_list_names <-
+      cov_list_names[!grepl(pattern = "_prior_", cov_list_names)]
+    cov_list_names <-
+      cov_list_names[!grepl(pattern = "^lm_", cov_list_names)]
+    cov_list_names <- sort(cov_list_names)
+    
+    bflist[[ii]] <- formula_bf
+    
+    
+    
+    ####
+    ymean <- mean(datai[[ysi]])
+    ymedian <- median(datai[[ysi]])
+    ysd <- sd(datai[[ysi]])
+    ymad <- mad(datai[[ysi]])
+    xsd <- sd(datai[[xsi]])
+    
+    # TODO
+    # acov_sd etc setting numeric but later can be worked out to infer from
+    # some meaningful way - until then, these will not be used in anywhere
+    # and are included here just as placeholders
+    lm_a_cov_sd <- 10
+    lm_b_cov_sd <- 1
+    lm_c_cov_sd <- 0.5
+    
+    
+    prior_data_internal_names <-
+      c(
+        lm_val_list,
+        "ymean",
+        "ymedian",
+        "ysd",
+        "ymad",
+        "xsd",
+        "lm_a_cov_sd",
+        "lm_b_cov_sd",
+        "lm_c_cov_sd",
+        "bstart"
+      )
+    
+    
+    prior_args_internal_names <-
+      c(
+        lm_val_list_not,
+        cov_list_names,
+        "a_formulasi",
+        "b_formulasi",
+        "c_formulasi",
+        "d_formulasi",
+        "s_formulasi",
+        "a_formula_grsi",
+        "fixedsi",
+        "b_formula_grsi",
+        "c_formula_grsi",
+        "d_formula_grsi",
+        "autocor_formi",
+        "randomsi",
+        "nabci",
+        "nabcrei",
+        "univariate_by",
+        "multivariate",
+        "group_arg",
+        "initsi",
+        "df",
+        "idsi",
+        "ys",
+        "resp",
+        "ii",
+        "nys",
+        "N_J_all",
+        "dpar_formulasi",
+        "normalize",
+        "seed",
+        'match_sitar_d_form',
+        "verbose"
+      )
+    
+    
+    prior_data_internal <- list()
+    prior_data_internal <- mget(prior_data_internal_names)
+    
+    
+    prior_args_internal <- list()
+    prior_args_internal <- mget(prior_args_internal_names)
+    
+    
+    
+    if (!is.null(prior_data[[1]])) {
+      get_common_names_lists <-
+        intersect(names(prior_data_internal), names(prior_data))
+      ttt_n1 <- paste(names(prior_data_internal), collapse = ", ")
+      ttt_nn2 <- paste(get_common_names_lists, collapse = ", ")
+      if (!identical(get_common_names_lists, character(0))) {
+        stop(
+          "Names in prior_data list should not be following reserved names:",
+          "\n ",
+          ttt_n1,
+          "\n ",
+          " Please change the following name(s) ",
+          "\n ",
+          ttt_nn2
+        )
+      }
+    }
+    
+    
+    init_data_internal <- prior_data_internal
+    init_args_internal <- prior_args_internal
+    
+    
+    init_arguments <-
+      list(
+        a_init_beta = a_init_betasi,
+        b_init_beta = b_init_betasi,
+        c_init_beta = c_init_betasi,
+        d_init_beta = d_init_betasi,
+        s_init_beta = s_init_betasi,
+        a_cov_init_beta = a_cov_init_betasi,
+        b_cov_init_beta = b_cov_init_betasi,
+        c_cov_init_beta = c_cov_init_betasi,
+        d_cov_init_beta = d_cov_init_betasi,
+        s_cov_init_beta = s_cov_init_betasi,
+        a_init_sd = a_init_sdsi,
+        b_init_sd = b_init_sdsi,
+        c_init_sd = c_init_sdsi,
+        d_init_sd = d_init_sdsi,
+        a_cov_init_sd = a_cov_init_sdsi,
+        b_cov_init_sd = b_cov_init_sdsi,
+        c_cov_init_sd = c_cov_init_sdsi,
+        d_cov_init_sd = d_cov_init_sdsi,
+        gr_init_cor = gr_init_corsi,
+        rsd_init_sigma = rsd_init_sigmasi,
+        dpar_init_sigma = dpar_init_sigmasi,
+        dpar_cov_init_sigma = dpar_cov_init_sigmasi,
+        autocor_init_acor = autocor_init_acorsi,
+        mvr_init_rescor = mvr_init_rescorsi,
+        r_init_z = r_init_zsi
+      )
+    
+    
+    if (verbose) {
+      if (ii == 1) {
+        setmsgtxt <- paste0("\n Preparing priors and initials")
+        if (displayit == 'msg') {
+          message(setmsgtxt)
+        } else if (displayit == 'col') {
+          col <- setcolh
+          cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+        }
+      }
+    }
+    
+    bpriors <-
+      set_priors_initials(
+        a_prior_betasi,
+        b_prior_betasi,
+        c_prior_betasi,
+        d_prior_betasi,
+        s_prior_betasi,
+        a_cov_prior_betasi,
+        b_cov_prior_betasi,
+        c_cov_prior_betasi,
+        d_cov_prior_betasi,
+        s_cov_prior_betasi,
+        a_prior_sdsi,
+        b_prior_sdsi,
+        c_prior_sdsi,
+        d_prior_sdsi,
+        a_cov_prior_sdsi,
+        b_cov_prior_sdsi,
+        c_cov_prior_sdsi,
+        d_cov_prior_sdsi,
+        gr_prior_corsi,
+        rsd_prior_sigmasi,
+        dpar_prior_sigmasi,
+        dpar_cov_prior_sigmasi,
+        autocor_prior_acorsi,
+        mvr_prior_rescorsi,
+        prior_data,
+        prior_data_internal,
+        prior_args_internal,
+        init_arguments,
+        init_data,
+        init_data_internal,
+        init_args_internal
+      )
+    
+    
+    priorlist <- rbind(priorlist, bpriors)
+    
+    stanvar_priors <- attr(bpriors, "stanvars")
+    
+    stanvar_priors_names <- names(stanvar_priors)
+    
+    prior_stanvarlist[[ii]] <- stanvar_priors
+    
+    initials <- attr(bpriors, "initials")
+    
+    scode_auxillary <- attr(bpriors, "scode_auxillary")
+    auxillary_stanvarlist[[ii]] <- scode_auxillary
+    
+    initialslist[[ii]] <- initials
+    initialslist_s[[ii]] <- initsi
+    
+    if (initsi == "random") {
+      blanketinits <- "random"
+    } else if (initsi == "0") {
+      blanketinits <- "0"
+    } else {
+      blanketinits <- "no"
+    }
+    
+    blanketinitslist[[ii]] <- blanketinits
+    
+    
+    if (nys == 1) {
+      xoffset_name <- "xoffset"
+      knots_name <- "knots"
+      fixed_name <- "fixed"
+      random_name <- "random"
+      groupvar_name <- "groupvar"
+      xvar_name <- "xvar"
+      yvar_name <- "yvar"
+      cov_name <- "cov"
+    } else if (nys > 1) {
+      xoffset_name <- paste0("xoffset", "_", ysi)
+      knots_name <- paste0("knots", "_", ysi)
+      fixed_name <- paste0("fixed", "_", ysi)
+      random_name <- paste0("random", "_", ysi)
+      groupvar_name <- paste0("groupvar", "_", ysi)
+      xvar_name <- paste0("xvar", "_", ysi)
+      yvar_name <- paste0("yvar", "_", ysi)
+      cov_name <- paste0("cov", "_", ysi)
+    }
+    
+    
+    xoffsetnamelist[[ii]] <- xoffset_name
+    xoffsetvaluelist[[ii]] <- xoffset
+    
+    knotsnamelist[[ii]] <- knots_name
+    knotsvaluelist[[ii]] <- knots
+    
+    fixednamelist[[ii]] <- fixed_name
+    fixedvaluelist[[ii]] <-
+      strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
+    
+    randomnamelist[[ii]] <- random_name
+    randomvaluelist[[ii]] <-
+      strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
+    
+    
+    groupvarnamelist[[ii]] <- groupvar_name
+    groupvarvaluelist[[ii]] <- group_arg_groupvar
+    
+    xnamelist[[ii]] <- xvar_name
+    xvarvaluelist[[ii]] <- xsi
+    
+    ynamelist[[ii]] <- yvar_name
+    yvarvaluelist[[ii]] <- ysi
+    
+    covnamelist[[ii]] <- cov_name
+    covvaluelist[[ii]] <- covariates_
+    
+    
+    # Restore x var for data
+    
+    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+      if (xfunsi == "log") {
+        datai[[xsi]] <- exp(datai[[xsi]] + xoffset)
+      } else if (xfunsi == "sqrt") {
+        datai[[xsi]] <- (datai[[xsi]] + xoffset) ^ 2
+      }
+    } else if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
+      datai[[xsi]] <- (datai[[xsi]] + xoffset)
+    }
+    
+    
+    # print(xfunsi)
+    # print(xoffset)
+    # datai %>% head() %>% print()
+    # stop()
+    
+    if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
+      dataout <- rbind(dataout, datai)
+    else
+      dataout <- datai
+    
+    if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
+      uvarbyTF <- TRUE
+    else
+      uvarbyTF <- FALSE
+  }  # end of loop over outcome(s)
+  
+  
+  if (verbose) {
+    if (multivariate$mvar) {
+      setmsgtxt <-
+        paste0(
+          "\n Combining formula, function, priors and initials",
+          "\n ",
+          "for multivariate model fitting"
+        )
+    }
+    if (!is.na(univariate_by$by)) {
+      setmsgtxt <-
+        paste0(
+          "\n Combining formula, function, priors and initials",
+          "\n ",
+          "for univariate-by-subgroup model fitting"
+        )
+    }
+    if (displayit == 'msg') {
+      message(setmsgtxt)
+    } else if (displayit == 'col') {
+      col <- setcolh
+      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+    }
+  }
+  
+  
+  # Now collect and combine elemets for univariate-by-sybgroup and multivariate
+  # models
+  
+  brmsdata <- dataout
+  brmspriors <- priorlist
+  
+  bflist_c_list <- list()
+  bflist_c <- c()
+  for (il in 1:length(bflist)) {
+    bflist_c_list[[il]] <- ept(bflist[[il]])
+    bflist_c <- c(bflist_c, paste0("bflist_c_list[[", il, "]]"))
+  }
+  
+  bformula <- ept(paste(bflist_c, collapse = "+"))
+  
+  
+  if (nys > 1) {
+    if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+      bformula <- bformula + set_rescor(FALSE)
+    }
+    if (multivariate$mvar && multivariate$rescor) {
+      bformula <- bformula + set_rescor(TRUE)
+    }
+    if (multivariate$mvar && !multivariate$rescor) {
+      bformula <- bformula + set_rescor(FALSE)
+    }
+  }
+  
+  
+  bstanvars <-
+    stanvar(scode = paste(funlist, collapse = "\n"), block = "function")
+  
+  prior_stanvarlistlist <- c()
+  for (i in 1:nys) {
+    prior_stanvarlistlist[i] <- paste0("prior_stanvarlist[[", i, "]]")
+  }
+  
+  bstanvars <-
+    bstanvars + eval(parse(text = paste(prior_stanvarlistlist, collapse = "+")))
+  
+  
+  if (length(auxillary_stanvarlist) != 0) {
+    auxillary_stanvarlistlist <- c()
+    for (i in 1:nys) {
+      auxillary_stanvarlistlist[i] <-
+        paste0("auxillary_stanvarlist[[", i, "]]")
+    }
+    bstanvars <-
+      bstanvars + eval(parse(text = paste(
+        auxillary_stanvarlistlist, collapse = "+"
+      )))
+  }
+  
+  
+  if (is.list(initialslist) & length(initialslist) == 0) {
+    brmsinits <- NULL
+  } else if (is.list(initialslist) & length(initialslist) > 0) {
+    clistlist <- c()
+    for (i in 1:length(initialslist)) {
+      clistlist <- c(clistlist, ept(paste0("initialslist[[", i, "]]")))
+    }
+    brmsinits <- clistlist
+  }
+  
+  
+  if (!is.null(brmsinits)) {
+    if (multivariate$mvar & multivariate$cor == "un") {
+      # combine sd
+      c_it <- "sd_"
+      brmsinits_names <- names(brmsinits)
+      keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+      temppp <- brmsinits[names(brmsinits) %in% keys]
+      temppp <- unlist(unname(temppp))
+      brmsinits <- brmsinits[!names(brmsinits) %in% keys]
+      brmsinits[[keys[1]]] <- temppp %>%
+        unname()
+      # combine cor
+      c_it <- "L_"
+      brmsinits_names <- names(brmsinits)
+      keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+      temppp <- brmsinits[names(brmsinits) %in% keys]
+      brmsinits <- brmsinits[!names(brmsinits) %in% keys]
+      t_names <- l_comb <- d_comb <- c()
+      for (lnamei in names(temppp)) {
+        t <- temppp[[lnamei]]
+        l <- t[lower.tri(t)]
+        names(l) <-
+          apply(combn(colnames(t), 2), 2, paste, collapse = "_")
+        d_comb <- c(d_comb, ncol(t))
+        l_comb <- c(l_comb, l)
+        t_names <- c(t_names, colnames(t))
+      }
+      #
+      create_cor_mat <- function(n, cor = NULL) {
+        n_elements <- n
+        m <- diag(n_elements)
+        m_upper <- m_lower <- matrix(0, n_elements, n_elements)
+        nc <- n_elements * (n_elements - 1) / 2
+        if (is.null(cor)) {
+          x <- rep(0, nc)
+        } else {
+          x <- cor
+          if (length(x) != nc) {
+            stop("length of correlation vector must be ",
+                 nc,
+                 "\n, ",
+                 ", but found ",
+                 length(x))
+          }
+        }
+        m_lower[lower.tri(m_lower, diag = FALSE)] <- x
+        m_upper <- t(m_lower)
+        M <- m_lower + m + m_upper
+        M
+      }
+      #
+      tt_names <- apply(combn(t_names, 2), 2, paste, collapse = "_")
+      tt_dims <- sum(d_comb)
+      tt_nc <- (tt_dims * (tt_dims - 1) / 2)
+      tt_12 <- create_cor_mat(tt_dims, rep(0, tt_nc))
+      colnames(tt_12) <- rownames(tt_12) <- t_names
+      tt_ll <- tt_12[lower.tri(tt_12)]
+      names(tt_ll) <-
+        apply(combn(colnames(tt_12), 2), 2, paste, collapse = "_")
+      tt_ll[names(l_comb)] <- l_comb
+      tt_ll[!names(tt_ll) %in% names(l_comb)] <- 0
+      brmsinits[[keys[1]]] <- create_cor_mat(tt_dims, tt_ll)
+      # combine std z
+      c_it <- "z_"
+      brmsinits_names <- names(brmsinits)
+      keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+      temppp <- brmsinits[names(brmsinits) %in% keys]
+      brmsinits <- brmsinits[!names(brmsinits) %in% keys]
+      brmsinits[[keys[1]]] <- do.call(rbind, temppp)
+    } else if (multivariate$mvar &
+               (multivariate$cor == "un" | multivariate$cor ==
+                "un_s") &
+               !any(grepl("^L_", names(brmsinits))))
+    {
+      # combine sd
+      c_it <- "sd_"
+      brmsinits_names <- names(brmsinits)
+      keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+      temppp <- brmsinits[names(brmsinits) %in% keys]
+      temppp <- unlist(unname(temppp))
+      # temppp <- temppp[order((attr(temppp, 'names')))]
+      brmsinits <- brmsinits[!names(brmsinits) %in% keys]
+      for (sdi in 1:length(temppp)) {
+        brmsinits[[paste0(c_it, sdi)]] <- temppp[sdi] %>%
+          unname()
+      }
+    }  # else if(!any(grepl('^L_', names(brmsinits)))) {
+    
+    
+    # keep only one Lrescor
+    if (multivariate$mvar & multivariate$rescor) {
+      c_it <- "Lrescor_"
+      brmsinits_names <- names(brmsinits)
+      keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+      temppp <- brmsinits[names(brmsinits) %in% keys]
+      brmsinits <- brmsinits[!names(brmsinits) %in% keys]
+      brmsinits[["Lrescor"]] <- temppp[[1]]
+    }
+    
+    if ((multivariate$mvar &
+         multivariate$cor == "diagonal") |
+        (!is.na(univariate_by$by) &
+         univariate_by$cor == "diagonal") |
+        group_arg$cor == "diagonal") {
+      # combine sd
+      c_it <- "sd_"
+      brmsinits_names <- names(brmsinits)
+      keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+      temppp <- brmsinits[names(brmsinits) %in% keys]
+      temppp <- unlist(unname(temppp))
+      brmsinits <- brmsinits[!names(brmsinits) %in% keys]
+      xxx <- temppp
+      ilc <- list()
+      ilc_c <- 0
+      for (nysi_ in 1:nys) {
+        for (il in letters[1:4]) {
+          ilc_c <- ilc_c + 1
+          na <- paste0("^", il, nysi_)
+          nb <- paste0("^", il, "cov", nysi_)
+          nanb <- paste0(na, "|", nb)
+          if (length(xxx[grepl(nanb, names(xxx))]) > 0) {
+            ilc[[ilc_c]] <- xxx[grepl(nanb, names(xxx))]
+          }
+        }
+      }
+      ilc <- ilc[lengths(ilc) != 0]
+      names(ilc) <- paste0("sd_", 1:length(ilc))
+      
+      for (sdi in names(ilc)) {
+        brmsinits[[sdi]] <- ilc[[sdi]]
+      }
+      
+      
+      c_it <- "z_"
+      brmsinits_names <- names(brmsinits)
+      keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+      temppp <- brmsinits[names(brmsinits) %in% keys]
+      
+      for (zi in 1:length(ilc)) {
+        brmsinits[[paste0(c_it, zi)]] <- temppp[[zi]]
+      }
+    }
+  }  # if(!is.null(brmsinits)) {
+  
+  
+  # for multivariate, it makes sense to keep initials for betas only otherwise
+  # dimensional mismatch
+  if (!is.null(brmsinits) & length(initialslist) != nys) {
+    if (multivariate$mvar & multivariate$cor == "un") {
+      c_it_names <- c("sd_", "L_", "z_", "Lrescor")
+      for (c_it in c_it_names) {
+        brmsinits_names <- names(brmsinits)
+        keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
+        brmsinits <- brmsinits[!names(brmsinits) %in% keys]
+      }
+    }
+  }
+  
+  
+  
+  if (all(sapply("random", grepl, initialslist_s))) {
+    brmsinits <- "random"
+    brmsinits_r <- ept(init_rsi)
+    brmsinits_ <- NULL
+  } else if (all(sapply("0", grepl, initialslist_s))) {
+    brmsinits <- "0"
+    brmsinits_r <- ept(init_rsi)
+    brmsinits_ <- NULL
+  } else {
+    brmsinits <- brmsinits
+    brmsinits_r <- NULL
+    brmsinits_ <- ""
+  }
+  
+  
+  # strip off initials attrubutes now
+  for (inm in names(brmsinits)) {
+    if (is.matrix(brmsinits[[inm]])) {
+      colnames(brmsinits[[inm]]) <- rownames(brmsinits[[inm]]) <- NULL
+      t__ <- brmsinits[[inm]]
+      if (!is.null(attr(t__, "dimnames")))
+        attr(t__, "dimnames") <- NULL
+      brmsinits[[inm]] <- t__
+    }
+    if (is.vector(brmsinits[[inm]])) {
+      t__ <- brmsinits[[inm]]
+      if (!is.null(attr(t__, "names")))
+        attr(t__, "names") <- NULL
+      brmsinits[[inm]] <- t__
+    }
+  }
+  
+  
+  
+  if (!is.null(brmsinits_)) {
+    eval_inits_fun <-
+      function(inits,
+               jitter_init_beta,
+               jitter_init_sd,
+               jitter_init_cor,
+               digits) {
+        if (is.character(jitter_init_beta))
+          jitter_init_beta <- ept(jitter_init_beta)
+        if (is.character(jitter_init_sd))
+          jitter_init_sd <- ept(jitter_init_sd)
+        if (is.character(jitter_init_cor))
+          jitter_init_cor <- ept(jitter_init_cor)
+        
+        if (!is.null(jitter_init_beta) &
+            !is.numeric(jitter_init_beta)) {
+          stop("Argument jitter_init_beta should be NULL or a numeric value")
+        }
+        if (!is.null(jitter_init_sd) &
+            !is.numeric(jitter_init_sd)) {
+          stop("Argument jitter_init_sd should be NULL or a numeric value")
+        }
+        if (!is.null(jitter_init_cor) &
+            !is.numeric(jitter_init_cor)) {
+          stop("Argument jitter_init_cor should be NULL or a numeric value")
+        }
+        
+        jitter_x <- function(x, a, digits) {
+          x <- unname(x)
+          col <- c()
+          for (i in 1:length(x)) {
+            amount <- abs(x[i]) * a
+            col <- c(col, jitter(x[i], factor = 1, amount = amount))
+          }
+          col <- round(col, digits)
+          col
+        }
+        
+        jitter_mat <- function(x, a, digits) {
+          mat_out <- x
+          x <- x[lower.tri(x)]
+          col <- c()
+          for (i in 1:length(x)) {
+            amount <- abs(x[i]) * a
+            col <- c(col, jitter(x[i], factor = 1, amount = amount))
+          }
+          col <- round(col, digits)
+          col <- ifelse(col > 1, 1, col)
+          col <- ifelse(col < -1, 1, col)
+          mat_out[lower.tri(mat_out)] <-
+            mat_out[upper.tri(mat_out)] <- col
+          return(mat_out)
+        }
+        
+        eval_inits <- c()
+        for (i_init in names(inits)) {
+          if (grepl("^b_", i_init)) {
+            if (!is.null(jitter_init_beta)) {
+              values_i <-
+                jitter_x(inits[[i_init]], jitter_init_beta, digits = digits)
+            } else if (is.null(jitter_init_beta)) {
+              values_i <- inits[[i_init]]
+              values_i <- round(values_i, digits)
+            }
+            eval_inits[[i_init]] <- values_i
+          } else if (grepl("^sd_", i_init)) {
+            if (!is.null(jitter_init_sd)) {
+              values_i <- jitter_x(inits[[i_init]], jitter_init_sd, digits)
+              values_i <- abs(values_i)
+              values_i <-
+                ifelse(values_i <= 0, values_i + 0.01, values_i)
+            } else if (is.null(jitter_init_sd)) {
+              values_i <- inits[[i_init]]
+              values_i <- abs(round(values_i, digits))
+              values_i <-
+                ifelse(values_i <= 0, values_i + 0.01, values_i)
+            }
+            eval_inits[[i_init]] <- values_i
+          } else if (grepl("^L_", i_init)) {
+            if (!is.null(jitter_init_cor)) {
+              values_i <- jitter_mat(inits[[i_init]], jitter_init_cor, digits)
+            } else if (is.null(jitter_init_cor)) {
+              values_i <- inits[[i_init]]
+              values_i <- round(values_i, digits)
+            }
+            eval_inits[[i_init]] <- values_i
+          } else {
+            eval_inits[[i_init]] <- inits[[i_init]]
+          }
+        }  # for(i_init in names(inits)) {
+        eval_inits
+        return(eval_inits)
+      }
+    # print(brms_arguments$chains)
+    brmsinits <- lapply(1:brms_arguments$chains, function(id) {
+      eval_inits_fun(
+        inits = brmsinits,
+        jitter_init_beta = jitter_init_beta,
+        jitter_init_sd = jitter_init_sd,
+        jitter_init_cor = jitter_init_cor,
+        digits = 4
+      )
+    })
+  }
+  
+  
+  
+  # set brm arguments and fit model
+  
+  setup_brms_args <-
+    function(formula,
+             prior,
+             stanvars,
+             data,
+             init_set,
+             init_str,
+             init_r,
+             seed,
+             verbose,
+             setarguments,
+             brmsdots) {
+      exc_args <- c("formula", "prior", "stanvars", "init", "data")
+      if (eval(setarguments$backend) == "rstan")
+        exc_args <- c(exc_args, "stan_model_args")
+      for (exc_argsi in exc_args) {
+        if (exc_argsi %in% names(setarguments))
+          setarguments[[exc_argsi]] <- NULL
+      }
+      setarguments$formula <- formula
+      setarguments$prior <- prior
+      setarguments$stanvars <- stanvars
+      setarguments$data <- data
+      
+      if (eval(setarguments$backend) == "cmdstanr") {
+        if (all(sapply("0", grepl, init_str))) {
+          setarguments$init <- 0
+          custom_init <- FALSE
+        } else if (all(sapply("random", grepl, init_str))) {
+          setarguments$init <- NULL
+          custom_init <- FALSE
+        } else {
+          setarguments$init <- init_set
+          custom_init <- TRUE
+        }
+        if (!custom_init & !is.null(init_r)) {
+          setarguments$init <- init_r
+        }
+      }
+      
+      if (eval(setarguments$backend) == "rstan") {
+        if (all(sapply("0", grepl, init_str))) {
+          setarguments$init <- "0"
+          custom_init <- FALSE
+        } else if (all(sapply("random", grepl, init_str))) {
+          setarguments$init <- "random"
+          custom_init <- FALSE
+        } else {
+          setarguments$init <- init_set
+          custom_init <- TRUE
+        }
+        if (!custom_init & !is.null(init_r)) {
+          setarguments$init_r <- init_r
+        }
+      }
+      
+      if (eval(setarguments$backend) == "rstan" | 
+          eval(setarguments$backend) == "cmdstanr") {
+        if (is.null(eval(setarguments$control))) {
+          setarguments$control <- list(adapt_delta = 0.8, max_treedepth = 15)
+        }
+        if (is.na(eval(setarguments$seed))) {
+          setarguments$seed <- seed
+        }
+        
+        cores_ <- eval(setarguments$cores)
+        threads_ <- eval(setarguments$threads)
+
+        if(cores_ == "maximise") {
+          max.cores <- 
+            as.numeric(future::availableCores(methods = "system", omit = 0))
+          if(max.cores < 1) max.cores <- 1
+        } else if(cores_ == "optimize") {
+          max.cores <- 
+            as.numeric(future::availableCores(methods = "system", omit = 1))
+          if(max.cores < 1) max.cores <- 1
+          if(max.cores > eval(setarguments$chains)) {
+            max.cores <- eval(setarguments$chains)
+          }
+        } else if(!is.null(getOption('mc.cores')) &
+                  cores_ != "maximise" &
+                  cores_ != "optimize") {
+          max.cores <- getOption('mc.cores')
+        } else {
+          max.cores <- eval(setarguments$cores)
+        }
+        setarguments$cores <-  max.cores
+        
+    
+       
+       if(!is.list(threads_)) {
+         if( is.character(threads_) & threads_ == "maximise") {
+           max.threads <- 
+             as.numeric(future::availableCores(methods = "system", omit = 0))
+           if(max.threads < 1) max.threads <- 1
+         } else if( is.character(threads_) & threads_ == "optimize") {
+           max.threads <- 
+             as.numeric(future::availableCores(methods = "system", omit = 1))
+           if(max.threads < 1) max.threads <- 1
+           max.threads <- floor(max.threads /  eval(setarguments$chains))
+         } else if(!is.null(getOption('brms.threads')) &
+                   (is.character(threads_) & threads_ != "maximise") &
+                   (is.character(threads_) & threads_ != "optimize")) {
+           max.threads <- getOption('brms.threads')
+         } else if(is.null(getOption('brms.threads')) &
+                   (is.character(threads_) & threads_ != "maximise") &
+                   (is.character(threads_) & threads_ != "optimize")) {
+           max.threads <- getOption('brms.threads')
+         } else {
+           max.threads <- eval(setarguments$cores)
+         }
+         setarguments$threads <-  threading(max.threads)
+       }
+       
+        # print(setarguments$cores)
+        # print(setarguments$threads)
+        # stop()
+      } #
+      
+      
+      if (eval(setarguments$backend) == "cmdstanr") {
+        if (is.list(eval(setarguments$stan_model_args)) &
+            eval(length(setarguments$stan_model_args)) == 0) {
+          setarguments$stan_model_args <- list(stanc_options = list("O1"))
+        }
+      }
+      
+      if (eval(setarguments$backend) == "rstan" & 
+          packageVersion("rstan") < "2.26.1") {
+        # placeholder, will be updated later when rstan > 2.26.1 on CRAN
+        # brms takes care of threads options for rstan by the version
+        setarguments$threads <- setarguments$threads 
+      }
+      
+      if (length(brmsdots) > 0) {
+        setarguments <- c(setarguments, brmsdots)
+      }
+      return(setarguments)
+    }
+  
+  # options(mc.cores = future::availableCores(methods ="system", omit = 1))
+  # options('brms.threads' = getOption("mc.cores", 1))
+  # options('brms.opencl' = NULL)
+  # options('brms.normalize' = TRUE)
+  # options('future' = FALSE)
+  # options('brms.algorithm' = "sampling")
+  # options('brms.file_refit' = "never")
+  
+  # getOption("mc.cores", 1)
+  
+  if (verbose) {
+    setmsgtxt <- paste0("\n Setting-up brms arguments")
+    if (displayit == 'msg') {
+      message(setmsgtxt)
+    } else if (displayit == 'col') {
+      col <- setcolh
+      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+    }
+  }
+  
+  brmsdots_ <- list(...)
+  
+  brm_args <-
+    setup_brms_args(
+      formula = bformula,
+      prior = brmspriors,
+      stanvars = bstanvars,
+      data = brmsdata,
+      init = brmsinits,
+      init_str = initialslist_s,
+      init_r = brmsinits_r,
+      seed,
+      verbose,
+      setarguments = brms_arguments,
+      brmsdots = brmsdots_
+    )
+  
+  
+  if (verbose) {
+    setmsgtxt <- paste0("\n Fitting model")
+    if (displayit == 'msg') {
+      message(setmsgtxt)
+    } else if (displayit == 'col') {
+      col <- setcolh
+      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+    }
+  }
+  
+  cat("\n")
+  
+  brmsfit <- do.call(brm, brm_args)
+  
+  
+  # add model info for post-processing
+  
+  model_info <- list()
+  
+  for (i in 1:length(xoffsetnamelist)) {
+    model_info[[xoffsetnamelist[[i]]]] <- xoffsetvaluelist[[i]]
+  }
+  
+  for (i in 1:length(knotsnamelist)) {
+    model_info[[knotsnamelist[[i]]]] <- knotsvaluelist[[i]]
+  }
+  
+  for (i in 1:length(fixednamelist)) {
+    model_info[[fixednamelist[[i]]]] <- fixedvaluelist[[i]]
+  }
+  
+  for (i in 1:length(randomnamelist)) {
+    model_info[[randomnamelist[[i]]]] <- randomvaluelist[[i]]
+  }
+  
+  for (i in 1:length(xfunnamelist)) {
+    model_info[[xfunnamelist[[i]]]] <- xfunvaluelist[[i]]
+  }
+  
+  for (i in 1:length(yfunnamelist)) {
+    model_info[[yfunnamelist[[i]]]] <- yfunvaluelist[[i]]
+  }
+  
+  for (i in 1:length(xxfunnamelist)) {
+    model_info[[xxfunnamelist[[i]]]] <- xxfunvaluelist[[i]]
+  }
+  
+  for (i in 1:length(yyfunnamelist)) {
+    model_info[[yyfunnamelist[[i]]]] <- yyfunvaluelist[[i]]
+  }
+  
+  for (i in 1:length(groupvarnamelist)) {
+    model_info[[groupvarnamelist[[i]]]] <- groupvarvaluelist[[i]]
+  }
+  
+  for (i in 1:length(xnamelist)) {
+    model_info[[xnamelist[[i]]]] <- xvarvaluelist[[i]]
+  }
+  
+  for (i in 1:length(ynamelist)) {
+    model_info[[ynamelist[[i]]]] <- yvarvaluelist[[i]]
+  }
+  
+  for (i in 1:length(covnamelist)) {
+    model_info[[covnamelist[[i]]]] <- covvaluelist[[i]]
+  }
+  
+  
+  model_info[[SplineFun_name]] <- SplineFun_name
+  model_info[['multivariate']] <- multivariate$mvar
+  model_info[['univariate_by']] <- univariate_by$by
+  model_info[['nys']] <- nys
+  model_info[['ys']] <- ys
+  
+  model_info[['call.bsitar']] <- mcall
+  
+  brmsfit$model_info <- model_info
+  
+  # expose Stan function
+  
+  if (expose_function) {
+    if (verbose) {
+      setmsgtxt <-
+        paste0("\n Exposing Stan functions for post-processing")
+      if (displayit == 'msg') {
+        message(setmsgtxt)
+      } else if (displayit == 'col') {
+        col <- setcolh
+        cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+      }
+    }
+    
+    
+    brmsfit <- expose_bsitar_functions(brmsfit)
+  }
+  
+  
+  if (verbose) {
+    setmsgtxt <- paste0("\nModel Fitting complete")
+    if (displayit == 'msg') {
+      message(setmsgtxt)
+    } else if (displayit == 'col') {
+      col <- setcolh
+      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+    }
+  }
+  
+  
+  attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bsitar')
+  
+  return(brmsfit)
+}

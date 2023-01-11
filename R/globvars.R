@@ -1,0 +1,58 @@
+#' \code{bsitar} package
+#'
+#' @docType package
+#' @name bsitar
+#' @importFrom dplyr %>%
+NULL
+
+## quiets concerns of R CMD check re: the .'s that appear in pipelines
+## if(getRversion() >= "2.15.1")  utils::globalVariables(c(".", ":="))
+
+
+if(getRversion() >= "2.15.1")  utils::globalVariables(
+  c(".", ":=", "<<", "deriv", "Estimate",  "Estimate.x",  "Estimate.y",   
+    "Parameter",  "Var1",  "Var2",  "VarCorr",  "a",  "a_cov_init_betasi",  
+    "a_cov_init_sdsi",  "a_cov_prior_betasi",  "a_cov_prior_sdsi", 
+    "a_form_0",  "a_formula_grsi",  "a_formulasi",  "a_init_betasi", 
+    "a_init_sdsi",  "a_prior_betasi",  "a_prior_sdsi",  "acorclass", 
+    "acovcoefnames",  "acovcoefnames_gr",  "across",  "all_of", "N_J_all", 
+    "allowed_init_options_beta",  "allowed_init_options_rate",  
+    "allowed_init_options_sd",  "apv",  "autocor_formi",  
+    "autocor_formulasi",  "autocor_init_acorsi",  "autocor_prior_acorsi", 
+    "b",  "b_cov_init_betasi",  "b_cov_init_sdsi",  "b_cov_prior_betasi", 
+    "b_cov_prior_sdsi",  "b_form_0",  "b_formula_grsi",  "b_formulasi",  
+    "b_init_betasi",  "b_init_sdsi",  "b_prior_betasi",  "b_prior_sdsi",  
+    "bcovcoefnames",  "bcovcoefnames_gr",  "boundsi",  "brm", 
+    "brms_arguments",  "bstartsi",  "c_cov_init_betasi",  "c_cov_init_sdsi", 
+    "c_cov_prior_betasi",  "c_cov_prior_sdsi",  "c_form_0",  "c_formula_grsi", 
+    "c_formulasi",  "c_init_betasi",  "c_init_sdsi",  "c_prior_betasi", 
+    "c_prior_sdsi",  "ccovcoefnames",  "ccovcoefnames_gr", 
+    "conditional_effects",  "cov_dpar",  "cov_nlpar",  "d_cov_init_betasi", 
+    "d_cov_init_sdsi",  "d_cov_prior_betasi",  "d_cov_prior_sdsi", 
+    "d_formula_grsi",  "d_formulasi",  "d_init_betasi",  "d_init_sdsi", 
+    "d_prior_betasi",  "d_prior_sdsi",  "dcovcoefnames",  "dcovcoefnames_gr",
+    "dfsi",  "dpar",  "dpar_cov_init_sigmasi",  "dpar_cov_prior_sigmasi",  
+    "dpar_formulasi",  "dpar_init_sigmasi",  "dpar_prior_sigmasi", 
+    "dparcovcoefnames",  "dy",  "familysi",  "fixedsi",  "fixef",  
+    "get_prior",  "getknotsname",  "getxname",  "gr_init_cor",  
+    "gr_init_corsi",  "gr_prior_corsi",  "group_arg_groupvar",  
+    "groupby",  "groupby.x",  "groupby.y",  "idsi",  "idvar",  
+    "ii",  "init_data",  "init_rsi",  "initsi",  "knotssi", 
+    "lkj",  "lme_sd_a",  "loo",  "make_stancode",  "make_standata",  
+    "mat_s",  "match_sitar_d_form",  "multisession",  
+    "multivariate_rescor",  "mvr_init_rescorsi",  "mvr_prior_rescorsi",  
+    "nabci",  "nabcrei",  "nacov",  "nacov_gr",  "nbcov",  "nbcov_gr",  
+    "nccov",  "nccov_gr",  "ndcov",  "ndcov_gr",  "ndparcov",  "nlpar",  
+    "normal",  "normalize",  "nrep_of_parms",  "nscov",  "nys",  "opt",  
+    "parm",  "post_processing_checks_call",  "pp_check",  "prior_argument", 
+    "prior_string",  "pstrarg",  "r_init_zsi",  "randomsi",  "ranef",  
+    "resp",  "resp_",  "rsd_init_sigmasi",  "rsd_prior_sigmasi",  
+    "s_cov_init_betasi",  "s_cov_prior_betasi",  "s_form_0",  
+    "s_formulasi",  "s_init_betasi",  "s_prior_betasi",  "scovcoefnames",  
+    "seed",  "set_rescor",  "setautocorr",  "spfncname",  "splitmvar_w2",  
+    "stancode",  "stanvar",  "stanvars_datazz",  "subindicatorsi",  "un",  
+    "uniform",  "univariate_by_by",  "verbose",  "xfunsi",  "xoffset",  
+    "xoffsetsi",  "xsi",  "xvar",  "yfunsi",  "ysi")
+  )
+
+
