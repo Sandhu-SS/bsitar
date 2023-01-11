@@ -87,6 +87,8 @@ models the biology of growth. To illustrate this we use the berkeley dataset to 
 
 We begin with a simple example using simulated data [@R-sitar]. hhh [Introduction] nnnn \@ref(Introduction) bbb [@Beath2007]
 
+simple methods
+
 ### nnn
 
 #### References
