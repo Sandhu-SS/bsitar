@@ -129,6 +129,7 @@
 #' 
 #' @importFrom rlang .data
 #'   
+#' @export gparameters.bsitar
 #' @export
 #'
 #' @examples

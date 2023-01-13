@@ -1,6 +1,0 @@
-
-
-
-define_pkgs <- c('brms', 'sitar', 'Hmisc')
-
-knitr::write_bib(define_pkgs, file = 'packages.bib')

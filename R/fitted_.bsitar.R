@@ -27,6 +27,7 @@
 #' 
 #' @inherit brms::fitted.brmsfit description return
 #' 
+#' @export fitted_.bsitar
 #' @export
 #'
 #' @examples

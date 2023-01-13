@@ -8,7 +8,7 @@ Authors@R: person(
   role = c("aut", "cre"),
   comment = c(ORCID = "0000-0002-8539-6897"))
 Description: Bayesian implementation of univariate and multivariate Super Imposition by Translation and Rotation (SITAR) growth models. The frequentist version of univariate SITAR model can be fit by using the 'sitar' package.  The SITAR is a shape-invariant model with a natural cubic spline mean curve and subject-specific random effects on both the measurement and age scales. For more information, see Cole et al (2010) <doi: 10.1093/ije/dyq115>. The 'bsitar' package is a front-end to the R package 'brms', which facilitates a range of regression specifications including hierarchical and multivariate modeling and provides an excelent framework for post-processing.
-BugReports: https://github.com/saudiwin/ordbetareg_pack/issues
+BugReports: https://github.com/Sandhu-SS/bsitar/issues.
 License: GPL-2
 Encoding: UTF-8
 LazyData: true
