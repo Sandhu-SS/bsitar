@@ -90,12 +90,12 @@
 #' @param linewidth.apv An optional character string to specify the width of 
 #' the the vertical line drawn to mark the APGV. The default \code{NULL} 
 #' will set it as 0.25.  
-#' @param linetype.groupby An optional character string to specify the line 
+#' @param linetype.groupby An optional argument to specify the line 
 #' type for the distance and velocity curves when drawing plots for a model
 #' that includes factor covariate(s) or individual specific distance/velocity
-#' curves. Default \code{NULL} will automatically sets the linetype for each 
-#' factor level or individual This will also add legends for the factor level
-#' covariate or individuals. Setting \code{linetype.groupby = NA} will set 
+#' curves (default \code{NA}). Setting it to \code{NULL} will automatically sets 
+#' the linetype for each factor level or individual This will also add legends 
+#' for the factor level covariate or individuals whereas \code{NA will set a 
 #' 'solid' line type and suppress legends. It is recommended to keep the 
 #' default \code{NULL} option when plotting population average curves for 
 #' when model included factor covariates because this would appropriately
@@ -173,7 +173,7 @@ plot_bsitar.bsitar <- function(model,
                                linetype.apv = NULL,
                                linewidth.main = NULL,
                                linewidth.apv = NULL,
-                               linetype.groupby = NULL,
+                               linetype.groupby = NA,
                                band.alpha = NULL,
                                returndata = FALSE,...) {
   if (is.null(ndraws))

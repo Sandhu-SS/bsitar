@@ -751,9 +751,9 @@ gparameters.bsitar <- function(model,
       arguments$envir <-arguments$envir_
      
       if (estimation_method == 'fitted') {
-        out_d_ <- do.call(fitted_, arguments)
+        out_d_ <- do.call(fitted_.bsitar, arguments)
       } else if (estimation_method == 'predict') {
-        out_d_ <- do.call(predict_, arguments)
+        out_d_ <- do.call(predict_.bsitar, arguments)
       }
       if (!summary) {
         out_d <- call_posterior_summary(out_d_)
@@ -810,9 +810,9 @@ gparameters.bsitar <- function(model,
       arguments$envir <-arguments$envir_
       
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_, arguments)
+        out_v_ <- do.call(fitted_.bsitar, arguments)
       } else if (estimation_method == 'predict') {
-        out_v_ <- do.call(predict_, arguments)
+        out_v_ <- do.call(predict_.bsitar, arguments)
       }
       if (!summary) {
         out_v <- call_posterior_summary(out_v_)
@@ -884,9 +884,9 @@ gparameters.bsitar <- function(model,
     arguments$envir <- parent.frame()
     
     if (estimation_method == 'fitted') {
-      out_v_ <- do.call(fitted_, arguments)
+      out_v_ <- do.call(fitted_.bsitar, arguments)
     } else if (estimation_method == 'predict') {
-      out_v_ <- do.call(predict_, arguments)
+      out_v_ <- do.call(predict_.bsitar, arguments)
     }
     if (!summary) {
       out_v <- call_posterior_summary(out_v_)
