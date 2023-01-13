@@ -95,7 +95,7 @@
 #' that includes factor covariate(s) or individual specific distance/velocity
 #' curves (default \code{NA}). Setting it to \code{NULL} will automatically sets 
 #' the linetype for each factor level or individual This will also add legends 
-#' for the factor level covariate or individuals whereas \code{NA will set a 
+#' for the factor level covariate or individuals whereas \code{NA} will set a 
 #' 'solid' line type and suppress legends. It is recommended to keep the 
 #' default \code{NULL} option when plotting population average curves for 
 #' when model included factor covariates because this would appropriately
