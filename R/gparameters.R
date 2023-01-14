@@ -211,7 +211,7 @@ gparameters.bsitar <- function(model,
   } else {
     max.cores <- eval(arguments$cores)
   }
-  arguments$cores <- cores <-  eval(max.cores)
+  arguments$cores <- cores <-  max.cores
   
   if(Sys.info()["sysname"] == "Windows") {
     .cores_ps <- 1
@@ -646,6 +646,31 @@ gparameters.bsitar <- function(model,
     }
     
     arguments[which(names(arguments) %in% "")] <- NULL
+    
+    
+    cores_ <- eval(arguments$cores)
+    if(cores_ == "maximise") {
+      max.cores <- 
+        as.numeric(future::availableCores(methods = "system", omit = 0))
+      if(max.cores < 1) max.cores <- 1
+    } else if(cores_ == "optimize") {
+      max.cores <- 
+        as.numeric(future::availableCores(methods = "system", omit = 1))
+      if(max.cores < 1) max.cores <- 1
+    } else if(!is.null(getOption('mc.cores')) &
+              cores_ != "maximise" &
+              cores_ != "optimize") {
+      max.cores <- getOption('mc.cores')
+    } else {
+      max.cores <- eval(arguments$cores)
+    }
+    arguments$cores <- cores <-  eval(max.cores)
+    
+    if(Sys.info()["sysname"] == "Windows") {
+      .cores_ps <- 1
+    } else {
+      .cores_ps <- cores
+    }
    
     list2env(arguments, envir = parent.env(new.env()))
     
