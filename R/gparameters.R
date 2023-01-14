@@ -211,7 +211,7 @@ gparameters.bsitar <- function(model,
   } else {
     max.cores <- eval(arguments$cores)
   }
-  arguments$cores <- cores <-  max.cores
+  arguments$cores <- cores <-  eval(max.cores)
   
   if(Sys.info()["sysname"] == "Windows") {
     .cores_ps <- 1

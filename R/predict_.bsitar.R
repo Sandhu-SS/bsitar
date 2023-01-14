@@ -27,6 +27,8 @@
 #' 
 #' @inherit brms::predict.brmsfit description return
 #' 
+#' @export predict_.bsitar
+#' 
 #' @export
 #'
 #' @examples
