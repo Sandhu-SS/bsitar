@@ -204,13 +204,10 @@ gparameters.bsitar <- function(model,
     max.cores <- 
       as.numeric(future::availableCores(methods = "system", omit = 1))
     if(max.cores < 1) max.cores <- 1
-  } else if(!is.null(getOption('mc.cores')) &
-            cores_ != "maximise" &
-            cores_ != "optimize") {
-    max.cores <- getOption('mc.cores')
   } else {
     max.cores <- eval(arguments$cores)
   }
+  
   arguments$cores <- cores <-  max.cores
   
   if(Sys.info()["sysname"] == "Windows") {
@@ -657,13 +654,10 @@ gparameters.bsitar <- function(model,
       max.cores <- 
         as.numeric(future::availableCores(methods = "system", omit = 1))
       if(max.cores < 1) max.cores <- 1
-    } else if(!is.null(getOption('mc.cores')) &
-              cores_ != "maximise" &
-              cores_ != "optimize") {
-      max.cores <- getOption('mc.cores')
     } else {
       max.cores <- eval(arguments$cores)
     }
+    
     arguments$cores <- cores <-  eval(max.cores)
     
     if(Sys.info()["sysname"] == "Windows") {

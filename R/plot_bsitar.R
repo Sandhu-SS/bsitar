@@ -325,7 +325,6 @@ plot_bsitar.bsitar <- function(model,
   
   
   cores_ <- eval(arguments$cores)
-  
   if(cores_ == "maximise") {
     max.cores <- 
       as.numeric(future::availableCores(methods = "system", omit = 0))
@@ -334,13 +333,10 @@ plot_bsitar.bsitar <- function(model,
     max.cores <- 
       as.numeric(future::availableCores(methods = "system", omit = 1))
     if(max.cores < 1) max.cores <- 1
-  } else if(!is.null(getOption('mc.cores')) &
-            cores_ != "maximise" &
-            cores_ != "optimize") {
-    max.cores <- getOption('mc.cores')
   } else {
     max.cores <- eval(arguments$cores)
   }
+  
   arguments$cores <- cores <-  max.cores
   
   arguments$envir_ <- parent.frame()
