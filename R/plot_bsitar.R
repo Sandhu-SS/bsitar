@@ -341,7 +341,7 @@ plot_bsitar.bsitar <- function(model,
   } else {
     max.cores <- eval(arguments$cores)
   }
-  arguments$cores <- cores <-  max.cores
+  arguments$cores <- cores <-  eval(max.cores)
   
   arguments$envir_ <- parent.frame()
   
