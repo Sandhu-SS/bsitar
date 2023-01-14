@@ -196,25 +196,36 @@ gparameters.bsitar <- function(model,
   set_names_  <- c('Estimate', 'Est.Error', probtitles)
   
   cores_ <- eval(arguments$cores)
-  if(cores_ == "maximise") {
-    max.cores <- 
-      as.numeric(future::availableCores(methods = "system", omit = 0))
-    if(max.cores < 1) max.cores <- 1
-  } else if(cores_ == "optimize") {
-    max.cores <- 
-      as.numeric(future::availableCores(methods = "system", omit = 1))
-    if(max.cores < 1) max.cores <- 1
-  } else {
-    max.cores <- eval(arguments$cores)
+  if(!is.null(cores_)) {
+    if(cores_ == "maximise") {
+      max.cores <- 
+        as.numeric(future::availableCores(methods = "system", omit = 0))
+      if(max.cores < 1) max.cores <- 1
+    } else if(cores_ == "optimize") {
+      max.cores <- 
+        as.numeric(future::availableCores(methods = "system", omit = 1))
+      if(max.cores < 1) max.cores <- 1
+    } else {
+      max.cores <- eval(arguments$cores)
+    }
+  } else if(is.null(cores_)) {
+    max.cores <- NULL
   }
+  
   
   arguments$cores <- cores <-  max.cores
   
-  if(Sys.info()["sysname"] == "Windows") {
+  if(!is.null(cores_)) {
+    if(Sys.info()["sysname"] == "Windows") {
+      .cores_ps <- 1
+    } else {
+      .cores_ps <- cores
+    }
+  } else if(is.null(cores_)) {
     .cores_ps <- 1
-  } else {
-    .cores_ps <- cores
   }
+  
+  
  
   
   # if (is.null(cores))
@@ -646,25 +657,35 @@ gparameters.bsitar <- function(model,
     
     
     cores_ <- eval(arguments$cores)
-    if(cores_ == "maximise") {
-      max.cores <- 
-        as.numeric(future::availableCores(methods = "system", omit = 0))
-      if(max.cores < 1) max.cores <- 1
-    } else if(cores_ == "optimize") {
-      max.cores <- 
-        as.numeric(future::availableCores(methods = "system", omit = 1))
-      if(max.cores < 1) max.cores <- 1
-    } else {
-      max.cores <- eval(arguments$cores)
+    if(!is.null(cores_)) {
+      if(cores_ == "maximise") {
+        max.cores <- 
+          as.numeric(future::availableCores(methods = "system", omit = 0))
+        if(max.cores < 1) max.cores <- 1
+      } else if(cores_ == "optimize") {
+        max.cores <- 
+          as.numeric(future::availableCores(methods = "system", omit = 1))
+        if(max.cores < 1) max.cores <- 1
+      } else {
+        max.cores <- eval(arguments$cores)
+      }
+    } else if(is.null(cores_)) {
+      max.cores <- NULL
     }
     
-    arguments$cores <- cores <-  eval(max.cores)
     
-    if(Sys.info()["sysname"] == "Windows") {
+    arguments$cores <- cores <-  max.cores
+    
+    if(!is.null(cores_)) {
+      if(Sys.info()["sysname"] == "Windows") {
+        .cores_ps <- 1
+      } else {
+        .cores_ps <- cores
+      }
+    } else if(is.null(cores_)) {
       .cores_ps <- 1
-    } else {
-      .cores_ps <- cores
     }
+    
    
     list2env(arguments, envir = parent.env(new.env()))
     
