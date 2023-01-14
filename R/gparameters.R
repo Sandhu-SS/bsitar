@@ -227,13 +227,9 @@ gparameters.bsitar <- function(model,
   
   
  
-  
-  # if (is.null(cores))
-  #   cores <- future::availableCores(methods = 'system') - 1
-  
   if (future) {
     if (future_session == 'multisession') {
-      future::plan(multisession, workers = cores)
+      future::plan('multisession', workers = cores)
     } else if (future_session == 'multicore') {
       future::plan('multicore', workers = cores)
     }
@@ -655,6 +651,13 @@ gparameters.bsitar <- function(model,
     
     arguments[which(names(arguments) %in% "")] <- NULL
     
+    if (future) {
+      if (future_session == 'multisession') {
+        future::plan('multisession', workers = cores)
+      } else if (future_session == 'multicore') {
+        future::plan('multicore', workers = cores)
+      }
+    }
     
     cores_ <- eval(arguments$cores)
     if(!is.null(cores_)) {

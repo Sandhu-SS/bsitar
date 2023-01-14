@@ -323,6 +323,14 @@ plot_bsitar.bsitar <- function(model,
   
   if(length(list(...)) != 0) arguments <- c(arguments, list(...))
   
+  if (future) {
+    if (future_session == 'multisession') {
+      future::plan('multisession', workers = cores)
+    } else if (future_session == 'multicore') {
+      future::plan('multicore', workers = cores)
+    }
+  }
+  
   
   cores_ <- eval(arguments$cores)
   if(!is.null(cores_)) {
