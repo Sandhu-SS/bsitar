@@ -1,0 +1,21 @@
+year <- sub("-.*", "", meta$Date)
+version_note <- sprintf("R package version %s", meta$Version)
+
+citHeader("To cite bsitar in publications please use the following citation entry:")
+          
+citEntry(entry = "Misc", 
+         title = "bsitar: Bayesian Super Imposition by Translation and Rotation Growth
+Curve Analysis.",
+         author = c(person("Satpal", "Sandhu")),
+         note = version_note,
+         year = year,
+         url = "https://github.com/Sandhu-SS/bsitar/",
+         textVersion =
+           paste0("Sandhu S. (", year, "). ",
+                 title = "bsitar: Bayesian Super Imposition by Translation and Rotation Growth
+Curve Analysis. ",
+                 version_note, " https://github.com/Sandhu-SS/bsitar.")
+)
+
+
+
