@@ -117,6 +117,7 @@
 #' @importFrom rlang .data
 #' @importFrom graphics curve
 #' 
+#' @export plot_bsitar.bsitar
 #' @export
 #'
 #' @examples
@@ -344,7 +345,7 @@ plot_bsitar.bsitar <- function(model,
   
   arguments$envir_ <- parent.frame()
   
-  d. <- do.call(gparameters, arguments)
+  d. <- do.call(gparameters.bsitar, arguments)
   
   p. <- d.[['parameters']]
   probtitles <- d.[['probtitles']]
@@ -594,7 +595,7 @@ plot_bsitar.bsitar <- function(model,
       }
       if (estimation_method == 'fitted') {
         extra$ey <-
-          fitted_(
+          fitted_.bsitar(
             model,
             newdata = extra,
             ndraws = ndraws,
@@ -603,7 +604,7 @@ plot_bsitar.bsitar <- function(model,
           )
       } else if (estimation_method == 'predict') {
         extra$ey <-
-          predict_(
+          predict_.bsitar(
             model,
             newdata = extra,
             ndraws = ndraws,
@@ -1497,9 +1498,9 @@ plot_bsitar.bsitar <- function(model,
   }
 }
 
-
 #' @rdname plot_bsitar.bsitar
 #' @export
 plot_bsitar <- function(model, ...) {
   UseMethod("plot_bsitar")
 }
+
