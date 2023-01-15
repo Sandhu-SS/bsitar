@@ -23,7 +23,7 @@
   robust = FALSE,
   future = FALSE,
   future_session = "multisession",
-  cores = getOption("mc.cores", "optimize"),
+  cores = NULL,
   trim = 0,
   layout = "single",
   linecolor = NULL,

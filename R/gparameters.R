@@ -162,7 +162,7 @@ gparameters.bsitar <- function(model,
                                seed = 123,
                                future = FALSE,
                                future_session = 'multisession',
-                               cores = getOption("mc.cores", "optimize"),
+                               cores = NULL,
                                ...) {
   if (is.null(ndraws))
     ndraws  <- ndraws(model)

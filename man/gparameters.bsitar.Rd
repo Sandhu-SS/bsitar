@@ -23,7 +23,7 @@
   seed = 123,
   future = FALSE,
   future_session = "multisession",
-  cores = getOption("mc.cores", "optimize"),
+  cores = NULL,
   ...
 )
 
