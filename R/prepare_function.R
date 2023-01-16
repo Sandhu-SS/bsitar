@@ -280,7 +280,7 @@ add_context_getknots_fun <- "
            "return(knots);",
            "\n}  "
            , paste0("// end of ", getknotsname), 
-           collapse = " ")  # %>% cat()
+           collapse = " ")
   
 add_context_getx_fun <- "
 /* Transform x variable
@@ -326,7 +326,7 @@ add_context_getx_fun <- "
            "return(x);",
            "\n}  "
            , paste0("// end of ", getxname), 
-           collapse = " ")  # %>% cat()
+           collapse = " ")
   
   
   getx_knots_fun <- paste0(getx_fun, 

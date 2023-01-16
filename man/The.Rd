@@ -72,8 +72,8 @@ effect \code{d} parameter. See \code{\link[=bsitar]{bsitar()}} function,
 \code{d_cov_prior_beta} for details.}
 
 \item{s_cov_prior_beta}{Set priors on the the covariate(s) for the fixed
-effect \code{s} parameter (i.e., spline coeficients).
-See \code{\link[=bsitar]{bsitar()}} function, \code{s_cov_prior_beta} for details.}
+effect \code{s} parameter (i.e., spline coeficients). See
+\code{\link[=bsitar]{bsitar()}} function, \code{s_cov_prior_beta} for details.}
 
 \item{a_prior_sd}{Set priors on the the group effect (i.e., random) effect
 for \code{a} parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{a_prior_sd}
@@ -91,33 +91,33 @@ for details.}
 for \code{d} parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_sd}
 for details.}
 
-\item{a_cov_prior_sd}{Set priors on the the covariate(s) for the
-group effect (i.e., random) effect for \code{a} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{a_cov_prior_sd} for details.}
+\item{a_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
+(i.e., random) effect for \code{a} parameter. See \code{\link[=bsitar]{bsitar()}}
+function, \code{a_cov_prior_sd} for details.}
 
-\item{b_cov_prior_sd}{Set priors on the the covariate(s) for the
-group effect (i.e., random) effect for \code{b} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{b_cov_prior_sd} for details.}
+\item{b_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
+(i.e., random) effect for \code{b} parameter. See \code{\link[=bsitar]{bsitar()}}
+function, \code{b_cov_prior_sd} for details.}
 
-\item{c_cov_prior_sd}{Set priors on the the covariate(s) for the
-group effect (i.e., random) effect for \code{c} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{c_cov_prior_sd} for details.}
+\item{c_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
+(i.e., random) effect for \code{c} parameter. See \code{\link[=bsitar]{bsitar()}}
+function, \code{c_cov_prior_sd} for details.}
 
-\item{d_cov_prior_sd}{Set priors on the the covariate(s) for the
-group effect (i.e., random) effect for \code{d} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{a_cov_prior_sd} for details.}
+\item{d_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
+(i.e., random) effect for \code{d} parameter. See \code{\link[=bsitar]{bsitar()}}
+function, \code{a_cov_prior_sd} for details.}
 
-\item{gr_prior_cor}{Set priors on the the group level correlation
-parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_beta} for details.}
+\item{gr_prior_cor}{Set priors on the the group level correlation parameter.
+See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_beta} for details.}
 
 \item{rsd_prior_sigma}{Set priors on the the residual standared deviation
-\code{sigma} parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{a_prior_beta}
-for details.}
+\code{sigma} parameter. See \code{\link[=bsitar]{bsitar()}} function,
+\code{a_prior_beta} for details.}
 
 \item{dpar_prior_sigma}{Set priors on the distributional \code{sigma}
 parameter (which is same as residual standared deviation for Gaussian
-distribution). See \code{\link[=bsitar]{bsitar()}} function, \code{a_prior_beta}
-for details.}
+distribution). See \code{\link[=bsitar]{bsitar()}} function, \code{a_prior_beta} for
+details.}
 
 \item{dpar_cov_prior_sigma}{Set priors on the covariates for the
 distributional \code{sigma} parameter (which is same as residual standard
@@ -128,16 +128,16 @@ deviation for Gaussian distribution). See \code{\link[=bsitar]{bsitar()}} functi
 \code{ar}, \code{ma} and \code{arma}. See \code{\link[=bsitar]{bsitar()}} function,
 \code{a_prior_beta} for details.}
 
-\item{mvr_prior_rescor}{Set priors on the the residual correlation
-parameter for multivariate model. See \code{\link[=bsitar]{bsitar()}} function,
+\item{mvr_prior_rescor}{Set priors on the the residual correlation parameter
+for multivariate model. See \code{\link[=bsitar]{bsitar()}} function,
 \code{d_prior_beta} for details.}
 
 \item{prior_data}{An optional argument as named list to pass value for prior.
 See \code{\link[=bsitar]{bsitar()}} function, \code{prior_data} for details.}
 
-\item{prior_data_internal}{An internal data frame (named list) to pass on
-the relevant information on priors from the \code{\link[=bsitar]{bsitar()}} function to
-the \code{set_priors_initials}.}
+\item{prior_data_internal}{An internal data frame (named list) to pass on the
+relevant information on priors from the \code{\link[=bsitar]{bsitar()}} function to the
+\code{set_priors_initials}.}
 
 \item{prior_args_internal}{An internal argument list that is passed from the
 \code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} and is used
@@ -150,8 +150,8 @@ the \code{\link[=bsitar]{bsitar()}} function and now passed on to the
 \item{init_data}{An optional data argument (named list) used to pass initial
 values. See \code{\link[=bsitar]{bsitar()}} function, \code{prior_data} for details.}
 
-\item{init_data_internal}{An internal data frame (named list) to pass on
-the relevant information on initials from the \code{\link[=bsitar]{bsitar()}} function to
+\item{init_data_internal}{An internal data frame (named list) to pass on the
+relevant information on initials from the \code{\link[=bsitar]{bsitar()}} function to
 the \code{set_priors_initials}.}
 
 \item{init_args_internal}{An internal argument list that is passed from the
@@ -159,15 +159,20 @@ the \code{set_priors_initials}.}
 for setting the initials.}
 }
 \value{
-An object of class \code{brmsprior} (See \code{brmsprior}).
-In addition to the priors, the returned object contains a list of initial
+An object of class \code{brmsprior} (See \code{brmsprior}). In
+addition to the priors, the returned object contains a list of initial
 values.
 }
 \description{
-The \code{set_priors_initials}) sets priors and initials values which are
-passed from the \link{bsitar} function to \code{set_priors_initials}.
-For univariate-by- subgroup model (specified by using the
-\code{univariate_by}) and multivariate model (specified by using the
-\code{multivariate}), each argument is automatically matched with
-the sub-model(s).
+Set priors and initials for fitting Bayesian SITAR growth curve model
 }
+\section{Functions}{
+\itemize{
+\item \code{set_priors_initials()}: \code{set_priors_initials}) sets priors and initials values
+which are passed from the \link{bsitar} function to
+\code{set_priors_initials}. For univariate-by- subgroup model (specified by
+using the \code{univariate_by}) and multivariate model (specified by using
+the \code{multivariate}), each argument is automatically matched with the
+sub-model(s).
+
+}}

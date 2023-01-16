@@ -43,11 +43,6 @@ prepare_formula <- function(x,
   
   
   
-  
-  # data %>% head() %>% print()
-  # stop()
-  
-  
   if (!is.null(group_arg$cor)) {
     if (group_arg$cor == "un")
       abccorr <- TRUE

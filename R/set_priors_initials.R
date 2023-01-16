@@ -1,109 +1,108 @@
 
 
-
 #' Set priors and initials for fitting Bayesian SITAR growth curve model
 #'
-#' The \code{set_priors_initials}) sets priors and initials values which are
-#' passed from the [bsitar::bsitar] function to \code{set_priors_initials}. 
-#' For univariate-by- subgroup model (specified by using the 
-#' \code{univariate_by}) and multivariate model (specified by using the 
-#' \code{multivariate}), each argument is automatically matched with 
-#' the sub-model(s).
-#' 
+#' @describeIn The \code{set_priors_initials}) sets priors and initials values
+#'   which are passed from the [bsitar::bsitar] function to
+#'   \code{set_priors_initials}. For univariate-by- subgroup model (specified by
+#'   using the \code{univariate_by}) and multivariate model (specified by using
+#'   the \code{multivariate}), each argument is automatically matched with the
+#'   sub-model(s).
 #'
-#' @param a_prior_beta Set priors on the the fixed effect \code{a} parameter. 
-#' See [bsitar::bsitar()] function, \code{a_prior_beta} for details.
-#' @param b_prior_beta Set priors on the the fixed effect \code{b} parameter. 
-#' See [bsitar::bsitar()] function, \code{b_prior_beta} for details.
-#' @param c_prior_beta Set priors on the the fixed effect \code{c} parameter. 
-#' See [bsitar::bsitar()] function, \code{c_prior_beta} for details.
-#' @param d_prior_beta Set priors on the the fixed effect \code{d} parameter. 
-#' See [bsitar::bsitar()] function, \code{d_prior_beta} for details.
+#'
+#' @param a_prior_beta Set priors on the the fixed effect \code{a} parameter.
+#'   See [bsitar::bsitar()] function, \code{a_prior_beta} for details.
+#' @param b_prior_beta Set priors on the the fixed effect \code{b} parameter.
+#'   See [bsitar::bsitar()] function, \code{b_prior_beta} for details.
+#' @param c_prior_beta Set priors on the the fixed effect \code{c} parameter.
+#'   See [bsitar::bsitar()] function, \code{c_prior_beta} for details.
+#' @param d_prior_beta Set priors on the the fixed effect \code{d} parameter.
+#'   See [bsitar::bsitar()] function, \code{d_prior_beta} for details.
 #' @param s_prior_beta Set priors on the the fixed effect \code{s} parameter
-#' (i.e., spline coeficients). See [bsitar::bsitar()] function, 
-#' \code{s_prior_beta} for details.
-#' @param a_cov_prior_beta Set priors on the the covariate(s) for the fixed 
-#' effect \code{a} parameter. See [bsitar::bsitar()] function, 
-#' \code{a_cov_prior_beta} for details.
-#' @param b_cov_prior_beta Set priors on the the covariate(s) for the fixed 
-#' effect \code{b} parameter. See [bsitar::bsitar()] function, 
-#' \code{b_cov_prior_beta} for details.
-#' @param c_cov_prior_beta Set priors on the the covariate(s) for the fixed 
-#' effect \code{c} parameter. See [bsitar::bsitar()] function, 
-#' \code{c_cov_prior_beta} for details.
-#' @param d_cov_prior_beta Set priors on the the covariate(s) for the fixed 
-#' effect \code{d} parameter. See [bsitar::bsitar()] function, 
-#' \code{d_cov_prior_beta} for details.
-#' @param s_cov_prior_beta Set priors on the the covariate(s) for the fixed 
-#' effect \code{s} parameter (i.e., spline coeficients).
-#' See [bsitar::bsitar()] function, \code{s_cov_prior_beta} for details.
-#' @param a_prior_sd Set priors on the the group effect (i.e., random) effect 
-#' for \code{a} parameter. See [bsitar::bsitar()] function, \code{a_prior_sd} 
-#' for details.
-#' @param b_prior_sd Set priors on the the group effect (i.e., random) effect 
-#' for \code{b} parameter. See [bsitar::bsitar()] function, \code{b_prior_sd} 
-#' for details.
-#' @param c_prior_sd Set priors on the the group effect (i.e., random) effect 
-#' for \code{c} parameter. See [bsitar::bsitar()] function, \code{c_prior_sd} 
-#' for details.
-#' @param d_prior_sd Set priors on the the group effect (i.e., random) effect 
-#' for \code{d} parameter. See [bsitar::bsitar()] function, \code{d_prior_sd} 
-#' for details.
-#' @param a_cov_prior_sd Set priors on the the covariate(s) for the 
-#' group effect (i.e., random) effect for \code{a} parameter.
-#' See [bsitar::bsitar()] function, \code{a_cov_prior_sd} for details.
-#' @param b_cov_prior_sd Set priors on the the covariate(s) for the 
-#' group effect (i.e., random) effect for \code{b} parameter.
-#' See [bsitar::bsitar()] function, \code{b_cov_prior_sd} for details.
-#' @param c_cov_prior_sd Set priors on the the covariate(s) for the 
-#' group effect (i.e., random) effect for \code{c} parameter.
-#' See [bsitar::bsitar()] function, \code{c_cov_prior_sd} for details.
-#' @param d_cov_prior_sd Set priors on the the covariate(s) for the 
-#' group effect (i.e., random) effect for \code{d} parameter.
-#' See [bsitar::bsitar()] function, \code{a_cov_prior_sd} for details.
-#' @param gr_prior_cor Set priors on the the group level correlation
-#' parameter. See [bsitar::bsitar()] function, \code{d_prior_beta} for details.
-#' @param rsd_prior_sigma Set priors on the the residual standared deviation 
-#' \code{sigma} parameter. See [bsitar::bsitar()] function, \code{a_prior_beta}
-#'  for details.
-#' @param dpar_prior_sigma Set priors on the distributional \code{sigma} 
-#' parameter (which is same as residual standared deviation for Gaussian 
-#' distribution). See [bsitar::bsitar()] function, \code{a_prior_beta}
-#' for details.
-#' @param dpar_cov_prior_sigma Set priors on the covariates for the 
-#' distributional \code{sigma} parameter (which is same as residual standard  
-#' deviation for Gaussian distribution). See [bsitar::bsitar()] function, 
-#' \code{a_prior_beta} for details.
+#'   (i.e., spline coeficients). See [bsitar::bsitar()] function,
+#'   \code{s_prior_beta} for details.
+#' @param a_cov_prior_beta Set priors on the the covariate(s) for the fixed
+#'   effect \code{a} parameter. See [bsitar::bsitar()] function,
+#'   \code{a_cov_prior_beta} for details.
+#' @param b_cov_prior_beta Set priors on the the covariate(s) for the fixed
+#'   effect \code{b} parameter. See [bsitar::bsitar()] function,
+#'   \code{b_cov_prior_beta} for details.
+#' @param c_cov_prior_beta Set priors on the the covariate(s) for the fixed
+#'   effect \code{c} parameter. See [bsitar::bsitar()] function,
+#'   \code{c_cov_prior_beta} for details.
+#' @param d_cov_prior_beta Set priors on the the covariate(s) for the fixed
+#'   effect \code{d} parameter. See [bsitar::bsitar()] function,
+#'   \code{d_cov_prior_beta} for details.
+#' @param s_cov_prior_beta Set priors on the the covariate(s) for the fixed
+#'   effect \code{s} parameter (i.e., spline coeficients). See
+#'   [bsitar::bsitar()] function, \code{s_cov_prior_beta} for details.
+#' @param a_prior_sd Set priors on the the group effect (i.e., random) effect
+#'   for \code{a} parameter. See [bsitar::bsitar()] function, \code{a_prior_sd}
+#'   for details.
+#' @param b_prior_sd Set priors on the the group effect (i.e., random) effect
+#'   for \code{b} parameter. See [bsitar::bsitar()] function, \code{b_prior_sd}
+#'   for details.
+#' @param c_prior_sd Set priors on the the group effect (i.e., random) effect
+#'   for \code{c} parameter. See [bsitar::bsitar()] function, \code{c_prior_sd}
+#'   for details.
+#' @param d_prior_sd Set priors on the the group effect (i.e., random) effect
+#'   for \code{d} parameter. See [bsitar::bsitar()] function, \code{d_prior_sd}
+#'   for details.
+#' @param a_cov_prior_sd Set priors on the the covariate(s) for the group effect
+#'   (i.e., random) effect for \code{a} parameter. See [bsitar::bsitar()]
+#'   function, \code{a_cov_prior_sd} for details.
+#' @param b_cov_prior_sd Set priors on the the covariate(s) for the group effect
+#'   (i.e., random) effect for \code{b} parameter. See [bsitar::bsitar()]
+#'   function, \code{b_cov_prior_sd} for details.
+#' @param c_cov_prior_sd Set priors on the the covariate(s) for the group effect
+#'   (i.e., random) effect for \code{c} parameter. See [bsitar::bsitar()]
+#'   function, \code{c_cov_prior_sd} for details.
+#' @param d_cov_prior_sd Set priors on the the covariate(s) for the group effect
+#'   (i.e., random) effect for \code{d} parameter. See [bsitar::bsitar()]
+#'   function, \code{a_cov_prior_sd} for details.
+#' @param gr_prior_cor Set priors on the the group level correlation parameter.
+#'   See [bsitar::bsitar()] function, \code{d_prior_beta} for details.
+#' @param rsd_prior_sigma Set priors on the the residual standared deviation
+#'   \code{sigma} parameter. See [bsitar::bsitar()] function,
+#'   \code{a_prior_beta} for details.
+#' @param dpar_prior_sigma Set priors on the distributional \code{sigma}
+#'   parameter (which is same as residual standared deviation for Gaussian
+#'   distribution). See [bsitar::bsitar()] function, \code{a_prior_beta} for
+#'   details.
+#' @param dpar_cov_prior_sigma Set priors on the covariates for the
+#'   distributional \code{sigma} parameter (which is same as residual standard
+#'   deviation for Gaussian distribution). See [bsitar::bsitar()] function,
+#'   \code{a_prior_beta} for details.
 #' @param autocor_prior_acor Set priors on the the autocorrelation parameters
-#' \code{ar}, \code{ma} and \code{arma}. See [bsitar::bsitar()] function, 
-#' \code{a_prior_beta} for details.
-#' @param mvr_prior_rescor Set priors on the the residual correlation
-#' parameter for multivariate model. See [bsitar::bsitar()] function, 
-#' \code{d_prior_beta} for details.
+#'   \code{ar}, \code{ma} and \code{arma}. See [bsitar::bsitar()] function,
+#'   \code{a_prior_beta} for details.
+#' @param mvr_prior_rescor Set priors on the the residual correlation parameter
+#'   for multivariate model. See [bsitar::bsitar()] function,
+#'   \code{d_prior_beta} for details.
 #' @param prior_data An optional argument as named list to pass value for prior.
-#'  See [bsitar::bsitar()] function, \code{prior_data} for details.
-#' @param prior_data_internal An internal data frame (named list) to pass on
-#' the relevant information on priors from the [bsitar::bsitar()] function to 
-#' the \code{set_priors_initials}.
-#' @param prior_args_internal An internal argument list that is passed from the 
-#' [bsitar::bsitar()] function to the \code{set_priors_initials} and is used 
-#' for setting the priors.
-#' @param init_arguments A list containing all the init arguments specified in  
-#' the [bsitar::bsitar()] function and now passed on to the 
-#' \code{set_priors_initials}.
-#' @param init_data An optional data argument (named list) used to pass initial  
-#' values. See [bsitar::bsitar()] function, \code{prior_data} for details.
-#' @param init_data_internal An internal data frame (named list) to pass on
-#' the relevant information on initials from the [bsitar::bsitar()] function to 
-#' the \code{set_priors_initials}.
-#' @param init_args_internal An internal argument list that is passed from the 
-#' [bsitar::bsitar()] function to the \code{set_priors_initials} and is used 
-#' for setting the initials.
+#'   See [bsitar::bsitar()] function, \code{prior_data} for details.
+#' @param prior_data_internal An internal data frame (named list) to pass on the
+#'   relevant information on priors from the [bsitar::bsitar()] function to the
+#'   \code{set_priors_initials}.
+#' @param prior_args_internal An internal argument list that is passed from the
+#'   [bsitar::bsitar()] function to the \code{set_priors_initials} and is used
+#'   for setting the priors.
+#' @param init_arguments A list containing all the init arguments specified in
+#'   the [bsitar::bsitar()] function and now passed on to the
+#'   \code{set_priors_initials}.
+#' @param init_data An optional data argument (named list) used to pass initial
+#'   values. See [bsitar::bsitar()] function, \code{prior_data} for details.
+#' @param init_data_internal An internal data frame (named list) to pass on the
+#'   relevant information on initials from the [bsitar::bsitar()] function to
+#'   the \code{set_priors_initials}.
+#' @param init_args_internal An internal argument list that is passed from the
+#'   [bsitar::bsitar()] function to the \code{set_priors_initials} and is used
+#'   for setting the initials.
 #'
-#' @return An object of class \code{brmsprior} (See \code{brmsprior}).
-#' In addition to the priors, the returned object contains a list of initial 
-#' values.
-#' 
+#' @return An object of class \code{brmsprior} (See \code{brmsprior}). In
+#'   addition to the priors, the returned object contains a list of initial
+#'   values.
+#'
 #' @export
 set_priors_initials <- function(a_prior_beta,
                                 b_prior_beta,
@@ -671,10 +670,12 @@ set_priors_initials <- function(a_prior_beta,
         }
       }
     } else if (class == "sigma" &
-               (class != 'b' | class != 'cor') & is.null(ndparcov)) {
+               (class != 'b' |
+                class != 'cor') & is.null(ndparcov)) {
       nrep_of_parms <- 1
     } else if (class == "" &
-               (class != 'b' | class != 'cor') & !is.null(ndparcov)) {
+               (class != 'b' |
+                class != 'cor') & !is.null(ndparcov)) {
       if (sigma_form_0) {
         nrep_of_parms <- length(dparcovcoefnames)
       } else {
@@ -686,10 +687,12 @@ set_priors_initials <- function(a_prior_beta,
       }
     } else if (setautocorr &
                class == "" &
-               (class != 'b' | class != 'cor') & is.null(ndparcov)) {
+               (class != 'b' |
+                class != 'cor') & is.null(ndparcov)) {
       nrep_of_parms <- 1
     } else if (class == "cor" &
-               (class != 'b' | class != 'sigma') & is.null(ndparcov)) {
+               (class != 'b' |
+                class != 'sigma') & is.null(ndparcov)) {
       nrep_of_parms <- 1
     } else {
       nrep_of_parms <- 1
@@ -1492,7 +1495,7 @@ set_priors_initials <- function(a_prior_beta,
         
         
         
-        # residual standard deviation (sigma) covariate prior - 
+        # residual standard deviation (sigma) covariate prior -
         # dpar_formula formulation
         
         if (!is.null(dpar_covi_mat_form) &
@@ -1619,13 +1622,13 @@ set_priors_initials <- function(a_prior_beta,
         initial_in = initial_in
       )
     return(out_pr)
-  } # eval_prior_args(a_prior_pa)
+  } 
   
   
   
   # use following custom order
   # This order ensures that corresponding initial arguments are matched
-  # with sequence or prior argument evaluation
+  # with the sequence of prior argument evaluation
   
   custom_order_prior <- c(
     'a_prior_beta',
@@ -1691,8 +1694,6 @@ set_priors_initials <- function(a_prior_beta,
     eval(parse(text = paste(svardatalistlist, collapse = "+")))
   
   attr(evaluated_priors, 'stanvars') <- stanvars
-  
-  # arrange initials values returned from the prior function
   
   initial_in_datazz <- initial_in_data
   
@@ -1810,9 +1811,8 @@ set_priors_initials <- function(a_prior_beta,
       combined_inits <- c(combined_inits, list_ck_rescor)
     }
     
-    # convert vector of 's' initials to named individual
-    # 's' element initials (s1, s2)
-    
+    # convert vector of 's' initials to named individual (s1, s2)
+
     nlpar_s_init <- paste0('_s', 1:df)
     if (grepl("~0", s_formulasi, fixed = T)) {
       nlpar_s_init <-
@@ -1853,7 +1853,7 @@ set_priors_initials <- function(a_prior_beta,
         names(combined_inits)
       ))
     combined_inits <-
-      combined_inits[!names(combined_inits) %in% paste0("", 
+      combined_inits[!names(combined_inits) %in% paste0("",
                                                         subset_sparms_name, "")]
     initials <- combined_inits
   }
@@ -1864,33 +1864,37 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   ###################3
-  
-  # initials <<- initials
-  # txnames <<- names(unlist(stanvars))
-  # stanvars <<- stanvars
-  # stanvar_priors_names <<- names(stanvars)
-  
+
   stanvar_priors_names <- names(stanvars)
   getaux <- "tau"
   stanvar_priors_names_c <- c()
   for (stanvar_priors_namesi in stanvar_priors_names) {
-    t <- stanvar_priors_namesi[grep(paste0(getaux, '_scale', resp_), stanvar_priors_namesi)]
+    t <-
+      stanvar_priors_namesi[grep(paste0(getaux, '_scale', resp_), 
+                                 stanvar_priors_namesi)]
     t <- gsub(paste0('_scale', resp_), "", t, fixed = T)
     stanvar_priors_names_c <- c(stanvar_priors_names_c, t)
   }
-  # stanvar_priors_names_c <<- stanvar_priors_names_c
+  
   add_tau <- list()
   for (stanvar_priors_names_ci in stanvar_priors_names_c) {
-    fstandat <- unlist(stanvars)[grep(paste0(stanvar_priors_names_ci, paste0('_scale', resp_, ".sdata")), names(unlist(stanvars)))] %>% as.numeric()
-    add_tau[[paste0(stanvar_priors_names_ci, resp_)]] <- # fstandat
+    fstandat <-
+      unlist(stanvars)[grep(paste0(
+        stanvar_priors_names_ci,
+        paste0('_scale', resp_, ".sdata")
+      ), names(unlist(stanvars)))] %>% as.numeric()
+    add_tau[[paste0(stanvar_priors_names_ci, resp_)]] <-
       rep(1, length(fstandat))
   }
- if(length(add_tau) == 0) add_tau <- NULL
+  if (length(add_tau) == 0)
+    add_tau <- NULL
   
   getaux <- "nu"
   stanvar_priors_names_c <- c()
   for (stanvar_priors_namesi in stanvar_priors_names) {
-    t <- stanvar_priors_namesi[grep(paste0(getaux, '_scale', resp_), stanvar_priors_namesi)]
+    t <-
+      stanvar_priors_namesi[grep(paste0(getaux, '_scale', resp_), 
+                                 stanvar_priors_namesi)]
     t <- gsub(paste0('_scale', resp_), "", t, fixed = T)
     stanvar_priors_names_c <- c(stanvar_priors_names_c, t)
   }
@@ -1898,46 +1902,51 @@ set_priors_initials <- function(a_prior_beta,
   for (stanvar_priors_names_ci in stanvar_priors_names_c) {
     add_nu[[paste0(stanvar_priors_names_ci, resp_)]] <-  5
   }
-  if(length(add_nu) == 0) add_nu <- NULL
-  
-  # add_tau <<- add_tau
+  if (length(add_nu) == 0)
+    add_nu <- NULL
+
   initials <- c(initials, add_tau, add_nu)
-  #initials <<- initials
-  
-  
+
   ################
   revSubstr <- function(x_) {
     x__ <- substr(x_, start = 1, stop = 3)
-      x___ <- paste0(rev(strsplit(x__, "_")[[1]]), collapse = "_")
-      x___ <- gsub(x__, x___, x_)
+    x___ <- paste0(rev(strsplit(x__, "_")[[1]]), collapse = "_")
+    x___ <- gsub(x__, x___, x_)
     x___
   }
- 
+  
   tau_nu_init_list <- c(add_tau, add_nu)
   
-  if(length(tau_nu_init_list) != 0) {
+  if (length(tau_nu_init_list) != 0) {
     names_tau_nu_parms <- names(tau_nu_init_list)
     names_tau_nu_parmsi_c <- c()
     for (names_tau_nu_parmsi in names_tau_nu_parms) {
       plength <- length(tau_nu_init_list[[names_tau_nu_parmsi]])
       revstr <- revSubstr(names_tau_nu_parmsi)
-      if(!grepl("^b_b", names_tau_nu_parmsi, fixed = F)) {
-        o <- paste0("vector[", plength, "]", " ",  revstr, " = ", names_tau_nu_parmsi, ";")
+      if (!grepl("^b_b", names_tau_nu_parmsi, fixed = F)) {
+        o <-
+          paste0("vector[",
+                 plength,
+                 "]",
+                 " ",
+                 revstr,
+                 " = ",
+                 names_tau_nu_parmsi,
+                 ";")
         names_tau_nu_parmsi_c <- c(names_tau_nu_parmsi_c, o)
       }
     }
-    names_tau_nu_parmsi_c <<- names_tau_nu_parmsi_c
-    names_tau_nu_parmsi_cc <- paste(names_tau_nu_parmsi_c, collapse = "\n")
-    if(ii == 1) {
-     # names_tau_nu_parmsi_cc <- paste0("\\\\ monitoring of auxillary parameters ", "\n", names_tau_nu_parmsi_cc)
-    }
-    scode_auxillary <- stanvar(scode = names_tau_nu_parmsi_cc, block = "genquant", position = 'end')
-  } else if(length(tau_nu_init_list) == 0) {
+    names_tau_nu_parmsi_c <- names_tau_nu_parmsi_c
+    names_tau_nu_parmsi_cc <-
+      paste(names_tau_nu_parmsi_c, collapse = "\n")
+    
+    scode_auxillary <-
+      stanvar(scode = names_tau_nu_parmsi_cc,
+              block = "genquant",
+              position = 'end')
+  } else if (length(tau_nu_init_list) == 0) {
     scode_auxillary <- NULL
   }
-  
-  ################
-  # stop()
   
   ##################
   

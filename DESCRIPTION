@@ -35,7 +35,8 @@ Imports:
     future,
     future.apply,
     jtools,
-    patchwork    
+    patchwork,
+    Rdpack  
 Suggests: 
     testthat (>= 3.0.0),
     emmeans (>= 1.4.2),
@@ -51,6 +52,7 @@ Suggests:
     R.rsp,
     processx,
     Rcpp (>= 0.12.0)
+RdMacros: Rdpack
 Additional_repositories:
     https://mc-stan.org/r-packages/
 VignetteBuilder:
