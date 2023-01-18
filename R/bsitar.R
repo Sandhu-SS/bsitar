@@ -849,6 +849,7 @@
 #'@import brms
 #'
 #'@export
+#'
 bsitar <- function(x,
                    y,
                    id,

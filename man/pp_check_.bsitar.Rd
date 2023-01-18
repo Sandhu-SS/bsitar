@@ -24,8 +24,8 @@ function. Please see \code{brms::pp_check.brmsfit} for details on
 various options available.}
 }
 \value{
-A ggplot object that can be further
- customized using the \pkg{ggplot2} package.
+A ggplot object that can be further customized using the
+ggplot2 package.
 }
 \description{
 Perform posterior predictive checks with the help
@@ -37,6 +37,7 @@ the \link[brms:loo.brmsfit]{brms::loo} and works exactly the same way as
 \link[brms:pp_check.brmsfit]{brms::pp_check.brmsfit}.
 }
 \examples{
+
 \dontrun{
 pp_check_(model)
 }

@@ -29,24 +29,8 @@ function. Please see \code{brms::fitted.brmsfit} for details on
 various options available.}
 }
 \value{
-An \code{array} of predicted \emph{mean} response values.
-  If \code{summary = FALSE} the output resembles those of
-  \code{\link[brms]{posterior_epred.brmsfit}}.
-
-  If \code{summary = TRUE} the output depends on the family: For categorical
-  and ordinal families, the output is an N x E x C array, where N is the
-  number of observations, E is the number of summary statistics, and C is the
-  number of categories. For all other families, the output is an N x E
-  matrix. The number of summary statistics E is equal to \code{2 +
-  length(probs)}: The \code{Estimate} column contains point estimates (either
-  mean or median depending on argument \code{robust}), while the
-  \code{Est.Error} column contains uncertainty estimates (either standard
-  deviation or median absolute deviation depending on argument
-  \code{robust}). The remaining columns starting with \code{Q} contain
-  quantile estimates as specified via argument \code{probs}.
-
-  In multivariate models, an additional dimension is added to the output
-  which indexes along the different response variables.
+An array of predicted mean response values. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit}
+for details.
 }
 \description{
 This method is an alias of \code{\link[brms]{posterior_epred.brmsfit}}

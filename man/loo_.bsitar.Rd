@@ -24,8 +24,8 @@ function. Please see \code{brms::loo} for details on
 various options available.}
 }
 \value{
-If just one object is provided, an object of class \code{loo}.
- If multiple objects are provided, an object of class \code{loolist}.
+If just one object is provided, an object of class \code{loo}. If
+multiple objects are provided, an object of class \code{loolist}.
 }
 \description{
 Perform approximate leave-one-out cross-validation based

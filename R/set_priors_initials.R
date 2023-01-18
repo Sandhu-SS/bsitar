@@ -2,7 +2,7 @@
 
 #' Set priors and initials for fitting Bayesian SITAR growth curve model
 #'
-#' @describeIn The \code{set_priors_initials}) sets priors and initials values
+#' @description The \code{set_priors_initials}) sets priors and initials values
 #'   which are passed from the [bsitar::bsitar] function to
 #'   \code{set_priors_initials}. For univariate-by- subgroup model (specified by
 #'   using the \code{univariate_by}) and multivariate model (specified by using
@@ -104,6 +104,7 @@
 #'   values.
 #'
 #' @export
+#' 
 set_priors_initials <- function(a_prior_beta,
                                 b_prior_beta,
                                 c_prior_beta,

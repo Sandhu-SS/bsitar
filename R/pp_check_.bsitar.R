@@ -16,11 +16,15 @@
 #' function. Please see \code{brms::pp_check.brmsfit} for details on 
 #' various options available.
 #' 
-#' @inherit brms::pp_check.brmsfit description return
+#' @inherit brms::pp_check.brmsfit description 
+#' 
+#' @return A ggplot object that can be further customized using the
+#' ggplot2 package.
 #' 
 #' @export
 #'
 #' @examples
+#' 
 #' \dontrun{
 #' pp_check_(model)
 #' }

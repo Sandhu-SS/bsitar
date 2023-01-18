@@ -24,6 +24,7 @@
 #' @importFrom stats rnorm runif rcauchy rexp rlnorm rgamma rlnorm
 #' 
 #' @export
+#' 
 prepare_initials <- function(init_argument,
                              init_internal_args) {
   if (!is.null(init_internal_args)) {

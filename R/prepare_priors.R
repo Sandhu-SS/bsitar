@@ -42,6 +42,7 @@
 #' @seealso [brms::brm] [brms::prior]
 #' 
 #' @export
+#' 
 prepare_priors <- function(prior_argument,
                            prior_data,
                            prior_data_internal,

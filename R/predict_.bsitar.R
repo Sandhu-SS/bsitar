@@ -25,7 +25,10 @@
 #' function. Please see \code{brms::predict.brmsfit} for details on 
 #' various options available.
 #' 
-#' @inherit brms::predict.brmsfit description return
+#' @inherit brms::predict.brmsfit description 
+#' 
+#' @return An array of predicted response values. See [brms::predict.brmsfit] 
+#' for details.
 #' 
 #' @export predict_.bsitar
 #' 

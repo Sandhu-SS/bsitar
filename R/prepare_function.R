@@ -22,6 +22,7 @@
 #'   and inserted into the Stan's functions block.
 #'
 #' @export
+#' 
 prepare_function <- function(x,
                              y,
                              id,

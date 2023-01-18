@@ -34,19 +34,9 @@ model estimated curve(s)). A 0 value (default) is for distance curve and
 function. Please see \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} for details.}
 }
 \value{
-An object of class \code{'brms_conditional_effects'} which is a
-  named list with one data.frame per effect containing all information
-  required to generate conditional effects plots. Among others, these
-  data.frames contain some special variables, namely \code{estimate__}
-  (predicted values of the response), \code{se__} (standard error of the
-  predicted response), \code{lower__} and \code{upper__} (lower and upper
-  bounds of the uncertainty interval of the response), as well as
-  \code{cond__} (used in faceting when \code{conditions} contains multiple
-  rows).
-
-  The corresponding \code{plot} method returns a named
-  list of \code{\link{ggplot}} objects, which can be further
-  customized using the \pkg{ggplot2} package.
+An object of class 'brms_conditional_effects' which is a named list
+with one data.frame per effect containing all information required to
+generate conditional effects plots. See brms::conditional_effects for details.
 }
 \description{
 Display conditional effects of one or more numeric and/or categorical

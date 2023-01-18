@@ -32,7 +32,11 @@
 #' @param ... Additional arguments passed to the [brms::conditional_effects()] 
 #' function. Please see [brms::conditional_effects()] for details.
 #'
-#' @inherit brms::conditional_effects description return
+#' @inherit brms::conditional_effects description 
+#' 
+#' @return An object of class 'brms_conditional_effects' which is a named list
+#'   with one data.frame per effect containing all information required to
+#'   generate conditional effects plots. See brms::conditional_effects for details.
 #' 
 #' @export
 #'

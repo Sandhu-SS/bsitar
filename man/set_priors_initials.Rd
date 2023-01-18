@@ -164,15 +164,10 @@ addition to the priors, the returned object contains a list of initial
 values.
 }
 \description{
-Set priors and initials for fitting Bayesian SITAR growth curve model
-}
-\section{Functions}{
-\itemize{
-\item \code{set_priors_initials()}: \code{set_priors_initials}) sets priors and initials values
+The \code{set_priors_initials}) sets priors and initials values
 which are passed from the \link{bsitar} function to
 \code{set_priors_initials}. For univariate-by- subgroup model (specified by
 using the \code{univariate_by}) and multivariate model (specified by using
 the \code{multivariate}), each argument is automatically matched with the
 sub-model(s).
-
-}}
+}

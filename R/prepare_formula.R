@@ -27,6 +27,7 @@
 #' @importFrom nlme lme
 #'   
 #' @export
+#' 
 prepare_formula <- function(x,
                             y,
                             id,

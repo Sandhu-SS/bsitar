@@ -118,6 +118,7 @@
 #' @importFrom graphics curve
 #' 
 #' @export plot_bsitar.bsitar
+#' 
 #' @export
 #'
 #' @examples
