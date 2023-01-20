@@ -458,13 +458,13 @@
 #'  only allowed distribution is uniform distribution bounded between -1 and +
 #'  1.
 #'  
-#'@param mvr_prior_rescor set priors on the the residual correlations for
-#'  multivariate model. The allowed distribution is lkj which has a single
+#'@param gr_prior_cor set priors on the the correlations of group-level
+#'  ('random') effects. The allowed distribution is lkj which has a single
 #'  parameter eta to control the priors on correlation parameters (see
 #'  \code{brms::prior} for details).
 #'  
-#'@param gr_prior_cor set priors on the the correlations of group-level
-#'  ('random') effects. The allowed distribution is lkj which has a single
+#'@param mvr_prior_rescor set priors on the the residual correlations for
+#'  multivariate model. The allowed distribution is lkj which has a single
 #'  parameter eta to control the priors on correlation parameters (see
 #'  \code{brms::prior} for details).
 #'  
@@ -850,6 +850,7 @@
 #'
 #'@export
 #'
+
 bsitar <- function(x,
                    y,
                    id,
@@ -913,9 +914,9 @@ bsitar <- function(x,
                    init = NULL,
                    init_r = NULL,
                    a_init_beta = lm,
-                   b_init_beta = lm,
-                   c_init_beta = lm,
-                   d_init_beta = lm,
+                   b_init_beta = 0.001,
+                   c_init_beta = 0.001,
+                   d_init_beta = 0.001,
                    s_init_beta = lm,
                    a_cov_init_beta = lm,
                    b_cov_init_beta = lm,
@@ -957,7 +958,7 @@ bsitar <- function(x,
                    algorithm = getOption("brms.algorithm", "sampling"),
                    control = list(adapt_delta = 0.8, max_treedepth = 15),
                    sample_prior = "no",
-                   save_all_pars = NULL,
+                   save_pars = NULL,
                    drop_unused_levels = TRUE,
                    stan_model_args = list(),
                    silent = 1,
@@ -968,7 +969,7 @@ bsitar <- function(x,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
                    ...) {
-  mcall <- match.call()
+  mcall <- mcall_ <- match.call()
   
   # check and update if argument value taken from the global environment
   # x,y,id and data are always taken from the data, thus excluded from checks
@@ -1019,6 +1020,7 @@ bsitar <- function(x,
   
   
   
+  
   arguments <- as.list(mcall)[-1]
   
   
@@ -1030,6 +1032,31 @@ bsitar <- function(x,
     intersect(names(arguments), names(f_bsitar_arg))
   arguments <-
     c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
+  
+  # arguments <<- arguments
+  # mcall_ <<- mcall_
+  
+  for (ip in names(arguments)) {
+    if (grepl("_init_", ip)) {
+      d_mcall_ <- deparse(mcall_[[ip]])
+      if(is.symbol(mcall_[[ip]])) {
+        arguments[[ip]] <- d_mcall_
+      } else if(grepl("c(", d_mcall_, fixed = T)) {
+        arguments[[ip]] <- gsub("c(", "list(", d_mcall_, fixed = T)
+      } else if(grepl("list(", d_mcall_, fixed = T)) {
+        arguments[[ip]] <- mcall_[[ip]]
+      }
+    }
+  }
+  
+  # arguments2 <<- arguments
+   
+  # mcall_ <<- mcall_
+  # zz <<- deparse(mcall_$b_init_beta)
+  # arguments$b_init_beta <- zz
+  # 
+  # zxxx <<- arguments
+  
   
   
   # separate OUT 'brms' arguments from 'bsitar' arguments for ease of handling
@@ -1049,19 +1076,14 @@ bsitar <- function(x,
       'control',
       'sample_prior',
       'save_pars',
-      'save_ranef',
-      'save_mevars',
-      'save_all_pars',
       'drop_unused_levels',
       'stan_model_args',
-      'empty',
       'silent',
       'seed',
       'save_model',
       'fit',
       'file',
       'file_refit',
-      'rename',
       'future'
     )
   
@@ -1815,6 +1837,7 @@ bsitar <- function(x,
   convert_to_list <- getArgNames(bsitar())
   
   
+  
   for (ip in convert_to_list) {
     if (grepl("_init_", ip)) {
       err. <- FALSE
@@ -1897,11 +1920,10 @@ bsitar <- function(x,
   
   # prepare data for 'bsitar'
   
-  make_bsitar_data <- function(data, univariate_by, ys, ...) {
+  make_bsitar_data <- function(data, uvarby, ys, verbose = FALSE, ...) {
     org.ys <- ys
     org.data <- data
-    if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
-      uvarby <- univariate_by$by
+    if (!(is.na(uvarby) | uvarby == "NA")) {
       if (!uvarby %in% colnames(data)) {
         stop(
           paste(
@@ -1917,7 +1939,7 @@ bsitar <- function(x,
              "' should be a factor variable")
       }
       for (l in levels(data[[uvarby]])) {
-        data[[l]] <- data[[ys[1]]] # data[["y"]]
+        data[[l]] <- data[[ys[1]]]
       }
       unibyimat <-
         model.matrix( ~ 0 + eval(parse(text = uvarby)), data)
@@ -1925,7 +1947,7 @@ bsitar <- function(x,
       colnames(unibyimat) <- subindicators
       ys <- levels(data[[uvarby]])
       data <- as.data.frame(cbind(data, unibyimat))
-      if (univariate_by$verbose) {
+      if (verbose) {
         resvcts_ <- levels(data[[uvarby]])
         resvcts <- paste0(resvcts_, collapse = " ")
         setmsgtxt <- paste0(
@@ -1978,10 +2000,11 @@ bsitar <- function(x,
     }
   }
   
-  data <- make_bsitar_data(data, univariate_by, ys)
+  org.ycall <- ys[1]
+  
+  data <- make_bsitar_data(data, univariate_by$by, ys, univariate_by$verbose)
   ys <- attr(data, "ys")
   subindicators <- attr(data, "subindicators")
-  
   
   # Initiate loop over outcome(s) First, create empty lists, vector etc. to
   # collect elements
@@ -2223,6 +2246,19 @@ bsitar <- function(x,
     N_J_all <- length(unique(data[[idsi]]))
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+      sortbylevels <- NA
+      data <- data %>%
+        dplyr::mutate(sortbylevels =
+                        forcats::fct_relevel(!!as.name(univariate_by$by),
+                                             (levels(
+                                               !!as.name(univariate_by$by)
+                                             )))) %>%
+        dplyr::arrange(sortbylevels) %>%
+        dplyr::mutate(!!as.name(idsi) := factor(!!as.name(idsi),
+                                                levels = 
+                                                  unique(!!as.name(idsi))))
+      
+      
       datai <- data %>%
         dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
         droplevels()
@@ -2424,6 +2460,11 @@ bsitar <- function(x,
     bstart <-
       eval_xoffset_bstart_args(xsi, ysi, knots, datai, bstartsi, xfunsi)
     bstart <- bstart - xoffset
+    
+    # setbstart <- bstart
+    
+    # assign('bstart', setbstart)
+    # rm(bstart)
     
     xoffset <- round(xoffset, 4)
     datai[[xsi]] <- datai[[xsi]] - xoffset
@@ -2731,11 +2772,11 @@ bsitar <- function(x,
         b_cov_init_sd = b_cov_init_sdsi,
         c_cov_init_sd = c_cov_init_sdsi,
         d_cov_init_sd = d_cov_init_sdsi,
-        gr_init_cor = gr_init_corsi,
         rsd_init_sigma = rsd_init_sigmasi,
         dpar_init_sigma = dpar_init_sigmasi,
         dpar_cov_init_sigma = dpar_cov_init_sigmasi,
         autocor_init_acor = autocor_init_acorsi,
+        gr_init_cor = gr_init_corsi,
         mvr_init_rescor = mvr_init_rescorsi,
         r_init_z = r_init_zsi
       )
@@ -2773,12 +2814,12 @@ bsitar <- function(x,
         b_cov_prior_sdsi,
         c_cov_prior_sdsi,
         d_cov_prior_sdsi,
+        gr_prior_corsi,
         rsd_prior_sigmasi,
         dpar_prior_sigmasi,
         dpar_cov_prior_sigmasi,
         autocor_prior_acorsi,
         mvr_prior_rescorsi,
-        gr_prior_corsi,
         prior_data,
         prior_data_internal,
         prior_args_internal,
@@ -3356,7 +3397,7 @@ bsitar <- function(x,
         
         cores_ <- eval(setarguments$cores)
         threads_ <- eval(setarguments$threads)
-
+        
         if(cores_ == "maximise") {
           max.cores <- 
             as.numeric(future::availableCores(methods = "system", omit = 0))
@@ -3377,32 +3418,32 @@ bsitar <- function(x,
         }
         setarguments$cores <-  max.cores
         
-    
-       
-       if(!is.list(threads_)) {
-         if( is.character(threads_) & threads_ == "maximise") {
-           max.threads <- 
-             as.numeric(future::availableCores(methods = "system", omit = 0))
-           if(max.threads < 1) max.threads <- 1
-         } else if( is.character(threads_) & threads_ == "optimize") {
-           max.threads <- 
-             as.numeric(future::availableCores(methods = "system", omit = 1))
-           if(max.threads < 1) max.threads <- 1
-           max.threads <- floor(max.threads /  eval(setarguments$chains))
-         } else if(!is.null(getOption('brms.threads')) &
-                   (is.character(threads_) & threads_ != "maximise") &
-                   (is.character(threads_) & threads_ != "optimize")) {
-           max.threads <- getOption('brms.threads')
-         } else if(is.null(getOption('brms.threads')) &
-                   (is.character(threads_) & threads_ != "maximise") &
-                   (is.character(threads_) & threads_ != "optimize")) {
-           max.threads <- getOption('brms.threads')
-         } else {
-           max.threads <- eval(setarguments$cores)
-         }
-         setarguments$threads <-  threading(max.threads)
-       }
-       
+        
+        
+        if(!is.list(threads_)) {
+          if( is.character(threads_) & threads_ == "maximise") {
+            max.threads <- 
+              as.numeric(future::availableCores(methods = "system", omit = 0))
+            if(max.threads < 1) max.threads <- 1
+          } else if( is.character(threads_) & threads_ == "optimize") {
+            max.threads <- 
+              as.numeric(future::availableCores(methods = "system", omit = 1))
+            if(max.threads < 1) max.threads <- 1
+            max.threads <- floor(max.threads /  eval(setarguments$chains))
+          } else if(!is.null(getOption('brms.threads')) &
+                    (is.character(threads_) & threads_ != "maximise") &
+                    (is.character(threads_) & threads_ != "optimize")) {
+            max.threads <- getOption('brms.threads')
+          } else if(is.null(getOption('brms.threads')) &
+                    (is.character(threads_) & threads_ != "maximise") &
+                    (is.character(threads_) & threads_ != "optimize")) {
+            max.threads <- getOption('brms.threads')
+          } else {
+            max.threads <- eval(setarguments$cores)
+          }
+          setarguments$threads <-  threading(max.threads)
+        }
+        
         # print(setarguments$cores)
         # print(setarguments$threads)
         # stop()
@@ -3478,7 +3519,7 @@ bsitar <- function(x,
   }
   
   cat("\n")
-  
+  # brm_args <<- brm_args
   brmsfit <- do.call(brm, brm_args)
   
   
@@ -3534,6 +3575,11 @@ bsitar <- function(x,
     model_info[[covnamelist[[i]]]] <- covvaluelist[[i]]
   }
   
+  if(!is.na(univariate_by$by)) {
+    model_info[['make_bsitar_data']] <- make_bsitar_data
+    model_info[['org.ycall']] <- org.ycall
+    model_info[['subindicators']] <- subindicators
+  } 
   
   model_info[[SplineFun_name]] <- SplineFun_name
   model_info[['multivariate']] <- multivariate$mvar
@@ -3541,7 +3587,7 @@ bsitar <- function(x,
   model_info[['nys']] <- nys
   model_info[['ys']] <- ys
   
-  model_info[['call.bsitar']] <- mcall
+  model_info[['call.bsitar']] <- mcall_
   
   brmsfit$model_info <- model_info
   

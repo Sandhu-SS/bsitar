@@ -43,7 +43,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "seed",  "set_rescor",  "setautocorr",  "spfncname",  "splitmvar_w2",  
     "stancode",  "stanvar",  "stanvars_datazz",  "subindicatorsi",  "un",  
     "uniform",  "univariate_by_by",  "verbose",  "xfunsi",  "xoffset",  
-    "xoffsetsi",  "xsi",  "xvar",  "yfunsi",  "ysi")
+    "xoffsetsi",  "xsi",  "xvar",  "yfunsi",  "ysi",
+    "newdatauvarby", "univariate_by")
   )
 
 

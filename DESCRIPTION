@@ -41,7 +41,8 @@ Imports:
     rstan (>= 2.21.2),
     sitar,
     stats,
-    utils
+    utils,
+    forcats
 Suggests: 
     bookdown,
     knitr,
