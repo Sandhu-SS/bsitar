@@ -62,6 +62,11 @@ run: |
 cmdstanr::install_cmdstan(cores = parallel::detectCores())
 shell: Rscript {0}
 
+- name: Build rstan
+        run: |
+          install.packages("rstan", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+        shell: Rscript {0}
+
 - name: Test coverage
 run: covr::codecov()
 shell: Rscript {0}

@@ -49,7 +49,6 @@ Suggests:
     R.rsp,
     rmarkdown,
     testthat (>= 3.0.0)
-LinkingTo: StanHeaders (>= 2.26.6), rstan (>= 2.26.6)
 VignetteBuilder:
     knitr,
     R.rsp
