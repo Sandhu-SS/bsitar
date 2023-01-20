@@ -78,6 +78,11 @@ jobs:
           cmdstanr::install_cmdstan(cores = parallel::detectCores())
         shell: Rscript {0}
 
+      - name: Build rstan
+        run: |
+          install.packages("rstan", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+        shell: Rscript {0}
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           build_args: 'c("--no-manual", "--no-build-vignettes")'
