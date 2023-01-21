@@ -168,278 +168,50 @@ gparameters.bsitar <- function(model,
     ndraws  <- ndraws(model)
   else
     ndraws <- ndraws
-  if (is.null(newdata))
-    newdata <- model$data
-  else
-    newdata <- newdata
+  
   
   oo <- post_processing_checks(model = model,
-                         xcall = match.call(),
-                         resp = resp)
+                               xcall = match.call(),
+                               resp = resp)
   
   
-  if(!is.na(model$model_info$univariate_by)) {
-    subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-  }
-  
-  
-  # if(!is.na(model$model_info$univariate_by)) {
-  #   newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
-  #                                                model$model_info$univariate_by,
-  #                                                model$model_info$org.ycall)
-  # 
-  #   subindicatorsi <<- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-  #   # newdata <- newdata %>%
-  #   #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
-  #   #   droplevels()
-  # }
-  
-  # print(newdata)
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
-  get_args_ <- function(arguments, xcall) {
-    `%!in%` <- Negate(`%in%`)
-    f_bsitar_arg <- formals(paste0(xcall, '.bsitar'))
-    nf_bsitar_arg_names <-
-      intersect(names(arguments), names(f_bsitar_arg))
-    arguments <-
-      c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
-    arguments
-  }
-  
   arguments <- get_args_(as.list(match.call())[-1], xcall)
- 
-  if(xcall == 'plot_bsitar') arguments$plot <- TRUE else arguments$plot <- FALSE
   
+  if(xcall == 'plot_bsitar') arguments$plot <- TRUE else arguments$plot <- FALSE
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', 'Est.Error', probtitles)
   
-  cores_ <- eval(arguments$cores)
-  if(!is.null(cores_)) {
-    if(cores_ == "maximise") {
-      max.cores <- 
-        as.numeric(future::availableCores(methods = "system", omit = 0))
-      if(max.cores < 1) max.cores <- 1
-    } else if(cores_ == "optimize") {
-      max.cores <- 
-        as.numeric(future::availableCores(methods = "system", omit = 1))
-      if(max.cores < 1) max.cores <- 1
-    } else {
-      max.cores <- eval(arguments$cores)
-    }
-  } else if(is.null(cores_)) {
-    max.cores <- NULL
-  }
-  arguments$cores <- cores <-  max.cores
+  #setincores <- NULL
+  get.cores_ <- get.cores(arguments$cores)
+  arguments$cores <- setincores <-  get.cores_[['max.cores']] 
+  .cores_ps <- get.cores_[['.cores_ps']]
   
-  if(!is.null(cores_)) {
-    if(Sys.info()["sysname"] == "Windows") {
-      .cores_ps <- 1
-    } else {
-      .cores_ps <- cores
-    }
-  } else if(is.null(cores_)) {
-    .cores_ps <- 1
-  }
-  
-  
- 
   if (future) {
     if (future_session == 'multisession') {
-      future::plan('multisession', workers = cores)
+      future::plan('multisession', workers = setincores)
     } else if (future_session == 'multicore') {
-      future::plan('multicore', workers = cores)
+      future::plan('multicore', workers = setincores)
     }
   }
   
+  newdata <- get.newdata(model, newdata = newdata, resp = resp)
+  list_c <- attr(newdata, 'list_c')
+  for (list_ci in names(list_c)) {
+    assign(list_ci, list_c[[list_ci]])
+  }
+  check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+               'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
   
-  
-  # if (is.null(resp)) {
-  #   resp_rev_ <- resp
-  # } else if (!is.null(resp)) {
-  #   resp_rev_ <- paste0("_", resp)
-  # }
-  # 
-  # xvar_ <- paste0('xvar', resp_rev_)
-  # yvar_ <- paste0('yvar', resp_rev_)
-  # groupvar_ <- paste0('groupvar', resp_rev_)
-  # Xx <- model$model_info[[xvar_]]
-  # IDvar <- model$model_info[[groupvar_]]
-  # 
-  # xvars <- model$model_info[[xvar_]]
-  # yvars <- model$model_info[[yvar_]]
-  # 
-  # xyvars <- c(xvars, yvars)
-  # allvars <- names(as.data.frame(newdata))
-  # factor_vars <- names(newdata[sapply(newdata, is.factor)])
-  # numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
-  # cov_vars <- model$model_info$cov
-  # cov_factor_vars <- intersect(cov_vars, factor_vars)
-  # cov_numeric_vars <- intersect(cov_vars, numeric_vars)
-  # groupby_fstr <- c(cov_factor_vars)
-  # groupby_fistr <- c(IDvar, cov_factor_vars)
-  # 
-  # if(!is.na(model$model_info$univariate_by)) {
-  #   groupby_fstr <- c(model$model_info$univariate_by, groupby_fstr)
-  #   groupby_fistr <- c(model$model_info$univariate_by, groupby_fistr)
-  # }
-  # 
-  # 
-  # if (is.null(cov_vars)) {
-  #   names.in.o <- unique(c(Xx))
-  #   names.in.O <- unique(c(IDvar, Xx))
-  # } else if (!is.null(cov_vars)) {
-  #   names.in.o <- unique(c(Xx, cov_vars))
-  #   names.in.O <- unique(c(IDvar, Xx, cov_vars))
-  # }
-  # 
-  
-  
-  
-  
-  
-  ####################
-  set_numeric_cov_at <- function(x) {
-    name_ <- deparse(substitute(x))
-    if (is.null((numeric_cov_at[[name_]]))) {
-      . <- mean(x, na.rm = T)
-    } else if (!is.null((numeric_cov_at[[name_]]))) {
-      if (numeric_cov_at[[name_]] == 'mean') {
-        . <- mean(x)
-      } else if (numeric_cov_at[[name_]] == 'median') {
-        . <- median(x, na.rm = T)
-      } else if (numeric_cov_at[[name_]] == 'min') {
-        . <- min(x, na.rm = T)
-      } else if (numeric_cov_at[[name_]] == 'max') {
-        . <- max(x, na.rm = T)
-      } else {
-        . <- numeric_cov_at[[name_]]
-      }
-    }
-    round(., 3)
+  for (check___ in check__) {
+    if(!exists(check___)) assign(check___, NULL)
   }
   
-  ged.data.grid_count <- 0
-  ged.data.grid <- function(data, vars_, ...) {
-    ged.data.grid_count <<- ged.data.grid_count + 1
-    cov_numeric_vars__ <-
-      cov_numeric_vars[!grepl(paste(xvars, collapse = "|"), cov_numeric_vars)]
-    if (identical(cov_numeric_vars__, character(0)))
-      cov_numeric_vars__ <- NULL
-    if (!is.null(cov_numeric_vars__)) {
-      for (cov_numeric_vars__i in cov_numeric_vars__) {
-        if (!is.null(numeric_cov_at)) {
-          if (!cov_numeric_vars__i %in% names(numeric_cov_at)) {
-            stop(
-              "You have used the argument 'numeric_cov_at' to specify the",
-              "\n ",
-              " value of continous covariate '",
-              cov_numeric_vars__i,
-              "'.",
-              "\n ",
-              " However, the name of this covariate is missing from the list",
-              "\n ",
-              " Please use the argument 'numeric_cov_at' correctly as follows:",
-              "\n ",
-              " numeric_cov_at = list(",
-              cov_numeric_vars__i,
-              " = xx)"
-            )
-          }
-        }
-      }
-      data <-
-        data %>% dplyr::mutate_at(cov_numeric_vars__, set_numeric_cov_at)
-      for (cov_numeric_vars__i in cov_numeric_vars__) {
-        if (ged.data.grid_count == 1)  {
-          message("Continous covariate(s) set at:")
-          message(" ", cov_numeric_vars__i, ": ",
-                  unique(data[[cov_numeric_vars__i]]))
-        }
-      }
-    }
-    relocate_vars <- c(xvars, IDvar)
-    if (yvars %in% colnames(newdata)) {
-      relocate_vars <- c(yvars, relocate_vars)
-    }
-    data %>% dplyr::relocate(all_of(relocate_vars)) %>% data.frame()
-  }
-  
-  
-  i_data <-
-    function(newdata,
-             newdata.oo,
-             cov_factor_vars,
-             xvar,
-             idvar,
-             ipts,
-             uvarby = NULL) {
-      cov_factor_vars <- c(uvarby, cov_factor_vars)
-      if (!is.null(ipts)) {
-        idatafunction <- function(.x, xvar, idvar, nmy) {
-          exdata <- function(x, id, idmat, nmy = nmy) {
-            n <- round(nmy * diff(range(x)))
-            npt <- n / diff(range(x))
-            extage <- apply(idmat, 1, function(x1) {
-              index <-
-                id == x1
-              id.x <- x[index]
-              nt <- floor(npt * diff(range(id.x))) + 1
-              newx <- seq(min(id.x), max(id.x), length = nt)
-              newid <-
-                rep(x1, nt)
-              extx <- data.frame(x = newx, id = newid)
-              colnames(extx) <- c("x", "id")
-              extx
-            })
-            df <-
-              extage[[1]][FALSE, ]
-            for (dft in extage)
-              df <- rbind(df, dft)
-            df
-          }
-          exdata(.x[[xvar]], .x[[idvar]], matrix(unique(.x[[idvar]], ncol = 1)),
-                 nmy = nmy)
-        }
-        
-        if (is.null(cov_factor_vars)) {
-          newdata %>% dplyr::arrange(IDvar, Xx) %>%
-            dplyr::group_modify(~ idatafunction(
-              .x,
-              xvar = Xx,
-              idvar = IDvar,
-              nmy = ipts
-            )) %>%
-            dplyr::rename(!!Xx := 'x') %>%
-            dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-            dplyr::relocate(all_of(IDvar), all_of(Xx)) %>%
-            data.frame() -> newdata
-        } else if (!is.null(cov_factor_vars)) {
-          newdata %>% dplyr::arrange(IDvar, Xx) %>%
-            dplyr::group_by(across(all_of(cov_factor_vars))) %>%
-            dplyr::group_modify(~ idatafunction(
-              .x,
-              xvar = Xx,
-              idvar = IDvar,
-              nmy = ipts
-            )) %>%
-            dplyr::rename(!!Xx := 'x') %>%
-            dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-            dplyr::relocate(all_of(IDvar), all_of(Xx)) %>%
-            data.frame() -> newdata
-        }
-        j_b_names <- names(newdata)
-        j_b_names__ <- c(j_b_names, cov_numeric_vars)
-        newdata <-
-          newdata %>% dplyr::left_join(., newdata.oo %>%
-                                         dplyr::select(all_of(j_b_names__)),
-                                       by = j_b_names)
-      }
-    }
   
   
   call_posterior_summary <- function(dat) {
@@ -482,11 +254,11 @@ gparameters.bsitar <- function(model,
         if (future)
           out_1 <-
             future.apply::future_sapply(Xnames, function(x)
-              sitar::getPeak(.x[[Xx]], as.numeric(.x[[x]])))
+              sitar::getPeak(.x[[xvar]], as.numeric(.x[[x]])))
         if (!future)
           out_1 <-
             sapply(Xnames, function(x)
-              sitar::getPeak(.x[[Xx]], as.numeric(.x[[x]])))
+              sitar::getPeak(.x[[xvar]], as.numeric(.x[[x]])))
         out_1 <- t(out_1)
         colnames(out_1) <- c("APGV", "PGV")
       } else if (!peak) {
@@ -497,11 +269,11 @@ gparameters.bsitar <- function(model,
         if (future)
           out_2 <-
             future.apply::future_sapply(Xnames, function(x)
-              sitar::getTakeoff(.x[[Xx]], as.numeric(.x[[x]])))
+              sitar::getTakeoff(.x[[xvar]], as.numeric(.x[[x]])))
         if (!future)
           out_2 <-
             sapply(Xnames, function(x)
-              sitar::getTakeoff(.x[[Xx]], as.numeric(.x[[x]])))
+              sitar::getTakeoff(.x[[xvar]], as.numeric(.x[[x]])))
         out_2 <- t(out_2)
         colnames(out_2) <- c("ATGV", "TGV")
       } else if (takeoff) {
@@ -512,11 +284,11 @@ gparameters.bsitar <- function(model,
         if (future)
           out_3 <-
             future.apply::future_sapply(Xnames, function(x)
-              sitar::getTrough(.x[[Xx]], as.numeric(.x[[x]])))
+              sitar::getTrough(.x[[xvar]], as.numeric(.x[[x]])))
         if (!future)
           out_3 <-
             sapply(Xnames, function(x)
-              sitar::getTrough(.x[[Xx]], as.numeric(.x[[x]])))
+              sitar::getTrough(.x[[xvar]], as.numeric(.x[[x]])))
         out_3 <- t(out_3)
         colnames(out_3) <- c("ACGV", "CGV")
       } else if (trough) {
@@ -575,13 +347,13 @@ gparameters.bsitar <- function(model,
           data.frame() %>%
           stats::setNames(paste0('P._D.', names(.))) %>%
           dplyr::mutate(!!IDvar := newdata[[IDvar]]) %>%
-          dplyr::mutate(!!Xx := newdata[[Xx]])
+          dplyr::mutate(!!xvar := newdata[[xvar]])
       } else if (summary) {
         out__ <- out_v %>% data.frame() %>%
           dplyr::select(1) %>%  data.frame() %>%
           stats::setNames(paste0('P._D.', names(.))) %>%
           dplyr::mutate(!!IDvar := newdata[[IDvar]]) %>%
-          dplyr::mutate(!!Xx := newdata[[Xx]])
+          dplyr::mutate(!!xvar := newdata[[xvar]])
       }
       if (!is.null(groupby_str)) {
         out__ <-
@@ -601,7 +373,7 @@ gparameters.bsitar <- function(model,
                 .x,
                 probs = probs,
                 future = future,
-                cores = cores,
+                cores = setincores,
                 peak = peak,
                 takeoff = takeoff,
                 trough = trough,
@@ -616,7 +388,7 @@ gparameters.bsitar <- function(model,
                 .x,
                 probs = probs,
                 future = future,
-                cores = cores,
+                cores = setincores,
                 peak = peak,
                 takeoff = takeoff,
                 trough = trough,
@@ -633,7 +405,7 @@ gparameters.bsitar <- function(model,
                 .x,
                 probs = probs,
                 future = future,
-                cores = cores,
+                cores = setincores,
                 peak = peak,
                 takeoff = takeoff,
                 trough = trough,
@@ -648,7 +420,7 @@ gparameters.bsitar <- function(model,
                 .x,
                 probs = probs,
                 future = future,
-                cores = cores,
+                cores = setincores,
                 peak = peak,
                 takeoff = takeoff,
                 trough = trough,
@@ -664,159 +436,12 @@ gparameters.bsitar <- function(model,
   
   
   
-  
-  
-  
-  
-  newdatauvarby <- function(datauvarby,...) {
-    newdata <- model$model_info$make_bsitar_data(datauvarby,
-                                                 model$model_info$univariate_by,
-                                                 model$model_info$org.ycall)
-    sortbylevels <- NA
-    newdata <- newdata %>%
-      dplyr::mutate(sortbylevels =
-                      forcats::fct_relevel(!!as.name(univariate_by$by),
-                                           (levels(
-                                             !!as.name(univariate_by$by)
-                                           )))) %>%
-      dplyr::arrange(sortbylevels) %>%
-      dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                               levels = 
-                                                 unique(!!as.name(IDvar))))
-    
-    newdata.oo <- ged.data.grid(newdata, names.in.O)
-    
-    # subindicatorsi <<- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-    # newdata <- newdata %>%
-    #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
-    #   droplevels()
-    newdata
-  }
-  
-  if(!is.na(model$model_info$univariate_by)) {
-    newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
-                                                 model$model_info$univariate_by,
-                                                 model$model_info$org.ycall)
-    sortbylevels <- NA
-    newdata <- newdata %>%
-      dplyr::mutate(sortbylevels =
-                      forcats::fct_relevel(!!as.name(univariate_by$by),
-                                           (levels(
-                                             !!as.name(univariate_by$by)
-                                           )))) %>%
-      dplyr::arrange(sortbylevels) %>%
-      dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                               levels = 
-                                                 unique(!!as.name(IDvar))))
-    
-    # newdata.oo <- ged.data.grid(newdata, names.in.O)
-    
-    
-    # subindicatorsi <<- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-    # newdata <- newdata %>%
-    #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
-    #   droplevels()
-  }
-  
-  
-  
-  if (is.null(resp)) {
-    resp_rev_ <- resp
-  } else if (!is.null(resp)) {
-    resp_rev_ <- paste0("_", resp)
-  }
-  
-  xvar_ <- paste0('xvar', resp_rev_)
-  yvar_ <- paste0('yvar', resp_rev_)
-  groupvar_ <- paste0('groupvar', resp_rev_)
-  Xx <- model$model_info[[xvar_]]
-  IDvar <- model$model_info[[groupvar_]]
-  
-  xvars <- model$model_info[[xvar_]]
-  yvars <- model$model_info[[yvar_]]
-  
-  xyvars <- c(xvars, yvars)
-  allvars <- names(as.data.frame(newdata))
-  factor_vars <- names(newdata[sapply(newdata, is.factor)])
-  numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
-  cov_vars <- model$model_info$cov
-  cov_factor_vars <- intersect(cov_vars, factor_vars)
-  cov_numeric_vars <- intersect(cov_vars, numeric_vars)
-  groupby_fstr <- c(cov_factor_vars)
-  groupby_fistr <- c(IDvar, cov_factor_vars)
-  
-  if(!is.na(model$model_info$univariate_by)) {
-    groupby_fstr <- c(model$model_info$univariate_by, groupby_fstr)
-    groupby_fistr <- c(model$model_info$univariate_by, groupby_fistr)
-  }
-  
-  
-  if (is.null(cov_vars)) {
-    names.in.o <- unique(c(Xx))
-    names.in.O <- unique(c(IDvar, Xx))
-  } else if (!is.null(cov_vars)) {
-    names.in.o <- unique(c(Xx, cov_vars))
-    names.in.O <- unique(c(IDvar, Xx, cov_vars))
-  }
-  
-  if(!is.na(model$model_info$univariate_by)) {
-    names.in.o <- c(model$model_info$univariate_by, names.in.o)
-    names.in.O <- c(model$model_info$univariate_by, names.in.O)
-  }
-  
-  newdata.oo <- ged.data.grid(newdata, names.in.O)
-  
-  
-  if (!is.null(ipts)) {
-    if(is.na(model$model_info$univariate_by)) {
-      newdata <-
-        i_data(newdata, newdata.oo, cov_factor_vars, xvar, idvar, ipts)
-    }
-    if(!is.na(model$model_info$univariate_by)) {
-      newdata <-
-        i_data(newdata, newdata.oo, cov_factor_vars, xvar, idvar, ipts,
-               model$model_info$univariate_by)
-      newdata <- newdatauvarby(newdata)
-    }
-  } else if (is.null(ipts)) {
-    if(is.na(model$model_info$univariate_by)) {
-      newdata <- newdata.oo
-    }
-    if(!is.na(model$model_info$univariate_by)) {
-      newdata <- newdatauvarby(eval.parent(model$model_info$call.bsitar$data))
-    }
-  }
-  
-  
-  # newdataxx <<- newdata
-  
-  # stop()
-  newdata_uvar_all <- newdata
-  
-  #newdata %>% head() %>% print() # %>% stop()
-  
-  # Dont pass univariate_by to groupby_str_d and groupby_str_v that are passed to plot_
-  if(!is.na(model$model_info$univariate_by)) {
-    # groupby_fstr <- c(model$model_info$univariate_by, groupby_fstr)
-    # groupby_fistr <- c(model$model_info$univariate_by, groupby_fistr)
-  }
-  
-  
-  
-  
-  ################
-  
-  
-  #
   if (arguments$plot) {
-    
     out_summary <- list()
-    out_summary[['probtitles']] <- probtitles
-   
     if(!is.null(arguments$...)) {
       arguments <- c(arguments, list(arguments$...))
     }
-   
+    
     for (argumentsi in names(arguments)) {
       if (length(arguments[[argumentsi]]) != 0) {
         if (argumentsi != "...") {
@@ -827,208 +452,45 @@ gparameters.bsitar <- function(model,
     
     arguments[which(names(arguments) %in% "")] <- NULL
     
-    if (future) {
-      if (future_session == 'multisession') {
-        future::plan('multisession', workers = cores)
-      } else if (future_session == 'multicore') {
-        future::plan('multicore', workers = cores)
-      }
-    }
-    
-    cores_ <- eval(arguments$cores)
-    if(!is.null(cores_)) {
-      if(cores_ == "maximise") {
-        max.cores <- 
-          as.numeric(future::availableCores(methods = "system", omit = 0))
-        if(max.cores < 1) max.cores <- 1
-      } else if(cores_ == "optimize") {
-        max.cores <- 
-          as.numeric(future::availableCores(methods = "system", omit = 1))
-        if(max.cores < 1) max.cores <- 1
-      } else {
-        max.cores <- eval(arguments$cores)
-      }
-    } else if(is.null(cores_)) {
-      max.cores <- NULL
-    }
-    
-    
-    arguments$cores <- cores <-  max.cores
-    
-    if(!is.null(cores_)) {
-      if(Sys.info()["sysname"] == "Windows") {
-        .cores_ps <- 1
-      } else {
-        .cores_ps <- cores
-      }
-    } else if(is.null(cores_)) {
-      .cores_ps <- 1
-    }
-    
-   
     list2env(arguments, envir = parent.env(new.env()))
     
+    probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+    probtitles <- probs[order(probs)] * 100
+    probtitles <- paste("Q", probtitles, sep = "")
+    set_names_  <- c('Estimate', 'Est.Error', probtitles)
     
-    # if (is.null(ndraws))
-    #   ndraws  <- ndraws(model)
-    # else
-    #   ndraws <- ndraws
-    # if (is.null(newdata))
-    #   newdata <- model$data
-    # else
-    #   newdata <- newdata
-    # 
+    get.cores_ <- get.cores(arguments$cores)
+    arguments$cores <- setincores <-  get.cores_[['max.cores']] 
+    .cores_ps <- get.cores_[['.cores_ps']]
     
-    
-    
-    # newdata.oo <- ged.data.grid(newdata, names.in.O)
-    # 
-    # 
-    # 
-    # 
-    # 
-    # oo <- post_processing_checks(model = model,
-    #                              xcall = match.call(),
-    #                              resp = resp)
-    # 
-    
-    if(!is.na(model$model_info$univariate_by)) {
-      subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-    }
-    
-    newdatauvarby <- function(datauvarby,...) {
-      newdata <- model$model_info$make_bsitar_data(datauvarby,
-                                                   model$model_info$univariate_by,
-                                                   model$model_info$org.ycall)
-      
-      sortbylevels <- NA
-      newdata <- newdata %>%
-        dplyr::mutate(sortbylevels =
-                        forcats::fct_relevel(!!as.name(univariate_by$by),
-                                             (levels(
-                                               !!as.name(univariate_by$by)
-                                             )))) %>%
-        dplyr::arrange(sortbylevels) %>%
-        dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                                 levels = 
-                                                   unique(!!as.name(IDvar))))
-      
-      newdata.oo <- ged.data.grid(newdata, names.in.O)
-      
-      # subindicatorsi <<- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-      # newdata <- newdata %>%
-      #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
-      #   droplevels()
-      newdata
-    }
-    
-    if(!is.na(model$model_info$univariate_by)) {
-      newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
-                                                   model$model_info$univariate_by,
-                                                   model$model_info$org.ycall)
-
-      sortbylevels <- NA
-      newdata <- newdata %>%
-        dplyr::mutate(sortbylevels =
-                        forcats::fct_relevel(!!as.name(univariate_by$by),
-                                             (levels(
-                                               !!as.name(univariate_by$by)
-                                             )))) %>%
-        dplyr::arrange(sortbylevels) %>%
-        dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                                 levels = 
-                                                   unique(!!as.name(IDvar))))
-      
-      
-      # newdata.oo <- ged.data.grid(newdata, names.in.O)
-      
-
-      # subindicatorsi <<- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-      # newdata <- newdata %>%
-      #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
-      #   droplevels()
-    }
-
-
-    
-    if (is.null(resp)) {
-      resp_rev_ <- resp
-    } else if (!is.null(resp)) {
-      resp_rev_ <- paste0("_", resp)
-    }
-    
-    xvar_ <- paste0('xvar', resp_rev_)
-    yvar_ <- paste0('yvar', resp_rev_)
-    groupvar_ <- paste0('groupvar', resp_rev_)
-    Xx <- model$model_info[[xvar_]]
-    IDvar <- model$model_info[[groupvar_]]
-    
-    xvars <- model$model_info[[xvar_]]
-    yvars <- model$model_info[[yvar_]]
-    
-    xyvars <- c(xvars, yvars)
-    allvars <- names(as.data.frame(newdata))
-    factor_vars <- names(newdata[sapply(newdata, is.factor)])
-    numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
-    cov_vars <- model$model_info$cov
-    cov_factor_vars <- intersect(cov_vars, factor_vars)
-    cov_numeric_vars <- intersect(cov_vars, numeric_vars)
-    groupby_fstr <- c(cov_factor_vars)
-    groupby_fistr <- c(IDvar, cov_factor_vars)
-    
-    if(!is.na(model$model_info$univariate_by)) {
-      groupby_fstr <- c(model$model_info$univariate_by, groupby_fstr)
-      groupby_fistr <- c(model$model_info$univariate_by, groupby_fistr)
-    }
-    
-    
-    if (is.null(cov_vars)) {
-      names.in.o <- unique(c(Xx))
-      names.in.O <- unique(c(IDvar, Xx))
-    } else if (!is.null(cov_vars)) {
-      names.in.o <- unique(c(Xx, cov_vars))
-      names.in.O <- unique(c(IDvar, Xx, cov_vars))
-    }
-    
-    if(!is.na(model$model_info$univariate_by)) {
-      names.in.o <- c(model$model_info$univariate_by, names.in.o)
-      names.in.O <- c(model$model_info$univariate_by, names.in.O)
-    }
-    
-    if (!is.null(ipts)) {
-      if(is.na(model$model_info$univariate_by)) {
-        newdata <-
-          i_data(newdata, newdata.oo, cov_factor_vars, xvar, idvar, ipts)
-      }
-      if(!is.na(model$model_info$univariate_by)) {
-        newdata <-
-          i_data(newdata, newdata.oo, cov_factor_vars, xvar, idvar, ipts,
-                 model$model_info$univariate_by)
-        newdata <- newdatauvarby(newdata)
-      }
-    } else if (is.null(ipts)) {
-      if(is.na(model$model_info$univariate_by)) {
-        newdata <- newdata.oo
-      }
-      if(!is.na(model$model_info$univariate_by)) {
-        newdata <- newdatauvarby(eval.parent(model$model_info$call.bsitar$data))
+    if (future) {
+      if (future_session == 'multisession') {
+        future::plan('multisession', workers = setincores)
+      } else if (future_session == 'multicore') {
+        future::plan('multicore', workers = setincores)
       }
     }
     
+    newdata <- get.newdata(model, newdata = newdata, resp = resp)
     
-    # newdataxx <<- newdata
+    list_c <- attr(newdata, 'list_c')
     
-   # stop()
-    newdata_uvar_all <- newdata
+    for (list_ci in names(list_c)) {
+      assign(list_ci, list_c[[list_ci]])
+    }
+    check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+                 'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
     
-    #newdata %>% head() %>% print() # %>% stop()
-    
-    # Dont pass univariate_by to groupby_str_d and groupby_str_v that are passed to plot_
-    if(!is.na(model$model_info$univariate_by)) {
-      # groupby_fstr <- c(model$model_info$univariate_by, groupby_fstr)
-      # groupby_fistr <- c(model$model_info$univariate_by, groupby_fistr)
+    for (check___ in check__) {
+      if(!exists(check___)) assign(check___, NULL)
     }
     
+    newdata <- i_data(model, newdata, resp = resp,
+                      cov_factor_vars = cov_factor_vars, 
+                      cov_numeric_vars = cov_numeric_vars,
+                      ipts = ipts)
+    
+    newdata___ <- newdata
     
     if (grepl("d", opt, ignore.case = T)) {
       index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
@@ -1063,8 +525,6 @@ gparameters.bsitar <- function(model,
       groupby_str_d <- NULL
     }
     
-   
-    
     
     if (velc.. != "") {
       if (grepl("^[[:upper:]]+$", velc..)) {
@@ -1074,65 +534,30 @@ gparameters.bsitar <- function(model,
       }
       if (identical(groupby_str_v, character(0)))
         groupby_str_v <- NULL
-      groupby_str_v <- groupby_str_v
     } else {
       groupby_str_v <- NULL
     }
     
     if (dist.. != "") {
-     # if (!is.null(ipts)) {
-        newdata_o <- newdata
-        if (grepl("^[[:upper:]]+$", dist..)) {
-          newdata <- ged.data.grid(newdata, names.in.O)
-        } else {
-          newdata <- ged.data.grid(newdata, names.in.o)
-        }
-     # }
-      if (grepl("^[[:upper:]]+$", dist..)) {
-       # if (!is.null(ipts)) {
-          newdata <- ged.data.grid(newdata, names.in.O)
-       # }
-      } else if (!grepl("^[[:upper:]]+$", dist..)) {
-       # if (!is.null(ipts)) {
-          newdata <- ged.data.grid(newdata, names.in.o)
-       # }
-      }
+      newdata <- newdata___
       if (grepl("^[[:upper:]]+$", dist..)) {
         arguments$re_formula <- NULL
       } else if (!grepl("^[[:upper:]]+$", dist..)) {
         arguments$re_formula <- NA
         if (!is.null(groupby_fstr)) {
-          groupby_fstr_xvars <- c(groupby_fstr, xvars)
+          groupby_fstr_xvars <- c(groupby_fstr, xvar)
         } else if (is.null(groupby_fstr)) {
-          groupby_fstr_xvars <- c(xvars)
+          groupby_fstr_xvars <- c(xvar)
         }
-        
-        # if(is.null(groupby_fstr) & !is.na(model$model_info$univariate_by)) {
-        #   groupby_fstr_xvars <- c(model$model_info$univariate_by, groupby_fstr_xvars)
-        #   groupby_fstr_xvars <- c(model$model_info$univariate_by, groupby_fstr_xvars)
-        # }
-        
-        # groupby_str_d <- unique(groupby_str_d)
-        # if(!is.na(model$model_info$univariate_by)) {
-        #   groupby_str_d <- groupby_str_d[groupby_str_d != model$model_info$univariate_by]
-        # }
-        
-        # print(head(newdata))
-        # print(groupby_str_d)
-        # print(groupby_fstr_xvars)
-        # print(groupby_fstr)
-        # print(groupby_fistr)
-        # stop()
-        
         newdata <- newdata %>%
           dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
           dplyr::slice(1) %>% dplyr::ungroup()
       }
       arguments$newdata <- newdata
       arguments$deriv <- 0
-     
+      
       arguments$envir <-arguments$envir_
-     
+      
       if (estimation_method == 'fitted') {
         out_d_ <- do.call(fitted_.bsitar, arguments)
       } else if (estimation_method == 'predict') {
@@ -1153,48 +578,24 @@ gparameters.bsitar <- function(model,
                                           out_d %>% data.frame() %>%
                                             dplyr::mutate(curve = 'distance')) %>%
         data.frame()
-     # if (!is.null(ipts)) {
-        newdata <- newdata_o
-     # }
+      
     } else if (dist.. == "") {
       out_summary[['distance']] <- NULL
     }
     
     
     if (velc.. != "") {
-     # if (!is.null(ipts)) {
-        newdata_o <- newdata
-        if (grepl("^[[:upper:]]+$", velc..)) {
-          newdata <- ged.data.grid(newdata, names.in.O)
-        } else {
-          newdata <- ged.data.grid(newdata, names.in.o)
-        }
-     # }
-      if (grepl("^[[:upper:]]+$", velc..)) {
-       # if (!is.null(ipts)) {
-          newdata <- ged.data.grid(newdata, names.in.O)
-       # }
-      } else {
-       # if (!is.null(ipts)) {
-          newdata <- ged.data.grid(newdata, names.in.o)
-       # }
-      }
+      newdata <- newdata___
       if (grepl("^[[:upper:]]+$", velc..)) {
         arguments$re_formula <- NULL
       } else if (!grepl("^[[:upper:]]+$", velc..)) {
         arguments$re_formula <- NA
         if (!is.null(groupby_fstr)) {
-          groupby_fstr_xvars <- c(groupby_fstr, xvars)
+          groupby_fstr_xvars <- c(groupby_fstr, xvar)
         } else if (is.null(groupby_fstr)) {
-          groupby_fstr_xvars <- c(xvars)
+          groupby_fstr_xvars <- c(xvar)
           
         }
-        
-        if(is.null(groupby_fstr) & !is.na(model$model_info$univariate_by)) {
-         # groupby_fstr_xvars <- c(model$model_info$univariate_by, groupby_fstr_xvars)
-          # groupby_fstr_xvars <- c(model$model_info$univariate_by, groupby_fstr_xvars)
-        }
-        
         newdata <- newdata %>%
           dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
           dplyr::slice(1) %>% dplyr::ungroup()
@@ -1239,50 +640,31 @@ gparameters.bsitar <- function(model,
     }
     out_summary[['groupby_str_d']] <- groupby_str_d
     out_summary[['groupby_str_v']] <- groupby_str_v
+    out_summary[['probtitles']] <- probtitles
     return(out_summary)
   }
   
   
   if (!arguments$plot) {
-    if (!is.null(ipts)) {
-      newdata_o <- newdata
-      if (is.null(re_formula)) {
-        newdata <- ged.data.grid(newdata, names.in.O)
-      } else if (is.na(re_formula)) {
-        newdata <- ged.data.grid(newdata, names.in.o)
-      }
-    }
-    if (is.null(re_formula)) {
-      if (!is.null(ipts)) {
-        newdata <- ged.data.grid(newdata, names.in.O)
-      }
-    } else if (is.na(re_formula)) {
-      if (!is.null(ipts)) {
-        newdata <- ged.data.grid(newdata, names.in.o)
-      }
-    }
+    
+    newdata <- i_data(model, newdata, resp = resp, 
+                      cov_factor_vars = cov_factor_vars, 
+                      cov_numeric_vars = cov_numeric_vars,
+                      ipts = ipts)
+    
     if (is.null(re_formula)) {
       groupby_str <- groupby_fistr
     } else  if (!is.null(re_formula)) {
       groupby_str <- groupby_fstr
     }
-    if (identical(groupby_str, character(0)))
-      groupby_str <- NULL
-    groupby_str <- groupby_str
+    if (identical(groupby_str, character(0))) groupby_str <- NULL
     
     if (!is.null(re_formula)) {
       if (!is.null(groupby_fstr)) {
-        groupby_fstr_xvars <- c(groupby_fstr, xvars)
+        groupby_fstr_xvars <- c(groupby_fstr, xvar)
       } else if (is.null(groupby_fstr)) {
-        groupby_fstr_xvars <- c(xvars)
-        
+        groupby_fstr_xvars <- c(xvar)
       }
-      
-      if(is.null(groupby_fstr) & !is.na(model$model_info$univariate_by)) {
-        groupby_fstr_xvars <- c(model$model_info$univariate_by, groupby_fstr_xvars)
-        # groupby_fstr_xvars <- c(model$model_info$univariate_by, groupby_fstr_xvars)
-      }
-      
       newdata <- newdata %>%
         dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
         dplyr::slice(1) %>% dplyr::ungroup()

@@ -44,7 +44,9 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "stancode",  "stanvar",  "stanvars_datazz",  "subindicatorsi",  "un",  
     "uniform",  "univariate_by_by",  "verbose",  "xfunsi",  "xoffset",  
     "xoffsetsi",  "xsi",  "xvar",  "yfunsi",  "ysi",
-    "newdatauvarby", "univariate_by")
+    "IDvar",  "cov_factor_vars",  "groupby_fistr",  "groupby_fstr",  
+    "yvar", "numeric_cov_at",  "groupby_str_d",  "uvarby", 
+    "groupby_fistr", "cov_vars", "cov_numeric_vars")
   )
 
 

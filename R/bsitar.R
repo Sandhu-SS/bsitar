@@ -2246,17 +2246,18 @@ bsitar <- function(x,
     N_J_all <- length(unique(data[[idsi]]))
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
-      sortbylevels <- NA
+      sortbylayer <- NA
       data <- data %>%
-        dplyr::mutate(sortbylevels =
+        dplyr::mutate(sortbylayer =
                         forcats::fct_relevel(!!as.name(univariate_by$by),
                                              (levels(
                                                !!as.name(univariate_by$by)
                                              )))) %>%
-        dplyr::arrange(sortbylevels) %>%
+        dplyr::arrange(sortbylayer) %>%
         dplyr::mutate(!!as.name(idsi) := factor(!!as.name(idsi),
                                                 levels = 
-                                                  unique(!!as.name(idsi))))
+                                                  unique(!!as.name(idsi)))) %>% 
+        dplyr::select(-sortbylayer)
       
       
       datai <- data %>%

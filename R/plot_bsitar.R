@@ -182,44 +182,53 @@ plot_bsitar.bsitar <- function(model,
     ndraws  <- ndraws(model)
   else
     ndraws <- ndraws
-  if (is.null(newdata))
-    newdata <- model$data
-  else
-    newdata <- newdata
   
+  o <- post_processing_checks(model = model,
+                              xcall = match.call(),
+                              resp = resp)
   
-  oo <- post_processing_checks(model = model,
-                               xcall = match.call(),
-                               resp = resp)
+  xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
-  if(!is.na(model$model_info$univariate_by)) {
-    newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
-                                                 model$model_info$univariate_by,
-                                                 model$model_info$org.ycall)
-    
-    sortbylevels <- NA
-    data <- data %>%
-      dplyr::mutate(sortbylevels =
-                      forcats::fct_relevel(!!as.name(univariate_by$by),
-                                           (levels(
-                                             !!as.name(univariate_by$by)
-                                           )))) %>%
-      dplyr::arrange(sortbylevels) %>%
-      dplyr::mutate(!!as.name(idsi) := factor(!!as.name(idsi),
-                                              levels = 
-                                                unique(!!as.name(idsi))))
-
-    subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-    # newdata <- newdata %>%
-    #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
-    #   droplevels()
+  arguments <- get_args_(as.list(match.call())[-1], xcall)
+  
+  probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+  probtitles <- probs[order(probs)] * 100
+  probtitles <- paste("Q", probtitles, sep = "")
+  set_names_  <- c('Estimate', 'Est.Error', probtitles)
+  
+  #setincores <- NULL
+  get.cores_ <- get.cores(arguments$cores)
+  arguments$cores <- setincores <-  get.cores_[['max.cores']] 
+  .cores_ps <- get.cores_[['.cores_ps']]
+  
+  if (future) {
+    if (future_session == 'multisession') {
+      future::plan('multisession', workers = setincores)
+    } else if (future_session == 'multicore') {
+      future::plan('multicore', workers = setincores)
+    }
   }
-
-
-  # if(!is.na(model$model_info$univariate_by)) {
-  #   newdata <- newdata %>%
-  #     dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
-  # }
+  
+  newdata <- get.newdata(model, newdata = newdata, resp = resp)
+  list_c <- attr(newdata, 'list_c')
+  for (list_ci in names(list_c)) {
+    assign(list_ci, list_c[[list_ci]])
+  }
+  check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+               'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
+  
+  for (check___ in check__) {
+    if(!exists(check___)) assign(check___, NULL)
+  }
+  
+  Xx <- xvar
+  Yy <- yvar
+  
+  if (is.null(resp)) {
+    resp_rev_ <- resp
+  } else if (!is.null(resp)) {
+    resp_rev_ <- paste0("_", resp)
+  }
   
   
   if (is.null(bands)) {
@@ -292,45 +301,6 @@ plot_bsitar.bsitar <- function(model,
     )
   }
   
-  if (is.null(resp)) {
-    resp_rev_ <- resp
-  } else if (!is.null(resp)) {
-    resp_rev_ <- paste0("_", resp)
-  }
-  
-  xvar_ <- paste0('xvar', resp_rev_)
-  yvar_ <- paste0('yvar', resp_rev_)
-  groupvar_ <- paste0('groupvar', resp_rev_)
-  Xx <- model$model_info[[xvar_]]
-  Yy <- model$model_info[[yvar_]]
-  IDvar <- model$model_info[[groupvar_]]
-  
-  
-  
-  if(!is.na(model$model_info$univariate_by)) {
-    newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
-                                                 model$model_info$univariate_by,
-                                                 model$model_info$org.ycall)
-    
-    sortbylevels <- NA
-    newdata <- newdata %>%
-      dplyr::mutate(sortbylevels =
-                      forcats::fct_relevel(!!as.name(univariate_by$by),
-                                           (levels(
-                                             !!as.name(univariate_by$by)
-                                           )))) %>%
-      dplyr::arrange(sortbylevels) %>%
-      dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                              levels = 
-                                                unique(!!as.name(IDvar))))
-    
-    subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-    # newdata <- newdata %>%
-    #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
-    #   droplevels()
-  }
-  
-  
   
   
   if (grepl("a", opt, ignore.case = F) |
@@ -360,21 +330,6 @@ plot_bsitar.bsitar <- function(model,
     )
   }
   
-  # arguments <- as.list(match.call())[-1]
-  
-  xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-  
-  get_args_ <- function(arguments, xcall) {
-    `%!in%` <- Negate(`%in%`)
-    f_bsitar_arg <- formals(paste0(xcall, '.bsitar'))
-    nf_bsitar_arg_names <-
-      intersect(names(arguments), names(f_bsitar_arg))
-    arguments <-
-      c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
-    arguments
-  }
-  
-  arguments <- get_args_(as.list(match.call())[-1], xcall)
   
   
   if (!grepl("v", opt, ignore.case = F) &
@@ -386,48 +341,6 @@ plot_bsitar.bsitar <- function(model,
   if(is.null(arguments$pv)) arguments$pv <- FALSE
   
   if(length(list(...)) != 0) arguments <- c(arguments, list(...))
-  
-  if (future) {
-    if (future_session == 'multisession') {
-      future::plan('multisession', workers = cores)
-    } else if (future_session == 'multicore') {
-      future::plan('multicore', workers = cores)
-    }
-  }
-  
-  
-  cores_ <- eval(arguments$cores)
-  if(!is.null(cores_)) {
-    if(cores_ == "maximise") {
-      max.cores <- 
-        as.numeric(future::availableCores(methods = "system", omit = 0))
-      if(max.cores < 1) max.cores <- 1
-    } else if(cores_ == "optimize") {
-      max.cores <- 
-        as.numeric(future::availableCores(methods = "system", omit = 1))
-      if(max.cores < 1) max.cores <- 1
-    } else {
-      max.cores <- eval(arguments$cores)
-    }
-  } else if(is.null(cores_)) {
-    max.cores <- NULL
-  }
-  
-  
-  arguments$cores <- cores <-  max.cores
-  
-  if(!is.null(cores_)) {
-    if(Sys.info()["sysname"] == "Windows") {
-      .cores_ps <- 1
-    } else {
-      .cores_ps <- cores
-    }
-  } else if(is.null(cores_)) {
-    .cores_ps <- 1
-  }
-  
-  
-  arguments$cores <- cores <-  max.cores
   
   arguments$envir_ <- parent.frame()
   
@@ -647,28 +560,22 @@ plot_bsitar.bsitar <- function(model,
         ndraws  <- ndraws(model)
       else
         ndraws <- ndraws
+      
       o <-
         post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp,
                                deriv = '')
+      
+      
       newdata.o <- newdata
       if (trim == 0)
         return(newdata)
       
-      if (is.null(resp)) {
-        resp_rev_ <- resp
-      } else if (!is.null(resp)) {
-        resp_rev_ <- paste0("_", resp)
-      }
+      .x <- Xx
+      .y <- Yy
+      .id <- IDvar
       
-      xvar_ <- paste0('xvar', resp_rev_)
-      yvar_ <- paste0('yvar', resp_rev_)
-      groupvar_ <- paste0('groupvar', resp_rev_)
-      
-      .x <- Xx <- model$model_info[[xvar_]]
-      .y <- Yy <- model$model_info[[yvar_]]
-      .id <- IDvar <- model$model_info[[groupvar_]]
       newdata <-
         with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
       extra <- dplyr::as_tibble(diff(as.matrix(newdata[, 1:2])))
@@ -677,6 +584,11 @@ plot_bsitar.bsitar <- function(model,
       extra$dx <- extra[[.x]]
       extra[, 1:2] <- newdata[-1, 1:2] - extra[, 1:2] / 2
       extra <- extra[!did, ]
+      
+      if(!is.na(uvarby)) {
+        extra[[subindicatorsi]] <- 1
+      }
+      
       if (level == 0) {
         re_formula <- NA
       } else if (level == 1) {
@@ -710,11 +622,24 @@ plot_bsitar.bsitar <- function(model,
       outliers <- order(extra$xy, decreasing = TRUE)[1:trim]
       extra <- extra[outliers, 1:3]
       extra[[.y]] <- NA
+      if(!is.na(uvarby)) {
+        newdata_tt <- newdata
+        common_colsnms <- intersect(colnames(newdata) , colnames(extra))
+        newdata <-newdata %>% dplyr::select(all_of(common_colsnms))
+      }
       newdata <- rbind(newdata, extra)
       newdata <-
         with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
+      
+      if(!is.na(uvarby)) {
+        tempotnames <- c(IDvar, Xx, Yy)
+        tempot <- newdata_tt %>%  dplyr::select(-all_of(tempotnames))
+        newdata <- cbind(newdata[-1, ], tempot) %>% data.frame()
+      }
+      
       newdata
     }
+  
   
   xyadj_ <-
     function (model,
@@ -730,51 +655,26 @@ plot_bsitar.bsitar <- function(model,
         ndraws  <- ndraws(model)
       else
         ndraws <- ndraws
-      if (is.null(newdata))
-        newdata <- model$data
-      else
-        newdata <- newdata
+      
       o <-
         post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp,
                                deriv = '')
       
-      newdatauvarby <- function(datauvarby,...) {
-        newdata <- model$model_info$make_bsitar_data(datauvarby,
-                                                     model$model_info$univariate_by,
-                                                     model$model_info$org.ycall)
-      }
+      newdata <- get.newdata(model, newdata = newdata, resp = resp)
       
-      if(!is.na(model$model_info$univariate_by)) {
-        newdata <- newdatauvarby(eval.parent(model$model_info$call.bsitar$data))
-        subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
+      if(!is.na(uvarby)) {
         newdata <- newdata %>%
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
       }
-      
-      
-      if (is.null(resp)) {
-        resp_rev_ <- resp
-      } else if (!is.null(resp)) {
-        resp_rev_ <- paste0("_", resp)
-      }
-      
-      xvar_ <- paste0('xvar', resp_rev_)
-      yvar_ <- paste0('yvar', resp_rev_)
-      groupvar_ <- paste0('groupvar', resp_rev_)
-      Xx <- model$model_info[[xvar_]]
-      Yy <- model$model_info[[yvar_]]
-      IDvar <- model$model_info[[groupvar_]]
       
       xoffsetXnames <- 'xoffset'
       randomRnames <- 'random' 
       if (!is.null(resp)) randomRnames <- paste0(randomRnames, resp_rev_)
       if (!is.null(resp)) xoffsetXnames <- paste0(xoffsetXnames, resp_rev_)
-      
       randomRnames <- model$model_info[[randomRnames]]
       xoffsetXnames <- model$model_info[[xoffsetXnames]]
-      
       if (missing(x))
         x <- newdata[[Xx]]
       if (missing(y))
@@ -794,7 +694,7 @@ plot_bsitar.bsitar <- function(model,
           re <- ranef(model)[[IDvar]]
           re <- re[match(id, rownames(re)) , 1, , drop = FALSE]
           re <- re[ , 1, grepl(paste0("^", resp), attr(re, "dimnames")[3][[1]])]
-          abc <- re # [match(id, rownames(re)), , drop = FALSE]
+          abc <- re 
         }
         abc <- as.data.frame(abc)
       }
@@ -823,10 +723,15 @@ plot_bsitar.bsitar <- function(model,
         x.adj <- x / exp(abc$c) + abc$b + xoffset
         y.adj <- y + abc$a + abc$d * x
       }
-      . <- as.data.frame(as.factor(newdata[[IDvar]]))
-      . <- cbind(x.adj, y.adj, .)
-      colnames(.) <- c(Xx, Yy, IDvar)
-      .
+      out <- as.data.frame(as.factor(newdata[[IDvar]]))
+      out <- cbind(x.adj, y.adj, out)
+      colnames(out) <- c(Xx, Yy, IDvar)
+      if(!is.na(uvarby)) {
+        tempotnames <- c(IDvar, Xx, Yy)
+        tempot <- newdata %>%  dplyr::select(-all_of(tempotnames))
+        out <- cbind(out, tempot) %>% data.frame()
+      }
+      out
     }
   
   xyunadj_ <-
@@ -836,28 +741,19 @@ plot_bsitar.bsitar <- function(model,
               id,
               resp = NULL,
               newdata = NULL,...) {
-      if (is.null(newdata))
-        newdata <- model$data
-      else
-        newdata <- newdata
+      
       o <-
         post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp,
                                deriv = '')
-      if (is.null(resp)) {
-        resp_rev_ <- resp
-      } else if (!is.null(resp)) {
-        resp_rev_ <- paste0("_", resp)
+      
+      newdata <- get.newdata(model, newdata = newdata, resp = resp)
+      
+      if(!is.na(uvarby)) {
+        newdata <- newdata %>%
+          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
       }
-      
-      xvar_ <- paste0('xvar', resp_rev_)
-      yvar_ <- paste0('yvar', resp_rev_)
-      groupvar_ <- paste0('groupvar', resp_rev_)
-      
-      Xx <- model$model_info[[xvar_]]
-      Yy <- model$model_info[[yvar_]]
-      IDvar <- model$model_info[[groupvar_]]
       
       if (missing(x))
         x <- newdata[[Xx]]
@@ -865,10 +761,13 @@ plot_bsitar.bsitar <- function(model,
         y <- newdata[[Yy]]
       if (missing(id))
         id <- newdata[[IDvar]]
-      . <- as.data.frame(as.factor(newdata[[IDvar]]))
-      . <- cbind(x, y, .)
-      colnames(.) <- c(Xx, Yy, IDvar)
-      .
+      out <- as.data.frame(as.factor(newdata[[IDvar]]))
+      out <- cbind(x, y, out)
+      colnames(out) <- c(Xx, Yy, IDvar)
+      if(!is.na(uvarby)) {
+        out[[uvarby]] <- resp
+      }
+      out
     }
   
   
@@ -902,7 +801,7 @@ plot_bsitar.bsitar <- function(model,
             d. %>% dplyr::mutate(groupby =
                                    interaction(dplyr::across(groupby_str_d)))
       }
-     
+      
       if (!is.null(set.linetype.groupby)) {
         if (set.linetype.groupby == 'groupby') {
           d.. <- d. %>% dplyr::filter(curve == curve.d)
@@ -1326,20 +1225,7 @@ plot_bsitar.bsitar <- function(model,
   }
   
   ############
-  xvars <- model$model_info$xvar
-  yvars <- model$model_info$yvar
-  xyvars <- c(xvars, yvars)
-  allvars <- names(as.data.frame(newdata))
-  factor_vars <- names(newdata[sapply(newdata, is.factor)])
-  numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
-  cov_vars <- model$model_info$cov
-  cov_factor_vars <- intersect(cov_vars, factor_vars)
-  cov_numeric_vars <- intersect(cov_vars, numeric_vars)
-  groupby_fstr <- c(cov_factor_vars)
-  groupby_fistr <- c(IDvar, cov_factor_vars)
-  
   groupby_str_au <- groupby_fistr
-  
   
   if (grepl("a", opt, ignore.case = T) |
       grepl("u", opt, ignore.case = T)) {
@@ -1349,13 +1235,19 @@ plot_bsitar.bsitar <- function(model,
     if (grepl("a", opt, ignore.case = T)) {
       
       xyadj_ed <- xyadj_(model, resp = resp)
+      
       out_a_ <-
         d.out <- trimlines_(model, resp = resp, newdata = xyadj_ed, trim = trim)
       out_a_ <-
         out_a_ %>%
         dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_au)))
-      x_minimum_a_ <- floor(min(out_a_[[Xx]]))
-      x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
+      
+      # x_minimum_a_ <- floor(min(out_a_[[Xx]]))
+      # x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
+      x_minimum_a_ <- x_minimum
+      x_maximum_a_ <- x_maximum
+      
+      out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum_a_ & out_a_[[Xx]] <= x_maximum_a_, ]
       
       if (!is.null(set.linetype.groupby)) {
         if (set.linetype.groupby == 'groupby') {
@@ -1486,8 +1378,14 @@ plot_bsitar.bsitar <- function(model,
           dplyr::bind_rows(., out_u_ %>%
                              dplyr::mutate(curve = 'Unadjusted')) %>%
           data.frame()
-        x_minimum_a_ <- floor(min(out_a_[[Xx]]))
-        x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
+        
+        # x_minimum_a_ <- floor(min(out_a_[[Xx]]))
+        # x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
+        x_minimum_a_ <- x_minimum
+        x_maximum_a_ <- x_maximum
+        
+        out_a_u_ <- out_a_u_[out_a_u_[[Xx]] >= x_minimum_a_ & out_a_u_[[Xx]] <= x_maximum_a_, ]
+        
         
         if (!is.null(set.linetype.groupby)) {
           if (set.linetype.groupby == 'groupby') {
