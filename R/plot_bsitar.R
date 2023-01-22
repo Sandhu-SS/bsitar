@@ -196,16 +196,16 @@ plot_bsitar.bsitar <- function(model,
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', 'Est.Error', probtitles)
   
-  #setincores <- NULL
+  cores <- 1
   get.cores_ <- get.cores(arguments$cores)
-  arguments$cores <- setincores <-  get.cores_[['max.cores']] 
+  arguments$cores <- cores <-  get.cores_[['max.cores']] 
   .cores_ps <- get.cores_[['.cores_ps']]
   
   if (future) {
     if (future_session == 'multisession') {
-      future::plan('multisession', workers = setincores)
+      future::plan('multisession', workers = cores)
     } else if (future_session == 'multicore') {
-      future::plan('multicore', workers = setincores)
+      future::plan('multicore', workers = cores)
     }
   }
   

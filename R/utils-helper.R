@@ -31,7 +31,7 @@ get.newdata <- function(model, newdata, resp) {
     newdata <- model$model_info$make_bsitar_data(newdata_,
                                                  model$model_info$univariate_by,
                                                  model$model_info$org.ycall)
-    # print(head(newdata_))
+    
     sortbylayer <- NA
     newdata <- newdata %>%
       dplyr::mutate(sortbylayer =
@@ -115,7 +115,7 @@ get.cores <- function(cores.arg) {
     if(Sys.info()["sysname"] == "Windows") {
       .cores_ps <- 1
     } else {
-      .cores_ps <- cores
+      .cores_ps <- max.cores
     }
   } else if(is.null(cores_)) {
     .cores_ps <- 1
@@ -149,7 +149,7 @@ set_numeric_cov_at <- function(x, numeric_cov_at) {
 
 
 
-ged.data.grid <- function(data, 
+get.data.grid <- function(data, 
                           xvar = NULL, 
                           yvar = NULL, 
                           IDvar = NULL, 
@@ -209,13 +209,11 @@ ged.data.grid <- function(data,
 i_data <-
   function(model,
            newdata,
-           newdata.oo,
            resp = NULL, 
            cov_factor_vars = NULL,
            cov_numeric_vars = NULL,
            ipts = NULL
   ) {
-    
     
     if (is.null(resp)) {
       resp_rev_ <- resp
@@ -286,6 +284,7 @@ i_data <-
         dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
         data.frame() -> newdata
     }
+    
     if(is.null(ipts)) newdata <- newdata
     
     if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
@@ -307,7 +306,7 @@ i_data <-
       
     }
     
-    newdata.oo <- ged.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
+    newdata.oo <- get.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
                                 numeric_cov_at, uvarby)
     
     j_b_names <- names(newdata)

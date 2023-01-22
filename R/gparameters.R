@@ -187,7 +187,6 @@ gparameters.bsitar <- function(model,
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', 'Est.Error', probtitles)
   
-  #setincores <- NULL
   get.cores_ <- get.cores(arguments$cores)
   arguments$cores <- setincores <-  get.cores_[['max.cores']] 
   .cores_ps <- get.cores_[['.cores_ps']]
@@ -422,7 +421,6 @@ gparameters.bsitar <- function(model,
   ###################################
   
   
-  
   if (arguments$plot) {
     out_summary <- list()
     if(!is.null(arguments$...)) {
@@ -458,7 +456,11 @@ gparameters.bsitar <- function(model,
       }
     }
     
-    newdata <- get.newdata(model, newdata = newdata, resp = resp)
+    
+    if(is.null(newdata)) {
+      newdata <- get.newdata(model, newdata = newdata, resp = resp)
+    }
+    
     
     list_c <- attr(newdata, 'list_c')
     
@@ -472,10 +474,11 @@ gparameters.bsitar <- function(model,
       if(!exists(check___)) assign(check___, NULL)
     }
     
+    
     newdata <- i_data(model, newdata, resp = resp,
-                      cov_factor_vars = cov_factor_vars, 
-                      cov_numeric_vars = cov_numeric_vars,
-                      ipts = ipts)
+                               cov_factor_vars = cov_factor_vars, 
+                               cov_numeric_vars = cov_numeric_vars,
+                               ipts = ipts)
     
     newdata___ <- newdata
     
@@ -635,6 +638,7 @@ gparameters.bsitar <- function(model,
   if (!arguments$plot) {
     
     newdata <- get.newdata(model, newdata = newdata, resp = resp)
+    
     list_c <- attr(newdata, 'list_c')
     for (list_ci in names(list_c)) {
       assign(list_ci, list_c[[list_ci]])
@@ -646,11 +650,10 @@ gparameters.bsitar <- function(model,
       if(!exists(check___)) assign(check___, NULL)
     }
     
-    
     newdata <- i_data(model, newdata, resp = resp, 
-                      cov_factor_vars = cov_factor_vars, 
-                      cov_numeric_vars = cov_numeric_vars,
-                      ipts = ipts)
+                               cov_factor_vars = cov_factor_vars, 
+                               cov_numeric_vars = cov_numeric_vars,
+                               ipts = ipts)
     
     if (is.null(re_formula)) {
       groupby_str <- groupby_fistr
