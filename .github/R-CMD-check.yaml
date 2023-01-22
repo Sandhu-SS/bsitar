@@ -59,6 +59,7 @@ jobs:
             MCMCglmm
             ape
             stan-dev/cmdstanr
+            stan-dev/rstan
             RcppEigen
             testthat
             emmeans

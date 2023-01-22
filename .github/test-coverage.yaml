@@ -41,6 +41,7 @@ BH
 MCMCglmm
 ape
 stan-dev/cmdstanr
+stan-dev/rstan
 RcppEigen
 emmeans
 projpred

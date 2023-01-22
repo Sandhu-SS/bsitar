@@ -196,9 +196,9 @@ curve parameters as described model \@ref(eq:1).
 
 
 
-We follow the blend of prior specification used in the popular packages
+We follow the recomendation made in the popular packages
 [rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
-and [brms](https://rdrr.io/cran/brms/man/set_prior.html).
+and [brms](https://rdrr.io/cran/brms/man/set_prior.html) for prior specification.
 Technically, the prior used in *rstanrm* and *brms* packages are data-dependent
 and, hence *weakly informative*. This is because  the the scaling is based on
 the scales of the predictors and the outcome. However, the amount of information
@@ -219,3 +219,5 @@ reasonable for many models fit using the *rstanrm* and *brms*.
 
 
 #### References
+
+
