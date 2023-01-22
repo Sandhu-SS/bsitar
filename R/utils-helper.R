@@ -11,8 +11,8 @@ get.newdata <- function(model, newdata, resp) {
   xvar_ <- paste0('xvar', resp_rev_)
   yvar_ <- paste0('yvar', resp_rev_)
   groupvar_ <- paste0('groupvar', resp_rev_)
-  Xx <- model$model_info[[xvar_]]
-  Yy <- model$model_info[[yvar_]]
+  xvar <- model$model_info[[xvar_]]
+  yvar <- model$model_info[[yvar_]]
   IDvar <- model$model_info[[groupvar_]]
   
   cov_ <- paste0('cov', resp_rev_)
@@ -62,8 +62,8 @@ get.newdata <- function(model, newdata, resp) {
     groupby_fistr <- c(uvarby, groupby_fistr)
   }
   
-  list_c[['xvar']] <- Xx
-  list_c[['yvar']] <- Yy
+  list_c[['xvar']] <- xvar
+  list_c[['yvar']] <- yvar
   list_c[['IDvar']] <- IDvar
   list_c[['cov_vars']] <- cov_vars
   list_c[['cov_factor_vars']] <- cov_factor_vars
@@ -148,7 +148,7 @@ set_numeric_cov_at <- function(x, numeric_cov_at) {
 
 
 
-ged.data.grid <- function(data, 
+get.data.grid <- function(data, 
                           xvar = NULL, 
                           yvar = NULL, 
                           IDvar = NULL, 
@@ -213,7 +213,7 @@ ged.data.grid <- function(data,
 # 
 # numeric_cov_at <- list(zz = 22, zzz = 33)
 # 
-# newdata.oo <- ged.data.grid(data %>% dplyr::mutate(zz = 3, zzz=4), xvar, yvar, IDvar, cov_numeric_vars,
+# newdata.oo <- get.data.grid(data %>% dplyr::mutate(zz = 3, zzz=4), xvar, yvar, IDvar, cov_numeric_vars,
 #                             numeric_cov_at, uvarby)
 
 
@@ -240,8 +240,8 @@ i_data <-
     xvar_ <- paste0('xvar', resp_rev_)
     yvar_ <- paste0('yvar', resp_rev_)
     groupvar_ <- paste0('groupvar', resp_rev_)
-    Xx <- model$model_info[[xvar_]]
-    Yy <- model$model_info[[yvar_]]
+    xvar <- model$model_info[[xvar_]]
+    yvar <- model$model_info[[yvar_]]
     IDvar <- model$model_info[[groupvar_]] 
     uvarby <- model$model_info$univariate_by
     
@@ -322,7 +322,7 @@ i_data <-
       
     }
     
-    newdata.oo <- ged.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
+    newdata.oo <- get.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
                                 numeric_cov_at, uvarby)
     
     j_b_names <- names(newdata)
