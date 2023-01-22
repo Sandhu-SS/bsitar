@@ -200,19 +200,6 @@ gparameters.bsitar <- function(model,
     }
   }
   
-  newdata <- get.newdata(model, newdata = newdata, resp = resp)
-  list_c <- attr(newdata, 'list_c')
-  for (list_ci in names(list_c)) {
-    assign(list_ci, list_c[[list_ci]])
-  }
-  check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
-               'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
-  
-  for (check___ in check__) {
-    if(!exists(check___)) assign(check___, NULL)
-  }
-  
-  
   
   call_posterior_summary <- function(dat) {
     if (!robust) {
@@ -646,6 +633,19 @@ gparameters.bsitar <- function(model,
   
   
   if (!arguments$plot) {
+    
+    newdata <- get.newdata(model, newdata = newdata, resp = resp)
+    list_c <- attr(newdata, 'list_c')
+    for (list_ci in names(list_c)) {
+      assign(list_ci, list_c[[list_ci]])
+    }
+    check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+                 'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
+    
+    for (check___ in check__) {
+      if(!exists(check___)) assign(check___, NULL)
+    }
+    
     
     newdata <- i_data(model, newdata, resp = resp, 
                       cov_factor_vars = cov_factor_vars, 
