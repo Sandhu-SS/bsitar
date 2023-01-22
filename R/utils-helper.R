@@ -18,33 +18,37 @@ get.newdata <- function(model, newdata, resp) {
   cov_ <- paste0('cov', resp_rev_)
   uvarby <- model$model_info$univariate_by
   
-  
-  if (is.null(newdata)) {
-    if(is.na(model$model_info$univariate_by)) {
-      newdata <- model$data
-    } else if(!is.na(model$model_info$univariate_by)) {
-      newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
-                                                   model$model_info$univariate_by,
-                                                   model$model_info$org.ycall)
-      sortbylayer <- NA
-      newdata <- newdata %>%
-        dplyr::mutate(sortbylayer =
-                        forcats::fct_relevel(!!as.name(uvarby),
-                                             (levels(
-                                               !!as.name(uvarby)
-                                             )))) %>%
-        dplyr::arrange(sortbylayer) %>%
-        dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                                 levels = 
-                                                   unique(!!as.name(IDvar)))) %>% 
-        dplyr::select(-sortbylayer)
-      subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
-      list_c[['subindicatorsi']] <- subindicatorsi
-      list_c[['uvarby']] <- uvarby
-    }
-  } else if (!is.null(newdata)) {
-    newdata <- newdata
+  if (is.null(newdata) & is.na(model$model_info$univariate_by)) {
+    newdata <- model$data
   }
+  
+  if(!is.na(model$model_info$univariate_by)) {
+    if (is.null(newdata)) {
+      newdata_ <- eval.parent(model$model_info$call.bsitar$data)
+    } else  if (!is.null(newdata)) {
+      newdata_ <- newdata
+    }
+    newdata <- model$model_info$make_bsitar_data(newdata_,
+                                                 model$model_info$univariate_by,
+                                                 model$model_info$org.ycall)
+    # print(head(newdata_))
+    sortbylayer <- NA
+    newdata <- newdata %>%
+      dplyr::mutate(sortbylayer =
+                      forcats::fct_relevel(!!as.name(uvarby),
+                                           (levels(
+                                             !!as.name(uvarby)
+                                           )))) %>%
+      dplyr::arrange(sortbylayer) %>%
+      dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
+                                               levels = 
+                                                 unique(!!as.name(IDvar)))) %>% 
+      dplyr::select(-sortbylayer)
+    subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
+    list_c[['subindicatorsi']] <- subindicatorsi
+    list_c[['uvarby']] <- uvarby
+  }
+  
   
   factor_vars <- names(newdata[sapply(newdata, is.factor)])
   numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
@@ -111,7 +115,7 @@ get.cores <- function(cores.arg) {
     if(Sys.info()["sysname"] == "Windows") {
       .cores_ps <- 1
     } else {
-      .cores_ps <- max.cores
+      .cores_ps <- cores
     }
   } else if(is.null(cores_)) {
     .cores_ps <- 1
@@ -143,18 +147,16 @@ set_numeric_cov_at <- function(x, numeric_cov_at) {
   round(., 3)
 }
 
-# numeric_cov_at <- list(age = 3, height = 4)
-# data %>% dplyr::mutate_at(c("age", "height")  , set_numeric_cov_at, numeric_cov_at)
 
 
-
-get.data.grid <- function(data, 
+ged.data.grid <- function(data, 
                           xvar = NULL, 
                           yvar = NULL, 
                           IDvar = NULL, 
                           cov_numeric_vars = NULL,
                           numeric_cov_at = NULL,
                           uvarby = NA) {
+  
   if(!is.null(IDvar)) relocate_vars <- c(xvar, IDvar)
   if(is.null(IDvar)) relocate_vars <- c(xvar)
   if(!is.na(uvarby)) relocate_vars <- c(relocate_vars, uvarby)
@@ -201,23 +203,6 @@ get.data.grid <- function(data,
   }
   data %>% dplyr::relocate(all_of(relocate_vars)) %>% data.frame()
 }
-
-
-
-# xvar <- 'age'
-# yvar <- 'height'
-# IDvar <- 'id'
-# uvarby <- 'sex'
-# xvar <- 'age'
-# cov_numeric_vars <- c('zz', 'zzz')
-# 
-# numeric_cov_at <- list(zz = 22, zzz = 33)
-# 
-# newdata.oo <- get.data.grid(data %>% dplyr::mutate(zz = 3, zzz=4), xvar, yvar, IDvar, cov_numeric_vars,
-#                             numeric_cov_at, uvarby)
-
-
-
 
 
 
@@ -322,7 +307,7 @@ i_data <-
       
     }
     
-    newdata.oo <- get.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
+    newdata.oo <- ged.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
                                 numeric_cov_at, uvarby)
     
     j_b_names <- names(newdata)
@@ -334,5 +319,7 @@ i_data <-
     
     newdata 
   }
+
+
 
 
