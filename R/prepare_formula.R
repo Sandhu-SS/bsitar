@@ -237,6 +237,35 @@ prepare_formula <- function(x,
     drandom <- NULL
   }
   
+  arandom_wb <- NULL
+  arandom_wb_ <- FALSE
+  brandom_wb <- crandom_wb <- drandom_wb <- arandom_wb
+  brandom_wb_ <- crandom_wb_ <- drandom_wb_ <- arandom_wb_
+
+  if(!is.null(arandom) & grepl("|", arandom, fixed = TRUE)) {
+    arandom_wb <- gsub("~", "", arandom) # with bar
+    arandom_wb_ <- TRUE
+    arandom <- sub("\\|.*", "", arandom)
+  }
+  if(!is.null(brandom) & grepl("|", brandom, fixed = TRUE)) {
+    brandom_wb <- gsub("~", "", brandom)
+    brandom_wb_ <- TRUE
+    brandom <- sub("\\|.*", "", brandom)
+  }
+  if(!is.null(crandom) & grepl("|", crandom, fixed = TRUE)) {
+    crandom_wb <- gsub("~", "", crandom)
+    crandom_wb_ <- TRUE
+    crandom <- sub("\\|.*", "", crandom)
+  }
+  
+  if(!is.null(drandom)) {
+    if(grepl("|", drandom, fixed = TRUE)) {
+      drandom_wb <- gsub("~", "", drandom)
+      drandom_wb_ <- TRUE
+      drandom <- sub("\\|.*", "", drandom)
+    }
+  }
+  
   
   if (!is.null(afixed)) {
     acovmat <- eval(parse(text = paste0(
@@ -467,21 +496,46 @@ prepare_formula <- function(x,
                          gr_distss2,
                          ")")
       
+      
+      
       if (!is.null(aform) & grepl("a", randomsi, fixed = T)) {
-        aform <- paste0(aform,
-                        " + (", aform_gr, "|", coridv, "|" , gr__args, ")")
+        if(!arandom_wb_) {
+          aform <- paste0(aform,
+                          " + (", aform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(arandom_wb_) {
+          aform <- paste0(aform,
+                          " + (", arandom_wb, ")")
+        }
       }
+      
       if (!is.null(bform) & grepl("b", randomsi, fixed = T)) {
-        bform <- paste0(bform,
-                        " + (", bform_gr, "|", coridv, "|" , gr__args, ")")
+        if(!brandom_wb_) {
+          bform <- paste0(bform,
+                          " + (", bform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(brandom_wb_) {
+          bform <- paste0(bform,
+                          " + (", brandom_wb, ")")
+        }
       }
+      
       if (!is.null(cform) & grepl("c", randomsi, fixed = T)) {
-        cform <- paste0(cform,
-                        " + (", cform_gr, "|", coridv, "|" , gr__args, ")")
+        if(!crandom_wb_) {
+          cform <- paste0(cform,
+                          " + (", cform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(crandom_wb_) {
+          cform <- paste0(cform,
+                          " + (", crandom_wb, ")")
+        }
       }
+      
       if (!is.null(dform) & grepl("d", randomsi, fixed = T)) {
-        dform <- paste0(dform,
-                        " + (", dform_gr, "|", coridv, "|" , gr__args, ")")
+        if(!drandom_wb_) {
+          dform <- paste0(dform,
+                          " + (", dform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(drandom_wb_) {
+          dform <- paste0(dform,
+                          " + (", drandom_wb, ")")
+        }
       }
       
       ###########
@@ -491,24 +545,48 @@ prepare_formula <- function(x,
       # only allowing for 'd'
       if (match_sitar_d_form) {
         if (is.null(dform) & grepl("d", randomsi, fixed = T)) {
-          dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , gr__args, ")")
+          if(!drandom_wb_) {
+            dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , gr__args, ")")
+          } else if(drandom_wb_) {
+            dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , gr__args, ")")
+          }
         }
       }
       ###########
     }
     
+    
     if (is.null(group_arg)) {
       if (!is.null(aform) & grepl("a", randomsi, fixed = T)) {
-        aform <- paste0(aform, " + (", aform_gr, "|", coridv, "|" , id, ")")
+        if(!arandom_wb_) { 
+          aform <- paste0(aform, " + (", aform_gr, "|", coridv, "|" , id, ")")
+        } else if(arandom_wb_) {
+          aform <- paste0(aform, " + (", arandom_wb, ")")
+        }
       }
+      
       if (!is.null(bform) & grepl("b", randomsi, fixed = T)) {
-        bform <- paste0(bform, " + (", bform_gr, "|", coridv, "|" , id, ")")
+        if(!brandom_wb_) { 
+          bform <- paste0(bform, " + (", bform_gr, "|", coridv, "|" , id, ")")
+        } else if(brandom_wb_) {
+          bform <- paste0(bform, " + (", brandom_wb, ")")
+        }
       }
+      
       if (!is.null(cform) & grepl("c", randomsi, fixed = T)) {
-        cform <- paste0(cform, " + (", cform_gr, "|", coridv, "|" , id, ")")
+        if(!crandom_wb_) { 
+          cform <- paste0(cform, " + (", cform_gr, "|", coridv, "|" , id, ")")
+        } else if(crandom_wb_) {
+          cform <- paste0(cform, " + (", crandom_wb, ")")
+        }
       }
+      
       if (!is.null(cform) & grepl("d", randomsi, fixed = T)) {
-        dform <- paste0(dform, " + (", dform_gr, "|", coridv, "|" , id, ")")
+        if(!drandom_wb_) { 
+          dform <- paste0(dform, " + (", dform_gr, "|", coridv, "|" , id, ")")
+        } else if(drandom_wb_) {
+          dform <- paste0(dform, " + (", drandom_wb, ")")
+        }
       }
       
       ###########
@@ -518,7 +596,11 @@ prepare_formula <- function(x,
       # only allowing for 'd'
       if (match_sitar_d_form) {
         if (is.null(dform) & grepl("d", randomsi, fixed = T)) {
-          dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , id, ")")
+          if(!drandom_wb_) { 
+            dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , id, ")")
+          } else if(drandom_wb_) {
+            dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , id, ")")
+          }
         }
       }
       ###########
@@ -991,6 +1073,20 @@ prepare_formula <- function(x,
     )
   }
   
+  # brms removes while spaces from the coefficient names
+  # mimicking that behaviors but keeping it seperate here as 
+  # brms may later change it to underscore or something else
+  
+  gsubitbt <- ""
+  acovcoefnames <- gsub("[[:space:]]", gsubitbt, acovcoefnames)
+  bcovcoefnames <- gsub("[[:space:]]", gsubitbt, bcovcoefnames)
+  ccovcoefnames <- gsub("[[:space:]]", gsubitbt, ccovcoefnames)
+  dcovcoefnames <- gsub("[[:space:]]", gsubitbt, dcovcoefnames)
+  acovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, acovcoefnames_gr)
+  bcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, bcovcoefnames_gr)
+  ccovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, ccovcoefnames_gr)
+  dcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, dcovcoefnames_gr)
+  dparcovcoefnames <- gsub("[[:space:]]", gsubitbt, dparcovcoefnames)
   
   list_out <- list(
     nacov = nacov,
@@ -1040,6 +1136,7 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
+  # print(bform); stop()
   attr(bform, "list_out") <- as.list(list_out)
   
   return(bform)
