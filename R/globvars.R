@@ -46,7 +46,11 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "xoffsetsi",  "xsi",  "xvar",  "yfunsi",  "ysi",
     "IDvar",  "cov_factor_vars",  "groupby_fistr",  "groupby_fstr",  
     "yvar", "numeric_cov_at",  "groupby_str_d",  "uvarby", 
-    "groupby_fistr", "cov_vars", "cov_numeric_vars")
+    "groupby_fistr", "cov_vars", "cov_numeric_vars",
+    "a_formula_gr_strsi", "b_formula_gr_strsi", "c_formula_gr_strsi",
+    "d_formula_gr_strsi", "group"
+    )
   )
+
 
 

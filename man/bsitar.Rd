@@ -27,6 +27,10 @@ bsitar(
   b_formula_gr = ~1,
   c_formula_gr = ~1,
   d_formula_gr = ~1,
+  a_formula_gr_str = NULL,
+  b_formula_gr_str = NULL,
+  c_formula_gr_str = NULL,
+  d_formula_gr_str = NULL,
   dpar_formula = NULL,
   autocor_formula = NULL,
   family = gaussian(),
@@ -91,6 +95,9 @@ bsitar(
   init_data = NULL,
   verbose = FALSE,
   expose_function = TRUE,
+  get_priors = FALSE,
+  validate_priors = FALSE,
+  set_self_priors = NULL,
   chains = 4,
   iter = 2000,
   warmup = floor(iter/2),
@@ -216,16 +223,55 @@ interactions.}
 \code{a_formula} for details.}
 
 \item{a_formula_gr}{formula for random effect a (default \code{~ 1}). See
-\code{a_formula} for details.}
+\code{a_formula} for details. The random effect can be specified by using
+the bar approach or allowing \code{group_by} argument to set group
+identifier and the correlation structure. For example, to specify
+unstructured varinace covarinace structure for random effects parameters
+\code{a}, \code{b}, and \code{c}, the formuale random parameter \code{a},
+\code{b}, and \code{c} are specified as \code{a_formula_gr = ~ 1},
+\code{b_formula_gr = ~ 1}, and \code{c_formula_gr = ~ 1}  then using the
+\code{group_by} argument to specify the group identifier and the to set the
+correlation structure as follows \code{group_by = list(groupvar = id, cor =
+ un)}. Else, the bar approach can be used equivalently to set unstructured
+varinace covarinace structure \code{a_formula_gr = ~ (1 |c|id)},
+\code{b_formula_gr = ~ (1 |c|id)}, and \code{c_formula_gr = ~ (1 |c|id)}.}
 
 \item{b_formula_gr}{formula for random effect b (default \code{~ 1}). See
-\code{a_formula} for details.}
+\code{a_formula_gr} for details.}
 
 \item{c_formula_gr}{formula for random effect c (default \code{~ 1}). See
-\code{a_formula} for details.}
+\code{a_formula_gr} for details.}
 
 \item{d_formula_gr}{formula for random effect d (default \code{~ 1}). See
-\code{a_formula} for details.}
+\code{a_formula_gr} for details.}
+
+\item{a_formula_gr_str}{formula for random effect a (default \code{NULL}) when
+fitting model with hierarchical structure greater than two levels. See
+\code{a_formula} for details. The groupvar and priors specified by the
+argument \code{a_formula_gr} are used for the second level of hierarchy
+whereas groupvar and priors are manually specified for the third and beyond
+hierarchies by using the \code{get_priors} and \code{set_self_priors}
+arguments. An example of specifying formula for random effect parameter
+\code{a} for a three level model with repeated measures on individuals
+nested within the growth studies is as follows: \code{a_formula_gr_str = ~
+ (1|a|id:study) + (1|b|istudy)}. This formulation implies (with \code{|a|}
+and \code{|b|}) that fully unstructured varinace covarinace structure is
+specified for indivuals levels as well as for study. Note that \code{|a|}
+and \code{|b|} need to be distict as becayse parameters can only only for
+correlated for at the same level of hierarchy. in other words, it is not
+alowed to use the letters such as \code{|a|} and \code{|a|}.}
+
+\item{b_formula_gr_str}{formula for random effect b (default \code{NULL}) when
+fitting model with hierarchical structure greater than two levels. See
+\code{a_formula_gr_str} for details.}
+
+\item{c_formula_gr_str}{formula for random effect c (default \code{NULL}) when
+fitting model with hierarchical structure greater than two levels. See
+\code{a_formula_gr_str} for details.}
+
+\item{d_formula_gr_str}{formula for random effect d (default \code{NULL}) when
+fitting model with hierarchical structure greater than two levels. See
+\code{a_formula_gr_str} for details.}
 
 \item{dpar_formula}{formula for distributional parameter sigma. This is only
 useful when modelling the sigma (i.e., residual standard deviation
@@ -268,9 +314,14 @@ structure whereas the diagonal correlation structure (cor = diagonal)
 estimates only the variance (i.e, standard deviation) parameters
 (correlation parameters are set to zero). For further details, see
 \link[brms:brm]{brms::brm} function (\bold{Group-level terms}). Note that only the groupvar
-suboption is carried to the univariate-by-subgroup (specified by using the
+suboption of the \code{group_arg} is passed to the univariate-by-subgroup
 \code{univariate_by} and the multivariate (specified by using the
-\code{multivariate} model fittings.}
+\code{multivariate} model fittings. Lastly, the \code{group_arg} is
+completely ignored when user specify random formula by using the "|"
+option for \code{a_formula_gr}, \code{b_formula_gr}, and
+\code{c_formula_gr}. Also, the \code{group_arg} is redundant for
+\code{a_formula_gr_str}, \code{b_formula_gr_str},
+and \code{c_formula_gr_str}.}
 
 \item{univariate_by}{specify univariate-by-subgroup model fitting arguments.
 Suboptions include the by argument to specify the variable (which must be a
@@ -677,6 +728,14 @@ pass on df, prior, initials etc.}
 function used for model fitting. These functions are essential for
 post-processing.}
 
+\item{get_priors}{An optional logical (default \code{FALSE}) to get priors.}
+
+\item{validate_priors}{An optional logical (default \code{FALSE}) to
+validate the specified priors..}
+
+\item{set_self_priors}{An optional (default \code{NULL}) to specify
+priors manually.}
+
 \item{chains}{Number of Markov chains (defaults to 4).}
 
 \item{iter}{Number of total iterations per chain (including warmup; defaults
@@ -866,10 +925,9 @@ frequentist version of the SITAR model can be fit by an already available R
 package, the \emph{sitar} \insertCite{R-sitar}{bsitar}. Besides fitting a
 Bayesian SITAR model, the \emph{bsitar} package greatly enhances the modelling
 capabilities offered earlier by the \emph{sitar} package. For example, in
-addition to the univariate model fitting (i.e, modelling a single
-outcome as implemented in the \emph{sitar} package), the \strong{bsitar} allows
-univariate-by-subgroup and multivariate model specifications
-(see @details).
+addition to the univariate model fitting (i.e, modelling a single outcome as
+implemented in the \emph{sitar} package), the \strong{bsitar} allows
+univariate-by-subgroup and multivariate model specifications (see @details).
 }
 \details{
 The SITAR model is a shape-invariant nonlinear mixed effect growth
