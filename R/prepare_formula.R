@@ -216,9 +216,7 @@ prepare_formula <- function(x,
   
   sfixed <- s_formulasi
   
- 
-  
-  
+
   if (grepl("a", randomsi, fixed = T)) {
     arandom <- a_formula_grsi
   } else {
@@ -282,7 +280,6 @@ prepare_formula <- function(x,
   brandom_wb <- gsub("1+1", "1", brandom_wb, fixed = T)
   crandom_wb <- gsub("1+1", "1", crandom_wb, fixed = T)
   drandom_wb <- gsub("1+1", "1", drandom_wb, fixed = T)
-  
   
   
   if (!is.null(afixed)) {
@@ -1217,7 +1214,7 @@ prepare_formula <- function(x,
   # list_out <<- list_out
   # print(a_formula_grsi)
   # print(acovcoefnames_gr)
-  #  print(bform); #stop()
+  # print(bform); #stop()
   
   attr(bform, "list_out") <- as.list(list_out)
   

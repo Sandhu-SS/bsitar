@@ -1045,6 +1045,22 @@ bsitar <- function(x,
   
   no_default_args <- c("x", "y", "id", "data", "...")
   
+  deparse_0 <- function(deparseobj) {
+    deparseobj <- paste(deparse(deparseobj), collapse = "")
+    deparseobj <- gsub("[[:space:]]", "", deparseobj)
+    deparseobj
+  }
+  
+  deparse_0s <- function(deparseobj) {
+    deparseobj <- paste(deparse(substitute(deparseobj)), collapse = "")
+    deparseobj
+  }
+  
+  gsub_space <- function(deparseobj) {
+    deparseobj <- gsub("[[:space:]]", "", deparseobj)
+    deparseobj
+  }
+  
   for (i in names(mcall)[-1]) {
     if (!i %in% no_default_args) {
       err. <- FALSE
@@ -1052,7 +1068,7 @@ bsitar <- function(x,
         expr = {
           # checks. <- eval(mcall[[i]])
           if (is.function(eval(mcall[[i]]))) {
-            checks. <- deparse(mcall[[i]])
+            checks. <- deparse_0(mcall[[i]])
           } else {
             checks. <- eval(mcall[[i]])
           }
@@ -1070,9 +1086,9 @@ bsitar <- function(x,
           } else if (!is.list(checks.[[1]])) {
             if (is.list(checks.)) {
               if (is.symbol(mcall[[i]]))
-                mcall[[i]] <- deparse(mcall[[i]]) # for set_self_priors
+                mcall[[i]] <- deparse_0(mcall[[i]]) # for set_self_priors
                 mcall[[i]] <- eval(mcall[[i]])
-              temp <- str2lang(deparse((mcall[[i]])))
+              temp <- str2lang(deparse_0((mcall[[i]])))
               mcall[[i]] <- temp
             } else if (!is.list(checks.)) {
               mcall[[i]] <- checks.
@@ -1087,9 +1103,7 @@ bsitar <- function(x,
     }
   }
   
-  
-  
-  
+
   arguments <- as.list(mcall)[-1]
   
   
@@ -1107,7 +1121,7 @@ bsitar <- function(x,
   
   for (ip in names(arguments)) {
     if (grepl("_init_", ip)) {
-      d_mcall_ <- deparse(mcall_[[ip]])
+      d_mcall_ <- deparse_0(mcall_[[ip]])
       if(is.symbol(mcall_[[ip]])) {
         arguments[[ip]] <- d_mcall_
       } else if(grepl("c(", d_mcall_, fixed = T)) {
@@ -1119,14 +1133,12 @@ bsitar <- function(x,
   }
   
   # arguments2 <<- arguments
-   
-  # mcall_ <<- mcall_
-  # zz <<- deparse(mcall_$b_init_beta)
-  # arguments$b_init_beta <- zz
-  # 
-  # zxxx <<- arguments
-  
-  
+ 
+  remove_spaces <- c('a_formula_gr_str', 'b_formula_gr_str', 
+                     'c_formula_gr_str', 'd_formula_gr_str')
+  for (ip in remove_spaces) {
+    arguments[[ip]] <-  gsub_space(arguments[[ip]] )
+  }
   
   # separate OUT 'brms' arguments from 'bsitar' arguments for ease of handling
   
@@ -1262,7 +1274,7 @@ bsitar <- function(x,
     xx <- gsub(paste0("^", prefix_, ""), prefix_by, xx)
     if (sub("\\).*", "", sub(".*\\(", "", xx)) != "") {
       xxx <- list_to_quoted_if_not(xx)
-      xxx <- gsub("\"" , "'", deparse(xxx))
+      xxx <- gsub("\"" , "'", deparse_0(xxx))
       xxx <- gsub(paste0("^", prefix_by, ""), prefix_, xxx)
       xxx <- gsub("\\s", "", xxx)
     } else {
@@ -1288,7 +1300,7 @@ bsitar <- function(x,
       xx <-
         paste0(prefix_by, "(", paste(xxtnf, collapse = ","), ")")
       xxx <- list_to_quoted_if_not(xx)
-      xxx <- gsub("\"" , "'", deparse(xxx))
+      xxx <- gsub("\"" , "'", deparse_0(xxx))
       xxx <- gsub(paste0("^", prefix_by, ""), prefix_, xxx)
       xxx <-
         gsub(paste0(prefix_, "\\("),
@@ -1368,7 +1380,7 @@ bsitar <- function(x,
         multivariate <- list_to_quoted_if_not(ttt)
         
       } else if (grepl("^list", multivariate)) {
-        ttt <- deparse(as.name(substitute(multivariate)))
+        ttt <- deparse_0(as.name(substitute(multivariate)))
         temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
         if (temp == "") {
           stop("empty list")
@@ -1475,7 +1487,7 @@ bsitar <- function(x,
         univariate_by <- list_to_quoted_if_not(ttt)
         
       } else if (grepl("^list", univariate_by)) {
-        ttt <- deparse(as.name(substitute(univariate_by)))
+        ttt <- deparse_0(as.name(substitute(univariate_by)))
         temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
         if (temp == "") {
           stop("empty list")
@@ -1595,7 +1607,7 @@ bsitar <- function(x,
         }
         group_arg <- list_to_quoted_if_not(ttt)
       } else if (grepl("^list", group_arg)) {
-        ttt <- deparse(as.name(substitute(group_arg)))
+        ttt <- deparse_0(as.name(substitute(group_arg)))
         temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
         if (temp == "") {
           stop("empty list")
@@ -1817,13 +1829,13 @@ bsitar <- function(x,
   to_list_if_not <- function(.x, nys, arguments, ...) {
     if (nys == 1) {
       if (!is.symbol(arguments[[.x]]) & !is.character(arguments[[.x]])) {
-        arguments[[.x]] <- deparse(arguments[[.x]])
+        arguments[[.x]] <- deparse_0(arguments[[.x]])
       } else {
         arguments[[.x]] <- arguments[[.x]]
       }
       if (is.symbol(arguments[[.x]]) &
           !is.character(arguments[[.x]])) {
-        arguments[[.x]] <- deparse(arguments[[.x]])
+        arguments[[.x]] <- deparse_0(arguments[[.x]])
       } else {
         arguments[[.x]] <- arguments[[.x]]
       }
@@ -1837,7 +1849,7 @@ bsitar <- function(x,
       .xx <- .x
     }
     if (!is.character(.xx) & !is.list(.xx)) {
-      .xx <- deparse(.xx)
+      .xx <- deparse_0(.xx)
     } else {
       .xx <- .xx
     }
@@ -1851,21 +1863,21 @@ bsitar <- function(x,
   
   eval_c_list_args <- function(.x, nys, arguments, ...) {
     if (is.language(arguments[[.x]]) &
-        (strsplit(deparse(arguments[[.x]]), "\\(")[[1]][1] !=
+        (strsplit(deparse_0(arguments[[.x]]), "\\(")[[1]][1] !=
          "c" &
-         strsplit(deparse(arguments[[.x]]), "\\(")[[1]][1] != "list")) {
+         strsplit(deparse_0(arguments[[.x]]), "\\(")[[1]][1] != "list")) {
       arguments[[.x]] <- deparse(arguments[[.x]])
     } else {
       arguments[[.x]] <- (arguments[[.x]])
     }
     if (is.logical(arguments[[.x]])) {
-      arguments[[.x]] <- deparse(arguments[[.x]])
+      arguments[[.x]] <- deparse_0(arguments[[.x]])
     } else {
       arguments[[.x]] <- arguments[[.x]]
     }
     
     if (is.numeric(arguments[[.x]])) {
-      arguments[[.x]] <- deparse(arguments[[.x]])
+      arguments[[.x]] <- deparse_0(arguments[[.x]])
     } else {
       arguments[[.x]] <- (arguments[[.x]])
     }
@@ -1873,13 +1885,13 @@ bsitar <- function(x,
     .x <- arguments[[.x]]
     fun_ <- function(.x) {
       if (!is.character(.x))
-        .x <- deparse(.x)
+        .x <- deparse_0(.x)
       else
         .x <- .x
       .x <- gsub("\\s", "", .x)
     }
     if (is.symbol(arguments[[.xo]]))
-      .x <- deparse(.x)
+      .x <- deparse_0(.x)
     else
       .x <- .x
     if (is.symbol(arguments[[.xo]]))
@@ -1901,7 +1913,7 @@ bsitar <- function(x,
   
   getArgNames <-
     function(value)
-      formalArgs(deparse(substitute(value)[[1]]))
+      formalArgs(deparse_0(substitute(value)[[1]]))
   
   convert_to_list <- getArgNames(bsitar())
   
@@ -2259,11 +2271,13 @@ bsitar <- function(x,
     
     ######################
     
+    # a_formula_gr_strsi <- gsub_space(a_formula_gr_strsi)
+    
     # checks for higher level model and update level 2 random formual
     f_checks_gr_gr_str <- function(a, b) {
       gr_st_id <- sub(".*\\|", "", a) 
-      a_ <- paste0("'", deparse(substitute(a)), "'")
-      b_ <- paste0("'", deparse(substitute(b)), "'")
+      a_ <- paste0("'", deparse_0(substitute(a)), "'")
+      b_ <- paste0("'", deparse_0(substitute(b)), "'")
       b_out <- NULL
       if(is.null(b[[1]])) {
         if(grepl(":", gr_st_id, fixed = T) | grepl("/", gr_st_id, fixed = T)) {
@@ -2316,12 +2330,12 @@ bsitar <- function(x,
       }
     }
     
+    
     a_formula_grsi <- gsub("[()]", "", a_formula_grsi)
     b_formula_grsi <- gsub("[()]", "", b_formula_grsi)
     c_formula_grsi <- gsub("[()]", "", c_formula_grsi)
     if(!is.null(d_formula_grsi)) d_formula_grsi <- gsub("[()]", "", d_formula_grsi)
     
-    set_higher_levels <- NA
     set_higher_levels <- TRUE
     if(is.null(a_fcgs_out) & 
        is.null(b_fcgs_out) & 
@@ -2739,7 +2753,6 @@ bsitar <- function(x,
         "set_higher_levels",
         "verbose"
       )
-   
     
     internal_formula_args <- list()
     internal_formula_args <- mget(internal_formula_args_names)
@@ -3680,49 +3693,82 @@ bsitar <- function(x,
   
   cat("\n")
   # brm_args <<- brm_args
-  
-  # brmspriors <<- brmspriors
-  # brmsfit <<- do.call(get_prior, brm_args)
-  # stop()
-  # brmspriors <<- brmspriors
-  # # brmspriors <- brmspriors %>% filter(class == 'b') %>% 
-  # #   bind_rows(., do.call(get_prior, brm_args) %>% filter(class != 'b'))
-  # 
-  # # brmspriors <<- brmspriors
+ 
   
   
+  # set_higher_priors <- function(prior_object, new_priors) {
+  #   new_priors.o <- new_priors
+  #   group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- NA
+  #   group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- c()
+  #   new_priors <- as.data.frame(new_priors)
+  #   for (new_priors_i in 1:nrow(new_priors)) {
+  #     pstr <- new_priors[new_priors_i,]
+  #     group_ <- c(group_, pstr[["group"]])
+  #     class_ <- c(class_, pstr[["class"]])
+  #     nlpar_ <- c(nlpar_, pstr[["nlpar"]])
+  #     if(pstr[["class"]] == 'sd') sd_check <- c(sd_check, pstr[["group"]])
+  #     if(pstr[["class"]] == 'cor') cor_check <- c(cor_check, pstr[["group"]])
+  #   }
+  #   
+  #   if(!is.null(sd_check)) {
+  #     prior_object <- prior_object %>% 
+  #       filter(!c(class == 'sd' & coef == '')) %>% 
+  #       filter(!c(group %in% group_ & class %in% class_ & nlpar %in% nlpar_))
+  #   }
+  #   
+  #   if(!is.null(cor_check)) {
+  #     prior_object <- prior_object %>% 
+  #       filter(!c(class == 'cor' & group == '')) %>% 
+  #       filter(!c(group %in% group_ & class %in% class_ ))
+  #   }
+  #   
+  #   out <- prior_object %>% bind_rows(.,new_priors.o)
+  #   out
+  # }
   
   
-  set_higher_priors <- function(prior_object, new_priors) {
-    new_priors.o <- new_priors
-    group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- NA
-    group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- c()
-    group <- NA
-    new_priors <- as.data.frame(new_priors)
-    for (new_priors_i in 1:nrow(new_priors)) {
-      pstr <- new_priors[new_priors_i,]
-      group_ <- c(group_, pstr[["group"]])
-      class_ <- c(class_, pstr[["class"]])
-      nlpar_ <- c(nlpar_, pstr[["nlpar"]])
-      if(pstr[["class"]] == 'sd') sd_check <- c(sd_check, pstr[["group"]])
-      if(pstr[["class"]] == 'cor') cor_check <- c(cor_check, pstr[["group"]])
-    }
+  
+  
+  
+  insert_new_priors <- function(setdf_1, setdf_2) {
+    index <- row_number <- valid <- NA
+    setdf_1 <- 
+      setdf_1 %>% dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
+      dplyr::mutate(order = row_number()) %>% 
+      dplyr::arrange(index)
     
-    if(!is.null(sd_check)) {
-      prior_object <- prior_object %>% 
-        dplyr::filter(!c(class == 'sd' & coef == '')) %>% 
-        dplyr::filter(!c(group %in% group_ & class %in% class_ & nlpar %in% nlpar_))
-    }
+    setdf_2 <- 
+      setdf_2 %>% dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
+      dplyr::mutate(order = row_number()) %>% 
+      dplyr::arrange(index)
     
-    if(!is.null(cor_check)) {
-      prior_object <- prior_object %>% 
-        dplyr::filter(!c(class == 'cor' & group == '')) %>% 
-        dplyr::filter(!c(group %in% group_ & class %in% class_ ))
-    }
+    vi_1 <- setdf_1 %>% dplyr::mutate(valid = ifelse(!(class == 'sd' & coef == ""), 1, 0)) %>% 
+      data.frame() %>% dplyr::filter(valid == 1) %>% dplyr::select(index) %>% unlist() %>% 
+      droplevels()
     
-    out <- prior_object %>% dplyr::bind_rows(.,new_priors.o)
-    out
+    setdf_1 <- setdf_1 %>% dplyr::filter(!(class == 'sd' & coef == ""))
+    
+    setdf_2 <- setdf_2 %>% dplyr::filter(!(class == 'sd' & coef == ""))
+    
+    setdf_3 <- setdf_1[setdf_1$index %in% vi_1,]
+    
+    setdf_2 <- setdf_2 %>% dplyr::filter(!index %in% vi_1)
+    
+    setdf_4 <- rbind(setdf_2, setdf_3)
+    
+    # setdf_4 <- setdf_4 %>% arrange(order) %>% select(-c(index, order))
+    setdf_4 <- setdf_4 %>% dplyr::select(-c(index, order))
+    
+    setdf_4
   }
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   
@@ -3790,11 +3836,12 @@ bsitar <- function(x,
     if(!is.null(set_self_priors)) {
       brm_args$prior <- set_self_priors
     } else if(!is.null(set_replace_priors)) {
-      brm_args$prior <- set_higher_priors(brmspriors, set_replace_priors)
+      # brm_args$prior <- set_higher_priors(brmspriors, set_replace_priors)
+      brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
     } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
       brm_args$prior <- brmspriors
     }
-  
+    
     
    # print(brm_args$prior)
     
