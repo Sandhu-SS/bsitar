@@ -216,61 +216,7 @@ prepare_formula <- function(x,
   
   sfixed <- s_formulasi
   
-  
-  afixed.o <- afixed
-  bfixed.o <- bfixed
-  cfixed.o <- cfixed
-  dfixed.o <- dfixed
-  
-  
-  
-  f_checks_gr_gr_str <- function(a, b) {
-    gr_st_id <- sub(".*\\|", "", a) 
-    a_ <- paste0("'", deparse(substitute(a)), "'")
-    b_ <- paste0("'", deparse(substitute(b)), "'")
-    b_out <- NULL
-    if(is.null(b[[1]])) {
-      if(grepl(":", gr_st_id, fixed = T) | grepl("/", gr_st_id, fixed = T)) {
-        stop("Models beyound two levels of hierarchy are not supported yet",
-             "\n ",
-             "An alternative to argument ", a_, " is to use ",
-             "\n ",
-             "argument ", b_, " to directly pass on the ", 
-             "\n ",
-             "random formual to the brms and then either accept",
-             "\n ",
-             "default priors placed by the brms for those varinace covarinace", 
-             "\n ",
-             "or else use get_prios to place priors manually and the pass them",
-             "\n ",
-             "to the bsitar by using argument 'set_self_priors'"
-        )
-      }
-    } else if(!is.null(b[[1]])) {
-      b_out <- b
-    }
-    b_out
-  }
-  
-  a_fcgs_out <- f_checks_gr_gr_str(a_formula_grsi, a_formula_gr_strsi)
-  b_fcgs_out <- f_checks_gr_gr_str(b_formula_grsi, b_formula_gr_strsi)
-  c_fcgs_out <- f_checks_gr_gr_str(c_formula_grsi, c_formula_gr_strsi)
-  d_fcgs_out <- f_checks_gr_gr_str(d_formula_grsi, d_formula_gr_strsi)
-  
-  
-  
-  
-  set_higher_levels <- TRUE
-  if(is.null(a_fcgs_out) & 
-     is.null(b_fcgs_out) & 
-     is.null(c_fcgs_out) & 
-     is.null(d_fcgs_out)) {
-    set_higher_levels <- FALSE
-  }
-  
-  
-  
-  
+ 
   
   
   if (grepl("a", randomsi, fixed = T)) {
@@ -294,7 +240,6 @@ prepare_formula <- function(x,
     drandom <- NULL
   }
   
-
   arandom_wb <- NULL
   arandom_wb_ <- FALSE
   brandom_wb <- crandom_wb <- drandom_wb <- arandom_wb
@@ -331,6 +276,13 @@ prepare_formula <- function(x,
       drandom <- get_x_random(drandom)
     }
   }
+  
+  
+  arandom_wb <- gsub("1+1", "1", arandom_wb, fixed = T)
+  brandom_wb <- gsub("1+1", "1", brandom_wb, fixed = T)
+  crandom_wb <- gsub("1+1", "1", crandom_wb, fixed = T)
+  drandom_wb <- gsub("1+1", "1", drandom_wb, fixed = T)
+  
   
   
   if (!is.null(afixed)) {
@@ -674,35 +626,60 @@ prepare_formula <- function(x,
   }
   
   
-  # print(aform)
-  # print(a_formula_gr_strsi)
+
+   
+   add_higher_level_str <- function(form, str) {
+     if(!is.null(str[[1]])) {
+       get_n_str <- strsplit(str, ")+(", fixed = T)[[1]][-1]
+       get_n_str_length <- length(get_n_str)
+     } else {
+       get_n_str_length <- 0
+     }
+     if(get_n_str_length != 0) {
+       str <- gsub(")+(", ")_(", str, fixed = T)
+       str_ <- sub("^[^_]*_", "", str)
+       str_ <- gsub(")_(", ")+(", str_, fixed = T)
+       form <- paste0(form, "+", str_)
+     } else {
+       form <- form
+     }
+     form <- gsub("[[:space:]]", "", form)
+     form
+   }
+   
+   
+  
   
   if(set_higher_levels) {
-    a_formula_gr_strsi_ <- paste0("+(",  gsub("~", "", a_formula_gr_strsi),")")
-    aform <- paste0("a", afixed, a_formula_gr_strsi_)
-    
-    b_formula_gr_strsi_ <- paste0("+(",  gsub("~", "", b_formula_gr_strsi),")")
-    bform <- paste0("b", bfixed, b_formula_gr_strsi_)
-    
-    c_formula_gr_strsi_ <- paste0("+(",  gsub("~", "", c_formula_gr_strsi),")")
-    cform <- paste0("c", cfixed, c_formula_gr_strsi_)
-    
+    aform <- add_higher_level_str(aform, a_formula_gr_strsi)
+    bform <- add_higher_level_str(bform, b_formula_gr_strsi)
+    cform <- add_higher_level_str(cform, c_formula_gr_strsi)
     if(!is.null(dform)) {
-      d_formula_gr_strsi_ <- paste0("+(",  gsub("~", "", d_formula_gr_strsi),")")
-      dform <- paste0("d", dfixed, d_formula_gr_strsi_)
+      dform <- add_higher_level_str(dform, d_formula_gr_strsi)
     }
     
-    xx <- a_formula_gr_strsi
-    xx <- gsub("[[:space:]]", "", xx)
-    xx2 <- strsplit(xx, "+", fixed = T)[[1]][1]
-    xx2 <- gsub("\\)", "", xx2)
-    gr_varss <- sub(".*\\|", "", xx2) 
+    extract_xx <- NULL
+    if(!is.null(a_formula_gr_strsi[[1]])) {
+      extract_xx <- a_formula_gr_strsi
+    } else if(!is.null(b_formula_gr_strsi[[1]])) {
+      extract_xx <- b_formula_gr_strsi
+    } else if(!is.null(c_formula_gr_strsi[[1]])) {
+      extract_xx <- c_formula_gr_strsi
+    } else if(!is.null(d_formula_gr_strsi[[1]])) {
+      extract_xx <- d_formula_gr_strsi
+    }
+    
+    extract_xx <- gsub("[[:space:]]", "", extract_xx)
+    extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
+    extract_xx <- gsub("\\)", "", extract_xx)
+    gr_varss <- sub(".*\\|", "", extract_xx) 
     
   } # if(set_higher_levels) {
   
-  # print(group_arg_groupvar)
+   # print(gr_varss)
+   # stop()
   
-  
+  # print(a_formula_gr_strsi_)
   
   
   
@@ -1237,7 +1214,11 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
- #  print(bform); stop()
+  # list_out <<- list_out
+  # print(a_formula_grsi)
+  # print(acovcoefnames_gr)
+  #  print(bform); #stop()
+  
   attr(bform, "list_out") <- as.list(list_out)
   
   return(bform)

@@ -96,8 +96,10 @@ bsitar(
   verbose = FALSE,
   expose_function = TRUE,
   get_priors = FALSE,
+  get_set_priors = FALSE,
   validate_priors = FALSE,
   set_self_priors = NULL,
+  set_replace_priors = NULL,
   chains = 4,
   iter = 2000,
   warmup = floor(iter/2),
@@ -730,11 +732,17 @@ post-processing.}
 
 \item{get_priors}{An optional logical (default \code{FALSE}) to get priors.}
 
+\item{get_set_priors}{An optional logical (default \code{FALSE}) to get
+priors specified by the \code{bsitar} via \code{prepare_priors}.}
+
 \item{validate_priors}{An optional logical (default \code{FALSE}) to
 validate the specified priors..}
 
 \item{set_self_priors}{An optional (default \code{NULL}) to specify
 priors manually.}
+
+\item{set_replace_priors}{An optional (default \code{NULL}) to replace
+part of prior object.}
 
 \item{chains}{Number of Markov chains (defaults to 4).}
 

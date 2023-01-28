@@ -696,11 +696,17 @@
 #'
 #'@param get_priors An optional logical (default \code{FALSE}) to get priors.
 #'
+#'@param get_set_priors An optional logical (default \code{FALSE}) to get 
+#' priors specified by the \code{bsitar} via \code{prepare_priors}.
+#'
 #'@param validate_priors An optional logical (default \code{FALSE}) to
 #'  validate the specified priors..
 #'
 #'@param set_self_priors An optional (default \code{NULL}) to specify
 #'  priors manually.
+#'  
+#'@param set_replace_priors An optional (default \code{NULL}) to replace
+#'  part of prior object.
 #'
 #'@param cores Number of cores to use when executing the chains in parallel. See
 #'  [brms::brm()] for details. Note that unlike [brms::brm()] which sets
@@ -1004,8 +1010,10 @@ bsitar <- function(x,
                    expose_function = TRUE,
                    
                    get_priors = FALSE,
+                   get_set_priors = FALSE,
                    validate_priors = FALSE,
                    set_self_priors = NULL,
+                   set_replace_priors = NULL,
                    
                    chains = 4,
                    iter = 2000,
@@ -1947,8 +1955,10 @@ bsitar <- function(x,
     "seed",
     "brms_arguments",
     "get_priors",
+    "get_set_priors",
     "validate_priors",
     "set_self_priors",
+    "set_replace_priors",
     "..."
   )
   
@@ -2245,6 +2255,82 @@ bsitar <- function(x,
         dpar_formulasi <- paste0(dpar_formulasi, ")")
       }
     }
+    
+    
+    ######################
+    
+    # checks for higher level model and update level 2 random formual
+    f_checks_gr_gr_str <- function(a, b) {
+      gr_st_id <- sub(".*\\|", "", a) 
+      a_ <- paste0("'", deparse(substitute(a)), "'")
+      b_ <- paste0("'", deparse(substitute(b)), "'")
+      b_out <- NULL
+      if(is.null(b[[1]])) {
+        if(grepl(":", gr_st_id, fixed = T) | grepl("/", gr_st_id, fixed = T)) {
+          stop("Models beyound two levels of hierarchy are not supported yet",
+               "\n ",
+               "An alternative to argument ", a_, " is to use ",
+               "\n ",
+               "argument ", b_, " to directly pass on the ", 
+               "\n ",
+               "random formual to the brms and then either accept",
+               "\n ",
+               "default priors placed by the brms for those varinace covarinace", 
+               "\n ",
+               "or else use get_prios to place priors manually and the pass them",
+               "\n ",
+               "to the bsitar by using argument 'set_self_priors'"
+          )
+        }
+      } else if(!is.null(b[[1]])) {
+        b_out <- b
+      }
+      b_out
+    }
+    
+    a_fcgs_out <- f_checks_gr_gr_str(a_formula_grsi, a_formula_gr_strsi)
+    b_fcgs_out <- f_checks_gr_gr_str(b_formula_grsi, b_formula_gr_strsi)
+    c_fcgs_out <- f_checks_gr_gr_str(c_formula_grsi, c_formula_gr_strsi)
+    d_fcgs_out <- f_checks_gr_gr_str(d_formula_grsi, d_formula_gr_strsi)
+    
+    if(!is.null(a_fcgs_out)) {
+      if(a_formula_grsi == "~1" & !is.null(a_formula_gr_strsi[[1]])) {
+        a_formula_grsi <- strsplit(a_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
+    if(!is.null(b_fcgs_out)) {
+      if(b_formula_grsi == "~1" & !is.null(b_formula_gr_strsi[[1]])) {
+        b_formula_grsi <- strsplit(b_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
+    if(!is.null(c_fcgs_out)) {
+      if(c_formula_grsi == "~1" & !is.null(c_formula_gr_strsi[[1]])) {
+        c_formula_grsi <- strsplit(c_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
+    if(!is.null(d_fcgs_out)) {
+      if(!is.null(d_formula_grsi[[1]]) & !is.null(d_formula_gr_strsi[[1]])) {
+        if(d_formula_grsi == "~1" & !is.null(d_formula_gr_strsi[[1]])) {
+          d_formula_grsi <- strsplit(d_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+        }
+      }
+    }
+    
+    a_formula_grsi <- gsub("[()]", "", a_formula_grsi)
+    b_formula_grsi <- gsub("[()]", "", b_formula_grsi)
+    c_formula_grsi <- gsub("[()]", "", c_formula_grsi)
+    if(!is.null(d_formula_grsi)) d_formula_grsi <- gsub("[()]", "", d_formula_grsi)
+    
+    set_higher_levels <- NA
+    set_higher_levels <- TRUE
+    if(is.null(a_fcgs_out) & 
+       is.null(b_fcgs_out) & 
+       is.null(c_fcgs_out) & 
+       is.null(d_fcgs_out)) {
+      set_higher_levels <- FALSE
+    }
+    
+    ###############
     
     
     
@@ -2650,7 +2736,7 @@ bsitar <- function(x,
         "b_formula_gr_strsi",
         "c_formula_gr_strsi",
         "d_formula_gr_strsi",
-        
+        "set_higher_levels",
         "verbose"
       )
    
@@ -3605,6 +3691,43 @@ bsitar <- function(x,
   # # brmspriors <<- brmspriors
   
   
+  
+  
+  set_higher_priors <- function(prior_object, new_priors) {
+    new_priors.o <- new_priors
+    group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- NA
+    group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- c()
+    group <- NA
+    new_priors <- as.data.frame(new_priors)
+    for (new_priors_i in 1:nrow(new_priors)) {
+      pstr <- new_priors[new_priors_i,]
+      group_ <- c(group_, pstr[["group"]])
+      class_ <- c(class_, pstr[["class"]])
+      nlpar_ <- c(nlpar_, pstr[["nlpar"]])
+      if(pstr[["class"]] == 'sd') sd_check <- c(sd_check, pstr[["group"]])
+      if(pstr[["class"]] == 'cor') cor_check <- c(cor_check, pstr[["group"]])
+    }
+    
+    if(!is.null(sd_check)) {
+      prior_object <- prior_object %>% 
+        dplyr::filter(!c(class == 'sd' & coef == '')) %>% 
+        dplyr::filter(!c(group %in% group_ & class %in% class_ & nlpar %in% nlpar_))
+    }
+    
+    if(!is.null(cor_check)) {
+      prior_object <- prior_object %>% 
+        dplyr::filter(!c(class == 'cor' & group == '')) %>% 
+        dplyr::filter(!c(group %in% group_ & class %in% class_ ))
+    }
+    
+    out <- prior_object %>% dplyr::bind_rows(.,new_priors.o)
+    out
+  }
+  
+  
+  
+  
+  
   if(set_higher_levels) {
     brmspriors_sdcor <- brmspriors %>% 
       dplyr::filter(class == 'sd' | class == 'cor')
@@ -3625,14 +3748,24 @@ bsitar <- function(x,
   brm_args$prior <- brmspriors
   
   
-  if(get_priors & validate_priors) {
-    stop("Amongst 'get_priors' and 'validate_priors' arguments,",
+  
+  if(!is.null(set_self_priors) & !is.null(set_replace_priors)) {
+    stop("Amongst 'set_self_priors' and 'set_replace_priors' arguments,",
          "\n ",
-         "only one can be set to TRUE at a time")
+         " only one can be specified at a time")
   }
+  
+  if(get_priors & get_set_priors & validate_priors) {
+    stop("Amongst 'get_priors' 'get_set_priors' and 'validate_priors' ",
+         "\n ",
+         " arguments, only one can be set to TRUE at a time")
+  }
+  
+  
   
   exe_model_fit <- TRUE
   if(get_priors |
+     get_set_priors |
      validate_priors) {
     exe_model_fit <- FALSE
   }
@@ -3643,6 +3776,8 @@ bsitar <- function(x,
   
   if(!exe_model_fit) {
     if(get_priors) {
+      return(do.call(get_prior, brm_args))
+    } else if(get_set_priors) {
       return(brm_args$prior)
     } else if(validate_priors) {
       return(do.call(validate_prior, brm_args))
@@ -3652,12 +3787,17 @@ bsitar <- function(x,
   
   
   if(exe_model_fit) {
-    if(is.null(set_self_priors)) {
-      brm_args$prior <- brmspriors
-    } else if(!is.null(set_self_priors)) {
+    if(!is.null(set_self_priors)) {
       brm_args$prior <- set_self_priors
+    } else if(!is.null(set_replace_priors)) {
+      brm_args$prior <- set_higher_priors(brmspriors, set_replace_priors)
+    } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
+      brm_args$prior <- brmspriors
     }
   
+    
+   # print(brm_args$prior)
+    
   brmsfit <- do.call(brm, brm_args)
   
   
