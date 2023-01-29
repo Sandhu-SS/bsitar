@@ -17,6 +17,7 @@
   summary = TRUE,
   re_formula = NULL,
   numeric_cov_at = NULL,
+  levels_id = NULL,
   ipts = NULL,
   seed = 123,
   estimation_method = "fitted",
@@ -48,13 +49,13 @@ plot_bsitar(model, ...)
 
 \item{opt}{A character string containing letter(s) corresponding to the
 following plotting options: 'd' for population average distance curve, 'v'
-for population average velocity curve, 'D' for individual-specific
-distance curves, 'V' for individual-specific velocity curves, 'u' for
-unadjusted individual-specific distance curves, and 'a' for adjusted
+for population average velocity curve, 'D' for individual-specific distance
+curves, 'V' for individual-specific velocity curves, 'u' for unadjusted
+individual-specific distance curves, and 'a' for adjusted
 individual-specific distance curves (adjusted for the random effects).
-Options 'd' and 'D' can not be specified simultaneously. Likewise,
-Options 'v' and 'V' can not be specified simultaneously. All other
-combinations are allowed. For example, dvau', Dvau', dVau', DVau', or dvau'.}
+Options 'd' and 'D' can not be specified simultaneously. Likewise, Options
+'v' and 'V' can not be specified simultaneously. All other combinations are
+allowed. For example, dvau', Dvau', dVau', DVau', or dvau'.}
 
 \item{apv}{An optional logical (default \code{FALSE}) specifying whether or
 not to calculate and plot the age at peak velocity (APGV) when \code{opt})
@@ -65,26 +66,26 @@ includes 'v' or 'V'.}
 velocity curves (and also the APGV). If \code{NULL}, no band plotted.
 Alternatively, user can specify a string with any one of the following or
 their combination(s): \code{'d'} for band around the distance curve,
-\code{'v} for band around the velocity curve, and \code{'p} for band
-around the the vertical line denoting the APGV parameter. The \code{'dvp'}
-will include CI bands for distance and velocity curves, and the APGV.}
+\code{'v} for band around the velocity curve, and \code{'p} for band around
+the the vertical line denoting the APGV parameter. The \code{'dvp'} will
+include CI bands for distance and velocity curves, and the APGV.}
 
 \item{conf}{A numeric value (default \code{0.95}) to be used to compute the
 CI and hence the width of the \code{bands}. See \link{gparameters.bsitar} for
 further details.}
 
-\item{resp}{Optional names of response variables. If specified,
-predictions are performed only for the specified response variables.}
+\item{resp}{Optional names of response variables. If specified, predictions
+are performed only for the specified response variables.}
 
-\item{ndraws}{Positive integer indicating the number of posterior draws to
-be used in estimation. If \code{NULL} (default), all draws are used.}
+\item{ndraws}{Positive integer indicating the number of posterior draws to be
+used in estimation. If \code{NULL} (default), all draws are used.}
 
-\item{newdata}{An optional data.frame for which to evaluate predictions.
-If \code{NULL} (default), the original data of the model is used.}
+\item{newdata}{An optional data.frame for which to evaluate predictions. If
+\code{NULL} (default), the original data of the model is used.}
 
-\item{summary}{A logical (default \code{TRUE}) to indicate whether
-only the Estimate should be returned or Estimate along with SE and CI should
-be computed. Setting this option to \code{FALSE} will reduce the computation
+\item{summary}{A logical (default \code{TRUE}) to indicate whether only the
+Estimate should be returned or Estimate along with SE and CI should be
+computed. Setting this option to \code{FALSE} will reduce the computation
 time but no SE or CI estimates will be available.}
 
 \item{re_formula}{Option to indicate whether or not to include the
@@ -99,135 +100,145 @@ included. When the continuous covariates by default are set to their means
 individual-specific growth parameter estimates are returned for each level
 of the factor cocariate.}
 
-\item{numeric_cov_at}{An option argument to specify the value of continuous
+\item{numeric_cov_at}{An optional argument to specify the value of continuous
 covariate(s) before calling the \link{fitted_.bsitar} and
 \link{predict_.bsitar} functions. The default \code{NULL} option set the
-continuous covariate(s) at mean. Alternatively, a named list can be supplied
-to manualy set the values. For example, \code{numeric_cov_at = list(xx = 2)}
-will set the continuous covariate varibale 'xx' at 2. The argument
-\code{numeric_cov_at} is ignored when no continuous covariate is included
-in the model.}
+continuous covariate(s) at mean. Alternatively, a named list can be
+supplied to manualy set the values. For example, \code{numeric_cov_at =
+  list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
+argument \code{numeric_cov_at} is ignored when no continuous covariate is
+included in the model.}
+
+\item{levels_id}{An optional argument to specify the ids for hierarchical
+model (default \code{NULL}. It is used only when a with 3 or higher level
+structures are fit. For two level model, the the id for second level is
+automatically inferred from the fitted model. Even for 3 or higher level
+model, ids are inferred from the fitted model but under the assumption that
+hierarchy is specified from lower to upper levels i.e, id, study assuming
+that id is nested within the studies. However, it is not gaunated that
+these ids are sorted correctly. Therefore, it is better to set it manually.}
 
 \item{ipts}{A numeric value to interpolate the predictor value to get a
-smooth velocity curve. The \code{NULL} (default) will return original values
-whereas a positive real value (e.g., \code{ipts = 10}) will interpolate
-the predictor. It is important to note that these interpolations do not
-alter the range of predictor when calculating population average and the
-individual specific velocity curves.}
+smooth velocity curve. The \code{NULL} (default) will return original
+values whereas a positive real value (e.g., \code{ipts = 10}) will
+interpolate the predictor. It is important to note that these
+interpolations do not alter the range of predictor when calculating
+population average and the individual specific velocity curves.}
 
-\item{seed}{An integer (default \code{123}) that is passed to the
-estimation method.}
+\item{seed}{An integer (default \code{123}) that is passed to the estimation
+method.}
 
 \item{estimation_method}{A character string to specify the estimation method
 used to calculate velocity from the posterior draws. The \code{'fitted'}
 method internally calls the \link{fitted_.bsitar} function whereas the
 option \code{'predict'} calls the \link{predict_.bsitar} function. See
-\link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} for derails on
-fitted versus predict estimations as they are the backend functions called
-by the \link{fitted_.bsitar} and \link{predict_.bsitar} functions.}
+\link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} for derails on fitted
+versus predict estimations as they are the backend functions called by the
+\link{fitted_.bsitar} and \link{predict_.bsitar} functions.}
 
-\item{robust}{If \code{FALSE} (the default) the mean is used as the measure of
-central tendency and the standard deviation as the measure of variability.
-If \code{TRUE}, the median and the median absolute deviation (MAD) are applied
-instead. Ignored if summary is \code{FALSE}}
+\item{robust}{If \code{FALSE} (the default) the mean is used as the measure
+of central tendency and the standard deviation as the measure of
+variability. If \code{TRUE}, the median and the median absolute deviation
+(MAD) are applied instead. Ignored if summary is \code{FALSE}}
 
 \item{future}{A logical (default \code{FALSE}) to specify whether or not to
 perform parallel computations. If set to \code{TRUE}, the
 \link[future.apply:future_lapply]{future.apply::future_sapply} function is used for summarizing the draws.}
 
 \item{future_session}{A character string to set the session type when
-\code{future = TRUE}. The \code{'multisession'} (default) options sets
-the multisession whereas the \code{'multicore'} set the multicore session.
-Note that multicore session are not supported on Windows systems. For more
+\code{future = TRUE}. The \code{'multisession'} (default) options sets the
+multisession whereas the \code{'multicore'} set the multicore session. Note
+that multicore session are not supported on Windows systems. For more
 details, see \link{future.apply} and \link{future}.}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations by setting the option \code{future = TRUE}. On non-Windows,
 systems this argument can be set globally via the mc.cores option. For the
-default \code{NULL} option, the number of cores are set automatically
-by calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
+default \code{NULL} option, the number of cores are set automatically by
+calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
 maximum number of cores avaialble minus one, i.e.,
 \code{future::availableCores() - 1}.}
 
 \item{trim}{A number (default 0) of long line segments to be excluded from
 plot with option 'u' or 'a'. See \link[sitar:plot.sitar]{sitar::plot.sitar} for details.}
 
-\item{layout}{A character string defining the layout structure of the
-plot. A \code{'single'} (default) layout provides overlaid distance and
-velocity curves on a single plot when opt includes \code{'dv'}, \code{'Dv'},
+\item{layout}{A character string defining the layout structure of the plot. A
+\code{'single'} (default) layout provides overlaid distance and velocity
+curves on a single plot when opt includes \code{'dv'}, \code{'Dv'},
 \code{'dV'} or \code{'DV'} options.  Similarly, when opt includes
-\code{'au'}, the adjusted and unadjusted curves are plotted as a single plot.
-When opt is a single letter (e.g., \code{'d'}. \code{'v'} \code{'D'},
-\code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is ignored.
-The alternative layout option, the \code{'facet'} uses \link[ggplot2:facet_wrap]{ggplot2::facet_wrap}
-to map and draw plot when \code{opt} include two or more letters.}
+\code{'au'}, the adjusted and unadjusted curves are plotted as a single
+plot. When opt is a single letter (e.g., \code{'d'}. \code{'v'} \code{'D'},
+\code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is
+ignored. The alternative layout option, the \code{'facet'} uses
+\link[ggplot2:facet_wrap]{ggplot2::facet_wrap} to map and draw plot when \code{opt} include two or
+more letters.}
 
 \item{linecolor}{The color of line used when layout is \code{'facet'}. The
 default is \code{NULL} which internally set the \code{linecolor} as
 \code{'grey50'}.}
 
-\item{linecolor1}{The color of first line when layout is \code{'single'}.
-For example, for \code{opt = 'dv'}, the color of distance line is controlled
-by the \code{linecolor1}. Default \code{NULL} will internally set
+\item{linecolor1}{The color of first line when layout is \code{'single'}. For
+example, for \code{opt = 'dv'}, the color of distance line is controlled by
+the \code{linecolor1}. Default \code{NULL} will internally set
 \code{linecolor1} as \code{'orange2'}.}
 
 \item{linecolor2}{The color of second line when layout is \code{'single'}.
-For example, for \code{opt = 'dv'}, the color of velocity line is controlled
-by the \code{linecolor2}. Default \code{NULL} sets the color \code{'green4'}
-for \code{linecolor2}.}
+For example, for \code{opt = 'dv'}, the color of velocity line is
+controlled by the \code{linecolor2}. Default \code{NULL} sets the color
+\code{'green4'} for \code{linecolor2}.}
 
 \item{label.x}{An optional character string to label the x axis. When
-\code{NULL} (default), the x axis label is taken from the predictor
-(e.g., age).}
+\code{NULL} (default), the x axis label is taken from the predictor (e.g.,
+age).}
 
 \item{label.y}{An optional character string to label the y axis. When
 \code{NULL} (default), the y axis label is taken from the type of plot
 (e.g., distance, velocity etc.). Note that when layout option is
-\code{'facet'}, then y axis label is removed and instead the same label
-is used as a title.}
+\code{'facet'}, then y axis label is removed and instead the same label is
+used as a title.}
 
 \item{legendpos}{An optional character string to specify the position of
 legends. When \code{NULL}, the legend position is set as 'bottom' for
 distance and velocity curves with \code{'single'} layout option.}
 
-\item{linetype.apv}{An optional character string to specify the type of
-the vertical line drawn to mark the APGV. Default \code{NULL} sets the
-linetype as 'dotted'}
+\item{linetype.apv}{An optional character string to specify the type of the
+vertical line drawn to mark the APGV. Default \code{NULL} sets the linetype
+as 'dotted'}
 
 \item{linewidth.main}{An optional character string to specify the width of
 the the line for the distance and velocity curves. The default \code{NULL}
 will set it as 0.35.}
 
-\item{linewidth.apv}{An optional character string to specify the width of
-the the vertical line drawn to mark the APGV. The default \code{NULL}
-will set it as 0.25.}
+\item{linewidth.apv}{An optional character string to specify the width of the
+the vertical line drawn to mark the APGV. The default \code{NULL} will set
+it as 0.25.}
 
-\item{linetype.groupby}{An optional argument to specify the line
-type for the distance and velocity curves when drawing plots for a model
-that includes factor covariate(s) or individual specific distance/velocity
-curves (default \code{NA}). Setting it to \code{NULL} will automatically sets
-the linetype for each factor level or individual This will also add legends
-for the factor level covariate or individuals whereas \code{NA} will set a
+\item{linetype.groupby}{An optional argument to specify the line type for the
+distance and velocity curves when drawing plots for a model that includes
+factor covariate(s) or individual specific distance/velocity curves
+(default \code{NA}). Setting it to \code{NULL} will automatically sets the
+linetype for each factor level or individual This will also add legends for
+the factor level covariate or individuals whereas \code{NA} will set a
 'solid' line type and suppress legends. It is recommended to keep the
-default \code{NULL} option when plotting population average curves for
-when model included factor covariates because this would appropriately
-set the legends otherwise it is difficult to differentiate which curve
-belongs to which level of factor. For individual specific curves, the
-line type can be set to \code{NULL} when the number of individuals is small.
-However, when the number of individuals is large, \code{NA} is a better
-choice which prevents printing a large number of legends.}
+default \code{NULL} option when plotting population average curves for when
+model included factor covariates because this would appropriately set the
+legends otherwise it is difficult to differentiate which curve belongs to
+which level of factor. For individual specific curves, the line type can be
+set to \code{NULL} when the number of individuals is small. However, when
+the number of individuals is large, \code{NA} is a better choice which
+prevents printing a large number of legends.}
 
 \item{band.alpha}{An optional numeric value to specify the transparency of
 the CI band(s) around the distance curve, velocity curve and the line
 indicating the APGV. The default \code{NULL} will set this value to 0.4.}
 
-\item{returndata}{A logical (default \code{FALSE}) indicating whether to
-plot the data or return the data. If \code{TRUE}, the data is returned as a
+\item{returndata}{A logical (default \code{FALSE}) indicating whether to plot
+the data or return the data. If \code{TRUE}, the data is returned as a
 \code{data.frame}.}
 
 \item{...}{Further arguments passed to \code{brms::fitted} and
-\code{brms::predict} functions that control several aspects of
-data validation and prediction. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
+\code{brms::predict} functions that control several aspects of data
+validation and prediction. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
 \link[brms:predict.brmsfit]{brms::predict.brmsfit} for details.}
 }
 \value{
@@ -247,14 +258,14 @@ population average velocity curve, individual-specific distance curves,
 individual-specific velocity curves, unadjusted individual growth curves
 (i.e, observed growth curves), and the adjusted individual growth curves
 (adjusted for the model estimated random effects). The \code{plot_bsitar}
-internally calls the \link{gparameters.bsitar} function to estimate and summaries
-the distance and velocity curves and to estimate growth parameters such as
-the age at peak growth velocity (APGV). The \code{plot_bsitar} in turn calls
-the \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} functions to make
-inference from the posterior draws. Thus, \code{plot_bsitar} allows plotting
-fitted or predicted curves. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
-\link[brms:predict.brmsfit]{brms::predict.brmsfit} for details on these functions and the difference
-between fitted and predicted values.
+internally calls the \link{gparameters.bsitar} function to estimate and
+summaries the distance and velocity curves and to estimate growth
+parameters such as the age at peak growth velocity (APGV). The
+\code{plot_bsitar} in turn calls the \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
+\link[brms:predict.brmsfit]{brms::predict.brmsfit} functions to make inference from the posterior
+draws. Thus, \code{plot_bsitar} allows plotting fitted or predicted curves.
+See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} for details on these
+functions and the difference between fitted and predicted values.
 }
 \examples{
 \dontrun{
@@ -272,13 +283,14 @@ plot_bsitar(model, opt = 'DV', apv = TRUE)
 
 # Population average distance curve, velocity curve, and APGV with CI bands
 plot_bsitar(model, opt = 'dv', apv = TRUE, bands = 'dvp')
- 
+
 # Adjusted and unadjusted individual curves
 plot_bsitar(model, opt = 'au')
- 
-# Population average distance and velocity curves along with adjusted 
+
+# Population average distance and velocity curves along with adjusted
 # and unadjusted individual curves
 plot_bsitar(model, opt = 'dvau')
- 
+
 }
+
 }

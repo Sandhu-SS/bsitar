@@ -5,22 +5,91 @@
 \alias{predict_}
 \title{Predicted values (draws) from the posterior predictive distribution}
 \usage{
-\method{predict_}{bsitar}(model, resp = NULL, deriv = 0, envir = parent.frame(), ...)
+\method{predict_}{bsitar}(
+  model,
+  newdata = NULL,
+  resp = NULL,
+  ndraws = NULL,
+  re_formula = NULL,
+  numeric_cov_at = NULL,
+  levels_id = NULL,
+  ipts = NULL,
+  deriv = 0,
+  summary = TRUE,
+  robust = FALSE,
+  probs = c(0.025, 0.975),
+  envir = parent.frame(),
+  ...
+)
 
 predict_(model, ...)
 }
 \arguments{
-\item{model}{An object of class \code{bsitar}.
-function.}
+\item{model}{An object of class \code{bsitar}.}
 
-\item{resp}{Response variable (default \code{NULL}) specified as a string
-character required during the post-processing of multivariate and
-univariate-by-subgroup model (see \code{bsitar} function for details).}
+\item{newdata}{An optional data.frame for which to evaluate predictions. If
+\code{NULL} (default), the original data of the model is used.}
+
+\item{resp}{Optional names of response variables. If specified, predictions
+are performed only for the specified response variables.}
+
+\item{ndraws}{Positive integer indicating the number of posterior draws to be
+used in estimation. If \code{NULL} (default), all draws are used.}
+
+\item{re_formula}{Option to indicate whether or not to include the
+individual/group-level effects in the estimation. When \code{NA} (default),
+the individual-level effects are excluded and therefore population average
+growth parameters are computed. When \code{NULL}, individual-level effects
+are included in the computation and hence the growth parameters estimates
+returned are individual-specific. In both sitations, (i.e,, \code{NA} or
+\code{NULL}), continuous and factor covariate(s) are appropriately
+included. When the continuous covariates by default are set to their means
+(see \code{numeric_cov_at} for details), the population average as well as
+individual-specific growth parameter estimates are returned for each level
+of the factor cocariate.}
+
+\item{numeric_cov_at}{An optional argument to specify the value of continuous
+covariate(s) before calling the \link{fitted_.bsitar} and
+\link{predict_.bsitar} functions. The default \code{NULL} option set the
+continuous covariate(s) at mean. Alternatively, a named list can be
+supplied to manualy set the values. For example, \code{numeric_cov_at =
+  list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
+argument \code{numeric_cov_at} is ignored when no continuous covariate is
+included in the model.}
+
+\item{levels_id}{An optional argument to specify the ids for hierarchical
+model (default \code{NULL}. It is used only when a with 3 or higher level
+structures are fit. For two level model, the the id for second level is
+automatically inferred from the fitted model. Even for 3 or higher level
+model, ids are inferred from the fitted model but under the assumption that
+hierarchy is specified from lower to upper levels i.e, id, study assuming
+that id is nested within the studies. However, it is not gaunated that
+these ids are sorted correctly. Therefore, it is better to set it manually.}
+
+\item{ipts}{A numeric value to interpolate the predictor value to get a
+smooth velocity curve. The \code{NULL} (default) will return original
+values whereas a positive real value (e.g., \code{ipts = 10}) will
+interpolate the predictor. It is important to note that these
+interpolations do not alter the range of predictor when calculating
+population average and the individual specific velocity curves.}
 
 \item{deriv}{An integer value to specify whether to estimate distance curve
 (i.e., model estimated curve(s)) or velocity curve (first derivative of the
 model estimated curve(s)). A 0 value (default) is for distance curve and
 1 for the velocity curve.}
+
+\item{summary}{A logical (default \code{TRUE}) to indicate whether only the
+Estimate should be returned or Estimate along with SE and CI should be
+computed. Setting this option to \code{FALSE} will reduce the computation
+time but no SE or CI estimates will be available.}
+
+\item{robust}{If \code{FALSE} (the default) the mean is used as the measure
+of central tendency and the standard deviation as the measure of
+variability. If \code{TRUE}, the median and the median absolute deviation
+(MAD) are applied instead. Ignored if summary is \code{FALSE}}
+
+\item{probs}{The percentiles to be computed by the \code{quantile}
+function. Only used if \code{summary} is \code{TRUE}.}
 
 \item{envir}{The calling environment. Deafault set to \code{parent.frame()}.}
 

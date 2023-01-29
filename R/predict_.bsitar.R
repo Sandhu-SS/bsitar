@@ -19,13 +19,15 @@
 #' for adding an underscore at the end of the name (*predict* to 
 #' *predict_*). 
 #' 
+#' @inherit gparameters.bsitar params
+#' 
 #' @inherit conditional_effects_.bsitar params
+#' 
+#' @inherit brms::predict.brmsfit description params
 #' 
 #' @param ... Additional arguments passed to the [brms::predict.brmsfit] 
 #' function. Please see \code{brms::predict.brmsfit} for details on 
 #' various options available.
-#' 
-#' @inherit brms::predict.brmsfit description 
 #' 
 #' @return An array of predicted response values. See [brms::predict.brmsfit] 
 #' for details.
@@ -55,8 +57,17 @@
 
 predict_.bsitar <-
   function(model,
+           newdata = NULL,
            resp = NULL,
+           ndraws = NULL,
+           re_formula = NULL,
+           numeric_cov_at = NULL,
+           levels_id = NULL,
+           ipts = NULL,
            deriv = 0,
+           summary = TRUE,
+           robust = FALSE,
+           probs = c(0.025, 0.975),
            envir = parent.frame(),
            ...) {
     o <-
@@ -64,8 +75,29 @@ predict_.bsitar <-
                              xcall = match.call(),
                              resp = resp,
                              deriv = deriv)
+    
+    newdata <- get.newdata(model, 
+                           newdata = newdata, 
+                           resp = resp, 
+                           numeric_cov_at = numeric_cov_at,
+                           levels_id = levels_id,
+                           ipts = ipts)
+    
     assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
-    . <- predict(model, resp = resp, ...)
+    
+    . <- predict(model = model,
+                newdata = newdata,
+                resp = resp,
+                ndraws = ndraws,
+                re_formula = re_formula,
+                numeric_cov_at = numeric_cov_at,
+                levels_id = levels_id,
+                ipts = ipts,
+                deriv = 0,
+                summary = TRUE,
+                robust = FALSE,
+                probs = c(0.025, 0.975), 
+                ...)
     assign(o[[1]], model$Spl_funs[[o[[1]]]], envir = envir)
     .
   }

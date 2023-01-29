@@ -2,150 +2,154 @@
 
 
 #' Plot \code{bsitar} model
-#' 
-#' @description The \code{plot_bsitar} provides visualization of six different
-#' types of growth curves that are ploted by using the [ggplot2]. The
-#' \code{plot_bsitar} also allows users to make their own detailed plots from
-#' the data returned as a \code{data.frame}. 
-#' 
-#' @details The \code{plot_bsitar} is a generic function that allows
-#' visualization of following six curves: population average distance curve, 
-#' population average velocity curve, individual-specific distance curves, 
-#' individual-specific velocity curves, unadjusted individual growth curves 
-#' (i.e, observed growth curves), and the adjusted individual growth curves
-#' (adjusted for the model estimated random effects). The \code{plot_bsitar} 
-#' internally calls the [gparameters.bsitar] function to estimate and summaries 
-#' the distance and velocity curves and to estimate growth parameters such as 
-#' the age at peak growth velocity (APGV). The \code{plot_bsitar} in turn calls 
-#' the [brms::fitted.brmsfit] and [brms::predict.brmsfit] functions to make
-#' inference from the posterior draws. Thus, \code{plot_bsitar} allows plotting 
-#' fitted or predicted curves. See [brms::fitted.brmsfit] and 
-#' [brms::predict.brmsfit] for details on these functions and the difference 
-#' between fitted and predicted values. 
-#' 
-#' @param model An object of class \code{bsitar}.
-#' @param opt A character string containing letter(s) corresponding to the 
-#' following plotting options: 'd' for population average distance curve, 'v' 
-#' for population average velocity curve, 'D' for individual-specific
-#' distance curves, 'V' for individual-specific velocity curves, 'u' for 
-#' unadjusted individual-specific distance curves, and 'a' for adjusted 
-#' individual-specific distance curves (adjusted for the random effects). 
-#' Options 'd' and 'D' can not be specified simultaneously. Likewise, 
-#' Options 'v' and 'V' can not be specified simultaneously. All other 
-#' combinations are allowed. For example, dvau', Dvau', dVau', DVau', or dvau'. 
-#' @param apv An optional logical (default \code{FALSE}) specifying whether or 
-#' not to calculate and plot the age at peak velocity (APGV) when \code{opt}) 
-#' includes 'v' or 'V'.
-#' @param bands A character string containing letter(s), or \code{NULL}   
-#' (default) to indicate if CI bands to be plotted around the distance and 
-#' velocity curves (and also the APGV). If \code{NULL}, no band plotted. 
-#' Alternatively, user can specify a string with any one of the following or
-#' their combination(s): \code{'d'} for band around the distance curve, 
-#' \code{'v} for band around the velocity curve, and \code{'p} for band 
-#' around the the vertical line denoting the APGV parameter. The \code{'dvp'}
-#' will include CI bands for distance and velocity curves, and the APGV. 
-#' @param conf A numeric value (default \code{0.95}) to be used to compute the 
-#' CI and hence the width of the \code{bands}. See [gparameters.bsitar] for 
-#' further details.
-#' @inheritParams  gparameters.bsitar
-#' @param trim A number (default 0) of long line segments to be excluded from 
-#' plot with option 'u' or 'a'. See [sitar::plot.sitar] for details.
-#' @param layout A character string defining the layout structure of the 
-#' plot. A \code{'single'} (default) layout provides overlaid distance and 
-#' velocity curves on a single plot when opt includes \code{'dv'}, \code{'Dv'},
-#' \code{'dV'} or \code{'DV'} options.  Similarly, when opt includes 
-#' \code{'au'}, the adjusted and unadjusted curves are plotted as a single plot.
-#' When opt is a single letter (e.g., \code{'d'}. \code{'v'} \code{'D'}, 
-#' \code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is ignored.
-#' The alternative layout option, the \code{'facet'} uses [ggplot2::facet_wrap]
-#' to map and draw plot when \code{opt} include two or more letters.
-#' @param linecolor The color of line used when layout is \code{'facet'}. The 
-#' default is \code{NULL} which internally set the \code{linecolor} as 
-#' \code{'grey50'}.
-#' @param linecolor1 The color of first line when layout is \code{'single'}.
-#' For example, for \code{opt = 'dv'}, the color of distance line is controlled
-#' by the \code{linecolor1}. Default \code{NULL} will internally set 
-#' \code{linecolor1} as \code{'orange2'}.
-#' @param linecolor2 The color of second line when layout is \code{'single'}.
-#' For example, for \code{opt = 'dv'}, the color of velocity line is controlled
-#' by the \code{linecolor2}. Default \code{NULL} sets the color \code{'green4'}
-#' for \code{linecolor2}.
-#' @param label.x An optional character string to label the x axis. When  
-#' \code{NULL} (default), the x axis label is taken from the predictor 
-#' (e.g., age).
-#' @param label.y An optional character string to label the y axis. When  
-#' \code{NULL} (default), the y axis label is taken from the type of plot 
-#' (e.g., distance, velocity etc.). Note that when layout option is 
-#' \code{'facet'}, then y axis label is removed and instead the same label 
-#' is used as a title.
-#' @param legendpos An optional character string to specify the position of 
-#' legends. When \code{NULL}, the legend position is set as 'bottom' for 
-#' distance and velocity curves with \code{'single'} layout option. 
-#' @param linetype.apv An optional character string to specify the type of 
-#' the vertical line drawn to mark the APGV. Default \code{NULL} sets the
-#' linetype as 'dotted' 
-#' @param linewidth.main An optional character string to specify the width of 
-#' the the line for the distance and velocity curves. The default \code{NULL} 
-#' will set it as 0.35.  
-#' @param linewidth.apv An optional character string to specify the width of 
-#' the the vertical line drawn to mark the APGV. The default \code{NULL} 
-#' will set it as 0.25.  
-#' @param linetype.groupby An optional argument to specify the line 
-#' type for the distance and velocity curves when drawing plots for a model
-#' that includes factor covariate(s) or individual specific distance/velocity
-#' curves (default \code{NA}). Setting it to \code{NULL} will automatically sets 
-#' the linetype for each factor level or individual This will also add legends 
-#' for the factor level covariate or individuals whereas \code{NA} will set a 
-#' 'solid' line type and suppress legends. It is recommended to keep the 
-#' default \code{NULL} option when plotting population average curves for 
-#' when model included factor covariates because this would appropriately
-#' set the legends otherwise it is difficult to differentiate which curve 
-#' belongs to which level of factor. For individual specific curves, the 
-#' line type can be set to \code{NULL} when the number of individuals is small. 
-#' However, when the number of individuals is large, \code{NA} is a better 
-#' choice which prevents printing a large number of legends.
-#' @param band.alpha An optional numeric value to specify the transparency of
-#' the CI band(s) around the distance curve, velocity curve and the line
-#' indicating the APGV. The default \code{NULL} will set this value to 0.4.
-#' @param returndata A logical (default \code{FALSE}) indicating whether to 
-#' plot the data or return the data. If \code{TRUE}, the data is returned as a
-#' \code{data.frame}.
 #'
-#' @return A [ggplot2] object (default) or a \code{data.frame} when returndata 
-#' is \code{TRUE}.
+#' @description The \code{plot_bsitar} provides visualization of six different
+#'   types of growth curves that are ploted by using the [ggplot2]. The
+#'   \code{plot_bsitar} also allows users to make their own detailed plots from
+#'   the data returned as a \code{data.frame}.
+#'
+#' @details The \code{plot_bsitar} is a generic function that allows
+#'   visualization of following six curves: population average distance curve,
+#'   population average velocity curve, individual-specific distance curves,
+#'   individual-specific velocity curves, unadjusted individual growth curves
+#'   (i.e, observed growth curves), and the adjusted individual growth curves
+#'   (adjusted for the model estimated random effects). The \code{plot_bsitar}
+#'   internally calls the [gparameters.bsitar] function to estimate and
+#'   summaries the distance and velocity curves and to estimate growth
+#'   parameters such as the age at peak growth velocity (APGV). The
+#'   \code{plot_bsitar} in turn calls the [brms::fitted.brmsfit] and
+#'   [brms::predict.brmsfit] functions to make inference from the posterior
+#'   draws. Thus, \code{plot_bsitar} allows plotting fitted or predicted curves.
+#'   See [brms::fitted.brmsfit] and [brms::predict.brmsfit] for details on these
+#'   functions and the difference between fitted and predicted values.
+#'
+#' @param model An object of class \code{bsitar}.
+#' @param opt A character string containing letter(s) corresponding to the
+#'   following plotting options: 'd' for population average distance curve, 'v'
+#'   for population average velocity curve, 'D' for individual-specific distance
+#'   curves, 'V' for individual-specific velocity curves, 'u' for unadjusted
+#'   individual-specific distance curves, and 'a' for adjusted
+#'   individual-specific distance curves (adjusted for the random effects).
+#'   Options 'd' and 'D' can not be specified simultaneously. Likewise, Options
+#'   'v' and 'V' can not be specified simultaneously. All other combinations are
+#'   allowed. For example, dvau', Dvau', dVau', DVau', or dvau'.
+#' @param apv An optional logical (default \code{FALSE}) specifying whether or
+#'   not to calculate and plot the age at peak velocity (APGV) when \code{opt})
+#'   includes 'v' or 'V'.
+#' @param bands A character string containing letter(s), or \code{NULL}
+#'   (default) to indicate if CI bands to be plotted around the distance and
+#'   velocity curves (and also the APGV). If \code{NULL}, no band plotted.
+#'   Alternatively, user can specify a string with any one of the following or
+#'   their combination(s): \code{'d'} for band around the distance curve,
+#'   \code{'v} for band around the velocity curve, and \code{'p} for band around
+#'   the the vertical line denoting the APGV parameter. The \code{'dvp'} will
+#'   include CI bands for distance and velocity curves, and the APGV.
+#' @param conf A numeric value (default \code{0.95}) to be used to compute the
+#'   CI and hence the width of the \code{bands}. See [gparameters.bsitar] for
+#'   further details.
 #' 
+#' @param trim A number (default 0) of long line segments to be excluded from
+#'   plot with option 'u' or 'a'. See [sitar::plot.sitar] for details.
+#' @param layout A character string defining the layout structure of the plot. A
+#'   \code{'single'} (default) layout provides overlaid distance and velocity
+#'   curves on a single plot when opt includes \code{'dv'}, \code{'Dv'},
+#'   \code{'dV'} or \code{'DV'} options.  Similarly, when opt includes
+#'   \code{'au'}, the adjusted and unadjusted curves are plotted as a single
+#'   plot. When opt is a single letter (e.g., \code{'d'}. \code{'v'} \code{'D'},
+#'   \code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is
+#'   ignored. The alternative layout option, the \code{'facet'} uses
+#'   [ggplot2::facet_wrap] to map and draw plot when \code{opt} include two or
+#'   more letters.
+#' @param linecolor The color of line used when layout is \code{'facet'}. The
+#'   default is \code{NULL} which internally set the \code{linecolor} as
+#'   \code{'grey50'}.
+#' @param linecolor1 The color of first line when layout is \code{'single'}. For
+#'   example, for \code{opt = 'dv'}, the color of distance line is controlled by
+#'   the \code{linecolor1}. Default \code{NULL} will internally set
+#'   \code{linecolor1} as \code{'orange2'}.
+#' @param linecolor2 The color of second line when layout is \code{'single'}.
+#'   For example, for \code{opt = 'dv'}, the color of velocity line is
+#'   controlled by the \code{linecolor2}. Default \code{NULL} sets the color
+#'   \code{'green4'} for \code{linecolor2}.
+#' @param label.x An optional character string to label the x axis. When
+#'   \code{NULL} (default), the x axis label is taken from the predictor (e.g.,
+#'   age).
+#' @param label.y An optional character string to label the y axis. When
+#'   \code{NULL} (default), the y axis label is taken from the type of plot
+#'   (e.g., distance, velocity etc.). Note that when layout option is
+#'   \code{'facet'}, then y axis label is removed and instead the same label is
+#'   used as a title.
+#' @param legendpos An optional character string to specify the position of
+#'   legends. When \code{NULL}, the legend position is set as 'bottom' for
+#'   distance and velocity curves with \code{'single'} layout option.
+#' @param linetype.apv An optional character string to specify the type of the
+#'   vertical line drawn to mark the APGV. Default \code{NULL} sets the linetype
+#'   as 'dotted'
+#' @param linewidth.main An optional character string to specify the width of
+#'   the the line for the distance and velocity curves. The default \code{NULL}
+#'   will set it as 0.35.
+#' @param linewidth.apv An optional character string to specify the width of the
+#'   the vertical line drawn to mark the APGV. The default \code{NULL} will set
+#'   it as 0.25.
+#' @param linetype.groupby An optional argument to specify the line type for the
+#'   distance and velocity curves when drawing plots for a model that includes
+#'   factor covariate(s) or individual specific distance/velocity curves
+#'   (default \code{NA}). Setting it to \code{NULL} will automatically sets the
+#'   linetype for each factor level or individual This will also add legends for
+#'   the factor level covariate or individuals whereas \code{NA} will set a
+#'   'solid' line type and suppress legends. It is recommended to keep the
+#'   default \code{NULL} option when plotting population average curves for when
+#'   model included factor covariates because this would appropriately set the
+#'   legends otherwise it is difficult to differentiate which curve belongs to
+#'   which level of factor. For individual specific curves, the line type can be
+#'   set to \code{NULL} when the number of individuals is small. However, when
+#'   the number of individuals is large, \code{NA} is a better choice which
+#'   prevents printing a large number of legends.
+#' @param band.alpha An optional numeric value to specify the transparency of
+#'   the CI band(s) around the distance curve, velocity curve and the line
+#'   indicating the APGV. The default \code{NULL} will set this value to 0.4.
+#' @param returndata A logical (default \code{FALSE}) indicating whether to plot
+#'   the data or return the data. If \code{TRUE}, the data is returned as a
+#'   \code{data.frame}.
+#'
+#'@inheritParams  gparameters.bsitar
+#'
+#' @return A [ggplot2] object (default) or a \code{data.frame} when returndata
+#'   is \code{TRUE}.
+#'
 #' @importFrom rlang .data
 #' @importFrom graphics curve
-#' 
+#'
 #' @export plot_bsitar.bsitar
-#' 
+#'
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' # Population average distance and velocity curves with default options
 #' plot_bsitar(model, opt = 'dv')
-#' 
+#'
 #' # Individual-specific distance and velocity curves with default options
 #' plot_bsitar(model, opt = 'DV')
-#' 
+#'
 #' # Population average distance and velocity curves with APGV
 #' plot_bsitar(model, opt = 'dv', apv = TRUE)
-#' 
+#'
 #' # Individual-specific distance and velocity curves with APGV
 #' plot_bsitar(model, opt = 'DV', apv = TRUE)
-#' 
+#'
 #' # Population average distance curve, velocity curve, and APGV with CI bands
 #' plot_bsitar(model, opt = 'dv', apv = TRUE, bands = 'dvp')
-#'  
+#'
 #' # Adjusted and unadjusted individual curves
 #' plot_bsitar(model, opt = 'au')
-#'  
-#' # Population average distance and velocity curves along with adjusted 
+#'
+#' # Population average distance and velocity curves along with adjusted
 #' # and unadjusted individual curves
 #' plot_bsitar(model, opt = 'dvau')
-#'  
+#'
 #' }
+#' 
 plot_bsitar.bsitar <- function(model,
                                opt = 'dv',
                                apv = FALSE,
@@ -157,6 +161,7 @@ plot_bsitar.bsitar <- function(model,
                                summary = TRUE,
                                re_formula = NULL,
                                numeric_cov_at = NULL,
+                               levels_id = NULL,
                                ipts = NULL,
                                seed = 123,
                                estimation_method = 'fitted',
@@ -209,7 +214,12 @@ plot_bsitar.bsitar <- function(model,
     }
   }
   
-  newdata <- get.newdata(model, newdata = newdata, resp = resp)
+  newdata <- get.newdata(model, newdata = newdata, 
+                         resp = resp, 
+                         numeric_cov_at = numeric_cov_at,
+                         levels_id = levels_id,
+                         ipts = ipts)
+  
   list_c <- attr(newdata, 'list_c')
   for (list_ci in names(list_c)) {
     assign(list_ci, list_c[[list_ci]])
@@ -365,18 +375,37 @@ plot_bsitar.bsitar <- function(model,
     x
   }
   
-  if (is.null(linetype.groupby)) {
-    if (!is.null(groupby_str_d) & !is.null(groupby_str_v)) {
-      set.linetype.groupby <- 'groupby'
-    } else if (is.null(groupby_str_d) | is.null(groupby_str_v)) {
+  
+  if(length(linetype.groupby) < 2) {
+    if (is.null(linetype.groupby)) {
+      if (!is.null(groupby_str_d) | !is.null(groupby_str_v)) {
+        set.linetype.groupby <- 'groupby'
+      } else if (is.null(groupby_str_d) & is.null(groupby_str_v)) {
+        set.linetype.groupby <- 'solid'
+      }
+    } else if (is.na(linetype.groupby)) {
       set.linetype.groupby <- 'solid'
+    } else {
+      set.linetype.groupby <- linetype.groupby
     }
-  } else if (is.na(linetype.groupby)) {
-    set.linetype.groupby <- 'solid'
-  } else {
-    set.linetype.groupby <- linetype.groupby
+    
+    custom_linetype <- FALSE
+    if(!is.null(set.linetype.groupby) &
+       set.linetype.groupby != 'groupby' &
+       set.linetype.groupby != 'solid') {
+      custom_linetype <- TRUE
+      linetype.groupby <- linetype.groupby
+    }
   }
   
+  
+  if(length(linetype.groupby) > 1) {
+    custom_linetype <- TRUE
+    set.linetype.groupby <- "nonexisting"
+    linetype.groupby <- linetype.groupby
+  }
+  
+  dvcurvelegend <- "legend"
   
   curve.d <- 'distance'
   curve.v <- 'velocity'
@@ -662,7 +691,11 @@ plot_bsitar.bsitar <- function(model,
                                resp = resp,
                                deriv = '')
       
-      newdata <- get.newdata(model, newdata = newdata, resp = resp)
+      newdata <- get.newdata(model, newdata = newdata, 
+                             resp = resp, 
+                             numeric_cov_at = numeric_cov_at,
+                             levels_id = levels_id,
+                             ipts = ipts)
       
       if(!is.na(uvarby)) {
         newdata <- newdata %>%
@@ -815,13 +848,15 @@ plot_bsitar.bsitar <- function(model,
         linetype.groupby <- NULL # 'solid'
       }
       
+
+      
       plot.o.d <- d. %>% dplyr::filter(curve == curve.d) %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
         ggplot2::geom_line(
           ggplot2::aes(
             y = Estimate,
             group = groupby,
-            linetype = linetype.groupby
+            linetype = groupby
           ),
           linewidth = linewidth.main,
           color = color.d
@@ -834,6 +869,27 @@ plot_bsitar.bsitar <- function(model,
         ggplot2::scale_color_manual(values = c(color.d)) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
+      
+      if (custom_linetype) {
+        nrepvals <- length(unique(d.[['groupby']]))
+        if(length(linetype.groupby) != nrepvals) {
+          linetype.groupby <- rep(linetype.groupby, nrepvals)
+        }
+        if(nrepvals == 1) {
+          setguide <- "none"
+          dvcurvelegend <- "none"
+        } else {
+          setguide <- "legend"
+          dvcurvelegend <- "legend"
+        }
+        plot.o.d <- plot.o.d +
+          ggplot2::scale_linetype_manual(values=linetype.groupby, guide = setguide)
+      }
+      
+     
+      
+      
+      
       if (grepl("d", bands, ignore.case = T)) {
         plot.o.d <- plot.o.d +
           ggplot2::geom_ribbon(
@@ -842,12 +898,15 @@ plot_bsitar.bsitar <- function(model,
               ymin = .data[[paste0(probtitles[1], '')]],
               ymax = .data[[paste0(probtitles[2], '')]],
               group = groupby,
-              linetype = linetype.groupby
+              linetype = groupby
             ),
             fill = color.d,
             alpha = band.alpha
           )
       }
+      
+      
+      
       d. <- d.o
       if ('curve' %in% names(d.)) {
         d.out <- d. %>% dplyr::select(-curve)
@@ -896,7 +955,7 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = Estimate,
             group = groupby,
-            linetype = linetype.groupby
+            linetype = groupby
           ),
           linewidth = linewidth.main,
           color = color.v
@@ -906,8 +965,25 @@ plot_bsitar.bsitar <- function(model,
         ggplot2::xlab("") +
         ggplot2::ylab("") +
         jtools::theme_apa(legend.pos = legendpos) +
-        ggplot2::scale_color_manual(values = c(color.v)) +
+        ggplot2::scale_color_manual(values = c(color.v), guide = dvcurvelegend) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      
+      
+      if (custom_linetype) {
+        nrepvals <- length(unique(d.[['groupby']]))
+        if(length(linetype.groupby) != nrepvals) {
+          linetype.groupby <- rep(linetype.groupby, nrepvals)
+        }
+        if(nrepvals == 1) {
+          setguide <- "none"
+          dvcurvelegend <- "none"
+        } else {
+          setguide <- "legend"
+          dvcurvelegend <- "legend"
+        }
+        plot.o.v <- plot.o.v +
+          ggplot2::scale_linetype_manual(values=linetype.groupby, guide = setguide)
+      }
       
       if (grepl("v", bands, ignore.case = T)) {
         plot.o.v <- plot.o.v +
@@ -1116,7 +1192,7 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = Estimate.x,
             group = groupby.x,
-            linetype = linetype.groupby.x,
+            linetype = groupby.x,
             colour = label.d
           ),
           linewidth = linewidth.main
@@ -1125,7 +1201,7 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = t.s.axis$fwd(Estimate.y),
             group = groupby.y,
-            linetype = linetype.groupby.y,
+            linetype = groupby.y,
             colour = label.v
           ),
           linewidth = linewidth.main
@@ -1134,11 +1210,23 @@ plot_bsitar.bsitar <- function(model,
                                       ggplot2::sec_axis(~ t.s.axis$rev(.),
                                                         name = label.v)) +
         ggplot2::labs(x = label.x, y = label.d, color = "") +
-        ggplot2::scale_color_manual(values = c(color.d, color.v)) +
+        ggplot2::scale_color_manual(values = c(color.d, color.v), guide = dvcurvelegend) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90))
+      
+      
+      # if (custom_linetype) {
+      #   nrepvals <- length(unique(d.[['groupby']]))
+      #   if(length(linetype.groupby) != nrepvals) {
+      #     linetype.groupby <- rep(linetype.groupby, nrepvals)
+      #   }
+      #   if(nrepvals == 1) setguide <- "none" else setguide <- "legend"
+      #   plot.o.v <- plot.o.v +
+      #     ggplot2::scale_linetype_manual(values=linetype.groupby, guide = setguide)
+      # }
+      
       
       if (grepl("d", bands, ignore.case = T)) {
         plot.o <- plot.o +
@@ -1148,7 +1236,7 @@ plot_bsitar.bsitar <- function(model,
               ymin = .data[[paste0(probtitles[1], '.x')]],
               ymax = .data[[paste0(probtitles[2], '.x')]],
               group = groupby.x,
-              linetype = linetype.groupby.x
+              linetype = groupby.x
             ),
             fill = color.d,
             alpha = band.alpha
@@ -1163,7 +1251,7 @@ plot_bsitar.bsitar <- function(model,
               ymin = t.s.axis$fwd(.data[[paste0(probtitles[1], '.y')]]),
               ymax = t.s.axis$fwd(.data[[paste0(probtitles[2], '.y')]]),
               group = groupby.y,
-              linetype = linetype.groupby.y
+              linetype = groupby.y
             ),
             fill = color.v,
             alpha = band.alpha

@@ -18,6 +18,7 @@
   trough = FALSE,
   estimation_method = "fitted",
   numeric_cov_at = NULL,
+  levels_id = NULL,
   conf = 0.95,
   ipts = NULL,
   seed = 123,
@@ -32,24 +33,24 @@ gparameters(model, ...)
 \arguments{
 \item{model}{An object of class \code{bsitar}.}
 
-\item{resp}{Optional names of response variables. If specified,
-predictions are performed only for the specified response variables.}
+\item{resp}{Optional names of response variables. If specified, predictions
+are performed only for the specified response variables.}
 
-\item{ndraws}{Positive integer indicating the number of posterior draws to
-be used in estimation. If \code{NULL} (default), all draws are used.}
+\item{ndraws}{Positive integer indicating the number of posterior draws to be
+used in estimation. If \code{NULL} (default), all draws are used.}
 
-\item{newdata}{An optional data.frame for which to evaluate predictions.
-If \code{NULL} (default), the original data of the model is used.}
+\item{newdata}{An optional data.frame for which to evaluate predictions. If
+\code{NULL} (default), the original data of the model is used.}
 
-\item{summary}{A logical (default \code{TRUE}) to indicate whether
-only the Estimate should be returned or Estimate along with SE and CI should
-be computed. Setting this option to \code{FALSE} will reduce the computation
+\item{summary}{A logical (default \code{TRUE}) to indicate whether only the
+Estimate should be returned or Estimate along with SE and CI should be
+computed. Setting this option to \code{FALSE} will reduce the computation
 time but no SE or CI estimates will be available.}
 
-\item{robust}{If \code{FALSE} (the default) the mean is used as the measure of
-central tendency and the standard deviation as the measure of variability.
-If \code{TRUE}, the median and the median absolute deviation (MAD) are applied
-instead. Ignored if summary is \code{FALSE}}
+\item{robust}{If \code{FALSE} (the default) the mean is used as the measure
+of central tendency and the standard deviation as the measure of
+variability. If \code{TRUE}, the median and the median absolute deviation
+(MAD) are applied instead. Ignored if summary is \code{FALSE}}
 
 \item{re_formula}{Option to indicate whether or not to include the
 individual/group-level effects in the estimation. When \code{NA} (default),
@@ -63,94 +64,102 @@ included. When the continuous covariates by default are set to their means
 individual-specific growth parameter estimates are returned for each level
 of the factor cocariate.}
 
-\item{peak}{Optional logical specifying whether or not to calculate the
-age at peak velocity from the velocity curve. If \code{TRUE} (default),
-age at peak velocity (APGV) and the peak velocity (PGV) are calculated along
-with the uncertainty (SE and CI) around the APGV and PGV parameters.
-See @details for further information.}
+\item{peak}{Optional logical specifying whether or not to calculate the age
+at peak velocity from the velocity curve. If \code{TRUE} (default), age at
+peak velocity (APGV) and the peak velocity (PGV) are calculated along with
+the uncertainty (SE and CI) around the APGV and PGV parameters. See
+@details for further information.}
 
-\item{takeoff}{Optional logical (default \code{FALSE}) specifying whether
-or not to calculate the age at takeoff velocity from the velocity curve.
-If \code{TRUE}, age at takeoff velocity (ATGV) and the takeoff growth
-velocity (TGV) are  calculated along with the the uncertainty (SE and CI)
-around the ATGV and TGV parameters. See @details for further information.}
+\item{takeoff}{Optional logical (default \code{FALSE}) specifying whether or
+not to calculate the age at takeoff velocity from the velocity curve. If
+\code{TRUE}, age at takeoff velocity (ATGV) and the takeoff growth velocity
+(TGV) are  calculated along with the the uncertainty (SE and CI) around the
+ATGV and TGV parameters. See @details for further information.}
 
-\item{trough}{Optional logical (default \code{FALSE}) specifying whether
-or not to calculate the age at takeoff velocity from the velocity curve.
-If \code{TRUE}, age at cessation of growth velocity (ACGV) and the cessation
-growth velocity (CGV) are  calculated along with the the uncertainty
-(SE and CI) around the ACGV and CGV parameters.
-See @details for further information.}
+\item{trough}{Optional logical (default \code{FALSE}) specifying whether or
+not to calculate the age at takeoff velocity from the velocity curve. If
+\code{TRUE}, age at cessation of growth velocity (ACGV) and the cessation
+growth velocity (CGV) are  calculated along with the the uncertainty (SE
+and CI) around the ACGV and CGV parameters. See @details for further
+information.}
 
 \item{estimation_method}{A character string to specify the estimation method
 used to calculate velocity from the posterior draws. The \code{'fitted'}
 method internally calls the \link{fitted_.bsitar} function whereas the
 option \code{'predict'} calls the \link{predict_.bsitar} function. See
-\link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} for derails on
-fitted versus predict estimations as they are the backend functions called
-by the \link{fitted_.bsitar} and \link{predict_.bsitar} functions.}
+\link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} for derails on fitted
+versus predict estimations as they are the backend functions called by the
+\link{fitted_.bsitar} and \link{predict_.bsitar} functions.}
 
-\item{numeric_cov_at}{An option argument to specify the value of continuous
+\item{numeric_cov_at}{An optional argument to specify the value of continuous
 covariate(s) before calling the \link{fitted_.bsitar} and
 \link{predict_.bsitar} functions. The default \code{NULL} option set the
-continuous covariate(s) at mean. Alternatively, a named list can be supplied
-to manualy set the values. For example, \code{numeric_cov_at = list(xx = 2)}
-will set the continuous covariate varibale 'xx' at 2. The argument
-\code{numeric_cov_at} is ignored when no continuous covariate is included
-in the model.}
+continuous covariate(s) at mean. Alternatively, a named list can be
+supplied to manualy set the values. For example, \code{numeric_cov_at =
+  list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
+argument \code{numeric_cov_at} is ignored when no continuous covariate is
+included in the model.}
+
+\item{levels_id}{An optional argument to specify the ids for hierarchical
+model (default \code{NULL}. It is used only when a with 3 or higher level
+structures are fit. For two level model, the the id for second level is
+automatically inferred from the fitted model. Even for 3 or higher level
+model, ids are inferred from the fitted model but under the assumption that
+hierarchy is specified from lower to upper levels i.e, id, study assuming
+that id is nested within the studies. However, it is not gaunated that
+these ids are sorted correctly. Therefore, it is better to set it manually.}
 
 \item{conf}{A numeric value (default \code{0.95}) to compute CI. Internally,
-this is translated into a paired probability values as
-\code{c((1 - conf) / 2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this
-will compute 95\% CI with CI varibales named as Q.2.5 and Q.97.5.}
+this is translated into a paired probability values as \code{c((1 - conf) /
+  2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this will compute 95\% CI
+with CI varibales named as Q.2.5 and Q.97.5.}
 
 \item{ipts}{A numeric value to interpolate the predictor value to get a
-smooth velocity curve. The \code{NULL} (default) will return original values
-whereas a positive real value (e.g., \code{ipts = 10}) will interpolate
-the predictor. It is important to note that these interpolations do not
-alter the range of predictor when calculating population average and the
-individual specific velocity curves.}
+smooth velocity curve. The \code{NULL} (default) will return original
+values whereas a positive real value (e.g., \code{ipts = 10}) will
+interpolate the predictor. It is important to note that these
+interpolations do not alter the range of predictor when calculating
+population average and the individual specific velocity curves.}
 
-\item{seed}{An integer (default \code{123}) that is passed to the
-estimation method.}
+\item{seed}{An integer (default \code{123}) that is passed to the estimation
+method.}
 
 \item{future}{A logical (default \code{FALSE}) to specify whether or not to
 perform parallel computations. If set to \code{TRUE}, the
 \link[future.apply:future_lapply]{future.apply::future_sapply} function is used for summarizing the draws.}
 
 \item{future_session}{A character string to set the session type when
-\code{future = TRUE}. The \code{'multisession'} (default) options sets
-the multisession whereas the \code{'multicore'} set the multicore session.
-Note that multicore session are not supported on Windows systems. For more
+\code{future = TRUE}. The \code{'multisession'} (default) options sets the
+multisession whereas the \code{'multicore'} set the multicore session. Note
+that multicore session are not supported on Windows systems. For more
 details, see \link{future.apply} and \link{future}.}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations by setting the option \code{future = TRUE}. On non-Windows,
 systems this argument can be set globally via the mc.cores option. For the
-default \code{NULL} option, the number of cores are set automatically
-by calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
+default \code{NULL} option, the number of cores are set automatically by
+calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
 maximum number of cores avaialble minus one, i.e.,
 \code{future::availableCores() - 1}.}
 
 \item{...}{Further arguments passed to \code{brms::fitted} and
-\code{brms::predict} functions that control several aspects of
-data validation and prediction. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
+\code{brms::predict} functions that control several aspects of data
+validation and prediction. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
 \link[brms:predict.brmsfit]{brms::predict.brmsfit} for details.}
 }
 \value{
-a data frame with five columns when \code{summary = TRUE},
-and two columns when \code{summary = False} (assuming
-\code{re_formual = NULL}). The first two columns common to both these
-approaches \code{summary = TRUE/False} are 'Parameter' and 'Estimate' which
-indicates the name of the growth parameter (e.g., APGV, PGV etc), and its
-value. When \code{summary = TRUE}, three additional columns are added,
-the 'Est.Error' and a pair of columns showing the CI. The CI columns are
-named as Q with appropriate suffix indicating the percentiles used to
-construct these intervals (such as Q.2.5 and Q.97.5 where 2.5 and 97.5
-are the 0.025 and 0.975 percentiles used to compute by the 95\% CI by
-calling the quantile function. When  \code{re_formual = NULL}, an additional
-column is added that shows the individuals/groups corresponding to the
-estimates.
+a data frame with five columns when \code{summary = TRUE}, and two
+columns when \code{summary = False} (assuming \code{re_formual = NULL}).
+The first two columns common to both these approaches \code{summary =
+  TRUE/False} are 'Parameter' and 'Estimate' which indicates the name of the
+growth parameter (e.g., APGV, PGV etc), and its value. When \code{summary =
+  TRUE}, three additional columns are added, the 'Est.Error' and a pair of
+columns showing the CI. The CI columns are named as Q with appropriate
+suffix indicating the percentiles used to construct these intervals (such
+as Q.2.5 and Q.97.5 where 2.5 and 97.5 are the 0.025 and 0.975 percentiles
+used to compute by the 95\% CI by calling the quantile function. When
+\code{re_formual = NULL}, an additional column is added that shows the
+individuals/groups corresponding to the estimates.
 }
 \description{
 The \code{gparameters} computes the growth parameter estimates
@@ -159,19 +168,19 @@ population average and individual-specific parameters such as the peak
 growth velocity and the age at peak growth velocity.
 }
 \details{
-The \code{gparameters} functions first call the appropriate
-function (fitted or predict) to estimate velocity curve for each
-draw from the posterior distribution and then estimates various growth
-parameters such as age at peak growth velocity (APGV), peak growth velocity
-(PGV), age at takeoff growth velocity (ATGV), takeoff growth velocity (TGV),
-age at cessation of growth velocity (ACGV), and the cessation growth
-velocity (CGV). The growth parameters APGV and PGV are estimated by calling
-the \link[sitar:getPeakTrough]{sitar::getPeak} function whereas the ATGV and TGV are estimated by
-using the \link[sitar:getPeakTrough]{sitar::getTakeoff} function. The \link[sitar:getPeakTrough]{sitar::getTrough} function is
-used to estimates ACGV and CGV parameters. These parameters obtained for
-each posterior draw are then summarized appropriately to get the estimate
-and the uncertainty (SE and CI) around these estimates. Please note that it
-is not always possible to estimate cessation and takeoff growth parameters
+The \code{gparameters} functions first call the appropriate function
+(fitted or predict) to estimate velocity curve for each draw from the
+posterior distribution and then estimates various growth parameters such as
+age at peak growth velocity (APGV), peak growth velocity (PGV), age at
+takeoff growth velocity (ATGV), takeoff growth velocity (TGV), age at
+cessation of growth velocity (ACGV), and the cessation growth velocity
+(CGV). The growth parameters APGV and PGV are estimated by calling the
+\link[sitar:getPeakTrough]{sitar::getPeak} function whereas the ATGV and TGV are estimated by using
+the \link[sitar:getPeakTrough]{sitar::getTakeoff} function. The \link[sitar:getPeakTrough]{sitar::getTrough} function is used
+to estimates ACGV and CGV parameters. These parameters obtained for each
+posterior draw are then summarized appropriately to get the estimate and
+the uncertainty (SE and CI) around these estimates. Please note that it is
+not always possible to estimate cessation and takeoff growth parameters
 when there are no distinct pre-peak or post-peak troughs.
 }
 \examples{
@@ -184,6 +193,7 @@ gparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)
 
 # Individual-specific APGV, PGV, ATGV, TGV
 gparameters(model, re_formula = NULL, peak = TRUE, takeoff = TRUE)
- 
+
 }
+
 }
