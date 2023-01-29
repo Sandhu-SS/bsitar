@@ -71,7 +71,7 @@ get.newdata <- function(model, newdata, resp,
   factor_vars <- names(newdata[sapply(newdata, is.factor)])
   numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
   cov_vars <-  model$model_info[[cov_]]
-  cov_vars <- covars_extrcation(cov_vars)
+  if(!is.null(cov_vars))  cov_vars <- covars_extrcation(cov_vars)
   
   cov_factor_vars <- intersect(cov_vars, factor_vars)
   cov_numeric_vars <- intersect(cov_vars, numeric_vars)
