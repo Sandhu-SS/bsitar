@@ -848,7 +848,12 @@ plot_bsitar.bsitar <- function(model,
         linetype.groupby <- NULL # 'solid'
       }
       
-
+      
+      if(is.na(d.[['groupby']][1])) {
+        d.$groupby_line <- 'solid'
+      } else {
+        d.$groupby_line <- d.$groupby
+      }
       
       plot.o.d <- d. %>% dplyr::filter(curve == curve.d) %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
@@ -856,7 +861,7 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = Estimate,
             group = groupby,
-            linetype = groupby
+            linetype = groupby_line
           ),
           linewidth = linewidth.main,
           color = color.d
@@ -868,6 +873,8 @@ plot_bsitar.bsitar <- function(model,
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::scale_color_manual(values = c(color.d)) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      
+      
       
       
       if (custom_linetype) {
@@ -886,7 +893,7 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::scale_linetype_manual(values=linetype.groupby, guide = setguide)
       }
       
-     
+      
       
       
       
