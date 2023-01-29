@@ -13,9 +13,9 @@ Description: Bayesian implementation of univariate and multivariate Super
     cubic spline mean curve and and aligns individual-specific growth curves to the mean cuvre via a set of random effects on both
     effects. For more information, see Cole et al.
     (2010) <doi: 10.1093/ije/dyq115>. The 'bsitar' package is a front-end
-    to the R package 'brms', which facilitates a range of regression
+    to the R package 'brms' which facilitates a range of regression
     specifications including hierarchical and multivariate modeling and
-    provides an excellent framework for post-processing.
+    also provides an excellent framework for post-processing.
 License: GPL-2
 URL: https://github.com/Sandhu-SS/bsitar
 BugReports: https://github.com/Sandhu-SS/bsitar/issues
