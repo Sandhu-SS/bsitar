@@ -2109,7 +2109,7 @@ bsitar <- function(x,
   randomvaluelist <- randomnamelist <- groupvarvaluelist <- funlist
   yvarvaluelist <- ynamelist <- covvaluelist <- covnamelist <- funlist
   groupvarnamelist <- xvarvaluelist <- xnamelist <- funlist
-  
+  hierarchicalvarnamelist <- hierarchicalvarvaluelist <- funlist
   # Start loop over outcome(s)
   
   for (ii in 1:length(ys)) {
@@ -3033,6 +3033,7 @@ bsitar <- function(x,
       fixed_name <- "fixed"
       random_name <- "random"
       groupvar_name <- "groupvar"
+      hierarchical_name <- "hierarchical"
       xvar_name <- "xvar"
       yvar_name <- "yvar"
       cov_name <- "cov"
@@ -3042,6 +3043,7 @@ bsitar <- function(x,
       fixed_name <- paste0("fixed", "_", ysi)
       random_name <- paste0("random", "_", ysi)
       groupvar_name <- paste0("groupvar", "_", ysi)
+      hierarchical_name <- paste0("hierarchical", "_", ysi)
       xvar_name <- paste0("xvar", "_", ysi)
       yvar_name <- paste0("yvar", "_", ysi)
       cov_name <- paste0("cov", "_", ysi)
@@ -3065,6 +3067,9 @@ bsitar <- function(x,
     
     groupvarnamelist[[ii]] <- groupvar_name
     groupvarvaluelist[[ii]] <- group_arg_groupvar
+    
+    hierarchicalvarnamelist[[ii]] <- hierarchical_name
+    hierarchicalvarvaluelist[[ii]] <- hierarchical_gr_names
     
     xnamelist[[ii]] <- xvar_name
     xvarvaluelist[[ii]] <- xsi
@@ -3886,6 +3891,10 @@ bsitar <- function(x,
   
   for (i in 1:length(groupvarnamelist)) {
     model_info[[groupvarnamelist[[i]]]] <- groupvarvaluelist[[i]]
+  }
+  
+  for (i in 1:length(hierarchicalvarnamelist)) {
+    model_info[[hierarchicalvarnamelist[[i]]]] <- hierarchicalvarvaluelist[[i]]
   }
   
   for (i in 1:length(xnamelist)) {

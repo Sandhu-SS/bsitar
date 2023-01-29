@@ -671,8 +671,32 @@ prepare_formula <- function(x,
     extract_xx <- gsub("\\)", "", extract_xx)
     gr_varss <- sub(".*\\|", "", extract_xx) 
     
+    
+    get_x_random2 <- function(x) {
+      x <- gsub("[[:space:]]", "", x)
+      x <- strsplit(x, ")+" )[[1]]
+      x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+      x <- sub(".*\\|", "", x) 
+      x <- unique(unlist(strsplit(x, ":")) )
+      x
+    }
+    aform_gr_names <- lapply(aform, get_x_random2)[[1]]
+    bform_gr_names <- lapply(bform, get_x_random2)[[1]]
+    cform_gr_names <- lapply(cform, get_x_random2)[[1]]
+    if(!is.null(dform)) {
+      dform_gr_names <- lapply(dform, get_x_random2)[[1]]
+    } else {
+      dform_gr_names <- NULL
+    }
+    hierarchical_gr_names <- c(aform_gr_names, bform_gr_names, 
+                               cform_gr_names, dform_gr_names)
+    hierarchical_gr_names <- unique(hierarchical_gr_names)
+    
   } # if(set_higher_levels) {
   
+   
+   if(!set_higher_levels) hierarchical_gr_names <- NULL
+   
    # print(gr_varss)
    # stop()
   
@@ -719,6 +743,13 @@ prepare_formula <- function(x,
   abcform <-
     paste(cbind(aform, bform, cform, dform), collapse = ",")
   
+  
+  
+  
+  
+  
+  
+  # Imp that beyond this point the bform will be changed to combine
   
   if (!is.null(dpar_formulasi)) {
     if (!grepl("lf\\(", dpar_formulasi) &
@@ -1162,6 +1193,8 @@ prepare_formula <- function(x,
   dcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, dcovcoefnames_gr)
   dparcovcoefnames <- gsub("[[:space:]]", gsubitbt, dparcovcoefnames)
   
+  
+  
   list_out <- list(
     nacov = nacov,
     nbcov = nbcov,
@@ -1187,6 +1220,7 @@ prepare_formula <- function(x,
     multivariate_rescor = multivariate_rescor,
     univariate_by_by = univariate_by_by,
     set_higher_levels = set_higher_levels,
+    hierarchical_gr_names = hierarchical_gr_names,
     covariates_ = covariates_,
     lm_a_all = lm_a_all,
     lm_b_all = lm_b_all,
@@ -1213,8 +1247,8 @@ prepare_formula <- function(x,
   
   # list_out <<- list_out
   # print(a_formula_grsi)
-  # print(acovcoefnames_gr)
-  # print(bform); #stop()
+   # print(aform)
+   # print(bform); stop()
   
   attr(bform, "list_out") <- as.list(list_out)
   
