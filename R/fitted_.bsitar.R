@@ -84,7 +84,7 @@ fitted_.bsitar <-
     
     assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
     
-    . <- fitted(model = model,
+    . <- fitted(model,
                 newdata = newdata,
                 resp = resp,
                 ndraws = ndraws,

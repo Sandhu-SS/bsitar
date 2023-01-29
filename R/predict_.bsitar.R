@@ -85,7 +85,7 @@ predict_.bsitar <-
     
     assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
     
-    . <- predict(model = model,
+    . <- predict(model,
                 newdata = newdata,
                 resp = resp,
                 ndraws = ndraws,
