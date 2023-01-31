@@ -49,7 +49,11 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "groupby_fistr", "cov_vars", "cov_numeric_vars",
     "a_formula_gr_strsi", "b_formula_gr_strsi", "c_formula_gr_strsi",
     "d_formula_gr_strsi", "group", "set_higher_levels",
-    "hierarchical_gr_names"
+    "hierarchical_gr_names",
+    "groupbytest", "set_lines_colors",
+    "ggplotColors", "default.set.linetype.groupby",
+    "groupby_line", "groupby_color", "groupby_line.x",
+    "groupby_line.y", "groupby_color.y", "groupby_color.x"
     )
   )
 

@@ -843,7 +843,7 @@ plot_bsitar.bsitar <- function(model,
       g <- g - 1
       d <- 360/g
       h <- cumsum(c(15, rep(d,g - 1)))
-      O <- hcl(h = h, c = 100, l = 65)
+      O <- grDevices::hcl(h = h, c = 100, l = 65)
       O <- c('black', O)
       O
     }
