@@ -93,7 +93,7 @@
 #'   it as 0.25.
 #' @param linetype.groupby An optional argument to specify the line type for the
 #'   distance and velocity curves when drawing plots for a model that includes
-#'   factor covariate(s) or individual specific distance/velocity curves
+#'   factor covariate(s) or when visualising individual specific distance/velocity curves
 #'   (default \code{NA}). Setting it to \code{NULL} will automatically sets the
 #'   linetype for each factor level or individual This will also add legends for
 #'   the factor level covariate or individuals whereas \code{NA} will set a
@@ -104,7 +104,22 @@
 #'   which level of factor. For individual specific curves, the line type can be
 #'   set to \code{NULL} when the number of individuals is small. However, when
 #'   the number of individuals is large, \code{NA} is a better choice which
-#'   prevents printing a large number of legends.
+#'   prevents printing a large number of legends for each individual.
+#'   
+#' @param color.groupby An optional argument to specify the line color for
+#'   distance and velocity curves when drawing plots for a model that includes
+#'   factor covariate(s), or when visualising individual specific distance/velocity curves
+#'   (default \code{NA}). Setting it to \code{NULL} will automatically sets the
+#'   line color for each factor level or individual. This will also add legends for
+#'   the factor level covariate or individuals. However, setting it as \code{NA} will set a
+#'   'solid' line type and suppress legends. It is recommended to keep the
+#'   default \code{NULL} option when plotting population average curves for
+#'   factor covariates because this would appropriately set the
+#'   legends otherwise it is difficult to differentiate which curve belongs to
+#'   which level of the factor. For individual specific curves, the line color can be
+#'   set to \code{NULL} when the number of individuals is small. However, when
+#'   the number of individuals is large, \code{NA} is a better choice which
+#'   prevents printing a large number of legends for each individual. 
 #' @param band.alpha An optional numeric value to specify the transparency of
 #'   the CI band(s) around the distance curve, velocity curve and the line
 #'   indicating the APGV. The default \code{NULL} will set this value to 0.4.
@@ -181,6 +196,7 @@ plot_bsitar.bsitar <- function(model,
                                linewidth.main = NULL,
                                linewidth.apv = NULL,
                                linetype.groupby = NA,
+                               color.groupby = NA,
                                band.alpha = NULL,
                                returndata = FALSE,...) {
   if (is.null(ndraws))
@@ -200,7 +216,7 @@ plot_bsitar.bsitar <- function(model,
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', 'Est.Error', probtitles)
-  
+ 
   cores <- 1
   get.cores_ <- get.cores(arguments$cores)
   arguments$cores <- cores <-  get.cores_[['max.cores']] 
@@ -230,6 +246,8 @@ plot_bsitar.bsitar <- function(model,
   for (check___ in check__) {
     if(!exists(check___)) assign(check___, NULL)
   }
+  
+  if(is.null(uvarby)) uvarby <- NA
   
   Xx <- xvar
   Yy <- yvar
@@ -312,11 +330,21 @@ plot_bsitar.bsitar <- function(model,
   }
   
   
-  
+ 
+ 
   if (grepl("a", opt, ignore.case = F) |
       grepl("u", opt, ignore.case = F)) {
-    if (!identical(levels(droplevels(model$data[[IDvar]])),
-                   levels(droplevels(newdata[[IDvar]])))) {
+    
+    testdata1 <- model$data %>% dplyr::select(dplyr::all_of(IDvar)) %>% droplevels() %>% 
+      dplyr::mutate(groupbytest = interaction(dplyr::across(IDvar))) %>% 
+      dplyr::select(groupbytest) %>% dplyr::ungroup()
+    
+    testdata2 <- newdata %>% dplyr::select(dplyr::all_of(IDvar)) %>% droplevels() %>% 
+      dplyr::mutate(groupbytest = interaction(dplyr::across(IDvar))) %>% 
+      dplyr::select(groupbytest) %>% dplyr::ungroup()
+    
+    
+    if (!identical(testdata1, testdata2)) {
       warning(
         "Your have specified 'a' (adjusted curves) and/or 'u'",
         "\n  (unadjusted curves) in the opt argument (i.e., opt = 'au') ",
@@ -329,6 +357,7 @@ plot_bsitar.bsitar <- function(model,
       )
     }
   }
+ 
   pv <- FALSE
   if (returndata & nchar(opt) > 1) {
     stop(
@@ -376,36 +405,7 @@ plot_bsitar.bsitar <- function(model,
   }
   
   
-  if(length(linetype.groupby) < 2) {
-    if (is.null(linetype.groupby)) {
-      if (!is.null(groupby_str_d) | !is.null(groupby_str_v)) {
-        set.linetype.groupby <- 'groupby'
-      } else if (is.null(groupby_str_d) & is.null(groupby_str_v)) {
-        set.linetype.groupby <- 'solid'
-      }
-    } else if (is.na(linetype.groupby)) {
-      set.linetype.groupby <- 'solid'
-    } else {
-      set.linetype.groupby <- linetype.groupby
-    }
-    
-    custom_linetype <- FALSE
-    if(!is.null(set.linetype.groupby) &
-       set.linetype.groupby != 'groupby' &
-       set.linetype.groupby != 'solid') {
-      custom_linetype <- TRUE
-      linetype.groupby <- linetype.groupby
-    }
-  }
   
-  
-  if(length(linetype.groupby) > 1) {
-    custom_linetype <- TRUE
-    set.linetype.groupby <- "nonexisting"
-    linetype.groupby <- linetype.groupby
-  }
-  
-  dvcurvelegend <- "legend"
   
   curve.d <- 'distance'
   curve.v <- 'velocity'
@@ -417,6 +417,10 @@ plot_bsitar.bsitar <- function(model,
   x_maximum <- max(newdata[[Xx]])
   x_minimum <- floor(x_minimum)
   x_maximum <- floor(x_maximum)
+  
+  single_plot_pair_color_dv_au <- c('black', 'red')
+  
+  
   
   if (nchar(opt) > 2) {
     layout <- 'facet'
@@ -464,19 +468,20 @@ plot_bsitar.bsitar <- function(model,
   }
   
   if (is.null(linewidth.main)) {
-    linewidth.main <- 0.35
+    linewidth.main <- 0.5
   }
   
   if (is.null(linewidth.apv)) {
-    linewidth.apv <- 0.25
-    linewidth.pv <- 0.25
+    linewidth.apv <- 0.5
+    linewidth.pv <- 0.5
   } else {
     linewidth.apv <- linewidth.pv <- linewidth.apv
   }
   
   if (is.null(band.alpha)) {
-    band.alpha <- 0.4
+    band.alpha <- 0.25
   }
+  
   
   
   add_global_label <-
@@ -685,17 +690,21 @@ plot_bsitar.bsitar <- function(model,
       else
         ndraws <- ndraws
       
+     
+      
       o <-
         post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp,
                                deriv = '')
       
-      newdata <- get.newdata(model, newdata = newdata, 
-                             resp = resp, 
-                             numeric_cov_at = numeric_cov_at,
+      newdata <- get.newdata(model, newdata = newdata,
+                             resp = resp,
+                             numeric_cov_at = NULL,
                              levels_id = levels_id,
-                             ipts = ipts)
+                             ipts = NULL)
+      
+      
       
       if(!is.na(uvarby)) {
         newdata <- newdata %>%
@@ -805,6 +814,228 @@ plot_bsitar.bsitar <- function(model,
   
   
   
+  
+  
+  
+  
+  set_lines_colors <- function(plot, ngroups, 
+                               linetype.groupby, color.groupby) {
+    nrepvals <- ngroups
+    
+    if(is.null(linetype.groupby)) {
+      linetype.groupby <- deparse(linetype.groupby)
+    } else  if(is.na(linetype.groupby)) {
+      linetype.groupby <- deparse(linetype.groupby)
+    } else {
+      linetype.groupby <- linetype.groupby
+    }
+    
+    if(is.null(color.groupby)) {
+      color.groupby <- deparse(color.groupby)
+    } else  if(is.na(color.groupby)) {
+      color.groupby <- deparse(color.groupby)
+    } else {
+      color.groupby <- color.groupby
+    }
+    
+    # https://data.library.virginia.edu/setting-up-color-palettes-in-r/
+    ggplotColors <- function(g){
+      g <- g - 1
+      d <- 360/g
+      h <- cumsum(c(15, rep(d,g - 1)))
+      O <- hcl(h = h, c = 100, l = 65)
+      O <- c('black', O)
+      O
+    }
+    
+    # https://groups.google.com/g/ggplot2/c/XIcXU3KlxW0
+    ggplotlines <- function(g){
+      lineTypes1 <- c("solid", "22", "42", "44", "13", "1343", "73", "2262")
+      # lineTypes1 <- c("solid", "solid", "solid", "13", "1343", "73", "2262")
+      lineTypes2 <- apply(expand.grid(1:3, 1:3, 1:3, 1:3), 1, paste0, collapse="")
+      lineTypes3 <- apply(expand.grid(1:2, 1:2, 1:2, 1:2), 1, paste0, collapse="")
+      lineTypes <- c(lineTypes1, lineTypes2, lineTypes3)
+      lineTypes[1:g]
+    }
+    
+    default.set.line.groupby <- 'solid'
+    default.set.color.groupby <- 'black'
+      
+    line.guide <- "none"
+    color.guide <- "none"
+    
+    if(linetype.groupby == 'NA' & color.groupby == 'NA') {
+      if(nrepvals > 1) {
+        set.line.groupby <- rep(default.set.line.groupby, nrepvals)
+        set.color.groupby <- rep(default.set.color.groupby, nrepvals)
+        line.guide <- "none"
+        color.guide <- "legend"
+      }
+    } # if(is.na(linetype.groupby) & is.na(color.groupby)) {
+    
+    if(linetype.groupby == 'NA' & color.groupby != 'NA') {
+      set.line.groupby <- rep(default.set.line.groupby, nrepvals)
+      if(nrepvals == 1) {
+        if(color.groupby == 'NULL') {
+          set.color.groupby <- default.set.color.groupby
+        } else if(color.groupby != 'NULL') {
+          set.color.groupby <- color.groupby[1]  
+        }
+      }
+      
+      if(nrepvals > 1) {
+        set.line.groupby <- rep(default.set.line.groupby, nrepvals)
+        if(color.groupby == 'NULL') {
+          set.color.groupby <- ggplotColors(nrepvals)
+        }
+        
+        if(color.groupby != 'NULL') {
+          if(length(color.groupby) == nrepvals) {
+            set.color.groupby <- color.groupby
+          } else if(length(color.groupby) != nrepvals) {
+            set.color.groupby <- rep(color.groupby, nrepvals)
+          }
+        }
+        line.guide <- "none"
+        color.guide <- "legend"
+      }
+    } # if(is.na(linetype.groupby) & !is.na(color.groupby)) {
+    
+    # print(linetype.groupby)
+    # print(color.groupby)
+    if(linetype.groupby != 'NA' & color.groupby == 'NA') {
+      set.color.groupby <- rep(default.set.color.groupby, nrepvals)
+      if(nrepvals == 1) {
+        if(linetype.groupby == 'NULL') {
+          set.line.groupby <- default.set.linetype.groupby
+        } else if(linetype.groupby != 'NULL') {
+          set.line.groupby <- linetype.groupby[1]  
+        }
+      }
+      
+      if(nrepvals > 1) {
+        if(linetype.groupby == 'NULL') {
+          set.line.groupby <- ggplotlines(nrepvals)
+          if(length(set.line.groupby) < nrepvals) {
+            set.line.groupby <- rep(set.line.groupby, nrepvals)
+          }
+        }
+        
+        if(linetype.groupby != 'NULL') {
+          if(length(linetype.groupby) == nrepvals) {
+            set.line.groupby <- linetype.groupby
+          } else if(length(color.groupby) != nrepvals) {
+            set.line.groupby <- rep(linetype.groupby, nrepvals)
+          }
+        }
+        line.guide <- "legend"
+        color.guide <- "none"
+      }
+    } # if(!is.na(linetype.groupby) & is.na(color.groupby)) {
+    
+    
+    
+    if(linetype.groupby != 'NA' & color.groupby != 'NA') {
+      if(nrepvals == 1) {
+        if(color.groupby == 'NULL') {
+          set.color.groupby <- 'black'
+        } else if(color.groupby != 'NULL') {
+          set.color.groupby <- color.groupby[1]   
+        }
+        
+        if(linetype.groupby == 'NULL') {
+          set.line.groupby <- 'solid'
+        } else if(linetype.groupby != 'NULL') {
+          set.line.groupby <- linetype.groupby[1]   
+        }
+      }
+      
+      if(nrepvals > 1) {
+        if(color.groupby == 'NULL') {
+          set.color.groupby <- ggplotColors(nrepvals)
+          if(length(set.color.groupby) < nrepvals) {
+            set.color.groupby <- rep(set.color.groupby, nrepvals)
+          }
+        }
+        if(linetype.groupby == 'NULL') {
+          set.line.groupby <- ggplotlines(nrepvals)
+          if(length(set.line.groupby) < nrepvals) {
+            set.line.groupby <- rep(set.line.groupby, nrepvals)
+          }
+        }
+        
+        if(color.groupby != 'NULL') {
+          if(length(color.groupby) == nrepvals) {
+            set.color.groupby <- color.groupby
+          } else if(length(color.groupby) != nrepvals) {
+            set.color.groupby <- rep(color.groupby, nrepvals)
+          }
+        }
+        if(linetype.groupby != 'NULL') {
+          if(length(linetype.groupby) == nrepvals) {
+            set.line.groupby <- linetype.groupby
+          } else if(length(linetype.groupby) != nrepvals) {
+            set.line.groupby <- rep(linetype.groupby, nrepvals)
+          }
+        }
+        line.guide <- "none"
+        color.guide <- "legend"
+      }
+    } # if(!is.na(linetype.groupby) & !is.na(set.color.groupby)) {
+    
+    # print(str(set.line.groupby))
+    # print(str(set.color.groupby))
+    suppressMessages({
+      plot <- plot + 
+        ggplot2::scale_linetype_manual(values=set.line.groupby, guide = line.guide) +
+        ggplot2::scale_color_manual(values=set.color.groupby, guide = color.guide)
+    })
+    
+    plot
+  } # set_lines_colors
+  
+  
+  
+  set_lines_colors_ribbon <- function(plot, guideby = NULL) {
+    getbuiltingg <- ggplot2::ggplot_build(plot)
+    get_line_  <- getbuiltingg$data[[1]]["linetype"]
+    get_color_ <- getbuiltingg$data[[1]]["colour"]
+    get_fill_  <- getbuiltingg$data[[1]]["colour"]
+    ngrpanels  <- getbuiltingg$data[[1]]["group"]
+    get_line_  <- unique(unlist(get_line_))
+    get_color_ <- unique(unlist(get_color_))
+    get_fill_  <- unique(unlist(get_fill_))
+    ngrpanels <- length(unique(unlist(ngrpanels)))
+    
+    if(length(get_line_) != ngrpanels) get_line_ <- rep(get_line_, ngrpanels)
+    if(length(get_color_) != ngrpanels) get_color_ <- rep(get_color_, ngrpanels)
+    if(length(get_fill_) != ngrpanels) get_fill_ <- rep(get_fill_, ngrpanels)
+    
+    setguide_line <- setguide_color <- setguide_fill <- 'none'
+    if(is.null(guideby)) {
+      setguide_line <- setguide_color <- setguide_fill <- 'none'
+    } else if(guideby == 'line') {
+      setguide_line <- 'legend'
+    } else if(guideby == 'color') {
+      setguide_color <- 'legend'
+    } else if(guideby == 'fill') {
+      setguide_fill <- 'legend'
+    }
+    
+    suppressMessages({
+      plot <- plot +
+        ggplot2::scale_linetype_manual(values=get_line_, guide = setguide_line) +
+        ggplot2::scale_color_manual(values=get_color_, guide = setguide_color) +
+        ggplot2::scale_fill_manual(values=get_fill_, guide = setguide_fill)
+    })
+    
+    plot
+  }
+  
+  
+  
+  
+  
   defaultW <- getOption("warn")
   options(warn = -1)
   if (grepl("d", opt, ignore.case = T) |
@@ -835,24 +1066,15 @@ plot_bsitar.bsitar <- function(model,
                                    interaction(dplyr::across(groupby_str_d)))
       }
       
-      if (!is.null(set.linetype.groupby)) {
-        if (set.linetype.groupby == 'groupby') {
-          d.. <- d. %>% dplyr::filter(curve == curve.d)
-          linetype.groupby <- d..[['groupby']]
-        }
-      } else if (is.null(set.linetype.groupby)) {
-        linetype.groupby <- NULL
-      }
       
-      if (set.linetype.groupby == 'solid') {
-        linetype.groupby <- NULL # 'solid'
-      }
       
       
       if(is.na(d.[['groupby']][1])) {
         d.$groupby_line <- 'solid'
+        d.$groupby_color <- 'black'
       } else {
         d.$groupby_line <- d.$groupby
+        d.$groupby_color <- d.$groupby
       }
       
       plot.o.d <- d. %>% dplyr::filter(curve == curve.d) %>%
@@ -861,41 +1083,26 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = Estimate,
             group = groupby,
-            linetype = groupby_line
+            linetype = groupby_line,
+            color = groupby_color
           ),
-          linewidth = linewidth.main,
-          color = color.d
+          linewidth = linewidth.main
         ) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
         ggplot2::labs(title = label.d) +
         ggplot2::xlab("") +
         ggplot2::ylab("") +
         jtools::theme_apa(legend.pos = legendpos) +
-        ggplot2::scale_color_manual(values = c(color.d)) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
+     
+      plot.o.d <- set_lines_colors(plot.o.d, length(unique(d.[['groupby']])), 
+                                   linetype.groupby = linetype.groupby, 
+                                   color.groupby = color.groupby)
       
       
       
-      if (custom_linetype) {
-        nrepvals <- length(unique(d.[['groupby']]))
-        if(length(linetype.groupby) != nrepvals) {
-          linetype.groupby <- rep(linetype.groupby, nrepvals)
-        }
-        if(nrepvals == 1) {
-          setguide <- "none"
-          dvcurvelegend <- "none"
-        } else {
-          setguide <- "legend"
-          dvcurvelegend <- "legend"
-        }
-        plot.o.d <- plot.o.d +
-          ggplot2::scale_linetype_manual(values=linetype.groupby, guide = setguide)
-      }
-      
-      
-      
-      
+
       
       if (grepl("d", bands, ignore.case = T)) {
         plot.o.d <- plot.o.d +
@@ -905,14 +1112,18 @@ plot_bsitar.bsitar <- function(model,
               ymin = .data[[paste0(probtitles[1], '')]],
               ymax = .data[[paste0(probtitles[2], '')]],
               group = groupby,
-              linetype = groupby
+              linetype = groupby_line,
+              color = groupby_color,
+              fill = groupby_color
             ),
-            fill = color.d,
             alpha = band.alpha
           )
+        plot.o.d <- set_lines_colors_ribbon(plot.o.d, guideby = 'color')
       }
       
       
+      
+    
       
       d. <- d.o
       if ('curve' %in% names(d.)) {
@@ -943,18 +1154,15 @@ plot_bsitar.bsitar <- function(model,
       }
       
       
-      if (!is.null(set.linetype.groupby)) {
-        if (set.linetype.groupby == 'groupby') {
-          d.. <- d. %>% dplyr::filter(curve == curve.v)
-          linetype.groupby <- d..[['groupby']]
-        }
-      } else if (is.null(set.linetype.groupby)) {
-        linetype.groupby <- NULL
+     
+      if(is.na(d.[['groupby']][1])) {
+        d.$groupby_line <- 'solid'
+        d.$groupby_color <- 'black'
+      } else {
+        d.$groupby_line <- d.$groupby
+        d.$groupby_color <- d.$groupby
       }
       
-      if (set.linetype.groupby == 'solid') {
-        linetype.groupby <-  NULL # 'solid'
-      }
       
       plot.o.v <- d. %>% dplyr::filter(curve == curve.v) %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
@@ -962,35 +1170,24 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = Estimate,
             group = groupby,
-            linetype = groupby
+            linetype = groupby_line,
+            color = groupby_color
           ),
-          linewidth = linewidth.main,
-          color = color.v
+          linewidth = linewidth.main
         ) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
         ggplot2::labs(title = label.v) +
         ggplot2::xlab("") +
         ggplot2::ylab("") +
         jtools::theme_apa(legend.pos = legendpos) +
-        ggplot2::scale_color_manual(values = c(color.v), guide = dvcurvelegend) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
       
-      if (custom_linetype) {
-        nrepvals <- length(unique(d.[['groupby']]))
-        if(length(linetype.groupby) != nrepvals) {
-          linetype.groupby <- rep(linetype.groupby, nrepvals)
-        }
-        if(nrepvals == 1) {
-          setguide <- "none"
-          dvcurvelegend <- "none"
-        } else {
-          setguide <- "legend"
-          dvcurvelegend <- "legend"
-        }
-        plot.o.v <- plot.o.v +
-          ggplot2::scale_linetype_manual(values=linetype.groupby, guide = setguide)
-      }
+      plot.o.v <- set_lines_colors(plot.o.v, length(unique(d.[['groupby']])), 
+                                   linetype.groupby = linetype.groupby, 
+                                   color.groupby = color.groupby)
+      
+      
       
       if (grepl("v", bands, ignore.case = T)) {
         plot.o.v <- plot.o.v +
@@ -1000,12 +1197,15 @@ plot_bsitar.bsitar <- function(model,
               ymin = .data[[paste0(probtitles[1], '')]],
               ymax = .data[[paste0(probtitles[2], '')]],
               group = groupby,
-              linetype = linetype.groupby
+              linetype = groupby_line,
+              color = groupby_color,
+              fill = groupby_color
             ),
-            fill = color.v,
             alpha = band.alpha
           )
+        plot.o.v <- set_lines_colors_ribbon(plot.o.v, guideby = 'color')
       }
+      
       if (pv) {
         data_hline <- p. %>% dplyr::filter(Parameter == name.pv)
         plot.o.v <- plot.o.v +
@@ -1178,20 +1378,24 @@ plot_bsitar.bsitar <- function(model,
       t.s.axis <-
         with(data_dv, transform.sec.axis(Estimate.x, Estimate.y))
       
-      if (!is.null(set.linetype.groupby)) {
-        if (set.linetype.groupby == 'groupby') {
-          linetype.groupby.x <- data_dv[['groupby.x']]
-          linetype.groupby.y <- data_dv[['groupby.y']]
-        }
-      } else if (is.null(set.linetype.groupby)) {
-        linetype.groupby.x <- NULL
-        linetype.groupby.y <- NULL
+      
+      if(is.na(data_dv[['groupby.x']][1])) {
+        legendlabs_mult_singel <- c('Distance', 'Velocity')
+        legendlabs_mult_color <- single_plot_pair_color_dv_au
+        legendlabs_mult_line <- c('solid', 'solid')
+        data_dv$groupby_line.x <- legendlabs_mult_singel[1]
+        data_dv$groupby_color.x <- legendlabs_mult_singel[1]
+          data_dv$groupby_line.y <- legendlabs_mult_singel[2]
+          data_dv$groupby_color.y <- legendlabs_mult_singel[2]
+      } else {
+        data_dv$groupby_line.x <- data_dv$groupby.x
+        data_dv$groupby_color.x <- data_dv$groupby.x
+        data_dv$groupby_line.y <- data_dv$groupby.y
+        data_dv$groupby_color.y <- data_dv$groupby.y
+        legendlabs_mult_mult <- unique(data_dv[['groupby.x']])
       }
       
-      if (set.linetype.groupby == 'solid') {
-        linetype.groupby.x <- NULL # 'solid'
-        linetype.groupby.y <- NULL # 'solid'
-      }
+      
       
       plot.o <- data_dv %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
@@ -1199,8 +1403,8 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = Estimate.x,
             group = groupby.x,
-            linetype = groupby.x,
-            colour = label.d
+            linetype = groupby_line.x,
+            colour = groupby_color.x
           ),
           linewidth = linewidth.main
         ) +
@@ -1208,8 +1412,8 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = t.s.axis$fwd(Estimate.y),
             group = groupby.y,
-            linetype = groupby.y,
-            colour = label.v
+            linetype = groupby_line.y,
+            colour = groupby_color.y
           ),
           linewidth = linewidth.main
         ) +
@@ -1217,22 +1421,37 @@ plot_bsitar.bsitar <- function(model,
                                       ggplot2::sec_axis(~ t.s.axis$rev(.),
                                                         name = label.v)) +
         ggplot2::labs(x = label.x, y = label.d, color = "") +
-        ggplot2::scale_color_manual(values = c(color.d, color.v), guide = dvcurvelegend) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90))
       
       
-      # if (custom_linetype) {
-      #   nrepvals <- length(unique(d.[['groupby']]))
-      #   if(length(linetype.groupby) != nrepvals) {
-      #     linetype.groupby <- rep(linetype.groupby, nrepvals)
-      #   }
-      #   if(nrepvals == 1) setguide <- "none" else setguide <- "legend"
-      #   plot.o.v <- plot.o.v +
-      #     ggplot2::scale_linetype_manual(values=linetype.groupby, guide = setguide)
-      # }
+      getbuiltingg <- ggplot2::ggplot_build(plot.o)
+      get_line_  <- getbuiltingg$data[[1]]["linetype"]
+      get_color_ <- getbuiltingg$data[[1]]["colour"]
+      get_fill_  <- getbuiltingg$data[[1]]["colour"]
+      ngrpanels  <- getbuiltingg$data[[1]]["group"]
+      ngrpanels <- length(unique(unlist(ngrpanels)))
+      get_line_ <- unique(unlist(get_line_))
+      get_color_ <- unique(unlist(get_color_))
+      if(length(get_line_) != ngrpanels) get_line_ <- rep(get_line_, ngrpanels)
+      if(length(get_color_) != ngrpanels) get_color_ <- rep(get_color_, ngrpanels)
+      
+      # These will be carried forward for ribbon also (below)
+      if(ngrpanels > 1) {
+        get_line_ <- get_line_
+        get_color_ <- get_color_
+        legendlabs_ <- legendlabs_mult_mult
+      } else if(ngrpanels == 1) {
+        get_line_ <- legendlabs_mult_line
+        get_color_ <- legendlabs_mult_color
+        legendlabs_ <- legendlabs_mult_singel
+      }
+      
+      plot.o <- plot.o + 
+        ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
+        ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
       
       
       if (grepl("d", bands, ignore.case = T)) {
@@ -1243,11 +1462,15 @@ plot_bsitar.bsitar <- function(model,
               ymin = .data[[paste0(probtitles[1], '.x')]],
               ymax = .data[[paste0(probtitles[2], '.x')]],
               group = groupby.x,
-              linetype = groupby.x
+             linetype = groupby_line.x,
+             # color = groupby_color.x,
+              fill = groupby_color.x,
             ),
-            fill = color.d,
             alpha = band.alpha
           )
+        # Need only oncen which is done for vel plot below
+        # plot.o <- plot.o +
+        #   ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
       }
       
       if (grepl("v", bands, ignore.case = T)) {
@@ -1258,12 +1481,16 @@ plot_bsitar.bsitar <- function(model,
               ymin = t.s.axis$fwd(.data[[paste0(probtitles[1], '.y')]]),
               ymax = t.s.axis$fwd(.data[[paste0(probtitles[2], '.y')]]),
               group = groupby.y,
-              linetype = groupby.y
+              linetype = groupby_line.y,
+              # color = groupby_color.y,
+              fill = groupby_color.y,
             ),
-            fill = color.v,
             alpha = band.alpha
           )
+        plot.o <- plot.o +
+          ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
       }
+      
       
       if (pv) {
         data_hline <- p. %>% dplyr::filter(Parameter == name.pv)
@@ -1319,6 +1546,8 @@ plot_bsitar.bsitar <- function(model,
     }
   }
   
+  
+  
   ############
   groupby_str_au <- groupby_fistr
   
@@ -1344,33 +1573,42 @@ plot_bsitar.bsitar <- function(model,
       
       out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum_a_ & out_a_[[Xx]] <= x_maximum_a_, ]
       
-      if (!is.null(set.linetype.groupby)) {
-        if (set.linetype.groupby == 'groupby') {
-          linetype.groupby <- out_a_[['groupby']]
-        }
-      } else if (is.null(set.linetype.groupby)) {
-        linetype.groupby <- NULL
+      out_a_ <- out_a_ %>% dplyr::mutate(groupby.x = groupby, groupby.y = groupby.x)
+      
+     
+      
+      if(is.na(out_a_[['groupby']][1])) {
+        legendlabs_mult_singel <- c('Distance', 'Velocity')
+        legendlabs_mult_color <- single_plot_pair_color_dv_au
+        legendlabs_mult_line <- c('solid', 'solid')
+        out_a_$groupby_line.x <- legendlabs_mult_singel[1]
+        out_a_$groupby_color.x <- legendlabs_mult_singel[1]
+        out_a_$groupby_line.y <- legendlabs_mult_singel[2]
+        out_a_$groupby_color.y <- legendlabs_mult_singel[2]
+      } else {
+        out_a_$groupby_line.x <- out_a_$groupby.x
+        out_a_$groupby_color.x <- out_a_$groupby.x
+        out_a_$groupby_line.y <- out_a_$groupby.y
+        out_a_$groupby_color.y <- out_a_$groupby.y
+        legendlabs_mult_mult <- unique(out_a_[['groupby']])
       }
       
-      if (set.linetype.groupby == 'solid') {
-        linetype.groupby <- NULL # 'solid'
-      }
-      ############## set to NULL
-      linetype.groupby <- NULL
+      ############# set to NULL
+      # linetype.groupby <- NULL
       
       plot.o.a <- out_a_ %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
         ggplot2::geom_line(
           ggplot2::aes(
             y = !!as.name(Yy),
-            group = groupby,
-            linetype = linetype.groupby,
-            colour = label.d
+            group = groupby.x,
+            # linetype = groupby_line.x,
+             colour = groupby_color.x
           ),
           linewidth = linewidth.main
         ) +
         ggplot2::labs(x = label.x, y = label.d, color = "") +
-        ggplot2::scale_color_manual(values = c(color.adj)) +
+        # ggplot2::scale_color_manual(values = c(color.adj)) +
         ggplot2::scale_x_continuous(breaks =
                                       seq(x_minimum_a_, x_maximum_a_, 1)) +
         jtools::theme_apa(legend.pos = legendpos) +
@@ -1379,6 +1617,35 @@ plot_bsitar.bsitar <- function(model,
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90)) +
         ggplot2::labs(title = label.adj) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      
+
+      getbuiltingg <- ggplot2::ggplot_build(plot.o.a)
+      get_line_  <- getbuiltingg$data[[1]]["linetype"]
+      get_color_ <- getbuiltingg$data[[1]]["colour"]
+      get_fill_  <- getbuiltingg$data[[1]]["colour"]
+      ngrpanels  <- getbuiltingg$data[[1]]["group"]
+      ngrpanels <- length(unique(unlist(ngrpanels)))
+      get_line_ <- unique(unlist(get_line_))
+      get_color_ <- unique(unlist(get_color_))
+      if(length(get_line_) != ngrpanels) get_line_ <- rep(get_line_, ngrpanels)
+      if(length(get_color_) != ngrpanels) get_color_ <- rep(get_color_, ngrpanels)
+      
+      # These will be carried forward for ribbon also (below)
+      if(ngrpanels > 1) {
+        get_line_ <- get_line_
+        get_color_ <- get_color_
+        legendlabs_ <- legendlabs_mult_mult
+      } else if(ngrpanels == 1) {
+        get_line_ <- legendlabs_mult_line
+        get_color_ <- legendlabs_mult_color
+        legendlabs_ <- legendlabs_mult_singel
+      }
+      
+      plot.o.a <- plot.o.a +
+        ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
+        ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
+      
+      
       
       if (nchar(opt) == 1) {
         plot.o.a <- plot.o.a +
@@ -1389,13 +1656,14 @@ plot_bsitar.bsitar <- function(model,
       }
       if (!grepl("u", opt, ignore.case = T)) {
         suppressMessages({
-          plot.o.a <- plot.o.a +
-            ggplot2::scale_color_manual(values = c(color_single))
+          # plot.o.a <- plot.o.a +
+          #   ggplot2::scale_color_manual(values = c(color_single))
         })
       }
     } else if (!grepl("a", opt, ignore.case = T)) {
       plot.o.a <- NULL
     }
+   
     
     if (grepl("u", opt, ignore.case = T)) {
       xyadj_ed <- xyunadj_(model, resp = resp)
@@ -1405,20 +1673,24 @@ plot_bsitar.bsitar <- function(model,
         out_u_ %>%
         dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_au)))
       
-      if (!is.null(set.linetype.groupby)) {
-        if (set.linetype.groupby == 'groupby') {
-          linetype.groupby <- out_a_[['groupby']]
-        }
-      } else if (is.null(set.linetype.groupby)) {
-        linetype.groupby <- NULL
-      }
+      out_u_ <- out_u_ %>% dplyr::mutate(groupby.x = groupby, groupby.y = groupby.x)
       
-      if (set.linetype.groupby == 'solid') {
-        linetype.groupby <- NULL # 'solid'
-      }
       
-      ############## set to NULL
-      linetype.groupby <- NULL
+      if(is.na(out_u_[['groupby']][1])) {
+        legendlabs_mult_singel <- c('Distance', 'Velocity')
+        legendlabs_mult_color <- single_plot_pair_color_dv_au
+        legendlabs_mult_line <- c('solid', 'solid')
+        out_u_$groupby_line.x <- legendlabs_mult_singel[1]
+        out_u_$groupby_color.x <- legendlabs_mult_singel[1]
+        out_u_$groupby_line.y <- legendlabs_mult_singel[2]
+        out_u_$groupby_color.y <- legendlabs_mult_singel[2]
+      } else {
+        out_u_$groupby_line.x <- out_u_$groupby.x
+        out_u_$groupby_color.x <- out_u_$groupby.x
+        out_u_$groupby_line.y <- out_u_$groupby.y
+        out_u_$groupby_color.y <- out_u_$groupby.y
+        legendlabs_mult_mult <- unique(out_u_[['groupby']])
+      }
       
       plot.o.u <- out_u_ %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
@@ -1426,13 +1698,14 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::aes(
             y = !!as.name(Yy),
             group = groupby,
-            linetype = linetype.groupby,
-            colour = label.d
+            group = groupby.y,
+            # linetype = groupby_line.y,
+            colour = groupby_color.y
           ),
           linewidth = linewidth.main
         ) +
         ggplot2::labs(x = label.x, y = label.d, color = "") +
-        ggplot2::scale_color_manual(values = c(color.unadj)) +
+        # ggplot2::scale_color_manual(values = c(color.unadj)) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
@@ -1441,10 +1714,38 @@ plot_bsitar.bsitar <- function(model,
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90)) +
         ggplot2::labs(title = label.unadj) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+      
+      getbuiltingg <- ggplot2::ggplot_build(plot.o.u)
+      get_line_  <- getbuiltingg$data[[1]]["linetype"]
+      get_color_ <- getbuiltingg$data[[1]]["colour"]
+      get_fill_  <- getbuiltingg$data[[1]]["colour"]
+      ngrpanels  <- getbuiltingg$data[[1]]["group"]
+      ngrpanels <- length(unique(unlist(ngrpanels)))
+      get_line_ <- unique(unlist(get_line_))
+      get_color_ <- unique(unlist(get_color_))
+      if(length(get_line_) != ngrpanels) get_line_ <- rep(get_line_, ngrpanels)
+      if(length(get_color_) != ngrpanels) get_color_ <- rep(get_color_, ngrpanels)
+      
+      # These will be carried forward for ribbon also (below)
+      if(ngrpanels > 1) {
+        get_line_ <- get_line_
+        get_color_ <- get_color_
+        legendlabs_ <- legendlabs_mult_mult
+      } else if(ngrpanels == 1) {
+        get_line_ <- legendlabs_mult_line
+        get_color_ <- legendlabs_mult_color
+        legendlabs_ <- legendlabs_mult_singel
+      }
+      
+      plot.o.u <- plot.o.u +
+        ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
+        ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
+      
+      
       if (!grepl("a", opt, ignore.case = T)) {
         suppressMessages({
-          plot.o.u <- plot.o.u +
-            ggplot2::scale_color_manual(values = c(color_single))
+          # plot.o.u <- plot.o.u +
+          #   ggplot2::scale_color_manual(values = c(color_single))
         })
       }
       if (nchar(opt) == 1) {
@@ -1481,36 +1782,40 @@ plot_bsitar.bsitar <- function(model,
         
         out_a_u_ <- out_a_u_[out_a_u_[[Xx]] >= x_minimum_a_ & out_a_u_[[Xx]] <= x_maximum_a_, ]
         
+        out_a_u_ <- out_a_u_ %>% dplyr::mutate(groupby.x = groupby, groupby.y = groupby.x)
         
-        if (!is.null(set.linetype.groupby)) {
-          if (set.linetype.groupby == 'groupby') {
-            linetype.groupby <- out_a_u_[['groupby']]
-          }
-        } else if (is.null(set.linetype.groupby)) {
-          linetype.groupby <- NULL
-        }
-        if (set.linetype.groupby == 'solid') {
-          linetype.groupby <- NULL # 'solid'
-        }
         
-        ############## set to NULL
-        linetype.groupby <- NULL
+        if(is.na(out_a_u_[['groupby']][1])) {
+          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_color <- single_plot_pair_color_dv_au
+          legendlabs_mult_line <- c('solid', 'solid')
+          out_a_u_$groupby_line.x <- legendlabs_mult_singel[1]
+          out_a_u_$groupby_color.x <- legendlabs_mult_singel[1]
+          out_a_u_$groupby_line.y <- legendlabs_mult_singel[2]
+          out_a_u_$groupby_color.y <- legendlabs_mult_singel[2]
+        } else {
+          out_a_u_$groupby_line.x <- out_a_u_$groupby.x
+          out_a_u_$groupby_color.x <- out_a_u_$groupby.x
+          out_a_u_$groupby_line.y <- out_a_u_$groupby.y
+          out_a_u_$groupby_color.y <- out_a_u_$groupby.y
+          legendlabs_mult_mult <- unique(out_a_u_[['groupby']])
+        }
         
         plot.o <- out_a_u_ %>%
           ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
           ggplot2::geom_line(
             ggplot2::aes(
               y = !!as.name(Yy),
-              group = groupby,
-              linetype = linetype.groupby,
-              colour = label.d
+              group = groupby.x,
+              linetype = groupby_line.x,
+              colour = groupby_color.x
             ),
             linewidth = linewidth.main
           ) +
           ggplot2::labs(x = label.x,
                         y = label.d,
                         color = "") +
-          ggplot2::scale_color_manual(values = c(color_single)) +
+          # ggplot2::scale_color_manual(values = c(color_single)) +
           ggplot2::scale_x_continuous(breaks =
                                         seq(x_minimum_a_, x_maximum_a_, 1)) +
           jtools::theme_apa(legend.pos = legendpos) +
@@ -1520,19 +1825,37 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::theme(legend.position = "none") +
           ggplot2::labs(y = paste0("Individual curves")) +
           ggplot2::facet_wrap(~ curve, scales = 'free_x')
+        
+        
+        getbuiltingg <- ggplot2::ggplot_build(plot.o)
+        get_line_  <- getbuiltingg$data[[1]]["linetype"]
+        get_color_ <- getbuiltingg$data[[1]]["colour"]
+        get_fill_  <- getbuiltingg$data[[1]]["colour"]
+        ngrpanels  <- getbuiltingg$data[[1]]["group"]
+        ngrpanels <- length(unique(unlist(ngrpanels)))
+        get_line_ <- unique(unlist(get_line_))
+        get_color_ <- unique(unlist(get_color_))
+        if(length(get_line_) != ngrpanels) get_line_ <- rep(get_line_, ngrpanels)
+        if(length(get_color_) != ngrpanels) get_color_ <- rep(get_color_, ngrpanels)
+        
+        # These will be carried forward for ribbon also (below)
+        if(ngrpanels > 1) {
+          get_line_ <- get_line_
+          get_color_ <- get_color_
+          legendlabs_ <- legendlabs_mult_mult
+        } else if(ngrpanels == 1) {
+          get_line_ <- legendlabs_mult_line
+          get_color_ <- legendlabs_mult_color
+          legendlabs_ <- legendlabs_mult_singel
+        }
+        
+        plot.o <- plot.o +
+          ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
+          ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
+      
       }
       
       if (layout == 'single') {
-        if (!is.null(set.linetype.groupby)) {
-          if (set.linetype.groupby == 'groupby') {
-            linetype.groupby <- out_a_[['groupby']]
-          }
-        } else if (is.null(set.linetype.groupby)) {
-          linetype.groupby <- NULL
-        }
-        if (set.linetype.groupby == 'solid') {
-          linetype.groupby <- NULL # 'solid'
-        }
         
         plot.o <- out_a_ %>%
           ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
@@ -1559,7 +1882,9 @@ plot_bsitar.bsitar <- function(model,
           ggplot2::labs(x = label.x,
                         y = label.d,
                         color = "") +
-          ggplot2::scale_color_manual(values = c(color.unadj, color.adj)) +
+          
+          # ggplot2::scale_color_manual(values = c(color.unadj, color.adj)) +
+          ggplot2::scale_color_manual(values = single_plot_pair_color_dv_au) +
           ggplot2::scale_x_continuous(breaks =
                                         seq(x_minimum_a_, x_maximum_a_, 1)) +
           jtools::theme_apa(legend.pos = legendpos.adj.unadj) +

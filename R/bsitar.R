@@ -681,6 +681,11 @@
 #' \code{init_a_cov_beta = rep(0, 10)} and then use \code{init_data =
 #' list(init_a_cov_beta = init_a_cov_beta)} to pass on initials as
 #'  \code{a_cov_init_beta = init_a_cov_beta}.
+#'  
+#'@param init_custum Set custom initials via a named list 
+#'  (default \code{init}). These are are  rarely used (for example when 
+#'  fitting a three level model). Note that the named list is directly passed 
+#'  to the arguments without checking the dimensions.
 #'
 #'@param verbose An optional logical (default FALSE) argument to print step
 #'  involved in preparing model formula,Stan function, priors, initials and also
@@ -693,6 +698,12 @@
 #'@param expose_function An optional logical (default TRUE) to expose Stan
 #'  function used for model fitting. These functions are essential for
 #'  post-processing.
+#'  
+#'@param get_stancode An optional logical (default \code{FALSE}) to get 
+#' the stancode.
+#' 
+#'@param get_standata An optional logical (default \code{FALSE}) to get 
+#' the standata.
 #'
 #'@param get_priors An optional logical (default \code{FALSE}) to get priors.
 #'
@@ -1006,9 +1017,12 @@ bsitar <- function(x,
                    jitter_init_cor = NULL,
                    prior_data = NULL,
                    init_data = NULL,
+                   init_custum = NULL,
                    verbose = FALSE,
                    expose_function = TRUE,
                    
+                   get_stancode = FALSE,
+                   get_standata = FALSE,
                    get_priors = FALSE,
                    get_set_priors = FALSE,
                    validate_priors = FALSE,
@@ -1958,6 +1972,7 @@ bsitar <- function(x,
     "multivariate",
     "prior_data",
     "init_data",
+    "init_custum",
     "jitter_init_beta",
     "jitter_init_sd",
     "jitter_init_cor",
@@ -1966,6 +1981,8 @@ bsitar <- function(x,
     "normalize",
     "seed",
     "brms_arguments",
+    "get_stancode",
+    "get_standata",
     "get_priors",
     "get_set_priors",
     "validate_priors",
@@ -3806,8 +3823,11 @@ bsitar <- function(x,
          " only one can be specified at a time")
   }
   
-  if(get_priors & get_set_priors & validate_priors) {
-    stop("Amongst 'get_priors' 'get_set_priors' and 'validate_priors' ",
+  if(get_priors & get_set_priors & validate_priors & 
+     get_stancode & get_standata) {
+    stop("Amongst 'get_priors' 'get_set_priors', 'validate_priors' ",
+         "\n ",
+         "'get_stancode' and 'get_standata' ",
          "\n ",
          " arguments, only one can be set to TRUE at a time")
   }
@@ -3815,7 +3835,9 @@ bsitar <- function(x,
   
   
   exe_model_fit <- TRUE
-  if(get_priors |
+  if(get_stancode |
+     get_standata |
+     get_priors |
      get_set_priors |
      validate_priors) {
     exe_model_fit <- FALSE
@@ -3826,7 +3848,11 @@ bsitar <- function(x,
  
   
   if(!exe_model_fit) {
-    if(get_priors) {
+    if(get_stancode) {
+      return(do.call(make_stancode, brm_args))
+    } else if(get_standata) {
+      return(do.call(make_standata, brm_args))
+    } else if(get_priors) {
       return(do.call(get_prior, brm_args))
     } else if(get_set_priors) {
       return(brm_args$prior)
@@ -3847,8 +3873,35 @@ bsitar <- function(x,
       brm_args$prior <- brmspriors
     }
     
+   
     
-   # print(brm_args$prior)
+    
+    if(!is.null(init_custum)) {
+      
+      init_fun <- function(chain_id = 1) init_custum
+      if(!is.list(init_custum[[1]])) {
+        init_custum <- lapply(1:brm_args$chains, function(id) init_fun(chain_id = id))
+      } else {
+        if(length(init_custum) != length(brm_args$init)) {
+          stop("Custom initials specified via 'init_custom' argument must",
+               "\n ", 
+               " be a single named list (e.g., custom_init = list(x= 2, xx=5)) ",
+               "\n ", 
+               " or else a list of list matching the number of chains")
+        }
+      }
+      
+      
+      new_init_append <- list()
+      init_old <- brm_args$init
+      init_append <- init_custum
+      for (ilen in 1:length(init_old)) {
+        new_init_append[[ilen]] <- c(init_old[[ilen]], init_append[[ilen]])
+      }
+      
+      brm_args$init <- new_init_append
+    } # if(!is.null(init_custum)) {
+  
     
   brmsfit <- do.call(brm, brm_args)
   

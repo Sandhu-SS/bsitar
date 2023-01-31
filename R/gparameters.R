@@ -593,17 +593,20 @@ gparameters.bsitar <- function(model,
       } else if (estimation_method == 'predict') {
         out_d_ <- do.call(predict_.bsitar, arguments)
       }
-      if (!summary) {
-        out_d <- call_posterior_summary(out_d_)
-      } else if (summary) {
-        out_d <- out_d_
-      }
+      # No need to summarise by calling call_posterior_summary
+      # if (!summary) {
+      #   out_d <- call_posterior_summary(out_d_)
+      # } else if (summary) {
+      #   out_d <- out_d_
+      # }
+      
+      out_d <- out_d_
       
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
       }
-      
+     
       out_summary[['distance']] <-  cbind(newdata,
                                           out_d %>% data.frame() %>%
                                             dplyr::mutate(curve = 'distance')) %>%
@@ -640,11 +643,14 @@ gparameters.bsitar <- function(model,
       } else if (estimation_method == 'predict') {
         out_v_ <- do.call(predict_.bsitar, arguments)
       }
-      if (!summary) {
-        out_v <- call_posterior_summary(out_v_)
-      } else if (summary) {
-        out_v <- out_v_
-      }
+      # No need to summa call_posterior_summary
+      # if (!summary) {
+      #   out_v <- call_posterior_summary(out_v_)
+      # } else if (summary) {
+      #   out_v <- out_v_
+      # }
+      
+      out_v <- out_v_
       
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
@@ -660,13 +666,16 @@ gparameters.bsitar <- function(model,
       out_summary[['velocity']] <- NULL
     }
     
+    
     if (apv) {
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
       }
+      # out_summary[['parameters']] <-
+      #   get_gparameters(t(out_v_), newdata, groupby_str_v, summary)
       out_summary[['parameters']] <-
-        get_gparameters(t(out_v_), newdata, groupby_str_v, summary)
+        get_gparameters(out_v_, newdata, groupby_str_v, summary)
     }
     out_summary[['groupby_str_d']] <- groupby_str_d
     out_summary[['groupby_str_v']] <- groupby_str_v

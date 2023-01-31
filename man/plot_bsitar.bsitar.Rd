@@ -37,6 +37,7 @@
   linewidth.main = NULL,
   linewidth.apv = NULL,
   linetype.groupby = NA,
+  color.groupby = NA,
   band.alpha = NULL,
   returndata = FALSE,
   ...
@@ -215,7 +216,7 @@ it as 0.25.}
 
 \item{linetype.groupby}{An optional argument to specify the line type for the
 distance and velocity curves when drawing plots for a model that includes
-factor covariate(s) or individual specific distance/velocity curves
+factor covariate(s) or when visualising individual specific distance/velocity curves
 (default \code{NA}). Setting it to \code{NULL} will automatically sets the
 linetype for each factor level or individual This will also add legends for
 the factor level covariate or individuals whereas \code{NA} will set a
@@ -226,7 +227,22 @@ legends otherwise it is difficult to differentiate which curve belongs to
 which level of factor. For individual specific curves, the line type can be
 set to \code{NULL} when the number of individuals is small. However, when
 the number of individuals is large, \code{NA} is a better choice which
-prevents printing a large number of legends.}
+prevents printing a large number of legends for each individual.}
+
+\item{color.groupby}{An optional argument to specify the line color for
+distance and velocity curves when drawing plots for a model that includes
+factor covariate(s), or when visualising individual specific distance/velocity curves
+(default \code{NA}). Setting it to \code{NULL} will automatically sets the
+line color for each factor level or individual. This will also add legends for
+the factor level covariate or individuals. However, setting it as \code{NA} will set a
+'solid' line type and suppress legends. It is recommended to keep the
+default \code{NULL} option when plotting population average curves for
+factor covariates because this would appropriately set the
+legends otherwise it is difficult to differentiate which curve belongs to
+which level of the factor. For individual specific curves, the line color can be
+set to \code{NULL} when the number of individuals is small. However, when
+the number of individuals is large, \code{NA} is a better choice which
+prevents printing a large number of legends for each individual.}
 
 \item{band.alpha}{An optional numeric value to specify the transparency of
 the CI band(s) around the distance curve, velocity curve and the line
