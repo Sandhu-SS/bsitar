@@ -682,7 +682,7 @@
 #' list(init_a_cov_beta = init_a_cov_beta)} to pass on initials as
 #'  \code{a_cov_init_beta = init_a_cov_beta}.
 #'  
-#'@param init_custum Set custom initials via a named list 
+#'@param init_custom Set custom initials via a named list 
 #'  (default \code{init}). These are are  rarely used (for example when 
 #'  fitting a three level model). Note that the named list is directly passed 
 #'  to the arguments without checking the dimensions.
@@ -1017,7 +1017,7 @@ bsitar <- function(x,
                    jitter_init_cor = NULL,
                    prior_data = NULL,
                    init_data = NULL,
-                   init_custum = NULL,
+                   init_custom = NULL,
                    verbose = FALSE,
                    expose_function = TRUE,
                    
@@ -1972,7 +1972,7 @@ bsitar <- function(x,
     "multivariate",
     "prior_data",
     "init_data",
-    "init_custum",
+    "init_custom",
     "jitter_init_beta",
     "jitter_init_sd",
     "jitter_init_cor",
@@ -3876,13 +3876,13 @@ bsitar <- function(x,
    
     
     
-    if(!is.null(init_custum)) {
+    if(!is.null(init_custom)) {
       
-      init_fun <- function(chain_id = 1) init_custum
-      if(!is.list(init_custum[[1]])) {
-        init_custum <- lapply(1:brm_args$chains, function(id) init_fun(chain_id = id))
+      init_fun <- function(chain_id = 1) init_custom
+      if(!is.list(init_custom[[1]])) {
+        init_custom <- lapply(1:brm_args$chains, function(id) init_fun(chain_id = id))
       } else {
-        if(length(init_custum) != length(brm_args$init)) {
+        if(length(init_custom) != length(brm_args$init)) {
           stop("Custom initials specified via 'init_custom' argument must",
                "\n ", 
                " be a single named list (e.g., custom_init = list(x= 2, xx=5)) ",
@@ -3892,15 +3892,16 @@ bsitar <- function(x,
       }
       
       
+      
       new_init_append <- list()
       init_old <- brm_args$init
-      init_append <- init_custum
+      init_append <- init_custom
       for (ilen in 1:length(init_old)) {
         new_init_append[[ilen]] <- c(init_old[[ilen]], init_append[[ilen]])
       }
       
       brm_args$init <- new_init_append
-    } # if(!is.null(init_custum)) {
+    } # if(!is.null(init_custom)) {
   
     
   brmsfit <- do.call(brm, brm_args)
