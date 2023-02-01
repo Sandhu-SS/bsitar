@@ -1187,13 +1187,15 @@ prepare_formula <- function(x,
   bcovcoefnames <- gsub("[[:space:]]", gsubitbt, bcovcoefnames)
   ccovcoefnames <- gsub("[[:space:]]", gsubitbt, ccovcoefnames)
   dcovcoefnames <- gsub("[[:space:]]", gsubitbt, dcovcoefnames)
+  scovcoefnames <- gsub("[[:space:]]", gsubitbt, scovcoefnames)
   acovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, acovcoefnames_gr)
   bcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, bcovcoefnames_gr)
   ccovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, ccovcoefnames_gr)
   dcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, dcovcoefnames_gr)
+  dcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, dcovcoefnames_gr)
   dparcovcoefnames <- gsub("[[:space:]]", gsubitbt, dparcovcoefnames)
   
-  
+ 
   
   list_out <- list(
     nacov = nacov,
