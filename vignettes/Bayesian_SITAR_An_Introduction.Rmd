@@ -117,7 +117,7 @@ Where **Spl(.)** is the natural cubic spline function that generates the spline 
 
 ## Model estimation - frequentist vs. Bayesian
 
-There are two competing philosophies of model estimation [@bland1998; @Schoot2014]: the Bayesian (based on Bayes' theorem) and the frequentist (e.g., maximum likelihood estimation) approaches. While the frequentist approach was predominant in the earlier years, the advent of powerful computers has given a new impetus to the Bayesian analysis [@bland1998; @Schoot2014; @hamra2013]. As a result, Bayesian statistical methods are becoming ever more popular in applied and fundamental research. The key difference between Bayesian statistical inference and frequentest statistical methods concerns the nature of the unknown parameters. In the frequentist framework, a parameter of interest is assumed to be unknown, but fixed. That is, it is assumed that in the population there is only one true population parameter, for example, one true mean or one true regression coefficient. In the Bayesian view of subjective probability, all unknown parameters are treated as uncertain and therefore should be described by a probability distribution [@Schoot2014]. A particular attractive feature of Bayesian modelling is its ability to handle otherwise complex model specifications such as hierarchical model (i.e,., multilevel/mixed-effects models) that involve nested data structures (e.g., repeated height measurements in individuals) [@hamra2013].
+There are two competing philosophies of model estimation [@bland1998; @Schoot2014]: the Bayesian (based on Bayes' theorem) and the frequentist (e.g., maximum likelihood estimation) approaches. While the frequentist approach was predominant in the earlier years, the advent of powerful computers has given a new impetus to the Bayesian analysis [@bland1998; @Schoot2014; @hamra2013]. As a result, Bayesian statistical methods are becoming ever more popular in applied and fundamental research. The key difference between Bayesian statistical inference and frequentest statistical methods concerns the nature of the unknown parameters. In the frequentist framework, a parameter of interest is assumed to be unknown, but fixed. That is, it is assumed that in the population there is only one true population parameter, for example, one true mean or one true regression coefficient. In the Bayesian view of subjective probability, all unknown parameters are treated as uncertain and therefore should be described by a probability distribution [@Schoot2014]. A particular attractive feature of Bayesian modelling is its ability to handle otherwise complex model specifications such as hierarchical model (i.e,., multilevel/mixed-effects models) that involve nested data structures (e.g., repeated height measurements in individuals) [@hamra2013]. Bayesian statistical methods are becoming popular in applied and clinical research [@Schoot2014]. 
 
 There are three essential components underlying Bayesian statistics ([@bayes1763lii; @stigler1986laplace]): the *prior distribution,* the *likelihood function,* and the *posterior distribution*. The *prior distribution* refers to all knowledge available *before* seeing the data whereas the *likelihood function* expresses the information in the data given the parameters defined in the model. The third component (i.e., *posterior distribution*) is based on combining the first two components via Bayes' theorem and the results are summarized by the so-called *posterior inference*. The *posterior distribution*, therefore, reflects one's updated knowledge, balancing prior knowledge with observed data.
 
@@ -129,7 +129,7 @@ The task of combining these components together can yield a complex model in whi
 
 <!-- ### Conventional multilevel growth model. -->
 
-Bayesian statistical methods are becoming ever more popular in applied and fundamental research [@Schoot2014]. Here we provide the Bayesian specification of the SITAR model described above. To get a better understanding of the data generative mechanism and for the ease of showing prior specification for each individual parameter, we re express the above model \@ref(eq:1) as as follows:
+Here we provide the Bayesian specification of the SITAR model described above. To get a better understanding of the data generative mechanism and for the ease of showing prior specification for each individual parameter, we re express the above model \@ref(eq:1) as as follows:
 
 <!-- color{#A65141} -->
 
@@ -157,8 +157,70 @@ Bayesian statistical methods are becoming ever more popular in applied and funda
 (\#eq:4)
 \end{equation}
 ```
-The first formula (line) in the above equation is the probability of the outcome (likelihood) which states that the outcome is distributed with mean *mu* (see second line) and standard deviation, *sigma*. The *mu* is the function of growth curve parameters as described model \@ref(eq:1).
 
-We follow the recomendation made in the popular packages [rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html) and [brms](https://rdrr.io/cran/brms/man/set_prior.html) for prior specification. Technically, the prior used in *rstanrm* and *brms* packages are data-dependent and, hence *weakly informative*. This is because the the scaling is based on the scales of the predictors and the outcome. However, the amount of information used is weak and mainly takes into account the order of magnitude of the variables. An important feature of such priors is that defaults priors are reasonable for many models fit using the *rstanrm* and *brms*.
+The first line in the above equation is the probability of the outcome
+(likelihood) which states that the outcome is distributed with mean *mu* and
+standard deviation, *sigma*. The *mu* is the function of growth curve parameters
+as described earlier \@ref(eq:1).
+
+We follow the recommendations made in the popular packages
+[rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+and [brms](https://rdrr.io/cran/brms/man/set_prior.html) for prior
+specification. Technically, the prior used in *rstanrm* and *brms* packages are
+data-dependent and, hence *weakly informative*. This is because the the scaling
+is based on the scales of the predictors and the outcome. However, the amount of
+information used is weak and mainly takes into account the order of magnitude of
+the variables. An important feature of such priors is that defaults priors are
+reasonable for many models fit using the *rstanrm* and *brms*. The *weakly
+informative* priors provide moderate regularization and help stabilize
+computation.
+
+For specifying priors, the `bsitar` function has arguments for each of the
+parameter. For example, to set prior for population parameter `a`, the
+corresponding argument is \code{a_prior_beta} and to specify the prior for the
+standard deviation of the parameter, the argument is \code{a_prior_sd}. To
+specify these arguments the user provides a call to one of the various available
+functions such as `normal(mean, sd)`. The documentation for these functions can
+be found at
+[rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+and [brms](https://rdrr.io/cran/brms/man/set_prior.html). To use the default
+priors we just leave those arguments at their defaults.
+
+For scale, we follow a mix of default priors suggested by the authors of
+[rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+and [brms](https://rdrr.io/cran/brms/man/set_prior.html) packages. For example,
+while
+*rstanrm* earlier (before 2020) automatically re scaled priors by a factor $2.5$, 
+it has now set the auto scale option to `FALSE`. The *brms*, on the other hand,
+select scaling factor depending on the the Median Absolute Deviation (MAD) of
+the outcome. If MAD is less than $2.5$, it scales the prior by a factor of $2.5$
+otherwise the scale factor is 1 (i.e., no auto rescaling). The *bsitar* allows
+user to set scale via an option `autoscale`  which can be set to TRUE (default
+is FALSE) to scale priors by a factor 2.5 automatically of else a real positive
+values can be specified as scaling factor via the same `autoscale` option (e.g.,
+`autoscale = 1.5`). This option is available for all the location scale based
+distibutions such as `normal`, `student_t`, `cauchy` distributions. Below we
+briefly describe the approach used to scale the *weakly informative* priors for
+intercept parameter (coefficients `a` i.e, size), standard deviation of the
+random effects for parameter `a`, and the residual standard deviation parameter,
+`sigma`.
+
+By default the population parameter `a` is assigned normal priors centered at
+$y_{mean}$ (i.e., mean of the outcome) with scale $y_{sd}$ which is the standard
+deviation of the outcome (`normal(0, ysd)`). The `autoscale` option can be used
+to scale the prior (i.e, multiply the standard deviation by the scale factor).
+The default prior for the sd deviation of the random effect parameter `a` is
+normal with 0 mean and sd of outcome as scale i.e, `normal(0, ysd)`. Note that
+while *rstanrm*  uses the normal priors for population and random effect
+intercepts, the *brms* uses the student_t distribution for these parameters. We
+follow *rstanrm*  and put normal priors for the population and random effect
+intercepts (i.e., size parameter, `a`).
+
+
+For population timing parameter `b`, default priors are normal with mean 0 and scale 2 i.e, `normal(0, 2)`. Since the predictor `age` is by default mean centered in SITAR,   these priors imply that 95% mass of the normal distribution would cover between 11 and 17 years when mean age is 13 years. Depending on the mean age and whether data analysed is for males or females, the scale of priors can be adjusted accordingly.Prior for the sd parameter (i.e., the random effect parameter `b`) is again normal but with 0 mean and sd 1.5 (`normal(0, 1.5)`) which indicates that 95% mass of the normal distribution for individual variation in the timing will cover $\pm 3$ years.
+
+The default prior for the population intensity parameter `c` are normal with mean 0 and scale 1 i.e, `normal(0, 1)`. Since the intensity parameter is on  `age` is by default mean centered in SITAR,   these priors imply that 95% mass of the normal distribution would cover between 11 and 17 years when mean age is 13 years. Depending on the mean age and whether data analysed is for males or females, the scale of priors can be adjusted accordingly.Prior for the sd parameter (i.e., the random effect parameter `b`) is again normal but with 0 mean and sd 1.5 (`normal(0, 1.5)`) which indicates that 95% mass of the normal distribution for individual variation in the timing will cover $\pm 3$ years.
+
+
 
 #### References

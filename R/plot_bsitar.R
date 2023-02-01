@@ -860,11 +860,19 @@ plot_bsitar.bsitar <- function(model,
     
     default.set.line.groupby <- 'solid'
     default.set.color.groupby <- 'black'
+  
       
     line.guide <- "none"
     color.guide <- "none"
     
+   
+    
+    
     if(linetype.groupby == 'NA' & color.groupby == 'NA') {
+      if(nrepvals == 1) {
+        set.line.groupby <- default.set.line.groupby
+        set.color.groupby <- default.set.color.groupby
+      }
       if(nrepvals > 1) {
         set.line.groupby <- rep(default.set.line.groupby, nrepvals)
         set.color.groupby <- rep(default.set.color.groupby, nrepvals)
@@ -872,6 +880,8 @@ plot_bsitar.bsitar <- function(model,
         color.guide <- "legend"
       }
     } # if(is.na(linetype.groupby) & is.na(color.groupby)) {
+    
+    
     
     if(linetype.groupby == 'NA' & color.groupby != 'NA') {
       set.line.groupby <- rep(default.set.line.groupby, nrepvals)
@@ -901,13 +911,13 @@ plot_bsitar.bsitar <- function(model,
       }
     } # if(is.na(linetype.groupby) & !is.na(color.groupby)) {
     
-    # print(linetype.groupby)
-    # print(color.groupby)
+    
     if(linetype.groupby != 'NA' & color.groupby == 'NA') {
       set.color.groupby <- rep(default.set.color.groupby, nrepvals)
+      
       if(nrepvals == 1) {
         if(linetype.groupby == 'NULL') {
-          set.line.groupby <- default.set.linetype.groupby
+          set.line.groupby <- default.set.line.groupby
         } else if(linetype.groupby != 'NULL') {
           set.line.groupby <- linetype.groupby[1]  
         }
