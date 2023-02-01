@@ -521,7 +521,7 @@ gparameters.bsitar <- function(model,
     #                            ipts = ipts)
     
     newdata___ <- newdata
-    
+   
     if (grepl("d", opt, ignore.case = T)) {
       index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
       dist.. <- substr(opt, index_opt, index_opt)
@@ -585,7 +585,8 @@ gparameters.bsitar <- function(model,
       }
       arguments$newdata <- newdata
       arguments$deriv <- 0
-      
+      # don't let the ipts to pass again to the fitted_.bsitar
+      arguments$ipts <- NULL 
       arguments$envir <-arguments$envir_
       
       if (estimation_method == 'fitted') {
@@ -593,6 +594,8 @@ gparameters.bsitar <- function(model,
       } else if (estimation_method == 'predict') {
         out_d_ <- do.call(predict_.bsitar, arguments)
       }
+      
+
       # No need to summarise by calling call_posterior_summary
       # if (!summary) {
       #   out_d <- call_posterior_summary(out_d_)
@@ -601,12 +604,12 @@ gparameters.bsitar <- function(model,
       # }
       
       out_d <- out_d_
-      
+     
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
       }
-     
+      
       out_summary[['distance']] <-  cbind(newdata,
                                           out_d %>% data.frame() %>%
                                             dplyr::mutate(curve = 'distance')) %>%
@@ -635,7 +638,8 @@ gparameters.bsitar <- function(model,
       }
       arguments$newdata <- newdata
       arguments$deriv <- 1
-      
+      # don't let the ipts to pass again to the fitted_.bsitar
+      arguments$ipts <- NULL 
       arguments$envir <-arguments$envir_
       
       if (estimation_method == 'fitted') {
@@ -728,7 +732,8 @@ gparameters.bsitar <- function(model,
     
     arguments$newdata <- newdata
     arguments$deriv <- 1
-    
+    # don't let the ipts to pass again to the fitted_.bsitar
+    arguments$ipts <- NULL 
     arguments$envir <- parent.frame()
     
     if (estimation_method == 'fitted') {

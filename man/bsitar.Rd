@@ -93,7 +93,7 @@ bsitar(
   jitter_init_cor = NULL,
   prior_data = NULL,
   init_data = NULL,
-  init_custum = NULL,
+  init_custom = NULL,
   verbose = FALSE,
   expose_function = TRUE,
   get_stancode = FALSE,
@@ -721,7 +721,7 @@ As an example, create vector of initials for \code{a_cov_prior_beta} as
 list(init_a_cov_beta = init_a_cov_beta)} to pass on initials as
 \code{a_cov_init_beta = init_a_cov_beta}.}
 
-\item{init_custum}{Set custom initials via a named list
+\item{init_custom}{Set custom initials via a named list
 (default \code{init}). These are are  rarely used (for example when
 fitting a three level model). Note that the named list is directly passed
 to the arguments without checking the dimensions.}
