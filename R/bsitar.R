@@ -992,21 +992,21 @@ bsitar <- function(x,
                    c_init_beta = 0.001,
                    d_init_beta = 0.001,
                    s_init_beta = lm,
-                   a_cov_init_beta = lm,
-                   b_cov_init_beta = lm,
-                   c_cov_init_beta = lm,
-                   d_cov_init_beta = lm,
-                   s_cov_init_beta = lm,
+                   a_cov_init_beta = 0,
+                   b_cov_init_beta = 0,
+                   c_cov_init_beta = 0,
+                   d_cov_init_beta = 0,
+                   s_cov_init_beta = 0,
                    a_init_sd = lme_sd_a,
-                   b_init_sd = 0.1,
-                   c_init_sd = 0.01,
+                   b_init_sd = 1,
+                   c_init_sd = 0.1,
                    d_init_sd = 0.1,
                    a_cov_init_sd = 0,
                    b_cov_init_sd = 0,
                    c_cov_init_sd = 0,
                    d_cov_init_sd = 0,
                    gr_init_cor = 0,
-                   rsd_init_sigma = 0.01,
+                   rsd_init_sigma = 1,
                    dpar_init_sigma = 0,
                    dpar_cov_init_sigma = 0,
                    autocor_init_acor = 0.5,
@@ -1054,7 +1054,7 @@ bsitar <- function(x,
                    ...) {
   mcall <- mcall_ <- match.call()
   
-  # check and update if argument value taken from the global environment
+  # check and update if argument value taken from the global environment.
   # x,y,id and data are always taken from the data, thus excluded from checks
   
   no_default_args <- c("x", "y", "id", "data", "...")
@@ -1130,8 +1130,6 @@ bsitar <- function(x,
   arguments <-
     c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
   
-  # arguments <<- arguments
-  # mcall_ <<- mcall_
   
   for (ip in names(arguments)) {
     if (grepl("_init_", ip)) {
@@ -1154,7 +1152,7 @@ bsitar <- function(x,
     arguments[[ip]] <-  gsub_space(arguments[[ip]] )
   }
   
-  # separate OUT 'brms' arguments from 'bsitar' arguments for ease of handling
+  # Separate 'brms' arguments from 'bsitar' arguments for the ease of handling
   
   brms_arguments_list <-
     c(
@@ -1440,7 +1438,7 @@ bsitar <- function(x,
   }
   
   
-  # set univariate_by arguments (i.e., univariate-by=subgroup model fitting)
+  # Set univariate_by arguments (i.e., univariate-by=subgroup model fitting)
   
   if (gsub("\\s", "",
            paste(deparse(substitute(univariate_by)), 
@@ -1547,7 +1545,7 @@ bsitar <- function(x,
   
   
   
-  # set group_arg arguments (for univariate model fitting)
+  # Set group_arg arguments (for univariate model fitting)
   
   if (!paste(deparse(substitute(group_arg)), collapse = "") == "NULL"  &
       !any(grepl("^list", gsub("\\s", "", paste(
@@ -1689,7 +1687,7 @@ bsitar <- function(x,
   }
   
   
-  # If not already specified by the user, add default values to 
+  # If not already specified by the user, add default values to the
   # univariate_by, multivariate, and group_arg arguments
   
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
@@ -1814,8 +1812,9 @@ bsitar <- function(x,
   
   
   
-  # temporary placeholder for number of outcomes when fitting
-  # univariate-by-subgroup model (see univariate_by arg)
+  # Temporary placeholder for the number of outcomes when fitting
+  # univariate-by-subgroup model
+  
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
     temp_ <- univariate_by$by
     if (!temp_ %in% colnames(data)) {
@@ -1837,8 +1836,7 @@ bsitar <- function(x,
   
   
   
-  # Perform checks and set-up to convert arguments to a required format if 
-  # not already set-up correctly by the user
+  # Perform checks and set-up the 'to convert arguments' 
   
   to_list_if_not <- function(.x, nys, arguments, ...) {
     if (nys == 1) {
@@ -1962,8 +1960,8 @@ bsitar <- function(x,
   }
   
   
-  # Converting arguments to the required format for setting sub-options for
-  # univariate-by-subgroup and multivariate model fitting
+  # Convert arguments to the required format for setting sub-options for
+  # the univariate-by-subgroup and multivariate model fitting
   
   single_args <- c(
     "data",
@@ -2021,7 +2019,7 @@ bsitar <- function(x,
   }
   
   
-  # prepare data for 'bsitar'
+  # Prepare data for 'bsitar'
   
   make_bsitar_data <- function(data, uvarby, ys, verbose = FALSE, ...) {
     org.ys <- ys
@@ -2109,8 +2107,8 @@ bsitar <- function(x,
   ys <- attr(data, "ys")
   subindicators <- attr(data, "subindicators")
   
-  # Initiate loop over outcome(s) First, create empty lists, vector etc. to
-  # collect elements
+  # Initiate loop over outcome(s) 
+  # First, create empty lists, vector etc. to collect these elements
   
   dataout <- priorlist <- NULL
   
@@ -2127,7 +2125,8 @@ bsitar <- function(x,
   yvarvaluelist <- ynamelist <- covvaluelist <- covnamelist <- funlist
   groupvarnamelist <- xvarvaluelist <- xnamelist <- funlist
   hierarchicalvarnamelist <- hierarchicalvarvaluelist <- funlist
-  # Start loop over outcome(s)
+  
+  # Start loop over the outcome(s)
   
   for (ii in 1:length(ys)) {
     if (nys > 1)
@@ -2191,8 +2190,8 @@ bsitar <- function(x,
       )
     }
     
-    # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter In
-    # fact for df > 1, it forces 'd' to be random parameter only
+    # For some reasons, 'sitar' (Tim Cole) allows the 'd' parameter to be 
+    # random only. In fact for df > 1, it forces 'd' to be random parameter only
     
     if (!match_sitar_d_form) {
       if (!grepl("d", fixedsi, fixed = T) &
@@ -2209,7 +2208,8 @@ bsitar <- function(x,
       }
     }
     
-    # covariate not allowed when matching to sitar d form
+    # Covariate not allowed when matching to sitar 'd' form
+    
     if (match_sitar_d_form) {
       if ((grepl("d", fixedsi, fixed = T) |
            grepl("d", randomsi, fixed = T)) &
@@ -2230,7 +2230,7 @@ bsitar <- function(x,
     }
     
     
-    # add missing parameters to the dpar_formula
+    # Add missing parameters to the dpar_formula
     
     if (!is.null(dpar_formulasi)) {
       if (grepl("^1$", dpar_formulasi)) {
@@ -2285,12 +2285,10 @@ bsitar <- function(x,
       }
     }
     
+  
     
-    ######################
+    # Check for higher level model and update level 2 random formula
     
-    # a_formula_gr_strsi <- gsub_space(a_formula_gr_strsi)
-    
-    # checks for higher level model and update level 2 random formual
     f_checks_gr_gr_str <- function(a, b) {
       gr_st_id <- sub(".*\\|", "", a) 
       a_ <- paste0("'", deparse_0(substitute(a)), "'")
@@ -2361,12 +2359,8 @@ bsitar <- function(x,
       set_higher_levels <- FALSE
     }
     
-    ###############
-    
-    
-    
-    
-    # add intercept ~ 1 if missing
+   
+    # Add intercept ~ 1 if missing
     
     check_formuals <-
       c(
@@ -2643,10 +2637,6 @@ bsitar <- function(x,
       eval_xoffset_bstart_args(xsi, ysi, knots, datai, bstartsi, xfunsi)
     bstart <- bstart - xoffset
     
-    # setbstart <- bstart
-    
-    # assign('bstart', setbstart)
-    # rm(bstart)
     
     xoffset <- round(xoffset, 4)
     datai[[xsi]] <- datai[[xsi]] - xoffset
@@ -2656,8 +2646,6 @@ bsitar <- function(x,
     df <- length(knots) - 1
     
     mat_s <- make_spline_matrix(datai[[xsi]], knots)
-    
-    
     
     
     SplineFun_name <- "SplineFun"
@@ -2672,7 +2660,6 @@ bsitar <- function(x,
       getxname <- getX_name
       getknotsname <- getKnots_name
     }
-    
     
     
     spfun_collect <-
@@ -2709,12 +2696,6 @@ bsitar <- function(x,
       }
     }
     
-    # print(ysi)
-    # print(xsi)
-    # print(idsi)
-    # print(nknots)
-    # print(knots)
-    # print(internal_function_args)
     
     
     funlist[ii] <-
@@ -2729,10 +2710,7 @@ bsitar <- function(x,
       )
     
     
-    # print(funlist)
-    # stop()
-    
-    
+   
     
     internal_formula_args_names <-
       c(
@@ -3111,10 +3089,7 @@ bsitar <- function(x,
     }
     
     
-    # print(xfunsi)
-    # print(xoffset)
-    # datai %>% head() %>% print()
-    # stop()
+  
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       dataout <- rbind(dataout, datai)
@@ -3126,6 +3101,7 @@ bsitar <- function(x,
     else
       uvarbyTF <- FALSE
   }  # end of loop over outcome(s)
+  
   
   
   if (verbose) {
@@ -3299,7 +3275,6 @@ bsitar <- function(x,
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
       temppp <- brmsinits[names(brmsinits) %in% keys]
       temppp <- unlist(unname(temppp))
-      # temppp <- temppp[order((attr(temppp, 'names')))]
       brmsinits <- brmsinits[!names(brmsinits) %in% keys]
       for (sdi in 1:length(temppp)) {
         brmsinits[[paste0(c_it, sdi)]] <- temppp[sdi] %>%
@@ -3364,7 +3339,7 @@ bsitar <- function(x,
   }  # if(!is.null(brmsinits)) {
   
   
-  # for multivariate, it makes sense to keep initials for betas only otherwise
+  # For multivariate, it makes sense to keep initials for betas only otherwise
   # dimensional mismatch
   if (!is.null(brmsinits) & length(initialslist) != nys) {
     if (multivariate$mvar & multivariate$cor == "un") {
@@ -3394,7 +3369,7 @@ bsitar <- function(x,
   }
   
   
-  # strip off initials attrubutes now
+  # Strip off initials attributes now
   for (inm in names(brmsinits)) {
     if (is.matrix(brmsinits[[inm]])) {
       colnames(brmsinits[[inm]]) <- rownames(brmsinits[[inm]]) <- NULL
@@ -3506,7 +3481,7 @@ bsitar <- function(x,
         eval_inits
         return(eval_inits)
       }
-    # print(brms_arguments$chains)
+    
     brmsinits <- lapply(1:brms_arguments$chains, function(id) {
       eval_inits_fun(
         inits = brmsinits,
@@ -3520,7 +3495,7 @@ bsitar <- function(x,
   
   
   
-  # set brm arguments and fit model
+  # Set brm arguments and fit model
   
   setup_brms_args <-
     function(formula,
@@ -3635,11 +3610,7 @@ bsitar <- function(x,
           }
           setarguments$threads <-  threading(max.threads)
         }
-        
-        # print(setarguments$cores)
-        # print(setarguments$threads)
-        # stop()
-      } #
+      } 
       
       
       if (eval(setarguments$backend) == "cmdstanr") {
@@ -3662,15 +3633,7 @@ bsitar <- function(x,
       return(setarguments)
     }
   
-  # options(mc.cores = future::availableCores(methods ="system", omit = 1))
-  # options('brms.threads' = getOption("mc.cores", 1))
-  # options('brms.opencl' = NULL)
-  # options('brms.normalize' = TRUE)
-  # options('future' = FALSE)
-  # options('brms.algorithm' = "sampling")
-  # options('brms.file_refit' = "never")
   
-  # getOption("mc.cores", 1)
   
   if (verbose) {
     setmsgtxt <- paste0("\n Setting-up brms arguments")
@@ -3714,41 +3677,6 @@ bsitar <- function(x,
   }
   
   cat("\n")
-  # brm_args <<- brm_args
- 
-  
-  
-  # set_higher_priors <- function(prior_object, new_priors) {
-  #   new_priors.o <- new_priors
-  #   group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- NA
-  #   group_ <- class_ <- nlpar_ <- cor_check <- sd_check <- c()
-  #   new_priors <- as.data.frame(new_priors)
-  #   for (new_priors_i in 1:nrow(new_priors)) {
-  #     pstr <- new_priors[new_priors_i,]
-  #     group_ <- c(group_, pstr[["group"]])
-  #     class_ <- c(class_, pstr[["class"]])
-  #     nlpar_ <- c(nlpar_, pstr[["nlpar"]])
-  #     if(pstr[["class"]] == 'sd') sd_check <- c(sd_check, pstr[["group"]])
-  #     if(pstr[["class"]] == 'cor') cor_check <- c(cor_check, pstr[["group"]])
-  #   }
-  #   
-  #   if(!is.null(sd_check)) {
-  #     prior_object <- prior_object %>% 
-  #       filter(!c(class == 'sd' & coef == '')) %>% 
-  #       filter(!c(group %in% group_ & class %in% class_ & nlpar %in% nlpar_))
-  #   }
-  #   
-  #   if(!is.null(cor_check)) {
-  #     prior_object <- prior_object %>% 
-  #       filter(!c(class == 'cor' & group == '')) %>% 
-  #       filter(!c(group %in% group_ & class %in% class_ ))
-  #   }
-  #   
-  #   out <- prior_object %>% bind_rows(.,new_priors.o)
-  #   out
-  # }
-  
-  
   
   
   
@@ -3758,40 +3686,21 @@ bsitar <- function(x,
       setdf_1 %>% dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
       dplyr::mutate(order = row_number()) %>% 
       dplyr::arrange(index)
-    
     setdf_2 <- 
       setdf_2 %>% dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
       dplyr::mutate(order = row_number()) %>% 
       dplyr::arrange(index)
-    
     vi_1 <- setdf_1 %>% dplyr::mutate(valid = ifelse(!(class == 'sd' & coef == ""), 1, 0)) %>% 
       data.frame() %>% dplyr::filter(valid == 1) %>% dplyr::select(index) %>% unlist() %>% 
       droplevels()
-    
     setdf_1 <- setdf_1 %>% dplyr::filter(!(class == 'sd' & coef == ""))
-    
     setdf_2 <- setdf_2 %>% dplyr::filter(!(class == 'sd' & coef == ""))
-    
     setdf_3 <- setdf_1[setdf_1$index %in% vi_1,]
-    
     setdf_2 <- setdf_2 %>% dplyr::filter(!index %in% vi_1)
-    
     setdf_4 <- rbind(setdf_2, setdf_3)
-    
-    # setdf_4 <- setdf_4 %>% arrange(order) %>% select(-c(index, order))
     setdf_4 <- setdf_4 %>% dplyr::select(-c(index, order))
-    
     setdf_4
   }
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   
   
@@ -3877,7 +3786,6 @@ bsitar <- function(x,
     
     
     if(!is.null(init_custom)) {
-      
       init_fun <- function(chain_id = 1) init_custom
       if(!is.list(init_custom[[1]])) {
         init_custom <- lapply(1:brm_args$chains, function(id) init_fun(chain_id = id))
@@ -3890,24 +3798,20 @@ bsitar <- function(x,
                " or else a list of list matching the number of chains")
         }
       }
-      
-      
-      
       new_init_append <- list()
       init_old <- brm_args$init
       init_append <- init_custom
       for (ilen in 1:length(init_old)) {
         new_init_append[[ilen]] <- c(init_old[[ilen]], init_append[[ilen]])
       }
-      
       brm_args$init <- new_init_append
-    } # if(!is.null(init_custom)) {
+    } 
   
     
   brmsfit <- do.call(brm, brm_args)
   
   
-  # add model info for post-processing
+  # Add model info for post-processing
   
   model_info <- list()
   
@@ -3979,7 +3883,7 @@ bsitar <- function(x,
   
   brmsfit$model_info <- model_info
   
-  # expose Stan function
+  # Expose Stan function
   
   if (expose_function) {
     if (verbose) {
@@ -4014,7 +3918,6 @@ bsitar <- function(x,
   }
   
   attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bsitar')
-  
   return(brmsfit)
   } # exe_model_fit
 }
