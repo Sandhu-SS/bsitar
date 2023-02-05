@@ -819,7 +819,8 @@ plot_bsitar.bsitar <- function(model,
   
   
   set_lines_colors <- function(plot, ngroups, 
-                               linetype.groupby, color.groupby) {
+                               linetype.groupby,
+                               color.groupby) {
     nrepvals <- ngroups
     
     if(is.null(linetype.groupby)) {
@@ -861,12 +862,8 @@ plot_bsitar.bsitar <- function(model,
     default.set.line.groupby <- 'solid'
     default.set.color.groupby <- 'black'
   
-      
     line.guide <- "none"
     color.guide <- "none"
-    
-   
-    
     
     if(linetype.groupby == 'NA' & color.groupby == 'NA') {
       if(nrepvals == 1) {
@@ -938,8 +935,8 @@ plot_bsitar.bsitar <- function(model,
             set.line.groupby <- rep(linetype.groupby, nrepvals)
           }
         }
-        line.guide <- "legend"
-        color.guide <- "none"
+        line.guide <- "none" # "legend"
+        color.guide <- "legend"  # "none"
       }
     } # if(!is.na(linetype.groupby) & is.na(color.groupby)) {
     
@@ -1387,22 +1384,44 @@ plot_bsitar.bsitar <- function(model,
       
       t.s.axis <-
         with(data_dv, transform.sec.axis(Estimate.x, Estimate.y))
+     
       
       
-      if(is.na(data_dv[['groupby.x']][1])) {
-        legendlabs_mult_singel <- c('Distance', 'Velocity')
-        legendlabs_mult_color <- single_plot_pair_color_dv_au
-        legendlabs_mult_line <- c('solid', 'solid')
-        data_dv$groupby_line.x <- legendlabs_mult_singel[1]
-        data_dv$groupby_color.x <- legendlabs_mult_singel[1]
+      if(is.na(uvarby)) {
+        if(is.na(data_dv[['groupby.x']][1])) {
+          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_color <- single_plot_pair_color_dv_au
+          legendlabs_mult_line <- c('solid', 'solid')
+          data_dv$groupby_line.x <- legendlabs_mult_singel[1]
+          data_dv$groupby_color.x <- legendlabs_mult_singel[1]
           data_dv$groupby_line.y <- legendlabs_mult_singel[2]
           data_dv$groupby_color.y <- legendlabs_mult_singel[2]
-      } else {
-        data_dv$groupby_line.x <- data_dv$groupby.x
-        data_dv$groupby_color.x <- data_dv$groupby.x
-        data_dv$groupby_line.y <- data_dv$groupby.y
-        data_dv$groupby_color.y <- data_dv$groupby.y
-        legendlabs_mult_mult <- unique(data_dv[['groupby.x']])
+        } else {
+          data_dv$groupby_line.x <- data_dv$groupby.x
+          data_dv$groupby_color.x <- data_dv$groupby.x
+          data_dv$groupby_line.y <- data_dv$groupby.y
+          data_dv$groupby_color.y <- data_dv$groupby.y
+          legendlabs_mult_mult <- unique(data_dv[['groupby.x']])
+        }
+      }
+      
+      
+      if(!is.na(uvarby)) {
+        if(is.null(cov_factor_vars)) {
+          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_color <- single_plot_pair_color_dv_au
+          legendlabs_mult_line <- c('solid', 'solid')
+          data_dv$groupby_line.x <- legendlabs_mult_singel[1]
+          data_dv$groupby_color.x <- legendlabs_mult_singel[1]
+          data_dv$groupby_line.y <- legendlabs_mult_singel[2]
+          data_dv$groupby_color.y <- legendlabs_mult_singel[2]
+        } else {
+          data_dv$groupby_line.x <- data_dv$groupby.x
+          data_dv$groupby_color.x <- data_dv$groupby.x
+          data_dv$groupby_line.y <- data_dv$groupby.y
+          data_dv$groupby_color.y <- data_dv$groupby.y
+          legendlabs_mult_mult <- unique(data_dv[['groupby.x']])
+        }
       }
       
       
@@ -1462,7 +1481,7 @@ plot_bsitar.bsitar <- function(model,
       plot.o <- plot.o + 
         ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
         ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
-      
+     
       
       if (grepl("d", bands, ignore.case = T)) {
         plot.o <- plot.o +
@@ -1478,8 +1497,8 @@ plot_bsitar.bsitar <- function(model,
             ),
             alpha = band.alpha
           )
-        plot.o <- plot.o +
-          ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
+        # plot.o <- plot.o +
+        #   ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
       }
       
       if (grepl("v", bands, ignore.case = T)) {
@@ -1496,9 +1515,41 @@ plot_bsitar.bsitar <- function(model,
             ),
             alpha = band.alpha
           )
+        # plot.o <- plot.o +
+        #   ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
+      }
+      
+      
+      # Match band color with the line color 
+      # Needed because opt might be 'dv' and band 'd' or 'v'
+      
+      if((grepl("d", bands, ignore.case = T) & !grepl("v", bands, ignore.case = T)) |
+         !grepl("d", bands, ignore.case = T) & grepl("v", bands, ignore.case = T)
+      ) {
+        one_band <- TRUE
+      } else {
+        one_band <- FALSE
+      }
+      
+      if(one_band & ngrpanels == 1) {
+        if(grepl("d", bands, ignore.case = T) & 
+           !grepl("v", bands, ignore.case = T)) {
+          plot.o <- plot.o +
+            ggplot2::scale_fill_manual(values=legendlabs_mult_color[1], guide = 'none')
+        }
+        if(!grepl("d", bands, ignore.case = T) & 
+           grepl("v", bands, ignore.case = T)) {
+          plot.o <- plot.o +
+            ggplot2::scale_fill_manual(values=legendlabs_mult_color[2], guide = 'none')
+        }
+      }
+      
+      if(!one_band & ngrpanels == 1) {
         plot.o <- plot.o +
           ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
       }
+      
+      
       
       
       if (pv) {
@@ -1584,23 +1635,45 @@ plot_bsitar.bsitar <- function(model,
       
       out_a_ <- out_a_ %>% dplyr::mutate(groupby.x = groupby, groupby.y = groupby.x)
       
+      
+      if(is.na(uvarby)) {
+        if(is.na(out_a_[['groupby']][1])) {
+          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_color <- single_plot_pair_color_dv_au
+          legendlabs_mult_line <- c('solid', 'solid')
+          out_a_$groupby_line.x <- legendlabs_mult_singel[1]
+          out_a_$groupby_color.x <- legendlabs_mult_singel[1]
+          out_a_$groupby_line.y <- legendlabs_mult_singel[2]
+          out_a_$groupby_color.y <- legendlabs_mult_singel[2]
+        } else {
+          out_a_$groupby_line.x <- out_a_$groupby.x
+          out_a_$groupby_color.x <- out_a_$groupby.x
+          out_a_$groupby_line.y <- out_a_$groupby.y
+          out_a_$groupby_color.y <- out_a_$groupby.y
+          legendlabs_mult_mult <- unique(out_a_[['groupby']])
+        }
+      }
      
       
-      if(is.na(out_a_[['groupby']][1])) {
-        legendlabs_mult_singel <- c('Distance', 'Velocity')
-        legendlabs_mult_color <- single_plot_pair_color_dv_au
-        legendlabs_mult_line <- c('solid', 'solid')
-        out_a_$groupby_line.x <- legendlabs_mult_singel[1]
-        out_a_$groupby_color.x <- legendlabs_mult_singel[1]
-        out_a_$groupby_line.y <- legendlabs_mult_singel[2]
-        out_a_$groupby_color.y <- legendlabs_mult_singel[2]
-      } else {
-        out_a_$groupby_line.x <- out_a_$groupby.x
-        out_a_$groupby_color.x <- out_a_$groupby.x
-        out_a_$groupby_line.y <- out_a_$groupby.y
-        out_a_$groupby_color.y <- out_a_$groupby.y
-        legendlabs_mult_mult <- unique(out_a_[['groupby']])
+      if(!is.na(uvarby)) {
+        if(is.null(cov_factor_vars)) {
+          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_color <- single_plot_pair_color_dv_au
+          legendlabs_mult_line <- c('solid', 'solid')
+          out_a_$groupby_line.x <- legendlabs_mult_singel[1]
+          out_a_$groupby_color.x <- legendlabs_mult_singel[1]
+          out_a_$groupby_line.y <- legendlabs_mult_singel[2]
+          out_a_$groupby_color.y <- legendlabs_mult_singel[2]
+        } else {
+          out_a_$groupby_line.x <- out_a_$groupby.x
+          out_a_$groupby_color.x <- out_a_$groupby.x
+          out_a_$groupby_line.y <- out_a_$groupby.y
+          out_a_$groupby_color.y <- out_a_$groupby.y
+          legendlabs_mult_mult <- unique(out_a_[['groupby']])
+        }
       }
+      
+      
       
       ############# set to NULL
       # linetype.groupby <- NULL
@@ -1685,21 +1758,43 @@ plot_bsitar.bsitar <- function(model,
       out_u_ <- out_u_ %>% dplyr::mutate(groupby.x = groupby, groupby.y = groupby.x)
       
       
-      if(is.na(out_u_[['groupby']][1])) {
-        legendlabs_mult_singel <- c('Distance', 'Velocity')
-        legendlabs_mult_color <- single_plot_pair_color_dv_au
-        legendlabs_mult_line <- c('solid', 'solid')
-        out_u_$groupby_line.x <- legendlabs_mult_singel[1]
-        out_u_$groupby_color.x <- legendlabs_mult_singel[1]
-        out_u_$groupby_line.y <- legendlabs_mult_singel[2]
-        out_u_$groupby_color.y <- legendlabs_mult_singel[2]
-      } else {
-        out_u_$groupby_line.x <- out_u_$groupby.x
-        out_u_$groupby_color.x <- out_u_$groupby.x
-        out_u_$groupby_line.y <- out_u_$groupby.y
-        out_u_$groupby_color.y <- out_u_$groupby.y
-        legendlabs_mult_mult <- unique(out_u_[['groupby']])
+      if(is.na(uvarby)) { 
+        if(is.na(out_u_[['groupby']][1])) {
+          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_color <- single_plot_pair_color_dv_au
+          legendlabs_mult_line <- c('solid', 'solid')
+          out_u_$groupby_line.x <- legendlabs_mult_singel[1]
+          out_u_$groupby_color.x <- legendlabs_mult_singel[1]
+          out_u_$groupby_line.y <- legendlabs_mult_singel[2]
+          out_u_$groupby_color.y <- legendlabs_mult_singel[2]
+        } else {
+          out_u_$groupby_line.x <- out_u_$groupby.x
+          out_u_$groupby_color.x <- out_u_$groupby.x
+          out_u_$groupby_line.y <- out_u_$groupby.y
+          out_u_$groupby_color.y <- out_u_$groupby.y
+          legendlabs_mult_mult <- unique(out_u_[['groupby']])
+        }
       }
+      
+      
+      if(!is.na(uvarby)) { 
+        if(is.null(cov_factor_vars)) {
+          legendlabs_mult_singel <- c('Distance', 'Velocity')
+          legendlabs_mult_color <- single_plot_pair_color_dv_au
+          legendlabs_mult_line <- c('solid', 'solid')
+          out_u_$groupby_line.x <- legendlabs_mult_singel[1]
+          out_u_$groupby_color.x <- legendlabs_mult_singel[1]
+          out_u_$groupby_line.y <- legendlabs_mult_singel[2]
+          out_u_$groupby_color.y <- legendlabs_mult_singel[2]
+        } else {
+          out_u_$groupby_line.x <- out_u_$groupby.x
+          out_u_$groupby_color.x <- out_u_$groupby.x
+          out_u_$groupby_line.y <- out_u_$groupby.y
+          out_u_$groupby_color.y <- out_u_$groupby.y
+          legendlabs_mult_mult <- unique(out_u_[['groupby']])
+        }
+      }
+      
       
       plot.o.u <- out_u_ %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
@@ -1794,21 +1889,44 @@ plot_bsitar.bsitar <- function(model,
         out_a_u_ <- out_a_u_ %>% dplyr::mutate(groupby.x = groupby, groupby.y = groupby.x)
         
         
-        if(is.na(out_a_u_[['groupby']][1])) {
-          legendlabs_mult_singel <- c('Distance', 'Velocity')
-          legendlabs_mult_color <- single_plot_pair_color_dv_au
-          legendlabs_mult_line <- c('solid', 'solid')
-          out_a_u_$groupby_line.x <- legendlabs_mult_singel[1]
-          out_a_u_$groupby_color.x <- legendlabs_mult_singel[1]
-          out_a_u_$groupby_line.y <- legendlabs_mult_singel[2]
-          out_a_u_$groupby_color.y <- legendlabs_mult_singel[2]
-        } else {
-          out_a_u_$groupby_line.x <- out_a_u_$groupby.x
-          out_a_u_$groupby_color.x <- out_a_u_$groupby.x
-          out_a_u_$groupby_line.y <- out_a_u_$groupby.y
-          out_a_u_$groupby_color.y <- out_a_u_$groupby.y
-          legendlabs_mult_mult <- unique(out_a_u_[['groupby']])
+        if(is.na(uvarby)) {
+          if(is.na(out_a_u_[['groupby']][1])) {
+            legendlabs_mult_singel <- c('Distance', 'Velocity')
+            legendlabs_mult_color <- single_plot_pair_color_dv_au
+            legendlabs_mult_line <- c('solid', 'solid')
+            out_a_u_$groupby_line.x <- legendlabs_mult_singel[1]
+            out_a_u_$groupby_color.x <- legendlabs_mult_singel[1]
+            out_a_u_$groupby_line.y <- legendlabs_mult_singel[2]
+            out_a_u_$groupby_color.y <- legendlabs_mult_singel[2]
+          } else {
+            out_a_u_$groupby_line.x <- out_a_u_$groupby.x
+            out_a_u_$groupby_color.x <- out_a_u_$groupby.x
+            out_a_u_$groupby_line.y <- out_a_u_$groupby.y
+            out_a_u_$groupby_color.y <- out_a_u_$groupby.y
+            legendlabs_mult_mult <- unique(out_a_u_[['groupby']])
+          }
         }
+        
+        
+        
+        if(!is.na(uvarby)) {
+          if(is.null(cov_factor_vars)) {
+            legendlabs_mult_singel <- c('Distance', 'Velocity')
+            legendlabs_mult_color <- single_plot_pair_color_dv_au
+            legendlabs_mult_line <- c('solid', 'solid')
+            out_a_u_$groupby_line.x <- legendlabs_mult_singel[1]
+            out_a_u_$groupby_color.x <- legendlabs_mult_singel[1]
+            out_a_u_$groupby_line.y <- legendlabs_mult_singel[2]
+            out_a_u_$groupby_color.y <- legendlabs_mult_singel[2]
+          } else {
+            out_a_u_$groupby_line.x <- out_a_u_$groupby.x
+            out_a_u_$groupby_color.x <- out_a_u_$groupby.x
+            out_a_u_$groupby_line.y <- out_a_u_$groupby.y
+            out_a_u_$groupby_color.y <- out_a_u_$groupby.y
+            legendlabs_mult_mult <- unique(out_a_u_[['groupby']])
+          }
+        }
+        
         
         plot.o <- out_a_u_ %>%
           ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
@@ -1865,7 +1983,6 @@ plot_bsitar.bsitar <- function(model,
       }
       
       if (layout == 'single') {
-        
         plot.o <- out_a_ %>%
           ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
           ggplot2::geom_line(
