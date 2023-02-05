@@ -251,6 +251,7 @@ get.newdata <- function(model, newdata, resp,
             df <- rbind(df, dft)
           df
         }
+        
         exdata(.x[[xvar]], .x[[IDvar]], matrix(unique(.x[[IDvar]], ncol = 1)),
                nmy = nmy)
       }
@@ -285,27 +286,32 @@ get.newdata <- function(model, newdata, resp,
         }
       } # if(is.null(model$model_info[[hierarchical_]]))
       
+      
+      multiNewVar <- function(df, df2, varname) {
+        df %>% dplyr::mutate(., !!varname := df2[[varname]])
+      }
+     
       if(!is.null(model$model_info[[hierarchical_]])) {
-        multiNewVar <- function(df, df2, varname){
-          df %>% dplyr::mutate(., !!varname := df2[[varname]])
-        }
         if (!is.null(ipts) & is.null(cov_factor_vars)) {
-          newdata <- newdata %>% dplyr::arrange(IDvar, xvar) %>% 
+          IDvar_ <- IDvar[1]
+          higher_ <- IDvar[2:length(IDvar)]
+          arrange_by <- c(IDvar_, xvar)
+          cov_factor_vars_by <- c(higher_, cov_factor_vars)
+          newdata <- newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
+            dplyr::group_by(across(all_of(cov_factor_vars_by))) %>%
             dplyr::group_modify(~ idatafunction(
               .x,
               xvar = xvar,
-              IDvar = IDvar[1],
+              IDvar = IDvar_,
               nmy = ipts
             )) %>%
-            dplyr::rename(!!xvar := 'x') %>% data.frame() 
+            dplyr::rename(!!xvar := 'x') %>% data.frame()
           for(i in IDvar) {
             newdata <- newdata %>% multiNewVar(df=., df2 = newdata, varname=i)
           } 
-          newdata %>%
-            dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
+          newdata %>% dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
             data.frame() -> newdata
         } 
-        
         
         if (!is.null(ipts) & !is.null(cov_factor_vars)) {
           IDvar_ <- IDvar[1]
@@ -327,7 +333,7 @@ get.newdata <- function(model, newdata, resp,
           newdata %>% dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
             data.frame() -> newdata
         }
-      } # if(!is.null(model$model
+      } # if(!is.null(model$model_info[[hierarchical_]])) {
       
       
       
