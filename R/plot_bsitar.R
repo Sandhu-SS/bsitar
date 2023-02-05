@@ -1478,9 +1478,8 @@ plot_bsitar.bsitar <- function(model,
             ),
             alpha = band.alpha
           )
-        # Need only oncen which is done for vel plot below
-        # plot.o <- plot.o +
-        #   ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
+        plot.o <- plot.o +
+          ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
       }
       
       if (grepl("v", bands, ignore.case = T)) {

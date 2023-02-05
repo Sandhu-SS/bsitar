@@ -204,6 +204,31 @@ get.newdata <- function(model, newdata, resp,
       uvarby <- model$model_info$univariate_by
       if(!is.na(uvarby)) cov_factor_vars <- c(uvarby, cov_factor_vars)
       
+      
+      
+      
+      # if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
+      #   newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
+      #                                                model$model_info$univariate_by,
+      #                                                model$model_info$org.ycall)
+      #   sortbylayer <- NA
+      #   newdata <- newdata %>%
+      #     dplyr::mutate(sortbylayer =
+      #                     forcats::fct_relevel(!!as.name(uvarby),
+      #                                          (levels(
+      #                                            !!as.name(uvarby)
+      #                                          )))) %>%
+      #     dplyr::arrange(sortbylayer) %>%
+      #     dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
+      #                                              levels = 
+      #                                                unique(!!as.name(IDvar)))) %>% 
+      #     dplyr::select(-sortbylayer)
+      #   
+      # }
+      
+      if(is.null(ipts)) newdata <- newdata
+      
+      
       idatafunction <- function(.x, xvar, IDvar, nmy) {
         exdata <- function(x, id, idmat, nmy = nmy) {
           n <- round(nmy * diff(range(x)))
@@ -281,6 +306,7 @@ get.newdata <- function(model, newdata, resp,
             data.frame() -> newdata
         } 
         
+        
         if (!is.null(ipts) & !is.null(cov_factor_vars)) {
           IDvar_ <- IDvar[1]
           higher_ <- IDvar[2:length(IDvar)]
@@ -306,10 +332,10 @@ get.newdata <- function(model, newdata, resp,
       
       
       
-      if(is.null(ipts)) newdata <- newdata
-      
+      # if(is.null(ipts)) newdata <- newdata
+      # 
       if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
-        newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
+        newdata <- model$model_info$make_bsitar_data(newdata,
                                                      model$model_info$univariate_by,
                                                      model$model_info$org.ycall)
         sortbylayer <- NA
@@ -321,10 +347,10 @@ get.newdata <- function(model, newdata, resp,
                                                )))) %>%
           dplyr::arrange(sortbylayer) %>%
           dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                                   levels = 
-                                                     unique(!!as.name(IDvar)))) %>% 
+                                                   levels =
+                                                     unique(!!as.name(IDvar)))) %>%
           dplyr::select(-sortbylayer)
-        
+
       }
       
       newdata.oo <- get.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,

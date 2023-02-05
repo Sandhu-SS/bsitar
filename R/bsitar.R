@@ -3783,7 +3783,11 @@ bsitar <- function(x,
     }
     
    
+    # If initials are 0 or random, then set custom init to NULL
     
+    if(brm_args$init == "0" | brm_args$init == "random") {
+      init_custom <- NULL
+    }
     
     if(!is.null(init_custom)) {
       init_fun <- function(chain_id = 1) init_custom
@@ -3888,7 +3892,7 @@ bsitar <- function(x,
   if (expose_function) {
     if (verbose) {
       setmsgtxt <-
-        paste0("\n Exposing Stan functions for post-processing")
+        paste0("\n Exposing Stan functions for post-processing\n")
       if (displayit == 'msg') {
         message(setmsgtxt)
       } else if (displayit == 'col') {
@@ -3899,7 +3903,7 @@ bsitar <- function(x,
     
     if (!verbose) {
       setmsgtxt <-
-        paste0("\n Exposing Stan functions for post-processing..")
+        paste0("\n Exposing Stan functions for post-processing..\n")
       message(setmsgtxt)
     }
     

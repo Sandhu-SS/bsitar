@@ -76,12 +76,19 @@ predict_.bsitar <-
                              resp = resp,
                              deriv = deriv)
     
-    newdata <- get.newdata(model, 
-                           newdata = newdata, 
-                           resp = resp, 
-                           numeric_cov_at = numeric_cov_at,
-                           levels_id = levels_id,
-                           ipts = ipts)
+    xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+    
+    if(xcall == "gparameters" | xcall == "plot_bsitar") {
+      arguments <- get_args_(as.list(match.call())[-1], xcall)
+      newdata <- newdata
+    } else {
+      newdata <- get.newdata(model, 
+                             newdata = newdata, 
+                             resp = resp, 
+                             numeric_cov_at = numeric_cov_at,
+                             levels_id = levels_id,
+                             ipts = ipts)
+    }
     
     assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
     
