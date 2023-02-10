@@ -374,10 +374,10 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
-  # no prior for nlf(sigma ~
+  # no prior if no lf | nlf(sigma ~
   if (!is.null(dpar_formulasi)) {
     if (!grepl("^lf\\(", dpar_formulasi) &
-        grepl("^nlf\\(", dpar_formulasi)) {
+        !grepl("^nlf\\(", dpar_formulasi)) {
       dpar_prior_sigma <- dpar_cov_prior_sigma <- NULL
     }
   }
@@ -1436,8 +1436,8 @@ set_priors_initials <- function(a_prior_beta,
                 coef <- dparcovcoefnames
               }
             }
-            if (!grepl("^lf\\(", dpar_formulasi) &
-                grepl("^nlf\\(", dpar_formulasi)) {
+            if (!grepl("^lf\\(", dpar_formulasi) |
+                !grepl("^nlf\\(", dpar_formulasi)) {
               coef <- dparcovcoefnames
             }
           } else {
@@ -1513,8 +1513,8 @@ set_priors_initials <- function(a_prior_beta,
                 class <- 'b'
                 coef  <- dparcovcoefnames[1]
               }
-            } else if (!grepl("^lf\\(", dpar_formulasi) &
-                       grepl("^nlf\\(", dpar_formulasi)) {
+            } else if (!grepl("^lf\\(", dpar_formulasi) |
+                       !grepl("^nlf\\(", dpar_formulasi)) {
               class <- dparcovcoefnames[1]
               coef  <- ""
             }

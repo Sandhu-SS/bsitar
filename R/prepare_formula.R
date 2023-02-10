@@ -708,16 +708,18 @@ prepare_formula <- function(x,
   
   
   if (!is.null(dpar_formulasi)) {
-    if (!grepl("lf\\(", dpar_formulasi) &
+    if (!grepl("lf\\(", dpar_formulasi) |
         !grepl("nlf\\(", dpar_formulasi)) {
-      dpar_covi_mat_form <- dpar_formulasi
+      # dpar_covi_mat_form <- dpar_formulasi
+      dpar_covi_mat_form <- gsub("\\(|)", "",
+                                 strsplit(dpar_formulasi, "~")[[1]][2])
+      dpar_covi_mat_form <- paste0("~", dpar_covi_mat_form)
     } else {
       dpar_covi_mat_form <- gsub("\\(|)", "",
                                  strsplit(dpar_formulasi, "~")[[1]][2])
       dpar_covi_mat_form <- paste0("~", dpar_covi_mat_form)
     }
   }
-  
   
   
   if (!is.null(dpar_formulasi)) {
@@ -754,7 +756,11 @@ prepare_formula <- function(x,
   if (!is.null(dpar_formulasi)) {
     if (!grepl("lf\\(", dpar_formulasi) &
         !grepl("nlf\\(", dpar_formulasi)) {
-      sform <- paste0(sform, ",", paste0("sigma", dpar_formulasi))
+      if(!grepl('sigma~', dpar_formulasi, fixed = T)) {
+        sform <- paste0(sform, ",", paste0("sigma", dpar_formulasi))
+      } else if(grepl('sigma~', dpar_formulasi, fixed = T)) {
+        sform <- paste0(sform, ",", paste0("", dpar_formulasi))
+      }
     } else {
       sform <- sform
     }
@@ -778,6 +784,7 @@ prepare_formula <- function(x,
   bform <- gsub("\\s", "", bform)
   
   
+  
   if (!is.null(dpar_formulasi)) {
     if (grepl("lf\\(", dpar_formulasi) |
         grepl("nlf\\(", dpar_formulasi)) {
@@ -791,7 +798,7 @@ prepare_formula <- function(x,
         )
       } else if (grepl("sigma~", dpar_formulasi, fixed = T)) {
         dpar_formulasi <- dpar_formulasi
-      } else {
+      } else  {
         dpar_formulasi <- gsub("~", "sigma~", dpar_formulasi)
       }
       bform <- paste0(bform, "+", dpar_formulasi)
@@ -1246,11 +1253,11 @@ prepare_formula <- function(x,
     lme_sd_a = lme_sd_a,
     lme_rsd = lme_rsd
   )
-  
+ 
   # list_out <<- list_out
   # print(a_formula_grsi)
    # print(aform)
-   # print(bform); stop()
+  # print(bform); stop()
   
   attr(bform, "list_out") <- as.list(list_out)
   

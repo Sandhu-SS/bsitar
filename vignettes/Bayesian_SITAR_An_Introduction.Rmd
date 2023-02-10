@@ -129,11 +129,16 @@ The task of combining these components together can yield a complex model in whi
 
 <!-- ### Conventional multilevel growth model. -->
 
-Here we provide the Bayesian specification of the SITAR model described above. To get a better understanding of the data generative mechanism and for the ease of showing prior specification for each individual parameter, we re express the above model \@ref(eq:1) as as follows:
+### Two-level SITAR model
+
+#### Univariate model specification
+
+Here we outline the Bayesian specification for a two-level SITAR model described earlier (See section [SITAR growth curve model - an overview]). 
+To get a better understanding of the data generative mechanism and for the ease of showing prior specification for each individual parameter, we re express the above model \@ref(eq:1) as as follows:
 
 <!-- color{#A65141} -->
 
-```{=tex}
+
 \begin{equation}
 \begin{aligned}
 \text{y}_{ij} & \sim \operatorname{Normal}(\mu_{ij}, \sigma) \\
@@ -149,19 +154,28 @@ Here we provide the Bayesian specification of the SITAR model described above. T
 \\
 \alpha_0   & \sim \operatorname{Normal}(y_{mean},\  {y_{sd}}) \\
 \zeta_0   & \sim \operatorname{Normal}(0, 2) \\
-\gamma_1   & \sim \operatorname{Normal}(0, 1) \\
+\gamma_0  & \sim \operatorname{Normal}(0, 1) \\
 \beta_1 \text{,..,} \beta_r & \sim \operatorname{Normal}(0, \ \mathbf {X_{scaled}}) \\
-\sigma_\epsilon & \sim \operatorname{Normal}(0, y_{sd}) \\
+\alpha_j   & \sim \operatorname{HalfNormal}({0},\  {y_{sd}}) \\
+\zeta_j   & \sim \operatorname{HalfNormal}({0},\  {2}) \\
+\gamma_j   & \sim \operatorname{HalfNormal}({0},\  {0.5}) \\
+\sigma_\epsilon & \sim \operatorname{HalfNormal}({0},\  y_{sd}) \\
 \mathbf R & \sim \operatorname{LKJ}(1),
 \end{aligned}
 (\#eq:4)
 \end{equation}
-```
+
 
 The first line in the above equation is the probability of the outcome
 (likelihood) which states that the outcome is distributed with mean *mu* and
 standard deviation, *sigma*. The *mu* is the function of growth curve parameters
-as described earlier \@ref(eq:1).
+as described earlier \@ref(eq:1). The residuals are assumed to be independent
+and normally distributed with 0 mean and a $n_j \times n_j$ dimensional identity
+covariance matrix with a diagonal constant variance parameter, $\sigma_\epsilon$
+i.e, $I\sigma_\epsilon$ where $I$ is the identity matrix (diagonal matrix
+of 1s), and $\sigma_\epsilon$ is the residual standard deviation. The assumption
+of homoscedasticity of residuals (constant level 1 variance) can be relaxed.
+
 
 We follow the recommendations made in the popular packages
 [rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
@@ -177,8 +191,8 @@ computation.
 
 For specifying priors, the `bsitar` function has arguments for each of the
 parameter. For example, to set prior for population parameter `a`, the
-corresponding argument is \code{a_prior_beta} and to specify the prior for the
-standard deviation of the parameter, the argument is \code{a_prior_sd}. To
+corresponding argument is `a_prior_beta` and to specify the prior for the
+standard deviation of the parameter, the argument is `a_prior_sd.` To
 specify these arguments the user provides a call to one of the various available
 functions such as `normal(mean, sd)`. The documentation for these functions can
 be found at
@@ -217,9 +231,101 @@ follow *rstanrm*  and put normal priors for the population and random effect
 intercepts (i.e., size parameter, `a`).
 
 
-For population timing parameter `b`, default priors are normal with mean 0 and scale 2 i.e, `normal(0, 2)`. Since the predictor `age` is by default mean centered in SITAR,   these priors imply that 95% mass of the normal distribution would cover between 11 and 17 years when mean age is 13 years. Depending on the mean age and whether data analysed is for males or females, the scale of priors can be adjusted accordingly.Prior for the sd parameter (i.e., the random effect parameter `b`) is again normal but with 0 mean and sd 1.5 (`normal(0, 1.5)`) which indicates that 95% mass of the normal distribution for individual variation in the timing will cover $\pm 3$ years.
+For population timing parameter `b`, the default priors are normal with mean 0 and scale 2 i.e, `normal(0, 2)`. Since the predictor `age` is by default mean centered, these priors imply that 95% mass of the normal distribution would cover between 11 and 17 years when mean age is 13 years. Depending on the mean age and whether data analysed is for males or females, the scale of priors can be adjusted accordingly.Prior for the sd parameter (i.e., the random effect parameter `b`) is again normal but with 0 mean and sd 1.5 (`normal(0, 1.5)`) which indicates that 95% mass of the normal distribution for individual variation in the timing will cover $\pm 3$ years.
 
-The default prior for the population intensity parameter `c` are normal with mean 0 and scale 1 i.e, `normal(0, 1)`. Since the intensity parameter is on  `age` is by default mean centered in SITAR,   these priors imply that 95% mass of the normal distribution would cover between 11 and 17 years when mean age is 13 years. Depending on the mean age and whether data analysed is for males or females, the scale of priors can be adjusted accordingly.Prior for the sd parameter (i.e., the random effect parameter `b`) is again normal but with 0 mean and sd 1.5 (`normal(0, 1.5)`) which indicates that 95% mass of the normal distribution for individual variation in the timing will cover $\pm 3$ years.
+The default prior for the population intensity parameter `c` are normal with mean 0 and scale 1 i.e, `normal(0, 1)`. Since the intensity parameter is on  `exp` scale, these priors imply that 95% mass of the normal distribution would cover intensity between  `exp(-2)` and `exp(2)` i.e., 0.14 and 7.39 mm/year. Prior for the sd parameter for intensity (i.e., the random effect parameter `c`) is again normal with 0 mean and sd 1 (`normal(0, 0.5)`) which indicates that 95% mass of the normal distribution for individual variation in the timing will cover $\pm exp(0.5)$ i.e, 0.37 and 2.72 mm/year. 
+
+
+#### Multivariate model specification
+
+A two level Bayesian SITAR model described earlier (See [Univariate model specification]) can be easily extended to analyze two or more outcome simultaneously. 
+
+To get a better understanding of the data generative mechanism and for the ease of showing prior specification for each individual parameter, we re express the above model \@ref(eq:4) as as follows:
+
+
+
+
+\begin{equation}
+\begin{aligned}
+\begin{bmatrix} \text{NA}_{ij} \\ \text{PA}_{ij} \end{bmatrix} & \sim \operatorname{MVNormal}\begin{pmatrix} \begin{bmatrix} 
+\mu_{ij}^\text{NA} \\ \mu_{ij}^\text{PA} \end{bmatrix}, \mathbf {\Sigma_{Residual}} \end{pmatrix} \\
+\\
+\mu_{ij}^{\text{NA}} & = \alpha_0^\text{NA}+ \alpha_j^\text{NA}+\sum_{r^\text{NA}=1}^{p^\text{NA}-1}{\beta_r^\text{NA}\mathbf{Spl}^\text{NA}\left(\frac{x_{ij}-\bar{x_{ij}}-\left(\zeta_0^\text{NA}+\zeta_j^\text{NA}\right)}{e^{-\ \left(\left.\ \gamma_0^\text{NA}+\gamma_j^\text{NA}\right)\right.}}\right)} \\
+\\
+\mu_{ij}^{\text{PA}} & = \alpha_0^\text{PA}+ \alpha_j^\text{PA}+\sum_{r^\text{PA}=1}^{p^\text{PA}-1}{\beta_r^\text{PA}\mathbf{Spl}^\text{PA}\left(\frac{x_{ij}-\bar{x_{ij}}-\left(\zeta_0^\text{PA}+\zeta_j^\text{PA}\right)}{e^{-\ \left(\left.\ \gamma_0^\text{PA}+\gamma_j^\text{PA}\right)\right.}}\right)} \\
+\\
+\mathbf {\Sigma_{Residual}} & = \mathbf S_W \mathbf R_W \mathbf S_W \\
+\\
+\mathbf S_W & = \begin{bmatrix}
+\sigma_{ij}^\text{NA} & 0 \\ 
+0 & \sigma_{ij}^\text{PA} \\
+\end{bmatrix} \\
+\\
+\mathbf R_W & = \begin{bmatrix}
+1 & \rho_{\sigma_{ij}^\text{NA}\sigma_{ij}^\text{PA}} \\
+\rho_{\sigma_{Ij}^\text{PA}\sigma_{Ij}^\text{NA}}  & 1 
+\end{bmatrix} \\
+\\
+\begin{bmatrix} \alpha_{j}^\text{NA} \\ \zeta_{j}^\text{NA} \\ \gamma_{j}^\text{NA} \\ \alpha_{j}^\text{PA} \\ \zeta_{j}^\text{PA} \\ \gamma_{j}^\text{PA} \end{bmatrix} & \sim {\operatorname{MVNormal}\begin{pmatrix} \begin{bmatrix} 0 \\ 0 \\ 0 \\ 0 \\ 0 \\ 0 \end{bmatrix},\ \mathbf {\Sigma_{ID}} \end{pmatrix}} \\
+\\
+\\
+\mathbf {\Sigma_{ID}} & = \mathbf S_{ID} \mathbf R_{ID} \mathbf S_{ID} \\
+\\
+\mathbf S_{ID} & = \begin{bmatrix} 
+\alpha_{j}^\text{NA} & 0 & 0 & 0 & 0 & 0 \\ 
+0 & \zeta_{j}^\text{NA} &  0 & 0 & 0 & 0 \\ 
+0 & 0 & \gamma_{j}^\text{NA} & 0 & 0 & 0 \\ 
+0 & 0 & 0 & \alpha_{j}^\text{PA} & 0 & 0 \\ 
+0 & 0 & 0 & 0 & \zeta_{j}^\text{PA}  & 0 \\ 
+0 & 0 & 0 & 0 & 0 & \gamma_{j}^\text{PA} \\ 
+\end{bmatrix} \\
+\\
+\mathbf R_{ID} & = \begin{bmatrix}
+1 & \rho_{\alpha_{j}^\text{NA}\zeta_{j}^\text{NA}} & \rho_{\alpha_{j}^\text{NA}\gamma_{j}^\text{NA}} & \rho_{\alpha_{j}^\text{NA}\alpha_{j}^\text{PA}} & \rho_{\alpha_{j}^\text{NA}\zeta_{j}^\text{PA}} & \rho_{\alpha_{j}^\text{NA}\gamma_{j}^\text{PA}} \\
+\rho_{\zeta_{j}^\text{NA}\alpha_{j}^\text{NA}} & 1 & \rho_{\zeta_{j}^\text{NA}\gamma_{j}^\text{NA}}  & \rho_{\zeta_{j}^\text{NA}\alpha_{j}^\text{PA}} & \rho_{\zeta_{j}^\text{NA}\zeta_{j}^\text{PA}} & \rho_{\zeta_{j}^\text{NA}\gamma_{j}^\text{PA}} \\
+\rho_{\gamma_{j}^\text{NA}\alpha_{j}^\text{NA}} & \rho_{\gamma_{j}^\text{NA}\zeta_{j}^\text{NA}}  & 1 & \rho_{\gamma_{j}^\text{NA}\alpha_{j}^\text{PA}} & \rho_{\gamma_{j}^\text{NA}\zeta_{j}^\text{PA}} & \rho_{\gamma_{j}^\text{NA}\gamma_{j}^\text{PA}} \\
+\rho_{\alpha_{j}^\text{NA}\alpha_{j}^\text{PA}} & \rho_{\zeta_{j}^\text{NA}\alpha_{j}^\text{PA}} & \rho_{\gamma_{j}^\text{NA}\alpha_{j}^\text{PA}} & 1 & \rho_{\alpha_{j}^\text{PA}\zeta_{j}^\text{PA}} & \rho_{\alpha_{j}^\text{PA}\gamma_{j}^\text{PA}} \\
+\rho_{\alpha_{j}^\text{NA}\zeta_{j}^\text{PA}} & \rho_{\zeta_{j}^\text{NA}\zeta_{j}^\text{PA}} & \rho_{\gamma_{j}^\text{NA}\zeta_{j}^\text{PA}} & \rho_{\zeta_{j}^\text{PA}\alpha_{j}^\text{PA}} & 1 & \rho_{\zeta_{j}^\text{PA}\gamma_{j}^\text{PA}} \\
+\rho_{\alpha_{j}^\text{NA}\gamma_{j}^\text{PA}} & \rho_{\zeta_{j}^\text{NA}\gamma_{j}^\text{PA}} & \rho_{\gamma_{j}^\text{NA}\gamma_{j}^\text{PA}} & \rho_{\gamma_{j}^\text{PA}\alpha_{j}^\text{PA}} & \rho_{\gamma_{j}^\text{PA}\zeta_{j}^\text{PA}}  & 1 
+\end{bmatrix} \\
+\\
+\alpha_0^\text{NA}   & \sim \operatorname{Normal}(y^\text{NA}_{mean},\  {y^\text{NA}_{sd}}) \\
+\alpha_0^\text{PA}   & \sim \operatorname{Normal}(y^\text{PA}_{mean},\  {y^\text{PA}_{sd}}) \\
+\zeta_0^\text{NA}   & \sim \operatorname{Normal}(0, 2) \\
+\zeta_0^\text{PA}   & \sim \operatorname{Normal}(0, 2) \\
+\gamma_0^\text{NA}   & \sim \operatorname{Normal}(0, 1) \\
+\gamma_0^\text{PA}   & \sim \operatorname{Normal}(0, 1) \\
+\beta_1^\text{NA} \text{,..,} \beta_r^\text{NA} & \sim \operatorname{Normal}(0, \ \mathbf {X^\text{NA}_{scaled}}) \\
+\beta_1^\text{PA} \text{,..,} \beta_r^\text{PA} & \sim \operatorname{Normal}(0, \ \mathbf {X^\text{PA}_{scaled}}) \\
+\alpha_j^\text{NA}   & \sim \operatorname{HalfNormal}({0},\  {y^\text{NA}_{sd}}) \\
+\zeta_j^\text{NA}   & \sim \operatorname{HalfNormal}({0},\  {2}) \\
+\gamma_j^\text{NA}   & \sim \operatorname{HalfNormal}({0},\  {0.5}) \\
+\sigma_{ij}^\text{NA} & \sim \operatorname{HalfNormal}({0},\  y^\text{NA}_{sd}) \\
+\sigma_{ij}^\text{PA} & \sim \operatorname{HalfNormal}({0},\  y^\text{PA}_{sd}) \\
+\mathbf R_W & \sim \operatorname{LKJ}(1) \\
+\mathbf R_{ID} & \sim \operatorname{LKJ}(1),
+\end{aligned}
+(\#eq:5)
+\end{equation}
+
+
+
+
+where $\text{NA}$ and $\text{PA}$ superscripts indicate which variable is
+connected with which parameter. This is a straight multivariate generalization
+from the previous model, \@ref(eq:4). At individual level, we have six
+parameters varying across individuals, resulting in an $6 \times 6$ $\mathbf
+S_{ID}$ matrix and an $6 \times 6$ $\mathbf R_{ID}$ matrix. The within
+individual variability is captured by the residual parameters which include $2
+\times 2$ $\mathbf S_{W}$ matrix and an $2 \times 2$ $\mathbf R_{W}$ matrix.
+
+
+
+
+#### Three level multivariate model
+
+
+
 
 
 

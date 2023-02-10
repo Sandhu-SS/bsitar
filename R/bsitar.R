@@ -987,20 +987,20 @@ bsitar <- function(x,
                    mvr_prior_rescor = lkj(1),
                    init = NULL,
                    init_r = NULL,
-                   a_init_beta = lm,
-                   b_init_beta = 0.001,
-                   c_init_beta = 0.001,
-                   d_init_beta = 0.001,
-                   s_init_beta = lm,
+                   a_init_beta = 0,
+                   b_init_beta = 0,
+                   c_init_beta = 0,
+                   d_init_beta = 0,
+                   s_init_beta = 0,
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
                    c_cov_init_beta = 0,
                    d_cov_init_beta = 0,
                    s_cov_init_beta = 0,
-                   a_init_sd = lme_sd_a,
+                   a_init_sd = 1, # lme_sd_a
                    b_init_sd = 1,
-                   c_init_sd = 0.1,
-                   d_init_sd = 0.1,
+                   c_init_sd = 1,
+                   d_init_sd = 1,
                    a_cov_init_sd = 0,
                    b_cov_init_sd = 0,
                    c_cov_init_sd = 0,
@@ -1009,7 +1009,7 @@ bsitar <- function(x,
                    rsd_init_sigma = 1,
                    dpar_init_sigma = 0,
                    dpar_cov_init_sigma = 0,
-                   autocor_init_acor = 0.5,
+                   autocor_init_acor = 0.1,
                    mvr_init_rescor = 0,
                    r_init_z = 0,
                    jitter_init_beta = 0.01,
@@ -2235,9 +2235,9 @@ bsitar <- function(x,
     if (!is.null(dpar_formulasi)) {
       if (grepl("^1$", dpar_formulasi)) {
         dpar_formulasi <- paste0("lf(", "sigma", "~", dpar_formulasi, ")")
-      } else if (grepl("^~1$", dpar_formulasi)) {
+      } else if (grepl("^~1", dpar_formulasi)) { # if (grepl("^~1$", dpar_formulasi)) {
         dpar_formulasi <- paste0("lf(", "sigma", dpar_formulasi, ")")
-      } else if (grepl("^sigma~1$", dpar_formulasi)) {
+      } else if (grepl("^sigma~1", dpar_formulasi)) { # f (grepl("^sigma~1$", dpar_formulasi)) {
         dpar_formulasi <- paste0("lf(", "", dpar_formulasi, ")")
       } else {
         dpar_formulasi <- dpar_formulasi
@@ -2255,7 +2255,7 @@ bsitar <- function(x,
                        'decomp') #
         } else if (!grepl("^lf\\(", dpar_formulasi) &
                    grepl("^nlf\\(", dpar_formulasi)) {
-          lf_list <- c('flist', 'dpar', 'resp', 'loop ') #
+          lf_list <- c('flist', 'dpar', 'resp', 'loop ') 
         }
         lf_list_c <- c()
         for (lf_listi in lf_list) {
@@ -3753,16 +3753,14 @@ bsitar <- function(x,
   }
   
  
-  
- 
-  
+
   if(!exe_model_fit) {
-    if(get_stancode) {
-      return(do.call(make_stancode, brm_args))
+    if(get_priors) {
+      return(do.call(get_prior, brm_args))
     } else if(get_standata) {
       return(do.call(make_standata, brm_args))
-    } else if(get_priors) {
-      return(do.call(get_prior, brm_args))
+    } else if(get_stancode) {
+      return(do.call(make_stancode, brm_args))
     } else if(get_set_priors) {
       return(brm_args$prior)
     } else if(validate_priors) {
@@ -3785,9 +3783,22 @@ bsitar <- function(x,
    
     # If initials are 0 or random, then set custom init to NULL
     
-    if(brm_args$init == "0" | brm_args$init == "random") {
-      init_custom <- NULL
+    if(brm_args$backend == "rstan") {
+      if(brm_args$init == "0" | brm_args$init == "random") {
+        init_custom <- NULL
+      }
     }
+    if(brm_args$backend == "cmdstanr") {
+      if(is.null(brm_args$init)) {
+        init_custom <- NULL
+      } else if(brm_args$init == "0") {
+        init_custom <- NULL
+      } else {
+        init_custom <- init_custom
+      }
+    }
+    
+    
     
     if(!is.null(init_custom)) {
       init_fun <- function(chain_id = 1) init_custom
