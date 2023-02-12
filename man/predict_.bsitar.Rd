@@ -18,7 +18,7 @@
   summary = TRUE,
   robust = FALSE,
   probs = c(0.025, 0.975),
-  irange_full = FALSE,
+  xrange = NULL,
   envir = parent.frame(),
   ...
 )
@@ -92,9 +92,13 @@ variability. If \code{TRUE}, the median and the median absolute deviation
 \item{probs}{The percentiles to be computed by the \code{quantile}
 function. Only used if \code{summary} is \code{TRUE}.}
 
-\item{irange_full}{A logical (default \code{FALSE}) to indicate whether
-\code{ipts} include maximum range of predictor i.e., age (\code{TRUE})
-across sample or it should be individual specific (\code{FALSE}).}
+\item{xrange}{An indicator to set the predictor range (i.e., age) when
+executing the interpolation via \code{ipts}. The default \code{NULL} sets
+the individual specific predictor range whereas code
+\code{xrange = 1} sets same range for all individuals within the higher order grouping variable (e.g., study). Code \code{xrange
+  = 2} sets the identical range across the entire sample. Lastly, a paired numeric
+values can be supplied e.g., \code{xrange = c(6, 20)} will set the range
+between 6 and 20.}
 
 \item{envir}{The calling environment. Deafault set to \code{parent.frame()}.}
 

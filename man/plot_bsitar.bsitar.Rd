@@ -19,7 +19,7 @@
   numeric_cov_at = NULL,
   levels_id = NULL,
   ipts = NULL,
-  irange_full = FALSE,
+  xrange = NULL,
   seed = 123,
   estimation_method = "fitted",
   allow_new_levels = FALSE,
@@ -130,9 +130,13 @@ interpolate the predictor. It is important to note that these
 interpolations do not alter the range of predictor when calculating
 population average and the individual specific velocity curves.}
 
-\item{irange_full}{A logical (default \code{FALSE}) to indicate whether
-\code{ipts} include maximum range of predictor i.e., age (\code{TRUE})
-across sample or it should be individual specific (\code{FALSE}).}
+\item{xrange}{An indicator to set the predictor range (i.e., age) when
+executing the interpolation via \code{ipts}. The default \code{NULL} sets
+the individual specific predictor range whereas code
+\code{xrange = 1} sets same range for all individuals within the higher order grouping variable (e.g., study). Code \code{xrange
+  = 2} sets the identical range across the entire sample. Lastly, a paired numeric
+values can be supplied e.g., \code{xrange = c(6, 20)} will set the range
+between 6 and 20.}
 
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method.}

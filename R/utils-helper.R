@@ -3,7 +3,7 @@ get.newdata <- function(model, newdata, resp,
                         numeric_cov_at = NULL, 
                         levels_id = NULL,
                         ipts = NULL,
-                        irange_full = FALSE) {
+                        xrange = NULL) {
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
@@ -179,7 +179,7 @@ get.newdata <- function(model, newdata, resp,
              cov_numeric_vars = NULL,
              levels_id = NULL, 
              ipts = NULL,
-             irange_full = FALSE
+             xrange = NULL
     ) {
       
       if (is.null(resp)) {
@@ -209,46 +209,34 @@ get.newdata <- function(model, newdata, resp,
       
       
       
-      # if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
-      #   newdata <- model$model_info$make_bsitar_data(eval.parent(model$model_info$call.bsitar$data),
-      #                                                model$model_info$univariate_by,
-      #                                                model$model_info$org.ycall)
-      #   sortbylayer <- NA
-      #   newdata <- newdata %>%
-      #     dplyr::mutate(sortbylayer =
-      #                     forcats::fct_relevel(!!as.name(uvarby),
-      #                                          (levels(
-      #                                            !!as.name(uvarby)
-      #                                          )))) %>%
-      #     dplyr::arrange(sortbylayer) %>%
-      #     dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-      #                                              levels = 
-      #                                                unique(!!as.name(IDvar)))) %>% 
-      #     dplyr::select(-sortbylayer)
-      #   
-      # }
-      
       if(is.null(ipts)) newdata <- newdata
       
       
-      idatafunction <- function(.x, xvar, IDvar, nmy, irange_full) {
-        exdata <- function(x, id, idmat, nmy, irange_full) {
+      idatafunction <- function(.x, xvar, IDvar, nmy, xrange, set_xrange) {
+        exdata <- function(x, id, idmat, nmy, xrange, set_xrange) {
           n <- round(nmy * diff(range(x)))
           npt <- n / diff(range(x))
           
           extage <- apply(idmat, 1, function(x1) {
             index <-
               id == x1
-            if(!irange_full) {
+            
+            if(is.null(xrange)) {
               id.x <- x[index]
-              nt <- floor(npt * diff(range(id.x))) + 1
-              newx <- seq(min(id.x), max(id.x), length = nt)
             }
-            if(irange_full) {
-              id.x <- x
-              nt <- floor(npt * diff(range(id.x))) + 1
-              newx <- seq(min(id.x), max(id.x), length = nt)
+            if(!is.null(xrange)) {
+              if(length(xrange) == 1) {
+                if(xrange == 1 & is.null(set_xrange)) id.x <- x
+                if(xrange == 2 & !is.null(set_xrange)) id.x <- set_xrange
+              }
+              if(length(xrange) == 2) {
+                if(xrange == 1) id.x <- set_xrange
+              }
             }
+            
+            nt <- floor(npt * diff(range(id.x))) + 1
+            newx <- seq(min(id.x), max(id.x), length = nt)
+            
             newid <-
               rep(x1, nt)
             extx <- data.frame(x = newx, id = newid)
@@ -263,9 +251,21 @@ get.newdata <- function(model, newdata, resp,
         }
         
         exdata(.x[[xvar]], .x[[IDvar]], matrix(unique(.x[[IDvar]], ncol = 1)),
-               nmy = nmy, irange_full = irange_full)
+               nmy = nmy, xrange = xrange, set_xrange = set_xrange)
       }
       
+      
+      if(!is.null(xrange)) {
+        if(length(xrange) == 1) {
+          if(xrange == 1) set_xrange <- NULL
+          if(xrange == 2) set_xrange <- range(newdata[[xvar]])
+        }
+        if(length(xrange) == 2) {
+          set_xrange <- xrange
+        }
+      }
+      
+      if(is.null(xrange)) set_xrange <- NULL
       
       if(is.null(model$model_info[[hierarchical_]])) {
         if (!is.null(ipts) & is.null(cov_factor_vars)) {
@@ -275,7 +275,8 @@ get.newdata <- function(model, newdata, resp,
               xvar = xvar,
               IDvar = IDvar,
               nmy = ipts,
-              irange_full = irange_full
+              xrange = xrange, 
+              set_xrange = set_xrange
             )) %>%
             dplyr::rename(!!xvar := 'x') %>%
             dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
@@ -289,7 +290,8 @@ get.newdata <- function(model, newdata, resp,
               xvar = xvar,
               IDvar = IDvar,
               nmy = ipts,
-              irange_full = irange_full
+              xrange = xrange, 
+              set_xrange = set_xrange
             )) %>%
             dplyr::rename(!!xvar := 'x') %>%
             dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
@@ -316,7 +318,8 @@ get.newdata <- function(model, newdata, resp,
               xvar = xvar,
               IDvar = IDvar_,
               nmy = ipts,  
-              irange_full = irange_full
+              xrange = xrange, 
+              set_xrange = set_xrange
             )) %>%
             dplyr::rename(!!xvar := 'x') %>% data.frame()
           for(i in IDvar) {
@@ -338,7 +341,8 @@ get.newdata <- function(model, newdata, resp,
               xvar = xvar,
               IDvar = IDvar_,
               nmy = ipts,
-              irange_full = irange_full
+              xrange = xrange, 
+              set_xrange = set_xrange
             )) %>%
             dplyr::rename(!!xvar := 'x') %>% data.frame()
           for(i in IDvar) {
@@ -397,7 +401,7 @@ get.newdata <- function(model, newdata, resp,
                              cov_numeric_vars = cov_numeric_vars, 
                     levels_id = levels_id,
                              ipts = ipts,
-                    irange_full = irange_full)
+                    xrange = xrange)
   
   #########
   list_c[['xvar']] <- xvar

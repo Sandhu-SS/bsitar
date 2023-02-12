@@ -180,7 +180,7 @@ plot_bsitar.bsitar <- function(model,
                                numeric_cov_at = NULL,
                                levels_id = NULL,
                                ipts = NULL,
-                               irange_full = FALSE,
+                               xrange = NULL,
                                seed = 123,
                                estimation_method = 'fitted',
                                allow_new_levels = FALSE,
@@ -241,7 +241,7 @@ plot_bsitar.bsitar <- function(model,
                          numeric_cov_at = numeric_cov_at,
                          levels_id = levels_id,
                          ipts = ipts,
-                         irange_full = irange_full)
+                         xrange = xrange)
   
   list_c <- attr(newdata, 'list_c')
   for (list_ci in names(list_c)) {
@@ -710,7 +710,7 @@ plot_bsitar.bsitar <- function(model,
                              numeric_cov_at = NULL,
                              levels_id = levels_id,
                              ipts = NULL,
-                             irange_full = FALSE)
+                             xrange = NULL)
       
       
       

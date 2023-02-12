@@ -68,7 +68,7 @@ predict_.bsitar <-
            summary = TRUE,
            robust = FALSE,
            probs = c(0.025, 0.975),
-           irange_full = FALSE,
+           xrange = NULL,
            envir = parent.frame(),
            ...) {
     o <-
@@ -89,7 +89,7 @@ predict_.bsitar <-
                              numeric_cov_at = numeric_cov_at,
                              levels_id = levels_id,
                              ipts = ipts,
-                             irange_full = irange_full)
+                             xrange = xrange)
     }
     
     assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
@@ -102,7 +102,7 @@ predict_.bsitar <-
                 numeric_cov_at = numeric_cov_at,
                 levels_id = levels_id,
                 ipts = ipts,
-                irange_full = irange_full,
+                xrange = xrange,
                 deriv = 0,
                 summary = TRUE,
                 robust = FALSE,

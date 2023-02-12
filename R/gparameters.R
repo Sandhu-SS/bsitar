@@ -99,9 +99,13 @@
 #'   interpolate the predictor. It is important to note that these
 #'   interpolations do not alter the range of predictor when calculating
 #'   population average and the individual specific velocity curves.
-#' @param irange_full A logical (default \code{FALSE}) to indicate whether
-#' \code{ipts} include maximum range of predictor i.e., age (\code{TRUE}) 
-#' across sample or it should be individual specific (\code{FALSE}). 
+#' @param xrange An indicator to set the predictor range (i.e., age) when
+#'   executing the interpolation via \code{ipts}. The default \code{NULL} sets
+#'   the individual specific predictor range whereas code
+#'   \code{xrange = 1} sets same range for all individuals within the higher order grouping variable (e.g., study). Code \code{xrange
+#'   = 2} sets the identical range across the entire sample. Lastly, a paired numeric
+#'   values can be supplied e.g., \code{xrange = c(6, 20)} will set the range
+#'   between 6 and 20.
 #' @param seed An integer (default \code{123}) that is passed to the estimation
 #'   method.
 #' @param future A logical (default \code{FALSE}) to specify whether or not to
@@ -176,7 +180,7 @@ gparameters.bsitar <- function(model,
                                levels_id = NULL,
                                conf = 0.95,
                                ipts = NULL,
-                               irange_full = FALSE,
+                               xrange = NULL,
                                seed = 123,
                                future = FALSE,
                                future_session = 'multisession',
@@ -508,7 +512,7 @@ gparameters.bsitar <- function(model,
                              numeric_cov_at = numeric_cov_at,
                              levels_id = levels_id,
                              ipts = ipts,
-                             irange_full = irange_full)
+                             xrange = xrange)
     }
     
     
@@ -593,7 +597,6 @@ gparameters.bsitar <- function(model,
       arguments$deriv <- 0
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
-      arguments$irange_full <- FALSE 
       arguments$envir <-arguments$envir_
       
       if (estimation_method == 'fitted') {
@@ -647,7 +650,6 @@ gparameters.bsitar <- function(model,
       arguments$deriv <- 1
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
-      arguments$irange_full <- FALSE 
       arguments$envir <-arguments$envir_
       
       if (estimation_method == 'fitted') {
@@ -703,7 +705,7 @@ gparameters.bsitar <- function(model,
                            numeric_cov_at = numeric_cov_at,
                            levels_id = levels_id,
                            ipts = ipts,
-                           irange_full = irange_full)
+                           xrange = xrange)
     
     list_c <- attr(newdata, 'list_c')
     for (list_ci in names(list_c)) {
@@ -740,7 +742,6 @@ gparameters.bsitar <- function(model,
     arguments$deriv <- 1
     # don't let the ipts to pass again to the fitted_.bsitar
     arguments$ipts <- NULL 
-    arguments$irange_full <- FALSE 
     arguments$envir <- parent.frame()
     
     if (estimation_method == 'fitted') {
