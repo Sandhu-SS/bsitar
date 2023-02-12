@@ -17,10 +17,14 @@
   takeoff = FALSE,
   trough = FALSE,
   estimation_method = "fitted",
+  allow_new_levels = FALSE,
+  sample_new_levels = "uncertainty",
+  incl_autocor = TRUE,
   numeric_cov_at = NULL,
   levels_id = NULL,
   conf = 0.95,
   ipts = NULL,
+  irange_full = FALSE,
   seed = 123,
   future = FALSE,
   future_session = "multisession",
@@ -91,6 +95,30 @@ option \code{'predict'} calls the \link{predict_.bsitar} function. See
 versus predict estimations as they are the backend functions called by the
 \link{fitted_.bsitar} and \link{predict_.bsitar} functions.}
 
+\item{allow_new_levels}{A flag indicating if new levels of group-level
+effects are allowed (defaults to \code{FALSE}). Only relevant if
+\code{newdata} is provided.}
+
+\item{sample_new_levels}{Indicates how to sample new levels for grouping
+factors specified in \code{re_formula}. This argument is only relevant if
+\code{newdata} is provided and \code{allow_new_levels} is set to
+\code{TRUE}. If \code{"uncertainty"} (default), each posterior sample for a
+new level is drawn from the posterior draws of a randomly chosen existing
+level. Each posterior sample for a new level may be drawn from a different
+existing level such that the resulting set of new posterior draws
+represents the variation across existing levels. If \code{"gaussian"},
+sample new levels from the (multivariate) normal distribution implied by the
+group-level standard deviations and correlations. This options may be useful
+for conducting Bayesian power analysis or predicting new levels in
+situations where relatively few levels where observed in the old_data. If
+\code{"old_levels"}, directly sample new levels from the existing levels,
+where a new level is assigned all of the posterior draws of the same
+(randomly chosen) existing level.}
+
+\item{incl_autocor}{A flag indicating if correlation structures originally
+specified via \code{autocor} should be included in the predictions.
+Defaults to \code{TRUE}.}
+
 \item{numeric_cov_at}{An optional argument to specify the value of continuous
 covariate(s) before calling the \link{fitted_.bsitar} and
 \link{predict_.bsitar} functions. The default \code{NULL} option set the
@@ -120,6 +148,10 @@ values whereas a positive real value (e.g., \code{ipts = 10}) will
 interpolate the predictor. It is important to note that these
 interpolations do not alter the range of predictor when calculating
 population average and the individual specific velocity curves.}
+
+\item{irange_full}{A logical (default \code{FALSE}) to indicate whether
+\code{ipts} include maximum range of predictor i.e., age (\code{TRUE})
+across sample or it should be individual specific (\code{FALSE}).}
 
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method.}

@@ -99,6 +99,9 @@
 #'   interpolate the predictor. It is important to note that these
 #'   interpolations do not alter the range of predictor when calculating
 #'   population average and the individual specific velocity curves.
+#' @param irange_full A logical (default \code{FALSE}) to indicate whether
+#' \code{ipts} include maximum range of predictor i.e., age (\code{TRUE}) 
+#' across sample or it should be individual specific (\code{FALSE}). 
 #' @param seed An integer (default \code{123}) that is passed to the estimation
 #'   method.
 #' @param future A logical (default \code{FALSE}) to specify whether or not to
@@ -135,6 +138,8 @@
 #'   individuals/groups corresponding to the estimates.
 #'
 #' @importFrom rlang .data
+#' 
+#' @inherit brms::prepare_predictions.brmsfit params 
 #'
 #' @export gparameters.bsitar
 #'
@@ -164,10 +169,14 @@ gparameters.bsitar <- function(model,
                                takeoff = FALSE,
                                trough = FALSE,
                                estimation_method = 'fitted',
+                               allow_new_levels = FALSE,
+                               sample_new_levels = "uncertainty",
+                               incl_autocor = TRUE,
                                numeric_cov_at = NULL,
                                levels_id = NULL,
                                conf = 0.95,
                                ipts = NULL,
+                               irange_full = FALSE,
                                seed = 123,
                                future = FALSE,
                                future_session = 'multisession',
@@ -498,7 +507,8 @@ gparameters.bsitar <- function(model,
                              resp = resp, 
                              numeric_cov_at = numeric_cov_at,
                              levels_id = levels_id,
-                             ipts = ipts)
+                             ipts = ipts,
+                             irange_full = irange_full)
     }
     
     
@@ -515,10 +525,6 @@ gparameters.bsitar <- function(model,
     }
     
     
-    # newdata <- i_data(model, newdata, resp = resp,
-    #                            cov_factor_vars = cov_factor_vars, 
-    #                            cov_numeric_vars = cov_numeric_vars,
-    #                            ipts = ipts)
     
     newdata___ <- newdata
    
@@ -587,6 +593,7 @@ gparameters.bsitar <- function(model,
       arguments$deriv <- 0
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
+      arguments$irange_full <- FALSE 
       arguments$envir <-arguments$envir_
       
       if (estimation_method == 'fitted') {
@@ -640,6 +647,7 @@ gparameters.bsitar <- function(model,
       arguments$deriv <- 1
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
+      arguments$irange_full <- FALSE 
       arguments$envir <-arguments$envir_
       
       if (estimation_method == 'fitted') {
@@ -694,7 +702,8 @@ gparameters.bsitar <- function(model,
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
                            levels_id = levels_id,
-                           ipts = ipts)
+                           ipts = ipts,
+                           irange_full = irange_full)
     
     list_c <- attr(newdata, 'list_c')
     for (list_ci in names(list_c)) {
@@ -707,10 +716,7 @@ gparameters.bsitar <- function(model,
       if(!exists(check___)) assign(check___, NULL)
     }
     
-    # newdata <- i_data(model, newdata, resp = resp, 
-    #                            cov_factor_vars = cov_factor_vars, 
-    #                            cov_numeric_vars = cov_numeric_vars,
-    #                            ipts = ipts)
+    
     
     if (is.null(re_formula)) {
       groupby_str <- groupby_fistr
@@ -734,6 +740,7 @@ gparameters.bsitar <- function(model,
     arguments$deriv <- 1
     # don't let the ipts to pass again to the fitted_.bsitar
     arguments$ipts <- NULL 
+    arguments$irange_full <- FALSE 
     arguments$envir <- parent.frame()
     
     if (estimation_method == 'fitted') {

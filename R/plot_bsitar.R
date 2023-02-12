@@ -129,6 +129,8 @@
 #'
 #'@inheritParams  gparameters.bsitar
 #'
+#'@inherit brms::prepare_predictions.brmsfit params 
+#'
 #' @return A [ggplot2] object (default) or a \code{data.frame} when returndata
 #'   is \code{TRUE}.
 #'
@@ -178,8 +180,12 @@ plot_bsitar.bsitar <- function(model,
                                numeric_cov_at = NULL,
                                levels_id = NULL,
                                ipts = NULL,
+                               irange_full = FALSE,
                                seed = 123,
                                estimation_method = 'fitted',
+                               allow_new_levels = FALSE,
+                               sample_new_levels = "uncertainty",
+                               incl_autocor = TRUE,
                                robust = FALSE,
                                future = FALSE,
                                future_session = 'multisession',
@@ -234,7 +240,8 @@ plot_bsitar.bsitar <- function(model,
                          resp = resp, 
                          numeric_cov_at = numeric_cov_at,
                          levels_id = levels_id,
-                         ipts = ipts)
+                         ipts = ipts,
+                         irange_full = irange_full)
   
   list_c <- attr(newdata, 'list_c')
   for (list_ci in names(list_c)) {
@@ -702,7 +709,8 @@ plot_bsitar.bsitar <- function(model,
                              resp = resp,
                              numeric_cov_at = NULL,
                              levels_id = levels_id,
-                             ipts = NULL)
+                             ipts = NULL,
+                             irange_full = FALSE)
       
       
       

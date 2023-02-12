@@ -18,6 +18,7 @@
   summary = TRUE,
   robust = FALSE,
   probs = c(0.025, 0.975),
+  irange_full = FALSE,
   envir = parent.frame(),
   ...
 )
@@ -90,6 +91,10 @@ variability. If \code{TRUE}, the median and the median absolute deviation
 
 \item{probs}{The percentiles to be computed by the \code{quantile}
 function. Only used if \code{summary} is \code{TRUE}.}
+
+\item{irange_full}{A logical (default \code{FALSE}) to indicate whether
+\code{ipts} include maximum range of predictor i.e., age (\code{TRUE})
+across sample or it should be individual specific (\code{FALSE}).}
 
 \item{envir}{The calling environment. Deafault set to \code{parent.frame()}.}
 

@@ -375,12 +375,13 @@ set_priors_initials <- function(a_prior_beta,
   
   
   # no prior if no lf | nlf(sigma ~
-  if (!is.null(dpar_formulasi)) {
-    if (!grepl("^lf\\(", dpar_formulasi) &
-        !grepl("^nlf\\(", dpar_formulasi)) {
-      dpar_prior_sigma <- dpar_cov_prior_sigma <- NULL
-    }
-  }
+  
+  # if (!is.null(dpar_formulasi)) {
+  #   if (!grepl("^lf\\(", dpar_formulasi) &
+  #       !grepl("^nlf\\(", dpar_formulasi)) {
+  #     dpar_prior_sigma <- dpar_cov_prior_sigma <- NULL
+  #   }
+  # }
   
   
   
