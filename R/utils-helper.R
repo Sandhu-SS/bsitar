@@ -230,7 +230,7 @@ get.newdata <- function(model, newdata, resp,
                 if(xrange == 2 & !is.null(set_xrange)) id.x <- set_xrange
               }
               if(length(xrange) == 2) {
-                if(xrange == 1) id.x <- set_xrange
+                id.x <- set_xrange
               }
             }
             
@@ -254,6 +254,13 @@ get.newdata <- function(model, newdata, resp,
                nmy = nmy, xrange = xrange, set_xrange = set_xrange)
       }
       
+      if(!is.null(xrange)) {
+        if(length(xrange) < 1 | length(xrange) > 2) {
+          stop("Argument xrange should be either NULL, numeric value 1 or 2",
+               "\n ",
+               "or else a paired values indicating the range e.g., c(6, 20)")
+        }
+      }
       
       if(!is.null(xrange)) {
         if(length(xrange) == 1) {
