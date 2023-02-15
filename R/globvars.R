@@ -53,8 +53,18 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "groupbytest", "set_lines_colors",
     "ggplotColors", "default.set.linetype.groupby",
     "groupby_line", "groupby_color", "groupby_line.x",
-    "groupby_line.y", "groupby_color.y", "groupby_color.x"
+    "groupby_line.y", "groupby_color.y", "groupby_color.x",
+    
+    "check_gr_str_form", "cov_sigma_dpar", "nsigma_cov", "nsigma_cov_gr",
+    "sigma_cov_init_betasi", "sigma_cov_init_sdsi", "sigma_cov_prior_betasi",
+    "sigma_cov_prior_sdsi", "sigma_covcoefnames", "sigma_covcoefnames_gr",
+    "sigma_dpar", "sigma_form_0", "sigma_formula_gr_strsi", "sigma_formula_grsi",
+    "sigma_formulasi", "sigma_group_arg", "sigma_group_arg_groupvar",
+    "sigma_hierarchical_gr_names", "sigma_init_betasi", "sigma_init_sdsi",
+    "sigma_prior_betasi", "sigma_prior_sdsi", "sigma_set_higher_levels"
+    
     )
   )
+
 
 

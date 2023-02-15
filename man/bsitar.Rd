@@ -31,10 +31,15 @@ bsitar(
   b_formula_gr_str = NULL,
   c_formula_gr_str = NULL,
   d_formula_gr_str = NULL,
+  sigma_formula = NULL,
+  sigma_formula_gr = NULL,
+  sigma_formula_gr_str = NULL,
   dpar_formula = NULL,
   autocor_formula = NULL,
   family = gaussian(),
   group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist = gaussian),
+  sigma_group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist =
+    gaussian),
   univariate_by = list(by = NA, cor = un),
   multivariate = list(mvar = FALSE, cor = un, rescor = TRUE),
   a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
@@ -55,6 +60,10 @@ bsitar(
   b_cov_prior_sd = normal(0, 2, autoscale = FALSE),
   c_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
   d_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
+  sigma_prior_beta = normal(0, 2, autoscale = FALSE),
+  sigma_cov_prior_beta = normal(0, 2, autoscale = FALSE),
+  sigma_prior_sd = normal(0, 1, autoscale = FALSE),
+  sigma_cov_prior_sd = normal(0, 1, autoscale = FALSE),
   rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
   dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
   dpar_cov_prior_sigma = normal(0, 5, autoscale = FALSE),
@@ -81,6 +90,10 @@ bsitar(
   b_cov_init_sd = 0,
   c_cov_init_sd = 0,
   d_cov_init_sd = 0,
+  sigma_init_beta = 0,
+  sigma_cov_init_beta = 0,
+  sigma_init_sd = 1,
+  sigma_cov_init_sd = 1,
   gr_init_cor = 0,
   rsd_init_sigma = 1,
   dpar_init_sigma = 0,
@@ -278,17 +291,53 @@ fitting model with hierarchical structure greater than two levels. See
 fitting model with hierarchical structure greater than two levels. See
 \code{a_formula_gr_str} for details.}
 
-\item{dpar_formula}{formula for distributional parameter sigma. This is only
-useful when modelling the sigma (i.e., residual standard deviation
-parameter) By default, the \link[brms:brm]{brms::brm} function includes the intercept for
-the residual standard deviation parameter (i.e,, sigma). The default setting
-for \code{dpar_formula} is NULL which implements the default behaviour of
-the \link[brms:brm]{brms::brm} function. The usefulness of \code{dpar_formula} is in
-including covariate(s) for sigam. For example, \code{dpar_formula = ~1 +
- cov}. See \code{a_formula} for inclusion of covariate(s) as well for
-different modelling structures for univariate-by-subgroup (specified by
-using the \code{univariate_by} argument) and the multivariate (specified by
-using the \code{multivariate} argument) models.}
+\item{sigma_formula}{formula for modelling distributional parameter sigma.
+(default \code{NULL}). This is only useful when including covariates(s) for
+sigma. The \link[brms:brm]{brms::brm} by defaults function includes an intercept for the
+residual standard deviation parameter (i.e,, sigma). The
+\code{sigma_formula} along with \code{sigma_formula_gr} and
+\code{sigma_formula_gr_str} arguments allows specifying hierarchical
+structure when modelling sigma. This set is similar to setting fixed and
+random effect structures for parameters \code{a}, \code{b}, and \code{c}.
+The \code{sigma_formula} sets up the fixed effect design matrix. It is
+important to note that another alternative to set up the fixed effect design
+matrix for distributional parameter sigma is argument \code{dpar_formula}.
+An advantage of \code{dpar_formula} over \code{sigma_formula} is that user
+can specify the linear and nonlinear formulation by using the brms'
+\link[brms:brmsformula-helpers]{brms::lf} and \link[brms:brmsformula-helpers]{brms::nlf} syntax. Both \link[brms:brmsformula-helpers]{brms::lf} and \link[brms:brmsformula-helpers]{brms::nlf} further
+allows control over centering of predictors as well as to enable or disable
+cell mean centering when excluding the \code{intercept} by adding \code{0}
+to the right-hand of model formulas. Note that \code{sigma_formula} and
+\code{dpar_formula} can not be specified together.}
+
+\item{sigma_formula_gr}{formula for setting up the random effect structure for
+the distributional parameter sigma (default \code{NULL}).  Note that
+\code{sigma_formula} can not be combined with the \code{dpar_formula}.}
+
+\item{sigma_formula_gr_str}{formula for setting up the random effect structure
+for the sigma (default \code{NULL}) when fitting model with hierarchical
+structure greater than two levels. The groupvar and priors specified by the
+argument \code{sigma_formula_gr} are used for the second level of hierarchy
+whereas groupvar and priors are manually specified for the third and beyond
+hierarchies by using the \code{get_priors} and \code{set_self_priors}
+arguments. An example of specifying formula for random effect parameter
+\code{sigma} for a three level model with repeated measures on individuals
+nested within the growth studies is as follows: \code{sigma_formula_gr_str = ~
+ (1|a|id:study) + (1|b|istudy)}. This formulation implies
+(with vertical bar, \code{|} ) that fully unstructured varinace covarinace
+structure is specified for indivuals levels as well as for study.
+See \code{a_formula_gr_str} for further details.}
+
+\item{dpar_formula}{formula for distributional parameter sigma (default
+\code{NULL}). This is only useful when modelling the sigma (i.e., residual
+standard deviation parameter). By default, the \link[brms:brm]{brms::brm} function includes
+the intercept for the residual standard deviation parameter (i.e,, sigma).
+The default setting for \code{dpar_formula} is NULL which implements the
+default behaviour of the \link[brms:brm]{brms::brm} function. Also note that
+\code{dpar_formula} can not be specified along with \code{sigma_formula},
+\code{sigma_formula_gr}, or \code{sigma_formula_gr_str}. See
+\code{sigma_formula} for relative advantages and disadvantages of using
+\code{sigma_formula} and \code{dpar_formula}}
 
 \item{autocor_formula}{formula for modelling autocorrelation. The default
 setting for \code{autocor_formula} is NULL i.e, not to model
@@ -308,7 +357,7 @@ else different such as \code{family = list(gaussian(), student()} which sets
 gaussian for the first outcome and student_t for the second outcome.}
 
 \item{group_arg}{specify group-level effects when fitting univariate models.
-The subptions for the \code{group_arg} are groupvar, dist, cor and by. The
+The subptions for the \code{group_arg} are 'groupvar', 'dist', 'cor' and 'by.' The
 suboption groupvar specifies the subject identifier (which is typically same
 as \code{id}) wheres the suboption dist sets the distribution of the random
 effects (options are gaussian, the default and student). The correlation
@@ -327,6 +376,14 @@ option for \code{a_formula_gr}, \code{b_formula_gr}, and
 \code{c_formula_gr}. Also, the \code{group_arg} is redundant for
 \code{a_formula_gr_str}, \code{b_formula_gr_str},
 and \code{c_formula_gr_str}.}
+
+\item{sigma_group_arg}{specify group-level effects for distributional parameter \code{sigma}.
+The subptions for the \code{sigma_group_arg} sames as are same \code{group_arg} i.e., 'groupvar', 'dist', 'cor' and 'by.' The
+suboption 'groupvar' specifies the subject identifier (which is typically same
+as \code{id}) whereas the suboption 'dist' sets the distribution of the random
+effects (options are gaussian, the default and student). The correlation
+structure is specified by using the suboption 'cor'. See \code{group_arg}
+for more details.}
 
 \item{univariate_by}{specify univariate-by-subgroup model fitting arguments.
 Suboptions include the by argument to specify the variable (which must be a
@@ -517,6 +574,34 @@ parameter. Approach is same as described earlier for the
 parameter. Approach is same as described earlier for the
 \code{a_cov_prior_sd}.}
 
+\item{sigma_prior_beta}{Set priors on the the fixed effect distributional
+parameter \code{sigma}. The allowed distributions are normal, student_t,
+cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
+\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_prior_beta} for
+full details on how to specify priors including various subptional
+available.}
+
+\item{sigma_cov_prior_beta}{Set priors on the covariate(s) for the the fixed
+effect distributional parameter \code{sigma}. The allowed distributions are
+normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
+gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
+\code{a_cov_prior_beta} for full details on how to specify priors including
+various suboptions available.}
+
+\item{sigma_prior_sd}{Set priors on the the random effect distributional
+parameter \code{sigma}. The allowed distributions are normal, student_t,
+cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
+\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_cov_prior_beta}
+for full details on how to specify priors including various subptional
+available.}
+
+\item{sigma_cov_prior_sd}{Set priors on the covariate(s) for the the random
+effect distributional parameter \code{sigma}. The allowed distributions are
+normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
+gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
+\code{a_cov_prior_sd} for full details on how to specify priors including
+various suboptions available.}
+
 \item{rsd_prior_sigma}{set priors on the the residual standard deviation
 parameter sigma. This argument will only be evaluated if \code{dpar_formual}
 is set to NULL. For location scale based distributions, user can use specify
@@ -652,6 +737,16 @@ parameter. The approach and options are same as described above for the
 \item{d_cov_init_sd}{Initial values for covariate(s) for the random effect d
 parameter. The approach and options are same as described above for the
 \code{c_cov_init_sd}.}
+
+\item{sigma_init_beta}{Initial values for fixed effect parameter sigma.}
+
+\item{sigma_cov_init_beta}{Initial values for covariate(s) fixed effect
+parameter sigma}
+
+\item{sigma_init_sd}{Initial values for sd of random effect parameter sigma.}
+
+\item{sigma_cov_init_sd}{Initial values for sd of covariate(s) for random
+effect parameter sigma.}
 
 \item{gr_init_cor}{Initial values for correlations of group-level ('random')
 effects. Allowed options are \code{0}, \code{random} and \code{prior}.}

@@ -24,6 +24,10 @@ set_priors_initials(
   c_cov_prior_sd,
   d_cov_prior_sd,
   gr_prior_cor,
+  sigma_prior_beta,
+  sigma_cov_prior_beta,
+  sigma_prior_sd,
+  sigma_cov_prior_sd,
   rsd_prior_sigma,
   dpar_prior_sigma,
   dpar_cov_prior_sigma,
@@ -109,6 +113,34 @@ function, \code{a_cov_prior_sd} for details.}
 
 \item{gr_prior_cor}{Set priors on the the group level correlation parameter.
 See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_beta} for details.}
+
+\item{sigma_prior_beta}{Set priors on the the fixed effect distributional
+parameter \code{sigma}. The allowed distributions are normal, student_t,
+cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
+\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_prior_beta} for
+full details on how to specify priors including various subptional
+available.}
+
+\item{sigma_cov_prior_beta}{Set priors on the covariate(s) for the the fixed
+effect distributional parameter \code{sigma}. The allowed distributions are
+normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
+gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
+\code{a_cov_prior_beta} for full details on how to specify priors including
+various suboptions available.}
+
+\item{sigma_prior_sd}{Set priors on the the random effect distributional
+parameter \code{sigma}. The allowed distributions are normal, student_t,
+cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
+\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_cov_prior_beta}
+for full details on how to specify priors including various subptional
+available.}
+
+\item{sigma_cov_prior_sd}{Set priors on the covariate(s) for the the random
+effect distributional parameter \code{sigma}. The allowed distributions are
+normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
+gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
+\code{a_cov_prior_sd} for full details on how to specify priors including
+various suboptions available.}
 
 \item{rsd_prior_sigma}{Set priors on the the residual standared deviation
 \code{sigma} parameter. See \code{\link[=bsitar]{bsitar()}} function,

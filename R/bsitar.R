@@ -238,18 +238,54 @@
 #'@param d_formula_gr_str formula for random effect d (default \code{NULL}) when
 #'  fitting model with hierarchical structure greater than two levels. See
 #'  \code{a_formula_gr_str} for details.
+#'  
+#'@param sigma_formula formula for modelling distributional parameter sigma.
+#'  (default \code{NULL}). This is only useful when including covariates(s) for
+#'  sigma. The [brms::brm] by defaults function includes an intercept for the
+#'  residual standard deviation parameter (i.e,, sigma). The
+#'  \code{sigma_formula} along with \code{sigma_formula_gr} and
+#'  \code{sigma_formula_gr_str} arguments allows specifying hierarchical
+#'  structure when modelling sigma. This set is similar to setting fixed and
+#'  random effect structures for parameters \code{a}, \code{b}, and \code{c}.
+#'  The \code{sigma_formula} sets up the fixed effect design matrix. It is
+#'  important to note that another alternative to set up the fixed effect design
+#'  matrix for distributional parameter sigma is argument \code{dpar_formula}.
+#'  An advantage of \code{dpar_formula} over \code{sigma_formula} is that user
+#'  can specify the linear and nonlinear formulation by using the brms'
+#'  [brms::lf] and [brms::nlf] syntax. Both [brms::lf] and [brms::nlf] further
+#'  allows control over centering of predictors as well as to enable or disable
+#'  cell mean centering when excluding the \code{intercept} by adding \code{0}
+#'  to the right-hand of model formulas. Note that \code{sigma_formula} and
+#'  \code{dpar_formula} can not be specified together.
 #'
-#'@param dpar_formula formula for distributional parameter sigma. This is only
-#'  useful when modelling the sigma (i.e., residual standard deviation
-#'  parameter) By default, the [brms::brm] function includes the intercept for
-#'  the residual standard deviation parameter (i.e,, sigma). The default setting
-#'  for \code{dpar_formula} is NULL which implements the default behaviour of
-#'  the [brms::brm] function. The usefulness of \code{dpar_formula} is in
-#'  including covariate(s) for sigam. For example, \code{dpar_formula = ~1 +
-#'  cov}. See \code{a_formula} for inclusion of covariate(s) as well for
-#'  different modelling structures for univariate-by-subgroup (specified by
-#'  using the \code{univariate_by} argument) and the multivariate (specified by
-#'  using the \code{multivariate} argument) models.
+#'@param sigma_formula_gr formula for setting up the random effect structure for
+#'  the distributional parameter sigma (default \code{NULL}).  Note that
+#'  \code{sigma_formula} can not be combined with the \code{dpar_formula}.
+#'
+#'@param sigma_formula_gr_str formula for setting up the random effect structure
+#'  for the sigma (default \code{NULL}) when fitting model with hierarchical
+#'  structure greater than two levels. The groupvar and priors specified by the
+#'  argument \code{sigma_formula_gr} are used for the second level of hierarchy
+#'  whereas groupvar and priors are manually specified for the third and beyond
+#'  hierarchies by using the \code{get_priors} and \code{set_self_priors}
+#'  arguments. An example of specifying formula for random effect parameter
+#'  \code{sigma} for a three level model with repeated measures on individuals
+#'  nested within the growth studies is as follows: \code{sigma_formula_gr_str = ~
+#'  (1|a|id:study) + (1|b|istudy)}. This formulation implies 
+#'  (with vertical bar, \code{|} ) that fully unstructured varinace covarinace 
+#'  structure is specified for indivuals levels as well as for study. 
+#'  See \code{a_formula_gr_str} for further details.
+#'
+#'@param dpar_formula formula for distributional parameter sigma (default
+#'  \code{NULL}). This is only useful when modelling the sigma (i.e., residual
+#'  standard deviation parameter). By default, the [brms::brm] function includes
+#'  the intercept for the residual standard deviation parameter (i.e,, sigma).
+#'  The default setting for \code{dpar_formula} is NULL which implements the
+#'  default behaviour of the [brms::brm] function. Also note that
+#'  \code{dpar_formula} can not be specified along with \code{sigma_formula},
+#'  \code{sigma_formula_gr}, or \code{sigma_formula_gr_str}. See
+#'  \code{sigma_formula} for relative advantages and disadvantages of using
+#'  \code{sigma_formula} and \code{dpar_formula}
 #'
 #'@param autocor_formula formula for modelling autocorrelation. The default
 #'  setting for \code{autocor_formula} is NULL i.e, not to model
@@ -269,7 +305,7 @@
 #'  gaussian for the first outcome and student_t for the second outcome.
 #'
 #'@param group_arg specify group-level effects when fitting univariate models.
-#'  The subptions for the \code{group_arg} are groupvar, dist, cor and by. The
+#'  The subptions for the \code{group_arg} are 'groupvar', 'dist', 'cor' and 'by.' The
 #'  suboption groupvar specifies the subject identifier (which is typically same
 #'  as \code{id}) wheres the suboption dist sets the distribution of the random
 #'  effects (options are gaussian, the default and student). The correlation
@@ -288,6 +324,14 @@
 #'  \code{c_formula_gr}. Also, the \code{group_arg} is redundant for
 #'  \code{a_formula_gr_str}, \code{b_formula_gr_str},
 #'  and \code{c_formula_gr_str}.
+#'  
+#'@param sigma_group_arg specify group-level effects for distributional parameter \code{sigma}.
+#'  The subptions for the \code{sigma_group_arg} sames as are same \code{group_arg} i.e., 'groupvar', 'dist', 'cor' and 'by.' The
+#'  suboption 'groupvar' specifies the subject identifier (which is typically same
+#'  as \code{id}) whereas the suboption 'dist' sets the distribution of the random
+#'  effects (options are gaussian, the default and student). The correlation
+#'  structure is specified by using the suboption 'cor'. See \code{group_arg}
+#'  for more details.
 #'
 #'@param univariate_by specify univariate-by-subgroup model fitting arguments.
 #'  Suboptions include the by argument to specify the variable (which must be a
@@ -477,6 +521,34 @@
 #'@param d_cov_prior_sd set priors on the the covariate(s) for random effect d
 #'  parameter. Approach is same as described earlier for the
 #'  \code{a_cov_prior_sd}.
+#'  
+#'@param sigma_prior_beta Set priors on the the fixed effect distributional
+#'  parameter \code{sigma}. The allowed distributions are normal, student_t,
+#'  cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
+#'  [brms::prior] function for details on priors. See \code{a_prior_beta} for
+#'  full details on how to specify priors including various subptional
+#'  available.
+#'
+#'@param sigma_cov_prior_beta Set priors on the covariate(s) for the the fixed
+#'  effect distributional parameter \code{sigma}. The allowed distributions are
+#'  normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
+#'  gamma. See [brms::prior] function for details on priors. See
+#'  \code{a_cov_prior_beta} for full details on how to specify priors including
+#'  various suboptions available.
+#'
+#'@param sigma_prior_sd Set priors on the the random effect distributional
+#'  parameter \code{sigma}. The allowed distributions are normal, student_t,
+#'  cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
+#'  [brms::prior] function for details on priors. See \code{a_cov_prior_beta}
+#'  for full details on how to specify priors including various subptional
+#'  available.
+#'
+#'@param sigma_cov_prior_sd Set priors on the covariate(s) for the the random
+#'  effect distributional parameter \code{sigma}. The allowed distributions are
+#'  normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
+#'  gamma. See [brms::prior] function for details on priors. See
+#'  \code{a_cov_prior_sd} for full details on how to specify priors including
+#'  various suboptions available.
 #'
 #'@param rsd_prior_sigma set priors on the the residual standard deviation
 #'  parameter sigma. This argument will only be evaluated if \code{dpar_formual}
@@ -613,6 +685,16 @@
 #'@param d_cov_init_sd Initial values for covariate(s) for the random effect d
 #'  parameter. The approach and options are same as described above for the
 #'  \code{c_cov_init_sd}.
+#'
+#'@param sigma_init_beta Initial values for fixed effect parameter sigma.
+#'
+#'@param sigma_cov_init_beta Initial values for covariate(s) fixed effect
+#'  parameter sigma
+#'
+#'@param sigma_init_sd Initial values for sd of random effect parameter sigma.
+#'
+#'@param sigma_cov_init_sd Initial values for sd of covariate(s) for random
+#'  effect parameter sigma.
 #'
 #'@param gr_init_cor Initial values for correlations of group-level ('random')
 #'  effects. Allowed options are \code{0}, \code{random} and \code{prior}.
@@ -947,10 +1029,21 @@ bsitar <- function(x,
                    c_formula_gr_str = NULL,
                    d_formula_gr_str = NULL,
                    
+                   sigma_formula = NULL,
+                   sigma_formula_gr = NULL,
+                   sigma_formula_gr_str = NULL,
+                   
                    dpar_formula = NULL,
                    autocor_formula = NULL,
                    family = gaussian(),
                    group_arg = list(
+                     groupvar = NULL,
+                     by = NULL,
+                     cor = un,
+                     cov = NULL,
+                     dist = gaussian
+                   ),
+                   sigma_group_arg = list(
                      groupvar = NULL,
                      by = NULL,
                      cor = un,
@@ -979,6 +1072,12 @@ bsitar <- function(x,
                    b_cov_prior_sd = normal(0, 2, autoscale = FALSE),
                    c_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
                    d_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   
+                   sigma_prior_beta = normal(0, 2, autoscale = FALSE),
+                   sigma_cov_prior_beta = normal(0, 2, autoscale = FALSE),
+                   sigma_prior_sd = normal(0, 1, autoscale = FALSE),
+                   sigma_cov_prior_sd = normal(0, 1, autoscale = FALSE),
+                   
                    rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
                    dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
                    dpar_cov_prior_sigma = normal(0, 5, autoscale = FALSE),
@@ -1005,6 +1104,12 @@ bsitar <- function(x,
                    b_cov_init_sd = 0,
                    c_cov_init_sd = 0,
                    d_cov_init_sd = 0,
+                   
+                   sigma_init_beta = 0,
+                   sigma_cov_init_beta = 0,
+                   sigma_init_sd = 1,
+                   sigma_cov_init_sd = 1,
+                   
                    gr_init_cor = 0,
                    rsd_init_sigma = 1,
                    dpar_init_sigma = 0,
@@ -1147,10 +1252,30 @@ bsitar <- function(x,
   # arguments2 <<- arguments
  
   remove_spaces <- c('a_formula_gr_str', 'b_formula_gr_str', 
-                     'c_formula_gr_str', 'd_formula_gr_str')
+                     'c_formula_gr_str', 'd_formula_gr_str',
+                     'sigma_formula_gr_str')
+  
   for (ip in remove_spaces) {
     arguments[[ip]] <-  gsub_space(arguments[[ip]] )
   }
+  
+  
+  
+  check_gr_str_form <- function(x, x__) {
+    if(!is.null(x) | !is.null(x[[1]])) {
+      if(!grepl("^list", x__)) {
+        if(!grepl("^~", x__)) {
+          stop("Argument ", deparse(substitute(x)), " should be a formula.",
+               "\n ",
+               " Please add '~' at the begining ")
+        }
+      } 
+    }
+  }
+ 
+  check_gr_str_form(sigma_formula_gr_str, 
+                    deparse(substitute(sigma_formula_gr_str)))
+  
   
   # Separate 'brms' arguments from 'bsitar' arguments for the ease of handling
   
@@ -1687,6 +1812,168 @@ bsitar <- function(x,
   }
   
   
+  
+  
+  
+  
+  
+  
+  # Set sigma_group_arg arguments (for univariate model fitting)
+  
+  if (!paste(deparse(substitute(sigma_group_arg)), collapse = "") == "NULL"  &
+      !any(grepl("^list", gsub("\\s", "", paste(
+        deparse(substitute(sigma_group_arg)), collapse = ""
+      )))) &
+      any(gsub("\\s", "", paste(deparse(
+        substitute(sigma_group_arg)
+      ), collapse = "")) == "NULL")) {
+    sigma_group_arg <- list()
+    sigma_group_arg$groupvar <- NULL
+  } else if (!any(grepl("^list", gsub("\\s", "", paste(
+    deparse(substitute(sigma_group_arg)), collapse = ""
+  )))) &
+  any(gsub("\\s", "", paste(deparse(
+    substitute(sigma_group_arg)
+  ), collapse = "")) != "NULL")) {
+    if (paste(deparse(substitute(sigma_group_arg)), collapse = "") == "T" |
+        paste(deparse(substitute(sigma_group_arg)), collapse = "") == "TRUE" |
+        paste(deparse(substitute(sigma_group_arg)), collapse = "") == "F" |
+        paste(deparse(substitute(sigma_group_arg)), collapse = "") == "FALSE" |
+        paste(deparse(substitute(sigma_group_arg)), collapse = "") == "NA") {
+      stop("sigma_group_arg should be either NULL or a character",
+           " denoting the group idetifier")
+    }
+    if (is.symbol(substitute(sigma_group_arg))) {
+      sigma_group_arg <-
+        gsub("\\s", "", paste(deparse(substitute(sigma_group_arg)), collapse = ""))
+      sigma_group_arg <- sigma_group_arg
+      sigma_group_arg <- as.list(sigma_group_arg)
+      names(sigma_group_arg) <- 'groupvar'
+    } else if (is.character(substitute(sigma_group_arg))) {
+      sigma_group_arg <- sigma_group_arg
+      sigma_group_arg <- as.list(sigma_group_arg)
+      names(sigma_group_arg) <- 'groupvar'
+    }
+  }
+  if (any(grepl("^list", gsub("\\s", "",
+                              paste(
+                                deparse(substitute(sigma_group_arg)),
+                                collapse = ""
+                              )))) &
+      length(strsplit(gsub("\\s", "",
+                           paste(
+                             deparse(substitute(sigma_group_arg)),
+                             collapse = ""
+                           )), ",")[[1]]) == 1) {
+    if (!is.null(gsub("\\s", "", paste(deparse(
+      substitute(sigma_group_arg)
+    ),
+    collapse = "")))) {
+      if (is.language(substitute(sigma_group_arg))) {
+        ttt <- gsub("\\s", "", paste(deparse(substitute(sigma_group_arg)),
+                                     collapse = ""))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "T" |
+            temp == "TRUE" |
+            temp == "F" |
+            temp == "FALSE") {
+          stop(
+            "sigma_group_arg should be either NULL or a character",
+            " denoting the group idetifier"
+          )
+        }
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("groupvar=", strsplit(temp, "=")[[1]]),
+                      ttt)
+        }
+        sigma_group_arg <- list_to_quoted_if_not(ttt)
+      } else if (grepl("^list", sigma_group_arg)) {
+        ttt <- deparse_0(as.name(substitute(sigma_group_arg)))
+        temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+        if (temp == "") {
+          stop("empty list")
+        }
+        if (length(strsplit(temp, "=")[[1]]) == 1) {
+          ttt <- gsub(strsplit(temp, "=")[[1]],
+                      paste0("groupvar=", strsplit(temp, "=")[[1]]),
+                      ttt)
+        }
+        sigma_group_arg <- list_to_quoted_if_not(ttt)
+        for (sigma_group_argi in 1:length(sigma_group_arg)) {
+          if (!is.null(sigma_group_arg[[sigma_group_argi]])) {
+            sigma_group_arg[[sigma_group_argi]] <- gsub("'", "", sigma_group_arg[[sigma_group_argi]])
+          }
+        }
+      } else {
+        if (!is.null(sigma_group_arg)) {
+          if (!grepl("^list", gsub("\\s", "",
+                                   paste(
+                                     deparse(substitute(sigma_group_arg)),
+                                     collapse = ""
+                                   )))) {
+            sigma_group_arg <- sigma_group_arg
+            sigma_group_arg <- as.list(sigma_group_arg)
+            names(sigma_group_arg) <- 'groupvar'
+          }
+        } else if (is.null(sigma_group_arg)) {
+          sigma_group_arg <- as.list(sigma_group_arg)
+        }
+      }
+    } else if (is.null(sigma_group_arg)) {
+      sigma_group_arg <- list()
+      sigma_group_arg$groupvar <- NULL
+    }
+  }
+  if (any(grepl("^list", gsub("\\s", "",
+                              paste(
+                                deparse(substitute(sigma_group_arg)),
+                                collapse = ""
+                              )))) &
+      length(strsplit(gsub("\\s", "",
+                           paste(
+                             deparse(substitute(sigma_group_arg)),
+                             collapse = ""
+                           )), ",")[[1]]) > 1) {
+    ttt <-
+      gsub("\\s", "", paste(deparse(substitute(sigma_group_arg)), collapse = ""))
+    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    temp <- gsub("\\s", "", temp)
+    if (!grepl("^groupvar=", temp[1])) {
+      temp[1] <- paste0("groupvar=", temp[1])
+    }
+    temp <- paste(temp, collapse = ",")
+    temp <- paste0("list(", temp, ")")
+    sigma_group_arg <- list_to_quoted_if_not(temp)
+  }
+  if (length(sigma_group_arg) == 0) {
+    sigma_group_arg <- list()
+    sigma_group_arg$groupvar <- NULL
+  }
+  if (!is.null(sigma_group_arg$groupvar) &
+      !is.character(sigma_group_arg$groupvar)) {
+    stop("sigma_group_arg should be either NULL or a character",
+         " denoting the group idetifier")
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   # If not already specified by the user, add default values to the
   # univariate_by, multivariate, and group_arg arguments
   
@@ -1807,10 +2094,28 @@ bsitar <- function(x,
   
   
   
+  
+  
+  if (is.null(sigma_group_arg$groupvar))
+    sigma_group_arg$groupvar <- NULL
+  if (is.null(sigma_group_arg$by))
+    sigma_group_arg$by <- NULL
+  if (is.null(sigma_group_arg$cor))
+    sigma_group_arg$cor <- "un"
+  if (is.null(sigma_group_arg$dist))
+    sigma_group_arg$dist <- "gaussian"
+  
+  
+  
+  
+  
+  
   multivariate$verbose <-
     univariate_by$verbose <- group_arg$verbose <- verbose
   
   
+  sigma_group_arg$verbose <- verbose
+ 
   
   # Temporary placeholder for the number of outcomes when fitting
   # univariate-by-subgroup model
@@ -1966,6 +2271,7 @@ bsitar <- function(x,
   single_args <- c(
     "data",
     "group_arg",
+    "sigma_group_arg",
     "univariate_by",
     "multivariate",
     "prior_data",
@@ -2126,6 +2432,13 @@ bsitar <- function(x,
   groupvarnamelist <- xvarvaluelist <- xnamelist <- funlist
   hierarchicalvarnamelist <- hierarchicalvarvaluelist <- funlist
   
+  sigma_groupvarnamelist <- sigma_groupvarvaluelist <- funlist
+  sigma_hierarchicalvarnamelist <- sigma_hierarchicalvarvaluelist <- funlist
+  
+  
+  
+  
+  
   # Start loop over the outcome(s)
   
   for (ii in 1:length(ys)) {
@@ -2144,6 +2457,9 @@ bsitar <- function(x,
     if (is.null(group_arg$groupvar))
       group_arg$groupvar <- idsi
     
+    
+    if (is.null(sigma_group_arg$groupvar))
+      sigma_group_arg$groupvar <- idsi
     
     
     if (!is.numeric(ept(dfsi)) & !is.numeric(ept(knotssi))) {
@@ -2322,6 +2638,51 @@ bsitar <- function(x,
     c_fcgs_out <- f_checks_gr_gr_str(c_formula_grsi, c_formula_gr_strsi)
     d_fcgs_out <- f_checks_gr_gr_str(d_formula_grsi, d_formula_gr_strsi)
     
+   
+    
+    # First, if sigma_formula_gr_strsi not NULL but sigma_formula_grsi NULL
+    # Then set sigma_formula_grsi to ~1 because then only first part of the 
+    # sigma_formula_gr_strsi (i.e., before first + ) will be copied to the 
+    # sigma_formula_grsi
+    
+  
+    if(sigma_formula_gr_strsi != 'NULL') {
+      if(sigma_formula_grsi == 'NULL') {
+        sigma_formula_grsi <- "~1"
+      } else {
+        sigma_formula_grsi <- sigma_formula_grsi
+      }
+    } else {
+      sigma_formula_grsi <- sigma_formula_grsi
+    }
+    
+    
+    if(sigma_formula_gr_strsi != 'NULL') {
+      if(!grepl("^~", sigma_formula_gr_strsi)) {
+        sigma_formula_gr_strsi <- paste0("~", sigma_formula_gr_strsi)
+      }
+    }
+    if(is.null(sigma_formula_gr_strsi[[1]])) {
+      sigma_formula_gr_strsi <- 'NULL'
+    }
+    
+    if(sigma_formula_grsi != 'NULL') {
+      if(!grepl("^~", sigma_formula_grsi)) {
+        sigma_formula_grsi <- paste0("~", sigma_formula_grsi)
+      }
+    }
+    if(is.null(sigma_formula_grsi[[1]])) {
+      sigma_formula_grsi <- 'NULL'
+    }
+    
+    
+    # print(sigma_formula_grsi)
+    # print(sigma_formula_gr_strsi)
+    # stop()
+    
+    
+    sigma_fcgs_out <- f_checks_gr_gr_str(sigma_formula_grsi, sigma_formula_gr_strsi)
+    
     if(!is.null(a_fcgs_out)) {
       if(a_formula_grsi == "~1" & !is.null(a_formula_gr_strsi[[1]])) {
         a_formula_grsi <- strsplit(a_formula_gr_strsi, "+(", fixed = T)[[1]][1]
@@ -2345,11 +2706,18 @@ bsitar <- function(x,
       }
     }
     
+    if(!is.null(sigma_fcgs_out) & sigma_fcgs_out != 'NULL') {
+      if(sigma_formula_grsi == "~1" & !is.null(sigma_formula_gr_strsi[[1]])) {
+        sigma_formula_grsi <- strsplit(sigma_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
     
     a_formula_grsi <- gsub("[()]", "", a_formula_grsi)
     b_formula_grsi <- gsub("[()]", "", b_formula_grsi)
     c_formula_grsi <- gsub("[()]", "", c_formula_grsi)
     if(!is.null(d_formula_grsi)) d_formula_grsi <- gsub("[()]", "", d_formula_grsi)
+    
+    sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
     
     set_higher_levels <- TRUE
     if(is.null(a_fcgs_out) & 
@@ -2357,6 +2725,11 @@ bsitar <- function(x,
        is.null(c_fcgs_out) & 
        is.null(d_fcgs_out)) {
       set_higher_levels <- FALSE
+    }
+    
+    sigma_set_higher_levels <- TRUE
+    if(is.null(sigma_fcgs_out) | sigma_fcgs_out == 'NULL') {
+      sigma_set_higher_levels <- FALSE
     }
     
    
@@ -2383,6 +2756,19 @@ bsitar <- function(x,
         assign(check_formualsi, check_formualsi_with1)
       }
     }
+    
+    
+    if (is.null(sigma_formula_gr_strsi[[1]][1]) |
+        sigma_formula_gr_strsi == "NULL") {
+      sigma_formula_gr_strsi <- NULL
+    }
+    
+    if (is.null(sigma_formula_grsi[[1]][1]) |
+        sigma_formula_grsi == "NULL") {
+      sigma_formula_grsi <- NULL
+    }
+    
+    
     
     
     if (is.null(dpar_formulasi[[1]][1]) |
@@ -2723,6 +3109,10 @@ bsitar <- function(x,
         "b_formula_grsi",
         "c_formula_grsi",
         "d_formula_grsi",
+        
+        "sigma_formulasi",
+        "sigma_formula_grsi",
+        
         "dpar_formulasi",
         "autocor_formi",
         "subindicatorsi",
@@ -2731,6 +3121,7 @@ bsitar <- function(x,
         "univariate_by",
         "multivariate",
         "group_arg",
+        "sigma_group_arg",
         "df",
         "mat_s",
         "spfncname",
@@ -2745,7 +3136,9 @@ bsitar <- function(x,
         "b_formula_gr_strsi",
         "c_formula_gr_strsi",
         "d_formula_gr_strsi",
+        "sigma_formula_gr_strsi",
         "set_higher_levels",
+        "sigma_set_higher_levels",
         "verbose"
       )
     
@@ -2792,6 +3185,12 @@ bsitar <- function(x,
     univariate_by$by <- univariate_by_by
     covariates_ <- covariates_
     set_higher_levels <- set_higher_levels
+    
+    sigma_set_higher_levels <- sigma_set_higher_levels
+    
+    
+    sigma_group_arg$groupvar <- sigma_group_arg_groupvar
+    
     
     lm_val_list <-
       names(eout)[grep(pattern = "^lm_|^lme_", names(eout))]
@@ -2862,6 +3261,9 @@ bsitar <- function(x,
         "b_formula_grsi",
         "c_formula_grsi",
         "d_formula_grsi",
+        "sigma_formulasi",
+        "sigma_formula_grsi",
+        "sigma_formula_gr_strsi",
         "autocor_formi",
         "randomsi",
         "nabci",
@@ -2869,6 +3271,7 @@ bsitar <- function(x,
         "univariate_by",
         "multivariate",
         "group_arg",
+        "sigma_group_arg",
         "initsi",
         "df",
         "idsi",
@@ -2937,6 +3340,12 @@ bsitar <- function(x,
         b_cov_init_sd = b_cov_init_sdsi,
         c_cov_init_sd = c_cov_init_sdsi,
         d_cov_init_sd = d_cov_init_sdsi,
+        
+        sigma_init_beta = sigma_init_betasi,
+        sigma_cov_init_beta = sigma_cov_init_betasi,
+        sigma_init_sd = sigma_init_sdsi,
+        sigma_cov_init_sd = sigma_cov_init_sdsi,
+        
         rsd_init_sigma = rsd_init_sigmasi,
         dpar_init_sigma = dpar_init_sigmasi,
         dpar_cov_init_sigma = dpar_cov_init_sigmasi,
@@ -2961,37 +3370,41 @@ bsitar <- function(x,
     
     bpriors <-
       set_priors_initials(
-        a_prior_betasi,
-        b_prior_betasi,
-        c_prior_betasi,
-        d_prior_betasi,
-        s_prior_betasi,
-        a_cov_prior_betasi,
-        b_cov_prior_betasi,
-        c_cov_prior_betasi,
-        d_cov_prior_betasi,
-        s_cov_prior_betasi,
-        a_prior_sdsi,
-        b_prior_sdsi,
-        c_prior_sdsi,
-        d_prior_sdsi,
-        a_cov_prior_sdsi,
-        b_cov_prior_sdsi,
-        c_cov_prior_sdsi,
-        d_cov_prior_sdsi,
-        gr_prior_corsi,
-        rsd_prior_sigmasi,
-        dpar_prior_sigmasi,
-        dpar_cov_prior_sigmasi,
-        autocor_prior_acorsi,
-        mvr_prior_rescorsi,
-        prior_data,
-        prior_data_internal,
-        prior_args_internal,
-        init_arguments,
-        init_data,
-        init_data_internal,
-        init_args_internal
+        a_prior_beta = a_prior_betasi,
+        b_prior_beta = b_prior_betasi,
+        c_prior_beta = c_prior_betasi,
+        d_prior_beta = d_prior_betasi,
+        s_prior_beta = s_prior_betasi,
+        a_cov_prior_beta = a_cov_prior_betasi,
+        b_cov_prior_beta = b_cov_prior_betasi,
+        c_cov_prior_beta = c_cov_prior_betasi,
+        d_cov_prior_beta = d_cov_prior_betasi,
+        s_cov_prior_beta = s_cov_prior_betasi,
+        a_prior_sd = a_prior_sdsi,
+        b_prior_sd = b_prior_sdsi,
+        c_prior_sd = c_prior_sdsi,
+        d_prior_sd = d_prior_sdsi,
+        a_cov_prior_sd = a_cov_prior_sdsi,
+        b_cov_prior_sd = b_cov_prior_sdsi,
+        c_cov_prior_sd = c_cov_prior_sdsi,
+        d_cov_prior_sd = d_cov_prior_sdsi,
+        gr_prior_cor = gr_prior_corsi,
+        sigma_prior_beta = sigma_prior_betasi, 
+        sigma_cov_prior_beta = sigma_cov_prior_betasi,
+        sigma_prior_sd = sigma_prior_sdsi,
+        sigma_cov_prior_sd = sigma_cov_prior_sdsi,
+        rsd_prior_sigma = rsd_prior_sigmasi,
+        dpar_prior_sigma = dpar_prior_sigmasi,
+        dpar_cov_prior_sigma = dpar_cov_prior_sigmasi,
+        autocor_prior_acor = autocor_prior_acorsi,
+        mvr_prior_rescor = mvr_prior_rescorsi,
+        prior_data = prior_data,
+        prior_data_internal = prior_data_internal,
+        prior_args_internal = prior_args_internal,
+        init_arguments = init_arguments,
+        init_data = init_data,
+        init_data_internal = init_data_internal,
+        init_args_internal = init_args_internal
       )
     
     
@@ -3028,7 +3441,9 @@ bsitar <- function(x,
       fixed_name <- "fixed"
       random_name <- "random"
       groupvar_name <- "groupvar"
+      sigma_groupvar_name <- "sigma_groupvar"
       hierarchical_name <- "hierarchical"
+      sigma_hierarchical_name <- "sigma_hierarchical"
       xvar_name <- "xvar"
       yvar_name <- "yvar"
       cov_name <- "cov"
@@ -3038,7 +3453,9 @@ bsitar <- function(x,
       fixed_name <- paste0("fixed", "_", ysi)
       random_name <- paste0("random", "_", ysi)
       groupvar_name <- paste0("groupvar", "_", ysi)
+      sigma_groupvar_name <- paste0("sigma_groupvar", "_", ysi)
       hierarchical_name <- paste0("hierarchical", "_", ysi)
+      sigma_hierarchical_name <- paste0("sigma_hierarchical", "_", ysi)
       xvar_name <- paste0("xvar", "_", ysi)
       yvar_name <- paste0("yvar", "_", ysi)
       cov_name <- paste0("cov", "_", ysi)
@@ -3063,8 +3480,15 @@ bsitar <- function(x,
     groupvarnamelist[[ii]] <- groupvar_name
     groupvarvaluelist[[ii]] <- group_arg_groupvar
     
+    
+    sigma_groupvarnamelist[[ii]] <- sigma_groupvar_name
+    sigma_groupvarvaluelist[[ii]] <- sigma_group_arg_groupvar
+    
     hierarchicalvarnamelist[[ii]] <- hierarchical_name
     hierarchicalvarvaluelist[[ii]] <- hierarchical_gr_names
+    
+    sigma_hierarchicalvarnamelist[[ii]] <- sigma_hierarchical_name
+    sigma_hierarchicalvarvaluelist[[ii]] <- sigma_hierarchical_gr_names
     
     xnamelist[[ii]] <- xvar_name
     xvarvaluelist[[ii]] <- xsi
@@ -3297,7 +3721,8 @@ bsitar <- function(x,
          multivariate$cor == "diagonal") |
         (!is.na(univariate_by$by) &
          univariate_by$cor == "diagonal") |
-        group_arg$cor == "diagonal") {
+        group_arg$cor == "diagonal" |
+        sigma_group_arg$cor == "diagonal") {
       # combine sd
       c_it <- "sd_"
       brmsinits_names <- names(brmsinits)
@@ -3721,6 +4146,27 @@ bsitar <- function(x,
     
     brmspriors <- brmspriors_brmsfit_sdcor
   }
+  
+  
+  
+  # if(sigma_set_higher_levels) {
+  #   brmspriors_sdcor <- brmspriors %>% 
+  #     dplyr::filter(class == 'sd' | class == 'cor')
+  #   brmspriors_sdcor_gr <- brmspriors_sdcor$group
+  #   
+  #   brmsfit_sdcor <- do.call(get_prior, brm_args) %>% 
+  #     dplyr::filter(class == 'sd' | class == 'cor')
+  #   
+  #   brmsfit_sdcor_prior_gr <- brmsfit_sdcor %>% 
+  #     dplyr::filter(!group %in%  brmspriors_sdcor_gr)
+  #   
+  #   brmspriors_brmsfit_sdcor <- brmspriors %>% 
+  #     dplyr::bind_rows(., brmsfit_sdcor_prior_gr)
+  #   
+  #   brmspriors <- brmspriors_brmsfit_sdcor
+  # }
+  
+  
   
   brm_args$prior <- brmspriors
   

@@ -1368,6 +1368,126 @@ prepare_priors <- function(prior_argument,
         
         
         
+        # location sigma fixed effects
+        
+        if (nlpar == "" & class == "b" & sigma_dpar == 'sigma') {
+          if (x_i == paste0("lm", empty_sufx)) {
+            if (sigma_form_0) {
+              lm_gsubby <- paste0("lm", "_", nlpar, "_", "all", resp_)
+            } else {
+              lm_gsubby <- paste0("lm", "_", nlpar, "", "", resp_)
+            }
+            eit <-  gsub("lm", lm_gsubby, x_i)
+            evaluated_parameter <- ept(eit)
+          } else if (x_i == paste0("ymean", empty_sufx)) {
+            eit <-  gsub("ymean", paste0("ymean", resp_), x_i)
+            evaluated_parameter <- ept(eit)
+          } else if (x_i == paste0("ymedian", empty_sufx)) {
+            eit <-  gsub("ymedian", paste0("ymedian", resp_), x_i)
+            evaluated_parameter <- ept(eit)
+          } else {
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
+              nlpar,
+              class,
+              allowed_parm_options,
+              splitmvar_w2
+            )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- ept(eit)
+            } else {
+              stop(
+                "location parameter options for distributional ",
+                sigma_dpar,
+                ", class ",
+                class,
+                " are:a numeric value (e.g., 2)",
+                "\n",
+                " or a charater such as zzz",
+                "\n with zzz defined in the prior_data",
+                "\n", 
+                " e.g., prior_data = list(zzz = 2)"
+              )
+            }
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements for distributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
+        
+        # print(class)
+        # print(sigma_dpar)
+        # print(cov_sigma_dpar)
+        # print(nsigma_cov)
+        
+        # location sigma cov beta
+        if (cov_sigma_dpar != "" & class == "b" & cov_sigma_dpar == 'sigma_cov' & 
+            !is.null(nsigma_cov)) {
+          if (x_i == paste0("lm", empty_sufx)) {
+            if (!sigma_form_0) {
+              # lm_gsubby <- paste0("lm", "_", nlpar, "_", "cov", resp_)
+            } else {
+              # lm_gsubby <- paste0("lm", "_", nlpar, "_", "cov", resp_)
+            }
+            # eit <-  gsub("lm", lm_gsubby, x_i)
+            # evaluated_parameter <- ept(eit)
+          } else {
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
+              nlpar,
+              class,
+              allowed_parm_options,
+              splitmvar_w2
+            )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- ept(eit)
+            } else {
+              stop(
+                "location parameter options for distributional ",
+                sigma_dpar,
+                ", class ",
+                class,
+                " are:\n a numeric value (e.g., 2)",
+                "or a charater such as zzz",
+                "\n with zzz defined in the prior_data",
+                "e.g., prior_data = list(zzz = 2)"
+              )
+            }
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements for distributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         # location a b c random effects
         if (nlpar == "a" & class == "sd" & grepl("a", randomsi)) {
           check_evalation_of_numeric_pdata_obj(
@@ -1675,6 +1795,84 @@ prepare_priors <- function(prior_argument,
         }
         
         
+        
+        
+        # location sigma random effects
+        if (nlpar == "" & class == "sd" & sigma_dpar == 'sigma') {
+          check_evalation_of_numeric_pdata_obj(
+            prior_argument,
+            p_str_in,
+            x_i,
+            x,
+            pname_,
+            dist,
+            nlpar,
+            class,
+            allowed_parm_options,
+            splitmvar_w2
+          )
+          if (is.numeric(eval(parse(text = x_i))) |
+              !is.null(eval(parse(text = x_i)))) {
+            eit <- x_i
+            evaluated_parameter <- ept(eit)
+          } else {
+            stop(
+              "location parameter options for distributional ",
+              sigma_dpar,
+              ", class ",
+              class,
+              " are:\n a numeric value (e.g., 2)",
+              "or a charater such as zzz",
+              "\n with zzz defined in the prior_data",
+              "e.g., prior_data = list(zzz = 2)"
+            )
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements for distributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
+        
+        # location sigma cov sd
+        if (cov_sigma_dpar != "" & class == "sd" & cov_sigma_dpar == 'sigma_cov' & 
+            !is.null(nsigma_cov_gr)) {
+          check_evalation_of_numeric_pdata_obj(
+            prior_argument,
+            p_str_in,
+            x_i,
+            x,
+            pname_,
+            dist,
+            nlpar,
+            class,
+            allowed_parm_options,
+            splitmvar_w2
+          )
+          if (is.numeric(eval(parse(text = x_i))) |
+              !is.null(eval(parse(text = x_i)))) {
+            eit <- x_i
+            evaluated_parameter <- ept(eit)
+          } else {
+            stop(
+              "location parameter options for distributional ",
+              sigma_dpar,
+              ", class ",
+              class,
+              " are:\n a numeric value (e.g., 2)",
+              "or a charater such as zzz",
+              "\n with zzz defined in the prior_data",
+              "e.g., prior_data = list(zzz = 2)"
+            )
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements for distributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
         
         
         
@@ -2256,6 +2454,103 @@ prepare_priors <- function(prior_argument,
         
         
         
+        # scale sigma fixed
+        if (nlpar == "" & class == "b" & sigma_dpar == "sigma") {
+          if (x_i == paste0("vsd", empty_sufx)) {
+            eit <-  gsub("vsd", paste0("vsd", resp_), x_i)
+            evaluated_parameter <- 1 * ept(eit)
+          } else if (x_i == paste0("vmad", empty_sufx)) {
+            eit <-  gsub("vmad", paste0("vmad", resp_), x_i)
+            evaluated_parameter <- 1 * ept(eit)
+          } else {
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
+              nlpar,
+              class,
+              allowed_parm_options,
+              splitmvar_w2
+            )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- 1 * ept(eit)
+            } else {
+              stop(
+                "scale parameter options for distributional ",
+                sigma_dpar,
+                ", class ",
+                class,
+                " are:\n a numeric value (e.g., 2) or a charater like zzz",
+                "\n with zzz defined in the prior_data", 
+                "e.g., prior_data = list(zzz = 2)"
+              )
+            }
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements for distributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
+        
+        
+        # scale a cov beta
+        if (cov_sigma_dpar != "" & class == "b" & cov_sigma_dpar == 'sigma_cov' & 
+            !is.null(nsigma_cov)) {
+          if (x_i == paste0("sdacov", empty_sufx)) {
+            eit <-  gsub("sdacov", paste0("acov_sd", resp_), x_i)
+            evaluated_parameter <- ept(eit)
+          } else {
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
+              nlpar,
+              class,
+              allowed_parm_options,
+              splitmvar_w2
+            )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- ept(eit)
+            } else {
+              stop(
+                "scale parameter options for distributional ",
+                sigma_dpar,
+                ", class ",
+                class,
+                " are:\n lm, ymean, ymedian, a numeric value (e.g., 2)",
+                "or a charater such as zzz",
+                "\n with zzz defined in the prior_data",
+                "e.g., prior_data = list(zzz = 2)"
+              )
+            }
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements fordistributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
+        
+        
+        
+        
+        
+        
+        
+        
         # scale a b c random effects
         if (nlpar == "a" & class == "sd" & grepl("a", randomsi)) {
           if (x_i == paste0("ysd", empty_sufx)) {
@@ -2597,6 +2892,102 @@ prepare_priors <- function(prior_argument,
                  nlpar,
                  " are greater than the parameter dimensions")
         }
+        
+        
+        
+        
+        
+        
+        # scale sigma fixed
+        if (nlpar == "" & class == "sd" & sigma_dpar == "sigma") {
+          if (x_i == paste0("vsd", empty_sufx)) {
+            eit <-  gsub("vsd", paste0("vsd", resp_), x_i)
+            evaluated_parameter <- 1 * ept(eit)
+          } else if (x_i == paste0("vmad", empty_sufx)) {
+            eit <-  gsub("vmad", paste0("vmad", resp_), x_i)
+            evaluated_parameter <- 1 * ept(eit)
+          } else {
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
+              nlpar,
+              class,
+              allowed_parm_options,
+              splitmvar_w2
+            )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- 1 * ept(eit)
+            } else {
+              stop(
+                "scale parameter options for distributional ",
+                sigma_dpar,
+                ", class ",
+                class,
+                " are:\n a numeric value (e.g., 2) or a charater like zzz",
+                "\n with zzz defined in the prior_data", 
+                "e.g., prior_data = list(zzz = 2)"
+              )
+            }
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements for distributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
+        
+        
+        # scale a cov beta
+        if (cov_sigma_dpar != "" & class == "sd" & sigma_dpar == "sigma" & 
+            !is.null(nsigma_cov)) {
+          if (x_i == paste0("sdacov", empty_sufx)) {
+            eit <-  gsub("sdacov", paste0("acov_sd", resp_), x_i)
+            evaluated_parameter <- ept(eit)
+          } else {
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
+              nlpar,
+              class,
+              allowed_parm_options,
+              splitmvar_w2
+            )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- ept(eit)
+            } else {
+              stop(
+                "scale parameter options for distributional ",
+                sigma_dpar,
+                ", class ",
+                class,
+                " are:\n lm, ymean, ymedian, a numeric value (e.g., 2)",
+                "or a charater such as zzz",
+                "\n with zzz defined in the prior_data",
+                "e.g., prior_data = list(zzz = 2)"
+              )
+            }
+          }
+          if (length(evaluated_parameter) < nrep_of_parms)
+            evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
+          if (length(evaluated_parameter) > nrep_of_parms)
+            stop("prior elements fordistributional ",
+                 sigma_dpar,
+                 " are greater than the parameter dimensions")
+        }
+        
         
         
         
@@ -3226,6 +3617,17 @@ prepare_priors <- function(prior_argument,
         prefix <- class
       if (dpar != "")
         prefix <- dpar
+      
+      
+      if (sigma_dpar == 'sigma' ) {
+        prefix <- 'sigma'
+      }
+      
+      if (cov_sigma_dpar == 'sigma_cov' ) {
+        prefix <- 'sigma_cov'
+      }
+      
+        print(prefix)
       
       
       if (setautocorr) {
@@ -4335,6 +4737,7 @@ prepare_priors <- function(prior_argument,
       'parm',
       'class',
       'dpar',
+      'sigma_dpar',
       'resp_',
       'dist',
       'lowerbound',
@@ -4365,6 +4768,7 @@ prepare_priors <- function(prior_argument,
     initial_out <- NULL
   }
   
+  # print(prior_str_arg_out)
   
   return(
     list(
