@@ -257,13 +257,19 @@ prepare_formula <- function(x,
   # substr(strsplit(sigma_formulasi, "~", fixed = T)[[1]][2], 1, 1) 
   # substr(strsplit(sigma_formula_grsi, "~", fixed = T)[[1]][2], 1, 1)  
   
+  # print(sigma_formulasi)
+  # print(sigma_formula_grsi)
   
-  if(!identical(substr(strsplit(sigma_formulasi, "~", fixed = T)[[1]][2], 1, 1),
-                substr(strsplit(sigma_formula_grsi, "~", fixed = T)[[1]][2], 1, 1))) {
-    stop("Formulae for sigma_formula and sigma_formula_gr should be identical",
-         "\n ", 
-         " in terms of Intercept i.e, both should be either ~ 0 or ~ 1")
+  if(!is.null(sigma_formulasi[[1]]) & !is.null(sigma_formula_grsi)) {
+    if(!identical(substr(strsplit(sigma_formulasi, "~", fixed = T)[[1]][2], 1, 1),
+                  substr(strsplit(sigma_formula_grsi, "~", fixed = T)[[1]][2], 1, 1))) {
+      stop("Formulae for sigma_formula and sigma_formula_gr should be identical",
+           "\n ", 
+           " in terms of Intercept i.e, both should be either ~ 0 or ~ 1")
+    }
   }
+  
+  
  
   if (!is.null(dpar_formulasi) & sigma_formulasi != 'NULL') {
     stop("Either use dpar_formula or sigma_formula")
@@ -923,19 +929,18 @@ prepare_formula <- function(x,
    #   sigma_hierarchical_gr_names <- c(sigma_gr_varss)
    # }
    
-  
-   if(!sigma_set_higher_levels & grepl("|", sigma_formula_grsi, fixed = TRUE)) {
-     extract_xx <- sigma_formula_grsi
-     extract_xx <- gsub("[[:space:]]", "", extract_xx)
-     extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
-     extract_xx <- gsub("\\)", "", extract_xx)
-     sigma_gr_varss <- sub(".*\\|", "", extract_xx) 
-     sigma_hierarchical_gr_names <- c(sigma_gr_varss)
-   }
-   
-   
-  
-   if(!sigma_set_higher_levels & !grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+  if(!is.null(sigma_formula_grsi)) {
+    if(!sigma_set_higher_levels & grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+      extract_xx <- sigma_formula_grsi
+      extract_xx <- gsub("[[:space:]]", "", extract_xx)
+      extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
+      extract_xx <- gsub("\\)", "", extract_xx)
+      sigma_gr_varss <- sub(".*\\|", "", extract_xx) 
+      sigma_hierarchical_gr_names <- c(sigma_gr_varss)
+    }
+  } else if(!sigma_set_higher_levels) { # & !grepl("|", sigma_formula_grsi, fixed = TRUE)
+    sigma_hierarchical_gr_names <- NULL
+  } else if(!sigma_set_higher_levels) {
      sigma_hierarchical_gr_names <- NULL
    }
   
@@ -1060,8 +1065,10 @@ prepare_formula <- function(x,
   
   if(sigma_set_higher_levels) { 
     sigma_group_arg_groupvar <- sigma_gr_varss
-  } else if(!sigma_set_higher_levels & !grepl("|", sigma_formula_grsi, fixed = TRUE)) {
-    sigma_group_arg_groupvar <- sigma_gr_varss
+  } else if(!is.null(sigma_formula_grsi)) {
+    if(!sigma_set_higher_levels & !grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+      sigma_group_arg_groupvar <- sigma_gr_varss
+    }
   } else if(!is.null(sigma_group_arg)) {
     sigma_group_arg_groupvar <- sigma_group_arg$groupvar
   } else {

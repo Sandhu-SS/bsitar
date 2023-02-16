@@ -1447,7 +1447,7 @@ set_priors_initials <- function(a_prior_beta,
         }
       }
       
-      print(sigma_formulasi)
+    
       # sigma cov - betas
       if (!grepl("~0", sigma_formulasi, fixed = T)) {
         if (class == 'b' & grepl("sigma_cov", x) & !is.null(sigma_cov_prior_beta)) {

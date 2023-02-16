@@ -3627,8 +3627,7 @@ prepare_priors <- function(prior_argument,
         prefix <- 'sigma_cov'
       }
       
-        print(prefix)
-      
+
       
       if (setautocorr) {
         add_cla_to_name <- NULL
