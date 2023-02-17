@@ -293,7 +293,7 @@ fitting model with hierarchical structure greater than two levels. See
 
 \item{sigma_formula}{formula for modelling distributional parameter sigma.
 (default \code{NULL}). This is only useful when including covariates(s) for
-sigma. The \link[brms:brm]{brms::brm} by defaults function includes an intercept for the
+sigma. The \code{\link[brms:brm]{brms::brm()}} by defaults function includes an intercept for the
 residual standard deviation parameter (i.e,, sigma). The
 \code{sigma_formula} along with \code{sigma_formula_gr} and
 \code{sigma_formula_gr_str} arguments allows specifying hierarchical
@@ -330,10 +330,10 @@ See \code{a_formula_gr_str} for further details.}
 
 \item{dpar_formula}{formula for distributional parameter sigma (default
 \code{NULL}). This is only useful when modelling the sigma (i.e., residual
-standard deviation parameter). By default, the \link[brms:brm]{brms::brm} function includes
+standard deviation parameter). By default, the \code{\link[brms:brm]{brms::brm()}} function includes
 the intercept for the residual standard deviation parameter (i.e,, sigma).
 The default setting for \code{dpar_formula} is NULL which implements the
-default behaviour of the \link[brms:brm]{brms::brm} function. Also note that
+default behaviour of the \code{\link[brms:brm]{brms::brm()}} function. Also note that
 \code{dpar_formula} can not be specified along with \code{sigma_formula},
 \code{sigma_formula_gr}, or \code{sigma_formula_gr_str}. See
 \code{sigma_formula} for relative advantages and disadvantages of using
@@ -349,7 +349,7 @@ brms package for further details on order p and q and setting up
 autocorrelation structures.}
 
 \item{family}{response distribution and link function to be used in the model.
-The default is gaussian(). See \link[brms:brm]{brms::brm} function for details. For
+The default is gaussian(). See \code{\link[brms:brm]{brms::brm()}} function for details. For
 univariate-by-subgroup model (specified by using the \code{univariate_by}
 argument) and multivariate model (specified by using the \code{multivariate}
 argument), the \code{family} could be same \code{family = gaussian()} or
@@ -367,7 +367,7 @@ correlation structure (cor = un) models the full varinace covarinace
 structure whereas the diagonal correlation structure (cor = diagonal)
 estimates only the variance (i.e, standard deviation) parameters
 (correlation parameters are set to zero). For further details, see
-\link[brms:brm]{brms::brm} function (\bold{Group-level terms}). Note that only the groupvar
+\code{\link[brms:brm]{brms::brm()}} function (\bold{Group-level terms}). Note that only the groupvar
 suboption of the \code{group_arg} is passed to the univariate-by-subgroup
 \code{univariate_by} and the multivariate (specified by using the
 \code{multivariate} model fittings. Lastly, the \code{group_arg} is
@@ -408,14 +408,14 @@ The default setting for correlation is un.}
 
 \item{a_prior_beta}{Set priors on the the fixed effect a parameter. The
 allowed distributions are normal, student_t, cauchy, lognormal, uniform,
-exponential, gamma, inverse gamma. See \link[brms:set_prior]{brms::prior} function for details on
+exponential, gamma, inverse gamma. See \code{\link[brms:set_prior]{brms::prior()}} function for details on
 priors. For each distibution, suboption allows for setting upper and lower
 bounds (default NA, i.e., lb = NA, ub = NA). For location scale based
 distributions which include the normal, student_t, cauchy and lognormal
 distributions, option autosclae (default FALSE) is provided to multiply the
 scale parameter as typically done in the rstanarm package. The rstanarm sets
 the autosclae as 2.5 whereas the brms package sets its to 1 or 2.5 depending
-on the standard deviation of the outcome (See \link[brms:set_prior]{brms::prior} function for
+on the standard deviation of the outcome (See \code{\link[brms:set_prior]{brms::prior()}} function for
 details). The 'bsitar' package offers the flexibility of choosing the value
 for the autosclae. For convinience purposes, lower bound as zero is
 automatically set for the positive distributions (such as lognormal,
@@ -577,28 +577,28 @@ parameter. Approach is same as described earlier for the
 \item{sigma_prior_beta}{Set priors on the the fixed effect distributional
 parameter \code{sigma}. The allowed distributions are normal, student_t,
 cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
-\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_prior_beta} for
+\code{\link[brms:set_prior]{brms::prior()}} function for details on priors. See \code{a_prior_beta} for
 full details on how to specify priors including various subptional
 available.}
 
 \item{sigma_cov_prior_beta}{Set priors on the covariate(s) for the the fixed
 effect distributional parameter \code{sigma}. The allowed distributions are
 normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
-gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
+gamma. See \code{\link[brms:set_prior]{brms::prior()}} function for details on priors. See
 \code{a_cov_prior_beta} for full details on how to specify priors including
 various suboptions available.}
 
 \item{sigma_prior_sd}{Set priors on the the random effect distributional
 parameter \code{sigma}. The allowed distributions are normal, student_t,
 cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
-\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_cov_prior_beta}
+\code{\link[brms:set_prior]{brms::prior()}} function for details on priors. See \code{a_cov_prior_beta}
 for full details on how to specify priors including various subptional
 available.}
 
 \item{sigma_cov_prior_sd}{Set priors on the covariate(s) for the the random
 effect distributional parameter \code{sigma}. The allowed distributions are
 normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
-gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
+gamma. See \code{\link[brms:set_prior]{brms::prior()}} function for details on priors. See
 \code{a_cov_prior_sd} for full details on how to specify priors including
 various suboptions available.}
 
@@ -1029,7 +1029,7 @@ package is used for parallel execution of the chains and argument
 session via the \code{"future"} option. The execution type is controlled via
 \code{\link[future:plan]{plan}} (see the examples section below).}
 
-\item{...}{Further arguments passed to \link[brms:brm]{brms::brm}}
+\item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}}
 }
 \value{
 An object of class \code{brmsfit, bsiatr}, that contains the posterior
@@ -1095,10 +1095,10 @@ range of prior specifications that encourage the users to apply prior
 distributions that actually reflect their prior knowledge about the human
 growth processes such as the timing of the age at peak growth velocity. The
 model fit to the data can evaluated by means of posterior predictive check
-(see \link[brms:pp_check.brmsfit]{brms::pp_check}). Furthermore, models with different priors and/or
+(see \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}). Furthermore, models with different priors and/or
 growth curves (i.e., with different \code{df} for splines) can be easily be
 evaluated and compared by using methods available in the \emph{brms} package,
-such as the leave one out cross validation (see \link[brms:loo.brmsfit]{brms::loo}). The excellent
+such as the leave one out cross validation (see \code{\link[brms:loo.brmsfit]{brms::loo()}}). The excellent
 post-processing support offered by the \emph{brms} is further augmented by custom
 functions provided in the \strong{bsitar} that allows for predicting and
 visualizing population average and individual specific distance and growth
@@ -1111,7 +1111,7 @@ univariate, univariate-by-subgroup model, and multivariate. The
 univariate-by-subgroup model fits two or more separate models for an outcome
 defined by a factor variable (e.g, sex). The data is typically stacked and
 the factor variable is used to set-up the sub models by using the 'subset'
-option available in the \link[brms:brm]{brms::brm} function. The multivariate model
+option available in the \code{\link[brms:brm]{brms::brm()}} function. The multivariate model
 specification allows simultaneous modelling of two or more outcomes with
 joint a distribution of random effects. For both univariate-by-subgroup and
 multivariate model fitting, the \strong{bsitar} package allows full flexibility
@@ -1255,7 +1255,7 @@ plot(conditional_effects(fit_male_female, deriv = 1, resp = 'height2'))
 \insertAllCited{}
 }
 \seealso{
-\link[brms:brm]{brms::brm} \link[brms:brmsformula]{brms::brmsformula} \link[brms:set_prior]{brms::prior}
+\code{\link[brms:brm]{brms::brm()}} \code{\link[brms:brmsformula]{brms::brmsformula()}} \code{\link[brms:set_prior]{brms::prior()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
