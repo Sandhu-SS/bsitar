@@ -1229,10 +1229,24 @@ set_priors_initials <- function(a_prior_beta,
           }
           
           # brms does not allow Intercept as coef name for dpar sigma with ~1
+          # But this only when covaritae missing 
           if (sigma_dpar == 'sigma') {
             dpar <- sigma_dpar
-            if(ept(mnf)) coef <- sigma_covcoefnames
-            if(!ept(mnf)) coef <- "" # sigma_covcoefnames
+            if(ept(mnf)) {
+              coef <- sigma_covcoefnames
+            }
+            if(!ept(mnf)) {
+              if (nlpar == '' & sigma_dpar != '' & length(sigma_covcoefnames) == 1 &
+                  sigma_covcoefnames[1] == "Intercept" ) {
+                coef <- ""
+                class <- sigma_covcoefnames
+              }
+             if (nlpar == '' & sigma_dpar != '' & grepl("+", sigma_formulasi, fixed = T)
+                 ) {
+                coef <- ""
+                class <- 'Intercept'
+              }
+            }
           }
           
         } else {
@@ -1249,10 +1263,10 @@ set_priors_initials <- function(a_prior_beta,
             if (!s_form_0 & !is.null(nscov))
               coef <- coef[1]
           }
-          if (sigma_dpar == 'sigma') {
-            dpar <- sigma_dpar
-            coef <- rep("", length(sigma_covcoefnames))
-          }
+          # if (sigma_dpar == 'sigma') {
+          #   dpar <- sigma_dpar
+          #   coef <- rep("", length(sigma_covcoefnames))
+          # }
             
         }
       }
@@ -1267,6 +1281,16 @@ set_priors_initials <- function(a_prior_beta,
         } else {
           setcoef <- coef
         }
+        
+        # if (!grepl("^~1$", sigma_formulasi, fixed = T)) {
+        #   setcoef <- coef
+        #   class <- class
+        # }
+        # if (grepl("^~1$", sigma_formulasi, fixed = T)) {
+        #   setcoef <- coef
+        #   class <- class
+        # }
+        
         priors_ <-
           prior_string(
             define_,
@@ -1366,7 +1390,7 @@ set_priors_initials <- function(a_prior_beta,
       
       
       # nlpar cov a - betas
-      if (!grepl("~0", a_formulasi, fixed = T)) {
+      if (!grepl("~0", a_formulasi, fixed = T) ) {
         if (class == 'b' & grepl("a_cov", x) & !is.null(a_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- acovcoefnames
@@ -1387,7 +1411,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       # nlpar cov b - betas
-      if (!grepl("~0", b_formulasi, fixed = T)) {
+      if (!grepl("~0", b_formulasi, fixed = T) ) {
         if (class == 'b' & grepl("b_cov", x) & !is.null(b_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- bcovcoefnames
@@ -1407,7 +1431,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       # nlpar cov c - betas
-      if (!grepl("~0", c_formulasi, fixed = T)) {
+      if (!grepl("~0", c_formulasi, fixed = T) ) {
         if (class == 'b' & grepl("c_cov", x) & !is.null(c_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- ccovcoefnames
@@ -1428,7 +1452,7 @@ set_priors_initials <- function(a_prior_beta,
       
       
       # nlpar cov d - betas
-      if (!grepl("~0", d_formulasi, fixed = T)) {
+      if (!grepl("~0", d_formulasi, fixed = T) ) {
         if (class == 'b' & grepl("d_cov", x) & !is.null(d_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- dcovcoefnames
@@ -1449,15 +1473,17 @@ set_priors_initials <- function(a_prior_beta,
       
     
       # sigma cov - betas
-      if (!grepl("~0", sigma_formulasi, fixed = T)) {
-        if (class == 'b' & grepl("sigma_cov", x) & !is.null(sigma_cov_prior_beta)) {
+      if (!grepl("~0", sigma_formulasi, fixed = T) ) {
+        class_org <- class
+        if (grepl("sigma_cov", x) & !is.null(sigma_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- sigma_covcoefnames
           } else {
             coef <- sigma_covcoefnames[2:length(sigma_covcoefnames)]
+            class <- c( rep('b', length(sigma_covcoefnames[-1])))
           }
-          
-          print(coef)
+         
+      
           dpar <- sigma_dpar
           priors_ <-
             prior_string(
@@ -1470,7 +1496,10 @@ set_priors_initials <- function(a_prior_beta,
             )
           
         }
+        class <- class_org
       }
+      
+      
       
       # nlpar cov s - betas
       if (!grepl("~0", s_formulasi, fixed = T)) {
@@ -1506,13 +1535,14 @@ set_priors_initials <- function(a_prior_beta,
       # mnc <- paste0("cov_nlpar")
       
       if(nlpar != '') {
-        mnf <- paste0(nlpar, "_form_0")
+        mnf <- paste0(nlpar, "_form_0_gr")
         mnc <- paste0("cov_nlpar")
       }
       if(sigma_dpar == 'sigma' | cov_sigma_dpar == 'sigma_cov') {
-        mnf <- paste0('sigma', "_form_0")
+        mnf <- paste0('sigma', "_form_0_gr")
         mnc <- paste0("cov_sigma_dpar")
       }
+      
       
       
       if (nlpar == 'a')
@@ -1752,7 +1782,7 @@ set_priors_initials <- function(a_prior_beta,
       if (!is.null(dpar_covi_mat_form) &
           !grepl("~1$", dpar_covi_mat_form, fixed = F)) {
         class <- 'b'
-        mnf <- paste0(dpar, "_form_0")
+        mnf <- paste0('dpar', "_form_0")
         mnc <- paste0("dpar_cov")
         
         if (dist != 'uniform' &
@@ -1789,6 +1819,7 @@ set_priors_initials <- function(a_prior_beta,
           } else {
             setcoef <- coef
           }
+          
           priors_ <-
             prior_string(
               define_,
@@ -1815,6 +1846,7 @@ set_priors_initials <- function(a_prior_beta,
               setcoef <- coef
             }
           }
+          
           priors_ <-
             prior_string(
               define_,
@@ -1887,6 +1919,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
+      
       if (!is.null(dpar_covi_mat_form) &
           grepl("~1$", dpar_covi_mat_form, fixed = F)) {
         if (grepl("center=T", dpar_formulasi) |
@@ -1897,6 +1930,7 @@ set_priors_initials <- function(a_prior_beta,
           class <- 'b'
           coef  <- dparcovcoefnames[1]
         }
+        
         priors_ <-
           prior_string(
             define_,

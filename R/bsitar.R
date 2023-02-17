@@ -1317,6 +1317,13 @@ bsitar <- function(x,
   brms_arguments <- list()
   brms_arguments <- mget(brms_arguments_list)
   
+  if (eval(brms_arguments$backend) != "rstan" &
+      eval(brms_arguments$backend) != "cmdstanr") {
+    stop("The backend argument must be either 'rstan' or 'cmdstanr'",
+         "\n ",
+         "\ Please check it which you have specified as: ", 
+         eval(brms_arguments$backend))
+  }
   
   
   ept <- function(x)
@@ -3934,6 +3941,7 @@ bsitar <- function(x,
              verbose,
              setarguments,
              brmsdots) {
+      
       exc_args <- c("formula", "prior", "stanvars", "init", "data")
       if (eval(setarguments$backend) == "rstan")
         exc_args <- c(exc_args, "stan_model_args")
@@ -4230,15 +4238,34 @@ bsitar <- function(x,
     # If initials are 0 or random, then set custom init to NULL
     
     if(brm_args$backend == "rstan") {
-      if(brm_args$init == "0" | brm_args$init == "random") {
-        init_custom <- NULL
+      if(length(brm_args$init) == 1) {
+        if(brm_args$init == "0") {
+          init_custom <- NULL
+        } else if(brm_args$init == "random") {
+          init_custom <- NULL
+        } else {
+          init_custom <- init_custom
+        }
+      } else {
+        init_custom <- init_custom
       }
     }
+    
+    
+   
     if(brm_args$backend == "cmdstanr") {
       if(is.null(brm_args$init)) {
         init_custom <- NULL
-      } else if(brm_args$init == "0") {
-        init_custom <- NULL
+      } else if(length(brm_args$init) == 1) {
+        if(brm_args$init == "0") {
+          init_custom <- NULL
+        } else if(brm_args$init == "random") {
+          init_custom <- NULL
+        } else if(brm_args$init == 0) {
+          init_custom <- NULL
+        } else {
+          init_custom <- init_custom
+        }
       } else {
         init_custom <- init_custom
       }

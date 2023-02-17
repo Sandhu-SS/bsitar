@@ -96,12 +96,14 @@ prepare_initials <- function(init_argument,
     assign(init_argument_z, "prior")
   }
   
-  
   check_form_0 <- paste0(parm, "_", 'form_0')
   nparcov <- paste0("n", parm, "cov")
   
   check_form_0_gr <- paste0(parm, "_", 'form_0_gr')
-  nparcov_gr <- paste0("n", parm, "cov_gr")
+  # nparcov_gr <- paste0("n", parm, "cov_gr")
+  
+  if(parm != 'sigma') nparcov_gr <- paste0("n", parm, "cov_gr")
+  if(parm == 'sigma') nparcov_gr <- paste0("n", parm, "_", "cov_gr")
   
   check_sigma_form_0 <- paste0('sigma', "_", 'form_0')
   

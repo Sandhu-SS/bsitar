@@ -1075,7 +1075,28 @@ prepare_formula <- function(x,
     sigma_group_arg_groupvar <- NULL
   }
   
+  if(!is.null(sigma_formula_grsi)) {
+    if(!sigma_set_higher_levels & 
+       grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+      sigma_group_arg_groupvar <- sigma_gr_varss
+    }
+    
+    if(!sigma_set_higher_levels & 
+       !grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+      sigma_group_arg_groupvar <- gr_varss
+    }
+    
+  }
+  
+  
+  
+  
+  
+  # if(!sigma_set_higher_levels & is.null(sigma_formula_grsi)) {
+  #   sigma_group_arg_groupvar <- NULL
+  # }
 
+  
   # fit lm model
   
   getcovlist <- function(x) {

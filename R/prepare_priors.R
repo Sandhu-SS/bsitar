@@ -4728,7 +4728,12 @@ prepare_priors <- function(prior_argument,
   # initials
   
   if (initsi != "random") {
-    parm <- nlpar
+    # parm <- nlpar
+    if(sigma_dpar == 'sigma')  {
+      parm <- sigma_dpar
+    } else {
+      parm <- nlpar
+    }
     stanvars_datazz <- stanvars_data
     pstrarg <- prior_str_arg_out
     
