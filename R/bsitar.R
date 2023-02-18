@@ -2361,102 +2361,6 @@ bsitar <- function(x,
   
   # Prepare data for 'bsitar'
   
-  # make_bsitar_data <- function(data, uvarby, ys, mvar = FALSE, 
-  #                              xfuns = NULL, yfuns = NULL,
-  #                              verbose = FALSE, ...) {
-  #  
-  #   org.data <- data
-  #   if (!(is.na(uvarby) | uvarby == "NA")) {
-  #     # org.ys <- ys[1]
-  #     if (!uvarby %in% colnames(data)) {
-  #       stop(
-  #         paste(
-  #           "\nvariable",
-  #           uvarby,
-  #           "used for setting univariate submodels is missing"
-  #         )
-  #       )
-  #     }
-  #     if (!is.factor(data[[uvarby]])) {
-  #       stop("subset by variable '",
-  #            uvarby,
-  #            "' should be a factor variable")
-  #     }
-  #     for (l in levels(data[[uvarby]])) {
-  #       data[[l]] <- data[[ys[1]]]
-  #     }
-  #     unibyimat <-
-  #       model.matrix( ~ 0 + eval(parse(text = uvarby)), data)
-  #     subindicators <- paste0(uvarby, levels(data[[uvarby]]))
-  #     colnames(unibyimat) <- subindicators
-  #     ys <- levels(data[[uvarby]])
-  #     data <- as.data.frame(cbind(data, unibyimat))
-  #     if (verbose) {
-  #       resvcts_ <- levels(data[[uvarby]])
-  #       resvcts <- paste0(resvcts_, collapse = " ")
-  #       setmsgtxt <- paste0(
-  #         "\n For univariate-by-subgroup model fitting for variable '",
-  #         uvarby,
-  #         "'",
-  #         " (specified via 'univariate_by' argument)",
-  #         "\n ",
-  #         resvcts,
-  #         " response vectors created based on the factor levels",
-  #         "\n\n ",
-  #         "Please check corresponding arguments list.",
-  #         " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
-  #         resvcts_[1],
-  #         ", and  df = 5 is for ",
-  #         resvcts_[2],
-  #         " (and similalry knots, priors, initials etc)",
-  #         "\n\n ",
-  #         "If it does't correspond correctly, then either reverse the list ",
-  #         "arguments\n such as df = list(5, 4),",
-  #         " or else reverse sort the order of factor levels"
-  #       )
-  #       if (displayit == 'msg') {
-  #         message(setmsgtxt)
-  #       } else if (displayit == 'col') {
-  #         col <- setcolb
-  #         cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
-  #       }
-  #     }
-  #     attr(data, "ys") <- ys
-  #     attr(data, "multivariate") <- FALSE
-  #     attr(data, "uvarby") <- uvarby
-  #     attr(data, "subindicators") <- subindicators
-  #     data_out <- data
-  #   } else if(mvar) { # not yet included
-  #     for(myfunsi in 1:length(ys)) {
-  #       mysi <- ys[[myfunsi]]
-  #       myfunsi <- yfuns[[myfunsi]]
-  #       if(grepl('.Primitive', myfunsi, fixed = T) & 
-  #          grepl('log', myfunsi, fixed = T)) {
-  #         myfunsi <- 'log'
-  #       }
-  #       if(grepl('.Primitive', myfunsi, fixed = T) & 
-  #          grepl('sqrt', myfunsi, fixed = T)) {
-  #         myfunsi <- 'sqrt'
-  #       }
-  #       if(myfunsi == 'log') data[[mysi]] <- log(data[[mysi]])
-  #       if(myfunsi == 'sqrt') data[[mysi]] <- sqrt(data[[mysi]])
-  #     }
-  #     data_out <- org.data
-  #     attr(data, "ys") <- ys
-  #     attr(data, "multivariate") <- TRUE
-  #     attr(data, "uvarby") <- NULL
-  #     attr(data, "subindicators") <- NULL
-  #   } else {
-  #     data_out <- org.data
-  #     attr(data, "ys") <- ys
-  #     attr(data, "multivariate") <- FALSE
-  #     attr(data, "uvarby") <- NULL
-  #     attr(data, "subindicators") <- NULL
-  #   }
-  #   return(data)
-  # }
-  
-  
   if (verbose) {
     setmsgtxt <- paste0("\n Preparing data")
     if (displayit == 'msg') {
@@ -2475,6 +2379,10 @@ bsitar <- function(x,
   if(is.list(yfuns) & length(yfuns) == 0) {
     yfuns <- rep('NULL', length(ys))
   }
+  
+  # This data.org.in as specified will be saved in model_info
+  
+  data.org.in <- data
   
   data <- make_bsitar_data(data, 
                            univariate_by$by, 
@@ -4521,7 +4429,7 @@ bsitar <- function(x,
   model_info[['xfuns']] <- xfuns
   model_info[['yfuns']] <- yfuns
   
-  model_info[['bsitar.data']] <- dataout
+  model_info[['bsitar.data']] <- data.org.in
   
   model_info[['call.bsitar']] <- mcall_
   
