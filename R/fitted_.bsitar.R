@@ -91,7 +91,6 @@ fitted_.bsitar <-
                              xrange = xrange)
     }
     
-    
     assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
     
     . <- fitted(model,

@@ -1,4 +1,8 @@
 
+
+
+
+
 get.newdata <- function(model, newdata, resp, 
                         numeric_cov_at = NULL, 
                         levels_id = NULL,
@@ -9,6 +13,9 @@ get.newdata <- function(model, newdata, resp,
   } else if (!is.null(resp)) {
     resp_rev_ <- paste0("_", resp)
   }
+  
+  validate_response(model, resp)
+  
   list_c <- list()
   xvar_ <- paste0('xvar', resp_rev_)
   yvar_ <- paste0('yvar', resp_rev_)
@@ -16,6 +23,7 @@ get.newdata <- function(model, newdata, resp,
   xvar <- model$model_info[[xvar_]]
   yvar <- model$model_info[[yvar_]]
   hierarchical_ <- paste0('hierarchical', resp_rev_)
+ 
   if(is.null(levels_id)) {
     IDvar <- model$model_info[[groupvar_]]
     if(!is.null(model$model_info[[hierarchical_]])) {
@@ -25,24 +33,52 @@ get.newdata <- function(model, newdata, resp,
     IDvar <- levels_id
   }
   
+  xfun_ <- paste0('xfun', resp_rev_)
+  yfun_ <- paste0('yfun', resp_rev_)
+  xfun <- model$model_info[[xfun_]]
+  yfun <- model$model_info[[yfun_]]
+  
   
   cov_ <- paste0('cov', resp_rev_)
   uvarby <- model$model_info$univariate_by
   
-  if (is.null(newdata) & is.na(model$model_info$univariate_by)) {
-    newdata <- model$data
+  # if (is.null(newdata) & is.na(model$model_info$univariate_by)) {
+  #   newdata <- model$data
+  # }
+  
+  
+  if (is.null(newdata)) {
+    newdata <- eval.parent(model$model_info$call.bsitar$data)
+  } else {
+    newdata = newdata
   }
+  
+  
+  
+  if(!is.null(yfun)) {
+    # if(yfun == 'log') newdata[[yvar]] <- log(newdata[[yvar]])
+    # if(yfun == 'sqrt') newdata[[yvar]] <- sqrt(newdata[[yvar]] )
+  }
+  
+  
   
   if(!is.na(model$model_info$univariate_by)) {
     if (is.null(newdata)) {
-      newdata_ <- eval.parent(model$model_info$call.bsitar$data)
+      # newdata_ <- eval.parent(model$model_info$call.bsitar$data)
+      newdata_ <- newdata
     } else  if (!is.null(newdata)) {
       newdata_ <- newdata
     }
+    
+    
+    
     newdata <- model$model_info$make_bsitar_data(newdata_,
                                                  model$model_info$univariate_by,
-                                                 model$model_info$org.ycall)
-    
+                                                 model$model_info$multivariate,
+                                                 model$model_info$ys,
+                                                 model$model_info$xfuns,
+                                                 model$model_info$yfuns)
+  
     sortbylayer <- NA
     newdata <- newdata %>%
       dplyr::mutate(sortbylayer =
@@ -55,6 +91,7 @@ get.newdata <- function(model, newdata, resp,
                                                levels = 
                                                  unique(!!as.name(IDvar)))) %>% 
       dplyr::select(-sortbylayer)
+    
     subindicatorsi <- model$model_info$subindicators[grep(resp, model$model_info$ys)]
     list_c[['subindicatorsi']] <- subindicatorsi
     list_c[['uvarby']] <- uvarby
@@ -368,7 +405,10 @@ get.newdata <- function(model, newdata, resp,
       if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
         newdata <- model$model_info$make_bsitar_data(newdata,
                                                      model$model_info$univariate_by,
-                                                     model$model_info$org.ycall)
+                                                     model$model_info$multivariate,
+                                                     model$model_info$ys,
+                                                     model$model_info$xfuns,
+                                                     model$model_info$yfuns)
         sortbylayer <- NA
         newdata <- newdata %>%
           dplyr::mutate(sortbylayer =
@@ -422,7 +462,7 @@ get.newdata <- function(model, newdata, resp,
   
   attr(newdata, 'list_c') <- list_c
   
-  newdata 
+  return(newdata) 
 } # get.newdata
 
 
@@ -472,5 +512,158 @@ get.cores <- function(cores.arg) {
   }
   
   list(max.cores = max.cores, .cores_ps = .cores_ps)
+}
+
+
+
+
+
+
+
+validate_response <- function(model, resp = NULL) {
+  if (model$model_info$nys == 1 & !is.null(resp)) {
+    stop(
+      "You have fit a univariate model",
+      " but set resp option as ",
+      resp,
+      ".",
+      "\n ",
+      " The resp option should be appropriately set to NULL",
+      "\n ",
+      " (i.e., resp = NULL)"
+    )
+  }
+  if (model$model_info$nys > 1 & is.null(resp)) {
+    if (!is.na(model$model_info$univariate_by)) {
+      stop(
+        "You have fit a univariate-by-subset model for ",
+        model$model_info$univariate_by,
+        "\n ",
+        " but dit not set the the resp options appropriately",
+        " (which is NULL at present).",
+        "\n ",
+        " The response options are ",
+        paste(model$model_info$ys, collapse = ", ")
+      )
+    }
+    if (model$model_info$multivariate) {
+      stop(
+        "You have fit a multivariate model ",
+        "\n ",
+        " but dit not set the the resp options appropriately",
+        " (which is NULL at present).",
+        "\n ",
+        " The response options are ",
+        paste(model$model_info$ys, collapse = ", ")
+      )
+    }
+  }
+  if(!resp %in% model$model_info[['ys']]) {
+    stop("Response should be one of the following: ", 
+         paste(model$model_info[['ys']], collapse = " "),
+         "\n ",
+         " but you have specified: ", resp)
+  }
+}
+
+
+
+
+
+
+
+make_bsitar_data <- function(data, uvarby, mvar = FALSE, 
+                             ys, 
+                             xfuns = NULL, yfuns = NULL) {
+  
+  org.data <- data
+  if (!(is.na(uvarby) | uvarby == "NA")) {
+    # org.ys <- ys[1]
+    if (!uvarby %in% colnames(data)) {
+      stop(
+        paste(
+          "\nvariable",
+          uvarby,
+          "used for setting univariate submodels is missing"
+        )
+      )
+    }
+    if (!is.factor(data[[uvarby]])) {
+      stop("subset by variable '",
+           uvarby,
+           "' should be a factor variable")
+    }
+    for (l in levels(data[[uvarby]])) {
+      data[[l]] <- data[[ys[1]]]
+    }
+    unibyimat <-
+      model.matrix( ~ 0 + eval(parse(text = uvarby)), data)
+    subindicators <- paste0(uvarby, levels(data[[uvarby]]))
+    colnames(unibyimat) <- subindicators
+    ys <- levels(data[[uvarby]])
+    data <- as.data.frame(cbind(data, unibyimat))
+    # if (verbose) {
+    #   resvcts_ <- levels(data[[uvarby]])
+    #   resvcts <- paste0(resvcts_, collapse = " ")
+    #   setmsgtxt <- paste0(
+    #     "\n For univariate-by-subgroup model fitting for variable '",
+    #     uvarby,
+    #     "'",
+    #     " (specified via 'univariate_by' argument)",
+    #     "\n ",
+    #     resvcts,
+    #     " response vectors created based on the factor levels",
+    #     "\n\n ",
+    #     "Please check corresponding arguments list.",
+    #     " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
+    #     resvcts_[1],
+    #     ", and  df = 5 is for ",
+    #     resvcts_[2],
+    #     " (and similalry knots, priors, initials etc)",
+    #     "\n\n ",
+    #     "If it does't correspond correctly, then either reverse the list ",
+    #     "arguments\n such as df = list(5, 4),",
+    #     " or else reverse sort the order of factor levels"
+    #   )
+    #   if (displayit == 'msg') {
+    #     message(setmsgtxt)
+    #   } else if (displayit == 'col') {
+    #     col <- setcolb
+    #     cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+    #   }
+    # }
+    attr(data, "ys") <- ys
+    attr(data, "multivariate") <- FALSE
+    attr(data, "uvarby") <- uvarby
+    attr(data, "subindicators") <- subindicators
+    data_out <- data
+  } else if(mvar) { # not yet included
+    for(myfunsi in 1:length(ys)) {
+      mysi <- ys[[myfunsi]]
+      myfunsi <- yfuns[[myfunsi]]
+      if(grepl('.Primitive', myfunsi, fixed = T) & 
+         grepl('log', myfunsi, fixed = T)) {
+        myfunsi <- 'log'
+      }
+      if(grepl('.Primitive', myfunsi, fixed = T) & 
+         grepl('sqrt', myfunsi, fixed = T)) {
+        myfunsi <- 'sqrt'
+      }
+      if(myfunsi == 'log') data[[mysi]] <- log(data[[mysi]])
+      if(myfunsi == 'sqrt') data[[mysi]] <- sqrt(data[[mysi]])
+    }
+    data_out <- org.data
+    attr(data, "ys") <- ys
+    attr(data, "multivariate") <- TRUE
+    attr(data, "uvarby") <- NULL
+    attr(data, "subindicators") <- NULL
+  } else {
+    data_out <- org.data
+    attr(data, "ys") <- ys
+    attr(data, "multivariate") <- FALSE
+    attr(data, "uvarby") <- NULL
+    attr(data, "subindicators") <- NULL
+  }
+  return(data)
 }
 

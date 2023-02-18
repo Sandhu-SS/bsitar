@@ -488,6 +488,8 @@ gparameters.bsitar <- function(model,
     
     list2env(arguments, envir = parent.env(new.env()))
     
+    
+    
     probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
     probtitles <- probs[order(probs)] * 100
     probtitles <- paste("Q", probtitles, sep = "")
@@ -506,24 +508,27 @@ gparameters.bsitar <- function(model,
     }
     
     
-    if(is.null(newdata)) {
+ #   if(is.null(newdata)) {
       newdata <- get.newdata(model, newdata = newdata, 
                              resp = resp, 
                              numeric_cov_at = numeric_cov_at,
                              levels_id = levels_id,
                              ipts = ipts,
                              xrange = xrange)
-    }
+    # } else {
+    #   newdata <- newdata
+    # }
     
     
     list_c <- attr(newdata, 'list_c')
     
+
     for (list_ci in names(list_c)) {
       assign(list_ci, list_c[[list_ci]])
     }
     check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
                  'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
-    
+ 
     for (check___ in check__) {
       if(!exists(check___)) assign(check___, NULL)
     }
@@ -589,6 +594,7 @@ gparameters.bsitar <- function(model,
         } else if (is.null(groupby_fstr)) {
           groupby_fstr_xvars <- c(xvar)
         }
+        
         newdata <- newdata %>%
           dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
           dplyr::slice(1) %>% dplyr::ungroup()
@@ -706,6 +712,8 @@ gparameters.bsitar <- function(model,
                            levels_id = levels_id,
                            ipts = ipts,
                            xrange = xrange)
+    
+    
     
     list_c <- attr(newdata, 'list_c')
     for (list_ci in names(list_c)) {

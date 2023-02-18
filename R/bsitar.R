@@ -2334,75 +2334,101 @@ bsitar <- function(x,
   
   # Prepare data for 'bsitar'
   
-  make_bsitar_data <- function(data, uvarby, ys, verbose = FALSE, ...) {
-    org.ys <- ys
-    org.data <- data
-    if (!(is.na(uvarby) | uvarby == "NA")) {
-      if (!uvarby %in% colnames(data)) {
-        stop(
-          paste(
-            "\nvariable",
-            uvarby,
-            "used for setting univariate submodels is missing"
-          )
-        )
-      }
-      if (!is.factor(data[[uvarby]])) {
-        stop("subset by variable '",
-             uvarby,
-             "' should be a factor variable")
-      }
-      for (l in levels(data[[uvarby]])) {
-        data[[l]] <- data[[ys[1]]]
-      }
-      unibyimat <-
-        model.matrix( ~ 0 + eval(parse(text = uvarby)), data)
-      subindicators <- paste0(uvarby, levels(data[[uvarby]]))
-      colnames(unibyimat) <- subindicators
-      ys <- levels(data[[uvarby]])
-      data <- as.data.frame(cbind(data, unibyimat))
-      if (verbose) {
-        resvcts_ <- levels(data[[uvarby]])
-        resvcts <- paste0(resvcts_, collapse = " ")
-        setmsgtxt <- paste0(
-          "\n For univariate-by-subgroup model fitting for variable '",
-          uvarby,
-          "'",
-          " (specified via 'univariate_by' argument)",
-          "\n ",
-          resvcts,
-          " response vectors created based on the factor levels",
-          "\n\n ",
-          "Please check corresponding arguments list.",
-          " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
-          resvcts_[1],
-          ", and  df = 5 is for ",
-          resvcts_[2],
-          " (and similalry knots, priors, initials etc)",
-          "\n\n ",
-          "If it does't correspond correctly, then either reverse the list ",
-          "arguments\n such as df = list(5, 4),",
-          " or else reverse sort the order of factor levels"
-        )
-        if (displayit == 'msg') {
-          message(setmsgtxt)
-        } else if (displayit == 'col') {
-          col <- setcolb
-          cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
-        }
-      }
-      attr(data, "ys") <- ys
-      attr(data, "uvarby") <- uvarby
-      attr(data, "subindicators") <- subindicators
-      data_out <- data
-    } else {
-      data_out <- org.data
-      attr(data, "ys") <- org.ys
-      attr(data, "uvarby") <- NULL
-      attr(data, "subindicators") <- NULL
-    }
-    return(data)
-  }
+  # make_bsitar_data <- function(data, uvarby, ys, mvar = FALSE, 
+  #                              xfuns = NULL, yfuns = NULL,
+  #                              verbose = FALSE, ...) {
+  #  
+  #   org.data <- data
+  #   if (!(is.na(uvarby) | uvarby == "NA")) {
+  #     # org.ys <- ys[1]
+  #     if (!uvarby %in% colnames(data)) {
+  #       stop(
+  #         paste(
+  #           "\nvariable",
+  #           uvarby,
+  #           "used for setting univariate submodels is missing"
+  #         )
+  #       )
+  #     }
+  #     if (!is.factor(data[[uvarby]])) {
+  #       stop("subset by variable '",
+  #            uvarby,
+  #            "' should be a factor variable")
+  #     }
+  #     for (l in levels(data[[uvarby]])) {
+  #       data[[l]] <- data[[ys[1]]]
+  #     }
+  #     unibyimat <-
+  #       model.matrix( ~ 0 + eval(parse(text = uvarby)), data)
+  #     subindicators <- paste0(uvarby, levels(data[[uvarby]]))
+  #     colnames(unibyimat) <- subindicators
+  #     ys <- levels(data[[uvarby]])
+  #     data <- as.data.frame(cbind(data, unibyimat))
+  #     if (verbose) {
+  #       resvcts_ <- levels(data[[uvarby]])
+  #       resvcts <- paste0(resvcts_, collapse = " ")
+  #       setmsgtxt <- paste0(
+  #         "\n For univariate-by-subgroup model fitting for variable '",
+  #         uvarby,
+  #         "'",
+  #         " (specified via 'univariate_by' argument)",
+  #         "\n ",
+  #         resvcts,
+  #         " response vectors created based on the factor levels",
+  #         "\n\n ",
+  #         "Please check corresponding arguments list.",
+  #         " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
+  #         resvcts_[1],
+  #         ", and  df = 5 is for ",
+  #         resvcts_[2],
+  #         " (and similalry knots, priors, initials etc)",
+  #         "\n\n ",
+  #         "If it does't correspond correctly, then either reverse the list ",
+  #         "arguments\n such as df = list(5, 4),",
+  #         " or else reverse sort the order of factor levels"
+  #       )
+  #       if (displayit == 'msg') {
+  #         message(setmsgtxt)
+  #       } else if (displayit == 'col') {
+  #         col <- setcolb
+  #         cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+  #       }
+  #     }
+  #     attr(data, "ys") <- ys
+  #     attr(data, "multivariate") <- FALSE
+  #     attr(data, "uvarby") <- uvarby
+  #     attr(data, "subindicators") <- subindicators
+  #     data_out <- data
+  #   } else if(mvar) { # not yet included
+  #     for(myfunsi in 1:length(ys)) {
+  #       mysi <- ys[[myfunsi]]
+  #       myfunsi <- yfuns[[myfunsi]]
+  #       if(grepl('.Primitive', myfunsi, fixed = T) & 
+  #          grepl('log', myfunsi, fixed = T)) {
+  #         myfunsi <- 'log'
+  #       }
+  #       if(grepl('.Primitive', myfunsi, fixed = T) & 
+  #          grepl('sqrt', myfunsi, fixed = T)) {
+  #         myfunsi <- 'sqrt'
+  #       }
+  #       if(myfunsi == 'log') data[[mysi]] <- log(data[[mysi]])
+  #       if(myfunsi == 'sqrt') data[[mysi]] <- sqrt(data[[mysi]])
+  #     }
+  #     data_out <- org.data
+  #     attr(data, "ys") <- ys
+  #     attr(data, "multivariate") <- TRUE
+  #     attr(data, "uvarby") <- NULL
+  #     attr(data, "subindicators") <- NULL
+  #   } else {
+  #     data_out <- org.data
+  #     attr(data, "ys") <- ys
+  #     attr(data, "multivariate") <- FALSE
+  #     attr(data, "uvarby") <- NULL
+  #     attr(data, "subindicators") <- NULL
+  #   }
+  #   return(data)
+  # }
+  
   
   if (verbose) {
     setmsgtxt <- paste0("\n Preparing data")
@@ -2414,11 +2440,88 @@ bsitar <- function(x,
     }
   }
   
-  org.ycall <- ys[1]
+  # org.ycall <- ys[1]
   
-  data <- make_bsitar_data(data, univariate_by$by, ys, univariate_by$verbose)
+  if(is.list(xfuns) & length(xfuns) == 0) {
+    xfuns <- rep('NULL', length(ys))
+  }
+  if(is.list(yfuns) & length(yfuns) == 0) {
+    yfuns <- rep('NULL', length(ys))
+  }
+  
+  data <- make_bsitar_data(data, 
+                           univariate_by$by, 
+                           multivariate$mvar,
+                           ys, 
+                           xfuns = xfuns, 
+                           yfuns = yfuns)
+  
   ys <- attr(data, "ys")
   subindicators <- attr(data, "subindicators")
+  
+  
+  if (univariate_by$verbose) {
+    resvcts_ <- levels(data[[univariate_by$by]])
+    resvcts <- paste0(resvcts_, collapse = " ")
+    setmsgtxt <- paste0(
+      "\n For univariate-by-subgroup model fitting for variable '",
+      uvarby,
+      "'",
+      " (specified via 'univariate_by' argument)",
+      "\n ",
+      resvcts,
+      " response vectors created based on the factor levels",
+      "\n\n ",
+      "Please check corresponding arguments list.",
+      " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
+      resvcts_[1],
+      ", and  df = 5 is for ",
+      resvcts_[2],
+      " (and similalry knots, priors, initials etc)",
+      "\n\n ",
+      "If it does't correspond correctly, then either reverse the list ",
+      "arguments\n such as df = list(5, 4),",
+      " or else reverse sort the order of factor levels"
+    )
+    if (displayit == 'msg') {
+      message(setmsgtxt)
+    } else if (displayit == 'col') {
+      col <- setcolb
+      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+    }
+  }
+  
+  
+  # yfuns <<- yfuns
+  # ys <<- ys
+  
+  # if(multivariate$mvar) {
+  #   if(is.list(yfuns) & length(yfuns) == 0) {
+  #     yfuns <- rep('NULL', length(ys))
+  #   }
+  #   for(myfunsi in 1:length(ys)) {
+  #     mysi <- ys[[myfunsi]]
+  #     myfunsi <- yfuns[[myfunsi]]
+  #     if(grepl('.Primitive', myfunsi, fixed = T) & 
+  #        grepl('log', myfunsi, fixed = T)) {
+  #       myfunsi <- 'log'
+  #     }
+  #     if(grepl('.Primitive', myfunsi, fixed = T) & 
+  #        grepl('sqrt', myfunsi, fixed = T)) {
+  #       myfunsi <- 'sqrt'
+  #     }
+  #     if(myfunsi == 'log') data[[mysi]] <- log(data[[mysi]])
+  #     if(myfunsi == 'sqrt') data[[mysi]] <- sqrt(data[[mysi]])
+  #   }
+  # }
+  
+  
+  
+  
+  # print(head(data))
+  # stop()
+  
+  
   
   # Initiate loop over outcome(s) 
   # First, create empty lists, vector etc. to collect these elements
@@ -2861,6 +2964,8 @@ bsitar <- function(x,
     }
     
     
+    
+    
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if (xfunsi == "log") {
         datai[[xsi]] <- log(datai[[xsi]])
@@ -2872,17 +2977,32 @@ bsitar <- function(x,
     }
     
     
+    # for multivariate, yvar is transformed before initiating loop over ys
     
     
-    if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
-      if (yfunsi == "log") {
-        datai[[ysi]] <- log(datai[[ysi]])
-      } else if (yfunsi == "sqrt") {
-        datai[[ysi]] <- sqrt(datai[[ysi]])
-      } else {
-        stop("only log or sqrt tranformation allowed for yfun argument")
+    if(!multivariate$mvar) {
+      if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+        if (yfunsi == "log") {
+          datai[[ysi]] <- log(datai[[ysi]])
+        } else if (yfunsi == "sqrt") {
+          datai[[ysi]] <- sqrt(datai[[ysi]])
+        } else {
+          stop("only log or sqrt tranformation allowed for yfun argument")
+        }
       }
     }
+    
+    
+    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+    #   if (yfunsi == "log") {
+    #     datai[[ysi]] <- log(datai[[ysi]])
+    #   } else if (yfunsi == "sqrt") {
+    #     datai[[ysi]] <- sqrt(datai[[ysi]])
+    #   } else {
+    #     stop("only log or sqrt tranformation allowed for yfun argument")
+    #   }
+    # }
+    
     
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
@@ -3526,6 +3646,10 @@ bsitar <- function(x,
       dataout <- rbind(dataout, datai)
     else
       dataout <- datai
+    
+    # print(head(dataout))
+    # stop()
+    # "kkkk"
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       uvarbyTF <- TRUE
@@ -4357,7 +4481,7 @@ bsitar <- function(x,
   
   if(!is.na(univariate_by$by)) {
     model_info[['make_bsitar_data']] <- make_bsitar_data
-    model_info[['org.ycall']] <- org.ycall
+    # model_info[['org.ycall']] <- org.ycall
     model_info[['subindicators']] <- subindicators
   } 
   
@@ -4366,6 +4490,9 @@ bsitar <- function(x,
   model_info[['univariate_by']] <- univariate_by$by
   model_info[['nys']] <- nys
   model_info[['ys']] <- ys
+  
+  model_info[['xfuns']] <- xfuns
+  model_info[['yfuns']] <- yfuns
   
   model_info[['call.bsitar']] <- mcall_
   
