@@ -4521,6 +4521,8 @@ bsitar <- function(x,
   model_info[['xfuns']] <- xfuns
   model_info[['yfuns']] <- yfuns
   
+  model_info[['bsitar.data']] <- dataout
+  
   model_info[['call.bsitar']] <- mcall_
   
   brmsfit$model_info <- model_info
