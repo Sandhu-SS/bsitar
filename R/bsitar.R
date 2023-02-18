@@ -837,6 +837,33 @@
 #'  = threading(x)} where \code{X} is an integer. Other arguments that can the
 #'  passed to the \code{threads} are \code{grainsize} and the \code{static}. See
 #'  [brms::brm()] for further details on within-chain parallelization.
+#'  
+#'@param normalize Indicates whether normalization constants should be included
+#'  in the Stan code (defaults to \code{TRUE}). Setting it to \code{FALSE}
+#'  requires Stan version >= 2.25. If \code{FALSE}, sampling efficiency
+#'  may be increased but some post processing functions such as
+#'  [brms::bridge_sampler()] will not be available. Can be controlled
+#'  globally for the current \R session via the `brms.normalize` option.
+#' 
+#'
+#'@param sample_prior Indicate if draws from priors should be drawn additionally
+#'  to the posterior draws. Options are \code{"no"} (the default), \code{"yes"},
+#'  and \code{"only"}. Among others, these draws can be used to calculate Bayes
+#'  factors for point hypotheses via [brms::hypothesis()]. Please note that
+#'  improper priors are not sampled, including the default improper priors used
+#'  by \code{brm}. See [brms::set_prior()] on how to set (proper) priors. Please
+#'  also note that prior draws for the overall intercept are not obtained by
+#'  default for technical reasons. See [brms::brmsformula()] how to obtain prior
+#'  draws for the intercept. If \code{sample_prior} is set to \code{"only"},
+#'  draws are drawn solely from the priors ignoring the likelihood, which allows
+#'  among others to generate draws from the prior predictive distribution. In
+#'  this case, all parameters must have proper priors
+#'
+#'@param save_model A character string or \code{NULL} (default). If not
+#'  \code{NULL}, then the model's Stan code is saved via in a text file named
+#'  after the string supplied in \code{save_model}.
+#'
+#'
 #'
 #'@param control A named \code{list} to control the sampler's behavior. The
 #'  default are same as [brms::brm()] with the exception that the

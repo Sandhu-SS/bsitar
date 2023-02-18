@@ -48,7 +48,9 @@ get.newdata <- function(model, newdata, resp,
   
   
   if (is.null(newdata)) {
-    newdata <- eval.parent(model$model_info$call.bsitar$data)
+    cl = match.call()
+    # newdata <- eval.parent(model$model_info$call.bsitar$data)
+    newdata <- eval.parent(cl$model_info$call.bsitar$data)
   } else {
     newdata = newdata
   }
