@@ -399,8 +399,8 @@ add_context_getx_fun <- "
     } else if(xscale_set == "sqrt" & yscale_set == "identity") {
       xscale_factor_str_d1 <- "(Xm + xoffset);"
       xscale_factor_str_d2 <- "(Xm + xoffset);"
-      yscale_factor_str_d1 <- "(0.5);"
-      yscale_factor_str_d2 <- "(0.5);"
+      yscale_factor_str_d1 <- "rep_vector(0.5, N);"
+      yscale_factor_str_d2 <- "rep_vector(0.5, N);"
     } else if(xscale_set == "identity" & yscale_set == "log") {
       xscale_factor_str_d1 <- "rep_vector(1, N);"
       xscale_factor_str_d2 <- "rep_vector(1, N);"
@@ -409,18 +409,18 @@ add_context_getx_fun <- "
     } else if(xscale_set == "sqrt" & yscale_set == "log") {
       xscale_factor_str_d1 <- "(Xm + xoffset);"
       xscale_factor_str_d2 <- "(Xm + xoffset);"
-      yscale_factor_str_d1 <- "(0.5 * (pred_d0));"
-      yscale_factor_str_d2 <- "(0.5 * (pred_d0));"
+      yscale_factor_str_d1 <- "(rep_vector(0.5, N) .* (pred_d0));"
+      yscale_factor_str_d2 <- "(rep_vector(0.5, N) .* (pred_d0));"
     } else if(xscale_set == "identity" & yscale_set == "sqrt") {
       xscale_factor_str_d1 <- "rep_vector(1, N);"
       xscale_factor_str_d2 <- "rep_vector(1, N);"
-      yscale_factor_str_d1 <- "(2.0 * sqrt(pred_d0));"
-      yscale_factor_str_d2 <- "(2.0 * sqrt(pred_d0));"
+      yscale_factor_str_d1 <- "(rep_vector(2.0, N) .* sqrt(pred_d0));"
+      yscale_factor_str_d2 <- "(rep_vector(2.0, N) .* sqrt(pred_d0));"
     } else if(xscale_set == "log" & yscale_set == "sqrt") {
       xscale_factor_str_d1 <- "exp(Xm + xoffset);"
       xscale_factor_str_d2 <- "exp(Xm + xoffset);"
-      yscale_factor_str_d1 <- "(2.0 * sqrt(pred_d0));"
-      yscale_factor_str_d2 <- "(2.0 * sqrt(pred_d0));"
+      yscale_factor_str_d1 <- "(rep_vector(2.0, N) .* sqrt(pred_d0));"
+      yscale_factor_str_d2 <- "(rep_vector(2.0, N) .* sqrt(pred_d0));"
     } 
     
     list(xscale_factor_str_d1 = xscale_factor_str_d1,
