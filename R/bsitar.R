@@ -4415,7 +4415,7 @@ bsitar <- function(x,
   }
   
   if(!is.na(univariate_by$by)) {
-    model_info[['make_bsitar_data']] <- make_bsitar_data
+    # model_info[['make_bsitar_data']] <- make_bsitar_data
     # model_info[['org.ycall']] <- org.ycall
     model_info[['subindicators']] <- subindicators
   } 

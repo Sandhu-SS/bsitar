@@ -72,8 +72,8 @@ get.newdata <- function(model, newdata, resp,
     }
     
     
-    
-    newdata <- model$model_info$make_bsitar_data(newdata_,
+    # model$model_info$make_bsitar_data(newdata_,
+    newdata <- make_bsitar_data(newdata_,
                                                  model$model_info$univariate_by,
                                                  model$model_info$multivariate,
                                                  model$model_info$ys,
@@ -403,8 +403,10 @@ get.newdata <- function(model, newdata, resp,
       
       # if(is.null(ipts)) newdata <- newdata
       # 
+      
+      # model$model_info$make_bsitar_data
       if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
-        newdata <- model$model_info$make_bsitar_data(newdata,
+        newdata <- make_bsitar_data(newdata,
                                                      model$model_info$univariate_by,
                                                      model$model_info$multivariate,
                                                      model$model_info$ys,
@@ -469,7 +471,8 @@ get.newdata <- function(model, newdata, resp,
 
 
 
-
+########################
+########################
 
 
 get_args_ <- function(arguments, xcall) {
@@ -483,6 +486,8 @@ get_args_ <- function(arguments, xcall) {
 }
 
 
+########################
+########################
 
 get.cores <- function(cores.arg) {
   cores_ <- eval(cores.arg)
@@ -518,8 +523,8 @@ get.cores <- function(cores.arg) {
 
 
 
-
-
+########################
+########################
 
 validate_response <- function(model, resp = NULL) {
   if (model$model_info$nys == 1 & !is.null(resp)) {
@@ -559,19 +564,24 @@ validate_response <- function(model, resp = NULL) {
       )
     }
   }
-  if(!resp %in% model$model_info[['ys']]) {
-    stop("Response should be one of the following: ", 
-         paste(model$model_info[['ys']], collapse = " "),
-         "\n ",
-         " but you have specified: ", resp)
+  
+  if(!is.null(resp)) {
+    if(!resp %in% model$model_info[['ys']]) {
+      stop("Response should be one of the following: ", 
+           paste(model$model_info[['ys']], collapse = " "),
+           "\n ",
+           " but you have specified: ", resp)
+    }
   }
+  
 }
 
 
 
 
 
-
+########################
+########################
 
 make_bsitar_data <- function(data, uvarby, mvar = FALSE, 
                              ys, 
@@ -603,42 +613,12 @@ make_bsitar_data <- function(data, uvarby, mvar = FALSE,
     colnames(unibyimat) <- subindicators
     ys <- levels(data[[uvarby]])
     data <- as.data.frame(cbind(data, unibyimat))
-    # if (verbose) {
-    #   resvcts_ <- levels(data[[uvarby]])
-    #   resvcts <- paste0(resvcts_, collapse = " ")
-    #   setmsgtxt <- paste0(
-    #     "\n For univariate-by-subgroup model fitting for variable '",
-    #     uvarby,
-    #     "'",
-    #     " (specified via 'univariate_by' argument)",
-    #     "\n ",
-    #     resvcts,
-    #     " response vectors created based on the factor levels",
-    #     "\n\n ",
-    #     "Please check corresponding arguments list.",
-    #     " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
-    #     resvcts_[1],
-    #     ", and  df = 5 is for ",
-    #     resvcts_[2],
-    #     " (and similalry knots, priors, initials etc)",
-    #     "\n\n ",
-    #     "If it does't correspond correctly, then either reverse the list ",
-    #     "arguments\n such as df = list(5, 4),",
-    #     " or else reverse sort the order of factor levels"
-    #   )
-    #   if (displayit == 'msg') {
-    #     message(setmsgtxt)
-    #   } else if (displayit == 'col') {
-    #     col <- setcolb
-    #     cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
-    #   }
-    # }
     attr(data, "ys") <- ys
     attr(data, "multivariate") <- FALSE
     attr(data, "uvarby") <- uvarby
     attr(data, "subindicators") <- subindicators
     data_out <- data
-  } else if(mvar) { # not yet included
+  } else if(mvar) {
     for(myfunsi in 1:length(ys)) {
       mysi <- ys[[myfunsi]]
       myfunsi <- yfuns[[myfunsi]]
@@ -667,4 +647,93 @@ make_bsitar_data <- function(data, uvarby, mvar = FALSE,
   }
   return(data)
 }
+
+
+
+########################
+########################
+
+
+setup_higher_priors <- function(new_prior_list) {
+  o_l <- list()
+  ixi = 0
+  group_ <- class_ <- nlpar_ <- resp_ <- cor_check <- sd_check <- NA
+  group_ <- class_ <- nlpar_ <- resp_ <- cor_check <- sd_check <- c()
+  for (new_prior_listi in 1:length(new_prior_list)) {
+    ixi <- ixi + 1
+    pstr <- new_prior_list[[new_prior_listi]]
+    if(is.null(pstr[['prior']])) prior_i <- '' else prior_i <- pstr[['prior']]
+    if(is.null(pstr[['group']])) group_i <- '' else group_i <- pstr[['group']]
+    if(is.null(pstr[['class']])) class_i <- '' else class_i <- pstr[['class']]
+    if(is.null(pstr[['nlpar']])) nlpar_i <- '' else nlpar_i <- pstr[['nlpar']]
+    if(is.null(pstr[['coef']]))  coef_i  <- '' else coef_i  <- pstr[['coef']]
+    if(is.null(pstr[['resp']]))  resp_i  <- '' else resp_i  <- pstr[['resp']]
+    if(is.null(pstr[['lb']]))    lb_i    <- '' else lb_i    <- pstr[['lb']]
+    if(is.null(pstr[['ub']]))    ub_i    <- '' else ub_i <- pstr[['ub']]
+    if(is.null(pstr[['dpar']]))  dpar_i  <- '' else dpar_i  <- pstr[['dpar']]
+    if(is.null(pstr[['prior']])) prior_i <- '' else prior_i <- pstr[['prior']]
+    
+    group_ <- c(group_, group_i)
+    class_ <- c(class_, class_i)
+    nlpar_ <- c(nlpar_, nlpar_i)
+    resp_ <- c(nlpar_, resp_i)
+    if(class_i == 'sd') sd_check <- c(sd_check, group_i)
+    if(class_i == 'cor') cor_check <- c(cor_check, group_i)
+    
+    if(lb_i == '' & ub_i == '' ) {
+      o_l[[ixi]] <- prior_string(prior_i,
+                                 group = group_i, 
+                                 class = class_i, 
+                                 nlpar = nlpar_i,
+                                 coef = coef_i,
+                                 resp = resp_i,
+                                 # lb = lb_i,
+                                 # ub = ub_i,
+                                 dpar = dpar_i)
+    } else if(lb_i != '' | ub_i != '' ) {
+      o_l[[ixi]] <- prior_string(prior_i,
+                                 group = group_i, 
+                                 class = class_i, 
+                                 nlpar = nlpar_i,
+                                 coef = coef_i,
+                                 resp = resp_i,
+                                 # lb = lb_i,
+                                 # ub = ub_i,
+                                 dpar = dpar_i)
+    }
+    
+    
+  }
+  o_l %>%  do.call(rbind, .)
+}
+
+
+########################
+########################
+
+insert_new_priors <- function(setdf_1, setdf_2) {
+  setdf_1 <- 
+    setdf_1 %>% dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
+    dplyr::mutate(order = row_number()) %>% 
+    dplyr::arrange(index)
+  
+  setdf_2 <- 
+    setdf_2 %>% dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
+    dplyr::mutate(order = row_number()) %>% 
+    dplyr::arrange(index)
+  
+  vi_1 <- setdf_1 %>% dplyr::mutate(valid = ifelse(!(class == 'sd' & coef == ""), 1, 0)) %>% 
+    data.frame() %>% dplyr::filter(valid == 1) %>% dplyr::select(index) %>% unlist() %>% 
+    droplevels()
+  
+  setdf_1 <- setdf_1 %>% dplyr::filter(!(class == 'sd' & coef == ""))
+  setdf_2 <- setdf_2 %>% dplyr::filter(!(class == 'sd' & coef == ""))
+  setdf_3 <- setdf_1[setdf_1$index %in% vi_1,]
+  setdf_2 <- setdf_2 %>% dplyr::filter(!index %in% vi_1)
+  setdf_4 <- rbind(setdf_2, setdf_3)
+  # setdf_4 <- setdf_4 %>% arrange(order) %>% select(-c(index, order))
+  setdf_4 <- setdf_4 %>% dplyr::select(-c(index, order))
+  setdf_4
+}
+
 
