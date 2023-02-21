@@ -1020,7 +1020,9 @@
 #'@importFrom sitar getPeak
 #'@importFrom methods formalArgs
 #'@importFrom stats as.formula coef df dist filter fitted gaussian lm mad median
-#'  model.matrix predict quantile rbeta sd setNames smooth.spline
+#'  model.matrix predict quantile rbeta sd setNames smooth.spline 
+#'  
+#'@importFrom stats loess na.omit residuals
 #'@importFrom utils combn head installed.packages packageVersion
 #'@importFrom Rdpack reprompt
 #'@import brms

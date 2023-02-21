@@ -42,7 +42,8 @@ Imports:
     stats,
     utils,
     forcats,
-    grDevices
+    grDevices,
+    tidyr
 Suggests: 
     testthat (>= 3.0.0),
     cmdstanr (>= 0.5.0),
