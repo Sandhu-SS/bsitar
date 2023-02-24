@@ -19,7 +19,7 @@
   robust = FALSE,
   probs = c(0.025, 0.975),
   xrange = NULL,
-  envir = parent.frame(),
+  envir = .GlobalEnv,
   ...
 )
 

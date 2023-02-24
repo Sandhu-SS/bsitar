@@ -68,7 +68,7 @@ fitted_.bsitar <-
            robust = FALSE,
            probs = c(0.025, 0.975),
            xrange = NULL,
-           envir = parent.frame(),
+           envir = .GlobalEnv,
            ...) {
     o <-
       post_processing_checks(model = model,
@@ -77,6 +77,16 @@ fitted_.bsitar <-
                              deriv = deriv)
     
     xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+    
+    scall <- deparse(sys.calls()[[1]])
+    
+    if(grepl("plot_bsitar", scall, fixed = T)) {
+      xcall <- "plot_bsitar"
+    } else if(grepl("gparameters", scall, fixed = T)) {
+      xcall <- "gparameters"
+    } else {
+      xcall <- xcall
+    } 
     
     if(xcall == "gparameters" | xcall == "plot_bsitar") {
       arguments <- get_args_(as.list(match.call())[-1], xcall)

@@ -63,7 +63,7 @@ conditional_effects_.bsitar <-
   function(model,
            resp = NULL,
            deriv = 0,
-           envir = parent.frame(),
+           envir = .GlobalEnv,
            ...) {
     o <-
       post_processing_checks(model = model,

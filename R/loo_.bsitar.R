@@ -27,7 +27,7 @@
 loo_.bsitar <-
   function(model,
            resp = NULL,
-           envir = parent.frame(),
+           envir = .GlobalEnv,
            ...) {
     o <-
       post_processing_checks(model = model,

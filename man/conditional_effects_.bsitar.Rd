@@ -5,13 +5,7 @@
 \alias{conditional_effects_}
 \title{Visualize the conditional effects of predictor}
 \usage{
-\method{conditional_effects_}{bsitar}(
-  model,
-  resp = NULL,
-  deriv = 0,
-  envir = parent.frame(),
-  ...
-)
+\method{conditional_effects_}{bsitar}(model, resp = NULL, deriv = 0, envir = .GlobalEnv, ...)
 
 conditional_effects_(model, ...)
 }

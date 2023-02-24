@@ -200,6 +200,16 @@ gparameters.bsitar <- function(model,
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
+  scall <- deparse(sys.calls()[[1]])
+  
+  if(grepl("plot_bsitar", scall, fixed = T)) {
+    xcall <- "plot_bsitar"
+  } else if(grepl("gparameters", scall, fixed = T)) {
+    xcall <- "gparameters"
+  } else {
+    xcall <- xcall
+  } 
+  
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   
   if(xcall == 'plot_bsitar') arguments$plot <- TRUE else arguments$plot <- FALSE
@@ -508,13 +518,13 @@ gparameters.bsitar <- function(model,
     }
     
     
- #   if(is.null(newdata)) {
-      newdata <- get.newdata(model, newdata = newdata, 
-                             resp = resp, 
-                             numeric_cov_at = numeric_cov_at,
-                             levels_id = levels_id,
-                             ipts = ipts,
-                             xrange = xrange)
+    #   if(is.null(newdata)) {
+    newdata <- get.newdata(model, newdata = newdata, 
+                           resp = resp, 
+                           numeric_cov_at = numeric_cov_at,
+                           levels_id = levels_id,
+                           ipts = ipts,
+                           xrange = xrange)
     # } else {
     #   newdata <- newdata
     # }
@@ -522,13 +532,13 @@ gparameters.bsitar <- function(model,
     
     list_c <- attr(newdata, 'list_c')
     
-
+    
     for (list_ci in names(list_c)) {
       assign(list_ci, list_c[[list_ci]])
     }
     check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
                  'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
- 
+    
     for (check___ in check__) {
       if(!exists(check___)) assign(check___, NULL)
     }
@@ -536,7 +546,7 @@ gparameters.bsitar <- function(model,
     
     
     newdata___ <- newdata
-   
+    
     if (grepl("d", opt, ignore.case = T)) {
       index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
       dist.. <- substr(opt, index_opt, index_opt)
@@ -603,7 +613,7 @@ gparameters.bsitar <- function(model,
       arguments$deriv <- 0
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
-      arguments$envir <-arguments$envir_
+      arguments$envir <- .GlobalEnv # arguments$envir_
       
       if (estimation_method == 'fitted') {
         out_d_ <- do.call(fitted_.bsitar, arguments)
@@ -611,7 +621,7 @@ gparameters.bsitar <- function(model,
         out_d_ <- do.call(predict_.bsitar, arguments)
       }
       
-
+      
       # No need to summarise by calling call_posterior_summary
       # if (!summary) {
       #   out_d <- call_posterior_summary(out_d_)
@@ -620,7 +630,7 @@ gparameters.bsitar <- function(model,
       # }
       
       out_d <- out_d_
-     
+      
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
@@ -656,7 +666,7 @@ gparameters.bsitar <- function(model,
       arguments$deriv <- 1
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
-      arguments$envir <-arguments$envir_
+      arguments$envir <- .GlobalEnv # arguments$envir_
       
       if (estimation_method == 'fitted') {
         out_v_ <- do.call(fitted_.bsitar, arguments)
@@ -745,12 +755,12 @@ gparameters.bsitar <- function(model,
         dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
         dplyr::slice(1) %>% dplyr::ungroup()
     }
-    
+    arguments2 <- arguments
     arguments$newdata <- newdata
     arguments$deriv <- 1
     # don't let the ipts to pass again to the fitted_.bsitar
     arguments$ipts <- NULL 
-    arguments$envir <- parent.frame()
+    arguments$envir <- .GlobalEnv # parent.frame()
     
     if (estimation_method == 'fitted') {
       out_v_ <- do.call(fitted_.bsitar, arguments)

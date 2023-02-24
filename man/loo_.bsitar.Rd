@@ -5,7 +5,7 @@
 \alias{loo_}
 \title{Leave-one-out (loo) cross-validation for \code{bsitar} object}
 \usage{
-\method{loo_}{bsitar}(model, resp = NULL, envir = parent.frame(), ...)
+\method{loo_}{bsitar}(model, resp = NULL, envir = .GlobalEnv, ...)
 
 loo_(model, ...)
 }

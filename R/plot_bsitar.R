@@ -216,13 +216,23 @@ plot_bsitar.bsitar <- function(model,
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
+  scall <- deparse(sys.calls()[[1]])
+  
+  if(grepl("plot_bsitar", scall, fixed = T)) {
+    xcall <- "plot_bsitar"
+  } else if(grepl("gparameters", scall, fixed = T)) {
+    xcall <- "gparameters"
+  } else {
+    xcall <- xcall
+  } 
+  
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', 'Est.Error', probtitles)
- 
+  
   cores <- 1
   get.cores_ <- get.cores(arguments$cores)
   arguments$cores <- cores <-  get.cores_[['max.cores']] 
@@ -337,8 +347,8 @@ plot_bsitar.bsitar <- function(model,
   }
   
   
- 
- 
+  
+  
   if (grepl("a", opt, ignore.case = F) |
       grepl("u", opt, ignore.case = F)) {
     
@@ -364,7 +374,7 @@ plot_bsitar.bsitar <- function(model,
       )
     }
   }
- 
+  
   pv <- FALSE
   if (returndata & nchar(opt) > 1) {
     stop(
@@ -388,7 +398,7 @@ plot_bsitar.bsitar <- function(model,
   
   if(length(list(...)) != 0) arguments <- c(arguments, list(...))
   
-  arguments$envir_ <- parent.frame()
+  arguments$envir <- .GlobalEnv # parent.frame()
   
   d. <- do.call(gparameters.bsitar, arguments)
   
@@ -697,7 +707,7 @@ plot_bsitar.bsitar <- function(model,
       else
         ndraws <- ndraws
       
-     
+      
       
       o <-
         post_processing_checks(model = model,
@@ -869,7 +879,7 @@ plot_bsitar.bsitar <- function(model,
     
     default.set.line.groupby <- 'solid'
     default.set.color.groupby <- 'black'
-  
+      
     line.guide <- "none"
     color.guide <- "none"
     
@@ -1110,14 +1120,14 @@ plot_bsitar.bsitar <- function(model,
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
-     
+      
       plot.o.d <- set_lines_colors(plot.o.d, length(unique(d.[['groupby']])), 
                                    linetype.groupby = linetype.groupby, 
                                    color.groupby = color.groupby)
       
       
       
-
+      
       
       if (grepl("d", bands, ignore.case = T)) {
         plot.o.d <- plot.o.d +
@@ -1138,7 +1148,7 @@ plot_bsitar.bsitar <- function(model,
       
       
       
-    
+      
       
       d. <- d.o
       if ('curve' %in% names(d.)) {
@@ -1169,7 +1179,7 @@ plot_bsitar.bsitar <- function(model,
       }
       
       
-     
+      
       if(is.na(d.[['groupby']][1])) {
         d.$groupby_line <- 'solid'
         d.$groupby_color <- 'black'
@@ -1392,7 +1402,7 @@ plot_bsitar.bsitar <- function(model,
       
       t.s.axis <-
         with(data_dv, transform.sec.axis(Estimate.x, Estimate.y))
-     
+      
       
       
       if(is.na(uvarby)) {
@@ -1489,7 +1499,7 @@ plot_bsitar.bsitar <- function(model,
       plot.o <- plot.o + 
         ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
         ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
-     
+      
       
       if (grepl("d", bands, ignore.case = T)) {
         plot.o <- plot.o +
@@ -1499,8 +1509,8 @@ plot_bsitar.bsitar <- function(model,
               ymin = .data[[paste0(probtitles[1], '.x')]],
               ymax = .data[[paste0(probtitles[2], '.x')]],
               group = groupby.x,
-             linetype = groupby_line.x,
-             # color = groupby_color.x,
+              linetype = groupby_line.x,
+              # color = groupby_color.x,
               fill = groupby_color.x,
             ),
             alpha = band.alpha
@@ -1661,7 +1671,7 @@ plot_bsitar.bsitar <- function(model,
           legendlabs_mult_mult <- unique(out_a_[['groupby']])
         }
       }
-     
+      
       
       if(!is.na(uvarby)) {
         if(is.null(cov_factor_vars)) {
@@ -1693,7 +1703,7 @@ plot_bsitar.bsitar <- function(model,
             y = !!as.name(Yy),
             group = groupby.x,
             # linetype = groupby_line.x,
-             colour = groupby_color.x
+            colour = groupby_color.x
           ),
           linewidth = linewidth.main
         ) +
@@ -1708,7 +1718,7 @@ plot_bsitar.bsitar <- function(model,
         ggplot2::labs(title = label.adj) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
-
+      
       getbuiltingg <- ggplot2::ggplot_build(plot.o.a)
       get_line_  <- getbuiltingg$data[[1]]["linetype"]
       get_color_ <- getbuiltingg$data[[1]]["colour"]
@@ -1753,7 +1763,7 @@ plot_bsitar.bsitar <- function(model,
     } else if (!grepl("a", opt, ignore.case = T)) {
       plot.o.a <- NULL
     }
-   
+    
     
     if (grepl("u", opt, ignore.case = T)) {
       xyadj_ed <- xyunadj_(model, resp = resp)
@@ -1987,7 +1997,7 @@ plot_bsitar.bsitar <- function(model,
         plot.o <- plot.o +
           ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
           ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
-      
+        
       }
       
       if (layout == 'single') {
