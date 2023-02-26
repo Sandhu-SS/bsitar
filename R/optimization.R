@@ -1,6 +1,6 @@
 
 
-#' optimize \pkg{bsitar} models
+#' Optimization of the \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
 #' @param newdata newdata Optional \code{data.frame} to update the model with
@@ -28,7 +28,7 @@
 #'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
-#' @export update.bsitar
+#' @export optimization.bsitar
 #'
 #' @export
 #'
@@ -37,19 +37,15 @@
 #' data(heights)
 #' data_males <- heights %>% filter(sex == 'Male')
 #' fit_males <- bsitar(x=age, y=height, id=id, data=heights, df=4)
-#' fit_males2 <- update(df=5)
+#' fit_males2 <- optimization(fit_males)
 #' }
 #' 
-optimize.bsitar <- function(model, newdata = NULL, recompile = T, 
+optimization.bsitar <- function(model, data = NULL,  
                             optimize = list(x = c('NULL', 'log',  'sqrt'),
                                             y = c('NULL', 'log',  'sqrt')),
                             add_fit_criteria = NULL,
                             add_fit_bayes_R = NULL,
                             ...) {
-  
-  # optimize = list(x = c('NULL', 'log',  'sqrt'),
-  #                 y = c('NULL', 'log',  'sqrt'))
-  
   
   scale_set_comb <- 
     with(expand.grid(optimize[[1]], optimize[[2]]), paste0(Var1,'_',Var2))
@@ -68,7 +64,7 @@ optimize.bsitar <- function(model, newdata = NULL, recompile = T,
     cat("\n")
     cat(paste0("Transformations: ", "x = ", xfun_print, "; y = ", yfun_print), "\n")
     
-    fit <- update(model, xfun = xfun, yfun = yfun)
+    fit <- update(model, data = data, xfun = xfun, yfun = yfun)
     
     ##########
     # Very important to set cores = 1 on windows
@@ -95,24 +91,16 @@ optimize.bsitar <- function(model, newdata = NULL, recompile = T,
     
   }
   
-  # brmsmodels <-
-  #   scale_set_comb %>% 
-  #   purrr::set_names() %>% 
-  #   purrr::map(~ brms_fitfun(.x, model))
-  
   brmsmodels <- lapply(scale_set_comb, function(.x) brms_fitfun(.x, model))
-
   
-  brmsmodels
-  
-} # end
+  return(brmsmodels)
+} 
 
 
-# ccc <- update_bsitar(fitx, cores = 2, x = age, a_init_beta = 2, y = y, xfun = NULL, df = 5, data = mmm)
 
 
-#' @rdname update.bsitar
+#' @rdname optimization.bsitar
 #' @export
-optimize <- function(model, ...) {
-  UseMethod("optimize")
+optimization <- function(model, ...) {
+  UseMethod("optimization")
 }

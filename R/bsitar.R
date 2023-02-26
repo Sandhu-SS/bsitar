@@ -1255,6 +1255,39 @@ bsitar <- function(x,
   arguments <- as.list(mcall)[-1]
   
   
+  match.call.defaults <- function(...) {
+    call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
+    formals <- evalq(formals(), parent.frame(1))
+    
+    for(i in setdiff(names(formals), names(call)))
+      call[i] <- list( formals[[i]] )
+    
+    
+    match.call(sys.function(sys.parent()), call)
+  }
+  
+  call.full <- match.call.defaults()
+  call.full <- call.full[-length(call.full)]
+  
+  for (call.fulli in names(call.full)) {
+    if(call.fulli != "") {
+      if(call.fulli == 'family' & 
+         is.language(call.full[[call.fulli]])) {
+        call.full[[call.fulli]] <- deparse(call.full[[call.fulli]])
+      } else if(call.fulli == 'stan_model_args')  { 
+        if(length(eval(call.full[[call.fulli]])) == 0) {
+          call.full[[call.fulli]] <- NULL
+        } else {
+          call.full[[call.fulli]] <- call.full[[call.fulli]] 
+        }
+      } else {
+        #  call.full[[call.fulli]] <- call.full[[call.fulli]]
+      }
+    } else {
+      # call.full[[call.fulli]] <- call.full[[call.fulli]]
+    }
+  }
+  
   
   # combine user defined and default arguments
   `%!in%` <- Negate(`%in%`)
@@ -2386,10 +2419,10 @@ bsitar <- function(x,
   
   data.org.in <- data
   
-  data <- make_bsitar_data(data, 
-                           univariate_by$by, 
-                           multivariate$mvar,
-                           ys, 
+  data <- make_bsitar_data(data = data,
+                           response_variable = ys, 
+                           uvarby = univariate_by$by, 
+                           mvar = multivariate$mvar,
                            xfuns = xfuns, 
                            yfuns = yfuns)
   
@@ -4432,6 +4465,8 @@ bsitar <- function(x,
   model_info[['yfuns']] <- yfuns
   
   model_info[['bsitar.data']] <- data.org.in
+  
+  model_info[['call.full.bsitar']] <- call.full
   
   model_info[['call.bsitar']] <- mcall_
   
