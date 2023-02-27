@@ -4519,7 +4519,7 @@ bsitar <- function(x,
     }
     
     if (!expose_function) {
-      brmsfit <- expose_bsitar_functions(brmsfit, expose = FALSE)
+      brmsfit$model <- brmsfit$bmodel <- stancode(brmsfit)
     }
     
     if (verbose) {
