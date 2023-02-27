@@ -62,14 +62,15 @@ optimization.bsitar <- function(model, data = NULL,
   
   
   if(exclude_default) {
-    
+    optimize$x <- optimize$x[!optimize$x %in% model$model_info$xfuns]
+    optimize$y <- optimize$y[!optimize$y %in% model$model_info$xfuns]
   }
   
   scale_set_comb <- 
     with(expand.grid(optimize[[1]], optimize[[2]]), paste0(Var1,'_',Var2))
   
   
-  brms_fitfun <- function(.x, model) {
+  optimize_fun <- function(.x, model) {
     xsplit <- strsplit(.x, "_")[[1]]
     xfun <- xsplit[1]
     yfun <- xsplit[2]
@@ -82,7 +83,7 @@ optimization.bsitar <- function(model, data = NULL,
     cat("\n")
     cat(paste0("Transformations: ", "x = ", xfun_print, "; y = ", yfun_print), "\n")
     
-    fit <- update(model, data = data, xfun = xfun, yfun = yfun)
+    fit <- update_bsitar(model, data = data, xfun = xfun, yfun = yfun)
     
     ##########
     # Very important to set cores = 1 on windows
@@ -109,7 +110,7 @@ optimization.bsitar <- function(model, data = NULL,
     
   }
   
-  brmsmodels <- lapply(scale_set_comb, function(.x) brms_fitfun(.x, model))
+  brmsmodels <- lapply(scale_set_comb, function(.x) optimize_fun(.x, model))
   
   return(brmsmodels)
 } 

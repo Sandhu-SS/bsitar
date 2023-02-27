@@ -1,7 +1,7 @@
 
 
 
-#' Update \pkg{bsitar} models
+#' Update \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
 #' @param data An optional \code{data.frame} to be used when updating the model.
@@ -9,7 +9,7 @@
 #'   used. Note that data-dependent default priors will not be updated
 #'   automatically.
 #' @param recompile A logical to indicate whether the Stan model should be
-#'   recompiled. When \code{NULL} (the default), \code{update} tries to figure
+#'   recompiled. When \code{NULL} (the default), \code{update_bsitar} tries to figure
 #'   out internally, if recompilation is necessary. Setting it to \code{FALSE}
 #'   will cause all Stan code changing arguments to be ignored.
 #' @param ... Other arguments passed to \code{\link{brms}}.
@@ -19,7 +19,7 @@
 #'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
-#' @export update.bsitar
+#' @export update_bsitar.bsitar
 #'
 #' @export
 #'
@@ -28,10 +28,10 @@
 #' data(heights)
 #' data_males <- heights %>% filter(sex == 'Male')
 #' fit_males <- bsitar(x=age, y=height, id=id, data=heights, df=4)
-#' fit_males2 <- update(df=5)
+#' fit_males2 <- update_bsitar(df=5)
 #' }
 #' 
-update.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
+update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
   
   mcall <- match.call()
   mcall_ <- mcall[3:length(mcall)]
@@ -125,10 +125,10 @@ update.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
 
 
 
-#' @rdname update.bsitar
+#' @rdname update_bsitar.bsitar
 #' @export
-update <- function(model, ...) {
-  UseMethod("update")
+update_bsitar <- function(model, ...) {
+  UseMethod("update_bsitar")
 }
 
 
