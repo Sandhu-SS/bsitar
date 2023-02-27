@@ -6,9 +6,11 @@
 #' @param model An object of class \code{bsitar}.
 #' @param scode An option argument specifying the code with the user-defined 
 #' Stan function.
+#' @param expose A logical (default \code{TRUE}) to indicate whether to expose
+#' functions and add to the global environment. 
 #'
-#' @return An object of class \code{brmsfit, bsiatr} with exposed. 
-#' user-defined Stan functions 
+#' @return An object of class \code{brmsfit, bsiatr} with exposed  
+#' user-defined Stan functions (when \code{expose=TRUE}).
 #' 
 #' @export
 #'
@@ -18,7 +20,7 @@
 #' expose_bsitar_functions(model)
 #' #
 #' }
-expose_bsitar_functions <- function(model, scode = NULL) {
+expose_bsitar_functions <- function(model, scode = NULL, expose = TRUE) {
   expose_it_ <- function(x, scode) {
     if (is.null(scode)) {
       exposecode <- stancode(x)
@@ -27,7 +29,7 @@ expose_bsitar_functions <- function(model, scode = NULL) {
     }
     rstan::expose_stan_functions(rstan::stanc(model_code = exposecode))
   }
-  expose_it_(model, scode = scode)
+  if(expose) expose_it_(model, scode = scode)
   SplineFun_name <- model$model_info$SplineFun
   spfun_collect <- c(model$model_info$SplineFun,
                      paste0(model$model_info$SplineFun, "_", c("d0", 

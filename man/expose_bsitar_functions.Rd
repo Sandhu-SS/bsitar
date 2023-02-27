@@ -5,17 +5,20 @@
 \title{Expose Stan function for post-processing of posterior sample obtained
 from the Bayesian SITAR growth curve model fit}
 \usage{
-expose_bsitar_functions(model, scode = NULL)
+expose_bsitar_functions(model, scode = NULL, expose = TRUE)
 }
 \arguments{
 \item{model}{An object of class \code{bsitar}.}
 
 \item{scode}{An option argument specifying the code with the user-defined
 Stan function.}
+
+\item{expose}{A logical (default \code{TRUE}) to indicate whether to expose
+functions and add to the global environment.}
 }
 \value{
-An object of class \code{brmsfit, bsiatr} with exposed.
-user-defined Stan functions
+An object of class \code{brmsfit, bsiatr} with exposed
+user-defined Stan functions (when \code{expose=TRUE}).
 }
 \description{
 Expose Stan function for post-processing of posterior sample obtained

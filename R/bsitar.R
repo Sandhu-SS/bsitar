@@ -4518,6 +4518,9 @@ bsitar <- function(x,
       brmsfit <- expose_bsitar_functions(brmsfit)
     }
     
+    if (!expose_function) {
+      brmsfit <- expose_bsitar_functions(brmsfit, expose = FALSE)
+    }
     
     if (verbose) {
       setmsgtxt <- paste0("\nModel Fitting complete")
