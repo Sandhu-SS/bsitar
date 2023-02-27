@@ -3,16 +3,28 @@
 #' Optimization of the \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
-#' @param newdata newdata Optional \code{data.frame} to update the model with
-#'   new data. Note that data-dependent default priors will not be updated
+#' @param data An optional \code{data.frame} to be used when optimising the
+#'   model. If \code{NULL} (default), the same same data used for original model
+#'   fit is used. Note that data-dependent default priors will not be updated
 #'   automatically.
-#' @param recompile A logical to indicate whether the Stan model should be
-#'   recompiled. When \code{NULL} (the default), \code{update} tries to figure
-#'   out internally, if recompilation is necessary. Setting it to \code{FALSE}
-#'   will cause all Stan code changing arguments to be ignored.
 #'
-#' @param optimize A list specifying the transformations of predictor (typically
-#'   \code{age}) and the outcome.
+#' @param optimize A list specifying the transformations  of predictor
+#'   (typically \code{age}) variable (via \code{xvar}) and the outcome (via
+#'   \code{yvar}). The options for both \code{xvar} and \code{yvar}) are 'NULL',
+#'   'log' and  'sqrt' or their combinations. The default
+#'    \code{optimize = list(x = c('NULL', 'log',  'sqrt'),
+#'    y = c('NULL', 'log',  'sqrt'))} is to explore all possible combinations of
+#'   'NULL', 'log' and  'sqrt'.
+#'
+#' @param exclude_default A logical (deafult \code{FALSE}) to indicate whether
+#'   transformations (\code{xvar} and \code{yvar}) used in the original model
+#'   fit should be excluded. If \code{TRUE}, then the \code{xvar} and
+#'   \code{yvar} transformations from the original model fit are excluded from
+#'   the \code{optimize}. From example, if original model is fit with \code{xvar
+#'   = log} and \code{yvar = NULL}, then the \code{optimize} is translated into
+#'  \code{optimize = list(x = c('NULL', 'sqrt'),
+#'  y = c('log',  'sqrt'))}.
+#'
 #'
 #' @param add_fit_criteria An optional (default \code{NULL}) indicator to add
 #'   fit criteria to the model fit. options are \code{loo} and \code{waic}.
@@ -43,9 +55,15 @@
 optimization.bsitar <- function(model, data = NULL,  
                             optimize = list(x = c('NULL', 'log',  'sqrt'),
                                             y = c('NULL', 'log',  'sqrt')),
+                            exclude_default = FALSE,
                             add_fit_criteria = NULL,
                             add_fit_bayes_R = NULL,
                             ...) {
+  
+  
+  if(exclude_default) {
+    
+  }
   
   scale_set_comb <- 
     with(expand.grid(optimize[[1]], optimize[[2]]), paste0(Var1,'_',Var2))

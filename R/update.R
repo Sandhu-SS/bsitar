@@ -4,8 +4,9 @@
 #' Update \pkg{bsitar} models
 #'
 #' @param model An object of class \code{bsitar}.
-#' @param newdata newdata Optional \code{data.frame} to update the model with
-#'   new data. Note that data-dependent default priors will not be updated
+#' @param data An optional \code{data.frame} to be used when updating the model.
+#'   If \code{NULL} (default), the same same data used for original model fit is
+#'   used. Note that data-dependent default priors will not be updated
 #'   automatically.
 #' @param recompile A logical to indicate whether the Stan model should be
 #'   recompiled. When \code{NULL} (the default), \code{update} tries to figure
@@ -30,7 +31,7 @@
 #' fit_males2 <- update(df=5)
 #' }
 #' 
-update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
+update.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
   
   mcall <- match.call()
   mcall_ <- mcall[3:length(mcall)]
@@ -126,8 +127,8 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
 
 #' @rdname update.bsitar
 #' @export
-update_bsitar <- function(model, ...) {
-  UseMethod("update_bsitar")
+update <- function(model, ...) {
+  UseMethod("update")
 }
 
 

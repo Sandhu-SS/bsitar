@@ -1,6 +1,6 @@
 
 
-#' Set up data for \pkg{bsitar} 
+#' Set up data for bsitar model 
 #'
 #' @param data An input data frame
 #' @param response_variable The name(s) of the outcome(s) variables. Must be a
@@ -19,13 +19,12 @@
 #' @return A data frame with necessary information added a attributes.
 #' 
 #' @export
-#'
+#' 
 #' @examples
-#' \dontrun {
+#' \dontrun{
 #' data(heights)
 #' make_bsitar_data(data = heights, response_variable = heights)
 #' }
-#' 
 make_bsitar_data <- function(data, response_variable, 
                              uvarby = NA, mvar = FALSE, 
                              xfuns = NULL, yfuns = NULL) {
