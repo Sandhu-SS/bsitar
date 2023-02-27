@@ -3,7 +3,7 @@
 #' Update \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
-#' @param data An optional \code{data.frame} to be used when updating the model.
+#' @param newdata An optional \code{data.frame} to be used when updating the model.
 #'   If \code{NULL} (default), the same same data used for original model fit is
 #'   used. Note that data-dependent default priors will not be updated
 #'   automatically.
@@ -30,12 +30,15 @@
 #' fit_males2 <- update_bsitar(df=5)
 #' }
 #' 
-update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
+update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   
   # backup_options <- options()
   mcall_ <- match.call()
   call_ <- model$model_info$call.full.bsitar #[-1]
   
+  if(!is.null(newdata)) {
+    call_$data <- mcall_$newdata
+  }
   
   if(!identical(names(mcall_)[-c(1:2)], character(0))) {
     for (i in names(names(mcall_)[-c(1:2)])) {

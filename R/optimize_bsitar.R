@@ -3,7 +3,7 @@
 #' Optimize \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
-#' @param data An optional \code{data.frame} to be used when optimising the
+#' @param newdata An optional \code{data.frame} to be used when optimising the
 #'   model. If \code{NULL} (default), the same same data used for original model
 #'   fit is used. Note that data-dependent default priors will not be updated
 #'   automatically.
@@ -16,7 +16,7 @@
 #'    y = c('NULL', 'log',  'sqrt'))} is to explore all possible combinations of
 #'   'NULL', 'log' and  'sqrt'.
 #'
-#' @param exclude_default A logical (deafult \code{FALSE}) to indicate whether
+#' @param exclude_default_funs A logical (deafult \code{FALSE}) to indicate whether
 #'   transformations (\code{xvar} and \code{yvar}) used in the original model
 #'   fit should be excluded. If \code{TRUE}, then the \code{xvar} and
 #'   \code{yvar} transformations from the original model fit are excluded from
@@ -33,7 +33,7 @@
 #' @param add_fit_bayes_R An optional (default \code{NULL}) to add Bayesian R
 #'   square.
 #'
-#' @param ... Other arguments passed to \code{\link{brms}}.
+#' @param ... Other arguments passed to \code{\link{update_bsitar}}.
 #'
 #' @return An updated object of class \code{brmsfit, bsiatr}, that contains the
 #'   posterior draws and other useful information about the model.
@@ -52,25 +52,37 @@
 #' fit_males2 <- optimize_bsitar(fit_males)
 #' }
 #' 
-optimize_bsitar.bsitar <- function(model, data = NULL,  
-                            optimize = list(x = c('NULL', 'log',  'sqrt'),
-                                            y = c('NULL', 'log',  'sqrt')),
-                            exclude_default = FALSE,
-                            add_fit_criteria = NULL,
-                            add_fit_bayes_R = NULL,
-                            ...) {
+optimize_bsitar.bsitar <- function(model, newdata = NULL,  
+                                   optimize = list(x = c('NULL', 'log',  'sqrt'),
+                                                   y = c('NULL', 'log',  'sqrt')),
+                                   exclude_default_funs = FALSE,
+                                   add_fit_criteria = NULL,
+                                   add_fit_bayes_R = NULL,
+                                   ...) {
   
   
-  if(is.null(data)) {
-    data <- eval.parent(model$model_info$call.bsitar$data)
+  call_o <- match.call()
+  call_o_args <- as.list(call_o)[-1]
+  
+  args_o <- as.list(model$model_info$call.full.bsitar)[-1]
+  args_o_dots_ <- list(...)
+  if (length(args_o_dots_) > 0) {
+    # args_o <- c(args_o, args_o_dots_)
+    for (i in names(args_o_dots_)) {
+      args_o[[i]] <- args_o_dots_[[i]]
+    }
   }
   
-  if(exclude_default) {
+  # if(is.null(newdata)) {
+  #   data <- eval.parent(model$model_info$call.bsitar$data)
+  # }
+  
+  if(exclude_default_funs) {
     optimize$x <- optimize$x[!optimize$x %in% model$model_info$xfuns]
     optimize$y <- optimize$y[!optimize$y %in% model$model_info$xfuns]
   }
   
-  scale_set_comb <- 
+  optimize_x_y <- 
     with(expand.grid(optimize[[1]], optimize[[2]]), paste0(Var1,'_',Var2))
   
   
@@ -80,6 +92,7 @@ optimize_bsitar.bsitar <- function(model, data = NULL,
     yfun <- xsplit[2]
     if(xfun == 'NULL') xfun <- NULL else xfun <- xfun
     if(yfun == 'NULL') yfun <- NULL else yfun <- yfun
+    # print(yfun); stop()
     
     #  cat(paste0('Degree of freedom ', .x), '\n')
     if(is.null(xfun)) xfun_print <- deparse(xfun) else xfun_print <- xfun
@@ -87,34 +100,46 @@ optimize_bsitar.bsitar <- function(model, data = NULL,
     cat("\n")
     cat(paste0("Transformations: ", "x = ", xfun_print, "; y = ", yfun_print), "\n")
     
-    fit <- update_bsitar(model, data = data, xfun = xfun, yfun = yfun)
+    # fit <- update_bsitar(model, data = data, xfun = xfun, yfun = yfun)
     
+    args_o$model <- model
+    args_o$xfun <- xfun
+    args_o$yfun <- yfun
+    
+    if(!is.null(newdata)) {
+      args_o$data <- call_o_args$newdata
+    }
+    
+    fit <- do.call(update_bsitar, args_o)
+    
+    # fitx1 <<- fit
+    # stop
     ##########
     # Very important to set cores = 1 on windows
     if(!is.null(add_fit_criteria)) {
-      cat("Adding criterion....\n")
-      cat(" ", add_fit_criteria)
-      fit <- add_criterion(fit, add_fit_criteria, cores = 1)
-      cat(" \n ")
+      what_ <- paste(add_fit_criteria, collapse = ", ")
+      message("Adding", " ", what_, " ", "...")
+      cat("\n")
+      suppressWarnings(fit <- add_criterion(fit, add_fit_criteria, cores = 1))
     }
     
     if(!is.null(add_fit_bayes_R) & !is.null(add_fit_criteria)) {
-      cat("Adding R square...\n")
-      cat(" ", add_fit_bayes_R)
-      fit$criteria$bayes_R <- bayes_R2(fit)
-      cat(" \n ")
+      what_ <- paste(add_fit_bayes_R, collapse = ", ")
+      message("Adding", " ", what_, " ", "...")
+      cat("\n")
+      suppressWarnings(fit$criteria$bayes_R <- bayes_R2(fit))
     }
     
     if(!is.null(add_fit_bayes_R) & is.null(add_fit_criteria)) {
-      cat("Adding R square...\n")
-      cat(" ", add_fit_bayes_R)
-      fit$bayes_R <- bayes_R2(fit)
-      cat(" \n ")
+      what_ <- paste(add_fit_bayes_R, collapse = ", ")
+      message("Adding", " ", what_, " ", "...")
+      cat("\n")
+      suppressWarnings(fit$bayes_R <- bayes_R2(fit))
     }
-    
+    return(fit)
   }
   
-  brmsmodels <- lapply(scale_set_comb, function(.x) optimize_fun(.x, model))
+  brmsmodels <- lapply(optimize_x_y, function(.x) optimize_fun(.x, model))
   
   return(brmsmodels)
 } 

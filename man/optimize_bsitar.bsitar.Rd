@@ -7,9 +7,9 @@
 \usage{
 \method{optimize_bsitar}{bsitar}(
   model,
-  data = NULL,
+  newdata = NULL,
   optimize = list(x = c("NULL", "log", "sqrt"), y = c("NULL", "log", "sqrt")),
-  exclude_default = FALSE,
+  exclude_default_funs = FALSE,
   add_fit_criteria = NULL,
   add_fit_bayes_R = NULL,
   ...
@@ -20,7 +20,7 @@ optimize_bsitar(model, ...)
 \arguments{
 \item{model}{An object of class \code{bsitar}.}
 
-\item{data}{An optional \code{data.frame} to be used when optimising the
+\item{newdata}{An optional \code{data.frame} to be used when optimising the
 model. If \code{NULL} (default), the same same data used for original model
 fit is used. Note that data-dependent default priors will not be updated
 automatically.}
@@ -33,7 +33,7 @@ automatically.}
    y = c('NULL', 'log',  'sqrt'))} is to explore all possible combinations of
 'NULL', 'log' and  'sqrt'.}
 
-\item{exclude_default}{A logical (deafult \code{FALSE}) to indicate whether
+\item{exclude_default_funs}{A logical (deafult \code{FALSE}) to indicate whether
 transformations (\code{xvar} and \code{yvar}) used in the original model
 fit should be excluded. If \code{TRUE}, then the \code{xvar} and
 \code{yvar} transformations from the original model fit are excluded from
@@ -49,7 +49,7 @@ Please see \code{\link[brms:add_criterion]{brms::add_criterion()}} for details.}
 \item{add_fit_bayes_R}{An optional (default \code{NULL}) to add Bayesian R
 square.}
 
-\item{...}{Other arguments passed to \code{\link{brms}}.}
+\item{...}{Other arguments passed to \code{\link{update_bsitar}}.}
 }
 \value{
 An updated object of class \code{brmsfit, bsiatr}, that contains the

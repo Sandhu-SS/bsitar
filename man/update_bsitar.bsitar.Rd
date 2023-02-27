@@ -5,14 +5,14 @@
 \alias{update_bsitar}
 \title{Update \pkg{bsitar} model}
 \usage{
-\method{update_bsitar}{bsitar}(model, data = NULL, recompile = NULL, ...)
+\method{update_bsitar}{bsitar}(model, newdata = NULL, recompile = NULL, ...)
 
 update_bsitar(model, ...)
 }
 \arguments{
 \item{model}{An object of class \code{bsitar}.}
 
-\item{data}{An optional \code{data.frame} to be used when updating the model.
+\item{newdata}{An optional \code{data.frame} to be used when updating the model.
 If \code{NULL} (default), the same same data used for original model fit is
 used. Note that data-dependent default priors will not be updated
 automatically.}
