@@ -1,6 +1,6 @@
 
 
-#' Optimization of the \pkg{bsitar} model
+#' Optimize \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
 #' @param data An optional \code{data.frame} to be used when optimising the
@@ -40,7 +40,7 @@
 #'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
-#' @export optimization.bsitar
+#' @export optimize_bsitar.bsitar
 #'
 #' @export
 #'
@@ -49,10 +49,10 @@
 #' data(heights)
 #' data_males <- heights %>% filter(sex == 'Male')
 #' fit_males <- bsitar(x=age, y=height, id=id, data=heights, df=4)
-#' fit_males2 <- optimization(fit_males)
+#' fit_males2 <- optimize_bsitar(fit_males)
 #' }
 #' 
-optimization.bsitar <- function(model, data = NULL,  
+optimize_bsitar.bsitar <- function(model, data = NULL,  
                             optimize = list(x = c('NULL', 'log',  'sqrt'),
                                             y = c('NULL', 'log',  'sqrt')),
                             exclude_default = FALSE,
@@ -60,6 +60,10 @@ optimization.bsitar <- function(model, data = NULL,
                             add_fit_bayes_R = NULL,
                             ...) {
   
+  
+  if(is.null(data)) {
+    data <- eval.parent(model$model_info$call.bsitar$data)
+  }
   
   if(exclude_default) {
     optimize$x <- optimize$x[!optimize$x %in% model$model_info$xfuns]
@@ -88,21 +92,21 @@ optimization.bsitar <- function(model, data = NULL,
     ##########
     # Very important to set cores = 1 on windows
     if(!is.null(add_fit_criteria)) {
-      message("Adding criterion....\n")
+      cat("Adding criterion....\n")
       cat(" ", add_fit_criteria)
       fit <- add_criterion(fit, add_fit_criteria, cores = 1)
       cat(" \n ")
     }
     
     if(!is.null(add_fit_bayes_R) & !is.null(add_fit_criteria)) {
-      message("Adding R square...\n")
+      cat("Adding R square...\n")
       cat(" ", add_fit_bayes_R)
       fit$criteria$bayes_R <- bayes_R2(fit)
       cat(" \n ")
     }
     
     if(!is.null(add_fit_bayes_R) & is.null(add_fit_criteria)) {
-      message("Adding R square...\n")
+      cat("Adding R square...\n")
       cat(" ", add_fit_bayes_R)
       fit$bayes_R <- bayes_R2(fit)
       cat(" \n ")
@@ -118,8 +122,8 @@ optimization.bsitar <- function(model, data = NULL,
 
 
 
-#' @rdname optimization.bsitar
+#' @rdname optimize_bsitar.bsitar
 #' @export
-optimization <- function(model, ...) {
-  UseMethod("optimization")
+optimize_bsitar <- function(model, ...) {
+  UseMethod("optimize_bsitar")
 }
