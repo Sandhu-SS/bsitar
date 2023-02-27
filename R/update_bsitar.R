@@ -32,13 +32,15 @@
 #' 
 update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   
-  # backup_options <- options()
-  mcall_ <- match.call()
-  call_ <- model$model_info$call.full.bsitar #[-1]
   
+  mcall_ <- match.call()
+  call_ <- model$model_info$call.full.bsitar
   if(!is.null(newdata)) {
     call_$data <- mcall_$newdata
   }
+  mcall_$newdata <- NULL
+  # print(call_$data)
+  # stop()
   
   if(!identical(names(mcall_)[-c(1:2)], character(0))) {
     for (i in names(names(mcall_)[-c(1:2)])) {
@@ -75,19 +77,6 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   iter <- call_$iter
   silent <- call_$silent
   
-  
-  # if(is.numeric(eval(call_$cores))) {
-  #   options(mc.cores = NULL)
-  #   call_$cores <- getOption("mc.cores", eval(call_$cores))
-  # }
-  
-  
-  # call_$cores <- getOption("mc.cores", "optimize")
-  # print(call_$cores)
-  # stop()
-  
-  
-  
   as_one_logical <- is_equal <- needs_recompilation <- NULL
   as_one_logical <- utils::getFromNamespace("as_one_logical", "brms")
   is_equal <- utils::getFromNamespace("is_equal", "brms")
@@ -110,12 +99,9 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
     call_stancode <- call_
     call_stancode$get_stancode <- TRUE
     new_stancode <- eval.parent(call_stancode)
-    #  new_stancode <<- sub("^[^\n]+\n", "", new_stancode)
     new_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", new_stancode)
     old_stancode <- model$bmodel
-    #   old_stancode <<- sub("^[^\n]+\n", "", old_stancode)
     old_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", old_stancode)
-    # print(is_equal(new_stancode, old_stancode))
     recompile <- needs_recompilation(model) || !same_backend || 
       !is_equal(new_stancode, old_stancode)
     if (recompile && silent < 2) {
@@ -125,7 +111,6 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   
   recompile <- as_one_logical(recompile)
   
-  
   if (recompile) {
     call_$fit <- NA
     model <- eval.parent(call_) 
@@ -133,7 +118,7 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
     call_$fit <- model
     model <- eval.parent(call_)
   }
-  # options(backup_options)
+  
   return(model)
 }
 
