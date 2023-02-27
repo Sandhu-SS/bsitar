@@ -1187,7 +1187,7 @@ bsitar <- function(x,
                    future = getOption("future", FALSE),
                    ...) {
   mcall <- mcall_ <- match.call()
-  
+  backup_options <- options()
   # check and update if argument value taken from the global environment.
   # x,y,id and data are always taken from the data, thus excluded from checks
   
@@ -1366,6 +1366,16 @@ bsitar <- function(x,
       'file_refit',
       'future'
     )
+  
+  
+  #######
+  if(is.numeric(arguments$cores)) {
+    options(mc.cores = NULL)
+    arguments$cores <- getOption("mc.cores", arguments$cores)
+  }
+  
+  iter <- arguments$iter
+  ######
   
   
   brms_arguments <- list()
@@ -4507,6 +4517,7 @@ bsitar <- function(x,
   }
   
   attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bsitar')
+  options(backup_options)
   return(brmsfit)
   } # exe_model_fit
 }
