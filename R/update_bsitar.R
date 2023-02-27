@@ -73,10 +73,10 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
   silent <- call_$silent
   
   
-  if(is.numeric(eval(call_$cores))) {
-    options(mc.cores = NULL)
-    call_$cores <- getOption("mc.cores", eval(call_$cores))
-  }
+  # if(is.numeric(eval(call_$cores))) {
+  #   options(mc.cores = NULL)
+  #   call_$cores <- getOption("mc.cores", eval(call_$cores))
+  # }
   
   
   # call_$cores <- getOption("mc.cores", "optimize")
@@ -107,9 +107,12 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
     call_stancode <- call_
     call_stancode$get_stancode <- TRUE
     new_stancode <- eval.parent(call_stancode)
-    new_stancode <- sub("^[^\n]+\n", "", new_stancode)
+    #  new_stancode <<- sub("^[^\n]+\n", "", new_stancode)
+    new_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", new_stancode)
     old_stancode <- model$bmodel
-    old_stancode <- sub("^[^\n]+\n", "", old_stancode)
+    #   old_stancode <<- sub("^[^\n]+\n", "", old_stancode)
+    old_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", old_stancode)
+    # print(is_equal(new_stancode, old_stancode))
     recompile <- needs_recompilation(model) || !same_backend || 
       !is_equal(new_stancode, old_stancode)
     if (recompile && silent < 2) {
@@ -138,5 +141,4 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
 update_bsitar <- function(model, ...) {
   UseMethod("update_bsitar")
 }
-
 

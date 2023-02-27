@@ -1187,7 +1187,7 @@ bsitar <- function(x,
                    future = getOption("future", FALSE),
                    ...) {
   mcall <- mcall_ <- match.call()
-  # backup_options <- options()
+  
   # check and update if argument value taken from the global environment.
   # x,y,id and data are always taken from the data, thus excluded from checks
   
@@ -1369,10 +1369,11 @@ bsitar <- function(x,
   
   
   #######
-  # if(is.numeric(arguments$cores)) {
-  #   options(mc.cores = NULL)
-  #   arguments$cores <- getOption("mc.cores", arguments$cores)
-  # }
+  mc.cores_restore <- getOption("mc.cores")
+  if(is.numeric(arguments$cores)) {
+    options(mc.cores = arguments$cores)
+    # arguments$cores <- getOption("mc.cores", arguments$cores)
+  }
   
   iter <- arguments$iter
   warmup <- arguments$warmup <- eval(arguments$warmup)
@@ -1392,7 +1393,7 @@ bsitar <- function(x,
   # brms_arguments <- list()
   # brms_arguments <- mget(brms_arguments_list)
   
-  #brms_arguments <- mget(brms_arguments_list)
+  brms_arguments <- mget(brms_arguments_list)
   
   
   
@@ -4321,14 +4322,19 @@ bsitar <- function(x,
   
   if(!exe_model_fit) {
     if(get_priors) {
+      options(mc.cores = mc.cores_restore)
       return(do.call(get_prior, brm_args))
     } else if(get_standata) {
+      options(mc.cores = mc.cores_restore)
       return(do.call(make_standata, brm_args))
     } else if(get_stancode) {
+      options(mc.cores = mc.cores_restore)
       return(do.call(make_stancode, brm_args))
     } else if(get_set_priors) {
+      options(mc.cores = mc.cores_restore)
       return(brm_args$prior)
     } else if(validate_priors) {
+      options(mc.cores = mc.cores_restore)
       return(do.call(validate_prior, brm_args))
     }
   } 
@@ -4524,7 +4530,7 @@ bsitar <- function(x,
     }
     
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bsitar')
-    # options(backup_options)
+    options(mc.cores = mc.cores_restore)
     return(brmsfit)
   } # exe_model_fit
 }
