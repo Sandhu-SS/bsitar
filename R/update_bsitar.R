@@ -1,6 +1,5 @@
 
 
-
 #' Update \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
@@ -33,18 +32,22 @@
 #' 
 update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
   
-  mcall <- match.call()
-  mcall_ <- mcall[3:length(mcall)]
-  
+  backup_options <- options()
+  mcall_ <- match.call()
   call_ <- model$model_info$call.full.bsitar #[-1]
   
-  for (i in names(mcall_[-1])) {
-    if(!i %in% names(call_)) {
-      stop("Argument ", i, " is not a valid arguments",
-           " \n ",
-           " Please see 'bsitar' function ")
+  
+  if(!identical(names(mcall_)[-c(1:2)], character(0))) {
+    for (i in names(names(mcall_)[-c(1:2)])) {
+      if(!i %in% names(call_)) {
+        stop("Argument ", i, " is not a valid arguments",
+             " \n ",
+             " Please see 'bsitar' function ")
+      }
     }
   }
+  
+  
   
   
   eval_identical <- function(x, y) {
@@ -62,7 +65,7 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
   }
   
   
-  for (i in names(mcall_)) {
+  for (i in names(mcall_)[-c(1:2)]) {
     call_[[i]] <- mcall_[[i]]
   }
   
@@ -70,44 +73,49 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
   silent <- call_$silent
   
   
-  as_one_logical <- NULL
-  backend_choices <- backend_choices <- first_not_null <- as_one_logical
-  get_drop_unused_levels <- is_equal <- is_normalized <- as_one_logical
-  needs_recompilation <- validate_silent <- as_one_logical
+  if(is.numeric(eval(call_$cores))) {
+    options(mc.cores = NULL)
+    call_$cores <- getOption("mc.cores", eval(call_$cores))
+  }
   
+  
+  # call_$cores <- getOption("mc.cores", "optimize")
+  # print(call_$cores)
+  # stop()
+  
+  
+  
+  as_one_logical <- is_equal <- needs_recompilation <- NULL
   as_one_logical <- utils::getFromNamespace("as_one_logical", "brms")
-  backend_choices <- utils::getFromNamespace("backend_choices", "brms")
-  first_not_null <- utils::getFromNamespace("first_not_null", "brms")
-  get_drop_unused_levels <- utils::getFromNamespace("get_drop_unused_levels", "brms")
   is_equal <- utils::getFromNamespace("is_equal", "brms")
-  is_normalized <- utils::getFromNamespace("is_normalized", "brms")
   needs_recompilation <- utils::getFromNamespace("needs_recompilation", "brms")
-  validate_silent <- utils::getFromNamespace("validate_silent", "brms")
   
   
-  validate_threads <- NULL
-  algorithm_choices <- validate_sample_prior <- validate_threads
-  validate_save_pars <- validate_threads
+  # backend_choices <- backend_choices <- first_not_null <- as_one_logical
+  # get_drop_unused_levels <- is_equal <- is_normalized <- as_one_logical
+  # needs_recompilation <- validate_silent <- as_one_numeric <- as_one_logical
+  # backend_choices <- utils::getFromNamespace("backend_choices", "brms")
+  # first_not_null <- utils::getFromNamespace("first_not_null", "brms")
+  # get_drop_unused_levels <- utils::getFromNamespace("get_drop_unused_levels", "brms")
+  # is_normalized <- utils::getFromNamespace("is_normalized", "brms")
+  # validate_silent <- utils::getFromNamespace("validate_silent", "brms")
+  # as_one_numeric <- utils::getFromNamespace("as_one_numeric", "brms")
+  
   
   
   if (is.null(recompile)) {
     call_stancode <- call_
     call_stancode$get_stancode <- TRUE
-    
     new_stancode <- eval.parent(call_stancode)
     new_stancode <- sub("^[^\n]+\n", "", new_stancode)
-    
     old_stancode <- model$bmodel
     old_stancode <- sub("^[^\n]+\n", "", old_stancode)
-    
     recompile <- needs_recompilation(model) || !same_backend || 
       !is_equal(new_stancode, old_stancode)
-    
     if (recompile && silent < 2) {
       message("The desired updates require recompiling the model")
     }
   }
-  
   
   recompile <- as_one_logical(recompile)
   
@@ -119,7 +127,7 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
     call_$fit <- model
     model <- eval.parent(call_)
   }
-  
+  options(backup_options)
   return(model)
 }
 

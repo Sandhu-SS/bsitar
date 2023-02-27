@@ -20,7 +20,7 @@
 #'
 #' @return An character string which later evaluated to a custom function
 #'   and inserted into the Stan's functions block.
-#'
+#' 
 #' @export
 #' 
 prepare_function <- function(x,
