@@ -32,7 +32,7 @@
 #' 
 update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
   
-  backup_options <- options()
+  # backup_options <- options()
   mcall_ <- match.call()
   call_ <- model$model_info$call.full.bsitar #[-1]
   
@@ -127,7 +127,7 @@ update_bsitar.bsitar <- function(model, data = NULL, recompile = NULL, ...) {
     call_$fit <- model
     model <- eval.parent(call_)
   }
-  options(backup_options)
+  # options(backup_options)
   return(model)
 }
 

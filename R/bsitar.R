@@ -1187,7 +1187,7 @@ bsitar <- function(x,
                    future = getOption("future", FALSE),
                    ...) {
   mcall <- mcall_ <- match.call()
-  backup_options <- options()
+  # backup_options <- options()
   # check and update if argument value taken from the global environment.
   # x,y,id and data are always taken from the data, thus excluded from checks
   
@@ -1235,7 +1235,7 @@ bsitar <- function(x,
             if (is.list(checks.)) {
               if (is.symbol(mcall[[i]]))
                 mcall[[i]] <- deparse_0(mcall[[i]]) # for set_self_priors
-                mcall[[i]] <- eval(mcall[[i]])
+              mcall[[i]] <- eval(mcall[[i]])
               temp <- str2lang(deparse_0((mcall[[i]])))
               mcall[[i]] <- temp
             } else if (!is.list(checks.)) {
@@ -1251,7 +1251,7 @@ bsitar <- function(x,
     }
   }
   
-
+  
   arguments <- as.list(mcall)[-1]
   
   
@@ -1312,7 +1312,7 @@ bsitar <- function(x,
   }
   
   # arguments2 <<- arguments
- 
+  
   remove_spaces <- c('a_formula_gr_str', 'b_formula_gr_str', 
                      'c_formula_gr_str', 'd_formula_gr_str',
                      'sigma_formula_gr_str')
@@ -1334,7 +1334,7 @@ bsitar <- function(x,
       } 
     }
   }
- 
+  
   check_gr_str_form(sigma_formula_gr_str, 
                     deparse(substitute(sigma_formula_gr_str)))
   
@@ -1369,12 +1369,15 @@ bsitar <- function(x,
   
   
   #######
-  if(is.numeric(arguments$cores)) {
-    options(mc.cores = NULL)
-    arguments$cores <- getOption("mc.cores", arguments$cores)
-  }
+  # if(is.numeric(arguments$cores)) {
+  #   options(mc.cores = NULL)
+  #   arguments$cores <- getOption("mc.cores", arguments$cores)
+  # }
   
   iter <- arguments$iter
+  warmup <- arguments$warmup <- eval(arguments$warmup)
+  # print(arguments$iter)
+  # print(arguments$warmup)
   ######
   
   
@@ -1386,8 +1389,12 @@ bsitar <- function(x,
   }
   
   #### Note
-  brms_arguments <- list()
-  brms_arguments <- mget(brms_arguments_list)
+  # brms_arguments <- list()
+  # brms_arguments <- mget(brms_arguments_list)
+  
+  #brms_arguments <- mget(brms_arguments_list)
+  
+  
   
   if (eval(brms_arguments$backend) != "rstan" &
       eval(brms_arguments$backend) != "cmdstanr") {
@@ -2194,7 +2201,7 @@ bsitar <- function(x,
   
   
   sigma_group_arg$verbose <- verbose
- 
+  
   
   # Temporary placeholder for the number of outcomes when fitting
   # univariate-by-subgroup model
@@ -2691,7 +2698,7 @@ bsitar <- function(x,
       }
     }
     
-  
+    
     
     # Check for higher level model and update level 2 random formula
     
@@ -2728,14 +2735,14 @@ bsitar <- function(x,
     c_fcgs_out <- f_checks_gr_gr_str(c_formula_grsi, c_formula_gr_strsi)
     d_fcgs_out <- f_checks_gr_gr_str(d_formula_grsi, d_formula_gr_strsi)
     
-   
+    
     
     # First, if sigma_formula_gr_strsi not NULL but sigma_formula_grsi NULL
     # Then set sigma_formula_grsi to ~1 because then only first part of the 
     # sigma_formula_gr_strsi (i.e., before first + ) will be copied to the 
     # sigma_formula_grsi
     
-  
+    
     if(sigma_formula_gr_strsi != 'NULL') {
       if(sigma_formula_grsi == 'NULL') {
         sigma_formula_grsi <- "~1"
@@ -2822,7 +2829,7 @@ bsitar <- function(x,
       sigma_set_higher_levels <- FALSE
     }
     
-   
+    
     # Add intercept ~ 1 if missing
     
     check_formuals <-
@@ -3203,7 +3210,7 @@ bsitar <- function(x,
       )
     
     
-   
+    
     
     internal_formula_args_names <-
       c(
@@ -3620,7 +3627,7 @@ bsitar <- function(x,
     }
     
     
-  
+    
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       dataout <- rbind(dataout, datai)
@@ -4310,8 +4317,8 @@ bsitar <- function(x,
     exe_model_fit <- FALSE
   }
   
- 
-
+  
+  
   if(!exe_model_fit) {
     if(get_priors) {
       return(do.call(get_prior, brm_args))
@@ -4338,7 +4345,7 @@ bsitar <- function(x,
       brm_args$prior <- brmspriors
     }
     
-   
+    
     # If initials are 0 or random, then set custom init to NULL
     
     if(brm_args$backend == "rstan") {
@@ -4356,7 +4363,7 @@ bsitar <- function(x,
     }
     
     
-   
+    
     if(brm_args$backend == "cmdstanr") {
       if(is.null(brm_args$init)) {
         init_custom <- NULL
@@ -4398,96 +4405,116 @@ bsitar <- function(x,
       }
       brm_args$init <- new_init_append
     } 
-  
     
-  brmsfit <- do.call(brm, brm_args)
-  
-  
-  # Add model info for post-processing
-  
-  model_info <- list()
-  
-  for (i in 1:length(xoffsetnamelist)) {
-    model_info[[xoffsetnamelist[[i]]]] <- xoffsetvaluelist[[i]]
-  }
-  
-  for (i in 1:length(knotsnamelist)) {
-    model_info[[knotsnamelist[[i]]]] <- knotsvaluelist[[i]]
-  }
-  
-  for (i in 1:length(fixednamelist)) {
-    model_info[[fixednamelist[[i]]]] <- fixedvaluelist[[i]]
-  }
-  
-  for (i in 1:length(randomnamelist)) {
-    model_info[[randomnamelist[[i]]]] <- randomvaluelist[[i]]
-  }
-  
-  for (i in 1:length(xfunnamelist)) {
-    model_info[[xfunnamelist[[i]]]] <- xfunvaluelist[[i]]
-  }
-  
-  for (i in 1:length(yfunnamelist)) {
-    model_info[[yfunnamelist[[i]]]] <- yfunvaluelist[[i]]
-  }
-  
-  for (i in 1:length(xxfunnamelist)) {
-    model_info[[xxfunnamelist[[i]]]] <- xxfunvaluelist[[i]]
-  }
-  
-  for (i in 1:length(yyfunnamelist)) {
-    model_info[[yyfunnamelist[[i]]]] <- yyfunvaluelist[[i]]
-  }
-  
-  for (i in 1:length(groupvarnamelist)) {
-    model_info[[groupvarnamelist[[i]]]] <- groupvarvaluelist[[i]]
-  }
-  
-  for (i in 1:length(hierarchicalvarnamelist)) {
-    model_info[[hierarchicalvarnamelist[[i]]]] <- hierarchicalvarvaluelist[[i]]
-  }
-  
-  for (i in 1:length(xnamelist)) {
-    model_info[[xnamelist[[i]]]] <- xvarvaluelist[[i]]
-  }
-  
-  for (i in 1:length(ynamelist)) {
-    model_info[[ynamelist[[i]]]] <- yvarvaluelist[[i]]
-  }
-  
-  for (i in 1:length(covnamelist)) {
-    model_info[[covnamelist[[i]]]] <- covvaluelist[[i]]
-  }
-  
-  if(!is.na(univariate_by$by)) {
-    # model_info[['make_bsitar_data']] <- make_bsitar_data
-    # model_info[['org.ycall']] <- org.ycall
-    model_info[['subindicators']] <- subindicators
-  } 
-  
-  model_info[[SplineFun_name]] <- SplineFun_name
-  model_info[['multivariate']] <- multivariate$mvar
-  model_info[['univariate_by']] <- univariate_by$by
-  model_info[['nys']] <- nys
-  model_info[['ys']] <- ys
-  
-  model_info[['xfuns']] <- xfuns
-  model_info[['yfuns']] <- yfuns
-  
-  model_info[['bsitar.data']] <- data.org.in
-  
-  model_info[['call.full.bsitar']] <- call.full
-  
-  model_info[['call.bsitar']] <- mcall_
-  
-  brmsfit$model_info <- model_info
-  
-  # Expose Stan function
-  
-  if (expose_function) {
+    
+    brmsfit <- do.call(brm, brm_args)
+    
+    
+    # Add model info for post-processing
+    
+    model_info <- list()
+    
+    for (i in 1:length(xoffsetnamelist)) {
+      model_info[[xoffsetnamelist[[i]]]] <- xoffsetvaluelist[[i]]
+    }
+    
+    for (i in 1:length(knotsnamelist)) {
+      model_info[[knotsnamelist[[i]]]] <- knotsvaluelist[[i]]
+    }
+    
+    for (i in 1:length(fixednamelist)) {
+      model_info[[fixednamelist[[i]]]] <- fixedvaluelist[[i]]
+    }
+    
+    for (i in 1:length(randomnamelist)) {
+      model_info[[randomnamelist[[i]]]] <- randomvaluelist[[i]]
+    }
+    
+    for (i in 1:length(xfunnamelist)) {
+      model_info[[xfunnamelist[[i]]]] <- xfunvaluelist[[i]]
+    }
+    
+    for (i in 1:length(yfunnamelist)) {
+      model_info[[yfunnamelist[[i]]]] <- yfunvaluelist[[i]]
+    }
+    
+    for (i in 1:length(xxfunnamelist)) {
+      model_info[[xxfunnamelist[[i]]]] <- xxfunvaluelist[[i]]
+    }
+    
+    for (i in 1:length(yyfunnamelist)) {
+      model_info[[yyfunnamelist[[i]]]] <- yyfunvaluelist[[i]]
+    }
+    
+    for (i in 1:length(groupvarnamelist)) {
+      model_info[[groupvarnamelist[[i]]]] <- groupvarvaluelist[[i]]
+    }
+    
+    for (i in 1:length(hierarchicalvarnamelist)) {
+      model_info[[hierarchicalvarnamelist[[i]]]] <- hierarchicalvarvaluelist[[i]]
+    }
+    
+    for (i in 1:length(xnamelist)) {
+      model_info[[xnamelist[[i]]]] <- xvarvaluelist[[i]]
+    }
+    
+    for (i in 1:length(ynamelist)) {
+      model_info[[ynamelist[[i]]]] <- yvarvaluelist[[i]]
+    }
+    
+    for (i in 1:length(covnamelist)) {
+      model_info[[covnamelist[[i]]]] <- covvaluelist[[i]]
+    }
+    
+    if(!is.na(univariate_by$by)) {
+      # model_info[['make_bsitar_data']] <- make_bsitar_data
+      # model_info[['org.ycall']] <- org.ycall
+      model_info[['subindicators']] <- subindicators
+    } 
+    
+    model_info[[SplineFun_name]] <- SplineFun_name
+    model_info[['multivariate']] <- multivariate$mvar
+    model_info[['univariate_by']] <- univariate_by$by
+    model_info[['nys']] <- nys
+    model_info[['ys']] <- ys
+    
+    model_info[['xfuns']] <- xfuns
+    model_info[['yfuns']] <- yfuns
+    
+    model_info[['bsitar.data']] <- data.org.in
+    
+    model_info[['call.full.bsitar']] <- call.full
+    
+    model_info[['call.bsitar']] <- mcall_
+    
+    brmsfit$model_info <- model_info
+    
+    # Expose Stan function
+    
+    if (expose_function) {
+      if (verbose) {
+        setmsgtxt <-
+          paste0("\n Exposing Stan functions for post-processing\n")
+        if (displayit == 'msg') {
+          message(setmsgtxt)
+        } else if (displayit == 'col') {
+          col <- setcolh
+          cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+        }
+      }
+      
+      if (!verbose) {
+        setmsgtxt <-
+          paste0("\n Exposing Stan functions for post-processing..\n")
+        message(setmsgtxt)
+      }
+      
+      brmsfit <- expose_bsitar_functions(brmsfit)
+    }
+    
+    
     if (verbose) {
-      setmsgtxt <-
-        paste0("\n Exposing Stan functions for post-processing\n")
+      setmsgtxt <- paste0("\nModel Fitting complete")
       if (displayit == 'msg') {
         message(setmsgtxt)
       } else if (displayit == 'col') {
@@ -4496,28 +4523,8 @@ bsitar <- function(x,
       }
     }
     
-    if (!verbose) {
-      setmsgtxt <-
-        paste0("\n Exposing Stan functions for post-processing..\n")
-      message(setmsgtxt)
-    }
-    
-    brmsfit <- expose_bsitar_functions(brmsfit)
-  }
-  
-  
-  if (verbose) {
-    setmsgtxt <- paste0("\nModel Fitting complete")
-    if (displayit == 'msg') {
-      message(setmsgtxt)
-    } else if (displayit == 'col') {
-      col <- setcolh
-      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
-    }
-  }
-  
-  attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bsitar')
-  options(backup_options)
-  return(brmsfit)
+    attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bsitar')
+    # options(backup_options)
+    return(brmsfit)
   } # exe_model_fit
 }
