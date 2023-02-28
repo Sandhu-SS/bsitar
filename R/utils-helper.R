@@ -42,9 +42,6 @@ get.newdata <- function(model, newdata, resp,
   cov_ <- paste0('cov', resp_rev_)
   uvarby <- model$model_info$univariate_by
   
-  # if (is.null(newdata) & is.na(model$model_info$univariate_by)) {
-  #   newdata <- model$data
-  # }
   
   
   if (is.null(newdata)) {
@@ -54,34 +51,41 @@ get.newdata <- function(model, newdata, resp,
     newdata = newdata
   }
   
-  
-  
   if(!is.null(yfun)) {
     # if(yfun == 'log') newdata[[yvar]] <- log(newdata[[yvar]])
     # if(yfun == 'sqrt') newdata[[yvar]] <- sqrt(newdata[[yvar]] )
   }
   
   
+  newdata <- prepare_data(data = newdata,
+                          x = model$model_info$xvar,
+                          y = model$model_info$ys,  
+                          id = model$model_info$groupvar_,
+                          uvarby = model$model_info$univariate_by,
+                          mvar = model$model_info$multivariate,
+                          xfuns = model$model_info$xfuns,
+                          yfuns = model$model_info$yfuns,
+                          outliers = model$model_info$outliers)
   
   if(!is.na(model$model_info$univariate_by)) {
-    if (is.null(newdata)) {
-      # newdata_ <- eval.parent(model$model_info$call.bsitar$data)
-      newdata_ <- newdata
-    } else  if (!is.null(newdata)) {
-      newdata_ <- newdata
-    }
+    # if (is.null(newdata)) {
+    #   # newdata_ <- eval.parent(model$model_info$call.bsitar$data)
+    #   newdata_ <- newdata
+    # } else  if (!is.null(newdata)) {
+    #   newdata_ <- newdata
+    # }
     
     
     # model$model_info$prepare_data(newdata_,
-    newdata <- prepare_data(data = newdata_,
-                            x = model$model_info$xvar,
-                            y = model$model_info$ys,  
-                            id = model$model_info$groupvar_,
-                            uvarby = model$model_info$univariate_by,
-                            mvar = model$model_info$multivariate,
-                            xfuns = model$model_info$xfuns,
-                            yfuns = model$model_info$yfuns,
-                            outliers = model$model_info$outliers)
+    # newdata <- prepare_data(data = newdata_,
+    #                         x = model$model_info$xvar,
+    #                         y = model$model_info$ys,  
+    #                         id = model$model_info$groupvar_,
+    #                         uvarby = model$model_info$univariate_by,
+    #                         mvar = model$model_info$multivariate,
+    #                         xfuns = model$model_info$xfuns,
+    #                         yfuns = model$model_info$yfuns,
+    #                         outliers = model$model_info$outliers)
   
     sortbylayer <- NA
     newdata <- newdata %>%
@@ -100,6 +104,7 @@ get.newdata <- function(model, newdata, resp,
     list_c[['subindicatorsi']] <- subindicatorsi
     list_c[['uvarby']] <- uvarby
   }
+  
   
   covars_extrcation <- function(str) {
     str <- gsub("[[:space:]]", "", str)
@@ -247,10 +252,6 @@ get.newdata <- function(model, newdata, resp,
       uvarby <- model$model_info$univariate_by
       if(!is.na(uvarby)) cov_factor_vars <- c(uvarby, cov_factor_vars)
       
-      
-      
-      
-      if(is.null(ipts)) newdata <- newdata
       
       
       idatafunction <- function(.x, xvar, IDvar, nmy, xrange, set_xrange) {
@@ -405,11 +406,11 @@ get.newdata <- function(model, newdata, resp,
       
       
       
-      # if(is.null(ipts)) newdata <- newdata
-      # 
+      if(is.null(ipts)) {
+        newdata <- newdata
+      } 
       
-      # model$model_info$prepare_data
-      if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
+      if(!is.null(ipts)) {
         newdata <- prepare_data(data = newdata,
                                 x = model$model_info$xvar,
                                 y = model$model_info$ys,  
@@ -419,6 +420,19 @@ get.newdata <- function(model, newdata, resp,
                                 xfuns = model$model_info$xfuns,
                                 yfuns = model$model_info$yfuns,
                                 outliers = model$model_info$outliers)
+      }
+      
+      # model$model_info$prepare_data
+      if(!is.na(model$model_info$univariate_by)) { # !is.null(ipts) & 
+        # newdata <- prepare_data(data = newdata,
+        #                         x = model$model_info$xvar,
+        #                         y = model$model_info$ys,  
+        #                         id = model$model_info$groupvar_,
+        #                         uvarby = model$model_info$univariate_by,
+        #                         mvar = model$model_info$multivariate,
+        #                         xfuns = model$model_info$xfuns,
+        #                         yfuns = model$model_info$yfuns,
+        #                         outliers = model$model_info$outliers)
         sortbylayer <- NA
         newdata <- newdata %>%
           dplyr::mutate(sortbylayer =
