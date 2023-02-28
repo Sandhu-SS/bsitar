@@ -77,23 +77,8 @@ predict_.bsitar <-
                              resp = resp,
                              deriv = deriv)
     
-    xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-    
-    scall <- sys.calls() 
-    scall <- scall[[length(scall)]]
-    
-    if(grepl("plot_bsitar", scall, fixed = T) |
-       grepl("plot_bsitar.bsitar", scall, fixed = T)) {
-      xcall <- "plot_bsitar"
-    } else if(grepl("gparameters", scall, fixed = T) |
-              grepl("gparameters.bsitar", scall, fixed = T)) {
-      xcall <- "gparameters"
-    } else {
-      xcall <- xcall
-    } 
-    
-    if(xcall == "gparameters" | xcall == "plot_bsitar") {
-      arguments <- get_args_(as.list(match.call())[-1], xcall)
+    if(!is.null(model$xcall)) {
+      arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
     } else {
       newdata <- get.newdata(model, 

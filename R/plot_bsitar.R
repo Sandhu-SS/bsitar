@@ -216,24 +216,31 @@ plot_bsitar.bsitar <- function(model,
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
-  scall <- sys.calls() # deparse(sys.calls()[[1]])
-  scall <- scall[[length(scall)]]
+  scall <- sys.calls()
   
-  # deparse(scall[[length(scall)]])
-  # "plot_bsitar.bsitar(bx[[.x]], resp = \"copod\")"
+  get_xcall <- function(xcall, scall) {
+    scall <- scall[[length(scall)]]
+    if(any(grepl("plot_bsitar", scall, fixed = T)) |
+       any(grepl("plot_bsitar.bsitar", scall, fixed = T))) {
+      xcall <- "plot_bsitar"
+    } else if(any(grepl("gparameters", scall, fixed = T)) |
+              any(grepl("gparameters.bsitar", scall, fixed = T))) {
+      xcall <- "gparameters"
+    } else {
+      xcall <- xcall
+    } 
+  }
   
-  if(grepl("plot_bsitar", scall, fixed = T) |
-     grepl("plot_bsitar.bsitar", scall, fixed = T)) {
-    xcall <- "plot_bsitar"
-  } else if(grepl("gparameters", scall, fixed = T) |
-            grepl("gparameters.bsitar", scall, fixed = T)) {
-    xcall <- "gparameters"
-  } else {
-    xcall <- xcall
-  } 
+  xcall <- get_xcall(xcall, scall)
   
+  model$xcall <- xcall
   
   arguments <- get_args_(as.list(match.call())[-1], xcall)
+  
+  arguments$model <- model
+  
+  # print(arguments$model)
+  # stop()
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
@@ -406,6 +413,9 @@ plot_bsitar.bsitar <- function(model,
   if(length(list(...)) != 0) arguments <- c(arguments, list(...))
   
   arguments$envir <- .GlobalEnv # parent.frame()
+  
+  # print(arguments$model)
+  # stop()
   
   d. <- do.call(gparameters.bsitar, arguments)
   
@@ -2099,7 +2109,7 @@ plot_bsitar.bsitar <- function(model,
     print(plot.o)
     if (grepl("d", opt, ignore.case = F) |
         grepl("v", opt, ignore.case = F)) {
-      print(p.)
+      if(apv)  print(p.)
     }
     options(warn = defaultW)
     return(plot.o)

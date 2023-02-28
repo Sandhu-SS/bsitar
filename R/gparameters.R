@@ -191,27 +191,36 @@ gparameters.bsitar <- function(model,
   else
     ndraws <- ndraws
   
-  
   oo <- post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp)
   
-  
-  
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
-  scall <- sys.calls() 
-  scall <- scall[[length(scall)]]
+  get_xcall <- function(xcall, scall) {
+    scall <- scall[[length(scall)]]
+    if(any(grepl("plot_bsitar", scall, fixed = T)) |
+       any(grepl("plot_bsitar.bsitar", scall, fixed = T))) {
+      xcall <- "plot_bsitar"
+    } else if(any(grepl("gparameters", scall, fixed = T)) |
+              any(grepl("gparameters.bsitar", scall, fixed = T))) {
+      xcall <- "gparameters"
+    } else {
+      xcall <- xcall
+    } 
+  }
   
-  if(grepl("plot_bsitar", scall, fixed = T) |
-     grepl("plot_bsitar.bsitar", scall, fixed = T)) {
-    xcall <- "plot_bsitar"
-  } else if(grepl("gparameters", scall, fixed = T) |
-            grepl("gparameters.bsitar", scall, fixed = T)) {
-    xcall <- "gparameters"
+  if(!is.null(model$xcall)) {
+    if(model$xcall == "plot_bsitar") {
+      xcall <- "plot_bsitar"
+    }
   } else {
-    xcall <- xcall
-  } 
+    scall <- sys.calls()
+    xcall <- get_xcall(xcall, scall)
+  }
+  
+  
+  model$xcall <- xcall
   
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   
@@ -488,6 +497,9 @@ gparameters.bsitar <- function(model,
     if(!is.null(arguments$...)) {
       arguments <- c(arguments, list(arguments$...))
     }
+    arguments$model <- model
+    
+    
     
     for (argumentsi in names(arguments)) {
       if (length(arguments[[argumentsi]]) != 0) {
@@ -501,7 +513,7 @@ gparameters.bsitar <- function(model,
     
     list2env(arguments, envir = parent.env(new.env()))
     
-    
+    # arguments$model <- arguments$model_
     
     probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
     probtitles <- probs[order(probs)] * 100
@@ -617,6 +629,9 @@ gparameters.bsitar <- function(model,
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
       arguments$envir <- .GlobalEnv # arguments$envir_
+      
+      
+      
       
       if (estimation_method == 'fitted') {
         out_d_ <- do.call(fitted_.bsitar, arguments)
@@ -764,6 +779,11 @@ gparameters.bsitar <- function(model,
     # don't let the ipts to pass again to the fitted_.bsitar
     arguments$ipts <- NULL 
     arguments$envir <- .GlobalEnv # parent.frame()
+    
+    arguments$model <- model
+    
+    # print(arguments$model)
+    # stop()
     
     if (estimation_method == 'fitted') {
       out_v_ <- do.call(fitted_.bsitar, arguments)
