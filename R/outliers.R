@@ -9,30 +9,30 @@
 #'
 #' @inherit sitar::velout params description
 #' @inherit sitar::zapvelout params
-#' @param remove_outliers A logical (default \code{FALSE}) to indicate whether
+#' @param remove A logical (default \code{FALSE}) to indicate whether
 #'   identified remove to be removed. When \code{FALSE}, outliers are set as
 #'   \code{NA}. If \code{TRUE}, outliers set as \code{NA} are removed.
 #' @param verbose A logical (default \code{FALSE}) to show frequency of
 #'   observations with different codes (see [sitar::velout()]), and the number
-#'   of observations (outliers) removed when \code{remove_outliers=TRUE}.
+#'   of observations (outliers) removed when \code{remove=TRUE}.
 #'
-#' @return A data frame with outliers removed when \code{remove_outliers=TRUE}
+#' @return A data frame with outliers removed when \code{remove=TRUE}
 #' @export
 #'
 #' @examples
-#' outliers(x = age, y = height, id = id, data = heights, limit=2)
+#' outliers(x = age, y = height, id = id, data = heights, limit=2, remove=TRUE)
 #'
 outliers <-
   function (x,
             y,
             id,
             data,
-            icode = 3,
+            icode = c(4:6),
             lag = 1,
             velpower = 0.5,
             limit = 5,
             linearise = FALSE,
-            remove_outliers = FALSE,
+            remove = FALSE,
             verbose = TRUE) {
     mcall <- match.call()
     data <- eval(mcall$data)
@@ -40,7 +40,7 @@ outliers <-
     xx_ <- deparse(substitute(x))
     yy_ <- deparse(substitute(y))
     idid_ <- deparse(substitute(id))
-    
+    # print(data)
     data <- data %>% dplyr::mutate(order = dplyr::row_number())
     
     data <- data %>% dplyr::arrange(idid_, xx_)
@@ -107,7 +107,7 @@ outliers <-
     mat <- cbind(mat, data_ex)
     mat <- mat %>% dplyr::relocate(all_of(colnames_data_ex))
     
-    if (remove_outliers) {
+    if (remove) {
       zap <- mat$code %in% icode
       if (verbose) {
         cat(sum(zap), yy_, "values set missing\n")

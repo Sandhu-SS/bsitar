@@ -800,6 +800,10 @@
 #'  
 #'@param set_replace_priors An optional (default \code{NULL}) to replace
 #'  part of prior object.
+#'  
+#'@param outliers An optional (default \code{NULL}) to remove velocity
+#' outliers. The argument should be a named list to pass options to the
+#' [bsitar::outliers] function. See [bsitar::outliers] for details.
 #'
 #'@param cores Number of cores to use when executing the chains in parallel. See
 #'  [brms::brm()] for details. Note that unlike [brms::brm()] which sets
@@ -1162,6 +1166,7 @@ bsitar <- function(x,
                    validate_priors = FALSE,
                    set_self_priors = NULL,
                    set_replace_priors = NULL,
+                   outliers = NULL, 
                    
                    chains = 4,
                    iter = 2000,
@@ -2379,6 +2384,7 @@ bsitar <- function(x,
     "validate_priors",
     "set_self_priors",
     "set_replace_priors",
+    "outliers",
     "..."
   )
   
@@ -2438,11 +2444,14 @@ bsitar <- function(x,
   data.org.in <- data
   
   data <- prepare_data(data = data,
-                           response_variable = ys, 
-                           uvarby = univariate_by$by, 
-                           mvar = multivariate$mvar,
-                           xfuns = xfuns, 
-                           yfuns = yfuns)
+                       x = xsi, 
+                       y = ys, 
+                       id = idsi,
+                       uvarby = univariate_by$by, 
+                       mvar = multivariate$mvar,
+                       xfuns = xfuns, 
+                       yfuns = yfuns,
+                       outliers = outliers)
   
   ys <- attr(data, "ys")
   subindicators <- attr(data, "subindicators")
@@ -4484,6 +4493,8 @@ bsitar <- function(x,
     
     model_info[['xfuns']] <- xfuns
     model_info[['yfuns']] <- yfuns
+    
+    model_info[['outliers']] <- outliers
     
     model_info[['bsitar.data']] <- data.org.in
     

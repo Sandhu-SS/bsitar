@@ -6,18 +6,25 @@
 \usage{
 prepare_data(
   data,
-  response_variable,
+  x,
+  y,
+  id,
   uvarby = NA,
   mvar = FALSE,
   xfuns = NULL,
-  yfuns = NULL
+  yfuns = NULL,
+  outliers = NULL
 )
 }
 \arguments{
 \item{data}{An input data frame}
 
-\item{response_variable}{The name(s) of the outcome(s) variables. Must be a
-single name except when fitting a multivariate model.}
+\item{x}{The predictor (typically age) variables.}
+
+\item{y}{The outcome variables. Must be a single name except when fitting a
+multivariate model.}
+
+\item{id}{The group identifier.}
 
 \item{uvarby}{An optional (default \code{NA}) to specify the indicator
 variable for fitting univariate-by-subgroup model. See \code{univariate_by}
@@ -32,6 +39,10 @@ the predictor variable (typically age). Default \code{NULL}.}
 
 \item{yfuns}{Optional name(s) of the transformation function(s) applied to
 the outcome variable. Default \code{NULL}.}
+
+\item{outliers}{An optional (default \code{NULL}) to remove velocity
+outliers. The argument should be a named list to pass options to the
+\link{outliers} function. See \link{outliers} for details.}
 }
 \value{
 A data frame with necessary information added a attributes.
@@ -42,6 +53,7 @@ Set up data for bsitar model
 \examples{
 \dontrun{
 data(heights)
-prepare_data(data = heights, response_variable = heights)
+prepare_data(data = heights, y = heights)
 }
+
 }

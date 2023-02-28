@@ -9,12 +9,12 @@ outliers(
   y,
   id,
   data,
-  icode = 3,
+  icode = c(4:6),
   lag = 1,
   velpower = 0.5,
   limit = 5,
   linearise = FALSE,
-  remove_outliers = FALSE,
+  remove = FALSE,
   verbose = TRUE
 )
 }
@@ -42,16 +42,16 @@ deemed to be an outlier.}
 \item{linearise}{if TRUE y is converted to a residual about the median curve
 of y versus x.}
 
-\item{remove_outliers}{A logical (default \code{FALSE}) to indicate whether
+\item{remove}{A logical (default \code{FALSE}) to indicate whether
 identified remove to be removed. When \code{FALSE}, outliers are set as
 \code{NA}. If \code{TRUE}, outliers set as \code{NA} are removed.}
 
 \item{verbose}{A logical (default \code{FALSE}) to show frequency of
 observations with different codes (see \code{\link[sitar:velout]{sitar::velout()}}), and the number
-of observations (outliers) removed when \code{remove_outliers=TRUE}.}
+of observations (outliers) removed when \code{remove=TRUE}.}
 }
 \value{
-A data frame with outliers removed when \code{remove_outliers=TRUE}
+A data frame with outliers removed when \code{remove=TRUE}
 }
 \description{
 The function identifies and remove the putative outliers for y
@@ -59,6 +59,6 @@ in data, Codes range from 0 (normal) to 8, where 4 and 6 are conventional
 outliers
 }
 \examples{
-outliers(x = age, y = height, id = id, data = heights, limit=2)
+outliers(x = age, y = height, id = id, data = heights, limit=2, remove=TRUE)
 
 }

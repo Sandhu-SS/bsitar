@@ -74,11 +74,14 @@ get.newdata <- function(model, newdata, resp,
     
     # model$model_info$prepare_data(newdata_,
     newdata <- prepare_data(data = newdata_,
-                                response_variable = model$model_info$ys,                 
-                                uvarby = model$model_info$univariate_by,
-                                mvar = model$model_info$multivariate,
-                                xfuns = model$model_info$xfuns,
-                                yfuns = model$model_info$yfuns)
+                            x = model$model_info$xvar,
+                            y = model$model_info$ys,  
+                            id = model$model_info$groupvar_,
+                            uvarby = model$model_info$univariate_by,
+                            mvar = model$model_info$multivariate,
+                            xfuns = model$model_info$xfuns,
+                            yfuns = model$model_info$yfuns,
+                            outliers = model$model_info$outliers)
   
     sortbylayer <- NA
     newdata <- newdata %>%
@@ -408,11 +411,14 @@ get.newdata <- function(model, newdata, resp,
       # model$model_info$prepare_data
       if(!is.null(ipts) & !is.na(model$model_info$univariate_by)) {
         newdata <- prepare_data(data = newdata,
-                                    response_variable = model$model_info$ys,
-                                    uvarby = model$model_info$univariate_by,
-                                    mvar = model$model_info$multivariate,
-                                    xfuns = model$model_info$xfuns,
-                                    yfuns = model$model_info$yfuns)
+                                x = model$model_info$xvar,
+                                y = model$model_info$ys,  
+                                id = model$model_info$groupvar_,
+                                uvarby = model$model_info$univariate_by,
+                                mvar = model$model_info$multivariate,
+                                xfuns = model$model_info$xfuns,
+                                yfuns = model$model_info$yfuns,
+                                outliers = model$model_info$outliers)
         sortbylayer <- NA
         newdata <- newdata %>%
           dplyr::mutate(sortbylayer =

@@ -116,6 +116,7 @@ bsitar(
   validate_priors = FALSE,
   set_self_priors = NULL,
   set_replace_priors = NULL,
+  outliers = NULL,
   chains = 4,
   iter = 2000,
   warmup = floor(iter/2),
@@ -852,6 +853,10 @@ priors manually.}
 
 \item{set_replace_priors}{An optional (default \code{NULL}) to replace
 part of prior object.}
+
+\item{outliers}{An optional (default \code{NULL}) to remove velocity
+outliers. The argument should be a named list to pass options to the
+\link{outliers} function. See \link{outliers} for details.}
 
 \item{chains}{Number of Markov chains (defaults to 4).}
 
