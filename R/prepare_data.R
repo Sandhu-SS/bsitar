@@ -23,9 +23,9 @@
 #' @examples
 #' \dontrun{
 #' data(heights)
-#' make_bsitar_data(data = heights, response_variable = heights)
+#' prepare_data(data = heights, response_variable = heights)
 #' }
-make_bsitar_data <- function(data, response_variable, 
+prepare_data <- function(data, response_variable, 
                              uvarby = NA, mvar = FALSE, 
                              xfuns = NULL, yfuns = NULL) {
   

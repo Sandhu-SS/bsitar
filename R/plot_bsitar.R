@@ -216,15 +216,22 @@ plot_bsitar.bsitar <- function(model,
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
-  scall <- deparse(sys.calls()[[1]])
+  scall <- sys.calls() # deparse(sys.calls()[[1]])
+  scall <- scall[[length(scall)]]
   
-  if(grepl("plot_bsitar", scall, fixed = T)) {
+  # deparse(scall[[length(scall)]])
+  # "plot_bsitar.bsitar(bx[[.x]], resp = \"copod\")"
+  
+  if(grepl("plot_bsitar", scall, fixed = T) |
+     grepl("plot_bsitar.bsitar", scall, fixed = T)) {
     xcall <- "plot_bsitar"
-  } else if(grepl("gparameters", scall, fixed = T)) {
+  } else if(grepl("gparameters", scall, fixed = T) |
+            grepl("gparameters.bsitar", scall, fixed = T)) {
     xcall <- "gparameters"
   } else {
     xcall <- xcall
   } 
+  
   
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   
@@ -2090,6 +2097,10 @@ plot_bsitar.bsitar <- function(model,
   
   if (!returndata) {
     print(plot.o)
+    if (grepl("d", opt, ignore.case = F) |
+        grepl("v", opt, ignore.case = F)) {
+      print(p.)
+    }
     options(warn = defaultW)
     return(plot.o)
   } else if (returndata) {

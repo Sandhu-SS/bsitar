@@ -200,11 +200,14 @@ gparameters.bsitar <- function(model,
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
-  scall <- deparse(sys.calls()[[1]])
+  scall <- sys.calls() 
+  scall <- scall[[length(scall)]]
   
-  if(grepl("plot_bsitar", scall, fixed = T)) {
+  if(grepl("plot_bsitar", scall, fixed = T) |
+     grepl("plot_bsitar.bsitar", scall, fixed = T)) {
     xcall <- "plot_bsitar"
-  } else if(grepl("gparameters", scall, fixed = T)) {
+  } else if(grepl("gparameters", scall, fixed = T) |
+            grepl("gparameters.bsitar", scall, fixed = T)) {
     xcall <- "gparameters"
   } else {
     xcall <- xcall

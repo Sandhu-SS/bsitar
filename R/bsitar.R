@@ -2437,7 +2437,7 @@ bsitar <- function(x,
   
   data.org.in <- data
   
-  data <- make_bsitar_data(data = data,
+  data <- prepare_data(data = data,
                            response_variable = ys, 
                            uvarby = univariate_by$by, 
                            mvar = multivariate$mvar,
@@ -4473,8 +4473,6 @@ bsitar <- function(x,
     }
     
     if(!is.na(univariate_by$by)) {
-      # model_info[['make_bsitar_data']] <- make_bsitar_data
-      # model_info[['org.ycall']] <- org.ycall
       model_info[['subindicators']] <- subindicators
     } 
     
