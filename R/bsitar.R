@@ -2444,9 +2444,9 @@ bsitar <- function(x,
   data.org.in <- data
   
   data <- prepare_data(data = data,
-                       x = xsi, 
+                       x = xs, 
                        y = ys, 
-                       id = idsi,
+                       id = ids,
                        uvarby = univariate_by$by, 
                        mvar = multivariate$mvar,
                        xfuns = xfuns, 
