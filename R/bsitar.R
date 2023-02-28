@@ -1259,6 +1259,8 @@ bsitar <- function(x,
   
   arguments <- as.list(mcall)[-1]
   
+  xs <- ids <- NA
+  
   
   match.call.defaults <- function(...) {
     call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))

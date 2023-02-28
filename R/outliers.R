@@ -35,7 +35,7 @@ outliers <-
             remove = FALSE,
             verbose = TRUE) {
     mcall <- match.call()
-    data <- eval(mcall$data)
+    # data <- eval(mcall$data)
     
     xx_ <- deparse(substitute(x))
     yy_ <- deparse(substitute(y))
