@@ -1,6 +1,7 @@
 
 
 
+
 #' Set up data for bsitar model
 #'
 #' @param data An input data frame
@@ -31,19 +32,17 @@
 #' data(heights)
 #' prepare_data(data = heights, y = heights)
 #' }
-#' 
-prepare_data <- function(data, 
+#'
+prepare_data <- function(data,
                          x,
                          y,
                          id,
-                         uvarby = NA, 
-                         mvar = FALSE, 
-                         xfuns = NULL, 
+                         uvarby = NA,
+                         mvar = FALSE,
+                         xfuns = NULL,
                          yfuns = NULL,
                          outliers = NULL) {
-  
-  
-  if(!is.null(outliers)) {
+  if (!is.null(outliers)) {
     remove_ <- outliers$remove
     icode_ <- outliers$icode
     icode_ <- deparse(substitute(icode_))
@@ -53,18 +52,69 @@ prepare_data <- function(data,
     linearise_ <- outliers$linearise
     verbose_ <- outliers$verbose
     
-    for(yi in 1:length(y)) {
-      if(!y[yi] %in% colnames(data)) {
-        stop("When model is fit with argument outliers (i.e., outliers not NULL), ",
-             "\n",
-             " then outcome variable should be part of the newdata",
-             "\n",
-             " please check the missing outcome varibale", y[yi])
+    for (yi in 1:length(y)) {
+      if (!y[yi] %in% colnames(data)) {
+        stop(
+          "When model is fit with argument outliers (i.e., outliers not NULL), ",
+          "\n",
+          "  then outcome variable should be part of the newdata specified.",
+          "\n",
+          "  As the outcome variable is not used in predictions, it is ok ",
+          "\n",
+          "  to just add a dummy varibale. For example, ",
+          y[yi],
+          "= 1",
+          "\n",
+          "  please check the missing outcome varibale ",
+          y[yi]
+        )
       }
-      data <- outliers(x = x[yi], y =  y[yi], id = id[yi], data = data, 
-                       icode = icode_, lag = lag_, velpower = velpower_, 
-                       limit = limit_, linearise = linearise_,
-                       remove = remove_, verbose = verbose_)
+      if (!x[yi] %in% colnames(data)) {
+        stop(
+          "When model is fit with argument outliers (i.e., outliers not NULL), ",
+          "\n",
+          "  then predictor variable should be part of the newdata specified.",
+          "\n",
+          "  As the predictor variable is not used in predictions, it is ok ",
+          "\n",
+          "  to just add a dummy varibale. For example, ",
+          x[yi],
+          "= 1",
+          "\n",
+          "  please check the missing predictor varibale ",
+          x[yi]
+        )
+      }
+      if (!id[yi] %in% colnames(data)) {
+        stop(
+          "When model is fit with argument outliers (i.e., outliers not NULL), ",
+          "\n",
+          "  then group identifier variable should be part of the newdata specified.",
+          "\n",
+          "  As the group identifier variable is not used in predictions, it is ok ",
+          "\n",
+          "  to just add a dummy varibale. For example, ",
+          id[yi],
+          "= 1",
+          "\n",
+          "  please check the missing group identifier varibale ",
+          id[yi]
+        )
+      }
+      data <-
+        outliers(
+          x = x[yi],
+          y =  y[yi],
+          id = id[yi],
+          data = data,
+          icode = icode_,
+          lag = lag_,
+          velpower = velpower_,
+          limit = limit_,
+          linearise = linearise_,
+          remove = remove_,
+          verbose = verbose_
+        )
       
     }
   } # if(!is.null(outliers)) {
@@ -74,13 +124,11 @@ prepare_data <- function(data,
   org.data <- data
   if (!(is.na(uvarby) | uvarby == "NA")) {
     if (!uvarby %in% colnames(data)) {
-      stop(
-        paste(
-          "\nvariable",
-          uvarby,
-          "used for setting univariate submodels is missing"
-        )
-      )
+      stop(paste(
+        "\nvariable",
+        uvarby,
+        "used for setting univariate submodels is missing"
+      ))
     }
     if (!is.factor(data[[uvarby]])) {
       stop("subset by variable '",
@@ -91,7 +139,7 @@ prepare_data <- function(data,
       data[[l]] <- data[[y[1]]]
     }
     unibyimat <-
-      model.matrix( ~ 0 + eval(parse(text = uvarby)), data)
+      model.matrix(~ 0 + eval(parse(text = uvarby)), data)
     subindicators <- paste0(uvarby, levels(data[[uvarby]]))
     colnames(unibyimat) <- subindicators
     y <- levels(data[[uvarby]])
@@ -101,20 +149,22 @@ prepare_data <- function(data,
     attr(data, "uvarby") <- uvarby
     attr(data, "subindicators") <- subindicators
     # data_out <- data
-  } else if(mvar) {
-    for(myfunsi in 1:length(y)) {
+  } else if (mvar) {
+    for (myfunsi in 1:length(y)) {
       mysi <- y[[myfunsi]]
       myfunsi <- yfuns[[myfunsi]]
-      if(grepl('.Primitive', myfunsi, fixed = T) & 
-         grepl('log', myfunsi, fixed = T)) {
+      if (grepl('.Primitive', myfunsi, fixed = T) &
+          grepl('log', myfunsi, fixed = T)) {
         myfunsi <- 'log'
       }
-      if(grepl('.Primitive', myfunsi, fixed = T) & 
-         grepl('sqrt', myfunsi, fixed = T)) {
+      if (grepl('.Primitive', myfunsi, fixed = T) &
+          grepl('sqrt', myfunsi, fixed = T)) {
         myfunsi <- 'sqrt'
       }
-      if(myfunsi == 'log') data[[mysi]] <- log(data[[mysi]])
-      if(myfunsi == 'sqrt') data[[mysi]] <- sqrt(data[[mysi]])
+      if (myfunsi == 'log')
+        data[[mysi]] <- log(data[[mysi]])
+      if (myfunsi == 'sqrt')
+        data[[mysi]] <- sqrt(data[[mysi]])
     }
     #  data_out <- org.data
     attr(data, "ys") <- y
@@ -131,7 +181,3 @@ prepare_data <- function(data,
   }
   return(data)
 }
-
-
-
-

@@ -56,8 +56,10 @@ get.newdata <- function(model, newdata, resp,
     # if(yfun == 'sqrt') newdata[[yvar]] <- sqrt(newdata[[yvar]] )
   }
   
-  # print(model$model_info$outliers)
-  # print(nrow(newdata))
+  
+ 
+  
+  
   newdata <- prepare_data(data = newdata,
                           x = model$model_info$xs,
                           y = model$model_info$ys,  
