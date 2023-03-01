@@ -36,23 +36,12 @@ outliers <-
             verbose = TRUE) {
     
     mcall <- match.call()
-    
-    # xx_ <- deparse(substitute(x))
-    # yy_ <- deparse(substitute(y))
-    # idid_ <- deparse(substitute(id))
-    
     if(is.symbol(x)) xx_ <- deparse(substitute(x)) else xx_ <- x
     if(is.symbol(y)) yy_ <- deparse(substitute(y)) else yy_ <- y
     if(is.symbol(id)) idid_ <- deparse(substitute(id)) else idid_ <- id
     
     data <- data %>% dplyr::mutate(order = dplyr::row_number())
-
     data <- data %>% dplyr::arrange(idid_, xx_)
-    
-    # dc <- data[, sapply(mcall[c(xx_, yy_, idid_)],
-    #                     deparse)]
-   
-    
     
     dc <- data %>% dplyr::select(!!as.symbol(xx_), 
                                  !!as.symbol(yy_),
@@ -113,7 +102,6 @@ outliers <-
       print(summary(mat$code))
     }
     
-    
     mat <- cbind(mat, data_ex)
     mat <- mat %>% dplyr::relocate(all_of(colnames_data_ex))
     
@@ -124,7 +112,7 @@ outliers <-
       }
       mat[mat$code %in% icode, yy_] <- NA
       mat <- mat %>% dplyr::select(all_of(colnames_data_ex))
-      mat <- mat %>% tidyr::drop_na()
+      mat <- mat %>% tidyr::drop_na() %>% droplevels()
     }
     mat <- mat %>% dplyr::arrange(order)
     mat <- mat %>% dplyr::select(-order)
