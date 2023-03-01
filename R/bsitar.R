@@ -2443,6 +2443,16 @@ bsitar <- function(x,
   
   # This data.org.in as specified will be saved in model_info
   
+  if(!is.null(outliers)) {
+    if(is.null(outliers$remove))    outliers$remove <- TRUE
+    if(is.null(outliers$icode))     outliers$icode <- c(4,5,6)
+    if(is.null(outliers$limit))     outliers$limit <- 5
+    if(is.null(outliers$velpower))  outliers$velpower <- 0.5
+    if(is.null(outliers$lag))       outliers$lag <- 1
+    if(is.null(outliers$linearise)) outliers$linearise <- FALSE
+    if(is.null(outliers$verbose))   outliers$verbose <- FALSE
+  }
+  
   data.org.in <- data
   
   data <- prepare_data(data = data,
@@ -4492,6 +4502,9 @@ bsitar <- function(x,
     model_info[['univariate_by']] <- univariate_by$by
     model_info[['nys']] <- nys
     model_info[['ys']] <- ys
+    
+    model_info[['xs']] <- xs
+    model_info[['ids']] <- ids
     
     model_info[['xfuns']] <- xfuns
     model_info[['yfuns']] <- yfuns

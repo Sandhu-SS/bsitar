@@ -43,14 +43,6 @@ prepare_data <- function(data,
   
   
   if(!is.null(outliers)) {
-    if(is.null(outliers$remove))    outliers$remove <- TRUE
-    if(is.null(outliers$icode))     outliers$icode <- c(4,5,6)
-    if(is.null(outliers$limit))     outliers$limit <- 5
-    if(is.null(outliers$velpower))  outliers$velpower <- 0.5
-    if(is.null(outliers$lag))       outliers$lag <- 1
-    if(is.null(outliers$linearise)) outliers$linearise <- FALSE
-    if(is.null(outliers$verbose))   outliers$verbose <- FALSE
-    
     remove_ <- outliers$remove
     icode_ <- outliers$icode
     icode_ <- deparse(substitute(icode_))
@@ -59,21 +51,28 @@ prepare_data <- function(data,
     lag_ <- outliers$lag
     linearise_ <- outliers$linearise
     verbose_ <- outliers$verbose
-    data_ <- deparse(substitute(data))
+    
     for(yi in 1:length(y)) {
-      exe_outlier <- paste0("outliers(x = ", x, "," , 
-                            "y = ", y[yi], "," , 
-                            "id = ", id, "," , 
-                            "data = ", data_, ", " ,
-                            "icode = ", icode_, "," , 
-                            "lag = ", lag_, "," , 
-                            "velpower = ", velpower_,  "," , 
-                            "limit = ", limit_, ", " , 
-                            "linearise = ", linearise_,  ", " ,
-                            "remove = ", remove_,  ", " ,
-                            "verbose = ", verbose_, ")")
+      data <- outliers(x = x[yi], y =  y[yi], id = id[yi], data = data, 
+                       icode = icode_, lag = lag_, velpower = velpower_, 
+                       limit = limit_, linearise = linearise_,
+                       remove = remove_, verbose = verbose_)
       
-      data <- eval(parse(text = exe_outlier))
+      # print(nrow(data))
+      
+      # exe_outlier <- paste0("outliers(x = ", x, "," , 
+      #                       "y = ", y[yi], "," , 
+      #                       "id = ", id, "," , 
+      #                       "data = ", data_, ", " ,
+      #                       "icode = ", icode_, "," , 
+      #                       "lag = ", lag_, "," , 
+      #                       "velpower = ", velpower_,  "," , 
+      #                       "limit = ", limit_, ", " , 
+      #                       "linearise = ", linearise_,  ", " ,
+      #                       "remove = ", remove_,  ", " ,
+      #                       "verbose = ", verbose_, ")")
+      # 
+      # data <- eval(parse(text = exe_outlier))
     }
   } # if(!is.null(outliers)) {
   

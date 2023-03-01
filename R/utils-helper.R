@@ -56,16 +56,19 @@ get.newdata <- function(model, newdata, resp,
     # if(yfun == 'sqrt') newdata[[yvar]] <- sqrt(newdata[[yvar]] )
   }
   
-  
+  # print(model$model_info$outliers)
+  # print(nrow(newdata))
   newdata <- prepare_data(data = newdata,
-                          x = model$model_info$xvar,
+                          x = model$model_info$xs,
                           y = model$model_info$ys,  
-                          id = model$model_info$groupvar_,
+                          id = model$model_info$ids,
                           uvarby = model$model_info$univariate_by,
                           mvar = model$model_info$multivariate,
                           xfuns = model$model_info$xfuns,
                           yfuns = model$model_info$yfuns,
                           outliers = model$model_info$outliers)
+  
+   # print(nrow(newdata))
   
   if(!is.na(model$model_info$univariate_by)) {
     # if (is.null(newdata)) {
@@ -404,22 +407,22 @@ get.newdata <- function(model, newdata, resp,
       } # if(!is.null(model$model_info[[hierarchical_]])) {
       
       
-      
-      
       if(is.null(ipts)) {
         newdata <- newdata
       } 
       
+      
       if(!is.null(ipts)) {
+        # outliers must be NULL as this has already been taken care of by get.newdata
         newdata <- prepare_data(data = newdata,
-                                x = model$model_info$xvar,
+                                x = model$model_info$xs,
                                 y = model$model_info$ys,  
-                                id = model$model_info$groupvar_,
+                                id = model$model_info$ids,
                                 uvarby = model$model_info$univariate_by,
                                 mvar = model$model_info$multivariate,
                                 xfuns = model$model_info$xfuns,
                                 yfuns = model$model_info$yfuns,
-                                outliers = model$model_info$outliers)
+                                outliers = NULL) # model$model_info$outliers
       }
       
       # model$model_info$prepare_data

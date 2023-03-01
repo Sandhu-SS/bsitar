@@ -42,9 +42,9 @@ deemed to be an outlier.}
 \item{linearise}{if TRUE y is converted to a residual about the median curve
 of y versus x.}
 
-\item{remove}{A logical (default \code{FALSE}) to indicate whether
-identified remove to be removed. When \code{FALSE}, outliers are set as
-\code{NA}. If \code{TRUE}, outliers set as \code{NA} are removed.}
+\item{remove}{A logical (default \code{FALSE}) to indicate whether identified
+remove to be removed. When \code{FALSE}, outliers are set as \code{NA}. If
+\code{TRUE}, outliers set as \code{NA} are removed.}
 
 \item{verbose}{A logical (default \code{FALSE}) to show frequency of
 observations with different codes (see \code{\link[sitar:velout]{sitar::velout()}}), and the number
@@ -59,6 +59,6 @@ in data, Codes range from 0 (normal) to 8, where 4 and 6 are conventional
 outliers
 }
 \examples{
-outliers(x = age, y = height, id = id, data = heights, limit=2, remove=TRUE)
+outliers(x = "age", y = "height", id = "id", data = heights, limit=2, remove=TRUE)
 
 }

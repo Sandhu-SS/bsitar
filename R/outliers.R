@@ -9,9 +9,9 @@
 #'
 #' @inherit sitar::velout params description
 #' @inherit sitar::zapvelout params
-#' @param remove A logical (default \code{FALSE}) to indicate whether
-#'   identified remove to be removed. When \code{FALSE}, outliers are set as
-#'   \code{NA}. If \code{TRUE}, outliers set as \code{NA} are removed.
+#' @param remove A logical (default \code{FALSE}) to indicate whether identified
+#'   remove to be removed. When \code{FALSE}, outliers are set as \code{NA}. If
+#'   \code{TRUE}, outliers set as \code{NA} are removed.
 #' @param verbose A logical (default \code{FALSE}) to show frequency of
 #'   observations with different codes (see [sitar::velout()]), and the number
 #'   of observations (outliers) removed when \code{remove=TRUE}.
@@ -20,8 +20,8 @@
 #' @export
 #'
 #' @examples
-#' outliers(x = age, y = height, id = id, data = heights, limit=2, remove=TRUE)
-#'
+#' outliers(x = "age", y = "height", id = "id", data = heights, limit=2, remove=TRUE)
+#' 
 outliers <-
   function (x,
             y,
@@ -34,19 +34,29 @@ outliers <-
             linearise = FALSE,
             remove = FALSE,
             verbose = TRUE) {
+    
     mcall <- match.call()
-    # data <- eval(mcall$data)
     
-    xx_ <- deparse(substitute(x))
-    yy_ <- deparse(substitute(y))
-    idid_ <- deparse(substitute(id))
-    # print(data)
+    # xx_ <- deparse(substitute(x))
+    # yy_ <- deparse(substitute(y))
+    # idid_ <- deparse(substitute(id))
+    
+    if(is.symbol(x)) xx_ <- deparse(substitute(x)) else xx_ <- x
+    if(is.symbol(y)) yy_ <- deparse(substitute(y)) else yy_ <- y
+    if(is.symbol(id)) idid_ <- deparse(substitute(id)) else idid_ <- id
+    
     data <- data %>% dplyr::mutate(order = dplyr::row_number())
-    
+
     data <- data %>% dplyr::arrange(idid_, xx_)
     
-    dc <- data[, sapply(mcall[c("x", "y", "id")],
-                        deparse)]
+    # dc <- data[, sapply(mcall[c(xx_, yy_, idid_)],
+    #                     deparse)]
+   
+    
+    
+    dc <- data %>% dplyr::select(!!as.symbol(xx_), 
+                                 !!as.symbol(yy_),
+                                 !!as.symbol(idid_))
     
     colnames_data_ex <- colnames(data)
     colnames_dc_ex <- colnames(dc)
