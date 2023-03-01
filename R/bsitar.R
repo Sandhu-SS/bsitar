@@ -1214,6 +1214,9 @@ bsitar <- function(x,
     deparseobj
   }
   
+  xs <- ids <- dfs <- NA
+  
+  
   for (i in names(mcall)[-1]) {
     if (!i %in% no_default_args) {
       err. <- FALSE
@@ -1258,9 +1261,6 @@ bsitar <- function(x,
   
   
   arguments <- as.list(mcall)[-1]
-  
-  xs <- ids <- NA
-  
   
   match.call.defaults <- function(...) {
     call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
@@ -4505,6 +4505,9 @@ bsitar <- function(x,
     
     model_info[['xs']] <- xs
     model_info[['ids']] <- ids
+    
+    model_info[['dfs']] <- dfs
+    
     
     model_info[['xfuns']] <- xfuns
     model_info[['yfuns']] <- yfuns

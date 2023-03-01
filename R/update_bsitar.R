@@ -3,14 +3,14 @@
 #' Update \pkg{bsitar} model
 #'
 #' @param model An object of class \code{bsitar}.
-#' @param newdata An optional \code{data.frame} to be used when updating the model.
-#'   If \code{NULL} (default), the same same data used for original model fit is
-#'   used. Note that data-dependent default priors will not be updated
+#' @param newdata An optional \code{data.frame} to be used when updating the
+#'   model. If \code{NULL} (default), the same same data used for original model
+#'   fit is used. Note that data-dependent default priors will not be updated
 #'   automatically.
 #' @param recompile A logical to indicate whether the Stan model should be
-#'   recompiled. When \code{NULL} (the default), \code{update_bsitar} tries to figure
-#'   out internally, if recompilation is necessary. Setting it to \code{FALSE}
-#'   will cause all Stan code changing arguments to be ignored.
+#'   recompiled. When \code{NULL} (the default), \code{update_bsitar} tries to
+#'   figure out internally, if recompilation is necessary. Setting it to
+#'   \code{FALSE} will cause all Stan code changing arguments to be ignored.
 #' @param ... Other arguments passed to \code{\link{brms}}.
 #'
 #' @return An updated object of class \code{brmsfit, bsiatr}, that contains the
@@ -38,9 +38,9 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   if(!is.null(newdata)) {
     call_$data <- mcall_$newdata
   }
+  
   mcall_$newdata <- NULL
-  # print(call_$data)
-  # stop()
+ 
   
   if(!identical(names(mcall_)[-c(1:2)], character(0))) {
     for (i in names(names(mcall_)[-c(1:2)])) {
@@ -105,7 +105,7 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
     recompile <- needs_recompilation(model) || !same_backend || 
       !is_equal(new_stancode, old_stancode)
     if (recompile && silent < 2) {
-      message("The desired updates require recompiling the model")
+      message("Update requires model recompilation")
     }
   }
   

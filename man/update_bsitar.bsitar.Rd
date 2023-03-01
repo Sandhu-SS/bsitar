@@ -12,15 +12,15 @@ update_bsitar(model, ...)
 \arguments{
 \item{model}{An object of class \code{bsitar}.}
 
-\item{newdata}{An optional \code{data.frame} to be used when updating the model.
-If \code{NULL} (default), the same same data used for original model fit is
-used. Note that data-dependent default priors will not be updated
+\item{newdata}{An optional \code{data.frame} to be used when updating the
+model. If \code{NULL} (default), the same same data used for original model
+fit is used. Note that data-dependent default priors will not be updated
 automatically.}
 
 \item{recompile}{A logical to indicate whether the Stan model should be
-recompiled. When \code{NULL} (the default), \code{update_bsitar} tries to figure
-out internally, if recompilation is necessary. Setting it to \code{FALSE}
-will cause all Stan code changing arguments to be ignored.}
+recompiled. When \code{NULL} (the default), \code{update_bsitar} tries to
+figure out internally, if recompilation is necessary. Setting it to
+\code{FALSE} will cause all Stan code changing arguments to be ignored.}
 
 \item{...}{Other arguments passed to \code{\link{brms}}.}
 }

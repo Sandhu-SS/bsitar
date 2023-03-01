@@ -8,7 +8,9 @@
 \method{optimize_bsitar}{bsitar}(
   model,
   newdata = NULL,
-  optimize = list(x = c("NULL", "log", "sqrt"), y = c("NULL", "log", "sqrt")),
+  optimize_df = NULL,
+  optimize_x = c("NULL", "log", "sqrt"),
+  optimize_y = c("NULL", "log", "sqrt"),
   exclude_default_funs = FALSE,
   add_fit_criteria = NULL,
   add_fit_bayes_R = NULL,
@@ -25,26 +27,37 @@ model. If \code{NULL} (default), the same same data used for original model
 fit is used. Note that data-dependent default priors will not be updated
 automatically.}
 
-\item{optimize}{A list specifying the transformations  of predictor
-(typically \code{age}) variable (via \code{xvar}) and the outcome (via
-\code{yvar}). The options for both \code{xvar} and \code{yvar}) are 'NULL',
-'log' and  'sqrt' or their combinations. The default
-\code{optimize = list(x = c('NULL', 'log',  'sqrt'),
-   y = c('NULL', 'log',  'sqrt'))} is to explore all possible combinations of
+\item{optimize_df}{A vector specifying the updation of degree of freedom
+\code{df}. For \code{univariate-by-sungroup} and \code{multivariate} model
+(see \link{bsitar} for details on these arguments), \code{optimize_df}
+can be a single integer (e.g., \code{optimize_df = 4}) or a list as a string
+(e.g., \code{optimize_df = 'list(4,5)'}). If \code{NULL}, then \code{df} is
+taken from the original model.}
+
+\item{optimize_x}{A vector specifying the transformations of predictor
+(typically \code{age}) variable (via \code{xvar}). The option are 'NULL',
+'log' and  'sqrt' or their combinations. The default \code{optimize_x =
+ c('NULL', 'log',  'sqrt')} is to explore all possible combinations of
 'NULL', 'log' and  'sqrt'.}
 
-\item{exclude_default_funs}{A logical (deafult \code{FALSE}) to indicate whether
-transformations (\code{xvar} and \code{yvar}) used in the original model
-fit should be excluded. If \code{TRUE}, then the \code{xvar} and
-\code{yvar} transformations from the original model fit are excluded from
-the \code{optimize}. From example, if original model is fit with \code{xvar
-  = log} and \code{yvar = NULL}, then the \code{optimize} is translated into
-\code{optimize = list(x = c('NULL', 'sqrt'),
- y = c('log',  'sqrt'))}.}
+\item{optimize_y}{A vector specifying the transformations of the outcome
+variable (via \code{yvar}). The options are 'NULL', 'log' and  'sqrt' or
+their combinations. The default \code{optimize_y = c('NULL', 'log',
+ 'sqrt')} is to explore all possible combinations of 'NULL', 'log' and
+'sqrt'.}
 
-\item{add_fit_criteria}{An optional (default \code{NULL}) indicator to add
-fit criteria to the model fit. options are \code{loo} and \code{waic}.
-Please see \code{\link[brms:add_criterion]{brms::add_criterion()}} for details.}
+\item{exclude_default_funs}{A logical (deafult \code{FALSE}) to indicate
+whether transformations (\code{xvar} and \code{yvar}) used in the original
+model fit should be excluded. If \code{TRUE}, then the \code{xvar} and
+\code{yvar} transformations spevified for the original model fit are
+excluded from the \code{optimize_x} and \code{optimize_y}. From example, if
+original model is fit with \code{xvar = log} and \code{yvar = NULL}, then
+the \code{optimize_x} is translated into \code{optimize_x = c('NULL',
+ 'sqrt')} and  \code{optimize_y} as \code{optimize_y = c('log', 'sqrt')}.}
+
+\item{add_fit_criteria}{An optional (default \code{NULL}) indicator to add fit
+criteria to the model fit. options are \code{loo} and \code{waic}. Please
+see \code{\link[brms:add_criterion]{brms::add_criterion()}} for details.}
 
 \item{add_fit_bayes_R}{An optional (default \code{NULL}) to add Bayesian R
 square.}
