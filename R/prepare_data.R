@@ -1,5 +1,6 @@
 
 
+
 #' Set up data for bsitar model
 #'
 #' @param data An input data frame
@@ -53,26 +54,18 @@ prepare_data <- function(data,
     verbose_ <- outliers$verbose
     
     for(yi in 1:length(y)) {
+      if(!y[yi] %in% colnames(data)) {
+        stop("When model is fit with argument outliers (i.e., outliers not NULL), ",
+             "\n",
+             " then outcome variable should be part of the newdata",
+             "\n",
+             " please check the missing outcome varibale", y[yi])
+      }
       data <- outliers(x = x[yi], y =  y[yi], id = id[yi], data = data, 
                        icode = icode_, lag = lag_, velpower = velpower_, 
                        limit = limit_, linearise = linearise_,
                        remove = remove_, verbose = verbose_)
       
-      # print(nrow(data))
-      
-      # exe_outlier <- paste0("outliers(x = ", x, "," , 
-      #                       "y = ", y[yi], "," , 
-      #                       "id = ", id, "," , 
-      #                       "data = ", data_, ", " ,
-      #                       "icode = ", icode_, "," , 
-      #                       "lag = ", lag_, "," , 
-      #                       "velpower = ", velpower_,  "," , 
-      #                       "limit = ", limit_, ", " , 
-      #                       "linearise = ", linearise_,  ", " ,
-      #                       "remove = ", remove_,  ", " ,
-      #                       "verbose = ", verbose_, ")")
-      # 
-      # data <- eval(parse(text = exe_outlier))
     }
   } # if(!is.null(outliers)) {
   
@@ -138,27 +131,6 @@ prepare_data <- function(data,
   }
   return(data)
 }
-
-
-
-###########
-
-
-# dx <- prepare_data(data, 
-#                    x = 'age',
-#                    y = c('copad', 'copod'), 
-#                    id = 'id',
-#                    uvarby = NA, 
-#                    outliers = list(remove =  TRUE, icode = c(4:6), 
-#                                    limit = 5, velpower = 0.5, 
-#                                    lag = 1, linearise = FALSE, 
-#                                    verbose = FALSE),
-#                    mvar = FALSE
-#                    )
-# 
-# 
-# head(dx)
-# nrow(dx)
 
 
 
