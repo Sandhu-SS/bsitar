@@ -9,9 +9,9 @@
   model,
   newdata = NULL,
   optimize_df = NULL,
-  optimize_x = c("NULL", "log", "sqrt"),
-  optimize_y = c("NULL", "log", "sqrt"),
-  exclude_default_funs = FALSE,
+  optimize_x = list(NULL, log, sqrt),
+  optimize_y = list(NULL, log, sqrt),
+  exclude_default_funs = TRUE,
   add_fit_criteria = NULL,
   add_fit_bayes_R = NULL,
   ...
@@ -22,38 +22,50 @@ optimize_bsitar(model, ...)
 \arguments{
 \item{model}{An object of class \code{bsitar}.}
 
-\item{newdata}{An optional \code{data.frame} to be used when optimising the
+\item{newdata}{An optional \code{data.frame} to be used when optimizing the
 model. If \code{NULL} (default), the same same data used for original model
 fit is used. Note that data-dependent default priors will not be updated
 automatically.}
 
 \item{optimize_df}{A vector specifying the updation of degree of freedom
-\code{df}. For \code{univariate-by-sungroup} and \code{multivariate} model
-(see \link{bsitar} for details on these arguments), \code{optimize_df}
-can be a single integer (e.g., \code{optimize_df = 4}) or a list as a string
-(e.g., \code{optimize_df = 'list(4,5)'}). If \code{NULL}, then \code{df} is
-taken from the original model.}
+\code{df}. If \code{NULL} (default), the \code{df} is taken from the
+original model. For \code{univariate-by-sungroup} and \code{multivariate}
+models (see \link{bsitar} for details on these arguments),
+\code{optimize_df} can be a single integer (e.g., \code{optimize_df = 4}) or
+a list (e.g., \code{optimize_df = list(4,5)}). For optimization over
+different \code{df}, say for example df 4 and 5 for univariate model, the
+corresponding code is \code{optimize_df = list(4,5)}. For a multivariate
+model fit to two outcomes with different \code{df}, the optimization over
+\code{df} 4 and 5 for the first submodel and 5 and 6 for the second
+submodel, the  corresponding \code{optimize_df} code is \code{optimize_df =
+ kist(list(4,5), list(5,6))}.}
 
 \item{optimize_x}{A vector specifying the transformations of predictor
 (typically \code{age}) variable (via \code{xvar}). The option are 'NULL',
-'log' and  'sqrt' or their combinations. The default \code{optimize_x =
- c('NULL', 'log',  'sqrt')} is to explore all possible combinations of
-'NULL', 'log' and  'sqrt'.}
+'log' and  'sqrt' or their combinations. Note that user need not to enclose
+these options in either single or double quotes as they are take care of
+internally. The default \code{optimize_x = list(NULL, log,  sqrt)} is to
+explore all possible combinations of 'NULL', 'log' and  'sqrt'. Similar to
+the \code{optimize_df}, user can specify different  \code{optimize_x} for
+\code{univariate-by-sungroup} and \code{multivariate} submodels.}
 
 \item{optimize_y}{A vector specifying the transformations of the outcome
-variable (via \code{yvar}). The options are 'NULL', 'log' and  'sqrt' or
-their combinations. The default \code{optimize_y = c('NULL', 'log',
- 'sqrt')} is to explore all possible combinations of 'NULL', 'log' and
-'sqrt'.}
+variable (via \code{yvar}). The option are 'NULL', 'log' and  'sqrt' or
+their combinations. Note that user need not to enclose these options in
+either single or double quotes as they are take care of internally. The
+default \code{optimize_y = list(NULL, log,  sqrt)} is to explore all
+possible combinations of 'NULL', 'log' and  'sqrt'. Similar to the
+\code{optimize_df}, user can specify different  \code{optimize_y} for
+\code{univariate-by-sungroup} and \code{multivariate} submodels.}
 
-\item{exclude_default_funs}{A logical (deafult \code{FALSE}) to indicate
+\item{exclude_default_funs}{A logical to indicate
 whether transformations (\code{xvar} and \code{yvar}) used in the original
-model fit should be excluded. If \code{TRUE}, then the \code{xvar} and
-\code{yvar} transformations spevified for the original model fit are
+model fit should be excluded. If \code{TRUE} (deafult), the the \code{xvar}
+and \code{yvar} transformations specified for the original model fit are
 excluded from the \code{optimize_x} and \code{optimize_y}. From example, if
 original model is fit with \code{xvar = log} and \code{yvar = NULL}, then
-the \code{optimize_x} is translated into \code{optimize_x = c('NULL',
- 'sqrt')} and  \code{optimize_y} as \code{optimize_y = c('log', 'sqrt')}.}
+the \code{optimize_x} is translated into \code{optimize_x = list(NULL,
+ sqrt)} and  \code{optimize_y} as \code{optimize_y = list(log, sqrt)}.}
 
 \item{add_fit_criteria}{An optional (default \code{NULL}) indicator to add fit
 criteria to the model fit. options are \code{loo} and \code{waic}. Please
@@ -65,8 +77,9 @@ square.}
 \item{...}{Other arguments passed to \code{\link{update_bsitar}}.}
 }
 \value{
-An updated object of class \code{brmsfit, bsiatr}, that contains the
-posterior draws and other useful information about the model.
+A list containing the optimized models of class \code{brmsfit, bsiatr},
+and the the combined summary statistics if \code{add_fit_criteria} and/or
+\code{add_fit_bayes_R} are specified.
 }
 \description{
 Optimize \pkg{bsitar} model

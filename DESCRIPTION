@@ -43,7 +43,8 @@ Imports:
     utils,
     forcats,
     grDevices,
-    tidyr
+    tidyr,
+    loo
 Suggests: 
     testthat (>= 3.0.0),
     cmdstanr (>= 0.5.0),
