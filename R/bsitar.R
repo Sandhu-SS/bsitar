@@ -2865,7 +2865,9 @@ bsitar <- function(x,
         "a_formula_grsi",
         "b_formula_grsi",
         "c_formula_grsi",
-        "d_formula_grsi"
+        "d_formula_grsi",
+        "sigma_formulasi",
+        "sigma_formula_grsi"
       )
     
     for (check_formualsi in check_formuals) {
@@ -4367,7 +4369,6 @@ bsitar <- function(x,
     if(!is.null(set_self_priors)) {
       brm_args$prior <- set_self_priors
     } else if(!is.null(set_replace_priors)) {
-      # brm_args$prior <- set_higher_priors(brmspriors, set_replace_priors)
       brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
     } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
       brm_args$prior <- brmspriors
@@ -4410,12 +4411,15 @@ bsitar <- function(x,
       }
     }
     
-    
+   
     
     if(!is.null(init_custom)) {
       init_fun <- function(chain_id = 1) init_custom
       if(!is.list(init_custom[[1]])) {
-        init_custom <- lapply(1:brm_args$chains, function(id) init_fun(chain_id = id))
+        init_custom <- 
+          lapply(1:brm_args$chains, function(id) init_fun(chain_id = id))
+      } else if(is.list(init_custom[[1]]) & length(init_custom) == 1) {
+        init_custom <- rep(init_custom, brm_args$chains)
       } else {
         if(length(init_custom) != length(brm_args$init)) {
           stop("Custom initials specified via 'init_custom' argument must",
@@ -4433,7 +4437,7 @@ bsitar <- function(x,
       }
       brm_args$init <- new_init_append
     } 
-    
+ 
     
     brmsfit <- do.call(brm, brm_args)
     
