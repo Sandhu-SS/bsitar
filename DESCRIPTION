@@ -51,7 +51,8 @@ Suggests:
     bookdown,
     knitr,
     R.rsp,
-    rmarkdown
+    rmarkdown,
+    tidyverse
 VignetteBuilder:
     knitr,
     R.rsp
