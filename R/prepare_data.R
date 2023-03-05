@@ -1,7 +1,5 @@
 
 
-
-
 #' Set up data for bsitar model
 #'
 #' @param data An input data frame
@@ -22,9 +20,9 @@
 #' @param outliers An optional (default \code{NULL}) to remove velocity
 #'   outliers. The argument should be a named list to pass options to the
 #'   [bsitar::outliers] function. See [bsitar::outliers] for details.
-#'
+#'   
 #' @return A data frame with necessary information added a attributes.
-#'
+#' 
 #' @export
 #'
 #' @examples
@@ -42,7 +40,9 @@ prepare_data <- function(data,
                          xfuns = NULL,
                          yfuns = NULL,
                          outliers = NULL) {
+  
   data <- data %>% droplevels()
+
   if (!is.null(outliers)) {
     remove_ <- outliers$remove
     icode_ <- outliers$icode
@@ -123,6 +123,31 @@ prepare_data <- function(data,
   
   
   org.data <- data
+  
+  
+  # Note that x tarnsformation is done within the prepare_function
+  transform_y <- function(y, yfuns) {
+    for (myfunsi in 1:length(y)) {
+      mysi <- y[[myfunsi]]
+      myfunsi <- yfuns[[myfunsi]]
+      if (grepl('.Primitive', myfunsi, fixed = T) &
+          grepl('log', myfunsi, fixed = T)) {
+        myfunsi <- 'log'
+      }
+      if (grepl('.Primitive', myfunsi, fixed = T) &
+          grepl('sqrt', myfunsi, fixed = T)) {
+        myfunsi <- 'sqrt'
+      }
+      if (myfunsi == 'log')
+        if(!is.null(data[[mysi]])) data[[mysi]] <- log(data[[mysi]])
+      if (myfunsi == 'sqrt')
+        if(!is.null(data[[mysi]])) data[[mysi]] <- sqrt(data[[mysi]])
+    }
+    return(data)
+  }
+  
+  
+  
   if (!(is.na(uvarby) | uvarby == "NA")) {
     if (!uvarby %in% colnames(data)) {
       stop(paste(
@@ -145,29 +170,31 @@ prepare_data <- function(data,
     colnames(unibyimat) <- subindicators
     y <- levels(data[[uvarby]])
     data <- as.data.frame(cbind(data, unibyimat))
+    data <- transform_y(y, yfuns)
     attr(data, "ys") <- y
     attr(data, "multivariate") <- FALSE
     attr(data, "uvarby") <- uvarby
     attr(data, "subindicators") <- subindicators
     # data_out <- data
   } else if (mvar) {
-    for (myfunsi in 1:length(y)) {
-      mysi <- y[[myfunsi]]
-      myfunsi <- yfuns[[myfunsi]]
-      if (grepl('.Primitive', myfunsi, fixed = T) &
-          grepl('log', myfunsi, fixed = T)) {
-        myfunsi <- 'log'
-      }
-      if (grepl('.Primitive', myfunsi, fixed = T) &
-          grepl('sqrt', myfunsi, fixed = T)) {
-        myfunsi <- 'sqrt'
-      }
-      if (myfunsi == 'log')
-        data[[mysi]] <- log(data[[mysi]])
-      if (myfunsi == 'sqrt')
-        data[[mysi]] <- sqrt(data[[mysi]])
-    }
-    #  data_out <- org.data
+    # for (myfunsi in 1:length(y)) {
+    #   mysi <- y[[myfunsi]]
+    #   myfunsi <- yfuns[[myfunsi]]
+    #   if (grepl('.Primitive', myfunsi, fixed = T) &
+    #       grepl('log', myfunsi, fixed = T)) {
+    #     myfunsi <- 'log'
+    #   }
+    #   if (grepl('.Primitive', myfunsi, fixed = T) &
+    #       grepl('sqrt', myfunsi, fixed = T)) {
+    #     myfunsi <- 'sqrt'
+    #   }
+    #   if (myfunsi == 'log')
+    #     data[[mysi]] <- log(data[[mysi]])
+    #   if (myfunsi == 'sqrt')
+    #     data[[mysi]] <- sqrt(data[[mysi]])
+    # }
+    data <- org.data
+    data <- transform_y(y, yfuns)
     attr(data, "ys") <- y
     attr(data, "multivariate") <- TRUE
     attr(data, "uvarby") <- NULL
@@ -175,6 +202,7 @@ prepare_data <- function(data,
   } else {
     # data_out <- org.data
     data <- org.data
+    data <- transform_y(y, yfuns)
     attr(data, "ys") <- y
     attr(data, "multivariate") <- FALSE
     attr(data, "uvarby") <- NULL

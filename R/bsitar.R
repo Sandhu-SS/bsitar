@@ -2552,6 +2552,8 @@ bsitar <- function(x,
   groupvarnamelist <- xvarvaluelist <- xnamelist <- funlist
   hierarchicalvarnamelist <- hierarchicalvarvaluelist <- funlist
   
+  sigmacovnamelist <- sigmacovvaluelist <- funlist
+  
   sigma_groupvarnamelist <- sigma_groupvarvaluelist <- funlist
   sigma_hierarchicalvarnamelist <- sigma_hierarchicalvarvaluelist <- funlist
   
@@ -3323,6 +3325,7 @@ bsitar <- function(x,
     multivariate$rescor <- multivariate_rescor
     univariate_by$by <- univariate_by_by
     covariates_ <- covariates_
+    covariates_sigma_ <- covariates_sigma_
     set_higher_levels <- set_higher_levels
     
     sigma_set_higher_levels <- sigma_set_higher_levels
@@ -3586,6 +3589,7 @@ bsitar <- function(x,
       xvar_name <- "xvar"
       yvar_name <- "yvar"
       cov_name <- "cov"
+      cov_name_sigma <- "cov_sigma"
     } else if (nys > 1) {
       xoffset_name <- paste0("xoffset", "_", ysi)
       knots_name <- paste0("knots", "_", ysi)
@@ -3598,6 +3602,7 @@ bsitar <- function(x,
       xvar_name <- paste0("xvar", "_", ysi)
       yvar_name <- paste0("yvar", "_", ysi)
       cov_name <- paste0("cov", "_", ysi)
+      cov_name_sigma <- paste0("cov_sigma", "_", ysi)
     }
     
     
@@ -3637,6 +3642,10 @@ bsitar <- function(x,
     
     covnamelist[[ii]] <- cov_name
     covvaluelist[[ii]] <- covariates_
+    
+    sigmacovnamelist[[ii]] <- cov_name_sigma
+    sigmacovvaluelist[[ii]] <- covariates_sigma_
+    
     
     
     # Restore x var for data
@@ -4496,6 +4505,10 @@ bsitar <- function(x,
     
     for (i in 1:length(covnamelist)) {
       model_info[[covnamelist[[i]]]] <- covvaluelist[[i]]
+    }
+    
+    for (i in 1:length(sigmacovnamelist)) {
+      model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
     }
     
     if(!is.na(univariate_by$by)) {

@@ -1117,12 +1117,14 @@ prepare_formula <- function(x,
   b_covariate <- getcovlist(b_formulasi)
   c_covariate <- getcovlist(c_formulasi)
   d_covariate <- getcovlist(d_formulasi)
-  
   s_covariate <- getcovlist(s_formulasi)
+  
+  sigma_covariate <- getcovlist(sigma_formulasi)
   
   covariates <- c(a_covariate, b_covariate, c_covariate, d_covariate, s_covariate)
   covariates_ <- unique(covariates)
   
+  covariates_sigma_ <- unique(sigma_covariate)
   
   
   a_covariate_i <- c()
@@ -1522,6 +1524,7 @@ prepare_formula <- function(x,
     hierarchical_gr_names = hierarchical_gr_names,
     sigma_hierarchical_gr_names = sigma_hierarchical_gr_names,
     covariates_ = covariates_,
+    covariates_sigma_ = covariates_sigma_,
     lm_a_all = lm_a_all,
     lm_b_all = lm_b_all,
     lm_c_all = lm_c_all,

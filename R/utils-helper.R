@@ -40,6 +40,7 @@ get.newdata <- function(model, newdata, resp,
   
   
   cov_ <- paste0('cov', resp_rev_)
+  cov_sigma_ <- paste0('cov_sigma', resp_rev_)
   uvarby <- model$model_info$univariate_by
   
   
@@ -58,8 +59,6 @@ get.newdata <- function(model, newdata, resp,
   
   
  
-  
-  
   newdata <- prepare_data(data = newdata,
                           x = model$model_info$xs,
                           y = model$model_info$ys,  
@@ -123,15 +122,36 @@ get.newdata <- function(model, newdata, resp,
   factor_vars <- names(newdata[sapply(newdata, is.factor)])
   numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
   cov_vars <-  model$model_info[[cov_]]
+  cov_sigma_vars <-  model$model_info[[cov_sigma_]]
   if(!is.null(cov_vars))  cov_vars <- covars_extrcation(cov_vars)
+  
+  if(!is.null(cov_sigma_vars))  cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
   
   cov_factor_vars <- intersect(cov_vars, factor_vars)
   cov_numeric_vars <- intersect(cov_vars, numeric_vars)
   groupby_fstr <- c(cov_factor_vars)
   groupby_fistr <- c(IDvar, cov_factor_vars)
   
+  cov_sigma_factor_vars <- intersect(cov_sigma_vars, factor_vars)
+  cov_sigma_numeric_vars <- intersect(cov_sigma_vars, numeric_vars)
+  
   if(identical(cov_factor_vars, character(0))) cov_factor_vars <- NULL
   if(identical(cov_numeric_vars, character(0))) cov_numeric_vars <- NULL
+ 
+  if(identical(cov_sigma_factor_vars, character(0))) cov_sigma_factor_vars <- NULL
+  if(identical(cov_sigma_numeric_vars, character(0))) cov_sigma_numeric_vars <- NULL
+  
+  # Merge here a b c covariate with sigma co variate
+  # IMP: Note that groupby_fstr and groupby_fistr are stil  a b c covariate 
+  # This way, plot_bsitar and gparameters will not produce sigam cov specific
+  # curves and g parameters
+  
+  cov_factor_vars <- c(cov_factor_vars, cov_sigma_factor_vars)
+  cov_numeric_vars <- c(cov_numeric_vars, cov_sigma_numeric_vars)
+  
+  # groupby_fstr <- c(groupby_fstr, groupby_fstr)
+  # groupby_fistr <- c(groupby_fstr, groupby_fstr)
+  
   
   if(!is.na(model$model_info$univariate_by)) {
     groupby_fstr <- c(uvarby, groupby_fstr)
@@ -413,9 +433,10 @@ get.newdata <- function(model, newdata, resp,
         newdata <- newdata
       } 
       
-      
+    
       if(!is.null(ipts)) {
-        # outliers must be NULL as this has already been taken care of by get.newdata
+        # outliers must be NULL 
+        # because these has already been taken care of by get.newdata
         newdata <- prepare_data(data = newdata,
                                 x = model$model_info$xs,
                                 y = model$model_info$ys,  
