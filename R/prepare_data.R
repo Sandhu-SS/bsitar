@@ -42,6 +42,7 @@ prepare_data <- function(data,
                          xfuns = NULL,
                          yfuns = NULL,
                          outliers = NULL) {
+  data <- data %>% droplevels()
   if (!is.null(outliers)) {
     remove_ <- outliers$remove
     icode_ <- outliers$icode
