@@ -99,6 +99,19 @@ optimize_bsitar.bsitar <- function(model,
     }
   }
   
+  # This to evaluate T/F to TRUE/FALSE
+  for (i in names(args_o)) {
+    if(is.symbol(args_o[[i]])) {
+      if(args_o[[i]] == "T") args_o[[i]] <- eval(args_o[[i]])
+      if(args_o[[i]] == "F") args_o[[i]] <- eval(args_o[[i]])
+    }
+  }
+  
+  # print(sort(names(args_o)))
+  # print(args_o$expose_function)
+  # xxx <<- args_o$expose_function
+  # stop()
+  
   for (add_fit_criteriai in add_fit_criteria) {
     if(!add_fit_criteriai %in% c("loo", "waic")) {
       stop("only loo and waic criteria are supported")
@@ -110,15 +123,16 @@ optimize_bsitar.bsitar <- function(model,
       stop("only bayes_R as R square measure is supported")
     }
   }
-  
+  # print(args_o$expose_function)
+  # stop()
   if(!args_o$expose_function) {
     if(!is.null(add_fit_criteria) | !is.null(add_fit_bayes_R)) {
-      stop("Argument expose_function must be set to TRUE for",
-           "\n",
+      stop("Argument expose_function must be set to TRUE when ",
+           "\n ",
            " adding fit criteria and bayes_R")
     }
   }
- 
+  
   get_args_opt <- function(xo) {
     get_within_fist_last_paranthesese <- function(x__) {
       x__ <- sub('\\(', '[', x__)
@@ -141,7 +155,9 @@ optimize_bsitar.bsitar <- function(model,
         x__
       }
     xxo <- gsub("[[:space:]]", "", xo)
-    if (xxo != "NULL" & xxo != "\"NULL\"") {
+    
+    numeric_dx <-  is.numeric(eval(parse(text = gsub('\"', "", xxo))))
+    if (xxo != "NULL" & xxo != "\"NULL\"" & !numeric_dx) {
       xxo <- get_within_fist_last_paranthesese(xxo)
       xxo <- gsub_comma_within_paranthesese(xxo, "_comma_")
       xxo <- strsplit(xxo, ",")[[1]]
@@ -232,7 +248,7 @@ optimize_bsitar.bsitar <- function(model,
       dplyr::relocate(Parameter, Estimate, SE)
     summary_bayes_R
   }
- 
+  
   combine_summaries <- function(model_list, summary_obj) {
     ic = 0
     list_c <- list()
