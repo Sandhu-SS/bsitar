@@ -83,17 +83,6 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   needs_recompilation <- utils::getFromNamespace("needs_recompilation", "brms")
   
   
-  # backend_choices <- backend_choices <- first_not_null <- as_one_logical
-  # get_drop_unused_levels <- is_equal <- is_normalized <- as_one_logical
-  # needs_recompilation <- validate_silent <- as_one_numeric <- as_one_logical
-  # backend_choices <- utils::getFromNamespace("backend_choices", "brms")
-  # first_not_null <- utils::getFromNamespace("first_not_null", "brms")
-  # get_drop_unused_levels <- utils::getFromNamespace("get_drop_unused_levels", "brms")
-  # is_normalized <- utils::getFromNamespace("is_normalized", "brms")
-  # validate_silent <- utils::getFromNamespace("validate_silent", "brms")
-  # as_one_numeric <- utils::getFromNamespace("as_one_numeric", "brms")
-  
-  
   if (is.null(recompile)) {
     call_stancode <- call_
     call_stancode$get_stancode <- TRUE
@@ -101,31 +90,32 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
     new_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", new_stancode)
     old_stancode <- model$bmodel
     old_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", old_stancode)
-    call_stancode$get_stancode <- FALSE
-    call_stancode$get_standata <- TRUE
-    new_standata <- eval.parent(call_stancode)
-    old_standata <- standata(model)
-    if(new_standata$prior_only == old_standata$prior_only) {
-      sample_prior_arg_same <- TRUE
-    } else {
-      sample_prior_arg_same <- FALSE
-    }
     
-    recompile <- needs_recompilation(model) || !same_backend || !sample_prior_arg_same || 
+    # Not using but good for later use
+    
+    # call_stancode$get_stancode <- FALSE
+    # call_stancode$get_standata <- TRUE
+    # new_standata <- eval.parent(call_stancode)
+    # old_standata <- standata(model)
+    # if(new_standata$prior_only == old_standata$prior_only) {
+    #   sample_prior_arg_same <- TRUE
+    # } else {
+    #   sample_prior_arg_same <- FALSE
+    # }
+    
+    # !sample_prior_arg_same || 
+    
+    recompile <- needs_recompilation(model) || !same_backend || 
       !is_equal(new_stancode, old_stancode)
     if (recompile && silent < 2) {
       message("Update requires model recompilation")
-      if(is_equal(new_stancode, old_stancode) & !sample_prior_arg_same) {
-        message("\ In this case, recompilation is required because of the change in the")
-        message("\ sample_prior argument even though the stancode is same")
-      }
     }
   }
   
   recompile <- as_one_logical(recompile)
   
-  # call_x <<- call_
-  # stop()
+  # This controls the sample prior argument
+  attr(model$prior, "sample_prior") <- call_$sample_prior 
   
   if (recompile) {
     call_$fit <- NA
