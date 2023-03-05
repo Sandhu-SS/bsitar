@@ -40,7 +40,7 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   }
   
   mcall_$newdata <- NULL
- 
+  
   
   if(!identical(names(mcall_)[-c(1:2)], character(0))) {
     for (i in names(names(mcall_)[-c(1:2)])) {
@@ -94,7 +94,6 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   # as_one_numeric <- utils::getFromNamespace("as_one_numeric", "brms")
   
   
-  
   if (is.null(recompile)) {
     call_stancode <- call_
     call_stancode$get_stancode <- TRUE
@@ -102,14 +101,31 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
     new_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", new_stancode)
     old_stancode <- model$bmodel
     old_stancode <- sub("^[^\n]+[[:digit:]]\\.[^\n]+\n", "", old_stancode)
-    recompile <- needs_recompilation(model) || !same_backend || 
+    call_stancode$get_stancode <- FALSE
+    call_stancode$get_standata <- TRUE
+    new_standata <- eval.parent(call_stancode)
+    old_standata <- standata(model)
+    if(new_standata$prior_only == old_standata$prior_only) {
+      sample_prior_arg_same <- TRUE
+    } else {
+      sample_prior_arg_same <- FALSE
+    }
+    
+    recompile <- needs_recompilation(model) || !same_backend || !sample_prior_arg_same || 
       !is_equal(new_stancode, old_stancode)
     if (recompile && silent < 2) {
       message("Update requires model recompilation")
+      if(is_equal(new_stancode, old_stancode) & !sample_prior_arg_same) {
+        message("\ In this case, recompilation is required because of the change in the")
+        message("\ sample_prior argument even though the stancode is same")
+      }
     }
   }
   
   recompile <- as_one_logical(recompile)
+  
+  # call_x <<- call_
+  # stop()
   
   if (recompile) {
     call_$fit <- NA

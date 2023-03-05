@@ -307,7 +307,12 @@ optimize_bsitar.bsitar <- function(model,
       args_o$data <- call_o_args$newdata
     }
     
-    fit <- do.call(update_bsitar, args_o)
+    # print(sort(names(args_o)))
+    # print(args_o$expose_function)
+    # xxx <<- args_o$sample_prior
+    # stop()
+    
+    fit <- do.call(update_bsitar, args_o) 
     
     fit$model_info$optimization_info <- optimization_info
     fit$model_info$optimize_df <- df
