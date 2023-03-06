@@ -282,20 +282,21 @@ optimize_bsitar.bsitar <- function(model,
     else
       yfun <- yfun
     
-    if (is.null(xfun))
-      xfun_print <- deparse(xfun)
-    else
-      xfun_print <- xfun
-    if (is.null(yfun))
-      yfun_print <- deparse(yfun)
-    else
-      yfun_print <- yfun
+    # if (is.null(xfun))
+    #   xfun_print <- deparse(xfun)
+    # else
+    #   xfun_print <- xfun
+    # if (is.null(yfun))
+    #   yfun_print <- deparse(yfun)
+    # else
+    #   yfun_print <- yfun
+    
     cat("\n")
-    cat(paste0("df = ", df, "; xfun = ", xfun_print, "; yfun = ", yfun_print),
+    cat(paste0("df = ", df, "; xfun = ", xfun, "; yfun = ", yfun),
         "\n")
     
     optimization_info <-
-      paste0("df = ", df, "; xfun = ", xfun_print, "; yfun = ", yfun_print)
+      paste0("df = ", df, "; xfun = ", xfun, "; yfun = ", yfun)
     
     
     args_o$model <- model
@@ -316,8 +317,8 @@ optimize_bsitar.bsitar <- function(model,
     
     fit$model_info$optimization_info <- optimization_info
     fit$model_info$optimize_df <- df
-    fit$model_info$optimize_x <- xfun_print
-    fit$model_info$optimize_y <- yfun_print
+    fit$model_info$optimize_x <- xfun
+    fit$model_info$optimize_y <- yfun
     
     # Add fit_criteria and bares_R to the fit 
     
@@ -349,13 +350,13 @@ optimize_bsitar.bsitar <- function(model,
     if('loo' %in% add_fit_criteria) {
       summary_loo <- add_summary_loo(fit$criteria$loo, digits = 1)
       summary_loo$df <- df
-      summary_loo$xfun <- xfun_print
-      summary_loo$yfun <- yfun_print
+      summary_loo$xfun <- xfun
+      summary_loo$yfun <- yfun
       summary_loo <- summary_loo %>% dplyr::relocate(df, xfun, yfun)
       diagnostic_loo <- add_diagnostic_loo(fit$criteria$loo, digits = 1)
       diagnostic_loo$df <- df
-      diagnostic_loo$xfun <- xfun_print
-      diagnostic_loo$yfun <- yfun_print
+      diagnostic_loo$xfun <- xfun
+      diagnostic_loo$yfun <- yfun
       diagnostic_loo <- diagnostic_loo %>% dplyr::relocate(df, xfun, yfun)
       fit$summary_loo <- summary_loo
       fit$diagnostic_loo <- diagnostic_loo
@@ -363,16 +364,16 @@ optimize_bsitar.bsitar <- function(model,
     if('waic' %in% add_fit_criteria) {
       summary_waic <- add_summary_waic(fit$criteria$waic, digits = 1)
       summary_waic$df <- df
-      summary_waic$xfun <- xfun_print
-      summary_waic$yfun <- yfun_print
+      summary_waic$xfun <- xfun
+      summary_waic$yfun <- yfun
       summary_waic <- summary_waic %>% dplyr::relocate(df, xfun, yfun)
       fit$summary_waic <- summary_waic
     }
     if('bayes_R' %in% add_fit_bayes_R) {
       summary_bayes_R <- add_summary_bayes_R(fit$criteria$bayes_R, digits = 1)
       summary_bayes_R$df <- df
-      summary_bayes_R$xfun <- xfun_print
-      summary_bayes_R$yfun <- yfun_print
+      summary_bayes_R$xfun <- xfun
+      summary_bayes_R$yfun <- yfun
       summary_bayes_R <- summary_bayes_R %>% dplyr::relocate(df, xfun, yfun)
       fit$summary_bayes_R <- summary_bayes_R
     }
