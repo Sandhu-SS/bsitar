@@ -94,7 +94,7 @@ expose_bsitar_functions <- function(model, scode = NULL, expose = TRUE) {
       }
     }
   }
-  model$model <- scode_include
+  model$model <- model$bmodel # scode_include
   return(model)
 }
 
