@@ -3651,6 +3651,10 @@ bsitar <- function(x,
     
     
     # Restore x var for data
+    # Imp: Note that only xvar is reverse transformed and not the yvar
+    # This is because the xvar is again transformed in the Stan function block
+    # Whereas the yvar is passed to bsitar as such 
+
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if (xfunsi == "log") {

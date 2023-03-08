@@ -264,10 +264,12 @@ optimize_bsitar.bsitar <- function(model,
   }
   
   optimize_fun <- function(.x, model) {
+    message("Working on model no. ", .x, " of ", nrow(optimize_df_x_y), " models")
+    cat("\n")
     exe_row <- optimize_df_x_y[.x, ]
     df <- levels(droplevels(exe_row$df))
     xfun <- levels(droplevels(exe_row$xfun))
-    yfun <- levels(droplevels(exe_row$xfun))
+    yfun <- levels(droplevels(exe_row$yfun))
     if (df == 'NULL')
       df <-
       paste0("list(", paste(model$model_info$dfs, collapse = ","), ")")
@@ -384,16 +386,19 @@ optimize_bsitar.bsitar <- function(model,
   optimize_list <- lapply(1:nrow(optimize_df_x_y), function(.x)
     optimize_fun(.x, model))
   
-  summary_loo_all     <- combine_summaries(optimize_list, 'summary_loo')
-  diagnostic_loo_all  <- combine_summaries(optimize_list, 'diagnostic_loo')
-  summary_waic_all    <- combine_summaries(optimize_list, 'summary_waic')
-  summary_bayes_R_all <- combine_summaries(optimize_list, 'summary_bayes_R')
+  # summary_loo_all     <- combine_summaries(optimize_list, 'summary_loo')
+  # diagnostic_loo_all  <- combine_summaries(optimize_list, 'diagnostic_loo')
+  # summary_waic_all    <- combine_summaries(optimize_list, 'summary_waic')
+  # summary_bayes_R_all <- combine_summaries(optimize_list, 'summary_bayes_R')
   
-  list(models = optimize_list, summary_loo_all = summary_loo_all,
-       diagnostic_loo_all = diagnostic_loo_all, 
-       summary_waic_all = summary_waic_all,
-       summary_bayes_R_all = summary_bayes_R_all)
+  loo_summary     <- combine_summaries(optimize_list, 'summary_loo')
+  loo_diagnostic  <- combine_summaries(optimize_list, 'diagnostic_loo')
+  waic_summary    <- combine_summaries(optimize_list, 'summary_waic')
+  bayes_R_summary <- combine_summaries(optimize_list, 'summary_bayes_R')
   
+  list(models = optimize_list, loo_summary = loo_summary,
+       loo_diagnostic = loo_diagnostic, waic_summary = waic_summary,
+       bayes_R_summary = bayes_R_summary)
 }
 
 
