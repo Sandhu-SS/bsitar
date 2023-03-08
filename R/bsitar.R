@@ -2992,30 +2992,32 @@ bsitar <- function(x,
     
     
     # for multivariate, yvar is transformed before initiating loop over ys
+    # Changed now, yvar transformations for univariate, univariate_by, 
+    # multivariate, done within the prepare_data
     
-    
-    if(!multivariate$mvar) {
-      if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
-        if (yfunsi == "log") {
-          datai[[ysi]] <- log(datai[[ysi]])
-        } else if (yfunsi == "sqrt") {
-          datai[[ysi]] <- sqrt(datai[[ysi]])
-        } else {
-          stop("only log or sqrt tranformation allowed for yfun argument")
-        }
-      }
-    }
-    
-    
-    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
-    #   if (yfunsi == "log") {
-    #     datai[[ysi]] <- log(datai[[ysi]])
-    #   } else if (yfunsi == "sqrt") {
-    #     datai[[ysi]] <- sqrt(datai[[ysi]])
-    #   } else {
-    #     stop("only log or sqrt tranformation allowed for yfun argument")
+    # if(!multivariate$mvar) {
+    #   if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+    #     if (yfunsi == "log") {
+    #       datai[[ysi]] <- log(datai[[ysi]])
+    #     } else if (yfunsi == "sqrt") {
+    #       datai[[ysi]] <- sqrt(datai[[ysi]])
+    #     } else {
+    #       stop("only log or sqrt tranformation allowed for yfun argument")
+    #     }
     #   }
     # }
+    # 
+    # 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+   
     
     
     

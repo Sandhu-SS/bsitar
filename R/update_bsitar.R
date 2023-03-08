@@ -42,6 +42,7 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   mcall_$newdata <- NULL
   
   
+  
   if(!identical(names(mcall_)[-c(1:2)], character(0))) {
     for (i in names(names(mcall_)[-c(1:2)])) {
       if(!i %in% names(call_)) {
@@ -73,6 +74,8 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
   for (i in names(mcall_)[-c(1:2)]) {
     call_[[i]] <- mcall_[[i]]
   }
+  
+  
   
   iter <- call_$iter
   silent <- call_$silent
@@ -124,7 +127,7 @@ update_bsitar.bsitar <- function(model, newdata = NULL, recompile = NULL, ...) {
     call_$fit <- model
     model <- eval.parent(call_)
   }
-  
+  # if(call_$expose_function) model <- expose_bsitar_functions(model, model$bmodel)
   return(model)
 }
 
