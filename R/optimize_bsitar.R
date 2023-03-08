@@ -264,8 +264,8 @@ optimize_bsitar.bsitar <- function(model,
   }
   
   optimize_fun <- function(.x, model) {
-    message("Working on model no. ", .x, " of ", nrow(optimize_df_x_y), " models")
-    cat("\n")
+    message("\nOptimizing model no. ", .x, " (total ", nrow(optimize_df_x_y), " models)")
+    # cat("\n")
     exe_row <- optimize_df_x_y[.x, ]
     df <- levels(droplevels(exe_row$df))
     xfun <- levels(droplevels(exe_row$xfun))
@@ -333,18 +333,25 @@ optimize_bsitar.bsitar <- function(model,
                          add_criterion(fit, add_fit_criteria, cores = 1))
     }
     
-    if (!is.null(add_fit_bayes_R) & !is.null(add_fit_criteria)) {
+    # if (!is.null(add_fit_bayes_R) & !is.null(add_fit_criteria)) {
+    #   what_ <- paste(add_fit_bayes_R, collapse = ", ")
+    #   message(" Adding", " ", what_, " ", "...")
+    #   cat("\n")
+    #   suppressWarnings(fit$criteria$bayes_R <- bayes_R2(fit))
+    # }
+    # 
+    # if (!is.null(add_fit_bayes_R) & is.null(add_fit_criteria)) {
+    #   what_ <- paste(add_fit_bayes_R, collapse = ", ")
+    #   message(" Adding", " ", what_, " ", "...")
+    #   cat("\n")
+    #   suppressWarnings(fit$bayes_R <- bayes_R2(fit))
+    # }
+    
+    if (!is.null(add_fit_bayes_R)) {
       what_ <- paste(add_fit_bayes_R, collapse = ", ")
       message(" Adding", " ", what_, " ", "...")
       cat("\n")
       suppressWarnings(fit$criteria$bayes_R <- bayes_R2(fit))
-    }
-    
-    if (!is.null(add_fit_bayes_R) & is.null(add_fit_criteria)) {
-      what_ <- paste(add_fit_bayes_R, collapse = ", ")
-      message(" Adding", " ", what_, " ", "...")
-      cat("\n")
-      suppressWarnings(fit$bayes_R <- bayes_R2(fit))
     }
     
     # Add summary data frames for criteria and R square
