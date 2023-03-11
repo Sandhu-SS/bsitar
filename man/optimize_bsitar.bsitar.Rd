@@ -14,6 +14,7 @@
   exclude_default_funs = TRUE,
   add_fit_criteria = NULL,
   add_fit_bayes_R = NULL,
+  digits = 2,
   ...
 )
 
@@ -73,6 +74,8 @@ see \code{\link[brms:add_criterion]{brms::add_criterion()}} for details.}
 
 \item{add_fit_bayes_R}{An optional (default \code{NULL}) to add Bayesian R
 square.}
+
+\item{digits}{An integer to set the number of decimal places.}
 
 \item{...}{Other arguments passed to \code{\link{update_bsitar}}.}
 }
