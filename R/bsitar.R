@@ -1088,28 +1088,28 @@ bsitar <- function(x,
                                        cor = un,
                                        rescor = TRUE),
                    a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
-                   b_prior_beta = normal(0, 2.5, autoscale = FALSE),
+                   b_prior_beta = normal(0, 2, autoscale = FALSE),
                    c_prior_beta = normal(0, 1, autoscale = FALSE),
                    d_prior_beta = normal(0, 1, autoscale = FALSE),
                    s_prior_beta = normal(0, lm, autoscale = 2.5),
-                   a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-                   b_cov_prior_beta = normal(0, 2, autoscale = FALSE),
+                   a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
+                   b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
                    d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
                    a_prior_sd = normal(0, ysd, autoscale = 1),
-                   b_prior_sd = normal(0, 1.5, autoscale = FALSE),
+                   b_prior_sd = normal(0, 1, autoscale = FALSE),
                    c_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    d_prior_sd = normal(0, 1, autoscale = FALSE),
-                   a_cov_prior_sd = normal(0, 10, autoscale = FALSE),
-                   b_cov_prior_sd = normal(0, 2, autoscale = FALSE),
-                   c_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
-                   d_cov_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
+                   b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
+                   c_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
+                   d_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    
-                   sigma_prior_beta = normal(0, 2, autoscale = FALSE),
-                   sigma_cov_prior_beta = normal(0, 2, autoscale = FALSE),
-                   sigma_prior_sd = normal(0, 1, autoscale = FALSE),
-                   sigma_cov_prior_sd = normal(0, 1, autoscale = FALSE),
+                   sigma_prior_beta = normal(0, 1, autoscale = FALSE),
+                   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
+                   sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
                    
                    rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
                    dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
@@ -1120,10 +1120,10 @@ bsitar <- function(x,
                    init = NULL,
                    init_r = NULL,
                    a_init_beta = lm,
-                   b_init_beta = 0,
-                   c_init_beta = 0,
+                   b_init_beta = 0.001,
+                   c_init_beta = 0.001,
                    d_init_beta = 0,
-                   s_init_beta = 0,
+                   s_init_beta = lm,
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
                    c_cov_init_beta = 0,
@@ -1133,10 +1133,10 @@ bsitar <- function(x,
                    b_init_sd = 1,
                    c_init_sd = 1,
                    d_init_sd = 1,
-                   a_cov_init_sd = 0,
-                   b_cov_init_sd = 0,
-                   c_cov_init_sd = 0,
-                   d_cov_init_sd = 0,
+                   a_cov_init_sd = 0.5,
+                   b_cov_init_sd = 0.5,
+                   c_cov_init_sd = 0.5,
+                   d_cov_init_sd = 0.5,
                    
                    sigma_init_beta = 0,
                    sigma_cov_init_beta = 0,
@@ -1145,8 +1145,8 @@ bsitar <- function(x,
                    
                    gr_init_cor = 0,
                    rsd_init_sigma = 1,
-                   dpar_init_sigma = 0,
-                   dpar_cov_init_sigma = 0,
+                   dpar_init_sigma = 1,
+                   dpar_cov_init_sigma = 1,
                    autocor_init_acor = 0.1,
                    mvr_init_rescor = 0,
                    r_init_z = 0,
@@ -4263,6 +4263,8 @@ bsitar <- function(x,
   cat("\n")
   
   
+  ######################
+  # not using insert_new_priors
   
   insert_new_priors <- function(setdf_1, setdf_2) {
     index <- row_number <- valid <- NA
@@ -4287,6 +4289,50 @@ bsitar <- function(x,
   }
   
   
+  insert_new_priors <- function(setdf_1, setdf_2) {
+    cc <- zz <- list()
+    for (i in 1:nrow(setdf_1)) {
+      getx <- setdf_1[i,]
+      zz[[i]] <- setdf_2 %>% dplyr::mutate(prior = dplyr::if_else(class == getx[['class']] &
+                                                                    coef == getx[['coef']] &
+                                                                    group == getx[['group']] &
+                                                                    resp == getx[['resp']] &
+                                                                    dpar == getx[['dpar']] &
+                                                                    nlpar == getx[['nlpar']] ,
+                                                                  getx$prior,
+                                                                  setdf_2$prior)) %>% 
+        dplyr::filter(class == getx[['class']] &
+                        coef == getx[['coef']] &
+                        group == getx[['group']] &
+                        resp == getx[['resp']] &
+                        dpar == getx[['dpar']] &
+                        nlpar == getx[['nlpar']])
+      
+      cc[[i]] <- setdf_2 %>% dplyr::mutate(prior = dplyr::if_else(class != getx[['class']] &
+                                                                    coef != getx[['coef']] &
+                                                                    group != getx[['group']] &
+                                                                    resp != getx[['resp']] &
+                                                                    dpar != getx[['dpar']] &
+                                                                    nlpar != getx[['nlpar']] ,
+                                                                  setdf_2$prior,
+                                                                  getx$prior)) %>% 
+        
+        dplyr::filter(class != getx[['class']] & 
+                        coef != getx[['coef']] &
+                        group != getx[['group']] &
+                        resp != getx[['resp']] &
+                        dpar != getx[['dpar']] &
+                        nlpar != getx[['nlpar']])
+      
+    }
+    
+    p1 <- cc %>% do.call(rbind, .)
+    p2 <- zz %>% do.call(rbind, .)
+    p1p2 <- rbind(p1, p2)
+    p1p2
+  }
+  
+  ######################
   
   
   if(set_higher_levels) {
@@ -4384,11 +4430,15 @@ bsitar <- function(x,
     if(!is.null(set_self_priors)) {
       brm_args$prior <- set_self_priors
     } else if(!is.null(set_replace_priors)) {
-      brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
+      # brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
+      brm_args$prior <- brmspriors %>% 
+        dplyr::filter(source == 'user') %>% 
+        dplyr::bind_rows(., set_replace_priors)
     } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
       brm_args$prior <- brmspriors
     }
     
+    # txx <<- brm_args$prior
     
     # If initials are 0 or random, then set custom init to NULL
     
