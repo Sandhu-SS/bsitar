@@ -1,8 +1,5 @@
 
 
-
-
-
 get.newdata <- function(model, newdata, resp, 
                         numeric_cov_at = NULL, 
                         levels_id = NULL,
@@ -69,28 +66,8 @@ get.newdata <- function(model, newdata, resp,
                           yfuns = model$model_info$yfuns,
                           outliers = model$model_info$outliers)
   
-   # print(nrow(newdata))
-  
+
   if(!is.na(model$model_info$univariate_by)) {
-    # if (is.null(newdata)) {
-    #   # newdata_ <- eval.parent(model$model_info$call.bsitar$data)
-    #   newdata_ <- newdata
-    # } else  if (!is.null(newdata)) {
-    #   newdata_ <- newdata
-    # }
-    
-    
-    # model$model_info$prepare_data(newdata_,
-    # newdata <- prepare_data(data = newdata_,
-    #                         x = model$model_info$xvar,
-    #                         y = model$model_info$ys,  
-    #                         id = model$model_info$groupvar_,
-    #                         uvarby = model$model_info$univariate_by,
-    #                         mvar = model$model_info$multivariate,
-    #                         xfuns = model$model_info$xfuns,
-    #                         yfuns = model$model_info$yfuns,
-    #                         outliers = model$model_info$outliers)
-  
     sortbylayer <- NA
     newdata <- newdata %>%
       dplyr::mutate(sortbylayer =
@@ -127,6 +104,7 @@ get.newdata <- function(model, newdata, resp,
   
   if(!is.null(cov_sigma_vars))  cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
   
+  
   cov_factor_vars <- intersect(cov_vars, factor_vars)
   cov_numeric_vars <- intersect(cov_vars, numeric_vars)
   groupby_fstr <- c(cov_factor_vars)
@@ -141,6 +119,7 @@ get.newdata <- function(model, newdata, resp,
   if(identical(cov_sigma_factor_vars, character(0))) cov_sigma_factor_vars <- NULL
   if(identical(cov_sigma_numeric_vars, character(0))) cov_sigma_numeric_vars <- NULL
   
+  
   # Merge here a b c covariate with sigma co variate
   # IMP: Note that groupby_fstr and groupby_fistr are stil  a b c covariate 
   # This way, plot_bsitar and gparameters will not produce sigam cov specific
@@ -149,6 +128,7 @@ get.newdata <- function(model, newdata, resp,
   cov_factor_vars <- c(cov_factor_vars, cov_sigma_factor_vars)
   cov_numeric_vars <- c(cov_numeric_vars, cov_sigma_numeric_vars)
   
+
   # groupby_fstr <- c(groupby_fstr, groupby_fstr)
   # groupby_fistr <- c(groupby_fstr, groupby_fstr)
   
@@ -196,8 +176,14 @@ get.newdata <- function(model, newdata, resp,
     if(is.null(IDvar)) relocate_vars <- c(xvar)
     if(!is.na(uvarby)) relocate_vars <- c(relocate_vars, uvarby)
     if(!is.null(cov_numeric_vars)) {
-      cov_numeric_vars__ <-
-        cov_numeric_vars[!grepl(paste(xvar, collapse = "|"), cov_numeric_vars)]
+      # This cov_numeric_vars__ excludes sigma covariates
+      
+      # cov_numeric_vars__ <-
+      #   cov_numeric_vars[!grepl(paste(xvar, collapse = "|"), cov_numeric_vars)]
+     
+      cov_numeric_vars__ <- cov_numeric_vars
+      
+      
       if (identical(cov_numeric_vars__, character(0)))
         cov_numeric_vars__ <- NULL
       if (!is.null(cov_numeric_vars__)) {
@@ -225,13 +211,19 @@ get.newdata <- function(model, newdata, resp,
         data <-
           data %>% dplyr::mutate_at(cov_numeric_vars__, 
                                     set_numeric_cov_at, numeric_cov_at)
-        cat("Continous covariate(s) set at:")
-        for (cov_numeric_vars__i in cov_numeric_vars__) {
-          cat("\n", cov_numeric_vars__i, "at",
-              unique(data[[cov_numeric_vars__i]]))
-        }
+        
+        # This is good but get.data.grid is called twice - why? 
+        # hence this cat("\n"... is printed twice
+        
+        # cat("Continous covariate(s) set at:\n")
+        # for (cov_numeric_vars__i in cov_numeric_vars__) {
+        #   cat("\n", cov_numeric_vars__i, "at",
+        #       unique(data[[cov_numeric_vars__i]]))
+        # }
       }
     }
+    
+   
     if(!is.null(yvar)) {
       if (yvar %in% colnames(data)) {
         relocate_vars <- c(yvar, relocate_vars)
@@ -279,9 +271,9 @@ get.newdata <- function(model, newdata, resp,
       
       
       
-      idatafunction <- function(.x, xvar, IDvar, nmy, xrange, set_xrange) {
+      idatafunction <- function(.x, xvar, IDvar, nmy, xrange, set_xrange, aux_var = NULL) {
         index__x <- NA
-        exdata <- function(x, id, idmat, nmy, xrange, set_xrange) {
+        exdata <- function(x, id, idmat, nmy, xrange, set_xrange, aux_var) {
           n <- round(nmy * diff(range(x)))
           npt <- n / diff(range(x))
           
@@ -317,10 +309,28 @@ get.newdata <- function(model, newdata, resp,
             df <- rbind(df, dft)
           df
         }
+        out <- exdata(.x[[xvar]], .x[[IDvar]], matrix(unique(.x[[IDvar]], ncol = 1)),
+               nmy = nmy, xrange = xrange, set_xrange = set_xrange, aux_var = aux_var)
         
-        exdata(.x[[xvar]], .x[[IDvar]], matrix(unique(.x[[IDvar]], ncol = 1)),
-               nmy = nmy, xrange = xrange, set_xrange = set_xrange)
+        idxx <- NULL
+        
+        if(!is.null(aux_var)) {
+          aux_varx <- c(aux_var, IDvar)
+          newx. <- .x %>% dplyr::select(all_of(aux_varx)) %>% 
+            dplyr::group_by(across(all_of(IDvar))) %>% 
+            dplyr::mutate(idxx = dplyr::row_number()) %>% 
+            dplyr::ungroup()
+          outx. <- out %>% 
+            dplyr::group_by(across(all_of(IDvar))) %>% 
+            dplyr::mutate(idxx = dplyr::row_number()) %>% 
+            dplyr::ungroup()
+          out <- outx. %>% dplyr::left_join(., newx., by = c(IDvar, 'idxx')) %>% 
+            dplyr::select(-idxx) %>% data.frame()
+        }
+        
+        out 
       }
+      
       
       if(!is.null(xrange)) {
         if(length(xrange) < 1 | length(xrange) > 2) {
@@ -379,13 +389,14 @@ get.newdata <- function(model, newdata, resp,
       multiNewVar <- function(df, df2, varname) {
         df %>% dplyr::mutate(., !!varname := df2[[varname]])
       }
-     
+      
       if(!is.null(model$model_info[[hierarchical_]])) {
         if (!is.null(ipts) & is.null(cov_factor_vars)) {
           IDvar_ <- IDvar[1]
           higher_ <- IDvar[2:length(IDvar)]
           arrange_by <- c(IDvar_, xvar)
           cov_factor_vars_by <- c(higher_, cov_factor_vars)
+          newdata_o <- newdata
           newdata <- newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
             dplyr::group_by(across(all_of(cov_factor_vars_by))) %>%
             dplyr::group_modify(~ idatafunction(
@@ -394,16 +405,20 @@ get.newdata <- function(model, newdata, resp,
               IDvar = IDvar_,
               nmy = ipts,  
               xrange = xrange, 
-              set_xrange = set_xrange
-            )) %>%
-            dplyr::rename(!!xvar := 'x') %>% data.frame()
+              set_xrange = set_xrange,
+              aux_var = "agem"
+            ), .keep = F) %>%
+            dplyr::rename(!!xvar := 'x') %>% 
+            data.frame()  
+     
           for(i in IDvar) {
             newdata <- newdata %>% multiNewVar(df=., df2 = newdata, varname=i)
           } 
+          
           newdata %>% dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
             data.frame() -> newdata
         } 
-        
+         
         if (!is.null(ipts) & !is.null(cov_factor_vars)) {
           IDvar_ <- IDvar[1]
           higher_ <- IDvar[2:length(IDvar)]
@@ -473,7 +488,7 @@ get.newdata <- function(model, newdata, resp,
           dplyr::select(-sortbylayer)
 
       }
-      
+   
       newdata.oo <- get.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
                                   numeric_cov_at, uvarby)
       
@@ -481,8 +496,6 @@ get.newdata <- function(model, newdata, resp,
       j_b_names <- intersect(names(newdata), names(newdata.oo))
       j_b_names__ <- c(j_b_names, cov_numeric_vars)
       j_b_names__ <- unique(j_b_names__)
-      
-      
       
       newdata <-
         newdata %>% dplyr::left_join(., newdata.oo %>%
@@ -716,95 +729,3 @@ insert_new_priors <- function(setdf_1, setdf_2) {
 
 
 
-
-
-########################
-########################
-
-
-
-
-# velout2 <- function (x, y, id, data, icode = 3, lag = 1, velpower = 0.5, limit = 5, 
-#                      linearise = FALSE, verbose = TRUE) {
-#   mcall <- match.call()
-#   data <- eval(mcall$data)
-#   
-#   xx_ <- deparse(substitute(x))
-#   yy_ <- deparse(substitute(y))
-#   idid_ <- deparse(substitute(id))
-#   
-#   data <- data %>% dplyr::mutate(order = dplyr::row_number())
-#   
-#   data <- data %>% dplyr::arrange(idid_, xx_)
-#   
-#   dc <- data[, sapply(mcall[c("x", "y", "id")],
-#                       deparse)]
-#   
-#   colnames_data_ex <- colnames(data)
-#   colnames_dc_ex <- colnames(dc)
-#   data_ex <- data %>% dplyr::select(-colnames(dc))
-#   
-#   nrow <- nrow(data)
-#   dc <- na.omit(cbind(dc, count = 1:nrow))
-#   dc <- dc[order(dc[, 3], dc[, 1]), ]
-#   if (linearise) {
-#     spline.lm <- loess(dc[, 2] ~ dc[, 1])
-#     dc[, 2] <- residuals(spline.lm)
-#   }
-#   dt1 <- diff(dc[, 1], lag = lag)
-#   vel1 <- diff(dc[, 2], lag = lag)/dt1^velpower
-#   dt2 <- diff(dc[, 1], lag = lag * 2)
-#   vel2 <- diff(dc[, 2], lag = lag * 2)/dt2^velpower
-#   dt1 <- dt1 == 0
-#   idlev <- as.numeric(dc[, 3])
-#   dt1[diff(idlev, lag = lag) != 0] <- FALSE
-#   vel1[diff(idlev, lag = lag) != 0] <- NA
-#   vel2[diff(idlev, lag = lag * 2) != 0] <- NA
-#   vel1 <- trunc(vel1/mad(vel1, na.rm = TRUE))
-#   vel2 <- trunc(vel2/mad(vel2, na.rm = TRUE))
-#   vel3 <- c(rep(NA, lag), vel2, rep(NA, lag))
-#   vel2 <- c(vel1, rep(NA, lag))
-#   vel1 <- c(rep(NA, lag), vel1)
-#   code <- (as.numeric(abs(vel1) >= limit) + as.numeric(abs(vel2) >= 
-#                                                          limit)) * 2 + as.numeric(abs(vel3) >= limit)
-#   dt2 <- c(dt1, rep(FALSE, lag))
-#   dt1 <- c(rep(FALSE, lag), dt1)
-#   code[dt2 | dt1] <- 8
-#   code[dt2 & !dt1] <- 7
-#   t <- is.na(vel3) & !(dt1 | dt2)
-#   code[t] <- (as.numeric(!is.na(vel1[t]) & abs(vel1[t]) >= 
-#                            limit) + as.numeric(!is.na(vel2[t]) & abs(vel2[t]) >= 
-#                                                  limit)) * 6
-#   dc <- cbind(dc[, c(3, 1, 2, 4)], code, vel1, vel2, vel3)
-#   mat <- as.data.frame(matrix(nrow = nrow, ncol = dim(dc)[2], 
-#                               dimnames = list(row.names(data), dimnames(dc)[[2]])))
-#   attr(mat, "data") <- deparse(mcall$data)
-#   mat[dc$count, ] <- dc
-#   if (is.factor(dc[, 1])) {
-#     mat[, 1] <- as.factor(mat[, 1])
-#     levels(mat[, 1]) <- levels(dc[, 1])
-#   }
-#   mat$count <- NULL
-#   mat$code <- factor(mat$code)
-#   if(verbose) {
-#     cat("code frequencies\n")
-#     print(summary(mat$code))
-#   }
-#   
-#   
-#   mat <- cbind(mat, data_ex)
-#   mat <- mat %>% dplyr::relocate(all_of(colnames_data_ex))
-#   
-#   # if(outliers) {
-#   zap <- mat$code %in% icode
-#   if(verbose) {
-#     cat(sum(zap), yy_, "values set missing\n")
-#   }
-#   mat[mat$code %in% icode, yy_] <- NA
-#   mat <- mat %>% dplyr::select(all_of(colnames_data_ex))
-#   mat <- mat %>% tidyr::drop_na()
-#   # }
-#   mat <- mat %>% dplyr::arrange(order)
-#   mat <- mat %>% dplyr::select(-order)
-#   mat
-# }
