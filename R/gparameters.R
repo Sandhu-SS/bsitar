@@ -89,6 +89,11 @@
 #'   hierarchy is specified from lower to upper levels i.e, id, study assuming
 #'   that id is nested within the studies. However, it is not gaunated that
 #'   these ids are sorted correctly. Therefore, it is better to set it manually.
+#'   
+#'@param aux_variables An optional argument to specify the variables to be 
+#'  passed to the \code{ipts} argument. This is useful when fitting location 
+#'  scale models and the measurement error models. 
+#'   
 #' @param conf A numeric value (default \code{0.95}) to compute CI. Internally,
 #'   this is translated into a paired probability values as \code{c((1 - conf) /
 #'   2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this will compute 95% CI
@@ -177,6 +182,7 @@ gparameters.bsitar <- function(model,
                                sample_new_levels = "uncertainty",
                                incl_autocor = TRUE,
                                numeric_cov_at = NULL,
+                               aux_variables = NULL,
                                levels_id = NULL,
                                conf = 0.95,
                                ipts = NULL,
@@ -537,6 +543,7 @@ gparameters.bsitar <- function(model,
     newdata <- get.newdata(model, newdata = newdata, 
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
+                           aux_variables = aux_variables,
                            levels_id = levels_id,
                            ipts = ipts,
                            xrange = xrange)
@@ -737,6 +744,7 @@ gparameters.bsitar <- function(model,
     newdata <- get.newdata(model, newdata = newdata, 
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
+                           aux_variables = aux_variables,
                            levels_id = levels_id,
                            ipts = ipts,
                            xrange = xrange)

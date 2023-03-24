@@ -1,7 +1,8 @@
 
 
 get.newdata <- function(model, newdata, resp, 
-                        numeric_cov_at = NULL, 
+                        numeric_cov_at = NULL,
+                        aux_variables = aux_variables,
                         levels_id = NULL,
                         ipts = NULL,
                         xrange = NULL) {
@@ -55,10 +56,24 @@ get.newdata <- function(model, newdata, resp,
   }
   
   
+  if(!is.na(model$model_info$univariate_by)) {
+    if(is.symbol(model$model_info$call.bsitar$y)) {
+      setorgy <- deparse(model$model_info$call.bsitar$y)
+    } else if(is.list(model$model_info$call.bsitar$y)) {
+      setorgy <- unname(unlist(model$model_info$call.bsitar$y))
+      if(is.symbol(setorgy)) setorgy <- deparse(setorgy)
+    } else {
+      setorgy <- model$model_info$call.bsitar$y
+    }
+  }
+  
+  if(is.na(model$model_info$univariate_by)) {
+    setorgy <- model$model_info$ys
+  }
  
   newdata <- prepare_data(data = newdata,
                           x = model$model_info$xs,
-                          y = model$model_info$ys,  
+                          y = setorgy,  
                           id = model$model_info$ids,
                           uvarby = model$model_info$univariate_by,
                           mvar = model$model_info$multivariate,
@@ -165,12 +180,13 @@ get.newdata <- function(model, newdata, resp,
   #########
   
   get.data.grid <- function(data, 
-                            xvar = xvar, 
-                            yvar = yvar, 
-                            IDvar = IDvar, 
-                            cov_numeric_vars = cov_numeric_vars,
-                            numeric_cov_at = numeric_cov_at,
-                            uvarby = uvarby) {
+                            xvar, 
+                            yvar, 
+                            IDvar, 
+                            cov_numeric_vars,
+                            numeric_cov_at,
+                            aux_variables,
+                            uvarby) {
     
     if(!is.null(IDvar)) relocate_vars <- c(xvar, IDvar)
     if(is.null(IDvar)) relocate_vars <- c(xvar)
@@ -240,6 +256,7 @@ get.newdata <- function(model, newdata, resp,
              resp = NULL, 
              cov_factor_vars = NULL,
              cov_numeric_vars = NULL,
+             aux_variables = NULL,
              levels_id = NULL, 
              ipts = NULL,
              xrange = NULL
@@ -313,7 +330,6 @@ get.newdata <- function(model, newdata, resp,
                nmy = nmy, xrange = xrange, set_xrange = set_xrange, aux_var = aux_var)
         
         idxx <- NULL
-        
         if(!is.null(aux_var)) {
           aux_varx <- c(aux_var, IDvar)
           newx. <- .x %>% dplyr::select(all_of(aux_varx)) %>% 
@@ -327,8 +343,7 @@ get.newdata <- function(model, newdata, resp,
           out <- outx. %>% dplyr::left_join(., newx., by = c(IDvar, 'idxx')) %>% 
             dplyr::select(-idxx) %>% data.frame()
         }
-        
-        out 
+        out # %>% print() %>% stop()
       }
       
       
@@ -361,7 +376,8 @@ get.newdata <- function(model, newdata, resp,
               IDvar = IDvar,
               nmy = ipts,
               xrange = xrange, 
-              set_xrange = set_xrange
+              set_xrange = set_xrange,
+              aux_var = aux_variables
             )) %>%
             dplyr::rename(!!xvar := 'x') %>%
             dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
@@ -376,7 +392,8 @@ get.newdata <- function(model, newdata, resp,
               IDvar = IDvar,
               nmy = ipts,
               xrange = xrange, 
-              set_xrange = set_xrange
+              set_xrange = set_xrange,
+              aux_var = aux_variables
             )) %>%
             dplyr::rename(!!xvar := 'x') %>%
             dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
@@ -406,7 +423,7 @@ get.newdata <- function(model, newdata, resp,
               nmy = ipts,  
               xrange = xrange, 
               set_xrange = set_xrange,
-              aux_var = "agem"
+              aux_var = aux_variables
             ), .keep = F) %>%
             dplyr::rename(!!xvar := 'x') %>% 
             data.frame()  
@@ -432,7 +449,8 @@ get.newdata <- function(model, newdata, resp,
               IDvar = IDvar_,
               nmy = ipts,
               xrange = xrange, 
-              set_xrange = set_xrange
+              set_xrange = set_xrange,
+              aux_var = aux_variables
             )) %>%
             dplyr::rename(!!xvar := 'x') %>% data.frame()
           for(i in IDvar) {
@@ -452,9 +470,26 @@ get.newdata <- function(model, newdata, resp,
       if(!is.null(ipts)) {
         # outliers must be NULL 
         # because these has already been taken care of by get.newdata
+        
+        if(!is.na(model$model_info$univariate_by)) {
+          if(is.symbol(model$model_info$call.bsitar$y)) {
+            setorgy <- deparse(model$model_info$call.bsitar$y)
+          } else if(is.list(model$model_info$call.bsitar$y)) {
+            setorgy <- unname(unlist(model$model_info$call.bsitar$y))
+            if(is.symbol(setorgy)) setorgy <- deparse(setorgy)
+          } else {
+            setorgy <- model$model_info$call.bsitar$y
+          }
+        }
+        
+        if(is.na(model$model_info$univariate_by)) {
+          setorgy <- model$model_info$ys
+        }
+        
+        
         newdata <- prepare_data(data = newdata,
                                 x = model$model_info$xs,
-                                y = model$model_info$ys,  
+                                y = setorgy,  
                                 id = model$model_info$ids,
                                 uvarby = model$model_info$univariate_by,
                                 mvar = model$model_info$multivariate,
@@ -463,17 +498,8 @@ get.newdata <- function(model, newdata, resp,
                                 outliers = NULL) # model$model_info$outliers
       }
       
-      # model$model_info$prepare_data
+   
       if(!is.na(model$model_info$univariate_by)) { # !is.null(ipts) & 
-        # newdata <- prepare_data(data = newdata,
-        #                         x = model$model_info$xvar,
-        #                         y = model$model_info$ys,  
-        #                         id = model$model_info$groupvar_,
-        #                         uvarby = model$model_info$univariate_by,
-        #                         mvar = model$model_info$multivariate,
-        #                         xfuns = model$model_info$xfuns,
-        #                         yfuns = model$model_info$yfuns,
-        #                         outliers = model$model_info$outliers)
         sortbylayer <- NA
         newdata <- newdata %>%
           dplyr::mutate(sortbylayer =
@@ -489,8 +515,14 @@ get.newdata <- function(model, newdata, resp,
 
       }
    
-      newdata.oo <- get.data.grid(newdata, xvar, yvar, IDvar, cov_numeric_vars,
-                                  numeric_cov_at, uvarby)
+      newdata.oo <- get.data.grid(data = newdata, 
+                                  xvar = xvar, 
+                                  yvar = yvar, 
+                                  IDvar = IDvar, 
+                                  cov_numeric_vars = cov_numeric_vars,
+                                  numeric_cov_at = numeric_cov_at, 
+                                  aux_variables = aux_variables, 
+                                  uvarby = uvarby)
       
       # j_b_names <- names(newdata)
       j_b_names <- intersect(names(newdata), names(newdata.oo))
@@ -509,6 +541,7 @@ get.newdata <- function(model, newdata, resp,
   newdata <- i_data(model, newdata, resp = resp,
                              cov_factor_vars = cov_factor_vars,
                              cov_numeric_vars = cov_numeric_vars, 
+                    aux_variables = aux_variables,
                     levels_id = levels_id,
                              ipts = ipts,
                     xrange = xrange)

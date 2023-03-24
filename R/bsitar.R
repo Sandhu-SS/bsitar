@@ -164,6 +164,15 @@
 #'@param bound span of \code{x} for regression spline, or a small extension of
 #'  range (default 0.04). See package 'sitar' for details.
 #'
+#'@param terms_rhs An option argument (default \code{NULL}) to specify terms on
+#'  the left hand side of the formula and after the outcome (separated by '|')
+#'  that are used when fitting measurement error model. An an example, consider
+#'  fitting a model with measurement error in the outcome specified as
+#'  \code{bf(y | mi(sdy) ~ ..)} where \code{mi(sdy)} is passed as follows:
+#'  \code{terms_rhs = mi(sdy)}. For multivariate models, each outcome can have
+#'  its own measurement error varibales that are passed as a list, i.e.,
+#'  \code{terms_rhs = list(mi(sdy1), mi(sdy2))}.
+#'
 #'@param a_formula formula for fixed effect a (default \code{~ 1}). User can
 #'  specify different formula when fitting univariate-by-subgroup (specified by
 #'  using the \code{univariate_by} argument) and the multivariate (specified by
@@ -1047,6 +1056,7 @@ bsitar <- function(x,
                    xfun = NULL,
                    yfun = NULL,
                    bound = 0.04,
+                   terms_rhs = NULL,
                    a_formula = ~ 1,
                    b_formula = ~ 1,
                    c_formula = ~ 1,
@@ -1087,6 +1097,7 @@ bsitar <- function(x,
                    multivariate = list(mvar = FALSE,
                                        cor = un,
                                        rescor = TRUE),
+                   
                    a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
                    b_prior_beta = normal(0, 2, autoscale = FALSE),
                    c_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1214,6 +1225,32 @@ bsitar <- function(x,
     deparseobj
   }
   
+
+  
+  terms_rhsxx <- deparse(mcall[['terms_rhs']])
+  terms_rhsxx <- gsub("[[:space:]]", "", terms_rhsxx)
+  terms_rhsxx <- gsub("^list\\(", "", terms_rhsxx)
+  if(grepl("^list", terms_rhsxx)) {
+    terms_rhsxx <- gsub(")$", "", terms_rhsxx)
+  }
+  terms_rhsxx <- strsplit(terms_rhsxx, ",")[[1]]
+  terms_rhsxx2 <- terms_rhsxx
+  terms_rhsxx <- paste(terms_rhsxx, sep = ",")
+  terms_rhsxx <- gsub("\"", "", terms_rhsxx)
+  if(grepl("^NULL", terms_rhsxx)) {
+    terms_rhsxx <- gsub(")$", "", terms_rhsxx)
+  }
+  terms_rhsxx <- paste0("'", terms_rhsxx, "'")
+  terms_rhsxx <- paste(terms_rhsxx, collapse = ",")
+  terms_rhsxx <- paste0("list(", terms_rhsxx, ")")
+  terms_rhsxx <- parse(text = terms_rhsxx)
+  mcall[['terms_rhs']] <- terms_rhsxx
+  
+  
+  
+  
+  
+  
   xs <- ids <- dfs <- NA
   
   
@@ -1260,6 +1297,7 @@ bsitar <- function(x,
   }
   
   
+  
   arguments <- as.list(mcall)[-1]
 
   
@@ -1269,7 +1307,6 @@ bsitar <- function(x,
     
     for(i in setdiff(names(formals), names(call)))
       call[i] <- list( formals[[i]] )
-    
     
     match.call(sys.function(sys.parent()), call)
   }
@@ -1305,6 +1342,7 @@ bsitar <- function(x,
   arguments <-
     c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
   
+
   
   for (ip in names(arguments)) {
     if (grepl("_init_", ip)) {
@@ -2531,6 +2569,8 @@ bsitar <- function(x,
   # print(head(data))
   # stop()
   
+  # print(terms_rhs)
+  # print(terms_rhss)
   
   
   # Initiate loop over outcome(s) 
@@ -3241,6 +3281,7 @@ bsitar <- function(x,
     
     
     
+    
     internal_formula_args_names <-
       c(
         "a_formulasi",
@@ -3252,6 +3293,8 @@ bsitar <- function(x,
         "b_formula_grsi",
         "c_formula_grsi",
         "d_formula_grsi",
+        
+        "terms_rhssi",
         
         "sigma_formulasi",
         "sigma_formula_grsi",
@@ -3284,6 +3327,8 @@ bsitar <- function(x,
         "sigma_set_higher_levels",
         "verbose"
       )
+    
+
     
     internal_formula_args <- list()
     internal_formula_args <- mget(internal_formula_args_names)

@@ -18,6 +18,7 @@ bsitar(
   xfun = NULL,
   yfun = NULL,
   bound = 0.04,
+  terms_rhs = NULL,
   a_formula = ~1,
   b_formula = ~1,
   c_formula = ~1,
@@ -216,6 +217,15 @@ are log, sqrt or NULL (default). See \code{xfun} for details.}
 
 \item{bound}{span of \code{x} for regression spline, or a small extension of
 range (default 0.04). See package 'sitar' for details.}
+
+\item{terms_rhs}{An option argument (default \code{NULL}) to specify terms on
+the left hand side of the formula and after the outcome (separated by '|')
+that are used when fitting measurement error model. An an example, consider
+fitting a model with measurement error in the outcome specified as
+\code{bf(y | mi(sdy) ~ ..)} where \code{mi(sdy)} is passed as follows:
+\code{terms_rhs = mi(sdy)}. For multivariate models, each outcome can have
+its own measurement error varibales that are passed as a list, i.e.,
+\code{terms_rhs = list(mi(sdy1), mi(sdy2))}.}
 
 \item{a_formula}{formula for fixed effect a (default \code{~ 1}). User can
 specify different formula when fitting univariate-by-subgroup (specified by

@@ -52,7 +52,7 @@ prepare_data <- function(data,
     lag_ <- outliers$lag
     linearise_ <- outliers$linearise
     verbose_ <- outliers$verbose
-    
+  
     for (yi in 1:length(y)) {
       if (!y[yi] %in% colnames(data)) {
         stop(

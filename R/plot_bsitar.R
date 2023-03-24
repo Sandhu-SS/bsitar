@@ -126,6 +126,10 @@
 #' @param returndata A logical (default \code{FALSE}) indicating whether to plot
 #'   the data or return the data. If \code{TRUE}, the data is returned as a
 #'   \code{data.frame}.
+#'   
+#'@param aux_variables An optional argument to specify the variables to be
+#' passed to the \code{ipts} argument. This is useful when fitting location 
+#' scale models and the measurement error models. 
 #'
 #'@inheritParams  gparameters.bsitar
 #'
@@ -178,6 +182,7 @@ plot_bsitar.bsitar <- function(model,
                                summary = TRUE,
                                re_formula = NULL,
                                numeric_cov_at = NULL,
+                               aux_variables = NULL,
                                levels_id = NULL,
                                ipts = NULL,
                                xrange = NULL,
@@ -263,6 +268,7 @@ plot_bsitar.bsitar <- function(model,
   newdata <- get.newdata(model, newdata = newdata, 
                          resp = resp, 
                          numeric_cov_at = numeric_cov_at,
+                         aux_variables = aux_variables,
                          levels_id = levels_id,
                          ipts = ipts,
                          xrange = xrange)
@@ -735,6 +741,7 @@ plot_bsitar.bsitar <- function(model,
       newdata <- get.newdata(model, newdata = newdata,
                              resp = resp,
                              numeric_cov_at = NULL,
+                             aux_variables = NULL,
                              levels_id = levels_id,
                              ipts = NULL,
                              xrange = NULL)

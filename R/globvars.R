@@ -1,7 +1,8 @@
 
 
 if(getRversion() >= "2.15.1")  utils::globalVariables(
-  c(".", ":=", "<<", "%||%", "deriv", "Estimate",  "Estimate.x",  "Estimate.y",   
+  c(".", ":=", "<<", "%||%", "deriv", "Estimate",  "Estimate.x",  "Estimate.y",  
+    "terms_rhssi",
     "Parameter",  "Var1",  "Var2",  "VarCorr",  "a",  "a_cov_init_betasi",  
     "a_cov_init_sdsi",  "a_cov_prior_betasi",  "a_cov_prior_sdsi", 
     "a_form_0",  "a_formula_grsi",  "a_formulasi",  "a_init_betasi", 

@@ -155,14 +155,42 @@ prepare_formula <- function(x,
   
   abcselements  <- paste0(fullabcsnames, collapse = "")
   abcselements  <- paste0(spfncname, "(", x, ",", abcselements, ")")
-  abcsformfit   <- (paste0(y, " ~ ", abcselements)) # as.formula
+  # abcsformfit   <- paste0(y, " ~ ", abcselements) # as.formula
+  
+  if (terms_rhssi == "NULL") {
+    abcsformfit   <- paste0(y, " ~ ", abcselements)
+  }
+  
+  if (terms_rhssi != "NULL") {
+    abcsformfit   <- paste0(y, "|", terms_rhssi, " ~ ", abcselements)
+  }
+  
+  
+  
+  # if (!(is.na(univariate_by$by) |
+  #       univariate_by$by == "NA") &
+  #     !is.null(subindicatorsi)) {
+  #   abcsformfit <- (paste0(y,  "| subset(", subindicatorsi, ")",
+  #                          " ~ ", abcselements))
+  # }
+  
   
   if (!(is.na(univariate_by$by) |
         univariate_by$by == "NA") &
       !is.null(subindicatorsi)) {
-    abcsformfit <- (paste0(y,  "| subset(", subindicatorsi, ")",
-                           " ~ ", abcselements))
+    if (terms_rhssi == "NULL") {
+      abcsformfit <- (paste0(y,  "|", "subset(", subindicatorsi, ")",
+                             " ~ ", abcselements))
+    }
+    if (terms_rhssi != "NULL") {
+      abcsformfit <- (paste0(y,  "|", terms_rhssi, "+", "subset(", subindicatorsi, ")",
+                             " ~ ", abcselements))
+    }
   }
+  
+  
+  
+  
   
   if ((is.na(univariate_by$by) |
        univariate_by$by == "NA") &
@@ -1551,7 +1579,8 @@ prepare_formula <- function(x,
   # list_out <<- list_out
   # print(a_formula_grsi)
    # print(aform)
-  # print(bform); stop()
+  # print(terms_rhssi)
+  #  print(bform); stop()
   
   attr(bform, "list_out") <- as.list(list_out)
   

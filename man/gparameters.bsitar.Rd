@@ -21,6 +21,7 @@
   sample_new_levels = "uncertainty",
   incl_autocor = TRUE,
   numeric_cov_at = NULL,
+  aux_variables = NULL,
   levels_id = NULL,
   conf = 0.95,
   ipts = NULL,
@@ -127,6 +128,10 @@ supplied to manualy set the values. For example, \code{numeric_cov_at =
   list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
 argument \code{numeric_cov_at} is ignored when no continuous covariate is
 included in the model.}
+
+\item{aux_variables}{An optional argument to specify the variables to be
+passed to the \code{ipts} argument. This is useful when fitting location
+scale models and the measurement error models.}
 
 \item{levels_id}{An optional argument to specify the ids for hierarchical
 model (default \code{NULL}. It is used only when a with 3 or higher level
