@@ -2744,7 +2744,7 @@ bsitar <- function(x,
               o. <- paste0(lf_listi, "=", 'TRUE')
             } else if (lf_listi == 'resp') {
               if (nys > 1) {
-                o. <- paste0(lf_listi, "=", paste0("", ysi, ""))
+                o. <- paste0(lf_listi, "=", paste0("'", ysi, "'"))
                 # o. <- paste0(lf_listi, "=", 'NULL')
               } else {
                 o. <- paste0(lf_listi, "=", 'NULL')
@@ -2763,6 +2763,7 @@ bsitar <- function(x,
       }
     }
     
+    # print(dpar_formulasi)
     
     
     # Check for higher level model and update level 2 random formula
@@ -2957,15 +2958,17 @@ bsitar <- function(x,
       familysi <- list_to_quoted_if_not_si(familysi)
     }
     
+    # lf edited 
     if (!is.null(dpar_formulasi)) {
       if (grepl("^lf\\(", dpar_formulasi) |
           grepl("^nlf\\(", dpar_formulasi)) {
-        dpar_formulasi <- list_to_quoted_if_not_si_lf(dpar_formulasi)
+      #  dpar_formulasi <- list_to_quoted_if_not_si_lf(dpar_formulasi)
       } else {
         dpar_formulasi <- dpar_formulasi
       }
     }
     
+    # print(dpar_formulasi)
     
     
     N_J_all <- length(unique(data[[idsi]]))

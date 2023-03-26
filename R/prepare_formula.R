@@ -972,21 +972,46 @@ prepare_formula <- function(x,
      sigma_hierarchical_gr_names <- NULL
    }
   
-  
+   get_o_paranthesis <- function(x) {
+     if(!grepl("lf\\(", x)) {
+       x <- gsub("^lf\\(", "", x)
+       x <- gsub(")$", "", x)
+     }
+     if(!grepl("nlf\\(", x)) {
+       x <- gsub("^nlf\\(", "", x)
+       x <- gsub(")$", "", x)
+     }
+     x <- strsplit(x, "~")[[1]][2]
+     x
+   }
+   
+   
+   get_o_paranthesis2 <- function(x) {
+     x <- gsub("^\\(", "", x)
+     x <- gsub(")$", "", x)
+     x <- strsplit(x, "~")[[1]][2]
+     x
+   }
+   
+  # print(dpar_formulasi)
   if (!is.null(dpar_formulasi)) {
     if (!grepl("lf\\(", dpar_formulasi) |
         !grepl("nlf\\(", dpar_formulasi)) {
       # dpar_covi_mat_form <- dpar_formulasi
-      dpar_covi_mat_form <- gsub("\\(|)", "",
-                                 strsplit(dpar_formulasi, "~")[[1]][2])
+      # dpar_covi_mat_form <- gsub("\\(|)", "",
+      #                            strsplit(dpar_formulasi, "~")[[1]][2])
+      dpar_covi_mat_form <- get_o_paranthesis(dpar_formulasi)
       dpar_covi_mat_form <- paste0("~", dpar_covi_mat_form)
     } else {
-      dpar_covi_mat_form <- gsub("\\(|)", "",
-                                 strsplit(dpar_formulasi, "~")[[1]][2])
+      # dpar_covi_mat_form <- gsub("\\(|)", "",
+      #                            strsplit(dpar_formulasi, "~")[[1]][2])
+      dpar_covi_mat_form <- get_o_paranthesis2(dpar_formulasi)
       dpar_covi_mat_form <- paste0("~", dpar_covi_mat_form)
     }
   }
-  
+   
+   # print(dpar_covi_mat_form)
+   # 
   
   if (!is.null(dpar_formulasi)) {
     dparcovmat <- eval(parse(
@@ -994,6 +1019,9 @@ prepare_formula <- function(x,
         paste0("model.matrix(",
                dpar_covi_mat_form, ",data = data)")
     ))
+    # print(dparcovmat)
+    # print(dpar_covi_mat_form)
+    # stop()
     if (ncol(dparcovmat) == 1) {
       ndparcov <- NULL
     } else {
@@ -1002,11 +1030,37 @@ prepare_formula <- function(x,
     dparcovcoefnames <- colnames(dparcovmat)
     dparcovcoefnames <- gsub("\\(|)", "", dparcovcoefnames)
   }
+   
+   
   
+  
+   
   if (is.null(dpar_formulasi)) {
     ndparcov <- NULL
     dparcovcoefnames <- NULL
   }
+   
+   # The brms replace equal sign = with EQ and removes comma from names
+   
+   if(!is.null(dparcovcoefnames)) {
+     if(!is.null(dparcovcoefnames)) {
+       dparcovcoefnames_c2 <- c()
+       for (dparcovcoefnamesi in dparcovcoefnames) {
+         dparcovcoefnamesi_c <- gsub("[[:space:]]", "", dparcovcoefnamesi)
+         if(grepl("rcspline.eval", dparcovcoefnamesi_c)) {
+           dparcovcoefnamesi_c <- gsub(",", "", dparcovcoefnamesi_c)
+           dparcovcoefnamesi_c <- gsub("=", "EQ", dparcovcoefnamesi_c)
+         } else {
+           dparcovcoefnamesi_c <- dparcovcoefnamesi_c
+         }
+         dparcovcoefnames_c2 <- c(dparcovcoefnames_c2, dparcovcoefnamesi_c)
+       }
+       dparcovcoefnames <- dparcovcoefnames_c2
+     }
+   }
+   
+   # print(dparcovcoefnames)
+   
   
   abcform <-
     paste(cbind(aform, bform, cform, dform), collapse = ",")
