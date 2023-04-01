@@ -390,34 +390,46 @@ optimize_bsitar.bsitar <- function(model,
     
     
     if('waic' %in% add_fit_criteria) {
-      if(!is.na(fit$model_info$univariate_by)) {
-        list_c_ <- list()
-        for (aci in fit$model_info$ys) {
-          getit_ <- paste0('waic', aci)
-          list_c_[[aci]] <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits) %>% 
-            dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-        }
-        summary_waic <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-      } else if(fit$model_info$multivariate & !is.null(resp)) {
-        list_c_ <- list()
-        for (aci in fit$model_info$ys) {
-          getit_ <- paste0('waic', aci)
-          list_c_[[aci]] <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits) %>% 
-            dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-        }
-        summary_waic <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-      } else if(fit$model_info$multivariate & is.null(resp)) {
-        getit_ <- paste0('waic', '')
-        summary_waic <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits)
-      } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
-        getit_ <- paste0('waic', '')
-        summary_waic <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits)
+      err. <- FALSE
+      tryCatch(
+        expr = {
+          if(!is.na(fit$model_info$univariate_by)) {
+            list_c_ <- list()
+            for (aci in fit$model_info$ys) {
+              getit_ <- paste0('waic', aci)
+              list_c_[[aci]] <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits) %>% 
+                dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+            }
+            summary_waic <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+          } else if(fit$model_info$multivariate & !is.null(resp)) {
+            list_c_ <- list()
+            for (aci in fit$model_info$ys) {
+              getit_ <- paste0('waic', aci)
+              list_c_[[aci]] <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits) %>% 
+                dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+            }
+            summary_waic <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+          } else if(fit$model_info$multivariate & is.null(resp)) {
+            getit_ <- paste0('waic', '')
+            summary_waic <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits)
+          } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
+            getit_ <- paste0('waic', '')
+            summary_waic <- add_summary_waic(fit$criteria[[getit_]], round_digits = digits)
+          }
+          summary_waic$df <- df
+          summary_waic$xfun <- xfun_print
+          summary_waic$yfun <- yfun_print
+          summary_waic <- summary_waic %>% dplyr::relocate(df, xfun, yfun)
+          rownames(summary_waic) <- NULL
+        },
+        error = function(e) {
+          err. <<- TRUE
+        })
+      if (err.) {
+        summary_waic <- NULL
+      } else {
+        summary_waic <- summary_waic
       }
-      summary_waic$df <- df
-      summary_waic$xfun <- xfun_print
-      summary_waic$yfun <- yfun_print
-      summary_waic <- summary_waic %>% dplyr::relocate(df, xfun, yfun)
-      rownames(summary_waic) <- NULL
       fit$summary_waic <- summary_waic
     }
     
@@ -426,103 +438,142 @@ optimize_bsitar.bsitar <- function(model,
     
     
     if('bayes_R2' %in% add_fit_bayes_R) {
-      if(!is.na(fit$model_info$univariate_by)) {
-        list_c_ <- list()
-        for (aci in fit$model_info$ys) {
-          getit_ <- paste0(add_fit_bayes_R, aci)
-          list_c_[[aci]] <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits) %>% 
-            dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-        }
-        summary_bayes_R2 <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-      } else if(fit$model_info$multivariate & !is.null(resp)) {
-        list_c_ <- list()
-        for (aci in fit$model_info$ys) {
-          getit_ <- paste0(add_fit_bayes_R, aci)
-          list_c_[[aci]] <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits) %>% 
-            dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-        }
-        summary_bayes_R2 <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-      } else if(fit$model_info$multivariate & is.null(resp)) {
-        getit_ <- paste0('bayes_R2', '')
-        summary_bayes_R2 <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits)
-      } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
-        getit_ <- paste0('bayes_R2', '')
-        summary_bayes_R2 <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits)
+      err. <- FALSE
+      tryCatch(
+        expr = {
+          if(!is.na(fit$model_info$univariate_by)) {
+            list_c_ <- list()
+            for (aci in fit$model_info$ys) {
+              getit_ <- paste0(add_fit_bayes_R, aci)
+              list_c_[[aci]] <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits) %>% 
+                dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+            }
+            summary_bayes_R2 <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+          } else if(fit$model_info$multivariate & !is.null(resp)) {
+            list_c_ <- list()
+            for (aci in fit$model_info$ys) {
+              getit_ <- paste0(add_fit_bayes_R, aci)
+              list_c_[[aci]] <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits) %>% 
+                dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+            }
+            summary_bayes_R2 <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+          } else if(fit$model_info$multivariate & is.null(resp)) {
+            getit_ <- paste0('bayes_R2', '')
+            summary_bayes_R2 <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits)
+          } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
+            getit_ <- paste0('bayes_R2', '')
+            summary_bayes_R2 <- add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits)
+          }
+          summary_bayes_R2$df <- df
+          summary_bayes_R2$xfun <- xfun_print
+          summary_bayes_R2$yfun <- yfun_print
+          summary_bayes_R2 <- summary_bayes_R2 %>% dplyr::relocate(df, xfun, yfun)
+          rownames(summary_bayes_R2) <- NULL
+        },
+        error = function(e) {
+          err. <<- TRUE
+        })
+      if (err.) {
+        summary_bayes_R2 <- NULL
+      } else {
+        summary_bayes_R2 <- summary_bayes_R2
       }
-      summary_bayes_R2$df <- df
-      summary_bayes_R2$xfun <- xfun_print
-      summary_bayes_R2$yfun <- yfun_print
-      summary_bayes_R2 <- summary_bayes_R2 %>% dplyr::relocate(df, xfun, yfun)
-      rownames(summary_bayes_R2) <- NULL
       fit$summary_bayes_R2 <- summary_bayes_R2 %>% dplyr::select(-Parameter)
     }
     
     
     
     if('loo' %in% add_fit_criteria) {
+      # first loo summary 
       if('loo' %in% add_fit_criteria) {
-        if(!is.na(fit$model_info$univariate_by)) {
-          list_c_ <- list()
-          for (aci in fit$model_info$ys) {
-            getit_ <- paste0('loo', aci)
-            list_c_[[aci]] <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
-              dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-          }
-          summary_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-        } else if(fit$model_info$multivariate & !is.null(resp)) {
-          list_c_ <- list()
-          for (aci in fit$model_info$ys) {
-            getit_ <- paste0('loo', aci)
-            list_c_[[aci]] <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
-              dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-          }
-          summary_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-        } else if(fit$model_info$multivariate & is.null(resp)) {
-          getit_ <- paste0('loo', '')
-          
-          summary_loo <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits)
-        } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
-          getit_ <- paste0('loo', '')
-          summary_loo <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits)
+        err. <- FALSE
+        tryCatch(
+          expr = {
+            if(!is.na(fit$model_info$univariate_by)) {
+              list_c_ <- list()
+              for (aci in fit$model_info$ys) {
+                getit_ <- paste0('loo', aci)
+                list_c_[[aci]] <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
+                  dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+              }
+              summary_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+            } else if(fit$model_info$multivariate & !is.null(resp)) {
+              list_c_ <- list()
+              for (aci in fit$model_info$ys) {
+                getit_ <- paste0('loo', aci)
+                list_c_[[aci]] <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
+                  dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+              }
+              summary_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+            } else if(fit$model_info$multivariate & is.null(resp)) {
+              getit_ <- paste0('loo', '')
+              
+              summary_loo <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits)
+            } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
+              getit_ <- paste0('loo', '')
+              summary_loo <- add_summary_loo(fit$criteria[[getit_]], round_digits = digits)
+            }
+            summary_loo$df <- df
+            summary_loo$xfun <- xfun_print
+            summary_loo$yfun <- yfun_print
+            summary_loo <- summary_loo %>% dplyr::relocate(df, xfun, yfun)
+            rownames(summary_loo) <- NULL
+          },
+          error = function(e) {
+            err. <<- TRUE
+          })
+        if (err.) {
+          summary_loo <- NULL
+        } else {
+          summary_loo <- summary_loo
         }
-        summary_loo$df <- df
-        summary_loo$xfun <- xfun_print
-        summary_loo$yfun <- yfun_print
-        summary_loo <- summary_loo %>% dplyr::relocate(df, xfun, yfun)
-        rownames(summary_loo) <- NULL
         fit$summary_loo <- summary_loo
       }
       
+      # now loo diagnostic 
       if('loo' %in% add_fit_criteria) {
-        if(!is.na(fit$model_info$univariate_by)) {
-          list_c_ <- list()
-          for (aci in fit$model_info$ys) {
-            getit_ <- paste0('loo', aci)
-            list_c_[[aci]] <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
-              dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-          }
-          diagnostic_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-        } else if(fit$model_info$multivariate & !is.null(resp)) {
-          list_c_ <- list()
-          for (aci in fit$model_info$ys) {
-            getit_ <- paste0('loo', aci)
-            list_c_[[aci]] <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
-              dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
-          }
-          diagnostic_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
-        } else if(fit$model_info$multivariate & is.null(resp)) {
-          getit_ <- paste0('loo', '')
-          diagnostic_loo <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits)
-        } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
-          diagnostic_loo <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits)
+        err. <- FALSE
+        tryCatch(
+          expr = {
+            if(!is.na(fit$model_info$univariate_by)) {
+              list_c_ <- list()
+              for (aci in fit$model_info$ys) {
+                getit_ <- paste0('loo', aci)
+                list_c_[[aci]] <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
+                  dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+              }
+              diagnostic_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+            } else if(fit$model_info$multivariate & !is.null(resp)) {
+              list_c_ <- list()
+              for (aci in fit$model_info$ys) {
+                getit_ <- paste0('loo', aci)
+                list_c_[[aci]] <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits) %>% 
+                  dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
+              }
+              diagnostic_loo <- list_c_ %>%  do.call(rbind, .) %>% data.frame()
+            } else if(fit$model_info$multivariate & is.null(resp)) {
+              getit_ <- paste0('loo', '')
+              diagnostic_loo <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits)
+            } else if(is.na(fit$model_info$univariate_by) & !fit$model_info$multivariate) {
+              diagnostic_loo <- add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits)
+            }
+            diagnostic_loo$df <- df
+            diagnostic_loo$xfun <- xfun_print
+            diagnostic_loo$yfun <- yfun_print
+            diagnostic_loo <- diagnostic_loo %>% dplyr::relocate(df, xfun, yfun)
+            rownames(diagnostic_loo) <- NULL
+          },
+          error = function(e) {
+            err. <<- TRUE
+          })
+        if (err.) {
+          diagnostic_loo <- NULL
+        } else {
+          diagnostic_loo <- diagnostic_loo
         }
-        diagnostic_loo$df <- df
-        diagnostic_loo$xfun <- xfun_print
-        diagnostic_loo$yfun <- yfun_print
-        diagnostic_loo <- diagnostic_loo %>% dplyr::relocate(df, xfun, yfun)
-        rownames(diagnostic_loo) <- NULL
         fit$diagnostic_loo <- diagnostic_loo
       }
+      
     } # if('loo' %in% add_fit_criteria) {
     
     return(fit)
@@ -536,11 +587,9 @@ optimize_bsitar.bsitar <- function(model,
   
   
   
-  
-  
-  
   optimize_fun <- function(.x, model) {
-    message("\nOptimizing model no. ", .x, " (total ", nrow(optimize_df_x_y), " models)")
+    message("\nOptimizing model no. ", .x, 
+            " (total ", nrow(optimize_df_x_y), " models)")
     # cat("\n")
     exe_row <- optimize_df_x_y[.x, ]
     df <- levels(droplevels(exe_row$df))
