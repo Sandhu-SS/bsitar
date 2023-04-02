@@ -14,6 +14,7 @@
   exclude_default_funs = TRUE,
   add_fit_criteria = NULL,
   add_fit_bayes_R = NULL,
+  byresp = FALSE,
   digits = 2,
   ...
 )
@@ -59,12 +60,12 @@ possible combinations of 'NULL', 'log' and  'sqrt'. Similar to the
 \code{optimize_df}, user can specify different  \code{optimize_y} for
 \code{univariate-by-sungroup} and \code{multivariate} submodels.}
 
-\item{exclude_default_funs}{A logical to indicate
-whether transformations (\code{xvar} and \code{yvar}) used in the original
-model fit should be excluded. If \code{TRUE} (deafult), the the \code{xvar}
-and \code{yvar} transformations specified for the original model fit are
-excluded from the \code{optimize_x} and \code{optimize_y}. From example, if
-original model is fit with \code{xvar = log} and \code{yvar = NULL}, then
+\item{exclude_default_funs}{A logical to indicate whether transformations
+(\code{xvar} and \code{yvar}) used in the original model fit should be
+excluded. If \code{TRUE} (deafult), the the \code{xvar} and \code{yvar}
+transformations specified for the original model fit are excluded from the
+\code{optimize_x} and \code{optimize_y}. From example, if original model is
+fit with \code{xvar = log} and \code{yvar = NULL}, then
 the \code{optimize_x} is translated into \code{optimize_x = list(NULL,
  sqrt)} and  \code{optimize_y} as \code{optimize_y = list(log, sqrt)}.}
 
@@ -75,14 +76,21 @@ see \code{\link[brms:add_criterion]{brms::add_criterion()}} for details.}
 \item{add_fit_bayes_R}{An optional (default \code{NULL}) to add Bayesian R
 square.}
 
+\item{byresp}{A logical (default \code{FALSE}) to indicate if response wise
+fit criteria to be calculated. This argument is evaluated only for the
+\code{multivariate} model for which options are available for joint
+calculation of pointwise log likelihood or response specific. For,
+\code{univariate-by-subgroup} model, the only option available is to
+calculate separate pointwise log likelihood for each sub-model.}
+
 \item{digits}{An integer to set the number of decimal places.}
 
 \item{...}{Other arguments passed to \code{\link{update_bsitar}}.}
 }
 \value{
-A list containing the optimized models of class \code{brmsfit, bsiatr},
-and the the combined summary statistics if \code{add_fit_criteria} and/or
-\code{add_fit_bayes_R} are specified.
+A list containing the optimized models of class \code{brmsfit,
+ bsiatr}, and the the combined summary statistics if \code{add_fit_criteria}
+and/or \code{add_fit_bayes_R} are specified.
 }
 \description{
 Optimize \pkg{bsitar} model
