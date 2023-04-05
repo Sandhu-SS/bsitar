@@ -799,7 +799,7 @@ gparameters.bsitar <- function(model,
       out_v_ <- do.call(predict_.bsitar, arguments)
     }
     if (!summary) {
-      out_v <- call_posterior_summary(out_v_)
+      out_v <- call_posterior_summary(t(out_v_))
     } else if (summary) {
       out_v <- out_v_
     }
@@ -820,3 +820,9 @@ gparameters.bsitar <- function(model,
 gparameters <- function(model, ...) {
   UseMethod("gparameters")
 }
+
+
+
+
+
+
