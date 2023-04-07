@@ -19,6 +19,7 @@
   numeric_cov_at = NULL,
   aux_variables = NULL,
   levels_id = NULL,
+  avg_reffects = NULL,
   ipts = NULL,
   xrange = NULL,
   seed = 123,
@@ -127,6 +128,14 @@ model, ids are inferred from the fitted model but under the assumption that
 hierarchy is specified from lower to upper levels i.e, id, study assuming
 that id is nested within the studies. However, it is not gaunated that
 these ids are sorted correctly. Therefore, it is better to set it manually.}
+
+\item{avg_reffects}{An optional argument (default \code{NULL} to calculate
+(marginal/average) distance and velocity curves (as well as APGV and PGV).
+If specified, it must be set as a named list indicating the \code{over} and
+the \code{by} arguments e.g., \code{avg_reffects = list(by = 'study', over
+  = 'age'}. The \code{over} is typically age and is used to average over the
+random effects. The second argument is \code{by} that specifies the factor
+variable by which \code{over} is executed.}
 
 \item{ipts}{A numeric value to interpolate the predictor value to get a
 smooth velocity curve. The \code{NULL} (default) will return original

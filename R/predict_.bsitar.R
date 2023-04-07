@@ -101,10 +101,10 @@ predict_.bsitar <-
                 levels_id = levels_id,
                 ipts = ipts,
                 xrange = xrange,
-                deriv = 0,
-                summary = TRUE,
-                robust = FALSE,
-                probs = c(0.025, 0.975), 
+                deriv = deriv,
+                summary = summary,
+                robust = robust,
+                probs = probs,
                 ...)
     assign(o[[1]], model$Spl_funs[[o[[1]]]], envir = envir)
     .
