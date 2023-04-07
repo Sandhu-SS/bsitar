@@ -614,6 +614,7 @@ gparameters.bsitar <- function(model,
       }
     }
     
+    
     if(is.null(avg_reffects)) {
       if (grepl("d", opt, ignore.case = T)) {
         index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
@@ -689,7 +690,13 @@ gparameters.bsitar <- function(model,
           out_d_ <- do.call(predict_.bsitar, arguments)
         }
         
-        out_d <- out_d_
+        if (!summary) {
+          out_d <- call_posterior_summary((out_d_))
+        } else if (summary) {
+          out_d <- out_d_
+        }
+        
+        # out_d <- out_d_
         
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
@@ -733,14 +740,14 @@ gparameters.bsitar <- function(model,
         } else if (estimation_method == 'predict') {
           out_v_ <- do.call(predict_.bsitar, arguments)
         }
-        # No need to summa call_posterior_summary
-        # if (!summary) {
-        #   out_v <- call_posterior_summary(out_v_)
-        # } else if (summary) {
-        #   out_v <- out_v_
-        # }
+        out_v__apv_ <- out_v_
+        if (!summary) {
+          out_v <- call_posterior_summary((out_v_))
+        } else if (summary) {
+          out_v <- out_v_
+        }
         
-        out_v <- out_v_
+        # out_v <- out_v_
         
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
@@ -764,8 +771,10 @@ gparameters.bsitar <- function(model,
         }
         # out_summary[['parameters']] <-
         #   get_gparameters(t(out_v_), newdata, groupby_str_v, summary)
+        
+        out_v__apv_ <- t(out_v__apv_)
         out_summary[['parameters']] <-
-          get_gparameters(out_v_, newdata, groupby_str_v, summary)
+          get_gparameters(out_v__apv_, newdata, groupby_str_v, summary)
       }
       out_summary[['groupby_str_d']] <- groupby_str_d
       out_summary[['groupby_str_v']] <- groupby_str_v
@@ -822,8 +831,7 @@ gparameters.bsitar <- function(model,
       #   groupby_str_v <- NULL
       # }
       
-      arguments$summary <- FALSE
-      arguments$re_formula <- NULL
+      
       
       groupby_str_d <- avg_reffects[['by']]
       groupby_str_v <- avg_reffects[['by']]
@@ -850,11 +858,18 @@ gparameters.bsitar <- function(model,
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         
+        summary_org <- arguments$summary
+        arguments$summary <- FALSE
+        arguments$re_formula <- NULL
+        
         if (estimation_method == 'fitted') {
           out_d_ <- do.call(fitted_.bsitar, arguments)
         } else if (estimation_method == 'predict') {
           out_d_ <- do.call(predict_.bsitar, arguments)
         }
+        
+        arguments$summary <- summary_org
+        
         
         selectby <- avg_reffects[['by']]
         selectover <- avg_reffects[['over']]
@@ -906,11 +921,17 @@ gparameters.bsitar <- function(model,
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         
+        summary_org <- arguments$summary
+        arguments$summary <- FALSE
+        arguments$re_formula <- NULL
+        
         if (estimation_method == 'fitted') {
           out_v_ <- do.call(fitted_.bsitar, arguments)
         } else if (estimation_method == 'predict') {
           out_v_ <- do.call(predict_.bsitar, arguments)
         }
+        
+        arguments$summary <- summary_org
         
         selectby <- avg_reffects[['by']]
         selectover <- avg_reffects[['over']]
@@ -1023,7 +1044,7 @@ gparameters.bsitar <- function(model,
         out_v_ <- do.call(predict_.bsitar, arguments)
       }
       if (!summary) {
-        out_v <- call_posterior_summary(t(out_v_))
+        out_v <- call_posterior_summary((out_v_))
       } else if (summary) {
         out_v <- out_v_
       }
@@ -1040,11 +1061,6 @@ gparameters.bsitar <- function(model,
     
     
     if(!is.null(avg_reffects)) {
-      # if (is.null(re_formula)) {
-      #   groupby_str <- groupby_fistr
-      # } else  if (!is.null(re_formula)) {
-      #   groupby_str <- groupby_fstr
-      # }
       
       groupby_str <- avg_reffects[['by']]
       
@@ -1071,6 +1087,7 @@ gparameters.bsitar <- function(model,
       arguments$envir <- .GlobalEnv # parent.frame()
       arguments$model <- model
       
+      summary_org <- arguments$summary
       arguments$summary <- FALSE
       arguments$re_formula <- NULL
       
@@ -1080,6 +1097,7 @@ gparameters.bsitar <- function(model,
         out_v_ <- do.call(predict_.bsitar, arguments)
       }
       
+      arguments$summary <- summary_org
       
       selectby <- avg_reffects[['by']]
       selectover <- avg_reffects[['over']]
@@ -1104,6 +1122,7 @@ gparameters.bsitar <- function(model,
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
       
+       # out_v <- t(out_v)
       parameters <-
         get_gparameters(out_v, newdata, groupby_str, summary)
     } # if(!is.null(avg_reffects)) {
