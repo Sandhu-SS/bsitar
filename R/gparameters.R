@@ -874,6 +874,8 @@ gparameters.bsitar <- function(model,
         out_d_ <- get_avg_over(out_d_, newdata = newdata, by = selectby_over,
                                probs = probs, robust = robust)
         
+        out_d <- out_d_
+        
         
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
