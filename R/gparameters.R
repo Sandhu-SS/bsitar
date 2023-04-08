@@ -512,7 +512,7 @@ gparameters.bsitar <- function(model,
     getitEstimate <- getitarray <- NULL
     for (i in 1:(dim(raw_re)[1])) {
       getitEstimate <- raw_re[i,]
-      raw_re_c[i] <- cbind(newdata,getitEstimate) %>% data.frame() %>% 
+      raw_re_c[i] <- cbind(newdata, getitEstimate) %>% data.frame() %>% 
         dplyr::group_by(across(all_of(by))) %>%
         dplyr::summarise(getitEstimate = mean(getitEstimate), .groups = 'drop') %>%
         dplyr::ungroup() %>%
@@ -569,7 +569,6 @@ gparameters.bsitar <- function(model,
     }
     
     
-    #   if(is.null(newdata)) {
     newdata <- get.newdata(model, newdata = newdata, 
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
@@ -577,9 +576,6 @@ gparameters.bsitar <- function(model,
                            levels_id = levels_id,
                            ipts = ipts,
                            xrange = xrange)
-    # } else {
-    #   newdata <- newdata
-    # }
     
     
     list_c <- attr(newdata, 'list_c')
@@ -604,13 +600,13 @@ gparameters.bsitar <- function(model,
         index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
         dist.. <- substr(opt, index_opt, index_opt)
         if (dist.. != "" & grepl("^[[:upper:]]+$", dist..) )
-            stop("use option 'd' (and not 'D') with avg_reffects" )
+          stop("use option 'd' (and not 'D') with avg_reffects" )
       }
       if (grepl("v", opt, ignore.case = T) ) {
         index_opt <- gregexpr("v", opt, ignore.case = T)[[1]]
         velc.. <- substr(opt, index_opt, index_opt)
         if (velc.. != "" & grepl("^[[:upper:]]+$", velc..) )
-            stop("use option 'v' (and not 'V') with avg_reffects" )
+          stop("use option 'v' (and not 'V') with avg_reffects" )
       }
     }
     
@@ -831,7 +827,9 @@ gparameters.bsitar <- function(model,
       #   groupby_str_v <- NULL
       # }
       
-      
+      summary_org <- arguments$summary
+      arguments$summary <- FALSE
+      arguments$re_formula <- NULL
       
       groupby_str_d <- avg_reffects[['by']]
       groupby_str_v <- avg_reffects[['by']]
@@ -852,15 +850,14 @@ gparameters.bsitar <- function(model,
           #   dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
           #   dplyr::slice(1) %>% dplyr::ungroup()
         }
+        
         arguments$newdata <- newdata
         arguments$deriv <- 0
         # don't let the ipts to pass again to the fitted_.bsitar
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         
-        summary_org <- arguments$summary
-        arguments$summary <- FALSE
-        arguments$re_formula <- NULL
+        
         
         if (estimation_method == 'fitted') {
           out_d_ <- do.call(fitted_.bsitar, arguments)
@@ -876,8 +873,7 @@ gparameters.bsitar <- function(model,
         selectby_over <- c(selectby, selectover)
         out_d_ <- get_avg_over(out_d_, newdata = newdata, by = selectby_over,
                                probs = probs, robust = robust)
-
-        out_d <- out_d_
+        
         
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
@@ -889,15 +885,24 @@ gparameters.bsitar <- function(model,
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
+        # out_d <<- out_d_
+        # newdata <<- newdata
+        # cbind(newdata %>% arrange(age), out_d) %>% ggplot(., aes(x = age)) + geom_line(aes(y = Estimate))
+        
+        
         out_summary[['distance']] <-  cbind(newdata,
                                             out_d %>% data.frame() %>%
                                               dplyr::mutate(curve = 'distance')) %>%
           data.frame()
-       
+        
       } else if (dist.. == "") {
         out_summary[['distance']] <- NULL
       }
       
+      
+      summary_org <- arguments$summary
+      arguments$summary <- FALSE
+      arguments$re_formula <- NULL
       
       if (velc.. != "") {
         newdata <- newdata___
@@ -921,9 +926,7 @@ gparameters.bsitar <- function(model,
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         
-        summary_org <- arguments$summary
-        arguments$summary <- FALSE
-        arguments$re_formula <- NULL
+        
         
         if (estimation_method == 'fitted') {
           out_v_ <- do.call(fitted_.bsitar, arguments)
@@ -938,7 +941,7 @@ gparameters.bsitar <- function(model,
         selectby_over <- c(selectby, selectover)
         out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
                                probs = probs, robust = robust)
-
+        
         out_v <- out_v_
         
         if(!is.na(model$model_info$univariate_by)) {
@@ -982,11 +985,10 @@ gparameters.bsitar <- function(model,
     } # if(!is.null(avg_reffects)) {
     
     return(out_summary)
-  }
+  } # if (arguments$plot) {
   
   
   if (!arguments$plot) {
-    
     newdata <- get.newdata(model, newdata = newdata, 
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
@@ -1009,87 +1011,138 @@ gparameters.bsitar <- function(model,
     }
     
     
+    if(is.null(arguments$re_formula)) {
+      opt <- 'V'
+    }
+    if(!is.null(arguments$re_formula)) {
+      opt <- 'v'
+    }
     
+    if(!is.null(avg_reffects)) {
+      # if (grepl("d", opt, ignore.case = T)) {
+      #   index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
+      #   dist.. <- substr(opt, index_opt, index_opt)
+      #   if (dist.. != "" & grepl("^[[:upper:]]+$", dist..) )
+      #     stop("use option 'd' (and not 'D') with avg_reffects" )
+      # }
+      if (grepl("v", opt, ignore.case = T) ) {
+        index_opt <- gregexpr("v", opt, ignore.case = T)[[1]]
+        velc.. <- substr(opt, index_opt, index_opt)
+        if (velc.. != "" & grepl("^[[:upper:]]+$", velc..) )
+          stop("use option 'v' (and not 'V') with avg_reffects" )
+      }
+    }
     
     
     if(is.null(avg_reffects)) {
-      if (is.null(re_formula)) {
-        groupby_str <- groupby_fistr
-      } else  if (!is.null(re_formula)) {
-        groupby_str <- groupby_fstr
+      if (grepl("v", opt, ignore.case = T)) {
+        index_opt <- gregexpr("v", opt, ignore.case = T)[[1]]
+        velc.. <- substr(opt, index_opt, index_opt)
+      } else if (!grepl("v", opt, ignore.case = T)) {
+        velc.. <- ""
       }
-      if (identical(groupby_str, character(0))) groupby_str <- NULL
       
-      if (!is.null(re_formula)) {
+      if (velc.. != "") {
+        if (grepl("^[[:upper:]]+$", velc..)) {
+          groupby_str_v <- groupby_fistr
+        } else  if (!grepl("^[[:upper:]]+$", velc..)) {
+          groupby_str_v <- groupby_fstr
+        }
+        if (identical(groupby_str_v, character(0)))
+          groupby_str_v <- NULL
+      } else {
+        groupby_str_v <- NULL
+      }
+      
+      if (grepl("^[[:upper:]]+$", velc..)) {
+        arguments$re_formula <- NULL
+      } else if (!grepl("^[[:upper:]]+$", velc..)) {
+        arguments$re_formula <- NA
         if (!is.null(groupby_fstr)) {
           groupby_fstr_xvars <- c(groupby_fstr, xvar)
         } else if (is.null(groupby_fstr)) {
           groupby_fstr_xvars <- c(xvar)
+          
         }
         newdata <- newdata %>%
           dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
           dplyr::slice(1) %>% dplyr::ungroup()
       }
-      arguments2 <- arguments
       arguments$newdata <- newdata
       arguments$deriv <- 1
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
-      arguments$envir <- .GlobalEnv # parent.frame()
-      arguments$model <- model
+      arguments$envir <- .GlobalEnv # arguments$envir_
       
       if (estimation_method == 'fitted') {
         out_v_ <- do.call(fitted_.bsitar, arguments)
       } else if (estimation_method == 'predict') {
         out_v_ <- do.call(predict_.bsitar, arguments)
       }
+      out_v__apv_ <- out_v_
       if (!summary) {
         out_v <- call_posterior_summary((out_v_))
       } else if (summary) {
         out_v <- out_v_
       }
+      
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
       }
+      
+      if(!is.na(model$model_info$univariate_by)) {
+        newdata <- newdata %>%
+          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+      }
+      
+      # out_v <<- out_v
+      # newdata <<- newdata
+      # cbind(newdata , out_v) %>% ggplot(., aes(x = age)) + 
+      #   geom_line(aes(y = Estimate, group = id))
+      
+      out_v__apv_ <- t(out_v__apv_)
       parameters <-
-        get_gparameters(out_v, newdata, groupby_str, summary)
+        get_gparameters(out_v__apv_, newdata, groupby_str_v, summary)
     } # if(is.null(avg_reffects)) {
     
     
     
     
-    
     if(!is.null(avg_reffects)) {
-      
-      groupby_str <- avg_reffects[['by']]
-      
-      if (identical(groupby_str, character(0))) groupby_str <- NULL
-      
-      # if (!is.null(re_formula)) {
-      #   if (!is.null(groupby_fstr)) {
-      #     groupby_fstr_xvars <- c(groupby_fstr, xvar)
-      #   } else if (is.null(groupby_fstr)) {
-      #     groupby_fstr_xvars <- c(xvar)
-      #   }
-      #   newdata <- newdata %>%
-      #     dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
-      #     dplyr::slice(1) %>% dplyr::ungroup()
-      # }
-      
-      
-      
-      arguments2 <- arguments
-      arguments$newdata <- newdata
-      arguments$deriv <- 1
-      # don't let the ipts to pass again to the fitted_.bsitar
-      arguments$ipts <- NULL 
-      arguments$envir <- .GlobalEnv # parent.frame()
-      arguments$model <- model
+      if (grepl("v", opt, ignore.case = T)) {
+        index_opt <- gregexpr("v", opt, ignore.case = T)[[1]]
+        velc.. <- substr(opt, index_opt, index_opt)
+      } else if (!grepl("v", opt, ignore.case = T)) {
+        velc.. <- ""
+      }
       
       summary_org <- arguments$summary
       arguments$summary <- FALSE
       arguments$re_formula <- NULL
+      
+      groupby_str_d <- avg_reffects[['by']]
+      groupby_str_v <- avg_reffects[['by']]
+      
+      if (grepl("^[[:upper:]]+$", velc..)) {
+        arguments$re_formula <- NULL
+      } else if (!grepl("^[[:upper:]]+$", velc..)) {
+        arguments$re_formula <- NA
+        if (!is.null(groupby_fstr)) {
+          groupby_fstr_xvars <- c(groupby_fstr, xvar)
+        } else if (is.null(groupby_fstr)) {
+          groupby_fstr_xvars <- c(xvar)
+          
+        }
+        # newdata <- newdata %>%
+        #   dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
+        #   dplyr::slice(1) %>% dplyr::ungroup()
+      }
+      arguments$newdata <- newdata
+      arguments$deriv <- 1
+      # don't let the ipts to pass again to the fitted_.bsitar
+      arguments$ipts <- NULL 
+      arguments$envir <- .GlobalEnv # arguments$envir_
       
       if (estimation_method == 'fitted') {
         out_v_ <- do.call(fitted_.bsitar, arguments)
@@ -1105,12 +1158,7 @@ gparameters.bsitar <- function(model,
       out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
                              probs = probs, robust = robust)
       
-      
-      if (!summary) {
-        out_v <- call_posterior_summary(t(out_v_))
-      } else if (summary) {
-        out_v <- out_v_
-      }
+      out_v <- out_v_
       
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
@@ -1122,25 +1170,36 @@ gparameters.bsitar <- function(model,
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
       
-       # out_v <- t(out_v)
+      if(!is.na(model$model_info$univariate_by)) {
+        newdata <- newdata %>%
+          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+      }
+      
+      newdata <- newdata %>%
+        dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
+        dplyr::arrange(!! as.name(selectby_over)) %>% 
+        droplevels()
+      
+      # out_v <<- out_v
+      # newdata <<- newdata
+      # cbind(newdata , out_v) %>% ggplot(., aes(x = age)) + 
+      #   geom_line(aes(y = Estimate))
+      
       parameters <-
-        get_gparameters(out_v, newdata, groupby_str, summary)
+        get_gparameters(out_v_, newdata, groupby_str_v, summary)
     } # if(!is.null(avg_reffects)) {
     
-    
-    
-    
     return(parameters)
-  }
-}
+  } # if (!arguments$plot) {
+  
+} # end gparameters
+
 
 #' @rdname gparameters.bsitar
 #' @export
 gparameters <- function(model, ...) {
   UseMethod("gparameters")
 }
-
-
 
 
 
