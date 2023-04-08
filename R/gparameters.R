@@ -834,12 +834,13 @@ gparameters.bsitar <- function(model,
       groupby_str_d <- avg_reffects[['by']]
       groupby_str_v <- avg_reffects[['by']]
       
+      # Don't let below arguments$re_formula override the above 'd' and 'v'
       if (dist.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", dist..)) {
-          arguments$re_formula <- NULL
+         # arguments$re_formula <- NULL
         } else if (!grepl("^[[:upper:]]+$", dist..)) {
-          arguments$re_formula <- NA
+        #  arguments$re_formula <- NA
           if (!is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(groupby_fstr, xvar)
           } else if (is.null(groupby_fstr)) {
@@ -906,12 +907,13 @@ gparameters.bsitar <- function(model,
       arguments$summary <- FALSE
       arguments$re_formula <- NULL
       
+      # Don't let below arguments$re_formula override the above 'd' and 'v'
       if (velc.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", velc..)) {
-          arguments$re_formula <- NULL
+          # arguments$re_formula <- NULL
         } else if (!grepl("^[[:upper:]]+$", velc..)) {
-          arguments$re_formula <- NA
+          # arguments$re_formula <- NA
           if (!is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(groupby_fstr, xvar)
           } else if (is.null(groupby_fstr)) {
@@ -1127,9 +1129,9 @@ gparameters.bsitar <- function(model,
       groupby_str_v <- avg_reffects[['by']]
       
       if (grepl("^[[:upper:]]+$", velc..)) {
-        arguments$re_formula <- NULL
+        # arguments$re_formula <- NULL
       } else if (!grepl("^[[:upper:]]+$", velc..)) {
-        arguments$re_formula <- NA
+        # arguments$re_formula <- NA
         if (!is.null(groupby_fstr)) {
           groupby_fstr_xvars <- c(groupby_fstr, xvar)
         } else if (is.null(groupby_fstr)) {
