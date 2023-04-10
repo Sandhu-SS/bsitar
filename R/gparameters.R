@@ -29,6 +29,8 @@
 #'   are performed only for the specified response variables.
 #' @param ndraws Positive integer indicating the number of posterior draws to be
 #'   used in estimation. If \code{NULL} (default), all draws are used.
+#' @param draw_ids An integer vector specifying the posterior draws 
+#' o be used. If NULL (the default), all draws are used.
 #' @param newdata An optional data.frame for which to evaluate predictions. If
 #'   \code{NULL} (default), the original data of the model is used.
 #' @param summary A logical (default \code{TRUE}) to indicate whether only the
@@ -178,6 +180,7 @@
 gparameters.bsitar <- function(model,
                                resp = NULL,
                                ndraws = NULL,
+                               draw_ids = NULL,
                                newdata = NULL,
                                summary = TRUE,
                                robust = FALSE,
