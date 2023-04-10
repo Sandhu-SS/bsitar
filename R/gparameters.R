@@ -525,7 +525,8 @@ gparameters.bsitar <- function(model,
     getitarray <- array(unlist(raw_re_c), 
                         dim=c(length(raw_re_c[[1]]), length(raw_re_c)  ))
     getitarray <- t(getitarray)
-    brms::posterior_summary(getitarray, probs = probs, robust = robust)
+    # brms::posterior_summary(getitarray, probs = probs, robust = robust)
+    getitarray
   }
   
   ###################################
@@ -841,9 +842,9 @@ gparameters.bsitar <- function(model,
       if (dist.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", dist..)) {
-         # arguments$re_formula <- NULL
+          # arguments$re_formula <- NULL
         } else if (!grepl("^[[:upper:]]+$", dist..)) {
-        #  arguments$re_formula <- NA
+          #  arguments$re_formula <- NA
           if (!is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(groupby_fstr, xvar)
           } else if (is.null(groupby_fstr)) {
@@ -878,7 +879,8 @@ gparameters.bsitar <- function(model,
         out_d_ <- get_avg_over(out_d_, newdata = newdata, by = selectby_over,
                                probs = probs, robust = robust)
         
-        out_d <- out_d_
+        out_d <- brms::posterior_summary(out_d_, probs = probs, robust = robust)
+        # out_d <- out_d_
         
         
         if(!is.na(model$model_info$univariate_by)) {
@@ -949,7 +951,9 @@ gparameters.bsitar <- function(model,
         out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
                                probs = probs, robust = robust)
         
-        out_v <- out_v_
+        out_v <- brms::posterior_summary(out_v_, probs = probs, robust = robust)
+        
+        # out_v <- out_v_
         
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
@@ -983,8 +987,9 @@ gparameters.bsitar <- function(model,
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
+        out_v_ <- t(out_v_)
         out_summary[['parameters']] <-
-          get_gparameters(out_v_, newdata, groupby_str_v, summary)
+          get_gparameters(out_v_, newdata, groupby_str_v, summary) # out_v_
       }
       out_summary[['groupby_str_d']] <- groupby_str_d
       out_summary[['groupby_str_v']] <- groupby_str_v
@@ -1158,13 +1163,15 @@ gparameters.bsitar <- function(model,
       }
       
       arguments$summary <- summary_org
-      
+      # out_v_1 <<- out_v_
       selectby <- avg_reffects[['by']]
       selectover <- avg_reffects[['over']]
       selectby_over <- c(selectby, selectover)
       out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
                              probs = probs, robust = robust)
       
+      
+      # out_v_ <<- out_v_
       out_v <- out_v_
       
       if(!is.na(model$model_info$univariate_by)) {
@@ -1191,7 +1198,7 @@ gparameters.bsitar <- function(model,
       # newdata <<- newdata
       # cbind(newdata , out_v) %>% ggplot(., aes(x = age)) + 
       #   geom_line(aes(y = Estimate))
-      
+      out_v_ <- t(out_v_)
       parameters <-
         get_gparameters(out_v_, newdata, groupby_str_v, summary)
     } # if(!is.null(avg_reffects)) {
