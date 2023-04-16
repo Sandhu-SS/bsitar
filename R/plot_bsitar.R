@@ -369,6 +369,13 @@ plot_bsitar.bsitar <- function(model,
   }
   
   
+  if (grepl("a", bands, ignore.case = T) & summary) {
+    stop(
+      "To construct bands (e.g., 95%) around the adjusted curve estimates, ",
+      "\n ",
+      " the summary option must be set to FALSE"
+    )
+  }
   
   
   if (grepl("a", opt, ignore.case = F) |
@@ -626,7 +633,10 @@ plot_bsitar.bsitar <- function(model,
   
   trimlines_ <-
     function(model,
-             newdata,
+             x,
+             y,
+             id,
+             newdata = NULL,
              resp = NULL,
              ndraws = NULL,
              level = 0,
@@ -648,9 +658,28 @@ plot_bsitar.bsitar <- function(model,
       if (trim == 0)
         return(newdata)
       
-      .x <- Xx
-      .y <- Yy
-      .id <- IDvar
+      if (missing(x)) {
+        .x <- Xx
+      } else {
+        .x <- x
+      }
+      
+      if (missing(y)) {
+        .y <- Yy
+      } else {
+        .y <- y
+      }
+      
+      if (missing(id)) {
+        .id <- IDvar
+      } else {
+        .id <- id
+      }
+      
+      
+      # .x <- Xx
+      # .y <- Yy
+      # .id <- IDvar
       
       newdata <-
         with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
@@ -717,16 +746,134 @@ plot_bsitar.bsitar <- function(model,
     }
   
   
+  # xyadj_ <-
+  #   function (model,
+  #             x,
+  #             y = NULL,
+  #             id,
+  #             resp = NULL,
+  #             ndraws = NULL,
+  #             newdata = NULL,
+  #             abc = NULL,
+  #             tomean = TRUE,...) {
+  #     if (is.null(ndraws))
+  #       ndraws  <- ndraws(model)
+  #     else
+  #       ndraws <- ndraws
+  #     
+  #     
+  #     
+  #     o <-
+  #       post_processing_checks(model = model,
+  #                              xcall = match.call(),
+  #                              resp = resp,
+  #                              deriv = '')
+  #     
+  #     newdata <- get.newdata(model, newdata = newdata,
+  #                            resp = resp,
+  #                            numeric_cov_at = NULL,
+  #                            aux_variables = NULL,
+  #                            levels_id = levels_id,
+  #                            ipts = NULL,
+  #                            xrange = NULL)
+  #     
+  #     if(!is.na(uvarby)) {
+  #       newdata <- newdata %>%
+  #         dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+  #     }
+  #     
+  #     xoffsetXnames <- 'xoffset'
+  #     randomRnames <- 'random' 
+  #     if (!is.null(resp)) randomRnames <- paste0(randomRnames, resp_rev_)
+  #     if (!is.null(resp)) xoffsetXnames <- paste0(xoffsetXnames, resp_rev_)
+  #     randomRnames <- model$model_info[[randomRnames]]
+  #     xoffsetXnames <- model$model_info[[xoffsetXnames]]
+  #     if (missing(x))
+  #       x <- newdata[[Xx]]
+  #     if (missing(y))
+  #       y <- newdata[[Yy]]
+  #     if (missing(id))
+  #       id <- newdata[[IDvar]]
+  #     
+  #     if (is.null(resp)) {
+  #       if (is.null(abc)) {
+  #         re <- ranef(model)[[IDvar]][, 1 , ]
+  #         abc <- re[match(id, rownames(re)), , drop = FALSE]
+  #       }
+  #       abc <- as.data.frame(abc)
+  #       
+  #     } else if (!is.null(resp)) {
+  #       if (is.null(abc)) {
+  #         re <- ranef(model)[[IDvar]]
+  #         re <- re[match(id, rownames(re)) , 1, , drop = FALSE]
+  #         re <- re[ , 1, grepl(paste0("^", resp), attr(re, "dimnames")[3][[1]])]
+  #         abc <- re 
+  #       }
+  #       abc <- as.data.frame(abc)
+  #     }
+  #     
+  #     colnames(abc) <- randomRnames
+  #     
+  #     fixef.df <- as.data.frame(fixef(model))
+  #     fixef.df$names <- rownames(fixef.df)
+  #     fixef.df <- fixef.df
+  #     name_fixef.df_b <- paste0("b", "_Intercept")
+  #     if (!is.null(resp)) name_fixef.df_b <- paste0(resp, "_", name_fixef.df_b)
+  #     fixef.df_b <-
+  #       subset(fixef.df, names == name_fixef.df_b)
+  #     for (i in letters[1:4])
+  #       if (!i %in% names(abc))
+  #         abc[, i] <- 0
+  #     xoffset <- xoffsetXnames
+  #     if (!is.na(b0 <- as.numeric(fixef.df_b[1])))
+  #       xoffset <- xoffset + b0
+  #     x <- x - xoffset
+  #     if (tomean) {
+  #       x.adj <- (x - abc$b) * exp(abc$c) + xoffset
+  #       y.adj <- y - abc$a - abc$d * x
+  #     }
+  #     else {
+  #       x.adj <- x / exp(abc$c) + abc$b + xoffset
+  #       y.adj <- y + abc$a + abc$d * x
+  #     }
+  #     out <- as.data.frame(as.factor(newdata[[IDvar]]))
+  #     out <- cbind(x.adj, y.adj, out)
+  #     colnames(out) <- c(Xx, Yy, IDvar)
+  #     if(!is.na(uvarby)) {
+  #       tempotnames <- c(IDvar, Xx, Yy)
+  #       tempot <- newdata %>%  dplyr::select(-all_of(tempotnames))
+  #       out <- cbind(out, tempot) %>% data.frame()
+  #     }
+  #     out
+  #   }
+  
+  
+  
+  
+  
+  
+  
+  
+  
   xyadj_ <-
     function (model,
               x,
-              y = NULL,
+              y,
               id,
               resp = NULL,
               ndraws = NULL,
               newdata = NULL,
+              levels_id = NULL,
               abc = NULL,
-              tomean = TRUE,...) {
+              summary = FALSE,
+              conf = 0.95,
+              robust = FALSE,
+              tomean = TRUE,
+              ipts = NULL,
+              xrange = NULL,
+              aux_variables = NULL,
+              numeric_cov_at = NULL,
+              ...) {
       if (is.null(ndraws))
         ndraws  <- ndraws(model)
       else
@@ -740,85 +887,272 @@ plot_bsitar.bsitar <- function(model,
                                resp = resp,
                                deriv = '')
       
-      newdata <- get.newdata(model, newdata = newdata,
-                             resp = resp,
-                             numeric_cov_at = NULL,
-                             aux_variables = NULL,
-                             levels_id = levels_id,
-                             ipts = NULL,
-                             xrange = NULL)
+      # if(is.null(newdata)) {
+        newdata <- get.newdata(model, 
+                               newdata = newdata,
+                               resp = resp,
+                               numeric_cov_at = numeric_cov_at,
+                               aux_variables = aux_variables,
+                               levels_id = levels_id,
+                               ipts = ipts,
+                               xrange = xrange)
+      # }
+     
+
+      # if(!is.na(uvarby)) {
+      #   newdata <- newdata %>%
+      #     dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+      # }
       
-      
-      
-      if(!is.na(uvarby)) {
-        newdata <- newdata %>%
-          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+      list_c <- attr(newdata, 'list_c')
+      for (list_ci in names(list_c)) {
+        assign(list_ci, list_c[[list_ci]])
       }
+      check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+                   'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
+      
+      for (check___ in check__) {
+        if(!exists(check___)) assign(check___, NULL)
+      }
+      
+      if(is.null(uvarby)) uvarby <- NA
+      
+      Xx <- xvar
+      Yy <- yvar
+      
+      
+      probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+      probtitles <- probs[order(probs)] * 100
+      probtitles <- paste("Q", probtitles, sep = "")
+      set_names_  <- c('Estimate', 'Est.Error', probtitles)
+      
+      
       
       xoffsetXnames <- 'xoffset'
       randomRnames <- 'random' 
-      if (!is.null(resp)) randomRnames <- paste0(randomRnames, resp_rev_)
       if (!is.null(resp)) xoffsetXnames <- paste0(xoffsetXnames, resp_rev_)
-      randomRnames <- model$model_info[[randomRnames]]
       xoffsetXnames <- model$model_info[[xoffsetXnames]]
-      if (missing(x))
-        x <- newdata[[Xx]]
-      if (missing(y))
-        y <- newdata[[Yy]]
-      if (missing(id))
-        id <- newdata[[IDvar]]
-      
-      if (is.null(resp)) {
-        if (is.null(abc)) {
-          re <- ranef(model)[[IDvar]][, 1 , ]
-          abc <- re[match(id, rownames(re)), , drop = FALSE]
-        }
-        abc <- as.data.frame(abc)
-        
-      } else if (!is.null(resp)) {
-        if (is.null(abc)) {
-          re <- ranef(model)[[IDvar]]
-          re <- re[match(id, rownames(re)) , 1, , drop = FALSE]
-          re <- re[ , 1, grepl(paste0("^", resp), attr(re, "dimnames")[3][[1]])]
-          abc <- re 
-        }
-        abc <- as.data.frame(abc)
-      }
-      
-      colnames(abc) <- randomRnames
-      
-      fixef.df <- as.data.frame(fixef(model))
-      fixef.df$names <- rownames(fixef.df)
-      fixef.df <- fixef.df
-      name_fixef.df_b <- paste0("b", "_Intercept")
-      if (!is.null(resp)) name_fixef.df_b <- paste0(resp, "_", name_fixef.df_b)
-      fixef.df_b <-
-        subset(fixef.df, names == name_fixef.df_b)
-      for (i in letters[1:4])
-        if (!i %in% names(abc))
-          abc[, i] <- 0
       xoffset <- xoffsetXnames
-      if (!is.na(b0 <- as.numeric(fixef.df_b[1])))
-        xoffset <- xoffset + b0
+      
+      if (missing(x)) {
+        x <- newdata[[Xx]]
+      }
+      
+      
+      if (missing(y)) {
+        y <- newdata[[Yy]]
+      }
+      
+      if (missing(id)) {
+        IDvar <- model$model_info$id
+        IDvar <- IDvar[1]
+        id <- newdata[[IDvar]][1]
+        # id <- IDvar
+      }
+      
+      Xx <- xvar
+      Yy <- yvar
+      
       x <- x - xoffset
-      if (tomean) {
-        x.adj <- (x - abc$b) * exp(abc$c) + xoffset
-        y.adj <- y - abc$a - abc$d * x
+      
+      nrowdatadims <- nrow(newdata)
+      ### 
+      predprep <- brms::prepare_predictions(model, resp = resp, newdata = newdata)
+      rparnames <- names(predprep$nlpars)
+      
+      respstr <- "" # paste0(resp, "_")
+      septsr <- ""
+      if(any(grepl(paste0(respstr, septsr, "a"), rparnames)) |
+         any(grepl(paste0(respstr, "a", septsr), rparnames))) {
+        a_r <- TRUE
+      } else {
+        a_r <- FALSE
       }
-      else {
-        x.adj <- x / exp(abc$c) + abc$b + xoffset
-        y.adj <- y + abc$a + abc$d * x
+      
+      if(any(grepl(paste0(respstr, septsr, "b"), rparnames)) |
+         any(grepl(paste0(respstr, "b", septsr), rparnames))) {
+        b_r <- TRUE
+      } else {
+        b_r <- FALSE
       }
-      out <- as.data.frame(as.factor(newdata[[IDvar]]))
-      out <- cbind(x.adj, y.adj, out)
-      colnames(out) <- c(Xx, Yy, IDvar)
-      if(!is.na(uvarby)) {
-        tempotnames <- c(IDvar, Xx, Yy)
-        tempot <- newdata %>%  dplyr::select(-all_of(tempotnames))
-        out <- cbind(out, tempot) %>% data.frame()
+      
+      if(any(grepl(paste0(respstr, septsr, "c"), rparnames)) |
+         any(grepl(paste0(respstr, "c", septsr), rparnames))) {
+        c_r <- TRUE
+      } else {
+        c_r <- FALSE
       }
+      
+      if(any(grepl(paste0(respstr, septsr, "d"), rparnames)) |
+         any(grepl(paste0(respstr, "d", septsr), rparnames))) {
+        d_r <- TRUE
+      } else {
+        d_r <- FALSE
+      }
+      
+      
+      
+      if(a_r) {
+        null_a <- fitted(model, resp = resp, newdata = newdata, nlpar="a", ndraws = ndraws, re_formula = NULL, summary = summary)
+        naaa_a <- fitted(model, resp = resp, newdata = newdata, nlpar="a", ndraws = ndraws, re_formula = NA,   summary = summary)
+      } else {
+        null_a <- matrix(0, ndraws, nrowdatadims) 
+        naaa_a <- matrix(0, ndraws, nrowdatadims) 
+      }
+      
+      if(b_r) {
+        null_b <- fitted(model, resp = resp, newdata = newdata, nlpar="b", ndraws = ndraws, re_formula = NULL, summary = summary)
+        naaa_b <- fitted(model, resp = resp, newdata = newdata, nlpar="b", ndraws = ndraws, re_formula = NA,   summary = summary)
+      } else {
+        null_b <- matrix(0, ndraws, nrowdatadims) 
+        naaa_b <- matrix(0, ndraws, nrowdatadims) 
+      }
+      
+      if(c_r) {
+        null_c <- fitted(model, resp = resp, newdata = newdata, nlpar="c", ndraws = ndraws, re_formula = NULL, summary = summary)
+        naaa_c <- fitted(model, resp = resp, newdata = newdata, nlpar="c", ndraws = ndraws, re_formula = NA,   summary = summary)
+      } else {
+        null_c <- matrix(0, ndraws, nrowdatadims) 
+        naaa_c <- matrix(0, ndraws, nrowdatadims) 
+      }
+      
+      if(d_r) {
+        null_d <- fitted(model, resp = resp, newdata = newdata, nlpar="d", ndraws = ndraws, re_formula = NULL, summary = summary)
+        naaa_d <- fitted(model, resp = resp, newdata = newdata, nlpar="d", ndraws = ndraws, re_formula = NA,   summary = summary)
+      } else {
+        null_d <- matrix(0, ndraws, nrowdatadims)
+        naaa_d <- matrix(0, ndraws, nrowdatadims)
+      }
+      
+      if(!summary) {
+        xadj_tmt <- yadj_tmt <- xadj_tmf <- yadj_tmf <- list()
+        for (i in 1:ndraws) {
+          r_a <- null_a[ i, ]
+          r_b <- null_b[ i, ]
+          r_c <- null_c[ i, ]
+          na_a <- naaa_a[ i, ]
+          na_b <- naaa_b[ i, ]
+          na_c <- naaa_c[ i, ]
+          # xvar <- modelmat[['age']]  - 11
+          xadj_tmt[[i]] <- (x - r_b + na_b) * exp(r_c - na_c) + na_b  + xoffset
+          yadj_tmt[[i]] <- y - r_a + na_a # - abc$d * x
+          xadj_tmf[[i]] <- x / exp(r_c - na_c) + (r_b - na_b) + na_b  + xoffset
+          yadj_tmf[[i]] <- y + r_a - na_a # + abc$d * x
+        } # for (i in 1:ndraws) {
+        xadj_tmt <- array(unlist(xadj_tmt), 
+                          dim=c(length(xadj_tmt[[1]]), length(xadj_tmt)  ))
+        xadj_tmt <- t(xadj_tmt)
+        
+        yadj_tmt <- array(unlist(yadj_tmt), 
+                          dim=c(length(yadj_tmt[[1]]), length(yadj_tmt)  ))
+        yadj_tmt <- t(yadj_tmt)
+        
+        xadj_tmf <- array(unlist(xadj_tmf), 
+                          dim=c(length(xadj_tmf[[1]]), length(xadj_tmf)  ))
+        xadj_tmf <- t(xadj_tmf)
+        
+        yadj_tmf <- array(unlist(yadj_tmf), 
+                          dim=c(length(yadj_tmf[[1]]), length(yadj_tmf)  ))
+        yadj_tmf <- t(yadj_tmf)
+        
+        xadj_tmt <- brms::posterior_summary(xadj_tmt, probs = probs, robust = robust) 
+        yadj_tmt <- brms::posterior_summary(yadj_tmt, probs = probs, robust = robust)
+        xadj_tmf <- brms::posterior_summary(xadj_tmf, probs = probs, robust = robust)
+        yadj_tmf <- brms::posterior_summary(yadj_tmf, probs = probs, robust = robust)
+        
+        if (tomean) {
+          x.adj <- xadj_tmt
+          y.adj <- yadj_tmt
+        }
+        else {
+          x.adj <- xadj_tmf
+          y.adj <- yadj_tmf
+        }
+        # This was good
+        # out <- cbind(x.adj[, 1], y.adj)
+        # setadnamex <- paste0("adj", "_", Xx)
+        # setadnamey <- colnames(y.adj)
+        # colnames(out) <- c(setadnamex, setadnamey)
+        # out <- cbind(newdata, out)
+        
+        # but for trimline, we need folowing order 
+        out <- newdata
+        out[[Xx]] <- x.adj[, 1]
+        out[[Yy]] <- y.adj[, 1]
+        out <- out %>% dplyr::relocate(c(Xx, Yy, IDvar))
+        # now add CI also - Estimate will be same as outcome
+        out <- cbind(out, y.adj)
+      } # if(!summary) {
+      
+      
+      if(summary) {
+        r_a <- null_a[ , 1]
+        r_b <- null_b[ , 1]
+        r_c <- null_c[ , 1]
+        na_a <- naaa_a[ , 1]
+        na_b <- naaa_b[ , 1]
+        na_c <- naaa_c[ , 1]
+        xadj_tmt <- (x - r_b + na_b) * exp(r_c - na_c) + na_b  + xoffset
+        yadj_tmt <- y - r_a + na_a # - abc$d * x
+        xadj_tmf <- x / exp(r_c - na_c) + (r_b - na_b) + na_b  + xoffset
+        yadj_tmf <- y + r_a - na_a # + abc$d * x
+        
+        if (tomean) {
+          x.adj <- xadj_tmt
+          y.adj <- yadj_tmt
+        }
+        else {
+          x.adj <- xadj_tmf
+          y.adj <- yadj_tmf
+        }
+        # out <- as.data.frame(as.factor(newdata[[IDvar]]))
+        # out <- cbind(x.adj, y.adj, out)
+        # colnames(out) <- c(Xx, Yy, IDvar)
+        
+        # This was good
+        out <- cbind(x.adj, y.adj)
+        setadnamex <- paste0("adj", "_", Xx)
+        setadnamey <- 'Estimate'
+        colnames(out) <- c(setadnamex, setadnamey)
+        out <- cbind(newdata, out)
+        
+        # but for trimline, we need folowing order 
+        out <- newdata
+        out[[Xx]] <- x.adj
+        out[[Yy]] <- y.adj
+        out <- out %>% dplyr::relocate(c(Xx, Yy, IDvar))
+      } # if(summary) {
+      
+      # if(!is.na(uvarby)) {
+      #   tempotnames <- c(IDvar, Xx, Yy)
+      #   tempot <- newdata %>%  dplyr::select(-all_of(tempotnames))
+      #   out <- cbind(out, tempot) %>% data.frame()
+      # }
+      
+      
       out
     }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   xyunadj_ <-
     function (model,
@@ -1658,14 +1992,23 @@ plot_bsitar.bsitar <- function(model,
   if (grepl("a", opt, ignore.case = T) |
       grepl("u", opt, ignore.case = T)) {
     if (!is.null(cov_vars)) {
-      stop("Adjusted curves not yet supported for model with covariate(s)")
+     # stop("Adjusted curves not yet supported for model with covariate(s)")
     }
     if (grepl("a", opt, ignore.case = T)) {
       
-      xyadj_ed <- xyadj_(model, resp = resp)
-      
+      xyadj_ed <- xyadj_(model, newdata = newdata, resp = resp, tomean = TRUE, 
+                         conf = conf, robust = robust,
+                         summary = summary, 
+                         numeric_cov_at = numeric_cov_at,
+                         aux_variables = aux_variables,
+                         levels_id = levels_id,
+                         ipts = ipts,
+                         xrange = xrange)
+      # axx <<- xyadj_ed
+      # out_a_ <- xyadj_ed
       out_a_ <-
-        d.out <- trimlines_(model, resp = resp, newdata = xyadj_ed, trim = trim)
+        d.out <- trimlines_(model, id = 'id', resp = resp, newdata = xyadj_ed, trim = trim)
+      # axx <<- out_a_
       out_a_ <-
         out_a_ %>%
         dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_au)))
@@ -1762,15 +2105,34 @@ plot_bsitar.bsitar <- function(model,
         get_color_ <- get_color_
         legendlabs_ <- legendlabs_mult_mult
       } else if(ngrpanels == 1) {
-        get_line_ <- legendlabs_mult_line
-        get_color_ <- legendlabs_mult_color
-        legendlabs_ <- legendlabs_mult_singel
+        get_line_ <- 'solid' # legendlabs_mult_line
+        get_color_ <- 'black' # legendlabs_mult_color
+        legendlabs_ <- NULL # legendlabs_mult_singel
       }
       
       plot.o.a <- plot.o.a +
         ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
         ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
       
+      
+      
+      if (grepl("a", bands, ignore.case = T)) {
+        plot.o.a <- plot.o.a +
+          ggplot2::geom_ribbon(
+            data = out_a_,
+            ggplot2::aes(
+              ymin = .data[[paste0(probtitles[1], '')]],
+              ymax = .data[[paste0(probtitles[2], '')]],
+              group = groupby.x,
+              linetype = groupby_line.x,
+              # color = groupby_color.x,
+              fill = groupby_color.x,
+            ),
+            alpha = band.alpha
+          )
+        # plot.o <- plot.o +
+        #   ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
+      }
       
       
       if (nchar(opt) == 1) {
@@ -1794,7 +2156,7 @@ plot_bsitar.bsitar <- function(model,
     if (grepl("u", opt, ignore.case = T)) {
       xyadj_ed <- xyunadj_(model, resp = resp)
       out_u_ <-
-        d.out <- trimlines_(model, resp = resp, newdata = xyadj_ed, trim = trim)
+        d.out <- trimlines_(model, id = 'id', resp = resp, newdata = xyadj_ed, trim = trim)
       out_u_ <-
         out_u_ %>%
         dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_au)))
@@ -1880,9 +2242,9 @@ plot_bsitar.bsitar <- function(model,
         get_color_ <- get_color_
         legendlabs_ <- legendlabs_mult_mult
       } else if(ngrpanels == 1) {
-        get_line_ <- legendlabs_mult_line
-        get_color_ <- legendlabs_mult_color
-        legendlabs_ <- legendlabs_mult_singel
+        get_line_ <- 'solid' # legendlabs_mult_line
+        get_color_ <- 'black' # legendlabs_mult_color
+        legendlabs_ <- NULL # legendlabs_mult_singel
       }
       
       plot.o.u <- plot.o.u +
@@ -2015,9 +2377,9 @@ plot_bsitar.bsitar <- function(model,
           get_color_ <- get_color_
           legendlabs_ <- legendlabs_mult_mult
         } else if(ngrpanels == 1) {
-          get_line_ <- legendlabs_mult_line
-          get_color_ <- legendlabs_mult_color
-          legendlabs_ <- legendlabs_mult_singel
+          get_line_ <- 'solid' # legendlabs_mult_line
+          get_color_ <- 'black' # legendlabs_mult_color
+          legendlabs_ <- NULL # legendlabs_mult_singel
         }
         
         plot.o <- plot.o +
