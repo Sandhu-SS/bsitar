@@ -391,16 +391,16 @@ plot_bsitar.bsitar <- function(model,
     
     
     if (!identical(testdata1, testdata2)) {
-      warning(
-        "Your have specified 'a' (adjusted curves) and/or 'u'",
-        "\n  (unadjusted curves) in the opt argument (i.e., opt = 'au') ",
-        "\n ",
-        " but newdata is not identical to the data fitted.",
-        "\n ",
-        " Please note that adjusted and unadjusted curves will be",
-        "\n ",
-        " plotted using the original data fitted"
-      )
+      # warning(
+      #   "You have specified 'a' (adjusted curves) and/or 'u'",
+      #   "\n  (unadjusted curves) in the opt argument (i.e., opt = 'au') ",
+      #   "\n ",
+      #   " but newdata is not identical to the data fitted.",
+      #   "\n ",
+      #   " Please note that adjusted and unadjusted curves will be",
+      #   "\n ",
+      #   " plotted using the original data fitted"
+      # )
     }
   }
   
@@ -880,6 +880,10 @@ plot_bsitar.bsitar <- function(model,
         ndraws <- ndraws
       
       
+      if(!is.null(ipts)) 
+        stop("It does not a make sense to interploate data when estimating",
+             "\n ",
+             " adjusted curves. Please set ipts = NULL")
       
       o <-
         post_processing_checks(model = model,
@@ -887,7 +891,6 @@ plot_bsitar.bsitar <- function(model,
                                resp = resp,
                                deriv = '')
       
-      # if(is.null(newdata)) {
         newdata <- get.newdata(model, 
                                newdata = newdata,
                                resp = resp,
@@ -896,7 +899,10 @@ plot_bsitar.bsitar <- function(model,
                                levels_id = levels_id,
                                ipts = ipts,
                                xrange = xrange)
-      # }
+        
+        
+     
+        
      
 
       # if(!is.na(uvarby)) {
@@ -938,7 +944,6 @@ plot_bsitar.bsitar <- function(model,
         x <- newdata[[Xx]]
       }
       
-      
       if (missing(y)) {
         y <- newdata[[Yy]]
       }
@@ -952,6 +957,20 @@ plot_bsitar.bsitar <- function(model,
       
       Xx <- xvar
       Yy <- yvar
+      
+      
+      
+      if(!is.null(ipts)) {
+        # add_outcome <- model$data %>% dplyr::select(Yy, Xx, IDvar)
+        # newdata <- newdata %>% left_join(., add_outcome, by = c(IDvar, Xx))
+        add_outcome <- model$data %>% dplyr::select(Yy, IDvar)
+        newdata <- newdata %>% dplyr::left_join(., add_outcome, by = c(IDvar))
+        x <- newdata[[Xx]]
+        y <- newdata[[Yy]]
+        id <- newdata[[IDvar]][1]
+      }
+      
+      
       
       x <- x - xoffset
       
@@ -1039,6 +1058,7 @@ plot_bsitar.bsitar <- function(model,
           xadj_tmf[[i]] <- x / exp(r_c - na_c) + (r_b - na_b) + na_b  + xoffset
           yadj_tmf[[i]] <- y + r_a - na_a # + abc$d * x
         } # for (i in 1:ndraws) {
+        
         xadj_tmt <- array(unlist(xadj_tmt), 
                           dim=c(length(xadj_tmt[[1]]), length(xadj_tmt)  ))
         xadj_tmt <- t(xadj_tmt)
@@ -1996,7 +2016,9 @@ plot_bsitar.bsitar <- function(model,
     }
     if (grepl("a", opt, ignore.case = T)) {
       
-      xyadj_ed <- xyadj_(model, newdata = newdata, resp = resp, tomean = TRUE, 
+      xyadj_ed <- xyadj_(model, newdata = newdata, 
+                         ndraws = ndraws,
+                         resp = resp, tomean = TRUE, 
                          conf = conf, robust = robust,
                          summary = summary, 
                          numeric_cov_at = numeric_cov_at,
