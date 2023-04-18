@@ -1228,7 +1228,7 @@ bsitar <- function(x,
     deparseobj
   }
   
-
+  
   
   terms_rhsxx <- deparse(mcall[['terms_rhs']])
   terms_rhsxx <- gsub("[[:space:]]", "", terms_rhsxx)
@@ -1302,7 +1302,7 @@ bsitar <- function(x,
   
   
   arguments <- as.list(mcall)[-1]
-
+  
   
   match.call.defaults <- function(...) {
     call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
@@ -1345,7 +1345,7 @@ bsitar <- function(x,
   arguments <-
     c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
   
-
+  
   
   for (ip in names(arguments)) {
     if (grepl("_init_", ip)) {
@@ -2965,7 +2965,7 @@ bsitar <- function(x,
     if (!is.null(dpar_formulasi)) {
       if (grepl("^lf\\(", dpar_formulasi) |
           grepl("^nlf\\(", dpar_formulasi)) {
-      #  dpar_formulasi <- list_to_quoted_if_not_si_lf(dpar_formulasi)
+        #  dpar_formulasi <- list_to_quoted_if_not_si_lf(dpar_formulasi)
       } else {
         dpar_formulasi <- dpar_formulasi
       }
@@ -3063,7 +3063,7 @@ bsitar <- function(x,
     
     
     
-   
+    
     
     
     
@@ -3334,7 +3334,7 @@ bsitar <- function(x,
         "verbose"
       )
     
-
+    
     
     internal_formula_args <- list()
     internal_formula_args <- mget(internal_formula_args_names)
@@ -3705,7 +3705,7 @@ bsitar <- function(x,
     # Imp: Note that only xvar is reverse transformed and not the yvar
     # This is because the xvar is again transformed in the Stan function block
     # Whereas the yvar is passed to bsitar as such 
-
+    
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if (xfunsi == "log") {
@@ -4456,6 +4456,43 @@ bsitar <- function(x,
   
   
   
+  # if(exe_model_fit) {
+  #   if(!is.null(set_self_priors)) {
+  #     brm_args$prior <- set_self_priors
+  #   } else if(!is.null(set_replace_priors)) {
+  #     # brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
+  #     brm_args$prior <- brmspriors %>% 
+  #       dplyr::filter(source == 'user') %>% 
+  #       dplyr::bind_rows(., set_replace_priors)
+  #   } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
+  #     brm_args$prior <- brmspriors
+  #   }
+  
+  
+  
+  
+  # IMP - brms does not allow different lb conditions for sd parsm (e.e, all to be NA)
+  # Because prior function automatically sets lb 0 for positive priors such as exponentials
+  # the following is need
+  lbbb_ <- ubbb_ <- NULL
+  tempprior_hold <- brmspriors # brm_args$prior 
+  setpriornamesorder <- colnames(tempprior_hold)
+  tempprior_hold$lbbb_ <- tempprior_hold$lb
+  tempprior_hold$ubbb_ <- tempprior_hold$ub
+  tempprior_hold$lb <- tempprior_hold$ub <- NULL
+  tempprior_hold <- tempprior_hold %>% dplyr::mutate(lbbb_ = dplyr::if_else(class == 'sd', NA, lbbb_))
+  tempprior_hold <- tempprior_hold %>% dplyr::mutate(ubbb_ = dplyr::if_else(class == 'sd', NA, ubbb_))
+  tempprior_hold$lb <- tempprior_hold$lbbb_
+  tempprior_hold$ub <- tempprior_hold$ubbb_
+  tempprior_hold$lbbb_ <- tempprior_hold$ubbb_ <- NULL
+  tempprior_hold <- tempprior_hold %>% dplyr::relocate(dplyr::all_of(setpriornamesorder))
+  # brm_args$prior <- tempprior_hold
+  brmspriors <-   tempprior_hold
+  
+  brm_args$prior <- brmspriors
+  
+  
+  
   if(!exe_model_fit) {
     if(get_priors) {
       options(mc.cores = mc.cores_restore)
@@ -4482,14 +4519,17 @@ bsitar <- function(x,
       brm_args$prior <- set_self_priors
     } else if(!is.null(set_replace_priors)) {
       # brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
-      brm_args$prior <- brmspriors %>% 
-        dplyr::filter(source == 'user') %>% 
+      brm_args$prior <- brmspriors %>%
+        dplyr::filter(source == 'user') %>%
         dplyr::bind_rows(., set_replace_priors)
     } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
       brm_args$prior <- brmspriors
     }
     
+    
+    
     # txx <<- brm_args$prior
+    # stop()
     
     # If initials are 0 or random, then set custom init to NULL
     
@@ -4527,7 +4567,7 @@ bsitar <- function(x,
       }
     }
     
-   
+    
     
     if(!is.null(init_custom)) {
       init_fun <- function(chain_id = 1) init_custom
@@ -4553,7 +4593,7 @@ bsitar <- function(x,
       }
       brm_args$init <- new_init_append
     } 
- 
+    
     
     brmsfit <- do.call(brm, brm_args)
     
