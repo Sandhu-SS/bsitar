@@ -1373,19 +1373,31 @@ bsitar <- function(x,
   
   
   check_gr_str_form <- function(x, x__) {
+    # print(x)
+    # print(x__)
     if(!is.null(x) | !is.null(x[[1]])) {
-      if(!grepl("^list", x__)) {
-        if(!grepl("^~", x__)) {
-          stop("Argument ", deparse(substitute(x)), " should be a formula.",
-               "\n ",
-               " Please add '~' at the begining ")
+      if(any(!grepl("^list", x__))) {
+        # if(!grepl("^~", x__)) {
+        #   stop("Argument ", deparse(substitute(x)), " should be a formula.",
+        #        "\n ",
+        #        " Please add '~' at the begining ")
+        # }
+        for (ixx in 1:length(x)) {
+          if(!grepl("^~", ixx)) {
+            stop("Argument ",  " should be a formula.",
+                 "\n ",
+                 " Please add '~' at the begining ")
+          }
         }
       } 
     }
   }
   
+  # check_gr_str_form(sigma_formula_gr_str, 
+  #                   deparse(substitute(sigma_formula_gr_str)))
+  
   check_gr_str_form(sigma_formula_gr_str, 
-                    deparse(substitute(sigma_formula_gr_str)))
+                    paste(deparse(substitute(sigma_formula_gr_str)), collapse = ""))
   
   
   # Separate 'brms' arguments from 'bsitar' arguments for the ease of handling
