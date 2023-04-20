@@ -1372,32 +1372,28 @@ bsitar <- function(x,
   
   
   
-  check_gr_str_form <- function(x, x__) {
-    # print(x)
-    # print(x__)
-    if(!is.null(x) | !is.null(x[[1]])) {
-      if(any(!grepl("^list", x__))) {
-        # if(!grepl("^~", x__)) {
-        #   stop("Argument ", deparse(substitute(x)), " should be a formula.",
-        #        "\n ",
-        #        " Please add '~' at the begining ")
-        # }
-        for (ixx in 1:length(x)) {
-          if(!grepl("^~", ixx)) {
-            stop("Argument ",  " should be a formula.",
-                 "\n ",
-                 " Please add '~' at the begining ")
-          }
-        }
-      } 
-    }
-  }
+  # check_gr_str_form <- function(x, x__) {
+  #     if(any(!grepl("^list", x__))) {
+  #       for (ix in 1:length(x)) {
+  #         ixx <-  deparse(x[[ix]])
+  #          ixxc <<- ixx
+  #         print(ixx)
+  #         if(!grepl("^~", ixx)) {
+  #           stop("Argument ",  " should be a formula.",
+  #                "\n ",
+  #                " Please add '~' at the begining ")
+  #         }
+  #       }
+  #     } 
+  # }
   
   # check_gr_str_form(sigma_formula_gr_str, 
   #                   deparse(substitute(sigma_formula_gr_str)))
   
-  check_gr_str_form(sigma_formula_gr_str, 
-                    paste(deparse(substitute(sigma_formula_gr_str)), collapse = ""))
+  # check_gr_str_form(sigma_formula_gr_str, 
+  #                   paste(deparse(substitute(sigma_formula_gr_str)), collapse = ""))
+  
+  
   
   
   # Separate 'brms' arguments from 'bsitar' arguments for the ease of handling
@@ -4468,21 +4464,6 @@ bsitar <- function(x,
   
   
   
-  # if(exe_model_fit) {
-  #   if(!is.null(set_self_priors)) {
-  #     brm_args$prior <- set_self_priors
-  #   } else if(!is.null(set_replace_priors)) {
-  #     # brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
-  #     brm_args$prior <- brmspriors %>% 
-  #       dplyr::filter(source == 'user') %>% 
-  #       dplyr::bind_rows(., set_replace_priors)
-  #   } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
-  #     brm_args$prior <- brmspriors
-  #   }
-  
-  
-  
-  
   # IMP - brms does not allow different lb conditions for sd parsm (e.e, all to be NA)
   # Because prior function automatically sets lb 0 for positive priors such as exponentials
   # the following is need
@@ -4501,10 +4482,24 @@ bsitar <- function(x,
   # brm_args$prior <- tempprior_hold
   brmspriors <-   tempprior_hold
   
+  
+  
+  if(!is.null(set_self_priors) & is.null(set_replace_priors)) {
+    brmspriors <- set_self_priors
+  }
+  
+  if(!is.null(set_replace_priors) & is.null(set_self_priors)) {
+    brmspriors <- brmspriors %>%
+      dplyr::filter(source == 'user') %>%
+      dplyr::bind_rows(., set_replace_priors)
+  }
+  
+  if(is.null(set_self_priors) & is.null(set_replace_priors)) {
+    brmspriors <- brmspriors
+  }
+  
   brm_args$prior <- brmspriors
-  
-  
-  
+    
   if(!exe_model_fit) {
     if(get_priors) {
       options(mc.cores = mc.cores_restore)
@@ -4526,25 +4521,13 @@ bsitar <- function(x,
   
   
   
+  
+  
+  # Fit model if get_set_priors get_priors get_standata get_stancode -> FALSE
+  # this if(exe_model_fit) { is closed just before the end of the bsitar 
+  
   if(exe_model_fit) {
-    if(!is.null(set_self_priors)) {
-      brm_args$prior <- set_self_priors
-    } else if(!is.null(set_replace_priors)) {
-      # brm_args$prior <- insert_new_priors(set_replace_priors, brmspriors)
-      brm_args$prior <- brmspriors %>%
-        dplyr::filter(source == 'user') %>%
-        dplyr::bind_rows(., set_replace_priors)
-    } else if(is.null(set_self_priors) & is.null(set_replace_priors)) {
-      brm_args$prior <- brmspriors
-    }
-    
-    
-    
-    # txx <<- brm_args$prior
-    # stop()
-    
     # If initials are 0 or random, then set custom init to NULL
-    
     if(brm_args$backend == "rstan") {
       if(length(brm_args$init) == 1) {
         if(brm_args$init == "0") {
@@ -4558,7 +4541,6 @@ bsitar <- function(x,
         init_custom <- init_custom
       }
     }
-    
     
     
     if(brm_args$backend == "cmdstanr") {
@@ -4608,8 +4590,7 @@ bsitar <- function(x,
     
     
     brmsfit <- do.call(brm, brm_args)
-    
-    
+  
     # Add model info for post-processing
     
     model_info <- list()

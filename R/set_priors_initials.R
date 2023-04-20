@@ -1206,14 +1206,19 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
-      
-      if (dist != 'uniform' &
-          dist != 'lognormal' &
-          dist != 'gamma' &
-          dist != 'inv_gamma' &
-          dist != 'exponential') {
-        if (all(is.na(lowerbound)) &
-            all(is.na(upperbound))) {
+     
+      # if (dist != 'uniform' &
+      #     dist != 'lognormal' &
+      #     dist != 'gamma' &
+      #     dist != 'inv_gamma' &
+      #     dist != 'exponential') {
+      if (dist != 'uniform' | dist == 'uniform'  &
+          dist != 'lognormal' | dist == 'lognormal'  &
+          dist != 'gamma' | dist == 'gamma'  &
+          dist != 'inv_gamma' | dist == 'inv_gamma'  &
+          dist != 'exponential' | dist == 'exponential'  ) {
+        # if (all(is.na(lowerbound)) &
+        #     all(is.na(upperbound))) {
           if (nlpar == 'a')
             coef <- acovcoefnames
           if (nlpar == 'b')
@@ -1247,7 +1252,9 @@ set_priors_initials <- function(a_prior_beta,
                 class <- 'Intercept'
               }
             }
-          }
+       #   } # end of if (all(is.na(lowerbound)) & all(is.na(upperbound))) {
+            
+            
           
         } else {
           if (nlpar == 'a')
@@ -1785,13 +1792,18 @@ set_priors_initials <- function(a_prior_beta,
         mnf <- paste0('dpar', "_form_0")
         mnc <- paste0("dpar_cov")
         
-        if (dist != 'uniform' &
-            dist != 'lognormal' &
-            dist != 'gamma' &
-            dist != 'inv_gamma' &
-            dist != 'exponential') {
-          if (all(is.na(lowerbound)) &
-              all(is.na(upperbound))) {
+        # if (dist != 'uniform' &
+        #     dist != 'lognormal' &
+        #     dist != 'gamma' &
+        #     dist != 'inv_gamma' &
+        #     dist != 'exponential') {
+        if (dist != 'uniform' | dist == 'uniform'  &
+            dist != 'lognormal' | dist == 'lognormal'  &
+            dist != 'gamma' | dist == 'gamma'  &
+            dist != 'inv_gamma' | dist == 'inv_gamma'  &
+            dist != 'exponential' | dist == 'exponential'  ) {
+          # if (all(is.na(lowerbound)) &
+          #     all(is.na(upperbound))) {
             if (grepl("^lf\\(", dpar_formulasi)) {
               if (grepl("cmc=F", dpar_formulasi) |
                   grepl("cmc=FALSE", dpar_formulasi)) {
@@ -1807,7 +1819,7 @@ set_priors_initials <- function(a_prior_beta,
             }
           } else {
             coef <- rep("", length(dparcovcoefnames))
-          }
+         # } # end of if (all(is.na(lowerbound)) & all(is.na(upperbound))) {
         }
         
         if (ept(mnf)) {
