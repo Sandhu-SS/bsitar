@@ -63,7 +63,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "sigma_dpar", "sigma_form_0", "sigma_formula_gr_strsi", "sigma_formula_grsi",
     "sigma_formulasi", "sigma_group_arg", "sigma_group_arg_groupvar",
     "sigma_hierarchical_gr_names", "sigma_init_betasi", "sigma_init_sdsi",
-    "sigma_prior_betasi", "sigma_prior_sdsi", "sigma_set_higher_levels",
+    "sigma_prior_betasi", "sigma_prior_sdsi", "sigma_set_higher_levels"
     
     
     )
