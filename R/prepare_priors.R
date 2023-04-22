@@ -816,9 +816,10 @@ prepare_priors <- function(prior_argument,
         allowed_init_options_rate <- NULL
       
       if (!exists('allowed_init_options_shape'))
-        allowed_init_options_rate <- NULL
+        allowed_init_options_shape <- NULL
       if (!exists('allowed_init_options_scale'))
-        allowed_init_options_rate <- NULL
+        allowed_init_options_scale <- NULL
+      
       
       # set location parameter -> for normal, log normal, cauchy, studdent_t
       
