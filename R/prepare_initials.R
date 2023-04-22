@@ -519,6 +519,8 @@ prepare_initials <- function(init_argument,
     
     allowed_init_options <- allowed_init_options_beta
     
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
+    
     lowerbound <- lowerbound
     upperbound <- upperbound
     
@@ -636,7 +638,13 @@ prepare_initials <- function(init_argument,
       allowed_init_options <- allowed_init_options_sd
     } else if (dist == 'exponential') {
       allowed_init_options <- allowed_init_options_rate
+    } else if (dist == 'gamma') {
+      allowed_init_options <- allowed_init_options_shape
+    } else {
+      allowed_init_options <- NULL
     }
+    
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
     
     lowerbound <- 0
     upperbound <- upperbound
@@ -747,6 +755,8 @@ prepare_initials <- function(init_argument,
     suffix <- 'cor'
     
     allowed_init_options <- NULL
+    
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
     
     if (!is.null(c_t_nabcri)) {
       NC_dims <- c_t_nabcri
@@ -947,6 +957,8 @@ prepare_initials <- function(init_argument,
     
     allowed_init_options <- NULL
     
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
+    
     NC_dims         <- ept(nys) %>% as.numeric()
     NC_cor_elements <- (NC_dims * (NC_dims - 1)) / 2
     
@@ -1050,7 +1062,13 @@ prepare_initials <- function(init_argument,
       allowed_init_options <- allowed_init_options_sd
     } else if (dist == 'exponential') {
       allowed_init_options <- allowed_init_options_rate
+    } else if (dist == 'gamma') {
+      allowed_init_options <- allowed_init_options_shape
+    } else {
+      allowed_init_options <- NULL
     }
+    
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
     
     lowerbound <- 0
     upperbound <- upperbound
@@ -1178,10 +1196,16 @@ prepare_initials <- function(init_argument,
         allowed_init_options <- allowed_init_options_sd
       } else if (dist == 'exponential') {
         allowed_init_options <- allowed_init_options_rate
+      } else if (dist == 'gamma') {
+        allowed_init_options <- allowed_init_options_shape
+      } else {
+        allowed_init_options <- NULL
       }
     } else if (!grepl('Intercept_sigma', name_parm)) {
       allowed_init_options <- NULL
     }
+    
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
     
     
     out_list <- list_collect <- list()
@@ -1289,6 +1313,8 @@ prepare_initials <- function(init_argument,
     
     allowed_init_options <- NULL
     
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
+    
     lowerbound <- lowerbound
     upperbound <- upperbound
     
@@ -1392,6 +1418,8 @@ prepare_initials <- function(init_argument,
     name_parm_s <- paste0(name_parm_s, resp_)
     
     allowed_init_options <- NULL
+    
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
     
     lowerbound <- lowerbound
     upperbound <- upperbound

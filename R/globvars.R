@@ -10,6 +10,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "acovcoefnames",  "acovcoefnames_gr",  "across",  "all_of", "N_J_all", 
     "allowed_init_options_beta",  "allowed_init_options_rate",  
     "allowed_init_options_sd",  "apv",  "autocor_formi",  
+    "allowed_init_options_shape",  "allowed_init_options_scale",  
     "autocor_formulasi",  "autocor_init_acorsi",  "autocor_prior_acorsi", 
     "b",  "b_cov_init_betasi",  "b_cov_init_sdsi",  "b_cov_prior_betasi", 
     "b_cov_prior_sdsi",  "b_form_0",  "b_formula_grsi",  "b_formulasi",  
@@ -62,7 +63,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(
     "sigma_dpar", "sigma_form_0", "sigma_formula_gr_strsi", "sigma_formula_grsi",
     "sigma_formulasi", "sigma_group_arg", "sigma_group_arg_groupvar",
     "sigma_hierarchical_gr_names", "sigma_init_betasi", "sigma_init_sdsi",
-    "sigma_prior_betasi", "sigma_prior_sdsi", "sigma_set_higher_levels"
+    "sigma_prior_betasi", "sigma_prior_sdsi", "sigma_set_higher_levels",
+    
     
     )
   )

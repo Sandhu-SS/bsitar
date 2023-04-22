@@ -1,5 +1,7 @@
 
 
+
+
 #' Prepare priors for fitting Bayesian SITAR growth curve model
 #' 
 #' For univariate-by-subgroup (specified by using the \code{univariate_by}) 
@@ -530,11 +532,11 @@ prepare_priors <- function(prior_argument,
             sub("=[^=]+$", "", splitmvar_w2[grepl(eit, splitmvar_w2)])
           const_msg <- 
             paste0(" - a numeric value (e.g., 2) or a charater string such as",
-                 "\n",
-                 "xxx with xxx defined in the use-specified 'prior_data'",
-                 "\n",
-                 "argument e.g., prior_data = list(xxx = 2)"
-          )
+                   "\n",
+                   "xxx with xxx defined in the use-specified 'prior_data'",
+                   "\n",
+                   "argument e.g., prior_data = list(xxx = 2)"
+            )
           
           if (!is.null(allowed_parm_options)) {
             allowed_parm_options <-
@@ -652,6 +654,8 @@ prepare_priors <- function(prior_argument,
             
           }
         }
+      
+      
       
       
       allowed_parm_options <- NULL
@@ -782,6 +786,18 @@ prepare_priors <- function(prior_argument,
         }
         
       } # if (grepl("^rate$", pname_)) {
+      
+      
+      if (grepl("^shape$", pname_)) {
+        allowed_init_options_shape <- NULL # 22 4 2023
+        allowed_init_options_scale <- NULL # 22 4 2023
+      }
+      
+      if (grepl("^scale$", pname_)) {
+        allowed_init_options_shape <- NULL # 22 4 2023
+        allowed_init_options_scale <- NULL # 22 4 2023
+      }
+      
       
       if (grepl("^df$", pname_)) {
         allowed_parm_options <- NULL
@@ -3627,7 +3643,7 @@ prepare_priors <- function(prior_argument,
         prefix <- 'sigma_cov'
       }
       
-
+      
       
       if (setautocorr) {
         add_cla_to_name <- NULL
