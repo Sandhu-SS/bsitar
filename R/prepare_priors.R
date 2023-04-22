@@ -815,6 +815,11 @@ prepare_priors <- function(prior_argument,
       if (!exists('allowed_init_options_rate'))
         allowed_init_options_rate <- NULL
       
+      if (!exists('allowed_init_options_shape'))
+        allowed_init_options_rate <- NULL
+      if (!exists('allowed_init_options_scale'))
+        allowed_init_options_rate <- NULL
+      
       # set location parameter -> for normal, log normal, cauchy, studdent_t
       
       if (grepl("^location$", pname_)) {
@@ -4765,6 +4770,8 @@ prepare_priors <- function(prior_argument,
       'allowed_init_options_beta',
       'allowed_init_options_sd',
       'allowed_init_options_rate',
+      'allowed_init_options_shape',
+      'allowed_init_options_scale',
       'stanvars_datazz',
       'pstrarg',
       'initsi',
