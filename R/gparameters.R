@@ -95,7 +95,8 @@
 #' @param avg_reffects An optional argument (default \code{NULL} to calculate
 #'   (marginal/average) distance and velocity curves (as well as APGV and PGV).
 #'   If specified, it must be set as a named list indicating the \code{over} and
-#'   the \code{by} arguments e.g., \code{avg_reffects = list(by = 'study', over
+#'   the fixed efects \code{feby} and random effects efects \code{reby} 
+#'   arguments e.g., \code{avg_reffects = list(feby = 'study', reby = NULL, over
 #'   = 'age'}. The \code{over} is typically age and is used to average over the
 #'   random effects. The second argument is \code{by} that specifies the factor
 #'   variable by which \code{over} is executed.
@@ -642,6 +643,7 @@ gparameters.bsitar <- function(model,
         } else  if (!grepl("^[[:upper:]]+$", dist..)) {
           groupby_str_d <- groupby_fstr
         }
+        # groupby_str_d <- c(avg_reffects_groupby_str_d, groupby_str_d)
         if (identical(groupby_str_d, character(0)))
           groupby_str_d <- NULL
         groupby_str_d <- groupby_str_d
@@ -656,6 +658,7 @@ gparameters.bsitar <- function(model,
         } else  if (!grepl("^[[:upper:]]+$", velc..)) {
           groupby_str_v <- groupby_fstr
         }
+        # groupby_str_v <- c(avg_reffects_groupby_str_v, groupby_str_v)
         if (identical(groupby_str_v, character(0)))
           groupby_str_v <- NULL
       } else {
@@ -697,7 +700,7 @@ gparameters.bsitar <- function(model,
         }
         
         # out_d <- out_d_
-        
+       
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
             dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
@@ -818,6 +821,14 @@ gparameters.bsitar <- function(model,
       #   groupby_str_d <- NULL
       # }
       
+      if (dist.. != "") {
+        groupby_str_d <- groupby_fstr
+        if (identical(groupby_str_d, character(0)))
+          groupby_str_d <- NULL
+        groupby_str_d <- groupby_str_d
+      } else {
+        groupby_str_d <- NULL
+      }
       
       # if (velc.. != "") {
       #   if (grepl("^[[:upper:]]+$", velc..)) {
@@ -831,12 +842,25 @@ gparameters.bsitar <- function(model,
       #   groupby_str_v <- NULL
       # }
       
+      if (velc.. != "") {
+        groupby_str_v <- groupby_fstr
+        if (identical(groupby_str_v, character(0)))
+          groupby_str_v <- NULL
+      } else {
+        groupby_str_v <- NULL
+      }
+      
       summary_org <- arguments$summary
       arguments$summary <- FALSE
       arguments$re_formula <- NULL
       
-      groupby_str_d <- avg_reffects[['by']]
-      groupby_str_v <- avg_reffects[['by']]
+      # avg_reffects_groupby_str_d <- avg_reffects[['feby']]
+      # avg_reffects_groupby_str_v <- avg_reffects[['feby']]
+      
+      groupby_str_d <- c(groupby_str_d, avg_reffects[['feby']])
+      groupby_str_v <- c(groupby_str_v, avg_reffects[['feby']])
+      
+      # print(groupby_str_v)
       
       # Don't let below arguments$re_formula override the above 'd' and 'v'
       if (dist.. != "") {
@@ -872,8 +896,14 @@ gparameters.bsitar <- function(model,
         
         arguments$summary <- summary_org
         
+        # moved here from below for avg_reffects to work with univariate_by
+        if(!is.na(model$model_info$univariate_by)) {
+          newdata <- newdata %>%
+            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+        }
         
-        selectby <- avg_reffects[['by']]
+         selectby <- avg_reffects[['reby']]
+        # selectby <- c(avg_reffects[['reby']], avg_reffects[['feby']])
         selectover <- avg_reffects[['over']]
         selectby_over <- c(selectby, selectover)
         out_d_ <- get_avg_over(out_d_, newdata = newdata, by = selectby_over,
@@ -882,11 +912,10 @@ gparameters.bsitar <- function(model,
         out_d <- brms::posterior_summary(out_d_, probs = probs, robust = robust)
         # out_d <- out_d_
         
-        
-        if(!is.na(model$model_info$univariate_by)) {
-          newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
-        }
+        # if(!is.na(model$model_info$univariate_by)) {
+        #   newdata <- newdata %>%
+        #     dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+        # }
         
         newdata <- newdata %>%
           dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
@@ -945,7 +974,14 @@ gparameters.bsitar <- function(model,
         
         arguments$summary <- summary_org
         
-        selectby <- avg_reffects[['by']]
+        # moved here from below for avg_reffects to work with univariate_by
+        if(!is.na(model$model_info$univariate_by)) {
+          newdata <- newdata %>%
+            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+        }
+        
+        selectby <- avg_reffects[['reby']]
+        # selectby <- c(avg_reffects[['reby']], avg_reffects[['feby']])
         selectover <- avg_reffects[['over']]
         selectby_over <- c(selectby, selectover)
         out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
@@ -955,10 +991,10 @@ gparameters.bsitar <- function(model,
         
         # out_v <- out_v_
         
-        if(!is.na(model$model_info$univariate_by)) {
-          newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
-        }
+        # if(!is.na(model$model_info$univariate_by)) {
+        #   newdata <- newdata %>%
+        #     dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+        # }
         
         
         newdata <- newdata %>%
@@ -978,8 +1014,8 @@ gparameters.bsitar <- function(model,
       
       if (apv) {
         if(!is.na(model$model_info$univariate_by)) {
-          newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+          # newdata <- newdata %>%
+          #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
         }
         
         newdata <- newdata %>%
@@ -1009,8 +1045,7 @@ gparameters.bsitar <- function(model,
                            ipts = ipts,
                            xrange = xrange)
     
-    
-    
+
     list_c <- attr(newdata, 'list_c')
     for (list_ci in names(list_c)) {
       assign(list_ci, list_c[[list_ci]])
@@ -1085,12 +1120,13 @@ gparameters.bsitar <- function(model,
       # don't let the ipts to pass again to the fitted_.bsitar
       arguments$ipts <- NULL 
       arguments$envir <- .GlobalEnv # arguments$envir_
-      
+     
       if (estimation_method == 'fitted') {
         out_v_ <- do.call(fitted_.bsitar, arguments)
       } else if (estimation_method == 'predict') {
         out_v_ <- do.call(predict_.bsitar, arguments)
       }
+      
       out_v__apv_ <- out_v_
       if (!summary) {
         out_v <- call_posterior_summary((out_v_))
@@ -1103,10 +1139,7 @@ gparameters.bsitar <- function(model,
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
       }
       
-      if(!is.na(model$model_info$univariate_by)) {
-        newdata <- newdata %>%
-          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
-      }
+     
       
       # out_v <<- out_v
       # newdata <<- newdata
@@ -1133,8 +1166,8 @@ gparameters.bsitar <- function(model,
       arguments$summary <- FALSE
       arguments$re_formula <- NULL
       
-      groupby_str_d <- avg_reffects[['by']]
-      groupby_str_v <- avg_reffects[['by']]
+      groupby_str_d <- avg_reffects[['feby']]
+      groupby_str_v <- avg_reffects[['feby']]
       
       if (grepl("^[[:upper:]]+$", velc..)) {
         # arguments$re_formula <- NULL
@@ -1164,7 +1197,9 @@ gparameters.bsitar <- function(model,
       
       arguments$summary <- summary_org
       # out_v_1 <<- out_v_
-      selectby <- avg_reffects[['by']]
+      
+      selectby <- avg_reffects[['reby']]
+      # selectby <- c(avg_reffects[['reby']], avg_reffects[['feby']])
       selectover <- avg_reffects[['over']]
       selectby_over <- c(selectby, selectover)
       out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
@@ -1193,6 +1228,7 @@ gparameters.bsitar <- function(model,
         dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
+     
       
       # out_v <<- out_v
       # newdata <<- newdata

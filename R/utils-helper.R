@@ -70,7 +70,7 @@ get.newdata <- function(model, newdata, resp,
   if(is.na(model$model_info$univariate_by)) {
     setorgy <- model$model_info$ys
   }
- 
+ # print(head(newdata))
   newdata <- prepare_data(data = newdata,
                           x = model$model_info$xs,
                           y = setorgy,  
@@ -81,6 +81,9 @@ get.newdata <- function(model, newdata, resp,
                           yfuns = model$model_info$yfuns,
                           outliers = model$model_info$outliers)
   
+  # This needed for the univariate_by in gparameters e.g., sexFemale sexMale
+  # 2.5.23
+  newdata <- newdata[ , !duplicated(colnames(newdata))] 
 
   if(!is.na(model$model_info$univariate_by)) {
     sortbylayer <- NA

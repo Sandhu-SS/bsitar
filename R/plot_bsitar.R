@@ -439,6 +439,7 @@ plot_bsitar.bsitar <- function(model,
   groupby_str_d <- d.[['groupby_str_d']]
   groupby_str_v <- d.[['groupby_str_v']]
   
+  p.as.d.out_attr <- p.
   
   d.[['parameters']] <- NULL
   d.[['probtitles']] <- NULL
@@ -2507,6 +2508,7 @@ plot_bsitar.bsitar <- function(model,
     options(warn = defaultW)
     return(plot.o)
   } else if (returndata) {
+    attr(d.out, 'gparameters') <- p.as.d.out_attr
     return(d.out)
   }
 }

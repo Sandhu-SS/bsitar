@@ -150,7 +150,8 @@ these ids are sorted correctly. Therefore, it is better to set it manually.}
 \item{avg_reffects}{An optional argument (default \code{NULL} to calculate
 (marginal/average) distance and velocity curves (as well as APGV and PGV).
 If specified, it must be set as a named list indicating the \code{over} and
-the \code{by} arguments e.g., \code{avg_reffects = list(by = 'study', over
+the fixed efects \code{feby} and random effects efects \code{reby}
+arguments e.g., \code{avg_reffects = list(feby = 'study', reby = NULL, over
   = 'age'}. The \code{over} is typically age and is used to average over the
 random effects. The second argument is \code{by} that specifies the factor
 variable by which \code{over} is executed.}
