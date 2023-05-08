@@ -244,7 +244,7 @@ prepare_formula <- function(x,
   
   sfixed <- s_formulasi
   
-
+  
   if (grepl("a", randomsi, fixed = T)) {
     arandom <- a_formula_grsi
   } else {
@@ -298,7 +298,7 @@ prepare_formula <- function(x,
   }
   
   
- 
+  
   if (!is.null(dpar_formulasi) & sigma_formulasi != 'NULL') {
     stop("Either use dpar_formula or sigma_formula")
   }
@@ -308,7 +308,7 @@ prepare_formula <- function(x,
   # }
   
   if (is.null(sigma_formula_grsi) & !is.null(sigma_formula_gr_strsi)) {
-  #  stop("Either use sigma_formula_gr or sigma_formula_gr_str but not both")
+    #  stop("Either use sigma_formula_gr or sigma_formula_gr_str but not both")
   }
   
   if (sigma_formulasi == 'NULL' ) {
@@ -774,10 +774,10 @@ prepare_formula <- function(x,
                                  " + (", sigma_random_wb, ")")
           }
         }
-    ##
+        ##
       }
     }
-   
+    
     if (is.null(sigma_group_arg)) {
       if (!is.null(sigma_form) & !is.null(sigma_formula_grsi)) {
         if(!sigma_random_wb_) {
@@ -787,7 +787,7 @@ prepare_formula <- function(x,
         }
       }
     }
-  
+    
     
     
     
@@ -842,28 +842,79 @@ prepare_formula <- function(x,
     }
   }
   
-   
-   add_higher_level_str <- function(form, str) {
-     if(!is.null(str[[1]])) {
-       get_n_str <- strsplit(str, ")+(", fixed = T)[[1]][-1]
-       get_n_str_length <- length(get_n_str)
-     } else {
-       get_n_str_length <- 0
-     }
-     if(get_n_str_length != 0) {
-       str <- gsub(")+(", ")_(", str, fixed = T)
-       str_ <- sub("^[^_]*_", "", str)
-       str_ <- gsub(")_(", ")+(", str_, fixed = T)
-       form <- paste0(form, "+", str_)
-     } else {
-       form <- form
-     }
-     form <- gsub("[[:space:]]", "", form)
-     form
-   }
-   
-   
-
+  
+  add_higher_level_str <- function(form, str) {
+    if(!is.null(str[[1]])) {
+      get_n_str <- strsplit(str, ")+(", fixed = T)[[1]][-1]
+      get_n_str_length <- length(get_n_str)
+    } else {
+      get_n_str_length <- 0
+    }
+    if(get_n_str_length != 0) {
+      str <- gsub(")+(", ")_(", str, fixed = T)
+      str_ <- sub("^[^_]*_", "", str)
+      str_ <- gsub(")_(", ")+(", str_, fixed = T)
+      form <- paste0(form, "+", str_)
+    } else {
+      form <- form
+    }
+    form <- gsub("[[:space:]]", "", form)
+    form
+  }
+  
+  
+  # function to restore parantheses for gr() terms in gr_str
+  restore_paranthese_grgr_str_form <- function(strx) {
+    restore_paranthese_grgr_str <- function(strx2) {
+      if(grepl("^|gr", strx2)) {
+        strx_ <- gsub("|gr" , "|gr(", strx2, fixed = T)
+      } else {
+        strx_ <- strx2
+      }
+      if(grepl("gr\\(", strx_)) strx_ <- paste0(strx_, ")")
+      strx_
+    }
+    abx_c <- c()
+    abxs <- strsplit(strx, "+", fixed = T)[[1]]
+    for (abxi in 1:length(abxs)) {
+      abx_c[abxi] <- restore_paranthese_grgr_str(abxs[abxi])
+    }
+    abx_c <- paste0(abx_c, collapse = "+")
+    abx_c
+  }
+  
+  
+  
+  
+  
+  get_x_random2 <- function(x) {
+    x <- gsub("[[:space:]]", "", x)
+    x <- strsplit(x, ")+" )[[1]]
+    x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    if(any(grepl("^|gr", x))) {
+      x <- sub(".*gr", "", x) 
+      x <- strsplit(x, ",")[[1]][1]
+    } 
+    x <- sub(".*\\|", "", x) 
+    x <- unique(unlist(strsplit(x, ":")) )
+    x
+  }
+  
+  get_x_random2_asitis <- function(x) {
+    x <- gsub("[[:space:]]", "", x)
+    x <- strsplit(x, ")+" )[[1]]
+    x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    if(any(grepl("^|gr", x))) {
+      x <- sub(".*gr", "", x) 
+      x <- strsplit(x, ",")[[1]][1]
+    } 
+    x <- sub(".*\\|", "", x) 
+    x
+  }
+  
+  
+  
+  
   
   if(set_higher_levels) {
     aform <- add_higher_level_str(aform, a_formula_gr_strsi)
@@ -871,6 +922,13 @@ prepare_formula <- function(x,
     cform <- add_higher_level_str(cform, c_formula_gr_strsi)
     if(!is.null(dform)) {
       dform <- add_higher_level_str(dform, d_formula_gr_strsi)
+    }
+    
+    aform <- restore_paranthese_grgr_str_form(aform)
+    bform <- restore_paranthese_grgr_str_form(bform)
+    cform <- restore_paranthese_grgr_str_form(cform)
+    if(!is.null(dform)) {
+      dform <- restore_paranthese_grgr_str_form(dform)
     }
     
     extract_xx <- NULL
@@ -889,74 +947,124 @@ prepare_formula <- function(x,
     extract_xx <- gsub("\\)", "", extract_xx)
     gr_varss <- sub(".*\\|", "", extract_xx) 
     
+    # get_x_random2 <- function(x) {
+    #   x <- gsub("[[:space:]]", "", x)
+    #   x <- strsplit(x, ")+" )[[1]]
+    #   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    #   if(any(grepl("^|gr", x))) {
+    #     x <- sub(".*gr", "", x) 
+    #     x <- strsplit(x, ",")[[1]][1]
+    #   } 
+    #   x <- sub(".*\\|", "", x) 
+    #   x <- unique(unlist(strsplit(x, ":")) )
+    #   x
+    # }
+    # 
+    # get_x_random2_asitis <- function(x) {
+    #   x <- gsub("[[:space:]]", "", x)
+    #   x <- strsplit(x, ")+" )[[1]]
+    #   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    #   if(any(grepl("^|gr", x))) {
+    #     x <- sub(".*gr", "", x) 
+    #     x <- strsplit(x, ",")[[1]][1]
+    #   } 
+    #   x <- sub(".*\\|", "", x) 
+    #   x
+    # }
     
-    get_x_random2 <- function(x) {
-      x <- gsub("[[:space:]]", "", x)
-      x <- strsplit(x, ")+" )[[1]]
-      x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
-      x <- sub(".*\\|", "", x) 
-      x <- unique(unlist(strsplit(x, ":")) )
-      x
-    }
     aform_gr_names <- lapply(aform, get_x_random2)[[1]]
     bform_gr_names <- lapply(bform, get_x_random2)[[1]]
     cform_gr_names <- lapply(cform, get_x_random2)[[1]]
+    
+    aform_gr_names_asitis <- lapply(aform, get_x_random2_asitis)[[1]]
+    bform_gr_names_asitis <- lapply(bform, get_x_random2_asitis)[[1]]
+    cform_gr_names_asitis <- lapply(cform, get_x_random2_asitis)[[1]]
     if(!is.null(dform)) {
       dform_gr_names <- lapply(dform, get_x_random2)[[1]]
+      dform_gr_names_asitis <- lapply(dform, get_x_random2_asitis)[[1]]
     } else {
       dform_gr_names <- NULL
+      dform_gr_names_asitis <- NULL
     }
+    
     hierarchical_gr_names <- c(aform_gr_names, bform_gr_names, 
                                cform_gr_names, dform_gr_names)
+    
+    hierarchical_gr_names_asitis <- c(aform_gr_names_asitis, bform_gr_names_asitis, 
+                                      cform_gr_names_asitis, dform_gr_names_asitis)
+    
     hierarchical_gr_names <- unique(hierarchical_gr_names)
+    
+    hierarchical_gr_names_asitis <- unique(hierarchical_gr_names_asitis)
+    gr_varss <- hierarchical_gr_names_asitis
   } # if(set_higher_levels) {
-   
-   
   
-   if(sigma_set_higher_levels) {
-     if(!is.null(sigma_form)) {
-       sigma_form <- add_higher_level_str(sigma_form, sigma_formula_gr_strsi)
-     }
-     extract_xx <- NULL
-     if(!is.null(sigma_formula_gr_strsi)) {
-       extract_xx <- sigma_formula_gr_strsi
-     } 
-     
-     extract_xx <- gsub("[[:space:]]", "", extract_xx)
-     extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
-     extract_xx <- gsub("\\)", "", extract_xx)
-     sigma_gr_varss <- sub(".*\\|", "", extract_xx) 
-     
-     get_x_random2 <- function(x) {
-       x <- gsub("[[:space:]]", "", x)
-       x <- strsplit(x, ")+" )[[1]]
-       x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
-       x <- sub(".*\\|", "", x) 
-       x <- unique(unlist(strsplit(x, ":")) )
-       x
-     }
-     sigma_form_gr_names <- lapply(sigma_form, get_x_random2)[[1]]
-     
-     sigma_hierarchical_gr_names <- c(sigma_form_gr_names)
-     sigma_hierarchical_gr_names <- unique(sigma_hierarchical_gr_names)
-   } # if(sigma_set_higher_levels) {
-   
   
-   
-    if(!set_higher_levels) hierarchical_gr_names <- NULL
-   
-   # if(!sigma_set_higher_levels) sigma_hierarchical_gr_names <- NULL
-   
-   
-   # if(!set_higher_levels & grepl("|", sigma_formula_grsi, fixed = TRUE)) {
-   #   extract_xx <- sigma_formula_grsi
-   #   extract_xx <- gsub("[[:space:]]", "", extract_xx)
-   #   extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
-   #   extract_xx <- gsub("\\)", "", extract_xx)
-   #   sigma_gr_varss <- sub(".*\\|", "", extract_xx) 
-   #   sigma_hierarchical_gr_names <- c(sigma_gr_varss)
-   # }
-   
+  
+  if(sigma_set_higher_levels) {
+    if(!is.null(sigma_form)) {
+      sigma_form <- add_higher_level_str(sigma_form, sigma_formula_gr_strsi)
+    }
+    
+    sigma_form <- restore_paranthese_grgr_str_form(sigma_form)
+    
+    extract_xx <- NULL
+    if(!is.null(sigma_formula_gr_strsi)) {
+      extract_xx <- sigma_formula_gr_strsi
+    } 
+    
+    extract_xx <- gsub("[[:space:]]", "", extract_xx)
+    extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
+    extract_xx <- gsub("\\)", "", extract_xx)
+    sigma_gr_varss <- sub(".*\\|", "", extract_xx) 
+    
+    # get_x_random2 <- function(x) {
+    #   x <- gsub("[[:space:]]", "", x)
+    #   x <- strsplit(x, ")+" )[[1]]
+    #   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    #   x <- sub(".*\\|", "", x) 
+    #   x <- unique(unlist(strsplit(x, ":")) )
+    #   x
+    # }
+    # 
+    # get_x_random2_asitis  <- function(x) {
+    #   x <- gsub("[[:space:]]", "", x)
+    #   x <- strsplit(x, ")+" )[[1]]
+    #   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    #   x <- sub(".*\\|", "", x) 
+    #   x
+    # }
+    
+    sigma_form_gr_names <- lapply(sigma_form, get_x_random2)[[1]]
+    
+    sigma_form_gr_names_asitis <- lapply(sigma_form, get_x_random2_asitis)[[1]]
+    
+    sigma_hierarchical_gr_names <- c(sigma_form_gr_names)
+    sigma_hierarchical_gr_names <- unique(sigma_hierarchical_gr_names)
+    
+    sigma_hierarchical_gr_names_asitis <- c(sigma_form_gr_names_asitis)
+    sigma_hierarchical_gr_names_asitis <- unique(sigma_hierarchical_gr_names_asitis)
+    
+    sigma_gr_varss_asitis <- sigma_form_gr_names_asitis
+  } # if(sigma_set_higher_levels) {
+  
+  
+  
+  if(!set_higher_levels) hierarchical_gr_names <- NULL
+  if(!set_higher_levels) hierarchical_gr_names_asitis <- NULL
+  
+  if(!sigma_set_higher_levels) sigma_hierarchical_gr_names_asitis <- NULL
+  
+  
+  # if(!set_higher_levels & grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+  #   extract_xx <- sigma_formula_grsi
+  #   extract_xx <- gsub("[[:space:]]", "", extract_xx)
+  #   extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
+  #   extract_xx <- gsub("\\)", "", extract_xx)
+  #   sigma_gr_varss <- sub(".*\\|", "", extract_xx) 
+  #   sigma_hierarchical_gr_names <- c(sigma_gr_varss)
+  # }
+  
   if(!is.null(sigma_formula_grsi)) {
     if(!sigma_set_higher_levels & grepl("|", sigma_formula_grsi, fixed = TRUE)) {
       extract_xx <- sigma_formula_grsi
@@ -968,31 +1076,33 @@ prepare_formula <- function(x,
     }
   } else if(!sigma_set_higher_levels) { # & !grepl("|", sigma_formula_grsi, fixed = TRUE)
     sigma_hierarchical_gr_names <- NULL
+    sigma_hierarchical_gr_names_asitis <- NULL
   } else if(!sigma_set_higher_levels) {
-     sigma_hierarchical_gr_names <- NULL
-   }
+    sigma_hierarchical_gr_names <- NULL
+    sigma_hierarchical_gr_names_asitis <- NULL
+  }
   
-   get_o_paranthesis <- function(x) {
-     if(!grepl("lf\\(", x)) {
-       x <- gsub("^lf\\(", "", x)
-       x <- gsub(")$", "", x)
-     }
-     if(!grepl("nlf\\(", x)) {
-       x <- gsub("^nlf\\(", "", x)
-       x <- gsub(")$", "", x)
-     }
-     x <- strsplit(x, "~")[[1]][2]
-     x
-   }
-   
-   
-   get_o_paranthesis2 <- function(x) {
-     x <- gsub("^\\(", "", x)
-     x <- gsub(")$", "", x)
-     x <- strsplit(x, "~")[[1]][2]
-     x
-   }
-   
+  get_o_paranthesis <- function(x) {
+    if(!grepl("lf\\(", x)) {
+      x <- gsub("^lf\\(", "", x)
+      x <- gsub(")$", "", x)
+    }
+    if(!grepl("nlf\\(", x)) {
+      x <- gsub("^nlf\\(", "", x)
+      x <- gsub(")$", "", x)
+    }
+    x <- strsplit(x, "~")[[1]][2]
+    x
+  }
+  
+  
+  get_o_paranthesis2 <- function(x) {
+    x <- gsub("^\\(", "", x)
+    x <- gsub(")$", "", x)
+    x <- strsplit(x, "~")[[1]][2]
+    x
+  }
+  
   # print(dpar_formulasi)
   if (!is.null(dpar_formulasi)) {
     if (!grepl("lf\\(", dpar_formulasi) |
@@ -1009,9 +1119,9 @@ prepare_formula <- function(x,
       dpar_covi_mat_form <- paste0("~", dpar_covi_mat_form)
     }
   }
-   
-   # print(dpar_covi_mat_form)
-   # 
+  
+  # print(dpar_covi_mat_form)
+  # 
   
   if (!is.null(dpar_formulasi)) {
     dparcovmat <- eval(parse(
@@ -1030,37 +1140,37 @@ prepare_formula <- function(x,
     dparcovcoefnames <- colnames(dparcovmat)
     dparcovcoefnames <- gsub("\\(|)", "", dparcovcoefnames)
   }
-   
-   
   
   
-   
+  
+  
+  
   if (is.null(dpar_formulasi)) {
     ndparcov <- NULL
     dparcovcoefnames <- NULL
   }
-   
-   # The brms replace equal sign = with EQ and removes comma from names
-   
-   if(!is.null(dparcovcoefnames)) {
-     if(!is.null(dparcovcoefnames)) {
-       dparcovcoefnames_c2 <- c()
-       for (dparcovcoefnamesi in dparcovcoefnames) {
-         dparcovcoefnamesi_c <- gsub("[[:space:]]", "", dparcovcoefnamesi)
-         if(grepl("rcspline.eval", dparcovcoefnamesi_c)) {
-           dparcovcoefnamesi_c <- gsub(",", "", dparcovcoefnamesi_c)
-           dparcovcoefnamesi_c <- gsub("=", "EQ", dparcovcoefnamesi_c)
-         } else {
-           dparcovcoefnamesi_c <- dparcovcoefnamesi_c
-         }
-         dparcovcoefnames_c2 <- c(dparcovcoefnames_c2, dparcovcoefnamesi_c)
-       }
-       dparcovcoefnames <- dparcovcoefnames_c2
-     }
-   }
-   
-   # print(dparcovcoefnames)
-   
+  
+  # The brms replace equal sign = with EQ and removes comma from names
+  
+  if(!is.null(dparcovcoefnames)) {
+    if(!is.null(dparcovcoefnames)) {
+      dparcovcoefnames_c2 <- c()
+      for (dparcovcoefnamesi in dparcovcoefnames) {
+        dparcovcoefnamesi_c <- gsub("[[:space:]]", "", dparcovcoefnamesi)
+        if(grepl("rcspline.eval", dparcovcoefnamesi_c)) {
+          dparcovcoefnamesi_c <- gsub(",", "", dparcovcoefnamesi_c)
+          dparcovcoefnamesi_c <- gsub("=", "EQ", dparcovcoefnamesi_c)
+        } else {
+          dparcovcoefnamesi_c <- dparcovcoefnamesi_c
+        }
+        dparcovcoefnames_c2 <- c(dparcovcoefnames_c2, dparcovcoefnamesi_c)
+      }
+      dparcovcoefnames <- dparcovcoefnames_c2
+    }
+  }
+  
+  # print(dparcovcoefnames)
+  
   
   abcform <-
     paste(cbind(aform, bform, cform, dform), collapse = ",")
@@ -1085,6 +1195,8 @@ prepare_formula <- function(x,
       sform <- sform
     }
   }
+  
+  
   
   
   if(!is.null(sigma_form)) {
@@ -1146,7 +1258,7 @@ prepare_formula <- function(x,
   
   
   if(sigma_set_higher_levels) { 
-    sigma_group_arg_groupvar <- sigma_gr_varss
+    sigma_group_arg_groupvar <- sigma_gr_varss_asitis
   } else if(!is.null(sigma_formula_grsi)) {
     if(!sigma_set_higher_levels & !grepl("|", sigma_formula_grsi, fixed = TRUE)) {
       sigma_group_arg_groupvar <- sigma_gr_varss
@@ -1177,7 +1289,7 @@ prepare_formula <- function(x,
   # if(!sigma_set_higher_levels & is.null(sigma_formula_grsi)) {
   #   sigma_group_arg_groupvar <- NULL
   # }
-
+  
   
   # fit lm model
   
@@ -1569,7 +1681,7 @@ prepare_formula <- function(x,
   sigma_covcoefnames <- gsub("[[:space:]]", gsubitbt, sigma_covcoefnames)
   sigma_covcoefnames_gr <- gsub("[[:space:]]", gsubitbt, sigma_covcoefnames_gr)
   
-
+  
   
   list_out <- list(
     nacov = nacov,
@@ -1604,7 +1716,9 @@ prepare_formula <- function(x,
     univariate_by_by = univariate_by_by,
     set_higher_levels = set_higher_levels,
     hierarchical_gr_names = hierarchical_gr_names,
+    hierarchical_gr_names_asitis = hierarchical_gr_names_asitis,
     sigma_hierarchical_gr_names = sigma_hierarchical_gr_names,
+    sigma_hierarchical_gr_names_asitis = sigma_hierarchical_gr_names_asitis,
     covariates_ = covariates_,
     covariates_sigma_ = covariates_sigma_,
     lm_a_all = lm_a_all,
@@ -1632,9 +1746,9 @@ prepare_formula <- function(x,
   
   # list_out <<- list_out
   # print(a_formula_grsi)
-   # print(aform)
+  # print(aform)
   # print(terms_rhssi)
-  #  print(bform); stop()
+  # print(bform); stop()
   
   attr(bform, "list_out") <- as.list(list_out)
   
