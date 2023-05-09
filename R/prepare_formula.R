@@ -341,20 +341,26 @@ prepare_formula <- function(x,
     x
   }
   
-  if(!is.null(arandom) & grepl("|", arandom, fixed = TRUE)) {
-    arandom_wb <- gsub("~", "", arandom) # with bar
-    arandom_wb_ <- TRUE
-    arandom <- get_x_random(arandom)
+  if(!is.null(arandom)) {
+    if(grepl("|", arandom, fixed = TRUE)) {
+      arandom_wb <- gsub("~", "", arandom) # with bar
+      arandom_wb_ <- TRUE
+      arandom <- get_x_random(arandom)
+    }
   }
-  if(!is.null(brandom) & grepl("|", brandom, fixed = TRUE)) {
-    brandom_wb <- gsub("~", "", brandom)
-    brandom_wb_ <- TRUE
-    brandom <- get_x_random(brandom)
+  if(!is.null(brandom)) {
+    if(grepl("|", brandom, fixed = TRUE)) {
+      brandom_wb <- gsub("~", "", brandom)
+      brandom_wb_ <- TRUE
+      brandom <- get_x_random(brandom)
+    }
   }
-  if(!is.null(crandom) & grepl("|", crandom, fixed = TRUE)) {
-    crandom_wb <- gsub("~", "", crandom)
-    crandom_wb_ <- TRUE
-    crandom <- get_x_random(crandom)
+  if(!is.null(crandom)) {
+    if(grepl("|", crandom, fixed = TRUE)) {
+      crandom_wb <- gsub("~", "", crandom)
+      crandom_wb_ <- TRUE
+      crandom <- get_x_random(crandom)
+    }
   }
   
   if(!is.null(drandom)) {

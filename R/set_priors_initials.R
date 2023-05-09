@@ -236,9 +236,9 @@ set_priors_initials <- function(a_prior_beta,
     group_arg$verbose <- FALSE
   }
   
-  
-  
-  
+  # this on 9 5 23 to accomodate random = ''
+  if(randomsi == "") gr_prior_cor <- NULL
+
   
   if (!is.null(sigma_group_arg$cor)) {
     if (sigma_group_arg$cor == "un")
@@ -2166,14 +2166,17 @@ set_priors_initials <- function(a_prior_beta,
           list_ck, `[`, keys
         ))), keys)
       list_ck_sd <- list_ck_sd[lengths(list_ck_sd) != 0]
-      for (list_ck_sd_i in 1:length(list_ck_sd)) {
-        if (length(list_ck_sd[[list_ck_sd_i]]) > 1) {
-          nami_ <-
-            paste0(names(list_ck_sd[[list_ck_sd_i]][1]),
-                   "cov",
-                   2:length(list_ck_sd[[list_ck_sd_i]]) - 1)
-          names(list_ck_sd[[list_ck_sd_i]]) <-
-            c(names(list_ck_sd[[list_ck_sd_i]][1]), nami_)
+      # this on 9 5 23 to accomodate random = ''
+      if(length(list_ck_sd) != 0) {
+        for (list_ck_sd_i in 1:length(list_ck_sd)) {
+          if (length(list_ck_sd[[list_ck_sd_i]]) > 1) {
+            nami_ <-
+              paste0(names(list_ck_sd[[list_ck_sd_i]][1]),
+                     "cov",
+                     2:length(list_ck_sd[[list_ck_sd_i]]) - 1)
+            names(list_ck_sd[[list_ck_sd_i]]) <-
+              c(names(list_ck_sd[[list_ck_sd_i]][1]), nami_)
+          }
         }
       }
       names(list_ck_sd) <-
@@ -2181,13 +2184,16 @@ set_priors_initials <- function(a_prior_beta,
       list_ck_sd2 <- list_ck_sd
       list_ck_z <- list_ck_z[lengths(list_ck_z) != 0]
       list_ck_z2 <- list()
-      for (list_ck_i in 1:length(list_ck_z)) {
-        addelemnt <-
-          strsplit(gsub("\\+", " ", randomsi), " ")[[1]][list_ck_i]
-        list_ck_z2[[paste0("z", "_", addelemnt, resp_, list_ck_i)]] <-
-          list_ck_z[[list_ck_i]]
-        attr(list_ck_z2[[paste0("z", "_", addelemnt, list_ck_i)]], "names") <-
-          NULL
+      # this on 9 5 23 to accomodate random = ''
+      if(length(list_ck_z) != 0) {
+        for (list_ck_i in 1:length(list_ck_z)) {
+          addelemnt <-
+            strsplit(gsub("\\+", " ", randomsi), " ")[[1]][list_ck_i]
+          list_ck_z2[[paste0("z", "_", addelemnt, resp_, list_ck_i)]] <-
+            list_ck_z[[list_ck_i]]
+          attr(list_ck_z2[[paste0("z", "_", addelemnt, list_ck_i)]], "names") <-
+            NULL
+        }
       }
       combined_inits <- c(list_ck, list_ck_sd2, list_ck_z2)
     }
