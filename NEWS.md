@@ -1,16 +1,3 @@
-## version 0.0.1
+# bsitar 0.1.0
 
----
-
-
-### Initial release
-
-
-
-
----
-
-### NEWS.md setup
-
-- added NEWS.md creation with [newsmd](https://github.com/Dschaykib/newsmd)
-
+* Added a `NEWS.md` file to track changes to the package.
