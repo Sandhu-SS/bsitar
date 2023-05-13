@@ -146,11 +146,17 @@
 #'  for setting the random effects structure.
 #'
 #'@param xoffset optional value of offset for \code{x} allowing the origin of
-#'  \code{x} to be varied (either mean, apv, or a numeric value). The default is
-#'  mean.
+#'  \code{x} to be varied by \code{mean(x)}, \code{min(x)}, \code{max(x)},  
+#'   \code{age at peak velocity i.e., apv}, or a numeric values. 
+#'   These options are set by function names
+#'   such as \code{xoffset = mean}, \code{xoffset = min},
+#'   \code{xoffset = max}, or \code{xoffset = apv} or explicitly specifying
+#'   a numeric values like \code{xoffset = 12.5}. The default 
+#'   is \code{xoffset = mean} 
 #'
 #'@param bstart optional value to set initial value for fixed effect \code{b}.
-#'  Options are mean (default), apv, or a numeric value.
+#'  Options are same as \code{xoffset}. The default is to use the same value 
+#'  that has been set for the \code{xoffset} i.e.,  \code{bstart = xoffset}. 
 #'
 #'@param xfun an optional argument to transform the predictor (i.e., age).
 #'  Options are log and sqrt for the logarithmic and square root transformation.
@@ -3200,6 +3206,10 @@ bsitar <- function(x,
       function(x, y, knots, data, eval_arg, xfunsi) {
         if (eval_arg == "mean") {
           eval_arg.o <- mean(data[[x]])
+        } else if (eval_arg == "min") {
+          eval_arg.o <- min(data[[x]])
+        } else if (eval_arg == "max") {
+          eval_arg.o <- max(data[[x]])
         } else if (eval_arg == "apv") {
           mat_s <- make_spline_matrix(data[[x]], knots)
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))

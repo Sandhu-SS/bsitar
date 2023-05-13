@@ -197,11 +197,17 @@ which implies that the fixed effect structure for the first outcome is
 for setting the random effects structure.}
 
 \item{xoffset}{optional value of offset for \code{x} allowing the origin of
-\code{x} to be varied (either mean, apv, or a numeric value). The default is
-mean.}
+\code{x} to be varied by \code{mean(x)}, \code{min(x)}, \code{max(x)},
+\code{age at peak velocity i.e., apv}, or a numeric values.
+These options are set by function names
+such as \code{xoffset = mean}, \code{xoffset = min},
+\code{xoffset = max}, or \code{xoffset = apv} or explicitly specifying
+a numeric values like \code{xoffset = 12.5}. The default
+is \code{xoffset = mean}}
 
 \item{bstart}{optional value to set initial value for fixed effect \code{b}.
-Options are mean (default), apv, or a numeric value.}
+Options are same as \code{xoffset}. The default is to use the same value
+that has been set for the \code{xoffset} i.e.,  \code{bstart = xoffset}.}
 
 \item{xfun}{an optional argument to transform the predictor (i.e., age).
 Options are log and sqrt for the logarithmic and square root transformation.

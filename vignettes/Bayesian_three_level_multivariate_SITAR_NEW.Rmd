@@ -1,5 +1,5 @@
 ---
-title: "Bayesian SITAR model - Three level multivariate model"
+title: "Bayesian SITAR model - Three level multivariate model new"
 author: "Satpal Sandhu"
 date: '`r format(Sys.time(), "%B %d, %Y")`'
 bibliography: [Bayesian_SITAR_An_Introduction.bib, packages.bib, REFERENCES.bib]
