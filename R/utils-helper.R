@@ -534,6 +534,7 @@ validate_response <- function(model, resp = NULL) {
 ########################
 
 setup_higher_priors <- function(new_prior_list) {
+  . <- NULL;
   o_l <- list()
   ixi = 0
   group_ <- class_ <- nlpar_ <- resp_ <- cor_check <- sd_check <- NA

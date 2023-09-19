@@ -94,6 +94,16 @@ optimize_bsitar.bsitar <- function(model,
                                    byresp = FALSE,
                                    digits = 2,
                                    ...) {
+  
+  # Global R cmd check
+  outcome <- NULL;
+  xfun <- NULL; 
+  yfun <- NULL;
+  Parameter <- NULL;
+  Estimate <- NULL;
+  . <- NULL;
+  
+  
   call_o <- match.call()
   call_o_args <- as.list(call_o)[-1]
   
@@ -105,12 +115,6 @@ optimize_bsitar.bsitar <- function(model,
     }
   }
   
-  # Global R cmd check
-  outcome <- NULL;
-  xfun <- NULL; 
-  yfun <- NULL;
-  Parameter <- NULL;
-  Estimate <- NULL;
   
   
   # This to evaluate T/F to TRUE/FALSE

@@ -36,6 +36,12 @@ priors_to_textdata <- function(model,
   group <- NULL;
   resp <- NULL;
   dpar <- NULL;
+  Response <- NULL;
+  Coefficient <- NULL;
+  Parameter <- NULL;
+  Group <- NULL;
+  Class <- NULL;
+  . <- NULL;
   
   
   if(is.null(model) & is.null(spriors) & is.null(sdata)) {
@@ -119,7 +125,7 @@ priors_to_textdata <- function(model,
   }
   
   
-  spriors <- spriors %>% relocate(nlpar, coef, 
+  spriors <- spriors %>% dplyr::relocate(nlpar, coef, 
                                   class, prior, 
                                   group, resp, 
                                   dpar)

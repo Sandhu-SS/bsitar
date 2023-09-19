@@ -2086,6 +2086,7 @@ bsitar <- function(x,
   ub <- NULL;
   init_rsi <- NULL;
   `:=` <- NULL;
+  . <- NULL;
   
   ######################
   

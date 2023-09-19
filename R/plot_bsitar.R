@@ -297,6 +297,7 @@ plot_bsitar.bsitar <- function(model,
   cov_vars <- NULL;
   `<<-` <- NULL
   ':=' <- NULL;
+  . <- NULL;
   ###
   
   xcall = match.call()

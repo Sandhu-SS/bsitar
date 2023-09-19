@@ -27,6 +27,7 @@ get.newdata <- function(model,
     resp_rev_ <- paste0("_", resp)
   }
   `:=` <- NULL
+  . <- NULL;
   validate_response(model, resp)
   
   list_c <- list()

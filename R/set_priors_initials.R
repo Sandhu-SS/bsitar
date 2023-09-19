@@ -265,6 +265,7 @@ set_priors_initials <- function(a_prior_beta,
   stanvars_data_5x <- NULL;
   nys <- NULL;
   cortimeNlags <- NULL;
+  . <- NULL;
   
   eout <- list2env(prior_data_internal)
   for (eoutii in names(eout)) {

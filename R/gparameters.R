@@ -268,6 +268,7 @@ gparameters.bsitar <- function(model,
   subindicatorsi <- NULL;
   Estimate <- NULL;
   ':=' <- NULL;
+  . <- NULL;
   ###
   
   oo <- post_processing_checks(model = model,
