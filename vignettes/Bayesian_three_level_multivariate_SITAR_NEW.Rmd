@@ -330,7 +330,7 @@ individual variability is captured by the residual parameters which include $2
 
 # need to set_cmdstan_path otherwise build check package throws error 
 
-cmdstanr::set_cmdstan_path("C:/cmdstan/cmdstan-2.32.1")
+cmdstanr::set_cmdstan_path("//wsl$/Ubuntu/home/sandhu/.cmdstan/cmdstan-2.32.2")
 
 library(tidyverse)
 library(bsitar)
@@ -399,6 +399,7 @@ data_female <- data %>% filter(sex == 'Female') %>% droplevels() %>% tidyr::drop
 # remove Fels with one male
 data_male <- data_male %>% filter(study != 'Fels') %>% droplevels() %>% tidyr::drop_na()
 
+data_male <- dataset_in %>% mutate(id2 = id, study2 = study) %>% ungroup()
 
 
 ########### 
@@ -432,7 +433,7 @@ sdata <- bsitar(x = age, y = list(copad, copod), id = id,
                 
                 sigma_formula = ~ 1 + age,
                 sigma_formula_gr = NULL,
-                sigma_formula_gr_str = ~ (1 + age | z | id:study) + (1 + age | z2 | study),
+                sigma_formula_gr_str = ~ (1 + age | z | id2:study2) + (1 + age | z2 | study2),
                 sigma_prior_beta = normal(0, 1, autoscale = FALSE),
                 sigma_init_beta = 0,
                 
@@ -707,7 +708,7 @@ fit1 <- bsitar(x = age, y = list(copad, copod), id = id,
                
                sigma_formula = ~ 1 + age,
                sigma_formula_gr = NULL,
-               sigma_formula_gr_str = ~ (1 + age | z | id:study) + (1 + age | z2 | study),
+               sigma_formula_gr_str = ~ (1 + age | z | id2:study2) + (1 + age | z2 | study2),
                sigma_prior_beta = normal(0, 1, autoscale = FALSE),
                sigma_init_beta = 0,
                
