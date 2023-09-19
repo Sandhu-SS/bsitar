@@ -1759,6 +1759,30 @@ bsitar <- function(x,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
                    ...) {
+  
+  
+  # First assign NULL to avoid global vars issue in Package
+  set_env <- parent.env()
+  
+  set_collect <- c()
+  for (agsxi in letters[1:9]) {
+    set_collect <- c(set_collect, paste0(agsxi, "", "" , ""))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "formula" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr_str" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "prior_beta" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_beta" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "prior_sd" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_sd" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "init_beta" , "si"))
+    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_init_sd" , "si"))
+  }
+  
+  var_lst <- sapply(set_collect, function(x) assign(x, NULL))
+  list2env(var_lst, envir = NULL)
+  
+  
+  
   mcall <- mcall_ <- match.call()
   
   
@@ -3264,25 +3288,6 @@ bsitar <- function(x,
   
   
   
-  # First assign NULL to avoid global vars issue in Package
-  set_env <- parent.env()
-  
-  set_collect <- c()
-  for (agsxi in letters[1:9]) {
-    set_collect <- c(set_collect, paste0(agsxi, "", "" , ""))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "formula" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr_str" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "prior_beta" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_beta" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "prior_sd" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_sd" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "init_beta" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_init_sd" , "si"))
-  }
-  
-  var_lst <- sapply(set_collect, function(x) assign(x, NULL))
-  list2env(var_lst, envir = NULL)
   
   
   # Initiate loop over outcome(s) 
