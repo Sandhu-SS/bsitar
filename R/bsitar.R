@@ -1788,7 +1788,7 @@ bsitar <- function(x,
   
   get('normal', NULL)
   
-  uniform <- NULL
+  # uniform <- NULL
   
   mcall <- mcall_ <- match.call()
   
