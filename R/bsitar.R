@@ -3233,7 +3233,7 @@ bsitar <- function(x,
   
   
   # First assign NULL to avoid global vars issue in Package
-  set_env <- parent.frame()
+  set_env <- parent.env(environment())
   for (agsxi in letters[1:26]) {
     assign(paste0(agsxi, "", "" , "") , NULL, 
            envir = set_env)
