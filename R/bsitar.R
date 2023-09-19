@@ -1497,11 +1497,11 @@ bsitar <- function(x,
                    data,
                    df = 4,
                    knots = NA,
-                   fixed = a + b + c + d + e + f,
-                   random = a + b + c + d + e + f,
+                   fixed = 'a + b + c + d + e + f',
+                   random = 'a + b + c + d + e + f',
                    select_model = 'sitar',
-                   xoffset = mean,
-                   bstart = mean,
+                   xoffset = 'mean',
+                   bstart = 'mean',
                    apgv = 13,
                    pgv = 4,
                    xfun = NULL,
@@ -1547,27 +1547,27 @@ bsitar <- function(x,
                    
                    dpar_formula = NULL,
                    autocor_formula = NULL,
-                   family = gaussian(),
+                   family = 'gaussian()',
                    group_arg = list(
                      groupvar = NULL,
                      by = NULL,
-                     cor = un,
+                     cor = 'un',
                      cov = NULL,
-                     dist = gaussian
+                     dist = 'gaussian'
                    ),
                    sigma_group_arg = list(
                      groupvar = NULL,
                      by = NULL,
-                     cor = un,
+                     cor = 'un',
                      cov = NULL,
-                     dist = gaussian
+                     dist = 'gaussian'
                    ),
-                   univariate_by = list(by = NA, cor = un),
+                   univariate_by = list(by = NA, cor = 'un'),
                    multivariate = list(mvar = FALSE,
-                                       cor = un,
+                                       cor = 'un',
                                        rescor = TRUE),
                    
-                   a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                   a_prior_beta = normal('lm', 'ysd', autoscale = FALSE),
                    b_prior_beta = normal(0, 2, autoscale = FALSE),
                    c_prior_beta = normal(0, 0.5, autoscale = FALSE),
                    d_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1577,7 +1577,7 @@ bsitar <- function(x,
                    h_prior_beta = normal(0, 1, autoscale = FALSE),
                    i_prior_beta = normal(0, 1, autoscale = FALSE),
                    
-                   s_prior_beta = normal(lm, lm, autoscale = FALSE),
+                   s_prior_beta = normal('lm', 'lm', autoscale = FALSE),
                    
                    a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1591,7 +1591,7 @@ bsitar <- function(x,
                    
                    s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
                    
-                   a_prior_sd = normal(0, ysd, autoscale = 1),
+                   a_prior_sd = normal(0, 'ysd', autoscale = 1),
                    b_prior_sd = normal(0, 1, autoscale = FALSE),
                    c_prior_sd = normal(0, 0.25, autoscale = FALSE),
                    d_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -1639,8 +1639,8 @@ bsitar <- function(x,
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
                    
-                   rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
-                   dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                   rsd_prior_sigma = normal(0, 'ysd', autoscale = FALSE),
+                   dpar_prior_sigma = normal(0, 'ysd', autoscale = FALSE),
                    dpar_cov_prior_sigma = normal(0, 5, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
@@ -1653,7 +1653,7 @@ bsitar <- function(x,
                    mvr_prior_rescor = lkj(1),
                    init = NULL,
                    init_r = NULL,
-                   a_init_beta = lm,
+                   a_init_beta = 'lm',
                    b_init_beta = 0,
                    c_init_beta = 0,
                    d_init_beta = 0,
@@ -1663,7 +1663,7 @@ bsitar <- function(x,
                    h_init_beta = 0,
                    i_init_beta = 0,
                    
-                   s_init_beta = lm,
+                   s_init_beta = 'lm',
                    
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
@@ -1675,7 +1675,7 @@ bsitar <- function(x,
                    h_cov_init_beta = 0,
                    i_cov_init_beta = 0,
                    
-                   s_cov_init_beta = lm,
+                   s_cov_init_beta = 'lm',
                    
                    a_init_sd = 1,
                    b_init_sd = 1,
@@ -1762,24 +1762,24 @@ bsitar <- function(x,
   
   
   # First assign NULL to avoid global vars issue in Package
-  set_env <- parent.env()
-  
-  set_collect <- c()
-  for (agsxi in letters[1:9]) {
-    set_collect <- c(set_collect, paste0(agsxi, "", "" , ""))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "formula" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr_str" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "prior_beta" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_beta" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "prior_sd" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_sd" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "init_beta" , "si"))
-    set_collect <- c(set_collect, paste0(agsxi, "_", "cov_init_sd" , "si"))
-  }
-  
-  var_lst <- sapply(set_collect, function(x) assign(x, NULL))
-  list2env(var_lst, envir = NULL)
+  # set_env <- parent.env()
+  # 
+  # set_collect <- c()
+  # for (agsxi in letters[1:9]) {
+  #   set_collect <- c(set_collect, paste0(agsxi, "", "" , ""))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "formula" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr_str" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "prior_beta" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_beta" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "prior_sd" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_sd" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "init_beta" , "si"))
+  #   set_collect <- c(set_collect, paste0(agsxi, "_", "cov_init_sd" , "si"))
+  # }
+  # 
+  # var_lst <- sapply(set_collect, function(x) assign(x, NULL))
+  # list2env(var_lst, envir = NULL)
   
   
   
@@ -3186,7 +3186,7 @@ bsitar <- function(x,
   }
   
   data.org.in <- data
-  
+  uvarby <- NULL
   data <- prepare_data(data = data,
                        x = xs, 
                        y = ys, 
