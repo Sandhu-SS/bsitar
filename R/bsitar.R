@@ -1784,8 +1784,9 @@ bsitar <- function(x,
   
   set_collect <-  c('normal', 'uniform')
   var_lst <- sapply(set_collect, function(x) assign(x, NULL))
-  list2env(var_lst, envir = .GlobalEnv)
+  # list2env(var_lst, envir = .GlobalEnv)
   
+  assign(('normal'), NULL)
   
   mcall <- mcall_ <- match.call()
   
