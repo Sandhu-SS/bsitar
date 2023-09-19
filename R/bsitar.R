@@ -3282,7 +3282,7 @@ bsitar <- function(x,
   }
   
   var_lst <- sapply(set_collect, function(x) assign(x, NULL))
-  list2env(var_lst, set_env)
+  list2env(var_lst, envir = NULL)
   
   
   # Initiate loop over outcome(s) 
