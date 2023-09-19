@@ -38,7 +38,10 @@ post_processing_checks <- function(model,
                                    xcall, 
                                    resp = NULL, 
                                    deriv = 0,
-                                   envir = parent.frame()) {
+                                   envir = NULL) {
+  
+  if(is.null(envir)) envir <- parent.frame()
+  
   if(!'bsitar' %in% class(model)) {
     stop("The class of model object should be 'bsitar' ")
   }

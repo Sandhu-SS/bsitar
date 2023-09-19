@@ -29,45 +29,40 @@ model. If \code{NULL} (default), the same same data used for original model
 fit is used. Note that data-dependent default priors will not be updated
 automatically.}
 
-\item{optimize_df}{A vector specifying the updation of degree of freedom
-\code{df}. If \code{NULL} (default), the \code{df} is taken from the
+\item{optimize_df}{A vector specifying the degree of freedom (\code{df})
+update. If \code{NULL} (default), the \code{df} is taken from the
 original model. For \code{univariate-by-sungroup} and \code{multivariate}
-models (see \link{bsitar} for details on these arguments),
+models (see \code{\link[=bsitar]{bsitar()}} for details on these arguments),
 \code{optimize_df} can be a single integer (e.g., \code{optimize_df = 4}) or
 a list (e.g., \code{optimize_df = list(4,5)}). For optimization over
 different \code{df}, say for example df 4 and 5 for univariate model, the
 corresponding code is \code{optimize_df = list(4,5)}. For a multivariate
 model fit to two outcomes with different \code{df}, the optimization over
-\code{df} 4 and 5 for the first submodel and 5 and 6 for the second
-submodel, the  corresponding \code{optimize_df} code is \code{optimize_df =
- kist(list(4,5), list(5,6))}.}
+\code{df} 4 and 5 for the first sub model and 5 and 6 for the second
+sub model, the corresponding \code{optimize_df} code is \code{optimize_df =
+ list(list(4,5), list(5,6))} i.e, a list of lists.}
 
 \item{optimize_x}{A vector specifying the transformations of predictor
-(typically \code{age}) variable (via \code{xvar}). The option are 'NULL',
-'log' and  'sqrt' or their combinations. Note that user need not to enclose
-these options in either single or double quotes as they are take care of
-internally. The default \code{optimize_x = list(NULL, log,  sqrt)} is to
-explore all possible combinations of 'NULL', 'log' and  'sqrt'. Similar to
-the \code{optimize_df}, user can specify different  \code{optimize_x} for
-\code{univariate-by-sungroup} and \code{multivariate} submodels.}
+(typically \code{age}) variable (via \code{xvar}). The option are
+\code{NULL}, \code{log}, \code{sqrt} and their combinations. Note that user
+need not to enclose these options in a single or double quotes as they are
+take care of internally. The default setting is to explore all possible
+combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to
+the \code{optimize_df}, user can specify different \code{optimize_x} for
+\code{univariate-by-sungroup} and \code{multivariate} sub models.}
 
-\item{optimize_y}{A vector specifying the transformations of the outcome
-variable (via \code{yvar}). The option are 'NULL', 'log' and  'sqrt' or
-their combinations. Note that user need not to enclose these options in
-either single or double quotes as they are take care of internally. The
-default \code{optimize_y = list(NULL, log,  sqrt)} is to explore all
-possible combinations of 'NULL', 'log' and  'sqrt'. Similar to the
-\code{optimize_df}, user can specify different  \code{optimize_y} for
-\code{univariate-by-sungroup} and \code{multivariate} submodels.}
+\item{optimize_y}{A vector specifying the transformations for the response
+variable (via \code{yvar}). The approach and options available for
+\code{optimize_y} are identical to the \code{optimize_x} (see above).}
 
-\item{exclude_default_funs}{A logical to indicate whether transformations
+\item{exclude_default_funs}{A logical to indicate whether transformations for
 (\code{xvar} and \code{yvar}) used in the original model fit should be
-excluded. If \code{TRUE} (deafult), the the \code{xvar} and \code{yvar}
+excluded. If \code{TRUE} (default), the \code{xvar} and \code{yvar}
 transformations specified for the original model fit are excluded from the
 \code{optimize_x} and \code{optimize_y}. From example, if original model is
-fit with \code{xvar = log} and \code{yvar = NULL}, then
-the \code{optimize_x} is translated into \code{optimize_x = list(NULL,
- sqrt)} and  \code{optimize_y} as \code{optimize_y = list(log, sqrt)}.}
+fit with \code{xvar = log} and \code{yvar = NULL}, then \code{optimize_x} is
+translated into \code{optimize_x = list(NULL, sqrt)} and \code{optimize_y}
+as \code{optimize_y = list(log, sqrt)}.}
 
 \item{add_fit_criteria}{An optional (default \code{NULL}) indicator to add fit
 criteria to the model fit. options are \code{loo} and \code{waic}. Please

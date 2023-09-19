@@ -123,6 +123,18 @@
 #' @param band.alpha An optional numeric value to specify the transparency of
 #'   the CI band(s) around the distance curve, velocity curve and the line
 #'   indicating the APGV. The default \code{NULL} will set this value to 0.4.
+#' @param show_age_takeoff A logical (default \code{TRUE}) to indicate whether
+#'  to display the ATGV line(s) on the plot.
+#'  @param show_age_peak A logical (default \code{TRUE}) to indicate whether
+#'  to display the APGV line(s) on the plot.
+#'  @param show_age_cessation A logical (default \code{TRUE}) to indicate whether
+#'  to display the ACGV line(s) on the plot.
+#'  @param show_vel_takeoff A logical (default \code{FALSE}) to indicate whether
+#'  to display the TGV line(s) on the plot.
+#'  @param show_vel_peak A logical (default \code{FALSE}) to indicate whether
+#'  to display the PGV line(s) on the plot.
+#'  @param show_vel_cessation A logical (default \code{FALSE}) to indicate whether
+#'  to display the CGV line(s) on the plot.
 #' @param returndata A logical (default \code{FALSE}) indicating whether to plot
 #'   the data or return the data. If \code{TRUE}, the data is returned as a
 #'   \code{data.frame}.
@@ -192,7 +204,6 @@ plot_bsitar.bsitar <- function(model,
                                trough = FALSE,
                                acgv = FALSE,
                                acgv_velocity = 0.10,
-                               acg_asymptote = NULL,
                                seed = 123,
                                estimation_method = 'fitted',
                                allow_new_levels = FALSE,
@@ -225,12 +236,14 @@ plot_bsitar.bsitar <- function(model,
                                returndata = FALSE,
                                parms_eval = FALSE,
                                parms_method = 'getPeak',
-                               envir = parent.frame(),
+                               envir = NULL,
                                ...) {
   if (is.null(ndraws))
     ndraws  <- ndraws(model)
   else
     ndraws <- ndraws
+  
+  if(is.null(envir)) envir <- parent.frame()
   
   xcall = match.call()
   

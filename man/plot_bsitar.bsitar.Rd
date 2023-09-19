@@ -23,6 +23,10 @@
   avg_reffects = NULL,
   ipts = NULL,
   xrange = NULL,
+  takeoff = FALSE,
+  trough = FALSE,
+  acgv = FALSE,
+  acgv_velocity = 0.1,
   seed = 123,
   estimation_method = "fitted",
   allow_new_levels = FALSE,
@@ -46,7 +50,16 @@
   linetype.groupby = NA,
   color.groupby = NA,
   band.alpha = NULL,
+  show_age_takeoff = TRUE,
+  show_age_peak = TRUE,
+  show_age_cessation = TRUE,
+  show_vel_takeoff = FALSE,
+  show_vel_peak = FALSE,
+  show_vel_cessation = FALSE,
   returndata = FALSE,
+  parms_eval = FALSE,
+  parms_method = "getPeak",
+  envir = NULL,
   ...
 )
 
@@ -82,19 +95,21 @@ include CI bands for distance and velocity curves, and the APGV.}
 CI and hence the width of the \code{bands}. See \link{gparameters.bsitar} for
 further details.}
 
-\item{resp}{Optional names of response variables. If specified, predictions
-are performed only for the specified response variables.}
+\item{resp}{An optional character string to specify response variable when
+estimating growth parameter for the univariate-by-subgroup and multivariate
+models (see \code{\link[=bsitar]{bsitar()}} for details on univariate-by-subgroup and
+multivariate models). For univariate model, \code{resp = NULL} (default).}
 
 \item{ndraws}{Positive integer indicating the number of posterior draws to be
 used in estimation. If \code{NULL} (default), all draws are used.}
 
-\item{draw_ids}{An integer vector specifying the posterior draws
-o be used. If NULL (the default), all draws are used.}
+\item{draw_ids}{An integer indicating the specif posterior draw(s)
+to be used. If \code{NULL} (default), all draws are used.}
 
-\item{newdata}{An optional data.frame for which to evaluate predictions. If
-\code{NULL} (default), the original data of the model is used.}
+\item{newdata}{An optional data frame to be used in predictions. If
+\code{NULL} (default), the original data from the fitted model is used.}
 
-\item{summary}{A logical (default \code{TRUE}) to indicate whether only the
+\item{summary}{A logical (default \code{TRUE}) indicating whether only the
 Estimate should be returned or Estimate along with SE and CI should be
 computed. Setting this option to \code{FALSE} will reduce the computation
 time but no SE or CI estimates will be available.}
@@ -104,18 +119,18 @@ individual/group-level effects in the estimation. When \code{NA} (default),
 the individual-level effects are excluded and therefore population average
 growth parameters are computed. When \code{NULL}, individual-level effects
 are included in the computation and hence the growth parameters estimates
-returned are individual-specific. In both sitations, (i.e,, \code{NA} or
-\code{NULL}), continuous and factor covariate(s) are appropriately
-included. When the continuous covariates by default are set to their means
-(see \code{numeric_cov_at} for details), the population average as well as
-individual-specific growth parameter estimates are returned for each level
-of the factor cocariate.}
+returned are individual-specific. In both situations, (i.e,, \code{NA} or
+\code{NULL}), continuous and factor covariate(s) are appropriately included
+in the estimation. The continuous covariates by default are set to their
+means (see \code{numeric_cov_at} for details) whereas factor covariates are
+left unaltered thereby allowing estimation of (factor) covariate specific
+population average and individual-specific growth parameter at mean value
+of continous covaristes(s).}
 
 \item{numeric_cov_at}{An optional argument to specify the value of continuous
-covariate(s) before calling the \link{fitted_.bsitar} and
-\link{predict_.bsitar} functions. The default \code{NULL} option set the
-continuous covariate(s) at mean. Alternatively, a named list can be
-supplied to manualy set the values. For example, \code{numeric_cov_at =
+covariate(s). The default \code{NULL} option set the continuous
+covariate(s) at their mean. Alternatively, a named list can be
+supplied to manually set these values. For example, \code{numeric_cov_at =
   list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
 argument \code{numeric_cov_at} is ignored when no continuous covariate is
 included in the model.}
@@ -125,48 +140,70 @@ passed to the \code{ipts} argument. This is useful when fitting location
 scale models and the measurement error models.}
 
 \item{levels_id}{An optional argument to specify the ids for hierarchical
-model (default \code{NULL}. It is used only when a with 3 or higher level
-structures are fit. For two level model, the the id for second level is
-automatically inferred from the fitted model. Even for 3 or higher level
-model, ids are inferred from the fitted model but under the assumption that
-hierarchy is specified from lower to upper levels i.e, id, study assuming
-that id is nested within the studies. However, it is not gaunated that
-these ids are sorted correctly. Therefore, it is better to set it manually.}
+model (default \code{NULL}. It is used only when model is fitted to the
+data with 3 or more levels of hierarchy. For a two level model, the id for
+second level is automatically inferred from the fitted model. Even for 3 or
+higher level model, ids are inferred from the fitted model but under the
+assumption that hierarchy is specified from lower to upper levels i.e, id,
+study assuming that id is nested within the studies. However, it is not
+gauranted that these ids are sorted correctly. Therefore, it is better to
+set them manually.}
 
 \item{avg_reffects}{An optional argument (default \code{NULL} to calculate
-(marginal/average) distance and velocity curves (as well as APGV and PGV).
-If specified, it must be set as a named list indicating the \code{over} and
-the fixed efects \code{feby} and random effects efects \code{reby}
-arguments e.g., \code{avg_reffects = list(feby = 'study', reby = NULL, over
-  = 'age'}. The \code{over} is typically age and is used to average over the
-random effects. The second argument is \code{by} that specifies the factor
+(marginal/average) curves and growth parameters (such as APGV and PGV). If
+specified, it must be a named list indicating the \code{over} and the fixed
+efects \code{feby} and random effects efects \code{reby} arguments e.g.,
+\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}. The
+\code{over} is typically age and is used to average over the random
+effects. The second argument is \code{by} that specifies the factor
 variable by which \code{over} is executed.}
 
-\item{ipts}{A numeric value to interpolate the predictor value to get a
+\item{ipts}{An integer to set the length of the predictor variable to get a
 smooth velocity curve. The \code{NULL} (default) will return original
-values whereas a positive real value (e.g., \code{ipts = 10}) will
-interpolate the predictor. It is important to note that these
-interpolations do not alter the range of predictor when calculating
-population average and the individual specific velocity curves.}
+values whereas an integer (e.g., \code{ipts = 10}) will interpolate the
+predictor. It is important to note that these interpolations do not alter
+the range of predictor when calculating population average and the
+individual specific velocity curves.}
 
-\item{xrange}{An indicator to set the predictor range (i.e., age) when
+\item{xrange}{An integer to set the predictor range (i.e., age) when
 executing the interpolation via \code{ipts}. The default \code{NULL} sets
-the individual specific predictor range whereas code
-\code{xrange = 1} sets same range for all individuals within the higher order grouping variable (e.g., study). Code \code{xrange
-  = 2} sets the identical range across the entire sample. Lastly, a paired numeric
-values can be supplied e.g., \code{xrange = c(6, 20)} will set the range
-between 6 and 20.}
+the individual specific predictor range whereas code \code{xrange = 1} sets
+same range for all individuals within the higher order grouping variable
+(e.g., study). Code \code{xrange  = 2} sets the identical range across the
+entire sample. Lastly, a paired numeric values can be supplied e.g.,
+\code{xrange = c(6, 20)} will set the range between 6 and 20.}
+
+\item{takeoff}{Optional (logical, default \code{FALSE}) to indicate whether
+or not to calculate the age at takeoff velocity (ATGV) and the takeoff
+growth velocity (TGV). See @details for further information.}
+
+\item{trough}{Optional (logical, default \code{FALSE}) to indicate whether or
+not to calculate the age at cessation of growth velocity (ACGV) and the
+cessation of growth velocity (CGV). See @details for further information.
+See @details for further information.}
+
+\item{acgv}{Optional (logical, default \code{FALSE}) to indicate whether or
+not to calculate the age at cessation of growth velocity from the velocity
+curve. If \code{TRUE}, age at cessation of growth velocity (ACGV) and the
+cessation growth velocity (CGV) are  calculated based on the percentage of
+the peak growth velocity as defined by the \code{acgv_velocity} argument
+(see below) which is typically set at 10 percent of the peak growth
+velocity. The ACGV and CGV are calculated along with the the uncertainty
+(SE and CI) around the ACGV and CGV parameters.}
+
+\item{acgv_velocity}{Specify the percentage of the peak growth velocity to be
+used when estimating \code{acgv}. The default value is \code{0.10} i.e.,
+10 percent of the peak growth velocity.}
 
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method.}
 
 \item{estimation_method}{A character string to specify the estimation method
-used to calculate velocity from the posterior draws. The \code{'fitted'}
-method internally calls the \link{fitted_.bsitar} function whereas the
-option \code{'predict'} calls the \link{predict_.bsitar} function. See
-\link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} for derails on fitted
-versus predict estimations as they are the backend functions called by the
-\link{fitted_.bsitar} and \link{predict_.bsitar} functions.}
+when calculating the velocity from the posterior draws. The \code{fitted}
+method internally calls the \code{\link[=fitted_.bsitar]{fitted_.bsitar()}} function whereas the
+option \code{predict} calls the \code{\link[=predict_.bsitar]{predict_.bsitar()}} function. See
+\code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for derails on
+fitted versus predict estimations.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -195,17 +232,17 @@ Defaults to \code{TRUE}.}
 \item{robust}{If \code{FALSE} (the default) the mean is used as the measure
 of central tendency and the standard deviation as the measure of
 variability. If \code{TRUE}, the median and the median absolute deviation
-(MAD) are applied instead. Ignored if summary is \code{FALSE}}
+(MAD) are applied instead. Ignored if summary is \code{FALSE}.}
 
 \item{future}{A logical (default \code{FALSE}) to specify whether or not to
 perform parallel computations. If set to \code{TRUE}, the
-\link[future.apply:future_lapply]{future.apply::future_sapply} function is used for summarizing the draws.}
+\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}} function is used for summarizing the draws.}
 
 \item{future_session}{A character string to set the session type when
-\code{future = TRUE}. The \code{'multisession'} (default) options sets the
-multisession whereas the \code{'multicore'} set the multicore session. Note
-that multicore session are not supported on Windows systems. For more
-details, see \link{future.apply} and \link{future}.}
+\code{future = TRUE}. The \code{multisession} (default) options sets the
+multisession whereas the \code{multicore} sets the multicore session. Note
+that multicore session is not supported on Windows systems. For more
+details, see \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations by setting the option \code{future = TRUE}. On non-Windows,
@@ -303,14 +340,39 @@ prevents printing a large number of legends for each individual.}
 the CI band(s) around the distance curve, velocity curve and the line
 indicating the APGV. The default \code{NULL} will set this value to 0.4.}
 
+\item{show_age_takeoff}{A logical (default \code{TRUE}) to indicate whether
+to display the ATGV line(s) on the plot.
+@param show_age_peak A logical (default \code{TRUE}) to indicate whether
+to display the APGV line(s) on the plot.
+@param show_age_cessation A logical (default \code{TRUE}) to indicate whether
+to display the ACGV line(s) on the plot.
+@param show_vel_takeoff A logical (default \code{FALSE}) to indicate whether
+to display the TGV line(s) on the plot.
+@param show_vel_peak A logical (default \code{FALSE}) to indicate whether
+to display the PGV line(s) on the plot.
+@param show_vel_cessation A logical (default \code{FALSE}) to indicate whether
+to display the CGV line(s) on the plot.}
+
 \item{returndata}{A logical (default \code{FALSE}) indicating whether to plot
 the data or return the data. If \code{TRUE}, the data is returned as a
 \code{data.frame}.}
 
-\item{...}{Further arguments passed to \code{brms::fitted} and
-\code{brms::predict} functions that control several aspects of data
-validation and prediction. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
-\link[brms:predict.brmsfit]{brms::predict.brmsfit} for details.}
+\item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
+to get growth parameters on the fly.}
+
+\item{parms_method}{A character to specify the method used to when
+evaluating \code{parms_eval}. The default is \code{getPeak} which uses
+the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The
+alternative option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}}
+function function from the \code{pracma} package.}
+
+\item{envir}{Indicator to set the environment of function evaluation.
+The default is \code{parent.frame}.}
+
+\item{...}{Further arguments passed to \code{brms::fitted()} and
+\code{brms::predict()} functions that control several aspects of data
+validation and prediction. See \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and
+\code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details.}
 }
 \value{
 A \link{ggplot2} object (default) or a \code{data.frame} when returndata

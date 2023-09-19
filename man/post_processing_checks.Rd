@@ -2,25 +2,26 @@
 % Please edit documentation in R/post_processing_checks.R
 \name{post_processing_checks}
 \alias{post_processing_checks}
-\title{An internal function to perform checks when calling the post-processing
-functions}
+\title{An internal function to perform checks when calling post-processing functions}
 \usage{
-post_processing_checks(model, xcall, resp = NULL, deriv = 0)
+post_processing_checks(model, xcall, resp = NULL, deriv = 0, envir = NULL)
 }
 \arguments{
-\item{model}{An object of class \code{bsitar}.
-function.}
+\item{model}{An object of class \code{bsitar}.}
 
 \item{xcall}{The \code{match.call()} from the post-processing function.}
 
-\item{resp}{Response variable (default \code{NULL}) specified as a string
-character required during the post-processing of multivariate and
-univariate-by-subgroup model (see \code{bsitar} function for details).}
+\item{resp}{Response variable (default \code{NULL}) specified as a character
+string. This is needed when processing univariate-by-subgroup and
+multivariate model (see \code{bsitar} function for details).}
 
 \item{deriv}{An integer value to specify whether to estimate distance curve
-(i.e., model estimated curve(s)) or velocity curve (first derivative of the
-model estimated curve(s)). A 0 value (default) is for distance curve and
-1 for the velocity curve.}
+(i.e., model estimated curve(s)) or the velocity curve (first derivative of
+the model estimated curve(s)). A value \code{0} (default) is for distance
+curve and  \code{1} for the velocity curve.
+
+@param envir Indicator to set the environment of function evaluation.
+The default is \code{parent.frame}.}
 }
 \value{
 A string with the error captured or else a list with necessary
@@ -28,8 +29,8 @@ information needed when executing the post-processing function
 }
 \description{
 The \code{post_processing_checks} perform essential checks
-(such as the validity of model class, response etc.) when post-processing
-functions
+(such as the validity of model class, response etc.) during post-processing
+of posterior draws.
 }
 \examples{
 \dontrun{

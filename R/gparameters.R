@@ -176,7 +176,7 @@
 #'  alternative option is \code{findpeaks} that uses the [pracma::findpeaks()] 
 #'  function function from the \code{pracma} package.
 #'  
-#'  @param envir Indicator to set the environment of function evaluation.  
+#' @param envir Indicator to set the environment of function evaluation.  
 #'  The default is \code{parent.frame}. 
 #'   
 #' @param ... Further arguments passed to \code{brms::fitted()} and
@@ -248,12 +248,14 @@ gparameters.bsitar <- function(model,
                                cores = NULL,
                                parms_eval = FALSE,
                                parms_method = 'getPeak',
-                               envir = parent.frame(),
+                               envir = NULL,
                                ...) {
   if (is.null(ndraws))
     ndraws  <- ndraws(model)
   else
     ndraws <- ndraws
+  
+  if(is.null(envir)) envir <- parent.frame()
   
   oo <- post_processing_checks(model = model,
                                xcall = match.call(),

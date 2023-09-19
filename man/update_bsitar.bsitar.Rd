@@ -25,11 +25,15 @@ figure out internally, if recompilation is necessary. Setting it to
 \item{...}{Other arguments passed to \code{\link{brms}}.}
 }
 \value{
-An updated object of class \code{brmsfit, bsiatr}, that contains the
+An updated model of class \code{brmsfit, bsiatr}, that contains the
 posterior draws and other useful information about the model.
 }
 \description{
 Update \pkg{bsitar} model
+}
+\details{
+This is an adapted version of the \code{update} function of
+\code{brms} package.
 }
 \examples{
 \dontrun{

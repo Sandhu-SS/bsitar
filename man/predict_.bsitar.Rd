@@ -28,11 +28,13 @@ predict_(model, ...)
 \arguments{
 \item{model}{An object of class \code{bsitar}.}
 
-\item{newdata}{An optional data.frame for which to evaluate predictions. If
-\code{NULL} (default), the original data of the model is used.}
+\item{newdata}{An optional data frame to be used in predictions. If
+\code{NULL} (default), the original data from the fitted model is used.}
 
-\item{resp}{Optional names of response variables. If specified, predictions
-are performed only for the specified response variables.}
+\item{resp}{An optional character string to specify response variable when
+estimating growth parameter for the univariate-by-subgroup and multivariate
+models (see \code{\link[=bsitar]{bsitar()}} for details on univariate-by-subgroup and
+multivariate models). For univariate model, \code{resp = NULL} (default).}
 
 \item{ndraws}{Positive integer indicating the number of posterior draws to be
 used in estimation. If \code{NULL} (default), all draws are used.}
@@ -42,44 +44,45 @@ individual/group-level effects in the estimation. When \code{NA} (default),
 the individual-level effects are excluded and therefore population average
 growth parameters are computed. When \code{NULL}, individual-level effects
 are included in the computation and hence the growth parameters estimates
-returned are individual-specific. In both sitations, (i.e,, \code{NA} or
-\code{NULL}), continuous and factor covariate(s) are appropriately
-included. When the continuous covariates by default are set to their means
-(see \code{numeric_cov_at} for details), the population average as well as
-individual-specific growth parameter estimates are returned for each level
-of the factor cocariate.}
+returned are individual-specific. In both situations, (i.e,, \code{NA} or
+\code{NULL}), continuous and factor covariate(s) are appropriately included
+in the estimation. The continuous covariates by default are set to their
+means (see \code{numeric_cov_at} for details) whereas factor covariates are
+left unaltered thereby allowing estimation of (factor) covariate specific
+population average and individual-specific growth parameter at mean value
+of continous covaristes(s).}
 
 \item{numeric_cov_at}{An optional argument to specify the value of continuous
-covariate(s) before calling the \link{fitted_.bsitar} and
-\link{predict_.bsitar} functions. The default \code{NULL} option set the
-continuous covariate(s) at mean. Alternatively, a named list can be
-supplied to manualy set the values. For example, \code{numeric_cov_at =
+covariate(s). The default \code{NULL} option set the continuous
+covariate(s) at their mean. Alternatively, a named list can be
+supplied to manually set these values. For example, \code{numeric_cov_at =
   list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
 argument \code{numeric_cov_at} is ignored when no continuous covariate is
 included in the model.}
 
 \item{levels_id}{An optional argument to specify the ids for hierarchical
-model (default \code{NULL}. It is used only when a with 3 or higher level
-structures are fit. For two level model, the the id for second level is
-automatically inferred from the fitted model. Even for 3 or higher level
-model, ids are inferred from the fitted model but under the assumption that
-hierarchy is specified from lower to upper levels i.e, id, study assuming
-that id is nested within the studies. However, it is not gaunated that
-these ids are sorted correctly. Therefore, it is better to set it manually.}
+model (default \code{NULL}. It is used only when model is fitted to the
+data with 3 or more levels of hierarchy. For a two level model, the id for
+second level is automatically inferred from the fitted model. Even for 3 or
+higher level model, ids are inferred from the fitted model but under the
+assumption that hierarchy is specified from lower to upper levels i.e, id,
+study assuming that id is nested within the studies. However, it is not
+gauranted that these ids are sorted correctly. Therefore, it is better to
+set them manually.}
 
-\item{ipts}{A numeric value to interpolate the predictor value to get a
+\item{ipts}{An integer to set the length of the predictor variable to get a
 smooth velocity curve. The \code{NULL} (default) will return original
-values whereas a positive real value (e.g., \code{ipts = 10}) will
-interpolate the predictor. It is important to note that these
-interpolations do not alter the range of predictor when calculating
-population average and the individual specific velocity curves.}
+values whereas an integer (e.g., \code{ipts = 10}) will interpolate the
+predictor. It is important to note that these interpolations do not alter
+the range of predictor when calculating population average and the
+individual specific velocity curves.}
 
 \item{deriv}{An integer value to specify whether to estimate distance curve
 (i.e., model estimated curve(s)) or velocity curve (first derivative of the
 model estimated curve(s)). A 0 value (default) is for distance curve and
 1 for the velocity curve.}
 
-\item{summary}{A logical (default \code{TRUE}) to indicate whether only the
+\item{summary}{A logical (default \code{TRUE}) indicating whether only the
 Estimate should be returned or Estimate along with SE and CI should be
 computed. Setting this option to \code{FALSE} will reduce the computation
 time but no SE or CI estimates will be available.}
@@ -87,20 +90,21 @@ time but no SE or CI estimates will be available.}
 \item{robust}{If \code{FALSE} (the default) the mean is used as the measure
 of central tendency and the standard deviation as the measure of
 variability. If \code{TRUE}, the median and the median absolute deviation
-(MAD) are applied instead. Ignored if summary is \code{FALSE}}
+(MAD) are applied instead. Ignored if summary is \code{FALSE}.}
 
 \item{probs}{The percentiles to be computed by the \code{quantile}
 function. Only used if \code{summary} is \code{TRUE}.}
 
-\item{xrange}{An indicator to set the predictor range (i.e., age) when
+\item{xrange}{An integer to set the predictor range (i.e., age) when
 executing the interpolation via \code{ipts}. The default \code{NULL} sets
-the individual specific predictor range whereas code
-\code{xrange = 1} sets same range for all individuals within the higher order grouping variable (e.g., study). Code \code{xrange
-  = 2} sets the identical range across the entire sample. Lastly, a paired numeric
-values can be supplied e.g., \code{xrange = c(6, 20)} will set the range
-between 6 and 20.}
+the individual specific predictor range whereas code \code{xrange = 1} sets
+same range for all individuals within the higher order grouping variable
+(e.g., study). Code \code{xrange  = 2} sets the identical range across the
+entire sample. Lastly, a paired numeric values can be supplied e.g.,
+\code{xrange = c(6, 20)} will set the range between 6 and 20.}
 
-\item{envir}{The calling environment. Deafault set to \code{parent.frame()}.}
+\item{envir}{Indicator to set the environment of function evaluation.
+The default is \code{parent.frame}.}
 
 \item{...}{Additional arguments passed to the \link[brms:predict.brmsfit]{brms::predict.brmsfit}
 function. Please see \code{brms::predict.brmsfit} for details on

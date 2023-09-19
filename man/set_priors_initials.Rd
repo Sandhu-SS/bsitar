@@ -9,21 +9,30 @@ set_priors_initials(
   b_prior_beta,
   c_prior_beta,
   d_prior_beta,
+  e_prior_beta,
+  f_prior_beta,
   s_prior_beta,
   a_cov_prior_beta,
   b_cov_prior_beta,
   c_cov_prior_beta,
   d_cov_prior_beta,
+  e_cov_prior_beta,
+  f_cov_prior_beta,
   s_cov_prior_beta,
   a_prior_sd,
   b_prior_sd,
   c_prior_sd,
   d_prior_sd,
+  e_prior_sd,
+  f_prior_sd,
   a_cov_prior_sd,
   b_cov_prior_sd,
   c_cov_prior_sd,
   d_cov_prior_sd,
+  e_cov_prior_sd,
+  f_cov_prior_sd,
   gr_prior_cor,
+  sigma_prior_cor,
   sigma_prior_beta,
   sigma_cov_prior_beta,
   sigma_prior_sd,
@@ -32,14 +41,18 @@ set_priors_initials(
   dpar_prior_sigma,
   dpar_cov_prior_sigma,
   autocor_prior_acor,
+  autocor_prior_unstr_acor,
   mvr_prior_rescor,
-  prior_data,
-  prior_data_internal,
-  prior_args_internal,
-  init_arguments,
-  init_data,
-  init_data_internal,
-  init_args_internal
+  prior_data = NULL,
+  prior_data_internal = NULL,
+  prior_args_internal = NULL,
+  init_arguments = NULL,
+  init_data = NULL,
+  init_data_internal = NULL,
+  init_args_internal = NULL,
+  temp_stancode = NULL,
+  temp_standata = NULL,
+  custom_order_prior_str = NULL
 )
 }
 \arguments{
@@ -54,6 +67,9 @@ See \code{\link[=bsitar]{bsitar()}} function, \code{c_prior_beta} for details.}
 
 \item{d_prior_beta}{Set priors on the the fixed effect \code{d} parameter.
 See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_beta} for details.}
+
+\item{e_prior_beta}{Set priors on the the fixed effect \code{e} parameter.
+See \code{\link[=bsitar]{bsitar()}} function, \code{e_prior_beta} for details.}
 
 \item{s_prior_beta}{Set priors on the the fixed effect \code{s} parameter
 (i.e., spline coeficients). See \code{\link[=bsitar]{bsitar()}} function,

@@ -2,35 +2,36 @@
 % Please edit documentation in R/prepare_function.R
 \name{prepare_function}
 \alias{prepare_function}
-\title{Prepare Stan function for fitting Bayesian SITAR growth curve model}
+\title{Prepare Stan function for Bayesian SITAR growth curve model}
 \usage{
 prepare_function(x, y, id, knots, nknots, data, internal_function_args)
 }
 \arguments{
-\item{x}{vector of predictor (typically age in years).}
+\item{x}{Predictor variable in the data. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{y}{vector of outcome (i.e., repeated growth measurements).}
+\item{y}{Response variable in the data. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{id}{a factor variable identifying the groups (typically individuals).}
+\item{id}{A vector specifying a unique group identifier for each individual.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{knots}{vector of values for knots.}
+\item{knots}{A vector of knots used for constructing the spline design
+matrix. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{nknots}{an integer specifying the number of knots.}
+\item{nknots}{An integer specifying the number of knots.}
 
-\item{data}{data frame containing variables \code{x}, \code{y} and \code{id}.}
+\item{data}{Data frame containing variables \code{x}, \code{y} and \code{id}.}
 
-\item{internal_function_args}{Other internal arguments passed from the
-\link{bsitar} to the \code{prepare_formula}).}
+\item{internal_function_args}{Internal arguments passed from the
+\code{\link[=bsitar]{bsitar()}} to the \code{prepare_formula}).}
 }
 \value{
 An character string which later evaluated to a custom function
 and inserted into the Stan's functions block.
 }
 \description{
-The \code{prepare_function}) prepares custom Stan function  which is passed
-on to the \link{bsitar} function. For univariate-by-
-subgroup model (specified by using the \code{univariate_by}) and
-multivariate model (specified by using the \code{multivariate}),
-the \code{x}, \code{y}, \code{id}, \code{knots}, \code{nknots}, are
-automatically matched with the sub-model(s).
+The \code{prepare_function}) constructs custom Stan function  which is passed
+on to the \code{\link[=bsitar]{bsitar()}} function. For univariate-by- subgroup model
+(\code{univariate_by}) and multivariate (\code{multivariate}) models (see
+\code{\link[=bsitar]{bsitar()}}), the \code{x}, \code{y}, \code{id}, \code{knots},
+\code{nknots}, are automatically matched with the sub-models.
 }

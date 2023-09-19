@@ -23,9 +23,9 @@
 #'  2 years). The current version of the SITAR model is developed by
 #'  \insertCite{Cole2010;textual}{bsitar} and has been used extensively for
 #'  modelling human growth data \insertCite{@see
-#' @nembidzaneUsingSITARMethod2020; @mansukoskiLifeCourseAssociations2019;
-#' @coleFiftyYearsChild2018; @riddellClassifyingGestationalWeight2017;
-#' @Sandhu2020}{bsitar}. As mentioned earlier (see @description), the
+#'  @nembidzaneUsingSITARMethod2020; @mansukoskiLifeCourseAssociations2019;
+#'  @coleFiftyYearsChild2018; @riddellClassifyingGestationalWeight2017;
+#'  @Sandhu2020}{bsitar}. As mentioned earlier (see @description), the
 #'  frequentist version of the SITAR model can be fit by an already available
 #'  R package, the *sitar* \insertCite{R-sitar}{bsitar}.
 #'
@@ -3233,17 +3233,30 @@ bsitar <- function(x,
   
   # First assign NULL to avoid global vars issue in Package
   for (agsxi in letters[1:26]) {
-      assign(paste0(agsxi, "_", "formula" , "si") , NULL)
-      assign(paste0(agsxi, "_", "formula_gr" , "si") , NULL)
-      assign(paste0(agsxi, "_", "formula_gr_str" , "si") , NULL)
-      assign(paste0(agsxi, "_", "prior_beta" , "si") , NULL)
-      assign(paste0(agsxi, "_", "cov_prior_beta" , "si") , NULL)
-      assign(paste0(agsxi, "_", "prior_sd" , "si") , NULL)
-      assign(paste0(agsxi, "_", "cov_prior_sd" , "si") , NULL)
-      assign(paste0(agsxi, "_", "init_beta", "si" ) , NULL)
-      assign(paste0(agsxi, "_", "cov_init_beta" , "si") , NULL)
-      assign(paste0(agsxi, "_", "init_sd", "si" ) , NULL)
-      assign(paste0(agsxi, "_", "cov_init_sd" , "si") , NULL)
+    assign(paste0(agsxi, "", "" , "") , NULL, 
+           envir = parent.frame())
+      assign(paste0(agsxi, "_", "formula" , "si") , NULL, 
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "formula_gr" , "si") , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "formula_gr_str" , "si") , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "prior_beta" , "si") , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "cov_prior_beta" , "si") , NULL, 
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "prior_sd" , "si") , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "cov_prior_sd" , "si") , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "init_beta", "si" ) , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "cov_init_beta" , "si") , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "init_sd", "si" ) , NULL,
+             envir = parent.frame())
+      assign(paste0(agsxi, "_", "cov_init_sd" , "si") , NULL, 
+             envir = parent.frame())
   }
   
   
