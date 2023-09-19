@@ -330,7 +330,7 @@ individual variability is captured by the residual parameters which include $2
 
 # need to set_cmdstan_path otherwise build check package throws error 
 
-cmdstanr::set_cmdstan_path("C:/cmdstan/cmdstan-2.31.0")
+cmdstanr::set_cmdstan_path("//wsl$/Ubuntu/home/sandhu/.cmdstan/cmdstan-2.32.2")
 
 library(tidyverse)
 library(bsitar)

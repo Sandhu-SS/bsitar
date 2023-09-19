@@ -2746,9 +2746,10 @@ set_priors_initials <- function(a_prior_beta,
   )
   
   
-
+  custom_order_prior_str_evaluating <- FALSE
   if(any(custom_order_prior_str != "")) {
      custom_order_prior <- custom_order_prior_str
+     custom_order_prior_str_evaluating <- TRUE
   }
  
   
@@ -2909,9 +2910,12 @@ set_priors_initials <- function(a_prior_beta,
       combined_inits <- c(list_ck, list_ck_sd2, list_ck_z2)
     }
     
+    # Don't let it evaluate when custom_order_prior_str != "" 
+    # i.e,  when evaluating when hierarchy priors 
     
-    
-    if (multivariate$mvar & multivariate$rescor) {
+    if (multivariate$mvar & 
+        multivariate$rescor & 
+        !custom_order_prior_str_evaluating) {
       list_ck_rescor <- list_ck_rescor[lengths(list_ck_rescor) != 0]
       list_ck_rescor <- list_ck_rescor[[1]]
       combined_inits <- c(combined_inits, list_ck_rescor)
