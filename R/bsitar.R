@@ -1483,7 +1483,7 @@
 #'  model.matrix predict quantile rbeta sd setNames smooth.spline 
 #'  
 #'@importFrom stats loess na.omit residuals complete.cases deriv formula update
-#' 
+#'@importFrom rlang .data
 #'@importFrom utils combn head installed.packages packageVersion tail
 #'@importFrom Rdpack reprompt
 #'@import brms
@@ -1781,6 +1781,10 @@ bsitar <- function(x,
   # var_lst <- sapply(set_collect, function(x) assign(x, NULL))
   # list2env(var_lst, envir = NULL)
   
+  
+  set_collect <-  c('normal', 'uniform')
+  var_lst <- sapply(set_collect, function(x) assign(x, NULL))
+  list2env(var_lst, envir = .GlobalEnv)
   
   
   mcall <- mcall_ <- match.call()
@@ -3326,9 +3330,9 @@ bsitar <- function(x,
     subindicatorsi <- subindicators[ii]
     
     
-    for (i in convert_to_list) {
-      assign(paste0(i, "s", "i"), NULL)
-    }
+    # for (i in convert_to_list) {
+    #   assign(paste0(i, "s", "i"), NULL)
+    # }
     
     
     for (i in convert_to_list) {
@@ -6275,7 +6279,8 @@ bsitar <- function(x,
   if(!is.null(set_replace_priors) & is.null(set_self_priors)) {
     if(!set_same_priors_hierarchy) {
       drop_old_sd_cor_groups <- unique(setup_new_priors_add[['group']])
-      brmspriors <- brmspriors %>% filter(! group %in% drop_old_sd_cor_groups)
+      brmspriors <- brmspriors %>% 
+        filter(! .data$group %in% drop_old_sd_cor_groups)
       brmspriors <- brmspriors %>%
         dplyr::filter(source == 'user') %>%
         dplyr::bind_rows(., set_replace_priors)
