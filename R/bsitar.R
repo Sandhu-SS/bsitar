@@ -1786,7 +1786,21 @@ bsitar <- function(x,
   # var_lst <- sapply(set_collect, function(x) assign(x, NULL))
   # list2env(var_lst, envir = .GlobalEnv)
   
-  get('normal', NULL)
+  assign('normal', NULL, pos = 1, inherits = FALSE, immediate = TRUE)
+  
+  assign('uniform', NULL, pos = 1, inherits = FALSE, immediate = FALSE)
+  
+  assign('lkj', NULL, pos = 1, inherits = TRUE, immediate = TRUE)
+  
+  
+  assign('idsi', NULL, pos = -1, inherits = FALSE, immediate = TRUE)
+  
+  assign('dfsi', NULL, pos = -1, inherits = FALSE, immediate = FALSE)
+  
+  assign('knotssi', NULL, pos = -1, inherits = TRUE, immediate = TRUE)
+  
+  
+  
   
   # uniform <- NULL
   
