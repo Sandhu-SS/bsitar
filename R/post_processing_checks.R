@@ -2,30 +2,30 @@
 
 
 #' An internal function to perform checks when calling post-processing functions
-#' 
-#' @description The \code{post_processing_checks} perform essential checks 
-#' (such as the validity of model class, response etc.) during post-processing 
-#' of posterior draws.
+#'
+#' @description The \code{post_processing_checks} perform essential checks (such
+#'   as the validity of model class, response etc.) during post-processing of
+#'   posterior draws.
 #'
 #' @param model An object of class \code{bsitar}.
-#' 
+#'
 #' @param xcall The \code{match.call()} from the post-processing function.
-#' 
-#' @param resp Response variable (default \code{NULL}) specified as a character  
-#'  string. This is needed when processing univariate-by-subgroup and 
-#'  multivariate model (see \code{bsitar} function for details). 
-#' 
+#'
+#' @param resp Response variable (default \code{NULL}) specified as a character
+#'   string. This is needed when processing univariate-by-subgroup and
+#'   multivariate model (see \code{bsitar} function for details).
+#'
 #' @param deriv An integer value to specify whether to estimate distance curve
 #'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
 #'   the model estimated curve(s)). A value \code{0} (default) is for distance
 #'   curve and  \code{1} for the velocity curve.
-#'  
-#'  @param envir Indicator to set the environment of function evaluation.
-#'  The default is \code{parent.frame}. 
 #'
-#' @return A string with the error captured or else a list with necessary  
-#' information needed when executing the post-processing function 
-#' 
+#' @param envir Indicator to set the environment of function evaluation. The
+#'   default is \code{parent.frame}.
+#'
+#' @return A string with the error captured or else a list with necessary
+#'   information needed when executing the post-processing function
+#'
 #' @export
 #'
 #' @examples
