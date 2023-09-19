@@ -1786,7 +1786,7 @@ bsitar <- function(x,
   # var_lst <- sapply(set_collect, function(x) assign(x, NULL))
   # list2env(var_lst, envir = .GlobalEnv)
   
-  assign((noquote('normal')), NULL)
+  get('normal', NULL)
   
   uniform <- NULL
   
