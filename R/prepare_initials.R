@@ -12,7 +12,8 @@
 #' the [bsitar::bsitar()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function via [bsitar::prepare_priors()] to 
 #' the \code{prepare_initials}. See [bsitar::bsitar()] function for details on 
-#' initials arguments 
+#' initials arguments.
+#' 
 #' @param init_internal_args An internal argument list created and passed from  
 #' the [bsitar::prepare_priors()] function to this \code{prepare_initials} 
 #' function.
@@ -44,9 +45,7 @@ prepare_initials <- function(init_argument,
   splitmvar_w2 <- NULL;
   ii <- NULL;
   allowed_init_options_sd <- NULL;
-  <- NULL;
   allowed_init_options_rate <- NULL;
-  <- NULL;
   allowed_init_options_shape <- NULL;
   nabcrei <- NULL;
   N_J_all <- NULL;

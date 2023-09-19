@@ -28,7 +28,15 @@ priors_to_textdata <- function(model,
   if(missing(model)) {
     model <- NULL
   }
-  # stop()
+  
+  nlpar <- NULL; 
+  coef <- NULL;
+  class <- NULL;
+  prior <- NULL;
+  group <- NULL;
+  resp <- NULL;
+  dpar <- NULL;
+  
   
   if(is.null(model) & is.null(spriors) & is.null(sdata)) {
     stop("Supply either model or spriors and sdata arguments")
@@ -106,15 +114,15 @@ priors_to_textdata <- function(model,
   
   if(!is.null(gsub_group)) {
     for (gsub_groupi in gsub_group) {
-      spriors <- spriors %>%  dplyr::mutate(.data$group = gsub(gsub_groupi, "" , .data$group))
+      spriors <- spriors %>%  dplyr::mutate(group = gsub(gsub_groupi, "" , group))
     }
   }
   
   
-  spriors <- spriors %>% relocate(.data$nlpar, .data$coef, 
-                                  .data$class, .data$prior, 
-                                  .data$group, .data$resp, 
-                                  .data$dpar)
+  spriors <- spriors %>% relocate(nlpar, coef, 
+                                  class, prior, 
+                                  group, resp, 
+                                  dpar)
   #stop()
   # for sigma betas
   spriors <- spriors %>%  dplyr::mutate(coef =  dplyr::if_else(coef == '' &
@@ -134,12 +142,12 @@ priors_to_textdata <- function(model,
   
   
   
-  spriors <- spriors %>% rename(.data$Parameter = .data$nlpar,
-                                .data$Coefficient = .data$coef,
-                                .data$Class = .data$class, 
-                                .data$Prior = .data$prior,
-                                .data$Group = .data$group,
-                                .data$Response = .data$resp)
+  spriors <- spriors %>% rename(Parameter = nlpar,
+                                Coefficient = coef,
+                                Class = class, 
+                                Prior = prior,
+                                Group = group,
+                                Response = resp)
   
   
   spriors <- spriors %>% 

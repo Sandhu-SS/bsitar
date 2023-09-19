@@ -82,17 +82,17 @@ allowed. For example, dvau', Dvau', dVau', DVau', or dvau'.}
 not to calculate and plot the age at peak velocity (APGV) when \code{opt})
 includes 'v' or 'V'.}
 
-\item{bands}{A character string containing letter(s), or \code{NULL}
-(default) to indicate if CI bands to be plotted around the distance and
-velocity curves (and also the APGV). If \code{NULL}, no band plotted.
-Alternatively, user can specify a string with any one of the following or
-their combination(s): \code{'d'} for band around the distance curve,
-\code{'v} for band around the velocity curve, and \code{'p} for band around
-the the vertical line denoting the APGV parameter. The \code{'dvp'} will
-include CI bands for distance and velocity curves, and the APGV.}
+\item{bands}{A character string containing letter(s), or \code{NULL} (default)
+to indicate if CI bands to be plotted around the distance and velocity
+curves (and also the APGV). If \code{NULL}, no band plotted. Alternatively,
+user can specify a string with any one of the following or their
+combination(s): \code{'d'} for band around the distance curve, \code{'v} for
+band around the velocity curve, and \code{'p} for band around the the
+vertical line denoting the APGV parameter. The \code{'dvp'} will include CI
+bands for distance and velocity curves, and the APGV.}
 
-\item{conf}{A numeric value (default \code{0.95}) to be used to compute the
-CI and hence the width of the \code{bands}. See \link{gparameters.bsitar} for
+\item{conf}{A numeric value (default \code{0.95}) to be used to compute the CI
+and hence the width of the \code{bands}. See \link{gparameters.bsitar} for
 further details.}
 
 \item{resp}{An optional character string to specify response variable when
@@ -261,10 +261,9 @@ curves on a single plot when opt includes \code{'dv'}, \code{'Dv'},
 \code{'dV'} or \code{'DV'} options.  Similarly, when opt includes
 \code{'au'}, the adjusted and unadjusted curves are plotted as a single
 plot. When opt is a single letter (e.g., \code{'d'}. \code{'v'} \code{'D'},
-\code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is
-ignored. The alternative layout option, the \code{'facet'} uses
-\link[ggplot2:facet_wrap]{ggplot2::facet_wrap} to map and draw plot when \code{opt} include two or
-more letters.}
+\code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is ignored.
+The alternative layout option, the \code{'facet'} uses \link[ggplot2:facet_wrap]{ggplot2::facet_wrap}
+to map and draw plot when \code{opt} include two or more letters.}
 
 \item{linecolor}{The color of line used when layout is \code{'facet'}. The
 default is \code{NULL} which internally set the \code{linecolor} as
@@ -275,10 +274,10 @@ example, for \code{opt = 'dv'}, the color of distance line is controlled by
 the \code{linecolor1}. Default \code{NULL} will internally set
 \code{linecolor1} as \code{'orange2'}.}
 
-\item{linecolor2}{The color of second line when layout is \code{'single'}.
-For example, for \code{opt = 'dv'}, the color of velocity line is
-controlled by the \code{linecolor2}. Default \code{NULL} sets the color
-\code{'green4'} for \code{linecolor2}.}
+\item{linecolor2}{The color of second line when layout is \code{'single'}. For
+example, for \code{opt = 'dv'}, the color of velocity line is controlled by
+the \code{linecolor2}. Default \code{NULL} sets the color \code{'green4'}
+for \code{linecolor2}.}
 
 \item{label.x}{An optional character string to label the x axis. When
 \code{NULL} (default), the x axis label is taken from the predictor (e.g.,
@@ -296,11 +295,11 @@ distance and velocity curves with \code{'single'} layout option.}
 
 \item{linetype.apv}{An optional character string to specify the type of the
 vertical line drawn to mark the APGV. Default \code{NULL} sets the linetype
-as 'dotted'}
+as \code{dotted}.}
 
-\item{linewidth.main}{An optional character string to specify the width of
-the the line for the distance and velocity curves. The default \code{NULL}
-will set it as 0.35.}
+\item{linewidth.main}{An optional character string to specify the width of the
+the line for the distance and velocity curves. The default \code{NULL} will
+set it as 0.35.}
 
 \item{linewidth.apv}{An optional character string to specify the width of the
 the vertical line drawn to mark the APGV. The default \code{NULL} will set
@@ -308,49 +307,56 @@ it as 0.25.}
 
 \item{linetype.groupby}{An optional argument to specify the line type for the
 distance and velocity curves when drawing plots for a model that includes
-factor covariate(s) or when visualising individual specific distance/velocity curves
-(default \code{NA}). Setting it to \code{NULL} will automatically sets the
-linetype for each factor level or individual This will also add legends for
-the factor level covariate or individuals whereas \code{NA} will set a
-'solid' line type and suppress legends. It is recommended to keep the
-default \code{NULL} option when plotting population average curves for when
-model included factor covariates because this would appropriately set the
-legends otherwise it is difficult to differentiate which curve belongs to
-which level of factor. For individual specific curves, the line type can be
-set to \code{NULL} when the number of individuals is small. However, when
-the number of individuals is large, \code{NA} is a better choice which
-prevents printing a large number of legends for each individual.}
+factor covariate(s) or when visualising individual specific
+distance/velocity curves (default \code{NA}). Setting it to \code{NULL} will
+automatically sets the linetype for each factor level or individual This
+will also add legends for the factor level covariate or individuals whereas
+\code{NA} will set a 'solid' line type and suppress legends. It is
+recommended to keep the default \code{NULL} option when plotting population
+average curves for when model included factor covariates because this would
+appropriately set the legends otherwise it is difficult to differentiate
+which curve belongs to which level of factor. For individual specific
+curves, the line type can be set to \code{NULL} when the number of
+individuals is small. However, when the number of individuals is large,
+\code{NA} is a better choice which prevents printing a large number of
+legends for each individual.}
 
 \item{color.groupby}{An optional argument to specify the line color for
 distance and velocity curves when drawing plots for a model that includes
-factor covariate(s), or when visualising individual specific distance/velocity curves
-(default \code{NA}). Setting it to \code{NULL} will automatically sets the
-line color for each factor level or individual. This will also add legends for
-the factor level covariate or individuals. However, setting it as \code{NA} will set a
-'solid' line type and suppress legends. It is recommended to keep the
-default \code{NULL} option when plotting population average curves for
-factor covariates because this would appropriately set the
-legends otherwise it is difficult to differentiate which curve belongs to
-which level of the factor. For individual specific curves, the line color can be
-set to \code{NULL} when the number of individuals is small. However, when
-the number of individuals is large, \code{NA} is a better choice which
-prevents printing a large number of legends for each individual.}
+factor covariate(s), or when visualising individual specific
+distance/velocity curves (default \code{NA}). Setting it to \code{NULL} will
+automatically sets the line color for each factor level or individual. This
+will also add legends for the factor level covariate or individuals.
+However, setting it as \code{NA} will set a 'solid' line type and suppress
+legends. It is recommended to keep the default \code{NULL} option when
+plotting population average curves for factor covariates because this would
+appropriately set the legends otherwise it is difficult to differentiate
+which curve belongs to which level of the factor. For individual specific
+curves, the line color can be set to \code{NULL} when the number of
+individuals is small. However, when the number of individuals is large,
+\code{NA} is a better choice which prevents printing a large number of
+legends for each individual.}
 
-\item{band.alpha}{An optional numeric value to specify the transparency of
-the CI band(s) around the distance curve, velocity curve and the line
-indicating the APGV. The default \code{NULL} will set this value to 0.4.}
+\item{band.alpha}{An optional numeric value to specify the transparency of the
+CI band(s) around the distance curve, velocity curve and the line indicating
+the APGV. The default \code{NULL} will set this value to 0.4.}
 
-\item{show_age_takeoff}{A logical (default \code{TRUE}) to indicate whether
-to display the ATGV line(s) on the plot.
-@param show_age_peak A logical (default \code{TRUE}) to indicate whether
-to display the APGV line(s) on the plot.
-@param show_age_cessation A logical (default \code{TRUE}) to indicate whether
-to display the ACGV line(s) on the plot.
-@param show_vel_takeoff A logical (default \code{FALSE}) to indicate whether
-to display the TGV line(s) on the plot.
-@param show_vel_peak A logical (default \code{FALSE}) to indicate whether
-to display the PGV line(s) on the plot.
-@param show_vel_cessation A logical (default \code{FALSE}) to indicate whether
+\item{show_age_takeoff}{A logical (default \code{TRUE}) to indicate whether to
+display the ATGV line(s) on the plot.}
+
+\item{show_age_peak}{A logical (default \code{TRUE}) to indicate whether to
+display the APGV line(s) on the plot.}
+
+\item{show_age_cessation}{A logical (default \code{TRUE}) to indicate whether
+to display the ACGV line(s) on the plot.}
+
+\item{show_vel_takeoff}{A logical (default \code{FALSE}) to indicate whether
+to display the TGV line(s) on the plot.}
+
+\item{show_vel_peak}{A logical (default \code{FALSE}) to indicate whether to
+display the PGV line(s) on the plot.}
+
+\item{show_vel_cessation}{A logical (default \code{FALSE}) to indicate whether
 to display the CGV line(s) on the plot.}
 
 \item{returndata}{A logical (default \code{FALSE}) indicating whether to plot
@@ -375,8 +381,8 @@ validation and prediction. See \code{\link[brms:fitted.brmsfit]{brms::fitted.brm
 \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details.}
 }
 \value{
-A \link{ggplot2} object (default) or a \code{data.frame} when returndata
-is \code{TRUE}.
+A \link{ggplot2} object (default) or a \code{data.frame} when returndata is
+\code{TRUE}.
 }
 \description{
 The \code{plot_bsitar} provides visualization of six different
@@ -391,14 +397,14 @@ population average velocity curve, individual-specific distance curves,
 individual-specific velocity curves, unadjusted individual growth curves
 (i.e, observed growth curves), and the adjusted individual growth curves
 (adjusted for the model estimated random effects). The \code{plot_bsitar}
-internally calls the \link{gparameters.bsitar} function to estimate and
-summaries the distance and velocity curves and to estimate growth
-parameters such as the age at peak growth velocity (APGV). The
-\code{plot_bsitar} in turn calls the \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
-\link[brms:predict.brmsfit]{brms::predict.brmsfit} functions to make inference from the posterior
-draws. Thus, \code{plot_bsitar} allows plotting fitted or predicted curves.
-See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} for details on these
-functions and the difference between fitted and predicted values.
+internally calls the \link{gparameters.bsitar} function to estimate and summaries
+the distance and velocity curves and to estimate growth parameters such as
+the age at peak growth velocity (APGV). The \code{plot_bsitar} in turn calls
+the \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} functions to make
+inference from the posterior draws. Thus, \code{plot_bsitar} allows plotting
+fitted or predicted curves. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
+\link[brms:predict.brmsfit]{brms::predict.brmsfit} for details on these functions and the difference
+between fitted and predicted values.
 }
 \examples{
 \dontrun{

@@ -11,7 +11,7 @@ prepare_initials(init_argument, init_internal_args)
 the \code{\link[=bsitar]{bsitar()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function via \code{\link[=prepare_priors]{prepare_priors()}} to
 the \code{prepare_initials}. See \code{\link[=bsitar]{bsitar()}} function for details on
-initials arguments}
+initials arguments.}
 
 \item{init_internal_args}{An internal argument list created and passed from
 the \code{\link[=prepare_priors]{prepare_priors()}} function to this \code{prepare_initials}
