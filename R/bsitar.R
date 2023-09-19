@@ -1482,8 +1482,9 @@
 #'@importFrom stats as.formula coef df dist filter fitted gaussian lm mad median
 #'  model.matrix predict quantile rbeta sd setNames smooth.spline 
 #'  
-#'@importFrom stats loess na.omit residuals
-#'@importFrom utils combn head installed.packages packageVersion
+#'@importFrom stats loess na.omit residuals complete.cases deriv formula update
+#' 
+#'@importFrom utils combn head installed.packages packageVersion tail
 #'@importFrom Rdpack reprompt
 #'@import brms
 #'
@@ -3232,31 +3233,32 @@ bsitar <- function(x,
   
   
   # First assign NULL to avoid global vars issue in Package
+  set_env <- environment()
   for (agsxi in letters[1:26]) {
     assign(paste0(agsxi, "", "" , "") , NULL, 
-           envir = parent.frame())
+           envir = set_env)
       assign(paste0(agsxi, "_", "formula" , "si") , NULL, 
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "formula_gr" , "si") , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "formula_gr_str" , "si") , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "prior_beta" , "si") , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "cov_prior_beta" , "si") , NULL, 
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "prior_sd" , "si") , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "cov_prior_sd" , "si") , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "init_beta", "si" ) , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "cov_init_beta" , "si") , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "init_sd", "si" ) , NULL,
-             envir = parent.frame())
+             envir = set_env)
       assign(paste0(agsxi, "_", "cov_init_sd" , "si") , NULL, 
-             envir = parent.frame())
+             envir = set_env)
   }
   
   
