@@ -54,8 +54,7 @@ prepare_function <- function(x,
   yfunsi <- NULL;
   all_raw_str <- NULL;
   all_raw_str <- NULL;
-  `<<-` <- NULL;
-  
+
   
   if (!is.null(internal_function_args)) {
     eout <- list2env(internal_function_args)
@@ -1271,11 +1270,11 @@ add_context_getknots_fun <-
                                              spfncname = spfncname)
   }
   
-  all_raw_str <<- c(rcsfun_raw_str, spl_d0_str, spl_d1_str, 
+  all_raw_str <- c(rcsfun_raw_str, spl_d0_str, spl_d1_str, 
                     spl_d2_str, getX_str, getknots_str)
   
-  # print(cat(rcsfun))
-  # stop()
+   # print(cat(all_raw_str))
+   # stop()
   
   list(rcsfun = rcsfun, r_funs = all_raw_str)
 } 

@@ -4352,7 +4352,7 @@ bsitar <- function(x,
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
     
     
-    #funlist_rx <<- funlist_r
+    # funlist_rx <<- get_s_r_funs[['r_funs']]
     # stop()
 
     
@@ -6461,6 +6461,9 @@ bsitar <- function(x,
     
     model_info <- list()
     
+    # print(funlist_rnamelist)
+    # print(funlist_rvaluelist)
+    
     for (i in 1:length(funlist_rnamelist)) {
       model_info[[funlist_rnamelist[[i]]]] <- funlist_rvaluelist[[i]]
     }
@@ -6532,13 +6535,9 @@ bsitar <- function(x,
     model_info[['univariate_by']] <- univariate_by$by
     model_info[['nys']] <- nys
     model_info[['ys']] <- ys
-    
     model_info[['xs']] <- xs
     model_info[['ids']] <- ids
-    
     model_info[['dfs']] <- dfs
-    
-    
     model_info[['xfuns']] <- xfuns
     model_info[['yfuns']] <- yfuns
     
