@@ -186,7 +186,7 @@ with CI varibales named as Q.2.5 and Q.97.5.}
 executing the interpolation via \code{ipts}. The default \code{NULL} sets
 the individual specific predictor range whereas code \code{xrange = 1} sets
 same range for all individuals within the higher order grouping variable
-(e.g., study). Code \code{xrange  = 2} sets the identical range across the
+(e.g., study). Code \code{xrange  = 2} sets the identical range dplyr::across the
 entire sample. Lastly, a paired numeric values can be supplied e.g.,
 \code{xrange = c(6, 20)} will set the range between 6 and 20.}
 

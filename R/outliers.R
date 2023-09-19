@@ -101,7 +101,7 @@ outliers <-
       cat("code frequencies\n")
       print(summary(mat$code))
     }
-    dplyr::
+    
     mat <- cbind(mat, data_ex)
     mat <- mat %>% dplyr::relocate(dplyr::all_of(colnames_data_ex))
     
