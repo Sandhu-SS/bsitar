@@ -33,7 +33,7 @@ linkcolor:  blue
 urlcolor: blue
 citecolor: magenta
 vignette: >
-  %\VignetteIndexEntry{Bayesian SITAR model - Three level multivariate model}
+  %\VignetteIndexEntry{Bayesian SITAR model - Three level multivariate model new}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 params:

@@ -50,8 +50,6 @@ set_priors_initials(
   init_data = NULL,
   init_data_internal = NULL,
   init_args_internal = NULL,
-  temp_stancode = NULL,
-  temp_standata = NULL,
   custom_order_prior_str = NULL
 )
 }
@@ -143,6 +141,9 @@ covariate(s) included in the random effect parameter, \code{f}. See
 \item{gr_prior_cor}{Specify prior on the correlation for group level random
 effect parameters. See \code{\link[=bsitar]{bsitar()}} for details.}
 
+\item{sigma_prior_cor}{Specify prior on the correlation for distribution level
+random effect parameters. See \code{\link[=bsitar]{bsitar()}} for details.}
+
 \item{sigma_prior_beta}{Specify prior on the the distributional fixed effect
 parameter, \code{sigma}. See \code{\link[=bsitar]{bsitar()}} for details.}
 
@@ -172,6 +173,9 @@ deviation for Gaussian distribution).See \code{\link[=bsitar]{bsitar()}} for det
 \item{autocor_prior_acor}{Specify priors on the the autocorrelation parameters
 \code{ar}, \code{ma} and \code{arma}. See \code{\link[=bsitar]{bsitar()}} for details,}
 
+\item{autocor_prior_unstr_acor}{Specify priors on the the unstructured
+autocorrelation parameter. See \code{\link[=bsitar]{bsitar()}} for details,}
+
 \item{mvr_prior_rescor}{Specify priors on the the residual correlation
 parameter for multivariate model. See \code{\link[=bsitar]{bsitar()}} for details,}
 
@@ -200,6 +204,11 @@ relevant information on initials from the \code{\link[=bsitar]{bsitar()}} functi
 \item{init_args_internal}{An internal argument list that is passed from the
 \code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} and is used
 for setting the initials.}
+
+\item{custom_order_prior_str}{An internal argument that is passed from the
+\code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} when setting
+the priors for the model with hierarchy level 3 and beyond. See
+\code{\link[=bsitar]{bsitar()}} for details,}
 }
 \value{
 An object of class \code{brmsprior} (See \code{brmsprior}). In
