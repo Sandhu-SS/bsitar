@@ -1,23 +1,27 @@
 
 
 
-#' An internal function to perform checks when calling the post-processing
-#' functions
-#'  
+#' An internal function to perform checks when calling post-processing functions
+#' 
 #' @description The \code{post_processing_checks} perform essential checks 
-#' (such as the validity of model class, response etc.) when post-processing 
-#' functions
+#' (such as the validity of model class, response etc.) during post-processing 
+#' of posterior draws.
 #'
 #' @param model An object of class \code{bsitar}.
-#' function.
+#' 
 #' @param xcall The \code{match.call()} from the post-processing function.
-#' @param resp Response variable (default \code{NULL}) specified as a string 
-#' character required during the post-processing of multivariate and 
-#' univariate-by-subgroup model (see \code{bsitar} function for details).
+#' 
+#' @param resp Response variable (default \code{NULL}) specified as a character  
+#'  string. This is needed when processing univariate-by-subgroup and 
+#'  multivariate model (see \code{bsitar} function for details). 
+#' 
 #' @param deriv An integer value to specify whether to estimate distance curve
-#'  (i.e., model estimated curve(s)) or velocity curve (first derivative of the 
-#'  model estimated curve(s)). A 0 value (default) is for distance curve and 
-#'  1 for the velocity curve.
+#'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
+#'   the model estimated curve(s)). A value \code{0} (default) is for distance
+#'   curve and  \code{1} for the velocity curve.
+#'  
+#'  @param envir Indicator to set the environment of function evaluation.
+#'  The default is \code{parent.frame}. 
 #'
 #' @return A string with the error captured or else a list with necessary  
 #' information needed when executing the post-processing function 
@@ -30,7 +34,11 @@
 #' post_processing_checks(model)
 #' }
 
-post_processing_checks <- function(model, xcall, resp = NULL, deriv = 0) {
+post_processing_checks <- function(model, 
+                                   xcall, 
+                                   resp = NULL, 
+                                   deriv = 0,
+                                   envir = parent.frame()) {
   if(!'bsitar' %in% class(model)) {
     stop("The class of model object should be 'bsitar' ")
   }
@@ -90,9 +98,32 @@ post_processing_checks <- function(model, xcall, resp = NULL, deriv = 0) {
   } else if (!is.null(resp)) {
     resp_ <- paste0(resp, "_")
   }
+  
+  
+  # assign expose default funs 
+  if(model$model_info[['expose_method']] == 'R') {
+    assign(paste0(resp_, 
+                  model$model_info[['namesexefuns']], 
+                  '0'), 
+           model$model_info$exefuns[[paste0(resp_, 
+                                            model$model_info[['namesexefuns']], 
+                                            '0')]], envir = envir)
+    
+    assign(paste0(resp_, 'getX'), 
+           model$model_info$exefuns[[paste0(resp_, 'getX')]], 
+           envir = envir)
+    
+    if(model$model_info[['select_model']] == 'sitar') {
+      assign(paste0(resp_, 'getKnots'), 
+             model$model_info$exefuns[[paste0(resp_, 'getKnots')]], 
+             envir = envir)
+    }
+  }
+  
+
   list(
-    paste0(resp_, model$model_info$SplineFun, ''),
-    paste0(resp_, model$model_info$SplineFun, deriv)
-  )
+    paste0(resp_, model$model_info[['namesexefuns']], ''),
+    paste0(resp_, model$model_info[['namesexefuns']], deriv)
+  ) 
 }
 

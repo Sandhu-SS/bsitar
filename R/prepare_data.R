@@ -72,8 +72,8 @@ prepare_data <- function(data,
       }
       if (!x[yi] %in% colnames(data)) {
         stop(
-          "When model is fit with argument outliers (i.e., outliers not NULL), ",
-          "\n",
+          "When model is fit with argument outliers (i.e., outliers not NULL),",
+          " \n ",
           "  then predictor variable should be part of the newdata specified.",
           "\n",
           # "  As the predictor variable is not used in predictions, it is ok ",
@@ -88,16 +88,12 @@ prepare_data <- function(data,
       }
       if (!id[yi] %in% colnames(data)) {
         stop(
-          "When model is fit with argument outliers (i.e., outliers not NULL), ",
+          "When model is fit with argument outliers 
+          (i.e., outliers not NULL), ",
           "\n",
-          "  then group identifier variable should be part of the newdata specified.",
+          "  then group identifier variable should be 
+          part of the newdata specified.",
           "\n",
-          # "  As the group identifier variable is not used in predictions, it is ok ",
-          # "\n",
-          # "  to just add a dummy varibale. For example, ",
-          # id[yi],
-          # " = 1",
-          # "\n",
           "  please check the missing group identifier varibale: ",
           id[yi]
         )

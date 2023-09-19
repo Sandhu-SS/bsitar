@@ -97,15 +97,19 @@ prepare_initials <- function(init_argument,
   }
   
   check_form_0 <- paste0(parm, "_", 'form_0')
-  nparcov <- paste0("n", parm, "cov")
+  nparcov <- paste0(parm, "ncov")
   
   check_form_0_gr <- paste0(parm, "_", 'form_0_gr')
-  # nparcov_gr <- paste0("n", parm, "cov_gr")
+
   
-  if(parm != 'sigma') nparcov_gr <- paste0("n", parm, "cov_gr")
-  if(parm == 'sigma') nparcov_gr <- paste0("n", parm, "_", "cov_gr")
+  nparcov_gr <- paste0(parm, "ncov_gr")
+  
   
   check_sigma_form_0 <- paste0('sigma', "_", 'form_0')
+  
+  
+  if(nparcov == 'nsigmacov') nparcov <- 'nsigmacov'
+
   
   abcrandomelements <-
     strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
@@ -125,9 +129,9 @@ prepare_initials <- function(init_argument,
   count_ <- 0
   for (abcrandomelements_i in abcrandomelements) {
     count_ <- count_ + 1
-    if (exists(paste0("n", abcrandomelements_i, "cov_gr")) &
-        length(ept(paste0("n", abcrandomelements_i, "cov_gr"))) > 0) {
-      i__ <- ept(paste0("n", abcrandomelements_i, "cov_gr"))
+    if (exists(paste0(abcrandomelements_i, "n",  "cov_gr")) &
+        length(ept(paste0(abcrandomelements_i, "n",  "cov_gr"))) > 0) {
+      i__ <- ept(paste0(abcrandomelements_i, "n",  "cov_gr"))
       nb <- rep(paste0(abcrandomelements_i, "cov"), i__ - 1)
       nb <- c(nb, paste0(nb, 1:length(nb)))
       abcrandomelements_c <- c(abcrandomelements_c, nb)
@@ -508,15 +512,22 @@ prepare_initials <- function(init_argument,
       out
     }
   
-  
-  
-  
+
+
   ################################################
   # class b - beta
-  if (class == 'b' & suffix == 'beta') {
-    name_parm <- paste0(class, resp_, "_", parm)
-    suffix <- 'beta'
+  if ((class == 'b' & suffix == 'beta') |
+      class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
     
+    if(ept("sigma_dpar") == "sigma") {
+      name_parm <- paste0(class, "_", parm, resp_)
+    } else {
+      name_parm <- paste0(class, resp_, "_", parm)
+    }
+    
+    # name_parm <- paste0(class, resp_, "_", parm)
+    suffix <- 'beta'
+  
     allowed_init_options <- allowed_init_options_beta
     
     if(!exists('allowed_init_options')) allowed_init_options <- NULL
@@ -555,6 +566,16 @@ prepare_initials <- function(init_argument,
                         paste0("ymean", resp_),
                         ept(name_initialsi))
             evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ymax') {
+            eit <- gsub("ymax",
+                        paste0("ymax", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ymaxs') {
+            eit <- gsub("ymaxs",
+                        paste0("ymaxs", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
           } else if (ept(name_initialsi) == 'median') {
             eit <- gsub("median",
                         paste0("median", resp_),
@@ -563,6 +584,21 @@ prepare_initials <- function(init_argument,
           } else if (ept(name_initialsi) == 'bstart') {
             eit <- gsub("bstart",
                         paste0("bstart", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'cstart') {
+            eit <- gsub("cstart",
+                        paste0("cstart", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'dstart') {
+            eit <- gsub("dstart",
+                        paste0("dstart", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'estart') {
+            eit <- gsub("estart",
+                        paste0("estart", resp_),
                         ept(name_initialsi))
             evaluated_init <- ept(eit) %>% as.numeric()
           } else if (ept(name_initialsi) == 'prior') {
@@ -619,16 +655,47 @@ prepare_initials <- function(init_argument,
     } else {
       out_list[[name_parm]] <- NULL
     }
-    
+  }
+  
+
+  
+  if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") != "sigma") {
+    if(ept(check_form_0)) {
+      if(length(out_list[[name_parm]]) == 1) {
+        out_list[[name_parm]] <- rep(out_list[[name_parm]], ept(nparcov))
+      }
+    }
   }
   
   
+  # new addition on 27 5 2023
+  # like a b c d e beta when ~ 0 +..., init for sigma are rep of sigma_init_beta 
+  if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
+    if(ept("sigma_form_0")) {
+      out_list[[name_parm]] <- rep(out_list[[name_parm]], ept(nparcov))
+    } else if(!ept("sigma_form_0")) {
+      #if(!is.null(ept(nparcov))) {
+        if(eit_cov) {
+          addcovsigma <- unlist(ept(ept(ept("init_argument"))))
+          addcovsigma_n <- ept(nparcov) - 1
+          if(addcovsigma_n == length(addcovsigma)) {
+            addcovsigma <- addcovsigma
+          } else if(length(addcovsigma) == 1) {
+            addcovsigma <- rep(addcovsigma, addcovsigma_n)
+          }
+          if(!is.null(ept(nparcov))) out_list[[name_parm]] <-addcovsigma
+        }
+      #} # if(!is.null(ept(nparcov))) {
+    } # end else if(!ept("sigma_form_0")) 
+  } # if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
   
   
   
   ################################################
   # class sd - sd
-  if (class == 'sd' & suffix == 'sd') {
+  if (class == 'sd' & suffix == 'sd' & ept("sigma_dpar") != "sigma" |
+      class == 'sd' & suffix == 'sd' & ept("sigma_dpar") == "sigma"
+      ) {
     name_parm <- paste0('sd', "_", ii)
     suffix <- 'sd'
     
@@ -746,6 +813,9 @@ prepare_initials <- function(init_argument,
       out_list[[name_parm]] <- NULL
     }
   }
+  
+  
+
   
   
   ################################################
@@ -1405,7 +1475,6 @@ prepare_initials <- function(init_argument,
   }
   
   
-  
   # autocorrelation parameters (ar, ma, and arms)
   if (class == 'ar' | class == 'ma' & suffix == 'acor') {
     if (acorclass == 'arma') {
@@ -1414,6 +1483,9 @@ prepare_initials <- function(init_argument,
     } else {
       name_parm_s <- class
     }
+    
+    # if(class == 'ar') nrep_of_parms <- nrep_of_parms_p
+    # if(class == 'ma') nrep_of_parms <- nrep_of_parms_q
     
     name_parm_s <- paste0(name_parm_s, resp_)
     
@@ -1425,9 +1497,13 @@ prepare_initials <- function(init_argument,
     upperbound <- upperbound
     
     suffix <- 'acor'
-    
+   
     out_list <- list()
     for (name_parm in name_parm_s) {
+      
+      if(grepl("ar", name_parm)) nrep_of_parms <- nrep_of_parms_p
+      if(grepl("ma", name_parm)) nrep_of_parms <- nrep_of_parms_q
+      
       list_collect <- list()
       start_cnt <- 0
       for (name_initialsi in init_argument) {
@@ -1492,6 +1568,13 @@ prepare_initials <- function(init_argument,
       if (!is.null(list_collect[[name_initialsi]])) {
         tempv <- list_collect %>% unlist() %>% unname()
         tempv <- as.numeric(tempv)
+        if(length(tempv) == 1 & nrep_of_parms == 1) {
+          tempv <- tempv
+        } else if(length(tempv) == 1 & nrep_of_parms > 1) {
+          tempv <- rep(tempv, nrep_of_parms)
+        } else if(length(tempv) != nrep_of_parms) {
+          stop("Length of initials should be either 1 of equal to dims")
+        }
         out_list[[name_parm]] <- tempv
       } else {
         out_list[[name_parm]] <- NULL
@@ -1499,9 +1582,119 @@ prepare_initials <- function(init_argument,
     }
   }
   
+
+  # autocorrelation parameters (unst) -> similar to cor / lrescor
+ 
+  if (class == 'Lcortime' & suffix == 'acor') {
+    
+    # name_parm <- paste0('Cortime', "_", ii)
+    
+    name_parm_s <- class
+    name_parm_s <- paste0(name_parm_s, resp_)
+    
+    name_parm <- name_parm_s # paste0('Lcortime', "_", ii)
+    
+    suffix <- 'acor'
+    
+    allowed_init_options <- NULL
+    
+    if(!exists('allowed_init_options')) allowed_init_options <- NULL
+    
+    NC_dims         <- ept(cortimeNlags) %>% as.numeric()
+    NC_cor_elements <- (NC_dims * (NC_dims - 1)) / 2
+    
+    lowerbound <- lowerbound
+    upperbound <- upperbound
+    
+    out_list <- list_collect <- list()
+    start_cnt <- 0
+    for (name_initialsi in init_argument) {
+      if (grepl("_cov", name_initialsi))
+        eit_cov <- TRUE
+      else
+        eit_cov <- FALSE
+      start_cnt <- start_cnt + 1
+      if (ept(name_initialsi) != 'NULL') {
+        if (ept(name_initialsi) != 'random') {
+          if (ept(name_initialsi) == '0') {
+            L_elements     <- rep(0, NC_cor_elements)
+            evaluated_init <- create_cor_mat(NC_dims, L_elements)
+          } else if (ept(name_initialsi) == 'prior') {
+            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
+            stanvname_cnt <- 0
+            for (stanvname_i in stanvname_) {
+              stanvname_cnt <- stanvname_cnt + 1
+              stanvname_cnt_name <-
+                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
+              assign(stanvname_cnt_name,
+                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
+              length_args <-
+                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
+            }
+            evaluated_init <-
+              eval_prior_based_init(
+                dist = dist,
+                class = class,
+                lowerbound = lowerbound,
+                upperbound = upperbound,
+                length_args = NC_dims
+              )
+          } else {
+            check_evalation_of_numeric_init_obj(
+              ept(name_initialsi),
+              check = 'args',
+              x = name_initialsi,
+              pname_ = 'xxx',
+              dist = 'dis',
+              nlpar = parm,
+              class = class,
+              allowed_init_options = allowed_init_options,
+              splitmvar_w2 = splitmvar_w2
+            )
+            name_initialsi <- ept(name_initialsi)
+            if (is.numeric(ept(name_initialsi)) |
+                !is.null(ept(name_initialsi))) {
+              if (length(ept(name_initialsi)) == 1) {
+                L_elements <-
+                  rep(ept(name_initialsi), NC_cor_elements) %>% as.numeric()
+              } else if (length(ept(name_initialsi)) == NC_cor_elements) {
+                L_elements <- ept(name_initialsi) %>% as.numeric()
+              } else {
+                stop(
+                  "length of correlation vector must be ",
+                  NC_cor_elements,
+                  ", but found ",
+                  length(ept(name_initialsi)),
+                  "\n ",
+                  " Please check the following init arg :",
+                  'gr_init_cor'
+                )
+              }
+              evaluated_init <- create_cor_mat(NC_dims, L_elements)
+            }
+          }
+        } else if (ept(name_initialsi) == 'random') {
+          evaluated_init <- NULL
+        }
+      } else if (ept(name_initialsi) == 'NULL') {
+        evaluated_init <- NULL
+      }
+      list_collect[[name_initialsi]] <- evaluated_init
+    }
+    
+    if (!is.null(list_collect[[name_initialsi]])) {
+      tempv <- list_collect %>% unname()
+      tempv <- tempv[[1]]
+      out_list[[name_parm]] <- tempv
+    } else {
+      out_list[[name_parm]] <- NULL
+    }
+  }
+  
+  
   
   # standardized group level effects (part of centred parametrisation)
-  
+ 
   if (any(grepl("_init_sd", init_argument)) &
       gr_init_cor == "NULL") {
     nabcrei_z <- 1
@@ -1601,5 +1794,11 @@ prepare_initials <- function(init_argument,
   
   if (!exists('out_list'))
     out_list <- NULL
+  
+  
+  # print(out_list)
+  # print(str(out_list))
+  # stop()
+  
   out_list
 }

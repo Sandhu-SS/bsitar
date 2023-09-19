@@ -68,14 +68,17 @@ fitted_.bsitar <-
            robust = FALSE,
            probs = c(0.025, 0.975),
            xrange = NULL,
-           envir = .GlobalEnv,
+           parms_eval = FALSE,
+           parms_method = 'getPeak',
+           envir = parent.frame(),
            ...) {
     
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
-                             deriv = deriv)
+                             deriv = deriv,
+                             envir = envir)
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
@@ -90,8 +93,9 @@ fitted_.bsitar <-
                              xrange = xrange)
     }
     
-    assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
-    
+  
+    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+   
     . <- fitted(model,
                 newdata = newdata,
                 resp = resp,
@@ -106,7 +110,7 @@ fitted_.bsitar <-
                 robust = robust,
                 probs = probs,
                 ...)
-    assign(o[[1]], model$Spl_funs[[o[[1]]]], envir = envir)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }
 
@@ -118,6 +122,8 @@ fitted_ <- function(model, ...) {
 }
 
 
-
-
+# tx <- fitted_(setmodel, deriv = 1, parms = T, re_formula = NA, draw_ids = 111, 
+#               parms_method = 'sitar',
+#               summary = T)
+# head(tx)
 

@@ -188,6 +188,11 @@ plot_bsitar.bsitar <- function(model,
                                avg_reffects = NULL,
                                ipts = NULL,
                                xrange = NULL,
+                               takeoff = FALSE,
+                               trough = FALSE,
+                               acgv = FALSE,
+                               acgv_velocity = 0.10,
+                               acg_asymptote = NULL,
                                seed = 123,
                                estimation_method = 'fitted',
                                allow_new_levels = FALSE,
@@ -211,14 +216,46 @@ plot_bsitar.bsitar <- function(model,
                                linetype.groupby = NA,
                                color.groupby = NA,
                                band.alpha = NULL,
-                               returndata = FALSE,...) {
+                               show_age_takeoff = TRUE,
+                               show_age_peak = TRUE,
+                               show_age_cessation = TRUE,
+                               show_vel_takeoff = FALSE,
+                               show_vel_peak = FALSE,
+                               show_vel_cessation = FALSE,
+                               returndata = FALSE,
+                               parms_eval = FALSE,
+                               parms_method = 'getPeak',
+                               envir = parent.frame(),
+                               ...) {
   if (is.null(ndraws))
     ndraws  <- ndraws(model)
   else
     ndraws <- ndraws
   
+  xcall = match.call()
+  
+  
+  match.call.list.in <- as.list(match.call())[-1]
+  
+  
+  # set alias argument for apv and peak
+  dots <- list(...)
+  if ("peak" %in% names(dots)) {
+    if (missing(apv)) {
+      match.call.list.in[['apv']] <- dots[["peak"]]
+    } else if (!missing(apv)) {
+      if(is.symbol(match.call.list.in[['apv']])) {
+        match.call.list.in[['apv']] <- eval(match.call.list.in[['apv']])
+      }
+      warning("both 'apv =' and 'peak =' found, ignoring 'peak='")
+    }
+  }
+  
+  
+  
+  
   o <- post_processing_checks(model = model,
-                              xcall = match.call(),
+                              xcall = xcall,
                               resp = resp)
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
@@ -242,13 +279,17 @@ plot_bsitar.bsitar <- function(model,
   
   model$xcall <- xcall
   
-  arguments <- get_args_(as.list(match.call())[-1], xcall)
+  
+  # arguments <- get_args_(as.list(match.call())[-1], xcall)
+  arguments <- get_args_(match.call.list.in, xcall)
+  
   
   arguments$model <- model
   
-  # print(arguments$model)
+  # argumentsxx <<- arguments
+  # print(arguments)
   # stop()
-  
+
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
@@ -259,7 +300,11 @@ plot_bsitar.bsitar <- function(model,
   arguments$cores <- cores <-  get.cores_[['max.cores']] 
   .cores_ps <- get.cores_[['.cores_ps']]
   
+  
+  
   if (future) {
+    if(is.null(cores)) stop("Please set the number of cores for 'future' by  
+                            using the the 'cores' argument, e.g. cores = 4")
     if (future_session == 'multisession') {
       future::plan('multisession', workers = cores)
     } else if (future_session == 'multicore') {
@@ -429,8 +474,7 @@ plot_bsitar.bsitar <- function(model,
   
   arguments$envir <- .GlobalEnv # parent.frame()
   
-  # print(arguments$model)
-  # stop()
+
   
   d. <- do.call(gparameters.bsitar, arguments)
   
@@ -463,6 +507,26 @@ plot_bsitar.bsitar <- function(model,
   name.apv <- "APGV"
   name.pv <- "PGV"
   
+  name.atv <- "ATGV"
+  name.tv <- "TGV"
+  
+  name.acv <- "ACGV"
+  name.cv <- "CGV"
+  
+  name.vline <- c()
+  if(show_age_takeoff)   name.vline <- c(name.vline, name.atv)
+  if(show_age_peak)      name.vline <- c(name.vline, name.apv)
+  if(show_age_cessation) name.vline <- c(name.vline, name.acv)
+  
+  name.hline <- c()
+  if(show_vel_takeoff)   name.hline <- c(name.hline, name.tv)
+  if(show_vel_peak)      name.hline <- c(name.hline, name.pv)
+  if(show_vel_cessation) name.hline <- c(name.hline, name.cv)
+  
+  # dont let hline - i.e, velovity - need to work out fwd rev intercepts
+  name.hline <- c()
+  # name.vline <- c(name.vline, name.atv, name.apv, name.acv)
+
   x_minimum <- min(newdata[[Xx]])
   x_maximum <- max(newdata[[Xx]])
   x_minimum <- floor(x_minimum)
@@ -589,48 +653,48 @@ plot_bsitar.bsitar <- function(model,
       return(pwobj)
     }
   
-  transform.sec.axis <- function(primary, secondary, na.rm = TRUE) {
-    from <- range(secondary, na.rm = na.rm)
-    to   <- range(primary, na.rm = na.rm)
-    zero_range <- function(x, tol = 1000 * .Machine$double.eps) {
-      if (length(x) == 1) {
-        return(TRUE)
-      }
-      if (length(x) != 2)
-        stop("x must be length 1 or 2")
-      if (any(is.na(x))) {
-        return(NA)
-      }
-      if (x[1] == x[2]) {
-        return(TRUE)
-      }
-      if (all(is.infinite(x))) {
-        return(FALSE)
-      }
-      m <- min(abs(x))
-      if (m == 0) {
-        return(FALSE)
-      }
-      abs((x[1] - x[2]) / m) < tol
-    }
-    rescale.numeric_ <-
-      function(x,
-               to = c(0, 1),
-               from = range(x, na.rm = TRUE, finite = TRUE),
-               ...) {
-        if (zero_range(from) || zero_range(to)) {
-          return(ifelse(is.na(x), NA, mean(to)))
-        }
-        (x - from[1]) / diff(from) * diff(to) + to[1]
-      }
-    forward <- function(x) {
-      rescale.numeric_(x, from = from, to = to)
-    }
-    reverse <- function(x) {
-      rescale.numeric_(x, from = to, to = from)
-    }
-    list(fwd = forward, rev = reverse)
-  }
+  # transform.sec.axis <- function(primary, secondary, na.rm = TRUE) {
+  #   from <- range(secondary, na.rm = na.rm)
+  #   to   <- range(primary, na.rm = na.rm)
+  #   zero_range <- function(x, tol = 1000 * .Machine$double.eps) {
+  #     if (length(x) == 1) {
+  #       return(TRUE)
+  #     }
+  #     if (length(x) != 2)
+  #       stop("x must be length 1 or 2")
+  #     if (any(is.na(x))) {
+  #       return(NA)
+  #     }
+  #     if (x[1] == x[2]) {
+  #       return(TRUE)
+  #     }
+  #     if (all(is.infinite(x))) {
+  #       return(FALSE)
+  #     }
+  #     m <- min(abs(x))
+  #     if (m == 0) {
+  #       return(FALSE)
+  #     }
+  #     abs((x[1] - x[2]) / m) < tol
+  #   }
+  #   rescale.numeric_ <-
+  #     function(x,
+  #              to = c(0, 1),
+  #              from = range(x, na.rm = TRUE, finite = TRUE),
+  #              ...) {
+  #       if (zero_range(from) || zero_range(to)) {
+  #         return(ifelse(is.na(x), NA, mean(to)))
+  #       }
+  #       (x - from[1]) / diff(from) * diff(to) + to[1]
+  #     }
+  #   forward <- function(x) {
+  #     rescale.numeric_(x, from = from, to = to)
+  #   }
+  #   reverse <- function(x) {
+  #     rescale.numeric_(x, from = to, to = from)
+  #   }
+  #   list(fwd = forward, rev = reverse)
+  # }
   
   trimlines_ <-
     function(model,
@@ -932,7 +996,7 @@ plot_bsitar.bsitar <- function(model,
       probtitles <- probs[order(probs)] * 100
       probtitles <- paste("Q", probtitles, sep = "")
       set_names_  <- c('Estimate', 'Est.Error', probtitles)
-      
+
       
       
       xoffsetXnames <- 'xoffset'
@@ -1511,6 +1575,8 @@ plot_bsitar.bsitar <- function(model,
       
       
       if (grepl("d", bands, ignore.case = T)) {
+        plot.o.dx <<- d.
+      
         plot.o.d <- plot.o.d +
           ggplot2::geom_ribbon(
             data = d. %>% dplyr::filter(curve == curve.d),
@@ -1635,9 +1701,13 @@ plot_bsitar.bsitar <- function(model,
         }
       }
       
-      if (apv) {
-        data_vline <- p. %>% dplyr::filter(Parameter == name.apv)
-        
+      
+      
+      
+      
+      if (!is.null(name.vline) & !is.null(p.)  ) {
+        # data_vline <- p. %>% dplyr::filter(Parameter == name.vline)
+        data_vline <- dplyr::filter(p., grepl(paste(name.vline, collapse  = "|"), Parameter))
         plot.o.v <- plot.o.v +
           ggplot2::geom_vline(
             data = data_vline,
@@ -1645,7 +1715,6 @@ plot_bsitar.bsitar <- function(model,
             linewidth = linewidth.apv,
             linetype = linetype.apv
           )
-        
         if (grepl("p", bands, ignore.case = T)) {
           plot.o.v <- plot.o.v +
             ggplot2::annotate(
@@ -1657,7 +1726,32 @@ plot_bsitar.bsitar <- function(model,
               alpha = band.alpha
             )
         }
-      }
+      } #  if (!is.null(name.vline) & !is.null(p.) ) {
+      
+      if (!is.null(name.hline) & !is.null(p.) ) {
+        # data_hline <- p. %>% dplyr::filter(Parameter == name.hline)
+        data_hline <- dplyr::filter(p., grepl(paste(name.hline, collapse  = "|"), Parameter))
+        plot.o.v <- plot.o.v +
+          ggplot2::geom_hline(
+            data = data_hline,
+            # ggplot2::aes(yintercept = .data[['Estimate']]),
+            ggplot2::aes(yintercept = t.s.axis$fwd(.data[['Estimate']]) ),
+            linewidth = linewidth.apv,
+            linetype = linetype.apv
+          )
+        if (grepl("p", bands, ignore.case = T)) {
+          plot.o.v <- plot.o.v +
+            ggplot2::annotate(
+              "rect",
+              xmin = (data_vline[[paste0(probtitles[1], '')]]),
+              xmax = (data_vline[[paste0(probtitles[2], '')]]),
+              ymin = -Inf,
+              ymax = Inf,
+              alpha = band.alpha
+            )
+        }
+      } #  if (!is.null(name.hline)) {
+      
       d. <- d.o
       if ('curve' %in% names(d.)) {
         d.out <- d. %>% dplyr::select(-curve)
@@ -1825,6 +1919,7 @@ plot_bsitar.bsitar <- function(model,
       
       
       
+      
       plot.o <- data_dv %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
         ggplot2::geom_line(
@@ -1974,8 +2069,9 @@ plot_bsitar.bsitar <- function(model,
         }
       }
       
-      if (apv) {
-        data_vline <- p. %>% dplyr::filter(Parameter == name.apv)
+      if (!is.null(name.vline) & !is.null(p.)) {
+        # data_vline <- p. %>% dplyr::filter(Parameter == name.vline)
+        data_vline <- dplyr::filter(p., grepl(paste(name.vline, collapse  = "|"), Parameter))
         plot.o <- plot.o +
           ggplot2::geom_vline(
             data = data_vline,
@@ -1995,7 +2091,33 @@ plot_bsitar.bsitar <- function(model,
               alpha = band.alpha
             )
         }
-      }
+      } # if (!is.null(name.vline) & !is.null(p.) ) {
+      
+      if (!is.null(name.hline) & !is.null(p.) ) {
+        # data_hline <- p. %>% dplyr::filter(Parameter == name.hline)
+        data_hline <- dplyr::filter(p., grepl(paste(name.hline, collapse  = "|"), Parameter))
+        plot.o <- plot.o +
+          ggplot2::geom_hline(
+            data = data_hline,
+            # ggplot2::aes(yintercept = .data[['Estimate']]),
+            ggplot2::aes(yintercept = t.s.axis$fwd(.data[['Estimate']]) ),
+            linewidth = linewidth.apv,
+            linetype = linetype.apv
+          )
+        
+        if (grepl("p", bands, ignore.case = T)) {
+          plot.o <- plot.o +
+            ggplot2::annotate(
+              "rect",
+              xmin = (data_hline[[paste0(probtitles[1], '')]]),
+              xmax = (data_hline[[paste0(probtitles[2], '')]]),
+              ymin = -Inf,
+              ymax = Inf,
+              alpha = band.alpha
+            )
+        }
+      } # if (!is.null(name.hline)) {
+      
       data_dv <- data_dv.o
       if ('curve' %in% names(data_dv)) {
         d.out <- data_dv %>% dplyr::select(-curve)
@@ -2498,14 +2620,15 @@ plot_bsitar.bsitar <- function(model,
     plot.o <-
       plot.o +  patchwork::plot_layout(guides = "collect")
   }
-  
+ 
   if (!returndata) {
     print(plot.o)
     if (grepl("d", opt, ignore.case = F) |
         grepl("v", opt, ignore.case = F)) {
-      if(apv)  print(p.)
+      if(apv | takeoff | trough | acgv)  print(p.)
     }
     options(warn = defaultW)
+    plot.o[['gparameters']] <- p.as.d.out_attr
     return(plot.o)
   } else if (returndata) {
     attr(d.out, 'gparameters') <- p.as.d.out_attr
@@ -2519,3 +2642,4 @@ plot_bsitar <- function(model, ...) {
   UseMethod("plot_bsitar")
 }
 
+# apv takeoff trough acgv

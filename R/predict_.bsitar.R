@@ -75,7 +75,8 @@ predict_.bsitar <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
-                             deriv = deriv)
+                             deriv = deriv, 
+                             envir = envir)
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
@@ -90,7 +91,7 @@ predict_.bsitar <-
                              xrange = xrange)
     }
     
-    assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
     . <- predict(model,
                 newdata = newdata,
@@ -106,7 +107,7 @@ predict_.bsitar <-
                 robust = robust,
                 probs = probs,
                 ...)
-    assign(o[[1]], model$Spl_funs[[o[[1]]]], envir = envir)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }
 

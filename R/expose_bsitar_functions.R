@@ -8,6 +8,8 @@
 #' Stan function.
 #' @param expose A logical (default \code{TRUE}) to indicate whether to expose
 #' functions and add to the global environment. 
+#' 
+#' @param select_model A string (default \code{NULL}) to indicate the model.
 #'
 #' @return An object of class \code{brmsfit, bsiatr} with exposed  
 #' user-defined Stan functions (when \code{expose=TRUE}).
@@ -20,21 +22,80 @@
 #' expose_bsitar_functions(model)
 #' #
 #' }
-expose_bsitar_functions <- function(model, scode = NULL, expose = TRUE) {
+expose_bsitar_functions <- function(model, 
+                                    scode = NULL, 
+                                    expose = FALSE, 
+                                    select_model = NULL) {
   expose_it_ <- function(x, scode) {
     if (is.null(scode)) {
-      exposecode <- stancode(x)
+      exposecode <- brms::stancode(x)
     } else if (!is.null(scode)) {
       exposecode <- scode
     }
-    rstan::expose_stan_functions(rstan::stanc(model_code = exposecode))
+     rstan::expose_stan_functions(rstan::stanc(model_code = exposecode))
+    # brms::expose_functions(model, vectorize = FALSE)
   }
+  
+  
+  
+  # allowed_model_names <- c('sitar', 'pb1', 'pb2', 'pb3')
+  # allowed_model_names <- paste(allowed_model_names, collapse = ", " )
+  # allowed_model_names <- paste0("(", allowed_model_names, ")")
+  # 
+  # if(!expose & is.null(select_model)) 
+  #   stop('Specify atleast one of the following two arguments:',
+  #        "\n ",
+  #        ' expose  - a logical argument (TRUE/FALSE)',
+  #        "\n ",
+  #        ' select_model - a string specifying one of the models ', 
+  #        allowed_model_names
+  #        )
+  # 
+  # if( expose & !is.null(select_model)) 
+  #   stop('Specify only one of the following two arguments:',
+  #        "\n ",
+  #        ' expose  - a logical argument (TRUE/FALSE)',
+  #        "\n ",
+  #        ' select_model - a string specifying one of the models ', 
+  #        allowed_model_names
+  #        )
+  
+  
+  if(!expose) {
+    expose_r_from_stan <- TRUE
+  } else {
+    expose_r_from_stan <- FALSE
+  }
+  
   if(expose) expose_it_(model, scode = scode)
-  SplineFun_name <- model$model_info$SplineFun
-  spfun_collect <- c(model$model_info$SplineFun,
-                     paste0(model$model_info$SplineFun, "_", c("d0", 
-                                                                "d1",
-                                                                "d2")))
+  
+  
+  if(expose_r_from_stan) {
+    for (funi in 1:length(model$model_info$funlist_r)) {
+      assign(gsub("<-.*$", "", model$model_info$funlist_r[funi]),
+             ept(model$model_info$funlist_r[funi]), envir = parent.frame())
+    }
+  }
+  
+  
+  # SplineFun_name <- model$model_info$SplineFun
+  SplineFun_name <- model$model_info[['StanFun_name']]
+  spfun_collect <- c(SplineFun_name,
+                     paste0(SplineFun_name, "_", 
+                            c("d0", 
+                              "d1",
+                              "d2")
+                            )
+                     )
+  
+  
+  if(expose_r_from_stan) {
+    spfun_collect <- c(spfun_collect, 'getX')
+    if(select_model == 'sitar') {
+      spfun_collect <- c(spfun_collect, 'getKnots')
+    }
+  }
+  
   
   nys <- model$model_info$nys
   ys <- model$model_info$ys
@@ -46,19 +107,72 @@ expose_bsitar_functions <- function(model, scode = NULL, expose = TRUE) {
     }
     spfun_collect <- spfun_collect2
   }
-  Spl_funs <- list()
-  spfun_collectic <- -1
-  for (spfun_collecti in spfun_collect) {
-    spfun_collectic <- spfun_collectic + 1
-    spfun_collecti_name <- spfun_collecti
-    spfun_collecti_name <- gsub("_d0", "0", spfun_collecti_name)
-    spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
-    spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
-    Spl_funs[[paste0(spfun_collecti_name, "")]] <-
-      eval(parse(text = spfun_collecti), envir = parent.frame())
-  }
-  model$Spl_funs <- Spl_funs
-  scode_include <- stancode(model)
+  
+
+  
+  if(expose) {
+    Spl_funs <- list()
+    spfun_collectic <- -1
+    for (spfun_collecti in spfun_collect) {
+      spfun_collectic <- spfun_collectic + 1
+      spfun_collecti_name <- spfun_collecti
+      spfun_collecti_name <- gsub("_d0", "0", spfun_collecti_name)
+      spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
+      spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
+      Spl_funs[[paste0(spfun_collecti_name, "")]] <- 
+        eval(parse(text = spfun_collecti), envir = parent.frame())
+    }
+  } # if(expose) {
+  
+  
+  
+  if(expose_r_from_stan) {
+    Spl_funs <- list()
+    spfun_collectic <- -1
+    for (spfun_collecti in spfun_collect) {
+      spfun_collectic <- spfun_collectic + 1
+      spfun_collecti_name <- spfun_collecti
+      spfun_collecti_name <- gsub("_d0", "0", spfun_collecti_name)
+      spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
+      spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
+      getfun_ <- spfun_collecti
+      # This below to change _d0 to 0 within the d2 d2 functions 
+      getfun__ <- deparse(ept(getfun_))
+      gsub_it <- '_d0'
+      gsub_by <- "0"
+      getfun__ <- gsub(gsub_it, gsub_by, getfun__, fixed = T)
+      getfun__ <- paste0(getfun__, collapse =  "\n")
+      Spl_funs[[paste0(spfun_collecti_name, "")]] <- 
+        eval(parse(text = getfun__), envir = parent.frame())
+    }
+  } # if(expose_r_from_stan) {
+  
+  
+  
+  
+  
+   # This was from the wrap_function2
+  # if(!is.null(select_model)) {
+  #   Spl_funs <- list()
+  #   # wrap_function  -> in utils-helper-3, and execute and = constructs functions'
+  #   # wrap_function2 -> in utils-helper-4, and uses constructed functions
+  #   # evaluatred_funs <- wrap_function(select_model)
+  #   evaluatred_funs <- wrap_function2(select_model)
+  #   spfun_collectic <- -1
+  #   for (spfun_collecti in 1:length(evaluatred_funs)) {
+  #     spfun_collectic <- spfun_collectic + 1
+  #     spfun_collecti_name <- paste0(SplineFun_name, spfun_collectic)
+  #     Spl_funs[[paste0(spfun_collecti_name, "")]] <- evaluatred_funs[[spfun_collecti]]
+  #   }
+  # }
+  
+  
+  
+  
+  # model$model_info$Spl_funs <- Spl_funs
+  model$model_info[['namesexefuns']] <- SplineFun_name
+  model$model_info[['exefuns']]      <- Spl_funs
+  scode_include <- brms::stancode(model)
   model$bmodel <- scode_include
   if (nys == 1 | nys > 1) {
     for (nys__i in 1:nys) {
@@ -98,3 +212,9 @@ expose_bsitar_functions <- function(model, scode = NULL, expose = TRUE) {
   return(model)
 }
 
+
+# female_14442 <- expose_bsitar_functions(female_1444, 
+# expose = F, select_model = 'pb2')
+
+# names(female_14442$model_info$exefuns)
+# female_14442$model_info$namesexefuns

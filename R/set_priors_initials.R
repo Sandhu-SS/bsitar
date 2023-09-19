@@ -18,6 +18,10 @@
 #'   See [bsitar::bsitar()] function, \code{c_prior_beta} for details.
 #' @param d_prior_beta Set priors on the the fixed effect \code{d} parameter.
 #'   See [bsitar::bsitar()] function, \code{d_prior_beta} for details.
+#'   
+#' @param e_prior_beta Set priors on the the fixed effect \code{e} parameter.
+#'   See [bsitar::bsitar()] function, \code{e_prior_beta} for details.
+#'   
 #' @param s_prior_beta Set priors on the the fixed effect \code{s} parameter
 #'   (i.e., spline coeficients). See [bsitar::bsitar()] function,
 #'   \code{s_prior_beta} for details.
@@ -138,21 +142,30 @@ set_priors_initials <- function(a_prior_beta,
                                 b_prior_beta,
                                 c_prior_beta,
                                 d_prior_beta,
+                                e_prior_beta,
+                                f_prior_beta,
                                 s_prior_beta,
                                 a_cov_prior_beta,
                                 b_cov_prior_beta,
                                 c_cov_prior_beta,
                                 d_cov_prior_beta,
+                                e_cov_prior_beta,
+                                f_cov_prior_beta,
                                 s_cov_prior_beta,
                                 a_prior_sd,
                                 b_prior_sd,
                                 c_prior_sd,
                                 d_prior_sd,
+                                e_prior_sd,
+                                f_prior_sd,
                                 a_cov_prior_sd,
                                 b_cov_prior_sd,
                                 c_cov_prior_sd,
                                 d_cov_prior_sd,
+                                e_cov_prior_sd,
+                                f_cov_prior_sd,
                                 gr_prior_cor,
+                                sigma_prior_cor,
                                 sigma_prior_beta,
                                 sigma_cov_prior_beta,
                                 sigma_prior_sd,
@@ -161,14 +174,18 @@ set_priors_initials <- function(a_prior_beta,
                                 dpar_prior_sigma,
                                 dpar_cov_prior_sigma,
                                 autocor_prior_acor,
+                                autocor_prior_unstr_acor,
                                 mvr_prior_rescor,
-                                prior_data,
-                                prior_data_internal,
-                                prior_args_internal,
-                                init_arguments,
-                                init_data,
-                                init_data_internal,
-                                init_args_internal) {
+                                prior_data             = NULL,
+                                prior_data_internal    = NULL,
+                                prior_args_internal    = NULL,
+                                init_arguments         = NULL,
+                                init_data              = NULL,
+                                init_data_internal     = NULL,
+                                init_args_internal     = NULL,
+                                temp_stancode          = NULL,
+                                temp_standata          = NULL,
+                                custom_order_prior_str = NULL) {
   eout <- list2env(prior_data_internal)
   for (eoutii in names(eout)) {
     assign(eoutii, eout[[eoutii]])
@@ -180,9 +197,28 @@ set_priors_initials <- function(a_prior_beta,
     assign(eoutii, eout[[eoutii]])
   }
   
+
   
-  ept <- function(x)
-    eval(parse(text = x), envir = parent.frame())
+  
+  # Depending on select_model, assign null values to all which not part of the model
+  for (set_randomsi_higher_levsli in c(letters[1:20])) {
+    set_nlpar_what <- set_randomsi_higher_levsli
+    if(!exists(paste0(set_randomsi_higher_levsli, 'form'))) {
+      assign(paste0(set_nlpar_what, '_prior_beta'), NULL)
+      assign(paste0(set_nlpar_what, '_cov_prior_beta'), NULL)
+      assign(paste0(set_nlpar_what, '_prior_sd'), NULL)
+      assign(paste0(set_nlpar_what, '_cov_prior_sd'), NULL)
+    } else if(exists(paste0(set_randomsi_higher_levsli, 'form'))) {
+      if(is.null(ept(paste0(set_randomsi_higher_levsli, 'form')))) {
+        assign(paste0(set_nlpar_what, '_prior_beta'), NULL)
+        assign(paste0(set_nlpar_what, '_cov_prior_beta'), NULL)
+        assign(paste0(set_nlpar_what, '_prior_sd'), NULL)
+        assign(paste0(set_nlpar_what, '_cov_prior_sd'), NULL)
+      } # if(is.null(ept(paste0('f', 'form')))) {
+    }
+  } # for (set_randomsi_higher_levsli in c(letters[1:20])) {
+  
+  
   
   normalize <- ept(normalize)
   
@@ -194,8 +230,15 @@ set_priors_initials <- function(a_prior_beta,
   
   if (is.null(autocor_formi)) {
     autocor_prior_acor <- NULL
+    autocor_prior_unstr_acor <- NULL
   }
   
+  if (!is.null(autocor_formi)) {
+    if(grepl("unstr(", autocor_formi, fixed = T)) autocor_prior_acor <- NULL
+    if(!grepl("unstr(", autocor_formi, fixed = T)) autocor_prior_unstr_acor <- NULL
+  }
+  
+
   getArgNames <-
     function(value)
       formalArgs(deparse(substitute(value)[[1]]))
@@ -210,6 +253,14 @@ set_priors_initials <- function(a_prior_beta,
   } else {
     group_arg$cor <- "un"
     abccorr <- TRUE
+  }
+  
+  if (group_arg$cor != "diagonal" & !group_arg$cor != "diagonal") {
+  #  abccorr <- FALSE
+  }
+  
+  if(group_arg$cor == "no") {
+    abccorr <- FALSE
   }
   
   if (!is.null(group_arg$by)) {
@@ -238,16 +289,22 @@ set_priors_initials <- function(a_prior_beta,
   
   # this on 9 5 23 to accomodate random = ''
   if(randomsi == "") gr_prior_cor <- NULL
+  if(!abccorr)       gr_prior_cor <- NULL
+  
+  
+  
+  
 
+  
   
   if (!is.null(sigma_group_arg$cor)) {
     if (sigma_group_arg$cor == "un")
-      abccorr <- TRUE
+      sigmacorr <- TRUE
     if (sigma_group_arg$cor == "diagonal")
-      abccorr <- FALSE
+      sigmacorr <- FALSE
   } else {
     sigma_group_arg$cor <- "un"
-    abccorr <- TRUE
+    sigmacorr <- TRUE
   }
   
   if (!is.null(sigma_group_arg$by)) {
@@ -275,11 +332,31 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
+  # this on 9 5 23 to accomodate no random sigam 
+  if(is.null(sigma_formula_grsi)) sigma_prior_cor <- NULL
+  if(!sigmacorr)                  sigma_prior_cor <- NULL
+  
+
+  
+  # if(!grepl("a", randomsi)) {
+  #   a_prior_sd <- a_cov_prior_sd <- NULL
+  # }
+  # if(!grepl("b", randomsi)) {
+  #   b_prior_sd <- b_cov_prior_sd <- NULL
+  # }
+  # if(!grepl("c", randomsi)) {
+  #   c_prior_sd <- c_cov_prior_sd <- NULL
+  # }
+  # if(!grepl("d", randomsi)) {
+  #   d_prior_sd <- d_cov_prior_sd <- NULL
+  # }
+  # if(!grepl("e", randomsi)) {
+  #   e_prior_sd <- e_cov_prior_sd <- NULL
+  # }
   
   
-  
-  
-  
+  # 
+  #  bcovcoefnames_gr <- NULL
   
   
   
@@ -307,6 +384,38 @@ set_priors_initials <- function(a_prior_beta,
     uvarabccorr <- FALSE
     univariate_by$verbose <- FALSE
   }
+  
+  
+  
+  
+  if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    if (!is.null(univariate_by$cor)) {
+      if (univariate_by$cor == "un")
+        uvarsigmacorr <- TRUE
+      if (univariate_by$cor == "diagonal")
+        uvarsigmacorr <- FALSE
+    } else {
+      univariate_by$cor <- "un"
+      uvarsigmacorr <- TRUE
+    }
+    if (is.null(univariate_by$verbose))
+      univariate_by$verbose <- FALSE
+  }
+  
+  if ((is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    univariate_by$cor <- "un"
+    uvarsigmacorr <- FALSE
+    univariate_by$verbose <- FALSE
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   if (multivariate$mvar) {
@@ -341,6 +450,8 @@ set_priors_initials <- function(a_prior_beta,
     mvr_prior_rescor <- NULL
   }
   
+  
+  
   getcovlist <- function(x) {
     if (is.character(x))
       x <- x
@@ -363,8 +474,17 @@ set_priors_initials <- function(a_prior_beta,
     c_cov_prior_beta <- NULL
   if (is.null(getcovlist(d_formulasi)))
     d_cov_prior_beta <- NULL
+  if (is.null(getcovlist(e_formulasi)))
+    e_cov_prior_beta <- NULL
+  if (is.null(getcovlist(f_formulasi)))
+    f_cov_prior_beta <- NULL
   if (is.null(getcovlist(s_formulasi)))
     s_cov_prior_beta <- NULL
+  
+  
+  if(select_model != 'sitar') {
+    s_prior_beta <- s_cov_prior_beta <- NULL
+  }
   
   
   if (!grepl("a", fixedsi, fixed = T))
@@ -375,6 +495,10 @@ set_priors_initials <- function(a_prior_beta,
     c_prior_beta <- NULL
   if (!grepl("d", fixedsi, fixed = T))
     d_prior_beta <- NULL
+  if (!grepl("e", fixedsi, fixed = T))
+    e_prior_beta <- NULL
+  if (!grepl("f", fixedsi, fixed = T))
+    f_prior_beta <- NULL
   
   if (!grepl("a", randomsi, fixed = T))
     a_prior_sd <- NULL
@@ -384,6 +508,10 @@ set_priors_initials <- function(a_prior_beta,
     c_prior_sd <- NULL
   if (!grepl("d", randomsi, fixed = T))
     d_prior_sd <- NULL
+  if (!grepl("e", randomsi, fixed = T))
+    e_prior_sd <- NULL
+  if (!grepl("f", randomsi, fixed = T))
+    f_prior_sd <- NULL
   
   if (is.null(getcovlist(a_formula_grsi)))
     a_cov_prior_sd <- NULL
@@ -393,44 +521,66 @@ set_priors_initials <- function(a_prior_beta,
     c_cov_prior_sd <- NULL
   if (is.null(getcovlist(d_formula_grsi)))
     d_cov_prior_sd <- NULL
+  if (is.null(getcovlist(e_formula_grsi)))
+    e_cov_prior_sd <- NULL
+  if (is.null(getcovlist(f_formula_grsi)))
+    f_cov_prior_sd <- NULL
   
   if (!is.null(a_cov_prior_beta))
-    nacov <- length(acovcoefnames)
+    ancov <- length(acovcoefnames)
   else
-    nacov <- NULL
+    ancov <- NULL
   if (!is.null(b_cov_prior_beta))
-    nbcov <- length(bcovcoefnames)
+    bncov <- length(bcovcoefnames)
   else
-    nbcov <- NULL
+    bncov <- NULL
   if (!is.null(c_cov_prior_beta))
-    nccov <- length(ccovcoefnames)
+    cncov <- length(ccovcoefnames)
   else
-    nccov <- NULL
+    cncov <- NULL
   if (!is.null(d_cov_prior_beta))
-    ndcov <- length(dcovcoefnames)
+    dncov <- length(dcovcoefnames)
   else
-    ndcov <- NULL
+    dncov <- NULL
+  if (!is.null(e_cov_prior_beta))
+    encov <- length(ecovcoefnames)
+  else
+    encov <- NULL
+  if (!is.null(f_cov_prior_beta))
+    fncov <- length(fcovcoefnames)
+  else
+    fncov <- NULL
+  
   if (!is.null(s_cov_prior_beta))
-    nscov <- length(scovcoefnames)
+    sncov <- length(scovcoefnames)
   else
-    nscov <- NULL
+    sncov <- NULL
   
   if (!is.null(a_cov_prior_sd))
-    nacov_gr <- length(acovcoefnames_gr)
+    ancov_gr <- length(acovcoefnames_gr)
   else
-    nacov_gr <- NULL
+    ancov_gr <- NULL
   if (!is.null(b_cov_prior_sd))
-    nbcov_gr <- length(bcovcoefnames_gr)
+    bncov_gr <- length(bcovcoefnames_gr)
   else
-    nbcov_gr <- NULL
+    bncov_gr <- NULL
   if (!is.null(c_cov_prior_sd))
-    nccov_gr <- length(ccovcoefnames_gr)
+    cncov_gr <- length(ccovcoefnames_gr)
   else
-    nccov_gr <- NULL
+    cncov_gr <- NULL
   if (!is.null(d_cov_prior_sd))
-    ndcov_gr <- length(dcovcoefnames_gr)
+    dncov_gr <- length(dcovcoefnames_gr)
   else
-    ndcov_gr <- NULL
+    dncov_gr <- NULL
+  if (!is.null(e_cov_prior_sd))
+    encov_gr <- length(ecovcoefnames_gr)
+  else
+    encov_gr <- NULL
+  if (!is.null(f_cov_prior_sd))
+    fncov_gr <- length(fcovcoefnames_gr)
+  else
+    fncov_gr <- NULL
+  
   
   
   if (!is.null(dpar_formulasi)) {
@@ -457,9 +607,7 @@ set_priors_initials <- function(a_prior_beta,
     dpar_prior_sigma <- dpar_cov_prior_sigma <- NULL
   }
   
-  # print(sigma_formulasi)
-  # print(sigma_formula_grsi)
-  # print(sigma_formula_gr_strsi)
+
   
   if(!is.null(sigma_formulasi[1]) & sigma_formulasi != 'NULL') {
     rsd_prior_sigma <- dpar_prior_sigma <- dpar_cov_prior_sigma <- NULL
@@ -471,6 +619,9 @@ set_priors_initials <- function(a_prior_beta,
   if (is.null(getcovlist(sigma_formulasi))) {
     sigma_cov_prior_beta <- NULL
   }
+  
+  
+  
   if(is.null(sigma_formula_grsi)) {
     sigma_prior_sd <- NULL
   }
@@ -478,21 +629,19 @@ set_priors_initials <- function(a_prior_beta,
     sigma_cov_prior_sd <- NULL
   }
   
+
+  
   if (!is.null(sigma_cov_prior_beta))
-    nsigma_cov <- length(sigma_covcoefnames)
+    sigmancov <- length(sigmacovcoefnames)
   else
-    nsigma_cov <- NULL
+    sigmancov <- NULL
   
   if (!is.null(sigma_cov_prior_sd))
-    nsigmacov_gr <- length(sigma_covcoefnames_gr)
+    sigmancov_gr <- length(sigmacovcoefnames_gr)
   else
-    nsigmacov_gr <- NULL
+    sigmancov_gr <- NULL
   
-  # print(sigma_prior_beta)
-  # print(sigma_cov_prior_beta)
-  # print(sigma_prior_sd)
-  # print(sigma_cov_prior_sd)
-  # stop()
+
   
   
   # no prior if no lf | nlf(sigma ~
@@ -505,72 +654,183 @@ set_priors_initials <- function(a_prior_beta,
   # }
   
   
-  
-  
-  if (grepl("~0", a_formulasi, fixed = T)) {
-    a_form_0 <- TRUE
-    a_cov_prior_beta <- NULL
+  if(!is.null(a_formulasi)) {
+    if (grepl("~0", a_formulasi, fixed = T)) {
+      a_form_0 <- TRUE
+      a_cov_prior_beta <- NULL
+    } else {
+      a_form_0 <- FALSE
+    }
   } else {
     a_form_0 <- FALSE
   }
   
-  if (grepl("~0", b_formulasi, fixed = T)) {
-    b_form_0 <- TRUE
-    b_cov_prior_beta <- NULL
+  if(!is.null(b_formulasi)) {
+    if (grepl("~0", b_formulasi, fixed = T)) {
+      b_form_0 <- TRUE
+      b_cov_prior_beta <- NULL
+    } else {
+      b_form_0 <- FALSE
+    }
   } else {
     b_form_0 <- FALSE
   }
   
-  if (grepl("~0", c_formulasi, fixed = T)) {
-    c_form_0 <- TRUE
-    c_cov_prior_beta <- NULL
+  
+  if(!is.null(c_formulasi)) {
+    if (grepl("~0", c_formulasi, fixed = T)) {
+      c_form_0 <- TRUE
+      c_cov_prior_beta <- NULL
+    } else {
+      c_form_0 <- FALSE
+    }
   } else {
     c_form_0 <- FALSE
   }
   
-  if (grepl("~0", d_formulasi, fixed = T)) {
-    d_form_0 <- TRUE
-    d_cov_prior_beta <- NULL
+  
+  if(!is.null(d_formulasi)) {
+    if (grepl("~0", d_formulasi, fixed = T)) {
+      d_form_0 <- TRUE
+      d_cov_prior_beta <- NULL
+    } else {
+      d_form_0 <- FALSE
+    }
   } else {
     d_form_0 <- FALSE
   }
   
   
-  if (grepl("~0", s_formulasi, fixed = T)) {
-    s_form_0 <- TRUE
-    s_cov_prior_beta <- NULL
+  if(!is.null(e_formulasi)) {
+    if (grepl("~0", e_formulasi, fixed = T)) {
+      e_form_0 <- TRUE
+      e_cov_prior_beta <- NULL
+    } else {
+      e_form_0 <- FALSE
+    }
+  } else {
+    e_prior_beta <- e_cov_prior_beta <- NULL
+    e_prior_sd   <- e_cov_prior_sd <- NULL
+    e_form_0 <- FALSE
+  }
+  
+  
+  if(!is.null(f_formulasi)) {
+    if (grepl("~0", f_formulasi, fixed = T)) {
+      f_form_0 <- TRUE
+      f_cov_prior_beta <- NULL
+    } else {
+      f_form_0 <- FALSE
+    }
+  } else {
+    f_form_0 <- FALSE
+  }
+  
+  
+  
+  
+  
+  if(!is.null(s_formulasi)) {
+    if (grepl("~0", s_formulasi, fixed = T)) {
+      s_form_0 <- TRUE
+      s_cov_prior_beta <- NULL
+    } else {
+      s_form_0 <- FALSE
+    }
   } else {
     s_form_0 <- FALSE
   }
   
   
-  if (grepl("~0", a_formula_grsi, fixed = T)) {
-    a_form_0_gr <- TRUE
-    a_cov_prior_sd <- NULL
+  
+  
+  if(!is.null(a_formula_grsi)) {
+    if (grepl("~0", a_formula_grsi, fixed = T)) {
+      a_form_0_gr <- TRUE
+      a_cov_prior_sd <- NULL
+    } else {
+      a_form_0_gr <- FALSE
+    }
   } else {
     a_form_0_gr <- FALSE
   }
   
-  if (grepl("~0", b_formula_grsi, fixed = T)) {
-    b_form_0_gr <- TRUE
-    b_cov_prior_sd <- NULL
+  
+  if(!is.null(b_formula_grsi)) {
+    if (grepl("~0", b_formula_grsi, fixed = T)) {
+      b_form_0_gr <- TRUE
+      b_cov_prior_sd <- NULL
+    } else {
+      b_form_0_gr <- FALSE
+    }
   } else {
     b_form_0_gr <- FALSE
   }
   
-  if (grepl("~0", c_formula_grsi, fixed = T)) {
-    c_form_0_gr <- TRUE
-    c_cov_prior_sd <- NULL
+  
+  if(!is.null(c_formula_grsi)) {
+    if (grepl("~0", c_formula_grsi, fixed = T)) {
+      c_form_0_gr <- TRUE
+      c_cov_prior_sd <- NULL
+    } else {
+      c_form_0_gr <- FALSE
+    }
   } else {
     c_form_0_gr <- FALSE
   }
   
-  if (grepl("~0", d_formula_grsi, fixed = T)) {
-    d_form_0_gr <- TRUE
-    d_cov_prior_sd <- NULL
+  
+  
+  if(!is.null(d_formula_grsi)) {
+    if (grepl("~0", d_formula_grsi, fixed = T)) {
+      d_form_0_gr <- TRUE
+      d_cov_prior_sd <- NULL
+    } else {
+      d_form_0_gr <- FALSE
+    }
   } else {
     d_form_0_gr <- FALSE
   }
+  
+  
+  if(!is.null(e_formula_grsi)) {
+    if (grepl("~0", e_formula_grsi, fixed = T)) {
+      e_form_0_gr <- TRUE
+      e_cov_prior_sd <- NULL
+    } else {
+      e_form_0_gr <- FALSE
+    }
+  } else {
+    e_form_0_gr <- FALSE
+  }
+  
+  
+  if(!is.null(f_formula_grsi)) {
+    if (grepl("~0", f_formula_grsi, fixed = T)) {
+      f_form_0_gr <- TRUE
+      f_cov_prior_sd <- NULL
+    } else {
+      f_form_0_gr <- FALSE
+    }
+  } else {
+    f_form_0_gr <- FALSE
+  }
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   if (!is.null(dpar_formulasi)) {
@@ -656,6 +916,50 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
+  
+  
+  
+  
+  
+  
+  if ((is.na(univariate_by$by) |
+       univariate_by$by == "NA") & !mvar & !sigmacorr) {
+    sigma_prior_cor <- NULL
+  }
+  
+
+  
+  # if (is.null(randomsi[[1]]))
+  #   sigma_prior_cor <- NULL
+  if(is.null(sigmancov_gr)) {
+    sigma_prior_cor <- NULL
+  }
+  if(!is.null(sigmancov_gr)) {
+    #if (length(sigmancov_gr) == 1) sigma_prior_cor <- NULL
+  }
+  
+  
+
+  # Note that currently brms does not allow setting separate cor prior for sigma
+  # So, either set sigma_prior_cor <- NULL for all or else set group = '
+  
+  # sigma_prior_cor <- NULL
+  
+  
+  
+  if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    if (uvarsigmacorr) {
+      sigma_prior_cor <- sigma_prior_cor
+    } else {
+      sigma_prior_cor <- NULL
+    }
+  }
+  
+  if (mvar && mvarccorr == "none") {
+    sigma_prior_cor <- NULL
+  }
+  
+  
   # evaluate prior arguments
   eval_prior_args <- function(x, ...) {
     x_org <- x
@@ -683,6 +987,10 @@ set_priors_initials <- function(a_prior_beta,
       nlpar <- 'c'
     if (grepl("d_", x))
       nlpar <- 'd'
+    if (grepl("e_", x))
+      nlpar <- 'e'
+    if (grepl("f_", x))
+      nlpar <- 'f'
     if (grepl("s_", x))
       nlpar <- 's'
     dpar <- ""
@@ -729,36 +1037,62 @@ set_priors_initials <- function(a_prior_beta,
       cov_nlpar <- 'c'
     if (grepl("d_cov", x))
       cov_nlpar <- 'd'
+    if (grepl("e_cov", x))
+      cov_nlpar <- 'e'
+    if (grepl("f_cov", x))
+      cov_nlpar <- 'f'
     if (grepl("s_cov", x))
       cov_nlpar <- 's'
     
     if (!is.null(dpar_prior_sigma) |
         !is.null(dpar_cov_prior_sigma)) {
-      ndparcov <- length(dparcovcoefnames) - 1
+      dparncov <- length(dparcovcoefnames) - 1
     } else {
-      ndparcov <- NULL
+      dparncov <- NULL
     }
     
-    
-    # print(group_arg_groupvar)
-    # print(sigma_group_arg_groupvar)
+
     
  
     if(sigma_dpar == 'sigma' | cov_sigma_dpar == 'sigma_cov') {
-      group <- sigma_group_arg_groupvar
+      group <- sigma_arg_groupvar
     } else {
       group <- group_arg_groupvar
     }
     
     
+    get_acorclass <- function(autocor_formi2) {
+      if(grepl("arma\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'arma'
+      } else if(grepl("ar\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'ar'
+      } else if(grepl("ma\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'ma'
+      } else if(grepl("cosy\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'cosy'
+      } else if(grepl("car\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'car'
+      } else if(grepl("lagsar\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'lagsar'
+      } else if(grepl("errorsar\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'errorsar'
+      } else if(grepl("unstr\\(", autocor_formi2, fixed = F)) {
+        acorclass <- 'Lcortime'
+      }
+      acorclass
+    }
+    
     
     setautocorr <- FALSE
     if (grepl("autocor_", x) & grepl("_acor", x)) {
       setautocorr <- TRUE
-      acorclass <- gsub("~", "", autocor_formi, fixed = T)
-      acorclass <- strsplit(acorclass, "\\(")[[1]][1]
+      # this does not work anymore, so using the function next
+      # acorclass <- gsub("~", "", autocor_formi, fixed = T)
+      # acorclass <- strsplit(acorclass, "\\(")[[1]][1]
+      acorclass <- get_acorclass(autocor_formi)
+      # stop()
       if (acorclass == "arma")
-        class <- 'ma'
+        class <- 'arma'
       if (acorclass == "ar")
         class <- 'ar'
       if (acorclass == "ma")
@@ -771,8 +1105,11 @@ set_priors_initials <- function(a_prior_beta,
         class <- 'lagsar'
       if (acorclass == "errorsar")
         class <- 'errorsar'
+      if (acorclass == "Lcortime")
+        class <- 'Lcortime'
     }
     
+   
     
     if (class == "b" & nlpar == 'a') {
       if (a_form_0) {
@@ -812,6 +1149,26 @@ set_priors_initials <- function(a_prior_beta,
           nrep_of_parms <- 1
         } else if (grepl("d_cov", x)) {
           nrep_of_parms <- length(dcovcoefnames) - 1
+        }
+      }
+    } else if (class == "b" & nlpar == 'e') {
+      if (e_form_0) {
+        nrep_of_parms <- length(ecovcoefnames)
+      } else {
+        if (!grepl("e_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("e_cov", x)) {
+          nrep_of_parms <- length(ecovcoefnames) - 1
+        }
+      }
+    } else if (class == "b" & nlpar == 'f') {
+      if (f_form_0) {
+        nrep_of_parms <- length(fcovcoefnames)
+      } else {
+        if (!grepl("f_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("f_cov", x)) {
+          nrep_of_parms <- length(fcovcoefnames) - 1
         }
       }
     } else if (class == "b" & nlpar == 's') {
@@ -864,13 +1221,33 @@ set_priors_initials <- function(a_prior_beta,
           nrep_of_parms <- length(dcovcoefnames_gr) - 1
         }
       }
+    } else if (class == "sd" & nlpar == 'e') {
+      if (e_form_0_gr) {
+        nrep_of_parms <- length(ecovcoefnames_gr)
+      } else {
+        if (!grepl("e_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("e_cov", x)) {
+          nrep_of_parms <- length(ecovcoefnames_gr) - 1
+        }
+      }
+    } else if (class == "sd" & nlpar == 'f') {
+      if (f_form_0_gr) {
+        nrep_of_parms <- length(fcovcoefnames_gr)
+      } else {
+        if (!grepl("f_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("f_cov", x)) {
+          nrep_of_parms <- length(fcovcoefnames_gr) - 1
+        }
+      }
     } else if (class == "sigma" &
                (class != 'b' |
-                class != 'cor') & is.null(ndparcov)) {
+                class != 'cor') & is.null(dparncov)) {
       nrep_of_parms <- 1
     } else if (class == "" &
                (class != 'b' |
-                class != 'cor') & !is.null(ndparcov)) {
+                class != 'cor') & !is.null(dparncov)) {
       if (dpar_form_0) {
         nrep_of_parms <- length(dparcovcoefnames)
       } else {
@@ -883,45 +1260,96 @@ set_priors_initials <- function(a_prior_beta,
     } else if (setautocorr &
                class == "" &
                (class != 'b' |
-                class != 'cor') & is.null(ndparcov)) {
+                class != 'cor') & is.null(dparncov)) {
       nrep_of_parms <- 1
     } else if (class == "cor" &
                (class != 'b' |
-                class != 'sigma') & is.null(ndparcov)) {
+                class != 'sigma') & is.null(dparncov)) {
       nrep_of_parms <- 1
     } else {
       nrep_of_parms <- 1
     }
     
     
-    # print(sigma_covcoefnames)
+    if(setautocorr) {
+      tempzxxx <- autocor_formi # "~arma(time = occ, gr = id, p=2, q=1, cov = FALSE)"
+      tempzxxx <- gsub("[[:space:]]", "", tempzxxx)
+      if(grepl("p=", tempzxxx, fixed = F)) {
+        acor_dim_p <- sub(",.*", "", sub(".*p=", "", tempzxxx) )  
+      } else if(!grepl("p=", tempzxxx, fixed = F)) {
+        acor_dim_p <- 1
+      }
+      if(grepl("q=", tempzxxx, fixed = F)) {
+        acor_dim_q <- sub(",.*", "", sub(".*q=", "", tempzxxx) )  
+      } else if(!grepl("q=", tempzxxx, fixed = F)) {
+        acor_dim_q <- 1
+      }
+      nrep_of_parms_p <- eval(parse(text = acor_dim_p))
+      nrep_of_parms_q <- eval(parse(text = acor_dim_q))
+    }
+    
+    if(!setautocorr) {
+      nrep_of_parms_p <- nrep_of_parms_q <- 1
+    }
+    
+
     
     if (class == "b" & sigma_dpar == 'sigma' & 
         !grepl("rsd_", x) & !grepl("_sigma", x) & !grepl("dpar", x)) {
       if (sigma_form_0) {
-        nrep_of_parms <- length(sigma_covcoefnames)
+        nrep_of_parms <- length(sigmacovcoefnames)
       } else {
         if (!grepl("sigma_cov", x)) {
           nrep_of_parms <- 1
         } else if (grepl("sigma_cov", x)) {
-          nrep_of_parms <- length(sigma_covcoefnames) - 1
+          nrep_of_parms <- length(sigmacovcoefnames) - 1
         }
       }
     } 
     
     
-    if (class == "sd" & sigma_dpar == 'sigma' & 
-        !grepl("rsd_", x) & !grepl("_sigma", x) & !grepl("dpar", x)) {
-      if (sigma_form_0_gr) {
-        nrep_of_parms <- length(sigma_covcoefnames_gr)
+    
+    if (class == "b" & sigma_dpar == 'sigma') {
+      if (sigma_form_0) {
+        nrep_of_parms <- length(sigmacovcoefnames)
       } else {
         if (!grepl("sigma_cov", x)) {
           nrep_of_parms <- 1
         } else if (grepl("sigma_cov", x)) {
-          nrep_of_parms <- length(sigma_covcoefnames_gr) - 1
+          nrep_of_parms <- length(sigmacovcoefnames) - 1
+        }
+      }  
+    }
+    
+    
+    if (class == "sd" & sigma_dpar == 'sigma' & 
+        !grepl("rsd_", x) & !grepl("_sigma", x) & !grepl("dpar", x)) {
+      if (sigma_form_0_gr) {
+        nrep_of_parms <- length(sigmacovcoefnames_gr)
+      } else {
+        if (!grepl("sigma_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("sigma_cov", x)) {
+          nrep_of_parms <- length(sigmacovcoefnames_gr) - 1
         }
       }
     }
+    
+    
+    
+    # if (class == "sd" & sigma_dpar == 'sigma') {
+    #   if (sigma_form_0_gr) {
+    #     nrep_of_parms <- length(sigmacovcoefnames_gr)
+    #   } else {
+    #     if (!grepl("sigma_cov", x)) {
+    #       nrep_of_parms <- 1
+    #     } else if (grepl("sigma_cov", x)) {
+    #       nrep_of_parms <- length(sigmacovcoefnames_gr) - 1
+    #     }
+    #   }
+    # }
+    
+
     
     get_priors_parms <- function(x,
                                  prior_data,
@@ -968,16 +1396,20 @@ set_priors_initials <- function(a_prior_beta,
           'class',
           'cov_nlpar',
           'cov_dpar',
-          'nacov',
-          'nbcov',
-          'nccov',
-          'ndcov',
-          'nscov',
-          'nacov_gr',
-          'nbcov_gr',
-          'nccov_gr',
-          'ndcov_gr',
-          'ndparcov',
+          'ancov',
+          'bncov',
+          'cncov',
+          'dncov',
+          'encov',
+          'fncov',
+          'sncov',
+          'ancov_gr',
+          'bncov_gr',
+          'cncov_gr',
+          'dncov_gr',
+          'encov_gr',
+          'fncov_gr',
+          'dparncov',
           'nabci',
           'nabcrei',
           'fixedsi',
@@ -985,6 +1417,8 @@ set_priors_initials <- function(a_prior_beta,
           'df',
           'setautocorr',
           'nrep_of_parms',
+          'nrep_of_parms_p',
+          'nrep_of_parms_q',
           'N_J_all',
           'ii',
           'nys',
@@ -992,20 +1426,27 @@ set_priors_initials <- function(a_prior_beta,
           'b_form_0',
           'c_form_0',
           'd_form_0',
+          'e_form_0',
+          'f_form_0',
           's_form_0',
           'a_form_0_gr',
           'b_form_0_gr',
           'c_form_0_gr',
           'd_form_0_gr',
+          'e_form_0_gr',
+          'f_form_0_gr',
           
           'sigma_form_0',
           'sigma_form_0_gr',
           "sigma_dpar",
           "cov_sigma_dpar",
-          'nsigma_cov',
-          'nsigma_cov_gr',
+          'sigmancov',
+          'sigmancov_gr',
           'sigma_dpar',
           'sigma_group_arg',
+          
+          'group_arg_groupvar',
+          'group',
           
           'dpar_form_0',
           'dpar_covi_mat_form',
@@ -1018,6 +1459,8 @@ set_priors_initials <- function(a_prior_beta,
           'initsi',
           'normalize',
           'seed',
+          'cortimeNlags_var',
+          'cortimeNlags',
           'verbose'
         )
       
@@ -1097,32 +1540,44 @@ set_priors_initials <- function(a_prior_beta,
       cov_nlpar = cov_nlpar,
       cov_dpar = cov_dpar,
       nrep_of_parms = nrep_of_parms,
-      nacov = nacov,
-      nbcov = nbcov,
-      nccov = nccov,
-      ndcov = ndcov,
-      nscov = nscov,
-      nacov_gr = nacov_gr,
-      nbcov_gr = nbcov_gr,
-      nccov_gr = nccov_gr,
-      ndcov_gr = ndcov_gr,
-      ndparcov = ndparcov,
+      nrep_of_parms_p = nrep_of_parms_p,
+      nrep_of_parms_q = nrep_of_parms_q,
+      ancov = ancov,
+      bncov = bncov,
+      cncov = cncov,
+      dncov = dncov,
+      encov = encov,
+      fncov = fncov,
+      sncov = sncov,
+      ancov_gr = ancov_gr,
+      bncov_gr = bncov_gr,
+      cncov_gr = cncov_gr,
+      dncov_gr = dncov_gr,
+      encov_gr = encov_gr,
+      fncov_gr = fncov_gr,
+      dparncov = dparncov,
       a_form_0 = a_form_0,
       b_form_0 = b_form_0,
       c_form_0 = c_form_0,
       d_form_0 = d_form_0,
+      e_form_0 = e_form_0,
+      f_form_0 = f_form_0,
       s_form_0 = s_form_0,
       a_form_0_gr = a_form_0_gr,
       b_form_0_gr = b_form_0_gr,
       c_form_0_gr = c_form_0_gr,
       d_form_0_gr = d_form_0_gr,
+      e_form_0_gr = e_form_0_gr,
+      f_form_0_gr = f_form_0_gr,
       
       sigma_form_0 = sigma_form_0,
       sigma_form_0_gr = sigma_form_0_gr,
       cov_sigma_dpar = cov_sigma_dpar,
-      nsigma_cov = nsigma_cov,
-      nsigma_cov_gr = nsigma_cov_gr,
+      sigmancov = sigmancov,
+      sigmancov_gr = sigmancov_gr,
       sigma_group_arg = sigma_group_arg,
+      group_arg_groupvar = group_arg_groupvar,
+      group = group,
       
       dpar_form_0 = dpar_form_0,
       dpar_covi_mat_form = dpar_covi_mat_form,
@@ -1135,6 +1590,8 @@ set_priors_initials <- function(a_prior_beta,
       init_args_internal = init_args_internal,
       normalize = normalize,
       seed = seed,
+      cortimeNlags_var = cortimeNlags_var,
+      cortimeNlags = cortimeNlags,
       verbose = verbose
     )
     
@@ -1146,6 +1603,10 @@ set_priors_initials <- function(a_prior_beta,
         acorclassclasses <- c("ar")
       if (acorclass == 'ma')
         acorclassclasses <- c("ma")
+      
+      
+      if (acorclass == 'Lcortime')
+        acorclassclasses <- c("Lcortime")
       
       priors_arma_c_define <- list()
       for (acorclassi in acorclassclasses) {
@@ -1180,7 +1641,7 @@ set_priors_initials <- function(a_prior_beta,
     
     
     define_ <- priors_parms$define_
-    
+  
     dist <- priors_parms$dist
     
     lowerbound <- priors_parms$lowerbound
@@ -1188,6 +1649,7 @@ set_priors_initials <- function(a_prior_beta,
     
     stanvars_data_in <- priors_parms$stanvars_data_in
     initial_in       <- priors_parms$initial_in
+    
     
     
     if (class == 'b') {
@@ -1204,21 +1666,21 @@ set_priors_initials <- function(a_prior_beta,
         mnf <- paste0('sigma', "_form_0")
         mnc <- paste0("cov_sigma_dpar")
       }
+
       
-      
-     
+
       # if (dist != 'uniform' &
       #     dist != 'lognormal' &
       #     dist != 'gamma' &
       #     dist != 'inv_gamma' &
       #     dist != 'exponential') {
-      if (dist != 'uniform' | dist == 'uniform'  &
-          dist != 'lognormal' | dist == 'lognormal'  &
-          dist != 'gamma' | dist == 'gamma'  &
-          dist != 'inv_gamma' | dist == 'inv_gamma'  &
-          dist != 'exponential' | dist == 'exponential'  ) {
-        # if (all(is.na(lowerbound)) &
-        #     all(is.na(upperbound))) {
+      # if (dist != 'uniform' | dist == 'uniform'  &
+      #     dist != 'lognormal' | dist == 'lognormal'  &
+      #     dist != 'gamma' | dist == 'gamma'  &
+      #     dist != 'inv_gamma' | dist == 'inv_gamma'  &
+      #     dist != 'exponential' | dist == 'exponential'  ) {
+        if (all(is.na(lowerbound)) |
+            all(is.na(upperbound))) {
           if (nlpar == 'a')
             coef <- acovcoefnames
           if (nlpar == 'b')
@@ -1227,24 +1689,29 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ccovcoefnames
           if (nlpar == 'd')
             coef <- dcovcoefnames
+          if (nlpar == 'e')
+            coef <- ecovcoefnames
+          if (nlpar == 'f')
+            coef <- fcovcoefnames
           if (nlpar == 's') {
             coef <- scovcoefnames
-            if (!s_form_0 & !is.null(nscov))
+            if (!s_form_0 & !is.null(sncov))
               coef <- coef[1]
           }
+         
           
           # brms does not allow Intercept as coef name for dpar sigma with ~1
           # But this only when covaritae missing 
           if (sigma_dpar == 'sigma') {
             dpar <- sigma_dpar
             if(ept(mnf)) {
-              coef <- sigma_covcoefnames
+              coef <- sigmacovcoefnames
             }
             if(!ept(mnf)) {
-              if (nlpar == '' & sigma_dpar != '' & length(sigma_covcoefnames) == 1 &
-                  sigma_covcoefnames[1] == "Intercept" ) {
+              if (nlpar == '' & sigma_dpar != '' & length(sigmacovcoefnames) == 1 &
+                  sigmacovcoefnames[1] == "Intercept" ) {
                 coef <- ""
-                class <- sigma_covcoefnames
+                class <- sigmacovcoefnames
               }
              if (nlpar == '' & sigma_dpar != '' & grepl("+", sigma_formulasi, fixed = T)
                  ) {
@@ -1256,7 +1723,7 @@ set_priors_initials <- function(a_prior_beta,
             
             
           
-        } else {
+        } else if (!all(is.na(lowerbound)) & !all(is.na(upperbound))) {
           if (nlpar == 'a')
             coef <- rep("", length(acovcoefnames))
           if (nlpar == 'b')
@@ -1265,20 +1732,27 @@ set_priors_initials <- function(a_prior_beta,
             coef <- rep("", length(ccovcoefnames))
           if (nlpar == 'd')
             coef <- rep("", length(dcovcoefnames))
+          if (nlpar == 'e')
+            coef <- rep("", length(ecovcoefnames))
+          if (nlpar == 'f')
+            coef <- rep("", length(fcovcoefnames))
           if (nlpar == 's') {
             coef <- rep("", length(scovcoefnames))
-            if (!s_form_0 & !is.null(nscov))
+            if (!s_form_0 & !is.null(sncov))
               coef <- coef[1]
           }
           # if (sigma_dpar == 'sigma') {
           #   dpar <- sigma_dpar
-          #   coef <- rep("", length(sigma_covcoefnames))
+          #   coef <- rep("", length(sigmacovcoefnames))
           # }
             
         }
       }
+     
       
-      # nlpar a b c - betas also sigma
+     
+      
+      # nlpar a b c d e f - betas also sigma
       if (ept(mnf) & cov_nlpar == "" & cov_sigma_dpar == "") {
         if (!any(is.na(lowerbound)) | !any(is.na(upperbound))) {
           define_ <- unique(define_)
@@ -1288,6 +1762,8 @@ set_priors_initials <- function(a_prior_beta,
         } else {
           setcoef <- coef
         }
+        
+       
         
         # if (!grepl("^~1$", sigma_formulasi, fixed = T)) {
         #   setcoef <- coef
@@ -1299,7 +1775,7 @@ set_priors_initials <- function(a_prior_beta,
         # }
         
         priors_ <-
-          prior_string(
+          brms::prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -1310,7 +1786,7 @@ set_priors_initials <- function(a_prior_beta,
             ub = upperbound
           )
       }
-      
+     
       if (!ept(mnf) & cov_nlpar == "" & cov_sigma_dpar == "") {
         if (!any(is.na(lowerbound)) | !any(is.na(upperbound))) {
           define_ <- unique(define_)
@@ -1325,7 +1801,7 @@ set_priors_initials <- function(a_prior_beta,
           }
         }
         priors_ <-
-          prior_string(
+          brms::prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -1347,7 +1823,7 @@ set_priors_initials <- function(a_prior_beta,
         nlpar <- paste0(nlpar, 1:df)
         if (grepl("~1", s_formulasi, fixed = T)) {
           if (all(coef == "")) {
-            priors_ <- prior_string(
+            priors_ <- brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1357,7 +1833,7 @@ set_priors_initials <- function(a_prior_beta,
               ub = upperbound
             )
           } else {
-            priors_ <-   prior_string(
+            priors_ <-   brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1372,7 +1848,7 @@ set_priors_initials <- function(a_prior_beta,
                        times = 1,
                        each = length(scovcoefnames))
           if (all(coef == "")) {
-            priors_ <- prior_string(
+            priors_ <- brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1382,7 +1858,7 @@ set_priors_initials <- function(a_prior_beta,
               ub = upperbound
             )
           } else {
-            priors_ <-   prior_string(
+            priors_ <-   brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1397,7 +1873,7 @@ set_priors_initials <- function(a_prior_beta,
       
       
       # nlpar cov a - betas
-      if (!grepl("~0", a_formulasi, fixed = T) ) {
+      if (!a_form_0) {
         if (class == 'b' & grepl("a_cov", x) & !is.null(a_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- acovcoefnames
@@ -1405,7 +1881,7 @@ set_priors_initials <- function(a_prior_beta,
             coef <- acovcoefnames[2:length(acovcoefnames)]
           }
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1418,7 +1894,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       # nlpar cov b - betas
-      if (!grepl("~0", b_formulasi, fixed = T) ) {
+      if (!b_form_0) {
         if (class == 'b' & grepl("b_cov", x) & !is.null(b_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- bcovcoefnames
@@ -1426,7 +1902,7 @@ set_priors_initials <- function(a_prior_beta,
             coef <- bcovcoefnames[2:length(bcovcoefnames)]
           }
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1438,7 +1914,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       # nlpar cov c - betas
-      if (!grepl("~0", c_formulasi, fixed = T) ) {
+      if (!c_form_0) {
         if (class == 'b' & grepl("c_cov", x) & !is.null(c_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- ccovcoefnames
@@ -1446,7 +1922,7 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ccovcoefnames[2:length(ccovcoefnames)]
           }
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1459,7 +1935,7 @@ set_priors_initials <- function(a_prior_beta,
       
       
       # nlpar cov d - betas
-      if (!grepl("~0", d_formulasi, fixed = T) ) {
+      if (!d_form_0) {
         if (class == 'b' & grepl("d_cov", x) & !is.null(d_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- dcovcoefnames
@@ -1467,7 +1943,7 @@ set_priors_initials <- function(a_prior_beta,
             coef <- dcovcoefnames[2:length(dcovcoefnames)]
           }
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1478,22 +1954,65 @@ set_priors_initials <- function(a_prior_beta,
         }
       }
       
+      
+      # nlpar cov e - betas
+      if (!e_form_0) {
+        if (class == 'b' & grepl("e_cov", x) & !is.null(e_cov_prior_beta)) {
+          if (ept(mnf)) {
+            coef <- ecovcoefnames
+          } else {
+            coef <- ecovcoefnames[2:length(ecovcoefnames)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
     
+      
+      
+      # nlpar cov f - betas
+      if (!f_form_0) {
+        if (class == 'b' & grepl("f_cov", x) & !is.null(f_cov_prior_beta)) {
+          if (ept(mnf)) {
+            coef <- fcovcoefnames
+          } else {
+            coef <- fcovcoefnames[2:length(fcovcoefnames)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
       # sigma cov - betas
       if (!grepl("~0", sigma_formulasi, fixed = T) ) {
         class_org <- class
         if (grepl("sigma_cov", x) & !is.null(sigma_cov_prior_beta)) {
           if (ept(mnf)) {
-            coef <- sigma_covcoefnames
+            coef <- sigmacovcoefnames
           } else {
-            coef <- sigma_covcoefnames[2:length(sigma_covcoefnames)]
-            class <- c( rep('b', length(sigma_covcoefnames[-1])))
+            coef <- sigmacovcoefnames[2:length(sigmacovcoefnames)]
+            class <- c( rep('b', length(sigmacovcoefnames[-1])))
           }
          
       
           dpar <- sigma_dpar
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1509,7 +2028,7 @@ set_priors_initials <- function(a_prior_beta,
       
       
       # nlpar cov s - betas
-      if (!grepl("~0", s_formulasi, fixed = T)) {
+      if (!s_form_0) {
         if (class == 'b' & grepl("s_cov", x) & !is.null(s_cov_prior_beta)) {
           if (ept(mnf)) {
             coef <- scovcoefnames
@@ -1520,7 +2039,7 @@ set_priors_initials <- function(a_prior_beta,
           nlpar <- rep(nlpar, times = length(coef), each = 1)
           coef <- rep(coef , times = 1, each = df)
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1532,7 +2051,6 @@ set_priors_initials <- function(a_prior_beta,
         }
       }
     } # if(class == 'b')
-    
     
     
     
@@ -1560,14 +2078,17 @@ set_priors_initials <- function(a_prior_beta,
         coef <- ccovcoefnames_gr
       if (nlpar == 'd')
         coef <- dcovcoefnames_gr
-      
+      if (nlpar == 'e')
+        coef <- ecovcoefnames_gr
+      if (nlpar == 'f')
+        coef <- fcovcoefnames_gr
       if (sigma_dpar == 'sigma') {
         dpar <- sigma_dpar
-        coef <- sigma_covcoefnames_gr
+        coef <- sigmacovcoefnames_gr
       }
         
       
-      # nlpar a b c - sd
+      # nlpar a b c d e f - sd
       
       if (ept(mnf) & cov_nlpar == "") {
         if (!any(is.na(lowerbound)) | !any(is.na(upperbound))) {
@@ -1579,7 +2100,7 @@ set_priors_initials <- function(a_prior_beta,
           setcoef <- coef
         }
         priors_ <-
-          prior_string(
+          brms::prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -1606,7 +2127,7 @@ set_priors_initials <- function(a_prior_beta,
           }
         }
         priors_ <-
-          prior_string(
+          brms::prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -1621,7 +2142,7 @@ set_priors_initials <- function(a_prior_beta,
       
       
       # nlpar cov a - sd
-      if (!grepl("~0", a_formula_grsi, fixed = T)) {
+      if (!a_form_0_gr) {
         if (class == 'sd' & grepl("a_cov", x) & !is.null(a_cov_prior_sd)) {
           if (ept(mnf)) {
             coef <- acovcoefnames_gr
@@ -1629,7 +2150,7 @@ set_priors_initials <- function(a_prior_beta,
             coef <- acovcoefnames_gr[2:length(acovcoefnames_gr)]
           }
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1642,7 +2163,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       # nlpar cov b - sd
-      if (!grepl("~0", b_formula_grsi, fixed = T)) {
+      if (!b_form_0_gr) {
         if (class == 'sd' & grepl("b_cov", x) & !is.null(b_cov_prior_sd)) {
           if (ept(mnf)) {
             coef <- bcovcoefnames_gr
@@ -1650,7 +2171,7 @@ set_priors_initials <- function(a_prior_beta,
             coef <- bcovcoefnames_gr[2:length(bcovcoefnames_gr)]
           }
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1663,7 +2184,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       # nlpar cov c - sd
-      if (!grepl("~0", c_formula_grsi, fixed = T)) {
+      if (!c_form_0_gr) {
         if (class == 'sd' & grepl("c_cov", x) & !is.null(c_cov_prior_sd)) {
           if (ept(mnf)) {
             coef <- ccovcoefnames_gr
@@ -1671,7 +2192,75 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ccovcoefnames_gr[2:length(ccovcoefnames_gr)]
           }
           priors_ <-
-            prior_string(
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      
+      # nlpar cov d - sd
+      if (!d_form_0_gr) {
+        if (class == 'sd' & grepl("d_cov", x) & !is.null(d_cov_prior_sd)) {
+          if (ept(mnf)) {
+            coef <- dcovcoefnames_gr
+          } else {
+            coef <- dcovcoefnames_gr[2:length(dcovcoefnames_gr)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      # nlpar cov e - sd
+      if (!e_form_0_gr) {
+        if (class == 'sd' & grepl("e_cov", x) & !is.null(e_cov_prior_sd)) {
+          if (ept(mnf)) {
+            coef <- ecovcoefnames_gr
+          } else {
+            coef <- ecovcoefnames_gr[2:length(ecovcoefnames_gr)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      
+      # nlpar cov f - sd
+      if (!f_form_0_gr) {
+        if (class == 'sd' & grepl("f_cov", x) & !is.null(f_cov_prior_sd)) {
+          if (ept(mnf)) {
+            coef <- fcovcoefnames_gr
+          } else {
+            coef <- fcovcoefnames_gr[2:length(fcovcoefnames_gr)]
+          }
+          priors_ <-
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1689,13 +2278,13 @@ set_priors_initials <- function(a_prior_beta,
         if (!grepl("~0", sigma_formula_grsi, fixed = T)) {
           if (class == 'sd' & grepl("sigma_cov", x) & !is.null(sigma_cov_prior_sd)) {
             if (ept(mnf)) {
-              coef <- sigma_covcoefnames_gr
+              coef <- sigmacovcoefnames_gr
             } else {
-              coef <- sigma_covcoefnames_gr[2:length(sigma_covcoefnames_gr)]
+              coef <- sigmacovcoefnames_gr[2:length(sigmacovcoefnames_gr)]
             }
             dpar <- sigma_dpar
             priors_ <-
-              prior_string(
+              brms::prior_string(
                 define_,
                 class = class,
                 nlpar = nlpar,
@@ -1709,27 +2298,8 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
-      # nlpar cov d - sd
-      if (!grepl("~0", d_formula_grsi, fixed = T)) {
-        if (class == 'sd' & grepl("d_cov", x) & !is.null(d_cov_prior_sd)) {
-          if (ept(mnf)) {
-            coef <- dcovcoefnames_gr
-          } else {
-            coef <- dcovcoefnames_gr[2:length(dcovcoefnames_gr)]
-          }
-          priors_ <-
-            prior_string(
-              define_,
-              class = class,
-              nlpar = nlpar,
-              group = group,
-              coef = coef,
-              resp = resp,
-              dpar = dpar
-            )
-        }
-      }
-    }
+      
+    } # end if (class == 'sd') {
     
     
     
@@ -1739,9 +2309,16 @@ set_priors_initials <- function(a_prior_beta,
     # subset and multivariate
     # removing resp leads to duplicate priors, so need to set only once
     
+    # Note that currently brms does not allow setting separate cor prior for sigma
+    # So, either set sigma_prior_cor <- NULL (line 810) for all or else set group = '
+    
+    # But then this won't let assign different prior - dup stanvars
+    # So keeping group 
+    
     if (class == 'cor') {
+     # if(sigma_dpar == "sigma") group <- ""
       if (ii == 1) {
-        priors_ <-  prior_string(define_,
+        priors_ <-  brms::prior_string(define_,
                                  class = class,
                                  group = group,
                                  dpar = dpar) # resp = resp,
@@ -1753,7 +2330,7 @@ set_priors_initials <- function(a_prior_beta,
     
     if (class == 'rescor') {
       if (ii == 1) {
-        priors_ <-  prior_string(define_,
+        priors_ <-  brms::prior_string(define_,
                                  class = class,
                                  group = "",
                                  dpar = "")
@@ -1767,7 +2344,7 @@ set_priors_initials <- function(a_prior_beta,
     # residual standard deviation (sigma) prior
     
     if (class == 'sigma' & dpar == "") {
-      priors_ <-  prior_string(
+      priors_ <-  brms::prior_string(
         define_,
         class = class,
         lb = lowerbound,
@@ -1797,13 +2374,13 @@ set_priors_initials <- function(a_prior_beta,
         #     dist != 'gamma' &
         #     dist != 'inv_gamma' &
         #     dist != 'exponential') {
-        if (dist != 'uniform' | dist == 'uniform'  &
-            dist != 'lognormal' | dist == 'lognormal'  &
-            dist != 'gamma' | dist == 'gamma'  &
-            dist != 'inv_gamma' | dist == 'inv_gamma'  &
-            dist != 'exponential' | dist == 'exponential'  ) {
-          # if (all(is.na(lowerbound)) &
-          #     all(is.na(upperbound))) {
+        # if (dist != 'uniform' | dist == 'uniform'  &
+        #     dist != 'lognormal' | dist == 'lognormal'  &
+        #     dist != 'gamma' | dist == 'gamma'  &
+        #     dist != 'inv_gamma' | dist == 'inv_gamma'  &
+        #     dist != 'exponential' | dist == 'exponential'  ) {
+          if (all(is.na(lowerbound)) |
+              all(is.na(upperbound))) {
             if (grepl("^lf\\(", dpar_formulasi)) {
               if (grepl("cmc=F", dpar_formulasi) |
                   grepl("cmc=FALSE", dpar_formulasi)) {
@@ -1817,7 +2394,7 @@ set_priors_initials <- function(a_prior_beta,
                 !grepl("^nlf\\(", dpar_formulasi)) {
               coef <- dparcovcoefnames
             }
-          } else {
+          } else if (!all(is.na(lowerbound)) & !all(is.na(upperbound))) {
             coef <- rep("", length(dparcovcoefnames))
          # } # end of if (all(is.na(lowerbound)) & all(is.na(upperbound))) {
         }
@@ -1833,7 +2410,7 @@ set_priors_initials <- function(a_prior_beta,
           }
           
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1860,7 +2437,7 @@ set_priors_initials <- function(a_prior_beta,
           }
           
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1919,7 +2496,7 @@ set_priors_initials <- function(a_prior_beta,
           }
           
           priors_ <-
-            prior_string(
+            brms::prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -1944,7 +2521,7 @@ set_priors_initials <- function(a_prior_beta,
         }
         
         priors_ <-
-          prior_string(
+          brms::prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -1970,7 +2547,7 @@ set_priors_initials <- function(a_prior_beta,
             priors_arma_c_define[[acorclassi]]$lowerbound
           upperbound <-
             priors_arma_c_define[[acorclassi]]$upperbound
-          priors_temp <-  prior_string(
+          priors_temp <-  brms::prior_string(
             define_,
             class = acorclassi,
             lb = lowerbound,
@@ -1986,7 +2563,7 @@ set_priors_initials <- function(a_prior_beta,
         priors_ <- priors_arma_c %>% do.call(rbind, .)
         stanvars_data_in <- stanvars_data_in_c %>% do.call(rbind, .)
       } else {
-        priors_ <-  prior_string(
+        priors_ <-  brms::prior_string(
           define_,
           class = class,
           lb = lowerbound,
@@ -2021,6 +2598,10 @@ set_priors_initials <- function(a_prior_beta,
     'c_cov_prior_beta',
     'd_prior_beta',
     'd_cov_prior_beta',
+    'e_prior_beta',
+    'e_cov_prior_beta',
+    'f_prior_beta',
+    'f_cov_prior_beta',
     's_prior_beta',
     's_cov_prior_beta',
     'a_prior_sd',
@@ -2031,6 +2612,10 @@ set_priors_initials <- function(a_prior_beta,
     'c_cov_prior_sd',
     'd_prior_sd',
     'd_cov_prior_sd',
+    'e_prior_sd',
+    'e_cov_prior_sd',
+    'f_prior_sd',
+    'f_cov_prior_sd',
     
     'sigma_prior_beta',
     'sigma_cov_prior_beta',
@@ -2038,15 +2623,24 @@ set_priors_initials <- function(a_prior_beta,
     'sigma_cov_prior_sd',
     
     'gr_prior_cor',
+    'sigma_prior_cor',
+    
     'rsd_prior_sigma',
     'dpar_prior_sigma',
     'dpar_cov_prior_sigma',
     'autocor_prior_acor',
+    'autocor_prior_unstr_acor',
     'mvr_prior_rescor'
   )
   
   
+
+  if(any(custom_order_prior_str != "")) {
+     custom_order_prior <- custom_order_prior_str
+  }
+ 
   
+ 
   stanvars_data_5 <- list()
   initial_in_data <- list()
   c_priors <- list()
@@ -2056,7 +2650,6 @@ set_priors_initials <- function(a_prior_beta,
         xx   <- deparse(ip)
         pget <- eval_prior_args(eval(parse(text = xx)))
         zz   <- pget$priors_
-        # print(zz)
         stanvars_data_5[[ip]] <- pget$stanvars_data_in
         initial_in_data[[ip]] <- pget$initial_in
         c_priors[[ip]] <- zz
@@ -2065,6 +2658,8 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   evaluated_priors <- c_priors %>% do.call(rbind, .)
+  
+  stanvars_data_5x <<- stanvars_data_5
   
   newlist <- c()
   for (i in 1:length(stanvars_data_5)) {
@@ -2089,8 +2684,11 @@ set_priors_initials <- function(a_prior_beta,
     initial_in_datazz <- NULL
   }
   
+  
+  
   if (!is.null(initial_in_datazz)) {
-    if (!is.null(gr_prior_cor)) {
+    if (!is.null(gr_prior_cor) | !is.null(sigma_prior_cor) ) {
+    # if (!is.null(gr_prior_cor)) {
       list_ck <- list_ck_ <- list()
       list_ck_rescor <- list()
       ik_j <- ik_j_ <- 0
@@ -2127,7 +2725,8 @@ set_priors_initials <- function(a_prior_beta,
     }
     
     
-    if (is.null(gr_prior_cor)) {
+    if (is.null(gr_prior_cor) & is.null(sigma_prior_cor) ) {
+    # if (is.null(gr_prior_cor)) {
       list_ck <- list_ck_z <- list_ck_sd <- list()
       list_ck_rescor <- list()
       ik_j <- ik_j_ <- 0
@@ -2199,60 +2798,76 @@ set_priors_initials <- function(a_prior_beta,
     }
     
     
+    
     if (multivariate$mvar & multivariate$rescor) {
       list_ck_rescor <- list_ck_rescor[lengths(list_ck_rescor) != 0]
       list_ck_rescor <- list_ck_rescor[[1]]
       combined_inits <- c(combined_inits, list_ck_rescor)
     }
     
+   
     # convert vector of 's' initials to named individual (s1, s2)
+    if(select_model == "sitar") {
+      # Don't let when evaluating _str higher custom order
+      if("s_prior_beta" %in% custom_order_prior) first_loop <- TRUE else first_loop <- FALSE   
+      if(first_loop) {
+        nlpar_s_init <- paste0('_s', 1:df)
+        if (grepl("~0", s_formulasi, fixed = T)) {
+          nlpar_s_init <-
+            rep(nlpar_s_init ,
+                times = 1,
+                each = length(scovcoefnames))
+        } else if (!grepl("~0", s_formulasi, fixed = T)) {
+          nlpar_s_init <- rep(nlpar_s_init , times = length(scovcoefnames))
+        }
+        
+        
+        subset_sparms <-
+          combined_inits[grepl(".*_s$", names(combined_inits))]
+        subset_sparms_name <- names(subset_sparms)
+        subset_sparms_numeric <- subset_sparms[[1]]
+        subset_sparms2 <- list()
+        subset_sparms2names <- c()
+        
+        for (subset_sparmsi in 1:length(subset_sparms_numeric)) {
+          subset_sparms_namei <-
+            gsub("_s", nlpar_s_init[subset_sparmsi], subset_sparms_name)
+          subset_sparms2[[subset_sparms_namei]] <-
+            subset_sparms_numeric[subset_sparmsi]
+          subset_sparms2names <-
+            c(subset_sparms2names, subset_sparms_namei)
+        }
+        names(subset_sparms_numeric) <- subset_sparms2names
+        subset_sparms3 <- list()
+        for (isi in 1:df) {
+          subset_sparms3[[paste0("b", resp_, "_s", isi)]] <-
+            subset_sparms_numeric[grep(paste0("b", resp_, "_s", isi),
+                                       names(subset_sparms_numeric))]
+        }
+        subset_sparms <- subset_sparms3
+        subset_sparms <-
+          subset_sparms[!names(subset_sparms) %in% subset_sparms_name]
+        combined_inits <-
+          append(combined_inits, subset_sparms, after = grep(
+            paste0("^", subset_sparms_name, "$"),
+            names(combined_inits)
+          ))
+        combined_inits <-
+          combined_inits[!names(combined_inits) %in% paste0("",
+                                                            subset_sparms_name, "")]
+        initials <- combined_inits
+      } # if(first_loop) {
+      
+      if(!first_loop) initials <- combined_inits
+      
+    } # if(select_model == "sitar") {
 
-    nlpar_s_init <- paste0('_s', 1:df)
-    if (grepl("~0", s_formulasi, fixed = T)) {
-      nlpar_s_init <-
-        rep(nlpar_s_init ,
-            times = 1,
-            each = length(scovcoefnames))
-    } else if (!grepl("~0", s_formulasi, fixed = T)) {
-      nlpar_s_init <- rep(nlpar_s_init , times = length(scovcoefnames))
-    }
+    if(select_model != "sitar") initials <- combined_inits
     
-    subset_sparms <-
-      combined_inits[grepl(".*_s$", names(combined_inits))]
-    subset_sparms_name <- names(subset_sparms)
-    subset_sparms_numeric <- subset_sparms[[1]]
-    subset_sparms2 <- list()
-    subset_sparms2names <- c()
-    for (subset_sparmsi in 1:length(subset_sparms_numeric)) {
-      subset_sparms_namei <-
-        gsub("_s", nlpar_s_init[subset_sparmsi], subset_sparms_name)
-      subset_sparms2[[subset_sparms_namei]] <-
-        subset_sparms_numeric[subset_sparmsi]
-      subset_sparms2names <-
-        c(subset_sparms2names, subset_sparms_namei)
-    }
-    names(subset_sparms_numeric) <- subset_sparms2names
-    subset_sparms3 <- list()
-    for (isi in 1:df) {
-      subset_sparms3[[paste0("b", resp_, "_s", isi)]] <-
-        subset_sparms_numeric[grep(paste0("b", resp_, "_s", isi),
-                                   names(subset_sparms_numeric))]
-    }
-    subset_sparms <- subset_sparms3
-    subset_sparms <-
-      subset_sparms[!names(subset_sparms) %in% subset_sparms_name]
-    combined_inits <-
-      append(combined_inits, subset_sparms, after = grep(
-        paste0("^", subset_sparms_name, "$"),
-        names(combined_inits)
-      ))
-    combined_inits <-
-      combined_inits[!names(combined_inits) %in% paste0("",
-                                                        subset_sparms_name, "")]
-    initials <- combined_inits
-  }
+  } # if (!is.null(initial_in_datazz)) {
   
   
+
   if (is.null(initial_in_datazz)) {
     initials <- NULL
   }
@@ -2335,7 +2950,7 @@ set_priors_initials <- function(a_prior_beta,
       paste(names_tau_nu_parmsi_c, collapse = "\n")
     
     scode_auxillary <-
-      stanvar(scode = names_tau_nu_parmsi_cc,
+      brms::stanvar(scode = names_tau_nu_parmsi_cc,
               block = "genquant",
               position = 'end')
   } else if (length(tau_nu_init_list) == 0) {
@@ -2344,6 +2959,90 @@ set_priors_initials <- function(a_prior_beta,
   
   ##################
   
+  # added on 11 6 2023
+  
+
+  # out_listx <- initials
+  # for (ili in 1:length(initials)) {
+  #   if(length(out_listx[[ili]]) == 1) {
+  #     out_listx[[ili]] <- out_listx[[ili]]
+  #   } else if(length(out_listx[[ili]]) > 1 & is.vector(out_listx[[ili]])) {
+  #     out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+  #   }
+  #   if(ili == 'ar' | ili == 'ma') {
+  #     out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+  #   }
+  # }
+  
+  out_listx <- initials
+  for (ili in names(initials)) {
+    if(length(out_listx[[ili]]) == 1) {
+      out_listx[[ili]] <- out_listx[[ili]]
+      # here also need array for a b c d e
+      # but not for sigma when sigma ~ not used but default rsd formulation 
+      if(nys == 1) sigma_par_name_rsd <- "sigma"
+      if(nys > 1) sigma_par_name_rsd <- paste0('sigma', resp_)
+      if(ili != sigma_par_name_rsd) {
+        out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+      }
+    } else if(length(out_listx[[ili]]) > 1 & is.vector(out_listx[[ili]])) {
+      out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+    }
+
+    if(is.na(ili)) ili <- "xxxxxxxxxxxxxx"
+    # for ar and ma, it is always vector , so array
+    if(ili == 'ar' | ili == 'ma') {
+      out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+    }
+  }
+  
+  
+  
+  initials <- out_listx
+  
+  
+  # when sigma  formula is ~1+.., then first element is Intercept_sigma and the 
+  # remaining are b_sigma
+ 
+  initialsx <- out_listx
+  if(!sigma_form_0) {
+    if(nys == 1) {
+      sigma_par_name <- 'b_sigma'
+      Intercept_sigma <- 'Intercept_sigma'
+    } else if(nys > 1) {
+      sigma_par_name <- paste0('b_sigma', resp_)
+      Intercept_sigma <- paste0('Intercept_sigma', resp_)
+    }
+    if(!is.null(initialsx[[sigma_par_name]])) {
+      g_sigma_i <- initialsx[[sigma_par_name]]
+      initialsx[[Intercept_sigma]] <- g_sigma_i[1]
+      if(length(g_sigma_i) > 1) {
+        initialsx[[sigma_par_name]] <-   array(g_sigma_i[2:length(g_sigma_i)], 
+                                          dim = length(g_sigma_i[2:length(g_sigma_i)]))
+      } # if(length(g_sigma_i) > 1) {
+    }
+  }
+  
+  
+  initials <- initialsx
+  
+
+  # re create symmetric square Lcortime which is flattened to a vector
+  # this could have have done above like L_|z_|Lrescor etc but this is same
+  if(!is.null(initials[['Lcortime']])) {
+    NC_dims         <- ept(cortimeNlags) %>% as.numeric()
+    initials[['Lcortime']] <- matrix(initials[['Lcortime']], 
+                                     nrow = NC_dims, 
+                                     ncol = NC_dims)
+  } # if(!is.null(initials[['Lcortime']])) {
+  
+  # initialsxx <<- initials
+   #  print(str(initials))
+  # print(evaluated_priors)
+  #########
+  
+  
+
   attr(evaluated_priors, 'initials') <- initials
   attr(evaluated_priors, 'scode_auxillary') <- scode_auxillary
   

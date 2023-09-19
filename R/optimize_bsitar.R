@@ -1,6 +1,5 @@
 
 
-
 #'Optimize \pkg{bsitar} model
 #'
 #'@param model An object of class \code{bsitar}.
@@ -10,45 +9,40 @@
 #'  fit is used. Note that data-dependent default priors will not be updated
 #'  automatically.
 #'
-#'@param optimize_df A vector specifying the updation of degree of freedom
-#'  \code{df}. If \code{NULL} (default), the \code{df} is taken from the
+#'@param optimize_df A vector specifying the degree of freedom (\code{df}) 
+#'  update. If \code{NULL} (default), the \code{df} is taken from the
 #'  original model. For \code{univariate-by-sungroup} and \code{multivariate}
-#'  models (see [bsitar::bsitar] for details on these arguments),
+#'  models (see [bsitar::bsitar()] for details on these arguments),
 #'  \code{optimize_df} can be a single integer (e.g., \code{optimize_df = 4}) or
 #'  a list (e.g., \code{optimize_df = list(4,5)}). For optimization over
 #'  different \code{df}, say for example df 4 and 5 for univariate model, the
 #'  corresponding code is \code{optimize_df = list(4,5)}. For a multivariate
 #'  model fit to two outcomes with different \code{df}, the optimization over
-#'  \code{df} 4 and 5 for the first submodel and 5 and 6 for the second
-#'  submodel, the  corresponding \code{optimize_df} code is \code{optimize_df =
-#'  kist(list(4,5), list(5,6))}.
+#'  \code{df} 4 and 5 for the first sub model and 5 and 6 for the second
+#'  sub model, the corresponding \code{optimize_df} code is \code{optimize_df =
+#'  list(list(4,5), list(5,6))} i.e, a list of lists.
 #'
 #'@param optimize_x A vector specifying the transformations of predictor
-#'  (typically \code{age}) variable (via \code{xvar}). The option are 'NULL',
-#'  'log' and  'sqrt' or their combinations. Note that user need not to enclose
-#'  these options in either single or double quotes as they are take care of
-#'  internally. The default \code{optimize_x = list(NULL, log,  sqrt)} is to
-#'  explore all possible combinations of 'NULL', 'log' and  'sqrt'. Similar to
-#'  the \code{optimize_df}, user can specify different  \code{optimize_x} for
-#'  \code{univariate-by-sungroup} and \code{multivariate} submodels.
+#'  (typically \code{age}) variable (via \code{xvar}). The option are 
+#'  \code{NULL}, \code{log}, \code{sqrt} and their combinations. Note that user 
+#'  need not to enclose these options in a single or double quotes as they are 
+#'  take care of internally. The default setting is to explore all possible 
+#'  combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to
+#'  the \code{optimize_df}, user can specify different \code{optimize_x} for
+#'  \code{univariate-by-sungroup} and \code{multivariate} sub models.
 #'
-#'@param optimize_y A vector specifying the transformations of the outcome
-#'  variable (via \code{yvar}). The option are 'NULL', 'log' and  'sqrt' or
-#'  their combinations. Note that user need not to enclose these options in
-#'  either single or double quotes as they are take care of internally. The
-#'  default \code{optimize_y = list(NULL, log,  sqrt)} is to explore all
-#'  possible combinations of 'NULL', 'log' and  'sqrt'. Similar to the
-#'  \code{optimize_df}, user can specify different  \code{optimize_y} for
-#'  \code{univariate-by-sungroup} and \code{multivariate} submodels.
+#'@param optimize_y A vector specifying the transformations for the response
+#'  variable (via \code{yvar}). The approach and options available for 
+#'  \code{optimize_y} are identical to the \code{optimize_x} (see above).
 #'
-#'@param exclude_default_funs A logical to indicate whether transformations
+#'@param exclude_default_funs A logical to indicate whether transformations for
 #'  (\code{xvar} and \code{yvar}) used in the original model fit should be
-#'  excluded. If \code{TRUE} (deafult), the the \code{xvar} and \code{yvar}
+#'  excluded. If \code{TRUE} (default), the \code{xvar} and \code{yvar}
 #'  transformations specified for the original model fit are excluded from the
 #'  \code{optimize_x} and \code{optimize_y}. From example, if original model is
-#'  fit with \code{xvar = log} and \code{yvar = NULL}, then
-#'  the \code{optimize_x} is translated into \code{optimize_x = list(NULL,
-#'  sqrt)} and  \code{optimize_y} as \code{optimize_y = list(log, sqrt)}.
+#'  fit with \code{xvar = log} and \code{yvar = NULL}, then \code{optimize_x} is
+#'  translated into \code{optimize_x = list(NULL, sqrt)} and \code{optimize_y}
+#'  as \code{optimize_y = list(log, sqrt)}.
 #'
 #'
 #'@param add_fit_criteria An optional (default \code{NULL}) indicator to add fit
@@ -141,8 +135,7 @@ optimize_bsitar.bsitar <- function(model,
       stop("only bayes_R2 as R square measure is supported")
     }
   }
-  # print(args_o$expose_function)
-  # stop()
+ 
   if (!args_o$expose_function) {
     if (!is.null(add_fit_criteria) | !is.null(add_fit_bayes_R)) {
       stop(
@@ -453,7 +446,8 @@ optimize_bsitar.bsitar <- function(model,
             for (aci in fit$model_info$ys) {
               getit_ <- paste0('waic', aci)
               list_c_[[aci]] <-
-                add_summary_waic(fit$criteria[[getit_]], round_digits = digits) %>%
+                add_summary_waic(fit$criteria[[getit_]], 
+                                 round_digits = digits) %>%
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_waic <-
@@ -463,7 +457,8 @@ optimize_bsitar.bsitar <- function(model,
             for (aci in fit$model_info$ys) {
               getit_ <- paste0('waic', aci)
               list_c_[[aci]] <-
-                add_summary_waic(fit$criteria[[getit_]], round_digits = digits) %>%
+                add_summary_waic(fit$criteria[[getit_]], 
+                                 round_digits = digits) %>%
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_waic <-
@@ -510,7 +505,8 @@ optimize_bsitar.bsitar <- function(model,
             for (aci in fit$model_info$ys) {
               getit_ <- paste0(add_fit_bayes_R, aci)
               list_c_[[aci]] <-
-                add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits) %>%
+                add_summary_bayes_R2(fit$criteria[[getit_]], 
+                                     round_digits = digits) %>%
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_bayes_R2 <-
@@ -520,7 +516,8 @@ optimize_bsitar.bsitar <- function(model,
             for (aci in fit$model_info$ys) {
               getit_ <- paste0(add_fit_bayes_R, aci)
               list_c_[[aci]] <-
-                add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits) %>%
+                add_summary_bayes_R2(fit$criteria[[getit_]], 
+                                     round_digits = digits) %>%
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_bayes_R2 <-
@@ -528,12 +525,14 @@ optimize_bsitar.bsitar <- function(model,
           } else if (fit$model_info$multivariate & is.null(resp)) {
             getit_ <- paste0('bayes_R2', '')
             summary_bayes_R2 <-
-              add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits)
+              add_summary_bayes_R2(fit$criteria[[getit_]], 
+                                   round_digits = digits)
           } else if (is.na(fit$model_info$univariate_by) &
                      !fit$model_info$multivariate) {
             getit_ <- paste0('bayes_R2', '')
             summary_bayes_R2 <-
-              add_summary_bayes_R2(fit$criteria[[getit_]], round_digits = digits)
+              add_summary_bayes_R2(fit$criteria[[getit_]], 
+                                   round_digits = digits)
           }
           summary_bayes_R2$df <- df
           summary_bayes_R2$xfun <- xfun_print
@@ -567,7 +566,8 @@ optimize_bsitar.bsitar <- function(model,
               for (aci in fit$model_info$ys) {
                 getit_ <- paste0('loo', aci)
                 list_c_[[aci]] <-
-                  add_summary_loo(fit$criteria[[getit_]], round_digits = digits) %>%
+                  add_summary_loo(fit$criteria[[getit_]], 
+                                  round_digits = digits) %>%
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               summary_loo <-
@@ -578,7 +578,8 @@ optimize_bsitar.bsitar <- function(model,
               for (aci in fit$model_info$ys) {
                 getit_ <- paste0('loo', aci)
                 list_c_[[aci]] <-
-                  add_summary_loo(fit$criteria[[getit_]], round_digits = digits) %>%
+                  add_summary_loo(fit$criteria[[getit_]], 
+                                  round_digits = digits) %>%
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               summary_loo <-
@@ -623,7 +624,8 @@ optimize_bsitar.bsitar <- function(model,
               for (aci in fit$model_info$ys) {
                 getit_ <- paste0('loo', aci)
                 list_c_[[aci]] <-
-                  add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits) %>%
+                  add_diagnostic_loo(fit$criteria[[getit_]], 
+                                     round_digits = digits) %>%
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               diagnostic_loo <-
@@ -634,7 +636,8 @@ optimize_bsitar.bsitar <- function(model,
               for (aci in fit$model_info$ys) {
                 getit_ <- paste0('loo', aci)
                 list_c_[[aci]] <-
-                  add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits) %>%
+                  add_diagnostic_loo(fit$criteria[[getit_]], 
+                                     round_digits = digits) %>%
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               diagnostic_loo <-
@@ -643,11 +646,13 @@ optimize_bsitar.bsitar <- function(model,
                        is.null(resp)) {
               getit_ <- paste0('loo', '')
               diagnostic_loo <-
-                add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits)
+                add_diagnostic_loo(fit$criteria[[getit_]], 
+                                   round_digits = digits)
             } else if (is.na(fit$model_info$univariate_by) &
                        !fit$model_info$multivariate) {
               diagnostic_loo <-
-                add_diagnostic_loo(fit$criteria[[getit_]], round_digits = digits)
+                add_diagnostic_loo(fit$criteria[[getit_]], 
+                                   round_digits = digits)
             }
             diagnostic_loo$df <- df
             diagnostic_loo$xfun <- xfun_print
@@ -690,7 +695,7 @@ optimize_bsitar.bsitar <- function(model,
             nrow(optimize_df_x_y),
             " models)")
     # cat("\n")
-    exe_row <- optimize_df_x_y[.x,]
+    exe_row <- optimize_df_x_y[.x, ]
     df <- levels(droplevels(exe_row$df))
     xfun <- levels(droplevels(exe_row$xfun))
     yfun <- levels(droplevels(exe_row$yfun))
@@ -726,16 +731,19 @@ optimize_bsitar.bsitar <- function(model,
     
     
     args_o$model <- model
-    args_o$df <- eval(parse(text = df))
-    args_o$xfun <- xfun
-    args_o$yfun <- yfun
+    args_o$df    <- eval(parse(text = df))
+    args_o$xfun  <- xfun
+    args_o$yfun  <- yfun
     
     if (!is.null(newdata)) {
       args_o$data <- call_o_args$newdata
     }
     
+    # Somehow update_bsitar is not accepting symbol as arg e.g, x = age
     
-    fit <- do.call(update_bsitar, args_o)
+    # fit <- do.call(update_bsitar, args_o)
+    fit <- do.call(bsitar, args_o)
+    
     
     fit$model_info$optimization_info <- optimization_info
     fit$model_info$optimize_df <- df
@@ -746,7 +754,7 @@ optimize_bsitar.bsitar <- function(model,
     # Add summary data frames for criteria and R square
     
     # setresp to anything so that even multivariate will be response wise
-    # if desired, this beha
+    # if desired, this behavious
     # if(length(fit$model_info$ys) == 1) setresp <- NULL
     # if(length(fit$model_info$ys) > 1) setresp <- 'TRUE'
     
@@ -759,7 +767,6 @@ optimize_bsitar.bsitar <- function(model,
     } else if (!fit$model_info$multivariate) {
       setresp <- NULL
     }
-    
     
     if (!is.null(add_fit_criteria)) {
       fit <- add_citeria_fun(
@@ -786,7 +793,6 @@ optimize_bsitar.bsitar <- function(model,
         yfun_print = yfun_print
       )
     }
-    
     return(fit)
   }
   

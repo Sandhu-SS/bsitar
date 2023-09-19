@@ -70,9 +70,9 @@ conditional_effects_.bsitar <-
                              xcall = match.call(),
                              resp = resp,
                              deriv = deriv)
-    assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     . <- conditional_effects(model, resp = resp, ...)
-    assign(o[[1]], model$Spl_funs[[o[[1]]]], envir = envir)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }
 

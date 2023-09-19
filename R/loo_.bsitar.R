@@ -34,9 +34,9 @@ loo_.bsitar <-
                              xcall = match.call(),
                              resp = resp,
                              deriv = deriv)
-    assign(o[[1]], model$Spl_funs[[o[[2]]]], envir = envir)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     . <- loo(model, resp = resp, ...)
-    assign(o[[1]], model$Spl_funs[[o[[1]]]], envir = envir)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }
 
