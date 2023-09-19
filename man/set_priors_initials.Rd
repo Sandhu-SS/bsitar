@@ -56,136 +56,131 @@ set_priors_initials(
 )
 }
 \arguments{
-\item{a_prior_beta}{Set priors on the the fixed effect \code{a} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{a_prior_beta} for details.}
+\item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{b_prior_beta}{Set priors on the the fixed effect \code{b} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{b_prior_beta} for details.}
+\item{b_prior_beta}{Specify priors for the fixed effect parameter, \code{b}.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{c_prior_beta}{Set priors on the the fixed effect \code{c} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{c_prior_beta} for details.}
+\item{c_prior_beta}{Specify priors for the fixed effect parameter, \code{c}.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{d_prior_beta}{Set priors on the the fixed effect \code{d} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_beta} for details.}
+\item{d_prior_beta}{Specify priors for the fixed effect parameter, \code{d}.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{e_prior_beta}{Set priors on the the fixed effect \code{e} parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{e_prior_beta} for details.}
+\item{e_prior_beta}{Specify priors for the fixed effect parameter, \code{e}.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{s_prior_beta}{Set priors on the the fixed effect \code{s} parameter
-(i.e., spline coeficients). See \code{\link[=bsitar]{bsitar()}} function,
-\code{s_prior_beta} for details.}
+\item{f_prior_beta}{Specify priors for the fixed effect parameter, \code{f}.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{a_cov_prior_beta}{Set priors on the the covariate(s) for the fixed
-effect \code{a} parameter. See \code{\link[=bsitar]{bsitar()}} function,
-\code{a_cov_prior_beta} for details.}
+\item{s_prior_beta}{Specify priors for the fixed effect parameter, \code{s}.
+See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{b_cov_prior_beta}{Set priors on the the covariate(s) for the fixed
-effect \code{b} parameter. See \code{\link[=bsitar]{bsitar()}} function,
-\code{b_cov_prior_beta} for details.}
+\item{a_cov_prior_beta}{Specify priors for the covariate(s) included for the
+fixed effect parameter, \code{a}. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{c_cov_prior_beta}{Set priors on the the covariate(s) for the fixed
-effect \code{c} parameter. See \code{\link[=bsitar]{bsitar()}} function,
-\code{c_cov_prior_beta} for details.}
+\item{b_cov_prior_beta}{Specify priors for the covariate(s) included for the
+fixed effect parameter, \code{b}. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{d_cov_prior_beta}{Set priors on the the covariate(s) for the fixed
-effect \code{d} parameter. See \code{\link[=bsitar]{bsitar()}} function,
-\code{d_cov_prior_beta} for details.}
+\item{c_cov_prior_beta}{Specify priors for the covariate(s) included for the
+fixed effect parameter, \code{c}. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{s_cov_prior_beta}{Set priors on the the covariate(s) for the fixed
-effect \code{s} parameter (i.e., spline coeficients). See
-\code{\link[=bsitar]{bsitar()}} function, \code{s_cov_prior_beta} for details.}
+\item{d_cov_prior_beta}{Specify priors for the covariate(s) included for the
+fixed effect parameter, \code{d}. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{a_prior_sd}{Set priors on the the group effect (i.e., random) effect
-for \code{a} parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{a_prior_sd}
+\item{e_cov_prior_beta}{Specify priors for the covariate(s) included for the
+fixed effect parameter, \code{e}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{f_cov_prior_beta}{Specify priors for the covariate(s) included for the
+fixed effect parameter, \code{f}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{s_cov_prior_beta}{Specify priors for the covariate(s) included for the
+fixed effect parameter, \code{s}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{a_prior_sd}{Specify prior on the standard deviation (sd) of random
+effect parameter, \code{a}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{b_prior_sd}{Specify prior on the standard deviation (sd) of random
+effect parameter, \code{b}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{c_prior_sd}{Specify prior on the standard deviation (sd) of random
+effect parameter, \code{c}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{d_prior_sd}{Specify prior on the standard deviation (sd) of random
+effect parameter, \code{d}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{e_prior_sd}{Specify prior on the standard deviation (sd) of random
+effect parameter, \code{e}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{f_prior_sd}{Specify prior on the standard deviation (sd) of random
+effect parameter, \code{f}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{a_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
+covariate(s) included in the random effect parameter, \code{a}. See
+\code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{b_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
+covariate(s) included in the random effect parameter, \code{b}. See
+\code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{c_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
+covariate(s) included in the random effect parameter, \code{c}. See
+\code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{d_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
+covariate(s) included in the random effect parameter, \code{d}. See
+\code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{e_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
+covariate(s) included in the random effect parameter, \code{w}. See
+\code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{f_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
+covariate(s) included in the random effect parameter, \code{f}. See
+\code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{gr_prior_cor}{Specify prior on the correlation for group level random
+effect parameters. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{sigma_prior_beta}{Specify prior on the the distributional fixed effect
+parameter, \code{sigma}. See \code{\link[=bsitar]{bsitar()}} for details.}
+
+\item{sigma_cov_prior_beta}{Specify prior on the covariate(s) included in the
+distributional fixed effect parameter, \code{sigma}.  See \code{\link[=bsitar]{bsitar()}}
 for details.}
 
-\item{b_prior_sd}{Set priors on the the group effect (i.e., random) effect
-for \code{b} parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{b_prior_sd}
+\item{sigma_prior_sd}{Specify prior on the standard deviation (sd) of
+distributional random effect parameter, \code{sigma}. See \code{\link[=bsitar]{bsitar()}}
 for details.}
 
-\item{c_prior_sd}{Set priors on the the group effect (i.e., random) effect
-for \code{c} parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{c_prior_sd}
-for details.}
+\item{sigma_cov_prior_sd}{Specify prior on the standard deviation (sd) of
+covariate(s) included in the distributional random effect parameter,
+\code{sigma}. See \code{\link[=bsitar]{bsitar()}} for details.}
 
-\item{d_prior_sd}{Set priors on the the group effect (i.e., random) effect
-for \code{d} parameter. See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_sd}
-for details.}
+\item{rsd_prior_sigma}{Specify prior on the residual standared deviation
+parameter, \code{sigma}, See \code{\link[=bsitar]{bsitar()}} for details,}
 
-\item{a_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
-(i.e., random) effect for \code{a} parameter. See \code{\link[=bsitar]{bsitar()}}
-function, \code{a_cov_prior_sd} for details.}
+\item{dpar_prior_sigma}{Specify prior on the distributional parameter,
+\code{sigma} (which is same as residual standared deviation for Gaussian
+distribution). See \code{\link[=bsitar]{bsitar()}} for details,}
 
-\item{b_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
-(i.e., random) effect for \code{b} parameter. See \code{\link[=bsitar]{bsitar()}}
-function, \code{b_cov_prior_sd} for details.}
+\item{dpar_cov_prior_sigma}{Specify prior for the covariate(s) included in the
+distributional parameter, \code{sigma} (which is same as residual standard
+deviation for Gaussian distribution).See \code{\link[=bsitar]{bsitar()}} for details,}
 
-\item{c_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
-(i.e., random) effect for \code{c} parameter. See \code{\link[=bsitar]{bsitar()}}
-function, \code{c_cov_prior_sd} for details.}
+\item{autocor_prior_acor}{Specify priors on the the autocorrelation parameters
+\code{ar}, \code{ma} and \code{arma}. See \code{\link[=bsitar]{bsitar()}} for details,}
 
-\item{d_cov_prior_sd}{Set priors on the the covariate(s) for the group effect
-(i.e., random) effect for \code{d} parameter. See \code{\link[=bsitar]{bsitar()}}
-function, \code{a_cov_prior_sd} for details.}
+\item{mvr_prior_rescor}{Specify priors on the the residual correlation
+parameter for multivariate model. See \code{\link[=bsitar]{bsitar()}} for details,}
 
-\item{gr_prior_cor}{Set priors on the the group level correlation parameter.
-See \code{\link[=bsitar]{bsitar()}} function, \code{d_prior_beta} for details.}
+\item{prior_data}{An optional argument (as named list) that can pass value for
+prior. See \code{\link[=bsitar]{bsitar()}} for details,}
 
-\item{sigma_prior_beta}{Set priors on the the fixed effect distributional
-parameter \code{sigma}. The allowed distributions are normal, student_t,
-cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
-\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_prior_beta} for
-full details on how to specify priors including various subptional
-available.}
-
-\item{sigma_cov_prior_beta}{Set priors on the covariate(s) for the the fixed
-effect distributional parameter \code{sigma}. The allowed distributions are
-normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
-gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
-\code{a_cov_prior_beta} for full details on how to specify priors including
-various suboptions available.}
-
-\item{sigma_prior_sd}{Set priors on the the random effect distributional
-parameter \code{sigma}. The allowed distributions are normal, student_t,
-cauchy, lognormal, uniform, exponential, gamma, inverse gamma. See
-\link[brms:set_prior]{brms::prior} function for details on priors. See \code{a_cov_prior_beta}
-for full details on how to specify priors including various subptional
-available.}
-
-\item{sigma_cov_prior_sd}{Set priors on the covariate(s) for the the random
-effect distributional parameter \code{sigma}. The allowed distributions are
-normal, student_t, cauchy, lognormal, uniform, exponential, gamma, inverse
-gamma. See \link[brms:set_prior]{brms::prior} function for details on priors. See
-\code{a_cov_prior_sd} for full details on how to specify priors including
-various suboptions available.}
-
-\item{rsd_prior_sigma}{Set priors on the the residual standared deviation
-\code{sigma} parameter. See \code{\link[=bsitar]{bsitar()}} function,
-\code{a_prior_beta} for details.}
-
-\item{dpar_prior_sigma}{Set priors on the distributional \code{sigma}
-parameter (which is same as residual standared deviation for Gaussian
-distribution). See \code{\link[=bsitar]{bsitar()}} function, \code{a_prior_beta} for
-details.}
-
-\item{dpar_cov_prior_sigma}{Set priors on the covariates for the
-distributional \code{sigma} parameter (which is same as residual standard
-deviation for Gaussian distribution). See \code{\link[=bsitar]{bsitar()}} function,
-\code{a_prior_beta} for details.}
-
-\item{autocor_prior_acor}{Set priors on the the autocorrelation parameters
-\code{ar}, \code{ma} and \code{arma}. See \code{\link[=bsitar]{bsitar()}} function,
-\code{a_prior_beta} for details.}
-
-\item{mvr_prior_rescor}{Set priors on the the residual correlation parameter
-for multivariate model. See \code{\link[=bsitar]{bsitar()}} function,
-\code{d_prior_beta} for details.}
-
-\item{prior_data}{An optional argument as named list to pass value for prior.
-See \code{\link[=bsitar]{bsitar()}} function, \code{prior_data} for details.}
-
-\item{prior_data_internal}{An internal data frame (named list) to pass on the
-relevant information on priors from the \code{\link[=bsitar]{bsitar()}} function to the
-\code{set_priors_initials}.}
+\item{prior_data_internal}{An internal data frame (named list) used to pass on
+the relevant information on priors from the \code{\link[=bsitar]{bsitar()}} function to
+the \code{set_priors_initials}.}
 
 \item{prior_args_internal}{An internal argument list that is passed from the
 \code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} and is used
@@ -199,8 +194,8 @@ the \code{\link[=bsitar]{bsitar()}} function and now passed on to the
 values. See \code{\link[=bsitar]{bsitar()}} function, \code{prior_data} for details.}
 
 \item{init_data_internal}{An internal data frame (named list) to pass on the
-relevant information on initials from the \code{\link[=bsitar]{bsitar()}} function to
-the \code{set_priors_initials}.}
+relevant information on initials from the \code{\link[=bsitar]{bsitar()}} function to the
+\code{set_priors_initials}.}
 
 \item{init_args_internal}{An internal argument list that is passed from the
 \code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} and is used

@@ -4447,8 +4447,6 @@ bsitar <- function(x,
     
     attributes(formula_bf) <- NULL
     
-    temp_stancode <- temp_standata <- NULL
-    
     
     eout <- list2env(list_out)
     for (eoutii in names(eout)) {
@@ -4779,9 +4777,6 @@ bsitar <- function(x,
     set_priors_initials_agrs $ init_data                <- init_data
     set_priors_initials_agrs $ init_data_internal       <- init_data_internal
     set_priors_initials_agrs $ init_args_internal       <- init_args_internal
-    set_priors_initials_agrs $ temp_stancode            <- temp_stancode
-    set_priors_initials_agrs $ temp_standata            <- temp_standata
-
     set_priors_initials_agrs $ custom_order_prior_str   <- ""
     
     

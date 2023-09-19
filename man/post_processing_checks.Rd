@@ -18,19 +18,19 @@ multivariate model (see \code{bsitar} function for details).}
 \item{deriv}{An integer value to specify whether to estimate distance curve
 (i.e., model estimated curve(s)) or the velocity curve (first derivative of
 the model estimated curve(s)). A value \code{0} (default) is for distance
-curve and  \code{1} for the velocity curve.
+curve and  \code{1} for the velocity curve.}
 
-@param envir Indicator to set the environment of function evaluation.
-The default is \code{parent.frame}.}
+\item{envir}{Indicator to set the environment of function evaluation. The
+default is \code{parent.frame}.}
 }
 \value{
 A string with the error captured or else a list with necessary
 information needed when executing the post-processing function
 }
 \description{
-The \code{post_processing_checks} perform essential checks
-(such as the validity of model class, response etc.) during post-processing
-of posterior draws.
+The \code{post_processing_checks} perform essential checks (such
+as the validity of model class, response etc.) during post-processing of
+posterior draws.
 }
 \examples{
 \dontrun{

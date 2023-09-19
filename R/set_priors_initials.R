@@ -112,6 +112,9 @@
 #'@param gr_prior_cor Specify prior on the correlation for group level random
 #'  effect parameters. See [bsitar::bsitar()] for details.
 #'
+#'@param sigma_prior_cor Specify prior on the correlation for distribution level
+#'  random effect parameters. See [bsitar::bsitar()] for details.
+#'
 #'@param rsd_prior_sigma Specify prior on the residual standared deviation
 #'  parameter, \code{sigma}, See [bsitar::bsitar()] for details,
 #'
@@ -125,6 +128,9 @@
 #'
 #'@param autocor_prior_acor Specify priors on the the autocorrelation parameters
 #'  \code{ar}, \code{ma} and \code{arma}. See [bsitar::bsitar()] for details,
+#'
+#'@param autocor_prior_unstr_acor Specify priors on the the unstructured
+#'  autocorrelation parameter. See [bsitar::bsitar()] for details,
 #'
 #'@param mvr_prior_rescor Specify priors on the the residual correlation
 #'  parameter for multivariate model. See [bsitar::bsitar()] for details,
@@ -154,6 +160,11 @@
 #'@param init_args_internal An internal argument list that is passed from the
 #'  [bsitar::bsitar()] function to the \code{set_priors_initials} and is used
 #'  for setting the initials.
+#'
+#'@param custom_order_prior_str An internal argument that is passed from the
+#'  [bsitar::bsitar()] function to the \code{set_priors_initials} when setting
+#'  the priors for the model with hierarchy level 3 and beyond. See
+#'  [bsitar::bsitar()] for details,
 #'
 #'@return An object of class \code{brmsprior} (See \code{brmsprior}). In
 #'  addition to the priors, the returned object contains a list of initial
@@ -205,8 +216,6 @@ set_priors_initials <- function(a_prior_beta,
                                 init_data              = NULL,
                                 init_data_internal     = NULL,
                                 init_args_internal     = NULL,
-                                temp_stancode          = NULL,
-                                temp_standata          = NULL,
                                 custom_order_prior_str = NULL) {
   
   
