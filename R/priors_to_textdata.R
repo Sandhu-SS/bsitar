@@ -92,51 +92,54 @@ priors_to_textdata <- function(model,
   
   spriors <- spriors %>% data.frame() %>% dplyr::select(-c('lb', 'ub', 'source'))
   spriors <- spriors %>% `rownames<-`( NULL )
-  # spriors <- spriors %>% mutate(class = if_else(class == 'b', 'Beta', class))
-  # spriors <- spriors %>% mutate(class = if_else(class == 'sd', 'Std.dev', class))
-  # spriors <- spriors %>% mutate(class = if_else(class == 'cor', 'Corr', class))
-  spriors <- spriors %>% mutate(class = if_else(class == 'L', 'cor', class))
-  
+  # spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'b', 'Beta', class))
+  # spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'sd', 'Std.dev', class))
+  # spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'cor', 'Corr', class))
+  spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'L', 'cor', class))
+ 
   
   if(!is.null(gsub_coef)) {
     for (gsub_coefi in gsub_coef) {
-      spriors <- spriors %>% mutate(coef = gsub(gsub_coefi, "" , coef))
+      spriors <- spriors %>%  dplyr::mutate(coef = gsub(gsub_coefi, "" , coef))
     }
   }
   
   if(!is.null(gsub_group)) {
     for (gsub_groupi in gsub_group) {
-      spriors <- spriors %>% mutate(group = gsub(gsub_groupi, "" , group))
+      spriors <- spriors %>%  dplyr::mutate(.data$group = gsub(gsub_groupi, "" , .data$group))
     }
   }
   
   
-  spriors <- spriors %>% relocate(nlpar, coef, class, prior, group, resp,  dpar)
+  spriors <- spriors %>% relocate(.data$nlpar, .data$coef, 
+                                  .data$class, .data$prior, 
+                                  .data$group, .data$resp, 
+                                  .data$dpar)
   #stop()
   # for sigma betas
-  spriors <- spriors %>% mutate(coef = if_else(coef == '' &
+  spriors <- spriors %>%  dplyr::mutate(coef =  dplyr::if_else(coef == '' &
                                                  class == 'Intercept',
                                                class, coef))
   
-  spriors <- spriors %>% mutate(class = if_else(class == 'Intercept' &
+  spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'Intercept' &
                                                   dpar == 'sigma' &
                                                   class == 'Intercept',
                                                 'b', class))
   
   
   
-  spriors <- spriors %>% mutate(nlpar = if_else(nlpar == '' & dpar != '', 
+  spriors <- spriors %>%  dplyr::mutate(nlpar =  dplyr::if_else(nlpar == '' & dpar != '', 
                                                 dpar, nlpar)) %>% 
     dplyr::select(-'dpar')
   
   
   
-  spriors <- spriors %>% rename(Parameter = nlpar,
-                                Coefficient = coef,
-                                Class = class, 
-                                Prior = prior,
-                                Group = group,
-                                Response = resp)
+  spriors <- spriors %>% rename(.data$Parameter = .data$nlpar,
+                                .data$Coefficient = .data$coef,
+                                .data$Class = .data$class, 
+                                .data$Prior = .data$prior,
+                                .data$Group = .data$group,
+                                .data$Response = .data$resp)
   
   
   spriors <- spriors %>% 

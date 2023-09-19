@@ -186,6 +186,86 @@ set_priors_initials <- function(a_prior_beta,
                                 temp_stancode          = NULL,
                                 temp_standata          = NULL,
                                 custom_order_prior_str = NULL) {
+  
+  
+  resp <- NULL;
+  autocor_formi <- NULL;
+  randomsi <- NULL;
+  sigma_formula_grsi <- NULL;
+  a_formulasi <- NULL;
+  b_formulasi <- NULL;
+  c_formulasi <- NULL;
+  d_formulasi <- NULL;
+  e_formulasi <- NULL;
+  f_formulasi <- NULL;
+  s_formulasi <- NULL;
+  select_model <- NULL;
+  fixedsi <- NULL;
+  a_formula_grsi <- NULL;
+  b_formula_grsi <- NULL;
+  c_formula_grsi <- NULL;
+  d_formula_grsi <- NULL;
+  e_formula_grsi <- NULL;
+  f_formula_grsi <- NULL;
+  acovcoefnames <- NULL;
+  bcovcoefnames <- NULL;
+  ccovcoefnames <- NULL;
+  dcovcoefnames <- NULL;
+  ecovcoefnames <- NULL;
+  fcovcoefnames <- NULL;
+  scovcoefnames <- NULL;
+  acovcoefnames_gr <- NULL;
+  bcovcoefnames_gr <- NULL;
+  ccovcoefnames_gr <- NULL;
+  dcovcoefnames_gr <- NULL;
+  ecovcoefnames_gr <- NULL;
+  fcovcoefnames_gr <- NULL;
+  dpar_formulasi <- NULL;
+  sigma_formulasi <- NULL;
+  sigmacovcoefnames <- NULL;
+  sigmacovcoefnames_gr <- NULL;
+  nabcrei <- NULL;
+  dparcovcoefnames <- NULL;
+  sigma_arg_groupvar <- NULL;
+  group_arg_groupvar <- NULL;
+  autocor_formi <- NULL;
+  acovcoefnames <- NULL;
+  bcovcoefnames <- NULL;
+  ccovcoefnames <- NULL;
+  dcovcoefnames <- NULL;
+  ecovcoefnames <- NULL;
+  fcovcoefnames <- NULL;
+  scovcoefnames <- NULL;
+  acovcoefnames_gr <- NULL;
+  bcovcoefnames_gr <- NULL;
+  ccovcoefnames_gr <- NULL;
+  dcovcoefnames_gr <- NULL;
+  ecovcoefnames_gr <- NULL;
+  fcovcoefnames_gr <- NULL;
+  sigmacovcoefnames <- NULL;
+  sigmacovcoefnames_gr <- NULL;
+  nabcrei <- NULL;
+  resp <- NULL;
+  nys <- NULL;
+  fixedsi <- NULL;
+  randomsi <- NULL;
+  nabci <- NULL;
+  nabcrei <- NULL;
+  ii <- NULL;
+  N_J_all <- NULL;
+  dpar_formulasi <- NULL;
+  initsi <- NULL;
+  seed <- NULL;
+  cortimeNlags_var <- NULL;
+  cortimeNlags <- NULL;
+  verbose <- NULL;
+  sigma_formulasi <- NULL;
+  s_formulasi <- NULL;
+  sigma_formula_grsi <- NULL;
+  stanvars_data_5x <- NULL;
+  nys <- NULL;
+  cortimeNlags <- NULL;
+  
   eout <- list2env(prior_data_internal)
   for (eoutii in names(eout)) {
     assign(eoutii, eout[[eoutii]])

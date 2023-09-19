@@ -696,6 +696,20 @@ splitAt2 <- function(x, pos) {
 }
 
 
+stop2 <- function(...) {
+  stop(..., call. = FALSE)
+}
+
+collapse_comma <- function(...) {
+  paste0("'", ..., "'", collapse = ", ")
+}
+
+
+warning2 <- function(...) {
+  warning(..., call. = FALSE)
+}
+
+
 ####
 
 # Find 

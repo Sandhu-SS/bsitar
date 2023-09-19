@@ -6237,14 +6237,14 @@ bsitar <- function(x,
   
   if(set_higher_levels) {
     brmspriors_sdcor <- brmspriors %>% 
-      dplyr::filter(class == 'sd' | class == 'cor')
+      dplyr::filter(.data$class == 'sd' | .data$class == 'cor')
     brmspriors_sdcor_gr <- brmspriors_sdcor$group
     
     brmsfit_sdcor <- do.call(brms::get_prior, brm_args) %>% 
-      dplyr::filter(class == 'sd' | class == 'cor')
+      dplyr::filter(.data$class == 'sd' | .data$class == 'cor')
     
     brmsfit_sdcor_prior_gr <- brmsfit_sdcor %>% 
-      dplyr::filter(!group %in%  brmspriors_sdcor_gr)
+      dplyr::filter(!.data$group %in%  brmspriors_sdcor_gr)
     
     brmspriors_brmsfit_sdcor <- brmspriors %>% 
       dplyr::bind_rows(., brmsfit_sdcor_prior_gr)

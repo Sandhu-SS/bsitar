@@ -150,7 +150,7 @@ update_bsitar.bsitar <-
       utils::getFromNamespace("rcols_prior", "brms")
     stop2                  <- utils::getFromNamespace("stop2", "brms")
     
-    
+    validate_silent        <- utils::getFromNamespace("validate_silent", "brms")
     
     
     

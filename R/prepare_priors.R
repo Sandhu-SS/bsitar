@@ -53,6 +53,47 @@ prepare_priors <- function(prior_argument,
                            init_data,
                            init_data_internal,
                            init_args_internal) {
+  
+  nlpar <- NULL;
+  verbose <- NULL;
+  cov_nlpar <- NULL;
+  dpar <- NULL;
+  cov_dpar <- NULL;
+  fixedsi <- NULL;
+  a_form_0 <- NULL;
+  resp_ <- NULL;
+  nrep_of_parms <- NULL;
+  b_form_0 <- NULL;
+  c_form_0 <- NULL;
+  d_form_0 <- NULL;
+  e_form_0 <- NULL;
+  f_form_0 <- NULL;
+  s_form_0 <- NULL;
+  sncov <- NULL;
+  ancov <- NULL;
+  bncov <- NULL;
+  cncov <- NULL;
+  dncov <- NULL;
+  encov <- NULL;
+  fncov <- NULL;
+  sigma_dpar <- NULL;
+  sigma_form_0 <- NULL;
+  cov_sigma_dpar <- NULL;
+  sigmancov <- NULL;
+  randomsi <- NULL;
+  ancov_gr <- NULL;
+  bncov_gr <- NULL;
+  cncov_gr <- NULL;
+  dncov_gr <- NULL;
+  encov_gr <- NULL;
+  fncov_gr <- NULL;
+  sigmancov_gr <- NULL;
+  dparncov <- NULL;
+  setautocorr <- NULL;
+  group <- NULL;
+  normalize <- NULL;
+  initsi <- NULL;
+  
   eout <- list2env(prior_internal_args)
   for (eoutii in names(eout)) {
     assign(eoutii, eout[[eoutii]])

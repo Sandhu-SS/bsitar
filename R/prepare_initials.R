@@ -27,6 +27,39 @@
 #' 
 prepare_initials <- function(init_argument,
                              init_internal_args) {
+  
+  
+  
+  seed <- NULL;
+  initsi <- NULL;
+  parm <- NULL;
+  randomsi <- NULL;
+  init_data <- NULL;
+  prior_argument <- NULL;
+  pstrarg <- NULL;
+  resp_ <- NULL;
+  allowed_init_options_beta <- NULL;
+  nlpar <- NULL;
+  stanvars_datazz <- NULL;
+  splitmvar_w2 <- NULL;
+  ii <- NULL;
+  allowed_init_options_sd <- NULL;
+  <- NULL;
+  allowed_init_options_rate <- NULL;
+  <- NULL;
+  allowed_init_options_shape <- NULL;
+  nabcrei <- NULL;
+  N_J_all <- NULL;
+  nys <- NULL;
+  dpar <- NULL;
+  ndparcov <- NULL;
+  acorclass <- NULL;
+  nrep_of_parms_p <- NULL;
+  nrep_of_parms_q <- NULL;
+  cortimeNlags <- NULL;
+  gr_init_cor <- NULL;
+  
+  
   if (!is.null(init_internal_args)) {
     eout <- list2env(init_internal_args)
     for (eoutii in names(eout)) {

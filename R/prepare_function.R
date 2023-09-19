@@ -37,6 +37,26 @@ prepare_function <- function(x,
                              nknots,
                              data,
                              internal_function_args) {
+  
+  
+  brms_arguments <- NULL;
+  xfunsi <- NULL;
+  Var1 <- NULL;
+  Var2 <- NULL;
+  select_model <- NULL;
+  fixedsi <- NULL;
+  match_sitar_d_form <- NULL;
+  randomsi <- NULL;
+  getxname <- NULL;
+  getknotsname <- NULL;
+  spfncname <- NULL;
+  xoffset <- NULL;
+  yfunsi <- NULL;
+  all_raw_str <- NULL;
+  all_raw_str <- NULL;
+  `<<-` <- NULL;
+  
+  
   if (!is.null(internal_function_args)) {
     eout <- list2env(internal_function_args)
     for (eoutii in names(eout)) {
