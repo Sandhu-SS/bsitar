@@ -1801,6 +1801,22 @@ bsitar <- function(x,
   
   
   
+  assign('normal', NULL, pos = 1, inherits = FALSE, immediate = TRUE, envir = environment())
+  
+  assign('uniform', NULL, pos = 1, inherits = FALSE, immediate = FALSE, envir = environment())
+  
+  assign('lkj', NULL, pos = 1, inherits = TRUE, immediate = TRUE, envir = environment())
+  
+  
+  assign('idsi', NULL, pos = -1, inherits = FALSE, immediate = TRUE, envir = parent.env())
+  
+  assign('dfsi', NULL, pos = -1, inherits = FALSE, immediate = FALSE, envir = parent.env())
+  
+  assign('knotssi', NULL, pos = -1, inherits = TRUE, immediate = TRUE, envir = parent.env())
+  
+  
+  assign('ysi', NULL, pos = -1, inherits = FALSE, immediate = TRUE, envir = parent.frame())
+
   
   # uniform <- NULL
   
