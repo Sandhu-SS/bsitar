@@ -3326,6 +3326,10 @@ bsitar <- function(x,
     subindicatorsi <- subindicators[ii]
     
     for (i in convert_to_list) {
+      assign(paste0(i, "s", "i"), NULL)
+    }
+    
+    for (i in convert_to_list) {
       if (!i %in% single_args) {
         assign(paste0(i, "s", "i"), eval(parse(text = paste0(i, "s")))[ii])
       }
