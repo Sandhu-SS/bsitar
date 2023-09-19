@@ -37,7 +37,71 @@ prepare_formula <- function(x,
                                      nknots,
                                      data,
                                      internal_formula_args) {
-  
+  randomsi <- NULL;
+  sigma_formula_gr_strsi <- NULL;
+  fixedsi <- NULL;
+  select_model <- NULL;
+  match_sitar_d_form <- NULL;
+  spfncname <- NULL;
+  terms_rhssi <- NULL;
+  subindicatorsi <- NULL;
+  a_formulasi <- NULL;
+  b_formulasi <- NULL;
+  c_formulasi <- NULL;
+  d_formulasi <- NULL;
+  e_formulasi <- NULL;
+  f_formulasi <- NULL;
+  s_formulasi <- NULL;
+  a_formula_grsi <- NULL;
+  b_formula_grsi <- NULL;
+  c_formula_grsi <- NULL;
+  d_formula_grsi <- NULL;
+  e_formula_grsi <- NULL;
+  f_formula_grsi <- NULL;
+  sigma_formulasi <- NULL;
+  sigma_formula_grsi <- NULL;
+  set_higher_levels <- NULL;
+  a_formula_gr_strsi_present <- NULL;
+  a_formula_gr_strsi <- NULL;
+  b_formula_gr_strsi_present <- NULL;
+  b_formula_gr_strsi <- NULL;
+  c_formula_gr_strsi_present <- NULL;
+  c_formula_gr_strsi <- NULL;
+  d_formula_gr_strsi_present <- NULL;
+  d_formula_gr_strsi <- NULL;
+  e_formula_gr_strsi_present <- NULL;
+  e_formula_gr_strsi <- NULL;
+  f_formula_gr_strsi_present <- NULL;
+  f_formula_gr_strsi <- NULL;
+  sigma_set_higher_levels <- NULL;
+  sigma_formula_gr_strsi_present <- NULL;
+  autocor_formi <- NULL;
+  unusedsi <- NULL;
+  familysi <- NULL;
+  mat_s <- NULL;
+  ancov_gr_str <- NULL;
+  bncov_gr_str <- NULL;
+  cncov_gr_str <- NULL;
+  dncov_gr_str <- NULL;
+  encov_gr_str <- NULL;
+  fncov_gr_str <- NULL;
+  acovcoefnames_gr_str_id <- NULL;
+  bcovcoefnames_gr_str_id <- NULL;
+  ccovcoefnames_gr_str_id <- NULL;
+  dcovcoefnames_gr_str_id <- NULL;
+  ecovcoefnames_gr_str_id <- NULL;
+  fcovcoefnames_gr_str_id <- NULL;
+  acovcoefnames_gr_str_form <- NULL;
+  bcovcoefnames_gr_str_form <- NULL;
+  ccovcoefnames_gr_str_form <- NULL;
+  dcovcoefnames_gr_str_form <- NULL;
+  ecovcoefnames_gr_str_form <- NULL;
+  fcovcoefnames_gr_str_form <- NULL;
+  sigmancov_gr_str <- NULL;
+  sigmacovcoefnames_gr_str <- NULL;
+  sigmacovcoefnames_gr_str_id <- NULL;
+  sigmacovcoefnames_gr_str_form <- NULL;
+  brms_arguments <- NULL;
   
   if (!is.null(internal_formula_args)) {
     eout <- list2env(internal_formula_args)

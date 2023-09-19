@@ -245,6 +245,39 @@ plot_bsitar.bsitar <- function(model,
   
   if(is.null(envir)) envir <- parent.frame()
   
+  ###
+  xvar <- NULL;
+  yvar <- NULL;
+  IDvar <- NULL;
+  groupbytest <- NULL;
+  IDvar <- NULL;
+  subindicatorsi <- NULL;
+  dy <- NULL;
+  xvar <- NULL;
+  yvar <- NULL;
+  subindicatorsi <- NULL;
+  IDvar <- NULL;
+  Estimate <- NULL;
+  groupby <- NULL;
+  groupby_line <- NULL;
+  groupby_color <- NULL;
+  plot.o.dx <- NULL;
+  Parameter <- NULL;
+  cov_factor_vars <- NULL;
+  Estimate.x <- NULL;
+  groupby.x <- NULL;
+  groupby_line.x <- NULL;
+  groupby_color.x <- NULL;
+  Estimate.y <- NULL;
+  groupby.y <- NULL;
+  groupby_line.y <- NULL;
+  groupby_color.y <- NULL;
+  groupby_fistr <- NULL;
+  cov_vars <- NULL;
+  `<<-` <- NULL
+  ':=' <- NULL;
+  ###
+  
   xcall = match.call()
   
   
@@ -439,12 +472,12 @@ plot_bsitar.bsitar <- function(model,
   if (grepl("a", opt, ignore.case = F) |
       grepl("u", opt, ignore.case = F)) {
     
-    testdata1 <- model$data %>% dplyr::select(dplyr::all_of(IDvar)) %>% droplevels() %>% 
-      dplyr::mutate(groupbytest = interaction(dplyr::across(IDvar))) %>% 
+    testdata1 <- model$data %>% dplyr::select(dplyr::dplyr::all_of(IDvar)) %>% droplevels() %>% 
+      dplyr::mutate(groupbytest = interaction(dplyr::dplyr::across(IDvar))) %>% 
       dplyr::select(groupbytest) %>% dplyr::ungroup()
     
-    testdata2 <- newdata %>% dplyr::select(dplyr::all_of(IDvar)) %>% droplevels() %>% 
-      dplyr::mutate(groupbytest = interaction(dplyr::across(IDvar))) %>% 
+    testdata2 <- newdata %>% dplyr::select(dplyr::dplyr::all_of(IDvar)) %>% droplevels() %>% 
+      dplyr::mutate(groupbytest = interaction(dplyr::dplyr::across(IDvar))) %>% 
       dplyr::select(groupbytest) %>% dplyr::ungroup()
     
     
@@ -808,7 +841,7 @@ plot_bsitar.bsitar <- function(model,
       if(!is.na(uvarby)) {
         newdata_tt <- newdata
         common_colsnms <- intersect(colnames(newdata) , colnames(extra))
-        newdata <-newdata %>% dplyr::select(all_of(common_colsnms))
+        newdata <-newdata %>% dplyr::select(dplyr::all_of(common_colsnms))
       }
       newdata <- rbind(newdata, extra)
       newdata <-
@@ -816,7 +849,7 @@ plot_bsitar.bsitar <- function(model,
       
       if(!is.na(uvarby)) {
         tempotnames <- c(IDvar, Xx, Yy)
-        tempot <- newdata_tt %>%  dplyr::select(-all_of(tempotnames))
+        tempot <- newdata_tt %>%  dplyr::select(-dplyr::all_of(tempotnames))
         newdata <- cbind(newdata[-1, ], tempot) %>% data.frame()
       }
       
@@ -919,7 +952,7 @@ plot_bsitar.bsitar <- function(model,
   #     colnames(out) <- c(Xx, Yy, IDvar)
   #     if(!is.na(uvarby)) {
   #       tempotnames <- c(IDvar, Xx, Yy)
-  #       tempot <- newdata %>%  dplyr::select(-all_of(tempotnames))
+  #       tempot <- newdata %>%  dplyr::select(-dplyr::all_of(tempotnames))
   #       out <- cbind(out, tempot) %>% data.frame()
   #     }
   #     out
@@ -1223,7 +1256,7 @@ plot_bsitar.bsitar <- function(model,
       
       # if(!is.na(uvarby)) {
       #   tempotnames <- c(IDvar, Xx, Yy)
-      #   tempot <- newdata %>%  dplyr::select(-all_of(tempotnames))
+      #   tempot <- newdata %>%  dplyr::select(-dplyr::all_of(tempotnames))
       #   out <- cbind(out, tempot) %>% data.frame()
       # }
       
@@ -1539,14 +1572,14 @@ plot_bsitar.bsitar <- function(model,
       dist.. <- substr(opt, index_opt, index_opt)
       if (grepl("^[[:upper:]]+$", dist..)) {
         d. <-
-          d. %>% dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_d)))
+          d. %>% dplyr::mutate(groupby = interaction(dplyr::dplyr::across(groupby_str_d)))
       } else if (!grepl("^[[:upper:]]+$", dist..)) {
         if (is.null(groupby_str_d))
           d. <- d. %>% dplyr::mutate(groupby = NA)
         if (!is.null(groupby_str_d))
           d. <-
             d. %>% dplyr::mutate(groupby =
-                                   interaction(dplyr::across(groupby_str_d)))
+                                   interaction(dplyr::dplyr::across(groupby_str_d)))
       }
       
       
@@ -1628,14 +1661,14 @@ plot_bsitar.bsitar <- function(model,
       velc.. <- substr(opt, index_opt, index_opt)
       if (grepl("^[[:upper:]]+$", velc..)) {
         d. <-
-          d. %>% dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_v)))
+          d. %>% dplyr::mutate(groupby = interaction(dplyr::dplyr::across(groupby_str_v)))
       } else if (!grepl("^[[:upper:]]+$", velc..)) {
         if (is.null(groupby_str_v))
           d. <- d. %>% dplyr::mutate(groupby = NA)
         if (!is.null(groupby_str_v))
           d. <-
             d. %>% dplyr::mutate(groupby =
-                                   interaction(dplyr::across(groupby_str_v)))
+                                   interaction(dplyr::dplyr::across(groupby_str_v)))
       }
       
       
@@ -1820,8 +1853,8 @@ plot_bsitar.bsitar <- function(model,
         if (grepl("^[[:upper:]]+$", dist..)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_d))) %>%
-            dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)))
+            dplyr::mutate(groupby = interaction(dplyr::dplyr::across(groupby_str_d))) %>%
+            dplyr::mutate(groupby.x = interaction(dplyr::dplyr::across(groupby_str_d)))
         } else if (!grepl("^[[:upper:]]+$", dist..)) {
           if (is.null(groupby_str_d)) {
             data_dv <- data_dv %>% dplyr::mutate(groupby = NA) %>%
@@ -1829,8 +1862,8 @@ plot_bsitar.bsitar <- function(model,
           } else if (!is.null(groupby_str_d)) {
             data_dv <- data_dv %>%
               dplyr::mutate(groupby =
-                              interaction(dplyr::across(groupby_str_d))) %>%
-              dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)))
+                              interaction(dplyr::dplyr::across(groupby_str_d))) %>%
+              dplyr::mutate(groupby.x = interaction(dplyr::dplyr::across(groupby_str_d)))
           }
         }
       }
@@ -1841,7 +1874,7 @@ plot_bsitar.bsitar <- function(model,
         if (grepl("^[[:upper:]]+$", velc..)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_v))) %>%
+            dplyr::mutate(groupby = interaction(dplyr::dplyr::across(groupby_str_v))) %>%
             dplyr::mutate(groupby.y = groupby)
         } else if (!grepl("^[[:upper:]]+$", velc..)) {
           if (is.null(groupby_str_v)) {
@@ -1850,8 +1883,8 @@ plot_bsitar.bsitar <- function(model,
           } else if (!is.null(groupby_str_v)) {
             data_dv <- data_dv %>%
               dplyr::mutate(groupby =
-                              interaction(dplyr::across(groupby_str_v))) %>%
-              dplyr::mutate(groupby.y = interaction(dplyr::across(groupby_str_v)))
+                              interaction(dplyr::dplyr::across(groupby_str_v))) %>%
+              dplyr::mutate(groupby.y = interaction(dplyr::dplyr::across(groupby_str_v)))
           }
         }
       }
@@ -1861,14 +1894,14 @@ plot_bsitar.bsitar <- function(model,
         if (is.null(groupby_str_v)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)),
+            dplyr::mutate(groupby.x = interaction(dplyr::dplyr::across(groupby_str_d)),
                           groupby.y = NA)
         } else if (!is.null(groupby_str_v)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)),
+            dplyr::mutate(groupby.x = interaction(dplyr::dplyr::across(groupby_str_d)),
                           groupby.y =
-                            interaction(dplyr::across(groupby_str_v)))
+                            interaction(dplyr::dplyr::across(groupby_str_v)))
         }
       }
       
@@ -1878,13 +1911,13 @@ plot_bsitar.bsitar <- function(model,
           data_dv <-
             data_dv %>% dplyr::mutate(groupby.x = NA,
                                       groupby.y =
-                                        interaction(dplyr::across(groupby_str_v)))
+                                        interaction(dplyr::dplyr::across(groupby_str_v)))
         } else if (!is.null(groupby_str_d)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)),
+            dplyr::mutate(groupby.x = interaction(dplyr::dplyr::across(groupby_str_d)),
                           groupby.y =
-                            interaction(dplyr::across(groupby_str_v)))
+                            interaction(dplyr::dplyr::across(groupby_str_v)))
         }
       }
       
@@ -2169,7 +2202,7 @@ plot_bsitar.bsitar <- function(model,
       # axx <<- out_a_
       out_a_ <-
         out_a_ %>%
-        dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_au)))
+        dplyr::mutate(groupby = interaction(dplyr::dplyr::across(groupby_str_au)))
       
       # x_minimum_a_ <- floor(min(out_a_[[Xx]]))
       # x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
@@ -2317,7 +2350,7 @@ plot_bsitar.bsitar <- function(model,
         d.out <- trimlines_(model, id = 'id', resp = resp, newdata = xyadj_ed, trim = trim)
       out_u_ <-
         out_u_ %>%
-        dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_au)))
+        dplyr::mutate(groupby = interaction(dplyr::dplyr::across(groupby_str_au)))
       
       out_u_ <- out_u_ %>% dplyr::mutate(groupby.x = groupby, groupby.y = groupby.x)
       

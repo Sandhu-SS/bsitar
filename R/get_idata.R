@@ -15,8 +15,9 @@ get_idata <- function(newdata, idVar, timeVar, times = NULL, length.out = 10, xr
   # check utils-helper function lines 60
   
   if(nlevels(newdata[[idVar]]) == 1) {
-    newdata <- newdata %>% distinct(newdata[[timeVar]], .keep_all = T) %>% 
-      arrange(!!as.name(timeVar))
+    newdata <- newdata %>% 
+      dplyr::distinct(newdata[[timeVar]], .keep_all = T) %>% 
+      dplyr::arrange(!!as.name(timeVar))
   }
   
   

@@ -101,9 +101,9 @@ outliers <-
       cat("code frequencies\n")
       print(summary(mat$code))
     }
-    
+    dplyr::
     mat <- cbind(mat, data_ex)
-    mat <- mat %>% dplyr::relocate(all_of(colnames_data_ex))
+    mat <- mat %>% dplyr::relocate(dplyr::all_of(colnames_data_ex))
     
     if (remove) {
       zap <- mat$code %in% icode
@@ -111,7 +111,7 @@ outliers <-
         cat(sum(zap), yy_, "values set missing\n")
       }
       mat[mat$code %in% icode, yy_] <- NA
-      mat <- mat %>% dplyr::select(all_of(colnames_data_ex))
+      mat <- mat %>% dplyr::select(dplyr::all_of(colnames_data_ex))
       mat <- mat %>% tidyr::drop_na() %>% droplevels()
     }
     mat <- mat %>% dplyr::arrange(order)

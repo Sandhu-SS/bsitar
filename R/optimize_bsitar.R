@@ -106,7 +106,11 @@ optimize_bsitar.bsitar <- function(model,
   }
   
   # Global R cmd check
-  outcome <- xfun <- yfun <- NULL
+  outcome <- NULL;
+  xfun <- NULL; 
+  yfun <- NULL;
+  Parameter <- NULL;
+  Estimate <- NULL;
   
   
   # This to evaluate T/F to TRUE/FALSE

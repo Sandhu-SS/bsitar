@@ -1484,6 +1484,7 @@
 #'  
 #'@importFrom stats loess na.omit residuals complete.cases deriv formula update
 #'@importFrom rlang .data
+#'@importFrom dplyr all_of across
 #'@importFrom utils combn head installed.packages packageVersion tail
 #'@importFrom Rdpack reprompt
 #'@import brms
@@ -1972,6 +1973,7 @@ bsitar <- function(x,
     c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
   
   
+  # Assign to objects otherwise error in R package
   
   #######################
   normal <- NULL;
@@ -6159,31 +6161,31 @@ bsitar <- function(x,
   ######################
   # not using insert_new_priors
   
-  insert_new_priors <- function(setdf_1, setdf_2) {
-    index <- row_number <- valid <- NA
-    setdf_1 <- 
-      setdf_1 %>% 
-      dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
-      dplyr::mutate(order = row_number()) %>% 
-      dplyr::arrange(index)
-    setdf_2 <- 
-      setdf_2 %>% 
-      dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
-      dplyr::mutate(order = row_number()) %>% 
-      dplyr::arrange(index)
-    vi_1 <- setdf_1 %>% 
-      dplyr::mutate(valid = ifelse(!(class == 'sd' & coef == ""), 1, 0)) %>% 
-      data.frame() %>% 
-      dplyr::filter(valid == 1) %>% dplyr::select(index) %>% unlist() %>% 
-      droplevels()
-    setdf_1 <- setdf_1 %>% dplyr::filter(!(class == 'sd' & coef == ""))
-    setdf_2 <- setdf_2 %>% dplyr::filter(!(class == 'sd' & coef == ""))
-    setdf_3 <- setdf_1[setdf_1$index %in% vi_1,]
-    setdf_2 <- setdf_2 %>% dplyr::filter(!index %in% vi_1)
-    setdf_4 <- rbind(setdf_2, setdf_3)
-    setdf_4 <- setdf_4 %>% dplyr::select(-c(index, order))
-    setdf_4
-  }
+  # insert_new_priors <- function(setdf_1, setdf_2) {
+  #   index <- row_number <- valid <- NA
+  #   setdf_1 <- 
+  #     setdf_1 %>% 
+  #     dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
+  #     dplyr::mutate(order = row_number()) %>% 
+  #     dplyr::arrange(index)
+  #   setdf_2 <- 
+  #     setdf_2 %>% 
+  #     dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
+  #     dplyr::mutate(order = row_number()) %>% 
+  #     dplyr::arrange(index)
+  #   vi_1 <- setdf_1 %>% 
+  #     dplyr::mutate(valid = ifelse(!(class == 'sd' & coef == ""), 1, 0)) %>% 
+  #     data.frame() %>% 
+  #     dplyr::filter(valid == 1) %>% dplyr::select(index) %>% unlist() %>% 
+  #     droplevels()
+  #   setdf_1 <- setdf_1 %>% dplyr::filter(!(class == 'sd' & coef == ""))
+  #   setdf_2 <- setdf_2 %>% dplyr::filter(!(class == 'sd' & coef == ""))
+  #   setdf_3 <- setdf_1[setdf_1$index %in% vi_1,]
+  #   setdf_2 <- setdf_2 %>% dplyr::filter(!index %in% vi_1)
+  #   setdf_4 <- rbind(setdf_2, setdf_3)
+  #   setdf_4 <- setdf_4 %>% dplyr::select(-c(index, order))
+  #   setdf_4
+  # }
   
   
   insert_new_priors <- function(setdf_1, setdf_2) {
@@ -6191,40 +6193,39 @@ bsitar <- function(x,
     for (i in 1:nrow(setdf_1)) {
       getx <- setdf_1[i,]
       zz[[i]] <- setdf_2 %>% 
-        dplyr::mutate(prior = dplyr::if_else(class == getx[['class']] &
-                                               coef == getx[['coef']] &
-                                               group == getx[['group']] &
-                                               resp == getx[['resp']] &
-                                               dpar == getx[['dpar']] &
-                                               nlpar == getx[['nlpar']],
-                                             getx$prior,
-                                             setdf_2$prior)) %>% 
-        dplyr::filter(class == getx[['class']] &
-                        coef == getx[['coef']] &
-                        group == getx[['group']] &
-                        resp == getx[['resp']] &
-                        dpar == getx[['dpar']] &
-                        nlpar == getx[['nlpar']])
+        dplyr::mutate(prior = dplyr::if_else(.data$class == getx[['class']] &
+                                               .data$coef == getx[['coef']] &
+                                               .data$group == getx[['group']] &
+                                               .data$resp == getx[['resp']] &
+                                               .data$dpar == getx[['dpar']] &
+                                               .data$nlpar == getx[['nlpar']],
+                                             .data$getx$prior,
+                                             .data$setdf_2$prior)) %>% 
+        dplyr::filter(.data$class == getx[['class']] &
+                        .data$coef == getx[['coef']] &
+                        .data$group == getx[['group']] &
+                        .data$resp == getx[['resp']] &
+                        .data$dpar == getx[['dpar']] &
+                        .data$nlpar == getx[['nlpar']])
       
       cc[[i]] <- setdf_2 %>% 
-        dplyr::mutate(prior = dplyr::if_else(class != getx[['class']] &
-                                      coef != getx[['coef']] &
-                                      group != getx[['group']] &
-                                      resp != getx[['resp']] &
-                                      dpar != getx[['dpar']] &
-                                      nlpar != getx[['nlpar']] ,
-                                    setdf_2$prior,
-                                    getx$prior)) %>% 
+        dplyr::mutate(prior = dplyr::if_else(.data$class != getx[['class']] &
+                                               .data$coef != getx[['coef']] &
+                                               .data$group != getx[['group']] &
+                                               .data$resp != getx[['resp']] &
+                                               .data$dpar != getx[['dpar']] &
+                                               .data$nlpar != getx[['nlpar']] ,
+                                             .data$setdf_2$prior,
+                                             .data$getx$prior)) %>% 
         
-        dplyr::filter(class != getx[['class']] & 
-                        coef != getx[['coef']] &
-                        group != getx[['group']] &
-                        resp != getx[['resp']] &
-                        dpar != getx[['dpar']] &
-                        nlpar != getx[['nlpar']])
+        dplyr::filter(.data$class != getx[['class']] & 
+                        .data$coef != getx[['coef']] &
+                        .data$group != getx[['group']] &
+                        .data$resp != getx[['resp']] &
+                        .data$dpar != getx[['dpar']] &
+                        .data$nlpar != getx[['nlpar']])
       
     }
-    
     p1 <- cc %>% do.call(rbind, .)
     p2 <- zz %>% do.call(rbind, .)
     p1p2 <- rbind(p1, p2)
@@ -6336,28 +6337,21 @@ bsitar <- function(x,
   }
   
   
-  
+  # This was for earlier three level model, now not needed
   # if(!is.null(set_replace_priors) & is.null(set_self_priors)) {
-  #   brmspriors <- brmspriors %>%
-  #     dplyr::filter(source == 'user') %>%
-  #     dplyr::bind_rows(., set_replace_priors)
+  #   if(!set_same_priors_hierarchy) {
+  #     drop_old_sd_cor_groups <- unique(setup_new_priors_add[['group']])
+  #     brmspriors <- brmspriors %>% 
+  #       filter(! .data$group %in% drop_old_sd_cor_groups)
+  #     brmspriors <- brmspriors %>%
+  #       dplyr::filter(source == 'user') %>%
+  #       dplyr::bind_rows(., set_replace_priors)
+  #   } else if(set_same_priors_hierarchy) {
+  #     brmspriors <- brmspriors %>%
+  #       dplyr::filter(.data$source == 'user')
+  #   }
   # }
-  
-  
-  if(!is.null(set_replace_priors) & is.null(set_self_priors)) {
-    if(!set_same_priors_hierarchy) {
-      drop_old_sd_cor_groups <- unique(setup_new_priors_add[['group']])
-      brmspriors <- brmspriors %>% 
-        filter(! .data$group %in% drop_old_sd_cor_groups)
-      brmspriors <- brmspriors %>%
-        dplyr::filter(source == 'user') %>%
-        dplyr::bind_rows(., set_replace_priors)
-    } else if(set_same_priors_hierarchy) {
-      brmspriors <- brmspriors %>%
-        dplyr::filter(source == 'user')
-    }
-  }
-  
+  # 
   
   
   

@@ -628,44 +628,6 @@ setup_higher_priors <- function(new_prior_list) {
 }
 
 
-########################
-########################
-
-insert_new_priors <- function(setdf_1, setdf_2) {
-  index__x <- NA
-  valid__x <- NA
-  setdf_1 <-
-    setdf_1 %>%
-    dplyr::mutate(index__x = interaction(.data$class, .data$coef, 
-                                         .data$group, .data$nlpar)) %>%
-    dplyr::mutate(order = dplyr::row_number()) %>%
-    dplyr::arrange(.data$index__x)
-  
-  setdf_2 <-
-    setdf_2 %>%
-    dplyr::mutate(index__x = interaction(.data$class, .data$coef, 
-                                         .data$group, .data$nlpar)) %>%
-    dplyr::mutate(order = dplyr::row_number()) %>%
-    dplyr::arrange(.data$index__x)
-  
-  vi_1 <- setdf_1 %>%
-    dplyr::mutate(valid__x = ifelse(!(class == 'sd' &
-                                        coef == ""), 1, 0)) %>%
-    data.frame() %>%
-    dplyr::filter(.data$valid__x == 1) %>% 
-    dplyr::select(.data$index__x) %>% unlist() %>%
-    droplevels()
-  
-  setdf_1 <-
-    setdf_1 %>% dplyr::filter(!(.data$class == 'sd' & .data$coef == ""))
-  setdf_2 <-
-    setdf_2 %>% dplyr::filter(!(.data$class == 'sd' & .data$coef == ""))
-  setdf_3 <- setdf_1[setdf_1$index__x %in% vi_1, ]
-  setdf_2 <- setdf_2 %>% dplyr::filter(!.data$index__x %in% vi_1)
-  setdf_4 <- rbind(setdf_2, setdf_3)
-  setdf_4 <- setdf_4 %>% dplyr::select(-c(.data$index__x, .data$order))
-  setdf_4
-}
 
 
 
@@ -732,3 +694,14 @@ splitAt2 <- function(x, pos) {
   if (is.null(x)) x <- y
   x
 }
+
+
+####
+
+# Find 
+# (.)$
+#   replace
+# \1 <- NULL;
+# 
+# Both regrex and wrap ticked ues
+

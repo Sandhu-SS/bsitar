@@ -142,7 +142,7 @@
 #'   executing the interpolation via \code{ipts}. The default \code{NULL} sets
 #'   the individual specific predictor range whereas code \code{xrange = 1} sets
 #'   same range for all individuals within the higher order grouping variable
-#'   (e.g., study). Code \code{xrange  = 2} sets the identical range across the
+#'   (e.g., study). Code \code{xrange  = 2} sets the identical range dplyr::across the
 #'   entire sample. Lastly, a paired numeric values can be supplied e.g.,
 #'   \code{xrange = c(6, 20)} will set the range between 6 and 20.
 #'   
@@ -256,6 +256,19 @@ gparameters.bsitar <- function(model,
     ndraws <- ndraws
   
   if(is.null(envir)) envir <- parent.frame()
+  
+  ###
+  xvar <- NULL;
+  acgv_asymptote <- NULL;
+  apv <- NULL;
+  Parameter <- NULL;
+  IDvar <- NULL;
+  groupby_fistr <- NULL;
+  groupby_fstr <- NULL;
+  subindicatorsi <- NULL;
+  Estimate <- NULL;
+  ':=' <- NULL;
+  ###
   
   oo <- post_processing_checks(model = model,
                                xcall = match.call(),
@@ -548,10 +561,10 @@ gparameters.bsitar <- function(model,
       
       if (!is.null(groupby_str)) {
         out__ <-
-          cbind(out__, newdata %>% dplyr::select(all_of(groupby_str))) %>%
+          cbind(out__, newdata %>% dplyr::select(dplyr::all_of(groupby_str))) %>%
           data.frame()
         out__ <-
-          out__ %>% dplyr::group_by(across(all_of(groupby_str)))
+          out__ %>% dplyr::group_by(dplyr::across(dplyr::all_of(groupby_str)))
       } else if (is.null(groupby_str)) {
         out__ <- cbind(out__, newdata)
       }
@@ -636,7 +649,7 @@ gparameters.bsitar <- function(model,
     for (i in 1:(dim(raw_re)[1])) {
       getitEstimate <- raw_re[i,]
       raw_re_c[i] <- cbind(newdata, getitEstimate) %>% data.frame() %>% 
-        dplyr::group_by(across(all_of(by))) %>%
+        dplyr::group_by(dplyr::across(dplyr::all_of(by))) %>%
         dplyr::summarise(getitEstimate = mean(getitEstimate), .groups = 'drop') %>%
         dplyr::ungroup() %>%
         dplyr::select(getitEstimate) 
@@ -799,7 +812,7 @@ gparameters.bsitar <- function(model,
           }
           
           newdata <- newdata %>%
-            dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
             dplyr::slice(1) %>% dplyr::ungroup()
         }
         arguments$newdata <- newdata
@@ -851,7 +864,7 @@ gparameters.bsitar <- function(model,
             
           }
           newdata <- newdata %>%
-            dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
             dplyr::slice(1) %>% dplyr::ungroup()
         }
         arguments$newdata <- newdata
@@ -998,7 +1011,7 @@ gparameters.bsitar <- function(model,
           }
           
           # newdata <- newdata %>%
-          #   dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
+          #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
           #   dplyr::slice(1) %>% dplyr::ungroup()
         }
         
@@ -1040,7 +1053,7 @@ gparameters.bsitar <- function(model,
         # }
         
         newdata <- newdata %>%
-          dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
+          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
@@ -1077,7 +1090,7 @@ gparameters.bsitar <- function(model,
             
           }
           # newdata <- newdata %>%
-          #   dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
+          #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
           #   dplyr::slice(1) %>% dplyr::ungroup()
         }
         arguments$newdata <- newdata
@@ -1120,7 +1133,7 @@ gparameters.bsitar <- function(model,
         
         
         newdata <- newdata %>%
-          dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
+          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
@@ -1141,7 +1154,7 @@ gparameters.bsitar <- function(model,
         }
         
         newdata <- newdata %>%
-          dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
+          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
@@ -1173,7 +1186,8 @@ gparameters.bsitar <- function(model,
       assign(list_ci, list_c[[list_ci]])
     }
     check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
-                 'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
+                 'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
+                 'uvarby', 'subindicatorsi')
     
     for (check___ in check__) {
       if(!exists(check___)) assign(check___, NULL)
@@ -1234,7 +1248,7 @@ gparameters.bsitar <- function(model,
           
         }
         newdata <- newdata %>%
-          dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
+          dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
           dplyr::slice(1) %>% dplyr::ungroup()
       }
       arguments$newdata <- newdata
@@ -1304,7 +1318,7 @@ gparameters.bsitar <- function(model,
           
         }
         # newdata <- newdata %>%
-        #   dplyr::group_by(across(all_of(groupby_fstr_xvars))) %>%
+        #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
         #   dplyr::slice(1) %>% dplyr::ungroup()
       }
       arguments$newdata <- newdata
@@ -1340,7 +1354,7 @@ gparameters.bsitar <- function(model,
       }
       
       newdata <- newdata %>%
-        dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
+        dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
       
@@ -1350,7 +1364,7 @@ gparameters.bsitar <- function(model,
       }
       
       newdata <- newdata %>%
-        dplyr::distinct(., across(all_of(selectby_over)), .keep_all = T) %>% 
+        dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
      

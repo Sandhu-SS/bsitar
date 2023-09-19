@@ -26,7 +26,7 @@ get.newdata <- function(model,
   } else if (!is.null(resp)) {
     resp_rev_ <- paste0("_", resp)
   }
-  
+  `:=` <- NULL
   validate_response(model, resp)
   
   list_c <- list()
@@ -289,7 +289,7 @@ get.newdata <- function(model,
         relocate_vars <- c(yvar, relocate_vars)
       }
     }
-    data %>% dplyr::relocate(all_of(relocate_vars)) %>% data.frame()
+    data %>% dplyr::relocate(dplyr::all_of(relocate_vars)) %>% data.frame()
   }
   
   ########
@@ -400,12 +400,12 @@ get.newdata <- function(model,
           idxx <- NULL
           if (!is.null(aux_var)) {
             aux_varx <- c(aux_var, IDvar)
-            newx. <- .x %>% dplyr::select(all_of(aux_varx)) %>%
-              dplyr::group_by(across(all_of(IDvar))) %>%
+            newx. <- .x %>% dplyr::select(dplyr::all_of(aux_varx)) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(IDvar))) %>%
               dplyr::mutate(idxx = dplyr::row_number()) %>%
               dplyr::ungroup()
             outx. <- out %>%
-              dplyr::group_by(across(all_of(IDvar))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(IDvar))) %>%
               dplyr::mutate(idxx = dplyr::row_number()) %>%
               dplyr::ungroup()
             out <- outx. %>% dplyr::left_join(., newx.,
@@ -457,11 +457,11 @@ get.newdata <- function(model,
               ) %>%
               dplyr::rename(!!xvar := 'x') %>%
               dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-              dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
+              dplyr::relocate(dplyr::all_of(IDvar), dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           } else if (!is.null(ipts) & !is.null(cov_factor_vars)) {
             newdata %>% dplyr::arrange(IDvar, xvar) %>%
-              dplyr::group_by(across(all_of(cov_factor_vars))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(cov_factor_vars))) %>%
               dplyr::group_modify(
                 ~ idatafunction(
                   .x,
@@ -475,7 +475,7 @@ get.newdata <- function(model,
               ) %>%
               dplyr::rename(!!xvar := 'x') %>%
               dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-              dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
+              dplyr::relocate(dplyr::all_of(IDvar), dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           }
         } # if(is.null(model$model_info[[hierarchical_]]))
@@ -494,7 +494,7 @@ get.newdata <- function(model,
             newdata_o <- newdata
             newdata <-
               newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
-              dplyr::group_by(across(all_of(cov_factor_vars_by))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(cov_factor_vars_by))) %>%
               dplyr::group_modify(
                 ~ idatafunction(
                   .x,
@@ -516,7 +516,8 @@ get.newdata <- function(model,
                                                  varname = i)
             }
             
-            newdata %>% dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
+            newdata %>% dplyr::relocate(dplyr::all_of(IDvar), 
+                                        dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           }
           
@@ -527,7 +528,7 @@ get.newdata <- function(model,
             cov_factor_vars_by <- c(higher_, cov_factor_vars)
             newdata <-
               newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
-              dplyr::group_by(across(all_of(cov_factor_vars_by))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(cov_factor_vars_by))) %>%
               dplyr::group_modify(
                 ~ idatafunction(
                   .x,
@@ -545,7 +546,8 @@ get.newdata <- function(model,
                                                  df2 = newdata,
                                                  varname = i)
             }
-            newdata %>% dplyr::relocate(all_of(IDvar), all_of(xvar)) %>%
+            newdata %>% dplyr::relocate(dplyr::all_of(IDvar), 
+                                        dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           }
         } # if(!is.null(model$model_info[[hierarchical_]])) {
@@ -654,7 +656,7 @@ get.newdata <- function(model,
       
       newdata <-
         newdata %>% dplyr::left_join(., newdata.oo %>%
-                                       dplyr::select(all_of(j_b_names__)),
+                                       dplyr::select(dplyr::all_of(j_b_names__)),
                                      by = j_b_names)
       
       newdata
