@@ -1760,71 +1760,8 @@ bsitar <- function(x,
                    future = getOption("future", FALSE),
                    ...) {
   
-  
-  # First assign NULL to avoid global vars issue in Package
-  # set_env <- parent.env()
-  # 
-  # set_collect <- c()
-  # for (agsxi in letters[1:9]) {
-  #   set_collect <- c(set_collect, paste0(agsxi, "", "" , ""))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "formula" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "formula_gr_str" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "prior_beta" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_beta" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "prior_sd" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "cov_prior_sd" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "init_beta" , "si"))
-  #   set_collect <- c(set_collect, paste0(agsxi, "_", "cov_init_sd" , "si"))
-  # }
-  # 
-  # var_lst <- sapply(set_collect, function(x) assign(x, NULL))
-  # list2env(var_lst, envir = NULL)
-  
-  
-  # set_collect <-  c('normal', 'uniform')
-  # var_lst <- sapply(set_collect, function(x) assign(x, NULL))
-  # list2env(var_lst, envir = .GlobalEnv)
-  
-  assign('normal', NULL, pos = 1, inherits = FALSE, immediate = TRUE)
-  
-  assign('uniform', NULL, pos = 1, inherits = FALSE, immediate = FALSE)
-  
-  assign('lkj', NULL, pos = 1, inherits = TRUE, immediate = TRUE)
-  
-  
-  assign('idsi', NULL, pos = -1, inherits = FALSE, immediate = TRUE)
-  
-  assign('dfsi', NULL, pos = -1, inherits = FALSE, immediate = FALSE)
-  
-  assign('knotssi', NULL, pos = -1, inherits = TRUE, immediate = TRUE)
-  
-  
-  
-  assign('normal', NULL, pos = 1, inherits = FALSE, immediate = TRUE, envir = environment())
-  
-  assign('uniform', NULL, pos = 1, inherits = FALSE, immediate = FALSE, envir = environment())
-  
-  assign('lkj', NULL, pos = 1, inherits = TRUE, immediate = TRUE, envir = environment())
-  
-  
-  assign('idsi', NULL, pos = -1, inherits = FALSE, immediate = TRUE, envir = parent.env())
-  
-  assign('dfsi', NULL, pos = -1, inherits = FALSE, immediate = FALSE, envir = parent.env())
-  
-  assign('knotssi', NULL, pos = -1, inherits = TRUE, immediate = TRUE, envir = parent.env())
-  
-  
-  assign('ysi', NULL, pos = -1, inherits = FALSE, immediate = TRUE, envir = parent.frame())
-
-  
-  # uniform <- NULL
-  
   mcall <- mcall_ <- match.call()
-  
 
-  
-  
   # check and set alias argument for formuale 
   dots_allias <- list(...)
   collect_dot_names <- c()
@@ -2036,23 +1973,119 @@ bsitar <- function(x,
   
   
   
-  # e_formulasi <- NULL
-  # 
-  # e_formula_grsi <- NULL
-  # e_formula_gr_strsi <- NULL
-  # e_prior_betasi <- NULL
-  # e_init_betasi <- NULL
+  #######################
+  normal <- NULL;
+  uniform <- NULL;
+  lkj <- NULL;
+  idsi <- NULL;
+  dfsi <- NULL;
+  knotssi <- NULL;
+  d_formulasi <- NULL;
+  ysi <- NULL;
+  a_formula_gr_strsi <- NULL;
+  b_formula_gr_strsi <- NULL;
+  c_formula_gr_strsi <- NULL;
+  d_formula_gr_strsi <- NULL;
+  e_formula_gr_strsi <- NULL;
+  f_formula_gr_strsi <- NULL;
+  xsi <- NULL;
+  xfunsi <- NULL;
+  yfunsi <- NULL;
+  boundsi <- NULL;
+  xoffsetsi <- NULL;
+  bstartsi <- NULL;
+  group_arg_groupvar <- NULL;
+  multivariate_rescor <- NULL;
+  univariate_by_by <- NULL;
+  sigma_arg_groupvar <- NULL;
+  pgvsi <- NULL;
+  apgvsi <- NULL;
+  a_init_betasi <- NULL;
+  b_init_betasi <- NULL;
+  c_init_betasi <- NULL;
+  d_init_betasi <- NULL;
+  e_init_betasi <- NULL;
+  f_init_betasi <- NULL;
+  s_init_betasi <- NULL;
+  a_cov_init_betasi <- NULL;
+  b_cov_init_betasi <- NULL;
+  c_cov_init_betasi <- NULL;
+  d_cov_init_betasi <- NULL;
+  e_cov_init_betasi <- NULL;
+  f_cov_init_betasi <- NULL;
+  s_cov_init_betasi <- NULL;
+  a_init_sdsi <- NULL;
+  b_init_sdsi <- NULL;
+  c_init_sdsi <- NULL;
+  d_init_sdsi <- NULL;
+  e_init_sdsi <- NULL;
+  f_init_sdsi <- NULL;
+  a_cov_init_sdsi <- NULL;
+  b_cov_init_sdsi <- NULL;
+  c_cov_init_sdsi <- NULL;
+  d_cov_init_sdsi <- NULL;
+  e_cov_init_sdsi <- NULL;
+  f_cov_init_sdsi <- NULL;
+  sigma_init_betasi <- NULL;
+  sigma_cov_init_betasi <- NULL;
+  sigma_init_sdsi <- NULL;
+  sigma_cov_init_sdsi <- NULL;
+  rsd_init_sigmasi <- NULL;
+  dpar_init_sigmasi <- NULL;
+  dpar_cov_init_sigmasi <- NULL;
+  autocor_init_acorsi <- NULL;
+  autocor_init_unstr_acorsi <- NULL;
+  gr_init_corsi <- NULL;
+  sigma_init_corsi <- NULL;
+  mvr_init_rescorsi <- NULL;
+  r_init_zsi <- NULL;
+  a_prior_betasi <- NULL;
+  b_prior_betasi <- NULL;
+  c_prior_betasi <- NULL;
+  d_prior_betasi <- NULL;
+  e_prior_betasi <- NULL;
+  f_prior_betasi <- NULL;
+  s_prior_betasi <- NULL;
+  a_cov_prior_betasi <- NULL;
+  b_cov_prior_betasi <- NULL;
+  c_cov_prior_betasi <- NULL;
+  d_cov_prior_betasi <- NULL;
+  e_cov_prior_betasi <- NULL;
+  f_cov_prior_betasi <- NULL;
+  s_cov_prior_betasi <- NULL;
+  a_prior_sdsi <- NULL;
+  b_prior_sdsi <- NULL;
+  c_prior_sdsi <- NULL;
+  d_prior_sdsi <- NULL;
+  e_prior_sdsi <- NULL;
+  f_prior_sdsi <- NULL;
+  a_cov_prior_sdsi <- NULL;
+  b_cov_prior_sdsi <- NULL;
+  c_cov_prior_sdsi <- NULL;
+  d_cov_prior_sdsi <- NULL;
+  e_cov_prior_sdsi <- NULL;
+  f_cov_prior_sdsi <- NULL;
+  gr_prior_corsi <- NULL;
+  sigma_prior_corsi <- NULL;
+  sigma_prior_betasi <- NULL;
+  sigma_cov_prior_betasi <- NULL;
+  sigma_prior_sdsi <- NULL;
+  sigma_cov_prior_sdsi <- NULL;
+  rsd_prior_sigmasi <- NULL;
+  dpar_prior_sigmasi <- NULL;
+  dpar_cov_prior_sigmasi <- NULL;
+  autocor_prior_acorsi <- NULL;
+  autocor_prior_unstr_acorsi <- NULL;
+  mvr_prior_rescorsi <- NULL;
+  initsi <- NULL;
+  hierarchical_gr_names <- NULL;
+  sigma_hierarchical_gr_names <- NULL;
+  lb <- NULL;
+  ub <- NULL;
+  init_rsi <- NULL;
+  `:=` <- NULL;
   
-  # argumentsx <<- arguments
-  # 
-  # for (agsxi in letters[1:26]) {
-  #   if(is.null(paste0(agsxi, "_", "formula"))) {
-  #     arguments[[paste0(agsxi, "_", "formula_gr")]] <- NULL
-  #     arguments[[paste0(agsxi, "_", "formula_gr_str")]] <- NULL
-  #     arguments[[paste0(agsxi, "_", "prior_beta")]] <- NULL
-  #     arguments[[paste0(agsxi, "_", "init_beta")]] <- NULL
-  #   }
-  # }
+  ######################
   
   
   
