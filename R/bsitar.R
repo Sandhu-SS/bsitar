@@ -1782,13 +1782,17 @@ bsitar <- function(x,
   # list2env(var_lst, envir = NULL)
   
   
-  set_collect <-  c('normal', 'uniform')
-  var_lst <- sapply(set_collect, function(x) assign(x, NULL))
+  # set_collect <-  c('normal', 'uniform')
+  # var_lst <- sapply(set_collect, function(x) assign(x, NULL))
   # list2env(var_lst, envir = .GlobalEnv)
   
-  assign(('normal'), NULL)
+  assign((noquote('normal')), NULL)
+  
+  uniform <- NULL
   
   mcall <- mcall_ <- match.call()
+  
+
   
   
   # check and set alias argument for formuale 
