@@ -3325,15 +3325,18 @@ bsitar <- function(x,
       resp <- ""
     subindicatorsi <- subindicators[ii]
     
+    
     for (i in convert_to_list) {
       assign(paste0(i, "s", "i"), NULL)
     }
+    
     
     for (i in convert_to_list) {
       if (!i %in% single_args) {
         assign(paste0(i, "s", "i"), eval(parse(text = paste0(i, "s")))[ii])
       }
     }
+    
     
     if (is.null(group_arg$groupvar))
        group_arg$groupvar <- idsi
