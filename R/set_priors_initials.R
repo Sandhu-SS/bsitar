@@ -448,34 +448,17 @@ set_priors_initials <- function(a_prior_beta,
   if(is.null(sigma_formula_grsi)) sigma_prior_cor <- NULL
   if(!sigmacorr)                  sigma_prior_cor <- NULL
   
+  
+  
+  # If group and sigma ids are same, then sigma_prior_cor NULL otherwise 
+  # duplicate priors error
+  
+  if(identical(sigma_group_arg$groupvar,
+               group_arg$groupvar)) {
+    sigma_prior_cor <- NULL
+  }
+  
 
-  
-  # if(!grepl("a", randomsi)) {
-  #   a_prior_sd <- a_cov_prior_sd <- NULL
-  # }
-  # if(!grepl("b", randomsi)) {
-  #   b_prior_sd <- b_cov_prior_sd <- NULL
-  # }
-  # if(!grepl("c", randomsi)) {
-  #   c_prior_sd <- c_cov_prior_sd <- NULL
-  # }
-  # if(!grepl("d", randomsi)) {
-  #   d_prior_sd <- d_cov_prior_sd <- NULL
-  # }
-  # if(!grepl("e", randomsi)) {
-  #   e_prior_sd <- e_cov_prior_sd <- NULL
-  # }
-  
-  
-  # 
-  #  bcovcoefnames_gr <- NULL
-  
-  
-  
-  
-  
-  
-  
   
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
     if (!is.null(univariate_by$cor)) {
