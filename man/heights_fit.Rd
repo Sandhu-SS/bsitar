@@ -5,13 +5,12 @@
 \alias{heights_fit}
 \title{Model fit to serial measurements of height on 12 girls}
 \format{
-A data frame with 124 observations on the following 4 variables:
+Data frame analysed have the following 3 variables:
 \describe{
-\item{id}{factor of subject ids (levels 1:12).}
-\item{age}{vector of ages (years).}
-\item{height}{vector of heights (cm).}
-\item{men}{vector of ages at menarche (years), where negative values
-are right censored.} }
+\item{id}{factor of subject ids (levels 1:12)}
+\item{age}{vector of ages (years)}
+\item{height}{vector of heights (cm)}
+}
 }
 \usage{
 heights_fit

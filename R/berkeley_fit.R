@@ -1,24 +1,23 @@
 
-#' Model fit berkeley dataset
+#' Model fit to the Berkeley datas et
 #'
-#' @description Model is fit to data comprise of height measurements of 12   
-#' girls from the Chard Growth Study measured twice a year between 8 and 
-#' 16 years of age.
+#' @description Model is fit to the Berkeley Child Guidance Study dataset
+#'   containing longitudinal anthropometry data for 136 children from birth to
+#'   21 years.
 #'
 #' @details Data details are provided in the the *sitar* package
-#'   \insertCite{R-sitar}{bsitar}. The data included in the **bsitar** package is 
-#'   the same as \code{heights} data used in the *sitar* package.
+#'   \insertCite{R-sitar}{bsitar}. 
 #'
 #'
 #' @name berkeley_fit
 #' @docType data
-#' @format A data frame with 124 observations on the following 4 variables:
+#' @format The Berkeley data analysed have the following 5 variables:
 #' \describe{
-#' \item{id}{factor of subject ids (levels 1:12).}
-#' \item{age}{vector of ages (years).}
-#' \item{height}{vector of heights (cm).}
-#' \item{men}{vector of ages at menarche (years), where negative values
-#' are right censored.} }
+#' \item{id}{factor with levels 201-278 male and 301-385 female}
+#' \item{age}{years, numeric vector}
+#' \item{height}{cm, numeric vector}
+#' \item{sex}{factor with level 1 male and level 2 female}
+#' }
 #' 
 #' @references
 #'  \insertAllCited{}

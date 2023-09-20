@@ -3,15 +3,15 @@
 \docType{data}
 \name{berkeley_fit}
 \alias{berkeley_fit}
-\title{Model fit berkeley dataset}
+\title{Model fit to the Berkeley datas et}
 \format{
-A data frame with 124 observations on the following 4 variables:
+The Berkeley data analysed have the following 5 variables:
 \describe{
-\item{id}{factor of subject ids (levels 1:12).}
-\item{age}{vector of ages (years).}
-\item{height}{vector of heights (cm).}
-\item{men}{vector of ages at menarche (years), where negative values
-are right censored.} }
+\item{id}{factor with levels 201-278 male and 301-385 female}
+\item{age}{years, numeric vector}
+\item{height}{cm, numeric vector}
+\item{sex}{factor with level 1 male and level 2 female}
+}
 }
 \usage{
 berkeley_fit
@@ -20,14 +20,13 @@ berkeley_fit
 A object of class \code{bsitar} with posterior draws.
 }
 \description{
-Model is fit to data comprise of height measurements of 12
-girls from the Chard Growth Study measured twice a year between 8 and
-16 years of age.
+Model is fit to the Berkeley Child Guidance Study dataset
+containing longitudinal anthropometry data for 136 children from birth to
+21 years.
 }
 \details{
 Data details are provided in the the \emph{sitar} package
-\insertCite{R-sitar}{bsitar}. The data included in the \strong{bsitar} package is
-the same as \code{heights} data used in the \emph{sitar} package.
+\insertCite{R-sitar}{bsitar}.
 }
 \references{
 \insertAllCited{}
