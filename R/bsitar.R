@@ -1136,12 +1136,12 @@
 #'
 #'@param get_set_priors An optional logical (default \code{FALSE}) to get priors
 #'  specified by the \code{bsitar} via \code{prepare_priors}.
-#'
-#'@param validate_priors An optional logical (default \code{FALSE}) to
-#'  validate the specified priors..
 #'  
 #'@param get_set_init An optional logical (default \code{FALSE}) to get 
 #' initials specified by the \code{bsitar} via \code{prepare_initials}.
+#' 
+#'@param validate_priors An optional logical (default \code{FALSE}) to
+#'  validate the specified priors.
 #'
 #'@param set_self_priors An optional (default \code{NULL}) to specify
 #'  priors manually.
@@ -1509,7 +1509,6 @@ bsitar <- function(x,
                    yfun = NULL,
                    bound = 0.04,
                    terms_rhs = NULL,
-                   
                    a_formula = ~ 1,
                    b_formula = ~ 1,
                    c_formula = ~ 1,
@@ -1568,9 +1567,9 @@ bsitar <- function(x,
                                        cor = 'un',
                                        rescor = TRUE),
                    
-                   a_prior_beta = normal('lm', 'ysd', autoscale = FALSE),
+                   a_prior_beta = normal('ymean', 'ysd', autoscale = 2.5),
                    b_prior_beta = normal(0, 2, autoscale = FALSE),
-                   c_prior_beta = normal(0, 0.5, autoscale = FALSE),
+                   c_prior_beta = normal(0, 1, autoscale = FALSE),
                    d_prior_beta = normal(0, 1, autoscale = FALSE),
                    e_prior_beta = normal(0, 1, autoscale = FALSE),
                    f_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1578,11 +1577,11 @@ bsitar <- function(x,
                    h_prior_beta = normal(0, 1, autoscale = FALSE),
                    i_prior_beta = normal(0, 1, autoscale = FALSE),
                    
-                   s_prior_beta = normal('lm', 'lm', autoscale = FALSE),
+                   s_prior_beta = normal(0, 'lm', autoscale = 2.5),
                    
                    a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-                   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                   c_cov_prior_beta = normal(0, 0.25, autoscale = FALSE),
                    d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    e_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    f_cov_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1592,9 +1591,9 @@ bsitar <- function(x,
                    
                    s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
                    
-                   a_prior_sd = normal(0, 'ysd', autoscale = 1),
+                   a_prior_sd = normal(0, 'ysd', autoscale = 2.5),
                    b_prior_sd = normal(0, 1, autoscale = FALSE),
-                   c_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   c_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    d_prior_sd = normal(0, 1, autoscale = FALSE),
                    e_prior_sd = normal(0, 1, autoscale = FALSE),
                    f_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -1640,9 +1639,9 @@ bsitar <- function(x,
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
                    
-                   rsd_prior_sigma = normal(0, 'ysd', autoscale = FALSE),
+                   rsd_prior_sigma = normal(0, 'ysd', autoscale = 2.5),
                    dpar_prior_sigma = normal(0, 'ysd', autoscale = FALSE),
-                   dpar_cov_prior_sigma = normal(0, 5, autoscale = FALSE),
+                   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
                    
@@ -1721,22 +1720,19 @@ bsitar <- function(x,
                    init_custom = NULL,
                    verbose = FALSE,
                    expose_function = FALSE,
-                   
                    get_stancode = FALSE,
                    get_standata = FALSE,
                    get_formula = FALSE,
                    get_stanvars = FALSE,
                    get_priors = FALSE,
                    get_set_priors = FALSE,
-                   validate_priors = FALSE,
                    get_set_init = FALSE,
-                   
+                   validate_priors = FALSE,
                    set_self_priors = NULL,
                    set_replace_priors = NULL,
                    set_same_priors_hierarchy = FALSE,
                    outliers = NULL, 
                    unused = NULL,
-                   
                    chains = 4,
                    iter = 2000,
                    warmup = floor(iter / 2),
@@ -1747,7 +1743,7 @@ bsitar <- function(x,
                    opencl = getOption("brms.opencl", NULL),
                    normalize = getOption("brms.normalize", TRUE),
                    algorithm = getOption("brms.algorithm", "sampling"),
-                   control = list(adapt_delta = 0.8, max_treedepth = 15),
+                   control = list(adapt_delta = 0.95, max_treedepth = 15),
                    sample_prior = "no",
                    save_pars = NULL,
                    drop_unused_levels = TRUE,
@@ -1797,23 +1793,6 @@ bsitar <- function(x,
   # x,y,id and data are always taken from the data, thus excluded from checks
   
   no_default_args <- c("x", "y", "id", "data", "...")
-  
-  deparse_0 <- function(deparseobj) {
-    deparseobj <- paste(deparse(deparseobj), collapse = "")
-    deparseobj <- gsub("[[:space:]]", "", deparseobj)
-    deparseobj
-  }
-  
-  deparse_0s <- function(deparseobj) {
-    deparseobj <- paste(deparse(substitute(deparseobj)), collapse = "")
-    deparseobj
-  }
-  
-  gsub_space <- function(deparseobj) {
-    deparseobj <- gsub("[[:space:]]", "", deparseobj)
-    deparseobj
-  }
-  
   
   # Problem with rethinking occurs during the expose_bsitar_function
   if("rethinking" %in% (.packages())){
@@ -1965,7 +1944,7 @@ bsitar <- function(x,
   
   
   # combine user defined and default arguments
-  `%!in%` <- Negate(`%in%`)
+  
   f_bsitar_arg <- formals(bsitar)
   nf_bsitar_arg_names <-
     intersect(names(arguments), names(f_bsitar_arg))

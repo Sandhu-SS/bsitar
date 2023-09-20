@@ -61,19 +61,19 @@ bsitar(
     "gaussian"),
   univariate_by = list(by = NA, cor = "un"),
   multivariate = list(mvar = FALSE, cor = "un", rescor = TRUE),
-  a_prior_beta = normal("lm", "ysd", autoscale = FALSE),
+  a_prior_beta = normal("ymean", "ysd", autoscale = 2.5),
   b_prior_beta = normal(0, 2, autoscale = FALSE),
-  c_prior_beta = normal(0, 0.5, autoscale = FALSE),
+  c_prior_beta = normal(0, 1, autoscale = FALSE),
   d_prior_beta = normal(0, 1, autoscale = FALSE),
   e_prior_beta = normal(0, 1, autoscale = FALSE),
   f_prior_beta = normal(0, 1, autoscale = FALSE),
   g_prior_beta = normal(0, 1, autoscale = FALSE),
   h_prior_beta = normal(0, 1, autoscale = FALSE),
   i_prior_beta = normal(0, 1, autoscale = FALSE),
-  s_prior_beta = normal("lm", "lm", autoscale = FALSE),
+  s_prior_beta = normal(0, "lm", autoscale = 2.5),
   a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+  c_cov_prior_beta = normal(0, 0.25, autoscale = FALSE),
   d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   e_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   f_cov_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -81,9 +81,9 @@ bsitar(
   h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-  a_prior_sd = normal(0, "ysd", autoscale = 1),
+  a_prior_sd = normal(0, "ysd", autoscale = 2.5),
   b_prior_sd = normal(0, 1, autoscale = FALSE),
-  c_prior_sd = normal(0, 0.25, autoscale = FALSE),
+  c_prior_sd = normal(0, 0.5, autoscale = FALSE),
   d_prior_sd = normal(0, 1, autoscale = FALSE),
   e_prior_sd = normal(0, 1, autoscale = FALSE),
   f_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -123,9 +123,9 @@ bsitar(
   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
   sigma_prior_sd_str = NULL,
   sigma_cov_prior_sd_str = NULL,
-  rsd_prior_sigma = normal(0, "ysd", autoscale = FALSE),
+  rsd_prior_sigma = normal(0, "ysd", autoscale = 2.5),
   dpar_prior_sigma = normal(0, "ysd", autoscale = FALSE),
-  dpar_cov_prior_sigma = normal(0, 5, autoscale = FALSE),
+  dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
   autocor_prior_unstr_acor = lkj(1),
   gr_prior_cor = lkj(1),
@@ -201,8 +201,8 @@ bsitar(
   get_stanvars = FALSE,
   get_priors = FALSE,
   get_set_priors = FALSE,
-  validate_priors = FALSE,
   get_set_init = FALSE,
+  validate_priors = FALSE,
   set_self_priors = NULL,
   set_replace_priors = NULL,
   set_same_priors_hierarchy = FALSE,
@@ -218,7 +218,7 @@ bsitar(
   opencl = getOption("brms.opencl", NULL),
   normalize = getOption("brms.normalize", TRUE),
   algorithm = getOption("brms.algorithm", "sampling"),
-  control = list(adapt_delta = 0.8, max_treedepth = 15),
+  control = list(adapt_delta = 0.95, max_treedepth = 15),
   sample_prior = "no",
   save_pars = NULL,
   drop_unused_levels = TRUE,
@@ -1278,11 +1278,11 @@ stanvars.}
 \item{get_set_priors}{An optional logical (default \code{FALSE}) to get priors
 specified by the \code{bsitar} via \code{prepare_priors}.}
 
-\item{validate_priors}{An optional logical (default \code{FALSE}) to
-validate the specified priors..}
-
 \item{get_set_init}{An optional logical (default \code{FALSE}) to get
 initials specified by the \code{bsitar} via \code{prepare_initials}.}
+
+\item{validate_priors}{An optional logical (default \code{FALSE}) to
+validate the specified priors.}
 
 \item{set_self_priors}{An optional (default \code{NULL}) to specify
 priors manually.}

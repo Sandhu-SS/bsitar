@@ -1,6 +1,6 @@
 
 
-# load("z.RData")
+# Expose function after optimization
 
 expose_optimize_fit <- function(optimize_fit, 
                                 subset_list = NULL, 
@@ -33,17 +33,17 @@ expose_optimize_fit <- function(optimize_fit,
   m_list
 }
 
-# elist <- expose_optimize_fit(optimize_fit2$models, subset_list = c(1, 6))
 
+# Plot models after optimization 
 
-
-plot_optimize_fit <- function(optimize_fit, subset_list = NULL, what = "plot", 
-                              expose_function = F, print= T, ...) {
+plot_optimize_fit <- function(optimize_fit, 
+                              subset_list = NULL, 
+                              what = "plot", 
+                              expose_function = F, 
+                              print= T, ...) {
   
-  optimize_fit_models <-  optimize_fit # optimize_fit$models
-  
+  optimize_fit_models <-  optimize_fit
   dots <- list(...)
-  
   for (i in names(dots)) {
     if(!i %in% formalArgs(plot_bsitar.bsitar)) 
       stop("arguments must be be one of the following",
@@ -75,15 +75,11 @@ plot_optimize_fit <- function(optimize_fit, subset_list = NULL, what = "plot",
   }
   
   m_list <- m_list[!sapply(m_list, is.null)]
-  
   nx <- function(.x, bx, args_) {
     message("Working on model no. ", .x)
-    
     dots$model <- bx[[.x]]
     dots$... <- NULL
-    
     if(is.null(what)) what <- 'plot'
-    
     if(what == "plot") {
       out_ <- do.call(plot_bsitar, dots)
       title_ <- bx[[.x]]$model_info$optimization_info
@@ -101,13 +97,12 @@ plot_optimize_fit <- function(optimize_fit, subset_list = NULL, what = "plot",
     }
     return(out_)
   }
-  
   out <- purrr::map(1:length(m_list), ~nx(.x, m_list, args_))
   return(out)
 }
 
 
-
+# Transform axis for dual y
 
 transform.sec.axis <- function(primary, secondary, na.rm = TRUE) {
   from <- range(secondary, na.rm = na.rm)
@@ -156,11 +151,7 @@ transform.sec.axis <- function(primary, secondary, na.rm = TRUE) {
 
 
 
-
-
-
-
-
+# Get _str arguments while evaluating priors
 
 get_gr_str_coef_id <- function(tsx, data) {
   tsx <- strsplit(tsx, "+(", fixed = T)[[1]] 
@@ -171,8 +162,6 @@ get_gr_str_coef_id <- function(tsx, data) {
   }
   tsx <- gsub("(", "", tsx, fixed = T)
   tsx <- gsub(")", "", tsx, fixed = T)
-  # tsx <- gsub("0+", "", tsx, fixed = T)
-  # tsx <- gsub("1+", "", tsx, fixed = T)
   tsx_c_coef  <- tsx_c_id    <- set_form_gr_it      <- list()
   set_ncov_it <- set_corr_it <- set_corr_true_false <- list()
   for (i in 1:length(tsx)) {
@@ -184,7 +173,6 @@ get_gr_str_coef_id <- function(tsx, data) {
     if(grepl("^~0", tsx_c1)) set_form_0_gr <- TRUE
     if(grepl("^~1", tsx_c1)) set_form_0_gr <- FALSE
     set_form_gr <- tsx_c1
-    # tsx_c1 <- strsplit(tsx_c1, "+", fixed = T)[[1]]
     tsx_c1_mat <- eval(parse(text = paste0(
       "model.matrix(",
       tsx_c1, ",data = data)"
@@ -216,8 +204,6 @@ get_gr_str_coef_id <- function(tsx, data) {
     set_ncov_it[[i]] <- set_ncov_it_get
   } # for (i in 1:length(tsx)) {
   
-  # print(set_corr_it) %>% unlist()
-  
   if(length(tsx_c_coef) != length(tsx_c_id)) 
     stop("coef and id length should be same")
   list(tsx_c_coef = tsx_c_coef, tsx_c_id = tsx_c_id, 
@@ -227,8 +213,7 @@ get_gr_str_coef_id <- function(tsx, data) {
 
 
 
-
-# This function get corr true false from | | syntax in _str 
+# Get corr true false from || syntax in _str arguments while evaluating priors
 # Used in prepare_formual 
 
 get_str_corr_tf_function_new_better <- function(str_id_all_list, 
@@ -239,7 +224,6 @@ get_str_corr_tf_function_new_better <- function(str_id_all_list,
     id_corr_tf_bind <- cbind(unlist(str_id_all_list), 
                              unlist(str_corr_all_list), 
                              unlist(str_corr_tf_all_list))
-    
     
     checkdi_c <- group_id_unique <- str_corr_tf <- c()
     
@@ -265,13 +249,12 @@ get_str_corr_tf_function_new_better <- function(str_id_all_list,
   } else {
     list(str_corr_tf = NULL, group_id_unique = NULL)
   }
-  
 }
 
 
 
 
-# This function will append priors to the above bpriors
+# Append priors to the bpriors
 # And, will out stanvar and inits to be added to stanvar_priors and initials
 
 extract_prior_str_lv <- function(tempx) {
@@ -307,8 +290,7 @@ extract_prior_str_lv <- function(tempx) {
 
 
 
-
-
+# Restore parantheses in formuale
 
 restore_paranthese_grgr_str_form <- function(strx) {
   restore_paranthese_grgr_str <- function(strx2) {
@@ -690,6 +672,34 @@ splitAt2 <- function(x, pos) {
 }
 
 
+# deparse and remove spaces
+
+deparse_0 <- function(deparseobj) {
+  deparseobj <- paste(deparse(deparseobj), collapse = "")
+  deparseobj <- gsub("[[:space:]]", "", deparseobj)
+  deparseobj
+}
+
+# deparse
+
+deparse_0s <- function(deparseobj) {
+  deparseobj <- paste(deparse(substitute(deparseobj)), collapse = "")
+  deparseobj
+}
+
+# Remove spaces
+
+gsub_space <- function(deparseobj) {
+  deparseobj <- gsub("[[:space:]]", "", deparseobj)
+  deparseobj
+}
+
+
+# Negate
+
+`%!in%` <- Negate(`%in%`)
+
+# Or
 
 '%||%' <- function(x, y) {
   if (is.null(x)) x <- y

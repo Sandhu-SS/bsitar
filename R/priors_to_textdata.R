@@ -21,7 +21,9 @@ priors_to_textdata <- function(model,
                                sort_group = NULL,
                                sort_parameter = c(letters[1:26], "sigma"),
                                sort_coefficient = c("Intercept"),
-                               sort_class = c("b", "sd", "cor")
+                               sort_class = c("b", "sd", "cor"),
+                               digits = 2,
+                               viewer = FALSE
                                ) {
   arguments <- as.list(match.call())[-1]
   
@@ -49,8 +51,8 @@ priors_to_textdata <- function(model,
   } else if(!is.null(model) & !is.null(spriors) & !is.null(sdata)) {
     stop("Supply only model or spriors and sdata arguments")
   } else if(!is.null(model)) {
-    spriors <- prior_summary(model)
-    sdata <- standata(model)
+    spriors <- brms::prior_summary(model)
+    sdata <- brms::standata(model)
   } else if(is.null(model)) {
     if(is.null(spriors) & is.null(sdata)) {
       stop("Supply spriors and sdata arguments")
@@ -66,7 +68,7 @@ priors_to_textdata <- function(model,
     x
   }
   
-  spriors <- spriors %>% filter(source == 'user')
+  spriors <- spriors %>% dplyr::filter(source == 'user')
   
   env_ <- environment()
   list2env(sdata, envir =  env_)
@@ -93,6 +95,7 @@ priors_to_textdata <- function(model,
     getxit_2 <- regmatches(getxit, gregexpr("(?<=\\().*?(?=\\))", getxit, perl=T))[[1]]
     getxit_3 <- strsplit(getxit_2, ",")[[1]]
     getxit_4 <- sapply(getxit_3, function(x) eval(parse(text=x)))
+    getxit_4 <- round(getxit_4, digits = digits)
     getxit_5 <- paste(getxit_4, collapse = ", ")
     getxit_6 <- paste0("(", getxit_5, ")")
     getxit_7 <- paste0(prior_name_case, getxit_6)
@@ -104,6 +107,7 @@ priors_to_textdata <- function(model,
   # }
   
   
+  
   spriors <- spriors %>% data.frame() %>% dplyr::select(-c('lb', 'ub', 'source'))
   spriors <- spriors %>% `rownames<-`( NULL )
   # spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'b', 'Beta', class))
@@ -111,6 +115,7 @@ priors_to_textdata <- function(model,
   # spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'cor', 'Corr', class))
   spriors <- spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'L', 'cor', class))
  
+  
   
   if(!is.null(gsub_coef)) {
     for (gsub_coefi in gsub_coef) {
@@ -148,7 +153,7 @@ priors_to_textdata <- function(model,
   
   
   
-  spriors <- spriors %>% rename(Parameter = nlpar,
+  spriors <- spriors %>% dplyr::rename(Parameter = nlpar,
                                 Coefficient = coef,
                                 Class = class, 
                                 Prior = prior,
@@ -170,13 +175,13 @@ priors_to_textdata <- function(model,
     }
   }
   
-  # spriors <- spriors %>% 
-  #   gt::gt()  %>% 
-  #   gt::cols_align(
-  #     align = "left",
-  #     columns = everything()
-  #   )
-  
+  # if(viewer) {
+  #   spriors <- spriors %>%
+  #     gt::gt()  %>%
+  #     gt::cols_align(
+  #       align = "left",
+  #       columns = dplyr::everything())
+  # }
   spriors
 }
 

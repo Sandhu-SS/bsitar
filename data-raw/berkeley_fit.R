@@ -27,9 +27,11 @@ data <- data %>% dplyr::filter(sex == "Male")
 
 # data %>% dplyr::glimpse()
 
-berkeley_fit <- bsitar::bsitar(age, y, id, data=data, 
-                       chains = 2, iter = 100,
-                       sample_prior = 'only')
+# sitar::sitar(age, y, id, data=data, df=4)
+# bsitar::
+berkeley_fit <- bsitar(age, y, id, data=data, 
+                       chains = 2, iter = 1000,
+                       sample_prior = 'no')
 
 
-usethis::use_data(berkeley_fit, overwrite = TRUE)
+# usethis::use_data(berkeley_fit, overwrite = TRUE)
