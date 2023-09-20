@@ -1855,11 +1855,9 @@ bsitar <- function(x,
   
   mcall$init <- temp_init_call_c
   
-  
-  
-  
   xs <- ids <- dfs <- NA
   
+  checks. <- NA
   
   for (i in names(mcall)[-1]) {
     # don't let family argument also to be evaluated
@@ -1868,7 +1866,6 @@ bsitar <- function(x,
       err. <- FALSE
       tryCatch(
         expr = {
-          # checks. <- eval(mcall[[i]])
           if (is.function(eval(mcall[[i]]))) {
             checks. <- deparse_0(mcall[[i]])
           } else {

@@ -1,6 +1,9 @@
 ## code to prepare `berkeley_fit` dataset goes here
 
-library(magrittr)
+# library(magrittr)
+
+library(bsitar)
+
 data(berkeley, package = "sitar")
 data <- berkeley
 rm(berkeley)
@@ -29,8 +32,12 @@ data <- data %>% dplyr::filter(sex == "Male")
 
 # sitar::sitar(age, y, id, data=data, df=4)
 # bsitar::
-berkeley_fit <- bsitar(age, y, id, data=data, 
-                       chains = 2, iter = 1000,
+
+# berkeley_fitx <- berkeley_fit
+
+berkeley_fit <- bsitar(age, y, id, data = data, 
+                       chains = 4, iter = 2000,
+                       a_prior_beta = normal(0, 1000),
                        sample_prior = 'no')
 
 

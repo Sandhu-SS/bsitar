@@ -175,13 +175,13 @@ priors_to_textdata <- function(model,
     }
   }
   
-  # if(viewer) {
-  #   spriors <- spriors %>%
-  #     gt::gt()  %>%
-  #     gt::cols_align(
-  #       align = "left",
-  #       columns = dplyr::everything())
-  # }
+  if(viewer) {
+    spriors <- spriors %>%
+      gt::gt()  %>%
+      gt::cols_align(
+        align = "left",
+        columns = everything())
+  }
   spriors
 }
 
