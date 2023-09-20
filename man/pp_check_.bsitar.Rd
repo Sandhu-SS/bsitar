@@ -5,7 +5,7 @@
 \alias{pp_check_}
 \title{Posterior predictive distribution check for \code{bsitar} object}
 \usage{
-\method{pp_check_}{bsitar}(model, resp = NULL, envir = .GlobalEnv, ...)
+\method{pp_check_}{bsitar}(model, resp = NULL, envir = parent.frame(), ...)
 
 pp_check_(model, ...)
 }

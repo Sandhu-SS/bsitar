@@ -326,14 +326,16 @@ individual variability is captured by the residual parameters which include $2
 
 
 
-```{r, echo=TRUE}
+```{r model-fit, echo=TRUE}
 
 # need to set_cmdstan_path otherwise build check package throws error 
 
-cmdstanr::set_cmdstan_path("//wsl$/Ubuntu/home/sandhu/.cmdstan/cmdstan-2.32.2")
+# cmdstanr::set_cmdstan_path("//wsl$/Ubuntu/home/sandhu/.cmdstan/cmdstan-2.32.2")
 
 library(tidyverse)
 library(bsitar)
+
+cmdstanr::register_knitr_engine(override = FALSE)
 
 dirpath <- "E:\\wdR\\a_aaofl_sitar_nlme\\"
 filedit <- "AAOF Collection Cephalometric Database Search 01.02.2022.csv"

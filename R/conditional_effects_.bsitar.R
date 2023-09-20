@@ -63,7 +63,7 @@ conditional_effects_.bsitar <-
   function(model,
            resp = NULL,
            deriv = 0,
-           envir = .GlobalEnv,
+           envir = parent.frame(),
            ...) {
     o <-
       post_processing_checks(model = model,
@@ -71,7 +71,7 @@ conditional_effects_.bsitar <-
                              resp = resp,
                              deriv = deriv)
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    . <- conditional_effects(model, resp = resp, ...)
+    . <- brms::conditional_effects(model, resp = resp, ...)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

@@ -27,7 +27,7 @@
 loo_.bsitar <-
   function(model,
            resp = NULL,
-           envir = .GlobalEnv,
+           envir = parent.frame(),
            ...) {
     o <-
       post_processing_checks(model = model,
@@ -35,7 +35,7 @@ loo_.bsitar <-
                              resp = resp,
                              deriv = deriv)
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    . <- loo(model, resp = resp, ...)
+    . <- brms::loo(model, resp = resp, ...)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

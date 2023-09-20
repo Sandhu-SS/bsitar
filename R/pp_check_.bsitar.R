@@ -32,7 +32,7 @@
 pp_check_.bsitar <-
   function(model,
            resp = NULL,
-           envir = .GlobalEnv,
+           envir = parent.frame(),
            ...) {
     o <-
       post_processing_checks(model = model,
@@ -40,7 +40,7 @@ pp_check_.bsitar <-
                              resp = resp,
                              deriv = 0)
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    . <- pp_check(model, resp = resp, ...)
+    . <- brms::pp_check(model, resp = resp, ...)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

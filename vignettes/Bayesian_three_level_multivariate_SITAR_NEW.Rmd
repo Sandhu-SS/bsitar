@@ -55,6 +55,7 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
+  echo = FALSE,
   collapse = TRUE,
   comment = NA,
   message = FALSE,
@@ -326,14 +327,16 @@ individual variability is captured by the residual parameters which include $2
 
 
 
-```{r, echo=TRUE}
+```{r model-fit, echo=TRUE}
 
 # need to set_cmdstan_path otherwise build check package throws error 
 
-cmdstanr::set_cmdstan_path("//wsl$/Ubuntu/home/sandhu/.cmdstan/cmdstan-2.32.2")
+# cmdstanr::set_cmdstan_path("//wsl$/Ubuntu/home/sandhu/.cmdstan/cmdstan-2.32.2")
 
 library(tidyverse)
 library(bsitar)
+
+cmdstanr::register_knitr_engine(override = FALSE)
 
 dirpath <- "E:\\wdR\\a_aaofl_sitar_nlme\\"
 filedit <- "AAOF Collection Cephalometric Database Search 01.02.2022.csv"
@@ -399,7 +402,7 @@ data_female <- data %>% filter(sex == 'Female') %>% droplevels() %>% tidyr::drop
 # remove Fels with one male
 data_male <- data_male %>% filter(study != 'Fels') %>% droplevels() %>% tidyr::drop_na()
 
-data_male <- dataset_in %>% mutate(id2 = id, study2 = study) %>% ungroup()
+data_male <- data_male %>% mutate(id2 = id, study2 = study) %>% ungroup()
 
 
 ########### 
@@ -735,7 +738,7 @@ fit1 <- bsitar(x = age, y = list(copad, copod), id = id,
 
 summary(fit1)
 
-```
+``` 
 
 
 

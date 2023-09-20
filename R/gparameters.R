@@ -251,7 +251,7 @@ gparameters.bsitar <- function(model,
                                envir = NULL,
                                ...) {
   if (is.null(ndraws))
-    ndraws  <- ndraws(model)
+    ndraws  <- brms::ndraws(model)
   else
     ndraws <- ndraws
   

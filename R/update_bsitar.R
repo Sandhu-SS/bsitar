@@ -164,7 +164,7 @@ update_bsitar.bsitar <-
       dots$silent <- model$stan_args$silent %||% 1L
     }
     silent <- dots$silent
-    model <- restructure(model)
+    model <- brms::restructure(model)
     if (isTRUE(model$version$brms < "2.0.0")) {
       warning2("Updating models fitted with older versions of brms may fail.")
     }
@@ -332,7 +332,7 @@ update_bsitar.bsitar <-
       
       # stan code may differ just because of the version number (#288)
       new_stancode <- sub("^[^\n]+\n", "", new_stancode)
-      old_stancode <- stancode(model, version = FALSE)
+      old_stancode <- brms::stancode(model, version = FALSE)
       recompile <- needs_recompilation(model) || !same_backend ||
         !is_equal(new_stancode, old_stancode)
       if (recompile && silent < 2) {
@@ -359,7 +359,7 @@ update_bsitar.bsitar <-
         model$formula <- dots$formula
         dots$formula <- NULL
       }
-      bterms <- brmsterms(model$formula)
+      bterms <- brms::brmsterms(model$formula)
       model$data2 <- validate_data2(dots$data2, bterms = bterms)
       model$data <- validate_data(
         dots$data,
