@@ -23,3 +23,5 @@
 ^CRAN-SUBMISSION$
 ^revdep$
 ^dev$
+^data-raw$
+^heights_fit.rda$
