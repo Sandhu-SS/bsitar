@@ -1,14 +1,18 @@
 
 
-#' Leave-one-out (loo) cross-validation for \code{bsitar} object
+#' Leave-one-out (loo) cross-validation for \code{bgmfit} object
 #' 
-#' @details The \code{loo_} function is a wrapper around 
+#' @details The \code{loo_bgm} function is a wrapper around 
 #' the [brms::loo] and works exactly the same way as 
-#' [bsitar::loo]. 
+#' [brms::loo]. 
 #' 
-#' @inherit pp_check_.bsitar params
+#' @inherit pp_check_bgm.bgmfit params
 #' 
 #' @inherit brms::loo description 
+#' 
+#' @inheritParams growthparameters.bgmfit
+#' 
+#' @param deriv Must be \code{NULL}. 
 #' 
 #' @param ... Additional arguments passed to the [brms::loo] 
 #' function. Please see \code{brms::loo} for details on 
@@ -21,29 +25,32 @@
 #'
 #' @examples
 #' \dontrun{
-#' loo_(model)
+#' loo_bgm(model)
 #' }
 
-loo_.bsitar <-
+loo_bgm.bgmfit <-
   function(model,
            resp = NULL,
+           cores = 1,
            envir = parent.frame(),
+           deriv = NULL,
            ...) {
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
+                             envir = envir,
                              deriv = deriv)
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    . <- brms::loo(model, resp = resp, ...)
+    . <- brms::loo(model, resp = resp, cores = cores ,...)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }
 
 
-#' @rdname loo_.bsitar
+#' @rdname loo_bgm.bgmfit
 #' @export
-loo_ <- function(model, ...) {
-  UseMethod("loo_")
+loo_bgm <- function(model, ...) {
+  UseMethod("loo_bgm")
 }
 

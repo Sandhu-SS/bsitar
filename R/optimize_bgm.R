@@ -1,8 +1,8 @@
 
 
-#'Optimize \pkg{bsitar} model
+#'Optimize \pkg{bgmfit} model
 #'
-#'@param model An object of class \code{bsitar}.
+#'@param model An object of class \code{bgmfit}.
 #'
 #'@param newdata An optional \code{data.frame} to be used when optimizing the
 #'  model. If \code{NULL} (default), the same same data used for original model
@@ -12,7 +12,7 @@
 #'@param optimize_df A vector specifying the degree of freedom (\code{df}) 
 #'  update. If \code{NULL} (default), the \code{df} is taken from the
 #'  original model. For \code{univariate-by-sungroup} and \code{multivariate}
-#'  models (see [bsitar::bsitar()] for details on these arguments),
+#'  models (see [bsitar::bgm()] for details on these arguments),
 #'  \code{optimize_df} can be a single integer (e.g., \code{optimize_df = 4}) or
 #'  a list (e.g., \code{optimize_df = list(4,5)}). For optimization over
 #'  different \code{df}, say for example df 4 and 5 for univariate model, the
@@ -61,7 +61,7 @@
 #'
 #'@param digits An integer to set the number of decimal places.
 #'
-#'@param ... Other arguments passed to \code{\link{update_bsitar}}.
+#'@param ... Other arguments passed to \code{\link{update_bgm}}.
 #'
 #'@return A list containing the optimized models of class \code{brmsfit,
 #'  bsiatr}, and the the combined summary statistics if \code{add_fit_criteria}
@@ -71,7 +71,7 @@
 #'
 #'@importFrom loo pareto_k_table
 #'
-#'@export optimize_bsitar.bsitar
+#'@export optimize_bgm.bgmfit
 #'
 #'@export
 #'
@@ -79,11 +79,11 @@
 #' \dontrun{
 #' data(heights)
 #' data_males <- heights %>% filter(sex == 'Male')
-#' fit_males <- bsitar(x=age, y=height, id=id, data=heights, df=4)
-#' fit_males2 <- optimize_bsitar(fit_males)
+#' fit_males <- bgm(x=age, y=height, id=id, data=heights, df=4)
+#' fit_males2 <- optimize_bgm(fit_males)
 #' }
 #'
-optimize_bsitar.bsitar <- function(model,
+optimize_bgm.bgmfit <- function(model,
                                    newdata = NULL,
                                    optimize_df = NULL,
                                    optimize_x = list(NULL, log,  sqrt),
@@ -107,7 +107,7 @@ optimize_bsitar.bsitar <- function(model,
   call_o <- match.call()
   call_o_args <- as.list(call_o)[-1]
   
-  args_o <- as.list(model$model_info$call.full.bsitar)[-1]
+  args_o <- as.list(model$model_info$call.full.bgm)[-1]
   args_o_dots_ <- list(...)
   if (length(args_o_dots_) > 0) {
     for (i in names(args_o_dots_)) {
@@ -747,10 +747,10 @@ optimize_bsitar.bsitar <- function(model,
       args_o$data <- call_o_args$newdata
     }
     
-    # Somehow update_bsitar is not accepting symbol as arg e.g, x = age
+    # Somehow update_bgm is not accepting symbol as arg e.g, x = age
     
-    # fit <- do.call(update_bsitar, args_o)
-    fit <- do.call(bsitar, args_o)
+    # fit <- do.call(update_bgm, args_o)
+    fit <- do.call(bgm, args_o)
     
     
     fit$model_info$optimization_info <- optimization_info
@@ -829,8 +829,8 @@ optimize_bsitar.bsitar <- function(model,
 
 
 
-#' @rdname optimize_bsitar.bsitar
+#' @rdname optimize_bgm.bgmfit
 #' @export
-optimize_bsitar <- function(model, ...) {
-  UseMethod("optimize_bsitar")
+optimize_bgm <- function(model, ...) {
+  UseMethod("optimize_bgm")
 }

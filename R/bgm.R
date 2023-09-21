@@ -51,7 +51,7 @@
 #'  to the first term of the spline design matrix created by the truncated power
 #'  basis approach.
 #'
-#'  The *bsitar* function is the main workhorse of the **bsitar** package that
+#'  The *bgm* function is the main workhorse of the **bsitar** package that
 #'  fits the Bayesian SITAR model. The package is a frontend to the R package
 #'  *brms* \insertCite{@see @R-brms; @brms2021}{bsitar}  which can fit a wide
 #'  range of hierarchical linear and nonlinear regression models including
@@ -1135,10 +1135,10 @@
 #'@param get_priors An optional logical (default \code{FALSE}) to get priors.
 #'
 #'@param get_set_priors An optional logical (default \code{FALSE}) to get priors
-#'  specified by the \code{bsitar} via \code{prepare_priors}.
+#'  specified by the \code{bgm} via \code{prepare_priors}.
 #'  
 #'@param get_set_init An optional logical (default \code{FALSE}) to get 
-#' initials specified by the \code{bsitar} via \code{prepare_initials}.
+#' initials specified by the \code{bgm} via \code{prepare_initials}.
 #' 
 #'@param validate_priors An optional logical (default \code{FALSE}) to
 #'  validate the specified priors.
@@ -1154,11 +1154,11 @@
 #'  
 #'@param outliers An optional (default \code{NULL}) to remove velocity
 #' outliers. The argument should be a named list to pass on to the
-#' [bsitar::outliers] function. See [bsitar::outliers] for details.
+#' [bsitar::outliers()] function. See [bsitar::outliers()] for details.
 #'
 #'@param cores Number of cores to be used when executing the chains in parallel.
 #'  See [brms::brm()] for details. Note that unlike [brms::brm()] which sets
-#'  \code{cores=getOption("mc.cores", 1)}, the default in \code{bsitar} is
+#'  \code{cores=getOption("mc.cores", 1)}, the default in \code{bgm} is
 #'  \code{cores=getOption("mc.cores", 'optimize')} which optimizes the
 #'  utilization of system resources. The maximum number of cores that can be
 #'  deployed is calculated as the maximum number of available cores minus 1.
@@ -1178,7 +1178,7 @@
 #'  Note that [brms::brm()] sets this argument as
 #'  \code{getOption("brms.threads", NULL)} which means that no within-chain
 #'  parallelization is used by default. In contrast, to utilize the available
-#'  resources from the modern computing systems, the \code{bsitar}, by default,
+#'  resources from the modern computing systems, the \code{bgm}, by default,
 #'  sets \code{threads} as \code{getOption("brms.threads", 'optimize')}. The
 #'  number of threads per chain is set as the maximum number of cores available
 #'  minus 1. Another option is to set \code{threads} as
@@ -1378,8 +1378,8 @@
 #' data_females <- heights %>% filter(sex == 'Female)
 #'
 #' # Fit model
-#' fit_males <- bsitar(x=age, y=height, id=id, data=heights, df=5)
-#' fit_females <- bsitar(x=age, y=height, id=id, data=heights, df=4)
+#' fit_males <- bgm(x=age, y=height, id=id, data=heights, df=5)
+#' fit_females <- bgm(x=age, y=height, id=id, data=heights, df=4)
 #'
 #' # Generate a summary of results for males and females
 #' summary(fit_males)
@@ -1406,7 +1406,7 @@
 #' # applies for all argument including prior and initials.
 #'
 #' # Fit model
-#' fit_male_female <- bsitar(x=age, y=height, id=id, data=heights,
+#' fit_male_female <- bgm(x=age, y=height, id=id, data=heights,
 #' univariate_by = sex, df=list(4,5))
 #'
 #' # Generate a summary of results for males and females
@@ -1454,7 +1454,7 @@
 #' # the resp = argument.
 #'
 #' # Fit model
-#' fit_mutivar <- bsitar(x=age, y=list(height, height2), id=id, data=heights,
+#' fit_mutivar <- bgm(x=age, y=list(height, height2), id=id, data=heights,
 #' multivariate = TRUE,  df=list(4,5),
 #' a_prior_beta = list(normal(ymean, ysd, autosclae = 2), cauchy(ymedian, 100)),
 #' a_init_beta = list(random, lm))
@@ -1492,7 +1492,7 @@
 #'@export
 #'
 #'
-bsitar <- function(x,
+bgm <- function(x,
                    y,
                    id,
                    data,
@@ -1794,7 +1794,7 @@ bsitar <- function(x,
   
   no_default_args <- c("x", "y", "id", "data", "...")
   
-  # Problem with rethinking occurs during the expose_bsitar_function
+  # Problem with rethinking occurs during the expose_function_bgm
   if("rethinking" %in% (.packages())){
     message("Package 'rethinking' detached and unloaded as it creates conflict",
             " \nwith the rstan version ", utils::packageVersion('rstan'))
@@ -1946,11 +1946,11 @@ bsitar <- function(x,
   
   # combine user defined and default arguments
   
-  f_bsitar_arg <- formals(bsitar)
-  nf_bsitar_arg_names <-
-    intersect(names(arguments), names(f_bsitar_arg))
+  f_bgm_arg <- formals(bgm)
+  nf_bgm_arg_names <-
+    intersect(names(arguments), names(f_bgm_arg))
   arguments <-
-    c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
+    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
   
   
   # Assign to objects otherwise error in R package (global var)
@@ -2156,7 +2156,7 @@ bsitar <- function(x,
   
   
   
-  # Separate 'brms' arguments from 'bsitar' arguments for the ease of handling
+  # Separate 'brms' arguments from 'bgm' arguments for the ease of handling
   
   brms_arguments_list <-
     c(
@@ -3112,7 +3112,7 @@ bsitar <- function(x,
     function(value)
       formalArgs(deparse_0(substitute(value)[[1]]))
   
-  convert_to_list <- getArgNames(bsitar())
+  convert_to_list <- getArgNames(bgm())
   
   
   
@@ -3211,7 +3211,7 @@ bsitar <- function(x,
   }
   
   
-  # Prepare data for 'bsitar'
+  # Prepare data for 'bgm'
   
   if (verbose) {
     setmsgtxt <- paste0("\n Preparing data")
@@ -3689,7 +3689,7 @@ bsitar <- function(x,
                  "\n ",
                  "or else use get_prios to place priors manually and the pass ",
                  "\n ",
-                 "to the bsitar by using argument 'set_self_priors'"
+                 "to the bgm by using argument 'set_self_priors'"
             )
           }
         } else if(!is.null(b[[1]])) {
@@ -5448,7 +5448,7 @@ bsitar <- function(x,
     # Restore x var for data
     # Imp: Note that only xvar is reverse transformed and not the yvar
     # This is because the xvar is again transformed in the Stan function block
-    # Whereas the yvar is passed to bsitar as such 
+    # Whereas the yvar is passed to bgm as such 
     
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
@@ -6370,7 +6370,7 @@ bsitar <- function(x,
   
   
   # Fit model if get_set_priors get_priors get_standata get_stancode -> FALSE
-  # this if(exe_model_fit) { is closed just before the end of the bsitar 
+  # this if(exe_model_fit) { is closed just before the end of the bgm 
   
   if(exe_model_fit) {
     # If initials are 0 or random, then set custom init to NULL
@@ -6525,11 +6525,11 @@ bsitar <- function(x,
     
     model_info[['outliers']] <- outliers
     
-    model_info[['bsitar.data']] <- data.org.in
+    model_info[['bgm.data']] <- data.org.in
     
-    model_info[['call.full.bsitar']] <- call.full
+    model_info[['call.full.bgm']] <- call.full
     
-    model_info[['call.bsitar']] <- mcall_
+    model_info[['call.bgm']] <- mcall_
     
     model_info[['brms_arguments_list']] <- brms_arguments_list
     
@@ -6557,14 +6557,14 @@ bsitar <- function(x,
         message(setmsgtxt)
       }
       
-      brmsfit <- expose_bsitar_functions(brmsfit, expose = TRUE)
+      brmsfit <- expose_functions_bgm(brmsfit, expose = TRUE, select_model = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } # if (expose_function) {
     
     
     
     if (!expose_function) {
-      brmsfit <- expose_bsitar_functions(brmsfit, expose = FALSE, 
+      brmsfit <- expose_functions_bgm(brmsfit, expose = FALSE, 
                                          select_model = select_model)
       brmsfit$model_info[['expose_method']] <- 'R'
     } # if (!expose_function) {
@@ -6582,7 +6582,7 @@ bsitar <- function(x,
       }
     }
     
-    attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bsitar')
+    attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
     options(mc.cores = mc.cores_restore)
     return(brmsfit)
   } # exe_model_fit

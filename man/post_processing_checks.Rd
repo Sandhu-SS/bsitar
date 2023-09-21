@@ -4,16 +4,22 @@
 \alias{post_processing_checks}
 \title{An internal function to perform checks when calling post-processing functions}
 \usage{
-post_processing_checks(model, xcall, resp = NULL, deriv = 0, envir = NULL)
+post_processing_checks(
+  model,
+  xcall,
+  resp = NULL,
+  deriv = NULL,
+  envir = parent.frame()
+)
 }
 \arguments{
-\item{model}{An object of class \code{bsitar}.}
+\item{model}{An object of class \code{bgmfit}.}
 
 \item{xcall}{The \code{match.call()} from the post-processing function.}
 
 \item{resp}{Response variable (default \code{NULL}) specified as a character
 string. This is needed when processing univariate-by-subgroup and
-multivariate model (see \code{bsitar} function for details).}
+multivariate model (see \code{bgmfit} function for details).}
 
 \item{deriv}{An integer value to specify whether to estimate distance curve
 (i.e., model estimated curve(s)) or the velocity curve (first derivative of

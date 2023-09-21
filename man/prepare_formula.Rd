@@ -20,7 +20,7 @@ prepare_formula(x, y, id, knots, nknots, data, internal_formula_args)
 \item{data}{data frame containing variables \code{x}, \code{y} and \code{id}.}
 
 \item{internal_formula_args}{Other internal arguments passed from the
-\link{bsitar} to the \code{prepare_formula}).}
+\code{\link[=bgm]{bgm()}} to the \code{prepare_formula}).}
 }
 \value{
 An object of class \code{brmsformula}, which is a \code{list}
@@ -28,7 +28,7 @@ containing formulas
 }
 \description{
 The \code{prepare_formula}) prepares \code{brms::brmsformual} which is
-passed on to the \link{bsitar} function. For univariate-by-
+passed on to the \code{\link[=bgm]{bgm()}} function. For univariate-by-
 subgroup model (specified by using the \code{univariate_by}) and
 multivariate model (specified by using the \code{multivariate}),
 the \code{x}, \code{y}, \code{id}, \code{knots}, \code{nknots}, are

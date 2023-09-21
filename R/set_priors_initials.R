@@ -3,7 +3,7 @@
 #'Set priors and initials for fitting Bayesian SITAR growth curve model
 #'
 #'@description The \code{set_priors_initials}) sets priors and initials values
-#'  which are passed from the [bsitar::bsitar] function to
+#'  which are passed from the [bsitar::bgm()] function to
 #'  \code{set_priors_initials}. For univariate-by- subgroup model (specified by
 #'  using the \code{univariate_by}) and multivariate model (specified by using
 #'  the \code{multivariate}), each argument is automatically matched with the
@@ -11,160 +11,160 @@
 #'
 #'
 #'@param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
-#'  See [bsitar::bsitar()] for details.
+#'  See [bsitar::bgm()] for details.
 #'
 #'@param b_prior_beta Specify priors for the fixed effect parameter, \code{b}.
-#'  See [bsitar::bsitar()] for details.
+#'  See [bsitar::bgm()] for details.
 #'
 #'@param c_prior_beta Specify priors for the fixed effect parameter, \code{c}.
-#'  See [bsitar::bsitar()] for details.
+#'  See [bsitar::bgm()] for details.
 #'
 #'@param d_prior_beta Specify priors for the fixed effect parameter, \code{d}.
-#'  See [bsitar::bsitar()] for details.
+#'  See [bsitar::bgm()] for details.
 #'
 #'@param e_prior_beta Specify priors for the fixed effect parameter, \code{e}.
-#'  See [bsitar::bsitar()] for details.
+#'  See [bsitar::bgm()] for details.
 #'
 #'@param f_prior_beta Specify priors for the fixed effect parameter, \code{f}.
-#'  See [bsitar::bsitar()] for details.
+#'  See [bsitar::bgm()] for details.
 #'
 #'@param s_prior_beta Specify priors for the fixed effect parameter, \code{s}.
-#'  See [bsitar::bsitar()] for details.
+#'  See [bsitar::bgm()] for details.
 #'
 #'@param a_cov_prior_beta Specify priors for the covariate(s) included for the
-#'  fixed effect parameter, \code{a}. See [bsitar::bsitar()] for details.
+#'  fixed effect parameter, \code{a}. See [bsitar::bgm()] for details.
 #'
 #'@param b_cov_prior_beta Specify priors for the covariate(s) included for the
-#'  fixed effect parameter, \code{b}. See [bsitar::bsitar()] for details.
+#'  fixed effect parameter, \code{b}. See [bsitar::bgm()] for details.
 #'
 #'@param c_cov_prior_beta Specify priors for the covariate(s) included for the
-#'  fixed effect parameter, \code{c}. See [bsitar::bsitar()] for details.
+#'  fixed effect parameter, \code{c}. See [bsitar::bgm()] for details.
 #'
 #'@param d_cov_prior_beta Specify priors for the covariate(s) included for the
-#'  fixed effect parameter, \code{d}. See [bsitar::bsitar()] for details.
+#'  fixed effect parameter, \code{d}. See [bsitar::bgm()] for details.
 #'
 #'@param e_cov_prior_beta Specify priors for the covariate(s) included for the
-#'  fixed effect parameter, \code{e}. See [bsitar::bsitar()] for details.
+#'  fixed effect parameter, \code{e}. See [bsitar::bgm()] for details.
 #'
 #'@param f_cov_prior_beta Specify priors for the covariate(s) included for the
-#'  fixed effect parameter, \code{f}. See [bsitar::bsitar()] for details.
+#'  fixed effect parameter, \code{f}. See [bsitar::bgm()] for details.
 #'
 #'@param s_cov_prior_beta Specify priors for the covariate(s) included for the
-#'  fixed effect parameter, \code{s}. See [bsitar::bsitar()] for details.
+#'  fixed effect parameter, \code{s}. See [bsitar::bgm()] for details.
 #'
 #'@param a_prior_sd Specify prior on the standard deviation (sd) of random
-#'  effect parameter, \code{a}. See [bsitar::bsitar()] for details.
+#'  effect parameter, \code{a}. See [bsitar::bgm()] for details.
 #'
 #'@param b_prior_sd Specify prior on the standard deviation (sd) of random
-#'  effect parameter, \code{b}. See [bsitar::bsitar()] for details.
+#'  effect parameter, \code{b}. See [bsitar::bgm()] for details.
 #'
 #'@param c_prior_sd Specify prior on the standard deviation (sd) of random
-#'  effect parameter, \code{c}. See [bsitar::bsitar()] for details.
+#'  effect parameter, \code{c}. See [bsitar::bgm()] for details.
 #'
 #'@param d_prior_sd Specify prior on the standard deviation (sd) of random
-#'  effect parameter, \code{d}. See [bsitar::bsitar()] for details.
+#'  effect parameter, \code{d}. See [bsitar::bgm()] for details.
 #'
 #'@param e_prior_sd Specify prior on the standard deviation (sd) of random
-#'  effect parameter, \code{e}. See [bsitar::bsitar()] for details.
+#'  effect parameter, \code{e}. See [bsitar::bgm()] for details.
 #'
 #'@param f_prior_sd Specify prior on the standard deviation (sd) of random
-#'  effect parameter, \code{f}. See [bsitar::bsitar()] for details.
+#'  effect parameter, \code{f}. See [bsitar::bgm()] for details.
 #'
 #'@param a_cov_prior_sd Specify prior on the standard deviation (sd) for the
 #'  covariate(s) included in the random effect parameter, \code{a}. See
-#'  [bsitar::bsitar()] for details.
+#'  [bsitar::bgm()] for details.
 #'
 #'@param b_cov_prior_sd Specify prior on the standard deviation (sd) for the
 #'  covariate(s) included in the random effect parameter, \code{b}. See
-#'  [bsitar::bsitar()] for details.
+#'  [bsitar::bgm()] for details.
 #'
 #'@param c_cov_prior_sd Specify prior on the standard deviation (sd) for the
 #'  covariate(s) included in the random effect parameter, \code{c}. See
-#'  [bsitar::bsitar()] for details.
+#'  [bsitar::bgm()] for details.
 #'
 #'@param d_cov_prior_sd Specify prior on the standard deviation (sd) for the
 #'  covariate(s) included in the random effect parameter, \code{d}. See
-#'  [bsitar::bsitar()] for details.
+#'  [bsitar::bgm()] for details.
 #'
 #'@param e_cov_prior_sd Specify prior on the standard deviation (sd) for the
 #'  covariate(s) included in the random effect parameter, \code{w}. See
-#'  [bsitar::bsitar()] for details.
+#'  [bsitar::bgm()] for details.
 #'
 #'@param f_cov_prior_sd Specify prior on the standard deviation (sd) for the
 #'  covariate(s) included in the random effect parameter, \code{f}. See
-#'  [bsitar::bsitar()] for details.
+#'  [bsitar::bgm()] for details.
 #'
 #'@param sigma_prior_beta Specify prior on the the distributional fixed effect
-#'  parameter, \code{sigma}. See [bsitar::bsitar()] for details.
+#'  parameter, \code{sigma}. See [bsitar::bgm()] for details.
 #'
 #'@param sigma_cov_prior_beta Specify prior on the covariate(s) included in the
-#'  distributional fixed effect parameter, \code{sigma}.  See [bsitar::bsitar()]
+#'  distributional fixed effect parameter, \code{sigma}.  See [bsitar::bgm()]
 #'  for details.
 #'
 #'@param sigma_prior_sd Specify prior on the standard deviation (sd) of
-#'  distributional random effect parameter, \code{sigma}. See [bsitar::bsitar()]
+#'  distributional random effect parameter, \code{sigma}. See [bsitar::bgm()]
 #'  for details.
 #'
 #'@param sigma_cov_prior_sd Specify prior on the standard deviation (sd) of
 #'  covariate(s) included in the distributional random effect parameter,
-#'  \code{sigma}. See [bsitar::bsitar()] for details.
+#'  \code{sigma}. See [bsitar::bgm()] for details.
 #'
 #'@param gr_prior_cor Specify prior on the correlation for group level random
-#'  effect parameters. See [bsitar::bsitar()] for details.
+#'  effect parameters. See [bsitar::bgm()] for details.
 #'
 #'@param sigma_prior_cor Specify prior on the correlation for distribution level
-#'  random effect parameters. See [bsitar::bsitar()] for details.
+#'  random effect parameters. See [bsitar::bgm()] for details.
 #'
 #'@param rsd_prior_sigma Specify prior on the residual standared deviation
-#'  parameter, \code{sigma}, See [bsitar::bsitar()] for details,
+#'  parameter, \code{sigma}, See [bsitar::bgm()] for details,
 #'
 #'@param dpar_prior_sigma Specify prior on the distributional parameter,
 #'  \code{sigma} (which is same as residual standared deviation for Gaussian
-#'  distribution). See [bsitar::bsitar()] for details,
+#'  distribution). See [bsitar::bgm()] for details,
 #'
 #'@param dpar_cov_prior_sigma Specify prior for the covariate(s) included in the
 #'  distributional parameter, \code{sigma} (which is same as residual standard
-#'  deviation for Gaussian distribution).See [bsitar::bsitar()] for details,
+#'  deviation for Gaussian distribution).See [bsitar::bgm()] for details,
 #'
 #'@param autocor_prior_acor Specify priors on the the autocorrelation parameters
-#'  \code{ar}, \code{ma} and \code{arma}. See [bsitar::bsitar()] for details,
+#'  \code{ar}, \code{ma} and \code{arma}. See [bsitar::bgm()] for details,
 #'
 #'@param autocor_prior_unstr_acor Specify priors on the the unstructured
-#'  autocorrelation parameter. See [bsitar::bsitar()] for details,
+#'  autocorrelation parameter. See [bsitar::bgm()] for details,
 #'
 #'@param mvr_prior_rescor Specify priors on the the residual correlation
-#'  parameter for multivariate model. See [bsitar::bsitar()] for details,
+#'  parameter for multivariate model. See [bsitar::bgm()] for details,
 #'
 #'@param prior_data An optional argument (as named list) that can pass value for
-#'  prior. See [bsitar::bsitar()] for details,
+#'  prior. See [bsitar::bgm()] for details,
 #'
 #'@param prior_data_internal An internal data frame (named list) used to pass on
-#'  the relevant information on priors from the [bsitar::bsitar()] function to
+#'  the relevant information on priors from the [bsitar::bgm()] function to
 #'  the \code{set_priors_initials}.
 #'
 #'@param prior_args_internal An internal argument list that is passed from the
-#'  [bsitar::bsitar()] function to the \code{set_priors_initials} and is used
+#'  [bsitar::bgm()] function to the \code{set_priors_initials} and is used
 #'  for setting the priors.
 #'
 #'@param init_arguments A list containing all the init arguments specified in
-#'  the [bsitar::bsitar()] function and now passed on to the
+#'  the [bsitar::bgm()] function and now passed on to the
 #'  \code{set_priors_initials}.
 #'
 #'@param init_data An optional data argument (named list) used to pass initial
-#'  values. See [bsitar::bsitar()] function, \code{prior_data} for details.
+#'  values. See [bsitar::bgm()] function, \code{prior_data} for details.
 #'
 #'@param init_data_internal An internal data frame (named list) to pass on the
-#'  relevant information on initials from the [bsitar::bsitar()] function to the
+#'  relevant information on initials from the [bsitar::bgm()] function to the
 #'  \code{set_priors_initials}.
 #'
 #'@param init_args_internal An internal argument list that is passed from the
-#'  [bsitar::bsitar()] function to the \code{set_priors_initials} and is used
+#'  [bsitar::bgm()] function to the \code{set_priors_initials} and is used
 #'  for setting the initials.
 #'
 #'@param custom_order_prior_str An internal argument that is passed from the
-#'  [bsitar::bsitar()] function to the \code{set_priors_initials} when setting
+#'  [bsitar::bgm()] function to the \code{set_priors_initials} when setting
 #'  the priors for the model with hierarchy level 3 and beyond. See
-#'  [bsitar::bsitar()] for details,
+#'  [bsitar::bgm()] for details,
 #'
 #'@return An object of class \code{brmsprior} (See \code{brmsprior}). In
 #'  addition to the priors, the returned object contains a list of initial

@@ -55,160 +55,160 @@ set_priors_initials(
 }
 \arguments{
 \item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
-See \code{\link[=bsitar]{bsitar()}} for details.}
+See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{b_prior_beta}{Specify priors for the fixed effect parameter, \code{b}.
-See \code{\link[=bsitar]{bsitar()}} for details.}
+See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{c_prior_beta}{Specify priors for the fixed effect parameter, \code{c}.
-See \code{\link[=bsitar]{bsitar()}} for details.}
+See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{d_prior_beta}{Specify priors for the fixed effect parameter, \code{d}.
-See \code{\link[=bsitar]{bsitar()}} for details.}
+See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{e_prior_beta}{Specify priors for the fixed effect parameter, \code{e}.
-See \code{\link[=bsitar]{bsitar()}} for details.}
+See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{f_prior_beta}{Specify priors for the fixed effect parameter, \code{f}.
-See \code{\link[=bsitar]{bsitar()}} for details.}
+See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{s_prior_beta}{Specify priors for the fixed effect parameter, \code{s}.
-See \code{\link[=bsitar]{bsitar()}} for details.}
+See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{a_cov_prior_beta}{Specify priors for the covariate(s) included for the
-fixed effect parameter, \code{a}. See \code{\link[=bsitar]{bsitar()}} for details.}
+fixed effect parameter, \code{a}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{b_cov_prior_beta}{Specify priors for the covariate(s) included for the
-fixed effect parameter, \code{b}. See \code{\link[=bsitar]{bsitar()}} for details.}
+fixed effect parameter, \code{b}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{c_cov_prior_beta}{Specify priors for the covariate(s) included for the
-fixed effect parameter, \code{c}. See \code{\link[=bsitar]{bsitar()}} for details.}
+fixed effect parameter, \code{c}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{d_cov_prior_beta}{Specify priors for the covariate(s) included for the
-fixed effect parameter, \code{d}. See \code{\link[=bsitar]{bsitar()}} for details.}
+fixed effect parameter, \code{d}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{e_cov_prior_beta}{Specify priors for the covariate(s) included for the
-fixed effect parameter, \code{e}. See \code{\link[=bsitar]{bsitar()}} for details.}
+fixed effect parameter, \code{e}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{f_cov_prior_beta}{Specify priors for the covariate(s) included for the
-fixed effect parameter, \code{f}. See \code{\link[=bsitar]{bsitar()}} for details.}
+fixed effect parameter, \code{f}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{s_cov_prior_beta}{Specify priors for the covariate(s) included for the
-fixed effect parameter, \code{s}. See \code{\link[=bsitar]{bsitar()}} for details.}
+fixed effect parameter, \code{s}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{a_prior_sd}{Specify prior on the standard deviation (sd) of random
-effect parameter, \code{a}. See \code{\link[=bsitar]{bsitar()}} for details.}
+effect parameter, \code{a}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{b_prior_sd}{Specify prior on the standard deviation (sd) of random
-effect parameter, \code{b}. See \code{\link[=bsitar]{bsitar()}} for details.}
+effect parameter, \code{b}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{c_prior_sd}{Specify prior on the standard deviation (sd) of random
-effect parameter, \code{c}. See \code{\link[=bsitar]{bsitar()}} for details.}
+effect parameter, \code{c}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{d_prior_sd}{Specify prior on the standard deviation (sd) of random
-effect parameter, \code{d}. See \code{\link[=bsitar]{bsitar()}} for details.}
+effect parameter, \code{d}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{e_prior_sd}{Specify prior on the standard deviation (sd) of random
-effect parameter, \code{e}. See \code{\link[=bsitar]{bsitar()}} for details.}
+effect parameter, \code{e}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{f_prior_sd}{Specify prior on the standard deviation (sd) of random
-effect parameter, \code{f}. See \code{\link[=bsitar]{bsitar()}} for details.}
+effect parameter, \code{f}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{a_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
 covariate(s) included in the random effect parameter, \code{a}. See
-\code{\link[=bsitar]{bsitar()}} for details.}
+\code{\link[=bgm]{bgm()}} for details.}
 
 \item{b_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
 covariate(s) included in the random effect parameter, \code{b}. See
-\code{\link[=bsitar]{bsitar()}} for details.}
+\code{\link[=bgm]{bgm()}} for details.}
 
 \item{c_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
 covariate(s) included in the random effect parameter, \code{c}. See
-\code{\link[=bsitar]{bsitar()}} for details.}
+\code{\link[=bgm]{bgm()}} for details.}
 
 \item{d_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
 covariate(s) included in the random effect parameter, \code{d}. See
-\code{\link[=bsitar]{bsitar()}} for details.}
+\code{\link[=bgm]{bgm()}} for details.}
 
 \item{e_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
 covariate(s) included in the random effect parameter, \code{w}. See
-\code{\link[=bsitar]{bsitar()}} for details.}
+\code{\link[=bgm]{bgm()}} for details.}
 
 \item{f_cov_prior_sd}{Specify prior on the standard deviation (sd) for the
 covariate(s) included in the random effect parameter, \code{f}. See
-\code{\link[=bsitar]{bsitar()}} for details.}
+\code{\link[=bgm]{bgm()}} for details.}
 
 \item{gr_prior_cor}{Specify prior on the correlation for group level random
-effect parameters. See \code{\link[=bsitar]{bsitar()}} for details.}
+effect parameters. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{sigma_prior_cor}{Specify prior on the correlation for distribution level
-random effect parameters. See \code{\link[=bsitar]{bsitar()}} for details.}
+random effect parameters. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{sigma_prior_beta}{Specify prior on the the distributional fixed effect
-parameter, \code{sigma}. See \code{\link[=bsitar]{bsitar()}} for details.}
+parameter, \code{sigma}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{sigma_cov_prior_beta}{Specify prior on the covariate(s) included in the
-distributional fixed effect parameter, \code{sigma}.  See \code{\link[=bsitar]{bsitar()}}
+distributional fixed effect parameter, \code{sigma}.  See \code{\link[=bgm]{bgm()}}
 for details.}
 
 \item{sigma_prior_sd}{Specify prior on the standard deviation (sd) of
-distributional random effect parameter, \code{sigma}. See \code{\link[=bsitar]{bsitar()}}
+distributional random effect parameter, \code{sigma}. See \code{\link[=bgm]{bgm()}}
 for details.}
 
 \item{sigma_cov_prior_sd}{Specify prior on the standard deviation (sd) of
 covariate(s) included in the distributional random effect parameter,
-\code{sigma}. See \code{\link[=bsitar]{bsitar()}} for details.}
+\code{sigma}. See \code{\link[=bgm]{bgm()}} for details.}
 
 \item{rsd_prior_sigma}{Specify prior on the residual standared deviation
-parameter, \code{sigma}, See \code{\link[=bsitar]{bsitar()}} for details,}
+parameter, \code{sigma}, See \code{\link[=bgm]{bgm()}} for details,}
 
 \item{dpar_prior_sigma}{Specify prior on the distributional parameter,
 \code{sigma} (which is same as residual standared deviation for Gaussian
-distribution). See \code{\link[=bsitar]{bsitar()}} for details,}
+distribution). See \code{\link[=bgm]{bgm()}} for details,}
 
 \item{dpar_cov_prior_sigma}{Specify prior for the covariate(s) included in the
 distributional parameter, \code{sigma} (which is same as residual standard
-deviation for Gaussian distribution).See \code{\link[=bsitar]{bsitar()}} for details,}
+deviation for Gaussian distribution).See \code{\link[=bgm]{bgm()}} for details,}
 
 \item{autocor_prior_acor}{Specify priors on the the autocorrelation parameters
-\code{ar}, \code{ma} and \code{arma}. See \code{\link[=bsitar]{bsitar()}} for details,}
+\code{ar}, \code{ma} and \code{arma}. See \code{\link[=bgm]{bgm()}} for details,}
 
 \item{autocor_prior_unstr_acor}{Specify priors on the the unstructured
-autocorrelation parameter. See \code{\link[=bsitar]{bsitar()}} for details,}
+autocorrelation parameter. See \code{\link[=bgm]{bgm()}} for details,}
 
 \item{mvr_prior_rescor}{Specify priors on the the residual correlation
-parameter for multivariate model. See \code{\link[=bsitar]{bsitar()}} for details,}
+parameter for multivariate model. See \code{\link[=bgm]{bgm()}} for details,}
 
 \item{prior_data}{An optional argument (as named list) that can pass value for
-prior. See \code{\link[=bsitar]{bsitar()}} for details,}
+prior. See \code{\link[=bgm]{bgm()}} for details,}
 
 \item{prior_data_internal}{An internal data frame (named list) used to pass on
-the relevant information on priors from the \code{\link[=bsitar]{bsitar()}} function to
+the relevant information on priors from the \code{\link[=bgm]{bgm()}} function to
 the \code{set_priors_initials}.}
 
 \item{prior_args_internal}{An internal argument list that is passed from the
-\code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} and is used
+\code{\link[=bgm]{bgm()}} function to the \code{set_priors_initials} and is used
 for setting the priors.}
 
 \item{init_arguments}{A list containing all the init arguments specified in
-the \code{\link[=bsitar]{bsitar()}} function and now passed on to the
+the \code{\link[=bgm]{bgm()}} function and now passed on to the
 \code{set_priors_initials}.}
 
 \item{init_data}{An optional data argument (named list) used to pass initial
-values. See \code{\link[=bsitar]{bsitar()}} function, \code{prior_data} for details.}
+values. See \code{\link[=bgm]{bgm()}} function, \code{prior_data} for details.}
 
 \item{init_data_internal}{An internal data frame (named list) to pass on the
-relevant information on initials from the \code{\link[=bsitar]{bsitar()}} function to the
+relevant information on initials from the \code{\link[=bgm]{bgm()}} function to the
 \code{set_priors_initials}.}
 
 \item{init_args_internal}{An internal argument list that is passed from the
-\code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} and is used
+\code{\link[=bgm]{bgm()}} function to the \code{set_priors_initials} and is used
 for setting the initials.}
 
 \item{custom_order_prior_str}{An internal argument that is passed from the
-\code{\link[=bsitar]{bsitar()}} function to the \code{set_priors_initials} when setting
+\code{\link[=bgm]{bgm()}} function to the \code{set_priors_initials} when setting
 the priors for the model with hierarchy level 3 and beyond. See
-\code{\link[=bsitar]{bsitar()}} for details,}
+\code{\link[=bgm]{bgm()}} for details,}
 }
 \value{
 An object of class \code{brmsprior} (See \code{brmsprior}). In
@@ -217,7 +217,7 @@ values.
 }
 \description{
 The \code{set_priors_initials}) sets priors and initials values
-which are passed from the \link{bsitar} function to
+which are passed from the \code{\link[=bgm]{bgm()}} function to
 \code{set_priors_initials}. For univariate-by- subgroup model (specified by
 using the \code{univariate_by}) and multivariate model (specified by using
 the \code{multivariate}), each argument is automatically matched with the

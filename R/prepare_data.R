@@ -1,6 +1,6 @@
 
 
-#' Set up data for bsitar model
+#' Set up data for \code{bsitar} model
 #'
 #' @param data An input data frame
 #' @param x The predictor (typically age) variables.
@@ -9,17 +9,17 @@
 #' @param id The group identifier.
 #' @param uvarby An optional (default \code{NA}) to specify the indicator
 #'   variable for fitting univariate-by-subgroup model. See \code{univariate_by}
-#'   argument in the [bsitar::bsitar()] function. If not \code{NA}, then it
+#'   argument in the [bsitar::bgm()] function. If not \code{NA}, then it
 #'   should be a valid factor variable present in the \code{data}.
 #' @param mvar A logical (default \code{FALSE}) to specify the the multivariate
-#'   model. See \code{multivariate} argument in the [bsitar::bsitar()] function.
+#'   model. See \code{multivariate} argument in the [bsitar::bgm()] function.
 #' @param xfuns Optional name(s) of the transformation function(s) applied to
 #'   the predictor variable (typically age). Default \code{NULL}.
 #' @param yfuns Optional name(s) of the transformation function(s) applied to
 #'   the outcome variable. Default \code{NULL}.
 #' @param outliers An optional (default \code{NULL}) to remove velocity
 #'   outliers. The argument should be a named list to pass options to the
-#'   [bsitar::outliers] function. See [bsitar::outliers] for details.
+#'   [bsitar::outliers()] function. See [bsitar::outliers()] for details.
 #'   
 #' @return A data frame with necessary information added a attributes.
 #' 

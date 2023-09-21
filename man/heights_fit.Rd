@@ -16,7 +16,7 @@ Data frame analysed have the following 3 variables:
 heights_fit
 }
 \value{
-A object of class \code{bsitar} with posterior draws.
+A object of class \code{bgmfit} with posterior draws.
 }
 \description{
 Model is fit to data comprise of height measurements of 12

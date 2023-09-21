@@ -3,7 +3,7 @@
 
 #' An internal function to create data frame for post-processing
 #'
-#' @inheritParams  gparameters.bsitar 
+#' @inheritParams  growthparameters.bgmfit 
 #' @param intpldata_function_used A character string to indicate interpolation 
 #' method. Options available are \code{'get_idata'} (default) and
 #' \code{'idatafunction'}
@@ -60,8 +60,8 @@ get.newdata <- function(model,
   
   
   if (is.null(newdata)) {
-    # newdata <- eval.parent(model$model_info$call.bsitar$data)
-    newdata <- model$model_info$bsitar.data
+    # newdata <- eval.parent(model$model_info$call.bgm$data)
+    newdata <- model$model_info$bgm.data
   } else {
     newdata = newdata
   }
@@ -86,14 +86,14 @@ get.newdata <- function(model,
   
   
   if (!is.na(model$model_info$univariate_by)) {
-    if (is.symbol(model$model_info$call.bsitar$y)) {
-      setorgy <- deparse(model$model_info$call.bsitar$y)
-    } else if (is.list(model$model_info$call.bsitar$y)) {
-      setorgy <- unname(unlist(model$model_info$call.bsitar$y))
+    if (is.symbol(model$model_info$call.bgm$y)) {
+      setorgy <- deparse(model$model_info$call.bgm$y)
+    } else if (is.list(model$model_info$call.bgm$y)) {
+      setorgy <- unname(unlist(model$model_info$call.bgm$y))
       if (is.symbol(setorgy))
         setorgy <- deparse(setorgy)
     } else {
-      setorgy <- model$model_info$call.bsitar$y
+      setorgy <- model$model_info$call.bgm$y
     }
   }
   
@@ -179,7 +179,7 @@ get.newdata <- function(model,
   
   # Merge here a b c covariate with sigma co variate
   # IMP: Note that groupby_fstr and groupby_fistr are stil  a b c covariate
-  # This way, plot_bsitar and gparameters will not produce sigam cov specific
+  # This way, plot_bgm and gparameters will not produce sigam cov specific
   # curves and g parameters
   
   cov_factor_vars <- c(cov_factor_vars, cov_sigma_factor_vars)
@@ -591,14 +591,14 @@ get.newdata <- function(model,
         # because these has already been taken care of by get.newdata
         
         if (!is.na(model$model_info$univariate_by)) {
-          if (is.symbol(model$model_info$call.bsitar$y)) {
-            setorgy <- deparse(model$model_info$call.bsitar$y)
-          } else if (is.list(model$model_info$call.bsitar$y)) {
-            setorgy <- unname(unlist(model$model_info$call.bsitar$y))
+          if (is.symbol(model$model_info$call.bgm$y)) {
+            setorgy <- deparse(model$model_info$call.bgm$y)
+          } else if (is.list(model$model_info$call.bgm$y)) {
+            setorgy <- unname(unlist(model$model_info$call.bgm$y))
             if (is.symbol(setorgy))
               setorgy <- deparse(setorgy)
           } else {
-            setorgy <- model$model_info$call.bsitar$y
+            setorgy <- model$model_info$call.bgm$y
           }
         }
         

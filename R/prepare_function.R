@@ -3,27 +3,27 @@
 #' Prepare Stan function for Bayesian SITAR growth curve model
 #'
 #' The \code{prepare_function}) constructs custom Stan function  which is passed
-#' on to the [bsitar::bsitar()] function. For univariate-by- subgroup model
+#' on to the [bsitar::bgm()] function. For univariate-by- subgroup model
 #' (\code{univariate_by}) and multivariate (\code{multivariate}) models (see
-#' [bsitar::bsitar()]), the \code{x}, \code{y}, \code{id}, \code{knots},
+#' [bsitar::bgm()]), the \code{x}, \code{y}, \code{id}, \code{knots},
 #' \code{nknots}, are automatically matched with the sub-models.
 #'
-#' @param x Predictor variable in the data. See [bsitar::bsitar()] for details.
+#' @param x Predictor variable in the data. See [bsitar::bgm()] for details.
 #'   
-#' @param y Response variable in the data. See [bsitar::bsitar()] for details.
+#' @param y Response variable in the data. See [bsitar::bgm()] for details.
 #' 
 #' @param id A vector specifying a unique group identifier for each individual.
-#' See [bsitar::bsitar()] for details.
+#' See [bsitar::bgm()] for details.
 #'  
 #' @param knots A vector of knots used for constructing the spline design 
-#' matrix. See [bsitar::bsitar()] for details.
+#' matrix. See [bsitar::bgm()] for details.
 #' 
 #' @param nknots An integer specifying the number of knots.
 #' 
 #' @param data Data frame containing variables \code{x}, \code{y} and \code{id}.
 #' 
 #' @param internal_function_args Internal arguments passed from the
-#'   [bsitar::bsitar()] to the \code{prepare_formula}).
+#'   [bsitar::bgm()] to the \code{prepare_formula}).
 #'
 #' @return An character string which later evaluated to a custom function
 #'   and inserted into the Stan's functions block.

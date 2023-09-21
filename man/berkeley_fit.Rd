@@ -17,7 +17,7 @@ The Berkeley data analysed have the following 5 variables:
 berkeley_fit
 }
 \value{
-A object of class \code{bsitar} with posterior draws.
+A object of class \code{bgmfit} with posterior draws.
 }
 \description{
 Model is fit to the Berkeley Child Guidance Study dataset

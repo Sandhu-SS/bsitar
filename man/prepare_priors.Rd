@@ -17,17 +17,17 @@ prepare_priors(
 }
 \arguments{
 \item{prior_argument}{A list containing the prior arguments specified in
-the \code{\link[=bsitar]{bsitar()}} function and then passed from the
+the \code{\link[=bgm]{bgm()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function to the \code{prepare_priors}.}
 
 \item{prior_data}{An optional argument (as named list) specified in
-the \code{\link[=bsitar]{bsitar()}} function and then passed from the
+the \code{\link[=bgm]{bgm()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function to the \code{prepare_priors}.
 The \code{prior_data} used to pass value for priors.
-See \code{\link[=bsitar]{bsitar()}} function, \code{prior_data} for details.}
+See \code{\link[=bgm]{bgm()}} function, \code{prior_data} for details.}
 
 \item{prior_data_internal}{An internal argument (as named list) specified in
-the \code{\link[=bsitar]{bsitar()}} function and then passed from the
+the \code{\link[=bgm]{bgm()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function to the \code{prepare_priors}.}
 
 \item{prior_internal_args}{An internal argument list that is passed from the
@@ -35,16 +35,16 @@ the \code{\link[=bsitar]{bsitar()}} function and then passed from the
 and is used in setting the priors.}
 
 \item{init_arguments}{A list containing the initial arguments specified in
-the \code{\link[=bsitar]{bsitar()}} function and then passed from the
+the \code{\link[=bgm]{bgm()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function to the \code{prepare_priors}.}
 
 \item{init_data}{An optional argument (as named list) specified in
-the \code{\link[=bsitar]{bsitar()}} function and then passed from the
+the \code{\link[=bgm]{bgm()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function to the \code{prepare_priors}.
 The \code{init_data} is used for setting the initials.}
 
 \item{init_data_internal}{An internal argument (as named list) specified in
-the \code{\link[=bsitar]{bsitar()}} function and then passed from the
+the \code{\link[=bgm]{bgm()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function to the \code{prepare_priors}.}
 
 \item{init_args_internal}{An internal argument list that is passed from the
@@ -59,7 +59,7 @@ for more details.
 For univariate-by-subgroup (specified by using the \code{univariate_by})
 and multivariate (specified by using the \code{multivariate}) models, each
 argument is automatically matched with the sub-model(s). See
-\code{\link[=bsitar]{bsitar()}} for details on \code{univariate_by} and
+\code{\link[=bgm]{bgm()}} for details on \code{univariate_by} and
 \code{multivariate}) arguments.
 }
 \seealso{

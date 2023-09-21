@@ -5,13 +5,13 @@
 #' For univariate-by-subgroup (specified by using the \code{univariate_by}) 
 #' and multivariate (specified by using the \code{multivariate}) models, each 
 #' argument is automatically matched with the sub-model(s). See 
-#' [bsitar::bsitar()] for details on \code{univariate_by} and 
+#' [bsitar::bgm()] for details on \code{univariate_by} and 
 #' \code{multivariate}) arguments.
 #'
 #' @param init_argument A list containing the initial arguments specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
+#' the [bsitar::bgm()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function via [bsitar::prepare_priors()] to 
-#' the \code{prepare_initials}. See [bsitar::bsitar()] function for details on 
+#' the \code{prepare_initials}. See [bsitar::bgm()] function for details on 
 #' initials arguments.
 #' 
 #' @param init_internal_args An internal argument list created and passed from  

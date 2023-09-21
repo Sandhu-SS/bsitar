@@ -3,7 +3,7 @@
 
 #' An internal function to evaluate and see priors specified
 #'
-#' @param model An object of class \code{bsitar}
+#' @param model An object of class \code{bgmfit}
 #' @keywords internal
 #' @return A data frame object. 
 #' @noRd

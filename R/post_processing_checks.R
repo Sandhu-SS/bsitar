@@ -7,13 +7,13 @@
 #'   as the validity of model class, response etc.) during post-processing of
 #'   posterior draws.
 #'
-#' @param model An object of class \code{bsitar}.
+#' @param model An object of class \code{bgmfit}.
 #'
 #' @param xcall The \code{match.call()} from the post-processing function.
 #'
 #' @param resp Response variable (default \code{NULL}) specified as a character
 #'   string. This is needed when processing univariate-by-subgroup and
-#'   multivariate model (see \code{bsitar} function for details).
+#'   multivariate model (see \code{bgmfit} function for details).
 #'
 #' @param deriv An integer value to specify whether to estimate distance curve
 #'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
@@ -37,15 +37,16 @@
 post_processing_checks <- function(model, 
                                    xcall, 
                                    resp = NULL, 
-                                   deriv = 0,
-                                   envir = NULL) {
+                                   deriv = NULL,
+                                   envir = parent.frame()) {
   
   if(is.null(envir)) envir <- parent.frame()
+  if(is.null(deriv)) deriv <- 0
   
-  if(!'bsitar' %in% class(model)) {
-    stop("The class of model object should be 'bsitar' ")
+  if(!'bgmfit' %in% class(model)) {
+    stop("The class of model object should be 'bgmfit' ")
   }
-  excall_ <- c("pp_check_", "loo_")
+  excall_ <- c("pp_check_bgm", "loo_bgm")
   if (strsplit(deparse((xcall[1])), "\\.")[[1]][1] %in% excall_) {
     if (!is.null(as.list(xcall)[['deriv']])) {
       stop(
@@ -127,6 +128,7 @@ post_processing_checks <- function(model,
   list(
     paste0(resp_, model$model_info[['namesexefuns']], ''),
     paste0(resp_, model$model_info[['namesexefuns']], deriv)
-  ) 
+    ) 
+  
 }
 

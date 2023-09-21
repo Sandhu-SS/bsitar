@@ -22,7 +22,7 @@ expose_optimize_fit <- function(optimize_fit,
       if(expose_function) {
         message("Exposing Stan function...", " (for model no. ", il, ")")
         m_list[[il]] <- 
-          expose_bsitar_functions(optimize_fit_models[[il]], 
+          expose_functions_bgm(optimize_fit_models[[il]], 
                                   optimize_fit_models[[il]]$bmodel)
       } else if(!expose_function) {
         m_list[[il]] <- optimize_fit_models[[il]]
@@ -45,10 +45,10 @@ plot_optimize_fit <- function(optimize_fit,
   optimize_fit_models <-  optimize_fit
   dots <- list(...)
   for (i in names(dots)) {
-    if(!i %in% formalArgs(plot_bsitar.bsitar)) 
+    if(!i %in% formalArgs(plot_bgm.bgmfit)) 
       stop("arguments must be be one of the following",
            "\n ",
-           formalArgs(plot_bsitar.bsitar))
+           formalArgs(plot_bgm.bgmfit))
   }
   
   if(!is.null(subset_list)) {
@@ -66,7 +66,7 @@ plot_optimize_fit <- function(optimize_fit,
       if(expose_function) {
         message("Exposing Stan function...", " (for model no. ", il, ")")
         m_list[[il]] <- 
-          expose_bsitar_functions(optimize_fit_models[[il]], 
+          expose_functions_bgm(optimize_fit_models[[il]], 
                                   optimize_fit_models[[il]]$bmodel)
       } else if(!expose_function) {
         m_list[[il]] <- optimize_fit_models[[il]]
@@ -81,13 +81,13 @@ plot_optimize_fit <- function(optimize_fit,
     dots$... <- NULL
     if(is.null(what)) what <- 'plot'
     if(what == "plot") {
-      out_ <- do.call(plot_bsitar, dots)
+      out_ <- do.call(plot_bgm, dots)
       title_ <- bx[[.x]]$model_info$optimization_info
       out_ <- out_ + ggplot2::labs(title = title_)
     }
     
-    if(what == "gparameters") {
-      out_ <- do.call(gparameters, dots)
+    if(what == "growthparameters") {
+      out_ <- do.call(growthparameters, dots)
     }
     
     if(!is.null(print)) {
@@ -396,6 +396,44 @@ ept <- function(x)
 
 
 
+get_par_names_from_stancode <- function(code, 
+                                        full = TRUE, 
+                                        section =  'parameters',
+                                        what = '') {
+  regex_for_section <- paste(".*(",section,"\\s*\\{.*?\\}).*", sep = '')
+  filtered_stan_code <- gsub(code, pattern = regex_for_section, replacement = "\\1")
+  
+  zz <- strsplit(filtered_stan_code, "\n")[[1]][-1]
+  collect <- c()
+  collect_full <- c()
+  for (i in 1:length(zz)-1) {
+    if(!(identical(zz[i], character(0))))  {
+      # print(zz[i])
+      t <- sub(";.*", "", zz[i])
+      t_full <- t
+      #  t_full <- gsub("[[:space:]]", "", t_full)
+      t_full <- gsub("^ *|(?<= ) | *$", "", t_full, perl=T)
+      if(what == "") {
+        get_t_full <- t_full
+        collect_full <- c(collect_full, get_t_full)
+      } else if(what != "") {
+        get_t_full <- t_full
+        get_t_full <- get_t_full[grepl(paste0(what, "_"), get_t_full)]
+        collect_full <- c(collect_full, get_t_full)
+      }
+      t <- tail(strsplit(t,split=" ")[[1]],1)
+      collect <- c(collect, t)
+    }
+  }
+  if(!full) {
+    out <- collect
+  }
+  if(full) {
+    out <- collect_full
+  }
+  out
+}
+
 
 
 ########################
@@ -404,11 +442,11 @@ ept <- function(x)
 
 get_args_ <- function(arguments, xcall) {
   `%!in%` <- Negate(`%in%`)
-  f_bsitar_arg <- formals(paste0(xcall, '.bsitar'))
-  nf_bsitar_arg_names <-
-    intersect(names(arguments), names(f_bsitar_arg))
+  f_bgm_arg <- formals(paste0(xcall, ".", 'bgmfit'))
+  nf_bgm_arg_names <-
+    intersect(names(arguments), names(f_bgm_arg))
   arguments <-
-    c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
+    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
   arguments
 }
 

@@ -1,9 +1,9 @@
 
 
 #' Expose Stan function for post-processing of posterior sample obtained 
-#' from the Bayesian SITAR growth curve model fit
+#' from the model fit
 #'
-#' @param model An object of class \code{bsitar}.
+#' @param model An object of class \code{bgmfit}.
 #' @param scode An option argument specifying the code with the user-defined 
 #' Stan function.
 #' @param expose A logical (default \code{TRUE}) to indicate whether to expose
@@ -11,7 +11,7 @@
 #' 
 #' @param select_model A string (default \code{NULL}) to indicate the model.
 #'
-#' @return An object of class \code{brmsfit, bsiatr} with exposed  
+#' @return An object of class \code{bgmfit} with exposed  
 #' user-defined Stan functions (when \code{expose=TRUE}).
 #' 
 #' @export
@@ -19,10 +19,10 @@
 #' @examples
 #' \dontrun{
 #' # 
-#' expose_bsitar_functions(model)
+#' expose_functions_bgm(model)
 #' #
 #' }
-expose_bsitar_functions <- function(model, 
+expose_functions_bgm <- function(model, 
                                     scode = NULL, 
                                     expose = FALSE, 
                                     select_model = NULL) {
@@ -212,9 +212,3 @@ expose_bsitar_functions <- function(model,
   return(model)
 }
 
-
-# female_14442 <- expose_bsitar_functions(female_1444, 
-# expose = F, select_model = 'pb2')
-
-# names(female_14442$model_info$exefuns)
-# female_14442$model_info$namesexefuns

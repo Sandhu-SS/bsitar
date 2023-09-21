@@ -1,29 +1,29 @@
 
 
 
-#'Plot \code{bsitar} model
+#'Plot \code{bgmfit} model
 #'
-#'@description The \code{plot_bsitar} provides visualization of six different
-#'  types of growth curves that are ploted by using the [ggplot2]. The
-#'  \code{plot_bsitar} also allows users to make their own detailed plots from
-#'  the data returned as a \code{data.frame}.
+#'@description The \code{plot_bgm} provides visualization of six different types
+#'  of growth curves that are ploted by using the [ggplot2]. The \code{plot_bgm}
+#'  also allows users to make their own detailed plots from the data returned as
+#'  a \code{data.frame}.
 #'
-#'@details The \code{plot_bsitar} is a generic function that allows
-#'  visualization of following six curves: population average distance curve,
-#'  population average velocity curve, individual-specific distance curves,
+#'@details The \code{plot_bgm} is a generic function that allows visualization
+#'  of following six curves: population average distance curve, population
+#'  average velocity curve, individual-specific distance curves,
 #'  individual-specific velocity curves, unadjusted individual growth curves
 #'  (i.e, observed growth curves), and the adjusted individual growth curves
-#'  (adjusted for the model estimated random effects). The \code{plot_bsitar}
-#'  internally calls the [gparameters.bsitar] function to estimate and summaries
-#'  the distance and velocity curves and to estimate growth parameters such as
-#'  the age at peak growth velocity (APGV). The \code{plot_bsitar} in turn calls
-#'  the [brms::fitted.brmsfit] and [brms::predict.brmsfit] functions to make
-#'  inference from the posterior draws. Thus, \code{plot_bsitar} allows plotting
-#'  fitted or predicted curves. See [brms::fitted.brmsfit] and
-#'  [brms::predict.brmsfit] for details on these functions and the difference
-#'  between fitted and predicted values.
+#'  (adjusted for the model estimated random effects). The \code{plot_bgm}
+#'  internally calls the [bsitar::growthparameters()] function to estimate
+#'  and summaries the distance and velocity curves and to estimate growth
+#'  parameters such as the age at peak growth velocity (APGV). The
+#'  \code{plot_bgm} in turn calls the [brms::fitted.brmsfit] and
+#'  [brms::predict.brmsfit] functions to make inference from the posterior
+#'  draws. Thus, \code{plot_bgm} allows plotting fitted or predicted curves. See
+#'  [brms::fitted.brmsfit] and [brms::predict.brmsfit] for details on these
+#'  functions and the difference between fitted and predicted values.
 #'
-#'@param model An object of class \code{bsitar}.
+#'@param model An object of class \code{bgmfit}.
 #'@param opt A character string containing letter(s) corresponding to the
 #'  following plotting options: 'd' for population average distance curve, 'v'
 #'  for population average velocity curve, 'D' for individual-specific distance
@@ -45,12 +45,12 @@
 #'  vertical line denoting the APGV parameter. The \code{'dvp'} will include CI
 #'  bands for distance and velocity curves, and the APGV.
 #'@param conf A numeric value (default \code{0.95}) to be used to compute the CI
-#'  and hence the width of the \code{bands}. See [gparameters.bsitar] for
-#'  further details.
+#'  and hence the width of the \code{bands}. See
+#'  [bsitar::growthparameters()] for further details.
 #'
 #'@param trim A number (default 0) of long line segments to be excluded from
 #'  plot with option 'u' or 'a'. See [sitar::plot.sitar] for details.
-#'  
+#'
 #'@param layout A character string defining the layout structure of the plot. A
 #'  \code{'single'} (default) layout provides overlaid distance and velocity
 #'  curves on a single plot when opt includes \code{'dv'}, \code{'Dv'},
@@ -60,47 +60,47 @@
 #'  \code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is ignored.
 #'  The alternative layout option, the \code{'facet'} uses [ggplot2::facet_wrap]
 #'  to map and draw plot when \code{opt} include two or more letters.
-#'  
+#'
 #'@param linecolor The color of line used when layout is \code{'facet'}. The
 #'  default is \code{NULL} which internally set the \code{linecolor} as
 #'  \code{'grey50'}.
-#'  
+#'
 #'@param linecolor1 The color of first line when layout is \code{'single'}. For
 #'  example, for \code{opt = 'dv'}, the color of distance line is controlled by
 #'  the \code{linecolor1}. Default \code{NULL} will internally set
 #'  \code{linecolor1} as \code{'orange2'}.
-#'  
+#'
 #'@param linecolor2 The color of second line when layout is \code{'single'}. For
 #'  example, for \code{opt = 'dv'}, the color of velocity line is controlled by
 #'  the \code{linecolor2}. Default \code{NULL} sets the color \code{'green4'}
 #'  for \code{linecolor2}.
-#'  
+#'
 #'@param label.x An optional character string to label the x axis. When
 #'  \code{NULL} (default), the x axis label is taken from the predictor (e.g.,
 #'  age).
-#'  
+#'
 #'@param label.y An optional character string to label the y axis. When
 #'  \code{NULL} (default), the y axis label is taken from the type of plot
 #'  (e.g., distance, velocity etc.). Note that when layout option is
 #'  \code{'facet'}, then y axis label is removed and instead the same label is
 #'  used as a title.
-#'  
+#'
 #'@param legendpos An optional character string to specify the position of
 #'  legends. When \code{NULL}, the legend position is set as 'bottom' for
 #'  distance and velocity curves with \code{'single'} layout option.
-#'  
+#'
 #'@param linetype.apv An optional character string to specify the type of the
 #'  vertical line drawn to mark the APGV. Default \code{NULL} sets the linetype
 #'  as \code{dotted}.
-#'  
+#'
 #'@param linewidth.main An optional character string to specify the width of the
 #'  the line for the distance and velocity curves. The default \code{NULL} will
 #'  set it as 0.35.
-#'  
+#'
 #'@param linewidth.apv An optional character string to specify the width of the
 #'  the vertical line drawn to mark the APGV. The default \code{NULL} will set
 #'  it as 0.25.
-#'  
+#'
 #'@param linetype.groupby An optional argument to specify the line type for the
 #'  distance and velocity curves when drawing plots for a model that includes
 #'  factor covariate(s) or when visualising individual specific
@@ -132,11 +132,11 @@
 #'  individuals is small. However, when the number of individuals is large,
 #'  \code{NA} is a better choice which prevents printing a large number of
 #'  legends for each individual.
-#'  
+#'
 #'@param band.alpha An optional numeric value to specify the transparency of the
 #'  CI band(s) around the distance curve, velocity curve and the line indicating
 #'  the APGV. The default \code{NULL} will set this value to 0.4.
-#'  
+#'
 #'@param show_age_takeoff A logical (default \code{TRUE}) to indicate whether to
 #'  display the ATGV line(s) on the plot.
 #'
@@ -163,7 +163,7 @@
 #'  passed to the \code{ipts} argument. This is useful when fitting location
 #'  scale models and the measurement error models.
 #'
-#'@inheritParams  gparameters.bsitar
+#'@inheritParams  growthparameters.bgmfit
 #'
 #'@inherit brms::prepare_predictions.brmsfit params
 #'
@@ -173,38 +173,38 @@
 #'@importFrom rlang .data
 #'@importFrom graphics curve
 #'
-#'@export plot_bsitar.bsitar
+#'@export plot_bgm.bgmfit
 #'
 #'@export
 #'
 #' @examples
 #' \dontrun{
 #' # Population average distance and velocity curves with default options
-#' plot_bsitar(model, opt = 'dv')
+#' plot_bgm(model, opt = 'dv')
 #'
 #' # Individual-specific distance and velocity curves with default options
-#' plot_bsitar(model, opt = 'DV')
+#' plot_bgm(model, opt = 'DV')
 #'
 #' # Population average distance and velocity curves with APGV
-#' plot_bsitar(model, opt = 'dv', apv = TRUE)
+#' plot_bgm(model, opt = 'dv', apv = TRUE)
 #'
 #' # Individual-specific distance and velocity curves with APGV
-#' plot_bsitar(model, opt = 'DV', apv = TRUE)
+#' plot_bgm(model, opt = 'DV', apv = TRUE)
 #'
 #' # Population average distance curve, velocity curve, and APGV with CI bands
-#' plot_bsitar(model, opt = 'dv', apv = TRUE, bands = 'dvp')
+#' plot_bgm(model, opt = 'dv', apv = TRUE, bands = 'dvp')
 #'
 #' # Adjusted and unadjusted individual curves
-#' plot_bsitar(model, opt = 'au')
+#' plot_bgm(model, opt = 'au')
 #'
 #' # Population average distance and velocity curves along with adjusted
 #' # and unadjusted individual curves
-#' plot_bsitar(model, opt = 'dvau')
+#' plot_bgm(model, opt = 'dvau')
 #'
 #' }
 #' 
 
-plot_bsitar.bsitar <- function(model,
+plot_bgm.bgmfit <- function(model,
                                opt = 'dv',
                                apv = FALSE,
                                bands = NULL,
@@ -332,12 +332,12 @@ plot_bsitar.bsitar <- function(model,
   
   get_xcall <- function(xcall, scall) {
     scall <- scall[[length(scall)]]
-    if(any(grepl("plot_bsitar", scall, fixed = T)) |
-       any(grepl("plot_bsitar.bsitar", scall, fixed = T))) {
-      xcall <- "plot_bsitar"
-    } else if(any(grepl("gparameters", scall, fixed = T)) |
-              any(grepl("gparameters.bsitar", scall, fixed = T))) {
-      xcall <- "gparameters"
+    if(any(grepl("plot_bgm", scall, fixed = T)) |
+       any(grepl("plot_bgm.bgmfit", scall, fixed = T))) {
+      xcall <- "plot_bgm"
+    } else if(any(grepl("growthparameters", scall, fixed = T)) |
+              any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
+      xcall <- "growthparameters"
     } else {
       xcall <- xcall
     } 
@@ -544,7 +544,7 @@ plot_bsitar.bsitar <- function(model,
   
 
   
-  d. <- do.call(gparameters.bsitar, arguments)
+  d. <- do.call(growthparameters.bgmfit, arguments)
   
   p. <- d.[['parameters']]
   probtitles <- d.[['probtitles']]
@@ -834,7 +834,7 @@ plot_bsitar.bsitar <- function(model,
       }
       if (estimation_method == 'fitted') {
         extra$ey <-
-          fitted_.bsitar(
+          fitted_bgm(
             model,
             resp = resp,
             newdata = extra,
@@ -844,7 +844,7 @@ plot_bsitar.bsitar <- function(model,
           )
       } else if (estimation_method == 'predict') {
         extra$ey <-
-          predict_.bsitar(
+          predict_bgm(
             model,
             resp = resp,
             newdata = extra,
@@ -2696,18 +2696,18 @@ plot_bsitar.bsitar <- function(model,
       if(apv | takeoff | trough | acgv)  print(p.)
     }
     options(warn = defaultW)
-    plot.o[['gparameters']] <- p.as.d.out_attr
+    plot.o[['growthparameters']] <- p.as.d.out_attr
     return(plot.o)
   } else if (returndata) {
-    attr(d.out, 'gparameters') <- p.as.d.out_attr
+    attr(d.out, 'growthparameters') <- p.as.d.out_attr
     return(d.out)
   }
 }
 
-#' @rdname plot_bsitar.bsitar
+#' @rdname plot_bgm.bgmfit
 #' @export
-plot_bsitar <- function(model, ...) {
-  UseMethod("plot_bsitar")
+plot_bgm <- function(model, ...) {
+  UseMethod("plot_bgm")
 }
 
 # apv takeoff trough acgv

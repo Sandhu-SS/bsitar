@@ -8,9 +8,9 @@ prepare_initials(init_argument, init_internal_args)
 }
 \arguments{
 \item{init_argument}{A list containing the initial arguments specified in
-the \code{\link[=bsitar]{bsitar()}} function and then passed from the
+the \code{\link[=bgm]{bgm()}} function and then passed from the
 \code{\link[=set_priors_initials]{set_priors_initials()}} function via \code{\link[=prepare_priors]{prepare_priors()}} to
-the \code{prepare_initials}. See \code{\link[=bsitar]{bsitar()}} function for details on
+the \code{prepare_initials}. See \code{\link[=bgm]{bgm()}} function for details on
 initials arguments.}
 
 \item{init_internal_args}{An internal argument list created and passed from
@@ -24,6 +24,6 @@ A list of initial values.
 For univariate-by-subgroup (specified by using the \code{univariate_by})
 and multivariate (specified by using the \code{multivariate}) models, each
 argument is automatically matched with the sub-model(s). See
-\code{\link[=bsitar]{bsitar()}} for details on \code{univariate_by} and
+\code{\link[=bgm]{bgm()}} for details on \code{univariate_by} and
 \code{multivariate}) arguments.
 }

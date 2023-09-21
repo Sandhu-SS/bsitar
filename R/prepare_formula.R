@@ -5,7 +5,7 @@
 #' Prepare formula for fitting Bayesian SITAR growth curve model
 #' 
 #' The \code{prepare_formula}) prepares \code{brms::brmsformual} which is  
-#' passed on to the [bsitar::bsitar] function. For univariate-by-
+#' passed on to the [bsitar::bgm()] function. For univariate-by-
 #' subgroup model (specified by using the \code{univariate_by}) and 
 #' multivariate model (specified by using the \code{multivariate}),
 #' the \code{x}, \code{y}, \code{id}, \code{knots}, \code{nknots}, are 
@@ -19,7 +19,7 @@
 #' @param nknots an integer specifying the number of knots.
 #' @param data data frame containing variables \code{x}, \code{y} and \code{id}.
 #' @param internal_formula_args Other internal arguments passed from the 
-#' [bsitar::bsitar] to the \code{prepare_formula}).
+#' [bsitar::bgm()] to the \code{prepare_formula}).
 #'
 #' @return An object of class \code{brmsformula}, which is a \code{list} 
 #'   containing formulas

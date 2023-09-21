@@ -2,7 +2,7 @@
 % Please edit documentation in R/prepare_data.R
 \name{prepare_data}
 \alias{prepare_data}
-\title{Set up data for bsitar model}
+\title{Set up data for \code{bsitar} model}
 \usage{
 prepare_data(
   data,
@@ -28,11 +28,11 @@ multivariate model.}
 
 \item{uvarby}{An optional (default \code{NA}) to specify the indicator
 variable for fitting univariate-by-subgroup model. See \code{univariate_by}
-argument in the \code{\link[=bsitar]{bsitar()}} function. If not \code{NA}, then it
+argument in the \code{\link[=bgm]{bgm()}} function. If not \code{NA}, then it
 should be a valid factor variable present in the \code{data}.}
 
 \item{mvar}{A logical (default \code{FALSE}) to specify the the multivariate
-model. See \code{multivariate} argument in the \code{\link[=bsitar]{bsitar()}} function.}
+model. See \code{multivariate} argument in the \code{\link[=bgm]{bgm()}} function.}
 
 \item{xfuns}{Optional name(s) of the transformation function(s) applied to
 the predictor variable (typically age). Default \code{NULL}.}
@@ -42,13 +42,13 @@ the outcome variable. Default \code{NULL}.}
 
 \item{outliers}{An optional (default \code{NULL}) to remove velocity
 outliers. The argument should be a named list to pass options to the
-\link{outliers} function. See \link{outliers} for details.}
+\code{\link[=outliers]{outliers()}} function. See \code{\link[=outliers]{outliers()}} for details.}
 }
 \value{
 A data frame with necessary information added a attributes.
 }
 \description{
-Set up data for bsitar model
+Set up data for \code{bsitar} model
 }
 \examples{
 \dontrun{

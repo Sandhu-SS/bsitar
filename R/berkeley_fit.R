@@ -23,5 +23,5 @@
 #'  \insertAllCited{}
 #' 
 #' @keywords datasets
-#' @return A object of class \code{bsitar} with posterior draws.
+#' @return A object of class \code{bgmfit} with posterior draws.
 "berkeley_fit"

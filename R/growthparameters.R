@@ -1,13 +1,13 @@
 
 
 
-#' Growth parameter estimation for \code{bsitar} model
+#' Growth parameter estimation for \code{bgmfit} model
 #'
-#' @description The \code{gparameters} computes growth parameters and the 
+#' @description The \code{growthparameters} computes growth parameters and the 
 #'   uncertainty (standard error, SE and the credible interval, CI) for
 #'   population average and individual-specific parameters (see @details).
 #'
-#' @details The \code{gparameters} calls the appropriate function (fitted or
+#' @details The \code{growthparameters} calls the appropriate function (fitted or
 #'   predict) to estimate the first derivative (velocity curve) for each
 #'   posterior draw (posterior distribution) and then computes growth parameters
 #'   such as age at peak growth velocity (APGV), peak growth velocity (PGV), age
@@ -23,11 +23,11 @@
 #'   when there are no distinct pre-peak or post-peak troughs.
 #'
 #'
-#' @param model An object of class \code{bsitar}.
+#' @param model An object of class \code{bgmfit}.
 #' 
 #' @param resp An optional character string to specify response variable when
 #'   estimating growth parameter for the univariate-by-subgroup and multivariate
-#'   models (see [bsitar::bsitar()] for details on univariate-by-subgroup and
+#'   models (see [bsitar::bgm()] for details on univariate-by-subgroup and
 #'   multivariate models). For univariate model, \code{resp = NULL} (default).
 #'   
 #' @param ndraws Positive integer indicating the number of posterior draws to be
@@ -90,8 +90,8 @@
 #'   
 #' @param estimation_method A character string to specify the estimation method
 #'   when calculating the velocity from the posterior draws. The \code{fitted}
-#'   method internally calls the [bsitar::fitted_.bsitar()] function whereas the
-#'   option \code{predict} calls the [bsitar::predict_.bsitar()] function. See
+#'   method internally calls the [bsitar::fitted_bgm()] function whereas the
+#'   option \code{predict} calls the [bsitar::predict_bgm()] function. See
 #'   [brms::fitted.brmsfit()] and [brms::predict.brmsfit()] for derails on
 #'   fitted versus predict estimations.
 #'   
@@ -201,24 +201,24 @@
 #' 
 #' @inherit brms::prepare_predictions.brmsfit params 
 #'
-#' @export gparameters.bsitar
+#' @export growthparameters.bgmfit
 #'
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' # Population average APGV and PGV
-#' gparameters(model, re_formula = NA)
+#' growthparameters(model, re_formula = NA)
 #'
 #' #' # Population average APGV, PGV, ATGV, TGV
-#' gparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)
+#' growthparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)
 #'
 #' # Individual-specific APGV, PGV, ATGV, TGV
-#' gparameters(model, re_formula = NULL, peak = TRUE, takeoff = TRUE)
+#' growthparameters(model, re_formula = NULL, peak = TRUE, takeoff = TRUE)
 #'
 #' }
 #' 
-gparameters.bsitar <- function(model,
+growthparameters.bgmfit <- function(model,
                                resp = NULL,
                                ndraws = NULL,
                                draw_ids = NULL,
@@ -280,20 +280,20 @@ gparameters.bsitar <- function(model,
   
   get_xcall <- function(xcall, scall) {
     scall <- scall[[length(scall)]]
-    if(any(grepl("plot_bsitar", scall, fixed = T)) |
-       any(grepl("plot_bsitar.bsitar", scall, fixed = T))) {
-      xcall <- "plot_bsitar"
-    } else if(any(grepl("gparameters", scall, fixed = T)) |
-              any(grepl("gparameters.bsitar", scall, fixed = T))) {
-      xcall <- "gparameters"
+    if(any(grepl("plot_bgm", scall, fixed = T)) |
+       any(grepl("plot_bgm.bgmfit", scall, fixed = T))) {
+      xcall <- "plot_bgm"
+    } else if(any(grepl("growthparameters", scall, fixed = T)) |
+              any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
+      xcall <- "growthparameters"
     } else {
       xcall <- xcall
     } 
   }
   
   if(!is.null(model$xcall)) {
-    if(model$xcall == "plot_bsitar") {
-      xcall <- "plot_bsitar"
+    if(model$xcall == "plot_bgm") {
+      xcall <- "plot_bgm"
     }
   } else {
     scall <- sys.calls()
@@ -308,7 +308,7 @@ gparameters.bsitar <- function(model,
   # This arguments$model <- model required when using pipe %>% to use gparameter
   arguments$model <- model
   
-  if(xcall == 'plot_bsitar') arguments$plot <- TRUE else arguments$plot <- FALSE
+  if(xcall == 'plot_bgm') arguments$plot <- TRUE else arguments$plot <- FALSE
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
@@ -518,27 +518,12 @@ gparameters.bsitar <- function(model,
     df %>% dplyr::mutate(., !!varname := df2[[varname]])
   }
   
-  get_gparameters <-
+  get_growthparameters <-
     function(out_v_,
              newdata,
              groupby_str,
              summary,
              ...) {
-      
-      # if (!summary) {
-      #   out__ <- out_v_ %>%
-      #     data.frame() %>%
-      #     stats::setNames(paste0('P._D.', names(.))) %>%
-      #     dplyr::mutate(!!IDvar := newdata[[IDvar]]) %>%
-      #     dplyr::mutate(!!xvar := newdata[[xvar]])
-      # } else if (summary) {
-      #   out__ <- out_v %>% data.frame() %>%
-      #     dplyr::select(1) %>%  data.frame() %>%
-      #     stats::setNames(paste0('P._D.', names(.))) %>%
-      #     dplyr::mutate(!!IDvar := newdata[[IDvar]]) %>%
-      #     dplyr::mutate(!!xvar := newdata[[xvar]])
-      # }
-      
       if (!summary) {
         out__ <- out_v_ %>%
           data.frame() %>%
@@ -558,7 +543,6 @@ gparameters.bsitar <- function(model,
           out__ <- out__ %>% multiNewVar(df=., df2 = newdata, varname=i)
         } 
       }
-      
       
       if (!is.null(groupby_str)) {
         out__ <-
@@ -818,15 +802,15 @@ gparameters.bsitar <- function(model,
         }
         arguments$newdata <- newdata
         arguments$deriv <- 0
-        # don't let the ipts to pass again to the fitted_.bsitar
+        # don't let the ipts to pass again to the fitted 
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         if (estimation_method == 'fitted') {
-          out_d_ <- do.call(fitted_.bsitar, arguments)
+          out_d_ <- do.call(fitted_bgm, arguments)
         } else if (estimation_method == 'predict') {
-          out_d_ <- do.call(predict_.bsitar, arguments)
+          out_d_ <- do.call(predict_bgm, arguments)
         }
         probs
         if (!summary) {
@@ -870,15 +854,15 @@ gparameters.bsitar <- function(model,
         }
         arguments$newdata <- newdata
         arguments$deriv <- 1
-        # don't let the ipts to pass again to the fitted_.bsitar
+        # don't let the ipts to pass again to the fitted 
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         if (estimation_method == 'fitted') {
-          out_v_ <- do.call(fitted_.bsitar, arguments)
+          out_v_ <- do.call(fitted_bgm, arguments)
         } else if (estimation_method == 'predict') {
-          out_v_ <- do.call(predict_.bsitar, arguments)
+          out_v_ <- do.call(predict_bgm, arguments)
         }
         out_v__apv_ <- out_v_
         if (!summary) {
@@ -910,11 +894,11 @@ gparameters.bsitar <- function(model,
             dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
         }
         # out_summary[['parameters']] <-
-        #   get_gparameters(t(out_v_), newdata, groupby_str_v, summary)
+        #   get_growthparameters(t(out_v_), newdata, groupby_str_v, summary)
         
         out_v__apv_ <- t(out_v__apv_)
         out_summary[['parameters']] <-
-          get_gparameters(out_v__apv_, newdata, groupby_str_v, summary)
+          get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary)
       }
       out_summary[['groupby_str_d']] <- groupby_str_d
       out_summary[['groupby_str_v']] <- groupby_str_v
@@ -1018,16 +1002,16 @@ gparameters.bsitar <- function(model,
         
         arguments$newdata <- newdata
         arguments$deriv <- 0
-        # don't let the ipts to pass again to the fitted_.bsitar
+        # don't let the ipts to pass again to the fitted
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         
         if (estimation_method == 'fitted') {
-          out_d_ <- do.call(fitted_.bsitar, arguments)
+          out_d_ <- do.call(fitted_bgm, arguments)
         } else if (estimation_method == 'predict') {
-          out_d_ <- do.call(predict_.bsitar, arguments)
+          out_d_ <- do.call(predict_bgm, arguments)
         }
         
         arguments$summary <- summary_org
@@ -1096,16 +1080,16 @@ gparameters.bsitar <- function(model,
         }
         arguments$newdata <- newdata
         arguments$deriv <- 1
-        # don't let the ipts to pass again to the fitted_.bsitar
+        # don't let the ipts to pass again to the fitted
         arguments$ipts <- NULL 
         arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         
         if (estimation_method == 'fitted') {
-          out_v_ <- do.call(fitted_.bsitar, arguments)
+          out_v_ <- do.call(fitted_bgm, arguments)
         } else if (estimation_method == 'predict') {
-          out_v_ <- do.call(predict_.bsitar, arguments)
+          out_v_ <- do.call(predict_bgm, arguments)
         }
         
         arguments$summary <- summary_org
@@ -1161,7 +1145,7 @@ gparameters.bsitar <- function(model,
         
         out_v_ <- t(out_v_)
         out_summary[['parameters']] <-
-          get_gparameters(out_v_, newdata, groupby_str_v, summary) # out_v_
+          get_growthparameters(out_v_, newdata, groupby_str_v, summary) # out_v_
       }
       out_summary[['groupby_str_d']] <- groupby_str_d
       out_summary[['groupby_str_v']] <- groupby_str_v
@@ -1254,15 +1238,15 @@ gparameters.bsitar <- function(model,
       }
       arguments$newdata <- newdata
       arguments$deriv <- 1
-      # don't let the ipts to pass again to the fitted_.bsitar
+      # don't let the ipts to pass again to the fitted
       arguments$ipts <- NULL 
       arguments$envir <- .GlobalEnv # arguments$envir_
       arguments$probs <- probs
      
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_.bsitar, arguments)
+        out_v_ <- do.call(fitted_bgm, arguments)
       } else if (estimation_method == 'predict') {
-        out_v_ <- do.call(predict_.bsitar, arguments)
+        out_v_ <- do.call(predict_bgm, arguments)
       }
       
       out_v__apv_ <- out_v_
@@ -1287,7 +1271,7 @@ gparameters.bsitar <- function(model,
       
       out_v__apv_ <- t(out_v__apv_)
       parameters <-
-        get_gparameters(out_v__apv_, newdata, groupby_str_v, summary)
+        get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary)
     } # if(is.null(avg_reffects)) {
     
     
@@ -1324,15 +1308,15 @@ gparameters.bsitar <- function(model,
       }
       arguments$newdata <- newdata
       arguments$deriv <- 1
-      # don't let the ipts to pass again to the fitted_.bsitar
+      # don't let the ipts to pass again to the fitted
       arguments$ipts <- NULL 
       arguments$envir <- .GlobalEnv # arguments$envir_
       arguments$probs <- probs
       
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_.bsitar, arguments)
+        out_v_ <- do.call(fitted_bgm, arguments)
       } else if (estimation_method == 'predict') {
-        out_v_ <- do.call(predict_.bsitar, arguments)
+        out_v_ <- do.call(predict_bgm, arguments)
       }
       
       arguments$summary <- summary_org
@@ -1376,19 +1360,19 @@ gparameters.bsitar <- function(model,
       #   geom_line(aes(y = Estimate))
       out_v_ <- t(out_v_)
       parameters <-
-        get_gparameters(out_v_, newdata, groupby_str_v, summary)
+        get_growthparameters(out_v_, newdata, groupby_str_v, summary)
     } # if(!is.null(avg_reffects)) {
     
     return(parameters)
   } # if (!arguments$plot) {
   
-} # end gparameters
+} # end growthparameters
 
 
-#' @rdname gparameters.bsitar
+#' @rdname growthparameters.bgmfit
 #' @export
-gparameters <- function(model, ...) {
-  UseMethod("gparameters")
+growthparameters <- function(model, ...) {
+  UseMethod("growthparameters")
 }
 
 

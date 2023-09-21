@@ -1,60 +1,61 @@
 
 
-#' Fitted (expected) values from the posterior predictive distribution
+#' Predicted values (draws) from the posterior predictive distribution
 #' 
-#' @details The \code{fitted_} function is a wrapper around 
-#' the [brms::fitted.brmsfit]. The [brms::fitted.brmsfit]  
-#' function from the \code{brms} package can used to plot the fitted (distance) 
+#' @details The \code{predict_bgm} function is a wrapper around 
+#' the [brms::predict.brmsfit]. The [brms::predict.brmsfit]  
+#' function from the \code{brms} package can used to plot the predict (distance) 
 #' curve for an *bsitar* model when outcome (e.g., height) is untransformed.
 #' However, when the outcome is log or square root transformed, the 
-#' [brms::fitted.brmsfit] will return the fitted curve on the log or 
-#' square root scale whereas the [bsitar::fitted_] will 
-#' return the fitted curve on the original scale. Furthermore, the 
-#' fitted_ also displays the velocity curve on the original scale
+#' [brms::predict.brmsfit] will return the predict curve on the log or 
+#' square root scale whereas the [bsitar::predict_bgm()] will 
+#' return the predict curve on the original scale. Furthermore, the 
+#' predict_bgm also displays the velocity curve on the original scale
 #' after making required back-transformation. Apart from these differences, 
-#' both these functions ([brms::fitted.brmsfit] and 
-#' [bsitar::fitted_]) work in the same manner. In other words, 
+#' both these functions ([brms::predict.brmsfit] and 
+#' [bsitar::predict_bgm()]) work in the same manner. In other words, 
 #' user can specify all the arguments which are available in the 
-#' [brms::fitted.brmsfit]. Because of this, the name is kept same except 
-#' for adding an underscore at the end of the name (*fitted* to 
-#' *fitted_*). 
+#' [brms::predict.brmsfit]. Because of this, the name is kept same except 
+#' for adding an underscore at the end of the name (*predict* to 
+#' *predict_bgm*). 
 #' 
-#' @inherit gparameters.bsitar params
+#' @inherit growthparameters.bgmfit params
 #' 
-#' @inherit conditional_effects_.bsitar params
+#' @inherit conditional_effects_bgm.bgmfit params
 #' 
-#' @inherit brms::fitted.brmsfit description params
+#' @inherit brms::predict.brmsfit description params
 #' 
-#' @param ... Additional arguments passed to the [brms::fitted.brmsfit] 
-#' function. Please see \code{brms::fitted.brmsfit} for details on 
+#' @param ... Additional arguments passed to the [brms::predict.brmsfit] 
+#' function. Please see \code{brms::predict.brmsfit} for details on 
 #' various options available.
 #' 
-#' @return An array of predicted mean response values. See [brms::fitted.brmsfit] 
+#' @return An array of predicted response values. See [brms::predict.brmsfit] 
 #' for details.
 #' 
-#' @export fitted_.bsitar
+#' @export predict_bgm.bgmfit
+#' 
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' # The following examples show the use of *fitted_* to estimate  
+#' # The examples below show the use of *predict_bgm* to estimate  
 #' # population average and individual-specific distance and velocity 
-#' # curves.
+#' # curves for the the predict model
 #' # Population average distance curve
-#' fitted_(model, deriv = 0, re_formula = NA)
+#' predict_bgm(model, deriv = 0, re_formula = NA)
 #' 
 #' # Individual-specific distance curves
-#' fitted_(model, deriv = 0, re_formula = NULL)
+#' predict_bgm(model, deriv = 0, re_formula = NULL)
 #' 
 #' # Population average velocity curve
-#' fitted_(model, deriv = 1, re_formula = NA)
+#' predict_bgm(model, deriv = 1, re_formula = NA)
 #' 
 #' # Individual-specific velocity curves
-#' fitted_(model, deriv = 1, re_formula = NULL)
+#' predict_bgm(model, deriv = 1, re_formula = NULL)
 #'  
 #' }
 
-fitted_.bsitar <-
+predict_bgm.bgmfit <-
   function(model,
            newdata = NULL,
            resp = NULL,
@@ -68,16 +69,13 @@ fitted_.bsitar <-
            robust = FALSE,
            probs = c(0.025, 0.975),
            xrange = NULL,
-           parms_eval = FALSE,
-           parms_method = 'getPeak',
-           envir = parent.frame(),
+           envir = .GlobalEnv,
            ...) {
-    
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
-                             deriv = deriv,
+                             deriv = deriv, 
                              envir = envir)
     
     if(!is.null(model$xcall)) {
@@ -93,10 +91,9 @@ fitted_.bsitar <-
                              xrange = xrange)
     }
     
-  
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-   
-    . <- fitted(model,
+    
+    . <- predict(model,
                 newdata = newdata,
                 resp = resp,
                 ndraws = ndraws,
@@ -115,15 +112,10 @@ fitted_.bsitar <-
   }
 
 
-#' @rdname fitted_.bsitar
+#' @rdname predict_bgm.bgmfit
 #' @export
-fitted_ <- function(model, ...) {
-  UseMethod("fitted_")
+predict_bgm <- function(model, ...) {
+  UseMethod("predict_bgm")
 }
 
-
-# tx <- fitted_(setmodel, deriv = 1, parms = T, re_formula = NA, draw_ids = 111, 
-#               parms_method = 'sitar',
-#               summary = T)
-# head(tx)
 

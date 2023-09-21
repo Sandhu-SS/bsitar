@@ -1,9 +1,9 @@
 
 
 
-#' Update \pkg{bsitar} model
+#' Update \pkg{bgmfit} model
 #'
-#' @param model An object of class \code{bsitar}.
+#' @param model An object of class \code{bgmfit}.
 #' 
 #' @details This is an adapted version of the \code{update} function of 
 #' \code{brms} package.
@@ -14,7 +14,7 @@
 #'   automatically.
 #'
 #' @param recompile A logical to indicate whether the Stan model should be
-#'   recompiled. When \code{NULL} (the default), \code{update_bsitar} tries to
+#'   recompiled. When \code{NULL} (the default), \code{update_bgm} tries to
 #'   figure out internally, if recompilation is necessary. Setting it to
 #'   \code{FALSE} will cause all Stan code changing arguments to be ignored.
 #'
@@ -25,7 +25,7 @@
 #'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
-#' @export update_bsitar.bsitar
+#' @export update_bgm.bgmfit
 #'
 #' @export
 #'
@@ -33,20 +33,20 @@
 #' \dontrun{
 #' data(heights)
 #' data_males <- heights %>% filter(sex == 'Male')
-#' fit_males <- bsitar(x=age, y=height, id=id, data=heights, df=4)
-#' fit_males2 <- update_bsitar(df=5)
+#' fit_males <- bgm(x=age, y=height, id=id, data=heights, df=4)
+#' fit_males2 <- update_bgm(df=5)
 #' }
 #'
-update_bsitar.bsitar <-
+update_bgm.bgmfit <-
   function(model,
            newdata = NULL,
            recompile = NULL,
            ...) {
     formula. <- NULL
-    args <- formalArgs(bsitar)
+    args <- formalArgs(bgm)
     args <- args[!args == "..."]
     
-    call_ <- model$model_info$call.full.bsitar[-1] %>% as.list()
+    call_ <- model$model_info$call.full.bgm[-1] %>% as.list()
     
     call_$data <- NULL
     mcall_ <- list(...)
@@ -58,7 +58,7 @@ update_bsitar.bsitar <-
                i,
                " is not a valid arguments",
                " \n ",
-               " Please see 'bsitar' function ")
+               " Please see 'bgm' function ")
         } else {
           call_[[i]] <- mcall_[[i]]
         }
@@ -327,7 +327,7 @@ update_bsitar.bsitar <-
       dots_for_scode              <- c(dots_for_scode, call_)
       dots_for_scode$get_stancode <- TRUE
       new_stancode <-
-        suppressMessages(do.call(bsitar, dots_for_scode))
+        suppressMessages(do.call(bgm, dots_for_scode))
       
       
       # stan code may differ just because of the version number (#288)
@@ -351,7 +351,7 @@ update_bsitar.bsitar <-
         if (!new_init_arg)
           dots_for_recompile$init     <- NULL
         dots_for_recompile          <- c(dots_for_recompile, call_)
-        model <- do.call(bsitar, dots_for_recompile)
+        model <- do.call(bgm, dots_for_recompile)
       }
     } else {
       # refit without compiling it again
@@ -405,7 +405,7 @@ update_bsitar.bsitar <-
           dots_for_norecompile$init     <- NULL
           dots_for_norecompile          <-
             c(dots_for_norecompile, call_)
-          model <- do.call(bsitar, dots_for_norecompile)
+          model <- do.call(bgm, dots_for_norecompile)
         } # if(!new_init_arg) {
         if (new_init_arg) {
           # set_brms_args            <- dots
@@ -425,8 +425,8 @@ update_bsitar.bsitar <-
     model
   }
 
-#' @rdname update_bsitar.bsitar
+#' @rdname update_bgm.bgmfit
 #' @export
-update_bsitar <- function(model, ...) {
-  UseMethod("update_bsitar")
+update_bgm <- function(model, ...) {
+  UseMethod("update_bgm")
 }
