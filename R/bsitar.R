@@ -1848,16 +1848,20 @@ bsitar <- function(x,
       temp_init_call_c <- paste0("list(", 
                                 paste(temp_init_call_c, collapse = ",") , ")")
       temp_init_call_c <- str2lang(temp_init_call_c)
-    } else { # if(length(temp_init_call) != 0) {
+    } else if(is.symbol(temp_init_call_in)) { # if(length(temp_init_call) != 0) {
+      temp_init_call_c <- deparse(substitute(temp_init_call_c))
+      temp_init_call_c <- gsub("\"" , "", temp_init_call_c)
+    } else {
       temp_init_call_c <- mcall$init
     }
   } # if(is.language(temp_init_call_in)) {
   
   mcall$init <- temp_init_call_c
   
+  
   xs <- ids <- dfs <- NA
   
-  checks. <- NA
+  checks. <- NULL;
   
   for (i in names(mcall)[-1]) {
     # don't let family argument also to be evaluated
@@ -1949,7 +1953,11 @@ bsitar <- function(x,
     c(arguments, f_bsitar_arg[names(f_bsitar_arg) %!in% nf_bsitar_arg_names])
   
   
-  # Assign to objects otherwise error in R package
+  # Assign to objects otherwise error in R package (global var)
+  # Note that a loop can be used to assign these objects NA
+  # If try to assign NULL, still same error persists in package 
+  # dist_args <- as.character(quote(c(normal, uniform, lkj)))[-1]
+  # fmul_args <- names(arguments)
   
   #######################
   normal <- NULL;
@@ -4688,8 +4696,6 @@ bsitar <- function(x,
     vcov_init_0e <- eval(parse(text =  "vcov_init_0si" ))
     vcov_init_0e <- eval(parse(text =  vcov_init_0e ))
     
-  
-
     
     
     #######################################
