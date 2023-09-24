@@ -11,10 +11,12 @@
 #'  offered by the *sitar* package. For example, in addition to the univariate
 #'  analysis (i.e, modelling a single response variable as implemented in the
 #'  *sitar* package), the **bsitar** allows univariate-by-subgroup (modelling a
-#'  single response variable for subgroup defined by a factor variable) and and
-#'  multivariate (simultanous modelling of two or more responses) models (see
-#'  @details). The [bsitar::bgm()] is the main workhorse of the **bsitar** 
-#'  package.
+#'  single response variable for subgroups defined by a factor variable) and
+#'  multivariate (simultaneous modelling of two or more responses) models (see
+#'  @details). Hereafter, the univariate-by-subgroup model is simply referred to
+#'  as univariate-by model and denoted by \code{univariate_by}. The multivariate
+#'  is denoted by \code{multivariate}. The [bsitar::bgm()] is the main workhorse
+#'  of the **bsitar** package.
 #'
 #'@details The SITAR is a shape-invariant nonlinear mixed effect growth curve
 #'  model that fits a population average (i.e., mean average) curve to the data
@@ -52,7 +54,7 @@
 #'  that inclusion of \code{d} results in multicollinearity because inclusion of
 #'  \code{d} parameter involves a linear predictor term which is identical to
 #'  the first term of the spline design matrix created by the truncated power
-#'  basis approach (see [Hmisc::rcspline.eval()]. \insertCite{R-Hmisc}{bsitar})
+#'  basis approach (see [Hmisc::rcspline.eval()] \insertCite{R-Hmisc}{bsitar}).
 #'
 #'  The **bsitar** package heavily depends on another Bayesian R package, the
 #'  *brms*  \insertCite{@see @R-brms; @brms2021}{bsitar}. The *brms* can fit a
@@ -78,89 +80,86 @@
 #'  individual specific growth parameters such as age at peak growth velocity
 #'  (APGV) and the peak growth velocity (PGV) can be easily computed.
 #'
-#'  The *bsitar* package allows three different model specifications: univariate
-#'  ,univariate-by-subgroup model, and multivariate. The univariate-by-subgroup
-#'  approach fits two or more separate sub models for a single response variable
-#'  defined by a factor variable (e.g, sex). The data are typically stacked and
-#'  the factor variable is used to set-up the submodels by using the 'subset'
-#'  option available in the [brms::brm()] function. The multivariate model
-#'  specification allows simultaneous modelling of two or more outcomes with
-#'  joint a distribution of random effects. For both univariate-by-subgroup and
-#'  multivariate model fitting, the **bsitar** package allows full flexibility
-#'  in specifying separate predictor (\code{x}), subject identifiers (\code{id})
-#'  and degree of freedom (\code{df}). Also, priors and initial values can be
-#'  different for each sub model . Furthermore, to enhance the ease of
-#'  specifying different options and to make it user-friendly, there is no need
-#'  to enclose the character strings in single or double quotes. For example to
-#'  specify the univariate-by-subgroup model for sex, the \code{univariate_by =
-#'  sex} is same as \code{univariate_by = 'sex'} or \code{univariate_by =
-#'  "sex"}. The same applies for all character string options.
+#'  The *bsitar* package allows three different model specifications:
+#'  \code{univariate}, \code{univariate_by} and \code{multivariate}. A
+#'  \code{univariate} model is a single model fit a single response variable
+#'  whereas both \code{univariate_by} and \code{multivariate} models comprise
+#'  two or more sub models. The \code{univariate_by} fits two or more separate
+#'  sub models for a single response variable defined by a factor variable (e.g,
+#'  sex). The data are typically stacked and the factor variable is used to
+#'  set-up the sub models by using the \code{subset} option available in the
+#'  [brms::brm()]. The \code{multivariate} model fitting allows simultaneous
+#'  modelling of two or more response variables with joint a distribution of
+#'  random effects. For both \code{univariate_by} and \code{multivariate}
+#'  models, the **bsitar** package allows full flexibility in specifying
+#'  separate predictor variables (\code{x}), subject identifiers (\code{id}),
+#'  degree of freedom (\code{df}) for design matrix as well as priors and the
+#'  initial values. Furthermore, to enhance the ease of specifying different
+#'  options and to make it user-friendly, there is no need to enclose the
+#'  character strings in single or double quotes. For example to specify the
+#'  \code{univariate_by} for sex, the \code{univariate_by = sex} is same as 
+#'  \code{univariate_by = 'sex'} or \code{univariate_by = "sex"}. The same
+#'  applies for all character string options.
 #'
-#'@param x Specify predictor variable (typically age in years). For univariate
-#'  model, the \code{x} is a single variable whereas for univariate-by-subgroup
-#'  (see \code{univariate_by}) and multivariate (see \code{multivariate})
-#'  models, the \code{x} can be same for each sub model or different. As an
-#'  example, when fitting a bivariate model, the \code{x = list(x1, x2)}
-#'  specifies that \code{x1} is the predictor for the first sub model and
-#'  \code{x2} for the second sub model. To specify \code{x1} as a common
-#'  predictor variable for both sub models, the argument \code{x} is specified
-#'  as \code{x = list(x1)} or simply \code{x = x1}.
+#'@param x Specify predictor variable (typically age in years). For
+#'  \code{univariate} model, the \code{x} is a single variable whereas for
+#'  \code{univariate_by} \code{multivariate} models, the \code{x} can be same
+#'  for sub models or different for each sub models. As an example, when fitting
+#'  a bivariate model, the \code{x = list(x1, x2)} specifies that \code{x1} is
+#'  the predictor for the first sub model and \code{x2} for the second sub
+#'  model. To specify \code{x1} as a common predictor variable for both sub
+#'  models, the argument \code{x} is specified as \code{x = list(x1)} or simply
+#'  \code{x = x1}.
 #'
 #'@param y Specify response variable (e.g., repeated height measurements). For
-#'  univariate (a single response variable) and univariate-by-subgroup (see
-#'  \code{univariate_by}) models, the \code{y} is specified as a single
-#'  variable. For the univariate-by-subgroup model, the response variables for
-#'  each sub model are created internally and are named after the levels of
-#'  factor variable used to specify the univariate-by-subgroup model. As an
-#'  example, for \code{univariate_by=sex}, the response variables  \code{Female}
-#'  and  \code{Male} are created on the fly  where \code{Female} is the first
-#'  level of the factor variable \code{sex}, and \code{Male} is the second
-#'  level. For multivariate model (see \code{multivariate}), the response
-#'  variables are specified as a list (e.g., \code{y = list(y1, y2}) where
-#'  \code{y1} is response variable for first sub model and \code{y2} for the
-#'  second sub model. Note that for \code{multivariate} model, data are not
-#'  stacked but rather response vectors of identical length that is same as the
-#'  rows of the data frame \code{data}.
+#'  \code{univariate} and \code{univariate_by} models, the \code{y} is specified
+#'  as a single variable. For the \code{univariate_by}, the response variable
+#'  for each sub model is created internally and named after the levels of
+#'  factor variable that was used to specify the \code{univariate_by} model. As
+#'  an example, for \code{univariate_by=sex}, the response variables
+#'  \code{Female} and  \code{Male} are created where \code{Female} is the first
+#'  level and \code{Male} is the second level of the factor variable,
+#'  \code{sex}. For \code{multivariate}, the response variables are specified as
+#'  a list (e.g., \code{y = list(y1, y2}) where \code{y1} is response variable
+#'  for first sub model and \code{y2} for the second sub model. Note that for
+#'  \code{multivariate} model, data are not stacked but rather response vectors
+#'  of identical length that is same as the rows of the data frame \code{data}.
 #'  
-#'@param id Specify a variable that uniquely identifies each individual in the
-#'  data frame. For univariate-by-subgroup (see \code{univariate_by}) and
-#'  multivariate (see \code{multivariate}) models, the \code{id} can be same
-#'  (typically) for sub models or different for each sub model (see \code{x} for
-#'  details).
+#'@param id Specify a variable that uniquely identifies the individuals in the
+#'  data frame. For \code{univariate_by} and \code{multivariate} models, the
+#'  \code{id} can be same (typically) for sub models or different for each sub
+#'  model (see \code{x} for details).
 #'
 #'@param data Data frame containing variables such as \code{x}, \code{y} 
-#' and \code{id}.
+#' and \code{id} etc.
 #'
 #'@param df Specify degrees of freedom for the natural cubic spline design
 #'  matrix (default \code{4}). The \code{df} is internally used to construct the
-#'  vector of knots (see \code{knots} below) that are used in the construction
-#'  of the spline design matrix (\code{df} quantiles of \code{x} distribution).
-#'  For univariate-by-subgroup model (see \code{univariate_by}) and multivariate
-#'  (see \code{multivariate}) models, the \code{df} can be same (e.g., \code{df
-#'  = 4}) for each sub model or different for each sub model such as
+#'  vector of knots (quantiles of \code{x} distributio) that are eventually used
+#'  in the construction of the spline design matrix. For \code{univariate_by}
+#'  and \code{multivariate} models, the \code{df} can be same (e.g., \code{df  =
+#'  4}) for sub models or different for each sub model specified as
 #'  \code{df=list(4, 5)} where \code{df} is 4 is for the first sub model and 5
 #'  for the second sub model.
 #'
-#'@param knots Specify a vector of knots for the construction of natural cubic
-#'  spline design matrix. Default is \code{NULL} because \code{df} is used by
-#'  default (see above). Note that \code{df} and \code{knots} can not be
-#'  specified simultaneously. When specified (i.e., when\code{df=NULL}), the
-#'  \code{knots} can be same for each sub model or different for each sub model
-#'  (see \code{df} for details).
+#'@param knots Specify a vector of knots for the natural cubic spline design 
+#'  matrix. Default is \code{NULL} as \code{df} is used by default (see above).
+#'  Note that \code{df} and \code{knots} can not be specified simultaneously,
+#'  and at least one of these ( \code{df} or \code{knots}) must be specified.
+#'  Like \code{df}, the \code{knots} can be same for sub models or different 
+#'  for each sub model when fitting \code{univariate_by} and \code{multivariate} 
+#'  models. 
 #'
 #'@param fixed A character string specifying the fixed effects structure
-#'  (default \code{fixed = a+b+c}. As mentioned earlier, there is
-#'  no need to enclose character string in quotes. In other words, \code{fixed =
-#'  a+b+c} and \code{fixed = 'a+b+c'} are same. Note that  different fixed effect
-#'  structures can be specified for the univariate-by-subgroup (see
-#'  \code{univariate_by}) and multivariate see \code{multivariate}) models. As
-#'  an example, \code{fixed = list(a+b+c, a+b)} implies that the fixed effect
-#'  structure for the first sub model is \code{fixed = 'a+b+c'} and \code{fixed
-#'  = 'a+b'} for the second sub model.
+#'  (default \code{fixed = a+b+c}.Note that  different fixed effect structures
+#'  can be specified when fitting \code{univariate_by} and \code{multivariate} 
+#'  models. As an example, \code{fixed = list(a+b+c, a+b)} implies that the 
+#'  fixed effect structure for the first sub model is \code{fixed = a+b+c} 
+#'  and \code{fixed = 'a+b'} for the second sub model.
 #'
 #'@param random A character string specifying the random effects structure
-#'  (default \code{fixed = a+b+c}. The approach is same as described above (see
-#'  \code{fixed}).
+#'  (default \code{fixed = a+b+c}. The approach is same as described above for
+#'  the fixed effects structure (see \code{fixed}).
 #'  
 #'@param select_model A character string specifying the model to be fitted.
 #'  Allowed models are SITAR (\code{sitar}), the Preece-Baines model 1
@@ -274,7 +273,7 @@
 #'  as follows: \code{a_formula_gr = ~ (1 |i|id)}, \code{b_formula_gr = ~
 #'  (1|i|id)}, and \code{c_formula_gr = ~ (1 |i|id)} where  \code{i} within the
 #'  vertical bars \code{||} is just a placeholder. The same correlation id
-#'  (i.e., \code{i}) shared across random effect formulas are modelled as
+#'  (i.e., \code{i}) shared across random effect formulas are modeled as
 #'  correlated.
 #'
 #'@param b_formula_gr Formula for the random effect parameter, \code{b} (default
@@ -425,7 +424,7 @@
 #'  (i.e., correlation) parameters are set to zero. For further details, see
 #'  brms::brm()] (\bold{Group-level terms}). Note that only the groupvar
 #'  suboption of the \code{group_arg} is passed to the univariate-by-subgroup
-#'  \code{univariate_by} and the ultivariate (\code{multivariate} models.
+#'  \code{univariate_by} and the multivariate (\code{multivariate} models.
 #'  Lastly, the \code{group_arg} is completely ignored when user specify random
 #'  formula using the vertical bar ("|") approach. Also, the \code{group_arg} is
 #'  ignored for \code{a_formula_gr_str}, \code{b_formula_gr_str}, and

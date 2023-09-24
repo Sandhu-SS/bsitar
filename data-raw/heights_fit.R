@@ -14,8 +14,9 @@ data <- data %>%
 
 # data %>% dplyr::glimpse()
 
-heights_fit <- bsitar::bsitar(age, y, id, data=data, 
+heights_fit <- bsitar::bgm(x = age, y = y, id = id, data = data, 
                                chains = 2, iter = 100,
+                               silent = 0,
                                sample_prior = 'only')
 
 
