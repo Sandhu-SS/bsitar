@@ -5,25 +5,26 @@
 #'@description Bayesian super imposition by translation and rotation (SITAR)
 #'  model summarizes the growth curves from early childhood through the
 #'  adulthood (see @details). The frequentist version of the SITAR model can be
-#'  fit by using an already available R package, the *sitar*
+#'  fit by using an already available R package, the \pkg{sitar}
 #'  \insertCite{R-sitar}{bsitar}. Besides Bayesian implementation of the SITAR
-#'  model, the *bsitar* package greatly enhances the modelling capabilities
-#'  offered by the *sitar* package. For example, in addition to the univariate
-#'  analysis (i.e, modelling a single response variable as implemented in the
-#'  *sitar* package), the **bsitar** allows univariate-by-subgroup (modelling a
-#'  single response variable for subgroups defined by a factor variable) and
-#'  multivariate (simultaneous modelling of two or more responses) models (see
-#'  @details). Hereafter, the univariate-by-subgroup model is simply referred to
-#'  as univariate-by model and denoted as \code{univariate_by}. The multivariate
-#'  is denoted by \code{multivariate}. The [bsitar::bgm()] is the main workhorse
-#'  of the \pkg{bsitar} package. 
+#'  model, the \pkg{bsitar} package greatly enhances the modelling capabilities
+#'  offered by the \pkg{sitar} package. For example, in addition to the
+#'  univariate analysis (i.e, modelling a single response variable as
+#'  implemented in the \pkg{sitar} package), the \pkg{bsitar} allows
+#'  univariate-by-subgroup (modelling a single response variable for subgroups
+#'  defined by a factor variable) and multivariate (simultaneous modelling of
+#'  two or more responses) models (see @details). Hereafter, the
+#'  univariate-by-subgroup model is simply referred to as univariate-by model
+#'  and denoted as \code{univariate_by}. The multivariate is denoted by 
+#'  \code{multivariate}. The [bsitar::bgm()] is the main workhorse of the
+#'  \pkg{bsitar} package.
 #'
 #'@details The SITAR is a shape-invariant nonlinear mixed effect growth curve
 #'  model that fits a population average (i.e., mean average) curve to the data
 #'  and aligns each individual's growth trajectory to this population average
 #'  curve via a set of three random effects, \code{size}, \code{timing} and
 #'  \code{intensity}. The concept of shape invariant model (SIM) was first
-#'  described by \insertCite{Lindstrom1995}{bsitar} and later used by#'
+#'  described by \insertCite{Lindstrom1995}{bsitar} and later used by
 #'  \insertCite{Beath2007;textual}{bsitar} to model infant growth data (birth to
 #'  2 years). The current version of the SITAR model is developed by
 #'  \insertCite{Cole2010;textual}{bsitar} and has been used extensively for
