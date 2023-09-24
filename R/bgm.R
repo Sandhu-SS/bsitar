@@ -14,9 +14,9 @@
 #'  single response variable for subgroups defined by a factor variable) and
 #'  multivariate (simultaneous modelling of two or more responses) models (see
 #'  @details). Hereafter, the univariate-by-subgroup model is simply referred to
-#'  as univariate-by model and denoted by \code{univariate_by}. The multivariate
+#'  as univariate-by model and denoted as \code{univariate_by}. The multivariate
 #'  is denoted by \code{multivariate}. The [bsitar::bgm()] is the main workhorse
-#'  of the **bsitar** package.
+#'  of the \pkg{bsitar} package. 
 #'
 #'@details The SITAR is a shape-invariant nonlinear mixed effect growth curve
 #'  model that fits a population average (i.e., mean average) curve to the data
@@ -40,7 +40,7 @@
 #'  \insertCite{R-splines}{bsitar}), the *bsitar* constructs spline design
 #'  matrix by using the truncated power basis approach as described by
 #'  \insertCite{harrell2001regression}{bsitar}, and implemented in
-#'  [Hmisc::rcspline.eval()]. \insertCite{R-Hmisc}{bsitar}. Note that the
+#'  [Hmisc::rcspline.eval()] \insertCite{R-Hmisc}{bsitar}. Note that the
 #'  **bsitar** package does not call the [Hmisc::rcspline.eval()] but rather
 #'  constructs a custom function on the fly that is then included in the
 #'  functions block of the *Stan* program and thus compiled (via the c++) during
