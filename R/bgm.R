@@ -135,7 +135,7 @@
 #'
 #'@param df Specify degrees of freedom for the natural cubic spline design
 #'  matrix (default \code{4}). The \code{df} is internally used to construct the
-#'  vector of knots (quantiles of \code{x} distributio) that are eventually used
+#'  vector of knots (quantiles of \code{x} distribution) that are eventually used
 #'  in the construction of the spline design matrix. For \code{univariate_by}
 #'  and \code{multivariate} models, the \code{df} can be same (e.g., \code{df  =
 #'  4}) for sub models or different for each sub model specified as
@@ -1072,8 +1072,8 @@
 #'  \code{random}, and \code{prior}.
 #'
 #'@param r_init_z Specify initial values for the standardized group level
-#'  effects. These parameters are part of the non centred parameterisation  
-#'  approach adopted in the see [brms::brm()].
+#'  effects. These parameters are part of the Non-Centered Parameterization  
+#'  (NCP) approach adopted in the see [brms::brm()].
 #'  
 #'@param vcov_init_0 A logical (default \code{TRUE}) to set initials for
 #'  variance (i.e, standard deviation) and covariance (i.e., correlation)
