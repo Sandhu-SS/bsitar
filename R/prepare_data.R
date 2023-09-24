@@ -1,36 +1,39 @@
 
 
-#' Set up data for \code{bsitar} model
+#' An internal function to set up data for \code{bsitar} model
 #'
-#' @param data An input data frame
+#' @param data An input data frame.
+#'
 #' @param x The predictor (typically age) variables.
+#'
 #' @param y The outcome variables. Must be a single name except when fitting a
 #'   multivariate model.
+#'
 #' @param id The group identifier.
+#'
 #' @param uvarby An optional (default \code{NA}) to specify the indicator
 #'   variable for fitting univariate-by-subgroup model. See \code{univariate_by}
-#'   argument in the [bsitar::bgm()] function. If not \code{NA}, then it
-#'   should be a valid factor variable present in the \code{data}.
+#'   argument in the [bsitar::bgm()] function. If not \code{NA}, then it should
+#'   be a valid factor variable present in the \code{data}.
+#'
 #' @param mvar A logical (default \code{FALSE}) to specify the the multivariate
 #'   model. See \code{multivariate} argument in the [bsitar::bgm()] function.
+#'
 #' @param xfuns Optional name(s) of the transformation function(s) applied to
 #'   the predictor variable (typically age). Default \code{NULL}.
+#'
 #' @param yfuns Optional name(s) of the transformation function(s) applied to
 #'   the outcome variable. Default \code{NULL}.
+#'
 #' @param outliers An optional (default \code{NULL}) to remove velocity
 #'   outliers. The argument should be a named list to pass options to the
 #'   [bsitar::outliers()] function. See [bsitar::outliers()] for details.
-#'   
+#'
 #' @return A data frame with necessary information added a attributes.
+#'
+#' @keywords internal
+#' @noRd
 #' 
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' data(heights)
-#' prepare_data(data = heights, y = heights)
-#' }
-#'
 prepare_data <- function(data,
                          x,
                          y,
@@ -116,10 +119,7 @@ prepare_data <- function(data,
     }
   } # if(!is.null(outliers)) {
   
-  
-  
   org.data <- data
-  
   
   # Note that x tarnsformation is done within the prepare_function
   transform_y <- function(y, yfuns) {
@@ -141,8 +141,6 @@ prepare_data <- function(data,
     }
     return(data)
   }
-  
-  
   
   if (!(is.na(uvarby) | uvarby == "NA")) {
     if (!uvarby %in% colnames(data)) {
@@ -173,22 +171,6 @@ prepare_data <- function(data,
     attr(data, "subindicators") <- subindicators
     # data_out <- data
   } else if (mvar) {
-    # for (myfunsi in 1:length(y)) {
-    #   mysi <- y[[myfunsi]]
-    #   myfunsi <- yfuns[[myfunsi]]
-    #   if (grepl('.Primitive', myfunsi, fixed = T) &
-    #       grepl('log', myfunsi, fixed = T)) {
-    #     myfunsi <- 'log'
-    #   }
-    #   if (grepl('.Primitive', myfunsi, fixed = T) &
-    #       grepl('sqrt', myfunsi, fixed = T)) {
-    #     myfunsi <- 'sqrt'
-    #   }
-    #   if (myfunsi == 'log')
-    #     data[[mysi]] <- log(data[[mysi]])
-    #   if (myfunsi == 'sqrt')
-    #     data[[mysi]] <- sqrt(data[[mysi]])
-    # }
     data <- org.data
     data <- transform_y(y, yfuns)
     attr(data, "ys") <- y

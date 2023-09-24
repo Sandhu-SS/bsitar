@@ -1,11 +1,82 @@
 
 
-# Expose function after optimization
 
-expose_optimize_fit <- function(optimize_fit, 
+#' An internal function to get arguments of a function
+#'
+#' @param arguments A list of default function arguments.
+#' @param xcall A character string specifying the name of the calling function.
+#' @keywords internal
+#' @return A list comprised of function arguments.
+#' @noRd
+#'
+get_args_ <- function(arguments, xcall) {
+  `%!in%` <- Negate(`%in%`)
+  f_bgm_arg <- formals(paste0(xcall, ".", 'bgmfit'))
+  nf_bgm_arg_names <-
+    intersect(names(arguments), names(f_bgm_arg))
+  arguments <-
+    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
+  arguments
+}
+
+
+
+#' An internal function to deparse a symbol argument and remove spaces
+#'
+#' @param deparseobj A symbol
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+
+deparse_0 <- function(deparseobj) {
+  deparseobj <- paste(deparse(deparseobj), collapse = "")
+  deparseobj <- gsub("[[:space:]]", "", deparseobj)
+  deparseobj
+}
+
+
+#' An internal function to substitute and deparse a symbol argument
+#'
+#' @param deparseobj A symbol
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+
+deparse_0s <- function(deparseobj) {
+  deparseobj <- paste(deparse(substitute(deparseobj)), collapse = "")
+  deparseobj
+}
+
+
+#' An internal function to remove spaces from the string
+#'
+#' @param deparseobj A character string
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+
+gsub_space <- function(deparseobj) {
+  deparseobj <- gsub("[[:space:]]", "", deparseobj)
+  deparseobj
+}
+
+
+
+#' An internal function to expose function after optimization
+#'
+#' @param model An object of class \code{bgmfit}.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+expose_optimize_fit <- function(model, 
                                 subset_list = NULL, 
                                 expose_function = T) {
-  optimize_fit_models <-  optimize_fit
+  optimize_fit_models <-  model
   
   if(!is.null(subset_list)) {
     if(!is.numeric(subset_list)) stop("models must a numeric vector")
@@ -34,15 +105,22 @@ expose_optimize_fit <- function(optimize_fit,
 }
 
 
-# Plot models after optimization 
 
-plot_optimize_fit <- function(optimize_fit, 
+#' An internal function to models after optimization
+#'
+#' @param model An object of class \code{bgmfit}.
+#' @keywords internal
+#' @return A list comprised of plot objects.
+#' @noRd
+#'
+
+plot_optimize_fit <- function(model, 
                               subset_list = NULL, 
                               what = "plot", 
                               expose_function = F, 
                               print= T, ...) {
   
-  optimize_fit_models <-  optimize_fit
+  optimize_fit_models <-  model
   dots <- list(...)
   for (i in names(dots)) {
     if(!i %in% formalArgs(plot_bgm.bgmfit)) 
@@ -102,9 +180,18 @@ plot_optimize_fit <- function(optimize_fit,
 }
 
 
-# Transform axis for dual y
+#' An internal function to transform y axis when plotting with dual y axis
+#'
+#' @param primary Primary y axis.
+#' @param secondary secondary y axis.
+#' @keywords internal
+#' @return A plot object.
+#' @noRd
+#'
 
-transform.sec.axis <- function(primary, secondary, na.rm = TRUE) {
+transform.sec.axis <- function(primary, 
+                               secondary, 
+                               na.rm = TRUE) {
   from <- range(secondary, na.rm = na.rm)
   to   <- range(primary, na.rm = na.rm)
   zero_range <- function(x, tol = 1000 * .Machine$double.eps) {
@@ -151,9 +238,17 @@ transform.sec.axis <- function(primary, secondary, na.rm = TRUE) {
 
 
 
-# Get _str arguments while evaluating priors
+#' An internal function to evaluate bgm arguments ending with _str suffix
+#'
+#' @param tsx An argument with _str suffix.
+#' @param data A data frame.
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
-get_gr_str_coef_id <- function(tsx, data) {
+get_gr_str_coef_id <- function(tsx, 
+                               data) {
   tsx <- strsplit(tsx, "+(", fixed = T)[[1]] 
   tsx_id_w_or_wo_gr <- c()
   for (tsx_id_w_or_wo_gri in 1:length(tsx)) {
@@ -213,8 +308,17 @@ get_gr_str_coef_id <- function(tsx, data) {
 
 
 
-# Get corr true false from || syntax in _str arguments while evaluating priors
-# Used in prepare_formual 
+
+#' An internal function to get corr structure from || syntax for  bgm 
+#'  arguments ending with _str suffix
+#'
+#' @param str_id_all_list An argument with _str suffix for \code{id}.
+#' @param str_corr_all_list An argument with _str suffix for \code{gr_cor}.
+#' @param str_corr_tf_all_list An argument with _str suffix for \code{corr}.
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
 get_str_corr_tf_function_new_better <- function(str_id_all_list, 
                                                 str_corr_all_list, 
@@ -253,9 +357,13 @@ get_str_corr_tf_function_new_better <- function(str_id_all_list,
 
 
 
-
-# Append priors to the bpriors
-# And, will out stanvar and inits to be added to stanvar_priors and initials
+#' An internal function to append priors to the bpriors
+#'
+#' @param tempx A prior object. 
+#' @keywords internal
+#' @return A prior object.
+#' @noRd
+#'
 
 extract_prior_str_lv <- function(tempx) {
   if(!is.list(tempx) & !is.vector(tempx)) {
@@ -290,7 +398,13 @@ extract_prior_str_lv <- function(tempx) {
 
 
 
-# Restore parantheses in formuale
+#' An internal function to restore parantheses in formuale objects
+#'
+#' @param strx A formual object. 
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
 restore_paranthese_grgr_str_form <- function(strx) {
   restore_paranthese_grgr_str <- function(strx2) {
@@ -323,6 +437,13 @@ restore_paranthese_grgr_str_form <- function(strx) {
 }
 
 
+#' An internal function to get random effect formula arguments
+#'
+#' @param x A character string of random effect formula. 
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
 get_x_random2 <- function(x) {
   x <- gsub("[[:space:]]", "", x)
@@ -336,6 +457,15 @@ get_x_random2 <- function(x) {
   x <- unique(unlist(strsplit(x, ":")) )
   x
 }
+
+
+#' An internal function to get random effect formula arguments with tilde sign
+#'
+#' @param x A character string of random effect formula. 
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
 get_x_random2_asitis <- function(x) {
   x <- gsub("[[:space:]]", "", x)
@@ -351,6 +481,13 @@ get_x_random2_asitis <- function(x) {
 
 
 
+#' An internal function to get object enclosed within the parenthesis
+#'
+#' @param x A character string. 
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
 get_o_paranthesis <- function(x) {
   if(!grepl("lf\\(", x)) {
@@ -366,6 +503,15 @@ get_o_paranthesis <- function(x) {
 }
 
 
+#' An internal function to get object enclosed within the parenthesis without
+#'  parenthesis.
+#'
+#' @param x A character string. 
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
+
 get_o_paranthesis2 <- function(x) {
   x <- gsub("^\\(", "", x)
   x <- gsub(")$", "", x)
@@ -374,6 +520,13 @@ get_o_paranthesis2 <- function(x) {
 }
 
 
+#' An internal function to get covariates from the formula.
+#'
+#' @param x A character string. 
+#' @keywords internal
+#' @return A vector comprised of character strings.
+#' @noRd
+#'
 
 getcovlist <- function(x) {
   if (is.character(x))
@@ -390,11 +543,29 @@ getcovlist <- function(x) {
 }
 
 
-ept <- function(x)
-  eval(parse(text = x), envir = parent.frame())
+#' An internal function to parse and evaluate a character string.
+#'
+#' @param x A character string. 
+#' @keywords internal
+#' @return An evaluated object.
+#' @noRd
+#'
+
+ept <- function(x) eval(parse(text = x), envir = parent.frame())
 
 
-
+#' An internal function to get parameter names from the stancode.
+#'
+#' @param code A character string of stancode.
+#' @param full A logical (default \code{TRUE}) indicating whether to get full 
+#' names. 
+#' @param section A character string specifying the Stan block 
+#' (default \code{parameters})
+#' @param what A character string specifying the name of a particular parameter.
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
 get_par_names_from_stancode <- function(code, 
                                         full = TRUE, 
@@ -408,10 +579,8 @@ get_par_names_from_stancode <- function(code,
   collect_full <- c()
   for (i in 1:length(zz)-1) {
     if(!(identical(zz[i], character(0))))  {
-      # print(zz[i])
       t <- sub(";.*", "", zz[i])
       t_full <- t
-      #  t_full <- gsub("[[:space:]]", "", t_full)
       t_full <- gsub("^ *|(?<= ) | *$", "", t_full, perl=T)
       if(what == "") {
         get_t_full <- t_full
@@ -436,23 +605,14 @@ get_par_names_from_stancode <- function(code,
 
 
 
-########################
-########################
-
-
-get_args_ <- function(arguments, xcall) {
-  `%!in%` <- Negate(`%in%`)
-  f_bgm_arg <- formals(paste0(xcall, ".", 'bgmfit'))
-  nf_bgm_arg_names <-
-    intersect(names(arguments), names(f_bgm_arg))
-  arguments <-
-    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
-  arguments
-}
-
-
-########################
-########################
+#' An internal function to get/set the number of cores 
+#'
+#' @param cores.arg A character string specifying cores argument from the 
+#' function.
+#' @keywords internal
+#' @return A list comprised of integers.
+#' @noRd
+#'
 
 get.cores <- function(cores.arg) {
   cores_ <- eval(cores.arg)
@@ -490,10 +650,18 @@ get.cores <- function(cores.arg) {
 
 
 
-########################
-########################
+#' An internal function to validate the response variable
+#'
+#' @param model An object of class \code{bgmfit}. 
+#' @param resp A character string specifying the name of the response variable.
+#' Default \code{NULL}.
+#' @keywords internal
+#' @return An error if evaluation fails.
+#' @noRd
+#'
 
-validate_response <- function(model, resp = NULL) {
+validate_response <- function(model, 
+                              resp = NULL) {
   if (model$model_info$nys == 1 & !is.null(resp)) {
     stop(
       "You have fit a univariate model",
@@ -550,8 +718,14 @@ validate_response <- function(model, resp = NULL) {
 
 
 
-########################
-########################
+#' An internal function to set up the priors when fitting a model with 3 or 
+#' more levels of hierarchy.
+#'
+#' @param new_prior_list A prior object. 
+#' @keywords internal
+#' @return A prior object.
+#' @noRd
+#'
 
 setup_higher_priors <- function(new_prior_list) {
   . <- NULL;
@@ -650,20 +824,24 @@ setup_higher_priors <- function(new_prior_list) {
 
 
 
-
-
-# From brms
-
-# rename specified patterns in a character vector
-# @param x a character vector to be renamed
-# @param pattern the regular expressions in x to be replaced
-# @param replacement the replacements
-# @param fixed same as for 'gsub'
-# @param check_dup: logical; check for duplications in x after renaming
-# @param ... passed to 'gsub'
-# @return renamed character vector of the same length as x
-rename <- function(x, pattern = NULL, replacement = NULL,
-                   fixed = TRUE, check_dup = FALSE, ...) {
+#' An internal function to rename patterns in a character vector.
+#' This is adapted from the brms package.
+#'  
+#' @param x a character vector to be renamed
+#' @param pattern the regular expressions in x to be replaced
+#' @param replacement the replacements
+#' @param fixed same as for 'gsub'
+#' @param check_dup: logical; check for duplications in x after renaming
+#' @param ... passed to 'gsub'
+#' @keywords internal
+#' @return renamed character vector of the same length as x
+#' @noRd
+#'
+rename <- function(x, 
+                   pattern = NULL, 
+                   replacement = NULL,
+                   fixed = TRUE, 
+                   check_dup = FALSE, ...) {
   pattern <- as.character(pattern)
   replacement <- as.character(replacement)
   if (!length(pattern) && !length(replacement)) {
@@ -678,7 +856,6 @@ rename <- function(x, pattern = NULL, replacement = NULL,
     replacement <- rep(replacement, length(pattern))
   }
   stopifnot(length(pattern) == length(replacement))
-  # avoid zero-length pattern error
   has_chars <- nzchar(pattern)
   pattern <- pattern[has_chars]
   replacement <- replacement[has_chars]
@@ -697,7 +874,228 @@ rename <- function(x, pattern = NULL, replacement = NULL,
 
 
 
-# split vector at factor indices
+
+#' An internal function to evaluate priors specified in data block of Stan
+#'
+#' @param model An object of class \code{bgmfit}
+#' @param spriors A prior object. If \code{NULL} (default),
+#'   [brms::prior_summary()] is used to \code{spriors} from the  \code{model}
+#' @param sdata A Stan data object. If \code{NULL} (default), [brms::standata()]
+#'   is used to get \code{sdata} from the  \code{model}.
+#' @param prior_name_asit A logical (default \code{FALSE}) to indicate whether
+#'   prior names should be returned as it is from the stancode.
+#' @param gsub_group A character vector specifying the group identifier that
+#'   will be removed from the \code{group} column of the prior object. Default
+#'   \code{NULL}.
+#' @param sort_response A character vector specifying the order of response
+#'   variables that will be used in sorting the \code{resp} column in the prior
+#'   object. Default \code{NULL}.
+#' @param sort_parameter A character vector specifying the order of parameter
+#'   names that will be used in sorting the \code{nlpar} column in the prior
+#'   object. Default \code{NULL}.
+#' @param sort_coefficient A character vector specifying the order of
+#'   coefficient names that will be used in sorting the \code{nlpar} column in
+#'   the prior object. Default \code{NULL}.
+#' @param sort_class A character vector specifying the order of class names that
+#'   will be used in sorting the \code{class} column in the prior object.
+#'   Default \code{NULL}.
+#' @param digits An integer to set the \code{digits} argument for the
+#'   \code{round} function.
+#' @param viewer A logical (default \code{FALSE}) to indicate whether to display
+#'   the output in R viewer. Currently ignored to avoid dependency on the 'gt'
+#'   package.
+#' @keywords internal
+#' @return A data frame object.
+#' @noRd
+#' 
+
+priors_to_textdata <- function(model,
+                               spriors = NULL,
+                               sdata = NULL,
+                               prior_name_asit = FALSE,
+                               gsub_coef = NULL,
+                               gsub_group = NULL,
+                               sort_response = NULL,
+                               sort_group = NULL,
+                               sort_parameter = c(letters[1:26], "sigma"),
+                               sort_coefficient = c("Intercept"),
+                               sort_class = c("b", "sd", "cor"),
+                               digits = 2,
+                               viewer = FALSE) {
+  arguments <- as.list(match.call())[-1]
+  
+  if (missing(model)) {
+    model <- NULL
+  }
+  
+  nlpar <- NULL;
+  coef <- NULL;
+  class <- NULL;
+  prior <- NULL;
+  group <- NULL;
+  resp <- NULL;
+  dpar <- NULL;
+  Response <- NULL;
+  Coefficient <- NULL;
+  Parameter <- NULL;
+  Group <- NULL;
+  Class <- NULL;
+  . <- NULL;
+  
+  if (is.null(model) & is.null(spriors) & is.null(sdata)) {
+    stop("Supply either model or spriors and sdata arguments")
+  } else if (!is.null(model) &
+             !is.null(spriors) & !is.null(sdata)) {
+    stop("Supply only model or spriors and sdata arguments")
+  } else if (!is.null(model)) {
+    spriors <- brms::prior_summary(model)
+    sdata <- brms::standata(model)
+  } else if (is.null(model)) {
+    if (is.null(spriors) & is.null(sdata)) {
+      stop("Supply spriors and sdata arguments")
+    }
+    if (is.null(spriors) & is.null(sdata)) {
+      stop("Supply spriors and sdata arguments")
+    }
+  }
+  
+  firstup <- function(x) {
+    substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+    x
+  }
+  
+  spriors <- spriors %>% dplyr::filter(source == 'user')
+  
+  env_ <- environment()
+  list2env(sdata, envir =  env_)
+  # a_cov_b_scale %>% print()
+  
+  for (i in 1:nrow(spriors)) {
+    getxit <- spriors[i, ]$prior
+    prior_name <- strsplit(getxit, "\\(")[[1]][1]
+    
+    if (!prior_name_asit) {
+      if (prior_name == 'lkj') {
+        prior_name_case <- toupper(prior_name)
+      } else if (prior_name == 'lkj_corr_cholesky') {
+        prior_name_case <- 'LKJ'
+      } else {
+        prior_name_case <- firstup(prior_name)
+      }
+    }
+    
+    if (prior_name_asit) {
+      prior_name_case <- prior_name
+    }
+    
+    getxit_2 <-
+      regmatches(getxit, gregexpr("(?<=\\().*?(?=\\))", getxit, perl = T))[[1]]
+    getxit_3 <- strsplit(getxit_2, ",")[[1]]
+    getxit_4 <- sapply(getxit_3, function(x)
+      eval(parse(text = x)))
+    getxit_4 <- round(getxit_4, digits = digits)
+    getxit_5 <- paste(getxit_4, collapse = ", ")
+    getxit_6 <- paste0("(", getxit_5, ")")
+    getxit_7 <- paste0(prior_name_case, getxit_6)
+    spriors[i, ]$prior <- getxit_7
+  }
+  
+  spriors <-
+    spriors %>% data.frame() %>% dplyr::select(-c('lb', 'ub', 'source'))
+  spriors <- spriors %>% `rownames<-`(NULL)
+  spriors <-
+    spriors %>%  dplyr::mutate(class =  dplyr::if_else(class == 'L', 'cor', 
+                                                       class))
+  
+  
+  if (!is.null(gsub_coef)) {
+    for (gsub_coefi in gsub_coef) {
+      spriors <-
+        spriors %>%  dplyr::mutate(coef = gsub(gsub_coefi, "" , coef))
+    }
+  }
+  
+  if (!is.null(gsub_group)) {
+    for (gsub_groupi in gsub_group) {
+      spriors <-
+        spriors %>%  dplyr::mutate(group = gsub(gsub_groupi, "" , group))
+    }
+  }
+  
+  spriors <- spriors %>% dplyr::relocate(nlpar, coef,
+                                         class, prior,
+                                         group, resp,
+                                         dpar)
+  
+  # for sigma betas
+  spriors <-
+    spriors %>%  dplyr::mutate(coef =  dplyr::if_else(coef == '' &
+                                                        class == 'Intercept',
+                                                      class, coef))
+  
+  spriors <-
+    spriors %>%  dplyr::mutate(
+      class =  dplyr::if_else(
+        class == 'Intercept' &
+          dpar == 'sigma' &
+          class == 'Intercept',
+        'b',
+        class
+      )
+    )
+  
+  
+  
+  spriors <-
+    spriors %>%  dplyr::mutate(nlpar =  dplyr::if_else(nlpar == '' &
+                                                         dpar != '',
+                                                       dpar, nlpar)) %>%
+    dplyr::select(-'dpar')
+  
+  
+  spriors <- spriors %>% dplyr::rename(
+    Parameter = nlpar,
+    Coefficient = coef,
+    Class = class,
+    Prior = prior,
+    Group = group,
+    Response = resp
+  )
+  
+  spriors <- spriors %>%
+    dplyr::arrange(match(Response, sort_response)) %>%
+    dplyr::arrange(match(Coefficient, sort_coefficient)) %>%
+    dplyr::arrange(match(Parameter, sort_parameter)) %>%
+    dplyr::arrange(match(Group, sort_group)) %>%
+    dplyr::arrange(match(Class, sort_class))
+  
+  if (!is.null(model)) {
+    if (is.na(model$model_info$univariate_by) |
+        !model$model_info$multivariate) {
+      spriors <- spriors %>%  dplyr::select(-'Response')
+    }
+  }
+  
+  # if(viewer) {
+  #   spriors <- spriors %>%
+  #     gt::gt()  %>%
+  #     gt::cols_align(
+  #       align = "left",
+  #       columns = dplyr::everything())
+  # }
+  spriors
+}
+
+
+
+#' An internal function to split vector at factor indices
+#'
+#' @param x A vector.
+#' @param pos A vector of indices.
+#' @keywords internal
+#' @return A vector.
+#' @noRd
+#'
 
 splitAt2 <- function(x, pos) {
   x <- droplevels(x)
@@ -710,34 +1108,24 @@ splitAt2 <- function(x, pos) {
 }
 
 
-# deparse and remove spaces
 
-deparse_0 <- function(deparseobj) {
-  deparseobj <- paste(deparse(deparseobj), collapse = "")
-  deparseobj <- gsub("[[:space:]]", "", deparseobj)
-  deparseobj
-}
-
-# deparse
-
-deparse_0s <- function(deparseobj) {
-  deparseobj <- paste(deparse(substitute(deparseobj)), collapse = "")
-  deparseobj
-}
-
-# Remove spaces
-
-gsub_space <- function(deparseobj) {
-  deparseobj <- gsub("[[:space:]]", "", deparseobj)
-  deparseobj
-}
-
-
-# Negate
+#' An internal function to Negate R's in function 
+#' @param `%in%` R's in function
+#' @keywords internal
+#' @return An R function.
+#' @noRd
+#'
 
 `%!in%` <- Negate(`%in%`)
 
-# Or
+
+#' An internal function to evaluate NULL and length zero arguments
+#' @param x A symbol (argument)
+#' @param y A symbol (argument)
+#' @keywords internal
+#' @return An R function.
+#' @noRd
+#'
 
 '%||%' <- function(x, y) {
   if (is.null(x)) x <- y
@@ -745,26 +1133,38 @@ gsub_space <- function(deparseobj) {
 }
 
 
+#' An internal function to customize R's stop function
+#' @param ... An argument
+#' @keywords internal
+#' @return A string (error message) from R's warning() function.
+#' @noRd
+#'
 stop2 <- function(...) {
   stop(..., call. = FALSE)
 }
 
-collapse_comma <- function(...) {
-  paste0("'", ..., "'", collapse = ", ")
-}
 
 
+#' An internal function to customize R's warning function
+#' @param ... An argument
+#' @keywords internal
+#' @return A string (warning message) from R's warning() function.
+#' @noRd
+#'
 warning2 <- function(...) {
   warning(..., call. = FALSE)
 }
 
 
-####
+#' An internal function to collapse elements of vector separated by a comma
+#' @param ... An argument
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+collapse_comma <- function(...) {
+  paste0("'", ..., "'", collapse = ", ")
+}
 
-# Find 
-# (.)$
-#   replace
-# \1 <- NULL;
-# 
-# Both regrex and wrap ticked ues
+
 

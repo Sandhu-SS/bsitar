@@ -3,7 +3,7 @@
 \name{update_bgm.bgmfit}
 \alias{update_bgm.bgmfit}
 \alias{update_bgm}
-\title{Update \pkg{bgmfit} model}
+\title{Update a model of class \code{bgmfit}.}
 \usage{
 \method{update_bgm}{bgmfit}(model, newdata = NULL, recompile = NULL, ...)
 
@@ -13,26 +13,26 @@ update_bgm(model, ...)
 \item{model}{An object of class \code{bgmfit}.}
 
 \item{newdata}{An optional \code{data.frame} to be used when updating the
-model. If \code{NULL} (default), the same same data used for original model
-fit is used. Note that data-dependent default priors will not be updated
-automatically.}
+model. If \code{NULL} (default), the same data used in the original model
+fit is evaluated. Note that data-dependent default priors will not be
+updated automatically.}
 
 \item{recompile}{A logical to indicate whether the Stan model should be
-recompiled. When \code{NULL} (the default), \code{update_bgm} tries to
-figure out internally, if recompilation is necessary. Setting it to
-\code{FALSE} will cause all Stan code changing arguments to be ignored.}
+recompiled. When \code{NULL} (the default), \code{bsitar::update_bgm()}
+tries to figure out internally, if recompilation is necessary. Setting it
+to \code{FALSE} will cause all Stan code changing arguments to be ignored.}
 
 \item{...}{Other arguments passed to \code{\link{brms}}.}
 }
 \value{
-An updated model of class \code{brmsfit, bsiatr}, that contains the
+An updated model of class \code{brmsfit}, that contains the
 posterior draws and other useful information about the model.
 }
 \description{
-Update \pkg{bgmfit} model
+Update a model of class \code{bgmfit}.
 }
 \details{
-This is an adapted version of the \code{update} function of
+This is an adapted version of the \code{update} function from the
 \code{brms} package.
 }
 \examples{

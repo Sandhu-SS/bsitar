@@ -1,6 +1,7 @@
 
 
-#' Prepare Stan function for Bayesian SITAR growth curve model
+#' An internal function to prepare Stan function for Bayesian SITAR growth 
+#' curve model
 #'
 #' The \code{prepare_function}) constructs custom Stan function  which is passed
 #' on to the [bsitar::bgm()] function. For univariate-by- subgroup model
@@ -28,7 +29,8 @@
 #' @return An character string which later evaluated to a custom function
 #'   and inserted into the Stan's functions block.
 #' 
-#' @export
+#' @keywords internal
+#' @noRd
 #' 
 prepare_function <- function(x,
                              y,

@@ -1,30 +1,23 @@
 
 
-#' Prepare initials for fitting Bayesian SITAR growth curve model
+#' An internal function to prepare initials for Bayesian SITAR growth curve 
+#' model
 #' 
-#' For univariate-by-subgroup (specified by using the \code{univariate_by}) 
-#' and multivariate (specified by using the \code{multivariate}) models, each 
-#' argument is automatically matched with the sub-model(s). See 
-#' [bsitar::bgm()] for details on \code{univariate_by} and 
-#' \code{multivariate}) arguments.
+#' For \code{univariate_by} and \code{multivariate} models (see [bsitar::bgm()])
+#' each argument is automatically matched with the sub model.
 #'
-#' @param init_argument A list containing the initial arguments specified in  
+#' @param init_argument A list containing the prior arguments specified in  
 #' the [bsitar::bgm()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function via [bsitar::prepare_priors()] to 
-#' the \code{prepare_initials}. See [bsitar::bgm()] function for details on 
-#' initials arguments.
+#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
 #' 
-#' @param init_internal_args An internal argument list created and passed from  
-#' the [bsitar::prepare_priors()] function to this \code{prepare_initials} 
-#' function.
+#' @param init_internal_args An internal argument (as named list) specified in  
+#' the [bsitar::bgm()] function and then passed from the 
+#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
 #'
 #' @return A list of initial values. 
 #' 
-#' @importFrom extraDistr rtnorm rhcauchy rlst rht rinvgamma 
-#' 
-#' @importFrom stats rnorm runif rcauchy rexp rlnorm rgamma rlnorm
-#' 
-#' @export
+#' @keywords internal
+#' @noRd
 #' 
 prepare_initials <- function(init_argument,
                              init_internal_args) {

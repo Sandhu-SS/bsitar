@@ -1,14 +1,34 @@
 
 
-#' An internal function to set var_cov initials t0 zero#'
-#' @param xscode A character string to evaluate code 
-#' method. Options available are \code{'get_idata'} (default) and
-#' \code{'idatafunction'}
+#' An internal function to set variance covariance initials values to zero
+#'
+#' @param xscode A character string to specify the stancode.
+#'
+#' @param xsdata A character string to specify the standata.
+#'
+#' @param full A logical (default \code{TRUE}) to indicate whether full names
+#'   should be extracted.
+#'
+#' @param what A character string to specify the variance covariance parameter.
+#'   Default \code{L} indicating the correlation parameters. Other options are
+#'   \code{sd} and \code{z}.
+#'
+#' @param sd_value A numeric value to set intials for standard deviation
+#'   parameters. Default \code{1} which is translated to zero initial i.e.,
+#'   \code{log(1) = 0}.
+#'
+#' @param z_value A numeric value (default \code{0}) to set initials for
+#'   \code{z} parameter which is part of the non centered parameterisation
+#'   implemented in the [brms::brm()].
+#'
+#' @param L_value A numeric value (default \code{0}) to set initials for
+#'   correlation parameter, \code{L}.
+#'   
+#' @return A prior object.
+#'
 #' @keywords internal
-#' @return A prior object. 
 #' @noRd
 #'
-
 set_init_gr_effects <- function(xscode,
                                 xsdata,
                                 full = TRUE,
@@ -54,10 +74,8 @@ set_init_gr_effects <- function(xscode,
     sdi <- gsub("(", "", sdi, fixed = T)
     sdi <- gsub(")", "", sdi, fixed = T)
     str_d <- gsub("[[:space:]]", "", sdi)
-    # str_d_ <- strsplit(str_d, ",")[[1]]
     str_d_ <- strsplit(str_d, ",") %>% unlist()
-    # print(fullxscode_i)
-    
+
     # for student_nu distribution parameter
     if (grepl("sd_nu", parm_c, fixed = T)) {
       set_value <- 3
@@ -105,13 +123,6 @@ set_init_gr_effects <- function(xscode,
         out <- array(out, dim = length(out))
       }
       
-      # for cmdstanr, one dim is assigned array
-      # if(grepl("array", fullxscode_i)) {
-      #   out <- t(out)
-      # } else if(!grepl("array", fullxscode_i)) {
-      #   out <- out
-      # }
-      # but it seems generic problem even for rstan
       if (ncol(out) == 1) {
         out <- t(out)
       }
@@ -126,7 +137,6 @@ set_init_gr_effects <- function(xscode,
       if (length(str_d_) == 2) {
         dim1 <- xsdata[[str_d_[1]]]
         dim2 <- xsdata[[str_d_[2]]]
-        # out <- array(set_value, dim = c(dim2, dim1, dim1))
         outxx <- array(0, dim = c(dim2, dim1, dim1))
         for (i in 1:dim(outxx)[2]) {
           outxx[, i, i] <- 1

@@ -2,38 +2,42 @@
 
 
 
-#' Prepare priors for fitting Bayesian SITAR growth curve model
+#' An internal function to prepare priors for Bayesian SITAR growth curve model
 #' 
-#' For univariate-by-subgroup (specified by using the \code{univariate_by}) 
-#' and multivariate (specified by using the \code{multivariate}) models, each 
-#' argument is automatically matched with the sub-model(s). See 
-#' [bsitar::bgm()] for details on \code{univariate_by} and 
-#' \code{multivariate}) arguments.
+#' For \code{univariate_by} and \code{multivariate} models (see [bsitar::bgm()])
+#' each argument is automatically matched with the sub model. 
 #'
 #' @param prior_argument A list containing the prior arguments specified in  
 #' the [bsitar::bgm()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' @param prior_data An optional argument (as named list) specified in  
+#' 
+#' @param prior_data An optional argument (a named list) specified in  
 #' the [bsitar::bgm()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
 #' The \code{prior_data} used to pass value for priors.
 #'  See [bsitar::bgm()] function, \code{prior_data} for details.
+#'  
 #' @param prior_data_internal An internal argument (as named list) specified in  
 #' the [bsitar::bgm()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
+#' 
 #' @param prior_internal_args An internal argument list that is passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{set_priors_initials} 
 #' and is used in setting the priors.
+#' 
 #' @param init_arguments A list containing the initial arguments specified in  
 #' the [bsitar::bgm()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
+#' 
 #' @param init_data An optional argument (as named list) specified in  
 #' the [bsitar::bgm()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
 #' The \code{init_data} is used for setting the initials.
+#' 
 #' @param init_data_internal An internal argument (as named list) specified in  
 #' the [bsitar::bgm()] function and then passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
+#' 
 #' @param init_args_internal An internal argument list that is passed from the 
 #' [bsitar::set_priors_initials()] function to the \code{set_priors_initials} 
 #' and is used in setting the initials.
@@ -41,9 +45,8 @@
 #' @return An object of class \code{brmsprior}. See \code{brmsprior} function 
 #' for more details. 
 #' 
-#' @seealso [brms::brm] [brms::prior]
-#' 
-#' @export
+#' @keywords internal
+#' @noRd
 #' 
 prepare_priors <- function(prior_argument,
                            prior_data,

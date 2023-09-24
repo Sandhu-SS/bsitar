@@ -26,14 +26,8 @@
 #' @return A string with the error captured or else a list with necessary
 #'   information needed when executing the post-processing function
 #'
-#' @export
+#' @noRd
 #'
-#' @examples
-#' \dontrun{
-#' #
-#' post_processing_checks(model)
-#' }
-
 post_processing_checks <- function(model, 
                                    xcall, 
                                    resp = NULL, 

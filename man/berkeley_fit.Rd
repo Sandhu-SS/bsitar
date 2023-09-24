@@ -3,30 +3,24 @@
 \docType{data}
 \name{berkeley_fit}
 \alias{berkeley_fit}
-\title{Model fit to the Berkeley datas et}
+\title{Model fit to the Berkeley data set}
 \format{
-The Berkeley data analysed have the following 5 variables:
-\describe{
-\item{id}{factor with levels 201-278 male and 301-385 female}
-\item{age}{years, numeric vector}
-\item{height}{cm, numeric vector}
-\item{sex}{factor with level 1 male and level 2 female}
-}
+A \code{bgmfit} object for the model fit to the Berkeley data.
 }
 \usage{
 berkeley_fit
 }
 \value{
-A object of class \code{bgmfit} with posterior draws.
+An object of class \code{bgmfit} with posterior draws.
 }
 \description{
 Model is fit to the Berkeley Child Guidance Study dataset
-containing longitudinal anthropometry data for 136 children from birth to
-21 years.
+containing longitudinal growth measurements made on 136 children from birth
+to 21 years.
 }
 \details{
-Data details are provided in the the \emph{sitar} package
-\insertCite{R-sitar}{bsitar}.
+Data details are provided in the \link{berkeley} and also in
+the \emph{sitar} package \insertCite{R-sitar}{bsitar}.
 }
 \references{
 \insertAllCited{}

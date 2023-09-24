@@ -5,8 +5,9 @@
 #'
 #' @inheritParams  growthparameters.bgmfit 
 #' @param intpldata_function_used A character string to indicate interpolation 
-#' method. Options available are \code{'get_idata'} (default) and
-#' \code{'idatafunction'}
+#' method. Options available are \code{get_idata} (default) and
+#' \code{idatafunction}
+#' 
 #' @keywords internal
 #' @return A data frame object. 
 #' @noRd
@@ -63,7 +64,7 @@ get.newdata <- function(model,
     # newdata <- eval.parent(model$model_info$call.bgm$data)
     newdata <- model$model_info$bgm.data
   } else {
-    newdata = newdata
+    newdata <- newdata
   }
   
   

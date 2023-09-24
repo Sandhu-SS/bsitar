@@ -1,26 +1,26 @@
 
 
 
-#' Update \pkg{bgmfit} model
+#' Update a model of class \code{bgmfit}.
 #'
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @details This is an adapted version of the \code{update} function of 
+#' @details This is an adapted version of the \code{update} function from the 
 #' \code{brms} package.
 #'
 #' @param newdata An optional \code{data.frame} to be used when updating the
-#'   model. If \code{NULL} (default), the same same data used for original model
-#'   fit is used. Note that data-dependent default priors will not be updated
-#'   automatically.
+#'   model. If \code{NULL} (default), the same data used in the original model
+#'   fit is evaluated. Note that data-dependent default priors will not be 
+#'   updated automatically.
 #'
 #' @param recompile A logical to indicate whether the Stan model should be
-#'   recompiled. When \code{NULL} (the default), \code{update_bgm} tries to
-#'   figure out internally, if recompilation is necessary. Setting it to
-#'   \code{FALSE} will cause all Stan code changing arguments to be ignored.
+#'   recompiled. When \code{NULL} (the default), \code{bsitar::update_bgm()} 
+#'   tries to figure out internally, if recompilation is necessary. Setting it 
+#'   to \code{FALSE} will cause all Stan code changing arguments to be ignored.
 #'
 #' @param ... Other arguments passed to \code{\link{brms}}.
 #'
-#' @return An updated model of class \code{brmsfit, bsiatr}, that contains the
+#' @return An updated model of class \code{brmsfit}, that contains the
 #'   posterior draws and other useful information about the model.
 #'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
@@ -85,12 +85,7 @@ update_bgm.bgmfit <-
     }
     
     dots <- list(...)
-    
     dots$data <- NULL
-    
-    # dots$select_model <- model$model_info[['select_model']]
-    # dots$multivariate <- model$model_info[['multivariate']]
-    
     
     as_one_logical         <-
       is_equal <- needs_recompilation <- substitute_name <- NULL
@@ -151,9 +146,6 @@ update_bgm.bgmfit <-
     stop2                  <- utils::getFromNamespace("stop2", "brms")
     
     validate_silent        <- utils::getFromNamespace("validate_silent", "brms")
-    
-    
-    
     
     
     testmode <- isTRUE(dots[["testmode"]])

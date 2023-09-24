@@ -1,27 +1,21 @@
 
-#' Model fit to the Berkeley datas et
+#' Model fit to the Berkeley data set
 #'
 #' @description Model is fit to the Berkeley Child Guidance Study dataset
-#'   containing longitudinal anthropometry data for 136 children from birth to
-#'   21 years.
+#'   containing longitudinal growth measurements made on 136 children from birth
+#'   to 21 years.
 #'
-#' @details Data details are provided in the the *sitar* package
-#'   \insertCite{R-sitar}{bsitar}. 
+#' @details Data details are provided in the [bsitar::berkeley] and also in 
+#'   the *sitar* package \insertCite{R-sitar}{bsitar}. 
 #'
 #'
 #' @name berkeley_fit
 #' @docType data
-#' @format The Berkeley data analysed have the following 5 variables:
-#' \describe{
-#' \item{id}{factor with levels 201-278 male and 301-385 female}
-#' \item{age}{years, numeric vector}
-#' \item{height}{cm, numeric vector}
-#' \item{sex}{factor with level 1 male and level 2 female}
-#' }
+#' @format A \code{bgmfit} object for the model fit to the Berkeley data.
 #' 
 #' @references
 #'  \insertAllCited{}
 #' 
 #' @keywords datasets
-#' @return A object of class \code{bgmfit} with posterior draws.
+#' @return An object of class \code{bgmfit} with posterior draws.
 "berkeley_fit"

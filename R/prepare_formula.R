@@ -2,7 +2,7 @@
 
 
 
-#' Prepare formula for fitting Bayesian SITAR growth curve model
+#' An internal function to prepare formula for Bayesian SITAR growth curve model
 #' 
 #' The \code{prepare_formula}) prepares \code{brms::brmsformual} which is  
 #' passed on to the [bsitar::bgm()] function. For univariate-by-
@@ -13,30 +13,33 @@
 #' for details. 
 #'
 #' @param x vector of predictor (typically age in years).
+#' 
 #' @param y vector of outcome (i.e., repeated growth measurements). 
+#' 
 #' @param id a factor variable identifying the groups (typically individuals).
+#' 
 #' @param knots vector of values for knots.
+#' 
 #' @param nknots an integer specifying the number of knots.
+#' 
 #' @param data data frame containing variables \code{x}, \code{y} and \code{id}.
+#' 
 #' @param internal_formula_args Other internal arguments passed from the 
 #' [bsitar::bgm()] to the \code{prepare_formula}).
 #'
 #' @return An object of class \code{brmsformula}, which is a \code{list} 
 #'   containing formulas
 #'   
-#' @seealso [brms::brm] [brms::brmsformula]
-#'   
-#' @importFrom nlme lme
-#'   
-#' @export
+#' @keywords internal
+#' @noRd
 #' 
 prepare_formula <- function(x,
-                                     y,
-                                     id,
-                                     knots,
-                                     nknots,
-                                     data,
-                                     internal_formula_args) {
+                             y,
+                             id,
+                             knots,
+                             nknots,
+                             data,
+                             internal_formula_args) {
   randomsi <- NULL;
   sigma_formula_gr_strsi <- NULL;
   fixedsi <- NULL;
@@ -1667,10 +1670,7 @@ prepare_formula <- function(x,
   } else {
     sigma_arg_groupvar <- NULL
   }
-  
-  
-  
-  
+ 
   
   if(!is.null(sigma_formula_grsi)) {
     if(!sigma_set_higher_levels & 

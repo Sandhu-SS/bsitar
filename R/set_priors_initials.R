@@ -1,6 +1,7 @@
 
 
-#'Set priors and initials for fitting Bayesian SITAR growth curve model
+#' An internal function to set priors and initials for Bayesian SITAR growth
+#'  curve model
 #'
 #'@description The \code{set_priors_initials}) sets priors and initials values
 #'  which are passed from the [bsitar::bgm()] function to
@@ -8,7 +9,6 @@
 #'  using the \code{univariate_by}) and multivariate model (specified by using
 #'  the \code{multivariate}), each argument is automatically matched with the
 #'  sub-model(s).
-#'
 #'
 #'@param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
 #'  See [bsitar::bgm()] for details.
@@ -169,7 +169,9 @@
 #'@return An object of class \code{brmsprior} (See \code{brmsprior}). In
 #'  addition to the priors, the returned object contains a list of initial
 #'  values.
-#'
+#'  
+#' @keywords internal
+#' @noRd
 #'
 set_priors_initials <- function(a_prior_beta,
                                 b_prior_beta,
