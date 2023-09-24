@@ -268,7 +268,7 @@ and \code{id} etc.}
 
 \item{df}{Specify degrees of freedom for the natural cubic spline design
 matrix (default \code{4}). The \code{df} is internally used to construct the
-vector of knots (quantiles of \code{x} distributio) that are eventually used
+vector of knots (quantiles of \code{x} distribution) that are eventually used
 in the construction of the spline design matrix. For \code{univariate_by}
 and \code{multivariate} models, the \code{df} can be same (e.g., \code{df  =
  4}) for sub models or different for each sub model specified as
@@ -1205,8 +1205,8 @@ parameter for \code{multivariate} model. Allowed options are \code{0},
 \code{random}, and \code{prior}.}
 
 \item{r_init_z}{Specify initial values for the standardized group level
-effects. These parameters are part of the non centred parameterisation
-approach adopted in the see \code{\link[brms:brm]{brms::brm()}}.}
+effects. These parameters are part of the Non-Centered Parameterization
+(NCP) approach adopted in the see \code{\link[brms:brm]{brms::brm()}}.}
 
 \item{vcov_init_0}{A logical (default \code{TRUE}) to set initials for
 variance (i.e, standard deviation) and covariance (i.e., correlation)
@@ -1490,18 +1490,19 @@ draws and other useful information about the model.
 Bayesian super imposition by translation and rotation (SITAR)
 model summarizes the growth curves from early childhood through the
 adulthood (see @details). The frequentist version of the SITAR model can be
-fit by using an already available R package, the \emph{sitar}
+fit by using an already available R package, the \pkg{sitar}
 \insertCite{R-sitar}{bsitar}. Besides Bayesian implementation of the SITAR
-model, the \emph{bsitar} package greatly enhances the modelling capabilities
-offered by the \emph{sitar} package. For example, in addition to the univariate
-analysis (i.e, modelling a single response variable as implemented in the
-\emph{sitar} package), the \strong{bsitar} allows univariate-by-subgroup (modelling a
-single response variable for subgroups defined by a factor variable) and
-multivariate (simultaneous modelling of two or more responses) models (see
-@details). Hereafter, the univariate-by-subgroup model is simply referred to
-as univariate-by model and denoted by \code{univariate_by}. The multivariate
-is denoted by \code{multivariate}. The \code{\link[=bgm]{bgm()}} is the main workhorse
-of the \strong{bsitar} package.
+model, the \pkg{bsitar} package greatly enhances the modelling capabilities
+offered by the \pkg{sitar} package. For example, in addition to the
+univariate analysis (i.e, modelling a single response variable as
+implemented in the \pkg{sitar} package), the \pkg{bsitar} allows
+univariate-by-subgroup (modelling a single response variable for subgroups
+defined by a factor variable) and multivariate (simultaneous modelling of
+two or more responses) models (see @details). Hereafter, the
+univariate-by-subgroup model is simply referred to as univariate-by model
+and denoted as \code{univariate_by}. The multivariate is denoted by
+\code{multivariate}. The \code{\link[=bgm]{bgm()}} is the main workhorse of the
+\pkg{bsitar} package.
 }
 \details{
 The SITAR is a shape-invariant nonlinear mixed effect growth curve
@@ -1509,7 +1510,7 @@ model that fits a population average (i.e., mean average) curve to the data
 and aligns each individual's growth trajectory to this population average
 curve via a set of three random effects, \code{size}, \code{timing} and
 \code{intensity}. The concept of shape invariant model (SIM) was first
-described by \insertCite{Lindstrom1995}{bsitar} and later used by#'
+described by \insertCite{Lindstrom1995}{bsitar} and later used by
 \insertCite{Beath2007;textual}{bsitar} to model infant growth data (birth to
 2 years). The current version of the SITAR model is developed by
 \insertCite{Cole2010;textual}{bsitar} and has been used extensively for
@@ -1526,7 +1527,7 @@ for the natural cubic spline design matrix (by calling the \code{\link[splines:n
 \insertCite{R-splines}{bsitar}), the \emph{bsitar} constructs spline design
 matrix by using the truncated power basis approach as described by
 \insertCite{harrell2001regression}{bsitar}, and implemented in
-\code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}. \insertCite{R-Hmisc}{bsitar}. Note that the
+\code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}} \insertCite{R-Hmisc}{bsitar}. Note that the
 \strong{bsitar} package does not call the \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}} but rather
 constructs a custom function on the fly that is then included in the
 functions block of the \emph{Stan} program and thus compiled (via the c++) during

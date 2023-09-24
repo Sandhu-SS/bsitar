@@ -12,18 +12,16 @@ HalfNormal
 Ij
 LKJ
 MVNormal
+NCP
 OpenBUGS
 OpenCL
 PGV
 Preece
-Similalry
 Spl
 TGV
 WinBUGS
 al
 analysed
-andom
-autoscaling
 avaialble
 bbb
 berkeley
@@ -35,7 +33,6 @@ brm
 brms
 brmsfit
 burnin
-coeeficients
 continous
 cov
 covarinace
@@ -65,7 +62,6 @@ init
 ittststsstststs
 itttttt
 linetype
-lm
 magrittr
 mathbf
 mc
@@ -76,7 +72,6 @@ multisession
 newpage
 nnn
 nnnn
-obatined
 operatorname
 optiion
 originaly
@@ -88,11 +83,8 @@ rescaling
 returndata
 rstanrm
 sd
-sethp
-simultanous
 sset
 stancode
-standared
 standata
 stanvars
 suboption
@@ -105,5 +97,3 @@ varinace
 velpower
 visualising
 warmup
-wheras
-xfun
