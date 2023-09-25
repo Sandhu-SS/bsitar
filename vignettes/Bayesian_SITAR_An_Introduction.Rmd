@@ -23,7 +23,8 @@ output:
       toc_float: false
       highlight: tango
       pandoc_args: 
-      - --shift-heading-level-by=-1
+      # This --shift-heading throws error with ubuntu build on rhub
+      # - --shift-heading-level-by=-1 T
       - --lua-filter=parse-html-links.lua
       # css: bsitar_style.css
       code_folding: hide
@@ -178,7 +179,7 @@ of homoscedasticity of residuals (constant level 1 variance) can be relaxed.
 
 
 We follow the recommendations made in the popular packages
-[rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+[rstanrm](https://rdrr.io/cran/rstanarm/man/priors.html)
 and [brms](https://rdrr.io/cran/brms/man/set_prior.html) for prior
 specification. Technically, the prior used in *rstanrm* and *brms* packages are
 data-dependent and, hence *weakly informative*. This is because the the scaling
@@ -196,12 +197,12 @@ standard deviation of the parameter, the argument is `a_prior_sd.` To
 specify these arguments the user provides a call to one of the various available
 functions such as `normal(mean, sd)`. The documentation for these functions can
 be found at
-[rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+[rstanrm]https://rdrr.io/cran/rstanarm/man/priors.html)
 and [brms](https://rdrr.io/cran/brms/man/set_prior.html). To use the default
 priors we just leave those arguments at their defaults.
 
 For scale, we follow a mix of default priors suggested by the authors of
-[rstanrm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+[rstanrm](https://rdrr.io/cran/rstanarm/man/priors.html)
 and [brms](https://rdrr.io/cran/brms/man/set_prior.html) packages. For example,
 while
 *rstanrm* earlier (before 2020) automatically re scaled priors by a factor $2.5$, 
@@ -318,13 +319,6 @@ parameters varying across individuals, resulting in an $6 \times 6$ $\mathbf
 S_{ID}$ matrix and an $6 \times 6$ $\mathbf R_{ID}$ matrix. The within
 individual variability is captured by the residual parameters which include $2
 \times 2$ $\mathbf S_{W}$ matrix and an $2 \times 2$ $\mathbf R_{W}$ matrix.
-
-
-
-
-#### Three level multivariate model
-
-
 
 
 

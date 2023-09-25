@@ -1487,7 +1487,7 @@ An object of class \code{brmsfit, bsiatr}, that contains the posterior
 draws and other useful information about the model.
 }
 \description{
-Bayesian super imposition by translation and rotation (SITAR)
+Bayesian super imposition by translation and rotation (BSITAR)
 model summarizes the growth curves from early childhood through the
 adulthood (see @details). The frequentist version of the SITAR model can be
 fit by using an already available R package, the \pkg{sitar}
@@ -1531,7 +1531,7 @@ matrix by using the truncated power basis approach as described by
 \strong{bsitar} package does not call the \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}} but rather
 constructs a custom function on the fly that is then included in the
 functions block of the \emph{Stan} program and thus compiled (via the c++) during
-the model fit.
+the model fit (see Stan \url{https://mc-stan.org/rstan/}).
 
 Like \emph{sitar} package, the \strong{bsitar} package fits SITAR model with (usually)
 up to three random effect parameters \insertCite{Cole2010}{bsitar}: the size

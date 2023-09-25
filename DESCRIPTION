@@ -4,7 +4,7 @@ Title: Bayesian Super Imposition by Translation and Rotation Growth Curve
     Analysis
 Version: 0.1.0
 Authors@R: 
-    person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", role = c("aut", "cre"),
+    person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-8539-6897"))
 Description: Bayesian implementation of univariate and multivariate Super
     Imposition by Translation and Rotation (SITAR) growth models. The
@@ -12,15 +12,13 @@ Description: Bayesian implementation of univariate and multivariate Super
     frequentist framework by using the already available package 'sitar'.
     The SITAR is a shape-invariant nonlinear mixed effect model that fits
     a natural cubic spline mean curve and and aligns individual-specific
-    growth curves to the mean cuvre via a set of random effects on both
-    effects. For more information, see Cole et al.  (2010) <doi:
-    10.1093/ije/dyq115>. The 'bsitar' package is a front-end to the R
-    package 'brms' which facilitates a range of regression specifications
-    including hierarchical and multivariate modeling and also provides an
-    excellent framework for post-processing.
+    growth curves to the mean curve via a set of random effects on both
+    effects. For more information, see Cole (2010) <10.1093/ije/dyq115>. 
+    The 'bsitar' package is a front-end to  the R package 'brms' which 
+    facilitates a range of regression specifications including hierarchical 
+    multivariate modeling and also provides an excellent framework for 
+    post-processing.
 License: GPL-2
-URL: https://github.com/Sandhu-SS/bsitar
-BugReports: https://github.com/Sandhu-SS/bsitar/issues
 Depends:     
     R (>= 3.6)
 Imports:
@@ -54,6 +52,8 @@ Suggests:
     knitr,
     rmarkdown,
     spelling,
+    Hmisc,
+    pracma,
     testthat (>= 3.0.0),
     tidyverse,
     R.rsp
