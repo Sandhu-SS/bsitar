@@ -1785,7 +1785,7 @@ bgm <- function(x,
   
   mcall <- mcall_ <- match.call()
 
-  # check and set alias argument for formuale 
+  # check and set alias argument for formula 
   dots_allias <- list(...)
   collect_dot_names <- c()
   for (ia in letters[1:10]) {
@@ -1793,10 +1793,8 @@ bgm <- function(x,
     set_name_uns <- paste0(ia, "_", 'formula')
     collect_dot_names <- c(collect_dot_names, set_name_dot)
     if (set_name_dot %in% names(dots_allias)) {
-      # if (missing(a_formula)) {
       if (eval(bquote(missing(.(set_name_uns)))) ) { 
         mcall[[set_name_uns]] <- dots_allias[[set_name_dot]]
-        # else if (!missing(a_formula)) {
       } else if (!eval(bquote(missing(.(set_name_uns)))) ) { 
         err_msg <- paste0("both '", set_name_uns, "' and '" , 
                           set_name_dot, "' found, ignoring '",set_name_dot, "'")
@@ -1805,18 +1803,13 @@ bgm <- function(x,
     }
   }
   
-  # Rememeber to remove these from the brms args also : brmsdots_  line 5552
   for (collect_dot_namesi in collect_dot_names) {
     if(!is.null(mcall[[collect_dot_namesi]])) 
       mcall[[collect_dot_namesi]] <- NULL
   }
   rm(dots_allias)
   
-  
   mcall <- mcall_ <- mcall
-  
-  # check and update if argument value taken from the global environment.
-  # x,y,id and data are always taken from the data, thus excluded from checks
   
   no_default_args <- c("x", "y", "id", "data", "...")
   
@@ -1827,9 +1820,6 @@ bgm <- function(x,
     detach("package:rethinking", unload=TRUE) 
   }
  
-  
-  
-  # Some checks 
   if(utils::packageVersion('rstan') < 2.26) {
     if(expose_function) stop("Argument 'expose_function' not allowed ",
                              "for this rstan version ",
@@ -1837,9 +1827,7 @@ bgm <- function(x,
   }
   
   
-  # This all done to not let init = random to evaluate to random effect str 
-  # i.e, "a+b+c..."
-  
+ 
   temp_init_call_in <- mcall$init
   if(is.null(temp_init_call_in)) temp_init_call_c <- temp_init_call_in
   if(is.symbol(temp_init_call_in) | is.numeric(temp_init_call_in)) {
@@ -1858,7 +1846,6 @@ bgm <- function(x,
     temp_init_call <- regmatches(temp_init_call, 
                                  gregexpr("(?<=\\().*?(?=\\))", 
                                           temp_init_call, perl=T))[[1]]
-    # this check if inits = list(xx = xx etc)
     if(length(temp_init_call) != 0) {
       temp_init_call <- strsplit(temp_init_call, ",")[[1]]
       temp_init_call_c <- c()
@@ -1880,17 +1867,13 @@ bgm <- function(x,
     } else {
       temp_init_call_c <- mcall$init
     }
-  } # if(is.language(temp_init_call_in)) {
+  } 
   
   mcall$init <- temp_init_call_c
-  
-  
   xs <- ids <- dfs <- NA
-  
   checks. <- NULL;
   
   for (i in names(mcall)[-1]) {
-    # don't let family argument also to be evaluated
     no_default_args_plus_family <- c(no_default_args, "family")
     if (!i %in% no_default_args_plus_family) {
       err. <- FALSE
@@ -1906,7 +1889,7 @@ bgm <- function(x,
           err. <<- TRUE
         }
       )
-      if(length(checks.) == 0) err. <- TRUE # This one line added for update
+      if(length(checks.) == 0) err. <- TRUE
       if (err.) {
         mcall[[i]] <- mcall[[i]]
       } else if (!err.) {
@@ -1936,14 +1919,11 @@ bgm <- function(x,
   
   arguments <- as.list(mcall)[-1]
  
-
   match.call.defaults <- function(...) {
     call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
     formals <- evalq(formals(), parent.frame(1))
-    
     for(i in setdiff(names(formals), names(call)))
       call[i] <- list( formals[[i]] )
-    
     match.call(sys.function(sys.parent()), call)
   }
   
@@ -1962,28 +1942,20 @@ bgm <- function(x,
           call.full[[call.fulli]] <- call.full[[call.fulli]] 
         }
       } else {
-        #  call.full[[call.fulli]] <- call.full[[call.fulli]]
+        #
       }
     } else {
-      # call.full[[call.fulli]] <- call.full[[call.fulli]]
+      #
     }
   }
   
   
-  # combine user defined and default arguments
-  
+
   f_bgm_arg <- formals(bgm)
   nf_bgm_arg_names <-
     intersect(names(arguments), names(f_bgm_arg))
   arguments <-
     c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
-  
-  
-  # Assign to objects otherwise error in R package (global var)
-  # Note that a loop can be used to assign these objects NA
-  # If try to assign NULL, still same error persists in package 
-  # dist_args <- as.character(quote(c(normal, uniform, lkj)))[-1]
-  # fmul_args <- names(arguments)
   
   #######################
   normal <- NULL;
@@ -2098,10 +2070,7 @@ bgm <- function(x,
   `:=` <- NULL;
   . <- NULL;
   
-  ######################
-  
-  
-  
+
   if(is.character(arguments$select_model)) {
     select_model <- arguments$select_model
   } else if(is.symbol(arguments$select_model)) {
@@ -2110,19 +2079,6 @@ bgm <- function(x,
             !is.symbol(arguments$select_model)
             ) {
     stop("The 'select_model' must be a symbol or single character string")
-  }
-  
-  
-  
-  
-  # Better below, control match_sitar_d_form from select_model arg
-  if(select_model == 'sitar') {
-    # 'd' formula control
-    # 1) Match with 'sitar' package (i.e., exclude 'd' from the fixed effects)
-    # 2) Or, include 'd' in fixed and random effects
-    # Setting default to FALSE to match scenario 2 for now
-    # TODO
-    # match_sitar_d_form <- FALSE
   }
   
   if(select_model == 'sitar3') select_model <- 'sitar'
@@ -2178,10 +2134,6 @@ bgm <- function(x,
     arguments[[ip]] <-  gsub_space(arguments[[ip]] )
   }
   
-  
-  
-  # Separate 'brms' arguments from 'bgm' arguments for the ease of handling
-  
   brms_arguments_list <-
     c(
       'chains',
@@ -2213,12 +2165,11 @@ bgm <- function(x,
   mc.cores_restore <- getOption("mc.cores")
   if(is.numeric(arguments$cores)) {
     options(mc.cores = arguments$cores)
-    # arguments$cores <- getOption("mc.cores", arguments$cores)
   }
   iter <-  arguments$iter
   warmup <-  arguments$warmup <- eval(arguments$warmup)
  
-  ######
+ 
   brms_arguments <- list()
   for (brms_arguments_listi in brms_arguments_list) {
     brms_arguments[[brms_arguments_listi]] <-
@@ -2237,14 +2188,12 @@ bgm <- function(x,
          eval(brms_arguments$backend))
   }
   
-  # Display method - either message or custom color
-  # Can be moved to the arguments but not that worth
+  
   displayit <- 'col'
   setcolh   <- 47 
   setcolb   <- 3
   
-  # Quote unquoted character (e.g., sex to 'sex') for user's convineinec
-  
+  # Quote unquoted character (e.g., sex to 'sex')
   list_to_quoted_if_not <- function(x) {
     splitmvar <- x
     splitmvar <- gsub("\\s", "", splitmvar)
@@ -2358,7 +2307,6 @@ bgm <- function(x,
   
   
   # set multivariate arguments
-  
   if (gsub("\\s", "",
            paste(deparse(substitute(multivariate)), collapse = "")) == "NULL" |
       gsub("\\s", "",
@@ -2385,7 +2333,8 @@ bgm <- function(x,
   ), collapse = "")))) {
     if (is.symbol(substitute(multivariate))) {
       multivariate <-
-        gsub("\\s", "", paste(deparse(substitute(multivariate)), collapse = ""))
+        gsub("\\s", "", paste(deparse(substitute(multivariate)), 
+                              collapse = ""))
       if (multivariate == "T")
         multivariate <- eval(parse(text = multivariate))
       multivariate <- multivariate
@@ -2469,8 +2418,7 @@ bgm <- function(x,
   }
   
   
-  # Set univariate_by arguments (i.e., univariate-by=subgroup model fitting)
-  
+  # Set univariate_by arguments
   if (gsub("\\s", "",
            paste(deparse(substitute(univariate_by)), 
                  collapse = "")) == "NULL" |
@@ -2563,7 +2511,8 @@ bgm <- function(x,
     deparse(substitute(univariate_by)), collapse = ""
   )), ",")[[1]]) > 1) {
     ttt <-
-      gsub("\\s", "", paste(deparse(substitute(univariate_by)), collapse = ""))
+      gsub("\\s", "", paste(deparse(substitute(univariate_by)), 
+                            collapse = ""))
     temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
     temp <- gsub("\\s", "", temp)
     if (!grepl("^by=", temp[1])) {
@@ -2574,8 +2523,7 @@ bgm <- function(x,
     univariate_by <- list_to_quoted_if_not(temp)
   }
   
-  # Set group_arg arguments (for univariate model fitting)
-  
+  # Set group_arg arguments 
   if (!paste(deparse(substitute(group_arg)), collapse = "") == "NULL"  &
       !any(grepl("^list", gsub("\\s", "", paste(
         deparse(substitute(group_arg)), collapse = ""
@@ -2717,8 +2665,7 @@ bgm <- function(x,
   
 
   
-  # Set up sigma_group_arg arguments (for univariate model fitting)
-  
+  # Set up sigma_group_arg arguments 
   if (!paste(deparse(substitute(sigma_group_arg)), collapse = "") == "NULL"  &
       !any(grepl("^list", gsub("\\s", "", paste(
         deparse(substitute(sigma_group_arg)), collapse = ""
@@ -2863,9 +2810,7 @@ bgm <- function(x,
   
   
   
-  # If not already specified by the user, add default values to the
-  # univariate_by, multivariate, and group_arg arguments
-  
+  # Add defaults to univariate_by, multivariate, and group_arg arguments
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
     univariate_by$by <- gsub("\\s", "", univariate_by$by)
   }
@@ -2981,10 +2926,6 @@ bgm <- function(x,
   if (is.null(group_arg$dist))
     group_arg$dist <- "gaussian"
   
-  
-  
-  
-  
   if (is.null(sigma_group_arg$groupvar))
     sigma_group_arg$groupvar <- NULL
   if (is.null(sigma_group_arg$by))
@@ -2994,21 +2935,13 @@ bgm <- function(x,
   if (is.null(sigma_group_arg$dist))
     sigma_group_arg$dist <- "gaussian"
   
-  
-  
-  
-  
-  
   multivariate$verbose <-
     univariate_by$verbose <- group_arg$verbose <- verbose
-  
   
   sigma_group_arg$verbose <- verbose
   
   
-  # Temporary placeholder for the number of outcomes when fitting
-  # univariate-by-subgroup model
-  
+  # Temporary placeholder for the number of response for univariate_by
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
     temp_ <- univariate_by$by
     if (!temp_ %in% colnames(data)) {
@@ -3028,10 +2961,7 @@ bgm <- function(x,
   }
   
   
-  
-  
   # Perform checks and set-up the 'to convert arguments' 
-  
   to_list_if_not <- function(.x, nys, arguments, ...) {
     if (nys == 1) {
       if (!is.symbol(arguments[[.x]]) & !is.character(arguments[[.x]])) {
@@ -3123,8 +3053,6 @@ bgm <- function(x,
   
   convert_to_list <- getArgNames(bgm())
   
-  
-  
   for (ip in convert_to_list) {
     if (grepl("_init_", ip)) {
       err. <- FALSE
@@ -3154,9 +3082,7 @@ bgm <- function(x,
   }
   
   
-  # Convert arguments to the required format for setting sub-options for
-  # the univariate-by-subgroup and multivariate model fitting
-  
+  # Convert arguments to the required format for setting sub-options 
   single_args <- c(
     "data",
     "group_arg",
@@ -3220,8 +3146,6 @@ bgm <- function(x,
   }
   
   
-  # Prepare data for 'bgm'
-  
   if (verbose) {
     setmsgtxt <- paste0("\n Preparing data")
     if (displayit == 'msg') {
@@ -3232,8 +3156,6 @@ bgm <- function(x,
     }
   }
   
-  # org.ycall <- ys[1]
-  
   if(is.list(xfuns) & length(xfuns) == 0) {
     xfuns <- rep('NULL', length(ys))
   }
@@ -3241,8 +3163,7 @@ bgm <- function(x,
     yfuns <- rep('NULL', length(ys))
   }
   
-  # This data.org.in as specified will be saved in model_info
-  
+
   if(!is.null(outliers)) {
     if(is.null(outliers$remove))    outliers$remove <- TRUE
     if(is.null(outliers$icode))     outliers$icode <- c(4,5,6)
@@ -3300,67 +3221,6 @@ bgm <- function(x,
   }
   
 
-  
-  # if(multivariate$mvar) {
-  #   if(is.list(yfuns) & length(yfuns) == 0) {
-  #     yfuns <- rep('NULL', length(ys))
-  #   }
-  #   for(myfunsi in 1:length(ys)) {
-  #     mysi <- ys[[myfunsi]]
-  #     myfunsi <- yfuns[[myfunsi]]
-  #     if(grepl('.Primitive', myfunsi, fixed = T) & 
-  #        grepl('log', myfunsi, fixed = T)) {
-  #       myfunsi <- 'log'
-  #     }
-  #     if(grepl('.Primitive', myfunsi, fixed = T) & 
-  #        grepl('sqrt', myfunsi, fixed = T)) {
-  #       myfunsi <- 'sqrt'
-  #     }
-  #     if(myfunsi == 'log') data[[mysi]] <- log(data[[mysi]])
-  #     if(myfunsi == 'sqrt') data[[mysi]] <- sqrt(data[[mysi]])
-  #   }
-  # }
-  
-  
-  
-  
-  # # First assign NULL to avoid global vars issue in Package
-  # set_env <- parent.env()
-  # for (agsxi in letters[1:26]) {
-  #   assign(paste0(agsxi, "", "" , "") , NULL, 
-  #          envir = set_env)
-  #     assign(paste0(agsxi, "_", "formula" , "si") , NULL, 
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "formula_gr" , "si") , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "formula_gr_str" , "si") , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "prior_beta" , "si") , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "cov_prior_beta" , "si") , NULL, 
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "prior_sd" , "si") , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "cov_prior_sd" , "si") , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "init_beta", "si" ) , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "cov_init_beta" , "si") , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "init_sd", "si" ) , NULL,
-  #            envir = set_env)
-  #     assign(paste0(agsxi, "_", "cov_init_sd" , "si") , NULL, 
-  #            envir = set_env)
-  # }
-  
-  
-  
-  
-  
-  
-  # Initiate loop over outcome(s) 
-  # First, create empty lists, vector etc. to collect these elements
-  
   dataout <- priorlist <- NULL
   
   bflist <- list()
@@ -3383,9 +3243,8 @@ bgm <- function(x,
   sigma_hierarchicalvarnamelist <- sigma_hierarchicalvarvaluelist <- funlist
   
   funlist_r <- funlist_rnamelist <- funlist_rvaluelist <- list()
-  # funlist_r <- list()
-  # Start loop over the outcome(s)
   
+  # Start loop over response
   for (ii in 1:length(ys)) {
     if (nys > 1)
       resp <- ys[ii]
@@ -3393,12 +3252,7 @@ bgm <- function(x,
       resp <- ""
     subindicatorsi <- subindicators[ii]
     
-    
-    # for (i in convert_to_list) {
-    #   assign(paste0(i, "s", "i"), NULL)
-    # }
-    
-    
+ 
     for (i in convert_to_list) {
       if (!i %in% single_args) {
         assign(paste0(i, "s", "i"), eval(parse(text = paste0(i, "s")))[ii])
@@ -3423,7 +3277,6 @@ bgm <- function(x,
     
     
 
-    # Set to NULL for those not included
     for (agsxi in letters[1:26]) {
       if(is.null(arguments[[paste0(agsxi, "_", "formula" , "")]])) {
         assign(paste0(agsxi, "_", "formula" , "si") , NULL)
@@ -3441,7 +3294,6 @@ bgm <- function(x,
     }
     
 
-    #################
     validate_fixed_random_parms <- function(fixedsi, randomsi, 
                                             allowed_parm_letters, 
                                             select_model) {
@@ -3524,7 +3376,8 @@ bgm <- function(x,
         stop(msg_1, "\n ", msg_2, " \n ", see_what_formual)
       }
       
-      # if no error, then check if fixed parm is present for each random
+
+      
       
       sub_parm_letters_fixed_random <- intersect(parm_letters_fixed, 
                                                  parm_letters_random)
@@ -3544,7 +3397,6 @@ bgm <- function(x,
         )
       }
       
-      # if all checks pass, then reassign fixed and random 
       sub_parm_letters_fixed <- sort(sub_parm_letters_fixed)
       sub_parm_letters_random <- sort(sub_parm_letters_random)
       
@@ -3558,16 +3410,14 @@ bgm <- function(x,
     
     
     
-    # Model (select_model) specifc fixedsi and randomsi
+    # Model specific number of fixed and random parameters
     
     allowed_parm_letters <- NULL
     if(select_model == 'sitar') allowed_parm_letters <- letters[1:sitar_nparms]
     if(select_model == 'pb1')   allowed_parm_letters <- letters[1:5]
     if(select_model == 'pb2')   allowed_parm_letters <- letters[1:6]
     if(select_model == 'pb3')   allowed_parm_letters <- letters[1:6]
-    
-    # fixedsi <- "a+c"
-    # randomsi <- "a+b+d+e"
+  
     
     fixedsi_randomsi <- validate_fixed_random_parms(fixedsi, randomsi,
                                                     allowed_parm_letters, 
@@ -3577,9 +3427,7 @@ bgm <- function(x,
     
     
     # Covariate not allowed when matching to sitar 'd' form
-    
     if(select_model == 'sitar') {
-      
       if (!match_sitar_d_form) {
         if (!grepl("d", fixedsi, fixed = T) &
             grepl("d", randomsi, fixed = T)) {
@@ -3620,7 +3468,6 @@ bgm <- function(x,
     
     
     # Add missing parameters to the dpar_formula
-    
     if (!is.null(dpar_formulasi)) {
       if (grepl("^1$", dpar_formulasi)) {
         dpar_formulasi <- paste0("lf(", "sigma", "~", dpar_formulasi, ")")
@@ -3677,7 +3524,6 @@ bgm <- function(x,
 
     
     # Check for higher level model and update level 2 random formula
-    
     f_checks_gr_gr_str <- function(a, b) {
       if(!is.null(a)) {
         gr_st_id <- sub(".*\\|", "", a) 
@@ -3713,10 +3559,7 @@ bgm <- function(x,
     } # f_checks_gr_gr_str
     
     
-    # First, if a,b,c,d or e not NULL but sigma_formula_grsi NULL
-    # Then set to ~1 because then only first part of the 
-    # (i.e., before first + ) will be copied to the 
-    # _grsi
+   
     
     test_gr_sr_str_function <- function(x_grsi, x_gr_strsi) {
       if(!is.null(x_grsi)) {
@@ -3745,7 +3588,8 @@ bgm <- function(x,
         out <- NULL
       }
       out
-    } # end test_gr_sr_str_function
+    } 
+    
     
     
     a_formula_grsi <- 
@@ -3770,16 +3614,6 @@ bgm <- function(x,
     f_fcgs_out <- f_checks_gr_gr_str(f_formula_grsi, f_formula_gr_strsi)
     
     
-    
-    # First, if sigma_formula_gr_strsi not NULL but sigma_formula_grsi NULL
-    # Then set sigma_formula_grsi to ~1 because then only first part of the 
-    # sigma_formula_gr_strsi (i.e., before first + ) will be copied to the 
-    # sigma_formula_grsi
-    
-    
-    # when no a, b, c, d, or e random effect, then sigma_formula_gr or 
-    # sigma_formula_gr_str are not allowed
-   
     sigma_formula_grsi_NULL <- sigma_formula_gr_strsi_NULL <- FALSE
     if (is.null(sigma_formula_grsi[[1]][1]) |
         sigma_formula_grsi == "NULL") {
@@ -3803,12 +3637,8 @@ bgm <- function(x,
     }
     
   
-    
-    
     sigma_formula_grsi <- test_gr_sr_str_function(sigma_formula_grsi, 
                                                   sigma_formula_gr_strsi)
-   
-    
    
     
     if(sigma_formula_gr_strsi != 'NULL') {
@@ -3830,7 +3660,6 @@ bgm <- function(x,
     }
     
 
-    
     sigma_fcgs_out <- f_checks_gr_gr_str(sigma_formula_grsi, 
                                          sigma_formula_gr_strsi)
     
@@ -3872,7 +3701,6 @@ bgm <- function(x,
     }
     
     
-    
     if(!is.null(sigma_fcgs_out) & sigma_fcgs_out != 'NULL') {
       if(sigma_formula_grsi == "~1" & !is.null(sigma_formula_gr_strsi[[1]])) {
         sigma_formula_grsi <- strsplit(sigma_formula_gr_strsi, 
@@ -3888,7 +3716,6 @@ bgm <- function(x,
     e_formula_grsi <- gsub("[()]", "", e_formula_grsi)
     f_formula_grsi <- gsub("[()]", "", f_formula_grsi)
     
-   
     
     sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
  
@@ -3906,8 +3733,6 @@ bgm <- function(x,
     }
     
    
-    
-    # Add intercept ~ 1 if missing
     
     check_formuals <-
       c(
@@ -3944,11 +3769,8 @@ bgm <- function(x,
       if(is.null(ept(check_formualsi)) | length(ept(check_formualsi)) ==0 ) {
         assign(check_formualsi, NULL)
       }
-    } # for (check_formualsi in check_formuals) {
+    } 
     
-    
-    
-
     
     if (is.null(sigma_formula_gr_strsi[[1]][1]) |
         sigma_formula_gr_strsi == "NULL") {
@@ -3959,8 +3781,6 @@ bgm <- function(x,
         sigma_formula_grsi == "NULL") {
       sigma_formula_grsi <- NULL
     }
-    
-    
     
 
     if (is.null(dpar_formulasi[[1]][1]) |
@@ -3981,7 +3801,7 @@ bgm <- function(x,
              " It seems you forgot to add '~' before the autocor structure")
       }
       autocor_formi <- autocor_formulasi
-    } # if (is.null(autocor_formulasi[[1]][1]) |
+    } 
     
 
     if(!is.null(autocor_formi)) {
@@ -4002,7 +3822,7 @@ bgm <- function(x,
       if(!grepl("unstr(", tempunstx, fixed = T)) {
         cortimeNlags_var <- NULL
       }
-    } # if(!is.null(autocor_formi)) {
+    } 
       
     
     if(is.null(autocor_formi)) {
@@ -4020,18 +3840,16 @@ bgm <- function(x,
       familysi <- list_to_quoted_if_not_si(familysi)
     }
     
-    # lf edited 
+    
     if (!is.null(dpar_formulasi)) {
       if (grepl("^lf\\(", dpar_formulasi) |
           grepl("^nlf\\(", dpar_formulasi)) {
-        #  dpar_formulasi <- list_to_quoted_if_not_si_lf(dpar_formulasi)
       } else {
         dpar_formulasi <- dpar_formulasi
       }
     }
     
 
-    
     N_J_all <- length(unique(data[[idsi]]))
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
@@ -4086,15 +3904,11 @@ bgm <- function(x,
     }
     
     
-
-    
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if (xfunsi != "log" & xfunsi != "sqrt") {
         stop("only log and sqrt options allowed for xfun argument")
       }
     }
-    
-    
     
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
@@ -4106,7 +3920,6 @@ bgm <- function(x,
         stop("only log and sqrt options allowed for xfun argument")
       }
     }
-    
     
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
@@ -4134,7 +3947,6 @@ bgm <- function(x,
       yyfun_name <- paste0("yvar_yfun", "_", ysi)
     }
     
-    
     xfunvaluelist[[ii]] <- xfunvalue
     xfunnamelist[[ii]] <- xfun_name
     
@@ -4147,7 +3959,6 @@ bgm <- function(x,
       xxfunvaluelist[[ii]] <- NULL
     }
     
-    
     if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
       yyfunvaluelist[[ii]] <- paste0(yfunsi, "(", ysi, ")")
     } else {
@@ -4156,7 +3967,6 @@ bgm <- function(x,
     
     xxfunnamelist[[ii]] <- xxfun_name
     yyfunnamelist[[ii]] <- xxfun_name
-    
     
     gkn <- function(x, df, bounds) {
       c(min(x) - bounds * (max(x) - min(x)),
@@ -4173,10 +3983,6 @@ bgm <- function(x,
     }
     
     
-    ########### For some reasons, 'sitar' (Tim Cole) allows random only 'd'
-    ########### parameter In fact for df > 1, it forces 'd' to be random
-    ########### parameter only
-    
     if(select_model == "sitar") {
       if (match_sitar_d_form) {
         if (length(knots) > 2) {
@@ -4187,17 +3993,12 @@ bgm <- function(x,
       }
     }
     
-    
-    
-    ###########
+  
     
     nabci <- length(strsplit(gsub("\\+", " ", fixedsi), " ")[[1]])
     nabcrei <-
       length(strsplit(gsub("\\+", " ", randomsi), " ")[[1]])
-    
-    
-    # define function to evaluate offset and bstart arguments
-    
+   
     make_spline_matrix <- function(x, knots) {
       X <- x
       N <- length(X)
@@ -4268,14 +4069,9 @@ bgm <- function(x,
     knots <- round(knots, 6)
     nknots <- length(knots)
     df <- length(knots) - 1
-    
-    # bstartx <<- bstart
-    # dataix <<- datai
-    
+   
     mat_s <- make_spline_matrix(datai[[xsi]], knots)
     
-    
-    # SplineFun_name <- "SplineFun" 
     SplineFun_name <- "DefFun" 
     getX_name <- "getX"
     getKnots_name <- "getKnots"
@@ -4341,12 +4137,7 @@ bgm <- function(x,
     
     funlist[ii] <- get_s_r_funs[['rcsfun']]
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
-    
-    
-    # funlist_rx <<- get_s_r_funs[['r_funs']]
-    # stop()
-
-    
+   
     
     internal_formula_args_names <-
       c(
@@ -4363,12 +4154,9 @@ bgm <- function(x,
         "d_formula_grsi",
         "e_formula_grsi",
         "f_formula_grsi",
-        
         "terms_rhssi",
-        
         "sigma_formulasi",
         "sigma_formula_grsi",
-        
         "dpar_formulasi",
         "autocor_formi",
         "subindicatorsi",
@@ -4387,7 +4175,6 @@ bgm <- function(x,
         'xfunsi',
         'xoffset',
         'match_sitar_d_form',
-
         "a_formula_gr_strsi",
         "b_formula_gr_strsi",
         "c_formula_gr_strsi",
@@ -4432,10 +4219,7 @@ bgm <- function(x,
     
     
     list_out <- attr(formula_bf, "list_out")
-    
-    # list_outx <<- list_out
-    
-    
+   
     attributes(formula_bf) <- NULL
     
     
@@ -4443,9 +4227,7 @@ bgm <- function(x,
     for (eoutii in names(eout)) {
       assign(eoutii, eout[[eoutii]])
     }
-    
-    
-    
+   
     group_arg$groupvar <- group_arg_groupvar
     multivariate$rescor <- multivariate_rescor
     univariate_by$by <- univariate_by_by
@@ -4482,8 +4264,6 @@ bgm <- function(x,
     bflist[[ii]] <- formula_bf
     
     
-    
-    ####
     ymean   <- mean(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
     ymedian <- median(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
     if(select_model == 'sitar') {
@@ -4500,14 +4280,8 @@ bgm <- function(x,
     xsd     <- sd(datai[[xsi]], na.rm = TRUE) %>% round(., 2)
     
     
-    
     loess_fit <- paste0("loess(", ysi, "~", xsi, ",", 'datai', ")")
     loess_fitx <- eval(parse(text = loess_fit))
-    
-    
-    
-    
-    
     
     
     if (!is.null(pgvsi[[1]][1]) & pgvsi != "NULL") {
@@ -4618,7 +4392,6 @@ bgm <- function(x,
     prior_args_internal <- mget(prior_args_internal_names)
     
     
-    
     if (!is.null(prior_data[[1]])) {
       get_common_names_lists <-
         intersect(names(prior_data_internal), names(prior_data))
@@ -4670,12 +4443,10 @@ bgm <- function(x,
         d_cov_init_sd = d_cov_init_sdsi,
         e_cov_init_sd = e_cov_init_sdsi,
         f_cov_init_sd = f_cov_init_sdsi,
-        
         sigma_init_beta = sigma_init_betasi,
         sigma_cov_init_beta = sigma_cov_init_betasi,
         sigma_init_sd = sigma_init_sdsi,
         sigma_cov_init_sd = sigma_cov_init_sdsi,
-        
         rsd_init_sigma = rsd_init_sigmasi,
         dpar_init_sigma = dpar_init_sigmasi,
         dpar_cov_init_sigma = dpar_cov_init_sigmasi,
@@ -4704,8 +4475,6 @@ bgm <- function(x,
     vcov_init_0e <- eval(parse(text =  vcov_init_0e ))
     
     
-    
-    #######################################
     
     set_priors_initials_agrs <- list()
     
@@ -4775,24 +4544,10 @@ bgm <- function(x,
     
     initials <- attr(bpriors, "initials")
     
-
-    
-    
-    
-    
-    #############################################################
-    
     # check and add hierarchical prior (for 3 level and more)
-    
-    #############################################################    
-    
-    ##########################
     # First, sd
-    
     set_class_what <- 'sd'
-    
     set_org_priors_initials_agrs_what <- set_priors_initials_agrs
-    
     set_randomsi_higher_levsl <- strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
     
     check_sigma_str <- 
@@ -4884,10 +4639,9 @@ bgm <- function(x,
         out <- list(temp_gr_str_priors = temp_gr_str_priors,
                     temp_gr_str_stanvars = temp_gr_str_stanvars,
                     temp_gr_str_inits = temp_gr_str_inits)
-       # bpriors <-  rbind(bpriors, temp_gr_str_priors)
       }
       out
-    } # evaluate_higher_level_sd_priors
+    } 
     
     
     temp_gr_str_priors_sd <- list()
@@ -4899,12 +4653,8 @@ bgm <- function(x,
                                                         "covcoefnames_gr_str")),
                                     envir = set_env_what))
       n_higher_str   <- n_higher_str - 1
-      # Evaluate hierarchy structure only if levels are 3 or more 
-      # This because for the second level, the first argument of _str already 
-      # evaluated with _sd priors
       
       if(n_higher_str > 0) {
-        # assign _prior
         set_assign_prior_what <- '_prior'
         check_prior_ifp <- 
           extract_prior_str_lv(ept(paste0(set_nlpar_what, 
@@ -4964,12 +4714,9 @@ bgm <- function(x,
           set_prior_what <- rep(set_prior_what, n_higher_str)
         }
         paste_message <- NULL
-        # end assign _prior
+
         
         
-        
-        
-        # assign _cov_prior
         set_assign_prior_what <- '_cov_prior'
         check_prior_ifp <- 
           extract_prior_str_lv(ept(paste0(set_nlpar_what, 
@@ -5026,8 +4773,7 @@ bgm <- function(x,
         } else if(length(set_prior_what) == 1) {
           set_cov_prior_what <- rep(set_cov_prior_what, n_higher_str)
         }
-        # end assign _cov_prior
-      
+       
        
         out2 <- evaluate_higher_level_sd_priors(set_nlpar_ = set_nlpar_what, 
                                         set_class  = set_class_what,
@@ -5043,17 +4789,12 @@ bgm <- function(x,
         c(temp_gr_str_stanvars_sd, out2 $ temp_gr_str_stanvars)
       temp_gr_str_inits_sd <- 
         c(temp_gr_str_inits_sd,    out2 $ temp_gr_str_inits)
-      } # end if(n_higher_str > 0) {
-    } # end for (set_randomsi_higher_levsli in set_randomsi_higher_levsl) {
+      } 
+    } 
     
-    
-    
-    
-     # Add temp_gr_str_priors_sd to bpriors above 
     higher_level_priors <- temp_gr_str_priors_sd %>% do.call(rbind, .)
     bpriors             <- rbind(bpriors, higher_level_priors)
     
-    # Add temp_gr_str_stanvars_sd to stanvar_priors to above 
     if(length(temp_gr_str_stanvars_sd) > 0) {
       stanvar_priors_c <- temp_gr_str_stanvars_sd_c <- c()
       for (i in 1:length(stanvar_priors)) {
@@ -5064,11 +4805,7 @@ bgm <- function(x,
                                        temp_gr_str_stanvars_sd[i])
       }
       stanvar_priors <- c(stanvar_priors_c, temp_gr_str_stanvars_sd_c)
-    } # if(length(temp_gr_str_stanvars_sd_c) > 0) {
-    # Add temp_gr_str_inits_sd to initials to above 
-    # But this is not good because it sets initials only for the outset level
-    # Instead, when 3 or more levels, set init = '0' or  init = 'random' or else 
-    # vcov_init_0 = TRUE
+    } 
     
     if(length(temp_gr_str_inits_sd) > 0) {
       initials_c <- temp_gr_str_inits_sd_c <- c()
@@ -5080,24 +4817,13 @@ bgm <- function(x,
                                     temp_gr_str_inits_sd[i])
       }
       initials <- c(initials_c, temp_gr_str_inits_sd) 
-    } # if(length(temp_gr_str_inits_sd) > 0) {
+    } 
     
     
-    
-    
-    
-    
-    
-    
-    ##########################
     # Now, cor priors    
-    
     # Adding cor priors is tricky because of complex |x| formulations possible
-    
     set_class_what <- 'cor'
-    
     set_org_priors_initials_agrs_what <- set_priors_initials_agrs
-    
     set_randomsi_higher_levsl <- 'gr'
     
     check_sigma_str <- eval(parse(text = paste0('sigma', 
@@ -5160,14 +4886,7 @@ bgm <- function(x,
             initials_str <- attr(bpriors_str, "initials")
             temp_gr_str_stanvars <- c(temp_gr_str_stanvars, stanvars_str)
             temp_gr_str_priors[[istrx]] <- bpriors_str
-            
-            # If prior is not evaluated, set it to NULL
-            # This was encountered for cor for univariate_by and multivariate
-            # See, set_priors_initials function, line 2086
-            # currently brms does not allow setting separate ljk prior for
-            # subset and multivariate
-            # removing resp leads to duplicate priors, so need to set only once
-            
+           
             if(temp_gr_str_priors[[istrx]][,1] != "") {
               temp_gr_str_priors <- temp_gr_str_priors %>% do.call(rbind, .)
             } else if(temp_gr_str_priors[[istrx]][,1] == "") {
@@ -5181,14 +4900,14 @@ bgm <- function(x,
               temp_gr_str_inits <- NULL
           }
           
-        } # for (istrx in 2:length(gr_str_id)) {
+        } 
        
         out <- list(temp_gr_str_priors = temp_gr_str_priors,
                     temp_gr_str_stanvars = temp_gr_str_stanvars,
                     temp_gr_str_inits = temp_gr_str_inits)
        
       out
-    } # evaluate_higher_level_sd_priors
+    }
     
 
     temp_gr_str_priors_corr <- list()
@@ -5207,12 +4926,8 @@ bgm <- function(x,
                                                      "_str_corr_tf")),
                                  envir = set_env_what)
 
-      # Evaluate hierarchy structure only if levels are 3 or more 
-      # This because for the second level, the first argument of _str already 
-      # evaluated with _sd priors
       
       if(n_higher_str > 0) {
-        # assign _prior
         set_assign_prior_what <- '_prior'
         check_prior_ifp <- 
           extract_prior_str_lv(ept(paste0(set_nlpar_what, 
@@ -5272,9 +4987,7 @@ bgm <- function(x,
         } else if(length(set_prior_cor_what) == 1) {
           set_prior_cor_what <- rep(set_prior_cor_what, n_higher_str)
         }
-        # end assign _prior
         
-
         out2 <- evaluate_higher_level_corr_priors(set_nlpar_ = set_nlpar_what, 
                                           set_class  = set_class_what,
                                           set_prior = set_prior_cor_what,
@@ -5290,16 +5003,11 @@ bgm <- function(x,
           c(temp_gr_str_stanvars_corr, out2 $ temp_gr_str_stanvars)
         temp_gr_str_inits_corr <- 
           c(temp_gr_str_inits_corr,    out2 $ temp_gr_str_inits)
-      } # end if(n_higher_str > 0) {
-    } # end for (set_randomsi_higher_levsli in set_randomsi_higher_levsl) {
-    
-    
-    # Add temp_gr_str_priors_sd to bpriors above 
+      } 
+    } 
     
     higher_level_priors <- temp_gr_str_priors_corr %>% do.call(rbind, .)
     bpriors             <- rbind(bpriors, higher_level_priors)
-    
-    # Add temp_gr_str_stanvars_sd to stanvar_priors to above 
     
     if(length(temp_gr_str_stanvars_corr) > 0) {
       stanvar_priors_c <- temp_gr_str_stanvars_corr_c <- c()
@@ -5311,12 +5019,7 @@ bgm <- function(x,
                                          temp_gr_str_stanvars_corr[i])
       }
       stanvar_priors <- c(stanvar_priors_c, temp_gr_str_stanvars_corr_c)
-    } # if(length(temp_gr_str_stanvars_sd_c) > 0) {
-    
-    # Add temp_gr_str_inits_sd to initials to above 
-    # But this is not good because it sets initials only for the outset level
-    # Instead, when 3 or more levels, set init = '0' or  init = 'random' or else 
-    # vcov_init_0 = TRUE
+    } 
     
     if(length(temp_gr_str_inits_corr) > 0) {
       initials_c <- temp_gr_str_inits_corr_c <- c()
@@ -5328,34 +5031,18 @@ bgm <- function(x,
                                       temp_gr_str_inits_corr[i])
       }
       initials <- c(initials_c, temp_gr_str_inits_corr) 
-    } # if(length(temp_gr_str_inits_sd) > 0) {
-    
-    
-    
-    
-    
-    
-    #######################################
-    
+    } 
    
     
     priorlist <- rbind(priorlist, bpriors)
-    
-    # Already added above
-    # stanvar_priors <- attr(bpriors, "stanvars")
-    
     stanvar_priors_names <- names(stanvar_priors)
     
     if(!"stanvars" %in% attr(stanvar_priors, 'class')) {
-      attr(stanvar_priors, 'class') <- c("stanvars", attr(stanvar_priors, 'class'))
+      attr(stanvar_priors, 'class') <- c("stanvars", 
+                                         attr(stanvar_priors, 'class'))
     }
     
     prior_stanvarlist[[ii]] <- stanvar_priors 
-  
-    # Already added above
-    # initials <- attr(bpriors, "initials")
-    
-
     
     scode_auxillary <- attr(bpriors, "scode_auxillary")
     auxillary_stanvarlist[[ii]] <- scode_auxillary
@@ -5404,8 +5091,7 @@ bgm <- function(x,
       # funlist_r_name <- paste0("funlist_r", "_", ysi)
     }
     
-    # No need for response specific funlist_r_name because already are named
-    # Therefore, ignoring above funlist_r_name and reassigning names 
+    
     funlist_r_name <- 'funlist_r'
     funlist_rnamelist[[ii]] <- funlist_r_name
     funlist_rvaluelist[[ii]] <- funlist_r %>% unlist()
@@ -5451,13 +5137,6 @@ bgm <- function(x,
     sigmacovvaluelist[[ii]] <- covariates_sigma_
     
     
-    
-    # Restore x var for data
-    # Imp: Note that only xvar is reverse transformed and not the yvar
-    # This is because the xvar is again transformed in the Stan function block
-    # Whereas the yvar is passed to bgm as such 
-    
-    
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if (xfunsi == "log") {
         datai[[xsi]] <- exp(datai[[xsi]] + xoffset)
@@ -5468,22 +5147,17 @@ bgm <- function(x,
       datai[[xsi]] <- (datai[[xsi]] + xoffset)
     }
     
-    
-    
-    
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       dataout <- rbind(dataout, datai)
     else
       dataout <- datai
-    
 
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       uvarbyTF <- TRUE
     else
       uvarbyTF <- FALSE
-  }  # end of loop over outcome(s)
-  
+  }  
   
   
   if (verbose) {
@@ -5512,8 +5186,6 @@ bgm <- function(x,
   }
   
   
-  # Now collect and combine elemets for univariate-by-sybgroup and multivariate
-  # models
   
   brmsdata <- dataout
   brmspriors <- priorlist
@@ -5528,9 +5200,6 @@ bgm <- function(x,
   brmspriors <- brmspriors %>% 
     dplyr::mutate(ub = dplyr::if_else(class == 'sd', NA, ub))
   
-  
-  
-
   bflist_c_list <- list()
   bflist_c <- c()
   for (il in 1:length(bflist)) {
@@ -5594,10 +5263,9 @@ bgm <- function(x,
   
   if (!is.null(brmsinits)) {
     if (multivariate$mvar & multivariate$cor == "un") {
-      # combine sd
+     
       c_it <- "sd_"
       brmsinits_names <- names(brmsinits)
-      # to exclude student_nu _sd_nu parameters
       brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', 
                                                 brmsinits_names)]
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
@@ -5606,7 +5274,7 @@ bgm <- function(x,
       brmsinits <- brmsinits[!names(brmsinits) %in% keys]
       brmsinits[[keys[1]]] <- temppp %>%
         unname()
-      # combine cor
+      
       c_it <- "L_"
       brmsinits_names <- names(brmsinits)
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
@@ -5622,7 +5290,7 @@ bgm <- function(x,
         l_comb <- c(l_comb, l)
         t_names <- c(t_names, colnames(t))
       }
-      #
+      
       create_cor_mat <- function(n, cor = NULL) {
         n_elements <- n
         m <- diag(n_elements)
@@ -5645,7 +5313,7 @@ bgm <- function(x,
         M <- m_lower + m + m_upper
         M
       }
-      #
+      
       tt_names <- apply(combn(t_names, 2), 2, paste, collapse = "_")
       tt_dims <- sum(d_comb)
       tt_nc <- (tt_dims * (tt_dims - 1) / 2)
@@ -5657,7 +5325,7 @@ bgm <- function(x,
       tt_ll[names(l_comb)] <- l_comb
       tt_ll[!names(tt_ll) %in% names(l_comb)] <- 0
       brmsinits[[keys[1]]] <- create_cor_mat(tt_dims, tt_ll)
-      # combine std z
+  
       c_it <- "z_"
       brmsinits_names <- names(brmsinits)
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
@@ -5669,10 +5337,9 @@ bgm <- function(x,
                 "un_s") &
                !any(grepl("^L_", names(brmsinits))))
     {
-      # combine sd
+     
       c_it <- "sd_"
       brmsinits_names <- names(brmsinits)
-      # to exclude student_nu _sd_nu parameters
       brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', brmsinits_names)]
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
       temppp <- brmsinits[names(brmsinits) %in% keys]
@@ -5682,8 +5349,7 @@ bgm <- function(x,
         brmsinits[[paste0(c_it, sdi)]] <- temppp[sdi] %>%
           unname()
       }
-    }  # else if(!any(grepl('^L_', names(brmsinits)))) {
-    
+    }  
     
     # keep only one Lrescor
     if (multivariate$mvar & multivariate$rescor) {
@@ -5701,10 +5367,9 @@ bgm <- function(x,
          univariate_by$cor == "diagonal") |
         group_arg$cor == "diagonal" |
         sigma_group_arg$cor == "diagonal") {
-      # combine sd
+     
       c_it <- "sd_"
       brmsinits_names <- names(brmsinits)
-      # to exclude student_nu _sd_nu parameters
       brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', brmsinits_names)]
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
       temppp <- brmsinits[names(brmsinits) %in% keys]
@@ -5741,7 +5406,7 @@ bgm <- function(x,
         brmsinits[[paste0(c_it, zi)]] <- temppp[[zi]]
       }
     }
-  }  # if(!is.null(brmsinits)) {
+  }  
   
   
   # For multivariate, it makes sense to keep initials for betas only otherwise
@@ -5751,7 +5416,6 @@ bgm <- function(x,
       c_it_names <- c("sd_", "L_", "z_", "Lrescor")
       for (c_it in c_it_names) {
         brmsinits_names <- names(brmsinits)
-        # to exclude student_nu _sd_nu parameters
         brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', 
                                                   brmsinits_names)]
         keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
@@ -5777,7 +5441,6 @@ bgm <- function(x,
   }
   
   
-  # Strip off initials attributes now
   for (inm in names(brmsinits)) {
     if (is.matrix(brmsinits[[inm]])) {
       colnames(brmsinits[[inm]]) <- rownames(brmsinits[[inm]]) <- NULL
@@ -5891,10 +5554,6 @@ bgm <- function(x,
       }
     
     
-    # this is the right place to replace sd, z and L initials to 0
-    # this is for univariate by model. for univariate and multivariate,
-    # the already done in set_prior_initials worked. but all now here
-    
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
                                     prior = brmspriors,
@@ -5909,7 +5568,6 @@ bgm <- function(x,
       initialsx2 <- brmsinits
       for (initialsi in names(initialsx2)) {
         if(grepl("sd_", initialsi)) {
-          # to exclude student_nu distribution parameter
           if(!grepl("sd_nu", initialsi, fixed = T)) {
             initialsx2[[initialsi]] <- NULL
             newinits <- set_init_gr_effects(temp_stancode2, 
@@ -5933,7 +5591,7 @@ bgm <- function(x,
       uni_name <- unique(names(initialsx2))
       initialsx2 <- initialsx2[uni_name] 
       brmsinits <- initialsx2
-    } # if(vcov_init_0e) {
+    } 
     
     
     
@@ -5951,8 +5609,7 @@ bgm <- function(x,
   
   
   
-  # Set brm arguments and fit model
-  
+  # Set brm arguments
   setup_brms_args <-
     function(formula,
              prior,
@@ -6079,8 +5736,6 @@ bgm <- function(x,
       
       if (eval(setarguments$backend) == "rstan" & 
           packageVersion("rstan") < "2.26.1") {
-        # placeholder, will be updated later when rstan > 2.26.1 on CRAN
-        # brms takes care of threads options for rstan by the version
         setarguments$threads <- setarguments$threads 
       }
       
@@ -6104,10 +5759,8 @@ bgm <- function(x,
   
   
   
-  
   brmsdots_ <- list(...)
   
-  # Remove these from the brms args passed via ... -> see also line 1388
   for (collect_dot_namesi in collect_dot_names) {
     if(!is.null(brmsdots_[[collect_dot_namesi]])) 
       brmsdots_[[collect_dot_namesi]] <- NULL
@@ -6141,36 +5794,6 @@ bgm <- function(x,
   }
   
   cat("\n")
-  
-  
-  ######################
-  # not using insert_new_priors
-  
-  # insert_new_priors <- function(setdf_1, setdf_2) {
-  #   index <- row_number <- valid <- NA
-  #   setdf_1 <- 
-  #     setdf_1 %>% 
-  #     dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
-  #     dplyr::mutate(order = row_number()) %>% 
-  #     dplyr::arrange(index)
-  #   setdf_2 <- 
-  #     setdf_2 %>% 
-  #     dplyr::mutate(index = interaction(class, coef, group, nlpar)) %>% 
-  #     dplyr::mutate(order = row_number()) %>% 
-  #     dplyr::arrange(index)
-  #   vi_1 <- setdf_1 %>% 
-  #     dplyr::mutate(valid = ifelse(!(class == 'sd' & coef == ""), 1, 0)) %>% 
-  #     data.frame() %>% 
-  #     dplyr::filter(valid == 1) %>% dplyr::select(index) %>% unlist() %>% 
-  #     droplevels()
-  #   setdf_1 <- setdf_1 %>% dplyr::filter(!(class == 'sd' & coef == ""))
-  #   setdf_2 <- setdf_2 %>% dplyr::filter(!(class == 'sd' & coef == ""))
-  #   setdf_3 <- setdf_1[setdf_1$index %in% vi_1,]
-  #   setdf_2 <- setdf_2 %>% dplyr::filter(!index %in% vi_1)
-  #   setdf_4 <- rbind(setdf_2, setdf_3)
-  #   setdf_4 <- setdf_4 %>% dplyr::select(-c(index, order))
-  #   setdf_4
-  # }
   
   
   insert_new_priors <- function(setdf_1, setdf_2) {
@@ -6217,8 +5840,7 @@ bgm <- function(x,
     p1p2
   }
   
-  ######################
-  
+
   
   if(set_higher_levels) {
     brmspriors_sdcor <- brmspriors %>% 
@@ -6239,28 +5861,8 @@ bgm <- function(x,
   
   
   
-  # if(sigma_set_higher_levels) {
-  #   brmspriors_sdcor <- brmspriors %>% 
-  #     dplyr::filter(class == 'sd' | class == 'cor')
-  #   brmspriors_sdcor_gr <- brmspriors_sdcor$group
-  #   
-  #   brmsfit_sdcor <- do.call(get_prior, brm_args) %>% 
-  #     dplyr::filter(class == 'sd' | class == 'cor')
-  #   
-  #   brmsfit_sdcor_prior_gr <- brmsfit_sdcor %>% 
-  #     dplyr::filter(!group %in%  brmspriors_sdcor_gr)
-  #   
-  #   brmspriors_brmsfit_sdcor <- brmspriors %>% 
-  #     dplyr::bind_rows(., brmsfit_sdcor_prior_gr)
-  #   
-  #   brmspriors <- brmspriors_brmsfit_sdcor
-  # }
-  
-  
   
   brm_args$prior <- brmspriors
-  
-  
   
   if(!is.null(set_self_priors) & !is.null(set_replace_priors)) {
     stop("Amongst 'set_self_priors' and 'set_replace_priors' arguments,",
@@ -6293,10 +5895,6 @@ bgm <- function(x,
   
   
   
-  # IMP - brms does not allow different lb conditions for sd parsm (all to NA)
-  # Error: Conflicting boundary information for coefficients of class 'sd'.
-  # Because prior function automatically sets lb 0 for positive priors such as 
-  # exponential the following is need (again done at line 4002)
   
   lbbb_ <- ubbb_ <- NULL
   tempprior_hold <- brmspriors # brm_args$prior 
@@ -6321,25 +5919,7 @@ bgm <- function(x,
     brmspriors <- set_self_priors
   }
   
-  
-  # This was for earlier three level model, now not needed
-  # if(!is.null(set_replace_priors) & is.null(set_self_priors)) {
-  #   if(!set_same_priors_hierarchy) {
-  #     drop_old_sd_cor_groups <- unique(setup_new_priors_add[['group']])
-  #     brmspriors <- brmspriors %>% 
-  #       filter(! .data$group %in% drop_old_sd_cor_groups)
-  #     brmspriors <- brmspriors %>%
-  #       dplyr::filter(source == 'user') %>%
-  #       dplyr::bind_rows(., set_replace_priors)
-  #   } else if(set_same_priors_hierarchy) {
-  #     brmspriors <- brmspriors %>%
-  #       dplyr::filter(.data$source == 'user')
-  #   }
-  # }
-  # 
-  
-  
-  
+
   if(is.null(set_self_priors) & is.null(set_replace_priors)) {
     brmspriors <- brmspriors
   }
@@ -6376,11 +5956,7 @@ bgm <- function(x,
   
   
   
-  # Fit model if get_set_priors get_priors get_standata get_stancode -> FALSE
-  # this if(exe_model_fit) { is closed just before the end of the bgm 
-  
   if(exe_model_fit) {
-    # If initials are 0 or random, then set custom init to NULL
     if(brm_args$backend == "rstan") {
       if(length(brm_args$init) == 1) {
         if(brm_args$init == "0") {
@@ -6412,8 +5988,7 @@ bgm <- function(x,
       } else if(!is.null(brm_args$init)) {
         init_custom <- init_custom
       }
-    } # if(brm_args$backend == "cmdstanr") {
-    
+    } 
     
     
     
@@ -6446,13 +6021,9 @@ bgm <- function(x,
     
     brmsfit <- do.call(brms::brm, brm_args)
   
-    # Add model info for post-processing
-    
+
     model_info <- list()
-    
-    # print(funlist_rnamelist)
-    # print(funlist_rvaluelist)
-    
+
     for (i in 1:length(funlist_rnamelist)) {
       model_info[[funlist_rnamelist[[i]]]] <- funlist_rvaluelist[[i]]
     }
@@ -6518,7 +6089,6 @@ bgm <- function(x,
       model_info[['subindicators']] <- subindicators
     } 
     
-    # model_info[[SplineFun_name]] <- SplineFun_name
     model_info[['StanFun_name']] <- SplineFun_name
     model_info[['multivariate']] <- multivariate$mvar
     model_info[['univariate_by']] <- univariate_by$by
@@ -6544,8 +6114,7 @@ bgm <- function(x,
     
     brmsfit$model_info <- model_info
     
-    # Expose Stan function
-    
+
     if (expose_function) {
       if (verbose) {
         setmsgtxt <-
@@ -6566,7 +6135,7 @@ bgm <- function(x,
       
       brmsfit <- expose_functions_bgm(brmsfit, expose = TRUE, select_model = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
-    } # if (expose_function) {
+    } 
     
     
     
@@ -6574,10 +6143,7 @@ bgm <- function(x,
       brmsfit <- expose_functions_bgm(brmsfit, expose = FALSE, 
                                          select_model = select_model)
       brmsfit$model_info[['expose_method']] <- 'R'
-    } # if (!expose_function) {
-    
-    
-    
+    } 
     
     if (verbose) {
       setmsgtxt <- paste0("\nModel Fitting complete")
@@ -6594,5 +6160,4 @@ bgm <- function(x,
     return(brmsfit)
   } # exe_model_fit
 }
-
 
