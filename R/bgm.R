@@ -5840,7 +5840,6 @@ bgm <- function(x,
     p1p2
   }
   
-
   
   if(set_higher_levels) {
     brmspriors_sdcor <- brmspriors %>% 
@@ -5858,9 +5857,6 @@ bgm <- function(x,
     
     brmspriors <- brmspriors_brmsfit_sdcor
   }
-  
-  
-  
   
   brm_args$prior <- brmspriors
   
@@ -6018,10 +6014,7 @@ bgm <- function(x,
     } 
     
     
-    
     brmsfit <- do.call(brms::brm, brm_args)
-  
-
     model_info <- list()
 
     for (i in 1:length(funlist_rnamelist)) {
@@ -6099,21 +6092,13 @@ bgm <- function(x,
     model_info[['dfs']] <- dfs
     model_info[['xfuns']] <- xfuns
     model_info[['yfuns']] <- yfuns
-    
     model_info[['outliers']] <- outliers
-    
     model_info[['bgm.data']] <- data.org.in
-    
     model_info[['call.full.bgm']] <- call.full
-    
     model_info[['call.bgm']] <- mcall_
-    
     model_info[['brms_arguments_list']] <- brms_arguments_list
-    
     model_info[['select_model']] <- select_model
-    
     brmsfit$model_info <- model_info
-    
 
     if (expose_function) {
       if (verbose) {
@@ -6126,18 +6111,14 @@ bgm <- function(x,
           cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
         }
       }
-      
       if (!verbose) {
         setmsgtxt <-
           paste0("\n Exposing Stan functions for post-processing..\n")
         message(setmsgtxt)
       }
-      
       brmsfit <- expose_functions_bgm(brmsfit, expose = TRUE, select_model = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
-    
-    
     
     if (!expose_function) {
       brmsfit <- expose_functions_bgm(brmsfit, expose = FALSE, 
@@ -6159,5 +6140,6 @@ bgm <- function(x,
     options(mc.cores = mc.cores_restore)
     return(brmsfit)
   } # exe_model_fit
+  
 }
 

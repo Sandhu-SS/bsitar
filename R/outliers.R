@@ -18,9 +18,9 @@
 #'
 #' @return A data frame with outliers removed when \code{remove=TRUE}
 #' @export
-#'
+#' 
 #' @examples
-#' outliers(x = "age", y = "height", id = "id", data = heights, limit=2, remove=TRUE)
+#' outliers(x = "age", y = "height", id = "id", data = heights, remove=TRUE)
 #' 
 outliers <-
   function (x,
@@ -73,7 +73,9 @@ outliers <-
     vel2 <- c(vel1, rep(NA, lag))
     vel1 <- c(rep(NA, lag), vel1)
     code <- (as.numeric(abs(vel1) >= limit) + as.numeric(abs(vel2) >=
-                                                           limit)) * 2 + as.numeric(abs(vel3) >= limit)
+                                                           limit)) * 2 + 
+      as.numeric(abs(vel3) >= limit)
+    
     dt2 <- c(dt1, rep(FALSE, lag))
     dt1 <- c(rep(FALSE, lag), dt1)
     code[dt2 | dt1] <- 8

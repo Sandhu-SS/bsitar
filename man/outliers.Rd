@@ -59,6 +59,6 @@ in data, Codes range from 0 (normal) to 8, where 4 and 6 are conventional
 outliers
 }
 \examples{
-outliers(x = "age", y = "height", id = "id", data = heights, limit=2, remove=TRUE)
+outliers(x = "age", y = "height", id = "id", data = heights, remove=TRUE)
 
 }
