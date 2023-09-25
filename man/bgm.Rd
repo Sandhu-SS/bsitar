@@ -1341,7 +1341,7 @@ set by directly by specifying an integer e.g., \code{cores= 4}.}
 
 \item{backend}{Character string naming the package to use as the backend for
 fitting the Stan model. Options are \code{"rstan"} (the default) or
-\code{cmdstanr}. Can be set globally for the current \R session via the
+\code{"cmdstanr"}. Can be set globally for the current \R session via the
 \code{"brms.backend"}. See \code{\link[brms:brm]{brms::brm()}} for details.}
 
 \item{threads}{Number of threads to be used in within-chain parallelization.
