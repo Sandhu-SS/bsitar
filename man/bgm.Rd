@@ -1341,15 +1341,8 @@ set by directly by specifying an integer e.g., \code{cores= 4}.}
 
 \item{backend}{Character string naming the package to use as the backend for
 fitting the Stan model. Options are \code{"rstan"} (the default) or
-\code{"cmdstanr"}. Can be set globally for the current \R session via the
-\code{"brms.backend"} option (see \code{\link{options}}). Details on the
-\pkg{rstan} and \pkg{cmdstanr} packages are available at
-\url{https://mc-stan.org/rstan/} and \url{https://mc-stan.org/cmdstanr/},
-respectively. Additionally a \code{"mock"} backend is available to make
-testing \pkg{brms} and packages that depend on it easier. The \code{"mock"}
-backend does not actually do any fitting, it only checks the generated Stan
-code for correctness and then returns whatever is passed in an additional
-\code{mock_fit} argument as the result of the fit.}
+\code{cmdstanr}. Can be set globally for the current \R session via the
+\code{"brms.backend"}. See \code{\link[brms:brm]{brms::brm()}} for details.}
 
 \item{threads}{Number of threads to be used in within-chain parallelization.
 Note that \code{\link[brms:brm]{brms::brm()}} sets this argument as
@@ -1423,8 +1416,8 @@ dropped? Defaults to \code{TRUE}.}
 
 \item{stan_model_args}{A \code{list} of further arguments passed to
 \code{\link[rstan:stan_model]{rstan::stan_model}} for \code{backend =
-  "rstan"} or to \code{cmdstanr::cmdstan_model} for \code{backend =
-  "cmdstanr"}, which allows to change how models are compiled.}
+  "rstan"} or \code{backend = "cmdstanr"}, which allows to change how
+models are compiled.}
 
 \item{silent}{Verbosity level between \code{0} and \code{2}. If \code{1} (the
 default), most of the informational messages of compiler and sampler are
@@ -1531,7 +1524,7 @@ matrix by using the truncated power basis approach as described by
 \strong{bsitar} package does not call the \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}} but rather
 constructs a custom function on the fly that is then included in the
 functions block of the \emph{Stan} program and thus compiled (via the c++) during
-the model fit (see Stan \url{https://mc-stan.org/rstan/}).
+the model fit.
 
 Like \emph{sitar} package, the \strong{bsitar} package fits SITAR model with (usually)
 up to three random effect parameters \insertCite{Cole2010}{bsitar}: the size
