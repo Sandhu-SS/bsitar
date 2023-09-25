@@ -67,9 +67,9 @@ prepare_function <- function(x,
   
   backend <- eval(brms_arguments$backend)
   
-  if (backend == 'cmdstanr' & cmdstanr::cmdstan_version() < "2.26.0") {
-    stop("Please install CmdStan version 2.26 or newer.")
-  }
+  # if (backend == 'cmdstanr' & cmdstanr::cmdstan_version() < "2.26.0") {
+  #   stop("Please install CmdStan version 2.26 or newer.")
+  # }
   
   vector_X_name <- "Xp"
   
