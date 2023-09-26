@@ -295,15 +295,15 @@ and \code{fixed = 'a+b'} for the second sub model.}
 the fixed effects structure (see \code{fixed}).}
 
 \item{select_model}{A character string specifying the model to be fitted.
-Allowed models are SITAR (\code{sitar}), the Preece-Baines model 1
-(\code{pb1}), Preece-Baines model 2 (\code{pb2}) and the Preece-Baines model
-3 (\code{pb3}). The option \code{sitar} fits the default three parameter
+Allowed models are SITAR (\code{'sitar'}), the Preece-Baines model 1
+(\code{'pb1'}), Preece-Baines model 2 (\code{'pb2'}) and the Preece-Baines model
+3 (\code{'pb3'}). The option \code{'sitar'} fits the default three parameter
 SITAR model i.e, \code{a+b+c} (see @details). To fit four parameter SITAR
 model that includes an additional parameter \code{d}, use \code{select_model
- = sitar4fr} or \code{select_model = sitar4r}. The option \code{sitar4fr}
+ = 'sitar4fr'} or \code{select_model = 'sitar4r'}. The option \code{'sitar4fr'}
 fits a four parameter SITAR model with parameter \code{d} included in both
 the fixed and random effects structures. On the contrary, \code{select_model
- = sitar4r} implies that parameter \code{d} will be included only in the
+ = 'sitar4r'} implies that parameter \code{d} will be included only in the
 random effects structure and not in the fixed effects structure.}
 
 \item{xoffset}{An optional character string or a numeric value to set up the
@@ -1480,29 +1480,29 @@ An object of class \code{brmsfit, bsiatr}, that contains the posterior
 draws and other useful information about the model.
 }
 \description{
-Bayesian super imposition by translation and rotation (BSITAR)
-model summarizes the growth curves from early childhood through the
-adulthood (see @details). The frequentist version of the SITAR model can be
-fit by using an already available R package, the \pkg{sitar}
-\insertCite{R-sitar}{bsitar}. Besides Bayesian implementation of the SITAR
-model, the \pkg{bsitar} package greatly enhances the modelling capabilities
-offered by the \pkg{sitar} package. For example, in addition to the
-univariate analysis (i.e, modelling a single response variable as
-implemented in the \pkg{sitar} package), the \pkg{bsitar} allows
-univariate-by-subgroup (modelling a single response variable for subgroups
-defined by a factor variable) and multivariate (simultaneous modelling of
-two or more responses) models (see @details). Hereafter, the
-univariate-by-subgroup model is simply referred to as univariate-by model
-and denoted as \code{univariate_by}. The multivariate is denoted by
-\code{multivariate}. The \code{\link[=bgm]{bgm()}} is the main workhorse of the
-\pkg{bsitar} package.
+The \code{\link[=bgm]{bgm()}} is the main function in the \pkg{bsitar}
+package that fits the Bayesian super imposition by translation and rotation
+(SITAR). The SITAR model summarizes the growth curves from early childhood
+through the adulthood (see @Details). The frequentist
+version of the SITAR model can be fit by using an already available R
+package, the \emph{sitar} \insertCite{R-sitar}{bsitar}. Besides Bayesian
+implementation of the SITAR model, the \pkg{bsitar} package greatly enhances
+the modelling capabilities of the SITAR model. For example, in addition to
+the univariate analysis (i.e, modelling a single response variable), the
+\pkg{bsitar} allows univariate-by-subgroup (modelling a single response
+variable but for different subgroups defined by a factor variable) and
+multivariate (simultaneous modelling of two or more responses) models (see
+@details). The univariate-by-subgroup model is simply referred to as
+univariate-by model and the argument to set up the this model is
+\code{univariate_by} (see below). The multivariate model is set up the via
+the \code{multivariate} argument (see below).
 }
 \details{
 The SITAR is a shape-invariant nonlinear mixed effect growth curve
-model that fits a population average (i.e., mean average) curve to the data
-and aligns each individual's growth trajectory to this population average
-curve via a set of three random effects, \code{size}, \code{timing} and
-\code{intensity}. The concept of shape invariant model (SIM) was first
+model that fits a population average (i.e., mean average) curve to the data,
+and then aligns each individual's growth trajectory to this population
+average curve via a set of three random effects, \code{size}, \code{timing}
+and \code{intensity}. The concept of shape invariant model (SIM) was first
 described by \insertCite{Lindstrom1995}{bsitar} and later used by
 \insertCite{Beath2007;textual}{bsitar} to model infant growth data (birth to
 2 years). The current version of the SITAR model is developed by

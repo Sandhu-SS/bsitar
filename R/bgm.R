@@ -2,28 +2,28 @@
 
 #'Fit Bayesian SITAR growth curve model
 #'
-#'@description Bayesian super imposition by translation and rotation (BSITAR)
-#'  model summarizes the growth curves from early childhood through the
-#'  adulthood (see @details). The frequentist version of the SITAR model can be
-#'  fit by using an already available R package, the \pkg{sitar}
-#'  \insertCite{R-sitar}{bsitar}. Besides Bayesian implementation of the SITAR
-#'  model, the \pkg{bsitar} package greatly enhances the modelling capabilities
-#'  offered by the \pkg{sitar} package. For example, in addition to the
-#'  univariate analysis (i.e, modelling a single response variable as
-#'  implemented in the \pkg{sitar} package), the \pkg{bsitar} allows
-#'  univariate-by-subgroup (modelling a single response variable for subgroups
-#'  defined by a factor variable) and multivariate (simultaneous modelling of
-#'  two or more responses) models (see @details). Hereafter, the
-#'  univariate-by-subgroup model is simply referred to as univariate-by model
-#'  and denoted as \code{univariate_by}. The multivariate is denoted by 
-#'  \code{multivariate}. The [bsitar::bgm()] is the main workhorse of the
-#'  \pkg{bsitar} package.
+#'@description The [bsitar::bgm()] is the main function in the \pkg{bsitar}
+#'  package that fits the Bayesian super imposition by translation and rotation
+#'  (SITAR). The SITAR model summarizes the growth curves from early childhood
+#'  through the adulthood (see @Details). The frequentist
+#'  version of the SITAR model can be fit by using an already available R
+#'  package, the \emph{sitar} \insertCite{R-sitar}{bsitar}. Besides Bayesian
+#'  implementation of the SITAR model, the \pkg{bsitar} package greatly enhances
+#'  the modelling capabilities of the SITAR model. For example, in addition to
+#'  the univariate analysis (i.e, modelling a single response variable), the
+#'  \pkg{bsitar} allows univariate-by-subgroup (modelling a single response
+#'  variable but for different subgroups defined by a factor variable) and
+#'  multivariate (simultaneous modelling of two or more responses) models (see
+#'  @details). The univariate-by-subgroup model is simply referred to as
+#'  univariate-by model and the argument to set up the this model is
+#'  \code{univariate_by} (see below). The multivariate model is set up the via
+#'  the \code{multivariate} argument (see below).
 #'
 #'@details The SITAR is a shape-invariant nonlinear mixed effect growth curve
-#'  model that fits a population average (i.e., mean average) curve to the data
-#'  and aligns each individual's growth trajectory to this population average
-#'  curve via a set of three random effects, \code{size}, \code{timing} and
-#'  \code{intensity}. The concept of shape invariant model (SIM) was first
+#'  model that fits a population average (i.e., mean average) curve to the data, 
+#'  and then aligns each individual's growth trajectory to this population 
+#'  average curve via a set of three random effects, \code{size}, \code{timing} 
+#'  and \code{intensity}. The concept of shape invariant model (SIM) was first
 #'  described by \insertCite{Lindstrom1995}{bsitar} and later used by
 #'  \insertCite{Beath2007;textual}{bsitar} to model infant growth data (birth to
 #'  2 years). The current version of the SITAR model is developed by
@@ -33,10 +33,10 @@
 #'  @coleFiftyYearsChild2018; @riddellClassifyingGestationalWeight2017;
 #'  @Sandhu2020}{bsitar}. As mentioned earlier (see @description), the
 #'  frequentist version of the SITAR model can be fit by an already available
-#'  R package, the *sitar* \insertCite{R-sitar}{bsitar}.
+#'  R package, the \emph{sitar} \insertCite{R-sitar}{bsitar}.
 #'
-#'  The SITAR model implemented in the **bsitar** package is same as *sitar*
-#'  package with the exception that unlike *sitar* which uses the B spline basis
+#'  The SITAR model implemented in the **bsitar** package is same as \emph{sitar}
+#'  package with the exception that unlike \emph{sitar} which uses the B spline basis
 #'  for the natural cubic spline design matrix (by calling the [splines::ns()])
 #'  \insertCite{R-splines}{bsitar}), the *bsitar* constructs spline design
 #'  matrix by using the truncated power basis approach as described by
@@ -47,7 +47,7 @@
 #'  functions block of the *Stan* program and thus compiled (via the c++) during
 #'  the model fit.
 #'  
-#'  Like *sitar* package, the **bsitar** package fits SITAR model with (usually)
+#'  Like \emph{sitar} package, the **bsitar** package fits SITAR model with (usually)
 #'  up to three random effect parameters \insertCite{Cole2010}{bsitar}: the size
 #'  (\code{a}), the timing (\code{b}) and the intensity (\code{c}). In addition,
 #'  there is a slope parameter \code{d} that models the variability in the adult
@@ -101,7 +101,6 @@
 #'  \code{univariate_by} for sex, the \code{univariate_by = sex} is same as 
 #'  \code{univariate_by = 'sex'} or \code{univariate_by = "sex"}. The same
 #'  applies for all character string options.
-#'
 #'@param x Specify predictor variable (typically age in years). For
 #'  \code{univariate} model, the \code{x} is a single variable whereas for
 #'  \code{univariate_by} \code{multivariate} models, the \code{x} can be same
@@ -111,7 +110,6 @@
 #'  model. To specify \code{x1} as a common predictor variable for both sub
 #'  models, the argument \code{x} is specified as \code{x = list(x1)} or simply
 #'  \code{x = x1}.
-#'
 #'@param y Specify response variable (e.g., repeated height measurements). For
 #'  \code{univariate} and \code{univariate_by} models, the \code{y} is specified
 #'  as a single variable. For the \code{univariate_by}, the response variable
@@ -163,15 +161,15 @@
 #'  the fixed effects structure (see \code{fixed}).
 #'  
 #'@param select_model A character string specifying the model to be fitted.
-#'  Allowed models are SITAR (\code{sitar}), the Preece-Baines model 1
-#'  (\code{pb1}), Preece-Baines model 2 (\code{pb2}) and the Preece-Baines model
-#'  3 (\code{pb3}). The option \code{sitar} fits the default three parameter
+#'  Allowed models are SITAR (\code{'sitar'}), the Preece-Baines model 1
+#'  (\code{'pb1'}), Preece-Baines model 2 (\code{'pb2'}) and the Preece-Baines model
+#'  3 (\code{'pb3'}). The option \code{'sitar'} fits the default three parameter
 #'  SITAR model i.e, \code{a+b+c} (see @details). To fit four parameter SITAR
 #'  model that includes an additional parameter \code{d}, use \code{select_model
-#'  = sitar4fr} or \code{select_model = sitar4r}. The option \code{sitar4fr}
+#'  = 'sitar4fr'} or \code{select_model = 'sitar4r'}. The option \code{'sitar4fr'}
 #'  fits a four parameter SITAR model with parameter \code{d} included in both
 #'  the fixed and random effects structures. On the contrary, \code{select_model
-#'  = sitar4r} implies that parameter \code{d} will be included only in the
+#'  = 'sitar4r'} implies that parameter \code{d} will be included only in the
 #'  random effects structure and not in the fixed effects structure.
 #'
 #'@param xoffset An optional character string or a numeric value to set up the
