@@ -101,53 +101,57 @@
 #'  \code{univariate_by} for sex, the \code{univariate_by = sex} is same as 
 #'  \code{univariate_by = 'sex'} or \code{univariate_by = "sex"}. The same
 #'  applies for all character string options.
+#'
 #'@param x Specify predictor variable (typically age in years). For
 #'  \code{univariate} model, the \code{x} is a single variable whereas for
-#'  \code{univariate_by} \code{multivariate} models, the \code{x} can be same
-#'  for sub models or different for each sub models. As an example, when fitting
-#'  a bivariate model, the \code{x = list(x1, x2)} specifies that \code{x1} is
-#'  the predictor for the first sub model and \code{x2} for the second sub
-#'  model. To specify \code{x1} as a common predictor variable for both sub
-#'  models, the argument \code{x} is specified as \code{x = list(x1)} or simply
-#'  \code{x = x1}.
+#'  \code{univariate_by} and \code{multivariate} models, the \code{x} can be
+#'  same for all sub models or different for each sub model. As an example, when
+#'  fitting a bivariate model, the \code{x = list(x1, x2)} specifies that
+#'  \code{x1} is the predictor variable for the first sub model, and \code{x2}
+#'  for the second sub model. To specify \code{x1} as a common predictor
+#'  variable for both sub models, the argument \code{x} is defined as \code{x =
+#'  list(x1)} or simply \code{x = x1}.
+#'
 #'@param y Specify response variable (e.g., repeated height measurements). For
 #'  \code{univariate} and \code{univariate_by} models, the \code{y} is specified
-#'  as a single variable. For the \code{univariate_by}, the response variable
-#'  for each sub model is created internally and named after the levels of
-#'  factor variable that was used to specify the \code{univariate_by} model. As
-#'  an example, for \code{univariate_by=sex}, the response variables
+#'  as a single variable. For the \code{univariate_by} model, the response
+#'  variables for sub models are created internally and named after the factor
+#'  levels of the variable that is used to set up the \code{univariate_by}
+#'  model. As an example, for \code{univariate_by = sex}, the response variables
 #'  \code{Female} and  \code{Male} are created where \code{Female} is the first
 #'  level and \code{Male} is the second level of the factor variable,
-#'  \code{sex}. For \code{multivariate}, the response variables are specified as
-#'  a list (e.g., \code{y = list(y1, y2}) where \code{y1} is response variable
-#'  for first sub model and \code{y2} for the second sub model. Note that for
-#'  \code{multivariate} model, data are not stacked but rather response vectors
-#'  of identical length that is same as the rows of the data frame \code{data}.
+#'  \code{sex}. For \code{multivariate} model, the response variables are
+#'  specified as a list such as \code{y = list(y1, y2} where \code{y1} is the
+#'  response variable for the first sub model and \code{y2} for the second sub
+#'  model. Note that for \code{multivariate} model, data are not stacked but
+#'  rather response vectors of identical length and two variables in the
+#'  \code{data}.
 #'  
 #'@param id Specify a variable that uniquely identifies the individuals in the
 #'  data frame. For \code{univariate_by} and \code{multivariate} models, the
 #'  \code{id} can be same (typically) for sub models or different for each sub
 #'  model (see \code{x} for details).
 #'
-#'@param data Data frame containing variables such as \code{x}, \code{y} 
-#' and \code{id} etc.
+#'@param data Data frame containing variables (such as \code{x}, \code{y}, 
+#' \code{id} etc.).
 #'
-#'@param df Specify degrees of freedom for the natural cubic spline design
+#'@param df Specify the degrees of freedom for the natural cubic spline design
 #'  matrix (default \code{4}). The \code{df} is internally used to construct the
-#'  vector of knots (quantiles of \code{x} distribution) that are eventually used
+#'  vector of knots (quantiles of \code{x} distribution) that are actually used
 #'  in the construction of the spline design matrix. For \code{univariate_by}
 #'  and \code{multivariate} models, the \code{df} can be same (e.g., \code{df  =
-#'  4}) for sub models or different for each sub model specified as
+#'  4}) for sub models or different for each sub model such as
 #'  \code{df=list(4, 5)} where \code{df} is 4 is for the first sub model and 5
 #'  for the second sub model.
 #'
-#'@param knots Specify a vector of knots for the natural cubic spline design 
-#'  matrix. Default is \code{NULL} as \code{df} is used by default (see above).
-#'  Note that \code{df} and \code{knots} can not be specified simultaneously,
-#'  and at least one of these ( \code{df} or \code{knots}) must be specified.
-#'  Like \code{df}, the \code{knots} can be same for sub models or different 
-#'  for each sub model when fitting \code{univariate_by} and \code{multivariate} 
-#'  models. 
+#'@param knots Specify a vector of knots for the natural cubic spline design
+#'  matrix. Default is \code{NULL} because the \code{df} is used (default, see
+#'  above). Note that \code{df} and \code{knots} can not be specified
+#'  simultaneously, and also both of them can not be \code{NULL}. In other
+#'  words, either \code{df} or \code{knots} must be specified, but not both.
+#'  Like \code{df}, the \code{knots} can be same for sub models or different for
+#'  each sub model when fitting \code{univariate_by} and \code{multivariate}
+#'  models.
 #'
 #'@param fixed A character string specifying the fixed effects structure
 #'  (default \code{fixed = a+b+c}.Note that  different fixed effect structures
