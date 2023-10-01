@@ -1206,6 +1206,22 @@ set_priors_initials <- function(a_prior_beta,
         class <- 'Lcortime'
     }
     
+    
+    if(setautocorr) {
+      if(class == 'Lcortime') {
+        acorclassname <- 'unstr' 
+      } else {
+        acorclassname <- acorclass
+      }
+      
+      allowed_acor_classes <- c('ar', 'ma', 'arma', 'unstr')
+      
+      if(!acorclassname %in% allowed_acor_classes) {
+        stop("Allowed autocorrelation classes are ", 
+             paste(allowed_acor_classes, collapse = ", ")) 
+      }
+    }
+    
    
     
     if (class == "b" & nlpar == 'a') {
@@ -1373,14 +1389,30 @@ set_priors_initials <- function(a_prior_beta,
       tempzxxx <- gsub("[[:space:]]", "", tempzxxx)
       if(grepl("p=", tempzxxx, fixed = F)) {
         acor_dim_p <- sub(",.*", "", sub(".*p=", "", tempzxxx) )  
+        acor_dim_p <- gsub(")" , "", acor_dim_p, fixed = T)
       } else if(!grepl("p=", tempzxxx, fixed = F)) {
-        acor_dim_p <- 1
+        acor_dim_p <- '1'
       }
       if(grepl("q=", tempzxxx, fixed = F)) {
         acor_dim_q <- sub(",.*", "", sub(".*q=", "", tempzxxx) )  
+        acor_dim_q <- gsub(")" , "", acor_dim_q, fixed = T) 
       } else if(!grepl("q=", tempzxxx, fixed = F)) {
-        acor_dim_q <- 1
+        acor_dim_q <- '1'
       }
+      
+      if(acorclass == 'ar') {
+        if(!grepl("p=", tempzxxx, fixed = F)) 
+          stop("Please specify arguments by names e.g., p=1")
+      } else if(acorclass == 'ma') {
+        if(!grepl("q=", tempzxxx, fixed = F))
+          stop("Please specify arguments by names e.g., q=1")
+      } else if(acorclass == 'arma') {
+        if(!grepl("p=", tempzxxx, fixed = F)) 
+          stop("Please specify arguments by names e.g., p=1")
+        if(!grepl("q=", tempzxxx, fixed = F))
+          stop("Please specify arguments by names e.g., q=1")
+      }
+      
       nrep_of_parms_p <- eval(parse(text = acor_dim_p))
       nrep_of_parms_q <- eval(parse(text = acor_dim_q))
     }
@@ -2782,6 +2814,15 @@ set_priors_initials <- function(a_prior_beta,
     initial_in_datazz <- NULL
   }
   
+  # print(initial_in_data)
+  
+  if(!is.null(initsi[[1]])) {
+    if(initsi[[1]] == 'random') {
+      initial_in_datazz <- NULL
+      combined_inits <- NULL
+    }
+  }
+  
   
   
   if (!is.null(initial_in_datazz)) {
@@ -2790,15 +2831,22 @@ set_priors_initials <- function(a_prior_beta,
       list_ck <- list_ck_ <- list()
       list_ck_rescor <- list()
       ik_j <- ik_j_ <- 0
+      what_not_to_flatten <- "^L_|^z_|Intercept_sigma|Lrescor"
+      what_not_to_flatten2 <- "^L_|^z_"
+      if(length(initial_in_datazz$a_prior_beta) == 0) {
+        # added |b_s when a_init is random 
+        what_not_to_flatten <- paste0(what_not_to_flatten, "|b_s")
+        what_not_to_flatten2 <- paste0(what_not_to_flatten2, "|b_s")
+      }
       for (ik in 1:length(initial_in_datazz)) {
         ik_j <- ik_j + 1
         ik_names <- names(initial_in_datazz[[ik]])
-        if (!any(grepl("^L_|^z_|Intercept_sigma|Lrescor", ik_names))) {
+        if (!any(grepl(what_not_to_flatten, ik_names))) {
           list_ck[[ik]] <- initial_in_datazz[[ik_j]]
           names(list_ck[[ik]]) <- ik_names
-        } else if (any(grepl("^L_|^z_", ik_names))) {
+        } else if (any(grepl(what_not_to_flatten2, ik_names))) {
           mn <- 0
-          for (ikl in 1:length(grepl("^L_|^z_", ik_names))) {
+          for (ikl in 1:length(grepl(what_not_to_flatten2, ik_names))) {
             mn <- mn + 1
             ik_j_ <- ik_j_ + 1
             list_ck_[[ik_j_]] <- initial_in_datazz[[ik_j]][[mn]]
@@ -2821,6 +2869,8 @@ set_priors_initials <- function(a_prior_beta,
         ))), keys)
       combined_inits <- c(list_ck, list_ck_)
     }
+    
+     # print(combined_inits)
     
     
     if (is.null(gr_prior_cor) & is.null(sigma_prior_cor) ) {
@@ -2906,7 +2956,7 @@ set_priors_initials <- function(a_prior_beta,
       combined_inits <- c(combined_inits, list_ck_rescor)
     }
     
-   
+
     # convert vector of 's' initials to named individual (s1, s2)
     if(select_model == "sitar") {
       # Don't let when evaluating _str higher custom order
@@ -2925,38 +2975,46 @@ set_priors_initials <- function(a_prior_beta,
         
         subset_sparms <-
           combined_inits[grepl(".*_s$", names(combined_inits))]
+       
         subset_sparms_name <- names(subset_sparms)
-        subset_sparms_numeric <- subset_sparms[[1]]
-        subset_sparms2 <- list()
-        subset_sparms2names <- c()
-        
-        for (subset_sparmsi in 1:length(subset_sparms_numeric)) {
-          subset_sparms_namei <-
-            gsub("_s", nlpar_s_init[subset_sparmsi], subset_sparms_name)
-          subset_sparms2[[subset_sparms_namei]] <-
-            subset_sparms_numeric[subset_sparmsi]
-          subset_sparms2names <-
-            c(subset_sparms2names, subset_sparms_namei)
+        # subset_sparms_numeric <- subset_sparms[[1]]
+        if(length(subset_sparms) != 0) subset_sparms_numeric <- subset_sparms[[1]]
+        if(length(subset_sparms) == 0) subset_sparms_numeric <- NULL
+        if(!is.null(subset_sparms_numeric)) {
+          subset_sparms2 <- list()
+          subset_sparms2names <- c()
+          
+          for (subset_sparmsi in 1:length(subset_sparms_numeric)) {
+            subset_sparms_namei <-
+              gsub("_s", nlpar_s_init[subset_sparmsi], subset_sparms_name)
+            subset_sparms2[[subset_sparms_namei]] <-
+              subset_sparms_numeric[subset_sparmsi]
+            subset_sparms2names <-
+              c(subset_sparms2names, subset_sparms_namei)
+          }
+          names(subset_sparms_numeric) <- subset_sparms2names
+          subset_sparms3 <- list()
+          for (isi in 1:df) {
+            subset_sparms3[[paste0("b", resp_, "_s", isi)]] <-
+              subset_sparms_numeric[grep(paste0("b", resp_, "_s", isi),
+                                         names(subset_sparms_numeric))]
+          }
+          subset_sparms <- subset_sparms3
+          subset_sparms <-
+            subset_sparms[!names(subset_sparms) %in% subset_sparms_name]
+          combined_inits <-
+            append(combined_inits, subset_sparms, after = grep(
+              paste0("^", subset_sparms_name, "$"),
+              names(combined_inits)
+            ))
+          combined_inits <-
+            combined_inits[!names(combined_inits) %in% paste0("",
+                                                              subset_sparms_name, "")]
+          initials <- combined_inits
+        } # if(!is.null(subset_sparms_numeric)) {
+        if(is.null(subset_sparms_numeric)) {
+          initials <- combined_inits
         }
-        names(subset_sparms_numeric) <- subset_sparms2names
-        subset_sparms3 <- list()
-        for (isi in 1:df) {
-          subset_sparms3[[paste0("b", resp_, "_s", isi)]] <-
-            subset_sparms_numeric[grep(paste0("b", resp_, "_s", isi),
-                                       names(subset_sparms_numeric))]
-        }
-        subset_sparms <- subset_sparms3
-        subset_sparms <-
-          subset_sparms[!names(subset_sparms) %in% subset_sparms_name]
-        combined_inits <-
-          append(combined_inits, subset_sparms, after = grep(
-            paste0("^", subset_sparms_name, "$"),
-            names(combined_inits)
-          ))
-        combined_inits <-
-          combined_inits[!names(combined_inits) %in% paste0("",
-                                                            subset_sparms_name, "")]
-        initials <- combined_inits
       } # if(first_loop) {
       
       if(!first_loop) initials <- combined_inits
@@ -2967,7 +3025,10 @@ set_priors_initials <- function(a_prior_beta,
     
   } # if (!is.null(initial_in_datazz)) {
   
+
   
+  # Mean all initals random
+  if(length(combined_inits) == 0) initials <- NULL
 
   if (is.null(initial_in_datazz)) {
     initials <- NULL
@@ -3127,6 +3188,7 @@ set_priors_initials <- function(a_prior_beta,
   
   initials <- initialsx
   
+  
 
   # re create symmetric square Lcortime which is flattened to a vector
   # this could have have done above like L_|z_|Lrescor etc but this is same
@@ -3141,7 +3203,6 @@ set_priors_initials <- function(a_prior_beta,
    #  print(str(initials))
   # print(evaluated_priors)
   #########
-  
   
 
   attr(evaluated_priors, 'initials') <- initials

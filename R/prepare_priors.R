@@ -164,6 +164,13 @@ prepare_priors <- function(prior_argument,
   splitmvar <- gsub("\\s", "", splitmvar)
   splitmvar <- paste(splitmvar, collapse = "")
   splitmvar_w <- get_within_fist_last_paranthesese(splitmvar)
+  
+  # This for flat prior when no () i.e, flat instead of flat()
+  if (identical(splitmvar_w, character(0))) {
+    splitmvar_w <- ""
+  }
+  
+ 
   splitmvar_w <-
     gsub_comma_within_paranthesese(splitmvar_w, "_comma_")
   splitmvar_w2 <- strsplit(splitmvar_w, ",")[[1]]
@@ -234,6 +241,8 @@ prepare_priors <- function(prior_argument,
   
   
   dist <- strsplit(gsub("\\s", "", prior_str_arg), "\\(")[[1]][1]
+  
+if(dist != 'flat') {
   
   add_missing_mandate_names <- function(x, testi, testi2) {
     j = 0
@@ -5638,7 +5647,20 @@ prepare_priors <- function(prior_argument,
   }
   
   
+} # end if(dist != 'flat') 
   
+  
+  if(dist == 'flat') {
+    prior_str_arg_out <- ""
+    lowerbound <- NA
+    upperbound <- NA
+    stanvars_data <- NULL
+    allowed_init_options_beta <- NULL
+    allowed_init_options_sd <- NULL
+    allowed_init_options_rate <- NULL
+    allowed_init_options_shape <- NULL
+    allowed_init_options_scale <- NULL
+  }
   
   
   # initials
@@ -5692,6 +5714,8 @@ prepare_priors <- function(prior_argument,
   
   # if(nlpar == 'e' | nlpar == 'f')
   # prior_str_arg %>% print()
+  
+  
   
   return(
     list(
