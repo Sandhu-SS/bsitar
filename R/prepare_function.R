@@ -503,8 +503,15 @@ add_context_getknots_fun <-
              paste0(getknotsname, "(", '', ")"), ";")
     )
     
-    vectorA <- "\n  vector[N] A=a-(s1*min(knots));"
-    add_knotinfo <- paste0(add_knotinfo, vectorA)
+  #  vectorA <- "\n    vector[N] A=a-((s1 .* Spl[,1])*min(knots));"
+    
+    
+     vectorA <- "\n  vector[N] A=a-(s1*min(knots));"
+    
+   # vectorA <- "\n    vector[N] A=a;"
+    
+    
+    # add_knotinfo <- paste0(add_knotinfo, vectorA)
     
     if((backend == "rstan" & utils::packageVersion("rstan") >= "2.26.1") | 
        backend == "cmdstanr") {
@@ -628,6 +635,7 @@ add_context_getknots_fun <-
              collapse = " ")
     
     
+    fun_body <- paste0(fun_body, "\n", vectorA)
     rcsfun <- paste(start_fun, add_knotinfo, fun_body, endof_fun)
     rcsfun_raw <- rcsfun
     # print(cat(rcsfun))
@@ -744,6 +752,7 @@ add_context_getknots_fun <-
     "
     }
     
+    body <- paste0(body, vectorA, "\n  ")
     
     spl_d0 <- create_internal_function(
       y = y,
@@ -1275,7 +1284,7 @@ add_context_getknots_fun <-
   all_raw_str <- c(rcsfun_raw_str, spl_d0_str, spl_d1_str, 
                     spl_d2_str, getX_str, getknots_str)
   
-   # print(cat(all_raw_str))
+   # print(cat(rcsfun))
    # stop()
   
   list(rcsfun = rcsfun, r_funs = all_raw_str)

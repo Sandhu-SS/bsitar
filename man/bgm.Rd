@@ -230,6 +230,7 @@ bgm(
   file = NULL,
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
+  parameterization = "ncp",
   ...
 )
 }
@@ -1446,6 +1447,10 @@ package is used for parallel execution of the chains and argument
 \code{cores} will be ignored. Can be set globally for the current \R
 session via the \code{"future"} option. The execution type is controlled
 via \code{\link[future:plan]{plan}} (see the examples section below).}
+
+\item{parameterization}{A character string to specify either
+Non-centered parameterization (\code{'ncp}, default) or Centered
+parameterization (\code{'cp} approach to draw random effects.}
 
 \item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}}
 }

@@ -1316,6 +1316,10 @@
 #'   session via the \code{"future"} option. The execution type is controlled
 #'   via \code{\link[future:plan]{plan}} (see the examples section below).
 #'   
+#' @param parameterization A character string to specify either 
+#' Non-centered parameterization (\code{'ncp}, default) or Centered 
+#' parameterization (\code{'cp} approach to draw random effects. 
+#'   
 #'@param ... Further arguments passed to [brms::brm()]
 #'
 #'@return An object of class \code{brmsfit, bsiatr}, that contains the posterior
@@ -1755,6 +1759,7 @@ bgm <- function(x,
                    file = NULL,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
+                   parameterization = 'ncp',
                    ...) {
   
   mcall <- mcall_ <- match.call()
@@ -1850,23 +1855,30 @@ bgm <- function(x,
  
   mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
   
-  # if(mcall$init != "random") {
-    for (inxc in letters[1:26]) {
-      what_inxc <- paste0(inxc, "_", "init", "_", "beta", "")
-      if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
-          quote_random_as_init_arg(mcall[[what_inxc]], mcall)
-      what_inxc <- paste0(inxc, "_", "cov", "_", "init", "_", "beta", "")
-      if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
+  for (inxc in letters[1:26]) {
+    what_inxc <- paste0(inxc, "_", "init", "_", "beta", "")
+    if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
         quote_random_as_init_arg(mcall[[what_inxc]], mcall)
-      what_inxc <- paste0(inxc, "_", "init", "_", "sd", "")
-      if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
-        quote_random_as_init_arg(mcall[[what_inxc]], mcall)
-      what_inxc <- paste0(inxc, "_", "cov", "_", "init", "_", "sd", "")
-      if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
-        quote_random_as_init_arg(mcall[[what_inxc]], mcall)
-    }
-  # }
+    what_inxc <- paste0(inxc, "_", "cov", "_", "init", "_", "beta", "")
+    if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
+      quote_random_as_init_arg(mcall[[what_inxc]], mcall)
+    what_inxc <- paste0(inxc, "_", "init", "_", "sd", "")
+    if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
+      quote_random_as_init_arg(mcall[[what_inxc]], mcall)
+    what_inxc <- paste0(inxc, "_", "cov", "_", "init", "_", "sd", "")
+    if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
+      quote_random_as_init_arg(mcall[[what_inxc]], mcall)
+  }
   
+  what_inxc <- paste0('sigma', "_", "init", "_", "beta", "")
+  if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
+    quote_random_as_init_arg(mcall[[what_inxc]], mcall)
+  
+  what_inxc <- paste0('sigma', "_", "cov", "_", "init", "_", "beta", "")
+  if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
+    quote_random_as_init_arg(mcall[[what_inxc]], mcall)
+  
+  # mcallx <<- mcall
   
   
   xs <- ids <- dfs <- NA
@@ -3114,6 +3126,7 @@ bgm <- function(x,
     "set_same_priors_hierarchy",
     "outliers",
     "select_model",
+    "parameterization",
     "..."
   )
   
@@ -4064,10 +4077,10 @@ bgm <- function(x,
     bstart <- bstart - xoffset
     
     
-    xoffset <- round(xoffset, 4)
+    #xoffset <- round(xoffset, 4)
     datai[[xsi]] <- datai[[xsi]] - xoffset
     knots <- knots - xoffset
-    knots <- round(knots, 6)
+    #knots <- round(knots, 6)
     nknots <- length(knots)
     df <- length(knots) - 1
    
@@ -6059,10 +6072,44 @@ bgm <- function(x,
     }
  
     
-    # brm_argsxx <<- brm_args
     
     
-    brmsfit <- do.call(brms::brm, brm_args)
+    if(parameterization == 'cp') {
+      scode  <- do.call(brms::make_stancode, brm_args)
+      sdata  <- do.call(brms::make_standata, brm_args)
+      escode <- edit_scode_ncp_to_cp(scode)
+      
+      message("Shifting to 'rstan' as backend for CP parameterization")
+      
+      rstan_args <- list()
+      cross_args <- intersect(names(brm_args), formalArgs(rstan::stan))
+      for (zxi in cross_args) {
+        if(zxi %in% names(brm_args)) {
+          rstan_args[[zxi]] <- brm_args[[zxi]]
+        } 
+      }
+      rstan_args$algorithm  <- "NUTS" # “NUTS”, “HMC”, “Fixed_param”
+      rstan_args$model_code <- escode
+      rstan_args$data       <- sdata
+      rstan::rstan_options(threads_per_chain = brm_args$threads$threads)
+      rfit <- do.call(rstan::stan, rstan_args)
+      
+      
+      brm_args$empty <- TRUE
+      brm_args$backend <- 'rstan'
+      ebrmsfit <- do.call(brms::brm, brm_args)
+      ebrmsfit$fit <- rfit
+      brmsfit <- brms::rename_pars(ebrmsfit)
+      brmsfit$escode <- escode
+    }
+    
+    
+    
+    if(parameterization == 'ncp') {
+      brmsfit <- do.call(brms::brm, brm_args)
+    }
+    
+    
     model_info <- list()
 
     for (i in 1:length(funlist_rnamelist)) {

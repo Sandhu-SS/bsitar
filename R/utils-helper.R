@@ -570,6 +570,7 @@ ept <- function(x) eval(parse(text = x), envir = parent.frame())
 get_par_names_from_stancode <- function(code, 
                                         full = TRUE, 
                                         section =  'parameters',
+                                        semicolan = FALSE,
                                         what = '') {
   regex_for_section <- paste(".*(",section,"\\s*\\{.*?\\}).*", sep = '')
   filtered_stan_code <- gsub(code, pattern = regex_for_section, replacement = "\\1")
@@ -579,7 +580,8 @@ get_par_names_from_stancode <- function(code,
   collect_full <- c()
   for (i in 1:length(zz)-1) {
     if(!(identical(zz[i], character(0))))  {
-      t <- sub(";.*", "", zz[i])
+      if(!semicolan) t <- sub(";.*", "", zz[i])
+      if( semicolan) t <- sub(";.*", ";", zz[i])
       t_full <- t
       t_full <- gsub("^ *|(?<= ) | *$", "", t_full, perl=T)
       if(what == "") {
@@ -973,30 +975,33 @@ priors_to_textdata <- function(model,
   for (i in 1:nrow(spriors)) {
     getxit <- spriors[i, ]$prior
     prior_name <- strsplit(getxit, "\\(")[[1]][1]
-    
+    # if(!is.na(prior_name))
     if (!prior_name_asit) {
-      if (prior_name == 'lkj') {
+      if (!is.na(prior_name) & prior_name == 'lkj') {
         prior_name_case <- toupper(prior_name)
-      } else if (prior_name == 'lkj_corr_cholesky') {
+      } else if (!is.na(prior_name) & prior_name == 'lkj_corr_cholesky') {
         prior_name_case <- 'LKJ'
       } else {
         prior_name_case <- firstup(prior_name)
       }
     }
     
-    if (prior_name_asit) {
-      prior_name_case <- prior_name
-    }
+    if (prior_name_asit) prior_name_case <- prior_name
+    
     
     getxit_2 <-
       regmatches(getxit, gregexpr("(?<=\\().*?(?=\\))", getxit, perl = T))[[1]]
-    getxit_3 <- strsplit(getxit_2, ",")[[1]]
-    getxit_4 <- sapply(getxit_3, function(x)
-      eval(parse(text = x)))
-    getxit_4 <- round(getxit_4, digits = digits)
-    getxit_5 <- paste(getxit_4, collapse = ", ")
-    getxit_6 <- paste0("(", getxit_5, ")")
-    getxit_7 <- paste0(prior_name_case, getxit_6)
+    if(!identical(getxit_2, character(0))) {
+      getxit_3 <- strsplit(getxit_2, ",")[[1]]
+      getxit_4 <- sapply(getxit_3, function(x)
+        eval(parse(text = x)))
+      getxit_4 <- round(getxit_4, digits = digits)
+      getxit_5 <- paste(getxit_4, collapse = ", ")
+      getxit_6 <- paste0("(", getxit_5, ")")
+      getxit_7 <- paste0(prior_name_case, getxit_6)
+    } else {
+      getxit_7 <- NULL
+    }
     spriors[i, ]$prior <- getxit_7
   }
   
@@ -1167,4 +1172,72 @@ collapse_comma <- function(...) {
 }
 
 
+
+
+edit_scode_ncp_to_cp <- function(stancode) {
+  editedcode <- editedcode2 <- stancode # berkeley_fit$bmodel
+  
+  clines <- get_par_names_from_stancode(editedcode,
+                                        section =  'transformed parameters',
+                                        semicolan = TRUE,
+                                        full = TRUE)
+  
+  move_to_p <- move_to_m <- c()
+  for (clinesi in clines) {
+    if(grepl("^matrix", clinesi)) {
+      move_to_p <- c(move_to_p, clinesi)
+      clinesi <- ""
+    } 
+    if(!grepl("^r_1 =", clinesi) & 
+       !grepl("^r_1=", clinesi) &
+       !grepl("//", clinesi) &
+       clinesi != "") {
+      move_to_m <- c(move_to_m, clinesi)
+    } 
+  } # for (clinesi in clines) {
+  
+  
+  m_n_c_l <- 
+    "for(i in 1:N_1) {
+      lprior +=  multi_normal_cholesky_lpdf(r_1[i,] |
+                                              rep_row_vector(0, M_1),
+                                            diag_pre_multiply(sd_1, L_1));
+    }"
+  
+  
+  move_to_m_mcode <- paste(c(m_n_c_l, move_to_m), collapse = "\n")
+  
+  move_to_m_gqcode <- paste(move_to_m, collapse = "\n")
+  
+  
+  for (clinesi in clines) {
+    if(!grepl("//", clinesi)) {
+      editedcode2 <- gsub(clinesi, paste0("// ", clinesi), editedcode2, fixed = T)
+    }
+  }
+  
+  
+  lprior_code <- "real lprior = 0;"
+  editedcode2 <- gsub(lprior_code, paste0(lprior_code, "\n", move_to_m_mcode, "\n"), editedcode2, fixed = T)
+  
+  genq_code <- "generated quantities {"
+  editedcode2 <- gsub(genq_code, paste0(genq_code, "\n", move_to_m_gqcode), editedcode2, fixed = T)
+  
+  
+  parm_code <- "parameters {"
+  editedcode2 <- gsub(paste0("", parm_code, ""), paste0(parm_code, "\n", move_to_p), editedcode2, fixed = T)
+  
+  
+  tparm_code_rm <- "transformed parameters {"
+  editedcode2 <- gsub(paste0(tparm_code_rm, "\n", move_to_p), tparm_code_rm, editedcode2, fixed = T)
+  
+  
+  z1_code_rm <- "matrix[M_1, N_1] z_1;"
+  editedcode2 <- gsub(z1_code_rm, paste0("// ", z1_code_rm), editedcode2, fixed = T)
+  
+  z1_tarhet_code_rm <- "target += std_normal_lupdf(to_vector(z_1));"
+  editedcode2 <- gsub(z1_tarhet_code_rm, paste0("// ", z1_tarhet_code_rm), editedcode2, fixed = T)
+  
+  editedcode2
+}
 

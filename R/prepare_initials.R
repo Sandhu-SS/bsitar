@@ -103,8 +103,6 @@ prepare_initials <- function(init_argument,
   }
   
   
-  ept <- function(x)
-    eval(parse(text = x), envir = parent.frame())
   
   set.seed(seed)
   
@@ -696,10 +694,10 @@ prepare_initials <- function(init_argument,
   # new addition on 27 5 2023
   # like a b c d e beta when ~ 0 +..., init for sigma are rep of sigma_init_beta 
   if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
-    if(ept("sigma_form_0")) {
-      out_list[[name_parm]] <- rep(out_list[[name_parm]], ept(nparcov))
-    } else if(!ept("sigma_form_0")) {
-      #if(!is.null(ept(nparcov))) {
+    if(ept(ept("init_argument")) != 'random' ) {
+      if(ept("sigma_form_0")) {
+        out_list[[name_parm]] <- rep(out_list[[name_parm]], ept(nparcov))
+      } else if(!ept("sigma_form_0")) {
         if(eit_cov) {
           addcovsigma <- unlist(ept(ept(ept("init_argument"))))
           addcovsigma_n <- ept(nparcov) - 1
@@ -710,8 +708,8 @@ prepare_initials <- function(init_argument,
           }
           if(!is.null(ept(nparcov))) out_list[[name_parm]] <-addcovsigma
         }
-      #} # if(!is.null(ept(nparcov))) {
-    } # end else if(!ept("sigma_form_0")) 
+      } # end else if(!ept("sigma_form_0")) 
+    } # if(ept(ept("init_argument")) != 'random' ) {
   } # if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
   
   
