@@ -54,6 +54,9 @@ prepare_formula <- function(x,
   d_formulasi <- NULL;
   e_formulasi <- NULL;
   f_formulasi <- NULL;
+  g_formulasi <- NULL;
+  h_formulasi <- NULL;
+  i_formulasi <- NULL;
   s_formulasi <- NULL;
   a_formula_grsi <- NULL;
   b_formula_grsi <- NULL;
@@ -61,6 +64,10 @@ prepare_formula <- function(x,
   d_formula_grsi <- NULL;
   e_formula_grsi <- NULL;
   f_formula_grsi <- NULL;
+  g_formula_grsi <- NULL;
+  h_formula_grsi <- NULL;
+  i_formula_grsi <- NULL;
+  s_formula_grsi <- NULL;
   sigma_formulasi <- NULL;
   sigma_formula_grsi <- NULL;
   set_higher_levels <- NULL;
@@ -76,6 +83,14 @@ prepare_formula <- function(x,
   e_formula_gr_strsi <- NULL;
   f_formula_gr_strsi_present <- NULL;
   f_formula_gr_strsi <- NULL;
+  g_formula_gr_strsi_present <- NULL;
+  g_formula_gr_strsi <- NULL;
+  h_formula_gr_strsi_present <- NULL;
+  h_formula_gr_strsi <- NULL;
+  i_formula_gr_strsi_present <- NULL;
+  i_formula_gr_strsi <- NULL;
+  s_formula_gr_strsi_present <- NULL;
+  s_formula_gr_strsi <- NULL;
   sigma_set_higher_levels <- NULL;
   sigma_formula_gr_strsi_present <- NULL;
   autocor_formi <- NULL;
@@ -88,18 +103,30 @@ prepare_formula <- function(x,
   dncov_gr_str <- NULL;
   encov_gr_str <- NULL;
   fncov_gr_str <- NULL;
+  gncov_gr_str <- NULL;
+  hncov_gr_str <- NULL;
+  incov_gr_str <- NULL;
+  sncov_gr_str <- NULL;
   acovcoefnames_gr_str_id <- NULL;
   bcovcoefnames_gr_str_id <- NULL;
   ccovcoefnames_gr_str_id <- NULL;
   dcovcoefnames_gr_str_id <- NULL;
   ecovcoefnames_gr_str_id <- NULL;
   fcovcoefnames_gr_str_id <- NULL;
+  gcovcoefnames_gr_str_id <- NULL;
+  hcovcoefnames_gr_str_id <- NULL;
+  icovcoefnames_gr_str_id <- NULL;
+  scovcoefnames_gr_str_id <- NULL;
   acovcoefnames_gr_str_form <- NULL;
   bcovcoefnames_gr_str_form <- NULL;
   ccovcoefnames_gr_str_form <- NULL;
   dcovcoefnames_gr_str_form <- NULL;
   ecovcoefnames_gr_str_form <- NULL;
   fcovcoefnames_gr_str_form <- NULL;
+  gcovcoefnames_gr_str_form <- NULL;
+  hcovcoefnames_gr_str_form <- NULL;
+  icovcoefnames_gr_str_form <- NULL;
+  scovcoefnames_gr_str_form <- NULL;
   sigmancov_gr_str <- NULL;
   sigmacovcoefnames_gr_str <- NULL;
   sigmacovcoefnames_gr_str_id <- NULL;
@@ -113,11 +140,27 @@ prepare_formula <- function(x,
     }
   }
   
+  fixedelements <- strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
+  for (cfi in letters[1:26]) {
+    if(!cfi %in% fixedelements) {
+      assign(paste0(cfi, '_', 'formulasi'), NULL)
+      assign(paste0(cfi, '', 'form'), NULL)
+    }
+  }
+  
+  randomelements <- strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
+  for (cfi in letters[1:26]) {
+    if(!cfi %in% randomelements) {
+      assign(paste0(cfi, '_', 'formula_grsi'), NULL)
+    }
+  }
+  
+ 
   # Need separate true false for random effects and sigma
   
   # First assign all FALSE
   # This to ignore _str formulae even if present when parmare not random
-  for (set_randomsi_higher_levsli in c(letters[1:20], 'sigma')) {
+  for (set_randomsi_higher_levsli in c(letters[1:26], 'sigma')) {
     set_nlpar_what <- set_randomsi_higher_levsli
     assign(paste0(set_nlpar_what, '_formula_gr_strsi_present'), FALSE)
   }
@@ -155,7 +198,7 @@ prepare_formula <- function(x,
   
   # First assign all FALSE
   # This to ignore _str formulae even if present when parmare not random
-  for (set_randomsi_higher_levsli in c(letters[1:10], 'sigma')) {
+  for (set_randomsi_higher_levsli in c(letters[1:26], 'sigma')) {
     set_nlpar_what <- set_randomsi_higher_levsli
     assign(paste0(set_nlpar_what, 'covcoefnames_gr_str'), NULL)
     assign(paste0(set_nlpar_what, 'covcoefnames_gr_str_id'), NULL)
@@ -358,7 +401,6 @@ prepare_formula <- function(x,
   }
   
   
-  
   if(select_model == "sitar") {
     ###########
     # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter
@@ -373,15 +415,20 @@ prepare_formula <- function(x,
   }
   
   
-  
-  if(select_model == "sitar") {
-    fullabcsnames <- c(abcnames, snames)
+  if(select_model == "sitar" | select_model == "rcs") {
+    if(select_model == "sitar") {
+      if(any(grepl("s", abcnames))) abcnames <- abcnames[-length(abcnames)]
+      fullabcsnames <- c(abcnames, snames)
+    }
+    if(select_model == "rcs") {
+      fullabcsnames <- c('a', ",", snames)
+    }
   }
   
-  if(select_model != "sitar") {
+  
+  if(select_model != "sitar" & select_model != "rcs") {
     fullabcsnames <- abcnames
   }
-  
   
   
   
@@ -490,7 +537,31 @@ prepare_formula <- function(x,
   }
   
   
-  sfixed <- s_formulasi
+  if (grepl("g", fixedsi, fixed = T)) {
+    gfixed <- g_formulasi
+  } else {
+    gfixed <- NULL
+  }
+  
+  if (grepl("h", fixedsi, fixed = T)) {
+    hfixed <- h_formulasi
+  } else {
+    hfixed <- NULL
+  }
+  
+  if (grepl("i", fixedsi, fixed = T)) {
+    ifixed <- i_formulasi
+  } else {
+    ifixed <- NULL
+  }
+  
+  if (grepl("s", fixedsi, fixed = T)) {
+    sfixed <- s_formulasi
+  } else {
+    sfixed <- NULL
+  }
+  
+  # sfixed <- s_formulasi
   
   
   if (grepl("a", randomsi, fixed = T)) {
@@ -525,6 +596,31 @@ prepare_formula <- function(x,
     frandom <- f_formula_grsi
   } else {
     frandom <- NULL
+  }
+  
+  if (grepl("g", randomsi, fixed = T)) {
+    grandom <- g_formula_grsi
+  } else {
+    grandom <- NULL
+  }
+  
+  if (grepl("h", randomsi, fixed = T)) {
+    hrandom <- h_formula_grsi
+  } else {
+    hrandom <- NULL
+  }
+  
+  
+  if (grepl("i", randomsi, fixed = T)) {
+    irandom <- i_formula_grsi
+  } else {
+    irandom <- NULL
+  }
+  
+  if (grepl("s", randomsi, fixed = T)) {
+    srandom <- s_formula_grsi
+  } else {
+    srandom <- NULL
   }
   
   
@@ -597,6 +693,18 @@ prepare_formula <- function(x,
   frandom_wb  <- arandom_wb
   frandom_wb_ <- arandom_wb_
   
+  grandom_wb  <- arandom_wb
+  grandom_wb_ <- arandom_wb_
+  
+  hrandom_wb  <- arandom_wb
+  hrandom_wb_ <- arandom_wb_
+  
+  irandom_wb  <- arandom_wb
+  irandom_wb_ <- arandom_wb_
+  
+  srandom_wb  <- arandom_wb
+  srandom_wb_ <- arandom_wb_
+  
   
   sigma_random_wb <- arandom_wb
   sigma_random_wb_ <- arandom_wb_
@@ -657,6 +765,42 @@ prepare_formula <- function(x,
   }
   
   
+  if(!is.null(grandom)) {
+    if(grepl("|", grandom, fixed = TRUE)) {
+      grandom_wb <- gsub("~", "", grandom)
+      grandom_wb_ <- TRUE
+      grandom <- get_x_random(grandom)
+    }
+  }
+  
+  
+  if(!is.null(hrandom)) {
+    if(grepl("|", hrandom, fixed = TRUE)) {
+      hrandom_wb <- gsub("~", "", hrandom)
+      hrandom_wb_ <- TRUE
+      hrandom <- get_x_random(hrandom)
+    }
+  }
+  
+  
+  if(!is.null(irandom)) {
+    if(grepl("|", irandom, fixed = TRUE)) {
+      irandom_wb <- gsub("~", "", irandom)
+      irandom_wb_ <- TRUE
+      irandom <- get_x_random(irandom)
+    }
+  }
+  
+  
+  if(!is.null(srandom)) {
+    if(grepl("|", srandom, fixed = TRUE)) {
+      srandom_wb <- gsub("~", "", srandom)
+      srandom_wb_ <- TRUE
+      srandom <- get_x_random(srandom)
+    }
+  }
+  
+  
   if(!is.null(sigmarandom)) {
     if(grepl("|", sigmarandom, fixed = TRUE)) {
       sigma_random_wb <- gsub("~", "", sigmarandom) # with bar
@@ -671,6 +815,10 @@ prepare_formula <- function(x,
   drandom_wb <- gsub("1+1", "1", drandom_wb, fixed = T)
   erandom_wb <- gsub("1+1", "1", erandom_wb, fixed = T)
   frandom_wb <- gsub("1+1", "1", frandom_wb, fixed = T)
+  grandom_wb <- gsub("1+1", "1", grandom_wb, fixed = T)
+  hrandom_wb <- gsub("1+1", "1", hrandom_wb, fixed = T)
+  irandom_wb <- gsub("1+1", "1", irandom_wb, fixed = T)
+  srandom_wb <- gsub("1+1", "1", srandom_wb, fixed = T)
   
   sigma_random_wb <- gsub("1+1", "1", sigma_random_wb, fixed = T)
   
@@ -765,11 +913,59 @@ prepare_formula <- function(x,
       fncov <- ncol(fcovmat) - 1
     fcovcoefnames <- colnames(fcovmat)
     fcovcoefnames <- gsub("\\(|)", "", fcovcoefnames)
-  } else if (is.null(efixed)) {
+  } else if (is.null(ffixed)) {
     fncov <- fcovcoefnames <- NULL
   }
   
   
+  if (!is.null(gfixed)) {
+    gcovmat <- eval(parse(text = paste0(
+      "model.matrix(",
+      gfixed, ",data = data)"
+    )))
+    if (ncol(gcovmat) == 1)
+      gncov <- NULL
+    else
+      gncov <- ncol(gcovmat) - 1
+    gcovcoefnames <- colnames(gcovmat)
+    gcovcoefnames <- gsub("\\(|)", "", gcovcoefnames)
+  } else if (is.null(gfixed)) {
+    gncov <- gcovcoefnames <- NULL
+  }
+  
+  
+  if (!is.null(hfixed)) {
+    hcovmat <- eval(parse(text = paste0(
+      "model.matrix(",
+      hfixed, ",data = data)"
+    )))
+    if (ncol(hcovmat) == 1)
+      hncov <- NULL
+    else
+      hncov <- ncol(hcovmat) - 1
+    hcovcoefnames <- colnames(hcovmat)
+    hcovcoefnames <- gsub("\\(|)", "", hcovcoefnames)
+  } else if (is.null(hfixed)) {
+    hncov <- hcovcoefnames <- NULL
+  }
+  
+  
+  if (!is.null(ifixed)) {
+    icovmat <- eval(parse(text = paste0(
+      "model.matrix(",
+      ifixed, ",data = data)"
+    )))
+    if (ncol(icovmat) == 1)
+      incov <- NULL
+    else
+      incov <- ncol(icovmat) - 1
+    icovcoefnames <- colnames(icovmat)
+    icovcoefnames <- gsub("\\(|)", "", icovcoefnames)
+  } else if (is.null(ifixed)) {
+    incov <- icovcoefnames <- NULL
+  }
+  
+
   if (!is.null(sfixed)) {
     scovmat <- eval(parse(text = paste0(
       "model.matrix(",
@@ -782,6 +978,8 @@ prepare_formula <- function(x,
     }
     scovcoefnames <- colnames(scovmat)
     scovcoefnames <- gsub("\\(|)", "", scovcoefnames)
+  } else if (is.null(sfixed)) {
+    sncov <- scovcoefnames <- NULL
   }
   
   
@@ -865,10 +1063,6 @@ prepare_formula <- function(x,
     dncov_gr <- dcovcoefnames_gr <- NULL
   }
   
-  
-  
-  
-  
   if (!is.null(erandom)) {
     ecovmat_gr <- eval(parse(text = paste0(
       "model.matrix(",
@@ -886,8 +1080,6 @@ prepare_formula <- function(x,
   }
   
   
-  
-  
   if (!is.null(frandom)) {
     fcovmat_gr <- eval(parse(text = paste0(
       "model.matrix(",
@@ -900,13 +1092,79 @@ prepare_formula <- function(x,
     }
     fcovcoefnames_gr <- colnames(fcovmat_gr)
     fcovcoefnames_gr <- gsub("\\(|)", "", fcovcoefnames_gr)
-  } else if (is.null(erandom)) {
+  } else if (is.null(frandom)) {
     fncov_gr <- fcovcoefnames_gr <- NULL
+  }
+  
+  if (!is.null(grandom)) {
+    gcovmat_gr <- eval(parse(text = paste0(
+      "model.matrix(",
+      grandom, ",data = data)"
+    )))
+    if (ncol(gcovmat_gr) == 1) {
+      gncov_gr <- NULL
+    } else {
+      gncov_gr <- ncol(gcovmat_gr) - 1
+    }
+    gcovcoefnames_gr <- colnames(gcovmat_gr)
+    gcovcoefnames_gr <- gsub("\\(|)", "", gcovcoefnames_gr)
+  } else if (is.null(grandom)) {
+    gncov_gr <- gcovcoefnames_gr <- NULL
+  }
+  
+  
+  if (!is.null(hrandom)) {
+    hcovmat_gr <- eval(parse(text = paste0(
+      "model.matrix(",
+      hrandom, ",data = data)"
+    )))
+    if (ncol(hcovmat_gr) == 1) {
+      hncov_gr <- NULL
+    } else {
+      hncov_gr <- ncol(hcovmat_gr) - 1
+    }
+    hcovcoefnames_gr <- colnames(hcovmat_gr)
+    hcovcoefnames_gr <- gsub("\\(|)", "", hcovcoefnames_gr)
+  } else if (is.null(hrandom)) {
+    hncov_gr <- hcovcoefnames_gr <- NULL
+  }
+  
+  
+  if (!is.null(irandom)) {
+    icovmat_gr <- eval(parse(text = paste0(
+      "model.matrix(",
+      irandom, ",data = data)"
+    )))
+    if (ncol(icovmat_gr) == 1) {
+      incov_gr <- NULL
+    } else {
+      incov_gr <- ncol(icovmat_gr) - 1
+    }
+    icovcoefnames_gr <- colnames(icovmat_gr)
+    icovcoefnames_gr <- gsub("\\(|)", "", icovcoefnames_gr)
+  } else if (is.null(irandom)) {
+    incov_gr <- icovcoefnames_gr <- NULL
   }
   
   
   
+  if (!is.null(srandom)) {
+    scovmat_gr <- eval(parse(text = paste0(
+      "model.matrix(",
+      srandom, ",data = data)"
+    )))
+    if (ncol(scovmat_gr) == 1) {
+      sncov_gr <- NULL
+    } else {
+      sncov_gr <- ncol(scovmat_gr) - 1
+    }
+    scovcoefnames_gr <- colnames(scovmat_gr)
+    scovcoefnames_gr <- gsub("\\(|)", "", scovcoefnames_gr)
+  } else if (is.null(srandom)) {
+    sncov_gr <- scovcoefnames_gr <- NULL
+  }
   
+
   
   
   if (!is.null(sigmarandom)) {
@@ -959,6 +1217,33 @@ prepare_formula <- function(x,
     fform <- NULL
   }
   
+  if (!is.null(gfixed)) {
+    gform <- paste0("g", gfixed)
+  } else {
+    gform <- NULL
+  }
+  
+  
+  if (!is.null(hfixed)) {
+    hform <- paste0("h", hfixed)
+  } else {
+    hform <- NULL
+  }
+  
+  
+  if (!is.null(ifixed)) {
+    iform <- paste0("i", ifixed)
+  } else {
+    iform <- NULL
+  }
+  
+  
+  if (!is.null(sfixed)) {
+    sform <- paste0("s", ifixed)
+  } else {
+    sform <- NULL
+  }
+  
   
   if (!is.null(sigmafixed)) {
     sigmaform <- paste0("sigma", sigmafixed)
@@ -1005,6 +1290,32 @@ prepare_formula <- function(x,
     fform_gr <- gsub("^~", "", frandom, fixed = F)
   } else {
     fform_gr <- NULL
+  }
+  
+  
+  if (!is.null(grandom)) {
+    gform_gr <- gsub("^~", "", grandom, fixed = F)
+  } else {
+    gform_gr <- NULL
+  }
+  
+  if (!is.null(hrandom)) {
+    hform_gr <- gsub("^~", "", hrandom, fixed = F)
+  } else {
+    hform_gr <- NULL
+  }
+  
+  
+  if (!is.null(irandom)) {
+    iform_gr <- gsub("^~", "", irandom, fixed = F)
+  } else {
+    iform_gr <- NULL
+  }
+  
+  if (!is.null(srandom)) {
+    sform_gr <- gsub("^~", "", srandom, fixed = F)
+  } else {
+    sform_gr <- NULL
   }
   
   
@@ -1123,6 +1434,51 @@ prepare_formula <- function(x,
         } else if(frandom_wb_) {
           fform <- paste0(fform,
                           " + (", frandom_wb, ")")
+        }
+      }
+      
+      
+      
+      if (!is.null(gform) & grepl("g", randomsi, fixed = T)) {
+        if(!grandom_wb_) {
+          gform <- paste0(gform,
+                          " + (", gform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(grandom_wb_) {
+          gform <- paste0(gform,
+                          " + (", grandom_wb, ")")
+        }
+      }
+      
+      
+      if (!is.null(hform) & grepl("h", randomsi, fixed = T)) {
+        if(!hrandom_wb_) {
+          hform <- paste0(hform,
+                          " + (", hform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(hrandom_wb_) {
+          hform <- paste0(hform,
+                          " + (", hrandom_wb, ")")
+        }
+      }
+      
+      
+      if (!is.null(iform) & grepl("i", randomsi, fixed = T)) {
+        if(!irandom_wb_) {
+          iform <- paste0(iform,
+                          " + (", iform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(irandom_wb_) {
+          iform <- paste0(iform,
+                          " + (", irandom_wb, ")")
+        }
+      }
+      
+      
+      if (!is.null(sform) & grepl("s", randomsi, fixed = T)) {
+        if(!srandom_wb_) {
+          sform <- paste0(sform,
+                          " + (", sform_gr, "|", coridv, "|" , gr__args, ")")
+        } else if(srandom_wb_) {
+          sform <- paste0(sform,
+                          " + (", srandom_wb, ")")
         }
       }
       
@@ -1268,8 +1624,44 @@ prepare_formula <- function(x,
       if (!is.null(fform) & grepl("f", randomsi, fixed = T)) {
         if(!frandom_wb_) { 
           fform <- paste0(fform, " + (", fform_gr, "|", coridv, "|" , id, ")")
-        } else if(drandom_wb_) {
+        } else if(frandom_wb_) {
           fform <- paste0(fform, " + (", frandom_wb, ")")
+        }
+      }
+      
+      
+      
+      if (!is.null(gform) & grepl("g", randomsi, fixed = T)) {
+        if(!grandom_wb_) { 
+          gform <- paste0(gform, " + (", gform_gr, "|", coridv, "|" , id, ")")
+        } else if(grandom_wb_) {
+          gform <- paste0(gform, " + (", grandom_wb, ")")
+        }
+      }
+      
+      
+      if (!is.null(hform) & grepl("h", randomsi, fixed = T)) {
+        if(!hrandom_wb_) { 
+          hform <- paste0(hform, " + (", hform_gr, "|", coridv, "|" , id, ")")
+        } else if(hrandom_wb_) {
+          hform <- paste0(hform, " + (", hrandom_wb, ")")
+        }
+      }
+      
+      
+      if (!is.null(iform) & grepl("i", randomsi, fixed = T)) {
+        if(!irandom_wb_) { 
+          iform <- paste0(iform, " + (", iform_gr, "|", coridv, "|" , id, ")")
+        } else if(irandom_wb_) {
+          iform <- paste0(iform, " + (", irandom_wb, ")")
+        }
+      }
+      
+      if (!is.null(sform) & grepl("s", randomsi, fixed = T)) {
+        if(!srandom_wb_) { 
+          sform <- paste0(sform, " + (", sform_gr, "|", coridv, "|" , id, ")")
+        } else if(srandom_wb_) {
+          sform <- paste0(sform, " + (", srandom_wb, ")")
         }
       }
       
@@ -1390,16 +1782,61 @@ prepare_formula <- function(x,
       fgr_varss <- fform_gr_names <- fform_gr_names_asitis <- NULL
     }
     
+    
+    if(g_formula_gr_strsi_present) {
+      gform <- add_higher_level_str(gform, g_formula_gr_strsi)
+      gform <- restore_paranthese_grgr_str_form(gform)
+      ggr_varss             <- add_higher_level_str_id(g_formula_gr_strsi)
+      gform_gr_names        <- lapply(gform, get_x_random2)[[1]]
+      gform_gr_names_asitis <- lapply(gform, get_x_random2_asitis)[[1]]
+    } else {
+      ggr_varss <- gform_gr_names <- gform_gr_names_asitis <- NULL
+    }
+    
+    if(h_formula_gr_strsi_present) {
+      hform <- add_higher_level_str(hform, h_formula_gr_strsi)
+      hform <- restore_paranthese_grgr_str_form(hform)
+      hgr_varss             <- add_higher_level_str_id(h_formula_gr_strsi)
+      hform_gr_names        <- lapply(hform, get_x_random2)[[1]]
+      hform_gr_names_asitis <- lapply(hform, get_x_random2_asitis)[[1]]
+    } else {
+      hgr_varss <- hform_gr_names <- hform_gr_names_asitis <- NULL
+    }
+    
+    if(i_formula_gr_strsi_present) {
+      iform <- add_higher_level_str(iform, i_formula_gr_strsi)
+      iform <- restore_paranthese_grgr_str_form(iform)
+      igr_varss             <- add_higher_level_str_id(i_formula_gr_strsi)
+      iform_gr_names        <- lapply(iform, get_x_random2)[[1]]
+      iform_gr_names_asitis <- lapply(iform, get_x_random2_asitis)[[1]]
+    } else {
+      igr_varss <- iform_gr_names <- iform_gr_names_asitis <- NULL
+    }
+    
+    if(s_formula_gr_strsi_present) {
+      sform <- add_higher_level_str(sform, s_formula_gr_strsi)
+      sform <- restore_paranthese_grgr_str_form(sform)
+      sgr_varss             <- add_higher_level_str_id(s_formula_gr_strsi)
+      sform_gr_names        <- lapply(sform, get_x_random2)[[1]]
+      sform_gr_names_asitis <- lapply(sform, get_x_random2_asitis)[[1]]
+    } else {
+      sgr_varss <- sform_gr_names <- sform_gr_names_asitis <- NULL
+    }
+    
     gr_varss <- c(agr_varss, bgr_varss, cgr_varss, dgr_varss, egr_varss, fgr_varss)
     gr_varss <- unique(gr_varss)
     
     hierarchical_gr_names <- c(aform_gr_names, bform_gr_names, 
                                cform_gr_names, dform_gr_names, 
-                               eform_gr_names, fform_gr_names)
+                               eform_gr_names, fform_gr_names,
+                               gform_gr_names, hform_gr_names,
+                               iform_gr_names, sform_gr_names)
     
     hierarchical_gr_names_asitis <- c(aform_gr_names_asitis, bform_gr_names_asitis, 
                                       cform_gr_names_asitis, dform_gr_names_asitis,
-                                      eform_gr_names_asitis, fform_gr_names_asitis)
+                                      eform_gr_names_asitis, fform_gr_names_asitis,
+                                      gform_gr_names_asitis, hform_gr_names_asitis,
+                                      iform_gr_names_asitis, sform_gr_names_asitis)
     
     
     hierarchical_gr_names <- unique(hierarchical_gr_names)
@@ -1533,11 +1970,20 @@ prepare_formula <- function(x,
   }
   
   
+  if(select_model != "sitar" & select_model != "rcs" ) {
+    abcform <-
+      paste(cbind(aform, bform, cform, dform, eform, fform, 
+                  gform, hform, iform), 
+            collapse = ",")
+  }
   
-  abcform <-
-    paste(cbind(aform, bform, cform, dform, eform, fform), collapse = ",")
   
-  
+  if(select_model == "sitar" | select_model == "rcs" ) {
+    abcform <-
+      paste(cbind(aform, bform, cform, dform, eform, fform, 
+                  gform, hform, iform), 
+            collapse = ",")
+  }
   
   
   
@@ -1562,23 +2008,23 @@ prepare_formula <- function(x,
   # sform <- NULL
   
   if(!is.null(sigmaform)) {
-    if(select_model == "sitar") {
+    if(select_model == "sitar" | select_model == "rcs") {
       sform <- paste0(sform, ",", paste0("", sigmaform))
       # sform <- sigmaform
     }
-    if(select_model != "sitar") {
+    if(select_model != "sitar" & select_model != "rcs") {
       abcform <- paste0(abcform, ",", paste0("", sigmaform))
     }
   }
   
   
   if (!is.null(autocor_formi)) {
-    if(select_model == "sitar") {
+    if(select_model == "sitar" | select_model == "rcs") {
       sform <- paste0(sform,
                       ",",
                       paste0("autocor=", autocor_formi))
     }
-    if(select_model != "sitar") {
+    if(select_model != "sitar" & select_model != "rcs") {
       abcform <- paste0(abcform,
                         ",",
                         paste0("autocor=", autocor_formi))
@@ -1587,8 +2033,8 @@ prepare_formula <- function(x,
   
   
   
-  if(select_model == "sitar") {
-    bform <- paste0("brms::bf(",
+  if(select_model == "sitar" | select_model == "rcs") {
+    setbformula <- paste0("brms::bf(",
                     abcsformfit,
                     ", " ,
                     abcform,
@@ -1599,8 +2045,8 @@ prepare_formula <- function(x,
   }
   
   
-  if(select_model != "sitar") {
-    bform <- paste0("brms::bf(",
+  if(select_model != "sitar" & select_model != "rcs") {
+    setbformula <- paste0("brms::bf(",
                     abcsformfit,
                     ", " ,
                     abcform,
@@ -1610,18 +2056,17 @@ prepare_formula <- function(x,
                     "nl=TRUE,loop=FALSE)")
   }
   
-  
-  
+
   if (!is.null(unusedsi[[1]][1]) & unusedsi != "NULL") {
-    bform <- paste0(bform, "unused=", unusedsi)
-    bform <- gsub(")unused=", ",unused=", bform, fixed = T)
-    bform <- paste0(bform, ")")
+    setbformula <- paste0(bform, "unused=", unusedsi)
+    setbformula <- gsub(")unused=", ",unused=", setbformula, fixed = T)
+    setbformula <- paste0(setbformula, ")")
   }
   
 
   
   
-  bform <- gsub("\\s", "", bform)
+  setbformula <- gsub("\\s", "", setbformula)
   
   
   
@@ -1641,15 +2086,15 @@ prepare_formula <- function(x,
       } else  {
         dpar_formulasi <- gsub("~", "sigma~", dpar_formulasi)
       }
-      bform <- paste0(bform, "+", dpar_formulasi)
+      setbformula <- paste0(setbformula, "+", dpar_formulasi)
     } else {
-      bform <- bform
+      setbformula <- setbformula
     }
   }
   
   
   if (!is.null(familysi)) {
-    bform <- paste0(bform, "+", familysi)
+    setbformula <- paste0(setbformula, "+", familysi)
   }
   
   
@@ -1693,23 +2138,24 @@ prepare_formula <- function(x,
   
   
   # Depending on select_model, assign null values to all which not part of the model
-  for (set_randomsi_higher_levsli in c(letters[1:20])) {
+  for (set_randomsi_higher_levsli in c(letters[1:26])) {
     set_nlpar_what <- set_randomsi_higher_levsli
     if(!exists(paste0(set_randomsi_higher_levsli, 'form'))) {
       assign(paste0(set_nlpar_what, 'covcoefnames'), NULL)
       assign(paste0(set_nlpar_what, 'covcoefnames_gr'), NULL)
       assign(paste0(set_nlpar_what, 'ncov'), NULL)
       assign(paste0(set_nlpar_what, 'ncov_gr'), NULL)
-    } else if(exists(paste0(set_randomsi_higher_levsli, 'form'))) {
-      if(is.null(ept(paste0(set_randomsi_higher_levsli, 'form')))) {
+    # } else if(exists(paste0(set_randomsi_higher_levsli, 'form'))) {
+      } else if(is.null(ept(paste0(set_randomsi_higher_levsli, 'form')))) {
         assign(paste0(set_nlpar_what, 'covcoefnames'), NULL)
         assign(paste0(set_nlpar_what, 'covcoefnames_gr'), NULL)
         assign(paste0(set_nlpar_what, 'ncov'), NULL)
         assign(paste0(set_nlpar_what, 'ncov_gr'), NULL)
       } # if(is.null(ept(paste0('f', 'form')))) {
-    }
-  } # for (set_randomsi_higher_levsli in c(letters[1:20])) {
+    # }
+  } # for (set_randomsi_higher_levsli in c(letters[1:26])) {
   
+   
   
   
   
@@ -1740,6 +2186,9 @@ prepare_formula <- function(x,
   d_covariate <- getcovlist(d_formulasi)
   e_covariate <- getcovlist(e_formulasi)
   f_covariate <- getcovlist(f_formulasi)
+  g_covariate <- getcovlist(g_formulasi)
+  h_covariate <- getcovlist(h_formulasi)
+  i_covariate <- getcovlist(i_formulasi)
   s_covariate <- getcovlist(s_formulasi)
   
   sigma_covariate <- getcovlist(sigma_formulasi)
@@ -1754,7 +2203,7 @@ prepare_formula <- function(x,
   
   
   
-  if(select_model == "sitar") {
+  if(select_model == "sitar" | select_model == "rcs") {
     # for sitar model only
     a_covariate_i <- c()
     if (grepl("\\*", a_formulasi)) {
@@ -1863,9 +2312,11 @@ prepare_formula <- function(x,
     }
   }
   
+  if(!is.null(ept('b_formulasi'))) {
+    if (grepl("^~1$", b_formulasi))
+      b_covariate <- NULL
+  }
   
-  if (grepl("^~1$", b_formulasi))
-    b_covariate <- NULL
   
   
   if (grepl("^~1$", a_formulasi)) {
@@ -1877,7 +2328,7 @@ prepare_formula <- function(x,
   }
   
   
-  if(select_model != 'sitar') {
+  if(select_model != 'sitar' & select_model != "rcs") {
     lm_data_at_max_x <- data
     
     lm_data_at_max_x[['mat_s']] <- lm_data_at_max_x[[x]] - max(lm_data_at_max_x[[x]])
@@ -1978,10 +2429,28 @@ prepare_formula <- function(x,
       lm_f_all <- NULL
     }
     
+    if (!is.null(gfixed)) {
+      lm_g_all <- rep(0, ncol(gcovmat))
+    } else {
+      lm_g_all <- NULL
+    }
+    
+    if (!is.null(hfixed)) {
+      lm_h_all <- rep(0, ncol(hcovmat))
+    } else {
+      lm_h_all <- NULL
+    }
+    
+    if (!is.null(ifixed)) {
+      lm_i_all <- rep(0, ncol(icovmat))
+    } else {
+      lm_i_all <- NULL
+    }
+    
 
     
     # # Depending on select_model, assign null values to all which not part of the model
-    # for (set_randomsi_higher_levsli in c(letters[1:20])) {
+    # for (set_randomsi_higher_levsli in c(letters[1:26])) {
     #   set_nlpar_what <- set_randomsi_higher_levsli
     #   if(!exists(paste0(set_randomsi_higher_levsli, 'form'))) {
     #     assign(paste0(set_nlpar_what, 'covcoefnames'), NULL)
@@ -1996,7 +2465,7 @@ prepare_formula <- function(x,
     #       assign(paste0(set_nlpar_what, 'ncov_gr'), NULL)
     #     } # if(is.null(ept(paste0('f', 'form')))) {
     #   }
-    # } # for (set_randomsi_higher_levsli in c(letters[1:20])) {
+    # } # for (set_randomsi_higher_levsli in c(letters[1:26])) {
     # 
     
     
@@ -2008,6 +2477,9 @@ prepare_formula <- function(x,
     names(lm_d_all) <- dcovcoefnames
     names(lm_e_all) <- ecovcoefnames
     names(lm_f_all) <- fcovcoefnames
+    names(lm_g_all) <- hcovcoefnames
+    names(lm_h_all) <- hcovcoefnames
+    names(lm_i_all) <- icovcoefnames
     
     lm_a <- lm_a_all[1]
     lm_b <- lm_b_all[1]
@@ -2015,6 +2487,9 @@ prepare_formula <- function(x,
     lm_d <- lm_d_all[1]
     lm_e <- lm_e_all[1]
     lm_f <- lm_f_all[1]
+    lm_g <- lm_h_all[1]
+    lm_h <- lm_h_all[1]
+    lm_i <- lm_i_all[1]
     
     if (!is.null(ancov)) {
       lm_a_cov <- lm_a_all[2:length(lm_a_all)]
@@ -2048,6 +2523,23 @@ prepare_formula <- function(x,
       lm_f_cov <- NULL
     }
       
+    if (!is.null(gncov)) {
+      lm_g_cov <- lm_g_all[2:length(lm_g_all)]
+    } else {
+      lm_g_cov <- NULL
+    }
+    
+    if (!is.null(hncov)) {
+      lm_h_cov <- lm_h_all[2:length(lm_h_all)]
+    } else {
+      lm_h_cov <- NULL
+    }
+    
+    if (!is.null(incov)) {
+      lm_i_cov <- lm_i_all[2:length(lm_i_all)]
+    } else {
+      lm_i_cov <- NULL
+    }
     
   } # if(select_model != 'sitar') {
   
@@ -2058,7 +2550,7 @@ prepare_formula <- function(x,
   
   #######################################################
   
-  if(select_model == 'sitar') {
+  if(select_model == 'sitar' | select_model == 'rcs') {
     # fit lm model
     a_covariate <- getcovlist(a_formulasi)
     b_covariate <- getcovlist(b_formulasi)
@@ -2428,7 +2920,7 @@ prepare_formula <- function(x,
         assign(paste0('lm_', set_randomsi_higher_levsli, ''), NULL)
       } # if(is.null(ept(paste0('f', 'form')))) {
     }
-  } # for (set_randomsi_higher_levsli in c(letters[1:20])) {
+  } # for (set_randomsi_higher_levsli in c(letters[1:26])) {
   
   if(is.null(lm_s_all)) {
     assign(paste0('lm_', 'sdx'), NULL)
@@ -2450,6 +2942,9 @@ prepare_formula <- function(x,
   dcovcoefnames <- gsub("[[:space:]]", gsubitbt, dcovcoefnames)
   ecovcoefnames <- gsub("[[:space:]]", gsubitbt, ecovcoefnames)
   fcovcoefnames <- gsub("[[:space:]]", gsubitbt, fcovcoefnames)
+  gcovcoefnames <- gsub("[[:space:]]", gsubitbt, gcovcoefnames)
+  hcovcoefnames <- gsub("[[:space:]]", gsubitbt, hcovcoefnames)
+  icovcoefnames <- gsub("[[:space:]]", gsubitbt, icovcoefnames)
   
   scovcoefnames <- gsub("[[:space:]]", gsubitbt, scovcoefnames)
   
@@ -2459,6 +2954,10 @@ prepare_formula <- function(x,
   dcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, dcovcoefnames_gr)
   ecovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, ecovcoefnames_gr)
   fcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, fcovcoefnames_gr)
+  gcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, gcovcoefnames_gr)
+  hcovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, hcovcoefnames_gr)
+  icovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, icovcoefnames_gr)
+  scovcoefnames_gr <- gsub("[[:space:]]", gsubitbt, scovcoefnames_gr)
   
   dparcovcoefnames <- gsub("[[:space:]]", gsubitbt, dparcovcoefnames)
   
@@ -2471,18 +2970,23 @@ prepare_formula <- function(x,
   dcovcoefnames_gr_str <- gsub("[[:space:]]", gsubitbt, dcovcoefnames_gr_str)
   ecovcoefnames_gr_str <- gsub("[[:space:]]", gsubitbt, ecovcoefnames_gr_str)
   fcovcoefnames_gr_str <- gsub("[[:space:]]", gsubitbt, fcovcoefnames_gr_str)
+  gcovcoefnames_gr_str <- gsub("[[:space:]]", gsubitbt, gcovcoefnames_gr_str)
+  hcovcoefnames_gr_str <- gsub("[[:space:]]", gsubitbt, hcovcoefnames_gr_str)
+  icovcoefnames_gr_str <- gsub("[[:space:]]", gsubitbt, icovcoefnames_gr_str)
+  scovcoefnames_gr_str <- gsub("[[:space:]]", gsubitbt, scovcoefnames_gr_str)
   
   
 
-  
   list_out <- list(
     aform = aform, 
     bform = bform, 
     cform = cform, 
     dform = dform, 
     eform = eform, 
-    fform = fform, 
-    
+    fform = fform,
+    gform = gform,
+    hform = hform,
+    iform = iform,
     sform = sform, 
     
     ancov = ancov,
@@ -2491,6 +2995,9 @@ prepare_formula <- function(x,
     dncov = dncov,
     encov = encov,
     fncov = fncov,
+    gncov = gncov,
+    hncov = hncov,
+    incov = incov,
     sncov = sncov,
     
     acovcoefnames = acovcoefnames,
@@ -2499,7 +3006,9 @@ prepare_formula <- function(x,
     dcovcoefnames = dcovcoefnames,
     ecovcoefnames = ecovcoefnames,
     fcovcoefnames = fcovcoefnames,
-    
+    gcovcoefnames = gcovcoefnames,
+    jcovcoefnames = hcovcoefnames,
+    icovcoefnames = icovcoefnames,
     scovcoefnames = scovcoefnames,
     
     ancov_gr = ancov_gr,
@@ -2508,6 +3017,10 @@ prepare_formula <- function(x,
     dncov_gr = dncov_gr,
     encov_gr = encov_gr,
     fncov_gr = fncov_gr,
+    gncov_gr = gncov_gr,
+    hncov_gr = hncov_gr,
+    incov_gr = incov_gr,
+    sncov_gr = sncov_gr,
     
     acovcoefnames_gr = acovcoefnames_gr,
     bcovcoefnames_gr = bcovcoefnames_gr,
@@ -2515,6 +3028,10 @@ prepare_formula <- function(x,
     dcovcoefnames_gr = dcovcoefnames_gr,
     ecovcoefnames_gr = ecovcoefnames_gr,
     fcovcoefnames_gr = fcovcoefnames_gr,
+    gcovcoefnames_gr = gcovcoefnames_gr,
+    hcovcoefnames_gr = hcovcoefnames_gr,
+    icovcoefnames_gr = icovcoefnames_gr,
+    scovcoefnames_gr = scovcoefnames_gr,
     
     ancov_gr_str = ancov_gr_str,
     bncov_gr_str = bncov_gr_str,
@@ -2522,6 +3039,10 @@ prepare_formula <- function(x,
     dncov_gr_str = dncov_gr_str,
     encov_gr_str = encov_gr_str,
     fncov_gr_str = fncov_gr_str,
+    gncov_gr_str = gncov_gr_str,
+    hncov_gr_str = hncov_gr_str,
+    incov_gr_str = incov_gr_str,
+    sncov_gr_str = sncov_gr_str,
     
     acovcoefnames_gr_str    = acovcoefnames_gr_str,
     bcovcoefnames_gr_str    = bcovcoefnames_gr_str,
@@ -2529,6 +3050,10 @@ prepare_formula <- function(x,
     dcovcoefnames_gr_str    = dcovcoefnames_gr_str,
     ecovcoefnames_gr_str    = ecovcoefnames_gr_str,
     fcovcoefnames_gr_str    = fcovcoefnames_gr_str,
+    gcovcoefnames_gr_str    = gcovcoefnames_gr_str,
+    hcovcoefnames_gr_str    = hcovcoefnames_gr_str,
+    icovcoefnames_gr_str    = icovcoefnames_gr_str,
+    scovcoefnames_gr_str    = scovcoefnames_gr_str,
     
     acovcoefnames_gr_str_id = acovcoefnames_gr_str_id,
     bcovcoefnames_gr_str_id = bcovcoefnames_gr_str_id,
@@ -2536,6 +3061,10 @@ prepare_formula <- function(x,
     dcovcoefnames_gr_str_id = dcovcoefnames_gr_str_id,
     ecovcoefnames_gr_str_id = ecovcoefnames_gr_str_id,
     fcovcoefnames_gr_str_id = fcovcoefnames_gr_str_id,
+    gcovcoefnames_gr_str_id = gcovcoefnames_gr_str_id,
+    hcovcoefnames_gr_str_id = hcovcoefnames_gr_str_id,
+    icovcoefnames_gr_str_id = icovcoefnames_gr_str_id,
+    scovcoefnames_gr_str_id = scovcoefnames_gr_str_id,
     
     acovcoefnames_gr_str_form = acovcoefnames_gr_str_form,
     bcovcoefnames_gr_str_form = bcovcoefnames_gr_str_form,
@@ -2543,6 +3072,10 @@ prepare_formula <- function(x,
     dcovcoefnames_gr_str_form = dcovcoefnames_gr_str_form,
     ecovcoefnames_gr_str_form = ecovcoefnames_gr_str_form,
     fcovcoefnames_gr_str_form = fcovcoefnames_gr_str_form,
+    gcovcoefnames_gr_str_form = gcovcoefnames_gr_str_form,
+    hcovcoefnames_gr_str_form = hcovcoefnames_gr_str_form,
+    icovcoefnames_gr_str_form = icovcoefnames_gr_str_form,
+    scovcoefnames_gr_str_form = scovcoefnames_gr_str_form,
     
     dparncov = dparncov,
     
@@ -2594,18 +3127,30 @@ prepare_formula <- function(x,
     lm_d_all = lm_d_all,
     lm_e_all = lm_e_all,
     lm_f_all = lm_f_all,
+    lm_g_all = lm_g_all,
+    lm_h_all = lm_h_all,
+    lm_i_all = lm_i_all,
+
     lm_a = lm_a,
     lm_b = lm_b,
     lm_c = lm_c,
     lm_d = lm_d,
     lm_e = lm_e,
     lm_f = lm_f,
+    lm_g = lm_g,
+    lm_h = lm_h,
+    lm_i = lm_i,
+    
     lm_a_cov = lm_a_cov,
     lm_b_cov = lm_b_cov,
     lm_c_cov = lm_c_cov,
     lm_d_cov = lm_d_cov,
     lm_e_cov = lm_e_cov,
     lm_f_cov = lm_f_cov,
+    lm_h_cov = lm_g_cov,
+    lm_h_cov = lm_h_cov,
+    lm_i_cov = lm_i_cov,
+    
     lm_s = lm_s,
     lm_s_cov = lm_s_cov,
     lm_s_all = lm_s_all,
@@ -2617,10 +3162,9 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
-#  print(unusedsi); stop()
- # print(bform); stop()
+  # print(setbformula); stop()
   
-  attr(bform, "list_out") <- as.list(list_out)
+  attr(setbformula, "list_out") <- as.list(list_out)
   
-  return(bform)
+  return(setbformula)
 }

@@ -91,7 +91,7 @@ expose_functions_bgm <- function(model,
   
   if(expose_r_from_stan) {
     spfun_collect <- c(spfun_collect, 'getX')
-    if(select_model == 'sitar') {
+    if(select_model == 'sitar' | select_model == 'rcs') {
       spfun_collect <- c(spfun_collect, 'getKnots')
     }
   }

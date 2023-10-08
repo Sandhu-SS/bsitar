@@ -1173,10 +1173,14 @@ collapse_comma <- function(...) {
 
 
 
-
+#' An internal function to edit stancode for NCP parametarization
+#' @param stancode A string character of stan code
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
 edit_scode_ncp_to_cp <- function(stancode) {
-  editedcode <- editedcode2 <- stancode # berkeley_fit$bmodel
-  
+  editedcode <- editedcode2 <- stancode 
   clines <- get_par_names_from_stancode(editedcode,
                                         section =  'transformed parameters',
                                         semicolan = TRUE,
@@ -1209,13 +1213,11 @@ edit_scode_ncp_to_cp <- function(stancode) {
   
   move_to_m_gqcode <- paste(move_to_m, collapse = "\n")
   
-  
   for (clinesi in clines) {
     if(!grepl("//", clinesi)) {
       editedcode2 <- gsub(clinesi, paste0("// ", clinesi), editedcode2, fixed = T)
     }
   }
-  
   
   lprior_code <- "real lprior = 0;"
   editedcode2 <- gsub(lprior_code, paste0(lprior_code, "\n", move_to_m_mcode, "\n"), editedcode2, fixed = T)
@@ -1223,14 +1225,11 @@ edit_scode_ncp_to_cp <- function(stancode) {
   genq_code <- "generated quantities {"
   editedcode2 <- gsub(genq_code, paste0(genq_code, "\n", move_to_m_gqcode), editedcode2, fixed = T)
   
-  
   parm_code <- "parameters {"
   editedcode2 <- gsub(paste0("", parm_code, ""), paste0(parm_code, "\n", move_to_p), editedcode2, fixed = T)
   
-  
   tparm_code_rm <- "transformed parameters {"
   editedcode2 <- gsub(paste0(tparm_code_rm, "\n", move_to_p), tparm_code_rm, editedcode2, fixed = T)
-  
   
   z1_code_rm <- "matrix[M_1, N_1] z_1;"
   editedcode2 <- gsub(z1_code_rm, paste0("// ", z1_code_rm), editedcode2, fixed = T)
@@ -1238,6 +1237,72 @@ edit_scode_ncp_to_cp <- function(stancode) {
   z1_tarhet_code_rm <- "target += std_normal_lupdf(to_vector(z_1));"
   editedcode2 <- gsub(z1_tarhet_code_rm, paste0("// ", z1_tarhet_code_rm), editedcode2, fixed = T)
   
-  editedcode2
+  return(editedcode2)
 }
+
+
+#' An internal function to get derivatives from distance curve for QR decomp
+#' @param model An object of class \code{bgmfit}.
+#' @param y0 A matrix comprised of distance curves.
+#' @param newdata A data frame. If \code{NULL}, data used in original model 
+#' fit used.
+#' @param deriv An integer (\code{1 or 2}) to specify derivative. Default 
+#'  \code{deriv = 1} estimates velocity curve whereas \code{deriv = 2} is to 
+#'  get acceleration curve.
+#' @param probs The percentiles to be computed by the quantile function. 
+#' @param robust If FALSE (the default) the mean is used as the measure of 
+#' central tendency and the standard deviation as the measure of variability. 
+#' If TRUE, the median and the median absolute deviation (MAD) are applied
+#' instead. Only used if summary is TRUE.
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+mapderivqr <- function(model, 
+                       y0, 
+                       newdata = NULL, 
+                       deriv = 1, 
+                       probs = c(0.025, 0.975),
+                       robust = FALSE
+                       ) {
+  xvar  <- model$model_info$xvar
+  idvar <- model$model_info$groupvar
+  if(length(idvar) > 1) idvar <- idvar[1]
+  yvar  <- 'yvar'
+  if(is.null(newdata)) newdata <- model$data
+  
+  getdydx <- function (x, y, id, data, ndigit = 2) {
+    sorder <- NULL;
+    data$sorder <- as.numeric(row.names(data))
+    .data <- data %>% 
+      dplyr::mutate(.x = !!dplyr::sym(x)) %>% 
+      dplyr::mutate(.y = !!dplyr::sym(y)) %>% 
+      dplyr::mutate(.id = !!dplyr::sym(id)) %>% 
+      data.frame()
+    
+    .dydx <- function(x, y) {
+      n <- length(x); i1 <- 1:2; i2 <- (n - 1):n
+      c(diff(y[i1])/diff(x[i1]), (y[-i1] - y[-i2])/(x[-i1] - x[-i2]), diff(y[i2])/diff(x[i2]))
+    }
+    dydx <- lapply(split(.data, as.numeric(.data$.id)), function(x) {x$.v <- .dydx(x$.x, x$.y); x } )
+    dydx <- do.call(rbind, dydx) %>% data.frame() %>% dplyr::arrange(sorder)
+    return(round(dydx[[".v"]], ndigit))
+  }
+  
+  mapderiv <- function(.xrow, x = xvar, y = yvar, id = idvar, 
+                       data = newdata) {
+    newdata[[y]] <- .xrow
+    getdydx(x = x, y = y, id = id, data = newdata)
+  }
+  
+  if(deriv == 1) {
+    tempx <- apply(y0, 1, mapderiv) %>% t()
+  }
+  if(deriv == 2) {
+    tempx <- apply(y0, 1, mapderiv) %>% t()
+    tempx <- apply(tempx , 1, mapderiv) %>% t()
+  }
+  dout <-  brms::posterior_summary(tempx , probs = probs, robust = robust) 
+  dout
+} 
 

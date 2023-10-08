@@ -15,11 +15,15 @@
   levels_id = NULL,
   ipts = NULL,
   deriv = 0,
+  deriv_model = TRUE,
   summary = TRUE,
   robust = FALSE,
   probs = c(0.025, 0.975),
   xrange = NULL,
-  envir = .GlobalEnv,
+  parms_eval = FALSE,
+  parms_method = "getPeak",
+  idata_method = "m1",
+  envir = parent.frame(),
   ...
 )
 
@@ -77,10 +81,16 @@ predictor. It is important to note that these interpolations do not alter
 the range of predictor when calculating population average and the
 individual specific velocity curves.}
 
-\item{deriv}{An integer value to specify whether to estimate distance curve
-(i.e., model estimated curve(s)) or velocity curve (first derivative of the
-model estimated curve(s)). A 0 value (default) is for distance curve and
-1 for the velocity curve.}
+\item{deriv}{An integer to specify whether to estimate distance curve or
+derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
+for the distance curve whereas \code{deriv = 1} for velocity curve and
+\code{deriv = 2} for the acceleration curve.}
+
+\item{deriv_model}{A logical (default \code{TRUE}) to indicate whether to
+estimate model based derivatives or from the differentiation of the
+distance curve. When model is fit with \code{decomp = 'QR'}, the only
+approach available to estimate derivatives is the  differentiation of the
+distance curve.}
 
 \item{summary}{A logical (default \code{TRUE}) indicating whether only the
 Estimate should be returned or Estimate along with SE and CI should be
@@ -102,6 +112,20 @@ same range for all individuals within the higher order grouping variable
 (e.g., study). Code \code{xrange  = 2} sets the identical range dplyr::across the
 entire sample. Lastly, a paired numeric values can be supplied e.g.,
 \code{xrange = c(6, 20)} will set the range between 6 and 20.}
+
+\item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
+to get growth parameters on the fly.}
+
+\item{parms_method}{A character to specify the method used to when
+evaluating \code{parms_eval}. The default is \code{getPeak} which uses
+the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The
+alternative option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}}
+function function from the \code{pracma} package.}
+
+\item{idata_method}{A character string to indicate interpolation
+method. Options available are \code{m1} (default) and
+\code{m2}. See \code{idata_method} argument of the \code{get.newdata}
+function for details.}
 
 \item{envir}{Indicator to set the environment of function evaluation.
 The default is \code{parent.frame}.}

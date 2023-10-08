@@ -35,6 +35,7 @@
   future_session = "multisession",
   cores = NULL,
   parms_eval = FALSE,
+  idata_method = "m1",
   parms_method = "getPeak",
   envir = NULL,
   ...
@@ -213,6 +214,11 @@ maximum number of cores avaialble minus one, i.e.,
 
 \item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
 to get growth parameters on the fly.}
+
+\item{idata_method}{A character string to indicate interpolation
+method. Options available are \code{m1} (default) and
+\code{m2}. See \code{idata_method} argument of the \code{get.newdata}
+function for details.}
 
 \item{parms_method}{A character to specify the method used to when
 evaluating \code{parms_eval}. The default is \code{getPeak} which uses

@@ -179,6 +179,9 @@ set_priors_initials <- function(a_prior_beta,
                                 d_prior_beta,
                                 e_prior_beta,
                                 f_prior_beta,
+                                g_prior_beta,
+                                h_prior_beta,
+                                i_prior_beta,
                                 s_prior_beta,
                                 a_cov_prior_beta,
                                 b_cov_prior_beta,
@@ -186,6 +189,9 @@ set_priors_initials <- function(a_prior_beta,
                                 d_cov_prior_beta,
                                 e_cov_prior_beta,
                                 f_cov_prior_beta,
+                                g_cov_prior_beta,
+                                h_cov_prior_beta,
+                                i_cov_prior_beta,
                                 s_cov_prior_beta,
                                 a_prior_sd,
                                 b_prior_sd,
@@ -193,12 +199,20 @@ set_priors_initials <- function(a_prior_beta,
                                 d_prior_sd,
                                 e_prior_sd,
                                 f_prior_sd,
+                                g_prior_sd,
+                                h_prior_sd,
+                                i_prior_sd,
+                                s_prior_sd,
                                 a_cov_prior_sd,
                                 b_cov_prior_sd,
                                 c_cov_prior_sd,
                                 d_cov_prior_sd,
                                 e_cov_prior_sd,
                                 f_cov_prior_sd,
+                                g_cov_prior_sd,
+                                h_cov_prior_sd,
+                                i_cov_prior_sd,
+                                s_cov_prior_sd,
                                 gr_prior_cor,
                                 sigma_prior_cor,
                                 sigma_prior_beta,
@@ -231,6 +245,9 @@ set_priors_initials <- function(a_prior_beta,
   d_formulasi <- NULL;
   e_formulasi <- NULL;
   f_formulasi <- NULL;
+  g_formulasi <- NULL;
+  h_formulasi <- NULL;
+  i_formulasi <- NULL;
   s_formulasi <- NULL;
   select_model <- NULL;
   fixedsi <- NULL;
@@ -240,12 +257,19 @@ set_priors_initials <- function(a_prior_beta,
   d_formula_grsi <- NULL;
   e_formula_grsi <- NULL;
   f_formula_grsi <- NULL;
+  g_formula_grsi <- NULL;
+  h_formula_grsi <- NULL;
+  i_formula_grsi <- NULL;
+  s_formula_grsi <- NULL;
   acovcoefnames <- NULL;
   bcovcoefnames <- NULL;
   ccovcoefnames <- NULL;
   dcovcoefnames <- NULL;
   ecovcoefnames <- NULL;
   fcovcoefnames <- NULL;
+  gcovcoefnames <- NULL;
+  hcovcoefnames <- NULL;
+  icovcoefnames <- NULL;
   scovcoefnames <- NULL;
   acovcoefnames_gr <- NULL;
   bcovcoefnames_gr <- NULL;
@@ -253,6 +277,10 @@ set_priors_initials <- function(a_prior_beta,
   dcovcoefnames_gr <- NULL;
   ecovcoefnames_gr <- NULL;
   fcovcoefnames_gr <- NULL;
+  gcovcoefnames_gr <- NULL;
+  hcovcoefnames_gr <- NULL;
+  icovcoefnames_gr <- NULL;
+  scovcoefnames_gr <- NULL;
   dpar_formulasi <- NULL;
   sigma_formulasi <- NULL;
   sigmacovcoefnames <- NULL;
@@ -268,6 +296,9 @@ set_priors_initials <- function(a_prior_beta,
   dcovcoefnames <- NULL;
   ecovcoefnames <- NULL;
   fcovcoefnames <- NULL;
+  gcovcoefnames <- NULL;
+  hcovcoefnames <- NULL;
+  icovcoefnames <- NULL;
   scovcoefnames <- NULL;
   acovcoefnames_gr <- NULL;
   bcovcoefnames_gr <- NULL;
@@ -275,6 +306,10 @@ set_priors_initials <- function(a_prior_beta,
   dcovcoefnames_gr <- NULL;
   ecovcoefnames_gr <- NULL;
   fcovcoefnames_gr <- NULL;
+  gcovcoefnames_gr <- NULL;
+  hcovcoefnames_gr <- NULL;
+  icovcoefnames_gr <- NULL;
+  scovcoefnames_gr <- NULL;
   sigmacovcoefnames <- NULL;
   sigmacovcoefnames_gr <- NULL;
   nabcrei <- NULL;
@@ -575,11 +610,17 @@ set_priors_initials <- function(a_prior_beta,
     e_cov_prior_beta <- NULL
   if (is.null(getcovlist(f_formulasi)))
     f_cov_prior_beta <- NULL
+  if (is.null(getcovlist(g_formulasi)))
+    g_cov_prior_beta <- NULL
+  if (is.null(getcovlist(h_formulasi)))
+    h_cov_prior_beta <- NULL
+  if (is.null(getcovlist(i_formulasi)))
+    i_cov_prior_beta <- NULL
   if (is.null(getcovlist(s_formulasi)))
     s_cov_prior_beta <- NULL
   
   
-  if(select_model != 'sitar') {
+  if(select_model != 'sitar' & select_model != 'rcs') {
     s_prior_beta <- s_cov_prior_beta <- NULL
   }
   
@@ -596,6 +637,14 @@ set_priors_initials <- function(a_prior_beta,
     e_prior_beta <- NULL
   if (!grepl("f", fixedsi, fixed = T))
     f_prior_beta <- NULL
+  if (!grepl("g", fixedsi, fixed = T))
+    g_prior_beta <- NULL
+  if (!grepl("h", fixedsi, fixed = T))
+    h_prior_beta <- NULL
+  if (!grepl("i", fixedsi, fixed = T))
+    i_prior_beta <- NULL
+  if (!grepl("s", fixedsi, fixed = T))
+    s_prior_beta <- NULL
   
   if (!grepl("a", randomsi, fixed = T))
     a_prior_sd <- NULL
@@ -609,7 +658,16 @@ set_priors_initials <- function(a_prior_beta,
     e_prior_sd <- NULL
   if (!grepl("f", randomsi, fixed = T))
     f_prior_sd <- NULL
+  if (!grepl("g", randomsi, fixed = T))
+    g_prior_sd <- NULL
+  if (!grepl("h", randomsi, fixed = T))
+    h_prior_sd <- NULL
+  if (!grepl("i", randomsi, fixed = T))
+    i_prior_sd <- NULL
+  if (!grepl("s", randomsi, fixed = T))
+    s_prior_sd <- NULL
   
+ 
   if (is.null(getcovlist(a_formula_grsi)))
     a_cov_prior_sd <- NULL
   if (is.null(getcovlist(b_formula_grsi)))
@@ -622,6 +680,14 @@ set_priors_initials <- function(a_prior_beta,
     e_cov_prior_sd <- NULL
   if (is.null(getcovlist(f_formula_grsi)))
     f_cov_prior_sd <- NULL
+  if (is.null(getcovlist(g_formula_grsi)))
+    g_cov_prior_sd <- NULL
+  if (is.null(getcovlist(h_formula_grsi)))
+    h_cov_prior_sd <- NULL
+  if (is.null(getcovlist(i_formula_grsi)))
+    i_cov_prior_sd <- NULL
+  if (is.null(getcovlist(s_formula_grsi)))
+    s_cov_prior_sd <- NULL
   
   if (!is.null(a_cov_prior_beta))
     ancov <- length(acovcoefnames)
@@ -647,11 +713,28 @@ set_priors_initials <- function(a_prior_beta,
     fncov <- length(fcovcoefnames)
   else
     fncov <- NULL
-  
+  if (!is.null(g_cov_prior_beta))
+    gncov <- length(gcovcoefnames)
+  else
+    gncov <- NULL
+  if (!is.null(h_cov_prior_beta))
+    hncov <- length(hcovcoefnames)
+  else
+    hncov <- NULL
+  if (!is.null(i_cov_prior_beta))
+    incov <- length(icovcoefnames)
+  else
+    incov <- NULL
   if (!is.null(s_cov_prior_beta))
     sncov <- length(scovcoefnames)
   else
     sncov <- NULL
+  
+  
+  # if (!is.null(s_cov_prior_beta))
+  #   sncov <- length(scovcoefnames)
+  # else
+  #   sncov <- NULL
   
   if (!is.null(a_cov_prior_sd))
     ancov_gr <- length(acovcoefnames_gr)
@@ -677,6 +760,22 @@ set_priors_initials <- function(a_prior_beta,
     fncov_gr <- length(fcovcoefnames_gr)
   else
     fncov_gr <- NULL
+  if (!is.null(g_cov_prior_sd))
+    gncov_gr <- length(gcovcoefnames_gr)
+  else
+    gncov_gr <- NULL
+  if (!is.null(h_cov_prior_sd))
+    hncov_gr <- length(hcovcoefnames_gr)
+  else
+    hncov_gr <- NULL
+  if (!is.null(i_cov_prior_sd))
+    incov_gr <- length(icovcoefnames_gr)
+  else
+    incov_gr <- NULL
+  if (!is.null(s_cov_prior_sd))
+    sncov_gr <- length(scovcoefnames_gr)
+  else
+    sncov_gr <- NULL
   
   
   
@@ -823,8 +922,40 @@ set_priors_initials <- function(a_prior_beta,
     f_form_0 <- FALSE
   }
   
+  if(!is.null(g_formulasi)) {
+    if (grepl("~0", g_formulasi, fixed = T)) {
+      g_form_0 <- TRUE
+      g_cov_prior_beta <- NULL
+    } else {
+      g_form_0 <- FALSE
+    }
+  } else {
+    g_form_0 <- FALSE
+  }
   
   
+  if(!is.null(h_formulasi)) {
+    if (grepl("~0", h_formulasi, fixed = T)) {
+      h_form_0 <- TRUE
+      f_cov_prior_beta <- NULL
+    } else {
+      h_form_0 <- FALSE
+    }
+  } else {
+    h_form_0 <- FALSE
+  }
+  
+  
+  if(!is.null(i_formulasi)) {
+    if (grepl("~0", i_formulasi, fixed = T)) {
+      i_form_0 <- TRUE
+      f_cov_prior_beta <- NULL
+    } else {
+      i_form_0 <- FALSE
+    }
+  } else {
+    i_form_0 <- FALSE
+  }
   
   
   if(!is.null(s_formulasi)) {
@@ -913,12 +1044,54 @@ set_priors_initials <- function(a_prior_beta,
     f_form_0_gr <- FALSE
   }
   
+  
+  
+  if(!is.null(g_formula_grsi)) {
+    if (grepl("~0", g_formula_grsi, fixed = T)) {
+      g_form_0_gr <- TRUE
+      g_cov_prior_sd <- NULL
+    } else {
+      g_form_0_gr <- FALSE
+    }
+  } else {
+    g_form_0_gr <- FALSE
+  }
 
   
+  if(!is.null(h_formula_grsi)) {
+    if (grepl("~0", h_formula_grsi, fixed = T)) {
+      h_form_0_gr <- TRUE
+      h_cov_prior_sd <- NULL
+    } else {
+      h_form_0_gr <- FALSE
+    }
+  } else {
+    h_form_0_gr <- FALSE
+  }
   
   
+  if(!is.null(i_formula_grsi)) {
+    if (grepl("~0", i_formula_grsi, fixed = T)) {
+      i_form_0_gr <- TRUE
+      i_cov_prior_sd <- NULL
+    } else {
+      i_form_0_gr <- FALSE
+    }
+  } else {
+    i_form_0_gr <- FALSE
+  }
   
   
+  if(!is.null(s_formula_grsi)) {
+    if (grepl("~0", s_formula_grsi, fixed = T)) {
+      s_form_0_gr <- TRUE
+      s_cov_prior_sd <- NULL
+    } else {
+      s_form_0_gr <- FALSE
+    }
+  } else {
+    s_form_0_gr <- FALSE
+  }
   
   
   
@@ -1088,6 +1261,12 @@ set_priors_initials <- function(a_prior_beta,
       nlpar <- 'e'
     if (grepl("f_", x))
       nlpar <- 'f'
+    if (grepl("g_", x))
+      nlpar <- 'g'
+    if (grepl("h_", x))
+      nlpar <- 'h'
+    if (grepl("i_", x))
+      nlpar <- 'i'
     if (grepl("s_", x))
       nlpar <- 's'
     dpar <- ""
@@ -1105,7 +1284,7 @@ set_priors_initials <- function(a_prior_beta,
       # class <- 'b'
     }
       
-    
+   
     
     cov_dpar <- ""
     if (grepl("dpar_cov", x))
@@ -1138,6 +1317,12 @@ set_priors_initials <- function(a_prior_beta,
       cov_nlpar <- 'e'
     if (grepl("f_cov", x))
       cov_nlpar <- 'f'
+    if (grepl("g_cov", x))
+      cov_nlpar <- 'g'
+    if (grepl("h_cov", x))
+      cov_nlpar <- 'h'
+    if (grepl("i_cov", x))
+      cov_nlpar <- 'i'
     if (grepl("s_cov", x))
       cov_nlpar <- 's'
     
@@ -1148,7 +1333,6 @@ set_priors_initials <- function(a_prior_beta,
       dparncov <- NULL
     }
     
-
     
  
     if(sigma_dpar == 'sigma' | cov_sigma_dpar == 'sigma_cov') {
@@ -1284,6 +1468,36 @@ set_priors_initials <- function(a_prior_beta,
           nrep_of_parms <- length(fcovcoefnames) - 1
         }
       }
+    } else if (class == "b" & nlpar == 'g') {
+      if (g_form_0) {
+        nrep_of_parms <- length(gcovcoefnames)
+      } else {
+        if (!grepl("g_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("g_cov", x)) {
+          nrep_of_parms <- length(gcovcoefnames) - 1
+        }
+      }
+    } else if (class == "b" & nlpar == 'h') {
+      if (h_form_0) {
+        nrep_of_parms <- length(hcovcoefnames)
+      } else {
+        if (!grepl("h_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("h_cov", x)) {
+          nrep_of_parms <- length(hcovcoefnames) - 1
+        }
+      }
+    } else if (class == "b" & nlpar == 'i') {
+      if (i_form_0) {
+        nrep_of_parms <- length(icovcoefnames)
+      } else {
+        if (!grepl("i_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("i_cov", x)) {
+          nrep_of_parms <- length(icovcoefnames) - 1
+        }
+      }
     } else if (class == "b" & nlpar == 's') {
       if (s_form_0) {
         nrep_of_parms <- df * length(scovcoefnames)
@@ -1352,6 +1566,46 @@ set_priors_initials <- function(a_prior_beta,
           nrep_of_parms <- 1
         } else if (grepl("f_cov", x)) {
           nrep_of_parms <- length(fcovcoefnames_gr) - 1
+        }
+      }
+    } else if (class == "sd" & nlpar == 'g') {
+      if (g_form_0_gr) {
+        nrep_of_parms <- length(gcovcoefnames_gr)
+      } else {
+        if (!grepl("g_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("g_cov", x)) {
+          nrep_of_parms <- length(gcovcoefnames_gr) - 1
+        }
+      }
+    } else if (class == "sd" & nlpar == 'h') {
+      if (h_form_0_gr) {
+        nrep_of_parms <- length(hcovcoefnames_gr)
+      } else {
+        if (!grepl("h_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("h_cov", x)) {
+          nrep_of_parms <- length(hcovcoefnames_gr) - 1
+        }
+      }
+    } else if (class == "sd" & nlpar == 'i') {
+      if (i_form_0_gr) {
+        nrep_of_parms <- length(icovcoefnames_gr)
+      } else {
+        if (!grepl("i_cov", x)) {
+          nrep_of_parms <- 1
+        } else if (grepl("i_cov", x)) {
+          nrep_of_parms <- length(icovcoefnames_gr) - 1
+        }
+      }
+    } else if (class == "sd" & nlpar == 's') {
+      if (s_form_0_gr) {
+        nrep_of_parms <- df * length(scovcoefnames_gr)
+      } else {
+        if (!grepl("s_cov", x)) {
+          nrep_of_parms <- df
+        } else if (grepl("s_cov", x)) {
+          nrep_of_parms <- df * (length(scovcoefnames_gr) - 1)
         }
       }
     } else if (class == "sigma" &
@@ -1531,6 +1785,9 @@ set_priors_initials <- function(a_prior_beta,
           'dncov',
           'encov',
           'fncov',
+          'gncov',
+          'hncov',
+          'incov',
           'sncov',
           'ancov_gr',
           'bncov_gr',
@@ -1538,6 +1795,10 @@ set_priors_initials <- function(a_prior_beta,
           'dncov_gr',
           'encov_gr',
           'fncov_gr',
+          'gncov_gr',
+          'hncov_gr',
+          'incov_gr',
+          'sncov_gr',
           'dparncov',
           'nabci',
           'nabcrei',
@@ -1557,6 +1818,9 @@ set_priors_initials <- function(a_prior_beta,
           'd_form_0',
           'e_form_0',
           'f_form_0',
+          'g_form_0',
+          'h_form_0',
+          'i_form_0',
           's_form_0',
           'a_form_0_gr',
           'b_form_0_gr',
@@ -1564,7 +1828,10 @@ set_priors_initials <- function(a_prior_beta,
           'd_form_0_gr',
           'e_form_0_gr',
           'f_form_0_gr',
-          
+          'g_form_0_gr',
+          'h_form_0_gr',
+          'i_form_0_gr',
+          's_form_0_gr',
           'sigma_form_0',
           'sigma_form_0_gr',
           "sigma_dpar",
@@ -1677,6 +1944,9 @@ set_priors_initials <- function(a_prior_beta,
       dncov = dncov,
       encov = encov,
       fncov = fncov,
+      gncov = gncov,
+      hncov = hncov,
+      incov = incov,
       sncov = sncov,
       ancov_gr = ancov_gr,
       bncov_gr = bncov_gr,
@@ -1684,6 +1954,10 @@ set_priors_initials <- function(a_prior_beta,
       dncov_gr = dncov_gr,
       encov_gr = encov_gr,
       fncov_gr = fncov_gr,
+      gncov_gr = gncov_gr,
+      hncov_gr = hncov_gr,
+      incov_gr = incov_gr,
+      sncov_gr = sncov_gr,
       dparncov = dparncov,
       a_form_0 = a_form_0,
       b_form_0 = b_form_0,
@@ -1691,6 +1965,9 @@ set_priors_initials <- function(a_prior_beta,
       d_form_0 = d_form_0,
       e_form_0 = e_form_0,
       f_form_0 = f_form_0,
+      g_form_0 = g_form_0,
+      h_form_0 = h_form_0,
+      i_form_0 = i_form_0,
       s_form_0 = s_form_0,
       a_form_0_gr = a_form_0_gr,
       b_form_0_gr = b_form_0_gr,
@@ -1698,7 +1975,10 @@ set_priors_initials <- function(a_prior_beta,
       d_form_0_gr = d_form_0_gr,
       e_form_0_gr = e_form_0_gr,
       f_form_0_gr = f_form_0_gr,
-      
+      g_form_0_gr = g_form_0_gr,
+      h_form_0_gr = h_form_0_gr,
+      i_form_0_gr = i_form_0_gr,
+      s_form_0_gr = s_form_0_gr,
       sigma_form_0 = sigma_form_0,
       sigma_form_0_gr = sigma_form_0_gr,
       cov_sigma_dpar = cov_sigma_dpar,
@@ -1779,8 +2059,7 @@ set_priors_initials <- function(a_prior_beta,
     stanvars_data_in <- priors_parms$stanvars_data_in
     initial_in       <- priors_parms$initial_in
     
-    
-    
+   
     if (class == 'b') {
       # need to remove lb and ub if specifying coef, otherwise
       # Error: Argument 'coef' may not be specified when using boundaries.
@@ -1822,6 +2101,12 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ecovcoefnames
           if (nlpar == 'f')
             coef <- fcovcoefnames
+          if (nlpar == 'g')
+            coef <- gcovcoefnames
+          if (nlpar == 'h')
+            coef <- hcovcoefnames
+          if (nlpar == 'i')
+            coef <- icovcoefnames
           if (nlpar == 's') {
             coef <- scovcoefnames
             if (!s_form_0 & !is.null(sncov))
@@ -1865,6 +2150,12 @@ set_priors_initials <- function(a_prior_beta,
             coef <- rep("", length(ecovcoefnames))
           if (nlpar == 'f')
             coef <- rep("", length(fcovcoefnames))
+          if (nlpar == 'g')
+            coef <- rep("", length(gcovcoefnames))
+          if (nlpar == 'h')
+            coef <- rep("", length(hcovcoefnames))
+          if (nlpar == 'i')
+            coef <- rep("", length(icovcoefnames))
           if (nlpar == 's') {
             coef <- rep("", length(scovcoefnames))
             if (!s_form_0 & !is.null(sncov))
@@ -1879,7 +2170,7 @@ set_priors_initials <- function(a_prior_beta,
       }
      
       
-     
+      
       
       # nlpar a b c d e f - betas also sigma
       if (ept(mnf) & cov_nlpar == "" & cov_sigma_dpar == "") {
@@ -1892,7 +2183,8 @@ set_priors_initials <- function(a_prior_beta,
           setcoef <- coef
         }
         
-       
+        
+        
         
         # if (!grepl("^~1$", sigma_formulasi, fixed = T)) {
         #   setcoef <- coef
@@ -1941,7 +2233,6 @@ set_priors_initials <- function(a_prior_beta,
             ub = upperbound
           )
       }
-      
       
       
       
@@ -1999,7 +2290,7 @@ set_priors_initials <- function(a_prior_beta,
         }
       }
       
-      
+
       
       # nlpar cov a - betas
       if (!a_form_0) {
@@ -2127,6 +2418,69 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
+      # nlpar cov g - betas
+      if (!g_form_0) {
+        if (class == 'b' & grepl("g_cov", x) & !is.null(g_cov_prior_beta)) {
+          if (ept(mnf)) {
+            coef <- gcovcoefnames
+          } else {
+            coef <- gcovcoefnames[2:length(gcovcoefnames)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      
+      # nlpar cov h - betas
+      if (!h_form_0) {
+        if (class == 'b' & grepl("h_cov", x) & !is.null(h_cov_prior_beta)) {
+          if (ept(mnf)) {
+            coef <- hcovcoefnames
+          } else {
+            coef <- hcovcoefnames[2:length(hcovcoefnames)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      # nlpar cov i - betas
+      if (!i_form_0) {
+        if (class == 'b' & grepl("i_cov", x) & !is.null(i_cov_prior_beta)) {
+          if (ept(mnf)) {
+            coef <- icovcoefnames
+          } else {
+            coef <- icovcoefnames[2:length(icovcoefnames)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
       # sigma cov - betas
       if (!grepl("~0", sigma_formulasi, fixed = T) ) {
         class_org <- class
@@ -2179,6 +2533,8 @@ set_priors_initials <- function(a_prior_beta,
           
         }
       }
+      
+      
     } # if(class == 'b')
     
     
@@ -2211,6 +2567,19 @@ set_priors_initials <- function(a_prior_beta,
         coef <- ecovcoefnames_gr
       if (nlpar == 'f')
         coef <- fcovcoefnames_gr
+      if (nlpar == 'g')
+        coef <- gcovcoefnames_gr
+      if (nlpar == 'h')
+        coef <- hcovcoefnames_gr
+      if (nlpar == 'i')
+        coef <- icovcoefnames_gr
+      
+      if (nlpar == 's') {
+        coef <- rep("", length(scovcoefnames_gr))
+        if (!s_form_0_gr & !is.null(sncov_gr))
+          coef <- coef[1]
+      }
+      
       if (sigma_dpar == 'sigma') {
         dpar <- sigma_dpar
         coef <- sigmacovcoefnames_gr
@@ -2270,6 +2639,63 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
+      
+      if (nlpar == 's' & cov_nlpar == "") {
+        nlpar <- paste0(nlpar, 1:df)
+        if (grepl("~1", s_formula_grsi, fixed = T)) {
+          if (all(coef == "")) {
+            priors_ <- brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              resp = resp,
+              dpar = dpar,
+              lb = lowerbound,
+              ub = upperbound
+            )
+          } else {
+            priors_ <-   brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              group = group,
+              resp = resp,
+              dpar = dpar
+            )
+          }
+        }
+        if (grepl("~0", s_formula_grsi, fixed = T)) {
+          nlpar <- rep(nlpar ,
+                       times = 1,
+                       each = length(scovcoefnames_gr))
+          if (all(coef == "")) {
+            priors_ <- brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              resp = resp,
+              dpar = dpar,
+              lb = lowerbound,
+              ub = upperbound
+            )
+          } else {
+            priors_ <-   brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              group = group,
+              resp = resp,
+              dpar = dpar
+            )
+          }
+        }
+      }
+      
+
       # nlpar cov a - sd
       if (!a_form_0_gr) {
         if (class == 'sd' & grepl("a_cov", x) & !is.null(a_cov_prior_sd)) {
@@ -2400,6 +2826,105 @@ set_priors_initials <- function(a_prior_beta,
             )
         }
       }
+      
+      
+      
+      # nlpar cov g - sd
+      if (!g_form_0_gr) {
+        if (class == 'sd' & grepl("g_cov", x) & !is.null(g_cov_prior_sd)) {
+          if (ept(mnf)) {
+            coef <- gcovcoefnames_gr
+          } else {
+            coef <- gcovcoefnames_gr[2:length(gcovcoefnames_gr)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      # nlpar cov h - sd
+      if (!h_form_0_gr) {
+        if (class == 'sd' & grepl("h_cov", x) & !is.null(h_cov_prior_sd)) {
+          if (ept(mnf)) {
+            coef <- hcovcoefnames_gr
+          } else {
+            coef <- hcovcoefnames_gr[2:length(hcovcoefnames_gr)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      # nlpar cov i - sd
+      if (!h_form_0_gr) {
+        if (class == 'sd' & grepl("h_cov", x) & !is.null(h_cov_prior_sd)) {
+          if (ept(mnf)) {
+            coef <- hcovcoefnames_gr
+          } else {
+            coef <- hcovcoefnames_gr[2:length(hcovcoefnames_gr)]
+          }
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              group = group,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+        }
+      }
+      
+      
+      
+      # nlpar cov s - betas
+      if (!s_form_0_gr) {
+        if (class == 'b' & grepl("s_cov", x) & !is.null(s_cov_prior_sd)) {
+          if (ept(mnf)) {
+            coef <- scovcoefnames_gr
+          } else {
+            coef <- scovcoefnames_gr[2:length(scovcoefnames_gr)]
+          }
+          nlpar <- paste0(nlpar, 1:df)
+          nlpar <- rep(nlpar, times = length(coef), each = 1)
+          coef <- rep(coef , times = 1, each = df)
+          priors_ <-
+            brms::prior_string(
+              define_,
+              class = class,
+              nlpar = nlpar,
+              coef = coef,
+              resp = resp,
+              dpar = dpar
+            )
+          
+        }
+      }
+      
+      
+      
+      
+      
+      
       
       
       # sigma cov - sd
@@ -2731,6 +3256,12 @@ set_priors_initials <- function(a_prior_beta,
     'e_cov_prior_beta',
     'f_prior_beta',
     'f_cov_prior_beta',
+    'g_prior_beta',
+    'g_cov_prior_beta',
+    'h_prior_beta',
+    'h_cov_prior_beta',
+    'i_prior_beta',
+    'i_cov_prior_beta',
     's_prior_beta',
     's_cov_prior_beta',
     'a_prior_sd',
@@ -2745,7 +3276,14 @@ set_priors_initials <- function(a_prior_beta,
     'e_cov_prior_sd',
     'f_prior_sd',
     'f_cov_prior_sd',
-    
+    'g_prior_sd',
+    'g_cov_prior_sd',
+    'h_prior_sd',
+    'h_cov_prior_sd',
+    'i_prior_sd',
+    'i_cov_prior_sd',
+    's_prior_sd',
+    's_cov_prior_sd',
     'sigma_prior_beta',
     'sigma_cov_prior_beta',
     'sigma_prior_sd',
@@ -2958,7 +3496,7 @@ set_priors_initials <- function(a_prior_beta,
     
 
     # convert vector of 's' initials to named individual (s1, s2)
-    if(select_model == "sitar") {
+    if(select_model == "sitar" | select_model == 'rcs') {
       # Don't let when evaluating _str higher custom order
       if("s_prior_beta" %in% custom_order_prior) first_loop <- TRUE else first_loop <- FALSE   
       if(first_loop) {
@@ -3021,7 +3559,7 @@ set_priors_initials <- function(a_prior_beta,
       
     } # if(select_model == "sitar") {
 
-    if(select_model != "sitar") initials <- combined_inits
+    if(select_model != "sitar" & select_model != 'rcs') initials <- combined_inits
     
   } # if (!is.null(initial_in_datazz)) {
   
@@ -3201,7 +3739,6 @@ set_priors_initials <- function(a_prior_beta,
   
   # initialsxx <<- initials
    #  print(str(initials))
-  # print(evaluated_priors)
   #########
   
 

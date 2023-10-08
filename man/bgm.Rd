@@ -15,9 +15,10 @@ bgm(
   random = "a + b + c + d + e + f",
   select_model = "sitar",
   xoffset = "mean",
-  bstart = "mean",
-  apgv = 13,
-  pgv = 4,
+  bstart = "apv",
+  cstart = "pv",
+  apv = NULL,
+  pv = NULL,
   xfun = NULL,
   yfun = NULL,
   bound = 0.04,
@@ -41,6 +42,7 @@ bgm(
   g_formula_gr = ~1,
   h_formula_gr = ~1,
   i_formula_gr = ~1,
+  s_formula_gr = ~1,
   a_formula_gr_str = NULL,
   b_formula_gr_str = NULL,
   c_formula_gr_str = NULL,
@@ -50,6 +52,7 @@ bgm(
   g_formula_gr_str = NULL,
   h_formula_gr_str = NULL,
   i_formula_gr_str = NULL,
+  s_formula_gr_str = NULL,
   sigma_formula = NULL,
   sigma_formula_gr = NULL,
   sigma_formula_gr_str = NULL,
@@ -90,6 +93,7 @@ bgm(
   g_prior_sd = normal(0, 1, autoscale = FALSE),
   h_prior_sd = normal(0, 1, autoscale = FALSE),
   i_prior_sd = normal(0, 1, autoscale = FALSE),
+  s_prior_sd = normal(0, 1, autoscale = FALSE),
   a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
   b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
   c_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
@@ -99,6 +103,7 @@ bgm(
   g_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
   h_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
   i_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
+  s_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
   a_prior_sd_str = NULL,
   b_prior_sd_str = NULL,
   c_prior_sd_str = NULL,
@@ -108,6 +113,7 @@ bgm(
   g_prior_sd_str = NULL,
   h_prior_sd_str = NULL,
   i_prior_sd_str = NULL,
+  s_prior_sd_str = NULL,
   a_cov_prior_sd_str = NULL,
   b_cov_prior_sd_str = NULL,
   c_cov_prior_sd_str = NULL,
@@ -117,6 +123,7 @@ bgm(
   g_cov_prior_sd_str = NULL,
   h_cov_prior_sd_str = NULL,
   i_cov_prior_sd_str = NULL,
+  s_cov_prior_sd_str = NULL,
   sigma_prior_beta = normal(0, 1, autoscale = FALSE),
   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
   sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
@@ -164,6 +171,7 @@ bgm(
   g_init_sd = random,
   h_init_sd = random,
   i_init_sd = random,
+  s_init_sd = random,
   a_cov_init_sd = random,
   b_cov_init_sd = random,
   c_cov_init_sd = random,
@@ -173,6 +181,7 @@ bgm(
   g_cov_init_sd = random,
   h_cov_init_sd = random,
   i_cov_init_sd = random,
+  s_cov_init_sd = random,
   sigma_init_beta = random,
   sigma_cov_init_beta = random,
   sigma_init_sd = random,
@@ -230,6 +239,7 @@ bgm(
   file = NULL,
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
+  decomp = NULL,
   parameterization = "ncp",
   ...
 )
@@ -325,11 +335,22 @@ origin for the fixed effect parameter \code{b}. Options are same as
 described above for the \code{xoffset}. The default is same as
 \code{xoffset} i.e.,  \code{bstart = xoffset}.}
 
-\item{apgv}{An optional numeric value to set up the initial value for the
-fixed effect parameter \code{b}.}
+\item{cstart}{An optional character string or a numeric value to set up the
+origin for the fixed effect parameter \code{c}. Options are \code{'pv'}
+(peak velocity derived from the velocity curve of the simple linear model
+fit to the data), or any real number such as \code{cstart = 2}. Note that
+the actual value passed to the model is \code{log(cstart)} because
+parameter \code{c} is estimated on the exponential scale. The default is
+\code{cstart = 'pv'} i.e, log of the peak velocity.}
 
-\item{pgv}{An optional numeric value to set up the initial value for the
-fixed effect parameter \code{c}.}
+\item{apv}{An optional numeric value (default \code{NULL}) to set up the
+initial value for the fixed effect parameter \code{b}. This is just an
+alternative method of setting up the \code{bstart}.}
+
+\item{pv}{An optional numeric value (default \code{NULL}) to set up the
+initial value for the fixed effect parameter \code{c}. This is just an
+alternative method of setting up the \code{cstart}. Note that like
+\code{cstart}, the actual value passed to the model is \code{log(pv)}.}
 
 \item{xfun}{An optional character string to specify the transformation of the
 predictor variable, \code{x}. Options are \code{'log'} (logarithmic
@@ -406,7 +427,7 @@ identifier (e.g., \code{id}) and an unstructured correlation structure, the
 identifier and correlation structure directly within the formula argument
 as follows: \code{a_formula_gr = ~ (1 |i|id)}, \code{b_formula_gr = ~
  (1|i|id)}, and \code{c_formula_gr = ~ (1 |i|id)} where  \code{i} within the
-vertical bars \code{||} is just a placeholder. A commo identifier (i.e.,
+vertical bars \code{||} is just a placeholder. A common identifier (i.e.,
 \code{i}) shared across random effect formulas are modeled as unstructured
 correlated. For more details on the the vertical bar approach, please see
 \code{\link[brms:brm]{brms::brm()}}.}
@@ -433,6 +454,9 @@ correlated. For more details on the the vertical bar approach, please see
 \code{~ 1}). See \code{a_formula_gr} for details.}
 
 \item{i_formula_gr}{Formula for the random effect parameter, \code{i} (default
+\code{~ 1}). See \code{a_formula_gr} for details.}
+
+\item{s_formula_gr}{Formula for the random effect parameter, \code{s} (default
 \code{~ 1}). See \code{a_formula_gr} for details.}
 
 \item{a_formula_gr_str}{Formula for the random effect parameter, \code{a}
@@ -484,6 +508,10 @@ levels. See \code{a_formula_gr_str} for details.}
 (default \code{NULL}) when fitting a hierarchical model with three or more
 levels. See \code{a_formula_gr_str} for details.}
 
+\item{s_formula_gr_str}{Formula for the random effect parameter, \code{s}
+(default \code{NULL}) when fitting a hierarchical model with three or more
+levels. See \code{a_formula_gr_str} for details.}
+
 \item{sigma_formula}{Formula for the fixed effect distributional parameter,
 \code{sigma}. The \code{sigma_formula} is useful when including
 covariates(s) for  the distributional parameter. Note that
@@ -494,7 +522,7 @@ the \code{sigma} as a residual standard deviation (\strong{RSD}) parameter
 at the link scale (prior and initial values for the \strong{RSD} are
 specified via the \code{rsd_prior_sigma} and \code{rsd_init_sigma},
 respectively. details on \code{rsd_prior_sigma} and \code{rsd_init_sigma}
-are mentioned belwo in relevant sections). The \code{sigma_formula} along
+are mentioned below in relevant sections). The \code{sigma_formula} along
 with \code{sigma_formula_gr} and \code{sigma_formula_gr_str} arguments
 allows hierarchical structure (estimation of random effects) for
 \code{sigma}. This set up is similar to setting fixed and random effect
@@ -772,6 +800,9 @@ See \code{a_prior_sd} for details.}
 \item{i_prior_sd}{sset Specify priors  for the random effect parameter,
 \code{i}. See \code{a_prior_sd} for details.}
 
+\item{s_prior_sd}{sset Specify priors  for the random effect parameter,
+\code{i}. See \code{a_prior_sd} for details.}
+
 \item{a_cov_prior_sd}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{a}. The approach is same as described earlier
 for the \code{a_cov_prior_beta} except that no pre-defined option (e.g.,
@@ -799,6 +830,9 @@ random effect parameter, \code{g}. See \code{a_cov_prior_sd} for details.}
 random effect parameter, \code{h}. See \code{a_cov_prior_sd} for details.}
 
 \item{i_cov_prior_sd}{Specify priors for the covariate(s) included in the
+random effect parameter, \code{i}. See \code{a_cov_prior_sd} for details.}
+
+\item{s_cov_prior_sd}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{i}. See \code{a_cov_prior_sd} for details.}
 
 \item{a_prior_sd_str}{Specify priors for the random effect parameter, \code{a}
@@ -837,6 +871,10 @@ when fitting a model with 3 or more hierarchy levels (see
 when fitting a model with 3 or more hierarchy levels (see
 \code{a_prior_sd_str}).}
 
+\item{s_prior_sd_str}{Specify priors for the random effect parameter, \code{s}
+when fitting a model with 3 or more hierarchy levels (see
+\code{a_prior_sd_str}).}
+
 \item{a_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{a}  when fitting a model with 3 or more
 hierarchy levels. The approach of setting up the priors is same as described
@@ -872,6 +910,10 @@ hierarchy levels (see \code{a_cov_prior_sd_str}).}
 
 \item{i_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{i} when fitting a model with 3 or more
+hierarchy levels (see \code{a_cov_prior_sd_str}).}
+
+\item{s_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
+random effect parameter, \code{s} when fitting a model with 3 or more
 hierarchy levels (see \code{a_cov_prior_sd_str}).}
 
 \item{sigma_prior_beta}{Specify priors for the fixed effect distributional
@@ -1090,6 +1132,9 @@ parameter, \code{h}. See \code{a_init_sd} for details.}
 \item{i_init_sd}{Specify initial values for the group level random effect
 parameter, \code{i}. See \code{a_init_sd} for details.}
 
+\item{s_init_sd}{Specify initial values for the group level random effect
+parameter, \code{s}. See \code{a_init_sd} for details.}
+
 \item{a_cov_init_sd}{Specify initial values for the covariate(s) included in
 the random effect parameter, \code{a}. Options available are \code{0},
 \code{random} and \code{prior}. See \code{a_cov_init_beta} for details.}
@@ -1117,6 +1162,9 @@ the random effect parameter, \code{h}. See \code{a_cov_init_sd} for details.}
 
 \item{i_cov_init_sd}{Specify initial values for the covariate(s) included in
 the random effect parameter, \code{i}. See \code{a_cov_init_sd} for details.}
+
+\item{s_cov_init_sd}{Specify initial values for the covariate(s) included in
+the random effect parameter, \code{s}. See \code{a_cov_init_sd} for details.}
 
 \item{sigma_init_beta}{Specify initial values for the fixed effect
 distributional parameter, \code{sigma}. The approach is same as described
@@ -1447,6 +1495,11 @@ package is used for parallel execution of the chains and argument
 \code{cores} will be ignored. Can be set globally for the current \R
 session via the \code{"future"} option. The execution type is controlled
 via \code{\link[future:plan]{plan}} (see the examples section below).}
+
+\item{decomp}{Optional name of the decomposition used for the
+population-level design matrix. Defaults to NULL that is no decomposition.
+Other options currently available are "QR" for the QR decomposition that
+helps in fitting models with highly correlated predictors.}
 
 \item{parameterization}{A character string to specify either
 Non-centered parameterization (\code{'ncp}, default) or Centered

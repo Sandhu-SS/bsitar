@@ -4,9 +4,11 @@
 #' An internal function to create data frame for post-processing
 #'
 #' @inheritParams  growthparameters.bgmfit 
-#' @param intpldata_function_used A character string to indicate interpolation 
-#' method. Options available are \code{get_idata} (default) and
-#' \code{idatafunction}
+#' @param idata_method A character string to indicate interpolation 
+#' method. Options available are \code{m1} (default) and
+#' \code{m2}. The \code{'m1'} calls the \code{idatafunction} function 
+#' whereas \code{'m2'} calls the \code{get_idata} function for data 
+#' interpolation. 
 #' 
 #' @keywords internal
 #' @return A data frame object. 
@@ -20,7 +22,7 @@ get.newdata <- function(model,
                         levels_id = NULL,
                         ipts = NULL,
                         xrange = NULL,
-                        intpldata_function_used = 'get_idata') {
+                        idata_method = 'm1') {
   
   if (is.null(resp)) {
     resp_rev_ <- resp
@@ -333,8 +335,8 @@ get.newdata <- function(model,
       
       
       
-      # this is old type idatafunction
-      if (intpldata_function_used == 'idatafunction') {
+      # this is old type idatafunction i.e., m1
+      if (idata_method == 'm1') {
         idatafunction <- function(.x,
                                   xvar,
                                   IDvar,
@@ -389,15 +391,24 @@ get.newdata <- function(model,
                 df <- rbind(df, dft)
               df
             }
+          
+        inidnull <- FALSE
+         if(is.null(.x[[IDvar]])) {
+           inidnull <- TRUE
+           .x[[IDvar]] <- unique(levels(newdata[[IDvar]]))[1]
+         }
+        
           out <- exdata(
-            .x[[xvar]],
-            .x[[IDvar]],
-            matrix(unique(.x[[IDvar]], ncol = 1)),
+            x = .x[[xvar]],
+            id = .x[[IDvar]],
+            idmat = matrix(unique(.x[[IDvar]], ncol = 1)),
             nmy = nmy,
             xrange = xrange,
             set_xrange = set_xrange,
             aux_var = aux_var
           )
+          
+          if(inidnull) out <- out %>% dplyr::select(-all_of(IDvar))
           
           idxx <- NULL
           if (!is.null(aux_var)) {
@@ -415,7 +426,7 @@ get.newdata <- function(model,
               dplyr::select(-idxx) %>% data.frame()
           }
           out # %>% print() %>% stop()
-        } # end idatafunction
+        } # end idatafunction -> m1
         
         
         if (!is.null(xrange)) {
@@ -553,14 +564,14 @@ get.newdata <- function(model,
               data.frame() -> newdata
           }
         } # if(!is.null(model$model_info[[hierarchical_]])) {
-      } # end of if(intpldata_function_used == 'idatafunction') {
+      } # end of if(idata_method == 'm1') {
       
       
       
       
       
-      # this is new type get_idata
-      if (intpldata_function_used == 'get_idata') {
+      # this is new type get_idata i.e., m2
+      if (idata_method == 'm2') {
         if (!is.null(ipts)) {
           # for 3 or more level data, idvar shoud be first of vector
           if (is.null(model$model_info[[hierarchical_]])) {
@@ -571,7 +582,7 @@ get.newdata <- function(model,
           # not using set_xrange which is range of x i.e. c(,) but xrange 1 2
           newdata <-
             get_idata(
-              newdata,
+              newdata = newdata,
               idVar = IDvar_for_idata,
               timeVar = xvar,
               times = NULL,
@@ -579,7 +590,7 @@ get.newdata <- function(model,
               xrange = xrange
             )
         }
-      } # end if(intpldata_function_used == 'get_idata') {
+      } # end if(idata_method == 'm2') {
       
       
       

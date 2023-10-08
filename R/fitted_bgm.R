@@ -64,12 +64,14 @@ fitted_bgm.bgmfit <-
            levels_id = NULL,
            ipts = NULL,
            deriv = 0,
+           deriv_model = TRUE,
            summary = TRUE,
            robust = FALSE,
            probs = c(0.025, 0.975),
            xrange = NULL,
            parms_eval = FALSE,
            parms_method = 'getPeak',
+           idata_method = 'm1',
            envir = parent.frame(),
            ...) {
     
@@ -90,12 +92,33 @@ fitted_bgm.bgmfit <-
                              numeric_cov_at = numeric_cov_at,
                              levels_id = levels_id,
                              ipts = ipts,
-                             xrange = xrange)
+                             xrange = xrange,
+                             idata_method = idata_method)
     }
     
   
-    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    if(deriv == 0) {
+      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    }
+    
+    if(!is.null(model$model_info$decomp)) {
+      if(model$model_info$decomp == "QR") deriv_model<- FALSE
+    }
+    
+    if(!deriv_model) {
+      if(deriv == 1 | deriv == 2) {
+        summary <- FALSE
+        assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+      }
+    }
+    
+    if(deriv_model) {
+      if(deriv == 1 | deriv == 2) {
+        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+      }
+    }
    
+    
     . <- fitted(model,
                 newdata = newdata,
                 resp = resp,
@@ -110,6 +133,14 @@ fitted_bgm.bgmfit <-
                 robust = robust,
                 probs = probs,
                 ...)
+    
+ 
+    if(!deriv_model) {
+      if(deriv == 1 | deriv == 2) {
+        . <- mapderivqr(model, ., newdata, deriv)
+      }
+    } 
+    
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

@@ -19,18 +19,22 @@
 #' for adding an underscore at the end of the name (*conditional_effects* to 
 #' *conditional_effects_bgm*). 
 #'
-#' @param model An object of class \code{bgmfit}.
-#' function.
-#' @param resp Response variable (default \code{NULL}) specified as a string 
-#' character required during the post-processing of multivariate and 
-#' univariate-by-subgroup model (see \code{bsitar::bgm()} for details).
-#' @param deriv An integer value to specify whether to estimate distance curve
-#'  (i.e., model estimated curve(s)) or velocity curve (first derivative of the 
-#'  model estimated curve(s)). A 0 value (default) is for distance curve and 
-#'  1 for the velocity curve.
+#' @param model An object of class \code{bgmfit}. function.
+#' @param resp Response variable (default \code{NULL}) specified as a string
+#'   character required during the post-processing of multivariate and
+#'   univariate-by-subgroup model (see \code{bsitar::bgm()} for details).
+#' @param deriv An integer to specify whether to estimate distance curve or
+#'   derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
+#'   for the distance curve whereas \code{deriv = 1} for velocity curve and
+#'   \code{deriv = 2} for the acceleration curve.
+#' @param deriv_model A logical (default \code{TRUE}) to indicate whether to
+#'   estimate model based derivatives or from the differentiation of the
+#'   distance curve. When model is fit with \code{decomp = 'QR'}, the only
+#'   approach available to estimate derivatives is the  differentiation of the
+#'   distance curve.
 #' @param envir The calling environment. Deafault set to \code{parent.frame()}.
-#' @param ... Additional arguments passed to the [brms::conditional_effects()] 
-#' function. Please see [brms::conditional_effects()] for details.
+#' @param ... Additional arguments passed to the [brms::conditional_effects()]
+#'   function. Please see [brms::conditional_effects()] for details.
 #'
 #' @inherit brms::conditional_effects description 
 #' 
@@ -63,6 +67,7 @@ conditional_effects_bgm.bgmfit <-
   function(model,
            resp = NULL,
            deriv = 0,
+           deriv_model = TRUE,
            envir = parent.frame(),
            ...) {
     o <-
@@ -72,8 +77,47 @@ conditional_effects_bgm.bgmfit <-
                              deriv = deriv,
                              envir = envir)
     
-    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    . <- brms::conditional_effects(model, resp = resp, ...)
+    if(deriv == 0) {
+      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    }
+    
+    if(!is.null(model$model_info$decomp)) {
+      if(model$model_info$decomp == "QR") deriv_model<- FALSE
+    }
+    
+    if(!deriv_model) {
+      if(deriv == 1 | deriv == 2) {
+        summary <- FALSE
+        assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+      }
+    }
+    
+    if(deriv_model) {
+      if(deriv == 1 | deriv == 2) {
+        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+      }
+    }
+    
+    
+    if(!deriv_model) {
+      xvar  <- model$model_info$xvar
+      idvar <- model$model_info$groupvar
+      if(length(idvar) > 1) idvar <- idvar[1]
+      yvar  <- 'yvar'
+      out_    <- brms::conditional_effects(model, resp = resp, ...)
+      datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
+      datace[[idvar]] <- unique(levels(model$data[[idvar]]))[1]
+      outx <- fitted_bgm(model, resp = resp, newdata = datace, deriv = deriv, ...)
+      out_[[1]][['estimate__']] <- outx[, 1]
+      out_[[1]][['se__']] <- outx[, 2]
+      out_[[1]][['lower__']] <- outx[, 3]
+      out_[[1]][['upper__']] <- outx[, 4]
+      # plot(out_, plot = FALSE)[[1]]
+      . <- out_
+    }
+    
+    if(deriv_model) . <- brms::conditional_effects(model, resp = resp, ...)
+    
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

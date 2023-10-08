@@ -192,11 +192,22 @@
 #'  described above for the \code{xoffset}. The default is same as
 #'  \code{xoffset} i.e.,  \code{bstart = xoffset}.
 #'  
-#'@param pgv An optional numeric value to set up the initial value for the 
-#'  fixed effect parameter \code{c}.
-#'  
-#'@param apgv An optional numeric value to set up the initial value for the
-#'  fixed effect parameter \code{b}. 
+#'@param cstart An optional character string or a numeric value to set up the
+#'  origin for the fixed effect parameter \code{c}. Options are \code{'pv'}
+#'  (peak velocity derived from the velocity curve of the simple linear model
+#'  fit to the data), or any real number such as \code{cstart = 2}. Note that
+#'  the actual value passed to the model is \code{log(cstart)} because
+#'  parameter \code{c} is estimated on the exponential scale. The default is
+#'  \code{cstart = 'pv'} i.e, log of the peak velocity.
+#'
+#'@param apv An optional numeric value (default \code{NULL}) to set up the
+#'  initial value for the fixed effect parameter \code{b}. This is just an
+#'  alternative method of setting up the \code{bstart}.
+#'
+#'@param pv An optional numeric value (default \code{NULL}) to set up the
+#'  initial value for the fixed effect parameter \code{c}. This is just an
+#'  alternative method of setting up the \code{cstart}. Note that like 
+#'  \code{cstart}, the actual value passed to the model is \code{log(pv)}.
 #'  
 #'@param xfun An optional character string to specify the transformation of the
 #'  predictor variable, \code{x}. Options are \code{'log'} (logarithmic
@@ -273,7 +284,7 @@
 #'  identifier and correlation structure directly within the formula argument
 #'  as follows: \code{a_formula_gr = ~ (1 |i|id)}, \code{b_formula_gr = ~
 #'  (1|i|id)}, and \code{c_formula_gr = ~ (1 |i|id)} where  \code{i} within the
-#'  vertical bars \code{||} is just a placeholder. A commo identifier (i.e.,
+#'  vertical bars \code{||} is just a placeholder. A common identifier (i.e.,
 #'  \code{i}) shared across random effect formulas are modeled as unstructured
 #'  correlated. For more details on the the vertical bar approach, please see
 #'  [brms::brm()].
@@ -300,6 +311,9 @@
 #'  \code{~ 1}). See \code{a_formula_gr} for details.
 #'  
 #'@param i_formula_gr Formula for the random effect parameter, \code{i} (default
+#'  \code{~ 1}). See \code{a_formula_gr} for details.
+#'  
+#'@param s_formula_gr Formula for the random effect parameter, \code{s} (default
 #'  \code{~ 1}). See \code{a_formula_gr} for details.
 #'
 #'@param a_formula_gr_str Formula for the random effect parameter, \code{a}
@@ -350,6 +364,10 @@
 #'@param i_formula_gr_str Formula for the random effect parameter, \code{i}
 #'  (default \code{NULL}) when fitting a hierarchical model with three or more
 #'  levels. See \code{a_formula_gr_str} for details.
+#'  
+#'@param s_formula_gr_str Formula for the random effect parameter, \code{s}
+#'  (default \code{NULL}) when fitting a hierarchical model with three or more
+#'  levels. See \code{a_formula_gr_str} for details.
 #'
 #'@param sigma_formula Formula for the fixed effect distributional parameter,
 #'  \code{sigma}. The \code{sigma_formula} is useful when including
@@ -361,7 +379,7 @@
 #'  at the link scale (prior and initial values for the \strong{RSD} are
 #'  specified via the \code{rsd_prior_sigma} and \code{rsd_init_sigma},
 #'  respectively. details on \code{rsd_prior_sigma} and \code{rsd_init_sigma}
-#'  are mentioned belwo in relevant sections). The \code{sigma_formula} along
+#'  are mentioned below in relevant sections). The \code{sigma_formula} along
 #'  with \code{sigma_formula_gr} and \code{sigma_formula_gr_str} arguments
 #'  allows hierarchical structure (estimation of random effects) for
 #'  \code{sigma}. This set up is similar to setting fixed and random effect
@@ -638,6 +656,9 @@
 #'
 #'@param i_prior_sd sset Specify priors  for the random effect parameter,
 #'  \code{i}. See \code{a_prior_sd} for details.
+#'  
+#'@param s_prior_sd sset Specify priors  for the random effect parameter,
+#'  \code{i}. See \code{a_prior_sd} for details.
 #'
 #'@param a_cov_prior_sd Specify priors for the covariate(s) included in the
 #'  random effect parameter, \code{a}. The approach is same as described earlier
@@ -666,6 +687,9 @@
 #'  random effect parameter, \code{h}. See \code{a_cov_prior_sd} for details.
 #'
 #'@param i_cov_prior_sd Specify priors for the covariate(s) included in the
+#'  random effect parameter, \code{i}. See \code{a_cov_prior_sd} for details.
+#'  
+#'@param s_cov_prior_sd Specify priors for the covariate(s) included in the
 #'  random effect parameter, \code{i}. See \code{a_cov_prior_sd} for details.
 #'
 #'@param a_prior_sd_str Specify priors for the random effect parameter, \code{a}
@@ -704,6 +728,10 @@
 #'  when fitting a model with 3 or more hierarchy levels (see
 #'  \code{a_prior_sd_str}).
 #'
+#'@param s_prior_sd_str Specify priors for the random effect parameter, \code{s}
+#'  when fitting a model with 3 or more hierarchy levels (see
+#'  \code{a_prior_sd_str}).
+#'
 #'@param a_cov_prior_sd_str Specify priors for the covariate(s) included in the
 #'  random effect parameter, \code{a}  when fitting a model with 3 or more
 #'  hierarchy levels. The approach of setting up the priors is same as described
@@ -739,6 +767,10 @@
 #'  
 #'@param i_cov_prior_sd_str Specify priors for the covariate(s) included in the
 #'  random effect parameter, \code{i} when fitting a model with 3 or more
+#'  hierarchy levels (see \code{a_cov_prior_sd_str}). 
+#'  
+#'@param s_cov_prior_sd_str Specify priors for the covariate(s) included in the
+#'  random effect parameter, \code{s} when fitting a model with 3 or more
 #'  hierarchy levels (see \code{a_cov_prior_sd_str}). 
 #'  
 #'@param sigma_prior_beta Specify priors for the fixed effect distributional
@@ -956,6 +988,9 @@
 #'  
 #'@param i_init_sd Specify initial values for the group level random effect
 #'  parameter, \code{i}. See \code{a_init_sd} for details.
+#'  
+#'@param s_init_sd Specify initial values for the group level random effect
+#'  parameter, \code{s}. See \code{a_init_sd} for details.
 #'
 #'@param a_cov_init_sd Specify initial values for the covariate(s) included in
 #'  the random effect parameter, \code{a}. Options available are \code{0},
@@ -984,6 +1019,9 @@
 #'  
 #'@param i_cov_init_sd Specify initial values for the covariate(s) included in
 #'  the random effect parameter, \code{i}. See \code{a_cov_init_sd} for details.
+#'  
+#'@param s_cov_init_sd Specify initial values for the covariate(s) included in
+#'  the random effect parameter, \code{s}. See \code{a_cov_init_sd} for details.
 #'
 #'@param sigma_init_beta Specify initial values for the fixed effect
 #'  distributional parameter, \code{sigma}. The approach is same as described
@@ -1316,6 +1354,11 @@
 #'   session via the \code{"future"} option. The execution type is controlled
 #'   via \code{\link[future:plan]{plan}} (see the examples section below).
 #'   
+#' @param decomp Optional name of the decomposition used for the
+#'   population-level design matrix. Defaults to NULL that is no decomposition.
+#'   Other options currently available are "QR" for the QR decomposition that
+#'   helps in fitting models with highly correlated predictors.
+#'   
 #' @param parameterization A character string to specify either 
 #' Non-centered parameterization (\code{'ncp}, default) or Centered 
 #' parameterization (\code{'cp} approach to draw random effects. 
@@ -1506,9 +1549,10 @@ bgm <- function(x,
                    random = 'a + b + c + d + e + f',
                    select_model = 'sitar',
                    xoffset = 'mean',
-                   bstart = 'mean',
-                   apgv = 13,
-                   pgv = 4,
+                   bstart = 'apv',
+                   cstart = 'pv',
+                   apv = NULL,
+                   pv = NULL,
                    xfun = NULL,
                    yfun = NULL,
                    bound = 0.04,
@@ -1534,6 +1578,8 @@ bgm <- function(x,
                    g_formula_gr = ~ 1,
                    h_formula_gr = ~ 1,
                    i_formula_gr = ~ 1,
+                
+                   s_formula_gr = ~ 1,
                    
                    a_formula_gr_str = NULL,
                    b_formula_gr_str = NULL,
@@ -1544,6 +1590,8 @@ bgm <- function(x,
                    g_formula_gr_str = NULL,
                    h_formula_gr_str = NULL,
                    i_formula_gr_str = NULL,
+                
+                   s_formula_gr_str = NULL,
                    
                    sigma_formula = NULL,
                    sigma_formula_gr = NULL,
@@ -1592,7 +1640,7 @@ bgm <- function(x,
                    g_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-                   
+                
                    s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
                    
                    a_prior_sd = normal(0, 'ysd', autoscale = 2.5),
@@ -1604,6 +1652,8 @@ bgm <- function(x,
                    g_prior_sd = normal(0, 1, autoscale = FALSE),
                    h_prior_sd = normal(0, 1, autoscale = FALSE),
                    i_prior_sd = normal(0, 1, autoscale = FALSE),
+                
+                s_prior_sd = normal(0, 1, autoscale = FALSE),
                    
                    a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -1614,6 +1664,8 @@ bgm <- function(x,
                    g_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    h_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    i_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
+                
+                s_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    
                    a_prior_sd_str = NULL,
                    b_prior_sd_str = NULL,
@@ -1624,6 +1676,8 @@ bgm <- function(x,
                    g_prior_sd_str = NULL,
                    h_prior_sd_str = NULL,
                    i_prior_sd_str = NULL,
+                
+                s_prior_sd_str = NULL,
                    
                    a_cov_prior_sd_str = NULL,
                    b_cov_prior_sd_str = NULL,
@@ -1634,6 +1688,8 @@ bgm <- function(x,
                    g_cov_prior_sd_str = NULL,
                    h_cov_prior_sd_str = NULL,
                    i_cov_prior_sd_str = NULL,
+                
+                s_cov_prior_sd_str = NULL,
                    
                    sigma_prior_beta = normal(0, 1, autoscale = FALSE),
                    sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
@@ -1690,6 +1746,8 @@ bgm <- function(x,
                    g_init_sd = random,
                    h_init_sd = random,
                    i_init_sd = random,
+                
+                s_init_sd = random,
                    
                    a_cov_init_sd = random,
                    b_cov_init_sd = random,
@@ -1700,6 +1758,8 @@ bgm <- function(x,
                    g_cov_init_sd = random,
                    h_cov_init_sd = random,
                    i_cov_init_sd = random,
+                
+                s_cov_init_sd = random,
                    
                    sigma_init_beta = random,
                    sigma_cov_init_beta = random,
@@ -1759,6 +1819,7 @@ bgm <- function(x,
                    file = NULL,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
+                decomp = NULL,
                    parameterization = 'ncp',
                    ...) {
   
@@ -1767,7 +1828,7 @@ bgm <- function(x,
   # check and set alias argument for formula 
   dots_allias <- list(...)
   collect_dot_names <- c()
-  for (ia in letters[1:10]) {
+  for (ia in letters[1:26]) {
     set_name_dot <- paste0(ia, ".", 'formula')
     set_name_uns <- paste0(ia, "_", 'formula')
     collect_dot_names <- c(collect_dot_names, set_name_dot)
@@ -1789,6 +1850,9 @@ bgm <- function(x,
   rm(dots_allias)
   
   mcall <- mcall_ <- mcall
+  
+  
+  # mcallx <<- mcall
   
   no_default_args <- c("x", "y", "id", "data", "...")
   
@@ -1888,8 +1952,6 @@ bgm <- function(x,
     no_default_args_plus_family <- c(no_default_args, "family")
     if (!i %in% no_default_args_plus_family) {
       err. <- FALSE
-      # if(mcall[[i]] == F) mcall[[i]] <- FALSE
-      # print(mcall[[i]])
       tryCatch(
         expr = {
           if (is.function(eval(mcall[[i]]))) {
@@ -1962,13 +2024,26 @@ bgm <- function(x,
     }
   }
   
-  
 
   f_bgm_arg <- formals(bgm)
   nf_bgm_arg_names <-
     intersect(names(arguments), names(f_bgm_arg))
   arguments <-
     c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
+  
+  # argumentsx <<- arguments
+  # mcall_x <<- mcall_
+  # mcallx <<- mcall
+ 
+
+  checks_start_names <- c('bstart', 'cstart', 'apv', 'pv')
+  for (checks_start_namesi in checks_start_names) {
+    if(checks_start_namesi %in% names(mcall_)) {
+      if(is.null(mcall_[[checks_start_namesi]])) {
+        arguments[[checks_start_namesi]] <- 'NULL'
+      }
+    }
+  }
   
   #######################
   normal <- NULL;
@@ -1985,24 +2060,32 @@ bgm <- function(x,
   d_formula_gr_strsi <- NULL;
   e_formula_gr_strsi <- NULL;
   f_formula_gr_strsi <- NULL;
+  g_formula_gr_strsi <- NULL;
+  h_formula_gr_strsi <- NULL;
+  i_formula_gr_strsi <- NULL;
+  s_formula_gr_strsi <- NULL;
   xsi <- NULL;
   xfunsi <- NULL;
   yfunsi <- NULL;
   boundsi <- NULL;
   xoffsetsi <- NULL;
   bstartsi <- NULL;
+  cstartsi <- NULL;
+  apvsi <- NULL;
+  pvsi <- NULL;
   group_arg_groupvar <- NULL;
   multivariate_rescor <- NULL;
   univariate_by_by <- NULL;
   sigma_arg_groupvar <- NULL;
-  pgvsi <- NULL;
-  apgvsi <- NULL;
   a_init_betasi <- NULL;
   b_init_betasi <- NULL;
   c_init_betasi <- NULL;
   d_init_betasi <- NULL;
   e_init_betasi <- NULL;
   f_init_betasi <- NULL;
+  g_init_betasi <- NULL;
+  h_init_betasi <- NULL;
+  i_init_betasi <- NULL;
   s_init_betasi <- NULL;
   a_cov_init_betasi <- NULL;
   b_cov_init_betasi <- NULL;
@@ -2010,6 +2093,9 @@ bgm <- function(x,
   d_cov_init_betasi <- NULL;
   e_cov_init_betasi <- NULL;
   f_cov_init_betasi <- NULL;
+  g_cov_init_betasi <- NULL;
+  h_cov_init_betasi <- NULL;
+  i_cov_init_betasi <- NULL;
   s_cov_init_betasi <- NULL;
   a_init_sdsi <- NULL;
   b_init_sdsi <- NULL;
@@ -2017,12 +2103,20 @@ bgm <- function(x,
   d_init_sdsi <- NULL;
   e_init_sdsi <- NULL;
   f_init_sdsi <- NULL;
+  g_init_sdsi <- NULL;
+  h_init_sdsi <- NULL;
+  i_init_sdsi <- NULL;
+  s_init_sdsi <- NULL;
   a_cov_init_sdsi <- NULL;
   b_cov_init_sdsi <- NULL;
   c_cov_init_sdsi <- NULL;
   d_cov_init_sdsi <- NULL;
   e_cov_init_sdsi <- NULL;
   f_cov_init_sdsi <- NULL;
+  g_cov_init_sdsi <- NULL;
+  h_cov_init_sdsi <- NULL;
+  i_cov_init_sdsi <- NULL;
+  s_cov_init_sdsi <- NULL;
   sigma_init_betasi <- NULL;
   sigma_cov_init_betasi <- NULL;
   sigma_init_sdsi <- NULL;
@@ -2042,6 +2136,9 @@ bgm <- function(x,
   d_prior_betasi <- NULL;
   e_prior_betasi <- NULL;
   f_prior_betasi <- NULL;
+  g_prior_betasi <- NULL;
+  h_prior_betasi <- NULL;
+  i_prior_betasi <- NULL;
   s_prior_betasi <- NULL;
   a_cov_prior_betasi <- NULL;
   b_cov_prior_betasi <- NULL;
@@ -2049,6 +2146,9 @@ bgm <- function(x,
   d_cov_prior_betasi <- NULL;
   e_cov_prior_betasi <- NULL;
   f_cov_prior_betasi <- NULL;
+  g_cov_prior_betasi <- NULL;
+  h_cov_prior_betasi <- NULL;
+  i_cov_prior_betasi <- NULL;
   s_cov_prior_betasi <- NULL;
   a_prior_sdsi <- NULL;
   b_prior_sdsi <- NULL;
@@ -2056,12 +2156,20 @@ bgm <- function(x,
   d_prior_sdsi <- NULL;
   e_prior_sdsi <- NULL;
   f_prior_sdsi <- NULL;
+  g_prior_sdsi <- NULL;
+  h_prior_sdsi <- NULL;
+  i_prior_sdsi <- NULL;
+  s_prior_sdsi <- NULL;
   a_cov_prior_sdsi <- NULL;
   b_cov_prior_sdsi <- NULL;
   c_cov_prior_sdsi <- NULL;
   d_cov_prior_sdsi <- NULL;
   e_cov_prior_sdsi <- NULL;
   f_cov_prior_sdsi <- NULL;
+  g_cov_prior_sdsi <- NULL;
+  h_cov_prior_sdsi <- NULL;
+  i_cov_prior_sdsi <- NULL;
+  s_cov_prior_sdsi <- NULL;
   gr_prior_corsi <- NULL;
   sigma_prior_corsi <- NULL;
   sigma_prior_betasi <- NULL;
@@ -2112,7 +2220,7 @@ bgm <- function(x,
   
   
   allowed_model_names   <- c('sitar', 'sitar3', 'sitar4', 'sitar4fr', 'sitar4r',
-                             'pb1', 'pb2', 'pb3')
+                             'pb1', 'pb2', 'pb3', "rcs")
   allowed_model_names_  <- paste(allowed_model_names, collapse = ", " )
   allowed_model_names__ <- paste0("(", allowed_model_names_, ")")
 
@@ -3126,6 +3234,7 @@ bgm <- function(x,
     "set_same_priors_hierarchy",
     "outliers",
     "select_model",
+    "decomp",
     "parameterization",
     "..."
   )
@@ -3431,6 +3540,8 @@ bgm <- function(x,
     if(select_model == 'pb1')   allowed_parm_letters <- letters[1:5]
     if(select_model == 'pb2')   allowed_parm_letters <- letters[1:6]
     if(select_model == 'pb3')   allowed_parm_letters <- letters[1:6]
+    
+    if(select_model == 'rcs')   allowed_parm_letters <- c('a', 's')
   
     
     fixedsi_randomsi <- validate_fixed_random_parms(fixedsi, randomsi,
@@ -3478,6 +3589,23 @@ bgm <- function(x,
       }
     } # if(select_model == 'sitar') {
     
+    
+
+    if(select_model == 'sitar') {
+      if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
+    }
+    
+    if(select_model == 'rcs') {
+      if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
+    }
+    
+    
+    # if(select_model == 'rcs') {
+    #   if(!grepl('s', fixedsi))
+    #     stop("For 'rcs' model, please specify s in the",
+    #          "\n ",
+    #          " fixed effects structure i.e., fixed='a+s'")
+    # }
     
     
     
@@ -3618,6 +3746,14 @@ bgm <- function(x,
       test_gr_sr_str_function(e_formula_grsi, e_formula_gr_strsi)
     f_formula_grsi <- 
       test_gr_sr_str_function(f_formula_grsi, f_formula_gr_strsi)
+    g_formula_grsi <- 
+      test_gr_sr_str_function(g_formula_grsi, g_formula_gr_strsi)
+    h_formula_grsi <- 
+      test_gr_sr_str_function(h_formula_grsi, h_formula_gr_strsi)
+    i_formula_grsi <- 
+      test_gr_sr_str_function(i_formula_grsi, i_formula_gr_strsi)
+    s_formula_grsi <- 
+      test_gr_sr_str_function(s_formula_grsi, s_formula_gr_strsi)
     
     
     a_fcgs_out <- f_checks_gr_gr_str(a_formula_grsi, a_formula_gr_strsi)
@@ -3626,6 +3762,10 @@ bgm <- function(x,
     d_fcgs_out <- f_checks_gr_gr_str(d_formula_grsi, d_formula_gr_strsi)
     e_fcgs_out <- f_checks_gr_gr_str(e_formula_grsi, e_formula_gr_strsi)
     f_fcgs_out <- f_checks_gr_gr_str(f_formula_grsi, f_formula_gr_strsi)
+    g_fcgs_out <- f_checks_gr_gr_str(g_formula_grsi, g_formula_gr_strsi)
+    h_fcgs_out <- f_checks_gr_gr_str(h_formula_grsi, h_formula_gr_strsi)
+    i_fcgs_out <- f_checks_gr_gr_str(i_formula_grsi, i_formula_gr_strsi)
+    s_fcgs_out <- f_checks_gr_gr_str(s_formula_grsi, s_formula_gr_strsi)
     
     
     sigma_formula_grsi_NULL <- sigma_formula_gr_strsi_NULL <- FALSE
@@ -3682,16 +3822,21 @@ bgm <- function(x,
         a_formula_grsi <- strsplit(a_formula_gr_strsi, "+(", fixed = T)[[1]][1]
       }
     }
+    
+    
     if(!is.null(b_fcgs_out)) {
       if(b_formula_grsi == "~1" & !is.null(b_formula_gr_strsi[[1]])) {
         b_formula_grsi <- strsplit(b_formula_gr_strsi, "+(", fixed = T)[[1]][1]
       }
     }
+    
+    
     if(!is.null(c_fcgs_out)) {
       if(c_formula_grsi == "~1" & !is.null(c_formula_gr_strsi[[1]])) {
         c_formula_grsi <- strsplit(c_formula_gr_strsi, "+(", fixed = T)[[1]][1]
       }
     }
+    
     if(!is.null(d_fcgs_out)) {
       if(!is.null(d_formula_grsi[[1]]) & !is.null(d_formula_gr_strsi[[1]])) {
         if(d_formula_grsi == "~1" & !is.null(d_formula_gr_strsi[[1]])) {
@@ -3715,6 +3860,35 @@ bgm <- function(x,
     }
     
     
+    if(!is.null(g_fcgs_out)) {
+      if(g_formula_grsi == "~1" & !is.null(g_formula_gr_strsi[[1]])) {
+        g_formula_grsi <- strsplit(g_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
+    
+    
+    if(!is.null(h_fcgs_out)) {
+      if(h_formula_grsi == "~1" & !is.null(h_formula_gr_strsi[[1]])) {
+        h_formula_grsi <- strsplit(h_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
+    
+    
+    if(!is.null(i_fcgs_out)) {
+      if(i_formula_grsi == "~1" & !is.null(i_formula_gr_strsi[[1]])) {
+        i_formula_grsi <- strsplit(i_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
+    
+    
+    if(!is.null(s_fcgs_out)) {
+      if(s_formula_grsi == "~1" & !is.null(s_formula_gr_strsi[[1]])) {
+        s_formula_grsi <- strsplit(s_formula_gr_strsi, "+(", fixed = T)[[1]][1]
+      }
+    }
+    
+    
+    
     if(!is.null(sigma_fcgs_out) & sigma_fcgs_out != 'NULL') {
       if(sigma_formula_grsi == "~1" & !is.null(sigma_formula_gr_strsi[[1]])) {
         sigma_formula_grsi <- strsplit(sigma_formula_gr_strsi, 
@@ -3729,6 +3903,10 @@ bgm <- function(x,
                                                         d_formula_grsi)
     e_formula_grsi <- gsub("[()]", "", e_formula_grsi)
     f_formula_grsi <- gsub("[()]", "", f_formula_grsi)
+    g_formula_grsi <- gsub("[()]", "", g_formula_grsi)
+    h_formula_grsi <- gsub("[()]", "", h_formula_grsi)
+    i_formula_grsi <- gsub("[()]", "", i_formula_grsi)
+    s_formula_grsi <- gsub("[()]", "", s_formula_grsi)
     
     
     sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
@@ -3737,7 +3915,14 @@ bgm <- function(x,
     if(is.null(a_fcgs_out) & 
        is.null(b_fcgs_out) & 
        is.null(c_fcgs_out) & 
-       is.null(d_fcgs_out)) {
+       is.null(d_fcgs_out) &
+       is.null(e_fcgs_out) &
+       is.null(f_fcgs_out) &
+       is.null(g_fcgs_out) &
+       is.null(h_fcgs_out) &
+       is.null(i_fcgs_out) &
+       is.null(s_fcgs_out)
+       ) {
       set_higher_levels <- FALSE
     }
     
@@ -3756,6 +3941,9 @@ bgm <- function(x,
         "d_formulasi",
         "e_formulasi",
         "f_formulasi",
+        "g_formulasi",
+        "h_formulasi",
+        "i_formulasi",
         "s_formulasi",
         "a_formula_grsi",
         "b_formula_grsi",
@@ -3763,6 +3951,10 @@ bgm <- function(x,
         "d_formula_grsi",
         "e_formula_grsi",
         "f_formula_grsi",
+        "g_formula_grsi",
+        "h_formula_grsi",
+        "i_formula_grsi",
+        "s_formula_grsi",
         "sigma_formulasi",
         "sigma_formula_grsi"
       )
@@ -4067,7 +4259,28 @@ bgm <- function(x,
         } else {
           eval_arg.o <- ept(eval_arg)
         }
-        return(as.numeric(eval_arg.o))
+        out <- as.numeric(eval_arg.o)
+        out <- round(out, 3)
+        return(out)
+      }
+    
+    
+    eval_xoffset_cstart_args <-
+      function(x, y, knots, data, eval_arg, xfunsi) {
+        if (eval_arg == "pv") {
+          mat_s <- make_spline_matrix(data[[x]], knots)
+          lmform <- as.formula(paste0(y, "~1+", "mat_s"))
+          lmfit <- lm(lmform, data = data)
+          eval_arg.o <- sitar::getPeak(data[[x]],
+                                       predict(smooth.spline(data[[x]],
+                                                             fitted(lmfit)),
+                                               data[[x]], deriv = 1)$y)[2]
+        } else {
+          eval_arg.o <- ept(eval_arg)
+        }
+        out <- as.numeric(eval_arg.o)
+        out <- round(out, 3)
+        return(out)
       }
     
     xoffset <-
@@ -4076,11 +4289,15 @@ bgm <- function(x,
       eval_xoffset_bstart_args(xsi, ysi, knots, datai, bstartsi, xfunsi)
     bstart <- bstart - xoffset
     
+    cstart <-
+      eval_xoffset_cstart_args(xsi, ysi, knots, datai, cstartsi, xfunsi)
     
-    #xoffset <- round(xoffset, 4)
+    
+    
+    xoffset <- round(xoffset, 6)
     datai[[xsi]] <- datai[[xsi]] - xoffset
     knots <- knots - xoffset
-    #knots <- round(knots, 6)
+    knots <- round(knots, 8)
     nknots <- length(knots)
     df <- length(knots) - 1
    
@@ -4117,6 +4334,7 @@ bgm <- function(x,
         'xoffset',
         'brms_arguments',
         'select_model',
+        'decomp', 
         "verbose"
       )
     
@@ -4161,6 +4379,9 @@ bgm <- function(x,
         "d_formulasi",
         "e_formulasi",
         "f_formulasi",
+        "g_formulasi",
+        "h_formulasi",
+        "i_formulasi",
         "s_formulasi",
         "a_formula_grsi",
         "b_formula_grsi",
@@ -4168,6 +4389,10 @@ bgm <- function(x,
         "d_formula_grsi",
         "e_formula_grsi",
         "f_formula_grsi",
+        "g_formula_grsi",
+        "h_formula_grsi",
+        "i_formula_grsi",
+        "s_formula_grsi",
         "terms_rhssi",
         "sigma_formulasi",
         "sigma_formula_grsi",
@@ -4195,6 +4420,10 @@ bgm <- function(x,
         "d_formula_gr_strsi",
         "e_formula_gr_strsi",
         "f_formula_gr_strsi",
+        "g_formula_gr_strsi",
+        "h_formula_gr_strsi",
+        "i_formula_gr_strsi",
+        "s_formula_gr_strsi",
         "sigma_formula_gr_strsi",
         "set_higher_levels",
         "sigma_set_higher_levels",
@@ -4280,11 +4509,11 @@ bgm <- function(x,
     
     ymean   <- mean(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
     ymedian <- median(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
-    if(select_model == 'sitar') {
+    if(select_model == 'sitar' | select_model == 'rcs') {
       ymax  <- max(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
       ymin  <- min(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
       ymaxs <- NULL
-    } else if(select_model != 'sitar') {
+    } else if(select_model != 'sitar' & select_model != 'rcs') {
       ymax <- round(max(predict(loess_fitx)), 2)
       ymaxs <- round(ymax * 0.95, 2)
     }
@@ -4298,27 +4527,41 @@ bgm <- function(x,
     loess_fitx <- eval(parse(text = loess_fit))
     
     
-    if (!is.null(pgvsi[[1]][1]) & pgvsi != "NULL") {
-      setpgv <- eval(parse(text = pgvsi))
-      cstart <- log(setpgv) / 5.0
-      dstart <- log(setpgv)
+    if (!is.null(pvsi[[1]][1]) & pvsi != "NULL") {
+      setpv <- log(eval(parse(text = pvsi)))
+      if(grepl("sitar", select_model)) cstart <- setpv
+      if(grepl("pb", select_model))    cstart <- setpv / 5.0
+      if(grepl("pb", select_model))    dstart <- setpv
+    } else if (!is.null(cstartsi[[1]][1]) & cstartsi != "NULL") {
+      setpv <- log(cstart)
+      if(grepl("sitar", select_model)) cstart <- setpv
+      if(grepl("pb", select_model))    cstart <- setpv / 5.0
+      if(grepl("pb", select_model))    dstart <- setpv
     } else {
-      cstart <- 0.01
-      dstart <- 0.01
+      if(grepl("sitar", select_model)) cstart <- 0.01
+      if(grepl("pb", select_model))    cstart <- 0.01
+      if(grepl("pb", select_model))    dstart <- 0.01 * 5.0
     }
     
-    if (!is.null(apgvsi[[1]][1]) & apgvsi != "NULL") {
-      setapgv <- eval(parse(text = apgvsi))
-      estart <- setapgv
+    if (!is.null(apvsi[[1]][1]) & apvsi != "NULL") {
+      setapv <- eval(parse(text = apvsi))
+      if(grepl("sitar", select_model)) bstart <- setapv
+      if(grepl("pb", select_model))    estart <- bstart
+    } else if (!is.null(bstartsi[[1]][1]) & bstartsi != "NULL") {
+      if(grepl("sitar", select_model)) bstart <- bstart
+      if(grepl("pb", select_model))    estart <- bstart
     } else {
-      estart <- 13
+      if(grepl("sitar", select_model)) bstart <- 13
+      if(grepl("pb", select_model))    estart <- 13
     }
     
+    # Set missing start values to 0
+    for (gwatxi in letters[1:26]) {
+      gwatx__ <- paste0(gwatxi, 'start')
+      if(!exists(gwatx__)) assign(gwatx__, 0)
+    }
     
-    cstart <- round(cstart, 2)
-    dstart <- round(dstart, 2)
-    estart <- round(estart, 1)
-    
+  
     
     # TODO
     # acov_sd etc setting numeric but later can be worked out to infer from
@@ -4340,15 +4583,15 @@ bgm <- function(x,
         assign(paste0(inxc, "_", "init", "_", "sd", "si"), '0')
         assign(paste0(inxc, "_", "cov", "_", "init", "_", "sd", "si"), '0')
       }
-      assign('gr_init_corsi', '0')
-      assign('sigma_init_corsi', '0')
-      assign('rsd_init_sigmasi', '0')
-      assign('sigma_init_sdsi', '0')
-      assign('sigma_cov_init_sdsi', '0')
-      assign('dpar_init_sigmasi', '0')
+      assign('gr_init_corsi',         '0')
+      assign('sigma_init_corsi',      '0')
+      assign('rsd_init_sigmasi',      '0')
+      assign('sigma_init_sdsi',       '0')
+      assign('sigma_cov_init_sdsi',   '0')
+      assign('dpar_init_sigmasi',     '0')
       assign('dpar_cov_init_sigmasi', '0')
-      assign('mvr_init_rescorsi', '0')
-      assign('r_init_zsi', '0')
+      assign('mvr_init_rescorsi',     '0')
+      assign('r_init_zsi',            '0')
     }
     
     
@@ -4384,6 +4627,9 @@ bgm <- function(x,
         "d_formulasi",
         "e_formulasi",
         "f_formulasi",
+        "g_formulasi",
+        "h_formulasi",
+        "i_formulasi",
         "s_formulasi",
         "a_formula_grsi",
         "fixedsi",
@@ -4392,6 +4638,10 @@ bgm <- function(x,
         "d_formula_grsi",
         "e_formula_grsi",
         "f_formula_grsi",
+        "g_formula_grsi",
+        "h_formula_grsi",
+        "i_formula_grsi",
+        "s_formula_grsi",
         "sigma_formulasi",
         "sigma_formula_grsi",
         "sigma_formula_gr_strsi",
@@ -4449,6 +4699,7 @@ bgm <- function(x,
     }
     
     
+    
     init_data_internal <- prior_data_internal
     init_args_internal <- prior_args_internal
     
@@ -4461,6 +4712,9 @@ bgm <- function(x,
         d_init_beta = d_init_betasi,
         e_init_beta = e_init_betasi,
         f_init_beta = f_init_betasi,
+        g_init_beta = g_init_betasi,
+        h_init_beta = h_init_betasi,
+        i_init_beta = i_init_betasi,
         s_init_beta = s_init_betasi,
         a_cov_init_beta = a_cov_init_betasi,
         b_cov_init_beta = b_cov_init_betasi,
@@ -4468,6 +4722,9 @@ bgm <- function(x,
         d_cov_init_beta = d_cov_init_betasi,
         e_cov_init_beta = e_cov_init_betasi,
         f_cov_init_beta = f_cov_init_betasi,
+        g_cov_init_beta = g_cov_init_betasi,
+        h_cov_init_beta = h_cov_init_betasi,
+        i_cov_init_beta = i_cov_init_betasi,
         s_cov_init_beta = s_cov_init_betasi,
         a_init_sd = a_init_sdsi,
         b_init_sd = b_init_sdsi,
@@ -4475,12 +4732,20 @@ bgm <- function(x,
         d_init_sd = d_init_sdsi,
         e_init_sd = e_init_sdsi,
         f_init_sd = f_init_sdsi,
+        g_init_sd = g_init_sdsi,
+        h_init_sd = h_init_sdsi,
+        i_init_sd = i_init_sdsi,
+        s_init_sd = s_init_sdsi,
         a_cov_init_sd = a_cov_init_sdsi,
         b_cov_init_sd = b_cov_init_sdsi,
         c_cov_init_sd = c_cov_init_sdsi,
         d_cov_init_sd = d_cov_init_sdsi,
         e_cov_init_sd = e_cov_init_sdsi,
         f_cov_init_sd = f_cov_init_sdsi,
+        g_cov_init_sd = g_cov_init_sdsi,
+        h_cov_init_sd = h_cov_init_sdsi,
+        i_cov_init_sd = i_cov_init_sdsi,
+        s_cov_init_sd = s_cov_init_sdsi,
         sigma_init_beta = sigma_init_betasi,
         sigma_cov_init_beta = sigma_cov_init_betasi,
         sigma_init_sd = sigma_init_sdsi,
@@ -4522,7 +4787,9 @@ bgm <- function(x,
     set_priors_initials_agrs $ d_prior_beta <- d_prior_betasi
     set_priors_initials_agrs $ e_prior_beta <- e_prior_betasi
     set_priors_initials_agrs $ f_prior_beta <- f_prior_betasi
-    
+    set_priors_initials_agrs $ g_prior_beta <- g_prior_betasi
+    set_priors_initials_agrs $ h_prior_beta <- h_prior_betasi
+    set_priors_initials_agrs $ i_prior_beta <- i_prior_betasi
     set_priors_initials_agrs $ s_prior_beta <- s_prior_betasi
     
     set_priors_initials_agrs $ a_cov_prior_beta <- a_cov_prior_betasi
@@ -4531,7 +4798,9 @@ bgm <- function(x,
     set_priors_initials_agrs $ d_cov_prior_beta <- d_cov_prior_betasi
     set_priors_initials_agrs $ e_cov_prior_beta <- e_cov_prior_betasi
     set_priors_initials_agrs $ f_cov_prior_beta <- f_cov_prior_betasi
-    
+    set_priors_initials_agrs $ g_cov_prior_beta <- g_cov_prior_betasi
+    set_priors_initials_agrs $ h_cov_prior_beta <- h_cov_prior_betasi
+    set_priors_initials_agrs $ i_cov_prior_beta <- i_cov_prior_betasi
     set_priors_initials_agrs $ s_cov_prior_beta <- s_cov_prior_betasi
     
     set_priors_initials_agrs $ a_prior_sd <- a_prior_sdsi
@@ -4540,6 +4809,10 @@ bgm <- function(x,
     set_priors_initials_agrs $ d_prior_sd <- d_prior_sdsi
     set_priors_initials_agrs $ e_prior_sd <- e_prior_sdsi
     set_priors_initials_agrs $ f_prior_sd <- f_prior_sdsi
+    set_priors_initials_agrs $ g_prior_sd <- g_prior_sdsi
+    set_priors_initials_agrs $ h_prior_sd <- h_prior_sdsi
+    set_priors_initials_agrs $ i_prior_sd <- i_prior_sdsi
+    set_priors_initials_agrs $ s_prior_sd <- s_prior_sdsi
     
     set_priors_initials_agrs $ a_cov_prior_sd <- a_cov_prior_sdsi
     set_priors_initials_agrs $ b_cov_prior_sd <- b_cov_prior_sdsi
@@ -4547,6 +4820,10 @@ bgm <- function(x,
     set_priors_initials_agrs $ d_cov_prior_sd <- d_cov_prior_sdsi
     set_priors_initials_agrs $ e_cov_prior_sd <- e_cov_prior_sdsi
     set_priors_initials_agrs $ f_cov_prior_sd <- f_cov_prior_sdsi
+    set_priors_initials_agrs $ g_cov_prior_sd <- g_cov_prior_sdsi
+    set_priors_initials_agrs $ h_cov_prior_sd <- h_cov_prior_sdsi
+    set_priors_initials_agrs $ i_cov_prior_sd <- i_cov_prior_sdsi
+    set_priors_initials_agrs $ s_cov_prior_sd <- s_cov_prior_sdsi
     
     set_priors_initials_agrs $ gr_prior_cor         <- gr_prior_corsi
     set_priors_initials_agrs $ sigma_prior_cor      <- sigma_prior_corsi
@@ -4753,7 +5030,6 @@ bgm <- function(x,
         paste_message <- NULL
 
         
-        
         set_assign_prior_what <- '_cov_prior'
         check_prior_ifp <- 
           extract_prior_str_lv(ept(paste0(set_nlpar_what, 
@@ -4858,7 +5134,7 @@ bgm <- function(x,
     
     
     # Now, cor priors    
-    # Adding cor priors is tricky because of complex |x| formulations possible
+    # Adding cor priors is tricky because of complex |x| formulations
     set_class_what <- 'cor'
     set_org_priors_initials_agrs_what <- set_priors_initials_agrs
     set_randomsi_higher_levsl <- 'gr'
@@ -5416,7 +5692,7 @@ bgm <- function(x,
       ilc <- list()
       ilc_c <- 0
       for (nysi_ in 1:nys) {
-        for (il in letters[1:4]) {
+        for (il in letters[1:26]) {
           ilc_c <- ilc_c + 1
           na <- paste0("^", il, nysi_)
           nb <- paste0("^", il, "cov", nysi_)
@@ -6193,6 +6469,7 @@ bgm <- function(x,
     model_info[['call.bgm']] <- mcall_
     model_info[['brms_arguments_list']] <- brms_arguments_list
     model_info[['select_model']] <- select_model
+    model_info[['decomp']] <- decomp
     brmsfit$model_info <- model_info
 
     if (expose_function) {

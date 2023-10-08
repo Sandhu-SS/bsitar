@@ -9,6 +9,7 @@
   model,
   resp = NULL,
   deriv = 0,
+  deriv_model = TRUE,
   envir = parent.frame(),
   ...
 )
@@ -16,17 +17,22 @@
 conditional_effects_bgm(model, ...)
 }
 \arguments{
-\item{model}{An object of class \code{bgmfit}.
-function.}
+\item{model}{An object of class \code{bgmfit}. function.}
 
 \item{resp}{Response variable (default \code{NULL}) specified as a string
 character required during the post-processing of multivariate and
 univariate-by-subgroup model (see \code{bsitar::bgm()} for details).}
 
-\item{deriv}{An integer value to specify whether to estimate distance curve
-(i.e., model estimated curve(s)) or velocity curve (first derivative of the
-model estimated curve(s)). A 0 value (default) is for distance curve and
-1 for the velocity curve.}
+\item{deriv}{An integer to specify whether to estimate distance curve or
+derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
+for the distance curve whereas \code{deriv = 1} for velocity curve and
+\code{deriv = 2} for the acceleration curve.}
+
+\item{deriv_model}{A logical (default \code{TRUE}) to indicate whether to
+estimate model based derivatives or from the differentiation of the
+distance curve. When model is fit with \code{decomp = 'QR'}, the only
+approach available to estimate derivatives is the  differentiation of the
+distance curve.}
 
 \item{envir}{The calling environment. Deafault set to \code{parent.frame()}.}
 

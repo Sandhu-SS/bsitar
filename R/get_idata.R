@@ -44,14 +44,18 @@ get_idata <-
            length.out = 10,
            xrange = 1) {
     
+    if (is.null(newdata)) {
+      newdata <- model$data
+    } else {
+      newdata <- newdata
+    }
+    
     if(is.null(model)) {
-      if (is.null(newdata)) stop("Specify model or newdata, both can not be NULL")
       if (is.null(idVar)) stop("Specify model or idVar, both can not be NULL")
       if (is.null(timeVar)) stop("Specify model or timeVar, both can not be NULL")
     }
-    
+
     if(!is.null(model)) {
-      if (!is.null(newdata)) stop("Specify either model or newdata, not both")
       if (!is.null(idVar)) stop("Specify either model or idVar, not both")
       if (!is.null(timeVar)) stop("Specify either model or timeVar, not both")
     }
@@ -64,11 +68,7 @@ get_idata <-
      }
     }
     
-    if (is.null(newdata)) {
-      newdata <- model$data
-    } else {
-      newdata <- newdata
-    }
+    
     
     if (is.null(idVar)) {
       idVar <- model$model_info$ids
@@ -79,7 +79,7 @@ get_idata <-
     if (is.null(timeVar)) {
       timeVar <- model$model_info$xvar
     } else {
-      timeVar <- newdata
+      timeVar <- timeVar
     }
     
     all_times <- TRUE

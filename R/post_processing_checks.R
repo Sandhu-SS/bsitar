@@ -111,7 +111,8 @@ post_processing_checks <- function(model,
            model$model_info$exefuns[[paste0(resp_, 'getX')]], 
            envir = envir)
     
-    if(model$model_info[['select_model']] == 'sitar') {
+    if(model$model_info[['select_model']] == 'sitar' |
+       model$model_info[['select_model']] == 'rcs') {
       assign(paste0(resp_, 'getKnots'), 
              model$model_info$exefuns[[paste0(resp_, 'getKnots')]], 
              envir = envir)

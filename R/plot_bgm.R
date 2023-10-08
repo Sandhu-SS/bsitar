@@ -256,6 +256,7 @@ plot_bgm.bgmfit <- function(model,
                                show_vel_cessation = FALSE,
                                returndata = FALSE,
                                parms_eval = FALSE,
+                               idata_method = 'm1',
                                parms_method = 'getPeak',
                                envir = NULL,
                                ...) {
@@ -386,7 +387,8 @@ plot_bgm.bgmfit <- function(model,
                          aux_variables = aux_variables,
                          levels_id = levels_id,
                          ipts = ipts,
-                         xrange = xrange)
+                         xrange = xrange,
+                         idata_method = idata_method)
   
   list_c <- attr(newdata, 'list_c')
   for (list_ci in names(list_c)) {
@@ -878,114 +880,7 @@ plot_bgm.bgmfit <- function(model,
       newdata
     }
   
-  
-  # xyadj_ <-
-  #   function (model,
-  #             x,
-  #             y = NULL,
-  #             id,
-  #             resp = NULL,
-  #             ndraws = NULL,
-  #             newdata = NULL,
-  #             abc = NULL,
-  #             tomean = TRUE,...) {
-  #     if (is.null(ndraws))
-  #       ndraws  <- ndraws(model)
-  #     else
-  #       ndraws <- ndraws
-  #     
-  #     
-  #     
-  #     o <-
-  #       post_processing_checks(model = model,
-  #                              xcall = match.call(),
-  #                              resp = resp,
-  #                              deriv = '')
-  #     
-  #     newdata <- get.newdata(model, newdata = newdata,
-  #                            resp = resp,
-  #                            numeric_cov_at = NULL,
-  #                            aux_variables = NULL,
-  #                            levels_id = levels_id,
-  #                            ipts = NULL,
-  #                            xrange = NULL)
-  #     
-  #     if(!is.na(uvarby)) {
-  #       newdata <- newdata %>%
-  #         dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
-  #     }
-  #     
-  #     xoffsetXnames <- 'xoffset'
-  #     randomRnames <- 'random' 
-  #     if (!is.null(resp)) randomRnames <- paste0(randomRnames, resp_rev_)
-  #     if (!is.null(resp)) xoffsetXnames <- paste0(xoffsetXnames, resp_rev_)
-  #     randomRnames <- model$model_info[[randomRnames]]
-  #     xoffsetXnames <- model$model_info[[xoffsetXnames]]
-  #     if (missing(x))
-  #       x <- newdata[[Xx]]
-  #     if (missing(y))
-  #       y <- newdata[[Yy]]
-  #     if (missing(id))
-  #       id <- newdata[[IDvar]]
-  #     
-  #     if (is.null(resp)) {
-  #       if (is.null(abc)) {
-  #         re <- ranef(model)[[IDvar]][, 1 , ]
-  #         abc <- re[match(id, rownames(re)), , drop = FALSE]
-  #       }
-  #       abc <- as.data.frame(abc)
-  #       
-  #     } else if (!is.null(resp)) {
-  #       if (is.null(abc)) {
-  #         re <- ranef(model)[[IDvar]]
-  #         re <- re[match(id, rownames(re)) , 1, , drop = FALSE]
-  #         re <- re[ , 1, grepl(paste0("^", resp), attr(re, "dimnames")[3][[1]])]
-  #         abc <- re 
-  #       }
-  #       abc <- as.data.frame(abc)
-  #     }
-  #     
-  #     colnames(abc) <- randomRnames
-  #     
-  #     fixef.df <- as.data.frame(fixef(model))
-  #     fixef.df$names <- rownames(fixef.df)
-  #     fixef.df <- fixef.df
-  #     name_fixef.df_b <- paste0("b", "_Intercept")
-  #     if (!is.null(resp)) name_fixef.df_b <- paste0(resp, "_", name_fixef.df_b)
-  #     fixef.df_b <-
-  #       subset(fixef.df, names == name_fixef.df_b)
-  #     for (i in letters[1:4])
-  #       if (!i %in% names(abc))
-  #         abc[, i] <- 0
-  #     xoffset <- xoffsetXnames
-  #     if (!is.na(b0 <- as.numeric(fixef.df_b[1])))
-  #       xoffset <- xoffset + b0
-  #     x <- x - xoffset
-  #     if (tomean) {
-  #       x.adj <- (x - abc$b) * exp(abc$c) + xoffset
-  #       y.adj <- y - abc$a - abc$d * x
-  #     }
-  #     else {
-  #       x.adj <- x / exp(abc$c) + abc$b + xoffset
-  #       y.adj <- y + abc$a + abc$d * x
-  #     }
-  #     out <- as.data.frame(as.factor(newdata[[IDvar]]))
-  #     out <- cbind(x.adj, y.adj, out)
-  #     colnames(out) <- c(Xx, Yy, IDvar)
-  #     if(!is.na(uvarby)) {
-  #       tempotnames <- c(IDvar, Xx, Yy)
-  #       tempot <- newdata %>%  dplyr::select(-dplyr::all_of(tempotnames))
-  #       out <- cbind(out, tempot) %>% data.frame()
-  #     }
-  #     out
-  #   }
-  
-  
-  
-  
-  
-  
-  
+
   
   
   xyadj_ <-
@@ -1031,7 +926,8 @@ plot_bgm.bgmfit <- function(model,
                                aux_variables = aux_variables,
                                levels_id = levels_id,
                                ipts = ipts,
-                               xrange = xrange)
+                               xrange = xrange,
+                               idata_method = idata_method)
         
         
      
