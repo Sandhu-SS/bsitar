@@ -191,8 +191,8 @@ bgm(
   rsd_init_sigma = random,
   dpar_init_sigma = random,
   dpar_cov_init_sigma = random,
-  autocor_init_acor = 0.5,
-  autocor_init_unstr_acor = 0,
+  autocor_init_acor = random,
+  autocor_init_unstr_acor = random,
   mvr_init_rescor = random,
   r_init_z = random,
   vcov_init_0 = TRUE,
@@ -1229,7 +1229,7 @@ parameter for \code{multivariate} model. Allowed options are \code{0},
 
 \item{r_init_z}{Specify initial values for the standardized group level
 effects. These parameters are part of the Non-Centered Parameterization
-(NCP) approach adopted in the see \code{\link[brms:brm]{brms::brm()}}.}
+(NCP) approach used in the \code{\link[brms:brm]{brms::brm()}}.}
 
 \item{vcov_init_0}{A logical (default \code{TRUE}) to set initials for
 variance (i.e, standard deviation) and covariance (i.e., correlation)
@@ -1499,11 +1499,17 @@ via \code{\link[future:plan]{plan}} (see the examples section below).}
 \item{decomp}{Optional name of the decomposition used for the
 population-level design matrix. Defaults to NULL that is no decomposition.
 Other options currently available are "QR" for the QR decomposition that
-helps in fitting models with highly correlated predictors.}
+helps in fitting models with highly correlated predictors. Note that "QR"
+decomposition is implementable only for the linear models, and therefore
+applicable only for the restricted cubic spline (RCS) model.}
 
-\item{parameterization}{A character string to specify either
-Non-centered parameterization (\code{'ncp}, default) or Centered
-parameterization (\code{'cp} approach to draw random effects.}
+\item{parameterization}{A character string to specify either Non-centered
+parameterization (NCP), (\code{'ncp}, default); or the Centered
+parameterization (CP) (\code{'cp} approach to draw group level random
+effect (see \code{\link[brms:brm]{brms::brm()}}). Note that NCP is the default approach
+implemented in the \code{\link[brms:brm]{brms::brm()}} whereas implementation of the CP involves
+editing of the brms generated stancode and therefore should be used with
+caution.}
 
 \item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}}
 }

@@ -1669,13 +1669,11 @@ brms_via_rstan <- function(scode, sdata, brm_args) {
     show_messages = show_messages
   )
   
-  brm_args_empty <- brm_args
-  brm_args_empty$empty <- TRUE
-  
-  # Create an empty brms object -> Set empty = TRUE
-  bfit <- do.call(brms::brm, brm_args_empty)
-  bfit$fit = cb_fit
-  bfit <- brms::rename_pars(bfit)
+  # Create an empty brms object and populate it with the rsran fit
+  brm_args$empty <- TRUE
+  bfit      <- do.call(brms::brm, brm_args)
+  bfit$fit  <- cb_fit
+  bfit      <- brms::rename_pars(bfit)
   bfit
 }
 

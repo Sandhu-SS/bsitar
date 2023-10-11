@@ -1086,7 +1086,7 @@
 #'
 #'@param r_init_z Specify initial values for the standardized group level
 #'  effects. These parameters are part of the Non-Centered Parameterization  
-#'  (NCP) approach adopted in the see [brms::brm()].
+#'  (NCP) approach used in the [brms::brm()].
 #'  
 #'@param vcov_init_0 A logical (default \code{TRUE}) to set initials for
 #'  variance (i.e, standard deviation) and covariance (i.e., correlation)
@@ -1353,15 +1353,21 @@
 #'   \code{cores} will be ignored. Can be set globally for the current \R
 #'   session via the \code{"future"} option. The execution type is controlled
 #'   via \code{\link[future:plan]{plan}} (see the examples section below).
-#'   
+#'
 #' @param decomp Optional name of the decomposition used for the
 #'   population-level design matrix. Defaults to NULL that is no decomposition.
 #'   Other options currently available are "QR" for the QR decomposition that
-#'   helps in fitting models with highly correlated predictors.
+#'   helps in fitting models with highly correlated predictors. Note that "QR"
+#'   decomposition is implementable only for the linear models, and therefore
+#'   applicable only for the restricted cubic spline (RCS) model.
 #'   
-#' @param parameterization A character string to specify either 
-#' Non-centered parameterization (\code{'ncp}, default) or Centered 
-#' parameterization (\code{'cp} approach to draw random effects. 
+#' @param parameterization A character string to specify either Non-centered
+#'   parameterization (NCP), (\code{'ncp}, default); or the Centered
+#'   parameterization (CP) (\code{'cp} approach to draw group level random
+#'   effect (see [brms::brm()]). Note that NCP is the default approach
+#'   implemented in the [brms::brm()] whereas implementation of the CP involves
+#'   editing of the brms generated stancode and therefore should be used with
+#'   caution.
 #'   
 #'@param ... Further arguments passed to [brms::brm()]
 #'
@@ -1738,8 +1744,8 @@ bgm <- function(x,
                    rsd_init_sigma = random,
                    dpar_init_sigma = random,
                    dpar_cov_init_sigma = random,
-                   autocor_init_acor = 0.5,
-                   autocor_init_unstr_acor = 0,
+                   autocor_init_acor = random,
+                   autocor_init_unstr_acor = random,
                    mvr_init_rescor = random,
                    r_init_z = random,
                    vcov_init_0 = TRUE,
@@ -6195,6 +6201,17 @@ bgm <- function(x,
   
   brm_args$prior <- brmspriors
   
+  
+  if(parameterization == 'cp') {
+    scode  <- do.call(brms::make_stancode, brm_args)
+    escode <- edit_scode_ncp_to_cp(scode)
+    # quietcat <- function(x) { 
+    #   sink(tempfile()) 
+    #   on.exit(sink()) 
+    #   invisible(force(x)) 
+    # } 
+  } 
+  
     
   if(!exe_model_fit) {
     if(get_priors) {
@@ -6205,7 +6222,12 @@ bgm <- function(x,
       return(do.call(brms::make_standata, brm_args))
     } else if(get_stancode) {
       options(mc.cores = mc.cores_restore)
-      return(do.call(brms::make_stancode, brm_args))
+      if(parameterization == 'ncp') {
+        return(do.call(brms::make_stancode, brm_args))
+      }
+      if(parameterization == 'cp') {
+        return(escode)
+      }
     } else if(get_priors_eval) {
       options(mc.cores = mc.cores_restore)
       return(brm_args$prior)
@@ -6320,6 +6342,7 @@ bgm <- function(x,
         # brmsfit <- brms_via_cmdstanr(escode, sdata, brm_args)
       }
       if(brm_args$backend == "rstan") {
+        print(escode)
         brmsfit <- brms_via_rstan(escode, sdata, brm_args)
       }
       model_info[['parameterization']] <- 'cp'
