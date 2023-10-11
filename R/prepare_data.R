@@ -28,7 +28,14 @@
 #' @param outliers An optional (default \code{NULL}) to remove velocity
 #'   outliers. The argument should be a named list to pass options to the
 #'   [bsitar::outliers()] function. See [bsitar::outliers()] for details.
-#'
+#'   
+#' @param subset A logical (default \code{TRUE}) to indicate whether to create
+#'   data for each level of the \code{univariate_by} variable, or only for a
+#'   subset of levels. The \code{subset = TRUE} is typically used during model
+#'   fit and \code{subset = FALSE} during post processing of each sub model. The
+#'   argument \code{subset} is ignored when \code{univariate_by} is \code{NA} or
+#'   \code{NULL}.
+#' 
 #' @return A data frame with necessary information added a attributes.
 #'
 #' @keywords internal
@@ -42,7 +49,8 @@ prepare_data <- function(data,
                          mvar = FALSE,
                          xfuns = NULL,
                          yfuns = NULL,
-                         outliers = NULL) {
+                         outliers = NULL,
+                         subset = TRUE) {
   
   data <- data %>% droplevels()
 
@@ -156,7 +164,8 @@ prepare_data <- function(data,
            "' should be a factor variable")
     }
     for (l in levels(data[[uvarby]])) {
-      data[[l]] <- data[[y[1]]]
+      if(!subset) data[[l]] <- data[[y[1]]]
+      if(subset) data[[l]]  <- data[[l]]
     }
     unibyimat <-
       model.matrix(~ 0 + eval(parse(text = uvarby)), data)

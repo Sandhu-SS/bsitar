@@ -1180,63 +1180,172 @@ collapse_comma <- function(...) {
 #' @noRd
 #'
 edit_scode_ncp_to_cp <- function(stancode) {
-  editedcode <- editedcode2 <- stancode 
-  clines <- get_par_names_from_stancode(editedcode,
-                                        section =  'transformed parameters',
-                                        semicolan = TRUE,
-                                        full = TRUE)
   
+  # Rename transformed parameters and parameters for ease of processing
+  
+  true_name_tp  <- 'transformed parameters'
+  true_name_p   <- 'parameters'
+  tempt_name_tp <- 'transformed_parameters_'
+  tempt_name_p  <- 'parameters_'
+  
+  clines_tp <- get_par_names_from_stancode(stancode,
+                                           section =  true_name_tp,
+                                           semicolan = TRUE,
+                                           full = TRUE)
+  
+  clines_p <- get_par_names_from_stancode(stancode,
+                                          section =  true_name_p,
+                                          semicolan = TRUE,
+                                          full = TRUE)
+  
+  clines_m <- get_par_names_from_stancode(stancode,
+                                          section =  'model',
+                                          semicolan = TRUE,
+                                          full = TRUE)
+  
+  
+  editedcode    <- stancode 
+  editedcode    <- gsub(true_name_tp, tempt_name_tp, editedcode, fixed = T)
+  editedcode    <- gsub(true_name_p,  tempt_name_p,  editedcode, fixed = T)
+  
+  editedcode2 <- editedcode
+  
+  how_many_r_1 <- 0
   move_to_p <- move_to_m <- c()
-  for (clinesi in clines) {
-    if(grepl("^matrix", clinesi)) {
-      move_to_p <- c(move_to_p, clinesi)
-      clinesi <- ""
-    } 
-    if(!grepl("^r_1 =", clinesi) & 
-       !grepl("^r_1=", clinesi) &
-       !grepl("//", clinesi) &
-       clinesi != "") {
-      move_to_m <- c(move_to_m, clinesi)
-    } 
-  } # for (clinesi in clines) {
+  for (clines_tpi in clines_tp) {
+    for (igr in 1:100) {
+      if(grepl(paste0("r_", igr), clines_tpi)) {
+        if(grepl("^matrix", clines_tpi)) {
+          how_many_r_1 <- how_many_r_1 + 1
+          move_to_p <- c(move_to_p, clines_tpi)
+          clines_tpi <- ""
+        } 
+        if(!grepl(paste0("^", "r_", igr, " = "), clines_tpi) & 
+           !grepl(paste0("^", "r_", igr, "="), clines_tpi) &
+           !grepl("//", clines_tpi) &
+           clines_tpi != "") {
+          move_to_m <- c(move_to_m, clines_tpi)
+        } 
+      }
+    }
+  } 
+  paste0("^", "r_", igr, " = ")
+  
+  prepare_p <- c()
+  for (clines_pi in clines_p) {
+    if(grepl("z_", clines_pi)) {
+      for (igr in 1:100) {
+        if(grepl(paste0("z_", igr), clines_pi)) {
+          if(grepl("^matrix", clines_pi)) {
+            what_p <- paste0("// ", clines_pi)
+          } 
+        } 
+      }
+    } else {
+      what_p <- paste0("", clines_pi)
+    }
+    prepare_p <- c(prepare_p, what_p)
+  } 
   
   
-  m_n_c_l <- 
-    "for(i in 1:N_1) {
-      lprior +=  multi_normal_cholesky_lpdf(r_1[i,] |
-                                              rep_row_vector(0, M_1),
-                                            diag_pre_multiply(sd_1, L_1));
-    }"
+  move_to_p <- paste(move_to_p, collapse = "\n")
+  prepare_p <- paste(prepare_p, collapse = "\n")
+  prepare_p <- paste0(prepare_p, "\n", move_to_p)
   
+  # Add space to model block elements
+  zz_c <- c()
+  for (iz in move_to_m) {
+    zz_c <- c(zz_c, paste0("  ", iz))
+  }
+  move_to_m <- paste(zz_c, collapse = '\n')
   
-  move_to_m_mcode <- paste(c(m_n_c_l, move_to_m), collapse = "\n")
+  # clines_tpx <<- clines_tp
+  # move_to_px <<- move_to_p
+  # move_to_mx <<- move_to_m
+  # prepare_px <<- prepare_p
+  # print(cat(move_to_mx))
   
-  move_to_m_gqcode <- paste(move_to_m, collapse = "\n")
+  # Add space to parameters elements
+  zz <- strsplit(prepare_p, "\n")[[1]]
+  zz_c <- c()
+  for (iz in 1:length(zz)) {
+    zz_c <- c(zz_c, paste0("  ", zz[iz]))
+  }
+  prepare_p <- paste(zz_c, collapse = '\n')
   
-  for (clinesi in clines) {
-    if(!grepl("//", clinesi)) {
-      editedcode2 <- gsub(clinesi, paste0("// ", clinesi), editedcode2, fixed = T)
+  # Prepare multi_normal_cholesky_lpdf
+  m_n_c_l_c <- c()
+  if(how_many_r_1 > 0) {
+    for (h1i in 1:how_many_r_1) {
+      m_n_c_l <- 
+        paste0("  for(i in 1:N_", h1i, ') {\n',
+               "    lprior +=  multi_normal_cholesky_lpdf(r_", h1i, "[i, ] |\n",
+               "    rep_row_vector(0, M_", h1i, "),\n",
+               "    diag_pre_multiply(sd_", h1i, ", L_", h1i, "));",
+               "  \n  }"
+        )
+      m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
+    }
+    if(how_many_r_1 > 1) {
+      m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
     }
   }
   
+  
+  for (il in clines_p) {
+    editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
+    editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
+    editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+  }
+  
+  for (il in clines_tp) {
+    editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
+    editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
+    editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+  }
+  
+  # Below to flatten code without any empty splace or lines
+  # editedcode2 <- gsub("(?m)^\\h*\\R?", "", editedcode2, perl=TRUE)
+  # editedcode2 <- gsub("\r", "", editedcode2, fixed=TRUE)
+  p_block_syb_by <- paste0("", tempt_name_p, " {")
+  p_block_syb_it <- paste0(p_block_syb_by, "\n", prepare_p)
+  editedcode2 <- gsub(paste0("", p_block_syb_by), p_block_syb_it, editedcode2, fixed=T, perl=F)
+  
+  
+  # Remove empty lines
+  zz <- strsplit(editedcode2, "\n")[[1]]
+  zz_c <- c()
+  for (iz in 1:length(zz)) {
+    if(!is_emptyx(gsub_space(zz[iz]))) {
+      zz_in <- zz[iz]
+      # comment out to_vector(z_
+      if(how_many_r_1 > 0) {
+        if(grepl("to_vector(z_", zz_in, fixed = T)) 
+          zz_in <- paste0("  //", zz_in)
+        if(grepl("scale_r_cor(z_", zz_in, fixed = T)) 
+          zz_in <- paste0("  //", zz_in)
+      }
+      zz_c <- c(zz_c, zz_in)
+    }
+  }
+  
+  editedcode2 <- paste(zz_c, collapse = '\n')
+  
+  add_to_model_block <- paste0(m_n_c_l_c, "\n", move_to_m)
+  add_to_genq_block <- paste0( move_to_m)
+  
   lprior_code <- "real lprior = 0;"
-  editedcode2 <- gsub(lprior_code, paste0(lprior_code, "\n", move_to_m_mcode, "\n"), editedcode2, fixed = T)
+  editedcode2 <- gsub(lprior_code, paste0(lprior_code, "\n", 
+                                          add_to_model_block, "\n"), 
+                      editedcode2, fixed = T)
   
   genq_code <- "generated quantities {"
-  editedcode2 <- gsub(genq_code, paste0(genq_code, "\n", move_to_m_gqcode), editedcode2, fixed = T)
+  editedcode2 <- gsub(genq_code, paste0(genq_code, "\n", 
+                                        add_to_genq_block), 
+                      editedcode2, fixed = T)
   
-  parm_code <- "parameters {"
-  editedcode2 <- gsub(paste0("", parm_code, ""), paste0(parm_code, "\n", move_to_p), editedcode2, fixed = T)
-  
-  tparm_code_rm <- "transformed parameters {"
-  editedcode2 <- gsub(paste0(tparm_code_rm, "\n", move_to_p), tparm_code_rm, editedcode2, fixed = T)
-  
-  z1_code_rm <- "matrix[M_1, N_1] z_1;"
-  editedcode2 <- gsub(z1_code_rm, paste0("// ", z1_code_rm), editedcode2, fixed = T)
-  
-  z1_tarhet_code_rm <- "target += std_normal_lupdf(to_vector(z_1));"
-  editedcode2 <- gsub(z1_tarhet_code_rm, paste0("// ", z1_tarhet_code_rm), editedcode2, fixed = T)
-  
+  editedcode2 <- gsub(tempt_name_tp, true_name_tp, editedcode2, fixed = T)
+  editedcode2 <- gsub(tempt_name_p,  true_name_p,  editedcode2, fixed = T)
   return(editedcode2)
 }
 
@@ -1262,14 +1371,39 @@ mapderivqr <- function(model,
                        y0, 
                        newdata = NULL, 
                        deriv = 1, 
+                       resp = NULL,
                        probs = c(0.025, 0.975),
-                       robust = FALSE
-                       ) {
-  xvar  <- model$model_info$xvar
-  idvar <- model$model_info$groupvar
+                       robust = FALSE) {
+  
+  if(is.null(newdata)) newdata <- model$data
+  
+  if (is.null(resp)) {
+    resp_rev_ <- resp
+  } else if (!is.null(resp)) {
+    resp_rev_ <- paste0("_", resp)
+  }
+  
+  validate_response(model, resp)
+  
+  list_c <- list()
+  xvar_ <- paste0('xvar', resp_rev_)
+  yvar_ <- paste0('yvar', resp_rev_)
+  groupvar_ <- paste0('groupvar', resp_rev_)
+  xvar <- model$model_info[[xvar_]]
+  yvar <- model$model_info[[yvar_]]
+  hierarchical_ <- paste0('hierarchical', resp_rev_)
+  
+  idvar <- model$model_info[[groupvar_]]
   if(length(idvar) > 1) idvar <- idvar[1]
   yvar  <- 'yvar'
-  if(is.null(newdata)) newdata <- model$data
+  
+  
+  if(!is.na(model$model_info$univariate_by)) {
+    newdata <- newdata %>% data.frame() %>% 
+      dplyr::filter(!!as.symbol(model$model_info$univariate_by) == 'Male')
+  }
+  
+  # if(!is.null(resp)) idvar <- c(resp, idvar)
   
   getdydx <- function (x, y, id, data, ndigit = 2) {
     sorder <- NULL;
@@ -1291,7 +1425,7 @@ mapderivqr <- function(model,
   
   mapderiv <- function(.xrow, x = xvar, y = yvar, id = idvar, 
                        data = newdata) {
-    newdata[[y]] <- .xrow
+    newdata[[y]] <- .xrow 
     getdydx(x = x, y = y, id = id, data = newdata)
   }
   
@@ -1305,4 +1439,245 @@ mapderivqr <- function(model,
   dout <-  brms::posterior_summary(tempx , probs = probs, robust = robust) 
   dout
 } 
+
+
+
+#' Title Check if string, vector, or list is empty
+#' @description Adapted from from is_empty.
+#' See https://github.com/strengejacke/sjmisc/blob/master/R/is_empty.R
+#' @param x String, character vector, list, data.frame or numeric vector or 
+#' factor.
+#' @param first.only Logical, if \code{FALSE} and \code{x} is a character
+#' vector, each element of \code{x} will be checked if empty. If
+#' \code{TRUE}, only the first element of \code{x} will be checked.
+#' @param all.na.empty Logical, if \code{x} is a vector with all \code{NA},
+#' \code{is_emptyx} will return \code{FALSE} if \code{all.na.empty = FALSE},
+#' and will return \code{TRUE} if \code{all.na.empty = TRUE} (default).
+#' @return Logical, \code{TRUE} if \code{x} is a character vector or string 
+#' and is empty, \code{TRUE} if \code{x} is a vector or list and of length 0,
+#' \code{FALSE} otherwise.
+#' @keywords internal
+#' @noRd
+#'
+is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
+  if (!is.null(x)) {
+    if (is.character(x)) {
+      if (length(x) == 0) return(TRUE)
+      zero_len <- nchar(x) == 0
+      if (first.only) {
+        zero_len <- .is_truex(zero_len[1])
+        if (length(x) > 0) x <- x[1]
+      } else {
+        return(unname(zero_len))
+      }
+    } else if (is.list(x)) {
+      x <- purrr::compact(x)
+      zero_len <- length(x) == 0
+    } else {
+      zero_len <- length(x) == 0
+    }
+  }
+  any(is.null(x) || zero_len || (all.na.empty && all(is.na(x))))
+}
+
+
+#' Title Check if TRUE or False
+#'
+#' @param x String, character vector
+#'
+#' @return Logical, \code{TRUE} / \code{FALSE} 
+#' @keywords internal
+#' @noRd
+#' 
+.is_truex <- function(x) {
+  is.logical(x) && length(x) == 1L && !is.na(x) && x
+}
+
+
+
+
+
+
+
+#' Fit model via cmdstanr
+#'
+#' @param scode A character string of model code
+#' @param sdata A list of data objects
+#' @param brm_args A list of argument passes to the [[brms::brm()]] 
+#'
+#' @return An object of class \code{bgmfit}
+#' @keywords internal
+#' # noRd
+#'
+
+# brms_via_cmdstanr <- function(scode, sdata, brm_args) {
+#   if(!is.null(brm_args$threads$threads)) {
+#     stan_threads <- TRUE
+#   } else {
+#     stan_threads <- FALSE
+#   }
+# 
+#   cpp_options <- list(stan_threads = stan_threads)
+#   stanc_options <- NULL
+# 
+#   if(brm_args$silent == 0) {
+#     show_messages = TRUE
+#     show_exceptions = TRUE
+#   }
+#   if(brm_args$silent == 1) {
+#     show_messages = TRUE
+#     show_exceptions = FALSE
+#   }
+#   if(brm_args$silent == 2) {
+#     show_messages = FALSE
+#     show_exceptions = FALSE
+#   }
+# 
+# 
+#   c_scode <- cmdstanr::cmdstan_model(cmdstanr::write_stan_file(scode),
+#                                      quiet = TRUE,
+#                                      cpp_options = cpp_options,
+#                                      stanc_options = stanc_options,
+#                                      dir = NULL,
+#                                      pedantic = FALSE,
+#                                      include_paths = NULL,
+#                                      user_header = NULL,
+#                                      compile_model_methods = FALSE,
+#                                      compile_hessian_method = FALSE,
+#                                      compile_standalone = FALSE)
+# 
+# 
+#   cb_fit <- c_scode$sample(
+#     data = sdata,
+#     seed = brm_args$seed,
+#     init = brm_args$init,
+#     chains = brm_args$chains,
+#     parallel_chains = brm_args$cores,
+#     threads_per_chain = brm_args$threads$threads,
+#     opencl_ids = brm_args$opencl,
+#     iter_sampling = brm_args$iter,
+#     iter_warmup = brm_args$warmup,
+#     thin = brm_args$thin,
+#     max_treedepth = brm_args$control$max_treedepth,
+#     adapt_delta = brm_args$control$adapt_delta,
+#     adapt_engaged = TRUE,
+#     fixed_param = FALSE,
+#     show_messages = show_messages,
+#     show_exceptions = show_exceptions
+#   )
+# 
+#   cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
+#   attributes(cb_fit)$CmdStanModel <- c_scode
+# 
+#   brm_args_empty <- brm_args
+#   brm_args_empty$empty <- TRUE
+# 
+#   # Create an empty brms object -> Set empty = TRUE
+#   bfit <- do.call(brms::brm, brm_args_empty)
+#   bfit$fit = cb_fit
+#   bfit <- brms::rename_pars(bfit)
+#   bfit
+# }
+
+
+
+#' Fit model via rstan
+#'
+#' @param scode A character string of model code
+#' @param sdata A list of data objects
+#' @param brm_args A list of argument passes to the brm 
+#'
+#' @return An object of class \code{bgmfit}
+#' @keywords internal
+#' @noRd
+#'
+brms_via_rstan <- function(scode, sdata, brm_args) {
+  if(!is.null(brm_args$threads$threads)) {
+    stan_threads <- TRUE 
+  } else {
+    stan_threads <- FALSE
+  }
+  
+  if(stan_threads) {
+    rstan::rstan_options(threads_per_chain = brm_args$threads$threads)
+  }
+  
+  # rstan::rstan_options(auto_write = TRUE)
+  
+  algorithm <- "NUTS" # c("NUTS", "HMC", "Fixed_param")
+  
+  cpp_options <- list(stan_threads = stan_threads)
+  stanc_options <- NULL
+  
+  if(brm_args$silent == 0) {
+    show_messages = TRUE
+    show_exceptions = TRUE
+  }
+  if(brm_args$silent == 1) {
+    show_messages = TRUE
+    show_exceptions = FALSE
+  }
+  if(brm_args$silent == 2) {
+    show_messages = FALSE
+    show_exceptions = FALSE
+  }
+  
+  message("Compiling Stan program...")
+  c_scode <- rstan::stan_model(
+    # file, 
+    model_name = "anon_model",
+    model_code = scode, 
+    stanc_ret = NULL,
+    boost_lib = NULL, 
+    eigen_lib = NULL,
+    save_dso = TRUE, 
+    verbose = FALSE,
+    auto_write = rstan::rstan_options("auto_write"),
+    obfuscate_model_name = TRUE,
+    allow_undefined = isTRUE(getOption("stanc.allow_undefined", FALSE)),
+    allow_optimizations = isTRUE(getOption("stanc.allow_optimizations", FALSE)),
+    standalone_functions = isTRUE(getOption("stanc.standalone_functions", FALSE)),
+    use_opencl = isTRUE(getOption("stanc.use_opencl", FALSE)),
+    warn_pedantic = isTRUE(getOption("stanc.warn_pedantic", FALSE)),
+    warn_uninitialized = isTRUE(getOption("stanc.warn_uninitialized", FALSE)),
+    includes = NULL,
+    isystem = c(if (!missing(file)) dirname(file), getwd())
+  )
+  
+  
+  message("Start sampling")
+  cb_fit <- rstan::sampling(
+    object = c_scode,
+    data = sdata, 
+    pars = NA, 
+    chains = brm_args$chains,
+    iter = brm_args$iter, 
+    warmup = brm_args$warmup,
+    thin = brm_args$thin, 
+    seed = brm_args$seed,
+    init = brm_args$init,
+    cores = brm_args$cores, 
+    check_data = TRUE,
+    sample_file = NULL, 
+    diagnostic_file = NULL, 
+    verbose = FALSE,
+    algorithm = algorithm,
+    control = brm_args$control,
+    include = TRUE, 
+    open_progress = interactive() && !isatty(stdout()) &&
+      !identical(Sys.getenv("RSTUDIO"), "1"),
+    show_messages = show_messages
+  )
+  
+  brm_args_empty <- brm_args
+  brm_args_empty$empty <- TRUE
+  
+  # Create an empty brms object -> Set empty = TRUE
+  bfit <- do.call(brms::brm, brm_args_empty)
+  bfit$fit = cb_fit
+  bfit <- brms::rename_pars(bfit)
+  bfit
+}
+
+
 

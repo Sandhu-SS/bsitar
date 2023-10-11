@@ -64,16 +64,16 @@ bgm(
     "gaussian"),
   univariate_by = list(by = NA, cor = "un"),
   multivariate = list(mvar = FALSE, cor = "un", rescor = TRUE),
-  a_prior_beta = normal("ymean", "ysd", autoscale = 2.5),
-  b_prior_beta = normal(0, 2, autoscale = FALSE),
-  c_prior_beta = normal(0, 1, autoscale = FALSE),
-  d_prior_beta = normal(0, 1, autoscale = FALSE),
-  e_prior_beta = normal(0, 1, autoscale = FALSE),
-  f_prior_beta = normal(0, 1, autoscale = FALSE),
-  g_prior_beta = normal(0, 1, autoscale = FALSE),
-  h_prior_beta = normal(0, 1, autoscale = FALSE),
-  i_prior_beta = normal(0, 1, autoscale = FALSE),
-  s_prior_beta = normal(0, "lm", autoscale = 2.5),
+  a_prior_beta = student_t(3, "ymean", "ysd", autoscale = 2.5),
+  b_prior_beta = student_t(3, 0, 3, autoscale = FALSE),
+  c_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  d_prior_beta = student_t(3, 0, 2, autoscale = FALSE),
+  e_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  f_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  g_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  h_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  i_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  s_prior_beta = student_t(3, 0, "lm", autoscale = 2.5),
   a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   c_cov_prior_beta = normal(0, 0.25, autoscale = FALSE),
@@ -85,7 +85,7 @@ bgm(
   i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
   a_prior_sd = normal(0, "ysd", autoscale = 2.5),
-  b_prior_sd = normal(0, 1, autoscale = FALSE),
+  b_prior_sd = normal(0, 2, autoscale = FALSE),
   c_prior_sd = normal(0, 0.5, autoscale = FALSE),
   d_prior_sd = normal(0, 1, autoscale = FALSE),
   e_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -130,8 +130,8 @@ bgm(
   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
   sigma_prior_sd_str = NULL,
   sigma_cov_prior_sd_str = NULL,
-  rsd_prior_sigma = normal(0, "ysd", autoscale = 2.5),
-  dpar_prior_sigma = normal(0, "ysd", autoscale = FALSE),
+  rsd_prior_sigma = student_t(3, 0, "ysd", autoscale = 2.5),
+  dpar_prior_sigma = student_t(3, 0, "ysd", autoscale = 2.5),
   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
   autocor_prior_unstr_acor = lkj(1),
@@ -219,7 +219,7 @@ bgm(
   unused = NULL,
   chains = 4,
   iter = 2000,
-  warmup = floor(iter/2),
+  warmup = floor(iter/1.3),
   thin = 1,
   cores = getOption("mc.cores", "optimize"),
   backend = getOption("brms.backend", "rstan"),
@@ -1340,7 +1340,7 @@ post-processing the model.}
 iterations. This also specifies the number of iterations used for stepsize
 adaptation, so warmup draws should not be used for inference. The number
 of warmup should not be larger than \code{iter} and the default is
-\code{iter/2}.}
+\code{iter/1.33}.}
 
 \item{thin}{Thinning rate. Must be a positive integer. Set \code{thin > 1} to
 save memory and computation time if \code{iter} is large.}

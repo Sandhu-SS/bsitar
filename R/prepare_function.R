@@ -553,10 +553,12 @@ add_context_getknots_fun <-
       vectorA <- "\n  vector[N] A=a-(s1*min(knots));"
       if(!is.null(decomp)) {
         if(decomp == 'QR') {
-          vectorA <- "\n  vector[N] A=a;"
+           vectorA <- "\n  vector[N] A=a;"
+          # vectorA <- "\n  vector[N] A=a-((XR_inv[1,1]*s1)*min(knots));"
         }
       }
     }
+    
     
  
     if(select_model == 'rcs') {

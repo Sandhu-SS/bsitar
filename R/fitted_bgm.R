@@ -134,10 +134,11 @@ fitted_bgm.bgmfit <-
                 probs = probs,
                 ...)
     
- 
+
     if(!deriv_model) {
       if(deriv == 1 | deriv == 2) {
-        . <- mapderivqr(model, ., newdata, deriv)
+        . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
+                        deriv = deriv, probs = probs, robust = robust)
       }
     } 
     

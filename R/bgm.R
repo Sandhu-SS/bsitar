@@ -1268,7 +1268,7 @@
 #'   iterations. This also specifies the number of iterations used for stepsize
 #'   adaptation, so warmup draws should not be used for inference. The number
 #'   of warmup should not be larger than \code{iter} and the default is
-#'   \code{iter/2}.
+#'   \code{iter/1.33}.
 #'   
 #' @param thin Thinning rate. Must be a positive integer. Set \code{thin > 1} to
 #'   save memory and computation time if \code{iter} is large.
@@ -1566,9 +1566,7 @@ bgm <- function(x,
                    g_formula = ~ 1,
                    h_formula = ~ 1,
                    i_formula = ~ 1,
-                   
                    s_formula = ~ 1,
-                   
                    a_formula_gr = ~ 1,
                    b_formula_gr = ~ 1,
                    c_formula_gr = ~ 1,
@@ -1578,9 +1576,7 @@ bgm <- function(x,
                    g_formula_gr = ~ 1,
                    h_formula_gr = ~ 1,
                    i_formula_gr = ~ 1,
-                
                    s_formula_gr = ~ 1,
-                   
                    a_formula_gr_str = NULL,
                    b_formula_gr_str = NULL,
                    c_formula_gr_str = NULL,
@@ -1590,13 +1586,10 @@ bgm <- function(x,
                    g_formula_gr_str = NULL,
                    h_formula_gr_str = NULL,
                    i_formula_gr_str = NULL,
-                
                    s_formula_gr_str = NULL,
-                   
                    sigma_formula = NULL,
                    sigma_formula_gr = NULL,
                    sigma_formula_gr_str = NULL,
-                   
                    dpar_formula = NULL,
                    autocor_formula = NULL,
                    family = 'gaussian()',
@@ -1618,19 +1611,16 @@ bgm <- function(x,
                    multivariate = list(mvar = FALSE,
                                        cor = 'un',
                                        rescor = TRUE),
-                   
-                   a_prior_beta = normal('ymean', 'ysd', autoscale = 2.5),
-                   b_prior_beta = normal(0, 2, autoscale = FALSE),
-                   c_prior_beta = normal(0, 1, autoscale = FALSE),
-                   d_prior_beta = normal(0, 1, autoscale = FALSE),
-                   e_prior_beta = normal(0, 1, autoscale = FALSE),
-                   f_prior_beta = normal(0, 1, autoscale = FALSE),
-                   g_prior_beta = normal(0, 1, autoscale = FALSE),
-                   h_prior_beta = normal(0, 1, autoscale = FALSE),
-                   i_prior_beta = normal(0, 1, autoscale = FALSE),
-                   
-                   s_prior_beta = normal(0, 'lm', autoscale = 2.5),
-                   
+                   a_prior_beta = student_t(3, 'ymean', 'ysd', autoscale = 2.5),
+                   b_prior_beta = student_t(3, 0, 3, autoscale = FALSE),
+                   c_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   d_prior_beta = student_t(3, 0, 2, autoscale = FALSE),
+                   e_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   f_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   g_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   h_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   i_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   s_prior_beta = student_t(3, 0, 'lm', autoscale = 2.5),
                    a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    c_cov_prior_beta = normal(0, 0.25, autoscale = FALSE),
@@ -1640,11 +1630,9 @@ bgm <- function(x,
                    g_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-                
                    s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-                   
                    a_prior_sd = normal(0, 'ysd', autoscale = 2.5),
-                   b_prior_sd = normal(0, 1, autoscale = FALSE),
+                   b_prior_sd = normal(0, 2, autoscale = FALSE),
                    c_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    d_prior_sd = normal(0, 1, autoscale = FALSE),
                    e_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -1652,9 +1640,7 @@ bgm <- function(x,
                    g_prior_sd = normal(0, 1, autoscale = FALSE),
                    h_prior_sd = normal(0, 1, autoscale = FALSE),
                    i_prior_sd = normal(0, 1, autoscale = FALSE),
-                
-                s_prior_sd = normal(0, 1, autoscale = FALSE),
-                   
+                   s_prior_sd = normal(0, 1, autoscale = FALSE),
                    a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
                    c_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
@@ -1664,9 +1650,7 @@ bgm <- function(x,
                    g_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    h_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    i_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
-                
-                s_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
-                   
+                   s_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    a_prior_sd_str = NULL,
                    b_prior_sd_str = NULL,
                    c_prior_sd_str = NULL,
@@ -1676,9 +1660,7 @@ bgm <- function(x,
                    g_prior_sd_str = NULL,
                    h_prior_sd_str = NULL,
                    i_prior_sd_str = NULL,
-                
-                s_prior_sd_str = NULL,
-                   
+                   s_prior_sd_str = NULL,
                    a_cov_prior_sd_str = NULL,
                    b_cov_prior_sd_str = NULL,
                    c_cov_prior_sd_str = NULL,
@@ -1688,28 +1670,22 @@ bgm <- function(x,
                    g_cov_prior_sd_str = NULL,
                    h_cov_prior_sd_str = NULL,
                    i_cov_prior_sd_str = NULL,
-                
-                s_cov_prior_sd_str = NULL,
-                   
+                   s_cov_prior_sd_str = NULL,
                    sigma_prior_beta = normal(0, 1, autoscale = FALSE),
                    sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
                    sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
                    sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
-                   
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
-                   
-                   rsd_prior_sigma = normal(0, 'ysd', autoscale = 2.5),
-                   dpar_prior_sigma = normal(0, 'ysd', autoscale = FALSE),
+                   rsd_prior_sigma = student_t(3, 0, 'ysd', autoscale = 2.5),
+                   dpar_prior_sigma = student_t(3, 0, 'ysd', autoscale = 2.5),
                    dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
-                   
                    gr_prior_cor = lkj(1),
                    gr_prior_cor_str = lkj(1),
                    sigma_prior_cor = lkj(1),
                    sigma_prior_cor_str = lkj(1),
-                   
                    mvr_prior_rescor = lkj(1),
                    init = NULL,
                    init_r = NULL,
@@ -1722,9 +1698,7 @@ bgm <- function(x,
                    g_init_beta = 0,
                    h_init_beta = 0,
                    i_init_beta = 0,
-                   
                    s_init_beta = 'lm',
-                   
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
                    c_cov_init_beta = 0,
@@ -1734,9 +1708,7 @@ bgm <- function(x,
                    g_cov_init_beta = 0,
                    h_cov_init_beta = 0,
                    i_cov_init_beta = 0,
-                   
                    s_cov_init_beta = 'lm',
-                   
                    a_init_sd = random,
                    b_init_sd = random,
                    c_init_sd = random,
@@ -1746,9 +1718,7 @@ bgm <- function(x,
                    g_init_sd = random,
                    h_init_sd = random,
                    i_init_sd = random,
-                
-                s_init_sd = random,
-                   
+                   s_init_sd = random,
                    a_cov_init_sd = random,
                    b_cov_init_sd = random,
                    c_cov_init_sd = random,
@@ -1758,14 +1728,11 @@ bgm <- function(x,
                    g_cov_init_sd = random,
                    h_cov_init_sd = random,
                    i_cov_init_sd = random,
-                
-                s_cov_init_sd = random,
-                   
+                   s_cov_init_sd = random,
                    sigma_init_beta = random,
                    sigma_cov_init_beta = random,
                    sigma_init_sd = random,
                    sigma_cov_init_sd = random,
-                   
                    gr_init_cor = random,
                    sigma_init_cor = random,
                    rsd_init_sigma = random,
@@ -1799,7 +1766,7 @@ bgm <- function(x,
                    unused = NULL,
                    chains = 4,
                    iter = 2000,
-                   warmup = floor(iter / 2),
+                   warmup = floor(iter / 1.3),
                    thin = 1,
                    cores = getOption("mc.cores", "optimize"),
                    backend = getOption("brms.backend", "rstan"),
@@ -1819,13 +1786,13 @@ bgm <- function(x,
                    file = NULL,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
-                decomp = NULL,
+                   decomp = NULL,
                    parameterization = 'ncp',
                    ...) {
   
   mcall <- mcall_ <- match.call()
 
-  # check and set alias argument for formula 
+  # check and set alias argument for formulas
   dots_allias <- list(...)
   collect_dot_names <- c()
   for (ia in letters[1:26]) {
@@ -1850,9 +1817,6 @@ bgm <- function(x,
   rm(dots_allias)
   
   mcall <- mcall_ <- mcall
-  
-  
-  # mcallx <<- mcall
   
   no_default_args <- c("x", "y", "id", "data", "...")
   
@@ -1914,9 +1878,6 @@ bgm <- function(x,
    temp_init_call_c
  } # quote_random_as_init_arg
   
-  
-  # mcall$init <- temp_init_call_c
- 
   mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
   
   for (inxc in letters[1:26]) {
@@ -1941,10 +1902,7 @@ bgm <- function(x,
   what_inxc <- paste0('sigma', "_", "cov", "_", "init", "_", "beta", "")
   if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
     quote_random_as_init_arg(mcall[[what_inxc]], mcall)
-  
-  # mcallx <<- mcall
-  
-  
+ 
   xs <- ids <- dfs <- NA
   checks. <- NULL;
   
@@ -2031,11 +1989,6 @@ bgm <- function(x,
   arguments <-
     c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
   
-  # argumentsx <<- arguments
-  # mcall_x <<- mcall_
-  # mcallx <<- mcall
- 
-
   checks_start_names <- c('bstart', 'cstart', 'apv', 'pv')
   for (checks_start_namesi in checks_start_names) {
     if(checks_start_namesi %in% names(mcall_)) {
@@ -2047,7 +2000,13 @@ bgm <- function(x,
   
   #######################
   normal <- NULL;
+  student_t <- NULL;
+  cauchy <- NULL;
+  lognormal <- NULL;
   uniform <- NULL;
+  exponential <- NULL;
+  gamma <- NULL;
+  inv_gamma <- NULL;
   lkj <- NULL;
   idsi <- NULL;
   dfsi <- NULL;
@@ -2230,7 +2189,6 @@ bgm <- function(x,
          " ", paste(paste0("'", allowed_model_names, "'"), collapse = ", ")
          )
   }
-  
   
   
   for (ip in names(arguments)) {
@@ -3307,7 +3265,8 @@ bgm <- function(x,
                        mvar = multivariate$mvar,
                        xfuns = xfuns, 
                        yfuns = yfuns,
-                       outliers = outliers)
+                       outliers = outliers,
+                       subset = FALSE)
   
   ys <- attr(data, "ys")
   subindicators <- attr(data, "subindicators")
@@ -6350,43 +6309,33 @@ bgm <- function(x,
     
     
     
+    model_info <- list()
+    
     if(parameterization == 'cp') {
       scode  <- do.call(brms::make_stancode, brm_args)
       sdata  <- do.call(brms::make_standata, brm_args)
       escode <- edit_scode_ncp_to_cp(scode)
-      
-      message("Shifting to 'rstan' as backend for CP parameterization")
-      
-      rstan_args <- list()
-      cross_args <- intersect(names(brm_args), formalArgs(rstan::stan))
-      for (zxi in cross_args) {
-        if(zxi %in% names(brm_args)) {
-          rstan_args[[zxi]] <- brm_args[[zxi]]
-        } 
+      if(brm_args$backend == "cmdstanr") {
+        stop("Please use 'rstan' as backend for CP parameterization")
+        # brmsfit <- brms_via_cmdstanr(escode, sdata, brm_args)
       }
-      rstan_args$algorithm  <- "NUTS" # “NUTS”, “HMC”, “Fixed_param”
-      rstan_args$model_code <- escode
-      rstan_args$data       <- sdata
-      rstan::rstan_options(threads_per_chain = brm_args$threads$threads)
-      rfit <- do.call(rstan::stan, rstan_args)
-      
-      
-      brm_args$empty <- TRUE
-      brm_args$backend <- 'rstan'
-      ebrmsfit <- do.call(brms::brm, brm_args)
-      ebrmsfit$fit <- rfit
-      brmsfit <- brms::rename_pars(ebrmsfit)
-      brmsfit$escode <- escode
-    }
+      if(brm_args$backend == "rstan") {
+        brmsfit <- brms_via_rstan(escode, sdata, brm_args)
+      }
+      model_info[['parameterization']] <- 'cp'
+    } 
+    
+    
     
     
     
     if(parameterization == 'ncp') {
       brmsfit <- do.call(brms::brm, brm_args)
+      model_info[['parameterization']] <- 'ncp'
     }
     
     
-    model_info <- list()
+    
 
     for (i in 1:length(funlist_rnamelist)) {
       model_info[[funlist_rnamelist[[i]]]] <- funlist_rvaluelist[[i]]
