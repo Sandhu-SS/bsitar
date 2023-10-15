@@ -57,6 +57,9 @@ prepare_function <- function(x,
   all_raw_str <- NULL;
   all_raw_str <- NULL;
   decomp <- NULL;
+  nys <- NULL;
+  gsub_out_unscaled <- NULL;
+  checkscovsi <- NULL;
 
   
   
@@ -76,6 +79,39 @@ prepare_function <- function(x,
   # }
   
   vector_X_name <- "Xp"
+  
+  
+  
+  if (nys == 1)
+    resp_ <- ""
+  if (nys > 1)
+    resp_ <- paste0("_", y)
+  
+  XR_inv_name <- 'XR_inv'
+  XR_inv_name_resp <- paste0(XR_inv_name, resp_)
+  
+  b_sx_name <- 'b_sx'
+  b_sx_name_resp <- paste0('b', resp_, "_", 'sx')
+  
+  
+  iysxi <- 's'
+  setp <- paste0(iysxi, '')
+  setnlp <- paste0('nlp', resp_, '_', iysxi)
+  setnlp_vector <- paste0('b', resp_)
+  
+  
+  if(resp_ == "") {
+    szx_name <- paste0('s', 1:(nknots - 1))
+    szx_name_resp <- paste0('b', "_", 's', 1:(nknots - 1))
+  } else {
+    szx_name <- paste0('s', 1:(nknots - 1))
+    szx_name_resp <- paste0('b', resp_, "_", szx_name)
+  }
+  
+  
+  b_s_name <- szx_name_resp
+  
+  szxbq_vector <- paste0('v', resp_, "_", 's', 'x')
   
   #########
   
@@ -187,8 +223,32 @@ prepare_function <- function(x,
   
   
   setxoffset <- paste0("real xoffset = ", xoffset, ";")
+  setxoffset_plane <- paste0("real xoffset = ", xoffset, ";")
   
-  decomp_code_qr <- 
+  
+  
+  
+  # https://mc-stan.org/users/documentation/case-studies/qr_regression.html
+  
+  # Qc = Spl;
+  
+  # for (i in 1:QK) Qc[, i] = Spl[, i] - mean(Spl[, i]);
+  
+  # decomp_code_qr <- 
+  #   "
+  #     int QK = nknots - 1;
+  #     matrix[N, QK] Qc;
+  #     Qc = Spl;
+  #     matrix[N, QK] XQ;
+  #     matrix[QK, QK] XR;
+  #     matrix[QK, QK] XR_inv;
+  #     XQ = qr_Q(Qc)[, 1:QK] * N;
+  #     XR = qr_R(Qc)[1:QK, ] / N;
+  #     XR_inv = inverse(XR);
+  #     "
+  
+  
+  decomp_code_qr <-
     "
       int QK = nknots - 1;
       matrix[N, QK] Qc = Spl;
@@ -200,6 +260,7 @@ prepare_function <- function(x,
       XR_inv = inverse(XR);
       "
   
+  decomp_code_qr <- gsub("XR_inv", XR_inv_name, decomp_code_qr, fixed = T)
   
   
   ##########
@@ -235,6 +296,7 @@ add_context_getknots_fun <-
              xfunsi,
              yfunsi,
              setxoffset,
+             gsub_out_unscaled,
              body,
              vectorA,
              decomp,
@@ -290,6 +352,16 @@ add_context_getknots_fun <-
         result <- regmatches(out, regexec(pattern, out))
         out_unscaled <- paste0("vector[N] out_unscaled=", result[[1]][2], ";")
         
+        # if(!is.null(decomp)) out_unscaled <- gsub('XQ', 'Spl', out_unscaled, fixed = T)
+        
+        if(!is.null(gsub_out_unscaled)) {
+          if(length(gsub_out_unscaled) != 2) 
+            stop('Length of gsub_out_unscaled should be 2')
+          out_unscaled <- gsub(gsub_out_unscaled[1], gsub_out_unscaled[2], 
+                               out_unscaled, fixed = T)
+        }
+        
+
         if (yfunsi == "log") {
           out_scaled <- 
             paste0("    vector[N] out_scaled=", "exp", 
@@ -315,8 +387,11 @@ add_context_getknots_fun <-
         
         out <- gsub(result[[1]][2], "out_scaled", out, fixed = T)
         out_return <- paste0(out_unscaled, "\n", out_scaled)
+        
         # setxoffset <- paste0("real xoffset = ", xoffset, ";")
+        
         if(is.null(decomp)) setxoffset <- paste0(setxoffset, vectorA)
+        
         out_return <- paste0(setxoffset,
                              "\n    ",
                              out_return)
@@ -408,6 +483,17 @@ add_context_getknots_fun <-
       ####
       if(grepl("d0", fnameout)) {
         out_unscaled <- paste0("vector[N] out_unscaled=", body, ";")
+        
+        # if(!is.null(decomp)) out_unscaled <- gsub('XQ', 'Spl', out_unscaled, fixed = T)
+        
+        if(!is.null(gsub_out_unscaled)) {
+          if(length(gsub_out_unscaled) != 2) 
+            stop('Length of gsub_out_unscaled should be 2')
+          out_unscaled <- gsub(gsub_out_unscaled[1], gsub_out_unscaled[2], 
+                               out_unscaled, fixed = T)
+        }
+        
+        
         if (yfunsi == "log") {
           out_scaled <- 
             paste0("    vector[N] out_scaled=", 
@@ -520,6 +606,20 @@ add_context_getknots_fun <-
     fullabcsnames <- c(abcnames, snames)
     fullabcsnames_v <- paste("vector", fullabcsnames, collapse = " ")
     
+    if(select_model == 'sitar') {
+      fullabcsnames_for_mat <- abcnames
+      fullabcsnames_for_mat <- gsub('.{1}$', '', fullabcsnames_for_mat)
+      fullabcsnames_v_for_mat <- paste("vector", fullabcsnames_for_mat, collapse = ", ")
+    }
+    
+    if(select_model == 'rcs') {
+      fullabcsnames_for_mat <- 'a'
+      fullabcsnames_v_for_mat <- paste("vector", fullabcsnames_for_mat, collapse = " ")
+    }
+    
+    # print(fullabcsnames_v_for_mat)
+    # stop()
+    
     if (grepl("b", fixedsi, fixed = T) &
         grepl("c", fixedsi, fixed = T)) {
       defineEx <- paste0("(Xm-b).*exp(c)")
@@ -554,7 +654,7 @@ add_context_getknots_fun <-
       if(!is.null(decomp)) {
         if(decomp == 'QR') {
            vectorA <- "\n  vector[N] A=a;"
-          # vectorA <- "\n  vector[N] A=a-((XR_inv[1,1]*s1)*min(knots));"
+          # vectorA <- "\n  vector[N] A=a-((XQ[,1].*s1)*min(knots));"
         }
       }
     }
@@ -676,8 +776,13 @@ add_context_getknots_fun <-
     # don't create space for +
     # returnmu <- gsub("+" , " + " , returnmu, fixed = TRUE)
     
+    
+    setxoffset_d0_noqr <- paste0(setxoffset,  vectorA)
+    returnmu_d0_noqr <- paste0(setxoffset,  vectorA)
+    
     if(!is.null(decomp)) {
       if(decomp == 'QR') {
+        returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
         setxoffset <- paste0(setxoffset,  decomp_code_qr, vectorA)
         returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
       }
@@ -687,7 +792,7 @@ add_context_getknots_fun <-
       fun_body <- paste0(fun_body, "\n", vectorA)
     }
     
-    
+  
     
     endof_fun <-
       paste0("\n    ", returnmu, "\n  } // end of spline function", sep = " ")
@@ -712,46 +817,245 @@ add_context_getknots_fun <-
     
     
     
-    add_rcsfunmat <- FALSE
+    rcsfunmultadd <- NULL
+    spfncname_multadd <- paste0(spfncname, "X")
+    
+    start_fun_multadd <-
+      paste0("\nvector ",
+             spfncname_multadd,
+             "(matrix ", vector_X_name, ", ",
+             fullabcsnames_v,
+             ") {" ,
+             "\n",
+             "  int N=num_elements(", vector_X_name, "[,1]);",
+             # "\n",
+             # insert_getX_name,
+             collapse = " ")
+    
+    
+    add_knotinfo_multadd <- paste0(
+       "\n  int mcolsmat=cols(", vector_X_name, ");",
+      # paste0("\n  vector[N] Xm=", paste0(getxname, 
+      #                                    "(", vector_X_name, ")"), 
+      #        ";"),
+      # paste0("\n  vector[N] X=", defineEx, ";"),
+      # paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
+      paste0("\n  vector[mcolsmat+1] knots=", 
+             paste0(getknotsname, "(", '', ")"), ";")
+    )
+    returnmu_multadd <- returnmu
+    returnmu_multadd <- gsub("XQ",  vector_X_name, returnmu_multadd, fixed = T)
+    returnmu_multadd <- gsub("Spl", vector_X_name, returnmu_multadd, fixed = T)
+    
+    start_fun_multadd <- gsub(",)" , ")" , start_fun_multadd, fixed = TRUE)
+    endof_fun <- paste0("\n    ", returnmu_multadd, 
+                        ";", "\n  } // end of spline mat function", sep = " ")
+    
+    endof_fun <- gsub(";;", ";", endof_fun, fixed = T)
+    
+    if(grepl('s1', vectorA)) {
+      rcsfunmultadd <- paste(start_fun_multadd, add_knotinfo_multadd, vectorA, endof_fun)
+    } else {
+      rcsfunmultadd <- paste(start_fun_multadd, vectorA, endof_fun)
+    }
+    
+    
+   # rcsfun <- paste0(rcsfun, "\n", rcsfunmultadd)
+    
+    # print(cat(rcsfun))
+    # stop()
+   
+    
+    
+    add_rcsfunmat <- TRUE
+    add_rcsfunmatqr <- TRUE
+    add_rcsfunmatqrinv <- add_rcsfunmatqrinv_genquant <- TRUE
+    
+    funmats <- paste0('', '')
     
     if(add_rcsfunmat) {
-      rcsfunmat_name <- paste0(spfncname, 'QRsmat')
-      
+      rcsfunmat_name <- paste0(spfncname, 'smat', '')
       start_funmat <-
         paste0("\nmatrix ",
                rcsfunmat_name,
                "(vector ", vector_X_name, ", ",
-               fullabcsnames_v,
+               fullabcsnames_v_for_mat,
+               ") {" ,
+               collapse = " ")
+      setxoffset_format <- paste0(setxoffset_plane, vectorA)
+      rcsfunmat <- paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset_format)
+      rcsfunmat <- gsub(vectorA, "", rcsfunmat, fixed = T)
+      rcsfunmat <- paste0(rcsfunmat, "\n", 'return Spl;')
+      rcsfunmat <- paste0(rcsfunmat, '\n}')
+      funmats <- paste0(funmats, "\n", rcsfunmat)
+      # print(cat(rcsfunmat))
+      # stop()
+    }
+    
+    if(add_rcsfunmatqr) {
+      rcsfunmatgr_name <- paste0(spfncname, 'QRsmat', '')
+      
+      start_funmat <-
+        paste0("\nmatrix ",
+               rcsfunmatgr_name,
+               "(vector ", vector_X_name, ", ",
+               fullabcsnames_v_for_mat,
                ") {" ,
                collapse = " ")
       
-      rcsfunmat <- paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
-      rcsfunmat <- gsub(vectorA, "", rcsfunmat, fixed = T)
+      rcsfunmatqr <- paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
+      rcsfunmatqr <- gsub(vectorA, "", rcsfunmatqr, fixed = T)
+      
+      
       
       szx <- paste0('s', 1:(nknots - 1))
       cnt <- 0
       cn_c <- c()
       for (vi in szx) {
         cnt <- cnt + 1
-        # tmx <- paste0('vector[N] ', paste0('s', 'x', cnt, " = "), 'XR_inv[', cnt, ",", cnt, "] * ", vi, ";")
-        tmx <- paste0(paste0('s', 'x', '[,', cnt, "]", " = "), 'XR_inv[', cnt, ",", cnt, "] * ", vi, ";")
+        # tmx <- paste0('vector[N] ', paste0('s', 'x', cnt, " = "), XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
+        tmx <- paste0(paste0('s', 'x', '[,', cnt, "]", " = "), XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
         cn_c <- c(cn_c, tmx)
       }
-      cn_c2 <- paste(cn_c, collapse = "\n")
-      cn_c2 <- paste0('matrix[N, QK] sx;', "\n", cn_c2)
-      rcsfunmat <- paste0(rcsfunmat, "\n", cn_c2)
-      rcsfunmat <- paste0(rcsfunmat, "\n", 'return sx;')
-      rcsfunmat <- paste0(rcsfunmat, '\n}')
-      # print(cat(rcsfun))
+      # cn_c2 <- paste(cn_c, collapse = "\n")
+      # cn_c2 <- paste0('matrix[N, QK] sx;', "\n", cn_c2)
+      # rcsfunmatqr <- paste0(rcsfunmatqr, "\n", cn_c2)
+      rcsfunmatqr <- paste0(rcsfunmatqr, "\n", 'return XQ;')
+      rcsfunmatqr <- paste0(rcsfunmatqr, '\n}')
+      funmats <- paste0(funmats, "\n", rcsfunmatqr)
+      # print(cat(rcsfunmatqr))
       # stop()
-    } # if(add_rcsfunmat) {
+    } # if(add_rcsfunmatqr) {
     
     
     
+    if(add_rcsfunmatqrinv) {
+      rcsfunmatgrinv_name <- paste0(spfncname, 'QRsmat', 'inv')
+      
+      start_funmat <-
+        paste0("\nmatrix ",
+               rcsfunmatgrinv_name,
+               "(vector ", vector_X_name, ", ",
+               fullabcsnames_v_for_mat,
+               ") {" ,
+               collapse = " ")
+      
+      rcsfunmatgrinv <- paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
+      rcsfunmatgrinv <- gsub(vectorA, "", rcsfunmatgrinv, fixed = T)
+      
+      szx <- paste0('b_s', 1:(nknots - 1))
+      cnt <- 0
+      cn_c <- c()
+      for (vi in szx) {
+        cnt <- cnt + 1
+        # tmx <- paste0('vector[N] ', paste0('s', 'x', cnt, " = "), XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
+        tmx <- paste0(paste0('b_s', 'q', '[,', cnt, "]", " = "), XR_inv_name_resp, '_mat', '[', cnt, ",", cnt, "] * ", vi, ";")
+        cn_c <- c(cn_c, tmx)
+      }
+      # cn_c2 <- paste(cn_c, collapse = "\n")
+      # cn_c2 <- paste0('matrix[QK, QK] XR_inv_name_resp, '_mat', ";", "\n", cn_c2)
+      # cn_c2 <- paste0('matrix[N, QK] ', b_sx_name_resp, ';', "\n", cn_c2)
+
+      rcsfunmatgrinv <- paste0(rcsfunmatgrinv, "\n", 'return ', XR_inv_name, ';')
+      rcsfunmatgrinv <- paste0(rcsfunmatgrinv, '\n}')
+      funmats <- paste0(funmats, "\n", rcsfunmatgrinv)
+      # print(cat(rcsfunmat))
+      # stop()
+    } # if(add_rcsfunmatqrinv) {
+    
+    
+    
+    
+    funmats_genquant <- ""
+    if(add_rcsfunmatqrinv_genquant) {
+      rcsfunmatgrinv_name <- paste0(spfncname, 'QRsmat', 'inv')
+     
+      setnqq <- nknots-1 
+      start_funmat <-
+        paste0("\nmatrix ",
+               rcsfunmatgrinv_name,
+               "(vector ", vector_X_name, ", ",
+               fullabcsnames_v_for_mat,
+               ") {" ,
+               collapse = " ")
+      
+      rcsfunmatqrinv_genquant <- paste(start_funmat, '')
+      rcsfunmatqrinv_genquant <- gsub(vectorA, "", rcsfunmatqrinv_genquant, fixed = T)
+      
+      szx <- paste0(setnlp, 1:(nknots - 1))
+      szxbq <- b_sx_name_resp
+      
+      szx_vector <- paste0(setnlp_vector, 1:(nknots - 1))
+      
+      
+      # setnqq <- 4
+      tems <- paste0('placeholder', '_', b_sx_name_resp)
+      # b_s_name <- paste0('b_s', '')
+      b_s_dims1 <- '[1]'
+      svector_ <- paste(paste0(b_s_name,  b_s_dims1), collapse = ", ")
+      svector_ <- paste0('vector[', setnqq, ']', " ", tems, ' = ', '[ ', svector_, ' ]' , "'" , ";" )
+        
+      tems2 <-  paste0('temp_', b_sx_name_resp)
+      
+      tems3 <- paste0('vector[', setnqq, ']', " ", tems2, ' = ')
+      qs_vector <- paste0(tems3, XR_inv_name_resp , ' * ', tems, ";")
+      
+      cn_c <- c()
+      cn_c2 <- c()
+      cnt <- 0
+      for (vi in szx) {
+        cnt <- cnt + 1
+         tmx <- paste0('vector[N] ', paste0(szxbq_vector, cnt, " = "), XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
+        cn_c <- c(cn_c, tmx)
+      }
+      cnt <- 0
+      for (vi in szx_vector) {
+        cnt <- cnt + 1
+        # '[', cnt, ',', cnt, "]"
+        # tmx2 <- paste0(paste0(szxbq, '[', cnt, ']', '', " = "), 'XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
+        tmx2 <- paste0(paste0(szxbq, '[', cnt, ']', '', " = "), tems2, '[',  cnt, "]", ";")
+        
+        cn_c2 <- c(cn_c2, tmx2)
+      }
+      
+      # if no covariate. then only add re-scaled s betas
+      if(is.null(checkscovsi)) {
+        cn_c <- paste(cn_c, collapse = "\n")
+        cn_c2 <- paste(cn_c2, collapse = "\n")
+        cn_c <- paste0(cn_c2, "\n", cn_c)
+        addcn_c2 <- paste0('vector[', "", setnqq, ']', " ", szxbq, ';')
+        addcn_c2 <- paste0(addcn_c2, "\n", svector_)
+        addcn_c2 <- paste0(addcn_c2, "\n", qs_vector)
+        addcn_c2 <- paste0(addcn_c2, "\n", cn_c)
+      } else if(!is.null(checkscovsi)) {
+        cn_c <- paste(cn_c, collapse = "\n")
+        addcn_c2 <- cn_c
+      }
+      replacematrixby <- paste0('matrix[',setnqq, ", ", setnqq, ']', XR_inv_name_resp , ' =')
+      rcsfunmatqrinv_genquant <- gsub('matrix', replacematrixby, rcsfunmatqrinv_genquant, fixed = T)
+      rcsfunmatqrinv_genquant <- gsub('{', ';', rcsfunmatqrinv_genquant, fixed = T)
+      rcsfunmatqrinv_genquant <- paste0(rcsfunmatqrinv_genquant, '\n', addcn_c2)
+      # print(cat(rcsfunmatqrinv_genquant))
+      # stop()
+    } # if(add_rcsfunmatqrinv_genquant) {
+    
+    
+    # svector_
+    # qs_vector
+    
+    if(funmats == "") {
+      add_funmats <- FALSE
+    } else {
+      add_funmats <- TRUE
+      # funmats <- paste0('\n', funmats)
+    }
+    
+    # print(cat(rcsfunmatqrinv_genquant))
+    # stop()
     ######
     
     
-    
+     
     getknots_fun_raw <- 
       paste0(
              "vector ",
@@ -869,7 +1173,8 @@ add_context_getknots_fun <-
       splout = splout,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
-      setxoffset = setxoffset,
+      setxoffset = setxoffset, # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL, # gsub_out_unscaled = c('QR', 'Spl')
       body = body,
       vectorA = vectorA,
       decomp = decomp,
@@ -927,7 +1232,8 @@ add_context_getknots_fun <-
       splout = splout,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
-      setxoffset = setxoffset,
+      setxoffset = setxoffset, # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL, # gsub_out_unscaled = c('QR', 'Spl')
       body = body,
       vectorA = vectorA,
       decomp = decomp,
@@ -985,7 +1291,8 @@ add_context_getknots_fun <-
       splout = splout,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
-      setxoffset = setxoffset,
+      setxoffset = setxoffset, # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL, # gsub_out_unscaled = c('QR', 'Spl')
       body = body,
       vectorA = vectorA,
       decomp = decomp,
@@ -998,17 +1305,17 @@ add_context_getknots_fun <-
     }
     
     if(utils::packageVersion('rstan') > 2.26 & is.null(decomp)) {
-      rcsfun <- paste0(getx_knots_fun, rcsfun, 
+      rcsfun <- paste0(getx_knots_fun, rcsfun, rcsfunmultadd,
                        spl_d0, spl_d1, spl_d2, sep = "\n")
     }
     
     if(utils::packageVersion('rstan') > 2.26 & !is.null(decomp)) {
         if(decomp == 'QR') {
-          if(add_rcsfunmat) {
-            rcsfun <- paste0(getx_knots_fun, rcsfunmat, rcsfun, 
+          if(add_funmats) {
+            rcsfun <- paste0(getx_knots_fun, funmats, rcsfun, rcsfunmultadd,
                              spl_d0, spl_d1, spl_d2, sep = "\n")
-          } else if(!add_rcsfunmat) {
-            rcsfun <- paste0(getx_knots_fun, rcsfun, 
+          } else if(!add_funmats) {
+            rcsfun <- paste0(getx_knots_fun, rcsfun, rcsfunmultadd,
                              spl_d0, spl_d1, spl_d2, sep = "\n")
           }
       }
@@ -1286,7 +1593,8 @@ add_context_getknots_fun <-
       returnmu = returnmu,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
-      setxoffset = setxoffset,
+      setxoffset = setxoffset, # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL, # gsub_out_unscaled = c('QR', 'Spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d0,
       decomp = decomp,
@@ -1303,7 +1611,8 @@ add_context_getknots_fun <-
       returnmu = returnmu,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
-      setxoffset = setxoffset,
+      setxoffset = setxoffset, # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL, # gsub_out_unscaled = c('QR', 'Spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d1,
       decomp = decomp,
@@ -1320,7 +1629,8 @@ add_context_getknots_fun <-
       returnmu = returnmu,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
-      setxoffset = setxoffset,
+      setxoffset = setxoffset, # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL, # gsub_out_unscaled = c('QR', 'Spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d2,
       decomp = decomp,
@@ -1332,17 +1642,17 @@ add_context_getknots_fun <-
     }
     
     if(utils::packageVersion('rstan') > 2.26 & is.null(decomp)) {
-      rcsfun <- paste0(getx_fun, rcsfun, 
+      rcsfun <- paste0(getx_fun, rcsfun, rcsfunmultadd,
                        spl_d0, spl_d1, spl_d2, sep = "\n")
     }
     
     if(utils::packageVersion('rstan') > 2.26 & !is.null(decomp)) {
         if(decomp == 'QR') {
-          if(add_rcsfunmat) {
-            rcsfun <- paste0(getx_fun, rcsfunmat, rcsfun, 
+          if(add_funmats) {
+            rcsfun <- paste0(getx_fun, funmats, rcsfun, rcsfunmultadd,
                              spl_d0, spl_d1, spl_d2, sep = "\n")
-          } else if(!add_rcsfunmat) {
-            rcsfun <- paste0(getx_fun, rcsfun, 
+          } else if(!add_funmats) {
+            rcsfun <- paste0(getx_fun, rcsfun, rcsfunmultadd,
                              spl_d0, spl_d1, spl_d2, sep = "\n")
           }
       }
@@ -1406,11 +1716,11 @@ add_context_getknots_fun <-
       if(decomp == 'QR') {
         xstaring <- gsub(paste0("matrix[N,QK]XQ;", "\n") , "", xstaring, fixed = T)
         xstaring <- gsub("matrix[N,QK]" , "", xstaring, fixed = T)
-        xstaring <- gsub(paste0("matrix[QK,QK]XR_inv;", "\n") , "", xstaring, fixed = T)
+        xstaring <- gsub(paste0("matrix[QK,QK]", XR_inv_name, ";", "\n") , "", xstaring, fixed = T)
         xstaring <- gsub(paste0("matrix[QK,QK]XR;", "\n"), "", xstaring, fixed = T)
         xstaring <- gsub("qr_thin_Q" , "qr", xstaring, fixed = T)
         xstaring <- gsub("qr_thin_R" , "qr.R", xstaring, fixed = T)
-        xstaring <- gsub("XR_inv=inverse" , "XR_inv=chol2inv", xstaring, fixed = T)
+        xstaring <- gsub(XR_inv_name, "=inverse" , XR_inv_name, "=chol2inv", xstaring, fixed = T)
       }
     }
     
@@ -1450,10 +1760,17 @@ add_context_getknots_fun <-
                     spl_d2_str, getX_str, getknots_str)
   
   
+  if(!add_rcsfunmatqrinv_genquant) {
+    out <- list(rcsfun = rcsfun, r_funs = all_raw_str)
+  } else if(add_rcsfunmatqrinv_genquant) {
+    out <- list(rcsfun = rcsfun, r_funs = all_raw_str, 
+                gq_funs = rcsfunmatqrinv_genquant)
+  }
  
-  
+   
+
    # print(cat(rcsfun))
    # stop()
   
-  list(rcsfun = rcsfun, r_funs = all_raw_str)
+  out
 } 

@@ -2245,17 +2245,21 @@ prepare_formula <- function(x,
   s_covariate <- s_covariate_i
   
   
+ 
+  
+  if(!is.null(b_formulasi)) {
+    if (!grepl("^~1$", a_formulasi)) {
+      if (!identical(strsplit(a_formulasi, "+")[[1]][1:2],
+                     strsplit(b_formulasi, "+")[[1]][1:2])) {
+        stop(
+          "a_formula and b_formula should have the identical ",
+          "\n ",
+          " intercept structure i.e., ~ 1 or ~ 0"
+        )
+      }
+  }
   
   
-  if (!grepl("^~1$", a_formulasi)) {
-    if (!identical(strsplit(a_formulasi, "+")[[1]][1:2],
-                   strsplit(b_formulasi, "+")[[1]][1:2])) {
-      stop(
-        "a_formula and b_formula should have the identical ",
-        "\n ",
-        " intercept structure i.e., ~ 1 or ~ 0"
-      )
-    }
     
     
     

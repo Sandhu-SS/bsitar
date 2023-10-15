@@ -1175,11 +1175,13 @@ collapse_comma <- function(...) {
 
 #' An internal function to edit stancode for NCP parametarization
 #' @param stancode A string character of stan code
+#' @param genq_only A logical (default \code{FALSE}) to indicate whether to 
+#' return only the generated quantity sub code.
 #' @keywords internal
 #' @return A character string.
 #' @noRd
 #'
-edit_scode_ncp_to_cp <- function(stancode) {
+edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   
   # Rename transformed parameters and parameters for ease of processing
   
@@ -1346,6 +1348,7 @@ edit_scode_ncp_to_cp <- function(stancode) {
   
   editedcode2 <- gsub(tempt_name_tp, true_name_tp, editedcode2, fixed = T)
   editedcode2 <- gsub(tempt_name_p,  true_name_p,  editedcode2, fixed = T)
+  if(genq_only) return(add_to_genq_block)
   return(editedcode2)
 }
 

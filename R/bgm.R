@@ -2155,6 +2155,7 @@ bgm <- function(x,
   init_rsi <- NULL;
   `:=` <- NULL;
   . <- NULL;
+  s_formulasi <- NULL;
   
 
   if(is.character(arguments$select_model)) {
@@ -3332,6 +3333,9 @@ bgm <- function(x,
   
   funlist_r <- funlist_rnamelist <- funlist_rvaluelist <- list()
   
+  gq_funs <- list() 
+  spfncname_c <- c()
+  
   # Start loop over response
   for (ii in 1:length(ys)) {
     if (nys > 1)
@@ -3638,7 +3642,8 @@ bgm <- function(x,
         b_ <- paste0("'", deparse_0(substitute(b)), "'")
         b_out <- NULL
         if(is.null(b[[1]])) {
-          if(grepl(":", gr_st_id, fixed = T) | grepl("/", gr_st_id, fixed = T)) {
+          if(grepl(":", gr_st_id, fixed = T) | 
+             grepl("/", gr_st_id, fixed = T)) {
             stop("Models beyound two levels of hierarchy are not supported yet",
                  "\n ",
                  "An alternative to argument ", a_, " is to use ",
@@ -4259,7 +4264,7 @@ bgm <- function(x,
     
     
     
-    xoffset <- round(xoffset, 6)
+    xoffset <- round(xoffset, 8)
     datai[[xsi]] <- datai[[xsi]] - xoffset
     knots <- knots - xoffset
     knots <- round(knots, 8)
@@ -4281,11 +4286,21 @@ bgm <- function(x,
       getknotsname <- getKnots_name
     }
     
+    spfncname_c <- c(spfncname_c, spfncname)
     
     spfun_collect <-
       c(spfun_collect, c(spfncname, paste0(spfncname, "_", c("d1",
                                                              "d2"))))
     
+    decomp_editcode <- FALSE
+    if(select_model == 'rcs') {
+      decomp_editcode <- FALSE
+    }
+    
+    
+    # This to check s covs
+    checkscovsi <-  getcovlist(s_formulasi)
+
     internal_function_args_names <-
       c(
         "fixedsi",
@@ -4300,6 +4315,9 @@ bgm <- function(x,
         'brms_arguments',
         'select_model',
         'decomp', 
+        'decomp_editcode',
+        'nys',
+        'checkscovsi',
         "verbose"
       )
     
@@ -4334,7 +4352,9 @@ bgm <- function(x,
     
     funlist[ii] <- get_s_r_funs[['rcsfun']]
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
-   
+    
+    gq_funs[[ii]] <- get_s_r_funs[['gq_funs']]
+    
     
     internal_formula_args_names <-
       c(
@@ -5133,7 +5153,8 @@ bgm <- function(x,
         gr_str_id <- id_higher_str
         counter_start_from_one_for_prior <- 0
         for (istrx in 2:length(gr_str_id)) {
-          counter_start_from_one_for_prior <- counter_start_from_one_for_prior + 1
+          counter_start_from_one_for_prior <- 
+            counter_start_from_one_for_prior + 1
           get_corr_higher_str_tf <- corr_higher_str_tf[istrx]
           
           if(get_corr_higher_str_tf) {
@@ -5266,14 +5287,15 @@ bgm <- function(x,
           set_prior_cor_what <- rep(set_prior_cor_what, n_higher_str)
         }
         
-        out2 <- evaluate_higher_level_corr_priors(set_nlpar_ = set_nlpar_what, 
-                                          set_class  = set_class_what,
-                                          set_prior = set_prior_cor_what,
-                                          id_higher_str = id_higher_str,
-                                          corr_higher_str_tf = corr_higher_str_tf,
-                                          set_env = set_env_what,
-                                          org_priors_initials_agrs = 
-                                            set_org_priors_initials_agrs_what)
+        out2 <- evaluate_higher_level_corr_priors(
+          set_nlpar_ = set_nlpar_what, 
+          set_class  = set_class_what,
+          set_prior = set_prior_cor_what,
+          id_higher_str = id_higher_str,
+          corr_higher_str_tf = corr_higher_str_tf,
+          set_env = set_env_what,
+          org_priors_initials_agrs = set_org_priors_initials_agrs_what
+          )
         
         temp_gr_str_priors_corr[[set_randomsi_higher_levsli]] <- 
           out2 $ temp_gr_str_priors
@@ -5468,9 +5490,11 @@ bgm <- function(x,
   brmsdata <- dataout
   brmspriors <- priorlist
   
-  # IMP - brms does not allow different lb conditions for sd parsm (e.e, all to be NA)
+  # IMP - brms does not allow different lb 
+  # conditions for sd parsm (e.e, all to be NA)
   # Error: Conflicting boundary information for coefficients of class 'sd'.
-  # Because prior function automatically sets lb 0 for positive priors such as exponential
+  # Because prior function automatically sets lb 0 for positive priors 
+  # such as exponential
   # the following is need (again done at line 4753 )
   
   brmspriors <- brmspriors %>% 
@@ -5500,6 +5524,9 @@ bgm <- function(x,
     }
   }
   
+  
+  fun_scode <- paste(funlist, collapse = "\n")
+  fun_scode <- paste0("functions {", "\n", fun_scode, "\n", "}")
 
   bstanvars <-
     brms::stanvar(scode = paste(funlist, collapse = "\n"), block = "function")
@@ -5840,6 +5867,195 @@ bgm <- function(x,
                                     stanvars = bstanvars,
                                     prior = brmspriors,
                                     data = brmsdata)
+    
+    
+
+   
+    move_from_model_to_qq_for_bqinv <- 
+      function(temp_stancode2x, 
+               section = 'model',
+               replacemuby = NULL,
+               spfncname_c = NULL,
+               spfncname_c_vector = NULL,
+               decomp_editcode = decomp_editcode) {
+      regex_for_section <- 
+        paste(".*(",section,"\\s*\\{.*?\\priors including constants).*", 
+              sep = '')
+      filtered_stan_code <- gsub(temp_stancode2x, pattern = regex_for_section, 
+                                 replacement = "\\1")
+      filtered_stan_code <- gsub('if (!prior_only) {', '', 
+                                 filtered_stan_code, fixed = T)
+      filtered_stan_code <- gsub('vector[N] mu;', '', 
+                                 filtered_stan_code, fixed = T)
+      filtered_stan_code <- gsub("target.*", '', filtered_stan_code, fixed = F)
+      
+      
+      editedcode2 <- filtered_stan_code
+      clines_p <- strsplit(filtered_stan_code, "\n")[[1]]
+      for (il in clines_p) {
+        editedcode2 <- gsub(pattern = "//", replacement = "//", 
+                            x = editedcode2, fixed = T)
+        editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", 
+                            x = editedcode2)
+        editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+      }
+      
+      zz <- strsplit(editedcode2, "\n")[[1]]
+      zz_c <- c()
+      for (iz in 1:length(zz)) {
+        if(!is_emptyx(gsub_space(zz[iz]))) {
+          zz_in <- zz[iz]
+          zz_in <- paste0("  ", zz_in)
+          zz_c <- c(zz_c, zz_in)
+        }
+      }
+      
+      zz_c <- paste(zz_c, collapse = "\n")
+      
+      
+      
+      if(!decomp_editcode) {
+        htx <- zz_c
+        htx <- strsplit(htx, "\n")[[1]]
+        nonmulines <- mulines <- c()
+        for (htxi in htx) {
+          tzx <- gsub("[[:space:]]", "", htxi)
+          if(!grepl('mu', tzx)) {
+            nonmulines <- c(nonmulines, htxi)
+          } else if(grepl('mu', tzx)) {
+            mulines <- c(mulines, htxi)
+          }
+        }
+        nonmulines <- paste0(nonmulines, collapse = "\n")
+        ##########
+        
+        lines_mu_subs <- c()
+        for (htxi in mulines) {
+            htxi_ <- gsub("[[:space:]]", "", htxi)
+            if(grepl("=", htxi)) {
+              htxi_ <- gsub("=(", "=", htxi_, fixed = T)
+              htxi_ <- gsub("));", ");", htxi_, fixed = T)
+              htxi_name <- strsplit(htxi_, "(", fixed = T)[[1]][1]
+              htxi_2 <- regmatches(htxi_, gregexpr("(?<=\\().*?(?=\\))", 
+                                                   htxi_, perl=T))[[1]]
+              htxi_2 <- strsplit(htxi_2, ",", fixed = T)[[1]]
+              htxi_3 <- c()
+              nlp_s_number <- c()
+              for (htxi_2i in htxi_2) {
+                if(grepl('nlp_', htxi_2i) & grepl('_s', htxi_2i)) {
+                  nlpsparms <- TRUE
+                } else {
+                  nlpsparms <- FALSE
+                }
+                if(!nlpsparms) htxi_3 <- c(htxi_3, htxi_2i)
+                if(nlpsparms) nlp_s_number <- c(nlp_s_number, htxi_2i)
+              }
+              htxi_4 <- paste(htxi_3, collapse = ",")
+              htxi_5 <- paste0(htxi_name, "(", htxi_4, ");")
+              htxi_5 <- gsub("mu", " XR_inv", htxi_5)
+              htxi_5 <- gsub("=", " = ", htxi_5)
+              htxi_5 <- gsub(SplineFun_name, paste0(SplineFun_name, 
+                                                    'QRsmatinv'), htxi_5)
+              npsn   <- length(nlp_s_number)
+              htxi_6 <- paste0("matrix[", npsn, ", ", npsn, "] ", htxi_5)
+              lines_mu_subs <- c(lines_mu_subs, htxi_6)
+            } # if(grepl("=", htxi)) {
+        } # for (htxi in mulines) {
+        lines_mu_subs <- paste0(lines_mu_subs, collapse = "\n")
+        zz_c <- paste0(nonmulines, "\n", "  ", lines_mu_subs)
+        zz_c2 <- zz_c
+      }
+        
+
+      
+      if(decomp_editcode) {
+        zz_c_ <- strsplit(zz_c, "\n", fixed = T)[[1]]
+        zz_c2 <- c()
+        for (zz_ci in 1:length(zz_c_)) {
+          if(!grepl('mu=', gsub_space(zz_c_[zz_ci])) ) {
+            g <- zz_c_[zz_ci]
+          }
+          zz_c2 <- c(zz_c2, g)
+        }
+        zz_c2 <- paste(zz_c2, collapse = "\n")
+      }
+      
+      return(zz_c2)
+    }
+    
+   
+
+    
+    gq_funs_2 <- list()
+    for (gq_funslen in 1:length(gq_funs)) {
+      gq_funs_2[[gq_funslen]] <- gsub(gsub("\\;.*", "", gq_funs[[gq_funslen]]),
+                                      "", gq_funs[[gq_funslen]], fixed = T)
+    }
+    
+
+    
+    if(!is.null(decomp)) {
+      temp_stancode_gqinv <- brms::make_stancode(formula = bformula,
+                                            stanvars = bstanvars,
+                                            prior = brmspriors,
+                                            threads = brms::threading(NULL),
+                                            data = brmsdata)
+      
+      qgcode <- 
+        move_from_model_to_qq_for_bqinv(
+          temp_stancode_gqinv, 
+          replacemuby = NA, 
+          spfncname_c = spfncname_c,
+          spfncname_c_vector = spfncname_c_vector,
+          decomp_editcode = decomp_editcode)
+      
+    
+      qgcode <- gsub("\n  }\n  }", "\n  }", qgcode) 
+
+      gq_funs_2 <- paste(unlist(gq_funs_2), collapse = "\n")
+      gq_funs_2 <- paste0(qgcode, '\n', gq_funs_2)
+      
+      bstanvars <- bstanvars + 
+        brms::stanvar(scode = gq_funs_2, block = "genquant", position = "end")
+      
+      
+      if(decomp_editcode) {
+        spfncname_c_mat <- c()
+        spfncname_c_vector <- c()
+        for (spfncname_ci in spfncname_c) {
+          spfncname_ci2 <- gsub(spfncname_ci, 
+                                paste0(spfncname_ci, 'QRsmat'), spfncname_ci)
+          spfncname_invmat <- gsub(spfncname_ci, 
+                                   paste0(spfncname_ci, 'QRsmatinv'), 
+                                   spfncname_ci)
+          waht_C <- 'C_1'
+          waht_Cby <- paste0(waht_C, 'X')
+          spfncname_c_vector <- c(spfncname_c_vector, waht_C)
+          tdcode <- paste0('matrix[', 'N', ',', 4, ']', " ", waht_Cby, " = ",
+                           spfncname_ci2, "(", waht_C, ",",
+                           'rep_vector(0.0, num_elements(', waht_C, '))',
+                           ");")
+          waht_Cby_inv <- 'XR_inv'
+          tdcode_inv <- paste0('matrix[', 4, ',', 4, ']', " ", 
+                               waht_Cby_inv, " = ",
+                               spfncname_invmat, "(", waht_C, ",",
+                               'rep_vector(0.0, num_elements(', waht_C, '))',
+                               ");")
+          
+          tdcode <- paste0(tdcode, "\n", tdcode_inv)
+          spfncname_c_mat <- c(spfncname_c_mat, tdcode)
+        }
+        spfncname_c_mat2 <- paste(spfncname_c_mat, collapse = "\n")
+        bstanvars <- bstanvars + brms::stanvar(scode = spfncname_c_mat2, 
+                                               block = "tdata", 
+                                               position = "end")
+      }
+      
+      
+    } # if(!is.null(decomp)) {
+    
+   
+    
     
     
     if(vcov_init_0e) {
@@ -6199,19 +6415,74 @@ bgm <- function(x,
   }
   
   
+  
+  
+  
+  
   brm_args$prior <- brmspriors
   
   
-  if(parameterization == 'cp') {
-    scode  <- do.call(brms::make_stancode, brm_args)
-    escode <- edit_scode_ncp_to_cp(scode)
-    # quietcat <- function(x) { 
-    #   sink(tempfile()) 
-    #   on.exit(sink()) 
-    #   invisible(force(x)) 
-    # } 
-  } 
   
+  
+  decomp_escode2<- function(temp_stancode2x) {
+    htx <- strsplit(temp_stancode2x, "\n")[[1]]
+    lines_all <- c()
+    for (htxi in 1:length(htx)) {
+      htxi_ <- htx[htxi]
+      if(grepl('^mu', gsub("[[:space:]]", "", htxi_))) {
+        htxi_ <- gsub("[[:space:]]", "", htxi_)
+        htxi_ <- gsub("=(", "=", htxi_, fixed = T)
+        htxi_ <- gsub("));", ");", htxi_, fixed = T)
+        htxi_name <- strsplit(htxi_, "(", fixed = T)[[1]][1]
+        if(grepl('[', htxi_, fixed = T)) {
+          htxi_c1 <- strsplit(htxi_, "[", fixed = T)[[1]][1]
+        } else {
+          htxi_c1 <- strsplit(htxi_, ",", fixed = T)[[1]][1]
+        }
+        htxi_others <- strsplit(htxi_, ",", fixed = T)[[1]][-1]
+        htxi_others <- paste(htxi_others, collapse = ", ")
+        htxi_c1 <- paste0(htxi_c1, 'X')
+        htxi_c1 <- strsplit(htxi_c1, "(", fixed = T)[[1]][2]
+        htxi_name <- paste0(htxi_name, 'X')
+        if(grepl('[', htxi_, fixed = T)) {
+          htxi_c1 <- paste0(htxi_c1, '[start:end,]')
+        } else {
+          htxi_c1 <- htxi_c1
+        }
+        htxi_final <- paste0(htxi_name, "(", htxi_c1, ", ", htxi_others)
+      } else {
+        htxi_final <- htxi_
+      }
+      lines_all <- c(lines_all, htxi_final)
+      lines_all <- paste(lines_all, collapse = "\n")
+    }
+    dvciit <- paste0('data vector', " ", 'C_1')
+    dvciby <- paste0('data matrix', " ", 'C_1', 'X')
+    lines_all <- gsub(dvciit, dvciby, lines_all, fixed = T)
+    dvciit <- ', C_1'
+    dvciby <-  paste0(dvciit, 'X')
+    lines_all <- gsub(dvciit, dvciby, lines_all, fixed = T)
+    return(lines_all)
+  }
+  
+  
+  scode  <- do.call(brms::make_stancode, brm_args)
+  sdata  <- do.call(brms::make_standata, brm_args)
+  
+  
+  if(parameterization == 'cp') {
+    scode_final <- edit_scode_ncp_to_cp(scode)
+  } else if(parameterization == 'ncp') {
+    scode_final <- scode
+  }
+  
+  
+  
+  if(!is.null(decomp)) {
+    if(decomp_editcode) scode_final <- decomp_escode2(scode_final)
+  }
+  
+
     
   if(!exe_model_fit) {
     if(get_priors) {
@@ -6222,12 +6493,7 @@ bgm <- function(x,
       return(do.call(brms::make_standata, brm_args))
     } else if(get_stancode) {
       options(mc.cores = mc.cores_restore)
-      if(parameterization == 'ncp') {
-        return(do.call(brms::make_stancode, brm_args))
-      }
-      if(parameterization == 'cp') {
-        return(escode)
-      }
+      return(scode_final)
     } else if(get_priors_eval) {
       options(mc.cores = mc.cores_restore)
       return(brm_args$prior)
@@ -6308,19 +6574,16 @@ bgm <- function(x,
     } 
     
     
-    # brm_argsx <<- brm_args
     # 
     # brm_args$prior <- brm_args$prior %>% 
     #   dplyr::filter(class == 'b' & !nlpar %in% c('a', 'b', "c"))
     # 
-    # brm_argsxx <<- brm_args
-    
+
     
     # brm_args$prior <- brm_args$prior %>% 
     #   dplyr::filter(class == 'sd' & !nlpar %in% c('a', 'b', "c"))
     # 
-    # brm_argsxx <<- brm_args
-    
+
     
     # This when all lists of list NULL (e.g., when all init args random)
     if(length(brm_args$init[lengths(brm_args$init) != 0]) == 0) {
@@ -6334,19 +6597,20 @@ bgm <- function(x,
     model_info <- list()
     
     if(parameterization == 'cp') {
-      scode  <- do.call(brms::make_stancode, brm_args)
-      sdata  <- do.call(brms::make_standata, brm_args)
-      escode <- edit_scode_ncp_to_cp(scode)
+      # scode  <- do.call(brms::make_stancode, brm_args)
+      # sdata  <- do.call(brms::make_standata, brm_args)
+      # escode <- edit_scode_ncp_to_cp(scode)
       if(brm_args$backend == "cmdstanr") {
         stop("Please use 'rstan' as backend for CP parameterization")
         # brmsfit <- brms_via_cmdstanr(escode, sdata, brm_args)
       }
       if(brm_args$backend == "rstan") {
-        print(escode)
-        brmsfit <- brms_via_rstan(escode, sdata, brm_args)
+        brmsfit <- brms_via_rstan(scode_final, sdata, brm_args)
       }
       model_info[['parameterization']] <- 'cp'
     } 
+    
+    
     
     
     
@@ -6442,8 +6706,9 @@ bgm <- function(x,
     model_info[['brms_arguments_list']] <- brms_arguments_list
     model_info[['select_model']] <- select_model
     model_info[['decomp']] <- decomp
+    model_info[['fun_scode']] <- fun_scode
     brmsfit$model_info <- model_info
-
+    
     if (expose_function) {
       if (verbose) {
         setmsgtxt <-
@@ -6460,13 +6725,19 @@ bgm <- function(x,
           paste0("\n Exposing Stan functions for post-processing..\n")
         message(setmsgtxt)
       }
-      brmsfit <- expose_functions_bgm(brmsfit, expose = TRUE, select_model = NULL)
+      
+      brmsfit <- expose_functions_bgm(brmsfit, 
+                                      scode = fun_scode,
+                                      expose = TRUE, 
+                                      select_model = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
     
     if (!expose_function) {
-      brmsfit <- expose_functions_bgm(brmsfit, expose = FALSE, 
-                                         select_model = select_model)
+      brmsfit <- expose_functions_bgm(brmsfit, 
+                                      scode = fun_scode,
+                                      expose = FALSE, 
+                                      select_model = select_model)
       brmsfit$model_info[['expose_method']] <- 'R'
     } 
     
