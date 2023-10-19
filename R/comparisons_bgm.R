@@ -12,12 +12,12 @@
 #' @details The \code{comparisons_bgm} function estimates and returns the 
 #' following growth paramaeter:
 #' \itemize{
-#'   \item pv  peak velocity
-#'   \item apv age at peak velocity
-#'   \item tv  take off velocity (i.e, minimum velocity before the peak velocity)
-#'   \item atv age at take off velocity
-#'   \item cv  cessation velocity (i.e, post peak velocity which is some % of pv)
-#'   \item acv age at cessation velocity
+#'   \item pv  - peak velocity
+#'   \item apv - age at peak velocity
+#'   \item tv  - take off velocity (i.e, minimum velocity before the peak velocity)
+#'   \item atv - age at take off velocity
+#'   \item cv  - cessation velocity (i.e, post peak velocity which is some % of pv)
+#'   \item acv - age at cessation velocity
 #' }
 #' The % of peak velocity (\code{pv}) that is used to get the cessation velocity 
 #' (\code{'cv'} is controlled via the \code{acg_velocity} argument. The 
