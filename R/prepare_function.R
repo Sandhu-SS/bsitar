@@ -747,13 +747,15 @@ add_context_getknots_fun <-
     # In fact for df > 1, it forces 'd' to be random parameter only
     if (match_sitar_d_form) {
       if (grepl("d", randomsi, fixed = T)) {
-        nameadja <- "A+(d . * Spl[,1])"
+        # nameadja <- "A+(d . * Spl[,1])"
+        nameadja <- "A+(d . * Xm)"
       }
     }
     
     if (!match_sitar_d_form) {
       if (grepl("d", fixedsi, fixed = T)) {
-        nameadja <- "A+(d . * Spl[,1])"
+        # nameadja <- "A+(d . * Spl[,1])"
+        nameadja <- "A+(d . * Xm)"
       }
     }
     
@@ -831,6 +833,8 @@ add_context_getknots_fun <-
              ") {" ,
              "\n",
              "  int N=num_elements(", vector_X_name, "[,1]);",
+             "\n",
+             "  vector[N] Xm=(", vector_X_name, "[,1]);", # getX
              # "\n",
              # insert_getX_name,
              collapse = " ")
