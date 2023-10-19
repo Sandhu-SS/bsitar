@@ -1217,7 +1217,9 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   for (clines_tpi in clines_tp) {
     for (igr in 1:100) {
       if(grepl(paste0("r_", igr), clines_tpi)) {
-        if(grepl("^matrix", clines_tpi)) {
+        if(grepl("^matrix", clines_tpi) |
+           grepl("^array", clines_tpi) # This for z_1 when only one sd
+        ) {
           how_many_r_1 <- how_many_r_1 + 1
           move_to_p <- c(move_to_p, clines_tpi)
           clines_tpi <- ""
@@ -1231,15 +1233,21 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
       }
     }
   } 
-  paste0("^", "r_", igr, " = ")
+  
   
   prepare_p <- c()
   for (clines_pi in clines_p) {
     if(grepl("z_", clines_pi)) {
       for (igr in 1:100) {
         if(grepl(paste0("z_", igr), clines_pi)) {
-          if(grepl("^matrix", clines_pi)) {
-            what_p <- paste0("// ", clines_pi)
+          if(grepl("^matrix", clines_pi) |
+             grepl("^array", clines_pi) # This for z_1 when only one sd
+          ) {
+            if(grepl("^array", clines_pi)) {
+              what_p <- paste0("// ", clines_pi) 
+            } else {
+              what_p <- paste0("// ", clines_pi)
+            }
           } 
         } 
       }
@@ -1250,9 +1258,48 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   } 
   
   
+  
+  
   move_to_p <- paste(move_to_p, collapse = "\n")
   prepare_p <- paste(prepare_p, collapse = "\n")
   prepare_p <- paste0(prepare_p, "\n", move_to_p)
+  
+  # Remove duplicate - this happens when some parms are single vector 
+  # For example, sigma_gr ~ 1
+  prepare_p <- strsplit(prepare_p, "\n", fixed = T)[[1]] %>% 
+    data.frame() %>% 
+    dplyr::distinct() %>% 
+    unlist() %>% 
+    as.vector()
+  
+  prepare_p <- paste(prepare_p, collapse = "\n")
+  
+  # prepare_px <<- prepare_p
+  
+  
+  
+  ## Match data from regexpr()
+  # x <- prepare_px
+  pattern_r <- pattern_N <- pattern_M <- pattern_sd <- pattern_L <-  c()
+  for (rxi in 1:100) {
+    pattern     <- paste0('r_', rxi)
+    pattern_    <- regexpr(pattern, prepare_p)
+    pattern_ri  <- regmatches(prepare_p, pattern_)
+    pattern_Ni  <- gsub('r_', 'N_', pattern_ri, fixed = T)
+    pattern_Mi  <- gsub('r_', 'M_', pattern_ri, fixed = T)
+    pattern_Li  <- gsub('r_', 'L_', pattern_ri, fixed = T)
+    pattern_sdi <- gsub('r_', 'sd_', pattern_ri, fixed = T)
+    pattern_r   <- c(pattern_r, pattern_ri)
+    pattern_N   <- c(pattern_N, pattern_Ni)
+    pattern_M   <- c(pattern_M, pattern_Mi)
+    pattern_L   <- c(pattern_L, pattern_Li)
+    pattern_sd  <- c(pattern_sd, pattern_sdi)
+  }
+  
+  
+  
+  # print(cat(prepare_p))
+  # stop()
   
   # Add space to model block elements
   zz_c <- c()
@@ -1275,35 +1322,65 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   }
   prepare_p <- paste(zz_c, collapse = '\n')
   
+  
+  
   # Prepare multi_normal_cholesky_lpdf
+  # m_n_c_l_c <- c()
+  # if(how_many_r_1 > 0) {
+  #   for (h1i in 1:how_many_r_1) {
+  #     m_n_c_l <- 
+  #       paste0("  for(i in 1:N_", h1i, ') {\n',
+  #              "    lprior +=  multi_normal_cholesky_lpdf(r_", h1i, "[i, ] |\n",
+  #              "    rep_row_vector(0, M_", h1i, "),\n",
+  #              "    diag_pre_multiply(sd_", h1i, ", L_", h1i, "));",
+  #              "  \n  }"
+  #       )
+  #     m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
+  #   }
+  #   if(how_many_r_1 > 1) {
+  #     m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
+  #   }
+  # }
+  
+  
   m_n_c_l_c <- c()
-  if(how_many_r_1 > 0) {
-    for (h1i in 1:how_many_r_1) {
-      m_n_c_l <- 
-        paste0("  for(i in 1:N_", h1i, ') {\n',
-               "    lprior +=  multi_normal_cholesky_lpdf(r_", h1i, "[i, ] |\n",
-               "    rep_row_vector(0, M_", h1i, "),\n",
-               "    diag_pre_multiply(sd_", h1i, ", L_", h1i, "));",
-               "  \n  }"
-        )
-      m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
-    }
-    if(how_many_r_1 > 1) {
-      m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
-    }
-  }
+  for (h1i in 1:length(pattern_r)) {
+    pattern_ri  <- pattern_r[h1i]
+    pattern_Ni  <- pattern_N[h1i]
+    pattern_Mi  <- pattern_M[h1i]
+    pattern_Li  <- pattern_L[h1i]
+    pattern_sdi <- pattern_sd[h1i]
+    m_n_c_l <- 
+      paste0("  for(i in 1:", pattern_Ni, ') {\n',
+             "    lprior +=  multi_normal_cholesky_lpdf(", pattern_ri, "[i, ] |\n",
+             "    rep_row_vector(0, ", pattern_Mi, "),\n",
+             "    diag_pre_multiply(", pattern_sdi, ", ", pattern_Li, "));",
+             "  \n  }"
+      )
+    m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
+  } # for (h1i in 1:length(pattern_r)) {
+  
+  m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
+  
+  # print(cat(m_n_c_l_c))
+  # stop()
+  
   
   
   for (il in clines_p) {
-    editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
-    editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
-    editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+    if(!grepl("^array", il)) {
+      editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
+      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
+      editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+    }
   }
   
   for (il in clines_tp) {
-    editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
-    editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
-    editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+    if(!grepl("^array", il)) {
+      editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
+      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
+      editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+    }
   }
   
   # Below to flatten code without any empty splace or lines
@@ -1510,77 +1587,77 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 #'
 #' @return An object of class \code{bgmfit}
 #' @keywords internal
-#' # noRd
+#' @noRd
 #'
 
-# brms_via_cmdstanr <- function(scode, sdata, brm_args) {
-#   if(!is.null(brm_args$threads$threads)) {
-#     stan_threads <- TRUE
-#   } else {
-#     stan_threads <- FALSE
-#   }
-# 
-#   cpp_options <- list(stan_threads = stan_threads)
-#   stanc_options <- NULL
-# 
-#   if(brm_args$silent == 0) {
-#     show_messages = TRUE
-#     show_exceptions = TRUE
-#   }
-#   if(brm_args$silent == 1) {
-#     show_messages = TRUE
-#     show_exceptions = FALSE
-#   }
-#   if(brm_args$silent == 2) {
-#     show_messages = FALSE
-#     show_exceptions = FALSE
-#   }
-# 
-# 
-#   c_scode <- cmdstanr::cmdstan_model(cmdstanr::write_stan_file(scode),
-#                                      quiet = TRUE,
-#                                      cpp_options = cpp_options,
-#                                      stanc_options = stanc_options,
-#                                      dir = NULL,
-#                                      pedantic = FALSE,
-#                                      include_paths = NULL,
-#                                      user_header = NULL,
-#                                      compile_model_methods = FALSE,
-#                                      compile_hessian_method = FALSE,
-#                                      compile_standalone = FALSE)
-# 
-# 
-#   cb_fit <- c_scode$sample(
-#     data = sdata,
-#     seed = brm_args$seed,
-#     init = brm_args$init,
-#     chains = brm_args$chains,
-#     parallel_chains = brm_args$cores,
-#     threads_per_chain = brm_args$threads$threads,
-#     opencl_ids = brm_args$opencl,
-#     iter_sampling = brm_args$iter,
-#     iter_warmup = brm_args$warmup,
-#     thin = brm_args$thin,
-#     max_treedepth = brm_args$control$max_treedepth,
-#     adapt_delta = brm_args$control$adapt_delta,
-#     adapt_engaged = TRUE,
-#     fixed_param = FALSE,
-#     show_messages = show_messages,
-#     show_exceptions = show_exceptions
-#   )
-# 
-#   cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
-#   attributes(cb_fit)$CmdStanModel <- c_scode
-# 
-#   brm_args_empty <- brm_args
-#   brm_args_empty$empty <- TRUE
-# 
-#   # Create an empty brms object -> Set empty = TRUE
-#   bfit <- do.call(brms::brm, brm_args_empty)
-#   bfit$fit = cb_fit
-#   bfit <- brms::rename_pars(bfit)
-#   bfit
-# }
+brms_via_cmdstanr <- function(scode, sdata, brm_args) {
+  if(!is.null(brm_args$threads$threads)) {
+    stan_threads <- TRUE
+  } else {
+    stan_threads <- FALSE
+  }
+
+  cpp_options <- list(stan_threads = stan_threads)
+  stanc_options <- NULL
+
+  if(brm_args$silent == 0) {
+    show_messages = TRUE
+    show_exceptions = TRUE
+  }
+  if(brm_args$silent == 1) {
+    show_messages = TRUE
+    show_exceptions = FALSE
+  }
+  if(brm_args$silent == 2) {
+    show_messages = FALSE
+    show_exceptions = FALSE
+  }
+
+
+  c_scode <- cmdstanr::cmdstan_model(cmdstanr::write_stan_file(scode),
+                                     quiet = TRUE,
+                                     cpp_options = cpp_options,
+                                     stanc_options = stanc_options,
+                                     dir = NULL,
+                                     pedantic = FALSE,
+                                     include_paths = NULL,
+                                     user_header = NULL,
+                                     compile_model_methods = FALSE,
+                                     compile_hessian_method = FALSE,
+                                     compile_standalone = FALSE)
+
+
+  cb_fit <- c_scode$sample(
+    data = sdata,
+    seed = brm_args$seed,
+    init = brm_args$init,
+    chains = brm_args$chains,
+    parallel_chains = brm_args$cores,
+    threads_per_chain = brm_args$threads$threads,
+    opencl_ids = brm_args$opencl,
+    iter_sampling = brm_args$iter,
+    iter_warmup = brm_args$warmup,
+    thin = brm_args$thin,
+    max_treedepth = brm_args$control$max_treedepth,
+    adapt_delta = brm_args$control$adapt_delta,
+    adapt_engaged = TRUE,
+    fixed_param = FALSE,
+    show_messages = show_messages,
+    show_exceptions = show_exceptions
+  )
+
+  cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
+  attributes(cb_fit)$CmdStanModel <- c_scode
+
+  brm_args_empty <- brm_args
+  brm_args_empty$empty <- TRUE
+
+  # Create an empty brms object -> Set empty = TRUE
+  bfit <- do.call(brms::brm, brm_args_empty)
+  bfit$fit = cb_fit
+  bfit <- brms::rename_pars(bfit)
+  bfit
+}
 
 
 

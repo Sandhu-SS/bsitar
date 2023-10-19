@@ -784,6 +784,8 @@ if(dist != 'flat') {
         if (class == "b") {
           if (nlpar == "a" & cov_nlpar == "") {
             allowed_parm_options <- c("ysd", "ymad", "lme_sd_a")
+          } else if (nlpar == "d") {
+            allowed_parm_options <- c("ysd", "ymad")
           } else if (nlpar == "s") {
             allowed_parm_options <- c("sdx")
           } else if (cov_nlpar != "") {
@@ -796,6 +798,8 @@ if(dist != 'flat') {
         if (class == "sd") {
           if (nlpar == "a" & cov_nlpar == "") {
             allowed_parm_options <- c("ysd", "ymad", "lme_sd_a")
+          } else if (nlpar == "d" & cov_nlpar == "") {
+            allowed_parm_options <- c("ysd", "ymad")
           } else {
             allowed_parm_options <- NULL
           }
@@ -3323,11 +3327,17 @@ if(dist != 'flat') {
         
         # scale nlpar d (class b)
         if (nlpar == "d" & class == "b" & grepl("d", fixedsi)) {
-          if (x_i == paste0("vsd", empty_sufx)) {
-            eit <-  gsub("vsd", paste0("vsd", resp_), x_i)
+          if (x_i == paste0("ysd", empty_sufx)) {
+            eit <-  gsub("ysd", paste0("ysd", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("ymad", empty_sufx)) {
+            eit <-  gsub("ymad", paste0("ymad", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("dsd", empty_sufx)) {
+            eit <-  gsub("dsd", paste0("vsd", resp_), x_i)
             evaluated_parameter <- 1 * ept(eit)
-          } else if (x_i == paste0("vmad", empty_sufx)) {
-            eit <-  gsub("vmad", paste0("vmad", resp_), x_i)
+          } else if (x_i == paste0("dmad", empty_sufx)) {
+            eit <-  gsub("dmad", paste0("dmad", resp_), x_i)
             evaluated_parameter <- 1 * ept(eit)
           } else {
             check_evalation_of_numeric_pdata_obj(
@@ -4371,32 +4381,41 @@ if(dist != 'flat') {
         
         # scale d (class sd)
         if (nlpar == "d" & class == "sd" & grepl("d", randomsi)) {
-          check_evalation_of_numeric_pdata_obj(
-            prior_argument,
-            p_str_in,
-            x_i,
-            x,
-            pname_,
-            dist,
-            nlpar,
-            class,
-            allowed_parm_options,
-            splitmvar_w2
-          )
-          if (is.numeric(eval(parse(text = x_i))) |
-              !is.null(eval(parse(text = x_i)))) {
-            eit <- x_i
-            evaluated_parameter <- ept(eit)
+          if (x_i == paste0("ysd", empty_sufx)) {
+            eit <-  gsub("ysd", paste0("ysd", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("ymad", empty_sufx)) {
+            eit <-  gsub("ymad", paste0("ymad", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
           } else {
-            stop(
-              "scale parameter options for nlpar ",
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
               nlpar,
-              ", class ",
               class,
-              " are:\n lm, a numeric value (e.g., 2) or a charater such as zzz",
-              "\n with zzz defined in the prior_data",
-              "e.g., prior_data = list(zzz = 2)"
+              allowed_parm_options,
+              splitmvar_w2
             )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else {
+              stop(
+                "scale parameter options for nlpar ",
+                nlpar,
+                ", class ",
+                class,
+                " are:\n ysd, ysd, lme_sd_a, or a numeric value (e.g., 2)",
+                "or a charater such as zzz",
+                "\n with zzz defined in the prior_data",
+                "e.g., prior_data = list(zzz = 2)"
+              )
+            }
           }
           if (length(evaluated_parameter) < nrep_of_parms)
             evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)

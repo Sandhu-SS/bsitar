@@ -418,12 +418,14 @@ prepare_formula <- function(x,
   if(select_model == "sitar" | select_model == "rcs") {
     if(select_model == "sitar") {
       if(any(grepl("s", abcnames))) abcnames <- abcnames[-length(abcnames)]
+      if(match_sitar_d_form) abcnames <- gsub('s', 'd', abcnames, fixed = T)
       fullabcsnames <- c(abcnames, snames)
     }
     if(select_model == "rcs") {
       fullabcsnames <- c('a', ",", snames)
     }
   }
+  
   
   
   if(select_model != "sitar" & select_model != "rcs") {

@@ -62,10 +62,12 @@ expose_functions_bgm <- function(model,
   
   
   if(!expose) {
-    expose_r_from_stan <- TRUE
+    if (is.null(model$model_info$decomp))  expose_r_from_stan <- TRUE
+    if (!is.null(model$model_info$decomp)) expose_r_from_stan <- FALSE
   } else {
     expose_r_from_stan <- FALSE
   }
+  
   
   if(expose) expose_it_(model, scode = scode)
   
@@ -110,6 +112,7 @@ expose_functions_bgm <- function(model,
   
 
   
+  
   if(expose) {
     Spl_funs <- list()
     spfun_collectic <- -1
@@ -148,6 +151,7 @@ expose_functions_bgm <- function(model,
   } # if(expose_r_from_stan) {
   
   
+  if(!expose & !expose_r_from_stan) Spl_funs <- NULL
   
   
   
@@ -169,7 +173,6 @@ expose_functions_bgm <- function(model,
   
   
   
-  # model$model_info$Spl_funs <- Spl_funs
   model$model_info[['namesexefuns']] <- SplineFun_name
   model$model_info[['exefuns']]      <- Spl_funs
   scode_include <- brms::stancode(model)

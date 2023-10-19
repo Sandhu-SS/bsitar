@@ -23,12 +23,15 @@ Depends:
     R (>= 3.6)
 Imports:
     brms (>= 2.17.0),
+    cmdstanr,
     dplyr,
     extraDistr,
     forcats,
     future,
     future.apply,
     ggplot2 (>= 3.4.0),
+    marginaleffects (>= 0.15.1),
+    tibble (>= 3.2.1),
     graphics,
     grDevices,
     jtools,

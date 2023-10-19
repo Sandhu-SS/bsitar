@@ -1553,7 +1553,7 @@ bgm <- function(x,
                    knots = NA,
                    fixed = 'a + b + c + d + e + f',
                    random = 'a + b + c + d + e + f',
-                   select_model = 'sitar',
+                   select_model = 'sitar4r',
                    xoffset = 'mean',
                    bstart = 'apv',
                    cstart = 'pv',
@@ -1617,19 +1617,19 @@ bgm <- function(x,
                    multivariate = list(mvar = FALSE,
                                        cor = 'un',
                                        rescor = TRUE),
-                   a_prior_beta = student_t(3, 'ymean', 'ysd', autoscale = 2.5),
-                   b_prior_beta = student_t(3, 0, 3, autoscale = FALSE),
-                   c_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-                   d_prior_beta = student_t(3, 0, 2, autoscale = FALSE),
-                   e_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-                   f_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-                   g_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-                   h_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-                   i_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-                   s_prior_beta = student_t(3, 0, 'lm', autoscale = 2.5),
+                   a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
+                   b_prior_beta = normal(0, 2, autoscale = FALSE),
+                   c_prior_beta = normal(0, 1, autoscale = FALSE),
+                   d_prior_beta = normal(0, ysd, autoscale = 2.5),
+                   e_prior_beta = normal(0, 1, autoscale = FALSE),
+                   f_prior_beta = normal(0, 1, autoscale = FALSE),
+                   g_prior_beta = normal(0, 1, autoscale = FALSE),
+                   h_prior_beta = normal(0, 1, autoscale = FALSE),
+                   i_prior_beta = normal(0, 1, autoscale = FALSE),
+                   s_prior_beta = normal(0, lm, autoscale = 2.5),
                    a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-                   c_cov_prior_beta = normal(0, 0.25, autoscale = FALSE),
+                   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
                    d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    e_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    f_cov_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1637,20 +1637,20 @@ bgm <- function(x,
                    h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-                   a_prior_sd = normal(0, 'ysd', autoscale = 2.5),
-                   b_prior_sd = normal(0, 2, autoscale = FALSE),
+                   a_prior_sd = normal(0, ysd, autoscale = 2.5),
+                   b_prior_sd = normal(0, 1.5, autoscale = FALSE),
                    c_prior_sd = normal(0, 0.5, autoscale = FALSE),
-                   d_prior_sd = normal(0, 1, autoscale = FALSE),
+                   d_prior_sd = normal(0, ysd, autoscale = 2.5),
                    e_prior_sd = normal(0, 1, autoscale = FALSE),
                    f_prior_sd = normal(0, 1, autoscale = FALSE),
                    g_prior_sd = normal(0, 1, autoscale = FALSE),
                    h_prior_sd = normal(0, 1, autoscale = FALSE),
                    i_prior_sd = normal(0, 1, autoscale = FALSE),
-                   s_prior_sd = normal(0, 1, autoscale = FALSE),
+                   s_prior_sd = normal(0, lm, autoscale = 2.5),
                    a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
-                   c_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
-                   d_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
+                   c_cov_prior_sd = normal(0, 0.05, autoscale = FALSE),
+                   d_cov_prior_sd = normal(0, 1, autoscale = FALSE),
                    e_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    f_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    g_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
@@ -1683,8 +1683,8 @@ bgm <- function(x,
                    sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
-                   rsd_prior_sigma = student_t(3, 0, 'ysd', autoscale = 2.5),
-                   dpar_prior_sigma = student_t(3, 0, 'ysd', autoscale = 2.5),
+                   rsd_prior_sigma = normal(0, ysd, autoscale = 2.5),
+                   dpar_prior_sigma = normal(0, ysd, autoscale = 2.5),
                    dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
@@ -1695,7 +1695,7 @@ bgm <- function(x,
                    mvr_prior_rescor = lkj(1),
                    init = NULL,
                    init_r = NULL,
-                   a_init_beta = 'lm',
+                   a_init_beta = lm,
                    b_init_beta = 0,
                    c_init_beta = 0,
                    d_init_beta = 0,
@@ -1704,7 +1704,7 @@ bgm <- function(x,
                    g_init_beta = 0,
                    h_init_beta = 0,
                    i_init_beta = 0,
-                   s_init_beta = 'lm',
+                   s_init_beta = lm,
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
                    c_cov_init_beta = 0,
@@ -1714,7 +1714,7 @@ bgm <- function(x,
                    g_cov_init_beta = 0,
                    h_cov_init_beta = 0,
                    i_cov_init_beta = 0,
-                   s_cov_init_beta = 'lm',
+                   s_cov_init_beta = lm,
                    a_init_sd = random,
                    b_init_sd = random,
                    c_init_sd = random,
@@ -1772,7 +1772,7 @@ bgm <- function(x,
                    unused = NULL,
                    chains = 4,
                    iter = 2000,
-                   warmup = floor(iter / 1.3),
+                   warmup = floor(iter / 2),
                    thin = 1,
                    cores = getOption("mc.cores", "optimize"),
                    backend = getOption("brms.backend", "rstan"),
@@ -1780,7 +1780,7 @@ bgm <- function(x,
                    opencl = getOption("brms.opencl", NULL),
                    normalize = getOption("brms.normalize", TRUE),
                    algorithm = getOption("brms.algorithm", "sampling"),
-                   control = list(adapt_delta = 0.95, max_treedepth = 15),
+                   control = list(adapt_delta = 0.8, max_treedepth = 12),
                    sample_prior = "no",
                    save_pars = NULL,
                    drop_unused_levels = TRUE,
@@ -1797,6 +1797,11 @@ bgm <- function(x,
                    ...) {
   
   mcall <- mcall_ <- match.call()
+  
+  if(!is.null(decomp)) {
+    if(select_model != 'rcs') 
+      stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
+  }
 
   # check and set alias argument for formulas
   dots_allias <- list(...)
@@ -2156,6 +2161,9 @@ bgm <- function(x,
   `:=` <- NULL;
   . <- NULL;
   s_formulasi <- NULL;
+  ymean <- NULL;
+  ysd <- NULL;
+  lm <- NULL;
   
 
   if(is.character(arguments$select_model)) {
@@ -2165,7 +2173,8 @@ bgm <- function(x,
   } else if(!is.character(arguments$select_model) |
             !is.symbol(arguments$select_model)
             ) {
-    stop("The 'select_model' must be a symbol or single character string")
+    stop("The argument 'select_model' must be a symbol or 
+         single character string")
   }
   
   if(select_model == 'sitar3') select_model <- 'sitar'
@@ -2173,7 +2182,7 @@ bgm <- function(x,
   if(grepl('sitar4', select_model)) {
     if(select_model == 'sitar4fr') match_sitar_d_form <- FALSE
     if(select_model == 'sitar4r')  match_sitar_d_form <- TRUE
-    if(select_model == 'sitar4')   match_sitar_d_form <- FALSE # default
+    if(select_model == 'sitar4')   match_sitar_d_form <- FALSE
     sitar_nparms <- 4
     select_model <- 'sitar'
   } else if(select_model == 'sitar') {
@@ -2186,7 +2195,9 @@ bgm <- function(x,
   
   
   allowed_model_names   <- c('sitar', 'sitar3', 'sitar4', 'sitar4fr', 'sitar4r',
-                             'pb1', 'pb2', 'pb3', "rcs")
+                             'pb1', 'pb2', 'pb3', 
+                             "rcs")
+  
   allowed_model_names_  <- paste(allowed_model_names, collapse = ", " )
   allowed_model_names__ <- paste0("(", allowed_model_names_, ")")
 
@@ -2214,6 +2225,8 @@ bgm <- function(x,
   remove_spaces <- c('a_formula_gr_str', 'b_formula_gr_str', 
                      'c_formula_gr_str', 'd_formula_gr_str',
                      'e_formula_gr_str', 'f_formula_gr_str', 
+                     'g_formula_gr_str', 'h_formula_gr_str', 
+                     'i_formula_gr_str', 's_formula_gr_str', 
                      'sigma_formula_gr_str')
   
   for (ip in remove_spaces) {
@@ -3386,9 +3399,11 @@ bgm <- function(x,
     }
     
 
-    validate_fixed_random_parms <- function(fixedsi, randomsi, 
+    validate_fixed_random_parms <- function(fixedsi, 
+                                            randomsi, 
                                             allowed_parm_letters, 
-                                            select_model) {
+                                            select_model,
+                                            match_sitar_d_form) {
       
       parm_letters_fixed <- strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
       parm_letters_fixed <- sort(parm_letters_fixed)
@@ -3476,18 +3491,33 @@ bgm <- function(x,
       inv_parm_letters_fixed_random <- 
         parm_letters_random[!parm_letters_random %in% parm_letters_fixed]
       inv_parm_letters_fixed_random <- sort(inv_parm_letters_fixed_random)
+      
+      
+      
+      
       if(length(inv_parm_letters_fixed_random) > 0) {
         not_allowed_parsm <- paste(paste0("'", 
                                           inv_parm_letters_fixed_random, "'"), 
                                    collapse = " ")
-        stop(
-          "Parameter ", not_allowed_parsm , " included in the random part of ",
-          "\n ",
-          " the model but missing from the fixed effects.",
-          "\n ",
-          " Please check and correct 'fixed' / 'random' arguments"
-        )
-      }
+        msg_mismatch_fixed_random_str <- 
+          paste0(
+            "Parameter ", not_allowed_parsm, " included in the random part of ",
+            "\n ",
+            " the model but missing from the fixed effects.",
+            "\n ",
+            " Please check and correctly specify the",
+            "\n ",
+            "'fixed'/'random' arguments for the ",
+            toupper(select_model), " model."
+          )
+        
+        if(select_model == 'sitar') {
+          if(!match_sitar_d_form) stop(msg_mismatch_fixed_random_str)
+        } else {
+          stop(msg_mismatch_fixed_random_str)
+        }
+      } # if(length(inv_parm_letters_fixed_random) > 0) {
+      
       
       sub_parm_letters_fixed <- sort(sub_parm_letters_fixed)
       sub_parm_letters_random <- sort(sub_parm_letters_random)
@@ -3513,9 +3543,14 @@ bgm <- function(x,
     if(select_model == 'rcs')   allowed_parm_letters <- c('a', 's')
   
     
-    fixedsi_randomsi <- validate_fixed_random_parms(fixedsi, randomsi,
-                                                    allowed_parm_letters, 
-                                                    select_model)
+    fixedsi_randomsi <- 
+      validate_fixed_random_parms(
+        fixedsi = fixedsi, 
+        randomsi = randomsi,
+        allowed_parm_letters = allowed_parm_letters, 
+        select_model = select_model,
+        match_sitar_d_form = match_sitar_d_form)
+    
     fixedsi <- fixedsi_randomsi[['fixed']]
     randomsi <- fixedsi_randomsi[['random']]
     
@@ -4298,8 +4333,24 @@ bgm <- function(x,
     }
     
     
-    # This to check s covs
+    # For QR decomp to pass to prepare_function 
+    # This to check s covs - re
     checkscovsi <-  getcovlist(s_formulasi)
+    
+    # This can be set to TRUE for RCS
+    if(!is.null(checkscovsi)) {
+      add_b_Qr_genquan_s_coef <- FALSE
+      # if(select_model == 'rcs') add_b_Qr_genquan_s_coef <- TRUE
+    } else {
+      add_b_Qr_genquan_s_coef <- FALSE
+    }
+    
+    # This control whether to add scode for genquant block for QR model
+    # Relevant in both bgm and prepare_function
+    add_rcsfunmatqrinv_genquant <- FALSE # TRUE
+    
+    
+    
 
     internal_function_args_names <-
       c(
@@ -4318,6 +4369,8 @@ bgm <- function(x,
         'decomp_editcode',
         'nys',
         'checkscovsi',
+        'add_b_Qr_genquan_s_coef',
+        'add_rcsfunmatqrinv_genquant',
         "verbose"
       )
     
@@ -5986,40 +6039,45 @@ bgm <- function(x,
    
 
     
-    gq_funs_2 <- list()
-    for (gq_funslen in 1:length(gq_funs)) {
-      gq_funs_2[[gq_funslen]] <- gsub(gsub("\\;.*", "", gq_funs[[gq_funslen]]),
-                                      "", gq_funs[[gq_funslen]], fixed = T)
-    }
+    
     
 
     
     if(!is.null(decomp)) {
-      temp_stancode_gqinv <- brms::make_stancode(formula = bformula,
-                                            stanvars = bstanvars,
-                                            prior = brmspriors,
-                                            threads = brms::threading(NULL),
-                                            data = brmsdata)
+      if(add_rcsfunmatqrinv_genquant ) {
+        temp_stancode_gqinv <- brms::make_stancode(formula = bformula,
+                                                   stanvars = bstanvars,
+                                                   prior = brmspriors,
+                                                   threads = brms::threading(NULL),
+                                                   data = brmsdata)
+        
+        gq_funs_2 <- list()
+        for (gq_funslen in 1:length(gq_funs)) {
+          gq_funs_2[[gq_funslen]] <- gsub(gsub("\\;.*", "", gq_funs[[gq_funslen]]),
+                                          "", gq_funs[[gq_funslen]], fixed = T)
+        }
+        
+        qgcode <- 
+          move_from_model_to_qq_for_bqinv(
+            temp_stancode_gqinv, 
+            replacemuby = NA, 
+            spfncname_c = spfncname_c,
+            spfncname_c_vector = spfncname_c_vector,
+            decomp_editcode = decomp_editcode)
+        
+        
+        qgcode <- gsub("\n  }\n  }", "\n  }", qgcode) 
+        
+        gq_funs_2 <- paste(unlist(gq_funs_2), collapse = "\n")
+        gq_funs_2 <- paste0(qgcode, '\n', gq_funs_2)
+        
+        bstanvars <- bstanvars + 
+          brms::stanvar(scode = gq_funs_2, block = "genquant", position = "end")
+      } # if(add_rcsfunmatqrinv_genquant ) {
       
-      qgcode <- 
-        move_from_model_to_qq_for_bqinv(
-          temp_stancode_gqinv, 
-          replacemuby = NA, 
-          spfncname_c = spfncname_c,
-          spfncname_c_vector = spfncname_c_vector,
-          decomp_editcode = decomp_editcode)
-      
-    
-      qgcode <- gsub("\n  }\n  }", "\n  }", qgcode) 
-
-      gq_funs_2 <- paste(unlist(gq_funs_2), collapse = "\n")
-      gq_funs_2 <- paste0(qgcode, '\n', gq_funs_2)
-      
-      bstanvars <- bstanvars + 
-        brms::stanvar(scode = gq_funs_2, block = "genquant", position = "end")
       
       
-      if(decomp_editcode) {
+      if(decomp_editcode & add_rcsfunmatqrinv_genquant) {
         spfncname_c_mat <- c()
         spfncname_c_vector <- c()
         for (spfncname_ci in spfncname_c) {
@@ -6049,7 +6107,7 @@ bgm <- function(x,
         bstanvars <- bstanvars + brms::stanvar(scode = spfncname_c_mat2, 
                                                block = "tdata", 
                                                position = "end")
-      }
+      } # if(decomp_editcode & add_rcsfunmatqrinv_genquant) {
       
       
     } # if(!is.null(decomp)) {
@@ -6469,9 +6527,9 @@ bgm <- function(x,
   scode  <- do.call(brms::make_stancode, brm_args)
   sdata  <- do.call(brms::make_standata, brm_args)
   
-  
+  # sigma_formula_grsi sigma_formula_gr_strsi
   if(parameterization == 'cp') {
-    scode_final <- edit_scode_ncp_to_cp(scode)
+    scode_final <- edit_scode_ncp_to_cp(scode, genq_only = FALSE)
   } else if(parameterization == 'ncp') {
     scode_final <- scode
   }
@@ -6597,15 +6655,12 @@ bgm <- function(x,
     model_info <- list()
     
     if(parameterization == 'cp') {
-      # scode  <- do.call(brms::make_stancode, brm_args)
-      # sdata  <- do.call(brms::make_standata, brm_args)
-      # escode <- edit_scode_ncp_to_cp(scode)
       if(brm_args$backend == "cmdstanr") {
-        stop("Please use 'rstan' as backend for CP parameterization")
-        # brmsfit <- brms_via_cmdstanr(escode, sdata, brm_args)
+        # stop("Please use 'rstan' as backend for CP parameterization")
+         brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args)
       }
       if(brm_args$backend == "rstan") {
-        brmsfit <- brms_via_rstan(scode_final, sdata, brm_args)
+        brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args)
       }
       model_info[['parameterization']] <- 'cp'
     } 

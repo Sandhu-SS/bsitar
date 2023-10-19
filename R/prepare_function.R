@@ -60,7 +60,8 @@ prepare_function <- function(x,
   nys <- NULL;
   gsub_out_unscaled <- NULL;
   checkscovsi <- NULL;
-
+  add_rcsfunmatqrinv_genquant <- NULL;
+  add_b_Qr_genquan_s_coef <- NULL;
   
   
   if (!is.null(internal_function_args)) {
@@ -69,6 +70,7 @@ prepare_function <- function(x,
       assign(eoutii, eout[[eoutii]])
     }
   }
+  
   
   
   
@@ -601,6 +603,7 @@ add_context_getknots_fun <-
     
     if(select_model == 'sitar' | select_model == 'rcs') {
       if(any(grepl("s", abcnames))) abcnames <- abcnames[-length(abcnames)]
+      if(match_sitar_d_form) abcnames <- gsub('s', 'd', abcnames, fixed = T)
     }
     
     fullabcsnames <- c(abcnames, snames)
@@ -869,7 +872,8 @@ add_context_getknots_fun <-
     
     add_rcsfunmat <- TRUE
     add_rcsfunmatqr <- TRUE
-    add_rcsfunmatqrinv <- add_rcsfunmatqrinv_genquant <- TRUE
+    add_rcsfunmatqrinv <- TRUE
+    
     
     funmats <- paste0('', '')
     
@@ -1019,7 +1023,7 @@ add_context_getknots_fun <-
       }
       
       # if no covariate. then only add re-scaled s betas
-      if(is.null(checkscovsi)) {
+      if(add_b_Qr_genquan_s_coef) {
         cn_c <- paste(cn_c, collapse = "\n")
         cn_c2 <- paste(cn_c2, collapse = "\n")
         cn_c <- paste0(cn_c2, "\n", cn_c)
@@ -1027,7 +1031,7 @@ add_context_getknots_fun <-
         addcn_c2 <- paste0(addcn_c2, "\n", svector_)
         addcn_c2 <- paste0(addcn_c2, "\n", qs_vector)
         addcn_c2 <- paste0(addcn_c2, "\n", cn_c)
-      } else if(!is.null(checkscovsi)) {
+      } else if(!add_b_Qr_genquan_s_coef) {
         cn_c <- paste(cn_c, collapse = "\n")
         addcn_c2 <- cn_c
       }
@@ -1768,7 +1772,6 @@ add_context_getknots_fun <-
   }
  
    
-
    # print(cat(rcsfun))
    # stop()
   
