@@ -252,7 +252,6 @@ growthparameters_comparison.bgmfit <- function(model,
   cov  <- model$model_info[[cov_]]
   
   
-  
   #####################
   
   allowed_parms <- c(
@@ -328,12 +327,13 @@ growthparameters_comparison.bgmfit <- function(model,
         stop('by must be one of the ', cov)
     set_group <- by
   } else if (!by & !is.null(cov)) {
-    set_by <- cov
+    set_group <- cov
   } else if (!by) {
     set_group <- FALSE
   }
   
   
+
   if (acg_velocity >= 1 | acg_velocity <= 0) {
     stop("The acg_velocity should be set between 0.01 and 0.99")
   }
@@ -367,6 +367,7 @@ growthparameters_comparison.bgmfit <- function(model,
         stop('parms not valid')
       }
       out <- (round(out, digits = digits))
+      print(out)
       out
     }
     
