@@ -315,20 +315,32 @@ following growth paramaeter:
 \itemize{
 \item pv  - peak velocity
 \item apv - age at peak velocity
-\item tv  - take off velocity (i.e, minimum velocity before the peak velocity)
+\item tv  - take off velocity
 \item atv - age at take off velocity
-\item cv  - cessation velocity (i.e, post peak velocity which is some \% of pv)
+\item cv  - cessation velocity
 \item acv - age at cessation velocity
 }
-The \% of peak velocity (\code{pv}) that is used to get the cessation velocity
-(\code{'cv'} is controlled via the \code{acg_velocity} argument. The
-\code{acg_velocity} takes a real value as an input (between 0 and 1).
-Typically, a 10 percent of \code{pv} (i.e., \code{acg_velocity = 0.1}) is
-considered as a good indicator of the cessation of active growth.
+
+The take off velocity is the minimum velocity before the peak velocity and it
+indicates the beginning of the pubertal growth spurt. The cessation velocity
+indicates the end of the active pubertal growth spurt and is calculated as
+the percentage of the peak velocity (\code{pv}). The percentage of the peak
+velocity used in the calculation of the the cessation velocity (\code{'cv'})
+is controlled via the \code{acg_velocity} argument. The \code{acg_velocity}
+takes a real value as an input (greater than 0 and less than 1). Typically, a
+10 percent of \code{pv} (i.e., \code{acg_velocity = 0.1}) is considered as a
+good indicator of the cessation of the active pubertal growth spurt
+(\insertCite{Anna2022}{bsitar}).
 }
 \examples{
 \dontrun{
 comparisons_bgm(model, parameter = 'apv')
 }
 
+}
+\references{
+\insertAllCited{}
+}
+\author{
+Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 }
