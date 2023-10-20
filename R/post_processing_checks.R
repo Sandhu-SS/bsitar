@@ -37,6 +37,9 @@ post_processing_checks <- function(model,
   if(is.null(envir)) envir <- parent.frame()
   if(is.null(deriv)) deriv <- 0
   
+  # print(strsplit(deparse((xcall[1])), "\\.")[[1]][1]) 
+  # "growthparameters_comparison"
+  
   if(!'bgmfit' %in% class(model)) {
     stop("The class of model object should be 'bgmfit' ")
   }

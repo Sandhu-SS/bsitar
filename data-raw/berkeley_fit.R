@@ -36,9 +36,8 @@ data <- data %>% dplyr::filter(sex == "Male")
 # berkeley_fitx <- berkeley_fit
 
 berkeley_fit <- bsitar::bgm(x = age, y = y, id = id, data = data, 
-                            chains = 2, iter = 100,
-                            silent = 0,
-                            sample_prior = 'only')
+                            chains = 2, iter = 1000,
+                            sample_prior = 'no')
 
 
 # usethis::use_data(berkeley_fit, overwrite = TRUE)

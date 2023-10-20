@@ -37,6 +37,7 @@
   hypothesis = NULL,
   equivalence = NULL,
   eps = NULL,
+  envir = parent.frame(),
   ...
 )
 
@@ -240,6 +241,9 @@ calculating numerical derivatives: (f(x+eps)-f(x))/eps. When \code{eps} is
 the maximum and minimum values of the variable with respect to which we
 are taking the derivative. Changing \code{eps} may be necessary to avoid
 numerical problems in certain models.}
+
+\item{envir}{Indicator to set the environment of function evaluation.
+The default is \code{parent.frame}.}
 
 \item{...}{Further arguments passed to \code{brms::fitted()} and
 \code{brms::predict()} functions that control several aspects of data

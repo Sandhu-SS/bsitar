@@ -88,7 +88,11 @@
 #' @inheritParams  marginaleffects::avg_comparisons
 #'
 #' @return A data frame objects with estimates and CIs for computed parameter(s)
+#' 
+#' @export growthparameters_comparison.bgmfit
+#' 
 #' @export
+#' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #' @references
 #' \insertAllCited{}
@@ -129,6 +133,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    hypothesis = NULL,
                                    equivalence = NULL,
                                    eps = NULL,
+                                   envir = parent.frame(),
                                    ...) {
   if (is.null(ndraws))
     ndraws  <- brms::ndraws(model)
@@ -137,14 +142,42 @@ growthparameters_comparison.bgmfit <- function(model,
   
   o <- post_processing_checks(model = model,
                               xcall = match.call(),
-                              resp = resp)
+                              deriv = 0,
+                              resp = resp, 
+                              envir = envir)
+  
+  assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+  
+  get_xcall <- function(xcall, scall) {
+    scall <- scall[[length(scall)]]
+    if(any(grepl("growthparameters_comparison", scall, fixed = T)) |
+       any(grepl("growthparameters_comparison.bgmfit", scall, fixed = T))) {
+      xcall <- "growthparameters_comparison"
+    } else {
+      xcall <- xcall
+    } 
+  }
+  
+  if(!is.null(model$xcall)) {
+    if(model$xcall == "growthparameters_comparison") {
+      xcall <- "growthparameters_comparison"
+    }
+  } else {
+    scall <- sys.calls()
+    xcall <- get_xcall(xcall, scall)
+  }
   
   
   model$xcall <- xcall
   
   arguments <- get_args_(as.list(match.call())[-1], xcall)
+  
+  # This arguments$model <- model required when using pipe %>% to use gparameter
+  arguments$model <- model
+  
+ 
   
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -167,18 +200,25 @@ growthparameters_comparison.bgmfit <- function(model,
     }
   }
   
+  
   if (is.null(newdata)) {
-    newdata <- get.newdata(
-      model,
-      newdata = newdata,
-      resp = resp,
-      numeric_cov_at = NULL,
-      aux_variables = NULL,
-      levels_id = NULL,
-      ipts = ipts,
-      xrange = xrange
-    )
+    newdata <- model$data
   }
+  
+  # if (is.null(newdata)) {
+  #   newdata <- get.newdata(
+  #     model,
+  #     newdata = newdata,
+  #     resp = resp,
+  #     numeric_cov_at = NULL,
+  #     aux_variables = NULL,
+  #     levels_id = NULL,
+  #     ipts = ipts,
+  #     xrange = xrange
+  #   )
+  # }
+  
+  
   
   arguments$newdata <- newdata
   
@@ -187,7 +227,12 @@ growthparameters_comparison.bgmfit <- function(model,
   
   `:=` <- NULL;
   `.` <- NULL;
-  
+  term <- NULL;
+  contrast <- NULL;
+  tmp_idx <- NULL;
+  predicted_lo <- NULL;
+  predicted_hi <- NULL;
+  predicted <- NULL;
   
   #####################
   
@@ -345,9 +390,9 @@ growthparameters_comparison.bgmfit <- function(model,
       data.frame() %>%
       dplyr::mutate(!!as.symbol('parameter') := parms) %>%
       dplyr::relocate(!!as.symbol('parameter')) %>%
-      dplyr::select(-c(.data$term, .data$contrast, .data$tmp_idx)) %>%
-      dplyr::select(-c(.data$predicted_lo, .data$predicted_hi)) %>%
-      dplyr::select(-c(.data$predicted)) %>%
+      dplyr::select(-c(term, contrast, tmp_idx)) %>%
+      dplyr::select(-c(predicted_lo, predicted_hi)) %>%
+      dplyr::select(-c(predicted)) %>%
       dplyr::mutate(across(dplyr::where(is.numeric), 
                            ~ round(., digits = digits)))
   } else if (length(parms) > 1) {
@@ -359,9 +404,9 @@ growthparameters_comparison.bgmfit <- function(model,
     out_sf <- do.call(rbind, list_cout) %>%
       data.frame() %>%
       tibble::rownames_to_column(., 'parameter') %>%
-      dplyr::select(-c(.data$term, .data$contrast, .data$tmp_idx)) %>%
-      dplyr::select(-c(.data$predicted_lo, .data$predicted_hi)) %>%
-      dplyr::select(-c(.data$predicted)) %>%
+      dplyr::select(-c(term, contrast, tmp_idx)) %>%
+      dplyr::select(-c(predicted_lo, predicted_hi)) %>%
+      dplyr::select(-c(predicted)) %>%
       dplyr::mutate(across(dplyr::where(is.numeric), 
                            ~ round(., digits = digits)))
   }
