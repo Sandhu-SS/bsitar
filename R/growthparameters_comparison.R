@@ -146,7 +146,9 @@ growthparameters_comparison.bgmfit <- function(model,
                               resp = resp, 
                               envir = envir)
   
-  assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+  # assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+  
+  assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = globalenv())
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
