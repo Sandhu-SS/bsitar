@@ -146,9 +146,6 @@ growthparameters_comparison.bgmfit <- function(model,
                               resp = resp, 
                               envir = envir)
   
-  # assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-  
-  assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = globalenv())
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
@@ -367,13 +364,14 @@ growthparameters_comparison.bgmfit <- function(model,
         stop('parms not valid')
       }
       out <- (round(out, digits = digits))
-      print(out)
       out
     }
     
     comparisons_arguments$variables  <- set_variables
     comparisons_arguments$by         <- set_group
     comparisons_arguments$comparison <- gparms_fun
+    
+    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
     suppressWarnings({
       if(!average) {
