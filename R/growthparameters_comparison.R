@@ -184,7 +184,8 @@ growthparameters_comparison.bgmfit <- function(model,
   arguments$model <- model
   
  
-  
+  if (is.null(eps)) eps <- 1e-6
+
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
@@ -317,11 +318,9 @@ growthparameters_comparison.bgmfit <- function(model,
     }
   }
   
+  
   if (is.null(variables)) {
-    if (is.null(eps))
-      set_variables <- list(1e-6)
-    if (!is.null(eps))
-      set_variables <- list(eps)
+    set_variables <- list(eps)
     names(set_variables) <- xvar
   }
   
@@ -358,9 +357,14 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-  call_comparison_gparms_fun <- function(parm, ...) {
+  call_comparison_gparms_fun <- function(parm, eps...) {
     gparms_fun = function(hi, lo, x, ...) {
-      y <- (hi - lo) / 1e-6
+      y <- (hi - lo) / eps
+      # xy <- xy.coords(x, y)
+      # xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
+      # x  <- xy$x
+      # y  <- xy$y
+      # out <- x[y == max(y)][1]
       if (parm == 'apv') {
         out <- sitar::getPeak(x = x, y = y)[1]
       } else if (parm == 'vpv') {
@@ -383,10 +387,7 @@ growthparameters_comparison.bgmfit <- function(model,
         stop('parm not valid')
       }
       out <- round(out, digits = digits)
-      # if(is.na(out)) {
-      #   message('danger')
-      #   out <- NULL
-      # }
+      
       out
     }
     
@@ -394,6 +395,7 @@ growthparameters_comparison.bgmfit <- function(model,
     comparisons_arguments$by         <- set_group
     comparisons_arguments$comparison <- gparms_fun
     
+
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
     suppressWarnings({
@@ -410,7 +412,8 @@ growthparameters_comparison.bgmfit <- function(model,
   
 
   if (length(parm) == 1) {
-    out_sf <- call_comparison_gparms_fun(parm) %>% data.frame() %>% 
+    out_sf <- call_comparison_gparms_fun(parm = parm, eps = eps) %>% 
+      data.frame() %>% 
       dplyr::mutate(!!as.symbol('parameter') := parm) %>% 
       dplyr::relocate(!!as.symbol('parameter'))
     
@@ -419,7 +422,7 @@ growthparameters_comparison.bgmfit <- function(model,
     list_name <- list()
     for (allowed_parmsi in parm) {
       list_cout[[allowed_parmsi]] <-
-        call_comparison_gparms_fun(parm = allowed_parmsi)
+        call_comparison_gparms_fun(parm = allowed_parmsi, eps = eps)
       list_name[[allowed_parmsi]] <- allowed_parmsi
     }
     list_name2 <- do.call(rbind, list_name)
