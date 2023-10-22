@@ -14,7 +14,9 @@ data <- data %>%
 
 # data %>% dplyr::glimpse()
 
-heights_fit <- bsitar::bgm(x = age, y = y, id = id, data = data, 
+# sfit <- sitar::sitar(x = age, y = y, id = id, data = data, df = 4, random = 'a+b+c') 
+
+heights_fit <- bsitar::bgm(x = age, y = y, id = id, data = data, df = 4,
                            chains = 2, iter = 2000,
                            select_model = sitar,
                            backend = 'cmdstanr',
