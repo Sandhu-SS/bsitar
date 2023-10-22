@@ -7,7 +7,7 @@ Authors@R:
     person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-8539-6897"))
 Description: Bayesian implementation of Super Imposition by Translation and 
-    Rotation (SITAR) model to analyse growth data with single outcome (e.g., height)  
+    Rotation (SITAR) model to analyze growth data with single outcome (e.g., height)  
     and joint modelling of multiple outcomes (multivariate model) such as height 
     and weight. The non Bayesian version of the SITAR model (for a single response  
     variable)  can be fit by using the already available R package 'sitar'.

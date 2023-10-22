@@ -37,6 +37,7 @@
   hypothesis = NULL,
   equivalence = NULL,
   eps = NULL,
+  reformat = TRUE,
   envir = parent.frame(),
   ...
 )
@@ -241,6 +242,13 @@ calculating numerical derivatives: (f(x+eps)-f(x))/eps. When \code{eps} is
 the maximum and minimum values of the variable with respect to which we
 are taking the derivative. Changing \code{eps} may be necessary to avoid
 numerical problems in certain models.}
+
+\item{reformat}{A logical (default \code{TRUE}) to reformat returned output
+as a data.frame with colnames renamed as follows: \code{estimate} as
+\code{Estimate}, \code{conf.low} as \code{Q2.5}, and \code{conf.high} as
+\code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following
+columns are dropped from the data frame: \code{term}, \code{contrast},
+\code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.}
 
 \item{envir}{Indicator to set the environment of function evaluation.
 The default is \code{parent.frame}.}

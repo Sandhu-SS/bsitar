@@ -81,6 +81,12 @@
 #' [sitar::getTakeoff()] and [sitar::getTrough()] functions to estimate
 #' various growth parameters. 
 #' 
+#' @param reformat A logical (default \code{TRUE}) to reformat returned output
+#' as a data.frame with colnames renamed as follows: \code{estimate} as 
+#' \code{Estimate}, \code{conf.low} as \code{Q2.5}, and \code{conf.high} as 
+#' \code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following 
+#' columns are dropped from the data frame: \code{term}, \code{contrast},
+#' \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
 #' 
 #' 
 #' @inheritParams  growthparameters.bgmfit
@@ -133,6 +139,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    hypothesis = NULL,
                                    equivalence = NULL,
                                    eps = NULL,
+                                   reformat = TRUE,
                                    envir = parent.frame(),
                                    ...) {
   if (is.null(ndraws))
@@ -232,6 +239,9 @@ growthparameters_comparison.bgmfit <- function(model,
   predicted_lo <- NULL;
   predicted_hi <- NULL;
   predicted <- NULL;
+  conf.high <- NULL;
+  conf.low <- NULL;
+  estimate <- NULL;
   
   #####################
   
@@ -271,9 +281,9 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   if (is.null(parameter)) {
-    parms <- 'apv'
+    parm <- 'apv'
   } else {
-    parms <- parameter
+    parm <- parameter
   }
   
   comparisons_arguments <- arguments
@@ -316,19 +326,30 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
   
-  if (by) {
-    if (!is.character(by))
-      stop('by must be a character string')
-    if (is.character(by))
-      if (!by %in% cov)
+  
+  if(is.null(by)) {
+    if(is.null(cov)) {
+      set_group <- FALSE
+    } else if(!is.null(cov)) {
+      set_group <- cov
+      if (!set_group %in% cov) {
         stop('by must be one of the ', cov)
-    set_group <- by
-  } else if (!by & !is.null(cov)) {
-    set_group <- cov
-  } else if (!by) {
-    set_group <- FALSE
+      } 
+    }
+  } else if(!is.null(by)) {
+    if (!isFALSE(by)) {
+      set_group <- by
+    } else if (isFALSE(by)) {
+      set_group <- FALSE
+    }
   }
   
+ 
+  if(!isFALSE(set_group)) {
+    if (length(parm) > 1) stop("For 'by' estimates/comparisons, please ",
+                               "\n ",
+                               " specificy only one parameter. ")
+  }
   
 
   if (acg_velocity >= 1 | acg_velocity <= 0) {
@@ -337,33 +358,35 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-  
-  
-  call_comparison_gparms_fun <- function(parms, ...) {
+  call_comparison_gparms_fun <- function(parm, ...) {
     gparms_fun = function(hi, lo, x, ...) {
       y <- (hi - lo) / 1e-6
-      if (parms == 'apv') {
+      if (parm == 'apv') {
         out <- sitar::getPeak(x = x, y = y)[1]
-      } else if (parms == 'vpv') {
+      } else if (parm == 'vpv') {
         out <- sitar::getPeak(x = x, y = y)[2]
-      } else if (parms == 'ato') {
+      } else if (parm == 'ato') {
         out <- sitar::getTakeoff(x = x, y = y)[1]
-      } else if (parms == 'vto') {
+      } else if (parm == 'vto') {
         out <- sitar::getTakeoff(x = x, y = y)[2]
-      } else if (parms == 'afo') {
+      } else if (parm == 'afo') {
         vcg  <- acg_velocity * sitar::getPeak(x = x, y = y)[2]
         vcgi <- which(abs(y - vcg) == min(abs(y - vcg)))[1]
         out <-  x[vcgi]
-      } else if (parms == 'vfo') {
+      } else if (parm == 'vfo') {
         vcg  <- acg_velocity * sitar::getPeak(x = x, y = y)[2]
         vcgi <- which(abs(y - vcg) == min(abs(y - vcg)))[1]
         out <-  y[vcgi]
-      } else if (parms == 'xxxx') {
+      } else if (parm == 'xxxx') {
         
       } else {
-        stop('parms not valid')
+        stop('parm not valid')
       }
-      out <- (round(out, digits = digits))
+      out <- round(out, digits = digits)
+      # if(is.na(out)) {
+      #   message('danger')
+      #   out <- NULL
+      # }
       out
     }
     
@@ -376,6 +399,7 @@ growthparameters_comparison.bgmfit <- function(model,
     suppressWarnings({
       if(!average) {
         out <- do.call(marginaleffects::comparisons, comparisons_arguments)
+       # out <- do.call(comparisons, comparisons_arguments)
       } else if(average) {
         out <- do.call(marginaleffects::avg_comparisons, comparisons_arguments)
       }
@@ -384,39 +408,44 @@ growthparameters_comparison.bgmfit <- function(model,
     out
   }
   
-  
-  if (length(parms) == 1) {
-    out_sf <- call_comparison_gparms_fun(parms)
-    out_sf <- out_sf %>%
-      data.frame() %>%
-      dplyr::mutate(!!as.symbol('parameter') := parms) %>%
-      dplyr::relocate(!!as.symbol('parameter')) %>%
-      dplyr::select(-c(term, contrast, tmp_idx)) %>%
-      dplyr::select(-c(predicted_lo, predicted_hi)) %>%
-      dplyr::select(-c(predicted)) %>%
-      dplyr::mutate(across(dplyr::where(is.numeric), 
-                           ~ round(., digits = digits)))
-  } else if (length(parms) > 1) {
+
+  if (length(parm) == 1) {
+    out_sf <- call_comparison_gparms_fun(parm) %>% data.frame() %>% 
+      dplyr::mutate(!!as.symbol('parameter') := parm) %>% 
+      dplyr::relocate(!!as.symbol('parameter'))
+    
+  } else if (length(parm) > 1) {
     list_cout <- list()
-    for (allowed_parmsi in parms) {
+    list_name <- list()
+    for (allowed_parmsi in parm) {
       list_cout[[allowed_parmsi]] <-
-        call_comparison_gparms_fun(parms = allowed_parmsi)
+        call_comparison_gparms_fun(parm = allowed_parmsi)
+      list_name[[allowed_parmsi]] <- allowed_parmsi
     }
-    out_sf <- do.call(rbind, list_cout) %>%
-      data.frame() %>%
-      tibble::rownames_to_column(., 'parameter') %>%
-      dplyr::select(-c(term, contrast, tmp_idx)) %>%
-      dplyr::select(-c(predicted_lo, predicted_hi)) %>%
-      dplyr::select(-c(predicted)) %>%
-      dplyr::mutate(across(dplyr::where(is.numeric), 
-                           ~ round(., digits = digits)))
+    list_name2 <- do.call(rbind, list_name)
+    out_sf <- do.call(rbind, list_cout) %>% data.frame() %>% 
+      dplyr::mutate(!!as.symbol('parameter') := list_name2) %>% 
+      dplyr::relocate(!!as.symbol('parameter'))
   }
   
+  out_sf <- out_sf %>% 
+    dplyr::rename(!!as.symbol('Parameter') := parameter) %>% 
+    dplyr::mutate(across(dplyr::where(is.numeric),
+                         ~ round(., digits = digits))) %>% 
+    data.frame()
   
   
-  if (is.null(hypothesis)) {
-    set_names_cols   <- c('Parameter', set_names_)
-    colnames(out_sf) <- set_names_cols
+  if (reformat) {
+    out_sf <- out_sf %>% 
+      dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
+      dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
+      dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
+      data.frame()
+    
+    remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
+                      'predicted_hi', 'predicted')
+    
+    out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
   }
   
   
@@ -433,27 +462,11 @@ growthparameters_comparison <- function(model, ...) {
 }
 
 
-# setmodel <- berkeley_fit
-#
-# # growthparameters_comparison(setmodel, parameter = allowed_parms)
-#
-# allowed_parms <- c('ato', 'vto', 'apv', 'vpv', 'afo', 'vfo')
-#
-# set_comparison = 'pairwise'
-# list_cout <- list()
-# list_name <- list()
-# for (allowed_parmsi in allowed_parms) {
-#   cout <- growthparameters_comparison(setmodel, re_formula = NA, parameter = allowed_parmsi,
-#                        newdata = newdata)
-#   list_name[[allowed_parmsi]] <- allowed_parmsi
-#   list_cout[[allowed_parmsi]] <- cout
+# get_contrasts <- marginaleffects:::get_contrasts
+# for (i in 1:1) {
+#  # print(i)
+#   c <- growthparameters_comparison(female_1444, draw_ids = i, by = NULL, parameter = c( 'vpv'))
+#   #print(c)
 # }
-#
-#
-#
-# list_cout_ <- do.call(rbind, list_cout) %>%
-#   data.frame() %>%
-#   tibble::rownames_to_column(., 'parameter') %>%
-#   dplyr::select(-c(term, contrast, tmp_idx)) %>%
-#   dplyr::select(-c(predicted_lo, predicted_hi , predicted)) %>%
-#   mutate(across(where(is.numeric), ~round(., digits = 2)))
+
+
