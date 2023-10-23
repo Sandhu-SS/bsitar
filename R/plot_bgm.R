@@ -273,7 +273,9 @@ plot_bgm.bgmfit <- function(model,
   
   if(is.null(envir)) envir <- parent.frame()
   
-  ###
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   xvar <- NULL;
   yvar <- NULL;
   IDvar <- NULL;
@@ -305,7 +307,8 @@ plot_bgm.bgmfit <- function(model,
   `<<-` <- NULL
   ':=' <- NULL;
   . <- NULL;
-  ###
+  
+  
   
   xcall = match.call()
   

@@ -232,8 +232,10 @@ growthparameters_comparison.bgmfit <- function(model,
   
   arguments[["..."]] <- NULL
   
-  `:=` <- NULL;
-  `.` <- NULL;
+  
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   term <- NULL;
   contrast <- NULL;
   tmp_idx <- NULL;
@@ -243,9 +245,10 @@ growthparameters_comparison.bgmfit <- function(model,
   conf.high <- NULL;
   conf.low <- NULL;
   estimate <- NULL;
+  `:=` <- NULL;
+  `.` <- NULL;
   
-  #####################
-  
+
   
   if (is.null(resp)) {
     resp_rev_ <- resp

@@ -1922,102 +1922,10 @@ bgm <- function(x,
   if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
     quote_random_as_init_arg(mcall[[what_inxc]], mcall)
  
-  xs <- ids <- dfs <- NA
   
-  
-  for (i in names(mcall)[-1]) {
-    no_default_args_plus_family <- c(no_default_args, "family")
-    if (!i %in% no_default_args_plus_family) {
-      err. <- FALSE
-      tryCatch(
-        expr = {
-          if (is.function(eval(mcall[[i]]))) {
-            checks. <- deparse_0(mcall[[i]])
-          } else {
-            checks. <- eval(mcall[[i]])
-          }
-        },
-        error = function(e) {
-          err. <<- TRUE
-        }
-      )
-      if(length(checks.) == 0) err. <- TRUE
-      if (err.) {
-        mcall[[i]] <- mcall[[i]]
-      } else if (!err.) {
-        if (is.list(checks.)) {
-          if (is.list(checks.[[1]])) {
-            mcall[[i]] <- checks.[[1]]
-          } else if (!is.list(checks.[[1]])) {
-            if (is.list(checks.)) {
-              if (is.symbol(mcall[[i]]))
-                mcall[[i]] <- deparse_0(mcall[[i]]) # for set_self_priors
-                mcall[[i]] <- eval(mcall[[i]])
-                temp       <- str2lang(deparse_0((mcall[[i]])))
-                mcall[[i]] <- temp
-            } else if (!is.list(checks.)) {
-              mcall[[i]] <- checks.
-            }
-          }
-        } else {
-          mcall[[i]] <-  checks.
-        }
-      }
-    } else if (i %in% no_default_args_plus_family) {
-      mcall[[i]] <-  mcall[[i]]
-    }
-  }
-  
-  
-  arguments <- as.list(mcall)[-1]
- 
-  match.call.defaults <- function(...) {
-    call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
-    formals <- evalq(formals(), parent.frame(1))
-    for(i in setdiff(names(formals), names(call)))
-      call[i] <- list( formals[[i]] )
-    match.call(sys.function(sys.parent()), call)
-  }
-  
-  call.full <- match.call.defaults()
-  call.full <- call.full[-length(call.full)]
- 
-  for (call.fulli in names(call.full)) {
-    if(call.fulli != "") {
-      if(call.fulli == 'family' & 
-         is.language(call.full[[call.fulli]])) {
-        call.full[[call.fulli]] <- deparse(call.full[[call.fulli]])
-      } else if(call.fulli == 'stan_model_args')  { 
-        if(length(eval(call.full[[call.fulli]])) == 0) {
-          call.full[[call.fulli]] <- NULL
-        } else {
-          call.full[[call.fulli]] <- call.full[[call.fulli]] 
-        }
-      } else {
-        #
-      }
-    } else {
-      #
-    }
-  }
-  
-
-  f_bgm_arg <- formals(bgm)
-  nf_bgm_arg_names <-
-    intersect(names(arguments), names(f_bgm_arg))
-  arguments <-
-    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
-  
-  checks_start_names <- c('bstart', 'cstart', 'apv', 'pv')
-  for (checks_start_namesi in checks_start_names) {
-    if(checks_start_namesi %in% names(mcall_)) {
-      if(is.null(mcall_[[checks_start_namesi]])) {
-        arguments[[checks_start_namesi]] <- 'NULL'
-      }
-    }
-  }
-  
-  #######################
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   normal <- NULL;
   student_t <- NULL;
   cauchy <- NULL;
@@ -2175,6 +2083,105 @@ bgm <- function(x,
   checks. <- NULL;
   NoccPI <- NULL;
   NoccAI <- NULL;
+  xs <- NULL;
+  ids <- NULL;
+  dfs <- NULL;
+  
+  
+  
+  
+  for (i in names(mcall)[-1]) {
+    no_default_args_plus_family <- c(no_default_args, "family")
+    if (!i %in% no_default_args_plus_family) {
+      err. <- FALSE
+      tryCatch(
+        expr = {
+          if (is.function(eval(mcall[[i]]))) {
+            checks. <- deparse_0(mcall[[i]])
+          } else {
+            checks. <- eval(mcall[[i]])
+          }
+        },
+        error = function(e) {
+          err. <<- TRUE
+        }
+      )
+      if(length(checks.) == 0) err. <- TRUE
+      if (err.) {
+        mcall[[i]] <- mcall[[i]]
+      } else if (!err.) {
+        if (is.list(checks.)) {
+          if (is.list(checks.[[1]])) {
+            mcall[[i]] <- checks.[[1]]
+          } else if (!is.list(checks.[[1]])) {
+            if (is.list(checks.)) {
+              if (is.symbol(mcall[[i]]))
+                mcall[[i]] <- deparse_0(mcall[[i]]) # for set_self_priors
+                mcall[[i]] <- eval(mcall[[i]])
+                temp       <- str2lang(deparse_0((mcall[[i]])))
+                mcall[[i]] <- temp
+            } else if (!is.list(checks.)) {
+              mcall[[i]] <- checks.
+            }
+          }
+        } else {
+          mcall[[i]] <-  checks.
+        }
+      }
+    } else if (i %in% no_default_args_plus_family) {
+      mcall[[i]] <-  mcall[[i]]
+    }
+  }
+  
+  
+  arguments <- as.list(mcall)[-1]
+ 
+  match.call.defaults <- function(...) {
+    call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
+    formals <- evalq(formals(), parent.frame(1))
+    for(i in setdiff(names(formals), names(call)))
+      call[i] <- list( formals[[i]] )
+    match.call(sys.function(sys.parent()), call)
+  }
+  
+  call.full <- match.call.defaults()
+  call.full <- call.full[-length(call.full)]
+ 
+  for (call.fulli in names(call.full)) {
+    if(call.fulli != "") {
+      if(call.fulli == 'family' & 
+         is.language(call.full[[call.fulli]])) {
+        call.full[[call.fulli]] <- deparse(call.full[[call.fulli]])
+      } else if(call.fulli == 'stan_model_args')  { 
+        if(length(eval(call.full[[call.fulli]])) == 0) {
+          call.full[[call.fulli]] <- NULL
+        } else {
+          call.full[[call.fulli]] <- call.full[[call.fulli]] 
+        }
+      } else {
+        #
+      }
+    } else {
+      #
+    }
+  }
+  
+
+  f_bgm_arg <- formals(bgm)
+  nf_bgm_arg_names <-
+    intersect(names(arguments), names(f_bgm_arg))
+  arguments <-
+    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
+  
+  checks_start_names <- c('bstart', 'cstart', 'apv', 'pv')
+  for (checks_start_namesi in checks_start_names) {
+    if(checks_start_namesi %in% names(mcall_)) {
+      if(is.null(mcall_[[checks_start_namesi]])) {
+        arguments[[checks_start_namesi]] <- 'NULL'
+      }
+    }
+  }
+  
   
 
   if(is.character(arguments$select_model)) {

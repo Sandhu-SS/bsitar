@@ -29,8 +29,14 @@ get.newdata <- function(model,
   } else if (!is.null(resp)) {
     resp_rev_ <- paste0("_", resp)
   }
+  
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   `:=` <- NULL
   . <- NULL;
+  
+  
   validate_response(model, resp)
   
   list_c <- list()

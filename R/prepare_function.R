@@ -41,6 +41,9 @@ prepare_function <- function(x,
                              internal_function_args) {
   
   
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   brms_arguments <- NULL;
   xfunsi <- NULL;
   Var1 <- NULL;

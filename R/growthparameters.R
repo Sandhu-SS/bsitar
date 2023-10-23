@@ -263,7 +263,9 @@ growthparameters.bgmfit <- function(model,
   
   if(is.null(envir)) envir <- parent.frame()
   
-  ###
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   xvar <- NULL;
   acgv_asymptote <- NULL;
   apv <- NULL;
@@ -275,7 +277,8 @@ growthparameters.bgmfit <- function(model,
   Estimate <- NULL;
   ':=' <- NULL;
   . <- NULL;
-  ###
+  
+  
   
   oo <- post_processing_checks(model = model,
                                xcall = match.call(),

@@ -95,7 +95,10 @@ optimize_bgm.bgmfit <- function(model,
                                    digits = 2,
                                    ...) {
   
-  # Global R cmd check
+ 
+   ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   outcome <- NULL;
   xfun <- NULL; 
   yfun <- NULL;

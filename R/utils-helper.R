@@ -730,7 +730,12 @@ validate_response <- function(model,
 #'
 
 setup_higher_priors <- function(new_prior_list) {
+  
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   . <- NULL;
+  
   o_l <- list()
   ixi = 0
   group_ <- class_ <- nlpar_ <- resp_ <- cor_check <- sd_check <- NA
@@ -930,6 +935,9 @@ priors_to_textdata <- function(model,
     model <- NULL
   }
   
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   nlpar <- NULL;
   coef <- NULL;
   class <- NULL;
@@ -943,6 +951,7 @@ priors_to_textdata <- function(model,
   Group <- NULL;
   Class <- NULL;
   . <- NULL;
+  
   
   if (is.null(model) & is.null(spriors) & is.null(sdata)) {
     stop("Supply either model or spriors and sdata arguments")
@@ -1524,10 +1533,13 @@ mapderivqr <- function(model,
       dplyr::filter(!!as.symbol(model$model_info$univariate_by) == 'Male')
   }
   
-  # if(!is.null(resp)) idvar <- c(resp, idvar)
-  
+
   getdydx <- function (x, y, id, data, ndigit = 2) {
+    ##############################################
+    # Initiate non formalArgs()
+    ##############################################
     sorder <- NULL;
+    
     data$sorder <- as.numeric(row.names(data))
     .data <- data %>% 
       dplyr::mutate(.x = !!dplyr::sym(x)) %>% 

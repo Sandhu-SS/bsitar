@@ -57,6 +57,10 @@ prepare_priors <- function(prior_argument,
                            init_data_internal,
                            init_args_internal) {
   
+  
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   nlpar <- NULL;
   verbose <- NULL;
   cov_nlpar <- NULL;

@@ -24,6 +24,9 @@ prepare_initials <- function(init_argument,
   
   
   
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   seed <- NULL;
   initsi <- NULL;
   parm <- NULL;

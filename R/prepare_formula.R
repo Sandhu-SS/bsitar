@@ -40,6 +40,11 @@ prepare_formula <- function(x,
                              nknots,
                              data,
                              internal_formula_args) {
+  
+  
+  ##############################################
+  # Initiate non formalArgs()
+  ##############################################
   randomsi <- NULL;
   sigma_formula_gr_strsi <- NULL;
   fixedsi <- NULL;
@@ -132,6 +137,8 @@ prepare_formula <- function(x,
   sigmacovcoefnames_gr_str_id <- NULL;
   sigmacovcoefnames_gr_str_form <- NULL;
   brms_arguments <- NULL;
+  
+  
   
   if (!is.null(internal_formula_args)) {
     eout <- list2env(internal_formula_args)
