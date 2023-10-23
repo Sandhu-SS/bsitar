@@ -1360,14 +1360,27 @@
 #'   helps in fitting models with highly correlated predictors. Note that "QR"
 #'   decomposition is implementable only for the linear models, and therefore
 #'   applicable only for the restricted cubic spline (RCS) model.
-#'   
+#'
 #' @param parameterization A character string to specify either Non-centered
-#'   parameterization (NCP), (\code{'ncp}, default); or the Centered
-#'   parameterization (CP) (\code{'cp} approach to draw group level random
-#'   effect (see [brms::brm()]). Note that NCP is the default approach
-#'   implemented in the [brms::brm()] whereas implementation of the CP involves
-#'   editing of the brms generated stancode and therefore should be used with
-#'   caution.
+#'   parameterization, NCP (\code{'ncp'}; or the Centered parameterization, CP
+#'   (\code{'cp'}  approach to draw group level random effect. The NCP is
+#'   generally recommended when likelihood is not strong (e.g., a few number of
+#'   and is the default (and only) approach implemented in the [brms::brm()].
+#'   The CP parameterization, on the other hand, is often considered more
+#'   efficient than NCP when a relatively large number of observations are
+#'   available across all individual. The 'relatively large number' is not
+#'   defined in the literature and we follow a general approach wherein CP
+#'   parameterization is used when each individual provides at least 10 repeated
+#'   measurements and NCP otherwise. Note this automatic behavior is set only
+#'   when the argument \code{parameterization = NULL} (default). To turn off
+#'   this automatic selection of parameterization and to set CP
+#'   parameterization, use \code{parameterization = 'cp'}, and
+#'   \code{parameterization = 'ncp'}. Please note that since [brms::brm()] does
+#'   not offer CP parameterization, we first edit the [brms::brm()] generated
+#'   \code{stancode} and then fit model using the [rstan::rstan()] (or
+#'   \code{cmdstanr}, depending on the \code{backend} choice). Therefore, we
+#'   consider this CP parameterization as experimental and it may fail if
+#'   structure of the [brms::brm()] generated \code{stancode} changes in future.
 #'   
 #'@param ... Further arguments passed to [brms::brm()]
 #'
@@ -1788,7 +1801,7 @@ bgm <- function(x,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
                    decomp = NULL,
-                   parameterization = 'ncp',
+                   parameterization = NULL,
                    ...) {
   
   mcall <- mcall_ <- match.call()
@@ -1910,7 +1923,7 @@ bgm <- function(x,
     quote_random_as_init_arg(mcall[[what_inxc]], mcall)
  
   xs <- ids <- dfs <- NA
-  checks. <- NULL;
+  
   
   for (i in names(mcall)[-1]) {
     no_default_args_plus_family <- c(no_default_args, "family")
@@ -2159,6 +2172,9 @@ bgm <- function(x,
   ymean <- NULL;
   ysd <- NULL;
   lm <- NULL;
+  checks. <- NULL;
+  NoccPI <- NULL;
+  NoccAI <- NULL;
   
 
   if(is.character(arguments$select_model)) {
@@ -4108,6 +4124,29 @@ bgm <- function(x,
     } else if(is.null(cortimeNlags_var)) {
       cortimeNlags <- NULL
     }
+    
+
+    if(is.null(parameterization)) {
+      checkoccs <- data %>% 
+        dplyr::filter(!is.na(ysi)) %>% 
+        droplevels() %>% 
+        dplyr::mutate(nid = dplyr::n_distinct(idsi)) %>%
+        dplyr::group_by_at(idsi) %>% 
+        dplyr::mutate(NoccPI = dplyr::row_number()) %>% 
+        dplyr::mutate(NoccAI = max(NoccPI)) %>% 
+        dplyr::ungroup()
+      
+      if(min(checkoccs$nocc) >= 10) {
+        parameterization = 'cp'
+      } else {
+        parameterization = 'ncp'
+      }
+    }
+    
+
+    
+    
+    
     
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
@@ -6147,21 +6186,26 @@ bgm <- function(x,
     } 
     
     
-    if(parameterization == 'cp') {
-      initialsx2 <- brmsinits
-      temp_stancode2cp <- edit_scode_ncp_to_cp(temp_stancode2, 
-                                               genq_only = FALSE, 
-                                               normalize = normalize)
-      # temp_stancode2cpx <<- temp_stancode2cp
-      newinits <- set_init_gr_effects(temp_stancode2cp, 
-                                      temp_standata2, 
-                                      parameterization = parameterization,
-                                      what = 'r')
-      initialsx2 <- c(initialsx2, newinits)
-      uni_name <- unique(names(initialsx2))
-      initialsx2 <- initialsx2[uni_name] 
-      brmsinits <- initialsx2
+    
+    
+    if(vcov_init_0e) {
+      if(parameterization == 'cp') {
+        initialsx2 <- brmsinits
+        temp_stancode2cp <- edit_scode_ncp_to_cp(temp_stancode2, 
+                                                 genq_only = FALSE, 
+                                                 normalize = normalize)
+        # temp_stancode2cpx <<- temp_stancode2cp
+        newinits <- set_init_gr_effects(temp_stancode2cp, 
+                                        temp_standata2, 
+                                        parameterization = parameterization,
+                                        what = 'r')
+        initialsx2 <- c(initialsx2, newinits)
+        uni_name <- unique(names(initialsx2))
+        initialsx2 <- initialsx2[uni_name] 
+        brmsinits <- initialsx2
+      }
     }
+    
     
     
     brmsinits <- lapply(1:brms_arguments$chains, function(id) {

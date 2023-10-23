@@ -240,7 +240,7 @@ bgm(
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
   decomp = NULL,
-  parameterization = "ncp",
+  parameterization = NULL,
   ...
 )
 }
@@ -1504,12 +1504,25 @@ decomposition is implementable only for the linear models, and therefore
 applicable only for the restricted cubic spline (RCS) model.}
 
 \item{parameterization}{A character string to specify either Non-centered
-parameterization (NCP), (\code{'ncp}, default); or the Centered
-parameterization (CP) (\code{'cp} approach to draw group level random
-effect (see \code{\link[brms:brm]{brms::brm()}}). Note that NCP is the default approach
-implemented in the \code{\link[brms:brm]{brms::brm()}} whereas implementation of the CP involves
-editing of the brms generated stancode and therefore should be used with
-caution.}
+parameterization, NCP (\code{'ncp'}; or the Centered parameterization, CP
+(\code{'cp'}  approach to draw group level random effect. The NCP is
+generally recommended when likelihood is not strong (e.g., a few number of
+and is the default (and only) approach implemented in the \code{\link[brms:brm]{brms::brm()}}.
+The CP parameterization, on the other hand, is often considered more
+efficient than NCP when a relatively large number of observations are
+available across all individual. The 'relatively large number' is not
+defined in the literature and we follow a general approach wherein CP
+parameterization is used when each individual provides at least 10 repeated
+measurements and NCP otherwise. Note this automatic behavior is set only
+when the argument \code{parameterization = NULL} (default). To turn off
+this automatic selection of parameterization and to set CP
+parameterization, use \code{parameterization = 'cp'}, and
+\code{parameterization = 'ncp'}. Please note that since \code{\link[brms:brm]{brms::brm()}} does
+not offer CP parameterization, we first edit the \code{\link[brms:brm]{brms::brm()}} generated
+\code{stancode} and then fit model using the \code{\link[rstan:rstan]{rstan::rstan()}} (or
+\code{cmdstanr}, depending on the \code{backend} choice). Therefore, we
+consider this CP parameterization as experimental and it may fail if
+structure of the \code{\link[brms:brm]{brms::brm()}} generated \code{stancode} changes in future.}
 
 \item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}}
 }
