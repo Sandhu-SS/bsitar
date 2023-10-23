@@ -1177,14 +1177,17 @@ collapse_comma <- function(...) {
 #' @param stancode A string character of stan code
 #' @param genq_only A logical (default \code{FALSE}) to indicate whether to 
 #' return only the generated quantity sub code.
+#' @param normalize A logical (default \code{TRUE}) to indicate whether to 
+#' include the normalizing constant in the prior target density.
 #' @keywords internal
 #' @return A character string.
 #' @noRd
 #'
-edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
+edit_scode_ncp_to_cp <- function(stancode, 
+                                 genq_only = FALSE, 
+                                 normalize = TRUE) {
   
   # Rename transformed parameters and parameters for ease of processing
-  
   true_name_tp  <- 'transformed parameters'
   true_name_p   <- 'parameters'
   tempt_name_tp <- 'transformed_parameters_'
@@ -1211,6 +1214,26 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   editedcode    <- gsub(true_name_p,  tempt_name_p,  editedcode, fixed = T)
   
   editedcode2 <- editedcode
+  
+  clines_tp2 <- c()
+  for (il in clines_tp) {
+    il <- gsub(pattern = "//", replacement = "//", x = il, fixed = T)
+    il <- gsub(pattern = "//[^\\\n]*", replacement = "", x = il)
+    if(!grepl('^lprior', gsub_space(il)) & 
+       !grepl('^reallprior', gsub_space(il)) & 
+       !grepl('^-', gsub_space(il))) {
+      if(!is_emptyx(il)) {
+        clines_tp2 <- c(clines_tp2, il) 
+      }
+    }
+  }
+  
+  # clines_tpx <<- clines_tp
+  # clines_tp2x <<- clines_tp2
+  # print(cat(clines_tp2))
+  # stop()
+  
+  clines_tp <- clines_tp2
   
   how_many_r_1 <- 0
   move_to_p <- move_to_m <- c()
@@ -1330,9 +1353,9 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   #   for (h1i in 1:how_many_r_1) {
   #     m_n_c_l <- 
   #       paste0("  for(i in 1:N_", h1i, ') {\n',
-  #              "    lprior +=  multi_normal_cholesky_lpdf(r_", h1i, "[i, ] |\n",
-  #              "    rep_row_vector(0, M_", h1i, "),\n",
-  #              "    diag_pre_multiply(sd_", h1i, ", L_", h1i, "));",
+  #              "  lprior += multi_normal_cholesky_lpdf(r_", h1i, "[i, ] |\n",
+  #              "  rep_row_vector(0, M_", h1i, "),\n",
+  #              "  diag_pre_multiply(sd_", h1i, ", L_", h1i, "));",
   #              "  \n  }"
   #       )
   #     m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
@@ -1343,6 +1366,12 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   # }
   
   
+  if(normalize) {
+    lprior_target <- "target"
+  } else if(!normalize) {
+    lprior_target <- "lprior"
+  }
+  
   m_n_c_l_c <- c()
   for (h1i in 1:length(pattern_r)) {
     pattern_ri  <- pattern_r[h1i]
@@ -1352,9 +1381,12 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
     pattern_sdi <- pattern_sd[h1i]
     m_n_c_l <- 
       paste0("  for(i in 1:", pattern_Ni, ') {\n',
-             "    lprior +=  multi_normal_cholesky_lpdf(", pattern_ri, "[i, ] |\n",
-             "    rep_row_vector(0, ", pattern_Mi, "),\n",
-             "    diag_pre_multiply(", pattern_sdi, ", ", pattern_Li, "));",
+             "    ", lprior_target, " +=  multi_normal_cholesky_lpdf(", 
+             pattern_ri, "[i, ] |\n",
+             "    rep_row_vector(0, ", 
+             pattern_Mi, "),\n",
+             "    diag_pre_multiply(", 
+             pattern_sdi, ", ", pattern_Li, "));",
              "  \n  }"
       )
     m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
@@ -1362,7 +1394,8 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   
   m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
   
-  # print(cat(m_n_c_l_c))
+  # move_to_m <- paste0(m_n_c_l_c, '\n', move_to_m)
+  # print(cat(move_to_m))
   # stop()
   
   
@@ -1413,7 +1446,15 @@ edit_scode_ncp_to_cp <- function(stancode, genq_only = FALSE) {
   add_to_model_block <- paste0(m_n_c_l_c, "\n", move_to_m)
   add_to_genq_block <- paste0( move_to_m)
   
-  lprior_code <- "real lprior = 0;"
+  
+  # lprior_code <- "real lprior = 0;"
+  if(normalize) {
+    lprior_code <- "model {"
+  } else if(!normalize) {
+    lprior_code <- "real lprior = 0;"
+  }
+  
+  
   editedcode2 <- gsub(lprior_code, paste0(lprior_code, "\n", 
                                           add_to_model_block, "\n"), 
                       editedcode2, fixed = T)
@@ -1596,9 +1637,21 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args) {
   } else {
     stan_threads <- FALSE
   }
+  
+  if(!is.null(brm_args$opencl)) {
+    stan_opencl <- TRUE
+  } else {
+    stan_opencl <- FALSE
+  }
 
-  cpp_options <- list(stan_threads = stan_threads)
-  stanc_options <- NULL
+  cpp_options <- list(stan_threads = stan_threads,
+                      stan_opencl = stan_opencl)
+  
+  
+  stanc_options <- brm_args$stan_model_args$stanc_options
+  
+  # print(str(brm_args$stan_model_args$stanc_options))
+  # stop()
 
   if(brm_args$silent == 0) {
     show_messages = TRUE
@@ -1625,7 +1678,10 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args) {
                                      compile_model_methods = FALSE,
                                      compile_hessian_method = FALSE,
                                      compile_standalone = FALSE)
-
+  
+  
+  iter_sampling <- brm_args$iter - brm_args$warmup
+  iter_warmup   <- brm_args$warmup
 
   cb_fit <- c_scode$sample(
     data = sdata,
@@ -1635,8 +1691,8 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args) {
     parallel_chains = brm_args$cores,
     threads_per_chain = brm_args$threads$threads,
     opencl_ids = brm_args$opencl,
-    iter_sampling = brm_args$iter,
-    iter_warmup = brm_args$warmup,
+    iter_sampling = iter_sampling,
+    iter_warmup = iter_warmup,
     thin = brm_args$thin,
     max_treedepth = brm_args$control$max_treedepth,
     adapt_delta = brm_args$control$adapt_delta,

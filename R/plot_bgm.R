@@ -4,9 +4,9 @@
 #'Plot \code{bgmfit} model
 #'
 #'@description The \code{plot_bgm} provides visualization of six different types
-#'  of growth curves that are ploted by using the [ggplot2]. The \code{plot_bgm}
-#'  also allows users to make their own detailed plots from the data returned as
-#'  a \code{data.frame}.
+#'  of growth curves that are plotted by using the \code{ggplot2} package. The
+#'  \code{plot_bgm} also allows users to make their own detailed plots from the
+#'  data returned as a \code{data.frame}. 
 #'
 #'@details The \code{plot_bgm} is a generic function that allows visualization
 #'  of following six curves: population average distance curve, population
@@ -58,8 +58,9 @@
 #'  \code{'au'}, the adjusted and unadjusted curves are plotted as a single
 #'  plot. When opt is a single letter (e.g., \code{'d'}. \code{'v'} \code{'D'},
 #'  \code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is ignored.
-#'  The alternative layout option, the \code{'facet'} uses [ggplot2::facet_wrap]
-#'  to map and draw plot when \code{opt} include two or more letters.
+#'  The alternative layout option, the \code{'facet'} uses the \code{facet_wrap}
+#'  from the \code{ggplot2}. to map and draw plot when \code{opt} include two or
+#'  more letters.
 #'
 #'@param linecolor The color of line used when layout is \code{'facet'}. The
 #'  default is \code{NULL} which internally set the \code{linecolor} as
@@ -167,8 +168,8 @@
 #'
 #'@inherit brms::prepare_predictions.brmsfit params
 #'
-#'@return A [ggplot2] object (default) or a \code{data.frame} when returndata is
-#'  \code{TRUE}.
+#'@return A plot object (default), or a \code{data.frame} when 
+#' \code{returndata = TRUE}.
 #'
 #'@importFrom rlang .data
 #'@importFrom graphics curve
@@ -260,6 +261,11 @@ plot_bgm.bgmfit <- function(model,
                                parms_method = 'getPeak',
                                envir = NULL,
                                ...) {
+  
+  if(system.file(package='ggplot2') == "") {
+    stop("Please install 'ggplot2' package before calling the 'plot_bgm'")
+  }
+  
   if (is.null(ndraws))
     ndraws  <- brms::ndraws(model)
   else

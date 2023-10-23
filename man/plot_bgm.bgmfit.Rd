@@ -263,8 +263,9 @@ curves on a single plot when opt includes \code{'dv'}, \code{'Dv'},
 \code{'au'}, the adjusted and unadjusted curves are plotted as a single
 plot. When opt is a single letter (e.g., \code{'d'}. \code{'v'} \code{'D'},
 \code{'V'}, \code{'a'}, \code{'u'}), the \code{'single'} optiion is ignored.
-The alternative layout option, the \code{'facet'} uses \link[ggplot2:facet_wrap]{ggplot2::facet_wrap}
-to map and draw plot when \code{opt} include two or more letters.}
+The alternative layout option, the \code{'facet'} uses the \code{facet_wrap}
+from the \code{ggplot2}. to map and draw plot when \code{opt} include two or
+more letters.}
 
 \item{linecolor}{The color of line used when layout is \code{'facet'}. The
 default is \code{NULL} which internally set the \code{linecolor} as
@@ -387,14 +388,14 @@ validation and prediction. See \code{\link[brms:fitted.brmsfit]{brms::fitted.brm
 \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details.}
 }
 \value{
-A \link{ggplot2} object (default) or a \code{data.frame} when returndata is
-\code{TRUE}.
+A plot object (default), or a \code{data.frame} when
+\code{returndata = TRUE}.
 }
 \description{
 The \code{plot_bgm} provides visualization of six different types
-of growth curves that are ploted by using the \link{ggplot2}. The \code{plot_bgm}
-also allows users to make their own detailed plots from the data returned as
-a \code{data.frame}.
+of growth curves that are plotted by using the \code{ggplot2} package. The
+\code{plot_bgm} also allows users to make their own detailed plots from the
+data returned as a \code{data.frame}.
 }
 \details{
 The \code{plot_bgm} is a generic function that allows visualization

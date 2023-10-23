@@ -23,30 +23,14 @@ License: GPL-2
 Depends:     
     R (>= 3.6)
 Imports:
-    brms (>= 2.17.0),
-    dplyr,
-    extraDistr,
-    forcats,
-    future,
-    future.apply,
-    ggplot2 (>= 3.4.0),      
-    graphics,
-    grDevices,
-    jtools,
-    loo,
-    magrittr,
-    methods,
-    nlme,
-    patchwork,
-    posterior (>= 1.3.1),
-    purrr,
-    Rdpack,
+    brms (>= 2.17.0),    
+    rstan (>= 2.26.0),    
     rlang,
-    rstan (>= 2.26.0),
-    sitar,
-    stats,
-    tidyr,
-    utils
+    sitar, 
+    magrittr,
+    loo,
+    methods,
+    Rdpack
 Suggests: 
     bookdown,
     knitr,
@@ -57,7 +41,23 @@ Suggests:
     testthat (>= 3.0.0),
     R.rsp,
     cmdstanr (>= 0.5.0),
-    marginaleffects (>= 0.15.1)
+    marginaleffects (>= 0.15.1),
+    dplyr,
+    forcats,
+    future,
+    future.apply,
+    ggplot2 (>= 3.4.0),      
+    graphics,
+    grDevices,
+    jtools,    
+    nlme,
+    patchwork,
+    posterior (>= 1.3.1),
+    purrr,    
+    stats,
+    tidyr,
+    utils,
+    extraDistr,
 Additional_repositories:
     https://mc-stan.org/r-packages/
 VignetteBuilder:

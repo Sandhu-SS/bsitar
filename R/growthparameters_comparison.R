@@ -433,7 +433,7 @@ growthparameters_comparison.bgmfit <- function(model,
   
   out_sf <- out_sf %>% 
     dplyr::rename(!!as.symbol('Parameter') := parameter) %>% 
-    dplyr::mutate(across(dplyr::where(is.numeric),
+    dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                          ~ round(., digits = digits))) %>% 
     data.frame()
   

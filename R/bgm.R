@@ -1520,7 +1520,6 @@
 #'
 #' }
 #'
-#'@importFrom sitar getPeak
 #'
 #'@importFrom methods formalArgs
 #'
@@ -1529,15 +1528,11 @@
 #'  rnorm runif rcauchy rexp rlnorm rgamma rlnorm
 #'  loess na.omit residuals complete.cases deriv formula update
 #'  
-#'@importFrom nlme lme
 #' 
 #'@importFrom rlang .data
 #'
-#'@importFrom dplyr all_of across
 #'
 #'@importFrom utils combn head installed.packages packageVersion tail
-#'
-#'@importFrom extraDistr rtnorm rhcauchy rlst rht rinvgamma 
 #'
 #'@importFrom Rdpack reprompt
 #'
@@ -6123,20 +6118,26 @@ bgm <- function(x,
           if(!grepl("sd_nu", initialsi, fixed = T)) {
             initialsx2[[initialsi]] <- NULL
             newinits <- set_init_gr_effects(temp_stancode2, 
-                                            temp_standata2, what = 'sd')
+                                            temp_standata2,
+                                            parameterization = parameterization,
+                                            what = 'sd')
             initialsx2 <- c(initialsx2, newinits)
           }
         }
         if(grepl("L_", initialsi)) {
           initialsx2[[initialsi]] <- NULL
           newinits <- set_init_gr_effects(temp_stancode2, 
-                                          temp_standata2, what = 'L')
+                                          temp_standata2, 
+                                          parameterization = parameterization,
+                                          what = 'L')
           initialsx2 <- c(initialsx2, newinits)
         }
         if(grepl("z_", initialsi)) {
           initialsx2[[initialsi]] <- NULL
           newinits <- set_init_gr_effects(temp_stancode2, 
-                                          temp_standata2, what = 'z')
+                                          temp_standata2, 
+                                          parameterization = parameterization,
+                                          what = 'z')
           initialsx2 <- c(initialsx2, newinits)
         }
       }
@@ -6145,6 +6146,22 @@ bgm <- function(x,
       brmsinits <- initialsx2
     } 
     
+    
+    if(parameterization == 'cp') {
+      initialsx2 <- brmsinits
+      temp_stancode2cp <- edit_scode_ncp_to_cp(temp_stancode2, 
+                                               genq_only = FALSE, 
+                                               normalize = normalize)
+      # temp_stancode2cpx <<- temp_stancode2cp
+      newinits <- set_init_gr_effects(temp_stancode2cp, 
+                                      temp_standata2, 
+                                      parameterization = parameterization,
+                                      what = 'r')
+      initialsx2 <- c(initialsx2, newinits)
+      uni_name <- unique(names(initialsx2))
+      initialsx2 <- initialsx2[uni_name] 
+      brmsinits <- initialsx2
+    }
     
     
     brmsinits <- lapply(1:brms_arguments$chains, function(id) {
@@ -6529,7 +6546,9 @@ bgm <- function(x,
   
   # sigma_formula_grsi sigma_formula_gr_strsi
   if(parameterization == 'cp') {
-    scode_final <- edit_scode_ncp_to_cp(scode, genq_only = FALSE)
+    scode_final <- edit_scode_ncp_to_cp(scode, 
+                                        genq_only = FALSE, 
+                                        normalize = normalize)
   } else if(parameterization == 'ncp') {
     scode_final <- scode
   }

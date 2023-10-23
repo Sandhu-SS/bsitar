@@ -408,7 +408,7 @@ get.newdata <- function(model,
             aux_var = aux_var
           )
           
-          if(inidnull) out <- out %>% dplyr::select(-all_of(IDvar))
+          if(inidnull) out <- out %>% dplyr::select(-dplyr::all_of(IDvar))
           
           idxx <- NULL
           if (!is.null(aux_var)) {

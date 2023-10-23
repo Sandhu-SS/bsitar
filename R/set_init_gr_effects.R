@@ -12,6 +12,9 @@
 #' @param what A character string to specify the variance covariance parameter.
 #'   Default \code{L} indicating the correlation parameters. Other options are
 #'   \code{sd} and \code{z}.
+#'   
+#' @param parameterization A character string to specify the 
+#' the parameterization, CP or NCP.
 #'
 #' @param sd_value A numeric value to set intials for standard deviation
 #'   parameters. Default \code{1} which is translated to zero initial i.e.,
@@ -33,8 +36,10 @@ set_init_gr_effects <- function(xscode,
                                 xsdata,
                                 full = TRUE,
                                 what = 'L',
+                                parameterization = 'ncp',
                                 sd_value = 1,
                                 z_value = 0,
+                                r_value = 0,
                                 L_value = 0) {
   xscode <-
     get_par_names_from_stancode(xscode, full = full, what = what)
@@ -126,7 +131,31 @@ set_init_gr_effects <- function(xscode,
       if (ncol(out) == 1) {
         out <- t(out)
       }
-    } # if(grepl("sd", parm_c, fixed = T)) {
+    } # if(grepl("z", parm_c, fixed = T)) {
+    
+    
+    if(parameterization == 'cp') {
+      if (grepl("r", parm_c, fixed = T)) {
+        if (length(str_d_) == 1) {
+          dim1 <- xsdata[[str_d_[1]]]
+          out <- rep(set_value, dim1)
+        } else if (length(str_d_) == 2) {
+          dim1 <- xsdata[[str_d_[1]]]
+          dim2 <- xsdata[[str_d_[2]]]
+          out <- matrix(set_value, dim1, dim2)
+        }
+        
+        if (is.vector(out)) {
+          out <- array(out, dim = length(out))
+        }
+        
+        if (ncol(out) == 1) {
+          out <- t(out)
+        }
+      } # if(grepl("r", parm_c, fixed = T)) {
+    } # if(parameterization == 'cp') {
+    
+    
     
     if (grepl("L", parm_c, fixed = T)) {
       if (length(str_d_) == 1) {

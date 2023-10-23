@@ -115,6 +115,11 @@ prepare_initials <- function(init_argument,
     assign(init_argument, "0")
   }
   if (initsi == "prior") {
+    if(system.file(package='extraDistr') == "") {
+      stop("For prior based initials (i.e., init = 'prior), 
+           package 'extraDistr' is required. Please install 'extraDistr'"
+           )
+    }
     assign(init_argument, "prior")
     assign(init_argument_z, "prior")
   }
