@@ -309,17 +309,21 @@ for the fixed effects structure (see \code{fixed}).}
 
 \item{select_model}{A character string specifying the model to be fitted.
 Allowed models are SITAR (\code{'sitar'}), the Preece-Baines model 1
-(\code{'pb1'}), Preece-Baines model 2 (\code{'pb2'}) and the Preece-Baines
-model 3 (\code{'pb3'}). The option \code{'sitar'} fits the default three
-parameter model (i.e, \code{a+b+c}. see @details). The four parameters
-version of the SITAR model (with an additional parameter, \code{d}), van be
-fit by specifying \code{select_model} as \code{'sitar4fr'} or
-\code{'sitar4r'}. The option \code{'sitar4fr'} includes parameter \code{d}
-in both the fixed and the random effects structures of the SITAR model
-whereas \code{'sitar4r'} implies that the parameter \code{d} will be
-included only in the random effects structure of the SITAR model. Note that
-for \code{'sitar4r'}, covariate(s) can not be specified for the parameter
-\code{d}.}
+(\code{'pb1'}), Preece-Baines model 2 (\code{'pb2'}), Preece-Baines model 3
+(\code{'pb3'}) and the restricted cubic spline (\code{'rcs'}) model. The
+option \code{'sitar'} fits the default three parameter model (i.e,
+\code{a+b+c}. see @details). The four parameters version of the SITAR model
+(with an additional parameter, \code{d}), van be fit by specifying
+\code{select_model} as \code{'sitar4fr'} or \code{'sitar4r'}. The option
+\code{'sitar4fr'} includes parameter \code{d} in both the fixed and the
+random effects structures of the SITAR model whereas \code{'sitar4r'}
+implies that the parameter \code{d} will be included only in the random
+effects structure of the SITAR model. Note that for \code{'sitar4r'},
+covariate(s) can not be specified for the parameter \code{d}. For the
+restricted cubic spline model, the default \code{select_model = 'rcs'} and
+the alternative \code{select_model = 'rcsfr'} fir model by including random
+spline effects. Though not recommended, model with splines only in the fixed
+effect structure can be fit by \code{select_model = 'rcsf'} option.}
 
 \item{xoffset}{An optional character string, or a numeric value to set up the
 origin of \code{x} (i.e., centering of the predictor variable, \code{x}).

@@ -217,6 +217,16 @@ prepare_formula <- function(x,
     set_nlpar_what <- set_randomsi_higher_levsli
     if(ept(paste0(set_nlpar_what, '_formula_gr_strsi_present'))) {
       in_gr_strsi <- paste0(set_nlpar_what, '_formula_gr_strsi')
+      if(!grepl("|" , ept(in_gr_strsi), fixed = T)) {
+        stop("For '_str' approach of setting the random effects,",
+             "\n ", 
+             " only the vertical bar '|' approach is aloowed.",
+             "\n ", 
+             " Please check and correct the '", in_gr_strsi, "' argument ",
+             "\n ", 
+             " which currently specified as ", ept(in_gr_strsi)
+             )
+      }
       get_gr_str_coef_id_it   <- get_gr_str_coef_id(ept(in_gr_strsi), data = data)
       assign(paste0(set_nlpar_what, 'covcoefnames_gr_str'),
              get_gr_str_coef_id_it[['tsx_c_coef']])
@@ -2236,22 +2246,21 @@ prepare_formula <- function(x,
   
   
   
-  s_covariate_i <- c()
-  if (grepl("\\*", s_formulasi)) {
-    for (s_covariatei in s_covariate) {
-      if (grepl("\\*", s_covariatei)) {
-        t <- strsplit(s_covariatei, "\\*")[[1]]
-        t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
-      } else {
-        t <- s_covariatei
-      }
-      s_covariate_i <- c(s_covariate_i, t)
-    }
-  } else {
-    s_covariate_i <- s_covariate
-  }
-  
-  s_covariate <- s_covariate_i
+  # s_covariate_i <- c()
+  # if (grepl("\\*", s_formulasi)) {
+  #   for (s_covariatei in s_covariate) {
+  #     if (grepl("\\*", s_covariatei)) {
+  #       t <- strsplit(s_covariatei, "\\*")[[1]]
+  #       t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
+  #     } else {
+  #       t <- s_covariatei
+  #     }
+  #     s_covariate_i <- c(s_covariate_i, t)
+  #   }
+  # } else {
+  #   s_covariate_i <- s_covariate
+  # }
+  # s_covariate <- s_covariate_i
   
   
  
@@ -2273,6 +2282,24 @@ prepare_formula <- function(x,
     
     
     if(select_model == "sitar") {
+      
+      s_covariate_i <- c()
+      if (grepl("\\*", s_formulasi)) {
+        for (s_covariatei in s_covariate) {
+          if (grepl("\\*", s_covariatei)) {
+            t <- strsplit(s_covariatei, "\\*")[[1]]
+            t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
+          } else {
+            t <- s_covariatei
+          }
+          s_covariate_i <- c(s_covariate_i, t)
+        }
+      } else {
+        s_covariate_i <- s_covariate
+      }
+      s_covariate <- s_covariate_i
+      
+      
       # for sitar model only
       if (length(a_covariate) != length(b_covariate)) {
         stop(

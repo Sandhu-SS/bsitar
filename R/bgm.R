@@ -166,17 +166,21 @@
 #'  
 #'@param select_model A character string specifying the model to be fitted.
 #'  Allowed models are SITAR (\code{'sitar'}), the Preece-Baines model 1
-#'  (\code{'pb1'}), Preece-Baines model 2 (\code{'pb2'}) and the Preece-Baines
-#'  model 3 (\code{'pb3'}). The option \code{'sitar'} fits the default three
-#'  parameter model (i.e, \code{a+b+c}. see @details). The four parameters
-#'  version of the SITAR model (with an additional parameter, \code{d}), van be
-#'  fit by specifying \code{select_model} as \code{'sitar4fr'} or
-#'  \code{'sitar4r'}. The option \code{'sitar4fr'} includes parameter \code{d}
-#'  in both the fixed and the random effects structures of the SITAR model
-#'  whereas \code{'sitar4r'} implies that the parameter \code{d} will be
-#'  included only in the random effects structure of the SITAR model. Note that
-#'  for \code{'sitar4r'}, covariate(s) can not be specified for the parameter
-#'  \code{d}.
+#'  (\code{'pb1'}), Preece-Baines model 2 (\code{'pb2'}), Preece-Baines model 3
+#'  (\code{'pb3'}) and the restricted cubic spline (\code{'rcs'}) model. The
+#'  option \code{'sitar'} fits the default three parameter model (i.e,
+#'  \code{a+b+c}. see @details). The four parameters version of the SITAR model
+#'  (with an additional parameter, \code{d}), van be fit by specifying
+#'  \code{select_model} as \code{'sitar4fr'} or \code{'sitar4r'}. The option
+#'  \code{'sitar4fr'} includes parameter \code{d} in both the fixed and the
+#'  random effects structures of the SITAR model whereas \code{'sitar4r'}
+#'  implies that the parameter \code{d} will be included only in the random
+#'  effects structure of the SITAR model. Note that for \code{'sitar4r'},
+#'  covariate(s) can not be specified for the parameter \code{d}. For the
+#'  restricted cubic spline model, the default \code{select_model = 'rcs'} and
+#'  the alternative \code{select_model = 'rcsfr'} fir model by including random
+#'  spline effects. Though not recommended, model with splines only in the fixed
+#'  effect structure can be fit by \code{select_model = 'rcsf'} option.
 #'
 #'@param xoffset An optional character string, or a numeric value to set up the
 #'  origin of \code{x} (i.e., centering of the predictor variable, \code{x}).
@@ -2195,7 +2199,21 @@ bgm <- function(x,
          single character string")
   }
   
+  if(select_model == 'pb') select_model <- 'pb1'
+  
   if(select_model == 'sitar3') select_model <- 'sitar'
+  
+  if(select_model == 'rcs' | select_model == 'rcsf' | select_model == 'rcsfr') {
+    if(select_model == 'rcsf') {
+      rcs_add_re_spline <- FALSE 
+    } else {
+      rcs_add_re_spline <- TRUE
+    }
+    select_model <- 'rcs'
+  }
+    
+    
+   
   
   if(grepl('sitar4', select_model)) {
     if(select_model == 'sitar4fr') match_sitar_d_form <- FALSE
@@ -3466,7 +3484,7 @@ bgm <- function(x,
                                              sub_parm_letters]
       inv_parm_letters <- sort(inv_parm_letters)
       if(length(inv_parm_letters) > 0) {
-        see_what_formual <- paste0(" Please see and correct ", "'", 
+        see_what_formual <- paste0(" Please see and correctly ", "'", 
                                    'fixed', "'", " argument")
         not_allowed_parsm <- paste(paste0("'", inv_parm_letters, "'"), 
                                    collapse = " ")
@@ -3487,7 +3505,7 @@ bgm <- function(x,
                                              sub_parm_letters]
       inv_parm_letters <- sort(inv_parm_letters)
       if(length(inv_parm_letters) > 0) {
-        see_what_formual <- paste0(" Please see and correct ", "'", 
+        see_what_formual <- paste0(" Please see and correctly ", "'", 
                                    'random', "'", " argument")
         not_allowed_parsm <- paste(paste0("'", inv_parm_letters, "'"), 
                                    collapse = " ")
@@ -3558,7 +3576,7 @@ bgm <- function(x,
     if(select_model == 'pb2')   allowed_parm_letters <- letters[1:6]
     if(select_model == 'pb3')   allowed_parm_letters <- letters[1:6]
     
-    if(select_model == 'rcs')   allowed_parm_letters <- c('a', 's')
+    if(select_model == 'rcs')   allowed_parm_letters <- letters[1] # c('a', 's')
   
     
     fixedsi_randomsi <- 
@@ -3617,8 +3635,21 @@ bgm <- function(x,
       if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
     }
     
+    
+    
+    
     if(select_model == 'rcs') {
       if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
+      if(!any(grepl('s', randomsi)) & rcs_add_re_spline) {
+          randomsi <- paste0(randomsi, "+", "s")
+      }
+      if(any(grepl('s', randomsi)) & !rcs_add_re_spline) {
+        stop("you have specified select_model = 'rcsf' (i.e., no random",
+             "\n ",
+             "spline effects) but your random argument have parameter 's'.",
+             "\n ",
+             "Please check your 'select_model' and 'random' arguments")
+      }
     }
     
     
@@ -4586,6 +4617,10 @@ bgm <- function(x,
     bflist[[ii]] <- formula_bf
     
     
+    loess_fit <- paste0("loess(", ysi, "~", xsi, ",", 'datai', ")")
+    loess_fitx <- eval(parse(text = loess_fit))
+    
+    
     ymean   <- mean(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
     ymedian <- median(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
     if(select_model == 'sitar' | select_model == 'rcs') {
@@ -4594,6 +4629,7 @@ bgm <- function(x,
       ymaxs <- NULL
     } else if(select_model != 'sitar' & select_model != 'rcs') {
       ymax <- round(max(predict(loess_fitx)), 2)
+      ymin  <- min(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
       ymaxs <- round(ymax * 0.95, 2)
     }
     
@@ -4602,8 +4638,7 @@ bgm <- function(x,
     xsd     <- sd(datai[[xsi]], na.rm = TRUE) %>% round(., 2)
     
     
-    loess_fit <- paste0("loess(", ysi, "~", xsi, ",", 'datai', ")")
-    loess_fitx <- eval(parse(text = loess_fit))
+    
     
     
     if (!is.null(pvsi[[1]][1]) & pvsi != "NULL") {

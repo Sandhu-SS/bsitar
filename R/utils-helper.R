@@ -1330,6 +1330,7 @@ edit_scode_ncp_to_cp <- function(stancode,
   
   
   
+  
   # print(cat(prepare_p))
   # stop()
   
@@ -1475,8 +1476,15 @@ edit_scode_ncp_to_cp <- function(stancode,
   
   editedcode2 <- gsub(tempt_name_tp, true_name_tp, editedcode2, fixed = T)
   editedcode2 <- gsub(tempt_name_p,  true_name_p,  editedcode2, fixed = T)
-  if(genq_only) return(add_to_genq_block)
-  return(editedcode2)
+  
+  # If only one random effects and hence no r_1 etc, then return original code
+  if(identical(pattern_r, character(0))) {
+    return(stancode)
+  } else if(!identical(pattern_r, character(0))) {
+    if(genq_only) return(add_to_genq_block)
+    return(editedcode2)
+  }
+  
 }
 
 

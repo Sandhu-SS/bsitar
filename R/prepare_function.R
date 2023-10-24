@@ -477,6 +477,7 @@ add_context_getknots_fun <-
              xfunsi,
              yfunsi,
              setxoffset,
+             gsub_out_unscaled = NULL,
              spl_fun_ford,
              body,
              decomp,
@@ -1340,7 +1341,7 @@ add_context_getknots_fun <-
   
   
 
-  if('pb' %in% select_model) {
+  if(grepl("^pb", select_model)) {
     abcnames <- paste0(strsplit(gsub("\\+", " ", 
                                      fixedsi), " ")[[1]], sep = ",")
     fullabcsnames <- abcnames
@@ -1584,7 +1585,6 @@ add_context_getknots_fun <-
     
     rcsfun <- paste(start_fun, endof_fun)
     rcsfun_raw <- rcsfun
-    
 
     # Create function d0
     fnameout <- paste0(spfncname, "_", "d0")
@@ -1648,9 +1648,8 @@ add_context_getknots_fun <-
       fixedsi = fixedsi
     )
     
-    if(utils::packageVersion('rstan') > 2.26 ) {
-      rcsfun <- paste(getx_fun, rcsfun)
-    }
+    
+    rcsfunmultadd <- NULL
     
     if(utils::packageVersion('rstan') > 2.26 & is.null(decomp)) {
       rcsfun <- paste0(getx_fun, rcsfun, rcsfunmultadd,
@@ -1671,7 +1670,7 @@ add_context_getknots_fun <-
     
     
     
-  } # if(select_model != 'sitar') {
+  } # if(select_model != 'sitar') { # pb models
   
   
   
@@ -1770,7 +1769,7 @@ add_context_getknots_fun <-
   all_raw_str <- c(rcsfun_raw_str, spl_d0_str, spl_d1_str, 
                     spl_d2_str, getX_str, getknots_str)
   
-  
+
   if(!add_rcsfunmatqrinv_genquant) {
     out <- list(rcsfun = rcsfun, r_funs = all_raw_str)
   } else if(add_rcsfunmatqrinv_genquant) {
