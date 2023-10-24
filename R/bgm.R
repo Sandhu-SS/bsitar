@@ -2200,9 +2200,12 @@ bgm <- function(x,
          single character string")
   }
   
-  if(select_model == 'pb') select_model <- 'pb1'
+  # For default prior setting
+  select_model_arg <- select_model
   
-  if(select_model == 'sitar3') select_model <- 'sitar'
+  if(select_model == 'pb')       select_model <- 'pb1'
+  if(select_model == 'logistic') select_model <- 'logistic1'
+  if(select_model == 'sitar3')   select_model <- 'sitar'
   
   if(select_model == 'rcs' | select_model == 'rcsf' | select_model == 'rcsfr') {
     if(select_model == 'rcsf') {
@@ -2213,11 +2216,10 @@ bgm <- function(x,
     select_model <- 'rcs'
   }
     
-    
-   
-  
+  match_sitar_d_form <- FALSE
   if(grepl('sitar4', select_model)) {
     if(select_model == 'sitar4fr') match_sitar_d_form <- FALSE
+    if(select_model == 'sitar4f')  match_sitar_d_form <- FALSE
     if(select_model == 'sitar4r')  match_sitar_d_form <- TRUE
     if(select_model == 'sitar4')   match_sitar_d_form <- FALSE
     sitar_nparms <- 4
@@ -2230,12 +2232,9 @@ bgm <- function(x,
     match_sitar_d_form <- FALSE
   }
   
-  
-  # allowed_model_names <- c('sitar', 'sitar3', 'sitar4', 'sitar4fr', 'sitar4r',
-  #                            'pb1', 'pb2', 'pb3', 'logistic3', 'logistic2',
-  #                            "rcs")
-  
-  sitar_models    <- c('sitar', 'sitar3', 'sitar4', 'sitar4fr', 'sitar4r')
+ 
+  sitar_models    <- c('sitar', 'sitar3', 'sitar4', 
+                       'sitar4f', 'sitar4fr', 'sitar4r')
   pb_models       <- c('pb1', 'pb2', 'pb3')
   logistic_models <- c('logistic1', 'logistic2', 'logistic3')
   rcs_models      <- c('rcs', 'rcsf', 'rcsfr')
@@ -2256,10 +2255,11 @@ bgm <- function(x,
   
  
   
-  allowed_model_names_  <- paste(allowed_model_names, collapse = ", " )
-  allowed_model_names__ <- paste0("(", allowed_model_names_, ")")
+  # allowed_model_names_  <- paste(allowed_model_names, collapse = ", " )
+  # allowed_model_names__ <- paste0("(", allowed_model_names_, ")")
 
-  if(!select_model %in% allowed_model_names) {
+  
+  if(!select_model_arg %in% allowed_model_names) {
     stop("Currently supported models (via 'select_model' argument) are:",
          "\n ",
          " ", all_models
@@ -4912,11 +4912,36 @@ bgm <- function(x,
     }
     
    
+   
+    
+    # check and set default priors (class = b)
+    a_prior_betasi <- set_default_priors(select_model_arg, a_prior_betasi)
+    b_prior_betasi <- set_default_priors(select_model_arg, b_prior_betasi)
+    c_prior_betasi <- set_default_priors(select_model_arg, c_prior_betasi)
+    d_prior_betasi <- set_default_priors(select_model_arg, d_prior_betasi)
+    e_prior_betasi <- set_default_priors(select_model_arg, e_prior_betasi)
+    f_prior_betasi <- set_default_priors(select_model_arg, f_prior_betasi)
+    g_prior_betasi <- set_default_priors(select_model_arg, g_prior_betasi)
+    h_prior_betasi <- set_default_priors(select_model_arg, g_prior_betasi)
+    i_prior_betasi <- set_default_priors(select_model_arg, i_prior_betasi)
+    
+    
+    
+    # check and set default priors (class = sd)
+    a_prior_sdsi <- set_default_priors(select_model_arg, a_prior_sdsi)
+    b_prior_sdsi <- set_default_priors(select_model_arg, b_prior_sdsi)
+    c_prior_sdsi <- set_default_priors(select_model_arg, c_prior_sdsi)
+    d_prior_sdsi <- set_default_priors(select_model_arg, d_prior_sdsi)
+    e_prior_sdsi <- set_default_priors(select_model_arg, e_prior_sdsi)
+    f_prior_sdsi <- set_default_priors(select_model_arg, f_prior_sdsi)
+    g_prior_sdsi <- set_default_priors(select_model_arg, g_prior_sdsi)
+    h_prior_sdsi <- set_default_priors(select_model_arg, g_prior_sdsi)
+    i_prior_sdsi <- set_default_priors(select_model_arg, i_prior_sdsi)
+    
     
     
     
     set_priors_initials_agrs <- list()
-    
 
     set_priors_initials_agrs $ a_prior_beta <- a_prior_betasi
     set_priors_initials_agrs $ b_prior_beta <- b_prior_betasi
@@ -6669,6 +6694,16 @@ bgm <- function(x,
   }
   
 
+  get_priors_eval_numeric <- TRUE
+  if(get_priors_eval & get_priors_eval_numeric) {
+    get_priors_eval_out <- priors_to_textdata(spriors = brm_args$prior,
+                                                  sdata = sdata)
+  }
+  
+  if(get_priors_eval & !get_priors_eval_numeric) {
+    get_priors_eval_out <- brm_args$prior
+  }
+  
     
   if(!exe_model_fit) {
     if(get_priors) {
@@ -6682,7 +6717,8 @@ bgm <- function(x,
       return(scode_final)
     } else if(get_priors_eval) {
       options(mc.cores = mc.cores_restore)
-      return(brm_args$prior)
+      # return(brm_args$prior)
+      return(get_priors_eval_out)
     } else if(validate_priors) {
       options(mc.cores = mc.cores_restore)
       return(do.call(brms::validate_prior, brm_args))
