@@ -2185,20 +2185,6 @@ prepare_formula <- function(x,
   
   # fit lm model
   
-  # getcovlist <- function(x) {
-  #   if (is.character(x))
-  #     x <- x
-  #   else
-  #     x <- deparse(x)
-  #   x <- gsub("~", "", gsub("\\s", "", x))
-  #   x <- strsplit(x, "+", fixed = T)[[1]]
-  #   if (length(x) == 1)
-  #     x <- NULL
-  #   else
-  #     x <- x[-1]
-  #   return(x)
-  # }
-  
   a_covariate <- getcovlist(a_formulasi)
   b_covariate <- getcovlist(b_formulasi)
   c_covariate <- getcovlist(c_formulasi)
@@ -2222,390 +2208,11 @@ prepare_formula <- function(x,
   
   
   
-  if(select_model == "sitar" | select_model == "rcs") {
-    # for sitar model only
-    a_covariate_i <- c()
-    if (grepl("\\*", a_formulasi)) {
-      for (a_covariatei in a_covariate) {
-        if (grepl("\\*", a_covariatei)) {
-          t <- strsplit(a_covariatei, "\\*")[[1]]
-          t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
-        } else {
-          t <- a_covariatei
-        }
-        a_covariate_i <- c(a_covariate_i, t)
-      }
-    } else {
-      a_covariate_i <- a_covariate
-    }
-    a_covariate <- a_covariate_i
-  }
-  
-  
-  
-  
-  
-  
-  # s_covariate_i <- c()
-  # if (grepl("\\*", s_formulasi)) {
-  #   for (s_covariatei in s_covariate) {
-  #     if (grepl("\\*", s_covariatei)) {
-  #       t <- strsplit(s_covariatei, "\\*")[[1]]
-  #       t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
-  #     } else {
-  #       t <- s_covariatei
-  #     }
-  #     s_covariate_i <- c(s_covariate_i, t)
-  #   }
-  # } else {
-  #   s_covariate_i <- s_covariate
-  # }
-  # s_covariate <- s_covariate_i
-  
-  
- 
-  
-  if(!is.null(b_formulasi)) {
-    if (!grepl("^~1$", a_formulasi)) {
-      if (!identical(strsplit(a_formulasi, "+")[[1]][1:2],
-                     strsplit(b_formulasi, "+")[[1]][1:2])) {
-        stop(
-          "a_formula and b_formula should have the identical ",
-          "\n ",
-          " intercept structure i.e., ~ 1 or ~ 0"
-        )
-      }
-  }
-  
-  
-    
-    
-    
-    if(select_model == "sitar") {
-      
-      s_covariate_i <- c()
-      if (grepl("\\*", s_formulasi)) {
-        for (s_covariatei in s_covariate) {
-          if (grepl("\\*", s_covariatei)) {
-            t <- strsplit(s_covariatei, "\\*")[[1]]
-            t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
-          } else {
-            t <- s_covariatei
-          }
-          s_covariate_i <- c(s_covariate_i, t)
-        }
-      } else {
-        s_covariate_i <- s_covariate
-      }
-      s_covariate <- s_covariate_i
-      
-      
-      # for sitar model only
-      if (length(a_covariate) != length(b_covariate)) {
-        stop(
-          "a_formula formula should have ",
-          "\n ",
-          " the same number of covariates as b_formula"
-        )
-      }
-    }
-    
-    
-    
-    if (length(a_covariate) == 1) {
-      if (grepl("~0", a_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~0+",  a_covariate, "*", 'mat_s'))
-      } else if (!grepl("~0", s_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~1+",  a_covariate, "*", 'mat_s'))
-      }
-    } else if (length(a_covariate) > 1) {
-      main_cov <- a_covariate
-      main_cov <-
-        paste(unlist(strsplit(main_cov, "+", fixed = T)), sep = " ")
-      inte_cov <- paste0(main_cov, ":", 'mat_s')
-      main_inte_cov <- c(main_cov, 'mat_s', inte_cov)
-      main_inte_cov <- paste(main_inte_cov, collapse = "+")
-      if (grepl("~0", s_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~0+",  main_inte_cov))
-      } else if (!grepl("~0", s_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~1+",  main_inte_cov))
-      }
-    }
-  }
-  
-  if (grepl("^~1$", a_formulasi)) {
-    if (length(a_covariate) == 1) {
-      if (grepl("~0", a_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~0+",  a_covariate, "+", 'mat_s'))
-      } else if (!grepl("~0", a_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~1+",  a_covariate, "+", 'mat_s'))
-      }
-    } else if (length(a_covariate) > 1) {
-      main_cov <- a_covariate
-      main_inte_cov <- c(main_cov, 'mat_s')
-      main_inte_cov <- paste(main_inte_cov, collapse = "+")
-      if (grepl("~0", a_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~0+",  main_inte_cov))
-      } else if (!grepl("~0", a_formulasi, fixed = T)) {
-        lmform  <- as.formula(paste0(y, "~1+",  main_inte_cov))
-      }
-    }
-  }
-  
-  if(!is.null(ept('b_formulasi'))) {
-    if (grepl("^~1$", b_formulasi))
-      b_covariate <- NULL
-  }
-  
-  
-  
-  if (grepl("^~1$", a_formulasi)) {
-    if (grepl("~0", a_formulasi, fixed = T)) {
-      lmform  <- as.formula(paste0(y, "~0+", 'mat_s'))
-    } else if (!grepl("~0", a_formulasi, fixed = T)) {
-      lmform  <- as.formula(paste0(y, "~1+", 'mat_s'))
-    }
-  }
-  
-  
-  if(select_model != 'sitar' & select_model != "rcs") {
-    lm_data_at_max_x <- data
-    
-    lm_data_at_max_x[['mat_s']] <- lm_data_at_max_x[[x]] - max(lm_data_at_max_x[[x]])
-    
-    lm_fit  <- lm(lmform, data = lm_data_at_max_x)
-    lm_coef <- coef(lm_fit)
-    lm_rsd  <- summary(lm_fit)$sigma
-    
-    if (any(is.na(lm_coef))) {
-      stop(
-        "Inclusion of covariates resulted in rank-deficient design  matrix",
-        "\n ",
-        "(with some NA coefficients for the 'lm' model fit)",
-        "\n ",
-        "Please simplyfy the model"
-      )
-    }
-    
-    
-    
-    # lme
-    err. <- FALSE
-    tryCatch(
-      expr = {
-        datalme <- data
-        datalme[['mat_s']] <- eval(parse(text = 'mat_s'))
-        randomlmer <- "Intercept"
-        if (randomlmer == "slope")
-          randomform <- paste0("~ 1 + ", x , " | ", id)
-        if (randomlmer == "Intercept")
-          randomform <- paste0("~ 1 ", " | ", id)
-        randomform <- as.formula(randomform)
-        lme_fit <-
-          nlme::lme(fixed = lmform,
-                    random = randomform,
-                    data = datalme)
-      },
-      error = function(e) {
-        err. <<- TRUE
-      }
-    )
-    if (err.) {
-      lme_coef <- lm_coef
-      lme_sd_a <- sd(predict(lm_fit))
-      lme_rsd <- lm_rsd
-    } else if (!err.) {
-      lme_coef <- unname(nlme::fixed.effects(lme_fit))
-      VarCorrnumeric <- nlme::VarCorr(lme_fit)[, 2] %>% as.numeric()
-      lme_sd_a <- VarCorrnumeric[1]
-      if (randomlmer == "Intercept") {
-        lme_rsd <- VarCorrnumeric[2]
-      } else if (randomlmer == "slope") {
-        lme_rsd <- VarCorrnumeric[3]
-      }
-    }
-    
-    
-    
-    if (grepl("\\*", a_formulasi) & grepl("^~1$", a_formulasi)) {
-      intercept_ <- lm_coef[!grepl("^mat_s", names(lm_coef))]
-      spls_ <- lm_coef[grepl("^mat_s", names(lm_coef))]
-      lm_coef <- c(intercept_, spls_)
-    }
-    
-    
-    if (grepl("\\*", a_formulasi) & !grepl("^~1$", a_formulasi)) {
-      intercept_ <- lm_coef[!grepl("mat_s", names(lm_coef))]
-      spls_ <- lm_coef[grepl("mat_s", names(lm_coef))]
-      lm_coef <- c(intercept_, spls_)
-    }
-    
-    lm_a_all <- lm_coef[1:ncol(acovmat)]
-    if (!is.null(bfixed)) {
-      lm_b_all <- lm_a_all * 0.9 # rep(0, ncol(bcovmat))
-    } else {
-      lm_b_all <- NULL
-    }
-    if (!is.null(cfixed)) {
-      lm_c_all <- rep(0, ncol(ccovmat))
-    } else {
-      lm_c_all <- NULL
-    }
-    if (!is.null(dfixed)) {
-      lm_d_all <- rep(0, ncol(dcovmat))
-    } else {
-      lm_d_all <- NULL
-    }
-    
-    if (!is.null(efixed)) {
-      lm_e_all <- rep(0, ncol(ecovmat))
-    } else {
-      lm_e_all <- NULL
-    }
-    
-    if (!is.null(ffixed)) {
-      lm_f_all <- rep(0, ncol(fcovmat))
-    } else {
-      lm_f_all <- NULL
-    }
-    
-    if (!is.null(gfixed)) {
-      lm_g_all <- rep(0, ncol(gcovmat))
-    } else {
-      lm_g_all <- NULL
-    }
-    
-    if (!is.null(hfixed)) {
-      lm_h_all <- rep(0, ncol(hcovmat))
-    } else {
-      lm_h_all <- NULL
-    }
-    
-    if (!is.null(ifixed)) {
-      lm_i_all <- rep(0, ncol(icovmat))
-    } else {
-      lm_i_all <- NULL
-    }
-    
 
-    
-    # # Depending on select_model, assign null values to all which not part of the model
-    # for (set_randomsi_higher_levsli in c(letters[1:26])) {
-    #   set_nlpar_what <- set_randomsi_higher_levsli
-    #   if(!exists(paste0(set_randomsi_higher_levsli, 'form'))) {
-    #     assign(paste0(set_nlpar_what, 'covcoefnames'), NULL)
-    #     assign(paste0(set_nlpar_what, 'covcoefnames_gr'), NULL)
-    #     assign(paste0(set_nlpar_what, 'ncov'), NULL)
-    #     assign(paste0(set_nlpar_what, 'ncov_gr'), NULL)
-    #   } else if(exists(paste0(set_randomsi_higher_levsli, 'form'))) {
-    #     if(is.null(ept(paste0(set_randomsi_higher_levsli, 'form')))) {
-    #       assign(paste0(set_nlpar_what, 'covcoefnames'), NULL)
-    #       assign(paste0(set_nlpar_what, 'covcoefnames_gr'), NULL)
-    #       assign(paste0(set_nlpar_what, 'ncov'), NULL)
-    #       assign(paste0(set_nlpar_what, 'ncov_gr'), NULL)
-    #     } # if(is.null(ept(paste0('f', 'form')))) {
-    #   }
-    # } # for (set_randomsi_higher_levsli in c(letters[1:26])) {
-    # 
-    
-    
-    
-    
-    names(lm_a_all) <- acovcoefnames
-    names(lm_b_all) <- bcovcoefnames
-    names(lm_c_all) <- ccovcoefnames
-    names(lm_d_all) <- dcovcoefnames
-    names(lm_e_all) <- ecovcoefnames
-    names(lm_f_all) <- fcovcoefnames
-    names(lm_g_all) <- hcovcoefnames
-    names(lm_h_all) <- hcovcoefnames
-    names(lm_i_all) <- icovcoefnames
-    
-    lm_a <- lm_a_all[1]
-    lm_b <- lm_b_all[1]
-    lm_c <- lm_c_all[1]
-    lm_d <- lm_d_all[1]
-    lm_e <- lm_e_all[1]
-    lm_f <- lm_f_all[1]
-    lm_g <- lm_h_all[1]
-    lm_h <- lm_h_all[1]
-    lm_i <- lm_i_all[1]
-    
-    if (!is.null(ancov)) {
-      lm_a_cov <- lm_a_all[2:length(lm_a_all)]
-    } else {
-      lm_a_cov <- NULL
-    }
-    if (!is.null(bncov)) {
-      lm_b_cov <- lm_b_all[2:length(lm_b_all)]
-    } else {
-      lm_b_cov <- NULL
-    }
-    if (!is.null(cncov)) {
-      lm_c_cov <- lm_c_all[2:length(lm_c_all)]
-    } else {
-      lm_c_cov <- NULL
-    }
-    if (!is.null(dncov)) {
-      lm_d_cov <- lm_d_all[2:length(lm_d_all)]
-    } else {
-      lm_d_cov <- NULL
-    }
-    if (!is.null(encov)) {
-      lm_e_cov <- lm_e_all[2:length(lm_e_all)]
-    } else {
-      lm_e_cov <- NULL
-    }
-    
-    if (!is.null(fncov)) {
-      lm_f_cov <- lm_f_all[2:length(lm_f_all)]
-    } else {
-      lm_f_cov <- NULL
-    }
-      
-    if (!is.null(gncov)) {
-      lm_g_cov <- lm_g_all[2:length(lm_g_all)]
-    } else {
-      lm_g_cov <- NULL
-    }
-    
-    if (!is.null(hncov)) {
-      lm_h_cov <- lm_h_all[2:length(lm_h_all)]
-    } else {
-      lm_h_cov <- NULL
-    }
-    
-    if (!is.null(incov)) {
-      lm_i_cov <- lm_i_all[2:length(lm_i_all)]
-    } else {
-      lm_i_cov <- NULL
-    }
-    
-  } # if(select_model != 'sitar') {
+
   
-  
-  
-  #######################################################3
-  
-  
-  #######################################################
-  
-  if(select_model == 'sitar' | select_model == 'rcs') {
-    # fit lm model
-    a_covariate <- getcovlist(a_formulasi)
-    b_covariate <- getcovlist(b_formulasi)
-    c_covariate <- getcovlist(c_formulasi)
-    d_covariate <- getcovlist(d_formulasi)
-    s_covariate <- getcovlist(s_formulasi)
-    
-    sigma_covariate <- getcovlist(sigma_formulasi)
-    
-    covariates <- c(a_covariate, b_covariate, c_covariate, d_covariate, s_covariate)
-    covariates_ <- unique(covariates)
-    
-    covariates_sigma_ <- unique(sigma_covariate)
-    
-    
+  if(select_model == "sitar" |
+     select_model == "rcs") {
     a_covariate_i <- c()
     if (grepl("\\*", a_formulasi)) {
       for (a_covariatei in a_covariate) {
@@ -2836,6 +2443,9 @@ prepare_formula <- function(x,
       lm_d_cov <- NULL
     }
     
+    
+    
+    
     xnames <- names(lm_s_all)
     names_mat_s_scovmat <- c()
     for (x in xnames) {
@@ -2863,9 +2473,11 @@ prepare_formula <- function(x,
     
     names(lm_s_all) <- names_mat_s_scovmat
     names(lm_sdx_all) <- names_mat_s_scovmat
-  
+    
+    
     lm_s   <- lm_s_all[1:(nknots - 1)]
     lm_sdx <- lm_sdx_all[1:(nknots - 1)]
+    
     
     if (!is.null(s_covariate) & length(s_covariate) > 1) {
       lm_s_cov <- lm_s_all[nknots:length(lm_s_all)]
@@ -2940,7 +2552,228 @@ prepare_formula <- function(x,
         "Please simplyfy the model"
       )
     }
-  } # if(select_model == 'sitar') {
+  } # if(select_model == 'sitar' | select_model == "rcs")) {
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  if(select_model != 'sitar' & select_model != "rcs") {
+    # a_covariate_i <- c()
+    # if (grepl("\\*", a_formulasi)) {
+    #   for (a_covariatei in a_covariate) {
+    #     if (grepl("\\*", a_covariatei)) {
+    #       t <- strsplit(a_covariatei, "\\*")[[1]]
+    #       t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
+    #     } else {
+    #       t <- a_covariatei
+    #     }
+    #     a_covariate_i <- c(a_covariate_i, t)
+    #   }
+    # } else {
+    #   a_covariate_i <- a_covariate
+    # }
+    # a_covariate <- a_covariate_i
+    # 
+    # 
+    # 
+    # if(!is.null(ept('b_formulasi'))) {
+    #   if (grepl("^~1$", b_formulasi))
+    #     b_covariate <- NULL
+    # }
+    
+    lm_data_at_max_x <- data
+   
+    if (grepl("~0", a_formulasi, fixed = T)) {
+      lmform  <- as.formula(paste0(y, "~0+", 'mat_s'))
+    } else if (!grepl("~0", a_formulasi, fixed = T)) {
+      lmform  <- as.formula(paste0(y, "~1+", 'mat_s'))
+    }
+   
+    lm_data_at_max_x[['mat_s']] <- lm_data_at_max_x[[x]] - max(lm_data_at_max_x[[x]])
+    
+    lm_fit  <- lm(lmform, data = lm_data_at_max_x)
+    lm_coef <- coef(lm_fit)
+    lm_rsd  <- summary(lm_fit)$sigma
+   
+    if (any(is.na(lm_coef))) {
+      stop(
+        "Inclusion of covariates resulted in rank-deficient design  matrix",
+        "\n ",
+        "(with some NA coefficients for the 'lm' model fit)",
+        "\n ",
+        "Please simplyfy the model"
+      )
+    }
+    
+    # lme
+    err. <- FALSE
+    tryCatch(
+      expr = {
+        datalme <- data
+        datalme[['mat_s']] <- eval(parse(text = 'mat_s'))
+        randomlmer <- "Intercept"
+        if (randomlmer == "slope")
+          randomform <- paste0("~ 1 + ", x , " | ", id)
+        if (randomlmer == "Intercept")
+          randomform <- paste0("~ 1 ", " | ", id)
+        randomform <- as.formula(randomform)
+        lme_fit <-
+          nlme::lme(fixed = lmform,
+                    random = randomform,
+                    data = datalme)
+      },
+      error = function(e) {
+        err. <<- TRUE
+      }
+    )
+    if (err.) {
+      lme_coef <- lm_coef
+      lme_sd_a <- sd(predict(lm_fit))
+      lme_rsd <- lm_rsd
+    } else if (!err.) {
+      lme_coef <- unname(nlme::fixed.effects(lme_fit))
+      VarCorrnumeric <- nlme::VarCorr(lme_fit)[, 2] %>% as.numeric()
+      lme_sd_a <- VarCorrnumeric[1]
+      if (randomlmer == "Intercept") {
+        lme_rsd <- VarCorrnumeric[2]
+      } else if (randomlmer == "slope") {
+        lme_rsd <- VarCorrnumeric[3]
+      }
+    }
+    
+    if (grepl("\\*", a_formulasi) & grepl("^~1$", a_formulasi)) {
+      intercept_ <- lm_coef[!grepl("^mat_s", names(lm_coef))]
+      spls_ <- lm_coef[grepl("^mat_s", names(lm_coef))]
+      lm_coef <- c(intercept_, spls_)
+    }
+    
+    if (grepl("\\*", a_formulasi) & !grepl("^~1$", a_formulasi)) {
+      intercept_ <- lm_coef[!grepl("mat_s", names(lm_coef))]
+      spls_ <- lm_coef[grepl("mat_s", names(lm_coef))]
+      lm_coef <- c(intercept_, spls_)
+    }
+    
+    lm_a_all <- lm_coef[1:ncol(acovmat)]
+    if (!is.null(bfixed)) {
+      if(grepl("^pb", select_model)) lm_b_all <- lm_a_all * 0.9
+      if(!grepl("^pb", select_model)) lm_b_all <- lm_a_all * 0.9
+    } else {
+      lm_b_all <- NULL
+    }
+    if (!is.null(cfixed)) {
+      lm_c_all <- rep(0, ncol(ccovmat))
+    } else {
+      lm_c_all <- NULL
+    }
+    if (!is.null(dfixed)) {
+      lm_d_all <- rep(0, ncol(dcovmat))
+    } else {
+      lm_d_all <- NULL
+    }
+    
+    if (!is.null(efixed)) {
+      lm_e_all <- rep(0, ncol(ecovmat))
+    } else {
+      lm_e_all <- NULL
+    }
+    
+    if (!is.null(ffixed)) {
+      lm_f_all <- rep(0, ncol(fcovmat))
+    } else {
+      lm_f_all <- NULL
+    }
+    
+    if (!is.null(gfixed)) {
+      lm_g_all <- rep(0, ncol(gcovmat))
+    } else {
+      lm_g_all <- NULL
+    }
+    
+    if (!is.null(hfixed)) {
+      lm_h_all <- rep(0, ncol(hcovmat))
+    } else {
+      lm_h_all <- NULL
+    }
+    
+    if (!is.null(ifixed)) {
+      lm_i_all <- rep(0, ncol(icovmat))
+    } else {
+      lm_i_all <- NULL
+    }
+    
+    names(lm_a_all) <- acovcoefnames
+    names(lm_b_all) <- bcovcoefnames
+    names(lm_c_all) <- ccovcoefnames
+    names(lm_d_all) <- dcovcoefnames
+    names(lm_e_all) <- ecovcoefnames
+    names(lm_f_all) <- fcovcoefnames
+    names(lm_g_all) <- hcovcoefnames
+    names(lm_h_all) <- hcovcoefnames
+    names(lm_i_all) <- icovcoefnames
+    
+    lm_a <- lm_a_all[1]
+    lm_b <- lm_b_all[1]
+    lm_c <- lm_c_all[1]
+    lm_d <- lm_d_all[1]
+    lm_e <- lm_e_all[1]
+    lm_f <- lm_f_all[1]
+    lm_g <- lm_h_all[1]
+    lm_h <- lm_h_all[1]
+    lm_i <- lm_i_all[1]
+    
+    if (!is.null(ancov)) {
+      lm_a_cov <- lm_a_all[2:length(lm_a_all)]
+    } else {
+      lm_a_cov <- NULL
+    }
+    if (!is.null(bncov)) {
+      lm_b_cov <- lm_b_all[2:length(lm_b_all)]
+    } else {
+      lm_b_cov <- NULL
+    }
+    if (!is.null(cncov)) {
+      lm_c_cov <- lm_c_all[2:length(lm_c_all)]
+    } else {
+      lm_c_cov <- NULL
+    }
+    if (!is.null(dncov)) {
+      lm_d_cov <- lm_d_all[2:length(lm_d_all)]
+    } else {
+      lm_d_cov <- NULL
+    }
+    if (!is.null(encov)) {
+      lm_e_cov <- lm_e_all[2:length(lm_e_all)]
+    } else {
+      lm_e_cov <- NULL
+    }
+    if (!is.null(fncov)) {
+      lm_f_cov <- lm_f_all[2:length(lm_f_all)]
+    } else {
+      lm_f_cov <- NULL
+    }
+    if (!is.null(gncov)) {
+      lm_g_cov <- lm_g_all[2:length(lm_g_all)]
+    } else {
+      lm_g_cov <- NULL
+    }
+    if (!is.null(hncov)) {
+      lm_h_cov <- lm_h_all[2:length(lm_h_all)]
+    } else {
+      lm_h_cov <- NULL
+    }
+    if (!is.null(incov)) {
+      lm_i_cov <- lm_i_all[2:length(lm_i_all)]
+    } else {
+      lm_i_cov <- NULL
+    }
+    
+  } # if(select_model != 'sitar' & select_model != "rcs") {
+  
   
   
   
@@ -2969,6 +2802,8 @@ prepare_formula <- function(x,
   }
   
   #######################################################
+  
+ 
   
   
   # brms removes white spaces from the coefficient names
@@ -3047,7 +2882,7 @@ prepare_formula <- function(x,
     ecovcoefnames = ecovcoefnames,
     fcovcoefnames = fcovcoefnames,
     gcovcoefnames = gcovcoefnames,
-    jcovcoefnames = hcovcoefnames,
+    hcovcoefnames = hcovcoefnames,
     icovcoefnames = icovcoefnames,
     scovcoefnames = scovcoefnames,
     
@@ -3117,36 +2952,33 @@ prepare_formula <- function(x,
     icovcoefnames_gr_str_form = icovcoefnames_gr_str_form,
     scovcoefnames_gr_str_form = scovcoefnames_gr_str_form,
     
-    dparncov = dparncov,
-    
+    dparncov             = dparncov,
     sigmancov            = sigmancov,
     sigmacovcoefnames    = sigmacovcoefnames,
     sigmancov_gr         = sigmancov_gr,
     sigmacovcoefnames_gr = sigmacovcoefnames_gr,
     
-    
-    sigmancov_gr_str = sigmancov_gr_str,
-    
+    sigmancov_gr_str            = sigmancov_gr_str,
     sigmacovcoefnames_gr_str    = sigmacovcoefnames_gr_str,
     sigmacovcoefnames_gr_str_id = sigmacovcoefnames_gr_str_id,
     sigmacovcoefnames_gr_str_form = sigmacovcoefnames_gr_str_form,
     
     
     gr_str_unique_id = gr_str_unique_id,
-    gr_str_id_all   = gr_str_id_all,
-    gr_str_form_all = gr_str_form_all, 
-    gr_str_coef_all = gr_str_coef_all,
-    gr_str_ncov_all = gr_str_ncov_all,
-    gr_str_corr_all = gr_str_corr_all,
-    gr_str_corr_tf  = gr_str_corr_tf,
+    gr_str_id_all    = gr_str_id_all,
+    gr_str_form_all  = gr_str_form_all, 
+    gr_str_coef_all  = gr_str_coef_all,
+    gr_str_ncov_all  = gr_str_ncov_all,
+    gr_str_corr_all  = gr_str_corr_all,
+    gr_str_corr_tf   = gr_str_corr_tf,
     
     sigma_str_unique_id = sigma_str_unique_id,
-    sigma_str_id_all   = sigma_str_id_all,
-    sigma_str_form_all = sigma_str_form_all, 
-    sigma_str_coef_all = sigma_str_coef_all,
-    sigma_str_ncov_all = sigma_str_ncov_all,
-    sigma_str_corr_all = sigma_str_corr_all,
-    sigma_str_corr_tf = sigma_str_corr_tf,
+    sigma_str_id_all    = sigma_str_id_all,
+    sigma_str_form_all  = sigma_str_form_all, 
+    sigma_str_coef_all  = sigma_str_coef_all,
+    sigma_str_ncov_all  = sigma_str_ncov_all,
+    sigma_str_corr_all  = sigma_str_corr_all,
+    sigma_str_corr_tf   = sigma_str_corr_tf,
     
     
     dparcovcoefnames = dparcovcoefnames,

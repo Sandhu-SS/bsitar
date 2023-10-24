@@ -1563,8 +1563,8 @@ bgm <- function(x,
                    data,
                    df = 4,
                    knots = NA,
-                   fixed = 'a + b + c + d + e + f',
-                   random = 'a + b + c + d + e + f',
+                   fixed = 'a + b + c + d + e + f + g + h + i',
+                   random = 'a + b + c + d + e + f + g + h + i',
                    select_model = 'sitar4r',
                    xoffset = 'mean',
                    bstart = 'apv',
@@ -1815,6 +1815,7 @@ bgm <- function(x,
       stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
   }
 
+  
   # check and set alias argument for formulas
   dots_allias <- list(...)
   collect_dot_names <- c()
@@ -2230,9 +2231,30 @@ bgm <- function(x,
   }
   
   
-  allowed_model_names   <- c('sitar', 'sitar3', 'sitar4', 'sitar4fr', 'sitar4r',
-                             'pb1', 'pb2', 'pb3', 
-                             "rcs")
+  # allowed_model_names <- c('sitar', 'sitar3', 'sitar4', 'sitar4fr', 'sitar4r',
+  #                            'pb1', 'pb2', 'pb3', 'logistic3', 'logistic2',
+  #                            "rcs")
+  
+  sitar_models    <- c('sitar', 'sitar3', 'sitar4', 'sitar4fr', 'sitar4r')
+  pb_models       <- c('pb1', 'pb2', 'pb3')
+  logistic_models <- c('logistic1', 'logistic2', 'logistic3')
+  rcs_models      <- c('rcs', 'rcsf', 'rcsfr')
+  
+  allowed_model_names <- c(sitar_models, pb_models, logistic_models, rcs_models)
+  
+  sitar_models    <- paste0(sitar_models, collapse=", ")
+  pb_models       <- paste0(pb_models, collapse=", ")
+  logistic_models <- paste0(logistic_models, collapse=", ")
+  rcs_models      <- paste0(rcs_models, collapse=", ")
+  
+  all_models <- paste0('NLME models: ', "\n  ", 
+                       '  SITAR: ',  sitar_models, "\n  ", 
+                       '  PB: ', pb_models, "\n  ", 
+                       '  LOGISTIC: ', logistic_models, "\n  ",
+                       'LME models: ', "\n  ", 
+                       '  RCS: ', rcs_models)
+  
+ 
   
   allowed_model_names_  <- paste(allowed_model_names, collapse = ", " )
   allowed_model_names__ <- paste0("(", allowed_model_names_, ")")
@@ -2240,7 +2262,7 @@ bgm <- function(x,
   if(!select_model %in% allowed_model_names) {
     stop("Currently supported models (via 'select_model' argument) are:",
          "\n ",
-         " ", paste(paste0("'", allowed_model_names, "'"), collapse = ", ")
+         " ", all_models
          )
   }
   
@@ -3452,7 +3474,11 @@ bgm <- function(x,
 
       if(select_model == 'pb1' | 
          select_model == 'pb2' | 
-         select_model == 'pb3') {
+         select_model == 'pb3' |
+         select_model == 'logistic1' |
+         select_model == 'logistic2' |
+         select_model == 'logistic3' 
+         ) {
         if(length(parm_letters_fixed) != length(allowed_parm_letters))
           stop("For model '", select_model, "'", ", 
                the number of parameters must be ",
@@ -3575,9 +3601,12 @@ bgm <- function(x,
     if(select_model == 'pb1')   allowed_parm_letters <- letters[1:5]
     if(select_model == 'pb2')   allowed_parm_letters <- letters[1:6]
     if(select_model == 'pb3')   allowed_parm_letters <- letters[1:6]
+    if(select_model == 'logistic1')   allowed_parm_letters <- letters[1:3]
+    if(select_model == 'logistic2')   allowed_parm_letters <- letters[1:6]
+    if(select_model == 'logistic3')   allowed_parm_letters <- letters[1:9]
     
     if(select_model == 'rcs')   allowed_parm_letters <- letters[1] # c('a', 's')
-  
+    
     
     fixedsi_randomsi <- 
       validate_fixed_random_parms(
@@ -3653,12 +3682,6 @@ bgm <- function(x,
     }
     
     
-    # if(select_model == 'rcs') {
-    #   if(!grepl('s', fixedsi))
-    #     stop("For 'rcs' model, please specify s in the",
-    #          "\n ",
-    #          " fixed effects structure i.e., fixed='a+s'")
-    # }
     
     
     
@@ -4165,7 +4188,7 @@ bgm <- function(x,
     
 
     if(is.null(parameterization)) {
-      checkoccs <- data %>% 
+      checkoccs <- datai %>% 
         dplyr::filter(!is.na(ysi)) %>% 
         droplevels() %>% 
         dplyr::mutate(nid = dplyr::n_distinct(idsi)) %>%
@@ -4174,7 +4197,7 @@ bgm <- function(x,
         dplyr::mutate(NoccAI = max(NoccPI)) %>% 
         dplyr::ungroup()
       
-      if(min(checkoccs$nocc) >= 10) {
+      if(min(checkoccs$NoccAI) >= 10) {
         parameterization = 'cp'
       } else {
         parameterization = 'ncp'

@@ -1341,7 +1341,7 @@ add_context_getknots_fun <-
   
   
 
-  if(grepl("^pb", select_model)) {
+  if(grepl("^pb", select_model) | grepl("^logistic", select_model)) {
     abcnames <- paste0(strsplit(gsub("\\+", " ", 
                                      fixedsi), " ")[[1]], sep = ",")
     fullabcsnames <- abcnames
@@ -1390,7 +1390,6 @@ add_context_getknots_fun <-
       funstring <- "a-2.0*(a-b)./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))"
       if(utils::packageVersion('rstan') < 2.26) funstring <- 
           gsub(".*", " .* ", funstring, fixed = T)
-      # returnmu    <- paste0("return ",  funstring)
       returnmu    <- paste0("return ", "(",  funstring, ")")
       returnmu_d0 <- funstring
       returnmu_d1 <- "rep_vector(2.0,N).*(a-b).*(c.*exp(c.*(Xm-e))+
@@ -1503,17 +1502,18 @@ add_context_getknots_fun <-
       if(utils::packageVersion('rstan') < 2.26) funstring <- gsub(".*", " .* ", 
                                                                   funstring, 
                                                                   fixed = T)
-      # returnmu    <- paste0("return ",  funstring)
       returnmu    <- paste0("return ", "(",  funstring, ")")
       returnmu_d0 <- funstring
-      returnmu_d1 <- "rep_vector(4.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      returnmu_d1 <- 
+      "rep_vector(4.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
       c.*exp(c.*(Xm-e)))./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
       2.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))+
       rep_vector(4.0,N).*(a-b).*d.*exp(d.*(Xm-e))./
       ((exp(f.*(Xm-e))+exp(c.*(Xm-e))).*(rep_vector(1.0,N)+
       exp(d.*(Xm-e)))^2.0)"
       
-      returnmu_d2 <- "-rep_vector(8.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      returnmu_d2 <- 
+      "-rep_vector(8.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
       c.*exp(c.*(Xm-e)))^2.0./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
       3.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))-
       rep_vector(8.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
@@ -1527,7 +1527,8 @@ add_context_getknots_fun <-
       rep_vector(4.0,N).*(a-b).*d^2.0.*exp(d.*(Xm-e))./((exp(f.*(Xm-e))+
       exp(c.*(Xm-e))).*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^2.0)"
       
-      returnmu_d3 <- "rep_vector(24.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      returnmu_d3 <- 
+      "rep_vector(24.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
       c.*exp(c.*(Xm-e)))^3.0./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
       4.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))+
       rep_vector(24.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+c.*exp(c.*(Xm-e)))^
@@ -1563,6 +1564,248 @@ add_context_getknots_fun <-
       returnmu_d2 <- paste0(returnmu_d2, ";")
       returnmu_d3 <- paste0(returnmu_d3, ";")
     } # if(select_model == 'pb3') {
+    
+    
+    
+    if(select_model == 'logistic1') {
+      funstring <- "a./(1+exp(-b.*(Xm-c)))"
+      if(utils::packageVersion('rstan') < 2.26) funstring <- 
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      returnmu_d1 <- "a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0"
+      
+      returnmu_d2 <- 
+        "rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
+        (1 + exp(-b.*(Xm - c)))^3.0 - 
+        a.*b^2.0.*exp(-b.*(Xm - c))./
+        (1 + exp(-b.*(Xm - c)))^2.0"
+      
+      returnmu_d3 <- 
+        "rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^3.0./
+        (1 + exp(-b.*(Xm - c)))^4.0 - 
+        rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^2.0./
+        (1 + exp(-b.*(Xm - c)))^3.0 + 
+        a.*b^3.0.*exp(-b.*(Xm - c))./
+        (1 + exp(-b.*(Xm - c)))^2.0"
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'logistic3') {
+    
+    
+    
+    # a - asymtote
+    # b - at theta
+    # c - s0
+    # d - theta1
+    # e - s1
+    # f - theta2
+    
+    # Alternative form -> (a./(1+exp(-c.*(x-e)))) + (1-b./(1+exp(-d.*(x-f))))
+    
+    if(select_model == 'logistic2') {
+      funstring <- "(b./(1+exp(-c.*(Xm-d)))) + ((a-b)./(1+exp(-e.*(Xm-f))))"
+      if(utils::packageVersion('rstan') < 2.26) funstring <- 
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      returnmu_d1 <- 
+        "b.*c.*exp(-c.*(Xm - d))./(1 + exp(-c.*(Xm - d)))^2.0 + 
+        (a - b).*e.*(1 - b.*c.*exp(-c.*(Xm - d))./
+        (1 + exp(-c.*(Xm - d)))^2.0).*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^2.0"
+      
+      returnmu_d2 <- 
+        "rep_vector(2.0,N).*b.*c^2.0.*exp(-c.*(Xm - d))^2.0./
+        (1 + exp(-c.*(Xm - d)))^3 - 
+        b.*c^2.0.*exp(-c.*(Xm - d))./(1 + exp(-c.*(Xm - d)))^2.0 + 
+        rep_vector(2.0,N).*(a - b).*e^2.0.*(1 - b.*c.*exp(-c.*(Xm - d))./
+        (1 + exp(-c.*(Xm - d)))^2.0)^2.0.*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))^2.0./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^3 +
+        (a - b).*e.*(-rep_vector(2.0,N).*b.*c^2.0.*exp(-c.*(Xm - d))^2.0./
+                       (1 + exp(-c.*(Xm - d)))^3 + b.*c^2.0.*exp(-c.*(Xm - d))./
+                       (1 + exp(-c.*(Xm - d)))^2.0).*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^2.0 - 
+        (a - b).*e^2.0.*(1 - b.*c.*exp(-c.*(Xm - d))./
+                           (1 + exp(-c.*(Xm - d)))^2.0)^2.0.*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^2.0"
+      
+      returnmu_d3 <- 
+        "rep_vector(6.0,N).*b.*c^3.0.*exp(-c.*(Xm - d))^3.0./
+        (1 + exp(-c.*(Xm - d)))^4.0 - 
+        rep_vector(6.0,N).*b.*c^3.0.*exp(-c.*(Xm - d))^2.0./
+        (1 + exp(-c.*(Xm - d)))^3.0 + b.*c^3.0.*exp(-c.*(Xm - d))./
+        (1 + exp(-c.*(Xm - d)))^2.0 + rep_vector(6.0,N).*(a - b).*e^3.0.*
+        (1 - b.*c.*exp(-c.*(Xm - d))./(1 + exp(-c.*(Xm - d)))^2.0)^3.0.*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))^3.0./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^4.0 + 
+        rep_vector(6.0,N).*(a - b).*
+        e^2.0.*(1 - b.*c.*exp(-c.*(Xm - d))./(1 + exp(-c.*(Xm - d)))^2.0).*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))^2.0.*
+        (-rep_vector(2.0,N).*b.*c^2.0.*exp(-c.*(Xm - d))^2.0./
+           (1 + exp(-c.*(Xm - d)))^3.0 + 
+           b.*c^2.0.*exp(-c.*(Xm - d))./(1 + exp(-c.*(Xm - d)))^2.0)./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^3.0 - 
+        rep_vector(6.0,N).*(a - b).*e^3.0.*(1 - b.*c.*exp(-c.*(Xm - d))./
+                                              (1 + exp(-c.*(Xm - d)))^2.0)^3.0.*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))^2.0./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^3.0 + (a - b).*e.*
+        (-rep_vector(6.0,N).*b.*c^3.0.*exp(-c.*(Xm - d))^3.0./
+           (1 + exp(-c.*(Xm - d)))^4.0 + 
+           rep_vector(6.0,N).*b.*c^3.0.*exp(-c.*(Xm - d))^2.0./
+           (1 + exp(-c.*(Xm - d)))^3.0 - 
+           b.*c^3.0.*exp(-c.*(Xm - d))./(1 + exp(-c.*(Xm - d)))^2.0).*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^2.0 - 
+        rep_vector(3.0,N).*(a - b).*e^2.0.*(-rep_vector(2.0,N).*b.*c^2.0.*
+                                              exp(-c.*(Xm - d))^2.0./
+                                              (1 + exp(-c.*(Xm - d)))^3.0 + 
+                                              b.*c^2.0.*exp(-c.*(Xm - d))./
+                                              (1 + exp(-c.*(Xm - d)))^2.0).*
+        (1 - b.*c.*exp(-c.*(Xm - d))./(1 + exp(-c.*(Xm - d)))^2.0).*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^2.0 + 
+        (a - b).*e^3.*(1 - b.*c.*exp(-c.*(Xm - d))./
+                         (1 + exp(-c.*(Xm - d)))^2.0)^3.*
+        exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d)))))./
+        (1 + exp(-e.*(Xm - b./(1 + exp(-c.*(Xm - d))))))^2.0"
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'logistic3') {
+    
+      
+    
+    if(select_model == 'logistic3') {
+      funstring <- 
+        "(a ./ (1 + exp(-b .* (Xm - c)))) + 
+        (d ./ (1 + exp(-e .* (Xm - f)))) +
+        (g ./ (1 + exp(-h .* (Xm - i))))"
+      if(utils::packageVersion('rstan') < 2.26) funstring <- 
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      
+      
+      # returnmu_d1 <- 
+      #   "(a .* b .* exp(-b .* (Xm - c)))./(exp(-b .* (Xm - c)) + 1)^2.0 + 
+      #   (d .* e .* exp(-e .* (Xm - f)))./(exp(-e .* (Xm - f)) + 1)^2.0 + 
+      #   (g .* h .* exp(-h .* (Xm - i)))./(exp(-h .* (Xm - i)) + 1)^2.0"
+      # 
+      # returnmu_d2 <- 
+      #   "(a .* ((rep_vector(2.0,N) .* b^2.0 .* 
+      #             exp(-rep_vector(2.0,N) .* b .* (Xm - c))) ./ 
+      #            (exp(-b .* (Xm - c)) + 1)^3.0 - 
+      #            (b^2.0 .* exp(-b .* (Xm - c))) ./ 
+      #            (exp(-b .* (Xm - c)) + 1.0)^2.0)) + 
+      #   (d .* ((rep_vector(2.0,N) .* e^2.0 .* 
+      #             exp(-rep_vector(2.0,N) .* e .* (Xm - f))) ./ 
+      #            (exp(-e .* (Xm - f)) + 1)^3.0 - 
+      #            (e^2.0 .* exp(-e .* (Xm - f))) ./ 
+      #            (exp(-e .* (Xm - f)) + 1.0)^2.0)) +
+      #   (g .* ((rep_vector(2.0,N) .* h^2.0 .* 
+      #             exp(-rep_vector(2.0,N) .* h .* (Xm - i))) ./ 
+      #            (exp(-h .* (Xm - i)) + 1)^3.0 - 
+      #            (h^2.0 .* exp(-h .* (Xm - i))) ./ 
+      #            (exp(-h .* (Xm - i)) + 1.0)^2.0)) "
+      # 
+      # returnmu_d3 <- returnmu_d2
+      
+      
+      returnmu_d1 <- 
+        "a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0 + 
+        d.*e.*(1 - a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 + 
+        g.*h.*exp(-h.*(Xm - i))./(1 + exp(-h.*(Xm - i)))^2.0"
+        
+        
+      returnmu_d2 <- 
+        "rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
+        (1 + exp(-b.*(Xm - c)))^3.0 - 
+        a.*b^2.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0 + 
+        rep_vector(2.0,N).*d.*e^2.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
+                                        (1 + exp(-b.*(Xm - c)))^2.0)^2.0.*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^2.0./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^3.0 + 
+        d.*e.*(-rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
+                 (1 + exp(-b.*(Xm - c)))^3.0 + 
+                 a.*b^2.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 - 
+        d.*e^2.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
+                     (1 + exp(-b.*(Xm - c)))^2.0)^2.0.*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 + 
+        rep_vector(2.0,N).*g.*h^2.0.*exp(-h.*(Xm - i))^2.0./
+        (1 + exp(-h.*(Xm - i)))^3.0 - 
+        g.*h^2.0.*exp(-h.*(Xm - i))./(1 + exp(-h.*(Xm - i)))^2.0"
+      
+      
+      returnmu_d3 <- 
+        "rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^3.0./
+        (1 + exp(-b.*(Xm - c)))^4.0 - 
+        rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^2.0./
+        (1 + exp(-b.*(Xm - c)))^3.0 + 
+        a.*b^3.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0 + 
+        rep_vector(6.0,N).*d.*e^3.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
+                                        (1 + exp(-b.*(Xm - c)))^2.0)^3.0.*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^3.0./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^4.0 + 
+        rep_vector(6.0,N).*d.*e^2.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
+                                        (1 + exp(-b.*(Xm - c)))^2.0).*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^2.0.*
+        (-rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
+           (1 + exp(-b.*(Xm - c)))^3.0 + 
+           a.*b^2.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0)./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^3.0 - 
+        rep_vector(6.0,N).*d.*e^3.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
+                                        (1 + exp(-b.*(Xm - c)))^2.0)^3.0.*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^2.0./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^3.0 + 
+        d.*e.*(-rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^3.0./
+                 (1 + exp(-b.*(Xm - c)))^4.0 + 
+                 rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^2.0./
+                 (1 + exp(-b.*(Xm - c)))^3.0 -
+                 a.*b^3.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 - 
+        rep_vector(3.0,N).*d.*e^2.0.*(-rep_vector(2.0,N).*
+                                        a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
+                                        (1 + exp(-b.*(Xm - c)))^3.0 +
+                                        a.*b^2.0.*exp(-b.*(Xm - c))./
+                                        (1 + exp(-b.*(Xm - c)))^2.0).*
+        (1 - a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 + 
+        d.*e^3.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
+                     (1 + exp(-b.*(Xm - c)))^2.0)^3.0.*
+        exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
+        (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 + 
+        rep_vector(6.0,N).*g.*h^3.0.*exp(-h.*(Xm - i))^3.0./
+        (1 + exp(-h.*(Xm - i)))^4.0 - 
+        rep_vector(6.0,N).*g.*h^3.0.*exp(-h.*(Xm - i))^2.0./
+        (1 + exp(-h.*(Xm - i)))^3.0 + 
+        g.*h^3.0.*exp(-h.*(Xm - i))./(1 + exp(-h.*(Xm - i)))^2.0"
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'logistic3') {
+    
+    
+    
+    
+    
+    
+    
     
     
     insert_getX_name <- paste0("  vector[N] Xm = ", getxname, "(Xp);")
