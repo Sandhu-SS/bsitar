@@ -1385,7 +1385,12 @@ add_context_getknots_fun <-
     
     getx_fun     <- paste0(add_context_getx_fun, "\n", getx_fun_raw)
 
-    
+    # a - asymtote
+    # b - size at theta
+    # c - s0
+    # d - s1
+    # e - time (theta)
+
     if(select_model == 'pb1') {
       funstring <- "a-2.0*(a-b)./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))"
       if(utils::packageVersion('rstan') < 2.26) funstring <- 
@@ -1412,6 +1417,13 @@ add_context_getknots_fun <-
       returnmu_d2 <- paste0(returnmu_d2, ";")
       returnmu_d3 <- paste0(returnmu_d3, ";")
     } # if(select_model == 'pb') {
+    
+    # a - asymtote
+    # b - size at theta
+    # c - s0
+    # d - s1
+    # e - time (theta)
+    # f - gamma
     
     if(select_model == 'pb2') {
       funstring <- "a-((a-b)./(((0.5*exp((f.*c).*(Xm-e)))+
@@ -1495,6 +1507,12 @@ add_context_getknots_fun <-
     } # if(select_model == 'pb2') {
     
     
+    # a - asymtote
+    # b - size at theta
+    # c - s0
+    # d - s1
+    # e - time (theta)
+    # f - gamma
     
     if(select_model == 'pb3') {
       funstring <- "a-((4.0*(a-b))./((exp(f.*(Xm-e))+
@@ -1567,6 +1585,10 @@ add_context_getknots_fun <-
     
     
     
+    # a - asymptote
+    # b - rate constant
+    # c - time at midpoint
+    
     if(select_model == 'logistic1') {
       funstring <- "a./(1+exp(-b.*(Xm-c)))"
       if(utils::packageVersion('rstan') < 2.26) funstring <- 
@@ -1597,7 +1619,7 @@ add_context_getknots_fun <-
     
     
     # a - asymtote
-    # b - at theta
+    # b - size at theta
     # c - s0
     # d - theta1
     # e - s1
@@ -1682,6 +1704,15 @@ add_context_getknots_fun <-
     } # if(select_model == 'logistic3') {
     
       
+    # a - size at infancy
+    # b - rate at infancy 
+    # c - time at infancy
+    # d - size at preadolescence 
+    # e - rate at preadolescence 
+    # f - time at preadolescence
+    # g - size at adolescence 
+    # h - rate at adolescence 
+    # i - time at adolescence
     
     if(select_model == 'logistic3') {
       funstring <- 
