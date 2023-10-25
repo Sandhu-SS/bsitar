@@ -2091,6 +2091,10 @@ bgm <- function(x,
   xs <- NULL;
   ids <- NULL;
   dfs <- NULL;
+  XXi <- NULL;
+  onepic <- NULL;
+  temp1 <- NULL;
+  temp2 <- NULL;
   
   
   
@@ -4383,6 +4387,18 @@ bgm <- function(x,
         return(out)
       }
     
+    
+    
+    if (xoffsetsi == 'NA' | xoffsetsi == '') {
+      if(grepl('sitar', select_model) | grepl('rcs', select_model)) {
+        xoffsetsi <- 'mean'
+      } else {
+        xoffsetsi <- 0
+      }
+    }
+    
+    
+    
     xoffset <-
       eval_xoffset_bstart_args(xsi, ysi, knots, datai, xoffsetsi, xfunsi)
     bstart <-
@@ -4661,6 +4677,62 @@ bgm <- function(x,
     xsd     <- sd(datai[[xsi]], na.rm = TRUE) %>% round(., 2)
     
     
+    ###
+    # This for logistic3 model
+    ymeanxmin_ysdxmin <- 
+      datai %>% dplyr::mutate(XXi := eval(parse(text = xsi))) %>% 
+      dplyr::filter(XXi %in% 
+                      (min(XXi):min(XXi)+0)) %>% 
+      dplyr::mutate(onepic = 1) %>% dplyr::group_by(onepic) %>% 
+      dplyr::mutate(temp1 = mean(eval(parse(text = ysi)))) %>% 
+      dplyr::mutate(temp2 = sd(eval(parse(text = ysi)))) %>% 
+      dplyr::ungroup() %>% 
+      dplyr::select(temp1, temp2) %>% 
+      dplyr::filter(dplyr::row_number() == 1) %>% 
+      unlist() %>% as.numeric()
+    
+    ymeanxmin <- round(ymeanxmin_ysdxmin[1], 2)
+    ysdxmin   <- round(ymeanxmin_ysdxmin[2], 2)
+    
+    ymeanxmax_ysdxmax <- 
+      datai %>% dplyr::mutate(XXi := eval(parse(text = xsi))) %>% 
+      dplyr::filter(XXi %in% 
+                      (max(XXi):max(XXi)+0)) %>% 
+      dplyr::mutate(onepic = 1) %>% dplyr::group_by(onepic) %>% 
+      dplyr::mutate(temp1 = mean(eval(parse(text = ysi)))) %>% 
+      dplyr::mutate(temp2 = sd(eval(parse(text = ysi)))) %>% 
+      dplyr::ungroup() %>% 
+      dplyr::select(temp1, temp2) %>% 
+      dplyr::filter(dplyr::row_number() == 1) %>% 
+      unlist() %>% as.numeric()
+    
+    ymeanxmax <- round(ymeanxmax_ysdxmax[1], 2)
+    ysdxmax   <- round(ymeanxmax_ysdxmax[2], 2)
+    
+    ymeanxmid_ysdxmid <- 
+      datai %>% dplyr::mutate(XXi := eval(parse(text = xsi))) %>% 
+      dplyr::filter(XXi %in% 
+                      (((max(XXi)-min(XXi))/1.8):
+                         ((max(XXi)-min(XXi))/1.0))) %>% 
+      dplyr::mutate(onepic = 1) %>% dplyr::group_by(onepic) %>% 
+      dplyr::mutate(temp1 = mean(eval(parse(text = ysi)))) %>% 
+      dplyr::mutate(temp2 = sd(eval(parse(text = ysi)))) %>% 
+      dplyr::ungroup() %>% 
+      dplyr::select(temp1, temp2) %>% 
+      dplyr::filter(dplyr::row_number() == 1) %>% 
+      unlist() %>% as.numeric()
+    
+    ymeanxmid <- round(ymeanxmid_ysdxmid[1], 2)
+    ysdxmid   <- round(ymeanxmid_ysdxmid[2], 2)
+    
+    
+    ymeanxmidxmaxdiff <- ymeanxmax - ymeanxmid
+    ysdxmidxmaxdiff   <- (ysdxmax + ysdxmid) / 2
+    
+    ymeanxmidxmaxdiff <- round(ymeanxmidxmaxdiff, 2)
+    ysdxmidxmaxdiff   <- round(ysdxmidxmaxdiff, 2)
+    
+    ###
     
     
     
@@ -4744,6 +4816,14 @@ bgm <- function(x,
         "ysd",
         "ymad",
         "xsd",
+        'ymeanxmin', 
+        'ysdxmin', 
+        'ymeanxmax', 
+        'ysdxmax', 
+        'ymeanxmid', 
+        'ysdxmid',
+        'ymeanxmidxmaxdiff',
+        'ysdxmidxmaxdiff',
         "lm_a_cov_sd",
         "lm_b_cov_sd",
         "lm_c_cov_sd",
@@ -4922,7 +5002,7 @@ bgm <- function(x,
     e_prior_betasi <- set_default_priors(select_model_arg, e_prior_betasi)
     f_prior_betasi <- set_default_priors(select_model_arg, f_prior_betasi)
     g_prior_betasi <- set_default_priors(select_model_arg, g_prior_betasi)
-    h_prior_betasi <- set_default_priors(select_model_arg, g_prior_betasi)
+    h_prior_betasi <- set_default_priors(select_model_arg, h_prior_betasi)
     i_prior_betasi <- set_default_priors(select_model_arg, i_prior_betasi)
     
     
@@ -4935,9 +5015,8 @@ bgm <- function(x,
     e_prior_sdsi <- set_default_priors(select_model_arg, e_prior_sdsi)
     f_prior_sdsi <- set_default_priors(select_model_arg, f_prior_sdsi)
     g_prior_sdsi <- set_default_priors(select_model_arg, g_prior_sdsi)
-    h_prior_sdsi <- set_default_priors(select_model_arg, g_prior_sdsi)
+    h_prior_sdsi <- set_default_priors(select_model_arg, h_prior_sdsi)
     i_prior_sdsi <- set_default_priors(select_model_arg, i_prior_sdsi)
-    
     
     
     

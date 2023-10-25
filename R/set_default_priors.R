@@ -37,6 +37,7 @@ set_default_priors <- function(select_model,
       class <- 'sd'
   }
   
+  
   ##############################################################
   # class b
   ##############################################################
@@ -58,7 +59,7 @@ set_default_priors <- function(select_model,
           prior_out <- "normal(ymax, ysd, autoscale = 2.5)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(ymean, ysd, autoscale = 2.5)"
+          prior_out <- "normal(ymeanxmin, ysdxmin, autoscale = 2.5)"
         }
       } else {
         
@@ -81,13 +82,13 @@ set_default_priors <- function(select_model,
         prior_out <- "normal(ymaxs, ysd, autoscale = 2.5)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          prior_out <- "normal(0.1, 0.1, autoscale = 1)"
         }
         if (select_model == 'logistic2') {
           prior_out <- "normal(ymaxs, ysd, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 0.75, autoscale = 1)"
+          prior_out <- "normal(1, 1, autoscale = 1)"
         }
       } else {
         
@@ -110,13 +111,13 @@ set_default_priors <- function(select_model,
         prior_out <- "normal(0.1, 0.1, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          prior_out <- "normal(5, 3, autoscale = 1)"
         }
         if (select_model == 'logistic2') {
           prior_out <- "normal(0.1, 0.1, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          prior_out <- "normal(1, 0.5, autoscale = 1)"
         }
       } else {
         
@@ -145,7 +146,7 @@ set_default_priors <- function(select_model,
           prior_out <- "normal(1.2, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(ymeanxmid, ysdxmid, autoscale = 2.5)"
         }
       } else {
         
@@ -174,7 +175,7 @@ set_default_priors <- function(select_model,
           prior_out <- "normal(7, 2, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0.2, 0.1, autoscale = 1)"
         }
       } else {
         
@@ -203,7 +204,7 @@ set_default_priors <- function(select_model,
           prior_out <- "normal(13, 2, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(7, 2, autoscale = 1)"
         }
       } else {
         
@@ -232,7 +233,8 @@ set_default_priors <- function(select_model,
           prior_out <- "normal(1.2, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- 
+            "normal(ymeanxmidxmaxdiff, ysdxmidxmaxdiff, autoscale = 2.5)"
         }
       } else {
         
@@ -244,7 +246,7 @@ set_default_priors <- function(select_model,
   }
   
   
-  # parameter g class b
+  # parameter h class b
   if (parameter == 'h' & class == 'b') {
     if (prior == 'NA' | prior == '') {
       if (grepl('^sitar', select_model)) {
@@ -261,7 +263,7 @@ set_default_priors <- function(select_model,
           prior_out <- "normal(1.2, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(1.5, 0.25, autoscale = 1)"
         }
       } else {
         
@@ -290,7 +292,7 @@ set_default_priors <- function(select_model,
           prior_out <- "normal(1.2, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(14, 2, autoscale = 1)"
         }
       } else {
         
@@ -313,20 +315,20 @@ set_default_priors <- function(select_model,
   if (parameter == 'a' & class == 'sd') {
     if (prior == 'NA' | prior == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 2.5)"
+        prior_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 2.5)"
+        prior_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(ymax, ysd, autoscale = 2.5)"
+        prior_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(ymax, ysd, autoscale = 2.5)"
+          prior_out <- "normal(0, ysd, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(ymaxs, ysd, autoscale = 2.5)"
+          prior_out <- "normal(0, ysd, autoscale = 2.5)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(ymean, ysd, autoscale = 2.5)"
+          prior_out <- "normal(0, ysdxmin, autoscale = 2.5)"
         }
       } else {
         
@@ -344,18 +346,18 @@ set_default_priors <- function(select_model,
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(ymaxs, ysd, autoscale = 2.5)"
+        prior_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 0.1, autoscale = 1)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, ysd, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 0.75, autoscale = 1)"
+          prior_out <- "normal(0, 1, autoscale = 1)"
         }
       } else {
         
@@ -373,18 +375,18 @@ set_default_priors <- function(select_model,
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0.1, 0.1, autoscale = 1)"
+        prior_out <- "normal(0, 0.1, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          prior_out <- "normal(0, 3, autoscale = 1)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          prior_out <- "normal(0, 0.1, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          prior_out <- "normal(0, 1, autoscale = 1)"
         }
       } else {
         
@@ -402,18 +404,18 @@ set_default_priors <- function(select_model,
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        prior_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
           prior_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, ysdxmid, autoscale = 2.5)"
         }
       } else {
         
@@ -431,18 +433,18 @@ set_default_priors <- function(select_model,
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        prior_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
           prior_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 2, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 0.15, autoscale = 1)"
         }
       } else {
         
@@ -460,18 +462,18 @@ set_default_priors <- function(select_model,
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        prior_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
           prior_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 2, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 2, autoscale = 1)"
         }
       } else {
         
@@ -489,18 +491,18 @@ set_default_priors <- function(select_model,
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        prior_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
           prior_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, ysdxmidxmaxdiff, autoscale = 1)"
         }
       } else {
         
@@ -512,24 +514,24 @@ set_default_priors <- function(select_model,
   }
   
   
-  # parameter g class sd
+  # parameter h class sd
   if (parameter == 'h' & class == 'sd') {
     if (prior == 'NA' | prior == '') {
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        prior_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
           prior_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 0.25, autoscale = 1)"
         }
       } else {
         
@@ -547,18 +549,18 @@ set_default_priors <- function(select_model,
       if (grepl('^sitar', select_model)) {
         prior_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        prior_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        prior_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
           prior_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          prior_out <- "normal(0, 2, autoscale = 1)"
         }
       } else {
         

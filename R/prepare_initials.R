@@ -632,6 +632,22 @@ prepare_initials <- function(init_argument,
                         paste0("estart", resp_),
                         ept(name_initialsi))
             evaluated_init <- ept(eit) %>% as.numeric()
+            
+          } else if (ept(name_initialsi) == 'ymeanxmin') {
+            eit <- gsub("ymeanxmin",
+                        paste0("ymeanxmin", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ymeanxmax') {
+            eit <- gsub("ymeanxmax",
+                        paste0("ymeanxmax", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ymeanxmid') {
+            eit <- gsub("ymeanxmid",
+                        paste0("ymeanxmid", resp_),
+                        ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
           } else if (ept(name_initialsi) == 'prior') {
             stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
             stanvname_cnt <- 0
@@ -776,6 +792,32 @@ prepare_initials <- function(init_argument,
             eit <-
               gsub("lme_sd_a",
                    paste0("lme_sd_a", resp_),
+                   ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+            
+            
+          } else if (ept(name_initialsi) == 'ysdxmin') {
+            eit <-
+              gsub("ysdxmin",
+                   paste0("ysdxmin", resp_),
+                   ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ysdxmax') {
+            eit <-
+              gsub("ysdxmax",
+                   paste0("ysdxmax", resp_),
+                   ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ysdxmid') {
+            eit <-
+              gsub("ysdxmid",
+                   paste0("ysdxmid", resp_),
+                   ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ysdxmidxmaxdiff') {
+            eit <-
+              gsub("ysdxmidxmaxdiff",
+                   paste0("ysdxmidxmaxdiff", resp_),
                    ept(name_initialsi))
             evaluated_init <- ept(eit) %>% as.numeric()
           } else if (ept(name_initialsi) == 'prior') {
@@ -1204,6 +1246,30 @@ prepare_initials <- function(init_argument,
             eit <- gsub("lm_rsd",
                         paste0("lm_rsd", resp_),
                         ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ysdxmin') {
+            eit <-
+              gsub("ysdxmin",
+                   paste0("ysdxmin", resp_),
+                   ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ysdxmax') {
+            eit <-
+              gsub("ysdxmax",
+                   paste0("ysdxmax", resp_),
+                   ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ysdxmid') {
+            eit <-
+              gsub("ysdxmid",
+                   paste0("ysdxmid", resp_),
+                   ept(name_initialsi))
+            evaluated_init <- ept(eit) %>% as.numeric()
+          } else if (ept(name_initialsi) == 'ysdxmidxmaxdiff') {
+            eit <-
+              gsub("ysdxmidxmaxdiff",
+                   paste0("ysdxmidxmaxdiff", resp_),
+                   ept(name_initialsi))
             evaluated_init <- ept(eit) %>% as.numeric()
           } else if (ept(name_initialsi) == 'prior') {
             stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))

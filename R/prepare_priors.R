@@ -732,15 +732,25 @@ if(dist != 'flat') {
       if (grepl("^location$", pname_)) {
         if (class == "b") {
           if (nlpar == "a" & cov_nlpar == "") {
-            allowed_parm_options <- c("lm", "ymean", "ymedian", "ymax")
+            allowed_parm_options <- c("lm", "ymean", 
+                                      "ymedian", "ymax",
+                                      "ymeanxmax", "ymeanxmin")
           } else if (nlpar == "b") {
-            allowed_parm_options <- c("lm", "ymaxs")
+            allowed_parm_options <- c("lm", "ymaxs", "bstart")
           } else if (nlpar == "c") {
             allowed_parm_options <- c("lm", "cstart")
           } else if (nlpar == "d") {
-            allowed_parm_options <- c("lm", "dstart")
+            allowed_parm_options <- c("lm", "dstart", "ymeanxmid")
           } else if (nlpar == "e") {
             allowed_parm_options <- c("lm", "estart")
+          } else if (nlpar == "f") {
+            allowed_parm_options <- NULL
+          } else if (nlpar == "g") {
+            allowed_parm_options <- c("ymeanxmax", "ymeanxmidxmaxdiff")
+          } else if (nlpar == "h") {
+            allowed_parm_options <- NULL
+          } else if (nlpar == "i") {
+            allowed_parm_options <- c("lm", "estart", "bstart")
           } else if (nlpar == "s") {
             allowed_parm_options <- c("lm")
           } else if (cov_nlpar != "") {
@@ -781,48 +791,73 @@ if(dist != 'flat') {
           allowed_init_options_beta <- NULL
         }
       }
-      
+      allowed_parm_options <- c("ysd", "ymad")
       ##########
       if (grepl("^scale$", pname_) &
           dist != "gamma" & dist != "inv_gamma") {
-        if (class == "b") {
+        if (class == "b" | class == "sd") {
           if (nlpar == "a" & cov_nlpar == "") {
-            allowed_parm_options <- c("ysd", "ymad", "lme_sd_a")
+            allowed_parm_options <- c("ysd", "ymad", "lme_sd_a",
+                                      "ysdxmax", "ysdxmin")
+          } else if (nlpar == "b") {
+            allowed_parm_options <- c("lm", "ymaxs", "bstart")
+          } else if (nlpar == "c") {
+            allowed_parm_options <- c("lm", "cstart")
           } else if (nlpar == "d") {
-            allowed_parm_options <- c("ysd", "ymad")
+            allowed_parm_options <- c("ysd", "ymad", "ysdxmid")
+          } else if (nlpar == "e") {
+            allowed_parm_options <- c("lm", "estart")
+          } else if (nlpar == "f") {
+            allowed_parm_options <- NULL
+          } else if (nlpar == "g") {
+            allowed_parm_options <- c("ysdxmax", "ysdxmidxmaxdiff")
+          } else if (nlpar == "h") {
+            allowed_parm_options <- NULL
+          } else if (nlpar == "i") {
+            allowed_parm_options <- NULL
           } else if (nlpar == "s") {
             allowed_parm_options <- c("sdx")
           } else if (cov_nlpar != "") {
-            allowed_parm_options <- NULL
+            allowed_parm_options <- c("lm")
           } else {
             allowed_parm_options <- NULL
           }
         }
         
-        if (class == "sd") {
-          if (nlpar == "a" & cov_nlpar == "") {
-            allowed_parm_options <- c("ysd", "ymad", "lme_sd_a")
-          } else if (nlpar == "d" & cov_nlpar == "") {
-            allowed_parm_options <- c("ysd", "ymad")
-          } else {
-            allowed_parm_options <- NULL
-          }
-        }
+        
+        
+        # if (class == "sd") {
+        #   if (nlpar == "a" & cov_nlpar == "") {
+        #     allowed_parm_options <- c("ysd", "ymad", "lme_sd_a")
+        #   } else if (nlpar == "d" & cov_nlpar == "") {
+        #     allowed_parm_options <- c("ysd", "ymad")
+        #   } else {
+        #     allowed_parm_options <- NULL
+        #   }
+        # }
+        
+        
+        
         if (class == "cor") {
           allowed_parm_options <- NULL
         }
+        
         if (class == "sigma") {
           allowed_parm_options <- c("ysd", "ymad", "lme_rsd", "lm_rsd")
         }
+        
         if (class == "") {
           allowed_parm_options <- NULL
         }
+        
         if (dpar != "") {
           allowed_parm_options <- NULL
         }
+        
         if (cov_dpar != "") {
           allowed_parm_options <- NULL
         }
+        
         if (class == '' &
             grepl("dpar_", prior_argument) &
             !grepl("dpar_cov", prior_argument)) {
@@ -922,6 +957,12 @@ if(dist != 'flat') {
             evaluated_parameter <- ept(eit)
           } else if (x_i == paste0("ymedian", empty_sufx)) {
             eit <-  gsub("ymedian", paste0("ymedian", resp_), x_i)
+            evaluated_parameter <- ept(eit) 
+          } else if (x_i == paste0("ymeanxmin", empty_sufx)) {
+            eit <-  gsub("ymeanxmin", paste0("ymeanxmin", resp_), x_i)
+            evaluated_parameter <- ept(eit) 
+          } else if (x_i == paste0("ymeanxmax", empty_sufx)) {
+            eit <-  gsub("ymeanxmax", paste0("ymeanxmax", resp_), x_i)
             evaluated_parameter <- ept(eit)
           } else {
             check_evalation_of_numeric_pdata_obj(
@@ -946,7 +987,8 @@ if(dist != 'flat') {
                 nlpar,
                 ", class ",
                 class,
-                " are:\n lm, ymean, ymedian, ymax, a numeric value (e.g., 2)",
+                " are:\n lm, ymean, ymedian, ymax, ymeanxmin, ymeanxmax,
+                a numeric value (e.g., 2)",
                 "\n",
                 " or a charater such as zzz",
                 "\n with zzz defined in the prior_data",
@@ -1103,6 +1145,12 @@ if(dist != 'flat') {
               message("location parameter specified as lm for nlpar",
                       nlpar,
                       " is set as 0")
+          } else if (x_i == paste0("ymeanxmid", empty_sufx)) {
+            eit <-  gsub("ymeanxmid", paste0("ymeanxmid", resp_), x_i)
+            evaluated_parameter <- ept(eit) 
+          } else if (x_i == paste0("ymeanxmid", empty_sufx)) {
+            eit <-  gsub("ymeanxmid", paste0("ymeanxmid", resp_), x_i)
+            evaluated_parameter <- ept(eit)
           } else if (x_i == paste0("ymean", empty_sufx)) {
             stop("option ymean as location parameter not alloweed for nlpar ",
                  nlpar)
@@ -1287,6 +1335,16 @@ if(dist != 'flat') {
               message("location parameter specified as lm for nlpar",
                       nlpar,
                       " is set as 0")
+          } else if (x_i == paste0("ymeanxmax", empty_sufx)) {
+            eit <-  gsub("ymeanxmax", paste0("ymeanxmax", resp_), x_i)
+            evaluated_parameter <- ept(eit) 
+          } else if (x_i == paste0("ymeanxmidxmaxdiff", empty_sufx)) {
+            eit <-  gsub("ymeanxmidxmaxdiff", 
+                         paste0("ymeanxmidxmaxdiff", resp_), x_i)
+            evaluated_parameter <- ept(eit) 
+          } else if (x_i == paste0("ymax", empty_sufx)) {
+            eit <-  gsub("ymax", paste0("ymax", resp_), x_i)
+            evaluated_parameter <- ept(eit)
           } else if (x_i == paste0("ymean", empty_sufx)) {
             stop("option ymean as location parameter not alloweed for nlpar ",
                  nlpar)
@@ -3194,6 +3252,12 @@ if(dist != 'flat') {
           } else if (x_i == paste0("lme_sd_a", empty_sufx)) {
             eit <-  gsub("lme_sd_a", paste0("lme_sd_a", resp_), x_i)
             evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("ysdxmin", empty_sufx)) {
+            eit <-  gsub("ysdxmin", paste0("ysdxmin", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmin", empty_sufx)) {
+            eit <-  gsub("ysdxmin", paste0("ysdxmin", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
           } else {
             check_evalation_of_numeric_pdata_obj(
               prior_argument,
@@ -3343,6 +3407,12 @@ if(dist != 'flat') {
           } else if (x_i == paste0("dmad", empty_sufx)) {
             eit <-  gsub("dmad", paste0("dmad", resp_), x_i)
             evaluated_parameter <- 1 * ept(eit)
+          } else if (x_i == paste0("ysdxmid", empty_sufx)) {
+            eit <-  gsub("ysdxmid", paste0("ysdxmid", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmid", empty_sufx)) {
+            eit <-  gsub("ysdxmid", paste0("ysdxmid", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
           } else {
             check_evalation_of_numeric_pdata_obj(
               prior_argument,
@@ -3484,6 +3554,13 @@ if(dist != 'flat') {
           } else if (x_i == paste0("xmad", empty_sufx)) {
             eit <-  gsub("xmad", paste0("xmad", resp_), x_i)
             evaluated_parameter <- 1 * ept(eit)
+          } else if (x_i == paste0("ysdxmax", empty_sufx)) {
+            eit <-  gsub("ysdxmax", paste0("ysdxmax", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmidxmaxdiff", empty_sufx)) {
+            eit <-  gsub("ysdxmidxmaxdiff", 
+                         paste0("ysdxmidxmaxdiff", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
           } else {
             check_evalation_of_numeric_pdata_obj(
               prior_argument,
@@ -4256,6 +4333,12 @@ if(dist != 'flat') {
           } else if (x_i == paste0("lme_sd_a", empty_sufx)) {
             eit <-  gsub("lme_sd_a", paste0("lme_sd_a", resp_), x_i)
             evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("ysdxmax", empty_sufx)) {
+            eit <-  gsub("ysdxmax", paste0("ysdxmax", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmin", empty_sufx)) {
+            eit <-  gsub("ysdxmin", paste0("ysdxmin", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
           } else {
             check_evalation_of_numeric_pdata_obj(
               prior_argument,
@@ -4391,6 +4474,16 @@ if(dist != 'flat') {
           } else if (x_i == paste0("ymad", empty_sufx)) {
             eit <-  gsub("ymad", paste0("ymad", resp_), x_i)
             evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("ysdxmid", empty_sufx)) {
+            eit <-  gsub("ysdxmid", paste0("ysdxmid", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmidxmaxdiff", empty_sufx)) {
+            eit <-  gsub("ysdxmidxmaxdiff", 
+                         paste0("ysdxmidxmaxdiff", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmax", empty_sufx)) {
+            eit <-  gsub("ysdxmax", paste0("ysdxmax", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
           } else {
             check_evalation_of_numeric_pdata_obj(
               prior_argument,
@@ -4511,32 +4604,51 @@ if(dist != 'flat') {
         
         # scale g (class sd)
         if (nlpar == "g" & class == "sd" & grepl("g", randomsi)) {
-          check_evalation_of_numeric_pdata_obj(
-            prior_argument,
-            p_str_in,
-            x_i,
-            x,
-            pname_,
-            dist,
-            nlpar,
-            class,
-            allowed_parm_options,
-            splitmvar_w2
-          )
-          if (is.numeric(eval(parse(text = x_i))) |
-              !is.null(eval(parse(text = x_i)))) {
-            eit <- x_i
-            evaluated_parameter <- ept(eit)
+          if (x_i == paste0("ysd", empty_sufx)) {
+            eit <-  gsub("ysd", paste0("ysd", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("ymad", empty_sufx)) {
+            eit <-  gsub("ymad", paste0("ymad", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
+          } else if (x_i == paste0("ysdxmid", empty_sufx)) {
+            eit <-  gsub("ysdxmid", paste0("ysdxmid", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmidxmaxdiff", empty_sufx)) {
+            eit <-  gsub("ysdxmidxmaxdiff", 
+                         paste0("ysdxmidxmaxdiff", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit) 
+          } else if (x_i == paste0("ysdxmax", empty_sufx)) {
+            eit <-  gsub("ysdxmax", paste0("ysdxmax", resp_), x_i)
+            evaluated_parameter <- scale_factor * ept(eit)
           } else {
-            stop(
-              "scale parameter options for nlpar ",
+            check_evalation_of_numeric_pdata_obj(
+              prior_argument,
+              p_str_in,
+              x_i,
+              x,
+              pname_,
+              dist,
               nlpar,
-              ", class ",
               class,
-              " are:\n lm, a numeric value (e.g., 2) or a charater such as zzz",
-              "\n with zzz defined in the prior_data",
-              "e.g., prior_data = list(zzz = 2)"
+              allowed_parm_options,
+              splitmvar_w2
             )
+            if (is.numeric(eval(parse(text = x_i))) |
+                !is.null(eval(parse(text = x_i)))) {
+              eit <- x_i
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else {
+              stop(
+                "scale parameter options for nlpar ",
+                nlpar,
+                ", class ",
+                class,
+                " are:\n ysd, ysd, lme_sd_a, or a numeric value (e.g., 2)",
+                "or a charater such as zzz",
+                "\n with zzz defined in the prior_data",
+                "e.g., prior_data = list(zzz = 2)"
+              )
+            }
           }
           if (length(evaluated_parameter) < nrep_of_parms)
             evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
