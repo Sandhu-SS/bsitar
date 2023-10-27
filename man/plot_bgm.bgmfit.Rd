@@ -23,6 +23,7 @@
   avg_reffects = NULL,
   ipts = NULL,
   xrange = NULL,
+  xrange_search = NULL,
   takeoff = FALSE,
   trough = FALSE,
   acgv = FALSE,
@@ -173,6 +174,12 @@ same range for all individuals within the higher order grouping variable
 (e.g., study). Code \code{xrange  = 2} sets the identical range dplyr::across the
 entire sample. Lastly, a paired numeric values can be supplied e.g.,
 \code{xrange = c(6, 20)} will set the range between 6 and 20.}
+
+\item{xrange_search}{A vector of length two, or a character string
+\code{'range'} to set the range of \code{x} variable within which growth
+parameters are searched. This is useful, for example. when there is more
+than one peak and user wants to summarize peak within a given range of the
+\code{x} variable. Default \code{xrange_search = NULL}.}
 
 \item{takeoff}{Optional (logical, default \code{FALSE}) to indicate whether
 or not to calculate the age at takeoff velocity (ATGV) and the takeoff

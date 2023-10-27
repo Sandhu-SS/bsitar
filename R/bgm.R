@@ -2204,8 +2204,33 @@ bgm <- function(x,
          single character string")
   }
   
+  
+  fit_edited_scode <- FALSE
+  
+  if(select_model == 'logistic1e' |
+     select_model == 'logistic2e' |
+     select_model == 'logistic3e' |
+     parameterization == 'cp'
+     ) {
+    
+    fit_edited_scode <- TRUE
+    
+  }
+  
+  
+  # For editing scode 
+  select_model_edit <- select_model
+  
+  if(select_model == 'logistic1e') select_model <- 'logistic1'
+  if(select_model == 'logistic2e') select_model <- 'logistic2'
+  if(select_model == 'logistic3e') select_model <- 'logistic3'
+  
+  
+  
+  
   # For default prior setting
   select_model_arg <- select_model
+  
   
   if(select_model == 'pb')       select_model <- 'pb1'
   if(select_model == 'logistic') select_model <- 'logistic1'
@@ -4712,8 +4737,8 @@ bgm <- function(x,
     ymeanxmid_ysdxmid <- 
       datai %>% dplyr::mutate(XXi := eval(parse(text = xsi))) %>% 
       dplyr::filter(XXi %in% 
-                      (((max(XXi)-min(XXi))/1.8):
-                         ((max(XXi)-min(XXi))/1.0))) %>% 
+                      (((max(XXi)-min(XXi))/2):
+                         ((max(XXi)-min(XXi))/1.4))) %>% 
       dplyr::mutate(onepic = 1) %>% dplyr::group_by(onepic) %>% 
       dplyr::mutate(temp1 = mean(eval(parse(text = ysi)))) %>% 
       dplyr::mutate(temp2 = sd(eval(parse(text = ysi)))) %>% 
@@ -4727,10 +4752,12 @@ bgm <- function(x,
     
     
     ymeanxmidxmaxdiff <- ymeanxmax - ymeanxmid
-    ysdxmidxmaxdiff   <- (ysdxmax + ysdxmid) / 2
+    ysdxmidxmaxdiff   <- (ysdxmax + ysdxmin) / 2
     
     ymeanxmidxmaxdiff <- round(ymeanxmidxmaxdiff, 2)
     ysdxmidxmaxdiff   <- round(ysdxmidxmaxdiff, 2)
+    
+    if(is.na(ymeanxmidxmaxdiff)) ymeanxmidxmaxdiff <- (ymeanxmax + ymeanxmin)/2
     
     ###
     
@@ -4919,6 +4946,18 @@ bgm <- function(x,
     
     init_data_internal <- prior_data_internal
     init_args_internal <- prior_args_internal
+    
+    
+    # check and set default initials (class = b)
+    a_init_betasi <- set_default_inits(select_model_arg, a_init_betasi)
+    b_init_betasi <- set_default_inits(select_model_arg, b_init_betasi)
+    c_init_betasi <- set_default_inits(select_model_arg, c_init_betasi)
+    d_init_betasi <- set_default_inits(select_model_arg, d_init_betasi)
+    e_init_betasi <- set_default_inits(select_model_arg, e_init_betasi)
+    f_init_betasi <- set_default_inits(select_model_arg, f_init_betasi)
+    g_init_betasi <- set_default_inits(select_model_arg, g_init_betasi)
+    h_init_betasi <- set_default_inits(select_model_arg, h_init_betasi)
+    i_init_betasi <- set_default_inits(select_model_arg, i_init_betasi)
     
     
     init_arguments <-
@@ -6754,16 +6793,23 @@ bgm <- function(x,
   }
   
   
-  scode  <- do.call(brms::make_stancode, brm_args)
+  scode_final  <- do.call(brms::make_stancode, brm_args)
   sdata  <- do.call(brms::make_standata, brm_args)
   
-  # sigma_formula_grsi sigma_formula_gr_strsi
+  
   if(parameterization == 'cp') {
-    scode_final <- edit_scode_ncp_to_cp(scode, 
+    scode_final <- edit_scode_ncp_to_cp(scode_final, 
                                         genq_only = FALSE, 
                                         normalize = normalize)
   } else if(parameterization == 'ncp') {
-    scode_final <- scode
+    scode_final <- scode_final
+  }
+  
+  
+  if(select_model_edit == 'logistic3e') {
+    scode_final <- edit_scode_logistic3(scode_final, 
+                                        genq_only = FALSE, 
+                                        normalize = normalize)
   }
   
   
@@ -6893,34 +6939,47 @@ bgm <- function(x,
     }
  
     
-    
-    
-    model_info <- list()
-    
-    if(parameterization == 'cp') {
+    if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {
         # stop("Please use 'rstan' as backend for CP parameterization")
-         brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args)
+        brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args)
       }
       if(brm_args$backend == "rstan") {
         brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args)
       }
-      model_info[['parameterization']] <- 'cp'
-    } 
-    
-    
-    
-    
-    
-    
-    
-    if(parameterization == 'ncp') {
+    } else if(!fit_edited_scode) {
       brmsfit <- do.call(brms::brm, brm_args)
-      model_info[['parameterization']] <- 'ncp'
     }
     
     
     
+    # model_info <- list()
+    # 
+    # if(parameterization == 'cp') {
+    #   if(brm_args$backend == "cmdstanr") {
+    #     # stop("Please use 'rstan' as backend for CP parameterization")
+    #      brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args)
+    #   }
+    #   if(brm_args$backend == "rstan") {
+    #     brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args)
+    #   }
+    #   model_info[['parameterization']] <- parameterization
+    # } 
+    # 
+    # 
+    # if(parameterization == 'ncp') {
+    #   brmsfit <- do.call(brms::brm, brm_args)
+    #   model_info[['parameterization']] <- parameterization
+    # }
+    
+    
+    
+    
+    model_info <- list()
+    
+    model_info[['emodel']] <- scode_final
+    
+    model_info[['parameterization']] <- parameterization
 
     for (i in 1:length(funlist_rnamelist)) {
       model_info[[funlist_rnamelist[[i]]]] <- funlist_rvaluelist[[i]]

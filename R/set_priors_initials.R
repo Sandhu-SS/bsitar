@@ -942,7 +942,7 @@ set_priors_initials <- function(a_prior_beta,
   if(!is.null(h_formulasi)) {
     if (grepl("~0", h_formulasi, fixed = T)) {
       h_form_0 <- TRUE
-      f_cov_prior_beta <- NULL
+      h_cov_prior_beta <- NULL
     } else {
       h_form_0 <- FALSE
     }
@@ -954,7 +954,7 @@ set_priors_initials <- function(a_prior_beta,
   if(!is.null(i_formulasi)) {
     if (grepl("~0", i_formulasi, fixed = T)) {
       i_form_0 <- TRUE
-      f_cov_prior_beta <- NULL
+      i_cov_prior_beta <- NULL
     } else {
       i_form_0 <- FALSE
     }

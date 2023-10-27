@@ -146,6 +146,12 @@
 #'   entire sample. Lastly, a paired numeric values can be supplied e.g.,
 #'   \code{xrange = c(6, 20)} will set the range between 6 and 20.
 #'   
+#' @param  xrange_search A vector of length two, or a character string 
+#' \code{'range'} to set the range of \code{x} variable within which growth 
+#' parameters are searched. This is useful, for example. when there is more 
+#' than one peak and user wants to summarize peak within a given range of the 
+#' \code{x} variable. Default \code{xrange_search = NULL}. 
+#' 
 #' @param seed An integer (default \code{123}) that is passed to the estimation
 #'   method.
 #'   
@@ -247,6 +253,7 @@ growthparameters.bgmfit <- function(model,
                                ipts = NULL,
                                conf = 0.95,
                                xrange = NULL,
+                               xrange_search = NULL,
                                seed = 123,
                                future = FALSE,
                                future_session = 'multisession',
@@ -277,6 +284,7 @@ growthparameters.bgmfit <- function(model,
   Estimate <- NULL;
   ':=' <- NULL;
   . <- NULL;
+  XXi <- NULL;
   
   
   
@@ -374,10 +382,35 @@ growthparameters.bgmfit <- function(model,
              takeoff,
              trough,
              acgv,
+             xrange_search,
              summary,
              robust) {
       Xnames <- names(.x)[grepl("^P._D.", names(.x))]
       .x <- .x %>% data.frame()
+      
+      if(!is.null(xrange_search)) {
+        if(length(xrange_search) == 1) {
+          if(is.symbol(xrange_search)) xrange_search <- deparse(xrange_search)
+          if(xrange_search == 'range') {
+            ullimits <- range(.x[[xvar]])
+            .x <- .x %>% dplyr::mutate(XXi := eval(parse(text = xvar))) %>% 
+              dplyr::filter(XXi %in% (ullimits[1]:ullimits[2]))
+          }
+        } else if(length(xrange_search) == 2) {
+            ullimits <- xrange_search
+            .x <- .x %>% dplyr::mutate(XXi := eval(parse(text = xvar))) %>% 
+              dplyr::filter(XXi %in% (ullimits[1]:ullimits[2]))
+            } else {
+            stop("argument xrange_search should be either 
+         'range' or vector of length 2")
+          }
+      }
+      
+      # print(.x)
+      # print(xrange_search)
+      # print(nrow(.x))
+      # stop()
+      
       if (peak) {
         if (future)
           out_1 <-
@@ -389,7 +422,6 @@ growthparameters.bgmfit <- function(model,
               sitar::getPeak(.x[[xvar]], as.numeric(.x[[x]])))
         out_1 <- t(out_1)
         colnames(out_1) <- c("APGV", "PGV")
-        # out_1x <<- out_1
       } else if (!peak) {
         out_1 <- NULL
       }
@@ -472,7 +504,6 @@ growthparameters.bgmfit <- function(model,
               set_get___fun(x))
         out_3 <- t(out_3)
         # out_3x <<- out_3
-        # print("kkkkkkkkkkkkk")
        #  if(!summary) out_3 <- out_3 %>% do.call(rbind, .) 
         colnames(out_3) <- c("ACGV", "CGV")
       } else if (!acgv) {
@@ -576,6 +607,7 @@ growthparameters.bgmfit <- function(model,
                 takeoff = takeoff,
                 trough = trough,
                 acgv = acgv,
+                xrange_search = xrange_search,
                 summary = summary,
                 robust = robust
               )
@@ -592,6 +624,7 @@ growthparameters.bgmfit <- function(model,
                 takeoff = takeoff,
                 trough = trough,
                 acgv = acgv,
+                xrange_search = xrange_search,
                 summary = summary,
                 robust = robust
               )
@@ -610,6 +643,7 @@ growthparameters.bgmfit <- function(model,
                 takeoff = takeoff,
                 trough = trough,
                 acgv = acgv,
+                xrange_search = xrange_search,
                 summary = summary,
                 robust = robust
               )
@@ -626,6 +660,7 @@ growthparameters.bgmfit <- function(model,
                 takeoff = takeoff,
                 trough = trough,
                 acgv = acgv,
+                xrange_search = xrange_search,
                 summary = summary,
                 robust = robust
               )

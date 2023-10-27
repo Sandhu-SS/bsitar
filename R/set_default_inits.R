@@ -1,12 +1,12 @@
 
 
 
-#' An internal function to set default prior for model specific parameters
+#' An internal function to set default initials for model specific parameters
 #'
 #' @param select_model A character string specifying the model fitted. Please 
 #' see \code{bgm} function for details. 
 #' 
-#' @param prior A character string specifying the prior. Please see
+#' @param init A character string specifying the initials. Please see
 #' \code{bgm} function for details. 
 #' 
 #' @param class A character string specifying the parameter class. Options
@@ -21,15 +21,15 @@
 #' @return A character string.
 #' @keywords internal
 #' @noRd
-set_default_priors <- function(select_model,
-                               prior,
+set_default_inits <- function(select_model,
+                               init,
                                class = NULL,
                                parameter = NULL) {
   if (is.null(parameter)) {
-    parameter <- strsplit(deparse(substitute(prior)), "_")[[1]][1]
+    parameter <- strsplit(deparse(substitute(init)), "_")[[1]][1]
   }
   if (is.null(class)) {
-    get_suffix <- strsplit(deparse(substitute(prior)), "_")[[1]]
+    get_suffix <- strsplit(deparse(substitute(init)), "_")[[1]]
     get_suffix <- get_suffix[length(get_suffix)]
     if (grepl("^beta", get_suffix))
       class <- 'b'
@@ -44,262 +44,266 @@ set_default_priors <- function(select_model,
   
   # parameter a class b
   if (parameter == 'a' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 2.5)"
+        init_out <- "ymean"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 2.5)"
+        init_out <- "ymean"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(ymax, ysd, autoscale = 2.5)"
+        init_out <- "ymax"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(ymax, ysd, autoscale = 2.5)"
+          init_out <- "ymax"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(ymax, ysd, autoscale = 2.5)"
+          init_out <- "ymax"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(ymin, ysdxmin, autoscale = 2.5)"
+          init_out <- "ymin"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter b class b
   if (parameter == 'b' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- 0
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(ymaxs, ysd, autoscale = 2.5)"
+        init_out <- "ymaxs"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0.1, 0.1, autoscale = 1)"
+          init_out <- 0.1
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(ymaxs, ysd, autoscale = 1)"
+          init_out <- "ymaxs"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.5, 0.5, autoscale = 1)"
+          init_out <- 1.5
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter c class b
   if (parameter == 'c' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- 0
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0.1, 0.1, autoscale = 1)"
+        init_out <- 0.1
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(5, 3, autoscale = 1)"
+          init_out <- 5.0
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0.1, 0.1, autoscale = 1)"
+          init_out <- 0.1
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0.1, 0.1, autoscale = 1)"
+          init_out <- 0.1
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter d class b
   if (parameter == 'd' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- 1.0
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        init_out <- 1.2
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- 1.0
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          init_out <- 1.2
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(ymeanxmid, ysdxmid, autoscale = 2.5)"
+          init_out <- "ymeanxmid"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter e class b
   if (parameter == 'e' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        if(select_model == 'pb1') init_out <- 13
+        if(select_model == 'pb2') init_out <- 13
+        if(select_model == 'pb3') init_out <- 13
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- NULL
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(7, 2, autoscale = 1)"
+          init_out <- 7
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0.2, 0.1, autoscale = 1)"
+          init_out <- 0.15
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter f class b
   if (parameter == 'f' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        if(select_model == 'pb1') init_out <- NULL
+        if(select_model == 'pb2') init_out <- 2
+        if(select_model == 'pb3') init_out <- 1
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- NULL
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(13, 2, autoscale = 1)"
+          init_out <- 13
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(5, 3, autoscale = 1)"
+          init_out <- 5
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter g class b
   if (parameter == 'g' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- NULL
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          init_out <- NULL
         }
         if (select_model == 'logistic3') {
-          prior_out <- 
-            "normal(ymeanxmidxmaxdiff, ysdxmidxmaxdiff, autoscale = 2.5)"
+          init_out <- 
+            "ymeanxmidxmaxdiff"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter h class b
   if (parameter == 'h' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- NULL
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          init_out <- NULL
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(1.5, 0.25, autoscale = 1)"
+          init_out <- 1.5
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter i class b
   if (parameter == 'i' & class == 'b') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(ymean, ysd, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+        init_out <- NULL
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- NULL
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(1.2, 0.25, autoscale = 1)"
+          init_out <- NULL
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(14, 2, autoscale = 1)"
+          init_out <- 13
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
@@ -313,261 +317,261 @@ set_default_priors <- function(select_model,
   
   # parameter a class sd
   if (parameter == 'a' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 2.5)"
+        init_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 2.5)"
+        init_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 2.5)"
+        init_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, ysd, autoscale = 2.5)"
+          init_out <- "normal(0, ysd, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, ysd, autoscale = 2.5)"
+          init_out <- "normal(0, ysd, autoscale = 2.5)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, ysdxmin, autoscale = 2.5)"
+          init_out <- "normal(0, ysdxmin, autoscale = 2.5)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter b class sd
   if (parameter == 'b' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 2.5)"
+        init_out <- "normal(0, ysd, autoscale = 2.5)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 0.1, autoscale = 1)"
+          init_out <- "normal(0, 0.1, autoscale = 1)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, ysd, autoscale = 1)"
+          init_out <- "normal(0, ysd, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 1, autoscale = 1)"
+          init_out <- "normal(0, 1, autoscale = 1)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter c class sd
   if (parameter == 'c' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, 0.1, autoscale = 1)"
+        init_out <- "normal(0, 0.1, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 3, autoscale = 1)"
+          init_out <- "normal(0, 3, autoscale = 1)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 0.1, autoscale = 1)"
+          init_out <- "normal(0, 0.1, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 1, autoscale = 1)"
+          init_out <- "normal(0, 1, autoscale = 1)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter d class sd
   if (parameter == 'd' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          init_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, ysdxmid, autoscale = 2.5)"
+          init_out <- "normal(0, ysdxmid, autoscale = 2.5)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter e class sd
   if (parameter == 'e' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          init_out <- "normal(0, 2, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 0.15, autoscale = 1)"
+          init_out <- "normal(0, 0.15, autoscale = 1)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter f class sd
   if (parameter == 'f' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          init_out <- "normal(0, 2, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          init_out <- "normal(0, 2, autoscale = 1)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter g class sd
   if (parameter == 'g' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          init_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, ysdxmidxmaxdiff, autoscale = 1)"
+          init_out <- "normal(0, ysdxmidxmaxdiff, autoscale = 1)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter h class sd
   if (parameter == 'h' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          init_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          init_out <- "normal(0, 0.25, autoscale = 1)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
   
   # parameter i class sd
   if (parameter == 'i' & class == 'sd') {
-    if (prior == 'NA' | prior == '') {
+    if (init == 'NA' | init == '') {
       if (grepl('^sitar', select_model)) {
-        prior_out <- "normal(0, 2, autoscale = 1)"
+        init_out <- "normal(0, 2, autoscale = 1)"
       } else if (grepl('^rcs', select_model)) {
-        prior_out <- "normal(0, ysd, autoscale = 1)"
+        init_out <- "normal(0, ysd, autoscale = 1)"
       } else if (grepl('^pb', select_model)) {
-        prior_out <- "normal(0, 0.25, autoscale = 1)"
+        init_out <- "normal(0, 0.25, autoscale = 1)"
       } else if (grepl('^logistic', select_model)) {
         if (select_model == 'logistic1') {
-          prior_out <- "normal(0, 2, autoscale = 2.5)"
+          init_out <- "normal(0, 2, autoscale = 2.5)"
         }
         if (select_model == 'logistic2') {
-          prior_out <- "normal(0, 0.25, autoscale = 1)"
+          init_out <- "normal(0, 0.25, autoscale = 1)"
         }
         if (select_model == 'logistic3') {
-          prior_out <- "normal(0, 2, autoscale = 1)"
+          init_out <- "normal(0, 2, autoscale = 1)"
         }
       } else {
         
       }
-      prior_out <- gsub_space(prior_out)
+      init_out <- gsub_space(init_out)
     } else {
-      prior_out <- prior
+      init_out <- init
     }
   }
   
@@ -575,7 +579,7 @@ set_default_priors <- function(select_model,
   
   
   # print(parameter)
-  # print(prior_out)
-  return(prior_out)
+  # print(init_out)
+  return(init_out)
 }
 
