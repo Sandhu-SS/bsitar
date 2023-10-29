@@ -2593,14 +2593,20 @@ bgm <- function(x,
   )), ",")[[1]]) > 1) {
     ttt <-
       gsub("\\s", "", paste(deparse(substitute(multivariate)), collapse = ""))
-    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
-    temp <- gsub("\\s", "", temp)
-    if (!grepl("^mvar=", temp[1])) {
-      temp[1] <- paste0("mvar=", temp[1])
-    }
-    temp <- paste(temp, collapse = ",")
-    temp <- paste0("list(", temp, ")")
-    multivariate <- list_to_quoted_if_not(temp)
+    # 28/10/2023 - don't know why this temp. It causes error when groupvar 
+    # not specified by the uses
+    # Instead directly using the 'ttt' in list_to_quoted_if_not'
+    # this issues was identified with the group_arg 
+    
+    # temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    # temp <- gsub("\\s", "", temp)
+    # if (!grepl("^mvar=", temp[1])) {
+    #   temp[1] <- paste0("mvar=", temp[1])
+    # }
+    # temp <- paste(temp, collapse = ",")
+    # temp <- paste0("list(", temp, ")")
+    # multivariate <- list_to_quoted_if_not(temp)
+    multivariate <- list_to_quoted_if_not(ttt)
   }
   
   
@@ -2699,14 +2705,20 @@ bgm <- function(x,
     ttt <-
       gsub("\\s", "", paste(deparse(substitute(univariate_by)), 
                             collapse = ""))
-    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
-    temp <- gsub("\\s", "", temp)
-    if (!grepl("^by=", temp[1])) {
-      temp[1] <- paste0("by=", temp[1])
-    }
-    temp <- paste(temp, collapse = ",")
-    temp <- paste0("list(", temp, ")")
-    univariate_by <- list_to_quoted_if_not(temp)
+    # 28/10/2023 - don't know why this temp. It causes error when groupvar 
+    # not specified by the uses
+    # Instead directly using the 'ttt' in list_to_quoted_if_not'
+    # this issues was identified with the group_arg 
+    
+    # temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    # temp <- gsub("\\s", "", temp)
+    # if (!grepl("^by=", temp[1])) {
+    #   temp[1] <- paste0("by=", temp[1])
+    # }
+    # temp <- paste(temp, collapse = ",")
+    # temp <- paste0("list(", temp, ")")
+    # univariate_by <- list_to_quoted_if_not(temp)
+    univariate_by <- list_to_quoted_if_not(ttt)
   }
   
   # Set group_arg arguments 
@@ -2830,14 +2842,19 @@ bgm <- function(x,
                            )), ",")[[1]]) > 1) {
     ttt <-
       gsub("\\s", "", paste(deparse(substitute(group_arg)), collapse = ""))
-    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
-    temp <- gsub("\\s", "", temp)
-    if (!grepl("^groupvar=", temp[1])) {
-      temp[1] <- paste0("groupvar=", temp[1])
-    }
-    temp <- paste(temp, collapse = ",")
-    temp <- paste0("list(", temp, ")")
-    group_arg <- list_to_quoted_if_not(temp)
+    # 28/10/2023 - don't know why this temp. It causes error when groupvar 
+    # not specified by the uses
+    # Instead directly using the 'ttt' in list_to_quoted_if_not'
+    
+    # temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    # temp <- gsub("\\s", "", temp)
+    # if (!grepl("^groupvar=", temp[1])) {
+    #   temp[1] <- paste0("groupvar=", temp[1])
+    # }
+    # temp <- paste(temp, collapse = ",")
+    # temp <- paste0("list(", temp, ")")
+    # group_arg <- list_to_quoted_if_not(temp)
+    group_arg <- list_to_quoted_if_not(ttt)
   }
   if (length(group_arg) == 0) {
     group_arg <- list()
@@ -2975,14 +2992,20 @@ bgm <- function(x,
     ttt <-
       gsub("\\s", "", paste(deparse(substitute(sigma_group_arg)), 
                             collapse = ""))
-    temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
-    temp <- gsub("\\s", "", temp)
-    if (!grepl("^groupvar=", temp[1])) {
-      temp[1] <- paste0("groupvar=", temp[1])
-    }
-    temp <- paste(temp, collapse = ",")
-    temp <- paste0("list(", temp, ")")
-    sigma_group_arg <- list_to_quoted_if_not(temp)
+    # 28/10/2023 - don't know why this temp. It causes error when groupvar 
+    # not specified by the uses
+    # Instead directly using the 'ttt' in list_to_quoted_if_not'
+    # this issues was identified with the group_arg 
+    
+    # temp <- sub("\\).*", "", sub(".*\\(", "", ttt))
+    # temp <- gsub("\\s", "", temp)
+    # if (!grepl("^groupvar=", temp[1])) {
+    #   temp[1] <- paste0("groupvar=", temp[1])
+    # }
+    # temp <- paste(temp, collapse = ",")
+    # temp <- paste0("list(", temp, ")")
+    # sigma_group_arg <- list_to_quoted_if_not(temp)
+    sigma_group_arg <- list_to_quoted_if_not(ttt)
   }
   if (length(sigma_group_arg) == 0) {
     sigma_group_arg <- list()
@@ -3120,6 +3143,8 @@ bgm <- function(x,
     sigma_group_arg$cor <- "un"
   if (is.null(sigma_group_arg$dist))
     sigma_group_arg$dist <- "gaussian"
+  
+  
   
   multivariate$verbose <-
     univariate_by$verbose <- group_arg$verbose <- verbose
@@ -5989,8 +6014,21 @@ bgm <- function(x,
           }
         }
       }
-      ilc <- ilc[lengths(ilc) != 0]
-      names(ilc) <- paste0("sd_", 1:length(ilc))
+      
+      # 29 10 2023
+      # Error if group_arg cor diagonal and no random effects
+      # Error in names(ilc) <- paste0("sd_", 1:length(ilc)) : 
+      #   'names' attribute [2] must be the same length as the vector [0]
+      # print(ilc) -> list()
+      # so enclused in if(!is_emptyx(ilc))
+      # Same below for for (zi in 1:length(ilc)) {
+      
+      if(!is_emptyx(ilc)) {
+        ilc <- ilc[lengths(ilc) != 0]
+        names(ilc) <- paste0("sd_", 1:length(ilc))
+      }
+      
+      
       
       for (sdi in names(ilc)) {
         brmsinits[[sdi]] <- ilc[[sdi]]
@@ -6002,9 +6040,13 @@ bgm <- function(x,
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
       temppp <- brmsinits[names(brmsinits) %in% keys]
       
-      for (zi in 1:length(ilc)) {
-        brmsinits[[paste0(c_it, zi)]] <- temppp[[zi]]
+      if(!is_emptyx(ilc)) {
+        for (zi in 1:length(ilc)) {
+          brmsinits[[paste0(c_it, zi)]] <- temppp[[zi]]
+        }
       }
+        
+      #
     }
   }  
   
@@ -6354,6 +6396,7 @@ bgm <- function(x,
       
     } # if(!is.null(decomp)) {
     
+    
    
     
     
@@ -6402,7 +6445,7 @@ bgm <- function(x,
         temp_stancode2cp <- edit_scode_ncp_to_cp(temp_stancode2, 
                                                  genq_only = FALSE, 
                                                  normalize = normalize)
-        # temp_stancode2cpx <<- temp_stancode2cp
+        
         newinits <- set_init_gr_effects(temp_stancode2cp, 
                                         temp_standata2, 
                                         parameterization = parameterization,
@@ -6426,6 +6469,100 @@ bgm <- function(x,
       )
     })
   }
+  
+  
+  
+  
+
+  # add stanvars for logistic3e
+  if(select_model_edit == 'logistic3e') {
+    temp_stancode_logistic3e <- brms::make_stancode(formula = bformula,
+                                          stanvars = bstanvars,
+                                          prior = brmspriors,
+                                          data = brmsdata)
+    temp_standata_logistic3e <- brms::make_standata(formula = bformula,
+                                                    stanvars = bstanvars,
+                                                    prior = brmspriors,
+                                                    data = brmsdata)
+    
+    
+    check_p_dimes <- c()
+    for (clines_tpi in names(temp_standata_logistic3e)) {
+      for (igr in 1:9) {
+        if(grepl(paste0("^K", "_"), clines_tpi) & 
+           grepl(paste0("_", letters[igr]), clines_tpi)) {
+           temd <- temp_standata_logistic3e[[clines_tpi]]
+          check_p_dimes <- c(check_p_dimes, temd)
+        }
+      }
+    }
+    
+    if(!all(check_p_dimes==check_p_dimes[1])) {
+      stop('All parameters must have the same number of parameters')
+    }
+    
+    
+    check_p_attr1 <- c()
+    for (clines_tpi in names(temp_standata_logistic3e)) {
+      for (igr in 1:9) {
+        if(grepl(paste0("^X", "_"), clines_tpi) & 
+           grepl(paste0("_", letters[igr]), clines_tpi)) {
+          temd <- temp_standata_logistic3e[[clines_tpi]]
+          temd2 <- attr(temd, "assign")[1]
+          check_p_attr1 <- c(check_p_attr1, temd2)
+        }
+      }
+    }
+    
+    
+    if(check_p_dimes[1] > 1) {
+      if(any(check_p_attr1 == 0)) {
+        stop('All parameters must have the covariate form as ~0+')
+      }
+    }
+    
+    
+    outlogistic3e <- edit_scode_for_logistic3(temp_stancode_logistic3e, 
+                                              # set_positive_ordered = FALSE,
+                                              # constraint = TRUE,
+                                              normalize = normalize)
+    
+    bstanvars <- bstanvars + brms::stanvar(scode = outlogistic3e$pcode, 
+                                           block = "parameters", 
+                                           position = "start")
+    
+    bstanvars <- bstanvars + brms::stanvar(scode = outlogistic3e$fcode, 
+                                           block = "functions")
+    
+    edit_ncov  <- as.integer(check_p_dimes[1])
+    edit_npar  <- as.integer(3)
+    edit_min_d <- array(rep(0, edit_ncov), dim = edit_ncov)
+    edit_max_d <- array(rep(500,  edit_ncov), dim = edit_ncov)
+    edit_min_v <- array(rep(0, edit_ncov), dim = edit_ncov)
+    edit_max_v <- array(rep(2.5,    edit_ncov), dim = edit_ncov)
+    edit_min_t <- array(rep(0,    edit_ncov), dim = edit_ncov)
+    edit_max_t <- array(rep(18,   edit_ncov), dim = edit_ncov)
+    bstanvars <- bstanvars + brms::stanvar(x = edit_ncov, name = 'Kedit',
+                                           block = "data")
+    bstanvars <- bstanvars + brms::stanvar(x = edit_npar, name = 'Cedit',
+                                           block = "data")
+    bstanvars <- bstanvars + brms::stanvar(x = edit_min_d, name = 'min_d',
+                                           block = "data")
+    bstanvars <- bstanvars + brms::stanvar(x = edit_max_d, name = 'max_d',
+                                           block = "data")
+    bstanvars <- bstanvars + brms::stanvar(x = edit_min_v, name = 'min_v',
+                                           block = "data")
+    bstanvars <- bstanvars + brms::stanvar(x = edit_max_v, name = 'max_v',
+                                           block = "data")
+    bstanvars <- bstanvars + brms::stanvar(x = edit_min_t, name = 'min_t',
+                                           block = "data")
+    bstanvars <- bstanvars + brms::stanvar(x = edit_max_t, name = 'max_t',
+                                           block = "data")
+    
+  } # if(select_model_edit == 'logistic3e') {
+  
+  
+  
   
   
   
@@ -6807,9 +6944,12 @@ bgm <- function(x,
   
   
   if(select_model_edit == 'logistic3e') {
-    scode_final <- edit_scode_logistic3(scode_final, 
-                                        genq_only = FALSE, 
-                                        normalize = normalize)
+    outedit_ <- edit_scode_for_logistic3(scode_final, 
+                                         # set_positive_ordered = FALSE,
+                                         # constraint = TRUE,
+                                         normalize = normalize)
+    # outedit_x <<- outedit_
+    scode_final <- outedit_$editedcode
   }
   
   
