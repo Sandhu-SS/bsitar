@@ -1835,3 +1835,145 @@ brms_via_rstan <- function(scode, sdata, brm_args) {
 
 
 
+#' Transform initial values for parameters with lower bound
+#'
+#' @param x An initial value on unconstrained parameter space 
+#' (\code{real value}).
+#' 
+#' @param lb A lower bound on the parameter space (\code{real value}).
+#'
+#' @return Transformed initial (\code{real value}).
+#' @keywords internal
+#' @noRd
+#'
+inits_lb <- function(x, lb = 0) {
+  if(x < 1) 1+log(1+x) + lb else log(x) + lb
+}
+
+
+
+#' Plot tripple logistic model with marked x and y axis
+#'
+#' @param model An object of class \code{brmsfit} 
+#' (\code{real value}).
+#' 
+#' @param return_plot A logical (default \code{FALSE}) to indicate whether to 
+#' return the plot object.
+#' 
+#' @param print_plot A logical (default \code{FALSE}) to indicate whether to 
+#' print plot along with the output
+#' 
+#' @param digits A integer (default \code{2}) to set the number of decimal 
+#' places.
+#'
+#' @return A plot object if (\code{return_plot = TRUE}).
+#' @keywords internal
+#' @noRd
+#'
+plot_lositic3 <- function(model, 
+                          return_plot = FALSE, 
+                          print_plot = TRUE,
+                          digits = 2 ,
+                          ...) {
+  
+  args <- list(...)
+  args$model <- model
+  
+  pob <- do.call(plot_bgm, args)
+  
+  fixed_ <- brms::fixef(model)
+  
+  yintercept_1 <- fixed_[1,1] + (fixed_[1,1] * fixed_[3,1])
+  xintercept_1 <- fixed_[3,1]
+  
+  yintercept_2 <- fixed_[4,1] + (fixed_[4,1] * fixed_[5,1]) 
+  xintercept_2 <- fixed_[6,1] + fixed_[3,1]
+  
+  yintercept_3 <- fixed_[1,1] + fixed_[4,1] + (fixed_[5,1] * fixed_[6,1]) 
+  xintercept_3 <- fixed_[9,1]
+  
+  #
+  # velocity - for secondry axis
+  getfb <- transform.sec.axis(pob$data$Estimate.x, pob$data$Estimate.y)
+  
+  xyvelocity_1 <- 
+    model$model_info$exefuns$DefFun1(xintercept_1, 
+                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
+                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
+                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+  
+  yintercept_v1 <- getfb$fwd(xyvelocity_1)
+  
+  xyvelocity_2 <- 
+    model$model_info$exefuns$DefFun1(xintercept_2, 
+                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
+                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
+                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+  
+  yintercept_v2 <- getfb$fwd(xyvelocity_2)
+  
+  
+  xyvelocity_3 <-
+    model$model_info$exefuns$DefFun1(xintercept_3, 
+                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
+                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
+                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+  
+  yintercept_v3 <- getfb$fwd(xyvelocity_3)
+  
+  
+  xintercept_1 <- round(xintercept_1, digits)
+  yintercept_1 <- round(yintercept_1, digits)
+  xyvelocity_1 <- round(xyvelocity_1, digits)
+  
+  xintercept_2 <- round(xintercept_2, digits)
+  yintercept_2 <- round(yintercept_2, digits)
+  xyvelocity_2 <- round(xyvelocity_2, digits)
+  
+  xintercept_3 <- round(xintercept_3, digits)
+  yintercept_3 <- round(yintercept_3, digits)
+  xyvelocity_3 <- round(xyvelocity_3, digits)
+  
+  
+  
+  setprint_1 <- 
+    paste0("stage 1: ", "\n ",
+           "timing = ", xintercept_1, "; velocit = ", 
+           xyvelocity_1, "; size = ", yintercept_1) 
+  
+  setprint_2 <- 
+    paste0("stage 2: ", "\n ",
+           "timing = ", xintercept_2, "; velocit = ", 
+           xyvelocity_2, "; size = ", yintercept_2)
+  
+  setprint_3 <- 
+    paste0("stage 3: ", "\n ",
+           "timing = ", xintercept_3, "; velocit = ", 
+           xyvelocity_3, "; size = ", yintercept_3) 
+  #
+  
+  
+  pob <- pob + 
+    ggplot2::geom_hline(ggplot2::aes(yintercept = yintercept_1))  + 
+    ggplot2::geom_hline(ggplot2::aes(yintercept = yintercept_2) ) +
+    ggplot2::geom_hline(ggplot2::aes(yintercept = yintercept_3))  + 
+    
+    ggplot2::geom_vline(ggplot2::aes(xintercept = xintercept_1) ) +
+    ggplot2::geom_vline(ggplot2::aes(xintercept = xintercept_2))  + 
+    ggplot2::geom_vline(ggplot2::aes(xintercept = xintercept_3) ) +
+    
+    ggplot2::geom_hline(ggplot2::aes(yintercept =  yintercept_v1 ) ) +
+    ggplot2::geom_hline(ggplot2::aes(yintercept =  yintercept_v2 ) ) + 
+    ggplot2::geom_hline(ggplot2::aes(yintercept =  yintercept_v3 ) )
+  
+  
+  if(print_plot) {
+    print(pob)
+    setprint_123 <- paste(setprint_1, setprint_2, setprint_3, sep = "\n")
+    cat(setprint_123)
+  }
+  
+  if(return_plot) return(pob)
+}
+
+# plot_lositic3(berkeley_fit, ipts = 11, apv = F, xrange_search = c(1, 12))
