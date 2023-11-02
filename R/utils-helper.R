@@ -1879,20 +1879,42 @@ plot_lositic3 <- function(model,
   args <- list(...)
   args$model <- model
   
-  pob <- do.call(plot_bgm, args)
+  # model <- berkeley_fit
+  # pob   <- plot_bgm(model, ipts = 11, apv = F)
   
+  pob    <- do.call(plot_bgm, args)
   fixed_ <- brms::fixef(model)
   
-  yintercept_1 <- fixed_[1,1] + (fixed_[1,1] * fixed_[3,1])
   xintercept_1 <- fixed_[3,1]
-  
-  yintercept_2 <- fixed_[4,1] + (fixed_[4,1] * fixed_[5,1]) 
   xintercept_2 <- fixed_[6,1] + fixed_[3,1]
-  
-  yintercept_3 <- fixed_[1,1] + fixed_[4,1] + (fixed_[5,1] * fixed_[6,1]) 
   xintercept_3 <- fixed_[9,1]
   
-  #
+  # yintercept_1 <- fixed_[1,1] + (fixed_[1,1] * fixed_[3,1])
+  # yintercept_2 <- fixed_[4,1] + (fixed_[4,1] * fixed_[5,1]) 
+  # yintercept_3 <- fixed_[1,1] + fixed_[4,1] + (fixed_[5,1] * fixed_[6,1]) 
+  
+  
+  # distance
+  yintercept_1 <- 
+    model$model_info$exefuns$DefFun0(xintercept_1, 
+                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
+                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
+                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+  
+  yintercept_2 <- 
+    model$model_info$exefuns$DefFun0(xintercept_2, 
+                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
+                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
+                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+  
+  yintercept_3 <- 
+    model$model_info$exefuns$DefFun1(xintercept_3, 
+                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
+                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
+                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+  
+  
+  
   # velocity - for secondry axis
   getfb <- transform.sec.axis(pob$data$Estimate.x, pob$data$Estimate.y)
   
