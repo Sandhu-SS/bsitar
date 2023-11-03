@@ -9,16 +9,9 @@
 #'  estimates of growth parameters (such as peak velocity and the age at peak
 #'  velocity) derived from the growth velocity curve. This function is a wrapper
 #'  around the [marginaleffects::predictions()] and
-#'  [marginaleffects::avg_predictions()]. These function estimate and return
-#'  predicted values at t different regressor values and and compare those
-#'  predictions by computing a difference between them. The
-#'  [marginaleffects::predictions()] computes unit-level (conditional) estimates
-#'  whereas [marginaleffects::avg_predictions()] return average (marginal)
-#'  estimates. A detailed explanation is available at
+#'  [marginaleffects::avg_predictions()]. A detailed explanation is available at
 #'  <https://marginaleffects.com/articles/predictions.html> and
-#'  <https://marginaleffects.com/>. Note that for the current use case, i.e.,
-#'  for estimating growth parameters, the arguments, especially \code{variables}
-#'  and \code{comparion} are modified via custom functions (see below).
+#'  <https://marginaleffects.com/>.
 #'  
 #' @details The \code{growthparameters_predictions} function estimates and
 #'   returns the following growth paramaeters:
@@ -68,21 +61,18 @@
 #'    [marginaleffects::avg_predictions()] function. If \code{FALSE} (default),
 #'    [marginaleffects::predictions()] is called otherwise
 #'    [marginaleffects::avg_predictions()] when \code{average = TRUE}.
-#'    
-#' @param variables For estimating growth parameters in the current use case, 
-#' the \code{variables} is the level 1 predictor such as \code{age}/\code{time}
-#' and is is a named list with value of list set via the \code{esp} 
-#' (default 1e-6). If \code{NULL}, the \code{variables} is set internally by
-#' retrieving the relevant information from the \code{model}. Otherwise, 
-#' can define it as \code{variables = list('age' = 1e-6)}.
 #' 
-#' @param deriv An integer to indicate whether to get the distance (size) at  
-#' the ages or the velocity. If \code{deriv = 0} (default), distance is calculated  
-#' otherwise If \code{deriv = 1}, velocity is calculated. 
-#' 
-#' the \code{comparison} is an internal function that uses [sitar::getPeak()], 
-#' [sitar::getTakeoff()] and [sitar::getTrough()] functions to estimate
-#' various growth parameters. 
+#'@param at_age An integer to indicate the age at which size, (distance) and
+#'  velocity to be calculated. For the \code{'logistic3'} model, the possible
+#'  \code{at_age} are \code{1} (first maximum growth velocity), \code{2} (at
+#'  childhood growth  spurt), and \code{3} (pubertal growth spurt). For
+#'  \code{at_age = NULL} (default), parameters are calculated at the pubertal
+#'  growth spurt, i.e., \code{at_age = 3}.
+#'
+#'@param tsv An integer to indicate whether to get the timing, size, (distance)
+#'  at the given timing or velocity at give timing. If \code{tsv = NULL}
+#'  (default), timing is returned otherwise distance if \code{tsv = 0}, or
+#'  velocity if \code{tsv = 1}.
 #' 
 #' @param reformat A logical (default \code{TRUE}) to reformat returned output
 #' as a data.frame with colnames renamed as follows: \code{estimate} as 
@@ -91,7 +81,7 @@
 #' columns are dropped from the data frame: \code{term}, \code{contrast},
 #' \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
 #' 
-#' 
+#' @inheritParams  growthparameters_comparison.bgmfit
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::predictions
 #' @inheritParams  marginaleffects::avg_predictions
@@ -117,15 +107,13 @@ growthparameters_predictions.bgmfit <- function(model,
                                                 draw_ids = NULL,
                                                 newdata = NULL,
                                                 re_formula = NA,
-                                                deriv = 0,
+                                                at_age = NULL,
+                                                tsv = NULL,
                                                 parameter = NULL,
                                                 xrange = 1,
                                                 acg_velocity = 0.10,
                                                 digits = 2,
-                                                numeric_cov_at = NULL,
-                                                aux_variables = NULL,
                                                 levels_id = NULL,
-                                                avg_reffects = NULL,
                                                 ipts = NULL,
                                                 seed = 123,
                                                 future = FALSE,
@@ -156,7 +144,30 @@ growthparameters_predictions.bgmfit <- function(model,
     ndraws <- ndraws
   
   
+  if(is.null(at_age)) {
+    if(model$model_info$select_model == "logistic3") {
+      at_age <- 3
+    } else if(model$model_info$select_model == "logistic2") {
+      
+    }
+  }
   
+  
+  
+  if(!is.null(tsv)) {
+    if(tsv == 0) {
+      deriv <- 0 
+    } else if(tsv == 1) {
+      deriv <- 1
+    } else {
+      stop("'tsv' should be between 0 and 1")
+    }
+  } 
+  
+  if(is.null(tsv)) {
+    deriv <- 0 # placeholder
+  }
+
   o <- post_processing_checks(model = model,
                               xcall = match.call(),
                               deriv = deriv,
@@ -190,11 +201,19 @@ growthparameters_predictions.bgmfit <- function(model,
   
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   
+  
   # This arguments$model <- model required when using pipe %>% to use gparameter
-  arguments$model <- model
+ # arguments$model <- model
+  
+  # https://michaelbarrowman.co.uk/post/getting-a-variable-name-in-a-pipeline/
+  if(deparse(arguments$model) == ".") {
+    first_call <- sys.calls()[[1]] # get the first entry on the call stack
+    lhs <- first_call[[2]] # get the second element of this entry
+    mymodel <- lhs # rlang::as_name(lhs)
+    arguments$model <- mymodel
+  }
   
   
-  if (is.null(eps)) eps <- 1e-6
   
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -301,42 +320,15 @@ growthparameters_predictions.bgmfit <- function(model,
   
   #####################
   
-  allowed_parms <- c(
-    'ato',
-    'dto',
-    'vto',
-    'apv',
-    'dpv',
-    'vpv',
-    'afo',
-    'dfo',
-    'vfo',
-    'acg',
-    'dcg',
-    'vcg',
-    'dgs',
-    'dgain',
-    'vgain'
-  )
   
-  
-  if (is.null(parameter)) {
-    parm <- 'apv'
-  } else {
-    parm <- parameter
-  }
   
   predictions_arguments <- arguments
   exclude_args <- as.character(quote(
     c(
-      parameter,
       xrange,
       acg_velocity,
       digits,
-      numeric_cov_at,
-      acg_asymptote,
       levels_id,
-      avg_reffects,
       ipts,
       seed,
       future,
@@ -365,29 +357,23 @@ growthparameters_predictions.bgmfit <- function(model,
   
   
   
-  # if(is.null(by)) {
-  #   if(is.null(cov)) {
-  #     set_group <- FALSE
-  #   } else if(!is.null(cov)) {
-  #     set_group <- cov
-  #     if (!set_group %in% cov) {
-  #       stop('by must be one of the ', cov)
-  #     } 
-  #   }
-  # } else if(!is.null(by)) {
-  #   if (!isFALSE(by)) {
-  #     set_group <- by
-  #   } else if (isFALSE(by)) {
-  #     set_group <- FALSE
-  #   }
-  # }
+  if(is.null(by)) {
+    if(is.null(cov)) {
+      set_group <- FALSE
+    } else if(!is.null(cov)) {
+      set_group <- cov
+      if (!set_group %in% cov) {
+        stop('by must be one of the ', cov)
+      }
+    }
+  } else if(!is.null(by)) {
+    if (!isFALSE(by)) {
+      set_group <- by
+    } else if (isFALSE(by)) {
+      set_group <- FALSE
+    }
+  }
   
-  
-  # if(!isFALSE(set_group)) {
-  #   if (length(parm) > 1) stop("For 'by' estimates/comparisons, please ",
-  #                              "\n ",
-  #                              " specificy only one parameter. ")
-  # }
   
   
   if (acg_velocity >= 1 | acg_velocity <= 0) {
@@ -402,6 +388,8 @@ growthparameters_predictions.bgmfit <- function(model,
   get_coefs_brms      <-
     utils::getFromNamespace("coef.brmsfit", "brms")
   
+  assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+  
   if(model$model_info$select_model == "logistic3") {
     if(is.null(re_formula)) {
       xvar_names_       <- c(xvar, IDvar)
@@ -409,48 +397,83 @@ growthparameters_predictions.bgmfit <- function(model,
       all_names_as_such <- setdiff(all_names_, xvar_names_)
       coef_   <- get_coefs_brms(model)
       coef_   <- coef_[[IDvar]]
-      coef_d1 <- coef_[ , , 'c_Intercept'][,1]
-      coef_d2 <- coef_[ , , 'f_Intercept'][,1]
-      coef_d3 <- coef_[ , , 'i_Intercept'][,1]
+      coef_d1 <- coef_[ , , 'c_Intercept']
+      coef_d2 <- coef_[ , , 'f_Intercept']
+      coef_d3 <- coef_[ , , 'i_Intercept']
       setid   <- levels(newdata_org[[IDvar]])
-      setage  <- coef_d1
+      if(at_age == 1) {
+        setage  <- coef_d1
+      } else if(at_age == 2) {
+        setage  <- coef_d2
+      } else if(at_age == 3) {
+        setage  <- coef_d3
+      }
+      setage_expnad <- setage[,1]
       newdata <- newdata %>% 
-        tidyr::expand(tidyr::nesting(!!xvar := setage, 
+        tidyr::expand(tidyr::nesting(!!xvar := setage_expnad, 
                               !!IDvar := setid, 
                               dplyr::select(
                                 newdata, 
                                 dplyr::all_of(!!all_names_as_such))))
+      
+      predictions_arguments$newdata    <- newdata
+      if(tsv == 0 | tsv == 1) {
+        suppressWarnings({
+          if(!average) {
+            out <- do.call(marginaleffects::predictions, 
+                           predictions_arguments)
+          } else if(average) {
+            out <- do.call(marginaleffects::avg_predictions, 
+                           predictions_arguments)
+          }
+        })
+      } else {
+        out <- setage
+      }
+      # out <- out %>% dplyr::mutate(!!IDvar := setid) 
     } else if(is.na(re_formula)) { # if(is.null(re_formula)) {
       xvar_names_       <- c(xvar)
-      all_names_        <- names(newdata)
+      all_names_        <- names(newdata_org)
       all_names_as_such <- setdiff(all_names_, xvar_names_)
       fixed_  <- brms::fixef(model)
       fixed_2 <- fixed_[,1]
-      setage  <- fixed_2[grepl("^c|^f|^i",names(fixed_2))]
+      if(at_age == 1) {
+        setage  <- fixed_2[grepl("^c",names(fixed_2))]
+      } else if(at_age == 2) {
+        setage  <- fixed_2[grepl("^f",names(fixed_2))]
+      } else if(at_age == 3) {
+        setage  <- fixed_2[grepl("^i",names(fixed_2))]
+      }
+      # setage  <- fixed_2[grepl("^c|^f|^i",names(fixed_2))]
+      setage_expnad <- setage
       newdata <- newdata %>% 
-        tidyr::expand(tidyr::nesting(!!xvar := setage, 
+        tidyr::expand(tidyr::nesting(!!xvar := setage_expnad, 
                               dplyr::select(
                                 newdata, 
                                 dplyr::all_of(!!all_names_as_such))))
+      predictions_arguments$newdata    <- newdata
+      if(!is.null(tsv)) {
+        suppressWarnings({
+          if(!average) {
+            out <- do.call(marginaleffects::predictions, 
+                           predictions_arguments)
+          } else if(average) {
+            out <- do.call(marginaleffects::avg_predictions, 
+                           predictions_arguments)
+          }
+        })
+      } else if(is.null(tsv)) {
+        setagenames <- names(setage)
+        out <- brms::posterior_summary(model, 
+                                       variable = paste0('b_', setagenames))
+        row.names(out) <- setagenames
+      }
+      
     } # if(is.na(re_formula)) {
   } # if(model$model_info$select_model == "logistic3") {
   
   
-  
-  
-  predictions_arguments$newdata    <- newdata
-  assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-  
-  suppressWarnings({
-    if(!average) {
-      out <- do.call(marginaleffects::predictions, predictions_arguments)
-    } else if(average) {
-      out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-    }
-  })
-  
-  
-  out_sf <- out %>% dplyr::select(!dplyr::all_of(!!all_names_))
+  out_sf <- out %>% data.frame() # %>% dplyr::select(!dplyr::all_of(!!all_names_))
   
   out_sf <- out_sf %>% 
     dplyr::rename(!!as.symbol('Parameter') := parameter) %>% 
@@ -487,7 +510,7 @@ growthparameters_predictions <- function(model, ...) {
 
 
 
-# growthparameters_predictions(model, re_formula= NA,variables = NULL,by=FALSE)
+# growthparameters_predictions(berkeley_fit, tsv = 0, re_formula= NA, variables = 'sex',by = 'sex')
 
 
 

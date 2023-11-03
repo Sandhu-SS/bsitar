@@ -12,15 +12,13 @@
   draw_ids = NULL,
   newdata = NULL,
   re_formula = NA,
-  deriv = 0,
+  at_age = NULL,
+  tsv = NULL,
   parameter = NULL,
   xrange = 1,
   acg_velocity = 0.1,
   digits = 2,
-  numeric_cov_at = NULL,
-  aux_variables = NULL,
   levels_id = NULL,
-  avg_reffects = NULL,
   ipts = NULL,
   seed = 123,
   future = FALSE,
@@ -72,13 +70,17 @@ left unaltered thereby allowing estimation of (factor) covariate specific
 population average and individual-specific growth parameter at mean value
 of continous covaristes(s).}
 
-\item{deriv}{An integer to indicate whether to get the distance (size) at
-the ages or the velocity. If \code{deriv = 0} (default), distance is calculated
-otherwise If \code{deriv = 1}, velocity is calculated.
+\item{at_age}{An integer to indicate the age at which size, (distance) and
+velocity to be calculated. For the \code{'logistic3'} model, the possible
+\code{at_age} are \code{1} (first maximum growth velocity), \code{2} (at
+childhood growth  spurt), and \code{3} (pubertal growth spurt). For
+\code{at_age = NULL} (default), parameters are calculated at the pubertal
+growth spurt, i.e., \code{at_age = 3}.}
 
-the \code{comparison} is an internal function that uses \code{\link[sitar:getPeakTrough]{sitar::getPeak()}},
-\code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} and \code{\link[sitar:getPeakTrough]{sitar::getTrough()}} functions to estimate
-various growth parameters.}
+\item{tsv}{An integer to indicate whether to get the timing, size, (distance)
+at the given timing or velocity at give timing. If \code{tsv = NULL}
+(default), timing is returned otherwise distance if \code{tsv = 0}, or
+velocity if \code{tsv = 1}.}
 
 \item{parameter}{A single character string, or a vector of character strings
 indicating the parameter to be estimated. Options available are \code{ato},
@@ -106,18 +108,6 @@ velocity. For example if peak growth velocity estimate is \code{10
 estimated growth parameters. The \code{digits} is passed on to the
 \code{\link[base:Round]{base::round()}} function.}
 
-\item{numeric_cov_at}{An optional argument to specify the value of continuous
-covariate(s). The default \code{NULL} option set the continuous
-covariate(s) at their mean. Alternatively, a named list can be
-supplied to manually set these values. For example, \code{numeric_cov_at =
-  list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
-argument \code{numeric_cov_at} is ignored when no continuous covariate is
-included in the model.}
-
-\item{aux_variables}{An optional argument to specify the variables that can be
-passed to the \code{ipts} argument (see below). This is useful when fitting
-location scale models and the measurement error models.}
-
 \item{levels_id}{An optional argument to specify the ids for hierarchical
 model (default \code{NULL}. It is used only when model is fitted to the
 data with 3 or more levels of hierarchy. For a two level model, the id for
@@ -127,15 +117,6 @@ assumption that hierarchy is specified from lower to upper levels i.e, id,
 study assuming that id is nested within the studies. However, it is not
 gauranted that these ids are sorted correctly. Therefore, it is better to
 set them manually.}
-
-\item{avg_reffects}{An optional argument (default \code{NULL} to calculate
-(marginal/average) curves and growth parameters (such as APGV and PGV). If
-specified, it must be a named list indicating the \code{over} and the fixed
-efects \code{feby} and random effects efects \code{reby} arguments e.g.,
-\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}. The
-\code{over} is typically age and is used to average over the random
-effects. The second argument is \code{by} that specifies the factor
-variable by which \code{over} is executed.}
 
 \item{ipts}{An integer to set the length of the predictor variable to get a
 smooth velocity curve. The \code{NULL} (default) will return original
@@ -197,7 +178,7 @@ first entry in the error message is used by default.}
 
 \item{conf_level}{numeric value between 0 and 1. Confidence level to use to build a confidence interval.}
 
-\item{transform}{A function applied to unit-level adjusted predictions and confidence intervals just before the function returns results. For bayesian models, this function is applied to individual draws from the posterior distribution, before computing summaries.}
+\item{transform}{string or function. Transformation applied to unit-level estimates and confidence intervals just before the function returns results. Functions must accept a vector and return a vector of the same length. Support string shortcuts: "exp", "ln"}
 
 \item{wts}{string or numeric: weights to use when computing average contrasts or slopes. These weights only affect the averaging in \verb{avg_*()} or with the \code{by} argument, and not the unit-level estimates themselves. Internally, estimates and weights are passed to the \code{weighted.mean()} function.
 \itemize{
@@ -255,16 +236,9 @@ The \code{growthparameters_predictions} function provides
 estimates of growth parameters (such as peak velocity and the age at peak
 velocity) derived from the growth velocity curve. This function is a wrapper
 around the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}. These function estimate and return
-predicted values at t different regressor values and and compare those
-predictions by computing a difference between them. The
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} computes unit-level (conditional) estimates
-whereas \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} return average (marginal)
-estimates. A detailed explanation is available at
+\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}. A detailed explanation is available at
 \url{https://marginaleffects.com/articles/predictions.html} and
-\url{https://marginaleffects.com/}. Note that for the current use case, i.e.,
-for estimating growth parameters, the arguments, especially \code{variables}
-and \code{comparion} are modified via custom functions (see below).
+\url{https://marginaleffects.com/}.
 }
 \details{
 The \code{growthparameters_predictions} function estimates and
