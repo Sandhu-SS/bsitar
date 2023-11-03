@@ -11,7 +11,7 @@
 #'
 #' @name berkeley_fit
 #' @docType data
-#' @format A \code{bgmfit} object for the model fit to the Berkeley data.
+#' @format An object of class \code{bgmfit} fit to the Berkeley data.
 #' 
 #' @references
 #'  \insertAllCited{}

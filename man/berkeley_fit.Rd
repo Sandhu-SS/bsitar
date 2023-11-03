@@ -5,7 +5,7 @@
 \alias{berkeley_fit}
 \title{Model fit to the Berkeley data set}
 \format{
-A \code{bgmfit} object for the model fit to the Berkeley data.
+An object of class \code{bgmfit} fit to the Berkeley data.
 }
 \usage{
 berkeley_fit

@@ -200,18 +200,19 @@
 #'  origin for the fixed effect parameter \code{c}. Options are \code{'pv'}
 #'  (peak velocity derived from the velocity curve of the simple linear model
 #'  fit to the data), or any real number such as \code{cstart = 2}. Note that
-#'  the actual value passed to the model is \code{log(cstart)} because
-#'  parameter \code{c} is estimated on the exponential scale. The default is
-#'  \code{cstart = 'pv'} i.e, log of the peak velocity.
+#'  the parameter \code{c} is estimated on the exponential scale scale. 
+#'  Therefore, set \code{cstart} accordingly. The default \code{cstart} is '0'
+#'  i.e., \code{cstart = '0'}.
 #'
 #'@param apv An optional numeric value (default \code{NULL}) to set up the
 #'  initial value for the fixed effect parameter \code{b}. This is just an
-#'  alternative method of setting up the \code{bstart}.
+#'  alternative method of setting up the \code{bstart}. See \code{bstart} for 
+#'  details.
 #'
 #'@param pv An optional numeric value (default \code{NULL}) to set up the
 #'  initial value for the fixed effect parameter \code{c}. This is just an
-#'  alternative method of setting up the \code{cstart}. Note that like 
-#'  \code{cstart}, the actual value passed to the model is \code{log(pv)}.
+#'  alternative method of setting up the \code{cstart}. See \code{cstart} for 
+#'  details.
 #'  
 #'@param xfun An optional character string to specify the transformation of the
 #'  predictor variable, \code{x}. Options are \code{'log'} (logarithmic
@@ -1567,8 +1568,8 @@ bgm <- function(x,
                    random = 'a + b + c + d + e + f + g + h + i',
                    select_model = 'sitar4r',
                    xoffset = 'mean',
-                   bstart = 'apv',
-                   cstart = 'pv',
+                   bstart = 'xoffset',
+                   cstart = 0,
                    apv = NULL,
                    pv = NULL,
                    xfun = NULL,
@@ -1629,10 +1630,10 @@ bgm <- function(x,
                    multivariate = list(mvar = FALSE,
                                        cor = 'un',
                                        rescor = TRUE),
-                   a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
-                   b_prior_beta = normal(0, 2, autoscale = FALSE),
-                   c_prior_beta = normal(0, 0.25, autoscale = FALSE),
-                   d_prior_beta = normal(0, ysd, autoscale = FALSE),
+                   a_prior_beta = normal(ymean, ysd, autoscale = 1),
+                   b_prior_beta = normal(0, 2.5, autoscale = FALSE),
+                   c_prior_beta = normal(0, 0.5, autoscale = FALSE),
+                   d_prior_beta = normal(0, 1, autoscale = 2.5),
                    e_prior_beta = normal(0, 1, autoscale = FALSE),
                    f_prior_beta = normal(0, 1, autoscale = FALSE),
                    g_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -1649,10 +1650,10 @@ bgm <- function(x,
                    h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-                   a_prior_sd = normal(0, ysd, autoscale = 2.5),
+                   a_prior_sd = normal(0, ysd, autoscale = 1),
                    b_prior_sd = normal(0, 2, autoscale = FALSE),
-                   c_prior_sd = normal(0, 0.15, autoscale = FALSE),
-                   d_prior_sd = normal(0, 1, autoscale = FALSE),
+                   c_prior_sd = normal(0, 0.2, autoscale = FALSE),
+                   d_prior_sd = normal(0, 1, autoscale = 2.5),
                    e_prior_sd = normal(0, 1, autoscale = FALSE),
                    f_prior_sd = normal(0, 1, autoscale = FALSE),
                    g_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -1695,7 +1696,7 @@ bgm <- function(x,
                    sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
-                   rsd_prior_sigma = normal(0, ysd, autoscale = 2.5),
+                   rsd_prior_sigma = normal(0, ysd, autoscale = 1),
                    dpar_prior_sigma = normal(0, ysd, autoscale = 2.5),
                    dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
@@ -1708,7 +1709,7 @@ bgm <- function(x,
                    init = NULL,
                    init_r = NULL,
                    a_init_beta = lm,
-                   b_init_beta = 0,
+                   b_init_beta = bstart,
                    c_init_beta = 0,
                    d_init_beta = 0,
                    e_init_beta = 0,
@@ -2205,17 +2206,17 @@ bgm <- function(x,
   }
   
   
-  fit_edited_scode <- FALSE
-  
-  if(select_model == 'logistic1e' |
-     select_model == 'logistic2e' |
-     select_model == 'logistic3e' |
-     parameterization == 'cp'
-     ) {
-    
-    fit_edited_scode <- TRUE
-    
-  }
+  # fit_edited_scode <- FALSE
+  # 
+  # if(select_model == 'logistic1e' |
+  #    select_model == 'logistic2e' |
+  #    select_model == 'logistic3e' |
+  #    parameterization == 'cp'
+  #    ) {
+  #   
+  #   fit_edited_scode <- TRUE
+  #   
+  # }
   
   
   # For editing scode 
@@ -4260,7 +4261,17 @@ bgm <- function(x,
     
 
     
+    fit_edited_scode <- FALSE
     
+    if(select_model == 'logistic1e' |
+       select_model == 'logistic2e' |
+       select_model == 'logistic3e' |
+       parameterization == 'cp'
+    ) {
+      
+      fit_edited_scode <- TRUE
+      
+    }
     
     
     
@@ -4395,7 +4406,7 @@ bgm <- function(x,
     
     
     eval_xoffset_bstart_args <-
-      function(x, y, knots, data, eval_arg, xfunsi) {
+      function(x, y, knots, data, eval_arg, xfunsi, arg = 'xoffset') {
         if (eval_arg == "mean") {
           eval_arg.o <- mean(data[[x]])
         } else if (eval_arg == "min") {
@@ -4410,6 +4421,11 @@ bgm <- function(x,
                                        predict(smooth.spline(data[[x]],
                                                              fitted(lmfit)),
                                                data[[x]], deriv = 1)$y)[1]
+          if(is.na(eval_arg.o)) {
+            stop(arg, " specified as '", eval_arg, "' returned NA.",
+                 "\n ",
+                 " Please change ", arg," argument to 'mean' or a numeric value.")
+          }
         } else {
           eval_arg.o <- ept(eval_arg)
         }
@@ -4429,6 +4445,11 @@ bgm <- function(x,
                                        predict(smooth.spline(data[[x]],
                                                              fitted(lmfit)),
                                                data[[x]], deriv = 1)$y)[2]
+          if(is.na(eval_arg.o)) {
+            stop("cstart specified as '", eval_arg, "' returned NA.",
+                 "\n ",
+                 " Please change cstart argument to 'mean' or a numeric value.")
+          }
         } else {
           eval_arg.o <- ept(eval_arg)
         }
@@ -4447,12 +4468,15 @@ bgm <- function(x,
       }
     }
     
+    if(bstartsi == 'xoffset') {
+      bstartsi <- xoffsetsi
+    }
     
     
     xoffset <-
-      eval_xoffset_bstart_args(xsi, ysi, knots, datai, xoffsetsi, xfunsi)
+      eval_xoffset_bstart_args(xsi, ysi, knots, datai, xoffsetsi, xfunsi, arg = 'xoffset')
     bstart <-
-      eval_xoffset_bstart_args(xsi, ysi, knots, datai, bstartsi, xfunsi)
+      eval_xoffset_bstart_args(xsi, ysi, knots, datai, bstartsi, xfunsi, arg = 'bstart')
     bstart <- bstart - xoffset
     
     cstart <-
@@ -4789,12 +4813,14 @@ bgm <- function(x,
     
     
     if (!is.null(pvsi[[1]][1]) & pvsi != "NULL") {
-      setpv <- log(eval(parse(text = pvsi)))
+      setpv <- (eval(parse(text = pvsi)))
+      # setpv <- log(eval(parse(text = pvsi)))
       if(grepl("sitar", select_model)) cstart <- setpv
       if(grepl("pb", select_model))    cstart <- setpv / 5.0
       if(grepl("pb", select_model))    dstart <- setpv
     } else if (!is.null(cstartsi[[1]][1]) & cstartsi != "NULL") {
-      setpv <- log(cstart)
+      setpv <- (cstart)
+      # setpv <- log(cstart)
       if(grepl("sitar", select_model)) cstart <- setpv
       if(grepl("pb", select_model))    cstart <- setpv / 5.0
       if(grepl("pb", select_model))    dstart <- setpv

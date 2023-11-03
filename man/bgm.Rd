@@ -15,8 +15,8 @@ bgm(
   random = "a + b + c + d + e + f + g + h + i",
   select_model = "sitar4r",
   xoffset = "mean",
-  bstart = "apv",
-  cstart = "pv",
+  bstart = "xoffset",
+  cstart = 0,
   apv = NULL,
   pv = NULL,
   xfun = NULL,
@@ -64,10 +64,10 @@ bgm(
     "gaussian"),
   univariate_by = list(by = NA, cor = "un"),
   multivariate = list(mvar = FALSE, cor = "un", rescor = TRUE),
-  a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
-  b_prior_beta = normal(0, 2, autoscale = FALSE),
-  c_prior_beta = normal(0, 0.25, autoscale = FALSE),
-  d_prior_beta = normal(0, ysd, autoscale = FALSE),
+  a_prior_beta = normal(ymean, ysd, autoscale = 1),
+  b_prior_beta = normal(0, 2.5, autoscale = FALSE),
+  c_prior_beta = normal(0, 0.5, autoscale = FALSE),
+  d_prior_beta = normal(0, 1, autoscale = 2.5),
   e_prior_beta = normal(0, 1, autoscale = FALSE),
   f_prior_beta = normal(0, 1, autoscale = FALSE),
   g_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -84,10 +84,10 @@ bgm(
   h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-  a_prior_sd = normal(0, ysd, autoscale = 2.5),
+  a_prior_sd = normal(0, ysd, autoscale = 1),
   b_prior_sd = normal(0, 2, autoscale = FALSE),
-  c_prior_sd = normal(0, 0.15, autoscale = FALSE),
-  d_prior_sd = normal(0, 1, autoscale = FALSE),
+  c_prior_sd = normal(0, 0.2, autoscale = FALSE),
+  d_prior_sd = normal(0, 1, autoscale = 2.5),
   e_prior_sd = normal(0, 1, autoscale = FALSE),
   f_prior_sd = normal(0, 1, autoscale = FALSE),
   g_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -130,7 +130,7 @@ bgm(
   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
   sigma_prior_sd_str = NULL,
   sigma_cov_prior_sd_str = NULL,
-  rsd_prior_sigma = normal(0, ysd, autoscale = 2.5),
+  rsd_prior_sigma = normal(0, ysd, autoscale = 1),
   dpar_prior_sigma = normal(0, ysd, autoscale = 2.5),
   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
@@ -143,7 +143,7 @@ bgm(
   init = NULL,
   init_r = NULL,
   a_init_beta = lm,
-  b_init_beta = 0,
+  b_init_beta = bstart,
   c_init_beta = 0,
   d_init_beta = 0,
   e_init_beta = 0,
@@ -343,18 +343,19 @@ described above for the \code{xoffset}. The default is same as
 origin for the fixed effect parameter \code{c}. Options are \code{'pv'}
 (peak velocity derived from the velocity curve of the simple linear model
 fit to the data), or any real number such as \code{cstart = 2}. Note that
-the actual value passed to the model is \code{log(cstart)} because
-parameter \code{c} is estimated on the exponential scale. The default is
-\code{cstart = 'pv'} i.e, log of the peak velocity.}
+the parameter \code{c} is estimated on the exponential scale scale.
+Therefore, set \code{cstart} accordingly. The default \code{cstart} is '0'
+i.e., \code{cstart = '0'}.}
 
 \item{apv}{An optional numeric value (default \code{NULL}) to set up the
 initial value for the fixed effect parameter \code{b}. This is just an
-alternative method of setting up the \code{bstart}.}
+alternative method of setting up the \code{bstart}. See \code{bstart} for
+details.}
 
 \item{pv}{An optional numeric value (default \code{NULL}) to set up the
 initial value for the fixed effect parameter \code{c}. This is just an
-alternative method of setting up the \code{cstart}. Note that like
-\code{cstart}, the actual value passed to the model is \code{log(pv)}.}
+alternative method of setting up the \code{cstart}. See \code{cstart} for
+details.}
 
 \item{xfun}{An optional character string to specify the transformation of the
 predictor variable, \code{x}. Options are \code{'log'} (logarithmic
