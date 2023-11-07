@@ -10,35 +10,21 @@ rm(berkeley)
 
 data <- data %>% 
   dplyr::select(id, age, height, sex) %>% 
-  dplyr::filter(age %in% c(8:18) ) %>% 
-  tidyr::drop_na(height)
+  dplyr::filter(age %in% c(6:20) ) %>% 
+  tidyr::drop_na(height) %>% 
+  dplyr::mutate(sex = 
+                  dplyr::recode_factor(sex, "1" = "Male", "2" = "Female")) %>% 
+  dplyr::select(id, age, sex, height) %>% 
+  tidyr::drop_na() %>% 
+  dplyr::filter(sex == "Male")
 
-data$sex <- dplyr::recode_factor(data$sex, "1" = "Male", "2" = "Female")
+data %>% dplyr::glimpse()
 
-data <- data %>% 
-  sjmisc::to_dummy(sex, suffix = "label") %>% 
-  dplyr::bind_cols(data,.) %>% 
-  dplyr::mutate(Male = height, Female = height) %>% 
-  dplyr::select(-height) %>% 
-  dplyr::arrange(id, age, sex)
+sitar_fit <- sitar::sitar(x = age, y = height, id = id, data = data, df = 4)
 
-
-data <- data %>% dplyr::mutate(y = Male, id = as.factor(id) ) 
-data <- data %>% dplyr::select(id, age, sex, y)
-
-data <- data %>% dplyr::filter(sex == "Male")
-
-# data %>% dplyr::glimpse()
-
-# sitar::sitar(age, y, id, data = data, df = 4)
-
-# berkeley_fitx <- berkeley_fit
-
-berkeley_fit <- bsitar::bgm(x = age, y = y, id = id, data = data, df = 5,
-                            chains = 2, iter = 1000,
-                            backend = 'cmdstanr',
-                            select_model = sitar,
-                            sample_prior = 'no')
+berkeley_fit <- bsitar::bgm(x = age, y = height, id = id, data = data, df = 4,
+                            sample_prior = 'only',
+                            chains = 2, iter = 1000, thin = 8)
 
 
 # usethis::use_data(berkeley_fit, overwrite = TRUE)

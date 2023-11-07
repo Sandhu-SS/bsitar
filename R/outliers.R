@@ -20,7 +20,10 @@
 #' @export
 #' 
 #' @examples
-#' outliers(x = "age", y = "height", id = "id", data = heights, remove=TRUE)
+#' data(berkeley, package = "sitar")
+#' data <- berkeley
+#' rm(berkeley)
+#' outliers(x = "age", y = "height", id = "id", data = data, remove=TRUE)
 #' 
 outliers <-
   function (x,
