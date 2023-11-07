@@ -88,18 +88,32 @@
 #'
 #' @return A data frame objects with estimates and CIs for computed parameter(s)
 #' 
+#' @references
+#' \insertAllCited{}
+#' 
 #' @export growthparameters_predictions.bgmfit
 #' 
 #' @export
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' @references
-#' \insertAllCited{}
+#' 
+#' 
 #' 
 #' @examples
-#' \dontrun{
-#' growthparameters_predictions(model, parameter = 'apv')
-#' }
+#' #
+#' # Fit Bayesian SITAR model 
+#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#' #                     chains = 2, iter = 1000, thin = 10)
+#' #
+#' # To avoid running the model which takes some time, the fitted model has 
+#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
+#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+#' # (to save memory also).
+#' # 
+#' model <- berkeley_fit
+#' #
+#' growthparameters_predictions(berkeley_fit)
+#' 
 #' 
 growthparameters_predictions.bgmfit <- function(model,
                                                 resp = NULL,
@@ -132,11 +146,20 @@ growthparameters_predictions.bgmfit <- function(model,
                                                 envir = parent.frame(),
                                                 ...) {
   
-  if(system.file(package='tidyr') == "") {
-    stop("Please install 'tidyr' package before calling the function",
-         "\n ",
-         "'growthparameters_predictions'")
-  }
+  # if(system.file(package='tidyr') == "") {
+  #   stop("Please install 'tidyr' package before calling the function",
+  #        "\n ",
+  #        "'growthparameters_predictions'")
+  # }
+  # 
+  # if(system.file(package='collapse') == "") {
+  #   stop("Please install 'collapse' package before 
+  #        calling the 'growthparameters_comparison'")
+  # }
+  
+  required_packages <- c('tidyr', 'collapse')
+  check_and_install_if_not_installed(required_packages,
+                                     'growthparameters_predictions')
   
   if (is.null(ndraws))
     ndraws  <- brms::ndraws(model)
@@ -472,6 +495,13 @@ growthparameters_predictions.bgmfit <- function(model,
     } # if(is.na(re_formula)) {
   } # if(model$model_info$select_model == "logistic3") {
   
+  if(model$model_info$select_model != "logistic3") {
+    out <- NA
+    reformat <- FALSE
+    message('growthparameters_predictions is implemeneted only for following: ', 
+            "\n ", 
+            ' logistic3')
+  }
   
   out_sf <- out %>% data.frame() # %>% dplyr::select(!dplyr::all_of(!!all_names_))
   
@@ -507,19 +537,5 @@ growthparameters_predictions.bgmfit <- function(model,
 growthparameters_predictions <- function(model, ...) {
   UseMethod("growthparameters_predictions")
 }
-
-
-
-# growthparameters_predictions(berkeley_fit, tsv = 0, re_formula= NA, variables = 'sex',by = 'sex')
-
-
-
-# get_contrasts <- marginaleffects:::get_contrasts
-# for (i in 1:1) {
-#  # print(i)
-# c <- growthparameters_predictions(female_1444, draw_ids = i,
-# by = NULL, parameter = c( 'vpv'))
-#   #print(c)
-# }
 
 

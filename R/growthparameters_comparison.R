@@ -104,9 +104,20 @@
 #' \insertAllCited{}
 #' 
 #' @examples
-#' \dontrun{
+#' #
+#' # Fit Bayesian SITAR model 
+#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#' #                     chains = 2, iter = 1000, thin = 10)
+#' #
+#' # To avoid running the model which takes some time, the fitted model has 
+#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
+#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+#' # (to save memory also).
+#' # 
+#' model <- berkeley_fit
+#' #
 #' growthparameters_comparison(model, parameter = 'apv')
-#' }
+#' 
 #' 
 growthparameters_comparison.bgmfit <- function(model,
                                    resp = NULL,
@@ -142,6 +153,17 @@ growthparameters_comparison.bgmfit <- function(model,
                                    reformat = TRUE,
                                    envir = parent.frame(),
                                    ...) {
+  
+  
+  # if(system.file(package='collapse') == "") {
+  #   stop("Please install 'collapse' package before 
+  #        calling the 'growthparameters_comparison'")
+  # }
+  
+  required_packages <- c('tidyr', 'collapse')
+  check_and_install_if_not_installed(required_packages, 
+                                     'growthparameters_comparison')
+  
   if (is.null(ndraws))
     ndraws  <- brms::ndraws(model)
   else
@@ -466,13 +488,5 @@ growthparameters_comparison.bgmfit <- function(model,
 growthparameters_comparison <- function(model, ...) {
   UseMethod("growthparameters_comparison")
 }
-
-
-# get_contrasts <- marginaleffects:::get_contrasts
-# for (i in 1:1) {
-#  # print(i)
-#   c <- growthparameters_comparison(female_1444, draw_ids = i, by = NULL, parameter = c( 'vpv'))
-#   #print(c)
-# }
 
 

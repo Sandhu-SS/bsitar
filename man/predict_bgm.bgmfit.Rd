@@ -75,8 +75,8 @@ gauranted that these ids are sorted correctly. Therefore, it is better to
 set them manually.}
 
 \item{ipts}{An integer to set the length of the predictor variable to get a
-smooth velocity curve. The \code{NULL} (default) will return original
-values whereas an integer (e.g., \code{ipts = 10}) will interpolate the
+smooth velocity curve. The \code{NULL} will return original values whereas
+an integer such as \code{ipts = 10} (default) will interpolate the
 predictor. It is important to note that these interpolations do not alter
 the range of predictor when calculating population average and the
 individual specific velocity curves.}
@@ -161,21 +161,33 @@ for adding an underscore at the end of the name (\emph{predict} to
 \emph{predict_bgm}).
 }
 \examples{
-\dontrun{
+
 # The examples below show the use of *predict_bgm* to estimate  
 # population average and individual-specific distance and velocity 
-# curves for the the predict model
+# curves for the the predict model.
+#
+# Fit Bayesian SITAR model 
+# berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#                     chains = 2, iter = 1000, thin = 10)
+#
+# To avoid running the model which takes some time, the fitted model has 
+# already been saved as berkeley_fit.rda object. The model is fitted using 2 
+# chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+# (to save memory also).
+# 
+model <- berkeley_fit
+#
 # Population average distance curve
 predict_bgm(model, deriv = 0, re_formula = NA)
-
+#
 # Individual-specific distance curves
 predict_bgm(model, deriv = 0, re_formula = NULL)
-
+#
 # Population average velocity curve
 predict_bgm(model, deriv = 1, re_formula = NA)
-
+#
 # Individual-specific velocity curves
 predict_bgm(model, deriv = 1, re_formula = NULL)
  
-}
+
 }

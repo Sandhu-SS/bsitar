@@ -22,7 +22,7 @@
   aux_variables = NULL,
   levels_id = NULL,
   avg_reffects = NULL,
-  ipts = NULL,
+  ipts = 10,
   xrange = NULL,
   xrange_search = NULL,
   takeoff = FALSE,
@@ -166,8 +166,8 @@ effects. The second argument is \code{by} that specifies the factor
 variable by which \code{over} is executed.}
 
 \item{ipts}{An integer to set the length of the predictor variable to get a
-smooth velocity curve. The \code{NULL} (default) will return original
-values whereas an integer (e.g., \code{ipts = 10}) will interpolate the
+smooth velocity curve. The \code{NULL} will return original values whereas
+an integer such as \code{ipts = 10} (default) will interpolate the
 predictor. It is important to note that these interpolations do not alter
 the range of predictor when calculating population average and the
 individual specific velocity curves.}
@@ -426,29 +426,43 @@ draws. Thus, \code{plot_bgm} allows plotting fitted or predicted curves. See
 functions and the difference between fitted and predicted values.
 }
 \examples{
-\dontrun{
+#
+# Fit Bayesian SITAR model 
+# berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#                     chains = 2, iter = 1000, thin = 10)
+#
+# To avoid running the model which takes some time, the fitted model has 
+# already been saved as berkeley_fit.rda object. The model is fitted using 2 
+# chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+# (to save memory also).
+# 
+model <- berkeley_fit
+#
 # Population average distance and velocity curves with default options
 plot_bgm(model, opt = 'dv')
-
+#
 # Individual-specific distance and velocity curves with default options
 plot_bgm(model, opt = 'DV')
-
+#
 # Population average distance and velocity curves with APGV
 plot_bgm(model, opt = 'dv', apv = TRUE)
-
+#
 # Individual-specific distance and velocity curves with APGV
 plot_bgm(model, opt = 'DV', apv = TRUE)
-
+#
 # Population average distance curve, velocity curve, and APGV with CI bands
-plot_bgm(model, opt = 'dv', apv = TRUE, bands = 'dvp')
-
+# To construct CI bands, growth parameters are first calculated for each  
+# posterior draw and then summarized across draws. Therefore,summary 
+# option must be set to FALSE
+#
+plot_bgm(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
+#
 # Adjusted and unadjusted individual curves
-plot_bgm(model, opt = 'au')
+# Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
+# This is because it does not a make sense to interploate data when
+# estimating adjusted curves.
+#
+plot_bgm(model, opt = 'au', ipts = NULL)
 
-# Population average distance and velocity curves along with adjusted
-# and unadjusted individual curves
-plot_bgm(model, opt = 'dvau')
-
-}
 
 }

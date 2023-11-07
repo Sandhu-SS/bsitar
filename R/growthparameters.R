@@ -131,8 +131,8 @@
 #'  location scale models and the measurement error models.
 #'   
 #' @param ipts An integer to set the length of the predictor variable to get a
-#'   smooth velocity curve. The \code{NULL} (default) will return original
-#'   values whereas an integer (e.g., \code{ipts = 10}) will interpolate the
+#'   smooth velocity curve. The \code{NULL} will return original values whereas
+#'   an integer such as \code{ipts = 10} (default) will interpolate the
 #'   predictor. It is important to note that these interpolations do not alter
 #'   the range of predictor when calculating population average and the
 #'   individual specific velocity curves.
@@ -221,17 +221,27 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' #
+#' # Fit Bayesian SITAR model 
+#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#' #                     chains = 2, iter = 1000, thin = 10)
+#' #
+#' # To avoid running the model which takes some time, the fitted model has 
+#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
+#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+#' # (to save memory also).
+#' # 
+#' model <- berkeley_fit
+#' #
 #' # Population average APGV and PGV
 #' growthparameters(model, re_formula = NA)
-#'
-#' #' # Population average APGV, PGV, ATGV, TGV
+#' #
+#' # Population average APGV, PGV, ATGV, TGV
 #' growthparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)
-#'
+#' #
 #' # Individual-specific APGV, PGV, ATGV, TGV
 #' growthparameters(model, re_formula = NULL, peak = TRUE, takeoff = TRUE)
 #'
-#' }
 #' 
 growthparameters.bgmfit <- function(model,
                                resp = NULL,
@@ -255,7 +265,7 @@ growthparameters.bgmfit <- function(model,
                                levels_id = NULL,
                                avg_reffects = NULL,
                                aux_variables = NULL,
-                               ipts = NULL,
+                               ipts = 10,
                                conf = 0.95,
                                xrange = NULL,
                                xrange_search = NULL,

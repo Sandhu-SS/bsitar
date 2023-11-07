@@ -1850,6 +1850,40 @@ inits_lb <- function(x, lb = 0) {
 
 
 
+#' @title Check and install package if not already installed
+#' @param pkgs Packages to install if not already installed
+#' @keywords internal
+#' @noRd
+#' 
+check_and_install_if_not_installed <- function(pkgs, 
+                                               getfun = NULL,
+                                               installpkg = TRUE) {
+  successfully_loaded <- vapply(
+    pkgs, requireNamespace,
+    FUN.VALUE = logical(1L), quietly = TRUE
+  )
+  required_pkgs <- names(which(successfully_loaded == FALSE))
+  
+  # print(required_pkgs)
+  
+  if(!is.null(getfun)) {
+    if(is.symbol(getfun)) getfun <- deparse(getfun)
+    message('Checking required packages for ', getfun, " ",
+            "\n ", 
+            paste(pkgs, collapse = ", "))
+  }
+  
+  if(installpkg) {
+    message('Installing required packages', 
+            paste(required_pkgs, collapse = ", "))
+    
+    utils::install.packages(required_pkgs,
+                            repos = "http://cran.us.r-project.org")
+  }
+  
+}
+
+
 #' Plot tripple logistic model with marked x and y axis
 #'
 #' @param model An object of class \code{brmsfit} 

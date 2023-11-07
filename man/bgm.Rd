@@ -1650,142 +1650,70 @@ character strings in single or double quotes. For example to specify the
 applies for all character string options.
 }
 \examples{
-\dontrun{
-# Examples below fit SITAR model to the Berkley height data for 66 males and
-# 70 females
-
-# First two examples demonstrate fitting two separate univariate models for
-# males and females and then a combined univariate-by-subgroup model. The
-# third example shows multivariate model fitting. Each model is fit with 
-# settings (4 chains with 2000 iterations per chain).
-
-# As shown below, the univariate-by-subgroup model internally fits two
-# sub-models, one for males and another for females. Advantage of fitting
-# univariate-by-subgroup model is that posterior samples for all each sub 
-# model are contained in a single framework which allows for a direct
-# comparisons of parameters (e.g., hypothesis testing). The flexibility
-# offered by the \bold{bsitar} package allows full control over the
-# the sub-models (e.g. \code{df} for spline curve, \code{priors}  etc.).
 #
-# Fit 1 - Separate models for males and females with 5 df for males and
-# 4 df for females.
-
-# Prepare data
-data(berkeley, package = "sitar")
-data <- berkeley
-rm(berkeley)
-
-data <- data \%>\% 
-  dplyr::select(id, age, height, sex) \%>\% 
-  dplyr::filter(age \%in\% c(6:20) ) \%>\% 
-  tidyr::drop_na(height)]
+# Examples below fit SITAR model to the Berkley height data for 66 males. 
+# The Berkley data available from the [sitar::sitar()] has been saved in 
+# current package.  
+#
+# Prepare data (select age range and gender, i.e., males)
+data <- berkeley \%>\% 
+dplyr::select(id, age, height, sex) \%>\%
+  dplyr::filter(age \%in\% c(6:20) ) \%>\%
+  tidyr::drop_na(height) \%>\%
+  dplyr::mutate(sex =
+                  dplyr::recode_factor(sex,"1"="Male", "2"="Female")) \%>\%
+  dplyr::select(id, age, sex, height) \%>\%
+  tidyr::drop_na() \%>\%
+  dplyr::filter(sex == "Male")
   
-data$sex <- dplyr::recode_factor(data$sex, "1" = "Male", "2" = "Female")
-  
-  
-data_males <- data \%>\% filter(sex == 'Male)
-data_females <- data \%>\% filter(sex == 'Female)
-
-# Fit model
-fit_males <- bgm(x=age, y=height, id=id, data=heights, df=5)
-fit_females <- bgm(x=age, y=height, id=id, data=heights, df=4)
-
-# Generate a summary of results for males and females
-summary(fit_males)
-summary(fit_females)
-
-# Perform posterior predictive checks for males and females
-pp_check(fit_males)
-pp_check(fit_females)
-
-# plot distance and velocity curves for males and females
+# Fit maximum likelihood SITAR model using the sitar package 
+#
+sitar_fit <- sitar::sitar(x = age, y = height, id = id, data = data, df = 4)
+#
+# Fit Bayesian SITAR model 
+# berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#                     chains = 2, iter = 1000, thin = 10)
+#
+# To avoid running the model which takes some time, the fitted model has 
+# already been saved as berkeley_fit.rda object. The model is fitted using 2 
+# chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+# (to save memory also).
+# 
+model <- berkeley_fit
+#
+# Generate model summary
+summary(model)
+#
+# Compare model summary with the maximum likelihood SITAR model
+summary(sitar_fit)
+#
+# Check model convergence 
+brms::mcmc_plot(model, variable = "^b_", regex = TRUE)
+#
+# Perform posterior predictive checks
+pp_check_bgm(model)
+#
+# Plot distance and velocity curves using conditional_effects_bgm() function.
+# This function works exactly same as as conditional_effects() from the brms
+# package with the exception that conditional_effects_bgm allows for 
+# plotting velocity curve also.
+# 
 # Distance
-plot(conditional_effects(fit_males, deriv = 0))
-plot(conditional_effects(fit_females, deriv = 0))
-
+conditional_effects_bgm(model, deriv = 0)
+#
 # Velocity
-plot(conditional_effects(fit_males, deriv = 1))
-plot(conditional_effects(fit_females, deriv = 1))
-
-# Fit 2 - A univariate-by-subgroup model is fit for sex (males and females) 
-# with 5 df for males and 4 df for females. Since factor variable sex is 
-# sorted alphabetically, the first reponse vector created is Female and 
-# Male. As shown below, controlling any argument such as \code{df} is as 
-# simple as enclosing it in list with arfuments separated by a comma. Same 
-# approach applies for all argument including prior and initials.
-
-# Fit model
-fit_male_female <- bgm(x=age, y=height, id=id, data=heights,
-univariate_by = sex, df=list(4,5))
-
-# Generate a summary of results for males and females
-summary(fit_male_female)
-
-# Perform posterior predictive checks (specify response option resp = )
-pp_check(fit_male_female, resp = 'Male')
-pp_check(fit_male_female, resp = 'Female')
-
-# plot distance and velocity curves for males and females
-# Distance
-plot(conditional_effects(fit_male_female, deriv = 0, resp = 'Male'))
-plot(conditional_effects(fit_male_female, deriv = 0, resp = 'Female'))
-
-# Velocity
-plot(conditional_effects(fit_male_female, deriv = 1, resp = 'Male'))
-plot(conditional_effects(fit_male_female, deriv = 1, resp = 'Female'))
-
-
-# Fit 3 - multivariate model
-# For demonstration purposes, we use the same heights data and artificially
-# create the second outcome (height2) by rescaling the original first
-# outcome (i.e., height). Again we use different degree of freedom (df) for
-# each outcome. Here we also show how to use different priors and initials
-# for some of the parameters.
-data2 <- data \%>\% mutate(height2 = (height - 10) * 0.1)
-
-# Fit model
-# We specified multivariate = TRUE for fitting multivariate model. By
-# default, the cor structure will be set to un for modelling unstructured
-# varinace covaraince with joint distribution of groop level random effects.
-# Also, option rescor for modelling residual correlation is set to TRUE
-# (default). These options can be modified by explicitly setting the
-# multivariate argument as a list, e.g., multivariate = list(mvar = TRUE,
-# cor = un, rescor = TRUE). This allows changing the cor suboptions to un_s
-# or diagonal, and rescor to FALSE (see \code{multivariate} for details).
-
-# In the example shown below, we set df = 4 for the first outcome, height
-# and df = 5 for the second outcome, height2. We set prior normal(ymean, ysd)
-# for outcome height and cauchy(ymedian, 100) for the second outcome height2.
-# Note data we set different autosclae values (2 for the first outcome and
-# default FALSE for the second outcome). Also, we have set random initial
-# for the first outcome and lm to the second outcome. Post-processing for
-# multivariate model is same as univariate-by-subgroup model i.e., by using
-# the resp = argument.
-
-# Fit model
-fit_mutivar <- bgm(x=age, y=list(height, height2), id=id, data=data2,
-multivariate = TRUE,  df=list(4,5),
-a_prior_beta = list(normal(ymean, ysd, autosclae = 2), cauchy(ymedian, 100)),
-a_init_beta = list(random, lm))
-
-# Generate a summary of results for height and height2
-summary(fit_mutivar)
-
-# Perform posterior predictive checks for height and height2
-pp_check(fit_male_female, resp = 'height')
-pp_check(fit_male_female, resp = 'height2')
-
-# plot distance and velocity curves for height and height2
-# Distance
-plot(conditional_effects(fit_male_female, deriv = 0, resp = 'height'))
-plot(conditional_effects(fit_male_female, deriv = 0, resp = 'height2'))
-
-# Velocity
-plot(conditional_effects(fit_male_female, deriv = 1, resp = 'height'))
-plot(conditional_effects(fit_male_female, deriv = 1, resp = 'height2'))
-
-}
-
+conditional_effects_bgm(model, deriv = 1)
+#
+# Plot distance and velocity curve along with the parameter estimates using 
+# the plot_bgm() function. This function works exactly the same way as 
+# plot.sitar from the sitar package
+# 
+plot_bgm(model, apv = TRUE)
+#
+# Compare plot with the maximum likelihood SITAR model
+#
+plot(sitar_fit)
+#
 
 }
 \references{
