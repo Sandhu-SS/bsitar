@@ -16,6 +16,7 @@
   draw_ids = NULL,
   newdata = NULL,
   summary = TRUE,
+  digits = 2,
   re_formula = NULL,
   numeric_cov_at = NULL,
   aux_variables = NULL,
@@ -115,6 +116,10 @@ to be used. If \code{NULL} (default), all draws are used.}
 Estimate should be returned or Estimate along with SE and CI should be
 computed. Setting this option to \code{FALSE} will reduce the computation
 time but no SE or CI estimates will be available.}
+
+\item{digits}{An integer (default \code{2}) to set the decimal places for the
+estimated growth parameters. The \code{digits} is passed on to the
+\code{\link[base:Round]{base::round()}} function.}
 
 \item{re_formula}{Option to indicate whether or not to include the
 individual/group-level effects in the estimation. When \code{NA} (default),

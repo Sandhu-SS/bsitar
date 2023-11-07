@@ -215,6 +215,7 @@ plot_bgm.bgmfit <- function(model,
                                draw_ids = NULL,
                                newdata = NULL,
                                summary = TRUE,
+                               digits = 2,
                                re_formula = NULL,
                                numeric_cov_at = NULL,
                                aux_variables = NULL,
@@ -365,10 +366,7 @@ plot_bgm.bgmfit <- function(model,
   
   arguments$model <- model
   
-  # argumentsxx <<- arguments
-  # print(arguments)
-  # stop()
-
+  
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
@@ -1427,8 +1425,7 @@ plot_bgm.bgmfit <- function(model,
       }
     } # if(!is.na(linetype.groupby) & !is.na(set.color.groupby)) {
     
-    # print(str(set.line.groupby))
-    # print(str(set.color.groupby))
+    
     suppressMessages({
       plot <- plot + 
         ggplot2::scale_linetype_manual(values=set.line.groupby, guide = line.guide) +

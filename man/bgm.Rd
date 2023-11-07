@@ -64,8 +64,8 @@ bgm(
     "gaussian"),
   univariate_by = list(by = NA, cor = "un"),
   multivariate = list(mvar = FALSE, cor = "un", rescor = TRUE),
-  a_prior_beta = normal(ymean, ysd, autoscale = 1),
-  b_prior_beta = normal(0, 2.5, autoscale = FALSE),
+  a_prior_beta = normal(ymean, ysd, autoscale = 2.5),
+  b_prior_beta = normal(0, 2, autoscale = FALSE),
   c_prior_beta = normal(0, 0.5, autoscale = FALSE),
   d_prior_beta = normal(0, 1, autoscale = 2.5),
   e_prior_beta = normal(0, 1, autoscale = FALSE),
@@ -84,9 +84,9 @@ bgm(
   h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-  a_prior_sd = normal(0, ysd, autoscale = 1),
+  a_prior_sd = normal(0, ysd, autoscale = 2.5),
   b_prior_sd = normal(0, 2, autoscale = FALSE),
-  c_prior_sd = normal(0, 0.2, autoscale = FALSE),
+  c_prior_sd = normal(0, 0.5, autoscale = FALSE),
   d_prior_sd = normal(0, 1, autoscale = 2.5),
   e_prior_sd = normal(0, 1, autoscale = FALSE),
   f_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -130,7 +130,7 @@ bgm(
   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
   sigma_prior_sd_str = NULL,
   sigma_cov_prior_sd_str = NULL,
-  rsd_prior_sigma = normal(0, ysd, autoscale = 1),
+  rsd_prior_sigma = normal(0, ysd, autoscale = 2.5),
   dpar_prior_sigma = normal(0, ysd, autoscale = 2.5),
   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
@@ -143,7 +143,7 @@ bgm(
   init = NULL,
   init_r = NULL,
   a_init_beta = lm,
-  b_init_beta = bstart,
+  b_init_beta = 0,
   c_init_beta = 0,
   d_init_beta = 0,
   e_init_beta = 0,
@@ -232,6 +232,7 @@ bgm(
   save_pars = NULL,
   drop_unused_levels = TRUE,
   stan_model_args = list(),
+  refresh = NULL,
   silent = 1,
   seed = 123,
   save_model = NULL,
@@ -1348,7 +1349,12 @@ of warmup should not be larger than \code{iter} and the default is
 \code{iter/1.33}.}
 
 \item{thin}{Thinning rate. Must be a positive integer. Set \code{thin > 1} to
-save memory and computation time if \code{iter} is large.}
+save memory and computation time if \code{iter} is large. The
+\code{thin > 1} is often used in cases with high autocorrelation of MCMC
+draws An indication of high autocorrelation is poor mixing of chain (
+i.e., high \code{rhat} values) despite the fact that model recovers the
+parameters well. An easy diagnostic to check for autocorrelation of MCMC
+draws is to use the \code{mcmc_acf} function from the \pkg{bayesplot}.}
 
 \item{cores}{Number of cores to be used when executing the chains in parallel.
 See \code{\link[brms:brm]{brms::brm()}} for details. Note that unlike \code{\link[brms:brm]{brms::brm()}} which sets
@@ -1446,6 +1452,12 @@ dropped? Defaults to \code{TRUE}.}
 \code{\link[rstan:stan_model]{rstan::stan_model}} for \code{backend =
   "rstan"} or \code{backend = "cmdstanr"}, which allows to change how
 models are compiled.}
+
+\item{refresh}{An integer to set the printing of every nth iteration. Default
+\code{NULL} indicates that refresh will be set automatically by the
+\code{\link[brms:brm]{brms::brm()}}. Setting  \code{refresh} is useful especially when
+\code{thin} is greater than \code{1}. In that case, the \code{refresh} is
+recalculated as (\code{refresh} * \code{thin}) / \code{thin}.}
 
 \item{silent}{Verbosity level between \code{0} and \code{2}. If \code{1} (the
 default), most of the informational messages of compiler and sampler are

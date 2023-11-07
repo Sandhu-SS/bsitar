@@ -3378,7 +3378,10 @@ set_priors_initials <- function(a_prior_beta,
       what_not_to_flatten2 <- "^L_|^z_"
       if(length(initial_in_datazz$a_prior_beta) == 0) {
         # added |b_s when a_init is random 
-        what_not_to_flatten <- paste0(what_not_to_flatten, "|b_s")
+        # 06 11 2023 detected -> setting a_init to random also set s_init random
+        # This should be paste0(what_not_to_flatten, "|b_a") 
+        # and paste0(what_not_to_flatten, "|b_s")
+        what_not_to_flatten <- paste0(what_not_to_flatten, "|b_a")
         what_not_to_flatten2 <- paste0(what_not_to_flatten2, "|b_s")
       }
       for (ik in 1:length(initial_in_datazz)) {

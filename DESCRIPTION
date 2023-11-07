@@ -41,7 +41,7 @@ Suggests:
     pracma,
     testthat (>= 3.0.0),
     R.rsp,
-    cmdstanr (>= 0.5.0),
+    bayesplot (>= 1.10.0),
     marginaleffects (>= 0.15.1),    
     forcats,
     future,

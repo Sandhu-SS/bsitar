@@ -44,6 +44,10 @@
 #'   computed. Setting this option to \code{FALSE} will reduce the computation
 #'   time but no SE or CI estimates will be available.
 #'   
+#' @param digits An integer (default \code{2}) to set the decimal places for the
+#'   estimated growth parameters. The \code{digits} is passed on to the
+#'   [base::round()] function.
+#'   
 #' @param robust If \code{FALSE} (the default) the mean is used as the measure
 #'   of central tendency and the standard deviation as the measure of
 #'   variability. If \code{TRUE}, the median and the median absolute deviation
@@ -235,6 +239,7 @@ growthparameters.bgmfit <- function(model,
                                draw_ids = NULL,
                                newdata = NULL,
                                summary = TRUE,
+                               digits = 2,
                                robust = FALSE,
                                re_formula = NA,
                                peak = TRUE,
@@ -563,6 +568,7 @@ growthparameters.bgmfit <- function(model,
              newdata,
              groupby_str,
              summary,
+             digits,
              ...) {
       if (!summary) {
         out__ <- out_v_ %>%
@@ -667,7 +673,11 @@ growthparameters.bgmfit <- function(model,
             ) %>% dplyr::ungroup()
         }
       }
-      parameters
+      parameters <- parameters %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                  ~ round(., digits = digits)))
+      
+      return(parameters)
     }
   
   
@@ -938,12 +948,12 @@ growthparameters.bgmfit <- function(model,
           newdata <- newdata %>%
             dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
         }
-        # out_summary[['parameters']] <-
-        #   get_growthparameters(t(out_v_), newdata, groupby_str_v, summary)
+        
         
         out_v__apv_ <- t(out_v__apv_)
         out_summary[['parameters']] <-
-          get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary)
+          get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary, 
+                               digits)
       }
       out_summary[['groupby_str_d']] <- groupby_str_d
       out_summary[['groupby_str_v']] <- groupby_str_v
@@ -1190,7 +1200,8 @@ growthparameters.bgmfit <- function(model,
         
         out_v_ <- t(out_v_)
         out_summary[['parameters']] <-
-          get_growthparameters(out_v_, newdata, groupby_str_v, summary) # out_v_
+          get_growthparameters(out_v_, newdata, groupby_str_v, summary, 
+                               digits) # out_v_
       }
       out_summary[['groupby_str_d']] <- groupby_str_d
       out_summary[['groupby_str_v']] <- groupby_str_v
@@ -1317,7 +1328,8 @@ growthparameters.bgmfit <- function(model,
       
       out_v__apv_ <- t(out_v__apv_)
       parameters <-
-        get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary)
+        get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary, 
+                             digits)
     } # if(is.null(avg_reffects)) {
     
     
@@ -1399,14 +1411,10 @@ growthparameters.bgmfit <- function(model,
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
      
-      
-      # out_v <<- out_v
-      # newdata <<- newdata
-      # cbind(newdata , out_v) %>% ggplot(., aes(x = age)) + 
-      #   geom_line(aes(y = Estimate))
       out_v_ <- t(out_v_)
       parameters <-
-        get_growthparameters(out_v_, newdata, groupby_str_v, summary)
+        get_growthparameters(out_v_, newdata, groupby_str_v, summary, 
+                             digits)
     } # if(!is.null(avg_reffects)) {
     
     return(parameters)

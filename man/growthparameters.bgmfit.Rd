@@ -12,6 +12,7 @@
   draw_ids = NULL,
   newdata = NULL,
   summary = TRUE,
+  digits = 2,
   robust = FALSE,
   re_formula = NA,
   peak = TRUE,
@@ -65,6 +66,10 @@ to be used. If \code{NULL} (default), all draws are used.}
 Estimate should be returned or Estimate along with SE and CI should be
 computed. Setting this option to \code{FALSE} will reduce the computation
 time but no SE or CI estimates will be available.}
+
+\item{digits}{An integer (default \code{2}) to set the decimal places for the
+estimated growth parameters. The \code{digits} is passed on to the
+\code{\link[base:Round]{base::round()}} function.}
 
 \item{robust}{If \code{FALSE} (the default) the mean is used as the measure
 of central tendency and the standard deviation as the measure of

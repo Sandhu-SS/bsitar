@@ -1637,7 +1637,7 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 
 
 
-
+# Commenting out for CRAN initial release
 
 
 #' Fit model via cmdstanr
@@ -1648,92 +1648,90 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 #'
 #' @return An object of class \code{bgmfit}
 #' @keywords internal
-#' @noRd
+#' #noRd
 #'
 
-brms_via_cmdstanr <- function(scode, sdata, brm_args) {
-  if(!is.null(brm_args$threads$threads)) {
-    stan_threads <- TRUE
-  } else {
-    stan_threads <- FALSE
-  }
-  
-  if(!is.null(brm_args$opencl)) {
-    stan_opencl <- TRUE
-  } else {
-    stan_opencl <- FALSE
-  }
-
-  cpp_options <- list(stan_threads = stan_threads,
-                      stan_opencl = stan_opencl)
-  
-  
-  stanc_options <- brm_args$stan_model_args$stanc_options
-  
-  # print(str(brm_args$stan_model_args$stanc_options))
-  # stop()
-
-  if(brm_args$silent == 0) {
-    show_messages = TRUE
-    show_exceptions = TRUE
-  }
-  if(brm_args$silent == 1) {
-    show_messages = TRUE
-    show_exceptions = FALSE
-  }
-  if(brm_args$silent == 2) {
-    show_messages = FALSE
-    show_exceptions = FALSE
-  }
-
-
-  c_scode <- cmdstanr::cmdstan_model(cmdstanr::write_stan_file(scode),
-                                     quiet = TRUE,
-                                     cpp_options = cpp_options,
-                                     stanc_options = stanc_options,
-                                     dir = NULL,
-                                     pedantic = FALSE,
-                                     include_paths = NULL,
-                                     user_header = NULL,
-                                     compile_model_methods = FALSE,
-                                     compile_hessian_method = FALSE,
-                                     compile_standalone = FALSE)
-  
-  
-  iter_sampling <- brm_args$iter - brm_args$warmup
-  iter_warmup   <- brm_args$warmup
-
-  cb_fit <- c_scode$sample(
-    data = sdata,
-    seed = brm_args$seed,
-    init = brm_args$init,
-    chains = brm_args$chains,
-    parallel_chains = brm_args$cores,
-    threads_per_chain = brm_args$threads$threads,
-    opencl_ids = brm_args$opencl,
-    iter_sampling = iter_sampling,
-    iter_warmup = iter_warmup,
-    thin = brm_args$thin,
-    max_treedepth = brm_args$control$max_treedepth,
-    adapt_delta = brm_args$control$adapt_delta,
-    adapt_engaged = TRUE,
-    fixed_param = FALSE,
-    show_messages = show_messages,
-    show_exceptions = show_exceptions
-  )
-
-  cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
-  attributes(cb_fit)$CmdStanModel <- c_scode
-
-  brm_args_empty <- brm_args
-  brm_args_empty$empty <- TRUE
-
-  # Create an empty brms object -> Set empty = TRUE
-  bfit <- do.call(brms::brm, brm_args_empty)
-  bfit$fit = cb_fit
-  bfit <- brms::rename_pars(bfit)
-  bfit
-}
+# brms_via_cmdstanr <- function(scode, sdata, brm_args) {
+#   if(!is.null(brm_args$threads$threads)) {
+#     stan_threads <- TRUE
+#   } else {
+#     stan_threads <- FALSE
+#   }
+#   
+#   if(!is.null(brm_args$opencl)) {
+#     stan_opencl <- TRUE
+#   } else {
+#     stan_opencl <- FALSE
+#   }
+# 
+#   cpp_options <- list(stan_threads = stan_threads,
+#                       stan_opencl = stan_opencl)
+#   
+#   
+#   stanc_options <- brm_args$stan_model_args$stanc_options
+#   
+# 
+#   if(brm_args$silent == 0) {
+#     show_messages = TRUE
+#     show_exceptions = TRUE
+#   }
+#   if(brm_args$silent == 1) {
+#     show_messages = TRUE
+#     show_exceptions = FALSE
+#   }
+#   if(brm_args$silent == 2) {
+#     show_messages = FALSE
+#     show_exceptions = FALSE
+#   }
+# 
+# 
+#   c_scode <- cmdstanr::cmdstan_model(cmdstanr::write_stan_file(scode),
+#                                      quiet = TRUE,
+#                                      cpp_options = cpp_options,
+#                                      stanc_options = stanc_options,
+#                                      dir = NULL,
+#                                      pedantic = FALSE,
+#                                      include_paths = NULL,
+#                                      user_header = NULL,
+#                                      compile_model_methods = FALSE,
+#                                      compile_hessian_method = FALSE,
+#                                      compile_standalone = FALSE)
+#   
+#   
+#   iter_sampling <- brm_args$iter - brm_args$warmup
+#   iter_warmup   <- brm_args$warmup
+# 
+#   cb_fit <- c_scode$sample(
+#     data = sdata,
+#     seed = brm_args$seed,
+#     init = brm_args$init,
+#     chains = brm_args$chains,
+#     parallel_chains = brm_args$cores,
+#     threads_per_chain = brm_args$threads$threads,
+#     opencl_ids = brm_args$opencl,
+#     iter_sampling = iter_sampling,
+#     iter_warmup = iter_warmup,
+#     thin = brm_args$thin,
+#     max_treedepth = brm_args$control$max_treedepth,
+#     adapt_delta = brm_args$control$adapt_delta,
+#     adapt_engaged = TRUE,
+#     fixed_param = FALSE,
+#     show_messages = show_messages,
+#     show_exceptions = show_exceptions
+#   )
+# 
+#   cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
+#   attributes(cb_fit)$CmdStanModel <- c_scode
+# 
+#   brm_args_empty <- brm_args
+#   brm_args_empty$empty <- TRUE
+# 
+#   # Create an empty brms object -> Set empty = TRUE
+#   bfit <- do.call(brms::brm, brm_args_empty)
+#   bfit$fit = cb_fit
+#   bfit <- brms::rename_pars(bfit)
+#   bfit
+# }
 
 
 
