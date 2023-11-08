@@ -20,19 +20,24 @@
 #' *conditional_effects_bgm*). 
 #'
 #' @param model An object of class \code{bgmfit}. function.
+#' 
 #' @param resp Response variable (default \code{NULL}) specified as a string
 #'   character required during the post-processing of multivariate and
 #'   univariate-by-subgroup model (see \code{bsitar::bgm()} for details).
+#'   
 #' @param deriv An integer to specify whether to estimate distance curve or
 #'   derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
 #'   for the distance curve whereas \code{deriv = 1} for velocity curve and
 #'   \code{deriv = 2} for the acceleration curve.
+#'   
 #' @param deriv_model A logical (default \code{TRUE}) to indicate whether to
 #'   estimate model based derivatives or from the differentiation of the
 #'   distance curve. When model is fit with \code{decomp = 'QR'}, the only
 #'   approach available to estimate derivatives is the  differentiation of the
 #'   distance curve.
-#' @param envir The calling environment. Deafault set to \code{parent.frame()}.
+#'   
+#' @param envir The calling environment. Deafault set to \code{globalenv()}.
+#' 
 #' @param ... Additional arguments passed to the [brms::conditional_effects()]
 #'   function. Please see [brms::conditional_effects()] for details.
 #'
@@ -40,53 +45,28 @@
 #' 
 #' @return An object of class 'brms_conditional_effects' which is a named list
 #'   with one data.frame per effect containing all information required to
-#'   generate conditional effects plots. See brms::conditional_effects for details.
-#' 
+#'   generate conditional effects plots. See brms::conditional_effects for
+#'   details.
+#'   
+#'@author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'
 #' @export
 #'
-#' @examples
-#' #
-#' # The examples below show the use of *conditional_effects_bgm* to plot  
-#' # the population average and individual-specific distance and velocity 
-#' # curves.
-#' #
-#' # Fit Bayesian SITAR model 
-#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
-#' #                     chains = 2, iter = 1000, thin = 10)
-#' #
-#' # To avoid running the model which takes some time, the fitted model has 
-#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
-#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
-#' # (to save memory also).
-#' # 
-#' model <- berkeley_fit
-#' #
-#' # Population average distance curve
-#' conditional_effects_bgm(model, deriv = 0, re_formula = NA)
-#' #
-#' # Individual-specific distance curves
-#' conditional_effects_bgm(model, deriv = 0, re_formula = NULL)
-#' #
-#' # Population average velocity curve
-#' conditional_effects_bgm(model, deriv = 1, re_formula = NA)
-#' #
-#' # Individual-specific velocity curves
-#' conditional_effects_bgm(model, deriv = 1, re_formula = NULL)
-#'  
+#' @example inst/examples/conditional_effects_ex.R
 #' 
 conditional_effects_bgm.bgmfit <-
   function(model,
            resp = NULL,
            deriv = 0,
            deriv_model = TRUE,
-           envir = parent.frame(),
+           envir = globalenv(),
            ...) {
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
-                             deriv = deriv,
-                             envir = envir)
+                             envir = envir,
+                             deriv = deriv)
     
     if(deriv == 0) {
       assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)

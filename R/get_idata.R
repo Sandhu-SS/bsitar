@@ -33,6 +33,8 @@
 #'
 #' @return A data frame.
 #' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @noRd
 #'
 get_idata <-

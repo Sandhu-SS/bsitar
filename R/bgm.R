@@ -1411,79 +1411,12 @@
 #'
 #'@seealso [brms::brm()] [brms::brmsformula()] [brms::prior()]
 #'
-#'
-#' @examples
-#' #
-#' # Examples below fit SITAR model to the Berkley height data for 66 males. 
-#' # The Berkley data available from the [sitar::sitar()] has been saved in 
-#' # current package.  
-#' #
-#' # Prepare data (select age range and gender, i.e., males)
-#' data <- berkeley %>% 
-#' dplyr::select(id, age, height, sex) %>%
-#'   dplyr::filter(age %in% c(6:20) ) %>%
-#'   tidyr::drop_na(height) %>%
-#'   dplyr::mutate(sex =
-#'                   dplyr::recode_factor(sex,"1"="Male", "2"="Female")) %>%
-#'   dplyr::select(id, age, sex, height) %>%
-#'   tidyr::drop_na() %>%
-#'   dplyr::filter(sex == "Male")
-#'   
-#' # Fit maximum likelihood SITAR model using the sitar package 
-#' #
-#' sitar_fit <- sitar::sitar(x = age, y = height, id = id, data = data, df = 4)
-#' #
-#' # Fit Bayesian SITAR model 
-#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
-#' #                     chains = 2, iter = 1000, thin = 10)
-#' #
-#' # To avoid running the model which takes some time, the fitted model has 
-#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
-#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
-#' # (to save memory also).
-#' # 
-#' model <- berkeley_fit
-#' #
-#' # Generate model summary
-#' summary(model)
-#' #
-#' # Compare model summary with the maximum likelihood SITAR model
-#' summary(sitar_fit)
-#' #
-#' # Check model convergence 
-#' brms::mcmc_plot(model, variable = "^b_", regex = TRUE)
-#' #
-#' # Perform posterior predictive checks
-#' pp_check_bgm(model)
-#' #
-#' # Plot distance and velocity curves using conditional_effects_bgm() function.
-#' # This function works exactly same as as conditional_effects() from the brms
-#' # package with the exception that conditional_effects_bgm allows for 
-#' # plotting velocity curve also.
-#' # 
-#' # Distance
-#' conditional_effects_bgm(model, deriv = 0)
-#' #
-#' # Velocity
-#' conditional_effects_bgm(model, deriv = 1)
-#' #
-#' # Plot distance and velocity curve along with the parameter estimates using 
-#' # the plot_bgm() function. This function works exactly the same way as 
-#' # plot.sitar from the sitar package
-#' # 
-#' plot_bgm(model, apv = TRUE)
-#' #
-#' # Compare plot with the maximum likelihood SITAR model
-#' #
-#' plot(sitar_fit)
-#' #
-#' 
 #'@importFrom methods formalArgs
 #'
 #'@importFrom stats as.formula coef df dist filter fitted gaussian lm mad median
-#'  model.matrix predict quantile rbeta sd setNames smooth.spline 
-#'  rnorm runif rcauchy rexp rlnorm rgamma rlnorm
-#'  loess na.omit residuals complete.cases deriv formula update
+#'  model.matrix predict quantile rbeta sd setNames smooth.spline rnorm runif
+#'  rcauchy rexp rlnorm rgamma rlnorm loess na.omit residuals complete.cases
+#'  deriv formula update
 #' 
 #'@importFrom rlang .data
 #'
@@ -1494,6 +1427,67 @@
 #'@import brms
 #'
 #'@export
+#'
+#' @examples
+#' 
+#' # Examples below fit SITAR model to the Berkley height data for 66 males. 
+#' # See [bsitar::berkeley_mdata] for details.
+#'   
+#' # Fit maximum likelihood SITAR model using the sitar package 
+#' 
+#' sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 4,
+#'                           data = berkeley_mdata)
+#' 
+#' # Fit Bayesian SITAR model 
+#' 
+#' # To avoid running the model which takes some time, model fit to the
+#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
+#' # To save time and memory, the model is fit using 2 chain  with 4000
+#' # iteration per chain and # and setting thin as 10
+#' 
+#' if(exists('berkeley_mfit')) {
+#'   model <- berkeley_mfit
+#' } else {
+#'   model <- bgm(x = age, y = height, id = id, df = 4,
+#'                data = berkeley_mdata,
+#'                chains = 2, iter = 4000, thin = 10)
+#' }
+#' 
+#' # Generate model summary
+#' summary(model)
+#' 
+#' # Compare model summary with the maximum likelihood SITAR model
+#' summary(sitar_fit)
+#' 
+#' \donttest{
+#' # Check model convergence (using brms's plot function)
+#' plot(model, ask = FALSE)
+#' 
+#' # Perform posterior predictive checks
+#' pp_check_bgm(model)
+#' 
+#' # Plot distance and velocity curves using conditional_effects_bgm() function.
+#' # This function works exactly same as as conditional_effects() from the brms
+#' # package with the exception that conditional_effects_bgm allows for 
+#' # plotting velocity curve also.
+#' 
+#' # Distance
+#' conditional_effects_bgm(model, deriv = 0)
+#' 
+#' # Velocity
+#' conditional_effects_bgm(model, deriv = 1)
+#' 
+#' # Plot distance and velocity curve along with the parameter estimates using 
+#' # the plot_bgm() function. This function works exactly the same way as 
+#' # plot.sitar from the sitar package
+#' 
+#' plot_bgm(model, apv = TRUE)
+#' 
+#' # Compare plot with the maximum likelihood SITAR model
+#' 
+#' plot(sitar_fit)
+#' }
+#' 
 #'
 bgm <- function(x,
                    y,

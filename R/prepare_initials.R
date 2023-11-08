@@ -16,6 +16,8 @@
 #'
 #' @return A list of initial values. 
 #' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @keywords internal
 #' @noRd
 #' 

@@ -17,12 +17,15 @@
 #'   of observations (outliers) removed when \code{remove=TRUE}.
 #'
 #' @return A data frame with outliers removed when \code{remove=TRUE}
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @export
 #' 
 #' @examples
-#' data(berkeley, package = "sitar")
-#' data <- berkeley
-#' rm(berkeley)
+#' 
+#' data <- berkeley_mdata
+#' 
 #' outliers(x = "age", y = "height", id = "id", data = data, remove=TRUE)
 #' 
 outliers <-

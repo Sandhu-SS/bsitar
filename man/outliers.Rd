@@ -59,9 +59,12 @@ in data, Codes range from 0 (normal) to 8, where 4 and 6 are conventional
 outliers
 }
 \examples{
-data(berkeley, package = "sitar")
-data <- berkeley
-rm(berkeley)
+
+data <- berkeley_mdata
+
 outliers(x = "age", y = "height", id = "id", data = data, remove=TRUE)
 
+}
+\author{
+Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 }

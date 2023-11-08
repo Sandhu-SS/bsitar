@@ -23,7 +23,7 @@
   parms_eval = FALSE,
   parms_method = "getPeak",
   idata_method = "m1",
-  envir = parent.frame(),
+  envir = globalenv(),
   ...
 )
 
@@ -128,7 +128,7 @@ method. Options available are \code{m1} (default) and
 function for details.}
 
 \item{envir}{Indicator to set the environment of function evaluation.
-The default is \code{parent.frame}.}
+The default is \code{globalenv}.}
 
 \item{...}{Additional arguments passed to the \link[brms:predict.brmsfit]{brms::predict.brmsfit}
 function. Please see \code{brms::predict.brmsfit} for details on
@@ -165,29 +165,34 @@ for adding an underscore at the end of the name (\emph{predict} to
 # The examples below show the use of *predict_bgm* to estimate  
 # population average and individual-specific distance and velocity 
 # curves for the the predict model.
-#
+
 # Fit Bayesian SITAR model 
+# data <- berkeley
 # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
 #                     chains = 2, iter = 1000, thin = 10)
-#
+
 # To avoid running the model which takes some time, the fitted model has 
 # already been saved as berkeley_fit.rda object. The model is fitted using 2 
 # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
 # (to save memory also).
-# 
-model <- berkeley_fit
-#
+
+model <- berkeley_mfit
+
 # Population average distance curve
 predict_bgm(model, deriv = 0, re_formula = NA)
-#
+
+\donttest{
 # Individual-specific distance curves
 predict_bgm(model, deriv = 0, re_formula = NULL)
-#
+
 # Population average velocity curve
 predict_bgm(model, deriv = 1, re_formula = NA)
-#
+
 # Individual-specific velocity curves
 predict_bgm(model, deriv = 1, re_formula = NULL)
- 
+ }
 
+}
+\author{
+Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 }

@@ -1849,6 +1849,7 @@ inits_lb <- function(x, lb = 0) {
 }
 
 
+# Adapted from https://rdrr.io/cran/rempsyc/src/R/utils.R
 
 #' @title Check and install package if not already installed
 #' @param pkgs Packages to install if not already installed

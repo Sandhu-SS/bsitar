@@ -28,7 +28,9 @@
 #' [bsitar::bgm()] to the \code{prepare_formula}).
 #'
 #' @return An object of class \code{brmsformula}, which is a \code{list} 
-#'   containing formulas
+#'   containing formulas.
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'   
 #' @keywords internal
 #' @noRd
@@ -172,7 +174,8 @@ prepare_formula <- function(x,
     assign(paste0(set_nlpar_what, '_formula_gr_strsi_present'), FALSE)
   }
   
-  set_randomsi_higher_levsl_nosigma <- strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
+  set_randomsi_higher_levsl_nosigma <- strsplit(gsub("\\+", " ", 
+                                                     randomsi), " ")[[1]]
   set_randomsi_higher_levsl <- strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
   set_randomsi_higher_levsl <- c(set_randomsi_higher_levsl, 'sigma')
   for (set_randomsi_higher_levsli in set_randomsi_higher_levsl) {
@@ -201,7 +204,8 @@ prepare_formula <- function(x,
   gr_str_corr_all  <- sigma_str_corr_all   <- c()
   gr_str_corr_tf_all  <- sigma_str_corr_tf_all   <- c()
   gr_str_id_all_list <- gr_str_corr_all_list <- gr_str_corr_tf_all_list <-list()
-  sigma_str_id_all_list <- sigma_str_corr_all_list <- sigma_str_corr_tf_all_list <- list()
+  sigma_str_id_all_list <- sigma_str_corr_all_list <- list()
+  sigma_str_corr_tf_all_list <- list()
   
   # First assign all FALSE
   # This to ignore _str formulae even if present when parmare not random
@@ -227,7 +231,8 @@ prepare_formula <- function(x,
              " which currently specified as ", ept(in_gr_strsi)
              )
       }
-      get_gr_str_coef_id_it   <- get_gr_str_coef_id(ept(in_gr_strsi), data = data)
+      get_gr_str_coef_id_it   <- get_gr_str_coef_id(ept(in_gr_strsi),
+                                                    data = data)
       assign(paste0(set_nlpar_what, 'covcoefnames_gr_str'),
              get_gr_str_coef_id_it[['tsx_c_coef']])
       assign(paste0(set_nlpar_what, 'covcoefnames_gr_str_id'),
@@ -237,26 +242,58 @@ prepare_formula <- function(x,
       assign(paste0(set_nlpar_what, 'ncov_gr_str'),
              get_gr_str_coef_id_it[['set_ncov_it']])
       if(set_randomsi_higher_levsli != 'sigma') {
-        gr_str_id_all   <- c(gr_str_id_all,    get_gr_str_coef_id_it[['tsx_c_id']] %>% unlist())
-        gr_str_form_all <- c(gr_str_form_all,  get_gr_str_coef_id_it[['set_form_gr_it']] %>% unlist())
-        gr_str_coef_all <- c(gr_str_coef_all,  get_gr_str_coef_id_it[['tsx_c_coef']] %>% unlist())
-        gr_str_ncov_all <- c(gr_str_ncov_all,  get_gr_str_coef_id_it[['set_ncov_it']] %>% unlist())
-        gr_str_corr_all <- c(gr_str_corr_all,  get_gr_str_coef_id_it[['set_corr_it']] %>% unlist() )
-        gr_str_corr_tf_all  <- c(gr_str_corr_tf_all,   get_gr_str_coef_id_it[['set_corr_true_false']] %>% unlist())
-        gr_str_id_all_list[[set_randomsi_higher_levsli]] <- get_gr_str_coef_id_it[['tsx_c_id']]
-        gr_str_corr_all_list[[set_randomsi_higher_levsli]] <- get_gr_str_coef_id_it[['set_corr_it']]
-        gr_str_corr_tf_all_list[[set_randomsi_higher_levsli]] <- get_gr_str_coef_id_it[['set_corr_true_false']]
+        gr_str_id_all   <- c(gr_str_id_all,    
+                             get_gr_str_coef_id_it[['tsx_c_id']] %>% 
+                               unlist())
+        gr_str_form_all <- c(gr_str_form_all,  
+                             get_gr_str_coef_id_it[['set_form_gr_it']] %>% 
+                               unlist())
+        gr_str_coef_all <- c(gr_str_coef_all,  
+                             get_gr_str_coef_id_it[['tsx_c_coef']] %>% 
+                               unlist())
+        gr_str_ncov_all <- c(gr_str_ncov_all,  
+                             get_gr_str_coef_id_it[['set_ncov_it']] %>% 
+                               unlist())
+        gr_str_corr_all <- c(gr_str_corr_all,  
+                             get_gr_str_coef_id_it[['set_corr_it']] %>% 
+                               unlist() )
+        gr_str_corr_tf_all  <- 
+          c(gr_str_corr_tf_all, 
+             get_gr_str_coef_id_it[['set_corr_true_false']] %>% 
+              unlist())
+        gr_str_id_all_list[[set_randomsi_higher_levsli]] <- 
+          get_gr_str_coef_id_it[['tsx_c_id']]
+        gr_str_corr_all_list[[set_randomsi_higher_levsli]] <- 
+          get_gr_str_coef_id_it[['set_corr_it']]
+        gr_str_corr_tf_all_list[[set_randomsi_higher_levsli]] <- 
+          get_gr_str_coef_id_it[['set_corr_true_false']]
       }
       if(set_randomsi_higher_levsli == 'sigma') {
-        sigma_str_id_all   <- c(sigma_str_id_all,    get_gr_str_coef_id_it[['tsx_c_id']] %>% unlist())
-        sigma_str_form_all <- c(sigma_str_form_all,  get_gr_str_coef_id_it[['set_form_gr_it']] %>% unlist())
-        sigma_str_coef_all <- c(sigma_str_coef_all,  get_gr_str_coef_id_it[['tsx_c_coef']] %>% unlist())
-        sigma_str_ncov_all <- c(sigma_str_ncov_all,  get_gr_str_coef_id_it[['set_ncov_it']] %>% unlist())
-        sigma_str_corr_all <- c(sigma_str_corr_all,  get_gr_str_coef_id_it[['set_corr_it']] %>% unlist() )
-        sigma_str_corr_tf_all  <- c(sigma_str_corr_tf_all,   get_gr_str_coef_id_it[['set_corr_true_false']] %>% unlist())
-        sigma_str_id_all_list[[set_randomsi_higher_levsli]] <- get_gr_str_coef_id_it[['tsx_c_id']]
-        sigma_str_corr_all_list[[set_randomsi_higher_levsli]] <- get_gr_str_coef_id_it[['set_corr_it']]
-        sigma_str_corr_tf_all_list[[set_randomsi_higher_levsli]] <- get_gr_str_coef_id_it[['set_corr_true_false']]
+        sigma_str_id_all   <- c(sigma_str_id_all, 
+                                get_gr_str_coef_id_it[['tsx_c_id']] %>% 
+                                  unlist())
+        sigma_str_form_all <- c(sigma_str_form_all, 
+                                get_gr_str_coef_id_it[['set_form_gr_it']] %>% 
+                                  unlist())
+        sigma_str_coef_all <- c(sigma_str_coef_all, 
+                                get_gr_str_coef_id_it[['tsx_c_coef']] %>% 
+                                  unlist())
+        sigma_str_ncov_all <- c(sigma_str_ncov_all, 
+                                get_gr_str_coef_id_it[['set_ncov_it']] %>% 
+                                  unlist())
+        sigma_str_corr_all <- c(sigma_str_corr_all, 
+                                get_gr_str_coef_id_it[['set_corr_it']] %>% 
+                                  unlist() )
+        sigma_str_corr_tf_all  <- 
+          c(sigma_str_corr_tf_all, 
+            get_gr_str_coef_id_it[['set_corr_true_false']] %>% 
+              unlist())
+        sigma_str_id_all_list[[set_randomsi_higher_levsli]] <- 
+          get_gr_str_coef_id_it[['tsx_c_id']]
+        sigma_str_corr_all_list[[set_randomsi_higher_levsli]] <- 
+          get_gr_str_coef_id_it[['set_corr_it']]
+        sigma_str_corr_tf_all_list[[set_randomsi_higher_levsli]] <- 
+          get_gr_str_coef_id_it[['set_corr_true_false']]
       }
     } # if(ept(paste0(set_nlpar_what, '_formula_gr_strsi_present'))) {
     if(!ept(paste0(set_nlpar_what, '_formula_gr_strsi_present'))) {
@@ -284,9 +321,10 @@ prepare_formula <- function(x,
   
   
   
-  sigma_gsctfnb <- get_str_corr_tf_function_new_better(sigma_str_id_all_list, 
-                                                       sigma_str_corr_all_list, 
-                                                       sigma_str_corr_tf_all_list)
+  sigma_gsctfnb <- 
+    get_str_corr_tf_function_new_better(sigma_str_id_all_list, 
+                                        sigma_str_corr_all_list, 
+                                        sigma_str_corr_tf_all_list)
   
   
   sigma_str_corr_tf <- sigma_gsctfnb[['str_corr_tf']]
@@ -306,7 +344,7 @@ prepare_formula <- function(x,
   # This to overide default 
   
   if(!is.null(sigma_str_id_all[[1]])) {
-    sigma_group_arg$groupvar <- sigma_str_id_all[[1]] # acovcoefnames_gr_str_id[[1]]
+    sigma_group_arg$groupvar <- sigma_str_id_all[[1]] 
   } else {
     sigma_group_arg$groupvar <- sigma_group_arg$groupvar
   }
@@ -483,7 +521,8 @@ prepare_formula <- function(x,
                              " ~ ", abcselements))
     }
     if (terms_rhssi != "NULL") {
-      abcsformfit <- (paste0(y,  "|", terms_rhssi, "+", "subset(", subindicatorsi, ")",
+      abcsformfit <- (paste0(y,  "|", terms_rhssi, "+", "subset(", 
+                             subindicatorsi, ")",
                              " ~ ", abcselements))
     }
   }
@@ -495,7 +534,7 @@ prepare_formula <- function(x,
   if ((is.na(univariate_by$by) |
        univariate_by$by == "NA") &
       !multivariate$mvar &  abccorr) {
-    coridv <- 1 # Don't use "C" otherwise marginalefefcts search for it as variable
+    coridv <- 1 # Don't use "C" coz marginalefefcts search for it as variable
   }
   
   if ((is.na(univariate_by$by) |
@@ -657,11 +696,14 @@ prepare_formula <- function(x,
   
   
   if(is.null(sigma_formulasi[[1]]) | sigma_formulasi == 'NULL') {
-    display_message <-  paste("Please specify the fixed effect structure for sigma parameter ",
+    display_message <-  paste("Please specify the fixed effect structure 
+                              for sigma parameter ",
                               "\n ", 
-                              " (by using the sigma_formula argument) since you have specified the ",
+                              " (by using the sigma_formula argument) 
+                              since you have specified the ",
                               "\n ", 
-                              " random effect structure via the sigma_formula_gr argument")
+                              " random effect structure via 
+                              the sigma_formula_gr argument")
     if(!is.null(sigma_formula_grsi)) {
       stop(display_message)
     }  
@@ -672,9 +714,11 @@ prepare_formula <- function(x,
   
   
   if(!is.null(sigma_formulasi[[1]]) & !is.null(sigma_formula_grsi)) {
-    if(!identical(substr(strsplit(sigma_formulasi, "~", fixed = T)[[1]][2], 1, 1),
-                  substr(strsplit(sigma_formula_grsi, "~", fixed = T)[[1]][2], 1, 1))) {
-      stop("Formulae for sigma_formula and sigma_formula_gr should be identical",
+    if(!identical(substr(strsplit(sigma_formulasi, "~", 
+                                  fixed = T)[[1]][2], 1, 1),
+                  substr(strsplit(sigma_formula_grsi, "~", 
+                                  fixed = T)[[1]][2], 1, 1))) {
+      stop("Formulae for sigma_formula and sigma_formula_gr should be same",
            "\n ", 
            " in terms of Intercept i.e, both should be either ~ 0 or ~ 1")
     }
@@ -686,13 +730,8 @@ prepare_formula <- function(x,
     stop("Either use dpar_formula or sigma_formula")
   }
   
-  # if (sigma_formulasi == 'NULL' ) {
-  #   stop("Either use dpar_formula or sigma_formula but not both")
-  # }
   
-  if (is.null(sigma_formula_grsi) & !is.null(sigma_formula_gr_strsi)) {
-    #  stop("Either use sigma_formula_gr or sigma_formula_gr_str but not both")
-  }
+  
   
   if (sigma_formulasi == 'NULL' ) {
     if (!is.null(sigma_formula_grsi) & !is.null(sigma_formula_gr_strsi)) {
@@ -1512,9 +1551,11 @@ prepare_formula <- function(x,
         if (match_sitar_d_form) {
           if (is.null(dform) & grepl("d", randomsi, fixed = T)) {
             if(!drandom_wb_) {
-              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , gr__args, ")")
+              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , 
+                              gr__args, ")")
             } else if(drandom_wb_) {
-              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , gr__args, ")")
+              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , 
+                              gr__args, ")")
             }
           }
         }
@@ -1573,7 +1614,8 @@ prepare_formula <- function(x,
         if (!is.null(sigmaform) & !is.null(sigma_formula_grsi)) {
           if(!sigma_random_wb_) {
             sigmaform <- paste0(sigmaform,
-                                " + (", sigma_form_gr, "|", coridv, "|" , sigma_gr__args, ")")
+                                " + (", sigma_form_gr, "|", coridv, "|" , 
+                                sigma_gr__args, ")")
           } else if(sigma_random_wb_) {
             sigmaform <- paste0(sigmaform,
                                 " + (", sigma_random_wb, ")")
@@ -1586,7 +1628,8 @@ prepare_formula <- function(x,
     if (is.null(sigma_group_arg)) {
       if (!is.null(sigmaform) & !is.null(sigma_formula_grsi)) {
         if(!sigma_random_wb_) {
-          sigmaform <- paste0(sigmaform, " + (", sigma_form_gr, "|", coridv, "|" , id, ")")
+          sigmaform <- paste0(sigmaform, " + (", sigma_form_gr, "|", 
+                              coridv, "|" , id, ")")
         } else if(arandom_wb_) {
           sigmaform <- paste0(sigmaform, " + (", sigma_random_wb, ")")
         }
@@ -1851,11 +1894,12 @@ prepare_formula <- function(x,
                                gform_gr_names, hform_gr_names,
                                iform_gr_names, sform_gr_names)
     
-    hierarchical_gr_names_asitis <- c(aform_gr_names_asitis, bform_gr_names_asitis, 
-                                      cform_gr_names_asitis, dform_gr_names_asitis,
-                                      eform_gr_names_asitis, fform_gr_names_asitis,
-                                      gform_gr_names_asitis, hform_gr_names_asitis,
-                                      iform_gr_names_asitis, sform_gr_names_asitis)
+    hierarchical_gr_names_asitis <- 
+      c(aform_gr_names_asitis, bform_gr_names_asitis, 
+        cform_gr_names_asitis, dform_gr_names_asitis,
+        eform_gr_names_asitis, fform_gr_names_asitis,
+        gform_gr_names_asitis, hform_gr_names_asitis,
+        iform_gr_names_asitis, sform_gr_names_asitis)
     
     
     hierarchical_gr_names <- unique(hierarchical_gr_names)
@@ -1877,7 +1921,8 @@ prepare_formula <- function(x,
     if(sigma_formula_gr_strsi_present) {
       sigmaform <- add_higher_level_str(sigmaform, sigma_formula_gr_strsi)
       sigmaform <- restore_paranthese_grgr_str_form(sigmaform)
-      sigmagr_varss             <- add_higher_level_str_id(sigma_formula_gr_strsi)
+      sigmagr_varss             <- 
+        add_higher_level_str_id(sigma_formula_gr_strsi)
       sigmaform_gr_names        <- lapply(sigmaform, get_x_random2)[[1]]
       sigmaform_gr_names_asitis <- lapply(sigmaform, get_x_random2_asitis)[[1]]
     } else {
@@ -1888,7 +1933,8 @@ prepare_formula <- function(x,
     sigma_hierarchical_gr_names <- unique(sigma_hierarchical_gr_names)
     
     sigma_hierarchical_gr_names_asitis <- c(sigmaform_gr_names_asitis)
-    sigma_hierarchical_gr_names_asitis <- unique(sigma_hierarchical_gr_names_asitis)
+    sigma_hierarchical_gr_names_asitis <- 
+      unique(sigma_hierarchical_gr_names_asitis)
     
     sigma_gr_varss <- sigma_gr_varss 
     sigma_gr_varss_asitis <- sigmaform_gr_names_asitis
@@ -1906,7 +1952,8 @@ prepare_formula <- function(x,
   
   
   if(!is.null(sigma_formula_grsi)) {
-    if(!sigma_set_higher_levels & grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+    if(!sigma_set_higher_levels & grepl("|", 
+                                        sigma_formula_grsi, fixed = TRUE)) {
       extract_xx <- sigma_formula_grsi
       extract_xx <- gsub("[[:space:]]", "", extract_xx)
       extract_xx <- strsplit(extract_xx, ")+(", fixed = T)[[1]][1]
@@ -1914,7 +1961,7 @@ prepare_formula <- function(x,
       sigma_gr_varss <- sub(".*\\|", "", extract_xx) 
       sigma_hierarchical_gr_names <- c(sigma_gr_varss)
     }
-  } else if(!sigma_set_higher_levels) { # & !grepl("|", sigma_formula_grsi, fixed = TRUE)
+  } else if(!sigma_set_higher_levels) { 
     sigma_hierarchical_gr_names <- NULL
     sigma_hierarchical_gr_names_asitis <- NULL
   } else if(!sigma_set_higher_levels) {
@@ -2126,7 +2173,8 @@ prepare_formula <- function(x,
   if(sigma_set_higher_levels) { 
     sigma_arg_groupvar <- sigma_gr_varss_asitis
   } else if(!is.null(sigma_formula_grsi)) {
-    if(!sigma_set_higher_levels & !grepl("|", sigma_formula_grsi, fixed = TRUE)) {
+    if(!sigma_set_higher_levels & !grepl("|", 
+                                         sigma_formula_grsi, fixed = TRUE)) {
       sigma_arg_groupvar <- sigma_gr_varss
     }
   } else if(!is.null(sigma_group_arg)) {
@@ -2156,7 +2204,7 @@ prepare_formula <- function(x,
   
   
   
-  # Depending on select_model, assign null values to all which not part of the model
+  # Depending on select_model, assign null values to which not part of the model
   for (set_randomsi_higher_levsli in c(letters[1:26])) {
     set_nlpar_what <- set_randomsi_higher_levsli
     if(!exists(paste0(set_randomsi_higher_levsli, 'form'))) {
@@ -2594,7 +2642,8 @@ prepare_formula <- function(x,
       lmform  <- as.formula(paste0(y, "~1+", 'mat_s'))
     }
    
-    lm_data_at_max_x[['mat_s']] <- lm_data_at_max_x[[x]] - max(lm_data_at_max_x[[x]])
+    lm_data_at_max_x[['mat_s']] <- 
+      lm_data_at_max_x[[x]] - max(lm_data_at_max_x[[x]])
     
     lm_fit  <- lm(lmform, data = lm_data_at_max_x)
     lm_coef <- coef(lm_fit)

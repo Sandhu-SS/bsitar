@@ -38,7 +38,7 @@
   equivalence = NULL,
   eps = NULL,
   reformat = TRUE,
-  envir = parent.frame(),
+  envir = globalenv(),
   ...
 )
 
@@ -251,7 +251,7 @@ columns are dropped from the data frame: \code{term}, \code{contrast},
 \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.}
 
 \item{envir}{Indicator to set the environment of function evaluation.
-The default is \code{parent.frame}.}
+The default is \code{globalenv}.}
 
 \item{...}{Further arguments passed to \code{brms::fitted()} and
 \code{brms::predict()} functions that control several aspects of data
@@ -301,19 +301,22 @@ good indicator of the cessation of the active pubertal growth spurt
 \insertCite{Anna2022}{bsitar}.
 }
 \examples{
-#
+
 # Fit Bayesian SITAR model 
+# data <- berkeley
 # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
 #                     chains = 2, iter = 1000, thin = 10)
-#
+
 # To avoid running the model which takes some time, the fitted model has 
 # already been saved as berkeley_fit.rda object. The model is fitted using 2 
 # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
 # (to save memory also).
-# 
-model <- berkeley_fit
-#
+
+model <- berkeley_mfit
+
+\donttest{
 growthparameters_comparison(model, parameter = 'apv')
+}
 
 
 }

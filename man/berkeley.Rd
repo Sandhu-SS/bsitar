@@ -51,4 +51,7 @@ circumference, and dynamo metric strength.
 \references{
 \insertAllCited{}
 }
+\author{
+Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+}
 \keyword{datasets}

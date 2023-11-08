@@ -28,6 +28,8 @@
 #'   correlation parameter, \code{L}.
 #'   
 #' @return A prior object.
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @keywords internal
 #' @noRd

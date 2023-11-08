@@ -4,6 +4,7 @@
 #' An internal function to create data frame for post-processing
 #'
 #' @inheritParams  growthparameters.bgmfit 
+#' 
 #' @param idata_method A character string to indicate interpolation 
 #' method. Options available are \code{m1} (default) and
 #' \code{m2}. The \code{'m1'} calls the \code{idatafunction} function 
@@ -11,7 +12,11 @@
 #' interpolation. 
 #' 
 #' @keywords internal
+#' 
 #' @return A data frame object. 
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @noRd
 #'
 get.newdata <- function(model,

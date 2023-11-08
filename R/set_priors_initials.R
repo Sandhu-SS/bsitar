@@ -170,6 +170,8 @@
 #'  addition to the priors, the returned object contains a list of initial
 #'  values.
 #'  
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'  
 #' @keywords internal
 #' @noRd
 #'

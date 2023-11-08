@@ -8,7 +8,7 @@ data(berkeley, package = "sitar")
 data <- berkeley
 rm(berkeley)
 
-data <- data %>% 
+berkeley_mdata <- data %>% 
   dplyr::select(id, age, height, sex) %>% 
   dplyr::filter(age %in% c(6:20) ) %>% 
   tidyr::drop_na(height) %>% 
@@ -16,15 +16,18 @@ data <- data %>%
                   dplyr::recode_factor(sex, "1" = "Male", "2" = "Female")) %>% 
   dplyr::select(id, age, sex, height) %>% 
   tidyr::drop_na() %>% 
-  dplyr::filter(sex == "Male")
+  dplyr::filter(sex == "Male") %>% 
+  dplyr::select(-sex) %>% 
+  droplevels()
 
-data %>% dplyr::glimpse()
 
-sitar_fit <- sitar::sitar(x = age, y = height, id = id, data = data, df = 4)
+sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 4,
+                          data = berkeley_mdata)
 
-berkeley_fit <- bsitar::bgm(x = age, y = height, id = id, data = data, df = 4,
+berkeley_mfit <- bsitar::bgm(x = age, y = height, id = id, df = 4,
+                            data = berkeley_mdata,
                             sample_prior = 'only',
-                            chains = 2, iter = 1000, thin = 8)
+                            chains = 2, iter = 1000, thin = 10)
 
 
-# usethis::use_data(berkeley_fit, overwrite = TRUE)
+usethis::use_data(berkeley_mfit, overwrite = TRUE)

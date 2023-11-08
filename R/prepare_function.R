@@ -29,6 +29,8 @@
 #'
 #' @return An character string which later evaluated to a custom function
 #'   and inserted into the Stan's functions block.
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @keywords internal
 #' @noRd
@@ -388,8 +390,7 @@ prepare_function <- function(x,
         out_unscaled <-
           paste0("vector[N] out_unscaled=", result[[1]][2], ";")
         
-        # if(!is.null(decomp)) out_unscaled <- gsub('XQ', 'Spl', out_unscaled, fixed = T)
-        
+
         if (!is.null(gsub_out_unscaled)) {
           if (length(gsub_out_unscaled) != 2)
             stop('Length of gsub_out_unscaled should be 2')
@@ -567,8 +568,6 @@ prepare_function <- function(x,
       ####
       if (grepl("d0", fnameout)) {
         out_unscaled <- paste0("vector[N] out_unscaled=", body, ";")
-        
-        # if(!is.null(decomp)) out_unscaled <- gsub('XQ', 'Spl', out_unscaled, fixed = T)
         
         if (!is.null(gsub_out_unscaled)) {
           if (length(gsub_out_unscaled) != 2)
@@ -1106,7 +1105,6 @@ prepare_function <- function(x,
       cn_c <- c()
       for (vi in szx) {
         cnt <- cnt + 1
-        # tmx <- paste0('vector[N] ', paste0('s', 'x', cnt, " = "), XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
         tmx <-
           paste0(
             paste0('s', 'x', '[,', cnt, "]", " = "),
@@ -1157,7 +1155,6 @@ prepare_function <- function(x,
       cn_c <- c()
       for (vi in szx) {
         cnt <- cnt + 1
-        # tmx <- paste0('vector[N] ', paste0('s', 'x', cnt, " = "), XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
         tmx <-
           paste0(
             paste0('b_s', 'q', '[,', cnt, "]", " = "),
@@ -1174,15 +1171,13 @@ prepare_function <- function(x,
         cn_c <- c(cn_c, tmx)
       }
       # cn_c2 <- paste(cn_c, collapse = "\n")
-      # cn_c2 <- paste0('matrix[QK, QK] XR_inv_name_resp, '_mat', ";", "\n", cn_c2)
+      # cn_c2 -paste0('matrix[QK, QK] XR_inv_name_resp,'_mat', ";", "\n", cn_c2)
       # cn_c2 <- paste0('matrix[N, QK] ', b_sx_name_resp, ';', "\n", cn_c2)
       
       rcsfunmatgrinv <-
         paste0(rcsfunmatgrinv, "\n", 'return ', XR_inv_name, ';')
       rcsfunmatgrinv <- paste0(rcsfunmatgrinv, '\n}')
       funmats <- paste0(funmats, "\n", rcsfunmatgrinv)
-      # print(cat(rcsfunmat))
-      # stop()
     } # if(add_rcsfunmatqrinv) {
     
     
@@ -1264,7 +1259,6 @@ prepare_function <- function(x,
       for (vi in szx_vector) {
         cnt <- cnt + 1
         # '[', cnt, ',', cnt, "]"
-        # tmx2 <- paste0(paste0(szxbq, '[', cnt, ']', '', " = "), 'XR_inv_name_resp, '[', cnt, ",", cnt, "] * ", vi, ";")
         tmx2 <-
           paste0(paste0(szxbq, '[', cnt, ']', '', " = "),
                  tems2,
@@ -1995,7 +1989,7 @@ prepare_function <- function(x,
     
     
     
-    # # Alternative form,maple  -> (a/(1+exp(-c*(x-e)))) + (1-b/(1+exp(-d*(x-f))))
+    # # Alternative form,maple->(a/(1+exp(-c*(x-e)))) + (1-b/(1+exp(-d*(x-f))))
     # # Alternative form -> (a./(1+exp(-c.*(x-e)))) + (1-b./(1+exp(-d.*(x-f))))
     # if(select_model == 'logistic2') {
     #   funstring <- "(a./(1+exp(-c.*(Xm-e)))) + (1-b./(1+exp(-d.*(Xm-f))))"
@@ -2533,7 +2527,6 @@ prepare_function <- function(x,
                 r_funs = all_raw_str,
                 gq_funs = rcsfunmatqrinv_genquant)
   }
-  
   
   # print(cat(rcsfun))
   # stop()

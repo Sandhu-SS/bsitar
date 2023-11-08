@@ -91,12 +91,28 @@ and/or \code{add_fit_bayes_R} are specified.
 Optimize \pkg{bgmfit} model
 }
 \examples{
-\dontrun{
-data(heights)
-data_males <- heights \%>\% filter(sex == 'Male')
-fit_males <- bgm(x=age, y=height, id=id, data=heights, df=4)
-fit_males2 <- optimize_bgm(fit_males)
+\donttest{
+
+# Fit Bayesian SITAR model 
+# data <- berkeley
+# berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#                     chains = 2, iter = 1000, thin = 10)
+
+# To avoid running the model which takes some time, the fitted model has 
+# already been saved as berkeley_fit.rda object. The model is fitted using 2 
+# chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+# (to save memory also).
+
+model <- berkeley_mfit
+
+# To save time, below example is fit with sample_prior = 'only'
+
+model2 <- optimize_bgm(model, optimize_df = 5, 
+optimize_x = NULL, 
+optimize_y = NULL,  
+sample_prior = 'only')
 }
+
 
 }
 \author{

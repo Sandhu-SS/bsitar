@@ -37,6 +37,8 @@
 #'   \code{NULL}.
 #' 
 #' @return A data frame with necessary information added a attributes.
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @keywords internal
 #' @noRd

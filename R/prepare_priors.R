@@ -45,6 +45,8 @@
 #' @return An object of class \code{brmsprior}. See \code{brmsprior} function 
 #' for more details. 
 #' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @keywords internal
 #' @noRd
 #' 
@@ -824,17 +826,6 @@ if(dist != 'flat') {
           }
         }
         
-        
-        
-        # if (class == "sd") {
-        #   if (nlpar == "a" & cov_nlpar == "") {
-        #     allowed_parm_options <- c("ysd", "ymad", "lme_sd_a")
-        #   } else if (nlpar == "d" & cov_nlpar == "") {
-        #     allowed_parm_options <- c("ysd", "ymad")
-        #   } else {
-        #     allowed_parm_options <- NULL
-        #   }
-        # }
         
         
         

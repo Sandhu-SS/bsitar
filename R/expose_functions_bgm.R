@@ -14,14 +14,32 @@
 #' @return An object of class \code{bgmfit} with exposed  
 #' user-defined Stan functions (when \code{expose=TRUE}).
 #' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # 
-#' expose_functions_bgm(model)
-#' #
+#' 
+#' # The examples below show the use of *conditional_effects_bgm* to plot  
+#' # the population average and individual-specific distance and velocity 
+#' # curves.
+#' 
+#' # Fit Bayesian SITAR model 
+#' # data <- berkeley
+#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
+#' #                     chains = 2, iter = 1000, thin = 10)
+#' 
+#' # To avoid running the model which takes some time, the fitted model has 
+#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
+#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
+#' # (to save memory also).
+#' 
+#' model <- berkeley_mfit
+#' 
+#' \donttest{
+#' expose_functions_bgm(model, expose = TRUE)
 #' }
+#' 
 expose_functions_bgm <- function(model, 
                                     scode = NULL, 
                                     expose = FALSE, 

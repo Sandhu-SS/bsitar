@@ -192,7 +192,7 @@
 #'  function function from the \code{pracma} package.
 #'  
 #' @param envir Indicator to set the environment of function evaluation.  
-#'  The default is \code{parent.frame}. 
+#'  The default is \code{globalenv}. 
 #'   
 #' @param ... Further arguments passed to \code{brms::fitted()} and
 #'   \code{brms::predict()} functions that control several aspects of data
@@ -211,6 +211,8 @@
 #'   used to compute by the 95% CI by calling the quantile function. When
 #'   \code{re_formual = NULL}, an additional column is added that shows the
 #'   individuals/groups corresponding to the estimates.
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @importFrom rlang .data
 #' 
@@ -221,27 +223,29 @@
 #' @export
 #'
 #' @examples
-#' #
+#' 
 #' # Fit Bayesian SITAR model 
+#' # data <- berkeley
 #' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
 #' #                     chains = 2, iter = 1000, thin = 10)
-#' #
+#' 
 #' # To avoid running the model which takes some time, the fitted model has 
 #' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
 #' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
 #' # (to save memory also).
-#' # 
-#' model <- berkeley_fit
-#' #
+#' 
+#' model <- berkeley_mfit
+#' 
 #' # Population average APGV and PGV
 #' growthparameters(model, re_formula = NA)
-#' #
+#' 
+#' \donttest{
 #' # Population average APGV, PGV, ATGV, TGV
 #' growthparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)
-#' #
+#' 
 #' # Individual-specific APGV, PGV, ATGV, TGV
 #' growthparameters(model, re_formula = NULL, peak = TRUE, takeoff = TRUE)
-#'
+#' }
 #' 
 growthparameters.bgmfit <- function(model,
                                resp = NULL,
@@ -276,14 +280,12 @@ growthparameters.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
-                               envir = NULL,
+                               envir = globalenv(),
                                ...) {
   if (is.null(ndraws))
     ndraws  <- brms::ndraws(model)
   else
     ndraws <- ndraws
-  
-  if(is.null(envir)) envir <- parent.frame()
   
   ##############################################
   # Initiate non formalArgs()
@@ -305,8 +307,8 @@ growthparameters.bgmfit <- function(model,
   
   oo <- post_processing_checks(model = model,
                                xcall = match.call(),
-                               resp = resp,
-                               envir = envir)
+                               envir = envir,
+                               resp = resp)
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
@@ -869,7 +871,6 @@ growthparameters.bgmfit <- function(model,
         arguments$deriv <- 0
         # don't let the ipts to pass again to the fitted 
         arguments$ipts <- NULL 
-        arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         if (estimation_method == 'fitted') {
@@ -921,7 +922,6 @@ growthparameters.bgmfit <- function(model,
         arguments$deriv <- 1
         # don't let the ipts to pass again to the fitted 
         arguments$ipts <- NULL 
-        arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         if (estimation_method == 'fitted') {
@@ -1069,7 +1069,6 @@ growthparameters.bgmfit <- function(model,
         arguments$deriv <- 0
         # don't let the ipts to pass again to the fitted
         arguments$ipts <- NULL 
-        arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         
@@ -1147,7 +1146,6 @@ growthparameters.bgmfit <- function(model,
         arguments$deriv <- 1
         # don't let the ipts to pass again to the fitted
         arguments$ipts <- NULL 
-        arguments$envir <- .GlobalEnv # arguments$envir_
         arguments$probs <- probs
         
         
@@ -1307,7 +1305,6 @@ growthparameters.bgmfit <- function(model,
       arguments$deriv <- 1
       # don't let the ipts to pass again to the fitted
       arguments$ipts <- NULL 
-      arguments$envir <- .GlobalEnv # arguments$envir_
       arguments$probs <- probs
      
       if (estimation_method == 'fitted') {
@@ -1378,7 +1375,6 @@ growthparameters.bgmfit <- function(model,
       arguments$deriv <- 1
       # don't let the ipts to pass again to the fitted
       arguments$ipts <- NULL 
-      arguments$envir <- .GlobalEnv # arguments$envir_
       arguments$probs <- probs
       
       if (estimation_method == 'fitted') {

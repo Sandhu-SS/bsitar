@@ -32,6 +32,8 @@
 #' @return An array of predicted response values. See [brms::predict.brmsfit] 
 #' for details.
 #' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @export predict_bgm.bgmfit
 #' 
 #' @export
@@ -41,32 +43,33 @@
 #' # The examples below show the use of *predict_bgm* to estimate  
 #' # population average and individual-specific distance and velocity 
 #' # curves for the the predict model.
-#' #
+#' 
 #' # Fit Bayesian SITAR model 
+#' # data <- berkeley
 #' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
 #' #                     chains = 2, iter = 1000, thin = 10)
-#' #
+#' 
 #' # To avoid running the model which takes some time, the fitted model has 
 #' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
 #' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
 #' # (to save memory also).
-#' # 
-#' model <- berkeley_fit
-#' #
+#' 
+#' model <- berkeley_mfit
+#' 
 #' # Population average distance curve
 #' predict_bgm(model, deriv = 0, re_formula = NA)
-#' #
+#' 
+#' \donttest{
 #' # Individual-specific distance curves
 #' predict_bgm(model, deriv = 0, re_formula = NULL)
-#' #
+#' 
 #' # Population average velocity curve
 #' predict_bgm(model, deriv = 1, re_formula = NA)
-#' #
+#' 
 #' # Individual-specific velocity curves
 #' predict_bgm(model, deriv = 1, re_formula = NULL)
-#'  
+#'  }
 #' 
-
 predict_bgm.bgmfit <-
   function(model,
            newdata = NULL,
@@ -85,15 +88,15 @@ predict_bgm.bgmfit <-
            parms_eval = FALSE,
            parms_method = 'getPeak',
            idata_method = 'm1',
-           envir = parent.frame(),
+           envir = globalenv(),
            ...) {
     
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
-                             deriv = deriv, 
-                             envir = envir)
+                             envir = envir,
+                             deriv = deriv)
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)

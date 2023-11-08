@@ -5,7 +5,7 @@
 \alias{pp_check_bgm}
 \title{Posterior predictive distribution check for \code{bgmfit} object}
 \usage{
-\method{pp_check_bgm}{bgmfit}(model, resp = NULL, envir = parent.frame(), ...)
+\method{pp_check_bgm}{bgmfit}(model, resp = NULL, envir = globalenv(), ...)
 
 pp_check_bgm(model, ...)
 }
@@ -37,18 +37,22 @@ the \link[brms:loo.brmsfit]{brms::loo} and works exactly the same way as
 \link[brms:pp_check.brmsfit]{brms::pp_check.brmsfit}.
 }
 \examples{
-#
+
 # Fit Bayesian SITAR model 
 # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
 #                     chains = 2, iter = 1000, thin = 10)
-#
+
 # To avoid running the model which takes some time, the fitted model has 
 # already been saved as berkeley_fit.rda object. The model is fitted using 2 
 # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
 # (to save memory also).
-# 
-model <- berkeley_fit
-#
+
+model <- berkeley_mfit
+
 pp_check_bgm(model)
 
+
+}
+\author{
+Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 }

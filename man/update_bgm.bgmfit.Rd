@@ -36,7 +36,8 @@ This is an adapted version of the \code{update} function from the
 \code{brms} package.
 }
 \examples{
-\dontrun{
+
+\donttest{
 # Fit Bayesian SITAR model 
 # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
 #                     chains = 2, iter = 1000, thin = 10)
@@ -45,9 +46,12 @@ This is an adapted version of the \code{update} function from the
 # already been saved as berkeley_fit.rda object. The model is fitted using 2 
 # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
 # (to save memory also).
-# 
-fit_males <- bgm(x=age, y=height, id=id, data=heights, df=4)
-model2 <- update_bgm(model, df = 5)
+
+model <- berkeley_mfit
+
+# To save time, below example is fit with sample_prior = 'only'
+
+model2 <- update_bgm(model, df = 5, iter = 100, sample_prior = 'only')
 }
 
 }

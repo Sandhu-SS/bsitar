@@ -25,6 +25,8 @@
 #'
 #' @return A string with the error captured or else a list with necessary
 #'   information needed when executing the post-processing function
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @noRd
 #'
@@ -32,9 +34,9 @@ post_processing_checks <- function(model,
                                    xcall, 
                                    resp = NULL, 
                                    deriv = NULL,
-                                   envir = parent.frame()) {
+                                   envir = NULL) {
   
-  if(is.null(envir)) envir <- parent.frame()
+  if(is.null(envir)) envir <- globalenv()
   if(is.null(deriv)) deriv <- 0
   
   # print(strsplit(deparse((xcall[1])), "\\.")[[1]][1]) 

@@ -5,14 +5,7 @@
 \alias{loo_bgm}
 \title{Leave-one-out (loo) cross-validation for \code{bgmfit} object}
 \usage{
-\method{loo_bgm}{bgmfit}(
-  model,
-  resp = NULL,
-  cores = 1,
-  envir = parent.frame(),
-  deriv = NULL,
-  ...
-)
+\method{loo_bgm}{bgmfit}(model, resp = NULL, cores = 1, envir = globalenv(), deriv = NULL, ...)
 
 loo_bgm(model, ...)
 }
@@ -55,18 +48,24 @@ the \link[brms:loo.brmsfit]{brms::loo} and works exactly the same way as
 \link[brms:loo.brmsfit]{brms::loo}.
 }
 \examples{
-#
+
 # Fit Bayesian SITAR model 
+# data <- berkeley
 # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
 #                     chains = 2, iter = 1000, thin = 10)
-#
+
 # To avoid running the model which takes some time, the fitted model has 
 # already been saved as berkeley_fit.rda object. The model is fitted using 2 
 # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
 # (to save memory also).
-# 
-model <- berkeley_fit
-#
-loo_bgm(model, cores = 1)
 
+model <- berkeley_mfit
+
+\donttest{
+loo_bgm(model, cores = 1)
+}
+
+}
+\author{
+Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 }

@@ -170,6 +170,8 @@
 #'
 #'@return A plot object (default), or a \code{data.frame} when 
 #' \code{returndata = TRUE}.
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #'@importFrom rlang .data
 #'@importFrom graphics curve
@@ -178,45 +180,7 @@
 #'
 #'@export
 #'
-#' @examples
-#' #
-#' # Fit Bayesian SITAR model 
-#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
-#' #                     chains = 2, iter = 1000, thin = 10)
-#' #
-#' # To avoid running the model which takes some time, the fitted model has 
-#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
-#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
-#' # (to save memory also).
-#' # 
-#' model <- berkeley_fit
-#' #
-#' # Population average distance and velocity curves with default options
-#' plot_bgm(model, opt = 'dv')
-#' #
-#' # Individual-specific distance and velocity curves with default options
-#' plot_bgm(model, opt = 'DV')
-#' #
-#' # Population average distance and velocity curves with APGV
-#' plot_bgm(model, opt = 'dv', apv = TRUE)
-#' #
-#' # Individual-specific distance and velocity curves with APGV
-#' plot_bgm(model, opt = 'DV', apv = TRUE)
-#' #
-#' # Population average distance curve, velocity curve, and APGV with CI bands
-#' # To construct CI bands, growth parameters are first calculated for each  
-#' # posterior draw and then summarized across draws. Therefore,summary 
-#' # option must be set to FALSE
-#' #
-#' plot_bgm(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
-#' #
-#' # Adjusted and unadjusted individual curves
-#' # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
-#' # This is because it does not a make sense to interploate data when
-#' # estimating adjusted curves.
-#' #
-#' plot_bgm(model, opt = 'au', ipts = NULL)
-#'
+#' @example inst/examples/plot_ex.R
 #' 
 plot_bgm.bgmfit <- function(model,
                                opt = 'dv',
@@ -274,7 +238,7 @@ plot_bgm.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
-                               envir = NULL,
+                               envir = globalenv(),
                                ...) {
   
   if(system.file(package='ggplot2') == "") {
@@ -286,8 +250,7 @@ plot_bgm.bgmfit <- function(model,
   else
     ndraws <- ndraws
   
-  if(is.null(envir)) envir <- parent.frame()
-  
+
   ##############################################
   # Initiate non formalArgs()
   ##############################################
@@ -349,7 +312,8 @@ plot_bgm.bgmfit <- function(model,
   
   o <- post_processing_checks(model = model,
                               xcall = xcall,
-                              resp = resp)
+                              resp = resp,
+                              envir = envir)
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
@@ -378,6 +342,10 @@ plot_bgm.bgmfit <- function(model,
   
   
   arguments$model <- model
+  
+  # Remove argument deriv if use specified it by mistake. 
+  # The deriv argument is set internally based on the the 'opt' argument
+  arguments$deriv <- NULL
   
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -563,10 +531,7 @@ plot_bgm.bgmfit <- function(model,
   
   if(length(list(...)) != 0) arguments <- c(arguments, list(...))
   
-  arguments$envir <- .GlobalEnv # parent.frame()
-  
 
-  
   d. <- do.call(growthparameters.bgmfit, arguments)
   
   p. <- d.[['parameters']]
@@ -807,6 +772,7 @@ plot_bgm.bgmfit <- function(model,
         post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp,
+                               envir = envir,
                                deriv = '')
       
       
@@ -938,6 +904,7 @@ plot_bgm.bgmfit <- function(model,
         post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp,
+                               envir = envir,
                                deriv = '')
       
         newdata <- get.newdata(model, 
@@ -1236,6 +1203,7 @@ plot_bgm.bgmfit <- function(model,
         post_processing_checks(model = model,
                                xcall = match.call(),
                                resp = resp,
+                               envir = envir,
                                deriv = '')
       
       newdata <- get.newdata(model, newdata = newdata, resp = resp)
