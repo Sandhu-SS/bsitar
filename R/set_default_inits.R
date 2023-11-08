@@ -19,9 +19,12 @@
 #'  parameter name in infered automatically. 
 #'
 #' @return A character string.
+#' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
 #' @keywords internal
 #' @noRd
+#' 
 set_default_inits <- function(select_model,
                                init,
                                class = NULL,

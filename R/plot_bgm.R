@@ -171,16 +171,50 @@
 #'@return A plot object (default), or a \code{data.frame} when 
 #' \code{returndata = TRUE}.
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#'
+#' @export plot_bgm.bgmfit
+#' @export
+#' 
 #'@importFrom rlang .data
 #'@importFrom graphics curve
 #'
-#'@export plot_bgm.bgmfit
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
-#'@export
-#'
-#' @example inst/examples/plot_ex.R
+#' @examples
+#' 
+#' # Fit Bayesian SITAR model 
+#' # To avoid running the model which takes some time, model fit to the
+#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
+#' # Please see \code{bgm} examples.
+#' 
+#' model <- berkeley_mfit
+#' 
+#' # Population average distance and velocity curves with default options
+#' plot_bgm(model, opt = 'dv')
+#' 
+#' \donttest{
+#' # Individual-specific distance and velocity curves with default options
+#' plot_bgm(model, opt = 'DV')
+#' 
+#' # Population average distance and velocity curves with APGV
+#' plot_bgm(model, opt = 'dv', apv = TRUE)
+#' 
+#' # Individual-specific distance and velocity curves with APGV
+#' plot_bgm(model, opt = 'DV', apv = TRUE)
+#' 
+#' # Population average distance curve, velocity curve, and APGV with CI bands
+#' # To construct CI bands, growth parameters are first calculated for each  
+#' # posterior draw and then summarized across draws. Therefore,summary 
+#' # option must be set to FALSE
+#' 
+#' plot_bgm(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
+#' 
+#' # Adjusted and unadjusted individual curves
+#' # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
+#' # This is because it does not a make sense to interploate data when
+#' # estimating adjusted curves.
+#' 
+#' plot_bgm(model, opt = 'au', ipts = NULL)
+#' }
 #' 
 plot_bgm.bgmfit <- function(model,
                                opt = 'dv',

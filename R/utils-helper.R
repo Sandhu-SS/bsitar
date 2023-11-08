@@ -4,9 +4,14 @@
 #' An internal function to get arguments of a function
 #'
 #' @param arguments A list of default function arguments.
+#' 
 #' @param xcall A character string specifying the name of the calling function.
+#' 
 #' @keywords internal
+#' 
 #' @return A list comprised of function arguments.
+#' 
+#' @keywords internal
 #' @noRd
 #'
 get_args_ <- function(arguments, xcall) {
@@ -28,7 +33,6 @@ get_args_ <- function(arguments, xcall) {
 #' @return A character string.
 #' @noRd
 #'
-
 deparse_0 <- function(deparseobj) {
   deparseobj <- paste(deparse(deparseobj), collapse = "")
   deparseobj <- gsub("[[:space:]]", "", deparseobj)
@@ -43,7 +47,6 @@ deparse_0 <- function(deparseobj) {
 #' @return A character string.
 #' @noRd
 #'
-
 deparse_0s <- function(deparseobj) {
   deparseobj <- paste(deparse(substitute(deparseobj)), collapse = "")
   deparseobj

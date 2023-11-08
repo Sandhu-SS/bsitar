@@ -28,6 +28,7 @@
 #'   
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
+#' @keywords internal
 #' @noRd
 #'
 post_processing_checks <- function(model, 

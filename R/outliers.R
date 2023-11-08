@@ -18,9 +18,9 @@
 #'
 #' @return A data frame with outliers removed when \code{remove=TRUE}
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' 
 #' @export
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #' 
 #' @examples
 #' 

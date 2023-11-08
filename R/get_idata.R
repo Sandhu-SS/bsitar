@@ -35,6 +35,7 @@
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #' 
+#' @keywords internal
 #' @noRd
 #'
 get_idata <-

@@ -1403,13 +1403,7 @@
 #'@return An object of class \code{brmsfit, bsiatr}, that contains the posterior
 #'  draws and other useful information about the model.
 #'
-#'@author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#'
-#' @references
-#'  \insertAllCited{}
-#'
-#'
-#'@seealso [brms::brm()] [brms::brmsformula()] [brms::prior()]
+#'@export
 #'
 #'@importFrom methods formalArgs
 #'
@@ -1426,7 +1420,12 @@
 #'
 #'@import brms
 #'
-#'@export
+#' @seealso [brms::brm()] [brms::brmsformula()] [brms::prior()]
+#'
+#' @references
+#'  \insertAllCited{}
+#'  
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @examples
 #' 

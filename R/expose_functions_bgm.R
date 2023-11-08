@@ -14,9 +14,9 @@
 #' @return An object of class \code{bgmfit} with exposed  
 #' user-defined Stan functions (when \code{expose=TRUE}).
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' 
 #' @export
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @examples
 #' 
@@ -25,14 +25,9 @@
 #' # curves.
 #' 
 #' # Fit Bayesian SITAR model 
-#' # data <- berkeley
-#' # berkeley_fit <- bgm(x = age, y = height, id = id, data = data, df = 4,
-#' #                     chains = 2, iter = 1000, thin = 10)
-#' 
-#' # To avoid running the model which takes some time, the fitted model has 
-#' # already been saved as berkeley_fit.rda object. The model is fitted using 2 
-#' # chain  with 1000  iteration per chain (to save time) and setting thin as 1 
-#' # (to save memory also).
+#' # To avoid running the model which takes some time, model fit to the
+#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
+#' # Please see \code{bgm} examples.
 #' 
 #' model <- berkeley_mfit
 #' 

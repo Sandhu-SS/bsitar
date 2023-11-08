@@ -47,12 +47,37 @@
 #'   with one data.frame per effect containing all information required to
 #'   generate conditional effects plots. See brms::conditional_effects for
 #'   details.
-#'   
-#'@author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @export
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
-#' @example inst/examples/conditional_effects_ex.R
+#' @examples
+#' 
+#' # The examples below show the use of *conditional_effects_bgm* to plot  
+#' # the population average and individual-specific distance and velocity 
+#' # curves.
+#' 
+#' # Fit Bayesian SITAR model 
+#' # To avoid running the model which takes some time, model fit to the
+#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
+#' # Please see \code{bgm} examples.
+#' 
+#' model <- berkeley_mfit
+#' 
+#' # Population average distance curve
+#' conditional_effects_bgm(model, deriv = 0, re_formula = NA)
+#' 
+#' # Individual-specific distance curves
+#' conditional_effects_bgm(model, deriv = 0, re_formula = NULL)
+#' 
+#' \donttest{
+#' # Population average velocity curve
+#' conditional_effects_bgm(model, deriv = 1, re_formula = NA)
+#' 
+#' # Individual-specific velocity curves
+#' conditional_effects_bgm(model, deriv = 1, re_formula = NULL)
+#' }
 #' 
 conditional_effects_bgm.bgmfit <-
   function(model,
