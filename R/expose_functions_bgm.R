@@ -39,15 +39,15 @@ expose_functions_bgm <- function(model,
                                     scode = NULL, 
                                     expose = FALSE, 
                                     select_model = NULL) {
-  expose_it_ <- function(x, scode) {
-    if (is.null(scode)) {
-      exposecode <- brms::stancode(x)
-    } else if (!is.null(scode)) {
-      exposecode <- scode
-    }
-     rstan::expose_stan_functions(rstan::stanc(model_code = exposecode))
-    # brms::expose_functions(model, vectorize = FALSE)
-  }
+  # expose_it_ <- function(x, scode) {
+  #   if (is.null(scode)) {
+  #     exposecode <- brms::stancode(x)
+  #   } else if (!is.null(scode)) {
+  #     exposecode <- scode
+  #   }
+  #    rstan::expose_stan_functions(rstan::stanc(model_code = exposecode))
+  #   # brms::expose_functions(model, vectorize = FALSE)
+  # }
   
   
   
@@ -82,7 +82,18 @@ expose_functions_bgm <- function(model,
   }
   
   
-  if(expose) expose_it_(model, scode = scode)
+  if(expose) {
+    if (is.null(scode)) {
+      exposecode <- brms::stancode(model)
+    } else if (!is.null(scode)) {
+      exposecode <- scode
+    }
+    rstan::expose_stan_functions(rstan::stanc(model_code = exposecode))
+    # brms::expose_functions(model, vectorize = FALSE)
+  }
+    
+    
+    # expose_it_(model, scode = scode)
   
   
   if(expose_r_from_stan) {

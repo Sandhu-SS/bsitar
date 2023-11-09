@@ -154,7 +154,7 @@
 #'  models.
 #'
 #'@param fixed A character string specifying the fixed effects structure
-#'  (default \code{fixed = 'a+b+c'}).Note that  different fixed effect
+#'  (default \code{fixed = 'a+b+c'}). Note that different fixed effect
 #'  structures can be specified when fitting \code{univariate_by} and
 #'  \code{multivariate} models. As an example, \code{fixed = list('a+b+c','
 #'  a+b')} implies that the fixed effect structure for the first sub model is
@@ -329,9 +329,10 @@
 #'  only the vertical bar approach (see \code{a_formula} for details) can be
 #'  used to set up the group identifiers and the correlation structure. Consider
 #'  an example where formulas for random effect parameter \code{a}, \code{b},
-#'  and \code{c} for a three level model are specified as \code{a_formula_gr_str
-#'  = ~ (1|i|id:study) + (1|i2|study)}, \code{b_formula_gr_str = ~
-#'  (1|i|id:study) + (1|i2|study)} and \code{c_formula_gr_str = ~ (1|i|id:study)
+#'  and \code{c} for a three level model are specified as 
+#'  \code{a_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)}, 
+#'  \code{b_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} and 
+#'  \code{c_formula_gr_str = ~ (1|i|id:study)
 #'  + (1|i2|study)} in which \code{|i|} and \code{|i2|} set up the unstructured
 #'  correlation structure for individual and study level random effects. Note
 #'  that \code{|i|} and \code{|i2|} need to be distinct because random effect
@@ -380,8 +381,8 @@
 #'  \code{sigma_formula} estimates \code{sigma} parameter at \code{log} scale.
 #'  The \code{sigma_formula}, by default is \code{NULL} (i.e.,
 #'  \code{sigma_formula = NULL}.  because the [brms::brm()] by default models
-#'  the \code{sigma} as a residual standard deviation (\strong{RSD}) parameter
-#'  at the link scale (prior and initial values for the \strong{RSD} are
+#'  the \code{sigma} as a residual standard deviation (\code{RSD}) parameter
+#'  at the link scale (prior and initial values for the \code{RSD} are
 #'  specified via the \code{rsd_prior_sigma} and \code{rsd_init_sigma},
 #'  respectively. details on \code{rsd_prior_sigma} and \code{rsd_init_sigma}
 #'  are mentioned below in relevant sections). The \code{sigma_formula} along
@@ -401,7 +402,7 @@
 #'  that it is not possible to include random effects for the \code{sigma}.
 #'  Note that \code{sigma_formula} and \code{dpar_formula} can not be specified
 #'  together. Lastly, when either \code{sigma_formula} or \code{dpar_formula},
-#'  the default estimation of the \strong{RSD} by [brms::brm()] is automatically
+#'  the default estimation of the \code{RSD} by [brms::brm()] is automatically
 #'  turned off.
 #'
 #'@param sigma_formula_gr Formula for the random effect parameter, \code{sigma}
