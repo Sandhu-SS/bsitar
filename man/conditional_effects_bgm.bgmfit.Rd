@@ -83,10 +83,10 @@ model <- berkeley_mfit
 # Population average distance curve
 conditional_effects_bgm(model, deriv = 0, re_formula = NA)
 
+\donttest{
 # Individual-specific distance curves
 conditional_effects_bgm(model, deriv = 0, re_formula = NULL)
 
-\donttest{
 # Population average velocity curve
 conditional_effects_bgm(model, deriv = 1, re_formula = NA)
 

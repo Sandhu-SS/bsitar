@@ -91,7 +91,7 @@ and/or \code{add_fit_bayes_R} are specified.
 Optimize \pkg{bgmfit} model
 }
 \examples{
-\donttest{
+\dontrun{
 
 # Fit Bayesian SITAR model 
 # To avoid running the model which takes some time, model fit to the

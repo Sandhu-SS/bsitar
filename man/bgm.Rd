@@ -241,7 +241,7 @@ bgm(
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
   decomp = NULL,
-  parameterization = NULL,
+  parameterization = "ncp",
   ...
 )
 }
@@ -1531,15 +1531,15 @@ available across all individual. The 'relatively large number' is not
 defined in the literature and we follow a general approach wherein CP
 parameterization is used when each individual provides at least 10 repeated
 measurements and NCP otherwise. Note this automatic behavior is set only
-when the argument \code{parameterization = NULL} (default). To turn off
-this automatic selection of parameterization and to set CP
-parameterization, use \code{parameterization = 'cp'}, and
-\code{parameterization = 'ncp'}. Please note that since \code{\link[brms:brm]{brms::brm()}} does
-not offer CP parameterization, we first edit the \code{\link[brms:brm]{brms::brm()}} generated
-\code{stancode} and then fit model using the \code{\link[rstan:rstan]{rstan::rstan()}} (or
-\code{cmdstanr}, depending on the \code{backend} choice). Therefore, we
-consider this CP parameterization as experimental and it may fail if
-structure of the \code{\link[brms:brm]{brms::brm()}} generated \code{stancode} changes in future.}
+when the argument \code{parameterization = NULL}. To turn off this
+automatic selection of parameterization and to set CP parameterization, use
+\code{parameterization = 'cp'}, and \code{parameterization = 'ncp'}
+(default). Please note that since \code{\link[brms:brm]{brms::brm()}} does not offer CP
+parameterization, we first edit the \code{\link[brms:brm]{brms::brm()}} generated \code{stancode}
+and then fit model using the \code{\link[rstan:rstan]{rstan::rstan()}} (or \code{cmdstanr},
+depending on the \code{backend} choice). Therefore, we consider this CP
+parameterization as experimental and it may fail if structure of the
+\code{\link[brms:brm]{brms::brm()}} generated \code{stancode} changes in future.}
 
 \item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}}
 }

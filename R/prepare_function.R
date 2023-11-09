@@ -413,6 +413,7 @@ prepare_function <- function(x,
         } else if (yfunsi == "sqrt") {
           if ((backend == "rstan" &
                utils::packageVersion("rstan") >= "2.26.1") |
+              backend == "mock" |
               backend == "cmdstanr") {
             out_scaled <-
               paste0("    vector[N] out_scaled=",
@@ -423,7 +424,8 @@ prepare_function <- function(x,
                      ";")
           }
           if ((backend == "rstan" &
-               utils::packageVersion("rstan") < "2.26.1") &
+               utils::packageVersion("rstan") < "2.26.1") | # &
+              backend == "mock" &
               backend != "cmdstanr") {
             out_scaled <-
               paste0("    vector[N] out_scaled=",
@@ -591,6 +593,7 @@ prepare_function <- function(x,
         } else if (yfunsi == "sqrt") {
           if ((backend == "rstan" &
                utils::packageVersion("rstan") >= "2.26.1") |
+              backend == "mock" |
               backend == "cmdstanr") {
             out_scaled <-
               paste0("    vector[N] out_scaled=",
@@ -601,7 +604,8 @@ prepare_function <- function(x,
                      ";")
           }
           if ((backend == "rstan" &
-               utils::packageVersion("rstan") < "2.26.1") &
+               utils::packageVersion("rstan") < "2.26.1") | # &
+              backend == "mock" &
               backend != "cmdstanr") {
             out_scaled <-
               paste0("    vector[N] out_scaled=",
@@ -808,6 +812,7 @@ prepare_function <- function(x,
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
         backend == "cmdstanr") {
       fun_body <- "
     matrix[N, nknots-1] Spl;
@@ -832,7 +837,8 @@ prepare_function <- function(x,
     }
     
     if ((backend == "rstan" &
-         utils::packageVersion("rstan") < "2.26.1") &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
         backend != "cmdstanr") {
       fun_body <- "
     matrix[N, nknots-1] Spl;
@@ -1409,6 +1415,7 @@ prepare_function <- function(x,
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
         backend == "cmdstanr") {
       body <- "
      while (j <= nknots - 2) {
@@ -1425,7 +1432,8 @@ prepare_function <- function(x,
     }
     
     if ((backend == "rstan" &
-         utils::packageVersion("rstan") < "2.26.1") &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
         backend != "cmdstanr") {
       body <- "
      while (j <= nknots - 2) {
@@ -1472,6 +1480,7 @@ prepare_function <- function(x,
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
         backend == "cmdstanr") {
       body <- "
      while (j <= nknots - 2) {
@@ -1488,7 +1497,8 @@ prepare_function <- function(x,
     }
     
     if ((backend == "rstan" &
-         utils::packageVersion("rstan") < "2.26.1") &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
         backend != "cmdstanr") {
       body <- "
      while (j <= nknots - 2) {
@@ -1534,6 +1544,7 @@ prepare_function <- function(x,
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
         backend == "cmdstanr") {
       body <- "
      while (j <= nknots - 2) {
@@ -1550,7 +1561,8 @@ prepare_function <- function(x,
     }
     
     if ((backend == "rstan" &
-         utils::packageVersion("rstan") < "2.26.1") &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
         backend != "cmdstanr") {
       body <- "
      while (j <= nknots - 2) {

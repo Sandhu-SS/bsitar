@@ -76,7 +76,7 @@
 #'@export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' 
 #' # Fit Bayesian SITAR model 
 #' # To avoid running the model which takes some time, model fit to the
@@ -191,9 +191,52 @@ optimize_bgm.bgmfit <- function(model,
       }
     xxo <- gsub("[[:space:]]", "", xo)
     
-    numeric_dx <-
-      is.numeric(eval(parse(text = gsub('\"', "", xxo))))
-    if (xxo != "NULL" & xxo != "\"NULL\"" & !numeric_dx) {
+    
+    
+    # numeric_dx <-
+    #   is.numeric(eval(parse(text = gsub('\"', "", xxo))))
+    
+    # The is.numeric(eval(parse(text = gsub('\"', "", xxo)))) triggered warning 
+    # Warning in .make_numeric_version(x, strict, 
+    # .standard_regexps()$valid_numeric_version)
+    
+    # https://stat.ethz.ch/pipermail/r-devel/2023-July/082722.html
+    
+    # still no relief
+    
+    # xxo_g <- gsub('\"', "", xxo)
+    # if(is.null(eval(parse(text = xxo_g)))) {
+    #   numeric_dx <- FALSE
+    # } else {
+    #   xxo_g2 <- eval(parse(text = xxo_g))
+    #   numeric_dx <- is.numeric(xxo_g2)
+    # }
+    
+    # print(eval(parse(text = xxo_g)))
+    # print(numeric_dx)
+    # stop()
+    
+    # so, changing below if 
+    
+    # https://stackoverflow.com/questions/13638377/
+    # test-for-numeric-elements-in-a-character-string
+    
+    xxo_g <- gsub('\"', "", xxo)
+    xxo_g2 <- 
+      grepl(
+        "[-]?[0-9]+[.]?[0-9]*|[-]?[0-9]+[L]?|[-]?[0-9]+[.]?[0-9]*[eE][0-9]+", 
+        xxo_g)
+    
+    if(any(xxo_g2)) xxo_g3 <- TRUE else xxo_g3 <- FALSE
+    
+    # print(xxo_g2)
+    # print(numeric_dx)
+    # stop()
+    
+    numeric_dx <- xxo_g3
+    
+    # if (xxo != "NULL" & xxo != "\"NULL\"") {
+     if (xxo != "NULL" & xxo != "\"NULL\"" & !numeric_dx) {
       xxo <- get_within_fist_last_paranthesese(xxo)
       xxo <- gsub_comma_within_paranthesese(xxo, "_comma_")
       xxo <- strsplit(xxo, ",")[[1]]

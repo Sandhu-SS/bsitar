@@ -1388,15 +1388,15 @@
 #'   defined in the literature and we follow a general approach wherein CP
 #'   parameterization is used when each individual provides at least 10 repeated
 #'   measurements and NCP otherwise. Note this automatic behavior is set only
-#'   when the argument \code{parameterization = NULL} (default). To turn off
-#'   this automatic selection of parameterization and to set CP
-#'   parameterization, use \code{parameterization = 'cp'}, and
-#'   \code{parameterization = 'ncp'}. Please note that since [brms::brm()] does
-#'   not offer CP parameterization, we first edit the [brms::brm()] generated
-#'   \code{stancode} and then fit model using the [rstan::rstan()] (or
-#'   \code{cmdstanr}, depending on the \code{backend} choice). Therefore, we
-#'   consider this CP parameterization as experimental and it may fail if
-#'   structure of the [brms::brm()] generated \code{stancode} changes in future.
+#'   when the argument \code{parameterization = NULL}. To turn off this
+#'   automatic selection of parameterization and to set CP parameterization, use
+#'   \code{parameterization = 'cp'}, and \code{parameterization = 'ncp'}
+#'   (default). Please note that since [brms::brm()] does not offer CP
+#'   parameterization, we first edit the [brms::brm()] generated \code{stancode}
+#'   and then fit model using the [rstan::rstan()] (or \code{cmdstanr},
+#'   depending on the \code{backend} choice). Therefore, we consider this CP
+#'   parameterization as experimental and it may fail if structure of the
+#'   [brms::brm()] generated \code{stancode} changes in future.
 #'   
 #'@param ... Further arguments passed to [brms::brm()]
 #'
@@ -1737,7 +1737,7 @@ bgm <- function(x,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
                    decomp = NULL,
-                   parameterization = NULL,
+                   parameterization = 'ncp',
                    ...) {
   
   mcall <- mcall_ <- match.call()
@@ -2137,17 +2137,7 @@ bgm <- function(x,
   }
   
   
-  # fit_edited_scode <- FALSE
-  # 
-  # if(select_model == 'logistic1e' |
-  #    select_model == 'logistic2e' |
-  #    select_model == 'logistic3e' |
-  #    parameterization == 'cp'
-  #    ) {
-  #   
-  #   fit_edited_scode <- TRUE
-  #   
-  # }
+  
   
   
   # For editing scode 
@@ -2300,8 +2290,9 @@ bgm <- function(x,
   brms_arguments <- mget(brms_arguments_list)
   
   if (eval(brms_arguments$backend) != "rstan" &
+      eval(brms_arguments$backend) != "mock" &
       eval(brms_arguments$backend) != "cmdstanr") {
-    stop("The backend argument must be either 'rstan' or 'cmdstanr'",
+    stop("The backend argument must be either 'rstan', 'mock', or 'cmdstanr'",
          "\n ",
          "\ Please check it which you have specified as: ", 
          eval(brms_arguments$backend))
@@ -6655,6 +6646,13 @@ bgm <- function(x,
         setarguments$threads <- setarguments$threads 
       }
       
+      if (eval(setarguments$backend) == "mock") {
+        max.threads <- getOption('brms.threads')
+        setarguments$threads <- brms::threading(max.threads)
+        max.cores <- getOption('mc.cores')
+        setarguments$cores <-  max.cores
+      }
+      
       if (length(brmsdots) > 0) {
         setarguments <- c(setarguments, brmsdots)
       }
@@ -7060,7 +7058,9 @@ bgm <- function(x,
     }
     
     
-    
+    if(brm_args$backend == "mock") {
+      brmsfit <- do.call(brms::brm, brm_args)
+    }
    
     
     model_info <- list()
