@@ -2,26 +2,24 @@
 
 #' Predicted values (draws) from the posterior predictive distribution
 #' 
-#' @details The \code{predict_bgm} function is a wrapper around 
+#' @details The \strong{predict_draws} function is a wrapper around 
 #' the [brms::predict.brmsfit]. The [brms::predict.brmsfit]  
 #' function from the \code{brms} package can used to plot the predict (distance) 
 #' curve for an *bsitar* model when outcome (e.g., height) is untransformed.
 #' However, when the outcome is log or square root transformed, the 
 #' [brms::predict.brmsfit] will return the predict curve on the log or 
-#' square root scale whereas the [bsitar::predict_bgm()] will 
+#' square root scale whereas the \strong{predict_draws} will 
 #' return the predict curve on the original scale. Furthermore, the 
-#' predict_bgm also displays the velocity curve on the original scale
+#' \strong{predict_draws} also displays the velocity curve on the original scale
 #' after making required back-transformation. Apart from these differences, 
 #' both these functions ([brms::predict.brmsfit] and 
-#' [bsitar::predict_bgm()]) work in the same manner. In other words, 
+#' \strong{predict_draws} work in the same manner. In other words, 
 #' user can specify all the arguments which are available in the 
-#' [brms::predict.brmsfit]. Because of this, the name is kept same except 
-#' for adding an underscore at the end of the name (*predict* to 
-#' *predict_bgm*). 
+#' [brms::predict.brmsfit].
 #' 
 #' @inherit growthparameters.bgmfit params
 #' 
-#' @inherit conditional_effects_bgm.bgmfit params
+#' @inherit plot_conditional_effects.bgmfit params
 #' 
 #' @inherit brms::predict.brmsfit description params
 #' 
@@ -32,14 +30,14 @@
 #' @return An array of predicted response values. See [brms::predict.brmsfit] 
 #' for details.
 #' 
-#' @export predict_bgm.bgmfit
+#' @export predict_draws.bgmfit
 #' @export
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @examples
 #' 
-#' # The examples below show the use of *predict_bgm* to estimate  
+#' # The examples below show the use of *predict_draws* to estimate  
 #' # population average and individual-specific distance and velocity 
 #' # curves for the the predict model.
 #' 
@@ -51,20 +49,20 @@
 #' model <- berkeley_mfit
 #' 
 #' # Population average distance curve
-#' predict_bgm(model, deriv = 0, re_formula = NA)
+#' predict_draws(model, deriv = 0, re_formula = NA)
 #' 
 #' \donttest{
 #' # Individual-specific distance curves
-#' predict_bgm(model, deriv = 0, re_formula = NULL)
+#' predict_draws(model, deriv = 0, re_formula = NULL)
 #' 
 #' # Population average velocity curve
-#' predict_bgm(model, deriv = 1, re_formula = NA)
+#' predict_draws(model, deriv = 1, re_formula = NA)
 #' 
 #' # Individual-specific velocity curves
-#' predict_bgm(model, deriv = 1, re_formula = NULL)
+#' predict_draws(model, deriv = 1, re_formula = NULL)
 #'  }
 #' 
-predict_bgm.bgmfit <-
+predict_draws.bgmfit <-
   function(model,
            newdata = NULL,
            resp = NULL,
@@ -154,10 +152,10 @@ predict_bgm.bgmfit <-
   }
 
 
-#' @rdname predict_bgm.bgmfit
+#' @rdname predict_draws.bgmfit
 #' @export
-predict_bgm <- function(model, ...) {
-  UseMethod("predict_bgm")
+predict_draws <- function(model, ...) {
+  UseMethod("predict_draws")
 }
 
 

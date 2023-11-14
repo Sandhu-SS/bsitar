@@ -1,34 +1,41 @@
 
 
 
-#' Growth parameter estimation for \code{bgmfit} model
+#' Estimate growth parameter 
 #'
-#' @description The \code{growthparameters} computes growth parameters and the 
-#'   uncertainty (standard error, SE and the credible interval, CI) for
-#'   population average and individual-specific parameters (see @details).
+#' @description The \strong{growthparameters} function computes population
+#'   average and and individual-specific growth parameters (such as age at peak
+#'   growth velocity) and the uncertainty (standard error, SE and the credible
+#'   interval, CI).
 #'
-#' @details The \code{growthparameters} calls the appropriate function (fitted or
-#'   predict) to estimate the first derivative (velocity curve) for each
-#'   posterior draw (posterior distribution) and then computes growth parameters
-#'   such as age at peak growth velocity (APGV), peak growth velocity (PGV), age
-#'   at takeoff growth velocity (ATGV), takeoff growth velocity (TGV), age at
-#'   cessation of growth velocity (ACGV), and the cessation growth velocity
-#'   (CGV). The growth parameters APGV and PGV are estimated by calling the
-#'   [sitar::getPeak()] function whereas the ATGV and TGV are estimated by using
-#'   the [sitar::getTakeoff()] function. The [sitar::getTrough()] function is
-#'   used to estimates ACGV and CGV parameters. The parameters obtained from
-#'   each posterior draw are then summarized appropriately to get the estimate
-#'   and the uncertainty (SE and CI) around these estimates. Please note that it
+#' @details The \strong{growthparameters} function internally calls the
+#'   appropriate function (\code{fitted_draws} or \code{predict_draws}) to estimate
+#'   the first derivative (velocity curve) for each posterior draw (posterior
+#'   distribution) and then computes growth parameters such as age at peak
+#'   growth velocity (APGV), peak growth velocity (PGV), age at takeoff growth
+#'   velocity (ATGV), takeoff growth velocity (TGV), age at cessation of growth
+#'   velocity (ACGV), and the cessation growth velocity (CGV). The growth
+#'   parameters APGV and PGV are estimated by calling the [sitar::getPeak()]
+#'   function whereas the ATGV and TGV are estimated by using the
+#'   [sitar::getTakeoff()] function. The [sitar::getTrough()] function is used
+#'   to estimates ACGV and CGV parameters. The parameters obtained from each
+#'   posterior draw are then summarized appropriately to get the estimates and
+#'   the uncertainty (SEs and CIs) around these estimates. Please note that it
 #'   is not always possible to estimate cessation and takeoff growth parameters
 #'   when there are no distinct pre-peak or post-peak troughs.
 #'
 #'
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @param resp An optional character string to specify response variable when
-#'   estimating growth parameter for the univariate-by-subgroup and multivariate
-#'   models (see [bsitar::bgm()] for details on univariate-by-subgroup and
+#' @param resp A character string to specify response variable when processing
+#'   posterior draws for the univariate-by-subgroup and multivariate models (see
+#'   [bsitar::bgm()] for details on fitting univariate-by-subgroup and
 #'   multivariate models). For univariate model, \code{resp = NULL} (default).
+#'   Note that argument \code{resp} must be specified for the
+#'   univariate-by-subgroup and multivariate models otherwise it will result in
+#'   an error. On the other hand, argument \code{resp} must be \code{NULL} for
+#'   the univariate model. The default setting is \code{resp = NULL} assuming a
+#'   univariate model.
 #'   
 #' @param ndraws Positive integer indicating the number of posterior draws to be
 #'   used in estimation. If \code{NULL} (default), all draws are used.
@@ -37,15 +44,14 @@
 #' to be used. If \code{NULL} (default), all draws are used.
 #' 
 #' @param newdata An optional data frame to be used in predictions. If
-#'   \code{NULL} (default), the original data from the fitted model is used.
+#'   \code{NULL} (default), the model fit.
 #'   
 #' @param summary A logical (default \code{TRUE}) indicating whether only the
 #'   Estimate should be returned or Estimate along with SE and CI should be
 #'   computed. Setting this option to \code{FALSE} will reduce the computation
 #'   time but no SE or CI estimates will be available.
 #'   
-#' @param digits An integer (default \code{2}) to set the decimal places for the
-#'   estimated growth parameters. The \code{digits} is passed on to the
+#' @param digits An integer (default \code{2}) to set the decimal for the
 #'   [base::round()] function.
 #'   
 #' @param robust If \code{FALSE} (the default) the mean is used as the measure
@@ -68,16 +74,15 @@
 #'   
 #' @param peak Optional (logical, default \code{TRUE}) to indicate whether or
 #'   not to calculate the age at peak velocity (APGV) and the peak velocity
-#'   (PGV). See @details for further information.
+#'   (PGV) parameters.
 #'   
 #' @param takeoff  Optional (logical, default \code{FALSE}) to indicate whether
 #'   or not to calculate the age at takeoff velocity (ATGV) and the takeoff
-#'   growth velocity (TGV). See @details for further information.
+#'   growth velocity (TGV) parameters.
 #'
 #' @param trough Optional (logical, default \code{FALSE}) to indicate whether or
 #'   not to calculate the age at cessation of growth velocity (ACGV) and the
-#'   cessation of growth velocity (CGV). See @details for further information.
-#'   See @details for further information.
+#'   cessation of growth velocity (CGV) parameters.
 #' 
 #' @param acgv Optional (logical, default \code{FALSE}) to indicate whether or
 #'   not to calculate the age at cessation of growth velocity from the velocity
@@ -94,10 +99,9 @@
 #'   
 #' @param estimation_method A character string to specify the estimation method
 #'   when calculating the velocity from the posterior draws. The \code{fitted}
-#'   method internally calls the [bsitar::fitted_bgm()] function whereas the
-#'   option \code{predict} calls the [bsitar::predict_bgm()] function. See
-#'   [brms::fitted.brmsfit()] and [brms::predict.brmsfit()] for derails on
-#'   fitted versus predict estimations.
+#'   method internally calls the [bsitar::fitted_draws()] function whereas the
+#'   option \code{predict} calls the [bsitar::predict_draws()] function. See
+#'   [brms::fitted.brmsfit()] and [brms::predict.brmsfit()] for derails.
 #'   
 #' @param numeric_cov_at An optional argument to specify the value of continuous
 #'   covariate(s). The default \code{NULL} option set the continuous
@@ -107,24 +111,24 @@
 #'   argument \code{numeric_cov_at} is ignored when no continuous covariate is
 #'   included in the model.
 #'   
-#' @param levels_id An optional argument to specify the ids for hierarchical
-#'   model (default \code{NULL}. It is used only when model is fitted to the
-#'   data with 3 or more levels of hierarchy. For a two level model, the id for
-#'   second level is automatically inferred from the fitted model. Even for 3 or
-#'   higher level model, ids are inferred from the fitted model but under the
-#'   assumption that hierarchy is specified from lower to upper levels i.e, id,
-#'   study assuming that id is nested within the studies. However, it is not
-#'   gauranted that these ids are sorted correctly. Therefore, it is better to
-#'   set them manually.
+#' @param levels_id An optional argument to specify the \code{ids} for
+#'   hierarchical model (default \code{NULL}). It is used only when model is
+#'   applied to the data with 3 or more levels of hierarchy. For a two level
+#'   model, the \code{id} for second level is automatically inferred from the
+#'   model fit. Even for 3 or higher level model, ids are inferred from the
+#'   model fit but under the assumption that hierarchy is specified from
+#'   lower to upper levels i.e, \code{id} followed by \code{study} assuming that
+#'   \code{id} is nested within the \code{study} However, it is not guaranteed
+#'   that these ids are sorted correctly. Therefore, it is better to set them
+#'   manually.
 #'   
-#' @param avg_reffects An optional argument (default \code{NULL} to calculate
+#' @param avg_reffects An optional argument (default \code{NULL}) to calculate
 #'   (marginal/average) curves and growth parameters (such as APGV and PGV). If
-#'   specified, it must be a named list indicating the \code{over} and the fixed
-#'   efects \code{feby} and random effects efects \code{reby} arguments e.g.,
-#'   \code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}. The
-#'   \code{over} is typically age and is used to average over the random
-#'   effects. The second argument is \code{by} that specifies the factor
-#'   variable by which \code{over} is executed.
+#'   specified, it must be a named list indicating the \code{over} (typically
+#'   level 1 predictor, such as age), \code{feby} (fixed effects, typically a
+#'   factor variable), and  \code{reby} (typically \code{NULL} indicating that
+#'   parameters are integrated over the random effects) such as
+#'   \code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}.
 #'   
 #'@param aux_variables An optional argument to specify the variables that can be
 #'  passed to the \code{ipts} argument (see below). This is useful when fitting
@@ -134,27 +138,28 @@
 #'   smooth velocity curve. The \code{NULL} will return original values whereas
 #'   an integer such as \code{ipts = 10} (default) will interpolate the
 #'   predictor. It is important to note that these interpolations do not alter
-#'   the range of predictor when calculating population average and the
-#'   individual specific velocity curves.
+#'   the range of predictor when calculating population average and/or the
+#'   individual specific growth curves.
 #'   
 #'@param conf A numeric value (default \code{0.95}) to compute CI. Internally,
 #'   this is translated into a paired probability values as \code{c((1 - conf) /
 #'   2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this will compute 95% CI
-#'   with CI varibales named as Q.2.5 and Q.97.5.
+#'  and the variables with lower and upper limits will be named as Q.2.5 and
+#'  Q.97.5.
 #'   
 #' @param xrange An integer to set the predictor range (i.e., age) when
 #'   executing the interpolation via \code{ipts}. The default \code{NULL} sets
 #'   the individual specific predictor range whereas code \code{xrange = 1} sets
 #'   same range for all individuals within the higher order grouping variable
-#'   (e.g., study). Code \code{xrange  = 2} sets the identical range dplyr::across the
+#'   (e.g., study). Code \code{xrange  = 2} sets the identical range across the
 #'   entire sample. Lastly, a paired numeric values can be supplied e.g.,
-#'   \code{xrange = c(6, 20)} will set the range between 6 and 20.
+#'   \code{xrange = c(6, 20)} to set the range between 6 and 20.
 #'   
-#' @param  xrange_search A vector of length two, or a character string 
-#' \code{'range'} to set the range of \code{x} variable within which growth 
-#' parameters are searched. This is useful, for example. when there is more 
-#' than one peak and user wants to summarize peak within a given range of the 
-#' \code{x} variable. Default \code{xrange_search = NULL}. 
+#' @param  xrange_search A vector of length two, or a character string
+#'   \code{'range'} to set the range of \code{x} variable within which growth
+#'   parameters are searched. This is useful when there is more than one peak
+#'   and user wants to summarize peak within a given range of the \code{x}
+#'   variable. Default \code{xrange_search = NULL}.
 #' 
 #' @param seed An integer (default \code{123}) that is passed to the estimation
 #'   method.
@@ -170,7 +175,7 @@
 #'   details, see [future.apply::future_sapply()].
 #'   
 #' @param cores Number of cores to be used when running the parallel
-#'   computations by setting the option \code{future = TRUE}. On non-Windows,
+#'   computations by setting the option \code{future = TRUE}. On non-Windows
 #'   systems this argument can be set globally via the mc.cores option. For the
 #'   default \code{NULL} option, the number of cores are set automatically by
 #'   calling the [future::availableCores()]. The number of cores used are the
@@ -180,10 +185,15 @@
 #' @param parms_eval A logical (default \code{FALSE}) to specify whether or not 
 #' to get growth parameters on the fly. 
 #' 
-#' @param idata_method A character string to indicate interpolation 
-#' method. Options available are \code{m1} (default) and
-#' \code{m2}. See \code{idata_method} argument of the \code{get.newdata} 
-#' function for details.
+#' @param idata_method A character string to indicate interpolation method.
+#'   Options available are \code{m1} (default) and \code{m2}. The \code{'m1'}
+#'   calls the \code{idatafunction} function whereas \code{'m2'} calls the
+#'   \code{get_idata} function for data interpolation. The \code{idatafunction}
+#'   function is adapted from the the \pkg{iapvbs} which is documented here
+#'   <https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R> The
+#'   \code{get_idata} function is adapted from the the \pkg{JMbayes} and is
+#'   documented here
+#'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>
 #' 
 #' @param parms_method A character to specify the method used to when 
 #'  evaluating \code{parms_eval}. The default is \code{getPeak} which uses
@@ -191,26 +201,26 @@
 #'  alternative option is \code{findpeaks} that uses the [pracma::findpeaks()] 
 #'  function function from the \code{pracma} package.
 #'  
-#' @param envir Indicator to set the environment of function evaluation.  
-#'  The default is \code{globalenv}. 
+#' @param envir Environment of function evaluation. The default is
+#'   \code{globalenv}.
 #'   
-#' @param ... Further arguments passed to \code{brms::fitted()} and
-#'   \code{brms::predict()} functions that control several aspects of data
-#'   validation and prediction. See [brms::fitted.brmsfit()] and
+#' @param ... Further arguments passed to [brms::fitted.brmsfit()] and
+#'   \code{brms::predict()} functions. See [brms::fitted.brmsfit()] and
 #'   [brms::predict.brmsfit()] for details.
 #'
 #' @return A data frame with five columns when \code{summary = TRUE}, and two
 #'   columns when \code{summary = False} (assuming \code{re_formual = NULL}).
-#'   The first two columns common to both these approaches \code{summary =
-#'   TRUE/False} are 'Parameter' and 'Estimate' which indicates the name of the
-#'   growth parameter (e.g., APGV, PGV etc), and its value. When \code{summary =
-#'   TRUE}, three additional columns are added, the 'Est.Error' and a pair of
-#'   columns showing the CI. The CI columns are named as Q with appropriate
-#'   suffix indicating the percentiles used to construct these intervals (such
-#'   as Q.2.5 and Q.97.5 where 2.5 and 97.5 are the 0.025 and 0.975 percentiles
-#'   used to compute by the 95% CI by calling the quantile function. When
-#'   \code{re_formual = NULL}, an additional column is added that shows the
-#'   individuals/groups corresponding to the estimates.
+#'   The first two columns common to the returned object (\code{summary =
+#'   TRUE/False}) are 'Parameter' and 'Estimate' which indicates the name of the
+#'   growth parameter (e.g., APGV, PGV etc), and its estimate. When
+#'   \code{summary = TRUE}, three additional columns are 'Est.Error' and the
+#'   lower and upper limits of the CIs. The CI columns are named as Q with
+#'   appropriate suffix indicating the percentiles used to construct these
+#'   intervals (such as Q.2.5 and Q.97.5 where 2.5 and 97.5 are the 0.025 and
+#'   0.975 percentiles used to compute by the 95% CI by calling the quantile
+#'   function. When \code{re_formual = NULL}, an additional column is added that
+#'   shows the individual identifier (typically \code{id}).
+#'   
 #'   
 #' @export growthparameters.bgmfit
 #' @export
@@ -308,9 +318,9 @@ growthparameters.bgmfit <- function(model,
   
   get_xcall <- function(xcall, scall) {
     scall <- scall[[length(scall)]]
-    if(any(grepl("plot_bgm", scall, fixed = T)) |
-       any(grepl("plot_bgm.bgmfit", scall, fixed = T))) {
-      xcall <- "plot_bgm"
+    if(any(grepl("plot_curves", scall, fixed = T)) |
+       any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
+      xcall <- "plot_curves"
     } else if(any(grepl("growthparameters", scall, fixed = T)) |
               any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
       xcall <- "growthparameters"
@@ -320,8 +330,8 @@ growthparameters.bgmfit <- function(model,
   }
   
   if(!is.null(model$xcall)) {
-    if(model$xcall == "plot_bgm") {
-      xcall <- "plot_bgm"
+    if(model$xcall == "plot_curves") {
+      xcall <- "plot_curves"
     }
   } else {
     scall <- sys.calls()
@@ -336,7 +346,7 @@ growthparameters.bgmfit <- function(model,
   # This arguments$model <- model required when using pipe %>% to use gparameter
   arguments$model <- model
   
-  if(xcall == 'plot_bgm') arguments$plot <- TRUE else arguments$plot <- FALSE
+  if(xcall == 'plot_curves') arguments$plot <- TRUE else arguments$plot <- FALSE
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
@@ -868,9 +878,9 @@ growthparameters.bgmfit <- function(model,
         arguments$probs <- probs
         
         if (estimation_method == 'fitted') {
-          out_d_ <- do.call(fitted_bgm, arguments)
+          out_d_ <- do.call(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_d_ <- do.call(predict_bgm, arguments)
+          out_d_ <- do.call(predict_draws, arguments)
         }
         probs
         if (!summary) {
@@ -919,9 +929,9 @@ growthparameters.bgmfit <- function(model,
         arguments$probs <- probs
         
         if (estimation_method == 'fitted') {
-          out_v_ <- do.call(fitted_bgm, arguments)
+          out_v_ <- do.call(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_v_ <- do.call(predict_bgm, arguments)
+          out_v_ <- do.call(predict_draws, arguments)
         }
         out_v__apv_ <- out_v_
         if (!summary) {
@@ -1067,9 +1077,9 @@ growthparameters.bgmfit <- function(model,
         
         
         if (estimation_method == 'fitted') {
-          out_d_ <- do.call(fitted_bgm, arguments)
+          out_d_ <- do.call(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_d_ <- do.call(predict_bgm, arguments)
+          out_d_ <- do.call(predict_draws, arguments)
         }
         
         arguments$summary <- summary_org
@@ -1144,9 +1154,9 @@ growthparameters.bgmfit <- function(model,
         
         
         if (estimation_method == 'fitted') {
-          out_v_ <- do.call(fitted_bgm, arguments)
+          out_v_ <- do.call(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_v_ <- do.call(predict_bgm, arguments)
+          out_v_ <- do.call(predict_draws, arguments)
         }
         
         arguments$summary <- summary_org
@@ -1302,9 +1312,9 @@ growthparameters.bgmfit <- function(model,
       arguments$probs <- probs
      
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_bgm, arguments)
+        out_v_ <- do.call(fitted_draws, arguments)
       } else if (estimation_method == 'predict') {
-        out_v_ <- do.call(predict_bgm, arguments)
+        out_v_ <- do.call(predict_draws, arguments)
       }
       
       out_v__apv_ <- out_v_
@@ -1372,9 +1382,9 @@ growthparameters.bgmfit <- function(model,
       arguments$probs <- probs
       
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_bgm, arguments)
+        out_v_ <- do.call(fitted_draws, arguments)
       } else if (estimation_method == 'predict') {
-        out_v_ <- do.call(predict_bgm, arguments)
+        out_v_ <- do.call(predict_draws, arguments)
       }
       
       arguments$summary <- summary_org

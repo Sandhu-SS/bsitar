@@ -47,16 +47,15 @@ devtools::install_github("Sandhu-SS/bsitar")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example which shows you how to fit the model:
 
 ```{r example, echo = TRUE, eval = FALSE}
 library(bsitar)
-## basic example code
+library(magrittr)
 ```
 
 
 ```{r data, echo = TRUE, eval = FALSE}
-library(magrittr)
 data(heights, package = "sitar")
 data <- heights
 rm(heights)
@@ -68,11 +67,6 @@ data <- data %>%
   dplyr::arrange(id, age) %>% 
   dplyr::mutate(id = as.factor(id) ) 
 ```
-
-```{r ignore, echo = FALSE, eval = FALSE}
-# You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date.`devtools::build_readme()` is handy for this.
-```
-
 
 
 ```{r fit1, echo = TRUE, eval = FALSE}

@@ -126,10 +126,10 @@ plot_optimize_fit <- function(model,
   optimize_fit_models <-  model
   dots <- list(...)
   for (i in names(dots)) {
-    if(!i %in% formalArgs(plot_bgm.bgmfit)) 
+    if(!i %in% formalArgs(plot_curves.bgmfit)) 
       stop("arguments must be be one of the following",
            "\n ",
-           formalArgs(plot_bgm.bgmfit))
+           formalArgs(plot_curves.bgmfit))
   }
   
   if(!is.null(subset_list)) {
@@ -162,7 +162,7 @@ plot_optimize_fit <- function(model,
     dots$... <- NULL
     if(is.null(what)) what <- 'plot'
     if(what == "plot") {
-      out_ <- do.call(plot_bgm, dots)
+      out_ <- do.call(plot_curves, dots)
       title_ <- bx[[.x]]$model_info$optimization_info
       out_ <- out_ + ggplot2::labs(title = title_)
     }
@@ -1239,12 +1239,7 @@ edit_scode_ncp_to_cp <- function(stancode,
       }
     }
   }
-  
-  # clines_tpx <<- clines_tp
-  # clines_tp2x <<- clines_tp2
-  # print(cat(clines_tp2))
-  # stop()
-  
+ 
   clines_tp <- clines_tp2
   
   how_many_r_1 <- 0
@@ -1309,12 +1304,7 @@ edit_scode_ncp_to_cp <- function(stancode,
   
   prepare_p <- paste(prepare_p, collapse = "\n")
   
-  # prepare_px <<- prepare_p
-  
-  
-  
   ## Match data from regexpr()
-  # x <- prepare_px
   pattern_r <- pattern_N <- pattern_M <- pattern_sd <- pattern_L <-  c()
   for (rxi in 1:100) {
     pattern     <- paste0('r_', rxi)
@@ -1331,24 +1321,13 @@ edit_scode_ncp_to_cp <- function(stancode,
     pattern_sd  <- c(pattern_sd, pattern_sdi)
   }
   
-  
-  
-  
-  # print(cat(prepare_p))
-  # stop()
-  
+ 
   # Add space to model block elements
   zz_c <- c()
   for (iz in move_to_m) {
     zz_c <- c(zz_c, paste0("  ", iz))
   }
   move_to_m <- paste(zz_c, collapse = '\n')
-  
-  # clines_tpx <<- clines_tp
-  # move_to_px <<- move_to_p
-  # move_to_mx <<- move_to_m
-  # prepare_px <<- prepare_p
-  # print(cat(move_to_mx))
   
   # Add space to parameters elements
   zz <- strsplit(prepare_p, "\n")[[1]]
@@ -1357,28 +1336,7 @@ edit_scode_ncp_to_cp <- function(stancode,
     zz_c <- c(zz_c, paste0("  ", zz[iz]))
   }
   prepare_p <- paste(zz_c, collapse = '\n')
-  
-  
-  
-  # Prepare multi_normal_cholesky_lpdf
-  # m_n_c_l_c <- c()
-  # if(how_many_r_1 > 0) {
-  #   for (h1i in 1:how_many_r_1) {
-  #     m_n_c_l <- 
-  #       paste0("  for(i in 1:N_", h1i, ') {\n',
-  #              "  lprior += multi_normal_cholesky_lpdf(r_", h1i, "[i, ] |\n",
-  #              "  rep_row_vector(0, M_", h1i, "),\n",
-  #              "  diag_pre_multiply(sd_", h1i, ", L_", h1i, "));",
-  #              "  \n  }"
-  #       )
-  #     m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
-  #   }
-  #   if(how_many_r_1 > 1) {
-  #     m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
-  #   }
-  # }
-  
-  
+
   if(normalize) {
     lprior_target <- "target"
   } else if(!normalize) {
@@ -1406,25 +1364,23 @@ edit_scode_ncp_to_cp <- function(stancode,
   } # for (h1i in 1:length(pattern_r)) {
   
   m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
-  
-  # move_to_m <- paste0(m_n_c_l_c, '\n', move_to_m)
-  # print(cat(move_to_m))
-  # stop()
-  
-  
-  
+
   for (il in clines_p) {
     if(!grepl("^array", il)) {
-      editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
-      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
+      editedcode2 <- gsub(pattern = "//", replacement = "//", 
+                          x = editedcode2, fixed = T)
+      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", 
+                          x = editedcode2)
       editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
     }
   }
   
   for (il in clines_tp) {
     if(!grepl("^array", il)) {
-      editedcode2 <- gsub(pattern = "//", replacement = "//", x = editedcode2, fixed = T)
-      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", x = editedcode2)
+      editedcode2 <- gsub(pattern = "//", replacement = "//", 
+                          x = editedcode2, fixed = T)
+      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "", 
+                          x = editedcode2)
       editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
     }
   }
@@ -1434,7 +1390,8 @@ edit_scode_ncp_to_cp <- function(stancode,
   # editedcode2 <- gsub("\r", "", editedcode2, fixed=TRUE)
   p_block_syb_by <- paste0("", tempt_name_p, " {")
   p_block_syb_it <- paste0(p_block_syb_by, "\n", prepare_p)
-  editedcode2 <- gsub(paste0("", p_block_syb_by), p_block_syb_it, editedcode2, fixed=T, perl=F)
+  editedcode2 <- gsub(paste0("", p_block_syb_by), p_block_syb_it, 
+                      editedcode2, fixed=T, perl=F)
   
   
   # Remove empty lines
@@ -1550,7 +1507,6 @@ mapderivqr <- function(model,
     # Initiate non formalArgs()
     ##############################################
     sorder <- NULL;
-    
     data$sorder <- as.numeric(row.names(data))
     .data <- data %>% 
       dplyr::mutate(.x = !!dplyr::sym(x)) %>% 
@@ -1560,9 +1516,11 @@ mapderivqr <- function(model,
     
     .dydx <- function(x, y) {
       n <- length(x); i1 <- 1:2; i2 <- (n - 1):n
-      c(diff(y[i1])/diff(x[i1]), (y[-i1] - y[-i2])/(x[-i1] - x[-i2]), diff(y[i2])/diff(x[i2]))
+      c(diff(y[i1])/diff(x[i1]), (y[-i1] - y[-i2])/(x[-i1] - x[-i2]), 
+        diff(y[i2])/diff(x[i2]))
     }
-    dydx <- lapply(split(.data, as.numeric(.data$.id)), function(x) {x$.v <- .dydx(x$.x, x$.y); x } )
+    dydx <- lapply(split(.data, as.numeric(.data$.id)), 
+                   function(x) {x$.v <- .dydx(x$.x, x$.y); x } )
     dydx <- do.call(rbind, dydx) %>% data.frame() %>% dplyr::arrange(sorder)
     return(round(dydx[[".v"]], ndigit))
   }
@@ -1641,7 +1599,6 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 
 
 # Commenting out for CRAN initial release
-
 
 #' Fit model via cmdstanr
 #'
@@ -1793,7 +1750,7 @@ brms_via_rstan <- function(scode, sdata, brm_args) {
     obfuscate_model_name = TRUE,
     allow_undefined = isTRUE(getOption("stanc.allow_undefined", FALSE)),
     allow_optimizations = isTRUE(getOption("stanc.allow_optimizations", FALSE)),
-    standalone_functions = isTRUE(getOption("stanc.standalone_functions", FALSE)),
+    standalone_functions=isTRUE(getOption("stanc.standalone_functions", FALSE)),
     use_opencl = isTRUE(getOption("stanc.use_opencl", FALSE)),
     warn_pedantic = isTRUE(getOption("stanc.warn_pedantic", FALSE)),
     warn_uninitialized = isTRUE(getOption("stanc.warn_uninitialized", FALSE)),
@@ -1915,10 +1872,7 @@ plot_lositic3 <- function(model,
   args <- list(...)
   args$model <- model
   
-  # model <- berkeley_fit
-  # pob   <- plot_bgm(model, ipts = 11, apv = F)
-  
-  pob    <- do.call(plot_bgm, args)
+  pob    <- do.call(plot_curves, args)
   fixed_ <- brms::fixef(model)
   
   xintercept_1 <- fixed_[3,1]
@@ -2034,4 +1988,5 @@ plot_lositic3 <- function(model,
   if(return_plot) return(pob)
 }
 
-# plot_lositic3(berkeley_fit, ipts = 11, apv = F, xrange_search = c(1, 12))
+
+

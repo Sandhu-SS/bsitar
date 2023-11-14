@@ -1,6 +1,6 @@
 
 
-#'Optimize \pkg{bgmfit} model
+#'Optimize model
 #'
 #'@param model An object of class \code{bgmfit}.
 #'
@@ -9,31 +9,33 @@
 #'  fit is used. Note that data-dependent default priors will not be updated
 #'  automatically.
 #'
-#'@param optimize_df A vector specifying the degree of freedom (\code{df}) 
-#'  update. If \code{NULL} (default), the \code{df} is taken from the
-#'  original model. For \code{univariate-by-sungroup} and \code{multivariate}
-#'  models (see [bsitar::bgm()] for details on these arguments),
+#'@param optimize_df A vector of integers specifying the degree of freedom
+#'  (\code{df}) values to be updated. If \code{NULL} (default), the \code{df} is
+#'  taken from the original model. For \code{univariate-by-sungroup} and
+#'  \code{multivariate} models (see [bsitar::bgm()] for details),
 #'  \code{optimize_df} can be a single integer (e.g., \code{optimize_df = 4}) or
 #'  a list (e.g., \code{optimize_df = list(4,5)}). For optimization over
-#'  different \code{df}, say for example df 4 and 5 for univariate model, the
-#'  corresponding code is \code{optimize_df = list(4,5)}. For a multivariate
-#'  model fit to two outcomes with different \code{df}, the optimization over
-#'  \code{df} 4 and 5 for the first sub model and 5 and 6 for the second
+#'  different \code{df}, say for example \code{df} 4 and \code{df} 5 for
+#'  univariate model, the corresponding code is \code{optimize_df = list(4,5)}.
+#'  For a multivariate model fit to two outcomes with different \code{df}, the
+#'  optimization over \code{df} 4 and \code{df} 5 for the first sub model, and
+#'  \code{df} 5 and \code{df} 6 for the second
 #'  sub model, the corresponding \code{optimize_df} code is \code{optimize_df =
 #'  list(list(4,5), list(5,6))} i.e, a list of lists.
 #'
 #'@param optimize_x A vector specifying the transformations of predictor
-#'  (typically \code{age}) variable (via \code{xvar}). The option are 
-#'  \code{NULL}, \code{log}, \code{sqrt} and their combinations. Note that user 
-#'  need not to enclose these options in a single or double quotes as they are 
-#'  take care of internally. The default setting is to explore all possible 
-#'  combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to
-#'  the \code{optimize_df}, user can specify different \code{optimize_x} for
+#'  variable (i.e., \code{xvar} which is typically \code{age}). The option are
+#'  \code{NULL}, \code{log}, \code{sqrt}, and their combinations. Note that user
+#'  need not to enclose these options in a single or double quotes as they are
+#'  take care of internally. The default setting is to explore all possible
+#'  combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to the
+#'  \code{optimize_df}, user can specify different \code{optimize_x} for
 #'  \code{univariate-by-sungroup} and \code{multivariate} sub models.
 #'
-#'@param optimize_y A vector specifying the transformations for the response
-#'  variable (via \code{yvar}). The approach and options available for 
-#'  \code{optimize_y} are identical to the \code{optimize_x} (see above).
+#'@param optimize_y A vector specifying the transformations of the response
+#'  variable (i.e., \code{yvar} which is typically repeated height
+#'  measurements). The approach and options available for \code{optimize_y} are
+#'  identical to those described above for the \code{optimize_x}.
 #'
 #'@param exclude_default_funs A logical to indicate whether transformations for
 #'  (\code{xvar} and \code{yvar}) used in the original model fit should be
@@ -44,9 +46,8 @@
 #'  translated into \code{optimize_x = list(NULL, sqrt)} and \code{optimize_y}
 #'  as \code{optimize_y = list(log, sqrt)}.
 #'
-#'
 #'@param add_fit_criteria An optional (default \code{NULL}) indicator to add fit
-#'  criteria to the model fit. options are \code{loo} and \code{waic}. Please
+#'  criteria to returned model fit. options are \code{loo} and \code{waic}. Please
 #'  see [brms::add_criterion()] for details.
 #'
 #'@param add_fit_bayes_R An optional (default \code{NULL}) to add Bayesian R
@@ -54,29 +55,30 @@
 #'
 #'@param byresp A logical (default \code{FALSE}) to indicate if response wise
 #'  fit criteria to be calculated. This argument is evaluated only for the
-#'  \code{multivariate} model for which options are available for joint
+#'  \code{multivariate} model for which user can select whether to get joint
 #'  calculation of pointwise log likelihood or response specific. For,
 #'  \code{univariate-by-subgroup} model, the only option available is to
 #'  calculate separate pointwise log likelihood for each sub-model.
 #'
 #'@param digits An integer to set the number of decimal places.
 #'
-#'@param ... Other arguments passed to \code{\link{update_bgm}}.
+#'@param ... Other arguments passed to \code{\link{update_model}}.
 #'
-#'@return A list containing the optimized models of class \code{brmsfit,
-#'  bsiatr}, and the the combined summary statistics if \code{add_fit_criteria}
-#'  and/or \code{add_fit_bayes_R} are specified.
+#'@return A list containing the optimized models of class \code{bgmfit}, and the
+#'  the summary statistics if \code{add_fit_criteria} and/or
+#'  \code{add_fit_bayes_R} are specified.
 #'
 #'@author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #'@importFrom loo pareto_k_table
 #'
-#'@export optimize_bgm.bgmfit
+#'@export optimize_model.bgmfit
 #'
 #'@export
 #'
 #' @examples
-#' \dontrun{
+#' 
+#' \donttest{
 #' 
 #' # Fit Bayesian SITAR model 
 #' # To avoid running the model which takes some time, model fit to the
@@ -87,14 +89,13 @@
 #' 
 #' # To save time, below example is fit with sample_prior = 'only'
 #' 
-#' model2 <- optimize_bgm(model, optimize_df = 5, 
+#' model2 <- optimize_model(model, optimize_df = 5, 
 #' optimize_x = NULL, 
 #' optimize_y = NULL,  
 #' sample_prior = 'only')
 #' }
 #'
-#'
-optimize_bgm.bgmfit <- function(model,
+optimize_model.bgmfit <- function(model,
                                    newdata = NULL,
                                    optimize_df = NULL,
                                    optimize_x = list(NULL, log,  sqrt),
@@ -122,6 +123,15 @@ optimize_bgm.bgmfit <- function(model,
   } else {
     newdata <- newdata
   }
+  
+  if(!is.null(optimize_x)) {
+    if(!is.list(optimize_x)) stop("argument 'optimize_x' must be a list")
+  }
+  
+  if(!is.null(optimize_y)) {
+    if(!is.list(optimize_y)) stop("argument 'optimize_y' must be a list")
+  }
+  
   
   call_o <- match.call()
   call_o_args <- as.list(call_o)[-1]
@@ -191,36 +201,6 @@ optimize_bgm.bgmfit <- function(model,
       }
     xxo <- gsub("[[:space:]]", "", xo)
     
-    
-    
-    # numeric_dx <-
-    #   is.numeric(eval(parse(text = gsub('\"', "", xxo))))
-    
-    # The is.numeric(eval(parse(text = gsub('\"', "", xxo)))) triggered warning 
-    # Warning in .make_numeric_version(x, strict, 
-    # .standard_regexps()$valid_numeric_version)
-    
-    # https://stat.ethz.ch/pipermail/r-devel/2023-July/082722.html
-    
-    # still no relief
-    
-    # xxo_g <- gsub('\"', "", xxo)
-    # if(is.null(eval(parse(text = xxo_g)))) {
-    #   numeric_dx <- FALSE
-    # } else {
-    #   xxo_g2 <- eval(parse(text = xxo_g))
-    #   numeric_dx <- is.numeric(xxo_g2)
-    # }
-    
-    # print(eval(parse(text = xxo_g)))
-    # print(numeric_dx)
-    # stop()
-    
-    # so, changing below if 
-    
-    # https://stackoverflow.com/questions/13638377/
-    # test-for-numeric-elements-in-a-character-string
-    
     xxo_g <- gsub('\"', "", xxo)
     xxo_g2 <- 
       grepl(
@@ -228,14 +208,9 @@ optimize_bgm.bgmfit <- function(model,
         xxo_g)
     
     if(any(xxo_g2)) xxo_g3 <- TRUE else xxo_g3 <- FALSE
-    
-    # print(xxo_g2)
-    # print(numeric_dx)
-    # stop()
-    
+  
     numeric_dx <- xxo_g3
     
-    # if (xxo != "NULL" & xxo != "\"NULL\"") {
      if (xxo != "NULL" & xxo != "\"NULL\"" & !numeric_dx) {
       xxo <- get_within_fist_last_paranthesese(xxo)
       xxo <- gsub_comma_within_paranthesese(xxo, "_comma_")
@@ -424,13 +399,6 @@ optimize_bgm.bgmfit <- function(model,
           rownames(fit$criteria[[aci_names]]) <- NULL
         }
       }
-      
-      # xx <- fit$criteria$bayes_R %>% data.frame()
-      # names(xx) <- sub('^bayes_R.', '', names(xx))
-      # xx$Parameter <- row.names(xx)
-      # row.names(xx) <- NULL
-      # xx <- xx %>% dplyr::relocate(Parameter)
-      # fit$criteria$bayes_R <- xx
     } # if (!is.null(add_fit_bayes_R)) {
     
     
@@ -744,15 +712,6 @@ optimize_bgm.bgmfit <- function(model,
   
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
   optimize_fun <- function(.x, model) {
     message("\nOptimizing model no. ",
             .x,
@@ -799,14 +758,82 @@ optimize_bgm.bgmfit <- function(model,
     args_o$df    <- eval(parse(text = df))
     args_o$xfun  <- xfun
     args_o$yfun  <- yfun
-    args_o$data  <- newdata
+    args_o$data  <- newdata %>% data.frame()
     
+    
+    # Somehow update_model is not accepting symbol as arg e.g, x = age
+    # fit <- do.call(update_model, args_o)
+    
+    # fit <- do.call(bgm, args_o)
+    
+    
+    
+    # Not even the above, using the below approach for full control 
+    
+    args_o$model  <- NULL
+    
+    args_o_new <- args_o
+    calling    <- model$model_info$call.full.bgm
+    
+    args_o_org <- calling
+    args_o_org[[1]] <- NULL
+    
+    if(is.na(model$model_info$univariate_by) &
+       !model$model_info$multivariate) {
+      if(length(args_o_new$df) == 1)   args_o_new$df   <- args_o_new$df[[1]]
+      if(length(args_o_new$xfun) == 1) args_o_new$xfun <- args_o_new$xfun[[1]]
+      if(length(args_o_new$yfun) == 1) args_o_new$yfun <- args_o_new$yfun[[1]]
+    }
+    
+    args_o_new$data <- NULL
+    args_o_org$data <- NULL
+    
+    all_same_args_c <- all_same_args <- c()
+    for (args_oi in names(args_o_new)) {
+      all_same_args_c <- c(all_same_args_c, identical(args_o_org[[args_oi]],
+                                                      args_o_new[[args_oi]]) 
+      )
+      # args_o_org[[args_oi]] <- args_o_new[[args_oi]]
+    }
+    
+    
+    all_same_args_c_diffs <- args_o_new[!all_same_args_c]
+    
+    if(length(all_same_args_c_diffs) > 0) {
+      all_same_args <- FALSE 
+    } else {
+      all_same_args <- TRUE
+    }
+    
+    
+    if(!all_same_args) {
+      cat("\n")
+      message('Updating model for the following new arguments:\n')
+      for (all_same_args_c_diffsi in names(all_same_args_c_diffs)) {
+        message(' Argument: ', 
+                names(all_same_args_c_diffs[all_same_args_c_diffsi]))
+        message(' Value: ', 
+                all_same_args_c_diffs[all_same_args_c_diffsi])
+        cat("\n")
+      }
+    }
    
     
-    # Somehow update_bgm is not accepting symbol as arg e.g, x = age
     
-    # fit <- do.call(update_bgm, args_o)
-    fit <- do.call(bgm, args_o)
+    if(all_same_args) {
+      cat("\n")
+      cat("The arguemnets supplied for optimization are identical to the", 
+              "\n ",
+              "original model fit. Therefore, returning the original model fit")
+      cat("\n")
+      return(model)
+    } else if(!all_same_args) {
+      calling      <- model$model_info$call.full.bgm
+      args_o$data  <- NULL
+      assign('data', newdata)
+      fit <- eval(calling)
+    }
+    
     
     
     fit$model_info$optimization_info <- optimization_info
@@ -885,8 +912,8 @@ optimize_bgm.bgmfit <- function(model,
 
 
 
-#' @rdname optimize_bgm.bgmfit
+#' @rdname optimize_model.bgmfit
 #' @export
-optimize_bgm <- function(model, ...) {
-  UseMethod("optimize_bgm")
+optimize_model <- function(model, ...) {
+  UseMethod("optimize_model")
 }

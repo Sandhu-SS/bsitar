@@ -5,7 +5,7 @@
 \alias{berkeley_mfit}
 \title{Model fit to the Berkeley data for males}
 \format{
-An object of class \code{bgmfit} fit to the Berkeley data.
+A \code{bgmfit} fit.
 }
 \usage{
 berkeley_mfit
@@ -14,15 +14,12 @@ berkeley_mfit
 An object of class \code{bgmfit} with posterior draws.
 }
 \description{
-Model is fit to the Berkeley Child Guidance Study dataset
-containing longitudinal growth measurements made on 66 males between 6
-and 20 years.
+Bayesian SITAR model fit to the Berkeley Child Guidance Study
+dataset containing longitudinal growth measurements for 66 males (6
+to 20 years of age).
 }
 \details{
 Data details are provided in the \link{berkeley_mdata}.
-}
-\references{
-\insertAllCited{}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

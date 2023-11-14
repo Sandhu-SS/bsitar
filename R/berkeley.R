@@ -5,15 +5,14 @@
 #' @description The Berkeley Child Guidance Study data set contains longitudinal
 #'   growth data for 136 children from birth to 21 years.
 #'
-#' @details The data were originaly provided as an appendix to the book by
-#'   \insertCite{Tuddenham1954;textual}{bsitar}. The same data has been used in
-#'   the *sitar* \insertCite{R-sitar}{bsitar} and the *fda*
-#'   \insertCite{R-fda}{bsitar} packages after correcting the transcription
-#'   errors. The data included in the **bsitar** package is the same as
-#'   \code{berkeley} data used in the *sitar* package.
+#' @details The data were provided as an appendix to the book by
+#'   \insertCite{Tuddenham1954;textual}{bsitar} and later used in the
+#'   \pkg{sitar} \insertCite{R-sitar}{bsitar} after correcting the transcription
+#'   errors. The data included in the \pkg{bsitar} package is the same as
+#'   \strong{berkeley} data used in the \pkg{sitar} package.
 #'
 #'   A detailed description of the data including the frequency of measurements
-#'   per year is provided in the the *sitar* package.
+#'   per year is provided in the the \pkg{sitar} package.
 #'   \insertCite{R-sitar}{bsitar}. Briefly, the data comprise of repeated growth
 #'   measurements made on 66 boys and 70 girls (birth to 21 years). Children
 #'   were born in 1928-29 (Berkeley, California) and were of north European

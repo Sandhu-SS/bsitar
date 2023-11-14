@@ -1,27 +1,24 @@
 
 
 #' Fitted (expected) values from the posterior predictive distribution
-#' 
-#' @details The \code{fitted_bgm} function is a wrapper around 
-#' the [brms::fitted.brmsfit]. The [brms::fitted.brmsfit]  
-#' function from the \code{brms} package can used to plot the fitted (distance) 
-#' curve for an *bsitar* model when outcome (e.g., height) is untransformed.
-#' However, when the outcome is log or square root transformed, the 
-#' [brms::fitted.brmsfit] will return the fitted curve on the log or 
-#' square root scale whereas the [bsitar::fitted_bgm()] will 
-#' return the fitted curve on the original scale. Furthermore, the 
-#' fitted_bgm also displays the velocity curve on the original scale
-#' after making required back-transformation. Apart from these differences, 
-#' both these functions ([brms::fitted.brmsfit] and 
-#' [bsitar::fitted_bgm()]) work in the same manner. In other words, 
-#' user can specify all the arguments which are available in the 
-#' [brms::fitted.brmsfit]. Because of this, the name is kept same except 
-#' for adding an underscore at the end of the name (*fitted* to 
-#' *fitted_bgm*). 
+#'
+#' @details The \strong{fitted_draws} function is a wrapper around the
+#'   [brms::fitted.brmsfit]. The [brms::fitted.brmsfit] function from the
+#'   \pkg{brms} package can used to plot the fitted (distance) curve for an
+#'   \strong{brms} model when outcome (e.g., height) is untransformed. However,
+#'   when the outcome is log or square root transformed, the
+#'   [brms::fitted.brmsfit] will return the fitted curve on the log or square
+#'   root scale whereas the \strong{fitted_draws} will return the fitted curve
+#'   on the original scale. Furthermore, the \strong{fitted_draws} also displays the
+#'   velocity curve on the original scale after making required
+#'   back-transformation. Apart from these differences, both these functions
+#'   ([brms::fitted.brmsfit] and [bsitar::fitted_draws()]) work in the same
+#'   manner. In other words, user can specify all the options available in the
+#'   [brms::fitted.brmsfit]. 
 #' 
 #' @inherit growthparameters.bgmfit params
 #' 
-#' @inherit conditional_effects_bgm.bgmfit params
+#' @inherit plot_conditional_effects.bgmfit params
 #' 
 #' @inherit brms::fitted.brmsfit description params
 #' 
@@ -32,14 +29,14 @@
 #' @return An array of predicted mean response values. See [brms::fitted.brmsfit] 
 #' for details.
 #' 
-#' @export fitted_bgm.bgmfit
+#' @export fitted_draws.bgmfit
 #' @export
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @examples
 #' 
-#' # The following examples show the use of *fitted_bgm* to estimate  
+#' # The following examples show the use of *fitted_draws* to estimate  
 #' # population average and individual-specific distance and velocity 
 #' # curves.
 #' 
@@ -51,20 +48,20 @@
 #' model <- berkeley_mfit
 #' 
 #' # Population average distance curve
-#' fitted_bgm(model, deriv = 0, re_formula = NA)
+#' fitted_draws(model, deriv = 0, re_formula = NA)
 #' 
 #' \donttest{
 #' # Individual-specific distance curves
-#' fitted_bgm(model, deriv = 0, re_formula = NULL)
+#' fitted_draws(model, deriv = 0, re_formula = NULL)
 #' 
 #' # Population average velocity curve
-#' fitted_bgm(model, deriv = 1, re_formula = NA)
+#' fitted_draws(model, deriv = 1, re_formula = NA)
 #' 
 #' # Individual-specific velocity curves
-#' fitted_bgm(model, deriv = 1, re_formula = NULL)
+#' fitted_draws(model, deriv = 1, re_formula = NULL)
 #' }
 #' 
-fitted_bgm.bgmfit <-
+fitted_draws.bgmfit <-
   function(model,
            newdata = NULL,
            resp = NULL,
@@ -157,10 +154,10 @@ fitted_bgm.bgmfit <-
   }
 
 
-#' @rdname fitted_bgm.bgmfit
+#' @rdname fitted_draws.bgmfit
 #' @export
-fitted_bgm <- function(model, ...) {
-  UseMethod("fitted_bgm")
+fitted_draws <- function(model, ...) {
+  UseMethod("fitted_draws")
 }
 
 

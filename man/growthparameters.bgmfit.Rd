@@ -3,7 +3,7 @@
 \name{growthparameters.bgmfit}
 \alias{growthparameters.bgmfit}
 \alias{growthparameters}
-\title{Growth parameter estimation for \code{bgmfit} model}
+\title{Estimate growth parameter}
 \usage{
 \method{growthparameters}{bgmfit}(
   model,
@@ -48,10 +48,15 @@ growthparameters(model, ...)
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
 
-\item{resp}{An optional character string to specify response variable when
-estimating growth parameter for the univariate-by-subgroup and multivariate
-models (see \code{\link[=bgm]{bgm()}} for details on univariate-by-subgroup and
-multivariate models). For univariate model, \code{resp = NULL} (default).}
+\item{resp}{A character string to specify response variable when processing
+posterior draws for the univariate-by-subgroup and multivariate models (see
+\code{\link[=bgm]{bgm()}} for details on fitting univariate-by-subgroup and
+multivariate models). For univariate model, \code{resp = NULL} (default).
+Note that argument \code{resp} must be specified for the
+univariate-by-subgroup and multivariate models otherwise it will result in
+an error. On the other hand, argument \code{resp} must be \code{NULL} for
+the univariate model. The default setting is \code{resp = NULL} assuming a
+univariate model.}
 
 \item{ndraws}{Positive integer indicating the number of posterior draws to be
 used in estimation. If \code{NULL} (default), all draws are used.}
@@ -60,15 +65,14 @@ used in estimation. If \code{NULL} (default), all draws are used.}
 to be used. If \code{NULL} (default), all draws are used.}
 
 \item{newdata}{An optional data frame to be used in predictions. If
-\code{NULL} (default), the original data from the fitted model is used.}
+\code{NULL} (default), the model fit.}
 
 \item{summary}{A logical (default \code{TRUE}) indicating whether only the
 Estimate should be returned or Estimate along with SE and CI should be
 computed. Setting this option to \code{FALSE} will reduce the computation
 time but no SE or CI estimates will be available.}
 
-\item{digits}{An integer (default \code{2}) to set the decimal places for the
-estimated growth parameters. The \code{digits} is passed on to the
+\item{digits}{An integer (default \code{2}) to set the decimal for the
 \code{\link[base:Round]{base::round()}} function.}
 
 \item{robust}{If \code{FALSE} (the default) the mean is used as the measure
@@ -91,16 +95,15 @@ of continous covaristes(s).}
 
 \item{peak}{Optional (logical, default \code{TRUE}) to indicate whether or
 not to calculate the age at peak velocity (APGV) and the peak velocity
-(PGV). See @details for further information.}
+(PGV) parameters.}
 
 \item{takeoff}{Optional (logical, default \code{FALSE}) to indicate whether
 or not to calculate the age at takeoff velocity (ATGV) and the takeoff
-growth velocity (TGV). See @details for further information.}
+growth velocity (TGV) parameters.}
 
 \item{trough}{Optional (logical, default \code{FALSE}) to indicate whether or
 not to calculate the age at cessation of growth velocity (ACGV) and the
-cessation of growth velocity (CGV). See @details for further information.
-See @details for further information.}
+cessation of growth velocity (CGV) parameters.}
 
 \item{acgv}{Optional (logical, default \code{FALSE}) to indicate whether or
 not to calculate the age at cessation of growth velocity from the velocity
@@ -117,10 +120,9 @@ used when estimating \code{acgv}. The default value is \code{0.10} i.e.,
 
 \item{estimation_method}{A character string to specify the estimation method
 when calculating the velocity from the posterior draws. The \code{fitted}
-method internally calls the \code{\link[=fitted_bgm]{fitted_bgm()}} function whereas the
-option \code{predict} calls the \code{\link[=predict_bgm]{predict_bgm()}} function. See
-\code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for derails on
-fitted versus predict estimations.}
+method internally calls the \code{\link[=fitted_draws]{fitted_draws()}} function whereas the
+option \code{predict} calls the \code{\link[=predict_draws]{predict_draws()}} function. See
+\code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for derails.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -154,24 +156,24 @@ supplied to manually set these values. For example, \code{numeric_cov_at =
 argument \code{numeric_cov_at} is ignored when no continuous covariate is
 included in the model.}
 
-\item{levels_id}{An optional argument to specify the ids for hierarchical
-model (default \code{NULL}. It is used only when model is fitted to the
-data with 3 or more levels of hierarchy. For a two level model, the id for
-second level is automatically inferred from the fitted model. Even for 3 or
-higher level model, ids are inferred from the fitted model but under the
-assumption that hierarchy is specified from lower to upper levels i.e, id,
-study assuming that id is nested within the studies. However, it is not
-gauranted that these ids are sorted correctly. Therefore, it is better to
-set them manually.}
+\item{levels_id}{An optional argument to specify the \code{ids} for
+hierarchical model (default \code{NULL}). It is used only when model is
+applied to the data with 3 or more levels of hierarchy. For a two level
+model, the \code{id} for second level is automatically inferred from the
+model fit. Even for 3 or higher level model, ids are inferred from the
+model fit but under the assumption that hierarchy is specified from
+lower to upper levels i.e, \code{id} followed by \code{study} assuming that
+\code{id} is nested within the \code{study} However, it is not guaranteed
+that these ids are sorted correctly. Therefore, it is better to set them
+manually.}
 
-\item{avg_reffects}{An optional argument (default \code{NULL} to calculate
+\item{avg_reffects}{An optional argument (default \code{NULL}) to calculate
 (marginal/average) curves and growth parameters (such as APGV and PGV). If
-specified, it must be a named list indicating the \code{over} and the fixed
-efects \code{feby} and random effects efects \code{reby} arguments e.g.,
-\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}. The
-\code{over} is typically age and is used to average over the random
-effects. The second argument is \code{by} that specifies the factor
-variable by which \code{over} is executed.}
+specified, it must be a named list indicating the \code{over} (typically
+level 1 predictor, such as age), \code{feby} (fixed effects, typically a
+factor variable), and  \code{reby} (typically \code{NULL} indicating that
+parameters are integrated over the random effects) such as
+\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}.}
 
 \item{aux_variables}{An optional argument to specify the variables that can be
 passed to the \code{ipts} argument (see below). This is useful when fitting
@@ -181,27 +183,28 @@ location scale models and the measurement error models.}
 smooth velocity curve. The \code{NULL} will return original values whereas
 an integer such as \code{ipts = 10} (default) will interpolate the
 predictor. It is important to note that these interpolations do not alter
-the range of predictor when calculating population average and the
-individual specific velocity curves.}
+the range of predictor when calculating population average and/or the
+individual specific growth curves.}
 
 \item{conf}{A numeric value (default \code{0.95}) to compute CI. Internally,
 this is translated into a paired probability values as \code{c((1 - conf) /
   2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this will compute 95\% CI
-with CI varibales named as Q.2.5 and Q.97.5.}
+and the variables with lower and upper limits will be named as Q.2.5 and
+Q.97.5.}
 
 \item{xrange}{An integer to set the predictor range (i.e., age) when
 executing the interpolation via \code{ipts}. The default \code{NULL} sets
 the individual specific predictor range whereas code \code{xrange = 1} sets
 same range for all individuals within the higher order grouping variable
-(e.g., study). Code \code{xrange  = 2} sets the identical range dplyr::across the
+(e.g., study). Code \code{xrange  = 2} sets the identical range across the
 entire sample. Lastly, a paired numeric values can be supplied e.g.,
-\code{xrange = c(6, 20)} will set the range between 6 and 20.}
+\code{xrange = c(6, 20)} to set the range between 6 and 20.}
 
 \item{xrange_search}{A vector of length two, or a character string
 \code{'range'} to set the range of \code{x} variable within which growth
-parameters are searched. This is useful, for example. when there is more
-than one peak and user wants to summarize peak within a given range of the
-\code{x} variable. Default \code{xrange_search = NULL}.}
+parameters are searched. This is useful when there is more than one peak
+and user wants to summarize peak within a given range of the \code{x}
+variable. Default \code{xrange_search = NULL}.}
 
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method.}
@@ -217,7 +220,7 @@ that multicore session is not supported on Windows systems. For more
 details, see \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
 
 \item{cores}{Number of cores to be used when running the parallel
-computations by setting the option \code{future = TRUE}. On non-Windows,
+computations by setting the option \code{future = TRUE}. On non-Windows
 systems this argument can be set globally via the mc.cores option. For the
 default \code{NULL} option, the number of cores are set automatically by
 calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
@@ -227,10 +230,15 @@ maximum number of cores avaialble minus one, i.e.,
 \item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
 to get growth parameters on the fly.}
 
-\item{idata_method}{A character string to indicate interpolation
-method. Options available are \code{m1} (default) and
-\code{m2}. See \code{idata_method} argument of the \code{get.newdata}
-function for details.}
+\item{idata_method}{A character string to indicate interpolation method.
+Options available are \code{m1} (default) and \code{m2}. The \code{'m1'}
+calls the \code{idatafunction} function whereas \code{'m2'} calls the
+\code{get_idata} function for data interpolation. The \code{idatafunction}
+function is adapted from the the \pkg{iapvbs} which is documented here
+\url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R} The
+\code{get_idata} function is adapted from the the \pkg{JMbayes} and is
+documented here
+\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}}
 
 \item{parms_method}{A character to specify the method used to when
 evaluating \code{parms_eval}. The default is \code{getPeak} which uses
@@ -238,46 +246,47 @@ the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{
 alternative option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}}
 function function from the \code{pracma} package.}
 
-\item{envir}{Indicator to set the environment of function evaluation.
-The default is \code{globalenv}.}
+\item{envir}{Environment of function evaluation. The default is
+\code{globalenv}.}
 
-\item{...}{Further arguments passed to \code{brms::fitted()} and
-\code{brms::predict()} functions that control several aspects of data
-validation and prediction. See \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and
+\item{...}{Further arguments passed to \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and
+\code{brms::predict()} functions. See \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and
 \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details.}
 }
 \value{
 A data frame with five columns when \code{summary = TRUE}, and two
 columns when \code{summary = False} (assuming \code{re_formual = NULL}).
-The first two columns common to both these approaches \code{summary =
-  TRUE/False} are 'Parameter' and 'Estimate' which indicates the name of the
-growth parameter (e.g., APGV, PGV etc), and its value. When \code{summary =
-  TRUE}, three additional columns are added, the 'Est.Error' and a pair of
-columns showing the CI. The CI columns are named as Q with appropriate
-suffix indicating the percentiles used to construct these intervals (such
-as Q.2.5 and Q.97.5 where 2.5 and 97.5 are the 0.025 and 0.975 percentiles
-used to compute by the 95\% CI by calling the quantile function. When
-\code{re_formual = NULL}, an additional column is added that shows the
-individuals/groups corresponding to the estimates.
+The first two columns common to the returned object (\code{summary =
+  TRUE/False}) are 'Parameter' and 'Estimate' which indicates the name of the
+growth parameter (e.g., APGV, PGV etc), and its estimate. When
+\code{summary = TRUE}, three additional columns are 'Est.Error' and the
+lower and upper limits of the CIs. The CI columns are named as Q with
+appropriate suffix indicating the percentiles used to construct these
+intervals (such as Q.2.5 and Q.97.5 where 2.5 and 97.5 are the 0.025 and
+0.975 percentiles used to compute by the 95\% CI by calling the quantile
+function. When \code{re_formual = NULL}, an additional column is added that
+shows the individual identifier (typically \code{id}).
 }
 \description{
-The \code{growthparameters} computes growth parameters and the
-uncertainty (standard error, SE and the credible interval, CI) for
-population average and individual-specific parameters (see @details).
+The \strong{growthparameters} function computes population
+average and and individual-specific growth parameters (such as age at peak
+growth velocity) and the uncertainty (standard error, SE and the credible
+interval, CI).
 }
 \details{
-The \code{growthparameters} calls the appropriate function (fitted or
-predict) to estimate the first derivative (velocity curve) for each
-posterior draw (posterior distribution) and then computes growth parameters
-such as age at peak growth velocity (APGV), peak growth velocity (PGV), age
-at takeoff growth velocity (ATGV), takeoff growth velocity (TGV), age at
-cessation of growth velocity (ACGV), and the cessation growth velocity
-(CGV). The growth parameters APGV and PGV are estimated by calling the
-\code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function whereas the ATGV and TGV are estimated by using
-the \code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} function. The \code{\link[sitar:getPeakTrough]{sitar::getTrough()}} function is
-used to estimates ACGV and CGV parameters. The parameters obtained from
-each posterior draw are then summarized appropriately to get the estimate
-and the uncertainty (SE and CI) around these estimates. Please note that it
+The \strong{growthparameters} function internally calls the
+appropriate function (\code{fitted_draws} or \code{predict_draws}) to estimate
+the first derivative (velocity curve) for each posterior draw (posterior
+distribution) and then computes growth parameters such as age at peak
+growth velocity (APGV), peak growth velocity (PGV), age at takeoff growth
+velocity (ATGV), takeoff growth velocity (TGV), age at cessation of growth
+velocity (ACGV), and the cessation growth velocity (CGV). The growth
+parameters APGV and PGV are estimated by calling the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}}
+function whereas the ATGV and TGV are estimated by using the
+\code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} function. The \code{\link[sitar:getPeakTrough]{sitar::getTrough()}} function is used
+to estimates ACGV and CGV parameters. The parameters obtained from each
+posterior draw are then summarized appropriately to get the estimates and
+the uncertainty (SEs and CIs) around these estimates. Please note that it
 is not always possible to estimate cessation and takeoff growth parameters
 when there are no distinct pre-peak or post-peak troughs.
 }

@@ -1,20 +1,16 @@
 
 
-#' Posterior predictive distribution check for \code{bgmfit} object
+#' Perform posterior predictive distribution check
 #' 
-#' @details The \code{pp_check_bgm} function is a wrapper around 
-#' the [brms::loo] and works exactly the same way as 
-#' [brms::pp_check.brmsfit]. 
+#' @details The \strong{plot_ppc} function is a wrapper around 
+#' the [brms::pp_check()]. 
 #' 
 #' @param model An object of class \code{bgmfit}.
-#' function.
-#' @param resp Response variable (default \code{NULL}) specified as a string 
-#' character required during the post-processing of multivariate and 
-#' univariate-by-subgroup model (see \code{bgmfit} function for details).
-#' @param envir The calling environment. Deafault set to \code{parent.frame()}.
-#' @param ... Additional arguments passed to the [brms::pp_check.brmsfit] 
-#' function. Please see \code{brms::pp_check.brmsfit} for details on 
-#' various options available.
+#' 
+#' @inherit plot_conditional_effects.bgmfit params
+#' 
+#' @param ... Additional arguments passed to the [brms::pp_check.brmsfit()] 
+#' function. Please see [brms::pp_check.brmsfit()] for details.
 #' 
 #' @inherit brms::pp_check.brmsfit description 
 #' 
@@ -34,9 +30,9 @@
 #' 
 #' model <- berkeley_mfit
 #' 
-#' pp_check_bgm(model)
+#' plot_ppc(model)
 #' 
-pp_check_bgm.bgmfit <-
+plot_ppc.bgmfit <-
   function(model,
            resp = NULL,
            envir = globalenv(),
@@ -56,10 +52,10 @@ pp_check_bgm.bgmfit <-
   }
 
 
-#' @rdname pp_check_bgm.bgmfit
+#' @rdname plot_ppc.bgmfit
 #' @export
-pp_check_bgm <- function(model, ...) {
-  UseMethod("pp_check_bgm")
+plot_ppc <- function(model, ...) {
+  UseMethod("plot_ppc")
 }
 
 

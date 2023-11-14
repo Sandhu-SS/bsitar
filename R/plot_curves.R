@@ -1,27 +1,27 @@
 
 
 
-#'Plot \code{bgmfit} model
+#'Plot growth curves
 #'
-#'@description The \code{plot_bgm} provides visualization of six different types
-#'  of growth curves that are plotted by using the \code{ggplot2} package. The
-#'  \code{plot_bgm} also allows users to make their own detailed plots from the
-#'  data returned as a \code{data.frame}. 
+#'@description The \strong{plot_curves} provides visualization of six different
+#'  types of growth curves that are plotted by using the \code{ggplot2} package.
+#'  The \strong{plot_curves} also allows users to make their own detailed plots
+#'  from the data returned as a \code{data.frame}.
 #'
-#'@details The \code{plot_bgm} is a generic function that allows visualization
-#'  of following six curves: population average distance curve, population
-#'  average velocity curve, individual-specific distance curves,
+#'@details The \strong{plot_curves} is a generic function that allows
+#'  visualization of following six curves: population average distance curve,
+#'  population average velocity curve, individual-specific distance curves,
 #'  individual-specific velocity curves, unadjusted individual growth curves
 #'  (i.e, observed growth curves), and the adjusted individual growth curves
-#'  (adjusted for the model estimated random effects). The \code{plot_bgm}
-#'  internally calls the [bsitar::growthparameters()] function to estimate
-#'  and summaries the distance and velocity curves and to estimate growth
-#'  parameters such as the age at peak growth velocity (APGV). The
-#'  \code{plot_bgm} in turn calls the [brms::fitted.brmsfit] and
-#'  [brms::predict.brmsfit] functions to make inference from the posterior
-#'  draws. Thus, \code{plot_bgm} allows plotting fitted or predicted curves. See
-#'  [brms::fitted.brmsfit] and [brms::predict.brmsfit] for details on these
-#'  functions and the difference between fitted and predicted values.
+#'  (adjusted for the model estimated random effects). The \strong{plot_curves}
+#'  internally calls the [bsitar::growthparameters()] function to estimate and
+#'  summaries the distance and velocity curves and to estimate growth parameters
+#'  such as the age at peak growth velocity (APGV). The \strong{plot_curves} in
+#'  turn calls the [brms::fitted.brmsfit] and [brms::predict.brmsfit] functions
+#'  to make inference from the posterior draws. Thus, \strong{plot_curves}
+#'  allows plotting fitted or predicted curves. See [brms::fitted.brmsfit] and
+#'  [brms::predict.brmsfit] for details on these functions and the difference
+#'  between fitted and predicted values.
 #'
 #'@param model An object of class \code{bgmfit}.
 #'@param opt A character string containing letter(s) corresponding to the
@@ -45,8 +45,8 @@
 #'  vertical line denoting the APGV parameter. The \code{'dvp'} will include CI
 #'  bands for distance and velocity curves, and the APGV.
 #'@param conf A numeric value (default \code{0.95}) to be used to compute the CI
-#'  and hence the width of the \code{bands}. See
-#'  [bsitar::growthparameters()] for further details.
+#'  and hence the width of the \code{bands}. See [bsitar::growthparameters()]
+#'  for further details.
 #'
 #'@param trim A number (default 0) of long line segments to be excluded from
 #'  plot with option 'u' or 'a'. See [sitar::plot.sitar] for details.
@@ -171,7 +171,7 @@
 #'@return A plot object (default), or a \code{data.frame} when 
 #' \code{returndata = TRUE}.
 #' 
-#' @export plot_bgm.bgmfit
+#' @export plot_curves.bgmfit
 #' @export
 #' 
 #'@importFrom rlang .data
@@ -189,34 +189,34 @@
 #' model <- berkeley_mfit
 #' 
 #' # Population average distance and velocity curves with default options
-#' plot_bgm(model, opt = 'dv')
+#' plot_curves(model, opt = 'dv')
 #' 
 #' \donttest{
 #' # Individual-specific distance and velocity curves with default options
-#' plot_bgm(model, opt = 'DV')
+#' plot_curves(model, opt = 'DV')
 #' 
 #' # Population average distance and velocity curves with APGV
-#' plot_bgm(model, opt = 'dv', apv = TRUE)
+#' plot_curves(model, opt = 'dv', apv = TRUE)
 #' 
 #' # Individual-specific distance and velocity curves with APGV
-#' plot_bgm(model, opt = 'DV', apv = TRUE)
+#' plot_curves(model, opt = 'DV', apv = TRUE)
 #' 
 #' # Population average distance curve, velocity curve, and APGV with CI bands
 #' # To construct CI bands, growth parameters are first calculated for each  
 #' # posterior draw and then summarized across draws. Therefore,summary 
 #' # option must be set to FALSE
 #' 
-#' plot_bgm(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
+#' plot_curves(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
 #' 
 #' # Adjusted and unadjusted individual curves
 #' # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
 #' # This is because it does not a make sense to interploate data when
 #' # estimating adjusted curves.
 #' 
-#' plot_bgm(model, opt = 'au', ipts = NULL)
+#' plot_curves(model, opt = 'au', ipts = NULL)
 #' }
 #' 
-plot_bgm.bgmfit <- function(model,
+plot_curves.bgmfit <- function(model,
                                opt = 'dv',
                                apv = FALSE,
                                bands = NULL,
@@ -276,7 +276,7 @@ plot_bgm.bgmfit <- function(model,
                                ...) {
   
   if(system.file(package='ggplot2') == "") {
-    stop("Please install 'ggplot2' package before calling the 'plot_bgm'")
+    stop("Please install 'ggplot2' package before calling the 'plot_curves'")
   }
   
   if (is.null(ndraws))
@@ -355,9 +355,9 @@ plot_bgm.bgmfit <- function(model,
   
   get_xcall <- function(xcall, scall) {
     scall <- scall[[length(scall)]]
-    if(any(grepl("plot_bgm", scall, fixed = T)) |
-       any(grepl("plot_bgm.bgmfit", scall, fixed = T))) {
-      xcall <- "plot_bgm"
+    if(any(grepl("plot_curves", scall, fixed = T)) |
+       any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
+      xcall <- "plot_curves"
     } else if(any(grepl("growthparameters", scall, fixed = T)) |
               any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
       xcall <- "growthparameters"
@@ -857,7 +857,7 @@ plot_bgm.bgmfit <- function(model,
       }
       if (estimation_method == 'fitted') {
         extra$ey <-
-          fitted_bgm(
+          fitted_draws(
             model,
             resp = resp,
             newdata = extra,
@@ -867,7 +867,7 @@ plot_bgm.bgmfit <- function(model,
           )
       } else if (estimation_method == 'predict') {
         extra$ey <-
-          predict_bgm(
+          predict_draws(
             model,
             resp = resp,
             newdata = extra,
@@ -2622,10 +2622,10 @@ plot_bgm.bgmfit <- function(model,
   }
 }
 
-#' @rdname plot_bgm.bgmfit
+#' @rdname plot_curves.bgmfit
 #' @export
-plot_bgm <- function(model, ...) {
-  UseMethod("plot_bgm")
+plot_curves <- function(model, ...) {
+  UseMethod("plot_curves")
 }
 
 # apv takeoff trough acgv

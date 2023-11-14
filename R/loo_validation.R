@@ -1,27 +1,27 @@
 
 
-#' Leave-one-out (loo) cross-validation for \code{bgmfit} object
+#' Perform leave-one-out (loo) cross-validation
 #' 
-#' @details The \code{loo_bgm} function is a wrapper around 
-#' the [brms::loo] and works exactly the same way as 
-#' [brms::loo]. 
-#' 
-#' @inherit pp_check_bgm.bgmfit params
+#' @details The \strong{loo_validation} function is a wrapper around 
+#' the [brms::loo()] and works exactly the same way as [brms::loo()]. 
 #' 
 #' @inherit brms::loo description 
 #' 
 #' @inheritParams growthparameters.bgmfit
 #' 
+#' @inheritParams pp_check_bgm.bgmfit
+#' 
 #' @param deriv Must be \code{NULL}. 
 #' 
-#' @param ... Additional arguments passed to the [brms::loo] 
+#' @param ... Additional arguments passed to the [brms::loo()] 
 #' function. Please see \code{brms::loo} for details on 
 #' various options available.
 #' 
-#' @return If just one object is provided, an object of class \code{loo}. If 
-#' multiple objects are provided, an object of class \code{loolist}.
+#' @return If only one model object is provided, then an object of class
+#'   \code{loo} is returned. If multiple objects are provided, an object of
+#'   class \code{loolist}.
 #' 
-#' @export loo_bgm.bgmfit
+#' @export loo_validation.bgmfit
 #' @export
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
@@ -36,11 +36,11 @@
 #' model <- berkeley_mfit
 #' 
 #' \donttest{
-#' loo_bgm(model, cores = 1)
+#' loo_validation(model, cores = 1)
 #' }
 #' 
 #' 
-loo_bgm.bgmfit <-
+loo_validation.bgmfit <-
   function(model,
            resp = NULL,
            cores = 1,
@@ -61,9 +61,9 @@ loo_bgm.bgmfit <-
   }
 
 
-#' @rdname loo_bgm.bgmfit
+#' @rdname loo_validation.bgmfit
 #' @export
-loo_bgm <- function(model, ...) {
-  UseMethod("loo_bgm")
+loo_validation <- function(model, ...) {
+  UseMethod("loo_validation")
 }
 

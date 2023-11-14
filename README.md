@@ -25,15 +25,14 @@ devtools::install_github("Sandhu-SS/bsitar")
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+This is a basic example which shows you how to fit the model:
 
 ``` r
 library(bsitar)
-## basic example code
+library(magrittr)
 ```
 
 ``` r
-library(magrittr)
 data(heights, package = "sitar")
 data <- heights
 rm(heights)

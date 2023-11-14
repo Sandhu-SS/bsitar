@@ -1,12 +1,12 @@
 
 
 
-#' Update a model of class \code{bgmfit}.
+#' Update model
 #'
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @details This is an adapted version of the \code{update} function from the 
-#' \code{brms} package.
+#' @details This is an adapted version of the \strong{update} function from the 
+#' \pkg{brms} package.
 #'
 #' @param newdata An optional \code{data.frame} to be used when updating the
 #'   model. If \code{NULL} (default), the same data used in the original model
@@ -14,7 +14,7 @@
 #'   updated automatically.
 #'
 #' @param recompile A logical to indicate whether the Stan model should be
-#'   recompiled. When \code{NULL} (the default), \code{bsitar::update_bgm()} 
+#'   recompiled. When \code{NULL} (the default), \code{bsitar::update_model()} 
 #'   tries to figure out internally, if recompilation is necessary. Setting it 
 #'   to \code{FALSE} will cause all Stan code changing arguments to be ignored.
 #'
@@ -23,7 +23,7 @@
 #' @return An updated model of class \code{brmsfit}, that contains the
 #'   posterior draws and other useful information about the model.
 #'   
-#' @export update_bgm.bgmfit
+#' @export update_model.bgmfit
 #' @export
 #'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
@@ -40,10 +40,10 @@
 #' 
 #' # To save time, below example is fit with sample_prior = 'only'
 #' 
-#' model2 <- update_bgm(model, df = 5, iter = 100, sample_prior = 'only')
+#' model2 <- update_model(model, df = 5, iter = 100, sample_prior = 'only')
 #' }
 #'
-update_bgm.bgmfit <-
+update_model.bgmfit <-
   function(model,
            newdata = NULL,
            recompile = NULL,
@@ -423,8 +423,10 @@ update_bgm.bgmfit <-
     model
   }
 
-#' @rdname update_bgm.bgmfit
+
+
+#' @rdname update_model.bgmfit
 #' @export
-update_bgm <- function(model, ...) {
-  UseMethod("update_bgm")
+update_model <- function(model, ...) {
+  UseMethod("update_model")
 }
