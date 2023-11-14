@@ -26,7 +26,7 @@ Imports:
     brms (>= 2.17.0),    
     rstan (>= 2.26.0),   
     dplyr (>= 1.1.3),  
-    rlang,
+    rlang (>= 1.1.2),
     sitar, 
     magrittr,
     loo,
