@@ -25,4 +25,6 @@
 ^revdep$
 ^dev$
 ^data-raw$
-^heights_fit.rda$
+^berkeley.rda$
+^berkeley_mdata.rda$
+^berkeley_mfit.rda$

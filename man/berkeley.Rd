@@ -32,9 +32,9 @@ growth data for 136 children from birth to 21 years.
 \details{
 The data were provided as an appendix to the book by
 \insertCite{Tuddenham1954;textual}{bsitar} and later used in the
-\pkg{sitar} \insertCite{R-sitar}{bsitar} after correcting the transcription
-errors. The data included in the \pkg{bsitar} package is the same as
-\strong{berkeley} data used in the \pkg{sitar} package.
+\pkg{sitar} \insertCite{R-sitar}{bsitar} package after correcting the
+transcription errors. The data included in the \pkg{bsitar} package is the
+same as \strong{berkeley} data used in the \pkg{sitar} package.
 
 A detailed description of the data including the frequency of measurements
 per year is provided in the the \pkg{sitar} package.

@@ -4,11 +4,16 @@
 #'
 #' @inheritParams  growthparameters.bgmfit 
 #' 
-#' @param idata_method A character string to indicate interpolation 
-#' method. Options available are \code{m1} (default) and
-#' \code{m2}. The \code{'m1'} calls the \code{idatafunction} function 
-#' whereas \code{'m2'} calls the \code{get_idata} function for data 
-#' interpolation. 
+#' @param idata_method A character string to indicate the interpolation method.
+#'   Options are \emph{method 1} (specified as  \code{'m1'}, default) and
+#'   \emph{method 2} (specified as \code{'m2'}). The \code{'m1'} calls an
+#'   internal function \code{idatafunction} whereas \code{'m2'} calls the
+#'   \code{get_idata} function for data interpolation. The \emph{method 1}
+#'   (\code{'m1'}) is adapted from the the \pkg{iapvbs} and is documented here
+#'   <https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R>. The
+#'   \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes} and is
+#'   documented here
+#'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
 #' 
 #' @keywords internal
 #' 
@@ -35,9 +40,7 @@ get.newdata <- function(model,
     resp_rev_ <- paste0("_", resp)
   }
   
-  ##############################################
   # Initiate non formalArgs()
-  ##############################################
   `:=` <- NULL
   . <- NULL;
   
@@ -74,15 +77,14 @@ get.newdata <- function(model,
   
   
   if (is.null(newdata)) {
-    # newdata <- eval.parent(model$model_info$call.bgm$data)
     newdata <- model$model_info$bgm.data
   } else {
     newdata <- newdata
   }
   
   
-  # this is when no random effects and this groupvar is NULL
-  # therefore, an artificial group var created
+  # This is when no random effects and this groupvar is NULL
+  # Therefore, an artificial group var created
   # see also changes made to the get_idata function lines 17
   
   if (is.null(model$model_info$groupvar)) {
@@ -92,11 +94,6 @@ get.newdata <- function(model,
   }
   
   
-  
-  if (!is.null(yfun)) {
-    # if(yfun == 'log') newdata[[yvar]] <- log(newdata[[yvar]])
-    # if(yfun == 'sqrt') newdata[[yvar]] <- sqrt(newdata[[yvar]] )
-  }
   
   
   if (!is.na(model$model_info$univariate_by)) {
@@ -114,7 +111,7 @@ get.newdata <- function(model,
   if (is.na(model$model_info$univariate_by)) {
     setorgy <- model$model_info$ys
   }
-  # print(head(newdata))
+ 
   newdata <- prepare_data(
     data = newdata,
     x = model$model_info$xs,
@@ -127,8 +124,7 @@ get.newdata <- function(model,
     outliers = model$model_info$outliers
   )
   
-  # This needed for the univariate_by in gparameters e.g., sexFemale sexMale
-  # 2.5.23
+ 
   newdata <- newdata[,!duplicated(colnames(newdata))]
   
   if (!is.na(model$model_info$univariate_by)) {
@@ -199,18 +195,12 @@ get.newdata <- function(model,
   cov_factor_vars <- c(cov_factor_vars, cov_sigma_factor_vars)
   cov_numeric_vars <- c(cov_numeric_vars, cov_sigma_numeric_vars)
   
-  
-  # groupby_fstr <- c(groupby_fstr, groupby_fstr)
-  # groupby_fistr <- c(groupby_fstr, groupby_fstr)
-  
-  
   if (!is.na(model$model_info$univariate_by)) {
     groupby_fstr <- c(uvarby, groupby_fstr)
     groupby_fistr <- c(uvarby, groupby_fistr)
   }
   
-  #########
-  
+
   
   set_numeric_cov_at <- function(x, numeric_cov_at) {
     name_ <- deparse(substitute(x))
@@ -233,8 +223,7 @@ get.newdata <- function(model,
   }
   
   
-  #########
-  
+
   get.data.grid <- function(data,
                             xvar,
                             yvar,
@@ -250,12 +239,7 @@ get.newdata <- function(model,
     if (!is.na(uvarby))
       relocate_vars <- c(relocate_vars, uvarby)
     if (!is.null(cov_numeric_vars)) {
-      # This cov_numeric_vars__ excludes sigma covariates
-      # cov_numeric_vars__ <-
-      # cov_numeric_vars[!grepl(paste(xvar, collapse = "|"), cov_numeric_vars)]
-      
       cov_numeric_vars__ <- cov_numeric_vars
-      
       if (identical(cov_numeric_vars__, character(0)))
         cov_numeric_vars__ <- NULL
       if (!is.null(cov_numeric_vars__)) {
@@ -287,7 +271,6 @@ get.newdata <- function(model,
         
         # This is good but get.data.grid is called twice - why?
         # hence this cat("\n"... is printed twice
-        
         # cat("Continous covariate(s) set at:\n")
         # for (cov_numeric_vars__i in cov_numeric_vars__) {
         #   cat("\n", cov_numeric_vars__i, "at",
@@ -344,7 +327,7 @@ get.newdata <- function(model,
       
       
       
-      # this is old type idatafunction i.e., m1
+      # this idatafunction i.e., 'm1'
       if (idata_method == 'm1') {
         idatafunction <- function(.x,
                                   xvar,
@@ -434,7 +417,7 @@ get.newdata <- function(model,
                                               by = c(IDvar, 'idxx')) %>%
               dplyr::select(-idxx) %>% data.frame()
           }
-          out # %>% print() %>% stop()
+          out 
         } # end idatafunction -> m1
         
         
@@ -578,7 +561,7 @@ get.newdata <- function(model,
       } # end of if(idata_method == 'm1') {
       
       
-      # this is new type get_idata i.e., m2
+      # this is get_idata i.e., 'm2'
       if (idata_method == 'm2') {
         if (!is.null(ipts)) {
           # for 3 or more level data, idvar shoud be first of vector
@@ -587,7 +570,6 @@ get.newdata <- function(model,
           } else if (!is.null(model$model_info[[hierarchical_]])) {
             IDvar_for_idata <- IDvar[1]
           }
-          # not using set_xrange which is range of x i.e. c(,) but xrange 1 2
           newdata <-
             get_idata(
               newdata = newdata,
@@ -608,8 +590,7 @@ get.newdata <- function(model,
       
       if (!is.null(ipts)) {
         # outliers must be NULL
-        # because these has already been taken care of by get.newdata
-        
+        # Because these has already been taken care of by get.newdata
         if (!is.na(model$model_info$univariate_by)) {
           if (is.symbol(model$model_info$call.bgm$y)) {
             setorgy <- deparse(model$model_info$call.bgm$y)
@@ -670,16 +651,17 @@ get.newdata <- function(model,
         uvarby = uvarby
       )
       
-      # j_b_names <- names(newdata)
+      
       j_b_names <- intersect(names(newdata), names(newdata.oo))
       j_b_names__ <- c(j_b_names, cov_numeric_vars)
       j_b_names__ <- unique(j_b_names__)
       
       newdata <-
-        newdata %>% dplyr::left_join(., newdata.oo %>%
-                                       dplyr::select(dplyr::all_of(j_b_names__)),
-                                     by = j_b_names)
-      
+        newdata %>% 
+        dplyr::left_join(., 
+                         newdata.oo %>%
+                           dplyr::select(dplyr::all_of(j_b_names__)),
+                         by = j_b_names)
       newdata
     }
   
@@ -696,7 +678,7 @@ get.newdata <- function(model,
     xrange = xrange
   )
   
-  #########
+ 
   list_c[['xvar']] <- xvar
   list_c[['yvar']] <- yvar
   list_c[['IDvar']] <- IDvar
@@ -814,9 +796,9 @@ get_idata <-
         seq(min(times_orig), max(times_orig), length.out = length.out)
     }
     
-    # this is when no random effects and groupvar is NULL
-    # therefore, an artificial group var created
-    # check utils-helper function lines 60
+    # This is when no random effects and groupvar is NULL
+    # Therefore, an artificial group var created
+    # Check utils-helper function lines 60
     
     if (nlevels(newdata[[idVar]]) == 1) {
       newdata <- newdata %>%
@@ -901,7 +883,7 @@ edit_scode_for_logistic3 <- function(stancode,
   setorder_v <- c(3, 1, 2)
   setorder_t <- c(1, 2, 3)
   
-  # Seems both set_positive_ordered and  constraint should be TRUE
+  # Seems both set_positive_ordered and constraint should be TRUE
   
   true_name_p      <- 'parameters'
   true_name_tp     <- 'transformed parameters'
@@ -1016,8 +998,7 @@ edit_scode_for_logistic3 <- function(stancode,
     }
   } 
   
-  # b_what_by_pairx <<- b_what_by_pair
-  
+
   
   b_what_it_c <- b_what_by_c <- c()
   for (igr in 1:nrow(b_what_by_pair)) {
@@ -1043,8 +1024,7 @@ edit_scode_for_logistic3 <- function(stancode,
     }
   }
   
-  # b_what_it_cx <<- b_what_it_c
-  # b_what_by_cx <<- b_what_by_c
+  
   
   set_b_a <- paste0("b_a = to_vector(raw_dx[", ",", setorder_d[1], "]);")
   set_b_d <- paste0("b_d = to_vector(raw_dx[", ",", setorder_d[2], "]);")
@@ -1085,8 +1065,7 @@ edit_scode_for_logistic3 <- function(stancode,
    array[Kedit] vector[Cedit] raw_tx;"
   }
   
-  # print(set_positive_ordered)
-  # print(move_to_tp_add_ordered_positive_ordered)
+  
   
   if(constraint) {
     move_to_tp_add_constraint <- 
@@ -1189,7 +1168,6 @@ edit_scode_for_logistic3 <- function(stancode,
   editedcode2 <- paste(zz_c, collapse = '\n')
   
   # https://github.com/stan-dev/math/issues/2959
-  
   fcode <- 
     "vector ordered_lb_ub_lp (vector y, real lb, real ub) {
     int N = rows(y);
@@ -2065,11 +2043,6 @@ set_default_priors <- function(select_model,
     }
   }
   
-  
-  
-  
-  # print(parameter)
-  # print(prior_out)
   return(prior_out)
 }
 
@@ -2890,41 +2863,7 @@ expose_functions_bgm <- function(model,
                                  scode = NULL, 
                                  expose = FALSE, 
                                  select_model = NULL) {
-  # expose_it_ <- function(x, scode) {
-  #   if (is.null(scode)) {
-  #     exposecode <- brms::stancode(x)
-  #   } else if (!is.null(scode)) {
-  #     exposecode <- scode
-  #   }
-  #    rstan::expose_stan_functions(rstan::stanc(model_code = exposecode))
-  #   # brms::expose_functions(model, vectorize = FALSE)
-  # }
-  
-  
-  
-  # allowed_model_names <- c('sitar', 'pb1', 'pb2', 'pb3')
-  # allowed_model_names <- paste(allowed_model_names, collapse = ", " )
-  # allowed_model_names <- paste0("(", allowed_model_names, ")")
-  # 
-  # if(!expose & is.null(select_model)) 
-  #   stop('Specify atleast one of the following two arguments:',
-  #        "\n ",
-  #        ' expose  - a logical argument (TRUE/FALSE)',
-  #        "\n ",
-  #        ' select_model - a string specifying one of the models ', 
-  #        allowed_model_names
-  #        )
-  # 
-  # if( expose & !is.null(select_model)) 
-  #   stop('Specify only one of the following two arguments:',
-  #        "\n ",
-  #        ' expose  - a logical argument (TRUE/FALSE)',
-  #        "\n ",
-  #        ' select_model - a string specifying one of the models ', 
-  #        allowed_model_names
-  #        )
-  
-  
+
   if(!expose) {
     if (is.null(model$model_info$decomp))  expose_r_from_stan <- TRUE
     if (!is.null(model$model_info$decomp)) expose_r_from_stan <- FALSE
@@ -2944,9 +2883,6 @@ expose_functions_bgm <- function(model,
   }
   
   
-  # expose_it_(model, scode = scode)
-  
-  
   if(expose_r_from_stan) {
     for (funi in 1:length(model$model_info$funlist_r)) {
       assign(gsub("<-.*$", "", model$model_info$funlist_r[funi]),
@@ -2955,7 +2891,6 @@ expose_functions_bgm <- function(model,
   }
   
   
-  # SplineFun_name <- model$model_info$SplineFun
   SplineFun_name <- model$model_info[['StanFun_name']]
   spfun_collect <- c(SplineFun_name,
                      paste0(SplineFun_name, "_", 

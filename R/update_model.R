@@ -3,10 +3,13 @@
 
 #' Update model
 #'
-#' @param model An object of class \code{bgmfit}.
+#' @description The \strong{update_model} function updates the \code{bgmfit}
+#'   model based on the new arguments specified by the user.
 #' 
 #' @details This is an adapted version of the \strong{update} function from the 
 #' \pkg{brms} package.
+#' 
+#' @param model An object of class \code{bgmfit}.
 #'
 #' @param newdata An optional \code{data.frame} to be used when updating the
 #'   model. If \code{NULL} (default), the same data used in the original model
@@ -31,16 +34,20 @@
 #' @examples
 #' 
 #' \donttest{
+#' 
 #' # Fit Bayesian SITAR model 
-#' # To avoid running the model which takes some time, model fit to the
-#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-#' # Please see \code{bgm} examples.
+#' 
+#' # To avoid fitting the model which takes time, the model  
+#' # fit has already been saved as 'berkeley_mfit.rda' file.
+#' # See examples section of the bgm function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 
-#' # To save time, below example is fit with sample_prior = 'only'
+#' # Update model for degree of freedom. For illustration purpose and to save 
+#' # time, the below example is run with sample_prior only. 
 #' 
-#' model2 <- update_model(model, df = 5, iter = 100, sample_prior = 'only')
+#' model2 <- update_model(model, df = 4, sample_prior = 'only')
+#' 
 #' }
 #'
 update_model.bgmfit <-
@@ -169,7 +176,6 @@ update_model.bgmfit <-
     model$file <- NULL
     
     if ("data" %in% names(dots)) {
-      # otherwise the data name cannot be found by substitute
       stop2("Please use argument 'newdata' to update the data.")
     }
     if (!is.null(newdata)) {
@@ -189,7 +195,6 @@ update_model.bgmfit <-
         dots$formula <- bf(dots$formula, autocor = dots$autocor)
       }
     } else {
-      # TODO: restructure updating of the formula
       if (is.mvbrmsformula(formula.) ||
           is.mvbrmsformula(model$formula)) {
         stop2("Updating formulas of multivariate models is not yet possible.")
@@ -208,15 +213,7 @@ update_model.bgmfit <-
            autocor = autocor,
            nl = nl)
       if (is_nonlinear(model)) {
-        # if (length(setdiff(all.vars(dots$formula$formula), ".")) == 0L) {
-        #   dots$formula <- update(model$formula, dots$formula, mode = "keep")
-        # } else {
-        #   dots$formula <- update(model$formula,dots$formula, mode = "replace")
-        #   if (silent < 2) {
-        #     message("Argument 'formula.' will completely replace the ",
-        #             "original formula in non-linear models.")
-        #   }
-        # }
+        
       } else {
         mvars <- all.vars(dots$formula$formula)
         mvars <- setdiff(mvars, c(names(model$data), "."))
@@ -230,7 +227,6 @@ update_model.bgmfit <-
         dots$formula <- update(formula(model), dots$formula)
       }
     }
-    # update response categories and ordinal thresholds
     dots$formula <- validate_formula(dots$formula, data = dots$data)
     
     if (is.null(dots$prior)) {
@@ -239,16 +235,8 @@ update_model.bgmfit <-
       if (!is.brmsprior(dots$prior)) {
         stop2("Argument 'prior' needs to be a 'brmsprior' model.")
       }
-      # update existing priors manually and keep only user-specified ones
-      # default priors are recomputed base on newdata if provided
-      
-      
-      # old_user_prior <- subset2(model$prior, source = "user")
-      # dots$prior <- rbind(dots$prior, old_user_prior)
-      # dupl_priors <- duplicated(dots$prior[, rcols_prior()])
-      # dots$prior <- dots$prior[!dupl_priors, ]
+     
     }
-    # make sure potentially updated priors pass 'validate_prior'
     attr(dots$prior, "allow_invalid_prior") <- TRUE
     if (!"sample_prior" %in% names(dots)) {
       dots$sample_prior <- attr(model$prior, "sample_prior")
@@ -260,7 +248,6 @@ update_model.bgmfit <-
           "no"
       }
     }
-    # do not use 'is.null' to allow updating arguments to NULL
     if (!"data2" %in% names(dots)) {
       dots$data2 <- model$data2
     }
@@ -289,9 +276,7 @@ update_model.bgmfit <-
       dots$normalize <- is_normalized(model$model)
     }
     
-    # update arguments controlling the sampling process
     if (is.null(dots$iter)) {
-      # only keep old 'warmup' if also keeping old 'iter'
       dots$warmup <- first_not_null(dots$warmup, model$fit@sim$warmup)
     }
     dots$iter <- first_not_null(dots$iter, model$fit@sim$iter)
@@ -300,11 +285,9 @@ update_model.bgmfit <-
     dots$backend <- match.arg(dots$backend, backend_choices())
     same_backend <- is_equal(dots$backend, model$backend)
     if (same_backend) {
-      # reusing control arguments in other backends may cause errors #1259
       control <- attr(model$fit@sim$samples[[1]], "args")$control
       control <- control[setdiff(names(control), names(dots$control))]
       dots$control[names(control)] <- control
-      # reuse backend arguments originally passed to brm #1373
       names_old_stan_args <-
         setdiff(names(model$stan_args), names(dots))
       dots[names_old_stan_args] <-
@@ -312,10 +295,6 @@ update_model.bgmfit <-
     }
     
     if (is.null(recompile)) {
-      # only recompile if new and old stan code do not match
-      
-      # new_stancode <- suppressMessages(do_call(make_stancode, dots))
-      
       dots_for_scode              <- dots
       dots_for_scode$prior        <- NULL
       dots_for_scode$stanvars     <- NULL
@@ -328,7 +307,6 @@ update_model.bgmfit <-
         suppressMessages(do.call(bgm, dots_for_scode))
       
       
-      # stan code may differ just because of the version number (#288)
       new_stancode <- sub("^[^\n]+\n", "", new_stancode)
       old_stancode <- brms::stancode(model, version = FALSE)
       recompile <- needs_recompilation(model) || !same_backend ||
@@ -339,7 +317,6 @@ update_model.bgmfit <-
     }
     recompile <- as_one_logical(recompile)
     if (recompile) {
-      # recompliation is necessary
       dots$fit <- NA
       if (!testmode) {
         dots_for_recompile          <- dots
@@ -352,7 +329,6 @@ update_model.bgmfit <-
         model <- do.call(bgm, dots_for_recompile)
       }
     } else {
-      # refit without compiling it again
       if (!is.null(dots$formula)) {
         model$formula <- dots$formula
         dots$formula <- NULL
@@ -406,16 +382,7 @@ update_model.bgmfit <-
           model <- do.call(bgm, dots_for_norecompile)
         } # if(!new_init_arg) {
         if (new_init_arg) {
-          # set_brms_args            <- dots
-          # set_brms_args$prior      <- model$prior
-          # set_brms_args$stanvars   <- model$stanvars
-          # set_brms_args$formula    <- model$formula
-          # # set_brms_args$model <- NULL
-          # # set_brms_args$newdata <- NULL
-          # set_brms_args$data <- newdata
-          # set_brms_args$init <- random
-          # set_brms_args          <- c(set_brms_args)
-          # model <- do.call(brm, set_brms_args)
+          # TODO
         } # if(new_init_arg) {
       } # if (!testmode) {
     }

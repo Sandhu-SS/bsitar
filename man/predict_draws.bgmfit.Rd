@@ -122,63 +122,61 @@ entire sample. Lastly, a paired numeric values can be supplied e.g.,
 \item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
 to get growth parameters on the fly.}
 
-\item{parms_method}{A character to specify the method used to when
-evaluating \code{parms_eval}. The default is \code{getPeak} which uses
-the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The
-alternative option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}}
-function function from the \code{pracma} package.}
+\item{parms_method}{A character to specify the method used to when evaluating
+\code{parms_eval}. The default is \code{getPeak} which uses the
+\code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The alternative
+option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}} function
+function from the \code{pracma} package. Note that the argument
+\code{parms_method} is currently ignored.}
 
-\item{idata_method}{A character string to indicate interpolation method.
-Options available are \code{m1} (default) and \code{m2}. The \code{'m1'}
-calls the \code{idatafunction} function whereas \code{'m2'} calls the
-\code{get_idata} function for data interpolation. The \code{idatafunction}
-function is adapted from the the \pkg{iapvbs} which is documented here
-\url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R} The
-\code{get_idata} function is adapted from the the \pkg{JMbayes} and is
-documented here
-\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}}
+\item{idata_method}{A character string to indicate the interpolation method.
+Options are \emph{method 1} (specified as  \code{'m1'}, default) and
+\emph{method 2} (specified as \code{'m2'}). The \emph{method 1}
+(\code{'m1'}) is adapted from the the \pkg{iapvbs} package and is
+documented here \url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}.
+The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
+package and is documented here
+\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
 
 \item{envir}{Environment of function evaluation. The default is
 \code{globalenv}.}
 
-\item{...}{Additional arguments passed to the \link[brms:predict.brmsfit]{brms::predict.brmsfit}
-function. Please see \code{brms::predict.brmsfit} for details on
-various options available.}
+\item{...}{Additional arguments passed to the \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}
+function. Please see \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details on various
+options available.}
 }
 \value{
-An array of predicted response values. See \link[brms:predict.brmsfit]{brms::predict.brmsfit}
+An array of predicted response values. See \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}
 for details.
 }
 \description{
-This method is an alias of \code{\link[brms]{posterior_predict.brmsfit}}
-with additional arguments for obtaining summaries of the computed draws.
+The \strong{predict_draws} function is a wrapper around the
+\code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function to obtain predicted values (and their
+summary) from the posterior distribution. See \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for
+details.
 }
 \details{
-The \strong{predict_draws} function is a wrapper around
-the \link[brms:predict.brmsfit]{brms::predict.brmsfit}. The \link[brms:predict.brmsfit]{brms::predict.brmsfit}
-function from the \code{brms} package can used to plot the predict (distance)
-curve for an \emph{bsitar} model when outcome (e.g., height) is untransformed.
-However, when the outcome is log or square root transformed, the
-\link[brms:predict.brmsfit]{brms::predict.brmsfit} will return the predict curve on the log or
-square root scale whereas the \strong{predict_draws} will
-return the predict curve on the original scale. Furthermore, the
-\strong{predict_draws} also displays the velocity curve on the original scale
-after making required back-transformation. Apart from these differences,
-both these functions (\link[brms:predict.brmsfit]{brms::predict.brmsfit} and
-\strong{predict_draws} work in the same manner. In other words,
-user can specify all the arguments which are available in the
-\link[brms:predict.brmsfit]{brms::predict.brmsfit}.
+The \strong{fitted_draws} function computed the fitted values from
+the posterior distribution. The \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function
+from the \pkg{brms} package can used to get the predicted (distance) values
+when outcome (e.g., height) is untransformed. However, when the outcome is
+log or square root transformed, the \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function will
+return the fitted curve on the log or square root scale whereas the
+\strong{predict_draws} function returns the fitted values on the original
+scale. Furthermore, the \strong{predict_draws} also compute the first
+derivative of (velocity) that too on the original scale after making
+required back-transformation. Except for these differences, both these
+functions (i.e., \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} and \code{\link[=predict_draws]{predict_draws()}}) work in
+the same manner. In other words, user can specify all the options available
+in the \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}.
 }
 \examples{
 
-# The examples below show the use of *predict_draws* to estimate  
-# population average and individual-specific distance and velocity 
-# curves for the the predict model.
-
 # Fit Bayesian SITAR model 
-# To avoid running the model which takes some time, model fit to the
-# \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-# Please see \code{bgm} examples.
+
+# To avoid fitting the model which takes time, the model  
+# fit has already been saved as 'berkeley_mfit.rda' file.
+# See examples section of the bgm function for details on the model fit.
 
 model <- berkeley_mfit
 
@@ -196,6 +194,9 @@ predict_draws(model, deriv = 1, re_formula = NA)
 predict_draws(model, deriv = 1, re_formula = NULL)
  }
 
+}
+\seealso{
+\code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

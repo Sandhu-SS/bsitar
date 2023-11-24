@@ -4,21 +4,23 @@ Title: Bayesian Super Imposition by Translation and Rotation Growth Curve
     Analysis
 Version: 0.1.0
 Authors@R: 
-    person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", role = c("aut", "cre", "cph"),
+    person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", 
+           role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-8539-6897"))
-Description: Bayesian implementation of Super Imposition by Translation and 
-    Rotation (SITAR) model to analyze growth data with single outcome (e.g., height)  
-    and joint modelling of multiple outcomes (multivariate model) such as height 
-    and weight. The non Bayesian version of the SITAR model (for a single response  
-    variable)  can be fit by using the already available R package 'sitar'.
-    The SITAR is a shape-invariant nonlinear mixed effect model that fits
-    a natural cubic spline mean curve and and aligns individual-specific
-    growth curves to the mean curve via a set of random effects on both
-    effects. For more information, see Cole (2010) <doi:10.1093/ije/dyq115>. 
-    The 'bsitar' package is a front-end to  the R package 'brms' which 
-    facilitates a range of regression specifications including hierarchical 
-    multivariate modeling and also provides an excellent framework for 
-    post-processing.
+Maintainer: Satpal Sandhu <satpal.sandhu@bristol.ac.uk>
+Description: Bayesian implementation of Super Imposition by Translation  
+    and Rotation (SITAR) model to analyze growth data with single outcome  
+    (e.g., height)  and joint modelling of multiple outcomes (multivariate 
+    model) such as height  and weight. The non Bayesian version of the 
+    SITAR model (for a single response variable) can be fit by using an 
+    already available R package 'sitar'. The SITAR is a shape-invariant 
+    nonlinear mixed effect model that fits a natural cubic spline mean 
+    curve and and aligns individual-specific growth curves to the mean 
+    curve via a set of random effects on both effects. For more information, 
+    please see Cole (2010)  <doi:10.1093/ije/dyq115>. The 'bsitar' package   
+    is a front-end to  the R package 'brms' which facilitates a range of  
+    regression specifications including hierarchical multivariate modeling and 
+    also provides an excellent framework for post-processing.
 License: GPL-2
 Depends:     
     R (>= 3.6)
@@ -31,6 +33,7 @@ Imports:
     magrittr,
     loo,
     methods,
+    utils,
     Rdpack (>= 2.5)
 Suggests: 
     bookdown,
@@ -56,7 +59,6 @@ Suggests:
     purrr,    
     stats,
     tidyr,
-    utils,
     extraDistr,
 Additional_repositories:
 VignetteBuilder:
@@ -67,8 +69,10 @@ RdMacros:
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
+LazyLoad: yes
+LazyDataCompression:xz
 NeedsCompilation: no
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Language: en-US
-LazyDataCompression: xz
+

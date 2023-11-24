@@ -73,12 +73,6 @@ prepare_data <- function(data,
           "\n",
           "  then outcome variable should be part of the newdata specified.",
           "\n",
-          # "  As the outcome variable is not used in predictions, it is ok ",
-          # "\n",
-          # "  to just add a dummy varibale. For example, ",
-          # y[yi],
-          # " = 1",
-          # "\n",
           "  please check the missing outcome varibale: ",
           y[yi]
         )
@@ -89,12 +83,6 @@ prepare_data <- function(data,
           " \n ",
           "  then predictor variable should be part of the newdata specified.",
           "\n",
-          # "  As the predictor variable is not used in predictions, it is ok ",
-          # "\n",
-          # "  to just add a dummy varibale. For example, ",
-          # x[yi],
-          # " = 1",
-          # "\n",
           "  please check the missing predictor varibale: ",
           x[yi]
         )
@@ -252,9 +240,7 @@ prepare_formula <- function(x,
                             internal_formula_args) {
   
   
-  ##############################################
   # Initiate non formalArgs()
-  ##############################################
   randomsi <- NULL;
   sigma_formula_gr_strsi <- NULL;
   fixedsi <- NULL;
@@ -347,6 +333,8 @@ prepare_formula <- function(x,
   sigmacovcoefnames_gr_str_id <- NULL;
   sigmacovcoefnames_gr_str_form <- NULL;
   brms_arguments <- NULL;
+  
+  d_adjustedsi <- NULL;
   
   
   
@@ -711,14 +699,7 @@ prepare_formula <- function(x,
     abcsformfit   <- paste0(y, "|", terms_rhssi, " ~ ", abcselements)
   }
   
-  
-  
-  # if (!(is.na(univariate_by$by) |
-  #       univariate_by$by == "NA") &
-  #     !is.null(subindicatorsi)) {
-  #   abcsformfit <- (paste0(y,  "| subset(", subindicatorsi, ")",
-  #                          " ~ ", abcselements))
-  # }
+ 
   
   
   if (!(is.na(univariate_by$by) |
@@ -1990,8 +1971,6 @@ prepare_formula <- function(x,
   
   
   if(set_higher_levels) {
-    # aform <- gsub("[[:space:]]", "", aform)
-    
     if(a_formula_gr_strsi_present) {
       aform <- add_higher_level_str(aform, a_formula_gr_strsi)
       aform <- restore_paranthese_grgr_str_form(aform)
@@ -2093,7 +2072,9 @@ prepare_formula <- function(x,
       sgr_varss <- sform_gr_names <- sform_gr_names_asitis <- NULL
     }
     
-    gr_varss <- c(agr_varss, bgr_varss, cgr_varss, dgr_varss, egr_varss, fgr_varss)
+    gr_varss <- c(agr_varss, bgr_varss, cgr_varss, dgr_varss, 
+                  egr_varss, fgr_varss)
+    
     gr_varss <- unique(gr_varss)
     
     hierarchical_gr_names <- c(aform_gr_names, bform_gr_names, 
@@ -2183,14 +2164,9 @@ prepare_formula <- function(x,
   if (!is.null(dpar_formulasi)) {
     if (!grepl("lf\\(", dpar_formulasi) |
         !grepl("nlf\\(", dpar_formulasi)) {
-      # dpar_covi_mat_form <- dpar_formulasi
-      # dpar_covi_mat_form <- gsub("\\(|)", "",
-      #                            strsplit(dpar_formulasi, "~")[[1]][2])
       dpar_covi_mat_form <- get_o_paranthesis(dpar_formulasi)
       dpar_covi_mat_form <- paste0("~", dpar_covi_mat_form)
     } else {
-      # dpar_covi_mat_form <- gsub("\\(|)", "",
-      #                            strsplit(dpar_formulasi, "~")[[1]][2])
       dpar_covi_mat_form <- get_o_paranthesis2(dpar_formulasi)
       dpar_covi_mat_form <- paste0("~", dpar_covi_mat_form)
     }
@@ -2403,8 +2379,7 @@ prepare_formula <- function(x,
     }  
   }
   
-  # new add on 3 06 2023
-  
+  # New add on 3 06 2023
   if(!sigma_set_higher_levels & !identical(sigma_gr_varss, gr_varss)) {
     sigma_arg_groupvar <- sigma_group_arg$groupvar
   }
@@ -2420,27 +2395,18 @@ prepare_formula <- function(x,
       assign(paste0(set_nlpar_what, 'covcoefnames_gr'), NULL)
       assign(paste0(set_nlpar_what, 'ncov'), NULL)
       assign(paste0(set_nlpar_what, 'ncov_gr'), NULL)
-      # } else if(exists(paste0(set_randomsi_higher_levsli, 'form'))) {
     } else if(is.null(ept(paste0(set_randomsi_higher_levsli, 'form')))) {
       assign(paste0(set_nlpar_what, 'covcoefnames'), NULL)
       assign(paste0(set_nlpar_what, 'covcoefnames_gr'), NULL)
       assign(paste0(set_nlpar_what, 'ncov'), NULL)
       assign(paste0(set_nlpar_what, 'ncov_gr'), NULL)
-    } # if(is.null(ept(paste0('f', 'form')))) {
-    # }
-  } # for (set_randomsi_higher_levsli in c(letters[1:26])) {
-  
-  
-  
-  
-  
-  
+    } 
+  } 
   
   
   
   
   # fit lm model
-  
   a_covariate <- getcovlist(a_formulasi)
   b_covariate <- getcovlist(b_formulasi)
   c_covariate <- getcovlist(c_formulasi)
@@ -2819,29 +2785,6 @@ prepare_formula <- function(x,
   
   
   if(select_model != 'sitar' & select_model != "rcs") {
-    # a_covariate_i <- c()
-    # if (grepl("\\*", a_formulasi)) {
-    #   for (a_covariatei in a_covariate) {
-    #     if (grepl("\\*", a_covariatei)) {
-    #       t <- strsplit(a_covariatei, "\\*")[[1]]
-    #       t <- c(paste0(t, collapse = "+"), paste0(t, collapse = ":"))
-    #     } else {
-    #       t <- a_covariatei
-    #     }
-    #     a_covariate_i <- c(a_covariate_i, t)
-    #   }
-    # } else {
-    #   a_covariate_i <- a_covariate
-    # }
-    # a_covariate <- a_covariate_i
-    # 
-    # 
-    # 
-    # if(!is.null(ept('b_formulasi'))) {
-    #   if (grepl("^~1$", b_formulasi))
-    #     b_covariate <- NULL
-    # }
-    
     lm_data_at_max_x <- data
     
     if (grepl("~0", a_formulasi, fixed = T)) {
@@ -3057,11 +3000,6 @@ prepare_formula <- function(x,
     assign(paste0('lm_', 'sdx', '_all'), NULL)
     assign(paste0('lm_', 'sdx', '_cov'), NULL)
   }
-  
-  #######################################################
-  
-  
-  
   
   # brms removes white spaces from the coefficient names
   # mimicking that behaviors but keeping it separate here as 
@@ -3347,50 +3285,30 @@ prepare_function <- function(x,
                              nknots,
                              data,
                              internal_function_args) {
-  ##############################################
+
   # Initiate non formalArgs()
-  ##############################################
-  brms_arguments <- NULL
-  
-  xfunsi <- NULL
-  
-  Var1 <- NULL
-  
-  Var2 <- NULL
-  
-  select_model <- NULL
-  
-  fixedsi <- NULL
-  
-  match_sitar_d_form <- NULL
-  
-  randomsi <- NULL
-  
-  getxname <- NULL
-  
-  getknotsname <- NULL
-  
-  spfncname <- NULL
-  
-  xoffset <- NULL
-  
-  yfunsi <- NULL
-  
-  all_raw_str <- NULL
-  
-  all_raw_str <- NULL
-  
-  decomp <- NULL
-  
-  nys <- NULL
-  
-  gsub_out_unscaled <- NULL
-  
-  checkscovsi <- NULL
-  
-  add_rcsfunmatqrinv_genquant <- NULL
-  
-  add_b_Qr_genquan_s_coef <- NULL
+  brms_arguments <- NULL;
+  xfunsi <- NULL;
+  Var1 <- NULL;
+  Var2 <- NULL;
+  select_model <- NULL;
+  fixedsi <- NULL;
+  match_sitar_d_form <- NULL;
+  d_adjustedsi <- NULL;
+  randomsi <- NULL;
+  getxname <- NULL;
+  getknotsname <- NULL;
+  spfncname <- NULL;
+  xoffset <- NULL;
+  yfunsi <- NULL;
+  all_raw_str <- NULL;
+  all_raw_str <- NULL;
+  decomp <- NULL;
+  nys <- NULL;
+  gsub_out_unscaled <- NULL;
+  checkscovsi <- NULL;
+  add_rcsfunmatqrinv_genquant <- NULL;
+  add_b_Qr_genquan_s_coef <- NULL;
   
   
   
@@ -3405,14 +3323,8 @@ prepare_function <- function(x,
   
   
   backend <- eval(brms_arguments$backend)
-  
-  # if (backend == 'cmdstanr' & cmdstanr::cmdstan_version() < "2.26.0") {
-  #   stop("Please install CmdStan version 2.26 or newer.")
-  # }
-  
+
   vector_X_name <- "Xp"
-  
-  
   
   if (nys == 1)
     resp_ <- ""
@@ -3570,24 +3482,6 @@ prepare_function <- function(x,
   
   
   # https://mc-stan.org/users/documentation/case-studies/qr_regression.html
-  
-  # Qc = Spl;
-  
-  # for (i in 1:QK) Qc[, i] = Spl[, i] - mean(Spl[, i]);
-  
-  # decomp_code_qr <-
-  #   "
-  #     int QK = nknots - 1;
-  #     matrix[N, QK] Qc;
-  #     Qc = Spl;
-  #     matrix[N, QK] XQ;
-  #     matrix[QK, QK] XR;
-  #     matrix[QK, QK] XR_inv;
-  #     XQ = qr_Q(Qc)[, 1:QK] * N;
-  #     XR = qr_R(Qc)[1:QK, ] / N;
-  #     XR_inv = inverse(XR);
-  #     "
-  
   
   decomp_code_qr <-
     "
@@ -4192,19 +4086,21 @@ prepare_function <- function(x,
     ###########
     # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter
     # In fact for df > 1, it forces 'd' to be random parameter only
+    
     if (match_sitar_d_form) {
       if (grepl("d", randomsi, fixed = T)) {
-        # nameadja <- "A+(d . * Spl[,1])"
-        nameadja <- "A+(d . * Xm)"
+        if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
+        if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
       }
     }
     
     if (!match_sitar_d_form) {
       if (grepl("d", fixedsi, fixed = T)) {
-        # nameadja <- "A+(d . * Spl[,1])"
-        nameadja <- "A+(d . * Xm)"
+        if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
+        if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
       }
     }
+    
     
     name5 <- paste(" (", name50, ");\n")
     
@@ -4310,11 +4206,6 @@ prepare_function <- function(x,
       "\n  int mcolsmat=cols(",
       vector_X_name,
       ");",
-      # paste0("\n  vector[N] Xm=", paste0(getxname,
-      #                                    "(", vector_X_name, ")"),
-      #        ";"),
-      # paste0("\n  vector[N] X=", defineEx, ";"),
-      # paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
       paste0(
         "\n  vector[mcolsmat+1] knots=",
         paste0(getknotsname, "(", '', ")"),
@@ -4346,12 +4237,6 @@ prepare_function <- function(x,
     } else {
       rcsfunmultadd <- paste(start_fun_multadd, vectorA, endof_fun)
     }
-    
-    
-    # rcsfun <- paste0(rcsfun, "\n", rcsfunmultadd)
-    
-    # print(cat(rcsfun))
-    # stop()
     
     
     
@@ -4430,14 +4315,9 @@ prepare_function <- function(x,
           )
         cn_c <- c(cn_c, tmx)
       }
-      # cn_c2 <- paste(cn_c, collapse = "\n")
-      # cn_c2 <- paste0('matrix[N, QK] sx;', "\n", cn_c2)
-      # rcsfunmatqr <- paste0(rcsfunmatqr, "\n", cn_c2)
       rcsfunmatqr <- paste0(rcsfunmatqr, "\n", 'return XQ;')
       rcsfunmatqr <- paste0(rcsfunmatqr, '\n}')
       funmats <- paste0(funmats, "\n", rcsfunmatqr)
-      # print(cat(rcsfunmatqr))
-      # stop()
     } # if(add_rcsfunmatqr) {
     
     
@@ -4481,10 +4361,6 @@ prepare_function <- function(x,
           )
         cn_c <- c(cn_c, tmx)
       }
-      # cn_c2 <- paste(cn_c, collapse = "\n")
-      # cn_c2 -paste0('matrix[QK, QK] XR_inv_name_resp,'_mat', ";", "\n", cn_c2)
-      # cn_c2 <- paste0('matrix[N, QK] ', b_sx_name_resp, ';', "\n", cn_c2)
-      
       rcsfunmatgrinv <-
         paste0(rcsfunmatgrinv, "\n", 'return ', XR_inv_name, ';')
       rcsfunmatgrinv <- paste0(rcsfunmatgrinv, '\n}')
@@ -4610,21 +4486,14 @@ prepare_function <- function(x,
       # stop()
     } # if(add_rcsfunmatqrinv_genquant) {
     
-    
-    # svector_
-    # qs_vector
-    
+   
     if (funmats == "") {
       add_funmats <- FALSE
     } else {
       add_funmats <- TRUE
-      # funmats <- paste0('\n', funmats)
     }
     
-    # print(cat(rcsfunmatqrinv_genquant))
-    # stop()
-    ######
-    
+   
     
     
     getknots_fun_raw <-
@@ -4947,7 +4816,6 @@ prepare_function <- function(x,
     }
     
     
-    
   } # if(select_model == 'sitar') {
   
   
@@ -4962,8 +4830,6 @@ prepare_function <- function(x,
     fullabcsnames_v <-
       paste("vector", fullabcsnames, collapse = " ")
     defineEx <- paste0("(Xm)")
-    # For transformations of x variable
-    # add_context_getx_fun
     getx_fun_raw <-
       paste0(
         "vector ",
@@ -5306,80 +5172,6 @@ prepare_function <- function(x,
     
     
     
-    # # Alternative form,maple->(a/(1+exp(-c*(x-e)))) + (1-b/(1+exp(-d*(x-f))))
-    # # Alternative form -> (a./(1+exp(-c.*(x-e)))) + (1-b./(1+exp(-d.*(x-f))))
-    # if(select_model == 'logistic2') {
-    #   funstring <- "(a./(1+exp(-c.*(Xm-e)))) + (1-b./(1+exp(-d.*(Xm-f))))"
-    #   if(utils::packageVersion('rstan') < 2.26) funstring <-
-    #       gsub(".*", " .* ", funstring, fixed = T)
-    #   returnmu    <- paste0("return ", "(",  funstring, ")")
-    #   returnmu_d0 <- funstring
-    #   returnmu_d1 <-
-    #     "a.*c.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0 -
-    #     b.*d.*(1 - a.*c.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0).*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^2.0"
-    #
-    #   returnmu_d2 <-
-    #     "2.0.*a.*c^2.0.*exp(-c.*(Xm - e))^2.0./(1 + exp(-c.*(Xm - e)))^3.0 -
-    #     a.*c^2.0.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0 -
-    #     2.0.*b.*d^2.0.*(1 - a.*c.*exp(-c.*(Xm - e))./
-    #                       (1 + exp(-c.*(Xm - e)))^2.0)^2.0.*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))^2.0./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^3.0 -
-    #     b.*d.*(-2.0.*a.*c^2.0.*exp(-c.*(Xm - e))^2.0./
-    #              (1 + exp(-c.*(Xm - e)))^3.0 +
-    #              a.*c^2.0.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0).*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^2.0 +
-    #     b.*d^2.0.*(1 - a.*c.*exp(-c.*(Xm - e))./
-    #                  (1 + exp(-c.*(Xm - e)))^2.0)^2.0.*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^2.0"
-    #
-    #   returnmu_d3 <-
-    #     "6.0.*a.*c^3.0.*exp(-c.*(Xm - e))^3.0./
-    #     (1 + exp(-c.*(Xm - e)))^4.0 - 6.0.*a.*c^3.0.*exp(-c.*(Xm - e))^2.0./
-    #     (1 + exp(-c.*(Xm - e)))^3.0 + a.*c^3.0.*exp(-c.*(Xm - e))./
-    #     (1 + exp(-c.*(Xm - e)))^2.0 - 6.0.*b.*d^3.0.*
-    #     (1 - a.*c.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0)^3.0.*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))^3.0./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^4.0 - 6.0.*b.*d^2.0.*
-    #     (1 - a.*c.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0).*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))^2.0.*
-    #     (-2.0.*a.*c^2.0.*exp(-c.*(Xm - e))^2.0./(1 + exp(-c.*(Xm - e)))^3.0 +
-    #        a.*c^2.0.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0)./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^3.0 +
-    #     6.0.*b.*d^3.0.*(1 - a.*c.*exp(-c.*(Xm - e))./
-    #                       (1 + exp(-c.*(Xm - e)))^2.0)^3.0.*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))^2.0./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^3.0 -
-    #     b.*d.*(-6.0.*a.*c^3.0.*exp(-c.*(Xm - e))^3.0./
-    #              (1 + exp(-c.*(Xm - e)))^4.0 +
-    #              6.0.*a.*c^3.0.*exp(-c.*(Xm - e))^2.0./
-    #              (1 + exp(-c.*(Xm - e)))^3.0 -
-    #              a.*c^3.0.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0).*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^2.0 +
-    #     3.0.*b.*d^2.0.*(-2.0.*a.*c^2.0.*exp(-c.*(Xm - e))^2.0./
-    #                       (1 + exp(-c.*(Xm - e)))^3.0 + a.*c^2.0.*
-    #                       exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0).*
-    #     (1 - a.*c.*exp(-c.*(Xm - e))./(1 + exp(-c.*(Xm - e)))^2.0).*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^2.0 -
-    #     b.*d^3.0.*(1 - a.*c.*exp(-c.*(Xm - e))./
-    #                  (1 + exp(-c.*(Xm - e)))^2.0)^3.0.*
-    #     exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e)))))./
-    #     (1 + exp(-d.*(Xm - a./(1 + exp(-c.*(Xm - e))))))^2.0"
-    #
-    #   returnmu_d1 <- paste0(returnmu_d1, ";")
-    #   returnmu_d2 <- paste0(returnmu_d2, ";")
-    #   returnmu_d3 <- paste0(returnmu_d3, ";")
-    # } # if(select_model == 'logistic3') {
-    #
-    
-    
-    
     # a - size at infancy
     # b - rate at infancy
     # c - time at infancy
@@ -5436,130 +5228,7 @@ prepare_function <- function(x,
     
     
     
-    # if (select_model == 'logistic3') {
-    #   funstring <-
-    #     "(a ./ (1 + exp(-b .* (Xm - c)))) +
-    #     (d ./ (1 + exp(-e .* (Xm - f)))) +
-    #     (g ./ (1 + exp(-h .* (Xm - i))))"
-    #   if (utils::packageVersion('rstan') < 2.26)
-    #     funstring <-
-    #       gsub(".*", " .* ", funstring, fixed = T)
-    #   returnmu    <- paste0("return ", "(",  funstring, ")")
-    #   returnmu_d0 <- funstring
-    #   
-    #   
-    #   # returnmu_d1 <-
-    #   #   "(a .* b .* exp(-b .* (Xm - c)))./(exp(-b .* (Xm - c)) + 1)^2.0 +
-    #   #   (d .* e .* exp(-e .* (Xm - f)))./(exp(-e .* (Xm - f)) + 1)^2.0 +
-    #   #   (g .* h .* exp(-h .* (Xm - i)))./(exp(-h .* (Xm - i)) + 1)^2.0"
-    #   #
-    #   # returnmu_d2 <-
-    #   #   "(a .* ((rep_vector(2.0,N) .* b^2.0 .*
-    #   #             exp(-rep_vector(2.0,N) .* b .* (Xm - c))) ./
-    #   #            (exp(-b .* (Xm - c)) + 1)^3.0 -
-    #   #            (b^2.0 .* exp(-b .* (Xm - c))) ./
-    #   #            (exp(-b .* (Xm - c)) + 1.0)^2.0)) +
-    #   #   (d .* ((rep_vector(2.0,N) .* e^2.0 .*
-    #   #             exp(-rep_vector(2.0,N) .* e .* (Xm - f))) ./
-    #   #            (exp(-e .* (Xm - f)) + 1)^3.0 -
-    #   #            (e^2.0 .* exp(-e .* (Xm - f))) ./
-    #   #            (exp(-e .* (Xm - f)) + 1.0)^2.0)) +
-    #   #   (g .* ((rep_vector(2.0,N) .* h^2.0 .*
-    #   #             exp(-rep_vector(2.0,N) .* h .* (Xm - i))) ./
-    #   #            (exp(-h .* (Xm - i)) + 1)^3.0 -
-    #   #            (h^2.0 .* exp(-h .* (Xm - i))) ./
-    #   #            (exp(-h .* (Xm - i)) + 1.0)^2.0)) "
-    #   #
-    #   # returnmu_d3 <- returnmu_d2
-    #   
-    #   
-    #   returnmu_d1 <-
-    #     "a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0 +
-    #     d.*e.*(1 - a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 +
-    #     g.*h.*exp(-h.*(Xm - i))./(1 + exp(-h.*(Xm - i)))^2.0"
-    #   
-    #   
-    #   returnmu_d2 <-
-    #     "rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
-    #     (1 + exp(-b.*(Xm - c)))^3.0 -
-    #     a.*b^2.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0 +
-    #     rep_vector(2.0,N).*d.*e^2.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
-    #                                     (1 + exp(-b.*(Xm - c)))^2.0)^2.0.*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^2.0./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^3.0 +
-    #     d.*e.*(-rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
-    #              (1 + exp(-b.*(Xm - c)))^3.0 +
-    #              a.*b^2.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 -
-    #     d.*e^2.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
-    #                  (1 + exp(-b.*(Xm - c)))^2.0)^2.0.*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 +
-    #     rep_vector(2.0,N).*g.*h^2.0.*exp(-h.*(Xm - i))^2.0./
-    #     (1 + exp(-h.*(Xm - i)))^3.0 -
-    #     g.*h^2.0.*exp(-h.*(Xm - i))./(1 + exp(-h.*(Xm - i)))^2.0"
-    #   
-    #   
-    #   returnmu_d3 <-
-    #     "rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^3.0./
-    #     (1 + exp(-b.*(Xm - c)))^4.0 -
-    #     rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^2.0./
-    #     (1 + exp(-b.*(Xm - c)))^3.0 +
-    #     a.*b^3.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0 +
-    #     rep_vector(6.0,N).*d.*e^3.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
-    #                                     (1 + exp(-b.*(Xm - c)))^2.0)^3.0.*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^3.0./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^4.0 +
-    #     rep_vector(6.0,N).*d.*e^2.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
-    #                                     (1 + exp(-b.*(Xm - c)))^2.0).*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^2.0.*
-    #     (-rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
-    #        (1 + exp(-b.*(Xm - c)))^3.0 +
-    #        a.*b^2.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0)./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^3.0 -
-    #     rep_vector(6.0,N).*d.*e^3.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
-    #                                     (1 + exp(-b.*(Xm - c)))^2.0)^3.0.*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))^2.0./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^3.0 +
-    #     d.*e.*(-rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^3.0./
-    #              (1 + exp(-b.*(Xm - c)))^4.0 +
-    #              rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^2.0./
-    #              (1 + exp(-b.*(Xm - c)))^3.0 -
-    #              a.*b^3.0.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 -
-    #     rep_vector(3.0,N).*d.*e^2.0.*(-rep_vector(2.0,N).*
-    #                                     a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
-    #                                     (1 + exp(-b.*(Xm - c)))^3.0 +
-    #                                     a.*b^2.0.*exp(-b.*(Xm - c))./
-    #                                     (1 + exp(-b.*(Xm - c)))^2.0).*
-    #     (1 - a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0).*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 +
-    #     d.*e^3.0.*(1 - a.*b.*exp(-b.*(Xm - c))./
-    #                  (1 + exp(-b.*(Xm - c)))^2.0)^3.0.*
-    #     exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c)))))./
-    #     (1 + exp(-e.*(Xm - a./(1 + exp(-b.*(Xm - c))))))^2.0 +
-    #     rep_vector(6.0,N).*g.*h^3.0.*exp(-h.*(Xm - i))^3.0./
-    #     (1 + exp(-h.*(Xm - i)))^4.0 -
-    #     rep_vector(6.0,N).*g.*h^3.0.*exp(-h.*(Xm - i))^2.0./
-    #     (1 + exp(-h.*(Xm - i)))^3.0 +
-    #     g.*h^3.0.*exp(-h.*(Xm - i))./(1 + exp(-h.*(Xm - i)))^2.0"
-    #   
-    #   returnmu_d1 <- paste0(returnmu_d1, ";")
-    #   returnmu_d2 <- paste0(returnmu_d2, ";")
-    #   returnmu_d3 <- paste0(returnmu_d3, ";")
-    # } # if(select_model == 'logistic3') {
-    # 
-    # 
-    
-    
-    
-    
-    
+   
     
     
     insert_getX_name <-
@@ -5612,9 +5281,7 @@ prepare_function <- function(x,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
       setxoffset = setxoffset,
-      # setxoffset setxoffset_d0_noqr
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'Spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d0,
       decomp = decomp,
@@ -5844,9 +5511,6 @@ prepare_function <- function(x,
                 r_funs = all_raw_str,
                 gq_funs = rcsfunmatqrinv_genquant)
   }
-  
-  # print(cat(rcsfun))
-  # stop()
   
   out
 }

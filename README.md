@@ -29,7 +29,6 @@ This is a basic example which shows you how to fit the model:
 
 ``` r
 library(bsitar)
-library(magrittr)
 ```
 
 ``` r
@@ -46,5 +45,5 @@ data <- data %>%
 ```
 
 ``` r
-fit1 <- bsitar(age, y, id, data = data, df = 4, chains = 2, iter = 1000)
+fit1 <- bsitar(age, y, id, data = data, df = 3, chains = 2, iter = 1000)
 ```

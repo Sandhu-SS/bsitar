@@ -29,7 +29,8 @@ An updated model of class \code{brmsfit}, that contains the
 posterior draws and other useful information about the model.
 }
 \description{
-Update model
+The \strong{update_model} function updates the \code{bgmfit}
+model based on the new arguments specified by the user.
 }
 \details{
 This is an adapted version of the \strong{update} function from the
@@ -38,16 +39,20 @@ This is an adapted version of the \strong{update} function from the
 \examples{
 
 \donttest{
+
 # Fit Bayesian SITAR model 
-# To avoid running the model which takes some time, model fit to the
-# \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-# Please see \code{bgm} examples.
+
+# To avoid fitting the model which takes time, the model  
+# fit has already been saved as 'berkeley_mfit.rda' file.
+# See examples section of the bgm function for details on the model fit.
 
 model <- berkeley_mfit
 
-# To save time, below example is fit with sample_prior = 'only'
+# Update model for degree of freedom. For illustration purpose and to save 
+# time, the below example is run with sample_prior only. 
 
-model2 <- update_model(model, df = 5, iter = 100, sample_prior = 'only')
+model2 <- update_model(model, df = 4, sample_prior = 'only')
+
 }
 
 }

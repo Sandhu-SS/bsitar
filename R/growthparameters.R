@@ -9,20 +9,19 @@
 #'   interval, CI).
 #'
 #' @details The \strong{growthparameters} function internally calls the
-#'   appropriate function (\code{fitted_draws} or \code{predict_draws}) to estimate
-#'   the first derivative (velocity curve) for each posterior draw (posterior
-#'   distribution) and then computes growth parameters such as age at peak
-#'   growth velocity (APGV), peak growth velocity (PGV), age at takeoff growth
-#'   velocity (ATGV), takeoff growth velocity (TGV), age at cessation of growth
-#'   velocity (ACGV), and the cessation growth velocity (CGV). The growth
-#'   parameters APGV and PGV are estimated by calling the [sitar::getPeak()]
-#'   function whereas the ATGV and TGV are estimated by using the
-#'   [sitar::getTakeoff()] function. The [sitar::getTrough()] function is used
-#'   to estimates ACGV and CGV parameters. The parameters obtained from each
-#'   posterior draw are then summarized appropriately to get the estimates and
-#'   the uncertainty (SEs and CIs) around these estimates. Please note that it
-#'   is not always possible to estimate cessation and takeoff growth parameters
-#'   when there are no distinct pre-peak or post-peak troughs.
+#'   [fitted_draws()] or the [predict_draws()] function to estimate the first
+#'   derivative based growth parameters for each posterior draw. The growth
+#'   parameters estimated are age at peak growth velocity (APGV), peak growth
+#'   velocity (PGV), age at takeoff growth velocity (ATGV), takeoff growth
+#'   velocity (TGV), age at cessation of growth velocity (ACGV), and the
+#'   cessation growth velocity (CGV). The APGV and PGV are estimated by calling
+#'   the [sitar::getPeak()] function whereas the ATGV and TGV are estimated by
+#'   using the [sitar::getTakeoff()] function. The [sitar::getTrough()] function
+#'   is used to estimates ACGV and CGV parameters. The parameters obtained from
+#'   each posterior draw are then summarized appropriately to get the estimates
+#'   and the uncertainty (SEs and CIs) around these estimates. Please note that
+#'   it is not always possible to estimate cessation and takeoff growth
+#'   parameters when there are no distinct pre-peak or post-peak troughs.
 #'
 #'
 #' @param model An object of class \code{bgmfit}.
@@ -185,21 +184,21 @@
 #' @param parms_eval A logical (default \code{FALSE}) to specify whether or not 
 #' to get growth parameters on the fly. 
 #' 
-#' @param idata_method A character string to indicate interpolation method.
-#'   Options available are \code{m1} (default) and \code{m2}. The \code{'m1'}
-#'   calls the \code{idatafunction} function whereas \code{'m2'} calls the
-#'   \code{get_idata} function for data interpolation. The \code{idatafunction}
-#'   function is adapted from the the \pkg{iapvbs} which is documented here
-#'   <https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R> The
-#'   \code{get_idata} function is adapted from the the \pkg{JMbayes} and is
-#'   documented here
-#'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>
-#' 
-#' @param parms_method A character to specify the method used to when 
-#'  evaluating \code{parms_eval}. The default is \code{getPeak} which uses
-#'  the [sitar::getPeak()] function from the \code{sitar} package. The 
-#'  alternative option is \code{findpeaks} that uses the [pracma::findpeaks()] 
-#'  function function from the \code{pracma} package.
+#' @param idata_method A character string to indicate the interpolation method.
+#'   Options are \emph{method 1} (specified as  \code{'m1'}, default) and
+#'   \emph{method 2} (specified as \code{'m2'}). The \emph{method 1}
+#'   (\code{'m1'}) is adapted from the the \pkg{iapvbs} package and is
+#'   documented here <https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R>.
+#'   The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
+#'   package and is documented here
+#'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
+#'
+#' @param parms_method A character to specify the method used to when evaluating
+#'   \code{parms_eval}. The default is \code{getPeak} which uses the
+#'   [sitar::getPeak()] function from the \code{sitar} package. The alternative
+#'   option is \code{findpeaks} that uses the [pracma::findpeaks()] function
+#'   function from the \code{pracma} package. Note that the argument
+#'   \code{parms_method} is currently ignored.
 #'  
 #' @param envir Environment of function evaluation. The default is
 #'   \code{globalenv}.
@@ -234,20 +233,25 @@
 #' @examples
 #' 
 #' # Fit Bayesian SITAR model 
-#' # To avoid running the model which takes some time, model fit to the
-#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-#' # Please see \code{bgm} examples.
+#' 
+#' # To avoid fitting the model which takes time, the model  
+#' # fit has already been saved as 'berkeley_mfit.rda' file.
+#' # See examples section of the bgm function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 
-#' # Population average APGV and PGV
+#' # Population average age and velocity during the peak growth spurt
 #' growthparameters(model, re_formula = NA)
 #' 
 #' \donttest{
-#' # Population average APGV, PGV, ATGV, TGV
+#' # Population average age and velocity during the take-off and the peak 
+#' # growth spurt (APGV, PGV. ATGV, TGV)
+#' 
 #' growthparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)
 #' 
-#' # Individual-specific APGV, PGV, ATGV, TGV
+#' # Individual-specific age and velocity during the take-off and the peak
+#' # growth spurt (APGV, PGV. ATGV, TGV)
+#' 
 #' growthparameters(model, re_formula = NULL, peak = TRUE, takeoff = TRUE)
 #' }
 #' 
@@ -291,9 +295,7 @@ growthparameters.bgmfit <- function(model,
   else
     ndraws <- ndraws
   
-  ##############################################
   # Initiate non formalArgs()
-  ##############################################
   xvar <- NULL;
   acgv_asymptote <- NULL;
   apv <- NULL;
@@ -306,8 +308,6 @@ growthparameters.bgmfit <- function(model,
   ':=' <- NULL;
   . <- NULL;
   XXi <- NULL;
-  
-  
   
   oo <- post_processing_checks(model = model,
                                xcall = match.call(),
@@ -343,7 +343,6 @@ growthparameters.bgmfit <- function(model,
   
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   
-  # This arguments$model <- model required when using pipe %>% to use gparameter
   arguments$model <- model
   
   if(xcall == 'plot_curves') arguments$plot <- TRUE else arguments$plot <- FALSE
@@ -426,11 +425,7 @@ growthparameters.bgmfit <- function(model,
          'range' or vector of length 2")
           }
       }
-      
-      # print(.x)
-      # print(xrange_search)
-      # print(nrow(.x))
-      # stop()
+     
       
       if (peak) {
         if (future)
@@ -479,10 +474,9 @@ growthparameters.bgmfit <- function(model,
         out_3 <- NULL
       }
       
-      #######
+
       
       if (acgv) {
-        # acgv_asymptote not supported becuase this currect function used velocity
         if(!is.null(acgv_asymptote)) stop("Currently acgv_asymptote not 
                                            supported. Please use acgv_velocity")
         if(!is.null(acgv_asymptote) & !is.null(acgv_velocity) ) {
@@ -504,15 +498,16 @@ growthparameters.bgmfit <- function(model,
           set_x_for_afo <-  tempbind[,2]
           if(length(get__) != 0) {
             get___pct <- max(get__) * acgv_velocity
-            target.index <- which(abs(get__ - get___pct) == min(abs(get__ - get___pct)))
+            target.index <- 
+              which(abs(get__ - get___pct) == min(abs(get__ - get___pct)))
             get_asymptote_pct_x <- set_x_for_afo[target.index]
-            if(length(get_asymptote_pct_x) > 1) get_asymptote_pct_x <- mean(get_asymptote_pct_x)
+            if(length(get_asymptote_pct_x) > 1) {
+              get_asymptote_pct_x <- mean(get_asymptote_pct_x)
+            }
             out_3_temp <- c(get_asymptote_pct_x, get___pct)
           } else if(length(get__) == 0) {
             out_3_temp <- c(NA, NA)
           }
-          # print(length(out_3_temp))
-          # print(out_3_temp)
           out_3_temp
         }
         if (future)
@@ -524,15 +519,13 @@ growthparameters.bgmfit <- function(model,
             sapply(Xnames, function(x)
               set_get___fun(x))
         out_3 <- t(out_3)
-        # out_3x <<- out_3
-       #  if(!summary) out_3 <- out_3 %>% do.call(rbind, .) 
         colnames(out_3) <- c("ACGV", "CGV")
       } else if (!acgv) {
         out_3 <- NULL
       }
       
 
-      ######
+
       
       xframe <- out_1
       if (exists('out_2'))
@@ -590,7 +583,6 @@ growthparameters.bgmfit <- function(model,
         out__ <- out_v_ %>%
           data.frame() %>%
           stats::setNames(paste0('P._D.', names(.))) %>%
-          # dplyr::mutate(!!IDvar := newdata[[IDvar]]) %>%
           dplyr::mutate(!!xvar := newdata[[xvar]])
         for(i in IDvar) {
           out__ <- out__ %>% multiNewVar(df=., df2 = newdata, varname=i)
@@ -599,7 +591,6 @@ growthparameters.bgmfit <- function(model,
         out__ <- out_v %>% data.frame() %>%
           dplyr::select(1) %>%  data.frame() %>%
           stats::setNames(paste0('P._D.', names(.))) %>%
-          # dplyr::mutate(!!IDvar := newdata[[IDvar]]) %>%
           dplyr::mutate(!!xvar := newdata[[xvar]])
         for(i in IDvar) {
           out__ <- out__ %>% multiNewVar(df=., df2 = newdata, varname=i)
@@ -697,7 +688,7 @@ growthparameters.bgmfit <- function(model,
     }
   
   
-  #
+  
   get_avg_over <- function(raw_re, newdata, by, probs, robust) {
     raw_re_c <- c()
     getitEstimate <- getitarray <- NULL
@@ -705,7 +696,8 @@ growthparameters.bgmfit <- function(model,
       getitEstimate <- raw_re[i,]
       raw_re_c[i] <- cbind(newdata, getitEstimate) %>% data.frame() %>% 
         dplyr::group_by(dplyr::across(dplyr::all_of(by))) %>%
-        dplyr::summarise(getitEstimate = mean(getitEstimate), .groups = 'drop') %>%
+        dplyr::summarise(getitEstimate = mean(getitEstimate), 
+                         .groups = 'drop') %>%
         dplyr::ungroup() %>%
         dplyr::select(getitEstimate) 
     }
@@ -713,12 +705,10 @@ growthparameters.bgmfit <- function(model,
     getitarray <- array(unlist(raw_re_c), 
                         dim=c(length(raw_re_c[[1]]), length(raw_re_c)  ))
     getitarray <- t(getitarray)
-    # brms::posterior_summary(getitarray, probs = probs, robust = robust)
     getitarray
   }
   
-  ###################################
-  
+
   
   if (arguments$plot) {
     out_summary <- list()
@@ -741,8 +731,7 @@ growthparameters.bgmfit <- function(model,
     
     list2env(arguments, envir = parent.env(new.env()))
     
-    # arguments$model <- arguments$model_
-    
+
     probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
     probtitles <- probs[order(probs)] * 100
     probtitles <- paste("Q", probtitles, sep = "")
@@ -780,7 +769,8 @@ growthparameters.bgmfit <- function(model,
       assign(list_ci, list_c[[list_ci]])
     }
     check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
-                 'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 'uvarby', 'subindicatorsi')
+                 'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
+                 'uvarby', 'subindicatorsi')
     
     for (check___ in check__) {
       if(!exists(check___)) assign(check___, NULL)
@@ -833,7 +823,6 @@ growthparameters.bgmfit <- function(model,
         } else  if (!grepl("^[[:upper:]]+$", dist..)) {
           groupby_str_d <- groupby_fstr
         }
-        # groupby_str_d <- c(avg_reffects_groupby_str_d, groupby_str_d)
         if (identical(groupby_str_d, character(0)))
           groupby_str_d <- NULL
         groupby_str_d <- groupby_str_d
@@ -871,9 +860,9 @@ growthparameters.bgmfit <- function(model,
             dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
             dplyr::slice(1) %>% dplyr::ungroup()
         }
+        
         arguments$newdata <- newdata
         arguments$deriv <- 0
-        # don't let the ipts to pass again to the fitted 
         arguments$ipts <- NULL 
         arguments$probs <- probs
         
@@ -889,16 +878,17 @@ growthparameters.bgmfit <- function(model,
           out_d <- out_d_
         }
         
-        # out_d <- out_d_
-       
+
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+            droplevels()
         }
         
-        out_summary[['distance']] <-  cbind(newdata,
-                                            out_d %>% data.frame() %>%
-                                              dplyr::mutate(curve = 'distance')) %>%
+        out_summary[['distance']] <-  
+          cbind(newdata,
+                out_d %>% data.frame() %>%
+                  dplyr::mutate(curve = 'distance')) %>%
           data.frame()
         
       } else if (dist.. == "") {
@@ -924,7 +914,6 @@ growthparameters.bgmfit <- function(model,
         }
         arguments$newdata <- newdata
         arguments$deriv <- 1
-        # don't let the ipts to pass again to the fitted 
         arguments$ipts <- NULL 
         arguments$probs <- probs
         
@@ -944,7 +933,8 @@ growthparameters.bgmfit <- function(model,
         
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+            droplevels()
         }
         
         out_summary[['velocity']] <-
@@ -960,7 +950,8 @@ growthparameters.bgmfit <- function(model,
       if (apv | takeoff | trough | acgv) {
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+            droplevels()
         }
         
         
@@ -998,18 +989,7 @@ growthparameters.bgmfit <- function(model,
              "contains no 'v' or 'V' option")
       }
       
-      # if (dist.. != "") {
-      #   if (grepl("^[[:upper:]]+$", dist..)) {
-      #     groupby_str_d <- groupby_fistr
-      #   } else  if (!grepl("^[[:upper:]]+$", dist..)) {
-      #     groupby_str_d <- groupby_fstr
-      #   }
-      #   if (identical(groupby_str_d, character(0)))
-      #     groupby_str_d <- NULL
-      #   groupby_str_d <- groupby_str_d
-      # } else {
-      #   groupby_str_d <- NULL
-      # }
+     
       
       if (dist.. != "") {
         groupby_str_d <- groupby_fstr
@@ -1020,17 +1000,7 @@ growthparameters.bgmfit <- function(model,
         groupby_str_d <- NULL
       }
       
-      # if (velc.. != "") {
-      #   if (grepl("^[[:upper:]]+$", velc..)) {
-      #     groupby_str_v <- groupby_fistr
-      #   } else  if (!grepl("^[[:upper:]]+$", velc..)) {
-      #     groupby_str_v <- groupby_fstr
-      #   }
-      #   if (identical(groupby_str_v, character(0)))
-      #     groupby_str_v <- NULL
-      # } else {
-      #   groupby_str_v <- NULL
-      # }
+      
       
       if (velc.. != "") {
         groupby_str_v <- groupby_fstr
@@ -1044,9 +1014,6 @@ growthparameters.bgmfit <- function(model,
       arguments$summary <- FALSE
       arguments$re_formula <- NULL
       
-      # avg_reffects_groupby_str_d <- avg_reffects[['feby']]
-      # avg_reffects_groupby_str_v <- avg_reffects[['feby']]
-      
       groupby_str_d <- c(groupby_str_d, avg_reffects[['feby']])
       groupby_str_v <- c(groupby_str_v, avg_reffects[['feby']])
       
@@ -1055,23 +1022,16 @@ growthparameters.bgmfit <- function(model,
       if (dist.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", dist..)) {
-          # arguments$re_formula <- NULL
         } else if (!grepl("^[[:upper:]]+$", dist..)) {
-          #  arguments$re_formula <- NA
           if (!is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(groupby_fstr, xvar)
           } else if (is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(xvar)
           }
-          
-          # newdata <- newdata %>%
-          #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-          #   dplyr::slice(1) %>% dplyr::ungroup()
         }
         
         arguments$newdata <- newdata
         arguments$deriv <- 0
-        # don't let the ipts to pass again to the fitted
         arguments$ipts <- NULL 
         arguments$probs <- probs
         
@@ -1087,37 +1047,31 @@ growthparameters.bgmfit <- function(model,
         # moved here from below for avg_reffects to work with univariate_by
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+            droplevels()
         }
         
          selectby <- avg_reffects[['reby']]
-        # selectby <- c(avg_reffects[['reby']], avg_reffects[['feby']])
         selectover <- avg_reffects[['over']]
         selectby_over <- c(selectby, selectover)
         out_d_ <- get_avg_over(out_d_, newdata = newdata, by = selectby_over,
                                probs = probs, robust = robust)
         
         out_d <- brms::posterior_summary(out_d_, probs = probs, robust = robust)
-        # out_d <- out_d_
-        
-        # if(!is.na(model$model_info$univariate_by)) {
-        #   newdata <- newdata %>%
-        #     dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
-        # }
+  
         
         newdata <- newdata %>%
-          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
+          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
+                          .keep_all = TRUE) %>% 
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
-        # out_d <<- out_d_
-        # newdata <<- newdata
-        # cbind(newdata %>% arrange(age), out_d) %>% ggplot(., aes(x = age)) + geom_line(aes(y = Estimate))
+  
         
-        
-        out_summary[['distance']] <-  cbind(newdata,
-                                            out_d %>% data.frame() %>%
-                                              dplyr::mutate(curve = 'distance')) %>%
+        out_summary[['distance']] <-  
+          cbind(newdata,
+                out_d %>% data.frame() %>%
+                  dplyr::mutate(curve = 'distance')) %>%
           data.frame()
         
       } else if (dist.. == "") {
@@ -1133,22 +1087,17 @@ growthparameters.bgmfit <- function(model,
       if (velc.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", velc..)) {
-          # arguments$re_formula <- NULL
         } else if (!grepl("^[[:upper:]]+$", velc..)) {
-          # arguments$re_formula <- NA
           if (!is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(groupby_fstr, xvar)
           } else if (is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(xvar)
             
           }
-          # newdata <- newdata %>%
-          #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-          #   dplyr::slice(1) %>% dplyr::ungroup()
         }
+        
         arguments$newdata <- newdata
         arguments$deriv <- 1
-        # don't let the ipts to pass again to the fitted
         arguments$ipts <- NULL 
         arguments$probs <- probs
         
@@ -1164,28 +1113,22 @@ growthparameters.bgmfit <- function(model,
         # moved here from below for avg_reffects to work with univariate_by
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
-            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+            dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+            droplevels()
         }
         
         selectby <- avg_reffects[['reby']]
-        # selectby <- c(avg_reffects[['reby']], avg_reffects[['feby']])
         selectover <- avg_reffects[['over']]
         selectby_over <- c(selectby, selectover)
         out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
                                probs = probs, robust = robust)
         
         out_v <- brms::posterior_summary(out_v_, probs = probs, robust = robust)
-        
-        # out_v <- out_v_
-        
-        # if(!is.na(model$model_info$univariate_by)) {
-        #   newdata <- newdata %>%
-        #     dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
-        # }
-        
+       
         
         newdata <- newdata %>%
-          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
+          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
+                          .keep_all = TRUE) %>% 
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
@@ -1201,12 +1144,11 @@ growthparameters.bgmfit <- function(model,
       
       if (apv) {
         if(!is.na(model$model_info$univariate_by)) {
-          # newdata <- newdata %>%
-          #   dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
         }
         
         newdata <- newdata %>%
-          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
+          dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
+                          .keep_all = TRUE) %>% 
           dplyr::arrange(!! as.name(selectby_over)) %>% 
           droplevels()
         
@@ -1219,7 +1161,6 @@ growthparameters.bgmfit <- function(model,
       out_summary[['groupby_str_v']] <- groupby_str_v
       out_summary[['probtitles']] <- probtitles
     } # if(!is.null(avg_reffects)) {
-    
     return(out_summary)
   } # if (arguments$plot) {
   
@@ -1256,12 +1197,6 @@ growthparameters.bgmfit <- function(model,
     }
     
     if(!is.null(avg_reffects)) {
-      # if (grepl("d", opt, ignore.case = T)) {
-      #   index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
-      #   dist.. <- substr(opt, index_opt, index_opt)
-      #   if (dist.. != "" & grepl("^[[:upper:]]+$", dist..) )
-      #     stop("use option 'd' (and not 'D') with avg_reffects" )
-      # }
       if (grepl("v", opt, ignore.case = T) ) {
         index_opt <- gregexpr("v", opt, ignore.case = T)[[1]]
         velc.. <- substr(opt, index_opt, index_opt)
@@ -1307,7 +1242,6 @@ growthparameters.bgmfit <- function(model,
       }
       arguments$newdata <- newdata
       arguments$deriv <- 1
-      # don't let the ipts to pass again to the fitted
       arguments$ipts <- NULL 
       arguments$probs <- probs
      
@@ -1331,12 +1265,6 @@ growthparameters.bgmfit <- function(model,
       }
       
      
-      
-      # out_v <<- out_v
-      # newdata <<- newdata
-      # cbind(newdata , out_v) %>% ggplot(., aes(x = age)) + 
-      #   geom_line(aes(y = Estimate, group = id))
-      
       out_v__apv_ <- t(out_v__apv_)
       parameters <-
         get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary, 
@@ -1362,22 +1290,17 @@ growthparameters.bgmfit <- function(model,
       groupby_str_v <- avg_reffects[['feby']]
       
       if (grepl("^[[:upper:]]+$", velc..)) {
-        # arguments$re_formula <- NULL
       } else if (!grepl("^[[:upper:]]+$", velc..)) {
-        # arguments$re_formula <- NA
         if (!is.null(groupby_fstr)) {
           groupby_fstr_xvars <- c(groupby_fstr, xvar)
         } else if (is.null(groupby_fstr)) {
           groupby_fstr_xvars <- c(xvar)
           
         }
-        # newdata <- newdata %>%
-        #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-        #   dplyr::slice(1) %>% dplyr::ungroup()
       }
+      
       arguments$newdata <- newdata
       arguments$deriv <- 1
-      # don't let the ipts to pass again to the fitted
       arguments$ipts <- NULL 
       arguments$probs <- probs
       
@@ -1391,33 +1314,35 @@ growthparameters.bgmfit <- function(model,
       # out_v_1 <<- out_v_
       
       selectby <- avg_reffects[['reby']]
-      # selectby <- c(avg_reffects[['reby']], avg_reffects[['feby']])
       selectover <- avg_reffects[['over']]
       selectby_over <- c(selectby, selectover)
       out_v_ <- get_avg_over(out_v_, newdata = newdata, by = selectby_over,
                              probs = probs, robust = robust)
       
       
-      # out_v_ <<- out_v_
       out_v <- out_v_
       
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
-          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+          droplevels()
       }
       
       newdata <- newdata %>%
-        dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
+        dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
+                        .keep_all = TRUE) %>% 
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
       
       if(!is.na(model$model_info$univariate_by)) {
         newdata <- newdata %>%
-          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+          droplevels()
       }
       
       newdata <- newdata %>%
-        dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), .keep_all = T) %>% 
+        dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
+                        .keep_all = TRUE) %>% 
         dplyr::arrange(!! as.name(selectby_over)) %>% 
         droplevels()
      
@@ -1426,7 +1351,6 @@ growthparameters.bgmfit <- function(model,
         get_growthparameters(out_v_, newdata, groupby_str_v, summary, 
                              digits)
     } # if(!is.null(avg_reffects)) {
-    
     return(parameters)
   } # if (!arguments$plot) {
   

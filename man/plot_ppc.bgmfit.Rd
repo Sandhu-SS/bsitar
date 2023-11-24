@@ -42,9 +42,10 @@ the \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}.
 \examples{
 
 # Fit Bayesian SITAR model 
-# To avoid running the model which takes some time, model fit to the
-# \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-# Please see \code{bgm} examples.
+
+# To avoid fitting the model which takes time, the model  
+# fit has already been saved as 'berkeley_mfit.rda' file.
+# See examples section of the bgm function for details on the model fit.
 
 model <- berkeley_mfit
 

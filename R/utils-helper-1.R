@@ -576,7 +576,8 @@ get_par_names_from_stancode <- function(code,
                                         semicolan = FALSE,
                                         what = '') {
   regex_for_section <- paste(".*(",section,"\\s*\\{.*?\\}).*", sep = '')
-  filtered_stan_code <- gsub(code, pattern = regex_for_section, replacement = "\\1")
+  filtered_stan_code <- gsub(code, pattern = regex_for_section, 
+                             replacement = "\\1")
   
   zz <- strsplit(filtered_stan_code, "\n")[[1]][-1]
   collect <- c()
@@ -918,7 +919,6 @@ rename <- function(x,
 #' @return A data frame object.
 #' @noRd
 #' 
-
 priors_to_textdata <- function(model,
                                spriors = NULL,
                                sdata = NULL,
@@ -1092,14 +1092,6 @@ priors_to_textdata <- function(model,
       spriors <- spriors %>%  dplyr::select(-'Response')
     }
   }
-  
-  # if(viewer) {
-  #   spriors <- spriors %>%
-  #     gt::gt()  %>%
-  #     gt::cols_align(
-  #       align = "left",
-  #       columns = dplyr::everything())
-  # }
   spriors
 }
 
@@ -1878,12 +1870,7 @@ plot_lositic3 <- function(model,
   xintercept_1 <- fixed_[3,1]
   xintercept_2 <- fixed_[6,1] + fixed_[3,1]
   xintercept_3 <- fixed_[9,1]
-  
-  # yintercept_1 <- fixed_[1,1] + (fixed_[1,1] * fixed_[3,1])
-  # yintercept_2 <- fixed_[4,1] + (fixed_[4,1] * fixed_[5,1]) 
-  # yintercept_3 <- fixed_[1,1] + fixed_[4,1] + (fixed_[5,1] * fixed_[6,1]) 
-  
-  
+
   # distance
   yintercept_1 <- 
     model$model_info$exefuns$DefFun0(xintercept_1, 
@@ -1990,3 +1977,29 @@ plot_lositic3 <- function(model,
 
 
 
+# Adapted from 
+# https://stackoverflow.com/questions/37149649/randomly-sample-groups
+
+#' @title select a random sample of n groups
+#' @param data A data frame
+#' @param size The number of groups to be selected 
+#' @examples
+#' # example code
+#'  set.seed(1234)
+#'  subdata <- berkeley_mdata %>% sample_n_of_groups(size = 2, id)
+#' @keywords internal
+#' @noRd
+#' 
+sample_n_of_groups <- function(data, size, ...) {
+  dots <- rlang::quos(...)
+  
+  group_ids <- data %>% 
+    dplyr::group_by(!!! dots) %>% 
+    dplyr::group_indices()
+  
+  sampled_groups <- sample(unique(group_ids), size)
+  
+  data %>% 
+    dplyr::filter(group_ids %in% sampled_groups) %>% 
+    droplevels()
+}

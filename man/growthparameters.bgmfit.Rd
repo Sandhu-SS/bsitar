@@ -230,21 +230,21 @@ maximum number of cores avaialble minus one, i.e.,
 \item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
 to get growth parameters on the fly.}
 
-\item{idata_method}{A character string to indicate interpolation method.
-Options available are \code{m1} (default) and \code{m2}. The \code{'m1'}
-calls the \code{idatafunction} function whereas \code{'m2'} calls the
-\code{get_idata} function for data interpolation. The \code{idatafunction}
-function is adapted from the the \pkg{iapvbs} which is documented here
-\url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R} The
-\code{get_idata} function is adapted from the the \pkg{JMbayes} and is
-documented here
-\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}}
+\item{idata_method}{A character string to indicate the interpolation method.
+Options are \emph{method 1} (specified as  \code{'m1'}, default) and
+\emph{method 2} (specified as \code{'m2'}). The \emph{method 1}
+(\code{'m1'}) is adapted from the the \pkg{iapvbs} package and is
+documented here \url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}.
+The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
+package and is documented here
+\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
 
-\item{parms_method}{A character to specify the method used to when
-evaluating \code{parms_eval}. The default is \code{getPeak} which uses
-the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The
-alternative option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}}
-function function from the \code{pracma} package.}
+\item{parms_method}{A character to specify the method used to when evaluating
+\code{parms_eval}. The default is \code{getPeak} which uses the
+\code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The alternative
+option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}} function
+function from the \code{pracma} package. Note that the argument
+\code{parms_method} is currently ignored.}
 
 \item{envir}{Environment of function evaluation. The default is
 \code{globalenv}.}
@@ -275,38 +275,42 @@ interval, CI).
 }
 \details{
 The \strong{growthparameters} function internally calls the
-appropriate function (\code{fitted_draws} or \code{predict_draws}) to estimate
-the first derivative (velocity curve) for each posterior draw (posterior
-distribution) and then computes growth parameters such as age at peak
-growth velocity (APGV), peak growth velocity (PGV), age at takeoff growth
-velocity (ATGV), takeoff growth velocity (TGV), age at cessation of growth
-velocity (ACGV), and the cessation growth velocity (CGV). The growth
-parameters APGV and PGV are estimated by calling the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}}
-function whereas the ATGV and TGV are estimated by using the
-\code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} function. The \code{\link[sitar:getPeakTrough]{sitar::getTrough()}} function is used
-to estimates ACGV and CGV parameters. The parameters obtained from each
-posterior draw are then summarized appropriately to get the estimates and
-the uncertainty (SEs and CIs) around these estimates. Please note that it
-is not always possible to estimate cessation and takeoff growth parameters
-when there are no distinct pre-peak or post-peak troughs.
+\code{\link[=fitted_draws]{fitted_draws()}} or the \code{\link[=predict_draws]{predict_draws()}} function to estimate the first
+derivative based growth parameters for each posterior draw. The growth
+parameters estimated are age at peak growth velocity (APGV), peak growth
+velocity (PGV), age at takeoff growth velocity (ATGV), takeoff growth
+velocity (TGV), age at cessation of growth velocity (ACGV), and the
+cessation growth velocity (CGV). The APGV and PGV are estimated by calling
+the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function whereas the ATGV and TGV are estimated by
+using the \code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} function. The \code{\link[sitar:getPeakTrough]{sitar::getTrough()}} function
+is used to estimates ACGV and CGV parameters. The parameters obtained from
+each posterior draw are then summarized appropriately to get the estimates
+and the uncertainty (SEs and CIs) around these estimates. Please note that
+it is not always possible to estimate cessation and takeoff growth
+parameters when there are no distinct pre-peak or post-peak troughs.
 }
 \examples{
 
 # Fit Bayesian SITAR model 
-# To avoid running the model which takes some time, model fit to the
-# \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-# Please see \code{bgm} examples.
+
+# To avoid fitting the model which takes time, the model  
+# fit has already been saved as 'berkeley_mfit.rda' file.
+# See examples section of the bgm function for details on the model fit.
 
 model <- berkeley_mfit
 
-# Population average APGV and PGV
+# Population average age and velocity during the peak growth spurt
 growthparameters(model, re_formula = NA)
 
 \donttest{
-# Population average APGV, PGV, ATGV, TGV
+# Population average age and velocity during the take-off and the peak 
+# growth spurt (APGV, PGV. ATGV, TGV)
+
 growthparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)
 
-# Individual-specific APGV, PGV, ATGV, TGV
+# Individual-specific age and velocity during the take-off and the peak
+# growth spurt (APGV, PGV. ATGV, TGV)
+
 growthparameters(model, re_formula = NULL, peak = TRUE, takeoff = TRUE)
 }
 

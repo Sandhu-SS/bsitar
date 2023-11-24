@@ -7,6 +7,7 @@
   ))
   
   
+  
   if("rethinking" %in% (.packages())){
     packageStartupMessage("Package 'rethinking' detached and unloaded as it creates conflict",
             " \nwith the current rstan version ", utils::packageVersion('rstan'))

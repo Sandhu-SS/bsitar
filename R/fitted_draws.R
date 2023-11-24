@@ -1,26 +1,30 @@
 
 
 #' Fitted (expected) values from the posterior predictive distribution
+#' 
+#' @description The \strong{fitted_draws} function is a wrapper around the
+#' [brms::fitted.brmsfit()] function to obtain fitted values (and their summary) 
+#' from the posterior draws. See [brms::fitted.brmsfit()] for details.
 #'
-#' @details The \strong{fitted_draws} function is a wrapper around the
-#'   [brms::fitted.brmsfit]. The [brms::fitted.brmsfit] function from the
-#'   \pkg{brms} package can used to plot the fitted (distance) curve for an
-#'   \strong{brms} model when outcome (e.g., height) is untransformed. However,
-#'   when the outcome is log or square root transformed, the
-#'   [brms::fitted.brmsfit] will return the fitted curve on the log or square
-#'   root scale whereas the \strong{fitted_draws} will return the fitted curve
-#'   on the original scale. Furthermore, the \strong{fitted_draws} also displays the
-#'   velocity curve on the original scale after making required
-#'   back-transformation. Apart from these differences, both these functions
-#'   ([brms::fitted.brmsfit] and [bsitar::fitted_draws()]) work in the same
-#'   manner. In other words, user can specify all the options available in the
-#'   [brms::fitted.brmsfit]. 
+#' @details The \strong{fitted_draws} function computed the fitted values from
+#'   the posterior draws. The [brms::fitted.brmsfit()] function from the
+#'   \pkg{brms} package can used to get the fitted (distance) values when
+#'   outcome (e.g., height) is untransformed. However, when the outcome is log
+#'   or square root transformed, the [brms::fitted.brmsfit()] function will
+#'   return the fitted curve on the log or square root scale whereas the
+#'   \strong{fitted_draws} function returns the fitted values on the original
+#'   scale. Furthermore, the \strong{fitted_draws} also compute the first
+#'   derivative of (velocity) that too on the original scale after making
+#'   required back-transformation. Except for these differences, both these
+#'   functions (i.e., [brms::fitted.brmsfit()] and [fitted_draws()]) work in the
+#'   same manner. In other words, user can specify all the options available in
+#'   the [brms::fitted.brmsfit()].
 #' 
 #' @inherit growthparameters.bgmfit params
 #' 
 #' @inherit plot_conditional_effects.bgmfit params
 #' 
-#' @inherit brms::fitted.brmsfit description params
+#' @inherit brms::fitted.brmsfit params
 #' 
 #' @param ... Additional arguments passed to the [brms::fitted.brmsfit] 
 #' function. Please see \code{brms::fitted.brmsfit} for details on 
@@ -32,18 +36,17 @@
 #' @export fitted_draws.bgmfit
 #' @export
 #' 
+#' @seealso [brms::fitted.brmsfit()]
+#' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @examples
 #' 
-#' # The following examples show the use of *fitted_draws* to estimate  
-#' # population average and individual-specific distance and velocity 
-#' # curves.
-#' 
 #' # Fit Bayesian SITAR model 
-#' # To avoid running the model which takes some time, model fit to the
-#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-#' # Please see \code{bgm} examples.
+#' 
+#' # To avoid fitting the model which takes time, the model  
+#' # fit has already been saved as 'berkeley_mfit.rda' file.
+#' # See examples section of the bgm function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 

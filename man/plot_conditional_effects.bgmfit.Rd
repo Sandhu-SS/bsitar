@@ -59,28 +59,24 @@ predictors including two-way interaction effects.
 The \strong{plot_conditional_effects} function is a wrapper around
 the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}. The \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}
 function from the \pkg{brms} package can used to plot the fitted (distance)
-curve for an \strong{brms} model when response (e.g., height) is not
-transformed. However, when the outcome is log or square root transformed,
-the \link[brms:conditional_effects.brmsfit]{brms::conditional_effects} will return the fitted curve on the log or
-square root scale whereas the \strong{plot_conditional_effects} will return
-the fitted curve on the original scale. Furthermore, the
-\strong{plot_conditional_effects} also plots the velocity curve on the
-original scale after making required back-transformation. Apart from these
-differences, both these functions (\link[brms:conditional_effects.brmsfit]{brms::conditional_effects} and
-\strong{plot_conditional_effects} work in the same manner. In other words,
-user can specify all the arguments which are available in the
-\link[brms:conditional_effects.brmsfit]{brms::conditional_effects}.
+curve when response (e.g., height) is not transformed. However, when the
+outcome is log or square root transformed, the \link[brms:conditional_effects.brmsfit]{brms::conditional_effects}
+will return the fitted curve on the log or square root scale whereas the
+\strong{plot_conditional_effects} will return the fitted curve on the
+original scale. Furthermore, the \strong{plot_conditional_effects} also
+plots the velocity curve on the original scale after making required
+back-transformation. Apart from these differences, both these functions
+(\link[brms:conditional_effects.brmsfit]{brms::conditional_effects} and \strong{plot_conditional_effects} work in
+the same manner. In other words, user can specify all the arguments which
+are available in the \link[brms:conditional_effects.brmsfit]{brms::conditional_effects}.
 }
 \examples{
 
-# The examples below show the use of *plot_conditional_effects* to plot  
-# the population average and individual-specific distance and velocity 
-# curves.
-
 # Fit Bayesian SITAR model 
-# To avoid running the model which takes some time, model fit to the
-# \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-# Please see \code{bgm} examples.
+
+# To avoid fitting the model which takes time, the model  
+# fit has already been saved as 'berkeley_mfit.rda' file.
+# See examples section of the bgm function for details on the model fit.
 
 model <- berkeley_mfit
 
@@ -98,6 +94,9 @@ plot_conditional_effects(model, deriv = 1, re_formula = NA)
 plot_conditional_effects(model, deriv = 1, re_formula = NULL)
 }
 
+}
+\seealso{
+\code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

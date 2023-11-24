@@ -237,10 +237,7 @@ set_priors_initials <- function(a_prior_beta,
                                 init_args_internal     = NULL,
                                 custom_order_prior_str = NULL) {
   
-  
-  ##############################################
   # Initiate non formalArgs()
-  ##############################################
   resp <- NULL;
   autocor_formi <- NULL;
   randomsi <- NULL;
@@ -340,6 +337,7 @@ set_priors_initials <- function(a_prior_beta,
   nys <- NULL;
   cortimeNlags <- NULL;
   . <- NULL;
+  d_adjustedsi <- NULL;
   
   
   
@@ -357,7 +355,7 @@ set_priors_initials <- function(a_prior_beta,
   
   
   
-  # Depending on select_model, assign null values to all which not part of the model
+  # Depending on select_model, assign null values to all not part of the model
   for (set_randomsi_higher_levsli in c(letters[1:20])) {
     set_nlpar_what <- set_randomsi_higher_levsli
     if(!exists(paste0(set_randomsi_higher_levsli, 'form'))) {
@@ -391,8 +389,10 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   if (!is.null(autocor_formi)) {
-    if(grepl("unstr(", autocor_formi, fixed = T)) autocor_prior_acor <- NULL
-    if(!grepl("unstr(", autocor_formi, fixed = T)) autocor_prior_unstr_acor <- NULL
+    if(grepl("unstr(", autocor_formi, fixed = T)) 
+      autocor_prior_acor <- NULL
+    if(!grepl("unstr(", autocor_formi, fixed = T)) 
+      autocor_prior_unstr_acor <- NULL
   }
   
   
@@ -547,13 +547,6 @@ set_priors_initials <- function(a_prior_beta,
     uvarsigmacorr <- FALSE
     univariate_by$verbose <- FALSE
   }
-  
-  
-  
-  
-  
-  
-  
   
   
   
@@ -846,16 +839,6 @@ set_priors_initials <- function(a_prior_beta,
     sigmancov_gr <- NULL
   
   
-  
-  
-  # no prior if no lf | nlf(sigma ~
-  
-  # if (!is.null(dpar_formulasi)) {
-  #   if (!grepl("^lf\\(", dpar_formulasi) &
-  #       !grepl("^nlf\\(", dpar_formulasi)) {
-  #     dpar_prior_sigma <- dpar_cov_prior_sigma <- NULL
-  #   }
-  # }
   
   
   if(!is.null(a_formulasi)) {
@@ -1205,10 +1188,6 @@ set_priors_initials <- function(a_prior_beta,
     sigma_prior_cor <- NULL
   }
   
-  
-  
-  # if (is.null(randomsi[[1]]))
-  #   sigma_prior_cor <- NULL
   if(is.null(sigmancov_gr)) {
     sigma_prior_cor <- NULL
   }
@@ -1220,9 +1199,6 @@ set_priors_initials <- function(a_prior_beta,
   
   # Note that currently brms does not allow setting separate cor prior for sigma
   # So, either set sigma_prior_cor <- NULL for all or else set group = '
-  
-  # sigma_prior_cor <- NULL
-  
   
   
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
@@ -1647,7 +1623,7 @@ set_priors_initials <- function(a_prior_beta,
     
     
     if(setautocorr) {
-      tempzxxx <- autocor_formi # "~arma(time = occ, gr = id, p=2, q=1, cov = FALSE)"
+      tempzxxx <- autocor_formi 
       tempzxxx <- gsub("[[:space:]]", "", tempzxxx)
       if(grepl("p=", tempzxxx, fixed = F)) {
         acor_dim_p <- sub(",.*", "", sub(".*p=", "", tempzxxx) )  
@@ -1727,20 +1703,7 @@ set_priors_initials <- function(a_prior_beta,
     }
     
     
-    
-    # if (class == "sd" & sigma_dpar == 'sigma') {
-    #   if (sigma_form_0_gr) {
-    #     nrep_of_parms <- length(sigmacovcoefnames_gr)
-    #   } else {
-    #     if (!grepl("sigma_cov", x)) {
-    #       nrep_of_parms <- 1
-    #     } else if (grepl("sigma_cov", x)) {
-    #       nrep_of_parms <- length(sigmacovcoefnames_gr) - 1
-    #     }
-    #   }
-    # }
-    
-    
+  
     
     get_priors_parms <- function(x,
                                  prior_data,
@@ -2071,9 +2034,7 @@ set_priors_initials <- function(a_prior_beta,
     if (class == 'b') {
       # need to remove lb and ub if specifying coef, otherwise
       # Error: Argument 'coef' may not be specified when using boundaries.
-      
       # mnf <- paste0(nlpar, "_form_0")
-      
       if(nlpar != '') {
         mnf <- paste0(nlpar, "_form_0")
         mnc <- paste0("cov_nlpar")
@@ -2085,16 +2046,6 @@ set_priors_initials <- function(a_prior_beta,
       
       
       
-      # if (dist != 'uniform' &
-      #     dist != 'lognormal' &
-      #     dist != 'gamma' &
-      #     dist != 'inv_gamma' &
-      #     dist != 'exponential') {
-      # if (dist != 'uniform' | dist == 'uniform'  &
-      #     dist != 'lognormal' | dist == 'lognormal'  &
-      #     dist != 'gamma' | dist == 'gamma'  &
-      #     dist != 'inv_gamma' | dist == 'inv_gamma'  &
-      #     dist != 'exponential' | dist == 'exponential'  ) {
       if (all(is.na(lowerbound)) |
           all(is.na(upperbound))) {
         if (nlpar == 'a')
@@ -2130,19 +2081,21 @@ set_priors_initials <- function(a_prior_beta,
             coef <- sigmacovcoefnames
           }
           if(!ept(mnf)) {
-            if (nlpar == '' & sigma_dpar != '' & length(sigmacovcoefnames) == 1 &
+            if (nlpar == '' & sigma_dpar != '' & 
+                length(sigmacovcoefnames) == 1 &
                 sigmacovcoefnames[1] == "Intercept" ) {
               coef <- ""
               class <- sigmacovcoefnames
             }
-            if (nlpar == '' & sigma_dpar != '' & grepl("+", sigma_formulasi, fixed = T)
+            if (nlpar == '' & sigma_dpar != '' & grepl("+", 
+                                                       sigma_formulasi, 
+                                                       fixed = T)
             ) {
               coef <- ""
               class <- 'Intercept'
             }
           }
-          #   } # end of if (all(is.na(lowerbound)) & all(is.na(upperbound))) {
-          
+
           
           
         } else if (!all(is.na(lowerbound)) & !all(is.na(upperbound))) {
@@ -2169,11 +2122,6 @@ set_priors_initials <- function(a_prior_beta,
             if (!s_form_0 & !is.null(sncov))
               coef <- coef[1]
           }
-          # if (sigma_dpar == 'sigma') {
-          #   dpar <- sigma_dpar
-          #   coef <- rep("", length(sigmacovcoefnames))
-          # }
-          
         }
       }
       
@@ -2192,16 +2140,6 @@ set_priors_initials <- function(a_prior_beta,
         }
         
         
-        
-        
-        # if (!grepl("^~1$", sigma_formulasi, fixed = T)) {
-        #   setcoef <- coef
-        #   class <- class
-        # }
-        # if (grepl("^~1$", sigma_formulasi, fixed = T)) {
-        #   setcoef <- coef
-        #   class <- class
-        # }
         
         priors_ <-
           brms::prior_string(
@@ -2246,7 +2184,6 @@ set_priors_initials <- function(a_prior_beta,
       
       
       # nlpar s - betas
-      
       if (nlpar == 's' & cov_nlpar == "") {
         nlpar <- paste0(nlpar, 1:df)
         if (grepl("~1", s_formulasi, fixed = T)) {
@@ -2549,9 +2486,6 @@ set_priors_initials <- function(a_prior_beta,
     
     
     if (class == 'sd') {
-      # mnf <- paste0(nlpar, "_form_0_gr")
-      # mnc <- paste0("cov_nlpar")
-      
       if(nlpar != '') {
         mnf <- paste0(nlpar, "_form_0_gr")
         mnc <- paste0("cov_nlpar")
@@ -2931,14 +2865,11 @@ set_priors_initials <- function(a_prior_beta,
       
       
       
-      
-      
-      
-      
       # sigma cov - sd
       if(!is.null(sigma_formula_grsi)) {
         if (!grepl("~0", sigma_formula_grsi, fixed = T)) {
-          if (class == 'sd' & grepl("sigma_cov", x) & !is.null(sigma_cov_prior_sd)) {
+          if (class == 'sd' & grepl("sigma_cov", x) & 
+              !is.null(sigma_cov_prior_sd)) {
             if (ept(mnf)) {
               coef <- sigmacovcoefnames_gr
             } else {
@@ -2971,9 +2902,8 @@ set_priors_initials <- function(a_prior_beta,
     # subset and multivariate
     # removing resp leads to duplicate priors, so need to set only once
     
-    # Note that currently brms does not allow setting separate cor prior for sigma
-    # So, either set sigma_prior_cor <- NULL (line 810) for all or else set group = '
-    
+    # Note that currently brms not allowing setting separate cor prior for sigma
+    # So, set sigma_prior_cor <- NULL (line 810) for all, or else set group = '
     # But then this won't let assign different prior - dup stanvars
     # So keeping group 
     
@@ -3022,25 +2952,13 @@ set_priors_initials <- function(a_prior_beta,
     if (class == "" & !is.null(dpar_formulasi)) {
       # need to remove lb and ub if specifying coef, otherwise
       # Error: Argument 'coef' may not be specified when using boundaries.
-      
       dpar <- 'sigma'
-      
       if (!is.null(dpar_covi_mat_form) &
           !grepl("~1$", dpar_covi_mat_form, fixed = F)) {
         class <- 'b'
         mnf <- paste0('dpar', "_form_0")
         mnc <- paste0("dpar_cov")
         
-        # if (dist != 'uniform' &
-        #     dist != 'lognormal' &
-        #     dist != 'gamma' &
-        #     dist != 'inv_gamma' &
-        #     dist != 'exponential') {
-        # if (dist != 'uniform' | dist == 'uniform'  &
-        #     dist != 'lognormal' | dist == 'lognormal'  &
-        #     dist != 'gamma' | dist == 'gamma'  &
-        #     dist != 'inv_gamma' | dist == 'inv_gamma'  &
-        #     dist != 'exponential' | dist == 'exponential'  ) {
         if (all(is.na(lowerbound)) |
             all(is.na(upperbound))) {
           if (grepl("^lf\\(", dpar_formulasi)) {
@@ -3058,7 +2976,6 @@ set_priors_initials <- function(a_prior_beta,
           }
         } else if (!all(is.na(lowerbound)) & !all(is.na(upperbound))) {
           coef <- rep("", length(dparcovcoefnames))
-          # } # end of if (all(is.na(lowerbound)) & all(is.na(upperbound))) {
         }
         
         if (ept(mnf)) {
@@ -3360,8 +3277,7 @@ set_priors_initials <- function(a_prior_beta,
     initial_in_datazz <- NULL
   }
   
-  # print(initial_in_data)
-  
+
   if(!is.null(initsi[[1]])) {
     if(initsi[[1]] == 'random') {
       initial_in_datazz <- NULL
@@ -3373,7 +3289,6 @@ set_priors_initials <- function(a_prior_beta,
   
   if (!is.null(initial_in_datazz)) {
     if (!is.null(gr_prior_cor) | !is.null(sigma_prior_cor) ) {
-      # if (!is.null(gr_prior_cor)) {
       list_ck <- list_ck_ <- list()
       list_ck_rescor <- list()
       ik_j <- ik_j_ <- 0
@@ -3419,11 +3334,9 @@ set_priors_initials <- function(a_prior_beta,
       combined_inits <- c(list_ck, list_ck_)
     }
     
-    # print(combined_inits)
-    
+
     
     if (is.null(gr_prior_cor) & is.null(sigma_prior_cor) ) {
-      # if (is.null(gr_prior_cor)) {
       list_ck <- list_ck_z <- list_ck_sd <- list()
       list_ck_rescor <- list()
       ik_j <- ik_j_ <- 0
@@ -3509,7 +3422,11 @@ set_priors_initials <- function(a_prior_beta,
     # convert vector of 's' initials to named individual (s1, s2)
     if(select_model == "sitar" | select_model == 'rcs') {
       # Don't let when evaluating _str higher custom order
-      if("s_prior_beta" %in% custom_order_prior) first_loop <- TRUE else first_loop <- FALSE   
+      if("s_prior_beta" %in% custom_order_prior) {
+        first_loop <- TRUE  
+      } else {
+        first_loop <- FALSE  
+      }
       if(first_loop) {
         nlpar_s_init <- paste0('_s', 1:df)
         if (grepl("~0", s_formulasi, fixed = T)) {
@@ -3526,8 +3443,8 @@ set_priors_initials <- function(a_prior_beta,
           combined_inits[grepl(".*_s$", names(combined_inits))]
         
         subset_sparms_name <- names(subset_sparms)
-        # subset_sparms_numeric <- subset_sparms[[1]]
-        if(length(subset_sparms) != 0) subset_sparms_numeric <- subset_sparms[[1]]
+        if(length(subset_sparms) != 0) subset_sparms_numeric <- 
+          subset_sparms[[1]]
         if(length(subset_sparms) == 0) subset_sparms_numeric <- NULL
         if(!is.null(subset_sparms_numeric)) {
           subset_sparms2 <- list()
@@ -3557,8 +3474,9 @@ set_priors_initials <- function(a_prior_beta,
               names(combined_inits)
             ))
           combined_inits <-
-            combined_inits[!names(combined_inits) %in% paste0("",
-                                                              subset_sparms_name, "")]
+            combined_inits[!names(combined_inits) %in% 
+                             paste0("",
+                                    subset_sparms_name, "")]
           initials <- combined_inits
         } # if(!is.null(subset_sparms_numeric)) {
         if(is.null(subset_sparms_numeric)) {
@@ -3669,22 +3587,6 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   ##################
-  
-  # added on 11 6 2023
-  
-  
-  # out_listx <- initials
-  # for (ili in 1:length(initials)) {
-  #   if(length(out_listx[[ili]]) == 1) {
-  #     out_listx[[ili]] <- out_listx[[ili]]
-  #   } else if(length(out_listx[[ili]]) > 1 & is.vector(out_listx[[ili]])) {
-  #     out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
-  #   }
-  #   if(ili == 'ar' | ili == 'ma') {
-  #     out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
-  #   }
-  # }
-  
   out_listx <- initials
   for (ili in names(initials)) {
     if(length(out_listx[[ili]]) == 1) {
@@ -3694,23 +3596,23 @@ set_priors_initials <- function(a_prior_beta,
       if(nys == 1) sigma_par_name_rsd <- "sigma"
       if(nys > 1) sigma_par_name_rsd <- paste0('sigma', resp_)
       if(ili != sigma_par_name_rsd) {
-        out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+        out_listx[[ili]] <- array(out_listx[[ili]], 
+                                  dim = length(out_listx[[ili]]))
       }
     } else if(length(out_listx[[ili]]) > 1 & is.vector(out_listx[[ili]])) {
-      out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+      out_listx[[ili]] <- array(out_listx[[ili]], 
+                                dim = length(out_listx[[ili]]))
     }
     
     if(is.na(ili)) ili <- "xxxxxxxxxxxxxx"
     # for ar and ma, it is always vector , so array
     if(ili == 'ar' | ili == 'ma') {
-      out_listx[[ili]] <- array(out_listx[[ili]], dim = length(out_listx[[ili]]))
+      out_listx[[ili]] <- array(out_listx[[ili]], 
+                                dim = length(out_listx[[ili]]))
     }
   }
   
-  
-  
   initials <- out_listx
-  
   
   # when sigma  formula is ~1+.., then first element is Intercept_sigma and the 
   # remaining are b_sigma
@@ -3728,8 +3630,9 @@ set_priors_initials <- function(a_prior_beta,
       g_sigma_i <- initialsx[[sigma_par_name]]
       initialsx[[Intercept_sigma]] <- g_sigma_i[1]
       if(length(g_sigma_i) > 1) {
-        initialsx[[sigma_par_name]] <-   array(g_sigma_i[2:length(g_sigma_i)], 
-                                               dim = length(g_sigma_i[2:length(g_sigma_i)]))
+        initialsx[[sigma_par_name]] <-  
+          array(g_sigma_i[2:length(g_sigma_i)], 
+                dim = length(g_sigma_i[2:length(g_sigma_i)]))
       } # if(length(g_sigma_i) > 1) {
     }
   }
@@ -3739,8 +3642,8 @@ set_priors_initials <- function(a_prior_beta,
   
   
   
-  # re create symmetric square Lcortime which is flattened to a vector
-  # this could have have done above like L_|z_|Lrescor etc but this is same
+  # Re create symmetric square Lcortime which is flattened to a vector
+  # This could have been done above like L_|z_|Lrescor etc but this is same
   if(!is.null(initials[['Lcortime']])) {
     NC_dims         <- ept(cortimeNlags) %>% as.numeric()
     initials[['Lcortime']] <- matrix(initials[['Lcortime']], 
@@ -3748,9 +3651,6 @@ set_priors_initials <- function(a_prior_beta,
                                      ncol = NC_dims)
   } # if(!is.null(initials[['Lcortime']])) {
   
-  # initialsxx <<- initials
-  #  print(str(initials))
-  #########
   
   
   attr(evaluated_priors, 'initials') <- initials
@@ -3828,9 +3728,7 @@ prepare_priors <- function(prior_argument,
                            init_args_internal) {
   
   
-  ##############################################
   # Initiate non formalArgs()
-  ##############################################
   nlpar <- NULL;
   verbose <- NULL;
   cov_nlpar <- NULL;
@@ -3976,9 +3874,6 @@ prepare_priors <- function(prior_argument,
   sethp_dist <- ept(get_sethp_arg)
   sethp_dist <- gsub("\"" , "", sethp_dist)
   
-  
-  
-  # if(!is.null(sethp_dist) & (sethp_dist == "T" | sethp_dist == "TRUE") {
   
   if (!is.null(sethp_dist) &
       (sethp_dist == "T" | sethp_dist == "TRUE")) {
@@ -4693,8 +4588,6 @@ prepare_priors <- function(prior_argument,
         # set location parameter -> for normal, log normal, cauchy, studdent_t
         
         if (grepl("^location$", pname_)) {
-          # location a b c d e f fixed effects
-          
           # location nlpar a (class b)
           if (nlpar == "a" & class == "b" & grepl("a", fixedsi)) {
             if (x_i == paste0("lm", empty_sufx)) {
@@ -5968,12 +5861,6 @@ prepare_priors <- function(prior_argument,
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
-          
-          
-          
           
           
           
@@ -9870,8 +9757,9 @@ prepare_priors <- function(prior_argument,
               pll_args = ept(set_data_pll_args)
             )
           } else {
-            stanvars_data[[name_lb]] <- brms::stanvar(eval(parse(text = name_lb)),
-                                                      name = name_lb, block = "data")
+            stanvars_data[[name_lb]] <- 
+              brms::stanvar(eval(parse(text = name_lb)),
+                            name = name_lb, block = "data")
           }
         } else {
           lowerbound <- NA
@@ -9887,7 +9775,8 @@ prepare_priors <- function(prior_argument,
       if (grepl("^lb$", pname_)  & grepl("b_", x_i, fixed = T) ) {
         set_x_i_p_bound <- x_i
         if(resp_ != "") {
-          set_x_i_p_bound <- gsub("b_", paste0("b", resp_, "_"), set_x_i_p_bound, fixed = T)
+          set_x_i_p_bound <- gsub("b_", paste0("b", resp_, "_"), 
+                                  set_x_i_p_bound, fixed = T)
         } 
         lowerbound <- set_x_i_p_bound
         assign(name_lb, lowerbound)
@@ -9911,8 +9800,9 @@ prepare_priors <- function(prior_argument,
               pll_args = ept(set_data_pll_args)
             )
           } else {
-            stanvars_data[[name_ub]] <- brms::stanvar(eval(parse(text = name_ub)),
-                                                      name = name_ub, block = "data")
+            stanvars_data[[name_ub]] <- 
+              brms::stanvar(eval(parse(text = name_ub)), 
+                            name = name_ub, block = "data")
           }
         } else {
           upperbound <- NA
@@ -9928,7 +9818,8 @@ prepare_priors <- function(prior_argument,
       if (grepl("^ub$", pname_)  & grepl("b_", x_i, fixed = T) ) {
         set_x_i_p_bound <- x_i
         if(resp_ != "") {
-          set_x_i_p_bound <- gsub("b_", paste0("b", resp_, "_"), set_x_i_p_bound, fixed = T)
+          set_x_i_p_bound <- gsub("b_", paste0("b", resp_, "_"), 
+                                  set_x_i_p_bound, fixed = T)
         } 
         upperbound <- set_x_i_p_bound
         assign(name_ub, upperbound)
@@ -9950,20 +9841,15 @@ prepare_priors <- function(prior_argument,
               pll_args = ept(set_data_pll_args)
             )
           } else {
-            stanvars_data[[name_lb]] <- brms::stanvar(eval(parse(text = name_lb)),
-                                                      name = name_lb, block = "data")
+            stanvars_data[[name_lb]] <- 
+              brms::stanvar(eval(parse(text = name_lb)),
+                            name = name_lb, block = "data")
           }
         }
       }
     } # end of loop for (i in 1:length(x)) {
     
     
-    
-    # # added < & class != 'sd' >  on 18 6 23 to not specify ub lb for unifrom
-    # if(dist == "uniform" & class == 'sd' ) {
-    #   evaluated_parameter_lower <- 0
-    #   evaluated_parameter_upper <- Inf
-    # }
     
     
     if (dist == "uniform" ) {
@@ -9980,8 +9866,9 @@ prepare_priors <- function(prior_argument,
           pll_args = ept(set_data_pll_args)
         )
       } else {
-        stanvars_data[[name_lb]] <- brms::stanvar(eval(parse(text = name_lb)),
-                                                  name = name_lb, block = "data")
+        stanvars_data[[name_lb]] <- 
+          brms::stanvar(eval(parse(text = name_lb)),
+                        name = name_lb, block = "data")
       }
       
       
@@ -9998,8 +9885,9 @@ prepare_priors <- function(prior_argument,
           pll_args = ept(set_data_pll_args)
         )
       } else {
-        stanvars_data[[name_ub]] <- brms::stanvar(eval(parse(text = name_ub)),
-                                                  name = name_ub, block = "data")
+        stanvars_data[[name_ub]] <- 
+          brms::stanvar(eval(parse(text = name_ub)),
+                        name = name_ub, block = "data")
       }
       
       
@@ -10942,7 +10830,6 @@ prepare_priors <- function(prior_argument,
   
   
   # initials
-  
   if (initsi != "random") {
     # parm <- nlpar
     if(sigma_dpar == 'sigma')  {
@@ -11124,7 +11011,6 @@ prepare_initials <- function(init_argument,
   
   # For standardized group level effects as implemented in the centerized 
   # parametrisation approach used in the brms package. 
-  
   init_argument_z <- "r_init_z"
   
   if (initsi == "0") {
@@ -11140,20 +11026,13 @@ prepare_initials <- function(init_argument,
     assign(init_argument_z, "prior")
   }
   
-  check_form_0 <- paste0(parm, "_", 'form_0')
-  nparcov <- paste0(parm, "ncov")
-  
-  check_form_0_gr <- paste0(parm, "_", 'form_0_gr')
-  
-  
-  nparcov_gr <- paste0(parm, "ncov_gr")
-  
-  
+  check_form_0       <- paste0(parm, "_", 'form_0')
+  nparcov            <- paste0(parm, "ncov")
+  check_form_0_gr    <- paste0(parm, "_", 'form_0_gr')
+  nparcov_gr         <- paste0(parm, "ncov_gr")
   check_sigma_form_0 <- paste0('sigma', "_", 'form_0')
   
-  
   if(nparcov == 'nsigmacov') nparcov <- 'nsigmacov'
-  
   
   abcrandomelements <-
     strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
@@ -11745,10 +11624,9 @@ prepare_initials <- function(init_argument,
           }
           if(!is.null(ept(nparcov))) out_list[[name_parm]] <-addcovsigma
         }
-      } # end else if(!ept("sigma_form_0")) 
-    } # if(ept(ept("init_argument")) != 'random' ) {
-  } # if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
-  
+      } 
+    } 
+  } 
   
   
   ################################################
@@ -12594,9 +12472,6 @@ prepare_initials <- function(init_argument,
       name_parm_s <- class
     }
     
-    # if(class == 'ar') nrep_of_parms <- nrep_of_parms_p
-    # if(class == 'ma') nrep_of_parms <- nrep_of_parms_q
-    
     name_parm_s <- paste0(name_parm_s, resp_)
     
     allowed_init_options <- NULL
@@ -12916,6 +12791,8 @@ prepare_initials <- function(init_argument,
 
 
 
+
+
 # optimize_model.bgmfit here because it caused error numeric in the latest
 # versions. Following dropped (full optimize_model.bgmfit saved i folder 4)
 
@@ -12994,6 +12871,9 @@ prepare_initials <- function(init_argument,
 #'
 #'@param digits An integer to set the number of decimal places.
 #'
+#'@param cores The number of cores to used in processing (default \code{1}).
+#' This passed to the [brms::add_criterion()].
+#'
 #'@param envir A environment. Default is \code{glonalenv()}.
 #'
 #'@param ... Other arguments passed to \code{\link{update_model}}.
@@ -13001,6 +12881,8 @@ prepare_initials <- function(init_argument,
 #'@return A list containing the optimized models of class \code{bgmfit}, and the
 #'  the summary statistics if \code{add_fit_criteria} and/or
 #'  \code{add_bayes_R} are specified.
+#'  
+#'@seealso [brms::add_criterion()]
 #'
 #'@author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
@@ -13019,6 +12901,7 @@ optimize_model.bgmfit <- function(model,
                                   add_bayes_R = c('bayes_R2'),
                                   byresp = FALSE,
                                   digits = 2,
+                                  cores = 1,
                                   envir = globalenv(),
                                   ...) {
   
@@ -13213,10 +13096,6 @@ optimize_model.bgmfit <- function(model,
                               ...) {
     
     if (!fit$model_info$call.full.bgm$expose_function) {
-      # funname__ <- names(fit$model_info$exefuns)[1]
-      # assign(funname__, 
-      #        fit$model_info$exefuns[[funname__]],
-      #        envir = environment())
       assign(o[[1]], fit$model_info[['exefuns']][[o[[1]]]], envir = envir)
     }
     
@@ -13228,12 +13107,14 @@ optimize_model.bgmfit <- function(model,
           !fit$model_info$multivariate) {
         if (!fit$model_info$multivariate) {
           suppressWarnings(fit <- brms::add_criterion(fit,
-                                                      add_fit_criteria, cores = 1))
+                                                      add_fit_criteria, 
+                                                      cores = cores))
         }
         if (fit$model_info$multivariate) {
           if (is.null(resp)) {
             suppressWarnings(fit <- brms::add_criterion(fit,
-                                                        add_fit_criteria, cores = 1))
+                                                        add_fit_criteria, 
+                                                        cores = cores))
           }
           if (!is.null(resp)) {
             for (aci in fit$model_info$ys) {
@@ -13241,7 +13122,7 @@ optimize_model.bgmfit <- function(model,
                 fit,
                 add_fit_criteria,
                 resp = aci,
-                cores = 1
+                cores = cores
               ))
               aci_names <- paste0(names(fit$criteria), aci)
               names(fit$criteria) <- aci_names
@@ -13261,7 +13142,7 @@ optimize_model.bgmfit <- function(model,
             fit,
             add_fit_criteria,
             resp = aci,
-            cores = 1
+            cores = cores
           ))
           aci_names <- paste0(names(fit$criteria), aci)
           names(fit$criteria) <- aci_names
@@ -13283,7 +13164,7 @@ optimize_model.bgmfit <- function(model,
         if (!fit$model_info$multivariate) {
           aci_names <- paste0(add_bayes_R, '')
           suppressWarnings(fit$criteria[[aci_names]] <-
-                             brms::bayes_R2(fit, cores = 1))
+                             brms::bayes_R2(fit, cores = cores))
           fit$criteria[[aci_names]] <-
             fit$criteria[[aci_names]] %>%
             data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
@@ -13295,7 +13176,7 @@ optimize_model.bgmfit <- function(model,
             aci_names <- paste0(add_bayes_R, '')
             suppressWarnings(fit$criteria[[aci_names]] <-
                                brms::bayes_R2(fit,
-                                              cores = 1))
+                                              cores = cores))
             fit$criteria[[aci_names]] <-
               fit$criteria[[aci_names]] %>%
               data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
@@ -13308,7 +13189,7 @@ optimize_model.bgmfit <- function(model,
               suppressWarnings(fit$criteria[[aci_names]] <-
                                  brms::bayes_R2(fit,
                                                 resp = aci,
-                                                cores = 1))
+                                                cores = cores))
               fit$criteria[[aci_names]] <-
                 fit$criteria[[aci_names]] %>%
                 data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
@@ -13328,7 +13209,7 @@ optimize_model.bgmfit <- function(model,
           suppressWarnings(fit$criteria[[aci_names]] <-
                              brms::bayes_R2(fit,
                                             resp = aci,
-                                            cores = 1))
+                                            cores = cores))
           fit$criteria[[aci_names]] <-
             fit$criteria[[aci_names]] %>%
             data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
@@ -13701,14 +13582,6 @@ optimize_model.bgmfit <- function(model,
     args_o$data  <- newdata %>% data.frame()
     
     
-    # Somehow update_model is not accepting symbol as arg e.g, x = age
-    # fit <- do.call(update_model, args_o)
-    
-    # fit <- do.call(bgm, args_o)
-    
-    
-    
-    # Not even the above, using the below approach for full control 
     
     args_o$model  <- NULL
     
@@ -13735,15 +13608,10 @@ optimize_model.bgmfit <- function(model,
       all_same_args_c <- c(all_same_args_c, identical(args_o_org[[args_oi]],
                                                       args_o_new[[args_oi]]) 
       )
-      # args_o_org[[args_oi]] <- args_o_new[[args_oi]]
-      # args_o_org_updated[[args_oi]] <- args_o_new[[args_oi]]
     }
     
-    # args_o_org_updated$data <- newdata %>% data.frame()
     
     all_same_args_c_diffs <- args_o_new[!all_same_args_c]
-    
-    
     
     if(length(all_same_args_c_diffs) > 0) {
       all_same_args <- FALSE 
@@ -13752,30 +13620,6 @@ optimize_model.bgmfit <- function(model,
     }
     
     mandatory_opts <- c('df', 'xfun', 'yfun')
-    
-    
-    # if(!all_same_args) {
-    #   cat("\n")
-    #   message('Additional arguments updated during optimization are:',
-    #           "\n "
-    #          # , "(i.e., inaddition to the ", 
-    #          # paste(mandatory_opts, collapse = ", "), ")"
-    #           )
-    #   for (all_same_args_c_diffsi in names(all_same_args_c_diffs)) {
-    #     if(!all_same_args_c_diffsi %in%  mandatory_opts) {
-    #       # Warning in .make_numeric_version(x, strict, 
-    #       # .standard_regexps()$valid_numeric_version) :
-    #       
-    #       message(' Argument: ',
-    #               names(all_same_args_c_diffs[all_same_args_c_diffsi]))
-    #       message('  Value: ',
-    #               all_same_args_c_diffs[all_same_args_c_diffsi])
-    #       
-    #       # cat("\n")
-    #     }
-    #   }
-    # }
-    
     
     
     if(all_same_args) {
@@ -13870,13 +13714,6 @@ optimize_model.bgmfit <- function(model,
   
   attributes(optimize_list) <- NULL
   
-  # out <- optimize_list
-  # attr(out, 'loo')            <- loo_fit
-  # attr(out, 'loo_diagnostic') <- loo_diagnostic_fit
-  # attr(out, 'waic')           <- waic_fit
-  # attr(out, 'bayes_R2')       <- bayes_R2_fit
-  
-  
   optimize_summary <- data.frame()
   
   if(exists('loo_fit')) optimize_summary <- optimize_summary %>% 
@@ -13896,8 +13733,6 @@ optimize_model.bgmfit <- function(model,
   
   return(out)
 }
-
-
 
 
 

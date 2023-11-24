@@ -382,21 +382,21 @@ the data or return the data. If \code{TRUE}, the data is returned as a
 \item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
 to get growth parameters on the fly.}
 
-\item{idata_method}{A character string to indicate interpolation method.
-Options available are \code{m1} (default) and \code{m2}. The \code{'m1'}
-calls the \code{idatafunction} function whereas \code{'m2'} calls the
-\code{get_idata} function for data interpolation. The \code{idatafunction}
-function is adapted from the the \pkg{iapvbs} which is documented here
-\url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R} The
-\code{get_idata} function is adapted from the the \pkg{JMbayes} and is
-documented here
-\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}}
+\item{idata_method}{A character string to indicate the interpolation method.
+Options are \emph{method 1} (specified as  \code{'m1'}, default) and
+\emph{method 2} (specified as \code{'m2'}). The \emph{method 1}
+(\code{'m1'}) is adapted from the the \pkg{iapvbs} package and is
+documented here \url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}.
+The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
+package and is documented here
+\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
 
-\item{parms_method}{A character to specify the method used to when
-evaluating \code{parms_eval}. The default is \code{getPeak} which uses
-the \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The
-alternative option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}}
-function function from the \code{pracma} package.}
+\item{parms_method}{A character to specify the method used to when evaluating
+\code{parms_eval}. The default is \code{getPeak} which uses the
+\code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The alternative
+option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}} function
+function from the \code{pracma} package. Note that the argument
+\code{parms_method} is currently ignored.}
 
 \item{envir}{Environment of function evaluation. The default is
 \code{globalenv}.}
@@ -411,7 +411,7 @@ A plot object (default), or a \code{data.frame} when
 }
 \description{
 The \strong{plot_curves} provides visualization of six different
-types of growth curves that are plotted by using the \code{ggplot2} package.
+types of growth curves that are plotted by using the \pkg{ggplot2} package.
 The \strong{plot_curves} also allows users to make their own detailed plots
 from the data returned as a \code{data.frame}.
 }
@@ -422,21 +422,22 @@ population average velocity curve, individual-specific distance curves,
 individual-specific velocity curves, unadjusted individual growth curves
 (i.e, observed growth curves), and the adjusted individual growth curves
 (adjusted for the model estimated random effects). The \strong{plot_curves}
-internally calls the \code{\link[=growthparameters]{growthparameters()}} function to estimate and
-summaries the distance and velocity curves and to estimate growth parameters
-such as the age at peak growth velocity (APGV). The \strong{plot_curves} in
-turn calls the \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and \link[brms:predict.brmsfit]{brms::predict.brmsfit} functions
-to make inference from the posterior draws. Thus, \strong{plot_curves}
-allows plotting fitted or predicted curves. See \link[brms:fitted.brmsfit]{brms::fitted.brmsfit} and
-\link[brms:predict.brmsfit]{brms::predict.brmsfit} for details on these functions and the difference
-between fitted and predicted values.
+internally calls the \code{\link[=growthparameters]{growthparameters()}} function to estimate and summaries
+the distance and velocity curves and to estimate growth parameters such as
+the age at peak growth velocity (APGV). The \strong{plot_curves} in turn
+calls the \code{\link[=fitted_draws]{fitted_draws()}} or the \code{\link[=predict_draws]{predict_draws()}} functions to make
+inference from the posterior draws. Thus, \strong{plot_curves} allows
+plotting fitted or predicted curves. See \code{\link[=fitted_draws]{fitted_draws()}} and
+\code{\link[=predict_draws]{predict_draws()}} for details on these functions and the difference between
+fitted and predicted values.
 }
 \examples{
 
 # Fit Bayesian SITAR model 
-# To avoid running the model which takes some time, model fit to the
-# \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-# Please see \code{bgm} examples.
+
+# To avoid fitting the model which takes time, the model  
+# fit has already been saved as 'berkeley_mfit.rda' file.
+# See examples section of the bgm function for details on the model fit.
 
 model <- berkeley_mfit
 
@@ -468,6 +469,9 @@ plot_curves(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
 plot_curves(model, opt = 'au', ipts = NULL)
 }
 
+}
+\seealso{
+\code{\link[=growthparameters]{growthparameters()}} \link{fitted_draws} \code{\link[=predict_draws]{predict_draws()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

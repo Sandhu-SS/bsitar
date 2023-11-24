@@ -2,49 +2,53 @@
 
 #' Predicted values (draws) from the posterior predictive distribution
 #' 
-#' @details The \strong{predict_draws} function is a wrapper around 
-#' the [brms::predict.brmsfit]. The [brms::predict.brmsfit]  
-#' function from the \code{brms} package can used to plot the predict (distance) 
-#' curve for an *bsitar* model when outcome (e.g., height) is untransformed.
-#' However, when the outcome is log or square root transformed, the 
-#' [brms::predict.brmsfit] will return the predict curve on the log or 
-#' square root scale whereas the \strong{predict_draws} will 
-#' return the predict curve on the original scale. Furthermore, the 
-#' \strong{predict_draws} also displays the velocity curve on the original scale
-#' after making required back-transformation. Apart from these differences, 
-#' both these functions ([brms::predict.brmsfit] and 
-#' \strong{predict_draws} work in the same manner. In other words, 
-#' user can specify all the arguments which are available in the 
-#' [brms::predict.brmsfit].
+#' @description The \strong{predict_draws} function is a wrapper around the
+#'   [brms::predict.brmsfit()] function to obtain predicted values (and their
+#'   summary) from the posterior distribution. See [brms::predict.brmsfit()] for
+#'   details.
+#' 
+#' @details The \strong{fitted_draws} function computed the fitted values from
+#'   the posterior distribution. The [brms::predict.brmsfit()] function
+#'   from the \pkg{brms} package can used to get the predicted (distance) values
+#'   when outcome (e.g., height) is untransformed. However, when the outcome is
+#'   log or square root transformed, the [brms::predict.brmsfit()] function will
+#'   return the fitted curve on the log or square root scale whereas the
+#'   \strong{predict_draws} function returns the fitted values on the original
+#'   scale. Furthermore, the \strong{predict_draws} also compute the first
+#'   derivative of (velocity) that too on the original scale after making
+#'   required back-transformation. Except for these differences, both these
+#'   functions (i.e., [brms::predict.brmsfit()] and [predict_draws()]) work in
+#'   the same manner. In other words, user can specify all the options available
+#'   in the [brms::predict.brmsfit()].
+#' 
 #' 
 #' @inherit growthparameters.bgmfit params
 #' 
 #' @inherit plot_conditional_effects.bgmfit params
 #' 
-#' @inherit brms::predict.brmsfit description params
+#' @inherit brms::predict.brmsfit params
 #' 
-#' @param ... Additional arguments passed to the [brms::predict.brmsfit] 
-#' function. Please see \code{brms::predict.brmsfit} for details on 
-#' various options available.
+#' @param ... Additional arguments passed to the [brms::predict.brmsfit()]
+#'   function. Please see [brms::predict.brmsfit()] for details on various
+#'   options available.
 #' 
-#' @return An array of predicted response values. See [brms::predict.brmsfit] 
+#' @return An array of predicted response values. See [brms::predict.brmsfit()] 
 #' for details.
 #' 
 #' @export predict_draws.bgmfit
 #' @export
 #' 
+#' @seealso [brms::predict.brmsfit()] 
+#' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @examples
 #' 
-#' # The examples below show the use of *predict_draws* to estimate  
-#' # population average and individual-specific distance and velocity 
-#' # curves for the the predict model.
-#' 
 #' # Fit Bayesian SITAR model 
-#' # To avoid running the model which takes some time, model fit to the
-#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-#' # Please see \code{bgm} examples.
+#' 
+#' # To avoid fitting the model which takes time, the model  
+#' # fit has already been saved as 'berkeley_mfit.rda' file.
+#' # See examples section of the bgm function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 

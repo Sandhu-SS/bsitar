@@ -2,10 +2,12 @@
 
 #' Perform leave-one-out (loo) cross-validation
 #' 
-#' @details The \strong{loo_validation} function is a wrapper around 
-#' the [brms::loo()] and works exactly the same way as [brms::loo()]. 
+#' @description The \strong{loo_validation} function is a wrapper around the
+#'   [brms::loo()] function to perform approximate leave-one-out
+#'   cross-validation based on the posterior likelihood. See [brms::loo()] for
+#'   details.
 #' 
-#' @inherit brms::loo description 
+#' @inherit brms::loo details 
 #' 
 #' @inheritParams growthparameters.bgmfit
 #' 
@@ -13,9 +15,8 @@
 #' 
 #' @param deriv Must be \code{NULL}. 
 #' 
-#' @param ... Additional arguments passed to the [brms::loo()] 
-#' function. Please see \code{brms::loo} for details on 
-#' various options available.
+#' @param ... Additional arguments passed to the [brms::loo()] function. 
+#' Please see \code{brms::loo} for details on various options available.
 #' 
 #' @return If only one model object is provided, then an object of class
 #'   \code{loo} is returned. If multiple objects are provided, an object of
@@ -24,14 +25,17 @@
 #' @export loo_validation.bgmfit
 #' @export
 #' 
+#' @seealso [brms::loo()] 
+#' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @examples
 #' 
 #' # Fit Bayesian SITAR model 
-#' # To avoid running the model which takes some time, model fit to the
-#' # \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-#' # Please see \code{bgm} examples.
+#' 
+#' # To avoid fitting the model which takes time, the model  
+#' # fit has already been saved as 'berkeley_mfit.rda' file.
+#' # See examples section of the bgm function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 

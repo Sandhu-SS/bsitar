@@ -42,9 +42,8 @@ maximum number of cores avaialble minus one, i.e.,
 
 \item{deriv}{Must be \code{NULL}.}
 
-\item{...}{Additional arguments passed to the \code{\link[brms:loo.brmsfit]{brms::loo()}}
-function. Please see \code{brms::loo} for details on
-various options available.}
+\item{...}{Additional arguments passed to the \code{\link[brms:loo.brmsfit]{brms::loo()}} function.
+Please see \code{brms::loo} for details on various options available.}
 }
 \value{
 If only one model object is provided, then an object of class
@@ -52,20 +51,24 @@ If only one model object is provided, then an object of class
 class \code{loolist}.
 }
 \description{
-Perform approximate leave-one-out cross-validation based
-on the posterior likelihood using the \pkg{loo} package.
-For more details see \code{\link[loo:loo]{loo}}.
+The \strong{loo_validation} function is a wrapper around the
+\code{\link[brms:loo.brmsfit]{brms::loo()}} function to perform approximate leave-one-out
+cross-validation based on the posterior likelihood. See \code{\link[brms:loo.brmsfit]{brms::loo()}} for
+details.
 }
 \details{
-The \strong{loo_validation} function is a wrapper around
-the \code{\link[brms:loo.brmsfit]{brms::loo()}} and works exactly the same way as \code{\link[brms:loo.brmsfit]{brms::loo()}}.
+See \code{\link[brms]{loo_compare}} for details on model comparisons.
+ For \code{brmsfit} objects, \code{LOO} is an alias of \code{loo}.
+ Use method \code{\link[brms]{add_criterion}} to store
+ information criteria in the fitted model object for later usage.
 }
 \examples{
 
 # Fit Bayesian SITAR model 
-# To avoid running the model which takes some time, model fit to the
-# \code{berkeley_mdata} has already been saved as berkeley_mfit.rda object.
-# Please see \code{bgm} examples.
+
+# To avoid fitting the model which takes time, the model  
+# fit has already been saved as 'berkeley_mfit.rda' file.
+# See examples section of the bgm function for details on the model fit.
 
 model <- berkeley_mfit
 
@@ -74,6 +77,9 @@ loo_validation(model, cores = 1)
 }
 
 
+}
+\seealso{
+\code{\link[brms:loo.brmsfit]{brms::loo()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
