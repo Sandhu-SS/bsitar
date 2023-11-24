@@ -69,12 +69,12 @@ bgm(
   b_prior_beta = student_t(3, 0, 3, autoscale = FALSE),
   c_prior_beta = student_t(3, 0, 1.25, autoscale = FALSE),
   d_prior_beta = student_t(3, 0, 1, autoscale = TRUE),
-  e_prior_beta = normal(0, 1, autoscale = FALSE),
-  f_prior_beta = normal(0, 1, autoscale = FALSE),
-  g_prior_beta = normal(0, 1, autoscale = FALSE),
-  h_prior_beta = normal(0, 1, autoscale = FALSE),
-  i_prior_beta = normal(0, 1, autoscale = FALSE),
-  s_prior_beta = normal(0, lm, autoscale = TRUE),
+  e_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  f_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  g_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  h_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  i_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+  s_prior_beta = student_t(3, 0, lm, autoscale = TRUE),
   a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
@@ -89,12 +89,12 @@ bgm(
   b_prior_sd = student_t(3, 0, 1.5, autoscale = FALSE),
   c_prior_sd = student_t(3, 0, 0.75, autoscale = FALSE),
   d_prior_sd = student_t(3, 0, 1, autoscale = TRUE),
-  e_prior_sd = normal(0, 1, autoscale = FALSE),
-  f_prior_sd = normal(0, 1, autoscale = FALSE),
-  g_prior_sd = normal(0, 1, autoscale = FALSE),
-  h_prior_sd = normal(0, 1, autoscale = FALSE),
-  i_prior_sd = normal(0, 1, autoscale = FALSE),
-  s_prior_sd = normal(0, lm, autoscale = 2.5),
+  e_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+  f_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+  g_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+  h_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+  i_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+  s_prior_sd = student_t(3, 0, lm, autoscale = 2.5),
   a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
   b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
   c_cov_prior_sd = normal(0, 0.05, autoscale = FALSE),
@@ -125,14 +125,14 @@ bgm(
   h_cov_prior_sd_str = NULL,
   i_cov_prior_sd_str = NULL,
   s_cov_prior_sd_str = NULL,
-  sigma_prior_beta = normal(0, 1, autoscale = FALSE),
+  sigma_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
-  sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
+  sigma_prior_sd = student_t(3, 0, 0.25, autoscale = FALSE),
   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
   sigma_prior_sd_str = NULL,
   sigma_cov_prior_sd_str = NULL,
   rsd_prior_sigma = exponential(ysd, autoscale = TRUE),
-  dpar_prior_sigma = normal(0, ysd, autoscale = TRUE),
+  dpar_prior_sigma = student_t(3, 0, ysd, autoscale = TRUE),
   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
   autocor_prior_unstr_acor = lkj(1),
@@ -1815,20 +1815,40 @@ software program full Bayesian inference
 Like \pkg{brms}, the \pkg{bsitar} package allows a wide range of prior
 specifications that encourage the users to apply prior distributions that
 actually reflect their prior knowledge about the human growth processes,
-such as the timing of the age at peak growth velocity. The model fit can be
-evaluated by means of posterior predictive check (see \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}).
-Furthermore, models with different priors and/or growth curves (i.e., with
-different \code{df} for splines) can be easily compared by using methods
-already available in the \pkg{brms} package such as the leave one out cross
-validation (see \code{\link[brms:loo.brmsfit]{brms::loo()}}). The excellent post-processing support
-offered by the \emph{brms} is further augmented by many custom functions written
-for the \strong{bsitar} that allows prediction and visualization of population
-average and individual specific growth trajectories velocity curves.
-Furthermore, population average and individual specific growth parameters
-such as age at peak growth velocity (APGV) and the peak growth velocity
-(PGV) can be easily computed.
+such as the timing of the age at peak growth velocity. We follow and adapt
+the time tested and carefully crafted prior specification approaches used in
+the \pkg{brms} and \pkg{rstanarm} packages. For example, we follow
+\pkg{brms} package approach and use \code{student_t} distribution for the
+regression coefficients and the standard deviation parameters for group
+level random effects but set \code{exponential} distribution for the
+residual standard deviation. Like \pkg{brms} and \pkg{rstanarm} packages,
+the \pkg{bsitar} package allows for auto scaling of the scale parameter.
+While \pkg{rstanarm} earlier used to set \code{autosclae} as 2.5 (recently
+authors changed this behavior to \code{FALSE}), the \pkg{brms} package sets
+it to 1 or 2.5 depending on the standard deviation of the response variable
+(See \code{\link[brms:set_prior]{brms::prior()}}). The \pkg{bsitar} package offers the flexibility of
+choosing the scaling factor as any real number (e.g., \code{autosclae =
+ 2.5}). When \code{autosclae = TRUE}, \code{2.5} is the default scaling
+factor. We strongly recommend to go through the well documented details on
+prior specifications used in the
+\href{https://paul-buerkner.github.io/brms/reference/set_prior.html}{brms} and
+\href{https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html}{rstanarm}
+packages.
 
-The \pkg{bsitar} package allows three different model specifications:
+Similar to the \pkg{brms} package, the \pkg{bsitar} package offers a range
+of tools to evaluate the model fit such as the posterior predictive check
+(see \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}). Furthermore, models with different priors and/or
+growth curves (i.e., with different \code{df} for splines) can be easily
+compared by using methods already available in the \pkg{brms} package such
+as the leave one out cross validation (see \code{\link[brms:loo.brmsfit]{brms::loo()}}). The excellent
+post-processing support offered by the \pkg{brms} package is further
+augmented by many custom functions written for the \pkg{bsitar} package that
+allows prediction and visualization of population average and individual
+specific growth trajectories velocity curves. Furthermore, population
+average and individual specific growth parameters such as age at peak growth
+velocity (APGV) and the peak growth velocity (PGV) can be easily computed.
+
+The \pkg{bsitar} package allows three different types of model specifications:
 \code{univariate}, \code{univariate_by} and \code{multivariate}. A
 \code{univariate} model involves a single model fit applied to an outcome
 whereas both \code{univariate_by} and \code{multivariate} models comprise
@@ -1879,6 +1899,8 @@ model_ml <- sitar::sitar(x = age, y = height, id = id,
 if(exists('berkeley_mfit')) {
   model <- berkeley_mfit
 } else {
+ # Fit model with default priors 
+ # See documentation for prior on each parameter
   model <- bgm(x = age, y = height, id = id, 
                   df = 3, 
                   data = berkeley_mdata,
@@ -1888,6 +1910,24 @@ if(exists('berkeley_mfit')) {
                   a.formula = ~1, 
                   b.formula = ~1, 
                   c.formula = ~1, 
+                  threads = brms::threading(NULL),
+                  chains = 2, cores = 2, iter = 6000, thin = 15)
+                  
+# Note that we can test for the sensitivity to the priors by re fitting the
+# above model with flat (i.e., uniform) priors on the regression coefficients
+model <- bgm(x = age, y = height, id = id, 
+                  df = 3, 
+                  data = berkeley_mdata,
+                  xoffset = 'mean', 
+                  fixed = 'a+b+c', 
+                  random = 'a+b+c',
+                  a.formula = ~1, 
+                  b.formula = ~1, 
+                  c.formula = ~1, 
+                  a_prior_beta = flat,
+                  b_prior_beta = flat,
+                  c_prior_beta = flat,
+                  s_prior_beta = flat,
                   threads = brms::threading(NULL),
                   chains = 2, cores = 2, iter = 6000, thin = 15)
 }

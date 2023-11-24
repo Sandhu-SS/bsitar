@@ -306,8 +306,11 @@ age).}
 used as a title.}
 
 \item{legendpos}{An optional character string to specify the position of
-legends. When \code{NULL}, the legend position is set as 'bottom' for
-distance and velocity curves with \code{'single'} layout option.}
+legends. When \code{NULL} (default), the legend position is set as 'bottom'
+for distance and velocity curves with \code{'single'} layout option for the
+population average curves, and \code{'none'} for the individual specific
+curves. The \code{'none'} suppress all legends that helps in avoiding
+printing legends for each individual.}
 
 \item{linetype.apv}{An optional character string to specify the type of the
 vertical line drawn to mark the APGV. Default \code{NULL} sets the linetype
@@ -446,12 +449,17 @@ plot_curves(model, opt = 'dv')
 
 \donttest{
 # Individual-specific distance and velocity curves with default options
+# Note that legendpos = 'none' will suppress the legend positions. This   
+# suppression is useful when plotting individual-specific curves
+
 plot_curves(model, opt = 'DV')
 
 # Population average distance and velocity curves with APGV
+
 plot_curves(model, opt = 'dv', apv = TRUE)
 
 # Individual-specific distance and velocity curves with APGV
+
 plot_curves(model, opt = 'DV', apv = TRUE)
 
 # Population average distance curve, velocity curve, and APGV with CI bands
@@ -464,9 +472,12 @@ plot_curves(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
 # Adjusted and unadjusted individual curves
 # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
 # This is because it does not a make sense to interploate data when
-# estimating adjusted curves.
+# estimating adjusted curves. Also, layout = 'facet' (and not default 
+# layout = 'single') for plotting adjusted and unadjusted individual curves
+# For the other plots shown above, user can set layout = 'single'
 
-plot_curves(model, opt = 'au', ipts = NULL)
+plot_curves(model, opt = 'au', ipts = NULL, layout = 'facet')
+
 }
 
 }

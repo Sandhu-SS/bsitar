@@ -30,7 +30,6 @@ bgm
 biacromial
 bmatrix
 brms
-brmsfit
 burnin
 continous
 covaristes
@@ -64,6 +63,7 @@ pmatrix
 ppc
 pre
 rescaling
+rstanarm
 rstanrm
 sd
 stancode

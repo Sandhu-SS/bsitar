@@ -65,20 +65,40 @@
 #'  Like \pkg{brms}, the \pkg{bsitar} package allows a wide range of prior
 #'  specifications that encourage the users to apply prior distributions that
 #'  actually reflect their prior knowledge about the human growth processes,
-#'  such as the timing of the age at peak growth velocity. The model fit can be
-#'  evaluated by means of posterior predictive check (see [brms::pp_check()]).
-#'  Furthermore, models with different priors and/or growth curves (i.e., with
-#'  different \code{df} for splines) can be easily compared by using methods
-#'  already available in the \pkg{brms} package such as the leave one out cross
-#'  validation (see [brms::loo()]). The excellent post-processing support
-#'  offered by the *brms* is further augmented by many custom functions written
-#'  for the **bsitar** that allows prediction and visualization of population
-#'  average and individual specific growth trajectories velocity curves.
-#'  Furthermore, population average and individual specific growth parameters
-#'  such as age at peak growth velocity (APGV) and the peak growth velocity
-#'  (PGV) can be easily computed.
+#'  such as the timing of the age at peak growth velocity. We follow and adapt
+#'  the time tested and carefully crafted prior specification approaches used in
+#'  the \pkg{brms} and \pkg{rstanarm} packages. For example, we follow
+#'  \pkg{brms} package approach and use \code{student_t} distribution for the
+#'  regression coefficients and the standard deviation parameters for group
+#'  level random effects but set \code{exponential} distribution for the
+#'  residual standard deviation. Like \pkg{brms} and \pkg{rstanarm} packages,
+#'  the \pkg{bsitar} package allows for auto scaling of the scale parameter.
+#'  While \pkg{rstanarm} earlier used to set \code{autosclae} as 2.5 (recently
+#'  authors changed this behavior to \code{FALSE}), the \pkg{brms} package sets
+#'  it to 1 or 2.5 depending on the standard deviation of the response variable
+#'  (See [brms::prior()]). The \pkg{bsitar} package offers the flexibility of
+#'  choosing the scaling factor as any real number (e.g., \code{autosclae =
+#'  2.5}). When \code{autosclae = TRUE}, \code{2.5} is the default scaling
+#'  factor. We strongly recommend to go through the well documented details on
+#'  prior specifications used in the
+#'  [brms](https://paul-buerkner.github.io/brms/reference/set_prior.html) and
+#'  [rstanarm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+#'  packages.
+#'  
+#'  Similar to the \pkg{brms} package, the \pkg{bsitar} package offers a range
+#'  of tools to evaluate the model fit such as the posterior predictive check
+#'  (see [brms::pp_check()]). Furthermore, models with different priors and/or
+#'  growth curves (i.e., with different \code{df} for splines) can be easily
+#'  compared by using methods already available in the \pkg{brms} package such
+#'  as the leave one out cross validation (see [brms::loo()]). The excellent
+#'  post-processing support offered by the \pkg{brms} package is further
+#'  augmented by many custom functions written for the \pkg{bsitar} package that
+#'  allows prediction and visualization of population average and individual
+#'  specific growth trajectories velocity curves. Furthermore, population
+#'  average and individual specific growth parameters such as age at peak growth
+#'  velocity (APGV) and the peak growth velocity (PGV) can be easily computed.
 #'
-#'  The \pkg{bsitar} package allows three different model specifications:
+#'  The \pkg{bsitar} package allows three different types of model specifications:
 #'  \code{univariate}, \code{univariate_by} and \code{multivariate}. A
 #'  \code{univariate} model involves a single model fit applied to an outcome
 #'  whereas both \code{univariate_by} and \code{multivariate} models comprise
@@ -1656,6 +1676,8 @@
 #' if(exists('berkeley_mfit')) {
 #'   model <- berkeley_mfit
 #' } else {
+#'  # Fit model with default priors 
+#'  # See documentation for prior on each parameter
 #'   model <- bgm(x = age, y = height, id = id, 
 #'                   df = 3, 
 #'                   data = berkeley_mdata,
@@ -1665,6 +1687,24 @@
 #'                   a.formula = ~1, 
 #'                   b.formula = ~1, 
 #'                   c.formula = ~1, 
+#'                   threads = brms::threading(NULL),
+#'                   chains = 2, cores = 2, iter = 6000, thin = 15)
+#'                   
+#' # Note that we can test for the sensitivity to the priors by re fitting the
+#' # above model with flat (i.e., uniform) priors on the regression coefficients
+#' model <- bgm(x = age, y = height, id = id, 
+#'                   df = 3, 
+#'                   data = berkeley_mdata,
+#'                   xoffset = 'mean', 
+#'                   fixed = 'a+b+c', 
+#'                   random = 'a+b+c',
+#'                   a.formula = ~1, 
+#'                   b.formula = ~1, 
+#'                   c.formula = ~1, 
+#'                   a_prior_beta = flat,
+#'                   b_prior_beta = flat,
+#'                   c_prior_beta = flat,
+#'                   s_prior_beta = flat,
 #'                   threads = brms::threading(NULL),
 #'                   chains = 2, cores = 2, iter = 6000, thin = 15)
 #' }
@@ -1781,12 +1821,12 @@ bgm <- function(x,
                    b_prior_beta = student_t(3, 0, 3.0, autoscale = FALSE),
                    c_prior_beta = student_t(3, 0, 1.25, autoscale = FALSE),
                    d_prior_beta = student_t(3, 0, 1.0, autoscale = TRUE),
-                   e_prior_beta = normal(0, 1, autoscale = FALSE),
-                   f_prior_beta = normal(0, 1, autoscale = FALSE),
-                   g_prior_beta = normal(0, 1, autoscale = FALSE),
-                   h_prior_beta = normal(0, 1, autoscale = FALSE),
-                   i_prior_beta = normal(0, 1, autoscale = FALSE),
-                   s_prior_beta = normal(0, lm, autoscale = TRUE),
+                   e_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   f_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   g_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   h_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   i_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
+                   s_prior_beta = student_t(3, 0, lm, autoscale = TRUE),
                    a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
                    c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
@@ -1801,12 +1841,12 @@ bgm <- function(x,
                    b_prior_sd = student_t(3, 0, 1.5, autoscale = FALSE),
                    c_prior_sd = student_t(3, 0, 0.75, autoscale = FALSE),
                    d_prior_sd = student_t(3, 0, 1.0, autoscale = TRUE),
-                   e_prior_sd = normal(0, 1, autoscale = FALSE),
-                   f_prior_sd = normal(0, 1, autoscale = FALSE),
-                   g_prior_sd = normal(0, 1, autoscale = FALSE),
-                   h_prior_sd = normal(0, 1, autoscale = FALSE),
-                   i_prior_sd = normal(0, 1, autoscale = FALSE),
-                   s_prior_sd = normal(0, lm, autoscale = 2.5),
+                   e_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+                   f_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+                   g_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+                   h_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+                   i_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+                   s_prior_sd = student_t(3, 0, lm, autoscale = 2.5),
                    a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
                    c_cov_prior_sd = normal(0, 0.05, autoscale = FALSE),
@@ -1837,14 +1877,14 @@ bgm <- function(x,
                    h_cov_prior_sd_str = NULL,
                    i_cov_prior_sd_str = NULL,
                    s_cov_prior_sd_str = NULL,
-                   sigma_prior_beta = normal(0, 1, autoscale = FALSE),
+                   sigma_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
                    sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
-                   sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   sigma_prior_sd = student_t(3, 0, 0.25, autoscale = FALSE),
                    sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
                    rsd_prior_sigma = exponential(ysd, autoscale = TRUE),
-                   dpar_prior_sigma = normal(0, ysd, autoscale = TRUE),
+                   dpar_prior_sigma = student_t(3, 0, ysd, autoscale = TRUE),
                    dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
@@ -1967,6 +2007,8 @@ bgm <- function(x,
   
   # check and set alias argument
   dots_allias <- list(...)
+  
+  # alias argument for a b c ... formula
   collect_dot_names <- c()
   for (ia in letters[1:26]) {
     set_name_dot <- paste0(ia, ".", 'formula')
@@ -1987,7 +2029,33 @@ bgm <- function(x,
     if(!is.null(mcall[[collect_dot_namesi]])) 
       mcall[[collect_dot_namesi]] <- NULL
   }
+  
+  # alias argument d_adjusted (SITAR)
+  collect_dot_names <- c()
+  for (ia in letters[4]) {
+    set_name_dot <- paste0(ia, ".", 'adjusted')
+    set_name_uns <- paste0(ia, "_", 'adjusted')
+    collect_dot_names <- c(collect_dot_names, set_name_dot)
+    if (set_name_dot %in% names(dots_allias)) {
+      if (eval(bquote(missing(.(set_name_uns)))) ) { 
+        mcall[[set_name_uns]] <- dots_allias[[set_name_dot]]
+      } else if (!eval(bquote(missing(.(set_name_uns)))) ) { 
+        err_msg <- paste0("both '", set_name_uns, "' and '" , 
+                          set_name_dot, "' found, ignoring '",set_name_dot, "'")
+        if(verbose) warning(err_msg)
+      }
+    }
+  }
+  
+  for (collect_dot_namesi in collect_dot_names) {
+    if(!is.null(mcall[[collect_dot_namesi]])) 
+      mcall[[collect_dot_namesi]] <- NULL
+  }
+  
+  # check and clear alias argument for formual and adjusted
   rm(dots_allias)
+  
+  
   
   mcall <- mcall_ <- mcall
   
@@ -2042,7 +2110,7 @@ bgm <- function(x,
        temp_init_call_c <- paste0("list(", 
                                   paste(temp_init_call_c, collapse = ",") , ")")
        temp_init_call_c <- str2lang(temp_init_call_c)
-     } else if(is.symbol(temp_init_call_in)) { # if(length(temp_init_call) != 0) {
+     } else if(is.symbol(temp_init_call_in)) { 
        temp_init_call_c <- deparse(substitute(temp_init_call_c))
        temp_init_call_c <- gsub("\"" , "", temp_init_call_c)
      } else {
@@ -3553,6 +3621,8 @@ bgm <- function(x,
   gq_funs <- list() 
   spfncname_c <- c()
   
+  d_adjustedvaluelist <- d_adjustednamelist <- funlist
+  
   # Start loop over response
   for (ii in 1:length(ys)) {
     if (nys > 1)
@@ -3661,7 +3731,7 @@ bgm <- function(x,
         not_allowed_parsm <- paste(paste0("'", inv_parm_letters, "'"), 
                                    collapse = " ")
         msg_1 <- paste0("Parameter ", not_allowed_parsm, 
-                        " not allowed for ", "'", select_model, "'", " model" )
+                        " not allowed for ", "'", select_model, "'", " model")
         msg_2 <- paste0(" Allowed parameters are ", 
                         paste(paste0("'", 
                                      allowed_parm_letters, "'"), 
@@ -5814,7 +5884,7 @@ bgm <- function(x,
       yvar_name <- "yvar"
       cov_name <- "cov"
       cov_name_sigma <- "cov_sigma"
-      # funlist_r_name <- 'funlist_r'
+      d_adjusted_name <- "d_adjusted"
     } else if (nys > 1) {
       xoffset_name <- paste0("xoffset", "_", ysi)
       knots_name <- paste0("knots", "_", ysi)
@@ -5828,7 +5898,7 @@ bgm <- function(x,
       yvar_name <- paste0("yvar", "_", ysi)
       cov_name <- paste0("cov", "_", ysi)
       cov_name_sigma <- paste0("cov_sigma", "_", ysi)
-      # funlist_r_name <- paste0("funlist_r", "_", ysi)
+      d_adjusted_name <- paste0("d_adjusted", "_", ysi)
     }
     
     
@@ -5875,6 +5945,9 @@ bgm <- function(x,
     
     sigmacovnamelist[[ii]] <- cov_name_sigma
     sigmacovvaluelist[[ii]] <- covariates_sigma_
+    
+    d_adjustednamelist[[ii]] <- d_adjusted_name
+    d_adjustedvaluelist[[ii]] <- ept(d_adjustedsi)
     
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
@@ -7236,6 +7309,8 @@ bgm <- function(x,
     model_info[['emodel']] <- scode_final
     
     model_info[['parameterization']] <- parameterization
+    
+    model_info[['d_adjusted']] <- d_adjusted
 
     for (i in 1:length(funlist_rnamelist)) {
       model_info[[funlist_rnamelist[[i]]]] <- funlist_rvaluelist[[i]]
@@ -7301,6 +7376,10 @@ bgm <- function(x,
     if(!is.na(univariate_by$by)) {
       model_info[['subindicators']] <- subindicators
     } 
+    
+    for (i in 1:length(d_adjustednamelist)) {
+      model_info[[d_adjustednamelist[[i]]]] <- d_adjustedvaluelist[[i]]
+    }
     
     model_info[['StanFun_name']] <- SplineFun_name
     model_info[['multivariate']] <- multivariate$mvar

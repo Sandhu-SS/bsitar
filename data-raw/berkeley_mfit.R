@@ -60,6 +60,6 @@ berkeley_mfit <- bgm(x = age, y = height, id = id, data = berkeley_mdata,
 
 
 
-# usethis::use_data(berkeley_mfit, overwrite = TRUE)
+ usethis::use_data(berkeley_mfit, overwrite = TRUE)
 
 

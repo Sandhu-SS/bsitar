@@ -91,8 +91,11 @@
 #'  used as a title.
 #'
 #'@param legendpos An optional character string to specify the position of
-#'  legends. When \code{NULL}, the legend position is set as 'bottom' for
-#'  distance and velocity curves with \code{'single'} layout option.
+#'  legends. When \code{NULL} (default), the legend position is set as 'bottom'
+#'  for distance and velocity curves with \code{'single'} layout option for the
+#'  population average curves, and \code{'none'} for the individual specific
+#'  curves. The \code{'none'} suppress all legends that helps in avoiding
+#'  printing legends for each individual.
 #'
 #'@param linetype.apv An optional character string to specify the type of the
 #'  vertical line drawn to mark the APGV. Default \code{NULL} sets the linetype
@@ -200,12 +203,17 @@
 #' 
 #' \donttest{
 #' # Individual-specific distance and velocity curves with default options
+#' # Note that legendpos = 'none' will suppress the legend positions. This   
+#' # suppression is useful when plotting individual-specific curves
+#' 
 #' plot_curves(model, opt = 'DV')
 #' 
 #' # Population average distance and velocity curves with APGV
+#' 
 #' plot_curves(model, opt = 'dv', apv = TRUE)
 #' 
 #' # Individual-specific distance and velocity curves with APGV
+#' 
 #' plot_curves(model, opt = 'DV', apv = TRUE)
 #' 
 #' # Population average distance curve, velocity curve, and APGV with CI bands
@@ -218,9 +226,12 @@
 #' # Adjusted and unadjusted individual curves
 #' # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
 #' # This is because it does not a make sense to interploate data when
-#' # estimating adjusted curves.
+#' # estimating adjusted curves. Also, layout = 'facet' (and not default 
+#' # layout = 'single') for plotting adjusted and unadjusted individual curves
+#' # For the other plots shown above, user can set layout = 'single'
 #' 
-#' plot_curves(model, opt = 'au', ipts = NULL)
+#' plot_curves(model, opt = 'au', ipts = NULL, layout = 'facet')
+#' 
 #' }
 #' 
 plot_curves.bgmfit <- function(model,
@@ -526,12 +537,14 @@ plot_curves.bgmfit <- function(model,
     
     testdata1 <- model$data %>% dplyr::select(dplyr::all_of(IDvar)) %>% 
       droplevels() %>% 
-      dplyr::mutate(groupbytest = interaction(dplyr::across(IDvar))) %>% 
+      dplyr::mutate(groupbytest = 
+                      interaction(dplyr::across(dplyr::all_of(IDvar)))) %>% 
       dplyr::select(groupbytest) %>% dplyr::ungroup()
     
     testdata2 <- newdata %>% dplyr::select(dplyr::all_of(IDvar)) %>% 
       droplevels() %>% 
-      dplyr::mutate(groupbytest = interaction(dplyr::across(IDvar))) %>% 
+      dplyr::mutate(groupbytest = 
+                      interaction(dplyr::across(dplyr::all_of(IDvar)))) %>% 
       dplyr::select(groupbytest) %>% dplyr::ungroup()
     
     
@@ -664,10 +677,20 @@ plot_curves.bgmfit <- function(model,
     label.x <- paste0(firstup(Xx), "")
   }
   
+  
+  
+  
   if (is.null(legendpos)) {
-    legendpos <- "bottom"
-    legendpos.adj.unadj <- "topleft"
-  } else {
+    if (grepl("D", opt, ignore.case = F) |
+        grepl("V", opt, ignore.case = F)) {
+      legendpos <- "none"
+    } else {
+      legendpos <- "bottom"
+      legendpos.adj.unadj <- "topleft"
+    }
+    # legendpos <- "bottom"
+    # legendpos.adj.unadj <- "topleft"
+  } else if (!is.null(legendpos)) {
     legendpos <- legendpos.adj.unadj <- legendpos
   }
   
@@ -764,7 +787,7 @@ plot_curves.bgmfit <- function(model,
              trim = 0,
              ...) {
       if (is.null(ndraws))
-        ndraws  <- ndraws(model)
+        ndraws  <- brms::ndraws(model)
       else
         ndraws <- ndraws
       
@@ -867,11 +890,17 @@ plot_curves.bgmfit <- function(model,
 
   
   
+  
+  
+  # adapted from https://github.com/statist7/sitar/blob/master/R/xyadj.R
+  # v.adj also calculated but not returned 
+  
   xyadj_ <-
     function (model,
               x,
               y,
               id,
+              v = 0,
               resp = NULL,
               ndraws = NULL,
               newdata = NULL,
@@ -887,7 +916,7 @@ plot_curves.bgmfit <- function(model,
               numeric_cov_at = NULL,
               ...) {
       if (is.null(ndraws))
-        ndraws  <- ndraws(model)
+        ndraws  <- brms::ndraws(model)
       else
         ndraws <- ndraws
       
@@ -950,12 +979,25 @@ plot_curves.bgmfit <- function(model,
       xoffsetXnames <- model$model_info[[xoffsetXnames]]
       xoffset <- xoffsetXnames
       
+      
+      d_adjustedXnames <- 'd_adjusted'
+      if (!is.null(resp)) d_adjustedXnames <- paste0(d_adjustedXnames, 
+                                                     resp_rev_)
+      d_adjustedXnames <- model$model_info[[d_adjustedXnames]]
+      d_adjusted <- d_adjustedXnames
+      
+      
+      
       if (missing(x)) {
         x <- newdata[[Xx]]
       }
       
       if (missing(y)) {
         y <- newdata[[Yy]]
+      }
+      
+      if (missing(v)) {
+        v <- 0
       }
       
       if (missing(id)) {
@@ -968,6 +1010,9 @@ plot_curves.bgmfit <- function(model,
       Xx <- xvar
       Yy <- yvar
       
+      # re_effx <- brms::ranef(berkeley_fit, summary = F)
+      # re_effx <- re_effx[['id']]
+      # re_effx <- re_effx[match('id', rownames(re_effx)), , drop = FALSE]
       
       
       if(!is.null(ipts)) {
@@ -979,7 +1024,7 @@ plot_curves.bgmfit <- function(model,
       }
       
       
-      
+      # This x - xoffset is needed for bsitar based computation
       x <- x - xoffset
       
       nrowdatadims <- nrow(newdata)
@@ -1018,7 +1063,7 @@ plot_curves.bgmfit <- function(model,
         d_r <- FALSE
       }
       
-      
+     
       
       if(a_r) {
         null_a <- fitted(model, resp = resp, newdata = newdata, 
@@ -1028,8 +1073,10 @@ plot_curves.bgmfit <- function(model,
                          nlpar="a", ndraws = ndraws, re_formula = NA, 
                          summary = summary)
       } else {
-        null_a <- matrix(0, ndraws, nrowdatadims) 
-        naaa_a <- matrix(0, ndraws, nrowdatadims) 
+        null_a <- matrix(0, nrowdatadims, 1)
+        naaa_a <- matrix(0, nrowdatadims, 1)
+        # null_a <- matrix(0, ndraws, nrowdatadims) 
+        # naaa_a <- matrix(0, ndraws, nrowdatadims) 
       }
       
       if(b_r) {
@@ -1040,8 +1087,10 @@ plot_curves.bgmfit <- function(model,
                          nlpar="b", ndraws = ndraws, re_formula = NA, 
                          summary = summary)
       } else {
-        null_b <- matrix(0, ndraws, nrowdatadims) 
-        naaa_b <- matrix(0, ndraws, nrowdatadims) 
+        null_b <- matrix(0, nrowdatadims, 1)
+        naaa_b <- matrix(0, nrowdatadims, 1)
+        # null_b <- matrix(0, ndraws, nrowdatadims) 
+        # naaa_b <- matrix(0, ndraws, nrowdatadims) 
       }
       
       if(c_r) {
@@ -1052,8 +1101,10 @@ plot_curves.bgmfit <- function(model,
                          nlpar="c", ndraws = ndraws, re_formula = NA, 
                          summary = summary)
       } else {
-        null_c <- matrix(0, ndraws, nrowdatadims) 
-        naaa_c <- matrix(0, ndraws, nrowdatadims) 
+        null_c <- matrix(0, nrowdatadims, 1)
+        naaa_c <- matrix(0, nrowdatadims, 1)
+        # null_c <- matrix(0, ndraws, nrowdatadims) 
+        # naaa_c <- matrix(0, ndraws, nrowdatadims) 
       }
       
       if(d_r) {
@@ -1064,23 +1115,75 @@ plot_curves.bgmfit <- function(model,
                          nlpar="d", ndraws = ndraws, re_formula = NA, 
                          summary = summary)
       } else {
-        null_d <- matrix(0, ndraws, nrowdatadims)
-        naaa_d <- matrix(0, ndraws, nrowdatadims)
+        null_d <- matrix(0, nrowdatadims, 1)
+        naaa_d <- matrix(0, nrowdatadims, 1)
+        # null_d <- matrix(0, ndraws, nrowdatadims)
+        # naaa_d <- matrix(0, ndraws, nrowdatadims)
       }
       
+      
       if(!summary) {
-        xadj_tmt <- yadj_tmt <- xadj_tmf <- yadj_tmf <- list()
+        xadj_tmt <- yadj_tmt <- vadj_tmt <- list()
+        xadj_tmf <- yadj_tmf <- vadj_tmf <- list()
         for (i in 1:ndraws) {
           r_a <- null_a[ i, ]
           r_b <- null_b[ i, ]
           r_c <- null_c[ i, ]
+          r_d <- null_d[ i, ]
           na_a <- naaa_a[ i, ]
           na_b <- naaa_b[ i, ]
           na_c <- naaa_c[ i, ]
-          xadj_tmt[[i]] <- (x - r_b + na_b) * exp(r_c - na_c) + na_b  + xoffset
-          yadj_tmt[[i]] <- y - r_a + na_a # - abc$d * x
-          xadj_tmf[[i]] <- x / exp(r_c - na_c) + (r_b - na_b) + na_b  + xoffset
-          yadj_tmf[[i]] <- y + r_a - na_a # + abc$d * x
+          na_d <- naaa_d[ i, ]
+          
+          # Re create random effects - coef = fixed + random 
+          rz_a <- r_a - na_a
+          rz_b <- r_b - na_b
+          rz_c <- r_c - na_c
+          rz_d <- r_d - na_d
+          
+          r_data_ <- cbind(rz_a, rz_b, rz_c, rz_d) %>% data.frame()
+          colnames(r_data_) <- letters[1:4]
+          
+          r_data_ <- r_data_ %>% 
+            dplyr::mutate(x = x) %>% 
+            dplyr::mutate(d.adjusted = d_adjusted %||% FALSE)
+          
+          adj_tmt <- r_data_ %>%
+            dplyr::mutate(x.adj = (x - .data$b) * exp(.data$c) + xoffset,
+                          y.adj = y - .data$a - 
+                            .data$d * dplyr::if_else(.data$d.adjusted,
+                                                     .data$x.adj - xoffset,
+                                                     x),
+                          v.adj = dplyr::if_else(.data$d.adjusted,
+                                                 v / exp(.data$c) - .data$d,
+                                                 (v - .data$d) / exp(.data$c)))
+          
+          
+          adj_tmf <- r_data_ %>%
+            dplyr::mutate(x.adj = x / exp(.data$c) + .data$b + xoffset,
+                          y.adj = y + .data$a + 
+                            .data$d * dplyr::if_else(.data$d.adjusted,
+                                                     .data$x.adj - xoffset,
+                                                     x),
+                          v.adj = dplyr::if_else(.data$d.adjusted,
+                                                 (v + .data$d) * exp(.data$c),
+                                                 v * exp(.data$c) + .data$d))
+          
+          adj_tmt <- adj_tmt %>% data.frame()
+          adj_tmf <- adj_tmf %>% data.frame()
+          
+          xadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+            unlist() %>% as.numeric()
+          yadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+            unlist() %>% as.numeric()
+          vadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+            unlist() %>% as.numeric()
+          xadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+            unlist() %>% as.numeric()
+          yadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+            unlist() %>% as.numeric()
+          vadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+            unlist() %>% as.numeric()
         } # for (i in 1:ndraws) {
         
         xadj_tmt <- array(unlist(xadj_tmt), 
@@ -1091,6 +1194,10 @@ plot_curves.bgmfit <- function(model,
                           dim=c(length(yadj_tmt[[1]]), length(yadj_tmt)  ))
         yadj_tmt <- t(yadj_tmt)
         
+        vadj_tmt <- array(unlist(vadj_tmt), 
+                          dim=c(length(vadj_tmt[[1]]), length(vadj_tmt)  ))
+        vadj_tmt <- t(vadj_tmt)
+        
         xadj_tmf <- array(unlist(xadj_tmf), 
                           dim=c(length(xadj_tmf[[1]]), length(xadj_tmf)  ))
         xadj_tmf <- t(xadj_tmf)
@@ -1099,22 +1206,33 @@ plot_curves.bgmfit <- function(model,
                           dim=c(length(yadj_tmf[[1]]), length(yadj_tmf)  ))
         yadj_tmf <- t(yadj_tmf)
         
+        vadj_tmf <- array(unlist(vadj_tmf), 
+                          dim=c(length(vadj_tmf[[1]]), length(vadj_tmf)  ))
+        vadj_tmf <- t(vadj_tmf)
+        
+        
         xadj_tmt <- brms::posterior_summary(xadj_tmt, probs = probs, 
                                             robust = robust) 
         yadj_tmt <- brms::posterior_summary(yadj_tmt, probs = probs, 
+                                            robust = robust)
+        vadj_tmt <- brms::posterior_summary(vadj_tmt, probs = probs, 
                                             robust = robust)
         xadj_tmf <- brms::posterior_summary(xadj_tmf, probs = probs, 
                                             robust = robust)
         yadj_tmf <- brms::posterior_summary(yadj_tmf, probs = probs, 
                                             robust = robust)
+        vadj_tmf <- brms::posterior_summary(vadj_tmf, probs = probs, 
+                                            robust = robust)
         
         if (tomean) {
           x.adj <- xadj_tmt
           y.adj <- yadj_tmt
+          v.adj <- vadj_tmt
         }
         else {
           x.adj <- xadj_tmf
           y.adj <- yadj_tmf
+          v.adj <- vadj_tmf
         }
         # This was good
         # out <- cbind(x.adj[, 1], y.adj)
@@ -1123,7 +1241,7 @@ plot_curves.bgmfit <- function(model,
         # colnames(out) <- c(setadnamex, setadnamey)
         # out <- cbind(newdata, out)
         
-        # but for trimline, we need folowing order 
+        # but for trimline, we need the following order 
         out <- newdata
         out[[Xx]] <- x.adj[, 1]
         out[[Yy]] <- y.adj[, 1]
@@ -1137,21 +1255,73 @@ plot_curves.bgmfit <- function(model,
         r_a <- null_a[ , 1]
         r_b <- null_b[ , 1]
         r_c <- null_c[ , 1]
+        r_d <- null_d[ , 1]
         na_a <- naaa_a[ , 1]
         na_b <- naaa_b[ , 1]
         na_c <- naaa_c[ , 1]
-        xadj_tmt <- (x - r_b + na_b) * exp(r_c - na_c) + na_b  + xoffset
-        yadj_tmt <- y - r_a + na_a # - abc$d * x
-        xadj_tmf <- x / exp(r_c - na_c) + (r_b - na_b) + na_b  + xoffset
-        yadj_tmf <- y + r_a - na_a # + abc$d * x
+        na_d <- naaa_d[ , 1]
+        
+        # Re create random effects - coef = fixed + random 
+        # Thus, random = coef - fixed
+        rz_a <- r_a - na_a
+        rz_b <- r_b - na_b
+        rz_c <- r_c - na_c
+        rz_d <- r_d - na_d
+        
+        r_data_ <- cbind(rz_a, rz_b, rz_c, rz_d) %>% data.frame()
+        colnames(r_data_) <- letters[1:4]
+        
+        r_data_ <- r_data_ %>% 
+          dplyr::mutate(x = x) %>% 
+          dplyr::mutate(d.adjusted = d_adjusted %||% FALSE)
+       
+        adj_tmt <- r_data_ %>%
+          dplyr::mutate(x.adj = (x - .data$b) * exp(.data$c) + xoffset,
+                 y.adj = y - .data$a - 
+                   .data$d * dplyr::if_else(.data$d.adjusted,
+                                            .data$x.adj - xoffset,
+                                            x),
+                 v.adj = dplyr::if_else(.data$d.adjusted,
+                                 v / exp(.data$c) - .data$d,
+                                 (v - .data$d) / exp(.data$c)))
+        
+        
+        adj_tmf <- r_data_ %>%
+          dplyr::mutate(x.adj = x / exp(.data$c) + .data$b + xoffset,
+                 y.adj = y + .data$a + 
+                   .data$d * dplyr::if_else(.data$d.adjusted,
+                                            .data$x.adj - xoffset,
+                                            x),
+                 v.adj = dplyr::if_else(.data$d.adjusted,
+                                 (v + .data$d) * exp(.data$c),
+                                 v * exp(.data$c) + .data$d))
+        
+        adj_tmt <- adj_tmt %>% data.frame()
+        adj_tmf <- adj_tmf %>% data.frame()
+        
+
+        xadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+          unlist() %>% as.numeric()
+        yadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+          unlist() %>% as.numeric()
+        vadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+          unlist() %>% as.numeric()
+        xadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+          unlist() %>% as.numeric()
+        yadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+          unlist() %>% as.numeric()
+        vadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+          unlist() %>% as.numeric()
         
         if (tomean) {
           x.adj <- xadj_tmt
           y.adj <- yadj_tmt
+          v.adj <- vadj_tmt
         }
         else {
           x.adj <- xadj_tmf
           y.adj <- yadj_tmf
+          v.adj <- vadj_tmf
         }
         # out <- as.data.frame(as.factor(newdata[[IDvar]]))
         # out <- cbind(x.adj, y.adj, out)
@@ -1177,14 +1347,8 @@ plot_curves.bgmfit <- function(model,
       #   out <- cbind(out, tempot) %>% data.frame()
       # }
       
-      
       out
     }
-  
-  
-  
-  
-  
   
   
   
@@ -1221,7 +1385,8 @@ plot_curves.bgmfit <- function(model,
       
       if(!is.na(uvarby)) {
         newdata <- newdata %>%
-          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% droplevels()
+          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+          droplevels()
       }
       
       if (missing(x))
@@ -1280,8 +1445,10 @@ plot_curves.bgmfit <- function(model,
     ggplotlines <- function(g){
       lineTypes1 <- c("solid", "22", "42", "44", "13", "1343", "73", "2262")
       # lineTypes1 <- c("solid", "solid", "solid", "13", "1343", "73", "2262")
-      lineTypes2 <- apply(expand.grid(1:3, 1:3, 1:3, 1:3), 1, paste0, collapse="")
-      lineTypes3 <- apply(expand.grid(1:2, 1:2, 1:2, 1:2), 1, paste0, collapse="")
+      lineTypes2 <- apply(expand.grid(1:3, 1:3, 1:3, 1:3), 1, 
+                          paste0, collapse="")
+      lineTypes3 <- apply(expand.grid(1:2, 1:2, 1:2, 1:2), 1, 
+                          paste0, collapse="")
       lineTypes <- c(lineTypes1, lineTypes2, lineTypes3)
       lineTypes[1:g]
     }
@@ -1420,8 +1587,10 @@ plot_curves.bgmfit <- function(model,
     
     suppressMessages({
       plot <- plot + 
-        ggplot2::scale_linetype_manual(values=set.line.groupby, guide = line.guide) +
-        ggplot2::scale_color_manual(values=set.color.groupby, guide = color.guide)
+        ggplot2::scale_linetype_manual(values=set.line.groupby, 
+                                       guide = line.guide) +
+        ggplot2::scale_color_manual(values=set.color.groupby, 
+                                    guide = color.guide)
     })
     
     plot
@@ -1842,7 +2011,7 @@ plot_curves.bgmfit <- function(model,
           data_dv <-
             data_dv %>% dplyr::mutate(groupby.x = NA,
                                       groupby.y =
-                                        interaction(dplyr::across(groupby_str_v)))
+                                      interaction(dplyr::across(groupby_str_v)))
         } else if (!is.null(groupby_str_d)) {
           data_dv <-
             data_dv %>%
@@ -2120,10 +2289,13 @@ plot_curves.bgmfit <- function(model,
     }
     if (grepl("a", opt, ignore.case = T)) {
       
-      xyadj_ed <- xyadj_(model, newdata = newdata, 
+      xyadj_ed <- xyadj_(model, 
+                         newdata = newdata, 
                          ndraws = ndraws,
-                         resp = resp, tomean = TRUE, 
-                         conf = conf, robust = robust,
+                         resp = resp, 
+                         tomean = TRUE, 
+                         conf = conf, 
+                         robust = robust,
                          summary = summary, 
                          numeric_cov_at = numeric_cov_at,
                          aux_variables = aux_variables,
@@ -2403,6 +2575,7 @@ plot_curves.bgmfit <- function(model,
       plot.o <- plot.o.u
     } else if (grepl("a", opt, ignore.case = T) &
                grepl("u", opt, ignore.case = T)) {
+      
       if (layout == 'facet') {
         out_a_u_ <-
           d.out <- out_a_ %>% dplyr::mutate(curve = 'Adjusted') %>%
@@ -2460,7 +2633,7 @@ plot_curves.bgmfit <- function(model,
           }
         }
         
-        
+       
         plot.o <- out_a_u_ %>%
           ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
           ggplot2::geom_line(
@@ -2518,6 +2691,8 @@ plot_curves.bgmfit <- function(model,
       }
       
       if (layout == 'single') {
+        # Somehow layout == 'single' not working when both 'au'
+        stop("For opt = 'au', please set layout = 'facet'")
         plot.o <- out_a_ %>%
           ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
           ggplot2::geom_line(
@@ -2552,6 +2727,7 @@ plot_curves.bgmfit <- function(model,
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
           ggplot2::labs(y = paste0("Individual curves")) +
           ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90))
+        
       }
     }
   }

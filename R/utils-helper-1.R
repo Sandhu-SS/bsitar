@@ -920,18 +920,18 @@ rename <- function(x,
 #' @noRd
 #' 
 priors_to_textdata <- function(model,
-                               spriors = NULL,
-                               sdata = NULL,
-                               prior_name_asit = FALSE,
-                               gsub_coef = NULL,
-                               gsub_group = NULL,
-                               sort_response = NULL,
-                               sort_group = NULL,
-                               sort_parameter = c(letters[1:26], "sigma"),
-                               sort_coefficient = c("Intercept"),
-                               sort_class = c("b", "sd", "cor"),
-                               digits = 2,
-                               viewer = FALSE) {
+                                spriors = NULL,
+                                sdata = NULL,
+                                prior_name_asit = FALSE,
+                                gsub_coef = NULL,
+                                gsub_group = NULL,
+                                sort_response = NULL,
+                                sort_group = NULL,
+                                sort_parameter = c(letters[1:26], "sigma"),
+                                sort_coefficient = c("Intercept"),
+                                sort_class = c("b", "sd", "cor"),
+                                digits = 2,
+                                viewer = FALSE) {
   arguments <- as.list(match.call())[-1]
   
   if (missing(model)) {
@@ -982,12 +982,11 @@ priors_to_textdata <- function(model,
   
   env_ <- environment()
   list2env(sdata, envir =  env_)
-  # a_cov_b_scale %>% print()
   
   for (i in 1:nrow(spriors)) {
     getxit <- spriors[i, ]$prior
+    if(getxit == "") getxit <- "flat"
     prior_name <- strsplit(getxit, "\\(")[[1]][1]
-    # if(!is.na(prior_name))
     if (!prior_name_asit) {
       if (!is.na(prior_name) & prior_name == 'lkj') {
         prior_name_case <- toupper(prior_name)
@@ -998,12 +997,17 @@ priors_to_textdata <- function(model,
       }
     }
     
+    
     if (prior_name_asit) prior_name_case <- prior_name
     
     
     getxit_2 <-
       regmatches(getxit, gregexpr("(?<=\\().*?(?=\\))", getxit, perl = T))[[1]]
-    if(!identical(getxit_2, character(0))) {
+    
+    # This is for flat priors
+    if(identical(getxit_2, character(0))) {
+      getxit_7 <- paste0(prior_name_case, '')
+    }  else if(!identical(getxit_2, character(0))) {
       getxit_3 <- strsplit(getxit_2, ",")[[1]]
       getxit_4 <- sapply(getxit_3, function(x)
         eval(parse(text = x)))
@@ -1079,6 +1083,16 @@ priors_to_textdata <- function(model,
     Response = resp
   )
   
+  
+  if(is.null(sort_response)) {
+    if (!is.null(model)) {
+      if(length(model$model_info$nys) > 1) {
+        sort_response <- model$model_info$ys
+      }
+    }
+  }
+  
+  
   spriors <- spriors %>%
     dplyr::arrange(match(Response, sort_response)) %>%
     dplyr::arrange(match(Coefficient, sort_coefficient)) %>%
@@ -1092,7 +1106,8 @@ priors_to_textdata <- function(model,
       spriors <- spriors %>%  dplyr::select(-'Response')
     }
   }
-  spriors
+  
+  return(spriors)
 }
 
 
