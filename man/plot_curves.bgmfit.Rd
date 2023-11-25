@@ -473,10 +473,16 @@ plot_curves(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
 # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
 # This is because it does not a make sense to interploate data when
 # estimating adjusted curves. Also, layout = 'facet' (and not default 
-# layout = 'single') for plotting adjusted and unadjusted individual curves
-# For the other plots shown above, user can set layout = 'single'
+# layout = 'single') is used for the ease of visualizing the plotted 
+# adjusted and unadjusted individual curves. However, these lines can be 
+# superimposed on each other by setting the set layout = 'single'.
+# For other plots shown above, layout can be set as 'single' or 'facet'
 
+# Separate plots for adjusted and unadjusted curves (layout = 'facet')
 plot_curves(model, opt = 'au', ipts = NULL, layout = 'facet')
+
+# Superimposed adjusted and unadjusted curves (layout = 'single')
+plot_curves(model, opt = 'au', ipts = NULL, layout = 'single')
 
 }
 

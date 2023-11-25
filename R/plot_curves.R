@@ -227,10 +227,16 @@
 #' # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
 #' # This is because it does not a make sense to interploate data when
 #' # estimating adjusted curves. Also, layout = 'facet' (and not default 
-#' # layout = 'single') for plotting adjusted and unadjusted individual curves
-#' # For the other plots shown above, user can set layout = 'single'
+#' # layout = 'single') is used for the ease of visualizing the plotted 
+#' # adjusted and unadjusted individual curves. However, these lines can be 
+#' # superimposed on each other by setting the set layout = 'single'.
+#' # For other plots shown above, layout can be set as 'single' or 'facet'
 #' 
+#' # Separate plots for adjusted and unadjusted curves (layout = 'facet')
 #' plot_curves(model, opt = 'au', ipts = NULL, layout = 'facet')
+#' 
+#' # Superimposed adjusted and unadjusted curves (layout = 'single')
+#' plot_curves(model, opt = 'au', ipts = NULL, layout = 'single')
 #' 
 #' }
 #' 
@@ -2692,7 +2698,6 @@ plot_curves.bgmfit <- function(model,
       
       if (layout == 'single') {
         # Somehow layout == 'single' not working when both 'au'
-        stop("For opt = 'au', please set layout = 'facet'")
         plot.o <- out_a_ %>%
           ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
           ggplot2::geom_line(
@@ -2700,7 +2705,7 @@ plot_curves.bgmfit <- function(model,
             ggplot2::aes(
               y = !!as.name(Yy),
               group = groupby,
-              linetype = linetype.groupby,
+              # linetype = linetype.groupby, # This does not plot lines TODO
               colour = label.unadj
             ),
             linewidth = linewidth.main
@@ -2710,7 +2715,7 @@ plot_curves.bgmfit <- function(model,
             ggplot2::aes(
               y = !!as.name(Yy),
               group = groupby,
-              linetype = linetype.groupby,
+              # linetype = linetype.groupby, # This does not plot lines TODO
               colour = label.adj
             ),
             linewidth = linewidth.main
