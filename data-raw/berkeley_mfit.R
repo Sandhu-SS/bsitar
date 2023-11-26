@@ -1,7 +1,5 @@
 ## code to prepare `berkeley_fit` dataset goes here
 
-# library(magrittr)
-
 library(bsitar)
 
 data(berkeley, package = "sitar")
@@ -38,26 +36,15 @@ set.seed(1234)
 berkeley_mdata <- berkeley_mdata %>% sample_n_of_groups(size = 20, id)
 
 
-sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 3,
+sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 4,
                           data = berkeley_mdata)
 
 
 berkeley_mfit <- bgm(x = age, y = height, id = id, data = berkeley_mdata,
-                     df = 3, xoffset = mean, fixed = a+b+c, random = a+b+c,
-                     a.formula = ~1, b.formula = ~1, c.formula = ~1, 
-                     # a_prior_beta = student_t(3, ymean, ysd, autoscale = TRUE),
-                     # b_prior_beta = student_t(3, 0, 3.0, autoscale = FALSE),
-                     # c_prior_beta = student_t(3, 0, 1.25, autoscale = FALSE),
-                     # 
-                     # a_prior_sd = student_t(3, 0, ysd, autoscale = TRUE),
-                     # b_prior_sd = student_t(3, 0, 1.5, autoscale = FALSE),
-                     # c_prior_sd = student_t(3, 0, 0.75, autoscale = FALSE),
-                     # 
-                     # rsd_prior_sigma = exponential(ysd, autoscale = TRUE),
+                     df = 4, xoffset = mean, fixed = a+b+c, random = a+b+c,
+                     a_formula = ~1, b_formula = ~1, c_formula = ~1, 
                      threads = brms::threading(NULL),
-                     chains = 2, cores = 2, iter = 6000, thin = 15)
-
-
+                     chains = 2, cores = 2, iter = 5000, thin = 15)
 
 
  usethis::use_data(berkeley_mfit, overwrite = TRUE)

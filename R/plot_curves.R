@@ -186,7 +186,7 @@
 #'
 #'@seealso [growthparameters()] [fitted_draws] [predict_draws()]
 #'
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit bgm author
 #'
 #' @examples
 #' 

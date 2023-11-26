@@ -27,7 +27,7 @@
 #' 
 #' @seealso [brms::loo()] 
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit bgm author
 #'
 #' @examples
 #' 

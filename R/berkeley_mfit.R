@@ -16,5 +16,5 @@
 #' 
 #' @return An object of class \code{bgmfit} with posterior draws.
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit bgm author
 "berkeley_mfit"

@@ -59,6 +59,6 @@
 #' \item{men}{vector of ages at menarche (years), where negative values
 #' are right censored.} }
 #' @export heights
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit bgm author
 #' @keywords datasets
 

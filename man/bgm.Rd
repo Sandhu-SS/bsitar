@@ -66,8 +66,8 @@ bgm(
   univariate_by = list(by = NA, cor = un),
   multivariate = list(mvar = FALSE, cor = un, rescor = TRUE),
   a_prior_beta = student_t(3, ymean, ysd, autoscale = TRUE),
-  b_prior_beta = student_t(3, 0, 3, autoscale = FALSE),
-  c_prior_beta = student_t(3, 0, 1.25, autoscale = FALSE),
+  b_prior_beta = student_t(3, 0, 3.5, autoscale = FALSE),
+  c_prior_beta = student_t(3, 0, 1.5, autoscale = FALSE),
   d_prior_beta = student_t(3, 0, 1, autoscale = TRUE),
   e_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
   f_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
@@ -86,8 +86,8 @@ bgm(
   i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
   a_prior_sd = student_t(3, 0, ysd, autoscale = TRUE),
-  b_prior_sd = student_t(3, 0, 1.5, autoscale = FALSE),
-  c_prior_sd = student_t(3, 0, 0.75, autoscale = FALSE),
+  b_prior_sd = student_t(3, 0, 2, autoscale = FALSE),
+  c_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
   d_prior_sd = student_t(3, 0, 1, autoscale = TRUE),
   e_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
   f_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
@@ -1869,6 +1869,10 @@ the \code{univariate_by = sex} is same as \code{univariate_by = 'sex'} or
 \code{univariate_by = "sex"}. The same applies for all character string
 options.
 }
+\note{
+The package is under continuous development and new models and
+post-processing features will be added soon.
+}
 \examples{
 
 # Examples below fits the SITAR model to the Berkley height data for males. 
@@ -1907,27 +1911,27 @@ if(exists('berkeley_mfit')) {
                   xoffset = 'mean', 
                   fixed = 'a+b+c', 
                   random = 'a+b+c',
-                  a.formula = ~1, 
-                  b.formula = ~1, 
-                  c.formula = ~1, 
+                  a_formula = ~1, 
+                  b_formula = ~1, 
+                  c_formula = ~1, 
                   threads = brms::threading(NULL),
                   chains = 2, cores = 2, iter = 6000, thin = 15)
                   
 # Note that we can test for the sensitivity to the priors by re fitting the
 # above model with flat (i.e., uniform) priors on the regression coefficients
+# for parameters a, b and c.
 model <- bgm(x = age, y = height, id = id, 
                   df = 3, 
                   data = berkeley_mdata,
                   xoffset = 'mean', 
                   fixed = 'a+b+c', 
                   random = 'a+b+c',
-                  a.formula = ~1, 
-                  b.formula = ~1, 
-                  c.formula = ~1, 
+                  a_formula = ~1, 
+                  b_formula = ~1, 
+                  c_formula = ~1, 
                   a_prior_beta = flat,
                   b_prior_beta = flat,
                   c_prior_beta = flat,
-                  s_prior_beta = flat,
                   threads = brms::threading(NULL),
                   chains = 2, cores = 2, iter = 6000, thin = 15)
 }
@@ -1936,13 +1940,13 @@ model <- bgm(x = age, y = height, id = id,
 summary(model)
 
 # Compare model summary with the maximum likelihood SITAR model
-summary(model_ml)
+print(model_ml)
 
 \donttest{
 # Check model fit via posterior predictive checks. The plot_ppc is a based
 # on the pp_check function from the brms package.  
 
-plot_ppc(model)
+plot_ppc(model, ndraws = 100)
 
 # Plot distance and velocity curves using conditional_effects_bgm() function.
 # This function works exactly same as as conditional_effects() from the brms

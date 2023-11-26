@@ -228,7 +228,7 @@
 #' 
 #' @inherit brms::prepare_predictions.brmsfit params 
 #'
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit bgm author
 #'
 #' @examples
 #' 

@@ -23,5 +23,5 @@
 #' @keywords datasets
 #' 
 #' @return A data frame with 3 columns.
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit bgm author
 "berkeley_mdata"
