@@ -8,19 +8,21 @@ Authors@R:
            role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-8539-6897"))
 Maintainer: Satpal Sandhu <satpal.sandhu@bristol.ac.uk>
-Description: Bayesian implementation of Super Imposition by Translation  
-    and Rotation (SITAR) model to analyze growth data with single outcome  
-    (e.g., height)  and joint modelling of multiple outcomes (multivariate 
-    model) such as height  and weight. The non Bayesian version of the 
-    SITAR model (for a single response variable) can be fit by using an 
-    already available R package 'sitar'. The SITAR is a shape-invariant 
-    nonlinear mixed effect model that fits a natural cubic spline mean 
-    curve and and aligns individual-specific growth curves to the mean 
-    curve via a set of random effects on both effects. For more information, 
-    please see Cole (2010)  <doi:10.1093/ije/dyq115>. The 'bsitar' package   
-    is a front-end to  the R package 'brms' which facilitates a range of  
-    regression specifications including hierarchical multivariate modeling and 
-    also provides an excellent framework for post-processing.
+Description: The 'bsitar' package implements the Bayesian version of the 
+    Super Imposition by Translation and Rotation (SITAR) model. The  SITAR  
+    is a shape-invariant nonlinear mixed effect model that fits a natural 
+    cubic spline mean curve and and then aligns individual-specific growth  
+    curves to the mean  curve via a set of random effects on both effects. 
+    For more details,  please see Cole (2010)  <doi:10.1093/ije/dyq115>. 
+    The non Bayesian version of the SITAR model can be fit by using an already 
+    available R package 'sitar'. However, the 'sitar' package allows modelling  
+    of a single outcome only. The 'bsitar' package allows joint modelling of 
+    multiple outcomes (multivariate model) such as height and weight in 
+    addition to analysis of a single outcome (e.g., height). Furthermore, the
+    'bsitar' package can also to fit separate models defined by sub group
+    such as gender when analyzing a single outcome. The 'bsitar' package is a 
+    front-end to  the R package 'brms' and offers an excellent framework for 
+    post-processing of posterior draws which is available from the 'brms' package.
 License: GPL-2
 Depends:     
     R (>= 3.6)

@@ -11,14 +11,11 @@ bgm(
   data,
   df = 4,
   knots = NA,
-  fixed = a + b + c + d + e + f + g + h + i,
-  random = a + b + c + d + e + f + g + h + i,
-  select_model = sitar,
+  fixed = a + b + c,
+  random = a + b + c,
   xoffset = mean,
   bstart = xoffset,
   cstart = 0,
-  apv = NULL,
-  pv = NULL,
   xfun = NULL,
   yfun = NULL,
   bound = 0.04,
@@ -27,31 +24,16 @@ bgm(
   b_formula = ~1,
   c_formula = ~1,
   d_formula = ~1,
-  e_formula = ~1,
-  f_formula = ~1,
-  g_formula = ~1,
-  h_formula = ~1,
-  i_formula = ~1,
   s_formula = ~1,
   a_formula_gr = ~1,
   b_formula_gr = ~1,
   c_formula_gr = ~1,
   d_formula_gr = ~1,
-  e_formula_gr = ~1,
-  f_formula_gr = ~1,
-  g_formula_gr = ~1,
-  h_formula_gr = ~1,
-  i_formula_gr = ~1,
   s_formula_gr = ~1,
   a_formula_gr_str = NULL,
   b_formula_gr_str = NULL,
   c_formula_gr_str = NULL,
   d_formula_gr_str = NULL,
-  e_formula_gr_str = NULL,
-  f_formula_gr_str = NULL,
-  g_formula_gr_str = NULL,
-  h_formula_gr_str = NULL,
-  i_formula_gr_str = NULL,
   s_formula_gr_str = NULL,
   d_adjusted = FALSE,
   sigma_formula = NULL,
@@ -69,61 +51,31 @@ bgm(
   b_prior_beta = student_t(3, 0, 3.5, autoscale = FALSE),
   c_prior_beta = student_t(3, 0, 1.5, autoscale = FALSE),
   d_prior_beta = student_t(3, 0, 1, autoscale = TRUE),
-  e_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-  f_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-  g_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-  h_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-  i_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
   s_prior_beta = student_t(3, 0, lm, autoscale = TRUE),
   a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
   d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  e_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  f_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  g_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  h_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  i_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   s_cov_prior_beta = normal(0, 10, autoscale = FALSE),
   a_prior_sd = student_t(3, 0, ysd, autoscale = TRUE),
   b_prior_sd = student_t(3, 0, 2, autoscale = FALSE),
-  c_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
+  c_prior_sd = student_t(3, 0, 1.25, autoscale = FALSE),
   d_prior_sd = student_t(3, 0, 1, autoscale = TRUE),
-  e_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
-  f_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
-  g_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
-  h_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
-  i_prior_sd = student_t(3, 0, 1, autoscale = FALSE),
   s_prior_sd = student_t(3, 0, lm, autoscale = 2.5),
   a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
   b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
   c_cov_prior_sd = normal(0, 0.05, autoscale = FALSE),
   d_cov_prior_sd = normal(0, 1, autoscale = FALSE),
-  e_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
-  f_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
-  g_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
-  h_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
-  i_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
   s_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
   a_prior_sd_str = NULL,
   b_prior_sd_str = NULL,
   c_prior_sd_str = NULL,
   d_prior_sd_str = NULL,
-  e_prior_sd_str = NULL,
-  f_prior_sd_str = NULL,
-  g_prior_sd_str = NULL,
-  h_prior_sd_str = NULL,
-  i_prior_sd_str = NULL,
   s_prior_sd_str = NULL,
   a_cov_prior_sd_str = NULL,
   b_cov_prior_sd_str = NULL,
   c_cov_prior_sd_str = NULL,
   d_cov_prior_sd_str = NULL,
-  e_cov_prior_sd_str = NULL,
-  f_cov_prior_sd_str = NULL,
-  g_cov_prior_sd_str = NULL,
-  h_cov_prior_sd_str = NULL,
-  i_cov_prior_sd_str = NULL,
   s_cov_prior_sd_str = NULL,
   sigma_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
@@ -147,41 +99,21 @@ bgm(
   b_init_beta = 0,
   c_init_beta = 0,
   d_init_beta = 0,
-  e_init_beta = 0,
-  f_init_beta = 0,
-  g_init_beta = 0,
-  h_init_beta = 0,
-  i_init_beta = 0,
   s_init_beta = lm,
   a_cov_init_beta = 0,
   b_cov_init_beta = 0,
   c_cov_init_beta = 0,
   d_cov_init_beta = 0,
-  e_cov_init_beta = 0,
-  f_cov_init_beta = 0,
-  g_cov_init_beta = 0,
-  h_cov_init_beta = 0,
-  i_cov_init_beta = 0,
   s_cov_init_beta = lm,
   a_init_sd = random,
   b_init_sd = random,
   c_init_sd = random,
   d_init_sd = random,
-  e_init_sd = random,
-  f_init_sd = random,
-  g_init_sd = random,
-  h_init_sd = random,
-  i_init_sd = random,
   s_init_sd = random,
   a_cov_init_sd = random,
   b_cov_init_sd = random,
   c_cov_init_sd = random,
   d_cov_init_sd = random,
-  e_cov_init_sd = random,
-  f_cov_init_sd = random,
-  g_cov_init_sd = random,
-  h_cov_init_sd = random,
-  i_cov_init_sd = random,
   s_cov_init_sd = random,
   sigma_init_beta = random,
   sigma_cov_init_beta = random,
@@ -309,90 +241,6 @@ for the second sub model.}
 (default \code{'a+b+c'}). The approach is same as described above
 for the fixed effects structure (see \code{fixed}).}
 
-\item{select_model}{A character string specifying the model to be fitted.
-Allowed models are:
-\itemize{
-\item The super imposition by translation and rotation (\emph{SITAR}) model
-specified as \code{select_model = 'sitar'} (default). The \code{select_model
- = 'sitar'} (or alternatively \code{select_model = 'sitar3'}) fits the
-\emph{SITAR} model that includes up to three parameters in the fixed
-(\code{fixed = 'a+b+c'}) and the random effect (\code{random = 'a+b+c'})
-structures. Note that the user need not to include all the three parameters
-in the fixed or the random effect structure. For example, a fixed effect
-version of the \emph{SITAR} model can be fit by setting randoms as an empty
-string i.e., \code{random = ''}. Also, the fixed effect structure may
-include only a sub set of the parameters e.g., size and timing parameters
-(\code{fixed = 'a+b'}) or the size and the intensity parameters
-(\code{fixed = 'a+c'}). The four parameter version of the \emph{SITAR} model
-includes an addition parameter \code{d} and is fit by specifying
-\code{select_model} as \code{'sitar4fr'} or \code{'sitar4r'}. The option
-\code{'sitar4fr'} includes parameter \code{d} in both the fixed and the
-random effects structures whereas \code{'sitar4r'} indicates that the
-parameter \code{d} is included only in the random effects structure of the
-\emph{SITAR} model. Similar to the three parameter \emph{SITAR} model,
-user can fit model with a sub set of the fixed and/or the random effects.
-Note that for \code{'sitar4r'}, covariate(s)  can not be specified
-for the parameter \code{d}.
-
-\item The Preece-Baines model 1 (\emph{PB-1}) model is specified as
-\code{select_model = 'pb1'}. The \emph{PB-1} model is a five parameter
-model. The fixed effect structure must include all five parameters
-\code{fixed = 'a+b+c+d+e'} whereas the random effects structure can be same
-as the fixed effect structure (i.e., \code{random = 'a+b+c+d+e'}), or a sub
-set of the fixed effect structure, or even an empty string to fit a fixed
-effect version of the \emph{PB-1} model.
-
-\item The Preece-Baines model 2 (\emph{PB-2}) model is specified as
-\code{select_model = 'pb2'}. The \emph{PB-2} model is a six parameter model.
-The fixed effect structure must include all six parameters \code{fixed =
- 'a+b+c+d+e+f'} whereas the random effects structure can be same as the fixed
-effect structure (i.e., \code{random = 'a+b+c+d+e+f'}), a sub set of the
-fixed effect structure, or even an empty string to fit a fixed effect
-version of the \emph{PB-2} model.
-
-\item The Preece-Baines model 3 (\emph{PB-3}) model specified as
-\code{select_model = 'pb3'}. The \emph{PB-3} model is a six parameter model.
-The fixed effect structure must include all six parameters \code{fixed =
- 'a+b+c+d+e+f'} whereas the random effects structure can be same as the fixed
-effect structure (i.e., \code{random = 'a+b+c+d+e+f'}), a sub set of the
-fixed effect structure, or even an empty string to fit a fixed effect
-version of the \emph{PB-3} model.
-
-\item The logistic growth model (\emph{LGM-1}) model specified as
-\code{select_model = 'logistic1'}. The \emph{LGM-1} model is a three
-parameter model. The fixed effect structure must include all three
-parameters \code{fixed = 'a+b+c'} whereas the random effects structure can
-be same as the fixed effect structure (i.e., \code{random = 'a+b+c'}), a sub
-set of the fixed effect structure, or even an empty string to fit a fixed
-effect version of the \emph{LGM-1} model.
-
-\item The double logistic growth model (\emph{LGM-2}) model specified as
-\code{select_model = 'logistic2'}. The \emph{LGM-2} model is a six
-parameter model. The fixed effect structure must include all six parameters
-\code{fixed = 'a+b+c+d+e+f'} whereas the random effects structure can be
-same as  the fixed effect structure (i.e., \code{random = 'a+b+c+d+e+f'}),
-a sub set of  the fixed effect structure, or even an empty string to fit a
-fixed effect version of the \emph{LGM-1} model.
-
-\item The triple logistic growth model (\emph{LGM-3}) model specified as
-\code{select_model = 'logistic3'}. The \emph{LGM-3} model is a nine
-parameter model. The fixed effect structure must include all nine parameters
-\code{fixed = 'a+b+c+d+e+f+g+h+i'} whereas the random effects structure can
-be same as  the fixed effect structure (i.e., \code{random =
- 'a+b+c+d+e+f+g+h+i'}), a sub set of  the fixed effect structure, or even an
-empty string to fit a fixed effect version of the \emph{LGM-1} model.
-
-\item The restricted cubic spline (\emph{RCS}) model is specified as
-\code{select_model = 'rcs'}. The \emph{RCS} model includes an intercept and
-spline coefficients. The number of spline coefficients depends on the
-degree of freedom (\code{df}) or the number of knots (\code{knots})
-arguments specified by the user. By default, the \emph{RCS} model is fit as
-an fully random effect model that includes identical fixed and random
-effect structures. Though not recommended, model with splines included only
-in the fixed effect structure can be fit by \code{select_model = 'rcsf'}
-option.
-}}
-
 \item{xoffset}{An optional character string, or a numeric value to set up the
 origin of the predictor variable, \code{x} (i.e., centering of \code{x}).
 The options available are \code{'mean'} (mean of x, i.e., \code{mean(x)}),
@@ -429,16 +277,6 @@ adjusted accordingly. The default \code{cstart} is '0' i.e., \code{cstart =
 the \code{xoffset} can be same for sub models (typically), or different for
 each sub model (see argument \code{x} for details on setting different
 arguments for sub models).}
-
-\item{apv}{An optional numeric value (default \code{NULL}) to set up the
-initial value for the fixed effect parameter \code{b}. This is just an
-alternative method of setting up the \code{bstart}. See \code{bstart} for
-details.}
-
-\item{pv}{An optional numeric value (default \code{NULL}) to set up the
-initial value for the fixed effect parameter \code{c}. This is just an
-alternative method of setting up the \code{cstart}. See \code{cstart} for
-details.}
 
 \item{xfun}{An optional character string to specify the transformation of the
 predictor variable, The default is \code{NULL}, indicating that no
@@ -495,21 +333,6 @@ well as their interactions.}
 \item{d_formula}{Formula for the fixed effect parameter, \code{d} (default
 \code{~ 1}). See \code{a_formula} for details.}
 
-\item{e_formula}{Formula for the fixed effect parameter, \code{e} (default
-\code{~ 1}). See \code{a_formula} for details.}
-
-\item{f_formula}{Formula for the fixed effect parameter, \code{f} (default
-\code{~ 1}). See \code{a_formula} for details.}
-
-\item{g_formula}{Formula for the fixed effect parameter, \code{g} (default
-\code{~ 1}). See \code{a_formula} for details.}
-
-\item{h_formula}{Formula for the fixed effect parameter, \code{h} (default
-\code{~ 1}). See \code{a_formula} for details.}
-
-\item{i_formula}{Formula for the fixed effect parameter, \code{i} (default
-\code{~ 1}). See \code{a_formula} for details.}
-
 \item{s_formula}{Formula for the fixed effect parameter, \code{s} (default
 \code{~ 1}). The \code{s_formula} sets up the the spline design matrix.
 Typically, covariate(s) are not included in the \code{s_formula} to limit
@@ -553,21 +376,6 @@ correlated. For more details on the the vertical bar approach, please see
 \item{d_formula_gr}{Formula for the random effect parameter, \code{d} (default
 \code{~ 1}). See \code{a_formula_gr} for details.}
 
-\item{e_formula_gr}{Formula for the random effect parameter, \code{e} (default
-\code{~ 1}). See \code{a_formula_gr} for details.}
-
-\item{f_formula_gr}{Formula for the random effect parameter, \code{f} (default
-\code{~ 1}). See \code{a_formula_gr} for details.}
-
-\item{g_formula_gr}{Formula for the random effect parameter, \code{g} (default
-\code{~ 1}). See \code{a_formula_gr} for details.}
-
-\item{h_formula_gr}{Formula for the random effect parameter, \code{h} (default
-\code{~ 1}). See \code{a_formula_gr} for details.}
-
-\item{i_formula_gr}{Formula for the random effect parameter, \code{i} (default
-\code{~ 1}). See \code{a_formula_gr} for details.}
-
 \item{s_formula_gr}{Formula for the random effect parameter, \code{s} (default
 \code{~ 1}). See \code{a_formula_gr} for details. Note that
 \code{s_formula_gr} is completely ignored for the \emph{SITAR} model because
@@ -603,26 +411,6 @@ levels of hierarchy. See \code{a_formula_gr_str} for details.}
 levels of hierarchy. See \code{a_formula_gr_str} for details.}
 
 \item{d_formula_gr_str}{Formula for the random effect parameter, \code{d}
-(default \code{NULL}) when fitting a hierarchical model with three or more
-levels of hierarchy. See \code{a_formula_gr_str} for details.}
-
-\item{e_formula_gr_str}{Formula for the random effect parameter, \code{e}
-(default \code{NULL}) when fitting a hierarchical model with three or more
-levels of hierarchy. See \code{a_formula_gr_str} for details.}
-
-\item{f_formula_gr_str}{Formula for the random effect parameter, \code{f}
-(default \code{NULL}) when fitting a hierarchical model with three or more
-levels of hierarchy. See \code{a_formula_gr_str} for details.}
-
-\item{g_formula_gr_str}{Formula for the random effect parameter, \code{g}
-(default \code{NULL}) when fitting a hierarchical model with three or more
-levels of hierarchy. See \code{a_formula_gr_str} for details.}
-
-\item{h_formula_gr_str}{Formula for the random effect parameter, \code{h}
-(default \code{NULL}) when fitting a hierarchical model with three or more
-levels of hierarchy. See \code{a_formula_gr_str} for details.}
-
-\item{i_formula_gr_str}{Formula for the random effect parameter, \code{i}
 (default \code{NULL}) when fitting a hierarchical model with three or more
 levels of hierarchy. See \code{a_formula_gr_str} for details.}
 
@@ -845,21 +633,6 @@ See \code{a_prior_beta} for details.}
 \item{d_prior_beta}{Specify priors for the fixed effect parameter, \code{d}.
 See \code{a_prior_beta} for details.}
 
-\item{e_prior_beta}{Specify priors for the fixed effect parameter, \code{e}.
-See \code{a_prior_beta} for details.}
-
-\item{f_prior_beta}{Specify priors for the fixed effect parameter, \code{f}.
-See \code{a_prior_beta} for details.}
-
-\item{g_prior_beta}{Specify priors for the fixed effect parameter, \code{g}.
-See \code{a_prior_beta} for details.}
-
-\item{h_prior_beta}{Specify priors for the fixed effect parameter, \code{h}.
-See \code{a_prior_beta} for details.}
-
-\item{i_prior_beta}{Specify priors for the fixed effect parameter, \code{i}.
-See \code{a_prior_beta} for details.}
-
 \item{s_prior_beta}{Specify priors for the fixed effect parameter, \code{s}
 (i.e., spline coefficients). The general approach is same as described
 earlier for the fixed effect parameters  (see \code{a_prior_beta} for
@@ -907,21 +680,6 @@ fixed effect parameter, \code{c} (see \code{a_cov_prior_beta} for details).}
 \item{d_cov_prior_beta}{Specify priors for the covariate(s) included in the
 fixed effect parameter, \code{d} (see \code{a_cov_prior_beta} for details).}
 
-\item{e_cov_prior_beta}{Specify priors for the covariate(s) included in the
-fixed effect parameter, \code{e} (see \code{a_cov_prior_beta} for details).}
-
-\item{f_cov_prior_beta}{Specify priors for the covariate(s) included in the
-fixed effect parameter, \code{f} (see \code{a_cov_prior_beta} for details).}
-
-\item{g_cov_prior_beta}{Specify priors for the covariate(s) included in the
-fixed effect parameter, \code{g} (see \code{a_cov_prior_beta} for details).}
-
-\item{h_cov_prior_beta}{Specify priors for the covariate(s) included in the
-fixed effect parameter, \code{h} (see \code{a_cov_prior_beta} for details).}
-
-\item{i_cov_prior_beta}{Specify priors for the covariate(s) included in the
-fixed effect parameter, \code{i} (see \code{a_cov_prior_beta} for details).}
-
 \item{s_cov_prior_beta}{Specify priors for the covariate(s) included in the
 fixed effect parameter, \code{s}. The approach is same as described earlier
 for the \code{a_cov_prior_beta}. For the location-scale based priors, the
@@ -950,21 +708,6 @@ See \code{a_prior_sd} for details.}
 \item{d_prior_sd}{Specify priors  for the random effect parameter,
 \code{d}. See \code{a_prior_sd} for details.}
 
-\item{e_prior_sd}{Specify priors  for the random effect parameter,
-\code{e}. See \code{a_prior_sd} for details.}
-
-\item{f_prior_sd}{Specify priors  for the random effect parameter,
-\code{f}. See \code{a_prior_sd} for details.}
-
-\item{g_prior_sd}{Specify priors  for the random effect parameter,
-\code{g}. See \code{a_prior_sd} for details.}
-
-\item{h_prior_sd}{Specify priors  for the random effect parameter,
-\code{h}. See \code{a_prior_sd} for details.}
-
-\item{i_prior_sd}{Specify priors  for the random effect parameter,
-\code{i}. See \code{a_prior_sd} for details.}
-
 \item{s_prior_sd}{Specify priors  for the random effect parameter, \code{s}.
 See \code{a_prior_sd} for details. However, note that the \code{s_prior_sd}
 is only used as a placeholder because the \emph{SITAR} model does not
@@ -983,21 +726,6 @@ random effect parameter, \code{c}. See \code{a_cov_prior_sd} for details.}
 
 \item{d_cov_prior_sd}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{d}. See \code{a_cov_prior_sd} for details.}
-
-\item{e_cov_prior_sd}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{e}. See \code{a_cov_prior_sd} for details.}
-
-\item{f_cov_prior_sd}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{f}. See \code{a_cov_prior_sd} for details.}
-
-\item{g_cov_prior_sd}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{g}. See \code{a_cov_prior_sd} for details.}
-
-\item{h_cov_prior_sd}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{h}. See \code{a_cov_prior_sd} for details.}
-
-\item{i_cov_prior_sd}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{i}. See \code{a_cov_prior_sd} for details.}
 
 \item{s_cov_prior_sd}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{s}. See \code{a_cov_prior_sd} for details.
@@ -1018,26 +746,6 @@ when fitting a hierarchical model with three or more levels of hierarchy.
 The approach is same as described earlier (see the \code{a_prior_sd_str}).}
 
 \item{d_prior_sd_str}{Specify priors for the random effect parameter, \code{d}
-when fitting a hierarchical model with three or more levels of hierarchy.
-The approach is same as described earlier (see the \code{a_prior_sd_str}).}
-
-\item{e_prior_sd_str}{Specify priors for the random effect parameter, \code{e}
-when fitting a hierarchical model with three or more levels of hierarchy.
-The approach is same as described earlier (see the \code{a_prior_sd_str}).}
-
-\item{f_prior_sd_str}{Specify priors for the random effect parameter, \code{f}
-when fitting a hierarchical model with three or more levels of hierarchy.
-The approach is same as described earlier (see the \code{a_prior_sd_str}).}
-
-\item{g_prior_sd_str}{Specify priors for the random effect parameter, \code{g}
-when fitting a hierarchical model with three or more levels of hierarchy.
-The approach is same as described earlier (see the \code{a_prior_sd_str}).}
-
-\item{h_prior_sd_str}{Specify priors for the random effect parameter, \code{h}
-when fitting a hierarchical model with three or more levels of hierarchy.
-The approach is same as described earlier (see the \code{a_prior_sd_str}).}
-
-\item{i_prior_sd_str}{Specify priors for the random effect parameter, \code{i}
 when fitting a hierarchical model with three or more levels of hierarchy.
 The approach is same as described earlier (see the \code{a_prior_sd_str}).}
 
@@ -1065,31 +773,6 @@ three or more levels of hierarchy. The approach is same as described earlier
 
 \item{d_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
 random effect parameter, \code{d} when fitting a hierarchical model with
-three or more levels of hierarchy. The approach is same as described earlier
-(see the \code{a_cov_prior_sd_str}).}
-
-\item{e_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{e} when fitting a hierarchical model with
-three or more levels of hierarchy. The approach is same as described earlier
-(see the \code{a_cov_prior_sd_str}).}
-
-\item{f_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{f} when fitting a hierarchical model with
-three or more levels of hierarchy. The approach is same as described earlier
-(see the \code{a_cov_prior_sd_str}).}
-
-\item{g_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{g} when fitting a hierarchical model with
-three or more levels of hierarchy. The approach is same as described earlier
-(see the \code{a_cov_prior_sd_str}).}
-
-\item{h_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{h} when fitting a hierarchical model with
-three or more levels of hierarchy. The approach is same as described earlier
-(see the \code{a_cov_prior_sd_str}).}
-
-\item{i_cov_prior_sd_str}{Specify priors for the covariate(s) included in the
-random effect parameter, \code{i} when fitting a hierarchical model with
 three or more levels of hierarchy. The approach is same as described earlier
 (see the \code{a_cov_prior_sd_str}).}
 
@@ -1218,21 +901,6 @@ as \cr \code{list(a_init_beta = '0', a_init_beta = 'lm')}.}
 \item{d_init_beta}{Specify initial values for the fixed effect parameter,
 \code{d}. See \code{a_init_beta} for details.}
 
-\item{e_init_beta}{Specify initial values for the fixed effect parameter,
-\code{e}. See \code{a_init_beta} for details.}
-
-\item{f_init_beta}{Specify initial values for the fixed effect parameter,
-\code{f}. See \code{a_init_beta} for details.}
-
-\item{g_init_beta}{Specify initial values for the fixed effect parameter,
-\code{g}. See \code{a_init_beta} for details.}
-
-\item{h_init_beta}{Specify initial values for the fixed effect parameter,
-\code{h}. See \code{a_init_beta} for details.}
-
-\item{i_init_beta}{Specify initial values for the fixed effect parameter,
-\code{i}. See \code{a_init_beta} for details.}
-
 \item{s_init_beta}{Specify initial values for the fixed effect parameter,
 \code{s} (spline coefficients). Options available are \code{'0'},
 \code{'random'}, \code{'prior'}, and \code{'lm'}. See \code{a_init_beta} for
@@ -1253,21 +921,6 @@ fixed effect parameter, \code{c}. See \code{a_cov_init_beta} for details.}
 
 \item{d_cov_init_beta}{Specify initial values for covariate(s) included in the
 fixed effect parameter, \code{d}. See \code{a_cov_init_beta} for details.}
-
-\item{e_cov_init_beta}{Specify initial values for covariate(s) included in the
-fixed effect parameter, \code{e}. See \code{a_cov_init_beta} for details.}
-
-\item{f_cov_init_beta}{Specify initial values for covariate(s) included in the
-fixed effect parameter, \code{f}. See \code{a_cov_init_beta} for details.}
-
-\item{g_cov_init_beta}{Specify initial values for covariate(s) included in the
-fixed effect parameter, \code{g}. See \code{a_cov_init_beta} for details.}
-
-\item{h_cov_init_beta}{Specify initial values for covariate(s) included in the
-fixed effect parameter, \code{h}. See \code{a_cov_init_beta} for details.}
-
-\item{i_cov_init_beta}{Specify initial values for covariate(s) included in the
-fixed effect parameter, \code{i}. See \code{a_cov_init_beta} for details.}
 
 \item{s_cov_init_beta}{Specify initial values for covariate(s) included in the
 fixed effect parameter, \code{s} (spline coefficients). See
@@ -1312,21 +965,6 @@ parameter, \code{c}. See \code{a_init_sd} for details.}
 \item{d_init_sd}{Specify initial value for the standard deviation of group
 level random effect parameter, \code{d}. See \code{a_init_sd} for details.}
 
-\item{e_init_sd}{Specify initial value for the standard deviation of group
-level random effect parameter, \code{e}. See \code{a_init_sd} for details.}
-
-\item{f_init_sd}{Specify initial value for the standard deviation of group
-level random effect parameter, \code{f}. See \code{a_init_sd} for details.}
-
-\item{g_init_sd}{Specify initial value for the standard deviation of group
-level random effect parameter, \code{g}. See \code{a_init_sd} for details.}
-
-\item{h_init_sd}{Specify initial value for the standard deviation of group
-level random effect parameter, \code{h}. See \code{a_init_sd} for details.}
-
-\item{i_init_sd}{Specify initial value for the standard deviation of group
-level random effect parameter, \code{i}. See \code{a_init_sd} for details.}
-
 \item{s_init_sd}{Specify initial value for the standard deviation of group
 level random effect parameter, \code{s}. See \code{a_init_sd} for details.
 Note that \code{s_init_sd} is a placeholder because random effects are not
@@ -1344,21 +982,6 @@ the random effect parameter, \code{c}. See \code{a_cov_init_sd} for details.}
 
 \item{d_cov_init_sd}{Specify initial values for the covariate(s) included in
 the random effect parameter, \code{d}. See \code{a_cov_init_sd} for details.}
-
-\item{e_cov_init_sd}{Specify initial values for the covariate(s) included in
-the random effect parameter, \code{e}. See \code{a_cov_init_sd} for details.}
-
-\item{f_cov_init_sd}{Specify initial values for the covariate(s) included in
-the random effect parameter, \code{f}. See \code{a_cov_init_sd} for details.}
-
-\item{g_cov_init_sd}{Specify initial values for the covariate(s) included in
-the random effect parameter, \code{g}. See \code{a_cov_init_sd} for details.}
-
-\item{h_cov_init_sd}{Specify initial values for the covariate(s) included in
-the random effect parameter, \code{h}. See \code{a_cov_init_sd} for details.}
-
-\item{i_cov_init_sd}{Specify initial values for the covariate(s) included in
-the random effect parameter, \code{i}. See \code{a_cov_init_sd} for details.}
 
 \item{s_cov_init_sd}{Specify initial values for the covariate(s) included in
 the random effect parameter, \code{s}. See \code{a_cov_init_sd} for details.
@@ -1803,7 +1426,19 @@ Please note that author of the \pkg{sitar} package,
 \code{d} only in the random effects structure of the model and not in the
 fixed fixed structure. However, the \pkg{bsitar} package allows inclusion of
 parameter \code{d} in fixed and/or in the random effects structures of the
-\emph{SITAR} model.
+\emph{SITAR} model. The three parameters \emph{SITAR} model (default) is
+specified via the \code{fixed} and the \code{random} arguments as follows:
+\cr \code{fixed = 'a+b+c'} \cr  \code{random = 'a+b+c'} Note that the user
+need not to include all the three parameters in the fixed or the random
+effect structure. For example, a fixed effect version of the \emph{SITAR}
+model can be fit by setting randoms as an empty string i.e., \code{random =
+ ''}. Furthermore, the fixed effect structure may include only a sub set of
+the parameters e.g., size and timing parameters (\code{fixed = 'a+b'}) or
+the size and the intensity parameters (\code{fixed = 'a+c'}). The four
+parameters version of the \emph{SITAR} model is fit by including parameter
+\code{d} in the \code{fixed} and/or the \code{random} arguments. Similar to
+the three parameter \emph{SITAR} model, user can fit model with a sub set of
+the fixed and/or the random effects.
 
 The \pkg{sitar} package heavily depends on another Bayesian R package, the
 \pkg{brms} \insertCite{@see @R-brms; @brms2021}{bsitar}. The \pkg{brms} can
