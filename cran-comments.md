@@ -63,4 +63,8 @@ Two notes:
 Note 2 seems to be a recurring issue on Rhub [issue #548](https://github.com/r-hub/rhub/issues/548), and therefore can be ignored  
 
 
-
+# Corrected following (from the earlier submission)
+1. Found the following (possibly) invalid URLs:
+     URL: https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html
+2. Found the following (possibly) invalid file URI:
+     URI: 2023-01-16

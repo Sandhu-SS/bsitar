@@ -1408,10 +1408,7 @@ it to 1 or 2.5 depending on the standard deviation of the response variable
 choosing the scaling factor as any real number (e.g., \code{autosclae =
  2.5}). When \code{autosclae = TRUE}, \code{2.5} is the default scaling
 factor. We strongly recommend to go through the well documented details on
-prior specifications used in the
-\href{https://cran.r-project.org/web/packages/brms/}{brms} and
-\href{https://cran.r-project.org/web/packages/rstanarm/}{rstanarm}
-packages.
+prior specifications used in \pkg{brms} and \pkg{rstanarm} packages.
 
 Similar to the \pkg{brms} package, the \pkg{bsitar} package offers a range
 of tools to evaluate the model fit such as the posterior predictive check
