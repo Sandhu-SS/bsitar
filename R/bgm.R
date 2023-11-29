@@ -93,8 +93,8 @@
 #'  2.5}). When \code{autosclae = TRUE}, \code{2.5} is the default scaling
 #'  factor. We strongly recommend to go through the well documented details on
 #'  prior specifications used in the
-#'  [brms](https://paul-buerkner.github.io/brms/reference/set_prior.html) and
-#'  [rstanarm](https://cran.r-project.org/web/packages/rstanarm/vignettes/priors.html)
+#'  [brms](https://cran.r-project.org/web/packages/brms/) and
+#'  [rstanarm](https://cran.r-project.org/web/packages/rstanarm/)
 #'  packages.
 #'  
 #'  Similar to the \pkg{brms} package, the \pkg{bsitar} package offers a range
@@ -328,14 +328,6 @@
 #'@param d_formula_gr Formula for the random effect parameter, \code{d} (default
 #'  \code{~ 1}). See \code{a_formula_gr} for details.
 #'  
-#'@param s_formula_gr Formula for the random effect parameter, \code{s} (default
-#'  \code{~ 1}). See \code{a_formula_gr} for details. Note that
-#'  \code{s_formula_gr} is completely ignored for the \emph{SITAR} model because
-#'  by definition, the spline curve must be population average curve to which
-#'  individual specific curves are aligned via the random effects. The
-#'  \code{s_formula_gr} is included here just as a placeholder and is not
-#'  evaluated when fitting the  \emph{SITAR} model.
-#'
 #'@param a_formula_gr_str Formula for the random effect parameter, \code{a}
 #'  (default \code{NULL}) when fitting a hierarchical model with three or more
 #'  levels of hierarchy. An example is model fit to the data with repeated
@@ -365,12 +357,6 @@
 #'@param d_formula_gr_str Formula for the random effect parameter, \code{d}
 #'  (default \code{NULL}) when fitting a hierarchical model with three or more
 #'  levels of hierarchy. See \code{a_formula_gr_str} for details.
-#'  
-#'@param s_formula_gr_str Formula for the random effect parameter, \code{i}
-#'  (default \code{NULL}) when fitting a hierarchical model with three or more
-#'  levels of hierarchy. See \code{a_formula_gr_str} for details. Note that
-#'  \code{s_formula_gr_str} is completely ignored for the \emph{SITAR} model,
-#'  See \code{s_formula_gr} for details.
 #'  
 #'@param d_adjusted A logical indicator to set the scale of predictor variable
 #'  \code{x} for modelling random effect parameter \code{d}. If \code{FALSE}
@@ -660,11 +646,6 @@
 #'@param d_prior_sd Specify priors  for the random effect parameter,
 #'  \code{d}. See \code{a_prior_sd} for details.
 #'
-#'@param s_prior_sd Specify priors  for the random effect parameter, \code{s}.
-#'  See \code{a_prior_sd} for details. However, note that the \code{s_prior_sd}
-#'  is only used as a placeholder because the \emph{SITAR} model does not
-#'  model random effects for the spline coefficients.
-#'
 #'@param a_cov_prior_sd Specify priors for the covariate(s) included in the
 #'  random effect parameter, \code{a}. The approach is same as described earlier
 #'  for the \code{a_cov_prior_beta} except that no pre-defined option (e.g.,
@@ -678,12 +659,6 @@
 #'
 #'@param d_cov_prior_sd Specify priors for the covariate(s) included in the
 #'  random effect parameter, \code{d}. See \code{a_cov_prior_sd} for details.
-#'
-#'@param s_cov_prior_sd Specify priors for the covariate(s) included in the
-#'  random effect parameter, \code{s}. See \code{a_cov_prior_sd} for details.
-#'  However, note that the \code{s_cov_prior_sd} is only used as a placeholder
-#'  because the \emph{SITAR} model does not model random effects for the
-#'  spline coefficients.
 #'
 #'@param a_prior_sd_str Specify priors for the random effect parameter, \code{a}
 #'  when fitting a hierarchical model with three or more levels of hierarchy. 
@@ -701,13 +676,6 @@
 #'  when fitting a hierarchical model with three or more levels of hierarchy. 
 #'  The approach is same as described earlier (see the \code{a_prior_sd_str}).
 #'  
-#'@param s_prior_sd_str Specify priors for the random effect parameter, \code{s}
-#'  when fitting a hierarchical model with three or more levels of hierarchy.
-#'  The approach is same as described earlier (see the \code{a_prior_sd_str}).
-#'  However, the \code{s_prior_sd_str} is only used as a placeholder because the
-#'  \emph{SITAR} model does not model random effects for the spline
-#'  coefficients.
-#'
 #'@param a_cov_prior_sd_str Specify priors for the covariate(s) included in the
 #'  random effect parameter, \code{a} when fitting a hierarchical model with
 #'  three or more levels of hierarchy. The approach is same as described earlier
@@ -727,13 +695,6 @@
 #'  random effect parameter, \code{d} when fitting a hierarchical model with
 #'  three or more levels of hierarchy. The approach is same as described earlier
 #'  (see the \code{a_cov_prior_sd_str}). 
-#'  
-#'@param s_cov_prior_sd_str Specify priors for the covariate(s) included in the
-#'  random effect parameter, \code{s} when fitting a hierarchical model with
-#'  three or more levels of hierarchy. The approach is same as described earlier
-#'  (see the \code{a_cov_prior_sd_str}). However, \code{s_cov_prior_sd_str} is
-#'  only used as a placeholder because the \emph{SITAR} model does not include
-#'  random effects for the spline coefficients.
 #'  
 #'@param sigma_prior_beta Specify priors for the fixed effect distributional
 #'  parameter, \code{sigma}. The approach is same as described earlier for the 
@@ -917,11 +878,6 @@
 #'@param d_init_sd Specify initial value for the standard deviation of group
 #'  level random effect parameter, \code{d}. See \code{a_init_sd} for details.
 #'  
-#'@param s_init_sd Specify initial value for the standard deviation of group
-#'  level random effect parameter, \code{s}. See \code{a_init_sd} for details.
-#'  Note that \code{s_init_sd} is a placeholder because random effects are not
-#'  allowed for the parameter, \code{s}.
-#'
 #'@param a_cov_init_sd Specify initial values for the covariate(s) included in
 #'  the random effect parameter, \code{a}. Options available are \code{'0'},
 #'  \code{'random'} and \code{'prior'}. See \code{a_cov_init_beta} for details.
@@ -934,11 +890,6 @@
 #'
 #'@param d_cov_init_sd Specify initial values for the covariate(s) included in
 #'  the random effect parameter, \code{d}. See \code{a_cov_init_sd} for details.
-#'
-#'@param s_cov_init_sd Specify initial values for the covariate(s) included in
-#'  the random effect parameter, \code{s}. See \code{a_cov_init_sd} for details.
-#'  Note that \code{s_cov_init_sd} is a placeholder because random effects are
-#'  not allowed for the parameter, \code{s}.
 #'
 #'@param sigma_init_beta Specify initial values for the fixed effect
 #'  distributional parameter, \code{sigma}. The approach is same as described
@@ -1474,12 +1425,10 @@ bgm <- function(x,
                    b_formula_gr = ~ 1,
                    c_formula_gr = ~ 1,
                    d_formula_gr = ~ 1,
-                   s_formula_gr = ~ 1,
                    a_formula_gr_str = NULL,
                    b_formula_gr_str = NULL,
                    c_formula_gr_str = NULL,
                    d_formula_gr_str = NULL,
-                   s_formula_gr_str = NULL,
                    d_adjusted = FALSE,
                    sigma_formula = NULL,
                    sigma_formula_gr = NULL,
@@ -1519,22 +1468,18 @@ bgm <- function(x,
                    b_prior_sd = student_t(3, 0, 2.0, autoscale = FALSE),
                    c_prior_sd = student_t(3, 0, 1.25, autoscale = FALSE),
                    d_prior_sd = student_t(3, 0, 1.0, autoscale = TRUE),
-                   s_prior_sd = student_t(3, 0, lm, autoscale = 2.5),
                    a_cov_prior_sd = normal(0, 2, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
                    c_cov_prior_sd = normal(0, 0.05, autoscale = FALSE),
                    d_cov_prior_sd = normal(0, 1, autoscale = FALSE),
-                   s_cov_prior_sd = normal(0, 0.5, autoscale = FALSE),
                    a_prior_sd_str = NULL,
                    b_prior_sd_str = NULL,
                    c_prior_sd_str = NULL,
                    d_prior_sd_str = NULL,
-                   s_prior_sd_str = NULL,
                    a_cov_prior_sd_str = NULL,
                    b_cov_prior_sd_str = NULL,
                    c_cov_prior_sd_str = NULL,
                    d_cov_prior_sd_str = NULL,
-                   s_cov_prior_sd_str = NULL,
                    sigma_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
                    sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
                    sigma_prior_sd = student_t(3, 0, 0.25, autoscale = FALSE),
@@ -1567,12 +1512,10 @@ bgm <- function(x,
                    b_init_sd = random,
                    c_init_sd = random,
                    d_init_sd = random,
-                   s_init_sd = random,
                    a_cov_init_sd = random,
                    b_cov_init_sd = random,
                    c_cov_init_sd = random,
                    d_cov_init_sd = random,
-                   s_cov_init_sd = random,
                    sigma_init_beta = random,
                    sigma_cov_init_beta = random,
                    sigma_init_sd = random,
@@ -3689,6 +3632,10 @@ bgm <- function(x,
       }
       out
     } 
+    
+    
+    # Over ride when restricting bgm to abcd
+    if(!exists('s_formula_grsi')) s_formula_grsi <- NULL
     
     
     
