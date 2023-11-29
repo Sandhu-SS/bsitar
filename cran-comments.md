@@ -1,11 +1,15 @@
 
-This is a new release, therefore 1 note across all test environments
+This is a new release, therefore 1 note across all test environments.
 
-# Four test environments
+# Test environments (a total four)
  1. Windows 11 x64 (build 22621)
- 2. Windows Server 2022 x64 (build 20348) - on R-hub
- 3. Ubuntu 20.04.6 LTS, GCC - on R-hub
- 4. Fedora Linux 36 (Container Image), clang, gfortran - on R-hub
+     	on devtools::check()
+ 2. Windows Server 2022 x64 (build 20348)
+	on rhub::check_for_cran()
+ 3. Ubuntu 20.04.6 LTS, GCC
+	on rhub::check_for_cran()
+ 4. Fedora Linux 36 (Container Image), clang, gfortran
+	on rhub::check_for_cran()
 
 
 

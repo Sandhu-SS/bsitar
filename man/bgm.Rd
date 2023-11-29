@@ -381,7 +381,7 @@ correlated. For more details on the the vertical bar approach, please see
 \code{s_formula_gr} is completely ignored for the \emph{SITAR} model because
 by definition, the spline curve must be population average curve to which
 individual specific curves are aligned via the random effects. The
-\code{s_formula_gr} is included here just as an placeholder and is not
+\code{s_formula_gr} is included here just as a placeholder and is not
 evaluated when fitting the  \emph{SITAR} model.}
 
 \item{a_formula_gr_str}{Formula for the random effect parameter, \code{a}
@@ -1428,7 +1428,7 @@ fixed fixed structure. However, the \pkg{bsitar} package allows inclusion of
 parameter \code{d} in fixed and/or in the random effects structures of the
 \emph{SITAR} model. The three parameters \emph{SITAR} model (default) is
 specified via the \code{fixed} and the \code{random} arguments as follows:
-\cr \code{fixed = 'a+b+c'} \cr  \code{random = 'a+b+c'} Note that the user
+\code{fixed = 'a+b+c'}, \code{random = 'a+b+c'} Note that the user
 need not to include all the three parameters in the fixed or the random
 effect structure. For example, a fixed effect version of the \emph{SITAR}
 model can be fit by setting randoms as an empty string i.e., \code{random =

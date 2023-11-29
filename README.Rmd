@@ -4,7 +4,6 @@ output:
     variant: gfm # markdown_github
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -32,43 +31,4 @@ mean curve via a set of random effects: the size, timing and intensity. The
 the **Stan** program (see https://mc-stan.org/) to performing full Bayesian
 inference for a range of regression specifications including hierarchical
 multivariate modeling.
-
-
-
-## Installation
-
-You can install the development version of bsitar from
-[GitHub](https://github.com/) with:
-
-``` r
-# install.packages("devtools")
-devtools::install_github("Sandhu-SS/bsitar")
-```
-
-## Example
-
-This is a basic example which shows you how to fit the model:
-
-```{r example, echo = TRUE, eval = FALSE}
-library(bsitar)
-```
-
-
-```{r data, echo = TRUE, eval = FALSE}
-data(heights, package = "sitar")
-data <- heights
-rm(heights)
-
-data <- data %>% 
-  dplyr::select(id, age, height) %>% 
-  tidyr::drop_na(height) %>% 
-  dplyr::rename(y = height) %>% 
-  dplyr::arrange(id, age) %>% 
-  dplyr::mutate(id = as.factor(id) ) 
-```
-
-
-```{r fit1, echo = TRUE, eval = FALSE}
-fit1 <- bsitar(age, y, id, data = data, df = 3, chains = 2, iter = 1000)
-```
 

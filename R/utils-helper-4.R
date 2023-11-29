@@ -1,8 +1,7 @@
 
 
 
-#' An internal function to set priors and initials for Bayesian SITAR growth
-#'  curve model
+#' An internal function to set priors and initials values
 #'
 #'@description The \code{set_priors_initials}) sets priors and initials values
 #'  which are passed from the [bsitar::bgm()] function to
@@ -12865,9 +12864,9 @@ prepare_initials <- function(init_argument,
 #'@param byresp A logical (default \code{FALSE}) to indicate if response wise
 #'  fit criteria to be calculated. This argument is evaluated only for the
 #'  \code{multivariate} model for which user can select whether to get joint
-#'  calculation of pointwise log likelihood or response specific. For,
+#'  calculation of point wise log likelihood or response specific. For,
 #'  \code{univariate-by-subgroup} model, the only option available is to
-#'  calculate separate pointwise log likelihood for each sub-model.
+#'  calculate separate point wise log likelihood for each sub-model.
 #'
 #'@param digits An integer to set the number of decimal places.
 #'
@@ -13058,8 +13057,6 @@ optimize_model.bgmfit <- function(model,
   Min.n_eff <- Percent <- Proportion <- Range <- SE <- NULL
   
   
-  
-  
   combine_summaries <- function(model_list, summary_obj) {
     ic = 0
     list_c <- list()
@@ -13075,10 +13072,6 @@ optimize_model.bgmfit <- function(model,
       summary_of_obj <- NULL
     summary_of_obj
   }
-  
-  
-  
-  
   
   # resp = NULL is only used as a placeholder that too only for multivariate
   # if NULL, then combined log likelihood used for multivariate model
@@ -13727,7 +13720,6 @@ optimize_model.bgmfit <- function(model,
   
   if(exists('bayes_R2_fit')) optimize_summary <- optimize_summary %>% 
     dplyr::bind_rows(., bayes_R2_fit)
-  
   
   out <- list(models = optimize_list, optimize_summary = optimize_summary)
   
