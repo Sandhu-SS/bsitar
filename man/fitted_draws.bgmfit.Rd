@@ -23,7 +23,7 @@
   parms_eval = FALSE,
   parms_method = "getPeak",
   idata_method = "m1",
-  envir = globalenv(),
+  envir = NULL,
   ...
 )
 
@@ -138,8 +138,8 @@ The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
 package and is documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
 
-\item{envir}{Environment of function evaluation. The default is
-\code{globalenv}.}
+\item{envir}{Environment of function evaluation. The default is \code{NULL}
+which will automatically set environment as \code{globalenv} environment.}
 
 \item{...}{Additional arguments passed to the \link[brms:fitted.brmsfit]{brms::fitted.brmsfit}
 function. Please see \code{brms::fitted.brmsfit} for details on
@@ -180,7 +180,7 @@ the \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}}.
 model <- berkeley_mfit
 
 # Population average distance curve
-fitted_draws(model, deriv = 0, re_formula = NA)
+fitted_draws.bgmfit(model, deriv = 0, re_formula = NA)
 
 \donttest{
 # Individual-specific distance curves

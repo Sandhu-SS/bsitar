@@ -296,8 +296,12 @@ plot_curves.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
-                               envir = globalenv(),
+                               envir = NULL,
                                ...) {
+  
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
   
   if(system.file(package='ggplot2') == "") {
     stop("Please install 'ggplot2' package before calling the 'plot_curves'")
@@ -325,7 +329,6 @@ plot_curves.bgmfit <- function(model,
   groupby <- NULL;
   groupby_line <- NULL;
   groupby_color <- NULL;
-  plot.o.dx <- NULL;
   Parameter <- NULL;
   cov_factor_vars <- NULL;
   Estimate.x <- NULL;
@@ -338,7 +341,6 @@ plot_curves.bgmfit <- function(model,
   groupby_color.y <- NULL;
   groupby_fistr <- NULL;
   cov_vars <- NULL;
-  `<<-` <- NULL
   ':=' <- NULL;
   . <- NULL;
   
@@ -370,6 +372,9 @@ plot_curves.bgmfit <- function(model,
                               xcall = xcall,
                               resp = resp,
                               envir = envir)
+  
+  
+  if(!check_if_functions_exists(model, o)) return(invisible(NULL))
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
@@ -1649,9 +1654,13 @@ plot_curves.bgmfit <- function(model,
   
   
   
+  # Not using options() to restore warn but rather using on.exit()
   
-  defaultW <- getOption("warn")
-  options(warn = -1)
+  # defaultW <- getOption("warn")
+  
+  oldopts <- options(warn = -1)
+  on.exit(options(oldopts))
+  
   if (grepl("d", opt, ignore.case = T) |
       grepl("v", opt, ignore.case = T)) {
     curves <- unique(d.$curve)
@@ -1720,7 +1729,7 @@ plot_curves.bgmfit <- function(model,
       
       
       if (grepl("d", bands, ignore.case = T)) {
-        plot.o.dx <<- d.
+        # plot.o.dx <<- d.
       
         plot.o.d <- plot.o.d +
           ggplot2::geom_ribbon(
@@ -2308,8 +2317,6 @@ plot_curves.bgmfit <- function(model,
                          levels_id = levels_id,
                          ipts = ipts,
                          xrange = xrange)
-      # axx <<- xyadj_ed
-      # out_a_ <- xyadj_ed
       out_a_ <-
         d.out <- trimlines_(model, id = 'id', resp = resp, 
                             newdata = xyadj_ed, trim = trim)
@@ -2792,7 +2799,7 @@ plot_curves.bgmfit <- function(model,
         grepl("v", opt, ignore.case = F)) {
       if(apv | takeoff | trough | acgv)  print(p.)
     }
-    options(warn = defaultW)
+    # options(warn = defaultW)
     plot.o[['growthparameters']] <- p.as.d.out_attr
     return(plot.o)
   } else if (returndata) {

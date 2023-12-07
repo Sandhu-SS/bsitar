@@ -200,8 +200,8 @@
 #'   function from the \code{pracma} package. Note that the argument
 #'   \code{parms_method} is currently ignored.
 #'  
-#' @param envir Environment of function evaluation. The default is
-#'   \code{globalenv}.
+#' @param envir Environment of function evaluation. The default is \code{NULL}
+#'   which will automatically set environment as \code{globalenv} environment.
 #'   
 #' @param ... Further arguments passed to [brms::fitted.brmsfit()] and
 #'   \code{brms::predict()} functions. See [brms::fitted.brmsfit()] and
@@ -288,8 +288,12 @@ growthparameters.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
-                               envir = globalenv(),
+                               envir = NULL,
                                ...) {
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  
   if (is.null(ndraws))
     ndraws  <- brms::ndraws(model)
   else
@@ -313,6 +317,12 @@ growthparameters.bgmfit <- function(model,
                                xcall = match.call(),
                                envir = envir,
                                resp = resp)
+  
+  
+  
+  # Check for the availability of the exposed Stan function(s)
+  if(!check_if_functions_exists(model, oo)) return(invisible(NULL))
+  
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
@@ -1311,8 +1321,7 @@ growthparameters.bgmfit <- function(model,
       }
       
       arguments$summary <- summary_org
-      # out_v_1 <<- out_v_
-      
+
       selectby <- avg_reffects[['reby']]
       selectover <- avg_reffects[['over']]
       selectby_over <- c(selectby, selectover)

@@ -165,7 +165,6 @@ bgm(
   file = NULL,
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
-  decomp = NULL,
   parameterization = "ncp",
   ...
 )
@@ -1280,13 +1279,6 @@ package is used for parallel execution of the chains and argument
 \code{cores} will be ignored. Can be set globally for the current \R
 session via the \code{"future"} option. The execution type is controlled
 via \code{\link[future:plan]{plan}} (see the examples section below).}
-
-\item{decomp}{Optional name of the decomposition used for the
-population-level design matrix. Defaults to NULL that is no decomposition.
-Other options currently available are "QR" for the QR decomposition that
-helps in fitting models with highly correlated predictors. Note that "QR"
-decomposition is implementable only for the linear models, and therefore
-applicable only for the restricted cubic spline (RCS) model.}
 
 \item{parameterization}{A character string to specify either Non-centered
 parameterization, NCP (\code{'ncp'}) or the Centered parameterization, CP

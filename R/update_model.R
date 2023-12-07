@@ -102,6 +102,7 @@ update_model.bgmfit <-
     
     as_one_logical         <-
       is_equal <- needs_recompilation <- substitute_name <- NULL
+    
     as_one_logical         <-
       utils::getFromNamespace("as_one_logical", "brms")
     is_equal               <-

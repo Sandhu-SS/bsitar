@@ -51,7 +51,7 @@
 #' model <- berkeley_mfit
 #' 
 #' # Population average distance curve
-#' fitted_draws(model, deriv = 0, re_formula = NA)
+#' fitted_draws.bgmfit(model, deriv = 0, re_formula = NA)
 #' 
 #' \donttest{
 #' # Individual-specific distance curves
@@ -82,15 +82,23 @@ fitted_draws.bgmfit <-
            parms_eval = FALSE,
            parms_method = 'getPeak',
            idata_method = 'm1',
-           envir = globalenv(),
+           envir = NULL,
            ...) {
     
+    if(is.null(envir)) {
+      envir <- parent.frame()
+    }
+    
+ 
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
                              envir = envir,
-                             deriv = deriv)
+                             deriv = deriv,
+                             all = FALSE)
+    
+   
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
@@ -127,7 +135,9 @@ fitted_draws.bgmfit <-
         assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
       }
     }
-   
+
+    
+    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
     
     . <- fitted(model,
                 newdata = newdata,
@@ -143,8 +153,7 @@ fitted_draws.bgmfit <-
                 robust = robust,
                 probs = probs,
                 ...)
-    
-
+  
     if(!deriv_model) {
       if(deriv == 1 | deriv == 2) {
         . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
@@ -157,10 +166,14 @@ fitted_draws.bgmfit <-
   }
 
 
+
+
 #' @rdname fitted_draws.bgmfit
 #' @export
 fitted_draws <- function(model, ...) {
   UseMethod("fitted_draws")
 }
+
+
 
 

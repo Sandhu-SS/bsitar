@@ -5,14 +5,7 @@
 \alias{loo_validation}
 \title{Perform leave-one-out (loo) cross-validation}
 \usage{
-\method{loo_validation}{bgmfit}(
-  model,
-  resp = NULL,
-  cores = 1,
-  envir = globalenv(),
-  deriv = NULL,
-  ...
-)
+\method{loo_validation}{bgmfit}(model, resp = NULL, cores = 1, deriv = NULL, envir = NULL, ...)
 
 loo_validation(model, ...)
 }
@@ -37,10 +30,10 @@ calling the \code{\link[future:re-exports]{future::availableCores()}}. The numbe
 maximum number of cores avaialble minus one, i.e.,
 \code{future::availableCores() - 1}.}
 
-\item{envir}{Environment of function evaluation. The default is
-\code{globalenv}.}
-
 \item{deriv}{Must be \code{NULL}.}
+
+\item{envir}{Environment of function evaluation. The default is \code{NULL}
+which will automatically set environment as \code{globalenv} environment.}
 
 \item{...}{Additional arguments passed to the \code{\link[brms:loo.brmsfit]{brms::loo()}} function.
 Please see \code{brms::loo} for details on various options available.}

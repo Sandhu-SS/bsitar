@@ -10,7 +10,7 @@
   resp = NULL,
   deriv = 0,
   deriv_model = TRUE,
-  envir = globalenv(),
+  envir = NULL,
   ...
 )
 

@@ -23,7 +23,7 @@
   parms_eval = FALSE,
   parms_method = "getPeak",
   idata_method = "m1",
-  envir = globalenv(),
+  envir = NULL,
   ...
 )
 
@@ -138,8 +138,8 @@ The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
 package and is documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
 
-\item{envir}{Environment of function evaluation. The default is
-\code{globalenv}.}
+\item{envir}{Environment of function evaluation. The default is \code{NULL}
+which will automatically set environment as \code{globalenv} environment.}
 
 \item{...}{Additional arguments passed to the \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}
 function. Please see \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details on various

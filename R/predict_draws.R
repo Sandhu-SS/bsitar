@@ -84,8 +84,12 @@ predict_draws.bgmfit <-
            parms_eval = FALSE,
            parms_method = 'getPeak',
            idata_method = 'm1',
-           envir = globalenv(),
+           envir = NULL,
            ...) {
+    
+    if(is.null(envir)) {
+      envir <- parent.frame()
+    }
     
     o <-
       post_processing_checks(model = model,
@@ -128,6 +132,9 @@ predict_draws.bgmfit <-
         assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
       }
     }
+    
+    
+    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
     
     . <- predict(model,
                 newdata = newdata,

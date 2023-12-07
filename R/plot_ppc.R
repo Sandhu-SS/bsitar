@@ -36,18 +36,29 @@
 plot_ppc.bgmfit <-
   function(model,
            resp = NULL,
-           envir = globalenv(),
+           envir = NULL,
            ...) {
+    
+    if(is.null(envir)) {
+      envir <- parent.frame()
+    }
     
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
                              envir = envir,
-                             deriv = 0)
+                             deriv = 0,
+                             all = FALSE)
+
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    
+    
+    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
+
     . <- brms::pp_check(model, resp = resp, ...)
+    
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

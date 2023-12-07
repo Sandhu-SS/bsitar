@@ -87,14 +87,22 @@ plot_conditional_effects.bgmfit <-
            resp = NULL,
            deriv = 0,
            deriv_model = TRUE,
-           envir = globalenv(),
+           envir = NULL,
            ...) {
+    
+    if(is.null(envir)) {
+      envir <- parent.frame()
+    }
+    
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
                              resp = resp,
                              envir = envir,
-                             deriv = deriv)
+                             deriv = deriv,
+                             all = FALSE)
+    
+   
     
     if(deriv == 0) {
       assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
@@ -117,6 +125,7 @@ plot_conditional_effects.bgmfit <-
       }
     }
     
+    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
     
     if(!deriv_model) {
       xvar  <- model$model_info$xvar
@@ -135,7 +144,10 @@ plot_conditional_effects.bgmfit <-
       . <- out_
     }
     
-    if(deriv_model) . <- brms::conditional_effects(model, resp = resp, ...)
+    if(deriv_model) {
+     . <- brms::conditional_effects(model, resp = resp, ...)
+    }
+    
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

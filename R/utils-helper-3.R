@@ -2552,8 +2552,11 @@ prepare_formula <- function(x,
     
     lm_rsd  <- summary(lm_fit)$sigma
     
+    
     # lme
-    err. <- FALSE
+    enverr. <- parent.frame()
+    # err. <- FALSE
+    assign('err.', FALSE, envir = enverr.)
     tryCatch(
       expr = {
         datalme <- data
@@ -2570,9 +2573,11 @@ prepare_formula <- function(x,
                     data = datalme)
       },
       error = function(e) {
-        err. <<- TRUE
+        # err. <<- TRUE
+        assign('err.', TRUE, envir = enverr.)
       }
     )
+    err. <- get('err.', envir = enverr.)
     if (err.) {
       lme_coef <- lm_coef
       lme_sd_a <- sd(predict(lm_fit))
@@ -2811,7 +2816,9 @@ prepare_formula <- function(x,
     }
     
     # lme
-    err. <- FALSE
+    enverr. <- parent.frame()
+    # err. <- FALSE
+    assign('err.', FALSE, envir = enverr.)
     tryCatch(
       expr = {
         datalme <- data
@@ -2828,9 +2835,11 @@ prepare_formula <- function(x,
                     data = datalme)
       },
       error = function(e) {
-        err. <<- TRUE
+        # err. <<- TRUE
+        assign('err.', TRUE, envir = enverr.)
       }
     )
+    err. <- get('err.', envir = enverr.)
     if (err.) {
       lme_coef <- lm_coef
       lme_sd_a <- sd(predict(lm_fit))

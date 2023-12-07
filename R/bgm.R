@@ -1239,13 +1239,6 @@
 #'   session via the \code{"future"} option. The execution type is controlled
 #'   via \code{\link[future:plan]{plan}} (see the examples section below).
 #'
-#' @param decomp Optional name of the decomposition used for the
-#'   population-level design matrix. Defaults to NULL that is no decomposition.
-#'   Other options currently available are "QR" for the QR decomposition that
-#'   helps in fitting models with highly correlated predictors. Note that "QR"
-#'   decomposition is implementable only for the linear models, and therefore
-#'   applicable only for the restricted cubic spline (RCS) model.
-#'
 #' @param parameterization A character string to specify either Non-centered
 #'   parameterization, NCP (\code{'ncp'}) or the Centered parameterization, CP
 #'   (\code{'cp'})  approach to draw group level random effect. The NCP is
@@ -1571,7 +1564,6 @@ bgm <- function(x,
                    file = NULL,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
-                   decomp = NULL,
                    parameterization = 'ncp',
                    ...) {
   
@@ -1900,11 +1892,12 @@ bgm <- function(x,
   
   
   
-  
+  enverr. <- parent.frame()
   for (i in names(mcall)[-1]) {
     no_default_args_plus_family <- c(no_default_args, "family")
     if (!i %in% no_default_args_plus_family) {
-      err. <- FALSE
+      #  err. <- FALSE
+      assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           if (is.function(eval(mcall[[i]]))) {
@@ -1914,9 +1907,11 @@ bgm <- function(x,
           }
         },
         error = function(e) {
-          err. <<- TRUE
+          # err. <<- TRUE
+          assign('err.', TRUE, envir = enverr.)
         }
       )
+      err. <- get('err.', envir = enverr.)
       if(length(checks.) == 0) err. <- TRUE
       if (err.) {
         mcall[[i]] <- mcall[[i]]
@@ -2000,6 +1995,9 @@ bgm <- function(x,
   override_select_model <- TRUE # FALSE
   
   if(override_select_model) arguments$select_model <- select_model <- 'sitar'
+  
+  # Override when restricting bgm to rcs
+  if(select_model != 'rcs') decomp <- NULL
   
   if(!is.null(decomp)) {
     if(select_model != 'rcs') 
@@ -2147,11 +2145,15 @@ bgm <- function(x,
     )
   
   
- 
-  mc.cores_restore <- getOption("mc.cores")
+ # Not using options() to restore mc.cores but rather using on.exit()
+  
+  # mc.cores_restore <- getOption("mc.cores")
+  
   if(is.numeric(arguments$cores)) {
-    options(mc.cores = arguments$cores)
+   oldopts <- options(mc.cores = arguments$cores)
+   on.exit(options(oldopts))
   }
+  
   iter <-  arguments$iter
   warmup <-  arguments$warmup <- eval(arguments$warmup)
  
@@ -2219,16 +2221,21 @@ bgm <- function(x,
       splitmvar2 <- gsub("\"\"", "\"", splitmvar2)
     splitmvar3 <- eval(parse(text = splitmvar2))
     zzz <- splitmvar3
+    
+    enverr. <- parent.frame()
     for (z in names(splitmvar3)) {
-      err. <- FALSE
+      # err. <- FALSE
+      assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           eval(parse(text = zzz[[z]]), envir = parent.frame())
         },
         error = function(e) {
-          err. <<- TRUE
+          # err. <<- TRUE
+          assign('err.', TRUE, envir = enverr.)
         }
       )
+      err. <- get('err.', envir = enverr.)
       if (!err.) {
         c_c_ <- eval(parse(text = zzz[[z]]))
         checkclass <- class(c_c_)
@@ -3014,17 +3021,21 @@ bgm <- function(x,
   
   convert_to_list <- getArgNames(bgm())
   
+  enverr. <- parent.frame()
   for (ip in convert_to_list) {
     if (grepl("_init_", ip)) {
-      err. <- FALSE
+      # err. <- FALSE
+      assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           out <- suppressWarnings(ept(ip))
         },
         error = function(e) {
-          err. <<- TRUE
+          # err. <<- TRUE
+          assign('err.', TRUE, envir = enverr.)
         }
       )
+      err. <- get('err.', envir = enverr.)
       if (!err.) {
         if (length(out) > 1 & !is.list(out)) {
           stop(
@@ -6803,20 +6814,19 @@ bgm <- function(x,
     
   if(!exe_model_fit) {
     if(get_priors) {
-      options(mc.cores = mc.cores_restore)
+      # options(mc.cores = mc.cores_restore)
       return(do.call(brms::get_prior, brm_args))
     } else if(get_standata) {
-      options(mc.cores = mc.cores_restore)
+      # options(mc.cores = mc.cores_restore)
       return(do.call(brms::make_standata, brm_args))
     } else if(get_stancode) {
-      options(mc.cores = mc.cores_restore)
+      # options(mc.cores = mc.cores_restore)
       return(scode_final)
     } else if(get_priors_eval) {
-      options(mc.cores = mc.cores_restore)
-      # return(brm_args$prior)
+      # options(mc.cores = mc.cores_restore)
       return(get_priors_eval_out)
     } else if(validate_priors) {
-      options(mc.cores = mc.cores_restore)
+      # options(mc.cores = mc.cores_restore)
       return(do.call(brms::validate_prior, brm_args))
     } else if(get_init_eval) {
       return(brm_args$init)
@@ -6910,22 +6920,16 @@ bgm <- function(x,
     }
  
     
-    # set refresh correctly based on thin argument
-    # brm_argsx <<- brm_args
-    
+    # Set refresh based on thin argument
+
     if(!is.null(brm_args$refresh) & brm_args$thin > 1) {
       brm_args$refresh <- 
         ceiling((brm_args$refresh * brm_args$thin) / brm_args$thin)
     }
     
-    # Imp that brm_args$refresh be dropped after adjuting iter and warmp
-    # otherwise, rstan via brms throw error:
-    "Error : Expecting a single value: [extent=0]."  
-    
     brm_args$refresh <- NULL
     
-    # brm_argsxx <<- brm_args
-    
+
     if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {
          stop("Please use 'rstan' as backend for CP parameterization")
@@ -7084,7 +7088,7 @@ bgm <- function(x,
     }
     
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
-    options(mc.cores = mc.cores_restore)
+    # options(mc.cores = mc.cores_restore)
     return(brmsfit)
   } # exe_model_fit
   

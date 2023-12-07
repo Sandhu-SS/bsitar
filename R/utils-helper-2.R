@@ -1366,10 +1366,12 @@ outliers <-
 post_processing_checks <- function(model, 
                                    xcall, 
                                    resp = NULL, 
+                                   envir = NULL, 
                                    deriv = NULL,
-                                   envir = NULL) {
+                                   all = FALSE) {
   
-  if(is.null(envir)) envir <- globalenv()
+  # if(is.null(envir)) envir <- globalenv()
+  if(is.null(envir)) envir <- parent.frame()
   if(is.null(deriv)) deriv <- 0
  
   if(!'bgmfit' %in% class(model)) {
@@ -1455,11 +1457,36 @@ post_processing_checks <- function(model,
   }
   
   
-  list(
-    paste0(resp_, model$model_info[['namesexefuns']], ''),
-    paste0(resp_, model$model_info[['namesexefuns']], deriv)
-  ) 
+  if(!all) {
+    out <-
+      list(
+        paste0(resp_, model$model_info[['namesexefuns']], ''),
+        paste0(resp_, model$model_info[['namesexefuns']], deriv)
+      ) 
+  }
   
+  
+  if(all) {
+    # out <-
+    #   list(
+    #     paste0(resp_, model$model_info[['namesexefuns']], ''),
+    #     paste0(resp_, model$model_info[['namesexefuns']], deriv),
+    #     paste0(resp_, model$model_info[['namesexefuns']], '0'),
+    #     paste0(resp_, model$model_info[['namesexefuns']], 'getX')
+    #   ) 
+    # if(model$model_info[['select_model']] == 'sitar' |
+    #    model$model_info[['select_model']] == 'rcs') {
+    #   out <- c(out,
+    #            list(paste0(resp_, model$model_info[['namesexefuns']], 
+    #                        'getKnots')
+    #            )
+    #            )
+    # }
+    out <- model$model_info[['exefuns']]
+  } # if(all) {
+  
+  
+  return(out)
 }
 
 
@@ -3026,4 +3053,6 @@ expose_functions_bgm <- function(model,
   model$model <- model$bmodel # scode_include
   return(model)
 }
+
+
 

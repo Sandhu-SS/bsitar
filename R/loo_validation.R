@@ -48,9 +48,14 @@ loo_validation.bgmfit <-
   function(model,
            resp = NULL,
            cores = 1,
-           envir = globalenv(),
            deriv = NULL,
+           envir = NULL,
            ...) {
+    
+    if(is.null(envir)) {
+      envir <- parent.frame()
+    }
+    
     o <-
       post_processing_checks(model = model,
                              xcall = match.call(),
@@ -59,7 +64,11 @@ loo_validation.bgmfit <-
                              deriv = deriv)
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    
+    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
+    
     . <- brms::loo(model, resp = resp, cores = cores ,...)
+    
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     .
   }

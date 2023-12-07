@@ -1841,13 +1841,17 @@ check_and_install_if_not_installed <- function(pkgs,
             paste(pkgs, collapse = ", "))
   }
   
+  # Dont install package in function 
+  # CRAN does not accept it, so comment it out
+  
   if(installpkg) {
-    message('Installing required packages', 
-            paste(required_pkgs, collapse = ", "))
-    
-    utils::install.packages(required_pkgs,
-                            repos = "http://cran.us.r-project.org")
+    # message('Installing required packages', 
+    #         paste(required_pkgs, collapse = ", "))
+    # 
+    # utils::install.packages(required_pkgs,
+    #                         repos = "http://cran.us.r-project.org")
   }
+  
   
 }
 
@@ -2017,4 +2021,36 @@ sample_n_of_groups <- function(data, size, ...) {
   data %>% 
     dplyr::filter(group_ids %in% sampled_groups) %>% 
     droplevels()
+}
+
+
+
+#' An internal function to check for the exposed function
+#'
+#' @param model An object of class \code{bgmfit}.
+#' @param o An object used as an index for functions
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+check_if_functions_exists <- function(model, o, ...) {
+  if(exists(o[[1]], mode = "function", envir = globalenv())) {
+    envglobal <- TRUE
+  } else {
+    envglobal <- FALSE
+  }
+  
+  xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]] [1]
+  
+  if(!envglobal) {
+    classname <- attr(model, 'class')[2]
+    calname.fun <- xcall # match.call()[1]
+    calname.fun <- gsub(paste0(".", classname), "", calname.fun)
+    message("Please expose user defined Stan function before calling the",
+            "\n ",
+            "'", calname.fun, "()'", " function",
+            "\n ",
+            "(See '?brms::expose_functions()' function for details)")
+  }
+  return(envglobal)
 }

@@ -5,7 +5,7 @@
 \alias{plot_ppc}
 \title{Perform posterior predictive distribution check}
 \usage{
-\method{plot_ppc}{bgmfit}(model, resp = NULL, envir = globalenv(), ...)
+\method{plot_ppc}{bgmfit}(model, resp = NULL, envir = NULL, ...)
 
 plot_ppc(model, ...)
 }
