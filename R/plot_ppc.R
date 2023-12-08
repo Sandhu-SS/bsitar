@@ -36,6 +36,7 @@
 plot_ppc.bgmfit <-
   function(model,
            resp = NULL,
+           deriv = 0,
            envir = NULL,
            ...) {
     
@@ -48,18 +49,29 @@ plot_ppc.bgmfit <-
                              xcall = match.call(),
                              resp = resp,
                              envir = envir,
-                             deriv = 0,
+                             deriv = deriv,
                              all = FALSE)
 
     
-    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
     
+    if(deriv == 0) {
+      getfunx <- model$model_info[['exefuns']][[o[[2]]]]
+    } else if(deriv > 0) {
+      stop("For loo_validation, the 'deriv' argument must be set as 0")
+    }
     
-    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
+    setcleanup <- FALSE
+    if(!check_if_functions_exists(model, o, model$xcall)) {
+      return(invisible(NULL))
+    } else {
+      setcleanup <- TRUE
+      assign(o[[1]], getfunx, envir = environment(getfunx))
+    }
 
     . <- brms::pp_check(model, resp = resp, ...)
     
-    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+    assign(o[[1]], getfunx1always, environment(getfunx1always))
     .
   }
 

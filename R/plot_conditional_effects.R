@@ -102,30 +102,32 @@ plot_conditional_effects.bgmfit <-
                              deriv = deriv,
                              all = FALSE)
     
-   
+    getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
     
-    if(deriv == 0) {
-      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    }
-    
+
     if(!is.null(model$model_info$decomp)) {
       if(model$model_info$decomp == "QR") deriv_model<- FALSE
     }
     
-    if(!deriv_model) {
-      if(deriv == 1 | deriv == 2) {
+    if(deriv == 0) {
+      getfunx <- model$model_info[['exefuns']][[o[[2]]]]
+    } else if(deriv > 0) {
+      if(deriv_model) {
+        getfunx <- model$model_info[['exefuns']][[o[[2]]]]
+      } else if(!deriv_model) {
         summary <- FALSE
-        assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+        getfunx <- model$model_info[['exefuns']][[o[[1]]]]
       }
     }
     
-    if(deriv_model) {
-      if(deriv == 1 | deriv == 2) {
-        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-      }
+    setcleanup <- FALSE
+    if(!check_if_functions_exists(model, o, model$xcall)) {
+      return(invisible(NULL))
+    } else {
+      setcleanup <- TRUE
+      assign(o[[1]], getfunx, envir = environment(getfunx))
     }
     
-    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
     
     if(!deriv_model) {
       xvar  <- model$model_info$xvar
@@ -148,7 +150,7 @@ plot_conditional_effects.bgmfit <-
      . <- brms::conditional_effects(model, resp = resp, ...)
     }
     
-    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+    assign(o[[1]], getfunx1always, environment(getfunx1always))
     .
   }
 

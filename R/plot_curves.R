@@ -366,15 +366,11 @@ plot_curves.bgmfit <- function(model,
   }
   
   
-  
-  
   o <- post_processing_checks(model = model,
                               xcall = xcall,
                               resp = resp,
                               envir = envir)
   
-  
-  if(!check_if_functions_exists(model, o)) return(invisible(NULL))
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
@@ -397,9 +393,7 @@ plot_curves.bgmfit <- function(model,
   
   model$xcall <- xcall
   
-  
   arguments <- get_args_(match.call.list.in, xcall)
-  
   
   arguments$model <- model
   
@@ -598,6 +592,9 @@ plot_curves.bgmfit <- function(model,
   
 
   d. <- do.call(growthparameters.bgmfit, arguments)
+  
+  if(is.null(d.)) return(invisible(NULL))
+  
   
   p. <- d.[['parameters']]
   probtitles <- d.[['probtitles']]

@@ -2033,24 +2033,29 @@ sample_n_of_groups <- function(data, size, ...) {
 #' @return A list comprised of exposed functions.
 #' @noRd
 #'
-check_if_functions_exists <- function(model, o, ...) {
+check_if_functions_exists <- function(model, o, xcall = NULL, msg = TRUE, ...) {
   if(exists(o[[1]], mode = "function", envir = globalenv())) {
     envglobal <- TRUE
   } else {
     envglobal <- FALSE
   }
   
-  xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]] [1]
-  
-  if(!envglobal) {
-    classname <- attr(model, 'class')[2]
-    calname.fun <- xcall # match.call()[1]
-    calname.fun <- gsub(paste0(".", classname), "", calname.fun)
-    message("Please expose user defined Stan function before calling the",
-            "\n ",
-            "'", calname.fun, "()'", " function",
-            "\n ",
-            "(See '?brms::expose_functions()' function for details)")
+  if(is.null(xcall)) {
+    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]] [1]
   }
+  
+  if(msg) {
+    if(!envglobal) {
+      classname <- attr(model, 'class')[2]
+      calname.fun <- xcall # match.call()[1]
+      calname.fun <- gsub(paste0(".", classname), "", calname.fun)
+      message("Please expose user defined Stan function before calling the",
+              "\n ",
+              "'", calname.fun, "()'", " function",
+              "\n ",
+              "(See '?brms::expose_functions()' function for details)")
+    } # if(!envglobal) {
+  } # if(msg) {
+  
   return(envglobal)
 }

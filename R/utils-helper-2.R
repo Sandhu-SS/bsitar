@@ -2889,8 +2889,15 @@ set_init_gr_effects <- function(xscode,
 expose_functions_bgm <- function(model, 
                                  scode = NULL, 
                                  expose = FALSE, 
-                                 select_model = NULL) {
-
+                                 select_model = NULL, 
+                                 envir = NULL) {
+  
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  
+  if(is.null(select_model)) select_model <- model$model_info$select_model
+  
   if(!expose) {
     if (is.null(model$model_info$decomp))  expose_r_from_stan <- TRUE
     if (!is.null(model$model_info$decomp)) expose_r_from_stan <- FALSE
@@ -2913,7 +2920,7 @@ expose_functions_bgm <- function(model,
   if(expose_r_from_stan) {
     for (funi in 1:length(model$model_info$funlist_r)) {
       assign(gsub("<-.*$", "", model$model_info$funlist_r[funi]),
-             ept(model$model_info$funlist_r[funi]), envir = parent.frame())
+             ept(model$model_info$funlist_r[funi]), envir = envir)
     }
   }
   
@@ -2950,6 +2957,22 @@ expose_functions_bgm <- function(model,
   
   
   
+  # if(expose) {
+  #   Spl_funs <- list()
+  #   spfun_collectic <- -1
+  #   for (spfun_collecti in spfun_collect) {
+  #     spfun_collectic <- spfun_collectic + 1
+  #     spfun_collecti_name <- spfun_collecti
+  #     spfun_collecti_name <- gsub("_d0", "0", spfun_collecti_name)
+  #     spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
+  #     spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
+  #     Spl_funs[[paste0(spfun_collecti_name, "")]] <- 
+  #       eval(parse(text = spfun_collecti), envir = envir)
+  #   }
+  # } # if(expose) {
+  
+  
+  
   if(expose) {
     Spl_funs <- list()
     spfun_collectic <- -1
@@ -2959,11 +2982,17 @@ expose_functions_bgm <- function(model,
       spfun_collecti_name <- gsub("_d0", "0", spfun_collecti_name)
       spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
       spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
-      Spl_funs[[paste0(spfun_collecti_name, "")]] <- 
-        eval(parse(text = spfun_collecti), envir = parent.frame())
+      getfun_ <- spfun_collecti
+      getfun_ <- eval(parse(text = getfun_), envir = envir)
+      # This below to change _d0 to 0 within the d2 d2 functions 
+      assign(spfun_collecti_name, getfun_, envir = envir)
+      
+      print(spfun_collecti_name)
+      print(getfun_)
+      Spl_funs[[paste0(spfun_collecti_name, "")]] <- getfun_
+      
     }
-  } # if(expose) {
-  
+  } # if(expose_r_from_stan) {
   
   
   if(expose_r_from_stan) {
@@ -2983,7 +3012,7 @@ expose_functions_bgm <- function(model,
       getfun__ <- gsub(gsub_it, gsub_by, getfun__, fixed = T)
       getfun__ <- paste0(getfun__, collapse =  "\n")
       Spl_funs[[paste0(spfun_collecti_name, "")]] <- 
-        eval(parse(text = getfun__), envir = parent.frame())
+        eval(parse(text = getfun__), envir = envir)
     }
   } # if(expose_r_from_stan) {
   
@@ -3053,6 +3082,8 @@ expose_functions_bgm <- function(model,
   model$model <- model$bmodel # scode_include
   return(model)
 }
+
+
 
 
 

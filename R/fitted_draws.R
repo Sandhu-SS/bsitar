@@ -89,6 +89,11 @@ fitted_draws.bgmfit <-
       envir <- parent.frame()
     }
     
+    
+    if(!is.null(model$model_info$decomp)) {
+      if(model$model_info$decomp == "QR") deriv_model<- FALSE
+    }
+    
  
     o <-
       post_processing_checks(model = model,
@@ -98,8 +103,7 @@ fitted_draws.bgmfit <-
                              deriv = deriv,
                              all = FALSE)
     
-   
-    
+  
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
@@ -114,30 +118,29 @@ fitted_draws.bgmfit <-
                              idata_method = idata_method)
     }
     
-  
+    
+    getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
+    
     if(deriv == 0) {
-      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    }
-    
-    if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") deriv_model<- FALSE
-    }
-    
-    if(!deriv_model) {
-      if(deriv == 1 | deriv == 2) {
+      getfunx <- model$model_info[['exefuns']][[o[[2]]]]
+    } else if(deriv > 0) {
+      if(deriv_model) {
+        getfunx <- model$model_info[['exefuns']][[o[[2]]]]
+      } else if(!deriv_model) {
         summary <- FALSE
-        assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+        getfunx <- model$model_info[['exefuns']][[o[[1]]]]
       }
     }
     
-    if(deriv_model) {
-      if(deriv == 1 | deriv == 2) {
-        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-      }
+    setcleanup <- FALSE
+    if(!check_if_functions_exists(model, o, model$xcall)) {
+      #. <- NULL
+       return(invisible(NULL))
+      #return(.)
+    } else {
+      setcleanup <- TRUE
+      assign(o[[1]], getfunx, envir = environment(getfunx))
     }
-
-    
-    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
     
     . <- fitted(model,
                 newdata = newdata,
@@ -161,7 +164,7 @@ fitted_draws.bgmfit <-
       }
     } 
     
-    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+    assign(o[[1]], getfunx1always, environment(getfunx1always))
     .
   }
 

@@ -48,7 +48,7 @@ loo_validation.bgmfit <-
   function(model,
            resp = NULL,
            cores = 1,
-           deriv = NULL,
+           deriv = 0,
            envir = NULL,
            ...) {
     
@@ -63,13 +63,24 @@ loo_validation.bgmfit <-
                              envir = envir,
                              deriv = deriv)
     
-    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
     
-    if(!check_if_functions_exists(model, o)) return(invisible(NULL))
+    if(deriv == 0) {
+      getfunx <- model$model_info[['exefuns']][[o[[2]]]]
+    } else if(deriv > 0) {
+      stop("For loo_validation, the 'deriv' argument must be set as 0")
+    }
+    
+    setcleanup <- FALSE
+    if(!check_if_functions_exists(model, o, model$xcall)) {
+      return(invisible(NULL))
+    } else {
+      setcleanup <- TRUE
+      assign(o[[1]], getfunx, envir = environment(getfunx))
+    }
     
     . <- brms::loo(model, resp = resp, cores = cores ,...)
-    
-    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+    assign(o[[1]], getfunx1always, environment(getfunx1always))
     .
   }
 

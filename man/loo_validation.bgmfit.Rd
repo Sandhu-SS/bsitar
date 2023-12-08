@@ -5,7 +5,7 @@
 \alias{loo_validation}
 \title{Perform leave-one-out (loo) cross-validation}
 \usage{
-\method{loo_validation}{bgmfit}(model, resp = NULL, cores = 1, deriv = NULL, envir = NULL, ...)
+\method{loo_validation}{bgmfit}(model, resp = NULL, cores = 1, deriv = 0, envir = NULL, ...)
 
 loo_validation(model, ...)
 }

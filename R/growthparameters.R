@@ -318,12 +318,6 @@ growthparameters.bgmfit <- function(model,
                                envir = envir,
                                resp = resp)
   
-  
-  
-  # Check for the availability of the exposed Stan function(s)
-  if(!check_if_functions_exists(model, oo)) return(invisible(NULL))
-  
-  
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
   get_xcall <- function(xcall, scall) {
@@ -881,7 +875,10 @@ growthparameters.bgmfit <- function(model,
         } else if (estimation_method == 'predict') {
           out_d_ <- do.call(predict_draws, arguments)
         }
-        probs
+        
+        if(is.null(out_d_)) return(invisible(NULL))
+        
+        
         if (!summary) {
           out_d <- call_posterior_summary((out_d_))
         } else if (summary) {
@@ -932,6 +929,10 @@ growthparameters.bgmfit <- function(model,
         } else if (estimation_method == 'predict') {
           out_v_ <- do.call(predict_draws, arguments)
         }
+        
+        if(is.null(out_v_)) return(invisible(NULL))
+        
+        
         out_v__apv_ <- out_v_
         if (!summary) {
           out_v <- call_posterior_summary((out_v_))
@@ -1052,6 +1053,9 @@ growthparameters.bgmfit <- function(model,
           out_d_ <- do.call(predict_draws, arguments)
         }
         
+        if(is.null(out_d_)) return(invisible(NULL))
+        
+        
         arguments$summary <- summary_org
         
         # moved here from below for avg_reffects to work with univariate_by
@@ -1117,6 +1121,9 @@ growthparameters.bgmfit <- function(model,
         } else if (estimation_method == 'predict') {
           out_v_ <- do.call(predict_draws, arguments)
         }
+        
+        if(is.null(out_v_)) return(invisible(NULL))
+        
         
         arguments$summary <- summary_org
         
@@ -1261,6 +1268,9 @@ growthparameters.bgmfit <- function(model,
         out_v_ <- do.call(predict_draws, arguments)
       }
       
+     if(is.null(out_v_)) return(invisible(NULL))
+      
+      
       out_v__apv_ <- out_v_
       if (!summary) {
         out_v <- call_posterior_summary((out_v_))
@@ -1319,6 +1329,9 @@ growthparameters.bgmfit <- function(model,
       } else if (estimation_method == 'predict') {
         out_v_ <- do.call(predict_draws, arguments)
       }
+      
+      if(is.null(out_v_)) return(invisible(NULL))
+      
       
       arguments$summary <- summary_org
 

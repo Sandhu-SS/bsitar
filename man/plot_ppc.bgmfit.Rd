@@ -5,7 +5,7 @@
 \alias{plot_ppc}
 \title{Perform posterior predictive distribution check}
 \usage{
-\method{plot_ppc}{bgmfit}(model, resp = NULL, envir = NULL, ...)
+\method{plot_ppc}{bgmfit}(model, resp = NULL, deriv = 0, envir = NULL, ...)
 
 plot_ppc(model, ...)
 }
@@ -21,6 +21,11 @@ univariate-by-subgroup and multivariate models otherwise it will result in
 an error. On the other hand, argument \code{resp} must be \code{NULL} for
 the univariate model. The default setting is \code{resp = NULL} assuming a
 univariate model.}
+
+\item{deriv}{An integer to indicate whether to estimate distance curve or
+derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
+for the distance curve, \code{deriv = 1} for velocity curve, and
+\code{deriv = 2} for the acceleration curve.}
 
 \item{envir}{The calling environment. Deafault is set to \code{globalenv()}.}
 
