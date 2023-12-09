@@ -12,11 +12,11 @@
 #'
 get_args_ <- function(arguments, xcall) {
   `%!in%` <- Negate(`%in%`)
-  f_bgm_arg <- formals(paste0(xcall, ".", 'bgmfit'))
-  nf_bgm_arg_names <-
-    intersect(names(arguments), names(f_bgm_arg))
+  f_funx_arg <- formals(paste0(xcall, ".", 'bgmfit'))
+  nf_funx_arg_names <-
+    intersect(names(arguments), names(f_funx_arg))
   arguments <-
-    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
+    c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
   arguments
 }
 
@@ -243,7 +243,7 @@ transform.sec.axis <- function(primary,
 
 
 
-#' An internal function to evaluate bgm arguments ending with _str suffix
+#' An internal function to evaluate arguments ending with _str suffix
 #'
 #' @param tsx An argument with _str suffix.
 #' @param data A data frame.
@@ -314,7 +314,7 @@ get_gr_str_coef_id <- function(tsx,
 
 
 
-#' An internal function to get corr structure from || syntax for  bgm 
+#' An internal function to get corr structure from || syntax for 
 #'  arguments ending with _str suffix
 #'
 #' @param str_id_all_list An argument with _str suffix for \code{id}.

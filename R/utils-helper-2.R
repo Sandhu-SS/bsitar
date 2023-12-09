@@ -77,7 +77,7 @@ get.newdata <- function(model,
   
   
   if (is.null(newdata)) {
-    newdata <- model$model_info$bgm.data
+    newdata <- model$model_info$bgmfit.data
   } else {
     newdata <- newdata
   }
@@ -97,14 +97,14 @@ get.newdata <- function(model,
   
   
   if (!is.na(model$model_info$univariate_by)) {
-    if (is.symbol(model$model_info$call.bgm$y)) {
-      setorgy <- deparse(model$model_info$call.bgm$y)
-    } else if (is.list(model$model_info$call.bgm$y)) {
-      setorgy <- unname(unlist(model$model_info$call.bgm$y))
+    if (is.symbol(model$model_info$call.bgmfit$y)) {
+      setorgy <- deparse(model$model_info$call.bgmfit$y)
+    } else if (is.list(model$model_info$call.bgmfit$y)) {
+      setorgy <- unname(unlist(model$model_info$call.bgmfit$y))
       if (is.symbol(setorgy))
         setorgy <- deparse(setorgy)
     } else {
-      setorgy <- model$model_info$call.bgm$y
+      setorgy <- model$model_info$call.bgmfit$y
     }
   }
   
@@ -592,14 +592,14 @@ get.newdata <- function(model,
         # outliers must be NULL
         # Because these has already been taken care of by get.newdata
         if (!is.na(model$model_info$univariate_by)) {
-          if (is.symbol(model$model_info$call.bgm$y)) {
-            setorgy <- deparse(model$model_info$call.bgm$y)
-          } else if (is.list(model$model_info$call.bgm$y)) {
-            setorgy <- unname(unlist(model$model_info$call.bgm$y))
+          if (is.symbol(model$model_info$call.bgmfit$y)) {
+            setorgy <- deparse(model$model_info$call.bgmfit$y)
+          } else if (is.list(model$model_info$call.bgmfit$y)) {
+            setorgy <- unname(unlist(model$model_info$call.bgmfit$y))
             if (is.symbol(setorgy))
               setorgy <- deparse(setorgy)
           } else {
-            setorgy <- model$model_info$call.bgm$y
+            setorgy <- model$model_info$call.bgmfit$y
           }
         }
         
@@ -1377,7 +1377,7 @@ post_processing_checks <- function(model,
   if(!'bgmfit' %in% class(model)) {
     stop("The class of model object should be 'bgmfit' ")
   }
-  excall_ <- c("pp_check_bgm", "loo_bgm")
+  excall_ <- c("plot_ppc", "loo_validation")
   if (strsplit(deparse((xcall[1])), "\\.")[[1]][1] %in% excall_) {
     if (!is.null(as.list(xcall)[['deriv']])) {
       stop(
@@ -1498,11 +1498,9 @@ post_processing_checks <- function(model,
 
 #' An internal function to set default prior for model specific parameters
 #'
-#' @param select_model A character string specifying the model fitted. Please 
-#' see \code{bgm} function for details. 
+#' @param select_model A character string specifying the model fitted. 
 #' 
-#' @param prior A character string specifying the prior. Please see
-#' \code{bgm} function for details. 
+#' @param prior A character string specifying the prior. 
 #' 
 #' @param class A character string specifying the parameter class. Options
 #' are \code{'b'}, \code{'sd'} and \code{'cor'}. Default \code{NULL} indicates 
@@ -2081,11 +2079,9 @@ set_default_priors <- function(select_model,
 
 #' An internal function to set default initials for model specific parameters
 #'
-#' @param select_model A character string specifying the model fitted. Please 
-#' see \code{bgm} function for details. 
+#' @param select_model A character string specifying the model fitted. 
 #' 
-#' @param init A character string specifying the initials. Please see
-#' \code{bgm} function for details. 
+#' @param init A character string specifying the initials. 
 #' 
 #' @param class A character string specifying the parameter class. Options
 #' are \code{'b'}, \code{'sd'} and \code{'cor'}. Default \code{NULL} indicates 

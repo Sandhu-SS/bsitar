@@ -46,12 +46,12 @@
 #' 
 #' # To avoid fitting the model which takes time, the model  
 #' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the bgm function for details on the model fit.
+#' # See examples section of the main function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 
 #' # Population average distance curve
-#' fitted_draws.bgmfit(model, deriv = 0, re_formula = NA)
+#' fitted_draws(model, deriv = 0, re_formula = NA)
 #' 
 #' \donttest{
 #' # Individual-specific distance curves

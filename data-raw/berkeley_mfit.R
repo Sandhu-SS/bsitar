@@ -40,7 +40,7 @@ sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 4,
                           data = berkeley_mdata)
 
 
-berkeley_mfit <- bgm(x = age, y = height, id = id, data = berkeley_mdata,
+berkeley_mfit <- bsitar(x = age, y = height, id = id, data = berkeley_mdata,
                      df = 4, xoffset = mean, fixed = a+b+c, random = a+b+c,
                      a_formula = ~1, b_formula = ~1, c_formula = ~1, 
                      threads = brms::threading(NULL),

@@ -20,7 +20,7 @@
 #'
 #' @param resp A character string to specify response variable when processing
 #'   posterior draws for the univariate-by-subgroup and multivariate models (see
-#'   [bsitar::bgm()] for details on fitting univariate-by-subgroup and
+#'   [bsitar::bsitar()] for details on fitting univariate-by-subgroup and
 #'   multivariate models). For univariate model, \code{resp = NULL} (default).
 #'   Note that argument \code{resp} must be specified for the
 #'   univariate-by-subgroup and multivariate models otherwise it will result in
@@ -64,7 +64,7 @@
 #' 
 #' # To avoid fitting the model which takes time, the model  
 #' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the bgm function for details on the model fit.
+#' # See examples section of the main function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 

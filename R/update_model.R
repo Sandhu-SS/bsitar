@@ -39,7 +39,7 @@
 #' 
 #' # To avoid fitting the model which takes time, the model  
 #' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the bgm function for details on the model fit.
+#' # See examples section of the main function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 
@@ -56,10 +56,10 @@ update_model.bgmfit <-
            recompile = NULL,
            ...) {
     formula. <- NULL
-    args <- formalArgs(bgm)
+    args <- formalArgs(bsitar)
     args <- args[!args == "..."]
     
-    call_ <- model$model_info$call.full.bgm[-1] %>% as.list()
+    call_ <- model$model_info$call.full.bgmfit[-1] %>% as.list()
     
     call_$data <- NULL
     mcall_ <- list(...)
@@ -71,7 +71,7 @@ update_model.bgmfit <-
                i,
                " is not a valid arguments",
                " \n ",
-               " Please see 'bgm' function ")
+               " Please see the main calling function ")
         } else {
           call_[[i]] <- mcall_[[i]]
         }
@@ -305,7 +305,7 @@ update_model.bgmfit <-
       dots_for_scode              <- c(dots_for_scode, call_)
       dots_for_scode$get_stancode <- TRUE
       new_stancode <-
-        suppressMessages(do.call(bgm, dots_for_scode))
+        suppressMessages(do.call(bsitar, dots_for_scode))
       
       
       new_stancode <- sub("^[^\n]+\n", "", new_stancode)
@@ -327,7 +327,7 @@ update_model.bgmfit <-
         if (!new_init_arg)
           dots_for_recompile$init     <- NULL
         dots_for_recompile          <- c(dots_for_recompile, call_)
-        model <- do.call(bgm, dots_for_recompile)
+        model <- do.call(bsitar, dots_for_recompile)
       }
     } else {
       if (!is.null(dots$formula)) {
@@ -380,7 +380,7 @@ update_model.bgmfit <-
           dots_for_norecompile$init     <- NULL
           dots_for_norecompile          <-
             c(dots_for_norecompile, call_)
-          model <- do.call(bgm, dots_for_norecompile)
+          model <- do.call(bsitar, dots_for_norecompile)
         } # if(!new_init_arg) {
         if (new_init_arg) {
           # TODO

@@ -2,7 +2,7 @@
 
 #'Fit Bayesian growth model (SITAR)
 #'
-#'@description The \strong{bgm} is the main function in the \pkg{bsitar} package
+#'@description The \strong{bsitar} is the main function in the \pkg{bsitar} package
 #'  that fits the Bayesian super imposition by translation and rotation
 #'  (\emph{SITAR}). The \emph{SITAR} model summarizes the growth curves from 
 #'  early childhood through the adulthood. The frequentist version of the
@@ -1059,7 +1059,7 @@
 #'@param cores Number of cores to be used when executing the chains in parallel.
 #'  See [brms::brm()] for details. Note that unlike [brms::brm()] which sets
 #'  default \code{cores} argument as \code{cores=getOption("mc.cores", 1)}, 
-#'  the default \code{cores} argument in \strong{bgm} is
+#'  the default \code{cores} argument in \pkg{bsitar} package is
 #'  \code{cores=getOption("mc.cores", 'optimize')} which optimizes the
 #'  utilization of system resources. The maximum number of cores that can be
 #'  deployed is calculated as the maximum number of available cores minus 1.
@@ -1078,7 +1078,7 @@
 #'@param threads Number of threads to be used in within-chain parallelization.
 #'  Note that unlike the [brms::brm()] which sets the \code{threads} argument as
 #'  \code{getOption("brms.threads", NULL)} implying that no within-chain
-#'  parallelization is used by default, the \strong{bgm}, by default,
+#'  parallelization is used by default, the \pkg{bsitar} package, by default,
 #'  sets \code{threads} as \code{getOption("brms.threads", 'optimize')} to 
 #'  utilize the available resources from the modern computing systems. The
 #'  number of threads per chain is set as the maximum number of cores available
@@ -1325,7 +1325,7 @@
 #' } else {
 #'  # Fit model with default priors 
 #'  # See documentation for prior on each parameter
-#'   model <- bgm(x = age, y = height, id = id, 
+#'   model <- bsitar(x = age, y = height, id = id, 
 #'                   df = 3, 
 #'                   data = berkeley_mdata,
 #'                   xoffset = 'mean', 
@@ -1340,7 +1340,7 @@
 #' # Note that we can test for the sensitivity to the priors by re fitting the
 #' # above model with flat (i.e., uniform) priors on the regression coefficients
 #' # for parameters a, b and c.
-#' model <- bgm(x = age, y = height, id = id, 
+#' model <- bsitar(x = age, y = height, id = id, 
 #'                   df = 3, 
 #'                   data = berkeley_mdata,
 #'                   xoffset = 'mean', 
@@ -1368,9 +1368,9 @@
 #' 
 #' plot_ppc(model, ndraws = 100)
 #' 
-#' # Plot distance and velocity curves using conditional_effects_bgm() function.
+#' # Plot distance and velocity curves using plot_conditional_effects() function.
 #' # This function works exactly same as as conditional_effects() from the brms
-#' # package with the exception that conditional_effects_bgm allows for 
+#' # package with the exception that plot_conditional_effects allows for 
 #' # plotting velocity curve also.
 #' 
 #' # Distance
@@ -1380,7 +1380,7 @@
 #' plot_conditional_effects(model, deriv = 1)
 #' 
 #' # Plot distance and velocity curve along with the parameter estimates using 
-#' # the plot_bgm() function. This function works exactly the same way as 
+#' # the plot_curves() function. This function works exactly the same way as 
 #' # plot.sitar from the sitar package
 #' 
 #' plot_curves(model, apv = TRUE)
@@ -1391,7 +1391,7 @@
 #' }
 #' 
 #'
-bgm <- function(x,
+bsitar <- function(x,
                    y,
                    id,
                    data,
@@ -1628,7 +1628,7 @@ bgm <- function(x,
   
   no_default_args <- c("x", "y", "id", "data", "...")
   
-  # Problem with rethinking occurs during the expose_function_bgm
+  # Problem with rethinking occurs during the expose_model_function
   if("rethinking" %in% (.packages())){
     message("Package 'rethinking' detached and unloaded as it creates conflict",
             " \nwith the rstan version ", utils::packageVersion('rstan'))
@@ -1973,11 +1973,11 @@ bgm <- function(x,
   }
   
 
-  f_bgm_arg <- formals(bgm)
-  nf_bgm_arg_names <-
-    intersect(names(arguments), names(f_bgm_arg))
+  f_funx_arg <- formals(bsitar)
+  nf_funx_arg_names <-
+    intersect(names(arguments), names(f_funx_arg))
   arguments <-
-    c(arguments, f_bgm_arg[names(f_bgm_arg) %!in% nf_bgm_arg_names])
+    c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
   
   checks_start_names <- c('bstart', 'cstart', 'apv', 'pv')
   for (checks_start_namesi in checks_start_names) {
@@ -1991,12 +1991,12 @@ bgm <- function(x,
   
   
   
-  # Override when restricting bgm to abcd
+  # Override when restricting to abcd
   override_select_model <- TRUE # FALSE
   
   if(override_select_model) arguments$select_model <- select_model <- 'sitar'
   
-  # Override when restricting bgm to rcs
+  # Override when restricting to rcs
   if(select_model != 'rcs') decomp <- NULL
   
   if(!is.null(decomp)) {
@@ -3019,7 +3019,7 @@ bgm <- function(x,
     function(value)
       formalArgs(deparse_0(substitute(value)[[1]]))
   
-  convert_to_list <- getArgNames(bgm())
+  convert_to_list <- getArgNames(bsitar())
   
   enverr. <- parent.frame()
   for (ip in convert_to_list) {
@@ -3407,7 +3407,7 @@ bgm <- function(x,
     } # validate_fixed_random_parms
     
     
-    # Over ride when restricting bgm to abcd
+    # Over ride when restricting to abcd
     if(override_select_model) {
       if(grepl("d", fixedsi) & grepl("d", randomsi)) {
         sitar_nparms <- 4
@@ -3593,9 +3593,9 @@ bgm <- function(x,
                  "\n ",
                  "default priors placed by brms for those varinace covarinace", 
                  "\n ",
-                 "or else use get_prios to place priors manually and the pass ",
+                 "or else use get_prios to place priors manually the pass ",
                  "\n ",
-                 "to the bgm by using argument 'set_self_priors'"
+                 "by using argument 'set_self_priors'"
             )
           }
         } else if(!is.null(b[[1]])) {
@@ -3642,7 +3642,7 @@ bgm <- function(x,
     } 
     
     
-    # Over ride when restricting bgm to abcd
+    # Over ride when restricting to abcd
     if(!exists('s_formula_grsi')) s_formula_grsi <- NULL
     
     
@@ -4315,7 +4315,7 @@ bgm <- function(x,
     }
     
     # This control whether to add scode for genquant block for QR model
-    # Relevant in both bgm and prepare_function
+    # Relevant in both and prepare_function
     add_rcsfunmatqrinv_genquant <- FALSE # TRUE
     
     
@@ -4593,7 +4593,7 @@ bgm <- function(x,
     if(is.na(ymeanxmidxmaxdiff)) ymeanxmidxmaxdiff <- (ymeanxmax + ymeanxmin)/2
     
     ###
-    # Add missing arguments when restricting bgm to abcd
+    # Add missing arguments when restricting to abcd
     if(is.null(pvsi))   pvsi  <- list(NULL)
     if(is.null(apvsi))  apvsi <- list(NULL)
     
@@ -4784,7 +4784,7 @@ bgm <- function(x,
     init_data_internal <- prior_data_internal
     init_args_internal <- prior_args_internal
     
-    # Add if(!is.null(a_init_betasi)).. when restricting bgm to abcd
+    # Add if(!is.null(a_init_betasi)).. when restricting to abcd
     # check and set default initials (class = b)
     if(!is.null(a_init_betasi)) a_init_betasi <- 
       set_default_inits(select_model_arg, a_init_betasi)
@@ -4877,7 +4877,7 @@ bgm <- function(x,
     
    
    
-    # Add if(!is.null(a_prior_betasi)).. when restricting bgm to abcd
+    # Add if(!is.null(a_prior_betasi)).. when restricting to abcd
     # check and set default priors (class = b)
     if(!is.null(a_prior_betasi)) a_prior_betasi <- 
       set_default_priors(select_model_arg, a_prior_betasi)
@@ -4899,7 +4899,7 @@ bgm <- function(x,
       set_default_priors(select_model_arg, i_prior_betasi)
     
     
-    # Add if(!is.null(a_prior_sdsi)).. when restricting bgm to abcd
+    # Add if(!is.null(a_prior_sdsi)).. when restricting to abcd
     # check and set default priors (class = sd)
     if(!is.null(a_prior_sdsi)) a_prior_sdsi <- 
       set_default_priors(select_model_arg, a_prior_sdsi)
@@ -6948,6 +6948,9 @@ bgm <- function(x,
     }
    
     
+    # Add attr so that expose_model_functions() works on bgmfit
+    attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
+    
     model_info <- list()
     
     model_info[['emodel']] <- scode_final
@@ -7036,9 +7039,9 @@ bgm <- function(x,
     model_info[['xfuns']] <- xfuns
     model_info[['yfuns']] <- yfuns
     model_info[['outliers']] <- outliers
-    model_info[['bgm.data']] <- data.org.in
-    model_info[['call.full.bgm']] <- call.full
-    model_info[['call.bgm']] <- mcall_
+    model_info[['bgmfit.data']] <- data.org.in
+    model_info[['call.full.bgmfit']] <- call.full
+    model_info[['call.bgmfit']] <- mcall_
     model_info[['brms_arguments_list']] <- brms_arguments_list
     model_info[['select_model']] <- select_model
     model_info[['decomp']] <- decomp
@@ -7089,7 +7092,6 @@ bgm <- function(x,
       }
     }
     
-    attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
     # options(mc.cores = mc.cores_restore)
     return(brmsfit)
   } # exe_model_fit

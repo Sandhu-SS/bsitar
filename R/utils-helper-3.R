@@ -13,11 +13,11 @@
 #'
 #' @param uvarby An optional (default \code{NA}) to specify the indicator
 #'   variable for fitting univariate-by-subgroup model. See \code{univariate_by}
-#'   argument in the [bsitar::bgm()] function. If not \code{NA}, then it should
+#'   argument in the [bsitar::bsitar()] function. If not \code{NA}, then it should
 #'   be a valid factor variable present in the \code{data}.
 #'
 #' @param mvar A logical (default \code{FALSE}) to specify the the multivariate
-#'   model. See \code{multivariate} argument in the [bsitar::bgm()] function.
+#'   model. See \code{multivariate} argument in the [bsitar::bsitar()] function.
 #'
 #' @param xfuns Optional name(s) of the transformation function(s) applied to
 #'   the predictor variable (typically age). Default \code{NULL}.
@@ -201,7 +201,7 @@ prepare_data <- function(data,
 #' An internal function to prepare formula for Bayesian SITAR growth curve model
 #' 
 #' The \code{prepare_formula}) prepares \code{brms::brmsformual} which is  
-#' passed on to the [bsitar::bgm()] function. For univariate-by-
+#' passed on to the [bsitar::bsitar()] function. For univariate-by-
 #' subgroup model (specified by using the \code{univariate_by}) and 
 #' multivariate model (specified by using the \code{multivariate}),
 #' the \code{x}, \code{y}, \code{id}, \code{knots}, \code{nknots}, are 
@@ -221,7 +221,7 @@ prepare_data <- function(data,
 #' @param data data frame containing variables \code{x}, \code{y} and \code{id}.
 #' 
 #' @param internal_formula_args Other internal arguments passed from the 
-#' [bsitar::bgm()] to the \code{prepare_formula}).
+#' [bsitar::bsitar()] to the \code{prepare_formula}).
 #'
 #' @return An object of class \code{brmsformula}, which is a \code{list} 
 #'   containing formulas.
@@ -3257,27 +3257,27 @@ prepare_formula <- function(x,
 #' curve model
 #'
 #' The \code{prepare_function}) constructs custom Stan function  which is passed
-#' on to the [bsitar::bgm()] function. For univariate-by- subgroup model
+#' on to the [bsitar::bsitar()] function. For univariate-by- subgroup model
 #' (\code{univariate_by}) and multivariate (\code{multivariate}) models (see
-#' [bsitar::bgm()]), the \code{x}, \code{y}, \code{id}, \code{knots},
+#' [bsitar::bsitar()]), the \code{x}, \code{y}, \code{id}, \code{knots},
 #' \code{nknots}, are automatically matched with the sub-models.
 #'
-#' @param x Predictor variable in the data. See [bsitar::bgm()] for details.
+#' @param x Predictor variable in the data. See [bsitar::bsitar()] for details.
 #'
-#' @param y Response variable in the data. See [bsitar::bgm()] for details.
+#' @param y Response variable in the data. See [bsitar::bsitar()] for details.
 #'
 #' @param id A vector specifying a unique group identifier for each individual.
-#' See [bsitar::bgm()] for details.
+#' See [bsitar::bsitar()] for details.
 #'
 #' @param knots A vector of knots used for constructing the spline design
-#' matrix. See [bsitar::bgm()] for details.
+#' matrix. See [bsitar::bsitar()] for details.
 #'
 #' @param nknots An integer specifying the number of knots.
 #'
 #' @param data Data frame containing variables \code{x}, \code{y} and \code{id}.
 #'
 #' @param internal_function_args Internal arguments passed from the
-#'   [bsitar::bgm()] to the \code{prepare_formula}).
+#'   [bsitar::bsitar()] to the \code{prepare_formula}).
 #'
 #' @return An character string which later evaluated to a custom function
 #'   and inserted into the Stan's functions block.

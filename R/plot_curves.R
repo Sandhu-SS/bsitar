@@ -194,7 +194,7 @@
 #' 
 #' # To avoid fitting the model which takes time, the model  
 #' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the bgm function for details on the model fit.
+#' # See examples section of the main function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 
@@ -224,9 +224,9 @@
 #' plot_curves(model, opt = 'dv', apv = TRUE, bands = 'dvp', summary = FALSE)
 #' 
 #' # Adjusted and unadjusted individual curves
-#' # Note ipts = NULL (i.e., no interpolation of curve for smoothness). 
-#' # This is because it does not a make sense to interploate data when
-#' # estimating adjusted curves. Also, layout = 'facet' (and not default 
+#' # Note ipts = NULL (i.e., no interpolation of predictor (i.e., age) to plot a 
+#' # smooth curve). This is because it does not a make sense to interploate data 
+#' # when estimating adjusted curves. Also, layout = 'facet' (and not default 
 #' # layout = 'single') is used for the ease of visualizing the plotted 
 #' # adjusted and unadjusted individual curves. However, these lines can be 
 #' # superimposed on each other by setting the set layout = 'single'.

@@ -27,7 +27,7 @@
 #' 
 #' # To avoid fitting the model which takes time, the model  
 #' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the bgm function for details on the model fit.
+#' # See examples section of the main function for details on the model fit.
 #' 
 #' model <- berkeley_mfit
 #' 
