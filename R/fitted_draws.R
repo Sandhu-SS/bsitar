@@ -38,7 +38,7 @@
 #' 
 #' @seealso [brms::fitted.brmsfit()]
 #' 
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

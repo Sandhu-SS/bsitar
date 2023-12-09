@@ -332,7 +332,6 @@ set_priors_initials <- function(a_prior_beta,
   sigma_formulasi <- NULL;
   s_formulasi <- NULL;
   sigma_formula_grsi <- NULL;
-  stanvars_data_5x <- NULL;
   nys <- NULL;
   cortimeNlags <- NULL;
   . <- NULL;
@@ -3251,8 +3250,7 @@ set_priors_initials <- function(a_prior_beta,
   
   evaluated_priors <- c_priors %>% do.call(rbind, .)
   
-  stanvars_data_5x <<- stanvars_data_5
-  
+
   newlist <- c()
   for (i in 1:length(stanvars_data_5)) {
     ttt <- stanvars_data_5[[i]][1:length(stanvars_data_5[[i]])]

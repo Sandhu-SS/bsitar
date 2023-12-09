@@ -19,7 +19,7 @@
 #' 
 #' @export
 #' 
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

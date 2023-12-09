@@ -201,7 +201,7 @@
 #'   \code{parms_method} is currently ignored.
 #'  
 #' @param envir Environment of function evaluation. The default is \code{NULL}
-#'   which will automatically set environment as \code{globalenv} environment.
+#'   which will set default environment \code{parent.frame()}.
 #'   
 #' @param ... Further arguments passed to [brms::fitted.brmsfit()] and
 #'   \code{brms::predict()} functions. See [brms::fitted.brmsfit()] and
@@ -228,7 +228,7 @@
 #' 
 #' @inherit brms::prepare_predictions.brmsfit params 
 #'
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

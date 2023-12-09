@@ -27,7 +27,7 @@
 #' 
 #' @seealso [brms::loo()] 
 #' 
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

@@ -247,7 +247,7 @@ function from the \code{pracma} package. Note that the argument
 \code{parms_method} is currently ignored.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
-which will automatically set environment as \code{globalenv} environment.}
+which will set default environment \code{parent.frame()}.}
 
 \item{...}{Further arguments passed to \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and
 \code{brms::predict()} functions. See \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and

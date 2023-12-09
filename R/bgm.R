@@ -1291,8 +1291,8 @@
 #' @references
 #'  \insertAllCited{}
 #'  
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#'
+#' @inherit berkeley author
+#' 
 #' @examples
 #' 
 #' # Examples below fits the SITAR model to the Berkley height data for males. 
@@ -7062,18 +7062,20 @@ bgm <- function(x,
         message(setmsgtxt)
       }
       
-      brmsfit <- expose_functions_bgm(brmsfit, 
+      brmsfit <- expose_model_functions(model = brmsfit, 
                                       scode = fun_scode,
                                       expose = TRUE, 
-                                      select_model = NULL)
+                                      select_model = NULL,
+                                      envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
     
     if (!expose_function) {
-      brmsfit <- expose_functions_bgm(brmsfit, 
+      brmsfit <- expose_model_functions(model = brmsfit, 
                                       scode = fun_scode,
                                       expose = FALSE, 
-                                      select_model = select_model)
+                                      select_model = select_model,
+                                      envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'R'
     } 
     

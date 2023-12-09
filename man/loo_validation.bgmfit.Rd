@@ -33,7 +33,7 @@ maximum number of cores avaialble minus one, i.e.,
 \item{deriv}{Must be \code{NULL}.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
-which will automatically set environment as \code{globalenv} environment.}
+which will set default environment \code{parent.frame()}.}
 
 \item{...}{Additional arguments passed to the \code{\link[brms:loo.brmsfit]{brms::loo()}} function.
 Please see \code{brms::loo} for details on various options available.}

@@ -16,5 +16,5 @@
 #' 
 #' @return An object of class \code{bgmfit} with posterior draws.
 #' 
-#' @inherit bgm author
+#' @inherit berkeley author
 "berkeley_mfit"

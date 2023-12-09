@@ -23,5 +23,5 @@
 #' @keywords datasets
 #' 
 #' @return A data frame with 3 columns.
-#' @inherit bgm author
+#' @inherit berkeley author
 "berkeley_mdata"

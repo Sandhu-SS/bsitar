@@ -40,7 +40,7 @@
 #' 
 #' @seealso [brms::predict.brmsfit()] 
 #' 
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

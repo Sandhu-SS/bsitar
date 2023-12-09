@@ -56,7 +56,7 @@
 #' 
 #' @seealso [brms::conditional_effects()]
 #'
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

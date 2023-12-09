@@ -4,13 +4,9 @@
 #' An internal function to get arguments of a function
 #'
 #' @param arguments A list of default function arguments.
-#' 
 #' @param xcall A character string specifying the name of the calling function.
-#' 
 #' @keywords internal
-#' 
 #' @return A list comprised of function arguments.
-#' 
 #' @keywords internal
 #' @noRd
 #'
@@ -96,8 +92,11 @@ expose_optimize_fit <- function(model,
       if(expose_function) {
         message("Exposing Stan function...", " (for model no. ", il, ")")
         m_list[[il]] <- 
-          expose_functions_bgm(optimize_fit_models[[il]], 
-                                  optimize_fit_models[[il]]$bmodel)
+          expose_model_functions(optimize_fit_models[[il]], 
+                                optimize_fit_models[[il]]$bmodel,
+                                expose = TRUE, 
+                                select_model = NULL, 
+                                envir = NULL)
       } else if(!expose_function) {
         m_list[[il]] <- optimize_fit_models[[il]]
       }
@@ -147,8 +146,11 @@ plot_optimize_fit <- function(model,
       if(expose_function) {
         message("Exposing Stan function...", " (for model no. ", il, ")")
         m_list[[il]] <- 
-          expose_functions_bgm(optimize_fit_models[[il]], 
-                                  optimize_fit_models[[il]]$bmodel)
+          expose_model_functions(model = optimize_fit_models[[il]], 
+                                scode = optimize_fit_models[[il]]$bmodel,
+                                expose = TRUE, 
+                                select_model = NULL, 
+                                envir = NULL)
       } else if(!expose_function) {
         m_list[[il]] <- optimize_fit_models[[il]]
       }
@@ -739,7 +741,6 @@ setup_higher_priors <- function(new_prior_list) {
   # Initiate non formalArgs()
   ##############################################
   . <- NULL;
-  
   o_l <- list()
   ixi = 0
   group_ <- class_ <- nlpar_ <- resp_ <- cor_check <- sd_check <- NA
@@ -2041,7 +2042,7 @@ check_if_functions_exists <- function(model, o, xcall = NULL, msg = TRUE, ...) {
   }
   
   if(is.null(xcall)) {
-    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]] [1]
+    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]][1]
   }
   
   if(msg) {
@@ -2053,9 +2054,9 @@ check_if_functions_exists <- function(model, o, xcall = NULL, msg = TRUE, ...) {
               "\n ",
               "'", calname.fun, "()'", " function",
               "\n ",
-              "(See '?brms::expose_functions()' function for details)")
-    } # if(!envglobal) {
-  } # if(msg) {
+              "(See '?expose_model_functions()' for details)")
+    }
+  }
   
   return(envglobal)
 }

@@ -139,7 +139,7 @@ package and is documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
-which will automatically set environment as \code{globalenv} environment.}
+which will set default environment \code{parent.frame()}.}
 
 \item{...}{Additional arguments passed to the \link[brms:fitted.brmsfit]{brms::fitted.brmsfit}
 function. Please see \code{brms::fitted.brmsfit} for details on

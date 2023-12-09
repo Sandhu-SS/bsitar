@@ -186,7 +186,7 @@
 #'
 #'@seealso [growthparameters()] [fitted_draws] [predict_draws()]
 #'
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

@@ -29,7 +29,7 @@
 #' @export update_model.bgmfit
 #' @export
 #'
-#' @inherit bgm author
+#' @inherit berkeley author
 #'
 #' @examples
 #' 

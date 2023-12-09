@@ -43,5 +43,5 @@
 #' @keywords datasets
 #' 
 #' @return A data frame with 10 columns.
-#' @inherit bgm author
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 "berkeley"
