@@ -20,6 +20,10 @@
 #' @param select_model A string (default \code{NULL}) to indicate the model. For
 #' internal use only.
 #' 
+#' @param returnobj A logical (default \code{TRUE}) to indicate whether to
+#'   return the model object. When \code{expose=TRUE}, then it is advisable to
+#'  set \code{returnobj=TRUE} also.
+#' 
 #' @param envir Environment of function evaluation. The default is \code{NULL}
 #' which will set default environment \code{parent.frame()}.
 #' 
@@ -27,7 +31,7 @@
 #'   [rstan::expose_stan_functions()] function.
 #'
 #' @return An object of class \code{bgmfit} with exposed user-defined Stan
-#'   functions (when \code{expose=TRUE}).
+#'   functions when \code{returnobj=TRUE}, otherwise invisible \code{NULL}.
 #' 
 #' @export expose_model_functions.bgmfit
 #' @export
@@ -54,6 +58,7 @@ expose_model_functions.bgmfit <- function(model,
                                  scode = NULL, 
                                  expose = TRUE, 
                                  select_model = NULL, 
+                                 returnobj = TRUE,
                                  envir = NULL,
                                  ...) {
   
@@ -79,7 +84,6 @@ expose_model_functions.bgmfit <- function(model,
     }
     rstan::expose_stan_functions(rstan::stanc(model_code = exposecode), 
                                  env = envir)
-    # brms::expose_functions(model, vectorize = FALSE)
   }
   
   
@@ -96,9 +100,8 @@ expose_model_functions.bgmfit <- function(model,
                      paste0(SplineFun_name, "_", 
                             c("d0", 
                               "d1",
-                              "d2")
+                              "d2"))
                      )
-  )
   
   
   if(expose_r_from_stan) {
@@ -107,7 +110,6 @@ expose_model_functions.bgmfit <- function(model,
       spfun_collect <- c(spfun_collect, 'getKnots')
     }
   }
-  
   
   nys <- model$model_info$nys
   ys <- model$model_info$ys
@@ -135,13 +137,10 @@ expose_model_functions.bgmfit <- function(model,
       getfun_ <- eval(parse(text = getfun_), envir = envir)
       # This below to change _d0 to 0 within the d2 d2 functions 
       assign(spfun_collecti_name, getfun_, envir = envir)
-      
-      print(spfun_collecti_name)
-      print(getfun_)
       Spl_funs[[paste0(spfun_collecti_name, "")]] <- getfun_
-      
     }
-  } # if(expose_r_from_stan) {
+  } 
+  
   
   
   if(expose_r_from_stan) {
@@ -163,7 +162,8 @@ expose_model_functions.bgmfit <- function(model,
       Spl_funs[[paste0(spfun_collecti_name, "")]] <- 
         eval(parse(text = getfun__), envir = envir)
     }
-  } # if(expose_r_from_stan) {
+  } 
+  
   
   
   if(!expose & !expose_r_from_stan) Spl_funs <- NULL
@@ -207,8 +207,14 @@ expose_model_functions.bgmfit <- function(model,
       }
     }
   }
-  model$model <- model$bmodel # scode_include
-  return(model)
+  
+  if(returnobj) {
+    model$model <- model$bmodel
+    return(model)
+  } else {
+    return(invisible(NULL))
+  }
+  
 }
 
 

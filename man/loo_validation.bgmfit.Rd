@@ -5,7 +5,15 @@
 \alias{loo_validation}
 \title{Perform leave-one-out (loo) cross-validation}
 \usage{
-\method{loo_validation}{bgmfit}(model, resp = NULL, cores = 1, deriv = 0, envir = NULL, ...)
+\method{loo_validation}{bgmfit}(
+  model,
+  resp = NULL,
+  cores = 1,
+  deriv = 0,
+  usesavedfuns = FALSE,
+  envir = NULL,
+  ...
+)
 
 loo_validation(model, ...)
 }
@@ -31,6 +39,10 @@ maximum number of cores avaialble minus one, i.e.,
 \code{future::availableCores() - 1}.}
 
 \item{deriv}{Must be \code{NULL}.}
+
+\item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
+use the already exposed and saved \code{Stan} functions. This is for
+internal use when testing the function and not used routinely.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
 which will set default environment \code{parent.frame()}.}

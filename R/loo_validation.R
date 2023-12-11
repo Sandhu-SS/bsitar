@@ -49,6 +49,7 @@ loo_validation.bgmfit <-
            resp = NULL,
            cores = 1,
            deriv = 0,
+           usesavedfuns = FALSE,
            envir = NULL,
            ...) {
     
@@ -61,7 +62,16 @@ loo_validation.bgmfit <-
                              xcall = match.call(),
                              resp = resp,
                              envir = envir,
-                             deriv = deriv)
+                             deriv = deriv,
+                             all = FALSE)
+    
+    oall <-
+      post_processing_checks(model = model,
+                             xcall = match.call(),
+                             resp = resp,
+                             envir = envir,
+                             deriv = deriv,
+                             all = TRUE)
     
     getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
     
@@ -71,16 +81,51 @@ loo_validation.bgmfit <-
       stop("For loo_validation, the 'deriv' argument must be set as 0")
     }
     
-    setcleanup <- FALSE
-    if(!check_if_functions_exists(model, o, model$xcall)) {
-      return(invisible(NULL))
-    } else {
+    
+    if(usesavedfuns) {
       setcleanup <- TRUE
-      assign(o[[1]], getfunx, envir = environment(getfunx))
+      tempgenv <- .GlobalEnv
+      oalli_c <- c()
+      oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
+      for (oalli in names(oall)) {
+        if(!grepl(o[[1]], oalli)) {
+          oalli_c <- c(oalli_c, oalli)
+        }
+      }
+      for (oalli in oalli_c) {
+        print(oalli)
+        assign(oalli, oall[[oalli]], envir = tempgenv)
+      }
+      assign(o[[1]], getfunx, envir = tempgenv)
+    } else if(!usesavedfuns) {
+      setcleanup <- FALSE
+      if(!check_if_functions_exists(model, o, model$xcall)) {
+        return(invisible(NULL))
+      } else {
+        setcleanup <- TRUE
+        tempgenv <- .GlobalEnv
+        if(exists(o[[1]], envir = tempgenv)) {
+          assign(o[[1]], getfunx, envir = tempgenv)
+        } else {
+          assign(o[[1]], getfunx, envir = environment(getfunx))
+        }
+      }
     }
     
+    
+    
     . <- brms::loo(model, resp = resp, cores = cores ,...)
+    
     assign(o[[1]], getfunx1always, environment(getfunx1always))
+    
+    if(setcleanup) {
+      for (oalli in names(oall)) {
+        if(exists(oalli, envir = .GlobalEnv )) {
+          remove(list=oalli, envir = .GlobalEnv)
+        }
+      }
+    }
+    
     .
   }
 

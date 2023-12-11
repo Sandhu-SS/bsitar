@@ -62,6 +62,7 @@
   parms_eval = FALSE,
   idata_method = "m1",
   parms_method = "getPeak",
+  usesavedfuns = FALSE,
   envir = NULL,
   ...
 )
@@ -400,6 +401,10 @@ package and is documented here
 option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}} function
 function from the \code{pracma} package. Note that the argument
 \code{parms_method} is currently ignored.}
+
+\item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
+use the already exposed and saved \code{Stan} functions. This is for
+internal use when testing the function and not used routinely.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
 which will set default environment \code{parent.frame()}.}

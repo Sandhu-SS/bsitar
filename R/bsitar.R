@@ -7069,6 +7069,7 @@ bsitar <- function(x,
                                       scode = fun_scode,
                                       expose = TRUE, 
                                       select_model = NULL,
+                                      returnobj = TRUE,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
@@ -7078,6 +7079,7 @@ bsitar <- function(x,
                                       scode = fun_scode,
                                       expose = FALSE, 
                                       select_model = select_model,
+                                      returnobj = TRUE,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'R'
     } 

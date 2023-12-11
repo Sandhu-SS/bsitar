@@ -10,6 +10,7 @@
   resp = NULL,
   deriv = 0,
   deriv_model = TRUE,
+  usesavedfuns = FALSE,
   envir = NULL,
   ...
 )
@@ -39,6 +40,10 @@ estimate model based derivatives or from the differentiation of the
 distance curve. When model is fit with \code{decomp = 'QR'}, the only
 approach available to estimate derivatives by the  differentiation of the
 distance curve.}
+
+\item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
+use the already exposed and saved \code{Stan} functions. This is for
+internal use when testing the function and not used routinely.}
 
 \item{envir}{The calling environment. Deafault is set to \code{globalenv()}.}
 

@@ -21,19 +21,16 @@
 #'   the same manner. In other words, user can specify all the options available
 #'   in the [brms::predict.brmsfit()].
 #' 
-#' 
-#' @inherit growthparameters.bgmfit params
-#' 
-#' @inherit plot_conditional_effects.bgmfit params
-#' 
-#' @inherit brms::predict.brmsfit params
-#' 
 #' @param ... Additional arguments passed to the [brms::predict.brmsfit()]
 #'   function. Please see [brms::predict.brmsfit()] for details on various
 #'   options available.
 #' 
 #' @return An array of predicted response values. See [brms::predict.brmsfit()] 
 #' for details.
+#' 
+#' @inherit growthparameters.bgmfit params
+#' @inherit plot_conditional_effects.bgmfit params
+#' @inherit brms::predict.brmsfit params
 #' 
 #' @export predict_draws.bgmfit
 #' @export
@@ -84,6 +81,7 @@ predict_draws.bgmfit <-
            parms_eval = FALSE,
            parms_method = 'getPeak',
            idata_method = 'm1',
+           usesavedfuns = FALSE,
            envir = NULL,
            ...) {
     
@@ -101,7 +99,17 @@ predict_draws.bgmfit <-
                              xcall = match.call(),
                              resp = resp,
                              envir = envir,
-                             deriv = deriv)
+                             deriv = deriv,
+                             all = FALSE)
+    
+    oall <-
+      post_processing_checks(model = model,
+                             xcall = match.call(),
+                             resp = resp,
+                             envir = envir,
+                             deriv = deriv,
+                             all = TRUE)
+    
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
@@ -130,13 +138,40 @@ predict_draws.bgmfit <-
       }
     }
     
-    setcleanup <- FALSE
-    if(!check_if_functions_exists(model, o, model$xcall)) {
-      return(invisible(NULL))
-    } else {
+    
+    
+    
+    if(usesavedfuns) {
       setcleanup <- TRUE
-      assign(o[[1]], getfunx, envir = environment(getfunx))
+      tempgenv <- .GlobalEnv
+      oalli_c <- c()
+      oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
+      for (oalli in names(oall)) {
+        if(!grepl(o[[1]], oalli)) {
+          oalli_c <- c(oalli_c, oalli)
+        }
+      }
+      for (oalli in oalli_c) {
+        print(oalli)
+        assign(oalli, oall[[oalli]], envir = tempgenv)
+      }
+      assign(o[[1]], getfunx, envir = tempgenv)
+    } else if(!usesavedfuns) {
+      setcleanup <- FALSE
+      if(!check_if_functions_exists(model, o, model$xcall)) {
+        return(invisible(NULL))
+      } else {
+        setcleanup <- TRUE
+        tempgenv <- .GlobalEnv
+        if(exists(o[[1]], envir = tempgenv)) {
+          assign(o[[1]], getfunx, envir = tempgenv)
+        } else {
+          assign(o[[1]], getfunx, envir = environment(getfunx))
+        }
+      }
     }
+    
+    
     
     . <- predict(model,
                 newdata = newdata,
@@ -161,6 +196,15 @@ predict_draws.bgmfit <-
     } 
     
     assign(o[[1]], getfunx1always, environment(getfunx1always))
+    
+    if(setcleanup) {
+      for (oalli in names(oall)) {
+        if(exists(oalli, envir = .GlobalEnv )) {
+          remove(list=oalli, envir = .GlobalEnv)
+        }
+      }
+    }
+    
     .
   }
 

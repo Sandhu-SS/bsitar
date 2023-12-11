@@ -10,6 +10,7 @@
   scode = NULL,
   expose = TRUE,
   select_model = NULL,
+  returnobj = TRUE,
   envir = NULL,
   ...
 )
@@ -28,6 +29,10 @@ functions and add to the global environment.}
 \item{select_model}{A string (default \code{NULL}) to indicate the model. For
 internal use only.}
 
+\item{returnobj}{A logical (default \code{TRUE}) to indicate whether to
+return the model object. When \code{expose=TRUE}, then it is advisable to
+set \code{returnobj=TRUE} also.}
+
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
 which will set default environment \code{parent.frame()}.}
 
@@ -36,7 +41,7 @@ which will set default environment \code{parent.frame()}.}
 }
 \value{
 An object of class \code{bgmfit} with exposed user-defined Stan
-functions (when \code{expose=TRUE}).
+functions when \code{returnobj=TRUE}, otherwise invisible \code{NULL}.
 }
 \description{
 The \strong{expose_model_functions} function is a wrapper around

@@ -96,6 +96,7 @@ expose_optimize_fit <- function(model,
                                 optimize_fit_models[[il]]$bmodel,
                                 expose = TRUE, 
                                 select_model = NULL, 
+                                returnobj = TRUE,
                                 envir = NULL)
       } else if(!expose_function) {
         m_list[[il]] <- optimize_fit_models[[il]]
@@ -150,6 +151,7 @@ plot_optimize_fit <- function(model,
                                 scode = optimize_fit_models[[il]]$bmodel,
                                 expose = TRUE, 
                                 select_model = NULL, 
+                                returnobj = TRUE,
                                 envir = NULL)
       } else if(!expose_function) {
         m_list[[il]] <- optimize_fit_models[[il]]
@@ -2050,11 +2052,13 @@ check_if_functions_exists <- function(model, o, xcall = NULL, msg = TRUE, ...) {
       classname <- attr(model, 'class')[2]
       calname.fun <- xcall # match.call()[1]
       calname.fun <- gsub(paste0(".", classname), "", calname.fun)
-      message("Please expose user defined Stan function before calling the",
-              "\n ",
+      m <- paste0("Please expose user defined Stan function before calling the",
+              "\n",
               "'", calname.fun, "()'", " function",
               "\n ",
               "(See '?expose_model_functions()' for details)")
+      cat(m)
+      
     }
   }
   

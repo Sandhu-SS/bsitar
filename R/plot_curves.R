@@ -296,6 +296,7 @@ plot_curves.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
+                               usesavedfuns = FALSE,
                                envir = NULL,
                                ...) {
   

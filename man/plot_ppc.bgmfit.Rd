@@ -5,7 +5,14 @@
 \alias{plot_ppc}
 \title{Perform posterior predictive distribution check}
 \usage{
-\method{plot_ppc}{bgmfit}(model, resp = NULL, deriv = 0, envir = NULL, ...)
+\method{plot_ppc}{bgmfit}(
+  model,
+  resp = NULL,
+  deriv = 0,
+  usesavedfuns = FALSE,
+  envir = NULL,
+  ...
+)
 
 plot_ppc(model, ...)
 }
@@ -27,7 +34,12 @@ derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
 for the distance curve, \code{deriv = 1} for velocity curve, and
 \code{deriv = 2} for the acceleration curve.}
 
-\item{envir}{The calling environment. Deafault is set to \code{globalenv()}.}
+\item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
+use the already exposed and saved \code{Stan} functions. This is for
+internal use when testing the function and not used routinely.}
+
+\item{envir}{Environment of function evaluation. The default is \code{NULL}
+which will set default environment \code{parent.frame()}.}
 
 \item{...}{Additional arguments passed to the \code{\link[brms:pp_check.brmsfit]{brms::pp_check.brmsfit()}}
 function. Please see \code{\link[brms:pp_check.brmsfit]{brms::pp_check.brmsfit()}} for details.}
@@ -54,7 +66,7 @@ the \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}.
 
 model <- berkeley_mfit
 
-plot_ppc(model)
+plot_ppc(model, ndraws = 100)
 
 }
 \author{

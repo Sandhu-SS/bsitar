@@ -40,11 +40,13 @@
 #'   distance curve.
 #'
 #' @param envir The calling environment. Deafault is set to \code{globalenv()}.
+#' 
+#' @inherit brms::conditional_effects description
+#' @inherit growthparameters.bgmfit params
+#' @inherit fitted_draws.bgmfit params
 #'
 #' @param ... Additional arguments passed to the [brms::conditional_effects()]
 #'   function. Please see [brms::conditional_effects()] for details.
-#'
-#' @inherit brms::conditional_effects description
 #'
 #' @return An object of class 'brms_conditional_effects' which is a named list
 #'   with one data.frame per effect containing all information required to
@@ -87,6 +89,7 @@ plot_conditional_effects.bgmfit <-
            resp = NULL,
            deriv = 0,
            deriv_model = TRUE,
+           usesavedfuns = FALSE,
            envir = NULL,
            ...) {
     
@@ -101,6 +104,14 @@ plot_conditional_effects.bgmfit <-
                              envir = envir,
                              deriv = deriv,
                              all = FALSE)
+    
+    oall <-
+      post_processing_checks(model = model,
+                             xcall = match.call(),
+                             resp = resp,
+                             envir = envir,
+                             deriv = deriv,
+                             all = TRUE)
     
     getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
     
@@ -120,13 +131,38 @@ plot_conditional_effects.bgmfit <-
       }
     }
     
-    setcleanup <- FALSE
-    if(!check_if_functions_exists(model, o, model$xcall)) {
-      return(invisible(NULL))
-    } else {
+    
+    
+    if(usesavedfuns) {
       setcleanup <- TRUE
-      assign(o[[1]], getfunx, envir = environment(getfunx))
+      tempgenv <- .GlobalEnv
+      oalli_c <- c()
+      oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
+      for (oalli in names(oall)) {
+        if(!grepl(o[[1]], oalli)) {
+          oalli_c <- c(oalli_c, oalli)
+        }
+      }
+      for (oalli in oalli_c) {
+        print(oalli)
+        assign(oalli, oall[[oalli]], envir = tempgenv)
+      }
+      assign(o[[1]], getfunx, envir = tempgenv)
+    } else if(!usesavedfuns) {
+      setcleanup <- FALSE
+      if(!check_if_functions_exists(model, o, model$xcall)) {
+        return(invisible(NULL))
+      } else {
+        setcleanup <- TRUE
+        tempgenv <- .GlobalEnv
+        if(exists(o[[1]], envir = tempgenv)) {
+          assign(o[[1]], getfunx, envir = tempgenv)
+        } else {
+          assign(o[[1]], getfunx, envir = environment(getfunx))
+        }
+      }
     }
+    
     
     
     if(!deriv_model) {
@@ -151,6 +187,15 @@ plot_conditional_effects.bgmfit <-
     }
     
     assign(o[[1]], getfunx1always, environment(getfunx1always))
+    
+    if(setcleanup) {
+      for (oalli in names(oall)) {
+        if(exists(oalli, envir = .GlobalEnv )) {
+          remove(list=oalli, envir = .GlobalEnv)
+        }
+      }
+    }
+    
     .
   }
 

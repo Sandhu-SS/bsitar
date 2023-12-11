@@ -23,6 +23,7 @@
   parms_eval = FALSE,
   parms_method = "getPeak",
   idata_method = "m1",
+  usesavedfuns = FALSE,
   envir = NULL,
   ...
 )
@@ -137,6 +138,10 @@ documented here \url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}.
 The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
 package and is documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
+
+\item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
+use the already exposed and saved \code{Stan} functions. This is for
+internal use when testing the function and not used routinely.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
 which will set default environment \code{parent.frame()}.}

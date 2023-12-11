@@ -200,6 +200,10 @@
 #'   function from the \code{pracma} package. Note that the argument
 #'   \code{parms_method} is currently ignored.
 #'  
+#' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to 
+#' use the already exposed and saved \code{Stan} functions. This is for 
+#' internal use when testing the function and not used routinely.   
+#'  
 #' @param envir Environment of function evaluation. The default is \code{NULL}
 #'   which will set default environment \code{parent.frame()}.
 #'   
@@ -288,6 +292,7 @@ growthparameters.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
+                               usesavedfuns = FALSE,
                                envir = NULL,
                                ...) {
   if(is.null(envir)) {
