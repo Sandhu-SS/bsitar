@@ -11,6 +11,7 @@
   deriv = 0,
   deriv_model = TRUE,
   usesavedfuns = FALSE,
+  clearenvfuns = FALSE,
   envir = NULL,
   ...
 )
@@ -44,6 +45,9 @@ distance curve.}
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
 internal use when testing the function and not used routinely.}
+
+\item{clearenvfuns}{A logical (default \code{FALSE}) to indicate whether to
+clear the exposed function from the environment.}
 
 \item{envir}{The calling environment. Deafault is set to \code{globalenv()}.}
 

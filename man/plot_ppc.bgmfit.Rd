@@ -10,6 +10,7 @@
   resp = NULL,
   deriv = 0,
   usesavedfuns = FALSE,
+  clearenvfuns = FALSE,
   envir = NULL,
   ...
 )
@@ -37,6 +38,9 @@ for the distance curve, \code{deriv = 1} for velocity curve, and
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
 internal use when testing the function and not used routinely.}
+
+\item{clearenvfuns}{A logical (default \code{FALSE}) to indicate whether to
+clear the exposed function from the environment.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
 which will set default environment \code{parent.frame()}.}

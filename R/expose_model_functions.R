@@ -130,6 +130,7 @@ expose_model_functions.bgmfit <- function(model,
     for (spfun_collecti in spfun_collect) {
       spfun_collectic <- spfun_collectic + 1
       spfun_collecti_name <- spfun_collecti
+      spfun_collecti_name_org <- spfun_collecti_name
       spfun_collecti_name <- gsub("_d0", "0", spfun_collecti_name)
       spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
       spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
@@ -138,6 +139,12 @@ expose_model_functions.bgmfit <- function(model,
       # This below to change _d0 to 0 within the d2 d2 functions 
       assign(spfun_collecti_name, getfun_, envir = envir)
       Spl_funs[[paste0(spfun_collecti_name, "")]] <- getfun_
+      if(exists(spfun_collecti_name_org, envir = .GlobalEnv )) {
+        remove(list=spfun_collecti_name_org, envir = .GlobalEnv)
+      }
+      if(exists(spfun_collecti_name_org, envir = envir )) {
+        remove(list=spfun_collecti_name_org, envir = envir)
+      }
     }
   } 
   

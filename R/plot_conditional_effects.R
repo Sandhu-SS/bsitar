@@ -90,6 +90,7 @@ plot_conditional_effects.bgmfit <-
            deriv = 0,
            deriv_model = TRUE,
            usesavedfuns = FALSE,
+           clearenvfuns = FALSE,
            envir = NULL,
            ...) {
     
@@ -187,6 +188,14 @@ plot_conditional_effects.bgmfit <-
     }
     
     assign(o[[1]], getfunx1always, environment(getfunx1always))
+    
+    if(!is.null(clearenvfuns)) {
+      if(!is.logical(clearenvfuns)) {
+        stop('clearenvfuns must be NULL or a logical')
+      } else {
+        setcleanup <- clearenvfuns
+      }
+    }
     
     if(setcleanup) {
       for (oalli in names(oall)) {

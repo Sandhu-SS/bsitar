@@ -38,6 +38,7 @@ plot_ppc.bgmfit <-
            resp = NULL,
            deriv = 0,
            usesavedfuns = FALSE,
+           clearenvfuns = FALSE,
            envir = NULL,
            ...) {
     
@@ -107,6 +108,14 @@ plot_ppc.bgmfit <-
     . <- brms::pp_check(model, resp = resp, ...)
     
     assign(o[[1]], getfunx1always, environment(getfunx1always))
+    
+    if(!is.null(clearenvfuns)) {
+      if(!is.logical(clearenvfuns)) {
+        stop('clearenvfuns must be NULL or a logical')
+      } else {
+        setcleanup <- clearenvfuns
+      }
+    }
     
     if(setcleanup) {
       for (oalli in names(oall)) {

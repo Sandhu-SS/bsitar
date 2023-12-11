@@ -50,6 +50,7 @@ loo_validation.bgmfit <-
            cores = 1,
            deriv = 0,
            usesavedfuns = FALSE,
+           clearenvfuns = FALSE,
            envir = NULL,
            ...) {
     
@@ -117,6 +118,14 @@ loo_validation.bgmfit <-
     . <- brms::loo(model, resp = resp, cores = cores ,...)
     
     assign(o[[1]], getfunx1always, environment(getfunx1always))
+    
+    if(!is.null(clearenvfuns)) {
+      if(!is.logical(clearenvfuns)) {
+        stop('clearenvfuns must be NULL or a logical')
+      } else {
+        setcleanup <- clearenvfuns
+      }
+    }
     
     if(setcleanup) {
       for (oalli in names(oall)) {

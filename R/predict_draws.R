@@ -82,6 +82,7 @@ predict_draws.bgmfit <-
            parms_method = 'getPeak',
            idata_method = 'm1',
            usesavedfuns = FALSE,
+           clearenvfuns = FALSE,
            envir = NULL,
            ...) {
     
@@ -196,6 +197,14 @@ predict_draws.bgmfit <-
     } 
     
     assign(o[[1]], getfunx1always, environment(getfunx1always))
+    
+    if(!is.null(clearenvfuns)) {
+      if(!is.logical(clearenvfuns)) {
+        stop('clearenvfuns must be NULL or a logical')
+      } else {
+        setcleanup <- clearenvfuns
+      }
+    }
     
     if(setcleanup) {
       for (oalli in names(oall)) {

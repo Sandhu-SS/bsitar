@@ -40,6 +40,7 @@
   idata_method = "m1",
   parms_method = "getPeak",
   usesavedfuns = FALSE,
+  clearenvfuns = FALSE,
   envir = NULL,
   ...
 )
@@ -250,6 +251,9 @@ function from the \code{pracma} package. Note that the argument
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
 internal use when testing the function and not used routinely.}
+
+\item{clearenvfuns}{A logical (default \code{FALSE}) to indicate whether to
+clear the exposed function from the environment.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
 which will set default environment \code{parent.frame()}.}
