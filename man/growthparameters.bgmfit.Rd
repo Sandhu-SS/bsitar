@@ -3,7 +3,7 @@
 \name{growthparameters.bgmfit}
 \alias{growthparameters.bgmfit}
 \alias{growthparameters}
-\title{Estimate growth parameter}
+\title{Estimate growth parameters from the model fit}
 \usage{
 \method{growthparameters}{bgmfit}(
   model,
@@ -277,13 +277,13 @@ function. When \code{re_formual = NULL}, an additional column is added that
 shows the individual identifier (typically \code{id}).
 }
 \description{
-The \strong{growthparameters} function computes population
+The \strong{growthparameters()} computes population
 average and and individual-specific growth parameters (such as age at peak
 growth velocity) and the uncertainty (standard error, SE and the credible
 interval, CI).
 }
 \details{
-The \strong{growthparameters} function internally calls the
+The \strong{growthparameters()} internally calls the
 \code{\link[=fitted_draws]{fitted_draws()}} or the \code{\link[=predict_draws]{predict_draws()}} function to estimate the first
 derivative based growth parameters for each posterior draw. The growth
 parameters estimated are age at peak growth velocity (APGV), peak growth

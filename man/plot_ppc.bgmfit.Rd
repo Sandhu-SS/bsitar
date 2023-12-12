@@ -3,7 +3,7 @@
 \name{plot_ppc.bgmfit}
 \alias{plot_ppc.bgmfit}
 \alias{plot_ppc}
-\title{Perform posterior predictive distribution check}
+\title{Perform posterior predictive distribution checks}
 \usage{
 \method{plot_ppc}{bgmfit}(
   model,
@@ -57,8 +57,7 @@ Perform posterior predictive checks with the help
 of the \pkg{bayesplot} package.
 }
 \details{
-The \strong{plot_ppc} function is a wrapper around
-the \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}.
+The \strong{plot_ppc()} is a wrapper around the \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}.
 }
 \examples{
 

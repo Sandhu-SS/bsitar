@@ -60,7 +60,7 @@ If only one model object is provided, then an object of class
 class \code{loolist}.
 }
 \description{
-The \strong{loo_validation} function is a wrapper around the
+The \strong{loo_validation()} is a wrapper around the
 \code{\link[brms:loo.brmsfit]{brms::loo()}} function to perform approximate leave-one-out
 cross-validation based on the posterior likelihood. See \code{\link[brms:loo.brmsfit]{brms::loo()}} for
 details.

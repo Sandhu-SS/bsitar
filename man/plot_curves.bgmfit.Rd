@@ -422,26 +422,26 @@ A plot object (default), or a \code{data.frame} when
 \code{returndata = TRUE}.
 }
 \description{
-The \strong{plot_curves} provides visualization of six different
-types of growth curves that are plotted by using the \pkg{ggplot2} package.
-The \strong{plot_curves} also allows users to make their own detailed plots
-from the data returned as a \code{data.frame}.
+The \strong{plot_curves()} provides visualization of six
+different types of growth curves that are plotted by using the \pkg{ggplot2}
+package. The \strong{plot_curves()} also allows users to make their own
+detailed plots from the data returned as a \code{data.frame}.
 }
 \details{
-The \strong{plot_curves} is a generic function that allows
+The \strong{plot_curves()} is a generic function that allows
 visualization of following six curves: population average distance curve,
 population average velocity curve, individual-specific distance curves,
 individual-specific velocity curves, unadjusted individual growth curves
 (i.e, observed growth curves), and the adjusted individual growth curves
-(adjusted for the model estimated random effects). The \strong{plot_curves}
-internally calls the \code{\link[=growthparameters]{growthparameters()}} function to estimate and summaries
-the distance and velocity curves and to estimate growth parameters such as
-the age at peak growth velocity (APGV). The \strong{plot_curves} in turn
-calls the \code{\link[=fitted_draws]{fitted_draws()}} or the \code{\link[=predict_draws]{predict_draws()}} functions to make
-inference from the posterior draws. Thus, \strong{plot_curves} allows
-plotting fitted or predicted curves. See \code{\link[=fitted_draws]{fitted_draws()}} and
-\code{\link[=predict_draws]{predict_draws()}} for details on these functions and the difference between
-fitted and predicted values.
+(adjusted for the model estimated random effects). The
+\strong{plot_curves()} internally calls the \code{\link[=growthparameters]{growthparameters()}} function to
+estimate and summaries the distance and velocity curves and to estimate
+growth parameters such as the age at peak growth velocity (APGV). The
+\strong{plot_curves()} in turn calls the \code{\link[=fitted_draws]{fitted_draws()}} or the
+\code{\link[=predict_draws]{predict_draws()}} functions to make inference from the posterior draws.
+Thus, \strong{plot_curves()} allows plotting fitted or predicted curves. See
+\code{\link[=fitted_draws]{fitted_draws()}} and \code{\link[=predict_draws]{predict_draws()}} for details on these functions and
+the difference between fitted and predicted values.
 }
 \examples{
 

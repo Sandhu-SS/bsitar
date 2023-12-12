@@ -1309,8 +1309,8 @@ An object of class \code{brmsfit, bsiatr}, that contains the posterior
 draws and other useful information about the model.
 }
 \description{
-The \strong{bsitar} is the main function in the \pkg{bsitar} package
-that fits the Bayesian super imposition by translation and rotation
+The \strong{bsitar()} is the main function in the \pkg{bsitar}
+package that fits the Bayesian super imposition by translation and rotation
 (\emph{SITAR}). The \emph{SITAR} model summarizes the growth curves from
 early childhood through the adulthood. The frequentist version of the
 \emph{SITAR} model can be fit by using an already available R package, the

@@ -65,19 +65,19 @@ Display conditional effects of one or more numeric and/or categorical
 predictors including two-way interaction effects.
 }
 \details{
-The \strong{plot_conditional_effects} function is a wrapper around
-the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}. The \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}
-function from the \pkg{brms} package can used to plot the fitted (distance)
-curve when response (e.g., height) is not transformed. However, when the
-outcome is log or square root transformed, the \link[brms:conditional_effects.brmsfit]{brms::conditional_effects}
-will return the fitted curve on the log or square root scale whereas the
-\strong{plot_conditional_effects} will return the fitted curve on the
-original scale. Furthermore, the \strong{plot_conditional_effects} also
+The \strong{plot_conditional_effects()} is a wrapper around the
+\code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}. The \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} function
+from the \pkg{brms} package can used to plot the fitted (distance) curve
+when response (e.g., height) is not transformed. However, when the outcome
+is log or square root transformed, the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} will
+return the fitted curve on the log or square root scale whereas the
+\strong{plot_conditional_effects()} will return the fitted curve on the
+original scale. Furthermore, the \strong{plot_conditional_effects()} also
 plots the velocity curve on the original scale after making required
 back-transformation. Apart from these differences, both these functions
-(\link[brms:conditional_effects.brmsfit]{brms::conditional_effects} and \strong{plot_conditional_effects} work in
-the same manner. In other words, user can specify all the arguments which
-are available in the \link[brms:conditional_effects.brmsfit]{brms::conditional_effects}.
+(\link[brms:conditional_effects.brmsfit]{brms::conditional_effects} and \strong{plot_conditional_effects()} work
+in the same manner. In other words, user can specify all the arguments
+which are available in the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}.
 }
 \examples{
 

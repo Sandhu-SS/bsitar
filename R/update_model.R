@@ -3,11 +3,11 @@
 
 #' Update model
 #'
-#' @description The \strong{update_model} function updates the \code{bgmfit}
-#'   model based on the new arguments specified by the user.
+#' @description The \strong{update_model()} re fits the model of class
+#'   \code{bgmfit} by user specified new updated arguments.
 #' 
-#' @details This is an adapted version of the \strong{update} function from the 
-#' \pkg{brms} package.
+#' @details This is an adapted version of the \strong{update()} function from  
+#' available the the\pkg{brms} package.
 #' 
 #' @param model An object of class \code{bgmfit}.
 #'

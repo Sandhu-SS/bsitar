@@ -2,8 +2,8 @@
 
 #'Fit Bayesian growth model (SITAR)
 #'
-#'@description The \strong{bsitar} is the main function in the \pkg{bsitar} package
-#'  that fits the Bayesian super imposition by translation and rotation
+#'@description The \strong{bsitar()} is the main function in the \pkg{bsitar} 
+#'  package that fits the Bayesian super imposition by translation and rotation
 #'  (\emph{SITAR}). The \emph{SITAR} model summarizes the growth curves from 
 #'  early childhood through the adulthood. The frequentist version of the
 #'  \emph{SITAR} model can be fit by using an already available R package, the

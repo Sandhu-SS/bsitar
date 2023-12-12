@@ -3,25 +3,25 @@
 
 #'Plot growth curves
 #'
-#'@description The \strong{plot_curves} provides visualization of six different
-#'  types of growth curves that are plotted by using the \pkg{ggplot2} package.
-#'  The \strong{plot_curves} also allows users to make their own detailed plots
-#'  from the data returned as a \code{data.frame}.
+#'@description The \strong{plot_curves()} provides visualization of six
+#'  different types of growth curves that are plotted by using the \pkg{ggplot2}
+#'  package. The \strong{plot_curves()} also allows users to make their own
+#'  detailed plots from the data returned as a \code{data.frame}.
 #'
-#'@details The \strong{plot_curves} is a generic function that allows
+#'@details The \strong{plot_curves()} is a generic function that allows
 #'  visualization of following six curves: population average distance curve,
 #'  population average velocity curve, individual-specific distance curves,
 #'  individual-specific velocity curves, unadjusted individual growth curves
 #'  (i.e, observed growth curves), and the adjusted individual growth curves
-#'  (adjusted for the model estimated random effects). The \strong{plot_curves}
-#'  internally calls the [growthparameters()] function to estimate and summaries
-#'  the distance and velocity curves and to estimate growth parameters such as
-#'  the age at peak growth velocity (APGV). The \strong{plot_curves} in turn
-#'  calls the [fitted_draws()] or the [predict_draws()] functions to make
-#'  inference from the posterior draws. Thus, \strong{plot_curves} allows
-#'  plotting fitted or predicted curves. See [fitted_draws()] and
-#'  [predict_draws()] for details on these functions and the difference between
-#'  fitted and predicted values.
+#'  (adjusted for the model estimated random effects). The
+#'  \strong{plot_curves()} internally calls the [growthparameters()] function to
+#'  estimate and summaries the distance and velocity curves and to estimate
+#'  growth parameters such as the age at peak growth velocity (APGV). The
+#'  \strong{plot_curves()} in turn calls the [fitted_draws()] or the
+#'  [predict_draws()] functions to make inference from the posterior draws.
+#'  Thus, \strong{plot_curves()} allows plotting fitted or predicted curves. See
+#'  [fitted_draws()] and [predict_draws()] for details on these functions and
+#'  the difference between fitted and predicted values.
 #'
 #'@param model An object of class \code{bgmfit}.
 #'

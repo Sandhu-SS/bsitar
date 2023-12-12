@@ -159,19 +159,19 @@ An array of predicted mean response values. See \link[brms:fitted.brmsfit]{brms:
 for details.
 }
 \description{
-The \strong{fitted_draws} function is a wrapper around the
+The \strong{fitted_draws()} is a wrapper around the
 \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} function to obtain fitted values (and their summary)
 from the posterior draws. See \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} for details.
 }
 \details{
-The \strong{fitted_draws} function computed the fitted values from
+The \strong{fitted_draws()} computes the fitted values from
 the posterior draws. The \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} function from the
 \pkg{brms} package can used to get the fitted (distance) values when
 outcome (e.g., height) is untransformed. However, when the outcome is log
 or square root transformed, the \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} function will
 return the fitted curve on the log or square root scale whereas the
-\strong{fitted_draws} function returns the fitted values on the original
-scale. Furthermore, the \strong{fitted_draws} also compute the first
+\strong{fitted_draws()} function returns the fitted values on the original
+scale. Furthermore, the \strong{fitted_draws()} also compute the first
 derivative of (velocity) that too on the original scale after making
 required back-transformation. Except for these differences, both these
 functions (i.e., \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and \code{\link[=fitted_draws]{fitted_draws()}}) work in the

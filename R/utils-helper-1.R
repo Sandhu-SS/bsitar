@@ -1,7 +1,7 @@
 
 
 
-#' An internal function to get arguments of a function
+#' An internal function to get arguments from the call
 #'
 #' @param arguments A list of default function arguments.
 #' @param xcall A character string specifying the name of the calling function.

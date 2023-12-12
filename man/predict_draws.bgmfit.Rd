@@ -159,20 +159,20 @@ An array of predicted response values. See \code{\link[brms:predict.brmsfit]{brm
 for details.
 }
 \description{
-The \strong{predict_draws} function is a wrapper around the
+The \strong{predict_draws()} is a wrapper around the
 \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function to obtain predicted values (and their
 summary) from the posterior distribution. See \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for
 details.
 }
 \details{
-The \strong{fitted_draws} function computed the fitted values from
-the posterior distribution. The \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function
+The \strong{predict_draws()} function computed the fitted values
+from the posterior distribution. The \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function
 from the \pkg{brms} package can used to get the predicted (distance) values
 when outcome (e.g., height) is untransformed. However, when the outcome is
 log or square root transformed, the \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function will
 return the fitted curve on the log or square root scale whereas the
-\strong{predict_draws} function returns the fitted values on the original
-scale. Furthermore, the \strong{predict_draws} also compute the first
+\strong{predict_draws()} function returns the fitted values on the original
+scale. Furthermore, the \strong{predict_draws()} also compute the first
 derivative of (velocity) that too on the original scale after making
 required back-transformation. Except for these differences, both these
 functions (i.e., \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} and \code{\link[=predict_draws]{predict_draws()}}) work in

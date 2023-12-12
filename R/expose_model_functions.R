@@ -3,7 +3,7 @@
 
 #' Expose user defined Stan function for post-processing of posterior samples
 #' 
-#' @description The \strong{expose_model_functions} function is a wrapper around
+#' @description The \strong{expose_model_functions()} is a wrapper around
 #'   the [rstan::expose_stan_functions()] function which is used to expose the
 #'   use defined \code{Stan} functions. These exposed functions are required
 #'   during the post-processing. See [rstan::expose_stan_functions()] for

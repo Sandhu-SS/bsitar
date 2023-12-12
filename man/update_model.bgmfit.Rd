@@ -29,12 +29,12 @@ An updated model of class \code{brmsfit}, that contains the
 posterior draws and other useful information about the model.
 }
 \description{
-The \strong{update_model} function updates the \code{bgmfit}
-model based on the new arguments specified by the user.
+The \strong{update_model()} re fits the model of class
+\code{bgmfit} by user specified new updated arguments.
 }
 \details{
-This is an adapted version of the \strong{update} function from the
-\pkg{brms} package.
+This is an adapted version of the \strong{update()} function from
+available the the\pkg{brms} package.
 }
 \examples{
 

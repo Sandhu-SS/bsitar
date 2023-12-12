@@ -1,14 +1,14 @@
 
 
 
-#' Estimate growth parameter 
+#' Estimate growth parameters from the model fit 
 #'
-#' @description The \strong{growthparameters} function computes population
+#' @description The \strong{growthparameters()} computes population
 #'   average and and individual-specific growth parameters (such as age at peak
 #'   growth velocity) and the uncertainty (standard error, SE and the credible
 #'   interval, CI).
 #'
-#' @details The \strong{growthparameters} function internally calls the
+#' @details The \strong{growthparameters()} internally calls the
 #'   [fitted_draws()] or the [predict_draws()] function to estimate the first
 #'   derivative based growth parameters for each posterior draw. The growth
 #'   parameters estimated are age at peak growth velocity (APGV), peak growth

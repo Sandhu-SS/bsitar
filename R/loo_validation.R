@@ -2,7 +2,7 @@
 
 #' Perform leave-one-out (loo) cross-validation
 #' 
-#' @description The \strong{loo_validation} function is a wrapper around the
+#' @description The \strong{loo_validation()} is a wrapper around the
 #'   [brms::loo()] function to perform approximate leave-one-out
 #'   cross-validation based on the posterior likelihood. See [brms::loo()] for
 #'   details.
@@ -94,7 +94,6 @@ loo_validation.bgmfit <-
         }
       }
       for (oalli in oalli_c) {
-        print(oalli)
         assign(oalli, oall[[oalli]], envir = tempgenv)
       }
       assign(o[[1]], getfunx, envir = tempgenv)

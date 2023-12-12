@@ -1,9 +1,8 @@
 
 
-#' Perform posterior predictive distribution check
+#' Perform posterior predictive distribution checks
 #' 
-#' @details The \strong{plot_ppc} function is a wrapper around 
-#' the [brms::pp_check()]. 
+#' @details The \strong{plot_ppc()} is a wrapper around the [brms::pp_check()].
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
@@ -84,7 +83,6 @@ plot_ppc.bgmfit <-
         }
       }
       for (oalli in oalli_c) {
-        print(oalli)
         assign(oalli, oall[[oalli]], envir = tempgenv)
       }
       assign(o[[1]], getfunx, envir = tempgenv)

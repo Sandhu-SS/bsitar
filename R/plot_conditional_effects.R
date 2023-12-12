@@ -2,19 +2,19 @@
 
 #' Visualize conditional effects of predictor
 #'
-#' @details The \strong{plot_conditional_effects} function is a wrapper around
-#'   the [brms::conditional_effects()]. The [brms::conditional_effects()]
-#'   function from the \pkg{brms} package can used to plot the fitted (distance)
-#'   curve when response (e.g., height) is not transformed. However, when the
-#'   outcome is log or square root transformed, the [brms::conditional_effects]
-#'   will return the fitted curve on the log or square root scale whereas the
-#'   \strong{plot_conditional_effects} will return the fitted curve on the
-#'   original scale. Furthermore, the \strong{plot_conditional_effects} also
+#' @details The \strong{plot_conditional_effects()} is a wrapper around the
+#'   [brms::conditional_effects()]. The [brms::conditional_effects()] function
+#'   from the \pkg{brms} package can used to plot the fitted (distance) curve
+#'   when response (e.g., height) is not transformed. However, when the outcome
+#'   is log or square root transformed, the [brms::conditional_effects()] will
+#'   return the fitted curve on the log or square root scale whereas the
+#'   \strong{plot_conditional_effects()} will return the fitted curve on the
+#'   original scale. Furthermore, the \strong{plot_conditional_effects()} also
 #'   plots the velocity curve on the original scale after making required
 #'   back-transformation. Apart from these differences, both these functions
-#'   ([brms::conditional_effects] and \strong{plot_conditional_effects} work in
-#'   the same manner. In other words, user can specify all the arguments which
-#'   are available in the [brms::conditional_effects].
+#'   ([brms::conditional_effects] and \strong{plot_conditional_effects()} work
+#'   in the same manner. In other words, user can specify all the arguments
+#'   which are available in the [brms::conditional_effects()].
 #'   
 #' @param model An object of class \code{bgmfit}. function.
 #'
@@ -145,7 +145,6 @@ plot_conditional_effects.bgmfit <-
         }
       }
       for (oalli in oalli_c) {
-        print(oalli)
         assign(oalli, oall[[oalli]], envir = tempgenv)
       }
       assign(o[[1]], getfunx, envir = tempgenv)
