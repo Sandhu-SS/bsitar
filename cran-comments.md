@@ -79,7 +79,10 @@ Note 2 seems to be a recurring issue on Rhub [issue #548](https://github.com/r-h
 	policies.
 
     Response: 
-        Corrected. Changed from GlobalEnv to parent.frame()
+        Corrected. Even earlier also, .GlobalEnv was not modified unless user 
+        opted to move objects to the .GlobalEnv environment via setting the 
+        option usesavedfuns = TRUE which by default is FALSE. 
+        However, as reviewer suggested, the .GlobalEnv is completely removed. 
 
 
 3. Comment: 

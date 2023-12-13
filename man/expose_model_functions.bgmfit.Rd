@@ -40,8 +40,8 @@ which will set default environment \code{parent.frame()}.}
 \code{\link[rstan:expose_stan_functions]{rstan::expose_stan_functions()}} function.}
 }
 \value{
-An object of class \code{bgmfit} with exposed user-defined Stan
-functions when \code{returnobj=TRUE}, otherwise invisible \code{NULL}.
+An object of class \code{bgmfit} if \code{returnobj=TRUE}, otherwise
+invisible \code{NULL}.
 }
 \description{
 The \strong{expose_model_functions()} is a wrapper around
