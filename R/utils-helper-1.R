@@ -120,8 +120,8 @@ expose_optimize_fit <- function(model,
 plot_optimize_fit <- function(model, 
                               subset_list = NULL, 
                               what = "plot", 
-                              expose_function = F, 
-                              print= T, ...) {
+                              expose_function = FALSE, 
+                              print= TRUE, ...) {
   
   optimize_fit_models <-  model
   dots <- list(...)
@@ -1835,8 +1835,7 @@ check_and_install_if_not_installed <- function(pkgs,
   )
   required_pkgs <- names(which(successfully_loaded == FALSE))
   
-  # print(required_pkgs)
-  
+
   if(!is.null(getfun)) {
     if(is.symbol(getfun)) getfun <- deparse(getfun)
     message('Checking required packages for ', getfun, " ",
@@ -2036,19 +2035,19 @@ sample_n_of_groups <- function(data, size, ...) {
 #' @return A list comprised of exposed functions.
 #' @noRd
 #'
-check_if_functions_exists <- function(model, o, xcall = NULL, msg = TRUE, ...) {
+check_if_functions_exists <- function(model, o, xcall = NULL, verbose = TRUE, ...) {
   if(exists(o[[1]], mode = "function", envir = globalenv())) {
-    envglobal <- TRUE
+    envgtf <- TRUE
   } else {
-    envglobal <- FALSE
+    envgtf <- FALSE
   }
   
   if(is.null(xcall)) {
     xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]][1]
   }
   
-  if(msg) {
-    if(!envglobal) {
+  if(verbose) {
+    if(!envgtf) {
       classname <- attr(model, 'class')[2]
       calname.fun <- xcall # match.call()[1]
       calname.fun <- gsub(paste0(".", classname), "", calname.fun)
@@ -2057,10 +2056,8 @@ check_if_functions_exists <- function(model, o, xcall = NULL, msg = TRUE, ...) {
               "'", calname.fun, "()'", " function",
               "\n ",
               "(See '?expose_model_functions()' for details)")
-      cat(m)
-      
+      if(verbose) message(m)
     }
   }
-  
-  return(envglobal)
+  return(envgtf)
 }

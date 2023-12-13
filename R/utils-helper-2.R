@@ -2818,7 +2818,7 @@ set_init_gr_effects <- function(xscode,
       } # if(grepl("r", parm_c, fixed = T)) {
     } # if(parameterization == 'cp') {
     
-    
+   
     
     if (grepl("L", parm_c, fixed = T)) {
       if (length(str_d_) == 1) {
@@ -2827,9 +2827,10 @@ set_init_gr_effects <- function(xscode,
         diag(out) <- 1
       }
       if (length(str_d_) == 2) {
-        dim1 <- xsdata[[str_d_[1]]]
-        dim2 <- xsdata[[str_d_[2]]]
-        outxx <- array(0, dim = c(dim2, dim1, dim1))
+        dim1 <- xsdata[[str_d_[1]]] 
+        dim2 <- xsdata[[str_d_[2]]] 
+        # outxx <- array(0, dim = c(dim2, dim1, dim1))
+        outxx <- array(0, dim = c(dim1, dim2, dim2)) # 13 12 23
         for (i in 1:dim(outxx)[2]) {
           outxx[, i, i] <- 1
         }

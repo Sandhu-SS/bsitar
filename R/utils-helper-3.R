@@ -3238,8 +3238,6 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
-  # print(setbformula); stop()
-  
   attr(setbformula, "list_out") <- as.list(list_out)
   
   return(setbformula)
@@ -3746,9 +3744,7 @@ prepare_function <- function(x,
         }
         out <- gsub("return", out_return_p, out, fixed = T)
       }
-      # print(cat(out))
-      # stop()
-      ####
+      
       return(out)
     }
   
@@ -3957,10 +3953,7 @@ prepare_function <- function(x,
       fullabcsnames_v_for_mat <-
         paste("vector", fullabcsnames_for_mat, collapse = " ")
     }
-    
-    # print(fullabcsnames_v_for_mat)
-    # stop()
-    
+
     if (grepl("b", fixedsi, fixed = T) &
         grepl("c", fixedsi, fixed = T)) {
       defineEx <- paste0("(Xm-b).*exp(c)")
@@ -4280,8 +4273,6 @@ prepare_function <- function(x,
       rcsfunmat <- paste0(rcsfunmat, "\n", 'return Spl;')
       rcsfunmat <- paste0(rcsfunmat, '\n}')
       funmats <- paste0(funmats, "\n", rcsfunmat)
-      # print(cat(rcsfunmat))
-      # stop()
     }
     
     if (add_rcsfunmatqr) {
@@ -4491,8 +4482,6 @@ prepare_function <- function(x,
         gsub('{', ';', rcsfunmatqrinv_genquant, fixed = T)
       rcsfunmatqrinv_genquant <-
         paste0(rcsfunmatqrinv_genquant, '\n', addcn_c2)
-      # print(cat(rcsfunmatqrinv_genquant))
-      # stop()
     } # if(add_rcsfunmatqrinv_genquant) {
     
    

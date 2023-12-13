@@ -12777,11 +12777,6 @@ prepare_initials <- function(init_argument,
   if (!exists('out_list'))
     out_list <- NULL
   
-  
-  # print(out_list)
-  # print(str(out_list))
-  # stop()
-  
   out_list
 }
 
@@ -12870,6 +12865,9 @@ prepare_initials <- function(init_argument,
 #'
 #'@param cores The number of cores to used in processing (default \code{1}).
 #' This passed to the [brms::add_criterion()].
+#' 
+#' @param verbose A logical (default \code{FALSE}) to indicate whether to print
+#' information.
 #'
 #'@param envir A environment. Default is \code{glonalenv()}.
 #'
@@ -12899,6 +12897,7 @@ optimize_model.bgmfit <- function(model,
                                   byresp = FALSE,
                                   digits = 2,
                                   cores = 1,
+                                  verbose = FALSE,
                                   envir = globalenv(),
                                   ...) {
   
@@ -13093,7 +13092,7 @@ optimize_model.bgmfit <- function(model,
     if (!is.null(add_fit_criteria)) {
       what_ <- paste(add_fit_criteria, collapse = ", ")
       message(" Adding", " ", what_, " ", "...")
-      cat("\n")
+      if(verbose) cat("\n")
       if (is.na(fit$model_info$univariate_by) |
           !fit$model_info$multivariate) {
         if (!fit$model_info$multivariate) {
@@ -13149,8 +13148,8 @@ optimize_model.bgmfit <- function(model,
     
     if (!is.null(add_bayes_R)) {
       what_ <- paste(add_bayes_R, collapse = ", ")
-      message(" Adding", " ", what_, " ", "...")
-      cat("\n")
+      if(verbose) message(" Adding", " ", what_, " ", "...")
+      if(verbose) cat("\n")
       if (is.na(fit$model_info$univariate_by)) {
         if (!fit$model_info$multivariate) {
           aci_names <- paste0(add_bayes_R, '')
@@ -13530,7 +13529,6 @@ optimize_model.bgmfit <- function(model,
             " (total ",
             nrow(optimize_df_x_y),
             " models)")
-    # cat("\n")
     exe_row <- optimize_df_x_y[.x, ]
     df <- levels(droplevels(exe_row$df))
     xfun <- levels(droplevels(exe_row$xfun))
@@ -13558,9 +13556,12 @@ optimize_model.bgmfit <- function(model,
     else
       yfun_print <- yfun
     
-    cat("\n")
-    cat(paste0("df = ", df, "; xfun = ", xfun_print, "; yfun = ", yfun_print),
-        "\n")
+    if(verbose) {
+      cat("\n")
+      cat(paste0("df = ", df, "; xfun = ", xfun_print, "; yfun = ", yfun_print),
+          "\n")
+    }
+    
     
     optimization_info <-
       paste0("df = ", df, "; xfun = ", xfun_print, "; yfun = ", yfun_print)
@@ -13614,11 +13615,13 @@ optimize_model.bgmfit <- function(model,
     
     
     if(all_same_args) {
-      cat("\n")
-      cat("The arguemnets supplied for optimization are identical to the", 
-          "\n ",
-          "original model fit. Therefore, returning the original model fit")
-      cat("\n")
+      if(verbose) {
+        cat("\n")
+        cat("The arguemnets supplied for optimization are identical to the", 
+            "\n ",
+            "original model fit. Therefore, returning the original model fit")
+        cat("\n")
+      }
       return(model)
     } else if(!all_same_args) {
       user_call   <- calling

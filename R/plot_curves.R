@@ -1653,12 +1653,11 @@ plot_curves.bgmfit <- function(model,
   
   
   
-  # Not using options() to restore warn but rather using on.exit()
+  # Not using options() to restore warn
   
   # defaultW <- getOption("warn")
-  
-  oldopts <- options(warn = -1)
-  on.exit(options(oldopts))
+  # oldopts <- options(warn = -1)
+  # on.exit(options(oldopts))
   
   if (grepl("d", opt, ignore.case = T) |
       grepl("v", opt, ignore.case = T)) {

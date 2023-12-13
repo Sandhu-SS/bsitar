@@ -146,7 +146,7 @@ fitted_draws.bgmfit <-
     
     if(usesavedfuns) {
       setcleanup <- TRUE
-      tempgenv <- .GlobalEnv
+      tempgenv <- parent.frame()
       oalli_c <- c()
       oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
       for (oalli in names(oall)) {
@@ -164,7 +164,7 @@ fitted_draws.bgmfit <-
         return(invisible(NULL))
       } else {
         setcleanup <- TRUE
-        tempgenv <- .GlobalEnv
+        tempgenv <- parent.frame()
         if(exists(o[[1]], envir = tempgenv)) {
           assign(o[[1]], getfunx, envir = tempgenv)
         } else {
@@ -209,9 +209,10 @@ fitted_draws.bgmfit <-
     
     
     if(setcleanup) {
+      tempgenv <- parent.frame()
       for (oalli in names(oall)) {
-        if(exists(oalli, envir = .GlobalEnv )) {
-          remove(list=oalli, envir = .GlobalEnv)
+        if(exists(oalli, envir = tempgenv )) {
+          remove(list=oalli, envir = tempgenv)
         }
       }
     }

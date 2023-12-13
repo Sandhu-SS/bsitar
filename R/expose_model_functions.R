@@ -30,8 +30,8 @@
 #' @param ... Additional arguments passed to the
 #'   [rstan::expose_stan_functions()] function.
 #'
-#' @return An object of class \code{bgmfit} with exposed user-defined Stan
-#'   functions when \code{returnobj=TRUE}, otherwise invisible \code{NULL}.
+#' @return An object of class \code{bgmfit} if \code{returnobj=TRUE}, otherwise
+#'   invisible \code{NULL}.
 #' 
 #' @export expose_model_functions.bgmfit
 #' @export

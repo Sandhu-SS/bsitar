@@ -67,52 +67,31 @@ Note 2 seems to be a recurring issue on Rhub [issue #548](https://github.com/r-h
 
 # Reviewer's comments
 1. Comment: 
-     "Please do not start the description with "This package", package name,
-      title or similar."
-
-   Response: 
-     Edited, as suggested
-
-2. Comment: 
       "You are setting options(warn=-1) in your function. This is not allowed.
 	Please rather use suppressWarnings() if really needed. -> R/plot_curves.R
 
-	Please make sure that you do not change the user's options, par or
-	working directory. If you really have to do so within functions, please
-	ensure with an *immediate* call of on.exit() that the settings are reset
-	when the function is exited.
-	e.g.:...
-	old <- options() # code line i
-	on.exit(options(old))# code line i+1
-	...
-	options(...)=# somewhere after
+    Response: 
+        Changed, as suggested. Removed options(warn=-1) -> R/plot_curves.R 
 
-	e.g.: R/bgm.R; R/plot_curves.R
-	If you're not familiar with the function, please check ?on.exit. This
-	function makes it possible to restore options before exiting a function
-	even if the function breaks. Therefore it needs to be called immediately
-	after the option change within a function."
+
+2. Comment: 
+	"Please do not modifiy the .GlobalEnv. This is not allowed by the CRAN
+	policies.
 
     Response: 
-        Changed, as suggested. Now using on.exit(options(oldopts)) to 
-        reset options for both R/bgm.R; R/plot_curves.R  
+        Corrected. Changed from GlobalEnv to parent.frame()
 
 
 3. Comment: 
-	"Please do not modifiy the .GlobalEnv. This is not allowed by the CRAN
-	policies.
-	->R/fitted_draws.R, R/growthparameters.R, R/loo_validation.R,
-	R/plot_conditional_effects.R, R/plot_curves.R, R/plot_ppc.R,
-	R/predict_draws.R, R/utils-helper-2.R, R/utils-helper-4.R"
+	"You write information messages to the console that cannot be easily
+	suppressed.
+	It is more R like to generate objects that can be used to extract the
+	information a user is interested in, and then print() that object.
+	Instead of print()/cat() rather use message()/warning() or
+	if(verbose)cat(..) (or maybe stop()) if you really have to write text to
+	the console. (except for print, summary, interactive functions) ->
+	R/utils-helper-4.R,"
 
    Response: 
-        Corrected. 
-
-4. Comment: 
-	"Please do not install packages in your functions, examples or vignette.
-	This can make the functions,examples and cran-check very slow. ->
-	R/utils-helper-1.R"
-
-   Response: 
-	Corrected, the packages are not installed in function (R/utils-helper-1.R).
+	Corrected. Now using if(verbose)cat(..) -> R/utils-helper-4.R
 
