@@ -53,46 +53,31 @@ plot_ppc.bgmfit <-
                              deriv = deriv,
                              all = FALSE)
     
-    oall <-
-      post_processing_checks(model = model,
-                             xcall = match.call(),
-                             resp = resp,
-                             envir = envir,
-                             deriv = deriv,
-                             all = TRUE)
-
-    
-    getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
-    
     if(deriv == 0) {
       getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-    } else if(deriv > 0) {
-      stop("For loo_validation, the 'deriv' argument must be set as 0")
+      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     }
     
     
     
-    if(usesavedfuns) {
-      setcleanup <- TRUE
-      tempgenv <- parent.frame()
-      oalli_c <- c()
-      oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
-      for (oalli in names(oall)) {
-        if(!grepl(o[[1]], oalli)) {
-          oalli_c <- c(oalli_c, oalli)
-        }
-      }
-      for (oalli in oalli_c) {
-        assign(oalli, oall[[oalli]], envir = tempgenv)
-      }
-      assign(o[[1]], getfunx, envir = tempgenv)
-    } else if(!usesavedfuns) {
-      setcleanup <- FALSE
+    
+    if(!usesavedfuns) {
       if(is.null(check_if_functions_exists(model, o, model$xcall))) {
         return(invisible(NULL))
-      } else {
-        setcleanup <- TRUE
-        tempgenv <- check_if_functions_exists(model, o, model$xcall)
+      }
+    }
+    
+    
+    if(usesavedfuns) {
+      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
+        oall <-
+          post_processing_checks(model = model,
+                                 xcall = match.call(),
+                                 resp = resp,
+                                 envir = envir,
+                                 deriv = deriv,
+                                 all = TRUE)
+        tempgenv <- envir
         oalli_c <- c()
         oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
         for (oalli in names(oall)) {
@@ -107,11 +92,10 @@ plot_ppc.bgmfit <-
       }
     }
     
-    
 
     . <- brms::pp_check(model, resp = resp, ...)
     
-    assign(o[[1]], getfunx1always, environment(getfunx1always))
+    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     if(!is.null(clearenvfuns)) {
       if(!is.logical(clearenvfuns)) {
@@ -122,7 +106,7 @@ plot_ppc.bgmfit <-
     }
     
     if(setcleanup) {
-      tempgenv <- parent.frame()
+      tempgenv <- envir
       for (oalli in names(oall)) {
         if(exists(oalli, envir = tempgenv )) {
           remove(list=oalli, envir = tempgenv)

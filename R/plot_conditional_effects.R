@@ -106,55 +106,44 @@ plot_conditional_effects.bgmfit <-
                              deriv = deriv,
                              all = FALSE)
     
-    oall <-
-      post_processing_checks(model = model,
-                             xcall = match.call(),
-                             resp = resp,
-                             envir = envir,
-                             deriv = deriv,
-                             all = TRUE)
-    
-    getfunx1always <- model$model_info[['exefuns']][[o[[1]]]]
-    
-
-    if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") deriv_model<- FALSE
-    }
-    
     if(deriv == 0) {
       getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-    } else if(deriv > 0) {
-      if(deriv_model) {
-        getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-      } else if(!deriv_model) {
+      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    }
+    
+    if(!deriv_model) {
+      if(deriv == 1 | deriv == 2) {
         summary <- FALSE
         getfunx <- model$model_info[['exefuns']][[o[[1]]]]
+        assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
       }
     }
     
+    if(deriv_model) {
+      if(deriv == 1 | deriv == 2) {
+        getfunx <- model$model_info[['exefuns']][[o[[2]]]]
+        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+      }
+    }
+    
+    
+    if(!usesavedfuns) {
+      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
+        return(invisible(NULL))
+      }
+    }
     
     
     if(usesavedfuns) {
-      setcleanup <- TRUE
-      tempgenv <- parent.frame()
-      oalli_c <- c()
-      oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
-      for (oalli in names(oall)) {
-        if(!grepl(o[[1]], oalli)) {
-          oalli_c <- c(oalli_c, oalli)
-        }
-      }
-      for (oalli in oalli_c) {
-        assign(oalli, oall[[oalli]], envir = tempgenv)
-      }
-      assign(o[[1]], getfunx, envir = tempgenv)
-    } else if(!usesavedfuns) {
-      setcleanup <- FALSE
       if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        return(invisible(NULL))
-      } else {
-        setcleanup <- TRUE
-        tempgenv <- check_if_functions_exists(model, o, model$xcall)
+        oall <-
+          post_processing_checks(model = model,
+                                 xcall = match.call(),
+                                 resp = resp,
+                                 envir = envir,
+                                 deriv = deriv,
+                                 all = TRUE)
+        tempgenv <- envir
         oalli_c <- c()
         oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
         for (oalli in names(oall)) {
@@ -192,7 +181,7 @@ plot_conditional_effects.bgmfit <-
      . <- brms::conditional_effects(model, resp = resp, ...)
     }
     
-    assign(o[[1]], getfunx1always, environment(getfunx1always))
+    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     if(!is.null(clearenvfuns)) {
       if(!is.logical(clearenvfuns)) {
@@ -203,7 +192,7 @@ plot_conditional_effects.bgmfit <-
     }
     
     if(setcleanup) {
-      tempgenv <- parent.frame()
+      tempgenv <- envir
       for (oalli in names(oall)) {
         if(exists(oalli, envir = tempgenv )) {
           remove(list=oalli, envir = tempgenv)
