@@ -2059,5 +2059,12 @@ check_if_functions_exists <- function(model, o, xcall = NULL, verbose = TRUE, ..
       if(verbose) message(m)
     }
   }
-  return(envgtf)
+  
+  if(!envgtf) {
+    en <- NULL
+  } else if(envgtf) {
+    en <- environment(eval(parse(text = o[[1]])))
+  }
+  
+  return(en)
 }

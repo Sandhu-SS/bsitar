@@ -91,7 +91,6 @@ fitted_draws.bgmfit <-
       envir <- parent.frame()
     }
     
-    
     if(!is.null(model$model_info$decomp)) {
       if(model$model_info$decomp == "QR") deriv_model<- FALSE
     }
@@ -143,6 +142,7 @@ fitted_draws.bgmfit <-
     }
     
     
+ 
     
     if(usesavedfuns) {
       setcleanup <- TRUE
@@ -160,16 +160,22 @@ fitted_draws.bgmfit <-
       assign(o[[1]], getfunx, envir = tempgenv)
     } else if(!usesavedfuns) {
       setcleanup <- FALSE
-      if(!check_if_functions_exists(model, o, model$xcall)) {
+      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
         return(invisible(NULL))
       } else {
         setcleanup <- TRUE
-        tempgenv <- parent.frame()
-        if(exists(o[[1]], envir = tempgenv)) {
-          assign(o[[1]], getfunx, envir = tempgenv)
-        } else {
-          assign(o[[1]], getfunx, envir = environment(getfunx))
+        tempgenv <- check_if_functions_exists(model, o, model$xcall)
+        oalli_c <- c()
+        oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
+        for (oalli in names(oall)) {
+          if(!grepl(o[[1]], oalli)) {
+            oalli_c <- c(oalli_c, oalli)
+          }
         }
+        for (oalli in oalli_c) {
+          assign(oalli, oall[[oalli]], envir = tempgenv)
+        }
+        assign(o[[1]], getfunx, envir = tempgenv)
       }
     }
     
