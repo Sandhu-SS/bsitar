@@ -22,9 +22,7 @@
 #'   [brms::fitted.brmsfit()].
 #' 
 #' @inherit growthparameters.bgmfit params
-#' 
 #' @inherit plot_conditional_effects.bgmfit params
-#' 
 #' @inherit brms::fitted.brmsfit params
 #' 
 #' @param ... Additional arguments passed to the [brms::fitted.brmsfit()] 

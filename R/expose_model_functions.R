@@ -24,8 +24,7 @@
 #'   return the model object. When \code{expose=TRUE}, then it is advisable to
 #'  set \code{returnobj=TRUE} also.
 #' 
-#' @param envir Environment of function evaluation. The default is \code{NULL}
-#' which will set default environment \code{parent.frame()}.
+#' @inherit growthparameters.bgmfit params
 #' 
 #' @param ... Additional arguments passed to the
 #'   [rstan::expose_stan_functions()] function.

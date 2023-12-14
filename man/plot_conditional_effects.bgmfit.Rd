@@ -49,7 +49,12 @@ internal use when testing the function and not used routinely.}
 \item{clearenvfuns}{A logical (default \code{FALSE}) to indicate whether to
 clear the exposed function from the environment.}
 
-\item{envir}{The calling environment. Deafault is set to \code{globalenv()}.}
+\item{envir}{Environment of function evaluation. The default is \code{NULL}
+which will set \code{parent.frame()} as default environment. Note that
+since most of post processing functions are based on \pkg{brms}, it is
+strongly advised to set \code{globalenv()} (or \code{.GlobalEnv}) as
+environment. This is particularly true for derivatives such as velocity
+curve.}
 
 \item{...}{Additional arguments passed to the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}
 function. Please see \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}} for details.}

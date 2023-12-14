@@ -38,8 +38,6 @@
 #'   distance curve. When model is fit with \code{decomp = 'QR'}, the only
 #'   approach available to estimate derivatives by the  differentiation of the
 #'   distance curve.
-#'
-#' @param envir The calling environment. Deafault is set to \code{globalenv()}.
 #' 
 #' @inherit brms::conditional_effects description
 #' @inherit growthparameters.bgmfit params

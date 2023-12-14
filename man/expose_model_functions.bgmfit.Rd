@@ -34,7 +34,11 @@ return the model object. When \code{expose=TRUE}, then it is advisable to
 set \code{returnobj=TRUE} also.}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
-which will set default environment \code{parent.frame()}.}
+which will set \code{parent.frame()} as default environment. Note that
+since most of post processing functions are based on \pkg{brms}, it is
+strongly advised to set \code{globalenv()} (or \code{.GlobalEnv}) as
+environment. This is particularly true for derivatives such as velocity
+curve.}
 
 \item{...}{Additional arguments passed to the
 \code{\link[rstan:expose_stan_functions]{rstan::expose_stan_functions()}} function.}
