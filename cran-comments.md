@@ -1,6 +1,4 @@
 
-This is a new submission, therefore 1 note across all test environments.
-
 # Test environments (a total four)
  1. Windows 11 x64 (build 22621)
      	on devtools::check()
@@ -61,40 +59,3 @@ Two notes:
  Note 2. Skipping checking HTML validation: no command 'tidy' found
 
 Note 2 seems to be a recurring issue on Rhub [issue #548](https://github.com/r-hub/rhub/issues/548), and therefore can be ignored  
-
-
-
-
-# Reviewer's comments
-1. Comment: 
-      "You are setting options(warn=-1) in your function. This is not allowed.
-	Please rather use suppressWarnings() if really needed. -> R/plot_curves.R
-
-    Response: 
-        Changed, as suggested. Removed options(warn=-1) -> R/plot_curves.R 
-
-
-2. Comment: 
-	"Please do not modifiy the .GlobalEnv. This is not allowed by the CRAN
-	policies.
-
-    Response: 
-        Corrected. Even earlier also, .GlobalEnv was not modified unless user 
-        opted to move objects to the .GlobalEnv environment via setting the 
-        option usesavedfuns = TRUE which by default is FALSE. 
-        However, as reviewer suggested, the .GlobalEnv is completely removed. 
-
-
-3. Comment: 
-	"You write information messages to the console that cannot be easily
-	suppressed.
-	It is more R like to generate objects that can be used to extract the
-	information a user is interested in, and then print() that object.
-	Instead of print()/cat() rather use message()/warning() or
-	if(verbose)cat(..) (or maybe stop()) if you really have to write text to
-	the console. (except for print, summary, interactive functions) ->
-	R/utils-helper-4.R,"
-
-   Response: 
-	Corrected. Now using if(verbose)cat(..) -> R/utils-helper-4.R
-

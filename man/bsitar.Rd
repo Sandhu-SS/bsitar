@@ -170,17 +170,17 @@ bsitar(
 )
 }
 \arguments{
-\item{x}{Specify predictor variable (typically age in years). For
-\code{univariate} model, the \code{x} is a single variable whereas for
-\code{univariate_by} and \code{multivariate} models, the \code{x} can be
-same for sub models, or different for each sub model. For example,
-when fitting a bivariate model, the \code{x = list(x1, x2)} specifies that
-\code{x1} is the predictor variable for the first sub model, and \code{x2}
-for the second sub model. To specify \code{x1} as a common predictor
+\item{x}{Predictor variable (typically age in years). For \code{univariate}
+model, the \code{x} is a single variable whereas for \code{univariate_by}
+and \code{multivariate} models, the \code{x} can be same for sub models, or
+different for each sub model. For example, when fitting a bivariate model,
+the \code{x = list(x1, x2)} specifies that \code{x1} is the predictor
+variable for the first sub model, and \code{x2} for the second sub model. To
+specify \code{x1} as a common predictor
 variable for both sub models, the argument \code{x} is defined as \code{x =
  list(x1)} or simply \code{x = x1}.}
 
-\item{y}{Specify response variable (e.g., repeated height measurements). For
+\item{y}{Response variable (e.g., repeated height measurements). For
 \code{univariate} and \code{univariate_by} models, the \code{y} is specified
 as a single variable. For the \code{univariate_by} model, the response
 variables for sub models are created internally and named after the factor
@@ -195,25 +195,25 @@ model. Note that for \code{multivariate} model, data are not stacked but
 rather response vectors are separate variables in the \code{data} and are of
 same length.}
 
-\item{id}{Specify a variable that uniquely identifies the individuals in the
-data frame. For \code{univariate_by} and \code{multivariate} models, the
-\code{id} can be same for sub models (typically) or different for each sub
-model (see argument \code{x} for details on setting different arguments for
-sub models).}
+\item{id}{A factor variable that uniquely identifies the groups (e.g.,
+individuals) in the data frame. For \code{univariate_by} and
+\code{multivariate} models, the \code{id} can be same for sub models
+(typically) or different for each sub model (see argument \code{x} for
+details on setting different arguments for sub models).}
 
-\item{data}{Data frame containing variables (such as \code{x}, \code{y},
-\code{id} etc.).}
+\item{data}{Data frame containing variables such as \code{x}, \code{y},
+\code{id} etc.}
 
-\item{df}{Specify the degrees of freedom for the natural cubic spline design
-matrix (default \code{4}). The \code{df} is internally used to construct the
-vector of knots (quantiles of \code{x} distribution) that are then used
-in the construction of the spline design matrix. For \code{univariate_by}
+\item{df}{Degrees of freedom for the natural cubic spline design matrix
+(default \code{4}). The \code{df} is internally used to construct the vector
+of knots (quantiles of \code{x} distribution) that are then used in the
+construction of the spline design matrix. For \code{univariate_by}
 and \code{multivariate} models, the \code{df} can be same (e.g., \code{df  =
  4}) for sub models or different for each sub model such as
-\code{df=list(4, 5)} where \code{df} is 4 is for the first sub model and 5
+\code{df=list(4, 5)} where \code{df} is 4 is for the first sub model, and 5
 for the second sub model.}
 
-\item{knots}{Specify a vector of knots for the natural cubic spline design
+\item{knots}{A vector of knots for the natural cubic spline design
 matrix (default \code{NULL}) Note that \code{df} and \code{knots} can not be
 specified simultaneously, and also both of them can not be \code{NULL}. In
 other words, either \code{df} or \code{knots} must be specified. Like
@@ -229,8 +229,8 @@ effect structure for the first sub model is \code{'a+b+c'}, and \code{'a+b'}
 for the second sub model.}
 
 \item{random}{A character string specifying the random effects structure
-(default \code{'a+b+c'}). The approach is same as described above
-for the fixed effects structure (see \code{fixed}).}
+(default \code{'a+b+c'}). The approach used in setting the \code{random} is
+same as described above for the fixed effects structure (see \code{fixed}).}
 
 \item{xoffset}{An optional character string, or a numeric value to set up the
 origin of the predictor variable, \code{x} (i.e., centering of \code{x}).
@@ -245,24 +245,27 @@ models or different for each sub model (see argument \code{x} for details
 on setting different arguments for sub models).}
 
 \item{bstart}{An optional character string, or a numeric value to set up the
-origin of the fixed effect parameter \code{b}. The \code{bstart} can be used
-to set up the location of the priors (via \code{b_prior_beta})
-and/or the initial value (via \code{b_init_beta}) for the fixed effect
-parameter \code{b}. Options are same as described above for the
-\code{xoffset}. The default is same as \code{xoffset} i.e.,  \code{bstart =
- 'xoffset'}. For \code{univariate_by} and \code{multivariate} models,
-the \code{xoffset} can be same for sub models (typically), or different for
-each sub model (see argument \code{x} for details
-on setting different arguments for sub models).}
+origin of the fixed effect parameter \code{b}. The argument \code{bstart}
+can be used to set up the location parameter for the location-scale based
+priors (such as \code{normal()}) via \code{b_prior_beta} argument and/or the
+initial value via the \code{b_init_beta} argument. The options available to
+set up the \code{bstart} are same as described above for the \code{xoffset}
+i.e., \code{'mean'}, \code{'min'}, \code{'max'}, \code{'apv'} or a real
+number such as \code{12}. The default is same as \code{xoffset} i.e.,
+\code{bstart = 'xoffset'}. For \code{univariate_by} and  \code{multivariate}
+models, the \code{xoffset} can be same for sub models (typically), or
+different for each sub model (see argument \code{x} for details on setting
+different arguments for sub models).}
 
-\item{cstart}{An optional character string or a numeric value to set up the
-origin for the fixed effect parameter \code{c}. The \code{cstart} can be
-used to set up the location of the prior (via \code{c_prior_beta}) and/or
-the initial value (via \code{c_init_beta}) for the fixed effect parameter
-\code{c}. Options are \code{'pv'} (peak velocity derived from the velocity
-curve of the simple linear model fit to the data), or any real number such
-as \code{cstart = 1}. Since parameter \code{c} is estimated on the
-exponential scale, the argument \code{cstart} should be
+\item{cstart}{An optional character string, or a numeric value to set up the
+origin of the fixed effect parameter \code{c}. The argument \code{cstart}
+can be used to set up the location parameter for the location-scale based
+priors (such as \code{normal()}) via \code{c_prior_beta} argument and/or the
+initial value via the \code{c_init_beta} argument. The options available to
+set up the \code{cstart} are \code{'pv'} (peak velocity estimated from the
+velocity curve derived from the simple linear model fit to the data), or a
+real number such as \code{1}. Note that since parameter \code{c} is
+estimated on the exponential scale, the argument \code{cstart} should be
 adjusted accordingly. The default \code{cstart} is '0' i.e., \code{cstart =
  '0'}. For \code{univariate_by} and \code{multivariate} models,
 the \code{xoffset} can be same for sub models (typically), or different for
@@ -270,45 +273,51 @@ each sub model (see argument \code{x} for details on setting different
 arguments for sub models).}
 
 \item{xfun}{An optional character string to specify the transformation of the
-predictor variable, The default is \code{NULL}, indicating that no
+predictor variable, The default is \code{NULL} indicating that no
 transformation is applied i.e., model is fit to the data with original scale
-of the \code{x}. Options are \code{'log'} (logarithmic transformation) and
-\code{'sqrt'} (square root transformation). For \code{univariate_by} and
-\code{multivariate} models, the \code{xfun} can be same for sub models
-(typically), or different for each sub model (see argument \code{x} for
-details on setting different arguments for sub models).}
+of the \code{x}. Available transformation options are \code{'log'}
+(logarithmic transformation) and \code{'sqrt'} (square root transformation).
+For \code{univariate_by} and \code{multivariate} models, the \code{xfun} can
+be same for sub models (typically), or different for each sub model (see
+argument \code{x} for details on setting different arguments for sub
+models).}
 
 \item{yfun}{An optional character string to specify the transformation of the
 response variable, The default is \code{NULL}, indicating that no
 transformation is applied i.e., model is fit to the data with original scale
-of the \code{y}. Options are \code{'log'} (logarithmic transformation) and
-\code{'sqrt'} (square root transformation). For \code{univariate_by} and
-\code{multivariate} models, the \code{xfun} can be same for sub models
-(typically), or different for each sub model (see argument \code{x} for
-details on setting different arguments for sub models).}
+of the \code{y}. Available transformation options are \code{'log'}
+(logarithmic transformation) and \code{'sqrt'} (square root transformation).
+For \code{univariate_by} and \code{multivariate} models, the \code{xfun} can
+be same for sub models (typically), or different for each sub model (see
+argument \code{x} for details on setting different arguments for sub
+models).}
 
-\item{bound}{An optional numeric value to extend the span of the predictor
+\item{bound}{An optional real number to extend the span of the predictor
 variable \code{x} by a small value (default 0.04). See package
 \code{\link[sitar:sitar]{sitar::sitar()}} for details. For \code{univariate_by} and
-\code{multivariate} models, the \code{xfun} can be same for sub models
+\code{multivariate} models, the \code{bound} can be same for sub models
 (typically), or different for each sub model (see argument \code{x} for
 details on setting different arguments for sub models).}
 
 \item{terms_rhs}{An optional character string (default \code{NULL}) to specify
-terms on the right side of the response variable (separated by \code{|}) but
-before the formula tilde (i.e., \code{~}). The \code{terms_rhs} is used when
-fitting a measurement error model. As an example, consider fitting a model
-with measurement error in the response variable specified as \code{bf(y |
- mi(sdy) ~ ..)} where \code{mi(sdy)} is passed to \code{\link[brms:brmsformula]{brms::brmsformula()}}
-as \code{terms_rhs = mi(sdy)}. For multivariate model, each outcome can have
-its own measurement error variable that can be specified as follows: \cr
-\code{terms_rhs = list(mi(sdy1), mi(sdy2))}.}
+terms on the right hand side of the response variable (separated by
+\code{|}) but before the formula tilde sign i.e., \code{~}. The
+\code{terms_rhs} is used when fitting a measurement error model. As an
+example, consider fitting a model with measurement error in the response
+variable which is specified in the \code{\link[brms:brmsformula]{brms::brmsformula()}} as
+\code{brmsformula(y | mi(sdy) ~ ..)}. In this example, the \code{mi(sdy)} is
+passed to \code{\link[brms:brmsformula]{brms::brmsformula()}} as \code{terms_rhs = mi(sdy)}. For
+\code{multivariate} model, each outcome can have its own measurement error
+variable that can be specified as follows: \cr \code{terms_rhs =
+ list(mi(sdy1), mi(sdy2))}. Note that \code{\link[brms:brmsformula]{brms::brmsformula()}} does not allow
+combining \code{mi()} with the \code{subset()} formulation that is used for
+fitting \code{univariate_by} model.}
 
 \item{a_formula}{Formula for the fixed effect parameter, \code{a} (default
 \code{~ 1}). User can specify different formula when fitting
 \code{univariate_by} and \code{multivariate} models. As an example
 \code{a_formula = list(~1, ~1 + cov)} implies that the \code{a_formula} for
-the first sub model includes only an intercept whereas the second sub model
+the first sub model includes an intercept only whereas the second sub model
 includes an intercept and a covariate, \code{cov}. The covariate(s)  can be
 continuous variable(s) or factor variable(s). For factor covariates, dummy
 variables are created internally via the \code{\link[stats:model.matrix]{stats::model.matrix()}}). The
@@ -334,29 +343,36 @@ covariates but the user need to justify the modelling of separate curves for
 each category when covariate is a factor variable.}
 
 \item{a_formula_gr}{Formula for the random effect parameter, \code{a} (default
-\code{~ 1}). User can specify different formula when fitting
-\code{univariate_by} and \code{multivariate} models. As an example
-\code{a_formula = list(~1, ~1 + cov)} implies that the \code{a_formula} for
-the first sub model includes only an intercept whereas the second sub model
-includes an intercept and a covariate, \code{cov}. The covariate(s)  can be
-continuous variable(s) or factor variable(s). For factor covariates, dummy
-variables are created internally via the \code{\link[stats:model.matrix]{stats::model.matrix()}}). The
-formula can include any combination of continuous and factor variables as
-well as their interactions. User can set up the group identifier and the
-correlation structure for random effects via the \code{group_by} argument or
-the vertical bar \code{||} approach. For example, consider random effects
-\code{a}, \code{b}, and \code{c} specified as \code{a_formula_gr = ~1},
-\code{b_formula_gr = ~1} and \code{c_formula_gr = ~1}. To specify the group
-identifier (e.g., \code{id}) and an unstructured correlation structure, the
-\code{group_by} argument is set up as \code{group_by = list(groupvar = id,
- cor = un)}. On the other hand, the vertical bar approach specifies the group
-identifier and correlation structure directly within the formula argument
-as follows: \code{a_formula_gr = ~ (1 |i|id)}, \code{b_formula_gr = ~
- (1|i|id)}, and \code{c_formula_gr = ~ (1 |i|id)} where  \code{i} within the
-vertical bars \code{||} is just a placeholder. A common identifier (i.e.,
-\code{i}) shared across random effect formulas are modeled as unstructured
-correlated. For more details on the the vertical bar approach, please see
-\code{\link[brms:brm]{brms::brm()}}.}
+\code{~ 1}). Similar to \code{a_formula}, user can specify different formula
+when fitting \code{univariate_by} and \code{multivariate} models and formula
+can include continuous and/or factor variable(s) including their
+interactions as covariates (see \code{a_formula} for details). In addition
+to setting up the design matrix for the random effect parameter \code{a},
+user can set up the group identifier and the correlation structure for
+random effects via the vertical bar \code{||} approach. For example,
+consider only an intercept for the random effects \code{a}, \code{b}, and
+\code{c} specified as \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}
+and \code{c_formula_gr = ~1}. To specify the group identifier
+(e.g., \code{id}) and an unstructured correlation structure, the formula
+argument as specified as follows: \cr
+\code{a_formula_gr = ~ (1|i|id)} \cr
+\code{b_formula_gr = ~ (1|i|id)} \cr
+\code{c_formula_gr = ~ (1|i|id)} \cr
+where  \code{i} within the vertical bars \code{||} is just a placeholder. A
+common identifier (i.e., \code{i}) shared across random effect formulas are
+modeled as unstructured correlated. For more details on the the vertical bar
+approach, please see \code{\link[brms:brm]{brms::brm()}}. As explained below, an alternative
+approach to set up the group identifier and the correlation structure is to
+use \code{group_by} argument. In other words, to achieve the same set up as
+defined above by using the vertical bar approach, user can just specify the
+design matrix part of the formula as
+\code{a_formula_gr = ~ 1} \cr
+\code{b_formula_gr = ~ 1} \cr
+\code{c_formula_gr = ~ 1} \cr
+and use the \code{group_by} argument as \code{group_by = list(groupvar = id,
+ cor = un)} where \code{id} specifies the group identifier and \code{un} sets
+up the unstructured correlation structure. See \code{group_by} argument for
+details.}
 
 \item{b_formula_gr}{Formula for the random effect parameter, \code{b} (default
 \code{~ 1}). See \code{a_formula_gr} for details.}
@@ -372,10 +388,10 @@ correlated. For more details on the the vertical bar approach, please see
 levels of hierarchy. An example is model fit to the data with repeated
 measurements (level 1) on individuals (level 2) nested further within the
 growth studies (level 3). Note that When using \code{a_formula_gr_str}
-argument, only the vertical bar approach (see \code{a_formula}) can be used
-to set up the group identifiers and the correlation structure. An example of
-setting up the formula for a three level model with random effect
-parameter \code{a}, \code{b} is as follows: \cr
+argument, only the vertical bar approach (see \code{a_formula_gr}) can be
+used to set up the group identifiers and the correlation structure. An
+example of setting up the formula for a three level model with random
+effect parameter \code{a}, \code{b} is as follows: \cr
 \code{a_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr
 \code{b_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr
 \code{c_formula_gr_str = ~ (1|i|id:study) + (1|i2|study)} \cr
@@ -767,18 +783,18 @@ parameter, \code{a} (See \code{a_cov_prior_sd_str} for details).}
 
 \item{rsd_prior_sigma}{Specify priors for the residual standard deviation
 parameter \code{sigma}. This argument is evaluated when both
-\code{dpar_formual} and \code{sigma_formual} are \code{NULL}. For location
+\code{dpar_formula} and \code{sigma_formula} are \code{NULL}. For location
 scale based distributions, user can use specify the standard deviation
 (\code{ysd}) or the median absolute deviation (\code{ymad}) as scale
 parameter.}
 
 \item{dpar_prior_sigma}{Specify priors for the fixed effect distributional
 parameter \code{sigma}. The argument is evaluated only when
-\code{sigma_formual} is \code{NULL}.}
+\code{sigma_formula} is \code{NULL}.}
 
 \item{dpar_cov_prior_sigma}{Specify priors for the covariate(s) included in
 the fixed effect distributional parameter \code{sigma}. The argument is
-evaluated only when \code{sigma_formual} is \code{NULL}.}
+evaluated only when \code{sigma_formula} is \code{NULL}.}
 
 \item{autocor_prior_acor}{Specify priors for the the autocorrelation
 parameters (see \code{autocor_formula} for details). The only allowed
@@ -965,13 +981,13 @@ model (\code{nlme::lme()}) fitted to the data. The initial value set by the
 \code{'lm_rsd'} is the square root of the residual variance from the simple
 linear model applied to the data. Note that in case \code{nlme::lme()} fails
 to converge, then option \code{'lm_sd_a'} is set automatically. The argument
-\code{rsd_init_sigma} is evaluated when \code{dpar_formual} and
-\code{sigma_formual} are set to \code{NULL}.}
+\code{rsd_init_sigma} is evaluated when \code{dpar_formula} and
+\code{sigma_formula} are set to \code{NULL}.}
 
 \item{dpar_init_sigma}{Specify initial values for the distributional parameter
 \code{sigma}. The approach and options available are same as described above
 for the \code{rsd_init_sigma}. This argument is evaluated only when
-\code{rsd_init_sigma} and \code{sigma_formual} are not set \code{NULL}.}
+\code{rsd_init_sigma} and \code{sigma_formula} are not set \code{NULL}.}
 
 \item{dpar_cov_init_sigma}{Specify initial values for the covariate(s)
 included in the distributional parameter, \code{sigma}. Allowed options are
@@ -1309,18 +1325,20 @@ An object of class \code{brmsfit, bsiatr}, that contains the posterior
 draws and other useful information about the model.
 }
 \description{
-The \strong{bsitar()} is the main function in the \pkg{bsitar}
-package that fits the Bayesian super imposition by translation and rotation
-(\emph{SITAR}). The \emph{SITAR} model summarizes the growth curves from
-early childhood through the adulthood. The frequentist version of the
-\emph{SITAR} model can be fit by using an already available R package, the
-\pkg{sitar} \insertCite{R-sitar}{bsitar}. Besides Bayesian implementation of
-the \emph{SITAR} model, the \pkg{bsitar} package greatly enhances the
-modelling capabilities of the \emph{SITAR} model. For example, in addition
-to the univariate analysis (i.e, modelling a single outcome variable), the
-\pkg{bsitar} allows univariate-by-subgroup (an outcome analysed
-simultaneously for different subgroups) and multivariate (simultaneous
-modelling of two or more outcomes) model fitting.
+The \strong{bsitar()} is the main function that fits the Bayesian
+version of the super imposition by translation and rotation (\emph{SITAR}).
+The \emph{SITAR} model is a nonlinear mixed effects model that has been used
+extensively to summarize the growth curves from early childhood through the
+adulthood. The frequentist version of the \emph{SITAR} model can be fit by
+using an already available R package, the \pkg{sitar}
+\insertCite{R-sitar}{bsitar}. Besides Bayesian implementation of the
+\emph{SITAR} model, the \pkg{bsitar} package greatly enhances the modelling
+capabilities of the \pkg{sitar} package. For example, in addition to the
+univariate analysis (i.e, modelling a single outcome), the \pkg{bsitar}
+allows univariate-by-subgroup (a single outcome analysed simultaneously but
+separately for subgroups defined by a factor variable such as gender) and
+multivariate (simultaneous joint modelling of two or more outcomes) model
+fitting.
 }
 \details{
 The \emph{SITAR} is a shape-invariant nonlinear mixed effect growth

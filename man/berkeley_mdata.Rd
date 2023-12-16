@@ -27,9 +27,6 @@ years of age).
 A detailed description of the full data including the frequency of
 measurements per year is provided in the \link{berkeley} data.
 }
-\references{
-\insertAllCited{}
-}
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 }

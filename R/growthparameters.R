@@ -716,7 +716,7 @@ growthparameters.bgmfit <- function(model,
         dplyr::summarise(getitEstimate = mean(getitEstimate), 
                          .groups = 'drop') %>%
         dplyr::ungroup() %>%
-        dplyr::select(getitEstimate) 
+        dplyr::select(dplyr::all_of(getitEstimate)) 
     }
     
     getitarray <- array(unlist(raw_re_c), 

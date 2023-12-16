@@ -17,8 +17,6 @@
 #' \item{age}{years, numeric vector}
 #' \item{height}{cm, numeric vector}
 #' }
-#' @references
-#'  \insertAllCited{}
 #'  
 #' @keywords datasets
 #' 
