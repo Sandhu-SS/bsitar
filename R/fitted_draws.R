@@ -82,7 +82,7 @@ fitted_draws.bgmfit <-
            parms_method = 'getPeak',
            idata_method = 'm1',
            usesavedfuns = FALSE,
-           clearenvfuns = FALSE,
+           clearenvfuns = NULL,
            envir = NULL,
            ...) {
     
@@ -111,7 +111,7 @@ fitted_draws.bgmfit <-
     
     expose_method_set <- model$model_info[['expose_method']]
     
-    model$model_info[['expose_method']] == 'NA' # Over ride method 'R'
+    model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
     o <- post_processing_checks(model = model,
                              xcall = match.call(),
@@ -131,7 +131,7 @@ fitted_draws.bgmfit <-
       if(is.null(check_if_functions_exists(model, o, model$xcall))) {
         envir <- envir
       } else {
-        envir <- check_if_functions_exists(model, o, model$xcall)
+        envir <- getEnv(o[[1]], geteval = TRUE)
       }
       oall <- model$model_info[['exefuns']]
       oalli_c <- names(oall)
@@ -189,6 +189,10 @@ fitted_draws.bgmfit <-
       }
     }
     
+    if(is.null(clearenvfuns)) {
+      if(usesavedfuns) setcleanup <- TRUE else setcleanup <- FALSE
+    }
+      
     # Cleanup environment if requested
     if(setcleanup) {
       tempgenv <- envir

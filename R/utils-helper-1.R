@@ -2057,7 +2057,9 @@ check_if_functions_exists <- function(model, o, xcall = NULL, verbose = TRUE, ..
               "\n ",
               "(See '?expose_model_functions()' for details)", 
               "\n ", 
-              "Also, environment should be set as global environment, i.e.,",
+              "\n ",
+              "Also, 'envir' should be set as global environment as follows,",
+              "\n ",
               paste0(calname.fun, "(...,", " envir = "," .GlobalEnv)")
               )
       if(verbose) message(m)
@@ -2071,4 +2073,26 @@ check_if_functions_exists <- function(model, o, xcall = NULL, verbose = TRUE, ..
   }
   
   return(en)
+}
+
+
+#' An internal function to get the environment of an object
+#'
+#' @param x A symbol or a character string.
+#' @param geteval A logical (default \code{TRUE}) to indicate whether to return 
+#' the object as a character string or as an environment.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+getEnv <- function(x, geteval = TRUE) {
+  if(!is.character(x)) xobj <- deparse(substitute(x)) else xobj <- x
+  gobjects <- ls(envir=.GlobalEnv)
+  envirs <- gobjects[sapply(gobjects, function(x) is.environment(get(x)))]
+  envirs <- c('.GlobalEnv', envirs)
+  xin <- sapply(envirs, function(e) xobj %in% ls(envir=get(e)))
+  out <- envirs[xin] 
+  if(geteval) out <- eval(parse(text = out))
+  out
 }

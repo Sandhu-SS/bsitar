@@ -204,8 +204,11 @@
 #' use the already exposed and saved \code{Stan} functions. This is for 
 #' internal use when testing the function and not used routinely.   
 #' 
-#' @param clearenvfuns A logical (default \code{FALSE}) to indicate whether to 
-#' clear the exposed function from the environment.
+#' @param clearenvfuns A logical to indicate whether to clear the exposed
+#'   function from the environment (\code{TRUE}) or not (\code{FALSE}). If
+#'   \code{NULL} (default), then \code{clearenvfuns} is set as \code{TRUE} when
+#'   \code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
+#'   is \code{FALSE}.
 #'  
 #' @param envir Environment of function evaluation. The default is \code{NULL}
 #'   which will set \code{parent.frame()} as default environment. Note that

@@ -13,16 +13,20 @@ Description: The Super Imposition by Translation and Rotation (SITAR) model
     cubic spline mean curve and aligns individual-specific growth curves to 
     the mean  curve via a set of random effects. For more details,  please 
     see Cole (2010)  <doi:10.1093/ije/dyq115>. The non Bayesian version of 
-    the SITAR model can be fit by using an already available R package 'sitar'. 
+    the SITAR model can be fit using an already available R package 'sitar'. 
     However, the 'sitar' package allows modelling of a single outcome only. 
     The 'bsitar' package, in addition to fitting SITAR to a single outcome,  
     offers a great flexibility in fitting models of varying complexities that 
     include joint modelling of multiple outcomes such as height and weight 
     (multivariate  model), and to fit separate models defined by sub group
     (such as gender) when analyzing a single outcome. Furthermore, since the 
-    'bsitar' package is a front-end to  the R package 'brms', it offers an  
-    excellent support for  post-processing of posterior draws which is available
-    from the  'brms' package.
+    'bsitar' package is a front-end to the R package 'brms', it offers an  
+    excellent support for  post-processing of posterior draws via functions 
+    that are directly available from the  'brms' package. In addition, the 
+    the 'bsitar' package include various customized functions that allow for
+    estimating and visualization of various growth curves such as distance 
+    (increase in size with age) and velocity (change in growth velocity as a
+    function of age). 
 License: GPL-2
 Depends: 
     R (>= 3.6)
@@ -47,7 +51,8 @@ Suggests:
     testthat (>= 3.0.0),
     R.rsp,
     bayesplot (>= 1.10.0),
-    marginaleffects (>= 0.15.1),    
+    marginaleffects (>= 0.15.1),  
+    cmdstanr (>= 0.5.0),  
     forcats,
     future,
     future.apply,
@@ -61,8 +66,11 @@ Suggests:
     purrr,    
     stats,
     tidyr,
-    extraDistr,
+    extraDistr
+URL: https://github.com/Sandhu-SS/bsitar
+BugReports: https://github.com/Sandhu-SS/bsitar/issues
 Additional_repositories:
+    https://mc-stan.org/r-packages/
 VignetteBuilder:
     knitr,
     R.rsp

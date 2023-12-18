@@ -24,7 +24,7 @@
   parms_method = "getPeak",
   idata_method = "m1",
   usesavedfuns = FALSE,
-  clearenvfuns = FALSE,
+  clearenvfuns = NULL,
   envir = NULL,
   ...
 )
