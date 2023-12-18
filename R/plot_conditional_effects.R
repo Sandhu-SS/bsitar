@@ -104,6 +104,16 @@ plot_conditional_effects.bgmfit <-
                              deriv = deriv,
                              all = FALSE)
     
+    if(usesavedfuns | clearenvfuns) {
+      oall <-
+        post_processing_checks(model = model,
+                               xcall = match.call(),
+                               resp = resp,
+                               envir = envir,
+                               deriv = deriv,
+                               all = TRUE)
+    }
+    
     if(deriv == 0) {
       getfunx <- model$model_info[['exefuns']][[o[[2]]]]
       assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
@@ -134,13 +144,6 @@ plot_conditional_effects.bgmfit <-
     
     if(usesavedfuns) {
       if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        oall <-
-          post_processing_checks(model = model,
-                                 xcall = match.call(),
-                                 resp = resp,
-                                 envir = envir,
-                                 deriv = deriv,
-                                 all = TRUE)
         tempgenv <- envir
         oalli_c <- c()
         oalli_c <- c(oalli_c, paste0(o[[1]], "0"))

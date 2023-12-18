@@ -104,6 +104,15 @@ predict_draws.bgmfit <-
                              all = FALSE)
     
    
+    if(usesavedfuns | clearenvfuns) {
+      oall <-
+        post_processing_checks(model = model,
+                               xcall = match.call(),
+                               resp = resp,
+                               envir = envir,
+                               deriv = deriv,
+                               all = TRUE)
+    }
     
     
     if(!is.null(model$xcall)) {
@@ -156,13 +165,6 @@ predict_draws.bgmfit <-
     
     if(usesavedfuns) {
       if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        oall <-
-          post_processing_checks(model = model,
-                                 xcall = match.call(),
-                                 resp = resp,
-                                 envir = envir,
-                                 deriv = deriv,
-                                 all = TRUE)
         tempgenv <- envir
         oalli_c <- c()
         oalli_c <- c(oalli_c, paste0(o[[1]], "0"))

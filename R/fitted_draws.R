@@ -90,13 +90,6 @@ fitted_draws.bgmfit <-
       envir <- parent.frame()
     }
     
-    o <-
-      post_processing_checks(model = model,
-                             xcall = match.call(),
-                             resp = resp,
-                             envir = envir,
-                             deriv = deriv)
-    
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
@@ -111,32 +104,21 @@ fitted_draws.bgmfit <-
                              idata_method = idata_method)
     }
     
-  
+    
     if(!is.null(model$model_info$decomp)) {
       if(model$model_info$decomp == "QR") deriv_model<- FALSE
     }
     
+    expose_method_set <- model$model_info[['expose_method']]
     
-    if(deriv == 0) {
-      getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    }
+    model$model_info[['expose_method']] == 'NA' # Over ride method 'R'
     
-    if(!deriv_model) {
-      if(deriv == 1 | deriv == 2) {
-        summary <- FALSE
-        getfunx <- model$model_info[['exefuns']][[o[[1]]]]
-        assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
-      }
-    }
+    o <- post_processing_checks(model = model,
+                             xcall = match.call(),
+                             resp = resp,
+                             envir = envir,
+                             deriv = deriv)
     
-    if(deriv_model) {
-      if(deriv == 1 | deriv == 2) {
-        getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-      }
-    }
-   
     
     if(!usesavedfuns) {
       if(is.null(check_if_functions_exists(model, o, model$xcall))) {
@@ -147,28 +129,29 @@ fitted_draws.bgmfit <-
     
     if(usesavedfuns) {
       if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        oall <-
-          post_processing_checks(model = model,
-                                 xcall = match.call(),
-                                 resp = resp,
-                                 envir = envir,
-                                 deriv = deriv,
-                                 all = TRUE)
-        tempgenv <- envir
-        oalli_c <- c()
-        oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
-        for (oalli in names(oall)) {
-          if(!grepl(o[[1]], oalli)) {
-            oalli_c <- c(oalli_c, oalli)
-          }
-        }
-        for (oalli in oalli_c) {
-          assign(oalli, oall[[oalli]], envir = tempgenv)
-        }
-        assign(o[[1]], getfunx, envir = tempgenv)
+        envir <- envir
+      } else {
+        envir <- check_if_functions_exists(model, o, model$xcall)
+      }
+      oall <- model$model_info[['exefuns']]
+      oalli_c <- names(oall)
+      for (oalli in oalli_c) {
+        assign(oalli, oall[[oalli]], envir = envir)
       }
     }
     
+
+    if(deriv == 0) {
+      assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+    } else if(deriv > 0) {
+      if(deriv_model) {
+        assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+      } else if(!deriv_model) {
+        assignfun <- paste0(model$model_info[['namesexefuns']], '0')
+      }
+      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+    }
     
     . <- fitted(model,
                 newdata = newdata,
@@ -185,14 +168,17 @@ fitted_draws.bgmfit <-
                 probs = probs,
                 ...)
     
-
-    if(!deriv_model) {
-      if(deriv == 1 | deriv == 2) {
+    if(deriv > 0) { 
+      if(!deriv_model) {
         . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
                         deriv = deriv, probs = probs, robust = robust)
+      } else {
+        . <- .
       }
-    } 
+    }
+
     
+    # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     if(!is.null(clearenvfuns)) {
@@ -203,6 +189,7 @@ fitted_draws.bgmfit <-
       }
     }
     
+    # Cleanup environment if requested
     if(setcleanup) {
       tempgenv <- envir
       for (oalli in names(oall)) {

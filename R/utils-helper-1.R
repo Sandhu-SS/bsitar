@@ -2055,7 +2055,11 @@ check_if_functions_exists <- function(model, o, xcall = NULL, verbose = TRUE, ..
               "\n",
               "'", calname.fun, "()'", " function",
               "\n ",
-              "(See '?expose_model_functions()' for details)")
+              "(See '?expose_model_functions()' for details)", 
+              "\n ", 
+              "Also, environment should be set as global environment, i.e.,",
+              paste0(calname.fun, "(...,", " envir = "," .GlobalEnv)")
+              )
       if(verbose) message(m)
     }
   }
