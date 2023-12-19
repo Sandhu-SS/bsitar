@@ -2096,3 +2096,29 @@ getEnv <- function(x, geteval = TRUE) {
   if(geteval) out <- eval(parse(text = out))
   out
 }
+
+
+
+#' An internal function to get the 'model' name from the arguments
+#'
+#' @param arguments A list of arguments.
+#' @param asstr A logical (default \code{FALSE}) to indicate whether to  
+#' return the object as a character string.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+getpipedot <- function(arguments, asstr = FALSE) {
+  if(deparse(arguments$model) == ".") {
+    first_call <- sys.calls()[[1]] # get the first entry on the call stack
+    lhs <- first_call[[2]] # get the second element of this entry
+    mymodel <- lhs # rlang::as_name(lhs) # lhs
+  } else {
+    mymodel <- arguments$model
+  }
+  if(asstr) mymodel <- deparse(mymodel)
+  mymodel
+}
+
+
