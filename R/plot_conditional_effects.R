@@ -16,7 +16,7 @@
 #'   in the same manner. In other words, user can specify all the arguments
 #'   which are available in the [brms::conditional_effects()].
 #'   
-#' @param model An object of class \code{bgmfit}. function.
+#' @param model An object of class \code{bgmfit}.
 #'
 #' @param resp A character string to specify response variable when processing
 #'   posterior draws for the univariate-by-subgroup and multivariate models (see

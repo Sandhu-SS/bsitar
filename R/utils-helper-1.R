@@ -2122,3 +2122,68 @@ getpipedot <- function(arguments, asstr = FALSE) {
 }
 
 
+
+
+
+
+#' An internal function to set up exposed functions and their environment
+#'
+#' @param model A list of arguments.
+#' @param o A logical (default \code{FALSE}) to indicate whether to  
+#' return the object as a character string.
+#' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to 
+#' @param deriv 
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+setupfuns <- function(model, 
+                      o, 
+                      oall, 
+                      usesavedfuns, 
+                      deriv, 
+                      envir,
+                      deriv_model, ...) {
+  
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  
+  if(!usesavedfuns) {
+    if(is.null(check_if_functions_exists(model, o, model$xcall))) {
+      return(invisible(NULL))
+    }
+  }
+  
+  if(usesavedfuns) {
+    if(is.null(check_if_functions_exists(model, o, model$xcall, 
+                                         verbose = F))) {
+      envir <- envir
+    } else {
+      envir <- getEnv(o[[1]], geteval = TRUE)
+    }
+    envir <- getEnv(o[[1]], geteval = TRUE)
+    oall <- model$model_info[['exefuns']]
+    oalli_c <- names(oall)
+    for (oalli in oalli_c) {
+      assign(oalli, oall[[oalli]], envir = envir)
+    }
+  }
+  
+  if(deriv == 0) {
+    assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+    assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+  } else if(deriv > 0) {
+    if(deriv_model) {
+      assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+    } else if(!deriv_model) {
+      assignfun <- paste0(model$model_info[['namesexefuns']], '0')
+    }
+    assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+  }
+  
+}
+
+
+

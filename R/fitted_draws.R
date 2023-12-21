@@ -85,7 +85,8 @@ fitted_draws.bgmfit <-
            clearenvfuns = NULL,
            envir = NULL,
            ...) {
-    
+   
+  
     if(is.null(envir)) {
       envir <- parent.frame()
     }
@@ -117,41 +118,59 @@ fitted_draws.bgmfit <-
                              xcall = match.call(),
                              resp = resp,
                              envir = envir,
-                             deriv = deriv)
+                             deriv = deriv, 
+                             all = FALSE)
+    
+    oall <- post_processing_checks(model = model,
+                                xcall = match.call(),
+                                resp = resp,
+                                envir = envir,
+                                deriv = deriv, 
+                                all = TRUE)
     
     
-    if(!usesavedfuns) {
-      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        return(invisible(NULL))
-      }
-    }
+    # if(!usesavedfuns) {
+    #   if(is.null(check_if_functions_exists(model, o, model$xcall))) {
+    #     return(invisible(NULL))
+    #   }
+    # }
     
     
-    if(usesavedfuns) {
-      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        envir <- envir
-      } else {
-        envir <- getEnv(o[[1]], geteval = TRUE)
-      }
-      oall <- model$model_info[['exefuns']]
-      oalli_c <- names(oall)
-      for (oalli in oalli_c) {
-        assign(oalli, oall[[oalli]], envir = envir)
-      }
-    }
+    # if(usesavedfuns) {
+    #   if(is.null(check_if_functions_exists(model, o, model$xcall))) {
+    #     envir <- envir
+    #   } else {
+    #     envir <- getEnv(o[[1]], geteval = TRUE)
+    #   }
+    #   oall <- model$model_info[['exefuns']]
+    #   oalli_c <- names(oall)
+    #   for (oalli in oalli_c) {
+    #     assign(oalli, oall[[oalli]], envir = envir)
+    #   }
+    # }
     
 
-    if(deriv == 0) {
-      assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
-      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
-    } else if(deriv > 0) {
-      if(deriv_model) {
-        assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
-      } else if(!deriv_model) {
-        assignfun <- paste0(model$model_info[['namesexefuns']], '0')
-      }
-      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
-    }
+    # if(deriv == 0) {
+    #   assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+    #   assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+    # } else if(deriv > 0) {
+    #   if(deriv_model) {
+    #     assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+    #   } else if(!deriv_model) {
+    #     assignfun <- paste0(model$model_info[['namesexefuns']], '0')
+    #   }
+    #   assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+    # }
+    
+    print(envir)
+    test <- setupfuns(model = model, 
+                      o = o, oall = oall, 
+                      usesavedfuns = usesavedfuns, 
+                      deriv = deriv, envir = envir, 
+                      deriv_model = deriv_model, 
+                      ...)
+    
+    if(is.null(test)) return(invisible(NULL))
     
     . <- fitted(model,
                 newdata = newdata,
