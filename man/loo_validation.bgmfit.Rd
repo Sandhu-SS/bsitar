@@ -10,7 +10,7 @@
   resp = NULL,
   cores = 1,
   usesavedfuns = FALSE,
-  clearenvfuns = FALSE,
+  clearenvfuns = NULL,
   envir = NULL,
   ...
 )

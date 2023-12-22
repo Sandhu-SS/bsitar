@@ -202,7 +202,14 @@ plot_conditional_effects.bgmfit <-
           remove(list=oalli, envir = tempgenv)
         }
       }
-    }
+      tempgenv <- test
+      for (oalli in names(oall)) {
+        if(exists(oalli, envir = tempgenv )) {
+          remove(list=oalli, envir = tempgenv)
+        }
+      }
+      
+    } # if(setcleanup) {
     
     .
   }

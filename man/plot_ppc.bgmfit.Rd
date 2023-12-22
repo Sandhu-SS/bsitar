@@ -10,7 +10,7 @@
   resp = NULL,
   deriv = 0,
   usesavedfuns = FALSE,
-  clearenvfuns = FALSE,
+  clearenvfuns = NULL,
   envir = NULL,
   ...
 )

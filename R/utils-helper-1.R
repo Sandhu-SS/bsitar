@@ -2194,7 +2194,7 @@ setupfuns <- function(model,
     assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
   }
   
-  return(o[[1]])
+  return(envir)
 }
 
 

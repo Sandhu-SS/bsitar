@@ -215,7 +215,8 @@ expose_model_functions.bgmfit <- function(model,
   
   if(returnobj) {
     model$model <- model$bmodel
-    return(model)
+    # return(model)
+    return(invisible(model))
   } else {
     return(invisible(NULL))
   }

@@ -47,7 +47,7 @@ loo_validation.bgmfit <-
            resp = NULL,
            cores = 1,
            usesavedfuns = FALSE,
-           clearenvfuns = FALSE,
+           clearenvfuns = NULL,
            envir = NULL,
            ...) {
     
@@ -176,7 +176,14 @@ loo_validation.bgmfit <-
           remove(list=oalli, envir = tempgenv)
         }
       }
-    }
+      tempgenv <- test
+      for (oalli in names(oall)) {
+        if(exists(oalli, envir = tempgenv )) {
+          remove(list=oalli, envir = tempgenv)
+        }
+      }
+      
+    } # if(setcleanup) {
     
     .
   }

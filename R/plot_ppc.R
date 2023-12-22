@@ -37,7 +37,7 @@ plot_ppc.bgmfit <-
            resp = NULL,
            deriv = 0,
            usesavedfuns = FALSE,
-           clearenvfuns = FALSE,
+           clearenvfuns = NULL,
            envir = NULL,
            ...) {
     
@@ -131,7 +131,14 @@ plot_ppc.bgmfit <-
           remove(list=oalli, envir = tempgenv)
         }
       }
-    }
+      tempgenv <- test
+      for (oalli in names(oall)) {
+        if(exists(oalli, envir = tempgenv )) {
+          remove(list=oalli, envir = tempgenv)
+        }
+      }
+      
+    } # if(setcleanup) {
     
     .
   }
