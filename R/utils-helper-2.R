@@ -14,6 +14,7 @@
 #'   \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes} and is
 #'   documented here
 #'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
+#'   If \code{NULL} (default), method \code{'m1'} is automatically set. 
 #' 
 #' @keywords internal
 #' 
@@ -32,12 +33,16 @@ get.newdata <- function(model,
                         levels_id = NULL,
                         ipts = NULL,
                         xrange = NULL,
-                        idata_method = 'm1') {
+                        idata_method = NULL) {
   
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
     resp_rev_ <- paste0("_", resp)
+  }
+  
+  if (is.null(idata_method)) {
+    idata_method <- 'm1'
   }
   
   # Initiate non formalArgs()

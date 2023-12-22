@@ -13,8 +13,6 @@
 #' 
 #' @inheritParams plot_ppc.bgmfit
 #' 
-#' @param deriv Must be \code{NULL}. 
-#' 
 #' @param ... Additional arguments passed to the [brms::loo()] function. 
 #' Please see \code{brms::loo} for details on various options available.
 #' 
@@ -48,7 +46,6 @@ loo_validation.bgmfit <-
   function(model,
            resp = NULL,
            cores = 1,
-           deriv = 0,
            usesavedfuns = FALSE,
            clearenvfuns = FALSE,
            envir = NULL,
@@ -58,60 +55,105 @@ loo_validation.bgmfit <-
       envir <- parent.frame()
     }
     
-    o <-
-      post_processing_checks(model = model,
-                             xcall = match.call(),
-                             resp = resp,
-                             envir = envir,
-                             deriv = deriv,
-                             all = FALSE)
+    # For consistency across post processing functions
+    charg <- ls()
+    chcall <- match.call()
+    if(!checkifargmiss(charg, chcall, 'deriv'))          deriv          <- NULL
+    if(!checkifargmiss(charg, chcall, 'numeric_cov_at')) numeric_cov_at <- NULL
+    if(!checkifargmiss(charg, chcall, 'levels_id'))      levels_id      <- NULL
+    if(!checkifargmiss(charg, chcall, 'ipts'))           ipts           <- NULL
+    if(!checkifargmiss(charg, chcall, 'idata_method'))   idata_method   <- NULL
+    if(!checkifargmiss(charg, chcall, 'xrange'))         xrange         <- NULL
+    if(!checkifargmiss(charg, chcall, 'probs'))          probs          <- NULL
+    if(!checkifargmiss(charg, chcall, 'robust'))         robust         <- NULL
+    if(!checkifargmiss(charg, chcall, 'newdata'))        newdata        <- NULL
+    if(!checkifargmiss(charg, chcall, 'deriv_model'))    deriv_model    <- FALSE
     
-    if(usesavedfuns | clearenvfuns) {
-      oall <-
-        post_processing_checks(model = model,
-                               xcall = match.call(),
-                               resp = resp,
-                               envir = envir,
-                               deriv = deriv,
-                               all = TRUE)
+    # setNULL <- as.character(expression(c(deriv, 
+    #                                 numeric_cov_at, 
+    #                                 levels_id,
+    #                                 ipts,
+    #                                 idata_method,
+    #                                 xrange,
+    #                                 probs,
+    #                                 robust,
+    #                                 )))[-1]
+    # 
+    # setFALSE <- as.character(expression(c(deriv_model
+    # )))[-1]
+    # 
+    # for (setNULLi in setNULL) {
+    #   if(!checkifargmiss(charg, chcall, setNULLi)) assign(setNULLi, NULL)
+    # }
+    # 
+    # for (setFALSEi in setFALSE) {
+    #   if(!checkifargmiss(charg, chcall, setFALSE)) assign(setFALSE, FALSE)
+    # }
+    
+    
+    
+    if(!is.null(model$xcall)) {
+      arguments <- get_args_(as.list(match.call())[-1], model$xcall)
+      newdata <- newdata
+    } else {
+      newdata <- get.newdata(model, 
+                             newdata = newdata, 
+                             resp = resp, 
+                             numeric_cov_at = numeric_cov_at,
+                             levels_id = levels_id,
+                             ipts = ipts,
+                             xrange = xrange,
+                             idata_method = idata_method)
     }
     
-   
-    if(deriv == 0) {
-      getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    
+    if(!is.null(model$model_info$decomp)) {
+      if(model$model_info$decomp == "QR") deriv_model <- FALSE
     }
     
+    expose_method_set <- model$model_info[['expose_method']]
     
+    model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
+    o <- post_processing_checks(model = model,
+                                xcall = match.call(),
+                                resp = resp,
+                                envir = envir,
+                                deriv = deriv, 
+                                all = FALSE)
     
-    if(!usesavedfuns) {
-      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        return(invisible(NULL))
-      }
-    }
+    oall <- post_processing_checks(model = model,
+                                   xcall = match.call(),
+                                   resp = resp,
+                                   envir = envir,
+                                   deriv = deriv, 
+                                   all = TRUE)
     
+    test <- setupfuns(model = model, o = o, oall = oall, 
+                      usesavedfuns = usesavedfuns, 
+                      deriv = deriv, 
+                      envir = envir, 
+                      deriv_model = deriv_model, 
+                      ...)
     
-    if(usesavedfuns) {
-      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        tempgenv <- envir
-        oalli_c <- c()
-        oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
-        for (oalli in names(oall)) {
-          if(!grepl(o[[1]], oalli)) {
-            oalli_c <- c(oalli_c, oalli)
-          }
-        }
-        for (oalli in oalli_c) {
-          assign(oalli, oall[[oalli]], envir = tempgenv)
-        }
-        assign(o[[1]], getfunx, envir = tempgenv)
-      }
-    }
+    if(is.null(test)) return(invisible(NULL))
     
     
     . <- brms::loo(model, resp = resp, cores = cores ,...)
     
+    
+    if(!is.null(deriv)) {
+      if(deriv > 0) { 
+        if(!deriv_model) {
+          . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
+                          deriv = deriv, probs = probs, robust = robust)
+        } else {
+          . <- .
+        }
+      }
+    }
+    
+    # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     if(!is.null(clearenvfuns)) {
@@ -122,6 +164,11 @@ loo_validation.bgmfit <-
       }
     }
     
+    if(is.null(clearenvfuns)) {
+      if(usesavedfuns) setcleanup <- TRUE else setcleanup <- FALSE
+    }
+    
+    # Cleanup environment if requested
     if(setcleanup) {
       tempgenv <- envir
       for (oalli in names(oall)) {

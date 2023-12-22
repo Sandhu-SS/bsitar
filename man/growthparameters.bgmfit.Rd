@@ -239,7 +239,9 @@ Options are \emph{method 1} (specified as  \code{'m1'}, default) and
 documented here \url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}.
 The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
 package and is documented here
-\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.}
+\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.
+If \code{idata_method = NULL}, then method \code{'m1'} is automatically
+set.}
 
 \item{parms_method}{A character to specify the method used to when evaluating
 \code{parms_eval}. The default is \code{getPeak} which uses the

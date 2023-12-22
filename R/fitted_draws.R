@@ -91,6 +91,21 @@ fitted_draws.bgmfit <-
       envir <- parent.frame()
     }
     
+    # For consistency across post processing functions
+    charg <- ls()
+    chcall <- match.call()
+    if(!checkifargmiss(charg, chcall, 'deriv'))          deriv          <- NULL
+    if(!checkifargmiss(charg, chcall, 'numeric_cov_at')) numeric_cov_at <- NULL
+    if(!checkifargmiss(charg, chcall, 'levels_id'))      levels_id      <- NULL
+    if(!checkifargmiss(charg, chcall, 'ipts'))           ipts           <- NULL
+    if(!checkifargmiss(charg, chcall, 'idata_method'))   idata_method   <- NULL
+    if(!checkifargmiss(charg, chcall, 'xrange'))         xrange         <- NULL
+    if(!checkifargmiss(charg, chcall, 'probs'))          probs          <- NULL
+    if(!checkifargmiss(charg, chcall, 'robust'))         robust         <- NULL
+    if(!checkifargmiss(charg, chcall, 'newdata'))        newdata        <- NULL
+    if(!checkifargmiss(charg, chcall, 'deriv_model'))    deriv_model    <- FALSE
+    
+    
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
@@ -162,15 +177,16 @@ fitted_draws.bgmfit <-
     #   assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
     # }
     
-    print(envir)
-    test <- setupfuns(model = model, 
-                      o = o, oall = oall, 
+    
+    test <- setupfuns(model = model, o = o, oall = oall, 
                       usesavedfuns = usesavedfuns, 
                       deriv = deriv, envir = envir, 
                       deriv_model = deriv_model, 
                       ...)
     
     if(is.null(test)) return(invisible(NULL))
+    
+    # assign(test, eval(parse(text = test)))
     
     . <- fitted(model,
                 newdata = newdata,
@@ -187,14 +203,17 @@ fitted_draws.bgmfit <-
                 probs = probs,
                 ...)
     
-    if(deriv > 0) { 
-      if(!deriv_model) {
-        . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
-                        deriv = deriv, probs = probs, robust = robust)
-      } else {
-        . <- .
+    if(!is.null(deriv)) {
+      if(deriv > 0) { 
+        if(!deriv_model) {
+          . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
+                          deriv = deriv, probs = probs, robust = robust)
+        } else {
+          . <- .
+        }
       }
     }
+    
 
     
     # Restore function(s)

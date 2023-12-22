@@ -305,6 +305,10 @@ plot_curves.bgmfit <- function(model,
     envir <- parent.frame()
   }
   
+  if (is.null(idata_method)) {
+    idata_method <- 'm1'
+  }
+  
   if(system.file(package='ggplot2') == "") {
     stop("Please install 'ggplot2' package before calling the 'plot_curves'")
   }

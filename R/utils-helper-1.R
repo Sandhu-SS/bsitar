@@ -1483,6 +1483,9 @@ mapderivqr <- function(model,
                        probs = c(0.025, 0.975),
                        robust = FALSE) {
   
+  if(is.null(probs)) probs <- c(0.025, 0.975)
+  if(is.null(robust)) robust <- FALSE
+  
   if(is.null(newdata)) newdata <- model$data
   
   if (is.null(resp)) {
@@ -2157,33 +2160,60 @@ setupfuns <- function(model,
   }
   
   if(usesavedfuns) {
-    if(is.null(check_if_functions_exists(model, o, model$xcall, 
+    if(is.null(check_if_functions_exists(model, o, model$xcall,
                                          verbose = F))) {
       envir <- envir
     } else {
-      envir <- getEnv(o[[1]], geteval = TRUE)
+     #  envir <- getEnv(o[[1]], geteval = TRUE)
     }
-    envir <- getEnv(o[[1]], geteval = TRUE)
+    # envir <- getEnv(o[[1]], geteval = TRUE)
+    
     oall <- model$model_info[['exefuns']]
     oalli_c <- names(oall)
     for (oalli in oalli_c) {
       assign(oalli, oall[[oalli]], envir = envir)
     }
   }
-  
-  if(deriv == 0) {
-    assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
-    assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
-  } else if(deriv > 0) {
-    if(deriv_model) {
+ 
+  if(!is.null(deriv)) {
+    if(deriv == 0) {
       assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
-    } else if(!deriv_model) {
-      assignfun <- paste0(model$model_info[['namesexefuns']], '0')
+      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+    } else if(deriv > 0) {
+      if(deriv_model) {
+        assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+      } else if(!deriv_model) {
+        assignfun <- paste0(model$model_info[['namesexefuns']], '0')
+      }
+      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
     }
+  }
+  
+  if(is.null(deriv)) {
+    assignfun <- paste0(model$model_info[['namesexefuns']], "")
     assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
   }
   
+  return(o[[1]])
 }
 
 
 
+#' An internal function to check an argument
+#'
+#' @param checkarg A list of defined arguments.
+#' @param checkcall A list of passed arguments.  
+#' @param check A aymbol or a character string to be checked.  
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+checkifargmiss <- function(checkarg, checkcall, check) {
+  defined <- checkarg
+  passed <- names(as.list(checkcall)[-1])
+  if(!is.character(check)) check <- deparse(substitute(check))
+  allargs <- unique(c(defined, passed))
+  if (!check %in% allargs) checkresulst <- FALSE else checkresulst <- TRUE
+  checkresulst
+}

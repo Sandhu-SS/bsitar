@@ -192,6 +192,8 @@
 #'   The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
 #'   package and is documented here
 #'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
+#'   If \code{idata_method = NULL}, then method \code{'m1'} is automatically 
+#'   set. 
 #'
 #' @param parms_method A character to specify the method used to when evaluating
 #'   \code{parms_eval}. The default is \code{getPeak} which uses the
@@ -310,10 +312,16 @@ growthparameters.bgmfit <- function(model,
     envir <- parent.frame()
   }
   
+  if (is.null(idata_method)) {
+    idata_method <- 'm1'
+  }
+  
   if (is.null(ndraws))
     ndraws  <- brms::ndraws(model)
   else
     ndraws <- ndraws
+  
+  
   
   # Initiate non formalArgs()
   xvar <- NULL;

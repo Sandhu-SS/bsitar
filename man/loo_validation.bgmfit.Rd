@@ -9,7 +9,6 @@
   model,
   resp = NULL,
   cores = 1,
-  deriv = 0,
   usesavedfuns = FALSE,
   clearenvfuns = FALSE,
   envir = NULL,
@@ -38,8 +37,6 @@ default \code{NULL} option, the number of cores are set automatically by
 calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
 maximum number of cores avaialble minus one, i.e.,
 \code{future::availableCores() - 1}.}
-
-\item{deriv}{Must be \code{NULL}.}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
