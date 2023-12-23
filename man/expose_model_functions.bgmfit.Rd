@@ -38,12 +38,13 @@ set \code{returnobj=TRUE} also.}
 indicate whether to print information collected during setting up the
 object(s).}
 
-\item{envir}{Environment of function evaluation. The default is \code{NULL}
-which will set \code{parent.frame()} as default environment. Note that
-since most of post processing functions are based on \pkg{brms}, it is
-strongly advised to set \code{globalenv()} (or \code{.GlobalEnv}) as
-environment. This is particularly true for derivatives such as velocity
-curve.}
+\item{envir}{Environment used for function evaluation. The default is
+\code{NULL} which will set \code{parent.frame()} as default environment.
+Note that since most of post processing functions are based on \pkg{brms},
+the elements needed for evaluation should be in the .GlobalEnv Therefore,
+it is strongly recommended to set \code{ envir = globalenv()} (or
+\code{envir = .GlobalEnv}). This is particularly true for the
+derivatives such as velocity curve.}
 
 \item{...}{Additional arguments passed to the
 \code{\link[rstan:expose_stan_functions]{rstan::expose_stan_functions()}} function.}

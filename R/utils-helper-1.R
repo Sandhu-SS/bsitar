@@ -421,6 +421,18 @@ restore_paranthese_grgr_str_form <- function(strx) {
         strx_ <- paste0("(", strx2, "")
       }
     } else if(grepl("|gr", strx2)) {
+        pattern <- "gr\\s*(.*?)\\s*,"
+        strx2_check_ <- regmatches(strx2, regexec(pattern, strx2))
+        strx2_check_ <- strx2_check_[[1]][2]
+        if(grepl("_", strx2_check_)) {
+          stop("Underscore '_' is not allowed in the variable name when",
+               "\n ", 
+               " defining the group identifier using the 'gr()' formulation",
+               "\n ",
+               " please check '", strx2_check_, "' varibale in the random ",
+               "formula for '", sub("\\~.*", "", strx), "'"
+          )
+        }
       if(!grepl("|gr(", strx2, fixed = T)) {
         strx_ <- gsub("|gr" , "|gr(", strx2, fixed = T)
         strx_ <- paste0("(", strx_, ")")

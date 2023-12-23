@@ -206,9 +206,10 @@
 #'  indicate whether to print information collected during setting up the 
 #'  object(s). 
 #'  
-#' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to 
-#' use the already exposed and saved \code{Stan} functions. This is for 
-#' internal use when testing the function and not used routinely.   
+#' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to
+#'   use the already exposed and saved \code{Stan} functions. This is for
+#'   internal use only during the testing of the functions and therefore should
+#'   not be used by users routinely because results might be unstable.
 #' 
 #' @param clearenvfuns A logical to indicate whether to clear the exposed
 #'   function from the environment (\code{TRUE}) or not (\code{FALSE}). If
@@ -216,16 +217,16 @@
 #'   \code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
 #'   is \code{FALSE}.
 #'  
-#' @param envir Environment of function evaluation. The default is \code{NULL}
-#'   which will set \code{parent.frame()} as default environment. Note that
-#'   since most of post processing functions are based on \pkg{brms}, it is
-#'   strongly advised to set \code{globalenv()} (or \code{.GlobalEnv}) as
-#'   environment. This is particularly true for derivatives such as velocity
-#'   curve.
+#' @param envir Environment used for function evaluation. The default is
+#'   \code{NULL} which will set \code{parent.frame()} as default environment.
+#'   Note that since most of post processing functions are based on \pkg{brms},
+#'   the elements needed for evaluation should be in the .GlobalEnv Therefore,
+#'   it is strongly recommended to set \code{ envir = globalenv()} (or
+#'   \code{envir = .GlobalEnv}). This is particularly true for the
+#'   derivatives such as velocity curve.
 #'   
-#' @param ... Further arguments passed to [brms::fitted.brmsfit()] and
-#'   \code{brms::predict()} functions. See [brms::fitted.brmsfit()] and
-#'   [brms::predict.brmsfit()] for details.
+#' @param ... Further arguments passed to \code{brms::fitted.brmsfit()} and
+#'   \code{brms::predict()} functions.
 #'
 #' @return A data frame with five columns when \code{summary = TRUE}, and two
 #'   columns when \code{summary = False} (assuming \code{re_formual = NULL}).

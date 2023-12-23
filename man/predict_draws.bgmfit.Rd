@@ -149,7 +149,8 @@ object(s).}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
-internal use when testing the function and not used routinely.}
+internal use only during the testing of the functions and therefore should
+not be used by users routinely because results might be unstable.}
 
 \item{clearenvfuns}{A logical to indicate whether to clear the exposed
 function from the environment (\code{TRUE}) or not (\code{FALSE}). If
@@ -157,12 +158,13 @@ function from the environment (\code{TRUE}) or not (\code{FALSE}). If
 \code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
 is \code{FALSE}.}
 
-\item{envir}{Environment of function evaluation. The default is \code{NULL}
-which will set \code{parent.frame()} as default environment. Note that
-since most of post processing functions are based on \pkg{brms}, it is
-strongly advised to set \code{globalenv()} (or \code{.GlobalEnv}) as
-environment. This is particularly true for derivatives such as velocity
-curve.}
+\item{envir}{Environment used for function evaluation. The default is
+\code{NULL} which will set \code{parent.frame()} as default environment.
+Note that since most of post processing functions are based on \pkg{brms},
+the elements needed for evaluation should be in the .GlobalEnv Therefore,
+it is strongly recommended to set \code{ envir = globalenv()} (or
+\code{envir = .GlobalEnv}). This is particularly true for the
+derivatives such as velocity curve.}
 
 \item{...}{Additional arguments passed to the \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}
 function. Please see \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details on various

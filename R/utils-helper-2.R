@@ -422,6 +422,7 @@ get.newdata <- function(model,
                                               by = c(IDvar, 'idxx')) %>%
               dplyr::select(-idxx) %>% data.frame()
           }
+          out <- out %>% dplyr::rename(!!IDvar := 'id') %>% data.frame()
           out 
         } # end idatafunction -> m1
         
