@@ -20,6 +20,8 @@
 #'   recompiled. When \code{NULL} (the default), \code{bsitar::update_model()} 
 #'   tries to figure out internally, if recompilation is necessary. Setting it 
 #'   to \code{FALSE} will cause all Stan code changing arguments to be ignored.
+#'   
+#' @inherit growthparameters.bgmfit params
 #'
 #' @param ... Other arguments passed to \code{\link{brms}}.
 #'
@@ -54,6 +56,7 @@ update_model.bgmfit <-
   function(model,
            newdata = NULL,
            recompile = NULL,
+           verbose = FALSE,
            ...) {
     formula. <- NULL
     args <- formalArgs(bsitar)

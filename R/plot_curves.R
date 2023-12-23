@@ -296,6 +296,7 @@ plot_curves.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
+                               verbose = FALSE,
                                usesavedfuns = FALSE,
                                clearenvfuns = FALSE,
                                envir = NULL,
@@ -534,6 +535,16 @@ plot_curves.bgmfit <- function(model,
   
   if (grepl("a", opt, ignore.case = F) |
       grepl("u", opt, ignore.case = F)) {
+    
+    ipts <- NULL
+    
+    if(verbose) {
+      message("The ipts has been set to NULL i.e., ipts = NULL",
+              "\n ",
+              "This because it does't a make sense to interploate data when",
+           "\n ",
+           " estimating adjusted/unadjusted curves")
+    }
     
     testdata1 <- model$data %>% dplyr::select(dplyr::all_of(IDvar)) %>% 
       droplevels() %>% 

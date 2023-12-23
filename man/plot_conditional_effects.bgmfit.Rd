@@ -10,6 +10,7 @@
   resp = NULL,
   deriv = 0,
   deriv_model = TRUE,
+  verbose = FALSE,
   usesavedfuns = FALSE,
   clearenvfuns = FALSE,
   envir = NULL,
@@ -41,6 +42,10 @@ estimate model based derivatives or from the differentiation of the
 distance curve. When model is fit with \code{decomp = 'QR'}, the only
 approach available to estimate derivatives by the  differentiation of the
 distance curve.}
+
+\item{verbose}{An optional argument (logical, default \code{FALSE}) to
+indicate whether to print information collected during setting up the
+object(s).}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for

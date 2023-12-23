@@ -58,6 +58,7 @@ expose_model_functions.bgmfit <- function(model,
                                  expose = TRUE, 
                                  select_model = NULL, 
                                  returnobj = TRUE,
+                                 verbose = FALSE,
                                  envir = NULL,
                                  ...) {
   
@@ -101,6 +102,16 @@ expose_model_functions.bgmfit <- function(model,
                               "d1",
                               "d2"))
                      )
+  
+  
+  if(expose) {
+    additionlsfuns <- c('getX')
+    if(model$model_info[['select_model']] == 'sitar' |
+       model$model_info[['select_model']] == 'rcs') {
+      additionlsfuns <- c(additionlsfuns, 'getKnots')
+    }
+    spfun_collect <- c(spfun_collect, additionlsfuns)
+  }
   
   
   if(expose_r_from_stan) {

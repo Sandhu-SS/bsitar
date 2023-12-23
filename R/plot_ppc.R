@@ -36,6 +36,7 @@ plot_ppc.bgmfit <-
   function(model,
            resp = NULL,
            deriv = 0,
+           verbose = FALSE,
            usesavedfuns = FALSE,
            clearenvfuns = NULL,
            envir = NULL,

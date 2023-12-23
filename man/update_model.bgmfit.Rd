@@ -5,7 +5,7 @@
 \alias{update_model}
 \title{Update model}
 \usage{
-\method{update_model}{bgmfit}(model, newdata = NULL, recompile = NULL, ...)
+\method{update_model}{bgmfit}(model, newdata = NULL, recompile = NULL, verbose = FALSE, ...)
 
 update_model(model, ...)
 }
@@ -21,6 +21,10 @@ updated automatically.}
 recompiled. When \code{NULL} (the default), \code{bsitar::update_model()}
 tries to figure out internally, if recompilation is necessary. Setting it
 to \code{FALSE} will cause all Stan code changing arguments to be ignored.}
+
+\item{verbose}{An optional argument (logical, default \code{FALSE}) to
+indicate whether to print information collected during setting up the
+object(s).}
 
 \item{...}{Other arguments passed to \code{\link{brms}}.}
 }

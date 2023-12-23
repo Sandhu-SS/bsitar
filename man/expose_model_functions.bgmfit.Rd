@@ -11,6 +11,7 @@
   expose = TRUE,
   select_model = NULL,
   returnobj = TRUE,
+  verbose = FALSE,
   envir = NULL,
   ...
 )
@@ -32,6 +33,10 @@ internal use only.}
 \item{returnobj}{A logical (default \code{TRUE}) to indicate whether to
 return the model object. When \code{expose=TRUE}, then it is advisable to
 set \code{returnobj=TRUE} also.}
+
+\item{verbose}{An optional argument (logical, default \code{FALSE}) to
+indicate whether to print information collected during setting up the
+object(s).}
 
 \item{envir}{Environment of function evaluation. The default is \code{NULL}
 which will set \code{parent.frame()} as default environment. Note that

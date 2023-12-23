@@ -81,6 +81,7 @@ predict_draws.bgmfit <-
            parms_eval = FALSE,
            parms_method = 'getPeak',
            idata_method = 'm1',
+           verbose = FALSE,
            usesavedfuns = FALSE,
            clearenvfuns = FALSE,
            envir = NULL,

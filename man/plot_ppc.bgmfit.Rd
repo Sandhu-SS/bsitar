@@ -9,6 +9,7 @@
   model,
   resp = NULL,
   deriv = 0,
+  verbose = FALSE,
   usesavedfuns = FALSE,
   clearenvfuns = NULL,
   envir = NULL,
@@ -34,6 +35,10 @@ univariate model.}
 derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
 for the distance curve, \code{deriv = 1} for velocity curve, and
 \code{deriv = 2} for the acceleration curve.}
+
+\item{verbose}{An optional argument (logical, default \code{FALSE}) to
+indicate whether to print information collected during setting up the
+object(s).}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for

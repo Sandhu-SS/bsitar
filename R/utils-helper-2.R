@@ -536,7 +536,12 @@ get.newdata <- function(model,
             IDvar_ <- IDvar[1]
             higher_ <- IDvar[2:length(IDvar)]
             arrange_by <- c(IDvar_, xvar)
-            cov_factor_vars_by <- c(higher_, cov_factor_vars)
+            # cov_factor_vars_by <- c(higher_, cov_factor_vars)
+            if(length(IDvar) > 1) {
+              cov_factor_vars_by <- c(higher_, cov_factor_vars)
+            } else {
+              cov_factor_vars_by <- c(cov_factor_vars)
+            }
             newdata <-
               newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
               dplyr::group_by(

@@ -23,6 +23,7 @@
   parms_eval = FALSE,
   parms_method = "getPeak",
   idata_method = "m1",
+  verbose = FALSE,
   usesavedfuns = FALSE,
   clearenvfuns = NULL,
   envir = NULL,
@@ -141,6 +142,10 @@ package and is documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.
 If \code{idata_method = NULL}, then method \code{'m1'} is automatically
 set.}
+
+\item{verbose}{An optional argument (logical, default \code{FALSE}) to
+indicate whether to print information collected during setting up the
+object(s).}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for

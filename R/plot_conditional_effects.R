@@ -87,6 +87,7 @@ plot_conditional_effects.bgmfit <-
            resp = NULL,
            deriv = 0,
            deriv_model = TRUE,
+           verbose = FALSE,
            usesavedfuns = FALSE,
            clearenvfuns = FALSE,
            envir = NULL,

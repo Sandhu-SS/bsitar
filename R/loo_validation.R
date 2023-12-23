@@ -46,6 +46,7 @@ loo_validation.bgmfit <-
   function(model,
            resp = NULL,
            cores = 1,
+           verbose = FALSE,
            usesavedfuns = FALSE,
            clearenvfuns = NULL,
            envir = NULL,

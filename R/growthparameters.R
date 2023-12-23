@@ -201,6 +201,10 @@
 #'   option is \code{findpeaks} that uses the [pracma::findpeaks()] function
 #'   function from the \code{pracma} package. Note that the argument
 #'   \code{parms_method} is currently ignored.
+#'   
+#' @param verbose An optional argument (logical, default \code{FALSE}) to
+#'  indicate whether to print information collected during setting up the 
+#'  object(s). 
 #'  
 #' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to 
 #' use the already exposed and saved \code{Stan} functions. This is for 
@@ -304,6 +308,7 @@ growthparameters.bgmfit <- function(model,
                                parms_eval = FALSE,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
+                               verbose = FALSE,
                                usesavedfuns = FALSE,
                                clearenvfuns = FALSE,
                                envir = NULL,
