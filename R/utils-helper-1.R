@@ -1895,7 +1895,19 @@ plot_lositic3 <- function(model,
                           return_plot = FALSE, 
                           print_plot = TRUE,
                           digits = 2 ,
+                          resp = NULL,
+                          envir = NULL,
                           ...) {
+  
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  
+  if (is.null(resp)) {
+    resp_ <- resp
+  } else if (!is.null(resp)) {
+    resp_ <- paste0(resp, "_")
+  }
   
   args <- list(...)
   args$model <- model
@@ -1906,25 +1918,51 @@ plot_lositic3 <- function(model,
   xintercept_1 <- fixed_[3,1]
   xintercept_2 <- fixed_[6,1] + fixed_[3,1]
   xintercept_3 <- fixed_[9,1]
+  
+  Funx0 <- NULL;
+  Funx1 <- NULL;
+  
+  assign(paste0(resp_, 
+                model$model_info[['namesexefuns']], 
+                '0'), 
+         model$model_info$exefuns[[paste0(resp_, 
+                                          model$model_info[['namesexefuns']], 
+                                          '0')]], envir = envir)
+  
+  assign('Funx0', 
+         model$model_info$exefuns[[paste0(resp_, 
+                                          model$model_info[['namesexefuns']], 
+                                          '0')]], envir = envir)
+  
+  assign('Funx1', 
+         model$model_info$exefuns[[paste0(resp_, 
+                                          model$model_info[['namesexefuns']], 
+                                          '1')]], envir = envir)
+  
+  assign('Funx2', 
+         model$model_info$exefuns[[paste0(resp_, 
+                                          model$model_info[['namesexefuns']], 
+                                          '2')]], envir = envir)
 
   # distance
+  
   yintercept_1 <- 
-    model$model_info$exefuns$DefFun0(xintercept_1, 
-                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
-                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
-                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+    Funx0(xintercept_1, 
+          fixed_[1,1], fixed_[2,1], fixed_[3,1],
+          fixed_[4,1], fixed_[5,1], fixed_[6,1],
+          fixed_[7,1], fixed_[8,1], fixed_[9,1])
   
   yintercept_2 <- 
-    model$model_info$exefuns$DefFun0(xintercept_2, 
-                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
-                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
-                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+    Funx0(xintercept_2, 
+          fixed_[1,1], fixed_[2,1], fixed_[3,1],
+          fixed_[4,1], fixed_[5,1], fixed_[6,1],
+          fixed_[7,1], fixed_[8,1], fixed_[9,1])
   
   yintercept_3 <- 
-    model$model_info$exefuns$DefFun1(xintercept_3, 
-                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
-                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
-                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+    Funx1(xintercept_3, 
+          fixed_[1,1], fixed_[2,1], fixed_[3,1],
+          fixed_[4,1], fixed_[5,1], fixed_[6,1],
+          fixed_[7,1], fixed_[8,1], fixed_[9,1])
   
   
   
@@ -1932,27 +1970,27 @@ plot_lositic3 <- function(model,
   getfb <- transform.sec.axis(pob$data$Estimate.x, pob$data$Estimate.y)
   
   xyvelocity_1 <- 
-    model$model_info$exefuns$DefFun1(xintercept_1, 
-                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
-                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
-                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+    Funx1(xintercept_1, 
+          fixed_[1,1], fixed_[2,1], fixed_[3,1],
+          fixed_[4,1], fixed_[5,1], fixed_[6,1],
+          fixed_[7,1], fixed_[8,1], fixed_[9,1])
   
   yintercept_v1 <- getfb$fwd(xyvelocity_1)
   
   xyvelocity_2 <- 
-    model$model_info$exefuns$DefFun1(xintercept_2, 
-                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
-                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
-                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+    Funx1(xintercept_2, 
+          fixed_[1,1], fixed_[2,1], fixed_[3,1],
+          fixed_[4,1], fixed_[5,1], fixed_[6,1],
+          fixed_[7,1], fixed_[8,1], fixed_[9,1])
   
   yintercept_v2 <- getfb$fwd(xyvelocity_2)
   
   
   xyvelocity_3 <-
-    model$model_info$exefuns$DefFun1(xintercept_3, 
-                                     fixed_[1,1], fixed_[2,1], fixed_[3,1],
-                                     fixed_[4,1], fixed_[5,1], fixed_[6,1],
-                                     fixed_[7,1], fixed_[8,1], fixed_[9,1])
+    Funx1(xintercept_3, 
+          fixed_[1,1], fixed_[2,1], fixed_[3,1],
+          fixed_[4,1], fixed_[5,1], fixed_[6,1],
+          fixed_[7,1], fixed_[8,1], fixed_[9,1])
   
   yintercept_v3 <- getfb$fwd(xyvelocity_3)
   

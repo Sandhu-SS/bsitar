@@ -700,17 +700,17 @@ prepare_formula <- function(x,
   }
   
  
-  
-  
+
   if (!(is.na(univariate_by$by) |
         univariate_by$by == "NA") &
       !is.null(subindicatorsi)) {
+    termsvia <- univariate_by$terms
     if (terms_rhssi == "NULL") {
-      abcsformfit <- (paste0(y,  "|", "subset(", subindicatorsi, ")",
+      abcsformfit <- (paste0(y,  "|", termsvia, "(", subindicatorsi, ")",
                              " ~ ", abcselements))
     }
     if (terms_rhssi != "NULL") {
-      abcsformfit <- (paste0(y,  "|", terms_rhssi, "+", "subset(", 
+      abcsformfit <- (paste0(y,  "|", terms_rhssi, "+", termsvia, "(", 
                              subindicatorsi, ")",
                              " ~ ", abcselements))
     }

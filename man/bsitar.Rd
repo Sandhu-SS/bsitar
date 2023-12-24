@@ -43,7 +43,7 @@ bsitar(
   group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist = gaussian),
   sigma_group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist =
     gaussian),
-  univariate_by = list(by = NA, cor = un),
+  univariate_by = list(by = NA, cor = un, terms = subset),
   multivariate = list(mvar = FALSE, cor = un, rescor = TRUE),
   a_prior_beta = student_t(3, ymean, ysd, autoscale = TRUE),
   b_prior_beta = student_t(3, 0, 3.5, autoscale = FALSE),
@@ -541,10 +541,10 @@ random effects, \code{sigma}. The approach used in setting up the
 \code{sigma_group_arg} is exactly same as described above for the group
 level random effects (see \code{group_arg} for details).}
 
-\item{univariate_by}{Set up univariate-by-subgroup model fitting (default
-\code{NULL}) arguments as a named list:
+\item{univariate_by}{Set up the univariate-by-subgroup model fitting (default
+\code{NULL}) via a named list as described below:
 \itemize{
-\item The \code{by} (an optional character string) is used to specifies the
+\item The \code{by} (an optional character string) is used to specify the
 variable (must be a factor variable) to define the sub models (default
 \code{NA}).
 \item The \code{cor} (an optional character string) specifies the
@@ -553,6 +553,9 @@ correlation structure. The options available are \code{un} and
 variance covariance structure, whereas the \code{cor = diagonal} estimates
 only the variance (i.e, standard deviation) parameters and the covariance
 (i.e., correlation) parameters are set to zero.
+\item The \code{terms} (an optional character string) specifies the method
+used in setting up the sub models. Options are \code{'subset'} (default) and
+\code{'weights'}. See \code{brms::`addition-terms`} for details.
 }}
 
 \item{multivariate}{Set up the multivariate model fitting (default

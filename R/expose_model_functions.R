@@ -187,6 +187,14 @@ expose_model_functions.bgmfit <- function(model,
   
   model$model_info[['namesexefuns']] <- SplineFun_name
   model$model_info[['exefuns']]      <- Spl_funs
+  
+  # If exposed from Stan, then replace with _pstrean funs
+  # if(expose) {
+  #   for (Spl_funsi in names(Spl_funs)) {
+  #     model$model_info[['exefuns']] [[Spl_funsi]] <- Spl_funs[[Spl_funsi]]
+  #   }
+  # }
+  
   scode_include <- brms::stancode(model)
   model$bmodel <- scode_include
   if (nys == 1 | nys > 1) {
