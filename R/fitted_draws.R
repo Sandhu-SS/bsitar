@@ -179,15 +179,14 @@ fitted_draws.bgmfit <-
     # }
     
     
-    test <- setupfuns(model = model, o = o, oall = oall, 
+    test <- setupfuns(model = model, resp = resp,
+                      o = o, oall = oall, 
                       usesavedfuns = usesavedfuns, 
                       deriv = deriv, envir = envir, 
                       deriv_model = deriv_model, 
                       ...)
     
     if(is.null(test)) return(invisible(NULL))
-    
-    # assign(test, eval(parse(text = test)))
     
     . <- fitted(model,
                 newdata = newdata,

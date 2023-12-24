@@ -1637,14 +1637,18 @@ plot_curves.bgmfit <- function(model,
       if (grepl("^[[:upper:]]+$", dist..)) {
         d. <-
           d. %>% 
-          dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_d)))
+          dplyr::mutate(
+            groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_d)))
+            )
       } else if (!grepl("^[[:upper:]]+$", dist..)) {
         if (is.null(groupby_str_d))
           d. <- d. %>% dplyr::mutate(groupby = NA)
         if (!is.null(groupby_str_d))
           d. <-
-            d. %>% dplyr::mutate(groupby =
-                                   interaction(dplyr::across(groupby_str_d)))
+            d. %>% 
+            dplyr::mutate(
+              groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_d)))
+              )
       }
       
       
@@ -1724,14 +1728,17 @@ plot_curves.bgmfit <- function(model,
       if (grepl("^[[:upper:]]+$", velc..)) {
         d. <-
           d. %>% 
-          dplyr::mutate(groupby = interaction(dplyr::across(groupby_str_v)))
+          dplyr::mutate(
+            groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_v)))
+            )
       } else if (!grepl("^[[:upper:]]+$", velc..)) {
         if (is.null(groupby_str_v))
           d. <- d. %>% dplyr::mutate(groupby = NA)
         if (!is.null(groupby_str_v))
           d. <-
-            d. %>% dplyr::mutate(groupby =
-                                   interaction(dplyr::across(groupby_str_v)))
+            d. %>% dplyr::mutate(
+              groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_v)))
+              )
       }
       
       
@@ -1917,20 +1924,27 @@ plot_curves.bgmfit <- function(model,
         if (grepl("^[[:upper:]]+$", dist..)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby = 
-                            interaction(dplyr::across(groupby_str_d))) %>%
-            dplyr::mutate(groupby.x = 
-                            interaction(dplyr::across(groupby_str_d)))
+            dplyr::mutate(
+              groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_d)))
+              ) %>%
+            dplyr::mutate(
+              groupby.x = 
+                interaction(dplyr::across(dplyr::all_of(groupby_str_d)))
+              )
         } else if (!grepl("^[[:upper:]]+$", dist..)) {
           if (is.null(groupby_str_d)) {
             data_dv <- data_dv %>% dplyr::mutate(groupby = NA) %>%
               dplyr::mutate(groupby.x = NA)
           } else if (!is.null(groupby_str_d)) {
             data_dv <- data_dv %>%
-              dplyr::mutate(groupby =
-                              interaction(dplyr::across(groupby_str_d))) %>%
-              dplyr::mutate(groupby.x = 
-                              interaction(dplyr::across(groupby_str_d)))
+              dplyr::mutate(
+                groupby = 
+                  interaction(dplyr::across(dplyr::all_of(groupby_str_d)))
+                ) %>%
+              dplyr::mutate(
+                groupby.x = 
+                  interaction(dplyr::across(dplyr::all_of(groupby_str_d)))
+                )
           }
         }
       }
@@ -1941,8 +1955,9 @@ plot_curves.bgmfit <- function(model,
         if (grepl("^[[:upper:]]+$", velc..)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby = 
-                            interaction(dplyr::across(groupby_str_v))) %>%
+            dplyr::mutate(
+              groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_v)))
+              ) %>%
             dplyr::mutate(groupby.y = groupby)
         } else if (!grepl("^[[:upper:]]+$", velc..)) {
           if (is.null(groupby_str_v)) {
@@ -1950,10 +1965,14 @@ plot_curves.bgmfit <- function(model,
               dplyr::mutate(groupby.y = NA)
           } else if (!is.null(groupby_str_v)) {
             data_dv <- data_dv %>%
-              dplyr::mutate(groupby =
-                              interaction(dplyr::across(groupby_str_v))) %>%
-              dplyr::mutate(groupby.y = 
-                              interaction(dplyr::across(groupby_str_v)))
+              dplyr::mutate(
+                groupby = 
+                  interaction(dplyr::across(dplyr::all_of(groupby_str_v)))
+                ) %>%
+              dplyr::mutate(
+                groupby.y = 
+                  interaction(dplyr::across(dplyr::all_of(groupby_str_v)))
+                )
           }
         }
       }
@@ -1963,14 +1982,18 @@ plot_curves.bgmfit <- function(model,
         if (is.null(groupby_str_v)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)),
-                          groupby.y = NA)
+            dplyr::mutate(
+              groupby.x = 
+                interaction(dplyr::across(dplyr::all_of(groupby_str_d))),
+              groupby.y = NA)
         } else if (!is.null(groupby_str_v)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)),
-                          groupby.y =
-                            interaction(dplyr::across(groupby_str_v)))
+            dplyr::mutate(
+              groupby.x = 
+                interaction(dplyr::across(dplyr::all_of(groupby_str_d))),
+              groupby.y =
+                interaction(dplyr::across(dplyr::all_of(groupby_str_v))))
         }
       }
       
@@ -1978,15 +2001,18 @@ plot_curves.bgmfit <- function(model,
           grepl("^[[:upper:]]+$", velc..)) {
         if (is.null(groupby_str_d)) {
           data_dv <-
-            data_dv %>% dplyr::mutate(groupby.x = NA,
-                                      groupby.y =
-                                      interaction(dplyr::across(groupby_str_v)))
+            data_dv %>% dplyr::mutate(
+              groupby.x = NA,
+              groupby.y =
+                interaction(dplyr::across(dplyr::all_of(groupby_str_v))))
         } else if (!is.null(groupby_str_d)) {
           data_dv <-
             data_dv %>%
-            dplyr::mutate(groupby.x = interaction(dplyr::across(groupby_str_d)),
-                          groupby.y =
-                            interaction(dplyr::across(groupby_str_v)))
+            dplyr::mutate(
+              groupby.x = 
+                interaction(dplyr::across(dplyr::all_of(groupby_str_d))),
+              groupby.y =
+                interaction(dplyr::across(dplyr::all_of(groupby_str_v))))
         }
       }
       

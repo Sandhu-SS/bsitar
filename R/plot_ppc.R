@@ -97,10 +97,10 @@ plot_ppc.bgmfit <-
                                    deriv = deriv, 
                                    all = TRUE)
     
-    test <- setupfuns(model = model, o = o, oall = oall, 
+    test <- setupfuns(model = model, resp = resp,
+                      o = o, oall = oall, 
                       usesavedfuns = usesavedfuns, 
-                      deriv = deriv, 
-                      envir = envir, 
+                      deriv = deriv, envir = envir, 
                       deriv_model = deriv_model, 
                       ...)
     

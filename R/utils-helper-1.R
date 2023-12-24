@@ -2154,6 +2154,7 @@ getpipedot <- function(arguments, asstr = FALSE) {
 #'
 
 setupfuns <- function(model, 
+                      resp,
                       o, 
                       oall, 
                       usesavedfuns, 
@@ -2163,6 +2164,12 @@ setupfuns <- function(model,
   
   if(is.null(envir)) {
     envir <- parent.frame()
+  }
+  
+  if (is.null(resp)) {
+    resp_ <- resp
+  } else if (!is.null(resp)) {
+    resp_ <- paste0(resp, "_")
   }
   
   if(!usesavedfuns) {
@@ -2190,12 +2197,15 @@ setupfuns <- function(model,
   if(!is.null(deriv)) {
     if(deriv == 0) {
       assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+      assignfun <- paste0(resp_, assignfun)
       assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
     } else if(deriv > 0) {
       if(deriv_model) {
         assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+        assignfun <- paste0(resp_, assignfun)
       } else if(!deriv_model) {
         assignfun <- paste0(model$model_info[['namesexefuns']], '0')
+        assignfun <- paste0(resp_, assignfun)
       }
       assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
     }
@@ -2203,9 +2213,9 @@ setupfuns <- function(model,
   
   if(is.null(deriv)) {
     assignfun <- paste0(model$model_info[['namesexefuns']], "")
+    assignfun <- paste0(resp_, assignfun)
     assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
   }
-  
   return(envir)
 }
 

@@ -91,29 +91,19 @@ predict_draws.bgmfit <-
       envir <- parent.frame()
     }
     
-    if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") deriv_model<- FALSE
-    }
-    
-    
-    o <-
-      post_processing_checks(model = model,
-                             xcall = match.call(),
-                             resp = resp,
-                             envir = envir,
-                             deriv = deriv,
-                             all = FALSE)
-    
-   
-    if(usesavedfuns | clearenvfuns) {
-      oall <-
-        post_processing_checks(model = model,
-                               xcall = match.call(),
-                               resp = resp,
-                               envir = envir,
-                               deriv = deriv,
-                               all = TRUE)
-    }
+    # For consistency across post processing functions
+    charg <- ls()
+    chcall <- match.call()
+    if(!checkifargmiss(charg, chcall, 'deriv'))          deriv          <- NULL
+    if(!checkifargmiss(charg, chcall, 'numeric_cov_at')) numeric_cov_at <- NULL
+    if(!checkifargmiss(charg, chcall, 'levels_id'))      levels_id      <- NULL
+    if(!checkifargmiss(charg, chcall, 'ipts'))           ipts           <- NULL
+    if(!checkifargmiss(charg, chcall, 'idata_method'))   idata_method   <- NULL
+    if(!checkifargmiss(charg, chcall, 'xrange'))         xrange         <- NULL
+    if(!checkifargmiss(charg, chcall, 'probs'))          probs          <- NULL
+    if(!checkifargmiss(charg, chcall, 'robust'))         robust         <- NULL
+    if(!checkifargmiss(charg, chcall, 'newdata'))        newdata        <- NULL
+    if(!checkifargmiss(charg, chcall, 'deriv_model'))    deriv_model    <- FALSE
     
     
     if(!is.null(model$xcall)) {
@@ -135,52 +125,32 @@ predict_draws.bgmfit <-
       if(model$model_info$decomp == "QR") deriv_model<- FALSE
     }
     
+    expose_method_set <- model$model_info[['expose_method']]
     
-    if(deriv == 0) {
-      getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    }
+    model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
-    if(!deriv_model) {
-      if(deriv == 1 | deriv == 2) {
-        summary <- FALSE
-        getfunx <- model$model_info[['exefuns']][[o[[1]]]]
-        assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
-      }
-    }
+    o <- post_processing_checks(model = model,
+                                xcall = match.call(),
+                                resp = resp,
+                                envir = envir,
+                                deriv = deriv, 
+                                all = FALSE)
     
-    if(deriv_model) {
-      if(deriv == 1 | deriv == 2) {
-        getfunx <- model$model_info[['exefuns']][[o[[2]]]]
-        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-      }
-    }
+    oall <- post_processing_checks(model = model,
+                                   xcall = match.call(),
+                                   resp = resp,
+                                   envir = envir,
+                                   deriv = deriv, 
+                                   all = TRUE)
     
+    test <- setupfuns(model = model, resp = resp,
+                      o = o, oall = oall, 
+                      usesavedfuns = usesavedfuns, 
+                      deriv = deriv, envir = envir, 
+                      deriv_model = deriv_model, 
+                      ...)
     
-    if(!usesavedfuns) {
-      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        return(invisible(NULL))
-      }
-    }
-    
-    
-    if(usesavedfuns) {
-      if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-        tempgenv <- envir
-        oalli_c <- c()
-        oalli_c <- c(oalli_c, paste0(o[[1]], "0"))
-        for (oalli in names(oall)) {
-          if(!grepl(o[[1]], oalli)) {
-            oalli_c <- c(oalli_c, oalli)
-          }
-        }
-        for (oalli in oalli_c) {
-          assign(oalli, oall[[oalli]], envir = tempgenv)
-        }
-        assign(o[[1]], getfunx, envir = tempgenv)
-      }
-    }
-    
+    if(is.null(test)) return(invisible(NULL))
     
     
     . <- predict(model,
@@ -198,13 +168,20 @@ predict_draws.bgmfit <-
                 probs = probs,
                 ...)
     
-    if(!deriv_model) {
-      if(deriv == 1 | deriv == 2) {
-        . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
-                        deriv = deriv, probs = probs, robust = robust)
+    if(!is.null(deriv)) {
+      if(deriv > 0) { 
+        if(!deriv_model) {
+          . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
+                          deriv = deriv, probs = probs, robust = robust)
+        } else {
+          . <- .
+        }
       }
-    } 
+    }
     
+    
+    
+    # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     if(!is.null(clearenvfuns)) {
@@ -215,6 +192,11 @@ predict_draws.bgmfit <-
       }
     }
     
+    if(is.null(clearenvfuns)) {
+      if(usesavedfuns) setcleanup <- TRUE else setcleanup <- FALSE
+    }
+    
+    # Cleanup environment if requested
     if(setcleanup) {
       tempgenv <- envir
       for (oalli in names(oall)) {
@@ -222,7 +204,14 @@ predict_draws.bgmfit <-
           remove(list=oalli, envir = tempgenv)
         }
       }
-    }
+      tempgenv <- test
+      for (oalli in names(oall)) {
+        if(exists(oalli, envir = tempgenv )) {
+          remove(list=oalli, envir = tempgenv)
+        }
+      }
+      
+    } # if(setcleanup) {
     
     .
   }
