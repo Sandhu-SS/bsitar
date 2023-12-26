@@ -1068,7 +1068,7 @@ prepare_formula <- function(x,
   srandom_wb <- gsub("1+1", "1", srandom_wb, fixed = T)
   
   sigma_random_wb <- gsub("1+1", "1", sigma_random_wb, fixed = T)
-  
+ 
   
   if (!is.null(afixed)) {
     acovmat <- eval(parse(text = paste0(
@@ -1968,7 +1968,7 @@ prepare_formula <- function(x,
     gr_varss
   }
   
-  
+ 
   
   if(set_higher_levels) {
     if(a_formula_gr_strsi_present) {
@@ -2073,7 +2073,8 @@ prepare_formula <- function(x,
     }
     
     gr_varss <- c(agr_varss, bgr_varss, cgr_varss, dgr_varss, 
-                  egr_varss, fgr_varss)
+                  egr_varss, fgr_varss, ggr_varss,
+                  hgr_varss, igr_varss)
     
     gr_varss <- unique(gr_varss)
     
@@ -2421,7 +2422,8 @@ prepare_formula <- function(x,
   sigma_covariate <- getcovlist(sigma_formulasi)
   
   covariates <- c(a_covariate, b_covariate, c_covariate, d_covariate, 
-                  e_covariate, f_covariate, 
+                  e_covariate, f_covariate, g_covariate, 
+                  h_covariate, i_covariate, 
                   s_covariate)
   
   covariates_ <- unique(covariates)
@@ -2452,7 +2454,7 @@ prepare_formula <- function(x,
     
     a_covariate <- a_covariate_i
     
-    
+   
     
     
     s_covariate_i <- c()
@@ -2474,6 +2476,7 @@ prepare_formula <- function(x,
     
     
     
+    
     if (!grepl("^~1$", s_formulasi)) {
       if (!identical(strsplit(a_formulasi, "+")[[1]][1:2],
                      strsplit(s_formulasi, "+")[[1]][1:2])) {
@@ -2492,6 +2495,7 @@ prepare_formula <- function(x,
         )
       }
       
+      
       if (length(a_covariate) == 1) {
         if (grepl("~0", s_formulasi, fixed = T)) {
           lmform  <- as.formula(paste0(y, "~0+",  a_covariate, "*", "mat_s"))
@@ -2502,12 +2506,20 @@ prepare_formula <- function(x,
         main_cov <- a_covariate
         main_cov <-
           paste(unlist(strsplit(main_cov, "+", fixed = T)), sep = " ")
-        inte_cov <- paste0(main_cov, ":", "mat_s")
+        # inte_cov <- paste0(main_cov, ":", "mat_s")
+        # Even when ~0 or ~1, interaction is excluded for the first covariate
+        inte_cov <- paste0(main_cov[2:length(main_cov)], ":", "mat_s")
         main_inte_cov <- c(main_cov, "mat_s", inte_cov)
         main_inte_cov <- paste(main_inte_cov, collapse = "+")
-        if (grepl("~0", s_formulasi, fixed = T)) {
+        # if (grepl("~0", s_formulasi, fixed = T)) {
+        # here and below in else if added a_formulasi
+        if (grepl("~0", s_formulasi, fixed = T) |
+            grepl("~0", a_formulasi, fixed = T)
+            ) {
           lmform  <- as.formula(paste0(y, "~0+",  main_inte_cov))
-        } else if (!grepl("~0", s_formulasi, fixed = T)) {
+        } else if (!grepl("~0", s_formulasi, fixed = T) &
+                   !grepl("~0", a_formulasi, fixed = T)
+                   ) {
           lmform  <- as.formula(paste0(y, "~1+",  main_inte_cov))
         }
       }
@@ -2524,9 +2536,15 @@ prepare_formula <- function(x,
         main_cov <- a_covariate
         main_inte_cov <- c(main_cov, "mat_s")
         main_inte_cov <- paste(main_inte_cov, collapse = "+")
-        if (grepl("~0", s_formulasi, fixed = T)) {
+        # if (grepl("~0", s_formulasi, fixed = T)) {
+        # here and below in else if added a_formulasi
+        if (grepl("~0", s_formulasi, fixed = T) |
+            grepl("~0", a_formulasi, fixed = T)
+        ) {
           lmform  <- as.formula(paste0(y, "~0+",  main_inte_cov))
-        } else if (!grepl("~0", s_formulasi, fixed = T)) {
+        } else if (!grepl("~0", s_formulasi, fixed = T) &
+                   !grepl("~0", a_formulasi, fixed = T)
+        ) {
           lmform  <- as.formula(paste0(y, "~1+",  main_inte_cov))
         }
       }
@@ -2546,13 +2564,12 @@ prepare_formula <- function(x,
     }
     
     
-    
     lm_fit  <- lm(lmform, data = data)
     lm_coef <- coef(lm_fit)
     
     lm_rsd  <- summary(lm_fit)$sigma
     
-    
+
     # lme
     enverr. <- parent.frame()
     # err. <- FALSE
@@ -2696,7 +2713,6 @@ prepare_formula <- function(x,
       sds_X[i] = sd(mat_s_scovmat[, i])
     }
     lm_sdx_all <- sd(data[[y]]) / sds_X
-    
     
     names(lm_s_all) <- names_mat_s_scovmat
     names(lm_sdx_all) <- names_mat_s_scovmat

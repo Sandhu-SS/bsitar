@@ -405,6 +405,8 @@ get.newdata <- function(model,
             aux_var = aux_var
           )
           
+          out <- out %>% dplyr::rename(!!IDvar := 'id') %>% data.frame()
+          
           if(inidnull) out <- out %>% dplyr::select(-dplyr::all_of(IDvar))
           
           idxx <- NULL
@@ -422,7 +424,7 @@ get.newdata <- function(model,
                                               by = c(IDvar, 'idxx')) %>%
               dplyr::select(-idxx) %>% data.frame()
           }
-          out <- out %>% dplyr::rename(!!IDvar := 'id') %>% data.frame()
+          
           out 
         } # end idatafunction -> m1
         

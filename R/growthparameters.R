@@ -129,9 +129,12 @@
 #'   parameters are integrated over the random effects) such as
 #'   \code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}.
 #'   
-#'@param aux_variables An optional argument to specify the variables that can be
-#'  passed to the \code{ipts} argument (see below). This is useful when fitting
-#'  location scale models and the measurement error models.
+#'@param aux_variables An optional argument to specify the variable(s) that can
+#'  be passed to the \code{ipts} argument (see below). This is useful when
+#'  fitting location scale models and the measurement error models. An
+#'  indication to use \code{aux_variables} is when post processing functions
+#'  throw an error such as \code{variable 'x' not found either 'data' or
+#'  'data2'}
 #'   
 #' @param ipts An integer to set the length of the predictor variable to get a
 #'   smooth velocity curve. The \code{NULL} will return original values whereas

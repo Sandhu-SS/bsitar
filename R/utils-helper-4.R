@@ -4195,7 +4195,9 @@ prepare_priors <- function(prior_argument,
       
       # Get scale_factor to multiply with scale parameters
       
-      err. <- FALSE
+      enverr. <- parent.frame()
+      # err. <- FALSE
+      assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           check_for_autoscale <-
@@ -4205,9 +4207,11 @@ prepare_priors <- function(prior_argument,
           ! is.numeric(check_for_autoscale)
         },
         error = function(e) {
-          err. <<- TRUE
+          # err. <<- TRUE
+          assign('err.', TRUE, envir = enverr.)
         }
       )
+      err. <- get('err.', envir = enverr.)
       if (err.) {
         stop("scale factor set by autoscale can only be",
              "\n",
@@ -4276,15 +4280,19 @@ prepare_priors <- function(prior_argument,
                 paste0(" - ", allowed_parm_options)
               const_msg <- paste0(allowed_parm_options, "\n", const_msg)
             }
-            err. <- FALSE
+            enverr. <- parent.frame()
+            # err. <- FALSE
+            assign('err.', FALSE, envir = enverr.)
             tryCatch(
               expr = {
                 out <- ept(eit)
               },
               error = function(e) {
-                err. <<- TRUE
+                # err. <<- TRUE
+                assign('err.', TRUE, envir = enverr.)
               }
             )
+            err. <- get('err.', envir = enverr.)
             if (err.) {
               if (class == 'b' | class == 'sd') {
                 stop(
@@ -10875,8 +10883,6 @@ prepare_priors <- function(prior_argument,
   }
   
   
-  
-  
   return(
     list(
       prior_str_arg = prior_str_arg_out,
@@ -11102,17 +11108,23 @@ prepare_initials <- function(init_argument,
       } else {
         const_msg <- paste0("random,", " 0, ", "Or ", const_msg)
       }
-      err. <- FALSE
+      enverr. <- parent.frame()
+      # err. <- FALSE
+      assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           out <- ept(eit)
         },
         error = function(e) {
-          err. <<- TRUE
+          # err. <<- TRUE
+          assign('err.', TRUE, envir = enverr.)
         }
       )
+      err. <- get('err.', envir = enverr.)
       if (eit == 'NULL' | eit == 'random')
-        err. <- FALSE
+        enverr. <- parent.frame()
+        # err. <- FALSE
+        assign('err.', FALSE, envir = enverr.)
       if (err.) {
         if (check == 'args') {
           if (class == 'b' | class == 'sd') {
@@ -11227,7 +11239,7 @@ prepare_initials <- function(init_argument,
             const_msg
           )
         }
-        rm(err.)
+        # rm(err.)
       }
     }
   
@@ -13282,7 +13294,8 @@ optimize_model.bgmfit <- function(model,
     
     
     if ('waic' %in% add_fit_criteria) {
-      err. <- FALSE
+      enverr. <- parent.frame()
+      # err. <- FALSE
       tryCatch(
         expr = {
           if (!is.na(fit$model_info$univariate_by)) {
@@ -13325,9 +13338,11 @@ optimize_model.bgmfit <- function(model,
           rownames(summary_waic) <- NULL
         },
         error = function(e) {
-          err. <<- TRUE
+          # err. <<- TRUE
+          assign('err.', TRUE, envir = enverr.)
         }
       )
+      err. <- get('err.', envir = enverr.)
       if (err.) {
         summary_waic <- NULL
       } else {
@@ -13341,7 +13356,9 @@ optimize_model.bgmfit <- function(model,
     
     
     if ('bayes_R2' %in% add_bayes_R) {
-      err. <- FALSE
+      enverr. <- parent.frame()
+      # err. <- FALSE
+      assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           if (!is.na(fit$model_info$univariate_by)) {
@@ -13386,9 +13403,11 @@ optimize_model.bgmfit <- function(model,
           rownames(summary_bayes_R2) <- NULL
         },
         error = function(e) {
-          err. <<- TRUE
+          # err. <<- TRUE
+          assign('err.', TRUE, envir = enverr.)
         }
       )
+      err. <- get('err.', envir = enverr.)
       if (err.) {
         summary_bayes_R2 <- NULL
       } else {
@@ -13402,7 +13421,9 @@ optimize_model.bgmfit <- function(model,
     
     if ('loo' %in% add_fit_criteria) {
       if ('loo' %in% add_fit_criteria) {
-        err. <- FALSE
+        enverr. <- parent.frame()
+        # err. <- FALSE
+        assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
             if (!is.na(fit$model_info$univariate_by)) {
@@ -13448,9 +13469,11 @@ optimize_model.bgmfit <- function(model,
             rownames(summary_loo) <- NULL
           },
           error = function(e) {
-            err. <<- TRUE
+            # err. <<- TRUE
+            assign('err.', TRUE, envir = enverr.)
           }
         )
+        err. <- get('err.', envir = enverr.)
         if (err.) {
           summary_loo <- NULL
         } else {
@@ -13460,7 +13483,9 @@ optimize_model.bgmfit <- function(model,
       }
       
       if ('loo' %in% add_fit_criteria) {
-        err. <- FALSE
+        enverr. <- parent.frame()
+        # err. <- FALSE
+        assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
             if (!is.na(fit$model_info$univariate_by)) {
@@ -13506,9 +13531,11 @@ optimize_model.bgmfit <- function(model,
             rownames(diagnostic_loo) <- NULL
           },
           error = function(e) {
-            err. <<- TRUE
+            # err. <<- TRUE
+            assign('err.', TRUE, envir = enverr.)
           }
         )
+        err. <- get('err.', envir = enverr.)
         if (err.) {
           diagnostic_loo <- NULL
         } else {

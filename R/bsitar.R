@@ -361,6 +361,8 @@
 #'  \code{|i|} and \code{|i2|} need to be distinct because random effect 
 #'  parameters are not allowed to be correlated across different levels of 
 #'  hierarchy.
+#'  It is worth mentioning that user can set up model with any number of 
+#'  hierarchical levels and include covariate into the random effect formula.
 #'  
 #'@param b_formula_gr_str Formula for the random effect parameter, \code{b}
 #'  (default \code{NULL}) when fitting a hierarchical model with three or more
@@ -5366,6 +5368,7 @@ bsitar <- function(x,
         set_priors_initials_agrs_str <- org_priors_initials_agrs 
         
         gr_str_id <- id_higher_str
+        
         counter_start_from_one_for_prior <- 0
         for (istrx in 2:length(gr_str_id)) {
           counter_start_from_one_for_prior <- 
@@ -5399,16 +5402,14 @@ bsitar <- function(x,
             stanvars_str <- attr(bpriors_str, "stanvars")
             initials_str <- attr(bpriors_str, "initials")
             temp_gr_str_stanvars <- c(temp_gr_str_stanvars, stanvars_str)
-            temp_gr_str_priors[[istrx]] <- bpriors_str
-           
-            if(temp_gr_str_priors[[istrx]][,1] != "") {
-              temp_gr_str_priors <- temp_gr_str_priors %>% do.call(rbind, .)
-            } else if(temp_gr_str_priors[[istrx]][,1] == "") {
+            # on 26 12 2023
+            temp_gr_str_priors <- bpriors_str
+            if(temp_gr_str_priors $ prior == "") {
               temp_gr_str_priors <- temp_gr_str_stanvars <- NULL
               temp_gr_str_inits <- NULL
             }
-            
           } # if(get_corr_higher_str_tf) {
+          
           if(!get_corr_higher_str_tf) {
             temp_gr_str_priors <- temp_gr_str_stanvars <- NULL
               temp_gr_str_inits <- NULL
@@ -5511,7 +5512,7 @@ bsitar <- function(x,
           set_env = set_env_what,
           org_priors_initials_agrs = set_org_priors_initials_agrs_what
           )
-        
+       
         temp_gr_str_priors_corr[[set_randomsi_higher_levsli]] <- 
           out2 $ temp_gr_str_priors
         temp_gr_str_stanvars_corr <- 
@@ -5519,10 +5520,12 @@ bsitar <- function(x,
         temp_gr_str_inits_corr <- 
           c(temp_gr_str_inits_corr,    out2 $ temp_gr_str_inits)
       } 
+      
     } 
     
-    higher_level_priors <- temp_gr_str_priors_corr %>% do.call(rbind, .)
-    bpriors             <- rbind(bpriors, higher_level_priors)
+    higher_level_priors_corr <- temp_gr_str_priors_corr %>% do.call(rbind, .)
+    bpriors                  <- rbind(bpriors, higher_level_priors_corr)
+   
     
     if(length(temp_gr_str_stanvars_corr) > 0) {
       stanvar_priors_c <- temp_gr_str_stanvars_corr_c <- c()
@@ -5548,6 +5551,7 @@ bsitar <- function(x,
       initials <- c(initials_c, temp_gr_str_inits_corr) 
     } 
    
+    
     
     priorlist <- rbind(priorlist, bpriors)
     stanvar_priors_names <- names(stanvar_priors)

@@ -470,9 +470,15 @@ get_x_random2 <- function(x) {
   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
   if(any(grepl("^|gr", x))) {
     x <- sub(".*gr", "", x) 
-    x <- strsplit(x, ",")[[1]][1]
+    x_c <- c()
+    for (xi in 1:length(x)) {
+      gxi <- strsplit(x[xi], ",")[[1]][1]
+      x_c <- c(x_c, gxi)
+    }
+    x <- x_c
+    # x <- strsplit(x, ",")[[1]][1]
   } 
-  x <- sub(".*\\|", "", x) 
+  x <- sub(".*\\|", "", x)
   x <- unique(unlist(strsplit(x, ":")) )
   x
 }

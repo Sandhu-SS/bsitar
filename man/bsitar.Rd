@@ -400,7 +400,9 @@ where \code{|i|} and \code{|i2|} set up the unstructured correlation
 structure for individual and study level random effects. Note that
 \code{|i|} and \code{|i2|} need to be distinct because random effect
 parameters are not allowed to be correlated across different levels of
-hierarchy.}
+hierarchy.
+It is worth mentioning that user can set up model with any number of
+hierarchical levels and include covariate into the random effect formula.}
 
 \item{b_formula_gr_str}{Formula for the random effect parameter, \code{b}
 (default \code{NULL}) when fitting a hierarchical model with three or more
