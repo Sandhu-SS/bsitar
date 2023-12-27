@@ -453,6 +453,7 @@ prepare_formula <- function(x,
         gr_str_corr_all <- c(gr_str_corr_all,  
                              get_gr_str_coef_id_it[['set_corr_it']] %>% 
                                unlist() )
+      
         gr_str_corr_tf_all  <- 
           c(gr_str_corr_tf_all, 
             get_gr_str_coef_id_it[['set_corr_true_false']] %>% 
@@ -465,6 +466,7 @@ prepare_formula <- function(x,
           get_gr_str_coef_id_it[['set_corr_true_false']]
       }
       if(set_randomsi_higher_levsli == 'sigma') {
+        
         sigma_str_id_all   <- c(sigma_str_id_all, 
                                 get_gr_str_coef_id_it[['tsx_c_id']] %>% 
                                   unlist())
@@ -480,6 +482,8 @@ prepare_formula <- function(x,
         sigma_str_corr_all <- c(sigma_str_corr_all, 
                                 get_gr_str_coef_id_it[['set_corr_it']] %>% 
                                   unlist() )
+        
+       
         sigma_str_corr_tf_all  <- 
           c(sigma_str_corr_tf_all, 
             get_gr_str_coef_id_it[['set_corr_true_false']] %>% 
@@ -516,7 +520,6 @@ prepare_formula <- function(x,
   gr_str_unique_id <- gr_gsctfnb[['group_id_unique']]
   
   
-  
   sigma_gsctfnb <- 
     get_str_corr_tf_function_new_better(sigma_str_id_all_list, 
                                         sigma_str_corr_all_list, 
@@ -526,8 +529,7 @@ prepare_formula <- function(x,
   sigma_str_corr_tf <- sigma_gsctfnb[['str_corr_tf']]
   sigma_str_unique_id <- sigma_gsctfnb[['group_id_unique']]
   
-  
-  
+
   # For first str i.e., level 2 id, group should be unique
   
   if(!is.null(gr_str_id_all[[1]])) {

@@ -33,7 +33,8 @@ get.newdata <- function(model,
                         levels_id = NULL,
                         ipts = NULL,
                         xrange = NULL,
-                        idata_method = NULL) {
+                        idata_method = NULL,
+                        verbose = FALSE) {
   
   if (is.null(resp)) {
     resp_rev_ <- resp
@@ -162,15 +163,40 @@ get.newdata <- function(model,
     str
   }
   
-  factor_vars <- names(newdata[sapply(newdata, is.factor)])
-  numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
+  
   cov_vars <-  model$model_info[[cov_]]
   cov_sigma_vars <-  model$model_info[[cov_sigma_]]
-  if (!is.null(cov_vars))
-    cov_vars <- covars_extrcation(cov_vars)
   
-  if (!is.null(cov_sigma_vars))
+  if (!is.null(cov_vars)) {
+    cov_vars <- covars_extrcation(cov_vars)
+  }
+  if (!is.null(cov_sigma_vars)) {
     cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
+  }
+  
+  # check if cov is charcater but not factor 
+  checks_for_chr_fact <- c(cov_vars, cov_sigma_vars)
+  checks_for_chr_fact <- unique(checks_for_chr_fact)
+  for (cov_varsi in checks_for_chr_fact) {
+    if(is.character(newdata[[cov_varsi]])) {
+      if(!is.factor(newdata[[cov_varsi]])) {
+        if(verbose) {
+          warning('Variable ', cov_varsi, "' used as a covariate in the model ",
+                  "\n",
+                  " is a character but not factor. Converting it to factor.")
+        }
+        newdata[[cov_varsi]] <- as.factor(newdata[[cov_varsi]])
+        factor_vars <- names(newdata[sapply(newdata, is.factor)])
+      }
+    }
+  }
+    
+  factor_vars <- names(newdata[sapply(newdata, is.factor)])
+  numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
+  
+  # if (!is.null(cov_sigma_vars))
+  #   cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
+  
   
   
   cov_factor_vars <- intersect(cov_vars, factor_vars)
@@ -206,7 +232,6 @@ get.newdata <- function(model,
   }
   
 
-  
   set_numeric_cov_at <- function(x, numeric_cov_at) {
     name_ <- deparse(substitute(x))
     if (is.null((numeric_cov_at[[name_]]))) {

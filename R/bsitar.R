@@ -5374,8 +5374,7 @@ bsitar <- function(x,
           counter_start_from_one_for_prior <- 
             counter_start_from_one_for_prior + 1
           get_corr_higher_str_tf <- corr_higher_str_tf[istrx]
-          
-          if(get_corr_higher_str_tf) {
+                    if(get_corr_higher_str_tf) {
             if(set_nlpar_ == 'sigma') {
               assign('sigma_arg_groupvar', gr_str_id[istrx], 
                      envir = set_env_what)
@@ -5402,31 +5401,45 @@ bsitar <- function(x,
             stanvars_str <- attr(bpriors_str, "stanvars")
             initials_str <- attr(bpriors_str, "initials")
             temp_gr_str_stanvars <- c(temp_gr_str_stanvars, stanvars_str)
+            temp_gr_str_inits    <- c(temp_gr_str_inits, initials_str)
+            temp_gr_str_priors[[istrx]] <- bpriors_str
+            
             # on 26 12 2023
-            temp_gr_str_priors <- bpriors_str
-            if(temp_gr_str_priors $ prior == "") {
-              temp_gr_str_priors <- temp_gr_str_stanvars <- NULL
-              temp_gr_str_inits <- NULL
+            bpriors_str_checks <- bpriors_str
+            attr(bpriors_str_checks, "stanvars") <- NULL
+            attr(bpriors_str_checks, "initials") <- NULL
+            bpriors_str_checks <- bpriors_str_checks
+            attributes(bpriors_str_checks) <- NULL
+            # bpriors_str_checksx <<- bpriors_str_checks
+            if(!is.list(bpriors_str_checks)) {
+              if(bpriors_str_checks == "") {
+                temp_gr_str_priors[[istrx]] <- temp_gr_str_stanvars <- NULL
+                temp_gr_str_inits <- NULL
+              }
             }
+            
           } # if(get_corr_higher_str_tf) {
           
           if(!get_corr_higher_str_tf) {
-            temp_gr_str_priors <- temp_gr_str_stanvars <- NULL
+            temp_gr_str_priors[[istrx]] <- temp_gr_str_stanvars <- NULL
               temp_gr_str_inits <- NULL
           }
           
         } 
+        
+        temp_gr_str_priors <- temp_gr_str_priors %>% do.call(rbind, .)
        
         out <- list(temp_gr_str_priors = temp_gr_str_priors,
                     temp_gr_str_stanvars = temp_gr_str_stanvars,
                     temp_gr_str_inits = temp_gr_str_inits)
-       
+        
       out
     }
     
 
     temp_gr_str_priors_corr <- list()
     temp_gr_str_stanvars_corr <-  temp_gr_str_inits_corr <- c()
+
     for (set_randomsi_higher_levsli in set_randomsi_higher_levsl) {
       set_nlpar_what <- set_randomsi_higher_levsli
       set_env_what   <- environment()
@@ -5502,7 +5515,7 @@ bsitar <- function(x,
         } else if(length(set_prior_cor_what) == 1) {
           set_prior_cor_what <- rep(set_prior_cor_what, n_higher_str)
         }
-        
+       
         out2 <- evaluate_higher_level_corr_priors(
           set_nlpar_ = set_nlpar_what, 
           set_class  = set_class_what,
@@ -5522,6 +5535,8 @@ bsitar <- function(x,
       } 
       
     } 
+    
+    
     
     higher_level_priors_corr <- temp_gr_str_priors_corr %>% do.call(rbind, .)
     bpriors                  <- rbind(bpriors, higher_level_priors_corr)
