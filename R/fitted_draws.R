@@ -20,6 +20,12 @@
 #'   [brms::fitted.brmsfit()] and [fitted_draws()]) work in the same manner. In
 #'   other words, user can specify all the options available in the
 #'   [brms::fitted.brmsfit()].
+#'   
+#' @param fullframe A logical to indicate whether to return \code{fullframe}
+#'   object in which \code{newdata} is bind to the summary estimates Note that
+#'   \code{fullframe} can not be combined with \code{summary = FALSE}.
+#'   Furthermore, \code{fullframe} can only be used when \code{idata_method =
+#'   'm2'}. A particular use case is when fitting \code{univariate_by} model.
 #' 
 #' @inherit growthparameters.bgmfit params
 #' @inherit plot_conditional_effects.bgmfit params
@@ -82,6 +88,7 @@ fitted_draws.bgmfit <-
            parms_method = 'getPeak',
            idata_method = 'm1',
            verbose = FALSE,
+           fullframe = NULL,
            usesavedfuns = FALSE,
            clearenvfuns = NULL,
            envir = NULL,
@@ -91,6 +98,7 @@ fitted_draws.bgmfit <-
     if(is.null(envir)) {
       envir <- parent.frame()
     }
+    
     
     # For consistency across post processing functions
     charg <- ls()
@@ -193,11 +201,11 @@ fitted_draws.bgmfit <-
                 resp = resp,
                 ndraws = ndraws,
                 re_formula = re_formula,
-                numeric_cov_at = numeric_cov_at,
-                levels_id = levels_id,
-                ipts = ipts,
-                xrange = xrange,
-                deriv = deriv,
+               # numeric_cov_at = numeric_cov_at,
+               # levels_id = levels_id,
+               # ipts = ipts,
+               # xrange = xrange,
+               # deriv = deriv,
                 summary = summary,
                 robust = robust,
                 probs = probs,
@@ -245,10 +253,37 @@ fitted_draws.bgmfit <-
           remove(list=oalli, envir = tempgenv)
         }
       }
-      
     } # if(setcleanup) {
     
-    .
+    
+    # fullframe
+    if(!is.null(fullframe)) {
+      if(fullframe) {
+        if(!summary) {
+          stop("fullframe can not be combined with summary = FALSE")
+        }
+        if(idata_method == 'm1') {
+          stop("fullframe can not be combined with idata_method = 'm1'")
+        }
+      }
+    }
+    if(is.null(fullframe)) {
+      if (!is.na(model$model_info$univariate_by)) {
+        fullframe <- TRUE
+      } else {
+        fullframe <- FALSE
+      }
+    }
+    if (!is.na(model$model_info$univariate_by)) {
+      if(idata_method == 'm2') {
+        uvarby <- model$model_info$univariate_by
+        uvarbyresp <- paste0(uvarby, resp)
+        uvarbynewdata <- newdata %>% dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
+      }
+      if(fullframe) . <- cbind(., uvarbynewdata)
+    }
+    
+    . 
   }
 
 

@@ -2040,7 +2040,6 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
-      
       if(!is.na(uvarby)) {
         if(is.null(cov_factor_vars)) {
           legendlabs_mult_singel <- c('Distance', 'Velocity')
@@ -2104,6 +2103,13 @@ plot_curves.bgmfit <- function(model,
         rep(get_line_, ngrpanels)
       if(length(get_color_) != ngrpanels) get_color_ <- 
         rep(get_color_, ngrpanels)
+      
+      # Added on 27 12 2023 - but error from somewhere else 
+      
+      if(!exists('legendlabs_mult_line')) legendlabs_mult_line <- 'solid'
+      if(!exists('legendlabs_mult_color')) legendlabs_mult_color <- 'black'
+      if(!exists('legendlabs_mult_singel')) legendlabs_mult_singel <- 'solid'
+      
       
       # These will be carried forward for ribbon also (below)
       if(ngrpanels > 1) {

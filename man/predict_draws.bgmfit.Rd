@@ -24,6 +24,7 @@
   parms_method = "getPeak",
   idata_method = "m1",
   verbose = FALSE,
+  fullframe = NULL,
   usesavedfuns = FALSE,
   clearenvfuns = FALSE,
   envir = NULL,
@@ -141,11 +142,21 @@ The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
 package and is documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.
 If \code{idata_method = NULL}, then method \code{'m1'} is automatically
-set.}
+set. An advantage of method \code{'m1'} is that it automatically sets up
+the factor covariates for \code{\link[=plot_curves]{plot_curves()}} and \code{\link[=growthparameters]{growthparameters()}}
+functions. Note that although method \code{'m1'} is preferred and is the
+default choice, it might fail in some cases when model involves covariates.
+In that case, it is advised to switch to method \code{'m2'}.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
 object(s).}
+
+\item{fullframe}{A logical to indicate whether to return \code{fullframe}
+object in which \code{newdata} is bind to the summary estimates Note that
+\code{fullframe} can not be combined with \code{summary = FALSE}.
+Furthermore, \code{fullframe} can only be used when \code{idata_method =
+  'm2'}. A particular use case is when fitting \code{univariate_by} model.}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for

@@ -196,7 +196,11 @@
 #'   package and is documented here
 #'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
 #'   If \code{idata_method = NULL}, then method \code{'m1'} is automatically 
-#'   set. 
+#'   set. An advantage of method \code{'m1'} is that it automatically sets up
+#'   the factor covariates for [plot_curves()] and [growthparameters()]
+#'   functions. Note that although method \code{'m1'} is preferred and is the
+#'   default choice, it might fail in some cases when model involves covariates.
+#'   In that case, it is advised to switch to method \code{'m2'}.
 #'
 #' @param parms_method A character to specify the method used to when evaluating
 #'   \code{parms_eval}. The default is \code{getPeak} which uses the
@@ -636,7 +640,8 @@ growthparameters.bgmfit <- function(model,
       
       if (!is.null(groupby_str)) {
         out__ <-
-          cbind(out__, newdata %>% dplyr::select(dplyr::all_of(groupby_str))) %>%
+          cbind(out__, newdata %>% 
+                  dplyr::select(dplyr::all_of(groupby_str))) %>%
           data.frame()
         out__ <-
           out__ %>% dplyr::group_by(dplyr::across(dplyr::all_of(groupby_str)))
@@ -894,7 +899,9 @@ growthparameters.bgmfit <- function(model,
           }
           
           newdata <- newdata %>%
-            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+            dplyr::group_by(
+              dplyr::across(dplyr::all_of(groupby_fstr_xvars))
+              ) %>%
             dplyr::slice(1) %>% dplyr::ungroup()
         }
         
@@ -949,7 +956,9 @@ growthparameters.bgmfit <- function(model,
             
           }
           newdata <- newdata %>%
-            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+            dplyr::group_by(
+              dplyr::across(dplyr::all_of(groupby_fstr_xvars))
+              ) %>%
             dplyr::slice(1) %>% dplyr::ungroup()
         }
         arguments$newdata <- newdata

@@ -29,6 +29,7 @@
 #' for details.
 #' 
 #' @inherit growthparameters.bgmfit params
+#' @inherit fitted_draws.bgmfit params
 #' @inherit plot_conditional_effects.bgmfit params
 #' @inherit brms::predict.brmsfit params
 #' 
@@ -82,6 +83,7 @@ predict_draws.bgmfit <-
            parms_method = 'getPeak',
            idata_method = 'm1',
            verbose = FALSE,
+           fullframe = NULL,
            usesavedfuns = FALSE,
            clearenvfuns = FALSE,
            envir = NULL,
@@ -158,10 +160,10 @@ predict_draws.bgmfit <-
                 resp = resp,
                 ndraws = ndraws,
                 re_formula = re_formula,
-                numeric_cov_at = numeric_cov_at,
-                levels_id = levels_id,
-                ipts = ipts,
-                xrange = xrange,
+                # numeric_cov_at = numeric_cov_at,
+                # levels_id = levels_id,
+                # ipts = ipts,
+                # xrange = xrange,
                 deriv = deriv,
                 summary = summary,
                 robust = robust,
@@ -212,6 +214,34 @@ predict_draws.bgmfit <-
       }
       
     } # if(setcleanup) {
+    
+    
+    # fullframe
+    if(!is.null(fullframe)) {
+      if(fullframe) {
+        if(!summary) {
+          stop("fullframe can not be combined with summary = FALSE")
+        }
+        if(idata_method == 'm1') {
+          stop("fullframe can not be combined with idata_method = 'm1'")
+        }
+      }
+    }
+    if(is.null(fullframe)) {
+      if (!is.na(model$model_info$univariate_by)) {
+        fullframe <- TRUE
+      } else {
+        fullframe <- FALSE
+      }
+    }
+    if (!is.na(model$model_info$univariate_by)) {
+      if(idata_method == 'm2') {
+        uvarby <- model$model_info$univariate_by
+        uvarbyresp <- paste0(uvarby, resp)
+        uvarbynewdata <- newdata %>% dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
+      }
+      if(fullframe) . <- cbind(., uvarbynewdata)
+    }
     
     .
   }

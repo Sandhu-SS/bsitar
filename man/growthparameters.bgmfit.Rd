@@ -245,7 +245,11 @@ The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
 package and is documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.
 If \code{idata_method = NULL}, then method \code{'m1'} is automatically
-set.}
+set. An advantage of method \code{'m1'} is that it automatically sets up
+the factor covariates for \code{\link[=plot_curves]{plot_curves()}} and \code{\link[=growthparameters]{growthparameters()}}
+functions. Note that although method \code{'m1'} is preferred and is the
+default choice, it might fail in some cases when model involves covariates.
+In that case, it is advised to switch to method \code{'m2'}.}
 
 \item{parms_method}{A character to specify the method used to when evaluating
 \code{parms_eval}. The default is \code{getPeak} which uses the

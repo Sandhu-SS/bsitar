@@ -83,7 +83,8 @@ get.newdata <- function(model,
   
   
   if (is.null(newdata)) {
-    newdata <- model$model_info$bgmfit.data
+    if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
+    if(idata_method == 'm2') newdata <- model$data
   } else {
     newdata <- newdata
   }
@@ -118,34 +119,39 @@ get.newdata <- function(model,
     setorgy <- model$model_info$ys
   }
  
-  newdata <- prepare_data(
-    data = newdata,
-    x = model$model_info$xs,
-    y = setorgy,
-    id = model$model_info$ids,
-    uvarby = model$model_info$univariate_by,
-    mvar = model$model_info$multivariate,
-    xfuns = model$model_info$xfuns,
-    yfuns = model$model_info$yfuns,
-    outliers = model$model_info$outliers
-  )
+  
+  if (idata_method == 'm1') {
+    newdata <- prepare_data(
+      data = newdata,
+      x = model$model_info$xs,
+      y = setorgy,
+      id = model$model_info$ids,
+      uvarby = model$model_info$univariate_by,
+      mvar = model$model_info$multivariate,
+      xfuns = model$model_info$xfuns,
+      yfuns = model$model_info$yfuns,
+      outliers = model$model_info$outliers)
+  }
+  
   
  
   newdata <- newdata[,!duplicated(colnames(newdata))]
   
   if (!is.na(model$model_info$univariate_by)) {
-    sortbylayer <- NA
-    newdata <- newdata %>%
-      dplyr::mutate(sortbylayer =
-                      forcats::fct_relevel(!!as.name(uvarby),
-                                           (levels(
-                                             !!as.name(uvarby)
-                                           )))) %>%
-      dplyr::arrange(sortbylayer) %>%
-      dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                               levels =
-                                                 unique(!!as.name(IDvar)))) %>%
-      dplyr::select(-sortbylayer)
+    if(idata_method == 'm1') {
+      sortbylayer <- NA
+      newdata <- newdata %>%
+        dplyr::mutate(sortbylayer =
+                        forcats::fct_relevel(!!as.name(uvarby),
+                                             (levels(
+                                               !!as.name(uvarby)
+                                             )))) %>%
+        dplyr::arrange(sortbylayer) %>%
+        dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
+                                                 levels =
+                                                   unique(!!as.name(IDvar)))) %>%
+        dplyr::select(-sortbylayer)
+    } # if(idata_method == 'm1') {
     
     subindicatorsi <- model$model_info$subindicators[grep(resp,
                                                           model$model_info$ys)]
@@ -267,7 +273,8 @@ get.newdata <- function(model,
     if (is.null(IDvar))
       relocate_vars <- c(xvar)
     if (!is.na(uvarby))
-      relocate_vars <- c(relocate_vars, uvarby)
+      if(idata_method == 'm1') relocate_vars <- c(relocate_vars, uvarby)
+      if(idata_method == 'm2') relocate_vars <- c(relocate_vars)
     if (!is.null(cov_numeric_vars)) {
       cov_numeric_vars__ <- cov_numeric_vars
       if (identical(cov_numeric_vars__, character(0)))
@@ -309,13 +316,14 @@ get.newdata <- function(model,
       }
     }
     
-    
+     
     if (!is.null(yvar)) {
       if (yvar %in% colnames(data)) {
         relocate_vars <- c(yvar, relocate_vars)
       }
     }
     data %>% dplyr::relocate(dplyr::all_of(relocate_vars)) %>% data.frame()
+    
   }
   
   ########
@@ -645,37 +653,40 @@ get.newdata <- function(model,
           setorgy <- model$model_info$ys
         }
         
+        if (idata_method == 'm1') {
+          newdata <- prepare_data(
+            data = newdata,
+            x = model$model_info$xs,
+            y = setorgy,
+            id = model$model_info$ids,
+            uvarby = model$model_info$univariate_by,
+            mvar = model$model_info$multivariate,
+            xfuns = model$model_info$xfuns,
+            yfuns = model$model_info$yfuns,
+            outliers = NULL) # model$model_info$outliers
+        } # if (idata_method == 'm1') {
         
-        newdata <- prepare_data(
-          data = newdata,
-          x = model$model_info$xs,
-          y = setorgy,
-          id = model$model_info$ids,
-          uvarby = model$model_info$univariate_by,
-          mvar = model$model_info$multivariate,
-          xfuns = model$model_info$xfuns,
-          yfuns = model$model_info$yfuns,
-          outliers = NULL
-        ) # model$model_info$outliers
       }
       
       
       if (!is.na(model$model_info$univariate_by)) {
-        # !is.null(ipts) &
-        sortbylayer <- NA
-        newdata <- newdata %>%
-          dplyr::mutate(sortbylayer =
-                          forcats::fct_relevel(!!as.name(uvarby),
-                                               (levels(
-                                                 !!as.name(uvarby)
-                                               )))) %>%
-          dplyr::arrange(sortbylayer) %>%
-          dplyr::mutate(!!as.name(IDvar) :=
-                          factor(!!as.name(IDvar),
-                                 levels =
-                                   unique(!!as.name(IDvar)))) %>%
-          dplyr::select(-sortbylayer)
-        
+        if(idata_method == 'm1') {
+          sortbylayer <- NA
+          unique_names <- unique(names(newdata))
+          newdata <- newdata %>% dplyr::select(dplyr::all_of(unique_names))
+          newdata <- newdata %>%
+            dplyr::mutate(sortbylayer =
+                            forcats::fct_relevel(!!as.name(uvarby),
+                                                 (levels(
+                                                   !!as.name(uvarby)
+                                                 )))) %>%
+            dplyr::arrange(sortbylayer) %>%
+            dplyr::mutate(!!as.name(IDvar) :=
+                            factor(!!as.name(IDvar),
+                                   levels =
+                                     unique(!!as.name(IDvar)))) %>%
+            dplyr::select(-sortbylayer)
+        } # if(idata_method == 'm1') {
       }
       
       newdata.oo <- get.data.grid(
