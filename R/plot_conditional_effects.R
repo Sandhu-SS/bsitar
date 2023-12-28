@@ -84,9 +84,12 @@
 #' 
 plot_conditional_effects.bgmfit <-
   function(model,
+           newdata = NULL,
+           levels_id = NULL,
            resp = NULL,
            deriv = 0,
            deriv_model = TRUE,
+           idata_method = 'm1',
            verbose = FALSE,
            usesavedfuns = FALSE,
            clearenvfuns = FALSE,
@@ -97,37 +100,22 @@ plot_conditional_effects.bgmfit <-
       envir <- parent.frame()
     }
     
-    # For consistency across post processing functions
-    charg <- ls()
-    chcall <- match.call()
-    if(!checkifargmiss(charg, chcall, 'deriv'))          deriv          <- NULL
-    if(!checkifargmiss(charg, chcall, 'numeric_cov_at')) numeric_cov_at <- NULL
-    if(!checkifargmiss(charg, chcall, 'levels_id'))      levels_id      <- NULL
-    if(!checkifargmiss(charg, chcall, 'ipts'))           ipts           <- NULL
-    if(!checkifargmiss(charg, chcall, 'idata_method'))   idata_method   <- NULL
-    if(!checkifargmiss(charg, chcall, 'xrange'))         xrange         <- NULL
-    if(!checkifargmiss(charg, chcall, 'probs'))          probs          <- NULL
-    if(!checkifargmiss(charg, chcall, 'robust'))         robust         <- NULL
-    if(!checkifargmiss(charg, chcall, 'newdata'))        newdata        <- NULL
-    if(!checkifargmiss(charg, chcall, 'deriv_model'))    deriv_model    <- FALSE
+    full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+                                    fargs = formals(), 
+                                    dargs = list(...), 
+                                    verbose = verbose)
+    
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
     } else {
-      newdata <- get.newdata(model, 
-                             newdata = newdata, 
-                             resp = resp, 
-                             numeric_cov_at = numeric_cov_at,
-                             levels_id = levels_id,
-                             ipts = ipts,
-                             xrange = xrange,
-                             idata_method = idata_method)
+      newdata <- do.call(get.newdata, full.args)
     }
-    
+    full.args$newdata <- newdata
     
     if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") deriv_model <- FALSE
+      if(model$model_info$decomp == "QR") deriv_model<- FALSE
     }
     
     expose_method_set <- model$model_info[['expose_method']]
@@ -139,14 +127,17 @@ plot_conditional_effects.bgmfit <-
                                 resp = resp,
                                 envir = envir,
                                 deriv = deriv, 
-                                all = FALSE)
+                                all = FALSE,
+                                verbose = verbose)
     
     oall <- post_processing_checks(model = model,
                                    xcall = match.call(),
                                    resp = resp,
                                    envir = envir,
                                    deriv = deriv, 
-                                   all = TRUE)
+                                   all = TRUE,
+                                   verbose = FALSE)
+    
     
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall, 
@@ -157,18 +148,55 @@ plot_conditional_effects.bgmfit <-
     
     if(is.null(test)) return(invisible(NULL))
     
+    misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
+              "envir", "fullframe")
+    calling.args <- post_processing_args_sanitize(model = model,
+                                                  xcall = match.call(),
+                                                  resp = resp,
+                                                  envir = envir,
+                                                  deriv = deriv, 
+                                                  dots = list(...),
+                                                  misc = misc,
+                                                  verbose = verbose)
     
     
-    if(!deriv_model) {
-      xvar  <- model$model_info$xvar
-      idvar <- model$model_info$groupvar
+    
+    if(!eval(full.args$deriv_model)) {
+      if (is.null(resp)) {
+        resp_rev_ <- resp
+      } else if (!is.null(resp)) {
+        resp_rev_ <- paste0("_", resp)
+      }
+      xvar_ <- paste0('xvar', resp_rev_)
+      yvar_ <- paste0('yvar', resp_rev_)
+      groupvar_ <- paste0('groupvar', resp_rev_)
+      xvar <- model$model_info[[xvar_]]
+      yvar <- model$model_info[[yvar_]]
+      hierarchical_ <- paste0('hierarchical', resp_rev_)
+      if (is.null(levels_id)) {
+        IDvar <- model$model_info[[groupvar_]]
+        if (!is.null(model$model_info[[hierarchical_]])) {
+          IDvar <- model$model_info[[hierarchical_]]
+        }
+      } else if (!is.null(levels_id)) {
+        IDvar <- levels_id
+      }
+      xvar  <- xvar
+      idvar <- IDvar
       if(length(idvar) > 1) idvar <- idvar[1]
       yvar  <- 'yvar'
+      # calling.args_ce <- calling.args
+      # calling.args_ce$newdata <- NULL
+      # out_    <- do.call(brms::conditional_effects, calling.args)
       out_    <- brms::conditional_effects(model, resp = resp, ...)
       datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
       datace[[idvar]] <- unique(levels(model$data[[idvar]]))[1]
-      outx <- fitted_draws(model, resp = resp, newdata = datace,
+      newdata <- datace
+      outx <- fitted_draws(model, resp = resp, newdata = newdata, 
                            deriv = deriv, ...)
+      # calling.args$newdata <- datace
+      # calling.args$model <- model
+      # outx <-  do.call(fitted_draws, calling.args)
       out_[[1]][['estimate__']] <- outx[, 1]
       out_[[1]][['se__']] <- outx[, 2]
       out_[[1]][['lower__']] <- outx[, 3]
@@ -176,23 +204,31 @@ plot_conditional_effects.bgmfit <-
       . <- out_
     }
     
-    if(deriv_model) {
-     . <- brms::conditional_effects(model, resp = resp, ...)
+    if(eval(full.args$deriv_model)) {
+      # calling.args_ce <- calling.args
+      # calling.args_ce$newdata <- NULL
+      # calling.args_ce$x <- calling.args_ce$object
+      # .    <- do.call(conditional_effects, calling.args_ce)
+      . <- brms::conditional_effects(model, resp = resp, ...)
     }
     
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
-    if(!is.null(clearenvfuns)) {
-      if(!is.logical(clearenvfuns)) {
+    if(!is.null(eval(full.args$clearenvfuns))) {
+      if(!is.logical(eval(full.args$clearenvfuns))) {
         stop('clearenvfuns must be NULL or a logical')
       } else {
-        setcleanup <- clearenvfuns
+        setcleanup <- eval(full.args$clearenvfuns)
       }
     }
     
-    if(is.null(clearenvfuns)) {
-      if(usesavedfuns) setcleanup <- TRUE else setcleanup <- FALSE
+    if(is.null(eval(full.args$clearenvfuns))) {
+      if(eval(full.args$usesavedfuns)) {
+        setcleanup <- TRUE 
+      } else {
+        setcleanup <- FALSE
+      }
     }
     
     # Cleanup environment if requested
@@ -209,7 +245,6 @@ plot_conditional_effects.bgmfit <-
           remove(list=oalli, envir = tempgenv)
         }
       }
-      
     } # if(setcleanup) {
     
     .

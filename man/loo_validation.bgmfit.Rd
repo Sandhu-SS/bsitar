@@ -9,6 +9,7 @@
   model,
   resp = NULL,
   cores = 1,
+  deriv = NULL,
   verbose = FALSE,
   usesavedfuns = FALSE,
   clearenvfuns = NULL,
@@ -38,6 +39,11 @@ default \code{NULL} option, the number of cores are set automatically by
 calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
 maximum number of cores avaialble minus one, i.e.,
 \code{future::availableCores() - 1}.}
+
+\item{deriv}{An integer to indicate whether to estimate distance curve or
+derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
+for the distance curve, \code{deriv = 1} for velocity curve, and
+\code{deriv = 2} for the acceleration curve.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the

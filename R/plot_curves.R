@@ -297,6 +297,7 @@ plot_curves.bgmfit <- function(model,
                                idata_method = 'm1',
                                parms_method = 'getPeak',
                                verbose = FALSE,
+                               fullframe = NULL,
                                usesavedfuns = FALSE,
                                clearenvfuns = FALSE,
                                envir = NULL,
@@ -427,7 +428,8 @@ plot_curves.bgmfit <- function(model,
                          levels_id = levels_id,
                          ipts = ipts,
                          xrange = xrange,
-                         idata_method = idata_method)
+                         idata_method = idata_method,
+                         verbose = verbose)
   
   list_c <- attr(newdata, 'list_c')
   for (list_ci in names(list_c)) {
@@ -950,7 +952,8 @@ plot_curves.bgmfit <- function(model,
                                levels_id = levels_id,
                                ipts = ipts,
                                xrange = xrange,
-                               idata_method = idata_method)
+                               idata_method = idata_method,
+                               verbose = verbose)
         
         
      
@@ -1361,7 +1364,8 @@ plot_curves.bgmfit <- function(model,
                                envir = envir,
                                deriv = '')
       
-      newdata <- get.newdata(model, newdata = newdata, resp = resp)
+      newdata <- get.newdata(model, newdata = newdata, resp = resp, 
+                             verbose = verbose)
       
       if(!is.na(uvarby)) {
         newdata <- newdata %>%

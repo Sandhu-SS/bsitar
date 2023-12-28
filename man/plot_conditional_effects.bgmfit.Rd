@@ -7,9 +7,12 @@
 \usage{
 \method{plot_conditional_effects}{bgmfit}(
   model,
+  newdata = NULL,
+  levels_id = NULL,
   resp = NULL,
   deriv = 0,
   deriv_model = TRUE,
+  idata_method = "m1",
   verbose = FALSE,
   usesavedfuns = FALSE,
   clearenvfuns = FALSE,
@@ -21,6 +24,20 @@ plot_conditional_effects(model, ...)
 }
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
+
+\item{newdata}{An optional data frame to be used in predictions. If
+\code{NULL} (default), the model fit.}
+
+\item{levels_id}{An optional argument to specify the \code{ids} for
+hierarchical model (default \code{NULL}). It is used only when model is
+applied to the data with 3 or more levels of hierarchy. For a two level
+model, the \code{id} for second level is automatically inferred from the
+model fit. Even for 3 or higher level model, ids are inferred from the
+model fit but under the assumption that hierarchy is specified from
+lower to upper levels i.e, \code{id} followed by \code{study} assuming that
+\code{id} is nested within the \code{study} However, it is not guaranteed
+that these ids are sorted correctly. Therefore, it is better to set them
+manually.}
 
 \item{resp}{A character string to specify response variable when processing
 posterior draws for the univariate-by-subgroup and multivariate models (see
@@ -42,6 +59,27 @@ estimate model based derivatives or from the differentiation of the
 distance curve. When model is fit with \code{decomp = 'QR'}, the only
 approach available to estimate derivatives by the  differentiation of the
 distance curve.}
+
+\item{idata_method}{A character string to indicate the interpolation method.
+The number of of interpolation points is set up the \code{ipts} argument.
+Options available for \code{idata_method} are \emph{method 1} (specified as
+\code{'m1'}, default) and \emph{method 2} (specified as \code{'m2'}). The
+\emph{method 1} (\code{'m1'}) is adapted from the the \pkg{iapvbs} package
+and is documented here
+\url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}
+whereas \emph{method 2} (\code{'m2'}) is based on the \pkg{JMbayes}
+package as documented here
+\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.
+The \code{'m1'} method works by internally constructing the data frame based
+on the model configuration whereas the method \code{'m2'} uses the exact
+data frame used in model fit and can be accessed via \code{fit$data}. If
+\code{idata_method = NULL}, then method \code{'m1'} is automatically set. An
+advantage of method \code{'m1'} is that it automatically sets up the factor
+covariates for \code{\link[=plot_curves]{plot_curves()}} and \code{\link[=growthparameters]{growthparameters()}} functions. Note that
+although method \code{'m1'} is preferred and is the default choice, it might
+fail in some cases when model involves covariates particularly when model is
+fit as \code{univariate_by}. In such cases, it is advised to switch to
+method \code{'m2'}.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the

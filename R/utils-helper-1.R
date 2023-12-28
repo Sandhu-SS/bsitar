@@ -2198,13 +2198,14 @@ getpipedot <- function(arguments, asstr = FALSE) {
 #'
 
 setupfuns <- function(model, 
-                      resp,
-                      o, 
-                      oall, 
-                      usesavedfuns, 
-                      deriv, 
-                      envir,
-                      deriv_model, ...) {
+                      resp = NULL, 
+                      o = NULL, 
+                      oall = NULL, 
+                      usesavedfuns = NULL, 
+                      deriv = NULL, 
+                      envir = NULL, 
+                      deriv_model = NULL, 
+                      ...) {
   
   if(is.null(envir)) {
     envir <- parent.frame()

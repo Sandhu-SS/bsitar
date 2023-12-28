@@ -26,15 +26,16 @@
 #' @noRd
 #'
 get.newdata <- function(model,
-                        newdata,
-                        resp,
+                        newdata = NULL,
+                        resp = NULL,
                         numeric_cov_at = NULL,
                         aux_variables = aux_variables,
                         levels_id = NULL,
                         ipts = NULL,
                         xrange = NULL,
                         idata_method = NULL,
-                        verbose = FALSE) {
+                        verbose = FALSE,
+                        ...) {
   
   if (is.null(resp)) {
     resp_rev_ <- resp
@@ -42,9 +43,11 @@ get.newdata <- function(model,
     resp_rev_ <- paste0("_", resp)
   }
   
+
   if (is.null(idata_method)) {
     idata_method <- 'm1'
   }
+  
   
   # Initiate non formalArgs()
   `:=` <- NULL
@@ -187,8 +190,8 @@ get.newdata <- function(model,
     if(is.character(newdata[[cov_varsi]])) {
       if(!is.factor(newdata[[cov_varsi]])) {
         if(verbose) {
-          warning('Variable ', cov_varsi, "' used as a covariate in the model ",
-                  "\n",
+          message("\nVariable '", cov_varsi, "' used as a covariate in the model ",
+                  "\n ",
                   " is a character but not factor. Converting it to factor.")
         }
         newdata[[cov_varsi]] <- as.factor(newdata[[cov_varsi]])
@@ -233,8 +236,8 @@ get.newdata <- function(model,
   cov_numeric_vars <- c(cov_numeric_vars, cov_sigma_numeric_vars)
   
   if (!is.na(model$model_info$univariate_by)) {
-    groupby_fstr <- c(uvarby, groupby_fstr)
-    groupby_fistr <- c(uvarby, groupby_fistr)
+    if(idata_method == 'm1') groupby_fstr <- c(uvarby, groupby_fstr)
+    if(idata_method == 'm1') groupby_fistr <- c(uvarby, groupby_fistr)
   }
   
 
@@ -1379,6 +1382,167 @@ outliers <-
 
 
 
+#' An internal function to set default initials for model specific parameters
+#'
+#' @param cargs A character string specifying the model fitted. 
+#' 
+#' @param fargs A character string specifying the initials. 
+#' 
+#' @param dargs A character string specifying the parameter class. Options
+#' are \code{'b'}, \code{'sd'} and \code{'cor'}. Default \code{NULL} indicates 
+#' that class name in infered automatically. 
+#' 
+#' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
+#'  \code{warnings} and \code{messages} during the function evaluation.
+#'
+#' @return A list.
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+evaluate_call_args <- function(cargs = NULL,
+                            fargs = NULL,
+                            dargs = NULL,
+                            verbose = FALSE) {
+  for (fargsi in names(dargs)) {
+    if(is.null(cargs[[fargsi]])) cargs[[fargsi]] <- fargs[[fargsi]]
+  }
+  for (fargsi in names(fargs)) {
+    if(is.null(cargs[[fargsi]])) cargs[[fargsi]] <- fargs[[fargsi]]
+  }
+  cargs$... <- NULL
+  cargs
+}
+
+
+
+#' An internal function to perform checks when calling post-processing functions
+#'
+#' @description The \code{post_processing_args_sanitize} perform essential 
+#'   checks for the arguments passed on to the \code{brms} post-processing
+#'   functions.
+#'
+#' @param model An object of class \code{bgmfit}.
+#'
+#' @param xcall The \code{match.call()} from the post-processing function.
+#'
+#' @param resp Response variable (default \code{NULL}) specified as a character
+#'   string. This is needed when processing univariate-by-subgroup and
+#'   multivariate model (see \code{bgmfit} function for details).
+#'
+#' @param deriv An integer value to specify whether to estimate distance curve
+#'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
+#'   the model estimated curve(s)). A value \code{0} (default) is for distance
+#'   curve and  \code{1} for the velocity curve.
+#'   
+#' @param dots A list passing the \code{...} arguments. Default \code{NULL}.
+#' 
+#' @param misc A vector of character strings specifying the miscellanous
+#'   arguments to be checked. Default \code{NULL}.
+#'
+#' @param envir Indicator to set the environment of function evaluation. The
+#'   default is \code{parent.frame}.
+#'   
+#' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
+#'  \code{warnings} and \code{messages} during the function evaluation.
+#'
+#' @return A list with the filtered necessary arguments required for the 
+#'   successgull execition of the post-processing function
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'
+#' @keywords internal
+#' @noRd
+#'
+post_processing_args_sanitize <- function(model, 
+                                          xcall, 
+                                          resp = NULL, 
+                                          deriv = NULL,
+                                          dots = NULL,
+                                          misc = NULL,
+                                          envir = NULL, 
+                                          verbose = FALSE) {
+  
+  if(is.null(envir)) envir <- parent.frame()
+  if(is.null(deriv)) deriv <- 0
+  
+  if(!'bgmfit' %in% class(model)) {
+    stop("The class of model object should be 'bgmfit' ")
+  }
+  
+  allargs <- c(as.list(xcall), dots)
+  
+  excall_ <- c("plot_ppc", "loo_validation")
+  excall_ <- c(excall_, paste0(excall_, ".", "bgmfit"))
+  
+  checkwhat_all <- c()
+  if (strsplit(deparse((xcall[1])), "\\.")[[1]][1] %in% excall_) {
+    # Check deriv
+    checkwhat <- ""
+    checkwhat <- 'deriv'
+    if(!is.null(allargs[[checkwhat]])) {
+      checkwhat_all <- c(checkwhat_all, checkwhat)
+      if(verbose) {
+        message(
+          "\nargument 'deriv' is not allowed for the ",
+          " post-processing function",  " '",
+          strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
+          "\n ",
+          "Therefore, it is set to i.e., deriv = NULL"
+        )
+      }
+    } # if(!is.null(allargs$idata_method)) {
+    
+    # Check idata_method
+    checkwhat <- ""
+    checkwhat <- 'idata_method'
+    if(!is.null(allargs[[checkwhat]])) {
+      checkwhat_all <- c(checkwhat_all, checkwhat)
+      if(verbose) {
+        message(
+          "\nargument 'idata_method' is not allowed for the ",
+          " post-processing function",  " '",
+          strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
+          "\n ",
+          "Therefore, it is set to i.e., idata_method = NULL"
+        )
+      }
+    } # if(!is.null(allargs$idata_method)) {
+    
+    # Check re_formula
+    checkwhat <- ""
+    checkwhat <- 're_formula'
+    if(!is.null(allargs[[checkwhat]])) {
+      checkwhat_all <- c(checkwhat_all, checkwhat)
+      if(verbose) {
+        message(
+          "\nargument 'idata_method' is not allowed for the ",
+          " post-processing function",  " '",
+          strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
+          "\n ",
+          "Therefore, it is set to i.e., idata_method = NULL"
+        )
+      }
+    } # if(!is.null(allargs$idata_method)) {
+    
+    
+  } # if (strsplit(deparse((xcall[1])), "\\.")[[1]][1] %in% excall_) {
+  
+  
+  if(length(checkwhat_all) == 0) checkwhat_all <- NULL
+  checkwhat_all <- c(checkwhat_all, misc)
+  
+  if(!is.null(checkwhat_all)) {
+    allargs[which(names(allargs)%in%checkwhat_all)] <- NULL
+  }
+  
+  allargs <- allargs[-1]
+  names(allargs) <- gsub("model", "object", names(allargs))
+ 
+  return(allargs)
+}
 
 
 
@@ -1400,9 +1564,15 @@ outliers <-
 #'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
 #'   the model estimated curve(s)). A value \code{0} (default) is for distance
 #'   curve and  \code{1} for the velocity curve.
+#'   
+#' @param all A logical (default \code{NULL}) to specify whether to return all
+#'   the exposed functions.
 #'
 #' @param envir Indicator to set the environment of function evaluation. The
 #'   default is \code{parent.frame}.
+#'   
+#' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
+#'  \code{warnings} and \code{messages} during the function evaluation.
 #'
 #' @return A string with the error captured or else a list with necessary
 #'   information needed when executing the post-processing function
@@ -1415,31 +1585,34 @@ outliers <-
 post_processing_checks <- function(model, 
                                    xcall, 
                                    resp = NULL, 
-                                   envir = NULL, 
                                    deriv = NULL,
-                                   all = FALSE) {
+                                   all = FALSE,
+                                   envir = NULL, 
+                                   verbose = FALSE) {
   
-  # if(is.null(envir)) envir <- globalenv()
   if(is.null(envir)) envir <- parent.frame()
   if(is.null(deriv)) deriv <- 0
- 
+  
   if(!'bgmfit' %in% class(model)) {
     stop("The class of model object should be 'bgmfit' ")
   }
   excall_ <- c("plot_ppc", "loo_validation")
   if (strsplit(deparse((xcall[1])), "\\.")[[1]][1] %in% excall_) {
+    if(is.null(as.list(xcall)[['deriv']])) deriv <- ''
     if (!is.null(as.list(xcall)[['deriv']])) {
-      stop(
-        "argument deriv is not allowed for the ",
-        "\n ",
-        " post-processing function",
-        " '",
-        strsplit(deparse((xcall[1])), "\\.")[[1]][1],
-        "'"
-      )
-    }
-    deriv <- ''
+      deriv <- ''
+      if(verbose) {
+        message(
+          "\nargument 'deriv' is not allowed for the ",
+          " post-processing function",  " '",
+          strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
+          "\n ",
+          "Therefore, it is set to missing i.e., deriv = ''"
+        )
+      }
+    } # if(!is.null(chcallls$idata_method)) {
   }
+  
   if (model$model_info$nys == 1 & !is.null(resp)) {
     stop(
       "You have fit a univariate model",
@@ -1504,8 +1677,7 @@ post_processing_checks <- function(model,
              envir = envir)
     }
   }
-  
-  
+ 
   if(!all) {
     out <-
       list(

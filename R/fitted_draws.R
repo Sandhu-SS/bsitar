@@ -20,12 +20,6 @@
 #'   [brms::fitted.brmsfit()] and [fitted_draws()]) work in the same manner. In
 #'   other words, user can specify all the options available in the
 #'   [brms::fitted.brmsfit()].
-#'   
-#' @param fullframe A logical to indicate whether to return \code{fullframe}
-#'   object in which \code{newdata} is bind to the summary estimates Note that
-#'   \code{fullframe} can not be combined with \code{summary = FALSE}.
-#'   Furthermore, \code{fullframe} can only be used when \code{idata_method =
-#'   'm2'}. A particular use case is when fitting \code{univariate_by} model.
 #' 
 #' @inherit growthparameters.bgmfit params
 #' @inherit plot_conditional_effects.bgmfit params
@@ -100,33 +94,33 @@ fitted_draws.bgmfit <-
     }
     
     
-    # For consistency across post processing functions
-    charg <- ls()
-    chcall <- match.call()
-    if(!checkifargmiss(charg, chcall, 'deriv'))          deriv          <- NULL
-    if(!checkifargmiss(charg, chcall, 'numeric_cov_at')) numeric_cov_at <- NULL
-    if(!checkifargmiss(charg, chcall, 'levels_id'))      levels_id      <- NULL
-    if(!checkifargmiss(charg, chcall, 'ipts'))           ipts           <- NULL
-    if(!checkifargmiss(charg, chcall, 'idata_method'))   idata_method   <- NULL
-    if(!checkifargmiss(charg, chcall, 'xrange'))         xrange         <- NULL
-    if(!checkifargmiss(charg, chcall, 'probs'))          probs          <- NULL
-    if(!checkifargmiss(charg, chcall, 'robust'))         robust         <- NULL
-    if(!checkifargmiss(charg, chcall, 'newdata'))        newdata        <- NULL
-    if(!checkifargmiss(charg, chcall, 'deriv_model'))    deriv_model    <- FALSE
+   
+    
+    # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){
+    plot_conditional_effects_calling <- FALSE
+    for (xc in 1:length(sys.calls())) {
+      if(any(grepl('plot_conditional_effects', sys.calls()[[xc]]))) {
+        plot_conditional_effects_calling <- TRUE
+      }
+    }
     
     
-    if(!is.null(model$xcall)) {
-      arguments <- get_args_(as.list(match.call())[-1], model$xcall)
-      newdata <- newdata
-    } else {
-      newdata <- get.newdata(model, 
-                             newdata = newdata, 
-                             resp = resp, 
-                             numeric_cov_at = numeric_cov_at,
-                             levels_id = levels_id,
-                             ipts = ipts,
-                             xrange = xrange,
-                             idata_method = idata_method)
+    if(!plot_conditional_effects_calling) {
+      if(!is.null(model$xcall)) {
+        arguments <- get_args_(as.list(match.call())[-1], model$xcall)
+        full.args <- evaluate_call_args(cargs = arguments, 
+                                        fargs = NULL, 
+                                        dargs = NULL, 
+                                        verbose = verbose)
+        newdata <- newdata
+      } else {
+        full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+                                        fargs = formals(), 
+                                        dargs = list(...), 
+                                        verbose = verbose)
+        newdata <- do.call(get.newdata, full.args)
+      }
+      full.args$newdata <- newdata
     }
     
     
@@ -143,48 +137,16 @@ fitted_draws.bgmfit <-
                              resp = resp,
                              envir = envir,
                              deriv = deriv, 
-                             all = FALSE)
+                             all = FALSE,
+                             verbose = verbose)
     
     oall <- post_processing_checks(model = model,
                                 xcall = match.call(),
                                 resp = resp,
                                 envir = envir,
                                 deriv = deriv, 
-                                all = TRUE)
-    
-    
-    # if(!usesavedfuns) {
-    #   if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-    #     return(invisible(NULL))
-    #   }
-    # }
-    
-    
-    # if(usesavedfuns) {
-    #   if(is.null(check_if_functions_exists(model, o, model$xcall))) {
-    #     envir <- envir
-    #   } else {
-    #     envir <- getEnv(o[[1]], geteval = TRUE)
-    #   }
-    #   oall <- model$model_info[['exefuns']]
-    #   oalli_c <- names(oall)
-    #   for (oalli in oalli_c) {
-    #     assign(oalli, oall[[oalli]], envir = envir)
-    #   }
-    # }
-    
-
-    # if(deriv == 0) {
-    #   assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
-    #   assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
-    # } else if(deriv > 0) {
-    #   if(deriv_model) {
-    #     assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
-    #   } else if(!deriv_model) {
-    #     assignfun <- paste0(model$model_info[['namesexefuns']], '0')
-    #   }
-    #   assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
-    # }
+                                all = TRUE,
+                                verbose = FALSE)
     
     
     test <- setupfuns(model = model, resp = resp,
@@ -196,22 +158,22 @@ fitted_draws.bgmfit <-
     
     if(is.null(test)) return(invisible(NULL))
     
-    . <- fitted(model,
-                newdata = newdata,
-                resp = resp,
-                ndraws = ndraws,
-                re_formula = re_formula,
-               # numeric_cov_at = numeric_cov_at,
-               # levels_id = levels_id,
-               # ipts = ipts,
-               # xrange = xrange,
-               # deriv = deriv,
-                summary = summary,
-                robust = robust,
-                probs = probs,
-                ...)
+    misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
+              "envir", "fullframe")
+    calling.args <- post_processing_args_sanitize(model = model,
+                                                  xcall = match.call(),
+                                                  resp = resp,
+                                                  envir = envir,
+                                                  deriv = deriv, 
+                                                  dots = list(...),
+                                                  misc = misc,
+                                                  verbose = verbose)
     
-    if(!is.null(deriv)) {
+    
+    . <- do.call(fitted, calling.args)
+    
+    
+    if(!is.null((eval(full.args$deriv)))) {
       if(deriv > 0) { 
         if(!deriv_model) {
           . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
@@ -222,21 +184,25 @@ fitted_draws.bgmfit <-
       }
     }
     
-
+    
     
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
-    
-    if(!is.null(clearenvfuns)) {
-      if(!is.logical(clearenvfuns)) {
+   
+    if(!is.null(eval(full.args$clearenvfuns))) {
+      if(!is.logical(eval(full.args$clearenvfuns))) {
         stop('clearenvfuns must be NULL or a logical')
       } else {
-        setcleanup <- clearenvfuns
+        setcleanup <- eval(full.args$clearenvfuns)
       }
     }
     
-    if(is.null(clearenvfuns)) {
-      if(usesavedfuns) setcleanup <- TRUE else setcleanup <- FALSE
+    if(is.null(eval(full.args$clearenvfuns))) {
+      if(eval(full.args$usesavedfuns)) {
+        setcleanup <- TRUE 
+      } else {
+        setcleanup <- FALSE
+      }
     }
       
     # Cleanup environment if requested
@@ -257,30 +223,32 @@ fitted_draws.bgmfit <-
     
     
     # fullframe
-    if(!is.null(fullframe)) {
-      if(fullframe) {
-        if(!summary) {
+    if(!is.null(eval(full.args$fullframe))) {
+      if(eval(full.args$fullframe)) {
+        if(!eval(full.args$fullframe)) {
           stop("fullframe can not be combined with summary = FALSE")
         }
-        if(idata_method == 'm1') {
+        if(full.args$idata_method == 'm1') {
           stop("fullframe can not be combined with idata_method = 'm1'")
         }
       }
     }
-    if(is.null(fullframe)) {
+    if(is.null(eval(full.args$fullframe))) {
       if (!is.na(model$model_info$univariate_by)) {
-        fullframe <- TRUE
+        if(full.args$idata_method == 'm1') setfullframe <- FALSE
+        if(full.args$idata_method == 'm2') setfullframe <- TRUE
       } else {
-        fullframe <- FALSE
+        setfullframe <- FALSE
       }
     }
     if (!is.na(model$model_info$univariate_by)) {
-      if(idata_method == 'm2') {
+      if(full.args$idata_method == 'm2') {
         uvarby <- model$model_info$univariate_by
         uvarbyresp <- paste0(uvarby, resp)
-        uvarbynewdata <- newdata %>% dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
+        uvarbynewdata <- eval(full.args$newdata) %>% 
+          dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
+        if(setfullframe) . <- cbind(., uvarbynewdata)
       }
-      if(fullframe) . <- cbind(., uvarbynewdata)
     }
     
     . 

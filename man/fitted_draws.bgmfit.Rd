@@ -134,19 +134,25 @@ function from the \code{pracma} package. Note that the argument
 \code{parms_method} is currently ignored.}
 
 \item{idata_method}{A character string to indicate the interpolation method.
-Options are \emph{method 1} (specified as  \code{'m1'}, default) and
-\emph{method 2} (specified as \code{'m2'}). The \emph{method 1}
-(\code{'m1'}) is adapted from the the \pkg{iapvbs} package and is
-documented here \url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}.
-The \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes}
-package and is documented here
+The number of of interpolation points is set up the \code{ipts} argument.
+Options available for \code{idata_method} are \emph{method 1} (specified as
+\code{'m1'}, default) and \emph{method 2} (specified as \code{'m2'}). The
+\emph{method 1} (\code{'m1'}) is adapted from the the \pkg{iapvbs} package
+and is documented here
+\url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}
+whereas \emph{method 2} (\code{'m2'}) is based on the \pkg{JMbayes}
+package as documented here
 \url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.
-If \code{idata_method = NULL}, then method \code{'m1'} is automatically
-set. An advantage of method \code{'m1'} is that it automatically sets up
-the factor covariates for \code{\link[=plot_curves]{plot_curves()}} and \code{\link[=growthparameters]{growthparameters()}}
-functions. Note that although method \code{'m1'} is preferred and is the
-default choice, it might fail in some cases when model involves covariates.
-In that case, it is advised to switch to method \code{'m2'}.}
+The \code{'m1'} method works by internally constructing the data frame based
+on the model configuration whereas the method \code{'m2'} uses the exact
+data frame used in model fit and can be accessed via \code{fit$data}. If
+\code{idata_method = NULL}, then method \code{'m1'} is automatically set. An
+advantage of method \code{'m1'} is that it automatically sets up the factor
+covariates for \code{\link[=plot_curves]{plot_curves()}} and \code{\link[=growthparameters]{growthparameters()}} functions. Note that
+although method \code{'m1'} is preferred and is the default choice, it might
+fail in some cases when model involves covariates particularly when model is
+fit as \code{univariate_by}. In such cases, it is advised to switch to
+method \code{'m2'}.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
@@ -156,7 +162,8 @@ object(s).}
 object in which \code{newdata} is bind to the summary estimates Note that
 \code{fullframe} can not be combined with \code{summary = FALSE}.
 Furthermore, \code{fullframe} can only be used when \code{idata_method =
-  'm2'}. A particular use case is when fitting \code{univariate_by} model.}
+  'm2'}. A particular use case is when fitting \code{univariate_by} model.
+The \code{fullframe} is mainly for internal use only.}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
