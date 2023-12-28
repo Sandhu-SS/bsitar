@@ -34,6 +34,7 @@ get.newdata <- function(model,
                         ipts = NULL,
                         xrange = NULL,
                         idata_method = NULL,
+                        dummy_to_factor = NULL,
                         verbose = FALSE,
                         ...) {
   
@@ -90,6 +91,38 @@ get.newdata <- function(model,
     if(idata_method == 'm2') newdata <- model$data
   } else {
     newdata <- newdata
+  }
+  
+  
+  if(!is.null(dummy_to_factor)) {
+      if(!is.list(dummy_to_factor)) {
+        stop("dummy_to_factor must be a named list as follows:",
+             "\n ",
+             "dummy_to_factor = list(factor.dummy = , factor.name = )",
+             "\n ",
+             "where factor.dummy is a vector of character strings that will" ,
+             "\n ",
+             "be converted to a factor variable, and ",
+             "\n ",
+             "factor.name is a single character string that is used to name the",
+             "\n ",
+             "newly created factor variable"
+        )
+      }
+    factor.dummy <- dummy_to_factor[['factor.dummy']]
+    factor.level <- dummy_to_factor[['factor.level']]
+    if(is.null(dummy_to_factor[['factor.name']])) {
+      factor.name <- 'factor.dummy'
+    } else {
+      factor.name <- dummy_to_factor[['factor.name']]
+    }
+    newdata <- convert_dummy_to_factor(df = newdata, 
+                                       factor.dummy = factor.dummy,
+                                       factor.level = factor.level,
+                                       factor.name = NULL)
+    
+    colnames(newdata) <- gsub('factor.var', factor.name, names(newdata))
+    newdata[[factor.name]] <- as.factor(newdata[[factor.name]])
   }
   
   
@@ -175,6 +208,7 @@ get.newdata <- function(model,
   
   cov_vars <-  model$model_info[[cov_]]
   cov_sigma_vars <-  model$model_info[[cov_sigma_]]
+
   
   if (!is.null(cov_vars)) {
     cov_vars <- covars_extrcation(cov_vars)
@@ -182,6 +216,21 @@ get.newdata <- function(model,
   if (!is.null(cov_sigma_vars)) {
     cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
   }
+  
+  
+  if(is.null(cov_vars) & is.null(cov_sigma_vars)) {
+    if(!is.null(dummy_to_factor)) {
+      warning("There are no covariate(s) but have specified dummy_to_factor",
+           "\n ", 
+           "Please check if this is an error")
+    }
+  }
+  
+  
+  if(!is.null(dummy_to_factor)) {
+    cov_vars <- c(cov_vars, factor.name)
+  }
+  
   
   # check if cov is charcater but not factor 
   checks_for_chr_fact <- c(cov_vars, cov_sigma_vars)
@@ -225,7 +274,6 @@ get.newdata <- function(model,
     cov_sigma_factor_vars <- NULL
   if (identical(cov_sigma_numeric_vars, character(0)))
     cov_sigma_numeric_vars <- NULL
-  
   
   # Merge here a b c covariate with sigma co variate
   # IMP: Note that groupby_fstr and groupby_fistr are stil  a b c covariate

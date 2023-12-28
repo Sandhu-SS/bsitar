@@ -48,6 +48,7 @@ loo_validation.bgmfit <-
            cores = 1,
            deriv = NULL,
            verbose = FALSE,
+           dummy_to_factor = NULL, 
            usesavedfuns = FALSE,
            clearenvfuns = NULL,
            envir = NULL,
@@ -115,7 +116,7 @@ loo_validation.bgmfit <-
     if(is.null(test)) return(invisible(NULL))
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
-              "envir", "fullframe")
+              "envir", "fullframe", "dummy_to_factor")
     calling.args <- post_processing_args_sanitize(model = model,
                                                   xcall = match.call(),
                                                   resp = resp,

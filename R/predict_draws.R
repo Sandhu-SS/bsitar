@@ -83,6 +83,7 @@ predict_draws.bgmfit <-
            idata_method = 'm1',
            verbose = FALSE,
            fullframe = NULL,
+           dummy_to_factor = NULL, 
            usesavedfuns = FALSE,
            clearenvfuns = FALSE,
            envir = NULL,
@@ -92,12 +93,6 @@ predict_draws.bgmfit <-
       envir <- parent.frame()
     }
     
-    full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
-                                    fargs = formals(), 
-                                    dargs = list(...), 
-                                    verbose = verbose)
-    
-    
     # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){
     plot_conditional_effects_calling <- FALSE
     for (xc in 1:length(sys.calls())) {
@@ -106,15 +101,38 @@ predict_draws.bgmfit <-
       }
     }
     
+    # For plot_conditional_effects_calling, newdata is not evaluted
+    # For indirectcall i.e.,  model$xcall arguments are passed from the
+    # plot_curves() and growthparameters() functions
     
+    indirectcall <- FALSE
     if(!plot_conditional_effects_calling) {
       if(!is.null(model$xcall)) {
         arguments <- get_args_(as.list(match.call())[-1], model$xcall)
+        full.args <- evaluate_call_args(cargs = arguments, 
+                                        fargs = NULL, 
+                                        dargs = NULL, 
+                                        verbose = verbose)
+        full.args$object <- full.args$model
         newdata <- newdata
+        indirectcall <- TRUE
       } else {
+        full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+                                        fargs = formals(), 
+                                        dargs = list(...), 
+                                        verbose = verbose)
         newdata <- do.call(get.newdata, full.args)
       }
       full.args$newdata <- newdata
+    }
+    
+    
+    
+    if(plot_conditional_effects_calling) {
+      full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+                                      fargs = formals(), 
+                                      dargs = list(...), 
+                                      verbose = verbose)
     }
     
     
@@ -154,14 +172,19 @@ predict_draws.bgmfit <-
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe")
-    calling.args <- post_processing_args_sanitize(model = model,
-                                                  xcall = match.call(),
-                                                  resp = resp,
-                                                  envir = envir,
-                                                  deriv = deriv, 
-                                                  dots = list(...),
-                                                  misc = misc,
-                                                  verbose = verbose)
+    
+    if(!indirectcall) {
+      calling.args <- post_processing_args_sanitize(model = model,
+                                                    xcall = match.call(),
+                                                    resp = resp,
+                                                    envir = envir,
+                                                    deriv = deriv, 
+                                                    dots = list(...),
+                                                    misc = misc,
+                                                    verbose = verbose)
+    } else if(indirectcall) {
+      calling.args <- full.args
+    }
     
     
     . <- do.call(predict, calling.args)

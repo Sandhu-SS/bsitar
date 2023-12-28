@@ -298,6 +298,7 @@ plot_curves.bgmfit <- function(model,
                                parms_method = 'getPeak',
                                verbose = FALSE,
                                fullframe = NULL,
+                               dummy_to_factor = NULL,
                                usesavedfuns = FALSE,
                                clearenvfuns = FALSE,
                                envir = NULL,
@@ -319,7 +320,7 @@ plot_curves.bgmfit <- function(model,
     ndraws  <- brms::ndraws(model)
   else
     ndraws <- ndraws
-  
+
 
   # Initiate non formalArgs()
   xvar <- NULL;

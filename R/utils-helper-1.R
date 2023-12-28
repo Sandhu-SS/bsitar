@@ -2217,14 +2217,21 @@ setupfuns <- function(model,
     resp_ <- paste0(resp, "_")
   }
   
+  if(is.null(model$xcall)) {
+    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]][1]
+  } else {
+    xcall <- model$xcall
+  }
+  
+  
   if(!usesavedfuns) {
-    if(is.null(check_if_functions_exists(model, o, model$xcall))) {
+    if(is.null(check_if_functions_exists(model, o, xcall))) {
       return(invisible(NULL))
     }
   }
   
   if(usesavedfuns) {
-    if(is.null(check_if_functions_exists(model, o, model$xcall,
+    if(is.null(check_if_functions_exists(model, o, xcall,
                                          verbose = F))) {
       envir <- envir
     } else {
@@ -2284,3 +2291,55 @@ checkifargmiss <- function(checkarg, checkcall, check) {
   if (!check %in% allargs) checkresulst <- FALSE else checkresulst <- TRUE
   checkresulst
 }
+
+
+
+#' An internal function to convert dummy variables to a factor variable
+#'
+#' @param df A data frame.
+#' @param factor.dummy A vector of character strings that will be converted to a
+#'   factor variable.
+#' @param factor.name A character string to name the newly created factor
+#'   variable.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+convert_dummy_to_factor <- function(df, 
+                                    factor.dummy = NULL, 
+                                    factor.level = NULL, 
+                                    factor.name = NULL) {
+
+  if(!is.data.frame(df)) stop("df should be a data frame")
+  all.dfnames  <- colnames(df)
+  # factor.dummy <- c("classClassI",  "classClassII" )
+  if(is.null(factor.dummy)) {
+    dfout <- df
+  } else if(!is.null(factor.dummy)) {
+    if(!is.null(factor.name)) {
+      if(!is.character(factor.name)) {
+        stop("factor.name should be a character string")
+      }
+    } else if(is.null(factor.name)) {
+      factor.variable <- "factor.var"
+    } 
+    all_min_factor <- setdiff(all.dfnames, factor.dummy)
+    dfout <- cbind(df[, all_min_factor], 
+                   tempvar = factor(max.col(df[, factor.dummy]), 
+                                        ordered = TRUE))
+    colnames(dfout) <- gsub('tempvar', factor.variable, names(dfout))
+    if(!is.null(factor.level)) {
+      if(length(factor.dummy) != length(factor.level)) {
+        stop("Lengths of factor.dummy and factor.level must be same")
+      }
+      levels(dfout[[factor.variable]]) <- factor.level
+    } else if(is.null(factor.level)) {
+      levels(dfout[[factor.variable]]) <- factor.dummy
+    }
+    dfout <- cbind(dfout, df[, factor.dummy])
+  }
+  dfout
+}
+
+

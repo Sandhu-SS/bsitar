@@ -224,8 +224,22 @@
 #'   \code{fullframe} can not be combined with \code{summary = FALSE}.
 #'   Furthermore, \code{fullframe} can only be used when \code{idata_method =
 #'   'm2'}. A particular use case is when fitting \code{univariate_by} model.
-#'   The \code{fullframe} is mainly for internal use only.
-#'  
+#'   The \code{fullframe} is mainly for internal use only. 
+#'   
+#' @param dummy_to_factor A named list (default \code{NULL}) that is used to
+#'   convert dummy variables into a factor variable. The named elements are
+#'   \code{factor.dummy}, \code{factor.name}, and \code{factor.level}. The
+#'   \code{factor.dummy} is a vector of character strings that will be converted
+#'   to a factor variable, and \code{factor.name} is a single character string
+#'   that is used to name the newly created factor variable. The
+#'   \code{factor.level} is used to name the levels of newly created factor.
+#'   When \code{factor.name} is \code{NULL}, then the factor name is internally 
+#'   set as \code{factor.var}. If \code{factor.level} is \code{NULL}, then 
+#'   names of factor levels are take from the \code{factor.dummy} i.e., 
+#'   the factor levels are assigned same name as \code{factor.dummy}. Note that 
+#'   when \code{factor.level} is not \code{NULL}, its length must be same as
+#'   the length of the \code{factor.dummy}.
+#' 
 #' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to
 #'   use the already exposed and saved \code{Stan} functions. This is for
 #'   internal use only during the testing of the functions and therefore should
@@ -331,6 +345,7 @@ growthparameters.bgmfit <- function(model,
                                parms_method = 'getPeak',
                                verbose = FALSE,
                                fullframe = NULL,
+                               dummy_to_factor = NULL, 
                                usesavedfuns = FALSE,
                                clearenvfuns = FALSE,
                                envir = NULL,
@@ -347,8 +362,6 @@ growthparameters.bgmfit <- function(model,
     ndraws  <- brms::ndraws(model)
   else
     ndraws <- ndraws
-  
-  
   
   # Initiate non formalArgs()
   xvar <- NULL;
@@ -816,6 +829,7 @@ growthparameters.bgmfit <- function(model,
                            ipts = ipts,
                            xrange = xrange,
                            idata_method = idata_method,
+                           dummy_to_factor = dummy_to_factor,
                            verbose = verbose)
     
     
@@ -1248,6 +1262,7 @@ growthparameters.bgmfit <- function(model,
                            ipts = ipts,
                            xrange = xrange,
                            idata_method = idata_method,
+                           dummy_to_factor = dummy_to_factor,
                            verbose = verbose)
     
 

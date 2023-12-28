@@ -14,6 +14,7 @@
   deriv_model = TRUE,
   idata_method = "m1",
   verbose = FALSE,
+  dummy_to_factor = NULL,
   usesavedfuns = FALSE,
   clearenvfuns = FALSE,
   envir = NULL,
@@ -84,6 +85,20 @@ method \code{'m2'}.}
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
 object(s).}
+
+\item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
+convert dummy variables into a factor variable. The named elements are
+\code{factor.dummy}, \code{factor.name}, and \code{factor.level}. The
+\code{factor.dummy} is a vector of character strings that will be converted
+to a factor variable, and \code{factor.name} is a single character string
+that is used to name the newly created factor variable. The
+\code{factor.level} is used to name the levels of newly created factor.
+When \code{factor.name} is \code{NULL}, then the factor name is internally
+set as \code{factor.var}. If \code{factor.level} is \code{NULL}, then
+names of factor levels are take from the \code{factor.dummy} i.e.,
+the factor levels are assigned same name as \code{factor.dummy}. Note that
+when \code{factor.level} is not \code{NULL}, its length must be same as
+the length of the \code{factor.dummy}.}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for

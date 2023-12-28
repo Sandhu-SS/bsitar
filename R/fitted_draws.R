@@ -83,6 +83,7 @@ fitted_draws.bgmfit <-
            idata_method = 'm1',
            verbose = FALSE,
            fullframe = NULL,
+           dummy_to_factor = NULL, 
            usesavedfuns = FALSE,
            clearenvfuns = NULL,
            envir = NULL,
@@ -93,9 +94,6 @@ fitted_draws.bgmfit <-
       envir <- parent.frame()
     }
     
-    
-   
-    
     # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){
     plot_conditional_effects_calling <- FALSE
     for (xc in 1:length(sys.calls())) {
@@ -104,7 +102,11 @@ fitted_draws.bgmfit <-
       }
     }
     
+    # For plot_conditional_effects_calling, newdata is not evaluted
+    # For indirectcall i.e.,  model$xcall arguments are passed from the
+    # plot_curves() and growthparameters() functions
     
+    indirectcall <- FALSE
     if(!plot_conditional_effects_calling) {
       if(!is.null(model$xcall)) {
         arguments <- get_args_(as.list(match.call())[-1], model$xcall)
@@ -112,7 +114,9 @@ fitted_draws.bgmfit <-
                                         fargs = NULL, 
                                         dargs = NULL, 
                                         verbose = verbose)
+        full.args$object <- full.args$model
         newdata <- newdata
+        indirectcall <- TRUE
       } else {
         full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                         fargs = formals(), 
@@ -124,6 +128,15 @@ fitted_draws.bgmfit <-
     }
     
     
+    
+    if(plot_conditional_effects_calling) {
+      full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+                                      fargs = formals(), 
+                                      dargs = list(...), 
+                                      verbose = verbose)
+    }
+    
+
     if(!is.null(model$model_info$decomp)) {
       if(model$model_info$decomp == "QR") deriv_model<- FALSE
     }
@@ -160,14 +173,20 @@ fitted_draws.bgmfit <-
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe")
-    calling.args <- post_processing_args_sanitize(model = model,
-                                                  xcall = match.call(),
-                                                  resp = resp,
-                                                  envir = envir,
-                                                  deriv = deriv, 
-                                                  dots = list(...),
-                                                  misc = misc,
-                                                  verbose = verbose)
+    
+    if(!indirectcall) {
+      calling.args <- post_processing_args_sanitize(model = model,
+                                                    xcall = match.call(),
+                                                    resp = resp,
+                                                    envir = envir,
+                                                    deriv = deriv, 
+                                                    dots = list(...),
+                                                    misc = misc,
+                                                    verbose = verbose)
+    } else if(indirectcall) {
+      calling.args <- full.args
+    }
+    
     
     
     . <- do.call(fitted, calling.args)
