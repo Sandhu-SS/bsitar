@@ -1336,7 +1336,7 @@ growthparameters.bgmfit <- function(model,
       arguments$probs <- probs
      
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_draws, arguments)
+        out_v_ <- do.call(fitted_draws.bgmfit, arguments)
       } else if (estimation_method == 'predict') {
         out_v_ <- do.call(predict_draws, arguments)
       }

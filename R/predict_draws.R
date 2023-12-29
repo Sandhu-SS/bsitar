@@ -95,8 +95,10 @@ predict_draws.bgmfit <-
     
     # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){
     plot_conditional_effects_calling <- FALSE
-    for (xc in 1:length(sys.calls())) {
-      if(any(grepl('plot_conditional_effects', sys.calls()[[xc]]))) {
+    syscalls1 <- sys.calls()[[1]]
+    syscallsall <- paste(deparse(syscalls1), collapse = "\n")
+    for (xc in 1:length(syscallsall)) {
+      if(any(grepl('plot_conditional_effects', syscallsall[[xc]]))) {
         plot_conditional_effects_calling <- TRUE
       }
     }
@@ -114,7 +116,7 @@ predict_draws.bgmfit <-
                                         dargs = NULL, 
                                         verbose = verbose)
         full.args$object <- full.args$model
-        newdata <- newdata
+        newdata <- full.args$newdata
         indirectcall <- TRUE
       } else {
         full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
@@ -191,10 +193,12 @@ predict_draws.bgmfit <-
     
     
     if(!is.null((eval(full.args$deriv)))) {
-      if(deriv > 0) { 
-        if(!deriv_model) {
-          . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
-                          deriv = deriv, probs = probs, robust = robust)
+      if(eval(full.args$deriv > 0)) { 
+        if(!eval(full.args$deriv_model)) {
+          full.args$. <- .
+          . <- do.call(mapderivqr, full.args)
+          # . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
+          #                 deriv = deriv, probs = probs, robust = robust)
         } else {
           . <- .
         }

@@ -106,6 +106,7 @@ plot_conditional_effects.bgmfit <-
                                     dargs = list(...), 
                                     verbose = verbose)
     
+    full.args$model <- model
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
