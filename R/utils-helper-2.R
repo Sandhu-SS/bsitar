@@ -1477,8 +1477,8 @@ evaluate_call_args <- function(cargs = NULL,
 #' @param xcall The \code{match.call()} from the post-processing function.
 #'
 #' @param resp Response variable (default \code{NULL}) specified as a character
-#'   string. This is needed when processing univariate-by-subgroup and
-#'   multivariate model (see \code{bgmfit} function for details).
+#'   string. This is needed when processing \code{univariate_by} and
+#'   \code{multivariate} models (see \code{bgmfit} function for details).
 #'
 #' @param deriv An integer value to specify whether to estimate distance curve
 #'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
@@ -1605,8 +1605,8 @@ post_processing_args_sanitize <- function(model,
 #' @param xcall The \code{match.call()} from the post-processing function.
 #'
 #' @param resp Response variable (default \code{NULL}) specified as a character
-#'   string. This is needed when processing univariate-by-subgroup and
-#'   multivariate model (see \code{bgmfit} function for details).
+#'   string. This is needed when processing \code{univariate_by} and
+#'   \code{multivariate} models (see \code{bgmfit} function for details).
 #'
 #' @param deriv An integer value to specify whether to estimate distance curve
 #'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
@@ -1676,10 +1676,10 @@ post_processing_checks <- function(model,
   if (model$model_info$nys > 1 & is.null(resp)) {
     if (!is.na(model$model_info$univariate_by)) {
       stop(
-        "You have fit a univariate-by-subset model for ",
+        "You have fit a univariate_by model for ",
         model$model_info$univariate_by,
         "\n ",
-        " but dit not set the the resp options correctly",
+        " but did not correctly specified the 'resp' option",
         " (which is NULL at present).",
         "\n ",
         " The response options are: ",

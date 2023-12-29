@@ -23,6 +23,7 @@
   levels_id = NULL,
   avg_reffects = NULL,
   ipts = 10,
+  deriv_model = TRUE,
   xrange = NULL,
   xrange_search = NULL,
   takeoff = FALSE,
@@ -180,6 +181,14 @@ an integer such as \code{ipts = 10} (default) will interpolate the
 predictor. It is important to note that these interpolations do not alter
 the range of predictor when calculating population average and/or the
 individual specific growth curves.}
+
+\item{deriv_model}{A logical to specify whether to derive velocity curve from
+the derivative function, or the differentiation of the distance curve. The
+argument \code{deriv_model} is set to \code{TRUE} for those functions which
+need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
+\code{NULL} for functions which are explicitly working with the model
+returned fitted values such as \code{loo_validation()} and
+\code{plot_ppc()}.}
 
 \item{xrange}{An integer to set the predictor range (i.e., age) when
 executing the interpolation via \code{ipts}. The default \code{NULL} sets

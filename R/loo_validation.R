@@ -7,10 +7,8 @@
 #'   cross-validation based on the posterior likelihood. See [brms::loo()] for
 #'   details.
 #' 
-#' @inherit brms::loo details 
-#' 
+#' @inherit brms::loo params details 
 #' @inheritParams growthparameters.bgmfit
-#' 
 #' @inheritParams plot_ppc.bgmfit
 #' 
 #' @param ... Additional arguments passed to the [brms::loo()] function. 
@@ -44,9 +42,19 @@
 #' 
 loo_validation.bgmfit <-
   function(model,
+           compare = TRUE,
            resp = NULL,
+           pointwise = FALSE,
+           moment_match = FALSE,
+           reloo = FALSE,
+           k_threshold = 0.7,
+           save_psis = FALSE,
+           moment_match_args = list(),
+           reloo_args = list(),
+           model_names = NULL,
            cores = 1,
            deriv = NULL,
+           deriv_model = NULL,
            verbose = FALSE,
            dummy_to_factor = NULL, 
            usesavedfuns = FALSE,
@@ -58,9 +66,14 @@ loo_validation.bgmfit <-
       envir <- parent.frame()
     }
     
+    if(is.null(deriv_model)) {
+      deriv_model <- TRUE
+    }
+    
     if(is.null(deriv)) {
       deriv <- 0
     }
+    
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                     fargs = formals(), 
@@ -126,12 +139,11 @@ loo_validation.bgmfit <-
                                                   misc = misc,
                                                   verbose = verbose)
     
-    
-    # . <- do.call(brms::loo, calling.args)
-    
-    
-    . <- brms::loo(model, resp = resp, cores = cores ,...)
-    
+    calling.args$ x<- calling.args$object
+    calling.args$object <- NULL
+   
+     . <- do.call(brms::loo , calling.args)
+
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     

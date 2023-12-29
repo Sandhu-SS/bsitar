@@ -7,11 +7,25 @@
 \usage{
 \method{plot_conditional_effects}{bgmfit}(
   model,
+  effects = NULL,
+  conditions = NULL,
+  int_conditions = NULL,
+  re_formula = NA,
+  spaghetti = FALSE,
+  surface = FALSE,
+  categorical = FALSE,
+  ordinal = FALSE,
+  transform = NULL,
+  resolution = 100,
+  select_points = 0,
+  too_far = 0,
+  prob = 0.95,
+  robust = TRUE,
   newdata = NULL,
   levels_id = NULL,
   resp = NULL,
   deriv = 0,
-  deriv_model = TRUE,
+  deriv_model = NULL,
   idata_method = "m1",
   verbose = FALSE,
   dummy_to_factor = NULL,
@@ -25,6 +39,98 @@ plot_conditional_effects(model, ...)
 }
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
+
+\item{effects}{An optional character vector naming effects (main effects or
+interactions) for which to compute conditional plots. Interactions are
+specified by a \code{:} between variable names. If \code{NULL} (the
+default), plots are generated for all main effects and two-way interactions
+estimated in the model. When specifying \code{effects} manually, \emph{all}
+two-way interactions (including grouping variables) may be plotted
+even if not originally modeled.}
+
+\item{conditions}{An optional \code{data.frame} containing variable values
+to condition on. Each effect defined in \code{effects} will
+be plotted separately for each row of \code{conditions}. Values in the
+\code{cond__} column will be used as titles of the subplots. If \code{cond__}
+is not given, the row names will be used for this purpose instead.
+It is recommended to only define a few rows in order to keep the plots clear.
+See \code{\link[brms]{make_conditions}} for an easy way to define conditions.
+If \code{NULL} (the default), numeric variables will be conditionalized by
+using their means and factors will get their first level assigned.
+\code{NA} values within factors are interpreted as if all dummy
+variables of this factor are zero. This allows, for instance, to make
+predictions of the grand mean when using sum coding.}
+
+\item{int_conditions}{An optional named \code{list} whose elements are
+vectors of values of the variables specified in \code{effects}.
+At these values, predictions are evaluated. The names of
+\code{int_conditions} have to match the variable names exactly.
+Additionally, the elements of the vectors may be named themselves,
+in which case their names appear as labels for the conditions in the plots.
+Instead of vectors, functions returning vectors may be passed and are
+applied on the original values of the corresponding variable.
+If \code{NULL} (the default), predictions are evaluated at the
+\eqn{mean} and at \eqn{mean +/- sd} for numeric predictors and at
+all categories for factor-like predictors.}
+
+\item{re_formula}{A formula containing group-level effects to be considered
+in the conditional predictions. If \code{NULL}, include all group-level
+effects; if \code{NA} (default), include no group-level effects.}
+
+\item{spaghetti}{Logical. Indicates if predictions should
+be visualized via spaghetti plots. Only applied for numeric
+predictors. If \code{TRUE}, it is recommended
+to set argument \code{ndraws} to a relatively small value
+(e.g., \code{100}) in order to reduce computation time.}
+
+\item{surface}{Logical. Indicates if interactions or
+two-dimensional smooths should be visualized as a surface.
+Defaults to \code{FALSE}. The surface type can be controlled
+via argument \code{stype} of the related plotting method.}
+
+\item{categorical}{Logical. Indicates if effects of categorical
+or ordinal models should be shown in terms of probabilities
+of response categories. Defaults to \code{FALSE}.}
+
+\item{ordinal}{(Deprecated) Please use argument \code{categorical}.
+Logical. Indicates if effects in ordinal models
+should be visualized as a raster with the response categories
+on the y-axis. Defaults to \code{FALSE}.}
+
+\item{transform}{A function or a character string naming
+a function to be applied on the predicted responses
+before summary statistics are computed. Only allowed
+if \code{method = "posterior_predict"}.}
+
+\item{resolution}{Number of support points used to generate
+the plots. Higher resolution leads to smoother plots.
+Defaults to \code{100}. If \code{surface} is \code{TRUE},
+this implies \code{10000} support points for interaction terms,
+so it might be necessary to reduce \code{resolution}
+when only few RAM is available.}
+
+\item{select_points}{Positive number.
+Only relevant if \code{points} or \code{rug} are set to \code{TRUE}:
+Actual data points of numeric variables that
+are too far away from the values specified in \code{conditions}
+can be excluded from the plot. Values are scaled into
+the unit interval and then points more than \code{select_points}
+from the values in \code{conditions} are excluded.
+By default, all points are used.}
+
+\item{too_far}{Positive number.
+For surface plots only: Grid points that are too
+far away from the actual data points can be excluded from the plot.
+\code{too_far} determines what is too far. The grid is scaled into
+the unit square and then grid points more than \code{too_far}
+from the predictor variables are excluded. By default, all
+grid points are used. Ignored for non-surface plots.}
+
+\item{prob}{A value between 0 and 1 indicating the desired probability
+to be covered by the uncertainty intervals. The default is 0.95.}
+
+\item{robust}{If \code{TRUE} (the default) the median is used as the
+measure of central tendency. If \code{FALSE} the mean is used instead.}
 
 \item{newdata}{An optional data frame to be used in predictions. If
 \code{NULL} (default), the model fit.}

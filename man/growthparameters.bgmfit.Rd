@@ -29,6 +29,7 @@
   avg_reffects = NULL,
   aux_variables = NULL,
   ipts = 10,
+  deriv_model = TRUE,
   conf = 0.95,
   xrange = NULL,
   xrange_search = NULL,
@@ -193,6 +194,14 @@ an integer such as \code{ipts = 10} (default) will interpolate the
 predictor. It is important to note that these interpolations do not alter
 the range of predictor when calculating population average and/or the
 individual specific growth curves.}
+
+\item{deriv_model}{A logical to specify whether to derive velocity curve from
+the derivative function, or the differentiation of the distance curve. The
+argument \code{deriv_model} is set to \code{TRUE} for those functions which
+need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
+\code{NULL} for functions which are explicitly working with the model
+returned fitted values such as \code{loo_validation()} and
+\code{plot_ppc()}.}
 
 \item{conf}{A numeric value (default \code{0.95}) to compute CI. Internally,
 this is translated into a paired probability values as \code{c((1 - conf) /

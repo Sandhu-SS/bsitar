@@ -7,9 +7,17 @@
 \usage{
 \method{plot_ppc}{bgmfit}(
   model,
+  type,
+  ndraws = NULL,
+  draw_ids = NULL,
+  prefix = c("ppc", "ppd"),
+  group = NULL,
+  x = NULL,
+  newdata = NULL,
   resp = NULL,
   deriv = 0,
   verbose = FALSE,
+  deriv_model = NULL,
   dummy_to_factor = NULL,
   usesavedfuns = FALSE,
   clearenvfuns = NULL,
@@ -21,6 +29,34 @@ plot_ppc(model, ...)
 }
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
+
+\item{type}{Type of the ppc plot as given by a character string.
+See \code{\link[bayesplot:PPC-overview]{PPC}} for an overview
+of currently supported types. You may also use an invalid
+type (e.g. \code{type = "xyz"}) to get a list of supported
+types in the resulting error message.}
+
+\item{ndraws}{Positive integer indicating the number of posterior draws to be
+used in estimation. If \code{NULL} (default), all draws are used.}
+
+\item{draw_ids}{An integer indicating the specif posterior draw(s)
+to be used. If \code{NULL} (default), all draws are used.}
+
+\item{prefix}{The prefix of the \pkg{bayesplot} function to be applied. 
+Either `"ppc"` (posterior predictive check; the default)
+or `"ppd"` (posterior predictive distribution), the latter being the same
+as the former except that the observed data is not shown for `"ppd"`.}
+
+\item{group}{Optional name of a factor variable in the model
+by which to stratify the ppc plot. This argument is required for
+ppc \code{*_grouped} types and ignored otherwise.}
+
+\item{x}{Optional name of a variable in the model.
+Only used for ppc types having an \code{x} argument
+and ignored otherwise.}
+
+\item{newdata}{An optional data frame to be used in predictions. If
+\code{NULL} (default), the model fit.}
 
 \item{resp}{A character string to specify response variable when processing
 posterior draws for the univariate-by-subgroup and multivariate models (see
@@ -40,6 +76,14 @@ for the distance curve, \code{deriv = 1} for velocity curve, and
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
 object(s).}
+
+\item{deriv_model}{A logical to specify whether to derive velocity curve from
+the derivative function, or the differentiation of the distance curve. The
+argument \code{deriv_model} is set to \code{TRUE} for those functions which
+need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
+\code{NULL} for functions which are explicitly working with the model
+returned fitted values such as \code{loo_validation()} and
+\code{plot_ppc()}.}
 
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are

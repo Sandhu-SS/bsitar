@@ -97,11 +97,13 @@ derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
 for the distance curve, \code{deriv = 1} for velocity curve, and
 \code{deriv = 2} for the acceleration curve.}
 
-\item{deriv_model}{A logical (default \code{TRUE}) to indicate whether to
-estimate model based derivatives or from the differentiation of the
-distance curve. When model is fit with \code{decomp = 'QR'}, the only
-approach available to estimate derivatives by the  differentiation of the
-distance curve.}
+\item{deriv_model}{A logical to specify whether to derive velocity curve from
+the derivative function, or the differentiation of the distance curve. The
+argument \code{deriv_model} is set to \code{TRUE} for those functions which
+need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
+\code{NULL} for functions which are explicitly working with the model
+returned fitted values such as \code{loo_validation()} and
+\code{plot_ppc()}.}
 
 \item{summary}{A logical (default \code{TRUE}) indicating whether only the
 Estimate should be returned or Estimate along with SE and CI should be

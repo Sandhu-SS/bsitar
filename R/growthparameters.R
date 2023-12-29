@@ -143,6 +143,14 @@
 #'   the range of predictor when calculating population average and/or the
 #'   individual specific growth curves.
 #'   
+#' @param deriv_model A logical to specify whether to derive velocity curve from
+#'   the derivative function, or the differentiation of the distance curve. The
+#'   argument \code{deriv_model} is set to \code{TRUE} for those functions which
+#'   need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
+#'   \code{NULL} for functions which are explicitly working with the model
+#'   returned fitted values such as \code{loo_validation()} and
+#'   \code{plot_ppc()}.
+#' 
 #'@param conf A numeric value (default \code{0.95}) to compute CI. Internally,
 #'   this is translated into a paired probability values as \code{c((1 - conf) /
 #'   2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this will compute 95% CI
@@ -333,6 +341,7 @@ growthparameters.bgmfit <- function(model,
                                avg_reffects = NULL,
                                aux_variables = NULL,
                                ipts = 10,
+                               deriv_model = TRUE,
                                conf = 0.95,
                                xrange = NULL,
                                xrange_search = NULL,
@@ -354,14 +363,19 @@ growthparameters.bgmfit <- function(model,
     envir <- parent.frame()
   }
   
+  if(is.null(ndraws)) {
+    ndraws <- brms::ndraws(model)
+  }
+  
+  if(is.null(deriv_model)) {
+    deriv_model <- TRUE
+  }
+  
   if (is.null(idata_method)) {
     idata_method <- 'm1'
   }
   
-  if (is.null(ndraws))
-    ndraws  <- brms::ndraws(model)
-  else
-    ndraws <- ndraws
+  
   
   # Initiate non formalArgs()
   xvar <- NULL;

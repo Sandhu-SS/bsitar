@@ -257,6 +257,7 @@ plot_curves.bgmfit <- function(model,
                                levels_id = NULL,
                                avg_reffects = NULL,
                                ipts = 10,
+                               deriv_model = TRUE,
                                xrange = NULL,
                                xrange_search = NULL,
                                takeoff = FALSE,
@@ -308,6 +309,14 @@ plot_curves.bgmfit <- function(model,
     envir <- parent.frame()
   }
   
+  if(is.null(ndraws)) {
+    ndraws <- brms::ndraws(model)
+  }
+  
+  if(is.null(deriv_model)) {
+    deriv_model <- TRUE
+  }
+  
   if (is.null(idata_method)) {
     idata_method <- 'm1'
   }
@@ -316,11 +325,6 @@ plot_curves.bgmfit <- function(model,
     stop("Please install 'ggplot2' package before calling the 'plot_curves'")
   }
   
-  if (is.null(ndraws))
-    ndraws  <- brms::ndraws(model)
-  else
-    ndraws <- ndraws
-
 
   # Initiate non formalArgs()
   xvar <- NULL;

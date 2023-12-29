@@ -6,7 +6,6 @@ CGV
 DVau
 Dvau
 GCMs
-GlobalEnv
 HMC
 HalfNormal
 Ij
@@ -30,6 +29,7 @@ biacromial
 bmatrix
 brms
 burnin
+conditionalized
 continous
 covaristes
 dVau
@@ -59,8 +59,10 @@ newpage
 operatorname
 optiion
 parallelization
+pareto
 pmatrix
 ppc
+ppd
 pre
 rescaling
 rstanrm

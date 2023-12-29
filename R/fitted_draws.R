@@ -94,6 +94,14 @@ fitted_draws.bgmfit <-
       envir <- parent.frame()
     }
     
+    if(is.null(ndraws)) {
+      ndraws <- brms::ndraws(model)
+    }
+    
+    if(is.null(deriv_model)) {
+      deriv_model <- TRUE
+    }
+    
     # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){
     plot_conditional_effects_calling <- FALSE
     syscalls1 <- sys.calls()[[1]]

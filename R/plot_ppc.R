@@ -7,7 +7,7 @@
 #' @param model An object of class \code{bgmfit}.
 #' 
 #' @inherit growthparameters.bgmfit params
-#' @inherit brms::pp_check.brmsfit description 
+#' @inherit brms::pp_check.brmsfit params description 
 #' @inherit fitted_draws.bgmfit params
 #' 
 #' @param ... Additional arguments passed to the [brms::pp_check.brmsfit()] 
@@ -34,9 +34,17 @@
 #' 
 plot_ppc.bgmfit <-
   function(model,
+           type,
+           ndraws = NULL,
+           draw_ids = NULL,
+           prefix = c("ppc", "ppd"),
+           group = NULL,
+           x = NULL,
+           newdata = NULL,
            resp = NULL,
            deriv = 0,
            verbose = FALSE,
+           deriv_model = NULL,
            dummy_to_factor = NULL, 
            usesavedfuns = FALSE,
            clearenvfuns = NULL,
@@ -46,6 +54,15 @@ plot_ppc.bgmfit <-
     if(is.null(envir)) {
       envir <- parent.frame()
     }
+    
+    if(is.null(ndraws)) {
+      ndraws <- brms::ndraws(model)
+    }
+    
+    if(is.null(deriv_model)) {
+      deriv_model <- TRUE
+    }
+  
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                            fargs = formals(), 

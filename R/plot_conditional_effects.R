@@ -39,7 +39,7 @@
 #'   approach available to estimate derivatives by the  differentiation of the
 #'   distance curve.
 #' 
-#' @inherit brms::conditional_effects description
+#' @inherit brms::conditional_effects params description
 #' @inherit growthparameters.bgmfit params
 #' @inherit fitted_draws.bgmfit params
 #'
@@ -84,11 +84,25 @@
 #' 
 plot_conditional_effects.bgmfit <-
   function(model,
+           effects = NULL,
+           conditions = NULL,
+           int_conditions = NULL,
+           re_formula = NA,
+           spaghetti = FALSE,
+           surface = FALSE,
+           categorical = FALSE,
+           ordinal = FALSE,
+           transform = NULL,
+           resolution = 100,
+           select_points = 0,
+           too_far = 0,
+           prob = 0.95,
+           robust = TRUE,
            newdata = NULL,
            levels_id = NULL,
            resp = NULL,
            deriv = 0,
-           deriv_model = TRUE,
+           deriv_model = NULL,
            idata_method = 'm1',
            verbose = FALSE,
            dummy_to_factor = NULL, 
@@ -99,6 +113,10 @@ plot_conditional_effects.bgmfit <-
     
     if(is.null(envir)) {
       envir <- parent.frame()
+    }
+    
+    if(is.null(deriv_model)) {
+      deriv_model <- TRUE
     }
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
@@ -187,18 +205,17 @@ plot_conditional_effects.bgmfit <-
       idvar <- IDvar
       if(length(idvar) > 1) idvar <- idvar[1]
       yvar  <- 'yvar'
-      # calling.args_ce <- calling.args
-      # calling.args_ce$newdata <- NULL
-      # out_    <- do.call(brms::conditional_effects, calling.args)
-      out_    <- brms::conditional_effects(model, resp = resp, ...)
+      calling.args_ce <- calling.args_cefd <- calling.args
+      calling.args_ce$newdata <- NULL
+      calling.args_ce$x <- calling.args_ce$object
+      calling.args_ce$object <- NULL
+      out_    <- do.call(brms::conditional_effects, calling.args_ce)
       datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
       datace[[idvar]] <- unique(levels(model$data[[idvar]]))[1]
-      newdata <- datace
-      outx <- fitted_draws(model, resp = resp, newdata = newdata, 
-                           deriv = deriv, ...)
-      # calling.args$newdata <- datace
-      # calling.args$model <- model
-      # outx <-  do.call(fitted_draws, calling.args)
+      calling.args_cefd$newdata <- datace
+      calling.args_cefd$model <- model
+      calling.args_cefd$object <- NULL
+      outx <-  do.call(fitted_draws, calling.args_cefd)
       out_[[1]][['estimate__']] <- outx[, 1]
       out_[[1]][['se__']] <- outx[, 2]
       out_[[1]][['lower__']] <- outx[, 3]
@@ -207,12 +224,13 @@ plot_conditional_effects.bgmfit <-
     }
     
     if(eval(full.args$deriv_model)) {
-      # calling.args_ce <- calling.args
-      # calling.args_ce$newdata <- NULL
-      # calling.args_ce$x <- calling.args_ce$object
-      # .    <- do.call(conditional_effects, calling.args_ce)
-      . <- brms::conditional_effects(model, resp = resp, ...)
+      calling.args_ce <- calling.args
+      calling.args_ce$newdata <- NULL
+      calling.args_ce$x <- calling.args_ce$object
+      calling.args_ce$object <- NULL
+      .   <- do.call(brms::conditional_effects, calling.args_ce)
     }
+    
     
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
