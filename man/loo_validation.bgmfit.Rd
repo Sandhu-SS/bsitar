@@ -46,15 +46,14 @@ The latter approach is usually considerably slower but
 requires much less working memory. Accordingly, if one runs
 into memory issues, \code{pointwise = TRUE} is the way to go.}
 
-\item{moment_match}{Logical; Indicate whether \code{\link[brms]{loo_moment_match}}
-should be applied on problematic observations. Defaults to \code{FALSE}.
-For most models, moment matching will only work if you have set
-\code{save_pars = save_pars(all = TRUE)} when fitting the model with
-\code{\link[brms]{brm}}. See \code{\link[brms]{loo_moment_match.brmsfit}} for more
-details.}
+\item{moment_match}{A logical argument to indicate whether
+\code{\link[loo:loo_moment_match]{loo::loo_moment_match()}} should be applied on problematic observations.
+Defaults to \code{FALSE}. For most models, moment matching will only work
+if you have set \code{save_pars = save_pars(all = TRUE)} when fitting the
+model with \code{\link[brms:brm]{brms::brm()}}. See \code{\link[brms:loo_moment_match.brmsfit]{brms::loo_moment_match()}} for more details.}
 
-\item{reloo}{Logical; Indicate whether \code{\link[brms]{reloo}}
-should be applied on problematic observations. Defaults to \code{FALSE}.}
+\item{reloo}{A logical argument to indicate whether \code{\link[brms:reloo.brmsfit]{brms::reloo()}} should be
+applied on problematic observations. Defaults to \code{FALSE}.}
 
 \item{k_threshold}{The threshold at which pareto \eqn{k}
 estimates are treated as problematic. Defaults to \code{0.7}.
@@ -64,11 +63,11 @@ See \code{\link[loo:pareto-k-diagnostic]{pareto_k_ids}} for more details.}
 \item{save_psis}{Should the \code{"psis"} object created internally be saved
 in the returned object? For more details see \code{\link[loo:loo]{loo}}.}
 
-\item{moment_match_args}{Optional \code{list} of additional arguments passed to
-\code{\link[brms]{loo_moment_match}}.}
+\item{moment_match_args}{An optional \code{list} of additional arguments
+passed to \code{\link[loo:loo_moment_match]{loo::loo_moment_match()}}.}
 
-\item{reloo_args}{Optional \code{list} of additional arguments passed to
-\code{\link[brms]{reloo}}.}
+\item{reloo_args}{An optional \code{list} of additional arguments passed to
+\code{\link[brms:reloo.brmsfit]{brms::reloo()}}.}
 
 \item{model_names}{If \code{NULL} (the default) will use model names
 derived from deparsing the call. Otherwise will use the passed
@@ -147,7 +146,7 @@ class \code{loolist}.
 The \strong{loo_validation()} is a wrapper around the
 \code{\link[brms:loo.brmsfit]{brms::loo()}} function to perform approximate leave-one-out
 cross-validation based on the posterior likelihood. See \code{\link[brms:loo.brmsfit]{brms::loo()}} for
-details.
+more details.
 }
 \details{
 See \code{\link[loo:loo_compare]{loo::loo_compare()}} for details on model comparisons. For

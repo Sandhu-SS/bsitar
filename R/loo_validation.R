@@ -5,7 +5,7 @@
 #' @description The \strong{loo_validation()} is a wrapper around the
 #'   [brms::loo()] function to perform approximate leave-one-out
 #'   cross-validation based on the posterior likelihood. See [brms::loo()] for
-#'   details.
+#'   more details.
 #'   
 #' @details See [loo::loo_compare()] for details on model comparisons. For
 #'   \code{bgmfit} objects, \code{LOO} is an alias of \code{loo}. Use method
@@ -14,6 +14,21 @@
 #' 
 #' @param compare A flag indicating if the information criteria of the models
 #'   should be compared to each other via [loo::loo_compare()].
+#'   
+#' @param moment_match A logical argument to indicate whether
+#'   [loo::loo_moment_match()] should be applied on problematic observations.
+#'   Defaults to \code{FALSE}. For most models, moment matching will only work
+#'   if you have set \code{save_pars = save_pars(all = TRUE)} when fitting the
+#'   model with [brms::brm()]. See [brms::loo_moment_match()] for more details.
+#'
+#' @param reloo A logical argument to indicate whether [brms::reloo()] should be
+#'   applied on problematic observations. Defaults to \code{FALSE}.
+#'
+#' @param moment_match_args An optional \code{list} of additional arguments
+#'   passed to [loo::loo_moment_match()].
+#'
+#' @param reloo_args  An optional \code{list} of additional arguments passed to
+#'   [brms::reloo()].
 #' 
 #' @inherit brms::loo params 
 #' @inheritParams growthparameters.bgmfit
