@@ -85,7 +85,7 @@ predict_draws.bgmfit <-
            fullframe = NULL,
            dummy_to_factor = NULL, 
            usesavedfuns = FALSE,
-           clearenvfuns = FALSE,
+           clearenvfuns = NULL,
            envir = NULL,
            ...) {
     
@@ -131,12 +131,12 @@ predict_draws.bgmfit <-
                                         fargs = formals(), 
                                         dargs = list(...), 
                                         verbose = verbose)
+        
         full.args$model <- model
         newdata <- do.call(get.newdata, full.args)
       }
       full.args$newdata <- newdata
     }
-    
     
     
     if(plot_conditional_effects_calling) {
@@ -284,6 +284,7 @@ predict_draws.bgmfit <-
     
     . 
   }
+
 
 
 #' @rdname predict_draws.bgmfit

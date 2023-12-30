@@ -301,7 +301,7 @@ plot_curves.bgmfit <- function(model,
                                fullframe = NULL,
                                dummy_to_factor = NULL,
                                usesavedfuns = FALSE,
-                               clearenvfuns = FALSE,
+                               clearenvfuns = NULL,
                                envir = NULL,
                                ...) {
   

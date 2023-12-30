@@ -31,7 +31,7 @@
   verbose = FALSE,
   dummy_to_factor = NULL,
   usesavedfuns = FALSE,
-  clearenvfuns = FALSE,
+  clearenvfuns = NULL,
   envir = NULL,
   ...
 )
