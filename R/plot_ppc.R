@@ -62,12 +62,18 @@ plot_ppc.bgmfit <-
     if(is.null(deriv_model)) {
       deriv_model <- TRUE
     }
+    
+    if(is.null(deriv)) {
+      deriv <- 0
+    }
   
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                            fargs = formals(), 
                                            dargs = list(...), 
                                            verbose = verbose)
+    
+    full.args$model <- model
     
     
     if(!is.null(model$xcall)) {
@@ -123,6 +129,8 @@ plot_ppc.bgmfit <-
                                           misc = misc,
                                           verbose = verbose)
    
+    
+    calling.args$object <- full.args$model
     
     . <- do.call(brms::pp_check, calling.args)
     

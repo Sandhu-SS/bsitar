@@ -17,6 +17,7 @@
   moment_match_args = list(),
   reloo_args = list(),
   model_names = NULL,
+  ndraws = NULL,
   cores = 1,
   deriv = NULL,
   deriv_model = NULL,
@@ -33,9 +34,8 @@ loo_validation(model, ...)
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
 
-\item{compare}{A flag indicating if the information criteria
-of the models should be compared to each other
-via \code{\link[brms]{loo_compare}}.}
+\item{compare}{A flag indicating if the information criteria of the models
+should be compared to each other via \code{\link[loo:loo_compare]{loo::loo_compare()}}.}
 
 \item{resp}{Optional names of response variables. If specified, predictions
 are performed only for the specified response variables.}
@@ -73,6 +73,9 @@ in the returned object? For more details see \code{\link[loo:loo]{loo}}.}
 \item{model_names}{If \code{NULL} (the default) will use model names
 derived from deparsing the call. Otherwise will use the passed
 values as model names.}
+
+\item{ndraws}{Positive integer indicating the number of posterior draws to be
+used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations by setting the option \code{future = TRUE}. On non-Windows
@@ -147,10 +150,10 @@ cross-validation based on the posterior likelihood. See \code{\link[brms:loo.brm
 details.
 }
 \details{
-See \code{\link[brms]{loo_compare}} for details on model comparisons.
- For \code{brmsfit} objects, \code{LOO} is an alias of \code{loo}.
- Use method \code{\link[brms]{add_criterion}} to store
- information criteria in the fitted model object for later usage.
+See \code{\link[loo:loo_compare]{loo::loo_compare()}} for details on model comparisons. For
+\code{bgmfit} objects, \code{LOO} is an alias of \code{loo}. Use method
+\code{\link[brms:add_criterion]{brms::add_criterion()}}  to store information criteria in the fitted model
+object for later usage.
 }
 \examples{
 

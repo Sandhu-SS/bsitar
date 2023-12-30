@@ -22,6 +22,7 @@
   prob = 0.95,
   robust = TRUE,
   newdata = NULL,
+  ndraws = NULL,
   levels_id = NULL,
   resp = NULL,
   deriv = 0,
@@ -134,6 +135,9 @@ measure of central tendency. If \code{FALSE} the mean is used instead.}
 
 \item{newdata}{An optional data frame to be used in predictions. If
 \code{NULL} (default), the model fit.}
+
+\item{ndraws}{Positive integer indicating the number of posterior draws to be
+used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{levels_id}{An optional argument to specify the \code{ids} for
 hierarchical model (default \code{NULL}). It is used only when model is

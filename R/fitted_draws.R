@@ -132,6 +132,8 @@ fitted_draws.bgmfit <-
                                         fargs = formals(), 
                                         dargs = list(...), 
                                         verbose = verbose)
+       
+        full.args$model <- model
         newdata <- do.call(get.newdata, full.args)
       }
       full.args$newdata <- newdata
@@ -196,8 +198,8 @@ fitted_draws.bgmfit <-
       calling.args <- full.args
     }
     
-    
-    
+    calling.args$object <- full.args$model
+
     . <- do.call(fitted, calling.args)
     
     

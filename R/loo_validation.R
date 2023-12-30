@@ -6,8 +6,16 @@
 #'   [brms::loo()] function to perform approximate leave-one-out
 #'   cross-validation based on the posterior likelihood. See [brms::loo()] for
 #'   details.
+#'   
+#' @details See [loo::loo_compare()] for details on model comparisons. For
+#'   \code{bgmfit} objects, \code{LOO} is an alias of \code{loo}. Use method
+#'   [brms::add_criterion()]  to store information criteria in the fitted model
+#'   object for later usage.
 #' 
-#' @inherit brms::loo params details 
+#' @param compare A flag indicating if the information criteria of the models
+#'   should be compared to each other via [loo::loo_compare()].
+#' 
+#' @inherit brms::loo params 
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams plot_ppc.bgmfit
 #' 
@@ -52,6 +60,7 @@ loo_validation.bgmfit <-
            moment_match_args = list(),
            reloo_args = list(),
            model_names = NULL,
+           ndraws = NULL,
            cores = 1,
            deriv = NULL,
            deriv_model = NULL,
@@ -66,6 +75,14 @@ loo_validation.bgmfit <-
       envir <- parent.frame()
     }
     
+    if(!is.null(ndraws)) {
+      if(ndraws == 1) stop("ndraws must be greater than 1")
+    }
+    
+    if(is.null(ndraws)) {
+      ndraws <- brms::ndraws(model)
+    }
+   
     if(is.null(deriv_model)) {
       deriv_model <- TRUE
     }
@@ -79,6 +96,8 @@ loo_validation.bgmfit <-
                                     fargs = formals(), 
                                     dargs = list(...), 
                                     verbose = verbose)
+    
+    full.args$model <- model
     
     
     if(!is.null(model$xcall)) {
@@ -113,11 +132,6 @@ loo_validation.bgmfit <-
                                    all = TRUE,
                                    verbose = FALSE)
     
-    # setupfuns.args <- full.args
-    # setupfuns.args$o <- o
-    # setupfuns.args$oall <- oall
-    # setupfuns.args$deriv <- deriv
-    # test <- do.call(setupfuns, setupfuns.args)
    
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall,
@@ -139,10 +153,18 @@ loo_validation.bgmfit <-
                                                   misc = misc,
                                                   verbose = verbose)
     
-    calling.args$ x<- calling.args$object
+    
+    # calling.args_names <- names(calling.args)
+    # names(calling.args) <- gsub("object", "x", calling.args_names)
+
+    calling.args$x <- full.args$model
     calling.args$object <- NULL
-   
-     . <- do.call(brms::loo , calling.args)
+    calling.args$model <- NULL
+  
+    suppressWarnings({
+      . <- do.call(brms::loo , calling.args)
+    })
+    
 
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
