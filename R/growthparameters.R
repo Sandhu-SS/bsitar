@@ -198,7 +198,7 @@
 #' @param idata_method A character string to indicate the interpolation method.
 #'   The number of of interpolation points is set up the \code{ipts} argument.
 #'   Options available for \code{idata_method} are \emph{method 1} (specified as
-#'   \code{'m1'}, default) and \emph{method 2} (specified as \code{'m2'}). The
+#'   \code{'m1'}) and \emph{method 2} (specified as \code{'m2'}). The
 #'   \emph{method 1} (\code{'m1'}) is adapted from the the \pkg{iapvbs} package
 #'   and is documented here
 #'    <https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R>
@@ -208,14 +208,12 @@
 #'  The \code{'m1'} method works by internally constructing the data frame based
 #'  on the model configuration whereas the method \code{'m2'} uses the exact
 #'  data frame used in model fit and can be accessed via \code{fit$data}. If
-#'  \code{idata_method = NULL}, then method \code{'m1'} is automatically set. An
-#'  advantage of method \code{'m1'} is that it automatically sets up the factor
-#'  covariates for [plot_curves()] and [growthparameters()] functions. Note that
-#'  although method \code{'m1'} is preferred and is the default choice, it might
-#'  fail in some cases when model involves covariates particularly when model is
-#'  fit as \code{univariate_by}. In such cases, it is advised to switch to
-#'  method \code{'m2'}.
-#'
+#'  \code{idata_method = NULL, default}, then method \code{'m2'} is
+#'  automatically set. Note that method \code{'m1'} might fail in some cases
+#'  when model involves covariates particularly when model is fit as
+#'  \code{univariate_by}. Therefore, it is advised to switch to method
+#'  \code{'m2'} in case \code{'m1'} results in error.
+#'  
 #' @param parms_method A character to specify the method used to when evaluating
 #'   \code{parms_eval}. The default is \code{getPeak} which uses the
 #'   [sitar::getPeak()] function from the \code{sitar} package. The alternative
@@ -350,7 +348,7 @@ growthparameters.bgmfit <- function(model,
                                future_session = 'multisession',
                                cores = NULL,
                                parms_eval = FALSE,
-                               idata_method = 'm1',
+                               idata_method = NULL,
                                parms_method = 'getPeak',
                                verbose = FALSE,
                                fullframe = NULL,
@@ -372,7 +370,7 @@ growthparameters.bgmfit <- function(model,
   }
   
   if (is.null(idata_method)) {
-    idata_method <- 'm1'
+    idata_method <- 'm2'
   }
   
   

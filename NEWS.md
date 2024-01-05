@@ -6,7 +6,7 @@
 ### Minor changes
 
 - Updated documentation
-- Typo correction in help files ('.rd' files) 
+- Added issue tracker url: https://github.com/Sandhu-SS/bsitar/issues
 
 
 ### Bugfixes

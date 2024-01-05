@@ -295,7 +295,7 @@ plot_curves.bgmfit <- function(model,
                                show_vel_cessation = FALSE,
                                returndata = FALSE,
                                parms_eval = FALSE,
-                               idata_method = 'm1',
+                               idata_method = NULL,
                                parms_method = 'getPeak',
                                verbose = FALSE,
                                fullframe = NULL,
@@ -318,7 +318,7 @@ plot_curves.bgmfit <- function(model,
   }
   
   if (is.null(idata_method)) {
-    idata_method <- 'm1'
+    idata_method <- 'm2'
   }
   
   if(system.file(package='ggplot2') == "") {

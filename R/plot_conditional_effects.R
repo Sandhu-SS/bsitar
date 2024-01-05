@@ -104,7 +104,7 @@ plot_conditional_effects.bgmfit <-
            resp = NULL,
            deriv = 0,
            deriv_model = NULL,
-           idata_method = 'm1',
+           idata_method = NULL,
            verbose = FALSE,
            dummy_to_factor = NULL, 
            usesavedfuns = FALSE,
@@ -116,6 +116,17 @@ plot_conditional_effects.bgmfit <-
       envir <- parent.frame()
     }
     
+    if(is.null(ndraws)) {
+      ndraws <- brms::ndraws(model)
+    }
+    
+    if(is.null(deriv_model)) {
+      deriv_model <- TRUE
+    }
+    
+    if (is.null(idata_method)) {
+      idata_method <- 'm2'
+    }
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                     fargs = formals(), 
@@ -124,13 +135,13 @@ plot_conditional_effects.bgmfit <-
     
     full.args$model <- model
     
-    if(is.null(deriv_model)) {
-      full.args$deriv_model <- TRUE
-    }
-    
-    if(is.null(ndraws)) {
-      full.args$ndraws <- brms::ndraws(model)
-    }
+    # if(is.null(deriv_model)) {
+    #   full.args$deriv_model <- TRUE
+    # }
+    # 
+    # if(is.null(ndraws)) {
+    #   full.args$ndraws <- brms::ndraws(model)
+    # }
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)

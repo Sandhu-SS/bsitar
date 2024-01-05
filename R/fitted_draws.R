@@ -80,7 +80,7 @@ fitted_draws.bgmfit <-
            xrange = NULL,
            parms_eval = FALSE,
            parms_method = 'getPeak',
-           idata_method = 'm1',
+           idata_method = NULL,
            verbose = FALSE,
            fullframe = NULL,
            dummy_to_factor = NULL, 
@@ -100,6 +100,10 @@ fitted_draws.bgmfit <-
     
     if(is.null(deriv_model)) {
       deriv_model <- TRUE
+    }
+    
+    if (is.null(idata_method)) {
+      idata_method <- 'm2'
     }
     
     # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){

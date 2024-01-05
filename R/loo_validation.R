@@ -176,9 +176,25 @@ loo_validation.bgmfit <-
     calling.args$object <- NULL
     calling.args$model <- NULL
   
-    suppressWarnings({
-      . <- do.call(brms::loo , calling.args)
-    })
+    
+    # suppressWarnings({
+    #   . <- do.call(brms::loo , calling.args)
+    # })
+    
+    . <- brms::loo(model,
+                   compare = compare,
+                   resp = resp,
+                   pointwise = pointwise,
+                   moment_match = moment_match,
+                   reloo = reloo,
+                   k_threshold = k_threshold,
+                   save_psis = save_psis,
+                   moment_match_args = moment_match_args,
+                   reloo_args = reloo_args,
+                   model_names = model_names,
+                   ndraws = ndraws,
+                   cores = cores, 
+                    ...)
     
 
     # Restore function(s)
