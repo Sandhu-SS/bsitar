@@ -3,23 +3,29 @@
 \name{predict_draws.bgmfit}
 \alias{predict_draws.bgmfit}
 \alias{predict_draws}
-\title{Predicted values (draws) from the posterior predictive distribution}
+\title{Predicted values from the posterior predictive distribution}
 \usage{
 \method{predict_draws}{bgmfit}(
   model,
   newdata = NULL,
   resp = NULL,
   ndraws = NULL,
-  re_formula = NULL,
+  re_formula = NA,
+  allow_new_levels = FALSE,
+  sample_new_levels = "uncertainty",
+  incl_autocor = TRUE,
   numeric_cov_at = NULL,
   levels_id = NULL,
-  ipts = NULL,
+  avg_reffects = NULL,
+  aux_variables = NULL,
+  ipts = 10,
   deriv = 0,
   deriv_model = TRUE,
   summary = TRUE,
   robust = FALSE,
   probs = c(0.025, 0.975),
   xrange = NULL,
+  xrange_search = NULL,
   parms_eval = FALSE,
   parms_method = "getPeak",
   idata_method = NULL,
@@ -66,6 +72,30 @@ left unaltered thereby allowing estimation of (factor) covariate specific
 population average and individual-specific growth parameter at mean value
 of continous covaristes(s).}
 
+\item{allow_new_levels}{A flag indicating if new levels of group-level
+effects are allowed (defaults to \code{FALSE}). Only relevant if
+\code{newdata} is provided.}
+
+\item{sample_new_levels}{Indicates how to sample new levels for grouping
+factors specified in \code{re_formula}. This argument is only relevant if
+\code{newdata} is provided and \code{allow_new_levels} is set to
+\code{TRUE}. If \code{"uncertainty"} (default), each posterior sample for a
+new level is drawn from the posterior draws of a randomly chosen existing
+level. Each posterior sample for a new level may be drawn from a different
+existing level such that the resulting set of new posterior draws
+represents the variation across existing levels. If \code{"gaussian"},
+sample new levels from the (multivariate) normal distribution implied by the
+group-level standard deviations and correlations. This options may be useful
+for conducting Bayesian power analysis or predicting new levels in
+situations where relatively few levels where observed in the old_data. If
+\code{"old_levels"}, directly sample new levels from the existing levels,
+where a new level is assigned all of the posterior draws of the same
+(randomly chosen) existing level.}
+
+\item{incl_autocor}{A flag indicating if correlation structures originally
+specified via \code{autocor} should be included in the predictions.
+Defaults to \code{TRUE}.}
+
 \item{numeric_cov_at}{An optional argument to specify the value of continuous
 covariate(s). The default \code{NULL} option set the continuous
 covariate(s) at their mean. Alternatively, a named list can be
@@ -84,6 +114,21 @@ lower to upper levels i.e, \code{id} followed by \code{study} assuming that
 \code{id} is nested within the \code{study} However, it is not guaranteed
 that these ids are sorted correctly. Therefore, it is better to set them
 manually.}
+
+\item{avg_reffects}{An optional argument (default \code{NULL}) to calculate
+(marginal/average) curves and growth parameters (such as APGV and PGV). If
+specified, it must be a named list indicating the \code{over} (typically
+level 1 predictor, such as age), \code{feby} (fixed effects, typically a
+factor variable), and  \code{reby} (typically \code{NULL} indicating that
+parameters are integrated over the random effects) such as
+\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}.}
+
+\item{aux_variables}{An optional argument to specify the variable(s) that can
+be passed to the \code{ipts} argument (see below). This is useful when
+fitting location scale models and the measurement error models. An
+indication to use \code{aux_variables} is when post processing functions
+throw an error such as \code{variable 'x' not found either 'data' or
+ 'data2'}}
 
 \item{ipts}{An integer to set the length of the predictor variable to get a
 smooth velocity curve. The \code{NULL} will return original values whereas
@@ -125,6 +170,12 @@ same range for all individuals within the higher order grouping variable
 (e.g., study). Code \code{xrange  = 2} sets the identical range across the
 entire sample. Lastly, a paired numeric values can be supplied e.g.,
 \code{xrange = c(6, 20)} to set the range between 6 and 20.}
+
+\item{xrange_search}{A vector of length two, or a character string
+\code{'range'} to set the range of \code{x} variable within which growth
+parameters are searched. This is useful when there is more than one peak
+and user wants to summarize peak within a given range of the \code{x}
+variable. Default \code{xrange_search = NULL}.}
 
 \item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
 to get growth parameters on the fly.}

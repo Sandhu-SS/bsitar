@@ -308,18 +308,8 @@ plot_curves.bgmfit <- function(model,
   if(is.null(envir)) {
     envir <- parent.frame()
   }
-  
-  if(is.null(ndraws)) {
-    ndraws <- brms::ndraws(model)
-  }
-  
-  if(is.null(deriv_model)) {
-    deriv_model <- TRUE
-  }
-  
-  if (is.null(idata_method)) {
-    idata_method <- 'm2'
-  }
+
+  # Move down NULL where setting the arguments
   
   if(system.file(package='ggplot2') == "") {
     stop("Please install 'ggplot2' package before calling the 'plot_curves'")
@@ -357,7 +347,7 @@ plot_curves.bgmfit <- function(model,
   ':=' <- NULL;
   . <- NULL;
   
-  xcall = match.call()
+  xcall <- match.call()
   match.call.list.in <- as.list(match.call())[-1]
   
   # Set alias argument for apv and pv
@@ -401,6 +391,25 @@ plot_curves.bgmfit <- function(model,
   
   arguments <- get_args_(match.call.list.in, xcall)
   arguments$model <- model
+  
+  
+  if(is.null(envir)) {
+    arguments$envir <- envir <- parent.frame()
+  }
+  
+  if(is.null(ndraws)) {
+    arguments$ndraws <- ndraws <- brms::ndraws(model)
+  }
+  
+  if(is.null(deriv_model)) {
+    arguments$deriv_model <- deriv_model <- TRUE
+  }
+  
+  if (is.null(idata_method)) {
+    arguments$idata_method <- idata_method <- 'm2'
+  }
+  
+  
   
   # Remove argument 'deriv' if user specified it by mistake. 
   # The 'deriv' argument is set internally based on the the 'opt' argument

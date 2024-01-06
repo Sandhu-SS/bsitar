@@ -102,6 +102,7 @@ plot_conditional_effects.bgmfit <-
            ndraws = NULL,
            levels_id = NULL,
            resp = NULL,
+           ipts = 10,
            deriv = 0,
            deriv_model = NULL,
            idata_method = NULL,
@@ -134,6 +135,7 @@ plot_conditional_effects.bgmfit <-
                                     verbose = verbose)
     
     full.args$model <- model
+    full.args$deriv_model <- deriv_model
     
     # if(is.null(deriv_model)) {
     #   full.args$deriv_model <- TRUE

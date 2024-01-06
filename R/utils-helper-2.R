@@ -29,7 +29,7 @@ get.newdata <- function(model,
                         newdata = NULL,
                         resp = NULL,
                         numeric_cov_at = NULL,
-                        aux_variables = aux_variables,
+                        aux_variables = NULL,
                         levels_id = NULL,
                         ipts = NULL,
                         xrange = NULL,
@@ -46,7 +46,7 @@ get.newdata <- function(model,
   
 
   if (is.null(idata_method)) {
-    idata_method <- 'm1'
+    idata_method <- 'm2'
   }
   
   

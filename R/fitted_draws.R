@@ -1,6 +1,6 @@
 
 
-#' Fitted (expected) values from the posterior predictive distribution
+#' Fitted (expected) values from the posterior draws
 #' 
 #' @description The \strong{fitted_draws()} is a wrapper around the
 #'   [brms::fitted.brmsfit()] function to obtain fitted values (and their
@@ -29,8 +29,8 @@
 #' function. Please see \code{brms::fitted.brmsfit()} for details on 
 #' various options available.
 #' 
-#' @return An array of predicted mean response values. See [brms::fitted.brmsfit] 
-#' for details.
+#' @return An array of predicted mean response values. See
+#'   [brms::fitted.brmsfit] for details.
 #' 
 #' @export fitted_draws.bgmfit
 #' @export
@@ -68,16 +68,22 @@ fitted_draws.bgmfit <-
            newdata = NULL,
            resp = NULL,
            ndraws = NULL,
-           re_formula = NULL,
+           re_formula = NA,
+           allow_new_levels = FALSE,
+           sample_new_levels = "uncertainty",
+           incl_autocor = TRUE,
            numeric_cov_at = NULL,
            levels_id = NULL,
-           ipts = NULL,
+           avg_reffects = NULL,
+           aux_variables = NULL,
+           ipts = 10,
            deriv = 0,
            deriv_model = TRUE,
            summary = TRUE,
            robust = FALSE,
            probs = c(0.025, 0.975),
            xrange = NULL,
+           xrange_search = NULL,
            parms_eval = FALSE,
            parms_method = 'getPeak',
            idata_method = NULL,
@@ -106,6 +112,8 @@ fitted_draws.bgmfit <-
       idata_method <- 'm2'
     }
     
+   
+    
     # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){
     plot_conditional_effects_calling <- FALSE
     syscalls1 <- sys.calls()[[1]]
@@ -116,6 +124,7 @@ fitted_draws.bgmfit <-
       }
     }
     
+    # Checks for newdata and arguments
     # For plot_conditional_effects_calling, newdata is not evaluted
     # For indirectcall i.e.,  model$xcall arguments are passed from the
     # plot_curves() and growthparameters() functions

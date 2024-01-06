@@ -1,6 +1,6 @@
 
 
-#' Predicted values (draws) from the posterior predictive distribution
+#' Predicted values from the posterior predictive distribution
 #' 
 #' @description The \strong{predict_draws()} is a wrapper around the
 #'   [brms::predict.brmsfit()] function to obtain predicted values (and their
@@ -25,8 +25,8 @@
 #'   function. Please see [brms::predict.brmsfit()] for details on various
 #'   options available.
 #' 
-#' @return An array of predicted response values. See [brms::predict.brmsfit()] 
-#' for details.
+#' @return An array of predicted response values. See [brms::predict.brmsfit()]
+#'   for details.
 #' 
 #' @inherit growthparameters.bgmfit params
 #' @inherit plot_conditional_effects.bgmfit params
@@ -68,16 +68,22 @@ predict_draws.bgmfit <-
            newdata = NULL,
            resp = NULL,
            ndraws = NULL,
-           re_formula = NULL,
+           re_formula = NA,
+           allow_new_levels = FALSE,
+           sample_new_levels = "uncertainty",
+           incl_autocor = TRUE,
            numeric_cov_at = NULL,
            levels_id = NULL,
-           ipts = NULL,
+           avg_reffects = NULL,
+           aux_variables = NULL,
+           ipts = 10,
            deriv = 0,
            deriv_model = TRUE,
            summary = TRUE,
            robust = FALSE,
            probs = c(0.025, 0.975),
            xrange = NULL,
+           xrange_search = NULL,
            parms_eval = FALSE,
            parms_method = 'getPeak',
            idata_method = NULL,
@@ -116,6 +122,7 @@ predict_draws.bgmfit <-
       }
     }
     
+    # Checks for newdata and arguments
     # For plot_conditional_effects_calling, newdata is not evaluted
     # For indirectcall i.e.,  model$xcall arguments are passed from the
     # plot_curves() and growthparameters() functions
@@ -212,8 +219,6 @@ predict_draws.bgmfit <-
         if(!eval(full.args$deriv_model)) {
           full.args$. <- .
           . <- do.call(mapderivqr, full.args)
-          # . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
-          #                 deriv = deriv, probs = probs, robust = robust)
         } else {
           . <- .
         }

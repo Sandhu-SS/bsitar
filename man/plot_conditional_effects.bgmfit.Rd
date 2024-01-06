@@ -25,6 +25,7 @@
   ndraws = NULL,
   levels_id = NULL,
   resp = NULL,
+  ipts = 10,
   deriv = 0,
   deriv_model = NULL,
   idata_method = NULL,
@@ -159,6 +160,13 @@ univariate-by-subgroup and multivariate models otherwise it will result in
 an error. On the other hand, argument \code{resp} must be \code{NULL} for
 the univariate model. The default setting is \code{resp = NULL} assuming a
 univariate model.}
+
+\item{ipts}{An integer to set the length of the predictor variable to get a
+smooth velocity curve. The \code{NULL} will return original values whereas
+an integer such as \code{ipts = 10} (default) will interpolate the
+predictor. It is important to note that these interpolations do not alter
+the range of predictor when calculating population average and/or the
+individual specific growth curves.}
 
 \item{deriv}{An integer to indicate whether to estimate distance curve or
 derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
