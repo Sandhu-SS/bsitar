@@ -166,7 +166,17 @@
 #'@param returndata A logical (default \code{FALSE}) indicating whether to plot
 #'  the data or return the data. If \code{TRUE}, the data is returned as a
 #'  \code{data.frame}.
-#'
+#'  
+#' @param returndata_add_parms A logical (default \code{FALSE}) indicating
+#'   whether add growth parameters to the \code{returndata}. The
+#'   \code{returndata_add_parms} is ignored when \code{returndata = FALSE}. If
+#'   \code{TRUE}, the growth parameters such as \code{APGV} and \code{PGV} are
+#'   added to the returned \code{data.frame}. Note that growth parameters are
+#'   estimated only when \code{'opt'} argument include either \code{'v'} or
+#'   \code{'V'} option and the argument \code{'apv'} is set to \code{TRUE}. If
+#'   any of these conditions are missing, then \code{returndata_add_parms} will
+#'   ignored ignored.
+#' 
 #'@param aux_variables An optional argument to specify the variables to be
 #'  passed to the \code{ipts} argument. This is useful when fitting location
 #'  scale models and the measurement error models.
@@ -294,6 +304,7 @@ plot_curves.bgmfit <- function(model,
                                show_vel_peak = FALSE,
                                show_vel_cessation = FALSE,
                                returndata = FALSE,
+                               returndata_add_parms = FALSE,
                                parms_eval = FALSE,
                                idata_method = NULL,
                                parms_method = 'getPeak',
@@ -2815,6 +2826,18 @@ plot_curves.bgmfit <- function(model,
     return(plot.o)
   } else if (returndata) {
     attr(d.out, 'growthparameters') <- p.as.d.out_attr
+    if(returndata_add_parms) {
+      if(!is.null(p.as.d.out_attr)) {
+        print(groupby_str_v)
+        # Note gpdata can be NULL because we have added attribute above
+        d.out <- add_parms_to_curve_data(d.out, 
+                                         gpdata = NULL,
+                                         Parametername = "Parameter",
+                                         parmcols = set_names_,
+                                         nonparmcols = groupby_str_v,
+                                         byjoincols = groupby_str_v)
+      } # if(!is.null(p.as.d.out_attr)) {
+    } # else if (returndata) {
     return(d.out)
   }
 }

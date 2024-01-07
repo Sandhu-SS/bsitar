@@ -2343,3 +2343,97 @@ convert_dummy_to_factor <- function(df,
 }
 
 
+
+
+#' An internal function to add growthparameters to the plot_curves data
+#'
+#' @param data A data frame returned by the \code{plot_curves} function.
+#' @param gpdata A data frame with growth parameters. If \code{NULL} (default),
+#'   the \code{gpdata} is taken from the data returned by the
+#'   \code{plot_curves()} as an \code{attribute}.
+#' @param Parametername A character string specifying the name of the Parameter
+#'   column in the \code{gpdata}.
+#' @param parmcols A character string, or a vector of character strings
+#'   specifying the name of growth parameter estimates columns in the
+#'   \code{gpdata}. Typically, they are \code{Estimate} and the associated
+#'   uncertainty parameters such as \code{Est.Error}, \code{Q2.5}, and
+#'   \code{Q97.5}.
+#' @param nonparmcols A character string, or a vector of character strings
+#'   specifying the name of columns in the \code{gpdata} other than the names
+#'   specified as \code{parmcols}.
+#' @param byjoincols A character string, or a vector of character strings
+#'   specifying the name of columns to be used in joining the \code{data} and
+#'   \code{gpdata}. Typically, they are same as \code{nonparmcols}.
+#' @param ... Other internal arguments passed to the
+#'   \code{add_parms_to_curve_data} function.
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+add_parms_to_curve_data <- function(data, 
+                                    gpdata = NULL,
+                                    Parametername = NULL,
+                                    parmcols = NULL,
+                                    nonparmcols = NULL,
+                                    byjoincols = NULL,
+                                    ...) {
+  tojoinwith <- data
+  if(  is.null(gpdata)) gp <- attr(tojoinwith, "growthparameters")
+  if(! is.null(gpdata)) gp <- gpdata
+  
+  # Initiate non formalArgs()
+  . <- NULL;
+  
+  if(is.null(Parametername)) {
+    Parametername <- "Parameter"
+  }
+  if(is.null(parmcols)) {
+    parmcols <- c('Estimate', "Est.Error", "Q2.5", "Q97.5")
+  }
+  if(is.null(nonparmcols))  {
+    stop("Please specify the 'nonparmcols'")
+  }
+  if(is.null(byjoincols)) {
+    stop("Please specify the 'byjoincols'")
+  }
+  
+  parmnames <- gp %>% dplyr::select(dplyr::all_of(Parametername)) %>% 
+    unique() %>% unlist() %>% as.vector()
+  
+  whati_list <- list()
+  for (whati in parmnames) {
+    addpre <- paste0(whati, ".")
+    addsuf <- NULL # paste0(".", whati)
+    
+    tojoinit2 <- 
+      gp %>% dplyr::filter(!!dplyr::sym(Parametername) == whati) %>% 
+      dplyr::select(dplyr::any_of(parmcols)) %>% 
+      stats::setNames(paste0(addpre, names(.), addsuf)) 
+    
+    whati_list[[whati]] <- tojoinit2
+  }
+  
+  tojoinit1 <- 
+    gp %>% 
+    dplyr::filter(!!dplyr::sym(Parametername) == names(whati_list)[1]) %>% 
+    dplyr::select(dplyr::any_of(nonparmcols))
+  
+  # Note dplyr::bind_cols instead of cbind. cbind adds again list name as prefix
+  tojoinit2all <- whati_list %>% do.call(dplyr::bind_cols, .) %>% data.frame()
+  
+  tojoinit12 <- cbind(tojoinit1, tojoinit2all)
+  
+  mergebycols <- intersect(nonparmcols, byjoincols)
+  setdiffcols <- setdiff(byjoincols, nonparmcols)
+  if(length(setdiffcols) != 0) {
+    stop("Variable(s) ", "'", paste(setdiffcols, collapse = ", "), "'", 
+         " missing in nonparmcols" )
+  }
+  
+  tojoinwith <- tojoinwith %>% dplyr::left_join(., tojoinit12, by = byjoincols)
+  return(tojoinwith)
+}
+
+
+

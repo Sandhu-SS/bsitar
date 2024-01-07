@@ -45,10 +45,10 @@
 #' 
 #' model <- berkeley_mfit
 #' 
-#' # Update model for degree of freedom. For illustration purpose and to save 
+#' # Update model for degree of freedom. For illustration purpose, and to save 
 #' # time, the below example is run with sample_prior only. 
 #' 
-#' model2 <- update_model(model, df = 4, sample_prior = 'only')
+#' model2 <- update_model(model, df = 5, sample_prior = 'only')
 #' 
 #' }
 #'

@@ -12812,16 +12812,16 @@ prepare_initials <- function(init_argument,
 
 
 
-#'Optimize model
+#' Optimize model
 #'
-#'@param model An object of class \code{bgmfit}.
+#' @param model An object of class \code{bgmfit}.
 #'
-#'@param newdata An optional \code{data.frame} to be used when optimizing the
+#' @param newdata An optional \code{data.frame} to be used when optimizing the
 #'  model. If \code{NULL} (default), the same same data used for original model
 #'  fit is used. Note that data-dependent default priors will not be updated
 #'  automatically.
 #'
-#'@param optimize_df A vector of integers specifying the degree of freedom
+#' @param optimize_df A vector of integers specifying the degree of freedom
 #'  (\code{df}) values to be updated. If \code{NULL} (default), the \code{df} is
 #'  taken from the original model. For \code{univariate-by-sungroup} and
 #'  \code{multivariate} models (see [bsitar::bsitar()] for details),
@@ -12898,7 +12898,7 @@ prepare_initials <- function(init_argument,
 #' @keywords internal
 #' @noRd
 #' 
-optimize_model.bgmfit <- function(model,
+optimize_model2.bgmfit <- function(model,
                                   newdata = NULL,
                                   optimize_df = NULL,
                                   optimize_x = list(NULL, log,  sqrt),

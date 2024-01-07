@@ -60,6 +60,7 @@
   show_vel_peak = FALSE,
   show_vel_cessation = FALSE,
   returndata = FALSE,
+  returndata_add_parms = FALSE,
   parms_eval = FALSE,
   idata_method = NULL,
   parms_method = "getPeak",
@@ -395,6 +396,16 @@ to display the CGV line(s) on the plot.}
 \item{returndata}{A logical (default \code{FALSE}) indicating whether to plot
 the data or return the data. If \code{TRUE}, the data is returned as a
 \code{data.frame}.}
+
+\item{returndata_add_parms}{A logical (default \code{FALSE}) indicating
+whether add growth parameters to the \code{returndata}. The
+\code{returndata_add_parms} is ignored when \code{returndata = FALSE}. If
+\code{TRUE}, the growth parameters such as \code{APGV} and \code{PGV} are
+added to the returned \code{data.frame}. Note that growth parameters are
+estimated only when \code{'opt'} argument include either \code{'v'} or
+\code{'V'} option and the argument \code{'apv'} is set to \code{TRUE}. If
+any of these conditions are missing, then \code{returndata_add_parms} will
+ignored ignored.}
 
 \item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
 to get growth parameters on the fly.}

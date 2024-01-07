@@ -52,7 +52,6 @@ Suggests:
     R.rsp,
     bayesplot (>= 1.10.0),
     marginaleffects (>= 0.15.1),  
-    cmdstanr (>= 0.5.0),  
     forcats,
     future,
     future.apply,
@@ -70,7 +69,6 @@ Suggests:
 URL: https://github.com/Sandhu-SS/bsitar
 BugReports: https://github.com/Sandhu-SS/bsitar/issues
 Additional_repositories:
-    https://mc-stan.org/r-packages/
 VignetteBuilder:
     knitr,
     R.rsp
