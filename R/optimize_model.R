@@ -98,13 +98,20 @@
 #' 
 #' \donttest{
 #' 
-#' # Below example shows optimization of the degree of freedom from df 4 to df 5
-#' # To save time, example is run with sample_prior = 'only'
+#' # Below example shows optimization of the degree of freedom (df). 
+#' # Note that in case degree of freedom is same as the original model and both 
+#' # optimize_x and optimize_y NULL (i.e., nothing to optimize), then original  
+#' # model is returned without evaluating any other argument. Since nothing is 
+#' # set to  be optimized in the below example, the original model is returned.  
+#' # To explicitly get this information whether model is being optimized or not, 
+#' # user can set verbose = TRUE. The verbose = TRUE also useful in getting the
+#' # information regarding what all arguments have been changed as compared to
+#' # the original model.
 #' 
-#' model2 <- optimize_model(model, optimize_df = 5, 
+#' model2 <- optimize_model(model, optimize_df = 4, 
 #'   optimize_x = NULL, 
-#'   optimize_y = NULL,  
-#'   sample_prior = 'only')
+#'   optimize_y = NULL,
+#'   verbose = TRUE)
 #' 
 #' }
 #' 
@@ -155,7 +162,8 @@ optimize_model.bgmfit <- function(model,
                            xcall = match.call(),
                            resp = NULL,
                            envir = envir,
-                           deriv = 0)
+                           deriv = 0,
+                           all = FALSE)
   
   call_o <- match.call()
   call_o_args <- as.list(call_o)[-1]
