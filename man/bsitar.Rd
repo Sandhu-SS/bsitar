@@ -2,7 +2,7 @@
 % Please edit documentation in R/bsitar.R
 \name{bsitar}
 \alias{bsitar}
-\title{Fit Bayesian growth model (SITAR)}
+\title{Fit Bayesian SITAR growth curve model}
 \usage{
 bsitar(
   x,
@@ -181,45 +181,44 @@ variable for both sub models, the argument \code{x} is defined as \code{x =
  list(x1)} or simply \code{x = x1}.}
 
 \item{y}{Response variable (e.g., repeated height measurements). For
-\code{univariate} and \code{univariate_by} models, the \code{y} is specified
-as a single variable. For the \code{univariate_by} model, the response
-variables for sub models are created internally and named after the factor
-levels of the variable that is used to set up the \code{univariate_by}
-model. As an example, for \code{univariate_by = sex}, the response variables
-\code{Female} and  \code{Male} are created where \code{Female} is the first
-level and \code{Male} is the second level of the factor variable,
-\code{sex}. For \code{multivariate} model, the response variables are
-specified via a list such as \code{y = list(y1, y2}) where \code{y1} is the
-response variable for the first sub model and \code{y2} for the second sub
-model. Note that for \code{multivariate} model, data are not stacked but
-rather response vectors are separate variables in the \code{data} and are of
-same length.}
+\code{univariate} and \code{univariate_by} models, \code{y} is specified as
+a single variable. For \code{univariate_by} model, the response vector for
+each sub model is created and named internally based on the factor levels of
+the variable that is used to set up the \code{univariate_by} model. As an
+example, the model specified as \code{univariate_by = sex} creates response
+vectors \code{Female} and  \code{Male} when \code{Female} is the first level
+and \code{Male} is the second level of the \code{sex} variable. For
+\code{multivariate} model, the response variables are specified as a list
+such as \code{y = list(y1, y2}) where \code{y1} is the response variable for
+the first sub model and \code{y2} for the second sub model. Note that for
+\code{multivariate} model, data are not stacked but rather response vectors
+are separate variables in the \code{data} and are of same length.}
 
-\item{id}{A factor variable that uniquely identifies the groups (e.g.,
+\item{id}{A factor variable uniquely identifying the groups (e.g.,
 individuals) in the data frame. For \code{univariate_by} and
-\code{multivariate} models, the \code{id} can be same for sub models
-(typically) or different for each sub model (see argument \code{x} for
-details on setting different arguments for sub models).}
+\code{multivariate} models, the \code{id} can be same (typically) for sub
+models or different for each sub model (see argument \code{x} for details on
+setting different arguments for sub models).}
 
 \item{data}{Data frame containing variables such as \code{x}, \code{y},
 \code{id} etc.}
 
 \item{df}{Degrees of freedom for the natural cubic spline design matrix
-(default \code{4}). The \code{df} is internally used to construct the vector
-of knots (quantiles of \code{x} distribution) that are then used in the
+(default \code{4}). The \code{df} is internally used to construct the
+knots (quantiles of \code{x} distribution) that are then used in the
 construction of the spline design matrix. For \code{univariate_by}
 and \code{multivariate} models, the \code{df} can be same (e.g., \code{df  =
  4}) for sub models or different for each sub model such as
 \code{df=list(4, 5)} where \code{df} is 4 is for the first sub model, and 5
 for the second sub model.}
 
-\item{knots}{A vector of knots for the natural cubic spline design
-matrix (default \code{NULL}) Note that \code{df} and \code{knots} can not be
-specified simultaneously, and also both of them can not be \code{NULL}. In
-other words, either \code{df} or \code{knots} must be specified. Like
-\code{df}, the \code{knots} can be same for sub models or different for each
-sub model when fitting \code{univariate_by} and \code{multivariate} models
-(see \code{df} for details).}
+\item{knots}{A numeric vector vector specifying the knots for the natural
+cubic spline design matrix (default \code{NULL}) Note that \code{df} and
+\code{knots} can not be specified together, and also both of them can not be
+\code{NULL}. In other words, either \code{df} or \code{knots} must be
+specified. Like \code{df}, the \code{knots} can be same for sub models or
+different for each sub model when fitting \code{univariate_by} and
+\code{multivariate} models (see \code{df} for details).}
 
 \item{fixed}{A character string specifying the fixed effects structure
 (default \code{'a+b+c'}). Note that different fixed effect structures can be
@@ -1363,134 +1362,145 @@ An object of class \code{brmsfit, bsiatr}, that contains the posterior
 draws and other useful information about the model.
 }
 \description{
-The \strong{bsitar()} is the main function that fits the Bayesian
-version of the super imposition by translation and rotation (\emph{SITAR}).
-The \emph{SITAR} model is a nonlinear mixed effects model that has been used
-extensively to summarize the growth curves from early childhood through the
-adulthood. The frequentist version of the \emph{SITAR} model can be fit by
-using an already available R package, the \pkg{sitar}
-\insertCite{R-sitar}{bsitar}. Besides Bayesian implementation of the
-\emph{SITAR} model, the \pkg{bsitar} package greatly enhances the modelling
-capabilities of the \pkg{sitar} package. For example, in addition to the
-univariate analysis (i.e, modelling a single outcome), the \pkg{bsitar}
-allows univariate-by-subgroup (a single outcome analysed simultaneously but
-separately for subgroups defined by a factor variable such as gender) and
-multivariate (simultaneous joint modelling of two or more outcomes) model
-fitting.
+The \strong{bsitar()} is the main function that fits the
+Bayesian version of the super imposition by translation and rotation
+(\emph{SITAR}). The \emph{SITAR} model is a nonlinear mixed effects model
+that has been used extensively to summarize growth processes (such as
+height and weight) from early childhood through the adulthood. The
+frequentist version of the \emph{SITAR} model can be fit by using an
+already available R package, the \pkg{sitar} \insertCite{R-sitar}{bsitar}.
+Besides Bayesian implementation of the \emph{SITAR} model, the \pkg{bsitar}
+package greatly enhances the modelling capabilities of the already existing
+\pkg{sitar} package. For example, in addition to the univariate analysis
+(i.e, modelling a single outcome), the \pkg{bsitar} allows
+univariate-by-subgroup and multivariate model fitting. In
+univariate-by-subgroup analysis, a single outcome is analysed
+simultaneously for subgroups defined by a factor variable such as gender.
+An advantage of such approach is that posterior draws for each sub group
+are part of a single model object that makes it possible to compare
+coefficients across groups and test hypotheses. The multivariate analysis
+involves simultaneous joint modelling of two or more outcomes.
 }
 \details{
 The \emph{SITAR} is a shape-invariant nonlinear mixed effect growth
-curve model that fits a population average (i.e., mean average) curve to the
-data, and then aligns each individual's growth trajectory to the underlying
-population average curve via a set of three random effects, the \code{size},
-\code{timing} and \code{intensity}. The concept of shape invariant model
-(SIM) was first described by \insertCite{Lindstrom1995;textual}{bsitar} and
+curve model that fits a population average (i.e., mean average) curve to
+the data, and then aligns each individual's growth trajectory to the
+underlying population average curve via a set of (typically) three random
+effects, the \code{size}, \code{timing} and \code{intensity}. Additionally,
+a slope parameter can be included as a random effect to model the
+variability in the adult slope (rate) of the growth curve (See
+\code{\link[sitar:sitar]{sitar::sitar()}} for details). The concept of shape invariant model (SIM)
+was first described by \insertCite{Lindstrom1995;textual}{bsitar} and
 later used by \insertCite{Beath2007;textual}{bsitar} to model infant growth
-data (birth to 2 years). The current version of the model is developed
-by \insertCite{Cole2010;textual}{bsitar} and has been used extensively for
-modelling growth data \insertCite{@see @nembidzaneUsingSITARMethod2020;
+data (birth to 2 years). The current version of the \emph{SITAR} model is
+developed by \insertCite{Cole2010;textual}{bsitar} and has been used
+extensively for modelling growth data
+\insertCite{@see @nembidzaneUsingSITARMethod2020;
 @mansukoskiLifeCourseAssociations2019; @coleFiftyYearsChild2018;
 @riddellClassifyingGestationalWeight2017; @Sandhu2020}{bsitar}.
-The frequentist version of the \emph{SITAR} model can be fit by an
-already available R package, the \pkg{sitar} \insertCite{R-sitar}{bsitar}.
 
-The implementation of the \emph{SITAR} model in \pkg{bsitar} package is
-same as the \pkg{sitar} package with the exception that unlike \pkg{sitar},
-which uses the B spline basis for the natural cubic spline design matrix by
-calling the \code{\link[splines:ns]{splines::ns()}} \insertCite{R-splines}{bsitar}, the \pkg{bsitar}
-constructs spline design matrix by using the truncated power basis approach
-as described by \insertCite{harrell2001regression;textual}{bsitar}, and
-implemented in \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}} \insertCite{@see @R-Hmisc}{bsitar}.
+The frequentist version of the \emph{SITAR} model can be fit by an already
+available R package, the \pkg{sitar} \insertCite{R-sitar}{bsitar}. The
+Bayesian implementation of the \emph{SITAR} model in \pkg{bsitar} package is
+same as the \pkg{sitar} package with the exception that unlike the
+\pkg{sitar}, package which uses the B spline basis for the natural cubic
+spline design matrix by calling the \code{\link[splines:ns]{splines::ns()}}
+\insertCite{R-splines}{bsitar}, the \pkg{bsitar} package constructs spline
+design matrix by using the truncated power basis approach as described by
+\insertCite{harrell2001regression;textual}{bsitar}, and implemented in
+\code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}} \insertCite{@see @R-Hmisc}{bsitar}.
 Note that \pkg{bsitar} package does not call the \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}
 but rather constructs a custom spline function on the fly which is then
-included in the \code{functions} block of the \strong{Stan} program and compiled
-(via the c++) during the model fit.
+included in the \code{functions} block of the \strong{Stan} program and hence
+compiled (via the c++) during the model fit.
 
-Like \pkg{sitar} package, the \pkg{bsitar} package fits \emph{SITAR} model
-with (usually) up to three random effects \insertCite{Cole2010}{bsitar}: the
-size (parameter defined as \code{a}), the timing (parameter defined as
+Like \pkg{sitar} package \insertCite{Cole2010}{bsitar}, the \pkg{bsitar}
+package fits \emph{SITAR} model with (usually) up to three random effects:
+the size (parameter defined as \code{a}), the timing (parameter defined as
 \code{b}) and the intensity (parameter defined as \code{c}). In addition,
 there is a slope parameter (defined as \code{d}) that models the variability
 in the adult slope of the growth curve (See \code{\link[sitar:sitar]{sitar::sitar()}} for details).
 Please note that author of the \pkg{sitar} package,
-\insertCite{Cole2010;textual}{bsitar}, enforces inclusion of parameter
+\insertCite{Cole2010}{bsitar}, enforces inclusion of parameter
 \code{d} only in the random effects structure of the model and not in the
 fixed fixed structure. However, the \pkg{bsitar} package allows inclusion of
 parameter \code{d} in fixed and/or in the random effects structures of the
-\emph{SITAR} model. The three parameters \emph{SITAR} model (default) is
-specified via the \code{fixed} and the \code{random} arguments as follows:
-\code{fixed = 'a+b+c'}, \code{random = 'a+b+c'} Note that the user
-need not to include all the three parameters in the fixed or the random
-effect structure. For example, a fixed effect version of the \emph{SITAR}
-model can be fit by setting randoms as an empty string i.e., \code{random =
- ''}. Furthermore, the fixed effect structure may include only a sub set of
-the parameters e.g., size and timing parameters (\code{fixed = 'a+b'}) or
-the size and the intensity parameters (\code{fixed = 'a+c'}). The four
-parameters version of the \emph{SITAR} model is fit by including parameter
-\code{d} in the \code{fixed} and/or the \code{random} arguments. Similar to
-the three parameter \emph{SITAR} model, user can fit model with a sub set of
-the fixed and/or the random effects.
+\emph{SITAR} model. For the three parameter version of the \emph{SITAR}
+model (default), the fixed effects structure (i.e., population average
+trajectory) is specified as \code{fixed = 'a+b+c'} whereas the random
+effects structure that captures the deviation of individual specific
+trajectories from the population average curve is specified as \code{random
+ = 'a+b+c'}. Note that user need not to include all the three parameters in
+the fixed or the random effect structure. For example, a fixed effect
+version of the \emph{SITAR} model can be fit by setting randoms as an empty
+string i.e., \code{random = ''}. Furthermore, the fixed effect structure may
+include only a sub set of the parameters e.g., size and timing parameters
+(\code{fixed = 'a+b'}) or the size and the intensity parameters
+(\code{fixed = 'a+c'}). The four parameters version of the \emph{SITAR}
+model is fit by including parameter \code{d} in the \code{fixed} and/or the
+\code{random} arguments. Similar to the three parameter \emph{SITAR} model,
+user can fit model with a sub set of the fixed and/or the random effects.
 
-The \pkg{sitar} package heavily depends on another Bayesian R package, the
+The \pkg{sitar} package internally depends on another R package, the
 \pkg{brms} \insertCite{@see @R-brms; @brms2021}{bsitar}. The \pkg{brms} can
 fit a wide range of hierarchical linear and nonlinear regression models
 including multivariate models. The \pkg{brms} itself depends on the \strong{Stan}
 software program full Bayesian inference
-\insertCite{@see @teamStanReferenceManual; @gelman2015}{bsitar}.
-
-Like \pkg{brms}, the \pkg{bsitar} package allows a wide range of prior
+\insertCite{@see @teamStanReferenceManual; @gelman2015}{bsitar}. Like
+\pkg{brms}, the \pkg{bsitar} package allows a wide range of prior
 specifications that encourage the users to apply prior distributions that
 actually reflect their prior knowledge about the human growth processes,
-such as the timing of the age at peak growth velocity. We follow and adapt
-the time tested and carefully crafted prior specification approaches used in
-the \pkg{brms} and \pkg{rstanarm} packages. For example, we follow
-\pkg{brms} package approach and use \code{student_t} distribution for the
-regression coefficients and the standard deviation parameters for group
+(such as the timing and intensity of the growth spurt). For prior
+specification, we follow the carefully crafted approaches used in the
+\pkg{brms} and \pkg{rstanarm} packages. For example, we follow the
+\pkg{brms} package in using the \code{student_t} distribution for the
+regression coefficients as well as the standard deviation for group
 level random effects but set \code{exponential} distribution for the
-residual standard deviation. Like \pkg{brms} and \pkg{rstanarm} packages,
-the \pkg{bsitar} package allows for auto scaling of the scale parameter.
-While \pkg{rstanarm} earlier used to set \code{autosclae} as 2.5 (recently
-authors changed this behavior to \code{FALSE}), the \pkg{brms} package sets
-it to 1 or 2.5 depending on the standard deviation of the response variable
-(See \code{\link[brms:set_prior]{brms::prior()}}). The \pkg{bsitar} package offers the flexibility of
-choosing the scaling factor as any real number (e.g., \code{autosclae =
- 2.5}). When \code{autosclae = TRUE}, \code{2.5} is the default scaling
-factor. We strongly recommend to go through the well documented details on
-prior specifications used in \pkg{brms} and \pkg{rstanarm} packages.
+residual standard deviation as used in the \pkg{rstanarm} package.
+Like \pkg{brms} and \pkg{rstanarm} packages, the \pkg{bsitar} package allows
+for auto scaling of the scale parameter. While \pkg{rstanarm} earlier used
+to set \code{autosclae} as 2.5 (recently authors changed this behavior to
+\code{FALSE}), the \pkg{brms} package sets it as \code{1.0} or \code{2.5}
+depending on the standard deviation of the response variable (See
+\code{\link[brms:set_prior]{brms::prior()}}). The \pkg{bsitar} package, on the other hand, offers full
+flexibility in choosing the scale factor as any real number (e.g.,
+\code{autosclae = 2.5}). When \code{autosclae = TRUE}, \code{2.5} is the
+default scaling factor. We strongly recommend to go through the well
+documented details on prior specifications used in \pkg{brms} and
+\pkg{rstanarm} packages.
 
-Similar to the \pkg{brms} package, the \pkg{bsitar} package offers a range
-of tools to evaluate the model fit such as the posterior predictive check
-(see \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}). Furthermore, models with different priors and/or
-growth curves (i.e., with different \code{df} for splines) can be easily
-compared by using methods already available in the \pkg{brms} package such
-as the leave one out cross validation (see \code{\link[brms:loo.brmsfit]{brms::loo()}}). The excellent
-post-processing support offered by the \pkg{brms} package is further
-augmented by many custom functions written for the \pkg{bsitar} package that
-allows prediction and visualization of population average and individual
-specific growth trajectories velocity curves. Furthermore, population
-average and individual specific growth parameters such as age at peak growth
-velocity (APGV) and the peak growth velocity (PGV) can be easily computed.
+Furthermore, like \pkg{brms} package, the \pkg{bsitar} package offers a
+range of tools to evaluate the model fit that include posterior predictive
+check (see \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}) and the leave one out (\code{loo}) cross
+validation (see \code{\link[brms:loo.brmsfit]{brms::loo()}}) Also, the excellent post-processing support
+offered by the \pkg{brms} package is further augmented via many custom
+functions written exclusively for the \pkg{bsitar} package. This allows for
+estimation and visualization of population average and individual specific
+distance (increase in size) and velocity (change in rate of growth), and
+estimation of population average and individual specific growth parameters
+such as age at peak growth velocity (APGV) and the peak growth velocity
+(PGV).
 
-The \pkg{bsitar} package allows three different types of model specifications:
-\code{univariate}, \code{univariate_by} and \code{multivariate}. A
-\code{univariate} model involves a single model fit applied to an outcome
-whereas both \code{univariate_by} and \code{multivariate} models comprise
-two or more sub models. The \code{univariate_by} fits two or more separate
-sub models for a single outcome variable defined by a factor variable (e.g,
-sex). The data are typically stacked and the factor variable is used to
-set-up the sub models via the \code{subset} option available in the
-\code{\link[brms:brm]{brms::brm()}}. The \code{multivariate} model allows simultaneous modelling
-of two or more outcomes with joint a distribution of the random effects. For
-both \code{univariate_by} and \code{multivariate} models, the \pkg{bsitar}
+Finally, the \pkg{bsitar} package allows three different types of model
+fittings: \code{univariate}, \code{univariate_by} and \code{multivariate}. A
+\code{univariate} involves a single model applied to an outcome whereas both
+\code{univariate_by} and \code{multivariate} comprise two or more sub
+models. The \code{univariate_by} fits two or more separate sub models for a
+single outcome variable defined by a factor variable (e.g, sex). The data
+are typically stacked and the factor variable is used to set-up the sub
+models via the \code{'subset'} option available in the \code{\link[brms:brm]{brms::brm()}}. The
+\code{multivariate} model allows simultaneous modelling of two or more
+outcomes with joint a distribution of the random effects. For both
+\code{univariate_by} and \code{multivariate} models, the \pkg{bsitar}
 package allows full flexibility in specifying separate predictor variables
-(\code{x}), subject identifiers (\code{id}), degree of freedom (\code{df})
-for design matrix as well as priors and the initial values. Furthermore, to
-enhance the ease of specifying different options and to make it
-user-friendly, there is no need to enclose the character strings in single
-or double quotes. For example to specify the \code{univariate_by} for sex,
-the \code{univariate_by = sex} is same as \code{univariate_by = 'sex'} or
-\code{univariate_by = "sex"}. The same applies for all character string
-options.
+(\code{x}), individual identifiers (\code{id}), degree of freedom
+(\code{df}) for design matrix as well as priors and the initial values.
+Furthermore, to enhance the ease of specifying different options and to make
+it user-friendly, there is no need to enclose the character strings
+option(s) in single or double quotes. For example to specify the
+\code{univariate_by} for sex, the \code{univariate_by = sex} is same as
+\code{univariate_by = 'sex'} or \code{univariate_by = "sex"}. The same
+applies for all character string options.
 }
 \note{
 The package is under continuous development and new models and

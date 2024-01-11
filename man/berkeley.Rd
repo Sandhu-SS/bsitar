@@ -7,7 +7,7 @@
 \format{
 A data frame with 4884 observations on the following 10 variables:
 \describe{
-\item{id}{factor with levels 201-278 male and 301-385 female}
+\item{id}{factor with levels 201-278 for males, and 301-385 for females}
 \item{age}{years, numeric vector}
 \item{height}{cm, numeric vector}
 \item{weight}{kg, numeric vector}
@@ -26,15 +26,14 @@ berkeley
 A data frame with 10 columns.
 }
 \description{
-The Berkeley Child Guidance Study data set contains longitudinal
-growth data for 136 children from birth to 21 years.
+The Berkeley Child Guidance Study data set containing
+longitudinal growth data for 136 children from birth to 21 years.
 }
 \details{
-The data were provided as an appendix to the book by
+Data originally provided as an appendix to the book by
 \insertCite{Tuddenham1954;textual}{bsitar} and later used in the
 \pkg{sitar} \insertCite{R-sitar}{bsitar} package after correcting the
-transcription errors. The data included in the \pkg{bsitar} package is the
-same as \strong{berkeley} data available in the \pkg{sitar} package.
+transcription errors.
 
 A detailed description of the data including the frequency of measurements
 per year is provided in the \pkg{sitar} package.
