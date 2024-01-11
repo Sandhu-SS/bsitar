@@ -1,28 +1,27 @@
 
 
 
-#' Expose user defined Stan function for post-processing of posterior samples
+#' Expose user defined Stan function for post-processing
 #' 
-#' @description The \strong{expose_model_functions()} is a wrapper around
-#'   the [rstan::expose_stan_functions()] function which is used to expose the
-#'   use defined \code{Stan} functions. These exposed functions are required
-#'   during the post-processing. See [rstan::expose_stan_functions()] for
-#'   details.
+#' @description The \strong{expose_model_functions()} is a wrapper around the
+#'   [rstan::expose_stan_functions()] function. These exposed functions are
+#'   needed during the post-processing of the posterior draws.
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @param scode An option argument specifying the code with the user-defined 
-#' Stan function.
+#' @param scode A character string (Stan code) with the user-defined Stan 
+#' function. If \code{NULL} (default), the \code{scode} is retrieved from the 
+#' \code{model}.
 #' 
 #' @param expose A logical (default \code{TRUE}) to indicate whether to expose
-#' functions and add to the global environment. 
+#' functions and add them to the \code{model} as an attribute.
 #' 
-#' @param select_model A string (default \code{NULL}) to indicate the model. For
-#' internal use only.
+#' @param select_model A character string (default \code{NULL}) to indicate the
+#'   model name. This is for internal use only.
 #' 
 #' @param returnobj A logical (default \code{TRUE}) to indicate whether to
-#'   return the model object. When \code{expose=TRUE}, then it is advisable to
-#'  set \code{returnobj=TRUE} also.
+#'   return the model object. When \code{expose = TRUE}, then it is advisable to
+#'  set \code{returnobj = TRUE} too.
 #' 
 #' @inherit growthparameters.bgmfit params
 #' 
