@@ -52,9 +52,9 @@
 #' 
 #' # Fit Bayesian SITAR model 
 #' 
-#' # To avoid fitting the model which takes time, the model  
-#' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the main function for details on the model fit.
+#' # To avoid mode estimation which takes time, a model fitted to the 
+#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
+#' # on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
 #' 
 #' model <- berkeley_mfit
 #' 

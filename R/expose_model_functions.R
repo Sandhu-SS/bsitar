@@ -4,14 +4,15 @@
 #' Expose user defined Stan function for post-processing
 #' 
 #' @description The \strong{expose_model_functions()} is a wrapper around the
-#'   [rstan::expose_stan_functions()] function. These exposed functions are
-#'   needed during the post-processing of the posterior draws.
+#'   [rstan::expose_stan_functions()] to expose user defined
+#'   \code{Stan} function(s). These exposed functions are needed during the
+#'   post-processing of the posterior draws.
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @param scode A character string (Stan code) with the user-defined Stan 
-#' function. If \code{NULL} (default), the \code{scode} is retrieved from the 
-#' \code{model}.
+#' @param scode A character string (\code{Stan code}) containing the
+#'   user-defined Stan function(s). If \code{NULL} (default), the \code{scode}
+#'   is retrieved from the \code{model}.
 #' 
 #' @param expose A logical (default \code{TRUE}) to indicate whether to expose
 #' functions and add them to the \code{model} as an attribute.
@@ -42,9 +43,9 @@
 #' 
 #' # Fit Bayesian SITAR model 
 #' 
-#' # To avoid fitting the model which takes time, the model  
-#' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the main function for details on the model fit.
+#' # To avoid mode estimation which takes time, a model fitted to the 
+#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
+#' # on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
 #' 
 #' model <- berkeley_mfit
 #' 

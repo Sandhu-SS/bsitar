@@ -26,37 +26,34 @@
 #'
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @param resp A character string to specify response variable when processing
-#'   posterior draws for the univariate-by-subgroup and multivariate models (see
-#'   [bsitar::bsitar()] for details on fitting univariate-by-subgroup and
-#'   multivariate models). For univariate model, \code{resp = NULL} (default).
-#'   Note that argument \code{resp} must be specified for the
-#'   univariate-by-subgroup and multivariate models otherwise it will result in
-#'   an error. On the other hand, argument \code{resp} must be \code{NULL} for
-#'   the univariate model. The default setting is \code{resp = NULL} assuming a
-#'   univariate model.
+#' @param resp A character string (default \code{NULL}) to specify response
+#'   variable when processing posterior draws for the univariate-by-subgroup and
+#'   multivariate models (see [bsitar::bsitar()] for details on fitting
+#'   univariate-by-subgroup and multivariate models).
 #'   
 #' @param ndraws Positive integer indicating the number of posterior draws to be
 #'   used in estimation. If \code{NULL} (default), all draws are used.
 #'   
-#' @param draw_ids An integer indicating the specif posterior draw(s) 
-#' to be used. If \code{NULL} (default), all draws are used.
+#' @param draw_ids An integer indicating the specific posterior draw(s) 
+#' to be used in estimation (default \code{NULL}).
 #' 
-#' @param newdata An optional data frame to be used in predictions. If
-#'   \code{NULL} (default), the model fit.
+#' @param newdata An optional data frame to be used in estimation. If
+#'   \code{NULL} (default), the \code{newdata} is retrieved from the
+#'   \code{model}.
 #'   
-#' @param summary A logical (default \code{TRUE}) indicating whether only the
-#'   Estimate should be returned or Estimate along with SE and CI should be
-#'   computed. Setting this option to \code{FALSE} will reduce the computation
-#'   time but no SE or CI estimates will be available.
+#' @param summary A logical indicating whether only the estimate should be
+#'   computed (\code{TRUE}, default), or estimate along with SE and CI should be
+#'   returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
+#'   increase the computation time.
 #'   
-#' @param digits An integer (default \code{2}) to set the decimal for the
-#'   [base::round()] function.
-#'   
-#' @param robust If \code{FALSE} (the default) the mean is used as the measure
-#'   of central tendency and the standard deviation as the measure of
-#'   variability. If \code{TRUE}, the median and the median absolute deviation
-#'   (MAD) are applied instead. Ignored if summary is \code{FALSE}. 
+#' @param digits An integer (default \code{2}) to set the decimal argument for
+#'   the [base::round()] function.
+#'
+#' @param robust A logical to specify the summarize options. If \code{FALSE}
+#'   (the default) the mean is used as the measure of central tendency and the
+#'   standard deviation as the measure of variability. If \code{TRUE}, the
+#'   median and the median absolute deviation (MAD) are applied instead. Ignored
+#'   if \code{summary} is \code{FALSE}.
 #'   
 #' @param re_formula Option to indicate whether or not to include the
 #'   individual/group-level effects in the estimation. When \code{NA} (default),
@@ -67,44 +64,43 @@
 #'   \code{NULL}), continuous and factor covariate(s) are appropriately included
 #'   in the estimation. The continuous covariates by default are set to their
 #'   means (see \code{numeric_cov_at} for details) whereas factor covariates are
-#'   left unaltered thereby allowing estimation of (factor) covariate specific
-#'   population average and individual-specific growth parameter at mean value
-#'   of continous covaristes(s).
+#'   left unaltered thereby allowing estimation of covariate specific population
+#'   average and individual-specific growth parameter.
 #'   
-#' @param peak Optional (logical, default \code{TRUE}) to indicate whether or
+#' @param peak A logical (default \code{TRUE}) to indicate whether or
 #'   not to calculate the age at peak velocity (APGV) and the peak velocity
 #'   (PGV) parameters.
 #'   
-#' @param takeoff  Optional (logical, default \code{FALSE}) to indicate whether
+#' @param takeoff  A logical (default \code{FALSE}) to indicate whether
 #'   or not to calculate the age at takeoff velocity (ATGV) and the takeoff
 #'   growth velocity (TGV) parameters.
 #'
-#' @param trough Optional (logical, default \code{FALSE}) to indicate whether or
+#' @param trough A logical (default \code{FALSE}) to indicate whether or
 #'   not to calculate the age at cessation of growth velocity (ACGV) and the
 #'   cessation of growth velocity (CGV) parameters.
 #' 
-#' @param acgv Optional (logical, default \code{FALSE}) to indicate whether or
-#'   not to calculate the age at cessation of growth velocity from the velocity
-#'   curve. If \code{TRUE}, age at cessation of growth velocity (ACGV) and the
+#' @param acgv A logical (default \code{FALSE}) to indicate whether or not to
+#'   calculate the age at cessation of growth velocity from the velocity curve.
+#'   If \code{TRUE}, age at cessation of growth velocity (ACGV) and the
 #'   cessation growth velocity (CGV) are  calculated based on the percentage of
 #'   the peak growth velocity as defined by the \code{acgv_velocity} argument
-#'   (see below) which is typically set at 10 percent of the peak growth
-#'   velocity. The ACGV and CGV are calculated along with the the uncertainty
-#'   (SE and CI) around the ACGV and CGV parameters. 
+#'   (see below). The \code{acgv_velocity} is typically set at 10 percent of the
+#'   peak growth velocity. The ACGV and CGV are calculated along with the the
+#'   uncertainty (SE and CI) around the ACGV and CGV parameters.
 #'   
 #' @param acgv_velocity Specify the percentage of the peak growth velocity to be 
 #'  used when estimating \code{acgv}. The default value is \code{0.10} i.e., 
 #'  10 percent of the peak growth velocity.
 #'   
 #' @param estimation_method A character string to specify the estimation method
-#'   when calculating the velocity from the posterior draws. The \code{fitted}
-#'   method internally calls the [bsitar::fitted_draws()] function whereas the
-#'   option \code{predict} calls the [bsitar::predict_draws()] function. See
+#'   when calculating the velocity from the posterior draws. The \code{'fitted'}
+#'   method internally calls the [bsitar::fitted_draws()] whereas the option
+#'   \code{predict} calls the [bsitar::predict_draws()]. See
 #'   [brms::fitted.brmsfit()] and [brms::predict.brmsfit()] for derails.
 #'   
-#' @param numeric_cov_at An optional argument to specify the value of continuous
-#'   covariate(s). The default \code{NULL} option set the continuous
-#'   covariate(s) at their mean. Alternatively, a named list can be
+#' @param numeric_cov_at An optional (named list) argument to specify the value
+#'   of continuous covariate(s). The default \code{NULL} option set the
+#'   continuous covariate(s) at their mean. Alternatively, a named list can be
 #'   supplied to manually set these values. For example, \code{numeric_cov_at =
 #'   list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
 #'   argument \code{numeric_cov_at} is ignored when no continuous covariate is
@@ -113,13 +109,13 @@
 #' @param levels_id An optional argument to specify the \code{ids} for
 #'   hierarchical model (default \code{NULL}). It is used only when model is
 #'   applied to the data with 3 or more levels of hierarchy. For a two level
-#'   model, the \code{id} for second level is automatically inferred from the
-#'   model fit. Even for 3 or higher level model, ids are inferred from the
-#'   model fit but under the assumption that hierarchy is specified from
-#'   lower to upper levels i.e, \code{id} followed by \code{study} assuming that
-#'   \code{id} is nested within the \code{study} However, it is not guaranteed
-#'   that these ids are sorted correctly. Therefore, it is better to set them
-#'   manually.
+#'   model, the \code{levels_id} is automatically inferred from the model fit.
+#'   Even for 3 or higher level model, the \code{levels_id} is inferred from the
+#'   model fit but under the assumption that hierarchy is specified from lowest
+#'   to upper most level i.e, \code{id} followed by \code{study} where \code{id}
+#'   is nested within the \code{study} Note that it is not guaranteed that the
+#'   \code{levels_id} is sorted correctly, and therefore it is better to set it
+#'   manually when fitting a model with three or more levels of hierarchy.
 #'   
 #' @param avg_reffects An optional argument (default \code{NULL}) to calculate
 #'   (marginal/average) curves and growth parameters (such as APGV and PGV). If
@@ -131,7 +127,7 @@
 #'   
 #'@param aux_variables An optional argument to specify the variable(s) that can
 #'  be passed to the \code{ipts} argument (see below). This is useful when
-#'  fitting location scale models and the measurement error models. An
+#'  fitting location scale models and measurement error models. An
 #'  indication to use \code{aux_variables} is when post processing functions
 #'  throw an error such as \code{variable 'x' not found either 'data' or
 #'  'data2'}
@@ -143,57 +139,58 @@
 #'   the range of predictor when calculating population average and/or the
 #'   individual specific growth curves.
 #'   
-#' @param deriv_model A logical to specify whether to derive velocity curve from
-#'   the derivative function, or the differentiation of the distance curve. The
-#'   argument \code{deriv_model} is set to \code{TRUE} for those functions which
-#'   need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
-#'   \code{NULL} for functions which are explicitly working with the model
-#'   returned fitted values such as \code{loo_validation()} and
-#'   \code{plot_ppc()}.
+#' @param deriv_model A logical to specify whether to estimate velocity curve
+#'   from the derivative function, or the differentiation of the distance curve.
+#'   The argument \code{deriv_model} is set to \code{TRUE} for those functions
+#'   which need velocity curve such as \strong{growthparameters()} and
+#'   \code{plot_curves()}, and \code{NULL} for functions which explicitly use
+#'   the distance curve (i.e., fitted values) such as \code{loo_validation()}
+#'   and \code{plot_ppc()}.
 #' 
-#'@param conf A numeric value (default \code{0.95}) to compute CI. Internally,
-#'   this is translated into a paired probability values as \code{c((1 - conf) /
-#'   2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this will compute 95% CI
-#'  and the variables with lower and upper limits will be named as Q.2.5 and
-#'  Q.97.5.
+#' @param conf A numeric value (default \code{0.95}) to compute CI. Internally,
+#'   the \code{conf} is translated into a paired probability values as
+#'   \code{c((1 - conf)/2, 1 - (1 - conf) / 2)}. For \code{conf = 0.95}, this
+#'   will compute 95% CI and the variables with lower and upper limits will be
+#'   named as \code{Q.2.5} and \code{Q.97.5}.
 #'   
 #' @param xrange An integer to set the predictor range (i.e., age) when
 #'   executing the interpolation via \code{ipts}. The default \code{NULL} sets
 #'   the individual specific predictor range whereas code \code{xrange = 1} sets
-#'   same range for all individuals within the higher order grouping variable
+#'   identical range for individuals within the same higher grouping variable
 #'   (e.g., study). Code \code{xrange  = 2} sets the identical range across the
 #'   entire sample. Lastly, a paired numeric values can be supplied e.g.,
-#'   \code{xrange = c(6, 20)} to set the range between 6 and 20.
+#'   \code{xrange = c(6, 20)} to set the range within those values.
 #'   
 #' @param  xrange_search A vector of length two, or a character string
-#'   \code{'range'} to set the range of \code{x} variable within which growth
-#'   parameters are searched. This is useful when there is more than one peak
-#'   and user wants to summarize peak within a given range of the \code{x}
-#'   variable. Default \code{xrange_search = NULL}.
+#'   \code{'range'} to set the range of predictor variable (\code{x} ) within
+#'   which growth parameters are searched. This is useful when there is more
+#'   than one peak and user wants to summarize peak within a given range of the
+#'   \code{x} variable. Default \code{xrange_search = NULL}.
 #' 
 #' @param seed An integer (default \code{123}) that is passed to the estimation
 #'   method.
 #'   
 #' @param future A logical (default \code{FALSE}) to specify whether or not to
 #'   perform parallel computations. If set to \code{TRUE}, the
-#'   [future.apply::future_sapply()] function is used for summarizing the draws.
+#'   [future.apply::future_sapply()] function is used to summarize draws.
 #'   
 #' @param future_session A character string to set the session type when
-#'   \code{future = TRUE}. The \code{multisession} (default) options sets the
-#'   multisession whereas the \code{multicore} sets the multicore session. Note
-#'   that multicore session is not supported on Windows systems. For more
-#'   details, see [future.apply::future_sapply()].
+#'   \code{future = TRUE}. The \code{'multisession'} (default) options sets the
+#'   multisession whereas the \code{'multicore'} sets the multicore session.
+#'   Note that option \code{'multicore'} is not supported on Windows systems.
+#'   For more details, see [future.apply::future_sapply()].
 #'   
 #' @param cores Number of cores to be used when running the parallel
-#'   computations by setting the option \code{future = TRUE}. On non-Windows
-#'   systems this argument can be set globally via the mc.cores option. For the
-#'   default \code{NULL} option, the number of cores are set automatically by
-#'   calling the [future::availableCores()]. The number of cores used are the
-#'   maximum number of cores avaialble minus one, i.e.,
-#'   \code{future::availableCores() - 1}.
+#'   computations (if \code{future = TRUE}). On non-Windows systems this
+#'   argument can be set globally via the mc.cores option. For the default
+#'   \code{NULL} option, the number of cores are set automatically by calling
+#'   the [future::availableCores()]. The number of cores used are the maximum
+#'   number of cores avaialble minus one, i.e., \code{future::availableCores() -
+#'   1}.
 #'  
-#' @param parms_eval A logical (default \code{FALSE}) to specify whether or not 
-#' to get growth parameters on the fly. 
+#' @param parms_eval A logical to specify whether or not to get growth
+#'   parameters on the fly. This is for internal use only and mainly needed for
+#'   compatibility across internal functions.
 #' 
 #' @param idata_method A character string to indicate the interpolation method.
 #'   The number of of interpolation points is set up the \code{ipts} argument.
@@ -218,15 +215,15 @@
 #'   \code{parms_eval}. The default is \code{getPeak} which uses the
 #'   [sitar::getPeak()] function from the \code{sitar} package. The alternative
 #'   option is \code{findpeaks} that uses the [pracma::findpeaks()] function
-#'   function from the \code{pracma} package. Note that the argument
-#'   \code{parms_method} is currently ignored.
+#'   function from the \code{pracma} package. This is for internal use only and
+#'   mainly needed for compatibility across internal functions.
 #'   
 #' @param verbose An optional argument (logical, default \code{FALSE}) to
 #'  indicate whether to print information collected during setting up the 
 #'  object(s). 
 #'  
 #' @param fullframe A logical to indicate whether to return \code{fullframe}
-#'   object in which \code{newdata} is bind to the summary estimates Note that
+#'   object in which \code{newdata} is bind to the summary estimates. Note that
 #'   \code{fullframe} can not be combined with \code{summary = FALSE}.
 #'   Furthermore, \code{fullframe} can only be used when \code{idata_method =
 #'   'm2'}. A particular use case is when fitting \code{univariate_by} model.
@@ -235,21 +232,22 @@
 #' @param dummy_to_factor A named list (default \code{NULL}) that is used to
 #'   convert dummy variables into a factor variable. The named elements are
 #'   \code{factor.dummy}, \code{factor.name}, and \code{factor.level}. The
-#'   \code{factor.dummy} is a vector of character strings that will be converted
-#'   to a factor variable, and \code{factor.name} is a single character string
-#'   that is used to name the newly created factor variable. The
-#'   \code{factor.level} is used to name the levels of newly created factor.
-#'   When \code{factor.name} is \code{NULL}, then the factor name is internally 
-#'   set as \code{factor.var}. If \code{factor.level} is \code{NULL}, then 
-#'   names of factor levels are take from the \code{factor.dummy} i.e., 
-#'   the factor levels are assigned same name as \code{factor.dummy}. Note that 
-#'   when \code{factor.level} is not \code{NULL}, its length must be same as
-#'   the length of the \code{factor.dummy}.
+#'   \code{factor.dummy} is a vector of character strings that need to be
+#'   converted to a factor variable whereas the \code{factor.name} is a single
+#'   character string that is used to name the newly created factor variable.
+#'   The \code{factor.level} is used to name the levels of newly created factor.
+#'   When \code{factor.name} is \code{NULL}, then the factor name is internally
+#'   set as \code{'factor.var'}. If \code{factor.level} is \code{NULL}, then
+#'   names of factor levels are take from the \code{factor.dummy} i.e., the
+#'   factor levels are assigned same name as \code{factor.dummy}. Note that when
+#'   \code{factor.level} is not \code{NULL}, its length must be same as the
+#'   length of the \code{factor.dummy}.
 #' 
 #' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to
 #'   use the already exposed and saved \code{Stan} functions. This is for
-#'   internal use only during the testing of the functions and therefore should
-#'   not be used by users routinely because results might be unstable.
+#'   internal purposes only and mainly used during the testing of the functions
+#'   and therefore should not be used by users as it might lead to unreliable
+#'   estimates.
 #' 
 #' @param clearenvfuns A logical to indicate whether to clear the exposed
 #'   function from the environment (\code{TRUE}) or not (\code{FALSE}). If
@@ -260,7 +258,7 @@
 #' @param envir Environment used for function evaluation. The default is
 #'   \code{NULL} which will set \code{parent.frame()} as default environment.
 #'   Note that since most of post processing functions are based on \pkg{brms},
-#'   the elements needed for evaluation should be in the \code{.GlobalEnv}.
+#'   the functions needed for evaluation should be in the \code{.GlobalEnv}.
 #'   Therefore, it is strongly recommended to set \code{ envir = globalenv()}
 #'   (or \code{envir = .GlobalEnv}). This is particularly true for the
 #'   derivatives such as velocity curve.
@@ -268,19 +266,19 @@
 #' @param ... Further arguments passed to \code{brms::fitted.brmsfit()} and
 #'   \code{brms::predict()} functions.
 #'
-#' @return A data frame with five columns when \code{summary = TRUE}, and two
-#'   columns when \code{summary = False} (assuming \code{re_formual = NULL}).
-#'   The first two columns common to the returned object (\code{summary =
-#'   TRUE/False}) are 'Parameter' and 'Estimate' which indicates the name of the
-#'   growth parameter (e.g., APGV, PGV etc), and its estimate. When
-#'   \code{summary = TRUE}, three additional columns are 'Est.Error' and the
-#'   lower and upper limits of the CIs. The CI columns are named as Q with
-#'   appropriate suffix indicating the percentiles used to construct these
-#'   intervals (such as Q.2.5 and Q.97.5 where 2.5 and 97.5 are the 0.025 and
-#'   0.975 percentiles used to compute by the 95% CI by calling the quantile
-#'   function. When \code{re_formual = NULL}, an additional column is added that
-#'   shows the individual identifier (typically \code{id}).
-#'   
+#' @return A data frame with either five columns (when \code{summary = TRUE}),
+#'   or two columns when \code{summary = False} (assuming \code{re_formual =
+#'   NULL}). The first two columns common to each scenario (\code{summary =
+#'   TRUE/False}) are \code{'Parameter'} and \code{'Estimate'} which define the
+#'   name of the growth parameter (e.g., APGV, PGV etc), and estimate. When 
+#'   \code{summary = TRUE}, the three additional columns are \code{'Est.Error'}, 
+#'   and a paired vector of names defining the lower and upper limits of the 
+#'   CIs. The CI columns are named as Q with appropriate suffix taken from the 
+#'   percentiles used to construct these intervals (such as  \code{Q.2.5} and 
+#'   \code{Q.97.5} where\code{2.5} and  \code{97.5} are the  \code{0.025} and 
+#'   \code{0.975} percentiles used to compute by the 95% CI by calling the 
+#'   quantile function. When \code{re_formual = NULL}, an additional column is 
+#'   added that denotes the individual identifier (typically \code{id}).
 #'   
 #' @export growthparameters.bgmfit
 #' @export
@@ -295,9 +293,9 @@
 #' 
 #' # Fit Bayesian SITAR model 
 #' 
-#' # To avoid fitting the model which takes time, the model  
-#' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the main function for details on the model fit.
+#' # To avoid mode estimation which takes time, a model fitted to the 
+#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
+#' # on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
 #' 
 #' model <- berkeley_mfit
 #' 

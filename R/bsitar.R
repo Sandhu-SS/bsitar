@@ -1358,7 +1358,7 @@
 #' @examples
 #' 
 #' # Examples below fits the SITAR model to the Berkley height data for males. 
-#' # See help file (?berkeley_mdata) for details on the berkeley_mdata dataset.
+#' # See help file (?berkeley_mdata) for details on berkeley_mdata dataset.
 #'   
 #' # Fit maximum likelihood (frequentist) SITAR model with df = 3 by using 
 #' # the sitar package 
@@ -1377,10 +1377,13 @@
 #' 
 #' # Fit Bayesian SITAR model 
 #' 
-#' # To save time and memory, the model is fit using 2 chain  with and setting 
-#' # thin as 15 (note 6000 iteration per chain used to get sufficient draws 
-#' # after thinning). To avoid fitting the model which takes time, the model  
-#' # fit has already been saved as 'berkeley_mfit.rda' file.
+#' # To save time and memory, the model is fit using 2 chain and thin set as 15.
+#' # To get sufficient draws after thinning, the number of iterations are 
+#' # increased from 2000 per chain (default) to 6000 iteration per chain.
+#' # Note that fitting model with these setting still taken a while. 
+#' 
+#' # To avoid mode estimation which takes time, a model fitted to the 
+#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. 
 #' 
 #' if(exists('berkeley_mfit')) {
 #'   model <- berkeley_mfit

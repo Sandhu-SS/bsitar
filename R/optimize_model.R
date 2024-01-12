@@ -98,8 +98,16 @@
 #' 
 #' \donttest{
 #' 
+#' # Fit Bayesian SITAR model 
+#' 
+#' # To avoid mode estimation which takes time, a model fitted to the 
+#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
+#' # on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
+#' 
+#' model <- berkeley_mfit
+#' 
 #' # Below example shows optimization of the degree of freedom (df). 
-#' # Note that in case degree of freedom is same as the original model and both 
+#' # Note that in case degree of freedom is same as the original model, and both 
 #' # optimize_x and optimize_y NULL (i.e., nothing to optimize), then original  
 #' # model is returned without evaluating any other argument. Since nothing is 
 #' # set to  be optimized in the below example, the original model is returned.  

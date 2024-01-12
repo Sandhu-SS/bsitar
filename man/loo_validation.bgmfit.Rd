@@ -77,25 +77,25 @@ values as model names.}
 used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{cores}{Number of cores to be used when running the parallel
-computations by setting the option \code{future = TRUE}. On non-Windows
-systems this argument can be set globally via the mc.cores option. For the
-default \code{NULL} option, the number of cores are set automatically by
-calling the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the
-maximum number of cores avaialble minus one, i.e.,
-\code{future::availableCores() - 1}.}
+computations (if \code{future = TRUE}). On non-Windows systems this
+argument can be set globally via the mc.cores option. For the default
+\code{NULL} option, the number of cores are set automatically by calling
+the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the maximum
+number of cores avaialble minus one, i.e., \code{future::availableCores() -
+  1}.}
 
 \item{deriv}{An integer to indicate whether to estimate distance curve or
 derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
 for the distance curve, \code{deriv = 1} for velocity curve, and
 \code{deriv = 2} for the acceleration curve.}
 
-\item{deriv_model}{A logical to specify whether to derive velocity curve from
-the derivative function, or the differentiation of the distance curve. The
-argument \code{deriv_model} is set to \code{TRUE} for those functions which
-need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
-\code{NULL} for functions which are explicitly working with the model
-returned fitted values such as \code{loo_validation()} and
-\code{plot_ppc()}.}
+\item{deriv_model}{A logical to specify whether to estimate velocity curve
+from the derivative function, or the differentiation of the distance curve.
+The argument \code{deriv_model} is set to \code{TRUE} for those functions
+which need velocity curve such as \strong{growthparameters()} and
+\code{plot_curves()}, and \code{NULL} for functions which explicitly use
+the distance curve (i.e., fitted values) such as \code{loo_validation()}
+and \code{plot_ppc()}.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
@@ -104,21 +104,22 @@ object(s).}
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are
 \code{factor.dummy}, \code{factor.name}, and \code{factor.level}. The
-\code{factor.dummy} is a vector of character strings that will be converted
-to a factor variable, and \code{factor.name} is a single character string
-that is used to name the newly created factor variable. The
-\code{factor.level} is used to name the levels of newly created factor.
+\code{factor.dummy} is a vector of character strings that need to be
+converted to a factor variable whereas the \code{factor.name} is a single
+character string that is used to name the newly created factor variable.
+The \code{factor.level} is used to name the levels of newly created factor.
 When \code{factor.name} is \code{NULL}, then the factor name is internally
-set as \code{factor.var}. If \code{factor.level} is \code{NULL}, then
-names of factor levels are take from the \code{factor.dummy} i.e.,
-the factor levels are assigned same name as \code{factor.dummy}. Note that
-when \code{factor.level} is not \code{NULL}, its length must be same as
-the length of the \code{factor.dummy}.}
+set as \code{'factor.var'}. If \code{factor.level} is \code{NULL}, then
+names of factor levels are take from the \code{factor.dummy} i.e., the
+factor levels are assigned same name as \code{factor.dummy}. Note that when
+\code{factor.level} is not \code{NULL}, its length must be same as the
+length of the \code{factor.dummy}.}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
-internal use only during the testing of the functions and therefore should
-not be used by users routinely because results might be unstable.}
+internal purposes only and mainly used during the testing of the functions
+and therefore should not be used by users as it might lead to unreliable
+estimates.}
 
 \item{clearenvfuns}{A logical to indicate whether to clear the exposed
 function from the environment (\code{TRUE}) or not (\code{FALSE}). If
@@ -129,7 +130,7 @@ is \code{FALSE}.}
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.
 Note that since most of post processing functions are based on \pkg{brms},
-the elements needed for evaluation should be in the \code{.GlobalEnv}.
+the functions needed for evaluation should be in the \code{.GlobalEnv}.
 Therefore, it is strongly recommended to set \code{ envir = globalenv()}
 (or \code{envir = .GlobalEnv}). This is particularly true for the
 derivatives such as velocity curve.}
@@ -158,9 +159,9 @@ object for later usage.
 
 # Fit Bayesian SITAR model 
 
-# To avoid fitting the model which takes time, the model  
-# fit has already been saved as 'berkeley_mfit.rda' file.
-# See examples section of the main function for details on the model fit.
+# To avoid mode estimation which takes time, a model fitted to the 
+# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
+# on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
 
 model <- berkeley_mfit
 

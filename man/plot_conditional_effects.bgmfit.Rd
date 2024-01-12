@@ -134,8 +134,9 @@ to be covered by the uncertainty intervals. The default is 0.95.}
 \item{robust}{If \code{TRUE} (the default) the median is used as the
 measure of central tendency. If \code{FALSE} the mean is used instead.}
 
-\item{newdata}{An optional data frame to be used in predictions. If
-\code{NULL} (default), the model fit.}
+\item{newdata}{An optional data frame to be used in estimation. If
+\code{NULL} (default), the \code{newdata} is retrieved from the
+\code{model}.}
 
 \item{ndraws}{Positive integer indicating the number of posterior draws to be
 used in estimation. If \code{NULL} (default), all draws are used.}
@@ -143,13 +144,13 @@ used in estimation. If \code{NULL} (default), all draws are used.}
 \item{levels_id}{An optional argument to specify the \code{ids} for
 hierarchical model (default \code{NULL}). It is used only when model is
 applied to the data with 3 or more levels of hierarchy. For a two level
-model, the \code{id} for second level is automatically inferred from the
-model fit. Even for 3 or higher level model, ids are inferred from the
-model fit but under the assumption that hierarchy is specified from
-lower to upper levels i.e, \code{id} followed by \code{study} assuming that
-\code{id} is nested within the \code{study} However, it is not guaranteed
-that these ids are sorted correctly. Therefore, it is better to set them
-manually.}
+model, the \code{levels_id} is automatically inferred from the model fit.
+Even for 3 or higher level model, the \code{levels_id} is inferred from the
+model fit but under the assumption that hierarchy is specified from lowest
+to upper most level i.e, \code{id} followed by \code{study} where \code{id}
+is nested within the \code{study} Note that it is not guaranteed that the
+\code{levels_id} is sorted correctly, and therefore it is better to set it
+manually when fitting a model with three or more levels of hierarchy.}
 
 \item{resp}{A character string to specify response variable when processing
 posterior draws for the univariate-by-subgroup and multivariate models (see
@@ -205,21 +206,22 @@ object(s).}
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are
 \code{factor.dummy}, \code{factor.name}, and \code{factor.level}. The
-\code{factor.dummy} is a vector of character strings that will be converted
-to a factor variable, and \code{factor.name} is a single character string
-that is used to name the newly created factor variable. The
-\code{factor.level} is used to name the levels of newly created factor.
+\code{factor.dummy} is a vector of character strings that need to be
+converted to a factor variable whereas the \code{factor.name} is a single
+character string that is used to name the newly created factor variable.
+The \code{factor.level} is used to name the levels of newly created factor.
 When \code{factor.name} is \code{NULL}, then the factor name is internally
-set as \code{factor.var}. If \code{factor.level} is \code{NULL}, then
-names of factor levels are take from the \code{factor.dummy} i.e.,
-the factor levels are assigned same name as \code{factor.dummy}. Note that
-when \code{factor.level} is not \code{NULL}, its length must be same as
-the length of the \code{factor.dummy}.}
+set as \code{'factor.var'}. If \code{factor.level} is \code{NULL}, then
+names of factor levels are take from the \code{factor.dummy} i.e., the
+factor levels are assigned same name as \code{factor.dummy}. Note that when
+\code{factor.level} is not \code{NULL}, its length must be same as the
+length of the \code{factor.dummy}.}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
-internal use only during the testing of the functions and therefore should
-not be used by users routinely because results might be unstable.}
+internal purposes only and mainly used during the testing of the functions
+and therefore should not be used by users as it might lead to unreliable
+estimates.}
 
 \item{clearenvfuns}{A logical to indicate whether to clear the exposed
 function from the environment (\code{TRUE}) or not (\code{FALSE}). If
@@ -230,7 +232,7 @@ is \code{FALSE}.}
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.
 Note that since most of post processing functions are based on \pkg{brms},
-the elements needed for evaluation should be in the \code{.GlobalEnv}.
+the functions needed for evaluation should be in the \code{.GlobalEnv}.
 Therefore, it is strongly recommended to set \code{ envir = globalenv()}
 (or \code{envir = .GlobalEnv}). This is particularly true for the
 derivatives such as velocity curve.}
@@ -267,9 +269,9 @@ which are available in the \code{\link[brms:conditional_effects.brmsfit]{brms::c
 
 # Fit Bayesian SITAR model 
 
-# To avoid fitting the model which takes time, the model  
-# fit has already been saved as 'berkeley_mfit.rda' file.
-# See examples section of the main function for details on the model fit.
+# To avoid mode estimation which takes time, a model fitted to the 
+# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
+# on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
 
 model <- berkeley_mfit
 

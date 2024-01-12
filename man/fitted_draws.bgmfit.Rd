@@ -43,18 +43,14 @@ fitted_draws(model, ...)
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
 
-\item{newdata}{An optional data frame to be used in predictions. If
-\code{NULL} (default), the model fit.}
+\item{newdata}{An optional data frame to be used in estimation. If
+\code{NULL} (default), the \code{newdata} is retrieved from the
+\code{model}.}
 
-\item{resp}{A character string to specify response variable when processing
-posterior draws for the univariate-by-subgroup and multivariate models (see
-\code{\link[=bsitar]{bsitar()}} for details on fitting univariate-by-subgroup and
-multivariate models). For univariate model, \code{resp = NULL} (default).
-Note that argument \code{resp} must be specified for the
-univariate-by-subgroup and multivariate models otherwise it will result in
-an error. On the other hand, argument \code{resp} must be \code{NULL} for
-the univariate model. The default setting is \code{resp = NULL} assuming a
-univariate model.}
+\item{resp}{A character string (default \code{NULL}) to specify response
+variable when processing posterior draws for the univariate-by-subgroup and
+multivariate models (see \code{\link[=bsitar]{bsitar()}} for details on fitting
+univariate-by-subgroup and multivariate models).}
 
 \item{ndraws}{Positive integer indicating the number of posterior draws to be
 used in estimation. If \code{NULL} (default), all draws are used.}
@@ -68,9 +64,8 @@ returned are individual-specific. In both situations, (i.e,, \code{NA} or
 \code{NULL}), continuous and factor covariate(s) are appropriately included
 in the estimation. The continuous covariates by default are set to their
 means (see \code{numeric_cov_at} for details) whereas factor covariates are
-left unaltered thereby allowing estimation of (factor) covariate specific
-population average and individual-specific growth parameter at mean value
-of continous covaristes(s).}
+left unaltered thereby allowing estimation of covariate specific population
+average and individual-specific growth parameter.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -96,9 +91,9 @@ where a new level is assigned all of the posterior draws of the same
 specified via \code{autocor} should be included in the predictions.
 Defaults to \code{TRUE}.}
 
-\item{numeric_cov_at}{An optional argument to specify the value of continuous
-covariate(s). The default \code{NULL} option set the continuous
-covariate(s) at their mean. Alternatively, a named list can be
+\item{numeric_cov_at}{An optional (named list) argument to specify the value
+of continuous covariate(s). The default \code{NULL} option set the
+continuous covariate(s) at their mean. Alternatively, a named list can be
 supplied to manually set these values. For example, \code{numeric_cov_at =
   list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
 argument \code{numeric_cov_at} is ignored when no continuous covariate is
@@ -107,13 +102,13 @@ included in the model.}
 \item{levels_id}{An optional argument to specify the \code{ids} for
 hierarchical model (default \code{NULL}). It is used only when model is
 applied to the data with 3 or more levels of hierarchy. For a two level
-model, the \code{id} for second level is automatically inferred from the
-model fit. Even for 3 or higher level model, ids are inferred from the
-model fit but under the assumption that hierarchy is specified from
-lower to upper levels i.e, \code{id} followed by \code{study} assuming that
-\code{id} is nested within the \code{study} However, it is not guaranteed
-that these ids are sorted correctly. Therefore, it is better to set them
-manually.}
+model, the \code{levels_id} is automatically inferred from the model fit.
+Even for 3 or higher level model, the \code{levels_id} is inferred from the
+model fit but under the assumption that hierarchy is specified from lowest
+to upper most level i.e, \code{id} followed by \code{study} where \code{id}
+is nested within the \code{study} Note that it is not guaranteed that the
+\code{levels_id} is sorted correctly, and therefore it is better to set it
+manually when fitting a model with three or more levels of hierarchy.}
 
 \item{avg_reffects}{An optional argument (default \code{NULL}) to calculate
 (marginal/average) curves and growth parameters (such as APGV and PGV). If
@@ -125,7 +120,7 @@ parameters are integrated over the random effects) such as
 
 \item{aux_variables}{An optional argument to specify the variable(s) that can
 be passed to the \code{ipts} argument (see below). This is useful when
-fitting location scale models and the measurement error models. An
+fitting location scale models and measurement error models. An
 indication to use \code{aux_variables} is when post processing functions
 throw an error such as \code{variable 'x' not found either 'data' or
  'data2'}}
@@ -142,23 +137,24 @@ derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
 for the distance curve, \code{deriv = 1} for velocity curve, and
 \code{deriv = 2} for the acceleration curve.}
 
-\item{deriv_model}{A logical to specify whether to derive velocity curve from
-the derivative function, or the differentiation of the distance curve. The
-argument \code{deriv_model} is set to \code{TRUE} for those functions which
-need velocity curve (such as \strong{code()} and \code{plot_curves()}), and
-\code{NULL} for functions which are explicitly working with the model
-returned fitted values such as \code{loo_validation()} and
-\code{plot_ppc()}.}
+\item{deriv_model}{A logical to specify whether to estimate velocity curve
+from the derivative function, or the differentiation of the distance curve.
+The argument \code{deriv_model} is set to \code{TRUE} for those functions
+which need velocity curve such as \strong{growthparameters()} and
+\code{plot_curves()}, and \code{NULL} for functions which explicitly use
+the distance curve (i.e., fitted values) such as \code{loo_validation()}
+and \code{plot_ppc()}.}
 
-\item{summary}{A logical (default \code{TRUE}) indicating whether only the
-Estimate should be returned or Estimate along with SE and CI should be
-computed. Setting this option to \code{FALSE} will reduce the computation
-time but no SE or CI estimates will be available.}
+\item{summary}{A logical indicating whether only the estimate should be
+computed (\code{TRUE}, default), or estimate along with SE and CI should be
+returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
+increase the computation time.}
 
-\item{robust}{If \code{FALSE} (the default) the mean is used as the measure
-of central tendency and the standard deviation as the measure of
-variability. If \code{TRUE}, the median and the median absolute deviation
-(MAD) are applied instead. Ignored if summary is \code{FALSE}.}
+\item{robust}{A logical to specify the summarize options. If \code{FALSE}
+(the default) the mean is used as the measure of central tendency and the
+standard deviation as the measure of variability. If \code{TRUE}, the
+median and the median absolute deviation (MAD) are applied instead. Ignored
+if \code{summary} is \code{FALSE}.}
 
 \item{probs}{The percentiles to be computed by the \code{quantile}
 function. Only used if \code{summary} is \code{TRUE}.}
@@ -166,26 +162,27 @@ function. Only used if \code{summary} is \code{TRUE}.}
 \item{xrange}{An integer to set the predictor range (i.e., age) when
 executing the interpolation via \code{ipts}. The default \code{NULL} sets
 the individual specific predictor range whereas code \code{xrange = 1} sets
-same range for all individuals within the higher order grouping variable
+identical range for individuals within the same higher grouping variable
 (e.g., study). Code \code{xrange  = 2} sets the identical range across the
 entire sample. Lastly, a paired numeric values can be supplied e.g.,
-\code{xrange = c(6, 20)} to set the range between 6 and 20.}
+\code{xrange = c(6, 20)} to set the range within those values.}
 
 \item{xrange_search}{A vector of length two, or a character string
-\code{'range'} to set the range of \code{x} variable within which growth
-parameters are searched. This is useful when there is more than one peak
-and user wants to summarize peak within a given range of the \code{x}
-variable. Default \code{xrange_search = NULL}.}
+\code{'range'} to set the range of predictor variable (\code{x} ) within
+which growth parameters are searched. This is useful when there is more
+than one peak and user wants to summarize peak within a given range of the
+\code{x} variable. Default \code{xrange_search = NULL}.}
 
-\item{parms_eval}{A logical (default \code{FALSE}) to specify whether or not
-to get growth parameters on the fly.}
+\item{parms_eval}{A logical to specify whether or not to get growth
+parameters on the fly. This is for internal use only and mainly needed for
+compatibility across internal functions.}
 
 \item{parms_method}{A character to specify the method used to when evaluating
 \code{parms_eval}. The default is \code{getPeak} which uses the
 \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The alternative
 option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}} function
-function from the \code{pracma} package. Note that the argument
-\code{parms_method} is currently ignored.}
+function from the \code{pracma} package. This is for internal use only and
+mainly needed for compatibility across internal functions.}
 
 \item{idata_method}{A character string to indicate the interpolation method.
 The number of of interpolation points is set up the \code{ipts} argument.
@@ -211,7 +208,7 @@ indicate whether to print information collected during setting up the
 object(s).}
 
 \item{fullframe}{A logical to indicate whether to return \code{fullframe}
-object in which \code{newdata} is bind to the summary estimates Note that
+object in which \code{newdata} is bind to the summary estimates. Note that
 \code{fullframe} can not be combined with \code{summary = FALSE}.
 Furthermore, \code{fullframe} can only be used when \code{idata_method =
   'm2'}. A particular use case is when fitting \code{univariate_by} model.
@@ -220,21 +217,22 @@ The \code{fullframe} is mainly for internal use only.}
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are
 \code{factor.dummy}, \code{factor.name}, and \code{factor.level}. The
-\code{factor.dummy} is a vector of character strings that will be converted
-to a factor variable, and \code{factor.name} is a single character string
-that is used to name the newly created factor variable. The
-\code{factor.level} is used to name the levels of newly created factor.
+\code{factor.dummy} is a vector of character strings that need to be
+converted to a factor variable whereas the \code{factor.name} is a single
+character string that is used to name the newly created factor variable.
+The \code{factor.level} is used to name the levels of newly created factor.
 When \code{factor.name} is \code{NULL}, then the factor name is internally
-set as \code{factor.var}. If \code{factor.level} is \code{NULL}, then
-names of factor levels are take from the \code{factor.dummy} i.e.,
-the factor levels are assigned same name as \code{factor.dummy}. Note that
-when \code{factor.level} is not \code{NULL}, its length must be same as
-the length of the \code{factor.dummy}.}
+set as \code{'factor.var'}. If \code{factor.level} is \code{NULL}, then
+names of factor levels are take from the \code{factor.dummy} i.e., the
+factor levels are assigned same name as \code{factor.dummy}. Note that when
+\code{factor.level} is not \code{NULL}, its length must be same as the
+length of the \code{factor.dummy}.}
 
 \item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. This is for
-internal use only during the testing of the functions and therefore should
-not be used by users routinely because results might be unstable.}
+internal purposes only and mainly used during the testing of the functions
+and therefore should not be used by users as it might lead to unreliable
+estimates.}
 
 \item{clearenvfuns}{A logical to indicate whether to clear the exposed
 function from the environment (\code{TRUE}) or not (\code{FALSE}). If
@@ -245,7 +243,7 @@ is \code{FALSE}.}
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.
 Note that since most of post processing functions are based on \pkg{brms},
-the elements needed for evaluation should be in the \code{.GlobalEnv}.
+the functions needed for evaluation should be in the \code{.GlobalEnv}.
 Therefore, it is strongly recommended to set \code{ envir = globalenv()}
 (or \code{envir = .GlobalEnv}). This is particularly true for the
 derivatives such as velocity curve.}
@@ -283,9 +281,9 @@ other words, user can specify all the options available in the
 
 # Fit Bayesian SITAR model 
 
-# To avoid fitting the model which takes time, the model  
-# fit has already been saved as 'berkeley_mfit.rda' file.
-# See examples section of the main function for details on the model fit.
+# To avoid mode estimation which takes time, a model fitted to the 
+# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
+# on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
 
 model <- berkeley_mfit
 
