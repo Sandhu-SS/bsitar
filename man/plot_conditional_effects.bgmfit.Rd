@@ -270,8 +270,9 @@ which are available in the \code{\link[brms:conditional_effects.brmsfit]{brms::c
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, a model fitted to the 
-# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
-# on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
+# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. 
+# Details on 'berkeley_mdata' and 'berkeley_mfit' are provided in the 
+# 'bsitar' function.
 
 model <- berkeley_mfit
 

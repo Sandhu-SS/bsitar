@@ -1,73 +1,76 @@
 
 
-#' Optimize model
-#'
+#' @title Optimization of the SITAR model
+#' 
+#' @description Optimization is the process of selecting the best fitting SITAR
+#'   model that involves choosing optimum degrees of freedom for the natural
+#'   cubic-spline curve, and the appropriate transformations of the predictor
+#'   variable \code{x} and the response variable \code{y}.
+#' 
 #' @param model An object of class \code{bgmfit}.
 #'
 #' @param newdata An optional \code{data.frame} to be used when optimizing the
-#'  model. If \code{NULL} (default), the same same data used for original model
-#'  fit is used. Note that data-dependent default priors will not be updated
-#'  automatically.
+#'   model. If \code{NULL} (default), the data used for original model fit is re
+#'   used.
 #'
-#' @param optimize_df A vector of integers specifying the degree of freedom
-#'  (\code{df}) values to be updated. If \code{NULL} (default), the \code{df} is
-#'  taken from the original model. For \code{univariate-by-sungroup} and
-#'  \code{multivariate} models (see [bsitar::bsitar()] for details),
-#'  \code{optimize_df} can be a single integer (e.g., \code{optimize_df = 4}) or
-#'  a list (e.g., \code{optimize_df = list(4,5)}). For optimization over
-#'  different \code{df}, say for example \code{df} 4 and \code{df} 5 for
-#'  univariate model, the corresponding code is \code{optimize_df = list(4,5)}.
-#'  For a multivariate model fit to two outcomes with different \code{df}, the
-#'  optimization over \code{df} 4 and \code{df} 5 for the first sub model, and
-#'  \code{df} 5 and \code{df} 6 for the second
-#'  sub model, the corresponding \code{optimize_df} code is \code{optimize_df =
-#'  list(list(4,5), list(5,6))} i.e, a list of lists.
+#' @param optimize_df A list of integers specifying the degree of freedom
+#'   (\code{df}) values to be optimized. If \code{NULL} (default), the \code{df}
+#'   is taken from the original model. For optimization over different
+#'   \code{df}, say for example \code{df} 4 and \code{df} 5, the corresponding
+#'   code is \code{optimize_df = list(4,5)}. For \code{univariate_by} and
+#'   \code{multivariate} models, \code{optimize_df} can be a single integer
+#'   (e.g., \code{optimize_df = 4}) or a list (e.g., \code{optimize_df =
+#'   list(4,5)}), or a a list of lists. As an example, consider optimization
+#'   over \code{df} 4 and \code{df} 5 for the first sub model, and \code{df} 5
+#'   and \code{df} 6 for the second sub model, the corresponding code is
+#'   \code{optimize_df = list(list(4,5), list(5,6))}.
 #'
-#' @param optimize_x A vector specifying the transformations of predictor
-#'  variable (i.e., \code{xvar} which is typically \code{age}). The option are
-#'  \code{NULL}, \code{log}, \code{sqrt}, and their combinations. Note that user
-#'  need not to enclose these options in a single or double quotes as they are
-#'  take care of internally. The default setting is to explore all possible
-#'  combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to the
-#'  \code{optimize_df}, user can specify different \code{optimize_x} for
-#'  \code{univariate-by-sungroup} and \code{multivariate} sub models.
+#' @param optimize_x A vector specifying the transformations for the predictor
+#'   variable (i.e., \code{x}). The options available are \code{NULL},
+#'   \code{'log'}, \code{'sqrt'}, or their combinations. Note that user need not
+#'   to enclose these options in a single or double quotes as they are take care
+#'   of internally. The default setting is to explore all possible combination
+#'   i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to the
+#'   \code{optimize_df}, user can specify different \code{optimize_x} for
+#'   \code{univariate_by} and \code{multivariate} sub models.
 #'
-#' @param optimize_y A vector specifying the transformations of the response
-#'  variable (i.e., \code{yvar} which is typically repeated height
-#'  measurements). The approach and options available for \code{optimize_y} are
-#'  identical to those described above for the \code{optimize_x}.
+#' @param optimize_y A vector specifying the transformations of the the response
+#'   variable (i.e., \code{y}). The approach and options available for
+#'   \code{optimize_y} are same as described above for the \code{optimize_x}.
 #'
 #' @param exclude_default_funs A logical to indicate whether transformations for
-#'  (\code{xvar} and \code{yvar}) used in the original model fit should be
-#'  excluded. If \code{TRUE} (default), the \code{xvar} and \code{yvar}
-#'  transformations specified for the original model fit are excluded from the
-#'  \code{optimize_x} and \code{optimize_y}. From example, if original model is
-#'  fit with \code{xvar = log} and \code{yvar = NULL}, then \code{optimize_x} is
-#'  translated into \code{optimize_x = list(NULL, sqrt)} and \code{optimize_y}
-#'  as \code{optimize_y = list(log, sqrt)}.
+#'   (\code{x} and \code{y}) variables used in the original model fit should be
+#'   excluded. If \code{TRUE} (default), the transformations specified for the
+#'   \code{x} and \code{y} variables in the original model fit are excluded from
+#'   the \code{optimize_x} and \code{optimize_y}. From example, if original
+#'   model is fit with \code{xvar = log} and \code{yvar = NULL}, then
+#'   \code{optimize_x} is translated into \code{optimize_x = list(NULL, sqrt)},
+#'   and similarly \code{optimize_y} is reset as \code{optimize_y = list(log,
+#'   sqrt)}.
 #'
-#' @param add_fit_criteria An optional (default \code{NULL}) indicator to add fit
-#'  criteria to returned model fit. Options are \code{loo} and \code{waic}. 
-#'  Please see [brms::add_criterion()] for details.
+#' @param add_fit_criteria An optional argument (default \code{NULL}) to
+#'   indicate whether to add fit criteria to the returned model fit. Options
+#'   available are \code{'loo'} and \code{'waic'}. Please see
+#'   [brms::add_criterion()] for details.
 #'
-#' @param add_bayes_R An optional (default \code{NULL}) to add Bayesian R
-#'  square. To estimate \code{bayes_R2}, please use 
-#'  \code{add_bayes_R = bayes_R2}
+#' @param add_bayes_R An optional argument (default \code{NULL}) to indicate
+#'   whether to add Bayesian R square to the returned model fit. To estimate and
+#'   add \code{bayes_R2} to the model fit, the argument \code{add_bayes_R} is
+#'   set as \code{add_bayes_R = 'bayes_R2'}.
 #'
 #' @param byresp A logical (default \code{FALSE}) to indicate if response wise
-#'  fit criteria to be calculated. This argument is evaluated only for the
-#'  \code{multivariate} model for which user can select whether to get joint
-#'  calculation of point wise log likelihood or response specific. For,
-#'  \code{univariate-by-subgroup} model, the only option available is to
-#'  calculate separate point wise log likelihood for each sub-model.
+#'   fit criteria to be calculated. This argument is evaluated only for the
+#'   \code{multivariate} model in which user can select whether to get joint
+#'   calculation of point wise log likelihood (\code{byresp = FALSE}) or
+#'   response specific (\code{byresp = TRUE}). For, \code{univariate_by} model,
+#'   the only option available is to calculate separate point wise log
+#'   likelihood for each sub-model, i.e., \code{byresp = TRUE}.
 #'
 #' @param digits An integer to set the number of decimal places.
 #'
-#' @param cores The number of cores to used in processing (default \code{1}).
-#' This passed to the [brms::add_criterion()].
-#' 
-#' @param verbose A logical (default \code{FALSE}) to indicate whether to print
-#' information.
+#' @param cores The number of cores to used in parallel processing (default
+#'   \code{1}). The argument \code{cores} is passed to the
+#'   [brms::add_criterion()].
 #'
 #' @param ... Other arguments passed to \code{\link{update_model}}.
 #' 
@@ -88,12 +91,6 @@
 #'
 #' @examples
 #' 
-#' # Fit Bayesian SITAR model 
-#' 
-#' # To avoid fitting the model which takes time, the model  
-#' # fit has already been saved as 'berkeley_mfit.rda' file.
-#' # See examples section of the main function for details on the model fit.
-#' 
 #' model <- berkeley_mfit
 #' 
 #' \donttest{
@@ -101,22 +98,21 @@
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, a model fitted to the 
-#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
-#' # on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
+#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. 
+#' # Details on 'berkeley_mdata' and 'berkeley_mfit' are provided in the 
+#' # 'bsitar' function.
 #' 
 #' model <- berkeley_mfit
 #' 
-#' # Below example shows optimization of the degree of freedom (df). 
-#' # Note that in case degree of freedom is same as the original model, and both 
-#' # optimize_x and optimize_y NULL (i.e., nothing to optimize), then original  
-#' # model is returned without evaluating any other argument. Since nothing is 
-#' # set to  be optimized in the below example, the original model is returned.  
+#' # Below example shows dummy call to optimization to save time. 
+#' # Note that in case degree of freedom and both  optimize_x and optimize_y are
+#' # NULL (i.e., nothing to optimize), the original model object is returned.   
 #' # To explicitly get this information whether model is being optimized or not, 
 #' # user can set verbose = TRUE. The verbose = TRUE also useful in getting the
 #' # information regarding what all arguments have been changed as compared to
 #' # the original model.
 #' 
-#' model2 <- optimize_model(model, optimize_df = 4, 
+#' model2 <- optimize_model(model, optimize_df = NULL, 
 #'   optimize_x = NULL, 
 #'   optimize_y = NULL,
 #'   verbose = TRUE)

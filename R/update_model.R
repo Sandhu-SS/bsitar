@@ -3,30 +3,30 @@
 
 #' Update model
 #'
-#' @description The \strong{update_model()} re fits the model of class
-#'   \code{bgmfit} by user specified new updated arguments.
+#' @description The \strong{update_model()} is a wrapper around the
+#'   \code{update()} function in the \pkg{brms} package which refits model as
+#'   per the updated arguments specified by the user.
 #' 
-#' @details This is an adapted version of the \strong{update()} function from  
-#' available the the\pkg{brms} package.
+#' @details This is an adapted version of the \strong{update()} function from
+#'   available the the\pkg{brms} package.
 #' 
 #' @param model An object of class \code{bgmfit}.
 #'
 #' @param newdata An optional \code{data.frame} to be used when updating the
-#'   model. If \code{NULL} (default), the same data used in the original model
-#'   fit is evaluated. Note that data-dependent default priors will not be 
-#'   updated automatically.
+#'   model. If \code{NULL} (default), the data used in the original model fit is
+#'   re used. Note that data-dependent default priors are not updated
+#'   automatically.
 #'
 #' @param recompile A logical to indicate whether the Stan model should be
-#'   recompiled. When \code{NULL} (the default), \code{bsitar::update_model()} 
-#'   tries to figure out internally, if recompilation is necessary. Setting it 
-#'   to \code{FALSE} will cause all Stan code changing arguments to be ignored.
+#'   recompiled. When \code{NULL} (default), \strong{update_model()} tries to
+#'   figure out internally whether recompilation is required or not. Setting
+#'   \code{recompile} to \code{FALSE} will ignore Stan code changing arguments.
 #'   
 #' @inherit growthparameters.bgmfit params
 #'
 #' @param ... Other arguments passed to \code{\link{brms}}.
 #'
-#' @return An updated model of class \code{brmsfit}, that contains the
-#'   posterior draws and other useful information about the model.
+#' @return An updated object of class \code{brmsfit}.
 #'   
 #' @export update_model.bgmfit
 #' @export
@@ -40,8 +40,9 @@
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, a model fitted to the 
-#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
-#' # on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
+#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. 
+#' # Details on 'berkeley_mdata' and 'berkeley_mfit' are provided in the 
+#' # 'bsitar' function.
 #' 
 #' model <- berkeley_mfit
 #' 

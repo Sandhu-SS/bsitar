@@ -181,7 +181,7 @@ individual specific growth curves.}
 \item{deriv_model}{A logical to specify whether to estimate velocity curve
 from the derivative function, or the differentiation of the distance curve.
 The argument \code{deriv_model} is set to \code{TRUE} for those functions
-which need velocity curve such as \strong{growthparameters()} and
+which need velocity curve such as \code{growthparameters()} and
 \code{plot_curves()}, and \code{NULL} for functions which explicitly use
 the distance curve (i.e., fitted values) such as \code{loo_validation()}
 and \code{plot_ppc()}.}
@@ -512,8 +512,9 @@ the difference between fitted and predicted values.
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, a model fitted to the 
-# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. Details
-# on 'berkeley_mdata' and 'berkeley_mfit' are provided in 'bsitar' function.
+# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. 
+# Details on 'berkeley_mdata' and 'berkeley_mfit' are provided in the 
+# 'bsitar' function.
 
 model <- berkeley_mfit
 
