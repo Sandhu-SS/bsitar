@@ -26,28 +26,25 @@
 #'
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @param resp A character string (default \code{NULL}) to specify response
-#'   variable when processing posterior draws for the univariate-by-subgroup and
-#'   multivariate models (see [bsitar::bsitar()] for details on fitting
-#'   univariate-by-subgroup and multivariate models).
-#'   
-#' @param ndraws Positive integer indicating the number of posterior draws to be
-#'   used in estimation. If \code{NULL} (default), all draws are used.
-#'   
-#' @param draw_ids An integer indicating the specific posterior draw(s) 
-#' to be used in estimation (default \code{NULL}).
-#' 
 #' @param newdata An optional data frame to be used in estimation. If
 #'   \code{NULL} (default), the \code{newdata} is retrieved from the
 #'   \code{model}.
+#' 
+#' @param resp A character string (default \code{NULL}) to specify response
+#'   variable when processing posterior draws for the \code{univariate_by} and
+#'   \code{multivariate} models. See [bsitar::bsitar()] for details on
+#'   \code{univariate_by} and \code{multivariate} models
+#'   
+#' @param ndraws A positive integer indicating the number of posterior draws to
+#'   be used in estimation. If \code{NULL} (default), all draws are used.
+#'   
+#' @param draw_ids An integer indicating the specific posterior draw(s) 
+#' to be used in estimation (default \code{NULL}).
 #'   
 #' @param summary A logical indicating whether only the estimate should be
 #'   computed (\code{TRUE}, default), or estimate along with SE and CI should be
 #'   returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
 #'   increase the computation time.
-#'   
-#' @param digits An integer (default \code{2}) to set the decimal argument for
-#'   the [base::round()] function.
 #'
 #' @param robust A logical to specify the summarize options. If \code{FALSE}
 #'   (the default) the mean is used as the measure of central tendency and the
@@ -166,6 +163,9 @@
 #'   which growth parameters are searched. This is useful when there is more
 #'   than one peak and user wants to summarize peak within a given range of the
 #'   \code{x} variable. Default \code{xrange_search = NULL}.
+#'   
+#' @param digits An integer (default \code{2}) to set the decimal argument for
+#'   the [base::round()] function.
 #' 
 #' @param seed An integer (default \code{123}) that is passed to the estimation
 #'   method.
@@ -316,12 +316,11 @@
 #' }
 #' 
 growthparameters.bgmfit <- function(model,
+                               newdata = NULL,
                                resp = NULL,
                                ndraws = NULL,
                                draw_ids = NULL,
-                               newdata = NULL,
                                summary = TRUE,
-                               digits = 2,
                                robust = FALSE,
                                re_formula = NA,
                                peak = TRUE,
@@ -342,6 +341,7 @@ growthparameters.bgmfit <- function(model,
                                conf = 0.95,
                                xrange = NULL,
                                xrange_search = NULL,
+                               digits = 2,
                                seed = 123,
                                future = FALSE,
                                future_session = 'multisession',
@@ -371,7 +371,6 @@ growthparameters.bgmfit <- function(model,
   if (is.null(idata_method)) {
     idata_method <- 'm2'
   }
-  
   
   
   # Initiate non formalArgs()

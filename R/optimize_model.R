@@ -6,12 +6,6 @@
 #'   model that involves choosing optimum degrees of freedom for the natural
 #'   cubic-spline curve, and the appropriate transformations of the predictor
 #'   variable \code{x} and the response variable \code{y}.
-#' 
-#' @param model An object of class \code{bgmfit}.
-#'
-#' @param newdata An optional \code{data.frame} to be used when optimizing the
-#'   model. If \code{NULL} (default), the data used for original model fit is re
-#'   used.
 #'
 #' @param optimize_df A list of integers specifying the degree of freedom
 #'   (\code{df}) values to be optimized. If \code{NULL} (default), the \code{df}
@@ -65,8 +59,6 @@
 #'   response specific (\code{byresp = TRUE}). For, \code{univariate_by} model,
 #'   the only option available is to calculate separate point wise log
 #'   likelihood for each sub-model, i.e., \code{byresp = TRUE}.
-#'
-#' @param digits An integer to set the number of decimal places.
 #'
 #' @param cores The number of cores to used in parallel processing (default
 #'   \code{1}). The argument \code{cores} is passed to the

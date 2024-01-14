@@ -19,7 +19,6 @@
   model_names = NULL,
   ndraws = NULL,
   cores = 1,
-  deriv = NULL,
   deriv_model = NULL,
   verbose = FALSE,
   dummy_to_factor = NULL,
@@ -73,8 +72,8 @@ passed to \code{\link[loo:loo_moment_match]{loo::loo_moment_match()}}.}
 derived from deparsing the call. Otherwise will use the passed
 values as model names.}
 
-\item{ndraws}{Positive integer indicating the number of posterior draws to be
-used in estimation. If \code{NULL} (default), all draws are used.}
+\item{ndraws}{A positive integer indicating the number of posterior draws to
+be used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations (if \code{future = TRUE}). On non-Windows systems this
@@ -83,11 +82,6 @@ argument can be set globally via the mc.cores option. For the default
 the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the maximum
 number of cores avaialble minus one, i.e., \code{future::availableCores() -
   1}.}
-
-\item{deriv}{An integer to indicate whether to estimate distance curve or
-derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
-for the distance curve, \code{deriv = 1} for velocity curve, and
-\code{deriv = 2} for the acceleration curve.}
 
 \item{deriv_model}{A logical to specify whether to estimate velocity curve
 from the derivative function, or the differentiation of the distance curve.

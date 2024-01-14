@@ -106,12 +106,12 @@ and hence the width of the \code{bands}. See \code{\link[=growthparameters]{grow
 for further details.}
 
 \item{resp}{A character string (default \code{NULL}) to specify response
-variable when processing posterior draws for the univariate-by-subgroup and
-multivariate models (see \code{\link[=bsitar]{bsitar()}} for details on fitting
-univariate-by-subgroup and multivariate models).}
+variable when processing posterior draws for the \code{univariate_by} and
+\code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
+\code{univariate_by} and \code{multivariate} models}
 
-\item{ndraws}{Positive integer indicating the number of posterior draws to be
-used in estimation. If \code{NULL} (default), all draws are used.}
+\item{ndraws}{A positive integer indicating the number of posterior draws to
+be used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{draw_ids}{An integer indicating the specific posterior draw(s)
 to be used in estimation (default \code{NULL}).}

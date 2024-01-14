@@ -7,12 +7,11 @@
 \usage{
 \method{growthparameters}{bgmfit}(
   model,
+  newdata = NULL,
   resp = NULL,
   ndraws = NULL,
   draw_ids = NULL,
-  newdata = NULL,
   summary = TRUE,
-  digits = 2,
   robust = FALSE,
   re_formula = NA,
   peak = TRUE,
@@ -33,6 +32,7 @@
   conf = 0.95,
   xrange = NULL,
   xrange_search = NULL,
+  digits = 2,
   seed = 123,
   future = FALSE,
   future_session = "multisession",
@@ -54,28 +54,25 @@ growthparameters(model, ...)
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
 
-\item{resp}{A character string (default \code{NULL}) to specify response
-variable when processing posterior draws for the univariate-by-subgroup and
-multivariate models (see \code{\link[=bsitar]{bsitar()}} for details on fitting
-univariate-by-subgroup and multivariate models).}
-
-\item{ndraws}{Positive integer indicating the number of posterior draws to be
-used in estimation. If \code{NULL} (default), all draws are used.}
-
-\item{draw_ids}{An integer indicating the specific posterior draw(s)
-to be used in estimation (default \code{NULL}).}
-
 \item{newdata}{An optional data frame to be used in estimation. If
 \code{NULL} (default), the \code{newdata} is retrieved from the
 \code{model}.}
+
+\item{resp}{A character string (default \code{NULL}) to specify response
+variable when processing posterior draws for the \code{univariate_by} and
+\code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
+\code{univariate_by} and \code{multivariate} models}
+
+\item{ndraws}{A positive integer indicating the number of posterior draws to
+be used in estimation. If \code{NULL} (default), all draws are used.}
+
+\item{draw_ids}{An integer indicating the specific posterior draw(s)
+to be used in estimation (default \code{NULL}).}
 
 \item{summary}{A logical indicating whether only the estimate should be
 computed (\code{TRUE}, default), or estimate along with SE and CI should be
 returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
 increase the computation time.}
-
-\item{digits}{An integer (default \code{2}) to set the decimal argument for
-the \code{\link[base:Round]{base::round()}} function.}
 
 \item{robust}{A logical to specify the summarize options. If \code{FALSE}
 (the default) the mean is used as the measure of central tendency and the
@@ -218,6 +215,9 @@ entire sample. Lastly, a paired numeric values can be supplied e.g.,
 which growth parameters are searched. This is useful when there is more
 than one peak and user wants to summarize peak within a given range of the
 \code{x} variable. Default \code{xrange_search = NULL}.}
+
+\item{digits}{An integer (default \code{2}) to set the decimal argument for
+the \code{\link[base:Round]{base::round()}} function.}
 
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method.}

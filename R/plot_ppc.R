@@ -43,7 +43,6 @@ plot_ppc.bgmfit <-
            x = NULL,
            newdata = NULL,
            resp = NULL,
-           deriv = 0,
            verbose = FALSE,
            deriv_model = NULL,
            dummy_to_factor = NULL, 
@@ -64,9 +63,6 @@ plot_ppc.bgmfit <-
       deriv_model <- TRUE
     }
     
-    if(is.null(deriv)) {
-      deriv <- 0
-    }
   
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
@@ -75,7 +71,7 @@ plot_ppc.bgmfit <-
                                            verbose = verbose)
     
     full.args$model <- model
-    
+    full.args$deriv <- deriv <- 0
     
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)

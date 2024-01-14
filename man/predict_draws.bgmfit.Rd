@@ -48,12 +48,12 @@ predict_draws(model, ...)
 \code{model}.}
 
 \item{resp}{A character string (default \code{NULL}) to specify response
-variable when processing posterior draws for the univariate-by-subgroup and
-multivariate models (see \code{\link[=bsitar]{bsitar()}} for details on fitting
-univariate-by-subgroup and multivariate models).}
+variable when processing posterior draws for the \code{univariate_by} and
+\code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
+\code{univariate_by} and \code{multivariate} models}
 
-\item{ndraws}{Positive integer indicating the number of posterior draws to be
-used in estimation. If \code{NULL} (default), all draws are used.}
+\item{ndraws}{A positive integer indicating the number of posterior draws to
+be used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{re_formula}{Option to indicate whether or not to include the
 individual/group-level effects in the estimation. When \code{NA} (default),
@@ -132,10 +132,9 @@ predictor. It is important to note that these interpolations do not alter
 the range of predictor when calculating population average and/or the
 individual specific growth curves.}
 
-\item{deriv}{An integer to indicate whether to estimate distance curve or
-derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
-for the distance curve, \code{deriv = 1} for velocity curve, and
-\code{deriv = 2} for the acceleration curve.}
+\item{deriv}{An integer to indicate whether to estimate distance curve or its
+derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
+the distance curve whereas \code{deriv = 1} for the velocity curve.}
 
 \item{deriv_model}{A logical to specify whether to estimate velocity curve
 from the derivative function, or the differentiation of the distance curve.

@@ -15,32 +15,10 @@
 #'   ([brms::conditional_effects] and \strong{plot_conditional_effects()} work
 #'   in the same manner. In other words, user can specify all the arguments
 #'   which are available in the [brms::conditional_effects()].
-#'   
-#' @param model An object of class \code{bgmfit}.
-#'
-#' @param resp A character string to specify response variable when processing
-#'   posterior draws for the univariate-by-subgroup and multivariate models (see
-#'   [bsitar::bsitar()] for details on fitting univariate-by-subgroup and
-#'   multivariate models). For univariate model, \code{resp = NULL} (default).
-#'   Note that argument \code{resp} must be specified for the
-#'   univariate-by-subgroup and multivariate models otherwise it will result in
-#'   an error. On the other hand, argument \code{resp} must be \code{NULL} for
-#'   the univariate model. The default setting is \code{resp = NULL} assuming a
-#'   univariate model.
-#'
-#' @param deriv An integer to indicate whether to estimate distance curve or
-#'   derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
-#'   for the distance curve, \code{deriv = 1} for velocity curve, and
-#'   \code{deriv = 2} for the acceleration curve.
-#'
-#' @param deriv_model A logical (default \code{TRUE}) to indicate whether to
-#'   estimate model based derivatives or from the differentiation of the
-#'   distance curve. When model is fit with \code{decomp = 'QR'}, the only
-#'   approach available to estimate derivatives by the  differentiation of the
-#'   distance curve.
 #' 
 #' @inherit brms::conditional_effects params description
 #' @inherit growthparameters.bgmfit params
+#' @inherit plot_curves.bgmfit params
 #' @inherit fitted_draws.bgmfit params
 #'
 #' @param ... Additional arguments passed to the [brms::conditional_effects()]
@@ -130,6 +108,8 @@ plot_conditional_effects.bgmfit <-
       idata_method <- 'm2'
     }
     
+    
+    
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                     fargs = formals(), 
                                     dargs = list(...), 
@@ -137,6 +117,7 @@ plot_conditional_effects.bgmfit <-
     
     full.args$model <- model
     full.args$deriv_model <- deriv_model
+
     
     # if(is.null(deriv_model)) {
     #   full.args$deriv_model <- TRUE

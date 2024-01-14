@@ -27,9 +27,9 @@ optimize_model(model, ...)
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
 
-\item{newdata}{An optional \code{data.frame} to be used when optimizing the
-model. If \code{NULL} (default), the data used for original model fit is re
-used.}
+\item{newdata}{An optional data frame to be used in estimation. If
+\code{NULL} (default), the \code{newdata} is retrieved from the
+\code{model}.}
 
 \item{optimize_df}{A list of integers specifying the degree of freedom
 (\code{df}) values to be optimized. If \code{NULL} (default), the \code{df}
@@ -84,7 +84,8 @@ response specific (\code{byresp = TRUE}). For, \code{univariate_by} model,
 the only option available is to calculate separate point wise log
 likelihood for each sub-model, i.e., \code{byresp = TRUE}.}
 
-\item{digits}{An integer to set the number of decimal places.}
+\item{digits}{An integer (default \code{2}) to set the decimal argument for
+the \code{\link[base:Round]{base::round()}} function.}
 
 \item{cores}{The number of cores to used in parallel processing (default
 \code{1}). The argument \code{cores} is passed to the

@@ -78,7 +78,6 @@ loo_validation.bgmfit <-
            model_names = NULL,
            ndraws = NULL,
            cores = 1,
-           deriv = NULL,
            deriv_model = NULL,
            verbose = FALSE,
            dummy_to_factor = NULL, 
@@ -103,10 +102,6 @@ loo_validation.bgmfit <-
       deriv_model <- TRUE
     }
     
-    if(is.null(deriv)) {
-      deriv <- 0
-    }
-    
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                     fargs = formals(), 
@@ -114,6 +109,7 @@ loo_validation.bgmfit <-
                                     verbose = verbose)
     
     full.args$model <- model
+    full.args$deriv <- deriv <- 0
     
     
     if(!is.null(model$xcall)) {

@@ -20,9 +20,12 @@
 #'   [brms::fitted.brmsfit()] and [fitted_draws()]) work in the same manner. In
 #'   other words, user can specify all the options available in the
 #'   [brms::fitted.brmsfit()].
+#'   
+#' @param deriv An integer to indicate whether to estimate distance curve or its
+#'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
+#'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
 #' 
 #' @inherit growthparameters.bgmfit params
-#' @inherit plot_conditional_effects.bgmfit params
 #' @inherit brms::fitted.brmsfit params
 #' 
 #' @param ... Additional arguments passed to the [brms::fitted.brmsfit()] 

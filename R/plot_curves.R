@@ -320,7 +320,8 @@ plot_curves.bgmfit <- function(model,
   if(is.null(envir)) {
     envir <- parent.frame()
   }
-
+  
+  
   # Move down NULL where setting the arguments
   
   if(system.file(package='ggplot2') == "") {

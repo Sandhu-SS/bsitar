@@ -29,7 +29,7 @@
 #'   for details.
 #' 
 #' @inherit growthparameters.bgmfit params
-#' @inherit plot_conditional_effects.bgmfit params
+#' @inherit fitted_draws.bgmfit params
 #' @inherit brms::predict.brmsfit params
 #' 
 #' @export predict_draws.bgmfit
@@ -111,6 +111,7 @@ predict_draws.bgmfit <-
     if (is.null(idata_method)) {
       idata_method <- 'm2'
     }
+    
     
     
     # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){

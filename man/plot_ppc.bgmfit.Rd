@@ -15,7 +15,6 @@
   x = NULL,
   newdata = NULL,
   resp = NULL,
-  deriv = 0,
   verbose = FALSE,
   deriv_model = NULL,
   dummy_to_factor = NULL,
@@ -36,8 +35,8 @@ of currently supported types. You may also use an invalid
 type (e.g. \code{type = "xyz"}) to get a list of supported
 types in the resulting error message.}
 
-\item{ndraws}{Positive integer indicating the number of posterior draws to be
-used in estimation. If \code{NULL} (default), all draws are used.}
+\item{ndraws}{A positive integer indicating the number of posterior draws to
+be used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{draw_ids}{An integer indicating the specific posterior draw(s)
 to be used in estimation (default \code{NULL}).}
@@ -60,14 +59,9 @@ and ignored otherwise.}
 \code{model}.}
 
 \item{resp}{A character string (default \code{NULL}) to specify response
-variable when processing posterior draws for the univariate-by-subgroup and
-multivariate models (see \code{\link[=bsitar]{bsitar()}} for details on fitting
-univariate-by-subgroup and multivariate models).}
-
-\item{deriv}{An integer to indicate whether to estimate distance curve or
-derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
-for the distance curve, \code{deriv = 1} for velocity curve, and
-\code{deriv = 2} for the acceleration curve.}
+variable when processing posterior draws for the \code{univariate_by} and
+\code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
+\code{univariate_by} and \code{multivariate} models}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the

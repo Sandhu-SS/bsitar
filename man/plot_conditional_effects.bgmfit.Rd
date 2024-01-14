@@ -138,8 +138,8 @@ measure of central tendency. If \code{FALSE} the mean is used instead.}
 \code{NULL} (default), the \code{newdata} is retrieved from the
 \code{model}.}
 
-\item{ndraws}{Positive integer indicating the number of posterior draws to be
-used in estimation. If \code{NULL} (default), all draws are used.}
+\item{ndraws}{A positive integer indicating the number of posterior draws to
+be used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{levels_id}{An optional argument to specify the \code{ids} for
 hierarchical model (default \code{NULL}). It is used only when model is
@@ -152,15 +152,10 @@ is nested within the \code{study} Note that it is not guaranteed that the
 \code{levels_id} is sorted correctly, and therefore it is better to set it
 manually when fitting a model with three or more levels of hierarchy.}
 
-\item{resp}{A character string to specify response variable when processing
-posterior draws for the univariate-by-subgroup and multivariate models (see
-\code{\link[=bsitar]{bsitar()}} for details on fitting univariate-by-subgroup and
-multivariate models). For univariate model, \code{resp = NULL} (default).
-Note that argument \code{resp} must be specified for the
-univariate-by-subgroup and multivariate models otherwise it will result in
-an error. On the other hand, argument \code{resp} must be \code{NULL} for
-the univariate model. The default setting is \code{resp = NULL} assuming a
-univariate model.}
+\item{resp}{A character string (default \code{NULL}) to specify response
+variable when processing posterior draws for the \code{univariate_by} and
+\code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
+\code{univariate_by} and \code{multivariate} models}
 
 \item{ipts}{An integer to set the length of the predictor variable to get a
 smooth velocity curve. The \code{NULL} will return original values whereas
@@ -169,16 +164,17 @@ predictor. It is important to note that these interpolations do not alter
 the range of predictor when calculating population average and/or the
 individual specific growth curves.}
 
-\item{deriv}{An integer to indicate whether to estimate distance curve or
-derivatives (velocity and acceleration curves). Default \code{deriv = 0} is
-for the distance curve, \code{deriv = 1} for velocity curve, and
-\code{deriv = 2} for the acceleration curve.}
+\item{deriv}{An integer to indicate whether to estimate distance curve or its
+derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
+the distance curve whereas \code{deriv = 1} for the velocity curve.}
 
-\item{deriv_model}{A logical (default \code{TRUE}) to indicate whether to
-estimate model based derivatives or from the differentiation of the
-distance curve. When model is fit with \code{decomp = 'QR'}, the only
-approach available to estimate derivatives by the  differentiation of the
-distance curve.}
+\item{deriv_model}{A logical to specify whether to estimate velocity curve
+from the derivative function, or the differentiation of the distance curve.
+The argument \code{deriv_model} is set to \code{TRUE} for those functions
+which need velocity curve such as \code{growthparameters()} and
+\code{plot_curves()}, and \code{NULL} for functions which explicitly use
+the distance curve (i.e., fitted values) such as \code{loo_validation()}
+and \code{plot_ppc()}.}
 
 \item{idata_method}{A character string to indicate the interpolation method.
 The number of of interpolation points is set up the \code{ipts} argument.
