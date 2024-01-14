@@ -3,7 +3,7 @@
 \name{optimize_model.bgmfit}
 \alias{optimize_model.bgmfit}
 \alias{optimize_model}
-\title{Optimization of the SITAR model}
+\title{Optimize the SITAR model}
 \usage{
 \method{optimize_model}{bgmfit}(
   model,

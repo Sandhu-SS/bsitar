@@ -1,6 +1,6 @@
 
 
-#' @title Optimization of the SITAR model
+#' @title Optimize the SITAR model
 #' 
 #' @description Optimization is the process of selecting the best fitting SITAR
 #'   model that involves choosing optimum degrees of freedom for the natural
