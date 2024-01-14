@@ -865,7 +865,7 @@ optimize_model.bgmfit <- function(model,
             "original model fit. Therefore, returning the original model fit")
         cat("\n")
       }
-      return(model)
+      fit <- NULL
     } else if(!all_same_args) {
       user_call   <- calling
       user_call   <- rlang::call_match(user_call, bsitar::bsitar)
@@ -880,96 +880,102 @@ optimize_model.bgmfit <- function(model,
     }
     
     
-    
-    fit$model_info$optimization_info <- optimization_info
-    fit$model_info$optimize_df <- df
-    fit$model_info$optimize_x <- xfun_print
-    fit$model_info$optimize_y <- yfun_print
-    
-    # Add fit_criteria and bares_R to the fit
-    # Add summary data frames for criteria and R square
-    
-    # setresp to anything so that even multivariate will be response wise
-    # if desired, this behavious
-    # if(length(fit$model_info$ys) == 1) setresp <- NULL
-    # if(length(fit$model_info$ys) > 1) setresp <- 'TRUE'
-    
-    if (fit$model_info$multivariate) {
-      if (byresp) {
-        setresp <- 'TRUE'
-      } else if (!byresp) {
+    if(!is.null(fit)) {
+      fit$model_info$optimization_info <- optimization_info
+      fit$model_info$optimize_df <- df
+      fit$model_info$optimize_x <- xfun_print
+      fit$model_info$optimize_y <- yfun_print
+      
+      # Add fit_criteria and bares_R to the fit
+      # Add summary data frames for criteria and R square
+      
+      # setresp to anything so that even multivariate will be response wise
+      # if desired, this behavious
+      # if(length(fit$model_info$ys) == 1) setresp <- NULL
+      # if(length(fit$model_info$ys) > 1) setresp <- 'TRUE'
+      
+      if (fit$model_info$multivariate) {
+        if (byresp) {
+          setresp <- 'TRUE'
+        } else if (!byresp) {
+          setresp <- NULL
+        }
+      } else if (!fit$model_info$multivariate) {
         setresp <- NULL
       }
-    } else if (!fit$model_info$multivariate) {
-      setresp <- NULL
-    }
+      
+      if (!is.null(add_fit_criteria)) {
+        fit <- add_citeria_fun(
+          fit,
+          add_fit_criteria = add_fit_criteria,
+          add_bayes_R =  NULL,
+          resp = setresp,
+          digits = digits,
+          df = df,
+          xfun_print = xfun_print,
+          yfun_print = yfun_print
+        )
+      }
+      
+      if (!is.null(add_bayes_R)) {
+        fit <- add_citeria_fun(
+          fit,
+          add_fit_criteria = NULL,
+          add_bayes_R =  add_bayes_R,
+          resp = setresp,
+          digits = digits,
+          df = df,
+          xfun_print = xfun_print,
+          yfun_print = yfun_print
+        )
+      }
+    } # if(!is.null(fit)) {
     
-    if (!is.null(add_fit_criteria)) {
-      fit <- add_citeria_fun(
-        fit,
-        add_fit_criteria = add_fit_criteria,
-        add_bayes_R =  NULL,
-        resp = setresp,
-        digits = digits,
-        df = df,
-        xfun_print = xfun_print,
-        yfun_print = yfun_print
-      )
-    }
     
-    if (!is.null(add_bayes_R)) {
-      fit <- add_citeria_fun(
-        fit,
-        add_fit_criteria = NULL,
-        add_bayes_R =  add_bayes_R,
-        resp = setresp,
-        digits = digits,
-        df = df,
-        xfun_print = xfun_print,
-        yfun_print = yfun_print
-      )
-    }
     return(fit)
   }
   
   optimize_list <- lapply(1:nrow(optimize_df_x_y), function(.x)
     optimize_fun(.x, model))
   
-  loo_fit             <- combine_summaries(optimize_list, 'summary_loo')
-  loo_diagnostic_fit  <-
-    combine_summaries(optimize_list, 'diagnostic_loo')
-  waic_fit            <-
-    combine_summaries(optimize_list, 'summary_waic')
-  bayes_R2_fit        <-
-    combine_summaries(optimize_list, 'summary_bayes_R2')
-  
-  # Parameter column is not created earlier for the 'bayes_R2_fit'
-  if(!is.null(bayes_R2_fit)) {
-    bayes_R2_fit <- bayes_R2_fit %>% 
-      dplyr::mutate(Parameter = 'bayes_R2') %>% 
-      dplyr::relocate(df, xfun, yfun, Parameter)
-  }
-  
-  
-  attributes(optimize_list) <- NULL
-  
-  optimize_summary <- data.frame()
-  
-  if(exists('loo_fit')) optimize_summary <- optimize_summary %>% 
-    dplyr::bind_rows(., loo_fit)
-  
-  if(exists('loo_diagnostic_fit')) optimize_summary <- optimize_summary %>% 
-    dplyr::bind_rows(., loo_diagnostic_fit)
-  
-  if(exists('waic_fit')) optimize_summary <- optimize_summary %>% 
-    dplyr::bind_rows(., waic_fit)
-  
-  if(exists('bayes_R2_fit')) optimize_summary <- optimize_summary %>% 
-    dplyr::bind_rows(., bayes_R2_fit)
-  
-  out <- list(models = optimize_list, optimize_summary = optimize_summary)
-  
-  return(out)
+  if(!is.null(optimize_list[[1]])) {
+    loo_fit             <- combine_summaries(optimize_list, 'summary_loo')
+    loo_diagnostic_fit  <-
+      combine_summaries(optimize_list, 'diagnostic_loo')
+    waic_fit            <-
+      combine_summaries(optimize_list, 'summary_waic')
+    bayes_R2_fit        <-
+      combine_summaries(optimize_list, 'summary_bayes_R2')
+    
+    # Parameter column is not created earlier for the 'bayes_R2_fit'
+    if(!is.null(bayes_R2_fit)) {
+      bayes_R2_fit <- bayes_R2_fit %>% 
+        dplyr::mutate(Parameter = 'bayes_R2') %>% 
+        dplyr::relocate(df, xfun, yfun, Parameter)
+    }
+    
+    
+    attributes(optimize_list) <- NULL
+    
+    optimize_summary <- data.frame()
+    
+    if(exists('loo_fit')) optimize_summary <- optimize_summary %>% 
+      dplyr::bind_rows(., loo_fit)
+    
+    if(exists('loo_diagnostic_fit')) optimize_summary <- optimize_summary %>% 
+      dplyr::bind_rows(., loo_diagnostic_fit)
+    
+    if(exists('waic_fit')) optimize_summary <- optimize_summary %>% 
+      dplyr::bind_rows(., waic_fit)
+    
+    if(exists('bayes_R2_fit')) optimize_summary <- optimize_summary %>% 
+      dplyr::bind_rows(., bayes_R2_fit)
+    
+    out <- list(models = optimize_list, optimize_summary = optimize_summary)
+    
+    return(out)
+  } # if(!is.null(optimize_list[[1]])) {
+ 
 }
 
 

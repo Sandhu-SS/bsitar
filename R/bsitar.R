@@ -1955,10 +1955,12 @@ bsitar <- function(x,
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
-          if (is.function(eval(mcall[[i]]))) {
+          # suppressWarnings 14 01 2024
+          if (is.function(suppressWarnings(eval(mcall[[i]])))) {
             checks. <- deparse_0(mcall[[i]])
           } else {
-            checks. <- eval(mcall[[i]])
+            # suppressWarnings 14 01 2024
+            suppressWarnings(checks. <- eval(mcall[[i]]))
           }
         },
         error = function(e) {
@@ -1978,7 +1980,8 @@ bsitar <- function(x,
             if (is.list(checks.)) {
               if (is.symbol(mcall[[i]]))
                 mcall[[i]] <- deparse_0(mcall[[i]]) # for set_self_priors
-                mcall[[i]] <- eval(mcall[[i]])
+              # suppressWarnings 14 01 2024
+                suppressWarnings(mcall[[i]] <- eval(mcall[[i]]))
                 temp       <- str2lang(deparse_0((mcall[[i]])))
                 mcall[[i]] <- temp
             } else if (!is.list(checks.)) {
