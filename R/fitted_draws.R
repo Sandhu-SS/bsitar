@@ -118,7 +118,7 @@ fitted_draws.bgmfit <-
     
    
     
-    # This in plot_conditional_effects_calling if(!eval(full.args$deriv_model)){
+   
     plot_conditional_effects_calling <- FALSE
     syscalls1 <- sys.calls()[[1]]
     syscallsall <- paste(deparse(syscalls1), collapse = "\n")
@@ -128,10 +128,6 @@ fitted_draws.bgmfit <-
       }
     }
     
-    # Checks for newdata and arguments
-    # For plot_conditional_effects_calling, newdata is not evaluted
-    # For indirectcall i.e.,  model$xcall arguments are passed from the
-    # plot_curves() and growthparameters() functions
     
     indirectcall <- FALSE
     if(!plot_conditional_effects_calling) {
@@ -225,8 +221,6 @@ fitted_draws.bgmfit <-
         if(!eval(full.args$deriv_model)) {
           full.args$. <- .
           . <- do.call(mapderivqr, full.args)
-          # . <- mapderivqr(model, ., newdata = newdata, resp = resp, 
-          #                 deriv = deriv, probs = probs, robust = robust)
         } else {
           . <- .
         }
@@ -299,7 +293,6 @@ fitted_draws.bgmfit <-
         if(setfullframe) . <- cbind(., uvarbynewdata)
       }
     }
-    
     . 
   }
 

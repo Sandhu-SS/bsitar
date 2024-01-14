@@ -2574,7 +2574,6 @@ prepare_formula <- function(x,
 
     # lme
     enverr. <- parent.frame()
-    # err. <- FALSE
     assign('err.', FALSE, envir = enverr.)
     tryCatch(
       expr = {
@@ -2592,7 +2591,6 @@ prepare_formula <- function(x,
                     data = datalme)
       },
       error = function(e) {
-        # err. <<- TRUE
         assign('err.', TRUE, envir = enverr.)
       }
     )
@@ -2835,7 +2833,6 @@ prepare_formula <- function(x,
     
     # lme
     enverr. <- parent.frame()
-    # err. <- FALSE
     assign('err.', FALSE, envir = enverr.)
     tryCatch(
       expr = {
@@ -2853,7 +2850,6 @@ prepare_formula <- function(x,
                     data = datalme)
       },
       error = function(e) {
-        # err. <<- TRUE
         assign('err.', TRUE, envir = enverr.)
       }
     )

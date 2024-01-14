@@ -156,6 +156,7 @@ loo_validation.bgmfit <-
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe", "dummy_to_factor")
+    
     calling.args <- post_processing_args_sanitize(model = model,
                                                   xcall = match.call(),
                                                   resp = resp,
@@ -166,17 +167,11 @@ loo_validation.bgmfit <-
                                                   verbose = verbose)
     
     
-    # calling.args_names <- names(calling.args)
-    # names(calling.args) <- gsub("object", "x", calling.args_names)
 
     calling.args$x <- full.args$model
     calling.args$object <- NULL
     calling.args$model <- NULL
   
-    
-    # suppressWarnings({
-    #   . <- do.call(brms::loo , calling.args)
-    # })
     
     . <- brms::loo(model,
                    compare = compare,
@@ -231,6 +226,7 @@ loo_validation.bgmfit <-
     
     .
   }
+
 
 
 #' @rdname loo_validation.bgmfit

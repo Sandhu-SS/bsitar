@@ -445,8 +445,7 @@ growthparameters.bgmfit <- function(model,
   }
   
   
-  
-  #
+
   call_posterior_summary <- function(dat) {
     if (!robust) {
       . <- posterior::summarise_draws(dat,
@@ -500,7 +499,7 @@ growthparameters.bgmfit <- function(model,
               dplyr::filter(XXi %in% (ullimits[1]:ullimits[2]))
             } else {
             stop("argument xrange_search should be either 
-         'range' or vector of length 2")
+                 'range' or vector of length 2")
           }
       }
      
@@ -1139,7 +1138,6 @@ growthparameters.bgmfit <- function(model,
         
         arguments$summary <- summary_org
         
-        # moved here from below for avg_reffects to work with univariate_by
         if(!is.na(model$model_info$univariate_by)) {
           newdata <- newdata %>%
             dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
@@ -1462,12 +1460,13 @@ growthparameters.bgmfit <- function(model,
 } # end growthparameters
 
 
+
+
+
 #' @rdname growthparameters.bgmfit
 #' @export
 growthparameters <- function(model, ...) {
   UseMethod("growthparameters")
 }
-
-
 
 

@@ -101,8 +101,7 @@ expose_model_functions.bgmfit <- function(model,
                      paste0(SplineFun_name, "_", 
                             c("d0", 
                               "d1",
-                              "d2"))
-                     )
+                              "d2")))
   
   
   if(expose) {
@@ -147,7 +146,6 @@ expose_model_functions.bgmfit <- function(model,
       spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
       getfun_ <- spfun_collecti
       getfun_ <- eval(parse(text = getfun_), envir = envir)
-      # This below to change _d0 to 0 within the d2 d2 functions 
       assign(spfun_collecti_name, getfun_, envir = envir)
       Spl_funs[[paste0(spfun_collecti_name, "")]] <- getfun_
       if(grepl("_d", spfun_collecti_name_org)) {
@@ -170,7 +168,6 @@ expose_model_functions.bgmfit <- function(model,
       spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
       spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
       getfun_ <- spfun_collecti
-      # This below to change _d0 to 0 within the d2 d2 functions 
       getfun__ <- deparse(ept(getfun_))
       gsub_it <- '_d0'
       gsub_by <- "0"
@@ -188,13 +185,7 @@ expose_model_functions.bgmfit <- function(model,
   
   model$model_info[['namesexefuns']] <- SplineFun_name
   model$model_info[['exefuns']]      <- Spl_funs
-  
-  # If exposed from Stan, then replace with _pstrean funs
-  # if(expose) {
-  #   for (Spl_funsi in names(Spl_funs)) {
-  #     model$model_info[['exefuns']] [[Spl_funsi]] <- Spl_funs[[Spl_funsi]]
-  #   }
-  # }
+ 
   
   scode_include <- brms::stancode(model)
   model$bmodel <- scode_include
@@ -235,7 +226,6 @@ expose_model_functions.bgmfit <- function(model,
   
   if(returnobj) {
     model$model <- model$bmodel
-    # return(model)
     return(invisible(model))
   } else {
     return(invisible(NULL))

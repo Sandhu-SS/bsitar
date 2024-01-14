@@ -119,14 +119,6 @@ plot_conditional_effects.bgmfit <-
     full.args$deriv_model <- deriv_model
 
     
-    # if(is.null(deriv_model)) {
-    #   full.args$deriv_model <- TRUE
-    # }
-    # 
-    # if(is.null(ndraws)) {
-    #   full.args$ndraws <- brms::ndraws(model)
-    # }
-    
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
@@ -171,6 +163,7 @@ plot_conditional_effects.bgmfit <-
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe")
+    
     calling.args <- post_processing_args_sanitize(model = model,
                                                   xcall = match.call(),
                                                   resp = resp,
@@ -268,7 +261,6 @@ plot_conditional_effects.bgmfit <-
         }
       }
     } # if(setcleanup) {
-    
     .
   }
 

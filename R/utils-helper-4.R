@@ -351,8 +351,6 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
-  
-  
   # Depending on select_model, assign null values to all not part of the model
   for (set_randomsi_higher_levsli in c(letters[1:20])) {
     set_nlpar_what <- set_randomsi_higher_levsli
@@ -495,7 +493,6 @@ set_priors_initials <- function(a_prior_beta,
   
   # If group and sigma ids are same, then sigma_prior_cor NULL otherwise 
   # duplicate priors error
-  
   if(identical(sigma_group_arg$groupvar,
                group_arg$groupvar)) {
     sigma_prior_cor <- NULL
@@ -729,11 +726,7 @@ set_priors_initials <- function(a_prior_beta,
   else
     sncov <- NULL
   
-  
-  # if (!is.null(s_cov_prior_beta))
-  #   sncov <- length(scovcoefnames)
-  # else
-  #   sncov <- NULL
+ 
   
   if (!is.null(a_cov_prior_sd))
     ancov_gr <- length(acovcoefnames_gr)
@@ -795,7 +788,6 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   # rsd_prior_sigma and dpar_prior are mutually exclusive
-  
   if (!is.null(dpar_formulasi)) {
     rsd_prior_sigma <- NULL
   } else {
@@ -1084,14 +1076,6 @@ set_priors_initials <- function(a_prior_beta,
   
   
   
-  
-  
-  
-  
-  
-  
-  
-  
   if (!is.null(dpar_formulasi)) {
     if (grepl("^~1$", dpar_covi_mat_form, fixed = F)) {
       dpar_intercept_only <- TRUE
@@ -1116,10 +1100,6 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
-  
-  
-  
-  
   if (grepl("~0", sigma_formulasi, fixed = T)) {
     sigma_form_0 <- TRUE
     sigma_cov_prior_beta <- NULL
@@ -1140,14 +1120,6 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   if(is.null(sigma_formula_grsi)) sigma_form_0_gr <- FALSE
-  
-  
-  
-  
-  
-  
-  
-  
   
   
   
@@ -1176,11 +1148,6 @@ set_priors_initials <- function(a_prior_beta,
   
   
   
-  
-  
-  
-  
-  
   if ((is.na(univariate_by$by) |
        univariate_by$by == "NA") & !mvar & !sigmacorr) {
     sigma_prior_cor <- NULL
@@ -1189,16 +1156,12 @@ set_priors_initials <- function(a_prior_beta,
   if(is.null(sigmancov_gr)) {
     sigma_prior_cor <- NULL
   }
-  if(!is.null(sigmancov_gr)) {
-    #if (length(sigmancov_gr) == 1) sigma_prior_cor <- NULL
-  }
+  
   
   
   
   # Note that currently brms does not allow setting separate cor prior for sigma
   # So, either set sigma_prior_cor <- NULL for all or else set group = '
-  
-  
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
     if (uvarsigmacorr) {
       sigma_prior_cor <- sigma_prior_cor
@@ -1212,7 +1175,7 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
-  # evaluate prior arguments
+  # Evaluate prior arguments
   eval_prior_args <- function(x, ...) {
     x_org <- x
     if (grepl("_beta", x))
@@ -1349,11 +1312,7 @@ set_priors_initials <- function(a_prior_beta,
     setautocorr <- FALSE
     if (grepl("autocor_", x) & grepl("_acor", x)) {
       setautocorr <- TRUE
-      # this does not work anymore, so using the function next
-      # acorclass <- gsub("~", "", autocor_formi, fixed = T)
-      # acorclass <- strsplit(acorclass, "\\(")[[1]][1]
       acorclass <- get_acorclass(autocor_formi)
-      # stop()
       if (acorclass == "arma")
         class <- 'arma'
       if (acorclass == "ar")
@@ -1728,8 +1687,8 @@ set_priors_initials <- function(a_prior_beta,
         resp_ <- paste0("_", resp)
       }
       
-      prior_argument <- x
       
+      prior_argument <- x
       zz <- prior_str_arg <- eval(parse(text = x))
       zz <- strsplit(zz, "\\(")[[1]]
       dist <- zz[1]
@@ -1809,10 +1768,8 @@ set_priors_initials <- function(a_prior_beta,
           'sigmancov_gr',
           'sigma_dpar',
           'sigma_group_arg',
-          
           'group_arg_groupvar',
           'group',
-          
           'dpar_form_0',
           'dpar_covi_mat_form',
           'dpar_formulasi',
@@ -1832,22 +1789,18 @@ set_priors_initials <- function(a_prior_beta,
       
       prior_internal_args <- mget(list_names)
       
-      # set to NULL as appropriate to match priors
+      # Set to NULL to appropriatly match priors
       for (ip in names(init_arguments)) {
         init_ip <- ip
         if (grepl("_init_", init_ip) &
             !grepl("r_init_z", init_ip)) {
           prior_ip <- gsub("_init_", "_prior_", init_ip)
-          # if(!is.null(eval(parse(text = prior_ip)))) {
           xx   <- deparse(prior_ip)
-          if (is.null(ept(prior_ip)))
-            init_arguments[[ip]] <- 'NULL'
-          # }
+          if (is.null(ept(prior_ip))) init_arguments[[ip]] <- 'NULL'
         }
       }
       
-      if (ept(nabcrei) == 0)
-        init_arguments[['r_init_z']] <- 'NULL'
+      if (ept(nabcrei) == 0) init_arguments[['r_init_z']] <- 'NULL'
       
       out_p_str <- prepare_priors(
         prior_argument,
@@ -2030,9 +1983,8 @@ set_priors_initials <- function(a_prior_beta,
     
     
     if (class == 'b') {
-      # need to remove lb and ub if specifying coef, otherwise
+      # Need to remove lb and ub if specifying coef, otherwise
       # Error: Argument 'coef' may not be specified when using boundaries.
-      # mnf <- paste0(nlpar, "_form_0")
       if(nlpar != '') {
         mnf <- paste0(nlpar, "_form_0")
         mnc <- paste0("cov_nlpar")
@@ -2071,8 +2023,8 @@ set_priors_initials <- function(a_prior_beta,
         }
         
         
-        # brms does not allow Intercept as coef name for dpar sigma with ~1
-        # But this only when covaritae missing 
+        # 'brms' does not allow Intercept as coef name for dpar sigma with ~1
+        #  But this only when covaritae missing 
         if (sigma_dpar == 'sigma') {
           dpar <- sigma_dpar
           if(ept(mnf)) {
@@ -2126,7 +2078,7 @@ set_priors_initials <- function(a_prior_beta,
       
       
       
-      # nlpar a b c d e f - betas also sigma
+      # nlpar a b c d e f g h i - betas also sigma
       if (ept(mnf) & cov_nlpar == "" & cov_sigma_dpar == "") {
         if (!any(is.na(lowerbound)) | !any(is.na(upperbound))) {
           define_ <- unique(define_)
@@ -2477,7 +2429,6 @@ set_priors_initials <- function(a_prior_beta,
         }
       }
       
-      
     } # if(class == 'b')
     
     
@@ -2526,7 +2477,7 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
-      # nlpar a b c d e f - sd
+      # nlpar a b c d e f g h i - sd
       
       if (ept(mnf) & cov_nlpar == "") {
         if (!any(is.na(lowerbound)) | !any(is.na(upperbound))) {
@@ -2889,18 +2840,17 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
-      
     } # end if (class == 'sd') {
     
     
     
     # correlation priors (lkj)
     
-    # currently brms does not allow setting separate ljk prior for
+    # Currently, 'brms' does not allow setting separate ljk prior for
     # subset and multivariate
-    # removing resp leads to duplicate priors, so need to set only once
+    # Also, removing resp leads to duplicate priors, so need to set only once
     
-    # Note that currently brms not allowing setting separate cor prior for sigma
+    # Note, currently 'brms' not allowing setting separate cor prior for sigma
     # So, set sigma_prior_cor <- NULL (line 810) for all, or else set group = '
     # But then this won't let assign different prior - dup stanvars
     # So keeping group 
@@ -2932,7 +2882,6 @@ set_priors_initials <- function(a_prior_beta,
     
     
     # residual standard deviation (sigma) prior
-    
     if (class == 'sigma' & dpar == "") {
       priors_ <-  brms::prior_string(
         define_,
@@ -2946,9 +2895,8 @@ set_priors_initials <- function(a_prior_beta,
     }
     
     # residual standard deviation (sigma) prior - dpar_formula formulation
-    
     if (class == "" & !is.null(dpar_formulasi)) {
-      # need to remove lb and ub if specifying coef, otherwise
+      # Need to remove lb and ub if specifying coef, otherwise
       # Error: Argument 'coef' may not be specified when using boundaries.
       dpar <- 'sigma'
       if (!is.null(dpar_covi_mat_form) &
@@ -3029,8 +2977,7 @@ set_priors_initials <- function(a_prior_beta,
         
         
         
-        # residual standard deviation (sigma) covariate prior -
-        # dpar_formula formulation
+        # residual standard deviation (sigma) covariate-dpar_formula formulation
         
         if (!is.null(dpar_covi_mat_form) &
             grepl("~1", dpar_covi_mat_form, fixed = T) &
@@ -3163,7 +3110,7 @@ set_priors_initials <- function(a_prior_beta,
   
   
   # use following custom order
-  # This order ensures that corresponding initial arguments are matched
+  # This ensures that corresponding initial arguments are matched
   # with the sequence of prior argument evaluation
   
   custom_order_prior <- c(
@@ -3211,10 +3158,8 @@ set_priors_initials <- function(a_prior_beta,
     'sigma_cov_prior_beta',
     'sigma_prior_sd',
     'sigma_cov_prior_sd',
-    
     'gr_prior_cor',
     'sigma_prior_cor',
-    
     'rsd_prior_sigma',
     'dpar_prior_sigma',
     'dpar_cov_prior_sigma',
@@ -3292,10 +3237,6 @@ set_priors_initials <- function(a_prior_beta,
       what_not_to_flatten <- "^L_|^z_|Intercept_sigma|Lrescor"
       what_not_to_flatten2 <- "^L_|^z_"
       if(length(initial_in_datazz$a_prior_beta) == 0) {
-        # added |b_s when a_init is random 
-        # 06 11 2023 detected -> setting a_init to random also set s_init random
-        # This should be paste0(what_not_to_flatten, "|b_a") 
-        # and paste0(what_not_to_flatten, "|b_s")
         what_not_to_flatten <- paste0(what_not_to_flatten, "|b_a")
         what_not_to_flatten2 <- paste0(what_not_to_flatten2, "|b_s")
       }
@@ -3390,7 +3331,6 @@ set_priors_initials <- function(a_prior_beta,
       list_ck_sd2 <- list_ck_sd
       list_ck_z <- list_ck_z[lengths(list_ck_z) != 0]
       list_ck_z2 <- list()
-      # this on 9 5 23 to accomodate random = ''
       if(length(list_ck_z) != 0) {
         for (list_ck_i in 1:length(list_ck_z)) {
           addelemnt <-
@@ -3416,7 +3356,7 @@ set_priors_initials <- function(a_prior_beta,
     }
     
     
-    # convert vector of 's' initials to named individual (s1, s2)
+    # Convert vector of 's' initials to named individual (s1, s2)
     if(select_model == "sitar" | select_model == 'rcs') {
       # Don't let when evaluating _str higher custom order
       if("s_prior_beta" %in% custom_order_prior) {
@@ -3588,7 +3528,7 @@ set_priors_initials <- function(a_prior_beta,
   for (ili in names(initials)) {
     if(length(out_listx[[ili]]) == 1) {
       out_listx[[ili]] <- out_listx[[ili]]
-      # here also need array for a b c d e
+      # here also need array for a b c d e etc.
       # but not for sigma when sigma ~ not used but default rsd formulation 
       if(nys == 1) sigma_par_name_rsd <- "sigma"
       if(nys > 1) sigma_par_name_rsd <- paste0('sigma', resp_)
@@ -3611,7 +3551,7 @@ set_priors_initials <- function(a_prior_beta,
   
   initials <- out_listx
   
-  # when sigma  formula is ~1+.., then first element is Intercept_sigma and the 
+  # When sigma  formula is ~1+.., then first element is Intercept_sigma and the 
   # remaining are b_sigma
   
   initialsx <- out_listx
@@ -3668,48 +3608,49 @@ set_priors_initials <- function(a_prior_beta,
 
 
 #' An internal function to prepare priors for Bayesian SITAR growth curve model
-#' 
-#' For \code{univariate_by} and \code{multivariate} models (see [bsitar::bsitar()])
-#' each argument is automatically matched with the sub model. 
 #'
-#' @param prior_argument A list containing the prior arguments specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' 
-#' @param prior_data An optional argument (a named list) specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' The \code{prior_data} used to pass value for priors.
-#'  See [bsitar::bsitar()] function, \code{prior_data} for details.
-#'  
-#' @param prior_data_internal An internal argument (as named list) specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' 
-#' @param prior_internal_args An internal argument list that is passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{set_priors_initials} 
-#' and is used in setting the priors.
-#' 
-#' @param init_arguments A list containing the initial arguments specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' 
-#' @param init_data An optional argument (as named list) specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' The \code{init_data} is used for setting the initials.
-#' 
-#' @param init_data_internal An internal argument (as named list) specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' 
-#' @param init_args_internal An internal argument list that is passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{set_priors_initials} 
-#' and is used in setting the initials.
+#' For \code{univariate_by} and \code{multivariate} models (see
+#' [bsitar::bsitar()]) each argument is automatically matched with the sub
+#' model.
 #'
-#' @return An object of class \code{brmsprior}. See \code{brmsprior} function 
-#' for more details. 
-#' 
+#' @param prior_argument A list containing the prior arguments specified in the
+#'   [bsitar::bsitar()] function and then passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{prepare_priors}.
+#'
+#' @param prior_data An optional argument (a named list) specified in the
+#'   [bsitar::bsitar()] function and then passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{prepare_priors}. The
+#'   \code{prior_data} used to pass value for priors. See [bsitar::bsitar()]
+#'   function, \code{prior_data} for details.
+#'
+#' @param prior_data_internal An internal argument (as named list) specified in
+#'   the [bsitar::bsitar()] function and then passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{prepare_priors}.
+#'
+#' @param prior_internal_args An internal argument list that is passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{set_priors_initials}
+#'   and is used in setting the priors.
+#'
+#' @param init_arguments A list containing the initial arguments specified in
+#'   the [bsitar::bsitar()] function and then passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{prepare_priors}.
+#'
+#' @param init_data An optional argument (as named list) specified in the
+#'   [bsitar::bsitar()] function and then passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{prepare_priors}. The
+#'   \code{init_data} is used for setting the initials.
+#'
+#' @param init_data_internal An internal argument (as named list) specified in
+#'   the [bsitar::bsitar()] function and then passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{prepare_priors}.
+#'
+#' @param init_args_internal An internal argument list that is passed from the
+#'   [bsitar::set_priors_initials()] function to the \code{set_priors_initials}
+#'   and is used in setting the initials.
+#'
+#' @return An object of class \code{brmsprior}. See \code{brmsprior} function
+#'   for more details.
+#'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #' 
 #' @keywords internal
@@ -4113,7 +4054,7 @@ prepare_priors <- function(prior_argument,
     optional_prior_names <-
       c("lb", "ub", "autoscale", "addrange", "sethp")
     
-    # add missing optional_prior_names
+    # Add missing optional_prior_names
     missing_optional_prior_names <-
       optional_prior_names[!optional_prior_names %in% splitmvar_w3]
     
@@ -4155,13 +4096,13 @@ prepare_priors <- function(prior_argument,
     }
     
     
-    # now make all enclosed in ''
+    # Now make all enclosed in ''
     tt <- sub('.*=', '', splitmvar_w2)
     tt <- paste0("'", tt, "'")
     
     x <- parms_ <- paste0(splitmvar_w3, "=", tt)
     
-    # not needed, directly using name_parameter towards the end
+    # Not needed, directly using name_parameter towards the end
     collect_name_parameter <- c()
     
     for (i in 1:length(x)) {
@@ -4194,9 +4135,7 @@ prepare_priors <- function(prior_argument,
       
       
       # Get scale_factor to multiply with scale parameters
-      
       enverr. <- parent.frame()
-      # err. <- FALSE
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -4207,7 +4146,6 @@ prepare_priors <- function(prior_argument,
           ! is.numeric(check_for_autoscale)
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -4281,14 +4219,12 @@ prepare_priors <- function(prior_argument,
               const_msg <- paste0(allowed_parm_options, "\n", const_msg)
             }
             enverr. <- parent.frame()
-            # err. <- FALSE
             assign('err.', FALSE, envir = enverr.)
             tryCatch(
               expr = {
                 out <- ept(eit)
               },
               error = function(e) {
-                # err. <<- TRUE
                 assign('err.', TRUE, envir = enverr.)
               }
             )
@@ -11109,21 +11045,18 @@ prepare_initials <- function(init_argument,
         const_msg <- paste0("random,", " 0, ", "Or ", const_msg)
       }
       enverr. <- parent.frame()
-      # err. <- FALSE
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           out <- ept(eit)
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
       err. <- get('err.', envir = enverr.)
       if (eit == 'NULL' | eit == 'random')
         enverr. <- parent.frame()
-        # err. <- FALSE
         assign('err.', FALSE, envir = enverr.)
       if (err.) {
         if (check == 'args') {
@@ -13295,7 +13228,6 @@ optimize_model2.bgmfit <- function(model,
     
     if ('waic' %in% add_fit_criteria) {
       enverr. <- parent.frame()
-      # err. <- FALSE
       tryCatch(
         expr = {
           if (!is.na(fit$model_info$univariate_by)) {
@@ -13338,7 +13270,6 @@ optimize_model2.bgmfit <- function(model,
           rownames(summary_waic) <- NULL
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -13357,7 +13288,6 @@ optimize_model2.bgmfit <- function(model,
     
     if ('bayes_R2' %in% add_bayes_R) {
       enverr. <- parent.frame()
-      # err. <- FALSE
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -13403,7 +13333,6 @@ optimize_model2.bgmfit <- function(model,
           rownames(summary_bayes_R2) <- NULL
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -13422,7 +13351,6 @@ optimize_model2.bgmfit <- function(model,
     if ('loo' %in% add_fit_criteria) {
       if ('loo' %in% add_fit_criteria) {
         enverr. <- parent.frame()
-        # err. <- FALSE
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
@@ -13469,7 +13397,6 @@ optimize_model2.bgmfit <- function(model,
             rownames(summary_loo) <- NULL
           },
           error = function(e) {
-            # err. <<- TRUE
             assign('err.', TRUE, envir = enverr.)
           }
         )
@@ -13484,7 +13411,6 @@ optimize_model2.bgmfit <- function(model,
       
       if ('loo' %in% add_fit_criteria) {
         enverr. <- parent.frame()
-        # err. <- FALSE
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
@@ -13531,7 +13457,6 @@ optimize_model2.bgmfit <- function(model,
             rownames(diagnostic_loo) <- NULL
           },
           error = function(e) {
-            # err. <<- TRUE
             assign('err.', TRUE, envir = enverr.)
           }
         )

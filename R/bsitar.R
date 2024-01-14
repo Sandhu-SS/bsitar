@@ -1634,9 +1634,8 @@ bsitar <- function(x,
   
   mcall <- mcall_ <- match.call()
   
-  # Check and set alias arguments
+  # Check and set Alias argument for a b c ... formula
   dots_allias <- list(...)
-  # alias argument for a b c ... formula
   collect_dot_names <- c()
   for (ia in letters[1:26]) {
     set_name_dot <- paste0(ia, ".", 'formula')
@@ -1658,7 +1657,7 @@ bsitar <- function(x,
       mcall[[collect_dot_namesi]] <- NULL
   }
   
-  # alias argument d_adjusted (SITAR)
+  # Check and set Alias argument for d_adjusted (SITAR)
   collect_dot_names <- c()
   for (ia in letters[4]) {
     set_name_dot <- paste0(ia, ".", 'adjusted')
@@ -1682,6 +1681,7 @@ bsitar <- function(x,
   
   # Clear alias argument for formula and adjusted
   rm(dots_allias)
+  
   
   mcall <- mcall_ <- mcall
   
@@ -1964,7 +1964,6 @@ bsitar <- function(x,
           }
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -2089,7 +2088,9 @@ bsitar <- function(x,
   if(select_model == 'logistic') select_model <- 'logistic1'
   if(select_model == 'sitar3')   select_model <- 'sitar'
   
-  if(select_model == 'rcs' | select_model == 'rcsf' | select_model == 'rcsfr') {
+  if(select_model == 'rcs' | 
+     select_model == 'rcsf' | 
+     select_model == 'rcsfr') {
     if(select_model == 'rcsf') {
       rcs_add_re_spline <- FALSE 
     } else {
@@ -2121,7 +2122,10 @@ bsitar <- function(x,
   logistic_models <- c('logistic1', 'logistic2', 'logistic3')
   rcs_models      <- c('rcs', 'rcsf', 'rcsfr')
   
-  allowed_model_names <- c(sitar_models, pb_models, logistic_models, rcs_models)
+  allowed_model_names <- c(sitar_models, 
+                           pb_models, 
+                           logistic_models, 
+                           rcs_models)
   
   sitar_models    <- paste0(sitar_models, collapse=", ")
   pb_models       <- paste0(pb_models, collapse=", ")
@@ -2195,11 +2199,8 @@ bsitar <- function(x,
       'future'
     )
   
-  
- # Not using options() to restore mc.cores but rather using on.exit()
-  
-  # mc.cores_restore <- getOption("mc.cores")
-  
+
+
   if(is.numeric(arguments$cores)) {
    oldopts <- options(mc.cores = arguments$cores)
    on.exit(options(oldopts))
@@ -2282,7 +2283,6 @@ bsitar <- function(x,
           eval(parse(text = zzz[[z]]), envir = parent.frame())
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -3095,7 +3095,6 @@ bsitar <- function(x,
           out <- suppressWarnings(ept(ip))
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -4269,7 +4268,8 @@ bsitar <- function(x,
           if(is.na(eval_arg.o)) {
             stop(arg, " specified as '", eval_arg, "' returned NA.",
                  "\n ",
-                 " Please change ", arg," argument to 'mean' or a numeric value.")
+                 " Please change ", arg,
+                 " argument to 'mean' or a numeric value.")
           }
         } else {
           eval_arg.o <- ept(eval_arg)
@@ -4341,12 +4341,10 @@ bsitar <- function(x,
    
     mat_s <- make_spline_matrix(datai[[xsi]], knots)
     
-    
-   # SplineFun_name <- "DefFun" 
-    SplineFun_name  <- paste0(toupper(select_model), "", 'Fun')
-    
-    getX_name <- "getX"
-    getKnots_name <- "getKnots"
+    # Define names for Stan functions 
+    SplineFun_name  <- paste0(toupper(select_model), "", 'Fun') # "DefFun" 
+    getX_name       <- "getX"
+    getKnots_name   <- "getKnots"
     
     
     if (nys > 1) {
@@ -4717,7 +4715,7 @@ bsitar <- function(x,
     vcov_init_0e <- eval(parse(text =  "vcov_init_0si" ))
     vcov_init_0e <- eval(parse(text =  vcov_init_0e ))
     
-    # if vcov_init_0e = TRUE, override random options for below elements
+    # If vcov_init_0e = TRUE, override random options for below elements
     # Note that these are placeholders, actual setting to zero done later
     
     if(vcov_init_0e) {
@@ -4871,7 +4869,8 @@ bsitar <- function(x,
       set_default_inits(select_model_arg, g_init_betasi)
     if(!is.null(h_init_betasi)) h_init_betasi <- 
       set_default_inits(select_model_arg, h_init_betasi)
-    if(!is.null(i_init_betasi)) i_init_betasi <- set_default_inits(select_model_arg, i_init_betasi)
+    if(!is.null(i_init_betasi)) i_init_betasi <- 
+      set_default_inits(select_model_arg, i_init_betasi)
     
     
     init_arguments <-
@@ -5350,6 +5349,7 @@ bsitar <- function(x,
     
     # Now, cor priors    
     # Adding cor priors is tricky because of complex |x| formulations
+    
     set_class_what <- 'cor'
     set_org_priors_initials_agrs_what <- set_priors_initials_agrs
     set_randomsi_higher_levsl <- 'gr'
@@ -5417,13 +5417,12 @@ bsitar <- function(x,
             temp_gr_str_inits    <- c(temp_gr_str_inits, initials_str)
             temp_gr_str_priors[[istrx]] <- bpriors_str
             
-            # on 26 12 2023
+            # 26 12 2023
             bpriors_str_checks <- bpriors_str
             attr(bpriors_str_checks, "stanvars") <- NULL
             attr(bpriors_str_checks, "initials") <- NULL
             bpriors_str_checks <- bpriors_str_checks
             attributes(bpriors_str_checks) <- NULL
-            # bpriors_str_checksx <<- bpriors_str_checks
             if(!is.list(bpriors_str_checks)) {
               if(bpriors_str_checks == "") {
                 temp_gr_str_priors[[istrx]] <- temp_gr_str_stanvars <- NULL
@@ -5579,7 +5578,6 @@ bsitar <- function(x,
       initials <- c(initials_c, temp_gr_str_inits_corr) 
     } 
    
-    
     
     priorlist <- rbind(priorlist, bpriors)
     stanvar_priors_names <- names(stanvar_priors)
@@ -5740,12 +5738,10 @@ bsitar <- function(x,
   brmsdata <- dataout
   brmspriors <- priorlist
   
-  # IMP - brms does not allow different lb 
-  # conditions for sd parsm (e.e, all to be NA)
+  # IMP - brms does not allow different lb for sd parsm (e.e, all to be NA)
   # Error: Conflicting boundary information for coefficients of class 'sd'.
   # Because prior function automatically sets lb 0 for positive priors 
-  # such as exponential
-  # the following is need (again done at line 4753 )
+  # such as exponential the following is need (again done at line 4753 )
   
   brmspriors <- brmspriors %>% 
     dplyr::mutate(lb = dplyr::if_else(class == 'sd', NA, lb))
@@ -5967,7 +5963,6 @@ bsitar <- function(x,
           brmsinits[[paste0(c_it, zi)]] <- temppp[[zi]]
         }
       }
-        
       #
     }
   }  
@@ -6243,11 +6238,6 @@ bsitar <- function(x,
     }
     
    
-
-    
-    
-    
-
     
     if(!is.null(decomp)) {
       if(add_rcsfunmatqrinv_genquant ) {
@@ -6317,8 +6307,6 @@ bsitar <- function(x,
                                                block = "tdata", 
                                                position = "end")
       } # if(decomp_editcode & add_rcsfunmatqrinv_genquant) {
-      
-      
     } # if(!is.null(decomp)) {
     
     
@@ -6399,7 +6387,7 @@ bsitar <- function(x,
   
   
 
-  # add stanvars for logistic3e
+  # Add stanvars for logistic3e
   if(select_model_edit == 'logistic3e') {
     temp_stancode_logistic3e <- brms::make_stancode(formula = bformula,
                                           stanvars = bstanvars,
@@ -6809,14 +6797,7 @@ bsitar <- function(x,
   }
   
   
-  
-  
-  
-  
   brm_args$prior <- brmspriors
-  
-  
-  
   
   decomp_escode2<- function(temp_stancode2x) {
     htx <- strsplit(temp_stancode2x, "\n")[[1]]
@@ -6900,19 +6881,14 @@ bsitar <- function(x,
     
   if(!exe_model_fit) {
     if(get_priors) {
-      # options(mc.cores = mc.cores_restore)
       return(do.call(brms::get_prior, brm_args))
     } else if(get_standata) {
-      # options(mc.cores = mc.cores_restore)
       return(do.call(brms::make_standata, brm_args))
     } else if(get_stancode) {
-      # options(mc.cores = mc.cores_restore)
       return(scode_final)
     } else if(get_priors_eval) {
-      # options(mc.cores = mc.cores_restore)
       return(get_priors_eval_out)
     } else if(validate_priors) {
-      # options(mc.cores = mc.cores_restore)
       return(do.call(brms::validate_prior, brm_args))
     } else if(get_init_eval) {
       return(brm_args$init)
@@ -6988,16 +6964,6 @@ bsitar <- function(x,
     } 
     
     
-    # 
-    # brm_args$prior <- brm_args$prior %>% 
-    #   dplyr::filter(class == 'b' & !nlpar %in% c('a', 'b', "c"))
-    # 
-
-    
-    # brm_args$prior <- brm_args$prior %>% 
-    #   dplyr::filter(class == 'sd' & !nlpar %in% c('a', 'b', "c"))
-    # 
-
     
     # This when all lists of list NULL (e.g., when all init args random)
     if(length(brm_args$init[lengths(brm_args$init) != 0]) == 0) {
@@ -7007,7 +6973,6 @@ bsitar <- function(x,
  
     
     # Set refresh based on thin argument
-
     if(!is.null(brm_args$refresh) & brm_args$thin > 1) {
       brm_args$refresh <- 
         ceiling((brm_args$refresh * brm_args$thin) / brm_args$thin)
@@ -7180,7 +7145,6 @@ bsitar <- function(x,
       }
     }
     
-    # options(mc.cores = mc.cores_restore)
     return(brmsfit)
   } # exe_model_fit
   

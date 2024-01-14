@@ -299,10 +299,9 @@ optimize_model.bgmfit <- function(model,
   }
   
   # resp = NULL is only used as a placeholder that too only for multivariate
-  # if NULL, then combined log likelihood used for multivariate model
-  # if anything else e.g., resp = 'NULL' or anything, '
-  # then separate likelihood for responses
-  
+  # If NULL, then combined log likelihood used for multivariate model
+  # otherwise separate log likelihood  for each response
+
   add_citeria_fun <- function(fit,
                               add_fit_criteria = NULL,
                               add_bayes_R = NULL,
@@ -439,7 +438,6 @@ optimize_model.bgmfit <- function(model,
     
     
     
-    ################
     add_summary_waic <- function(x, digits = 1) {
       summary_waic <- x
       summary_waic$pointwise <- NULL
@@ -511,7 +509,6 @@ optimize_model.bgmfit <- function(model,
     
     if ('waic' %in% add_fit_criteria) {
       enverr. <- parent.frame()
-      # err. <- FALSE
       tryCatch(
         expr = {
           if (!is.na(fit$model_info$univariate_by)) {
@@ -554,7 +551,6 @@ optimize_model.bgmfit <- function(model,
           rownames(summary_waic) <- NULL
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -573,7 +569,6 @@ optimize_model.bgmfit <- function(model,
     
     if ('bayes_R2' %in% add_bayes_R) {
       enverr. <- parent.frame()
-      # err. <- FALSE
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -619,7 +614,6 @@ optimize_model.bgmfit <- function(model,
           rownames(summary_bayes_R2) <- NULL
         },
         error = function(e) {
-          # err. <<- TRUE
           assign('err.', TRUE, envir = enverr.)
         }
       )
@@ -638,7 +632,6 @@ optimize_model.bgmfit <- function(model,
     if ('loo' %in% add_fit_criteria) {
       if ('loo' %in% add_fit_criteria) {
         enverr. <- parent.frame()
-        # err. <- FALSE
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
@@ -685,7 +678,6 @@ optimize_model.bgmfit <- function(model,
             rownames(summary_loo) <- NULL
           },
           error = function(e) {
-            # err. <<- TRUE
             assign('err.', TRUE, envir = enverr.)
           }
         )
@@ -700,7 +692,6 @@ optimize_model.bgmfit <- function(model,
       
       if ('loo' %in% add_fit_criteria) {
         enverr. <- parent.frame()
-        # err. <- FALSE
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
@@ -747,7 +738,6 @@ optimize_model.bgmfit <- function(model,
             rownames(diagnostic_loo) <- NULL
           },
           error = function(e) {
-            # err. <<- TRUE
             assign('err.', TRUE, envir = enverr.)
           }
         )
@@ -887,10 +877,10 @@ optimize_model.bgmfit <- function(model,
       fit$model_info$optimize_y <- yfun_print
       
       # Add fit_criteria and bares_R to the fit
-      # Add summary data frames for criteria and R square
+      # Also, add summary data frames for criteria and R square
       
       # setresp to anything so that even multivariate will be response wise
-      # if desired, this behavious
+      # if desired, this behavior
       # if(length(fit$model_info$ys) == 1) setresp <- NULL
       # if(length(fit$model_info$ys) > 1) setresp <- 'TRUE'
       
@@ -930,8 +920,6 @@ optimize_model.bgmfit <- function(model,
         )
       }
     } # if(!is.null(fit)) {
-    
-    
     return(fit)
   }
   

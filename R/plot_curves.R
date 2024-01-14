@@ -323,7 +323,6 @@ plot_curves.bgmfit <- function(model,
   
   
   # Move down NULL where setting the arguments
-  
   if(system.file(package='ggplot2') == "") {
     stop("Please install 'ggplot2' package before calling the 'plot_curves'")
   }
