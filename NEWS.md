@@ -16,6 +16,7 @@
 ### Minor changes
 
 - Updated documentation
+- Added vignette illustrating the univariate model fit the data
 - Added issue tracker url: https://github.com/Sandhu-SS/bsitar/issues
 
 
