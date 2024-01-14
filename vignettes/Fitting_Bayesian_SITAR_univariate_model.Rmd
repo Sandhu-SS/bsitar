@@ -1,0 +1,204 @@
+---
+title: "Fitting Bayesian SITAR univariate model"
+author: "Satpal Sandhu"
+date: '`r format(Sys.time(), "%B %d, %Y")`'
+bibliography: [Bayesian_SITAR_An_Introduction.bib, packages.bib, REFERENCES.bib]
+csl: apa-7th-edition.csl
+link-citations: yes
+colorlinks: true
+lang: en-US
+zotero: true
+header-includes:
+   - \setlength\parindent{30pt}\setlength{\parskip}{0.0pt plus 1.0pt}
+   - \pagenumbering{gobble}
+   - \setlength{\headheight}{47pt}
+   - \usepackage{float}
+   - \floatplacement{figure}{H}
+output: 
+  bookdown::html_document2:
+    #  base_format: rmarkdown::html_vignette
+      toc: yes
+      number_sections: true
+      toc_depth: 2
+      toc_float: false
+      highlight: tango
+      pandoc_args: 
+      - --shift-heading-level-by=-1
+      - --lua-filter=parse-html-links.lua
+      # css: bsitar_style.css
+      code_folding: hide
+      fig_caption: yes
+      keep_tex: yes
+linkcolor:  blue
+urlcolor: blue
+citecolor: magenta
+vignette: >
+  %\VignetteIndexEntry{Fitting Bayesian SITAR univariate model}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+params:
+  EVAL: !r identical(Sys.getenv("NOT_CRAN"), "true")
+linestretch: 1.5
+mainfont: "Times New Roman"
+monofont: "Monaco"
+fontsize: 12pt
+geometry:
+- top=2cm
+- left=2.5cm
+- right=2.5cm
+- bottom=3.5cm
+papersize: a4
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE,
+ # eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
+  dev = "jpeg",
+  dpi = 100,
+  fig.asp = 0.8,
+  fig.width = 5,
+  out.width = "60%",
+  fig.align = "center"
+)
+```
+
+
+```{=tex}
+\newpage
+\pagenumbering{arabic}
+```
+```{css, echo=FALSE}
+p {
+	text-indent: 0em;
+}
+
+p + p {
+	text-indent: 2em;
+}
+```
+
+
+\newpage
+
+
+## Introduction
+
+The super imposition by translation and rotation (SITAR) model [@Cole2010] is a
+shape-invariant nonlinear mixed effect growth curve model that fits a population
+average curve to the data, and aligns each individual's growth trajectory to
+this underlying population average curve via a set of random effects
+[@Cole2010]. A detailed introduction to the SITAR model including Bayesian
+estimation of the SITAR model via *BSITAR* package is provided in the [Bayesian
+SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html). As reported in
+the [Bayesian SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html), the
+*BSITAR* package can fit univariate model (analysis of a single outcome),
+univariate_by model (simultaneous analysis of a single outcome separately for
+sub groups defined by a factor variable such as gender), and multivariate model
+(joint modelling of two or more outcomes). In this vignette, we focus on fitting
+the univariate SITAR model. Details on model specification including
+mathematical description of the model and prior used for each coefficient are
+provided in the [Bayesian SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html) vignette.
+
+To illustrate this, we use the Berkeley dataset to explore the growth of height
+in girls during puberty. The same data has been analysed in the vignette
+vignette("Fitting models with SITAR", package = "sitar") included in the *sitar*
+package [@R-sitar] that implements the non-Bayesian (frequentist) version of the
+SITAR model.
+
+
+If necessary, first install the sitar library.
+
+```{r, eval=FALSE}
+if (!require(bsitar)) install.packages('bsitar')
+```
+
+Next load the sitar library, which contains the berkeley dataset, and then fit a SITAR model to the heights of girls from 8 to 18 years.
+```{r, results='hide'}
+library(sitar)
+ff <- na.omit(berkeley[berkeley$sex == 2 & berkeley$age >= 8 & berkeley$age <= 18, 
+                       c('id', 'age', 'height')])
+fh1 <- sitar(x = age, y = height, id = id, data = ff, df = 5)
+```
+Next plot the data, before and after SITAR adjustment.
+```{r, fig.show='hold'}
+par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
+mplot(x = age, y = height, id = id, data = ff, col = id, las = 1)
+plot(fh1, opt = 'a', col = id, las = 1, xlim = xaxsd(), ylim = yaxsd())
+```
+
+The girls were measured every six months, and their heights are shown (left) plotted as growth curves using different color to separate them. The curves after SITAR adjustment are also shown (right, as discussed below).
+
+## Patterns of growth
+
+Looking at the individual curves, some girls are consistently taller than average and others consistently shorter. Also some start relatively short and become taller, while others do the opposite. In addition all the girls have a pubertal growth spurt, a time when they grow appreciably faster than before or after, and the timing of the spurt varies between 10 and 14 years.
+
+These are the three growth patterns that SITAR focuses on, which are named as size, timing and intensity:
+
+- Size is an individual's mean height compared to the average (measured in cm)
+- Timing is the individual's age at peak height velocity (i.e. the age when they are growing fastest) compared to the average (measured in years)
+- Intensity is their growth rate compared to the average (measured as a fraction, or percentage / 100)
+
+The SITAR model estimates size, timing and intensity for each individual as random effects, and then uses the values to adjust individual curves to the average. The graph (above right) shows the girls' curves after they have been SITAR-adjusted, and they are now all superimposed - most of the inter-individual variability has been removed.
+
+It has achieved this by shifting the high curves down and the low curves up (i.e. adjusting for size), and shifting the early curves later and the late curves earlier (timing). For intensity, the steep curves are made shallower by stretching them along the age scale, and the shallow curves are made steeper by shrinking them along the age scale.
+
+This explains the name SITAR - Super Imposition by Translation And Rotation. The curve adjustment involves translation (shifting the curves up/down and left/right) and rotation (making them steeper or shallower), and the effect is to superimpose the curves.
+
+## Mean curve
+
+The SITAR mean growth curve is estimated by taking the adjusted curves (above right) and fitting a natural cubic spline through them (below left). The mean height velocity curve, calculated as the first derivative of the mean curve, is also shown (right, dashed). The mean age at peak height velocity is 11.7 years, marked by the vertical dotted line in the plots, and the mean peak height velocity is 7.8 cm/year.
+
+The complexity of the spline curve's shape is determined by its number of degrees of freedom, as set with the degree of freedom argument in the sitar call. Here there are five degrees of freedom (see first code chunk).
+
+```{r, results='hide', fig.show='hold'}
+par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
+plot(fh1, opt = 'd', las = 1, apv = TRUE)
+plot(fh1, opt = 'v', las = 1, apv = TRUE, lty = 2)
+```
+
+## Size, timing and intensity
+
+To see the effect of SITAR adjustment in individual curves, the plot (below left) shows all the curves in gray as background, plus curves for the tallest and shortest girls before and after adjustment, along with the mean curve (shown dashed). For the tall girl (id 310 in blue), her mean height is estimated as 14.8 cm greater than average (size), her age at peak height velocity is 1.4 years earlier than average (timing), and her mean growth rate is 25% faster than average (intensity). Her adjusted curve, which incorporates these differences, appears as the blue curve close to the mean curve. 
+
+```{r, fig.show='hold'}
+par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
+plot(fh1, opt = 'u', las = 1, col = 8, lwd = 0.5)
+lines(fh1, opt = 'd', lty = 2)
+lines(fh1, opt = 'ua', col = 4, subset = id == 310)
+lines(fh1, opt = 'ua', col = 2, subset = id == 355)
+legend('bottomright', c('id 310', 'mean', 'id 355'), lty = c(1, 2, 1), col = c(4, 1, 2), cex = 0.8, inset=0.04)
+pairs(ranef(fh1), labels = c('size', 'timing', 'intensity'), pch=20)
+```
+
+Correspondingly the short girl (id 355 in red) is 9.5 cm shorter, 1.4 years later and 15% slower growing than average. Her adjusted curve is the upper red curve. Note that the two adjusted curves are very close to the mean curve, showing how effectively SITAR superimposes the curves.
+
+The random effects of size, timing and intensity are accessed using the random.effects() or ```ranef()``` function. The associations between the random effects are shown in the scatterplot (above right), where timing is negatively correlated with intensity, but size is uncorrelated with timing and intensity. The corresponding correlation matrix is shown below, with the random effects named as a, b and c respectively. So early puberty is associated with faster growth -- and hence a shorter growth spurt.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(cor(ranef(fh1)), digits = 2)
+```
+
+Here are the values of the random effects for the first ten girls, including id 310, where the intensity c, multiplied by 100, is a percentage. 
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(ranef(fh1)[1:10, ], digits = 2)
+```
+
+## Biology of SITAR
+
+The SITAR model relies on the concept of developmental age, and it assumes that chronological age and developmental age in individual children are linearly related. An individual may be advanced or delayed in age terms, which is reflected in their timing parameter, and they may be becoming more or less advanced over time, as flagged by their intensity parameter. Thus the analysis models on both the height scale (i.e. the size parameter) and the age scale, and in this sense it mimics biology as the appropriate age scale is developmental age not chronological age.
+
+## Algebra of SITAR
+
+The algebra underlying the SITAR model is as follows: 
+$$y_{ij} = \alpha_i + h[\frac{t_{ij} - \beta_i}{exp(-\gamma_i)}] + \epsilon_{ij}$$
+where $y_{ij}$ and $t_{ij}$ are height and age, and $\epsilon_{ij}$ is the residual, for subject $i$ and measurement $j$; $h[.]$ is a natural cubic spline function, and $\alpha_i$, $\beta_i$ and $\gamma_i$ are respectively the size, timing and intensity parameters for subject $i$.
