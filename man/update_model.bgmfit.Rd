@@ -33,8 +33,8 @@ An updated object of class \code{brmsfit}.
 }
 \description{
 The \strong{update_model()} is a wrapper around the
-\code{update()} function in the \pkg{brms} package which refits model as
-per the updated arguments specified by the user.
+\code{update()} function in the \pkg{brms} package which refits the model
+as per the user specified updated arguments.
 }
 \details{
 This is an adapted version of the \strong{update()} function from
