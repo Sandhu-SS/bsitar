@@ -9665,19 +9665,27 @@ prepare_priors <- function(prior_argument,
       
       # assigning bounds
       
-      name_lb <-
-        paste0(prefix, 
-               add_cla_to_name, 
-               sep_indicator, 
-               "lb",
-               resp_)
+      # name_lb <-
+      #   paste0(prefix, 
+      #          add_cla_to_name, 
+      #          sep_indicator, 
+      #          "lb",
+      #          resp_)
+      # 
+      # name_ub <-
+      #   paste0(prefix, 
+      #          add_cla_to_name, 
+      #          sep_indicator, 
+      #          "ub", 
+      #          resp_)
       
-      name_ub <-
-        paste0(prefix, 
-               add_cla_to_name, 
-               sep_indicator, 
-               "ub", 
-               resp_)
+      if(is.null(resp_) | resp_ == "") {
+        name_lb <- paste0(name_parameter, "_", 'lb')
+        name_ub <- paste0(name_parameter, "_", 'ub')
+      } else {
+        name_lb <- gsub(resp_, paste0('lb', "", resp_),  name_parameter)
+        name_ub <- gsub(resp_, paste0('ub', "", resp_),  name_parameter)
+      }
       
       
       

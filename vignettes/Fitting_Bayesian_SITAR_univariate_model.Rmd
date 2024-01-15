@@ -96,46 +96,63 @@ The super imposition by translation and rotation (SITAR) model [@Cole2010] is a
 shape-invariant nonlinear mixed effect growth curve model that fits a population
 average curve to the data, and aligns each individual's growth trajectory to
 this underlying population average curve via a set of random effects
-[@Cole2010]. A detailed introduction to the SITAR model including Bayesian
-estimation of the SITAR model via *BSITAR* package is provided in the [Bayesian
-SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html). As reported in
-the [Bayesian SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html), the
-*BSITAR* package can fit univariate model (analysis of a single outcome),
-univariate_by model (simultaneous analysis of a single outcome separately for
-sub groups defined by a factor variable such as gender), and multivariate model
-(joint modelling of two or more outcomes). In this vignette, we focus on fitting
-the univariate SITAR model. Details on model specification including
-mathematical description of the model and prior used for each coefficient are
-provided in the [Bayesian SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html) vignette.
+[@Cole2010]. 
 
-To illustrate this, we use the Berkeley dataset to explore the growth of height
-in girls during puberty. The same data has been analysed in the
-[vignette](https://cran.r-project.org/web/packages/sitar/vignettes/Fitting_models_with_SITAR.html)
-included in the *sitar* package [@R-sitar] that implements the non-Bayesian
-(frequentist) version of the SITAR model.
+A detailed introduction to the SITAR model including biological and mathematical
+description of the model, as well as the Bayesian estimation of the SITAR model
+has been provided in the [Bayesian SITAR - An
+Introduction](Bayesian_SITAR_An_Introduction.html). As described in [Bayesian
+SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html), the *bsitar*
+package can fit univariate model (analysis of a single outcome), univariate_by
+model (simultaneous analysis of a single outcome separately for sub groups
+defined by a factor variable such as gender), and multivariate model (joint
+modelling of two or more outcomes).
+
+In this vignette, we focus on fitting a univariate SITAR model by using the
+*bsitar* package. The mathematical description of the model along with prior
+specifications are provided in the the [Bayesian SITAR - An
+Introduction](Bayesian_SITAR_An_Introduction.html) vignette. We analyse Berkeley
+dataset that comprise of repeated growth measurements made on males and
+females from birth to adulthood. 
+
+been analysed in the vignette [Fitting models
+with SITAR](https://CRAN.R-project.org/package=sitar) as part of the *sitar*
+package [@R-sitar]. The *sitar* package implements the non-Bayesian
+(frequentist) version of the SITAR model. 
+
+The Berkeley dataset comprise of repeated growth measurements made on males and
+females from birth to adulthood. The 
+height measurement during 
+
+to explore the growth of height
+in girls during puberty. The same data has been analysed in the vignette
+[Fitting models with SITAR](https://CRAN.R-project.org/package=sitar) included
+in the *sitar* package [@R-sitar]. The *sitar* package implements the
+non-Bayesian (frequentist) version of the SITAR model. The Berkeley dataset is 
+included in both *sitar* and *bsitar* packages.
 
 
-If necessary, first install the sitar library.
-
-```{r, eval=FALSE}
+If necessary, first install the *bsitar* package.
+```{r lib, eval = FALSE, echo=TRUE,include=TRUE}
 if (!require(bsitar)) install.packages('bsitar')
 ```
 
-Next load the sitar library, which contains the berkeley dataset, and then fit a SITAR model to the heights of girls from 8 to 18 years.
+Load *bsitar* library and fit Bayesian SITAR model to the heights of girls from 8 to 18 years. The girls were measured every six months.
 ```{r, results='hide'}
-library(sitar)
-ff <- na.omit(berkeley[berkeley$sex == 2 & berkeley$age >= 8 & berkeley$age <= 18, 
+library(bsitar)
+ff <- na.omit(berkeley[berkeley$sex == "Female" & berkeley$age >= 8 & berkeley$age <= 18, 
                        c('id', 'age', 'height')])
+# bfh1 <- bsitar(x = age, y = height, id = id, data = ff, df = 5)
 fh1 <- sitar(x = age, y = height, id = id, data = ff, df = 5)
 ```
-Next plot the data, before and after SITAR adjustment.
+Next plot the data, before and after Bayesian SITAR adjustment.
 ```{r, fig.show='hold'}
 par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
 mplot(x = age, y = height, id = id, data = ff, col = id, las = 1)
 plot(fh1, opt = 'a', col = id, las = 1, xlim = xaxsd(), ylim = yaxsd())
 ```
 
-The girls were measured every six months, and their heights are shown (left) plotted as growth curves using different color to separate them. The curves after SITAR adjustment are also shown (right, as discussed below).
+ and their heights are shown (left) plotted as growth curves using different color to separate them. The curves after SITAR adjustment are also shown (right, as discussed below).
 
 ## Patterns of growth
 
@@ -197,8 +214,3 @@ knitr::kable(ranef(fh1)[1:10, ], digits = 2)
 
 The SITAR model relies on the concept of developmental age, and it assumes that chronological age and developmental age in individual children are linearly related. An individual may be advanced or delayed in age terms, which is reflected in their timing parameter, and they may be becoming more or less advanced over time, as flagged by their intensity parameter. Thus the analysis models on both the height scale (i.e. the size parameter) and the age scale, and in this sense it mimics biology as the appropriate age scale is developmental age not chronological age.
 
-## Algebra of SITAR
-
-The algebra underlying the SITAR model is as follows: 
-$$y_{ij} = \alpha_i + h[\frac{t_{ij} - \beta_i}{exp(-\gamma_i)}] + \epsilon_{ij}$$
-where $y_{ij}$ and $t_{ij}$ are height and age, and $\epsilon_{ij}$ is the residual, for subject $i$ and measurement $j$; $h[.]$ is a natural cubic spline function, and $\alpha_i$, $\beta_i$ and $\gamma_i$ are respectively the size, timing and intensity parameters for subject $i$.
