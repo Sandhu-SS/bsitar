@@ -109,10 +109,10 @@ mathematical description of the model and prior used for each coefficient are
 provided in the [Bayesian SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html) vignette.
 
 To illustrate this, we use the Berkeley dataset to explore the growth of height
-in girls during puberty. The same data has been analysed in the vignette
-vignette("Fitting_models_with_SITAR", package = "sitar") included in the *sitar*
-package [@R-sitar] that implements the non-Bayesian (frequentist) version of the
-SITAR model.
+in girls during puberty. The same data has been analysed in the
+[vignette](https://cran.r-project.org/web/packages/sitar/vignettes/Fitting_models_with_SITAR.html)
+included in the *sitar* package [@R-sitar] that implements the non-Bayesian
+(frequentist) version of the SITAR model.
 
 
 If necessary, first install the sitar library.
