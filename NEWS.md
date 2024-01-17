@@ -16,7 +16,7 @@
 ### Minor changes
 
 - Updated documentation
-- Added vignette illustrating the univariate model fit the data
+- Added vignette about the Bayesian SITAR model fit to height data (univariate model)
 - Added issue tracker url: https://github.com/Sandhu-SS/bsitar/issues
 
 
@@ -31,6 +31,7 @@ four curves together (distance, velocity, adjusted and unadjusted)
 
 
 ### Miscellaneous
+- Added more utility functions for internal use (for consistency and efficiency) 
 - Minor corrections/changes to make R code more efficient and consistent across sub modules.
 
 
