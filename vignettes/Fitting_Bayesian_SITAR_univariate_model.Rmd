@@ -106,30 +106,21 @@ SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html), the *bsitar*
 package can fit univariate model (analysis of a single outcome), univariate_by
 model (simultaneous analysis of a single outcome separately for sub groups
 defined by a factor variable such as gender), and multivariate model (joint
-modelling of two or more outcomes).
+modelling of two or more outcomes). In this vignette, we focus on fitting a
+univariate SITAR model by using the *bsitar* package. The mathematical
+description of the model along with prior specifications are provided in the the
+[Bayesian SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html)
+vignette.
 
-In this vignette, we focus on fitting a univariate SITAR model by using the
-*bsitar* package. The mathematical description of the model along with prior
-specifications are provided in the the [Bayesian SITAR - An
-Introduction](Bayesian_SITAR_An_Introduction.html) vignette. We analyse Berkeley
-dataset that comprise of repeated growth measurements made on males and
-females from birth to adulthood. 
+We study Berkeley data that comprise repeated growth measurements made on males
+and females from birth to adulthood. The Berkeley dataset is  included in both
+*sitar* and *bsitar* packages. To compare our findings with the non-Bayesian 
+(frequentist) SITAR model fit results shown in the vignette [Fitting models with
+SITAR](https://CRAN.R-project.org/package=sitar), we analyze the exact same data
+which is fit via the *sitar* package [@R-sitar]. The data is a subset of the
+Berkeley data that include height measurements for girls (between 8 and
+18 years of age) collected every six months.
 
-been analysed in the vignette [Fitting models
-with SITAR](https://CRAN.R-project.org/package=sitar) as part of the *sitar*
-package [@R-sitar]. The *sitar* package implements the non-Bayesian
-(frequentist) version of the SITAR model. 
-
-The Berkeley dataset comprise of repeated growth measurements made on males and
-females from birth to adulthood. The 
-height measurement during 
-
-to explore the growth of height
-in girls during puberty. The same data has been analysed in the vignette
-[Fitting models with SITAR](https://CRAN.R-project.org/package=sitar) included
-in the *sitar* package [@R-sitar]. The *sitar* package implements the
-non-Bayesian (frequentist) version of the SITAR model. The Berkeley dataset is 
-included in both *sitar* and *bsitar* packages.
 
 
 If necessary, first install the *bsitar* package.
@@ -137,13 +128,18 @@ If necessary, first install the *bsitar* package.
 if (!require(bsitar)) install.packages('bsitar')
 ```
 
-Load *bsitar* library and fit Bayesian SITAR model to the heights of girls from 8 to 18 years. The girls were measured every six months.
+Load *bsitar* library and fit Bayesian SITAR model to the heights of girls  
 ```{r, results='hide'}
 library(bsitar)
+
 ff <- na.omit(berkeley[berkeley$sex == "Female" & berkeley$age >= 8 & berkeley$age <= 18, 
                        c('id', 'age', 'height')])
+
+library(sitar)
+
+
 # bfh1 <- bsitar(x = age, y = height, id = id, data = ff, df = 5)
-fh1 <- sitar(x = age, y = height, id = id, data = ff, df = 5)
+fh1 <- sitar::sitar(x = age, y = height, id = id, data = ff, df = 5)
 ```
 Next plot the data, before and after Bayesian SITAR adjustment.
 ```{r, fig.show='hold'}

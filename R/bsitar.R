@@ -1951,7 +1951,6 @@ bsitar <- function(x,
   for (i in names(mcall)[-1]) {
     no_default_args_plus_family <- c(no_default_args, "family")
     if (!i %in% no_default_args_plus_family) {
-      #  err. <- FALSE
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -2036,6 +2035,24 @@ bsitar <- function(x,
   arguments <-
     c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
   
+  
+  
+  familyzzzx <- arguments$family
+  if(grepl("^c\\(", deparse_0(familyzzzx), fixed = F)) {
+    stop("Argument family should be a list() and not a vector 'c()'")
+  } else if(grepl("^\\(", deparse_0(familyzzzx), fixed = F)) {
+    familyzzzx <- paste0("list", "", deparse_0(familyzzzx) , "")
+    familyzzzx <- str2lang(familyzzzx)
+  } else if(!is.list(familyzzzx) & !grepl("list", familyzzzx)[[1]]) {
+    familyzzzx <- paste0("list", "(", deparse_0(familyzzzx) , ")")
+    familyzzzx <- str2lang(familyzzzx)
+  } else {
+    familyzzzx <- familyzzzx 
+  }
+  familyzzzx2 <- familyzzzx
+  arguments$family <- familyzzzx
+  
+
   checks_start_names <- c('bstart', 'cstart', 'apv', 'pv')
   for (checks_start_namesi in checks_start_names) {
     if(checks_start_namesi %in% names(mcall_)) {
@@ -2276,7 +2293,6 @@ bsitar <- function(x,
     
     enverr. <- parent.frame()
     for (z in names(splitmvar3)) {
-      # err. <- FALSE
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -2288,7 +2304,10 @@ bsitar <- function(x,
       )
       err. <- get('err.', envir = enverr.)
       if (!err.) {
-        c_c_ <- eval(parse(text = zzz[[z]]))
+        # if brms::brmsfamily(family), eval eliminates family 16 1 24
+        if(z != "family") c_c_ <- eval(parse(text = zzz[[z]]))
+        if(z == "family") c_c_ <- zzz[[z]] 
+        # c_c_ <- eval(parse(text = zzz[[z]]))
         checkclass <- class(c_c_)
         if (checkclass == "NULL")
           checkclass_ <- NULL
@@ -3088,7 +3107,6 @@ bsitar <- function(x,
   enverr. <- parent.frame()
   for (ip in convert_to_list) {
     if (grepl("_init_", ip)) {
-      # err. <- FALSE
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -4017,6 +4035,32 @@ bsitar <- function(x,
         familysi == "NULL") {
       familysi <- NULL
     }
+   
+   
+  # For backward compatibility if model fit using family = gaussian()
+   if (!is.null(familysi)) {
+     if(familysi == "gaussian()") {
+       familysi <- "brms::brmsfamily(family = gaussian)"
+     }
+   }
+    
+   
+    
+    
+    if (!is.null(familysi)) {
+      familysi_check <- familysi
+      if( grepl('brmsfamily', familysi_check) &
+          !grepl('brms::', familysi_check)) {
+        familysi_check <- paste0('brms::', familysi_check)
+      } else if( grepl('brmsfamily', familysi_check) &
+                 grepl('brms::', familysi_check)) {
+        familysi_check <- familysi_check
+      } else if(!grepl('brmsfamily', familysi_check)) {
+        stop("Argument family should be specified as brmsfamily(family,...)")
+      }
+      familysi <- familysi_check
+    }
+  
     
     if (!is.null(familysi)) {
       familysi <- list_to_quoted_if_not_si(familysi)
