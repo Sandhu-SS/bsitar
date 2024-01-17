@@ -7188,7 +7188,7 @@ bsitar <- function(x,
         cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
       }
     }
-    
+    if(exists("err.")) rm("err.")
     return(brmsfit)
   } # exe_model_fit
   
