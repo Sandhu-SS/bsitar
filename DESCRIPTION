@@ -46,6 +46,7 @@ Imports:
 Suggests: 
     bookdown,
     knitr,
+    kableExtra,
     rmarkdown,
     spelling,
     Hmisc,

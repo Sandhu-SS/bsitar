@@ -55,16 +55,21 @@ editor_options:
 
 
 ```{r setup, include=FALSE}
+NOT_CRAN <- identical(tolower(Sys.getenv("NOT_CRAN")), "true")
 knitr::knit_hooks$set(purl = knitr::hook_purl)
+options(width = 90)
 knitr::opts_chunk$set(
   echo = FALSE,
   collapse = TRUE,
   comment = "#>",
   message = FALSE,
   warning = FALSE,
- # eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
+  # eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
+  purl = NOT_CRAN,
+  eval = NOT_CRAN,
   dev = "jpeg",
   dpi = 100,
+  fig.cap = "",
   fig.asp = 0.8,
   fig.width = 5,
   out.width = "60%",
@@ -123,54 +128,326 @@ Berkeley data that include height measurements for girls (between 8 and
 18 years of age) collected every six months.
 
 
-If required, install *bsitar* and *sitar* packages.
-```{r lib, eval= FALSE, echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
+If needed, install *bsitar* and *sitar* packages (also other required packages)
+```{r lib, eval=FALSE, echo=FALSE,include=TRUE, warning= FALSE, message=FALSE}
 if (!require(bsitar)) install.packages('bsitar')
 if (!require(sitar)) install.packages('sitar')
+if (!require(ggplot2)) install.packages('ggplot2')
+if (!require(knitr)) install.packages('knitr')
+if (!require(kableExtra)) install.packages('kableExtra')
 ```
-Fit SITAR and Bayesian SITAR models to the height data for girls  
-```{r fit, results='hide', echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
+
+
+```{r loadlib}
+stopifnot(require(knitr))
+stopifnot(require(kableExtra))
+stopifnot(require(ggplot2))
+stopifnot(require(sitar))
 library(bsitar)
-ff <- na.omit(berkeley[berkeley$sex == "Female" & 
+library(ggplot2)
+```
+
+## Model fit
+
+Fit SITAR and Bayesian SITAR models to the height data for girls  
+```{r modelfit, results='hide', echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
+if(exists('berkeley_mdatax')) {
+  data <- berkeley_mdata
+} else {
+  data <- na.omit(berkeley[berkeley$sex == "Female" & 
                          berkeley$age >= 8 & berkeley$age <= 18, 
                        c('id', 'age', 'height')])
+}
+
 
 # Fit SITAR model (fit via 'sitar' package)
-fh1 <- sitar::sitar(x = age, y = height, id = id, data = ff, df = 5)
+model_frequ <- sitar::sitar(x = age, y = height, id = id, data = data, df = 4)
 
-# Fit Bayesian SITAR model (via 'bsitar' package) - note prefix 'b' to 'bfh1'.
+# Fit Bayesian SITAR model (via 'bsitar' package) - note prefix 'b' to 'model_bayes'.
 # To save time, the model is fit by running two (default four) parallel chain
 # with 1000 iterations (default 2000) per chain. Note also we have requested to
 # expose Stan functions by setting expose_function as TRUE (default FALSE) and
 # save them for later use.
 
-# bfh1 <- bsitar(x = age, y = height, id = id, data = ff, df = 5)
+# model_bayes <- bsitar(x = age, y = height, id = id, data = data, df = 5)
 
-bfh1 <-  bsitar(x = age, y = height, id = id, data = ff, df = 5, 
-                chains = 2, cores = 2, refresh = 100,
-                sample_prior = "only",
+if(exists('berkeley_mfitx')) {
+  model_bayes <- berkeley_mfit
+} else {
+  model_bayes <-  bsitar(x = age, y = height, id = id, data = data, df = 5,
+                chains = 2, cores = 2, iter = 1000, refresh = 100,
+                sample_prior = "no",
                 expose_function = TRUE)
+}
 ```
+
+## Model summary
+
 Summary of SITAR model fit ('sitar' package)
 ```{r summary_sitar, results='show', echo=FALSE,include=TRUE}
-print(fh1)
+print(model_frequ)
 ```
 Summary of Bayesian SITAR model fit ('bsitar' package)
 ```{r summary_bsitar, results='show', echo=FALSE,include=TRUE}
-print(bfh1)
+print(model_bayes)
 ```
 
-Plot data, before and after SITAR adjustments
-```{r plot_1, fig.cap= "bb" fig.show='hold',echo=TRUE,include=TRUE}
-par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
-# Plot observed growth trajectories
-sitar::mplot(x = age, y = height, id = id, data = ff, col = id, las = 1)
-# Plot growth trajectories adjusted by the SITAR model
-plot(fh1, opt = 'a', col = id, las = 1, xlim = sitar::xaxsd(), ylim = sitar::yaxsd())
-# Plot growth trajectories adjusted by the Bayesian SITAR model
-plot_curves(bfh1, 'a')
+```{r prepare_adv, echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
+# For observed and adjusted plot
+data_sitar_a  <- plot(model_frequ, opt = 'a', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
+data_bsitar_a <- plot_curves(model_bayes, opt = 'a', returndata = T)
+data_all_a <- data %>% dplyr::mutate(Curve = 'observed') %>% 
+  dplyr::bind_rows(., data_sitar_a %>% dplyr::relocate(all_of(colnames(data))) %>% 
+                     dplyr::mutate(Curve = 'adjusted_sitar')) %>% 
+  dplyr::bind_rows(., data_bsitar_a %>% dplyr::relocate(all_of(colnames(data))) %>% 
+                     dplyr::mutate(Curve = 'adjusted_bsitar')) %>% 
+  dplyr::mutate(Curve = as.factor(Curve))
+
+
+# For distance and velocity (dv) plots
+data_sitar_d  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
+data_sitar_v  <- plot(model_frequ, opt = 'v', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T) 
+data_sitar_df <- data_sitar_d %>% data.frame()
+data_bsitar_d <- plot_curves(model_bayes, opt = 'd', returndata = T, newdata = data_sitar_df, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+data_bsitar_v <- plot_curves(model_bayes, opt = 'v', returndata = T, newdata = data_sitar_df, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+
+data_sitar_d  <- data_sitar_d %>% dplyr::rename(distance = height)
+data_sitar_v  <- data_sitar_v %>% dplyr::rename(velocity = height)
+data_bsitar_d <- data_bsitar_d %>% dplyr::rename(distance = Estimate) %>% dplyr::select(all_of(colnames(data_sitar_d)))
+data_bsitar_v <- data_bsitar_v %>% dplyr::rename(velocity = Estimate) %>% dplyr::select(all_of(colnames(data_sitar_v)))
+
+idx <- c('id', 'age')
+data_sitar_d  <- data_sitar_d %>% dplyr::relocate(all_of(idx))
+data_sitar_v  <- data_sitar_v %>% dplyr::relocate(all_of(idx))
+data_bsitar_d <- data_bsitar_d %>% dplyr::relocate(all_of(idx))
+data_bsitar_v <- data_bsitar_v %>% dplyr::relocate(all_of(idx))
+
+data_sitar_dv <- data_sitar_d %>% dplyr::left_join(., data_sitar_v, by = idx)
+data_bsitar_dv <- data_bsitar_d %>% dplyr::left_join(., data_bsitar_v, by = idx)
+
+data_all_dv <- data_sitar_dv %>% dplyr::mutate(Model = 'sitar') %>% 
+  dplyr::bind_rows(., data_bsitar_dv %>% 
+                     dplyr::mutate(Model = 'bsitar'))
+
+
+
+# For Distance and Velocity (DV) plots
+data_sitar_D  <- plot(model_frequ, opt = 'D', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
+data_sitar_V  <- plot(model_frequ, opt = 'V', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T) 
+data_sitar_DF <- data_sitar_D %>% data.frame()
+data_bsitar_D <- plot_curves(model_bayes, opt = 'D', returndata = T, newdata = data_sitar_DF, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+data_bsitar_V <- plot_curves(model_bayes, opt = 'V', returndata = T, newdata = data_sitar_DF, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+
+data_sitar_D  <- data_sitar_D %>% dplyr::rename(distance = height)
+data_sitar_V  <- data_sitar_V %>% dplyr::rename(velocity = height)
+data_bsitar_D <- data_bsitar_D %>% dplyr::rename(distance = Estimate) %>% dplyr::select(all_of(colnames(data_sitar_D)))
+data_bsitar_V <- data_bsitar_V %>% dplyr::rename(velocity = Estimate) %>% dplyr::select(all_of(colnames(data_sitar_V)))
+
+idx <- c('id', 'age')
+data_sitar_D  <- data_sitar_D %>% dplyr::relocate(all_of(idx))
+data_sitar_V  <- data_sitar_V %>% dplyr::relocate(all_of(idx))
+data_bsitar_D <- data_bsitar_D %>% dplyr::relocate(all_of(idx))
+data_bsitar_V <- data_bsitar_V %>% dplyr::relocate(all_of(idx))
+
+data_sitar_DV <- data_sitar_D %>% dplyr::left_join(., data_sitar_V, by = idx)
+data_bsitar_DV <- data_bsitar_D %>% dplyr::left_join(., data_bsitar_V, by = idx)
+
+data_all_DV <- data_sitar_DV %>% dplyr::mutate(Model = 'sitar') %>% 
+  dplyr::bind_rows(., data_bsitar_DV %>% 
+                     dplyr::mutate(Model = 'bsitar'))
+
+# Set x range for x axis
+xrange <- c(min(data$age), max(data$age))
+
+# Get random effects for sitar model
+fh1_ranef <- nlme::ranef(model_frequ)
+
+# Get random effects for bsitar model
+bfh1_ranef <- cbind(brms::ranef(model_bayes)$id[,,1][,1],
+                    brms::ranef(model_bayes)$id[,,1][,2],
+                    brms::ranef(model_bayes)$id[,,1][,3])
+colnames(bfh1_ranef) <- letters[1:3]
+
+# Get correlation of random effects for sitar model
+fh1_ranef_corr  <- cor(fh1_ranef)
+
+# Get correlation of random effects for bsitar model
+bfh1_ranef_corr <- cor(bfh1_ranef)
+colnames(bfh1_ranef_corr) <- letters[1:3]
+rownames(bfh1_ranef_corr) <- letters[1:3]
+
+# Get random effects along with id cilumn for sitar model
+fh1_ranef_id  <- fh1_ranef %>% data.frame() %>% tibble::rownames_to_column(., "id") 
+
+# Get random effects along with id cilumn for sitar model
+bfh1_ranef_id <- bfh1_ranef %>% data.frame() %>% tibble::rownames_to_column(., "id") 
+
+# Set legend theme for ggplot
+theme_legends1 <- theme(legend.position = "bottom",
+                       legend.title = element_text(size=12),
+                       legend.key.height = unit(1.5, 'cm'),
+                       legend.key.width = unit(1.5, 'cm'),
+                       legend.key.size = unit(1.5, 'cm'),
+                       legend.text = element_text(size=12))
+
+theme_legends2 <- theme(legend.position = "bottom",
+                       legend.title = element_text(size=12),
+                       legend.key.height = unit(1.5, 'cm'),
+                       legend.key.width = unit(1.5, 'cm'),
+                       legend.key.size = unit(1.5, 'cm'),
+                       legend.text = element_text(size=12))
+
+# Set grid theme for ggplot
+theme_grids1 <- theme(panel.grid.major = element_blank(), 
+                      panel.grid.minor = element_blank()) + 
+  theme_bw()
+
+linewidths <- c(0.5, 0.75, 1.0, 1.5)
+alphas     <- c(0.25, 0.5, 0.75, 1.0)
+colours    <- c('black', 'red', 'green', 'orange')
 ```
 
+
+
+```{r prepare_apv, echo=FALSE,include=FALSE, warning= FALSE, message=FALSE}
+parms_apv_sitar <- plot(model_frequ, apv = T, returndata = F)
+parms_apv_sitar <- parms_apv_sitar$apv %>% data.frame() %>% setNames('sitar')
+parms_apv_sitar <- round(parms_apv_sitar, 2)
+row.names(parms_apv_sitar) <- NULL
+parms_apv_bsitar <- plot_curves(model_bayes, apv = T, newdata = data_sitar_df, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+parms_apv_bsitar <- parms_apv_bsitar$growthparameters
+colnames(parms_apv_bsitar) <- c('Parameter', 'bsitar')
+parms_apv_all <- cbind(parms_apv_bsitar, parms_apv_sitar)
+```
+
+
+## Growth curves
+# Observed and adjusted curves (via random effects)
+Figure \@ref(fig:plota) shows a comparison of observed individual-specific
+growth trajectories with those adjusted via the random effects. As described
+earlier in the [Introduction], the random effects (size, timing and intensity)
+align individual-specific growth trajectories towards a common (population
+average) trajectory.
+```{r plota, echo=TRUE,include=TRUE, fig.width = 6, fig.height=4, fig.asp = 1.0, fig.cap="\\label{fig:plota}Observed and adjusted (via sitar and bsitar models) growth curves"}
+data_all_a <- data_all_a %>% 
+  dplyr::mutate(across(Curve, ~factor(., 
+                                      levels=c("observed",
+                                               "adjusted_sitar",
+                                               "adjusted_bsitar"))))
+data_all_a %>% 
+  dplyr::mutate(groupby = interaction(id, Curve) ) %>% 
+  ggplot(., aes(x = age)) +
+  geom_line(aes(x = age, y = height, group = groupby, 
+                linetype = Curve), 
+            color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
+            show.legend = T) +
+  scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
+  theme_grids1 + theme_legends1
+```
+
+
+
+
+```{r plotapopavg, echo=TRUE,include=TRUE, fig.width = 6, fig.height=4, fig.asp = 1.0, fig.cap="\\label{fig:plotapopavg}Observed and adjusted (via sitar and bsitar models) growth curves"}
+data_sitar_dx2  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
+data_sitar_dfx2 <- data_sitar_dx2 %>% data.frame()
+data_bsitar_dx2 <- plot_curves(model_bayes, opt = 'd', returndata = T, newdata = data_sitar_dfx2, ipts = NULL, usesavedfuns = T, envir = globalenv()) %>% 
+  dplyr::rename(distance = Estimate) %>% 
+  dplyr::select(-dplyr::all_of(c('distance', 'Est.Error',  'Q2.5', 'Q97.5')))
+data_all_ad <- data_all_a %>% 
+  dplyr::bind_rows(., data_sitar_dx2 %>% dplyr::relocate(all_of(colnames(data))) %>% 
+                     dplyr::mutate(Curve = 'pop.avg_sitar')) %>% 
+  dplyr::bind_rows(., data_bsitar_dx2 %>% dplyr::relocate(all_of(colnames(data))) %>% 
+                     dplyr::mutate(Curve = 'pop.avg_bsitar')) %>% 
+  dplyr::mutate(Curve = as.factor(Curve))
+
+
+data_all_ad <- data_all_ad %>% 
+  dplyr::mutate(across(Curve, ~factor(., 
+                                      levels=c("observed",
+                                               "adjusted_sitar",
+                                               "adjusted_bsitar", 
+                                               "pop.avg_sitar",
+                                               "pop.avg_bsitar" ))))
+
+data_all_alevs <- levels(data_all_ad$Curve)
+
+p <- 
+  data_all_ad %>% 
+  dplyr::mutate(groupby = interaction(id, Curve)) %>% 
+  ggplot(., aes(x = age)) 
+# p + 
+#   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[1]) %>%
+#               dplyr::mutate(groupby = interaction(id, Curve)),
+#               aes(x = age, y = height, group = groupby),
+#             linetype = 1, color = colours[1], , linewidth = linewidths[2],
+#             alpha = alphas[2], show.legend = F) +
+#   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[2]) %>%
+#               dplyr::mutate(groupby = interaction(id, Curve)),
+#             aes(x = age, y = height, group = groupby),
+#             linetype = 1, color = colours[1], , linewidth = linewidths[2],
+#             alpha = alphas[2], show.legend = F) +
+#   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[3]) %>%
+#               dplyr::mutate(groupby = interaction(id, Curve)),
+#             aes(x = age, y = height, group = groupby),
+#             linetype = 1, color = colours[1], , linewidth = linewidths[2],
+#             alpha = alphas[2], show.legend = F) +
+#   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[4]) %>%
+#               dplyr::mutate(groupby = interaction(id, Curve)),
+#             aes(x = age, y = height, group = groupby),
+#             linetype = 1, color = colours[1], , linewidth = linewidths[2], 
+#             alpha = alphas[2], show.legend = F) +
+#   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[5]) %>%
+#               dplyr::mutate(groupby = interaction(id, Curve)),
+#             aes(x = age, y = height, group = groupby),
+#             linetype = 1, color = colours[1], , linewidth = linewidths[2], 
+#             alpha = alphas[2], show.legend = F) +
+#   facet_wrap(~Curve) +
+#   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
+#   theme_grids1 + theme_legends1
+
+p + 
+  geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[4]) %>%
+              dplyr::mutate(groupby = interaction(id, Curve)),
+            aes(x = age, y = height, group = groupby, linetype = Curve),
+            color = colours[1], linewidth = linewidths[2], 
+            alpha = alphas[2], show.legend = T) +
+  geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[5]) %>%
+              dplyr::mutate(groupby = interaction(id, Curve)),
+            aes(x = age, y = height, group = groupby, linetype = Curve),
+            color = colours[1], linewidth = linewidths[2], 
+            alpha = alphas[2], show.legend = T) +
+  scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
+  theme_grids1 + theme_legends1
+```
+
+
+
+```{r plotD2, echo=TRUE,include=TRUE, fig.width = 6, fig.height=4, fig.asp = 1.0, fig.cap="\\label{fig:plotD2}Individual specific growth trajectories estimated by the sitar and bsitar models"}
+data_all_DV %>% 
+  dplyr::mutate(groupby = interaction(id, Model) ) %>% 
+  ggplot(., aes(x = age)) +
+  geom_line(aes(x = age, y = distance, group = groupby, 
+                linetype = Model),
+            color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
+            show.legend = T) +
+  scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
+  theme_grids1 + theme_legends1
+```
+
+
+
+```{r plotV2, echo=TRUE,include=TRUE, fig.width = 6, fig.height=4, fig.asp = 1.0, fig.cap="\\label{fig:plotV2}Individual specific growth trajectories estimated by the sitar and bsitar models"}
+data_all_DV %>% 
+  dplyr::mutate(groupby = interaction(id, Model) ) %>% 
+  ggplot(., aes(x = age)) +
+  geom_line(aes(x = age, y = velocity, group = groupby, 
+                linetype = Model),
+            color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
+            show.legend = T) +
+  scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
+  theme_grids1 + theme_legends1
+```
 
 ## Patterns of growth
 
@@ -194,42 +471,72 @@ The SITAR mean growth curve is estimated by taking the adjusted curves (above ri
 
 The complexity of the spline curve's shape is determined by its number of degrees of freedom, as set with the degree of freedom argument in the sitar call. Here there are five degrees of freedom (see first code chunk).
 
-```{r plot_2, results='hide', fig.show='hold', echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
-par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
-# Plot distance curves for the SITAR model (fit via 'sitar' package)
-plot(fh1, opt = 'd', las = 1, apv = TRUE)
-# Plot velocity curves for the SITAR model (fit via 'sitar' package)
-plot(fh1, opt = 'v', las = 1, apv = TRUE, lty = 2)
-
-# Plot distance curves for the Bayesian SITAR model (fit via 'bsitar' package)
-plot_curves(bfh1, 'd', usesavedfuns = TRUE, envir =  .GlobalEnv)
-# Plot distance curves for the Bayesian SITAR model (fit via 'bsitar' package)
-plot_curves(bfh1, 'v', usesavedfuns = TRUE, envir =  .GlobalEnv)
+Plot distance curves (increase in size with age)
 
 
+```{r plotd, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotd}Distance curves estimated by the sitar and bsitar models"}
+data_all_dv %>% 
+  dplyr::mutate(groupby = interaction(id, Model) ) %>% 
+  ggplot(., aes(x = age)) +
+  geom_line(aes(x = age, y = velocity, group = groupby), 
+            color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
+            show.legend = TRUE) +
+  scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
+  theme_grids1 + theme_legends1
 ```
+
+Plot velocity (first derivative) curves (change in growth velocity as a function of age)
+```{r plotv, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotv}Velocity curves estimated by the sitar and bsitar models"}
+data_all_dv %>% 
+  dplyr::mutate(groupby = interaction(id, Model) ) %>% 
+  ggplot(., aes(x = age)) +
+  geom_line(aes(x = age, y = velocity, group = groupby), 
+            color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
+            show.legend = TRUE) +
+  scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
+  theme_grids1 + theme_legends1
+```
+
+Figure \@ref(fig:plotd) and Figure \@ref(fig:plotv) show that distance and
+velocity curves for sitar and bsitar models superimpose well on each other
+indicating that they both capture similar trend in the height increase with age
+as well as the change in the growth rate. Velocity curves shows that both sitar
+and bsitar models capture similar timing (i.e., age at peak growth velocity,
+APGV) and the intensity (i.e.,peak growth velocity, PGV) of the growth spurt.
+This is confirmed by the results shown below.
+```{r tab_apgv, echo=FALSE, results='asis'}
+# SITAR model (fit via 'sitar' package)
+knitr::kable(parms_apv_all, digits = 2, 
+             caption = "The  timing (APGV) and intensity (PGV) estimates for the 
+             SITAR (fit via 'sitar' package) and Bayesian SITAR (fit via 'bsitar' package) models", 
+             label = NA,
+             format = "html", align = 'c') %>% 
+  kableExtra::kable_classic(full_width = T, html_font = "Cambria")
+```
+
+
 
 ## Size, timing and intensity
 
 To see the effect of SITAR adjustment in individual curves, the plot (below left) shows all the curves in gray as background, plus curves for the tallest and shortest girls before and after adjustment, along with the mean curve (shown dashed). For the tall girl (id 310 in blue), her mean height is estimated as 14.8 cm greater than average (size), her age at peak height velocity is 1.4 years earlier than average (timing), and her mean growth rate is 25% faster than average (intensity). Her adjusted curve, which incorporates these differences, appears as the blue curve close to the mean curve. 
 
-```{r plot_3, fig.show='hold',echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
+```{r plot_ua, fig.show='hold',echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
 # Plot curves for ids 310 and 355 for the SITAR model (fit via 'sitar' package)
-par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
-plot(fh1, opt = 'u', las = 1, col = 8, lwd = 0.5)
-lines(fh1, opt = 'd', lty = 2)
-lines(fh1, opt = 'ua', col = 4, subset = id == 310)
-lines(fh1, opt = 'ua', col = 2, subset = id == 355)
-legend('bottomright', c('id 310', 'mean', 'id 355'), lty = c(1, 2, 1), col = c(4, 1, 2), cex = 0.8, inset=0.04)
+# par(mar = c(4,4,1,1) + 0.1, cex = 0.8)
+# plot(model_frequ, opt = 'u', las = 1, col = 8, lwd = 0.5)
+# lines(model_frequ, opt = 'd', lty = 2)
+# lines(model_frequ, opt = 'ua', col = 4, subset = id == 310)
+# lines(model_frequ, opt = 'ua', col = 2, subset = id == 355)
+# legend('bottomright', c('id 310', 'mean', 'id 355'), lty = c(1, 2, 1), col = c(4, 1, 2), cex = 0.8, inset=0.04)
 # Plot curves for ids 310 and 355 for the Bayesian SITAR model (fit via 'bsitar' package)
 
 
 # Plot correlations of random effects for the SITAR model (fit via 'sitar' package)
-pairs(nlme::ranef(fh1), labels = c('size', 'timing', 'intensity'), pch=20)
+pairs(nlme::ranef(model_frequ), labels = c('size', 'timing', 'intensity'), pch=20)
 # Plot correlations of random effects for the Bayesian SITAR model (fit via 'bsitar' package)
-bfh1_ranef <- cbind(brms::ranef(bfh1)$id[,,1][,1],
-                    brms::ranef(bfh1)$id[,,1][,2],
-                    brms::ranef(bfh1)$id[,,1][,3])
+bfh1_ranef <- cbind(brms::ranef(model_bayes)$id[,,1][,1],
+                    brms::ranef(model_bayes)$id[,,1][,2],
+                    brms::ranef(model_bayes)$id[,,1][,3])
 pairs(bfh1_ranef, labels = c('size', 'timing', 'intensity'), pch=20)
 ```
 
@@ -237,39 +544,139 @@ Correspondingly the short girl (id 355 in red) is 9.5 cm shorter, 1.4 years late
 
 The random effects of size, timing and intensity are accessed using the random.effects() or ```ranef()``` function. The associations between the random effects are shown in the scatterplot (above right), where timing is negatively correlated with intensity, but size is uncorrelated with timing and intensity. The corresponding correlation matrix is shown below, with the random effects named as a, b and c respectively. So early puberty is associated with faster growth -- and hence a shorter growth spurt.
 
-```{r tab_1, echo=FALSE, results='asis',echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
-# Summarize correlations of random effects for the SITAR model (fit via 'sitar' package)
-knitr::kable(cor(nlme::ranef(fh1)), digits = 2)
-# Summarize correlations of random effects for the Bayesian SITAR model (fit via 'bsitar' package)
-bfh1_ranef <- cbind(brms::ranef(bfh1)$id[,,1][,1],
-                    brms::ranef(bfh1)$id[,,1][,2],
-                    brms::ranef(bfh1)$id[,,1][,3])
-colnames(bfh1_ranef) <- letters[1:3]
-knitr::kable(cor(bfh1_ranef), digits = 2)
+
+Summarize correlations of random effects for the SITAR model (fit via 'sitar' package)
+
+
+```{r}
+# fh1_ranef_corr[upper.tri(fh1_ranef_corr)] = NA_real_
+# options(knitr.kable.NA="")
+knitr::kable(fh1_ranef_corr, 
+             digits = 2, 
+             caption = "Random effects correlation estimates for the
+             SITAR model (fit via 'sitar' package)", 
+             row.names=TRUE, 
+             # col.names = TRUE, 
+             align='c',
+             format="html", 
+             booktabs=TRUE) %>%
+  kableExtra::kable_styling(latex_options="scale_down", 
+                            row_label_position = "c",
+                            position = "float_left",
+                            font_size = 14,
+                            htmltable_class = 'lightable-classic',
+                            html_font = "Cambria") %>%
+  # kableExtra::row_spec(1:3, align = "c", monospace = T) %>%
+  kableExtra::column_spec(1, width = "2.5in", monospace = T) %>%
+  kableExtra::column_spec(2, width = "2.5in", monospace = T) %>%
+  kableExtra::column_spec(3, width = "1.2in", monospace = T) %>%
+  kableExtra::footnote(
+    general = "a: Size (height); b: Timing (age at peak growth velocity, APGV); c: Intensity (peak growth velocity, AGV)",
+    footnote_as_chunk = TRUE,
+    general_title = "",
+    threeparttable = FALSE)
 ```
+
+
+```{r}
+# fh1_ranef_corr[upper.tri(fh1_ranef_corr)] = NA_real_
+# options(knitr.kable.NA="")
+knitr::kable(bfh1_ranef_corr, 
+             digits = 2, 
+             caption = "Random effects correlation estimates for the
+             Bayesian SITAR model (fit via 'bsitar' package)", 
+             row.names=TRUE, 
+             # col.names = TRUE, 
+             align='c',
+             format="html", 
+             booktabs=TRUE) %>%
+  kableExtra::kable_styling(latex_options="scale_down", 
+                            row_label_position = "c",
+                            position = "float_left",
+                            font_size = 14,
+                            htmltable_class = 'lightable-classic',
+                            html_font = "Cambria") %>%
+  # kableExtra::row_spec(1:3, align = "c", monospace = T) %>%
+  kableExtra::column_spec(1, width = "2.5in", monospace = T) %>%
+  kableExtra::column_spec(2, width = "2.5in", monospace = T) %>%
+  kableExtra::column_spec(3, width = "1.2in", monospace = T) %>%
+  kableExtra::footnote(
+    general = "a: Size (height); b: Timing (age at peak growth velocity, APGV); c: Intensity (peak growth velocity, AGV)",
+    footnote_as_chunk = TRUE,
+    general_title = "",
+    threeparttable = FALSE)
+```
+
 
 Random effects for the first ten girls. The intensity c, multiplied by 100, is a
 percentage.
 
-```{r tab_2, echo=FALSE, results='asis'}
-# SITAR model (fit via 'sitar' package)
-knitr::kable(nlme::ranef(fh1)[1:10, ], digits = 2, 
-             caption = "Random effects for the first ten girls
-             (SITAR model fit via 'sitar' package)", 
-             label = NA,
-             format = "html", align = 'c') %>% 
-  kableExtra::kable_classic(full_width = T, html_font = "Cambria")
-# Bayesian SITAR model (fit via 'bsitar' package)
-bfh1_ranef <- cbind(brms::ranef(bfh1)$id[,,1][,1],
-                    brms::ranef(bfh1)$id[,,1][,2],
-                    brms::ranef(bfh1)$id[,,1][,3])
-colnames(bfh1_ranef) <- letters[1:3]
-knitr::kable(bfh1_ranef[1:10, ], digits = 2, 
-             caption = "Random effects for the first ten girls 
-             (Bayesian SITAR model fit via 'bsitar' package)", 
-             label = NA,
-             format = "html", align = 'c') %>% 
-  kableExtra::kable_classic(full_width = T, html_font = "Cambria")
+```{r}
+# https://community.rstudio.com/t/sizing-tables-in-pdf-documents-using-knitr-and-kableextra/19285/2
+knitr::kable(fh1_ranef_id[1:10, ], 
+             digits = 2, 
+             caption = "Random effects for the first ten girls estimated by the
+             SITAR model (fit via 'sitar' package)", 
+             # label = '\\label{tab:tab_ranef_bsitar}Table',
+             row.names=F, 
+             # align=c("l",rep("r",3)),
+             align='c',
+             format="html", 
+             booktabs=TRUE) %>%
+   kableExtra::kable_styling(latex_options="scale_down", 
+                            row_label_position = "c",
+                            position = "float_left",
+                            font_size = 14,
+                            htmltable_class = 'lightable-classic',
+                            html_font = "Cambria") %>%
+  # kableExtra::kable_classic(full_width = F, html_font = "Cambria") %>% 
+  # kableExtra::kable_styling() %>% 
+  # kableExtra::row_spec(0, align = "c", bold = T ) %>%
+  # kableExtra::row_spec(1:4, align = "c", monospace = T) %>%
+  kableExtra::column_spec(1, width = "0.4in") %>%
+  kableExtra::column_spec(2, width = "0.4in") %>%
+  kableExtra::column_spec(3, width = "0.4in") %>%
+  kableExtra::column_spec(4, width = "0.4in") %>%
+  # kableExtra::add_indent(c(3:9)) %>%
+  # kableExtra::add_header_above(header="Header") %>%
+  kableExtra::footnote(
+    general = "a: Size (height); b: Timing (age at peak growth velocity, APGV); c: Intensity (peak growth velocity, AGV)",
+    footnote_as_chunk = TRUE,
+    general_title = "",
+    threeparttable = FALSE)
 ```
+
+
+
+
+```{r}
+knitr::kable(bfh1_ranef_id[1:10, ], 
+             digits = 2, 
+             caption = "Random effects for the first ten girls estimated by the
+             Bayesian SITAR model (fit via 'bsitar' package)", 
+             row.names=FALSE, 
+             align='c',
+             format="html", 
+             booktabs=TRUE) %>%
+  kableExtra::kable_styling(latex_options="scale_down", 
+                            row_label_position = "c",
+                            position = "float_left",
+                            font_size = 14,
+                            htmltable_class = 'lightable-classic',
+                            html_font = "Cambria") %>%
+  # kableExtra::row_spec(1:4, align = "c", monospace = T) %>%
+  kableExtra::column_spec(1, width = "0.4in") %>%
+  kableExtra::column_spec(2, width = "0.4in") %>%
+  kableExtra::column_spec(3, width = "0.4in") %>%
+  kableExtra::column_spec(4, width = "0.4in") %>%
+  kableExtra::footnote(
+    general = "a: Size (height); b: Timing (age at peak growth velocity, APGV); c: Intensity (peak growth velocity, AGV)",
+    footnote_as_chunk = TRUE,
+    general_title = "",
+    threeparttable = FALSE)
+```
+
+
+## References
 
 
