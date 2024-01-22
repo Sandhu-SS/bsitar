@@ -47,6 +47,7 @@ Suggests:
     bookdown,
     knitr,
     kableExtra,
+    tibble,
     rmarkdown,
     spelling,
     Hmisc,
