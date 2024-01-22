@@ -100,43 +100,40 @@ The super imposition by translation and rotation (*SITAR*) model is a
 shape-invariant nonlinear mixed effect growth curve model that fits a population
 average curve to the data, and aligns each individual's growth trajectory to
 this underlying population average curve via a set of random effects
-[@Cole2010].
+[@Cole2010]. The 'bsitar' package [@bsitar-package] can fit univariate model
+(analysis of a single outcome), univariate_by model (analysis of a single
+outcome separately for sub groups defined by a factor variable such as gender),
+and multivariate model (joint modelling of two or more outcomes). A detailed
+introduction to the *SITAR* model including biological and mathematical
+description of the model, Bayesian estimation of the *SITAR* model, and the
+default priors used in the 'bsitar' package are provided in the the [Bayesian
+SITAR - An Introduction](Bayesian_SITAR_An_Introduction.html) vignette.
 
-A detailed introduction to the *SITAR* model including biological and
-mathematical description of the model, as well as its Bayesian estimation using
-'bsitar' package has been provided in the [Bayesian SITAR - An
-Introduction](Bayesian_SITAR_An_Introduction.html). The 'bsitar' package
-[@bsitar-package] can fit univariate model (analysis of a single outcome),
-univariate_by model (analysis of a single outcome separately for sub groups
-defined by a factor variable such as gender), and multivariate model (joint
-modelling of two or more outcomes). The mathematical description of the model
-along with prior specifications are provided in the the [Bayesian SITAR - An
-Introduction](Bayesian_SITAR_An_Introduction.html) vignette.
-
-In this vignette, we fit a univariate Bayesian *SITAR* model using the 'bsitar'
-package [@bsitar-package] and compare results with the non Bayesian
-*SITAR* model fit via the 'sitar' package [@R-sitar]. Hereafter, the Bayesian and non
-Bayesian model fits are referred to as **sitar** and **bsitar** models,
-respectively. The purpose of this vignette is to demonstrate that both 'sitar'
-and 'bsitar' packages perform almost identically in capturing population average
-as well as individual specific trajectories thereby provide similar estimates of
-the timing and the intensity of the adolescent growth spurt parameters. This is
-important to ensure that new 'bsitar' package performs as expected before we fit
-more complex model (such as multivariate model) for which no direct comparison
-is possible with the 'sitar' package because it is restricted to univariate
-model fitting.
+In this vignette, we fit univariate Bayesian *SITAR* model using 'bsitar'
+package [@bsitar-package] and compare results with the non Bayesian *SITAR*
+model fit via the 'sitar' package [@R-sitar]. Hereafter, the Bayesian and non
+Bayesian model estimated by the 'sitar' and 'bsitar' package are referred to as
+**sitar** and **bsitar** models, respectively. The purpose of this vignette is
+to demonstrate that both 'sitar' and 'bsitar' packages perform similarly in
+capturing population average as well as individual specific trajectories thereby
+provide similar estimates of the timing and the intensity of the adolescent
+growth spurt parameters. This is important to ensure that new 'bsitar' package
+performs as expected (as compared to the *sitar* model) before we fit more
+complex model (such as multivariate model) for which no direct comparison is
+possible between *bsitar* and *sitar* models because 'sitar' package is
+restricted to univariate model fitting.
 
 We study Berkeley data that comprise repeated growth measurements made on males
-and females from birth to adulthood. The Berkeley dataset is included in both
+and females from birth to adulthood. The Berkeley data set is included in both
 'sitar' and 'bsitar' packages. To compare our findings directly with the
-non-Bayesian (frequentist) model fit results shown in the vignette [Fitting
-models with SITAR](https://CRAN.R-project.org/package=sitar) included in the
-'sitar' package, we analyze the exact same data which is used in the [Fitting
-models with SITAR](https://CRAN.R-project.org/package=sitar). The data is a
-subset of the Berkeley data that include height measurements for individuals (between
-8 and 18 years of age) collected every six months.
+*sitar* model results shown in the vignette included in the 'sitar' package 
+[Fitting models with SITAR](https://CRAN.R-project.org/package=sitar), we 
+analyze the exact same data. The data is a subset of the Berkeley data that 
+include height measurements for individuals (between 8 and 18 years of age) 
+collected every six months.
 
-
+\newline
+## Model fit
 If needed, install 'bsitar' and 'sitar' packages (also other required packages)
 ```{r lib, eval=FALSE, echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
 if (!require(bsitar)) install.packages('bsitar')
@@ -145,7 +142,6 @@ if (!require(ggplot2)) install.packages('ggplot2')
 if (!require(knitr)) install.packages('knitr')
 if (!require(kableExtra)) install.packages('kableExtra')
 ```
-
 
 ```{r loadlib}
 stopifnot(require(knitr))
@@ -157,9 +153,8 @@ library(ggplot2)
 existsdata <- existsfit  <- T
 ```
 
-\newline
-## Model fit
-Fit *SITAR* (**sitar**) and *Bayesian SITAR* (**bsitar**) models to the height data for individuals  
+
+Fit **sitar** and **bsitar** models using the 'sitar' and 'bsitar' packages. 
 ```{r modelfit, results='hide', echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
 if(existsdata) {
   if(exists('berkeley_mdata')) data <- berkeley_mdata else stop("data does not exist")
@@ -198,15 +193,17 @@ if(existsfit) {
 
 \newline
 ## Model summary
-Summary of *SITAR* model fit (**sitar**)
+
+Summary of **sitar** model
 ```{r summary_sitar, results='show', echo=FALSE,include=TRUE}
 print(model_frequ)
 ```
 
-Summary of Bayesian SITAR model fit ((**bsitar**))
+Summary of **bsitar** model
 ```{r summary_bsitar, results='show', echo=FALSE,include=TRUE}
 print(model_bayes)
 ```
+
 
 ```{r prepare_adv, echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
 idvar <- 'id'

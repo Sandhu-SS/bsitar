@@ -7,9 +7,10 @@ DVau
 Dvau
 GCMs
 HMC
-HalfNormal
 Ij
+Kurowicka
 LKJ
+Lewandowski
 MVNormal
 NCP
 OpenBUGS
@@ -49,6 +50,7 @@ iliac
 init
 jitter
 linetype
+lkj
 lm
 magrittr
 mathbf
@@ -65,7 +67,9 @@ pmatrix
 ppc
 ppd
 pre
+priori
 rescaling
+rstanarm
 rstanrm
 sd
 stancode
@@ -80,3 +84,4 @@ varibales
 visualising
 waic
 warmup
+ysd
