@@ -136,11 +136,11 @@ collected every six months.
 ## Model fit
 If needed, install 'bsitar' and 'sitar' packages (also other required packages)
 ```{r lib, eval=FALSE, echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
-# if (!require(bsitar)) install.packages('bsitar')
-# if (!require(sitar)) install.packages('sitar')
-# if (!require(ggplot2)) install.packages('ggplot2')
-# if (!require(knitr)) install.packages('knitr')
-# if (!require(kableExtra)) install.packages('kableExtra')
+if (!require(bsitar)) install.packages('bsitar')
+if (!require(sitar)) install.packages('sitar')
+if (!require(ggplot2)) install.packages('ggplot2')
+if (!require(knitr)) install.packages('knitr')
+if (!require(kableExtra)) install.packages('kableExtra')
 ```
 
 ```{r loadlib}
