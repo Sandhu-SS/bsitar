@@ -151,7 +151,7 @@ stopifnot(require(ggplot2))
 stopifnot(require(sitar))
 library(bsitar)
 library(ggplot2)
-existsdata <- existsfit  <- F
+existsdata <- existsfit  <- T
 ```
 
 
@@ -203,6 +203,15 @@ print(model_frequ)
 Summary for the **bsitar** model
 ```{r summary_bsitar, results='show', echo=FALSE,include=TRUE}
 print(model_bayes)
+```
+
+
+```{r prepare_advNALL, eval=TRUE,echo=TRUE,include=FALSE, warning= FALSE, message=FALSE}
+# When NOT_CRAN, set eval=TRUE to avoid error on sitar_ranef_id_min and sitar_ranef_id_max
+sitar_ranef_id_min   <- data.frame(id=1:1, a = NA_real_, b = NA_real_, c = NA_real_)
+sitar_ranef_id_max   <- data.frame(id=1:1, a = NA_real_, b = NA_real_, c = NA_real_)
+bsitar_ranef_id_min  <- data.frame(id=1:1, a = NA_real_, b = NA_real_, c = NA_real_)
+bsitar_ranef_id_max  <- data.frame(id=1:1, a = NA_real_, b = NA_real_, c = NA_real_)
 ```
 
 
