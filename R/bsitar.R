@@ -548,7 +548,7 @@
 #'@param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
 #'  (default \code{student_t(3, ymean, ysd, autoscale = TRUE)}). The key points
 #'  in prior specification that are applicable for all parameters are
-#'  highlighted below. For full details on prior specification, please see See
+#'  highlighted below. For full details on prior specification, please see
 #'  [brms::prior()].
 #'  \itemize{
 #'  \item Allowed distributions are \code{normal}, \code{student_t},
@@ -604,8 +604,9 @@
 #'  \code{a_prior_beta = normal(lm, ysd)}, \cr 
 #'  Note that options \code{'ymean'}, \code{'ymedian'}, \code{'ysd'},
 #'  \code{'ymad'}, \code{'ymad'} and \code{'lm'} are available only for the
-#'  fixed effect parameter, \code{a} and not for any other parameter.
-#'
+#'  fixed effect parameter, \code{a} and not for parameters \code{b}, \code{c}
+#'  or \code{d}.
+#'  
 #'@param b_prior_beta Specify priors for the fixed effect parameter, \code{b}.
 #'  (default \code{student_t(3, 0, 3.5, autoscale = FALSE)}). See
 #'  \code{a_prior_beta} for details.
@@ -620,40 +621,35 @@
 #'  
 #'@param s_prior_beta  Specify priors for the fixed effect parameter, \code{s}
 #'  (i.e., spline coefficients). (default \code{student_t(3, 0, 'lm', autoscale
-#'  = FALSE)}). The general approach is same as described
+#'  = TRUE)}). The general approach is same as described
 #'  earlier for the fixed effect parameters (see \code{a_prior_beta} for
 #'  details). A few key points are highlighted below:
 #'  \itemize{
-#'  \item When specifying the location-scale based priors, option \code{lm} as
-#'  location parameter sets the spline coefficients obtained from the simple
-#'  linear model fit to the data, and the option \code{lm} as scale parameter
-#'  sets the scale parameter same as the standard deviation of the spline design
-#'  matrix that was used in the fitting of the simple linear model to the data.
-#'  Such a prior is specified as \code{s_prior_beta = normal(lm, lm)}. However, 
-#'  typically, the location parameter is set at '0' (default), and the autoscale
-#'  option is set as \code{TRUE}. Therefore, the default priors used  for the 
-#'  fixed effect parameter, \code{s} is as follows: \cr
-#'  \code{s_prior_beta = normal(0, lm, autoscale = TRUE)}.
-#'  \item For the location scale based priors, an option \code{sethp} (logical,
-#'  default \code{FALSE}) is available to set up the hierarchical priors for the
-#'  \code{s} parameter. To set \code{sethp} as \code{TRUE}, the prior is
-#'  specified as \code{s_prior_beta = normal(0, lm, autoscale = TRUE, sethp =
-#'  TRUE)}). When \code{TRUE}, instead of setting prior as \code{s ~ normal(0,
-#'  lm)} the hierarchical priors are set as \code{s ~ normal(0, hp)} with
-#'  \code{hp} defined as \code{hp ~ normal(0, lm)}. Note that the scale 
-#'  parameter for the  \code{hp ~ normal(0, lm)} is automatically taken from the 
-#'  \code{s ~ normal(0, hp)}. Setting \code{sethp = TRUE} implies that the 
+#'  \item When specifying location-scale based priors using 'lm' such as
+#'  \code{s_prior_beta = normal(lm, 'lm')} , it sets spline coefficients
+#'  obtained from the simple linear model fit as location parameter whereas
+#'  scale parameter is based on the standard deviation of the spline design
+#'  matrix. However, typically, the location parameter is set at '0' (default),
+#'  and the autoscale option is set as \code{TRUE}.
+#'  \item For location-scale based priors, an option \code{sethp} (logical,
+#'  default \code{FALSE}) is available to set up the hierarchical priors. To set \code{sethp} as \code{TRUE}, the prior is
+#'  specified as \code{s_prior_beta = normal(0, 'lm', autoscale = TRUE, sethp =
+#'  TRUE)}). When \code{sethp = TRUE}, instead of setting prior as \code{s ~ normal(0,
+#'  'lm')} the hierarchical priors are set as \code{s ~ normal(0, 'hp')} where
+#'  \code{'hp'} is defined as \code{hp ~ normal(0, 'lm')}. Note that the scale 
+#'  parameter for the  \code{hp ~ normal(0, 'lm')} is automatically taken from the 
+#'  \code{s ~ normal(0, 'hp')}. Setting \code{sethp = TRUE} implies that the 
 #'  scale for spline coefficients is estimated from the data itself. The 
 #'  distribution of hierarchical priors is automatically matched with the prior 
 #'  set for the \code{s} parameter, or else can be set by the same \code{sethp} 
-#'  option. For example, \code{s_prior_beta = normal(0, lm, sethp = cauchy)} 
-#'  will be translated to \code{s ~ normal(0, lm)}, \code{hp  ~ cauchy(0, lm)}.
-#'  \item For \code{uniform} priors, the \code{addrange} option can be used to
-#'  symmetrically add range to the \code{lm} based spline coefficients.
-#'  \item 
+#'  option. For example, \code{s_prior_beta = normal(0, 'lm', sethp = cauchy)} 
+#'  will be translated to \code{s ~ normal(0, 'lm')}, \code{hp  ~ cauchy(0, 'lm')}.
+#'  \item For \code{uniform} priors, the  option\code{addrange} can be used to
+#'  symmetrically expand the prior range.
 #'  }
-#'  It is advised to use only the location scale based prior distributions (e.g,
-#'  \code{normal}, \code{student_t}, and \code{cauchy}).
+#'  It is observed that location scale based prior distributions (e.g,
+#'  \code{normal}, \code{student_t}, and \code{cauchy}) perform well for the
+#'  spline coefficients.
 #'  
 #'@param a_cov_prior_beta Specify priors for the covariate(s) included in the
 #'  fixed effect parameter, \code{a} (default \code{student_t(3, 0, 5.0,

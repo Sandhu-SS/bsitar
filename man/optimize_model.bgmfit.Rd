@@ -3,7 +3,7 @@
 \name{optimize_model.bgmfit}
 \alias{optimize_model.bgmfit}
 \alias{optimize_model}
-\title{Optimize the SITAR model}
+\title{Optimize SITAR model}
 \usage{
 \method{optimize_model}{bgmfit}(
   model,
@@ -17,6 +17,7 @@
   byresp = FALSE,
   digits = 2,
   cores = 1,
+  expose_function = NULL,
   verbose = FALSE,
   envir = NULL,
   ...
@@ -91,6 +92,12 @@ the \code{\link[base:Round]{base::round()}} function.}
 \code{1}). The argument \code{cores} is passed to the
 \code{\link[brms:add_criterion]{brms::add_criterion()}}.}
 
+\item{expose_function}{An optional argument logical argument to indicate
+whether to expose Stan function used in model fitting (\code{TRUE}) or not
+(\code{FALSE}). Default \code{NULL} takes \code{expose_function} from the
+\code{model} being optimized. Note that \code{expose_function} must be set
+as \code{TRUE} when adding \code{fit criteria} and/or \code{bayes_R2}.}
+
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
 object(s).}
@@ -111,10 +118,10 @@ the summary statistics if \code{add_fit_criteria} and/or
 \code{add_bayes_R} are specified.
 }
 \description{
-Optimization is the process of selecting the best fitting SITAR
-model that involves choosing optimum degrees of freedom for the natural
-cubic-spline curve, and the appropriate transformations of the predictor
-variable \code{x} and the response variable \code{y}.
+Select the best fitting SITAR model that involves choosing the
+optimum degrees of freedom (\code{df}) for the natural cubic-spline curve
+and the appropriate transformations of the predictor \code{x} and response
+\code{y} variables.
 }
 \examples{
 

@@ -1,11 +1,11 @@
 
 
-#' @title Optimize the SITAR model
+#' @title Optimize SITAR model
 #' 
-#' @description Optimization is the process of selecting the best fitting SITAR
-#'   model that involves choosing optimum degrees of freedom for the natural
-#'   cubic-spline curve, and the appropriate transformations of the predictor
-#'   variable \code{x} and the response variable \code{y}.
+#' @description Select the best fitting SITAR model that involves choosing the
+#'   optimum degrees of freedom (\code{df}) for the natural cubic-spline curve
+#'   and the appropriate transformations of the predictor \code{x} and response
+#'   \code{y} variables.
 #'
 #' @param optimize_df A list of integers specifying the degree of freedom
 #'   (\code{df}) values to be optimized. If \code{NULL} (default), the \code{df}
@@ -63,7 +63,13 @@
 #' @param cores The number of cores to used in parallel processing (default
 #'   \code{1}). The argument \code{cores} is passed to the
 #'   [brms::add_criterion()].
-#'
+#'   
+#' @param expose_function An optional argument logical argument to indicate
+#'   whether to expose Stan function used in model fitting (\code{TRUE}) or not
+#'   (\code{FALSE}). Default \code{NULL} takes \code{expose_function} from the
+#'   \code{model} being optimized. Note that \code{expose_function} must be set
+#'   as \code{TRUE} when adding \code{fit criteria} and/or \code{bayes_R2}.
+#' 
 #' @param ... Other arguments passed to \code{\link{update_model}}.
 #' 
 #' @inheritParams  growthparameters.bgmfit
@@ -122,6 +128,7 @@ optimize_model.bgmfit <- function(model,
                                   byresp = FALSE,
                                   digits = 2,
                                   cores = 1,
+                                  expose_function = NULL, 
                                   verbose = FALSE,
                                   envir = NULL,
                                   ...) {
@@ -129,7 +136,6 @@ optimize_model.bgmfit <- function(model,
   if(is.null(envir)) {
     envir <- parent.frame()
   }
-  
   
   # Initiate non formalArgs()
   outcome <- NULL;
@@ -165,6 +171,11 @@ optimize_model.bgmfit <- function(model,
   call_o_args <- as.list(call_o)[-1]
   
   args_o <- as.list(model$model_info$call.full.bgmfit)[-1]
+  
+  if(!is.null(call_o_args$expose_function)) {
+    args_o$expose_function <- call_o_args$expose_function
+  }
+    
   args_o_dots_ <- list(...)
   if (length(args_o_dots_) > 0) {
     for (i in names(args_o_dots_)) {
@@ -197,16 +208,40 @@ optimize_model.bgmfit <- function(model,
   }
   
   
-  # Not must for expose_function to be true
-  if (!args_o$expose_function) {
-    if (!is.null(add_fit_criteria) | !is.null(add_bayes_R)) {
-      # stop(
-      #   "Argument expose_function must be set to TRUE when ",
-      #   "\n ",
-      #   " adding fit criteria and bayes_R2"
-      # )
-    }
+  need_exposed_function <- FALSE
+  if(!is.null(add_fit_criteria)) {
+    need_exposed_function <- TRUE
+  } else if(is.list(add_fit_criteria)) {
+    if(!any(is.null(add_fit_criteria[[1]]))) need_exposed_function <- TRUE
+  } else if(!is.null(add_bayes_R)) {
+    need_exposed_function <- TRUE
+  } else if(is.list(add_bayes_R)) {
+    if(!any(is.null(add_bayes_R[[1]]))) need_exposed_function <- TRUE
   }
+
+  
+  
+  
+  # Not must for expose_function to be true when not adding criteria or bayes R2
+  if (need_exposed_function) {
+  if (!args_o$expose_function) {
+      stop(
+        "Argument 'expose_function' must be set to TRUE when ",
+        "\n ",
+        " 'add_fit_criteria' and/or 'add_bayes_R' not NULL"
+      )
+    }
+    if(!grepl('GlobalEnv', deparse(substitute(envir)), ignore.case = T)) {
+      stop(
+        "The 'envir' must be '.GlobalEnv' when ",
+        "\n ",
+        " 'add_fit_criteria' and/or 'add_bayes_R' not NULL",
+        "\n ",
+        " This is a known issue ",
+        "(https://github.com/paul-buerkner/brms/issues/1577)"
+      )
+    }
+  } # if (need_exposed_function) {
   
   
   
@@ -312,9 +347,9 @@ optimize_model.bgmfit <- function(model,
                               yfun_print,
                               ...) {
     
-    if (!fit$model_info$call.full.bgmfit$expose_function) {
+   # if (!fit$model_info$call.full.bgmfit$expose_function) {
       assign(o[[1]], fit$model_info[['exefuns']][[o[[1]]]], envir = envir)
-    }
+   # }
     
     if (!is.null(add_fit_criteria)) {
       what_ <- paste(add_fit_criteria, collapse = ", ")
@@ -866,7 +901,12 @@ optimize_model.bgmfit <- function(model,
       user_call_data_name <- user_call$data
       assign(deparse(user_call_data_name), newdata)
       user_call <- rlang::call_modify(user_call, !!!newargs)
+      # Setting it to FALSE because we are exposing it anyways below
+      user_call$expose_function <- FALSE
       fit <- eval(user_call)
+      if(args_o$expose_function) {
+        fit <- expose_model_functions(fit, envir = envir)
+      }
     }
     
     

@@ -1,5 +1,5 @@
 ---
-title: "Fitting Bayesian SITAR univariate model"
+title: "Fit univariate Bayesian SITAR model"
 author: "Satpal Sandhu"
 date: '`r format(Sys.time(), "%B %d, %Y")`'
 bibliography: [Bayesian_SITAR_An_Introduction.bib, packages.bib, REFERENCES.bib]
@@ -33,7 +33,7 @@ linkcolor:  blue
 urlcolor: blue
 citecolor: magenta
 vignette: >
-  %\VignetteIndexEntry{Fitting Bayesian SITAR univariate model}
+  %\VignetteIndexEntry{Fit_univariate_Bayesian_SITAR_model}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 params:
@@ -54,7 +54,7 @@ editor_options:
 ---
 
 
-```{r setup, include=FALSE}
+```{r SETTINGS-knitr, include=FALSE}
 NOT_CRAN <- identical(tolower(Sys.getenv("NOT_CRAN")), "true")
 knitr::knit_hooks$set(purl = knitr::hook_purl)
 options(width = 90)
@@ -66,8 +66,8 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE,
   eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
-  purl = NOT_CRAN,
-  eval = NOT_CRAN,
+  # purl = NOT_CRAN,
+  # eval = NOT_CRAN,
   dev = "jpeg",
   dpi = 40,
   fig.cap = "",
@@ -151,7 +151,7 @@ stopifnot(require(ggplot2))
 stopifnot(require(sitar))
 library(bsitar)
 library(ggplot2)
-existsdata <- existsfit  <- T
+existsdata <- existsfit  <- F
 ```
 
 
@@ -411,17 +411,18 @@ patterns that *SITAR* adjust via random effects are size, timing and intensity:
 
 Adjusted curves aligned with the mean curve (Figure \@ref(fig:plota)) indicate
 that most of the inter-individual variability has been captured. This is
-achieved by: 1) shifting the high curves down and the low curves up (i.e.
-adjusting for size), 2) shifting the early curves later and the late curves
-earlier (timing), and 3) for intensity, the steep curves are made shallower by
-stretching them along the age scale, and the shallow curves are made steeper by
-shrinking them along the age scale. This explains the name SITAR - Super
-Imposition by Translation And Rotation. The curve adjustment involves
-translation (shifting the curves up/down and left/right) and rotation (making
-them steeper or shallower), and the effect is to superimpose the curves. The
-complexity of the spline curve's shape is determined by the degrees of freedom
-(df) argument in the **sitar** and **bsitar** call. In our example, the models
-are fit using five degrees of freedom.
+achieved by: 1) shifting the high curves down and the low curves up to adjust
+for the size, 2) shifting the early curves later and the late curves earlier
+(translation) to adjust for the timing, and 3) steep curves are made shallower
+by stretching them along the age scale whereas  shallow curves are made steeper
+by shrinking them along the age scale (rotation) to adjust for the intensity.
+This explains the name SITAR - Super Imposition by Translation And Rotation. The
+curve adjustment involves translation (shifting the curves up/down and
+left/right) and rotation (making them steeper or shallower), and the effect is
+to superimpose the curves. The complexity of the spline curve's shape is
+determined by the degrees of freedom (`df`) argument in the **sitar** and
+**bsitar** call. In our example, the models are fit using five degrees of
+freedom.
 
 
 ```{r plota, echo=TRUE,include=TRUE, fig.width = 6, fig.height=4, fig.asp = 1.0, fig.cap="\\label{fig:plota}Observed curves along with the superimposed adjusted curves (via random effects) for the **sitar** and **bsitar** models. The observed curves are shown as solid light grey lines whereas the adjusted curves for the **sitar** model are displayed as solid black lines. The adjusted curves for the **bsitar** model are shown as dotted black lines."}
@@ -487,7 +488,7 @@ percentage. Results for both the models are very similar to each other. Results
 for the **sitar** model are presented below.
 
 For the shortest individual, size is `r round(sitar_ranef_id_min$a, 2)` cm smaller
-than the average size, timing of the spurt is `r round(sitar_ranef_id_min$b, 2)` year earlier than average timing, and the growth rate (intensity) is `r round(sitar_ranef_id_min$c*100, 2)` % faster than average growth rate. In contrast, the size for tallest individual is `r round(sitar_ranef_id_max$a, 2)` cm larger than the average size and the spurt occurrs `r round(sitar_ranef_id_max$b, 2)` year later than average timing with growth rate `r round(sitar_ranef_id_max$c*100, 2)` % slower than
+than the average size, timing of the spurt is `r round(sitar_ranef_id_min$b, 2)` year earlier than average timing, and the growth rate (intensity) is `r round(sitar_ranef_id_min$c*100, 2)` % faster than average growth rate. In contrast, the size for tallest individual is `r round(sitar_ranef_id_max$a, 2)` cm larger than the average size and the spurt occurs `r round(sitar_ranef_id_max$b, 2)` year later than average timing with growth rate `r round(sitar_ranef_id_max$c*100, 2)` % slower than
 average intensity.
 
 For a broader comparison among the **sitar** and **bsitar** models, random
@@ -1001,7 +1002,7 @@ knitr::kable(parms_apv_all,
 
 
 \newline
-### Individual specific (mean) estimates
+### Individual specific estimates
 Like population average, both **sitar** and
 **bsitar** models provide very similar estimates for the timing (APGV) and the
 intensity (PGV) of the growth spurt (see Table \@ref(tab:sitarraneffecidapv))
