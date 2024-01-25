@@ -151,7 +151,7 @@ stopifnot(require(ggplot2))
 stopifnot(require(sitar))
 library(bsitar)
 library(ggplot2)
-existsdata <- existsfit  <- F
+existsdata <- existsfit  <- FALSE
 ```
 
 
