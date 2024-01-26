@@ -161,6 +161,11 @@ prepare_data <- function(data,
       model.matrix(~ 0 + eval(parse(text = uvarby)), data)
     subindicators <- paste0(uvarby, levels(data[[uvarby]]))
     colnames(unibyimat) <- subindicators
+    #
+    unibyimat <- unibyimat %>% data.frame()
+    unibyimat <- sapply(unibyimat, as.integer ) %>% data.frame()
+    unibyimat <- sapply(unibyimat, as.logical ) %>% data.frame()
+    #
     y <- levels(data[[uvarby]])
     data <- as.data.frame(cbind(data, unibyimat))
     data <- transform_y(y, yfuns)

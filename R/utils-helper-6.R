@@ -3563,15 +3563,49 @@ set_priors_initials <- function(a_prior_beta,
       sigma_par_name <- paste0('b_sigma', resp_)
       Intercept_sigma <- paste0('Intercept_sigma', resp_)
     }
+   
+    
+  #   if(!is.null(initialsx[[sigma_par_name]])) {
+  #     g_sigma_i <- initialsx[[sigma_par_name]]
+  #     initialsx[[Intercept_sigma]] <- g_sigma_i[1]
+  #     if(init_arguments[['sigma_cov_init_beta']] != "random") {
+  #       if(length(g_sigma_i) > 1) {
+  #         if(init_arguments[['sigma_cov_init_beta']] != "random") {
+  #           initialsx[[sigma_par_name]] <-  
+  #             array(g_sigma_i[2:length(g_sigma_i)], 
+  #                   dim = length(g_sigma_i[2:length(g_sigma_i)]))
+  #         } # if(length(g_sigma_i) > 1) {
+  #       }
+  #     } # if(init_arguments[['sigma_cov_init_beta']] != "random")
+  #     
+  #       if(init_arguments[['sigma_cov_init_beta']] == "random") {
+  #         initialsx[[sigma_par_name]] <-  NULL
+  #       } 
+  #   }
+  # }
+    
+    
     if(!is.null(initialsx[[sigma_par_name]])) {
       g_sigma_i <- initialsx[[sigma_par_name]]
-      initialsx[[Intercept_sigma]] <- g_sigma_i[1]
-      if(length(g_sigma_i) > 1) {
-        initialsx[[sigma_par_name]] <-  
-          array(g_sigma_i[2:length(g_sigma_i)], 
-                dim = length(g_sigma_i[2:length(g_sigma_i)]))
-      } # if(length(g_sigma_i) > 1) {
-    }
+      if(init_arguments[['sigma_init_beta']] != "random") {
+        initialsx[[Intercept_sigma]] <- g_sigma_i[1]
+        g_sigma_i_cov <- g_sigma_i[2:length(g_sigma_i)]
+      } else if(init_arguments[['sigma_init_beta']] == "random") {
+        initialsx[[Intercept_sigma]] <- NULL
+        g_sigma_i_cov <- g_sigma_i[1:length(g_sigma_i)]
+      }
+      
+      if(init_arguments[['sigma_cov_init_beta']] != "random") {
+        if(length(g_sigma_i) > 1) {
+          initialsx[[sigma_par_name]] <- array(g_sigma_i_cov, dim = length(g_sigma_i_cov))
+        } else if(length(g_sigma_i) == 1) {
+          initialsx[[sigma_par_name]] <- g_sigma_i_cov
+        }
+      } else if(init_arguments[['sigma_cov_init_beta']] == "random") {
+        initialsx[[sigma_par_name]] <-  NULL
+      }
+    } # if(!is.null(initialsx[[sigma_par_name]])) {
+  
   }
   
   

@@ -122,13 +122,13 @@ spurt parameters (timing and the intensity). The aim of this exercise is to
 ensure that our 'bsitar' package performs as expected (i.e., no systematic
 difference in results when compared with the *sitar* model) before we fit more
 complex model (such as multivariate model) for which no direct comparison is
-possible between *bsitar* and *sitar* models ('sitar' package is restricted to
-univariate model fitting).
+possible between **sitar** and **bsitar** models. This is because the 'sitar'
+package is restricted to univariate model fitting.
 
 We study Berkeley data that comprise repeated growth measurements made on males
 and females from birth to adulthood. The Berkeley data set is included in both
 'sitar' and 'bsitar' packages. To compare our findings directly with the results
-shown in the vignette for the *sitar* model [Fitting models with
+shown in the vignette for the **sitar** model [Fitting models with
 SITAR](https://CRAN.R-project.org/package=sitar), we analyze the exact same
 data. The data is a subset of the Berkeley data with height measurements for
 females (between 8 and 18 years of age, every six months).
@@ -151,7 +151,7 @@ stopifnot(require(ggplot2))
 stopifnot(require(sitar))
 library(bsitar)
 library(ggplot2)
-existsdata <- existsfit  <- F
+existsdata <- existsfit  <- FALSE
 ```
 
 
