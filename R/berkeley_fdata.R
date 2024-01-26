@@ -3,13 +3,13 @@
 #' @title Berkeley Child Guidance Study Data for males
 #'
 #' @description A subset of the [bsitar::berkeley] data that contains
-#'   longitudinal growth data for 20 randomly selected males (6 to 20
+#'   longitudinal growth data for 20 randomly selected females (8 to 18
 #'   years of age).
 #'
 #' @details A detailed description of the full data is provided in the
 #'   [bsitar::berkeley] data.
 #'
-#' @name berkeley_mdata
+#' @name berkeley_fdata
 #' @docType data
 #' @format A data frame with following 3 variables:
 #' \describe{
@@ -22,4 +22,4 @@
 #'
 #' @return A data frame with 3 columns.
 #' @inherit berkeley author
-"berkeley_mdata"
+"berkeley_fdata"

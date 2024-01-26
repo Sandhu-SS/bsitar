@@ -157,8 +157,9 @@ existsdata <- existsfit  <- T
 
 Fit **sitar** and **bsitar** models using the 'sitar' and 'bsitar' packages. 
 ```{r modelfit, results='hide', echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
+data <- berkeley_mdata
 if(existsdata) {
-  if(exists('berkeley_mdata')) data <- berkeley_mdata else stop("data does not exist")
+  if(exists('berkeley_fdata')) data <- berkeley_fdata else stop("data does not exist")
 } else {
   data <- na.omit(berkeley[berkeley$sex == "Female" & 
                          berkeley$age >= 8 & berkeley$age <= 18, 
@@ -183,7 +184,7 @@ if(existsfit) {
 # model_bayes <- bsitar(x = age, y = height, id = id, data = data, df = 5)
 
 if(existsfit) {
-  if(exists('berkeley_mfit')) model_bayes <- berkeley_mfit else stop("model does not exist")
+  if(exists('berkeley_ffit')) model_bayes <- berkeley_ffit else stop("model does not exist")
 } else {
   model_bayes <-  bsitar(x = age, y = height, id = id, data = data, df = 5,
                 chains = 2, cores = 2, iter = 2000, refresh = 100,

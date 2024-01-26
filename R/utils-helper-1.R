@@ -1122,7 +1122,7 @@ priors_to_textdata <- function(model,
     dplyr::arrange(match(Class, sort_class))
 
   if (!is.null(model)) {
-    if (is.na(model$model_info$univariate_by) |
+    if (is.na(model$model_info$univariate_by) &
         !model$model_info$multivariate) {
       spriors <- spriors %>%  dplyr::select(-'Response')
     }
