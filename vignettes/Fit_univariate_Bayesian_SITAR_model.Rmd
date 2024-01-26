@@ -65,7 +65,7 @@ knitr::opts_chunk$set(
   comment = "#>",
   message = FALSE,
   warning = FALSE,
-  eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
+  # eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
   # purl = NOT_CRAN,
   # eval = NOT_CRAN,
   dev = "jpeg",
@@ -130,8 +130,9 @@ and females from birth to adulthood. The Berkeley data set is included in both
 'sitar' and 'bsitar' packages. To compare our findings directly with the results
 shown in the vignette for the **sitar** model [Fitting models with
 SITAR](https://CRAN.R-project.org/package=sitar), we analyze the exact same
-data. The data is a subset of the Berkeley data with height measurements for
-females (between 8 and 18 years of age, every six months).
+data which is a subset of the Berkeley data with height measurements for
+females (between 8 and 18 years of age, every six months). However, to reduce 
+the file size of the model object, we select a random sample of 20 individuals.
 
 \newline
 ## Model fit
@@ -151,7 +152,7 @@ stopifnot(require(ggplot2))
 stopifnot(require(sitar))
 library(bsitar)
 library(ggplot2)
-existsdata <- existsfit  <- T
+existsdata <- existsfit  <- TRUE
 ```
 
 
@@ -169,7 +170,7 @@ if(existsdata) {
 
 # Fit SITAR model (fit via 'sitar' package)
 if(existsfit) {
-  model_frequ <- sitar::sitar(x = age, y = height, id = id, data = data, df = 4)
+  model_frequ <- sitar::sitar(x = age, y = height, id = id, data = data, df = 5)
 } else {
   model_frequ <- sitar::sitar(x = age, y = height, id = id, data = data, df = 5)
 }
