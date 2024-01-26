@@ -28,21 +28,21 @@
 #' @param outliers An optional (default \code{NULL}) to remove velocity
 #'   outliers. The argument should be a named list to pass options to the
 #'   [bsitar::outliers()] function. See [bsitar::outliers()] for details.
-#'   
+#'
 #' @param subset A logical (default \code{TRUE}) to indicate whether to create
 #'   data for each level of the \code{univariate_by} variable, or only for a
 #'   subset of levels. The \code{subset = TRUE} is typically used during model
 #'   fit and \code{subset = FALSE} during post processing of each sub model. The
 #'   argument \code{subset} is ignored when \code{univariate_by} is \code{NA} or
 #'   \code{NULL}.
-#' 
+#'
 #' @return A data frame with necessary information added a attributes.
-#' 
+#'
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @keywords internal
 #' @noRd
-#' 
+#'
 prepare_data <- function(data,
                          x,
                          y,
@@ -53,9 +53,9 @@ prepare_data <- function(data,
                          yfuns = NULL,
                          outliers = NULL,
                          subset = TRUE) {
-  
+
   data <- data %>% droplevels()
-  
+
   if (!is.null(outliers)) {
     remove_ <- outliers$remove
     icode_ <- outliers$icode
@@ -65,7 +65,7 @@ prepare_data <- function(data,
     lag_ <- outliers$lag
     linearise_ <- outliers$linearise
     verbose_ <- outliers$verbose
-    
+
     for (yi in 1:length(y)) {
       if (!y[yi] %in% colnames(data)) {
         stop(
@@ -89,10 +89,10 @@ prepare_data <- function(data,
       }
       if (!id[yi] %in% colnames(data)) {
         stop(
-          "When model is fit with argument outliers 
+          "When model is fit with argument outliers
           (i.e., outliers not NULL), ",
           "\n",
-          "  then group identifier variable should be 
+          "  then group identifier variable should be
           part of the newdata specified.",
           "\n",
           "  please check the missing group identifier varibale: ",
@@ -113,12 +113,12 @@ prepare_data <- function(data,
           remove = remove_,
           verbose = verbose_
         )
-      
+
     }
   } # if(!is.null(outliers)) {
-  
+
   org.data <- data
-  
+
   # Note that x tarnsformation is done within the prepare_function
   transform_y <- function(y, yfuns) {
     for (myfunsi in 1:length(y)) {
@@ -139,7 +139,7 @@ prepare_data <- function(data,
     }
     return(data)
   }
-  
+
   if (!(is.na(uvarby) | uvarby == "NA")) {
     if (!uvarby %in% colnames(data)) {
       stop(paste(
@@ -164,7 +164,7 @@ prepare_data <- function(data,
     #
     unibyimat <- unibyimat %>% data.frame()
     unibyimat <- sapply(unibyimat, as.integer ) %>% data.frame()
-    unibyimat <- sapply(unibyimat, as.logical ) %>% data.frame()
+    # unibyimat <- sapply(unibyimat, as.logical ) %>% data.frame()
     #
     y <- levels(data[[uvarby]])
     data <- as.data.frame(cbind(data, unibyimat))
