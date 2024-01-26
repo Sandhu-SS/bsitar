@@ -162,8 +162,9 @@ prepare_data <- function(data,
     subindicators <- paste0(uvarby, levels(data[[uvarby]]))
     colnames(unibyimat) <- subindicators
     #
-    unibyimat <- unibyimat %>% data.frame()
-    unibyimat <- sapply(unibyimat, as.integer ) %>% data.frame()
+    # unibyimat <- unibyimat %>% data.frame()
+    # unibyimat <- sapply(unibyimat, as.integer ) %>% data.frame()
+
     # unibyimat <- sapply(unibyimat, as.logical ) %>% data.frame()
     #
     y <- levels(data[[uvarby]])
