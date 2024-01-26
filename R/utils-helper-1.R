@@ -2197,11 +2197,10 @@ getpipedot <- function(arguments, asstr = FALSE) {
 
 #' An internal function to set up exposed functions and their environment
 #'
-#' @param model A list of arguments.
 #' @param o A logical (default \code{FALSE}) to indicate whether to
 #' return the object as a character string.
-#' @param usesavedfuns A logical (default \code{FALSE}) to indicate whether to
-#' @param deriv
+#' @inherit growthparameters.bgmfit params
+#' @param ... Additional arguments. Currently ignored.
 #' @keywords internal
 #' @return A list comprised of exposed functions.
 #' @noRd

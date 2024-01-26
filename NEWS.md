@@ -2,8 +2,8 @@
 
 ### Bugfixes
 
-- bsitar(): For sigma_cov_init_beta = 'random', wrong initial values were set for covariates included in the 'sigma' parameter. The initials set for 'sigam' parameter (sigma_cov_init_beta) were passed to covariates.
-- bsitar(): For 'univariate_by' model, the subset indicators were set as numeric 1 0 rather than explicitl logical (TRUE/FALSE). 
+- bsitar(): The 'sigma_cov_init_beta = random' sets wrong initial values for covariates included in the 'sigma' formula. The initials for Intercept ('sigma_init_beta') were used for covariates too.
+- bsitar(): For 'univariate_by' model, the subset indicators were set as numeric '1' and '0' rather than explicitly setting them to logical TRUE/FALSE. 
 
 # bsitar 0.1.1
 
