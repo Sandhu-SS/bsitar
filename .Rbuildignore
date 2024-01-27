@@ -28,3 +28,5 @@
 ^berkeley.rda$
 ^berkeley_mdata.rda$
 ^berkeley_mfit.rda$
+^berkeley_fdata.rda$
+^berkeley_ffit.rda$
