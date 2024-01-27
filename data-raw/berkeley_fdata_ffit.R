@@ -33,7 +33,7 @@ sample_n_of_groups <- function(data, size, ...) {
 }
 
 set.seed(1234)
-berkeley_fdata <- berkeley_fdata %>% sample_n_of_groups(size = 20, id)
+#berkeley_fdata <- berkeley_fdata %>% sample_n_of_groups(size = 20, id)
 
 
 sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 5,
@@ -43,8 +43,8 @@ sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 5,
 berkeley_ffit <- bsitar(x = age, y = height, id = id, data = berkeley_fdata,
                         df = 5, xoffset = mean, fixed = a+b+c, random = a+b+c,
                         a_formula = ~1, b_formula = ~1, c_formula = ~1,
-                        threads = brms::threading(NULL),
-                        chains = 2, cores = 2, iter = 2000, thin = 10)
+                        threads = brms::threading(12), backend = 'cmdstanr',
+                        chains = 2, cores = 2, iter = 1000, thin = 2)
 
 
 

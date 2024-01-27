@@ -5,6 +5,12 @@
 - bsitar(): The 'sigma_cov_init_beta = random' sets wrong initial values for covariates included in the 'sigma' formula. The initials for Intercept ('sigma_init_beta') were used for covariates too.
 - bsitar(): For 'univariate_by' model, the subset indicators were set as numeric '1' and '0' rather than explicitly setting them to logical TRUE/FALSE. 
 
+
+### Miscellaneous
+- Changed Bayesian SITAR model fit shown as example from 'berkeley_mfit' (SITAR model fit to 20 randomly selected males between 6 and 20 years of age) to 'berkeley_ffit' (SITAR model fit to 70 females between 8 and 20 years of age). This is done to use sample model fit ('berkeley_ffit') in vigenette that provide a detailed compariosn between non Bayesian SITAR model fit (using the 'sitar' package) and Bayesian SITAR model fit (using the 'bsitar' package). The vigenette included in the 'sitar' package analysed the exact same data (70 females between 8 and 20 years of age). 
+- Minor corrections/changes to make R code more efficient and consistent across sub modules.
+
+
 # bsitar 0.1.1
 
 
