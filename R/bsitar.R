@@ -1393,15 +1393,16 @@
 #' 
 #' @examples
 #' 
-#' # Examples below fits the SITAR model to the Berkley height data for males. 
-#' # See help file (?berkeley_mdata) for details on berkeley_mdata dataset.
+#' # Examples below fits SITAR model to the 'berkeley_exdata' which is a 
+#' # subset of the  Berkley height data and used as an example dataset. 
+#' # See help file (?berkeley_exdata) for data details.  
 #'   
 #' # Fit maximum likelihood (frequentist) SITAR model with df = 3 by using 
 #' # the sitar package 
 #' 
 #' model_ml <- sitar::sitar(x = age, y = height, id = id, 
 #'                           df = 3, 
-#'                           data = berkeley_mdata, 
+#'                           data = berkeley_exdata, 
 #'                           xoffset = 'mean',
 #'                           fixed = 'a+b+c', 
 #'                           random = 'a+b+c',
@@ -1413,22 +1414,19 @@
 #' 
 #' # Fit Bayesian SITAR model 
 #' 
-#' # To save time and memory, the model is fit using 2 chain and thin set as 15.
-#' # To get sufficient draws after thinning, the number of iterations are 
-#' # increased from 2000 per chain (default) to 6000 iteration per chain.
-#' # Note that fitting model with these setting still taken a while. 
+#' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to  
+#' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
+#' # The model is fit using 2 chain (2000 iterations per) with thin set as 4 to 
+#' # save time and memory.
 #' 
-#' # To avoid mode estimation which takes time, a model fitted to the 
-#' # 'berkeley_mdata' has already been saved as 'berkeley_mfit'. 
-#' 
-#' if(exists('berkeley_mfit')) {
-#'   model <- berkeley_mfit
+#' if(exists('berkeley_exfit')) {
+#'   model <- berkeley_exfit
 #' } else {
 #'  # Fit model with default priors 
 #'  # See documentation for prior on each parameter
 #'   model <- bsitar(x = age, y = height, id = id, 
 #'                   df = 3, 
-#'                   data = berkeley_mdata,
+#'                   data = berkeley_exdata,
 #'                   xoffset = 'mean', 
 #'                   fixed = 'a+b+c', 
 #'                   random = 'a+b+c',
@@ -1443,7 +1441,7 @@
 #' # for parameters a, b and c.
 #' model <- bsitar(x = age, y = height, id = id, 
 #'                   df = 3, 
-#'                   data = berkeley_mdata,
+#'                   data = berkeley_exdata,
 #'                   xoffset = 'mean', 
 #'                   fixed = 'a+b+c', 
 #'                   random = 'a+b+c',
@@ -4153,6 +4151,9 @@ bsitar <- function(x,
     }
     
     
+    # 28 01 2024
+    datai <- datai %>% tidyr::drop_na()
+    
     if(!is.null(cortimeNlags_var)) {
       if(!is.factor(datai[[cortimeNlags_var]])) {
         datai[[cortimeNlags_var]] <- as.factor(datai[[cortimeNlags_var]])
@@ -4265,7 +4266,7 @@ bsitar <- function(x,
     
     gkn <- function(x, df, bounds) {
       c(min(x) - bounds * (max(x) - min(x)),
-        quantile(x, (1:(df - 1)) / df),
+        quantile(x, (1:(df - 1)) / df, na.rm = TRUE), # 28 01 2024
         max(x) +
           bounds * (max(x) - min(x)))
     }

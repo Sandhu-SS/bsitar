@@ -7,7 +7,7 @@
 
 
 ### Miscellaneous
-- Changed Bayesian SITAR model fit shown as example from 'berkeley_mfit' (SITAR model fit to 20 randomly selected males between 6 and 20 years of age) to 'berkeley_ffit' (SITAR model fit to 70 females between 8 and 20 years of age). This is done to use sample model fit ('berkeley_ffit') in vigenette that provide a detailed compariosn between non Bayesian SITAR model fit (using the 'sitar' package) and Bayesian SITAR model fit (using the 'bsitar' package). The vigenette included in the 'sitar' package analysed the exact same data (70 females between 8 and 20 years of age). 
+- Replaced Bayesian SITAR model fit shown as example from 'berkeley_mfit' applied to 20 randomly selected males between 6 and 20 years of age ('berkeley_mdata') with 'berkeley_exfit' that is fit to 70 females between 8 and 20 years of age ('berkeley_exdata'). This is done to use the example model ('berkeley_exfit') in vignette that provide a detailed comparison between non Bayesian SITAR model fit (using the 'sitar' package) and Bayesian SITAR model fit (using the 'bsitar' package). The vignette included in the 'sitar' package analysed the exact same data (70 females between 8 and 20 years of age). 
 - Minor corrections/changes to make R code more efficient and consistent across sub modules.
 
 

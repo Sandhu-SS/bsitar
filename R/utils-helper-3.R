@@ -54,8 +54,9 @@ prepare_data <- function(data,
                          outliers = NULL,
                          subset = TRUE) {
 
+  . <- NULL;
   data <- data %>% droplevels()
-
+  uvarby_method <- 'uvarby_method2'
   if (!is.null(outliers)) {
     remove_ <- outliers$remove
     icode_ <- outliers$icode
@@ -153,22 +154,39 @@ prepare_data <- function(data,
            uvarby,
            "' should be a factor variable")
     }
-    for (l in levels(data[[uvarby]])) {
-      if(!subset) data[[l]] <- data[[y[1]]]
-      if(subset) data[[l]]  <- data[[l]]
-    }
-    unibyimat <-
-      model.matrix(~ 0 + eval(parse(text = uvarby)), data)
-    subindicators <- paste0(uvarby, levels(data[[uvarby]]))
-    colnames(unibyimat) <- subindicators
-    #
-    # unibyimat <- unibyimat %>% data.frame()
-    # unibyimat <- sapply(unibyimat, as.integer ) %>% data.frame()
-
-    # unibyimat <- sapply(unibyimat, as.logical ) %>% data.frame()
-    #
-    y <- levels(data[[uvarby]])
-    data <- as.data.frame(cbind(data, unibyimat))
+    
+    if(uvarby_method == 'uvarby_method1') {
+      for (l in levels(data[[uvarby]])) {
+        if(!subset) data[[l]] <- data[[y[1]]]
+        if(subset) data[[l]]  <- data[[l]]
+      }
+      unibyimat <-
+        model.matrix(~ 0 + eval(parse(text = uvarby)), data)
+      subindicators <- paste0(uvarby, levels(data[[uvarby]]))
+      colnames(unibyimat) <- subindicators
+      #
+      unibyimat <- unibyimat %>% data.frame()
+      unibyimat <- sapply(unibyimat, as.integer ) %>% data.frame()
+      # unibyimat <- sapply(unibyimat, as.logical ) %>% data.frame()
+      #
+      y <- levels(data[[uvarby]])
+      data <- as.data.frame(cbind(data, unibyimat))
+    } # if(uvarby_method == 'uvarby_method1') {
+    
+    
+    if(uvarby_method == 'uvarby_method2') {
+      id_colsx <- setdiff(colnames(data), c(y, uvarby))
+      uvarbyx  <- levels(data[[uvarby]])
+      data <-
+        data %>% data.frame() %>% 
+        tidyr::pivot_wider(., id_cols= dplyr::all_of(id_colsx), names_from = uvarby, values_from = y) %>% 
+        dplyr::mutate(dplyr::across(dplyr::all_of(uvarbyx), 
+                             ~ dplyr::if_else(is.na(.x), FALSE, TRUE), .names = "{.col}s"))
+      data[[uvarby]] <- org.data[[uvarby]]
+      subindicators <- paste0(uvarbyx, 's')
+      y <- uvarbyx
+    } # if(uvarby_method == 'uvarby_method2') {
+    
     data <- transform_y(y, yfuns)
     attr(data, "ys") <- y
     attr(data, "multivariate") <- FALSE

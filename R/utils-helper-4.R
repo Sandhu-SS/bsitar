@@ -394,6 +394,15 @@ prepare_formula <- function(x,
     group_arg$verbose <- FALSE
   }
   
+  
+  # 28 01 2024
+  # if (!is.null(group_arg$groupvar)) {
+  #   group_arg$groupvar <- group_arg$groupvar
+  # } else {
+  #   group_arg$groupvar <- id
+  # }
+  
+  
   if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
     if (!is.null(univariate_by$cor)) {
       if (univariate_by$cor == "un")
@@ -1389,7 +1398,9 @@ prepare_formula <- function(x,
     gr_varss    <- NULL
   }
   
-  
+  # 28 01 2024
+  gr_varss <- id
+ 
   
   if (!is.null(randomsi)) {
     # these two arguments are set automaticaly if missing
@@ -3053,6 +3064,8 @@ prepare_formula <- function(x,
     lme_sd_a = lme_sd_a,
     lme_rsd = lme_rsd
   )
+  
+  # print(setbformula)
   
   attr(setbformula, "list_out") <- as.list(list_out)
   

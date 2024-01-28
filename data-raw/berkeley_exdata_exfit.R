@@ -6,7 +6,7 @@ data(berkeley, package = "sitar")
 data <- berkeley
 rm(berkeley)
 
-berkeley_fdata <- data %>%
+berkeley_exdata <- data %>%
   dplyr::select(id, age, height, sex) %>%
   dplyr::filter(age %in% c(8:18) ) %>%
   tidyr::drop_na(height) %>%
@@ -33,25 +33,27 @@ sample_n_of_groups <- function(data, size, ...) {
 }
 
 set.seed(1234)
-#berkeley_fdata <- berkeley_fdata %>% sample_n_of_groups(size = 20, id)
+#berkeley_exdata <- berkeley_exdata %>% sample_n_of_groups(size = 20, id)
 
 
-sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 5,
-                          data = berkeley_fdata)
+# sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 5,
+#                           data = berkeley_exdata)
 
 
-berkeley_ffit <- bsitar(x = age, y = height, id = id, data = berkeley_fdata,
-                        df = 5, xoffset = mean, fixed = a+b+c, random = a+b+c,
-                        a_formula = ~1, b_formula = ~1, c_formula = ~1,
-                        threads = brms::threading(12), backend = 'cmdstanr',
-                        chains = 2, cores = 2, iter = 1000, thin = 2)
+berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
+                        df = 5, 
+                        # threads = brms::threading(12), 
+                        # backend = 'cmdstanr',
+                        # b_prior_beta = student_t(3, 0, 2.5),
+                        # c_prior_beta = student_t(3, 0, 1.0),
+                        chains = 2, cores = 2, iter = 2000, thin = 4)
 
 
 
+# berkeley_exfit <- berkeley_ffit
 
+usethis::use_data(berkeley_exdata, overwrite = TRUE)
 
-usethis::use_data(berkeley_fdata, overwrite = TRUE)
-
-usethis::use_data(berkeley_ffit, overwrite = TRUE)
+usethis::use_data(berkeley_exfit, overwrite = TRUE, compress = 'xz')
 
 

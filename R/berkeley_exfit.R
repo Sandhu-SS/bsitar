@@ -1,12 +1,12 @@
 
 #' @title Model fit to the Berkeley data for females
 #'
-#' @description Bayesian SITAR model fit to the [bsitar::berkeley_fdata]
-#'   data (20 females, 8 to 18 years of age).
+#' @description Bayesian SITAR model fit to the [bsitar::berkeley_exdata]
+#'   data (70 females, 8 to 18 years of age).
 #'
-#' @details Data details are provided in the [bsitar::berkeley_fdata].
+#' @details Data details are provided in the [bsitar::berkeley_exdata].
 #'
-#' @name berkeley_ffit
+#' @name berkeley_exfit
 #' @docType data
 #' @format Model fit comprising summary of posterior draws.
 #'
@@ -15,4 +15,4 @@
 #' @return An object of class \code{bgmfit} with posterior draws.
 #'
 #' @inherit berkeley author
-"berkeley_ffit"
+"berkeley_exfit"

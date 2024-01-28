@@ -46,12 +46,11 @@ available the the\pkg{brms} package.
 
 # Fit Bayesian SITAR model 
 
-# To avoid mode estimation which takes time, a model fitted to the 
-# 'berkeley_mdata' has already been saved as 'berkeley_mfit'. 
-# Details on 'berkeley_mdata' and 'berkeley_mfit' are provided in the 
-# 'bsitar' function.
+# To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
+# the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
+# See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
-model <- berkeley_mfit
+model <- berkeley_exfit
 
 # Update model for degree of freedom. For illustration purpose, and to save 
 # time, the below example is run with sample_prior only. 
