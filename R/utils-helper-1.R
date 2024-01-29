@@ -2088,50 +2088,113 @@ sample_n_of_groups <- function(data, size, ...) {
 
 #' An internal function to check for the exposed function
 #'
-#' @param model An object of class \code{bgmfit}.
 #' @param o An object used as an index for functions
+#' @param checks A logical (default \code{FALSE}) to check if funnctions are 
+#' attached to the \code{model}.
+#' @inherit growthparameters.bgmfit params
+#' @param ... other arguments. Currently ignored.
 #' @keywords internal
 #' @return A list comprised of exposed functions.
 #' @noRd
 #'
-check_if_functions_exists <- function(model, o, xcall = NULL, verbose = TRUE, ...) {
+check_if_functions_exists <- function(model, 
+                                      o = NULL, 
+                                      xcall = NULL, 
+                                      verbose = TRUE, 
+                                      usesavedfuns = FALSE, 
+                                      checks = FALSE,...) {
+  
+  if(!checks) {
+    if(is.null(o)) stop("object 'o' must be specified")
+  }
+  
+  # if(exists(o[[1]], mode = "function", envir = globalenv())) {
+  #   envgtf <- TRUE
+  # } else {
+  #   envgtf <- FALSE
+  # }
+  
+  if(is.null(xcall)) {
+    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]][1]
+  }
+  
+  classname <- attr(model, 'class')[2]
+  calname.fun <- xcall # match.call()[1]
+  calname.fun <- gsub(paste0(".", classname), "", calname.fun)
+  
+  msg1 <- paste0("Please expose user defined Stan function before calling the",
+                 "\n",
+                 "'", calname.fun, "()'", " function",
+                 # "\n ",
+                 " (See '?expose_model_functions()' for details).",
+                 "\n ",
+                 "\n ",
+                 "Note that if you have already exposed Stan functions in ",
+                 "'bsitar()' call,\n then those saved functions can be used here ",
+                 "by setting usesavedfuns = TRUE",
+                 "\n ",
+                 paste0(calname.fun,
+                        "(...,", " usesavedfuns = TRUE"),
+                 "\n "              )
+  
+  
+  msg2 <- paste0("Please expose user defined Stan function before calling the",
+                 "\n",
+                 "'", calname.fun, "()'", " function",
+                 # "\n ",
+                 " (See '?expose_model_functions()' for details).",
+                 "\n ",
+                 "\n ",
+                 "Note that you can use 'usesavedfuns = TRUE' only if Stan ",
+                 "functions have been ",
+                 "\n",
+                 " exposed and saved within the 'bsitar()' ",
+                 "by there using 'expose_functions = TRUE'",
+                 "\n "              )
+  
+  msg3 <- paste0("Please expose user defined Stan function before calling the",
+                 "\n",
+                 "'", calname.fun, "()'", " function",
+                 # "\n ",
+                 " (See '?expose_model_functions()' for details).",
+                 # "\n ",
+                 # "Also, 'envir' should be set as global environment as",
+                 # "\n ",
+                 # paste0(calname.fun, "(...,", " envir = "," .GlobalEnv)"),
+                 # "\n ",
+                 # "This is a known issue ",
+                 # "(https://github.com/paul-buerkner/brms/issues/1577)",
+                 "\n ",
+                 "\n ",
+                 "Note that if you have already exposed Stan functions in ",
+                 "'bsitar()' call,\n then those saved functions can be used here ",
+                 "by setting 'usesavedfuns = TRUE'",
+                 # "\n ",
+                 # paste0(calname.fun,
+                 #        "(...,", " usesavedfuns = TRUE, envir = "," .GlobalEnv)"),
+                 "\n "              )
+  
+  
+  if(checks) {
+    if(is.null(model$model_info$exefuns[[1]])) {
+      if(!is.null(usesavedfuns)) {
+        if(!usesavedfuns) message(msg1)
+        if(usesavedfuns) message(msg2)
+      }
+    }
+    return(invisible(NULL))
+  }
+  
+  
   if(exists(o[[1]], mode = "function", envir = globalenv())) {
     envgtf <- TRUE
   } else {
     envgtf <- FALSE
   }
 
-  if(is.null(xcall)) {
-    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]][1]
-  }
-
   if(verbose) {
     if(!envgtf) {
-      classname <- attr(model, 'class')[2]
-      calname.fun <- xcall # match.call()[1]
-      calname.fun <- gsub(paste0(".", classname), "", calname.fun)
-      m <- paste0("Please expose user defined Stan function before calling the",
-              "\n",
-              "'", calname.fun, "()'", " function",
-              # "\n ",
-              " (See '?expose_model_functions()' for details).",
-              "\n ",
-              "Also, 'envir' should be set as global environment as",
-              "\n ",
-              paste0(calname.fun, "(...,", " envir = "," .GlobalEnv)"),
-              "\n ",
-              "This is a known issue ",
-              "(https://github.com/paul-buerkner/brms/issues/1577)",
-              "\n ",
-              "\n ",
-              "Note that if you have already exposed Stan functions in ",
-              "'bsitar()' call,\n then those saved functions can be used here ",
-              "by setting usesavedfuns = TRUE",
-              "\n ",
-              paste0(calname.fun,
-                     "(...,", " usesavedfuns = TRUE, envir = "," .GlobalEnv)"),
-              "\n "              )
-      if(verbose) message(m)
+      if(verbose) message(msg3)
     }
   }
 

@@ -41,7 +41,8 @@ dplyr
 dvau
 dyq
 eq
-fdata
+exdata
+exfit
 frac
 ggplot
 growthparameters
@@ -58,6 +59,7 @@ magrittr
 mathbf
 mc
 mdata
+mfit
 modelling
 multisession
 newpage

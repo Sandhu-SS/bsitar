@@ -31,7 +31,7 @@
   idata_method = NULL,
   verbose = FALSE,
   dummy_to_factor = NULL,
-  usesavedfuns = FALSE,
+  usesavedfuns = NULL,
   clearenvfuns = NULL,
   envir = NULL,
   ...
@@ -213,11 +213,16 @@ factor levels are assigned same name as \code{factor.dummy}. Note that when
 \code{factor.level} is not \code{NULL}, its length must be same as the
 length of the \code{factor.dummy}.}
 
-\item{usesavedfuns}{A logical (default \code{FALSE}) to indicate whether to
-use the already exposed and saved \code{Stan} functions. This is for
-internal purposes only and mainly used during the testing of the functions
-and therefore should not be used by users as it might lead to unreliable
-estimates.}
+\item{usesavedfuns}{A logical (default \code{NULL}) to indicate whether to
+use the already exposed and saved \code{Stan} functions. Depending on
+whether the user have exposed Stan functions within the \code{\link[=bsitar]{bsitar()}} call via
+\code{expose_functions} argument in the \code{\link[=bsitar]{bsitar()}}, the \code{usesavedfuns}
+is automatically set to \code{TRUE} (if \code{expose_functions = TRUE}) or
+\code{FALSE} (if \code{expose_functions = FALSE}). Therefore, manual
+setting of \code{usesavedfuns} as \code{TRUE}/\code{FALSE} is rarely
+needed. This is for internal purposes only and mainly used during the
+testing of the functions and therefore should not be used by users as it
+might lead to unreliable estimates.}
 
 \item{clearenvfuns}{A logical to indicate whether to clear the exposed
 function from the environment (\code{TRUE}) or not (\code{FALSE}). If

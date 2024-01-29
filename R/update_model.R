@@ -57,7 +57,17 @@ update_model.bgmfit <-
            newdata = NULL,
            recompile = NULL,
            verbose = FALSE,
+           envir = NULL,
            ...) {
+    
+    if(is.null(envir)) {
+      if(!is.null(model$model_info$exefuns[[1]])) {
+        envir <- environment(model$model_info$exefuns[[1]])
+      } else {
+        envir <- parent.frame()
+      }
+    }
+    
     formula. <- NULL
     args <- formalArgs(bsitar)
     args <- args[!args == "..."]

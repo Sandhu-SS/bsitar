@@ -131,7 +131,11 @@ optimize_model.bgmfit <- function(model,
                                   ...) {
   
   if(is.null(envir)) {
-    envir <- parent.frame()
+    if(!is.null(model$model_info$exefuns[[1]])) {
+      envir <- environment(model$model_info$exefuns[[1]])
+    } else {
+      envir <- parent.frame()
+    }
   }
   
   # Initiate non formalArgs()

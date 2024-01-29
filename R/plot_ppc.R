@@ -45,13 +45,30 @@ plot_ppc.bgmfit <-
            verbose = FALSE,
            deriv_model = NULL,
            dummy_to_factor = NULL, 
-           usesavedfuns = FALSE,
+           usesavedfuns = NULL,
            clearenvfuns = NULL,
            envir = NULL,
            ...) {
     
+    if(is.null(usesavedfuns)) {
+      if(!is.null(model$model_info$exefuns[[1]])) {
+        usesavedfuns <- TRUE
+      } else if(is.null(model$model_info$exefuns[[1]])) {
+        usesavedfuns <- FALSE
+      }
+    } else if(!is.null(usesavedfuns)) {
+      if(usesavedfuns) {
+        check_if_functions_exists(model, checks = TRUE, 
+                                  usesavedfuns = usesavedfuns)
+      }
+    }
+    
     if(is.null(envir)) {
-      envir <- parent.frame()
+      if(!is.null(model$model_info$exefuns[[1]])) {
+        envir <- environment(model$model_info$exefuns[[1]])
+      } else {
+        envir <- parent.frame()
+      }
     }
     
     if(is.null(ndraws)) {
@@ -143,6 +160,9 @@ plot_ppc.bgmfit <-
     }
     
     if(is.null(eval(full.args$clearenvfuns))) {
+      if(is.null(eval(full.args$usesavedfuns))) {
+        full.args$usesavedfuns <- usesavedfuns
+      }
       if(eval(full.args$usesavedfuns)) {
         setcleanup <- TRUE 
       } else {

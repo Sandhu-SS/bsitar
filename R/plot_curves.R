@@ -311,15 +311,31 @@ plot_curves.bgmfit <- function(model,
                                verbose = FALSE,
                                fullframe = NULL,
                                dummy_to_factor = NULL,
-                               usesavedfuns = FALSE,
+                               usesavedfuns = NULL,
                                clearenvfuns = NULL,
                                envir = NULL,
                                ...) {
   
-  if(is.null(envir)) {
-    envir <- parent.frame()
+  if(is.null(usesavedfuns)) {
+    if(!is.null(model$model_info$exefuns[[1]])) {
+      usesavedfuns <- TRUE
+    } else if(is.null(model$model_info$exefuns[[1]])) {
+      usesavedfuns <- FALSE
+    }
+  } else if(!is.null(usesavedfuns)) {
+    if(usesavedfuns) {
+      check_if_functions_exists(model, checks = TRUE, 
+                                usesavedfuns = usesavedfuns)
+    }
   }
   
+  if(is.null(envir)) {
+    if(!is.null(model$model_info$exefuns[[1]])) {
+      envir <- environment(model$model_info$exefuns[[1]])
+    } else {
+      envir <- parent.frame()
+    }
+  }
   
   # Move down NULL where setting the arguments
   if(system.file(package='ggplot2') == "") {

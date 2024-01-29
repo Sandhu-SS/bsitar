@@ -5,7 +5,14 @@
 \alias{update_model}
 \title{Update model}
 \usage{
-\method{update_model}{bgmfit}(model, newdata = NULL, recompile = NULL, verbose = FALSE, ...)
+\method{update_model}{bgmfit}(
+  model,
+  newdata = NULL,
+  recompile = NULL,
+  verbose = FALSE,
+  envir = NULL,
+  ...
+)
 
 update_model(model, ...)
 }
@@ -25,6 +32,14 @@ figure out internally whether recompilation is required or not. Setting
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
 object(s).}
+
+\item{envir}{Environment used for function evaluation. The default is
+\code{NULL} which will set \code{parent.frame()} as default environment.
+Note that since most of post processing functions are based on \pkg{brms},
+the functions needed for evaluation should be in the \code{.GlobalEnv}.
+Therefore, it is strongly recommended to set \code{ envir = globalenv()}
+(or \code{envir = .GlobalEnv}). This is particularly true for the
+derivatives such as velocity curve.}
 
 \item{...}{Other arguments passed to \code{\link{brms}}.}
 }
