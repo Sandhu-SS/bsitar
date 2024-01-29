@@ -9,6 +9,7 @@
   model,
   newdata = NULL,
   recompile = NULL,
+  expose_function = FALSE,
   verbose = FALSE,
   envir = NULL,
   ...
@@ -28,6 +29,21 @@ automatically.}
 recompiled. When \code{NULL} (default), \strong{update_model()} tries to
 figure out internally whether recompilation is required or not. Setting
 \code{recompile} to \code{FALSE} will ignore Stan code changing arguments.}
+
+\item{expose_function}{An optional logical argument to indicate whether to
+expose Stan functions (default \code{FALSE}). Note that if user has already
+exposed Stan functions during model fit by setting \code{expose_function =
+  TRUE} in the \code{\link[=bsitar]{bsitar()}}, then those exposed functions are saved and can be
+used during post processing of the posterior draws and therefore
+\code{expose_function} is by default set as \code{FALSE} in all post
+processing functions except \code{\link[=optimize_model]{optimize_model()}}. For \code{\link[=optimize_model]{optimize_model()}}, the
+default setting is \code{expose_function = NULL}. The reason is that each
+optimized model has different Stan function and therefore it need to be re
+exposed and saved. The \code{expose_function = NULL} implies that the
+setting for \code{expose_function} is taken from the original \code{model}
+fit. Note that \code{expose_function} must be set to \code{TRUE} when
+adding \code{fit criteria} and/or \code{bayes_R2} during model
+optimization.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the

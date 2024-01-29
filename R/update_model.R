@@ -56,6 +56,7 @@ update_model.bgmfit <-
   function(model,
            newdata = NULL,
            recompile = NULL,
+           expose_function = FALSE,
            verbose = FALSE,
            envir = NULL,
            ...) {
@@ -400,6 +401,7 @@ update_model.bgmfit <-
         } # if(new_init_arg) {
       } # if (!testmode) {
     }
+    if(expose_function) model <- expose_model_functions(model, envir = envir)
     attr(model$data, "data_name") <- data_name
     model
   }

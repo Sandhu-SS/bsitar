@@ -63,16 +63,10 @@
 #' @param cores The number of cores to used in parallel processing (default
 #'   \code{1}). The argument \code{cores} is passed to the
 #'   [brms::add_criterion()].
-#'   
-#' @param expose_function An optional argument logical argument to indicate
-#'   whether to expose Stan function used in model fitting (\code{TRUE}) or not
-#'   (\code{FALSE}). Default \code{NULL} takes \code{expose_function} from the
-#'   \code{model} being optimized. Note that \code{expose_function} must be set
-#'   as \code{TRUE} when adding \code{fit criteria} and/or \code{bayes_R2}.
 #' 
 #' @param ... Other arguments passed to \code{\link{update_model}}.
 #' 
-#' @inheritParams  growthparameters.bgmfit
+#' @inheritParams growthparameters.bgmfit
 #'
 #' @return A list containing the optimized models of class \code{bgmfit}, and the
 #'  the summary statistics if \code{add_fit_criteria} and/or
@@ -232,16 +226,16 @@ optimize_model.bgmfit <- function(model,
         " 'add_fit_criteria' and/or 'add_bayes_R' not NULL"
       )
     }
-    if(!grepl('GlobalEnv', deparse(substitute(envir)), ignore.case = T)) {
-      stop(
-        "The 'envir' must be '.GlobalEnv' when ",
-        "\n ",
-        " 'add_fit_criteria' and/or 'add_bayes_R' not NULL",
-        "\n ",
-        " This is a known issue ",
-        "(https://github.com/paul-buerkner/brms/issues/1577)"
-      )
-    }
+    # if(!grepl('GlobalEnv', deparse(substitute(envir)), ignore.case = T)) {
+    #   stop(
+    #     "The 'envir' must be '.GlobalEnv' when ",
+    #     "\n ",
+    #     " 'add_fit_criteria' and/or 'add_bayes_R' not NULL",
+    #     "\n ",
+    #     " This is a known issue ",
+    #     "(https://github.com/paul-buerkner/brms/issues/1577)"
+    #   )
+    # }
   } # if (need_exposed_function) {
   
   

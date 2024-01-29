@@ -2,11 +2,8 @@
 
 library(bsitar)
 
-data(berkeley, package = "sitar")
-data <- berkeley
-rm(berkeley)
 
-berkeley_exdata <- data %>%
+berkeley_exdata <- berkeley %>%
   dplyr::select(id, age, height, sex) %>%
   dplyr::filter(age %in% c(8:18) ) %>%
   tidyr::drop_na(height) %>%
@@ -46,7 +43,7 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # backend = 'cmdstanr',
                         # b_prior_beta = student_t(3, 0, 2.5),
                         # c_prior_beta = student_t(3, 0, 1.0),
-                        chains = 2, cores = 2, iter = 2000, thin = 4)
+                        chains = 2, cores = 2, iter = 4000, thin = 1)
 
 
 

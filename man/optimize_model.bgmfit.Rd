@@ -92,11 +92,20 @@ the \code{\link[base:Round]{base::round()}} function.}
 \code{1}). The argument \code{cores} is passed to the
 \code{\link[brms:add_criterion]{brms::add_criterion()}}.}
 
-\item{expose_function}{An optional argument logical argument to indicate
-whether to expose Stan function used in model fitting (\code{TRUE}) or not
-(\code{FALSE}). Default \code{NULL} takes \code{expose_function} from the
-\code{model} being optimized. Note that \code{expose_function} must be set
-as \code{TRUE} when adding \code{fit criteria} and/or \code{bayes_R2}.}
+\item{expose_function}{An optional logical argument to indicate whether to
+expose Stan functions (default \code{FALSE}). Note that if user has already
+exposed Stan functions during model fit by setting \code{expose_function =
+  TRUE} in the \code{\link[=bsitar]{bsitar()}}, then those exposed functions are saved and can be
+used during post processing of the posterior draws and therefore
+\code{expose_function} is by default set as \code{FALSE} in all post
+processing functions except \code{\link[=optimize_model]{optimize_model()}}. For \code{\link[=optimize_model]{optimize_model()}}, the
+default setting is \code{expose_function = NULL}. The reason is that each
+optimized model has different Stan function and therefore it need to be re
+exposed and saved. The \code{expose_function = NULL} implies that the
+setting for \code{expose_function} is taken from the original \code{model}
+fit. Note that \code{expose_function} must be set to \code{TRUE} when
+adding \code{fit criteria} and/or \code{bayes_R2} during model
+optimization.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the

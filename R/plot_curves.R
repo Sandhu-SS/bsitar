@@ -311,23 +311,11 @@ plot_curves.bgmfit <- function(model,
                                verbose = FALSE,
                                fullframe = NULL,
                                dummy_to_factor = NULL,
+                               expose_function = FALSE,
                                usesavedfuns = NULL,
                                clearenvfuns = NULL,
                                envir = NULL,
                                ...) {
-  
-  if(is.null(usesavedfuns)) {
-    if(!is.null(model$model_info$exefuns[[1]])) {
-      usesavedfuns <- TRUE
-    } else if(is.null(model$model_info$exefuns[[1]])) {
-      usesavedfuns <- FALSE
-    }
-  } else if(!is.null(usesavedfuns)) {
-    if(usesavedfuns) {
-      check_if_functions_exists(model, checks = TRUE, 
-                                usesavedfuns = usesavedfuns)
-    }
-  }
   
   if(is.null(envir)) {
     if(!is.null(model$model_info$exefuns[[1]])) {
@@ -336,6 +324,30 @@ plot_curves.bgmfit <- function(model,
       envir <- parent.frame()
     }
   }
+  
+  if(is.null(usesavedfuns)) {
+    if(!is.null(model$model_info$exefuns[[1]])) {
+      usesavedfuns <- TRUE
+    } else if(is.null(model$model_info$exefuns[[1]])) {
+      if(expose_function) {
+        model <- expose_model_functions(model, envir = envir)
+        usesavedfuns <- TRUE
+      } else if(!expose_function) {
+        usesavedfuns <- FALSE
+      }
+    }
+  } else { # if(!is.null(usesavedfuns)) {
+    if(!usesavedfuns) {
+      if(expose_function) {
+        model <- expose_model_functions(model, envir = envir)
+        usesavedfuns <- TRUE
+      }
+    } else if(usesavedfuns) {
+      check_if_functions_exists(model, checks = TRUE, 
+                                usesavedfuns = usesavedfuns)
+    }
+  }
+  
   
   # Move down NULL where setting the arguments
   if(system.file(package='ggplot2') == "") {
@@ -418,6 +430,7 @@ plot_curves.bgmfit <- function(model,
   
   arguments <- get_args_(match.call.list.in, xcall)
   arguments$model <- model
+  arguments$usesavedfuns <- usesavedfuns
   
   
   if(is.null(envir)) {

@@ -18,6 +18,7 @@
   verbose = FALSE,
   deriv_model = NULL,
   dummy_to_factor = NULL,
+  expose_function = FALSE,
   usesavedfuns = NULL,
   clearenvfuns = NULL,
   envir = NULL,
@@ -88,6 +89,21 @@ names of factor levels are take from the \code{factor.dummy} i.e., the
 factor levels are assigned same name as \code{factor.dummy}. Note that when
 \code{factor.level} is not \code{NULL}, its length must be same as the
 length of the \code{factor.dummy}.}
+
+\item{expose_function}{An optional logical argument to indicate whether to
+expose Stan functions (default \code{FALSE}). Note that if user has already
+exposed Stan functions during model fit by setting \code{expose_function =
+  TRUE} in the \code{\link[=bsitar]{bsitar()}}, then those exposed functions are saved and can be
+used during post processing of the posterior draws and therefore
+\code{expose_function} is by default set as \code{FALSE} in all post
+processing functions except \code{\link[=optimize_model]{optimize_model()}}. For \code{\link[=optimize_model]{optimize_model()}}, the
+default setting is \code{expose_function = NULL}. The reason is that each
+optimized model has different Stan function and therefore it need to be re
+exposed and saved. The \code{expose_function = NULL} implies that the
+setting for \code{expose_function} is taken from the original \code{model}
+fit. Note that \code{expose_function} must be set to \code{TRUE} when
+adding \code{fit criteria} and/or \code{bayes_R2} during model
+optimization.}
 
 \item{usesavedfuns}{A logical (default \code{NULL}) to indicate whether to
 use the already exposed and saved \code{Stan} functions. Depending on

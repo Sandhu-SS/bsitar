@@ -178,11 +178,10 @@ if(existsfit) {
 }
 
 
-# Fit Bayesian SITAR model (via 'bsitar' package) - note prefix 'b' to 'model_bayes'.
-# To save time, the model is fit by running two (default four) parallel chain
-# with 1000 iterations (default 2000) per chain. Note also we have requested to
-# expose Stan functions by setting expose_function as TRUE (default FALSE) and
-# save them for later use.
+# Fit Bayesian SITAR model 'model_bayes' (via 'bsitar' package) 
+# To save time, the model is fit by running two parallel chain with 1000  
+# iterations per chain. Note also we have also set 'expose_function' as TRUE
+# tO expose Stan functions
 
 # model_bayes <- bsitar(x = age, y = height, id = id, data = data, df = 5)
 
@@ -225,8 +224,8 @@ xvar  <- 'age'
 yvar  <- 'height'
 
 # For observed and adjusted plot
-data_sitar_a  <- plot(model_frequ, opt = 'a', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
-data_bsitar_a <- plot_curves(model_bayes, opt = 'a', returndata = T)
+data_sitar_a  <- plot(model_frequ, opt = 'a', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
+data_bsitar_a <- plot_curves(model_bayes, opt = 'a', returndata = TRUE)
 data_all_a <- data %>% dplyr::mutate(Curve = 'observed') %>% 
   dplyr::bind_rows(., data_sitar_a %>% dplyr::relocate(all_of(colnames(data))) %>% 
                      dplyr::mutate(Curve = 'adjusted_sitar')) %>% 
@@ -236,11 +235,11 @@ data_all_a <- data %>% dplyr::mutate(Curve = 'observed') %>%
 
 
 # For distance and velocity (dv) plots
-data_sitar_d  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
-data_sitar_v  <- plot(model_frequ, opt = 'v', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T) 
+data_sitar_d  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
+data_sitar_v  <- plot(model_frequ, opt = 'v', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE) 
 data_sitar_df <- data_sitar_d %>% data.frame()
-data_bsitar_d <- plot_curves(model_bayes, opt = 'd', returndata = T, newdata = data_sitar_df, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
-data_bsitar_v <- plot_curves(model_bayes, opt = 'v', returndata = T, newdata = data_sitar_df, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+data_bsitar_d <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_df, ipts = NULL) 
+data_bsitar_v <- plot_curves(model_bayes, opt = 'v', returndata = TRUE, newdata = data_sitar_df, ipts = NULL) 
 
 data_sitar_d  <- data_sitar_d %>% dplyr::rename(distance = height)
 data_sitar_v  <- data_sitar_v %>% dplyr::rename(velocity = height)
@@ -263,11 +262,11 @@ data_all_dv <- data_sitar_dv %>% dplyr::mutate(Model = 'sitar') %>%
 
 
 # For Distance and Velocity (DV) plots
-data_sitar_D  <- plot(model_frequ, opt = 'D', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
-data_sitar_V  <- plot(model_frequ, opt = 'V', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T) 
+data_sitar_D  <- plot(model_frequ, opt = 'D', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
+data_sitar_V  <- plot(model_frequ, opt = 'V', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE) 
 data_sitar_DF <- data_sitar_D %>% data.frame()
-data_bsitar_D <- plot_curves(model_bayes, opt = 'D', returndata = T, newdata = data_sitar_DF, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
-data_bsitar_V <- plot_curves(model_bayes, opt = 'V', returndata = T, newdata = data_sitar_DF, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+data_bsitar_D <- plot_curves(model_bayes, opt = 'D', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL) 
+data_bsitar_V <- plot_curves(model_bayes, opt = 'V', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL) 
 
 data_sitar_D  <- data_sitar_D %>% dplyr::rename(distance = height)
 data_sitar_V  <- data_sitar_V %>% dplyr::rename(velocity = height)
@@ -379,11 +378,11 @@ linetypes  <- c('solid', 'dashed', 'dotted', 'dotdash', 'longdash', 'twodash')
 
 
 ```{r prepare_apv, echo=FALSE,include=FALSE, warning= FALSE, message=FALSE}
-parms_apv_sitar <- plot(model_frequ, apv = T, returndata = F)
+parms_apv_sitar <- plot(model_frequ, apv = TRUE, returndata = FALSE)
 parms_apv_sitar <- parms_apv_sitar$apv %>% data.frame() %>% setNames('sitar')
 parms_apv_sitar <- round(parms_apv_sitar, 2)
 row.names(parms_apv_sitar) <- NULL
-parms_apv_bsitar <- plot_curves(model_bayes, apv = T, newdata = data_sitar_df, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+parms_apv_bsitar <- plot_curves(model_bayes, apv = TRUE, newdata = data_sitar_df, ipts = NULL) 
 parms_apv_bsitar <- parms_apv_bsitar$growthparameters
 colnames(parms_apv_bsitar) <- c('Parameter', 'bsitar')
 parms_apv_all <- cbind(parms_apv_bsitar, parms_apv_sitar)
@@ -392,9 +391,8 @@ parms_apv_all <- cbind(parms_apv_bsitar, parms_apv_sitar)
 
 ```{r prepare_Vapv, echo=FALSE,include=FALSE, warning= FALSE, message=FALSE}
 # Individual specific APGV and PGV
-data_sitar_Vapv  <- plot(model_frequ, opt = 'V', apv = T)$apv %>% data.frame() 
-data_bsitar_Vapv <- plot_curves(model_bayes, opt = 'V', returndata = T, newdata = data_sitar_DF, ipts = NULL, usesavedfuns = T, envir = globalenv(),
-                                apv = T) 
+data_sitar_Vapv  <- plot(model_frequ, opt = 'V', apv = TRUE)$apv %>% data.frame() 
+data_bsitar_Vapv <- plot_curves(model_bayes, opt = 'V', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL, apv = TRUE) 
 data_bsitar_Vapv <- attr(data_bsitar_Vapv, "growthparameters")
 data_bsitar_Vapv <- data_bsitar_Vapv %>% 
   tidyr::pivot_wider(names_from = Parameter, values_from = c(Estimate))
@@ -449,21 +447,21 @@ p +
             aes(x = age, y = height, group = groupby),
             linetype = linetypes[1],
              color = colours[1], linewidth = linewidths[1], alpha = alphas[1],
-            show.legend = T) +
+            show.legend = TRUE) +
   geom_line(data = data_all_a %>% 
               dplyr::filter(Curve==data_all_alevs[2]) %>%
               dplyr::mutate(groupby = interaction(id, Curve)),
             aes(x = age, y = height, group = groupby),
             linetype = linetypes[1],
              color = colours[1], linewidth = linewidths[1], alpha = alphas[3],
-            show.legend = T) +
+            show.legend = TRUE) +
   geom_line(data = data_all_a %>% 
               dplyr::filter(Curve==data_all_alevs[3]) %>%
               dplyr::mutate(groupby = interaction(id, Curve)),
             aes(x = age, y = height, group = groupby),
             linetype = linetypes[2],
              color = colours[1], linewidth = linewidths[1], alpha = alphas[4],
-            show.legend = T) +
+            show.legend = TRUE) +
   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
   theme_grids1 + theme_legends1 +
   theme(legend.title=element_blank())
@@ -474,7 +472,7 @@ p +
 #   geom_line(aes(x = age, y = height, group = groupby, 
 #                 linetype = Curve), 
 #             color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
-#             show.legend = T) +
+#             show.legend = TRUE) +
 #   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
 #   theme_grids1 + theme_legends1
 ```
@@ -508,21 +506,21 @@ with intensity indicating the early puberty is associated with faster growth.
 
 ```{r plotuadids, echo=TRUE,include=TRUE, fig.width = 6, fig.height=4, fig.asp = 1.0, fig.cap="\\label{fig:plotuadids}Observed and adjusted curve (via random effects) curves along with the population averag curves for **sitar** and **bsitar** models. The observed curves for all individuals are shown as solid light grey lines whereas curves for the tallest and shortest individuals are displayed using the solid black lines. The adjusted curves for the tallest and shortest individuals are shown as dotted black lines, and the population average curve is shown as solid black line"}
 
-data_sitar_u_f <- plot(model_frequ, opt = 'u', returndata = T) %>% 
+data_sitar_u_f <- plot(model_frequ, opt = 'u', returndata = TRUE) %>% 
   dplyr::relocate( all_of(idvar),  all_of(xvar), all_of(yvar)) %>% 
   dplyr::mutate(Curve = 'u') %>% dplyr::mutate(Model = 'sitar')
-data_sitar_a_f <- plot(model_frequ, opt = 'a', returndata = T) %>% 
+data_sitar_a_f <- plot(model_frequ, opt = 'a', returndata = TRUE) %>% 
   dplyr::relocate( all_of(idvar),  all_of(xvar), all_of(yvar)) %>% 
   dplyr::mutate(Curve = 'a') %>% dplyr::mutate(Model = 'sitar')
-data_sitar_d_f <- plot(model_frequ, opt = 'd', returndata = T) %>% 
+data_sitar_d_f <- plot(model_frequ, opt = 'd', returndata = TRUE) %>% 
   dplyr::relocate( all_of(idvar),  all_of(xvar), all_of(yvar)) %>% 
   dplyr::mutate(Curve = 'd') %>% dplyr::mutate(Model = 'sitar')
 
 data_sitar_uad_df12 <- data_sitar_u_f[, 1:2]
 data_sitar_uad_df123 <- data_sitar_u_f[, 1:3]
-data_bsitar_u_f <- plot_curves(model_bayes, opt = 'u', returndata = T, newdata = data_sitar_uad_df123, ipts = NULL, usesavedfuns = T, envir = globalenv())
-data_bsitar_a_f <- plot_curves(model_bayes, opt = 'a', returndata = T, newdata = data_sitar_uad_df123, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
-data_bsitar_d_f <- plot_curves(model_bayes, opt = 'd', returndata = T, newdata = data_sitar_uad_df12, ipts = NULL, usesavedfuns = T, envir = globalenv()) 
+data_bsitar_u_f <- plot_curves(model_bayes, opt = 'u', returndata = TRUE, newdata = data_sitar_uad_df123, ipts = NULL)
+data_bsitar_a_f <- plot_curves(model_bayes, opt = 'a', returndata = TRUE, newdata = data_sitar_uad_df123, ipts = NULL)
+data_bsitar_d_f <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_uad_df12, ipts = NULL)
 
 data_bsitar_u_f <- data_bsitar_u_f %>% dplyr::rename(!!yvar := yvar) %>% dplyr::select(all_of(colnames(data_sitar_uad_df123)))
 data_bsitar_a_f <- data_bsitar_a_f %>% dplyr::rename(!!yvar := yvar) %>% dplyr::select(all_of(colnames(data_sitar_uad_df123)))
@@ -587,7 +585,7 @@ p +
             aes(x = .data[[xvar]], y = .data[[yvar]], group = groupby),
             linetype = linetypes[1],
            color = colours[1], linewidth = linewidths[1], alpha = alphas[1],
-            show.legend = T) +
+            show.legend = TRUE) +
   geom_line(data = which_uad_f %>% 
               dplyr::filter(Curve==data_all_alevs[1]) %>%
               dplyr::filter(.data[[idvar]] %in% ranef_id_max_min[1]) %>%
@@ -597,7 +595,7 @@ p +
             aes(x = .data[[xvar]], y = .data[[yvar]], group = groupby),
             linetype = linetypes[1],
             color = colours[1], linewidth = linewidths[2], alpha = alphas[4],
-              show.legend = T) +
+              show.legend = TRUE) +
   geom_line(data = which_uad_f %>% 
               dplyr::filter(Curve==data_all_alevs[2]) %>%
               dplyr::filter(.data[[idvar]] %in% ranef_id_max_min[1]) %>%
@@ -607,7 +605,7 @@ p +
             aes(x = .data[[xvar]], y = .data[[yvar]], group = groupby),
             linetype = linetypes[2],
             color = colours[1], linewidth = linewidths[2], alpha = alphas[4],
-            show.legend = T) +
+            show.legend = TRUE) +
   geom_line(data = which_uad_f %>% 
               dplyr::filter(Curve==data_all_alevs[1]) %>%
               dplyr::filter(.data[[idvar]] %in% ranef_id_max_min[2]) %>%
@@ -617,7 +615,7 @@ p +
             aes(x = .data[[xvar]], y = .data[[yvar]], group = groupby),
             linetype = linetypes[1],
             color = colours[1], linewidth = linewidths[2], alpha = alphas[4],
-            show.legend = T) +
+            show.legend = TRUE) +
   geom_line(data = which_uad_f %>% 
               dplyr::filter(Curve==data_all_alevs[2]) %>%
               dplyr::filter(.data[[idvar]] %in% ranef_id_max_min[2]) %>%
@@ -627,14 +625,14 @@ p +
             aes(x = .data[[xvar]], y = .data[[yvar]], group = groupby),
             linetype = linetypes[2],
             color = colours[1], linewidth = linewidths[2], alpha = alphas[4],
-            show.legend = T) +
+            show.legend = TRUE) +
   geom_line(data = which_uad_f %>% 
               dplyr::filter(Curve==data_all_alevs[3]) %>%
               dplyr::mutate(groupby = interaction(Curve)),
             aes(x = .data[[xvar]], y = .data[[yvar]], group = groupby),
             linetype = linetypes[1],
              color = colours[1], linewidth = linewidths[2], alpha = alphas[4],
-            show.legend = T) +
+            show.legend = TRUE) +
   facet_wrap(~Model) +
   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
   theme_grids1 + theme_legends1 + 
@@ -657,7 +655,7 @@ knitr::kable(fh1_ranef_id %>% dplyr::filter(.data[[idvar]] %in% ranef_id_max_min
                             font_size = 14,
                             htmltable_class = 'lightable-classic',
                             html_font = "Cambria") %>%
-  # kableExtra::row_spec(1:4, align = "c", monospace = T) %>%
+  # kableExtra::row_spec(1:4, align = "c", monospace = TRUE) %>%
   kableExtra::column_spec(1, width = "0.4in") %>%
   kableExtra::column_spec(2, width = "0.4in") %>%
   kableExtra::column_spec(3, width = "0.4in") %>%
@@ -684,7 +682,6 @@ knitr::kable(bfh1_ranef_id %>% dplyr::filter(.data[[idvar]] %in% ranef_id_max_mi
                             font_size = 14,
                             htmltable_class = 'lightable-classic',
                             html_font = "Cambria") %>%
-  # kableExtra::row_spec(1:4, align = "c", monospace = T) %>%
   kableExtra::column_spec(1, width = "0.4in") %>%
   kableExtra::column_spec(2, width = "0.4in") %>%
   kableExtra::column_spec(3, width = "0.4in") %>%
@@ -706,7 +703,7 @@ knitr::kable(fh1_ranef_id[1:10, ],
              digits = 2, 
              caption = "Random effects estimates for the first ten individuals        (**sitar** model)", 
              # label = '\\label{tab:tab_ranef_bsitar}Table',
-             row.names=F, 
+             row.names = FALSE, 
              # align=c("l",rep("r",3)),
              align='c',
              format="html", 
@@ -717,10 +714,10 @@ knitr::kable(fh1_ranef_id[1:10, ],
                             font_size = 14,
                             htmltable_class = 'lightable-classic',
                             html_font = "Cambria") %>%
-  # kableExtra::kable_classic(full_width = F, html_font = "Cambria") %>% 
+  # kableExtra::kable_classic(full_width = FALSE, html_font = "Cambria") %>% 
   # kableExtra::kable_styling() %>% 
-  # kableExtra::row_spec(0, align = "c", bold = T ) %>%
-  # kableExtra::row_spec(1:4, align = "c", monospace = T) %>%
+  # kableExtra::row_spec(0, align = "c", bold = TRUE ) %>%
+  # kableExtra::row_spec(1:4, align = "c", monospace = TRUE) %>%
   kableExtra::column_spec(1, width = "0.4in") %>%
   kableExtra::column_spec(2, width = "0.4in") %>%
   kableExtra::column_spec(3, width = "0.4in") %>%
@@ -749,7 +746,6 @@ knitr::kable(bfh1_ranef_id[1:10, ],
                             font_size = 14,
                             htmltable_class = 'lightable-classic',
                             html_font = "Cambria") %>%
-  # kableExtra::row_spec(1:4, align = "c", monospace = T) %>%
   kableExtra::column_spec(1, width = "0.4in") %>%
   kableExtra::column_spec(2, width = "0.4in") %>%
   kableExtra::column_spec(3, width = "0.4in") %>%
@@ -780,7 +776,7 @@ pairs(bfh1_ranef, labels = c('size', 'timing', 'intensity'), pch=20)
 knitr::kable(fh1_ranef_corr, 
              digits = 2, 
              caption = "Correlation estimates for the random effects (**sitar** model)", 
-             row.names=F, 
+             row.names = FALSE, 
              # col.names = TRUE, 
              align='c',
              format="html", 
@@ -791,10 +787,9 @@ knitr::kable(fh1_ranef_corr,
                             font_size = 14,
                             htmltable_class = 'lightable-classic',
                             html_font = "Cambria") %>%
-  # kableExtra::row_spec(1:3, align = "c", monospace = T) %>%
-  kableExtra::column_spec(1, width = "1.2in", monospace = F) %>%
-  kableExtra::column_spec(2, width = "1.2in", monospace = F) %>%
-  kableExtra::column_spec(3, width = "1.2in", monospace = F) %>%
+  kableExtra::column_spec(1, width = "1.2in", monospace = FALSE) %>%
+  kableExtra::column_spec(2, width = "1.2in", monospace = FALSE) %>%
+  kableExtra::column_spec(3, width = "1.2in", monospace = FALSE) %>%
   kableExtra::footnote(
     general = "a: Size (height); b: Timing (age at peak growth velocity, APGV); c: Intensity (peak growth velocity, AGV)",
     footnote_as_chunk = TRUE,
@@ -809,7 +804,7 @@ knitr::kable(fh1_ranef_corr,
 knitr::kable(bfh1_ranef_corr, 
              digits = 2, 
              caption = "Correlation estimates for the random effects (**bsitar** model)", 
-             row.names=F, 
+             row.names = FALSE, 
              # col.names = TRUE, 
              align='c',
              format="html", 
@@ -820,10 +815,9 @@ knitr::kable(bfh1_ranef_corr,
                             font_size = 14,
                             htmltable_class = 'lightable-classic',
                             html_font = "Cambria") %>%
-  # kableExtra::row_spec(1:3, align = "c", monospace = T) %>%
-  kableExtra::column_spec(1, width = "1.2in", monospace = F) %>%
-  kableExtra::column_spec(2, width = "1.2in", monospace = F) %>%
-  kableExtra::column_spec(3, width = "1.2in", monospace = F) %>%
+  kableExtra::column_spec(1, width = "1.2in", monospace = FALSE) %>%
+  kableExtra::column_spec(2, width = "1.2in", monospace = FALSE) %>%
+  kableExtra::column_spec(3, width = "1.2in", monospace = FALSE) %>%
   kableExtra::footnote(
     general = "a: Size (height); b: Timing (age at peak growth velocity, APGV); c: Intensity (peak growth velocity, AGV)",
     footnote_as_chunk = TRUE,
@@ -836,9 +830,9 @@ knitr::kable(bfh1_ranef_corr,
 ## Growth curves (distance and velocity)
 ### Population average (mean) distance and velocity curves
 ```{r plotd, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotd}Population average distance curves (increase in size) for the **sitar** and **bsitar** models"}
-data_sitar_dx2  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = T)
+data_sitar_dx2  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
 data_sitar_dfx2 <- data_sitar_dx2 %>% data.frame()
-data_bsitar_dx2 <- plot_curves(model_bayes, opt = 'd', returndata = T, newdata = data_sitar_dfx2, ipts = NULL, usesavedfuns = T, envir = globalenv()) %>% 
+data_bsitar_dx2 <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_dfx2, ipts = NULL) %>% 
   dplyr::rename(distance = Estimate) %>% 
   dplyr::select(-dplyr::all_of(c('distance', 'Est.Error',  'Q2.5', 'Q97.5')))
 data_all_ad <- data_all_a %>% 
@@ -868,27 +862,27 @@ p <-
 #               dplyr::mutate(groupby = interaction(id, Curve)),
 #               aes(x = age, y = height, group = groupby),
 #             linetype = 1, color = colours[1], , linewidth = linewidths[2],
-#             alpha = alphas[2], show.legend = F) +
+#             alpha = alphas[2], show.legend = FALSE) +
 #   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[2]) %>%
 #               dplyr::mutate(groupby = interaction(id, Curve)),
 #             aes(x = age, y = height, group = groupby),
 #             linetype = 1, color = colours[1], , linewidth = linewidths[2],
-#             alpha = alphas[2], show.legend = F) +
+#             alpha = alphas[2], show.legend = FALSE) +
 #   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[3]) %>%
 #               dplyr::mutate(groupby = interaction(id, Curve)),
 #             aes(x = age, y = height, group = groupby),
 #             linetype = 1, color = colours[1], , linewidth = linewidths[2],
-#             alpha = alphas[2], show.legend = F) +
+#             alpha = alphas[2], show.legend = FALSE) +
 #   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[4]) %>%
 #               dplyr::mutate(groupby = interaction(id, Curve)),
 #             aes(x = age, y = height, group = groupby),
 #             linetype = 1, color = colours[1], , linewidth = linewidths[2], 
-#             alpha = alphas[2], show.legend = F) +
+#             alpha = alphas[2], show.legend = FALSE) +
 #   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[5]) %>%
 #               dplyr::mutate(groupby = interaction(id, Curve)),
 #             aes(x = age, y = height, group = groupby),
 #             linetype = 1, color = colours[1], , linewidth = linewidths[2], 
-#             alpha = alphas[2], show.legend = F) +
+#             alpha = alphas[2], show.legend = FALSE) +
 #   facet_wrap(~Curve) +
 #   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
 #   theme_grids1 + theme_legends1
@@ -898,12 +892,12 @@ p +
               dplyr::mutate(groupby = interaction(id, Curve)),
             aes(x = age, y = height, group = groupby, linetype = Curve),
             color = colours[1], linewidth = linewidths[2], 
-            alpha = alphas[2], show.legend = T) +
+            alpha = alphas[2], show.legend = TRUE) +
   geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[5]) %>%
               dplyr::mutate(groupby = interaction(id, Curve)),
             aes(x = age, y = height, group = groupby, linetype = Curve),
             color = colours[1], linewidth = linewidths[2], 
-            alpha = alphas[2], show.legend = T) +
+            alpha = alphas[2], show.legend = TRUE) +
   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
   theme_grids1 + theme_legends1
 ```
@@ -936,7 +930,7 @@ data_all_DV %>%
   geom_line(aes(x = age, y = distance, group = groupby, 
                 linetype = Model),
             color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
-            show.legend = T) +
+            show.legend = TRUE) +
   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
   theme_grids1 + theme_legends1
 ```
@@ -950,7 +944,7 @@ data_all_DV %>%
   geom_line(aes(x = age, y = velocity, group = groupby, 
                 linetype = Model),
             color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
-            show.legend = T) +
+            show.legend = TRUE) +
   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
   theme_grids1 + theme_legends1
 ```
@@ -982,7 +976,7 @@ growth spurt (see Table \@ref(tab:tabapgv)).
 knitr::kable(parms_apv_all, 
              digits = 2, 
              caption = "Population average timing and intensity estimates for the **sitar** and **bsitar** models", 
-             row.names=F, 
+             row.names = FALSE, 
              # col.names = TRUE, 
              align='c',
              format="html", 
@@ -993,10 +987,10 @@ knitr::kable(parms_apv_all,
                             font_size = 14,
                             htmltable_class = 'lightable-classic',
                             html_font = "Cambria") %>%
-  # kableExtra::row_spec(1:3, align = "c", monospace = T) %>%
-  kableExtra::column_spec(1, width = "1.2in", monospace = F) %>%
-  kableExtra::column_spec(2, width = "1.2in", monospace = F) %>%
-  kableExtra::column_spec(3, width = "1.2in", monospace = F) %>%
+  # kableExtra::row_spec(1:3, align = "c", monospace = TRUE) %>%
+  kableExtra::column_spec(1, width = "1.2in", monospace = FALSE) %>%
+  kableExtra::column_spec(2, width = "1.2in", monospace = FALSE) %>%
+  kableExtra::column_spec(3, width = "1.2in", monospace = FALSE) %>%
   kableExtra::footnote(
     general = "APGV: age at peak growth velocity; PGV: peak growth velocity",
     footnote_as_chunk = TRUE,
@@ -1016,7 +1010,7 @@ and (Table \@ref(tab:bsitarraneffecidapv)).
 knitr::kable(data_sitar_Vapv[1:10, ], 
              digits = 2, 
             caption = "Individual specific timing and intensity estimates for the first ten individuals (**sitar** model)", 
-             row.names=F, 
+             row.names = FALSE, 
              # align=c("l",rep("r",3)),
              align='c',
              format="html", 

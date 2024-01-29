@@ -242,6 +242,21 @@
 #'   factor levels are assigned same name as \code{factor.dummy}. Note that when
 #'   \code{factor.level} is not \code{NULL}, its length must be same as the
 #'   length of the \code{factor.dummy}.
+#'   
+#' @param expose_function An optional logical argument to indicate whether to
+#'   expose Stan functions (default \code{FALSE}). Note that if user has already
+#'   exposed Stan functions during model fit by setting \code{expose_function =
+#'   TRUE} in the [bsitar()], then those exposed functions are saved and can be
+#'   used during post processing of the posterior draws and therefore
+#'   \code{expose_function} is by default set as \code{FALSE} in all post
+#'   processing functions except [optimize_model()]. For [optimize_model()], the
+#'   default setting is \code{expose_function = NULL}. The reason is that each
+#'   optimized model has different Stan function and therefore it need to be re
+#'   exposed and saved. The \code{expose_function = NULL} implies that the
+#'   setting for \code{expose_function} is taken from the original \code{model}
+#'   fit. Note that \code{expose_function} must be set to \code{TRUE} when
+#'   adding \code{fit criteria} and/or \code{bayes_R2} during model
+#'   optimization.
 #' 
 #' @param usesavedfuns A logical (default \code{NULL}) to indicate whether to
 #'   use the already exposed and saved \code{Stan} functions. Depending on
@@ -356,23 +371,11 @@ growthparameters.bgmfit <- function(model,
                                verbose = FALSE,
                                fullframe = NULL,
                                dummy_to_factor = NULL, 
+                               expose_function = FALSE,
                                usesavedfuns = NULL,
                                clearenvfuns = NULL,
                                envir = NULL,
                                ...) {
-  
-  if(is.null(usesavedfuns)) {
-    if(!is.null(model$model_info$exefuns[[1]])) {
-      usesavedfuns <- TRUE
-    } else if(is.null(model$model_info$exefuns[[1]])) {
-      usesavedfuns <- FALSE
-    }
-  } else if(!is.null(usesavedfuns)) {
-    if(usesavedfuns) {
-      check_if_functions_exists(model, checks = TRUE, 
-                                usesavedfuns = usesavedfuns)
-    }
-  }
   
   if(is.null(envir)) {
     if(!is.null(model$model_info$exefuns[[1]])) {
@@ -381,6 +384,31 @@ growthparameters.bgmfit <- function(model,
       envir <- parent.frame()
     }
   }
+  
+  if(is.null(usesavedfuns)) {
+    if(!is.null(model$model_info$exefuns[[1]])) {
+      usesavedfuns <- TRUE
+    } else if(is.null(model$model_info$exefuns[[1]])) {
+      if(expose_function) {
+        model <- expose_model_functions(model, envir = envir)
+        usesavedfuns <- TRUE
+      } else if(!expose_function) {
+        usesavedfuns <- FALSE
+      }
+    }
+  } else { # if(!is.null(usesavedfuns)) {
+    if(!usesavedfuns) {
+      if(expose_function) {
+        model <- expose_model_functions(model, envir = envir)
+        usesavedfuns <- TRUE
+      }
+    } else if(usesavedfuns) {
+      check_if_functions_exists(model, checks = TRUE, 
+                                usesavedfuns = usesavedfuns)
+    }
+  }
+  
+  
   
   if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
@@ -442,8 +470,10 @@ growthparameters.bgmfit <- function(model,
   model$xcall <- xcall
   
   arguments <- get_args_(as.list(match.call())[-1], xcall)
-  
   arguments$model <- model
+  arguments$usesavedfuns <- usesavedfuns
+  
+  
   
   if(xcall == 'plot_curves') arguments$plot <- TRUE else arguments$plot <- FALSE
   

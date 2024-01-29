@@ -80,23 +80,11 @@ loo_validation.bgmfit <-
            deriv_model = NULL,
            verbose = FALSE,
            dummy_to_factor = NULL, 
+           expose_function = FALSE,
            usesavedfuns = NULL,
            clearenvfuns = NULL,
            envir = NULL,
            ...) {
-    
-    if(is.null(usesavedfuns)) {
-      if(!is.null(model$model_info$exefuns[[1]])) {
-        usesavedfuns <- TRUE
-      } else if(is.null(model$model_info$exefuns[[1]])) {
-        usesavedfuns <- FALSE
-      }
-    } else if(!is.null(usesavedfuns)) {
-      if(usesavedfuns) {
-        check_if_functions_exists(model, checks = TRUE, 
-                                  usesavedfuns = usesavedfuns)
-      }
-    }
     
     if(is.null(envir)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
@@ -105,6 +93,31 @@ loo_validation.bgmfit <-
         envir <- parent.frame()
       }
     }
+    
+    if(is.null(usesavedfuns)) {
+      if(!is.null(model$model_info$exefuns[[1]])) {
+        usesavedfuns <- TRUE
+      } else if(is.null(model$model_info$exefuns[[1]])) {
+        if(expose_function) {
+          model <- expose_model_functions(model, envir = envir)
+          usesavedfuns <- TRUE
+        } else if(!expose_function) {
+          usesavedfuns <- FALSE
+        }
+      }
+    } else { # if(!is.null(usesavedfuns)) {
+      if(!usesavedfuns) {
+        if(expose_function) {
+          model <- expose_model_functions(model, envir = envir)
+          usesavedfuns <- TRUE
+        }
+      } else if(usesavedfuns) {
+        check_if_functions_exists(model, checks = TRUE, 
+                                  usesavedfuns = usesavedfuns)
+      }
+    }
+    
+    
     
     if(!is.null(ndraws)) {
       if(ndraws == 1) stop("ndraws must be greater than 1")
@@ -229,18 +242,20 @@ loo_validation.bgmfit <-
     
     # Cleanup environment if requested
     if(setcleanup) {
-      tempgenv <- envir
-      for (oalli in names(oall)) {
-        if(exists(oalli, envir = tempgenv )) {
-          remove(list=oalli, envir = tempgenv)
+      suppressWarnings({
+        tempgenv <- envir
+        for (oalli in names(oall)) {
+          if(exists(oalli, envir = tempgenv )) {
+            remove(list=oalli, envir = tempgenv)
+          }
         }
-      }
-      tempgenv <- test
-      for (oalli in names(oall)) {
-        if(exists(oalli, envir = tempgenv )) {
-          remove(list=oalli, envir = tempgenv)
+        tempgenv <- test
+        for (oalli in names(oall)) {
+          if(exists(oalli, envir = tempgenv )) {
+            remove(list=oalli, envir = tempgenv)
+          }
         }
-      }
+      })
     } # if(setcleanup) {
     
     .
