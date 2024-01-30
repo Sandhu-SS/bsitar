@@ -1980,8 +1980,39 @@ bsitar <- function(x,
   temp2 <- NULL;
   
   
+  # override but check using 'log_and_divide' to see if  'err.' correctly 
+  # assigned and not passed to the outer .G environment 
+  # Seems enverr. <- environment() works fine
   
-  enverr. <- parent.frame()
+  #enverr. <- parent.frame()
+  
+  enverr. <- environment()
+  
+  # assign('err.', FALSE, envir = enverr.)
+  # log_and_divide <- function(x, y){
+  #   tryCatch(
+  #     {
+  #       result = log(x) / y
+  #       return(result)
+  #     },
+  #     error=function(e) {
+  #       assign('err.', TRUE, envir = enverr.)
+  #       message('An Error Occurred')
+  #       
+  #     },
+  #     warning=function(w) {
+  #       message('A Warning Occurred')
+  #       
+  #       return(NA)
+  #     }
+  #   )
+  # }
+  # print(err.)
+  # log_and_divide(10)
+  # print(err.)
+  
+  
+  
   for (i in names(mcall)[-1]) {
     no_default_args_plus_family <- c(no_default_args, "family")
     if (!i %in% no_default_args_plus_family) {
@@ -2325,7 +2356,7 @@ bsitar <- function(x,
     splitmvar3 <- eval(parse(text = splitmvar2))
     zzz <- splitmvar3
     
-    enverr. <- parent.frame()
+    # enverr. <- parent.frame()
     for (z in names(splitmvar3)) {
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
@@ -3138,7 +3169,7 @@ bsitar <- function(x,
   
   convert_to_list <- getArgNames(bsitar())
   
-  enverr. <- parent.frame()
+  # enverr. <- parent.frame()
   for (ip in convert_to_list) {
     if (grepl("_init_", ip)) {
       assign('err.', FALSE, envir = enverr.)
@@ -7228,7 +7259,6 @@ bsitar <- function(x,
         cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
       }
     }
-    if(exists("err.")) rm("err.")
     return(brmsfit)
   } # exe_model_fit
   
