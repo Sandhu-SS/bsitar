@@ -168,10 +168,6 @@ optimize_model.bgmfit <- function(model,
   call_o_args <- as.list(call_o)[-1]
   
   args_o <- as.list(model$model_info$call.full.bgmfit)[-1]
-  
-  if(!is.null(call_o_args$expose_function)) {
-    args_o$expose_function <- call_o_args$expose_function
-  }
     
   args_o_dots_ <- list(...)
   if (length(args_o_dots_) > 0) {
@@ -219,27 +215,27 @@ optimize_model.bgmfit <- function(model,
   
   
   
-  # Not must for expose_function to be true when not adding criteria or bayes R2
+  # The 'expose_function' must TRUE when adding fit criteria or bayes R2
   if (need_exposed_function) {
-  if (!args_o$expose_function) {
-      stop(
-        "Argument 'expose_function' must be set to TRUE when ",
-        "\n ",
-        " 'add_fit_criteria' and/or 'add_bayes_R' not NULL"
-      )
-    }
-    # if(!grepl('GlobalEnv', deparse(substitute(envir)), ignore.case = T)) {
-    #   stop(
-    #     "The 'envir' must be '.GlobalEnv' when ",
-    #     "\n ",
-    #     " 'add_fit_criteria' and/or 'add_bayes_R' not NULL",
-    #     "\n ",
-    #     " This is a known issue ",
-    #     "(https://github.com/paul-buerkner/brms/issues/1577)"
-    #   )
-    # }
+    if(is.null(expose_function)) {
+      args_o$expose_function <- expose_function <- TRUE
+      if(verbose) message("Argument 'expose_function' must be set to TRUE")
+    } else if(!is.null(expose_function)) {
+      if (!args_o$expose_function) {
+        stop(
+          "Argument 'expose_function' must be set to TRUE ",
+          "\n ",
+          " when adding 'fit criteria' or 'bayes_R'"
+        )
+      }
+    } # if(is.null(expose_function)) {
   } # if (need_exposed_function) {
   
+  
+  
+  if(!is.null(call_o_args$expose_function)) {
+    args_o$expose_function <- call_o_args$expose_function
+  }
   
   
   
@@ -349,36 +345,36 @@ optimize_model.bgmfit <- function(model,
     
     
     
-    if(is.null(envir)) {
-      if(!is.null(fit$model_info$exefuns[[1]])) {
-        envir <- environment(fit$model_info$exefuns[[1]])
-      } else {
-        envir <- parent.frame()
-      }
-    }
-    
-    if(is.null(usesavedfuns)) {
-      if(!is.null(fit$model_info$exefuns[[1]])) {
-        usesavedfuns <- TRUE
-      } else if(is.null(fit$model_info$exefuns[[1]])) {
-        if(expose_function) {
-          fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
-          usesavedfuns <- TRUE
-        } else if(!expose_function) {
-          usesavedfuns <- FALSE
-        }
-      }
-    } else { # if(!is.null(usesavedfuns)) {
-      if(!usesavedfuns) {
-        if(expose_function) {
-          fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
-          usesavedfuns <- TRUE
-        }
-      } else if(usesavedfuns) {
-        check_if_functions_exists(fit, checks = TRUE, 
-                                  usesavedfuns = usesavedfuns)
-      }
-    }
+    # if(is.null(envir)) {
+    #   if(!is.null(fit$model_info$exefuns[[1]])) {
+    #     envir <- environment(fit$model_info$exefuns[[1]])
+    #   } else {
+    #     envir <- parent.frame()
+    #   }
+    # }
+    # 
+    # if(is.null(usesavedfuns)) {
+    #   if(!is.null(fit$model_info$exefuns[[1]])) {
+    #     usesavedfuns <- TRUE
+    #   } else if(is.null(fit$model_info$exefuns[[1]])) {
+    #     if(expose_function) {
+    #       fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+    #       usesavedfuns <- TRUE
+    #     } else if(!expose_function) {
+    #       usesavedfuns <- FALSE
+    #     }
+    #   }
+    # } else { # if(!is.null(usesavedfuns)) {
+    #   if(!usesavedfuns) {
+    #     if(expose_function) {
+    #       fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+    #       usesavedfuns <- TRUE
+    #     }
+    #   } else if(usesavedfuns) {
+    #     check_if_functions_exists(fit, checks = TRUE, 
+    #                               usesavedfuns = usesavedfuns)
+    #   }
+    # }
     
     
    # if (!fit$model_info$call.full.bgmfit$expose_function) {
@@ -859,15 +855,27 @@ optimize_model.bgmfit <- function(model,
     else
       yfun_print <- yfun
     
+    
+    df_print <- deparse(df)
+    
+    if(grepl("\\(", df_print)) {
+      df_print <- 
+        regmatches(df_print, gregexpr("(?<=\\().*?(?=\\))", 
+                                      df_print, perl=T))[[1]]
+    }
+    
+    df_print <- eval(parse(text = df_print))
+    
+    
     if(verbose) {
       cat("\n")
-      cat(paste0("df = ", df, "; xfun = ", xfun_print, "; yfun = ", yfun_print),
+      cat(paste0("df = ", df_print, "; xfun = ", xfun_print, "; yfun = ", yfun_print),
           "\n")
     }
     
     
     optimization_info <-
-      paste0("df = ", df, "; xfun = ", xfun_print, "; yfun = ", yfun_print)
+      paste0("df = ", df_print, "; xfun = ", xfun_print, "; yfun = ", yfun_print)
     
     
     args_o$model <- model
@@ -940,21 +948,52 @@ optimize_model.bgmfit <- function(model,
       user_call$expose_function <- FALSE
       fit <- eval(user_call)
       if(args_o$expose_function) {
-        fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
-      }
-    }
+        # fit$model_info$exefuns[[1]] <- NULL
+        # fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+        if(is.null(envir)) {
+          if(!is.null(fit$model_info$exefuns[[1]])) {
+            envir <- environment(fit$model_info$exefuns[[1]])
+          } else {
+            envir <- parent.frame()
+          }
+        }
+        
+        if(is.null(usesavedfuns)) {
+          if(!is.null(fit$model_info$exefuns[[1]])) {
+            usesavedfuns <- TRUE
+          } else if(is.null(fit$model_info$exefuns[[1]])) {
+            if(expose_function) {
+              fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+              usesavedfuns <- TRUE
+            } else if(!expose_function) {
+              usesavedfuns <- FALSE
+            }
+          }
+        } else { # if(!is.null(usesavedfuns)) {
+          if(!usesavedfuns) {
+            if(expose_function) {
+              fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+              usesavedfuns <- TRUE
+            }
+          } else if(usesavedfuns) {
+            check_if_functions_exists(fit, checks = TRUE, 
+                                      usesavedfuns = usesavedfuns)
+          }
+        } # if(is.null(envir)) {...
+      } # if(args_o$expose_function) {
+    } # else if(!all_same_args) {
     
     
     if(!is.null(fit)) {
       fit$model_info$optimization_info <- optimization_info
-      fit$model_info$optimize_df <- df
+      fit$model_info$optimize_df <- df_print
       fit$model_info$optimize_x <- xfun_print
       fit$model_info$optimize_y <- yfun_print
       
       # Add fit_criteria and bares_R to the fit
       # Also, add summary data frames for criteria and R square
       
-      # setresp to anything so that even multivariate will be response wise
+      # 'setresp' to anything so that even multivariate will be response wise
       # if desired, this behavior
       # if(length(fit$model_info$ys) == 1) setresp <- NULL
       # if(length(fit$model_info$ys) > 1) setresp <- 'TRUE'
