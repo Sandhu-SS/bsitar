@@ -829,7 +829,7 @@ knitr::kable(bfh1_ranef_corr,
 \newline
 ## Growth curves (distance and velocity)
 ### Population average (mean) distance and velocity curves
-```{r plotd, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotd}Population average distance curves (increase in size) for the **sitar** and **bsitar** models"}
+```{r plotd, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotd}Population average distance curves for the **sitar** and **bsitar** models"}
 data_sitar_dx2  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
 data_sitar_dfx2 <- data_sitar_dx2 %>% data.frame()
 data_bsitar_dx2 <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_dfx2, ipts = NULL) %>% 
@@ -910,11 +910,12 @@ shows a clear spurt in growth rate which peaks at around 11.7 years of age (see
 
 
 \newline
-```{r plotv, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotv}Population average velocity curves (change in growth rate) for the **sitar** and **bsitar** models"}
+```{r plotv, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotv}Population average velocity curves for the **sitar** and **bsitar** models"}
 data_all_dv %>% 
   dplyr::mutate(groupby = interaction(id, Model) ) %>% 
   ggplot(., aes(x = age)) +
-  geom_line(aes(x = age, y = velocity, group = groupby), 
+  geom_line(aes(x = age, y = velocity, group = groupby,
+                linetype = Model), 
             color = colours[1], alpha = alphas[2], linewidth = linewidths[2],
             show.legend = TRUE) +
   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
@@ -923,7 +924,7 @@ data_all_dv %>%
 
 
 ### Individual specific distance and velocity curves
-```{r plotD2, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotD2}Individual specific distance curves (increase in size) for the **sitar** and **bsitar** models"}
+```{r plotD2, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotD2}Individual specific distance curves for the **sitar** and **bsitar** models"}
 data_all_DV %>% 
   dplyr::mutate(groupby = interaction(id, Model) ) %>% 
   ggplot(., aes(x = age)) +
@@ -937,7 +938,7 @@ data_all_DV %>%
 
 
 \newline
-```{r plotV2, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotV2}Individual specific velocity curves (change in growth rate) for the **sitar** and **bsitar** models"}
+```{r plotV2, echo=TRUE,include=TRUE, fig.cap="\\label{fig:plotV2}Individual specific velocity curves for the **sitar** and **bsitar** models"}
 data_all_DV %>% 
   dplyr::mutate(groupby = interaction(id, Model) ) %>% 
   ggplot(., aes(x = age)) +

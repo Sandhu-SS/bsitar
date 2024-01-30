@@ -2,8 +2,11 @@
 
 library(bsitar)
 
+data(berkeley, package = "sitar")
+berkeley_data <- berkeley
+rm(berkeley)
 
-berkeley_exdata <- berkeley %>%
+berkeley_exdata <- berkeley_data %>%
   dplyr::select(id, age, height, sex) %>%
   dplyr::filter(age %in% c(8:18) ) %>%
   tidyr::drop_na(height) %>%

@@ -3,7 +3,7 @@
 \docType{data}
 \name{berkeley_exfit}
 \alias{berkeley_exfit}
-\title{Model fit to the Berkeley data for females}
+\title{Model fit to the Berkeley Child Guidance Study Data for females}
 \format{
 Model fit comprising summary of posterior draws.
 }

@@ -3,7 +3,7 @@
 \docType{data}
 \name{berkeley_exdata}
 \alias{berkeley_exdata}
-\title{Berkeley Child Guidance Study Data for males}
+\title{Berkeley Child Guidance Study Data for females}
 \format{
 A data frame with following 3 variables:
 \describe{

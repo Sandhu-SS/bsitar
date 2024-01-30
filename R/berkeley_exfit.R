@@ -1,5 +1,5 @@
 
-#' @title Model fit to the Berkeley data for females
+#' @title Model fit to the Berkeley Child Guidance Study Data for females
 #'
 #' @description Bayesian SITAR model fit to the [bsitar::berkeley_exdata]
 #'   data (70 females, 8 to 18 years of age).

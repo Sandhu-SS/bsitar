@@ -10,7 +10,7 @@
 
 ### Miscellaneous
 - Replaced Bayesian SITAR model fit shown as example from 'berkeley_mfit' applied to 20 randomly selected males   between 6 and 20 years of age ('berkeley_mdata') with 'berkeley_exfit' that is fit to 70 females between 8 and 20 years of age ('berkeley_exdata'). This is done to use the example model ('berkeley_exfit') in vignette that provide a detailed comparison between non Bayesian SITAR model fit (using the 'sitar' package) and Bayesian SITAR model fit (using the 'bsitar' package). The vignette included in the 'sitar' package analysed the exact same data (70 females between 8 and 20 years of age). 
-- Now user need not to set environment as 'globalenv()' i.e., (envir = globalenv())' for post processing functions. The environment is now automatically set to match the environment of exposed functions. It is important to note that setting environment manually (via the 'envir' argument) may actually result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests. 
+- Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing functions. The environment is now automatically set to match the environment of exposed functions. It is important to note that setting environment manually (via the 'envir' argument) may actually result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests. 
 - Minor corrections/changes to make R code more efficient.
 
 
@@ -23,7 +23,7 @@
 
 - Added 'optimize_model' function to perform model optimization by fitting 
   model with varying degree of freedom and by transforming 'x' (predictor) 
-  and 'y' (outcome) varibales. The allowed transformations for 'x' and 'y'    
+  and 'y' (outcome) varibales. The allowed transformations for 'x' and 'y' 
   variables are 'log' (logarithmic) and 'sqrt' (square root) transformation. 
   The 'optimize_model' performs comparison of resulting model fits based on 
   user specified  criteria such as the Watanabe–Akaike information criterion

@@ -1,6 +1,6 @@
 
 
-#' @title Berkeley Child Guidance Study Data for males
+#' @title Berkeley Child Guidance Study Data for females
 #'
 #' @description A subset of the [bsitar::berkeley] data that contains
 #'   longitudinal growth data for 70 females (8 to 18 years of age).

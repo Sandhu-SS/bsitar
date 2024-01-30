@@ -40,11 +40,13 @@ doi
 dplyr
 dvau
 dyq
+envir
 eq
 exdata
 exfit
 frac
 ggplot
+globalenv
 growthparameters
 homoscedasticity
 ij
