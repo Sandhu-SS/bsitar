@@ -77,6 +77,14 @@ expose_model_functions.bgmfit <- function(model,
   
   
   if(expose) {
+    if (verbose) {
+      setmsgtxt <-
+        paste0("\n Exposing Stan functions for post-processing\n")
+      message(setmsgtxt)
+    }
+  }
+  
+  if(expose) {
     if (is.null(scode)) {
       exposecode <- brms::stancode(model)
     } else if (!is.null(scode)) {

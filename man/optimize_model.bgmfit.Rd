@@ -17,8 +17,10 @@
   byresp = FALSE,
   digits = 2,
   cores = 1,
-  expose_function = NULL,
   verbose = FALSE,
+  expose_function = NULL,
+  usesavedfuns = FALSE,
+  clearenvfuns = NULL,
   envir = NULL,
   ...
 )
@@ -92,6 +94,10 @@ the \code{\link[base:Round]{base::round()}} function.}
 \code{1}). The argument \code{cores} is passed to the
 \code{\link[brms:add_criterion]{brms::add_criterion()}}.}
 
+\item{verbose}{An optional argument (logical, default \code{FALSE}) to
+indicate whether to print information collected during setting up the
+object(s).}
+
 \item{expose_function}{An optional logical argument to indicate whether to
 expose Stan functions (default \code{FALSE}). Note that if user has already
 exposed Stan functions during model fit by setting \code{expose_function =
@@ -107,9 +113,22 @@ fit. Note that \code{expose_function} must be set to \code{TRUE} when
 adding \code{fit criteria} and/or \code{bayes_R2} during model
 optimization.}
 
-\item{verbose}{An optional argument (logical, default \code{FALSE}) to
-indicate whether to print information collected during setting up the
-object(s).}
+\item{usesavedfuns}{A logical (default \code{NULL}) to indicate whether to
+use the already exposed and saved \code{Stan} functions. Depending on
+whether the user have exposed Stan functions within the \code{\link[=bsitar]{bsitar()}} call via
+\code{expose_functions} argument in the \code{\link[=bsitar]{bsitar()}}, the \code{usesavedfuns}
+is automatically set to \code{TRUE} (if \code{expose_functions = TRUE}) or
+\code{FALSE} (if \code{expose_functions = FALSE}). Therefore, manual
+setting of \code{usesavedfuns} as \code{TRUE}/\code{FALSE} is rarely
+needed. This is for internal purposes only and mainly used during the
+testing of the functions and therefore should not be used by users as it
+might lead to unreliable estimates.}
+
+\item{clearenvfuns}{A logical to indicate whether to clear the exposed
+function from the environment (\code{TRUE}) or not (\code{FALSE}). If
+\code{NULL} (default), then \code{clearenvfuns} is set as \code{TRUE} when
+\code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
+is \code{FALSE}.}
 
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.

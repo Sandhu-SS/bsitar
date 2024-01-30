@@ -119,8 +119,10 @@ optimize_model.bgmfit <- function(model,
                                   byresp = FALSE,
                                   digits = 2,
                                   cores = 1,
-                                  expose_function = NULL, 
                                   verbose = FALSE,
+                                  expose_function = NULL,
+                                  usesavedfuns = FALSE,
+                                  clearenvfuns = NULL,
                                   envir = NULL,
                                   ...) {
   
@@ -340,12 +342,50 @@ optimize_model.bgmfit <- function(model,
                               df,
                               xfun_print,
                               yfun_print,
+                              usesavedfuns,
+                              clearenvfuns,
+                              envir,
                               ...) {
+    
+    
+    
+    if(is.null(envir)) {
+      if(!is.null(fit$model_info$exefuns[[1]])) {
+        envir <- environment(fit$model_info$exefuns[[1]])
+      } else {
+        envir <- parent.frame()
+      }
+    }
+    
+    if(is.null(usesavedfuns)) {
+      if(!is.null(fit$model_info$exefuns[[1]])) {
+        usesavedfuns <- TRUE
+      } else if(is.null(fit$model_info$exefuns[[1]])) {
+        if(expose_function) {
+          fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+          usesavedfuns <- TRUE
+        } else if(!expose_function) {
+          usesavedfuns <- FALSE
+        }
+      }
+    } else { # if(!is.null(usesavedfuns)) {
+      if(!usesavedfuns) {
+        if(expose_function) {
+          fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+          usesavedfuns <- TRUE
+        }
+      } else if(usesavedfuns) {
+        check_if_functions_exists(fit, checks = TRUE, 
+                                  usesavedfuns = usesavedfuns)
+      }
+    }
+    
     
    # if (!fit$model_info$call.full.bgmfit$expose_function) {
       assign(o[[1]], fit$model_info[['exefuns']][[o[[1]]]], envir = envir)
    # }
     
+      
     if (!is.null(add_fit_criteria)) {
       what_ <- paste(add_fit_criteria, collapse = ", ")
       message(" Adding", " ", what_, " ", "...")
@@ -900,7 +940,7 @@ optimize_model.bgmfit <- function(model,
       user_call$expose_function <- FALSE
       fit <- eval(user_call)
       if(args_o$expose_function) {
-        fit <- expose_model_functions(fit, envir = envir)
+        fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
       }
     }
     
@@ -938,7 +978,10 @@ optimize_model.bgmfit <- function(model,
           digits = digits,
           df = df,
           xfun_print = xfun_print,
-          yfun_print = yfun_print
+          yfun_print = yfun_print,
+          usesavedfuns = usesavedfuns,
+          clearenvfuns = clearenvfuns,
+          envir = envir
         )
       }
       
@@ -951,7 +994,10 @@ optimize_model.bgmfit <- function(model,
           digits = digits,
           df = df,
           xfun_print = xfun_print,
-          yfun_print = yfun_print
+          yfun_print = yfun_print,
+          usesavedfuns = usesavedfuns,
+          clearenvfuns = clearenvfuns,
+          envir = envir
         )
       }
     } # if(!is.null(fit)) {

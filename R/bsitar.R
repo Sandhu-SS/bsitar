@@ -7180,28 +7180,30 @@ bsitar <- function(x,
     model_info[['fun_scode']] <- fun_scode
     brmsfit$model_info <- model_info
     
+    # Now message moved to the expose_model_functions()
     if (expose_function) {
-      if (verbose) {
-        setmsgtxt <-
-          paste0("\n Exposing Stan functions for post-processing\n")
-        if (displayit == 'msg') {
-          message(setmsgtxt)
-        } else if (displayit == 'col') {
-          col <- setcolh
-          cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
-        }
-      }
-      if (!verbose) {
-        setmsgtxt <-
-          paste0("\n Exposing Stan functions for post-processing..\n")
-        message(setmsgtxt)
-      }
+      # if (verbose) {
+      #   setmsgtxt <-
+      #     paste0("\n Exposing Stan functions for post-processing\n")
+      #   if (displayit == 'msg') {
+      #     message(setmsgtxt)
+      #   } else if (displayit == 'col') {
+      #     col <- setcolh
+      #     cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+      #   }
+      # }
+      # if (!verbose) {
+      #   setmsgtxt <-
+      #     paste0("\n Exposing Stan functions for post-processing..\n")
+      #   message(setmsgtxt)
+      # }
       
       brmsfit <- expose_model_functions(model = brmsfit, 
                                       scode = fun_scode,
                                       expose = TRUE, 
                                       select_model = NULL,
                                       returnobj = TRUE,
+                                      verbose = TRUE,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
@@ -7212,6 +7214,7 @@ bsitar <- function(x,
                                       expose = FALSE, 
                                       select_model = select_model,
                                       returnobj = TRUE,
+                                      verbose = TRUE,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'R'
     } 
