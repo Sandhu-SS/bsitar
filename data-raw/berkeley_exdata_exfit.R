@@ -42,18 +42,22 @@ set.seed(1234)
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 5, 
-                        # threads = brms::threading(12), 
+                        threads = brms::threading(NULL), 
                         # backend = 'cmdstanr',
                         # b_prior_beta = student_t(3, 0, 2.5),
                         # c_prior_beta = student_t(3, 0, 1.0),
-                        chains = 2, cores = 2, iter = 4000, thin = 1)
+                        sample_prior = 'only',
+                        expose_function = F,
+                        chains = 2, cores = 2, iter = 2000, thin = 4)
 
 
 
-# berkeley_exfit <- berkeley_ffit
+# berkeley_exfit <- berkeley_exfitxz
+
+# save(berkeley_exfit, file = 'berkeley_exfitxz.rda', compress = 'xz')
 
 usethis::use_data(berkeley_exdata, overwrite = TRUE)
 
-usethis::use_data(berkeley_exfit, overwrite = TRUE, compress = 'xz')
+# usethis::use_data(berkeley_exfit, overwrite = TRUE, compress = 'xz')
 
 

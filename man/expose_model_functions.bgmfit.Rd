@@ -11,6 +11,7 @@
   expose = TRUE,
   select_model = NULL,
   returnobj = TRUE,
+  vectorize = FALSE,
   verbose = FALSE,
   envir = NULL,
   ...
@@ -34,6 +35,11 @@ model name. This is for internal use only.}
 \item{returnobj}{A logical (default \code{TRUE}) to indicate whether to
 return the model object. When \code{expose = TRUE}, then it is advisable to
 set \code{returnobj = TRUE} too.}
+
+\item{vectorize}{A logical (default \code{FALSE}) to indicate whether the
+exposed functions should be vectorized via \code{\link[base:Vectorize]{base::Vectorize()}}. Note that
+currently \code{vectorize} should be set to \code{FALSE} because setting it
+\code{TRUE} may not work as expected.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the
