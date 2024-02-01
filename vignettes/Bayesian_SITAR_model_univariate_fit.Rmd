@@ -191,8 +191,11 @@ if(existsfit) {
   model_bayes <-  bsitar(x = age, y = height, id = id, data = data, df = 5,
                 chains = 2, cores = 2, iter = 2000, thin = 4, refresh = 100,
                 sample_prior = "no",
-                expose_function = FALSE)
+                seed = 123)
 }
+
+# Expose Stan functions
+model_bayes <- expose_model_functions(model_bayes)
 ```
 
 \newline

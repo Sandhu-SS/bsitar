@@ -46,18 +46,23 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # backend = 'cmdstanr',
                         # b_prior_beta = student_t(3, 0, 2.5),
                         # c_prior_beta = student_t(3, 0, 1.0),
-                        sample_prior = 'only',
-                        expose_function = F,
-                        chains = 2, cores = 2, iter = 2000, thin = 4)
+                        sample_prior = 'no',
+                        expose_function = FALSE,
+                        chains = 2, cores = 2, iter = 2000, thin = 10)
 
-
-
-# berkeley_exfit <- berkeley_exfitxz
-
-# save(berkeley_exfit, file = 'berkeley_exfitxz.rda', compress = 'xz')
 
 usethis::use_data(berkeley_exdata, overwrite = TRUE)
 
-# usethis::use_data(berkeley_exfit, overwrite = TRUE, compress = 'xz')
+save_file       <- "berkeley_exfittemp.rds"
+saveRDS(berkeley_exfit, file = save_file, compress = 'xz')
+
+rm(list = ls())
+
+save_file      <- "berkeley_exfittemp.rds"
+berkeley_exfit <- readRDS(file = save_file)
+
+file.remove(save_file)
+
+usethis::use_data(berkeley_exfit, overwrite = TRUE)
 
 
