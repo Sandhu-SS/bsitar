@@ -2753,3 +2753,45 @@ cbind_fill_na2 <- function(..., names = NA) {
   })
   return(y)
 }
+
+
+
+
+
+#' Check and get data object if exists
+#'
+#' @param object A character string naming the object to be retrieved.
+#' @param namespace A character string specifying the namespace to be checked.
+#' @param envir An environment to be set when checking the existence of the
+#'   object.
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+check_and_get_object <- function(object, namespace = NULL, envir = NULL) {
+  if(is.null(namespace)) {
+    namespace <- "bsitar"
+  }
+  if(grepl("\"", deparse(substitute(object)), fixed = T)) {
+    stop("object must be a symbol and not a string")
+  }
+  object_str <- deparse(substitute(object))
+  if(is.null(envir)) {
+    if(exists(object_str)) {
+      out <- object
+    } else {
+      out <- getFromNamespace(object_str, namespace)
+    }
+  }
+  
+  if(!is.null(envir)) {
+    if(exists(object_str, envir = envir)) {
+      out <- assign(object_str, object, envir = envir)
+    } else {
+      out <- getFromNamespace(object_str, namespace, envir = envir)
+    }
+  }
+  
+  return(out)
+}

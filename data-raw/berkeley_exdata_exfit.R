@@ -21,19 +21,19 @@ berkeley_exdata <- berkeley_data %>%
 
 
 
-sample_n_of_groups <- function(data, size, ...) {
-  dots <- rlang::quos(...)
-  group_ids <- data %>%
-    dplyr::group_by(!!! dots) %>%
-    dplyr::group_indices()
-  sampled_groups <- sample(unique(group_ids), size)
-  data %>%
-    dplyr::filter(group_ids %in% sampled_groups) %>%
-    droplevels()
-}
-
-set.seed(1234)
-#berkeley_exdata <- berkeley_exdata %>% sample_n_of_groups(size = 20, id)
+# sample_n_of_groups <- function(data, size, ...) {
+#   dots <- rlang::quos(...)
+#   group_ids <- data %>%
+#     dplyr::group_by(!!! dots) %>%
+#     dplyr::group_indices()
+#   sampled_groups <- sample(unique(group_ids), size)
+#   data %>%
+#     dplyr::filter(group_ids %in% sampled_groups) %>%
+#     droplevels()
+# }
+# 
+# set.seed(1234)
+# berkeley_exdata <- berkeley_exdata %>% sample_n_of_groups(size = 20, id)
 
 
 # sitar_fit <- sitar::sitar(x = age, y = height, id = id, df = 5,
@@ -46,23 +46,38 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # backend = 'cmdstanr',
                         # b_prior_beta = student_t(3, 0, 2.5),
                         # c_prior_beta = student_t(3, 0, 1.0),
-                        sample_prior = 'no',
+                        sample_prior = 'only',
                         expose_function = FALSE,
-                        chains = 2, cores = 2, iter = 2000, thin = 10)
+                        chains = 2, cores = 2, iter = 2000, thin = 4)
 
 
-usethis::use_data(berkeley_exdata, overwrite = TRUE)
 
-save_file       <- "berkeley_exfittemp.rds"
-saveRDS(berkeley_exfit, file = save_file, compress = 'xz')
+save_file_exdata      <- "berkeley_exdata_temp.rds"
+save_file_exfit       <- "berkeley_exfit_temp.rds"
 
-rm(list = ls())
+saveRDS(berkeley_exdata, file = save_file_exdata, compress = 'xz')
+saveRDS(berkeley_exfit,  file = save_file_exfit,  compress = 'xz')
 
-save_file      <- "berkeley_exfittemp.rds"
-berkeley_exfit <- readRDS(file = save_file)
+rm(list=setdiff(ls(), c('save_file_exdata', 'save_file_exfit')))
 
-file.remove(save_file)
 
-usethis::use_data(berkeley_exfit, overwrite = TRUE)
+berkeley_exdata <- readRDS(file = save_file_exdata)
+berkeley_exfit  <- readRDS(file = save_file_exfit)
+
+file.remove(save_file_exdata)
+file.remove(save_file_exfit)
+
+
+# Moving from data 'rda' to sysdata internal
+
+# usethis::use_data(berkeley_exdata, overwrite = TRUE)
+
+# usethis::use_data(berkeley_exfit, overwrite = TRUE)
+
+
+usethis::use_data(berkeley_exdata, berkeley_exfit, 
+                  overwrite = TRUE, internal = TRUE, compress = 'xz')
+
+
 
 

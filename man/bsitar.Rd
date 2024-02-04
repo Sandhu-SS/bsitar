@@ -1541,15 +1541,27 @@ post-processing features will be added soon.
 }
 \examples{
 
-# Examples below fits SITAR model to the 'berkeley_exdata' which is a 
-# subset of the  Berkley height data and used as an example dataset. 
-# See help file (?berkeley_exdata) for data details.  
+# Examples below fits SITAR model to the 'berkeley_exdata' which is a subset
+# of the  Berkley height data. The same subset of the  Berkley height data
+# has been used as an example data in the vignette for the 'sitar' package.
+#
+# The Berkley height data comprise of repeated growth measurements made on
+# 66 boys and 70 girls (birth to 21 years). 
+#
+# The subset of the Berkley height data analysed here include growth 
+# measurements for 70 girls (8 to 18 years).
+#
+# See 'sitar' package documentation for details on Berkley height data   
+# (help file ?sitar::berkeley ). The details on subset data for 70 girls is 
+# provided in the vignette('Fitting_models_with_SITAR', package = 'sitar').
   
-# Fit maximum likelihood (frequentist) SITAR model with df = 3 by using 
-# the sitar package 
+# Fit frequentist SITAR model with df = 5 by using the sitar package 
+
+# Get 'berkeley_exdata' data that has been already saved
+berkeley_exdata <- check_and_get_object(berkeley_exdata)
 
 model_ml <- sitar::sitar(x = age, y = height, id = id, 
-                          df = 3, 
+                          df = 5, 
                           data = berkeley_exdata, 
                           xoffset = 'mean',
                           fixed = 'a+b+c', 
@@ -1567,6 +1579,11 @@ model_ml <- sitar::sitar(x = age, y = height, id = id,
 # The model is fit using 2 chain (2000 iterations per) with thin set as 4 to 
 # save time and memory.
 
+# Check and confirm whether model fit object 'berkeley_exfit' exists
+# berkeley_exfit <- bsitar:::berkeley_exfit
+ berkeley_exfit <- check_and_get_object(berkeley_exfit)
+ 
+ print(berkeley_exfit)
 if(exists('berkeley_exfit')) {
   model <- berkeley_exfit
 } else {
