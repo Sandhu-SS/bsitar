@@ -1410,7 +1410,7 @@
 #' # Fit frequentist SITAR model with df = 5 by using the sitar package 
 #' 
 #' # Get 'berkeley_exdata' data that has been already saved
-#' berkeley_exdata <- check_and_get_object(berkeley_exdata)
+#' berkeley_exdata <- getNsObject(berkeley_exdata)
 #' 
 #' model_ml <- sitar::sitar(x = age, y = height, id = id, 
 #'                           df = 5, 
@@ -1433,7 +1433,7 @@
 #' 
 #' # Check and confirm whether model fit object 'berkeley_exfit' exists
 #' # berkeley_exfit <- bsitar:::berkeley_exfit
-#'  berkeley_exfit <- check_and_get_object(berkeley_exfit)
+#'  berkeley_exfit <- getNsObject(berkeley_exfit)
 #'  
 #'  print(berkeley_exfit)
 #' if(exists('berkeley_exfit')) {

@@ -153,7 +153,7 @@ The \strong{plot_ppc()} is a wrapper around the \code{\link[brms:pp_check.brmsfi
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check and confirm whether model fit object 'berkeley_exfit' exists
- berkeley_exfit <- check_and_get_object(berkeley_exfit)
+ berkeley_exfit <- getNsObject(berkeley_exfit)
 
 model <- berkeley_exfit
 

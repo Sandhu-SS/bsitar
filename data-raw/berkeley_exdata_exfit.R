@@ -48,7 +48,29 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # c_prior_beta = student_t(3, 0, 1.0),
                         sample_prior = 'only',
                         expose_function = FALSE,
-                        chains = 2, cores = 2, iter = 1000, thin = 4)
+                        chains = 2, cores = 2, iter = 1000, thin = 5)
+
+
+
+# https://win-vector.com/2014/05/30/trimming-the-fat-from-glm-models-in-r/
+
+# breakItDown = function(mod) {
+#   sapply(mod, FUN=function(x){length(serialize(x, NULL))}, simplify=T)
+# }
+# cleanModel1 = function(cm) {
+#   cm$model_info$bgmfit.data = c()
+#   cm$bmodel  = c()
+#   cm$model_info$emodel  = c()
+#   cm$model_info$exefuns  = c()
+#   cm$model_info$bgmfit.data   = c()
+#   cm
+# }
+# 
+# berkeley_exfit_checks = breakItDown(berkeley_exfit)
+# berkeley_exfit_reduce = cleanModel1(berkeley_exfit)
+# 
+# berkeley_exfit <- berkeley_exfit_reduce
+
 
 
 

@@ -1,6 +1,4 @@
 
-
-
 ---
 title: "Bayesian SITAR model - Univariate fit"
 author: "Satpal Sandhu"
@@ -17,9 +15,9 @@ output:
 vignette: >
  %\VignetteIndexEntry{Bayesian SITAR model - Univariate fit}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
-params:
-  EVAL: !r identical(Sys.getenv("NOT_CRAN"), "true")
+  \usepackage[utf8]
+<!-- params: -->
+<!--   EVAL: !r identical(Sys.getenv("NOT_CRAN"), "true") -->
 ---
 
 ```{r, SETTINGS-knitr, include=FALSE}
@@ -29,10 +27,12 @@ opts_chunk$set(
   comment = NA,
   message = FALSE,
   warning = FALSE,
-  eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
+  # eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
   dev = "jpeg",
-  dpi = 50,
+  dpi = 100,
+  fig.cap = "",
   fig.asp = 0.8,
+  fig.height=4,
   fig.width = 5,
   out.width = "60%",
   fig.align = "center"
@@ -107,7 +107,7 @@ females (between 8 and 18 years of age, every six months).
 \newline
 ## Model fit
 If needed, install 'bsitar' and 'sitar' packages (also other required packages
-such as ggplot2 and kableExtra)
+such as ggplot2)
 ```{r lib, eval=FALSE, echo=FALSE,include=FALSE, warning= FALSE, message=FALSE}
 if (!require(bsitar)) install.packages('bsitar')
 if (!require(sitar)) install.packages('sitar')
@@ -134,7 +134,7 @@ library(ggplot2) # For plots
 ```
 
 
-```{r evacondition, eval=TRUE, echo=FALSE, include=FALSE}
+```{r evacondition, eval=FALSE, echo=FALSE, include=FALSE}
    if(existsdata) {
      if(exists('berkeley_exdata', envir = asNamespace('bsitar'))) {
     berkeley_exdata <- utils::getFromNamespace('berkeley_exdata', 'bsitar')
@@ -147,8 +147,8 @@ library(ggplot2) # For plots
     }
    }
   
-  # berkeley_exdata <- check_and_get_object(berkeley_exdata)
-  # berkeley_exfit  <- check_and_get_object(berkeley_exfit)
+  # berkeley_exdata <- getNsObject(berkeley_exdata)
+  # berkeley_exfit  <- getNsObject(berkeley_exfit)
 ```
 
 

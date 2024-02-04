@@ -97,6 +97,15 @@ p + p {
 ```
 
 
+
+```{css, echo=FALSE}
+.caption {
+  margin: auto;
+  text-align: left;
+}
+```
+
+
 \newpage
 ## Introduction
 The super imposition by translation and rotation (*SITAR*) model is a
@@ -137,28 +146,52 @@ females (between 8 and 18 years of age, every six months).
 
 \newline
 ## Model fit
-If needed, install 'bsitar' and 'sitar' packages (also other required packages)
-```{r lib, eval=FALSE, echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}
+If needed, install 'bsitar' and 'sitar' packages (also other required packages
+such as ggplot2)
+```{r lib, eval=FALSE, echo=FALSE,include=FALSE, warning= FALSE, message=FALSE}
 if (!require(bsitar)) install.packages('bsitar')
 if (!require(sitar)) install.packages('sitar')
 if (!require(ggplot2)) install.packages('ggplot2')
 if (!require(knitr)) install.packages('knitr')
 if (!require(kableExtra)) install.packages('kableExtra')
-```
 
-```{r loadlib}
 stopifnot(require(knitr))
 stopifnot(require(kableExtra))
 stopifnot(require(ggplot2))
 stopifnot(require(sitar))
-library(bsitar)
-library(ggplot2)
-existsdata <- existsfit  <- TRUE
 ```
 
-```{r, eval=TRUE, results='show',echo=TRUE, include=TRUE}
-#print(getwd())
+
+```{r loadbsitar, eval=TRUE, echo=TRUE,include=TRUE}
+# Load required packages
+library(bsitar)  # To fit Bayesian SITAR model
+library(ggplot2) # For plots
 ```
+
+
+```{r setcondition, eval=TRUE, echo=FALSE, include=FALSE}
+  existsdata <- existsfit  <- TRUE
+```
+
+
+```{r evacondition, eval=TRUE, echo=FALSE, include=FALSE}
+   if(existsdata) {
+     if(exists('berkeley_exdata', envir = asNamespace('bsitar'))) {
+  #  berkeley_exdata <- utils::getFromNamespace('berkeley_exdata', 'bsitar')
+    }
+   }
+  
+  if(existsfit) {
+     if(exists('berkeley_exfit', envir = asNamespace('bsitar'))) {
+   # berkeley_exfit <- utils::getFromNamespace('berkeley_exfit', 'bsitar')
+    }
+   }
+  
+  # berkeley_exdata <- check_and_get_object(berkeley_exdata)
+  # berkeley_exfit  <- check_and_get_object(berkeley_exfit)
+```
+
+
 
 Fit **sitar** and **bsitar** models using the 'sitar' and 'bsitar' packages. 
 ```{r modelfit, results='hide', echo=TRUE,include=TRUE, warning= FALSE, message=FALSE}

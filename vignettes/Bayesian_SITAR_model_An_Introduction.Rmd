@@ -17,8 +17,8 @@ vignette: >
  %\VignetteIndexEntry{Bayesian SITAR model - An introduction}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
-params:
-  EVAL: !r identical(Sys.getenv("NOT_CRAN"), "true")
+<!-- params: -->
+<!--   EVAL: !r identical(Sys.getenv("NOT_CRAN"), "true") -->
 ---
 
 ```{r, SETTINGS-knitr, include=FALSE}
@@ -28,7 +28,7 @@ opts_chunk$set(
   comment = NA,
   message = FALSE,
   warning = FALSE,
-  eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
+  # eval = if (isTRUE(exists("params"))) params$EVAL else FALSE,
   dev = "jpeg",
   dpi = 100,
   fig.asp = 0.8,
