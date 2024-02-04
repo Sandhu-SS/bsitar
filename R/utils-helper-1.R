@@ -2768,7 +2768,7 @@ cbind_fill_na2 <- function(..., names = NA) {
 #' @return A data frame.
 #' @keywords internal
 #' @noRd
-#'
+#' @export
 check_and_get_object <- function(object, namespace = NULL, envir = NULL) {
   if(is.null(namespace)) {
     namespace <- "bsitar"

@@ -5,7 +5,7 @@
 title: "Bayesian SITAR model - Univariate fit"
 author: "Satpal Sandhu"
 date: '`r format(Sys.time(), "%B %d, %Y")`'
-bibliography: [Bayesian_SITAR_An_Introduction.bib, packages.bib, REFERENCES.bib]
+bibliography: [bibliography.bib]
 csl: apa-7th-edition.csl
 link-citations: yes
 colorlinks: true
@@ -122,18 +122,33 @@ stopifnot(require(sitar))
 ```
 
 
-
-```{r loadlib, eval=TRUE, echo=FALSE, include=FALSE}
-  existsdata <- existsfit  <- TRUE
-  berkeley_exdata <- check_and_get_object(berkeley_exdata)
-  berkeley_exfit  <- check_and_get_object(berkeley_exfit)
-```
-
-
 ```{r loadbsitar, eval=TRUE, echo=TRUE,include=TRUE}
 # Load required packages
 library(bsitar)  # To fit Bayesian SITAR model
 library(ggplot2) # For plots
+```
+
+
+```{r setcondition, eval=TRUE, echo=FALSE, include=FALSE}
+  existsdata <- existsfit  <- TRUE
+```
+
+
+```{r evacondition, eval=TRUE, echo=FALSE, include=FALSE}
+   if(existsdata) {
+     if(exists('berkeley_exdata', envir = asNamespace('bsitar'))) {
+    berkeley_exdata <- utils::getFromNamespace('berkeley_exdata', 'bsitar')
+    }
+   }
+  
+  if(existsfit) {
+     if(exists('berkeley_exfit', envir = asNamespace('bsitar'))) {
+    berkeley_exfit <- utils::getFromNamespace('berkeley_exfit', 'bsitar')
+    }
+   }
+  
+  # berkeley_exdata <- check_and_get_object(berkeley_exdata)
+  # berkeley_exfit  <- check_and_get_object(berkeley_exfit)
 ```
 
 

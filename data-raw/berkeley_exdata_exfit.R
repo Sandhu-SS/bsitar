@@ -48,7 +48,7 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # c_prior_beta = student_t(3, 0, 1.0),
                         sample_prior = 'only',
                         expose_function = FALSE,
-                        chains = 2, cores = 2, iter = 2000, thin = 4)
+                        chains = 2, cores = 2, iter = 1000, thin = 4)
 
 
 
@@ -70,13 +70,12 @@ file.remove(save_file_exfit)
 
 # Moving from data 'rda' to sysdata internal
 
-# usethis::use_data(berkeley_exdata, overwrite = TRUE)
+usethis::use_data(berkeley_exdata, overwrite = TRUE)
+usethis::use_data(berkeley_exfit, overwrite = TRUE)
 
-# usethis::use_data(berkeley_exfit, overwrite = TRUE)
 
-
-usethis::use_data(berkeley_exdata, berkeley_exfit, 
-                  overwrite = TRUE, internal = TRUE, compress = 'xz')
+# usethis::use_data(berkeley_exdata, berkeley_exfit, 
+#                   overwrite = TRUE, internal = TRUE, compress = 'xz')
 
 
 

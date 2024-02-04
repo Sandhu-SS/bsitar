@@ -4,7 +4,7 @@
 title: "Bayesian SITAR model - An introduction"
 author: "Satpal Sandhu"
 date: '`r format(Sys.time(), "%B %d, %Y")`'
-bibliography: [Bayesian_SITAR_An_Introduction.bib, packages.bib, REFERENCES.bib]
+bibliography: [bibliography.bib]
 csl: apa-7th-edition.csl
 link-citations: yes
 colorlinks: true
