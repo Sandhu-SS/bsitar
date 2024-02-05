@@ -2756,4 +2756,36 @@ cbind_fill_na2 <- function(..., names = NA) {
 
 
 
+#' An internal function to check and appropriately set brms exported functions
+#'
+#' @param call A \code{call} object, typically the \code{match.call()}.
+#' @param arg A character string or vector of character string of brms exported
+#'   functions.
+#' @param prefix A character string specifying the namespace i.e, \code{brms::}
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+check_brms_args <- function(call, arg, prefix = NULL) {
+  newcall <- call
+  if(is.null(prefix)) prefix <- "brms::"
+  for (argi in arg) {
+    if(!is.null((newcall[[argi]]))) {
+      argin <- newcall[[argi]]
+      argin <- deparse(substitute(argin))
+      if(!grepl(prefix, argin)) {
+        newargin <- paste0(argi, " = ", prefix, argin)
+        newcall[[argi]] <- NULL
+        newcall[[argi]] <- (str2expression(newargin))
+      } else {
+        newcall[[argi]] <- newcall[[argi]]
+      } 
+    }
+    if(is.null((newcall[[argi]]))) {
+      newcall <- newcall
+    }
+  }
+  return(newcall)
+}
 

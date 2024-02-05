@@ -131,6 +131,7 @@ library(ggplot2) # For plots
 
 ```{r setcondition, eval=TRUE, echo=FALSE, include=FALSE}
   existsdata <- existsfit  <- TRUE
+  tabfiglabs <- FALSE
 ```
 
 
@@ -197,13 +198,15 @@ model_bayes <- expose_model_functions(model_bayes)
 \newline
 ## Model summary
 
-Print summary for the **sitar** model
-```{r summary_sitar, echo=TRUE,include=TRUE}
+Summary of **sitar** model fit
+```{r summary_sitar, eval=TRUE, echo=FALSE,include=TRUE}
 print(model_frequ)
 ```
 
-Print summary for the **bsitar** model
-```{r summary_bsitar, echo=TRUE,include=TRUE}
+\newline
+
+Summary of the **bsitar** model fit
+```{r summary_bsitar, eval=TRUE, echo=FALSE,include=TRUE}
 print(model_bayes)
 ```
 
@@ -400,6 +403,10 @@ colnames(data_sitar_Vapv) <- colnames(data_bsitar_Vapv)
 
 
 \newline
+```{asis, echo=tabfiglabs}
+# Figure \@ref(fig:plota) (below) shows a comparison of observed growth curves
+```
+
 Figure \@ref(fig:plota) (below) shows a comparison of observed growth curves
 with those adjusted via the random effects. As described earlier (see
 [Introduction]), the random effects align individual-specific growth

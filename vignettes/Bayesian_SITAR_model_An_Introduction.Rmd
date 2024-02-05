@@ -115,7 +115,9 @@ WinBUGS [@lunn2000], OpenBUGS [@spiegelhalter2007openbugs], JAGS [@Plummer2003JA
 
 ### Two-level SITAR model
 #### Univariate model
-Here we outline the Bayesian specification for a two-level *SITAR* model described [earlier][SITAR growth curve model - an overview].
+Below we describe Bayesian model specification for a two-level *SITAR* model
+([see also overview section][SITAR growth curve model - an overview])
+and the default priors.
 
 ##### Model specification
 To get a better understanding of the data generative mechanism and for the ease of showing prior specification for each individual parameter, we re express the above model \@ref(eq:1) as as follows:

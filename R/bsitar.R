@@ -1685,6 +1685,11 @@ bsitar <- function(x,
   
   mcall <- mcall_ <- match.call()
   
+  newcall_checks <- c('threads', 'save_pars')
+  
+  newcall <- check_brms_args(mcall, newcall_checks)
+  mcall <- mcall_ <- newcall
+  
   # Check and set Alias argument for a b c ... formula
   dots_allias <- list(...)
   collect_dot_names <- c()
@@ -2298,7 +2303,7 @@ bsitar <- function(x,
       'future'
     )
   
-
+  
 
   if(is.numeric(arguments$cores)) {
    oldopts <- options(mc.cores = arguments$cores)
@@ -2316,7 +2321,7 @@ bsitar <- function(x,
     arguments[[brms_arguments_listi]] <- NULL
   }
   
- 
+  
   brms_arguments <- mget(brms_arguments_list)
   
   if (eval(brms_arguments$backend) != "rstan" &
@@ -2327,6 +2332,26 @@ bsitar <- function(x,
          "\ Please check it which you have specified as: ", 
          eval(brms_arguments$backend))
   }
+  
+  
+  
+  
+  # threads_check <- brms_arguments$threads
+  # threads_check <- deparse(substitute(threads_check))
+  # if( grepl('threading', threads_check) &
+  #     !grepl('brms::', threads_check)) {
+  #   threads_check <- paste0('brms::', threads_check)
+  # } else if( grepl('threading', threads_check) &
+  #            grepl('brms::', threads_check)) {
+  #   threads_check <- threading
+  # } else if(!grepl('threading', threads_check)) {
+  #   # stop("Argument threads should be specified as brmsfamily(threading,...)")
+  # }
+  # threads_check <- threads_check
+ 
+  
+  
+  
   
   
   displayit <- 'col'
@@ -4147,6 +4172,9 @@ bsitar <- function(x,
     if (!is.null(familysi)) {
       familysi <- list_to_quoted_if_not_si(familysi)
     }
+    
+    
+    
     
     
     if (!is.null(dpar_formulasi)) {
