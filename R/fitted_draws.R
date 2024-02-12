@@ -140,7 +140,7 @@ fitted_draws.bgmfit <-
       }
     }
     
-    
+    check_if_package_installed(model, xcall = NULL)
     
     
     if(is.null(ndraws)) {

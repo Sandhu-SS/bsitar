@@ -126,7 +126,7 @@ plot_conditional_effects.bgmfit <-
       }
     }
     
-    
+    check_if_package_installed(model, xcall = NULL)
     
     if(is.null(ndraws)) {
       ndraws <- brms::ndraws(model)

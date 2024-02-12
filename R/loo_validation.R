@@ -120,7 +120,7 @@ loo_validation.bgmfit <-
       }
     }
     
-    
+    check_if_package_installed(model, xcall = NULL)
     
     if(!is.null(ndraws)) {
       if(ndraws == 1) stop("ndraws must be greater than 1")

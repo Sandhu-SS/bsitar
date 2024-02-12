@@ -5905,6 +5905,7 @@ bsitar <- function(x,
   brmspriors <- brmspriors %>% 
     dplyr::mutate(ub = dplyr::if_else(class == 'sd', NA, ub))
   
+  
   bflist_c_list <- list()
   bflist_c <- c()
   for (il in 1:length(bflist)) {
@@ -6952,6 +6953,17 @@ bsitar <- function(x,
   if(is.null(set_self_priors) & is.null(set_replace_priors)) {
     brmspriors <- brmspriors
   }
+  
+  
+  
+  
+  
+
+  
+  # brmspriors <- brmspriors %>% 
+  #   dplyr::mutate(prior = dplyr::if_else(prior == "", "''", prior))
+  # brmspriors <- brmspriors %>% dplyr::filter(!grepl("''", prior, fixed = F))
+  # brmspriorsx <<- brmspriors
   
   
   brm_args$prior <- brmspriors

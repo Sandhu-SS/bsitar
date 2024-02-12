@@ -137,6 +137,8 @@ optimize_model.bgmfit <- function(model,
     }
   }
   
+  check_if_package_installed(model, xcall = NULL)
+  
   # Initiate non formalArgs()
   outcome <- NULL;
   xfun <- NULL; 

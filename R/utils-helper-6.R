@@ -3098,6 +3098,26 @@ set_priors_initials <- function(a_prior_beta,
         )
       }
     }
+    
+   # For sd flat prior, brms assigns ~ flat prior above via brms::prior_string
+    
+    # if(class == "sd") {
+    #   if(define_ == "") {
+    #     priors_ <- brms::set_prior(
+    #       "",
+    #       class = class,
+    #       nlpar = nlpar,
+    #       group = group,
+    #       coef = coef,
+    #       resp = resp,
+    #       dpar = dpar
+    #     )
+    #   }
+    # }
+    # print(class)
+    # print(define_)
+    # print(priors_)
+    
     out_pr <-
       list(
         priors_ = priors_,

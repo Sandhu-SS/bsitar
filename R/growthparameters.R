@@ -472,6 +472,8 @@ growthparameters.bgmfit <- function(model,
   
   model$xcall <- xcall
   
+  check_if_package_installed(model, xcall = xcall)
+  
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   arguments$model <- model
   arguments$usesavedfuns <- usesavedfuns

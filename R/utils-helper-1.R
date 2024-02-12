@@ -1849,7 +1849,8 @@ inits_lb <- function(x, lb = 0) {
 #'
 check_and_install_if_not_installed <- function(pkgs,
                                                getfun = NULL,
-                                               installpkg = TRUE) {
+                                               installpkg = TRUE,
+                                               verbose = FALSE) {
   successfully_loaded <- vapply(
     pkgs, requireNamespace,
     FUN.VALUE = logical(1L), quietly = TRUE
@@ -1859,10 +1860,12 @@ check_and_install_if_not_installed <- function(pkgs,
 
   if(!is.null(getfun)) {
     if(is.symbol(getfun)) getfun <- deparse(getfun)
-    message('Checking required packages for ', getfun, " ",
-            "\n ",
-            paste(pkgs, collapse = ", "))
-  }
+    if(verbose) {
+      message('Checking required packages for ', getfun, " ",
+              "\n ",
+              paste(pkgs, collapse = ", "))
+    } # if(verbose) {
+  } # if(!is.null(getfun)) {
 
   # Dont install package in function
   # CRAN does not accept it, so comment it out
@@ -1874,9 +1877,9 @@ check_and_install_if_not_installed <- function(pkgs,
     # utils::install.packages(required_pkgs,
     #                         repos = "http://cran.us.r-project.org")
   }
-
-
 }
+
+
 
 
 #' Plot tripple logistic model with marked x and y axis
@@ -2206,6 +2209,79 @@ check_if_functions_exists <- function(model,
 
   return(en)
 }
+
+
+
+
+#' An internal function to check required package(s) installed 
+#'
+#' @param o An object used as an index for functions
+#' @param checks A logical (default \code{FALSE}) to check if funnctions are 
+#' attached to the \code{model}.
+#' @inherit growthparameters.bgmfit params
+#' @param ... other arguments. Currently ignored.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+check_if_package_installed <- function(model, 
+                                      xcall = NULL, 
+                                      package = NULL, 
+                                      reason = "for this function to work",
+                                      stop = TRUE,
+                                      minimum_version = NULL,
+                                      quietly = FALSE,
+                                      prompt = FALSE,
+                                      verbose = TRUE, 
+                                      ...) {
+  
+  
+  
+  if(is.null(xcall)) {
+    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]][1]
+  }
+  
+  classname <- attr(model, 'class')[2]
+  calname.fun <- xcall # match.call()[1]
+  calname.fun <- gsub(paste0(".", classname), "", calname.fun)
+  
+  
+  if(is.null(package)) {
+    if(calname.fun == "plot_curves") {
+      package <- c('ggplot2', 'jtools')
+    } else if(calname.fun == "growthparameters_comparison") {
+      package <- c('tidyr', 'collapse')
+    } else  {
+      return(invisible(NULL))
+    }
+  } # if(is.null(package)) {
+  
+  
+  
+  if(!is.null(package)) {
+    if(is.null(reason)) {
+      reason <- paste0("for ", "'", calname.fun, "()'", " function", " to work")
+    } else {
+      reason <- reason
+    }
+    
+    insight::check_if_installed(package = package,
+                                reason = reason,
+                                stop = stop,
+                                minimum_version = minimum_version,
+                                quietly = quietly,
+                                prompt = prompt
+    )
+    
+    return(invisible(NULL))
+  } # if(!is.null(package)) {
+  
+}
+
+
+
+
+
 
 
 #' An internal function to get the environment of an object

@@ -353,10 +353,12 @@ plot_curves.bgmfit <- function(model,
   
   
   # Move down NULL where setting the arguments
-  if(system.file(package='ggplot2') == "") {
-    stop("Please install 'ggplot2' package before calling the 'plot_curves'")
-  }
-  
+  # if(system.file(package='ggplot2') == "") {
+  #   stop("Please install 'ggplot2' package before calling the 'plot_curves'")
+  # }
+  # if(system.file(package='jtools') == "") {
+  #   stop("Please install 'ggplot2' package before calling the 'plot_curves'")
+  # }
 
   # Initiate non formalArgs()
   xvar <- NULL;
@@ -429,6 +431,10 @@ plot_curves.bgmfit <- function(model,
   }
   
   xcall <- get_xcall(xcall, scall)
+  
+  check_if_package_installed(model, xcall = xcall)
+  
+  
   model$xcall <- xcall
   
   arguments <- get_args_(match.call.list.in, xcall)

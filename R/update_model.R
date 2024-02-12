@@ -72,6 +72,9 @@ update_model.bgmfit <-
       }
     }
     
+    
+    check_if_package_installed(model, xcall = NULL)
+    
     formula. <- NULL
     args <- formalArgs(bsitar)
     args <- args[!args == "..."]
