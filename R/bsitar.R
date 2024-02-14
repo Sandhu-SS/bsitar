@@ -2005,9 +2005,9 @@ bsitar <- function(x,
   # override but check using 'log_and_divide' to see if  'err.' correctly 
   # assigned and not passed to the outer .G environment 
   # Seems enverr. <- environment() works fine
+  # Note that same 'enverr.' is passed to the model_info
   
-  #enverr. <- parent.frame()
-  
+
   enverr. <- environment()
   
   # assign('err.', FALSE, envir = enverr.)
@@ -2398,7 +2398,6 @@ bsitar <- function(x,
     splitmvar3 <- eval(parse(text = splitmvar2))
     zzz <- splitmvar3
     
-    # enverr. <- parent.frame()
     for (z in names(splitmvar3)) {
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
@@ -7266,6 +7265,7 @@ bsitar <- function(x,
     model_info[['select_model']] <- select_model
     model_info[['decomp']] <- decomp
     model_info[['fun_scode']] <- fun_scode
+    model_info[['envir']] <- enverr.
     brmsfit$model_info <- model_info
     
     # Now message moved to the expose_model_functions()

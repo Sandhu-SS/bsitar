@@ -39,7 +39,7 @@
   hypothesis = NULL,
   equivalence = NULL,
   eps = NULL,
-  reformat = TRUE,
+  reformat = NULL,
   dummy_to_factor = NULL,
   verbose = FALSE,
   expose_function = FALSE,
@@ -214,9 +214,13 @@ from the \code{model}. Otherwise, user can define it as follows:
 \code{variables = list('age' = 1e-6)}.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
-the \code{comparison} is an internal function that uses \code{\link[sitar:getPeakTrough]{sitar::getPeak()}},
-\code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} and \code{\link[sitar:getPeakTrough]{sitar::getTrough()}} functions to estimate
-various growth parameters.}
+options allowed for the \code{comparison} are \code{'difference'} and
+\code{'differenceavg'}. Note that \code{comparison} is a placeholder and is
+only used to setup the the internal function that estimates
+\code{'parameter'} via \code{\link[sitar:getPeakTrough]{sitar::getPeak()}}, \code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} and
+\code{\link[sitar:getPeakTrough]{sitar::getTrough()}} functions to estimate various growth parameters.
+Options \code{'difference'} and \code{'differenceavg'} are internally
+restructured according to the user specified \code{hypothesis} argument.}
 
 \item{type}{string indicates the type (scale) of the predictions used to
 compute contrasts or slopes. This can differ based on the model
@@ -363,8 +367,7 @@ growth velocity. This function is a wrapper around the
 The \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} computes unit-level (conditional)
 estimates whereas \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} return average
 (marginal) estimates. A detailed explanation is available
-\href{https://marginaleffects.com/articles/comparisons.html}{here} and
-\href{https://marginaleffects.com}{here} Note that for the current use case,
+\href{https://marginaleffects.com}{here}. Note that for the current use case,
 i.e., to estimate and compare growth parameters, the arguments
 \code{variables} and \code{comparion} of \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}
 and \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} are modified (see below).

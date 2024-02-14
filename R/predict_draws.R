@@ -71,6 +71,7 @@ predict_draws.bgmfit <-
            newdata = NULL,
            resp = NULL,
            ndraws = NULL,
+           draw_ids = NULL,
            re_formula = NA,
            allow_new_levels = FALSE,
            sample_new_levels = "uncertainty",
@@ -100,11 +101,9 @@ predict_draws.bgmfit <-
            ...) {
     
     if(is.null(envir)) {
-      if(!is.null(model$model_info$exefuns[[1]])) {
-        envir <- environment(model$model_info$exefuns[[1]])
-      } else {
-        envir <- parent.frame()
-      }
+      envir <- model$model_info$envir
+    } else {
+      envir <- parent.frame()
     }
     
     if(is.null(usesavedfuns)) {

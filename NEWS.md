@@ -3,11 +3,11 @@
 
 ### New feature
 
-- Added ```add_model_criterion()``` function to compute various fit criteria such as "loo", "waic", 
- "kfold", "loo_subsample", "bayes_R2" (Bayesian R-squared), "loo_R2" (LOO-adjusted R-squared), and 
- "marglik" (log marginal likelihood). The computed fit criteria are added to the model object for 
- later use such as comparison between various models.  The ```add_model_criterion()``` is a wrapper 
- around the ```add_criterion()``` function available from the  **brms** package
+- Added ```add_model_criterion()``` function to compute fit criteria such as "loo", "waic", "kfold", 
+ "loo_subsample", "bayes_R2" (Bayesian R-squared), "loo_R2" (LOO-adjusted R-squared), and "marglik" 
+ (log marginal likelihood). The computed fit criteria are added to the model object for later use such 
+ as comparison of models.  The ```add_model_criterion()``` is a wrapper around the ```add_criterion()``` 
+ function available from the  **brms** package
 
 
 ### Bugfixes

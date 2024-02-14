@@ -23,6 +23,7 @@
   robust = TRUE,
   newdata = NULL,
   ndraws = NULL,
+  draw_ids = NULL,
   levels_id = NULL,
   resp = NULL,
   ipts = 10,
@@ -141,6 +142,9 @@ measure of central tendency. If \code{FALSE} the mean is used instead.}
 
 \item{ndraws}{A positive integer indicating the number of posterior draws to
 be used in estimation. If \code{NULL} (default), all draws are used.}
+
+\item{draw_ids}{An integer indicating the specific posterior draw(s)
+to be used in estimation (default \code{NULL}).}
 
 \item{levels_id}{An optional argument to specify the \code{ids} for
 hierarchical model (default \code{NULL}). It is used only when model is

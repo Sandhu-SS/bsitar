@@ -10,6 +10,7 @@
   newdata = NULL,
   resp = NULL,
   ndraws = NULL,
+  draw_ids = NULL,
   re_formula = NA,
   allow_new_levels = FALSE,
   sample_new_levels = "uncertainty",
@@ -55,6 +56,9 @@ variable when processing posterior draws for the \code{univariate_by} and
 
 \item{ndraws}{A positive integer indicating the number of posterior draws to
 be used in estimation. If \code{NULL} (default), all draws are used.}
+
+\item{draw_ids}{An integer indicating the specific posterior draw(s)
+to be used in estimation (default \code{NULL}).}
 
 \item{re_formula}{Option to indicate whether or not to include the
 individual/group-level effects in the estimation. When \code{NA} (default),

@@ -18,6 +18,7 @@
   reloo_args = list(),
   model_names = NULL,
   ndraws = NULL,
+  draw_ids = NULL,
   cores = 1,
   deriv_model = NULL,
   verbose = FALSE,
@@ -75,6 +76,9 @@ values as model names.}
 
 \item{ndraws}{A positive integer indicating the number of posterior draws to
 be used in estimation. If \code{NULL} (default), all draws are used.}
+
+\item{draw_ids}{An integer indicating the specific posterior draw(s)
+to be used in estimation (default \code{NULL}).}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations (if \code{future = TRUE}). On non-Windows systems this

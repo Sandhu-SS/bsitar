@@ -130,11 +130,9 @@ optimize_model.bgmfit <- function(model,
                                   ...) {
   
   if(is.null(envir)) {
-    if(!is.null(model$model_info$exefuns[[1]])) {
-      envir <- environment(model$model_info$exefuns[[1]])
-    } else {
-      envir <- parent.frame()
-    }
+    envir <- model$model_info$envir
+  } else {
+    envir <- parent.frame()
   }
   
   check_if_package_installed(model, xcall = NULL)

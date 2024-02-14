@@ -72,6 +72,8 @@ expose_model_functions.bgmfit <- function(model,
                                  ...) {
   
   if(is.null(envir)) {
+    envir <- model$model_info$envir
+  } else {
     envir <- parent.frame()
   }
   

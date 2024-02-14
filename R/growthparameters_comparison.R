@@ -9,8 +9,7 @@
 #'  The [marginaleffects::comparisons()] computes unit-level (conditional)
 #'  estimates whereas [marginaleffects::avg_comparisons()] return average
 #'  (marginal) estimates. A detailed explanation is available
-#'  [here](https://marginaleffects.com/articles/comparisons.html) and
-#'  [here](https://marginaleffects.com) Note that for the current use case,
+#'  [here](https://marginaleffects.com). Note that for the current use case,
 #'  i.e., to estimate and compare growth parameters, the arguments
 #'  \code{variables} and \code{comparion} of [marginaleffects::comparisons()]
 #'  and [marginaleffects::avg_comparisons()] are modified (see below).
@@ -74,17 +73,20 @@
 #'   \code{variables = list('age' = 1e-6)}.
 #' 
 #' @param comparison For estimating growth parameters in the current use case,
-#' the \code{comparison} is an internal function that uses [sitar::getPeak()], 
-#' [sitar::getTakeoff()] and [sitar::getTrough()] functions to estimate
-#' various growth parameters. 
-#' 
+#'   options allowed for the \code{comparison} are \code{'difference'} and
+#'   \code{'differenceavg'}. Note that \code{comparison} is a placeholder and is
+#'   only used to setup the the internal function that estimates
+#'   \code{'parameter'} via [sitar::getPeak()], [sitar::getTakeoff()] and
+#'   [sitar::getTrough()] functions to estimate various growth parameters.
+#'   Options \code{'difference'} and \code{'differenceavg'} are internally
+#'   restructured according to the user specified \code{hypothesis} argument.
+#'   
 #' @param reformat A logical (default \code{TRUE}) to reformat the  output
 #'   returned by the \code{marginaleffects} as a data.frame with column names
 #'   re-defined as follows: \code{conf.low} as \code{Q2.5}, and \code{conf.high}
 #'   as \code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following
 #'   columns are dropped from the data frame: \code{term}, \code{contrast},
 #'   \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
-#' 
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
@@ -149,7 +151,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    hypothesis = NULL,
                                    equivalence = NULL,
                                    eps = NULL,
-                                   reformat = TRUE,
+                                   reformat = NULL,
                                    dummy_to_factor = NULL, 
                                    verbose = FALSE,
                                    expose_function = FALSE,
@@ -160,11 +162,9 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   if(is.null(envir)) {
-    if(!is.null(model$model_info$exefuns[[1]])) {
-      envir <- environment(model$model_info$exefuns[[1]])
-    } else {
-      envir <- parent.frame()
-    }
+    envir <- model$model_info$envir
+  } else {
+    envir <- parent.frame()
   }
   
   if(is.null(usesavedfuns)) {
@@ -380,7 +380,15 @@ growthparameters_comparison.bgmfit <- function(model,
   
   if (!is.null(variables)) {
     if (!is.list(variables)) {
-      stop('variables must be a named list')
+      stop("'variables' argument must be a named list and the first ", 
+           "element should be ", xvar, 
+           "\n ",
+           " specified as follows ",
+           "\n ",
+          " variables = list(", xvar, "=", "1e-6",")",
+          "\n ",
+          " where 1e-6 is the default value for the argument 'eps'"
+           )
     } else if (is.list(variables)) {
       set_variables <- variables
     }
@@ -392,7 +400,41 @@ growthparameters_comparison.bgmfit <- function(model,
     names(set_variables) <- xvar
   }
   
+  allowed_comparison <- c('difference', 'differenceavg')
   
+  if(!comparison %in% allowed_comparison) {
+    stop("Allowed comparison options are ", 
+         paste(paste0("'", allowed_comparison, "'"), collapse = ", ")
+         )
+  }
+  
+  
+  if(comparison == 'differenceavg') {
+    if(!average) {
+      stop("For comparison = 'differenceavg' ", 
+           ", the argument 'average' should be TRUE")
+    }
+    if(is.null(hypothesis)) {
+      stop("For comparison = 'differenceavg' ", 
+           ", the argument 'hypothesis' is required.",
+           " \n",
+           "An example of Non-linear hypothesis testing via hypothesis",
+           " argument is as follows:",
+           " \n",
+           "hypothesis = 'b2 - b1 = 0.2'",
+           " where b2 and b1 are row indices",
+           " \n",
+           "(see https://marginaleffects.com/vignettes/comparisons.html)",
+           " for more details",
+           " \n",
+           "Note that user need to set comparison = 'differenceavg'",
+           " and average = TRUE when ",
+           " \n", 
+           "testing non-linear hypothesis as described above"
+           )
+    }
+  }
+  hypothesis = "b2 + b1 = 1"
   
   if(is.null(by)) {
     if(is.null(cov)) {
@@ -494,6 +536,10 @@ growthparameters_comparison.bgmfit <- function(model,
                          ~ round(., digits = digits))) %>% 
     data.frame()
   
+  if(is.null(reformat)) {
+    if(is.null(hypothesis))  reformat <- TRUE else reformat <- FALSE
+    if(is.null(equivalence)) reformat <- TRUE else reformat <- FALSE
+  }
   
   if (reformat) {
     out_sf <- out_sf %>% 
