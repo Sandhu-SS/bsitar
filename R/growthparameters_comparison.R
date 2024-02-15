@@ -42,8 +42,10 @@
 #'   growth velocity), \code{'atgv'} (age at takeoff growth velocity),
 #'   \code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
 #'   velocity), \code{'cgv'} (cessation growth velocity), and \code{'acgv'} (age
-#'   at cessation growth velocity). For \code{parameter = NULL} (default), age
-#'   at peak growth velocity (\code{'apgv'}) is estimated.
+#'   at cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
+#'   (default), age at peak growth velocity (\code{'apgv'}) is estimated where
+#'   when \code{parameter = 'all'}, all six parameters are estimated. Note that
+#'   option \code{'all'} can not be used when argument \code{by} is \code{TRUE}.
 #' 
 #' @param acg_velocity A real number to set the percentage of peak growth growth
 #'   velocity as the cessation velocity when estimating the \code{cgv} and
@@ -70,7 +72,26 @@
 #'   set via the \code{esp} argument (default 1e-6). If \code{NULL}, the
 #'   \code{variables} is set internally by retrieving the relevant information
 #'   from the \code{model}. Otherwise, user can define it as follows:
-#'   \code{variables = list('age' = 1e-6)}.
+#'   \code{variables = list('x' = 1e-6)} where \code{'x'} is the level 1
+#'   predictor. Note that \code{variables = list('age' = 1e-6)} is the default
+#'   behavior for the \pkg{marginaleffects} because velocity is typically
+#'   calculated by differentiating the distance curve via \code{dydx} approach,
+#'   and therefore argument \code{deriv} is automatically set as \code{0} and
+#'   \code{deriv_model} as \code{FALSE}. If user want to estimate parameters
+#'   based on the model based first derivative, then argument \code{deriv} must
+#'   be set as \code{1} and internally argument \code{variables} is defined as
+#'   \code{variables = list('age' = 0)} i.e, original level 1 predictor
+#'   variable, \code{'x'}. It is important to consider that if default behavior
+#'   is used i.e, \code{deriv = 0} and \code{variables = list('x' = 1e-6)}, then
+#'   user can not pass additional arguments to the \code{variables} argument. On
+#'   the other hand, alternative approach i.e, \code{deriv = 0} and
+#'   \code{variables = list('x' = 0)}, additional options can be passed to the
+#'   [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()]
+#'   functions.
+#'   
+#' @param deriv A numeric to specify whether to estimate parameters based on the
+#'   differentiation of the distance curve or the model based first derivative.
+#'   Please see argument \code{variables} for more details.  
 #' 
 #' @param comparison For estimating growth parameters in the current use case,
 #'   options allowed for the \code{comparison} are \code{'difference'} and
@@ -132,7 +153,6 @@ growthparameters_comparison.bgmfit <- function(model,
                                    aux_variables = NULL,
                                    levels_id = NULL,
                                    avg_reffects = NULL,
-                                   deriv_model = NULL,
                                    idata_method = NULL,
                                    ipts = NULL,
                                    seed = 123,
@@ -141,6 +161,8 @@ growthparameters_comparison.bgmfit <- function(model,
                                    cores = NULL,
                                    average = FALSE, 
                                    variables = NULL,
+                                   deriv = NULL,
+                                   deriv_model = NULL,
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
@@ -195,22 +217,44 @@ growthparameters_comparison.bgmfit <- function(model,
   if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
   }
-   
-  if(is.null(deriv_model)) {
+  
+  if(is.null(deriv) & is.null(deriv_model)) {
+    deriv <- 0
+    deriv_model <- FALSE
+  } else if(deriv == 0 & is.null(deriv_model)) {
+    deriv <- 0
+    deriv_model <- FALSE
+  } else if(deriv == 1 & is.null(deriv_model)) {
+    deriv <- 1
+    deriv_model <- TRUE
+  } else if(is.null(deriv) & !deriv_model) {
+    deriv <- 0
+    deriv_model <- FALSE
+  } else if(is.null(deriv) & deriv_model) {
+    deriv <- 1
     deriv_model <- TRUE
   }
+   
+  # The deriv_model is a placeholder in marginaleffects
+  # if(is.null(deriv_model)) {
+  #   deriv_model <- TRUE
+  # }
   
   if (is.null(idata_method)) {
     idata_method <- 'm2'
   }
   
-  
+  if(idata_method == 'm1') {
+    stop("For marginaleffects based functions, the " ,
+         " \n",
+         " 'idata_method' argument must be either NULL or 'm2'" )
+  }
   
   o <- post_processing_checks(model = model,
                               xcall = match.call(),
                               resp = resp,
                               envir = envir,
-                              deriv = 0)
+                              deriv = deriv)
   
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
@@ -283,8 +327,7 @@ growthparameters_comparison.bgmfit <- function(model,
   full.args$deriv_model <- deriv_model
   newdata <- do.call(get.newdata, full.args)
   
-  
-  
+
   arguments$newdata  <- newdata
   arguments[["..."]] <- NULL
   
@@ -350,8 +393,16 @@ growthparameters_comparison.bgmfit <- function(model,
     'cgv')
   
   if (is.null(parameter)) {
-    parm <- 'apgv'
+    parm <- 'apgv' 
+  } else if(parameter == 'all') {
+    parm <- allowed_parms
   } else {
+    if(!parameter %in% allowed_parms) {
+      allowed_parms_err <- c(allowed_parms, 'all')
+      stop("Allowed parameter options are ", 
+           paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
+      )
+    }
     parm <- parameter
   }
   
@@ -366,6 +417,8 @@ growthparameters_comparison.bgmfit <- function(model,
       acg_asymptote,
       levels_id,
       avg_reffects,
+      deriv,
+      deriv_model,
       ipts,
       seed,
       future,
@@ -391,15 +444,30 @@ growthparameters_comparison.bgmfit <- function(model,
            )
     } else if (is.list(variables)) {
       set_variables <- variables
+      if(is.null(set_variables[[xvar]])) {
+        if(deriv == 0) set_variables[[xvar]] <- eps
+        if(deriv > 0)  set_variables[[xvar]] <- 0
+      } else if(!is.null(set_variables[[xvar]])) {
+        if(eval(set_variables[[xvar]]) !=0) {
+          if(verbose) {
+            message("The value of ", xvar, " is not same as used in the ",
+                    " \n", 
+                    " model fit. Please check if this is intended")
+          }
+        }
+      }
     }
-  }
-  
-  
-  if (is.null(variables)) {
-    set_variables <- list(eps)
+  } else if (is.null(variables)) {
+    if(deriv == 0) set_variables <- list(eps)
+    if(deriv > 0)  set_variables <- list(0)
     names(set_variables) <- xvar
-  }
+  } 
   
+  
+  
+  
+  
+
   allowed_comparison <- c('difference', 'differenceavg')
   
   if(!comparison %in% allowed_comparison) {
@@ -434,7 +502,7 @@ growthparameters_comparison.bgmfit <- function(model,
            )
     }
   }
-  hypothesis = "b2 + b1 = 1"
+  
   
   if(is.null(by)) {
     if(is.null(cov)) {
@@ -469,7 +537,10 @@ growthparameters_comparison.bgmfit <- function(model,
   
   call_comparison_gparms_fun <- function(parm, eps, ...) {
     gparms_fun = function(hi, lo, x, ...) {
-      y <- (hi - lo) / eps
+      if(deriv == 0) y <- (hi - lo) / eps
+      if(deriv > 0)  y <- (hi + lo) / 2
+      # print(head(hi))
+      # print(head(lo))
       if (parm == 'apgv') {
         out <- sitar::getPeak(x = x, y = y)[1]
       } else if (parm == 'pgv') {
@@ -536,9 +607,13 @@ growthparameters_comparison.bgmfit <- function(model,
                          ~ round(., digits = digits))) %>% 
     data.frame()
   
+ 
   if(is.null(reformat)) {
-    if(is.null(hypothesis))  reformat <- TRUE else reformat <- FALSE
-    if(is.null(equivalence)) reformat <- TRUE else reformat <- FALSE
+    if(is.null(hypothesis) && is.null(equivalence)) {
+      reformat <- TRUE
+    } else {
+      reformat <- FALSE
+    }
   }
   
   if (reformat) {
@@ -552,6 +627,8 @@ growthparameters_comparison.bgmfit <- function(model,
                       'predicted_hi', 'predicted')
     
     out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
+    row.names(out_sf) <- NULL
+    attr(out_sf$Parameter, "dimnames") <- NULL
   }
    
   out_sf <- out_sf %>% 

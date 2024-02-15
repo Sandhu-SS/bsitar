@@ -20,7 +20,6 @@
   aux_variables = NULL,
   levels_id = NULL,
   avg_reffects = NULL,
-  deriv_model = NULL,
   idata_method = NULL,
   ipts = NULL,
   seed = 123,
@@ -29,6 +28,8 @@
   cores = NULL,
   average = FALSE,
   variables = NULL,
+  deriv = NULL,
+  deriv_model = NULL,
   comparison = "difference",
   type = NULL,
   by = FALSE,
@@ -86,8 +87,10 @@ the growth parameter(s) to be estimated. Options are \code{'tgv'} (takeoff
 growth velocity), \code{'atgv'} (age at takeoff growth velocity),
 \code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
 velocity), \code{'cgv'} (cessation growth velocity), and \code{'acgv'} (age
-at cessation growth velocity). For \code{parameter = NULL} (default), age
-at peak growth velocity (\code{'apgv'}) is estimated.}
+at cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
+(default), age at peak growth velocity (\code{'apgv'}) is estimated where
+when \code{parameter = 'all'}, all six parameters are estimated. Note that
+option \code{'all'} can not be used when argument \code{by} is \code{TRUE}.}
 
 \item{xrange}{An integer to set the predictor range (i.e., age) when
 executing the interpolation via \code{ipts}. The default \code{NULL} sets
@@ -143,14 +146,6 @@ level 1 predictor, such as age), \code{feby} (fixed effects, typically a
 factor variable), and  \code{reby} (typically \code{NULL} indicating that
 parameters are integrated over the random effects) such as
 \code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}.}
-
-\item{deriv_model}{A logical to specify whether to estimate velocity curve
-from the derivative function, or the differentiation of the distance curve.
-The argument \code{deriv_model} is set to \code{TRUE} for those functions
-which need velocity curve such as \code{growthparameters()} and
-\code{plot_curves()}, and \code{NULL} for functions which explicitly use
-the distance curve (i.e., fitted values) such as \code{loo_validation()}
-and \code{plot_ppc()}.}
 
 \item{idata_method}{A character string to indicate the interpolation method.
 The number of of interpolation points is set up the \code{ipts} argument.
@@ -211,7 +206,34 @@ the \code{variables} is the level 1 predictor such as
 set via the \code{esp} argument (default 1e-6). If \code{NULL}, the
 \code{variables} is set internally by retrieving the relevant information
 from the \code{model}. Otherwise, user can define it as follows:
-\code{variables = list('age' = 1e-6)}.}
+\code{variables = list('x' = 1e-6)} where \code{'x'} is the level 1
+predictor. Note that \code{variables = list('age' = 1e-6)} is the default
+behavior for the \pkg{marginaleffects} because velocity is typically
+calculated by differentiating the distance curve via \code{dydx} approach,
+and therefore argument \code{deriv} is automatically set as \code{0} and
+\code{deriv_model} as \code{FALSE}. If user want to estimate parameters
+based on the model based first derivative, then argument \code{deriv} must
+be set as \code{1} and internally argument \code{variables} is defined as
+\code{variables = list('age' = 0)} i.e, original level 1 predictor
+variable, \code{'x'}. It is important to consider that if default behavior
+is used i.e, \code{deriv = 0} and \code{variables = list('x' = 1e-6)}, then
+user can not pass additional arguments to the \code{variables} argument. On
+the other hand, alternative approach i.e, \code{deriv = 0} and
+\code{variables = list('x' = 0)}, additional options can be passed to the
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
+functions.}
+
+\item{deriv}{A numeric to specify whether to estimate parameters based on the
+differentiation of the distance curve or the model based first derivative.
+Please see argument \code{variables} for more details.}
+
+\item{deriv_model}{A logical to specify whether to estimate velocity curve
+from the derivative function, or the differentiation of the distance curve.
+The argument \code{deriv_model} is set to \code{TRUE} for those functions
+which need velocity curve such as \code{growthparameters()} and
+\code{plot_curves()}, and \code{NULL} for functions which explicitly use
+the distance curve (i.e., fitted values) such as \code{loo_validation()}
+and \code{plot_ppc()}.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and
