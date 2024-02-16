@@ -56,7 +56,7 @@ prepare_data <- function(data,
 
   . <- NULL;
   data <- data %>% droplevels()
-  uvarby_method <- 'uvarby_method2'
+  
   if (!is.null(outliers)) {
     remove_ <- outliers$remove
     icode_ <- outliers$icode
@@ -118,6 +118,11 @@ prepare_data <- function(data,
     }
   } # if(!is.null(outliers)) {
 
+  # Internal argument 'uvarby_method2' to set data for multivariate framework 
+  # for uvarby. Did not work. The 'uvarby_method1' is the traditional and 
+  # correct approach.
+  uvarby_method <- 'uvarby_method1'
+  
   org.data <- data
 
   # Note that x tarnsformation is done within the prepare_function
