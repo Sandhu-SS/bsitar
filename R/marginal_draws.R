@@ -1,0 +1,596 @@
+
+
+#' Fitted (expected) values from the posterior draws
+#' 
+#' @description The \strong{marginal_draws()} function estimates and plots
+#'   growth curves (distance and velocity) by using \pkg{marginaleffects}
+#'   package as back-end. This function can compute growth curves (via
+#'   [marginaleffects::predictions()]), average growth curves (via
+#'   [marginaleffects::avg_predictions()]) or plot growth curves (via
+#'   [marginaleffects::plot_predictions()]). Please see
+#'   [here](https://marginaleffects.com/) for details.
+#'
+#' @details The \strong{marginal_draws()} estimates fitted values (via
+#'   [brms::fitted.brmsfit()]) or the posterior draws from the posterior
+#'   distribution (via [brms::predict.brmsfit()]) depending on the \code{type}
+#'   argument.
+#'   
+#' @param average A logical to indicate whether to internally call the
+#'    [marginaleffects::predictions()] or the
+#'    [marginaleffects::avg_predictions()] function. If \code{FALSE} (default),
+#'    [marginaleffects::predictions()] is called otherwise
+#'    [marginaleffects::avg_predictions()] when \code{average = TRUE}.
+#'
+#' @param plot A logical to specify whether to plot predictions by calling the
+#'   [marginaleffects::plot_predictions()] function (\code{FALSE}) or not
+#'   (\code{FALSE}). if \code{FALSE} (default), then
+#'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
+#'   are called to compute predictions (see \code{average} for details)
+#' 
+#' @param showlegends An argument to specify whether to show legends
+#'   (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
+#'   \code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
+#'   NA}, and \code{FALSE} if \code{re_formula = NULL}. 
+#' 
+#' @param deriv An integer to indicate whether to estimate distance curve or its
+#'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
+#'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
+#' 
+#' @inherit growthparameters.bgmfit params
+#' @inherit brms::fitted.brmsfit params
+#' @inherit growthparameters_comparison.bgmfit params
+#' @inherit marginaleffects::predictions params
+#' @inherit marginaleffects::plot_predictions params
+#' 
+#' @param ... Additional arguments passed to the [brms::fitted.brmsfit()] 
+#' function. Please see \code{brms::fitted.brmsfit()} for details on 
+#' various options available.
+#' 
+#' @return An array of predicted mean response values. See
+#'   [brms::fitted.brmsfit] for details.
+#' 
+#' @export marginal_draws.bgmfit
+#' @export
+#' 
+#' @seealso [marginaleffects::predictions()]
+#'   [marginaleffects::avg_predictions()]
+#'   [marginaleffects::plot_predictions()]
+#' 
+#' @inherit berkeley author
+#'
+#' @examples
+#' 
+#' # Fit Bayesian SITAR model 
+#' 
+#' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
+#' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
+#' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+#' 
+#' # Check and confirm whether model fit object 'berkeley_exfit' exists
+#'  berkeley_exfit <- getNsObject(berkeley_exfit)
+#' 
+#' model <- berkeley_exfit
+#' 
+#' # Population average distance curve
+#' marginal_draws(model, deriv = 0, re_formula = NA)
+#' 
+#' \donttest{
+#' # Individual-specific distance curves
+#' marginal_draws(model, deriv = 0, re_formula = NULL)
+#' 
+#' # Population average velocity curve
+#' marginal_draws(model, deriv = 1, re_formula = NA)
+#' 
+#' # Individual-specific velocity curves
+#' marginal_draws(model, deriv = 1, re_formula = NULL)
+#' }
+#' 
+marginal_draws.bgmfit <-
+  function(model,
+           resp = NULL,
+           ndraws = NULL,
+           draw_ids = NULL,
+           newdata = NULL,
+           re_formula = NA,
+           parameter = NULL,
+           xrange = 1,
+           acg_velocity = 0.10,
+           digits = 2,
+           numeric_cov_at = NULL,
+           aux_variables = NULL,
+           levels_id = NULL,
+           avg_reffects = NULL,
+           idata_method = NULL,
+           ipts = NULL,
+           seed = 123,
+           future = FALSE,
+           future_session = 'multisession',
+           cores = NULL,
+           fullframe = FALSE, 
+           average = FALSE, 
+           plot = FALSE, 
+           showlegends = NULL, 
+           variables = NULL,
+           condition = NULL,
+           deriv = 0,
+           deriv_model = TRUE,
+           type = NULL,
+           by = FALSE,
+           conf_level = 0.95,
+           transform = NULL,
+           byfun = NULL,
+           wts = NULL,
+           hypothesis = NULL,
+           equivalence = NULL,
+           reformat = NULL,
+           dummy_to_factor = NULL, 
+           verbose = FALSE,
+           expose_function = FALSE,
+           usesavedfuns = NULL,
+           clearenvfuns = NULL,
+           envir = NULL,
+           ...) {
+    
+    
+    if(is.null(envir)) {
+      envir <- model$model_info$envir
+    } else {
+      envir <- parent.frame()
+    }
+    
+    if(is.null(usesavedfuns)) {
+      if(!is.null(model$model_info$exefuns[[1]])) {
+        usesavedfuns <- TRUE
+      } else if(is.null(model$model_info$exefuns[[1]])) {
+        if(expose_function) {
+          model <- expose_model_functions(model, envir = envir)
+          usesavedfuns <- TRUE
+        } else if(!expose_function) {
+          usesavedfuns <- FALSE
+        }
+      }
+    } else { # if(!is.null(usesavedfuns)) {
+      if(!usesavedfuns) {
+        if(expose_function) {
+          model <- expose_model_functions(model, envir = envir)
+          usesavedfuns <- TRUE
+        }
+      } else if(usesavedfuns) {
+        check_if_functions_exists(model, checks = TRUE, 
+                                  usesavedfuns = usesavedfuns)
+      }
+    }
+    
+    
+    if(is.null(ndraws)) {
+      ndraws <- brms::ndraws(model)
+    }
+    
+    
+    if (is.null(resp)) {
+      resp_rev_ <- resp
+    } else if (!is.null(resp)) {
+      resp_rev_ <- paste0("_", resp)
+    }
+    
+    xvar_  <- paste0('xvar', resp_rev_)
+    xvar   <- model$model_info[[xvar_]]
+    cov_   <- paste0('cov', resp_rev_)
+    cov    <- model$model_info[[cov_]]
+    uvarby <- model$model_info$univariate_by
+    
+    # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
+    # This was must for univariate_by
+    if(is.null(newdata)) {
+      newdata <- model$model_info$bgmfit.data
+    }
+    
+    if(!is.na(uvarby)) {
+      uvarby_ind <- paste0(uvarby, resp)
+      varne <- paste0(uvarby, resp)
+      newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    }
+    
+    
+    # If default marginal effects 'dydx', then 
+    call_predictions <- TRUE
+    call_slopes      <- FALSE
+    if(!deriv_model) {
+      if(deriv > 0) {
+        deriv <- 0
+        call_predictions <- FALSE
+        call_slopes      <- TRUE
+      }
+    } # if(!deriv_model) {
+    
+    
+    if (is.null(idata_method)) {
+      idata_method <- 'm2'
+    }
+    
+    if(idata_method == 'm1') {
+      stop("For marginaleffects based functions, the " ,
+           " \n",
+           " 'idata_method' argument must be either NULL or 'm2'" )
+    }
+    
+    
+    
+    conf <- conf_level
+    probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+    probtitles <- probs[order(probs)] * 100
+    probtitles <- paste("Q", probtitles, sep = "")
+    # set_names_  <- c('Estimate', 'Est.Error', probtitles)
+    set_names_  <- c('Estimate', probtitles)
+    
+    if(!is.null(model$model_info$decomp)) {
+      if(model$model_info$decomp == "QR") deriv_model<- FALSE
+    }
+    
+    expose_method_set <- model$model_info[['expose_method']]
+    
+    model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
+    
+    o <- post_processing_checks(model = model,
+                                xcall = match.call(),
+                                resp = resp,
+                                envir = envir,
+                                deriv = deriv, 
+                                all = FALSE,
+                                verbose = verbose)
+    
+    oall <- post_processing_checks(model = model,
+                                   xcall = match.call(),
+                                   resp = resp,
+                                   envir = envir,
+                                   deriv = deriv, 
+                                   all = TRUE,
+                                   verbose = FALSE)
+    
+    
+    test <- setupfuns(model = model, resp = resp,
+                      o = o, oall = oall, 
+                      usesavedfuns = usesavedfuns, 
+                      deriv = deriv, envir = envir, 
+                      deriv_model = deriv_model, 
+                      ...)
+    
+    if(is.null(test)) return(invisible(NULL))
+    
+    
+    xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+    scall <- sys.calls()
+    
+    get_xcall <- function(xcall, scall) {
+      scall <- scall[[length(scall)]]
+      if(any(grepl("marginal_draws", scall, fixed = T)) |
+         any(grepl("marginal_draws.bgmfit", scall, fixed = T))) {
+        xcall <- "marginal_draws"
+      } else {
+        xcall <- xcall
+      } 
+    }
+    
+    if(!is.null(model$xcall)) {
+      if(model$xcall == "marginal_draws") {
+        xcall <- "marginal_draws"
+      }
+    } else {
+      scall <- sys.calls()
+      xcall <- get_xcall(xcall, scall)
+    }
+    
+    
+    xcall <- xcall
+    
+    check_if_package_installed(model, xcall = xcall)
+    
+    model$xcall <- xcall
+    
+    
+    
+    arguments <- get_args_(as.list(match.call())[-1], xcall)
+    arguments$model <- model
+    arguments$usesavedfuns <- usesavedfuns
+    
+    
+    
+    get.cores_ <- get.cores(arguments$cores)
+    arguments$cores <- setincores <-  get.cores_[['max.cores']]
+    .cores_ps <- get.cores_[['.cores_ps']]
+    
+    if (future) {
+      if (future_session == 'multisession') {
+        future::plan('multisession', workers = setincores)
+      } else if (future_session == 'multicore') {
+        future::plan('multicore', workers = setincores)
+      }
+    }
+    
+    
+    
+    comparisons_arguments <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+                                                fargs = formals(), 
+                                                dargs = list(...), 
+                                                verbose = verbose)
+    
+    
+    comparisons_arguments$model <- model
+    comparisons_arguments$deriv_model <- deriv_model
+    
+    comparisons_arguments$newdata <- newdata
+    newdata           <- do.call(get.newdata, comparisons_arguments)
+    comparisons_arguments$newdata <- newdata
+    
+    
+    # arguments$newdata  <- newdata
+    # arguments[["..."]] <- NULL
+    
+    
+    # Initiate non formalArgs()
+    term <- NULL;
+    contrast <- NULL;
+    tmp_idx <- NULL;
+    predicted_lo <- NULL;
+    predicted_hi <- NULL;
+    predicted <- NULL;
+    conf.high <- NULL;
+    conf.low <- NULL;
+    estimate <- NULL;
+    `:=` <- NULL;
+    `.` <- NULL;
+    
+    
+    
+    
+    # comparisons_arguments <- arguments
+    
+    exclude_args <- as.character(quote(
+      c(
+        parameter,
+        xrange,
+        acg_velocity,
+        digits,
+        numeric_cov_at,
+        acg_asymptote,
+        levels_id,
+        avg_reffects,
+        deriv,
+        deriv_model,
+        aux_variables, 
+        idata_method, 
+        condition, 
+        reformat, 
+        dummy_to_factor, 
+        expose_function,
+        ipts,
+        seed,
+        future,
+        future_session,
+        verbose,
+        usesavedfuns,
+        clearenvfuns,
+        envir, 
+        fullframe,
+        average,
+        plot,
+        showlegends
+      )
+    ))[-1]
+    
+    if(call_predictions) exclude_args <- c(exclude_args, 'variables')
+    
+    if(call_slopes) exclude_args <- c(exclude_args, 'transform', 'byfun')
+    
+    for (exclude_argsi in exclude_args) {
+      comparisons_arguments[[exclude_argsi]] <- NULL
+    }
+    
+    
+    
+    
+    
+    if(call_slopes) {
+      if (!is.null(variables)) {
+        if (!is.character(variables)) {
+          stop("'variables' argument must be a character string such as", 
+               "\n ",
+               " variables = ", "'", xvar, "'"
+          )
+        } else {
+          set_variables <- variables
+          if(!grepl(xvar, variables)) {
+            set_variables <- xvar
+          } else if(!is.null(set_variables[[xvar]])) {
+            
+          }
+        }
+      } else if (is.null(variables)) {
+        set_variables <- xvar
+      } 
+    } # if(call_slopes) {
+    
+    
+    
+    # Decide if set by = NULL and then here pick and replace 'by' set_group 
+    
+    if(is.null(by)) {
+      if(is.null(cov)) {
+        set_group <- FALSE
+      } else if(!is.null(cov)) {
+        set_group <- cov
+        if (!set_group %in% cov) {
+          stop('by must be one of the ', cov)
+        } 
+      }
+    } else if(!is.null(by)) {
+      if (!isFALSE(by)) {
+        set_group <- by
+      } else if (isFALSE(by)) {
+        set_group <- FALSE
+      }
+    }
+    
+    
+    if(call_slopes) comparisons_arguments$variables  <- set_variables
+    comparisons_arguments$by         <- set_group
+    
+    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+
+    
+    
+    
+    if(is.null(showlegends)) {
+      if(is.null(comparisons_arguments$re_formula)) {
+        showlegends <- FALSE
+      } else {
+        showlegends <- TRUE
+      }
+    }
+    
+    
+    
+    
+    if(call_predictions) {
+      if(!plot) {
+        if(!average) {
+          . <- do.call(marginaleffects::predictions, comparisons_arguments)
+        } else if(average) {
+          . <- do.call(marginaleffects::avg_predictions, comparisons_arguments)
+        }
+      } else if(plot) {
+        . <- do.call(marginaleffects::plot_predictions, comparisons_arguments)
+        outp <- .
+        if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
+        return(outp)
+      }
+    } # if(call_predictions) {
+    
+    
+    
+    if(call_slopes) {
+      if(!plot) {
+        if(!average) {
+          . <- do.call(marginaleffects::slopes, comparisons_arguments)
+        } else if(average) {
+          . <- do.call(marginaleffects::avg_slopes, comparisons_arguments)
+        }
+      } else if(plot) {
+        . <- do.call(marginaleffects::plot_slopes, comparisons_arguments)
+        outp <- .
+        outp <- outp + ggplot2::theme(legend.position = 'none')
+        return(outp)
+      }
+    } # if(call_slopes) {
+    
+    
+    
+    # Restore function(s)
+    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+    
+    if(!is.null(eval(comparisons_arguments$clearenvfuns))) {
+      if(!is.logical(eval(comparisons_arguments$clearenvfuns))) {
+        stop('clearenvfuns must be NULL or a logical')
+      } else {
+        setcleanup <- eval(comparisons_arguments$clearenvfuns)
+      }
+    }
+    
+    if(is.null(eval(comparisons_arguments$clearenvfuns))) {
+      if(is.null(eval(comparisons_arguments$usesavedfuns))) {
+        comparisons_arguments$usesavedfuns <- usesavedfuns
+      }
+      if(eval(comparisons_arguments$usesavedfuns)) {
+        setcleanup <- TRUE 
+      } else {
+        setcleanup <- FALSE
+      }
+    }
+    
+    # Cleanup environment if requested
+    if(setcleanup) {
+      suppressWarnings({
+        tempgenv <- envir
+        for (oalli in names(oall)) {
+          if(exists(oalli, envir = tempgenv )) {
+            remove(list=oalli, envir = tempgenv)
+          }
+        }
+        tempgenv <- test
+        for (oalli in names(oall)) {
+          if(exists(oalli, envir = tempgenv )) {
+            remove(list=oalli, envir = tempgenv)
+          }
+        }
+      })
+    } # if(setcleanup) {
+    
+    
+    # fullframe
+    
+    if(!isTRUE(eval(fullframe))) setfullframe <- FALSE
+    
+    if(!is.null(eval(fullframe))) {
+      if(eval(fullframe)) {
+        if(!eval(fullframe)) {
+          stop("fullframe can not be combined with summary = FALSE")
+        }
+        if(idata_method == 'm1') {
+          stop("fullframe can not be combined with idata_method = 'm1'")
+        }
+      }
+    }
+    if(is.null(eval(fullframe))) {
+      if (!is.na(model$model_info$univariate_by)) {
+        if(idata_method == 'm1') setfullframe <- FALSE
+        if(idata_method == 'm2') setfullframe <- TRUE
+      } else {
+        setfullframe <- FALSE
+      }
+    }
+    if (!is.na(model$model_info$univariate_by)) {
+      if(idata_method == 'm2') {
+        uvarby <- model$model_info$univariate_by
+        uvarbyresp <- paste0(uvarby, resp)
+        uvarbynewdata <- eval(newdata) %>% 
+          dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
+        if(setfullframe) . <- cbind(., uvarbynewdata)
+      }
+    }
+    
+    
+    
+    if(is.null(reformat)) {
+      if(is.null(hypothesis) && is.null(equivalence)) {
+        reformat <- TRUE
+      } else {
+        reformat <- FALSE
+      }
+    }
+    
+    out <- .
+    if (reformat) {
+      out <- out %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) %>% 
+        data.frame()
+      
+      remove_cols_ <- c('term',  'tmp_idx', 'predicted_lo', 
+                        'predicted_hi', 'predicted')
+      
+      out <- out[,!names(.) %in% remove_cols_]
+      # row.names(out_sf) <- NULL
+    }
+    
+    return(out)
+  }
+
+
+#' @rdname marginal_draws.bgmfit
+#' @export
+marginal_draws <- function(model, ...) {
+  UseMethod("marginal_draws")
+}
+
+

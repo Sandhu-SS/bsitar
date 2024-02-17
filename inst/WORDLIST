@@ -73,6 +73,7 @@ mathbf
 mc
 mdata
 mfit
+minmax
 modelling
 multisession
 newpage
@@ -86,6 +87,7 @@ ppc
 ppd
 pre
 probs
+quartile
 retreive
 revpairwise
 revreference
@@ -99,6 +101,7 @@ standardisation
 standata
 stanvars
 tgv
+threenum
 unadjusted
 untransformed
 variational

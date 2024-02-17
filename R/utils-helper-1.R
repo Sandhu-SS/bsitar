@@ -2251,6 +2251,8 @@ check_if_package_installed <- function(model,
       package <- c('ggplot2', 'jtools')
     } else if(calname.fun == "growthparameters_comparison") {
       package <- c('tidyr', 'collapse')
+    } else if(calname.fun == "marginal_draws") {
+      package <- c('tidyr', 'collapse')
     } else  {
       return(invisible(NULL))
     }

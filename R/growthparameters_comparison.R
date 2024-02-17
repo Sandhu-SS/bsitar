@@ -13,6 +13,10 @@
 #'  i.e., to estimate and compare growth parameters, the arguments
 #'  \code{variables} and \code{comparion} of [marginaleffects::comparisons()]
 #'  and [marginaleffects::avg_comparisons()] are modified (see below).
+#'  Furthermore, comparison of growth parameters is performed via the
+#'  \code{hypothesis} argument of the [marginaleffects::comparisons()] and
+#'  [marginaleffects::avg_comparisons()] functions.
+#'
 #'
 #' @details The \code{growthparameters_comparison} function estimates and
 #'   returns the following growth parameters:
@@ -218,6 +222,32 @@ growthparameters_comparison.bgmfit <- function(model,
     ndraws <- brms::ndraws(model)
   }
   
+  
+  if (is.null(resp)) {
+    resp_rev_ <- resp
+  } else if (!is.null(resp)) {
+    resp_rev_ <- paste0("_", resp)
+  }
+  
+  xvar_  <- paste0('xvar', resp_rev_)
+  xvar   <- model$model_info[[xvar_]]
+  cov_   <- paste0('cov', resp_rev_)
+  cov    <- model$model_info[[cov_]]
+  uvarby <- model$model_info$univariate_by
+  
+  # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
+  # This was must for univariate_by
+  if(is.null(newdata)) {
+    newdata <- model$model_info$bgmfit.data
+  }
+  
+  if(!is.na(uvarby)) {
+    uvarby_ind <- paste0(uvarby, resp)
+    varne <- paste0(uvarby, resp)
+    newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+  }
+  
+  
   if(is.null(deriv) & is.null(deriv_model)) {
     deriv <- 0
     deriv_model <- FALSE
@@ -250,11 +280,49 @@ growthparameters_comparison.bgmfit <- function(model,
          " 'idata_method' argument must be either NULL or 'm2'" )
   }
   
+  
+  if (is.null(eps)) eps <- 1e-6
+  
+  conf <- conf_level
+  probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+  probtitles <- probs[order(probs)] * 100
+  probtitles <- paste("Q", probtitles, sep = "")
+  # set_names_  <- c('Estimate', 'Est.Error', probtitles)
+  set_names_  <- c('Estimate', probtitles)
+  
+  if(!is.null(model$model_info$decomp)) {
+    if(model$model_info$decomp == "QR") deriv_model<- FALSE
+  }
+  
+  expose_method_set <- model$model_info[['expose_method']]
+  
+  model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
+  
   o <- post_processing_checks(model = model,
                               xcall = match.call(),
                               resp = resp,
                               envir = envir,
-                              deriv = deriv)
+                              deriv = deriv, 
+                              all = FALSE,
+                              verbose = verbose)
+  
+  oall <- post_processing_checks(model = model,
+                                 xcall = match.call(),
+                                 resp = resp,
+                                 envir = envir,
+                                 deriv = deriv, 
+                                 all = TRUE,
+                                 verbose = FALSE)
+  
+  
+  test <- setupfuns(model = model, resp = resp,
+                    o = o, oall = oall, 
+                    usesavedfuns = usesavedfuns, 
+                    deriv = deriv, envir = envir, 
+                    deriv_model = deriv_model, 
+                    ...)
+  
+  if(is.null(test)) return(invisible(NULL))
   
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
@@ -287,21 +355,9 @@ growthparameters_comparison.bgmfit <- function(model,
   model$xcall <- xcall
   
   
-  
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   arguments$model <- model
   arguments$usesavedfuns <- usesavedfuns
-  
- 
-  if (is.null(eps)) eps <- 1e-6
-
-  conf <- conf_level
-  probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
-  probtitles <- probs[order(probs)] * 100
-  probtitles <- paste("Q", probtitles, sep = "")
-  # set_names_  <- c('Estimate', 'Est.Error', probtitles)
-  set_names_  <- c('Estimate', probtitles)
-  
   
   
   get.cores_ <- get.cores(arguments$cores)
@@ -325,16 +381,17 @@ growthparameters_comparison.bgmfit <- function(model,
   
   full.args$model <- model
   full.args$deriv_model <- deriv_model
-  newdata <- do.call(get.newdata, full.args)
+  
+  full.args$newdata <- newdata
+  newdata           <- do.call(get.newdata, full.args)
+  full.args$newdata <- newdata
   
 
   arguments$newdata  <- newdata
   arguments[["..."]] <- NULL
   
   
-  ##############################################
   # Initiate non formalArgs()
-  ##############################################
   term <- NULL;
   contrast <- NULL;
   tmp_idx <- NULL;
@@ -349,17 +406,7 @@ growthparameters_comparison.bgmfit <- function(model,
   
 
   
-  if (is.null(resp)) {
-    resp_rev_ <- resp
-  } else if (!is.null(resp)) {
-    resp_rev_ <- paste0("_", resp)
-  }
   
-  xvar_ <- paste0('xvar', resp_rev_)
-  xvar  <- model$model_info[[xvar_]]
-  
-  cov_ <- paste0('cov', resp_rev_)
-  cov  <- model$model_info[[cov_]]
   
   
   #####################
@@ -422,7 +469,13 @@ growthparameters_comparison.bgmfit <- function(model,
       ipts,
       seed,
       future,
-      future_session
+      future_session,
+      dummy_to_factor,
+      verbose,
+      expose_function,
+      usesavedfuns,
+      clearenvfuns,
+      envir
     )
   ))[-1]
   
@@ -569,7 +622,9 @@ growthparameters_comparison.bgmfit <- function(model,
     comparisons_arguments$variables  <- set_variables
     comparisons_arguments$by         <- set_group
     comparisons_arguments$comparison <- gparms_fun
+    
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    
     suppressWarnings({
       if(!average) {
         out <- do.call(marginaleffects::comparisons, comparisons_arguments)
