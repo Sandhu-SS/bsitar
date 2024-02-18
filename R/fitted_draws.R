@@ -258,6 +258,9 @@ fitted_draws.bgmfit <-
     }
     
     calling.args$object <- full.args$model
+    if(is.null(calling.args$newdata)) {
+      if(!is.null(newdata)) calling.args$newdata <- newdata
+    }
 
     . <- do.call(fitted, calling.args)
     
@@ -317,9 +320,12 @@ fitted_draws.bgmfit <-
     
     
     # fullframe
+    full.args$idata_method <- idata_method
+    full.args$fullframe <- eval(full.args$fullframe)
+    print(full.args$summary)
     if(!is.null(eval(full.args$fullframe))) {
       if(eval(full.args$fullframe)) {
-        if(!eval(full.args$fullframe)) {
+        if(!eval(full.args$summary)) {
           stop("fullframe can not be combined with summary = FALSE")
         }
         if(full.args$idata_method == 'm1') {
@@ -336,7 +342,10 @@ fitted_draws.bgmfit <-
       }
     }
     if (!is.na(model$model_info$univariate_by)) {
-      if(full.args$idata_method == 'm2') {
+      if(full.args$fullframe & full.args$idata_method == 'm1') setfullframe <- FALSE
+      if(full.args$fullframe & full.args$idata_method == 'm2') setfullframe <- TRUE
+      if(!full.args$fullframe) setfullframe <- FALSE
+      if(setfullframe) {
         uvarby <- model$model_info$univariate_by
         uvarbyresp <- paste0(uvarby, resp)
         uvarbynewdata <- eval(full.args$newdata) %>% 

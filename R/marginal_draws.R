@@ -182,13 +182,13 @@ marginal_draws.bgmfit <-
     # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
     # This was must for univariate_by
     if(is.null(newdata)) {
-      newdata <- model$model_info$bgmfit.data
+      #newdata <- model$model_info$bgmfit.data
     }
     
     if(!is.na(uvarby)) {
       uvarby_ind <- paste0(uvarby, resp)
       varne <- paste0(uvarby, resp)
-      newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+     # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
     }
     
     
@@ -214,6 +214,19 @@ marginal_draws.bgmfit <-
            " 'idata_method' argument must be either NULL or 'm2'" )
     }
     
+    
+    # Initiate non formalArgs()
+    term <- NULL;
+    contrast <- NULL;
+    tmp_idx <- NULL;
+    predicted_lo <- NULL;
+    predicted_hi <- NULL;
+    predicted <- NULL;
+    conf.high <- NULL;
+    conf.low <- NULL;
+    estimate <- NULL;
+    `:=` <- NULL;
+    `.` <- NULL;
     
     
     conf <- conf_level
@@ -309,42 +322,33 @@ marginal_draws.bgmfit <-
     
     
     
-    comparisons_arguments <- evaluate_call_args(cargs = as.list(match.call())[-1], 
-                                                fargs = formals(), 
-                                                dargs = list(...), 
-                                                verbose = verbose)
+    full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+                                    fargs = formals(), 
+                                    dargs = list(...), 
+                                    verbose = verbose)
     
+    full.args$model <- model
+    full.args$deriv_model <- deriv_model
     
-    comparisons_arguments$model <- model
-    comparisons_arguments$deriv_model <- deriv_model
+    full.args$newdata <- newdata
+    newdata           <- do.call(get.newdata, full.args)
     
-    comparisons_arguments$newdata <- newdata
-    newdata           <- do.call(get.newdata, comparisons_arguments)
-    comparisons_arguments$newdata <- newdata
+    if(!is.na(uvarby)) {
+      uvarby_ind <- paste0(uvarby, resp)
+      varne <- paste0(uvarby, resp)
+      newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    }
+    full.args$newdata <- newdata
     
-    
+
     # arguments$newdata  <- newdata
     # arguments[["..."]] <- NULL
+    # predictions_arguments <- arguments
     
+    full.args[["..."]] <- NULL
+    predictions_arguments <- full.args
     
-    # Initiate non formalArgs()
-    term <- NULL;
-    contrast <- NULL;
-    tmp_idx <- NULL;
-    predicted_lo <- NULL;
-    predicted_hi <- NULL;
-    predicted <- NULL;
-    conf.high <- NULL;
-    conf.low <- NULL;
-    estimate <- NULL;
-    `:=` <- NULL;
-    `.` <- NULL;
-    
-    
-    
-    
-    # comparisons_arguments <- arguments
-    
+
     exclude_args <- as.character(quote(
       c(
         parameter,
@@ -383,7 +387,7 @@ marginal_draws.bgmfit <-
     if(call_slopes) exclude_args <- c(exclude_args, 'transform', 'byfun')
     
     for (exclude_argsi in exclude_args) {
-      comparisons_arguments[[exclude_argsi]] <- NULL
+      predictions_arguments[[exclude_argsi]] <- NULL
     }
     
     
@@ -432,8 +436,8 @@ marginal_draws.bgmfit <-
     }
     
     
-    if(call_slopes) comparisons_arguments$variables  <- set_variables
-    comparisons_arguments$by         <- set_group
+    if(call_slopes) predictions_arguments$variables  <- set_variables
+    predictions_arguments$by         <- set_group
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
 
@@ -441,7 +445,7 @@ marginal_draws.bgmfit <-
     
     
     if(is.null(showlegends)) {
-      if(is.null(comparisons_arguments$re_formula)) {
+      if(is.null(predictions_arguments$re_formula)) {
         showlegends <- FALSE
       } else {
         showlegends <- TRUE
@@ -454,12 +458,12 @@ marginal_draws.bgmfit <-
     if(call_predictions) {
       if(!plot) {
         if(!average) {
-          . <- do.call(marginaleffects::predictions, comparisons_arguments)
+          . <- do.call(marginaleffects::predictions, predictions_arguments)
         } else if(average) {
-          . <- do.call(marginaleffects::avg_predictions, comparisons_arguments)
+          . <- do.call(marginaleffects::avg_predictions, predictions_arguments)
         }
       } else if(plot) {
-        . <- do.call(marginaleffects::plot_predictions, comparisons_arguments)
+        . <- do.call(marginaleffects::plot_predictions, predictions_arguments)
         outp <- .
         if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
         return(outp)
@@ -471,12 +475,12 @@ marginal_draws.bgmfit <-
     if(call_slopes) {
       if(!plot) {
         if(!average) {
-          . <- do.call(marginaleffects::slopes, comparisons_arguments)
+          . <- do.call(marginaleffects::slopes, predictions_arguments)
         } else if(average) {
-          . <- do.call(marginaleffects::avg_slopes, comparisons_arguments)
+          . <- do.call(marginaleffects::avg_slopes, predictions_arguments)
         }
       } else if(plot) {
-        . <- do.call(marginaleffects::plot_slopes, comparisons_arguments)
+        . <- do.call(marginaleffects::plot_slopes, predictions_arguments)
         outp <- .
         outp <- outp + ggplot2::theme(legend.position = 'none')
         return(outp)
@@ -488,19 +492,19 @@ marginal_draws.bgmfit <-
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
-    if(!is.null(eval(comparisons_arguments$clearenvfuns))) {
-      if(!is.logical(eval(comparisons_arguments$clearenvfuns))) {
+    if(!is.null(eval(predictions_arguments$clearenvfuns))) {
+      if(!is.logical(eval(predictions_arguments$clearenvfuns))) {
         stop('clearenvfuns must be NULL or a logical')
       } else {
-        setcleanup <- eval(comparisons_arguments$clearenvfuns)
+        setcleanup <- eval(predictions_arguments$clearenvfuns)
       }
     }
     
-    if(is.null(eval(comparisons_arguments$clearenvfuns))) {
-      if(is.null(eval(comparisons_arguments$usesavedfuns))) {
-        comparisons_arguments$usesavedfuns <- usesavedfuns
+    if(is.null(eval(predictions_arguments$clearenvfuns))) {
+      if(is.null(eval(predictions_arguments$usesavedfuns))) {
+        predictions_arguments$usesavedfuns <- usesavedfuns
       }
-      if(eval(comparisons_arguments$usesavedfuns)) {
+      if(eval(predictions_arguments$usesavedfuns)) {
         setcleanup <- TRUE 
       } else {
         setcleanup <- FALSE
@@ -526,33 +530,40 @@ marginal_draws.bgmfit <-
     } # if(setcleanup) {
     
     
+    # fullframe - for marginal_draws, already fullframe returned 
+    # if(!isTRUE(eval(fullframe))) setfullframe <- FALSE
+    # if( isTRUE(eval(fullframe))) setfullframe <- TRUE
+    setfullframe <- FALSE
     # fullframe
-    
-    if(!isTRUE(eval(fullframe))) setfullframe <- FALSE
-    
-    if(!is.null(eval(fullframe))) {
-      if(eval(fullframe)) {
-        if(!eval(fullframe)) {
+    full.args$idata_method <- idata_method
+    full.args$fullframe <- eval(full.args$fullframe)
+    full.args$summary   <- TRUE
+    if(!is.null(eval(full.args$fullframe))) {
+      if(eval(full.args$fullframe)) {
+        if(!eval(full.args$summary)) {
           stop("fullframe can not be combined with summary = FALSE")
         }
-        if(idata_method == 'm1') {
+        if(full.args$idata_method == 'm1') {
           stop("fullframe can not be combined with idata_method = 'm1'")
         }
       }
     }
-    if(is.null(eval(fullframe))) {
+    if(is.null(eval(full.args$fullframe))) {
       if (!is.na(model$model_info$univariate_by)) {
-        if(idata_method == 'm1') setfullframe <- FALSE
-        if(idata_method == 'm2') setfullframe <- TRUE
+        if(full.args$idata_method == 'm1') setfullframe <- FALSE
+        if(full.args$idata_method == 'm2') setfullframe <- TRUE
       } else {
         setfullframe <- FALSE
       }
     }
     if (!is.na(model$model_info$univariate_by)) {
-      if(idata_method == 'm2') {
+      if(full.args$fullframe & full.args$idata_method == 'm1') setfullframe <- FALSE
+      if(full.args$fullframe & full.args$idata_method == 'm2') setfullframe <- TRUE
+      if(!full.args$fullframe) setfullframe <- FALSE
+      if(setfullframe) {
         uvarby <- model$model_info$univariate_by
         uvarbyresp <- paste0(uvarby, resp)
-        uvarbynewdata <- eval(newdata) %>% 
+        uvarbynewdata <- eval(full.args$newdata) %>% 
           dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
         if(setfullframe) . <- cbind(., uvarbynewdata)
       }

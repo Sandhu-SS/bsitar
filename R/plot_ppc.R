@@ -160,6 +160,10 @@ plot_ppc.bgmfit <-
    
     
     calling.args$object <- full.args$model
+    if(is.null(calling.args$newdata)) {
+      if(!is.null(newdata)) calling.args$newdata <- newdata
+    }
+    
     
     . <- do.call(brms::pp_check, calling.args)
     

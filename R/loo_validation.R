@@ -203,6 +203,10 @@ loo_validation.bgmfit <-
     calling.args$object <- NULL
     calling.args$model <- NULL
   
+    if(is.null(calling.args$newdata)) {
+      if(!is.null(newdata)) calling.args$newdata <- newdata
+    }
+    
     
     . <- brms::loo(model,
                    compare = compare,

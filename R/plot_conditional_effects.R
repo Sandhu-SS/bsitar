@@ -206,6 +206,10 @@ plot_conditional_effects.bgmfit <-
     
     
     calling.args$object <- full.args$model
+    if(is.null(calling.args$newdata)) {
+      if(!is.null(newdata)) calling.args$newdata <- newdata
+    }
+    
     
     if(!eval(full.args$deriv_model)) {
       if (is.null(resp)) {

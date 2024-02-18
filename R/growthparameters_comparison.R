@@ -238,13 +238,13 @@ growthparameters_comparison.bgmfit <- function(model,
   # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
   # This was must for univariate_by
   if(is.null(newdata)) {
-    newdata <- model$model_info$bgmfit.data
+    #newdata <- model$model_info$bgmfit.data
   }
   
   if(!is.na(uvarby)) {
     uvarby_ind <- paste0(uvarby, resp)
     varne <- paste0(uvarby, resp)
-    newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+   # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
   }
   
   
@@ -282,6 +282,44 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   if (is.null(eps)) eps <- 1e-6
+  
+  
+  # Initiate non formalArgs()
+  term <- NULL;
+  contrast <- NULL;
+  tmp_idx <- NULL;
+  predicted_lo <- NULL;
+  predicted_hi <- NULL;
+  predicted <- NULL;
+  conf.high <- NULL;
+  conf.low <- NULL;
+  estimate <- NULL;
+  `:=` <- NULL;
+  `.` <- NULL;
+  
+  
+  allowed_parms <- c(
+    'atgv',
+    'tgv',
+    'apgv',
+    'pgv',
+    'acgv',
+    'cgv')
+  
+  
+  if (is.null(parameter)) {
+    parm <- 'apgv' 
+  } else if(parameter == 'all') {
+    parm <- allowed_parms
+  } else {
+    if(!parameter %in% allowed_parms) {
+      allowed_parms_err <- c(allowed_parms, 'all')
+      stop("Allowed parameter options are ", 
+           paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
+      )
+    }
+    parm <- parameter
+  }
   
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -384,76 +422,22 @@ growthparameters_comparison.bgmfit <- function(model,
   
   full.args$newdata <- newdata
   newdata           <- do.call(get.newdata, full.args)
+  
+  if(!is.na(uvarby)) {
+    uvarby_ind <- paste0(uvarby, resp)
+    varne <- paste0(uvarby, resp)
+     newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+  }
   full.args$newdata <- newdata
   
 
-  arguments$newdata  <- newdata
-  arguments[["..."]] <- NULL
+  # arguments$newdata  <- newdata
+  # arguments[["..."]] <- NULL
+  # comparisons_arguments <- arguments
   
+  full.args[["..."]] <- NULL
+  comparisons_arguments <- full.args
   
-  # Initiate non formalArgs()
-  term <- NULL;
-  contrast <- NULL;
-  tmp_idx <- NULL;
-  predicted_lo <- NULL;
-  predicted_hi <- NULL;
-  predicted <- NULL;
-  conf.high <- NULL;
-  conf.low <- NULL;
-  estimate <- NULL;
-  `:=` <- NULL;
-  `.` <- NULL;
-  
-
-  
-  
-  
-  
-  #####################
-  
-  # allowed_parms <- c(
-  #   'ato',
-  #   'dto',
-  #   'vto',
-  #   'apv',
-  #   'dpv',
-  #   'vpv',
-  #   'afo',
-  #   'dfo',
-  #   'vfo',
-  #   'acg',
-  #   'dcg',
-  #   'vcg',
-  #   'dgs',
-  #   'dgain',
-  #   'vgain'
-  # )
-  
-  
-  
-  allowed_parms <- c(
-    'atgv',
-    'tgv',
-    'apgv',
-    'pgv',
-    'acgv',
-    'cgv')
-  
-  if (is.null(parameter)) {
-    parm <- 'apgv' 
-  } else if(parameter == 'all') {
-    parm <- allowed_parms
-  } else {
-    if(!parameter %in% allowed_parms) {
-      allowed_parms_err <- c(allowed_parms, 'all')
-      stop("Allowed parameter options are ", 
-           paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
-      )
-    }
-    parm <- parameter
-  }
-  
-  comparisons_arguments <- arguments
   exclude_args <- as.character(quote(
     c(
       parameter,
@@ -592,8 +576,6 @@ growthparameters_comparison.bgmfit <- function(model,
     gparms_fun = function(hi, lo, x, ...) {
       if(deriv == 0) y <- (hi - lo) / eps
       if(deriv > 0)  y <- (hi + lo) / 2
-      # print(head(hi))
-      # print(head(lo))
       if (parm == 'apgv') {
         out <- sitar::getPeak(x = x, y = y)[1]
       } else if (parm == 'pgv') {
@@ -648,10 +630,13 @@ growthparameters_comparison.bgmfit <- function(model,
     for (allowed_parmsi in parm) {
       list_cout[[allowed_parmsi]] <-
         call_comparison_gparms_fun(parm = allowed_parmsi, eps = eps)
-      list_name[[allowed_parmsi]] <- allowed_parmsi
+      if(nrow(list_cout[[allowed_parmsi]]) > 0) { # If fails, don't add par name
+        list_name[[allowed_parmsi]] <- allowed_parmsi
+      }
     }
     list_name2 <- do.call(rbind, list_name)
-    out_sf <- do.call(rbind, list_cout) %>% data.frame() %>% 
+    out_sf <- do.call(rbind, list_cout) %>% data.frame() 
+    out_sf <- out_sf %>% 
       dplyr::mutate(!!as.symbol('parameter') := list_name2) %>% 
       dplyr::relocate(!!as.symbol('parameter'))
   }
