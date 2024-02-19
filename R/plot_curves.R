@@ -917,7 +917,7 @@ plot_curves.bgmfit <- function(model,
       } else if (level == 1) {
         re_formula <- NULL
       }
-      print(estimation_method)
+      
       if (estimation_method == 'fitted') {
         extra$ey <-
           fitted_draws(

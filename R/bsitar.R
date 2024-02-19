@@ -456,7 +456,21 @@
 #'  be same (e.g., \code{family = gaussian()}) for sub models or different for
 #'  each sub model such as \code{family = list(gaussian(), student())} which
 #'  sets \code{gaussian} distribution for the first sub model and
-#'  \code{student_t} distribution for the second sub model.
+#'  \code{student_t} distribution for the second sub model. Please note that
+#'  argument \code{family} is ignored when use specifies \code{custom_family}
+#'  i.e., \code{custom_family} is not \code{NULL}.
+#'
+#'@param custom_family Specify  custom families (i.e. response distribution).
+#'  Default \code{NULL}. Please see [brms::custom_family()] for details. It is
+#'  important no note that user defined Stan functions must be expose by setting
+#'  \code{expose_functions = TRUE}.
+#'  
+#'@param custom_stanvars Prepare and pass user-defined variables that need to be
+#'  added to the Stan's program blocks (default \code{NULL}). This is primarily
+#'  useful when defining \code{custom_family}. Please see
+#'  [brms::custom_family()] for details on specifying \code{stanvars}. Note that
+#'  \code{custom_stanvars} are passed directly without conducting any sanity
+#'  checks.
 #'
 #'@param group_arg Specify arguments for group-level random effects. The
 #'  \code{group_arg} should be a named list that may include \code{groupvar},
@@ -1542,6 +1556,8 @@ bsitar <- function(x,
                    dpar_formula = NULL,
                    autocor_formula = NULL,
                    family = gaussian(),
+                   custom_family = NULL,
+                   custom_stanvars  = NULL,
                    group_arg = list(
                      groupvar = NULL,
                      by = NULL,
@@ -2390,9 +2406,12 @@ bsitar <- function(x,
       if (gsubs_c_counter == 1) {
         splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar, fixed = F)
       } else {
-        splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar2, fixed = F)
+        # splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar2, fixed = F)
+        splitmvar2 <- gsub(paste0('\\<', noquote(majors2), '\\>'), majors3, 
+                           splitmvar2, fixed = F)
       }
     }
+    
     for (i in 1:length(splitmvar_w3))
       splitmvar2 <- gsub("\"\"", "\"", splitmvar2)
     splitmvar3 <- eval(parse(text = splitmvar2))
@@ -3274,6 +3293,8 @@ bsitar <- function(x,
     "select_model",
     "decomp",
     "parameterization",
+    "custom_family",
+    "custom_stanvars",
     "..."
   )
   
@@ -4135,7 +4156,7 @@ bsitar <- function(x,
       cortimeNlags_var <- NULL
     }
     
-   
+  
     
     if (is.null(familysi[[1]][1]) |
         familysi == "NULL") {
@@ -4152,21 +4173,24 @@ bsitar <- function(x,
     
    
     
-    
     if (!is.null(familysi)) {
       familysi_check <- familysi
-      if( grepl('brmsfamily', familysi_check) &
-          !grepl('brms::', familysi_check)) {
-        familysi_check <- paste0('brms::', familysi_check)
-      } else if( grepl('brmsfamily', familysi_check) &
-                 grepl('brms::', familysi_check)) {
+      if(grepl('brmsfamily', familysi_check) &
+          grepl('brms::', familysi_check)) {
         familysi_check <- familysi_check
-      } else if(!grepl('brmsfamily', familysi_check)) {
+      } else if( grepl('brmsfamily', familysi_check) &
+                 !grepl('brms::', familysi_check)) {
+        familysi_check <- paste0('brms::', familysi_check)
+      } else if( grepl('family', familysi_check) &
+                 !grepl('brms::', familysi_check)) {
+        familysi_check <- paste0('brms::brmsfamily', familysi_check)
+      } else if(!grepl('brmsfamily', familysi_check) & 
+                !grepl('family', familysi_check)) {
         stop("Argument family should be specified as brmsfamily(family,...)")
       }
       familysi <- familysi_check
     }
-  
+    
     
     if (!is.null(familysi)) {
       familysi <- list_to_quoted_if_not_si(familysi)
@@ -4642,6 +4666,7 @@ bsitar <- function(x,
         'nys',
         'ysi',
         'familysi',
+        'custom_family',
         'xfunsi',
         'xoffset',
         'match_sitar_d_form',
@@ -6799,6 +6824,10 @@ bsitar <- function(x,
       brmsdots_[[collect_dot_namesi]] <- NULL
   }
  
+
+  if(!is.null(custom_stanvars)) {
+    bstanvars <- bstanvars + custom_stanvars
+  }
   
   brm_args <-
     setup_brms_args(
@@ -6815,6 +6844,9 @@ bsitar <- function(x,
       brmsdots = brmsdots_
     )
   
+  if(!is.null(custom_family)) {
+    brm_args$family <- custom_family
+  }
   
   if (verbose) {
     setmsgtxt <- paste0("\n Fitting model")
@@ -6872,6 +6904,8 @@ bsitar <- function(x,
     p1p2 <- rbind(p1, p2)
     p1p2
   }
+  
+  
   
   
   if(set_higher_levels) {

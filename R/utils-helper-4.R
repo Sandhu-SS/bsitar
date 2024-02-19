@@ -99,6 +99,7 @@ prepare_formula <- function(x,
   autocor_formi <- NULL;
   unusedsi <- NULL;
   familysi <- NULL;
+  # custom_family <- NULL;
   mat_s <- NULL;
   ancov_gr_str <- NULL;
   bncov_gr_str <- NULL;
@@ -2159,11 +2160,19 @@ prepare_formula <- function(x,
   }
   
   
-  if (!is.null(familysi)) {
-    setbformula <- paste0(setbformula, "+", familysi)
+  # If no custom_family, then only add family to the call
+  if(is.null(custom_family)) {
+    if (!is.null(familysi)) {
+      setbformula <- paste0(setbformula, "+", familysi)
+    }
   }
   
   
+  # if (!is.null(familysi)) {
+  #   setbformula <- paste0(setbformula, "+", familysi)
+  # }
+  
+ 
   
   group_arg_groupvar <- gr_varss
   multivariate_rescor <-  multivariate$rescor
@@ -3065,7 +3074,6 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
-  # print(setbformula)
   
   attr(setbformula, "list_out") <- as.list(list_out)
   

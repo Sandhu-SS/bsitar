@@ -322,7 +322,7 @@ fitted_draws.bgmfit <-
     # fullframe
     full.args$idata_method <- idata_method
     full.args$fullframe <- eval(full.args$fullframe)
-    print(full.args$summary)
+    
     if(!is.null(eval(full.args$fullframe))) {
       if(eval(full.args$fullframe)) {
         if(!eval(full.args$summary)) {

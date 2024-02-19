@@ -134,10 +134,15 @@ get.newdata <- function(model,
     name_hypothetical_id <- paste0("hy_id", resp_rev_)
     model$model_info$groupvar <- name_hypothetical_id
     newdata[[name_hypothetical_id]] <- as.factor("tempid")
+  } else if (!is.null(model$model_info$groupvar)) {
+    if(length(newdata[[model$model_info$groupvar]]) == 0) {
+      name_hypothetical_id <- paste0("hy_id", resp_rev_)
+      model$model_info$groupvar <- name_hypothetical_id
+      newdata[[name_hypothetical_id]] <- as.factor("tempid")
+    }
   }
   
-  
-  
+
   
   if (!is.na(model$model_info$univariate_by)) {
     if (is.symbol(model$model_info$call.bgmfit$y)) {
@@ -907,6 +912,7 @@ get_idata <-
     }
     
     id <- match(newdata[[idVar]], unique(newdata[[idVar]]))
+    
     last_time <- tapply(newdata[[timeVar]], id, max)
     first_time <- tapply(newdata[[timeVar]], id, min)
     

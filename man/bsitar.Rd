@@ -40,6 +40,8 @@ bsitar(
   dpar_formula = NULL,
   autocor_formula = NULL,
   family = gaussian(),
+  custom_family = NULL,
+  custom_stanvars = NULL,
   group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist = gaussian),
   sigma_group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist =
     gaussian),
@@ -488,7 +490,21 @@ available distributions and link functions, and how to specify them. For
 be same (e.g., \code{family = gaussian()}) for sub models or different for
 each sub model such as \code{family = list(gaussian(), student())} which
 sets \code{gaussian} distribution for the first sub model and
-\code{student_t} distribution for the second sub model.}
+\code{student_t} distribution for the second sub model. Please note that
+argument \code{family} is ignored when use specifies \code{custom_family}
+i.e., \code{custom_family} is not \code{NULL}.}
+
+\item{custom_family}{Specify  custom families (i.e. response distribution).
+Default \code{NULL}. Please see \code{\link[brms:custom_family]{brms::custom_family()}} for details. It is
+important no note that user defined Stan functions must be expose by setting
+\code{expose_functions = TRUE}.}
+
+\item{custom_stanvars}{Prepare and pass user-defined variables that need to be
+added to the Stan's program blocks (default \code{NULL}). This is primarily
+useful when defining \code{custom_family}. Please see
+\code{\link[brms:custom_family]{brms::custom_family()}} for details on specifying \code{stanvars}. Note that
+\code{custom_stanvars} are passed directly without conducting any sanity
+checks.}
 
 \item{group_arg}{Specify arguments for group-level random effects. The
 \code{group_arg} should be a named list that may include \code{groupvar},
