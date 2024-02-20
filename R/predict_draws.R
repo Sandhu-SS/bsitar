@@ -330,9 +330,14 @@ predict_draws.bgmfit <-
       }
     }
     if (!is.na(model$model_info$univariate_by)) {
-      if(full.args$fullframe & full.args$idata_method == 'm1') setfullframe <- FALSE
-      if(full.args$fullframe & full.args$idata_method == 'm2') setfullframe <- TRUE
-      if(!full.args$fullframe) setfullframe <- FALSE
+      if(is.null(full.args$fullframe)) 
+        full.args$fullframe <- fullframe <- FALSE
+      if(full.args$fullframe & full.args$idata_method == 'm1') 
+        setfullframe <- FALSE
+      if(full.args$fullframe & full.args$idata_method == 'm2') 
+        setfullframe <- TRUE
+      if(!full.args$fullframe) 
+        setfullframe <- FALSE
       if(setfullframe) {
         uvarby <- model$model_info$univariate_by
         uvarbyresp <- paste0(uvarby, resp)

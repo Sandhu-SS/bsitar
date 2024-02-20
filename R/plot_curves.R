@@ -660,6 +660,7 @@ plot_curves.bgmfit <- function(model,
   
   if(length(list(...)) != 0) arguments <- c(arguments, list(...))
   
+  arguments$draw_ids <- draw_ids
 
   d. <- do.call(growthparameters.bgmfit, arguments)
   

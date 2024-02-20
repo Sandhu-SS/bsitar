@@ -1003,6 +1003,7 @@ growthparameters.bgmfit <- function(model,
         arguments$ipts <- NULL 
         arguments$probs <- probs
         
+        
         if (estimation_method == 'fitted') {
           out_d_ <- do.call(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
