@@ -222,7 +222,7 @@ optimize_model.bgmfit <- function(model,
   if (need_exposed_function) {
     if(is.null(expose_function)) {
       args_o$expose_function <- expose_function <- TRUE
-      if(verbose) message("Argument 'expose_function' must be set to TRUE")
+      if(verbose) message("Argument 'expose_function' has been set to TRUE")
     } else if(!is.null(expose_function)) {
       if (!args_o$expose_function) {
         stop(
@@ -289,7 +289,21 @@ optimize_model.bgmfit <- function(model,
     xxo
   }
   
-  optimize_df <- get_args_opt(deparse(substitute(optimize_df)))
+  if(!is.null(optimize_df)) {
+    if(is.list(optimize_df)) {
+      optimize_df <- unlist(optimize_df)
+    } else {
+      optimize_df <- optimize_df
+    }
+  } else if(is.null(optimize_df)) {
+    optimize_df <- model$model_info$dfs
+  }
+  
+  
+  optimize_df <- as.factor(optimize_df)
+  
+  # optimize_df <- get_args_opt(deparse(substitute(optimize_df)))
+  
   optimize_x  <- get_args_opt(deparse(substitute(optimize_x)))
   optimize_y  <- get_args_opt(deparse(substitute(optimize_y)))
   
@@ -311,7 +325,7 @@ optimize_model.bgmfit <- function(model,
   add_summary_waic <- NULL
   Count <- Est.Error <- Inference <- Min..n_eff <- where <- NULL
   Min.n_eff <- Percent <- Proportion <- Range <- SE <- NULL
-  
+  optimize_df_x_yx <<- optimize_df_x_y
   
   combine_summaries <- function(model_list, summary_obj) {
     ic = 0
@@ -577,7 +591,9 @@ optimize_model.bgmfit <- function(model,
     
     
     if ('waic' %in% add_fit_criteria) {
-      enverr. <- parent.frame()
+      # enverr. <- parent.frame()
+      enverr. <- environment()
+      assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
           if (!is.na(fit$model_info$univariate_by)) {
@@ -637,7 +653,8 @@ optimize_model.bgmfit <- function(model,
     
     
     if ('bayes_R2' %in% add_bayes_R) {
-      enverr. <- parent.frame()
+      # enverr. <- parent.frame()
+      enverr. <- environment()
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -700,7 +717,8 @@ optimize_model.bgmfit <- function(model,
     
     if ('loo' %in% add_fit_criteria) {
       if ('loo' %in% add_fit_criteria) {
-        enverr. <- parent.frame()
+        # enverr. <- parent.frame()
+        enverr. <- environment()
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
@@ -760,7 +778,8 @@ optimize_model.bgmfit <- function(model,
       }
       
       if ('loo' %in% add_fit_criteria) {
-        enverr. <- parent.frame()
+        # enverr. <- parent.frame()
+        enverr. <- environment()
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
           expr = {
@@ -835,11 +854,11 @@ optimize_model.bgmfit <- function(model,
     df <- levels(droplevels(exe_row$df))
     xfun <- levels(droplevels(exe_row$xfun))
     yfun <- levels(droplevels(exe_row$yfun))
-    if (df == 'NULL')
-      df <-
-      paste0("list(", paste(model$model_info$dfs, collapse = ","), ")")
-    else
-      df <- df
+    # if (df == 'NULL')
+    #   df <-
+    #   paste0("list(", paste(model$model_info$dfs, collapse = ","), ")")
+    # else
+    #   df <- df
     if (xfun == 'NULL')
       xfun <- NULL
     else
