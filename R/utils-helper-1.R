@@ -2867,3 +2867,55 @@ check_brms_args <- function(call, arg, prefix = NULL) {
   return(newcall)
 }
 
+
+
+#' An internal function to check and appropriately set brms exported functions
+#' 
+#' @details This function is used when no random effects are included and the
+#'   groupvar is NULL An an artificial groupvar created to maintain consistency
+#'   across various functions.
+#' 
+#' @param model model An object of class \code{bgmfit}.
+#' @param newdata A data frame
+#' @param IDvar A character string specifying the group identifier
+#' @param resp A character string specifying the response variable (default
+#'   \code{NULL})
+#' @param verbose A logical to indicate whether to print relevant information.
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+check_newdata_args <- function(model, newdata, IDvar, resp = NULL, verbose = FALSE) {
+  # This is when no random effects and this groupvar is NULL
+  # Therefore, an artificial group var created
+  # see also changes made to the get_idata function lines 17
+  
+  if (is.null(resp)) {
+    resp_rev_ <- resp
+  } else if (!is.null(resp)) {
+    resp_rev_ <- paste0("_", resp)
+  }
+  
+  
+  if (is.null(model$model_info$groupvar)) {
+    name_hypothetical_id <- paste0("id", resp_rev_)
+    model$model_info$groupvar <- name_hypothetical_id
+    newdata[[name_hypothetical_id]] <- as.factor("tempid")
+  } else if (!is.null(model$model_info$groupvar)) {
+    if(length(newdata[[model$model_info$groupvar]]) == 0) {
+      # name_hypothetical_id <- paste0("hy_id", resp_rev_)
+      if(length(IDvar) > 1) {
+        name_hypothetical_id <- IDvar[1] 
+      } else {
+        name_hypothetical_id <- IDvar
+      }
+      model$model_info$groupvar <- name_hypothetical_id
+      newdata[[name_hypothetical_id]] <- as.factor("tempid")
+    }
+  }
+  
+  newdata
+}
+
+

@@ -130,18 +130,24 @@ get.newdata <- function(model,
   # Therefore, an artificial group var created
   # see also changes made to the get_idata function lines 17
   
-  if (is.null(model$model_info$groupvar)) {
-    name_hypothetical_id <- paste0("hy_id", resp_rev_)
-    model$model_info$groupvar <- name_hypothetical_id
-    newdata[[name_hypothetical_id]] <- as.factor("tempid")
-  } else if (!is.null(model$model_info$groupvar)) {
-    if(length(newdata[[model$model_info$groupvar]]) == 0) {
-      name_hypothetical_id <- paste0("hy_id", resp_rev_)
-      model$model_info$groupvar <- name_hypothetical_id
-      newdata[[name_hypothetical_id]] <- as.factor("tempid")
-    }
-  }
+  # if (is.null(model$model_info$groupvar)) {
+  #   name_hypothetical_id <- paste0("id", resp_rev_)
+  #   model$model_info$groupvar <- name_hypothetical_id
+  #   newdata[[name_hypothetical_id]] <- as.factor("tempid")
+  # } else if (!is.null(model$model_info$groupvar)) {
+  #   if(length(newdata[[model$model_info$groupvar]]) == 0) {
+  #     # name_hypothetical_id <- paste0("hy_id", resp_rev_)
+  #     if(length(IDvar) > 1) {
+  #       name_hypothetical_id <- IDvar[1] 
+  #     } else {
+  #       name_hypothetical_id <- IDvar
+  #     }
+  #     model$model_info$groupvar <- name_hypothetical_id
+  #     newdata[[name_hypothetical_id]] <- as.factor("tempid")
+  #   }
+  # }
   
+  newdata <- check_newdata_args(model, newdata, IDvar, resp)
 
   
   if (!is.na(model$model_info$univariate_by)) {
@@ -682,12 +688,15 @@ get.newdata <- function(model,
               xrange = xrange
             )
         }
+        
       } # end if(idata_method == 'm2') {
       
       
-      
-      if (is.null(ipts))
+
+      if (is.null(ipts)) {
         newdata <- newdata
+      }
+        
       
       
       if (!is.null(ipts)) {
@@ -757,17 +766,40 @@ get.newdata <- function(model,
       )
       
       
+      #         newdata <- check_newdata_args(model, newdata, IDvar, resp)
+      
       j_b_names <- intersect(names(newdata), names(newdata.oo))
       j_b_names__ <- c(j_b_names, cov_numeric_vars)
       j_b_names__ <- unique(j_b_names__)
       
-      newdata <-
-        newdata %>% 
-        dplyr::left_join(., 
-                         newdata.oo %>%
-                           dplyr::select(dplyr::all_of(j_b_names__)),
-                         by = j_b_names)
-      newdata
+      if(idata_method == 'm1') {
+        newdata <-
+          newdata %>% 
+          dplyr::left_join(., 
+                           newdata.oo %>%
+                             dplyr::select(dplyr::all_of(j_b_names__)),
+                           by = j_b_names)
+        
+      } else if(idata_method == 'm2') {
+        if(length(IDvar) > 1) {
+          name_hypothetical_id <- IDvar[1]
+        } else {
+          name_hypothetical_id <- IDvar
+        }
+        if(length(unique(newdata[[name_hypothetical_id]])) > 1) {
+          newdata <-
+            newdata %>% 
+            dplyr::left_join(., 
+                             newdata.oo %>%
+                               dplyr::select(dplyr::all_of(j_b_names__)),
+                             by = j_b_names)
+        } else if(length(unique(newdata[[name_hypothetical_id]])) == 1) {
+          newdata <- newdata
+        }
+      } # else if(idata_method == 'm2') {
+      
+      
+      return(newdata)
     }
   
   
@@ -912,6 +944,10 @@ get_idata <-
     }
     
     id <- match(newdata[[idVar]], unique(newdata[[idVar]]))
+    
+    if(length( unique(newdata[[idVar]])) == 1) {
+      if(length.out == 1) stop("The argument 'ipts' should be > 1")
+    }
     
     last_time <- tapply(newdata[[timeVar]], id, max)
     first_time <- tapply(newdata[[timeVar]], id, min)

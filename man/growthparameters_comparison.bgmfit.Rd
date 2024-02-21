@@ -11,6 +11,7 @@
   ndraws = NULL,
   draw_ids = NULL,
   newdata = NULL,
+  datagrid = NULL,
   re_formula = NA,
   parameter = NULL,
   xrange = 1,
@@ -69,6 +70,21 @@ to be used in estimation (default \code{NULL}).}
 \item{newdata}{An optional data frame to be used in estimation. If
 \code{NULL} (default), the \code{newdata} is retrieved from the
 \code{model}.}
+
+\item{datagrid}{Generate a grid of user-specified values for use in the
+\code{newdata} argument in various functions of the \pkg{marginaleffects}
+package. This is useful to define where in the predictor space we want to
+evaluate the quantities of interest. See \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} for
+details. The default value for the \code{datagrid} is \code{NULL} implying
+that no custom grid is constructed. To set a data grid, the argument should
+be a data.frame constructed by using the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}
+function, or else a named list which are internally used for setting up the
+grid. For the user convenience, we also allow setting an empty list
+\code{datagrid = list()} in which case essential arguments such as
+\code{model}, \code{newdata} are taken up from the respective arguments
+specified elsewhere. Further, the level 1 predictor (such as age) and any
+covariate included in the model fit (e.g., gender) are also automatically
+inferred from the \code{model} object.}
 
 \item{re_formula}{Option to indicate whether or not to include the
 individual/group-level effects in the estimation. When \code{NA} (default),

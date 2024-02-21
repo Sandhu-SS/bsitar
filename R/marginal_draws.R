@@ -37,8 +37,8 @@
 #'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
 #' 
 #' @inherit growthparameters.bgmfit params
-#' @inherit brms::fitted.brmsfit params
 #' @inherit growthparameters_comparison.bgmfit params
+#' @inherit brms::fitted.brmsfit params
 #' @inherit marginaleffects::predictions params
 #' @inherit marginaleffects::plot_predictions params
 #' 
@@ -91,6 +91,7 @@ marginal_draws.bgmfit <-
            ndraws = NULL,
            draw_ids = NULL,
            newdata = NULL,
+           datagrid = NULL,
            re_formula = NA,
            parameter = NULL,
            xrange = 1,
@@ -115,7 +116,7 @@ marginal_draws.bgmfit <-
            deriv = 0,
            deriv_model = TRUE,
            type = NULL,
-           by = FALSE,
+           by = NULL,
            conf_level = 0.95,
            transform = NULL,
            byfun = NULL,
@@ -178,6 +179,7 @@ marginal_draws.bgmfit <-
     cov_   <- paste0('cov', resp_rev_)
     cov    <- model$model_info[[cov_]]
     uvarby <- model$model_info$univariate_by
+    
     
     # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
     # This was must for univariate_by
@@ -436,6 +438,7 @@ marginal_draws.bgmfit <-
     }
     
     
+    
     if(call_slopes) predictions_arguments$variables  <- set_variables
     predictions_arguments$by         <- set_group
     
@@ -453,8 +456,44 @@ marginal_draws.bgmfit <-
     }
     
     
+    # Set up datagrid
+    
+    if(!is.null(datagrid)) {
+      if(is.data.frame(datagrid)) {
+        set_datagrid <- datagrid
+        predictions_arguments$newdata <- set_datagrid
+      } else if(is.list(datagrid)) {
+        if(is.null(datagrid[['model']])) setmodel <- model else setmodel <- datagrid$model
+        if(is.null(datagrid[['newdata']])) setnewdata <- newdata else setnewdata <- datagrid$newdata
+        if(is.null(datagrid[['grid_type']])) setgrid_type <- "mean_or_mode" else setgrid_type <- datagrid$grid_type
+        if(is.null(datagrid[[xvar]])) setxvar <- newdata[[xvar]] else setxvar <- datagrid$newdata[[xvar]]
+        datagrid_arguments <- list(model = setmodel,
+                                   newdata = setnewdata,
+                                   grid_type = setgrid_type)
+        datagrid_arguments[[xvar]] <- setxvar
+        if(setgrid_type == "mean_or_mode") {
+          if(!isFALSE(set_group)) datagrid_arguments[['by']] <- set_group
+        } else if(setgrid_type == "balanced") {
+          if(!isFALSE(set_group)) datagrid_arguments[['by']] <- NULL
+          # correctly set predictions_arguments[['by']]  too 
+          predictions_arguments[['by']] <- setdiff(predictions_arguments[['by']], cov)
+        }
+        set_datagrid <- do.call(marginaleffects::datagrid, datagrid_arguments)
+        predictions_arguments$newdata <- set_datagrid
+      } else {
+        stop("datagrid should be a data frame or named list")
+      }
+    } else if(is.null(datagrid)) {
+      predictions_arguments$newdata <- predictions_arguments$newdata
+    }
+
+    # The datagrid argument is not allowed. It served its purpose by defining 
+    # the newdata. So remove it from the arguments
+    
+    predictions_arguments[['datagrid']] <- NULL
     
     
+
     if(call_predictions) {
       if(!plot) {
         if(!average) {

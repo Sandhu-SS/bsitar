@@ -41,6 +41,21 @@
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
+#' @param datagrid Generate a grid of user-specified values for use in the
+#'   \code{newdata} argument in various functions of the \pkg{marginaleffects}
+#'   package. This is useful to define where in the predictor space we want to
+#'   evaluate the quantities of interest. See [marginaleffects::datagrid()] for
+#'   details. The default value for the \code{datagrid} is \code{NULL} implying
+#'   that no custom grid is constructed. To set a data grid, the argument should
+#'   be a data.frame constructed by using the [marginaleffects::datagrid()]
+#'   function, or else a named list which are internally used for setting up the
+#'   grid. For the user convenience, we also allow setting an empty list
+#'   \code{datagrid = list()} in which case essential arguments such as
+#'   \code{model}, \code{newdata} are taken up from the respective arguments
+#'   specified elsewhere. Further, the level 1 predictor (such as age) and any
+#'   covariate included in the model fit (e.g., gender) are also automatically
+#'   inferred from the \code{model} object.
+#' 
 #' @param parameter A single character string, or a character vector specifying
 #'   the growth parameter(s) to be estimated. Options are \code{'tgv'} (takeoff
 #'   growth velocity), \code{'atgv'} (age at takeoff growth velocity),
@@ -116,6 +131,7 @@
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
 #' @inheritParams  marginaleffects::avg_comparisons
+#' @inheritParams  marginaleffects::datagrid
 #'
 #' @return A data frame objects with estimates and CIs for computed parameter(s)
 #' 
@@ -148,6 +164,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    ndraws = NULL,
                                    draw_ids = NULL,
                                    newdata = NULL,
+                                   datagrid = NULL,
                                    re_formula = NA,
                                    parameter = NULL,
                                    xrange = 1,
@@ -606,6 +623,51 @@ growthparameters_comparison.bgmfit <- function(model,
     comparisons_arguments$comparison <- gparms_fun
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    
+    
+    
+    
+    
+    # Set up datagrid
+    
+    if(!is.null(datagrid)) {
+      if(is.data.frame(datagrid)) {
+        set_datagrid <- datagrid
+        comparisons_arguments$newdata <- set_datagrid
+      } else if(is.list(datagrid)) {
+        if(is.null(datagrid[['model']])) setmodel <- model else setmodel <- datagrid$model
+        if(is.null(datagrid[['newdata']])) setnewdata <- newdata else setnewdata <- datagrid$newdata
+        if(is.null(datagrid[['grid_type']])) setgrid_type <- "mean_or_mode" else setgrid_type <- datagrid$grid_type
+        if(is.null(datagrid[[xvar]])) setxvar <- newdata[[xvar]] else setxvar <- datagrid$newdata[[xvar]]
+        datagrid_arguments <- list(model = setmodel,
+                                   newdata = setnewdata,
+                                   grid_type = setgrid_type)
+        datagrid_arguments[[xvar]] <- setxvar
+        if(setgrid_type == "mean_or_mode") {
+          if(!isFALSE(set_group)) datagrid_arguments[['by']] <- set_group
+        } else if(setgrid_type == "balanced") {
+          if(!isFALSE(set_group)) datagrid_arguments[['by']] <- NULL
+          # correctly set comparisons_arguments[['by']]  too 
+          comparisons_arguments[['by']] <- NULL
+        }
+        set_datagrid <- do.call(marginaleffects::datagrid, datagrid_arguments)
+        comparisons_arguments$newdata <- set_datagrid
+      } else {
+        stop("datagrid should be a data frame or named list")
+      }
+    } else if(is.null(datagrid)) {
+      comparisons_arguments$newdata <- comparisons_arguments$newdata
+    }
+    
+    # The datagrid argument is not allowed. It served its purpose by defining 
+    # the newdata. So remove it from the arguments
+    
+    comparisons_arguments[['datagrid']] <- NULL
+    
+    
+    
+    
+    
     
     suppressWarnings({
       if(!average) {
