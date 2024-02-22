@@ -23,7 +23,7 @@
 #'
 #' @param plot A logical to specify whether to plot predictions by calling the
 #'   [marginaleffects::plot_predictions()] function (\code{FALSE}) or not
-#'   (\code{FALSE}). if \code{FALSE} (default), then
+#'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
 #'   are called to compute predictions (see \code{average} for details)
 #' 
@@ -36,11 +36,11 @@
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
 #'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
 #' 
-#' @inherit growthparameters.bgmfit params
-#' @inherit growthparameters_comparison.bgmfit params
-#' @inherit brms::fitted.brmsfit params
-#' @inherit marginaleffects::predictions params
-#' @inherit marginaleffects::plot_predictions params
+#' @inheritParams growthparameters.bgmfit
+#' @inheritParams growthparameters_comparison.bgmfit
+#' @inheritParams brms::fitted.brmsfit
+#' @inheritParams marginaleffects::predictions
+#' @inheritParams marginaleffects::plot_predictions
 #' 
 #' @param ... Additional arguments passed to the [brms::fitted.brmsfit()] 
 #' function. Please see \code{brms::fitted.brmsfit()} for details on 
@@ -441,6 +441,8 @@ marginal_draws.bgmfit <-
     
     if(call_slopes) predictions_arguments$variables  <- set_variables
     predictions_arguments$by         <- set_group
+    
+    if(is.null(predictions_arguments$by)) predictions_arguments$by < 'NULL'
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
 

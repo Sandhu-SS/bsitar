@@ -1,43 +1,15 @@
 
 
-#' Compare growth parameters
+#' Compare growth curves
 #' 
-#'@description The \strong{growthparameters_comparison()} function estimates and
-#'  compare growth parameters such as peak growth velocity and the age at peak
-#'  growth velocity. This function is a wrapper around the
+#'@description The \strong{marginal_comparison()} function estimates and
+#'  compare growth curves such as distance and velocity. This function is a wrapper around the
 #'  [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
 #'  The [marginaleffects::comparisons()] computes unit-level (conditional)
 #'  estimates whereas [marginaleffects::avg_comparisons()] return average
 #'  (marginal) estimates. A detailed explanation is available
-#'  [here](https://marginaleffects.com). Note that for the current use case,
-#'  i.e., to estimate and compare growth parameters, the arguments
-#'  \code{variables} and \code{comparion} of [marginaleffects::comparisons()]
-#'  and [marginaleffects::avg_comparisons()] are modified (see below).
-#'  Furthermore, comparison of growth parameters is performed via the
-#'  \code{hypothesis} argument of the [marginaleffects::comparisons()] and
-#'  [marginaleffects::avg_comparisons()] functions.
-#'
-#'
-#' @details The \code{growthparameters_comparison} function estimates and
-#'   returns the following growth parameters:
-#' \itemize{
-#'   \item pgv  - peak growth velocity
-#'   \item apgv - age at peak growth velocity
-#'   \item tgv  - takeoff growth velocity
-#'   \item atgv - age at takeoff growth velocity
-#'   \item cgv  - cessation growth velocity
-#'   \item acgv - age at cessation growth velocity
-#' }
+#'  [here](https://marginaleffects.com). 
 #' 
-#' The takeoff growth velocity is the lowest velocity just before the peak
-#' starts and it indicates the beginning of the pubertal growth spurt. The
-#' cessation growth velocity indicates the end of the active pubertal growth
-#' spurt and is calculated as some percentage of the peak velocity (\code{pgv}).
-#' Typically, a 10 percent of the \code{pgv} is considered as a good indicator
-#' of the cessation of the active pubertal growth spurt
-#' \insertCite{Anna2022}{bsitar}. The percentage is controlled via the
-#' \code{acg_velocity} argument which takes a positive real value bounded
-#' between 0 and 1 (default \code{0.1} implying 10 percent). 
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
@@ -56,27 +28,8 @@
 #'   covariate included in the model fit (e.g., gender) are also automatically
 #'   inferred from the \code{model} object.
 #' 
-#' @param parameter A single character string, or a character vector specifying
-#'   the growth parameter(s) to be estimated. Options are \code{'tgv'} (takeoff
-#'   growth velocity), \code{'atgv'} (age at takeoff growth velocity),
-#'   \code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
-#'   velocity), \code{'cgv'} (cessation growth velocity), and \code{'acgv'} (age
-#'   at cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
-#'   (default), age at peak growth velocity (\code{'apgv'}) is estimated where
-#'   when \code{parameter = 'all'}, all six parameters are estimated. Note that
-#'   option \code{'all'} can not be used when argument \code{by} is \code{TRUE}.
-#' 
-#' @param acg_velocity A real number to set the percentage of peak growth growth
-#'   velocity as the cessation velocity when estimating the \code{cgv} and
-#'   \code{acgv} growth parameters. The \code{acg_velocity} should be greater
-#'   than \code{0} and less than \code{1}. The default \code{acg_velocity =
-#'   0.10} indicates that a 10 per cent of the peak growth velocity will be used
-#'   to get the cessation velocity and the corresponding age at the cessation
-#'   velocity. For example if peak growth velocity estimate is \code{10
-#'   mm/year}, then cessation growth velocity is \code{1 mm/year}.
-#' 
 #' @param digits An integer (default \code{2}) to set the decimal places for the
-#'   estimated growth parameters. The \code{digits} is passed on to the
+#'   estimates. The \code{digits} is passed on to the
 #'   [base::round()] function.
 #'   
 #' @param average A logical to indicate whether to internally call the
@@ -90,42 +43,10 @@
 #'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::comparisons()] or [marginaleffects::avg_comparisons()]
 #'   are called to compute predictions (see \code{average} for details)
-#'
-#' @param variables For estimating growth parameters in the current use case,
-#'   the \code{variables} is the level 1 predictor such as
-#'   \code{age}/\code{time}. The \code{variables} is a named list where value is
-#'   set via the \code{esp} argument (default 1e-6). If \code{NULL}, the
-#'   \code{variables} is set internally by retrieving the relevant information
-#'   from the \code{model}. Otherwise, user can define it as follows:
-#'   \code{variables = list('x' = 1e-6)} where \code{'x'} is the level 1
-#'   predictor. Note that \code{variables = list('age' = 1e-6)} is the default
-#'   behavior for the \pkg{marginaleffects} because velocity is typically
-#'   calculated by differentiating the distance curve via \code{dydx} approach,
-#'   and therefore argument \code{deriv} is automatically set as \code{0} and
-#'   \code{deriv_model} as \code{FALSE}. If user want to estimate parameters
-#'   based on the model based first derivative, then argument \code{deriv} must
-#'   be set as \code{1} and internally argument \code{variables} is defined as
-#'   \code{variables = list('age' = 0)} i.e, original level 1 predictor
-#'   variable, \code{'x'}. It is important to consider that if default behavior
-#'   is used i.e, \code{deriv = 0} and \code{variables = list('x' = 1e-6)}, then
-#'   user can not pass additional arguments to the \code{variables} argument. On
-#'   the other hand, alternative approach i.e, \code{deriv = 0} and
-#'   \code{variables = list('x' = 0)}, additional options can be passed to the
-#'   [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()]
-#'   functions.
 #'   
 #' @param deriv A numeric to specify whether to estimate parameters based on the
 #'   differentiation of the distance curve or the model based first derivative.
 #'   Please see argument \code{variables} for more details.  
-#' 
-#' @param comparison For estimating growth parameters in the current use case,
-#'   options allowed for the \code{comparison} are \code{'difference'} and
-#'   \code{'differenceavg'}. Note that \code{comparison} is a placeholder and is
-#'   only used to setup the the internal function that estimates
-#'   \code{'parameter'} via [sitar::getPeak()], [sitar::getTakeoff()] and
-#'   [sitar::getTrough()] functions to estimate various growth parameters.
-#'   Options \code{'difference'} and \code{'differenceavg'} are internally
-#'   restructured according to the user specified \code{hypothesis} argument.
 #'   
 #' @param reformat A logical (default \code{TRUE}) to reformat the  output
 #'   returned by the \code{marginaleffects} as a data.frame with column names
@@ -135,6 +56,7 @@
 #'   \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
 #' 
 #' @inheritParams  growthparameters.bgmfit
+#' @inheritParams  marginal_draws.bgmfit
 #' @inheritParams  marginaleffects::comparisons
 #' @inheritParams  marginaleffects::avg_comparisons
 #' @inheritParams  marginaleffects::plot_comparisons
@@ -142,7 +64,7 @@
 #'
 #' @return A data frame objects with estimates and CIs for computed parameter(s)
 #' 
-#' @export growthparameters_comparison.bgmfit
+#' @export marginal_comparison.bgmfit
 #' @export
 #' 
 #' @seealso [marginaleffects::comparisons()]
@@ -167,19 +89,17 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' growthparameters_comparison(model, parameter = 'apgv', draw_ids = 1)
+#' marginal_comparison(model, parameter = 'apgv', draw_ids = 1)
 #' 
 #' 
-growthparameters_comparison.bgmfit <- function(model,
+marginal_comparison.bgmfit <- function(model,
                                    resp = NULL,
                                    ndraws = NULL,
                                    draw_ids = NULL,
                                    newdata = NULL,
                                    datagrid = NULL,
                                    re_formula = NA,
-                                   parameter = NULL,
                                    xrange = 1,
-                                   acg_velocity = 0.10,
                                    digits = 2,
                                    numeric_cov_at = NULL,
                                    aux_variables = NULL,
@@ -328,28 +248,7 @@ growthparameters_comparison.bgmfit <- function(model,
   `.` <- NULL;
   
   
-  allowed_parms <- c(
-    'atgv',
-    'tgv',
-    'apgv',
-    'pgv',
-    'acgv',
-    'cgv')
-  
-  
-  if (is.null(parameter)) {
-    parm <- 'apgv' 
-  } else if(parameter == 'all') {
-    parm <- allowed_parms
-  } else {
-    if(!parameter %in% allowed_parms) {
-      allowed_parms_err <- c(allowed_parms, 'all')
-      stop("Allowed parameter options are ", 
-           paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
-      )
-    }
-    parm <- parameter
-  }
+ 
   
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -398,17 +297,17 @@ growthparameters_comparison.bgmfit <- function(model,
   
   get_xcall <- function(xcall, scall) {
     scall <- scall[[length(scall)]]
-    if(any(grepl("growthparameters_comparison", scall, fixed = T)) |
-       any(grepl("growthparameters_comparison.bgmfit", scall, fixed = T))) {
-      xcall <- "growthparameters_comparison"
+    if(any(grepl("marginal_comparison", scall, fixed = T)) |
+       any(grepl("marginal_comparison.bgmfit", scall, fixed = T))) {
+      xcall <- "marginal_comparison"
     } else {
       xcall <- xcall
     } 
   }
   
   if(!is.null(model$xcall)) {
-    if(model$xcall == "growthparameters_comparison") {
-      xcall <- "growthparameters_comparison"
+    if(model$xcall == "marginal_comparison") {
+      xcall <- "marginal_comparison"
     }
   } else {
     scall <- sys.calls()
@@ -461,18 +360,12 @@ growthparameters_comparison.bgmfit <- function(model,
   full.args$newdata <- newdata
   
 
-  # arguments$newdata  <- newdata
-  # arguments[["..."]] <- NULL
-  # comparisons_arguments <- arguments
-  
   full.args[["..."]] <- NULL
   comparisons_arguments <- full.args
   
   exclude_args <- as.character(quote(
     c(
-      parameter,
       xrange,
-      acg_velocity,
       digits,
       numeric_cov_at,
       acg_asymptote,
@@ -540,16 +433,6 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-
-  allowed_comparison <- c('difference', 'differenceavg')
-  
-  if(!comparison %in% allowed_comparison) {
-    stop("Allowed comparison options are ", 
-         paste(paste0("'", allowed_comparison, "'"), collapse = ", ")
-         )
-  }
-  
-  
   if(comparison == 'differenceavg') {
     if(!average) {
       stop("For comparison = 'differenceavg' ", 
@@ -595,52 +478,14 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
  
-  if(!isFALSE(set_group)) {
-    if (length(parm) > 1) stop("For 'by' estimates/comparisons, please ",
-                               "\n ",
-                               " specificy only one parameter. ")
-  }
-  
-
-  if (acg_velocity >= 1 | acg_velocity <= 0) {
-    stop("The acg_velocity should be set between 0.01 and 0.99")
-  }
   
   
   
-  call_comparison_gparms_fun <- function(parm, eps, ...) {
-    gparms_fun = function(hi, lo, x, ...) {
-      if(deriv == 0) y <- (hi - lo) / eps
-      if(deriv > 0)  y <- (hi + lo) / 2
-      if (parm == 'apgv') {
-        out <- sitar::getPeak(x = x, y = y)[1]
-      } else if (parm == 'pgv') {
-        out <- sitar::getPeak(x = x, y = y)[2]
-      } else if (parm == 'atgv') {
-        out <- sitar::getTakeoff(x = x, y = y)[1]
-      } else if (parm == 'tgv') {
-        out <- sitar::getTakeoff(x = x, y = y)[2]
-      } else if (parm == 'acgv') {
-        cgv  <- acg_velocity * sitar::getPeak(x = x, y = y)[2]
-        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-        out <-  x[vcgi]
-      } else if (parm == 'cgv') {
-        cgv  <- acg_velocity * sitar::getPeak(x = x, y = y)[2]
-        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-        out <-  y[vcgi]
-      } else if (parm == 'xxxx') {
-        
-      } else {
-        stop('parm not valid')
-      }
-      out <- round(out, digits = digits)
-      out
-    } # gparms_fun
+  
     
     comparisons_arguments$variables  <- set_variables
     comparisons_arguments$by         <- set_group
-    comparisons_arguments$comparison <- gparms_fun
-    
+
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
     
@@ -707,43 +552,16 @@ growthparameters_comparison.bgmfit <- function(model,
       }
     })
     
-    return(out)
-  } # call_comparison_gparms_fun
+    out_sf <- out
   
   
-  
-  if(plot) {
-    return(call_comparison_gparms_fun(parm = parm, eps = eps))
-  }
   
 
-  if (length(parm) == 1) {
-    out_sf <- call_comparison_gparms_fun(parm = parm, eps = eps) %>% 
-      data.frame() %>% 
-      dplyr::mutate(!!as.symbol('parameter') := parm) %>% 
-      dplyr::relocate(!!as.symbol('parameter'))
-    
-  } else if (length(parm) > 1) {
-    list_cout <- list()
-    list_name <- list()
-    for (allowed_parmsi in parm) {
-      list_cout[[allowed_parmsi]] <-
-        call_comparison_gparms_fun(parm = allowed_parmsi, eps = eps)
-      if(nrow(list_cout[[allowed_parmsi]]) > 0) { # If fails, don't add par name
-        list_name[[allowed_parmsi]] <- allowed_parmsi
-      }
-    }
-    list_name2 <- do.call(rbind, list_name)
-    out_sf <- do.call(rbind, list_cout) %>% data.frame() 
-    out_sf <- out_sf %>% 
-      dplyr::mutate(!!as.symbol('parameter') := list_name2) %>% 
-      dplyr::relocate(!!as.symbol('parameter'))
-  }
   
-  out_sf <- out_sf %>% 
-    dplyr::rename(!!as.symbol('Parameter') := parameter) %>% 
+  
+  out_sf <- out_sf %>%
     dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
-                         ~ round(., digits = digits))) %>% 
+                         ~ round(., digits = digits))) %>%
     data.frame()
   
  
@@ -763,15 +581,11 @@ growthparameters_comparison.bgmfit <- function(model,
       data.frame()
     
     remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
-                      'predicted_hi', 'predicted')
+                      'predicted_hi', 'predicted', 'rowid')
     
     out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
     row.names(out_sf) <- NULL
-    attr(out_sf$Parameter, "dimnames") <- NULL
   }
-   
-  out_sf <- out_sf %>% 
-    dplyr::mutate(dplyr::across(dplyr::all_of('Parameter'), toupper))
   
   return(out_sf)
 }
@@ -779,10 +593,10 @@ growthparameters_comparison.bgmfit <- function(model,
 
 
 
-#' @rdname growthparameters_comparison.bgmfit
+#' @rdname marginal_comparison.bgmfit
 #' @export
-growthparameters_comparison <- function(model, ...) {
-  UseMethod("growthparameters_comparison")
+marginal_comparison <- function(model, ...) {
+  UseMethod("marginal_comparison")
 }
 
 

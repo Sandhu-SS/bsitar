@@ -28,6 +28,8 @@
   future_session = "multisession",
   cores = NULL,
   average = FALSE,
+  plot = FALSE,
+  showlegends = NULL,
   variables = NULL,
   deriv = NULL,
   deriv_model = NULL,
@@ -215,6 +217,12 @@ number of cores avaialble minus one, i.e., \code{future::availableCores() -
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} function. If \code{FALSE} (default),
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} is called otherwise
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} when \code{average = TRUE}.}
+
+\item{plot}{A logical to specify whether to plot comparisons by calling the
+\code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}} function (\code{FALSE}) or not
+(\code{FALSE}). If \code{FALSE} (default), then
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} or \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
+are called to compute predictions (see \code{average} for details)}
 
 \item{variables}{For estimating growth parameters in the current use case,
 the \code{variables} is the level 1 predictor such as
@@ -454,6 +462,11 @@ growthparameters_comparison(model, parameter = 'apgv', draw_ids = 1)
 }
 \references{
 \insertAllCited{}
+}
+\seealso{
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
+\code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
