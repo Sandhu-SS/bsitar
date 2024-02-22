@@ -89,7 +89,12 @@
 #'   [marginaleffects::plot_comparisons()] function (\code{FALSE}) or not
 #'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::comparisons()] or [marginaleffects::avg_comparisons()]
-#'   are called to compute predictions (see \code{average} for details)
+#'   are called to compute predictions (see \code{average} for details).
+#'   
+#' @param showlegends An argument to specify whether to show legends
+#'   (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
+#'   \code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
+#'   NA}, and \code{FALSE} if \code{re_formula = NULL}. 
 #'
 #' @param variables For estimating growth parameters in the current use case,
 #'   the \code{variables} is the level 1 predictor such as
@@ -139,6 +144,7 @@
 #' @inheritParams  marginaleffects::avg_comparisons
 #' @inheritParams  marginaleffects::plot_comparisons
 #' @inheritParams  marginaleffects::datagrid
+#' @inheritParams  brms::fitted.brmsfit
 #'
 #' @return A data frame objects with estimates and CIs for computed parameter(s)
 #' 
@@ -177,6 +183,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    newdata = NULL,
                                    datagrid = NULL,
                                    re_formula = NA,
+                                   allow_new_levels = FALSE,
                                    parameter = NULL,
                                    xrange = 1,
                                    acg_velocity = 0.10,
@@ -443,7 +450,8 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
-                                  fargs = formals(), 
+                                  # fargs = formals(), 
+                                  fargs = arguments, 
                                   dargs = list(...), 
                                   verbose = verbose)
   

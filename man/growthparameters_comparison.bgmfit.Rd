@@ -13,6 +13,7 @@
   newdata = NULL,
   datagrid = NULL,
   re_formula = NA,
+  allow_new_levels = FALSE,
   parameter = NULL,
   xrange = 1,
   acg_velocity = 0.1,
@@ -99,6 +100,10 @@ in the estimation. The continuous covariates by default are set to their
 means (see \code{numeric_cov_at} for details) whereas factor covariates are
 left unaltered thereby allowing estimation of covariate specific population
 average and individual-specific growth parameter.}
+
+\item{allow_new_levels}{A flag indicating if new levels of group-level
+effects are allowed (defaults to \code{FALSE}). Only relevant if
+\code{newdata} is provided.}
 
 \item{parameter}{A single character string, or a character vector specifying
 the growth parameter(s) to be estimated. Options are \code{'tgv'} (takeoff

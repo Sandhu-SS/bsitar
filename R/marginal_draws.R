@@ -27,20 +27,15 @@
 #'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
 #'   are called to compute predictions (see \code{average} for details)
 #' 
-#' @param showlegends An argument to specify whether to show legends
-#'   (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
-#'   \code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
-#'   NA}, and \code{FALSE} if \code{re_formula = NULL}. 
-#' 
 #' @param deriv An integer to indicate whether to estimate distance curve or its
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
 #'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
 #' 
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams growthparameters_comparison.bgmfit
-#' @inheritParams brms::fitted.brmsfit
 #' @inheritParams marginaleffects::predictions
 #' @inheritParams marginaleffects::plot_predictions
+#' @inheritParams brms::fitted.brmsfit
 #' 
 #' @param ... Additional arguments passed to the [brms::fitted.brmsfit()] 
 #' function. Please see \code{brms::fitted.brmsfit()} for details on 
@@ -93,6 +88,7 @@ marginal_draws.bgmfit <-
            newdata = NULL,
            datagrid = NULL,
            re_formula = NA,
+           allow_new_levels = FALSE, 
            parameter = NULL,
            xrange = 1,
            acg_velocity = 0.10,
@@ -325,7 +321,8 @@ marginal_draws.bgmfit <-
     
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
-                                    fargs = formals(), 
+                                    # fargs = formals(), 
+                                    fargs = arguments, 
                                     dargs = list(...), 
                                     verbose = verbose)
     
@@ -493,7 +490,6 @@ marginal_draws.bgmfit <-
     # the newdata. So remove it from the arguments
     
     predictions_arguments[['datagrid']] <- NULL
-    
     
 
     if(call_predictions) {

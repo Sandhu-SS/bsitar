@@ -56,11 +56,13 @@
 #'   \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
 #' 
 #' @inheritParams  growthparameters.bgmfit
+#' @inheritParams  growthparameters_comparison.bgmfit
 #' @inheritParams  marginal_draws.bgmfit
 #' @inheritParams  marginaleffects::comparisons
 #' @inheritParams  marginaleffects::avg_comparisons
 #' @inheritParams  marginaleffects::plot_comparisons
 #' @inheritParams  marginaleffects::datagrid
+#' @inheritParams  brms::fitted.brmsfit
 #'
 #' @return A data frame objects with estimates and CIs for computed parameter(s)
 #' 
@@ -99,6 +101,7 @@ marginal_comparison.bgmfit <- function(model,
                                    newdata = NULL,
                                    datagrid = NULL,
                                    re_formula = NA,
+                                   allow_new_levels = FALSE,
                                    xrange = 1,
                                    digits = 2,
                                    numeric_cov_at = NULL,
@@ -342,7 +345,8 @@ marginal_comparison.bgmfit <- function(model,
   
   
   full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
-                                  fargs = formals(), 
+                                  # fargs = formals(), 
+                                  fargs = arguments, 
                                   dargs = list(...), 
                                   verbose = verbose)
   
@@ -360,7 +364,7 @@ marginal_comparison.bgmfit <- function(model,
   full.args$newdata <- newdata
   
 
-  full.args[["..."]] <- NULL
+  # full.args[["..."]] <- NULL
   comparisons_arguments <- full.args
   
   exclude_args <- as.character(quote(
@@ -399,15 +403,7 @@ marginal_comparison.bgmfit <- function(model,
   
   if (!is.null(variables)) {
     if (!is.list(variables)) {
-      stop("'variables' argument must be a named list and the first ", 
-           "element should be ", xvar, 
-           "\n ",
-           " specified as follows ",
-           "\n ",
-          " variables = list(", xvar, "=", "1e-6",")",
-          "\n ",
-          " where 1e-6 is the default value for the argument 'eps'"
-           )
+      set_variables <- variables
     } else if (is.list(variables)) {
       set_variables <- variables
       if(is.null(set_variables[[xvar]])) {
@@ -429,35 +425,6 @@ marginal_comparison.bgmfit <- function(model,
     names(set_variables) <- xvar
   } 
   
-  
-  
-  
-  
-  if(comparison == 'differenceavg') {
-    if(!average) {
-      stop("For comparison = 'differenceavg' ", 
-           ", the argument 'average' should be TRUE")
-    }
-    if(is.null(hypothesis)) {
-      stop("For comparison = 'differenceavg' ", 
-           ", the argument 'hypothesis' is required.",
-           " \n",
-           "An example of Non-linear hypothesis testing via hypothesis",
-           " argument is as follows:",
-           " \n",
-           "hypothesis = 'b2 - b1 = 0.2'",
-           " where b2 and b1 are row indices",
-           " \n",
-           "(see https://marginaleffects.com/vignettes/comparisons.html)",
-           " for more details",
-           " \n",
-           "Note that user need to set comparison = 'differenceavg'",
-           " and average = TRUE when ",
-           " \n", 
-           "testing non-linear hypothesis as described above"
-           )
-    }
-  }
   
   
   if(is.null(by)) {
