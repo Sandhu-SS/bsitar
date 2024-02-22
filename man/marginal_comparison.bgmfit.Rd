@@ -203,50 +203,33 @@ number of cores avaialble minus one, i.e., \code{future::availableCores() -
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} or \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
 are called to compute predictions (see \code{average} for details)}
 
-\item{variables}{Focal variables
-\itemize{
-\item \code{NULL}: compute comparisons for all the variables in the model object (can be slow).
-\item Character vector: subset of variables (usually faster).
-\item Named list: names identify the subset of variables of interest, and values define the type of contrast to compute. Acceptable values depend on the variable type:
-\itemize{
-\item Factor or character variables:
-\itemize{
-\item "reference": Each factor level is compared to the factor reference (base) level
-\item "all": All combinations of observed levels
-\item "sequential": Each factor level is compared to the previous factor level
-\item "pairwise": Each factor level is compared to all other levels
-\item "minmax": The highest and lowest levels of a factor.
-\item "revpairwise", "revreference", "revsequential": inverse of the corresponding hypotheses.
-\item Vector of length 2 with the two values to compare.
-\item Data frame with the same number of rows as \code{newdata}, with two columns of "lo" and "hi" values to compare.
-\item Function that accepts a vector and returns a data frame with two columns of "lo" and "hi" values to compare. See examples below.
-}
-\item Logical variables:
-\itemize{
-\item NULL: contrast between TRUE and FALSE
-\item Data frame with the same number of rows as \code{newdata}, with two columns of "lo" and "hi" values to compare.
-\item Function that accepts a vector and returns a data frame with two columns of "lo" and "hi" values to compare. See examples below.
-}
-\item Numeric variables:
-\itemize{
-\item Numeric of length 1: Forward contrast for a gap of \code{x}, computed between the observed value and the observed value plus \code{x}. Users can set a global option to get a "center" or "backward" contrast instead: \code{options(marginaleffects_contrast_direction="center")}
-\item Numeric vector of length 2: Contrast between the largest and the smallest elements of the \code{x} vector.
-\item Data frame with the same number of rows as \code{newdata}, with two columns of "lo" and "hi" values to compare.
-\item Function that accepts a vector and returns a data frame with two columns of "lo" and "hi" values to compare. See examples below.
-\item "iqr": Contrast across the interquartile range of the regressor.
-\item "sd": Contrast across one standard deviation around the regressor mean.
-\item "2sd": Contrast across two standard deviations around the regressor mean.
-\item "minmax": Contrast between the maximum and the minimum values of the regressor.
-}
-\item Examples:
-\itemize{
-\item \code{variables = list(gear = "pairwise", hp = 10)}
-\item \code{variables = list(gear = "sequential", hp = c(100, 120))}
-\item \verb{variables = list(hp = \\(x) data.frame(low = x - 5, high = x + 10))}
-\item See the Examples section below for more.
-}
-}
-}}
+\item{showlegends}{An argument to specify whether to show legends
+(\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
+\code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
+  NA}, and \code{FALSE} if \code{re_formula = NULL}.}
+
+\item{variables}{For estimating growth parameters in the current use case,
+the \code{variables} is the level 1 predictor such as
+\code{age}/\code{time}. The \code{variables} is a named list where value is
+set via the \code{esp} argument (default 1e-6). If \code{NULL}, the
+\code{variables} is set internally by retrieving the relevant information
+from the \code{model}. Otherwise, user can define it as follows:
+\code{variables = list('x' = 1e-6)} where \code{'x'} is the level 1
+predictor. Note that \code{variables = list('age' = 1e-6)} is the default
+behavior for the \pkg{marginaleffects} because velocity is typically
+calculated by differentiating the distance curve via \code{dydx} approach,
+and therefore argument \code{deriv} is automatically set as \code{0} and
+\code{deriv_model} as \code{FALSE}. If user want to estimate parameters
+based on the model based first derivative, then argument \code{deriv} must
+be set as \code{1} and internally argument \code{variables} is defined as
+\code{variables = list('age' = 0)} i.e, original level 1 predictor
+variable, \code{'x'}. It is important to consider that if default behavior
+is used i.e, \code{deriv = 0} and \code{variables = list('x' = 1e-6)}, then
+user can not pass additional arguments to the \code{variables} argument. On
+the other hand, alternative approach i.e, \code{deriv = 0} and
+\code{variables = list('x' = 0)}, additional options can be passed to the
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
+functions.}
 
 \item{deriv}{A numeric to specify whether to estimate parameters based on the
 differentiation of the distance curve or the model based first derivative.
