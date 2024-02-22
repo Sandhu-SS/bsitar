@@ -325,8 +325,7 @@ optimize_model.bgmfit <- function(model,
   add_summary_waic <- NULL
   Count <- Est.Error <- Inference <- Min..n_eff <- where <- NULL
   Min.n_eff <- Percent <- Proportion <- Range <- SE <- NULL
-  optimize_df_x_yx <<- optimize_df_x_y
-  
+
   combine_summaries <- function(model_list, summary_obj) {
     ic = 0
     list_c <- list()
@@ -1031,42 +1030,101 @@ optimize_model.bgmfit <- function(model,
       }
       
       if (!is.null(add_fit_criteria)) {
-        fit <- add_citeria_fun(
-          fit,
-          add_fit_criteria = add_fit_criteria,
-          add_bayes_R =  NULL,
-          resp = setresp,
-          digits = digits,
-          df = df,
-          xfun_print = xfun_print,
-          yfun_print = yfun_print,
-          usesavedfuns = usesavedfuns,
-          clearenvfuns = clearenvfuns,
-          envir = envir
+        enverr. <- environment()
+        assign('err.', FALSE, envir = enverr.)
+        tryCatch(
+          expr = {
+            fit_ac <- add_citeria_fun(
+              fit,
+              add_fit_criteria = add_fit_criteria,
+              add_bayes_R =  NULL,
+              resp = setresp,
+              digits = digits,
+              df = df,
+              xfun_print = xfun_print,
+              yfun_print = yfun_print,
+              usesavedfuns = usesavedfuns,
+              clearenvfuns = clearenvfuns,
+              envir = envir
+            )
+          },
+          error = function(e) {
+            assign('err.', TRUE, envir = enverr.)
+          }
         )
-      }
+        err. <- get('err.', envir = enverr.)
+        if (err.) {
+          fit <- fit
+        } else {
+          fit <- fit_ac
+        } # tryCatch
+        # fit <- add_citeria_fun(
+        #   fit,
+        #   add_fit_criteria = add_fit_criteria,
+        #   add_bayes_R =  NULL,
+        #   resp = setresp,
+        #   digits = digits,
+        #   df = df,
+        #   xfun_print = xfun_print,
+        #   yfun_print = yfun_print,
+        #   usesavedfuns = usesavedfuns,
+        #   clearenvfuns = clearenvfuns,
+        #   envir = envir
+        # )
+      } # if (!is.null(add_fit_criteria)) {
       
       if (!is.null(add_bayes_R)) {
-        fit <- add_citeria_fun(
-          fit,
-          add_fit_criteria = NULL,
-          add_bayes_R =  add_bayes_R,
-          resp = setresp,
-          digits = digits,
-          df = df,
-          xfun_print = xfun_print,
-          yfun_print = yfun_print,
-          usesavedfuns = usesavedfuns,
-          clearenvfuns = clearenvfuns,
-          envir = envir
+        enverr. <- environment()
+        assign('err.', FALSE, envir = enverr.)
+        tryCatch(
+          expr = {
+            fit_rs <- add_citeria_fun(
+              fit,
+              add_fit_criteria = NULL,
+              add_bayes_R =  add_bayes_R,
+              resp = setresp,
+              digits = digits,
+              df = df,
+              xfun_print = xfun_print,
+              yfun_print = yfun_print,
+              usesavedfuns = usesavedfuns,
+              clearenvfuns = clearenvfuns,
+              envir = envir
+            )
+          },
+          error = function(e) {
+            assign('err.', TRUE, envir = enverr.)
+          }
         )
-      }
+        err. <- get('err.', envir = enverr.)
+        if (err.) {
+          fit <- fit
+        } else {
+          fit <- fit_rs
+        } # tryCatch
+        # fit <- add_citeria_fun(
+        #   fit,
+        #   add_fit_criteria = NULL,
+        #   add_bayes_R =  add_bayes_R,
+        #   resp = setresp,
+        #   digits = digits,
+        #   df = df,
+        #   xfun_print = xfun_print,
+        #   yfun_print = yfun_print,
+        #   usesavedfuns = usesavedfuns,
+        #   clearenvfuns = clearenvfuns,
+        #   envir = envir
+        # )
+      } # if (!is.null(add_bayes_R)) {
     } # if(!is.null(fit)) {
+    
     return(fit)
   }
   
+  
   optimize_list <- lapply(1:nrow(optimize_df_x_y), function(.x)
     optimize_fun(.x, model))
+  
   
   if(!is.null(optimize_list[[1]])) {
     loo_fit             <- combine_summaries(optimize_list, 'summary_loo')
