@@ -6295,13 +6295,21 @@ bsitar <- function(x,
       }
     
     
+    if(is.null(set_self_priors)) {
+      temp_prior <- brmspriors
+    } else if(!is.null(set_self_priors)) {
+      temp_prior <- set_self_priors
+    }
+      
+  
+      
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
-                                    prior = brmspriors,
+                                    prior = temp_prior,
                                     data = brmsdata)
     temp_standata2 <- brms::make_standata(formula = bformula,
                                     stanvars = bstanvars,
-                                    prior = brmspriors,
+                                    prior = temp_prior,
                                     data = brmsdata)
     
     
@@ -6977,7 +6985,6 @@ bsitar <- function(x,
   brmspriors <-   tempprior_hold
   
   
-  
   if(!is.null(set_self_priors) & is.null(set_replace_priors)) {
     brmspriors <- set_self_priors
   }
@@ -7070,10 +7077,12 @@ bsitar <- function(x,
   }
   
 
+  
   get_priors_eval_numeric <- TRUE
   if(get_priors_eval & get_priors_eval_numeric) {
     get_priors_eval_out <- priors_to_textdata(spriors = brm_args$prior,
-                                                  sdata = sdata)
+                                                  sdata = sdata,
+                                              raw = TRUE)
   }
   
   if(get_priors_eval & !get_priors_eval_numeric) {

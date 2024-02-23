@@ -227,7 +227,12 @@ number of cores avaialble minus one, i.e., \code{future::availableCores() -
 \code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}} function (\code{FALSE}) or not
 (\code{FALSE}). If \code{FALSE} (default), then
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} or \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
-are called to compute predictions (see \code{average} for details)}
+are called to compute predictions (see \code{average} for details).}
+
+\item{showlegends}{An argument to specify whether to show legends
+(\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
+\code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
+  NA}, and \code{FALSE} if \code{re_formula = NULL}.}
 
 \item{variables}{For estimating growth parameters in the current use case,
 the \code{variables} is the level 1 predictor such as

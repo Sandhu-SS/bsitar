@@ -936,6 +936,9 @@ rename <- function(x,
 #' @param viewer A logical (default \code{FALSE}) to indicate whether to display
 #'   the output in R viewer. Currently ignored to avoid dependency on the 'gt'
 #'   package.
+#' @param raw A logical (default \code{FALSE}) to indicate whether to return
+#'   the output in original format.
+#'   
 #' @keywords internal
 #' @return A data frame object.
 #' @noRd
@@ -952,7 +955,9 @@ priors_to_textdata <- function(model,
                                 sort_coefficient = c("Intercept"),
                                 sort_class = c("b", "sd", "cor"),
                                 digits = 2,
-                                viewer = FALSE) {
+                                viewer = FALSE,
+                                raw = FALSE
+                               ) {
   arguments <- as.list(match.call())[-1]
 
   if (missing(model)) {
@@ -999,7 +1004,8 @@ priors_to_textdata <- function(model,
     x
   }
 
-  spriors <- spriors %>% dplyr::filter(source == 'user')
+  if(!raw) spriors <- spriors %>% dplyr::filter(source == 'user')
+  if( raw) prior_name_asit <- TRUE
 
   env_ <- environment()
   list2env(sdata, envir =  env_)
@@ -1014,7 +1020,7 @@ priors_to_textdata <- function(model,
       } else if (!is.na(prior_name) & prior_name == 'lkj_corr_cholesky') {
         prior_name_case <- 'LKJ'
       } else {
-        prior_name_case <- firstup(prior_name)
+        if(!raw) prior_name_case <- firstup(prior_name)
       }
     }
 
@@ -1041,6 +1047,11 @@ priors_to_textdata <- function(model,
     }
     spriors[i, ]$prior <- getxit_7
   }
+  
+  
+  if(raw) {
+    return(spriors)
+  }
 
   spriors <-
     spriors %>% data.frame() %>% dplyr::select(-c('lb', 'ub', 'source'))
@@ -1063,7 +1074,9 @@ priors_to_textdata <- function(model,
         spriors %>%  dplyr::mutate(group = gsub(gsub_groupi, "" , group))
     }
   }
-
+  
+  
+  
   spriors <- spriors %>% dplyr::relocate(nlpar, coef,
                                          class, prior,
                                          group, resp,

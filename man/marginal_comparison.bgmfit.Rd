@@ -248,18 +248,14 @@ which need velocity curve such as \code{growthparameters()} and
 the distance curve (i.e., fitted values) such as \code{loo_validation()}
 and \code{plot_ppc()}.}
 
-\item{comparison}{How should pairs of predictions be compared? Difference, ratio, odds ratio, or user-defined functions.
-\itemize{
-\item string: shortcuts to common contrast functions.
-\itemize{
-\item Supported shortcuts strings: difference, differenceavg, differenceavgwts, dydx, eyex, eydx, dyex, dydxavg, eyexavg, eydxavg, dyexavg, dydxavgwts, eyexavgwts, eydxavgwts, dyexavgwts, ratio, ratioavg, ratioavgwts, lnratio, lnratioavg, lnratioavgwts, lnor, lnoravg, lnoravgwts, lift, liftavg, expdydx, expdydxavg, expdydxavgwts
-\item See the Comparisons section below for definitions of each transformation.
-}
-\item function: accept two equal-length numeric vectors of adjusted predictions (\code{hi} and \code{lo}) and returns a vector of contrasts of the same length, or a unique numeric value.
-\itemize{
-\item See the Transformations section below for examples of valid functions.
-}
-}}
+\item{comparison}{For estimating growth parameters in the current use case,
+options allowed for the \code{comparison} are \code{'difference'} and
+\code{'differenceavg'}. Note that \code{comparison} is a placeholder and is
+only used to setup the the internal function that estimates
+\code{'parameter'} via \code{\link[sitar:getPeakTrough]{sitar::getPeak()}}, \code{\link[sitar:getPeakTrough]{sitar::getTakeoff()}} and
+\code{\link[sitar:getPeakTrough]{sitar::getTrough()}} functions to estimate various growth parameters.
+Options \code{'difference'} and \code{'differenceavg'} are internally
+restructured according to the user specified \code{hypothesis} argument.}
 
 \item{type}{string indicates the type (scale) of the predictions used to
 compute contrasts or slopes. This can differ based on the model
