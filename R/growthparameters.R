@@ -397,7 +397,7 @@ growthparameters.bgmfit <- function(model,
         usesavedfuns <- FALSE
       }
     }
-  } else { # if(!is.null(usesavedfuns)) {
+  } else {
     if(!usesavedfuns) {
       if(expose_function) {
         model <- expose_model_functions(model, envir = envir)

@@ -2,18 +2,25 @@
 
 #' Add model fit criteria to model
 #' 
-#' @details The \strong{add_model_criterion()} is a wrapper around the
-#'   [brms::add_criterion()].
+#' @description The \strong{add_model_criterion()} is a wrapper around the
+#'   [brms::add_criterion()]. Note that arguments \code{compare} and
+#'   \code{pointwise} are relevant only for [brms::add_loo] whereas arguments
+#'   \code{summary}, \code{robust}, and \code{probs} ignored except for the
+#'   [brms::bayes_R2()].
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @inherit growthparameters.bgmfit params
+#' @inheritParams growthparameters.bgmfit
 #' @inherit brms::add_criterion.brmsfit params description return
-#' @inherit fitted_draws.bgmfit params
-#' 
+#' @inheritParams brms::bayes_R2.brmsfit
+#' @inheritParams brms::waic.brmsfit
+#' @inheritParams fitted_draws.bgmfit
+#'  
 #' @return An object of class class \code{bgmfit} with fit criteria added.
 #' 
 #' @export
+#' @seealso [brms::add_loo] [brms::add_loo] [brms::add_ic()] [brms::add_waic()]
+#'   [brms::bayes_R2()]
 #' 
 #' @inherit berkeley author
 #'
@@ -28,7 +35,7 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' model <- add_model_criterion(model, criterion = c("loo", "waic"))
+#' model <- add_model_criterion(model, criterion = c("waic"))
 #' 
 #' }
 #' 
@@ -37,6 +44,12 @@ add_model_criterion.bgmfit <-
            criterion = c("loo", "waic"),
            ndraws = NULL,
            draw_ids = NULL,
+           compare = TRUE,
+           pointwise = FALSE,
+           model_names = NULL,
+           summary = TRUE,
+           robust = FALSE,
+           probs = c(0.025, 0.975),
            newdata = NULL,
            resp = NULL,
            deriv_model = NULL,

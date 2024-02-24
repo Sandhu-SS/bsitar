@@ -109,14 +109,6 @@ fitted_draws.bgmfit <-
     } else {
       envir <- parent.frame()
     }
-    
-    # if(is.null(envir)) {
-    #   if(!is.null(model$model_info$exefuns[[1]])) {
-    #     envir <- environment(model$model_info$exefuns[[1]])
-    #   } else {
-    #     envir <- parent.frame()
-    #   }
-    # }
    
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
@@ -126,16 +118,10 @@ fitted_draws.bgmfit <-
           model <- expose_model_functions(model, envir = envir)
           usesavedfuns <- TRUE
         } else if(!expose_function) {
-          # if(!is.null(model$model_info$funlist_r)) {
-          #   model <- expose_model_functions(model, expose = F, envir = envir)
-          #   usesavedfuns <- TRUE
-          # } else if(is.null(model$model_info$funlist_r)) {
-          #   usesavedfuns <- FALSE
-          # }
           usesavedfuns <- FALSE
         }
       }
-    } else { # if(!is.null(usesavedfuns)) {
+    } else {
       if(!usesavedfuns) {
         if(expose_function) {
           model <- expose_model_functions(model, envir = envir)

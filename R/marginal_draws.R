@@ -88,7 +88,8 @@ marginal_draws.bgmfit <-
            newdata = NULL,
            datagrid = NULL,
            re_formula = NA,
-           allow_new_levels = FALSE, 
+           allow_new_levels = FALSE,
+           sample_new_levels = "gaussian", 
            parameter = NULL,
            xrange = 1,
            acg_velocity = 0.10,
@@ -491,6 +492,16 @@ marginal_draws.bgmfit <-
     
     predictions_arguments[['datagrid']] <- NULL
     
+    # Somehow draw_ids not passed correctly if not specified explicitly as arg
+    get_draw_ids <- predictions_arguments[['draw_ids']]
+    if(is.null(eval(get_draw_ids))) {
+      set_draw_ids <- NULL
+    } else if(is.numeric(eval(get_draw_ids))) {
+      set_draw_ids <- get_draw_ids
+    } else if(!eval(get_draw_ids)) {
+      set_draw_ids <- NULL
+    }
+   predictions_arguments[['draw_ids']] <- set_draw_ids
 
     if(call_predictions) {
       if(!plot) {

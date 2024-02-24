@@ -71,7 +71,7 @@ plot_ppc.bgmfit <-
           usesavedfuns <- FALSE
         }
       }
-    } else { # if(!is.null(usesavedfuns)) {
+    } else { 
       if(!usesavedfuns) {
         if(expose_function) {
           model <- expose_model_functions(model, envir = envir)

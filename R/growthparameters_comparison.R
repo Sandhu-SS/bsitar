@@ -184,6 +184,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    datagrid = NULL,
                                    re_formula = NA,
                                    allow_new_levels = FALSE,
+                                   sample_new_levels = "gaussian",
                                    parameter = NULL,
                                    xrange = 1,
                                    acg_velocity = 0.10,
@@ -696,6 +697,17 @@ growthparameters_comparison.bgmfit <- function(model,
     # the newdata. So remove it from the arguments
     
     comparisons_arguments[['datagrid']] <- NULL
+    
+    # Somehow draw_ids not passed correctly if not specified explicitly as arg
+    get_draw_ids <- comparisons_arguments[['draw_ids']]
+    if(is.null(eval(get_draw_ids))) {
+      set_draw_ids <- NULL
+    } else if(is.numeric(eval(get_draw_ids))) {
+      set_draw_ids <- get_draw_ids
+    } else if(!eval(get_draw_ids)) {
+      set_draw_ids <- NULL
+    }
+    comparisons_arguments[['draw_ids']] <- set_draw_ids
     
     
     suppressWarnings({

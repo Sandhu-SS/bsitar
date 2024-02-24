@@ -337,7 +337,7 @@ plot_curves.bgmfit <- function(model,
         usesavedfuns <- FALSE
       }
     }
-  } else { # if(!is.null(usesavedfuns)) {
+  } else { 
     if(!usesavedfuns) {
       if(expose_function) {
         model <- expose_model_functions(model, envir = envir)
@@ -350,14 +350,6 @@ plot_curves.bgmfit <- function(model,
   }
   
   
-  # Move down NULL where setting the arguments
-  # if(system.file(package='ggplot2') == "") {
-  #   stop("Please install 'ggplot2' package before calling the 'plot_curves'")
-  # }
-  # if(system.file(package='jtools') == "") {
-  #   stop("Please install 'ggplot2' package before calling the 'plot_curves'")
-  # }
-
   # Initiate non formalArgs()
   xvar <- NULL;
   yvar <- NULL;

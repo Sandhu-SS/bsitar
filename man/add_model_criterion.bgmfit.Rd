@@ -10,6 +10,12 @@
   criterion = c("loo", "waic"),
   ndraws = NULL,
   draw_ids = NULL,
+  compare = TRUE,
+  pointwise = FALSE,
+  model_names = NULL,
+  summary = TRUE,
+  robust = FALSE,
+  probs = c(0.025, 0.975),
   newdata = NULL,
   resp = NULL,
   deriv_model = NULL,
@@ -38,6 +44,34 @@ be used in estimation. If \code{NULL} (default), all draws are used.}
 
 \item{draw_ids}{An integer indicating the specific posterior draw(s)
 to be used in estimation (default \code{NULL}).}
+
+\item{compare}{A flag indicating if the information criteria
+of the models should be compared to each other
+via \code{\link[brms]{loo_compare}}.}
+
+\item{pointwise}{A flag indicating whether to compute the full
+log-likelihood matrix at once or separately for each observation.
+The latter approach is usually considerably slower but
+requires much less working memory. Accordingly, if one runs
+into memory issues, \code{pointwise = TRUE} is the way to go.}
+
+\item{model_names}{If \code{NULL} (the default) will use model names
+derived from deparsing the call. Otherwise will use the passed
+values as model names.}
+
+\item{summary}{A logical indicating whether only the estimate should be
+computed (\code{TRUE}, default), or estimate along with SE and CI should be
+returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
+increase the computation time.}
+
+\item{robust}{A logical to specify the summarize options. If \code{FALSE}
+(the default) the mean is used as the measure of central tendency and the
+standard deviation as the measure of variability. If \code{TRUE}, the
+median and the median absolute deviation (MAD) are applied instead. Ignored
+if \code{summary} is \code{FALSE}.}
+
+\item{probs}{The percentiles to be computed by the \code{quantile}
+function. Only used if \code{summary} is \code{TRUE}.}
 
 \item{newdata}{An optional data frame to be used in estimation. If
 \code{NULL} (default), the \code{newdata} is retrieved from the
@@ -107,11 +141,11 @@ derivatives such as velocity curve.}
 An object of class class \code{bgmfit} with fit criteria added.
 }
 \description{
-Add model fit criteria to model objects
-}
-\details{
 The \strong{add_model_criterion()} is a wrapper around the
-\code{\link[brms:add_criterion]{brms::add_criterion()}}.
+\code{\link[brms:add_criterion]{brms::add_criterion()}}. Note that arguments \code{compare} and
+\code{pointwise} are relevant only for \link[brms:add_ic]{brms::add_loo} whereas arguments
+\code{summary}, \code{robust}, and \code{probs} ignored except for the
+\code{\link[brms:bayes_R2.brmsfit]{brms::bayes_R2()}}.
 }
 \examples{
 
@@ -124,10 +158,14 @@ The \strong{add_model_criterion()} is a wrapper around the
 
 model <- berkeley_exfit
 
-model <- add_model_criterion(model, criterion = c("loo", "waic"))
+model <- add_model_criterion(model, criterion = c("waic"))
 
 }
 
+}
+\seealso{
+\link[brms:add_ic]{brms::add_loo} \link[brms:add_ic]{brms::add_loo} \code{\link[brms:add_ic]{brms::add_ic()}} \code{\link[brms:add_ic]{brms::add_waic()}}
+\code{\link[brms:bayes_R2.brmsfit]{brms::bayes_R2()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
