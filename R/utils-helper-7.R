@@ -195,6 +195,61 @@ prepare_priors <- function(prior_argument,
     eval(parse(text = x), envir = parent.frame())
   
   
+  ###########
+  get_loc_sca_funs <- function(fun_x, splitmvar_w2, envir = NULL) {
+    # extract get_fun_x distribution
+    if(is.null(envir)) envir <- parent.frame()
+    get_ept <- function(x)
+      eval(parse(text = x), envir = envir)
+    get_get_fun_x_arg <- splitmvar_w2[grepl(paste0("^", fun_x, "="), splitmvar_w2)]
+    get_fun_x_tt <- sub('.*=', '', get_get_fun_x_arg)
+    get_fun_x_tt <- paste0("'", get_fun_x_tt, "'")
+    get_get_fun_x_arg <-
+      paste0(sub("=[^=]+$", "=", get_get_fun_x_arg),  get_fun_x_tt)
+    get_fun_x <- get_ept(get_get_fun_x_arg)
+    get_fun_x <- gsub("\"" , "", get_fun_x)
+    
+    if(get_fun_x == "") {
+      get_fun_x <- NULL
+    } else if(get_fun_x == 'NULL') {
+      get_fun_x <- NULL
+    } else if(!exists(get_fun_x)) {
+      stop("Object ", get_fun_x, " defined as a function does not exists")
+    } else if(exists(get_fun_x)) {
+      enverr. <- environment()
+      assign('err.', FALSE, envir = enverr.)
+      tryCatch(
+        expr = {
+          is.function(get_ept(get_fun_x))
+        },
+        error = function(e) {
+          assign('err.', TRUE, envir = enverr.)
+        }
+      )
+      err. <- get('err.', envir = enverr.)
+      if (err.) {
+        stop("Object ", get_fun_x, " defined as a function can not be evaluated")
+      } else {
+        if(is.function(eval(get_fun_x))) 
+          get_fun_x <- get_ept(get_fun_x)
+        if(!is.function(get_ept(get_fun_x))) 
+          stop("Object ", get_fun_x, " is not a function")
+      }
+    }
+    return(get_fun_x)
+  }
+  
+  fun_loc <- get_loc_sca_funs(fun_x = 'fun_loc', splitmvar_w2, 
+                              envir = environment())
+  
+  fun_sca <- get_loc_sca_funs(fun_x = 'fun_sca', splitmvar_w2, 
+                              envir = environment())
+  
+
+  
+  ###########
+  
+  
   # extract sethp distribution
   get_sethp_arg <- splitmvar_w2[grepl("^sethp=", splitmvar_w2)]
   sethp_tt <- sub('.*=', '', get_sethp_arg)
@@ -439,12 +494,14 @@ prepare_priors <- function(prior_argument,
       "ub",
       "autoscale",
       "addrange",
-      "sethp"
+      "sethp",
+      "fun_loc",
+      "fun_sca"
     )
     
     
     optional_prior_names <-
-      c("lb", "ub", "autoscale", "addrange", "sethp")
+      c("lb", "ub", "autoscale", "addrange", "sethp", "fun_loc", "fun_sca")
     
     # Add missing optional_prior_names
     missing_optional_prior_names <-
@@ -466,13 +523,15 @@ prepare_priors <- function(prior_argument,
         check__ > 0, colSums(
           sapply(splitmvar_w3, grepl, vacoublary_prior_parnames)
         )))
+    
     incorrect_names <- splitmvar_w3[!splitmvar_w3 %in% min_par_names]
     
+
     if (!identical(incorrect_names, character(0))) {
       ttt_n1 <- paste(incorrect_names, collapse = ", ")
       ttt_nn2 <- paste(vacoublary_prior_parnames, collapse = ", ")
       stop(
-        "\nFollowing prior parameter name(s) are incorrect/misspelled:\n ",
+        "\nFollowing are incorrect/misspelled/not allowed options in prior:\n ",
         ttt_n1,
         "\n",
         "Available prior parameter names are:\n",
@@ -529,7 +588,8 @@ prepare_priors <- function(prior_argument,
       
       
       # Get scale_factor to multiply with scale parameters
-      enverr. <- parent.frame()
+      # enverr. <- parent.frame()
+      enverr. <- environment()
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
@@ -570,6 +630,8 @@ prepare_priors <- function(prior_argument,
       } else if (is.numeric(check_for_autoscale)) {
         scale_factor <- check_for_autoscale
       }
+      
+      
       
       # Get addrange to add to uniform prior range
       
@@ -612,7 +674,8 @@ prepare_priors <- function(prior_argument,
                 paste0(" - ", allowed_parm_options)
               const_msg <- paste0(allowed_parm_options, "\n", const_msg)
             }
-            enverr. <- parent.frame()
+            # enverr. <- parent.frame()
+            enverr. <- environment()
             assign('err.', FALSE, envir = enverr.)
             tryCatch(
               expr = {
@@ -988,6 +1051,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+              lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1052,6 +1119,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1112,6 +1183,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1180,6 +1255,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1241,6 +1320,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1301,6 +1384,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1374,6 +1461,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1435,6 +1526,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1499,6 +1594,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1548,6 +1647,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
@@ -1617,6 +1720,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1665,6 +1772,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1715,6 +1826,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1763,6 +1878,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1813,6 +1932,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1865,6 +1988,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1915,6 +2042,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -1964,6 +2095,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2016,6 +2151,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2065,6 +2204,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
@@ -2142,6 +2285,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2193,6 +2340,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2237,7 +2388,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2276,6 +2430,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2312,6 +2470,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2350,6 +2512,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2387,6 +2553,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2427,6 +2597,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2466,6 +2640,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2503,6 +2681,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2543,6 +2725,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2595,6 +2781,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
@@ -2655,6 +2845,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2693,6 +2887,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2734,6 +2932,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2772,6 +2974,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2814,6 +3020,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2854,6 +3064,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2896,6 +3110,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2935,6 +3153,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2976,6 +3198,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -2988,7 +3214,7 @@ prepare_priors <- function(prior_argument,
           
           
           
-          # location nlpar i cov (class sd, typically 0)
+          # location nlpar s cov (class sd, typically 0)
           if (cov_nlpar == "s" & !is.null(sncov_gr)) {
             if (x_i == paste0("lm", empty_sufx)) {
               if (!s_form_0_gr) {
@@ -3027,6 +3253,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
@@ -3085,6 +3315,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -3124,6 +3358,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3166,6 +3404,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -3206,6 +3448,10 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
+            if(!is.null(fun_loc)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -3224,8 +3470,7 @@ prepare_priors <- function(prior_argument,
         # set scale parameter -> for normal, log normal, cauchy, studdent_t
         
         if (grepl("^scale$", pname_)) {
-          # scale a b c d e fixed effects
-          
+          # scale a b c d e f g h i fixed effects
           # scale nlpar a (class b)
           if (nlpar == "a" & class == "b" & grepl("a", fixedsi)) {
             if (x_i == paste0("ysd", empty_sufx)) {
@@ -3272,6 +3517,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3323,6 +3572,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -3336,10 +3589,10 @@ prepare_priors <- function(prior_argument,
           if (nlpar == "c" & class == "b" & grepl("c", fixedsi)) {
             if (x_i == paste0("vsd", empty_sufx)) {
               eit <-  gsub("vsd", paste0("vsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("vmad", empty_sufx)) {
               eit <-  gsub("vmad", paste0("vmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3356,7 +3609,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3368,6 +3621,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3388,10 +3645,10 @@ prepare_priors <- function(prior_argument,
               evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("dsd", empty_sufx)) {
               eit <-  gsub("dsd", paste0("vsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("dmad", empty_sufx)) {
               eit <-  gsub("dmad", paste0("dmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("ysdxmid", empty_sufx)) {
               eit <-  gsub("ysdxmid", paste0("ysdxmid", resp_), x_i)
               evaluated_parameter <- scale_factor * ept(eit) 
@@ -3414,7 +3671,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3426,6 +3683,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3440,10 +3701,10 @@ prepare_priors <- function(prior_argument,
           if (nlpar == "e" & class == "b" & grepl("e", fixedsi)) {
             if (x_i == paste0("xsd", empty_sufx)) {
               eit <-  gsub("xsd", paste0("xsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("xmad", empty_sufx)) {
               eit <-  gsub("xmad", paste0("xmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3460,7 +3721,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3472,6 +3733,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3488,10 +3753,10 @@ prepare_priors <- function(prior_argument,
           if (nlpar == "f" & class == "b" & grepl("f", fixedsi)) {
             if (x_i == paste0("xsd", empty_sufx)) {
               eit <-  gsub("xsd", paste0("xsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("xmad", empty_sufx)) {
               eit <-  gsub("xmad", paste0("xmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3508,7 +3773,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3520,6 +3785,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3535,10 +3804,10 @@ prepare_priors <- function(prior_argument,
           if (nlpar == "g" & class == "b" & grepl("g", fixedsi)) {
             if (x_i == paste0("xsd", empty_sufx)) {
               eit <-  gsub("xsd", paste0("xsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("xmad", empty_sufx)) {
               eit <-  gsub("xmad", paste0("xmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("ysdxmax", empty_sufx)) {
               eit <-  gsub("ysdxmax", paste0("ysdxmax", resp_), x_i)
               evaluated_parameter <- scale_factor * ept(eit) 
@@ -3562,7 +3831,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3574,6 +3843,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3589,10 +3862,10 @@ prepare_priors <- function(prior_argument,
           if (nlpar == "h" & class == "b" & grepl("h", fixedsi)) {
             if (x_i == paste0("xsd", empty_sufx)) {
               eit <-  gsub("xsd", paste0("xsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("xmad", empty_sufx)) {
               eit <-  gsub("xmad", paste0("xmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3609,7 +3882,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3621,6 +3894,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3636,10 +3913,10 @@ prepare_priors <- function(prior_argument,
           if (nlpar == "i" & class == "b" & grepl("i", fixedsi)) {
             if (x_i == paste0("xsd", empty_sufx)) {
               eit <-  gsub("xsd", paste0("xsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("xmad", empty_sufx)) {
               eit <-  gsub("xmad", paste0("xmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3656,7 +3933,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3668,6 +3945,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3721,6 +4002,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+            }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
               if (length(evaluated_parameter) == 1) {
@@ -3749,7 +4034,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "a" & class == "b" & !is.null(ancov)) {
             if (x_i == paste0("sdacov", empty_sufx)) {
               eit <-  gsub("sdacov", paste0("acov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3766,7 +4051,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3779,6 +4064,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3793,7 +4082,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "b" & class == "b" & !is.null(bncov)) {
             if (x_i == paste0("sdbcov", empty_sufx)) {
               eit <-  gsub("sdbcov", paste0("bcov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3810,7 +4099,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3823,6 +4112,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3838,7 +4131,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "c" & class == "b" & !is.null(cncov)) {
             if (x_i == paste0("sdccov", empty_sufx)) {
               eit <-  gsub("sdccov", paste0("ccov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3855,7 +4148,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3868,6 +4161,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3883,7 +4180,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "d" & class == "b" & !is.null(dncov)) {
             if (x_i == paste0("sddcov", empty_sufx)) {
               eit <-  gsub("sddcov", paste0("dcov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3900,7 +4197,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3913,6 +4210,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3928,7 +4229,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "e" & class == "b" & !is.null(encov)) {
             if (x_i == paste0("sdecov", empty_sufx)) {
               eit <-  gsub("sdecov", paste0("ecov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3945,7 +4246,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -3958,6 +4259,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3974,7 +4279,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "f" & class == "b" & !is.null(fncov)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("fcov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -3991,7 +4296,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4004,6 +4309,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4020,7 +4329,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "g" & class == "b" & !is.null(gncov)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("gcov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4037,7 +4346,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4050,6 +4359,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4065,7 +4378,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "h" & class == "b" & !is.null(hncov)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("hcov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4082,7 +4395,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4095,6 +4408,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4110,7 +4427,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "f" & class == "b" & !is.null(incov)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("icov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4127,7 +4444,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4140,6 +4457,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4159,7 +4480,7 @@ prepare_priors <- function(prior_argument,
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
               }
               eit <-  gsub("lm", lm_gsubby, x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4176,8 +4497,12 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
@@ -4215,10 +4540,10 @@ prepare_priors <- function(prior_argument,
               evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("ysd", empty_sufx)) {
               eit <-  gsub("vsd", paste0("vsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("ymad", empty_sufx)) {
               eit <-  gsub("vmad", paste0("vmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4235,7 +4560,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for distributional ",
@@ -4247,6 +4572,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4262,7 +4591,7 @@ prepare_priors <- function(prior_argument,
               !is.null(sigmancov)) {
             if (x_i == paste0("sdacov", empty_sufx)) {
               eit <-  gsub("sdacov", paste0("acov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4279,7 +4608,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for distributional ",
@@ -4292,6 +4621,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4308,7 +4641,7 @@ prepare_priors <- function(prior_argument,
           
           
           
-          # scale a b c d e f random effects
+          # scale a b c d e f g h i random effects
           
           # scale a (class sd)
           if (nlpar == "a" & class == "sd" & grepl("a", randomsi)) {
@@ -4356,6 +4689,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4407,6 +4744,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -4433,7 +4774,7 @@ prepare_priors <- function(prior_argument,
             if (is.numeric(eval(parse(text = x_i))) |
                 !is.null(eval(parse(text = x_i)))) {
               eit <- x_i
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               stop(
                 "scale parameter options for nlpar ",
@@ -4444,6 +4785,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4502,6 +4847,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -4528,7 +4877,7 @@ prepare_priors <- function(prior_argument,
             if (is.numeric(eval(parse(text = x_i))) |
                 !is.null(eval(parse(text = x_i)))) {
               eit <- x_i
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               stop(
                 "scale parameter options for nlpar ",
@@ -4539,6 +4888,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4568,7 +4921,7 @@ prepare_priors <- function(prior_argument,
             if (is.numeric(eval(parse(text = x_i))) |
                 !is.null(eval(parse(text = x_i)))) {
               eit <- x_i
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               stop(
                 "scale parameter options for nlpar ",
@@ -4579,6 +4932,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4638,6 +4995,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -4665,7 +5026,7 @@ prepare_priors <- function(prior_argument,
             if (is.numeric(eval(parse(text = x_i))) |
                 !is.null(eval(parse(text = x_i)))) {
               eit <- x_i
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               stop(
                 "scale parameter options for nlpar ",
@@ -4676,6 +5037,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4704,7 +5069,7 @@ prepare_priors <- function(prior_argument,
             if (is.numeric(eval(parse(text = x_i))) |
                 !is.null(eval(parse(text = x_i)))) {
               eit <- x_i
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               stop(
                 "scale parameter options for nlpar ",
@@ -4715,6 +5080,10 @@ prepare_priors <- function(prior_argument,
                 "\n with zzz defined in the prior_data",
                 "e.g., prior_data = list(zzz = 2)"
               )
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4768,6 +5137,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+            }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
               if (length(evaluated_parameter) == 1) {
@@ -4797,7 +5170,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "a" & class == "sd" & !is.null(ancov_gr)) {
             if (x_i == paste0("sdacov", empty_sufx)) {
               eit <-  gsub("sdacov", paste0("acov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4814,7 +5187,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4827,6 +5200,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4841,7 +5218,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "b" & class == "sd" & !is.null(bncov_gr)) {
             if (x_i == paste0("sdbcov", empty_sufx)) {
               eit <-  gsub("sdbcov", paste0("bcov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4858,7 +5235,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4871,6 +5248,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4886,7 +5267,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "c" & class == "sd" & !is.null(cncov_gr)) {
             if (x_i == paste0("sdccov", empty_sufx)) {
               eit <-  gsub("sdccov", paste0("ccov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4903,7 +5284,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4916,6 +5297,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4931,7 +5316,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "c" & class == "sd" & !is.null(dncov_gr)) {
             if (x_i == paste0("sdccov", empty_sufx)) {
               eit <-  gsub("sdccov", paste0("ccov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4948,7 +5333,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -4961,6 +5346,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4977,7 +5366,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "e" & class == "sd" & !is.null(encov_gr)) {
             if (x_i == paste0("sdecov", empty_sufx)) {
               eit <-  gsub("sdecov", paste0("ecov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -4994,7 +5383,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -5007,6 +5396,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5023,7 +5416,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "f" & class == "sd" & !is.null(fncov_gr)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("fcov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -5040,7 +5433,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -5053,6 +5446,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5068,7 +5465,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "g" & class == "sd" & !is.null(fncov_gr)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("gcov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -5085,7 +5482,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -5098,6 +5495,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5114,7 +5515,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "h" & class == "sd" & !is.null(hncov_gr)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("hcov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -5131,7 +5532,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -5144,6 +5545,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5160,7 +5565,7 @@ prepare_priors <- function(prior_argument,
           if (cov_nlpar == "i" & class == "sd" & !is.null(incov_gr)) {
             if (x_i == paste0("sdfcov", empty_sufx)) {
               eit <-  gsub("sdfcov", paste0("icov_sd_gr", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -5177,7 +5582,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for nlpar ",
@@ -5190,6 +5595,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5212,7 +5621,7 @@ prepare_priors <- function(prior_argument,
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
               }
               eit <-  gsub("lm", lm_gsubby, x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -5229,8 +5638,12 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
@@ -5264,10 +5677,10 @@ prepare_priors <- function(prior_argument,
           if (nlpar == "" & class == "sd" & sigma_dpar == "sigma") {
             if (x_i == paste0("vsd", empty_sufx)) {
               eit <-  gsub("vsd", paste0("vsd", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("vmad", empty_sufx)) {
               eit <-  gsub("vmad", paste0("vmad", resp_), x_i)
-              evaluated_parameter <- 1 * ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -5284,7 +5697,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- 1 * ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for distributional ",
@@ -5296,6 +5709,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5312,7 +5729,7 @@ prepare_priors <- function(prior_argument,
               !is.null(sigmancov)) {
             if (x_i == paste0("sdacov", empty_sufx)) {
               eit <-  gsub("sdacov", paste0("acov_sd", resp_), x_i)
-              evaluated_parameter <- ept(eit)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
@@ -5329,7 +5746,7 @@ prepare_priors <- function(prior_argument,
               if (is.numeric(eval(parse(text = x_i))) |
                   !is.null(eval(parse(text = x_i)))) {
                 eit <- x_i
-                evaluated_parameter <- ept(eit)
+                evaluated_parameter <- scale_factor * ept(eit)
               } else {
                 stop(
                   "scale parameter options for distributional ",
@@ -5342,6 +5759,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5399,6 +5820,10 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+            }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
@@ -5451,6 +5876,10 @@ prepare_priors <- function(prior_argument,
                   "e.g., prior_data = list(zzz = 2)"
                 )
               }
+            }
+            if(!is.null(fun_sca)) {
+              evaluated_parameter <-
+                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5622,15 +6051,16 @@ prepare_priors <- function(prior_argument,
         
         
         
+        
         # set rate parameters -> for exponential
         
         if (grepl("^rate$", pname_)) {
           if (x_i == paste0("ysd", empty_sufx)) {
             eit <-  gsub("ysd", paste0("ysd", resp_), x_i)
-            evaluated_parameter <- 1 / (1 * ept(eit))
+            evaluated_parameter <- 1 / (scale_factor * ept(eit))
           } else if (x_i == paste0("ymad", empty_sufx)) {
             eit <-  gsub("ymad", paste0("ymad", resp_), x_i)
-            evaluated_parameter <- 1 / (1 * ept(eit))
+            evaluated_parameter <- 1 / (scale_factor * ept(eit))
           } else if (x_i == paste0("lme_rsd", empty_sufx)) {
             eit <-  gsub("lme_rsd", paste0("lme_rsd", resp_), x_i)
             evaluated_parameter <- scale_factor * ept(eit)

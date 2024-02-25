@@ -616,6 +616,14 @@ standard deviation of the response variable (See \code{\link[brms:set_prior]{brm
 \pkg{bsitar} package offers full flexibility in choosing the scaling factor
 as any real number instead of 1.0 or 2.5 (e.g., \code{autosclae = 5.0}).
 When \code{autosclae = TRUE}, \code{2.5} is the default scaling factor.
+\item For location-scale based distributions such as \code{normal},
+options \code{fun_loc} and \code{fun_sca} are available to apply
+any primitive function such as \code{log} and \code{sqrt} or a function
+defined on the R environment to the location and scale parameters. For
+example, prior \code{normal(2, 5, fun_loc = log, fun_sca = sqrt)} will
+be translated internally as \code{normal(log(2), sqrt(5))} implying that
+the actually prior assigned will be  \code{normal(0.693, 2.23)}. The
+default for both  \code{fun_loc} and \code{fun_sca} is \code{NULL}.
 \item For strictly positive distributions such as \code{exponential},
 \code{gamma} and \code{inv_gamma}, the lower bound (\code{lb}) is
 automatically set to zero i.e., \code{lb = 0}. \item For uniform
@@ -629,8 +637,8 @@ parameter is evaluated as inverse. In other words, prior set as
 explicitly because the missing options are set to their default values
 automatically. For example, the prior specified as
 \code{a_prior_beta = normal(location = 5, scale = 1, lb = NA, ub = NA,
- addrange = NA, autosclae = FALSE)}) is same as
-\code{a_prior_beta = normal(5, 1)}).
+ addrange = NA, autosclae = FALSE, fun_loc = NULL, fun_sca = NULL)}) is same
+as \code{a_prior_beta = normal(5, 1)}).
 \item For \code{univariate_by} \code{multivariate} models, priors
 can be same for sub models (e.g., \code{a_prior_beta =
  normal(5, 1)}), or different for each sub such as \code{a_prior_beta =
