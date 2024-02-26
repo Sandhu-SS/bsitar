@@ -616,14 +616,44 @@ standard deviation of the response variable (See \code{\link[brms:set_prior]{brm
 \pkg{bsitar} package offers full flexibility in choosing the scaling factor
 as any real number instead of 1.0 or 2.5 (e.g., \code{autosclae = 5.0}).
 When \code{autosclae = TRUE}, \code{2.5} is the default scaling factor.
-\item For location-scale based distributions such as \code{normal},
-options \code{fun_loc} and \code{fun_sca} are available to apply
-any primitive function such as \code{log} and \code{sqrt} or a function
-defined on the R environment to the location and scale parameters. For
-example, prior \code{normal(2, 5, fun_loc = log, fun_sca = sqrt)} will
-be translated internally as \code{normal(log(2), sqrt(5))} implying that
-the actually prior assigned will be  \code{normal(0.693, 2.23)}. The
-default for both  \code{fun_loc} and \code{fun_sca} is \code{NULL}.
+\item For location-scale based distributions such as \code{normal}, options
+\code{fxl} (\code{function location}) and \code{fxs} (\code{function scale})
+are available to apply any function such as \code{log} and \code{sqrt},
+or a function defined in the R environment to transform the location and
+scale parameters. For example, prior \code{normal(2, 5, fxl = 'log', fxs =
+ 'sqrt')} will be translated internally as \code{normal(log(2), sqrt(5))}
+implying that the actually prior assigned will be  \code{normal(0.693,
+ 2.23)}. The default for both  \code{fxl} and \code{fxs} is \code{NULL}.
+\item Like \code{fxl} and \code{fxs} functions, another function \code{fxls}
+(\code{function location scale}) is available to transform location and
+scale parameters for the location-scale based distributions such
+as \code{normal}. Unlike \code{fxl} and \code{fxs} functions which transform
+location and scale parameters individually, the \code{fxls} function is used
+for those transformation for which both location and scale parameters are
+needed in the transformation of these parameters. For example, the
+transformation of location and scale parameters for the normal prior on log
+scale is as follows: \cr
+\code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr
+\code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr
+where location and scale are nor the normal distribution and the
+log_location and log_scale are the equivalent parameters on the log scale.
+The \code{fxls} can be set as a character string or a list comprised of two
+functions where first function of the list will be used to transform the
+location parameter and the second function will be for the scale
+transformation. If a character string is used such as \code{fxls = 'log'},
+then the above transformation for the log parametrization will be applied
+automatically. Note that if using a list, then the list must be crated
+within the R environment and then passed this to the  \code{fxls} as: \cr
+\code{location_fun <- function(location, scale) {
+ log(location / sqrt(scale^2 / location^2 + 1))
+ }} \cr
+\code{scale_fun <- function(location, scale) {
+ sqrt(log(scale^2 / location^2 + 1))
+ }} \cr
+fxls_fun <- list(location_fun = location_fun, scale_fun = scale_fun) \cr
+\code{fxls = 'fxls_fun'} \cr
+As an example, \code{normal(2, 5, fxls = 'fxls_fun'}. The default for
+\code{fxls} is \code{NULL}.
 \item For strictly positive distributions such as \code{exponential},
 \code{gamma} and \code{inv_gamma}, the lower bound (\code{lb}) is
 automatically set to zero i.e., \code{lb = 0}. \item For uniform
@@ -637,7 +667,7 @@ parameter is evaluated as inverse. In other words, prior set as
 explicitly because the missing options are set to their default values
 automatically. For example, the prior specified as
 \code{a_prior_beta = normal(location = 5, scale = 1, lb = NA, ub = NA,
- addrange = NA, autosclae = FALSE, fun_loc = NULL, fun_sca = NULL)}) is same
+ addrange = NA, autosclae = FALSE, fxl = NULL, fxs = NULL)}) is same
 as \code{a_prior_beta = normal(5, 1)}).
 \item For \code{univariate_by} \code{multivariate} models, priors
 can be same for sub models (e.g., \code{a_prior_beta =

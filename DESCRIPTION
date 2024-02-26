@@ -34,7 +34,8 @@ Depends:
     R (>= 3.6)
 Imports:
     brms (>= 2.17.0),    
-    rstan (>= 2.26.0),    
+    rstan (>= 2.26.0),
+    loo (>= 2.7.0),    
     dplyr (>= 1.1.3),  
     rlang (>= 1.1.2),
     Rdpack (>= 2.5),
@@ -42,7 +43,6 @@ Imports:
     marginaleffects (>= 0.18.0),
     sitar, 
     magrittr,
-    loo,
     methods,
     utils    
 Suggests: 

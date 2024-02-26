@@ -196,7 +196,8 @@ prepare_priors <- function(prior_argument,
   
   
   ###########
-  get_loc_sca_funs <- function(fun_x, splitmvar_w2, envir = NULL) {
+  get_loc_sca_funs <- function(fun_x, splitmvar_w2, 
+                               assertfun = TRUE, envir = NULL) {
     # extract get_fun_x distribution
     if(is.null(envir)) envir <- parent.frame()
     get_ept <- function(x)
@@ -230,20 +231,28 @@ prepare_priors <- function(prior_argument,
       if (err.) {
         stop("Object ", get_fun_x, " defined as a function can not be evaluated")
       } else {
-        if(is.function(eval(get_fun_x))) 
-          get_fun_x <- get_ept(get_fun_x)
-        if(!is.function(get_ept(get_fun_x))) 
-          stop("Object ", get_fun_x, " is not a function")
+        if(assertfun) {
+          if(is.function(eval(get_fun_x))) 
+            get_fun_x <- get_ept(get_fun_x)
+          if(!is.function(get_ept(get_fun_x))) 
+            stop("Object ", get_fun_x, " is not a function")
+        } # if(assertfun) {
       }
     }
     return(get_fun_x)
   }
   
-  fun_loc <- get_loc_sca_funs(fun_x = 'fun_loc', splitmvar_w2, 
+  fxl <- get_loc_sca_funs(fun_x = 'fxl', splitmvar_w2, 
+                              assertfun = TRUE,
                               envir = environment())
   
-  fun_sca <- get_loc_sca_funs(fun_x = 'fun_sca', splitmvar_w2, 
+  fxs <- get_loc_sca_funs(fun_x = 'fxs', splitmvar_w2,
+                              assertfun = TRUE,
                               envir = environment())
+  
+  fxls <- get_loc_sca_funs(fun_x = 'fxls', splitmvar_w2,
+                                      assertfun = FALSE,
+                                      envir = environment())
   
 
   
@@ -495,13 +504,15 @@ prepare_priors <- function(prior_argument,
       "autoscale",
       "addrange",
       "sethp",
-      "fun_loc",
-      "fun_sca"
+      "fxl",
+      "fxs",
+      "fxls"
     )
     
     
     optional_prior_names <-
-      c("lb", "ub", "autoscale", "addrange", "sethp", "fun_loc", "fun_sca")
+      c("lb", "ub", "autoscale", "addrange", "sethp", 
+        "fxl", "fxs", "fxls")
     
     # Add missing optional_prior_names
     missing_optional_prior_names <-
@@ -987,6 +998,22 @@ prepare_priors <- function(prior_argument,
           allowed_init_options_scale <- NULL
         
         
+        # This method_location_scale was tried during fxls tranformation of 
+        # location and scale parameters. 
+        # The method_location_scale <- "original" sets the original behavior
+        # The method_location_scale <- "via_functions" sets the behavior
+        # where get_prior_location and get_prior_scale functions defined in
+        # the R files utils-helper-7_1 and utils-helper-7_2. 
+        # However, this did not work out, so re setting the  "original
+        # 
+        
+        method_location_scale <- "original" # "via_functions"
+        
+        # method_location_scale <- "via_functions" # "original"
+        
+        
+        
+        if(method_location_scale == "original" ) {
         # set location parameter -> for normal, log normal, cauchy, studdent_t
         
         if (grepl("^location$", pname_)) {
@@ -1051,9 +1078,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-              lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+              lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1119,9 +1146,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1184,9 +1211,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1255,9 +1282,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1320,9 +1347,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1385,9 +1412,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1461,9 +1488,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1527,9 +1554,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1594,9 +1621,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1648,9 +1675,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
@@ -1720,9 +1747,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1773,9 +1800,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1826,9 +1853,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1879,9 +1906,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1933,9 +1960,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -1988,9 +2015,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2042,9 +2069,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2096,9 +2123,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2151,9 +2178,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2205,9 +2232,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
@@ -2285,9 +2312,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2340,9 +2367,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2388,9 +2415,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2430,9 +2457,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2471,9 +2498,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2512,9 +2539,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2554,9 +2581,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2597,9 +2624,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2640,9 +2667,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2682,9 +2709,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2726,9 +2753,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2782,9 +2809,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
@@ -2845,9 +2872,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2888,9 +2915,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2932,9 +2959,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -2975,9 +3002,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3020,9 +3047,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3065,9 +3092,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3110,9 +3137,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3154,9 +3181,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3198,9 +3225,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3254,9 +3281,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
@@ -3315,9 +3342,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3359,9 +3386,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3404,9 +3431,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3448,9 +3475,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_loc)) {
+            if(!is.null(fxl)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_loc) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxl) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3518,9 +3545,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3572,9 +3599,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3622,9 +3649,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3684,9 +3711,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3734,9 +3761,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3786,9 +3813,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3844,9 +3871,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3895,9 +3922,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -3946,9 +3973,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4002,9 +4029,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
@@ -4065,9 +4092,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4113,9 +4140,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4162,9 +4189,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4211,9 +4238,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4260,9 +4287,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4310,9 +4337,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4360,9 +4387,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4409,9 +4436,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4458,9 +4485,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4500,9 +4527,9 @@ prepare_priors <- function(prior_argument,
                 evaluated_parameter <- scale_factor * ept(eit)
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov)) {
@@ -4573,9 +4600,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4622,9 +4649,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4690,9 +4717,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4744,9 +4771,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4786,9 +4813,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4847,9 +4874,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4889,9 +4916,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4933,9 +4960,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -4995,9 +5022,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5038,9 +5065,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5081,9 +5108,9 @@ prepare_priors <- function(prior_argument,
                 "e.g., prior_data = list(zzz = 2)"
               )
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5137,9 +5164,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
@@ -5201,9 +5228,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5249,9 +5276,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5298,9 +5325,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5347,9 +5374,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5397,9 +5424,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5447,9 +5474,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5496,9 +5523,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5546,9 +5573,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5596,9 +5623,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5641,9 +5668,9 @@ prepare_priors <- function(prior_argument,
                 evaluated_parameter <- scale_factor * ept(eit)
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             # checks
             if (nlpar == "s" & !is.null(sncov_gr)) {
@@ -5710,9 +5737,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5760,9 +5787,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5820,9 +5847,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5877,9 +5904,9 @@ prepare_priors <- function(prior_argument,
                 )
               }
             }
-            if(!is.null(fun_sca)) {
+            if(!is.null(fxs)) {
               evaluated_parameter <-
-                lapply(evaluated_parameter, FUN = fun_sca) %>% unlist()
+                lapply(evaluated_parameter, FUN = fxs) %>% unlist()
             }
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
@@ -5890,7 +5917,34 @@ prepare_priors <- function(prior_argument,
           }
         }
         
+      } # end if(method_location_scale == "original" )
         
+        # print(pname_)
+        
+        # if(method_location_scale == "via_functions") {
+        #   list_objs <- mget(ls())
+        #   if (grepl("^location$", pname_)) {
+        #     evaluated_parameterx <- get_prior_location(list_objs = list_objs, envir = NULL)
+        #   }
+        # 
+        #   if (grepl("^scale$", pname_)) {
+        #     evaluated_parameterx <- get_prior_scale(list_objs = list_objs, envir = NULL)
+        #     print(evaluated_parameterx)
+        #   }
+        # }
+        
+        
+        # if(method_location_scale == "via_functions") {
+        #   list_objs <- mget(ls())
+        #   list_objs$pname_ <- "location"
+        #   evaluated_parameter <- get_prior_location(list_objs = list_objs, envir = NULL)
+        #   print(evaluated_parameter)
+        #   list_objs$pname_ <- "scale"
+        #   evaluated_parameter <- get_prior_scale(list_objs = list_objs, envir = NULL)
+        #   print(evaluated_parameter)
+        # }
+       
+        # stop()
         
         
         # set degree of freedom df parameters -> for student_t
@@ -6392,6 +6446,7 @@ prepare_priors <- function(prior_argument,
                  " are greater than the parameter dimensions")
         }
         
+       
         
         
         # make unique names
@@ -6472,7 +6527,7 @@ prepare_priors <- function(prior_argument,
                  resp_)
         
         # name_parameter <- paste0(name_parameter, add_gr_id)
-        
+       
         assign(name_parameter, evaluated_parameter)
         
         if (change_default_data_pll_args) {
@@ -6489,9 +6544,14 @@ prepare_priors <- function(prior_argument,
                           name = name_parameter, block = "data")
         }
         
+       
+        
         collect_name_parameter <-
           c(collect_name_parameter, name_parameter)
       }
+      
+      
+      
       
       
       
@@ -6653,8 +6713,122 @@ prepare_priors <- function(prior_argument,
       
     } # end of loop for (i in 1:length(x)) {
     
+    ########################
+    
+    # After exiting the loop for (i in 1:length(x)), execute transformation of 
+    # location scale parameters for log transformed 
+    # print(fxls)
+
+    # if fxls = 'log', then assign them 
+    if(fxls == 'log') {
+      loc_log <- function(loc_parm, sca_parm) {
+        log_mu <- log(loc_parm / sqrt(sca_parm^2 / loc_parm^2 + 1))
+        log_mu
+      }
+      sca_log <- function(loc_parm, sca_parm) {
+        log_sd <- sqrt(log(sca_parm^2 / loc_parm^2 + 1))
+        log_sd
+      }
+      loc_sca_log <- list(loc_log = loc_log, sca_log = sca_log)
+      fxls <- 'loc_sca_log'
+    }
+    
+    fxls <- ept(fxls)
+    
+    if(!is.null(fxls)) {
+      if(is.list(fxls)) {
+        fxls <- fxls
+      } else if(is.na(fxls)) {
+        fxls <- FALSE
+      } else if(!fxls) {
+        fxls <- FALSE
+      } else if(fxls) {
+        fxls <- TRUE
+      } else  {
+        # fxls <- fxls
+      }
+    } else if(is.null(fxls)) {
+      fxls <- FALSE
+    }
+    
+    if(is.list(fxls)) {
+      if(length(fxls) != 2) 
+        stop("length of fxls must be 2")
+      assign('fun_log_loc', fxls[[1]])
+      assign('fun_log_sca', fxls[[2]])
+      fxls <- TRUE
+    } else {
+      fun_log_loc <- function(loc_parm, sca_parm) {
+        log_mu <- log(loc_parm / sqrt(sca_parm^2 / loc_parm^2 + 1))
+        log_mu
+      }
+      fun_log_sca <- function(loc_parm, sca_parm) {
+        log_sd <- sqrt(log(sca_parm^2 / loc_parm^2 + 1))
+        log_sd
+      }
+    }
     
     
+    if(fxls) {
+      
+      for (collect_name_parameteri in collect_name_parameter) {
+        if (grepl("_location", collect_name_parameteri)) {
+          loc_parm <- ept(collect_name_parameteri)
+        }
+        if (grepl("_scale", collect_name_parameteri)) {
+          sca_parm <- ept(collect_name_parameteri)
+        }
+      } # for (collect_name_parameteri in collect_name_parameter) {
+      
+      log_mu <- fun_log_loc(loc_parm, sca_parm)
+      log_sd <- fun_log_sca(loc_parm, sca_parm)
+      
+      # log_mu <- log(loc_parm / sqrt(sca_parm^2 / loc_parm^2 + 1))
+      # log_sd <- sqrt(log(sca_parm^2 / loc_parm^2 + 1))
+      
+      for (collect_name_parameteri in collect_name_parameter) {
+        if (grepl("_location", collect_name_parameteri)) {
+          assign(collect_name_parameteri, log_mu)
+          if (change_default_data_pll_args) {
+            stanvars_data[[collect_name_parameteri]] <-
+              brms::stanvar(
+                eval(parse(text = collect_name_parameteri)),
+                name = collect_name_parameteri,
+                block = "data",
+                pll_args = ept(set_data_pll_args)
+              )
+          } else {
+            stanvars_data[[collect_name_parameteri]] <-
+              brms::stanvar(eval(parse(text = collect_name_parameteri)),
+                            name = collect_name_parameteri, block = "data")
+          }
+        } # if (grepl("_location", collect_name_parameteri)) {
+        
+        if (grepl("_scale", collect_name_parameteri)) {
+          assign(collect_name_parameteri, log_sd)
+          if (change_default_data_pll_args) {
+            stanvars_data[[collect_name_parameteri]] <-
+              brms::stanvar(
+                eval(parse(text = collect_name_parameteri)),
+                name = collect_name_parameteri,
+                block = "data",
+                pll_args = ept(set_data_pll_args)
+              )
+          } else {
+            stanvars_data[[collect_name_parameteri]] <-
+              brms::stanvar(eval(parse(text = collect_name_parameteri)),
+                            name = collect_name_parameteri, block = "data")
+          }
+        } # if (grepl("_scale", collect_name_parameteri)) {
+      } # for (collect_name_parameteri in collect_name_parameter) {
+      
+    } # if(fxls) {
+
+   
+   
+    
+    
+    ########################
     
     if (dist == "uniform" ) {
       if (all(is.na(lowerbound) |
@@ -6720,6 +6894,7 @@ prepare_priors <- function(prior_argument,
         }
       }
     }
+    
     
     
     # name_parameter
