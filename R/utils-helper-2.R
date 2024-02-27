@@ -1686,8 +1686,13 @@ post_processing_checks <- function(model,
   if(!'bgmfit' %in% class(model)) {
     stop("The class of model object should be 'bgmfit' ")
   }
+  
   excall_ <- c("plot_ppc", "loo_validation")
-  if (strsplit(deparse((xcall[1])), "\\.")[[1]][1] %in% excall_) {
+  
+  check_it <- strsplit(deparse((xcall[1])), "\\.")[[1]][1] 
+  check_it <- gsub("\"",  "", check_it)
+  
+  if (check_it %in% excall_) {
     if(is.null(as.list(xcall)[['deriv']])) deriv <- ''
     if (!is.null(as.list(xcall)[['deriv']])) {
       deriv <- ''
@@ -1695,7 +1700,7 @@ post_processing_checks <- function(model,
         message(
           "\nargument 'deriv' is not allowed for the ",
           " post-processing function",  " '",
-          strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
+          check_it, "'",
           "\n ",
           "Therefore, it is set to missing i.e., deriv = ''"
         )
@@ -1776,30 +1781,122 @@ post_processing_checks <- function(model,
       ) 
   }
   
-  
   if(all) {
-    # out <-
-    #   list(
-    #     paste0(resp_, model$model_info[['namesexefuns']], ''),
-    #     paste0(resp_, model$model_info[['namesexefuns']], deriv),
-    #     paste0(resp_, model$model_info[['namesexefuns']], '0'),
-    #     paste0(resp_, model$model_info[['namesexefuns']], 'getX')
-    #   ) 
-    # if(model$model_info[['select_model']] == 'sitar' |
-    #    model$model_info[['select_model']] == 'rcs') {
-    #   out <- c(out,
-    #            list(paste0(resp_, model$model_info[['namesexefuns']], 
-    #                        'getKnots')
-    #            )
-    #            )
-    # }
     out <- model$model_info[['exefuns']]
-  } # if(all) {
-  
+  } 
   
   return(out)
 }
 
+
+
+
+#' An internal function to set up exposed functions and their environment
+#'
+#' @param o A logical (default \code{FALSE}) to indicate whether to
+#' return the object as a character string.
+#' @inherit growthparameters.bgmfit params
+#' @param ... Additional arguments. Currently ignored.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+setupfuns <- function(model,
+                      resp = NULL,
+                      o = NULL,
+                      oall = NULL,
+                      usesavedfuns = NULL,
+                      deriv = NULL,
+                      envir = NULL,
+                      deriv_model = NULL,
+                      verbose = FALSE,
+                      ...) {
+  
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  
+  if (is.null(resp)) {
+    resp_ <- resp
+  } else if (!is.null(resp)) {
+    resp_ <- paste0(resp, "_")
+  }
+  
+  if(is.null(model$xcall)) {
+    xcall <- strsplit( deparse(sys.calls()[[sys.nframe()-1]]) , "\\(")[[1]][1]
+  } else {
+    xcall <- model$xcall
+  }
+  
+  
+  excall_ <- c("plot_ppc", "loo_validation")
+  
+  check_it <- strsplit(deparse((xcall[1])), "\\.")[[1]][1] 
+  check_it <- gsub("\"",  "", check_it)
+  
+  if (check_it %in% excall_) {
+    if(is.null(as.list(xcall)[['deriv']])) deriv <- ''
+    if (!is.null(as.list(xcall)[['deriv']])) {
+      deriv <- ''
+      if(verbose) {
+        message(
+          "\nargument 'deriv' is not allowed for the ",
+          " post-processing function",  " '",
+          check_it, "'",
+          "\n ",
+          "Therefore, it is set to missing i.e., deriv = ''"
+        )
+      }
+    } # if(!is.null(chcallls$idata_method)) {
+  }
+  
+  if(!usesavedfuns) {
+    if(is.null(check_if_functions_exists(model, o, xcall))) {
+      return(invisible(NULL))
+    }
+  }
+  
+  if(usesavedfuns) {
+    if(is.null(check_if_functions_exists(model, o, xcall,
+                                         verbose = F))) {
+      envir <- envir
+    } else {
+      #  envir <- getEnv(o[[1]], geteval = TRUE)
+    }
+    # envir <- getEnv(o[[1]], geteval = TRUE)
+    
+    oall <- model$model_info[['exefuns']]
+    oalli_c <- names(oall)
+    for (oalli in oalli_c) {
+      assign(oalli, oall[[oalli]], envir = envir)
+    }
+  }
+  
+  if(!is.null(deriv)) {
+    if(deriv == 0) {
+      assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+      assignfun <- paste0(resp_, assignfun)
+      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+    } else if(deriv > 0) {
+      if(deriv_model) {
+        assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
+        assignfun <- paste0(resp_, assignfun)
+      } else if(!deriv_model) {
+        assignfun <- paste0(model$model_info[['namesexefuns']], '0')
+        assignfun <- paste0(resp_, assignfun)
+      }
+      assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+    }
+  }
+  
+  if(is.null(deriv)) {
+    assignfun <- paste0(model$model_info[['namesexefuns']], "")
+    assignfun <- paste0(resp_, assignfun)
+    assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
+  }
+  return(envir)
+}
 
 
 

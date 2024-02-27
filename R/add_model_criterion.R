@@ -52,6 +52,7 @@ add_model_criterion.bgmfit <-
            probs = c(0.025, 0.975),
            newdata = NULL,
            resp = NULL,
+           cores = 1,
            deriv_model = NULL,
            verbose = FALSE,
            expose_function = FALSE,

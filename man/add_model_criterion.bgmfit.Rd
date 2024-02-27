@@ -18,6 +18,7 @@
   probs = c(0.025, 0.975),
   newdata = NULL,
   resp = NULL,
+  cores = 1,
   deriv_model = NULL,
   verbose = FALSE,
   expose_function = FALSE,
@@ -81,6 +82,14 @@ function. Only used if \code{summary} is \code{TRUE}.}
 variable when processing posterior draws for the \code{univariate_by} and
 \code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
 \code{univariate_by} and \code{multivariate} models}
+
+\item{cores}{Number of cores to be used when running the parallel
+computations (if \code{future = TRUE}). On non-Windows systems this
+argument can be set globally via the mc.cores option. For the default
+\code{NULL} option, the number of cores are set automatically by calling
+the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the maximum
+number of cores avaialble minus one, i.e., \code{future::availableCores() -
+  1}.}
 
 \item{deriv_model}{A logical to specify whether to estimate velocity curve
 from the derivative function, or the differentiation of the distance curve.

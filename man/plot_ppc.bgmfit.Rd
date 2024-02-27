@@ -15,6 +15,23 @@
   x = NULL,
   newdata = NULL,
   resp = NULL,
+  size = 0.25,
+  alpha = 0.7,
+  trim = FALSE,
+  bw = "nrd0",
+  adjust = 1,
+  kernel = "gaussian",
+  n_dens = 1024,
+  pad = TRUE,
+  discrete = FALSE,
+  binwidth = NULL,
+  bins = NULL,
+  breaks = NULL,
+  freq = TRUE,
+  y_draw = c("violin", "points", "both"),
+  y_size = 1,
+  y_alpha = 1,
+  y_jitter = 0.1,
   verbose = FALSE,
   deriv_model = NULL,
   dummy_to_factor = NULL,
@@ -63,6 +80,46 @@ and ignored otherwise.}
 variable when processing posterior draws for the \code{univariate_by} and
 \code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
 \code{univariate_by} and \code{multivariate} models}
+
+\item{size, alpha}{Passed to the appropriate geom to control the appearance of
+the predictive distributions.}
+
+\item{trim}{A logical scalar passed to \code{\link[ggplot2:geom_density]{ggplot2::geom_density()}}.}
+
+\item{bw, adjust, kernel, n_dens}{Optional arguments passed to
+\code{\link[stats:density]{stats::density()}} to override default kernel density estimation
+parameters. \code{n_dens} defaults to \code{1024}.}
+
+\item{pad}{A logical scalar passed to \code{\link[ggplot2:stat_ecdf]{ggplot2::stat_ecdf()}}.}
+
+\item{discrete}{For \code{ppc_ecdf_overlay()}, should the data be treated as
+discrete? The default is \code{FALSE}, in which case \code{geom="line"} is
+passed to \code{\link[ggplot2:stat_ecdf]{ggplot2::stat_ecdf()}}. If \code{discrete} is set to
+\code{TRUE} then \code{geom="step"} is used.}
+
+\item{binwidth}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} to override
+the default binwidth.}
+
+\item{bins}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} to override
+the default binwidth.}
+
+\item{breaks}{Passed to \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} as an
+alternative to \code{binwidth}.}
+
+\item{freq}{For histograms, \code{freq=TRUE} (the default) puts count on the
+y-axis. Setting \code{freq=FALSE} puts density on the y-axis. (For many
+plots the y-axis text is off by default. To view the count or density
+labels on the y-axis see the \code{\link[bayesplot:yaxis_text]{yaxis_text()}} convenience
+function.)}
+
+\item{y_draw}{For \code{ppc_violin_grouped()}, a string specifying how to draw
+\code{y}: \code{"violin"} (default), \code{"points"} (jittered points), or \code{"both"}.}
+
+\item{y_jitter, y_size, y_alpha}{For \code{ppc_violin_grouped()}, if \code{y_draw} is
+\code{"points"} or \code{"both"} then \code{y_size}, \code{y_alpha}, and \code{y_jitter} are passed
+to to the \code{size}, \code{alpha}, and \code{width} arguments of \code{\link[ggplot2:geom_jitter]{ggplot2::geom_jitter()}}
+to control the appearance of \code{y} points. The default of \code{y_jitter=NULL}
+will let \strong{ggplot2} determine the amount of jitter.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the

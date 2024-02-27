@@ -6,9 +6,15 @@
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @inherit growthparameters.bgmfit params
-#' @inherit brms::pp_check.brmsfit params description 
-#' @inherit fitted_draws.bgmfit params
+#' @inheritParams growthparameters.bgmfit
+#' @inheritParams brms::pp_check.brmsfit
+#' @inheritParams fitted_draws.bgmfit
+#' @inheritParams bayesplot::ppc_dens_overlay
+#' @inheritParams bayesplot::ppc_ecdf_overlay
+#' @inheritParams bayesplot::ppc_freqpoly
+#' @inheritParams bayesplot::ppc_violin_grouped
+#' @inheritParams bayesplot::ppc_hist
+#' @inherit brms::pp_check.brmsfit description
 #' 
 #' @param ... Additional arguments passed to the [brms::pp_check.brmsfit()] 
 #' function. Please see [brms::pp_check.brmsfit()] for details.
@@ -45,6 +51,23 @@ plot_ppc.bgmfit <-
            x = NULL,
            newdata = NULL,
            resp = NULL,
+           size = 0.25,
+           alpha = 0.7,
+           trim = FALSE,
+           bw = "nrd0",
+           adjust = 1,
+           kernel = "gaussian",
+           n_dens = 1024,
+           pad = TRUE,
+           discrete = FALSE,
+           binwidth = NULL,
+           bins = NULL,
+           breaks = NULL,
+           freq = TRUE,
+           y_draw = c("violin", "points", "both"),
+           y_size = 1,
+           y_alpha = 1,
+           y_jitter = 0.1,
            verbose = FALSE,
            deriv_model = NULL,
            dummy_to_factor = NULL, 
@@ -125,7 +148,7 @@ plot_ppc.bgmfit <-
                                 xcall = match.call(),
                                 resp = resp,
                                 envir = envir,
-                                deriv = deriv, 
+                                deriv = 'deriv', 
                                 all = FALSE,
                                 verbose = verbose)
     
@@ -163,7 +186,7 @@ plot_ppc.bgmfit <-
     if(is.null(calling.args$newdata)) {
       if(!is.null(newdata)) calling.args$newdata <- newdata
     }
-    
+   
     
     . <- do.call(brms::pp_check, calling.args)
     
