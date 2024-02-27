@@ -144,6 +144,8 @@ optimize_model.bgmfit <- function(model,
   Parameter <- NULL;
   Estimate <- NULL;
   . <- NULL;
+  Criterion <- NULL;
+  
   
   if (is.null(newdata)) {
     newdata <- model$model_info$bgmfit.data
@@ -222,7 +224,8 @@ optimize_model.bgmfit <- function(model,
   if (need_exposed_function) {
     if(is.null(expose_function)) {
       args_o$expose_function <- expose_function <- TRUE
-      if(verbose) message("Argument 'expose_function' has been set to TRUE")
+      if(verbose) 
+        message("Argument 'expose_function' set to TRUE for adding fit criteria")
     } else if(!is.null(expose_function)) {
       if (!args_o$expose_function) {
         stop(
@@ -359,45 +362,8 @@ optimize_model.bgmfit <- function(model,
                               envir,
                               ...) {
     
-    
-    
-    # if(is.null(envir)) {
-    #   if(!is.null(fit$model_info$exefuns[[1]])) {
-    #     envir <- environment(fit$model_info$exefuns[[1]])
-    #   } else {
-    #     envir <- parent.frame()
-    #   }
-    # }
-    # 
-    # if(is.null(usesavedfuns)) {
-    #   if(!is.null(fit$model_info$exefuns[[1]])) {
-    #     usesavedfuns <- TRUE
-    #   } else if(is.null(fit$model_info$exefuns[[1]])) {
-    #     if(expose_function) {
-    #       fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
-    #       usesavedfuns <- TRUE
-    #     } else if(!expose_function) {
-    #       usesavedfuns <- FALSE
-    #     }
-    #   }
-    # } else { # if(!is.null(usesavedfuns)) {
-    #   if(!usesavedfuns) {
-    #     if(expose_function) {
-    #       fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
-    #       usesavedfuns <- TRUE
-    #     }
-    #   } else if(usesavedfuns) {
-    #     check_if_functions_exists(fit, checks = TRUE, 
-    #                               usesavedfuns = usesavedfuns)
-    #   }
-    # }
-    
-    
-   # if (!fit$model_info$call.full.bgmfit$expose_function) {
-      assign(o[[1]], fit$model_info[['exefuns']][[o[[1]]]], envir = envir)
-   # }
-    
-      
+    assign(o[[1]], fit$model_info[['exefuns']][[o[[1]]]], envir = envir)
+   
     if (!is.null(add_fit_criteria)) {
       what_ <- paste(add_fit_criteria, collapse = ", ")
       message(" Adding", " ", what_, " ", "...")
@@ -467,7 +433,7 @@ optimize_model.bgmfit <- function(model,
           fit$criteria[[aci_names]] <-
             fit$criteria[[aci_names]] %>%
             data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
-            dplyr::relocate(Parameter)
+            dplyr::relocate(dplyr::all_of('Parameter'))
           rownames(fit$criteria[[aci_names]]) <- NULL
         }
         if (fit$model_info$multivariate) {
@@ -479,7 +445,7 @@ optimize_model.bgmfit <- function(model,
             fit$criteria[[aci_names]] <-
               fit$criteria[[aci_names]] %>%
               data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
-              dplyr::relocate(Parameter)
+              dplyr::relocate(dplyr::all_of('Parameter'))
             rownames(fit$criteria[[aci_names]]) <- NULL
           }
           if (!is.null(resp)) {
@@ -492,7 +458,7 @@ optimize_model.bgmfit <- function(model,
               fit$criteria[[aci_names]] <-
                 fit$criteria[[aci_names]] %>%
                 data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
-                dplyr::relocate(Parameter)
+                dplyr::relocate(dplyr::all_of('Parameter'))
               rownames(fit$criteria[[aci_names]]) <- NULL
             }
           }
@@ -512,7 +478,7 @@ optimize_model.bgmfit <- function(model,
           fit$criteria[[aci_names]] <-
             fit$criteria[[aci_names]] %>%
             data.frame() %>% dplyr::mutate(Parameter = rownames(.)) %>%
-            dplyr::relocate(Parameter)
+            dplyr::relocate(dplyr::all_of('Parameter'))
           rownames(fit$criteria[[aci_names]]) <- NULL
         }
       }
@@ -573,8 +539,9 @@ optimize_model.bgmfit <- function(model,
       row.names(summary_loo_diagnostic) <- NULL
       summary_loo_diagnostic$Range <- attr(loo::pareto_k_table(x),
                                            "dimnames")[[1]]
+      
       summary_loo_diagnostic$Inference <-
-        c('Good', "Ok", "Bad", "Very bad")
+        c('Good', "Bad", "Very bad")
       summary_loo_diagnostic$Percent <-
         round(summary_loo_diagnostic$Proportion * 100, digits)
       summary_loo_diagnostic$Min.n_eff  <-
@@ -709,7 +676,7 @@ optimize_model.bgmfit <- function(model,
         summary_bayes_R2 <- summary_bayes_R2
       }
       fit$summary_bayes_R2 <-
-        summary_bayes_R2 %>% dplyr::select(-Parameter)
+        summary_bayes_R2 %>% dplyr::select(-dplyr::all_of('Parameter'))
     }
     
     
@@ -1143,27 +1110,108 @@ optimize_model.bgmfit <- function(model,
     }
     
     
+    ########################
+    
+    
+    
+    
+    
+    ########################
+    
+    
+    
+    # loo_fitx <<- loo_fit
+    # loo_diagnostic_fitx <<- loo_diagnostic_fit
+    # waic_fitx <<- waic_fit
+    # bayes_R2_fitx <<- bayes_R2_fit
+    
+    
     attributes(optimize_list) <- NULL
     
     optimize_summary <- data.frame()
     
-    if(exists('loo_fit')) optimize_summary <- optimize_summary %>% 
-      dplyr::bind_rows(., loo_fit)
+    if(exists('loo_fit')) {
+      if(!is.null(loo_fit)) {
+        loo_fit <- loo_fit %>% 
+          dplyr::mutate(Criterion = 'loo') %>% 
+          dplyr::relocate(Criterion, .before = dplyr::all_of('Parameter'))
+      }
+      
+      optimize_summary <- optimize_summary %>% 
+        dplyr::bind_rows(., loo_fit)
+    }
     
-    if(exists('loo_diagnostic_fit')) optimize_summary <- optimize_summary %>% 
-      dplyr::bind_rows(., loo_diagnostic_fit)
+    if(exists('loo_diagnostic_fit')) {
+      if(!is.null(loo_diagnostic_fit)) {
+        loo_diagnostic_fit <- loo_diagnostic_fit %>% 
+          dplyr::rename(Parameter = Inference) %>% 
+          dplyr::mutate(Criterion = 'loo') %>% 
+          dplyr::relocate(Criterion, .before = dplyr::all_of('Parameter'))
+        
+        loo_diagnostic_fit <- loo_diagnostic_fit %>% 
+          dplyr::mutate(Parameter = paste0("Pareto k: ", Parameter)) %>% 
+          dplyr::mutate(Estimate = NA, SE = NA) %>% 
+          dplyr::relocate(Parameter, .before = dplyr::all_of('Range')) %>% 
+          dplyr::relocate(Estimate, .before = dplyr::all_of('Range'))
+      }
+      
+        
+      optimize_summary <- optimize_summary %>% 
+        dplyr::bind_rows(., loo_diagnostic_fit)
+    }
     
-    if(exists('waic_fit')) optimize_summary <- optimize_summary %>% 
-      dplyr::bind_rows(., waic_fit)
+    if(exists('waic_fit')) {
+      if(!is.null(waic_fit)) {
+        waic_fit <- waic_fit %>% 
+          dplyr::mutate(Criterion = 'waic') %>% 
+          dplyr::relocate(Criterion, .before = dplyr::all_of('Parameter'))
+      }
+     
+      optimize_summary <- optimize_summary %>% 
+        dplyr::bind_rows(., waic_fit)
+    }
     
-    if(exists('bayes_R2_fit')) optimize_summary <- optimize_summary %>% 
-      dplyr::bind_rows(., bayes_R2_fit)
+    if(exists('bayes_R2_fit')) {
+      # Somehow bayes_R2_fit throw error: mutate applied to 'NULL'
+      if(!is.null(bayes_R2_fit)) {
+      bayes_R2_fit <- bayes_R2_fit %>% 
+        dplyr::mutate(Criterion = 'Bayes_R2') %>% 
+        dplyr::relocate(Criterion, .before = dplyr::all_of('Parameter'))
+      }
+   
+      optimize_summary <- optimize_summary %>% 
+        dplyr::bind_rows(., bayes_R2_fit)
+    }
+    
+    
+    # optimize_summary <- optimize_summary %>%
+    #   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+    #                               ~ round(., digits = digits)))
+    
+    
+    if(nrow(optimize_summary) > 0) {
+      comment_optimize_summary <- 
+        paste("Notes:",
+              "\n",
+              "Columns 'Range' 'Count' 'Percent' and 'Min.n_eff'",
+              " are relevant only for the 'loo Inference'.",
+              "\n",
+              "Columns CI limits are applicable only for the 'Bayes_R2'",
+              "\n",
+              "Columns Estimate and SE are applicable for",
+              "'loo Estimate', 'waic' and 'Bayes_R2'"
+        )
+      attr(optimize_summary, 'comment') <- comment_optimize_summary
+    } else {
+      optimize_summary <- NULL
+    }
     
     out <- list(models = optimize_list, optimize_summary = optimize_summary)
     
     return(out)
   } # if(!is.null(optimize_list[[1]])) {
  
+  
 }
 
 
