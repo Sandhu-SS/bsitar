@@ -6725,7 +6725,9 @@ prepare_priors <- function(prior_argument,
     # print(fxls)
 
     # if fxls = 'log', then assign them 
+    dont_allow_0 <- FALSE
     if(fxls == 'log') {
+      dont_allow_0 <- TRUE
       loc_log <- function(loc_parm, sca_parm) {
         log_mu <- log(loc_parm / sqrt(sca_parm^2 / loc_parm^2 + 1))
         log_mu
@@ -6785,8 +6787,41 @@ prepare_priors <- function(prior_argument,
         }
       } # for (collect_name_parameteri in collect_name_parameter) {
       
+      
+      inf_fun <- function(x) if(x <=0) x <- 0.000001 else x
+      
+      if(dont_allow_0) {
+        loc_parm <- lapply(loc_parm, inf_fun) %>% unlist()
+        sca_parm <- lapply(sca_parm, inf_fun) %>% unlist()
+      }
+      
+      
       log_mu <- fun_log_loc(loc_parm, sca_parm)
       log_sd <- fun_log_sca(loc_parm, sca_parm)
+      
+      if(any(is.infinite(log_mu))) {
+        stop("location parameter for transformed prior is Inf",
+             "\n ", 
+             "Perhaps you intend to log transform the prior", 
+             " but location parameter for some priors is '0'",
+             "\n ", 
+             "To circumvent this problem, set fxls = 'log' for which parameters",
+             "\n ", 
+             "location parameter is moved away from '0' by addding 0.00001"
+             )
+      }
+      
+      if(any(is.infinite(log_sd))) {
+        stop("scale parameter for transformed prior is Inf",
+             "\n ", 
+             "Perhaps you intend to log transform the prior", 
+             " but location parameter for some priors is '0'",
+             "\n ", 
+             "To circumvent this problem, set fxls = 'log' for which parameters",
+             "\n ", 
+             "location parameter is moved away from '0' by addding 0.00001"
+        )
+      }
       
       # log_mu <- log(loc_parm / sqrt(sca_parm^2 / loc_parm^2 + 1))
       # log_sd <- sqrt(log(sca_parm^2 / loc_parm^2 + 1))

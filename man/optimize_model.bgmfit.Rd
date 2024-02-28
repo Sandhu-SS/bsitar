@@ -11,7 +11,9 @@
   optimize_df = NULL,
   optimize_x = list(NULL, log, sqrt),
   optimize_y = list(NULL, log, sqrt),
-  transform_priors = c("beta", "sd", "rsd", "sigma", "dpar"),
+  transform_prior_class = c("beta", "sd", "rsd", "sigma", "dpar"),
+  transform_beta_coef = c("b", "c", "d"),
+  transform_sd_coef = c("b", "c", "d"),
   exclude_default_funs = TRUE,
   add_fit_criteria = NULL,
   add_bayes_R = NULL,
@@ -60,20 +62,45 @@ i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to the
 variable (i.e., \code{y}). The approach and options available for
 \code{optimize_y} are same as described above for the \code{optimize_x}.}
 
-\item{transform_priors}{A character vector (default \code{NULL}) specifying
-the transformations of location-scale based priors such as \code{normal()}
-when response variable (i.e., \code{y}) is \code{'log'} or \code{'sqrt'}
-transformed. The prior type that could be transformed are \code{'beta'},
-\code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}. Currently it
-is available only for \code{'log'} transformed \code{y}. Each prior type
-(i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'}) specified via
-\code{transform_priors} is log transformed as follows: \cr
+\item{transform_prior_class}{A character vector (default \code{NULL})
+specifying the transformations of location-scale based priors such as
+\code{normal()} when response variable (i.e., \code{y}) is \code{'log'} or
+\code{'sqrt'} transformed. The prior type that could be transformed are
+\code{'beta'}, \code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}.
+Currently it is available only for \code{'log'} transformed \code{y}. Each
+prior type (i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'}) specified
+via \code{transform_prior_class} is log transformed as follows: \cr
 \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr
 \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr
 where location and scale are the original parameters supplied by the user
 and the log_location and log_scale are the equivalent parameters on the log
 scale. For more details, see \code{a_prior_beta} argument in \code{\link[=bsitar]{bsitar()}}
-function.}
+function. Note that \code{transform_prior_class} is used as an experiment
+and therefore results may not be what user intended. Thus we recommend to
+explicitly set the desired prior and not to use
+\code{transform_prior_class}.}
+
+\item{transform_beta_coef}{A character vector (default \code{NULL})
+specifying the transformations of location-scale based priors for specific
+regression coefficient(s) when response variable (i.e., \code{y}) is
+\code{'log'} or \code{'sqrt'} transformed. The coefficient that could be
+transformed are \code{'a'}, \code{'b'}, \code{'c'}, \code{'d'} and
+\code{'s'}. The default is \code{transform_beta_coef = c('b',' b', 'd')}
+which implies that parameters \code{'a'}, \code{'a'} and \code{'a'} will be
+transformed whereas parameter \code{'a'} will be left unchnaged because
+default prior for parameter \code{'a'} is based on outcome  \code{y} itself
+(e.g., \code{a_prior_beta = normal(ymean, ysd)}) which has be transormed.
+However, we strongly suggest that user explicitly set the desired prior and
+not to rely on \code{transform_beta_coef} because it is included on
+experimental basis. See \code{transform_prior_class} for details.}
+
+\item{transform_sd_coef}{A character vector (default \code{NULL}) specifying
+the transformations of location-scale based priors for specific group level
+coefficient(s) when response variable (i.e., \code{y}) is \code{'log'} or
+\code{'sqrt'} transformed. The coefficient that could be transformed are
+\code{'a'}, \code{'b'}, \code{'c'}, \code{'d'} and \code{'s'}. The default
+is \code{transform_beta_coef = c('b',' b', 'd')}. See
+\code{transform_prior_class} and \code{transform_beta_coef}  for details.}
 
 \item{exclude_default_funs}{A logical to indicate whether transformations for
 (\code{x} and \code{y}) variables used in the original model fit should be
@@ -157,8 +184,8 @@ derivatives such as velocity curve.}
 \item{...}{Other arguments passed to \code{\link{update_model}}.}
 }
 \value{
-A list containing the optimized models of class \code{bgmfit}, and the
-the summary statistics if \code{add_fit_criteria} and/or
+A list containing the optimized models of class \code{bgmfit}, and
+the the summary statistics if \code{add_fit_criteria} and/or
 \code{add_bayes_R} are specified.
 }
 \description{

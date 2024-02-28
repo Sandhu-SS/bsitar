@@ -32,21 +32,46 @@
 #'   variable (i.e., \code{y}). The approach and options available for
 #'   \code{optimize_y} are same as described above for the \code{optimize_x}.
 #'   
-#' @param transform_priors A character vector (default \code{NULL}) specifying
-#'   the transformations of location-scale based priors such as \code{normal()}
-#'   when response variable (i.e., \code{y}) is \code{'log'} or \code{'sqrt'}
-#'   transformed. The prior type that could be transformed are \code{'beta'},
-#'   \code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}. Currently it
-#'   is available only for \code{'log'} transformed \code{y}. Each prior type
-#'   (i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'}) specified via
-#'   \code{transform_priors} is log transformed as follows: \cr
+#' @param transform_prior_class A character vector (default \code{NULL})
+#'   specifying the transformations of location-scale based priors such as
+#'   \code{normal()} when response variable (i.e., \code{y}) is \code{'log'} or
+#'   \code{'sqrt'} transformed. The prior type that could be transformed are
+#'   \code{'beta'}, \code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}.
+#'   Currently it is available only for \code{'log'} transformed \code{y}. Each
+#'   prior type (i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'}) specified
+#'   via \code{transform_prior_class} is log transformed as follows: \cr
 #'  \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr 
 #'  \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr 
 #'  where location and scale are the original parameters supplied by the user
 #'  and the log_location and log_scale are the equivalent parameters on the log
 #'  scale. For more details, see \code{a_prior_beta} argument in [bsitar()]
-#'  function.
+#'  function. Note that \code{transform_prior_class} is used as an experiment
+#'  and therefore results may not be what user intended. Thus we recommend to
+#'  explicitly set the desired prior and not to use
+#'  \code{transform_prior_class}.
+#'  
+#' @param transform_beta_coef A character vector (default \code{NULL})
+#'   specifying the transformations of location-scale based priors for specific
+#'   regression coefficient(s) when response variable (i.e., \code{y}) is
+#'   \code{'log'} or \code{'sqrt'} transformed. The coefficient that could be
+#'   transformed are \code{'a'}, \code{'b'}, \code{'c'}, \code{'d'} and
+#'   \code{'s'}. The default is \code{transform_beta_coef = c('b',' b', 'd')}
+#'   which implies that parameters \code{'a'}, \code{'a'} and \code{'a'} will be
+#'   transformed whereas parameter \code{'a'} will be left unchanged because
+#'   default prior for parameter \code{'a'} is based on outcome  \code{y} itself
+#'   (e.g., \code{a_prior_beta = normal(ymean, ysd)}) which has be transformed.
+#'   However, we strongly suggest that user explicitly set the desired prior and
+#'   not to rely on \code{transform_beta_coef} because it is included on
+#'   experimental basis. See \code{transform_prior_class} for details.
 #' 
+#' @param transform_sd_coef A character vector (default \code{NULL}) specifying
+#'   the transformations of location-scale based priors for specific group level
+#'   coefficient(s) when response variable (i.e., \code{y}) is \code{'log'} or
+#'   \code{'sqrt'} transformed. The coefficient that could be transformed are
+#'   \code{'a'}, \code{'b'}, \code{'c'}, \code{'d'} and \code{'s'}. The default
+#'   is \code{transform_beta_coef = c('b',' b', 'd')}. See
+#'   \code{transform_prior_class} and \code{transform_beta_coef}  for details.
+#'  
 #' @param exclude_default_funs A logical to indicate whether transformations for
 #'   (\code{x} and \code{y}) variables used in the original model fit should be
 #'   excluded. If \code{TRUE} (default), the transformations specified for the
@@ -83,9 +108,9 @@
 #' 
 #' @inheritParams growthparameters.bgmfit
 #'
-#' @return A list containing the optimized models of class \code{bgmfit}, and the
-#'  the summary statistics if \code{add_fit_criteria} and/or
-#'  \code{add_bayes_R} are specified.
+#' @return A list containing the optimized models of class \code{bgmfit}, and
+#'   the the summary statistics if \code{add_fit_criteria} and/or
+#'   \code{add_bayes_R} are specified.
 #'  
 #' @export optimize_model.bgmfit
 #' @export
@@ -131,8 +156,10 @@ optimize_model.bgmfit <- function(model,
                                   optimize_df = NULL,
                                   optimize_x = list(NULL, log,  sqrt),
                                   optimize_y = list(NULL, log,  sqrt),
-                                  transform_priors = c('beta', 'sd', 
-                                                       'rsd', 'sigma', 'dpar'), 
+                                  transform_prior_class = c('beta', 'sd', 
+                                                       'rsd', 'sigma', 'dpar'),
+                                  transform_beta_coef = c('b', 'c', 'd'),
+                                  transform_sd_coef = c('b', 'c', 'd'),
                                   exclude_default_funs = TRUE,
                                   add_fit_criteria = NULL,
                                   add_bayes_R = NULL,
@@ -242,7 +269,7 @@ optimize_model.bgmfit <- function(model,
     if(is.null(expose_function)) {
       args_o$expose_function <- expose_function <- TRUE
       if(verbose) 
-        message("Argument 'expose_function' set to TRUE for adding fit criteria")
+        message("Argument 'expose_function' set to TRUE for fit criteria")
     } else if(!is.null(expose_function)) {
       if (!args_o$expose_function) {
         stop(
@@ -827,7 +854,7 @@ optimize_model.bgmfit <- function(model,
   
   
   
-  optimize_fun <- function(.x, model) {
+  optimize_fun <- function(.x, model, exe_model_fit) {
     message("\nOptimizing model no. ",
             .x,
             " (total ",
@@ -837,11 +864,7 @@ optimize_model.bgmfit <- function(model,
     df <- levels(droplevels(exe_row$df))
     xfun <- levels(droplevels(exe_row$xfun))
     yfun <- levels(droplevels(exe_row$yfun))
-    # if (df == 'NULL')
-    #   df <-
-    #   paste0("list(", paste(model$model_info$dfs, collapse = ","), ")")
-    # else
-    #   df <- df
+    
     if (xfun == 'NULL')
       xfun <- NULL
     else
@@ -874,13 +897,15 @@ optimize_model.bgmfit <- function(model,
     
     if(verbose) {
       cat("\n")
-      cat(paste0("df = ", df_print, "; xfun = ", xfun_print, "; yfun = ", yfun_print),
+      cat(paste0("df = ", df_print, "; xfun = ", 
+                 xfun_print, "; yfun = ", yfun_print),
           "\n")
     }
     
     
     optimization_info <-
-      paste0("df = ", df_print, "; xfun = ", xfun_print, "; yfun = ", yfun_print)
+      paste0("df = ", df_print, "; xfun = ", 
+             xfun_print, "; yfun = ", yfun_print)
     
     
     args_o$model <- model
@@ -956,37 +981,102 @@ optimize_model.bgmfit <- function(model,
       transform_allowed_dist <- 
         c('normal', 'student_t', 'student_nu', 'cauchy', 'lognormal')
       
-      if(is.null(transform_priors)) {
-        transform_beta <- transform_sd <- 
-          transform_rsd <- transform_sigma <- transform_dpar <- FALSE
-      } else if(!is.null(transform_priors)) {
-        if('beta' %in% transform_priors) {
-          transform_beta <- TRUE 
+      if(is.null(transform_beta_coef)) {
+        transform_beta_a <- transform_beta_b <- 
+          transform_beta_c <- transform_beta_d <- transform_beta_s <- FALSE
+      } else if(!is.null(transform_beta_coef)) {
+        if('a' %in% transform_beta_coef) {
+          transform_beta_a <- TRUE 
         } else {
-          transform_beta <- FALSE
+          transform_beta_a <- FALSE
         }
-        if('sd' %in% transform_priors) {
-          transform_sd <- TRUE 
+        if('b' %in% transform_beta_coef) {
+          transform_beta_b <- TRUE 
         } else {
-          transform_sd <- FALSE
+          transform_beta_b <- FALSE
         }
-        if('rsd' %in% transform_priors) {
-          transform_rsd <- TRUE 
+        if('c' %in% transform_beta_coef) {
+          transform_beta_c <- TRUE 
         } else {
-          transform_rsd <- FALSE
+          transform_beta_c <- FALSE
         }
-        if('sigma' %in% transform_priors) {
-          transform_sigma <- TRUE 
+        if('d' %in% transform_beta_coef) {
+          transform_beta_d <- TRUE 
         } else {
-          transform_sigma <- FALSE
+          transform_beta_d <- FALSE
         }
-        if('dpar' %in% transform_priors) {
-          transform_dpar <- TRUE 
+        if('s' %in% transform_beta_coef) {
+          transform_beta_s <- TRUE 
         } else {
-          transform_dpar <- FALSE
+          transform_beta_s <- FALSE
         }
       }
       
+      
+      if(is.null(transform_sd_coef)) {
+        transform_sd_a <- transform_sd_b <- 
+          transform_sd_c <- transform_sd_d <- transform_sd_s <- FALSE
+      } else if(!is.null(transform_sd_coef)) {
+        if('a' %in% transform_sd_coef) {
+          transform_sd_a <- TRUE 
+        } else {
+          transform_sd_a <- FALSE
+        }
+        if('b' %in% transform_sd_coef) {
+          transform_sd_b <- TRUE 
+        } else {
+          transform_sd_b <- FALSE
+        }
+        if('c' %in% transform_sd_coef) {
+          transform_sd_c <- TRUE 
+        } else {
+          transform_sd_c <- FALSE
+        }
+        if('d' %in% transform_sd_coef) {
+          transform_sd_d <- TRUE 
+        } else {
+          transform_sd_d <- FALSE
+        }
+        if('s' %in% transform_sd_coef) {
+          transform_sd_s <- TRUE 
+        } else {
+          transform_sd_s <- FALSE
+        }
+      }
+      
+      if(is.null(transform_prior_class)) {
+        transform_class_beta <- transform_class_sd <- 
+          transform_class_rsd <- transform_class_sigma <- 
+          transform_class_dpar <- FALSE
+      } else if(!is.null(transform_prior_class)) {
+        if('beta' %in% transform_prior_class) {
+          transform_class_beta <- TRUE 
+        } else {
+          transform_class_beta <- FALSE
+        }
+        if('sd' %in% transform_prior_class) {
+          transform_class_sd <- TRUE 
+        } else {
+          transform_class_sd <- FALSE
+        }
+        if('rsd' %in% transform_prior_class) {
+          transform_class_rsd <- TRUE 
+        } else {
+          transform_class_rsd <- FALSE
+        }
+        if('sigma' %in% transform_prior_class) {
+          transform_class_sigma <- TRUE 
+        } else {
+          transform_class_sigma <- FALSE
+        }
+        if('dpar' %in% transform_prior_class) {
+          transform_class_dpar <- TRUE 
+        } else {
+          transform_class_dpar <- FALSE
+        }
+      }
+      
+     
       
       if(!is.null(args_o$yfun)) {
         if(args_o$yfun == "log") {
@@ -994,8 +1084,50 @@ optimize_model.bgmfit <- function(model,
           for (user_calli in names(user_call)) {
             if(grepl("_prior", user_calli)) {
               if(grepl("_beta", user_calli)) {
+                transform_beta_coef_tf <- FALSE
+                if(grepl("a_prior", user_calli)) {
+                  if(transform_beta_a & transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(transform_beta_a & !transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(!transform_beta_a & !transform_class_beta) 
+                    transform_beta_coef_tf <- FALSE
+                } 
+                if(grepl("b_prior", user_calli)) {
+                  if(transform_beta_b & transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(transform_beta_b & !transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(!transform_beta_b & !transform_class_beta) 
+                    transform_beta_coef_tf <- FALSE
+                } 
+                if(grepl("c_prior", user_calli)) {
+                  if(transform_beta_c & transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(transform_beta_c & !transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(!transform_beta_c & !transform_class_beta) 
+                    transform_beta_coef_tf <- FALSE
+                } 
+                if(grepl("d_prior", user_calli)) {
+                  if(transform_beta_d & transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(transform_beta_d & !transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(!transform_beta_d & !transform_class_beta) 
+                    transform_beta_coef_tf <- FALSE
+                } 
+                if(grepl("s_prior", user_calli)) {
+                  if(transform_beta_s & transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(transform_beta_s & !transform_class_beta) 
+                    transform_beta_coef_tf <- TRUE
+                  if(!transform_beta_s & !transform_class_beta) 
+                    transform_beta_coef_tf <- FALSE
+                } 
+                
                 if(!is.null(user_call[[user_calli]])) {
-                  if(transform_beta) {
+                  if(transform_beta_coef_tf) {
                     tem_dist <- deparse(user_call[[user_calli]][[1]])
                     tem_as_str <- FALSE
                     if(grepl("\"",  tem_dist)) {
@@ -1008,18 +1140,18 @@ optimize_model.bgmfit <- function(model,
                       stop("Tranformation of '", tem_dist, "; distribution ", 
                            "for ", user_calli, " is not allowed.",
                            "\n", 
-                           "  Please adjust your 'transform_priors' argument",
+                           "  Please adjust 'transform_prior_class' argument",
                            " which at present is specified as:",
                            "\n", 
-                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "  ",  paste(transform_prior_class, collapse = ", "), 
                            "\n", 
-                           "  Or else, change prior '", user_calli, "' from its",
+                           "  Else, change prior '", user_calli, "' from its",
                            " current formulation ", tem_prior, 
                            "\n",
-                           " ", " to one",
-                           " that is based on one of the following distributions",
+                           " ", " to one that",
+                           " is based on one of the following distributions",
                            "\n", 
-                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                           "  ",paste(transform_allowed_dist, collapse = ", ")
                       )
                     }
                     tem <- user_call[[user_calli]]
@@ -1030,8 +1162,49 @@ optimize_model.bgmfit <- function(model,
                 }
               }
               if(grepl("_sd", user_calli) & !grepl("$sigma", user_calli)) {
+                transform_sd_coef_tf <- FALSE
+                if(grepl("a_prior", user_calli)) {
+                  if(transform_sd_a & transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(transform_sd_a & !transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(!transform_sd_a & !transform_class_beta) 
+                    transform_sd_coef_tf <- FALSE
+                } 
+                if(grepl("b_prior", user_calli)) {
+                  if(transform_sd_b & transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(transform_sd_b & !transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(!transform_sd_b & !transform_class_beta) 
+                    transform_sd_coef_tf <- FALSE
+                } 
+                if(grepl("c_prior", user_calli)) {
+                  if(transform_sd_c & transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(transform_sd_c & !transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(!transform_sd_c & !transform_class_beta) 
+                    transform_sd_coef_tf <- FALSE
+                } 
+                if(grepl("d_prior", user_calli)) {
+                  if(transform_sd_d & transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(transform_sd_d & !transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(!transform_sd_d & !transform_class_beta) 
+                    transform_sd_coef_tf <- FALSE
+                } 
+                if(grepl("s_prior", user_calli)) {
+                  if(transform_sd_s & transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(transform_sd_s & !transform_class_beta) 
+                    transform_sd_coef_tf <- TRUE
+                  if(!transform_sd_s & !transform_class_beta) 
+                    transform_sd_coef_tf <- FALSE
+                } 
                 if(!is.null(user_call[[user_calli]])) {
-                  if(transform_sd) {
+                  if(transform_sd_coef_tf) {
                     tem_dist <- deparse(user_call[[user_calli]][[1]])
                     tem_as_str <- FALSE
                     if(grepl("\"",  tem_dist)) {
@@ -1044,18 +1217,18 @@ optimize_model.bgmfit <- function(model,
                       stop("Tranformation of '", tem_dist, "; distribution ", 
                            "for ", user_calli, " is not allowed.",
                            "\n", 
-                           "  Please adjust your 'transform_priors' argument",
+                           "  Please adjust 'transform_prior_class' argument",
                            " which at present is specified as:",
                            "\n", 
-                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "  ",  paste(transform_prior_class, collapse = ", "), 
                            "\n", 
-                           "  Or else, change prior '", user_calli, "' from its",
+                           "  Else, change prior '", user_calli, "' from its",
                            " current formulation ", tem_prior, 
                            "\n",
-                           " ", " to one",
-                           " that is based on one of the following distributions",
+                           " ", " to one that",
+                           " is based on one of the following distributions",
                            "\n", 
-                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                           "  ",paste(transform_allowed_dist, collapse = ", ")
                       )
                     }
                     tem <- user_call[[user_calli]]
@@ -1067,7 +1240,7 @@ optimize_model.bgmfit <- function(model,
               }
               if(grepl("rsd_", user_calli) & grepl("sigma", user_calli)) {
                 if(!is.null(user_call[[user_calli]])) {
-                  if(transform_rsd) {
+                  if(transform_class_rsd) {
                     tem_dist <- deparse(user_call[[user_calli]][[1]])
                     tem_as_str <- FALSE
                     if(grepl("\"",  tem_dist)) {
@@ -1080,18 +1253,18 @@ optimize_model.bgmfit <- function(model,
                       stop("Tranformation of '", tem_dist, "; distribution ", 
                            "for ", user_calli, " is not allowed.",
                            "\n", 
-                           "  Please adjust your 'transform_priors' argument",
+                           "  Please adjust 'transform_prior_class' argument",
                            " which at present is specified as:",
                            "\n", 
-                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "  ",  paste(transform_prior_class, collapse = ", "), 
                            "\n", 
-                           "  Or else, change prior '", user_calli, "' from its",
+                           "  Else, change prior '", user_calli, "' from its",
                            " current formulation ", tem_prior, 
                            "\n",
-                           " ", " to one",
-                           " that is based on one of the following distributions",
+                           " ", " to one that",
+                           " is based on one of the following distributions",
                            "\n", 
-                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                           "  ",paste(transform_allowed_dist, collapse = ", ")
                       )
                     }
                     tem <- user_call[[user_calli]]
@@ -1103,7 +1276,7 @@ optimize_model.bgmfit <- function(model,
               }
               if(grepl("dpar_", user_calli) & grepl("sigma", user_calli)) {
                 if(!is.null(user_call[[user_calli]])) {
-                  if(transform_dpar) {
+                  if(transform_class_dpar) {
                     tem_dist <- deparse(user_call[[user_calli]][[1]])
                     tem_as_str <- FALSE
                     if(grepl("\"",  tem_dist)) {
@@ -1116,18 +1289,18 @@ optimize_model.bgmfit <- function(model,
                       stop("Tranformation of '", tem_dist, "; distribution ", 
                            "for ", user_calli, " is not allowed.",
                            "\n", 
-                           "  Please adjust your 'transform_priors' argument",
+                           "  Please adjust 'transform_prior_class' argument",
                            " which at present is specified as:",
                            "\n", 
-                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "  ",  paste(transform_prior_class, collapse = ", "), 
                            "\n", 
-                           "  Or else, change prior '", user_calli, "' from its",
+                           "  Else, change prior '", user_calli, "' from its",
                            " current formulation ", tem_prior, 
                            "\n",
-                           " ", " to one",
-                           " that is based on one of the following distributions",
+                           " ", " to one that",
+                           " is based on one of the following distributions",
                            "\n", 
-                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                           "  ",paste(transform_allowed_dist, collapse = ", ")
                       )
                     }
                     tem <- user_call[[user_calli]]
@@ -1139,7 +1312,7 @@ optimize_model.bgmfit <- function(model,
               }
               if(grepl("sigma", user_calli) & grepl("_sd", user_calli)) {
                 if(!is.null(user_call[[user_calli]])) {
-                  if(transform_sigma) {
+                  if(transform_class_sigma) {
                     tem_dist <- deparse(user_call[[user_calli]][[1]])
                     tem_as_str <- FALSE
                     if(grepl("\"",  tem_dist)) {
@@ -1152,18 +1325,18 @@ optimize_model.bgmfit <- function(model,
                       stop("Tranformation of '", tem_dist, "; distribution ", 
                            "for ", user_calli, " is not allowed.",
                            "\n", 
-                           "  Please adjust your 'transform_priors' argument",
+                           "  Please adjust 'transform_prior_class' argument",
                            " which at present is specified as:",
                            "\n", 
-                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "  ",  paste(transform_prior_class, collapse = ", "), 
                            "\n", 
-                           "  Or else, change prior '", user_calli, "' from its",
+                           "  Else, change prior '", user_calli, "' from its",
                            " current formulation ", tem_prior, 
                            "\n",
-                           " ", " to one",
-                           " that is based on one of the following distributions",
+                           " ", " to one that",
+                           " is based on one of the following distributions",
                            "\n", 
-                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                           "  ",paste(transform_allowed_dist, collapse = ", ")
                       )
                     }
                     tem <- user_call[[user_calli]]
@@ -1184,9 +1357,40 @@ optimize_model.bgmfit <- function(model,
   
       ###
       fit <- eval(user_call)
+  
+      if(!exe_model_fit) {
+        return(fit)
+      }
+      
+      # if(!exe_model_fit) {
+      #   if(get_priors) {
+      #     return(do.call(brms::get_prior, brm_args))
+      #   } else if(get_standata) {
+      #     return(do.call(brms::make_standata, brm_args))
+      #   } else if(get_stancode) {
+      #     return(scode_final)
+      #   } else if(get_priors_eval) {
+      #     return(get_priors_eval_out)
+      #   } else if(validate_priors) {
+      #     return(do.call(brms::validate_prior, brm_args))
+      #   } else if(get_init_eval) {
+      #     return(brm_args$init)
+      #   } else if(get_formula) {
+      #     return(brm_args$formula)
+      #   } else if(get_stanvars) {
+      #     return(brm_args$stanvars)
+      #   }
+      # } 
+      
+      if("brmsfit" %in% class(fit) | "bgmfit" %in% class(fit)) {
+        class_fit <- TRUE
+      } else {
+        class_fit <- FALSE
+      }
+      
+      
+      
       if(args_o$expose_function) {
-        # fit$model_info$exefuns[[1]] <- NULL
-        # fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
         if(is.null(envir)) {
           if(!is.null(fit$model_info$exefuns[[1]])) {
             envir <- environment(fit$model_info$exefuns[[1]])
@@ -1200,7 +1404,8 @@ optimize_model.bgmfit <- function(model,
             usesavedfuns <- TRUE
           } else if(is.null(fit$model_info$exefuns[[1]])) {
             if(expose_function) {
-              fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+              fit <- 
+                expose_model_functions(fit, envir = envir, verbose = verbose)
               usesavedfuns <- TRUE
             } else if(!expose_function) {
               usesavedfuns <- FALSE
@@ -1209,7 +1414,8 @@ optimize_model.bgmfit <- function(model,
         } else { # if(!is.null(usesavedfuns)) {
           if(!usesavedfuns) {
             if(expose_function) {
-              fit <- expose_model_functions(fit, envir = envir, verbose = verbose)
+              fit <- 
+                expose_model_functions(fit, envir = envir, verbose = verbose)
               usesavedfuns <- TRUE
             }
           } else if(usesavedfuns) {
@@ -1338,8 +1544,25 @@ optimize_model.bgmfit <- function(model,
   }
   
   
+  exe_model_fit <- TRUE
+  if(args_o$get_stancode |
+     args_o$get_standata |
+     args_o$get_formula |
+     args_o$get_stanvars |
+     args_o$get_priors |
+     args_o$get_priors_eval |
+     args_o$validate_priors |
+     args_o$get_init_eval) {
+    exe_model_fit <- FALSE
+  }
+  
   optimize_list <- lapply(1:nrow(optimize_df_x_y), function(.x)
-    optimize_fun(.x, model))
+    optimize_fun(.x, model, exe_model_fit))
+  
+  
+  if(!exe_model_fit) {
+    return(optimize_list)
+  }
   
   
   if(!is.null(optimize_list[[1]])) {
