@@ -31,7 +31,22 @@
 #' @param optimize_y A vector specifying the transformations of the the response
 #'   variable (i.e., \code{y}). The approach and options available for
 #'   \code{optimize_y} are same as described above for the \code{optimize_x}.
-#'
+#'   
+#' @param transform_priors A character vector (default \code{NULL}) specifying
+#'   the transformations of location-scale based priors such as \code{normal()}
+#'   when response variable (i.e., \code{y}) is \code{'log'} or \code{'sqrt'}
+#'   transformed. The prior type that could be transformed are \code{'beta'},
+#'   \code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}. Currently it
+#'   is available only for \code{'log'} transformed \code{y}. Each prior type
+#'   (i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'}) specified via
+#'   \code{transform_priors} is log transformed as follows: \cr
+#'  \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr 
+#'  \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr 
+#'  where location and scale are the original parameters supplied by the user
+#'  and the log_location and log_scale are the equivalent parameters on the log
+#'  scale. For more details, see \code{a_prior_beta} argument in [bsitar()]
+#'  function.
+#' 
 #' @param exclude_default_funs A logical to indicate whether transformations for
 #'   (\code{x} and \code{y}) variables used in the original model fit should be
 #'   excluded. If \code{TRUE} (default), the transformations specified for the
@@ -116,6 +131,8 @@ optimize_model.bgmfit <- function(model,
                                   optimize_df = NULL,
                                   optimize_x = list(NULL, log,  sqrt),
                                   optimize_y = list(NULL, log,  sqrt),
+                                  transform_priors = c('beta', 'sd', 
+                                                       'rsd', 'sigma', 'dpar'), 
                                   exclude_default_funs = TRUE,
                                   add_fit_criteria = NULL,
                                   add_bayes_R = NULL,
@@ -934,6 +951,238 @@ optimize_model.bgmfit <- function(model,
       user_call <- rlang::call_modify(user_call, !!!newargs)
       # Setting it to FALSE because we are exposing it anyways below
       user_call$expose_function <- FALSE
+      ####
+      # Modify priors for log transformed outcome y
+      transform_allowed_dist <- 
+        c('normal', 'student_t', 'student_nu', 'cauchy', 'lognormal')
+      
+      if(is.null(transform_priors)) {
+        transform_beta <- transform_sd <- 
+          transform_rsd <- transform_sigma <- transform_dpar <- FALSE
+      } else if(!is.null(transform_priors)) {
+        if('beta' %in% transform_priors) {
+          transform_beta <- TRUE 
+        } else {
+          transform_beta <- FALSE
+        }
+        if('sd' %in% transform_priors) {
+          transform_sd <- TRUE 
+        } else {
+          transform_sd <- FALSE
+        }
+        if('rsd' %in% transform_priors) {
+          transform_rsd <- TRUE 
+        } else {
+          transform_rsd <- FALSE
+        }
+        if('sigma' %in% transform_priors) {
+          transform_sigma <- TRUE 
+        } else {
+          transform_sigma <- FALSE
+        }
+        if('dpar' %in% transform_priors) {
+          transform_dpar <- TRUE 
+        } else {
+          transform_dpar <- FALSE
+        }
+      }
+      
+      
+      if(!is.null(args_o$yfun)) {
+        if(args_o$yfun == "log") {
+          set_fxls <- 'log'
+          for (user_calli in names(user_call)) {
+            if(grepl("_prior", user_calli)) {
+              if(grepl("_beta", user_calli)) {
+                if(!is.null(user_call[[user_calli]])) {
+                  if(transform_beta) {
+                    tem_dist <- deparse(user_call[[user_calli]][[1]])
+                    tem_as_str <- FALSE
+                    if(grepl("\"",  tem_dist)) {
+                      tem_as_str <- TRUE
+                      tem_dist <- gsub("\"", "", tem_dist)
+                      tem_dist <- strsplit(tem_dist, "\\(")[[1]][1]
+                    }
+                    tem_prior <- deparse(user_call[[user_calli]])
+                    if(!tem_dist %in% transform_allowed_dist) {
+                      stop("Tranformation of '", tem_dist, "; distribution ", 
+                           "for ", user_calli, " is not allowed.",
+                           "\n", 
+                           "  Please adjust your 'transform_priors' argument",
+                           " which at present is specified as:",
+                           "\n", 
+                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "\n", 
+                           "  Or else, change prior '", user_calli, "' from its",
+                           " current formulation ", tem_prior, 
+                           "\n",
+                           " ", " to one",
+                           " that is based on one of the following distributions",
+                           "\n", 
+                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                      )
+                    }
+                    tem <- user_call[[user_calli]]
+                    if(tem_as_str) tem <- parse(text = tem)[[1]]
+                    tem <- rlang::call_modify(tem, fxls = set_fxls)
+                    user_call[[user_calli]] <- tem
+                  }
+                }
+              }
+              if(grepl("_sd", user_calli) & !grepl("$sigma", user_calli)) {
+                if(!is.null(user_call[[user_calli]])) {
+                  if(transform_sd) {
+                    tem_dist <- deparse(user_call[[user_calli]][[1]])
+                    tem_as_str <- FALSE
+                    if(grepl("\"",  tem_dist)) {
+                      tem_as_str <- TRUE
+                      tem_dist <- gsub("\"", "", tem_dist)
+                      tem_dist <- strsplit(tem_dist, "\\(")[[1]][1]
+                    }
+                    tem_prior <- deparse(user_call[[user_calli]])
+                    if(!tem_dist %in% transform_allowed_dist) {
+                      stop("Tranformation of '", tem_dist, "; distribution ", 
+                           "for ", user_calli, " is not allowed.",
+                           "\n", 
+                           "  Please adjust your 'transform_priors' argument",
+                           " which at present is specified as:",
+                           "\n", 
+                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "\n", 
+                           "  Or else, change prior '", user_calli, "' from its",
+                           " current formulation ", tem_prior, 
+                           "\n",
+                           " ", " to one",
+                           " that is based on one of the following distributions",
+                           "\n", 
+                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                      )
+                    }
+                    tem <- user_call[[user_calli]]
+                    if(tem_as_str) tem <- parse(text = tem)[[1]]
+                    tem <- rlang::call_modify(tem, fxls = set_fxls)
+                    user_call[[user_calli]] <- tem
+                  }
+                }
+              }
+              if(grepl("rsd_", user_calli) & grepl("sigma", user_calli)) {
+                if(!is.null(user_call[[user_calli]])) {
+                  if(transform_rsd) {
+                    tem_dist <- deparse(user_call[[user_calli]][[1]])
+                    tem_as_str <- FALSE
+                    if(grepl("\"",  tem_dist)) {
+                      tem_as_str <- TRUE
+                      tem_dist <- gsub("\"", "", tem_dist)
+                      tem_dist <- strsplit(tem_dist, "\\(")[[1]][1]
+                    }
+                    tem_prior <- deparse(user_call[[user_calli]])
+                    if(!tem_dist %in% transform_allowed_dist) {
+                      stop("Tranformation of '", tem_dist, "; distribution ", 
+                           "for ", user_calli, " is not allowed.",
+                           "\n", 
+                           "  Please adjust your 'transform_priors' argument",
+                           " which at present is specified as:",
+                           "\n", 
+                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "\n", 
+                           "  Or else, change prior '", user_calli, "' from its",
+                           " current formulation ", tem_prior, 
+                           "\n",
+                           " ", " to one",
+                           " that is based on one of the following distributions",
+                           "\n", 
+                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                      )
+                    }
+                    tem <- user_call[[user_calli]]
+                    if(tem_as_str) tem <- parse(text = tem)[[1]]
+                    tem <- rlang::call_modify(tem, fxls = set_fxls)
+                    user_call[[user_calli]] <- tem
+                  }
+                }
+              }
+              if(grepl("dpar_", user_calli) & grepl("sigma", user_calli)) {
+                if(!is.null(user_call[[user_calli]])) {
+                  if(transform_dpar) {
+                    tem_dist <- deparse(user_call[[user_calli]][[1]])
+                    tem_as_str <- FALSE
+                    if(grepl("\"",  tem_dist)) {
+                      tem_as_str <- TRUE
+                      tem_dist <- gsub("\"", "", tem_dist)
+                      tem_dist <- strsplit(tem_dist, "\\(")[[1]][1]
+                    }
+                    tem_prior <- deparse(user_call[[user_calli]])
+                    if(!tem_dist %in% transform_allowed_dist) {
+                      stop("Tranformation of '", tem_dist, "; distribution ", 
+                           "for ", user_calli, " is not allowed.",
+                           "\n", 
+                           "  Please adjust your 'transform_priors' argument",
+                           " which at present is specified as:",
+                           "\n", 
+                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "\n", 
+                           "  Or else, change prior '", user_calli, "' from its",
+                           " current formulation ", tem_prior, 
+                           "\n",
+                           " ", " to one",
+                           " that is based on one of the following distributions",
+                           "\n", 
+                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                      )
+                    }
+                    tem <- user_call[[user_calli]]
+                    if(tem_as_str) tem <- parse(text = tem)[[1]]
+                    tem <- rlang::call_modify(tem, fxls = set_fxls)
+                    user_call[[user_calli]] <- tem
+                  }
+                }
+              }
+              if(grepl("sigma", user_calli) & grepl("_sd", user_calli)) {
+                if(!is.null(user_call[[user_calli]])) {
+                  if(transform_sigma) {
+                    tem_dist <- deparse(user_call[[user_calli]][[1]])
+                    tem_as_str <- FALSE
+                    if(grepl("\"",  tem_dist)) {
+                      tem_as_str <- TRUE
+                      tem_dist <- gsub("\"", "", tem_dist)
+                      tem_dist <- strsplit(tem_dist, "\\(")[[1]][1]
+                    }
+                    tem_prior <- deparse(user_call[[user_calli]])
+                    if(!tem_dist %in% transform_allowed_dist) {
+                      stop("Tranformation of '", tem_dist, "; distribution ", 
+                           "for ", user_calli, " is not allowed.",
+                           "\n", 
+                           "  Please adjust your 'transform_priors' argument",
+                           " which at present is specified as:",
+                           "\n", 
+                           "  ",  paste(transform_priors, collapse = ", "), 
+                           "\n", 
+                           "  Or else, change prior '", user_calli, "' from its",
+                           " current formulation ", tem_prior, 
+                           "\n",
+                           " ", " to one",
+                           " that is based on one of the following distributions",
+                           "\n", 
+                           "  ",  paste(transform_allowed_dist, collapse = ", ")
+                      )
+                    }
+                    tem <- user_call[[user_calli]]
+                    if(tem_as_str) tem <- parse(text = tem)[[1]]
+                    tem <- rlang::call_modify(tem, fxls = set_fxls)
+                    user_call[[user_calli]] <- tem
+                  }
+                }
+              }
+              
+            } # if(grepl("_prior", user_calli)) {
+          } # for (user_calli in names(user_call)) {
+        } # if(args_o$yfun == "log") {
+      } # if(!is.null(args_o$yfun == "log")) {
+      
+      
+      
+  
+      ###
       fit <- eval(user_call)
       if(args_o$expose_function) {
         # fit$model_info$exefuns[[1]] <- NULL

@@ -11,6 +11,7 @@
   optimize_df = NULL,
   optimize_x = list(NULL, log, sqrt),
   optimize_y = list(NULL, log, sqrt),
+  transform_priors = c("beta", "sd", "rsd", "sigma", "dpar"),
   exclude_default_funs = TRUE,
   add_fit_criteria = NULL,
   add_bayes_R = NULL,
@@ -58,6 +59,21 @@ i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to the
 \item{optimize_y}{A vector specifying the transformations of the the response
 variable (i.e., \code{y}). The approach and options available for
 \code{optimize_y} are same as described above for the \code{optimize_x}.}
+
+\item{transform_priors}{A character vector (default \code{NULL}) specifying
+the transformations of location-scale based priors such as \code{normal()}
+when response variable (i.e., \code{y}) is \code{'log'} or \code{'sqrt'}
+transformed. The prior type that could be transformed are \code{'beta'},
+\code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}. Currently it
+is available only for \code{'log'} transformed \code{y}. Each prior type
+(i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'}) specified via
+\code{transform_priors} is log transformed as follows: \cr
+\code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr
+\code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr
+where location and scale are the original parameters supplied by the user
+and the log_location and log_scale are the equivalent parameters on the log
+scale. For more details, see \code{a_prior_beta} argument in \code{\link[=bsitar]{bsitar()}}
+function.}
 
 \item{exclude_default_funs}{A logical to indicate whether transformations for
 (\code{x} and \code{y}) variables used in the original model fit should be

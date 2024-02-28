@@ -209,13 +209,18 @@ prepare_priors <- function(prior_argument,
       paste0(sub("=[^=]+$", "=", get_get_fun_x_arg),  get_fun_x_tt)
     get_fun_x <- get_ept(get_get_fun_x_arg)
     get_fun_x <- gsub("\"" , "", get_fun_x)
-    
+    # if(get_fun_x == "TRUE" | get_fun_x == "T") get_fun_x <- TRUE 
+    # if(get_fun_x == "FALSE" | get_fun_x == "F") get_fun_x <- TRUE 
     if(get_fun_x == "") {
       get_fun_x <- NULL
     } else if(get_fun_x == 'NULL') {
       get_fun_x <- NULL
+    } else if(is.logical(get_fun_x)) {
+      # if(get_fun_x) get_fun_x <- TRUE 
+      # if(!get_fun_x) get_fun_x <- FALSE 
     } else if(!exists(get_fun_x)) {
-      stop("Object ", get_fun_x, " defined as a function does not exists")
+      if(assertfun) 
+        stop("Object ", get_fun_x, " defined as a function does not exists")
     } else if(exists(get_fun_x)) {
       enverr. <- environment()
       assign('err.', FALSE, envir = enverr.)

@@ -601,15 +601,15 @@
 #'  scale is as follows: \cr 
 #'  \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr 
 #'  \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr 
-#'  where location and scale are nor the normal distribution and the
-#'  log_location and log_scale are the equivalent parameters on the log scale.
-#'  The \code{fxls} can be set as a character string or a list comprised of two
-#'  functions where first function of the list will be used to transform the
-#'  location parameter and the second function will be for the scale
+#'  where location and scale are the original parameters supplied by the user
+#'  and log_location and log_scale are the equivalent parameters on the log
+#'  scale. The \code{fxls} can be set as a character string or a list comprised
+#'  of two functions where first function of the list will be used to transform
+#'  the location parameter and the second function will be for the scale
 #'  transformation. If a character string is used such as \code{fxls = 'log'},
 #'  then the above transformation for the log parametrization will be applied
 #'  automatically. Note that if using a list, then the list must be crated
-#'  within the R environment and then passed this to the  \code{fxls} as: \cr 
+#'  within the R environment and then passed this to the  \code{fxls} as: \cr
 #'  \code{location_fun <- function(location, scale) {
 #'  log(location / sqrt(scale^2 / location^2 + 1))
 #'  }} \cr
