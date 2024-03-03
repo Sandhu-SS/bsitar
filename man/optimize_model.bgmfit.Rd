@@ -87,9 +87,9 @@ regression coefficient(s) when response variable (i.e., \code{y}) is
 transformed are \code{'a'}, \code{'b'}, \code{'c'}, \code{'d'} and
 \code{'s'}. The default is \code{transform_beta_coef = c('b',' b', 'd')}
 which implies that parameters \code{'a'}, \code{'a'} and \code{'a'} will be
-transformed whereas parameter \code{'a'} will be left unchnaged because
+transformed whereas parameter \code{'a'} will be left unchanged because
 default prior for parameter \code{'a'} is based on outcome  \code{y} itself
-(e.g., \code{a_prior_beta = normal(ymean, ysd)}) which has be transormed.
+(e.g., \code{a_prior_beta = normal(ymean, ysd)}) which has be transformed.
 However, we strongly suggest that user explicitly set the desired prior and
 not to rely on \code{transform_beta_coef} because it is included on
 experimental basis. See \code{transform_prior_class} for details.}
