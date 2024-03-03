@@ -69,6 +69,10 @@ get.newdata <- function(model,
     IDvar <- model$model_info[[groupvar_]]
     if (!is.null(model$model_info[[hierarchical_]])) {
       IDvar <- model$model_info[[hierarchical_]]
+    } else if (is.null(model$model_info[[hierarchical_]])) {
+      # if(!is.null(model$model_info[['ids']])) {
+      #   IDvar <- model$model_info[['ids']]
+      # }
     }
   } else if (!is.null(levels_id)) {
     IDvar <- levels_id
@@ -85,6 +89,18 @@ get.newdata <- function(model,
   uvarby <- model$model_info$univariate_by
   
   
+  # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
+  #if(idata_method == 'm2') {
+    if(is.null(levels_id)) {
+      if(is.null(IDvar)) {
+        if(!is.null(model$model_info[['ids']])) {
+          IDvar <- model$model_info[['ids']]
+        }
+      }
+    }
+  #}
+  
+ 
   
   if (is.null(newdata)) {
     if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
