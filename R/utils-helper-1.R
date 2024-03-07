@@ -2842,3 +2842,86 @@ check_newdata_args <- function(model, newdata, IDvar, resp = NULL, verbose = FAL
 }
 
 
+
+
+
+#' An internal function to create interactions within the dplyr framework
+#'
+#' @param data A data frame.
+#' @param vars A character vector specifying the variables included in
+#'   interaction.
+#' @param varname A character that will be used as a name for the interaction
+#'   term created.
+#' @param envir An environment for function evaluation.
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+vars_to_interaction <- function(data, vars, varname, envir = NULL) {
+  if(is.null(envir)) envir <- parent.frame()
+  `:=` <- NULL;
+  nested_vars_x <- paste0("interaction(", paste(vars, collapse = ","), ")" )
+  data_ou <- data %>% dplyr::mutate(!! varname := eval(parse(text = nested_vars_x),
+                                                       envir = envir)) %>%
+    dplyr::select(dplyr::all_of(varname)) %>% 
+    dplyr::select(dplyr::all_of(varname)) %>% unlist() # %>% as.vector()
+  attr(data_ou, "names") <- NULL
+  data_ou
+}
+
+
+
+#' An internal function to redefine grid with nested variables
+#'
+#' @param fullgrid A data frame.
+#' @param fulldata A data frame.
+#' @param all_vars A character vector specifying the variables included in
+#'   interaction.
+#' @param nested_vars A character vector specifying the variables included in
+#'   interaction.
+#' @param xvar A character
+#' @param yvar A character
+#' @param idvar A character
+#' @param envir An environment for function evaluation.
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+refine_grid <- function(fullgrid, 
+                        fulldata, 
+                        all_vars = NULL, 
+                        nested_vars = NULL, 
+                        xvar = NULL, 
+                        yvar = NULL, 
+                        idvar = NULL, 
+                        envir = NULL) {
+  if(is.null(all_vars)) stop("Please specify all_vars")
+  if(is.null(nested_vars)) stop("Please specify nested_vars")
+  `.` <- NULL;
+  `:=` <- NULL;
+  zzz <- NULL;
+  nested_vars_name <- 'varname'
+  zz <- fulldata %>% dplyr::arrange(!! as.name(all_vars)) %>% droplevels() %>% 
+    dplyr::mutate(nested_vars_name = 
+                    vars_to_interaction(., nested_vars, nested_vars_name)) %>% 
+    dplyr::select(nested_vars_name) %>% unlist() %>% as.vector()
+  
+  zz2 <- fullgrid %>% dplyr::arrange(!! as.name(all_vars)) %>% droplevels() %>% 
+    dplyr::mutate(nested_vars_name = 
+                    vars_to_interaction(., nested_vars, nested_vars_name)) %>% 
+    dplyr::select(nested_vars_name) %>% unlist() %>% as.vector()
+  
+  zzz3 <- intersect(zz, zz2)
+  
+  nested_vars_name <- 'zzz'
+  out <- fullgrid %>% 
+    dplyr::mutate(zzz = 
+                    vars_to_interaction(., nested_vars, nested_vars_name)) %>%
+    dplyr::filter(zzz %in% zzz3) %>% 
+    dplyr::select(-dplyr::all_of('zzz')) %>% 
+    dplyr::arrange(!! as.name(all_vars)) %>% droplevels()
+  
+  out
+}

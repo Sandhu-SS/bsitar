@@ -339,7 +339,7 @@ levels. See examples section.}
 \item numeric: vector of length equal to the number of rows in the original data or in \code{newdata} (if supplied).
 }}
 
-\item{hypothesis}{specify a hypothesis test or custom contrast using a numeric value, vector, or matrix, a string, or a string formula.
+\item{hypothesis}{specify a hypothesis test or custom contrast using a numeric value, vector, or matrix, a string, a string formula, or a function.
 \itemize{
 \item Numeric:
 \itemize{
@@ -360,6 +360,12 @@ levels. See examples section.}
 \item "reference": differences between the estimates in each row and the estimate in the first row.
 \item "sequential": difference between an estimate and the estimate in the next row.
 \item "revpairwise", "revreference", "revsequential": inverse of the corresponding hypotheses, as described above.
+}
+\item Function:
+\itemize{
+\item Accepts an argument \code{x}: data frame with column \code{rowid} and \code{estimate}
+\item Returns a data frame with columns \code{term} and \code{estimate} (mandatory) and \code{rowid} (optional).
+\item The function can also accept and operation on optional input arguments: \code{newdata}, \code{by}, \code{draws}.
 }
 \item See the Examples section below and the vignette: https://marginaleffects.com/vignettes/hypothesis.html
 }}
