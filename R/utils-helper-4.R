@@ -721,9 +721,10 @@ prepare_formula <- function(x,
                                   fixed = T)[[1]][2], 1, 1),
                   substr(strsplit(sigma_formula_grsi, "~", 
                                   fixed = T)[[1]][2], 1, 1))) {
-      stop("Formulae for sigma_formula and sigma_formula_gr should be same",
-           "\n ", 
-           " in terms of Intercept i.e, both should be either ~ 0 or ~ 1")
+      # commented out on 07 03 2024
+      # stop("Formulae for sigma_formula and sigma_formula_gr should be same",
+      #      "\n ", 
+      #      " in terms of Intercept i.e, both should be either ~ 0 or ~ 1")
     }
   }
   
