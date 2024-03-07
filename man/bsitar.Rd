@@ -165,6 +165,7 @@ bsitar(
   save_model = NULL,
   fit = NA,
   file = NULL,
+  file_compress = TRUE,
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
   parameterization = "ncp",
@@ -1402,6 +1403,11 @@ the \code{file_refit} argument as well, the existing files won't be
 overwritten, you have to manually remove the file in order to refit and save
 the model under an existing file name. The file name is stored in the
 \code{brmsfit} object for later usage.}
+
+\item{file_compress}{Logical or a character string, specifying one of the
+compression algorithms supported by \code{\link{saveRDS}}. If the
+\code{file} argument is provided, this compression will be used when saving
+the fitted model object.}
 
 \item{file_refit}{Modifies when the fit stored via the \code{file} argument is
 re-used. Can be set globally for the current \R session via the

@@ -23,6 +23,7 @@
 - Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing functions. The environment is now automatically set to match the environment of exposed functions. It is important to note that setting environment manually (via the 'envir' argument) may actually result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests. 
 - Moved example dataset ('berkeley_exdata') and the model fit object ('berkeley_exfit') to the ```sysdata.rda``` in order to reduce the package size.
 - Added ```getNsObject()``` function to retreive objects from namespace. This is mainly for internal use only to streamline the workflow across sub modules.
+- Added options ```file```, ``file_refit```, and ``file_compress``` to save and retreive fitted objects. See  ```brms::brm``` help file for details. 
 - Minor corrections/changes to make R code more efficient.
 
 

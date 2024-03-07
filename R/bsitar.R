@@ -1418,6 +1418,8 @@
 #'
 #'@export
 #'
+#'@inheritParams brms::brm
+#'
 #'@importFrom methods formalArgs
 #'
 #'@importFrom stats as.formula coef df dist filter fitted gaussian lm mad median
@@ -1732,6 +1734,7 @@ bsitar <- function(x,
                    save_model = NULL,
                    fit = NA,
                    file = NULL,
+                   file_compress = TRUE,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
                    parameterization = 'ncp',
@@ -2354,6 +2357,7 @@ bsitar <- function(x,
       'fit',
       'file',
       'file_refit',
+      'file_compress',
       'future'
     )
   
@@ -7229,6 +7233,50 @@ bsitar <- function(x,
     
     brm_args$refresh <- NULL
     
+    
+    # Get and evaluate file argument
+    # This to save object 'file' at the end with model info
+    get_file <- brm_args$file
+    get_file_refit <- brm_args$file_refit
+    
+    get_file_compress <- brm_args$file_compress
+    
+    get_write_brmsfit          <-
+      utils::getFromNamespace("write_brmsfit", "brms")
+    
+    get_read_brmsfit          <-
+      utils::getFromNamespace("read_brmsfit", "brms")
+    
+    get_file_refit_options          <-
+      utils::getFromNamespace("file_refit_options", "brms")
+    
+    get_file_refit <- match.arg(get_file_refit, get_file_refit_options())
+    if (!is.null(get_file) && get_file_refit == "never") {
+      x_from_file <- get_read_brmsfit(get_file)
+      if (!is.null(x_from_file)) {
+        return(x_from_file)
+      }
+    }
+    
+    if (!is.null(get_file) && get_file_refit == "on_change") {
+      x_from_file <- get_read_brmsfit(get_file)
+      if (!is.null(x_from_file)) {
+        needs_refit <- brms::brmsfit_needs_refit(
+          x_from_file, scode = brms::stancode(x_from_file), 
+          sdata = brms::standata(x_from_file),
+          data = x_from_file$data, 
+          algorithm = brm_args$algorithm, silent = brm_args$silent
+        )
+        if (!needs_refit) {
+          return(x_from_file)
+        }
+      }
+    }
+    
+    # Set it to NULL to avoid re saving later
+    brm_args$file <- NULL
+    
+
 
     if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {
@@ -7399,6 +7447,12 @@ bsitar <- function(x,
         cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
       }
     }
+    
+    if (!is.null(get_file)) {
+      brmsfit <- get_write_brmsfit(brmsfit, get_file, 
+                               compress = get_file_compress)
+    }
+    
     return(brmsfit)
   } # exe_model_fit
   
