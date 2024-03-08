@@ -1543,7 +1543,7 @@ evaluate_call_args <- function(cargs = NULL,
 #'   the model estimated curve(s)). A value \code{0} (default) is for distance
 #'   curve and  \code{1} for the velocity curve.
 #'   
-#' @param dots A list passing the \code{'...'} arguments. Default \code{NULL}.
+#' @param dots A list passing the \code{...} arguments. Default \code{NULL}.
 #' 
 #' @param misc A vector of character strings specifying the miscellanous
 #'   arguments to be checked. Default \code{NULL}.
