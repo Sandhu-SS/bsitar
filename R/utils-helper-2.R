@@ -1518,7 +1518,7 @@ evaluate_call_args <- function(cargs = NULL,
   for (fargsi in names(fargs)) {
     if(is.null(cargs[[fargsi]])) cargs[[fargsi]] <- fargs[[fargsi]]
   }
- # cargs$... <- NULL
+ 
   cargs
 }
 
