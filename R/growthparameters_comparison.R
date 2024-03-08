@@ -470,13 +470,12 @@ growthparameters_comparison.bgmfit <- function(model,
   full.args$newdata <- newdata
   
 
-  # arguments$newdata  <- newdata
-  # arguments[["..."]] <- NULL
-  # comparisons_arguments <- arguments
-  
+  # keeping ... cause marginaleffects:: argument is missing, with no default
   full.args[["..."]] <- NULL
+  
   comparisons_arguments <- full.args
   
+  # Drop that not required for marginaleffects::
   exclude_args <- as.character(quote(
     c(
       parameter,
@@ -500,7 +499,8 @@ growthparameters_comparison.bgmfit <- function(model,
       clearenvfuns,
       envir,
       plot,
-      showlegends
+      showlegends,
+      average
     )
   ))[-1]
   

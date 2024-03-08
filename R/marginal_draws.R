@@ -345,10 +345,13 @@ marginal_draws.bgmfit <-
     # arguments[["..."]] <- NULL
     # predictions_arguments <- arguments
     
+    # keeping ... cause marginaleffects:: argument is missing, with no default
     full.args[["..."]] <- NULL
+    
     predictions_arguments <- full.args
     
 
+    # Drop that not required for marginaleffects::
     exclude_args <- as.character(quote(
       c(
         parameter,
@@ -378,7 +381,8 @@ marginal_draws.bgmfit <-
         fullframe,
         average,
         plot,
-        showlegends
+        showlegends,
+        average
       )
     ))[-1]
     

@@ -364,10 +364,13 @@ marginal_comparison.bgmfit <- function(model,
   }
   full.args$newdata <- newdata
   
-
-  # full.args[["..."]] <- NULL
+  # keeping ... cause marginaleffects:: argument is missing, with no default
+  full.args[["..."]] <- NULL
+  
+  
   comparisons_arguments <- full.args
   
+  # Drop that not required for marginaleffects::
   exclude_args <- as.character(quote(
     c(
       xrange,
@@ -389,7 +392,9 @@ marginal_comparison.bgmfit <- function(model,
       clearenvfuns,
       envir,
       plot,
-      showlegends
+      showlegends,
+      average,
+      parameter
     )
   ))[-1]
   
@@ -512,6 +517,10 @@ marginal_comparison.bgmfit <- function(model,
       set_draw_ids <- NULL
     }
     comparisons_arguments[['draw_ids']] <- set_draw_ids
+    
+    # comparisons_arguments$average <- NULL
+    # comparisons_arguments$parameter <- NULL
+   # comparisons_arguments$... <- NULL
     
     
     suppressWarnings({
