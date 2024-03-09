@@ -881,7 +881,8 @@ get.newdata <- function(model,
 #'   dplyr::across the entire sample. Lastly, a paired numeric values can be
 #'   supplied e.g., \code{xrange = c(6, 20)} will set the range between 6 and
 #'   20.
-#'
+#' @param keeplevels A logical in case factor variables other than \code{idVar}
+#'   present
 #' @return A data frame.
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
@@ -896,13 +897,21 @@ get_idata <-
            timeVar = NULL,
            times = NULL,
            length.out = 10,
-           xrange = 1) {
+           xrange = 1, 
+           keeplevels = FALSE) {
     
     if (is.null(newdata)) {
       newdata <- model$data
     } else {
       newdata <- newdata
     }
+    
+    
+    if(keeplevels) {
+      is.fact <- names(newdata[, sapply(newdata, is.factor)])
+      cnames  <- colnames(newdata)
+    }
+    
     
     if(is.null(model)) {
       if (is.null(idVar)) stop("Specify model or idVar, both can not be NULL")
@@ -1005,10 +1014,40 @@ get_idata <-
     
     newdata_pred <-
       right_rows(newdata, newdata[[timeVar]], id, times_to_pred)
+    
+    
+    if(keeplevels) {
+      if(length(setdiff(is.fact, idVar)) > 0) {
+        newdata_pred <- newdata_pred %>% droplevels
+        newdata_pred <- newdata_pred %>% 
+          dplyr::select(-dplyr::all_of(setdiff(is.fact, idVar)))
+        
+        newdata_is.factx <- newdata %>% 
+          dplyr::select(dplyr::all_of(is.fact))
+        
+        newdata_pred <- newdata_pred %>% 
+          dplyr::left_join(., newdata_is.factx, by = idVar,
+                    relationship = "many-to-many")
+      }
+    }
+    
+    
+    # for (is.facti in is.fact) {
+    #   print(levels(newdata_pred[[is.facti]]))
+    #   levels(newdata_pred[[is.facti]]) <- levels(newdata[[is.facti]])
+    # }
+    # print(str(newdata_pred %>% droplevels))
+    # print(unique(newdata_pred$class))
+    #stop()
+    
     newdata_pred[[timeVar]] <- unlist(times_to_pred)
+    
+    if(keeplevels) {
+      newdata_pred <- newdata_pred %>% dplyr::select(dplyr::all_of(cnames))
+    }
+    
     newdata_pred
   }
-
 
 
 

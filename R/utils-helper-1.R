@@ -2853,21 +2853,32 @@ check_newdata_args <- function(model, newdata, IDvar, resp = NULL, verbose = FAL
 #' @param varname A character that will be used as a name for the interaction
 #'   term created.
 #' @param envir An environment for function evaluation.
+#' @param full A logical to indicate whether to return the full data frame.
 #' @keywords internal
 #' @return A data frame.
 #' @keywords internal
 #' @noRd
 #'
-vars_to_interaction <- function(data, vars, varname, envir = NULL) {
+vars_to_interaction <- function(data, 
+                                vars, 
+                                varname, 
+                                envir = NULL, 
+                                full = FALSE) {
   if(is.null(envir)) envir <- parent.frame()
   `:=` <- NULL;
+  data_in <- data
   nested_vars_x <- paste0("interaction(", paste(vars, collapse = ","), ")" )
   data_ou <- data %>% dplyr::mutate(!! varname := eval(parse(text = nested_vars_x),
                                                        envir = envir)) %>%
     dplyr::select(dplyr::all_of(varname)) %>% 
     dplyr::select(dplyr::all_of(varname)) %>% unlist() # %>% as.vector()
   attr(data_ou, "names") <- NULL
-  data_ou
+  if(full) {
+    data_in[[varname]] <- data_ou
+    return(data_in)
+  } else {
+    return(data_ou)
+  }
 }
 
 
