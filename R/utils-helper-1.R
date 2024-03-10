@@ -2900,24 +2900,47 @@ vars_to_interaction <- function(data,
 #' @keywords internal
 #' @noRd
 #'
-refine_grid <- function(fullgrid, 
-                        fulldata, 
+refine_grid <- function(fullgrid = NULL, 
+                        fulldata = NULL, 
+                        varsvector = NULL, 
                         all_vars = NULL, 
                         nested_vars = NULL, 
                         xvar = NULL, 
                         yvar = NULL, 
                         idvar = NULL, 
                         envir = NULL) {
+  if(is.null(fullgrid)) stop("Please specify fullgrid")
   if(is.null(all_vars)) stop("Please specify all_vars")
   if(is.null(nested_vars)) stop("Please specify nested_vars")
+  if(is.null(fulldata) & is.null(varsvector)) 
+    stop("Please specify at least fulldata or varsvector")
+  if(!is.null(fulldata) & !is.null(varsvector)) 
+    stop("Please specify either fulldata or varsvector, not both")
+  
+  if(!is.null(varsvector)) {
+    # if(!is.vector(varsvector)) stop("varsvector must be a vector")
+    if(!is.factor(varsvector)) stop("varsvector must be a factor vector")
+  }
+  
   `.` <- NULL;
   `:=` <- NULL;
   zzz <- NULL;
   nested_vars_name <- 'varname'
-  zz <- fulldata %>% dplyr::arrange(!! as.name(all_vars)) %>% droplevels() %>% 
-    dplyr::mutate(nested_vars_name = 
-                    vars_to_interaction(., nested_vars, nested_vars_name)) %>% 
-    dplyr::select(nested_vars_name) %>% unlist() %>% as.vector()
+  
+  if(!is.null(fulldata)) {
+    zz <- fulldata %>% dplyr::arrange(!! as.name(all_vars)) %>% droplevels() %>% 
+      dplyr::mutate(nested_vars_name = 
+                      vars_to_interaction(., nested_vars, nested_vars_name)) %>% 
+      dplyr::select(nested_vars_name) %>% unlist() %>% as.vector()
+  }
+  
+  if(!is.null(varsvector)) {
+    # envir <- parent.frame()
+    # nested_vars_x <- paste0("interaction(", paste(varsvector, collapse = ","), 
+    #                         ")")
+    # zz <-  eval(parse(text = nested_vars_x), envir = envir)
+    zz <- varsvector
+  }
   
   zz2 <- fullgrid %>% dplyr::arrange(!! as.name(all_vars)) %>% droplevels() %>% 
     dplyr::mutate(nested_vars_name = 
@@ -2936,3 +2959,4 @@ refine_grid <- function(fullgrid,
   
   out
 }
+

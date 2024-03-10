@@ -931,7 +931,7 @@ get_idata <-
       }
     }
     
-    
+    `.` <- NULL;
     
     if (is.null(idVar)) {
       idVar <- model$model_info$ids
