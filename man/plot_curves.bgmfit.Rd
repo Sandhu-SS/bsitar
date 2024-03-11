@@ -165,12 +165,12 @@ is nested within the \code{study} Note that it is not guaranteed that the
 manually when fitting a model with three or more levels of hierarchy.}
 
 \item{avg_reffects}{An optional argument (default \code{NULL}) to calculate
-(marginal/average) curves and growth parameters (such as APGV and PGV). If
+(marginal/average) curves and growth parameters such as APGV and PGV. If
 specified, it must be a named list indicating the \code{over} (typically
 level 1 predictor, such as age), \code{feby} (fixed effects, typically a
 factor variable), and  \code{reby} (typically \code{NULL} indicating that
 parameters are integrated over the random effects) such as
-\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}.}
+\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age')}.}
 
 \item{ipts}{An integer to set the length of the predictor variable to get a
 smooth velocity curve. The \code{NULL} will return original values whereas

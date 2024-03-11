@@ -121,6 +121,8 @@ marginal_draws.bgmfit <-
            hypothesis = NULL,
            equivalence = NULL,
            reformat = NULL,
+           estimate_center = 'mean',
+           estimate_interval = "eti",
            dummy_to_factor = NULL, 
            verbose = FALSE,
            expose_function = FALSE,
@@ -129,6 +131,13 @@ marginal_draws.bgmfit <-
            envir = NULL,
            ...) {
     
+    
+    estimate_center_op <- options("marginaleffects_posterior_center" = 
+                                    estimate_center)
+    on.exit(options(estimate_center))
+    estimate_interval_op <-  options("marginaleffects_posterior_interval" = 
+                                       estimate_interval)
+    on.exit(options(estimate_interval_op))
     
     if(is.null(envir)) {
       envir <- model$model_info$envir

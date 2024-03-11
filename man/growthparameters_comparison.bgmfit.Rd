@@ -46,6 +46,8 @@
   equivalence = NULL,
   eps = NULL,
   reformat = NULL,
+  estimate_center = "mean",
+  estimate_interval = "eti",
   dummy_to_factor = NULL,
   verbose = FALSE,
   expose_function = FALSE,
@@ -180,12 +182,12 @@ is nested within the \code{study} Note that it is not guaranteed that the
 manually when fitting a model with three or more levels of hierarchy.}
 
 \item{avg_reffects}{An optional argument (default \code{NULL}) to calculate
-(marginal/average) curves and growth parameters (such as APGV and PGV). If
+(marginal/average) curves and growth parameters such as APGV and PGV. If
 specified, it must be a named list indicating the \code{over} (typically
 level 1 predictor, such as age), \code{feby} (fixed effects, typically a
 factor variable), and  \code{reby} (typically \code{NULL} indicating that
 parameters are integrated over the random effects) such as
-\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age'}.}
+\code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age')}.}
 
 \item{idata_method}{A character string to indicate the interpolation method.
 The number of of interpolation points is set up the \code{ipts} argument.
@@ -373,6 +375,23 @@ re-defined as follows: \code{conf.low} as \code{Q2.5}, and \code{conf.high}
 as \code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following
 columns are dropped from the data frame: \code{term}, \code{contrast},
 \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.}
+
+\item{estimate_center}{A character string to specify whether to center
+estimate as \code{'mean'} (default) or as \code{'median'}. Note that
+\code{estimate_center} is used to set the global options which are: \cr
+\code{ options("marginaleffects_posterior_center" = "mean")}, or \cr \code{
+  options("marginaleffects_posterior_center" = "median")} \cr
+The pre-specified global options are restored on exit via the
+\code{\link[base:on.exit]{base::on.exit()}}.}
+
+\item{estimate_interval}{A character string to specify whether to compute
+credible intervals as equal-tailed intervals, \code{'eti'} (default) or
+highest density intervals, \code{'hdi'}. Note that \code{estimate_interval}
+is used to set the global options which are: \cr
+\code{ options("marginaleffects_posterior_interval" = "eti")}, or \cr
+\code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
+The pre-specified global options are restored on exit via the
+\code{\link[base:on.exit]{base::on.exit()}}.}
 
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are
