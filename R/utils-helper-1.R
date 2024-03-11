@@ -2960,3 +2960,206 @@ refine_grid <- function(fullgrid = NULL,
   out
 }
 
+
+
+
+# https://stackoverflow.com/questions/71339547/how-to-add-a-label-to-the-x-y-
+# axis-whenever-a-vertical-horizontal-line-is-ad
+
+#' An internal function to extract xintercept label
+#'
+#' @param plot A \code{ggplot} object
+#' @param xval A numeric value
+#' @param linewidth Argument to control the width of line drawn
+#' @param linetype Argument to control the type of line drawn
+#' @param alpha Argument to control the transparency of line drawn
+#' @param color_line Argument to control the color of line drawn
+#' @param color_text Argument to control the color of value marked on axis
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+mark_value_on_xaxis <- function(plot, xval,
+                                linewidth = 1, 
+                                linetype = 1, 
+                                alpha = 0.7,
+                                color_line = 'black', 
+                                color_text = 'black'
+                                ) {
+  
+  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+                                  prompt = FALSE))
+  
+  p2 <- ggplot2::ggplot_build(plot)
+  breaks <- p2$layout$panel_params[[1]]$x$breaks
+  breaks <- breaks[!is.na(breaks)]
+  
+  color <- c(color_text, rep("black", length(breaks)  ))
+  setx <- (c(xval, breaks)) # sort
+  labs <- as.character(setx)
+  name <- glue::glue("<i style='color:{color}'>{labs}")
+  
+  plot +
+    ggplot2::geom_vline(xintercept = xval, 
+                        linewidth = linewidth,
+                        linetype = linetype,
+                        color = color_line,
+                        alpha = alpha) +
+    ggplot2::scale_x_continuous(breaks = setx, labels = name) +
+    ggplot2::theme(axis.text.x = ggtext::element_markdown())
+}
+
+#' An internal function to extract xintercept label
+#'
+#' @param plot A \code{ggplot} object
+#' @param yval A numeric value
+#' @param linewidth Argument to control the width of line drawn
+#' @param linetype Argument to control the type of line drawn
+#' @param alpha Argument to control the transparency of line drawn
+#' @param color_line Argument to control the color of line drawn
+#' @param color_text Argument to control the color of value marked on axis
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+mark_value_on_yaxis <- function(plot, yval, 
+                                linewidth = 1, 
+                                linetype = 1, 
+                                alpha = 0.7,
+                                color_line = 'black', 
+                                color_text = 'black'
+                                ) {
+  
+  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+                                  prompt = FALSE))
+  
+  p2 <- ggplot2::ggplot_build(plot)
+  breaks <- p2$layout$panel_params[[1]]$y$breaks
+  breaks <- breaks[!is.na(breaks)]
+  
+  color <- c(color_text, rep("black", length(breaks)  ))
+  setx <- (c(yval, breaks)) 
+  labs <- as.character(setx)
+  name <- glue::glue("<i style='color:{color}'>{labs}")
+  
+  plot +
+    ggplot2::geom_hline(yintercept = yval, 
+                        linewidth = linewidth,
+                        linetype = linetype,
+                        color = color_line,
+                        alpha = alpha
+    ) +
+    ggplot2::scale_y_continuous(breaks = setx, labels = name) +
+    ggplot2::theme(axis.text.y = ggtext::element_markdown())
+}
+
+
+
+#' An internal function to extract and add xintercept value label
+#'
+#' @param p A \code{ggplot} object
+#' @param linewidth Argument to control the width of line drawn
+#' @param linetype Argument to control the type of line drawn
+#' @param alpha Argument to control the transparency of line drawn
+#' @param color_line Argument to control the color of line drawn
+#' @param color_text Argument to control the color of value marked on axis
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+mark_value_of_xintercept <- function(plot,
+                                     linewidth = 1, 
+                                     linetype = 1, 
+                                     alpha = 0.7,
+                                     color_line = 'black', 
+                                     color_text = 'black'
+                                     ) {
+  
+  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+                                  prompt = FALSE))
+  
+  p <- plot
+  p2 <- ggplot2::ggplot_build(p)
+  breaks <- p2$layout$panel_params[[1]]$x$breaks
+  breaks <- breaks[!is.na(breaks)]
+  
+  vals <- unlist(lapply(seq_along(p$layers), function(x) {
+    d <- ggplot2::layer_data(p, x)
+    if('xintercept' %in% names(d)) d$xintercept else numeric()
+  }))
+  
+  xval <- vals
+  
+  color <- c(color_text, rep("black", length(breaks)  ))
+  setx <- c(xval, breaks)
+  labs <- as.character(setx)
+  name <- glue::glue("<i style='color:{color}'>{labs}")
+  
+  plot +
+    ggplot2::geom_vline(xintercept = xval, 
+                        linewidth = linewidth,
+                        linetype = linetype,
+                        color = color_line,
+                        alpha = alpha) +
+    ggplot2::scale_x_continuous(breaks = setx, labels = name) +
+    ggplot2::theme(axis.text.x = ggtext::element_markdown())
+}
+
+
+
+#' An internal function to extract and add xintercept value label
+#'
+#' @param p A \code{ggplot} object
+#' @param linewidth Argument to control the width of line drawn
+#' @param linetype Argument to control the type of line drawn
+#' @param alpha Argument to control the transparency of line drawn
+#' @param color_line Argument to control the color of line drawn
+#' @param color_text Argument to control the color of value marked on axis
+#' @keywords internal
+#' @return A data frame.
+#' @keywords internal
+#' @noRd
+#'
+mark_value_of_yintercept <- function(plot,
+                                     linewidth = 1, 
+                                     linetype = 1, 
+                                     alpha = 0.7,
+                                     color_line = 'black', 
+                                     color_text = 'black'
+                                     ) {
+  
+  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+                                  prompt = FALSE))
+  
+  p <- plot
+  p2 <- ggplot2::ggplot_build(p)
+  breaks <- p2$layout$panel_params[[1]]$y$breaks
+  breaks <- breaks[!is.na(breaks)]
+  
+  vals <- unlist(lapply(seq_along(p$layers), function(x) {
+    d <- ggplot2::layer_data(p, x)
+    if('yintercept' %in% names(d)) d$yintercept else numeric()
+  }))
+  
+  yval <- vals
+  
+  color <- c(color_text, rep("black", length(breaks)  ))
+  setx <- c(yval, breaks)
+  labs <- as.character(setx)
+  name <- glue::glue("<i style='color:{color}'>{labs}")
+  
+  plot +
+    ggplot2::geom_hline(yintercept = yval, 
+                        linewidth = linewidth,
+                        linetype = linetype,
+                        color = color_line,
+                        alpha = alpha) +
+    ggplot2::scale_y_continuous(breaks = setx, labels = name) +
+    ggplot2::theme(axis.text.y = ggtext::element_markdown())
+}
+
+
+
