@@ -497,6 +497,7 @@ between 0 and 1 (default \code{0.1} implying 10 percent).
 }
 \examples{
 
+\donttest{
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -508,8 +509,8 @@ between 0 and 1 (default \code{0.1} implying 10 percent).
 
 model <- berkeley_exfit
 
-growthparameters_comparison(model, parameter = 'apgv', draw_ids = 1)
-
+growthparameters_comparison(model, parameter = 'apgv', ndraws = 10)
+}
 
 }
 \references{

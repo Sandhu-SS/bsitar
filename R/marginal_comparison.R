@@ -80,6 +80,7 @@
 #' 
 #' @examples
 #' 
+#' \donttest{
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -92,7 +93,7 @@
 #' model <- berkeley_exfit
 #' 
 #' marginal_comparison(model, parameter = 'apgv', draw_ids = 1)
-#' 
+#' }
 #' 
 marginal_comparison.bgmfit <- function(model,
                                    resp = NULL,
@@ -143,12 +144,13 @@ marginal_comparison.bgmfit <- function(model,
                                    ...) {
   
   
-  estimate_center_op <- options("marginaleffects_posterior_center" = 
-                                  estimate_center)
-  on.exit(options(estimate_center))
-  estimate_interval_op <-  options("marginaleffects_posterior_interval" = 
-                                     estimate_interval)
-  on.exit(options(estimate_interval_op))
+  ec_ <- getOption("marginaleffects_posterior_center")
+  ei_ <- getOption("marginaleffects_posterior_interval")
+  options("marginaleffects_posterior_center" = estimate_center)
+  options("marginaleffects_posterior_interval" = estimate_interval)
+  on.exit(options("marginaleffects_posterior_center" = ec_), add = TRUE)
+  on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
+  
   
   if(is.null(envir)) {
     envir <- model$model_info$envir
@@ -403,7 +405,9 @@ marginal_comparison.bgmfit <- function(model,
       plot,
       showlegends,
       average,
-      parameter
+      parameter,
+      estimate_center,
+      estimate_interval
     )
   ))[-1]
   

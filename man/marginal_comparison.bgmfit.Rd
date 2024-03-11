@@ -447,6 +447,7 @@ estimates whereas \code{\link[marginaleffects:comparisons]{marginaleffects::avg_
 }
 \examples{
 
+\donttest{
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -459,7 +460,7 @@ estimates whereas \code{\link[marginaleffects:comparisons]{marginaleffects::avg_
 model <- berkeley_exfit
 
 marginal_comparison(model, parameter = 'apgv', draw_ids = 1)
-
+}
 
 }
 \references{

@@ -481,6 +481,7 @@ argument.
 }
 \examples{
 
+\donttest{
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -495,7 +496,7 @@ model <- berkeley_exfit
 # Population average distance curve
 marginal_draws(model, deriv = 0, re_formula = NA)
 
-\donttest{
+
 # Individual-specific distance curves
 marginal_draws(model, deriv = 0, re_formula = NULL)
 
