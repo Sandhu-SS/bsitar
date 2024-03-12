@@ -301,8 +301,8 @@ growthparameters_comparison.bgmfit <- function(model,
   cov    <- model$model_info[[cov_]]
   uvarby <- model$model_info$univariate_by
   
-  # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
-  # This was must for univariate_by
+  # Note, newdata is not model$data but rather model$model_info$bgmfit.data
+  # This is must for univariate_by
   if(is.null(newdata)) {
     #newdata <- model$model_info$bgmfit.data
   }
@@ -331,10 +331,7 @@ growthparameters_comparison.bgmfit <- function(model,
     deriv_model <- TRUE
   }
    
-  # The deriv_model is a placeholder in marginaleffects
-  # if(is.null(deriv_model)) {
-  #   deriv_model <- TRUE
-  # }
+  
   
   if (is.null(idata_method)) {
     idata_method <- 'm2'
@@ -365,12 +362,13 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   allowed_parms <- c(
-    'atgv',
-    'tgv',
     'apgv',
     'pgv',
+    'atgv',
+    'tgv',
     'acgv',
-    'cgv')
+    'cgv'
+    )
   
   
   if (is.null(parameter)) {
@@ -634,13 +632,6 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
  
-  if(!isFALSE(set_group)) {
-    if (length(parm) > 1) stop("For 'by' estimates/comparisons, please ",
-                               "\n ",
-                               " specificy only one parameter. ")
-  }
-  
-
   if (acg_velocity >= 1 | acg_velocity <= 0) {
     stop("The acg_velocity should be set between 0.01 and 0.99")
   }
@@ -695,7 +686,6 @@ growthparameters_comparison.bgmfit <- function(model,
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
-    
     if(is.null(showlegends)) {
       if(is.null(comparisons_arguments$re_formula)) {
         showlegends <- FALSE
@@ -706,16 +696,31 @@ growthparameters_comparison.bgmfit <- function(model,
     
     
     # Set up datagrid
-    
     if(!is.null(datagrid)) {
       if(is.data.frame(datagrid)) {
         set_datagrid <- datagrid
         comparisons_arguments$newdata <- set_datagrid
       } else if(is.list(datagrid)) {
-        if(is.null(datagrid[['model']])) setmodel <- model else setmodel <- datagrid$model
-        if(is.null(datagrid[['newdata']])) setnewdata <- newdata else setnewdata <- datagrid$newdata
-        if(is.null(datagrid[['grid_type']])) setgrid_type <- "mean_or_mode" else setgrid_type <- datagrid$grid_type
-        if(is.null(datagrid[[xvar]])) setxvar <- newdata[[xvar]] else setxvar <- datagrid$newdata[[xvar]]
+        if(is.null(datagrid[['model']])) {
+          setmodel <- model 
+        } else {
+          setmodel <- datagrid$model
+        }
+        if(is.null(datagrid[['newdata']])) {
+          setnewdata <- newdata
+        } else {
+          setnewdata <- datagrid$newdata
+        }
+        if(is.null(datagrid[['grid_type']])) {
+          setgrid_type <- "mean_or_mode"
+        } else {
+          setgrid_type <- datagrid$grid_type
+        }
+        if(is.null(datagrid[[xvar]])) {
+          setxvar <- newdata[[xvar]] 
+        } else {
+          setxvar <- datagrid$newdata[[xvar]]
+        }
         datagrid_arguments <- list(model = setmodel,
                                    newdata = setnewdata,
                                    grid_type = setgrid_type)
@@ -724,7 +729,7 @@ growthparameters_comparison.bgmfit <- function(model,
           if(!isFALSE(set_group)) datagrid_arguments[['by']] <- set_group
         } else if(setgrid_type == "balanced") {
           if(!isFALSE(set_group)) datagrid_arguments[['by']] <- NULL
-          # correctly set comparisons_arguments[['by']]  too 
+          # correctly set comparisons_arguments[['by']] too 
           comparisons_arguments[['by']] <- NULL
         }
         set_datagrid <- do.call(marginaleffects::datagrid, datagrid_arguments)
@@ -738,7 +743,6 @@ growthparameters_comparison.bgmfit <- function(model,
     
     # The datagrid argument is not allowed. It served its purpose by defining 
     # the newdata. So remove it from the arguments
-    
     comparisons_arguments[['datagrid']] <- NULL
     
     # Somehow draw_ids not passed correctly if not specified explicitly as arg
@@ -755,14 +759,17 @@ growthparameters_comparison.bgmfit <- function(model,
     suppressWarnings({
       if(!plot) {
         if(!average) {
-          out <- do.call(marginaleffects::comparisons, comparisons_arguments)
+          out <- do.call(marginaleffects::comparisons, 
+                         comparisons_arguments)
         } else if(average) {
-          out <- do.call(marginaleffects::avg_comparisons, comparisons_arguments)
+          out <- do.call(marginaleffects::avg_comparisons, 
+                         comparisons_arguments)
         }
       }
       if(plot) {
         if(isFALSE(set_group)) comparisons_arguments$by <- NULL
-        out <- do.call(marginaleffects::plot_comparisons, comparisons_arguments)
+        out <- do.call(marginaleffects::plot_comparisons, 
+                       comparisons_arguments)
         outp <- out
         if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
         return(outp)
@@ -781,6 +788,7 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
 
+  
   if (length(parm) == 1) {
     out_sf <- call_comparison_gparms_fun(parm = parm, eps = eps, 
                                          by = comparisons_arguments$by,
@@ -788,7 +796,6 @@ growthparameters_comparison.bgmfit <- function(model,
       data.frame() %>% 
       dplyr::mutate(!!as.symbol('parameter') := parm) %>% 
       dplyr::relocate(!!as.symbol('parameter'))
-    
   } else if (length(parm) > 1) {
     list_cout <- list()
     list_name <- list()
@@ -803,18 +810,18 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     list_name2 <- do.call(rbind, list_name)
     out_sf <- do.call(rbind, list_cout) %>% data.frame() 
-    out_sf <- out_sf %>% 
-      dplyr::mutate(!!as.symbol('parameter') := list_name2) %>% 
-      dplyr::relocate(!!as.symbol('parameter'))
+    out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter") %>% 
+      dplyr::mutate(!!as.symbol('parameter') := sub("*\\.[0-9]", "", 
+                                                   !!as.symbol('parameter')))
   }
   
   out_sf <- out_sf %>% 
-    dplyr::rename(!!as.symbol('Parameter') := parameter) %>% 
     dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                          ~ round(., digits = digits))) %>% 
+    dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
     data.frame()
   
- 
+  
   if(is.null(reformat)) {
     if(is.null(hypothesis) && is.null(equivalence)) {
       reformat <- TRUE
@@ -829,17 +836,18 @@ growthparameters_comparison.bgmfit <- function(model,
       dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
       dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
       data.frame()
-    
+  
     remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
                       'predicted_hi', 'predicted')
     
     out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
+    
+    colnames(out_sf) <- sub("(.)", "\\U\\1", colnames(out_sf), perl = TRUE)
+    
     row.names(out_sf) <- NULL
     attr(out_sf$Parameter, "dimnames") <- NULL
   }
    
-  out_sf <- out_sf %>% 
-    dplyr::mutate(dplyr::across(dplyr::all_of('Parameter'), toupper))
   
   return(out_sf)
 }
