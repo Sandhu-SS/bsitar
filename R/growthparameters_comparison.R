@@ -647,10 +647,23 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-  call_comparison_gparms_fun <- function(parm, eps, ...) {
+  call_comparison_gparms_fun <- function(parm, eps, by, newdata, ...) {
     gparms_fun = function(hi, lo, x, ...) {
       if(deriv == 0) y <- (hi - lo) / eps
       if(deriv > 0)  y <- (hi + lo) / 2
+      # Here need to aggregate based on by argument
+      try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
+                                      prompt = FALSE))
+      xy <- grDevices::xy.coords(x, y)
+      xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
+      if(!isFALSE(by)) {
+        ec_agg <- getOption("marginaleffects_posterior_center")
+        if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, mean)
+        if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, median)
+      }
+      x <- xy$x
+      y <- xy$y
+      
       if (parm == 'apgv') {
         out <- sitar::getPeak(x = x, y = y)[1]
       } else if (parm == 'pgv') {
@@ -739,7 +752,6 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     comparisons_arguments[['draw_ids']] <- set_draw_ids
     
-    
     suppressWarnings({
       if(!plot) {
         if(!average) {
@@ -763,12 +775,16 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   if(plot) {
-    return(call_comparison_gparms_fun(parm = parm, eps = eps))
+    return(call_comparison_gparms_fun(parm = parm, eps = eps, 
+                                      by = comparisons_arguments$by,
+                                      newdata = newdata))
   }
   
 
   if (length(parm) == 1) {
-    out_sf <- call_comparison_gparms_fun(parm = parm, eps = eps) %>% 
+    out_sf <- call_comparison_gparms_fun(parm = parm, eps = eps, 
+                                         by = comparisons_arguments$by,
+                                         newdata = newdata) %>% 
       data.frame() %>% 
       dplyr::mutate(!!as.symbol('parameter') := parm) %>% 
       dplyr::relocate(!!as.symbol('parameter'))
@@ -778,7 +794,9 @@ growthparameters_comparison.bgmfit <- function(model,
     list_name <- list()
     for (allowed_parmsi in parm) {
       list_cout[[allowed_parmsi]] <-
-        call_comparison_gparms_fun(parm = allowed_parmsi, eps = eps)
+        call_comparison_gparms_fun(parm = allowed_parmsi, eps = eps,
+                                   by = comparisons_arguments$by,
+                                   newdata = newdata)
       if(nrow(list_cout[[allowed_parmsi]]) > 0) { # If fails, don't add par name
         list_name[[allowed_parmsi]] <- allowed_parmsi
       }
