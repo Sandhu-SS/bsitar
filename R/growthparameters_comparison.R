@@ -820,11 +820,43 @@ growthparameters_comparison.bgmfit <- function(model,
     )
     err. <- get('err.', envir = enverr.)
     if(length(gout) == 0) err. <- TRUE
+    
+    # for (byi in eval(by)) {
+    #   if(is.factor(newdata[[byi]])) {
+    #     if(length(unique(gout[[byi]])) != 
+    #        length(unique(newdata[[byi]])) ) {
+    #       err. <- TRUE
+    #     }
+    #   }
+    # }
+    
     if (err.) {
       gout <- NULL
     } else if (!err.) {
       gout <- gout
     }
+    
+    if(plot) {
+      return(gout)
+    }
+    
+    # If results not available for all factor, theN add NA it
+    if(!is.null(gout)) {
+      if(!isFALSE(by)) {
+        goutnames <- names(gout)
+        groupvars <-  eval(by)
+        newdatajoin <- newdata %>% dplyr::group_by_at(groupvars) %>% 
+          dplyr::filter(dplyr::row_number() == 1) %>% dplyr::ungroup()
+        gout <- newdatajoin %>% dplyr::left_join(., gout, by = groupvars) %>% 
+          dplyr::select(dplyr::all_of(goutnames)) %>% 
+          dplyr::select(-dplyr::any_of(c('predicted_lo', 'predicted_hi',
+                                         'predicted', 'tmp_idx'))) %>% 
+          dplyr::mutate(!! as.name('parameter') := parm) %>% 
+          dplyr::relocate(dplyr::all_of('parameter')) %>% 
+          data.frame()
+      }
+    }
+    
     return(gout)
   }
   
@@ -837,13 +869,13 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
   if(plot) {
-    return(outer_call_comparison_gparms_fun(
+    out_sf <- outer_call_comparison_gparms_fun(
       parm = parm, eps = eps, 
       by = comparisons_arguments$by,
       aggregate_by = aggregate_by,
       newdata = newdata
-      )
-      )
+    ) 
+    return(out_sf)
   }
   
 
@@ -853,10 +885,12 @@ growthparameters_comparison.bgmfit <- function(model,
       by = comparisons_arguments$by,
       aggregate_by = aggregate_by,
       newdata = newdata
-      ) %>% 
-      data.frame() %>% 
-      dplyr::mutate(!!as.symbol('parameter') := parm) %>% 
-      dplyr::relocate(!!as.symbol('parameter'))
+      ) 
+    
+    if(!"parameter" %in% colnames(out_sf)) {
+      out_sf <- out_sf %>% dplyr::mutate(!!as.symbol('parameter') := parm) %>%
+        dplyr::relocate(!!as.symbol('parameter')) %>% data.frame() 
+    }
   } else if (length(parm) > 1) {
     list_cout <- list()
     for (allowed_parmsi in parm) {
@@ -867,8 +901,12 @@ growthparameters_comparison.bgmfit <- function(model,
         newdata = newdata
         )
     }
+    
     out_sf <- do.call(rbind, list_cout) %>% data.frame() 
-    out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter") %>% 
+    if(!"parameter" %in% colnames(out_sf)) {
+      out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter")
+    }
+    out_sf <- out_sf %>% 
       dplyr::mutate(!!as.symbol('parameter') := sub("*\\.[0-9]", "", 
                                                    !!as.symbol('parameter')))
   }
