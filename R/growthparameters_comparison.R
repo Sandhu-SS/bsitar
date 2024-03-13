@@ -385,6 +385,11 @@ growthparameters_comparison.bgmfit <- function(model,
     parm <- parameter
   }
   
+  if(length(parm) > 1) {
+    if(plot) stop("Please specify only one parameter when plot = TRUE")
+  }
+  
+  
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
@@ -638,22 +643,32 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-  call_comparison_gparms_fun <- function(parm, eps, by, newdata, ...) {
+  call_comparison_gparms_fun <- function(parm, 
+                                         eps, 
+                                         by, 
+                                         aggregate_by, 
+                                         newdata, ...) {
     gparms_fun = function(hi, lo, x, ...) {
       if(deriv == 0) y <- (hi - lo) / eps
       if(deriv > 0)  y <- (hi + lo) / 2
       # Here need to aggregate based on by argument
-      try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
-                                      prompt = FALSE))
-      xy <- grDevices::xy.coords(x, y)
-      xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
-      if(!isFALSE(by)) {
-        ec_agg <- getOption("marginaleffects_posterior_center")
-        if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, mean)
-        if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, median)
-      }
-      x <- xy$x
-      y <- xy$y
+      if(aggregate_by) {
+        try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
+                                        prompt = FALSE))
+        xy <- grDevices::xy.coords(x, y)
+        xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
+        if(!isFALSE(by)) {
+          ec_agg <- getOption("marginaleffects_posterior_center")
+          if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
+                                                        mean, drop = TRUE)
+          if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
+                                                        median, drop = TRUE)
+        }
+        x <- xy$x
+        y <- xy$y
+      } # if(aggregate_by) {
+      
+      
       
       if (parm == 'apgv') {
         out <- sitar::getPeak(x = x, y = y)[1]
@@ -781,39 +796,83 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
+  #################
+  enverr. <- environment()
+  outer_call_comparison_gparms_fun <- function(parm, 
+                                               eps,
+                                               by,
+                                               aggregate_by,
+                                               newdata,
+                                               ...) {
+    
+    assign('err.', FALSE, envir = enverr.)
+    tryCatch(
+      expr = {
+        # 13 03 2024
+        gout <- call_comparison_gparms_fun(parm = parm, eps = eps,
+                                           by = by,
+                                           aggregate_by = aggregate_by,
+                                           newdata = newdata)
+      },
+      error = function(e) {
+        assign('err.', TRUE, envir = enverr.)
+      }
+    )
+    err. <- get('err.', envir = enverr.)
+    if(length(gout) == 0) err. <- TRUE
+    if (err.) {
+      gout <- NULL
+    } else if (!err.) {
+      gout <- gout
+    }
+    return(gout)
+  }
+  
+  ###############
+  eval_re_formula <- eval(comparisons_arguments$re_formula)
+  if(is.null(eval_re_formula)) {
+    aggregate_by <- TRUE
+  } else if(is.na(eval_re_formula)) {
+    aggregate_by <- FALSE
+  }
+  
   if(plot) {
-    return(call_comparison_gparms_fun(parm = parm, eps = eps, 
-                                      by = comparisons_arguments$by,
-                                      newdata = newdata))
+    return(outer_call_comparison_gparms_fun(
+      parm = parm, eps = eps, 
+      by = comparisons_arguments$by,
+      aggregate_by = aggregate_by,
+      newdata = newdata
+      )
+      )
   }
   
 
-  
   if (length(parm) == 1) {
-    out_sf <- call_comparison_gparms_fun(parm = parm, eps = eps, 
-                                         by = comparisons_arguments$by,
-                                         newdata = newdata) %>% 
+    out_sf <- outer_call_comparison_gparms_fun(
+      parm = parm, eps = eps, 
+      by = comparisons_arguments$by,
+      aggregate_by = aggregate_by,
+      newdata = newdata
+      ) %>% 
       data.frame() %>% 
       dplyr::mutate(!!as.symbol('parameter') := parm) %>% 
       dplyr::relocate(!!as.symbol('parameter'))
   } else if (length(parm) > 1) {
     list_cout <- list()
-    list_name <- list()
     for (allowed_parmsi in parm) {
-      list_cout[[allowed_parmsi]] <-
-        call_comparison_gparms_fun(parm = allowed_parmsi, eps = eps,
-                                   by = comparisons_arguments$by,
-                                   newdata = newdata)
-      if(nrow(list_cout[[allowed_parmsi]]) > 0) { # If fails, don't add par name
-        list_name[[allowed_parmsi]] <- allowed_parmsi
-      }
+      list_cout[[allowed_parmsi]] <- outer_call_comparison_gparms_fun(
+        parm = allowed_parmsi, eps = eps, 
+        by = comparisons_arguments$by,
+        aggregate_by = aggregate_by,
+        newdata = newdata
+        )
     }
-    list_name2 <- do.call(rbind, list_name)
     out_sf <- do.call(rbind, list_cout) %>% data.frame() 
     out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter") %>% 
       dplyr::mutate(!!as.symbol('parameter') := sub("*\\.[0-9]", "", 
                                                    !!as.symbol('parameter')))
   }
+  
   
   out_sf <- out_sf %>% 
     dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
