@@ -490,6 +490,18 @@ growthparameters_comparison.bgmfit <- function(model,
   full.args$model <- model
   full.args$deriv_model <- deriv_model
   
+  if(is.null(full.args$hypothesis) && is.null(full.args$equivalence)) {
+    plot <- plot
+  } else {
+    plot <- FALSE
+    if(verbose) {
+      message("Argument plot = TRUE is not allowed when either hypothesis ", 
+              "or equivalence is not NULL",
+              "\n ",
+              "Therefor, argument setting plot = FALSE") 
+    }
+  }
+  
   full.args$newdata <- newdata
   newdata           <- do.call(get.newdata, full.args)
   
@@ -699,6 +711,7 @@ growthparameters_comparison.bgmfit <- function(model,
     comparisons_arguments$by         <- set_group
     comparisons_arguments$comparison <- gparms_fun
     
+
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
     if(is.null(showlegends)) {
@@ -819,6 +832,10 @@ growthparameters_comparison.bgmfit <- function(model,
       }
     )
     err. <- get('err.', envir = enverr.)
+    
+    # This happen when NA in one factor for hypothesis
+    if(!exists('gout')) return(invisible(NULL))
+    
     if(length(gout) == 0) err. <- TRUE
     
     # for (byi in eval(by)) {
@@ -836,6 +853,7 @@ growthparameters_comparison.bgmfit <- function(model,
       gout <- gout
     }
     
+    
     if(plot) {
       return(gout)
     }
@@ -843,17 +861,19 @@ growthparameters_comparison.bgmfit <- function(model,
     # If results not available for all factor, theN add NA it
     if(!is.null(gout)) {
       if(!isFALSE(by)) {
-        goutnames <- names(gout)
-        groupvars <-  eval(by)
-        newdatajoin <- newdata %>% dplyr::group_by_at(groupvars) %>% 
-          dplyr::filter(dplyr::row_number() == 1) %>% dplyr::ungroup()
-        gout <- newdatajoin %>% dplyr::left_join(., gout, by = groupvars) %>% 
-          dplyr::select(dplyr::all_of(goutnames)) %>% 
-          dplyr::select(-dplyr::any_of(c('predicted_lo', 'predicted_hi',
-                                         'predicted', 'tmp_idx'))) %>% 
-          dplyr::mutate(!! as.name('parameter') := parm) %>% 
-          dplyr::relocate(dplyr::all_of('parameter')) %>% 
-          data.frame()
+        if(is.null(hypothesis) && is.null(equivalence)) {
+          goutnames <- names(gout)
+          groupvars <-  eval(by)
+          newdatajoin <- newdata %>% dplyr::group_by_at(groupvars) %>%
+            dplyr::filter(dplyr::row_number() == 1) %>% dplyr::ungroup()
+          gout <- newdatajoin %>% dplyr::left_join(., gout, by = groupvars) %>%
+            dplyr::select(dplyr::all_of(goutnames)) %>%
+            dplyr::select(-dplyr::any_of(c('predicted_lo', 'predicted_hi',
+                                           'predicted', 'tmp_idx'))) %>%
+            dplyr::mutate(!! as.name('parameter') := parm) %>%
+            dplyr::relocate(dplyr::all_of('parameter')) %>%
+            data.frame()
+        }
       }
     }
     
@@ -886,7 +906,7 @@ growthparameters_comparison.bgmfit <- function(model,
       aggregate_by = aggregate_by,
       newdata = newdata
       ) 
-    
+    if(is.null(out_sf)) return(invisible(NULL))
     if(!"parameter" %in% colnames(out_sf)) {
       out_sf <- out_sf %>% dplyr::mutate(!!as.symbol('parameter') := parm) %>%
         dplyr::relocate(!!as.symbol('parameter')) %>% data.frame() 
@@ -934,8 +954,15 @@ growthparameters_comparison.bgmfit <- function(model,
       dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
       data.frame()
   
-    remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
+    remove_cols_ <- c('tmp_idx', 'predicted_lo', 
                       'predicted_hi', 'predicted')
+    
+    if(!is.null(full.args$hypothesis) | !is.null(full.args$equivalence)) {
+      remove_cols_ <- remove_cols_
+    }
+    if(is.null(full.args$hypothesis) && is.null(full.args$equivalence)) {
+      remove_cols_ <- c('term', 'contrast', remove_cols_)
+    }
     
     out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
     
