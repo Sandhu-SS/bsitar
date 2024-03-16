@@ -545,7 +545,8 @@ growthparameters_comparison.bgmfit <- function(model,
       showlegends,
       average,
       estimate_center,
-      estimate_interval
+      estimate_interval,
+      reformat
     )
   ))[-1]
   
@@ -558,17 +559,26 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
   
+ 
+  
+  if(deriv == 0 & deriv_model) 
+    stop("If deriv_model = TRUE, deriv should be 1")
+  if(deriv == 1 & !deriv_model) 
+    stop("If deriv_model = FALSE, deriv should be 0")
+  
   if (!is.null(variables)) {
     if (!is.list(variables)) {
-      stop("'variables' argument must be a named list and the first ", 
-           "element should be ", xvar, 
-           "\n ",
-           " specified as follows ",
-           "\n ",
-          " variables = list(", xvar, "=", "1e-6",")",
-          "\n ",
-          " where 1e-6 is the default value for the argument 'eps'"
-           )
+      if(!deriv_model) {
+        stop("'variables' argument must be a named list and the first ", 
+             "element should be ", xvar, 
+             "\n ",
+             " specified as follows ",
+             "\n ",
+             " variables = list(", xvar, "=", "1e-6",")",
+             "\n ",
+             " where 1e-6 is the default value for the argument 'eps'"
+        )
+      }
     } else if (is.list(variables)) {
       set_variables <- variables
       if(is.null(set_variables[[xvar]])) {

@@ -11,6 +11,7 @@
   recompile = NULL,
   expose_function = FALSE,
   verbose = FALSE,
+  check_args = TRUE,
   envir = NULL,
   ...
 )
@@ -49,6 +50,12 @@ optimization.}
 indicate whether to print information collected during setting up the
 object(s).}
 
+\item{check_args}{A logical (default \code{TRUE}) to indicate whether to
+check if arguments in the original \code{model} object and the
+\code{update_model} are same. If arguments are same, then original
+\code{model} object is returned along with the message (if \code{verbose =
+  TRUE}).}
+
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.
 Note that since most of post processing functions are based on \pkg{brms},
@@ -86,10 +93,15 @@ available the the\pkg{brms} package.
 
 model <- berkeley_exfit
 
-# Update model for degree of freedom. For illustration purpose, and to save 
-# time, the below example is run with sample_prior only. 
+# Update model
+# Note that in case all arguments supplied to the update_model() are same as
+# the original model fit, then original model object is returned.   
+# To explicitly get this information whether model is being updated or not, 
+# user can set verbose = TRUE. The verbose = TRUE also useful in getting the
+# information regarding what all arguments have been changed as compared to
+# the original model.
 
-model2 <- update_model(model, df = 5, sample_prior = 'only')
+model2 <- update_model(model, df = 5, verbose = TRUE)
 
 }
 

@@ -188,6 +188,9 @@ if(existsfit) {
                 seed = 123)
 }
 
+# print(model_bayes)
+# stop()
+
 # Expose Stan functions
 model_bayes <- expose_model_functions(model_bayes)
 ```
@@ -407,7 +410,7 @@ colnames(data_sitar_Vapv) <- colnames(data_bsitar_Vapv)
 # Figure \@ref(fig:plota) (below) shows a comparison of observed growth curves
 ```
 
-Figure \@ref(fig:plota) (below) shows a comparison of observed growth curves
+Figure below shows a comparison of observed growth curves
 with those adjusted via the random effects. As described earlier (see
 [Introduction]), the random effects align individual-specific growth
 trajectories towards a common population average (mean) trajectory. The three growth
@@ -417,7 +420,11 @@ patterns that *SITAR* adjust via random effects are size, timing and intensity:
 * Timing is the individual's age at peak height velocity (i.e. the age when they are growing fastest) compared to the average (measured in years)
 * Intensity is their growth rate compared to the average (measured as a fraction, or percentage / 100)
 
-Adjusted curves aligned with the mean curve (Figure \@ref(fig:plota)) indicate
+```{asis, echo=tabfiglabs}
+# (Figure \@ref(fig:plota)) indicate
+```
+
+Adjusted curves aligned with the mean curve (Figure shown below) indicate
 that most of the inter-individual variability has been captured. This is
 achieved by: 1) shifting the high curves down and the low curves up to adjust
 for the size, 2) shifting the early curves later and the late curves earlier
@@ -498,14 +505,21 @@ replayPlot(plt_plota)
 
 
 
+```{asis, echo=tabfiglabs}
+# Figure \@ref(fig:plotuadids) which displays
+```
+
+
+```{asis, echo=tabfiglabs}
+# Tables \@ref(tab:tsidssitar) and \@ref(tab:tsidsbsitar). Note that
+```
 
 ## Random effects (size, timing and intensity)
 The effect of *SITAR* adjustment in individual curves via random effects is
-shown more clearly in Figure \@ref(fig:plotuadids) which displays observed and
+shown more clearly in Figure below which displays observed and
 adjusted curves for tallest and shortest individuals along with the population
 average (mean) curve. The corresponding estimates of random effects (size,
-timing and intensity) are provided in Tables \@ref(tab:tsidssitar) and
-\@ref(tab:tsidsbsitar). Note that intensity c, multiplied by 100, is a
+timing and intensity) are provided in the Tables below. Note that intensity c, multiplied by 100, is a
 percentage. Results for both the models are very similar to each other. Results
 for the **sitar** model are presented below.
 
@@ -513,14 +527,19 @@ For the shortest individual, size is `r round(sitar_ranef_id_min$a, 2)` cm small
 than the average size, timing of the spurt is `r round(sitar_ranef_id_min$b, 2)` year earlier than average timing, and the growth rate (intensity) is `r round(sitar_ranef_id_min$c*100, 2)` % faster than average growth rate. In contrast, the size for tallest individual is `r round(sitar_ranef_id_max$a, 2)` cm larger than the average size and the spurt occurs `r round(sitar_ranef_id_max$b, 2)` year later than average timing with growth rate `r round(sitar_ranef_id_max$c*100, 2)` % slower than
 average intensity.
 
+
+```{asis, echo=tabfiglabs}
+# (Table \@ref(tab:sitarraneffecid) and (Table \@ref(tab:bsitarraneffecid)). The
+# Figures \@ref(fig:sitarranefcorrplot) \@ref(fig:bsitarranefcorrplot), and the #corresponding estimates are
+#provided in Table \@ref(tab:sitarranefcorr) and Table
+#\@ref(tab:bsitarranefcorr). 
+```
+
 For a broader comparison among the **sitar** and **bsitar** models, random
-effects for the first ten individuals estimated are shown below in (Table
-\@ref(tab:sitarraneffecid) and (Table \@ref(tab:bsitarraneffecid)). The
-association (correlation) between random effects (across all individuals) is
-shown as a scatterplot in Figures \@ref(fig:sitarranefcorrplot) and
-\@ref(fig:bsitarranefcorrplot), and the corresponding estimates are
-provided in Table \@ref(tab:sitarranefcorr) and Table
-\@ref(tab:bsitarranefcorr). Results show that timing is negatively correlated
+effects for the first ten individuals estimated are shown below (see Tables). 
+The association (correlation) between random effects (across all individuals) is
+shown as a scatterplot in Figures and corresponding estimates are
+provided in Tables. Results show that timing is negatively correlated
 with intensity indicating the early puberty is associated with faster growth.
 
 
@@ -971,11 +990,17 @@ replayPlot(plt_plotd)
 ```
 
 
-Estimated distance curve (Figure \@ref(fig:plotd)) shows that increase in height
+```{asis, echo=tabfiglabs}
+# (Figure \@ref(fig:plotd)) shows that
+# (Figure \@ref(fig:plotv)) which shows a clear spurt
+# [Population average (mean) estimates], Table \@ref(tab:sitarraneffecidapv)).
+```
+
+Estimated distance curve (see Figure below) shows that increase in height
 follows a sigmoid pattern with maximum gain in height occurring around 12 years
-of age. This is confirmed by the velocity curve (Figure \@ref(fig:plotv)) which
+of age. This is confirmed by the velocity curve shown in Figure (below) which
 shows a clear spurt in growth rate which peaks at around 11.7 years of age (see
-[Population average (mean) estimates], Table \@ref(tab:sitarraneffecidapv)).
+[Population average (mean) estimates].
 
 
 
@@ -1054,11 +1079,16 @@ replayPlot(plt_plotV2)
 ```
 
 
-Individual specific distance (Figure \@ref(fig:plotD2)) and velocity(Figure
-\@ref(fig:plotV2)) curves follow a pattern similar to the population average
+```{asis, echo=tabfiglabs}
+# distance (Figure \@ref(fig:plotD2)) and velocity(Figure \@ref(fig:plotV2)) curves
+# (Figure \@ref(fig:plotv)) which shows a clear spurt
+# [Population average (mean) estimates], Table \@ref(tab:sitarraneffecidapv)).
+# Individual velocity curves (Figure \@ref(fig:plotV2)) 
+```
+
+Individual specific distance and velocity curves (shown below) follow a pattern similar to the population average
 distance and velocity curves described [earlier][Population average (mean)
-distance and velocity curves]. Individual velocity curves (Figure
-\@ref(fig:plotV2)) show that all individuals experience a pubertal growth spurt
+distance and velocity curves]. Individual velocity curves (shown below) show that all individuals experience a pubertal growth spurt
 but the timing of the spurt varies between 10 and 14 years with varying growth
 pattern among individuals. Some individuals are consistently taller than average
 and others consistently shorter. While some start relatively short and become
@@ -1071,11 +1101,15 @@ at an early age.
 ## Growth parameters (timing and intensity)
 \newline
 ### Population average (mean) estimates
+```{asis, echo=tabfiglabs}
+# Figure \@ref(fig:plotv)), it is not surprising
+# (see Table \@ref(tab:tabapgv)).
+```
 As velocity curves estimated by the **sitar** and **bsitar** models are very
-similar to each other (Figure \@ref(fig:plotv)), it is not surprising that both
+similar to each other (see below), it is not surprising that both
 models provide almost identical estimates for the timing (i.e., age at peak
 growth velocity, APGV) and the intensity (i.e.,peak growth velocity, PGV) of the
-growth spurt (see Table \@ref(tab:tabapgv)).
+growth spurt (see Table below).
 ```{r tabapgv, eval=TRUE, echo=FALSE, include=TRUE}
 knitr::kable(parms_apv_all, 
              digits = 2, 
@@ -1105,10 +1139,14 @@ knitr::kable(parms_apv_all,
 
 
 ### Individual specific estimates
+```{asis, echo=tabfiglabs}
+# growth spurt (see Table \@ref(tab:sitarraneffecidapv))
+# and (Table \@ref(tab:bsitarraneffecidapv)).
+```
 Like population average, both **sitar** and
 **bsitar** models provide very similar estimates for the timing (APGV) and the
-intensity (PGV) of the growth spurt (see Table \@ref(tab:sitarraneffecidapv))
-and (Table \@ref(tab:bsitarraneffecidapv)).
+intensity (PGV) of the growth spurt (see Tables below).
+
 ```{r sitarraneffecidapv, eval=TRUE, echo=FALSE, include=TRUE}
 # https://community.rstudio.com/t/sizing-tables-in-pdf-documents-using-knitr-and-kableextra/19285/2
 knitr::kable(data_sitar_Vapv[1:10, ], 

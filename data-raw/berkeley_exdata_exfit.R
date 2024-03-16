@@ -46,10 +46,10 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # backend = 'cmdstanr',
                         # b_prior_beta = student_t(3, 0, 2.5),
                         # c_prior_beta = student_t(3, 0, 1.0),
-                        sample_prior = 'only',
+                        sample_prior = 'no',
                         expose_function = FALSE,
-                         chains = 2, cores = 2, iter = 2000, thin = 15,
-                        # chains = 2, cores = 2, iter = 1000, thin = 6,
+                         # chains = 2, cores = 2, iter = 2000, thin = 15,
+                        chains = 2, cores = 2, iter = 1000, thin = 7,
                         seed = 123)
 
 

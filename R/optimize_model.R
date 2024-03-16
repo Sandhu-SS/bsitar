@@ -958,9 +958,10 @@ optimize_model.bgmfit <- function(model,
     if(all_same_args) {
       if(verbose) {
         cat("\n")
-        cat("The arguemnets supplied for optimization are identical to the", 
-            "\n ",
-            "original model fit. Therefore, returning the original model fit")
+        message("Arguemnets supplied for optimize_model()' call are same as ",
+                "the original model fit.", 
+                "\n ",
+                "Therefore, returning the original model fit")
         cat("\n")
       }
       fit <- NULL

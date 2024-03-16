@@ -1,4 +1,14 @@
 
+# The 'bsitar' package (version 0.1.1) was archived on 10 March 2024 because of the following 
+when running the example: model2 <- update_model(model, df = 5, sample_prior = 'only') using
+R Under development (unstable) 
+
+Error in .make_numeric_version(x, strict, .standard_regexps()$valid_numeric_version) : 
+  invalid non-character version specification 'x' (type: double)
+Calls: update_model ... as.numeric_version -> numeric_version -> .make_numeric_version
+Execution halted
+
+
 # Test environments (a total four)
  1. Windows 11 x64 (build 22621)
      	on devtools::check()

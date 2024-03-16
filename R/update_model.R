@@ -22,6 +22,12 @@
 #'   figure out internally whether recompilation is required or not. Setting
 #'   \code{recompile} to \code{FALSE} will ignore Stan code changing arguments.
 #'   
+#' @param check_args  A logical (default \code{TRUE}) to indicate whether to
+#'   check if arguments in the original \code{model} object and the
+#'   \code{update_model} are same. If arguments are same, then original
+#'   \code{model} object is returned along with the message (if \code{verbose =
+#'   TRUE}).
+#' 
 #' @inherit growthparameters.bgmfit params
 #'
 #' @param ... Other arguments passed to \code{\link{brms}}.
@@ -48,10 +54,15 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' # Update model for degree of freedom. For illustration purpose, and to save 
-#' # time, the below example is run with sample_prior only. 
+#' # Update model
+#' # Note that in case all arguments supplied to the update_model() are same as
+#' # the original model fit, then original model object is returned.   
+#' # To explicitly get this information whether model is being updated or not, 
+#' # user can set verbose = TRUE. The verbose = TRUE also useful in getting the
+#' # information regarding what all arguments have been changed as compared to
+#' # the original model.
 #' 
-#' model2 <- update_model(model, df = 5, sample_prior = 'only')
+#' model2 <- update_model(model, df = 5, verbose = TRUE)
 #' 
 #' }
 #'
@@ -61,6 +72,7 @@ update_model.bgmfit <-
            recompile = NULL,
            expose_function = FALSE,
            verbose = FALSE,
+           check_args = TRUE,
            envir = NULL,
            ...) {
     
@@ -69,6 +81,81 @@ update_model.bgmfit <-
     } else {
       envir <- parent.frame()
     }
+    
+    
+    
+    if(check_args) {
+      call_o <- match.call()
+      call_o_args <- as.list(call_o)[-1]
+      
+      args_o <- as.list(model$model_info$call.full.bgmfit)[-1]
+      
+      args_o_dots_ <- list(...)
+      if (length(args_o_dots_) > 0) {
+        for (i in names(args_o_dots_)) {
+          args_o[[i]] <- args_o_dots_[[i]]
+        }
+      }
+      
+      # This to evaluate T/F to TRUE/FALSE
+      for (i in names(args_o)) {
+        if (is.symbol(args_o[[i]])) {
+          if (args_o[[i]] == "T")
+            args_o[[i]] <- eval(args_o[[i]])
+          if (args_o[[i]] == "F")
+            args_o[[i]] <- eval(args_o[[i]])
+        }
+      }
+      
+      args_o_new <- args_o_dots_
+      args_o_new[['expose_function']] <- expose_function
+      
+      calling    <- model$model_info$call.full.bgmfit
+      calling[['verbose']] <- NULL
+      
+      args_o_org <- calling
+      args_o_new$data <- NULL
+      args_o_org$data <- NULL
+      
+      # This to evaluate T/F to TRUE/FALSE
+      for (i in names(args_o_org)) {
+        if (is.symbol(args_o_org[[i]])) {
+          if (args_o_org[[i]] == "T")
+            args_o_org[[i]] <- eval(args_o_org[[i]])
+          if (args_o_org[[i]] == "F")
+            args_o_org[[i]] <- eval(args_o_org[[i]])
+        }
+      }
+      
+      all_same_args_c <- all_same_args <- c()
+      # args_o_org_updated <- list()
+      for (args_oi in names(args_o_new)) {
+        all_same_args_c <- c(all_same_args_c, identical(args_o_org[[args_oi]],
+                                                        args_o_new[[args_oi]]) 
+        )
+      }
+      
+      all_same_args_c_diffs <- args_o_new[!all_same_args_c]
+      if(length(all_same_args_c_diffs) > 0) {
+        all_same_args <- FALSE 
+      } else {
+        all_same_args <- TRUE
+      }
+      
+      if(all_same_args) {
+        if(verbose) {
+          cat("\n")
+          message("Arguemnets supplied for 'update_model()' call are same as ",
+              "the original model fit.", 
+              "\n ",
+              "Therefore, returning the original model object")
+          cat("\n")
+        }
+      }
+      return(model)
+    } # if(check_args) {
+    
+    
     
     
     check_if_package_installed(model, xcall = NULL)
