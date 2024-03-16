@@ -410,11 +410,8 @@ colnames(data_sitar_Vapv) <- colnames(data_bsitar_Vapv)
 # Figure \@ref(fig:plota) (below) shows a comparison of observed growth curves
 ```
 
-Figure below shows a comparison of observed growth curves
-with those adjusted via the random effects. As described earlier (see
-[Introduction]), the random effects align individual-specific growth
-trajectories towards a common population average (mean) trajectory. The three growth
-patterns that *SITAR* adjust via random effects are size, timing and intensity:
+Figure below shows growth curves adjusted via the random effects. As described earlier (see [Introduction]), the random effects align individual-specific growth
+trajectories towards a common population average (mean) trajectory. The three growth patterns that *SITAR* adjust via random effects are size, timing and intensity:
 
 * Size is an individual's mean height compared to the average (measured in cm)
 * Timing is the individual's age at peak height velocity (i.e. the age when they are growing fastest) compared to the average (measured in years)
@@ -424,7 +421,7 @@ patterns that *SITAR* adjust via random effects are size, timing and intensity:
 # (Figure \@ref(fig:plota)) indicate
 ```
 
-Adjusted curves aligned with the mean curve (Figure shown below) indicate
+Adjusted curves aligned with the mean curve indicate
 that most of the inter-individual variability has been captured. This is
 achieved by: 1) shifting the high curves down and the low curves up to adjust
 for the size, 2) shifting the early curves later and the late curves earlier

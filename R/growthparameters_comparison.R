@@ -252,6 +252,18 @@ growthparameters_comparison.bgmfit <- function(model,
   on.exit(options("marginaleffects_posterior_center" = ec_), add = TRUE)
   on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
   
+  try(zz <- insight::check_if_installed(c("marginaleffects"), 
+                                        minimum_version = '0.18.0.9003',
+                                        prompt = FALSE,
+                                        stop = FALSE))
+  
+  if(!isTRUE(zz)) {
+    message("Please install the latest version of the 'marginaleffects' package",
+            "\n ",
+            "remotes::install_github('vincentarelbundock/marginaleffects')")
+    return(invisible(NULL))
+  }
+  
   
   if(is.null(envir)) {
     envir <- model$model_info$envir

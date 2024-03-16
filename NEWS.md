@@ -5,8 +5,8 @@
 
 - Added ```add_model_criterion()``` function to compute fit criteria such as "loo", "waic", "kfold", 
  "loo_subsample", "bayes_R2" (Bayesian R-squared), "loo_R2" (LOO-adjusted R-squared), and "marglik" 
- (log marginal likelihood). The computed fit criteria are added to the model object for later use such 
- as comparison of models.  The ```add_model_criterion()``` is a wrapper around the ```add_criterion()``` 
+ (log marginal likelihood). The computed fit criteria are added to the model object for later use including 
+ comparison of models.  The ```add_model_criterion()``` is a wrapper around the ```add_criterion()``` 
  function available from the  **brms** package
 
 
@@ -14,16 +14,12 @@
 
 - bsitar(): The 'sigma_cov_init_beta = random' argument was setting wrong initial values for the covariates  
   included in the 'sigma' formula. The initials for Intercept ('sigma_init_beta') were used for covariates too.
-- bsitar(): For 'univariate_by' model, the subset indicators were set as numeric '1' and '0' rather than         
-  explicitly setting them to logical TRUE/FALSE. 
+
 
 
 ### Miscellaneous
 - Replaced Bayesian SITAR model fit shown as example from 'berkeley_mfit' applied to 20 randomly selected males   between 6 and 20 years of age ('berkeley_mdata') with 'berkeley_exfit' that is fit to 70 females between 8 and 20 years of age ('berkeley_exdata'). This is done to use the example model ('berkeley_exfit') in vignette that provide a detailed comparison between non Bayesian SITAR model fit (using the 'sitar' package) and Bayesian SITAR model fit (using the 'bsitar' package). The vignette included in the 'sitar' package analysed the exact same data (70 females between 8 and 20 years of age). 
-- Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing functions. The environment is now automatically set to match the environment of exposed functions. It is important to note that setting environment manually (via the 'envir' argument) may actually result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests. 
-- Moved example dataset ('berkeley_exdata') and the model fit object ('berkeley_exfit') to the ```sysdata.rda``` in order to reduce the package size.
-- Added ```getNsObject()``` function to retreive objects from namespace. This is mainly for internal use only to streamline the workflow across sub modules.
-- Added options ```file```, ``file_refit```, and ``file_compress``` to save and retreive fitted objects. See  ```brms::brm``` help file for details. 
+- The ``bsitar::bsitar()```received options ```file```, ``file_refit```, and ``file_compress``` to save and retreive fitted objects. See  ```brms::brm``` help file for details. 
 - Minor corrections/changes to make R code more efficient.
 
 

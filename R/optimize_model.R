@@ -144,9 +144,11 @@
 #' # information regarding what all arguments have been changed as compared to
 #' # the original model.
 #' 
-#' model2 <- optimize_model(model, optimize_df = NULL, 
+#' model2 <- optimize_model(model, 
+#'   optimize_df = 4, 
 #'   optimize_x = NULL, 
 #'   optimize_y = NULL,
+#'   sample_prior = 'only',
 #'   verbose = TRUE)
 #' 
 #' }

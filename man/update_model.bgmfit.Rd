@@ -11,7 +11,7 @@
   recompile = NULL,
   expose_function = FALSE,
   verbose = FALSE,
-  check_args = TRUE,
+  check_newargs = FALSE,
   envir = NULL,
   ...
 )
@@ -50,11 +50,11 @@ optimization.}
 indicate whether to print information collected during setting up the
 object(s).}
 
-\item{check_args}{A logical (default \code{TRUE}) to indicate whether to
-check if arguments in the original \code{model} object and the
-\code{update_model} are same. If arguments are same, then original
-\code{model} object is returned along with the message (if \code{verbose =
-  TRUE}).}
+\item{check_newargs}{A logical (default \code{FALSE}) to check whether
+arguments in the original \code{model} fit and the \code{update_model} are
+same. When \code{check_newargs = TRUE} and arguments are same, it implies
+that update is not needed and hence the original \code{model} object is
+returned along with the message if \code{verbose = TRUE}.}
 
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.
@@ -95,13 +95,16 @@ model <- berkeley_exfit
 
 # Update model
 # Note that in case all arguments supplied to the update_model() are same as
-# the original model fit, then original model object is returned.   
+# the original model fit (checked via check_newargs = TRUE), then original 
+# model object is returned.   
 # To explicitly get this information whether model is being updated or not, 
 # user can set verbose = TRUE. The verbose = TRUE also useful in getting the
 # information regarding what all arguments have been changed as compared to
 # the original model.
 
-model2 <- update_model(model, df = 5, verbose = TRUE)
+model2 <- update_model(model, df = 4, 
+sample_prior = 'only',
+check_newargs = FALSE, verbose = TRUE)
 
 }
 
