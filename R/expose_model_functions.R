@@ -46,6 +46,7 @@
 #'
 #' @examples
 #' 
+#' \donttest{
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -57,8 +58,10 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' \donttest{
-#' expose_model_functions(model)
+#' # To save time, argument expose is set as FALSE which runs a dummy test 
+#' # and avoid model compilation which often takes time
+#' 
+#' expose_model_functions(model, expose = FALSE)
 #' }
 #' 
 expose_model_functions.bgmfit <- function(model, 
