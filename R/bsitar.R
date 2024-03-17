@@ -1184,7 +1184,7 @@
 #'  get the stanvars (see [brms::stanvar()] for details).
 #'
 #'@param get_priors An optional argument (logical, default \code{FALSE}) to
-#'  get the priors. (see [brms::get_prior()] for details).
+#'  get the priors. (see \code{brms::get_prior()} for details). 
 #'
 #'@param get_priors_eval An optional argument (logical, default \code{FALSE}) to
 #'  get the priors specified by the user.

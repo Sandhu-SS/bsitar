@@ -106,6 +106,8 @@ predict_draws.bgmfit <-
       envir <- parent.frame()
     }
     
+    environment(model$formula) <- envir
+    
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE
@@ -227,6 +229,19 @@ predict_draws.bgmfit <-
                       ...)
     
     if(is.null(test)) return(invisible(NULL))
+    
+    
+    if(!isTRUE(
+      check_pkg_version_exists('brms', minversion = '2.20.17', 
+                               prompt = FALSE,
+                               stop = FALSE,
+                               verbose = FALSE))) {
+      if(is.null(check_if_functions_exists(model, o, model$xcall,
+                                           usesavedfuns = usesavedfuns))) {
+        return(invisible(NULL))
+      }
+    }
+    
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe")

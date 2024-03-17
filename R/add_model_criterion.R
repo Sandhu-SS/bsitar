@@ -154,6 +154,19 @@ add_model_criterion.bgmfit <-
     
     if(is.null(test)) return(invisible(NULL))
     
+    
+    if(!isTRUE(
+      check_pkg_version_exists('brms', minversion = '2.20.17', 
+                               prompt = FALSE,
+                               stop = FALSE,
+                               verbose = FALSE))) {
+      if(is.null(check_if_functions_exists(model, o, model$xcall,
+                                           usesavedfuns = usesavedfuns))) {
+        return(invisible(NULL))
+      }
+    }
+    
+    
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe", "dummy_to_factor")
     calling.args <- post_processing_args_sanitize(model = model,

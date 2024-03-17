@@ -181,6 +181,8 @@ optimize_model.bgmfit <- function(model,
     envir <- parent.frame()
   }
   
+  environment(model$formula) <- envir
+  
   check_if_package_installed(model, xcall = NULL)
   
   # Initiate non formalArgs()

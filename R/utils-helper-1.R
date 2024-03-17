@@ -2101,6 +2101,36 @@ sample_n_of_groups <- function(data, size, ...) {
 }
 
 
+#' An internal function to check the minimum version of the package
+#'
+#' @param pkg A character string of package names
+#' @param minver A character string of minimum version of the package
+#' @param verbose A logical (default \code{FALSE}) to check 
+#' @param ... other arguments. Currently ignored.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+
+check_pkg_version_exists <- function(pkg, 
+                                     minversion = NULL, 
+                                     verbose = FALSE,
+                                     ...) {
+  
+  try(zz <- insight::check_if_installed(pkg, 
+                                        minimum_version = minversion,
+                                        ...))
+ 
+  if(!isTRUE(zz)) {
+    if(verbose) {
+      message("Please install the latest version of the 'brms' package",
+              "\n ",
+              "remotes::install_github('paul-buerkner/brms')")
+    }
+  }
+  return(zz)
+}
+
 
 #' An internal function to check for the exposed function
 #'
@@ -2122,6 +2152,17 @@ check_if_functions_exists <- function(model,
   
   if(!checks) {
     if(is.null(o)) stop("object 'o' must be specified")
+  }
+  
+  check_brms_v <- 
+  check_pkg_version_exists('brms', minversion = '2.20.17', 
+                           prompt = FALSE,
+                           stop = FALSE,
+                           verbose = FALSE)
+  
+  latest_brms_v <- TRUE
+  if(!isTRUE(check_brms_v)) {
+    latest_brms_v <- FALSE
   }
   
   # if(exists(o[[1]], mode = "function", envir = globalenv())) {
@@ -2169,33 +2210,36 @@ check_if_functions_exists <- function(model,
                  "\n "              )
   
   msg3 <- paste0("Please expose user defined Stan function before calling the",
-                 "\n",
                  "'", calname.fun, "()'", " function",
-                 # "\n ",
                  " (See '?expose_model_functions()' for details).",
-                 # "\n ",
-                 # "Also, 'envir' should be set as global environment as",
-                 # "\n ",
-                 # paste0(calname.fun, "(...,", " envir = "," .GlobalEnv)"),
-                 # "\n ",
-                 # "This is a known issue ",
-                 # "(https://github.com/paul-buerkner/brms/issues/1577)",
+                 "\n ",
+                 "\n ",
+                 "Also, 'envir' should be set as global environment i.e.,",
+                 "\n ",
+                 paste0(calname.fun, "(...,", " envir = "," .GlobalEnv)"),
+                 "\n ",
+                 "This is a known issue ",
+                 "(https://github.com/paul-buerkner/brms/issues/1577)",
                  "\n ",
                  "\n ",
                  "Note that if you have already exposed Stan functions in ",
                  "'bsitar()' call,\n then those saved functions can be used here ",
                  "by setting 'usesavedfuns = TRUE'",
-                 # "\n ",
-                 # paste0(calname.fun,
-                 #        "(...,", " usesavedfuns = TRUE, envir = "," .GlobalEnv)"),
+                 "\n ",
+                 paste0(calname.fun,
+                        "(...,", " usesavedfuns = TRUE, envir = "," .GlobalEnv)"),
                  "\n "              )
   
   
   if(checks) {
     if(is.null(model$model_info$exefuns[[1]])) {
       if(!is.null(usesavedfuns)) {
-        if(!usesavedfuns) message(msg1)
-        if(usesavedfuns) message(msg2)
+        if(!usesavedfuns & latest_brms_v) message(msg1)
+        if(usesavedfuns & latest_brms_v) message(msg2)
+        
+        if(!usesavedfuns & !latest_brms_v) message(msg3)
+        if(usesavedfuns & !latest_brms_v) message(msg3)
+        
       }
     }
     return(invisible(NULL))

@@ -1207,10 +1207,10 @@ the desired order of options passed to each such model such as \code{df},
 indicate whether to expose Stan function used in model fitting.}
 
 \item{get_stancode}{An optional argument (logical, default \code{FALSE}) to
-get the stancode (see \code{\link[brms:stancode]{brms::stancode()}} for details).}
+get the stancode (see \code{\link[brms:stancode.brmsfit]{brms::stancode()}} for details).}
 
 \item{get_standata}{An optional argument (logical, default \code{FALSE}) to
-get the standata (see \code{\link[brms:standata]{brms::standata()}} for details).}
+get the standata (see \code{\link[brms:standata.brmsfit]{brms::standata()}} for details).}
 
 \item{get_formula}{An optional argument (logical, default \code{FALSE}) to
 get the formula. (see \code{\link[brms:brmsformula]{brms::brmsformula()}} for details).}
@@ -1219,7 +1219,7 @@ get the formula. (see \code{\link[brms:brmsformula]{brms::brmsformula()}} for de
 get the stanvars (see \code{\link[brms:stanvar]{brms::stanvar()}} for details).}
 
 \item{get_priors}{An optional argument (logical, default \code{FALSE}) to
-get the priors. (see \code{\link[brms:default_prior]{brms::get_prior()}} for details).}
+get the priors. (see \code{brms::get_prior()} for details).}
 
 \item{get_priors_eval}{An optional argument (logical, default \code{FALSE}) to
 get the priors specified by the user.}

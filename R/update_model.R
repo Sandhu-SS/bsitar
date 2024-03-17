@@ -85,7 +85,7 @@ update_model.bgmfit <-
       envir <- parent.frame()
     }
     
-    
+    environment(model$formula) <- envir
     
     if(check_newargs) {
       call_o <- match.call()
