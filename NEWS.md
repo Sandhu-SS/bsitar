@@ -1,4 +1,4 @@
-# bsitar (development version)
+# bsitar 0.2.0
 
 
 ### New feature
