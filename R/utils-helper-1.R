@@ -2116,7 +2116,7 @@ check_pkg_version_exists <- function(pkg,
                                      minversion = NULL, 
                                      verbose = FALSE,
                                      ...) {
-  print(minversion)
+  
   try(zz <- insight::check_if_installed(pkg, 
                                         minimum_version = minversion,
                                         ...))

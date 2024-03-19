@@ -43,9 +43,19 @@ berkeley_exdata <- berkeley_data %>%
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 5, 
                         threads = brms::threading(NULL), 
+                        
                         # backend = 'cmdstanr',
-                        # b_prior_beta = student_t(3, 0, 2.5),
-                        # c_prior_beta = student_t(3, 0, 1.0),
+                        
+                        a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
+                        b_prior_beta = normal(0, 3.5),
+                        c_prior_beta = normal(0, 1.5),
+                        
+                        a_prior_sd = normal(0, ysd),
+                        b_prior_sd = normal(0, 2.0),
+                        c_prior_sd = normal(0, 1.0),
+                        
+                        rsd_prior_sigma = normal(0, ysd),
+                        
                         sample_prior = 'no',
                         expose_function = FALSE,
                          # chains = 2, cores = 2, iter = 2000, thin = 15,
