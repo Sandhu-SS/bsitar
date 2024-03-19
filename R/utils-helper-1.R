@@ -2180,10 +2180,10 @@ check_if_functions_exists <- function(model,
   calname.fun <- xcall # match.call()[1]
   calname.fun <- gsub(paste0(".", classname), "", calname.fun)
   
-  msg1 <- paste0("Please expose user defined Stan function before calling the",
-                 "\n",
+  msg1 <- paste0(" Please expose user defined Stan function before calling the",
+                 "\n ",
                  "'", calname.fun, "()'", " function",
-                 # "\n ",
+                  "\n ",
                  " (See '?expose_model_functions()' for details).",
                  "\n ",
                  "\n ",
@@ -2210,9 +2210,10 @@ check_if_functions_exists <- function(model,
                  "by there using 'expose_functions = TRUE'",
                  "\n "              )
   
-  msg3 <- paste0("Please expose user defined Stan function before calling the",
+  msg3 <- paste0(" Please expose user defined Stan function before calling the ",
                  "'", calname.fun, "()'", " function",
-                 " (See '?expose_model_functions()' for details).",
+                 "\n ",
+                 "(See '?expose_model_functions()' for details).",
                  "\n ",
                  "\n ",
                  "Also, 'envir' should be set as global environment i.e.,",
@@ -2223,14 +2224,23 @@ check_if_functions_exists <- function(model,
                  "(https://github.com/paul-buerkner/brms/issues/1577)",
                  "\n ",
                  "\n ",
-                 "Note that if you have already exposed Stan functions in ",
-                 "'bsitar()' call,\n then those saved functions can be used here ",
-                 "by setting 'usesavedfuns = TRUE'",
+                 "Note that if you have already exposed the Stan functions in ",
+                 "'bsitar()' call,\n then those saved functions can be used ",
+                 "here by setting 'usesavedfuns = TRUE'",
                  "\n ",
                  paste0(calname.fun,
                         "(...,", " usesavedfuns = TRUE, envir = "," .GlobalEnv)"),
                  "\n "              )
   
+  if(!latest_brms_v) {
+    msg3 <- paste0(msg3, 
+                   "\n ",
+                   "Or else, you can install the lates deveopmental versions ",
+                   " of the brms package:",
+                   "\n ",
+                   "remotes::install_github('paul-buerkner/brms')"
+    )
+  }
   
   if(checks) {
     if(is.null(model$model_info$exefuns[[1]])) {
