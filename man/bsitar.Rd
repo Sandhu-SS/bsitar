@@ -1191,9 +1191,14 @@ steps can be used to set covariate priors that each has scale parameter
 can be used to pass information to the initial arguments. The approach is
 the exact same as described above for the \code{prior_data}.}
 
-\item{init_custom}{Specify a custom initials object (a named list). Note that
-the named list is directly passed to the \code{init} argument without
-checking for the dimensions and name matching.}
+\item{init_custom}{Specify a custom initials object (a named list). The named
+list is directly passed to the \code{init} argument without checking for the
+dimensions and name matching. Note that in case initials are set for
+some parameter by using parameter specific argument (e.g., \code{a_init_beta
+ = 0}), then \code{init_custom} is only passed to those parameters for which
+initials are missing. If user want to override this behaviors i.e., to pass
+all \code{init_custom} ignoring parameter specific initials, then
+\code{init} should be set as \code{init = 'custom'}.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the model
@@ -1207,10 +1212,10 @@ the desired order of options passed to each such model such as \code{df},
 indicate whether to expose Stan function used in model fitting.}
 
 \item{get_stancode}{An optional argument (logical, default \code{FALSE}) to
-get the stancode (see \code{\link[brms:stancode.brmsfit]{brms::stancode()}} for details).}
+get the stancode (see \code{\link[brms:stancode]{brms::stancode()}} for details).}
 
 \item{get_standata}{An optional argument (logical, default \code{FALSE}) to
-get the standata (see \code{\link[brms:standata.brmsfit]{brms::standata()}} for details).}
+get the standata (see \code{\link[brms:standata]{brms::standata()}} for details).}
 
 \item{get_formula}{An optional argument (logical, default \code{FALSE}) to
 get the formula. (see \code{\link[brms:brmsformula]{brms::brmsformula()}} for details).}

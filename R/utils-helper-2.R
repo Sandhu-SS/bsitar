@@ -3308,4 +3308,136 @@ set_init_gr_effects <- function(xscode,
 
 
 
+#' An internal function to get initials from pathfinder algorithm
+#'
+#' @param pthf A pathfinder draw object
+#' @param ndraws An integer specifying the number of paths
+#' @param init_structure A list of initial to set the appropriate dimensions of 
+#'  inits returned from the pathfinder
+#' @param variables A character vector specifying the variable names
+#' @param model An object of class \code{bgmfit}
+#' @param compile_init_model_methods A logical to indicate whether to compile
+#' \code{init_model_methods()}
+#' @param verbose A logical
+#' @keywords internal
+#' @return A named list.
+#' @keywords internal
+#' @noRd
+#'
+get_pathfinder_init <- function(pthf = NULL, 
+                                ndraws = 1, 
+                                init_structure = NULL,
+                                variables = NULL,
+                                model = NULL,
+                                compile_init_model_methods = NULL,
+                                verbose = FALSE) {
+  
+  if(is.null(pthf) & is.null(model)) 
+    stop('Specify at least pthf or model')
+  if(!is.null(pthf) & !is.null(model)) 
+    stop('Specify either least pthf or model')
+  
+  if(!is.null(model)) {
+    mod <- attr(model$fit, "CmdStanModel")
+    dat <- brms::standata(model)
+    ini <- model$stan_args$init
+    threads <- model$threads$threads
+    if(!is.null(threads)) {
+      pth1 <- mod$pathfinder(data = dat, init = ini,  num_threads = threads)
+    } else if(!is.null(threads)) {
+      pth1 <- mod$pathfinder(data = dat, init = ini)
+    }
+    if(is.null(compile_init_model_methods)) compile_init_model_methods <- TRUE
+  } else {
+    if(is.null(compile_init_model_methods)) compile_init_model_methods <- FALSE
+    pthf <- pthf
+  }
+  
+  if(compile_init_model_methods) {
+    pth1$init_model_methods()
+  }
+  
+  lp__ <- NULL;
+  lp_approx__ <- NULL;
+  lw <- NULL;
+  .draw <- NULL;
+  lw.x <- NULL;
+  lp__ <- NULL;
+  
+  
+  as_inits <- function(draws, variable=NULL, ndraws=4) {
+    ndraws <- min(posterior::ndraws(draws),ndraws)
+    if (is.null(draws)) {variable = variables(draws)}
+    draws <- draws  %>%  posterior::as_draws_matrix()
+    inits <- lapply(1:ndraws,
+                    function(drawid) {
+                      sapply(variable,
+                             function(var) {
+                               as.numeric(posterior::subset_draws(draws, 
+                                                                  variable=var, 
+                                                                  draw=drawid))
+                             })
+                    })
+    if (ndraws==1) { inits[[1]] } else { inits }
+  }
+  
+  if (is.null(variables)) {
+    # set variable names to be list of parameter names
+    variables <- names(pthf$variable_skeleton(transformed_parameters = FALSE,
+                                              generated_quantities = FALSE))
+  }
+  draws <- pthf$draws(format="df")
+  draws <- draws %>% 
+    posterior::mutate_variables(lw = lp__ - lp_approx__)
+  ndist <- dplyr::n_distinct(posterior::extract_variable(draws,"lw"))
+  if (ndist < ndraws) {
+    stop(paste0("Not enough distinct draws (", ndist, ") to create inits."))
+  }
+  if (ndist < 0.95*posterior::ndraws(draws)) {
+    # Resampling has been done in Stan, compute weights for distinct draws
+    #these are now non Pareto smoothed as we have lost the original information
+    draws <- draws %>% 
+      dplyr::group_by(lw) %>% 
+      dplyr::summarise(.draw=min(.draw)) %>% 
+      dplyr::left_join(draws, by = ".draw") %>% 
+      posterior::as_draws_df() %>% 
+      posterior::mutate_variables(lw = lw.x,
+                                  w = exp(lw-max(lw)))
+  } else {
+    # Resampling was not done in Stan, compute Pareto smoothed weights
+    draws <- draws %>% 
+      posterior::mutate_variables(w=posterior::pareto_smooth(exp(lw-max(lw)), 
+                                                             tail="right"))
+  }
+  
+  out <- 
+    draws %>% 
+    posterior::weight_draws(weights=posterior::extract_variable(draws,"w"), 
+                            log=FALSE) %>% 
+    posterior::resample_draws(ndraws=ndraws, method = "simple_no_replace") %>% 
+    as_inits(variable=variables, ndraws=ndraws)
+  
+  
+  if(!is.null(init_structure)) {
+    path_inits <- out # inits_pathfinder
+    init_str_x <- init_structure # fit_m$stan_args$init[[1]]
+    for (stri in names(init_str_x)) {
+      if(is.array( init_str_x[[stri]] )) {
+        # print(dim(init_str_x[[stri]]))
+        if(!is.null(path_inits[[stri]])) {
+          path_inits[[stri]] <- array(path_inits[[stri]], dim = dim(init_str_x[[stri]]) )
+        }
+      } else if(is.vector( init_str_x[[stri]] )) {
+        # print(length(init_str_x[[stri]]))
+      } else if(is.numeric( init_str_x[[stri]] )) {
+        # print(length(init_str_x[[stri]]))
+      }
+      out <- path_inits
+    }
+  } # if(!is.null(init_structure)) {
+  
+  return(out)
+}
+
+
 

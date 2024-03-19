@@ -122,8 +122,8 @@ marginal_draws.bgmfit <-
            hypothesis = NULL,
            equivalence = NULL,
            reformat = NULL,
-           estimate_center = 'mean',
-           estimate_interval = "eti",
+           estimate_center = NULL,
+           estimate_interval = NULL,
            dummy_to_factor = NULL, 
            verbose = FALSE,
            expose_function = FALSE,
@@ -132,15 +132,22 @@ marginal_draws.bgmfit <-
            envir = NULL,
            ...) {
     
-    ec_ <- getOption("marginaleffects_posterior_center")
-    ei_ <- getOption("marginaleffects_posterior_interval")
-    options("marginaleffects_posterior_center" = estimate_center)
-    options("marginaleffects_posterior_interval" = estimate_interval)
-    on.exit(options("marginaleffects_posterior_center" = ec_), add = TRUE)
-    on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
+    if(!is.null(estimate_center)) {
+      ec_ <- getOption("marginaleffects_posterior_center")
+      options("marginaleffects_posterior_center" = estimate_center)
+      on.exit(options("marginaleffects_posterior_center" = ec_), add = TRUE)
+    }
+    if(!is.null(estimate_interval)) {
+      ei_ <- getOption("marginaleffects_posterior_interval")
+      options("marginaleffects_posterior_interval" = estimate_interval)
+      on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
+    }
     
     try(zz <- insight::check_if_installed(c("marginaleffects"), 
-                                          minimum_version = '0.18.0.9003',
+                                          minversion = 
+                                            get_package_minversion(
+                                              'marginaleffects'
+                                              ), 
                                           prompt = FALSE,
                                           stop = FALSE))
     
@@ -293,7 +300,8 @@ marginal_draws.bgmfit <-
     if(is.null(test)) return(invisible(NULL))
     
     if(!isTRUE(
-      check_pkg_version_exists('brms', minversion = '2.20.17', 
+      check_pkg_version_exists('brms', 
+                               minversion = get_package_minversion('brms'), 
                                prompt = FALSE,
                                stop = FALSE,
                                verbose = FALSE))) {

@@ -1155,10 +1155,15 @@
 #'@param init_data An optional argument (a named list, default \code{NULL}) that
 #'  can be used to pass information to the initial arguments. The approach is
 #'  the exact same as described above for the \code{prior_data}.
-#'  
-#'@param init_custom Specify a custom initials object (a named list). Note that
-#'  the named list is directly passed to the \code{init} argument without
-#'  checking for the dimensions and name matching.
+#'
+#'@param init_custom Specify a custom initials object (a named list). The named
+#'  list is directly passed to the \code{init} argument without checking for the
+#'  dimensions and name matching. Note that in case initials are set for
+#'  some parameter by using parameter specific argument (e.g., \code{a_init_beta
+#'  = 0}), then \code{init_custom} is only passed to those parameters for which
+#'  initials are missing. If user want to override this behaviors i.e., to pass
+#'  all \code{init_custom} ignoring parameter specific initials, then
+#'  \code{init} should be set as \code{init = 'custom'}.
 #'
 #'@param verbose An optional argument (logical, default \code{FALSE}) to
 #'  indicate whether to print information collected during setting up the model
@@ -7131,7 +7136,16 @@ bsitar <- function(x,
     get_priors_eval_out <- brm_args$prior
   }
   
-    
+  
+  
+  full_custom <- FALSE
+  if(is.null(initsi) | initsi == 'NULL') {
+    init_custom <- init_custom
+  } else if(initsi[[1]] == 'custom') {
+    if(!is.null(init_custom)) full_custom <- TRUE
+  }
+  
+
   if(!exe_model_fit) {
     if(get_priors) {
       return(do.call(brms::get_prior, brm_args))
@@ -7151,8 +7165,6 @@ bsitar <- function(x,
       return(brm_args$stanvars)
     }
   } 
-  
-  
   
   
   if(exe_model_fit) {
@@ -7207,16 +7219,29 @@ bsitar <- function(x,
                " or else a list of list matching the number of chains")
         }
       }
-      new_init_append <- list()
-      init_old <- brm_args$init
-      init_append <- init_custom
-      for (ilen in 1:length(init_old)) {
-        new_init_append[[ilen]] <- c(init_old[[ilen]], init_append[[ilen]])
-      }
-      brm_args$init <- new_init_append
-    } 
+      
+      
+      if(!full_custom) {
+        new_init_append <- list()
+        init_old <- brm_args$init
+        init_append <- init_custom
+        # for (ilen in 1:length(init_old)) {
+        #   new_init_append[[ilen]] <- c(init_old[[ilen]], init_append[[ilen]])
+        # }
+        additional_init_names <- 
+          setdiff(names(init_append[[1]]), names(init_old[[1]]))
+        for (ilen in 1:length(init_old)) {
+          additional_init <- init_append[[ilen]][additional_init_names]
+          new_init_append[[ilen]] <- c(init_old[[ilen]], additional_init)
+        }
+        brm_args$init <- new_init_append
+      } else if(full_custom) {
+        brm_args$init <- init_custom
+      } # if(!full_custom) {
+      
+    } # if(!is.null(init_custom)) {
     
-    
+
     
     # This when all lists of list NULL (e.g., when all init args random)
     if(length(brm_args$init[lengths(brm_args$init) != 0]) == 0) {
@@ -7276,7 +7301,23 @@ bsitar <- function(x,
     # Set it to NULL to avoid re saving later
     brm_args$file <- NULL
     
+    
+    brm_args <- sanitize_algorithm_args(args = brm_args,
+                                        algorithm = brm_args$algorithm,
+                                        verbose = FALSE)
 
+    # pathfinderargs <- c('num_paths', 'single_path_draws', 
+    #                     'draws', 'history_size', 'max_lbfgs_iters')
+    # 
+    # for (i in pathfinderargs) {
+    #   if(!is.null(brm_args[[i]])) brm_args[[i]] <- NULL
+    # }
+    # 
+    # brm_argsx <<- brm_args
+    # brm_args$init <- brm_args$init[[1]]
+    # brm_args$init <- list(brm_args$init)
+
+    
 
     if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {

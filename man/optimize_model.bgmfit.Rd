@@ -218,10 +218,9 @@ model <- berkeley_exfit
 # the original model.
 
 model2 <- optimize_model(model, 
-  optimize_df = 4, 
+  optimize_df = NULL, 
   optimize_x = NULL, 
   optimize_y = NULL,
-  sample_prior = 'only',
   verbose = TRUE)
 
 }

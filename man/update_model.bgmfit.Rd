@@ -94,17 +94,15 @@ available the the\pkg{brms} package.
 model <- berkeley_exfit
 
 # Update model
-# Note that in case all arguments supplied to the update_model() are same as
-# the original model fit (checked via check_newargs = TRUE), then original 
-# model object is returned.   
+# Note that in case all arguments supplied to the update_model() call are 
+# same as the original model fit (checked via check_newargs = TRUE), then  
+# original model object is returned.   
 # To explicitly get this information whether model is being updated or not, 
 # user can set verbose = TRUE. The verbose = TRUE also useful in getting the
 # information regarding what all arguments have been changed as compared to
 # the original model.
 
-model2 <- update_model(model, df = 4, 
-sample_prior = 'only',
-check_newargs = FALSE, verbose = TRUE)
+model2 <- update_model(model, df = 5, check_newargs = TRUE, verbose = TRUE)
 
 }
 

@@ -2116,7 +2116,7 @@ check_pkg_version_exists <- function(pkg,
                                      minversion = NULL, 
                                      verbose = FALSE,
                                      ...) {
-  
+  print(minversion)
   try(zz <- insight::check_if_installed(pkg, 
                                         minimum_version = minversion,
                                         ...))
@@ -2155,7 +2155,8 @@ check_if_functions_exists <- function(model,
   }
   
   check_brms_v <- 
-  check_pkg_version_exists('brms', minversion = '2.20.17', 
+  check_pkg_version_exists('brms', 
+                           minversion = get_package_minversion('brms'), 
                            prompt = FALSE,
                            stop = FALSE,
                            verbose = FALSE)
@@ -3203,6 +3204,92 @@ mark_value_of_yintercept <- function(plot,
                         alpha = alpha) +
     ggplot2::scale_y_continuous(breaks = setx, labels = name) +
     ggplot2::theme(axis.text.y = ggtext::element_markdown())
+}
+
+
+#' An internal function to get the minimum version of packahege need
+#'
+#' @param pkg A character string specifying the package
+#' @param version A numeric indicating the version to be returned
+#' @param verbose A logical
+#' @keywords internal
+#' @return A character string.
+#' @keywords internal
+#' @noRd
+#'
+get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
+  if(!is.character(pkg)) stop('pkg must be a character')
+  if(pkg == 'brms') {
+    if(is.null(version)) {
+      out <- '2.20.17' 
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  if(pkg == 'marginaleffects') {
+    if(is.null(version)) {
+      out <- '0.18.0.9003'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  
+  return(out)
+}
+
+
+
+#' An internal function to sanitize algorithm specific arguments
+#'
+#' @param args A list of argument to be sanitized
+#' @param algorithm A character specifying the algorithm
+#' @param verbose A logical
+#' @keywords internal
+#' @return A named list.
+#' @keywords internal
+#' @noRd
+#'
+sanitize_algorithm_args <- function(args, algorithm, verbose = FALSE) {
+  if(!is.character(algorithm)) stop('algorithm must be a character')
+  
+  pathfinderargs <- c('save_latent_dynamics', 'output_dir',
+                      'output_basename', 'sig_figs', 
+                      'num_threads', 'init_alpha', 'tol_obj',
+                      'tol_rel_obj', 'tol_grad', 'tol_rel_grad',
+                      'tol_param', 'history_size', 'single_path_draws',
+                      'draws', 'num_paths', 'max_lbfgs_iters', 
+                      'num_elbo_draws', 'save_single_paths')
+  
+  laplacerargs <- c('save_latent_dynamics', 'output_dir',
+                    'output_basename', 'sig_figs', 
+                    'mode', 'opt_args', 'jacobian',
+                    'draws')
+  
+  # if(algorithm == 'sampling') {
+  #   return(args)
+  # } else if(algorithm == 'meanfield') {
+  #   return(args)
+  # } else if(algorithm == 'fullrank') {
+  #   return(args)
+  # } else if(algorithm == 'fixed_param') {
+  #   return(args)
+  # }  
+  
+  if(!'pathfinder' %in% algorithm) {
+    for (i in pathfinderargs) {
+      if(!is.null(args[[i]])) args[[i]] <- NULL
+    }
+  } else if(!'laplace' %in% algorithm) {
+    for (i in laplacerargs) {
+      if(!is.null(args[[i]])) args[[i]] <- NULL
+    }
+  } else {
+    args <- args
+  }
+  
+  return(args)
 }
 
 

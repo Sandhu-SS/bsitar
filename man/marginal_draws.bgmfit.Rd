@@ -46,8 +46,8 @@
   hypothesis = NULL,
   equivalence = NULL,
   reformat = NULL,
-  estimate_center = "mean",
-  estimate_interval = "eti",
+  estimate_center = NULL,
+  estimate_interval = NULL,
   dummy_to_factor = NULL,
   verbose = FALSE,
   expose_function = FALSE,
@@ -381,18 +381,19 @@ as \code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following
 columns are dropped from the data frame: \code{term}, \code{contrast},
 \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.}
 
-\item{estimate_center}{A character string to specify whether to center
-estimate as \code{'mean'} (default) or as \code{'median'}. Note that
-\code{estimate_center} is used to set the global options which are: \cr
-\code{ options("marginaleffects_posterior_center" = "mean")}, or \cr \code{
-  options("marginaleffects_posterior_center" = "median")} \cr
+\item{estimate_center}{A character string (default \code{NULL}) to specify
+whether to center estimate as \code{'mean'} or as \code{'median'}. Note
+that \code{estimate_center} is used to set the global options as follows:
+\cr
+\code{ options("marginaleffects_posterior_center" = "mean")}, or \cr
+\code{options("marginaleffects_posterior_center" = "median")} \cr
 The pre-specified global options are restored on exit via the
 \code{\link[base:on.exit]{base::on.exit()}}.}
 
-\item{estimate_interval}{A character string to specify whether to compute
-credible intervals as equal-tailed intervals, \code{'eti'} (default) or
-highest density intervals, \code{'hdi'}. Note that \code{estimate_interval}
-is used to set the global options which are: \cr
+\item{estimate_interval}{A character string (default \code{NULL}) to specify
+whether to compute credible intervals as equal-tailed intervals,
+\code{'eti'} or highest density intervals, \code{'hdi'}. Note that
+\code{estimate_interval} is used to set the global options as follows: \cr
 \code{ options("marginaleffects_posterior_interval" = "eti")}, or \cr
 \code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
 The pre-specified global options are restored on exit via the

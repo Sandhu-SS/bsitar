@@ -189,7 +189,8 @@ loo_validation.bgmfit <-
     
     
     if(!isTRUE(
-      check_pkg_version_exists('brms', minversion = '2.20.17', 
+      check_pkg_version_exists('brms', 
+                               minversion = get_package_minversion('brms'),
                                prompt = FALSE,
                                stop = FALSE,
                                verbose = FALSE))) {

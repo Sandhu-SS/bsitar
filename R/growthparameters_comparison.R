@@ -139,18 +139,19 @@
 #'   columns are dropped from the data frame: \code{term}, \code{contrast},
 #'   \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
 #'   
-#' @param estimate_center A character string to specify whether to center
-#'   estimate as \code{'mean'} (default) or as \code{'median'}. Note that
-#'   \code{estimate_center} is used to set the global options which are: \cr
-#'   \code{ options("marginaleffects_posterior_center" = "mean")}, or \cr \code{
-#'   options("marginaleffects_posterior_center" = "median")} \cr 
+#' @param estimate_center A character string (default \code{NULL}) to specify
+#'   whether to center estimate as \code{'mean'} or as \code{'median'}. Note
+#'   that \code{estimate_center} is used to set the global options as follows:
+#'   \cr
+#'   \code{ options("marginaleffects_posterior_center" = "mean")}, or \cr 
+#'   \code{options("marginaleffects_posterior_center" = "median")} \cr
 #'   The pre-specified global options are restored on exit via the
 #'   [base::on.exit()].
 #' 
-#' @param estimate_interval A character string to specify whether to compute
-#'   credible intervals as equal-tailed intervals, \code{'eti'} (default) or
-#'   highest density intervals, \code{'hdi'}. Note that \code{estimate_interval}
-#'   is used to set the global options which are: \cr
+#' @param estimate_interval A character string (default \code{NULL}) to specify
+#'   whether to compute credible intervals as equal-tailed intervals,
+#'   \code{'eti'} or highest density intervals, \code{'hdi'}. Note that
+#'   \code{estimate_interval} is used to set the global options as follows: \cr
 #'   \code{ options("marginaleffects_posterior_interval" = "eti")}, or \cr
 #'   \code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
 #'   The pre-specified global options are restored on exit via the
@@ -234,8 +235,8 @@ growthparameters_comparison.bgmfit <- function(model,
                                    equivalence = NULL,
                                    eps = NULL,
                                    reformat = NULL,
-                                   estimate_center = 'mean',
-                                   estimate_interval = "eti",
+                                   estimate_center = NULL,
+                                   estimate_interval = NULL,
                                    dummy_to_factor = NULL, 
                                    verbose = FALSE,
                                    expose_function = FALSE,
@@ -245,15 +246,25 @@ growthparameters_comparison.bgmfit <- function(model,
                                    ...) {
   
   
-  ec_ <- getOption("marginaleffects_posterior_center")
-  ei_ <- getOption("marginaleffects_posterior_interval")
-  options("marginaleffects_posterior_center" = estimate_center)
-  options("marginaleffects_posterior_interval" = estimate_interval)
-  on.exit(options("marginaleffects_posterior_center" = ec_), add = TRUE)
-  on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
+  if(!is.null(estimate_center)) {
+    ec_ <- getOption("marginaleffects_posterior_center")
+    options("marginaleffects_posterior_center" = estimate_center)
+    on.exit(options("marginaleffects_posterior_center" = ec_), add = TRUE)
+  }
+  if(!is.null(estimate_interval)) {
+    ei_ <- getOption("marginaleffects_posterior_interval")
+    options("marginaleffects_posterior_interval" = estimate_interval)
+    on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
+  }
+  
+  
+  
   
   try(zz <- insight::check_if_installed(c("marginaleffects"), 
-                                        minimum_version = '0.18.0.9003',
+                                        minversion = 
+                                          get_package_minversion(
+                                            'marginaleffects'
+                                          ), 
                                         prompt = FALSE,
                                         stop = FALSE))
   
@@ -447,7 +458,8 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   if(!isTRUE(
-    check_pkg_version_exists('brms', minversion = '2.20.17', 
+    check_pkg_version_exists('brms', 
+                             minversion = get_package_minversion('brms'), 
                              prompt = FALSE,
                              stop = FALSE,
                              verbose = FALSE))) {
@@ -708,6 +720,7 @@ growthparameters_comparison.bgmfit <- function(model,
         xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
         if(!isFALSE(by)) {
           ec_agg <- getOption("marginaleffects_posterior_center")
+          if(is.null(ec_agg)) ec_agg <- "mean"
           if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
                                                         mean, drop = TRUE)
           if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
