@@ -7438,6 +7438,8 @@ bsitar <- function(x,
     model_info[['envir']] <- enverr.
     brmsfit$model_info <- model_info
     
+    environment(brmsfit$formula) <- enverr.
+    
     # Now message moved to the expose_model_functions()
     if (expose_function) {
       # if (verbose) {

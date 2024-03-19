@@ -164,8 +164,7 @@ marginal_draws.bgmfit <-
       envir <- parent.frame()
     }
     
-    environment(model$formula) <- envir
-    
+
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE
