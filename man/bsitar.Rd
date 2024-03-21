@@ -1641,8 +1641,12 @@ model_ml <- sitar::sitar(x = age, y = height, id = id,
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to  
 # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
-# The model is fit using 2 chain (2000 iterations per) with thin set as 4 to 
-# save time and memory.
+# The model is fit using 2 chain (1000 iterations per) with thin set as 6 to 
+# save time and memory. This is because of the package size restrictions 
+# imposed by the CRAN. Due to the small number of draws, the example model  
+# fit shown here is only included as an illustration and therefore users
+# are advised to refit model with default setting suggested by the Stan Team 
+# (4 chain with 2000 iterations per chain along with thin = 1). 
 
 # Check and confirm whether model fit object 'berkeley_exfit' exists
 # berkeley_exfit <- bsitar:::berkeley_exfit

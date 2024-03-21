@@ -46,45 +46,24 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         
                         # backend = 'cmdstanr',
                         
-                        a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
-                        b_prior_beta = normal(0, 3.5),
-                        c_prior_beta = normal(0, 1.5),
-                        
-                        a_prior_sd = normal(0, ysd),
-                        b_prior_sd = normal(0, 2.0),
-                        c_prior_sd = normal(0, 1.0),
-                        
-                        rsd_prior_sigma = normal(0, ysd),
+                         a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
+                         b_prior_beta = normal(0, 2.5), # try 2.5
+                         c_prior_beta = normal(0, 1.5),
+  
+                         a_prior_sd = normal(0, ysd, autoscale = TRUE),
+                         b_prior_sd = normal(0, 2.0),
+                         c_prior_sd = normal(0, 1.0),
+
+                         rsd_prior_sigma = normal(0, ysd, autoscale = TRUE),
                         
                         sample_prior = 'no',
                         expose_function = FALSE,
                          # chains = 2, cores = 2, iter = 2000, thin = 15,
-                        chains = 2, cores = 2, iter = 1000, thin = 7,
+                        chains = 2, cores = 2, iter = 1000, thin = 8,
                         seed = 123)
 
 
-
-# https://win-vector.com/2014/05/30/trimming-the-fat-from-glm-models-in-r/
-
-# breakItDown = function(mod) {
-#   sapply(mod, FUN=function(x){length(serialize(x, NULL))}, simplify=T)
-# }
-# cleanModel1 = function(cm) {
-#   cm$model_info$bgmfit.data = c()
-#   cm$bmodel  = c()
-#   cm$model_info$emodel  = c()
-#   cm$model_info$exefuns  = c()
-#   cm$model_info$bgmfit.data   = c()
-#   cm
-# }
-# 
-# berkeley_exfit_checks = breakItDown(berkeley_exfit)
-# berkeley_exfit_reduce = cleanModel1(berkeley_exfit)
-# 
-# berkeley_exfit <- berkeley_exfit_reduce
-
-
-
+# plot(berkeley_exfit, nvariables = 1, combo = c('dens', 'trace'))
 
 save_file_exdata      <- "berkeley_exdata_temp.rds"
 save_file_exfit       <- "berkeley_exfit_temp.rds"

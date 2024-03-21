@@ -400,6 +400,7 @@ growthparameters_comparison.bgmfit <- function(model,
   } else if(parameter == 'all') {
     parm <- allowed_parms
   } else {
+    parameter <- base::tolower(parameter)
     if(!parameter %in% allowed_parms) {
       allowed_parms_err <- c(allowed_parms, 'all')
       stop("Allowed parameter options are ", 
