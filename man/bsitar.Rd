@@ -1212,10 +1212,10 @@ the desired order of options passed to each such model such as \code{df},
 indicate whether to expose Stan function used in model fitting.}
 
 \item{get_stancode}{An optional argument (logical, default \code{FALSE}) to
-get the stancode (see \code{\link[brms:stancode.brmsfit]{brms::stancode()}} for details).}
+get the stancode (see \code{\link[brms:stancode]{brms::stancode()}} for details).}
 
 \item{get_standata}{An optional argument (logical, default \code{FALSE}) to
-get the standata (see \code{\link[brms:standata.brmsfit]{brms::standata()}} for details).}
+get the standata (see \code{\link[brms:standata]{brms::standata()}} for details).}
 
 \item{get_formula}{An optional argument (logical, default \code{FALSE}) to
 get the formula. (see \code{\link[brms:brmsformula]{brms::brmsformula()}} for details).}

@@ -56,9 +56,10 @@ model with \code{\link[brms:brm]{brms::brm()}}. See \code{\link[brms:loo_moment_
 \item{reloo}{A logical argument to indicate whether \code{\link[brms:reloo.brmsfit]{brms::reloo()}} should be
 applied on problematic observations. Defaults to \code{FALSE}.}
 
-\item{k_threshold}{The threshold at which pareto \eqn{k}
-estimates are treated as problematic. Defaults to \code{0.7}.
-Only used if argument \code{reloo} is \code{TRUE}.
+\item{k_threshold}{The Pareto \eqn{k} threshold for which observations
+\code{\link[brms]{loo_moment_match}} or \code{\link[brms]{reloo}} is applied if
+argument \code{moment_match} or \code{reloo} is \code{TRUE}.
+Defaults to \code{0.7}.
 See \code{\link[loo:pareto-k-diagnostic]{pareto_k_ids}} for more details.}
 
 \item{save_psis}{Should the \code{"psis"} object created internally be saved
