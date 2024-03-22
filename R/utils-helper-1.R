@@ -3245,6 +3245,23 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
+  if(pkg == 'data.table') {
+    if(is.null(version)) {
+      out <- '1.15.2'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  if(pkg == 'checkmate') {
+    if(is.null(version)) {
+      out <- '2.3.1'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  
   
   return(out)
 }

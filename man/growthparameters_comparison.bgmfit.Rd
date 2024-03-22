@@ -35,6 +35,7 @@
   variables = NULL,
   deriv = NULL,
   deriv_model = NULL,
+  method = NULL,
   comparison = "difference",
   type = NULL,
   by = FALSE,
@@ -287,6 +288,19 @@ which need velocity curve such as \code{growthparameters()} and
 \code{plot_curves()}, and \code{NULL} for functions which explicitly use
 the distance curve (i.e., fitted values) such as \code{loo_validation()}
 and \code{plot_ppc()}.}
+
+\item{method}{A character string (default \code{NULL}) to specify whether to
+compute comparisons and hypothesis based on
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (if \code{method = 'comparisons'})
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} (if \code{method = 'predictions'}). While
+\code{method = 'comparisons'} is directly uses the \pkg{marginaleffects}
+structure, it takes time when the number of parameters (see
+\code{'parameter'}) is large. The \code{method = 'predictions'}, on the
+other hand, is fast when the number of parameter is large. If \code{method
+  = NULL}, then  \code{method} is automatically set as \code{'comparisons'}
+when a single parameter is being evaluated (e.g., \code{'apgv'}) and
+\code{'predictions'} when more than one parameter are being computed (such
+as  \code{'apgv'}) and  \code{'pgv'})).}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and

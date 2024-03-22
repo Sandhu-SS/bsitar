@@ -119,6 +119,19 @@
 #'   [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()]
 #'   functions.
 #'   
+#' @param method A character string (default \code{NULL}) to specify whether to
+#'   compute comparisons and hypothesis based on
+#'   [marginaleffects::comparisons()] (if \code{method = 'comparisons'})
+#'   [marginaleffects::predictions()] (if \code{method = 'predictions'}). While
+#'   \code{method = 'comparisons'} is directly uses the \pkg{marginaleffects}
+#'   structure, it takes time when the number of parameters (see
+#'   \code{'parameter'}) is large. The \code{method = 'predictions'}, on the
+#'   other hand, is fast when the number of parameter is large. If \code{method
+#'   = NULL}, then  \code{method} is automatically set as \code{'comparisons'}
+#'   when a single parameter is being evaluated (e.g., \code{'apgv'}) and
+#'   \code{'predictions'} when more than one parameter are being computed (such
+#'   as  \code{'apgv'}) and  \code{'pgv'})).
+#'   
 #' @param deriv A numeric to specify whether to estimate parameters based on the
 #'   differentiation of the distance curve or the model based first derivative.
 #'   Please see argument \code{variables} for more details.  
@@ -224,6 +237,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    variables = NULL,
                                    deriv = NULL,
                                    deriv_model = NULL,
+                                   method = NULL,
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
@@ -383,7 +397,7 @@ growthparameters_comparison.bgmfit <- function(model,
   estimate <- NULL;
   `:=` <- NULL;
   `.` <- NULL;
-  
+  drawid <- NULL;
   
   allowed_parms <- c(
     'apgv',
@@ -397,18 +411,24 @@ growthparameters_comparison.bgmfit <- function(model,
   
   if (is.null(parameter)) {
     parm <- 'apgv' 
-  } else if(parameter == 'all') {
-    parm <- allowed_parms
-  } else {
+  } else if(length(parameter) == 1 && parameter == 'all') {
+    parm <- allowed_parms 
+  } else if(length(parameter) == 1) {
+    parm <- parameter
+  } else if(length(parameter) > 1) {
     parameter <- base::tolower(parameter)
-    if(!parameter %in% allowed_parms) {
-      allowed_parms_err <- c(allowed_parms, 'all')
-      stop("Allowed parameter options are ", 
-           paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
-      )
+    for (parameteri in parameter) {
+      if(!parameteri %in% allowed_parms) {
+        allowed_parms_err <- c(allowed_parms, 'all')
+        stop("Allowed parameter options are ", 
+             paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
+        )
+      }
     }
     parm <- parameter
   }
+  
+  
   
   if(length(parm) > 1) {
     if(plot) stop("Please specify only one parameter when plot = TRUE")
@@ -938,48 +958,203 @@ growthparameters_comparison.bgmfit <- function(model,
     aggregate_by <- FALSE
   }
   
-  if(plot) {
-    out_sf <- outer_call_comparison_gparms_fun(
-      parm = parm, eps = eps, 
-      by = comparisons_arguments$by,
-      aggregate_by = aggregate_by,
-      newdata = newdata
-    ) 
-    return(out_sf)
+  
+  
+  #######################################
+  out_sf_hy <- NULL
+  
+  if(is.null(method)) {
+    if (length(parm) == 1) parm_via <- 'comparisons'
+    if (length(parm) > 1) parm_via <- 'predictions'
+  } else {
+    parm_via <- method
   }
   
-
-  if (length(parm) == 1) {
-    out_sf <- outer_call_comparison_gparms_fun(
-      parm = parm, eps = eps, 
-      by = comparisons_arguments$by,
-      aggregate_by = aggregate_by,
-      newdata = newdata
-      ) 
-    if(is.null(out_sf)) return(invisible(NULL))
-    if(!"parameter" %in% colnames(out_sf)) {
-      out_sf <- out_sf %>% dplyr::mutate(!!as.symbol('parameter') := parm) %>%
-        dplyr::relocate(!!as.symbol('parameter')) %>% data.frame() 
-    }
-  } else if (length(parm) > 1) {
-    list_cout <- list()
-    for (allowed_parmsi in parm) {
-      list_cout[[allowed_parmsi]] <- outer_call_comparison_gparms_fun(
-        parm = allowed_parmsi, eps = eps, 
+  
+  if(parm_via == 'comparisons') {
+    if(plot) {
+      out_sf <- outer_call_comparison_gparms_fun(
+        parm = parm, eps = eps, 
         by = comparisons_arguments$by,
         aggregate_by = aggregate_by,
         newdata = newdata
-        )
+      ) 
+      return(out_sf)
     }
     
-    out_sf <- do.call(rbind, list_cout) %>% data.frame() 
-    if(!"parameter" %in% colnames(out_sf)) {
-      out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter")
+    
+    if (length(parm) == 1) {
+      out_sf <- outer_call_comparison_gparms_fun(
+        parm = parm, eps = eps, 
+        by = comparisons_arguments$by,
+        aggregate_by = aggregate_by,
+        newdata = newdata
+      ) 
+      if(is.null(out_sf)) return(invisible(NULL))
+      if(!"parameter" %in% colnames(out_sf)) {
+        out_sf <- out_sf %>% dplyr::mutate(!!as.symbol('parameter') := parm) %>%
+          dplyr::relocate(!!as.symbol('parameter')) %>% data.frame() 
+      }
+    } else if (length(parm) > 1) {
+      list_cout <- list()
+      for (allowed_parmsi in parm) {
+        list_cout[[allowed_parmsi]] <- outer_call_comparison_gparms_fun(
+          parm = allowed_parmsi, eps = eps, 
+          by = comparisons_arguments$by,
+          aggregate_by = aggregate_by,
+          newdata = newdata
+        )
+      }
+      
+      out_sf <- do.call(rbind, list_cout) %>% data.frame() 
+      if(!"parameter" %in% colnames(out_sf)) {
+        out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter")
+      }
+      out_sf <- out_sf %>% 
+        dplyr::mutate(!!as.symbol('parameter') := sub("*\\.[0-9]", "", 
+                                                      !!as.symbol('parameter')))
     }
-    out_sf <- out_sf %>% 
-      dplyr::mutate(!!as.symbol('parameter') := sub("*\\.[0-9]", "", 
-                                                   !!as.symbol('parameter')))
-  }
+  } # if(parm_via == 'comparisons') {
+  
+  
+  if(parm_via == 'predictions') {
+    xcby <- c(xvar, by)  # c('age', 'class')
+    cby <- by            # c( 'class')
+    predictions_arguments <- comparisons_arguments
+    predictions_arguments[['cross']] <- NULL
+    predictions_arguments[['method']] <- NULL
+    predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
+    predictions_arguments[['by']] <- xcby
+    if(!average) {
+      oux <- do.call(marginaleffects::predictions, predictions_arguments)
+    } else if(average) {
+      oux <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+    }
+    
+    zxdraws <- oux %>% marginaleffects::posterior_draws()
+    
+    getparmsx <- function(x, y, ...) {
+      aggregate_by <- FALSE
+      if(aggregate_by) {
+        try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
+                                        prompt = FALSE))
+        xy <- grDevices::xy.coords(x, y)
+        xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
+        if(!isFALSE(by)) {
+          ec_agg <- getOption("marginaleffects_posterior_center")
+          if(is.null(ec_agg)) ec_agg <- "mean"
+          if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
+                                                        mean, drop = TRUE)
+          if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
+                                                        median, drop = TRUE)
+        }
+        x <- xy$x
+        y <- xy$y
+      } # if(aggregate_by) {
+      
+      parm_c <- list()
+      pgvx <- NULL
+      for (parmi in parm) {
+        if('apgv' %in% parmi) parm_c[[parmi]] <- sitar::getPeak(x, y)[1]
+        if('pgv' %in% parmi) parm_c[[parmi]] <- pgvx <- sitar::getPeak(x, y)[2]
+        if('atgv' %in% parmi) parm_c[[parmi]] <- sitar::getTakeoff(x, y)[1]
+        if('tgv' %in% parmi) parm_c[[parmi]] <- sitar::getTakeoff(x, y)[2]
+        if('acgv' %in% parmi | 'acgv' %in% parmi) {
+          if(is.null(pgvx)) pgvx <- sitar::getPeak(x, y)[2]
+          cgv  <- acg_velocity * pgvx
+          vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+        }
+        if('acgv' %in% parmi) parm_c[[parmi]] <- x[vcgi]
+        if('cgv' %in% parmi) parm_c[[parmi]] <- y[vcgi]
+      }
+      out <- parm_c %>% do.call(cbind, .) %>% data.frame()
+      out
+    }
+    
+    drawid_c <- list()
+    for (drawidi in 1:nlevels(zxdraws$drawid)) {
+      drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>% 
+        dplyr::group_by(!! as.name(cby)) %>% 
+        dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw), .keep = TRUE) %>% 
+        dplyr::mutate(drawid = drawidi)
+    }
+    out2 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
+    
+    get_pe_ci <- function(x, probs = c(0.25, 0.75), na.rm = TRUE, ...) {
+      ec_agg <- getOption("marginaleffects_posterior_center")
+      ei_agg <- getOption("marginaleffects_posterior_interval")
+      if(is.null(ec_agg)) ec_agg <- "mean"
+      if(is.null(ei_agg)) ei_agg <- "eti"
+      if(ec_agg == "mean") estimate = mean(x, na.rm = na.rm)
+      if(ec_agg == "median") estimate = median(x, na.rm = na.rm)
+      if(ei_agg == "eti") luci = quantile(x, probs, na.rm = na.rm)
+      if(ei_agg == "hdi") luci = quantile(x, probs, na.rm = na.rm)
+      tibble::tibble(
+        estimate = estimate,
+        conf.low = luci[1],
+        conf.high = luci[2]
+      )
+    }
+    
+    summary_c <- list()
+    for (parmi in parm) {
+      summary_c[[parmi]] <- out2 %>%
+        dplyr::reframe(
+          dplyr::across(c(dplyr::all_of(parmi)), get_pe_ci, .unpack = TRUE),
+          .by = dplyr::all_of(!! cby)
+        ) %>% dplyr::rename_with(., ~ gsub(paste0(parmi, "_"), "", .x, fixed = TRUE)) %>% 
+        dplyr::mutate(parameter = parmi) %>% 
+        dplyr::relocate(parameter)
+    }
+    out3 <- summary_c %>% do.call(rbind, .) %>% data.frame()
+    row.names(out3) <- NULL
+    out_sf <- out3
+    
+    # Hypothesis
+    if(!is.null(hypothesis)) {
+      hypthesis_drawid_ci_c <- list()
+      parmi_ci_c <- list()
+      for (parmi in parm) {
+        for (drawid_ci in 1:length(drawid_c)) {
+          outhy <- drawid_c[[drawid_ci]] %>% dplyr::rename(estimate = parmi)
+          hypthesis_drawid_ci_c[[drawid_ci]] <- get_hypothesis_x(x = outhy, 
+                                                                 hypothesis = hypothesis, 
+                                                                 by = cby, 
+                                                                 draws = estimate) %>% 
+            dplyr::mutate(parameter = parmi) %>% 
+            dplyr::relocate(parameter)
+        }
+        parmi_ci_c[[parmi]] <- do.call(rbind, hypthesis_drawid_ci_c)
+        
+      }
+      out4 <- parmi_ci_c %>% do.call(rbind, .) %>% data.frame()
+      
+      
+      summary_c <- list()
+      for (parmi in parm) {
+        cby_term <- 'term'
+        parmi_estimate <- 'estimate'
+        summary_c[[parmi]] <- out4 %>% dplyr::filter(parameter == parmi) %>% 
+          dplyr::reframe(
+            dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+            .by = dplyr::all_of(!! cby_term) 
+          ) %>% 
+          dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
+          dplyr::mutate(parameter = parmi) %>% 
+          dplyr::relocate(parameter)
+      }
+      out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
+      row.names(out5) <- NULL
+      
+      out_sf_hy <- out5
+    }
+    
+  } # if(parm_via == 'predictions') {
+  
+  
+  
+  
+  #######################################
   
   
   out_sf <- out_sf %>% 
@@ -1003,25 +1178,37 @@ growthparameters_comparison.bgmfit <- function(model,
       dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
       dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
       data.frame()
-  
     remove_cols_ <- c('tmp_idx', 'predicted_lo', 
                       'predicted_hi', 'predicted')
-    
     if(!is.null(full.args$hypothesis) | !is.null(full.args$equivalence)) {
       remove_cols_ <- remove_cols_
     }
     if(is.null(full.args$hypothesis) && is.null(full.args$equivalence)) {
       remove_cols_ <- c('term', 'contrast', remove_cols_)
     }
-    
     out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
-    
     colnames(out_sf) <- sub("(.)", "\\U\\1", colnames(out_sf), perl = TRUE)
-    
     row.names(out_sf) <- NULL
     attr(out_sf$Parameter, "dimnames") <- NULL
-  }
+    
+    if(!is.null(out_sf_hy)) {
+      out_sf_hy <- out_sf_hy %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits))) %>% 
+        dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+        data.frame()
+      out_sf_hy <- out_sf_hy %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
+      data.frame()
+    } # if(!is.null(out_sf_hy)) {
+  } # if (reformat) {
    
+  if(!is.null(out_sf_hy)) {
+    out_sf <- list(out_sf = out_sf, out_sf_hy = out_sf_hy)
+  }
+  
   
   return(out_sf)
 }
