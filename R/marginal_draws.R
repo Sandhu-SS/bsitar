@@ -25,7 +25,15 @@
 #'   [marginaleffects::plot_predictions()] function (\code{FALSE}) or not
 #'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
-#'   are called to compute predictions (see \code{average} for details)
+#'   are called to compute predictions (see \code{average} for details).
+#'   
+#' @param method A character string (default \code{NULL}) to specify whether to
+#'   compute comparisons and hypothesis based on
+#'   [marginaleffects::comparisons()] (if \code{method = 'comparisons'})
+#'   [marginaleffects::predictions()] (if \code{method = 'predictions'}). If
+#'   \code{method = NULL}, then  \code{method} is automatically set as
+#'   \code{'comparisons'} when \code{re_formual = NA} and \code{'predictions'}
+#'   when \code{re_formual = NULL}.
 #' 
 #' @param deriv An integer to indicate whether to estimate distance curve or its
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
@@ -113,6 +121,7 @@ marginal_draws.bgmfit <-
            condition = NULL,
            deriv = 0,
            deriv_model = TRUE,
+           method = NULL,
            type = NULL,
            by = NULL,
            conf_level = 0.95,
@@ -425,7 +434,8 @@ marginal_draws.bgmfit <-
         showlegends,
         average,
         estimate_center,
-        estimate_interval
+        estimate_interval, 
+        method
       )
     ))[-1]
     
@@ -510,13 +520,69 @@ marginal_draws.bgmfit <-
         set_datagrid <- datagrid
         predictions_arguments$newdata <- set_datagrid
       } else if(is.list(datagrid)) {
-        if(is.null(datagrid[['model']])) setmodel <- model else setmodel <- datagrid$model
-        if(is.null(datagrid[['newdata']])) setnewdata <- newdata else setnewdata <- datagrid$newdata
-        if(is.null(datagrid[['grid_type']])) setgrid_type <- "mean_or_mode" else setgrid_type <- datagrid$grid_type
-        if(is.null(datagrid[[xvar]])) setxvar <- newdata[[xvar]] else setxvar <- datagrid$newdata[[xvar]]
+        if(is.null(datagrid[['model']]))
+          setmodel <- model
+        else
+          setmodel <- datagrid$model
+        if (is.null(datagrid[['newdata']]))
+          setnewdata <- newdata
+        else
+          setnewdata <- datagrid$newdata
+        if (is.null(datagrid[['grid_type']]))
+          setgrid_type <- "mean_or_mode"
+        else
+          setgrid_type <- datagrid$grid_type
+        if (is.null(datagrid[['by']]))
+          setgrid_by <- NULL
+        else
+          setgrid_by <- datagrid$by
+        
+        if (is.null(datagrid[['FUN_character']]))
+          setgrid_FUN_character <- NULL
+        else
+          setgrid_FUN_character <- datagrid$FUN_character
+        if (is.null(datagrid[['FUN_factor']]))
+          setgrid_FUN_factor <- NULL
+        else
+          setgrid_FUN_factor <- datagrid$FUN_factor
+        if (is.null(datagrid[['FUN_logical']]))
+          setgrid_FUN_logical <- NULL
+        else
+          setgrid_FUN_logical <- datagrid$FUN_logical
+        if (is.null(datagrid[['FUN_numeric']]))
+          setgrid_FUN_numeric <- NULL
+        else
+          setgrid_FUN_numeric <- datagrid$FUN_numeric
+        if (is.null(datagrid[['FUN_integer']]))
+          setgrid_FUN_integer <- NULL
+        else
+          setgrid_FUN_integer <- datagrid$FUN_integer
+        if (is.null(datagrid[['FUN_binary']]))
+          setgrid_FUN_binary <- NULL
+        else
+          setgrid_FUN_binary <- datagrid$FUN_binary
+        if (is.null(datagrid[['FUN_other']]))
+          setgrid_FUN_other <- NULL
+        else
+          setgrid_FUN_other <- datagrid$FUN_other
+        
+        if(is.null(datagrid[[xvar]])) 
+          setxvar <- newdata[[xvar]] 
+        else 
+          setxvar <- datagrid$newdata[[xvar]]
+        
         datagrid_arguments <- list(model = setmodel,
                                    newdata = setnewdata,
-                                   grid_type = setgrid_type)
+                                   by = setgrid_by,
+                                   grid_type = setgrid_type,
+                                   FUN_character = setgrid_FUN_character,
+                                   FUN_factor = setgrid_FUN_factor,
+                                   FUN_logical = setgrid_FUN_logical,
+                                   FUN_numeric = setgrid_FUN_numeric,
+                                   FUN_integer = setgrid_FUN_integer,
+                                   FUN_binary = setgrid_FUN_binary,
+                                   FUN_other = setgrid_FUN_other
+        )
         datagrid_arguments[[xvar]] <- setxvar
         if(setgrid_type == "mean_or_mode") {
           if(!isFALSE(set_group)) datagrid_arguments[['by']] <- set_group
@@ -549,39 +615,212 @@ marginal_draws.bgmfit <-
       set_draw_ids <- NULL
     }
    predictions_arguments[['draw_ids']] <- set_draw_ids
+   
+   
+   out_sf_hy <- NULL
+   if(is.null(method)) {
+     if(is.null(predictions_arguments$re_formula)) {
+       parm_via <- 'predictions'
+     } else if(is.na(predictions_arguments$re_formula)) {
+       parm_via <- 'comparisons'
+     }
+   } else {
+     allowed_methods <- c('comparisons', 'predictions')
+     if(!method %in% allowed_methods) 
+       stop("Argument 'method' should be one of the following:",
+            "\n ", 
+            collapse_comma(allowed_methods))
+     parm_via <- method
+   }
+  
+   if(!is.null(predictions_arguments[['by']])) {
+     checbyx <- predictions_arguments[['by']]
+     if(checbyx == "") parm_via <- 'comparisons'
+     if(is.logical(checbyx)) {
+       if(!checbyx) parm_via <- 'comparisons'
+     }
+   }
+   
+   if(parm_via == 'comparisons') {
+     if(call_predictions) {
+       if(!plot) {
+         if(!average) {
+           . <- do.call(marginaleffects::predictions, predictions_arguments)
+         } else if(average) {
+           . <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+         }
+         out_sf <- .
+       } else if(plot) {
+         . <- do.call(marginaleffects::plot_predictions, predictions_arguments)
+         outp <- .
+         if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
+         return(outp)
+       }
+     } # if(call_predictions) {
+     
+     if(call_slopes) {
+       if(!plot) {
+         if(!average) {
+           . <- do.call(marginaleffects::slopes, predictions_arguments)
+         } else if(average) {
+           . <- do.call(marginaleffects::avg_slopes, predictions_arguments)
+         }
+         out_sf <- .
+       } else if(plot) {
+         . <- do.call(marginaleffects::plot_slopes, predictions_arguments)
+         outp <- .
+         outp <- outp + ggplot2::theme(legend.position = 'none')
+         return(outp)
+       }
+     } # if(call_slopes) {
+   } # if(parm_via == 'comparisons') {
 
-    if(call_predictions) {
-      if(!plot) {
-        if(!average) {
-          . <- do.call(marginaleffects::predictions, predictions_arguments)
-        } else if(average) {
-          . <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-        }
-      } else if(plot) {
-        . <- do.call(marginaleffects::plot_predictions, predictions_arguments)
-        outp <- .
-        if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
-        return(outp)
-      }
-    } # if(call_predictions) {
     
+   get_pe_ci <- function(x, probs = c(0.25, 0.75), na.rm = TRUE, ...) {
+     ec_agg <- getOption("marginaleffects_posterior_center")
+     ei_agg <- getOption("marginaleffects_posterior_interval")
+     if(is.null(ec_agg)) ec_agg <- "mean"
+     if(is.null(ei_agg)) ei_agg <- "eti"
+     if(ec_agg == "mean") estimate = mean(x, na.rm = na.rm)
+     if(ec_agg == "median") estimate = median(x, na.rm = na.rm)
+     if(ei_agg == "eti") luci = quantile(x, probs, na.rm = na.rm)
+     if(ei_agg == "hdi") luci = quantile(x, probs, na.rm = na.rm)
+     tibble::tibble(
+       estimate = estimate,
+       conf.low = luci[1],
+       conf.high = luci[2]
+     )
+   }
     
-    
-    if(call_slopes) {
-      if(!plot) {
-        if(!average) {
-          . <- do.call(marginaleffects::slopes, predictions_arguments)
-        } else if(average) {
-          . <- do.call(marginaleffects::avg_slopes, predictions_arguments)
-        }
-      } else if(plot) {
-        . <- do.call(marginaleffects::plot_slopes, predictions_arguments)
-        outp <- .
-        outp <- outp + ggplot2::theme(legend.position = 'none')
-        return(outp)
-      }
-    } # if(call_slopes) {
-    
+   if(parm_via == 'predictions') {
+     predictions_arguments[['cross']] <- NULL
+     predictions_arguments[['method']] <- NULL
+     predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
+     # predictions_arguments[['by']] <- xcby
+     
+     xcby <- predictions_arguments[['by']] 
+     xvar <- intersect(xvar, xcby)         
+     cby <- setdiff(xcby, xvar)            
+     parm <- 'xz'
+     
+     if(call_predictions) {
+       if(!plot) {
+         if(!average) {
+           outx <- do.call(marginaleffects::predictions, predictions_arguments)
+         } else if(average) {
+           . <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+         }
+       } else if(plot) {
+         outx <- do.call(marginaleffects::plot_predictions, predictions_arguments)
+         outp <- outx
+         if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
+         return(outp)
+       }
+     } # if(call_predictions) {
+     
+     if(call_slopes) {
+       if(!plot) {
+         if(!average) {
+           outx <- do.call(marginaleffects::slopes, predictions_arguments)
+         } else if(average) {
+           outx <- do.call(marginaleffects::avg_slopes, predictions_arguments)
+         }
+       } else if(plot) {
+         outx <- do.call(marginaleffects::plot_slopes, predictions_arguments)
+         outp <- outx
+         outp <- outp + ggplot2::theme(legend.position = 'none')
+         return(outp)
+       }
+     } # if(call_slopes) {
+     
+     zcx <- outx %>% marginaleffects::posterior_draws() %>% 
+       dplyr::mutate(!! as.name(parm) :=  eval(parse(text = 'draw'))) %>% dplyr::select(-estimate)
+     drawid_c <-  split(zcx , f = zcx[['drawid']] )
+     
+     drawid_ci_c <- list()
+     for (drawid_ci in 1:length(drawid_c)) {
+       outhy <- drawid_c[[drawid_ci]] %>% 
+         dplyr::rename(estimate = dplyr::all_of('draw'))
+       if(length(xvar) > 0) {
+         outhy <- outhy %>% 
+           dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
+       } else {
+         outhy <- outhy %>% 
+           dplyr::mutate(!! 'xf' :=  as.factor(1))
+       }
+       x_ci_c <- list()
+       for (x in levels(outhy[['xf']])) {
+         outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
+         x_ci_c[[x]] <- outhy2 %>% dplyr::reframe(
+           dplyr::across(c(dplyr::all_of('estimate')), get_pe_ci, .unpack = TRUE),
+           .by = dplyr::all_of(!! cby) 
+         ) %>% 
+           dplyr::rename_with(., ~ gsub(paste0('draw', "_"), "", .x, fixed = TRUE)) %>% 
+           dplyr::mutate(!! 'at' := x) %>% 
+           dplyr::relocate(at)
+       }
+       drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
+     }
+     out_sf <- do.call(rbind, drawid_ci_c) %>% data.frame
+     out_sf <- out_sf %>% dplyr::select(-'at')
+     row.names(out_sf) <- NULL
+     
+     if(!is.null(hypothesis)) {
+       parmi_ci_c <- list()
+       for (parmi in parm) {
+         hypthesis_drawid_ci_c <- list()
+         for (drawid_ci in 1:length(drawid_c)) {
+           outhy <- drawid_c[[drawid_ci]] %>% 
+             dplyr::rename(estimate = dplyr::all_of(parmi))
+           if(length(xvar) > 0) {
+             outhy <- outhy %>% 
+               dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
+           } else {
+             outhy <- outhy %>% 
+               dplyr::mutate(!! 'xf' :=  as.factor(1))
+           }
+           x_ci_c <- list()
+           for (x in levels(outhy[['xf']])) {
+             outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
+             x_ci_c[[x]] <- get_hypothesis_x(x = outhy2, 
+                                             hypothesis = hypothesis, 
+                                             by = cby, 
+                                             draws = estimate) %>% 
+               dplyr::mutate(!! 'at' :=  as.factor(x)) %>% 
+               dplyr::mutate(!! 'drawid' := drawid_ci) %>% 
+               dplyr::relocate(drawid, at) 
+           }
+           hypthesis_drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
+         }
+         parmi_ci_c[[parmi]] <- do.call(rbind, hypthesis_drawid_ci_c)
+       }
+       out4 <- hypthesis_drawid_ci_c %>% do.call(rbind, .) %>% data.frame()
+       
+       parm <- levels(out4[['at']])
+       summary_c <- list()
+       for (parmi in parm) {
+         cby_term <- 'term'
+         parmi_estimate <- 'estimate'
+         summary_c[[parmi]] <- out4 %>% dplyr::filter(!! as.name('at') == parmi) %>% 
+           dplyr::reframe(
+             dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+             .by = dplyr::all_of(!! cby_term) 
+           ) %>% 
+           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
+           dplyr::mutate(!! 'at' := parmi) %>% 
+           dplyr::relocate(at)
+       }
+       out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
+       row.names(out5) <- NULL
+       out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(at)) %>% 
+         dplyr::relocate(dplyr::all_of(xvar), .before = at)
+       out_sf_hy <- out5
+     }
+     
+   } # if(parm_via == 'predictions') {
+   
+   
+   
     
     
     # Restore function(s)
@@ -665,7 +904,8 @@ marginal_draws.bgmfit <-
         uvarbyresp <- paste0(uvarby, resp)
         uvarbynewdata <- eval(full.args$newdata) %>% 
           dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
-        if(setfullframe) . <- cbind(., uvarbynewdata)
+        # if(setfullframe) . <- cbind(., uvarbynewdata)
+        if(setfullframe) out_sf <- cbind(out_sf, uvarbynewdata)
       }
     }
     
@@ -679,22 +919,47 @@ marginal_draws.bgmfit <-
       }
     }
     
-    out <- .
+    
+    
+    # out <- . 
     if (reformat) {
-      out <- out %>% 
-        dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
-        dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) %>% 
+      out_sf <- out_sf %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of(estimate)) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of(conf.low)) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of(conf.high)) %>% 
         data.frame()
       
       remove_cols_ <- c('term',  'tmp_idx', 'predicted_lo', 
                         'predicted_hi', 'predicted')
       
-      out <- out[,!names(.) %in% remove_cols_]
+      out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
       # row.names(out_sf) <- NULL
+     
+      if(!is.null(out_sf_hy)) {
+        out_sf_hy <- out_sf_hy %>% 
+          dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                      ~ round(., digits = digits))) %>% 
+          # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+          dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of('estimate')) %>% 
+          dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of('conf.low')) %>% 
+          dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of('conf.high')) %>% 
+          # dplyr::rename_with(., ~ tools::toTitleCase(.x)) %>% 
+          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+          data.frame()
+      } # if(!is.null(out_sf_hy)) {
+      
     }
     
-    return(out)
+    
+    if(!is.null(out_sf_hy)) {
+      # out_sf <- out_sf %>% dplyr::ungroup()
+      # out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
+      row.names(out_sf) <- NULL
+      row.names(out_sf_hy) <- NULL
+      out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
+    } 
+    
+    return(out_sf)
   }
 
 

@@ -794,34 +794,75 @@ growthparameters_comparison.bgmfit <- function(model,
     
     
     # Set up datagrid
+    
     if(!is.null(datagrid)) {
       if(is.data.frame(datagrid)) {
         set_datagrid <- datagrid
         comparisons_arguments$newdata <- set_datagrid
       } else if(is.list(datagrid)) {
-        if(is.null(datagrid[['model']])) {
-          setmodel <- model 
-        } else {
+        if(is.null(datagrid[['model']]))
+          setmodel <- model
+        else
           setmodel <- datagrid$model
-        }
-        if(is.null(datagrid[['newdata']])) {
+        if (is.null(datagrid[['newdata']]))
           setnewdata <- newdata
-        } else {
+        else
           setnewdata <- datagrid$newdata
-        }
-        if(is.null(datagrid[['grid_type']])) {
+        if (is.null(datagrid[['grid_type']]))
           setgrid_type <- "mean_or_mode"
-        } else {
+        else
           setgrid_type <- datagrid$grid_type
-        }
-        if(is.null(datagrid[[xvar]])) {
+        if (is.null(datagrid[['by']]))
+          setgrid_by <- NULL
+        else
+          setgrid_by <- datagrid$by
+        
+        if (is.null(datagrid[['FUN_character']]))
+          setgrid_FUN_character <- NULL
+        else
+          setgrid_FUN_character <- datagrid$FUN_character
+        if (is.null(datagrid[['FUN_factor']]))
+          setgrid_FUN_factor <- NULL
+        else
+          setgrid_FUN_factor <- datagrid$FUN_factor
+        if (is.null(datagrid[['FUN_logical']]))
+          setgrid_FUN_logical <- NULL
+        else
+          setgrid_FUN_logical <- datagrid$FUN_logical
+        if (is.null(datagrid[['FUN_numeric']]))
+          setgrid_FUN_numeric <- NULL
+        else
+          setgrid_FUN_numeric <- datagrid$FUN_numeric
+        if (is.null(datagrid[['FUN_integer']]))
+          setgrid_FUN_integer <- NULL
+        else
+          setgrid_FUN_integer <- datagrid$FUN_integer
+        if (is.null(datagrid[['FUN_binary']]))
+          setgrid_FUN_binary <- NULL
+        else
+          setgrid_FUN_binary <- datagrid$FUN_binary
+        if (is.null(datagrid[['FUN_other']]))
+          setgrid_FUN_other <- NULL
+        else
+          setgrid_FUN_other <- datagrid$FUN_other
+        
+        if(is.null(datagrid[[xvar]])) 
           setxvar <- newdata[[xvar]] 
-        } else {
+        else 
           setxvar <- datagrid$newdata[[xvar]]
-        }
+        
         datagrid_arguments <- list(model = setmodel,
                                    newdata = setnewdata,
-                                   grid_type = setgrid_type)
+                                   by = setgrid_by,
+                                   grid_type = setgrid_type,
+                                   FUN_character = setgrid_FUN_character,
+                                   FUN_factor = setgrid_FUN_factor,
+                                   FUN_logical = setgrid_FUN_logical,
+                                   FUN_numeric = setgrid_FUN_numeric,
+                                   FUN_integer = setgrid_FUN_integer,
+                                   FUN_binary = setgrid_FUN_binary,
+                                   FUN_other = setgrid_FUN_other
+        )
         datagrid_arguments[[xvar]] <- setxvar
         if(setgrid_type == "mean_or_mode") {
           if(!isFALSE(set_group)) datagrid_arguments[['by']] <- set_group
@@ -967,6 +1008,11 @@ growthparameters_comparison.bgmfit <- function(model,
     if (length(parm) == 1) parm_via <- 'comparisons'
     if (length(parm) > 1) parm_via <- 'predictions'
   } else {
+    allowed_methods <- c('comparisons', 'predictions')
+    if(!method %in% allowed_methods) 
+      stop("Argument 'method' should be one of the following:",
+           "\n ", 
+           collapse_comma(allowed_methods))
     parm_via <- method
   }
   
@@ -1116,7 +1162,7 @@ growthparameters_comparison.bgmfit <- function(model,
       parmi_ci_c <- list()
       for (parmi in parm) {
         for (drawid_ci in 1:length(drawid_c)) {
-          outhy <- drawid_c[[drawid_ci]] %>% dplyr::rename(estimate = parmi)
+          outhy <- drawid_c[[drawid_ci]] %>% dplyr::rename(estimate = dplyr::all_of(parmi))
           hypthesis_drawid_ci_c[[drawid_ci]] <- get_hypothesis_x(x = outhy, 
                                                                  hypothesis = hypothesis, 
                                                                  by = cby, 
@@ -1196,19 +1242,20 @@ growthparameters_comparison.bgmfit <- function(model,
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                     ~ round(., digits = digits))) %>% 
         dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
-        data.frame()
-      out_sf_hy <- out_sf_hy %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
         dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
+        dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) %>% 
+          # dplyr::rename_with(., ~ tools::toTitleCase(.x)) %>% 
+        dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
       data.frame()
     } # if(!is.null(out_sf_hy)) {
   } # if (reformat) {
    
   if(!is.null(out_sf_hy)) {
-    out_sf <- list(out_sf = out_sf, out_sf_hy = out_sf_hy)
-  }
-  
+    out_sf <- out_sf %>% dplyr::ungroup()
+    out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
+    out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
+  } 
   
   return(out_sf)
 }

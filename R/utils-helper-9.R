@@ -398,3 +398,82 @@ expand_wildcard <- function(hyp, bmax, lab) {
   return(list(result, labs))
 }
 
+
+
+
+
+
+#' An internal function to compute hypothesis from estimates
+#'
+#' @details Function adpated from \code{marginaleffects:::get_hypothesis}
+#'   available at
+#'   <https://github.com/vincentarelbundock/marginaleffects/blob/main/R/get_hypothesis.R>
+#' 
+#' @param data A data frame
+#' @param from A character vector to be renamed \code{to}
+#' @param to A character specifying the new names for \code{from}
+#' @param to_title A character vector to be be converted to title case
+#' @param to_lower A character vector to be be converted to lower case
+#' @param to_upper A character vector to be be converted to upper case
+#' 
+#' @return A data frame
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+rename_keyvars <- function(data, 
+                           from, 
+                           to, 
+                           to_title = NULL, 
+                           to_lower = NULL, 
+                           to_upper = NULL) {
+  
+  if(length(from) != length(to)) stop("lenght mismatch")
+  
+  for (i in 1:length(from)) {
+    if(from[i] %in% colnames(data) & !to[i] %in% colnames(data)) {
+      data[[to[i]]] <- data[[from[i]]]
+      data[[from[i]]] <- NULL
+    }
+  }
+  
+  if(!is.null(to_title)) {
+    for (i in 1:length(to_title)) {
+      if(!is.character(to_title[i])) to_title[i] <- deparse(to_title[i])
+      if(any(grepl(to_title[i], colnames(data), ignore.case = T))) {
+        # newname <- tools::toTitleCase(to_title[i])
+        newname <- sub("(.)", "\\U\\1", to_title[i], perl = TRUE)
+        colnames(data) <- gsub(to_title[i], newname, 
+                               colnames(data), fixed = T)
+      }
+    }
+  }
+  
+  
+  if(!is.null(to_lower)) {
+    for (i in 1:length(to_lower)) {
+      if(!is.character(to_lower[i])) to_lower[i] <- deparse(to_lower[i])
+      if(any(grepl(to_lower[i], colnames(data), ignore.case = T))) {
+        newname <- base::tolower(to_lower[i])
+        colnames(data) <- gsub(to_lower[i], newname, 
+                               colnames(data), fixed = T)
+      }
+    }
+  }
+  
+  if(!is.null(to_upper)) {
+    for (i in 1:length(to_upper)) {
+      if(!is.character(to_upper[i])) to_upper[i] <- deparse(to_upper[i])
+      if(any(grepl(to_upper[i], colnames(data), ignore.case = T))) {
+        newname <- base::toupper(to_upper[i])
+        colnames(data) <- gsub(to_upper[i], newname, 
+                               colnames(data), fixed = T)
+      }
+    }
+  }
+  
+  return(data)
+}
+

@@ -37,6 +37,7 @@
   condition = NULL,
   deriv = 0,
   deriv_model = TRUE,
+  method = NULL,
   type = NULL,
   by = NULL,
   conf_level = 0.95,
@@ -252,7 +253,7 @@ The \code{fullframe} is mainly for internal use only.}
 \code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} function (\code{FALSE}) or not
 (\code{FALSE}). If \code{FALSE} (default), then
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}
-are called to compute predictions (see \code{average} for details)}
+are called to compute predictions (see \code{average} for details).}
 
 \item{showlegends}{An argument to specify whether to show legends
 (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
@@ -306,6 +307,14 @@ which need velocity curve such as \code{growthparameters()} and
 \code{plot_curves()}, and \code{NULL} for functions which explicitly use
 the distance curve (i.e., fitted values) such as \code{loo_validation()}
 and \code{plot_ppc()}.}
+
+\item{method}{A character string (default \code{NULL}) to specify whether to
+compute comparisons and hypothesis based on
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (if \code{method = 'comparisons'})
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} (if \code{method = 'predictions'}). If
+\code{method = NULL}, then  \code{method} is automatically set as
+\code{'comparisons'} when \code{re_formual = NA} and \code{'predictions'}
+when \code{re_formual = NULL}.}
 
 \item{type}{string indicates the type (scale) of the predictions used to
 compute contrasts or slopes. This can differ based on the model
