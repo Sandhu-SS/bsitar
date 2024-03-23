@@ -44,13 +44,12 @@
 #'   [marginaleffects::comparisons()] or [marginaleffects::avg_comparisons()]
 #'   are called to compute predictions (see \code{average} for details).
 #'
-#' @param method A character string (default \code{NULL}) to specify whether to
-#'   compute comparisons and hypothesis based on
-#'   [marginaleffects::comparisons()] (if \code{method = 'comparisons'})
-#'   [marginaleffects::predictions()] (if \code{method = 'predictions'}). If
-#'   \code{method = NULL}, then  \code{method} is automatically set as
-#'   \code{'comparisons'} when \code{re_formual = NA} and \code{'predictions'}
-#'   when \code{re_formual = NULL}.
+#' @param method A character string (default \code{'pkg'}) to specify whether to
+#'   make computation at post draw stage using \code{'marginaleffects'}
+#'   machinery i.e., [marginaleffects::comparisons()] (if \code{method = 'pkg'})
+#'   or via custom functions written for efficiency (if \code{method =
+#'   'custom'}). Note that \code{method = 'custom'} is on experimental basis
+#'   and should be used cautiously.
 #'   
 #' @param deriv A numeric to specify whether to estimate parameters based on the
 #'   differentiation of the distance curve or the model based first derivative.
@@ -130,7 +129,7 @@ marginal_comparison.bgmfit <- function(model,
                                    variables = NULL,
                                    deriv = NULL,
                                    deriv_model = NULL,
-                                   method = NULL,
+                                   method = 'pkg',
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
@@ -633,20 +632,39 @@ marginal_comparison.bgmfit <- function(model,
    # comparisons_arguments$... <- NULL
     
     out_sf_hy <- NULL
-    if(is.null(method)) {
-      if(is.null(comparisons_arguments$re_formula)) {
-        parm_via <- 'predictions'
-      } else if(is.na(comparisons_arguments$re_formula)) {
-        parm_via <- 'comparisons'
+    allowed_methods <- c('pkg', 'custom')
+    if(!method %in% allowed_methods) 
+      stop("Argument 'method' should be one of the following:",
+           "\n ", 
+           collapse_comma(allowed_methods)
+      )
+    if(method == 'pkg') parm_via <- 'comparisons'
+    if(method == 'custom') parm_via <- 'predictions'
+    
+    # if(is.null(method)) {
+    #   if(is.null(predictions_arguments$re_formula)) {
+    #     parm_via <- 'predictions'
+    #   } else if(is.na(predictions_arguments$re_formula)) {
+    #     parm_via <- 'comparisons'
+    #   }
+    # } else {
+    #   allowed_methods <- c('comparisons', 'predictions')
+    #   if(!method %in% allowed_methods) 
+    #     stop("Argument 'method' should be one of the following:",
+    #          "\n ", 
+    #          collapse_comma(allowed_methods))
+    #   parm_via <- method
+    # }
+    
+    
+    if(!is.null(comparisons_arguments[['by']])) {
+      checbyx <- comparisons_arguments[['by']]
+      if(checbyx == "") parm_via <- 'comparisons'
+      if(is.logical(checbyx)) {
+        if(!checbyx) parm_via <- 'comparisons'
       }
-    } else {
-      allowed_methods <- c('comparisons', 'predictions')
-      if(!method %in% allowed_methods) 
-        stop("Argument 'method' should be one of the following:",
-             "\n ", 
-             collapse_comma(allowed_methods))
-      parm_via <- method
     }
+    
     
     # In this case parm_via == 'predictions' only relevant later for hypothesis
     if(parm_via == 'comparisons') {
@@ -693,9 +711,9 @@ marginal_comparison.bgmfit <- function(model,
       predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
       # predictions_arguments[['by']] <- xcby
       
-      xcby <- predictions_arguments[['by']] # c('age', 'class')
-      xvar <- intersect(xvar, xcby)         # c('age') # 'age'
-      cby <- setdiff(xcby, xvar)             # c('age', 'class')
+      xcby <- predictions_arguments[['by']] 
+      xvar <- intersect(xvar, xcby)         
+      cby <- setdiff(xcby, xvar)            
       parm <- 'xz'
       
       if(!average) {
@@ -711,8 +729,14 @@ marginal_comparison.bgmfit <- function(model,
       drawid_ci_c <- list()
       for (drawid_ci in 1:length(drawid_c)) {
         outhy <- drawid_c[[drawid_ci]] %>% 
-          dplyr::rename(estimate = dplyr::all_of('draw')) %>% 
-          dplyr::mutate(!! 'xf' := as.factor(eval(parse(text = 'age'))))
+          dplyr::rename(estimate = dplyr::all_of('draw'))
+        if(length(xvar) > 0) {
+          outhy <- outhy %>% 
+            dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
+        } else {
+          outhy <- outhy %>% 
+            dplyr::mutate(!! 'xf' :=  as.factor(1))
+        }
         x_ci_c <- list()
         for (x in levels(outhy[['xf']])) {
           outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
@@ -727,7 +751,8 @@ marginal_comparison.bgmfit <- function(model,
         drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
       }
       out_sf <- do.call(rbind, drawid_ci_c) %>% data.frame
-      
+      out_sf <- out_sf %>% dplyr::select(-'at')
+      row.names(out_sf) <- NULL
       
       if(!is.null(hypothesis)) {
         parmi_ci_c <- list()
@@ -735,8 +760,14 @@ marginal_comparison.bgmfit <- function(model,
           hypthesis_drawid_ci_c <- list()
           for (drawid_ci in 1:length(drawid_c)) {
             outhy <- drawid_c[[drawid_ci]] %>% 
-              dplyr::rename(estimate = dplyr::all_of(parmi)) %>% 
-              dplyr::mutate(!! 'xf' := as.factor(age))
+              dplyr::rename(estimate = dplyr::all_of(parmi)) 
+            if(length(xvar) > 0) {
+              outhy <- outhy %>% 
+                dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
+            } else {
+              outhy <- outhy %>% 
+                dplyr::mutate(!! 'xf' :=  as.factor(1))
+            }
             x_ci_c <- list()
             for (x in levels(outhy[['xf']])) {
               outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
@@ -771,7 +802,7 @@ marginal_comparison.bgmfit <- function(model,
         out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
         row.names(out5) <- NULL
         out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(eval(parse(text = 'at')))) %>% 
-          dplyr::relocate(dplyr::all_of(xvar), .before = at)
+          dplyr::relocate(dplyr::all_of(xvar), .before = 'at')
         out_sf_hy <- out5
       }
     } # if(parm_via == 'predictions') {

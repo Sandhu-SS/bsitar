@@ -27,13 +27,12 @@
 #'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
 #'   are called to compute predictions (see \code{average} for details).
 #'   
-#' @param method A character string (default \code{NULL}) to specify whether to
-#'   compute comparisons and hypothesis based on
-#'   [marginaleffects::comparisons()] (if \code{method = 'comparisons'})
-#'   [marginaleffects::predictions()] (if \code{method = 'predictions'}). If
-#'   \code{method = NULL}, then  \code{method} is automatically set as
-#'   \code{'comparisons'} when \code{re_formual = NA} and \code{'predictions'}
-#'   when \code{re_formual = NULL}.
+#' @param method A character string (default \code{'pkg'}) to specify whether to
+#'   make computation at post draw stage using \code{'marginaleffects'}
+#'   machinery i.e., [marginaleffects::predictions()] (if \code{method = 'pkg'})
+#'   or via custom functions written for efficiency (if \code{method =
+#'   'custom'}). Note that \code{method = 'custom'} is on experimental basis
+#'   and should be used cautiously.
 #' 
 #' @param deriv An integer to indicate whether to estimate distance curve or its
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
@@ -121,7 +120,7 @@ marginal_draws.bgmfit <-
            condition = NULL,
            deriv = 0,
            deriv_model = TRUE,
-           method = NULL,
+           method = 'pkg',
            type = NULL,
            by = NULL,
            conf_level = 0.95,
@@ -618,20 +617,29 @@ marginal_draws.bgmfit <-
    
    
    out_sf_hy <- NULL
-   if(is.null(method)) {
-     if(is.null(predictions_arguments$re_formula)) {
-       parm_via <- 'predictions'
-     } else if(is.na(predictions_arguments$re_formula)) {
-       parm_via <- 'comparisons'
-     }
-   } else {
-     allowed_methods <- c('comparisons', 'predictions')
-     if(!method %in% allowed_methods) 
-       stop("Argument 'method' should be one of the following:",
-            "\n ", 
-            collapse_comma(allowed_methods))
-     parm_via <- method
-   }
+   allowed_methods <- c('pkg', 'custom')
+   if(!method %in% allowed_methods) 
+     stop("Argument 'method' should be one of the following:",
+          "\n ", 
+          collapse_comma(allowed_methods)
+          )
+   if(method == 'pkg') parm_via <- 'comparisons'
+   if(method == 'custom') parm_via <- 'predictions'
+   
+   # if(is.null(method)) {
+   #   if(is.null(predictions_arguments$re_formula)) {
+   #     parm_via <- 'predictions'
+   #   } else if(is.na(predictions_arguments$re_formula)) {
+   #     parm_via <- 'comparisons'
+   #   }
+   # } else {
+   #   allowed_methods <- c('comparisons', 'predictions')
+   #   if(!method %in% allowed_methods) 
+   #     stop("Argument 'method' should be one of the following:",
+   #          "\n ", 
+   #          collapse_comma(allowed_methods))
+   #   parm_via <- method
+   # }
   
    if(!is.null(predictions_arguments[['by']])) {
      checbyx <- predictions_arguments[['by']]
@@ -640,6 +648,7 @@ marginal_draws.bgmfit <-
        if(!checbyx) parm_via <- 'comparisons'
      }
    }
+   
    
    if(parm_via == 'comparisons') {
      if(call_predictions) {
@@ -757,7 +766,7 @@ marginal_draws.bgmfit <-
          ) %>% 
            dplyr::rename_with(., ~ gsub(paste0('draw', "_"), "", .x, fixed = TRUE)) %>% 
            dplyr::mutate(!! 'at' := x) %>% 
-           dplyr::relocate(at)
+           dplyr::relocate(dplyr::all_of(c('at'))) 
        }
        drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
      }
@@ -788,7 +797,7 @@ marginal_draws.bgmfit <-
                                              draws = estimate) %>% 
                dplyr::mutate(!! 'at' :=  as.factor(x)) %>% 
                dplyr::mutate(!! 'drawid' := drawid_ci) %>% 
-               dplyr::relocate(drawid, at) 
+               dplyr::relocate(dplyr::all_of(c('drawid', 'at'))) 
            }
            hypthesis_drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
          }
@@ -808,12 +817,12 @@ marginal_draws.bgmfit <-
            ) %>% 
            dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
            dplyr::mutate(!! 'at' := parmi) %>% 
-           dplyr::relocate(at)
+           dplyr::relocate(dplyr::all_of(c('at')))
        }
        out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
        row.names(out5) <- NULL
-       out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(at)) %>% 
-         dplyr::relocate(dplyr::all_of(xvar), .before = at)
+       out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(eval(parse(text = 'at')))) %>% 
+         dplyr::relocate(dplyr::all_of(xvar), .before = 'at')
        out_sf_hy <- out5
      }
      

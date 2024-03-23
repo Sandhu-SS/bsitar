@@ -33,7 +33,7 @@
   variables = NULL,
   deriv = NULL,
   deriv_model = NULL,
-  method = NULL,
+  method = "pkg",
   comparison = "difference",
   type = NULL,
   by = FALSE,
@@ -268,13 +268,12 @@ which need velocity curve such as \code{growthparameters()} and
 the distance curve (i.e., fitted values) such as \code{loo_validation()}
 and \code{plot_ppc()}.}
 
-\item{method}{A character string (default \code{NULL}) to specify whether to
-compute comparisons and hypothesis based on
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (if \code{method = 'comparisons'})
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} (if \code{method = 'predictions'}). If
-\code{method = NULL}, then  \code{method} is automatically set as
-\code{'comparisons'} when \code{re_formual = NA} and \code{'predictions'}
-when \code{re_formual = NULL}.}
+\item{method}{A character string (default \code{'pkg'}) to specify whether to
+make computation at post draw stage using \code{'marginaleffects'}
+machinery i.e., \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (if \code{method = 'pkg'})
+or via custom functions written for efficiency (if \code{method =
+  'custom'}). Note that \code{method = 'custom'} is on experimental basis
+and should be used cautiously.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and
