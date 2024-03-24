@@ -769,14 +769,15 @@ marginal_draws.bgmfit <-
          outhy <- outhy %>% 
            dplyr::mutate(!! 'xf' :=  as.factor(1))
        }
+       parmi_estimate <- 'estimate'
        x_ci_c <- list()
        for (x in levels(outhy[['xf']])) {
          outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
          x_ci_c[[x]] <- outhy2 %>% dplyr::reframe(
-           dplyr::across(c(dplyr::all_of('estimate')), get_pe_ci, .unpack = TRUE),
+           dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
            .by = dplyr::all_of(!! cby) 
          ) %>% 
-           dplyr::rename_with(., ~ gsub(paste0('draw', "_"), "", .x, fixed = TRUE)) %>% 
+           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
            dplyr::mutate(!! 'at' := x) %>% 
            dplyr::relocate(dplyr::all_of(c('at'))) 
        }
@@ -832,9 +833,13 @@ marginal_draws.bgmfit <-
            dplyr::relocate(dplyr::all_of(c('at')))
        }
        out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
-       row.names(out5) <- NULL
-       out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(eval(parse(text = 'at')))) %>% 
-         dplyr::relocate(dplyr::all_of(xvar), .before = 'at')
+       if(length(xvar) > 0) {
+         out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(eval(parse(text = 'at')))) %>% 
+           dplyr::relocate(dplyr::all_of(xvar), .before = 'at')
+       } else {
+         out5 <- out5 %>%
+           dplyr::select(-dplyr::all_of('at'))
+       }
        out_sf_hy <- out5
      }
      
@@ -940,7 +945,9 @@ marginal_draws.bgmfit <-
       }
     }
     
-    
+    out_sf <- out_sf %>% 
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                  ~ round(., digits = digits)))
     
     # out <- . 
     if (reformat) {
