@@ -1242,9 +1242,9 @@ growthparameters_comparison.bgmfit <- function(model,
   
   if (reformat) {
     out_sf <- out_sf %>% 
-      dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of(estimate)) %>% 
-      dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of(conf.low)) %>% 
-      dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of(conf.high)) %>% 
+      dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of('estimate')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of('conf.low')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of('conf.high')) %>% 
       data.frame()
     
     remove_cols_ <- c('tmp_idx', 'predicted_lo', 
@@ -1265,9 +1265,9 @@ growthparameters_comparison.bgmfit <- function(model,
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                     ~ round(., digits = digits))) %>% 
         dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
-        dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
-        dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of('estimate')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of('conf.low')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of('conf.high')) %>% 
           # dplyr::rename_with(., ~ tools::toTitleCase(.x)) %>% 
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
       data.frame()

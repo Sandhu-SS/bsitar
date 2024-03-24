@@ -835,9 +835,9 @@ marginal_comparison.bgmfit <- function(model,
   
   if (reformat) {
     out_sf <- out_sf %>% 
-      dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of(estimate)) %>% 
-      dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of(conf.low)) %>% 
-      dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of(conf.high)) %>% 
+      dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of('estimate')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of('conf.low')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of('conf.high')) %>% 
       data.frame()
     
     remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
