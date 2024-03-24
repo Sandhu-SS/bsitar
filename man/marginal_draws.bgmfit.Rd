@@ -308,12 +308,16 @@ which need velocity curve such as \code{growthparameters()} and
 the distance curve (i.e., fitted values) such as \code{loo_validation()}
 and \code{plot_ppc()}.}
 
-\item{method}{A character string (default \code{'pkg'}) to specify whether to
-make computation at post draw stage using \code{'marginaleffects'}
-machinery i.e., \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} (if \code{method = 'pkg'})
-or via custom functions written for efficiency (if \code{method =
+\item{method}{A character string to specify whether to make computation at
+post draw stage by using the \code{'marginaleffects'} machinery i.e.,
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} (\code{method = 'pkg'}, default) or via
+the custom functions written for efficiency and speed (\code{method =
   'custom'}). Note that \code{method = 'custom'} is on experimental basis
-and should be used cautiously.}
+and should be used cautiously. A particular use case is if user wants to
+compute estimates and comparisons together for a factor co variate i.e.,
+\code{by = 'cov'}, or at each value of predictor (typically 'age') by
+setting \code{by = c('age', 'cov')}. The \code{method} is ignored when
+\code{by = FALSE}.}
 
 \item{type}{string indicates the type (scale) of the predictions used to
 compute contrasts or slopes. This can differ based on the model

@@ -44,12 +44,16 @@
 #'   [marginaleffects::comparisons()] or [marginaleffects::avg_comparisons()]
 #'   are called to compute predictions (see \code{average} for details).
 #'
-#' @param method A character string (default \code{'pkg'}) to specify whether to
-#'   make computation at post draw stage using \code{'marginaleffects'}
-#'   machinery i.e., [marginaleffects::comparisons()] (if \code{method = 'pkg'})
-#'   or via custom functions written for efficiency (if \code{method =
+#' @param method A character string to specify whether to make computation at
+#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
+#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}, default) or via
+#'   the custom functions written for efficiency and speed (\code{method =
 #'   'custom'}). Note that \code{method = 'custom'} is on experimental basis
-#'   and should be used cautiously.
+#'   and should be used cautiously. A particular use case is if user wants to
+#'   compute estimates and comparisons together for a factor co variate i.e.,
+#'   \code{by = 'cov'}, or at each value of predictor (typically 'age') by 
+#'   setting \code{by = c('age', 'cov')}. The \code{method} is ignored when 
+#'   \code{by = FALSE}.
 #'   
 #' @param deriv A numeric to specify whether to estimate parameters based on the
 #'   differentiation of the distance curve or the model based first derivative.
@@ -447,7 +451,8 @@ marginal_comparison.bgmfit <- function(model,
       parameter,
       estimate_center,
       estimate_interval,
-      reformat
+      reformat,
+      method
     )
   ))[-1]
   
@@ -668,7 +673,7 @@ marginal_comparison.bgmfit <- function(model,
     
     # In this case parm_via == 'predictions' only relevant later for hypothesis
     if(parm_via == 'comparisons') {
-      suppressWarnings({
+      # suppressWarnings({
         if(!plot) {
           if(!average) {
             out <- do.call(marginaleffects::comparisons, comparisons_arguments)
@@ -683,12 +688,13 @@ marginal_comparison.bgmfit <- function(model,
           if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
           return(outp)
         }
-      })
+      # })
       out_sf <- out
     } # if(parm_via == 'comparisons') {
     
-    
-    get_pe_ci <- function(x, probs = c(0.25, 0.75), na.rm = TRUE, ...) {
+    # let probs be passed directly via ...
+    # probs = c(0.25, 0.75), 
+    get_pe_ci <- function(x, na.rm = TRUE, ...) {
       ec_agg <- getOption("marginaleffects_posterior_center")
       ei_agg <- getOption("marginaleffects_posterior_interval")
       if(is.null(ec_agg)) ec_agg <- "mean"
@@ -825,9 +831,9 @@ marginal_comparison.bgmfit <- function(model,
   
   if (reformat) {
     out_sf <- out_sf %>% 
-      dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
-      dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
-      dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
+      dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of(estimate)) %>% 
+      dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of(conf.low)) %>% 
+      dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of(conf.high)) %>% 
       data.frame()
     
     remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 

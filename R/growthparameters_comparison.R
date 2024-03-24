@@ -119,18 +119,14 @@
 #'   [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()]
 #'   functions.
 #'   
-#' @param method A character string (default \code{NULL}) to specify whether to
-#'   compute comparisons and hypothesis based on
-#'   [marginaleffects::comparisons()] (if \code{method = 'comparisons'})
-#'   [marginaleffects::predictions()] (if \code{method = 'predictions'}). While
-#'   \code{method = 'comparisons'} is directly uses the \pkg{marginaleffects}
-#'   structure, it takes time when the number of parameters (see
-#'   \code{'parameter'}) is large. The \code{method = 'predictions'}, on the
-#'   other hand, is fast when the number of parameter is large. If \code{method
-#'   = NULL}, then  \code{method} is automatically set as \code{'comparisons'}
-#'   when a single parameter is being evaluated (e.g., \code{'apgv'}) and
-#'   \code{'predictions'} when more than one parameter are being computed (such
-#'   as  \code{'apgv'}) and  \code{'pgv'})).
+#' @param method A character string to specify whether to make computation at
+#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
+#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}, default) or via
+#'   the custom functions written for efficiency and speed (\code{method =
+#'   'custom'}). Note that \code{method = 'custom'} is on experimental basis
+#'   and should be used cautiously. The \code{method = 'custom'} is particularly
+#'   useful when more than one parameter are being evaluated such as
+#'   \code{'apgv'}) and \code{'pgv'} (see \code{'parameter'})).
 #'   
 #' @param deriv A numeric to specify whether to estimate parameters based on the
 #'   differentiation of the distance curve or the model based first derivative.
@@ -237,7 +233,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    variables = NULL,
                                    deriv = NULL,
                                    deriv_model = NULL,
-                                   method = NULL,
+                                   method = 'pkg',
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
@@ -605,7 +601,8 @@ growthparameters_comparison.bgmfit <- function(model,
       average,
       estimate_center,
       estimate_interval,
-      reformat
+      reformat,
+      method
     )
   ))[-1]
   
@@ -895,7 +892,7 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     comparisons_arguments[['draw_ids']] <- set_draw_ids
     
-    suppressWarnings({
+    # suppressWarnings({
       if(!plot) {
         if(!average) {
           out <- do.call(marginaleffects::comparisons, 
@@ -913,7 +910,7 @@ growthparameters_comparison.bgmfit <- function(model,
         if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
         return(outp)
       }
-    })
+    # })
     
     return(out)
   } # call_comparison_gparms_fun
@@ -1003,18 +1000,27 @@ growthparameters_comparison.bgmfit <- function(model,
   
   #######################################
   out_sf_hy <- NULL
+  allowed_methods <- c('pkg', 'custom')
+  if(!method %in% allowed_methods) 
+    stop("Argument 'method' should be one of the following:",
+         "\n ", 
+         collapse_comma(allowed_methods)
+    )
+  if(method == 'pkg') parm_via <- 'comparisons'
+  if(method == 'custom') parm_via <- 'predictions'
   
-  if(is.null(method)) {
-    if (length(parm) == 1) parm_via <- 'comparisons'
-    if (length(parm) > 1) parm_via <- 'predictions'
-  } else {
-    allowed_methods <- c('comparisons', 'predictions')
-    if(!method %in% allowed_methods) 
-      stop("Argument 'method' should be one of the following:",
-           "\n ", 
-           collapse_comma(allowed_methods))
-    parm_via <- method
-  }
+  # out_sf_hy <- NULL
+  # if(is.null(method)) {
+  #   if (length(parm) == 1) parm_via <- 'comparisons'
+  #   if (length(parm) > 1) parm_via <- 'predictions'
+  # } else {
+  #   allowed_methods <- c('comparisons', 'predictions')
+  #   if(!method %in% allowed_methods) 
+  #     stop("Argument 'method' should be one of the following:",
+  #          "\n ", 
+  #          collapse_comma(allowed_methods))
+  #   parm_via <- method
+  # }
   
   
   if(parm_via == 'comparisons') {
@@ -1126,7 +1132,10 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     out2 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
     
-    get_pe_ci <- function(x, probs = c(0.25, 0.75), na.rm = TRUE, ...) {
+    
+    # let probs be passed directly via ...
+    # probs = c(0.25, 0.75), 
+    get_pe_ci <- function(x, na.rm = TRUE, ...) {
       ec_agg <- getOption("marginaleffects_posterior_center")
       ei_agg <- getOption("marginaleffects_posterior_interval")
       if(is.null(ec_agg)) ec_agg <- "mean"
@@ -1220,10 +1229,11 @@ growthparameters_comparison.bgmfit <- function(model,
   
   if (reformat) {
     out_sf <- out_sf %>% 
-      dplyr::rename(!!as.symbol(set_names_[1]) := estimate) %>% 
-      dplyr::rename(!!as.symbol(set_names_[2]) := conf.low) %>% 
-      dplyr::rename(!!as.symbol(set_names_[3]) := conf.high) 
+      dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of(estimate)) %>% 
+      dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of(conf.low)) %>% 
+      dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of(conf.high)) %>% 
       data.frame()
+    
     remove_cols_ <- c('tmp_idx', 'predicted_lo', 
                       'predicted_hi', 'predicted')
     if(!is.null(full.args$hypothesis) | !is.null(full.args$equivalence)) {

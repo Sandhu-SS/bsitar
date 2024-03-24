@@ -268,12 +268,16 @@ which need velocity curve such as \code{growthparameters()} and
 the distance curve (i.e., fitted values) such as \code{loo_validation()}
 and \code{plot_ppc()}.}
 
-\item{method}{A character string (default \code{'pkg'}) to specify whether to
-make computation at post draw stage using \code{'marginaleffects'}
-machinery i.e., \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (if \code{method = 'pkg'})
-or via custom functions written for efficiency (if \code{method =
+\item{method}{A character string to specify whether to make computation at
+post draw stage by using the \code{'marginaleffects'} machinery i.e.,
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}, default) or via
+the custom functions written for efficiency and speed (\code{method =
   'custom'}). Note that \code{method = 'custom'} is on experimental basis
-and should be used cautiously.}
+and should be used cautiously. A particular use case is if user wants to
+compute estimates and comparisons together for a factor co variate i.e.,
+\code{by = 'cov'}, or at each value of predictor (typically 'age') by
+setting \code{by = c('age', 'cov')}. The \code{method} is ignored when
+\code{by = FALSE}.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and

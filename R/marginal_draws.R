@@ -27,12 +27,16 @@
 #'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
 #'   are called to compute predictions (see \code{average} for details).
 #'   
-#' @param method A character string (default \code{'pkg'}) to specify whether to
-#'   make computation at post draw stage using \code{'marginaleffects'}
-#'   machinery i.e., [marginaleffects::predictions()] (if \code{method = 'pkg'})
-#'   or via custom functions written for efficiency (if \code{method =
+#' @param method A character string to specify whether to make computation at
+#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
+#'   [marginaleffects::predictions()] (\code{method = 'pkg'}, default) or via
+#'   the custom functions written for efficiency and speed (\code{method =
 #'   'custom'}). Note that \code{method = 'custom'} is on experimental basis
-#'   and should be used cautiously.
+#'   and should be used cautiously. A particular use case is if user wants to
+#'   compute estimates and comparisons together for a factor co variate i.e.,
+#'   \code{by = 'cov'}, or at each value of predictor (typically 'age') by 
+#'   setting \code{by = c('age', 'cov')}. The \code{method} is ignored when 
+#'   \code{by = FALSE}.
 #' 
 #' @param deriv An integer to indicate whether to estimate distance curve or its
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
@@ -158,6 +162,7 @@ marginal_draws.bgmfit <-
                                               ), 
                                           prompt = FALSE,
                                           stop = FALSE))
+    
     
     if(!isTRUE(zz)) {
       message("Please install the latest version of the 'marginaleffects' package",
@@ -434,6 +439,7 @@ marginal_draws.bgmfit <-
         average,
         estimate_center,
         estimate_interval, 
+        reformat,
         method
       )
     ))[-1]
@@ -685,7 +691,9 @@ marginal_draws.bgmfit <-
    } # if(parm_via == 'comparisons') {
 
     
-   get_pe_ci <- function(x, probs = c(0.25, 0.75), na.rm = TRUE, ...) {
+   # let probs be passed directly via ...
+   # probs = c(0.25, 0.75), 
+   get_pe_ci <- function(x, na.rm = TRUE, ...) {
      ec_agg <- getOption("marginaleffects_posterior_center")
      ei_agg <- getOption("marginaleffects_posterior_interval")
      if(is.null(ec_agg)) ec_agg <- "mean"
@@ -856,7 +864,7 @@ marginal_draws.bgmfit <-
     
     # Cleanup environment if requested
     if(setcleanup) {
-      suppressWarnings({
+      # suppressWarnings({
         tempgenv <- envir
         for (oalli in names(oall)) {
           if(exists(oalli, envir = tempgenv )) {
@@ -869,7 +877,7 @@ marginal_draws.bgmfit <-
             remove(list=oalli, envir = tempgenv)
           }
         }
-      })
+      # })
     } # if(setcleanup) {
     
     
