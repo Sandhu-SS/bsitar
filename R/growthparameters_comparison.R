@@ -1009,6 +1009,15 @@ growthparameters_comparison.bgmfit <- function(model,
   if(method == 'pkg') parm_via <- 'comparisons'
   if(method == 'custom') parm_via <- 'predictions'
   
+  
+  if(!is.null(comparisons_arguments[['by']])) {
+    checbyx <- comparisons_arguments[['by']]
+    if(all(checbyx == "")) parm_via <- 'comparisons'
+    if(is.logical(checbyx)) {
+      if(!checbyx) parm_via <- 'comparisons'
+    }
+  }
+  
   # out_sf_hy <- NULL
   # if(is.null(method)) {
   #   if (length(parm) == 1) parm_via <- 'comparisons'
@@ -1135,6 +1144,8 @@ growthparameters_comparison.bgmfit <- function(model,
     
     # let probs be passed directly via ...
     # probs = c(0.25, 0.75), 
+    get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+    get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
     get_pe_ci <- function(x, na.rm = TRUE, ...) {
       ec_agg <- getOption("marginaleffects_posterior_center")
       ei_agg <- getOption("marginaleffects_posterior_interval")
@@ -1142,8 +1153,10 @@ growthparameters_comparison.bgmfit <- function(model,
       if(is.null(ei_agg)) ei_agg <- "eti"
       if(ec_agg == "mean") estimate = mean(x, na.rm = na.rm)
       if(ec_agg == "median") estimate = median(x, na.rm = na.rm)
-      if(ei_agg == "eti") luci = quantile(x, probs, na.rm = na.rm)
-      if(ei_agg == "hdi") luci = quantile(x, probs, na.rm = na.rm)
+      # if(ei_agg == "eti") luci = quantile(x, probs, na.rm = na.rm)
+      # if(ei_agg == "hdi") luci = quantile(x, probs, na.rm = na.rm)
+      if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
+      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
       tibble::tibble(
         estimate = estimate,
         conf.low = luci[1],
