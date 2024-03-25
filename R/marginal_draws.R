@@ -810,9 +810,12 @@ marginal_draws.bgmfit <-
        
        
        for (caxi in names(constrats_at)) {
-         onex1 <- 
-           # onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
-           onex0 %>% filter(eval(parse(text = caxi)) %in%  constrats_at[[caxi]])
+         
+         onex1 <- subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
+         
+         # onex1 <- 
+         #   # onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
+         #   onex0 %>% filter(eval(parse(text = caxi)) %in%  constrats_at[[caxi]])
          
          if(nrow(onex1) == 0) {
            stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
