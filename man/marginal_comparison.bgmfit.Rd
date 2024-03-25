@@ -44,6 +44,7 @@
   hypothesis = NULL,
   equivalence = NULL,
   eps = NULL,
+  constrats_at = NULL,
   reformat = NULL,
   estimate_center = NULL,
   estimate_interval = NULL,
@@ -353,6 +354,20 @@ calculating numerical derivatives: (f(x+eps)-f(x))/eps. When \code{eps} is
 the maximum and minimum values of the variable with respect to which we
 are taking the derivative. Changing \code{eps} may be necessary to avoid
 numerical problems in certain models.}
+
+\item{constrats_at}{A named list (default \code{NULL}) to specify the values
+at which contrast via \code{hypothesis} should be computed during the post
+draw stage. \code{constrats_at} can be specified as a one of the following
+strings \code{'max', 'min', 'unique', 'range'} (e.g., \code{constrats_at =
+  list(age = 'min')}) or else as a numeric values or a numeric vector (e.g.,
+\code{constrats_at = list(age = c(6, 7))}). When \code{constrats_at = NULL}
+and level i predictor (such as \code{age}), then this will be automatically
+set up as \code{constrats_at = list(age = 'unique')}. Note that
+\code{constrats_at} only subsets the data that has been set up the
+\code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or specified as the \code{newdata} argument.
+In case no match is found, an error will be triggered. The
+\code{constrats_at} argument is only evaluated when \code{method =
+  'custom'} and the \code{hypothesis} is not \code{NULL}.}
 
 \item{reformat}{A logical (default \code{TRUE}) to reformat the  output
 returned by the \code{marginaleffects} as a data.frame with column names

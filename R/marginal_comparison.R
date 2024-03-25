@@ -55,6 +55,20 @@
 #'   setting \code{by = c('age', 'cov')}. The \code{method} is ignored when 
 #'   \code{by = FALSE}.
 #'   
+#' @param constrats_at A named list (default \code{NULL}) to specify the values
+#'   at which contrast via \code{hypothesis} should be computed during the post
+#'   draw stage. \code{constrats_at} can be specified as a one of the following
+#'   strings \code{'max', 'min', 'unique', 'range'} (e.g., \code{constrats_at =
+#'   list(age = 'min')}) or else as a numeric values or a numeric vector (e.g.,
+#'   \code{constrats_at = list(age = c(6, 7))}). When \code{constrats_at = NULL}
+#'   and level i predictor (such as \code{age}), then this will be automatically
+#'   set up as \code{constrats_at = list(age = 'unique')}. Note that
+#'   \code{constrats_at} only subsets the data that has been set up the
+#'   [marginaleffects::datagrid()] or specified as the \code{newdata} argument.
+#'   In case no match is found, an error will be triggered. The
+#'   \code{constrats_at} argument is only evaluated when \code{method =
+#'   'custom'} and the \code{hypothesis} is not \code{NULL}.
+#'   
 #' @param deriv A numeric to specify whether to estimate parameters based on the
 #'   differentiation of the distance curve or the model based first derivative.
 #'   Please see argument \code{variables} for more details.  
@@ -144,6 +158,7 @@ marginal_comparison.bgmfit <- function(model,
                                    hypothesis = NULL,
                                    equivalence = NULL,
                                    eps = NULL,
+                                   constrats_at = NULL,
                                    reformat = NULL,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
@@ -456,7 +471,8 @@ marginal_comparison.bgmfit <- function(model,
       estimate_center,
       estimate_interval,
       reformat,
-      method
+      method,
+      constrats_at
     )
   ))[-1]
   
@@ -730,6 +746,75 @@ marginal_comparison.bgmfit <- function(model,
         out <- do.call(marginaleffects::predictions, predictions_arguments)
       }
       
+      onex0 <- out %>% marginaleffects::posterior_draws()
+      
+      if(is.null(constrats_at)) {
+        if(length(xvar) > 0) {
+          constrats_at <- list()
+          constrats_at[[xvar]] <- 'unique'
+        }
+      }
+      
+      # For hypothesis
+      groupvarshyp1 <- c('drawid')
+      groupvarshyp2 <- c('term')
+      if(!is.null(constrats_at)) {
+        for (caxi in names(constrats_at)) {
+          if(!caxi %in% names(onex0)) {
+            stop(caxi, " specified in 'constrats_at' is not in the estimates",
+                 "\n ", 
+                 " Note that ", caxi, " should also be included in the 'by' argument",
+                 "\n ", 
+                 " Avilable names are:", 
+                 "\n ",
+                 collapse_comma(xcby)
+            )
+          }
+          allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
+          if(is.character(constrats_at[[caxi]])) {
+            if(length(constrats_at[[caxi]]) > 1) {
+              stop(caxi, " specified in 'constrats_at' as character should be a single character:",
+                   "\n ", 
+                   collapse_comma(allowed_char_constrats_at)
+              )
+            }
+            if(!constrats_at[[caxi]] %in% allowed_char_constrats_at) {
+              stop(constrats_at[[caxi]], " specified in 'constrats_at' as character should be one of",
+                   "\n ", 
+                   collapse_comma(allowed_char_constrats_at)
+              )
+            }
+            getatval<- paste0(constrats_at[[caxi]], "(", "onex0", "[['", caxi, "']]", ")" )
+            getatval <- eval(parse(text = getatval))                
+          } # if(is.character(constrats_at[[caxi]])) {
+          
+          if(!is.character(constrats_at[[caxi]])) {
+            getatval <- constrats_at[[caxi]]
+          }
+          constrats_at[[caxi]] <- getatval
+          groupvarshyp1 <- c(caxi, groupvarshyp1)
+          groupvarshyp2 <- c(caxi, groupvarshyp2)
+        } # for (caxi in names(constrats_at)) {
+        
+        
+        for (caxi in names(constrats_at)) {
+          onex1 <- 
+            onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
+          if(nrow(onex1) == 0) {
+            stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
+                 "\n ", 
+                 ""
+            )
+          }
+        }
+      } # if(!is.null(constrats_at)) {
+      
+      
+      
+      if(is.null(constrats_at)) {
+        onex1 <- onex0
+      }
+      
       # zcx <- out %>% marginaleffects::posterior_draws() %>%
       #   dplyr::mutate(!! as.name(parm) :=  eval(parse(text = 'draw'))) %>%
       #   dplyr::select(-estimate)
@@ -776,16 +861,12 @@ marginal_comparison.bgmfit <- function(model,
       aggform2 <- as.formula(paste(measurevar, paste(groupvars2, collapse=" + "), 
                                    sep=" ~ "))
       
-      if(ec_agg == "mean") {
-        onex1 <- stats::aggregate(aggform1, data = out %>% 
-                             marginaleffects::posterior_draws(), 
-                           mean) 
-      }
-      if(ec_agg == "median") {
-        onex1 <- stats::aggregate(aggform1, data = out %>% 
-                             marginaleffects::posterior_draws(), 
-                           median) 
-      }
+      if(ec_agg == "mean") 
+        onex1 <- stats::aggregate(aggform1, data = onex1, mean) 
+      
+      if(ec_agg == "median") 
+        onex1 <- stats::aggregate(aggform1, data = onex1, median) 
+      
       
       out_sf <- onex1 %>% 
         dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
@@ -801,12 +882,74 @@ marginal_comparison.bgmfit <- function(model,
           get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, draws = draws)
         }
         
-        groupvarshyp1 <- c('drawid')
-        groupvarshyp2 <- c('term')
-        if(length(xvar) > 0) {
-          roupvarshyp1 <- c(xvar, groupvarshyp1)
-          groupvarshyp2 <- c(xvar, groupvarshyp2)
+        # Moved from here to up to even get estimates at constrats_at
+        
+        # groupvarshyp1 <- c('drawid')
+        # groupvarshyp2 <- c('term')
+        # if(!is.null(constrats_at)) {
+        #   for (caxi in names(constrats_at)) {
+        #     if(!caxi %in% names(onex1)) {
+        #       stop(caxi, " specified in 'constrats_at' is not in the estimates",
+        #            "\n ",
+        #            " Note that ", caxi, " should also be included in the 'by' argument",
+        #            "\n ",
+        #            " Avilable names are:",
+        #            "\n ",
+        #            collapse_comma(xcby)
+        #       )
+        #     }
+        #     allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
+        #     if(is.character(constrats_at[[caxi]])) {
+        #       if(length(constrats_at[[caxi]]) > 1) {
+        #         stop(caxi, " specified in 'constrats_at' as character should be a single character:",
+        #              "\n ",
+        #              collapse_comma(allowed_char_constrats_at)
+        #         )
+        #       }
+        #       if(!constrats_at[[caxi]] %in% allowed_char_constrats_at) {
+        #         stop(constrats_at[[caxi]], " specified in 'constrats_at' as character should be one of",
+        #              "\n ",
+        #              collapse_comma(allowed_char_constrats_at)
+        #         )
+        #       }
+        #       getatval<- paste0(constrats_at[[caxi]], "(", "onex1", "[['", caxi, "']]", ")" )
+        #       getatval <- eval(parse(text = getatval))
+        #     } # if(is.character(constrats_at[[caxi]])) {
+        # 
+        #     if(!is.character(constrats_at[[caxi]])) {
+        #       getatval <- constrats_at[[caxi]]
+        #     }
+        #     constrats_at[[caxi]] <- getatval
+        #     groupvarshyp1 <- c(caxi, groupvarshyp1)
+        #     groupvarshyp2 <- c(caxi, groupvarshyp2)
+        #   } # for (caxi in names(constrats_at)) {
+        # 
+        #   for (caxi in names(constrats_at)) {
+        #     onex12 <-
+        #       onex1 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
+        #     if(nrow(onex12) == 0) {
+        #       stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
+        #            "\n ",
+        #            ""
+        #       )
+        #     }
+        #   }
+        #   onex1 <- onex12
+        # } # if(!is.null(constrats_at)) {
+        
+        if(nrow(onex1) > 25) {
+          if(is.null(constrats_at)) {
+            message("Note that the marginaleffects package does not allow" ,
+                    "\n",
+                    "hypothesis argument when more than 25 rows of data",
+                    "\n",
+                    "To avoid this issue, you can use 'constrats_at' argument",
+                    "\n"
+            )
+          }
         }
+        
+        
         out_sf_hy <-
           onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
           dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
