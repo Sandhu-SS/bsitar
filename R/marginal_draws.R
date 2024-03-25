@@ -154,6 +154,10 @@ marginal_draws.bgmfit <-
       options("marginaleffects_posterior_interval" = estimate_interval)
       on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
     }
+    ec_agg <- getOption("marginaleffects_posterior_center")
+    ei_agg <- getOption("marginaleffects_posterior_interval")
+    if(is.null(ec_agg)) ec_agg <- "mean"
+    if(is.null(ei_agg)) ei_agg <- "eti"
     
     try(zz <- insight::check_if_installed(c("marginaleffects"), 
                                           minversion = 
@@ -696,20 +700,12 @@ marginal_draws.bgmfit <-
    get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
    get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
    get_pe_ci <- function(x, na.rm = TRUE, ...) {
-     ec_agg <- getOption("marginaleffects_posterior_center")
-     ei_agg <- getOption("marginaleffects_posterior_interval")
-     if(is.null(ec_agg)) ec_agg <- "mean"
-     if(is.null(ei_agg)) ei_agg <- "eti"
-     if(ec_agg == "mean") estimate = mean(x, na.rm = na.rm)
-     if(ec_agg == "median") estimate = median(x, na.rm = na.rm)
-     # if(ei_agg == "eti") luci = quantile(x, probs, na.rm = na.rm)
-     # if(ei_agg == "hdi") luci = quantile(x, probs, na.rm = na.rm)
+     if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
+     if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
      if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
      tibble::tibble(
-       estimate = estimate,
-       conf.low = luci[1],
-       conf.high = luci[2]
+       estimate = estimate, conf.low = luci[1],conf.high = luci[2]
      )
    }
     
@@ -721,19 +717,19 @@ marginal_draws.bgmfit <-
      
      xcby <- predictions_arguments[['by']] 
      xvar <- intersect(xvar, xcby)         
-     cby <- setdiff(xcby, xvar)            
-     parm <- 'xz'
+     # cby <- setdiff(xcby, xvar)            
+     # parm <- 'xz'
      
      if(call_predictions) {
        if(!plot) {
          if(!average) {
-           outx <- do.call(marginaleffects::predictions, predictions_arguments)
+           out <- do.call(marginaleffects::predictions, predictions_arguments)
          } else if(average) {
            . <- do.call(marginaleffects::avg_predictions, predictions_arguments)
          }
        } else if(plot) {
-         outx <- do.call(marginaleffects::plot_predictions, predictions_arguments)
-         outp <- outx
+         out <- do.call(marginaleffects::plot_predictions, predictions_arguments)
+         outp <- out
          if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
          return(outp)
        }
@@ -742,106 +738,165 @@ marginal_draws.bgmfit <-
      if(call_slopes) {
        if(!plot) {
          if(!average) {
-           outx <- do.call(marginaleffects::slopes, predictions_arguments)
+           out <- do.call(marginaleffects::slopes, predictions_arguments)
          } else if(average) {
-           outx <- do.call(marginaleffects::avg_slopes, predictions_arguments)
+           out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
          }
        } else if(plot) {
-         outx <- do.call(marginaleffects::plot_slopes, predictions_arguments)
-         outp <- outx
+         out <- do.call(marginaleffects::plot_slopes, predictions_arguments)
+         outp <- out
          outp <- outp + ggplot2::theme(legend.position = 'none')
          return(outp)
        }
      } # if(call_slopes) {
      
-     zcx <- outx %>% marginaleffects::posterior_draws() %>% 
-       dplyr::mutate(!! as.name(parm) :=  eval(parse(text = 'draw'))) %>% dplyr::select(-estimate)
-     drawid_c <-  split(zcx , f = zcx[['drawid']] )
      
-     drawid_ci_c <- list()
-     for (drawid_ci in 1:length(drawid_c)) {
-       outhy <- drawid_c[[drawid_ci]] %>% 
-         dplyr::rename(estimate = dplyr::all_of('draw'))
-       if(length(xvar) > 0) {
-         outhy <- outhy %>% 
-           dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
-       } else {
-         outhy <- outhy %>% 
-           dplyr::mutate(!! 'xf' :=  as.factor(1))
-       }
-       parmi_estimate <- 'estimate'
-       x_ci_c <- list()
-       for (x in levels(outhy[['xf']])) {
-         outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
-         x_ci_c[[x]] <- outhy2 %>% dplyr::reframe(
-           dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
-           .by = dplyr::all_of(!! cby) 
-         ) %>% 
-           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
-           dplyr::mutate(!! 'at' := x) %>% 
-           dplyr::relocate(dplyr::all_of(c('at'))) 
-       }
-       drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
+     parmi_estimate <- 'estimate'
+     measurevar     <- 'draw'
+     groupvars2 <- predictions_arguments[['by']] 
+     groupvars1 <- c('drawid', groupvars2)
+     
+     aggform1 <- as.formula(paste(measurevar, paste(groupvars1, collapse=" + "), 
+                                  sep=" ~ "))
+     aggform2 <- as.formula(paste(measurevar, paste(groupvars2, collapse=" + "), 
+                                  sep=" ~ "))
+     
+     if(ec_agg == "mean") {
+       onex1 <- stats::aggregate(aggform1, data = out %>% 
+                            marginaleffects::posterior_draws(), 
+                          mean) 
      }
-     out_sf <- do.call(rbind, drawid_ci_c) %>% data.frame
-     out_sf <- out_sf %>% dplyr::select(-'at')
-     row.names(out_sf) <- NULL
+     if(ec_agg == "median") {
+       onex1 <- stats::aggregate(aggform1, data = out %>% 
+                            marginaleffects::posterior_draws(), 
+                          median) 
+     }
+     
+     out_sf <- onex1 %>% 
+       dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+       dplyr::reframe(
+         dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+         .by = dplyr::all_of(!! groupvars2)
+       ) %>%
+       dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE))
+     
      
      if(!is.null(hypothesis)) {
-       parmi_ci_c <- list()
-       for (parmi in parm) {
-         hypthesis_drawid_ci_c <- list()
-         for (drawid_ci in 1:length(drawid_c)) {
-           outhy <- drawid_c[[drawid_ci]] %>% 
-             dplyr::rename(estimate = dplyr::all_of(parmi))
-           if(length(xvar) > 0) {
-             outhy <- outhy %>% 
-               dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
-           } else {
-             outhy <- outhy %>% 
-               dplyr::mutate(!! 'xf' :=  as.factor(1))
-           }
-           x_ci_c <- list()
-           for (x in levels(outhy[['xf']])) {
-             outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
-             x_ci_c[[x]] <- get_hypothesis_x(x = outhy2, 
-                                             hypothesis = hypothesis, 
-                                             by = cby, 
-                                             draws = estimate) %>% 
-               dplyr::mutate(!! 'at' :=  as.factor(x)) %>% 
-               dplyr::mutate(!! 'drawid' := drawid_ci) %>% 
-               dplyr::relocate(dplyr::all_of(c('drawid', 'at'))) 
-           }
-           hypthesis_drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
-         }
-         parmi_ci_c[[parmi]] <- do.call(rbind, hypthesis_drawid_ci_c)
+       get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
+         get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, draws = draws)
        }
-       out4 <- hypthesis_drawid_ci_c %>% do.call(rbind, .) %>% data.frame()
        
-       parm <- levels(out4[['at']])
-       summary_c <- list()
-       for (parmi in parm) {
-         cby_term <- 'term'
-         parmi_estimate <- 'estimate'
-         summary_c[[parmi]] <- out4 %>% dplyr::filter(!! as.name('at') == parmi) %>% 
-           dplyr::reframe(
-             dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
-             .by = dplyr::all_of(!! cby_term) 
-           ) %>% 
-           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
-           dplyr::mutate(!! 'at' := parmi) %>% 
-           dplyr::relocate(dplyr::all_of(c('at')))
-       }
-       out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
+       groupvarshyp1 <- c('drawid')
+       groupvarshyp2 <- c('term')
        if(length(xvar) > 0) {
-         out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(eval(parse(text = 'at')))) %>% 
-           dplyr::relocate(dplyr::all_of(xvar), .before = 'at')
-       } else {
-         out5 <- out5 %>%
-           dplyr::select(-dplyr::all_of('at'))
+         roupvarshyp1 <- c(xvar, groupvarshyp1)
+         groupvarshyp2 <- c(xvar, groupvarshyp2)
        }
-       out_sf_hy <- out5
+       out_sf_hy <-
+         onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
+         dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+         dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
+                                                         hypothesis = 'pairwise', 
+                                                         by = 'class', 
+                                                         draws = estimate
+         ), .keep = F) %>% 
+         dplyr::ungroup() %>% 
+         dplyr::reframe(
+           dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+           .by = dplyr::all_of(!! groupvarshyp2)
+         ) %>%
+         dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE))
+       
      }
+     
+     # zcx <- out %>% marginaleffects::posterior_draws() %>% 
+     #   dplyr::mutate(!! as.name(parm) :=  eval(parse(text = 'draw'))) %>% dplyr::select(-estimate)
+     # drawid_c <-  split(zcx , f = zcx[['drawid']] )
+     # 
+     # drawid_ci_c <- list()
+     # for (drawid_ci in 1:length(drawid_c)) {
+     #   outhy <- drawid_c[[drawid_ci]] %>% 
+     #     dplyr::rename(estimate = dplyr::all_of('draw'))
+     #   if(length(xvar) > 0) {
+     #     outhy <- outhy %>% 
+     #       dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
+     #   } else {
+     #     outhy <- outhy %>% 
+     #       dplyr::mutate(!! 'xf' :=  as.factor(1))
+     #   }
+     #   parmi_estimate <- 'estimate'
+     #   x_ci_c <- list()
+     #   for (x in levels(outhy[['xf']])) {
+     #     outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
+     #     x_ci_c[[x]] <- outhy2 %>% dplyr::reframe(
+     #       dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+     #       .by = dplyr::all_of(!! cby) 
+     #     ) %>% 
+     #       dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
+     #       dplyr::mutate(!! 'at' := x) %>% 
+     #       dplyr::relocate(dplyr::all_of(c('at'))) 
+     #   }
+     #   drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
+     # }
+     # out_sf <- do.call(rbind, drawid_ci_c) %>% data.frame
+     # out_sf <- out_sf %>% dplyr::select(-'at')
+     # row.names(out_sf) <- NULL
+     # 
+     # if(!is.null(hypothesis)) {
+     #   parmi_ci_c <- list()
+     #   for (parmi in parm) {
+     #     hypthesis_drawid_ci_c <- list()
+     #     for (drawid_ci in 1:length(drawid_c)) {
+     #       outhy <- drawid_c[[drawid_ci]] %>% 
+     #         dplyr::rename(estimate = dplyr::all_of(parmi))
+     #       if(length(xvar) > 0) {
+     #         outhy <- outhy %>% 
+     #           dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
+     #       } else {
+     #         outhy <- outhy %>% 
+     #           dplyr::mutate(!! 'xf' :=  as.factor(1))
+     #       }
+     #       x_ci_c <- list()
+     #       for (x in levels(outhy[['xf']])) {
+     #         outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
+     #         x_ci_c[[x]] <- get_hypothesis_x(x = outhy2, 
+     #                                         hypothesis = hypothesis, 
+     #                                         by = cby, 
+     #                                         draws = estimate) %>% 
+     #           dplyr::mutate(!! 'at' :=  as.factor(x)) %>% 
+     #           dplyr::mutate(!! 'drawid' := drawid_ci) %>% 
+     #           dplyr::relocate(dplyr::all_of(c('drawid', 'at'))) 
+     #       }
+     #       hypthesis_drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
+     #     }
+     #     parmi_ci_c[[parmi]] <- do.call(rbind, hypthesis_drawid_ci_c)
+     #   }
+     #   out4 <- hypthesis_drawid_ci_c %>% do.call(rbind, .) %>% data.frame()
+     #   
+     #   parm <- levels(out4[['at']])
+     #   summary_c <- list()
+     #   for (parmi in parm) {
+     #     cby_term <- 'term'
+     #     parmi_estimate <- 'estimate'
+     #     summary_c[[parmi]] <- out4 %>% dplyr::filter(!! as.name('at') == parmi) %>% 
+     #       dplyr::reframe(
+     #         dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+     #         .by = dplyr::all_of(!! cby_term) 
+     #       ) %>% 
+     #       dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
+     #       dplyr::mutate(!! 'at' := parmi) %>% 
+     #       dplyr::relocate(dplyr::all_of(c('at')))
+     #   }
+     #   out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
+     #   if(length(xvar) > 0) {
+     #     out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(eval(parse(text = 'at')))) %>% 
+     #       dplyr::relocate(dplyr::all_of(xvar), .before = 'at')
+     #   } else {
+     #     out5 <- out5 %>%
+     #       dplyr::select(-dplyr::all_of('at'))
+     #   }
+     #   out_sf_hy <- out5
+     # }
      
    } # if(parm_via == 'predictions') {
    
@@ -949,7 +1004,7 @@ marginal_draws.bgmfit <-
       dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                   ~ round(., digits = digits)))
     
-    # out <- . 
+   
     if (reformat) {
       out_sf <- out_sf %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of('estimate')) %>% 

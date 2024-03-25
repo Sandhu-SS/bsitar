@@ -266,9 +266,10 @@ growthparameters_comparison.bgmfit <- function(model,
     options("marginaleffects_posterior_interval" = estimate_interval)
     on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
   }
-  
-  
-  
+  ec_agg <- getOption("marginaleffects_posterior_center")
+  ei_agg <- getOption("marginaleffects_posterior_interval")
+  if(is.null(ec_agg)) ec_agg <- "mean"
+  if(is.null(ei_agg)) ei_agg <- "eti"
   
   try(zz <- insight::check_if_installed(c("marginaleffects"), 
                                         minversion = 
@@ -618,9 +619,9 @@ growthparameters_comparison.bgmfit <- function(model,
  
   
   if(deriv == 0 & deriv_model) 
-    stop("If deriv_model = TRUE, deriv should be 1")
+    stop("If argument 'deriv_model' = TRUE, the argument 'deriv' should be 1")
   if(deriv == 1 & !deriv_model) 
-    stop("If deriv_model = FALSE, deriv should be 0")
+    stop("If argument 'deriv_model' = FALSE, the argument 'deriv' should be 0")
   
   if (!is.null(variables)) {
     if (!is.list(variables)) {
@@ -736,8 +737,6 @@ growthparameters_comparison.bgmfit <- function(model,
         xy <- grDevices::xy.coords(x, y)
         xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
         if(!isFALSE(by)) {
-          ec_agg <- getOption("marginaleffects_posterior_center")
-          if(is.null(ec_agg)) ec_agg <- "mean"
           if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
                                                         mean, drop = TRUE)
           if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
@@ -1102,8 +1101,6 @@ growthparameters_comparison.bgmfit <- function(model,
         xy <- grDevices::xy.coords(x, y)
         xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
         if(!isFALSE(by)) {
-          ec_agg <- getOption("marginaleffects_posterior_center")
-          if(is.null(ec_agg)) ec_agg <- "mean"
           if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
                                                         mean, drop = TRUE)
           if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
@@ -1147,20 +1144,12 @@ growthparameters_comparison.bgmfit <- function(model,
     get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
     get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
     get_pe_ci <- function(x, na.rm = TRUE, ...) {
-      ec_agg <- getOption("marginaleffects_posterior_center")
-      ei_agg <- getOption("marginaleffects_posterior_interval")
-      if(is.null(ec_agg)) ec_agg <- "mean"
-      if(is.null(ei_agg)) ei_agg <- "eti"
-      if(ec_agg == "mean") estimate = mean(x, na.rm = na.rm)
-      if(ec_agg == "median") estimate = median(x, na.rm = na.rm)
-      # if(ei_agg == "eti") luci = quantile(x, probs, na.rm = na.rm)
-      # if(ei_agg == "hdi") luci = quantile(x, probs, na.rm = na.rm)
+      if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
+      if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
       if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
       if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
       tibble::tibble(
-        estimate = estimate,
-        conf.low = luci[1],
-        conf.high = luci[2]
+        estimate = estimate, conf.low = luci[1],conf.high = luci[2]
       )
     }
     
