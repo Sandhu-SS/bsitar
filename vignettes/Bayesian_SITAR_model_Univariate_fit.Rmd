@@ -188,11 +188,9 @@ if(existsfit) {
                 seed = 123)
 }
 
-# print(model_bayes)
-# stop()
 
 # Expose Stan functions
-model_bayes <- expose_model_functions(model_bayes)
+# model_bayes <- expose_model_functions(model_bayes)
 ```
 
 

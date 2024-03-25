@@ -55,14 +55,15 @@
 #'   setting \code{by = c('age', 'cov')}. The \code{method} is ignored when 
 #'   \code{by = FALSE}.
 #'   
-#' @param constrats_at A named list (default \code{NULL}) to specify the values
-#'   at which contrast via \code{hypothesis} should be computed during the post
-#'   draw stage. \code{constrats_at} can be specified as a one of the following
+#' @param constrats_at A named list or a logical (default \code{FALSE}) to
+#'   specify the values at which estimates and contrast (post draw stage) via
+#'   \code{hypothesis} argument should be computed. The \code{constrats_at} can
+#'   be specified as a one of the following
 #'   strings \code{'max', 'min', 'unique', 'range'} (e.g., \code{constrats_at =
-#'   list(age = 'min')}) or else as a numeric values or a numeric vector (e.g.,
-#'   \code{constrats_at = list(age = c(6, 7))}). When \code{constrats_at = NULL}
-#'   and level i predictor (such as \code{age}), then this will be automatically
-#'   set up as \code{constrats_at = list(age = 'unique')}. Note that
+#'   list(age = 'min')}) or else as a numeric value or a numeric vector (e.g.,
+#'   \code{constrats_at = list(age = c(6, 7))}). When \code{constrats_at =
+#'   NULL}, any level-1 predictor (such as \code{age}) is be automatically set
+#'   up as \code{constrats_at = list(age = 'unique')}. Note that
 #'   \code{constrats_at} only subsets the data that has been set up the
 #'   [marginaleffects::datagrid()] or specified as the \code{newdata} argument.
 #'   In case no match is found, an error will be triggered. The
@@ -158,7 +159,7 @@ marginal_comparison.bgmfit <- function(model,
                                    hypothesis = NULL,
                                    equivalence = NULL,
                                    eps = NULL,
-                                   constrats_at = NULL,
+                                   constrats_at = FALSE,
                                    reformat = NULL,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
@@ -748,12 +749,24 @@ marginal_comparison.bgmfit <- function(model,
       
       onex0 <- out %>% marginaleffects::posterior_draws()
       
-      if(is.null(constrats_at)) {
-        if(length(xvar) > 0) {
-          constrats_at <- list()
-          constrats_at[[xvar]] <- 'unique'
+      
+      if(isFALSE(constrats_at)) {
+        constrats_at <- NULL
+      } else if(!isFALSE(constrats_at)) {
+        if(is.null(constrats_at)) {
+          if(length(xvar) > 0) {
+            constrats_at <- list()
+            constrats_at[[xvar]] <- 'unique'
+          }
         }
       }
+      
+      # if(is.null(constrats_at)) {
+      #   if(length(xvar) > 0) {
+      #     constrats_at <- list()
+      #     constrats_at[[xvar]] <- 'unique'
+      #   }
+      # }
       
       # For hypothesis
       groupvarshyp1 <- c('drawid')
@@ -761,11 +774,11 @@ marginal_comparison.bgmfit <- function(model,
       if(!is.null(constrats_at)) {
         for (caxi in names(constrats_at)) {
           if(!caxi %in% names(onex0)) {
-            stop(caxi, " specified in 'constrats_at' is not in the estimates",
+            stop("Variable '", caxi, ". specified in 'constrats_at' is not in",
                  "\n ", 
-                 " Note that ", caxi, " should also be included in the 'by' argument",
+                 " the estimates. Note that ", caxi, " should also be included",
                  "\n ", 
-                 " Avilable names are:", 
+                 " in the 'by' argument. The current 'by' argument includes:", 
                  "\n ",
                  collapse_comma(xcby)
             )
@@ -799,7 +812,9 @@ marginal_comparison.bgmfit <- function(model,
         
         for (caxi in names(constrats_at)) {
           onex1 <- 
-            onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
+            # onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
+            onex0 %>% filter(eval(parse(text = caxi)) %in%  constrats_at[[caxi]])
+          
           if(nrow(onex1) == 0) {
             stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
                  "\n ", 
@@ -939,9 +954,9 @@ marginal_comparison.bgmfit <- function(model,
         
         if(nrow(onex1) > 25) {
           if(is.null(constrats_at)) {
-            message("Note that the marginaleffects package does not allow" ,
+            message("Note that the 'marginaleffects' package does not allow" ,
                     "\n",
-                    "hypothesis argument when more than 25 rows of data",
+                    "hypothesis argument when estimates rows are more than 25",
                     "\n",
                     "To avoid this issue, you can use 'constrats_at' argument",
                     "\n"

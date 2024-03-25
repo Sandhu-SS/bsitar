@@ -134,7 +134,7 @@ marginal_draws.bgmfit <-
            wts = NULL,
            hypothesis = NULL,
            equivalence = NULL,
-           constrats_at = NULL,
+           constrats_at = FALSE,
            reformat = NULL,
            estimate_center = NULL,
            estimate_interval = NULL,
@@ -756,10 +756,14 @@ marginal_draws.bgmfit <-
      
      onex0 <- out %>% marginaleffects::posterior_draws()
      
-     if(is.null(constrats_at)) {
-       if(length(xvar) > 0) {
-         constrats_at <- list()
-         constrats_at[[xvar]] <- 'unique'
+     if(isFALSE(constrats_at)) {
+       constrats_at <- NULL
+     } else if(!isFALSE(constrats_at)) {
+       if(is.null(constrats_at)) {
+         if(length(xvar) > 0) {
+           constrats_at <- list()
+           constrats_at[[xvar]] <- 'unique'
+         }
        }
      }
      
@@ -769,11 +773,11 @@ marginal_draws.bgmfit <-
      if(!is.null(constrats_at)) {
        for (caxi in names(constrats_at)) {
          if(!caxi %in% names(onex0)) {
-           stop(caxi, " specified in 'constrats_at' is not in the estimates",
+           stop("Variable '", caxi, ". specified in 'constrats_at' is not in",
                 "\n ", 
-                " Note that ", caxi, " should also be included in the 'by' argument",
+                " the estimates. Note that ", caxi, " should also be included",
                 "\n ", 
-                " Avilable names are:", 
+                " in the 'by' argument. The current 'by' argument includes:", 
                 "\n ",
                 collapse_comma(xcby)
            )
@@ -807,7 +811,9 @@ marginal_draws.bgmfit <-
        
        for (caxi in names(constrats_at)) {
          onex1 <- 
-           onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
+           # onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
+           onex0 %>% filter(eval(parse(text = caxi)) %in%  constrats_at[[caxi]])
+         
          if(nrow(onex1) == 0) {
            stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
                 "\n ", 
@@ -913,9 +919,9 @@ marginal_draws.bgmfit <-
        
        if(nrow(onex1) > 25) {
          if(is.null(constrats_at)) {
-           message("Note that the marginaleffects package does not allow" ,
+           message("Note that the 'marginaleffects' package does not allow" ,
                    "\n",
-                   "hypothesis argument when more than 25 rows of data",
+                   "hypothesis argument when estimates rows are more than 25",
                    "\n",
                    "To avoid this issue, you can use 'constrats_at' argument",
                    "\n"
