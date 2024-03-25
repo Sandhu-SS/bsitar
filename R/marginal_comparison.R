@@ -811,7 +811,7 @@ marginal_comparison.bgmfit <- function(model,
         
         
         for (caxi in names(constrats_at)) {
-          onex1 <- subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
+          onex1 <- base::subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
           
           # onex1 %>% 
           #   onex0 %>% dplyr::filter(eval(parse(text = caxi)) %in%  constrats_at[[caxi]])

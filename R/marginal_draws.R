@@ -811,7 +811,7 @@ marginal_draws.bgmfit <-
        
        for (caxi in names(constrats_at)) {
          
-         onex1 <- subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
+         onex1 <- base::subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
          
          # onex1 <- 
          #   # onex0 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
