@@ -51,24 +51,13 @@
 #'   'custom'}). Note that \code{method = 'custom'} is on experimental basis
 #'   and should be used cautiously. A particular use case is if user wants to
 #'   compute estimates and comparisons together for a factor co variate i.e.,
-#'   \code{by = 'cov'}, or at each value of predictor (typically 'age') by 
-#'   setting \code{by = c('age', 'cov')}. The \code{method} is ignored when 
-#'   \code{by = FALSE}.
-#'   
-#' @param constrats_at A named list or a logical (default \code{FALSE}) to
-#'   specify the values at which estimates and contrast (post draw stage) via
-#'   \code{hypothesis} argument should be computed. The \code{constrats_at} can
-#'   be specified as a one of the following
-#'   strings \code{'max', 'min', 'unique', 'range'} (e.g., \code{constrats_at =
-#'   list(age = 'min')}) or else as a numeric value or a numeric vector (e.g.,
-#'   \code{constrats_at = list(age = c(6, 7))}). When \code{constrats_at =
-#'   NULL}, any level-1 predictor (such as \code{age}) is be automatically set
-#'   up as \code{constrats_at = list(age = 'unique')}. Note that
-#'   \code{constrats_at} only subsets the data that has been set up the
-#'   [marginaleffects::datagrid()] or specified as the \code{newdata} argument.
-#'   In case no match is found, an error will be triggered. The
-#'   \code{constrats_at} argument is only evaluated when \code{method =
-#'   'custom'} and the \code{hypothesis} is not \code{NULL}.
+#'   \code{by = 'cov'}, or at each value of predictor (typically 'age') by
+#'   setting \code{by = c('age', 'cov')}. The \code{method} is ignored when
+#'   \code{by = FALSE}.  Note that since \code{method = 'custom'} is applied
+#'   only during the post draw stage, all the features available from the
+#'   \code{'marginaleffects'} (such as getting 'marginal' or the 'conditional'
+#'   effects at population or the individual level) are available for the
+#'   \code{method = 'custom'}.
 #'   
 #' @param deriv A numeric to specify whether to estimate parameters based on the
 #'   differentiation of the distance curve or the model based first derivative.
@@ -159,7 +148,9 @@ marginal_comparison.bgmfit <- function(model,
                                    hypothesis = NULL,
                                    equivalence = NULL,
                                    eps = NULL,
+                                   constrats_by = NULL,
                                    constrats_at = FALSE,
+                                   constrats_subset = FALSE,
                                    reformat = NULL,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
@@ -281,10 +272,7 @@ marginal_comparison.bgmfit <- function(model,
     deriv_model <- TRUE
   }
    
-  # The deriv_model is a placeholder in marginaleffects
-  # if(is.null(deriv_model)) {
-  #   deriv_model <- TRUE
-  # }
+ 
   
   if (is.null(idata_method)) {
     idata_method <- 'm2'
@@ -438,7 +426,6 @@ marginal_comparison.bgmfit <- function(model,
   }
   full.args$newdata <- newdata
   
-  # keeping ... cause marginaleffects:: argument is missing, with no default
   full.args[["..."]] <- NULL
   
   
@@ -473,7 +460,9 @@ marginal_comparison.bgmfit <- function(model,
       estimate_interval,
       reformat,
       method,
-      constrats_at
+      constrats_by,
+      constrats_at,
+      constrats_subset
     )
   ))[-1]
   
@@ -530,11 +519,6 @@ marginal_comparison.bgmfit <- function(model,
       set_group <- FALSE
     }
   }
-  
- 
-  
-  
-  
   
     
     comparisons_arguments$variables  <- set_variables
@@ -639,9 +623,6 @@ marginal_comparison.bgmfit <- function(model,
       comparisons_arguments$newdata <- comparisons_arguments$newdata
     }
     
-    # The datagrid argument is not allowed. It served its purpose by defining 
-    # the newdata. So remove it from the arguments
-    
     comparisons_arguments[['datagrid']] <- NULL
     
     # Somehow draw_ids not passed correctly if not specified explicitly as arg
@@ -654,11 +635,7 @@ marginal_comparison.bgmfit <- function(model,
       set_draw_ids <- NULL
     }
     comparisons_arguments[['draw_ids']] <- set_draw_ids
-    
-    # comparisons_arguments$average <- NULL
-    # comparisons_arguments$parameter <- NULL
-   # comparisons_arguments$... <- NULL
-    
+   
     out_sf_hy <- NULL
     allowed_methods <- c('pkg', 'custom')
     if(!method %in% allowed_methods) 
@@ -666,57 +643,39 @@ marginal_comparison.bgmfit <- function(model,
            "\n ", 
            collapse_comma(allowed_methods)
       )
-    if(method == 'pkg') parm_via <- 'comparisons'
-    if(method == 'custom') parm_via <- 'predictions'
-    
-    # if(is.null(method)) {
-    #   if(is.null(predictions_arguments$re_formula)) {
-    #     parm_via <- 'predictions'
-    #   } else if(is.na(predictions_arguments$re_formula)) {
-    #     parm_via <- 'comparisons'
-    #   }
-    # } else {
-    #   allowed_methods <- c('comparisons', 'predictions')
-    #   if(!method %in% allowed_methods) 
-    #     stop("Argument 'method' should be one of the following:",
-    #          "\n ", 
-    #          collapse_comma(allowed_methods))
-    #   parm_via <- method
-    # }
-    
-    
+   
     if(!is.null(comparisons_arguments[['by']])) {
       checbyx <- comparisons_arguments[['by']]
-      if(all(checbyx == "")) parm_via <- 'comparisons'
+      if(all(checbyx == "")) method <- 'pkg'
       if(is.logical(checbyx)) {
-        if(!checbyx) parm_via <- 'comparisons'
+        if(!checbyx) method <- 'pkg'
       }
     }
     
     
-    # In this case parm_via == 'predictions' only relevant later for hypothesis
-    if(parm_via == 'comparisons') {
-      # suppressWarnings({
+    if(method == 'pkg') {
         if(!plot) {
           if(!average) {
-            out <- do.call(marginaleffects::comparisons, comparisons_arguments)
+            out <- do.call(marginaleffects::comparisons, 
+                           comparisons_arguments)
           } else if(average) {
-            out <- do.call(marginaleffects::avg_comparisons, comparisons_arguments)
+            out <- do.call(marginaleffects::avg_comparisons, 
+                           comparisons_arguments)
           }
         }
         if(plot) {
           if(isFALSE(set_group)) comparisons_arguments$by <- NULL
-          out <- do.call(marginaleffects::plot_comparisons, comparisons_arguments)
+          out <- do.call(marginaleffects::plot_comparisons, 
+                         comparisons_arguments)
           outp <- out
-          if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
+          if(!showlegends) outp <- outp + 
+            ggplot2::theme(legend.position = 'none')
           return(outp)
         }
-      # })
       out_sf <- out
-    } # if(parm_via == 'comparisons') {
+    } # if(method == 'pkg') {
     
-    # let probs be passed directly via ...
-    # probs = c(0.25, 0.75), 
+
     get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
     get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
     get_pe_ci <- function(x, na.rm = TRUE, ...) {
@@ -729,17 +688,15 @@ marginal_comparison.bgmfit <- function(model,
       )
     }
   
-    if(parm_via == 'predictions') {
+    if(method == 'custom') {
       predictions_arguments <- comparisons_arguments
       predictions_arguments[['cross']] <- NULL
       predictions_arguments[['method']] <- NULL
       predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
-      # predictions_arguments[['by']] <- xcby
-      
+
       xcby <- predictions_arguments[['by']] 
       xvar <- intersect(xvar, xcby)         
-      # cby <- setdiff(xcby, xvar)            
-      # parm <- 'xz'
+     
       
       if(!average) {
         out <- do.call(marginaleffects::predictions, predictions_arguments)
@@ -748,6 +705,41 @@ marginal_comparison.bgmfit <- function(model,
       }
       
       onex0 <- out %>% marginaleffects::posterior_draws()
+      
+      
+      
+      if(is.null(constrats_by)) {
+        if(is.null(hypothesis)) {
+          constrats_by <- NULL
+        } else if(!is.null(hypothesis)) {
+          if(!isFALSE(by)) constrats_by <- by
+        }
+      } else if(!is.null(constrats_by)) {
+        constrats_by <- constrats_by
+      }
+      
+      
+      if(!is.null(constrats_by)) {
+        if(!is.character(constrats_by)) 
+          stop("The 'constrats_by' argument should be a character string")
+        for (axi in 1:length(constrats_by)) {
+          caxi <- constrats_by[axi]
+          if(!is.character(caxi)) {
+            stop("The 'constrats_by' argument '", caxi, " should be a string")
+          }
+          if(!caxi %in% by) {
+            stop("The 'constrats_by' argument '", caxi, "' is not available in",
+                 " the 'by' argument.",
+                 "\n ", 
+                 " The '", caxi, "' must be included in the 'by' argument.",
+                 "\n ",
+                 " The current 'by' argument includes:",
+                 "\n ",
+                 collapse_comma(by))
+          }
+          
+        }
+      }
       
       
       if(isFALSE(constrats_at)) {
@@ -761,12 +753,6 @@ marginal_comparison.bgmfit <- function(model,
         }
       }
       
-      # if(is.null(constrats_at)) {
-      #   if(length(xvar) > 0) {
-      #     constrats_at <- list()
-      #     constrats_at[[xvar]] <- 'unique'
-      #   }
-      # }
       
       # For hypothesis
       groupvarshyp1 <- c('drawid')
@@ -786,18 +772,21 @@ marginal_comparison.bgmfit <- function(model,
           allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
           if(is.character(constrats_at[[caxi]])) {
             if(length(constrats_at[[caxi]]) > 1) {
-              stop(caxi, " specified in 'constrats_at' as character should be a single character:",
+              stop(caxi, " specified in 'constrats_at' as character should be 
+                   a single character:",
                    "\n ", 
                    collapse_comma(allowed_char_constrats_at)
               )
             }
             if(!constrats_at[[caxi]] %in% allowed_char_constrats_at) {
-              stop(constrats_at[[caxi]], " specified in 'constrats_at' as character should be one of",
+              stop(constrats_at[[caxi]], " specified in 'constrats_at' as 
+                   character should be one of",
                    "\n ", 
                    collapse_comma(allowed_char_constrats_at)
               )
             }
-            getatval<- paste0(constrats_at[[caxi]], "(", "onex0", "[['", caxi, "']]", ")" )
+            getatval<- paste0(constrats_at[[caxi]], "(", "onex0", 
+                              "[['", caxi, "']]", ")" )
             getatval <- eval(parse(text = getatval))                
           } # if(is.character(constrats_at[[caxi]])) {
           
@@ -812,12 +801,6 @@ marginal_comparison.bgmfit <- function(model,
         
         for (caxi in names(constrats_at)) {
           onex1 <- base::subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
-          
-          # onex1 %>% 
-          #   onex0 %>% dplyr::filter(eval(parse(text = caxi)) %in%  constrats_at[[caxi]])
-            # onex0 %>% dplyr::filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
-            
-          
           if(nrow(onex1) == 0) {
             stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
                  "\n ", 
@@ -833,50 +816,49 @@ marginal_comparison.bgmfit <- function(model,
         onex1 <- onex0
       }
       
-      # zcx <- out %>% marginaleffects::posterior_draws() %>%
-      #   dplyr::mutate(!! as.name(parm) :=  eval(parse(text = 'draw'))) %>%
-      #   dplyr::select(-estimate)
-      # drawid_c <-  split(zcx , f = zcx[['drawid']] )
-      # drawid_ci_c <- list()
-      # for (drawid_ci in 1:length(drawid_c)) {
-      #   outhy <- drawid_c[[drawid_ci]] %>%
-      #     dplyr::rename(estimate = dplyr::all_of('draw'))
-      #   if(length(xvar) > 0) {
-      #     outhy <- outhy %>%
-      #       dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
-      #   } else {
-      #     outhy <- outhy %>%
-      #       dplyr::mutate(!! 'xf' :=  as.factor(1))
-      #   }
-      #   parmi_estimate <- 'estimate'
-      #   x_ci_c <- list()
-      #   for (x in levels(outhy[['xf']])) {
-      #     outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x)
-      #     x_ci_c[[x]] <- outhy2 %>% dplyr::reframe(
-      #       dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
-      #       .by = dplyr::all_of(!! cby)
-      #     ) %>%
-      #       dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>%
-      #       dplyr::mutate(!! 'at' := x) %>%
-      #       dplyr::relocate(dplyr::all_of('at'))
-      #   }
-      #   drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
-      # }
-      # out_sf <- do.call(rbind, drawid_ci_c) %>% data.frame
-      # out_sf <- out_sf %>% dplyr::select(-'at')
-      # row.names(out_sf) <- NULL
+      if(!is.null(constrats_subset)) {
+        for (caxi in names(constrats_subset)) {
+          if(!caxi %in% names(onex0)) {
+            stop("Variable '", caxi, ". specified in 'constrats_subset' is not",
+                 "\n ", 
+                 " in the estimates. The ", caxi, " should also be included",
+                 "\n ", 
+                 " in the 'by' argument. The current 'by' argument includes:", 
+                 "\n ",
+                 collapse_comma(xcby)
+            )
+          }
+          getatval <- constrats_subset[[caxi]]
+          constrats_subset[[caxi]] <- getatval
+          groupvarshyp1 <- c(caxi, groupvarshyp1)
+          groupvarshyp2 <- c(caxi, groupvarshyp2)
+        } # for (caxi in names(constrats_subset)) {
+        
+        
+        for (caxi in names(constrats_subset)) {
+          onex1 <- 
+            base::subset(onex1, onex1[[caxi]] %in% constrats_subset[[caxi]])
+          if(nrow(onex1) == 0) {
+            stop(caxi, " specified in 'constrats_subset' resulted in zero rows:",
+                 "\n ", 
+                 ""
+            )
+          }
+        }
+      } # if(!is.null(constrats_subset)) {
       
       
-      # zcx <- out %>% marginaleffects::posterior_draws()
-      
+
       parmi_estimate <- 'estimate'
       measurevar     <- 'draw'
       groupvars2 <- predictions_arguments[['by']] 
       groupvars1 <- c('drawid', groupvars2)
     
-      aggform1 <- as.formula(paste(measurevar, paste(groupvars1, collapse=" + "), 
+      aggform1 <- as.formula(paste(measurevar, 
+                                   paste(groupvars1, collapse=" + "), 
                                    sep=" ~ "))
-      aggform2 <- as.formula(paste(measurevar, paste(groupvars2, collapse=" + "), 
+      aggform2 <- as.formula(paste(measurevar, 
+                                   paste(groupvars2, collapse=" + "), 
                                    sep=" ~ "))
       
       if(ec_agg == "mean") 
@@ -889,71 +871,19 @@ marginal_comparison.bgmfit <- function(model,
       out_sf <- onex1 %>% 
         dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
         dplyr::reframe(
-          dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+          dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
+                        .unpack = TRUE),
           .by = dplyr::all_of(!! groupvars2)
         ) %>%
-        dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE))
+        dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                     fixed = TRUE))
       
      
       if(!is.null(hypothesis)) {
         get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
-          get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, draws = draws)
+          get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, 
+                           draws = draws)
         }
-        
-        # Moved from here to up to even get estimates at constrats_at
-        
-        # groupvarshyp1 <- c('drawid')
-        # groupvarshyp2 <- c('term')
-        # if(!is.null(constrats_at)) {
-        #   for (caxi in names(constrats_at)) {
-        #     if(!caxi %in% names(onex1)) {
-        #       stop(caxi, " specified in 'constrats_at' is not in the estimates",
-        #            "\n ",
-        #            " Note that ", caxi, " should also be included in the 'by' argument",
-        #            "\n ",
-        #            " Avilable names are:",
-        #            "\n ",
-        #            collapse_comma(xcby)
-        #       )
-        #     }
-        #     allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
-        #     if(is.character(constrats_at[[caxi]])) {
-        #       if(length(constrats_at[[caxi]]) > 1) {
-        #         stop(caxi, " specified in 'constrats_at' as character should be a single character:",
-        #              "\n ",
-        #              collapse_comma(allowed_char_constrats_at)
-        #         )
-        #       }
-        #       if(!constrats_at[[caxi]] %in% allowed_char_constrats_at) {
-        #         stop(constrats_at[[caxi]], " specified in 'constrats_at' as character should be one of",
-        #              "\n ",
-        #              collapse_comma(allowed_char_constrats_at)
-        #         )
-        #       }
-        #       getatval<- paste0(constrats_at[[caxi]], "(", "onex1", "[['", caxi, "']]", ")" )
-        #       getatval <- eval(parse(text = getatval))
-        #     } # if(is.character(constrats_at[[caxi]])) {
-        # 
-        #     if(!is.character(constrats_at[[caxi]])) {
-        #       getatval <- constrats_at[[caxi]]
-        #     }
-        #     constrats_at[[caxi]] <- getatval
-        #     groupvarshyp1 <- c(caxi, groupvarshyp1)
-        #     groupvarshyp2 <- c(caxi, groupvarshyp2)
-        #   } # for (caxi in names(constrats_at)) {
-        # 
-        #   for (caxi in names(constrats_at)) {
-        #     onex12 <-
-        #       onex1 %>% filter(!! as.name(caxi) %in%  constrats_at[[caxi]])
-        #     if(nrow(onex12) == 0) {
-        #       stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
-        #            "\n ",
-        #            ""
-        #       )
-        #     }
-        #   }
-        #   onex1 <- onex12
-        # } # if(!is.null(constrats_at)) {
         
         if(nrow(onex1) > 25) {
           if(is.null(constrats_at)) {
@@ -972,76 +902,22 @@ marginal_comparison.bgmfit <- function(model,
           onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
           dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
           dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
-                                                          hypothesis = 'pairwise', 
-                                                          by = 'class', 
+                                                          hypothesis = 
+                                                            hypothesis, 
+                                                          by = constrats_by, 
                                                           draws = estimate
           ), .keep = F) %>% 
           dplyr::ungroup() %>% 
           dplyr::reframe(
-            dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
+            dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
+                          .unpack = TRUE),
             .by = dplyr::all_of(!! groupvarshyp2)
           ) %>%
-          dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE))
+          dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                       fixed = TRUE))
         
-      }
-      
-      # if(!is.null(hypothesis)) {
-      #   parmi_ci_c <- list()
-      #   for (parmi in parm) {
-      #     hypthesis_drawid_ci_c <- list()
-      #     for (drawid_ci in 1:length(drawid_c)) {
-      #       outhy <- drawid_c[[drawid_ci]] %>% 
-      #         dplyr::rename(estimate = dplyr::all_of(parmi)) 
-      #       if(length(xvar) > 0) {
-      #         outhy <- outhy %>% 
-      #           dplyr::mutate(!! 'xf' :=  as.factor(eval(parse(text = xvar))))
-      #       } else {
-      #         outhy <- outhy %>% 
-      #           dplyr::mutate(!! 'xf' :=  as.factor(1))
-      #       }
-      #       x_ci_c <- list()
-      #       for (x in levels(outhy[['xf']])) {
-      #         outhy2 <- outhy %>% dplyr::filter(!! as.name('xf') == x) 
-      #         x_ci_c[[x]] <- get_hypothesis_x(x = outhy2, 
-      #                                         hypothesis = hypothesis, 
-      #                                         by = cby, 
-      #                                         draws = estimate) %>% 
-      #           dplyr::mutate(!! 'at' := as.factor(x)) %>% 
-      #           dplyr::mutate(!! 'drawid' := drawid_ci) %>% 
-      #           dplyr::relocate(dplyr::all_of(c('drawid', 'at'))) 
-      #       }
-      #       hypthesis_drawid_ci_c[[drawid_ci]] <- do.call(rbind, x_ci_c)
-      #     }
-      #     parmi_ci_c[[parmi]] <- do.call(rbind, hypthesis_drawid_ci_c)
-      #   }
-      #   out4 <- hypthesis_drawid_ci_c %>% do.call(rbind, .) %>% data.frame()
-      #   
-      #   parm <- levels(out4[['at']])
-      #   summary_c <- list()
-      #   for (parmi in parm) {
-      #     cby_term <- 'term'
-      #     parmi_estimate <- 'estimate'
-      #     summary_c[[parmi]] <- out4 %>% dplyr::filter(!! as.name('at') == parmi) %>% 
-      #       dplyr::reframe(
-      #         dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, .unpack = TRUE),
-      #         .by = dplyr::all_of(!! cby_term) 
-      #       ) %>% 
-      #       dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, fixed = TRUE)) %>% 
-      #       dplyr::mutate(!! 'at' := parmi) %>% 
-      #       dplyr::relocate(dplyr::all_of('at'))
-      #   }
-      #   out5 <- summary_c %>% do.call(rbind, .) %>% data.frame()
-      #   row.names(out5) <- NULL
-      #   if(length(xvar) > 0) {
-      #     out5 <- out5 %>% dplyr::mutate(!!xvar := as.numeric(eval(parse(text = 'at')))) %>% 
-      #       dplyr::relocate(dplyr::all_of(xvar), .before = 'at')
-      #   } else {
-      #     out5 <- out5 %>%
-      #       dplyr::select(-dplyr::all_of('at'))
-      #   }
-      #   out_sf_hy <- out5
-      # } # if(!is.null(hypothesis)) {
-    } # if(parm_via == 'predictions') {
+      } # if(!is.null(hypothesis)) {
+    } # if(method == 'custom') {
   
 
   
@@ -1061,9 +937,12 @@ marginal_comparison.bgmfit <- function(model,
   
   if (reformat) {
     out_sf <- out_sf %>% 
-      dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of('estimate')) %>% 
-      dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of('conf.low')) %>% 
-      dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of('conf.high')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[1]) := 
+                      dplyr::all_of('estimate')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[2]) := 
+                      dplyr::all_of('conf.low')) %>% 
+      dplyr::rename(!!as.symbol(set_names_[3]) := 
+                      dplyr::all_of('conf.high')) %>% 
       data.frame()
     
     remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
@@ -1078,11 +957,12 @@ marginal_comparison.bgmfit <- function(model,
       out_sf_hy <- out_sf_hy %>% 
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                     ~ round(., digits = digits))) %>% 
-        # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
-        dplyr::rename(!!as.symbol(set_names_[1]) := dplyr::all_of('estimate')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[2]) := dplyr::all_of('conf.low')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := dplyr::all_of('conf.high')) %>% 
-        # dplyr::rename_with(., ~ tools::toTitleCase(.x)) %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := 
+                        dplyr::all_of('estimate')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := 
+                        dplyr::all_of('conf.low')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := 
+                        dplyr::all_of('conf.high')) %>% 
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
         data.frame()
     } # if(!is.null(out_sf_hy)) {
