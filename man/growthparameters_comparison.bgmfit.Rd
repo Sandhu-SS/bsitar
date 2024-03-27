@@ -47,8 +47,8 @@
   equivalence = NULL,
   eps = NULL,
   constrats_by = NULL,
-  constrats_at = FALSE,
-  constrats_subset = FALSE,
+  constrats_at = NULL,
+  constrats_subset = NULL,
   reformat = NULL,
   estimate_center = NULL,
   estimate_interval = NULL,
@@ -383,36 +383,39 @@ numerical problems in certain models.}
 \item{constrats_by}{A character vector (default \code{NULL}) specifying the
 variable(s) by which estimates and contrast (post draw stage) via the
 \code{hypothesis} argument should be computed. Note that variable(s)
-specified in the \code{constrats_by} should be included in the \code{'by'}
-argument. If \code{constrats_by = NULL}, then all variables are copied from
-the \code{'by'} i.e., \code{constrats_by = by}. The
-\code{constrats_by} argument is only evaluated when \code{method =
-  'custom'} and the \code{hypothesis} is not \code{NULL}.}
+specified in the \code{constrats_by} should be sub set of the variables
+included in the \code{'by'} argument. If \code{constrats_by = NULL}, then
+all variables are copied from the \code{'by'} argument (i.e.,
+\code{constrats_by = by}) except the level-1 predictor (such as
+\code{age}). This automatic behavior of setting at 'unique' values can be
+turned off by using \code{constrats_by = FALSE}.  The \code{constrats_by}
+argument is only evaluated when \code{method = 'custom'} and the
+\code{hypothesis} is not \code{NULL}.}
 
-\item{constrats_at}{A named list or a logical (default \code{FALSE}) to
-specify the values at which estimates and contrast (post draw stage) via
-the \code{hypothesis} argument should be computed. The \code{constrats_at}
-can be specified as a one of the following
-strings \code{'max', 'min', 'unique', 'range'} (e.g., \code{constrats_at =
-  list(age = 'min')}) or else as a numeric value or a numeric vector (e.g.,
-\code{constrats_at = list(age = c(6, 7))}). When \code{constrats_at =
-  NULL}, any level-1 predictor (such as \code{age}) is be automatically set
-up as \code{constrats_at = list(age = 'unique')}. Note that
-\code{constrats_at} only subsets the data that has been set up the
-\code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or specified as the \code{newdata} argument.
-In case no match is found, an error will be triggered. The
-\code{constrats_at} argument is only evaluated when \code{method =
-  'custom'} and the \code{hypothesis} is not \code{NULL}.}
+\item{constrats_at}{A named list (default \code{NULL}) to specify the values
+at which estimates and contrast (post draw stage) via the \code{hypothesis}
+argument should be computed. The \code{constrats_at} can be specified as a
+one of the following strings \code{'max', 'min', 'unique', 'range'} (e.g.,
+\code{constrats_at = list(age = 'min')}) or else as a numeric value or a
+numeric vector (e.g., \code{constrats_at = list(age = c(6, 7))}). When
+\code{constrats_at = NULL}, any level-1 predictor (such as \code{age}) is
+be automatically set at its 'unique' values i.e., \code{constrats_at =
+  list(age = 'unique')}. This automatic behavior of setting at 'unique'
+values can be turned off by using \code{constrats_at = FALSE}. Note that
+\code{constrats_at} only subsets the data that has been set up
+the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or specified as the \code{newdata}
+argument. In case no match is found, an error will be triggered. The
+\code{constrats_at} argument is only evaluated when \code{method = 'custom'}
+and the \code{hypothesis} is not \code{NULL}.}
 
-\item{constrats_subset}{A named list or a logical (default \code{FALSE}) to
-subset the estimates (post draw stage) at which contrast are computed
+\item{constrats_subset}{A named list (default \code{FALSE}) to subset the
+estimates (post draw stage) at which contrast are computed via the
 \code{hypothesis} argument. The use of the \code{constrats_subset} argument
-is similar to the \code{constrats_at} with the exception that while the
+is similar to the \code{constrats_at} with the exception that while
 \code{constrats_at} subsets the data based on the values of a variable, the
-\code{constrats_at} filters the character vector of a variables such as to
-filter individuals defined by the \code{id} variable as follows:
-\code{constrats_at = list(id = c('subject1', 'subject2'))} where
-\code{subject1'} and  \code{subject2'} are individual identifiers. The
+\code{constrats_at} filters the character vector of a variables such as
+sub-setting individuals \code{constrats_at = list(id = c('id1', 'id2'))}
+where \code{'id1'} and  \code{'id1'} are individual identifiers. The
 \code{constrats_subset} argument is only evaluated when \code{method =
   'custom'} and the \code{hypothesis} is not \code{NULL}.}
 

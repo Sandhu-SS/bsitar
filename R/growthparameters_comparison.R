@@ -131,40 +131,43 @@
 #'   the features available from the \code{'marginaleffects'} (such as getting
 #'   'marginal' or the 'conditional' effects at population or the individual
 #'   level) are available for the \code{method = 'custom'}.
-#'   
+#'
 #' @param constrats_by A character vector (default \code{NULL}) specifying the
 #'   variable(s) by which estimates and contrast (post draw stage) via the
 #'   \code{hypothesis} argument should be computed. Note that variable(s)
-#'   specified in the \code{constrats_by} should be included in the \code{'by'}
-#'   argument. If \code{constrats_by = NULL}, then all variables are copied from
-#'   the \code{'by'} i.e., \code{constrats_by = by}. The
-#'   \code{constrats_by} argument is only evaluated when \code{method =
-#'   'custom'} and the \code{hypothesis} is not \code{NULL}.
+#'   specified in the \code{constrats_by} should be sub set of the variables
+#'   included in the \code{'by'} argument. If \code{constrats_by = NULL}, then
+#'   all variables are copied from the \code{'by'} argument (i.e.,
+#'   \code{constrats_by = by}) except the level-1 predictor (such as
+#'   \code{age}). This automatic behavior of setting at 'unique' values can be
+#'   turned off by using \code{constrats_by = FALSE}.  The \code{constrats_by}
+#'   argument is only evaluated when \code{method = 'custom'} and the
+#'   \code{hypothesis} is not \code{NULL}.
+#' 
+#' @param constrats_at A named list (default \code{NULL}) to specify the values
+#'   at which estimates and contrast (post draw stage) via the \code{hypothesis}
+#'   argument should be computed. The \code{constrats_at} can be specified as a
+#'   one of the following strings \code{'max', 'min', 'unique', 'range'} (e.g.,
+#'   \code{constrats_at = list(age = 'min')}) or else as a numeric value or a
+#'   numeric vector (e.g., \code{constrats_at = list(age = c(6, 7))}). When
+#'   \code{constrats_at = NULL}, any level-1 predictor (such as \code{age}) is
+#'   be automatically set at its 'unique' values i.e., \code{constrats_at =
+#'   list(age = 'unique')}. This automatic behavior of setting at 'unique'
+#'   values can be turned off by using \code{constrats_at = FALSE}. Note that
+#'   \code{constrats_at} only subsets the data that has been set up
+#'   the [marginaleffects::datagrid()] or specified as the \code{newdata} 
+#'   argument. In case no match is found, an error will be triggered. The
+#'   \code{constrats_at} argument is only evaluated when \code{method = 'custom'}
+#'   and the \code{hypothesis} is not \code{NULL}.
 #'   
-#' @param constrats_at A named list or a logical (default \code{FALSE}) to
-#'   specify the values at which estimates and contrast (post draw stage) via
-#'   the \code{hypothesis} argument should be computed. The \code{constrats_at}
-#'   can be specified as a one of the following
-#'   strings \code{'max', 'min', 'unique', 'range'} (e.g., \code{constrats_at =
-#'   list(age = 'min')}) or else as a numeric value or a numeric vector (e.g.,
-#'   \code{constrats_at = list(age = c(6, 7))}). When \code{constrats_at =
-#'   NULL}, any level-1 predictor (such as \code{age}) is be automatically set
-#'   up as \code{constrats_at = list(age = 'unique')}. Note that
-#'   \code{constrats_at} only subsets the data that has been set up the
-#'   [marginaleffects::datagrid()] or specified as the \code{newdata} argument.
-#'   In case no match is found, an error will be triggered. The
-#'   \code{constrats_at} argument is only evaluated when \code{method =
-#'   'custom'} and the \code{hypothesis} is not \code{NULL}.
-#'   
-#' @param constrats_subset A named list or a logical (default \code{FALSE}) to
-#'   subset the estimates (post draw stage) at which contrast are computed
+#' @param constrats_subset A named list (default \code{FALSE}) to subset the
+#'   estimates (post draw stage) at which contrast are computed via the
 #'   \code{hypothesis} argument. The use of the \code{constrats_subset} argument
-#'   is similar to the \code{constrats_at} with the exception that while the
+#'   is similar to the \code{constrats_at} with the exception that while
 #'   \code{constrats_at} subsets the data based on the values of a variable, the
-#'   \code{constrats_at} filters the character vector of a variables such as to
-#'   filter individuals defined by the \code{id} variable as follows:
-#'   \code{constrats_at = list(id = c('subject1', 'subject2'))} where
-#'   \code{subject1'} and  \code{subject2'} are individual identifiers. The
+#'   \code{constrats_at} filters the character vector of a variables such as
+#'   sub-setting individuals \code{constrats_at = list(id = c('id1', 'id2'))}
+#'   where \code{'id1'} and  \code{'id1'} are individual identifiers. The
 #'   \code{constrats_subset} argument is only evaluated when \code{method =
 #'   'custom'} and the \code{hypothesis} is not \code{NULL}.
 #'   
@@ -285,8 +288,8 @@ growthparameters_comparison.bgmfit <- function(model,
                                    equivalence = NULL,
                                    eps = NULL,
                                    constrats_by = NULL,
-                                   constrats_at = FALSE,
-                                   constrats_subset = FALSE,
+                                   constrats_at = NULL,
+                                   constrats_subset = NULL,
                                    reformat = NULL,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
@@ -379,17 +382,17 @@ growthparameters_comparison.bgmfit <- function(model,
   cov    <- model$model_info[[cov_]]
   uvarby <- model$model_info$univariate_by
   
-  # Note, newdata is not model$data but rather model$model_info$bgmfit.data
-  # This is must for univariate_by
-  if(is.null(newdata)) {
-    #newdata <- model$model_info$bgmfit.data
-  }
-  
-  if(!is.na(uvarby)) {
-    uvarby_ind <- paste0(uvarby, resp)
-    varne <- paste0(uvarby, resp)
-   # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
-  }
+  # # Note, newdata is not model$data but rather model$model_info$bgmfit.data
+  # # This is must for univariate_by
+  # if(is.null(newdata)) {
+  #   #newdata <- model$model_info$bgmfit.data
+  # }
+  # 
+  # if(!is.na(uvarby)) {
+  #   uvarby_ind <- paste0(uvarby, resp)
+  #   varne <- paste0(uvarby, resp)
+  #  # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+  # }
   
   
   if(is.null(deriv) & is.null(deriv_model)) {
@@ -479,7 +482,6 @@ growthparameters_comparison.bgmfit <- function(model,
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
-  # set_names_  <- c('Estimate', 'Est.Error', probtitles)
   set_names_  <- c('Estimate', probtitles)
   
   if(!is.null(model$model_info$decomp)) {
@@ -609,9 +611,6 @@ growthparameters_comparison.bgmfit <- function(model,
      newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
   }
   full.args$newdata <- newdata
-  
-
-  # keeping ... cause marginaleffects:: argument is missing, with no default
   full.args[["..."]] <- NULL
   
   comparisons_arguments <- full.args
@@ -702,10 +701,6 @@ growthparameters_comparison.bgmfit <- function(model,
     names(set_variables) <- xvar
   } 
   
-  
-  
-  
-  
 
   allowed_comparison <- c('difference', 'differenceavg')
   
@@ -764,9 +759,7 @@ growthparameters_comparison.bgmfit <- function(model,
   if (acg_velocity >= 1 | acg_velocity <= 0) {
     stop("The acg_velocity should be set between 0.01 and 0.99")
   }
-  
-  
-  
+
   call_comparison_gparms_fun <- function(parm, 
                                          eps, 
                                          by, 
@@ -822,7 +815,6 @@ growthparameters_comparison.bgmfit <- function(model,
     comparisons_arguments$by         <- set_group
     comparisons_arguments$comparison <- gparms_fun
     
-
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
     if(is.null(showlegends)) {
@@ -1014,7 +1006,6 @@ growthparameters_comparison.bgmfit <- function(model,
         }
       }
     }
-    
     return(gout)
   }
   
@@ -1025,7 +1016,6 @@ growthparameters_comparison.bgmfit <- function(model,
   } else if(is.na(eval_re_formula)) {
     aggregate_by <- FALSE
   }
-  
   
   
   #######################################
@@ -1043,6 +1033,8 @@ growthparameters_comparison.bgmfit <- function(model,
       if(!checbyx) method <- 'pkg'
     }
   }
+  
+
   
   if(method == 'pkg') {
     if(plot) {
@@ -1091,18 +1083,26 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   if(method == 'custom') {
-    xcby <- c(xvar, by)  # c('age', 'class')
-    cby  <- by            # c( 'class')
     predictions_arguments <- comparisons_arguments
     predictions_arguments[['cross']] <- NULL
     predictions_arguments[['method']] <- NULL
     predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
-    predictions_arguments[['by']] <- xcby
+   
+    # Imp, add xvar to the by if missing
+    by <- predictions_arguments[['by']]
+    if(!any(grepl(xvar, by)))  by <- c(xvar, eval(by))
+    by <- eval(by)
+    predictions_arguments[['by']] <- by # xcby
+
     if(!average) {
       oux <- do.call(marginaleffects::predictions, predictions_arguments)
     } else if(average) {
       oux <- do.call(marginaleffects::avg_predictions, predictions_arguments)
     }
+    
+    # Imp, remove xvar from the by
+    by <- base::setdiff(eval(by), eval(xvar)) 
+    
     
     zxdraws <- oux %>% marginaleffects::posterior_draws()
     
@@ -1146,21 +1146,26 @@ growthparameters_comparison.bgmfit <- function(model,
     drawid_c <- list()
     for (drawidi in 1:nlevels(zxdraws$drawid)) {
       drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>% 
-        dplyr::group_by_at(cby) %>% 
+        dplyr::group_by_at(by) %>% 
         dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw), 
                             .keep = TRUE) %>% 
         dplyr::mutate(drawid = drawidi)
     }
     onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
     
-    if(is.null(constrats_by)) {
-      if(is.null(hypothesis)) {
-        constrats_by <- NULL
-      } else if(!is.null(hypothesis)) {
-        if(!isFALSE(cby)) constrats_by <- cby
+    
+    if(isFALSE(constrats_by)) {
+      constrats_by <- NULL
+    } else if(!isFALSE(constrats_by)) {
+      if(is.null(constrats_by)) {
+        if(is.null(hypothesis)) {
+          constrats_by <- NULL
+        } else if(!is.null(hypothesis)) {
+          if(!isFALSE(by)) constrats_by <- setdiff(by, xvar) 
+        }
+      } else if(!is.null(constrats_by)) {
+        constrats_by <- constrats_by
       }
-    } else if(!is.null(constrats_by)) {
-      constrats_by <- constrats_by
     }
     
   
@@ -1172,7 +1177,7 @@ growthparameters_comparison.bgmfit <- function(model,
         if(!is.character(caxi)) {
           stop("The 'constrats_by' argument '", caxi, " should be a character")
         }
-        if(!caxi %in% cby) {
+        if(!caxi %in% by) {
           stop("The 'constrats_by' argument '", caxi, "' is not available in",
                " the 'by' argument.",
                 "\n ", 
@@ -1190,10 +1195,13 @@ growthparameters_comparison.bgmfit <- function(model,
       constrats_at <- NULL
     } else if(!isFALSE(constrats_at)) {
       if(is.null(constrats_at)) {
-        if(length(xvar) > 0) {
-          constrats_at <- list()
-          constrats_at[[xvar]] <- 'unique'
+        constrats_at <- list()
+        for(byi in by) {
+          if(is.numeric(constrats_at[[byi]])) {
+            constrats_at[[byi]] <- 'unique'
+          }
         }
+        if(length(constrats_at) == 0) constrats_at <- NULL
       }
     }
     
@@ -1209,7 +1217,7 @@ growthparameters_comparison.bgmfit <- function(model,
                "\n ", 
                " in the 'by' argument. The current 'by' argument includes:", 
                "\n ",
-               collapse_comma(xcby)
+               collapse_comma(by)
           )
         }
         allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
@@ -1257,16 +1265,10 @@ growthparameters_comparison.bgmfit <- function(model,
       onex1 <- onex0
     }
     
-    
-    
-    
-    
     #########################33
     if(isFALSE(constrats_subset)) {
       constrats_subset <- NULL
-    } else if(!isFALSE(constrats_subset)) {
-     #
-    }
+    } 
     
     
     if(!is.null(constrats_subset)) {
@@ -1278,7 +1280,7 @@ growthparameters_comparison.bgmfit <- function(model,
                "\n ", 
                " in the 'by' argument. The current 'by' argument includes:", 
                "\n ",
-               collapse_comma(xcby)
+               collapse_comma(by)
           )
         }
         getatval <- constrats_subset[[caxi]]
@@ -1319,7 +1321,7 @@ growthparameters_comparison.bgmfit <- function(model,
         dplyr::reframe(
           dplyr::across(c(dplyr::all_of(parmi)), get_pe_ci, 
                         .unpack = TRUE),
-          .by = dplyr::all_of(!! cby)
+          .by = dplyr::all_of(!! by)
         ) %>% dplyr::rename_with(., ~ gsub(paste0(parmi, "_"), "", .x, 
                                            fixed = TRUE)) %>% 
         dplyr::mutate(parameter = parmi) %>% 

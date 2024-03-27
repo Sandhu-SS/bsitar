@@ -149,8 +149,8 @@ marginal_comparison.bgmfit <- function(model,
                                    equivalence = NULL,
                                    eps = NULL,
                                    constrats_by = NULL,
-                                   constrats_at = FALSE,
-                                   constrats_subset = FALSE,
+                                   constrats_at = NULL,
+                                   constrats_subset = NULL,
                                    reformat = NULL,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
@@ -242,17 +242,17 @@ marginal_comparison.bgmfit <- function(model,
   cov    <- model$model_info[[cov_]]
   uvarby <- model$model_info$univariate_by
   
-  # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
-  # This was must for univariate_by
-  if(is.null(newdata)) {
-    #newdata <- model$model_info$bgmfit.data
-  }
-  
-  if(!is.na(uvarby)) {
-    uvarby_ind <- paste0(uvarby, resp)
-    varne <- paste0(uvarby, resp)
-   # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
-  }
+  # # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
+  # # This was must for univariate_by
+  # if(is.null(newdata)) {
+  #   #newdata <- model$model_info$bgmfit.data
+  # }
+  # 
+  # if(!is.na(uvarby)) {
+  #   uvarby_ind <- paste0(uvarby, resp)
+  #   varne <- paste0(uvarby, resp)
+  #  # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+  # }
   
   
   if(is.null(deriv) & is.null(deriv_model)) {
@@ -693,11 +693,7 @@ marginal_comparison.bgmfit <- function(model,
       predictions_arguments[['cross']] <- NULL
       predictions_arguments[['method']] <- NULL
       predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
-
-      xcby <- predictions_arguments[['by']] 
-      xvar <- intersect(xvar, xcby)         
-     
-      
+      by <- predictions_arguments[['by']] 
       if(!average) {
         out <- do.call(marginaleffects::predictions, predictions_arguments)
       } else if(average) {
@@ -707,18 +703,21 @@ marginal_comparison.bgmfit <- function(model,
       onex0 <- out %>% marginaleffects::posterior_draws()
       
       
-      
-      if(is.null(constrats_by)) {
-        if(is.null(hypothesis)) {
-          constrats_by <- NULL
-        } else if(!is.null(hypothesis)) {
-          if(!isFALSE(by)) constrats_by <- by
+      if(isFALSE(constrats_by)) {
+        constrats_by <- NULL
+      } else if(!isFALSE(constrats_by)) {
+        if(is.null(constrats_by)) {
+          if(is.null(hypothesis)) {
+            constrats_by <- NULL
+          } else if(!is.null(hypothesis)) {
+            if(!isFALSE(by)) constrats_by <- setdiff(by, xvar) 
+          }
+        } else if(!is.null(constrats_by)) {
+          constrats_by <- constrats_by
         }
-      } else if(!is.null(constrats_by)) {
-        constrats_by <- constrats_by
       }
       
-      
+     
       if(!is.null(constrats_by)) {
         if(!is.character(constrats_by)) 
           stop("The 'constrats_by' argument should be a character string")
@@ -737,23 +736,27 @@ marginal_comparison.bgmfit <- function(model,
                  "\n ",
                  collapse_comma(by))
           }
-          
         }
       }
+      
+      
       
       
       if(isFALSE(constrats_at)) {
         constrats_at <- NULL
       } else if(!isFALSE(constrats_at)) {
         if(is.null(constrats_at)) {
-          if(length(xvar) > 0) {
-            constrats_at <- list()
-            constrats_at[[xvar]] <- 'unique'
+          constrats_at <- list()
+          for(byi in by) {
+            if(is.numeric(constrats_at[[byi]])) {
+              constrats_at[[byi]] <- 'unique'
+            }
           }
+          if(length(constrats_at) == 0) constrats_at <- NULL
         }
       }
       
-      
+     
       # For hypothesis
       groupvarshyp1 <- c('drawid')
       groupvarshyp2 <- c('term')
@@ -766,7 +769,7 @@ marginal_comparison.bgmfit <- function(model,
                  "\n ", 
                  " in the 'by' argument. The current 'by' argument includes:", 
                  "\n ",
-                 collapse_comma(xcby)
+                 collapse_comma(by)
             )
           }
           allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
@@ -825,7 +828,7 @@ marginal_comparison.bgmfit <- function(model,
                  "\n ", 
                  " in the 'by' argument. The current 'by' argument includes:", 
                  "\n ",
-                 collapse_comma(xcby)
+                 collapse_comma(by)
             )
           }
           getatval <- constrats_subset[[caxi]]
@@ -896,7 +899,6 @@ marginal_comparison.bgmfit <- function(model,
             )
           }
         }
-        
         
         out_sf_hy <-
           onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
