@@ -3253,6 +3253,14 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
+  if(pkg == 'dtplyr') {
+    if(is.null(version)) {
+      out <- '1.3.1'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
   if(pkg == 'checkmate') {
     if(is.null(version)) {
       out <- '2.3.1'

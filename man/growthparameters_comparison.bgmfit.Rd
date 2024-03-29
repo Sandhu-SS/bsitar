@@ -52,6 +52,7 @@
   reformat = NULL,
   estimate_center = NULL,
   estimate_interval = NULL,
+  usedtplyr = FALSE,
   dummy_to_factor = NULL,
   verbose = FALSE,
   expose_function = FALSE,
@@ -443,6 +444,10 @@ whether to compute credible intervals as equal-tailed intervals,
 \code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
 The pre-specified global options are restored on exit via the
 \code{\link[base:on.exit]{base::on.exit()}}.}
+
+\item{usedtplyr}{A logical (default \code{FALSE}) to indicate whether to use
+the \pkg{dtplyr} package to summarize draws. The \pkg{dtplyr} package uses
+the  \pkg{data.table} package as backend.}
 
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are

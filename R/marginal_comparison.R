@@ -154,6 +154,7 @@ marginal_comparison.bgmfit <- function(model,
                                    reformat = NULL,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
+                                   usedtplyr = FALSE,
                                    dummy_to_factor = NULL, 
                                    verbose = FALSE,
                                    expose_function = FALSE,
@@ -191,6 +192,24 @@ marginal_comparison.bgmfit <- function(model,
             "\n ",
             "remotes::install_github('vincentarelbundock/marginaleffects')")
     return(invisible(NULL))
+  }
+  
+  if(usedtplyr) {
+    try(zz <- insight::check_if_installed(c("dtplyr"), 
+                                          minversion =
+                                            get_package_minversion(
+                                              'marginaleffects'
+                                            ),
+                                          prompt = FALSE,
+                                          stop = FALSE))
+    
+    try(zz <- insight::check_if_installed(c("data.table"), 
+                                          minversion =
+                                            get_package_minversion(
+                                              'marginaleffects'
+                                            ),
+                                          prompt = FALSE,
+                                          stop = FALSE))
   }
   
   if(is.null(envir)) {
@@ -422,7 +441,13 @@ marginal_comparison.bgmfit <- function(model,
   if(!is.na(uvarby)) {
     uvarby_ind <- paste0(uvarby, resp)
     varne <- paste0(uvarby, resp)
-     newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    if(usedtplyr) {
+      newdata <- newdata %>% dtplyr::lazy_dt() %>% 
+        dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    } else if(!usedtplyr) {
+      newdata <- newdata %>% 
+        dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    }
   }
   full.args$newdata <- newdata
   
@@ -462,7 +487,8 @@ marginal_comparison.bgmfit <- function(model,
       method,
       constrats_by,
       constrats_at,
-      constrats_subset
+      constrats_subset,
+      usedtplyr
     )
   ))[-1]
   
@@ -676,12 +702,22 @@ marginal_comparison.bgmfit <- function(model,
     } # if(method == 'pkg') {
     
 
+    # This from marginaleffects does not allow na.rm
+    # So use stats::quantile instead
     get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+    get_etix <- stats::quantile
     get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
-    get_pe_ci <- function(x, na.rm = TRUE, ...) {
+    get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
+      if(data.table::is.data.table(x) | is.data.frame(x)) {
+        if(is.null(draw)) {
+          stop("please specify the 'draw' argument")
+        }
+        x <- x[[draw]] %>% unlist() %>% as.numeric()
+      }
       if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
       if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-      if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
+      # if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
+      if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
       if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
       tibble::tibble(
         estimate = estimate, conf.low = luci[1],conf.high = luci[2]
@@ -871,15 +907,44 @@ marginal_comparison.bgmfit <- function(model,
         onex1 <- stats::aggregate(aggform1, data = onex1, median) 
       
       
-      out_sf <- onex1 %>% 
-        dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-        dplyr::reframe(
-          dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
-                        .unpack = TRUE),
-          .by = dplyr::all_of(!! groupvars2)
-        ) %>%
-        dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-                                     fixed = TRUE))
+      # out_sf <- onex1 %>% 
+      #   dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+      #   dplyr::reframe(
+      #     dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
+      #                   .unpack = TRUE),
+      #     .by = dplyr::all_of(!! groupvars2)
+      #   ) %>%
+      #   dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+      #                                fixed = TRUE))
+      
+      
+      if(usedtplyr) {
+        get_pe_ci2 <- get_pe_ci
+        hypothesisargs <- formals(get_pe_ci2)
+        hypothesisargs[['x']]          <- as.name('x')
+        hypothesisargs[['draw']]       <- 'estimate'
+        hypothesisargs[['...']]        <- NULL
+        hypothesisargs[['na.rm']]      <- TRUE
+        hypothesisargs <- base::append(hypothesisargs, as.name('...') , after = 1)
+        names(hypothesisargs)[2] <- '...'
+        formals(get_pe_ci2) <- hypothesisargs
+        out_sf <- onex1 %>% dtplyr::lazy_dt() %>%
+          dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+          dplyr::group_by_at(groupvars2) %>% 
+          dplyr::group_modify(., get_pe_ci2, .keep = F) %>% 
+          dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                       fixed = TRUE))
+      } else if(!usedtplyr) {
+        out_sf <- onex1 %>% 
+          dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+          dplyr::reframe(
+            dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
+                          .unpack = TRUE),
+            .by = dplyr::all_of(!! groupvars2)
+          ) %>%
+          dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                       fixed = TRUE))
+      }
       
      
       if(!is.null(hypothesis)) {
@@ -900,30 +965,85 @@ marginal_comparison.bgmfit <- function(model,
           }
         }
         
-        out_sf_hy <-
-          onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
-          dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-          dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
-                                                          hypothesis = 
-                                                            hypothesis, 
-                                                          by = constrats_by, 
-                                                          draws = estimate
-          ), .keep = F) %>% 
-          dplyr::ungroup() %>% 
-          dplyr::reframe(
-            dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
-                          .unpack = TRUE),
-            .by = dplyr::all_of(!! groupvarshyp2)
-          ) %>%
-          dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-                                       fixed = TRUE))
+        # out_sf_hy <-
+        #   onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
+        #   dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+        #   dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
+        #                                                   hypothesis = 
+        #                                                     hypothesis, 
+        #                                                   by = constrats_by, 
+        #                                                   draws = estimate
+        #   ), .keep = F) %>% 
+        #   dplyr::ungroup() %>% 
+        #   dplyr::reframe(
+        #     dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
+        #                   .unpack = TRUE),
+        #     .by = dplyr::all_of(!! groupvarshyp2)
+        #   ) %>%
+        #   dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+        #                                fixed = TRUE))
+        
+        if(usedtplyr) {
+          get_hypothesis_x_modifyx2 <- get_hypothesis_x
+          hypothesisargs <- formals(get_hypothesis_x_modifyx2)
+          hypothesisargs[['x']]          <- as.name('x')
+          hypothesisargs[['hypothesis']] <- hypothesis
+          hypothesisargs[['draws']]      <- as.name(parmi_estimate)
+          hypothesisargs[['by']]         <- constrats_by
+          hypothesisargs[['newdata']]    <- NULL
+          hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
+                                         after = 1)
+          names(hypothesisargs)[2] <- '...'
+          formals(get_hypothesis_x_modifyx2) <- hypothesisargs
+          
+          get_pe_ci2 <- get_pe_ci
+          hypothesisargs <- formals(get_pe_ci2)
+          hypothesisargs[['x']]          <- as.name('x')
+          hypothesisargs[['draw']]       <- 'estimate'
+          hypothesisargs[['...']]        <- NULL
+          hypothesisargs[['na.rm']]      <- TRUE
+          hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
+                                         after = 1)
+          names(hypothesisargs)[2] <- '...'
+          formals(get_pe_ci2) <- hypothesisargs
+          
+          out_sf_hy <-
+            onex1 %>% dtplyr::lazy_dt() %>%
+            dplyr::group_by_at(groupvarshyp1) %>% 
+            dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+            dplyr::group_modify(., get_hypothesis_x_modifyx2, .keep = F) %>% 
+            dtplyr::lazy_dt(.) %>%
+            dplyr::group_by_at(groupvarshyp2) %>% 
+            dplyr::group_modify(., get_pe_ci2, .keep = F) %>% 
+            dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                         fixed = TRUE))
+        } else if(!usedtplyr) {
+          out_sf_hy <-
+            onex1 %>% 
+            dplyr::group_by_at(groupvarshyp1) %>% 
+            dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+            dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
+                                                            hypothesis = 
+                                                              hypothesis, 
+                                                            by = constrats_by, 
+                                                            draws = estimate
+            ), .keep = F) %>% 
+            dplyr::ungroup() %>% 
+            dplyr::reframe(
+              dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
+                            .unpack = TRUE),
+              .by = dplyr::all_of(!! groupvarshyp2)
+            ) %>%
+            dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                         fixed = TRUE))
+        }
         
       } # if(!is.null(hypothesis)) {
     } # if(method == 'custom') {
   
 
   
-  out_sf <- out_sf %>%
+  out_sf <- out_sf %>% data.frame() %>% 
     dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                          ~ round(., digits = digits))) %>%
     data.frame()
@@ -956,7 +1076,7 @@ marginal_comparison.bgmfit <- function(model,
     
     
     if(!is.null(out_sf_hy)) {
-      out_sf_hy <- out_sf_hy %>% 
+      out_sf_hy <- out_sf_hy %>% data.frame() %>% 
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                     ~ round(., digits = digits))) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 

@@ -208,6 +208,10 @@
 #'   \code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
 #'   The pre-specified global options are restored on exit via the
 #'   [base::on.exit()].
+#'   
+#' @param usedtplyr A logical (default \code{FALSE}) to indicate whether to use
+#'  the \pkg{dtplyr} package to summarize draws. The \pkg{dtplyr} package uses
+#'  the  \pkg{data.table} package as backend. 
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
@@ -293,6 +297,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    reformat = NULL,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
+                                   usedtplyr = FALSE,
                                    dummy_to_factor = NULL, 
                                    verbose = FALSE,
                                    expose_function = FALSE,
@@ -330,6 +335,25 @@ growthparameters_comparison.bgmfit <- function(model,
             "\n ",
             "remotes::install_github('vincentarelbundock/marginaleffects')")
     return(invisible(NULL))
+  }
+  
+  
+  if(usedtplyr) {
+    try(zz <- insight::check_if_installed(c("dtplyr"), 
+                                          minversion =
+                                            get_package_minversion(
+                                              'marginaleffects'
+                                            ),
+                                          prompt = FALSE,
+                                          stop = FALSE))
+    
+    try(zz <- insight::check_if_installed(c("data.table"), 
+                                          minversion =
+                                            get_package_minversion(
+                                              'marginaleffects'
+                                            ),
+                                          prompt = FALSE,
+                                          stop = FALSE))
   }
   
   
@@ -608,7 +632,13 @@ growthparameters_comparison.bgmfit <- function(model,
   if(!is.na(uvarby)) {
     uvarby_ind <- paste0(uvarby, resp)
     varne <- paste0(uvarby, resp)
-     newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    if(usedtplyr) {
+      newdata <- newdata %>% dtplyr::lazy_dt() %>% 
+        dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    } else if(!usedtplyr) {
+      newdata <- newdata %>% 
+        dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
+    }
   }
   full.args$newdata <- newdata
   full.args[["..."]] <- NULL
@@ -647,7 +677,8 @@ growthparameters_comparison.bgmfit <- function(model,
       method,
       constrats_by,
       constrats_at,
-      constrats_subset
+      constrats_subset,
+      usedtplyr
     )
   ))[-1]
   
@@ -1106,8 +1137,22 @@ growthparameters_comparison.bgmfit <- function(model,
     
     zxdraws <- oux %>% marginaleffects::posterior_draws()
     
-    getparmsx <- function(x, y, ...) {
-      aggregate_by <- FALSE
+    getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
+                          aggregate_by = FALSE, ...) {
+      
+      if(data.table::is.data.table(x) | is.data.frame(x)) {
+        if(is.null(xvar)) {
+          stop("please specify the 'xvar' argument")
+        }
+        if(is.null(xvar)) {
+          stop("please specify the 'draw' argument")
+        }
+        temx <- x
+        x <- temx[[xvar]] %>% unlist() %>% as.numeric()
+        y <- temx[[draw]] %>% unlist() %>% as.numeric()
+      }
+      
+      # aggregate_by <- FALSE
       if(aggregate_by) {
         try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
                                         prompt = FALSE))
@@ -1142,16 +1187,32 @@ growthparameters_comparison.bgmfit <- function(model,
       out
     }
    
+   
     
-    drawid_c <- list()
-    for (drawidi in 1:nlevels(zxdraws$drawid)) {
-      drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>% 
-        dplyr::group_by_at(by) %>% 
-        dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw), 
-                            .keep = TRUE) %>% 
-        dplyr::mutate(drawid = drawidi)
+    if(usedtplyr) {
+      getparmsx2 <- getparmsx
+      hypothesisargs <- formals(getparmsx2)
+      hypothesisargs[['xvar']]       <- xvar
+      hypothesisargs[['draw']]       <- 'draw'
+      hypothesisargs[['parm']]       <- parm
+      formals(getparmsx2)            <- hypothesisargs
+      drawidby                       <- c('drawid', by)
+      onex0 <- zxdraws %>% dtplyr::lazy_dt() %>%
+        dplyr::group_by_at(drawidby) %>% 
+        dplyr::group_modify(., getparmsx2, .keep = F) %>% 
+        dplyr::ungroup()
+      
+    } else if(!usedtplyr) {
+      drawid_c <- list()
+      for (drawidi in 1:nlevels(zxdraws$drawid)) {
+        drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>% 
+          dplyr::group_by_at(by) %>% 
+          dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw, parm = parm), 
+                              .keep = TRUE) %>% 
+          dplyr::mutate(drawid = drawidi)
+      }
+      onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
     }
-    onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
     
     
     if(isFALSE(constrats_by)) {
@@ -1303,40 +1364,101 @@ growthparameters_comparison.bgmfit <- function(model,
     } # if(!is.null(constrats_subset)) {
     
 
+    # get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+    # get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
+    # get_pe_ci <- function(x, na.rm = TRUE, ...) {
+    #   if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
+    #   if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
+    #   if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
+    #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+    #   tibble::tibble(
+    #     estimate = estimate, conf.low = luci[1],conf.high = luci[2]
+    #   )
+    # }
+    
+    # This from marginaleffects does not allow na.rm
+    # So use stats::quantile instead
     get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+    get_etix <- stats::quantile
     get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
-    get_pe_ci <- function(x, na.rm = TRUE, ...) {
+    get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
+      if(data.table::is.data.table(x) | is.data.frame(x)) {
+        if(is.null(draw)) {
+          stop("please specify the 'draw' argument")
+        }
+        x <- x[[draw]] %>% unlist() %>% as.numeric()
+      }
       if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
       if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-      if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
+      # if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
+      if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
       if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
       tibble::tibble(
         estimate = estimate, conf.low = luci[1],conf.high = luci[2]
       )
     }
     
-    summary_c <- list()
-    for (parmi in parm) {
-      summary_c[[parmi]] <- onex1 %>% # out2 %>%
-        dplyr::reframe(
-          dplyr::across(c(dplyr::all_of(parmi)), get_pe_ci, 
-                        .unpack = TRUE),
-          .by = dplyr::all_of(!! by)
-        ) %>% dplyr::rename_with(., ~ gsub(paste0(parmi, "_"), "", .x, 
-                                           fixed = TRUE)) %>% 
-        dplyr::mutate(parameter = parmi) %>% 
-        dplyr::relocate(parameter)
+  
+    if(usedtplyr) {
+      get_pe_ci2 <- get_pe_ci
+      hypothesisargs <- formals(get_pe_ci2)
+      hypothesisargs[['x']]          <- as.name('x')
+      hypothesisargs[['draw']]       <- 'draw'
+      hypothesisargs[['...']]        <- NULL
+      hypothesisargs[['na.rm']]      <- TRUE
+      hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
+                                     after = 1)
+      names(hypothesisargs)[2] <- '...'
+      formals(get_pe_ci2) <- hypothesisargs
+      parmi_estimate <- 'estimate'
+      
+      setdrawid     <- c('drawid', by)
+      setdrawidparm <- c(by, 'parameter')
+      
+      out_sf_and_later_hy <-
+      onex1 %>% dtplyr::lazy_dt() %>% 
+        tidyr::pivot_longer(!setdrawid, names_to = 'parameter', 
+                            values_to = "draw")
+     
+      out_sf <- out_sf_and_later_hy %>% 
+      # onex1 %>% dtplyr::lazy_dt() %>% 
+      #   tidyr::pivot_longer(!setdrawid, names_to = 'parameter', 
+      #                       values_to = "draw") %>% 
+        dplyr::select(-dplyr::all_of('drawid')) %>% 
+        dplyr::group_by_at(setdrawidparm) %>% 
+        dplyr::group_modify(., get_pe_ci2, .keep = F) %>% 
+        dtplyr::lazy_dt() %>% 
+        dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                     fixed = TRUE))
+      
+    } else if(!usedtplyr) {
+      summary_c <- list()
+      for (parmi in parm) {
+        summary_c[[parmi]] <- onex1 %>% # out2 %>%
+          dplyr::reframe(
+            dplyr::across(c(dplyr::all_of(parmi)), get_pe_ci, 
+                          .unpack = TRUE),
+            .by = dplyr::all_of(!! by)
+          ) %>% dplyr::rename_with(., ~ gsub(paste0(parmi, "_"), "", .x, 
+                                             fixed = TRUE)) %>% 
+          dplyr::mutate(parameter = parmi) %>% 
+          dplyr::relocate(parameter)
+      }
+      out3 <- summary_c %>% do.call(rbind, .) %>% data.frame()
+      row.names(out3) <- NULL
+      out_sf <- out3
     }
-    out3 <- summary_c %>% do.call(rbind, .) %>% data.frame()
-    row.names(out3) <- NULL
-    out_sf <- out3
+    
+    
+    
     
     # Hypothesis
     if(!is.null(hypothesis)) {
       get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
         get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, draws = draws)
       }
-      if(nrow(onex1) > 25) {
+      if(length(tibble::as_tibble(onex1)) > 25) {
+      # if(nrow(onex1) > 25) {
         if(is.null(constrats_at)) {
           message("Note that the 'marginaleffects' package does not allow" ,
                   "\n",
@@ -1348,31 +1470,78 @@ growthparameters_comparison.bgmfit <- function(model,
         }
       }
       
-      parmi_ci_c <- list()
-      for (parmi in parm) {
+      
+      if(usedtplyr) {
         parmi_estimate <- 'estimate'
-        measurevar <- parmi
-        parmi_ci_c[[parmi]] <-
-          onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
-          dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-          dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
-                                                          hypothesis = 
-                                                            hypothesis, 
-                                                          by = constrats_by, 
-                                                          draws = estimate
-          ), .keep = F) %>% 
+        get_hypothesis_x_modifyx2 <- get_hypothesis_x
+        hypothesisargs <- formals(get_hypothesis_x_modifyx2)
+        hypothesisargs[['x']]          <- as.name('x')
+        hypothesisargs[['hypothesis']] <- hypothesis
+        hypothesisargs[['draws']]      <- as.name(parmi_estimate)
+        hypothesisargs[['by']]         <- constrats_by
+        hypothesisargs[['newdata']]    <- NULL
+        hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
+                                       after = 1)
+        names(hypothesisargs)[2] <- '...'
+        formals(get_hypothesis_x_modifyx2) <- hypothesisargs
+
+        get_pe_ci2 <- get_pe_ci
+        hypothesisargs <- formals(get_pe_ci2)
+        hypothesisargs[['x']]          <- as.name('x')
+        hypothesisargs[['draw']]       <- parmi_estimate
+        hypothesisargs[['...']]        <- NULL
+        hypothesisargs[['na.rm']]      <- TRUE
+        hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
+                                       after = 1)
+        names(hypothesisargs)[2] <- '...'
+        formals(get_pe_ci2) <- hypothesisargs
+       
+        groupvarshyp1 <- c("drawid", 'parameter')
+        groupvarshyp2 <- c('term', 'parameter')
+        
+        out_sf_hy <-
+          # onex1 %>% dtplyr::lazy_dt() %>%
+          out_sf_and_later_hy %>% 
+          dplyr::group_by_at(groupvarshyp1) %>% 
+          dplyr::mutate(!! parmi_estimate := eval(parse(text = 'draw'))) %>% 
+          dplyr::group_modify(., get_hypothesis_x_modifyx2, .keep = F) %>% 
           dplyr::ungroup() %>% 
-          dplyr::reframe(
-            dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
-                          .unpack = TRUE),
-            .by = dplyr::all_of(!! groupvarshyp2)
-          ) %>%
+          dplyr::select(-dplyr::all_of('drawid')) %>% 
+          dtplyr::lazy_dt(.) %>%
+          dplyr::group_by_at(groupvarshyp2) %>% 
+          dplyr::group_modify(., get_pe_ci2, .keep = F) %>% 
           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-                                       fixed = TRUE)) %>% 
-          dplyr::mutate(!! 'parameter' := parmi) %>% 
-          dplyr::relocate(dplyr::all_of('parameter'))
+                                       fixed = TRUE)) 
+        
+      } else if(!usedtplyr) {
+        parmi_ci_c <- list()
+        for (parmi in parm) {
+          parmi_estimate <- 'estimate'
+          measurevar <- parmi
+          parmi_ci_c[[parmi]] <-
+            onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
+            dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+            dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
+                                                            hypothesis = 
+                                                              hypothesis, 
+                                                            by = constrats_by, 
+                                                            draws = estimate
+            ), .keep = F) %>% 
+            dplyr::ungroup() %>% 
+            dplyr::reframe(
+              dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
+                            .unpack = TRUE),
+              .by = dplyr::all_of(!! groupvarshyp2)
+            ) %>%
+            dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
+                                         fixed = TRUE)) %>% 
+            dplyr::mutate(!! 'parameter' := parmi) %>% 
+            dplyr::relocate(dplyr::all_of('parameter'))
+        }
+        out_sf_hy <- parmi_ci_c %>% do.call(rbind, .) %>% data.frame()
       }
-      out_sf_hy <- parmi_ci_c %>% do.call(rbind, .) %>% data.frame()
+      
+      
     } # if(!is.null(hypothesis)) {
   } # if(method == 'custom') {
   
@@ -1382,11 +1551,13 @@ growthparameters_comparison.bgmfit <- function(model,
   #######################################
   
   
-  out_sf <- out_sf %>% 
+  
+  out_sf <- out_sf %>% data.frame() %>% 
+    dplyr::relocate(dplyr::all_of('parameter')) %>% 
     dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                          ~ round(., digits = digits))) %>% 
     dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
-    data.frame()
+      data.frame()
   
   
   if(is.null(reformat)) {
@@ -1421,7 +1592,8 @@ growthparameters_comparison.bgmfit <- function(model,
     attr(out_sf$Parameter, "dimnames") <- NULL
     
     if(!is.null(out_sf_hy)) {
-      out_sf_hy <- out_sf_hy %>% 
+      out_sf_hy <- out_sf_hy %>% data.frame() %>% 
+        dplyr::relocate(dplyr::all_of('parameter')) %>% 
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                     ~ round(., digits = digits))) %>% 
         dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
@@ -1439,7 +1611,7 @@ growthparameters_comparison.bgmfit <- function(model,
   
   if(!is.null(out_sf_hy)) {
     out_sf <- out_sf %>% dplyr::ungroup()
-    out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
+    out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
     out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
   } 
   
