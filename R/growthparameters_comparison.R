@@ -222,6 +222,8 @@
 #'
 #' @return A data frame objects with estimates and CIs for computed parameter(s)
 #' 
+#' @import data.table
+#' 
 #' @export growthparameters_comparison.bgmfit
 #' @export
 #' 
@@ -1386,7 +1388,7 @@ growthparameters_comparison.bgmfit <- function(model,
         if(is.null(draw)) {
           stop("please specify the 'draw' argument")
         }
-        x <- x[[draw]] %>% unlist() %>% as.numeric()
+        x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% unlist() %>% as.numeric()
       }
       if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
       if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
@@ -1417,7 +1419,7 @@ growthparameters_comparison.bgmfit <- function(model,
       
       out_sf_and_later_hy <-
       onex1 %>% dtplyr::lazy_dt() %>% 
-        tidyr::pivot_longer(!setdrawid, names_to = 'parameter', 
+        tidyr::pivot_longer(!dplyr::all_of(setdrawid), names_to = 'parameter', 
                             values_to = "draw")
      
       out_sf <- out_sf_and_later_hy %>% 

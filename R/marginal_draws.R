@@ -697,7 +697,7 @@ marginal_draws.bgmfit <-
        if(is.null(draw)) {
          stop("please specify the 'draw' argument")
        }
-       x <- x[[draw]] %>% unlist() %>% as.numeric()
+       x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% unlist() %>% as.numeric()
      }
      if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
      if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
