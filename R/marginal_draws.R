@@ -1,6 +1,6 @@
 
 
-#' Fitted (expected) values from the posterior draws
+#' Estimate growth curves
 #' 
 #' @description The \strong{marginal_draws()} function estimates and plots
 #'   growth curves (distance and velocity) by using \pkg{marginaleffects}
@@ -187,7 +187,7 @@ marginal_draws.bgmfit <-
       try(zz <- insight::check_if_installed(c("dtplyr"), 
                                             minversion =
                                               get_package_minversion(
-                                                'marginaleffects'
+                                                'dtplyr'
                                               ),
                                             prompt = FALSE,
                                             stop = FALSE))
@@ -195,7 +195,7 @@ marginal_draws.bgmfit <-
       try(zz <- insight::check_if_installed(c("data.table"), 
                                             minversion =
                                               get_package_minversion(
-                                                'marginaleffects'
+                                                'data.table'
                                               ),
                                             prompt = FALSE,
                                             stop = FALSE))
@@ -612,7 +612,8 @@ marginal_draws.bgmfit <-
         } else if(setgrid_type == "balanced") {
           if(!isFALSE(set_group)) datagrid_arguments[['by']] <- NULL
           # correctly set predictions_arguments[['by']]  too 
-          predictions_arguments[['by']] <- setdiff(predictions_arguments[['by']], cov)
+          predictions_arguments[['by']] <- 
+            setdiff(predictions_arguments[['by']], cov)
         }
         set_datagrid <- do.call(marginaleffects::datagrid, datagrid_arguments)
         predictions_arguments$newdata <- set_datagrid
@@ -656,9 +657,11 @@ marginal_draws.bgmfit <-
      if(call_predictions) {
        if(!plot) {
          if(!average) {
-           out_sf <- do.call(marginaleffects::predictions, predictions_arguments)
+           out_sf <- do.call(marginaleffects::predictions, 
+                             predictions_arguments)
          } else if(average) {
-           out_sf <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+           out_sf <- do.call(marginaleffects::avg_predictions, 
+                             predictions_arguments)
          }
        } else if(plot) {
          . <- do.call(marginaleffects::plot_predictions, predictions_arguments)
@@ -697,11 +700,11 @@ marginal_draws.bgmfit <-
        if(is.null(draw)) {
          stop("please specify the 'draw' argument")
        }
-       x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% unlist() %>% as.numeric()
+       x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
+         unlist() %>% as.numeric()
      }
      if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
      if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-     # if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
      if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
      tibble::tibble(
@@ -848,10 +851,11 @@ marginal_draws.bgmfit <-
        for (caxi in names(constrats_subset)) {
          if(!caxi %in% names(onex0)) {
            stop("Variable '", caxi, ". specified in 'constrats_subset' is not ",
+                " avaialble in the 'by' argument.",
                 "\n ", 
-                " in the estimates. The ", caxi, " should also be included",
+                " Please include ", caxi, " in the 'by' argument.",
                 "\n ", 
-                " in the 'by' argument. The current 'by' argument includes:", 
+                " The current 'by' argument includes:", 
                 "\n ",
                 collapse_comma(by)
            )

@@ -1,7 +1,7 @@
 
 
 
-#' @title Update model
+#' Update model
 #'
 #' @description The \strong{update_model()} is a wrapper around the
 #'   \code{update()} function in the \pkg{brms} package which refits the model

@@ -1,14 +1,14 @@
 
 
-#' Compare growth curves
+#' Estimate and compare growth curves
 #' 
-#'@description The \strong{marginal_comparison()} function estimates and
-#'  compare growth curves such as distance and velocity. This function is a wrapper around the
-#'  [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
-#'  The [marginaleffects::comparisons()] computes unit-level (conditional)
-#'  estimates whereas [marginaleffects::avg_comparisons()] return average
-#'  (marginal) estimates. A detailed explanation is available
-#'  [here](https://marginaleffects.com). 
+#'@description The \strong{marginal_comparison()} function estimates and compare
+#'  growth curves such as distance and velocity. This function is a wrapper
+#'  around the [marginaleffects::comparisons()] and
+#'  [marginaleffects::avg_comparisons()]. The [marginaleffects::comparisons()]
+#'  computes unit-level (conditional) estimates whereas
+#'  [marginaleffects::avg_comparisons()] return average (marginal) estimates. A
+#'  detailed explanation is available [here](https://marginaleffects.com).
 #' 
 #' 
 #' @param model An object of class \code{bgmfit}.
@@ -198,7 +198,7 @@ marginal_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("dtplyr"), 
                                           minversion =
                                             get_package_minversion(
-                                              'marginaleffects'
+                                              'dtplyr'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -206,7 +206,7 @@ marginal_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("data.table"), 
                                           minversion =
                                             get_package_minversion(
-                                              'marginaleffects'
+                                              'data.table'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -260,18 +260,6 @@ marginal_comparison.bgmfit <- function(model,
   cov_   <- paste0('cov', resp_rev_)
   cov    <- model$model_info[[cov_]]
   uvarby <- model$model_info$univariate_by
-  
-  # # Note here, newdata is not model$data but rather model$model_info$bgmfit.data
-  # # This was must for univariate_by
-  # if(is.null(newdata)) {
-  #   #newdata <- model$model_info$bgmfit.data
-  # }
-  # 
-  # if(!is.na(uvarby)) {
-  #   uvarby_ind <- paste0(uvarby, resp)
-  #   varne <- paste0(uvarby, resp)
-  #  # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
-  # }
   
   
   if(is.null(deriv) & is.null(deriv_model)) {
@@ -712,7 +700,8 @@ marginal_comparison.bgmfit <- function(model,
         if(is.null(draw)) {
           stop("please specify the 'draw' argument")
         }
-        x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% unlist() %>% as.numeric()
+        x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
+          unlist() %>% as.numeric()
       }
       if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
       if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
@@ -728,7 +717,7 @@ marginal_comparison.bgmfit <- function(model,
       predictions_arguments <- comparisons_arguments
       predictions_arguments[['cross']] <- NULL
       predictions_arguments[['method']] <- NULL
-      predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
+      predictions_arguments[['hypothesis']] <- NULL # evaluated later
       by <- predictions_arguments[['by']] 
       if(!average) {
         out <- do.call(marginaleffects::predictions, predictions_arguments)
@@ -841,7 +830,7 @@ marginal_comparison.bgmfit <- function(model,
         for (caxi in names(constrats_at)) {
           onex1 <- base::subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
           if(nrow(onex1) == 0) {
-            stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
+            stop(caxi, " specified in 'constrats_at' has resulted in zero rows",
                  "\n ", 
                  ""
             )
@@ -858,11 +847,12 @@ marginal_comparison.bgmfit <- function(model,
       if(!is.null(constrats_subset)) {
         for (caxi in names(constrats_subset)) {
           if(!caxi %in% names(onex0)) {
-            stop("Variable '", caxi, ". specified in 'constrats_subset' is not",
+            stop("Variable '", caxi, ". specified in 'constrats_subset' is ",
+                 " not avaialble in the 'by' argument.",
                  "\n ", 
-                 " in the estimates. The ", caxi, " should also be included",
+                 " Please include ", caxi, " in the 'by' argument.",
                  "\n ", 
-                 " in the 'by' argument. The current 'by' argument includes:", 
+                 " The current 'by' argument includes:", 
                  "\n ",
                  collapse_comma(by)
             )
@@ -878,7 +868,7 @@ marginal_comparison.bgmfit <- function(model,
           onex1 <- 
             base::subset(onex1, onex1[[caxi]] %in% constrats_subset[[caxi]])
           if(nrow(onex1) == 0) {
-            stop(caxi, " specified in 'constrats_subset' resulted in zero rows:",
+            stop(caxi, " specified in 'constrats_subset' resulted in zero rows",
                  "\n ", 
                  ""
             )
@@ -906,18 +896,6 @@ marginal_comparison.bgmfit <- function(model,
       if(ec_agg == "median") 
         onex1 <- stats::aggregate(aggform1, data = onex1, median) 
       
-      
-      # out_sf <- onex1 %>% 
-      #   dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-      #   dplyr::reframe(
-      #     dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
-      #                   .unpack = TRUE),
-      #     .by = dplyr::all_of(!! groupvars2)
-      #   ) %>%
-      #   dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-      #                                fixed = TRUE))
-      
-      
       if(usedtplyr) {
         get_pe_ci2 <- get_pe_ci
         hypothesisargs <- formals(get_pe_ci2)
@@ -925,7 +903,8 @@ marginal_comparison.bgmfit <- function(model,
         hypothesisargs[['draw']]       <- 'estimate'
         hypothesisargs[['...']]        <- NULL
         hypothesisargs[['na.rm']]      <- TRUE
-        hypothesisargs <- base::append(hypothesisargs, as.name('...') , after = 1)
+        hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
+                                       after = 1)
         names(hypothesisargs)[2] <- '...'
         formals(get_pe_ci2) <- hypothesisargs
         out_sf <- onex1 %>% dtplyr::lazy_dt() %>%
@@ -965,23 +944,6 @@ marginal_comparison.bgmfit <- function(model,
           }
         }
         
-        # out_sf_hy <-
-        #   onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
-        #   dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-        #   dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
-        #                                                   hypothesis = 
-        #                                                     hypothesis, 
-        #                                                   by = constrats_by, 
-        #                                                   draws = estimate
-        #   ), .keep = F) %>% 
-        #   dplyr::ungroup() %>% 
-        #   dplyr::reframe(
-        #     dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
-        #                   .unpack = TRUE),
-        #     .by = dplyr::all_of(!! groupvarshyp2)
-        #   ) %>%
-        #   dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-        #                                fixed = TRUE))
         
         if(usedtplyr) {
           get_hypothesis_x_modifyx2 <- get_hypothesis_x
@@ -1010,7 +972,8 @@ marginal_comparison.bgmfit <- function(model,
           out_sf_hy <-
             onex1 %>% dtplyr::lazy_dt() %>%
             dplyr::group_by_at(groupvarshyp1) %>% 
-            dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+            dplyr::mutate(!! parmi_estimate := 
+                            eval(parse(text = measurevar))) %>% 
             dplyr::group_modify(., get_hypothesis_x_modifyx2, .keep = F) %>% 
             dtplyr::lazy_dt(.) %>%
             dplyr::group_by_at(groupvarshyp2) %>% 
@@ -1021,7 +984,8 @@ marginal_comparison.bgmfit <- function(model,
           out_sf_hy <-
             onex1 %>% 
             dplyr::group_by_at(groupvarshyp1) %>% 
-            dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+            dplyr::mutate(!! parmi_estimate := 
+                            eval(parse(text = measurevar))) %>% 
             dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
                                                             hypothesis = 
                                                               hypothesis, 

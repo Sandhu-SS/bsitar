@@ -3,7 +3,7 @@
 \name{growthparameters_comparison.bgmfit}
 \alias{growthparameters_comparison.bgmfit}
 \alias{growthparameters_comparison}
-\title{Compare growth parameters}
+\title{Estimate and compare growth parameters}
 \usage{
 \method{growthparameters_comparison}{bgmfit}(
   model,
@@ -446,8 +446,13 @@ The pre-specified global options are restored on exit via the
 \code{\link[base:on.exit]{base::on.exit()}}.}
 
 \item{usedtplyr}{A logical (default \code{FALSE}) to indicate whether to use
-the \pkg{dtplyr} package to summarize draws. The \pkg{dtplyr} package uses
-the  \pkg{data.table} package as backend.}
+the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}
+package uses the \pkg{data.table} package as back-end. Note that
+\code{usedtplyr}is useful only when the data has a large number of
+observation. For routine uses, the \code{usedtplyr} does not make a large
+difference in the performance because the \pkg{marginaleffects} package
+itself uses the \pkg{data.table} package. The \code{usedtplyr} argument is
+evaluated only when the \code{method = 'custom'}.}
 
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are

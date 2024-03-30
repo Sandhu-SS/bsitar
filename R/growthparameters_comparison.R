@@ -1,6 +1,6 @@
 
 
-#' Compare growth parameters
+#' Estimate and compare growth parameters
 #' 
 #'@description The \strong{growthparameters_comparison()} function estimates and
 #'  compare growth parameters such as peak growth velocity and the age at peak
@@ -208,10 +208,15 @@
 #'   \code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
 #'   The pre-specified global options are restored on exit via the
 #'   [base::on.exit()].
-#'   
+#'
 #' @param usedtplyr A logical (default \code{FALSE}) to indicate whether to use
-#'  the \pkg{dtplyr} package to summarize draws. The \pkg{dtplyr} package uses
-#'  the  \pkg{data.table} package as backend. 
+#'   the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}
+#'   package uses the \pkg{data.table} package as back-end. Note that
+#'   \code{usedtplyr}is useful only when the data has a large number of
+#'   observation. For routine uses, the \code{usedtplyr} does not make a large
+#'   difference in the performance because the \pkg{marginaleffects} package
+#'   itself uses the \pkg{data.table} package. The \code{usedtplyr} argument is
+#'   evaluated only when the \code{method = 'custom'}.
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
@@ -344,7 +349,7 @@ growthparameters_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("dtplyr"), 
                                           minversion =
                                             get_package_minversion(
-                                              'marginaleffects'
+                                              'dtplyr'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -352,7 +357,7 @@ growthparameters_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("data.table"), 
                                           minversion =
                                             get_package_minversion(
-                                              'marginaleffects'
+                                              'data.table'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -407,19 +412,7 @@ growthparameters_comparison.bgmfit <- function(model,
   cov_   <- paste0('cov', resp_rev_)
   cov    <- model$model_info[[cov_]]
   uvarby <- model$model_info$univariate_by
-  
-  # # Note, newdata is not model$data but rather model$model_info$bgmfit.data
-  # # This is must for univariate_by
-  # if(is.null(newdata)) {
-  #   #newdata <- model$model_info$bgmfit.data
-  # }
-  # 
-  # if(!is.na(uvarby)) {
-  #   uvarby_ind <- paste0(uvarby, resp)
-  #   varne <- paste0(uvarby, resp)
-  #  # newdata <- newdata %>% dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
-  # }
-  
+ 
   
   if(is.null(deriv) & is.null(deriv_model)) {
     deriv <- 0
@@ -1125,7 +1118,7 @@ growthparameters_comparison.bgmfit <- function(model,
     by <- predictions_arguments[['by']]
     if(!any(grepl(xvar, by)))  by <- c(xvar, eval(by))
     by <- eval(by)
-    predictions_arguments[['by']] <- by # xcby
+    predictions_arguments[['by']] <- by 
 
     if(!average) {
       oux <- do.call(marginaleffects::predictions, predictions_arguments)
@@ -1248,7 +1241,8 @@ growthparameters_comparison.bgmfit <- function(model,
                "\n ",
                " The current 'by' argument includes:",
                "\n ",
-               collapse_comma(by))
+               collapse_comma(by)
+               )
         }
       }
     }
@@ -1276,7 +1270,7 @@ growthparameters_comparison.bgmfit <- function(model,
         if(!caxi %in% names(onex0)) {
           stop("Variable '", caxi, ". specified in 'constrats_at' is not in",
                "\n ", 
-               " the estimates. Note that ", caxi, " should also be included",
+               " the 'by' arg. Note that ", caxi, " should also be included",
                "\n ", 
                " in the 'by' argument. The current 'by' argument includes:", 
                "\n ",
@@ -1315,7 +1309,7 @@ growthparameters_comparison.bgmfit <- function(model,
       for (caxi in names(constrats_at)) {
         onex1 <- base::subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
         if(nrow(onex1) == 0) {
-          stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
+          stop(caxi, " specified in 'constrats_at' has resulted in zero rows",
                "\n ", 
                ""
           )
@@ -1338,10 +1332,11 @@ growthparameters_comparison.bgmfit <- function(model,
       for (caxi in names(constrats_subset)) {
         if(!caxi %in% names(onex0)) {
           stop("Variable '", caxi, ". specified in 'constrats_subset' is not ",
+               " avaialble in the 'by' argument.",
                "\n ", 
-               " in the estimates. Note that ", caxi, " should also be included",
+               " Please include ", caxi, " in the 'by' argument.",
                "\n ", 
-               " in the 'by' argument. The current 'by' argument includes:", 
+               " The current 'by' argument includes:", 
                "\n ",
                collapse_comma(by)
           )
@@ -1357,7 +1352,7 @@ growthparameters_comparison.bgmfit <- function(model,
         onex1 <- 
           base::subset(onex1, onex1[[caxi]] %in% constrats_subset[[caxi]])
         if(nrow(onex1) == 0) {
-          stop(caxi, " specified in 'constrats_subset' resulted in zero rows:",
+          stop(caxi, " specified in 'constrats_subset' resulted in zero rows",
                "\n ", 
                ""
           )
@@ -1366,18 +1361,6 @@ growthparameters_comparison.bgmfit <- function(model,
     } # if(!is.null(constrats_subset)) {
     
 
-    # get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
-    # get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
-    # get_pe_ci <- function(x, na.rm = TRUE, ...) {
-    #   if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
-    #   if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-    #   if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
-    #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-    #   tibble::tibble(
-    #     estimate = estimate, conf.low = luci[1],conf.high = luci[2]
-    #   )
-    # }
-    
     # This from marginaleffects does not allow na.rm
     # So use stats::quantile instead
     get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
@@ -1386,13 +1369,13 @@ growthparameters_comparison.bgmfit <- function(model,
     get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
       if(data.table::is.data.table(x) | is.data.frame(x)) {
         if(is.null(draw)) {
-          stop("please specify the 'draw' argument")
+          stop("Please specify the 'draw' argument")
         }
-        x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% unlist() %>% as.numeric()
+        x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
+          unlist() %>% as.numeric()
       }
       if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
       if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-      # if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
       if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
       if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
       tibble::tibble(
@@ -1472,7 +1455,6 @@ growthparameters_comparison.bgmfit <- function(model,
         }
       }
       
-      
       if(usedtplyr) {
         parmi_estimate <- 'estimate'
         get_hypothesis_x_modifyx2 <- get_hypothesis_x
@@ -1522,7 +1504,8 @@ growthparameters_comparison.bgmfit <- function(model,
           measurevar <- parmi
           parmi_ci_c[[parmi]] <-
             onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
-            dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
+            dplyr::mutate(!! parmi_estimate := 
+                            eval(parse(text = measurevar))) %>% 
             dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
                                                             hypothesis = 
                                                               hypothesis, 
