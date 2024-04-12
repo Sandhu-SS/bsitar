@@ -3240,7 +3240,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
   
   if(pkg == 'marginaleffects') {
     if(is.null(version)) {
-      out <- '0.18.0.9003'
+      out <- '0.18.0.11'
     } else {
       if(!is.character(version)) stop('version must be a character')
       out <- version
