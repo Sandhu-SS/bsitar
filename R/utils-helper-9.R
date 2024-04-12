@@ -29,7 +29,7 @@ get_hypothesis_x <- function(
   if (is.null(hypothesis)) return(x)
   
   try(zz <- insight::check_if_installed(c("data.table"), 
-                                        minversion = 
+                                        minimum_version = 
                                           get_package_minversion(
                                             'data.table'
                                           ), 
@@ -37,7 +37,7 @@ get_hypothesis_x <- function(
                                         stop = FALSE))
   
   try(zz <- insight::check_if_installed(c("checkmate"), 
-                                        minversion = 
+                                        minimum_version = 
                                           get_package_minversion(
                                             'checkmate'
                                           ), 

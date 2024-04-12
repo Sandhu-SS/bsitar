@@ -2113,12 +2113,12 @@ sample_n_of_groups <- function(data, size, ...) {
 #'
 
 check_pkg_version_exists <- function(pkg, 
-                                     minversion = NULL, 
+                                     minimum_version = NULL, 
                                      verbose = FALSE,
                                      ...) {
   
   try(zz <- insight::check_if_installed(pkg, 
-                                        minimum_version = minversion,
+                                        minimum_version = minimum_version,
                                         ...))
  
   if(!isTRUE(zz)) {
@@ -2156,7 +2156,7 @@ check_if_functions_exists <- function(model,
   
   check_brms_v <- 
   check_pkg_version_exists('brms', 
-                           minversion = get_package_minversion('brms'), 
+                           minimum_version = get_package_minversion('brms'), 
                            prompt = FALSE,
                            stop = FALSE,
                            verbose = FALSE)

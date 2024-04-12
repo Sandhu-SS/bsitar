@@ -196,7 +196,7 @@ plot_conditional_effects.bgmfit <-
     
     if(!isTRUE(
       check_pkg_version_exists('brms', 
-                               minversion = get_package_minversion('brms'), 
+                               minimum_version = get_package_minversion('brms'), 
                                prompt = FALSE,
                                stop = FALSE,
                                verbose = FALSE))) {

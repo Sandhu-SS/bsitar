@@ -180,7 +180,7 @@ marginal_comparison.bgmfit <- function(model,
   if(is.null(ei_agg)) ei_agg <- "eti"
   
   try(zz <- insight::check_if_installed(c("marginaleffects"), 
-                                        minversion = 
+                                        minimum_version = 
                                           get_package_minversion(
                                             'marginaleffects'
                                           ), 
@@ -196,7 +196,7 @@ marginal_comparison.bgmfit <- function(model,
   
   if(usedtplyr) {
     try(zz <- insight::check_if_installed(c("dtplyr"), 
-                                          minversion =
+                                          minimum_version =
                                             get_package_minversion(
                                               'dtplyr'
                                             ),
@@ -204,7 +204,7 @@ marginal_comparison.bgmfit <- function(model,
                                           stop = FALSE))
     
     try(zz <- insight::check_if_installed(c("data.table"), 
-                                          minversion =
+                                          minimum_version =
                                             get_package_minversion(
                                               'data.table'
                                             ),
@@ -354,7 +354,7 @@ marginal_comparison.bgmfit <- function(model,
   
   if(!isTRUE(
     check_pkg_version_exists('brms', 
-                             minversion = get_package_minversion('brms'),
+                             minimum_version = get_package_minversion('brms'),
                              prompt = FALSE,
                              stop = FALSE,
                              verbose = FALSE))) {
