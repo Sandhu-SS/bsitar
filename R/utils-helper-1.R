@@ -3237,6 +3237,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
+  
   if(pkg == 'marginaleffects') {
     if(is.null(version)) {
       out <- '0.18.0.9003'
@@ -3245,6 +3246,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
+  
   if(pkg == 'data.table') {
     if(is.null(version)) {
       out <- '1.15.2'
@@ -3253,6 +3255,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
+  
   if(pkg == 'dtplyr') {
     if(is.null(version)) {
       out <- '1.3.1'
@@ -3261,6 +3264,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
+  
   if(pkg == 'checkmate') {
     if(is.null(version)) {
       out <- '2.3.1'
@@ -3270,6 +3274,32 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     }
   }
   
+  if(pkg == 'collapse') {
+    if(is.null(version)) {
+      out <- '2.0.3'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  
+  if(pkg == 'doParallel') {
+    if(is.null(version)) {
+      out <- '1.0.17'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  
+  if(pkg == 'foreach') {
+    if(is.null(version)) {
+      out <- '1.5.2'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
   
   return(out)
 }
