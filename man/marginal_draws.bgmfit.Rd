@@ -351,10 +351,12 @@ value. This is sometimes used to take the sum or mean of predicted
 probabilities across outcome or predictor
 levels. See examples section.}
 
-\item{wts}{string or numeric: weights to use when computing average contrasts or slopes. These weights only affect the averaging in \verb{avg_*()} or with the \code{by} argument, and not the unit-level estimates themselves. Internally, estimates and weights are passed to the \code{weighted.mean()} function.
+\item{wts}{logical, string or numeric: weights to use when computing average predictions, contrasts or slopes. These weights only affect the averaging in \verb{avg_*()} or with the \code{by} argument, and not unit-level estimates. See \code{?weighted.mean}
 \itemize{
 \item string: column name of the weights variable in \code{newdata}. When supplying a column name to \code{wts}, it is recommended to supply the original data (including the weights variable) explicitly to \code{newdata}.
 \item numeric: vector of length equal to the number of rows in the original data or in \code{newdata} (if supplied).
+\item FALSE: Equal weights.
+\item TRUE: Extract weights from the fitted object with \code{insight::find_weights()} and use them when taking weighted averages of estimates. Warning: \code{newdata=datagrid()} returns a single average weight, which is equivalent to using \code{wts=FALSE}
 }}
 
 \item{hypothesis}{specify a hypothesis test or custom contrast using a numeric value, vector, or matrix, a string, a string formula, or a function.
@@ -384,6 +386,7 @@ levels. See examples section.}
 \item Accepts an argument \code{x}: object produced by a \code{marginaleffects} function or a data frame with column \code{rowid} and \code{estimate}
 \item Returns a data frame with columns \code{term} and \code{estimate} (mandatory) and \code{rowid} (optional).
 \item The function can also accept and operation on optional input arguments: \code{newdata}, \code{by}, \code{draws}.
+\item This function approach will not work for Bayesian models or with bootstrapping. In those cases, it is easy to use \code{posterior_draws()} to extract and manipulate the draws directly.
 }
 \item See the Examples section below and the vignette: https://marginaleffects.com/vignettes/hypothesis.html
 }}
