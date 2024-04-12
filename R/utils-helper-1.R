@@ -3301,6 +3301,15 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     }
   }
   
+  if(pkg == 'parallel') {
+    if(is.null(version)) {
+      out <- '4.3.1'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  
   return(out)
 }
 

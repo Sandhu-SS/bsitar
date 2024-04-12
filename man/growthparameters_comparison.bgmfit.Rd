@@ -39,6 +39,7 @@
   deriv = NULL,
   deriv_model = NULL,
   method = "pkg",
+  pdraws = NULL,
   comparison = "difference",
   type = NULL,
   by = FALSE,
@@ -323,6 +324,13 @@ useful when more than one parameter are being evaluated such as
 the features available from the \code{'marginaleffects'} (such as getting
 'marginal' or the 'conditional' effects at population or the individual
 level) are available for the \code{method = 'custom'}.}
+
+\item{pdraws}{A character string (default \code{NULL}) to indicate whether to
+return the posterior draws (see \code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}} for
+detauls). If  \code{pdraws} is not  \code{NULL}, then character string is
+used to set up the \code{shape} of returned draw object. The possible
+\code{shape} are \code{"long"}, \code{"DxP"}, \code{"PxD"}, and
+\code{"rvar"} (see \code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}).}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and

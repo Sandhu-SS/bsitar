@@ -218,8 +218,8 @@
 #'   itself uses the \pkg{data.table} package. The \code{usedtplyr} argument is
 #'   evaluated only when the \code{method = 'custom'}.
 #'   
-#' @param usecollapse A logical (default \code{FALSE}) to indicate whether to use
-#'   the \pkg{collapse} package for summarizing the draws.
+#' @param usecollapse A logical (default \code{FALSE}) to indicate whether to
+#'   use the \pkg{collapse} package for summarizing the draws.
 #'   
 #' @param parallel A logical (default \code{FALSE}) to indicate whether to use
 #'   parallel computation (via \pkg{doParallel} and \pkg{foreach}) when
@@ -232,6 +232,13 @@
 #' @param cores A positive integer (default \code{1}) to set up the number of
 #'   cores to be used when \pkg{parallel = TRUE}. To automatically detect the 
 #'   number of cores, please use \pkg{cores = NULL}.
+#'   
+#' @param pdraws A character string (default \code{NULL}) to indicate whether to
+#'   return the posterior draws (see [marginaleffects::posterior_draws()] for
+#'   detauls). If  \code{pdraws} is not  \code{NULL}, then character string is
+#'   used to set up the \code{shape} of returned draw object. The possible
+#'   \code{shape} are \code{"long"}, \code{"DxP"}, \code{"PxD"}, and
+#'   \code{"rvar"} (see [marginaleffects::posterior_draws()]).
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
@@ -306,6 +313,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    deriv = NULL,
                                    deriv_model = NULL,
                                    method = 'pkg',
+                                   pdraws = NULL, 
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
@@ -404,6 +412,14 @@ growthparameters_comparison.bgmfit <- function(model,
                                           stop = FALSE))
     
     try(zz <- insight::check_if_installed(c("foreach"), 
+                                          minversion =
+                                            get_package_minversion(
+                                              'data.table'
+                                            ),
+                                          prompt = FALSE,
+                                          stop = FALSE))
+    
+    try(zz <- insight::check_if_installed(c("parallel"), 
                                           minversion =
                                             get_package_minversion(
                                               'data.table'
@@ -729,7 +745,9 @@ growthparameters_comparison.bgmfit <- function(model,
       constrats_subset,
       usedtplyr,
       usecollapse, 
-      parallel
+      parallel,
+      cores,
+      pdraws
     )
   ))[-1]
   
@@ -1255,15 +1273,18 @@ growthparameters_comparison.bgmfit <- function(model,
     } else if(usecollapse) {
       pipe_if <- function(cond,x,y) {if(cond) return(x) else return(y)}
       getpest_f <- function(x, y) {
-        stats::setNames(as.data.frame(t(sitar::getPeak(x, y))), c('apgv', 'pgv'))
+        stats::setNames(as.data.frame(t(sitar::getPeak(x, y))), 
+                        c('apgv', 'pgv'))
       }
       gettest_f <- function(x, y) {
-        stats::setNames(as.data.frame(t(sitar::getTakeoff(x, y))), c('atgv', 'tgv'))
+        stats::setNames(as.data.frame(t(sitar::getTakeoff(x, y))), 
+                        c('atgv', 'tgv'))
       }
       getcest_f <- function(x, y,...) {
         cgv <- acg_velocity * sitar::getPeak(x, y)[2]
         vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-        stats::setNames(as.data.frame(cbind(x[vcgi], y[vcgi])), c('acgv', 'cgv'))
+        stats::setNames(as.data.frame(cbind(x[vcgi], y[vcgi])), 
+                        c('acgv', 'cgv'))
       }
       
       # by <- 'class'
@@ -1279,9 +1300,15 @@ growthparameters_comparison.bgmfit <- function(model,
       onex0 <- 
         zxdraws %>% collapse::fgroup_by(drawidby) %>% 
         collapse::fselect(allcom_varx) %>% 
-        pipe_if(getpest, collapse::fmutate(., getpest_f(.data[[xvar]], .data[[parmest]])), .) %>% 
-        pipe_if(getpest, collapse::fmutate(., gettest_f(.data[[xvar]], .data[[parmest]])), .) %>%
-        pipe_if(getpest, collapse::fmutate(., getcest_f(.data[[xvar]], .data[[parmest]])), .) %>%
+        pipe_if(getpest, collapse::fmutate(., 
+                                           getpest_f(.data[[xvar]], 
+                                                     .data[[parmest]])), .) %>% 
+        pipe_if(getpest, collapse::fmutate(., 
+                                           gettest_f(.data[[xvar]], 
+                                                     .data[[parmest]])), .) %>%
+        pipe_if(getpest, collapse::fmutate(., 
+                                           getcest_f(.data[[xvar]], 
+                                                     .data[[parmest]])), .) %>%
         collapse::fselect(allcom_varx_parm) %>% 
         collapse::ffirst()
 
@@ -1297,6 +1324,23 @@ growthparameters_comparison.bgmfit <- function(model,
       onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
     }
 
+    if(!is.null(pdraws)) {
+      if(!is.character(pdraws)) {
+        stop("pdraws must be a character string")
+      } else {
+        # only "long" allowed for params
+        selectchoices <- c("long", "DxP", "PxD", "rvar")
+        selectchoices <- "long"
+        checkmate::assert_choice(pdraws, choices = selectchoices)
+        return(onex0)
+      }
+    }
+    
+    # zxdrawsx <<- zxdraws
+    # onex0x <<- onex0
+    # # zxdraws <- oux %>% marginaleffects::posterior_draws()
+    # marginaleffects::posterior_draws(onex0x)
+    
     # getparmsxx <<- getparmsx
     # zxdrawsx <<- zxdraws
     # onex0x <<- onex0
@@ -1514,12 +1558,12 @@ growthparameters_comparison.bgmfit <- function(model,
       setdrawidparm <- c(by, 'parameter')
       out_sf_and_later_hy <- data.table::melt(data.table::setDT(onex1), 
                                id.vars=setdrawid, measure.vars=parm) %>% 
-        collapse::fselect(-drawid) %>% 
-        collapse::frename(., 'variable' = 'parameter', 'value' = 'draw') 
+        collapse::frename(., 'variable' = 'parameter', 'value' = 'draw')
       # %>% 
       #   collapse::fgroup_by( setdrawidparm )
       
-      xzc3 <- out_sf_and_later_hy %>% collapse::fgroup_by( setdrawidparm )
+      xzc3 <- out_sf_and_later_hy %>% collapse::fgroup_by( setdrawidparm ) %>% 
+        collapse::fselect(-drawid)
       
       if(ec_agg == "mean") {
         xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = T, 
@@ -1582,7 +1626,8 @@ growthparameters_comparison.bgmfit <- function(model,
     # Hypothesis
     if(!is.null(hypothesis)) {
       get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
-        get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, draws = draws)
+        get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, 
+                         draws = draws)
       }
       if(length(tibble::as_tibble(onex1)) > 25) {
       # if(nrow(onex1) > 25) {
@@ -1699,15 +1744,26 @@ growthparameters_comparison.bgmfit <- function(model,
         # `%:%` <- foreach::`%:%`
         
        
-        
+       out_sf_and_later_hy <- 
+       out_sf_and_later_hy %>% 
+         collapse::fmutate(drawid = as.integer(drawid)) %>% 
+         collapse::frename(., 'draw' = 'estimate')
+       
         gethydraws <- 
-          foreach::foreach(i = 1:length(unique(out_sf_and_later_hy[['drawid']])), 
+          foreach::foreach(j = unique(out_sf_and_later_hy[['parameter']]),
                            .combine='rbind') %:%
           foreach::foreach(
-            #i = 1:length(unique(hxzc3[['drawid']])), # 1:10, 
-            j = unique(out_sf_and_later_hy[['parameter']]),
-            .packages='dplyr'
+            i = 1:length(unique(out_sf_and_later_hy[['drawid']])), 
+            # .packages='dplyr'
+            .packages='magrittr'
           ) %doforeachf% {
+            lincom_pairwise <- utils::getFromNamespace("lincom_pairwise", 
+                                                       "marginaleffects")
+            sanitize_lincom <- utils::getFromNamespace("sanitize_lincom", 
+                                                       "marginaleffects")
+            lincom_multiply <- utils::getFromNamespace("lincom_multiply", 
+                                                       "marginaleffects")
+            
             collapse::fsubset(out_sf_and_later_hy,  parameter == j & 
                                 drawid == i) %>% 
               collapse::fgroup_by(c('parameter')) %>% 
@@ -1715,6 +1771,10 @@ growthparameters_comparison.bgmfit <- function(model,
               # collapse::fmutate(drawid = i) %>% 
               collapse::fmutate(parameter = j)
           }
+        
+        if(setparallel) {
+          parallel::stopCluster(cl = my.cluster)
+        }
         
         groupvarshyp2 <- c('term', 'parameter')
         xzc3 <- gethydraws %>% do.call(rbind, .) %>% 
@@ -1748,9 +1808,9 @@ growthparameters_comparison.bgmfit <- function(model,
         # out_sf_hy_draws <- xzc3ci
         
         out_sf_hy <- 
-          xzc3 %>% # collapse::ffirst() %>% collapse::fselect(-draw) %>% 
-          collapse::join(., xzc3e, on = setdrawidparm, verbose = FALSE) %>% 
-          collapse::join(., xzc3ci, on = setdrawidparm, verbose = FALSE) %>% 
+          xzc3 %>% collapse::ffirst() %>% collapse::fselect(-estimate) %>% 
+          collapse::join(., xzc3e, on = groupvarshyp2, verbose = FALSE) %>% 
+          collapse::join(., xzc3ci, on = groupvarshyp2, verbose = FALSE) %>% 
           data.frame()
         
         row.names(out_sf_hy) <- NULL
@@ -1805,6 +1865,19 @@ growthparameters_comparison.bgmfit <- function(model,
     dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
       data.frame()
   
+  if(!is.null(out_sf_hy)) {
+    if(usecollapse) {
+      out_sf_hy <- out_sf_hy %>% data.frame() %>% 
+        dplyr::relocate(dplyr::all_of('parameter')) %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    } else {
+      out_sf_hy <- out_sf_hy %>% data.frame() %>% 
+        dplyr::relocate(dplyr::all_of('parameter')) %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    }
+  }
   
   if(is.null(reformat)) {
     if(is.null(hypothesis) && is.null(equivalence)) {
@@ -1838,10 +1911,7 @@ growthparameters_comparison.bgmfit <- function(model,
     attr(out_sf$Parameter, "dimnames") <- NULL
     
     if(!is.null(out_sf_hy)) {
-      out_sf_hy <- out_sf_hy %>% data.frame() %>% 
-        dplyr::relocate(dplyr::all_of('parameter')) %>% 
-        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
-                                    ~ round(., digits = digits))) %>% 
+      out_sf_hy <- out_sf_hy %>% 
         dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 
                         dplyr::all_of('estimate')) %>% 
