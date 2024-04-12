@@ -398,7 +398,7 @@ growthparameters_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("collapse"), 
                                           minversion =
                                             get_package_minversion(
-                                              'dtplyr'
+                                              'collapse'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -406,7 +406,7 @@ growthparameters_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("doParallel"), 
                                           minversion =
                                             get_package_minversion(
-                                              'dtplyr'
+                                              'doParallel'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -414,7 +414,7 @@ growthparameters_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("foreach"), 
                                           minversion =
                                             get_package_minversion(
-                                              'data.table'
+                                              'foreach'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -422,7 +422,7 @@ growthparameters_comparison.bgmfit <- function(model,
     try(zz <- insight::check_if_installed(c("parallel"), 
                                           minversion =
                                             get_package_minversion(
-                                              'data.table'
+                                              'parallel'
                                             ),
                                           prompt = FALSE,
                                           stop = FALSE))
@@ -1187,6 +1187,18 @@ growthparameters_comparison.bgmfit <- function(model,
     predictions_arguments[['cross']] <- NULL
     predictions_arguments[['method']] <- NULL
     predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
+    
+   # if(is.null(predictions_arguments$re_formula)) {
+      if(is.null(predictions_arguments$variables)) {
+        cat("Since marginaleffects version 0.18.0.11, argument ",
+                " variables = NULL results in the error",
+                "\n ",
+                "To avoid the abover error, please specify 'variables' argument",
+            "\n "
+                )
+      }
+   # }
+   
    
     # Imp, add xvar to the by if missing
     by <- predictions_arguments[['by']]
