@@ -3249,7 +3249,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
   
   if(pkg == 'data.table') {
     if(is.null(version)) {
-      out <- '1.15.2'
+      out <- '1.15.4'
     } else {
       if(!is.character(version)) stop('version must be a character')
       out <- version
@@ -3276,7 +3276,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
   
   if(pkg == 'collapse') {
     if(is.null(version)) {
-      out <- '2.0.3'
+      out <- '2.0.13'
     } else {
       if(!is.character(version)) stop('version must be a character')
       out <- version

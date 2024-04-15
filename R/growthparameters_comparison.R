@@ -272,12 +272,16 @@
 #' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 #' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
+#' # Note that since no covariate is part of the model fit, the below example 
+#' # doesn't make sense and included here only for the purpose of completeness.
+#' 
+#' 
 #' # Check and confirm whether model fit object 'berkeley_exfit' exists
 #'  berkeley_exfit <- getNsObject(berkeley_exfit)
 #' 
 #' model <- berkeley_exfit
 #' 
-#' growthparameters_comparison(model, parameter = 'apgv', ndraws = 10)
+#' growthparameters_comparison(model, ndraws = 10)
 #' }
 #' 
 growthparameters_comparison.bgmfit <- function(model,
