@@ -335,8 +335,8 @@ growthparameters_comparison.bgmfit <- function(model,
                                    expose_function = FALSE,
                                    usesavedfuns = NULL,
                                    clearenvfuns = NULL,
-                                   envir = NULL,
-                                   ...) {
+                                   envir = NULL, ...
+                                   ) {
   
   
   if(!is.null(estimate_center)) {
@@ -370,8 +370,10 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
   if(usecollapse) {
+    usedtplyrcheck <- usedtplyr
     usedtplyr <- FALSE
-    if(verbose) message("Overridden usedtplyr as FALSE because usecollapse = TRUE")
+    if(verbose & usedtplyrcheck) message("Setting usedtplyr = FALSE because ",
+                        "usecollapse = TRUE")
   } else {
     usedtplyr <- usedtplyr
   }
@@ -679,11 +681,12 @@ growthparameters_comparison.bgmfit <- function(model,
   full.args$model <- model
   full.args$deriv_model <- deriv_model
   
-  if(is.null(full.args$hypothesis) && is.null(full.args$equivalence)) {
+ 
+  if(is.null(full.args$hypothesis) & is.null(full.args$equivalence)) {
     plot <- plot
   } else {
     plot <- FALSE
-    if(verbose) {
+    if(verbose & plot) {
       message("Argument plot = TRUE is not allowed when either hypothesis ", 
               "or equivalence is not NULL",
               "\n ",
@@ -758,9 +761,7 @@ growthparameters_comparison.bgmfit <- function(model,
   for (exclude_argsi in exclude_args) {
     comparisons_arguments[[exclude_argsi]] <- NULL
   }
-  
-  
- 
+
   
   if(deriv == 0 & deriv_model) 
     stop("If argument 'deriv_model' = TRUE, the argument 'deriv' should be 1")
@@ -876,9 +877,13 @@ growthparameters_comparison.bgmfit <- function(model,
         xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
         if(!isFALSE(by)) {
           if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
-                                                        mean, drop = TRUE)
+                                                        mean, 
+                                                        na.action = na.omit,
+                                                        drop = TRUE)
           if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
-                                                        median, drop = TRUE)
+                                                        median, 
+                                                        na.action = na.omit,
+                                                        drop = TRUE)
         }
         x <- xy$x
         y <- xy$y
@@ -1188,16 +1193,16 @@ growthparameters_comparison.bgmfit <- function(model,
     predictions_arguments[['method']] <- NULL
     predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
     
-   # if(is.null(predictions_arguments$re_formula)) {
-      if(is.null(predictions_arguments$variables)) {
-        cat("Since marginaleffects version 0.18.0.11, argument ",
-                " variables = NULL results in the error",
-                "\n ",
-                "To avoid the abover error, please specify 'variables' argument",
-            "\n "
-                )
-      }
-   # }
+    if(is.null(predictions_arguments$variables)) {
+      # cat("Since marginaleffects version 0.18.0.11, argument ",
+      #         " variables = NULL results in the error",
+      #         "\n ",
+      #         "To avoid the abover error, please specify 'variables' argument",
+      #     "\n "
+      #         )
+      cat("please specify 'variables' argument")
+    }
+   
    
    
     # Imp, add xvar to the by if missing
@@ -1241,9 +1246,13 @@ growthparameters_comparison.bgmfit <- function(model,
         xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
         if(!isFALSE(by)) {
           if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
-                                                        mean, drop = TRUE)
+                                                        mean, 
+                                                        na.action = na.omit,
+                                                        drop = TRUE)
           if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
-                                                        median, drop = TRUE)
+                                                        median, 
+                                                        na.action = na.omit,
+                                                        drop = TRUE)
         }
         x <- xy$x
         y <- xy$y
@@ -1337,12 +1346,12 @@ growthparameters_comparison.bgmfit <- function(model,
     }
 
     if(!is.null(pdraws)) {
+      selectchoices <- "long" # c("long", "DxP", "PxD", "rvar")
       if(!is.character(pdraws)) {
-        stop("pdraws must be a character string")
+        # stop("pdraws must be a character string")
+        checkmate::assert_choice(pdraws, choices = selectchoices)
       } else {
         # only "long" allowed for params
-        selectchoices <- c("long", "DxP", "PxD", "rvar")
-        selectchoices <- "long"
         checkmate::assert_choice(pdraws, choices = selectchoices)
         return(onex0)
       }
@@ -1578,13 +1587,13 @@ growthparameters_comparison.bgmfit <- function(model,
         collapse::fselect(-drawid)
       
       if(ec_agg == "mean") {
-        xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = T, 
+        xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = TRUE, 
                                        keep.group_vars = TRUE) %>% 
           collapse::frename(., 'draw' = 'estimate')
       }
       
       if(ec_agg == "median") {
-        xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = T, 
+        xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = TRUE, 
                                        keep.group_vars = TRUE) %>% 
           collapse::frename(., 'draw' = 'estimate')
       }
@@ -1725,6 +1734,7 @@ growthparameters_comparison.bgmfit <- function(model,
             setparallel <- FALSE
           }
         } else if(is.character(parallel)) {
+          checkmate::assert_choice(parallel, choices = c("PSOCK", "FORK"))
           setparallel <- TRUE
           setsocket <- parallel
         }
@@ -1735,8 +1745,16 @@ growthparameters_comparison.bgmfit <- function(model,
           } else {
             n.cores <- cores
           }
+          
+          if(verbose) cat("Registering doParallel process....")
+          
           my.cluster <- parallel::makeCluster(n.cores, type = setsocket)
           doParallel::registerDoParallel(cl = my.cluster)
+          cat("\n")
+          if(verbose) cat("Executing doParallel....")
+          
+          print("mmmm")
+          
           `%:%` <- foreach::`%:%`
           `%doforeachf%` <- foreach::`%dopar%`
         } else if(!setparallel) {
@@ -1765,10 +1783,12 @@ growthparameters_comparison.bgmfit <- function(model,
           foreach::foreach(j = unique(out_sf_and_later_hy[['parameter']]),
                            .combine='rbind') %:%
           foreach::foreach(
-            i = 1:length(unique(out_sf_and_later_hy[['drawid']])), 
+            i = 1:length(unique(out_sf_and_later_hy[['drawid']]))
+            # , 
             # .packages='dplyr'
-            .packages='magrittr'
+            # .packages='magrittr'
           ) %doforeachf% {
+            `%>%` <- magrittr::`%>%`
             lincom_pairwise <- utils::getFromNamespace("lincom_pairwise", 
                                                        "marginaleffects")
             sanitize_lincom <- utils::getFromNamespace("sanitize_lincom", 
@@ -1793,12 +1813,12 @@ growthparameters_comparison.bgmfit <- function(model,
           collapse::fgroup_by(groupvarshyp2)
           
         if(ec_agg == "mean") {
-          xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = T, 
+          xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = TRUE, 
                                          keep.group_vars = TRUE) 
         }
         
         if(ec_agg == "median") {
-          xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = T, 
+          xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = TRUE, 
                                          keep.group_vars = TRUE) 
         }
         

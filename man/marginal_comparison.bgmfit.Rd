@@ -526,12 +526,15 @@ detailed explanation is available \href{https://marginaleffects.com}{here}.
 # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
+# Note that since no covariate is part of the model, the 'marginal_comparison'
+# doesn't make sense here. It's included only as a dummy example. 
+
 # Check and confirm whether model fit object 'berkeley_exfit' exists
  berkeley_exfit <- getNsObject(berkeley_exfit)
 
 model <- berkeley_exfit
 
-marginal_comparison(model, parameter = 'apgv', draw_ids = 1)
+marginal_comparison(model, draw_ids = 1)
 }
 
 }

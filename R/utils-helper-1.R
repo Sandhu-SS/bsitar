@@ -3231,7 +3231,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
   if(!is.character(pkg)) stop('pkg must be a character')
   if(pkg == 'brms') {
     if(is.null(version)) {
-      out <- '2.20.17' 
+      out <- '2.21.0' 
     } else {
       if(!is.character(version)) stop('version must be a character')
       out <- version
@@ -3240,7 +3240,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
   
   if(pkg == 'marginaleffects') {
     if(is.null(version)) {
-      out <- '0.18.0.11'
+      out <- '0.19.0'
     } else {
       if(!is.character(version)) stop('version must be a character')
       out <- version
@@ -3300,10 +3300,10 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
-  
+  # parallel is base, so all fine
   if(pkg == 'parallel') {
     if(is.null(version)) {
-      out <- '4.3.1'
+      out <- '0.0.1' # '4.3.1'
     } else {
       if(!is.character(version)) stop('version must be a character')
       out <- version
