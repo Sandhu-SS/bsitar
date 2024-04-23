@@ -1200,16 +1200,23 @@ growthparameters_comparison.bgmfit <- function(model,
     predictions_arguments[['method']] <- NULL
     predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
     
-    if(is.null(predictions_arguments$variables)) {
-      # cat("Since marginaleffects version 0.18.0.11, argument ",
-      #         " variables = NULL results in the error",
-      #         "\n ",
-      #         "To avoid the abover error, please specify 'variables' argument",
-      #     "\n "
-      #         )
-      cat("please specify 'variables' argument")
+    
+    if(!is.null(predictions_arguments[['variables']])) {
+      if(!is.list(eval(predictions_arguments[['variables']]))) {
+        stop("Argument 'variables' must be a named list")
+      }
     }
-   
+    
+    # if(is.null(predictions_arguments$variables)) {
+    #   # cat("Since marginaleffects version 0.18.0.11, argument ",
+    #   #         " variables = NULL results in the error",
+    #   #         "\n ",
+    #   #         "To avoid the abover error, please specify 'variables' argument",
+    #   #     "\n "
+    #   #         )
+    #   # cat("please specify 'variables' argument")
+    # }
+    # 
    
    
     # Imp, add xvar to the by if missing
@@ -1217,6 +1224,9 @@ growthparameters_comparison.bgmfit <- function(model,
     if(!any(grepl(xvar, by)))  by <- c(xvar, eval(by))
     by <- eval(by)
     predictions_arguments[['by']] <- by 
+    
+    # predictions_argumentsx <<- predictions_arguments
+    
 
     if(!average) {
       oux <- do.call(marginaleffects::predictions, predictions_arguments)
@@ -1227,7 +1237,7 @@ growthparameters_comparison.bgmfit <- function(model,
     # Imp, remove xvar from the by
     by <- base::setdiff(eval(by), eval(xvar)) 
     
-    
+   
     zxdraws <- oux %>% marginaleffects::posterior_draws()
     
 
@@ -1398,18 +1408,22 @@ growthparameters_comparison.bgmfit <- function(model,
 
     
     
-    if(!is.null(pdraws)) {
-      selectchoices <- "long" # c("long", "DxP", "PxD", "rvar") 
-      if(pdraws) pdraws <- "long" 
-      if(!is.character(pdraws)) {
-        # stop("pdraws must be a character string")
-        checkmate::assert_choice(pdraws, choices = selectchoices)
-      } else {
-        # only "long" allowed for params
-        checkmate::assert_choice(pdraws, choices = selectchoices)
-        return(onex0)
+    if(!isFALSE(pdraws)) {
+      if(!is.null(pdraws)) {
+        selectchoices <- "long" # c("long", "DxP", "PxD", "rvar") 
+        if(pdraws) pdraws <- "long" 
+        if(!is.character(pdraws)) {
+          # stop("pdraws must be a character string")
+          checkmate::assert_choice(pdraws, choices = selectchoices)
+        } else {
+          # only "long" allowed for params
+          checkmate::assert_choice(pdraws, choices = selectchoices)
+          return(onex0)
+        }
       }
     }
+    
+    
     
     # zxdrawsx <<- zxdraws
     # onex0x <<- onex0
