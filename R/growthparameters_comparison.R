@@ -1953,7 +1953,7 @@ growthparameters_comparison.bgmfit <- function(model,
        
         setdrawidparmh <- c('term', 'parameter')
         namesx <- c('estimate', 'conf.low', 'conf.high')
-        setdrawidparm_ <- c(setdrawidparm, namesx)
+        setdrawidparm_ <- c(setdrawidparmh, namesx)
         # xzc3 <- onex1 %>% collapse::fgroup_by(setdrawidparm)
         out_sf_hy <-
           temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
