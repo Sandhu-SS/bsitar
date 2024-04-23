@@ -9,6 +9,11 @@
 #'   [marginaleffects::avg_predictions()]) or plot growth curves (via
 #'   [marginaleffects::plot_predictions()]). Please see
 #'   [here](https://marginaleffects.com/) for details.
+#'  Note that \pkg{marginaleffects} package is highly flexible and therefore it
+#'  is expected that user has a strong understanding of its working.
+#'  Furthermore, since \pkg{marginaleffects} package is rapidly evolving, the
+#'  results obtained from the current implementation should be considered
+#'  experimental.
 #'
 #' @details The \strong{marginal_draws()} estimates fitted values (via
 #'   [brms::fitted.brmsfit()]) or the posterior draws from the posterior

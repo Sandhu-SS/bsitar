@@ -15,8 +15,11 @@
 #'  and [marginaleffects::avg_comparisons()] are modified (see below).
 #'  Furthermore, comparison of growth parameters is performed via the
 #'  \code{hypothesis} argument of the [marginaleffects::comparisons()] and
-#'  [marginaleffects::avg_comparisons()] functions.
-#'
+#'  [marginaleffects::avg_comparisons()] functions. Note that
+#'  \pkg{marginaleffects} package is highly flexible and therefore it is
+#'  expected that user has a strong understanding of its working. Furthermore,
+#'  since \pkg{marginaleffects} package is rapidly evolving, the results
+#'  obtained from the current implementation should be considered experimental.
 #'
 #' @details The \code{growthparameters_comparison} function estimates and
 #'   returns the following growth parameters:
@@ -226,7 +229,7 @@
 #'   \pkg{usecollapse = TRUE}. Note that when \pkg{parallel = TRUE}, the
 #'   [parallel::makeCluster()] sets type as \code{"PSOCK"} which works on all
 #'   operating systems including \code{Windows}. To set type as \code{"FORK"},
-#'   which is fast (but does not works on \code{Windows} system), pleae use
+#'   which is fast (but does not works on \code{Windows} system), use
 #'   \pkg{parallel = "FORK"}.
 #'  
 #' @param cores A positive integer (default \code{1}) to set up the number of
@@ -235,7 +238,7 @@
 #'   
 #' @param pdraws A character string (default \code{NULL}) to indicate whether to
 #'   return the posterior draws (see [marginaleffects::posterior_draws()] for
-#'   detauls). If  \code{pdraws} is not  \code{NULL}, then character string is
+#'   details). If  \code{pdraws} is not  \code{NULL}, then character string is
 #'   used to set up the \code{shape} of returned draw object. The possible
 #'   \code{shape} are \code{"long"}, \code{"DxP"}, \code{"PxD"}, and
 #'   \code{"rvar"} (see [marginaleffects::posterior_draws()]).
@@ -307,7 +310,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    future = FALSE,
                                    future_session = 'multisession',
                                    usedtplyr = FALSE,
-                                   usecollapse = FALSE,
+                                   usecollapse = TRUE,
                                    parallel = FALSE,
                                    cores = NULL,
                                    average = FALSE, 
@@ -1227,6 +1230,7 @@ growthparameters_comparison.bgmfit <- function(model,
     
     zxdraws <- oux %>% marginaleffects::posterior_draws()
     
+
     getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
                           aggregate_by = FALSE, ...) {
       
@@ -1296,46 +1300,89 @@ growthparameters_comparison.bgmfit <- function(model,
         dplyr::ungroup()
       
     } else if(usecollapse) {
-      pipe_if <- function(cond,x,y) {if(cond) return(x) else return(y)}
-      getpest_f <- function(x, y) {
-        stats::setNames(as.data.frame(t(sitar::getPeak(x, y))), 
-                        c('apgv', 'pgv'))
-      }
-      gettest_f <- function(x, y) {
-        stats::setNames(as.data.frame(t(sitar::getTakeoff(x, y))), 
-                        c('atgv', 'tgv'))
-      }
-      getcest_f <- function(x, y,...) {
-        cgv <- acg_velocity * sitar::getPeak(x, y)[2]
-        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-        stats::setNames(as.data.frame(cbind(x[vcgi], y[vcgi])), 
-                        c('acgv', 'cgv'))
-      }
+      # pipe_if <- function(cond,x,y) {if(cond) return(x) else return(y)}
+      # getpest_f <- function(x, y) {
+      #   stats::setNames(as.data.frame(t(sitar::getPeak(x, y))), 
+      #                   c('apgv', 'pgv'))
+      # }
+      # gettest_f <- function(x, y) {
+      #   stats::setNames(as.data.frame(t(sitar::getTakeoff(x, y))), 
+      #                   c('atgv', 'tgv'))
+      # }
+      # getcest_f <- function(x, y,...) {
+      #   cgv <- acg_velocity * sitar::getPeak(x, y)[2]
+      #   vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+      #   stats::setNames(as.data.frame(cbind(x[vcgi], y[vcgi])), 
+      #                   c('acgv', 'cgv'))
+      # }
+      # 
+      # # by <- 'class'
+      # drawidby <- c('drawid', by)
+      # parmest <- 'draw'
+      # # xvar <- 'age'
+      # allcom_varx <- c(drawidby, parmest, xvar)
+      # allcom_varx_parm <- setdiff(allcom_varx, c(parmest, xvar))
+      # allcom_varx_parm <- c(allcom_varx_parm, parm)
+      # if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
+      # if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
+      # if(any(c('acgv', 'cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
+      # onex0 <- 
+      #   zxdraws %>% collapse::fgroup_by(drawidby) %>% 
+      #   collapse::fselect(allcom_varx) %>% 
+      #   pipe_if(getpest, collapse::fmutate(., 
+      #                                      getpest_f(.data[[xvar]], 
+      #                                                .data[[parmest]])), .) %>% 
+      #   pipe_if(getpest, collapse::fmutate(., 
+      #                                      gettest_f(.data[[xvar]], 
+      #                                                .data[[parmest]])), .) %>%
+      #   pipe_if(getpest, collapse::fmutate(., 
+      #                                      getcest_f(.data[[xvar]], 
+      #                                                .data[[parmest]])), .) %>%
+      #   collapse::fselect(allcom_varx_parm) %>% 
+      #   collapse::ffirst()
       
-      # by <- 'class'
       drawidby <- c('drawid', by)
-      parmest <- 'draw'
-      # xvar <- 'age'
-      allcom_varx <- c(drawidby, parmest, xvar)
-      allcom_varx_parm <- setdiff(allcom_varx, c(parmest, xvar))
-      allcom_varx_parm <- c(allcom_varx_parm, parm)
+      drawidby_ <- c(drawidby, 'parameter', 'estimate')
+      parmest   <- 'draw'
+      
+      drawidby  <- c('drawid', by)
+      drawidby_ <- c(drawidby, 'parameter', 'estimate')
+      parmest   <- 'draw'
+      
+      
       if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
       if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
       if(any(c('acgv', 'cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
-      onex0 <- 
-        zxdraws %>% collapse::fgroup_by(drawidby) %>% 
-        collapse::fselect(allcom_varx) %>% 
-        pipe_if(getpest, collapse::fmutate(., 
-                                           getpest_f(.data[[xvar]], 
-                                                     .data[[parmest]])), .) %>% 
-        pipe_if(getpest, collapse::fmutate(., 
-                                           gettest_f(.data[[xvar]], 
-                                                     .data[[parmest]])), .) %>%
-        pipe_if(getpest, collapse::fmutate(., 
-                                           getcest_f(.data[[xvar]], 
-                                                     .data[[parmest]])), .) %>%
-        collapse::fselect(allcom_varx_parm) %>% 
-        collapse::ffirst()
+      
+      if(getpest) namesp <- cbind('apgv', 'pgv') else namesp <- NULL
+      if(gettest) namest <- cbind('atgv', 'tgv') else namest <- NULL
+      if(getcest) namesc <- cbind('acgv', 'cgv') else namesc <- NULL
+      
+      getcgvfunc <- function(x, y, p = NULL, ...) {
+        if(is.null(p)) {
+          cgv <- acg_velocity * sitar::getPeak(x, y)[2] 
+        } else {
+          cgv <- acg_velocity * p
+        }
+        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+        return(c(x = x[vcgi], y = y[vcgi]))
+      }
+      
+      funx <- function(x,...) {
+        if(getpest) dfp <- sitar::getPeak(x[,1], x[,2]) else dfp <- NULL
+        if(gettest) dft <- sitar::getTakeoff(x[,1], x[,2]) else dft <- NULL
+        if(getcest) dfc <- getcgvfunc(x[,1], x[,2]) else dfc <- NULL
+        cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
+      }
+      
+      onex0 <- zxdraws %>% 
+        collapse::fgroup_by(drawidby) %>% 
+        collapse::fsummarise(collapse::mctl(funx(cbind(.data[[xvar]], 
+                                                       .data[[parmest]])), 
+                                            names = F)) %>% 
+        collapse::ftransformv(., 'V2', as.numeric) %>% 
+        collapse::frename(., drawidby_) %>% 
+        collapse::fsubset(., parameter %in% parm)
 
     } else {
       drawid_c <- list()
@@ -1349,8 +1396,11 @@ growthparameters_comparison.bgmfit <- function(model,
       onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
     }
 
+    
+    
     if(!is.null(pdraws)) {
-      selectchoices <- "long" # c("long", "DxP", "PxD", "rvar")
+      selectchoices <- "long" # c("long", "DxP", "PxD", "rvar") 
+      if(pdraws) pdraws <- "long" 
       if(!is.character(pdraws)) {
         # stop("pdraws must be a character string")
         checkmate::assert_choice(pdraws, choices = selectchoices)
@@ -1546,6 +1596,16 @@ growthparameters_comparison.bgmfit <- function(model,
       )
     }
     
+    
+    get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+      if(ec_agg == "mean")  estimate <- collapse::fmean(x, na.rm = na.rm, nthreads = cores) 
+      if(ec_agg == "median") estimate <- collapse::fmedian(x, na.rm = na.rm, nthreads = cores)
+      # luci = get_etix(x, probs = probs, na.rm = na.rm)
+      if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, na.rm = na.rm)
+      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+      cbind(estimate, luci[1], luci[2]) 
+    }
+    
   
     if(usedtplyr) {
       get_pe_ci2 <- get_pe_ci
@@ -1579,49 +1639,64 @@ growthparameters_comparison.bgmfit <- function(model,
         dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
                                      fixed = TRUE))
     } else if(usecollapse) {
+      # setdrawid     <- c('drawid', by)
+      # setdrawidparm <- c(by, 'parameter')
+      # out_sf_and_later_hy <- data.table::melt(data.table::setDT(onex1), 
+      #                          id.vars=setdrawid, measure.vars=parm) %>% 
+      #   collapse::frename(., 'variable' = 'parameter', 'value' = 'draw')
+      # # %>% 
+      # #   collapse::fgroup_by( setdrawidparm )
+      # 
+      # xzc3 <- out_sf_and_later_hy %>% collapse::fgroup_by( setdrawidparm ) %>% 
+      #   collapse::fselect(-drawid)
+      # 
+      # if(ec_agg == "mean") {
+      #   xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = TRUE, 
+      #                                  keep.group_vars = TRUE) %>% 
+      #     collapse::frename(., 'draw' = 'estimate')
+      # }
+      # 
+      # if(ec_agg == "median") {
+      #   xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = TRUE, 
+      #                                  keep.group_vars = TRUE) %>% 
+      #     collapse::frename(., 'draw' = 'estimate')
+      # }
+      # 
+      # if(ei_agg == "eti") {
+      #   xzc3ci <- xzc3 %>% collapse::BY(collapse::fquantile, probs = probs, 
+      #                                   keep.group_vars = TRUE, 
+      #                                   expand.wide = TRUE) %>% 
+      #     collapse::frename(., c("conf.low", "conf.high"), 
+      #                       cols = c(max(ncol(.))-1,max(ncol(.))) )
+      # }
+      # if(ei_agg == "hdi") {
+      #   xzc3ci <- xzc3 %>% collapse::BY(get_hdix, credMass = conf, 
+      #                                   keep.group_vars = TRUE, 
+      #                                   expand.wide = TRUE) %>% 
+      #     collapse::frename(., c("conf.low", "conf.high"), 
+      #                       cols = c(max(ncol(.))-1,max(ncol(.))) )
+      # }
+      # 
+      # out3 <- 
+      # xzc3 %>% collapse::ffirst() %>% collapse::fselect(-draw) %>% 
+      #   collapse::join(., xzc3e, on = setdrawidparm, verbose = FALSE) %>% 
+      #   collapse::join(., xzc3ci, on = setdrawidparm, verbose = FALSE) %>% 
+      #   data.frame()
+      # 
+      # row.names(out3) <- NULL
+      # out_sf <- out3
+      
       setdrawid     <- c('drawid', by)
       setdrawidparm <- c(by, 'parameter')
-      out_sf_and_later_hy <- data.table::melt(data.table::setDT(onex1), 
-                               id.vars=setdrawid, measure.vars=parm) %>% 
-        collapse::frename(., 'variable' = 'parameter', 'value' = 'draw')
-      # %>% 
-      #   collapse::fgroup_by( setdrawidparm )
-      
-      xzc3 <- out_sf_and_later_hy %>% collapse::fgroup_by( setdrawidparm ) %>% 
-        collapse::fselect(-drawid)
-      
-      if(ec_agg == "mean") {
-        xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = TRUE, 
-                                       keep.group_vars = TRUE) %>% 
-          collapse::frename(., 'draw' = 'estimate')
-      }
-      
-      if(ec_agg == "median") {
-        xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = TRUE, 
-                                       keep.group_vars = TRUE) %>% 
-          collapse::frename(., 'draw' = 'estimate')
-      }
-      
-      if(ei_agg == "eti") {
-        xzc3ci <- xzc3 %>% collapse::BY(collapse::fquantile, probs = probs, 
-                                        keep.group_vars = TRUE, 
-                                        expand.wide = TRUE) %>% 
-          collapse::frename(., c("conf.low", "conf.high"), 
-                            cols = c(max(ncol(.))-1,max(ncol(.))) )
-      }
-      if(ei_agg == "hdi") {
-        xzc3ci <- xzc3 %>% collapse::BY(get_hdix, credMass = conf, 
-                                        keep.group_vars = TRUE, 
-                                        expand.wide = TRUE) %>% 
-          collapse::frename(., c("conf.low", "conf.high"), 
-                            cols = c(max(ncol(.))-1,max(ncol(.))) )
-      }
-      
-      out3 <- 
-      xzc3 %>% collapse::ffirst() %>% collapse::fselect(-draw) %>% 
-        collapse::join(., xzc3e, on = setdrawidparm, verbose = FALSE) %>% 
-        collapse::join(., xzc3ci, on = setdrawidparm, verbose = FALSE) %>% 
-        data.frame()
+      namesx <- c('estimate', 'conf.low', 'conf.high')
+      setdrawidparm_ <- c(setdrawidparm, namesx)
+    
+      # xzc3 <- onex1 %>% collapse::fgroup_by(setdrawidparm)
+      out3 <-
+      onex1 %>% collapse::fgroup_by(setdrawidparm) %>% 
+        collapse::fsummarise(collapse::mctl(get_pe_ci_collapse(.data[['estimate']]))) %>% 
+        collapse::ftransformv(., 'V2', as.numeric) %>% 
+        collapse::frename(., setdrawidparm_) 
       
       row.names(out3) <- NULL
       out_sf <- out3
@@ -1712,148 +1787,167 @@ growthparameters_comparison.bgmfit <- function(model,
           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
                                        fixed = TRUE)) 
       } else if(usecollapse) {
-        parmi_estimate <- 'estimate'
-        get_hypothesis_x_modifyx2 <- get_hypothesis_x
-        hypothesisargs <- formals(get_hypothesis_x_modifyx2)
-        hypothesisargs[['x']]          <- as.name('x')
-        hypothesisargs[['hypothesis']] <- hypothesis
-        hypothesisargs[['draws']]      <- as.name(parmi_estimate)
-        hypothesisargs[['by']]         <- constrats_by
-        hypothesisargs[['newdata']]    <- NULL
-        formals(get_hypothesis_x_modifyx2) <- hypothesisargs
-        # https://www.blasbenito.com/post/02_parallelizing_loops_with_r/
-        # hxzc3 <- data.table::melt(data.table::setDT(onex1), 
-        #                           id.vars=drawidby, measure.vars=parm) %>% 
-        #   # collapse::fselect(-drawid) %>% 
-        #   # data.frame() %>% 
-        #   collapse::frename(., 'variable' = 'parameter', 'value' = 'estimate')
-        # 
-        # out_sf_and_later_hy <- hxzc3
+       #  parmi_estimate <- 'estimate'
+       #  get_hypothesis_x_modifyx2 <- get_hypothesis_x
+       #  hypothesisargs <- formals(get_hypothesis_x_modifyx2)
+       #  hypothesisargs[['x']]          <- as.name('x')
+       #  hypothesisargs[['hypothesis']] <- hypothesis
+       #  hypothesisargs[['draws']]      <- as.name(parmi_estimate)
+       #  hypothesisargs[['by']]         <- constrats_by
+       #  hypothesisargs[['newdata']]    <- NULL
+       #  formals(get_hypothesis_x_modifyx2) <- hypothesisargs
+       #  # https://www.blasbenito.com/post/02_parallelizing_loops_with_r/
+       #  # hxzc3 <- data.table::melt(data.table::setDT(onex1), 
+       #  #                           id.vars=drawidby, measure.vars=parm) %>% 
+       #  #   # collapse::fselect(-drawid) %>% 
+       #  #   # data.frame() %>% 
+       #  #   collapse::frename(., 'variable' = 'parameter', 'value' = 'estimate')
+       #  # 
+       #  # out_sf_and_later_hy <- hxzc3
+       #  
+       #  if(is.logical(parallel)) {
+       #    if(!isFALSE(parallel)) {
+       #      setparallel <- TRUE
+       #      setsocket <- "PSOCK"
+       #    } else if(isFALSE(parallel)) {
+       #      setparallel <- FALSE
+       #    }
+       #  } else if(is.character(parallel)) {
+       #    checkmate::assert_choice(parallel, choices = c("PSOCK", "FORK"))
+       #    setparallel <- TRUE
+       #    setsocket <- parallel
+       #  }
+       #  
+       #  if(setparallel) {
+       #    if(is.null(cores)) {
+       #      n.cores <- parallel::detectCores() - 1
+       #    } else {
+       #      n.cores <- cores
+       #    }
+       #    
+       #    if(verbose) cat("Registering doParallel process....")
+       #    
+       #    my.cluster <- parallel::makeCluster(n.cores, type = setsocket)
+       #    doParallel::registerDoParallel(cl = my.cluster)
+       #    cat("\n")
+       #    if(verbose) cat("Executing doParallel....")
+       #    
+       #    `%:%` <- foreach::`%:%`
+       #    `%doforeachf%` <- foreach::`%dopar%`
+       #  } else if(!setparallel) {
+       #    `%:%` <- foreach::`%:%`
+       #    `%doforeachf%` <- foreach::`%do%`
+       #  }
+       #  
+       # 
+       # out_sf_and_later_hy <- 
+       # out_sf_and_later_hy %>% 
+       #   collapse::fmutate(drawid = as.integer(drawid)) %>% 
+       #   collapse::frename(., 'draw' = 'estimate')
+       # 
+       #  gethydraws <- 
+       #    foreach::foreach(j = unique(out_sf_and_later_hy[['parameter']]),
+       #                     .combine='rbind') %:%
+       #    foreach::foreach(
+       #      i = 1:length(unique(out_sf_and_later_hy[['drawid']]))
+       #      # , 
+       #      # .packages='dplyr'
+       #      # .packages='magrittr'
+       #    ) %doforeachf% {
+       #      `%>%` <- magrittr::`%>%`
+       #      lincom_pairwise <- utils::getFromNamespace("lincom_pairwise", 
+       #                                                 "marginaleffects")
+       #      sanitize_lincom <- utils::getFromNamespace("sanitize_lincom", 
+       #                                                 "marginaleffects")
+       #      lincom_multiply <- utils::getFromNamespace("lincom_multiply", 
+       #                                                 "marginaleffects")
+       #      
+       #      collapse::fsubset(out_sf_and_later_hy,  parameter == j & 
+       #                          drawid == i) %>% 
+       #        collapse::fgroup_by(c('parameter')) %>% 
+       #        get_hypothesis_x_modifyx2 %>% 
+       #        # collapse::fmutate(drawid = i) %>% 
+       #        collapse::fmutate(parameter = j)
+       #    }
+       #  
+       #  if(setparallel) {
+       #    parallel::stopCluster(cl = my.cluster)
+       #  }
+       #  
+       #  groupvarshyp2 <- c('term', 'parameter')
+       #  xzc3 <- gethydraws %>% do.call(rbind, .) %>% 
+       #    collapse::fgroup_by(groupvarshyp2)
+       #    
+       #  if(ec_agg == "mean") {
+       #    xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = TRUE, 
+       #                                   keep.group_vars = TRUE) 
+       #  }
+       #  
+       #  if(ec_agg == "median") {
+       #    xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = TRUE, 
+       #                                   keep.group_vars = TRUE) 
+       #  }
+       #  
+       #  if(ei_agg == "eti") {
+       #    xzc3ci <- xzc3 %>% collapse::BY(collapse::fquantile, probs = probs, 
+       #                                    keep.group_vars = TRUE, 
+       #                                    expand.wide = TRUE) %>% 
+       #      collapse::frename(., c("conf.low", "conf.high"), 
+       #                        cols = c(max(ncol(.))-1,max(ncol(.))) )
+       #  }
+       #  if(ei_agg == "hdi") {
+       #    xzc3ci <- xzc3 %>% collapse::BY(get_hdix, credMass = conf, 
+       #                                    keep.group_vars = TRUE, 
+       #                                    expand.wide = TRUE) %>% 
+       #      collapse::frename(., c("conf.low", "conf.high"), 
+       #                        cols = c(max(ncol(.))-1,max(ncol(.))) )
+       #  }
+       #  
+       #  # out_sf_hy_draws <- xzc3ci
+       #  
+       #  out_sf_hy <- 
+       #    xzc3 %>% collapse::ffirst() %>% collapse::fselect(-estimate) %>% 
+       #    collapse::join(., xzc3e, on = groupvarshyp2, verbose = FALSE) %>% 
+       #    collapse::join(., xzc3ci, on = groupvarshyp2, verbose = FALSE) %>% 
+       #    data.frame()
+       #  
+       #  row.names(out_sf_hy) <- NULL
+       #  # out_sf <- out3
+       #  # out_sf_hy <- xzc3ci 
         
-        if(is.logical(parallel)) {
-          if(!isFALSE(parallel)) {
-            setparallel <- TRUE
-            setsocket <- "PSOCK"
-          } else if(isFALSE(parallel)) {
-            setparallel <- FALSE
-          }
-        } else if(is.character(parallel)) {
-          checkmate::assert_choice(parallel, choices = c("PSOCK", "FORK"))
-          setparallel <- TRUE
-          setsocket <- parallel
+        get_hypothesis_x_fx <- function(x,...) {
+          get_hypothesis_x(x,
+                           hypothesis = hypothesis,
+                           by = by, 
+                           newdata = NULL,
+                           draws = 'estimate'
+          ) %>% as.matrix()
         }
-        
-        if(setparallel) {
-          if(is.null(cores)) {
-            n.cores <- parallel::detectCores() - 1
-          } else {
-            n.cores <- cores
-          }
-          
-          if(verbose) cat("Registering doParallel process....")
-          
-          my.cluster <- parallel::makeCluster(n.cores, type = setsocket)
-          doParallel::registerDoParallel(cl = my.cluster)
-          cat("\n")
-          if(verbose) cat("Executing doParallel....")
-          
-          print("mmmm")
-          
-          `%:%` <- foreach::`%:%`
-          `%doforeachf%` <- foreach::`%dopar%`
-        } else if(!setparallel) {
-          `%:%` <- foreach::`%:%`
-          `%doforeachf%` <- foreach::`%do%`
-        }
-        
-        # setsocket <- "PSOCK" # "PSOCK" “FORK” 
-        # parallel::detectCores()
-        # n.cores <- parallel::detectCores() - 1
-        # my.cluster <- parallel::makeCluster(n.cores, type = setsocket)
-        # doParallel::registerDoParallel(cl = my.cluster)
-        # foreach::getDoParRegistered()
-        # foreach::getDoParWorkers()
-        # `%dopar%` <- foreach::`%dopar%`
-        # `%do%`    <- foreach::`%do%`
-        # `%:%` <- foreach::`%:%`
         
        
-       out_sf_and_later_hy <- 
-       out_sf_and_later_hy %>% 
-         collapse::fmutate(drawid = as.integer(drawid)) %>% 
-         collapse::frename(., 'draw' = 'estimate')
+        
+        setdrawidh     <- c('drawid', 'parameter')
+        setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
+        temhyy <- 
+        onex1 %>% collapse::fgroup_by( setdrawidh ) %>% 
+          collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>% 
+          collapse::ftransformv(., 'V2', as.numeric) %>% 
+          collapse::frename(., setdrawidh_)
        
-        gethydraws <- 
-          foreach::foreach(j = unique(out_sf_and_later_hy[['parameter']]),
-                           .combine='rbind') %:%
-          foreach::foreach(
-            i = 1:length(unique(out_sf_and_later_hy[['drawid']]))
-            # , 
-            # .packages='dplyr'
-            # .packages='magrittr'
-          ) %doforeachf% {
-            `%>%` <- magrittr::`%>%`
-            lincom_pairwise <- utils::getFromNamespace("lincom_pairwise", 
-                                                       "marginaleffects")
-            sanitize_lincom <- utils::getFromNamespace("sanitize_lincom", 
-                                                       "marginaleffects")
-            lincom_multiply <- utils::getFromNamespace("lincom_multiply", 
-                                                       "marginaleffects")
-            
-            collapse::fsubset(out_sf_and_later_hy,  parameter == j & 
-                                drawid == i) %>% 
-              collapse::fgroup_by(c('parameter')) %>% 
-              get_hypothesis_x_modifyx2 %>% 
-              # collapse::fmutate(drawid = i) %>% 
-              collapse::fmutate(parameter = j)
-          }
-        
-        if(setparallel) {
-          parallel::stopCluster(cl = my.cluster)
-        }
-        
-        groupvarshyp2 <- c('term', 'parameter')
-        xzc3 <- gethydraws %>% do.call(rbind, .) %>% 
-          collapse::fgroup_by(groupvarshyp2)
-          
-        if(ec_agg == "mean") {
-          xzc3e <- xzc3 %>% collapse::BY(collapse::fmean, na.rm = TRUE, 
-                                         keep.group_vars = TRUE) 
-        }
-        
-        if(ec_agg == "median") {
-          xzc3e <- xzc3 %>% collapse::BY(collapse::fmedian, na.rm = TRUE, 
-                                         keep.group_vars = TRUE) 
-        }
-        
-        if(ei_agg == "eti") {
-          xzc3ci <- xzc3 %>% collapse::BY(collapse::fquantile, probs = probs, 
-                                          keep.group_vars = TRUE, 
-                                          expand.wide = TRUE) %>% 
-            collapse::frename(., c("conf.low", "conf.high"), 
-                              cols = c(max(ncol(.))-1,max(ncol(.))) )
-        }
-        if(ei_agg == "hdi") {
-          xzc3ci <- xzc3 %>% collapse::BY(get_hdix, credMass = conf, 
-                                          keep.group_vars = TRUE, 
-                                          expand.wide = TRUE) %>% 
-            collapse::frename(., c("conf.low", "conf.high"), 
-                              cols = c(max(ncol(.))-1,max(ncol(.))) )
-        }
-        
-        # out_sf_hy_draws <- xzc3ci
-        
-        out_sf_hy <- 
-          xzc3 %>% collapse::ffirst() %>% collapse::fselect(-estimate) %>% 
-          collapse::join(., xzc3e, on = groupvarshyp2, verbose = FALSE) %>% 
-          collapse::join(., xzc3ci, on = groupvarshyp2, verbose = FALSE) %>% 
-          data.frame()
+        #temhyyx <<- temhyy
+        # temhyyx %>%  collapse::roworderv(., 'estimate')
+       
+        setdrawidparmh <- c('term', 'parameter')
+        namesx <- c('estimate', 'conf.low', 'conf.high')
+        setdrawidparm_ <- c(setdrawidparm, namesx)
+        # xzc3 <- onex1 %>% collapse::fgroup_by(setdrawidparm)
+        out_sf_hy <-
+          temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
+          collapse::fsummarise(collapse::mctl(get_pe_ci_collapse(.data[['estimate']]))) %>% 
+          collapse::frename(., setdrawidparm_) 
         
         row.names(out_sf_hy) <- NULL
-        # out_sf <- out3
-        # out_sf_hy <- xzc3ci 
-        
-        
+
       } else {
         parmi_ci_c <- list()
         for (parmi in parm) {
@@ -1898,13 +1992,16 @@ growthparameters_comparison.bgmfit <- function(model,
     dplyr::relocate(dplyr::all_of('parameter')) %>% 
     dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                          ~ round(., digits = digits))) %>% 
+    dplyr::arrange(match(parameter, parm), by) %>% 
     dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
       data.frame()
   
   if(!is.null(out_sf_hy)) {
     if(usecollapse) {
       out_sf_hy <- out_sf_hy %>% data.frame() %>% 
+        dplyr::arrange(match(parameter, parm)) %>% 
         dplyr::relocate(dplyr::all_of('parameter')) %>% 
+        dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                     ~ round(., digits = digits)))
     } else {
@@ -1914,6 +2011,8 @@ growthparameters_comparison.bgmfit <- function(model,
                                     ~ round(., digits = digits)))
     }
   }
+  
+  
   
   if(is.null(reformat)) {
     if(is.null(hypothesis) && is.null(equivalence)) {

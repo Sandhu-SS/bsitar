@@ -516,6 +516,11 @@ around the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons
 computes unit-level (conditional) estimates whereas
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} return average (marginal) estimates. A
 detailed explanation is available \href{https://marginaleffects.com}{here}.
+Note that \pkg{marginaleffects} package is highly flexible and therefore it
+is expected that user has a strong understanding of its working.
+Furthermore, since \pkg{marginaleffects} package is rapidly evolving, the
+results obtained from the current implementation should be considered
+experimental.
 }
 \examples{
 

@@ -29,7 +29,7 @@
   future = FALSE,
   future_session = "multisession",
   usedtplyr = FALSE,
-  usecollapse = FALSE,
+  usecollapse = TRUE,
   parallel = FALSE,
   cores = NULL,
   average = FALSE,
@@ -558,7 +558,11 @@ i.e., to estimate and compare growth parameters, the arguments
 and \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} are modified (see below).
 Furthermore, comparison of growth parameters is performed via the
 \code{hypothesis} argument of the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
-\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions.
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions. Note that
+\pkg{marginaleffects} package is highly flexible and therefore it is
+expected that user has a strong understanding of its working. Furthermore,
+since \pkg{marginaleffects} package is rapidly evolving, the results
+obtained from the current implementation should be considered experimental.
 }
 \details{
 The \code{growthparameters_comparison} function estimates and
@@ -591,12 +595,16 @@ between 0 and 1 (default \code{0.1} implying 10 percent).
 # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
+# Note that since no covariate is part of the model fit, the below example 
+# doesn't make sense and included here only for the purpose of completeness.
+
+
 # Check and confirm whether model fit object 'berkeley_exfit' exists
  berkeley_exfit <- getNsObject(berkeley_exfit)
 
 model <- berkeley_exfit
 
-growthparameters_comparison(model, parameter = 'apgv', ndraws = 10)
+growthparameters_comparison(model, ndraws = 10)
 }
 
 }

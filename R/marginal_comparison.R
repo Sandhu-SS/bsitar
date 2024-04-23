@@ -8,7 +8,12 @@
 #'  [marginaleffects::avg_comparisons()]. The [marginaleffects::comparisons()]
 #'  computes unit-level (conditional) estimates whereas
 #'  [marginaleffects::avg_comparisons()] return average (marginal) estimates. A
-#'  detailed explanation is available [here](https://marginaleffects.com).
+#'  detailed explanation is available [here](https://marginaleffects.com). 
+#'  Note that \pkg{marginaleffects} package is highly flexible and therefore it
+#'  is expected that user has a strong understanding of its working.
+#'  Furthermore, since \pkg{marginaleffects} package is rapidly evolving, the
+#'  results obtained from the current implementation should be considered
+#'  experimental.
 #' 
 #' 
 #' @param model An object of class \code{bgmfit}.
