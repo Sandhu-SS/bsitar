@@ -898,7 +898,8 @@ get_idata <-
            times = NULL,
            length.out = 10,
            xrange = 1, 
-           keeplevels = FALSE) {
+           keeplevels = FALSE, 
+           asdf = FALSE) {
     
     if (is.null(newdata)) {
       newdata <- model$data
@@ -906,6 +907,12 @@ get_idata <-
       newdata <- newdata
     }
     
+    if(data.table::is.data.table(newdata)) {
+      setasdt <- TRUE 
+      newdata <- as.data.frame(newdata)
+    } else {
+      setasdt <- FALSE
+    }
     
     if(keeplevels) {
       is.fact <- names(newdata[, sapply(newdata, is.factor)])
@@ -1045,8 +1052,10 @@ get_idata <-
     if(keeplevels) {
       newdata_pred <- newdata_pred %>% dplyr::select(dplyr::all_of(cnames))
     }
-    
-    newdata_pred
+    if(setasdt) newdata_pred <- data.table::as.data.table(newdata_pred)
+    if(asdf) out <- as.data.frame(newdata_pred) else out <- newdata_pred 
+    # newdata_pred
+    out
   }
 
 

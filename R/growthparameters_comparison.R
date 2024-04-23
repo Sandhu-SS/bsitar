@@ -548,6 +548,7 @@ growthparameters_comparison.bgmfit <- function(model,
     'cgv'
     )
   
+  parameter <- base::tolower(parameter)
   
   if (is.null(parameter)) {
     parm <- 'apgv' 
@@ -1612,10 +1613,15 @@ growthparameters_comparison.bgmfit <- function(model,
     
     
     get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-      if(ec_agg == "mean")  estimate <- collapse::fmean(x, na.rm = na.rm, nthreads = cores) 
-      if(ec_agg == "median") estimate <- collapse::fmedian(x, na.rm = na.rm, nthreads = cores)
+      if(ec_agg == "mean")  estimate <- collapse::fmean(x, 
+                                                        na.rm = na.rm, 
+                                                        nthreads = cores) 
+      if(ec_agg == "median") estimate <- collapse::fmedian(x, 
+                                                           na.rm = na.rm, 
+                                                           nthreads = cores)
       # luci = get_etix(x, probs = probs, na.rm = na.rm)
-      if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, na.rm = na.rm)
+      if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+                                                     na.rm = na.rm)
       if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
       cbind(estimate, luci[1], luci[2]) 
     }
@@ -1708,7 +1714,9 @@ growthparameters_comparison.bgmfit <- function(model,
       # xzc3 <- onex1 %>% collapse::fgroup_by(setdrawidparm)
       out3 <-
       onex1 %>% collapse::fgroup_by(setdrawidparm) %>% 
-        collapse::fsummarise(collapse::mctl(get_pe_ci_collapse(.data[['estimate']]))) %>% 
+        collapse::fsummarise(collapse::mctl(
+          get_pe_ci_collapse(.data[['estimate']]))
+          ) %>% 
         collapse::ftransformv(., 'V2', as.numeric) %>% 
         collapse::frename(., setdrawidparm_) 
       
@@ -1957,7 +1965,9 @@ growthparameters_comparison.bgmfit <- function(model,
         # xzc3 <- onex1 %>% collapse::fgroup_by(setdrawidparm)
         out_sf_hy <-
           temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
-          collapse::fsummarise(collapse::mctl(get_pe_ci_collapse(.data[['estimate']]))) %>% 
+          collapse::fsummarise(collapse::mctl(
+            get_pe_ci_collapse(.data[['estimate']]))
+            ) %>% 
           collapse::frename(., setdrawidparm_) 
         
         row.names(out_sf_hy) <- NULL
