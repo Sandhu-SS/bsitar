@@ -38,8 +38,9 @@
   variables = NULL,
   deriv = NULL,
   deriv_model = NULL,
-  method = "pkg",
-  pdraws = NULL,
+  method = "custom",
+  pdraws = FALSE,
+  pdrawsp = FALSE,
   comparison = "difference",
   type = NULL,
   by = FALSE,
@@ -253,7 +254,7 @@ parallel computation (via \pkg{doParallel} and \pkg{foreach}) when
 \pkg{usecollapse = TRUE}. Note that when \pkg{parallel = TRUE}, the
 \code{\link[parallel:makeCluster]{parallel::makeCluster()}} sets type as \code{"PSOCK"} which works on all
 operating systems including \code{Windows}. To set type as \code{"FORK"},
-which is fast (but does not works on \code{Windows} system), pleae use
+which is fast (but does not works on \code{Windows} system), use
 \pkg{parallel = "FORK"}.}
 
 \item{cores}{A positive integer (default \code{1}) to set up the number of
@@ -325,12 +326,18 @@ the features available from the \code{'marginaleffects'} (such as getting
 'marginal' or the 'conditional' effects at population or the individual
 level) are available for the \code{method = 'custom'}.}
 
-\item{pdraws}{A character string (default \code{NULL}) to indicate whether to
-return the posterior draws (see \code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}} for
-detauls). If  \code{pdraws} is not  \code{NULL}, then character string is
-used to set up the \code{shape} of returned draw object. The possible
-\code{shape} are \code{"long"}, \code{"DxP"}, \code{"PxD"}, and
-\code{"rvar"} (see \code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}).}
+\item{pdraws}{A character string (default \code{FALSE}) to indicate whether
+to return raw draws (if \code{pdraws = 'return'}), add raw draws (if
+\code{pdraws = 'add'}) to the final return object, return summary of draws
+(if \code{pdraws = 'returns'}), or add summary of draws (if \code{pdraws =
+  'adds'}) to the final return object. See \code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}
+for details.}
+
+\item{pdrawsp}{A character string (default \code{FALSE}) to indicate whether
+to return the posterior draws for parameters (if \code{pdrawsp = 'return'})
+or add posterior draws for parameters  (if \code{pdrawsp = 'add'}) to the
+final return object. details). Note that summary of posterior draws for
+parameters is the default returned object.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and
@@ -604,7 +611,7 @@ between 0 and 1 (default \code{0.1} implying 10 percent).
 
 model <- berkeley_exfit
 
-growthparameters_comparison(model, ndraws = 10)
+growthparameters_comparison(model, parameter = 'apgv', ndraws = 10)
 }
 
 }

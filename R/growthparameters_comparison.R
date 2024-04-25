@@ -236,12 +236,18 @@
 #'   cores to be used when \pkg{parallel = TRUE}. To automatically detect the 
 #'   number of cores, please use \pkg{cores = NULL}.
 #'   
-#' @param pdraws A character string (default \code{NULL}) to indicate whether to
-#'   return the posterior draws (see [marginaleffects::posterior_draws()] for
-#'   details). If  \code{pdraws} is not  \code{NULL}, then character string is
-#'   used to set up the \code{shape} of returned draw object. The possible
-#'   \code{shape} are \code{"long"}, \code{"DxP"}, \code{"PxD"}, and
-#'   \code{"rvar"} (see [marginaleffects::posterior_draws()]).
+#' @param pdraws A character string (default \code{FALSE}) to indicate whether
+#'   to return raw draws (if \code{pdraws = 'return'}), add raw draws (if
+#'   \code{pdraws = 'add'}) to the final return object, return summary of draws
+#'   (if \code{pdraws = 'returns'}), or add summary of draws (if \code{pdraws =
+#'   'adds'}) to the final return object. See [marginaleffects::posterior_draws()]
+#'   for details.
+#'   
+#' @param pdrawsp A character string (default \code{FALSE}) to indicate whether
+#'   to return the posterior draws for parameters (if \code{pdrawsp = 'return'})
+#'   or add posterior draws for parameters  (if \code{pdrawsp = 'add'}) to the
+#'   final return object. details). Note that summary of posterior draws for
+#'   parameters is the default returned object.
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
@@ -284,7 +290,7 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' growthparameters_comparison(model, ndraws = 10)
+#' growthparameters_comparison(model, parameter = 'apgv', ndraws = 10)
 #' }
 #' 
 growthparameters_comparison.bgmfit <- function(model,
@@ -319,8 +325,9 @@ growthparameters_comparison.bgmfit <- function(model,
                                    variables = NULL,
                                    deriv = NULL,
                                    deriv_model = NULL,
-                                   method = 'pkg',
-                                   pdraws = NULL, 
+                                   method = 'custom',
+                                   pdraws = FALSE, 
+                                   pdrawsp = FALSE, 
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
@@ -758,7 +765,8 @@ growthparameters_comparison.bgmfit <- function(model,
       usecollapse, 
       parallel,
       cores,
-      pdraws
+      pdraws,
+      pdrawsp
     )
   ))[-1]
   
@@ -1195,6 +1203,9 @@ growthparameters_comparison.bgmfit <- function(model,
   } # if(method == 'pkg') {
   
   
+  pdrawsp_est <- NULL
+  pdraws_est <- NULL
+  
   if(method == 'custom') {
     predictions_arguments <- comparisons_arguments
     predictions_arguments[['cross']] <- NULL
@@ -1226,8 +1237,7 @@ growthparameters_comparison.bgmfit <- function(model,
     by <- eval(by)
     predictions_arguments[['by']] <- by 
     
-    # predictions_argumentsx <<- predictions_arguments
-    
+
 
     if(!average) {
       oux <- do.call(marginaleffects::predictions, predictions_arguments)
@@ -1235,12 +1245,24 @@ growthparameters_comparison.bgmfit <- function(model,
       oux <- do.call(marginaleffects::avg_predictions, predictions_arguments)
     }
     
+    by_pdraws <- by
+    
     # Imp, remove xvar from the by
     by <- base::setdiff(eval(by), eval(xvar)) 
+    
     
    
     zxdraws <- oux %>% marginaleffects::posterior_draws()
     
+    # if(!isFALSE(pdraws)) {
+    #   selectchoicesr <- c("return", "add", "returns", "adds") 
+    #   checkmate::assert_choice(pdraws, choices = selectchoicesr)
+    #   if(pdraws == 'return') return(zxdraws)
+    #   if(pdraws == 'add') pdraws_est <- zxdraws
+    # }
+    
+    
+
 
     getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
                           aggregate_by = FALSE, ...) {
@@ -1408,35 +1430,121 @@ growthparameters_comparison.bgmfit <- function(model,
     }
 
     
+    #######################################################
     
-    if(!isFALSE(pdraws)) {
-      if(!is.null(pdraws)) {
-        selectchoices <- "long" # c("long", "DxP", "PxD", "rvar") 
-        if(pdraws) pdraws <- "long" 
-        if(!is.character(pdraws)) {
-          # stop("pdraws must be a character string")
-          checkmate::assert_choice(pdraws, choices = selectchoices)
-        } else {
-          # only "long" allowed for params
-          checkmate::assert_choice(pdraws, choices = selectchoices)
-          return(onex0)
+    # This from marginaleffects does not allow na.rm
+    # So use stats::quantile instead
+    get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+    get_etix <- stats::quantile
+    get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
+    get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
+      if(data.table::is.data.table(x) | is.data.frame(x)) {
+        if(is.null(draw)) {
+          stop("Please specify the 'draw' argument")
         }
+        x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
+          unlist() %>% as.numeric()
+      }
+      if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
+      if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
+      if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
+      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+      tibble::tibble(
+        estimate = estimate, conf.low = luci[1],conf.high = luci[2]
+      )
+    }
+    
+    
+    get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+      if(ec_agg == "mean")  estimate <- collapse::fmean(x, 
+                                                        na.rm = na.rm, 
+                                                        nthreads = arguments$cores) 
+      if(ec_agg == "median") estimate <- collapse::fmedian(x, 
+                                                           na.rm = na.rm, 
+                                                           nthreads = arguments$cores)
+      # luci = get_etix(x, probs = probs, na.rm = na.rm)
+      if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+                                                     na.rm = na.rm)
+      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+      cbind(estimate, luci[1], luci[2]) 
+    }
+    
+    
+    # if(!isFALSE(pdrawsp)) {
+    #   if(!is.null(pdrawsp)) {
+    #     selectchoices <- "long" # c("long", "DxP", "PxD", "rvar") 
+    #     if(pdrawsp) pdrawsp <- "long" 
+    #     if(!is.character(pdrawsp)) {
+    #       # stop("pdrawsp must be a character string")
+    #       checkmate::assert_choice(pdrawsp, choices = selectchoices)
+    #     } else {
+    #       # only "long" allowed for params
+    #       checkmate::assert_choice(pdrawsp, choices = selectchoices)
+    #       return(onex0)
+    #     }
+    #   }
+    # } # if(!isFALSE(pdrawsp)) {
+    
+    
+    if(!isFALSE(pdrawsp)) {
+      selectchoicesr <- c("return", "add") 
+      checkmate::assert_choice(pdrawsp, choices = selectchoicesr)
+      if(pdrawsp == 'return') {
+        return(onex0)
+      } else if(pdrawsp == 'add') {
+        pdrawsp_est <- onex0
+      } else {
+        
       }
     }
     
     
+    if(!isFALSE(pdraws)) {
+      selectchoicesr <- c("return", "add", "returns", "adds") 
+      checkmate::assert_choice(pdraws, choices = selectchoicesr)
+      if(pdraws == 'return') {
+        return(zxdraws)
+      } else if(pdraws == 'add') {
+        pdraws_est <- zxdraws
+      } else {
+        setdrawidparm <- c(by_pdraws)
+        namesx <- c('estimate', 'conf.low', 'conf.high')
+        setdrawidparm_ <- c(setdrawidparm, namesx)
+        # Actually no need to summarise again because estimate already is summary
+        # if(usecollapse) {
+        #   what_summary <- 'draw' # 'estimate' 'draw'
+        #   setdrawidparm <- c(by_pdraws)
+        #   namesx <- c('estimate', 'conf.low', 'conf.high')
+        #   setdrawidparm_ <- c(setdrawidparm, namesx)
+        #   
+        #   zxdraws_summary <-
+        #     zxdraws %>% collapse::fgroup_by(setdrawidparm) %>% 
+        #     collapse::fsummarise(collapse::mctl(
+        #       get_pe_ci_collapse(.data[[what_summary]]))
+        #     ) %>% 
+        #     collapse::ftransformv(., 'V2', as.numeric) %>% 
+        #     collapse::frename(., setdrawidparm_) 
+        #   
+        #   row.names(zxdraws_summary) <- NULL
+        # }
+        
+        if(usedtplyr) {
+          zxdraws_summary <- zxdraws %>% dplyr::filter(., drawid == 1) %>% 
+            dplyr::select(., dplyr::all_of(setdrawidparm_))
+        } else if(usecollapse) {
+          zxdraws_summary <- zxdraws %>% collapse::fsubset(., drawid == 1) %>% 
+            collapse::fselect(., setdrawidparm_)
+        } else {
+          zxdraws_summary <- zxdraws %>% dplyr::filter(., drawid == 1) %>% 
+            dplyr::select(., dplyr::all_of(setdrawidparm_))
+        }
+        
+        
+        if(pdraws == 'returns') return(zxdraws_summary)
+        if(pdraws == 'adds') pdraws_est <- zxdraws_summary
+      }
+    } # if(!isFALSE(pdraws)) {
     
-    # zxdrawsx <<- zxdraws
-    # onex0x <<- onex0
-    # # zxdraws <- oux %>% marginaleffects::posterior_draws()
-    # marginaleffects::posterior_draws(onex0x)
-    
-    # getparmsxx <<- getparmsx
-    # zxdrawsx <<- zxdraws
-    # onex0x <<- onex0
-    
-    # print(onex0)
-    # stop()
     
     if(isFALSE(constrats_by)) {
       constrats_by <- NULL
@@ -1589,42 +1697,42 @@ growthparameters_comparison.bgmfit <- function(model,
     } # if(!is.null(constrats_subset)) {
     
 
-    # This from marginaleffects does not allow na.rm
-    # So use stats::quantile instead
-    get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
-    get_etix <- stats::quantile
-    get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
-    get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
-      if(data.table::is.data.table(x) | is.data.frame(x)) {
-        if(is.null(draw)) {
-          stop("Please specify the 'draw' argument")
-        }
-        x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
-          unlist() %>% as.numeric()
-      }
-      if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
-      if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-      if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
-      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-      tibble::tibble(
-        estimate = estimate, conf.low = luci[1],conf.high = luci[2]
-      )
-    }
-    
-    
-    get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-      if(ec_agg == "mean")  estimate <- collapse::fmean(x, 
-                                                        na.rm = na.rm, 
-                                                        nthreads = cores) 
-      if(ec_agg == "median") estimate <- collapse::fmedian(x, 
-                                                           na.rm = na.rm, 
-                                                           nthreads = cores)
-      # luci = get_etix(x, probs = probs, na.rm = na.rm)
-      if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-                                                     na.rm = na.rm)
-      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-      cbind(estimate, luci[1], luci[2]) 
-    }
+    # # This from marginaleffects does not allow na.rm
+    # # So use stats::quantile instead
+    # get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+    # get_etix <- stats::quantile
+    # get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
+    # get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
+    #   if(data.table::is.data.table(x) | is.data.frame(x)) {
+    #     if(is.null(draw)) {
+    #       stop("Please specify the 'draw' argument")
+    #     }
+    #     x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
+    #       unlist() %>% as.numeric()
+    #   }
+    #   if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
+    #   if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
+    #   if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
+    #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+    #   tibble::tibble(
+    #     estimate = estimate, conf.low = luci[1],conf.high = luci[2]
+    #   )
+    # }
+    # 
+    # 
+    # get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+    #   if(ec_agg == "mean")  estimate <- collapse::fmean(x, 
+    #                                                     na.rm = na.rm, 
+    #                                                     nthreads = arguments$cores) 
+    #   if(ec_agg == "median") estimate <- collapse::fmedian(x, 
+    #                                                        na.rm = na.rm, 
+    #                                                        nthreads = arguments$cores)
+    #   # luci = get_etix(x, probs = probs, na.rm = na.rm)
+    #   if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+    #                                                  na.rm = na.rm)
+    #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+    #   cbind(estimate, luci[1], luci[2]) 
+    # }
     
   
     if(usedtplyr) {
@@ -1741,10 +1849,7 @@ growthparameters_comparison.bgmfit <- function(model,
       out_sf <- out3
     }
     
-    # onex1x <<- onex1
-    # out_sfx <<- out_sf
-    
-    
+   
     # Hypothesis
     if(!is.null(hypothesis)) {
       get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
@@ -1765,8 +1870,7 @@ growthparameters_comparison.bgmfit <- function(model,
       }
       
       
-      # get_hypothesis_x_modifyx2x <<- get_hypothesis_x_modifyx2
-      
+
       if(usedtplyr) {
         parmi_estimate <- 'estimate'
         get_hypothesis_x_modifyx2 <- get_hypothesis_x
@@ -1841,10 +1945,10 @@ growthparameters_comparison.bgmfit <- function(model,
        #  }
        #  
        #  if(setparallel) {
-       #    if(is.null(cores)) {
+       #    if(is.null(arguments$cores)) {
        #      n.cores <- parallel::detectCores() - 1
        #    } else {
-       #      n.cores <- cores
+       #      n.cores <- arguments$cores
        #    }
        #    
        #    if(verbose) cat("Registering doParallel process....")
@@ -1955,14 +2059,12 @@ growthparameters_comparison.bgmfit <- function(model,
           collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>% 
           collapse::ftransformv(., 'V2', as.numeric) %>% 
           collapse::frename(., setdrawidh_)
-       
-        #temhyyx <<- temhyy
-        # temhyyx %>%  collapse::roworderv(., 'estimate')
+    
        
         setdrawidparmh <- c('term', 'parameter')
         namesx <- c('estimate', 'conf.low', 'conf.high')
         setdrawidparm_ <- c(setdrawidparmh, namesx)
-        # xzc3 <- onex1 %>% collapse::fgroup_by(setdrawidparm)
+        
         out_sf_hy <-
           temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
           collapse::fsummarise(collapse::mctl(
@@ -2038,6 +2140,35 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
+  if(!is.null(pdraws_est)) {
+    if(usecollapse) {
+      pdraws_est <- pdraws_est %>% data.frame() %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    } else {
+      pdraws_est <- pdraws_est %>% data.frame() %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    }
+  }
+  
+  
+  if(!is.null(pdrawsp_est)) {
+    if(usecollapse) {
+      pdrawsp_est <- pdrawsp_est %>% data.frame() %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    } else {
+      pdrawsp_est <- pdrawsp_est %>% data.frame() %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    }
+  }
+  
+  
+  
+  
+  
   if(is.null(reformat)) {
     if(is.null(hypothesis) && is.null(equivalence)) {
       reformat <- TRUE
@@ -2081,14 +2212,53 @@ growthparameters_comparison.bgmfit <- function(model,
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
       data.frame()
     } # if(!is.null(out_sf_hy)) {
+    
+    if(!is.null(pdraws_est)) {
+      pdraws_est <- pdraws_est %>% 
+        # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := 
+                        dplyr::all_of('estimate')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := 
+                        dplyr::all_of('conf.low')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := 
+                        dplyr::all_of('conf.high')) %>% 
+        dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+        data.frame()
+    } # if(!is.null(pdraws_est)) {
+    
+    if(!is.null(pdrawsp_est)) {
+      pdrawsp_est <- pdrawsp_est %>% 
+        # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := 
+                        dplyr::all_of('estimate')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := 
+                        dplyr::all_of('conf.low')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := 
+                        dplyr::all_of('conf.high')) %>% 
+        dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+        data.frame()
+    } # if(!is.null(pdrawsp_est)) {
+    
   } # if (reformat) {
    
+  out_sf <- out_sf %>% dplyr::ungroup()
   
-  if(!is.null(out_sf_hy)) {
-    out_sf <- out_sf %>% dplyr::ungroup()
+  if(!is.null(out_sf_hy) & is.null(pdraws_est)) {
     out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
     out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
-  } 
+  } else if(is.null(out_sf_hy) & !is.null(pdraws_est)) {
+    pdraws_est <- pdraws_est %>% dplyr::ungroup() 
+    out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf)
+  } else if(!is.null(out_sf_hy) & !is.null(pdraws_est)) {
+    out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
+    pdraws_est <- pdraws_est %>% dplyr::ungroup() 
+    out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf, contrast = out_sf_hy)
+  }
+  
+  if(!is.null(pdrawsp_est)) {
+    pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
+    out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+  }
   
   return(out_sf)
 }
