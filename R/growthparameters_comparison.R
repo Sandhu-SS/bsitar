@@ -244,10 +244,12 @@
 #'   for details.
 #'   
 #' @param pdrawsp A character string (default \code{FALSE}) to indicate whether
-#'   to return the posterior draws for parameters (if \code{pdrawsp = 'return'})
-#'   or add posterior draws for parameters  (if \code{pdrawsp = 'add'}) to the
-#'   final return object. details). Note that summary of posterior draws for
-#'   parameters is the default returned object.
+#'   to return the posterior draws for parameters (if \code{pdrawsp =
+#'   'return'}). Note that summary of posterior draws for parameters is the
+#'   default returned object.
+#'   
+#' @param bys A character string (default \code{NULL}) to specify variables 
+#' over which parameters need to be summarized.
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
@@ -331,6 +333,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
+                                   bys = NULL,
                                    conf_level = 0.95,
                                    transform = NULL,
                                    cross = FALSE,
@@ -766,7 +769,8 @@ growthparameters_comparison.bgmfit <- function(model,
       parallel,
       cores,
       pdraws,
-      pdrawsp
+      pdrawsp,
+      bys
     )
   ))[-1]
   
@@ -1374,14 +1378,27 @@ growthparameters_comparison.bgmfit <- function(model,
       #   collapse::fselect(allcom_varx_parm) %>% 
       #   collapse::ffirst()
       
-      drawidby <- c('drawid', by)
-      drawidby_ <- c(drawidby, 'parameter', 'estimate')
-      parmest   <- 'draw'
+      # drawidby <- c('drawid', by)
+      # drawidby_ <- c(drawidby, 'parameter', 'estimate')
+      # parmest   <- 'draw'
+      
+      
+      
       
       drawidby  <- c('drawid', by)
       drawidby_ <- c(drawidby, 'parameter', 'estimate')
       parmest   <- 'draw'
       
+      
+      # if(is.null(bys)) {
+      #   drawidby  <- c('drawid', by)
+      #   drawidby_ <- c(drawidby, 'parameter', 'estimate')
+      #   parmest   <- 'draw'
+      # } else if(!is.null(bys)) {
+      #   drawidby  <- c('drawid', bys)
+      #   drawidby_ <- c(drawidby, 'parameter', 'estimate')
+      #   parmest   <- 'draw'
+      # }
       
       if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
       if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
@@ -1487,7 +1504,7 @@ growthparameters_comparison.bgmfit <- function(model,
     
     
     if(!isFALSE(pdrawsp)) {
-      selectchoicesr <- c("return", "add") 
+      selectchoicesr <- c("return") 
       checkmate::assert_choice(pdrawsp, choices = selectchoicesr)
       if(pdrawsp == 'return') {
         return(onex0)
@@ -1516,26 +1533,26 @@ growthparameters_comparison.bgmfit <- function(model,
         #   setdrawidparm <- c(by_pdraws)
         #   namesx <- c('estimate', 'conf.low', 'conf.high')
         #   setdrawidparm_ <- c(setdrawidparm, namesx)
-        #   
+        # 
         #   zxdraws_summary <-
-        #     zxdraws %>% collapse::fgroup_by(setdrawidparm) %>% 
+        #     zxdraws %>% collapse::fgroup_by(setdrawidparm) %>%
         #     collapse::fsummarise(collapse::mctl(
         #       get_pe_ci_collapse(.data[[what_summary]]))
-        #     ) %>% 
-        #     collapse::ftransformv(., 'V2', as.numeric) %>% 
-        #     collapse::frename(., setdrawidparm_) 
-        #   
+        #     ) %>%
+        #     collapse::ftransformv(., 'V2', as.numeric) %>%
+        #     collapse::frename(., setdrawidparm_)
+        # 
         #   row.names(zxdraws_summary) <- NULL
         # }
         
         if(usedtplyr) {
-          zxdraws_summary <- zxdraws %>% dplyr::filter(., drawid == 1) %>% 
+          zxdraws_summary <- zxdraws %>% dplyr::filter(., drawid == 1) %>%
             dplyr::select(., dplyr::all_of(setdrawidparm_))
         } else if(usecollapse) {
-          zxdraws_summary <- zxdraws %>% collapse::fsubset(., drawid == 1) %>% 
+          zxdraws_summary <- zxdraws %>% collapse::fsubset(., drawid == 1) %>%
             collapse::fselect(., setdrawidparm_)
         } else {
-          zxdraws_summary <- zxdraws %>% dplyr::filter(., drawid == 1) %>% 
+          zxdraws_summary <- zxdraws %>% dplyr::filter(., drawid == 1) %>%
             dplyr::select(., dplyr::all_of(setdrawidparm_))
         }
         
@@ -1814,8 +1831,18 @@ growthparameters_comparison.bgmfit <- function(model,
       # row.names(out3) <- NULL
       # out_sf <- out3
       
-      setdrawid     <- c('drawid', by)
-      setdrawidparm <- c(by, 'parameter')
+      # setdrawid     <- c('drawid', by)
+      # setdrawidparm <- c(by, 'parameter')
+      
+      if(is.null(bys)) {
+        setdrawid     <- c('drawid', by)
+        setdrawidparm <- c(by, 'parameter')
+      } else if(!is.null(bys)) {
+        setdrawid     <- c('drawid', bys)
+        setdrawidparm <- c(bys, 'parameter')
+      }
+      
+      
       namesx <- c('estimate', 'conf.low', 'conf.high')
       setdrawidparm_ <- c(setdrawidparm, namesx)
     
@@ -2112,15 +2139,46 @@ growthparameters_comparison.bgmfit <- function(model,
   
   #######################################
   
+   
+  # 
+  # out_sfx <<- out_sf
+  # parmx <<- parm
+  # byx <<- by
   
+  # out_sfx %>% data.frame() %>% 
+  #   dplyr::arrange(match(parameter, parmx), !!as.name(byx)) 
   
-  out_sf <- out_sf %>% data.frame() %>% 
-    dplyr::relocate(dplyr::all_of('parameter')) %>% 
-    dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
-                         ~ round(., digits = digits))) %>% 
-    dplyr::arrange(match(parameter, parm), by) %>% 
-    dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+  if(is.null(bys)) {
+    byarrange <- by 
+  } else if(!by) {
+    byarrange <- NULL
+  } else if(!is.null(bys)) {
+    byarrange <- bys
+  } else if(!ibys) {
+    byarrange <- NULL
+  }
+  
+  if(!byarrange) byarrange <- NULL
+  
+  if(length(byarrange) != 0) {
+    out_sf <- out_sf %>% data.frame() %>% 
+      dplyr::relocate(dplyr::all_of('parameter')) %>% 
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                  ~ round(., digits = digits))) %>% 
+      dplyr::arrange(match(parameter, parm), !!as.name(byarrange)) %>% 
+      dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
       data.frame()
+  } else if(length(byarrange) == 0) {
+    out_sf <- out_sf %>% data.frame() %>% 
+      dplyr::relocate(dplyr::all_of('parameter')) %>% 
+      dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                  ~ round(., digits = digits))) %>% 
+      dplyr::arrange(match(parameter, parm)) %>% 
+      dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+      data.frame()
+  }
+  
+  
   
   if(!is.null(out_sf_hy)) {
     if(usecollapse) {

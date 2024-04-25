@@ -228,7 +228,7 @@ yvar  <- 'height'
 
 # For observed and adjusted plot
 data_sitar_a  <- plot(model_frequ, opt = 'a', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
-data_bsitar_a <- plot_curves(model_bayes, opt = 'a', returndata = TRUE)
+data_bsitar_a <- plot_curves(model_bayes, opt = 'a', returndata = TRUE, summary = TRUE)
 data_all_a <- data %>% dplyr::mutate(Curve = 'observed') %>% 
   dplyr::bind_rows(., data_sitar_a %>% dplyr::relocate(all_of(colnames(data))) %>% 
                      dplyr::mutate(Curve = 'adjusted_sitar')) %>% 
@@ -241,8 +241,8 @@ data_all_a <- data %>% dplyr::mutate(Curve = 'observed') %>%
 data_sitar_d  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
 data_sitar_v  <- plot(model_frequ, opt = 'v', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE) 
 data_sitar_df <- data_sitar_d %>% data.frame()
-data_bsitar_d <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_df, ipts = NULL) 
-data_bsitar_v <- plot_curves(model_bayes, opt = 'v', returndata = TRUE, newdata = data_sitar_df, ipts = NULL) 
+data_bsitar_d <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_df, ipts = NULL, summary = TRUE) 
+data_bsitar_v <- plot_curves(model_bayes, opt = 'v', returndata = TRUE, newdata = data_sitar_df, ipts = NULL, summary = TRUE) 
 
 data_sitar_d  <- data_sitar_d %>% dplyr::rename(distance = height)
 data_sitar_v  <- data_sitar_v %>% dplyr::rename(velocity = height)
@@ -268,8 +268,8 @@ data_all_dv <- data_sitar_dv %>% dplyr::mutate(Model = 'sitar') %>%
 data_sitar_D  <- plot(model_frequ, opt = 'D', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
 data_sitar_V  <- plot(model_frequ, opt = 'V', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE) 
 data_sitar_DF <- data_sitar_D %>% data.frame()
-data_bsitar_D <- plot_curves(model_bayes, opt = 'D', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL) 
-data_bsitar_V <- plot_curves(model_bayes, opt = 'V', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL) 
+data_bsitar_D <- plot_curves(model_bayes, opt = 'D', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL, summary = TRUE) 
+data_bsitar_V <- plot_curves(model_bayes, opt = 'V', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL, summary = TRUE) 
 
 data_sitar_D  <- data_sitar_D %>% dplyr::rename(distance = height)
 data_sitar_V  <- data_sitar_V %>% dplyr::rename(velocity = height)
@@ -385,7 +385,7 @@ parms_apv_sitar <- plot(model_frequ, apv = TRUE, returndata = FALSE)
 parms_apv_sitar <- parms_apv_sitar$apv %>% data.frame() %>% setNames('sitar')
 parms_apv_sitar <- round(parms_apv_sitar, 2)
 row.names(parms_apv_sitar) <- NULL
-parms_apv_bsitar <- plot_curves(model_bayes, apv = TRUE, newdata = data_sitar_df, ipts = NULL) 
+parms_apv_bsitar <- plot_curves(model_bayes, apv = TRUE, newdata = data_sitar_df, ipts = NULL, summary = TRUE) 
 parms_apv_bsitar <- parms_apv_bsitar$growthparameters
 colnames(parms_apv_bsitar) <- c('Parameter', 'bsitar')
 parms_apv_all <- cbind(parms_apv_bsitar, parms_apv_sitar)
@@ -395,7 +395,7 @@ parms_apv_all <- cbind(parms_apv_bsitar, parms_apv_sitar)
 ```{r prepare_Vapv, echo=FALSE,include=FALSE, warning= FALSE, message=FALSE}
 # Individual specific APGV and PGV
 data_sitar_Vapv  <- plot(model_frequ, opt = 'V', apv = TRUE)$apv %>% data.frame() 
-data_bsitar_Vapv <- plot_curves(model_bayes, opt = 'V', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL, apv = TRUE) 
+data_bsitar_Vapv <- plot_curves(model_bayes, opt = 'V', returndata = TRUE, newdata = data_sitar_DF, ipts = NULL, apv = TRUE, summary = TRUE) 
 data_bsitar_Vapv <- attr(data_bsitar_Vapv, "growthparameters")
 data_bsitar_Vapv <- data_bsitar_Vapv %>% 
   tidyr::pivot_wider(names_from = Parameter, values_from = c(Estimate))
@@ -555,9 +555,9 @@ data_sitar_d_f <- plot(model_frequ, opt = 'd', returndata = TRUE) %>%
 
 data_sitar_uad_df12 <- data_sitar_u_f[, 1:2]
 data_sitar_uad_df123 <- data_sitar_u_f[, 1:3]
-data_bsitar_u_f <- plot_curves(model_bayes, opt = 'u', returndata = TRUE, newdata = data_sitar_uad_df123, ipts = NULL)
-data_bsitar_a_f <- plot_curves(model_bayes, opt = 'a', returndata = TRUE, newdata = data_sitar_uad_df123, ipts = NULL)
-data_bsitar_d_f <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_uad_df12, ipts = NULL)
+data_bsitar_u_f <- plot_curves(model_bayes, opt = 'u', returndata = TRUE, newdata = data_sitar_uad_df123, ipts = NULL, summary = TRUE)
+data_bsitar_a_f <- plot_curves(model_bayes, opt = 'a', returndata = TRUE, newdata = data_sitar_uad_df123, ipts = NULL, summary = TRUE)
+data_bsitar_d_f <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_uad_df12, ipts = NULL, summary = TRUE)
 
 data_bsitar_u_f <- data_bsitar_u_f %>% dplyr::rename(!!yvar := yvar) %>% dplyr::select(all_of(colnames(data_sitar_uad_df123)))
 data_bsitar_a_f <- data_bsitar_a_f %>% dplyr::rename(!!yvar := yvar) %>% dplyr::select(all_of(colnames(data_sitar_uad_df123)))
@@ -905,7 +905,7 @@ knitr::kable(bfh1_ranef_corr,
 ```{r prepare_plotd, eval=TRUE,  echo=FALSE,include=FALSE}
 data_sitar_dx2  <- plot(model_frequ, opt = 'd', xlim = sitar::xaxsd(), ylim = sitar::yaxsd(), returndata = TRUE)
 data_sitar_dfx2 <- data_sitar_dx2 %>% data.frame()
-data_bsitar_dx2 <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_dfx2, ipts = NULL) %>% 
+data_bsitar_dx2 <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdata = data_sitar_dfx2, ipts = NULL, summary = TRUE) %>% 
   dplyr::rename(distance = Estimate) %>% 
   dplyr::select(-dplyr::all_of(c('distance', 'Est.Error',  'Q2.5', 'Q97.5')))
 data_all_ad <- data_all_a %>% 

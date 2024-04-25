@@ -44,6 +44,7 @@
   comparison = "difference",
   type = NULL,
   by = FALSE,
+  bys = NULL,
   conf_level = 0.95,
   transform = NULL,
   cross = FALSE,
@@ -334,10 +335,9 @@ to return raw draws (if \code{pdraws = 'return'}), add raw draws (if
 for details.}
 
 \item{pdrawsp}{A character string (default \code{FALSE}) to indicate whether
-to return the posterior draws for parameters (if \code{pdrawsp = 'return'})
-or add posterior draws for parameters  (if \code{pdrawsp = 'add'}) to the
-final return object. details). Note that summary of posterior draws for
-parameters is the default returned object.}
+to return the posterior draws for parameters (if \code{pdrawsp =
+  'return'}). Note that summary of posterior draws for parameters is the
+default returned object.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and
@@ -364,6 +364,9 @@ first entry in the error message is used by default.}
 \item See examples below.
 \item For more complex aggregations, you can use the \code{FUN} argument of the \code{hypotheses()} function. See that function's documentation and the Hypothesis Test vignettes on the \code{marginaleffects} website.
 }}
+
+\item{bys}{A character string (default \code{NULL}) to specify variables
+over which parameters need to be summarized.}
 
 \item{conf_level}{numeric value between 0 and 1. Confidence level to use to build a confidence interval.}
 

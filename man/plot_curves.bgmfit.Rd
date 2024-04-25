@@ -15,7 +15,7 @@
   ndraws = NULL,
   draw_ids = NULL,
   newdata = NULL,
-  summary = TRUE,
+  summary = FALSE,
   digits = 2,
   re_formula = NULL,
   numeric_cov_at = NULL,
@@ -122,9 +122,10 @@ to be used in estimation (default \code{NULL}).}
 \code{model}.}
 
 \item{summary}{A logical indicating whether only the estimate should be
-computed (\code{TRUE}, default), or estimate along with SE and CI should be
-returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
-increase the computation time.}
+computed (\code{TRUE}), or estimate along with SE and CI should be returned
+(\code{FALSE}, default). Setting \code{summary} as \code{FALSE} will
+increase the computation time. Note that \code{summary = FALSE} is must to
+get the correct estimates when \code{re_formula = NULL}.}
 
 \item{digits}{An integer (default \code{2}) to set the decimal argument for
 the \code{\link[base:Round]{base::round()}} function.}

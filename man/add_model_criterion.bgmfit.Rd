@@ -61,9 +61,10 @@ derived from deparsing the call. Otherwise will use the passed
 values as model names.}
 
 \item{summary}{A logical indicating whether only the estimate should be
-computed (\code{TRUE}, default), or estimate along with SE and CI should be
-returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
-increase the computation time.}
+computed (\code{TRUE}), or estimate along with SE and CI should be returned
+(\code{FALSE}, default). Setting \code{summary} as \code{FALSE} will
+increase the computation time. Note that \code{summary = FALSE} is must to
+get the correct estimates when \code{re_formula = NULL}.}
 
 \item{robust}{A logical to specify the summarize options. If \code{FALSE}
 (the default) the mean is used as the measure of central tendency and the

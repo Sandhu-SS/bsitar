@@ -265,6 +265,24 @@ predict_draws.bgmfit <-
     }
     
     
+    growthparameters_calling <- FALSE
+    syscalls1 <- sys.calls()[[1]]
+    syscallsall <- paste(deparse(syscalls1), collapse = "\n")
+    for (xc in 1:length(syscallsall)) {
+      if(any(grepl('growthparameters', syscallsall[[xc]]))) {
+        growthparameters_calling <- TRUE
+      }
+    }
+    if(growthparameters_calling) {
+      if(calling.args$re_formula_opt == "V") {
+        calling.args$re_formula <- NULL
+      } else if(calling.args$re_formula_opt == "v") {
+        calling.args$re_formula <- NA
+      }
+    }
+    
+    
+    
     . <- do.call(predict, calling.args)
     
     

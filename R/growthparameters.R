@@ -40,11 +40,12 @@
 #'   
 #' @param draw_ids An integer indicating the specific posterior draw(s) 
 #' to be used in estimation (default \code{NULL}).
-#'   
+#'
 #' @param summary A logical indicating whether only the estimate should be
-#'   computed (\code{TRUE}, default), or estimate along with SE and CI should be
-#'   returned (\code{FALSE}). Setting \code{summary} as \code{FALSE} will
-#'   increase the computation time.
+#'   computed (\code{TRUE}), or estimate along with SE and CI should be returned
+#'   (\code{FALSE}, default). Setting \code{summary} as \code{FALSE} will
+#'   increase the computation time. Note that \code{summary = FALSE} is must to
+#'   get the correct estimates when \code{re_formula = NULL}. 
 #'
 #' @param robust A logical to specify the summarize options. If \code{FALSE}
 #'   (the default) the mean is used as the measure of central tendency and the
@@ -342,7 +343,7 @@ growthparameters.bgmfit <- function(model,
                                resp = NULL,
                                ndraws = NULL,
                                draw_ids = NULL,
-                               summary = TRUE,
+                               summary = FALSE,
                                robust = FALSE,
                                re_formula = NA,
                                peak = TRUE,
@@ -1399,9 +1400,11 @@ growthparameters.bgmfit <- function(model,
       arguments$deriv <- 1
       arguments$ipts <- NULL 
       arguments$probs <- probs
+      
+      arguments$re_formula_opt <- opt
      
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_draws.bgmfit, arguments)
+        out_v_ <- do.call(fitted_draws, arguments)
       } else if (estimation_method == 'predict') {
         out_v_ <- do.call(predict_draws, arguments)
       }
@@ -1461,6 +1464,8 @@ growthparameters.bgmfit <- function(model,
       arguments$deriv <- 1
       arguments$ipts <- NULL 
       arguments$probs <- probs
+      
+      arguments$re_formula_opt <- opt
       
       if (estimation_method == 'fitted') {
         out_v_ <- do.call(fitted_draws, arguments)
