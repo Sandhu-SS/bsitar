@@ -2148,17 +2148,28 @@ growthparameters_comparison.bgmfit <- function(model,
   # out_sfx %>% data.frame() %>% 
   #   dplyr::arrange(match(parameter, parmx), !!as.name(byx)) 
   
-  if(is.null(bys)) {
+  # if(is.null(bys)) {
+  #   byarrange <- by 
+  # } else if(!by) {
+  #   byarrange <- NULL
+  # } else if(!is.null(bys)) {
+  #   byarrange <- bys
+  # } else if(!ibys) {
+  #   byarrange <- NULL
+  # }
+  
+  
+  if(!isFALSE(by)) {
     byarrange <- by 
-  } else if(!by) {
+  } else if(isFALSE(by)) {
     byarrange <- NULL
-  } else if(!is.null(bys)) {
-    byarrange <- bys
-  } else if(!ibys) {
-    byarrange <- NULL
+  } 
+  
+  if(!is.null(byarrange)) {
+    if(!is.null(bys)) byarrange <- bys else byarrange <- by
   }
   
-  if(!byarrange) byarrange <- NULL
+  # if(!byarrange) byarrange <- NULL
   
   if(length(byarrange) != 0) {
     out_sf <- out_sf %>% data.frame() %>% 
