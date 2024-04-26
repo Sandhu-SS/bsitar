@@ -276,16 +276,12 @@ and \code{plot_ppc()}.}
 post draw stage by using the \code{'marginaleffects'} machinery i.e.,
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}, default) or via
 the custom functions written for efficiency and speed (\code{method =
-  'custom'}). Note that \code{method = 'custom'} is on experimental basis
-and should be used cautiously. A particular use case is if user wants to
-compute estimates and comparisons together for a factor co variate i.e.,
-\code{by = 'cov'}, or at each value of predictor (typically 'age') by
-setting \code{by = c('age', 'cov')}. The \code{method} is ignored when
-\code{by = FALSE}.  Note that since \code{method = 'custom'} is applied
-only during the post draw stage, all the features available from the
-\code{'marginaleffects'} (such as getting 'marginal' or the 'conditional'
-effects at population or the individual level) are available for the
-\code{method = 'custom'}.}
+  'custom'}). Note that \code{method = 'custom'} is only useful when
+for certain reasons the \code{varibales} results in errors. When
+\code{method = 'pkg'}, the \code{comparisons} argument is used to compare
+estimates whereas if \code{method = 'custom'}, the \code{hypotheis}
+argument is utilized for making comparisons which is rather restrictive in
+functionality.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and

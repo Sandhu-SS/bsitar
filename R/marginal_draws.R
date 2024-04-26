@@ -46,6 +46,8 @@
 #' @param deriv An integer to indicate whether to estimate distance curve or its
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
 #'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
+#'   
+#'  
 #' 
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams growthparameters_comparison.bgmfit

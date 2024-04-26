@@ -74,6 +74,18 @@
 #'   as \code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following
 #'   columns are dropped from the data frame: \code{term}, \code{contrast},
 #'   \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
+#'   
+#'   
+#' @param method A character string to specify whether to make computation at
+#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
+#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}, default) or via
+#'   the custom functions written for efficiency and speed (\code{method =
+#'   'custom'}). Note that \code{method = 'custom'} is only useful when
+#'   for certain reasons the \code{varibales} results in errors. When
+#'   \code{method = 'pkg'}, the \code{comparisons} argument is used to compare
+#'   estimates whereas if \code{method = 'custom'}, the \code{hypotheis}
+#'   argument is utilized for making comparisons which is rather restrictive in
+#'   functionality.
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  growthparameters_comparison.bgmfit
@@ -497,34 +509,43 @@ marginal_comparison.bgmfit <- function(model,
   }
   
   
-  if (!is.null(variables)) {
-    if (!is.list(variables)) {
-      set_variables <- variables
-    } else if (is.list(variables)) {
-      set_variables <- variables
-      if(is.null(set_variables[[xvar]])) {
-        if(deriv == 0) set_variables[[xvar]] <- eps
-        if(deriv > 0 | deriv_model)  set_variables[[xvar]] <- 0
-        if(method == 'custom') set_variables <- NULL
-      } else if(!is.null(set_variables[[xvar]])) {
-        if(eval(set_variables[[xvar]]) !=0) {
-          if(verbose) {
-            message("The value of ", xvar, " is not same as used in the ",
-                    " \n", 
-                    " model fit. Please check if this is intended")
+  # isFALSE new on 26 04 2024 to use variables with custom with counterfactual
+  if(method == 'custom') {
+    if (!is.null(variables)) {
+      if (!is.list(variables)) {
+        set_variables <- variables
+      } else if (is.list(variables)) {
+        set_variables <- variables
+        if(is.null(set_variables[[xvar]])) {
+          if(deriv == 0) set_variables[[xvar]] <- eps
+          if(deriv > 0 | deriv_model)  set_variables[[xvar]] <- 0
+          # if(method == 'custom') set_variables <- NULL
+        } else if(!is.null(set_variables[[xvar]])) {
+          if(eval(set_variables[[xvar]]) !=0) {
+            if(verbose) {
+              message("The value of ", xvar, " is not same as used in the ",
+                      " \n",
+                      " model fit. Please check if this is intended")
+            }
           }
         }
       }
+    } else if (is.null(variables)) {
+      if(deriv == 0) set_variables <- list(eps)
+      if(deriv > 0 | deriv_model)  set_variables <- list(0)
+      if(method == 'custom') set_variables <- NULL
+      if(!is.null(set_variables)) names(set_variables) <- xvar
     }
-  } else if (is.null(variables)) {
-    if(deriv == 0) set_variables <- list(eps)
-    if(deriv > 0 | deriv_model)  set_variables <- list(0)
-    if(method == 'custom') set_variables <- NULL
-    if(!is.null(set_variables)) names(set_variables) <- xvar
-  } 
+  } # if(isFALSE(variables)) {
+
+  if(method == 'pkg') {
+    set_variables <- NULL
+  }
   
   
-  
+  set_variables <- variables
+ 
+
   if(is.null(by)) {
     if(is.null(cov)) {
       set_group <- FALSE
@@ -674,7 +695,7 @@ marginal_comparison.bgmfit <- function(model,
       }
     }
     
-    
+
     if(method == 'pkg') {
         if(!plot) {
           if(!average) {
@@ -684,6 +705,7 @@ marginal_comparison.bgmfit <- function(model,
             out <- do.call(marginaleffects::avg_comparisons, 
                            comparisons_arguments)
           }
+          
         }
         if(plot) {
           if(isFALSE(set_group)) comparisons_arguments$by <- NULL
@@ -727,10 +749,13 @@ marginal_comparison.bgmfit <- function(model,
       predictions_arguments[['method']] <- NULL
       predictions_arguments[['hypothesis']] <- NULL # evaluated later
       by <- predictions_arguments[['by']] 
+      
+     
+      
       if(!average) {
         out <- do.call(marginaleffects::predictions, predictions_arguments)
       } else if(average) {
-        out <- do.call(marginaleffects::predictions, predictions_arguments)
+        out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
       }
       
       onex0 <- out %>% marginaleffects::posterior_draws()
@@ -1039,8 +1064,14 @@ marginal_comparison.bgmfit <- function(model,
                       dplyr::all_of('conf.high')) %>% 
       data.frame()
     
-    remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
-                      'predicted_hi', 'predicted', 'rowid')
+    if(method == 'pkg') {
+      remove_cols_ <- c('tmp_idx', 'predicted_lo', 
+                        'predicted_hi', 'predicted', 'rowid')
+    } else if(method == 'custom') {
+      remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
+                        'predicted_hi', 'predicted', 'rowid')
+    }
+    
     
     out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
     row.names(out_sf) <- NULL
