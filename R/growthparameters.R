@@ -3,10 +3,13 @@
 
 #' Estimate growth parameters from the model fit 
 #'
-#' @description The \strong{growthparameters()} computes population
-#'   average and and individual-specific growth parameters (such as age at peak
-#'   growth velocity) and the uncertainty (standard error, SE and the credible
-#'   interval, CI).
+#' @description The \strong{growthparameters()} computes population average and
+#'   and individual-specific growth parameters (such as age at peak growth
+#'   velocity) and the uncertainty (standard error, SE and the credible
+#'   interval, CI). Note that a better alternative is to use
+#'   [growthparameters_comparison()] function that not only allows estimation of
+#'   adjusted parameters but also makes it possible to compare these parameters
+#'   across groups.
 #'
 #' @details The \strong{growthparameters()} internally calls the
 #'   [fitted_draws()] or the [predict_draws()] function to estimate the first

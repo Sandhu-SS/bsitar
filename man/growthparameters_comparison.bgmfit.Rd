@@ -52,9 +52,9 @@
   hypothesis = NULL,
   equivalence = NULL,
   eps = NULL,
-  constrats_by = NULL,
-  constrats_at = NULL,
-  constrats_subset = NULL,
+  constrats_by = FALSE,
+  constrats_at = FALSE,
+  constrats_subset = FALSE,
   reformat = NULL,
   estimate_center = NULL,
   estimate_interval = NULL,
@@ -316,16 +316,17 @@ and \code{plot_ppc()}.}
 
 \item{method}{A character string to specify whether to make computation at
 post draw stage by using the \code{'marginaleffects'} machinery i.e.,
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}, default) or via
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}) or via
 the custom functions written for efficiency and speed (\code{method =
-  'custom'}). Note that \code{method = 'custom'} is on experimental basis
-and should be used cautiously. The \code{method = 'custom'} is particularly
-useful when more than one parameter are being evaluated such as
-\code{'apgv'}) and \code{'pgv'} (see \code{'parameter'})). Note that since
-\code{method = 'custom'} is applied only during the post draw stage, all
-the features available from the \code{'marginaleffects'} (such as getting
-'marginal' or the 'conditional' effects at population or the individual
-level) are available for the \code{method = 'custom'}.}
+  'custom'}, default). Note that \code{method = 'pkg'} does not work except
+for very simple cases and therefore and should be used cautiously. The
+\code{method = 'custom'} is the recommended and preferred method because it
+allows computation of more than one parameter simultaneously (such as
+\code{'apgv'}) and \code{'pgv'}, see \code{'parameter'})), \code{method =
+  'custom'} is applied only during the post draw stage, all comparison of
+multiple parameters simultaneously via the \code{hypothesis} argument, and
+makes it possible to add or return draws (see \code{pdraws} and
+\code{pdraws} for details).}
 
 \item{pdraws}{A character string (default \code{FALSE}) to indicate whether
 to return raw draws (if \code{pdraws = 'return'}), add raw draws (if
@@ -426,7 +427,7 @@ the maximum and minimum values of the variable with respect to which we
 are taking the derivative. Changing \code{eps} may be necessary to avoid
 numerical problems in certain models.}
 
-\item{constrats_by}{A character vector (default \code{NULL}) specifying the
+\item{constrats_by}{A character vector (default \code{FALSE}) specifying the
 variable(s) by which estimates and contrast (post draw stage) via the
 \code{hypothesis} argument should be computed. Note that variable(s)
 specified in the \code{constrats_by} should be sub set of the variables
@@ -438,7 +439,7 @@ turned off by using \code{constrats_by = FALSE}.  The \code{constrats_by}
 argument is only evaluated when \code{method = 'custom'} and the
 \code{hypothesis} is not \code{NULL}.}
 
-\item{constrats_at}{A named list (default \code{NULL}) to specify the values
+\item{constrats_at}{A named list (default \code{FALSE}) to specify the values
 at which estimates and contrast (post draw stage) via the \code{hypothesis}
 argument should be computed. The \code{constrats_at} can be specified as a
 one of the following strings \code{'max', 'min', 'unique', 'range'} (e.g.,
@@ -448,11 +449,11 @@ numeric vector (e.g., \code{constrats_at = list(age = c(6, 7))}). When
 be automatically set at its 'unique' values i.e., \code{constrats_at =
   list(age = 'unique')}. This automatic behavior of setting at 'unique'
 values can be turned off by using \code{constrats_at = FALSE}. Note that
-\code{constrats_at} only subsets the data that has been set up
-the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or specified as the \code{newdata}
-argument. In case no match is found, an error will be triggered. The
-\code{constrats_at} argument is only evaluated when \code{method = 'custom'}
-and the \code{hypothesis} is not \code{NULL}.}
+\code{constrats_at} only subsets the data that has been set up the
+\code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or specified as the \code{newdata} argument.
+In case no match is found, an error will be triggered. The
+\code{constrats_at} argument is only evaluated when \code{method =
+  'custom'} and the \code{hypothesis} is not \code{NULL}.}
 
 \item{constrats_subset}{A named list (default \code{FALSE}) to subset the
 estimates (post draw stage) at which contrast are computed via the

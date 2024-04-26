@@ -371,7 +371,7 @@ the maximum and minimum values of the variable with respect to which we
 are taking the derivative. Changing \code{eps} may be necessary to avoid
 numerical problems in certain models.}
 
-\item{constrats_by}{A character vector (default \code{NULL}) specifying the
+\item{constrats_by}{A character vector (default \code{FALSE}) specifying the
 variable(s) by which estimates and contrast (post draw stage) via the
 \code{hypothesis} argument should be computed. Note that variable(s)
 specified in the \code{constrats_by} should be sub set of the variables
@@ -383,7 +383,7 @@ turned off by using \code{constrats_by = FALSE}.  The \code{constrats_by}
 argument is only evaluated when \code{method = 'custom'} and the
 \code{hypothesis} is not \code{NULL}.}
 
-\item{constrats_at}{A named list (default \code{NULL}) to specify the values
+\item{constrats_at}{A named list (default \code{FALSE}) to specify the values
 at which estimates and contrast (post draw stage) via the \code{hypothesis}
 argument should be computed. The \code{constrats_at} can be specified as a
 one of the following strings \code{'max', 'min', 'unique', 'range'} (e.g.,
@@ -393,11 +393,11 @@ numeric vector (e.g., \code{constrats_at = list(age = c(6, 7))}). When
 be automatically set at its 'unique' values i.e., \code{constrats_at =
   list(age = 'unique')}. This automatic behavior of setting at 'unique'
 values can be turned off by using \code{constrats_at = FALSE}. Note that
-\code{constrats_at} only subsets the data that has been set up
-the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or specified as the \code{newdata}
-argument. In case no match is found, an error will be triggered. The
-\code{constrats_at} argument is only evaluated when \code{method = 'custom'}
-and the \code{hypothesis} is not \code{NULL}.}
+\code{constrats_at} only subsets the data that has been set up the
+\code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or specified as the \code{newdata} argument.
+In case no match is found, an error will be triggered. The
+\code{constrats_at} argument is only evaluated when \code{method =
+  'custom'} and the \code{hypothesis} is not \code{NULL}.}
 
 \item{constrats_subset}{A named list (default \code{FALSE}) to subset the
 estimates (post draw stage) at which contrast are computed via the
