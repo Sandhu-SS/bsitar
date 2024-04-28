@@ -864,9 +864,10 @@ marginal_draws.bgmfit <-
        }
        
        set_constrats_by <- c(constrats_by, 'draw')
-       
        namesx <- c('estimate', 'conf.low', 'conf.high')
-       setdrawidparm_ <- c(setdrawidparm, namesx)
+       
+       setdrawidparm_at <- c(constrats_at, 'term')
+       setdrawidparm_at_ <- c(setdrawidparm_at, namesx)
        
        out_sf_hy <-
          onex0 %>% 
@@ -882,7 +883,7 @@ marginal_draws.bgmfit <-
          collapse::fsummarise(collapse::mctl(
            get_pe_ci_collapse(.data[['estimate']]))
          ) %>%
-         collapse::frename(., setdrawidparm_)
+         collapse::frename(., setdrawidparm_at_)
        
      } # if(!is.null(hypothesis)) {
    } # if(method == 'custom') {
