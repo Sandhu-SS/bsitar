@@ -1,6 +1,32 @@
 # bsitar (development version)
 
-# bsitar 0.2.0
+# bsitar 0.2.2
+
+
+### New feature
+
+- Added three new functions to compute and compare growth curve (see  ```marginal_draws()``` and       
+  ```marginal_comparison()```) and growth parameters (via ```growthparameters_comparison()```). 
+  These three function utilize the various functions available from the ```marginaleffects```  
+  package such as ```marginaleffects::predictions()```, ```marginaleffects::avg_predictions()```, 
+  ```marginaleffects::comparisons()``` and ```marginaleffects::avg_comparisons()```. 
+  The ```marginal_draws()```, ```marginal_comparison()``` and ```growthparameters_comparison()```
+  are fully customized for the ```bsitar``` package and yet incoprporate the full flexibility offerered
+  by the ```marginaleffects``` package. 
+ 
+### Bugfixes
+
+- bsitar(): The 'sigma_cov_init_beta = random' argument was setting wrong initial values for the covariates  
+  included in the 'sigma' formula. The initials for Intercept ('sigma_init_beta') were used for covariates too.
+
+
+
+### Miscellaneous
+- Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing functions. The environment is now automatically set to match the environment of exposed functions. It is important to note that setting environment manually (via the 'envir' argument) may actually result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests. 
+- Minor corrections/changes to make R code more efficient.
+
+
+# bsitar 0.2.1
 
 
 ### New feature

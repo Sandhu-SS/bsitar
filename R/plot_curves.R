@@ -6,7 +6,10 @@
 #'@description The \strong{plot_curves()} provides visualization of six
 #'  different types of growth curves that are plotted by using the \pkg{ggplot2}
 #'  package. The \strong{plot_curves()} also allows users to make their own
-#'  detailed plots from the data returned as a \code{data.frame}.
+#'  detailed plots from the data returned as a \code{data.frame}. Note that an
+#'  alternative approach is to use [marginal_draws()] function that not
+#'  only allows estimation of adjusted curves but also makes it possible to
+#'  compare them across groups by using the \code{hypotheses} argument.
 #'
 #'@details The \strong{plot_curves()} is a generic function that allows
 #'  visualization of following six curves: population average distance curve,

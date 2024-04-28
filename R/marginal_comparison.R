@@ -83,7 +83,7 @@
 #'   'custom'}, default). Note that \code{method = 'custom'} is useful and
 #'   rather needed when testing hypotheses. Note that when \code{method =
 #'   'custom'}, [marginaleffects::predictions()] and not the
-#'   [marginaleffects::comparison()] is used internally.
+#'   [marginaleffects::comparisons()] is used internally.
 #' 
 #' @param constrats_by A character vector (default \code{NULL}) specifying the
 #'   variable(s) by which hypotheses (post draw stage) should be tested
@@ -341,6 +341,7 @@ marginal_comparison.bgmfit <- function(model,
   estimate <- NULL;
   `:=` <- NULL;
   `.` <- NULL;
+  drawid <- NULL;
   
   
  
@@ -874,7 +875,7 @@ marginal_comparison.bgmfit <- function(model,
           collapse::fselect(set_constrats_by) %>% 
           collapse::frename('estimate' = 'draw') %>% 
           collapse::fsummarise(collapse::qDF(
-            get_hypothesis_x_funx(.data,
+            get_hypothesis_x(.data,
                                   by = constrats_by,
                                   hypothesis = hypothesis,
                                   draws = 'estimate'))) %>%
