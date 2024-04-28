@@ -11,7 +11,7 @@
   package such as ```marginaleffects::predictions()```, ```marginaleffects::avg_predictions()```, 
   ```marginaleffects::comparisons()``` and ```marginaleffects::avg_comparisons()```. 
   The ```marginal_draws()```, ```marginal_comparison()``` and ```growthparameters_comparison()```
-  are fully customized for the ```bsitar``` package and yet incoprporate the full flexibility offerered
+  are fully customized for the ```bsitar``` package and yet inappropriate the full flexibility offered
   by the ```marginaleffects``` package. 
  
 ### Bugfixes

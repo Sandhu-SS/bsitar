@@ -33,22 +33,21 @@
 #'   \code{optimize_y} are same as described above for the \code{optimize_x}.
 #'   
 #' @param transform_prior_class A character vector (default \code{NULL})
-#'   specifying the transformations of location-scale based priors such as
-#'   \code{normal()} when response variable (i.e., \code{y}) is \code{'log'} or
-#'   \code{'sqrt'} transformed. The prior type that could be transformed are
+#'   specifying the transformations of location-scale based priors (such as
+#'   \code{normal()}) when response variable (i.e., \code{y}) is \code{'log'} or
+#'   \code{'sqrt'} transformed (currently available only for \code{'log'}
+#'   transformed \code{y}). The prior types that can be transformed are
 #'   \code{'beta'}, \code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}.
-#'   Currently it is available only for \code{'log'} transformed \code{y}. Each
-#'   prior type (i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'}) specified
-#'   via \code{transform_prior_class} is log transformed as follows: \cr
-#'  \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr 
-#'  \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr 
-#'  where location and scale are the original parameters supplied by the user
-#'  and the log_location and log_scale are the equivalent parameters on the log
-#'  scale. For more details, see \code{a_prior_beta} argument in [bsitar()]
-#'  function. Note that \code{transform_prior_class} is used as an experiment
-#'  and therefore results may not be what user intended. Thus we recommend to
-#'  explicitly set the desired prior and not to use
-#'  \code{transform_prior_class}.
+#'   Each prior type (i.e., \code{'beta', 'sd', 'rsd', 'sigma', 'dpar'})
+#'   specified via \code{transform_prior_class} is log transformed as follows:
+#'   \cr \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))},
+#'   \cr \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr where
+#'   location and scale are the original parameters supplied by the user and the
+#'   log_location and log_scale are the equivalent parameters on the log scale.
+#'   For more details, see \code{a_prior_beta} argument in [bsitar()] function.
+#'   Note that \code{transform_prior_class} is used on an experimental basis and
+#'   therefore results may not be what user intended. Thus we recommend to
+#'   explicitly set the desired prior on \code{y} scale.
 #'  
 #' @param transform_beta_coef A character vector (default \code{NULL})
 #'   specifying the transformations of location-scale based priors for specific
@@ -60,17 +59,19 @@
 #'   transformed whereas parameter \code{'a'} will be left unchanged because
 #'   default prior for parameter \code{'a'} is based on outcome  \code{y} itself
 #'   (e.g., \code{a_prior_beta = normal(ymean, ysd)}) which has be transformed.
-#'   However, we strongly suggest that user explicitly set the desired prior and
-#'   not to rely on \code{transform_beta_coef} because it is included on
-#'   experimental basis. See \code{transform_prior_class} for details.
+#'   Note that \code{transform_beta_coef} is used on an experimental basis and
+#'   therefore results may not be what user intended. Thus we recommend to
+#'   explicitly set the desired prior on \code{y} scale.
 #' 
 #' @param transform_sd_coef A character vector (default \code{NULL}) specifying
 #'   the transformations of location-scale based priors for specific group level
 #'   coefficient(s) when response variable (i.e., \code{y}) is \code{'log'} or
 #'   \code{'sqrt'} transformed. The coefficient that could be transformed are
 #'   \code{'a'}, \code{'b'}, \code{'c'}, \code{'d'} and \code{'s'}. The default
-#'   is \code{transform_beta_coef = c('b',' b', 'd')}. See
-#'   \code{transform_prior_class} and \code{transform_beta_coef}  for details.
+#'   is \code{transform_beta_coef = c('b',' b', 'd')}. Note that
+#'   \code{transform_sd_coef} is used on an experimental basis and therefore
+#'   results may not be what user intended. Thus we recommend to explicitly set
+#'   the desired prior on \code{y} scale.
 #'  
 #' @param exclude_default_funs A logical to indicate whether transformations for
 #'   (\code{x} and \code{y}) variables used in the original model fit should be
@@ -157,8 +158,11 @@ optimize_model.bgmfit <- function(model,
                                   optimize_df = NULL,
                                   optimize_x = list(NULL, log,  sqrt),
                                   optimize_y = list(NULL, log,  sqrt),
-                                  transform_prior_class = c('beta', 'sd', 
-                                                       'rsd', 'sigma', 'dpar'),
+                                  transform_prior_class = c('beta', 
+                                                            'sd', 
+                                                            'rsd', 
+                                                            'sigma', 
+                                                            'dpar'),
                                   transform_beta_coef = c('b', 'c', 'd'),
                                   transform_sd_coef = c('b', 'c', 'd'),
                                   exclude_default_funs = TRUE,
@@ -314,7 +318,6 @@ optimize_model.bgmfit <- function(model,
       }
     
     xxo <- gsub("[[:space:]]", "", xo)
-    
     xxo_g <- gsub('\"', "", xxo)
     xxo_g2 <- 
       grepl(
@@ -350,9 +353,6 @@ optimize_model.bgmfit <- function(model,
   
   
   optimize_df <- as.factor(optimize_df)
-  
-  # optimize_df <- get_args_opt(deparse(substitute(optimize_df)))
-  
   optimize_x  <- get_args_opt(deparse(substitute(optimize_x)))
   optimize_y  <- get_args_opt(deparse(substitute(optimize_y)))
   
@@ -603,7 +603,6 @@ optimize_model.bgmfit <- function(model,
     
     
     if ('waic' %in% add_fit_criteria) {
-      # enverr. <- parent.frame()
       enverr. <- environment()
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
@@ -665,7 +664,6 @@ optimize_model.bgmfit <- function(model,
     
     
     if ('bayes_R2' %in% add_bayes_R) {
-      # enverr. <- parent.frame()
       enverr. <- environment()
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
@@ -729,7 +727,6 @@ optimize_model.bgmfit <- function(model,
     
     if ('loo' %in% add_fit_criteria) {
       if ('loo' %in% add_fit_criteria) {
-        # enverr. <- parent.frame()
         enverr. <- environment()
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
@@ -790,7 +787,6 @@ optimize_model.bgmfit <- function(model,
       }
       
       if ('loo' %in% add_fit_criteria) {
-        # enverr. <- parent.frame()
         enverr. <- environment()
         assign('err.', FALSE, envir = enverr.)
         tryCatch(
@@ -972,7 +968,7 @@ optimize_model.bgmfit <- function(model,
       user_call   <- rlang::call_match(user_call, bsitar::bsitar)
       newargs     <- all_same_args_c_diffs
       for (newargsi in names(newargs)) {
-        user_call[[newargsi]] <- NULL
+        if(!is.null(user_call[[newargsi]])) user_call[[newargsi]] <- NULL
       }
       user_call_data_name <- user_call$data
       assign(deparse(user_call_data_name), newdata)
@@ -1438,7 +1434,6 @@ optimize_model.bgmfit <- function(model,
       
       # Add fit_criteria and bares_R to the fit
       # Also, add summary data frames for criteria and R square
-      
       # 'setresp' to anything so that even multivariate will be response wise
       # if desired, this behavior
       # if(length(fit$model_info$ys) == 1) setresp <- NULL
@@ -1483,19 +1478,6 @@ optimize_model.bgmfit <- function(model,
         } else {
           fit <- fit_ac
         } # tryCatch
-        # fit <- add_citeria_fun(
-        #   fit,
-        #   add_fit_criteria = add_fit_criteria,
-        #   add_bayes_R =  NULL,
-        #   resp = setresp,
-        #   digits = digits,
-        #   df = df,
-        #   xfun_print = xfun_print,
-        #   yfun_print = yfun_print,
-        #   usesavedfuns = usesavedfuns,
-        #   clearenvfuns = clearenvfuns,
-        #   envir = envir
-        # )
       } # if (!is.null(add_fit_criteria)) {
       
       if (!is.null(add_bayes_R)) {
@@ -1527,22 +1509,8 @@ optimize_model.bgmfit <- function(model,
         } else {
           fit <- fit_rs
         } # tryCatch
-        # fit <- add_citeria_fun(
-        #   fit,
-        #   add_fit_criteria = NULL,
-        #   add_bayes_R =  add_bayes_R,
-        #   resp = setresp,
-        #   digits = digits,
-        #   df = df,
-        #   xfun_print = xfun_print,
-        #   yfun_print = yfun_print,
-        #   usesavedfuns = usesavedfuns,
-        #   clearenvfuns = clearenvfuns,
-        #   envir = envir
-        # )
       } # if (!is.null(add_bayes_R)) {
     } # if(!is.null(fit)) {
-    
     return(fit)
   }
   
@@ -1585,20 +1553,7 @@ optimize_model.bgmfit <- function(model,
     }
     
     
-    ########################
-    
-    
-    
-    
-    
-    ########################
-    
-    
-    
-    # loo_fitx <<- loo_fit
-    # loo_diagnostic_fitx <<- loo_diagnostic_fit
-    # waic_fitx <<- waic_fit
-    # bayes_R2_fitx <<- bayes_R2_fit
+   ###########################################
     
     
     attributes(optimize_list) <- NULL
@@ -1658,10 +1613,7 @@ optimize_model.bgmfit <- function(model,
         dplyr::bind_rows(., bayes_R2_fit)
     }
     
-    
-    # optimize_summary <- optimize_summary %>%
-    #   dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
-    #                               ~ round(., digits = digits)))
+   ########################################
     
     
     if(nrow(optimize_summary) > 0) {
