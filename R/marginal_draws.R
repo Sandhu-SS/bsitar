@@ -31,22 +31,34 @@
 #'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
 #'   are called to compute predictions (see \code{average} for details).
-#'   
-#' @param method A character string to specify whether to make computation at
-#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
-#'   [marginaleffects::predictions()] (\code{method = 'pkg'}, default) or via
-#'   the custom functions written for efficiency and speed (\code{method =
-#'   'custom'}). Note that \code{method = 'custom'} is on experimental basis
-#'   and should be used cautiously. A particular use case is if user wants to
-#'   compute estimates and comparisons together for a factor co variate i.e.,
-#'   \code{by = 'cov'}, or at each value of predictor (typically 'age') by 
-#'   setting \code{by = c('age', 'cov')}. The \code{method} is ignored when 
-#'   \code{by = FALSE}.
 #' 
 #' @param deriv An integer to indicate whether to estimate distance curve or its
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
 #'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
+#'
+#' @param method A character string to specify whether to make computation at
+#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
+#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}) or via
+#'   the custom functions written for efficiency and speed (\code{method =
+#'   'custom'}, default). Note that \code{method = 'custom'} is useful and
+#'   rather needed when testing hypotheses. Note that when \code{method =
+#'   'custom'}, [marginaleffects::predictions()] and not the
+#'   [marginaleffects::comparison()] is used internally.
+#' 
+#' @param constrats_by A character vector (default \code{NULL}) specifying the
+#'   variable(s) by which hypotheses (post draw stage) should be tested
+#'   (see \code{hypothesis} argument). Note that variable(s)
+#'   specified in the \code{constrats_by} should be sub set of the variables
+#'   included in the \code{'by'} argument. 
 #'   
+#' @param constrats_at A character vector (default \code{NULL}) specifying the
+#'   variable(s) at which hypotheses (post draw stage) should be tested (see
+#'   \code{hypothesis} argument). Note that variable(s) specified in the
+#'   \code{constrats_at} should be sub set of the variables included in the
+#'   \code{'by'} argument. The \code{constrats_at} is particularly useful when
+#'   number of rows in the estimates is large. This is because the
+#'   \pkg{marginaleffects} does not allow hypotheses testing when the number of
+#'   rows in the estimates is more that 25.  
 #'  
 #' 
 #' @inheritParams growthparameters.bgmfit
@@ -143,7 +155,6 @@ marginal_draws.bgmfit <-
            equivalence = NULL,
            constrats_by = NULL,
            constrats_at = NULL,
-           constrats_subset = NULL,
            reformat = NULL,
            estimate_center = NULL,
            estimate_interval = NULL,
@@ -468,7 +479,6 @@ marginal_draws.bgmfit <-
         method,
         constrats_by,
         constrats_at,
-        constrats_subset,
         usedtplyr
       )
     ))[-1]
@@ -762,394 +772,183 @@ marginal_draws.bgmfit <-
      
      onex0 <- out %>% marginaleffects::posterior_draws()
      
-     if(isFALSE(constrats_by)) {
-       constrats_by <- NULL
-     } else if(!isFALSE(constrats_by)) {
-       if(is.null(constrats_by)) {
-         if(is.null(hypothesis)) {
-           constrats_by <- NULL
-         } else if(!is.null(hypothesis)) {
-           if(!isFALSE(by)) constrats_by <- setdiff(by, xvar) 
-         }
-       } else if(!is.null(constrats_by)) {
-         constrats_by <- constrats_by
-       }
-     }
+     
+     setdrawidparm <- by
+     namesx <- c('estimate', 'conf.low', 'conf.high')
+     setdrawidparm_ <- c(setdrawidparm, namesx)
+     
+     out_sf <- onex0 %>% collapse::fsubset(., drawid == 1) %>%
+       collapse::fselect(., setdrawidparm_)
      
      
-     if(isFALSE(constrats_at)) {
-       constrats_at <- NULL
-     } else if(!isFALSE(constrats_at)) {
-       if(is.null(constrats_at)) {
-         constrats_at <- list()
-         for(byi in by) {
-           if(is.numeric(constrats_at[[byi]])) {
-             constrats_at[[byi]] <- 'unique'
-           }
-         }
-         if(length(constrats_at) == 0) constrats_at <- NULL
-       }
-     }
-     
-    
-     # For hypothesis
-     groupvarshyp1 <- c('drawid')
-     groupvarshyp2 <- c('term')
-     if(!is.null(constrats_at)) {
-       for (caxi in names(constrats_at)) {
-         if(!caxi %in% names(onex0)) {
-           stop("Variable '", caxi, ". specified in 'constrats_at' is not in",
-                "\n ", 
-                " the estimates. Note that ", caxi, " should also be included",
-                "\n ", 
-                " in the 'by' argument. The current 'by' argument includes:", 
-                "\n ",
-                collapse_comma(by)
-           )
-         }
-         allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
-         if(is.character(constrats_at[[caxi]])) {
-           if(length(constrats_at[[caxi]]) > 1) {
-             stop(caxi, " specified in 'constrats_at' as character should be a 
-                  single character:",
-                  "\n ", 
-                  collapse_comma(allowed_char_constrats_at)
-             )
-           }
-           if(!constrats_at[[caxi]] %in% allowed_char_constrats_at) {
-             stop(constrats_at[[caxi]], " specified in 'constrats_at' as 
-                  character should be one of",
-                  "\n ", 
-                  collapse_comma(allowed_char_constrats_at)
-             )
-           }
-           getatval<- paste0(constrats_at[[caxi]], "(", "onex0", "[['", caxi, "']]", ")" )
-           getatval <- eval(parse(text = getatval))                
-         } # if(is.character(constrats_at[[caxi]])) {
-         
-         if(!is.character(constrats_at[[caxi]])) {
-           getatval <- constrats_at[[caxi]]
-         }
-         constrats_at[[caxi]] <- getatval
-         groupvarshyp1 <- c(caxi, groupvarshyp1)
-         groupvarshyp2 <- c(caxi, groupvarshyp2)
-       } # for (caxi in names(constrats_at)) {
-       
-       
-       for (caxi in names(constrats_at)) {
-         onex1 <- base::subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
-         if(nrow(onex1) == 0) {
-           stop(caxi, " specified in 'constrats_at' has resulted in zero rows:",
-                "\n ", 
-                ""
-           )
-         }
-       }
-     } # if(!is.null(constrats_at)) {
-     
-    
-     
-     if(is.null(constrats_at)) {
-       onex1 <- onex0
-     }
-     
-
-     if(!is.null(constrats_subset)) {
-       for (caxi in names(constrats_subset)) {
-         if(!caxi %in% names(onex0)) {
-           stop("Variable '", caxi, ". specified in 'constrats_subset' is not ",
-                " avaialble in the 'by' argument.",
-                "\n ", 
-                " Please include ", caxi, " in the 'by' argument.",
-                "\n ", 
-                " The current 'by' argument includes:", 
-                "\n ",
-                collapse_comma(by)
-           )
-         }
-         getatval <- constrats_subset[[caxi]]
-         constrats_subset[[caxi]] <- getatval
-         groupvarshyp1 <- c(caxi, groupvarshyp1)
-         groupvarshyp2 <- c(caxi, groupvarshyp2)
-       } # for (caxi in names(constrats_subset)) {
-       
-       
-       for (caxi in names(constrats_subset)) {
-         onex1 <- 
-           base::subset(onex1, onex1[[caxi]] %in% constrats_subset[[caxi]])
-         if(nrow(onex1) == 0) {
-           stop(caxi, " specified in 'constrats_subset' resulted in zero rows:",
-                "\n ", 
-                ""
-           )
-         }
-       }
-     } # if(!is.null(constrats_subset)) {
-     
-     
-     parmi_estimate <- 'estimate'
-     measurevar     <- 'draw'
-     groupvars2 <- predictions_arguments[['by']] 
-     groupvars1 <- c('drawid', groupvars2)
-     
-     aggform1 <- as.formula(paste(measurevar, paste(groupvars1, collapse=" + "), 
-                                  sep=" ~ "))
-     aggform2 <- as.formula(paste(measurevar, paste(groupvars2, collapse=" + "), 
-                                  sep=" ~ "))
-     
-     
-     if(ec_agg == "mean") 
-       onex1 <- stats::aggregate(aggform1, data = onex1, mean) 
-     
-     if(ec_agg == "median") 
-       onex1 <- stats::aggregate(aggform1, data = onex1, median) 
-     
-     
-     
-     if(usedtplyr) {
-       get_pe_ci2 <- get_pe_ci
-       hypothesisargs <- formals(get_pe_ci2)
-       hypothesisargs[['x']]          <- as.name('x')
-       hypothesisargs[['draw']]       <- 'estimate'
-       hypothesisargs[['...']]        <- NULL
-       hypothesisargs[['na.rm']]      <- TRUE
-       hypothesisargs <- base::append(hypothesisargs, as.name('...') , after = 1)
-       names(hypothesisargs)[2] <- '...'
-       formals(get_pe_ci2) <- hypothesisargs
-       out_sf <- onex1 %>% dtplyr::lazy_dt() %>%
-         dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-         dplyr::group_by_at(groupvars2) %>% 
-         dplyr::group_modify(., get_pe_ci2, .keep = F) %>% 
-         dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-                                      fixed = TRUE))
-     } else if(!usedtplyr) {
-       out_sf <- onex1 %>% 
-         dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-         dplyr::reframe(
-           dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
-                         .unpack = TRUE),
-           .by = dplyr::all_of(!! groupvars2)
-         ) %>%
-         dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-                                      fixed = TRUE))
-     }
-     
-    
      
      if(!is.null(hypothesis)) {
-       get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
-         get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, 
-                          draws = draws)
+       # For hypothesis
+       groupvarshyp1 <- c('drawid')
+       groupvarshyp2 <- c('term')
+       if(!is.null(constrats_at)) {
+         if(!is.character(constrats_at)) 
+           stop("'constrats_at' must be a character vector")
+         for (caxi in constrats_at) {
+           if(!caxi %in% names(onex0)) {
+             stop("Variable '", caxi, ". specified in 'constrats_at' is not in",
+                  "\n ", 
+                  " the estimates. Note that ", caxi, " should also be included",
+                  "\n ", 
+                  " in the 'by' argument. The current 'by' argument includes:", 
+                  "\n ",
+                  collapse_comma(by)
+             )
+           }
+           groupvarshyp1 <- c(caxi, groupvarshyp1)
+           groupvarshyp2 <- c(caxi, groupvarshyp2)
+         } # for (caxi in names(constrats_at)) {
+       } # if(!is.null(constrats_at)) {
+       
+       
+       if(is.null(constrats_by)) {
+         stop("Please specify 'constrats_by' argument when testing 'hypothesis'",
+              "\n ",
+              " The available options are: ",
+              collapse_comma(by)
+         )
        }
        
-       if(nrow(onex1) > 25) {
+       if(!is.null(constrats_by)) {
+         if(!is.character(constrats_by)) 
+           stop("'constrats_by' must be a character vector")
+         for (caxi in constrats_by) {
+           if(!caxi %in% names(onex0)) {
+             stop("Variable '", caxi, ". specified in 'constrats_by' is not in",
+                  "\n ", 
+                  " the estimates. Note that ", caxi, " should also be included",
+                  "\n ", 
+                  " in the 'by' argument. The current 'by' argument includes:", 
+                  "\n ",
+                  collapse_comma(by)
+             )
+           }
+         } # for (caxi in names(constrats_by)) {
+       } # if(!is.null(constrats_by)) {
+       
+       
+       if(nrow(out_sf) > 25) {
          if(is.null(constrats_at)) {
-           message("Note that the 'marginaleffects' package does not allow" ,
-                   "\n",
-                   "hypothesis argument when estimates rows are more than 25",
-                   "\n",
-                   "To avoid this issue, you can use 'constrats_at' argument",
-                   "\n"
+           cat(" Note that the 'marginaleffects' package does not allow" ,
+               "\n",
+               "'hypothesis' argument when estimates rows are more than 25",
+               "\n",
+               "To avoid this issue, you can use 'constrats_at' argument",
+               "\n"
            )
          }
        }
        
-       if(usedtplyr) {
-         get_hypothesis_x_modifyx2 <- get_hypothesis_x
-         hypothesisargs <- formals(get_hypothesis_x_modifyx2)
-         hypothesisargs[['x']]          <- as.name('x')
-         hypothesisargs[['hypothesis']] <- hypothesis
-         hypothesisargs[['draws']]      <- as.name(parmi_estimate)
-         hypothesisargs[['by']]         <- constrats_by
-         hypothesisargs[['newdata']]    <- NULL
-         hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
-                                        after = 1)
-         names(hypothesisargs)[2] <- '...'
-         formals(get_hypothesis_x_modifyx2) <- hypothesisargs
+       
+       get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+         if(ec_agg == "mean")  estimate <- 
+             collapse::fmean(x, 
+                             na.rm = na.rm, 
+                             nthreads = arguments$cores) 
          
-         get_pe_ci2 <- get_pe_ci
-         hypothesisargs <- formals(get_pe_ci2)
-         hypothesisargs[['x']]          <- as.name('x')
-         hypothesisargs[['draw']]       <- 'estimate'
-         hypothesisargs[['...']]        <- NULL
-         hypothesisargs[['na.rm']]      <- TRUE
-         hypothesisargs <- base::append(hypothesisargs, as.name('...') , 
-                                        after = 1)
-         names(hypothesisargs)[2] <- '...'
-         formals(get_pe_ci2) <- hypothesisargs
+         if(ec_agg == "median") estimate <- 
+             collapse::fmedian(x, 
+                               na.rm = na.rm, 
+                               nthreads = arguments$cores)
          
-         out_sf_hy <-
-           onex1 %>% dtplyr::lazy_dt() %>%
-           dplyr::group_by_at(groupvarshyp1) %>% 
-           dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-           dplyr::group_modify(., get_hypothesis_x_modifyx2, .keep = F) %>% 
-           dtplyr::lazy_dt(.) %>%
-           dplyr::group_by_at(groupvarshyp2) %>% 
-           dplyr::group_modify(., get_pe_ci2, .keep = F) %>% 
-           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-                                        fixed = TRUE))
-       } else if(!usedtplyr) {
-         out_sf_hy <-
-           onex1 %>% 
-           dplyr::group_by_at(groupvarshyp1) %>% 
-           dplyr::mutate(!! parmi_estimate := eval(parse(text = measurevar))) %>% 
-           dplyr::group_modify(., ~get_hypothesis_x_modify(.x,
-                                                           hypothesis = 
-                                                             hypothesis, 
-                                                           by = constrats_by, 
-                                                           draws = estimate
-           ), .keep = F) %>% 
-           dplyr::ungroup() %>% 
-           dplyr::reframe(
-             dplyr::across(c(dplyr::all_of(parmi_estimate)), get_pe_ci, 
-                           .unpack = TRUE),
-             .by = dplyr::all_of(!! groupvarshyp2)
-           ) %>%
-           dplyr::rename_with(., ~ gsub(paste0(parmi_estimate, "_"), "", .x, 
-                                        fixed = TRUE))
+         if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+                                                        na.rm = na.rm)
+         if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+         cbind(estimate, luci[1], luci[2]) 
        }
+       
+       set_constrats_by <- c(constrats_by, 'draw')
+       
+       namesx <- c('estimate', 'conf.low', 'conf.high')
+       setdrawidparm_ <- c(setdrawidparm, namesx)
+       
+       out_sf_hy <-
+         onex0 %>% 
+         collapse::fgroup_by(groupvarshyp1) %>%
+         collapse::fselect(set_constrats_by) %>% 
+         collapse::frename('estimate' = 'draw') %>% 
+         collapse::fsummarise(collapse::qDF(
+           get_hypothesis_x_funx(.data,
+                                 by = constrats_by,
+                                 hypothesis = hypothesis,
+                                 draws = 'estimate'))) %>%
+         collapse::fgroup_by(groupvarshyp2) %>%
+         collapse::fsummarise(collapse::mctl(
+           get_pe_ci_collapse(.data[['estimate']]))
+         ) %>%
+         collapse::frename(., setdrawidparm_)
+       
      } # if(!is.null(hypothesis)) {
    } # if(method == 'custom') {
    
    
-    # Restore function(s)
-    assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
-    
-    if(!is.null(eval(predictions_arguments$clearenvfuns))) {
-      if(!is.logical(eval(predictions_arguments$clearenvfuns))) {
-        stop('clearenvfuns must be NULL or a logical')
-      } else {
-        setcleanup <- eval(predictions_arguments$clearenvfuns)
-      }
-    }
-    
-    if(is.null(eval(predictions_arguments$clearenvfuns))) {
-      if(is.null(eval(predictions_arguments$usesavedfuns))) {
-        predictions_arguments$usesavedfuns <- usesavedfuns
-      }
-      if(eval(predictions_arguments$usesavedfuns)) {
-        setcleanup <- TRUE 
-      } else {
-        setcleanup <- FALSE
-      }
-    }
-    
-    # Cleanup environment if requested
-    if(setcleanup) {
-      # suppressWarnings({
-        tempgenv <- envir
-        for (oalli in names(oall)) {
-          if(exists(oalli, envir = tempgenv )) {
-            remove(list=oalli, envir = tempgenv)
-          }
-        }
-        tempgenv <- test
-        for (oalli in names(oall)) {
-          if(exists(oalli, envir = tempgenv )) {
-            remove(list=oalli, envir = tempgenv)
-          }
-        }
-      # })
-    } # if(setcleanup) {
-    
-    
-    # fullframe - for marginal_draws, already fullframe returned 
-    # if(!isTRUE(eval(fullframe))) setfullframe <- FALSE
-    # if( isTRUE(eval(fullframe))) setfullframe <- TRUE
-    setfullframe <- FALSE
-    # fullframe
-    full.args$idata_method <- idata_method
-    full.args$fullframe <- eval(full.args$fullframe)
-    full.args$summary   <- TRUE
-    if(!is.null(eval(full.args$fullframe))) {
-      if(eval(full.args$fullframe)) {
-        if(!eval(full.args$summary)) {
-          stop("fullframe can not be combined with summary = FALSE")
-        }
-        if(full.args$idata_method == 'm1') {
-          stop("fullframe can not be combined with idata_method = 'm1'")
-        }
-      }
-    }
-    if(is.null(eval(full.args$fullframe))) {
-      if (!is.na(model$model_info$univariate_by)) {
-        if(full.args$idata_method == 'm1') setfullframe <- FALSE
-        if(full.args$idata_method == 'm2') setfullframe <- TRUE
-      } else {
-        setfullframe <- FALSE
-      }
-    }
-    if (!is.na(model$model_info$univariate_by)) {
-      if(is.null(full.args$fullframe)) 
-        full.args$fullframe <- fullframe <- FALSE
-      if(full.args$fullframe & full.args$idata_method == 'm1') 
-        setfullframe <- FALSE
-      if(full.args$fullframe & full.args$idata_method == 'm2') 
-        setfullframe <- TRUE
-      if(!full.args$fullframe) 
-        setfullframe <- FALSE
-      if(setfullframe) {
-        uvarby <- model$model_info$univariate_by
-        uvarbyresp <- paste0(uvarby, resp)
-        uvarbynewdata <- eval(full.args$newdata) %>% 
-          dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
-        if(setfullframe) out_sf <- cbind(out_sf, uvarbynewdata)
-      }
-    }
-    
-    
-    
-    if(is.null(reformat)) {
-      if(is.null(hypothesis) && is.null(equivalence)) {
-        reformat <- TRUE
-      } else {
-        reformat <- FALSE
-      }
-    }
-    
-    out_sf <- out_sf %>% data.frame() %>% 
-      dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
-                                  ~ round(., digits = digits)))
-    
    
-    if (reformat) {
-      out_sf <- out_sf %>% 
-        dplyr::rename(!!as.symbol(set_names_[1]) := 
-                        dplyr::all_of('estimate')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[2]) := 
-                        dplyr::all_of('conf.low')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := 
-                        dplyr::all_of('conf.high')) %>% 
-        data.frame()
-      
-      remove_cols_ <- c('term',  'tmp_idx', 'predicted_lo', 
-                        'predicted_hi', 'predicted')
-      
-      out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
-
-      if(!is.null(out_sf_hy)) {
-        out_sf_hy <- out_sf_hy %>% data.frame() %>% 
-          dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
-                                      ~ round(., digits = digits))) %>% 
-          dplyr::rename(!!as.symbol(set_names_[1]) := 
-                          dplyr::all_of('estimate')) %>% 
-          dplyr::rename(!!as.symbol(set_names_[2]) := 
-                          dplyr::all_of('conf.low')) %>% 
-          dplyr::rename(!!as.symbol(set_names_[3]) := 
-                          dplyr::all_of('conf.high')) %>% 
-          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
-          data.frame()
-      } # if(!is.null(out_sf_hy)) {
-    }
-    
-    
-    if(!is.null(out_sf_hy)) {
-      row.names(out_sf) <- NULL
-      row.names(out_sf_hy) <- NULL
-      out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
-    } 
-    
-    return(out_sf)
+   out_sf <- out_sf %>% data.frame() %>% 
+     dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                 ~ round(., digits = digits))) %>%
+     data.frame()
+   
+   
+   if(is.null(reformat)) {
+     if(is.null(hypothesis) && is.null(equivalence)) {
+       reformat <- TRUE
+     } else {
+       reformat <- FALSE
+     }
+   }
+   
+   if (reformat) {
+     out_sf <- out_sf %>% 
+       dplyr::rename(!!as.symbol(set_names_[1]) := 
+                       dplyr::all_of('estimate')) %>% 
+       dplyr::rename(!!as.symbol(set_names_[2]) := 
+                       dplyr::all_of('conf.low')) %>% 
+       dplyr::rename(!!as.symbol(set_names_[3]) := 
+                       dplyr::all_of('conf.high')) %>% 
+       data.frame()
+     
+     if(method == 'pkg') {
+       remove_cols_ <- c('tmp_idx', 'predicted_lo', 
+                         'predicted_hi', 'predicted', 'rowid')
+     } else if(method == 'custom') {
+       remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
+                         'predicted_hi', 'predicted', 'rowid')
+     }
+     
+     
+     out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
+     row.names(out_sf) <- NULL
+     
+     
+     
+     if(!is.null(out_sf_hy)) {
+       out_sf_hy <- out_sf_hy %>% data.frame() %>% 
+         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                     ~ round(., digits = digits))) %>% 
+         dplyr::rename(!!as.symbol(set_names_[1]) := 
+                         dplyr::all_of('estimate')) %>% 
+         dplyr::rename(!!as.symbol(set_names_[2]) := 
+                         dplyr::all_of('conf.low')) %>% 
+         dplyr::rename(!!as.symbol(set_names_[3]) := 
+                         dplyr::all_of('conf.high')) %>% 
+         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+         data.frame()
+     } # if(!is.null(out_sf_hy)) {
+   } # if (reformat) {
+   
+   
+   if(!is.null(out_sf_hy)) {
+     out_sf <- out_sf %>% dplyr::ungroup()
+     out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
+     out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
+   } 
+   
+   return(out_sf)
   }
 
 
