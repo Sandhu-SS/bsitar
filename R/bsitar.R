@@ -205,11 +205,16 @@
 #'  \code{'max'} (maximum value of x, i.e., \code{max(x)}), \code{'min'}
 #'  (minimum value of x, i.e., \code{min(x)}), \code{'apv'} (age at peak
 #'  velocity estimated from the velocity curve derived from the simple linear
-#'  model fit to the data), or any real number such as \code{xoffset = 12}.
-#'  The default is \code{xoffset = 'mean'}. For \code{univariate_by} 
-#'  and \code{multivariate} models, the \code{xoffset} can be same for sub 
-#'  models or different for each sub model (see argument \code{x} for details
-#'  on setting different arguments for sub models).
+#'  model fit to the data), or any real number such as \code{xoffset = 12}. The
+#'  default is \code{xoffset = 'mean'}. For \code{univariate_by} and
+#'  \code{multivariate} models, the \code{xoffset} can be same for sub models or
+#'  different for each sub model (see argument \code{x} for details on setting
+#'  different arguments for sub models). Note that if \code{xoffset} is a
+#'  numeric value, it will be internally transformed (\code{log} or \code{sqrt})
+#'  depending on the \code{xfun} argument. Similarly, when \code{xoffset} is
+#'  \code{'mean'}, \code{'min'} or \code{'max'}, then these value are retrieved
+#'  after the \code{log} or \code{sqrt} transformation of the predictor
+#'  variable, \code{'x'}.
 #'
 #'@param bstart An optional character string, or a numeric value to set up the
 #'  origin of the fixed effect parameter \code{b}. The argument \code{bstart}
@@ -4360,8 +4365,23 @@ bsitar <- function(x,
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if (xfunsi == "log") {
         datai[[xsi]] <- log(datai[[xsi]])
+        # Automatically adjust xoffset if numeric value
+        if(is.numeric.like(xoffsetsi)) {
+          zm <- as.numeric(xoffsetsi)
+          xoffsetsi <- round(log(zm), 2)
+          if(verbose) message("'xoffset' value '", zm, "' log transformed to '", 
+                              xoffsetsi ,"'")
+          rm('zm')
+        }
       } else if (xfunsi == "sqrt") {
         datai[[xsi]] <- sqrt(datai[[xsi]])
+        if(is.numeric.like(xoffsetsi)) {
+          zm <- as.numeric(xoffsetsi)
+          xoffsetsi <- round(sqrt(zm), 2)
+          if(verbose) message("'xoffset' value '", zm, "' sqrt transformed to '", 
+                              xoffsetsi ,"'")
+          rm('zm')
+        }
       } else {
         stop("only log and sqrt options allowed for xfun argument")
       }
@@ -4543,6 +4563,7 @@ bsitar <- function(x,
         xoffsetsi <- 0
       }
     }
+    
     
     if(bstartsi == 'xoffset') {
       bstartsi <- xoffsetsi

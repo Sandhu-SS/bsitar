@@ -3328,7 +3328,6 @@ set_init_gr_effects <- function(xscode,
 #' @param compile_init_model_methods A logical to indicate whether to compile
 #' \code{init_model_methods()}
 #' @param verbose A logical
-#' @keywords internal
 #' @return A named list.
 #' @keywords internal
 #' @noRd
@@ -3449,4 +3448,38 @@ get_pathfinder_init <- function(pthf = NULL,
 }
 
 
+
+
+# check if a str obj is actually numeric
+# @description check if a str obj is actually numeric
+# https://stackoverflow.com/questions/13638377/test-for-numeric-elements-in-a-character-string
+#' @param x a str vector, or a factor of str vector, or numeric vector. x will
+#'   be coerced and trimws.
+#' @param na.strings case sensitive strings that will be treated to NA.
+#' @param naAsTrue whether NA (including actual NA and na.strings) will be
+#'   treated as numeric like
+#' @return a logical vector (vectorized).
+#' @note Using regular expression
+#' \cr TRUE for any actual numeric c(3,4,5,9.9) or c("-3","+4.4",
+#' "-42","4L","9L",   "1.36e4","1.36E4",    NA, "NA", "","NaN", NaN):
+#' \cr positive or negative numbers with no more than one decimal c("-3","+4.4")
+#' OR
+#' \cr positive or negative integers (e.g., c("-42","4L","39L")) OR
+#' \cr positive or negative numbers in scientific notation c("1.36e4","1.36E4")
+#' \cr NA, or na.strings
+#' @keywords internal
+#' @noRd
+#'
+is.numeric.like <- function(x, 
+                            naAsTrue = TRUE, 
+                            na.strings = 
+                              c('','.','NA','na','N/A','n/a','NaN','nan')
+                            ){
+  x = trimws(x,'both')
+  x[x %in% na.strings] = NA
+  # https://stackoverflow.com/a/21154566/2292993
+  result = grepl("^[\\-\\+]?[0-9]+[\\.]?[0-9]*$|^[\\-\\+]?[0-9]+[L]?$|^[\\-\\+]?[0-9]+[\\.]?[0-9]*[eE][0-9]+$",x,perl=TRUE)
+  if (naAsTrue) result = result | is.na(x)
+  return((result))
+}
 
