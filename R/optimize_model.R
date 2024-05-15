@@ -108,6 +108,7 @@
 #' @param ... Other arguments passed to \code{\link{update_model}}.
 #' 
 #' @inheritParams growthparameters.bgmfit
+#' @inheritParams brms::add_criterion
 #'
 #' @return A list containing the optimized models of class \code{bgmfit}, and
 #'   the the summary statistics if \code{add_fit_criteria} and/or
@@ -169,6 +170,10 @@ optimize_model.bgmfit <- function(model,
                                   add_fit_criteria = NULL,
                                   add_bayes_R = NULL,
                                   byresp = FALSE,
+                                  model_name = NULL,
+                                  overwrite = FALSE,
+                                  file = NULL,
+                                  force_save = FALSE,
                                   digits = 2,
                                   cores = 1,
                                   verbose = FALSE,
@@ -270,7 +275,7 @@ optimize_model.bgmfit <- function(model,
   
   
   
-  # The 'expose_function' must TRUE when adding fit criteria or bayes R2
+  # The 'expose_function' must be TRUE when adding fit criteria or bayes R2
   if (need_exposed_function) {
     if(is.null(expose_function)) {
       args_o$expose_function <- expose_function <- TRUE
@@ -397,6 +402,10 @@ optimize_model.bgmfit <- function(model,
 
   add_citeria_fun <- function(fit,
                               add_fit_criteria = NULL,
+                              model_name = NULL,
+                              overwrite = FALSE,
+                              file = NULL,
+                              force_save = FALSE,
                               add_bayes_R = NULL,
                               resp = NULL,
                               digits = 2,
@@ -412,28 +421,42 @@ optimize_model.bgmfit <- function(model,
    
     if (!is.null(add_fit_criteria)) {
       what_ <- paste(add_fit_criteria, collapse = ", ")
-      message(" Adding", " ", what_, " ", "...")
+      if(verbose) message(" Adding", " ", what_, " ", "...")
       if(verbose) cat("\n")
       if (is.na(fit$model_info$univariate_by) |
           !fit$model_info$multivariate) {
         if (!fit$model_info$multivariate) {
-          suppressWarnings(fit <- brms::add_criterion(fit,
-                                                      add_fit_criteria, 
-                                                      cores = cores))
+          suppressWarnings(fit <- brms::add_criterion(
+            x = fit,
+            criterion = add_fit_criteria,
+            model_name = model_name,
+            overwrite = overwrite,
+            file = file,
+            force_save = force_save,
+            cores = cores))
         }
         if (fit$model_info$multivariate) {
           if (is.null(resp)) {
-            suppressWarnings(fit <- brms::add_criterion(fit,
-                                                        add_fit_criteria, 
-                                                        cores = cores))
+            suppressWarnings(fit <- brms::add_criterion(
+              x = fit,
+              criterion = add_fit_criteria,
+              model_name = model_name,
+              overwrite = overwrite,
+              file = file,
+              force_save = force_save,
+              cores = cores))
           }
           if (!is.null(resp)) {
             for (aci in fit$model_info$ys) {
               suppressWarnings(fit <- brms::add_criterion(
-                fit,
-                add_fit_criteria,
-                resp = aci,
-                cores = cores
+                x = fit,
+                criterion = add_fit_criteria,
+                model_name = model_name,
+                overwrite = overwrite,
+                file = file,
+                force_save = force_save,
+                cores = cores,
+                resp = aci
               ))
               aci_names <- paste0(names(fit$criteria), aci)
               names(fit$criteria) <- aci_names
@@ -447,13 +470,18 @@ optimize_model.bgmfit <- function(model,
         }
       }
       
+      
       if (!is.na(fit$model_info$univariate_by)) {
         for (aci in fit$model_info$ys) {
           suppressWarnings(fit <- brms::add_criterion(
-            fit,
-            add_fit_criteria,
-            resp = aci,
-            cores = cores
+            x = fit,
+            criterion = add_fit_criteria,
+            model_name = model_name,
+            overwrite = overwrite,
+            file = file,
+            force_save = force_save,
+            cores = cores,
+            resp = aci
           ))
           aci_names <- paste0(names(fit$criteria), aci)
           names(fit$criteria) <- aci_names
@@ -1457,6 +1485,10 @@ optimize_model.bgmfit <- function(model,
             fit_ac <- add_citeria_fun(
               fit,
               add_fit_criteria = add_fit_criteria,
+              model_name = model_name,
+              overwrite = overwrite,
+              file = file,
+              force_save = force_save,
               add_bayes_R =  NULL,
               resp = setresp,
               digits = digits,
@@ -1488,6 +1520,10 @@ optimize_model.bgmfit <- function(model,
             fit_rs <- add_citeria_fun(
               fit,
               add_fit_criteria = NULL,
+              model_name = model_name,
+              overwrite = overwrite,
+              file = file,
+              force_save = force_save,
               add_bayes_R =  add_bayes_R,
               resp = setresp,
               digits = digits,
@@ -1640,6 +1676,7 @@ optimize_model.bgmfit <- function(model,
  
   
 }
+
 
 
 

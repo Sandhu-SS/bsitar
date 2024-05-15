@@ -18,6 +18,10 @@
   add_fit_criteria = NULL,
   add_bayes_R = NULL,
   byresp = FALSE,
+  model_name = NULL,
+  overwrite = FALSE,
+  file = NULL,
+  force_save = FALSE,
   digits = 2,
   cores = 1,
   verbose = FALSE,
@@ -130,6 +134,27 @@ calculation of point wise log likelihood (\code{byresp = FALSE}) or
 response specific (\code{byresp = TRUE}). For, \code{univariate_by} model,
 the only option available is to calculate separate point wise log
 likelihood for each sub-model, i.e., \code{byresp = TRUE}.}
+
+\item{model_name}{Optional name of the model. If \code{NULL}
+(the default) the name is taken from the call to \code{x}.}
+
+\item{overwrite}{Logical; Indicates if already stored fit
+indices should be overwritten. Defaults to \code{FALSE}.
+Setting it to \code{TRUE} is useful for example when changing
+additional arguments of an already stored criterion.}
+
+\item{file}{Either \code{NULL} or a character string. In the latter case, the
+fitted model object including the newly added criterion values is saved via
+\code{\link{saveRDS}} in a file named after the string supplied in
+\code{file}. The \code{.rds} extension is added automatically. If \code{x}
+was already stored in a file before, the file name will be reused
+automatically (with a message) unless overwritten by \code{file}. In any
+case, \code{file} only applies if new criteria were actually added via
+\code{add_criterion} or if \code{force_save} was set to \code{TRUE}.}
+
+\item{force_save}{Logical; only relevant if \code{file} is specified and
+ignored otherwise. If \code{TRUE}, the fitted model object will be saved
+regardless of whether new criteria were added via \code{add_criterion}.}
 
 \item{digits}{An integer (default \code{2}) to set the decimal argument for
 the \code{\link[base:Round]{base::round()}} function.}
