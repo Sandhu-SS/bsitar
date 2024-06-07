@@ -1642,6 +1642,77 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 
 
 
+
+#' Sanitize pathfinder arguments for fit via cmdstanr
+#'
+#' @param sdata A list of data objects
+#' @param pathfinder_args A list of argument allowed for pathfinder
+#' @param brm_args A list of argument passes to the [[brms::brm()]]
+#' @param ... Other arguments
+#' 
+#' @return A list
+#' @keywords internal
+#' @noRd
+#'
+
+
+
+sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) { 
+  
+  pathfinder_args_all <- list(
+    data = NULL,
+    seed = NULL,
+    refresh = NULL,
+    init = NULL,
+    save_latent_dynamics = FALSE,
+    output_dir = getOption("cmdstanr_output_dir"),
+    output_basename = NULL,
+    sig_figs = NULL,
+    opencl_ids = NULL,
+    num_threads = NULL,
+    init_alpha = NULL,
+    tol_obj = NULL,
+    tol_rel_obj = NULL,
+    tol_grad = NULL,
+    tol_rel_grad = NULL,
+    tol_param = NULL,
+    history_size = NULL,
+    single_path_draws = NULL,
+    draws = NULL,
+    num_paths = 4,
+    max_lbfgs_iters = NULL,
+    num_elbo_draws = NULL,
+    save_single_paths = NULL,
+    psis_resample = NULL,
+    calculate_lp = NULL,
+    show_messages = TRUE,
+    show_exceptions = TRUE,
+    save_cmdstan_config = NULL
+  )
+  
+  
+  pathfinder_args_all_names <- names(pathfinder_args_all)
+  pathfinder_args_final <- c(pathfinder_args, brm_args)
+  pathfinder_args_final[['data']] <- NULL
+  pathfinder_args_final_names <- names(pathfinder_args_final)
+  
+  pathfinder_args_final_valid_names <-
+    setdiff(pathfinder_args_final_names, pathfinder_args_all_names) 
+  
+  for (i in pathfinder_args_final_valid_names) {
+    pathfinder_args_final[[i]] <- NULL
+  }
+  
+  if(!is.null(brm_args$threads$threads)) 
+    pathfinder_args_final[['num_threads']] <- brm_args$threads$threads
+  
+  pathfinder_args_final[['data']] <- sdata
+  
+  pathfinder_args_final
+}
+
+
+
 # Commenting out for CRAN initial release
 
 #' Fit model via cmdstanr
@@ -1649,93 +1720,182 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 #' @param scode A character string of model code
 #' @param sdata A list of data objects
 #' @param brm_args A list of argument passes to the [[brms::brm()]]
+#' @param pathfinder_args A list of argument allowed for pathfinder
+#' @param pathfinder_init A logical to indicate whether to use pathfinder
+#'   initials.
 #'
 #' @return An object of class \code{bgmfit}
 #' @keywords internal
-#' #noRd
+#' @noRd
 #'
 
-# brms_via_cmdstanr <- function(scode, sdata, brm_args) {
-#   if(!is.null(brm_args$threads$threads)) {
-#     stan_threads <- TRUE
-#   } else {
-#     stan_threads <- FALSE
-#   }
-#
-#   if(!is.null(brm_args$opencl)) {
-#     stan_opencl <- TRUE
-#   } else {
-#     stan_opencl <- FALSE
-#   }
-#
-#   cpp_options <- list(stan_threads = stan_threads,
-#                       stan_opencl = stan_opencl)
-#
-#
-#   stanc_options <- brm_args$stan_model_args$stanc_options
-#
-#
-#   if(brm_args$silent == 0) {
-#     show_messages = TRUE
-#     show_exceptions = TRUE
-#   }
-#   if(brm_args$silent == 1) {
-#     show_messages = TRUE
-#     show_exceptions = FALSE
-#   }
-#   if(brm_args$silent == 2) {
-#     show_messages = FALSE
-#     show_exceptions = FALSE
-#   }
-#
-#
-#   c_scode <- cmdstanr::cmdstan_model(cmdstanr::write_stan_file(scode),
-#                                      quiet = TRUE,
-#                                      cpp_options = cpp_options,
-#                                      stanc_options = stanc_options,
-#                                      dir = NULL,
-#                                      pedantic = FALSE,
-#                                      include_paths = NULL,
-#                                      user_header = NULL,
-#                                      compile_model_methods = FALSE,
-#                                      compile_hessian_method = FALSE,
-#                                      compile_standalone = FALSE)
-#
-#
-#   iter_sampling <- brm_args$iter - brm_args$warmup
-#   iter_warmup   <- brm_args$warmup
-#
-#   cb_fit <- c_scode$sample(
-#     data = sdata,
-#     seed = brm_args$seed,
-#     init = brm_args$init,
-#     chains = brm_args$chains,
-#     parallel_chains = brm_args$cores,
-#     threads_per_chain = brm_args$threads$threads,
-#     opencl_ids = brm_args$opencl,
-#     iter_sampling = iter_sampling,
-#     iter_warmup = iter_warmup,
-#     thin = brm_args$thin,
-#     max_treedepth = brm_args$control$max_treedepth,
-#     adapt_delta = brm_args$control$adapt_delta,
-#     adapt_engaged = TRUE,
-#     fixed_param = FALSE,
-#     show_messages = show_messages,
-#     show_exceptions = show_exceptions
-#   )
-#
-#   cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
-#   attributes(cb_fit)$CmdStanModel <- c_scode
-#
-#   brm_args_empty <- brm_args
-#   brm_args_empty$empty <- TRUE
-#
-#   # Create an empty brms object -> Set empty = TRUE
-#   bfit <- do.call(brms::brm, brm_args_empty)
-#   bfit$fit = cb_fit
-#   bfit <- brms::rename_pars(bfit)
-#   bfit
-# }
+brms_via_cmdstanr <- function(scode, 
+                              sdata, 
+                              brm_args, 
+                              pathfinder_args = NULL,
+                              pathfinder_init = FALSE) {
+  
+  try(zz <- insight::check_if_installed(c("cmdstanr"), 
+                                        minimum_version = 
+                                          get_package_minversion(
+                                            'cmdstanr'
+                                          ), 
+                                        prompt = FALSE,
+                                        stop = FALSE))
+  
+  
+  if(!isTRUE(zz)) {
+    message("Please install the latest version of the 'cmdstanr' 
+              package",
+            "\n ",
+            paste0("install.packages('cmdstanr', "   ,
+                   "repos = c('https://mc-stan.org/r-packages/', "   ,
+                   "getOption('repos')))")
+    )
+    return(invisible(NULL))
+  } 
+  
+  if(isTRUE(zz)) {
+    # suppressPackageStartupMessages(requireNamespace(cmdstanr))
+    cmdstan_model <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
+    write_stan_file <- utils::getFromNamespace("write_stan_file", "cmdstanr")
+  }
+  
+  
+  if(!is.null(brm_args$threads$threads)) {
+    stan_threads <- TRUE
+  } else {
+    stan_threads <- FALSE
+  }
+  
+  
+  
+  if(!is.null(brm_args$opencl)) {
+    stan_opencl <- TRUE
+  } else if(is.null(brm_args$opencl)) {
+    stan_opencl <- FALSE
+  }
+  
+  
+  
+  
+  # cpp_options <- list(stan_threads = stan_threads,
+  #                     stan_opencl = stan_opencl)
+  
+  cpp_options <- list(stan_threads = stan_threads)
+  
+  
+  stanc_options <- brm_args$stan_model_args$stanc_options
+  
+  
+  if(brm_args$silent == 0) {
+    show_messages = TRUE
+    show_exceptions = TRUE
+  }
+  if(brm_args$silent == 1) {
+    show_messages = TRUE
+    show_exceptions = FALSE
+  }
+  if(brm_args$silent == 2) {
+    show_messages = FALSE
+    show_exceptions = FALSE
+  }
+  
+  
+  c_scode <- cmdstan_model(write_stan_file(scode),
+                            quiet = TRUE,
+                            cpp_options = cpp_options,
+                            stanc_options = stanc_options,
+                            dir = NULL,
+                            pedantic = FALSE,
+                            include_paths = NULL,
+                            user_header = NULL,
+                            compile_model_methods = FALSE,
+                            compile_hessian_method = FALSE,
+                            compile_standalone = FALSE)
+  
+  
+  iter_sampling <- brm_args$iter - brm_args$warmup
+  iter_warmup   <- brm_args$warmup
+  
+  ####################
+  call_pathfinder_ <- FALSE
+  if(pathfinder_init | !is.null(pathfinder_args)) {
+    call_pathfinder_ <- TRUE
+  }
+  
+  
+  if(call_pathfinder_) {
+    if(is.null(pathfinder_args)) {
+      pathfinder_args_final <- list()
+      pathfinder_args_final[['save_cmdstan_config']] <- TRUE
+      pathfinder_args_final[['refresh']] <- 0
+      pathfinder_args_final[['show_messages']] <- FALSE
+      pathfinder_args_final[['show_exceptions']] <- FALSE
+      
+      pathfinder_args_final[['data']] <- sdata
+      pathfinder_args_final[['init']] <- brm_args$init
+      
+      if(!is.null(brm_args$threads$threads)) 
+        pathfinder_args_final[['num_threads']] <- brm_args$threads$threads
+    } else if(!is.null(pathfinder_args)) {
+      pathfinder_args_final <- sanitize_pathfinder_args(sdata, 
+                                                        pathfinder_args, 
+                                                        brm_args)
+      
+      pathfinder_args_final[['save_cmdstan_config']] <- TRUE
+      pathfinder_args_final[['refresh']] <- 0
+      pathfinder_args_final[['show_messages']] <- FALSE
+      pathfinder_args_final[['show_exceptions']] <- FALSE
+    }
+    
+    cb_pathfinder <- do.call(c_scode$pathfinder, pathfinder_args_final)
+    
+    if(pathfinder_init) brm_args$init <-  cb_pathfinder
+  } # if(call_pathfinder_) 
+  
+  
+  # print(brm_args$init)
+  
+  ################################
+  
+  
+  
+  cb_fit <- c_scode$sample(
+    data = sdata,
+    seed = brm_args$seed,
+    init = brm_args$init,
+    chains = brm_args$chains,
+    parallel_chains = brm_args$cores,
+    threads_per_chain = brm_args$threads$threads,
+    opencl_ids = brm_args$opencl,
+    iter_sampling = iter_sampling,
+    iter_warmup = iter_warmup,
+    thin = brm_args$thin,
+    max_treedepth = brm_args$control$max_treedepth,
+    adapt_delta = brm_args$control$adapt_delta,
+    adapt_engaged = TRUE,
+    fixed_param = FALSE,
+    show_messages = show_messages,
+    show_exceptions = show_exceptions
+  )
+  
+  cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
+  attributes(cb_fit)$CmdStanModel <- c_scode
+  
+  brm_args_empty <- brm_args
+  brm_args_empty$empty <- TRUE
+  
+  # Create an empty brms object -> Set empty = TRUE
+  bfit <- do.call(brms::brm, brm_args_empty)
+  bfit$fit = cb_fit
+  bfit <- brms::rename_pars(bfit)
+  bfit
+}
+
+
+
+
 
 
 
@@ -3309,6 +3469,17 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
       out <- version
     }
   }
+  
+  
+  if(pkg == 'cmdstanr') {
+    if(is.null(version)) {
+      out <- '0.7.1'
+    } else {
+      if(!is.character(version)) stop('version must be a character')
+      out <- version
+    }
+  }
+  
   
   return(out)
 }

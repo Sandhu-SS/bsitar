@@ -35,7 +35,6 @@ berkeley
 biacromial
 binwidth
 bmatrix
-brm
 brms
 burnin
 cgv
@@ -75,6 +74,8 @@ marglik
 mathbf
 mc
 mdata
+meandev
+meanotherdev
 mfit
 minmax
 modelling
@@ -83,7 +84,6 @@ newpage
 operatorname
 optiion
 parallelization
-pareto
 pgv
 pmatrix
 ppc

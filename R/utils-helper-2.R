@@ -3373,7 +3373,7 @@ get_pathfinder_init <- function(pthf = NULL,
   lp__ <- NULL;
   
   
-  as_inits <- function(draws, variable=NULL, ndraws=4) {
+  as_inits <- function(draws, variable=NULL, ndraws=ndraws) {
     ndraws <- min(posterior::ndraws(draws),ndraws)
     if (is.null(draws)) {variable = variables(draws)}
     draws <- draws  %>%  posterior::as_draws_matrix()

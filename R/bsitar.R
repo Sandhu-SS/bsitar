@@ -1315,6 +1315,19 @@
 #'  default setting as in [brms::brm()] i.e, 0.8. This is to avoid unnecessarily
 #'  increasing the sampling time. See [brms::brm()] for full details on control
 #'  parameters and their default values.
+#'  
+#'@param pathfinder_args A \code{list} of arguments passed to the
+#'  \code{'pathfinder'} algorithm. This is used to set pathfinder based initial
+#'  values. This works only for \code{backend = "cmdstanr"}. Therefore, even
+#'  when use specified \code{backend = "rstan"}, it will be automatically
+#'  changed to \code{backend = "cmdstanr"}.
+#'
+#'@param pathfinder_init A logical \code{default FALSE} to indicate whether to
+#'  use initials from the \code{'pathfinder'} when fitting the final model i.e,
+#'  sampling. This is used to set pathfinder based initial values. This works
+#'  only for \code{backend = "cmdstanr"}. Therefore, even when use specified
+#'  \code{backend = "rstan"}, it will be automatically changed to \code{backend
+#'  = "cmdstanr"}. Also, \code{pathfinder_args} should no be \code{NULL}.
 #'
 #'@param sample_prior Indicates whether to draw sample from priors in addition
 #'  to the posterior draws. Options are \code{"no"} (the default), \code{"yes"},
@@ -1738,6 +1751,10 @@ bsitar <- function(x,
                    normalize = getOption("brms.normalize", TRUE),
                    algorithm = getOption("brms.algorithm", "sampling"),
                    control = list(adapt_delta = 0.8, max_treedepth = 15),
+                   empty = FALSE,
+                   rename = TRUE,
+                   pathfinder_args = NULL,
+                   pathfinder_init = FALSE,
                    sample_prior = "no",
                    save_pars = NULL,
                    drop_unused_levels = TRUE,
@@ -2360,6 +2377,8 @@ bsitar <- function(x,
       'normalize',
       'algorithm',
       'control',
+      'empty',
+      'rename',
       'sample_prior',
       'save_pars',
       'drop_unused_levels',
@@ -3351,6 +3370,8 @@ bsitar <- function(x,
     "parameterization",
     "custom_family",
     "custom_stanvars",
+    'pathfinder_args',
+    'pathfinder_init',
     "..."
   )
   
@@ -7343,24 +7364,40 @@ bsitar <- function(x,
     # brm_args$init <- list(brm_args$init)
 
     
+    
+    # if(!is.null(pathfinder_args)) {
+    #   pathfinderargs <- brm_args$pathfinder_args
+    #   brm_args$pathfinder_args <- NULL
+    # }
+    
 
     if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {
-         stop("Please use 'rstan' as backend for CP parameterization")
-        # brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args)
+         # stop("Please use 'rstan' as backend for CP parameterization")
+         brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args, 
+                                      pathfinder_args = pathfinder_args,
+                                      pathfinder_init = pathfinder_init)
       }
       if(brm_args$backend == "rstan") {
         brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args)
       }
     } else if(!fit_edited_scode) {
-      brmsfit <- do.call(brms::brm, brm_args)
-    }
+      if(!is.null(pathfinder_args) | pathfinder_init) {
+        brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args,
+                                     pathfinder_args = pathfinder_args,
+                                     pathfinder_init = pathfinder_init)
+      } else {
+        brmsfit <- do.call(brms::brm, brm_args)
+      }
+    } # if(fit_edited_scode) {
     
     
     if(brm_args$backend == "mock") {
       brmsfit <- do.call(brms::brm, brm_args)
     }
-   
+    
+   # if(brm_args$empty) return(brmsfit)
+    
     
     # Add attr so that expose_model_functions() works on bgmfit
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')

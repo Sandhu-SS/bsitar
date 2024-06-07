@@ -155,6 +155,10 @@ bsitar(
   normalize = getOption("brms.normalize", TRUE),
   algorithm = getOption("brms.algorithm", "sampling"),
   control = list(adapt_delta = 0.8, max_treedepth = 15),
+  empty = FALSE,
+  rename = TRUE,
+  pathfinder_args = NULL,
+  pathfinder_init = FALSE,
   sample_prior = "no",
   save_pars = NULL,
   drop_unused_levels = TRUE,
@@ -1350,6 +1354,26 @@ which is also  often need to be increased for nonlinear model, has be set to
 default setting as in \code{\link[brms:brm]{brms::brm()}} i.e, 0.8. This is to avoid unnecessarily
 increasing the sampling time. See \code{\link[brms:brm]{brms::brm()}} for full details on control
 parameters and their default values.}
+
+\item{empty}{Logical. If \code{TRUE}, the Stan model is not created
+and compiled and the corresponding \code{'fit'} slot of the \code{brmsfit}
+object will be empty. This is useful if you have estimated a brms-created
+Stan model outside of \pkg{brms} and want to feed it back into the package.}
+
+\item{rename}{For internal use only.}
+
+\item{pathfinder_args}{A \code{list} of arguments passed to the
+\code{'pathfinder'} algorithm. This is used to set pathfinder based initial
+values. This works only for \code{backend = "cmdstanr"}. Therefore, even
+when use specified \code{backend = "rstan"}, it will be automatically
+changed to \code{backend = "cmdstanr"}.}
+
+\item{pathfinder_init}{A logical \code{default FALSE} to indicate whether to
+use initials from the \code{'pathfinder'} when fitting the final model i.e,
+sampling. This is used to set pathfinder based initial values. This works
+only for \code{backend = "cmdstanr"}. Therefore, even when use specified
+\code{backend = "rstan"}, it will be automatically changed to \code{backend
+ = "cmdstanr"}. Also, \code{pathfinder_args} should no be \code{NULL}.}
 
 \item{sample_prior}{Indicates whether to draw sample from priors in addition
 to the posterior draws. Options are \code{"no"} (the default), \code{"yes"},
