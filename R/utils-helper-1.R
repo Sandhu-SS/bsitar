@@ -1729,9 +1729,7 @@ sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) {
 #' @noRd
 #'
 
-brms_via_cmdstanr <- function(scode, 
-                              sdata, 
-                              brm_args, 
+brms_via_cmdstanr <- function(scode, sdata, brm_args, 
                               pathfinder_args = NULL,
                               pathfinder_init = FALSE) {
   
@@ -1756,9 +1754,7 @@ brms_via_cmdstanr <- function(scode,
   } 
   
   if(isTRUE(zz)) {
-    # suppressPackageStartupMessages(requireNamespace(cmdstanr))
-    cmdstan_model <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
-    write_stan_file <- utils::getFromNamespace("write_stan_file", "cmdstanr")
+    suppressPackageStartupMessages(require(cmdstanr))
   }
   
   
@@ -1802,7 +1798,7 @@ brms_via_cmdstanr <- function(scode,
   }
   
   
-  c_scode <- cmdstan_model(write_stan_file(scode),
+  c_scode <<- cmdstan_model(write_stan_file(scode),
                             quiet = TRUE,
                             cpp_options = cpp_options,
                             stanc_options = stanc_options,
@@ -1828,10 +1824,11 @@ brms_via_cmdstanr <- function(scode,
   if(call_pathfinder_) {
     if(is.null(pathfinder_args)) {
       pathfinder_args_final <- list()
-      pathfinder_args_final[['save_cmdstan_config']] <- TRUE
       pathfinder_args_final[['refresh']] <- 0
-      pathfinder_args_final[['show_messages']] <- FALSE
-      pathfinder_args_final[['show_exceptions']] <- FALSE
+      
+      pathfinder_args_final[['save_cmdstan_config']] <- NULL
+      pathfinder_args_final[['show_messages']] <- NULL
+      pathfinder_args_final[['show_exceptions']] <- NULL
       
       pathfinder_args_final[['data']] <- sdata
       pathfinder_args_final[['init']] <- brm_args$init
@@ -1843,15 +1840,29 @@ brms_via_cmdstanr <- function(scode,
                                                         pathfinder_args, 
                                                         brm_args)
       
-      pathfinder_args_final[['save_cmdstan_config']] <- TRUE
       pathfinder_args_final[['refresh']] <- 0
-      pathfinder_args_final[['show_messages']] <- FALSE
-      pathfinder_args_final[['show_exceptions']] <- FALSE
+      pathfinder_args_final[['save_cmdstan_config']] <- NULL
+      pathfinder_args_final[['show_messages']] <- NULL
+      pathfinder_args_final[['show_exceptions']] <- NULL
     }
     
     cb_pathfinder <- do.call(c_scode$pathfinder, pathfinder_args_final)
     
-    if(pathfinder_init) brm_args$init <-  cb_pathfinder
+    if(pathfinder_init) {
+      brm_args$init <-  cb_pathfinder
+    } else if(!pathfinder_init) {
+      cb_pathfinder <- brms::read_csv_as_stanfit(cb_pathfinder$output_files(), model = c_scode)
+      attributes(cb_pathfinder)$CmdStanModel <- c_scode
+      # Somehow this does not work with pathfinder
+      # brm_args_empty <- brm_args
+      # brm_args_empty$empty <- TRUE
+      # brm_args_empty$rename <- FALSE
+      # # Create an empty brms object -> Set empty = TRUE
+      # pathfinder_bfit <- do.call(brms::brm, brm_args_empty)
+      # pathfinder_bfit$fit = cb_pathfinder
+      # pathfinder_bfit <- brms::rename_pars(pathfinder_bfit)
+      # return(cb_pathfinder)
+    }
   } # if(call_pathfinder_) 
   
   
@@ -1880,8 +1891,9 @@ brms_via_cmdstanr <- function(scode,
     show_exceptions = show_exceptions
   )
   
-  cb_fit <- rstan::read_stan_csv(cb_fit$output_files())
+  cb_fit <- brms::read_csv_as_stanfit(cb_fit$output_files(), model = c_scode)
   attributes(cb_fit)$CmdStanModel <- c_scode
+  
   
   brm_args_empty <- brm_args
   brm_args_empty$empty <- TRUE
