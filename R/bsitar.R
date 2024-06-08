@@ -1316,18 +1316,23 @@
 #'  increasing the sampling time. See [brms::brm()] for full details on control
 #'  parameters and their default values.
 #'  
-#'@param pathfinder_args A \code{list} of arguments passed to the
-#'  \code{'pathfinder'} algorithm. This is used to set pathfinder based initial
-#'  values. This works only for \code{backend = "cmdstanr"}. Therefore, even
-#'  when use specified \code{backend = "rstan"}, it will be automatically
-#'  changed to \code{backend = "cmdstanr"}.
+#'@param pathfinder_args A named \code{list} of arguments passed to the
+#'  \code{'pathfinder'} algorithm. This is used to set \code{'pathfinder'} based
+#'  initial values for the \code{'MCMC'}. Note that \code{'pathfinder_args'}
+#'  currently works only for \code{backend = "cmdstanr"}. Therefore, even when
+#'  user specified \code{backend = "rstan"}, it will be automatically changed to
+#'  \code{backend = "cmdstanr"} when \code{'pathfinder_args'} is not
+#'  \code{NULL}.
 #'
 #'@param pathfinder_init A logical \code{default FALSE} to indicate whether to
 #'  use initials from the \code{'pathfinder'} when fitting the final model i.e,
-#'  sampling. This is used to set pathfinder based initial values. This works
-#'  only for \code{backend = "cmdstanr"}. Therefore, even when use specified
+#'  \code{'MCMC'} sampling. Note that \code{'pathfinder_args'} currently works
+#'  only for \code{backend = "cmdstanr"}. Therefore, even when user specified
 #'  \code{backend = "rstan"}, it will be automatically changed to \code{backend
-#'  = "cmdstanr"}. Also, \code{pathfinder_args} should no be \code{NULL}.
+#'  = "cmdstanr"} when \code{'pathfinder_args'} is not \code{NULL}. The
+#'  arguments passed to the \code{'pathfinder'} algorithm are specified via the
+#'  \code{'pathfinder_args'}. If \code{'pathfinder_args' = NULL}, then the
+#'  default arguments set via the \code{'cmdstanr'} are used.
 #'
 #'@param sample_prior Indicates whether to draw sample from priors in addition
 #'  to the posterior draws. Options are \code{"no"} (the default), \code{"yes"},
@@ -7271,9 +7276,7 @@ bsitar <- function(x,
         new_init_append <- list()
         init_old <- brm_args$init
         init_append <- init_custom
-        # for (ilen in 1:length(init_old)) {
-        #   new_init_append[[ilen]] <- c(init_old[[ilen]], init_append[[ilen]])
-        # }
+        
         additional_init_names <- 
           setdiff(names(init_append[[1]]), names(init_old[[1]]))
         for (ilen in 1:length(init_old)) {
@@ -7352,28 +7355,29 @@ bsitar <- function(x,
                                         algorithm = brm_args$algorithm,
                                         verbose = FALSE)
 
-    # pathfinderargs <- c('num_paths', 'single_path_draws', 
-    #                     'draws', 'history_size', 'max_lbfgs_iters')
-    # 
-    # for (i in pathfinderargs) {
-    #   if(!is.null(brm_args[[i]])) brm_args[[i]] <- NULL
-    # }
-    # 
-    # brm_argsx <<- brm_args
-    # brm_args$init <- brm_args$init[[1]]
-    # brm_args$init <- list(brm_args$init)
-
     
     
-    # if(!is.null(pathfinder_args)) {
-    #   pathfinderargs <- brm_args$pathfinder_args
-    #   brm_args$pathfinder_args <- NULL
-    # }
+    if(brm_args$backend == "cmdstanr" |
+       !is.null(pathfinder_args) | 
+       pathfinder_init) {
+      clinenumber <- getOption("cmdstanr.print_line_numbers")
+      options("cmdstanr.print_line_numbers" = TRUE)
+      on.exit(options("cmdstanr.print_line_numbers" = clinenumber), add = TRUE)
+      
+      cmaxrows <- getOption("cmdstanr_max_rows")
+      options("cmdstanr_max_rows" = 20)
+      on.exit(options("cmdstanr_max_rows" = cmaxrows), add = TRUE)
+      
+      cwarninits <- getOption("cmdstanr_warn_inits")
+      options("cmdstanr_warn_inits" = FALSE)
+      on.exit(options("cmdstanr_warn_inits" = cwarninits), add = TRUE)
+    }
+    
+    
     
 
     if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {
-         # stop("Please use 'rstan' as backend for CP parameterization")
          brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args, 
                                       pathfinder_args = pathfinder_args,
                                       pathfinder_init = pathfinder_init)
@@ -7392,12 +7396,13 @@ bsitar <- function(x,
     } # if(fit_edited_scode) {
     
     
+    
+    
     if(brm_args$backend == "mock") {
       brmsfit <- do.call(brms::brm, brm_args)
     }
     
-   # if(brm_args$empty) return(brmsfit)
-    
+
     
     # Add attr so that expose_model_functions() works on bgmfit
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')

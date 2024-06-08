@@ -1362,18 +1362,23 @@ Stan model outside of \pkg{brms} and want to feed it back into the package.}
 
 \item{rename}{For internal use only.}
 
-\item{pathfinder_args}{A \code{list} of arguments passed to the
-\code{'pathfinder'} algorithm. This is used to set pathfinder based initial
-values. This works only for \code{backend = "cmdstanr"}. Therefore, even
-when use specified \code{backend = "rstan"}, it will be automatically
-changed to \code{backend = "cmdstanr"}.}
+\item{pathfinder_args}{A named \code{list} of arguments passed to the
+\code{'pathfinder'} algorithm. This is used to set \code{'pathfinder'} based
+initial values for the \code{'MCMC'}. Note that \code{'pathfinder_args'}
+currently works only for \code{backend = "cmdstanr"}. Therefore, even when
+user specified \code{backend = "rstan"}, it will be automatically changed to
+\code{backend = "cmdstanr"} when \code{'pathfinder_args'} is not
+\code{NULL}.}
 
 \item{pathfinder_init}{A logical \code{default FALSE} to indicate whether to
 use initials from the \code{'pathfinder'} when fitting the final model i.e,
-sampling. This is used to set pathfinder based initial values. This works
-only for \code{backend = "cmdstanr"}. Therefore, even when use specified
+\code{'MCMC'} sampling. Note that \code{'pathfinder_args'} currently works
+only for \code{backend = "cmdstanr"}. Therefore, even when user specified
 \code{backend = "rstan"}, it will be automatically changed to \code{backend
- = "cmdstanr"}. Also, \code{pathfinder_args} should no be \code{NULL}.}
+ = "cmdstanr"} when \code{'pathfinder_args'} is not \code{NULL}. The
+arguments passed to the \code{'pathfinder'} algorithm are specified via the
+\code{'pathfinder_args'}. If \code{'pathfinder_args' = NULL}, then the
+default arguments set via the \code{'cmdstanr'} are used.}
 
 \item{sample_prior}{Indicates whether to draw sample from priors in addition
 to the posterior draws. Options are \code{"no"} (the default), \code{"yes"},
