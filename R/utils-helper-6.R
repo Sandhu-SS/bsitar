@@ -3574,7 +3574,12 @@ set_priors_initials <- function(a_prior_beta,
   # When sigma  formula is ~1+.., then first element is Intercept_sigma and the 
   # remaining are b_sigma
   
+  
+  
   initialsx <- out_listx
+  
+  
+  
   if(!sigma_form_0) {
     if(nys == 1) {
       sigma_par_name <- 'b_sigma'
@@ -3583,6 +3588,7 @@ set_priors_initials <- function(a_prior_beta,
       sigma_par_name <- paste0('b_sigma', resp_)
       Intercept_sigma <- paste0('Intercept_sigma', resp_)
     }
+   
    
     
   #   if(!is.null(initialsx[[sigma_par_name]])) {
@@ -3617,7 +3623,8 @@ set_priors_initials <- function(a_prior_beta,
       
       if(init_arguments[['sigma_cov_init_beta']] != "random") {
         if(length(g_sigma_i) > 1) {
-          initialsx[[sigma_par_name]] <- array(g_sigma_i_cov, dim = length(g_sigma_i_cov))
+          initialsx[[sigma_par_name]] <- array(g_sigma_i_cov, 
+                                               dim = length(g_sigma_i_cov))
         } else if(length(g_sigma_i) == 1) {
           initialsx[[sigma_par_name]] <- g_sigma_i_cov
         }
@@ -3628,8 +3635,15 @@ set_priors_initials <- function(a_prior_beta,
   
   }
   
+  # Somehow 'b_sigma' are created and carried forward even when only intercept
+  # So, dropping it - 09 06 2024
+  if(sigma_formulasi == "~1") {
+    initialsx[['b_sigma']] <- NULL
+  }
   
   initials <- initialsx
+  
+  
   
   
   

@@ -2394,6 +2394,11 @@ prepare_formula <- function(x,
     
     lm_rsd  <- summary(lm_fit)$sigma
     
+    # library(ggplot2)
+    # ppp <<- predict(lm_fit)
+    # dataset_in %>%
+    #   ggplot(., aes(x = age)) + geom_line(aes(y = ppp, group = class))
+    
 
     # lme
     enverr. <- parent.frame()

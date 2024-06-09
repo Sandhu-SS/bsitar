@@ -3530,9 +3530,11 @@ bsitar <- function(x,
     }
     
     
-    if (is.null(group_arg$groupvar))
-       group_arg$groupvar <- idsi
-    
+    if (is.null(group_arg$groupvar)) {
+      group_arg$groupvar <- idsi
+    }
+      
+   
     
     if (is.null(sigma_group_arg$groupvar))
       sigma_group_arg$groupvar <- idsi
@@ -3542,7 +3544,12 @@ bsitar <- function(x,
       stop("either df or knots must be specified")
     }
     if (is.numeric(ept(dfsi)) & is.numeric(ept(knotssi))) {
-      stop("both df and knots specified. Specify one of them\n")
+      # stop("both df and knots specified. Specify one of them\n")
+      dfsi <- 'NULL'
+      if(verbose) {
+        message("The user specified knots are used, hence",
+                " the df argument ignored")
+      }
     }
     
     
@@ -4475,6 +4482,7 @@ bsitar <- function(x,
     }
     
     
+    
     if(select_model == "sitar") {
       if (match_sitar_d_form) {
         if (length(knots) > 2) {
@@ -4536,6 +4544,7 @@ bsitar <- function(x,
           eval_arg.o <- max(data[[x]])
         } else if (eval_arg == "apv") {
           mat_s <- make_spline_matrix(data[[x]], knots)
+          # mat_s <- Hmisc::rcspline.eval(data[[x]], knots = knots, inclx = T, norm=2)
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
           eval_arg.o <- sitar::getPeak(data[[x]],
