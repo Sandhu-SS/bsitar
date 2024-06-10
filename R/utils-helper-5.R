@@ -1514,11 +1514,11 @@ prepare_function <- function(x,
     )
     
     
-    if (utils::packageVersion('rstan') < 2.26) {
+    if (utils::packageVersion('rstan') < "2.26") {
       rcsfun <- paste(getx_knots_fun, rcsfun)
     }
     
-    if (utils::packageVersion('rstan') > 2.26 & is.null(decomp)) {
+    if (utils::packageVersion('rstan') > "2.26" & is.null(decomp)) {
       rcsfun <- paste0(getx_knots_fun,
                        rcsfun,
                        rcsfunmultadd,
@@ -1528,7 +1528,7 @@ prepare_function <- function(x,
                        sep = "\n")
     }
     
-    if (utils::packageVersion('rstan') > 2.26 & !is.null(decomp)) {
+    if (utils::packageVersion('rstan') > "2.26" & !is.null(decomp)) {
       if (decomp == 'QR') {
         if (add_funmats) {
           rcsfun <- paste0(
@@ -1623,7 +1623,7 @@ prepare_function <- function(x,
     
     if (select_model == 'pb1') {
       funstring <- "a-2.0*(a-b)./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))"
-      if (utils::packageVersion('rstan') < 2.26)
+      if (utils::packageVersion('rstan') < "2.26")
         funstring <-
           gsub(".*", " .* ", funstring, fixed = T)
       returnmu    <- paste0("return ", "(",  funstring, ")")
@@ -1659,7 +1659,7 @@ prepare_function <- function(x,
     if (select_model == 'pb2') {
       funstring <- "a-((a-b)./(((0.5*exp((f.*c).*(Xm-e)))+
       (0.5*exp((f.*d).*(Xm-e))))^(1.0./f)))"
-      if (utils::packageVersion('rstan') < 2.26)
+      if (utils::packageVersion('rstan') < "2.26")
         funstring <-
           gsub(".*", " .* ", funstring, fixed = T)
       returnmu    <- paste0("return ", "(",  funstring, ")")
@@ -1752,7 +1752,7 @@ prepare_function <- function(x,
     if (select_model == 'pb3') {
       funstring <- "a-((4.0*(a-b))./((exp(f.*(Xm-e))+
       exp(c.*(Xm-e))).*(1.0+exp(d.*(Xm-e)))))"
-      if (utils::packageVersion('rstan') < 2.26)
+      if (utils::packageVersion('rstan') < "2.26")
         funstring <- gsub(".*", " .* ",
                           funstring,
                           fixed = T)
@@ -1827,7 +1827,7 @@ prepare_function <- function(x,
     
     if (select_model == 'logistic1') {
       funstring <- "a./(1+exp(-b.*(Xm-c)))"
-      if (utils::packageVersion('rstan') < 2.26)
+      if (utils::packageVersion('rstan') < "2.26")
         funstring <-
           gsub(".*", " .* ", funstring, fixed = T)
       returnmu    <- paste0("return ", "(",  funstring, ")")
@@ -1872,7 +1872,7 @@ prepare_function <- function(x,
     if (select_model == 'logistic2') {
       funstring <-
         "((a-b)./(1+exp(-e.*(Xm-f)))) + (b./(1+exp(-c.*(Xm-d))))"
-      if (utils::packageVersion('rstan') < 2.26)
+      if (utils::packageVersion('rstan') < "2.26")
         funstring <-
           gsub(".*", " .* ", funstring, fixed = T)
       returnmu    <- paste0("return ", "(",  funstring, ")")
@@ -1925,7 +1925,7 @@ prepare_function <- function(x,
         "(a ./ (1 + exp(-b .* (Xm - c)))) +
         (d ./ (1 + exp(-e .* (Xm - f)))) +
         (g ./ (1 + exp(-h .* (Xm - i))))"
-      if (utils::packageVersion('rstan') < 2.26)
+      if (utils::packageVersion('rstan') < "2.26")
         funstring <-
           gsub(".*", " .* ", funstring, fixed = T)
       returnmu    <- paste0("return ", "(",  funstring, ")")
@@ -2069,7 +2069,7 @@ prepare_function <- function(x,
     
     rcsfunmultadd <- NULL
     
-    if (utils::packageVersion('rstan') > 2.26 & is.null(decomp)) {
+    if (utils::packageVersion('rstan') > "2.26" & is.null(decomp)) {
       rcsfun <- paste0(getx_fun,
                        rcsfun,
                        rcsfunmultadd,
@@ -2079,7 +2079,7 @@ prepare_function <- function(x,
                        sep = "\n")
     }
     
-    if (utils::packageVersion('rstan') > 2.26 & !is.null(decomp)) {
+    if (utils::packageVersion('rstan') > "2.26" & !is.null(decomp)) {
       if (decomp == 'QR') {
         if (add_funmats) {
           rcsfun <- paste0(getx_fun,

@@ -1652,12 +1652,12 @@ bsitar <- function(x,
                    b_prior_beta = student_t(3, 0, 3.5, autoscale = FALSE),
                    c_prior_beta = student_t(3, 0, 1.5, autoscale = FALSE),
                    d_prior_beta = student_t(3, 0, 1.0, autoscale = TRUE),
-                   s_prior_beta = student_t(3, 0, lm, autoscale = TRUE),
+                   s_prior_beta = student_t(3, lm, lm, autoscale = FALSE),
                    a_cov_prior_beta = student_t(3, 0, 5.0, autoscale = FALSE),
                    b_cov_prior_beta = student_t(3, 0, 1.0, autoscale = FALSE),
                    c_cov_prior_beta = student_t(3, 0, 0.1, autoscale = FALSE),
                    d_cov_prior_beta = student_t(3, 0, 1.0, autoscale = FALSE),
-                   s_cov_prior_beta = student_t(3, 0, 10.0, autoscale = FALSE),
+                   s_cov_prior_beta = student_t(3, lm, lm, autoscale = FALSE),
                    a_prior_sd = student_t(3, 0, ysd, autoscale = TRUE),
                    b_prior_sd = student_t(3, 0, 2.0, autoscale = FALSE),
                    c_prior_sd = student_t(3, 0, 1.25, autoscale = FALSE),
@@ -1680,7 +1680,7 @@ bsitar <- function(x,
                    sigma_cov_prior_sd = student_t(3, 0, 0.15, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
-                   rsd_prior_sigma = exponential(ysd, autoscale = TRUE),
+                   rsd_prior_sigma = exponential(ysd, autoscale = FALSE),
                    dpar_prior_sigma = student_t(3, 0, ysd, autoscale = TRUE),
                    dpar_cov_prior_sigma = student_t(3, 0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
@@ -1842,8 +1842,8 @@ bsitar <- function(x,
             " \nwith the rstan version ", utils::packageVersion('rstan'))
     detach("package:rethinking", unload=TRUE) 
   }
- 
-  if(utils::packageVersion('rstan') < 2.26) {
+  
+  if(utils::packageVersion('rstan') < "2.26") {
     if(expose_function) stop("Argument 'expose_function' not allowed ",
                              "for this rstan version ",
                              utils::packageVersion('rstan'))

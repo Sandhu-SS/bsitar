@@ -185,9 +185,9 @@ compatibility across internal functions.}
 \item{parms_method}{A character to specify the method used to when evaluating
 \code{parms_eval}. The default is \code{getPeak} which uses the
 \code{\link[sitar:getPeakTrough]{sitar::getPeak()}} function from the \code{sitar} package. The alternative
-option is \code{findpeaks} that uses the \code{\link[pracma:findpeaks]{pracma::findpeaks()}} function
-function from the \code{pracma} package. This is for internal use only and
-mainly needed for compatibility across internal functions.}
+option is \code{findpeaks} that uses this \code{findpeaks} from the
+\code{pracma} package. This is for internal use only and mainly needed for
+compatibility across internal functions.}
 
 \item{idata_method}{A character string to indicate the interpolation method.
 The number of of interpolation points is set up the \code{ipts} argument.

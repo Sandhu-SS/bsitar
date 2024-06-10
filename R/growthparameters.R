@@ -214,13 +214,13 @@
 #'  when model involves covariates particularly when model is fit as
 #'  \code{univariate_by}. Therefore, it is advised to switch to method
 #'  \code{'m2'} in case \code{'m1'} results in error.
-#'  
+#'
 #' @param parms_method A character to specify the method used to when evaluating
 #'   \code{parms_eval}. The default is \code{getPeak} which uses the
 #'   [sitar::getPeak()] function from the \code{sitar} package. The alternative
-#'   option is \code{findpeaks} that uses the [pracma::findpeaks()] function
-#'   function from the \code{pracma} package. This is for internal use only and
-#'   mainly needed for compatibility across internal functions.
+#'   option is \code{findpeaks} that uses this \code{findpeaks} from the
+#'   \code{pracma} package. This is for internal use only and mainly needed for
+#'   compatibility across internal functions.
 #'   
 #' @param verbose An optional argument (logical, default \code{FALSE}) to
 #'  indicate whether to print information collected during setting up the 
