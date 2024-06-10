@@ -47,12 +47,14 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # backend = 'cmdstanr',
                         
                          a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
-                         b_prior_beta = normal(0, 2.5), # try 2.5
-                         c_prior_beta = normal(0, 1.5),
+                         b_prior_beta = normal(0, 2.0), # try 2.5
+                         c_prior_beta = normal(0, 1.0),
+                        
+                        s_prior_beta = flat,
   
                          a_prior_sd = normal(0, ysd, autoscale = TRUE),
-                         b_prior_sd = normal(0, 2.0),
-                         c_prior_sd = normal(0, 1.0),
+                         b_prior_sd = normal(0, 1.0),
+                         c_prior_sd = normal(0, 0.5),
 
                          rsd_prior_sigma = normal(0, ysd, autoscale = TRUE),
                         
