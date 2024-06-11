@@ -20,6 +20,7 @@
   feature is only available when ```backend = 'cmdstanr'```. 
 
 ### Minor changes
+
  - The default distribution for all parameters i.e., regression coefficients as well as the standard
    deviation (sd) for the group level random effects and the distributional parameter (sigma) changed 
    to the ```normal()```. Earlier, the distribution for regression coefficients and the sd for the 
@@ -28,6 +29,10 @@
    ```student_t()``` which were used earlier are now used for the ```normal()``` distribution. Similarly,
    the scale parameter used earlier for the ```exponential()``` for distributional parameter is now 
   used for setting the ```normal()``` prior for the distributional parameter (location parameter as '0'.
+
+- The default initials for all parameters i.e., regression coefficients as well as the standard
+   deviation (sd) for the group level random effects and the distributional parameter (sigma) changed 
+   to the ```random```. 
 
 ### Bugfixes
 
@@ -39,6 +44,7 @@
 ### Miscellaneous
 - Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing functions. The environment is now automatically set to match the environment of exposed functions. It is important to note that setting environment manually (via the 'envir' argument) may actually result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests. 
 - Minor corrections/changes to make R code more efficient.
+
 
 
 # bsitar 0.2.1
