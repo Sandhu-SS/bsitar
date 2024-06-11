@@ -3285,10 +3285,20 @@ set_priors_initials <- function(a_prior_beta,
       }
       list_ck <- list_ck[lengths(list_ck) != 0]
       keys    <- unique(unlist(lapply(list_ck, names)))
-      list_ck <-
-        setNames(do.call(mapply, c(FUN = c, lapply(
-          list_ck, `[`, keys
-        ))), keys)
+      
+      # This was resulting in error when spline initial random - 11 06 2024
+      
+      # list_ck <-
+      #   setNames(do.call(mapply, c(FUN = c, lapply(
+      #     list_ck, `[`, keys
+      #   ))), keys)
+      
+      list_ck <- do.call(mapply, c(FUN = c, lapply(list_ck, `[`, keys)))
+      if(is.matrix(list_ck)) {
+        list_ck <- lapply(seq_len(ncol(list_ck)), function(i) list_ck[,i])
+      }
+      list_ck <- setNames(list_ck, keys)
+      
       combined_inits <- c(list_ck, list_ck_)
     }
     
