@@ -955,10 +955,10 @@
 #'  model such as \cr \code{list(a_init_beta = '0', a_init_beta = 'lm')}.
 #'
 #'@param b_init_beta Initial values for the fixed effect parameter, \code{b}
-#'  (default '0'). See \code{a_init_beta} for details.
+#'  (default 'random'). See \code{a_init_beta} for details.
 #'
 #'@param c_init_beta Initial values for the fixed effect parameter, \code{c}
-#'  (default '0'). See \code{a_init_beta} for details.
+#'  (default 'random'). See \code{a_init_beta} for details.
 #'
 #'@param d_init_beta Initial values for the fixed effect parameter, \code{d}
 #'  (default 'random'). See \code{a_init_beta} for details.
@@ -968,23 +968,23 @@
 #'  \code{'prior'}, and \code{'lm'}.
 #'
 #'@param a_cov_init_beta Initial values for the covariate(s) included in the
-#'  fixed effect parameter, \code{a} (default '0'). Options available are
+#'  fixed effect parameter, \code{a} (default 'random'). Options available are
 #'  \code{'0'}, \code{'random'}, \code{'prior'} and \code{'lm'}. The option
 #'  \code{'lm'} is available only for the \code{a_cov_init_beta} and not for the
 #'  covariate(s) included in other fixed effect parameters \code{b}, \code{c},
 #'  or \code{d}.
 #'
 #'@param b_cov_init_beta Initial values for covariate(s) included in the fixed
-#'  effect parameter, \code{b} (default '0'). See \code{a_cov_init_beta} for
-#'  details.
+#'  effect parameter, \code{b} (default 'random'). See \code{a_cov_init_beta}
+#'  for details.
 #'
 #'@param c_cov_init_beta Initial values for covariate(s) included in the fixed
-#'  effect parameter, \code{c} (default '0'). See \code{a_cov_init_beta} for
-#'  details.
+#'  effect parameter, \code{c} (default 'random'). See \code{a_cov_init_beta}
+#'  for details.
 #'
 #'@param d_cov_init_beta Initial values for covariate(s) included in the fixed
-#'  effect parameter, \code{d} (default '0'). See \code{a_cov_init_beta} for
-#'  details.
+#'  effect parameter, \code{d} (default 'random'). See \code{a_cov_init_beta}
+#'  for details.
 #'  
 #'@param s_cov_init_beta Initial values for covariate(s) included in the fixed
 #'  effect parameter, \code{s} (default 'lm'). See \code{a_cov_init_beta} for
@@ -1701,11 +1701,11 @@ bsitar <- function(x,
                    c_init_beta = random,
                    d_init_beta = random,
                    s_init_beta = random,
-                   a_cov_init_beta = 0,
-                   b_cov_init_beta = 0,
-                   c_cov_init_beta = 0,
-                   d_cov_init_beta = 0,
-                   s_cov_init_beta = 0,
+                   a_cov_init_beta = random,
+                   b_cov_init_beta = random,
+                   c_cov_init_beta = random,
+                   d_cov_init_beta = random,
+                   s_cov_init_beta = random,
                    a_init_sd = random,
                    b_init_sd = random,
                    c_init_sd = random,
