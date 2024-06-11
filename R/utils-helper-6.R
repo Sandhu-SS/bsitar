@@ -3295,7 +3295,7 @@ set_priors_initials <- function(a_prior_beta,
       
       list_ck <- do.call(mapply, c(FUN = c, lapply(list_ck, `[`, keys)))
       if(is.matrix(list_ck)) {
-        list_ck <- lapply(seq_len(ncol(list_ck)), function(i) list_ck[,i])
+        list_ck <- lapply(base::seq_len(ncol(list_ck)), function(i) list_ck[,i])
       }
       list_ck <- setNames(list_ck, keys)
       
