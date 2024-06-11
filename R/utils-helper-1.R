@@ -1831,11 +1831,16 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args,
       pathfinder_args_final[['show_messages']] <- FALSE
       pathfinder_args_final[['show_exceptions']] <- FALSE
       
+      if(!is.null(brm_args$threads$threads)) {
+        pathfinder_args_final[['num_threads']] <- brm_args$threads$threads
+      }
+      
       pathfinder_args_final[['data']] <- sdata
       pathfinder_args_final[['init']] <- brm_args$init
       
-      if(!is.null(brm_args$threads$threads)) 
-        pathfinder_args_final[['num_threads']] <- brm_args$threads$threads
+      pathfinder_args_final[['history_size']] <- 100
+      pathfinder_args_final[['num_paths']] <- brm_args$chains
+      
     } else if(!is.null(pathfinder_args)) {
       pathfinder_args_final <- sanitize_pathfinder_args(sdata, 
                                                         pathfinder_args, 
