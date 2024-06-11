@@ -1110,10 +1110,10 @@
 #'  parameters (default 'random'). These parameters are part of the Non-Centered
 #'  Parameterization (NCP) approach used in the [brms::brm()].
 #'  
-#'@param vcov_init_0 A logical (default \code{TRUE}) to set initials for
+#'@param vcov_init_0 A logical (default \code{FALSE}) to set initials for
 #'  variance (i.e, standard deviation) and covariance (i.e., correlation)
 #'  parameters as zero. This allows for setting custom initials for the fixed
-#'  effects parameters but zero for variance covariance parameters.
+#'  effects parameters but zero initials for the variance covariance parameters.
 #'
 #'@param jitter_init_beta A value as proportion (between 0 and 1) to perturb the
 #'  initial values for fixed effect parameters. The default is \code{NULL}
@@ -1727,7 +1727,7 @@ bsitar <- function(x,
                    autocor_init_unstr_acor = random,
                    mvr_init_rescor = random,
                    r_init_z = random,
-                   vcov_init_0 = TRUE,
+                   vcov_init_0 = FALSE,
                    jitter_init_beta = NULL,
                    jitter_init_sd = NULL,
                    jitter_init_cor = NULL,
