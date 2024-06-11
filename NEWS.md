@@ -13,7 +13,22 @@
   The ```marginal_draws()```, ```marginal_comparison()``` and ```growthparameters_comparison()```
   are fully customized for the ```bsitar``` package and yet inappropriate the full flexibility offered
   by the ```marginaleffects``` package. 
- 
+
+- Added support for using the ```$pathfinder()``` based initial values for the MCMC sampling  
+  ```$sample()``` (via argument ```pathfinder_init = TRUE```, default FALSE). The arguments for the 
+  ```$pathfinder()``` can be specified as a named list via the ```pathfinder_args```. Note that this
+  feature is only available when ```backend = 'cmdstanr'```. 
+
+### Minor changes
+ - The default distribution for all parameters i.e., regression coefficients as well as the standard
+   deviation (sd) for the group level random effects and the distributional parameter (sigma) changed 
+   to the ```normal()```. Earlier, the distribution for regression coefficients and the sd for the 
+   group level random effects was ```student_t()``` whereas distribution for sd of distributional 
+   parameter (sigma) was ```exponential()```. Note that the same location and scale parameter for the 
+   ```student_t()``` which were used earlier are now used for the ```normal()``` distribution. Similarly,
+   the scale parameter used earlier for the ```exponential()``` for distributional parameter is now 
+  used for setting the ```normal()``` prior for the distributional parameter (location parameter as '0'.
+
 ### Bugfixes
 
 - bsitar(): The 'sigma_cov_init_beta = random' argument was setting wrong initial values for the covariates  

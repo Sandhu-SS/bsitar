@@ -83,24 +83,28 @@
 #'  software program full Bayesian inference
 #'  \insertCite{@see @teamStanReferenceManual; @gelman2015}{bsitar}. Like 
 #'  \pkg{brms}, the \pkg{bsitar} package allows a wide range of prior
-#'  specifications that encourage the users to specify priors that
-#'  actually reflect their prior knowledge about the human growth processes,
-#'  (such as timing and intensity of the growth spurt). For prior
-#'  specification, we follow the carefully crafted approaches used in the
-#'  \pkg{brms} and \pkg{rstanarm} packages. For example, we follow the
-#'  \pkg{brms} package in using the \code{student_t} distribution for the
-#'  regression coefficients as well as the standard deviation for group
-#'  level random effects, but set \code{exponential} distribution for the
-#'  residual standard deviation as used in the \pkg{rstanarm} package. 
-#'  Like \pkg{brms} and \pkg{rstanarm} packages, the \pkg{bsitar} package allows
-#'  for auto scaling of the scale parameter for the location-scale based
-#'  distributions such as \code{normal} and \code{student_t}. While
-#'  \pkg{rstanarm} earlier used to set \code{autosclae} as \code{2.5} (recently
+#'  specifications that encourage the users to specify priors that actually
+#'  reflect their prior knowledge about the human growth processes, (such as
+#'  timing and intensity of the growth spurt). For prior specification, we
+#'  follow the carefully crafted approaches used in the \pkg{brms} and
+#'  \pkg{rstanarm} packages. While \pkg{brms} packages use a combination of
+#'  \code{normal} and \code{student_t} distribution for the regression
+#'  coefficients and the standard deviation of group level random effects and
+#'  the distributional parameter (\code{sigma}), the \pkg{rstanarm} uses
+#'  \code{normal} distribution for regression coefficients and the group level
+#'  random effects but sets \code{exponential} distribution for the
+#'  distributional parameter (\code{sigma}). We follow use default\code{normal}
+#'  distribution for all parameters i.e., regression coefficients and the
+#'  standard deviation of group level random effects and the distributional
+#'  parameter. Like \pkg{brms} and \pkg{rstanarm} packages, the \pkg{bsitar}
+#'  package allows \code{'autoscaling'} of the scale parameter for location-scale
+#'  based distributions (such as \code{normal} and \code{student_t}). While
+#'  \pkg{rstanarm} earlier used to set \code{autoscale} as \code{2.5} (recently
 #'  authors changed this behavior to \code{FALSE}), the \pkg{brms} package sets
 #'  it as \code{1.0} or \code{2.5} depending on the standard deviation of the
 #'  response variable (See [brms::prior()]). The \pkg{bsitar} package, on the
 #'  other hand, offers full flexibility in choosing the scale factor as any real
-#'  number (e.g., \code{autosclae = 5.0}). When \code{autosclae = TRUE}, the
+#'  number (e.g., \code{autoscale = 5.0}). When \code{autoscale = TRUE}, the
 #'  \code{2.5} is the default scaling factor. We strongly recommend to go
 #'  through the well documented details on prior specifications used in
 #'  \pkg{brms} and \pkg{rstanarm} packages.
@@ -565,7 +569,7 @@
 #'  }
 #'
 #'@param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
-#'  (default \code{student_t(3, ymean, ysd, autoscale = TRUE)}). The key points
+#'  (default \code{normal(ymean, ysd, autoscale = TRUE)}). The key points
 #'  in prior specification that are applicable for all parameters are
 #'  highlighted below. For full details on prior specification, please see
 #'  [brms::prior()].
@@ -576,17 +580,17 @@
 #'  distribution, upper and lower bounds can be set via options \code{lb} and
 #'  \code{ub} (default \code{NA} for both \code{lb} and \code{ub}). \item For
 #'  location-scale based distributions (such as \code{normal}, \code{student_t},
-#'  \code{cauchy}, and \code{lognormal}), an option \code{autosclae} (default
+#'  \code{cauchy}, and \code{lognormal}), an option \code{autoscale} (default
 #'  \code{FALSE}) can be used to multiply the scale parameter by a numeric
 #'  value. Both \pkg{brms} and \pkg{rstanarm} packages allow similar auto
 #'  scaling under the hood. While \pkg{rstanarm} earlier used to set
-#'  \code{autosclae} as \code{TRUE} which internally multiplied scale parameter
+#'  \code{autoscale} as \code{TRUE} which internally multiplied scale parameter
 #'  by a value 2.5 (recently authors changed this behavior to \code{FALSE}), the
 #'  \pkg{brms} package sets scaling factor as 1.0 or 2.5 depending on the
 #'  standard deviation of the response variable (See [brms::prior()]). The
 #'  \pkg{bsitar} package offers full flexibility in choosing the scaling factor
-#'  as any real number instead of 1.0 or 2.5 (e.g., \code{autosclae = 5.0}).
-#'  When \code{autosclae = TRUE}, \code{2.5} is the default scaling factor.
+#'  as any real number instead of 1.0 or 2.5 (e.g., \code{autoscale = 5.0}).
+#'  When \code{autoscale = TRUE}, \code{2.5} is the default scaling factor.
 #'  \item For location-scale based distributions such as \code{normal}, options
 #'  \code{fxl} (\code{function location}) and \code{fxs} (\code{function scale}) 
 #'  are available to apply any function such as \code{log} and \code{sqrt}, 
@@ -633,12 +637,12 @@
 #'  implies that the lower and upper limits will be evaluated as
 #'  \code{uniform(a-5, b+5)}. \item For exponential distribution, the rate
 #'  parameter is evaluated as inverse. In other words, prior set as
-#'  \code{exponential(10)} is translated to 0.1 i.e.,
+#'  \code{exponential(10.0)} is translated to 0.1 i.e.,
 #'  \code{exponential(1.0/10.0)}. \item User need not to specify each option
 #'  explicitly because the missing options are set to their default values
 #'  automatically. For example, the prior specified as
 #'  \code{a_prior_beta = normal(location = 5, scale = 1, lb = NA, ub = NA,
-#'  addrange = NA, autosclae = FALSE, fxl = NULL, fxs = NULL)}) is same 
+#'  addrange = NA, autoscale = FALSE, fxl = NULL, fxs = NULL)}) is same 
 #'  as \code{a_prior_beta = normal(5, 1)}).
 #'  \item For \code{univariate_by} \code{multivariate} models, priors
 #'  can be same for sub models (e.g., \code{a_prior_beta =
@@ -665,19 +669,19 @@
 #'  or \code{d}.
 #'  
 #'@param b_prior_beta Specify priors for the fixed effect parameter, \code{b}.
-#'  (default \code{student_t(3, 0, 3.5, autoscale = FALSE)}). See
+#'  (default \code{normal(0, 3.5, autoscale = FALSE)}). See
 #'  \code{a_prior_beta} for details.
 #'
 #'@param c_prior_beta Specify priors for the fixed effect parameter, \code{c}.
-#'  (default \code{student_t(3, 0, 1.5, autoscale = FALSE)}). See
+#'  (default \code{normal(0, 1.5, autoscale = FALSE)}). See
 #'  \code{a_prior_beta} for details.
 #'
 #'@param d_prior_beta Specify priors for the fixed effect parameter, \code{d}.
-#'  (default \code{student_t(3, 0, 1.0, autoscale = FALSE)}). See
+#'  (default \code{normal(0, 1.0, autoscale = FALSE)}). See
 #'  \code{a_prior_beta} for details.
 #'  
 #'@param s_prior_beta  Specify priors for the fixed effect parameter, \code{s}
-#'  (i.e., spline coefficients). (default \code{student_t(3, 0, 'lm', autoscale
+#'  (i.e., spline coefficients). (default \code{normal(0, 'lm', autoscale
 #'  = TRUE)}). The general approach is same as described
 #'  earlier for the fixed effect parameters (see \code{a_prior_beta} for
 #'  details). A few key points are highlighted below:
@@ -689,27 +693,28 @@
 #'  matrix. However, typically, the location parameter is set at '0' (default),
 #'  and the autoscale option is set as \code{TRUE}.
 #'  \item For location-scale based priors, an option \code{sethp} (logical,
-#'  default \code{FALSE}) is available to set up the hierarchical priors. To set \code{sethp} as \code{TRUE}, the prior is
-#'  specified as \code{s_prior_beta = normal(0, 'lm', autoscale = TRUE, sethp =
-#'  TRUE)}). When \code{sethp = TRUE}, instead of setting prior as \code{s ~ normal(0,
+#'  default \code{FALSE}) is available to set up the hierarchical priors. To set
+#'  \code{sethp} as \code{TRUE}, the prior is specified as
+#'  \code{s_prior_beta = normal(0, 'lm', autoscale = TRUE, sethp = TRUE)}). 
+#'  When \code{sethp = TRUE}, instead of setting prior as \code{s ~ normal(0,
 #'  'lm')} the hierarchical priors are set as \code{s ~ normal(0, 'hp')} where
-#'  \code{'hp'} is defined as \code{hp ~ normal(0, 'lm')}. Note that the scale 
-#'  parameter for the  \code{hp ~ normal(0, 'lm')} is automatically taken from the 
-#'  \code{s ~ normal(0, 'hp')}. Setting \code{sethp = TRUE} implies that the 
-#'  scale for spline coefficients is estimated from the data itself. The 
-#'  distribution of hierarchical priors is automatically matched with the prior 
-#'  set for the \code{s} parameter, or else can be set by the same \code{sethp} 
-#'  option. For example, \code{s_prior_beta = normal(0, 'lm', sethp = cauchy)} 
-#'  will be translated to \code{s ~ normal(0, 'lm')}, \code{hp  ~ cauchy(0, 'lm')}.
-#'  \item For \code{uniform} priors, the  option\code{addrange} can be used to
-#'  symmetrically expand the prior range.
+#'  \code{'hp'} is defined as \code{hp ~ normal(0, 'lm')}. Note that the scale
+#'  parameter for the  \code{hp ~ normal(0, 'lm')} is automatically taken from
+#'  the \code{s ~ normal(0, 'hp')}. Setting \code{sethp = TRUE} implies that the
+#'  scale for spline coefficients is estimated from the data itself. The
+#'  distribution of hierarchical priors is automatically matched with the prior
+#'  set for the \code{s} parameter, or else can be set by the same \code{sethp}
+#'  option. For example, \code{s_prior_beta = normal(0, 'lm', sethp = cauchy)}
+#'  will be translated to \code{s ~ normal(0, 'lm')}, \code{hp  ~ cauchy(0,
+#'  'lm')}. \item For \code{uniform} priors, the  option\code{addrange} can be
+#'  used to symmetrically expand the prior range.
 #'  }
 #'  It is observed that location scale based prior distributions (e.g,
 #'  \code{normal}, \code{student_t}, and \code{cauchy}) perform well for the
 #'  spline coefficients.
 #'  
 #'@param a_cov_prior_beta Specify priors for the covariate(s) included in the
-#'  fixed effect parameter, \code{a} (default \code{student_t(3, 0, 5.0,
+#'  fixed effect parameter, \code{a} (default \code{normal(0, 5.0,
 #'  autoscale = FALSE)}). The approach is same as described earlier for the
 #'  \code{a_prior_beta} except that options \code{'ymean'}, \code{'ymedian'},
 #'  \code{'ysd'}, and \code{'ymad'} are not allowed. The Option \code{'lm'} for
@@ -721,19 +726,19 @@
 #'  \code{a_prior_beta} models (see \code{a_prior_beta}).
 #' 
 #'@param b_cov_prior_beta Specify priors for the covariate(s) included in the
-#'  fixed effect parameter, \code{b} (default \code{student_t(3, 0, 1.0,
+#'  fixed effect parameter, \code{b} (default \code{normal(0, 1.0,
 #'  autoscale = FALSE)}). See \code{a_cov_prior_beta} for details.
 #'
 #'@param c_cov_prior_beta Specify priors for the covariate(s) included in the
-#'  fixed effect parameter, \code{c} (default \code{student_t(3, 0, 0.1,
+#'  fixed effect parameter, \code{c} (default \code{normal(0, 0.1,
 #'  autoscale = FALSE)}). See \code{a_cov_prior_beta} for details.
 #'
 #'@param d_cov_prior_beta Specify priors for the covariate(s) included in the
-#'  fixed effect parameter, \code{d} (default \code{student_t(3, 0, 1.0,
+#'  fixed effect parameter, \code{d} (default \code{normal(0, 1.0,
 #'  autoscale = FALSE)}). See \code{a_cov_prior_beta} for details.
 #'  
 #'@param s_cov_prior_beta Specify priors for the covariate(s) included in the
-#'  fixed effect parameter, \code{s} (default \code{student_t(3, 0, 10.0,
+#'  fixed effect parameter, \code{s} (default \code{normal(0, 10.0,
 #'  autoscale = FALSE)}). However, as described earlier, (see \code{s_formual}),
 #'  the \emph{SITAR} model does not allows for inclusion of covariate(s) in the
 #'  spline design matrix. If and when covariate(s) are specified (see
@@ -745,7 +750,7 @@
 #'  obtained from fitting a simple linear to the data.
 #'
 #'@param a_prior_sd Specify priors  for the random effect parameter, \code{a}.
-#'  (default \code{student_t(3, 0, 'ysd', autoscale = FALSE)}). Note that prior
+#'  (default \code{normal(0, 'ysd', autoscale = FALSE)}). Note that prior
 #'  is on the standard deviation (which is the square root of the variance) and
 #'  not on the variance itself. The approach of setting the prior is same as
 #'  described earlier for the fixed effect parameter, \code{a} (See
@@ -756,33 +761,33 @@
 #'  \code{a_prior_beta}).
 #'
 #'@param b_prior_sd  Specify priors  for the random effect parameter, \code{b}
-#'  (default \code{student_t(3, 0, 2.0, autoscale = FALSE)}). See
+#'  (default \code{normal(0, 2.0, autoscale = FALSE)}). See
 #'  \code{a_prior_sd} for details.
 #'
 #'@param c_prior_sd Specify priors  for the random effect parameter, \code{c}
-#'  (default \code{student_t(3, 0, 1.25, autoscale = FALSE)}). See
+#'  (default \code{normal(0, 1.25, autoscale = FALSE)}). See
 #'  \code{a_prior_sd} for details.
 #'
 #'@param d_prior_sd Specify priors  for the random effect parameter,
-#'  \code{d} (default \code{student_t(3, 0, 1.0, autoscale = FALSE)}). See
+#'  \code{d} (default \code{normal(0, 1.0, autoscale = FALSE)}). See
 #'  \code{a_prior_sd} for details.
 #'
 #'@param a_cov_prior_sd Specify priors for the covariate(s) included in the
-#'  random effect parameter, \code{a} (default \code{student_t(3, 0, 5.0,
+#'  random effect parameter, \code{a} (default \code{normal(0, 5.0,
 #'  autoscale = FALSE)}). The approach is same as described earlier for the
 #'  \code{a_cov_prior_beta} except that no pre-defined option (e.g.,
 #'  \code{'lm'}) is allowed.
 #'
 #'@param b_cov_prior_sd Specify priors for the covariate(s) included in the
-#'  random effect parameter, \code{b} (default \code{student_t(3, 0, 1.0,
+#'  random effect parameter, \code{b} (default \code{normal(0, 1.0,
 #'  autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.
 #'
 #'@param c_cov_prior_sd Specify priors for the covariate(s) included in the
-#'  random effect parameter, \code{c} (default \code{student_t(3, 0, 0.1,
+#'  random effect parameter, \code{c} (default \code{normal(0, 0.1,
 #'  autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.
 #'
 #'@param d_cov_prior_sd Specify priors for the covariate(s) included in the
-#'  random effect parameter, \code{d} (default \code{student_t(3, 0, 1.0,
+#'  random effect parameter, \code{d} (default \code{normal(0, 1.0,
 #'  autoscale = FALSE)}). See \code{a_cov_prior_sd} for details.
 #'
 #'@param a_prior_sd_str Specify priors for the random effect parameter, \code{a}
@@ -826,24 +831,24 @@
 #'  same as described earlier (see the \code{a_cov_prior_sd_str}).
 #'  
 #'@param sigma_prior_beta Specify priors for the fixed effect distributional
-#'  parameter, \code{sigma} (default \code{student_t(3, 0, 1.0, autoscale =
+#'  parameter, \code{sigma} (default \code{normal(0, 1.0, autoscale =
 #'  FALSE)}). The approach is same as described earlier for the fixed effect
 #'  parameter, \code{a} (See \code{a_prior_beta} for details).
 #'
 #'@param sigma_cov_prior_beta Specify priors for the covariate(s) included in
 #'  the fixed effect distributional parameter, \code{sigma} (default
-#'  \code{student_t(3, 0, 0.5, autoscale = FALSE)}). The approach is same as
+#'  \code{normal(0, 0.5, autoscale = FALSE)}). The approach is same as
 #'  described earlier for the covariate(s) included the fixed effect parameter,
 #'  \code{a} (see \code{a_cov_prior_beta} for details).
 #'
 #'@param sigma_prior_sd Specify priors for the random effect distributional
-#'  parameter, \code{sigma} (default \code{student_t(3, 0, 0.25, autoscale =
+#'  parameter, \code{sigma} (default \code{normal(0, 0.25, autoscale =
 #'  FALSE)}). The approach is same as described earlier the random effect
 #'  parameter \code{a} (see \code{a_prior_sd} for details).
 #'
 #'@param sigma_cov_prior_sd Specify priors for the covariate(s) included in the
 #'  random effect distributional parameter, \code{sigma} (default
-#'  \code{student_t(3, 0, 0.15, autoscale = FALSE)}). The approach is same as
+#'  \code{normal(0, 0.15, autoscale = FALSE)}). The approach is same as
 #'  described earlier for the covariate(s) included in the random effect
 #'  parameter \code{a} (see \code{a_cov_prior_sd} for details).
 #'  
@@ -861,7 +866,7 @@
 #'  \code{a_cov_prior_sd_str} for details).
 #'
 #'@param rsd_prior_sigma Specify priors for the residual standard deviation
-#'  parameter \code{sigma} (default \code{exponential('ysd', autoscale =
+#'  parameter \code{sigma} (default \code{normal(0, 'ysd', autoscale =
 #'  TRUE)}). Note that this argument is evaluated only when both
 #'  \code{dpar_formula} and \code{sigma_formula} are \code{NULL}. For location
 #'  scale based distributions, user can use specify standard deviation
@@ -869,13 +874,13 @@
 #'  parameter.
 #'
 #'@param dpar_prior_sigma Specify priors for the fixed effect distributional
-#'  parameter \code{sigma} (default \code{student_t(3, 0, 'ysd', autoscale =
+#'  parameter \code{sigma} (default \code{normal(0, 'ysd', autoscale =
 #'  TRUE)}). The argument is evaluated only when
 #'  \code{sigma_formula} is \code{NULL}.
 #'
 #'@param dpar_cov_prior_sigma Specify priors for the covariate(s) included in
 #'  the fixed effect distributional parameter \code{sigma} (default
-#'  \code{student_t(3, 0, 1.0, autoscale = FALSE)}). The argument is evaluated
+#'  \code{normal(0, 1.0, autoscale = FALSE)}). The argument is evaluated
 #'  only when \code{sigma_formula} is \code{NULL}.
 #'
 #'@param autocor_prior_acor Specify priors for the autocorrelation parameters
@@ -935,7 +940,7 @@
 #'  \code{init = 'random'}.
 #'
 #'@param a_init_beta Initial values for the fixed effect parameter, \code{a}
-#'  (default 'lm'). Options available are \code{'0'}, \code{'random'} and
+#'  (default 'random'). Options available are \code{'0'}, \code{'random'} and
 #'  \code{'prior'}. In addition, user can specify \code{'ymean'} and
 #'  \code{'ymedian'} to set initial as the mean or the median of the response
 #'  variable. Also, option \code{'lm'} can be used to set coefficients obtained
@@ -956,10 +961,10 @@
 #'  (default '0'). See \code{a_init_beta} for details.
 #'
 #'@param d_init_beta Initial values for the fixed effect parameter, \code{d}
-#'  (default '0'). See \code{a_init_beta} for details.
+#'  (default 'random'). See \code{a_init_beta} for details.
 #'  
 #'@param s_init_beta  Initial values for the fixed effect parameter, \code{s}
-#'  (default 'lm'). Options available are \code{'0'}, \code{'random'},
+#'  (default 'random'). Options available are \code{'0'}, \code{'random'},
 #'  \code{'prior'}, and \code{'lm'}.
 #'
 #'@param a_cov_init_beta Initial values for the covariate(s) included in the
@@ -991,9 +996,9 @@
 #'
 #'@param a_init_sd Initial value for the standard deviation of group level
 #'  random effect parameter, \code{a} (default 'random'). Options available are
-#'  \code{'0'}, \code{'random'} and \code{'prior'}. In addition, \code{'ysd'},
-#'  \code{'ymad'}, \code{'lme_sd_a'}, and \code{'lm_sd_a'} can be used to
-#'  specify initial values as described below:
+#'  \code{'random'}, \code{'random'} and \code{'prior'}. In addition,
+#'  \code{'ysd'}, \code{'ymad'}, \code{'lme_sd_a'}, and \code{'lm_sd_a'} can be
+#'  used to specify initial values as described below:
 #'  \itemize{
 #'  \item The \code{'ysd'} sets standard deviation (\code{sd}) of the response
 #'  variable as an initial value.
@@ -1027,7 +1032,7 @@
 #'
 #'@param a_cov_init_sd Initial values for the covariate(s) included in the
 #'  random effect parameter, \code{a} (default 'random'). Options available are
-#'  \code{'0'}, \code{'random'} and \code{'prior'}.
+#'  \code{'random'}, \code{'random'} and \code{'prior'}.
 #'  
 #'@param b_cov_init_sd Initial values for the covariate(s) included in the
 #'  random effect parameter, \code{b} (default 'random'). See
@@ -1043,11 +1048,10 @@
 #'
 #'@param sigma_init_beta Initial values for the fixed effect distributional
 #'  parameter, \code{sigma} (default 'random'). Options available are
-#'  \code{'0'}, \code{'random'} and \code{'prior'}.
+#'  \code{'random'}, \code{'random'} and \code{'prior'}.
 #'
-#'@param sigma_cov_init_beta Initial values for the covariate(s)
-#'  included in the fixed effect distributional parameter, \code{sigma} (See
-#'  \code{sigma_init_beta} for details).
+#'@param sigma_cov_init_beta Initial values for the covariate(s) included in the
+#'  fixed effect distributional parameter, \code{sigma} (default 'random')
 #'
 #'@param sigma_init_sd Initial value for the standard deviation of
 #'  distributional random effect parameter, \code{sigma} (default 'random'). The
@@ -1060,11 +1064,11 @@
 #'
 #'@param gr_init_cor Initial values for the correlation parameters of
 #'  group-level random effects parameters (default 'random'). Allowed options
-#'  are \code{'0'}, \code{'random'} and \code{'prior'}.
+#'  are \code{'random'}, \code{'random'} and \code{'prior'}.
 #'
 #'@param sigma_init_cor Initial values for the correlation parameters of
 #'  distributional random effects parameter \code{sigma} (default 'random').
-#'  Allowed options are \code{'0'}, \code{'random'} and \code{'prior'}.
+#'  Allowed options are \code{'random'}, \code{'random'} and \code{'prior'}.
 #'
 #'@param rsd_init_sigma Initial values for the residual standard deviation
 #'  parameter, \code{sigma} (default 'random'). Options available are
@@ -1648,24 +1652,24 @@ bsitar <- function(x,
                    multivariate = list(mvar = FALSE,
                                        cor = un,
                                        rescor = TRUE),
-                   a_prior_beta = student_t(3, ymean, ysd, autoscale = TRUE),
-                   b_prior_beta = student_t(3, 0, 3.5, autoscale = FALSE),
-                   c_prior_beta = student_t(3, 0, 1.5, autoscale = FALSE),
-                   d_prior_beta = student_t(3, 0, 1.0, autoscale = TRUE),
-                   s_prior_beta = student_t(3, lm, lm, autoscale = FALSE),
-                   a_cov_prior_beta = student_t(3, 0, 5.0, autoscale = FALSE),
-                   b_cov_prior_beta = student_t(3, 0, 1.0, autoscale = FALSE),
-                   c_cov_prior_beta = student_t(3, 0, 0.1, autoscale = FALSE),
-                   d_cov_prior_beta = student_t(3, 0, 1.0, autoscale = FALSE),
-                   s_cov_prior_beta = student_t(3, lm, lm, autoscale = FALSE),
-                   a_prior_sd = student_t(3, 0, ysd, autoscale = TRUE),
-                   b_prior_sd = student_t(3, 0, 2.0, autoscale = FALSE),
-                   c_prior_sd = student_t(3, 0, 1.25, autoscale = FALSE),
-                   d_prior_sd = student_t(3, 0, 1.0, autoscale = TRUE),
-                   a_cov_prior_sd = student_t(3, 0, 5.0, autoscale = FALSE),
-                   b_cov_prior_sd = student_t(3, 0, 1.0, autoscale = FALSE),
-                   c_cov_prior_sd = student_t(3, 0, 0.1, autoscale = FALSE),
-                   d_cov_prior_sd = student_t(3, 0, 1.0, autoscale = FALSE),
+                   a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
+                   b_prior_beta = normal(0, 3.5, autoscale = FALSE),
+                   c_prior_beta = normal(0, 1.5, autoscale = FALSE),
+                   d_prior_beta = normal(0, 1.0, autoscale = TRUE),
+                   s_prior_beta = normal(lm, lm, autoscale = FALSE),
+                   a_cov_prior_beta = normal(0, 5.0, autoscale = FALSE),
+                   b_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
+                   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                   d_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
+                   s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+                   a_prior_sd = normal(0, ysd, autoscale = TRUE),
+                   b_prior_sd = normal(0, 2.0, autoscale = FALSE),
+                   c_prior_sd = normal(0, 1.25, autoscale = FALSE),
+                   d_prior_sd = normal(0, 1.0, autoscale = TRUE),
+                   a_cov_prior_sd = normal(0, 5.0, autoscale = FALSE),
+                   b_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
+                   c_cov_prior_sd = normal(0, 0.1, autoscale = FALSE),
+                   d_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
                    a_prior_sd_str = NULL,
                    b_prior_sd_str = NULL,
                    c_prior_sd_str = NULL,
@@ -1674,15 +1678,15 @@ bsitar <- function(x,
                    b_cov_prior_sd_str = NULL,
                    c_cov_prior_sd_str = NULL,
                    d_cov_prior_sd_str = NULL,
-                   sigma_prior_beta = student_t(3, 0, 1, autoscale = FALSE),
-                   sigma_cov_prior_beta = student_t(3, 0, 0.5, autoscale = FALSE),
-                   sigma_prior_sd = student_t(3, 0, 0.25, autoscale = FALSE),
-                   sigma_cov_prior_sd = student_t(3, 0, 0.15, autoscale = FALSE),
+                   sigma_prior_beta = normal(0, 1, autoscale = FALSE),
+                   sigma_cov_prior_beta = normal(0, 0.5, autoscale = FALSE),
+                   sigma_prior_sd = normal(0, 0.25, autoscale = FALSE),
+                   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
-                   rsd_prior_sigma = exponential(ysd, autoscale = FALSE),
-                   dpar_prior_sigma = student_t(3, 0, ysd, autoscale = TRUE),
-                   dpar_cov_prior_sigma = student_t(3, 0, 1, autoscale = FALSE),
+                   rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                   dpar_prior_sigma = normal(0, ysd, autoscale = TRUE),
+                   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
                    gr_prior_cor = lkj(1),
@@ -1692,16 +1696,16 @@ bsitar <- function(x,
                    mvr_prior_rescor = lkj(1),
                    init = NULL,
                    init_r = NULL,
-                   a_init_beta = lm,
-                   b_init_beta = 0,
-                   c_init_beta = 0,
-                   d_init_beta = 0,
-                   s_init_beta = lm,
+                   a_init_beta = random,
+                   b_init_beta = random,
+                   c_init_beta = random,
+                   d_init_beta = random,
+                   s_init_beta = random,
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
                    c_cov_init_beta = 0,
                    d_cov_init_beta = 0,
-                   s_cov_init_beta = lm,
+                   s_cov_init_beta = 0,
                    a_init_sd = random,
                    b_init_sd = random,
                    c_init_sd = random,
