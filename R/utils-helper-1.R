@@ -3557,4 +3557,24 @@ sanitize_algorithm_args <- function(args, algorithm, verbose = FALSE) {
 }
 
 
+#' An internal function to convert velocity parameter from exp to unit/time and vice versa
+#'
+#' @param x A numeric value or a vector.
+#' @param to A character string to indicate direction of conversion.
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
 
+vel_exp_unit_convert <- function(x, to = 'unit') {
+  if(to == 'unit') {
+    message("converted from exp(x) to unit/time")
+    out <-  1 - exp(x)^2
+    # out <- abs(out)
+  }
+  if(to == 'exp') {
+    message("converted from unit/time to exp(x)")
+    out <-  log(sqrt(1-x))
+  }
+  out
+}
