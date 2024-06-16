@@ -3493,23 +3493,59 @@ is.numeric.like <- function(x,
 #' @param outcome 
 #' @param nset 
 #'
-#' @return
 #' @keywords internal
 #' @noRd
 #' 
-flattten_last_time <- function(data, id, outcome, nset = 2) {
+flattten_last_time <- function(data, 
+                               id, 
+                               outcome, 
+                               nset = 1, 
+                               inc = NULL ) {
+  occtemp <- NULL;
   temdata <- data %>%
-    dplyr::group_by_at(id) %>%
-    dplyr::mutate('occtempxxx' := dplyr::row_number()) %>% 
-    dplyr::mutate(nocctempxxx = max(.data[['occ']]))
+    dplyr::group_by_at(id) %>% # head(n=10)
+    dplyr::mutate('occtemp' := dplyr::row_number()) %>% 
+    dplyr::mutate('nocctemp' := max(.data[['occ']]))
+  
   setseq <- seq(1, nset, 1)-1
-  for (i in setseq) {
-    temdata <- temdata %>% 
-      dplyr::mutate(!! base::as.symbol(outcome) := 
-                      dplyr::if_else(occtempxxx == max(occtempxxx)-i, 
-                                     cummax(.data[[outcome]]), 
-                                     .data[[outcome]])) 
+  
+  inc <- rev(inc)
+  
+  if(is.null(inc)) {
+    inc <- 0
+    inc <- rep(inc, length(nset))
+  } else if(length(inc) == 1) {
+    inc <- rep(inc, nset)
+  } else if(length(inc) != nset) {
+    stop("lenhth of 'inc' must be either 1 or same as the 'nset'")
   }
-  temdata2 <- temdata %>% dplyr::select(-c('occtempxxx', 'nocctempxxx'))
+  
+  if(nset == 1) {
+    j = 0
+    for (i in setseq) {
+      j <- j+1
+      addinc <- inc[j] 
+      temdata <- temdata %>% 
+        dplyr::group_by_at(id) %>% 
+        dplyr::mutate(!! base::as.symbol(outcome) := 
+                        dplyr::if_else(occtemp == max(.data[['occtemp']])-i, 
+                                       (.data[[outcome]] + addinc ), 
+                                       .data[[outcome]])) 
+    }
+  } else {
+    j = 0
+    for (i in setseq) {
+      j <- j+1
+      addinc <- inc[j] 
+      temdata <- temdata %>% 
+        dplyr::group_by_at(id) %>% 
+        dplyr::mutate(!! base::as.symbol(outcome) := 
+                        dplyr::if_else(occtemp == max(.data[['occtemp']])-i, 
+                                       cummax(.data[[outcome]] + addinc ), 
+                                       .data[[outcome]])) 
+    }
+  }
+  
+  temdata2 <- temdata %>% dplyr::select(-c('occtemp', 'nocctemp'))
   return(temdata2)
 }
