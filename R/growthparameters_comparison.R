@@ -249,6 +249,11 @@
 #'   'return'}). Note that summary of posterior draws for parameters is the
 #'   default returned object.
 #'   
+#' @param pdrawsh A character string (default \code{FALSE}) to indicate whether
+#'   to return the posterior draws for parameters (if \code{pdrawsh =
+#'   'return'}). Note that summary of posterior draws for parameters is the
+#'   default returned object.
+#'   
 #' @param bys A character string (default \code{NULL}) to specify variables 
 #' over which parameters need to be summarized.
 #' 
@@ -331,6 +336,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    method = 'custom',
                                    pdraws = FALSE, 
                                    pdrawsp = FALSE, 
+                                   pdrawsh = FALSE, 
                                    comparison = "difference",
                                    type = NULL,
                                    by = FALSE,
@@ -516,6 +522,25 @@ growthparameters_comparison.bgmfit <- function(model,
     deriv_model <- TRUE
   }
    
+  
+  
+  # 15 06 2025
+  allowed_methods <- c('pkg', 'custom')
+  if(!method %in% allowed_methods) 
+    stop("Argument 'method' should be one of the following:",
+         "\n ", 
+         collapse_comma(allowed_methods)
+    )
+  
+  
+  
+  
+  if(method == 'custom') {
+    deriv <- 1
+    deriv_model <- TRUE
+    if(verbose) message("for method = 'custom', deriv set to TRUE")
+  }
+  
   
   
   if (is.null(idata_method)) {
@@ -771,6 +796,7 @@ growthparameters_comparison.bgmfit <- function(model,
       cores,
       pdraws,
       pdrawsp,
+      pdrawsh,
       bys
     )
   ))[-1]
@@ -1152,13 +1178,14 @@ growthparameters_comparison.bgmfit <- function(model,
          "\n ", 
          collapse_comma(allowed_methods)
     )
-  if(!is.null(comparisons_arguments[['by']])) {
-    checbyx <- comparisons_arguments[['by']]
-    if(all(checbyx == "")) method <- 'pkg'
-    if(is.logical(checbyx)) {
-      if(!checbyx) method <- 'pkg'
-    }
-  }
+  
+  # if(!is.null(comparisons_arguments[['by']])) {
+  #   checbyx <- comparisons_arguments[['by']]
+  #   if(all(checbyx == "")) method <- 'pkg'
+  #   if(is.logical(checbyx)) {
+  #     if(!checbyx) method <- 'pkg'
+  #   }
+  # }
   
 
   
@@ -1209,6 +1236,7 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   pdrawsp_est <- NULL
+  pdrawsh_est <- NULL
   pdraws_est <- NULL
   
   if(method == 'custom') {
@@ -1422,7 +1450,7 @@ growthparameters_comparison.bgmfit <- function(model,
    
     
     if(!isFALSE(pdrawsp)) {
-      selectchoicesr <- c("return") 
+      selectchoicesr <- c("return", 'add') 
       checkmate::assert_choice(pdrawsp, choices = selectchoicesr)
       if(pdrawsp == 'return') {
         return(onex0)
@@ -1432,6 +1460,8 @@ growthparameters_comparison.bgmfit <- function(model,
         
       }
     }
+    
+    
     
     
     if(!isFALSE(pdraws)) {
@@ -1785,6 +1815,20 @@ growthparameters_comparison.bgmfit <- function(model,
           collapse::ftransformv(., 'V2', as.numeric) %>% 
           collapse::frename(., setdrawidh_)
     
+        
+        if(!isFALSE(pdrawsh)) {
+          selectchoicesr <- c("return", 'add') 
+          checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
+          if(pdrawsh == 'return') {
+            return(temhyy)
+          } else if(pdrawsh == 'add') {
+            pdrawsh_est <- temhyy
+          } else {
+            
+          }
+        }
+        
+      
        
         setdrawidparmh <- c('term', 'parameter')
         namesx <- c('estimate', 'conf.low', 'conf.high')
@@ -1914,6 +1958,19 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
+  if(!is.null(pdrawsh_est)) {
+    if(usecollapse) {
+      pdrawsh_est <- pdrawsh_est %>% data.frame() %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    } else {
+      pdrawsh_est <- pdrawsh_est %>% data.frame() %>% 
+        dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                    ~ round(., digits = digits)))
+    }
+  }
+  
+  
   
   
   if(is.null(reformat)) {
@@ -1986,6 +2043,19 @@ growthparameters_comparison.bgmfit <- function(model,
         data.frame()
     } # if(!is.null(pdrawsp_est)) {
     
+    if(!is.null(pdrawsh_est)) {
+      pdrawsh_est <- pdrawsh_est %>% 
+        # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+        dplyr::rename(!!as.symbol(set_names_[1]) := 
+                        dplyr::all_of('estimate')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[2]) := 
+                        dplyr::all_of('conf.low')) %>% 
+        dplyr::rename(!!as.symbol(set_names_[3]) := 
+                        dplyr::all_of('conf.high')) %>% 
+        dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+        data.frame()
+    } # if(!is.null(pdrawsh_est)) {
+    
   } # if (reformat) {
    
   out_sf <- out_sf %>% dplyr::ungroup()
@@ -2006,6 +2076,11 @@ growthparameters_comparison.bgmfit <- function(model,
   if(!is.null(pdrawsp_est)) {
     pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
     out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+  }
+  
+  if(!is.null(pdrawsh_est)) {
+    pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
+    out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
   }
   
   return(out_sf)

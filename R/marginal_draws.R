@@ -663,13 +663,13 @@ marginal_draws.bgmfit <-
           "\n ", 
           collapse_comma(allowed_methods)
      )
-   if(!is.null(predictions_arguments[['by']])) {
-     checbyx <- predictions_arguments[['by']]
-     if(all(checbyx == "")) method <- 'pkg'
-     if(is.logical(checbyx)) {
-       if(!checbyx) method <- 'pkg'
-     }
-   }
+   # if(!is.null(predictions_arguments[['by']])) {
+   #   checbyx <- predictions_arguments[['by']]
+   #   if(all(checbyx == "")) method <- 'pkg'
+   #   if(is.logical(checbyx)) {
+   #     if(!checbyx) method <- 'pkg'
+   #   }
+   # }
    
    if(method == 'pkg') {
      if(call_predictions) {

@@ -3483,3 +3483,33 @@ is.numeric.like <- function(x,
   return((result))
 }
 
+
+
+
+#' Title
+#'
+#' @param data 
+#' @param id 
+#' @param outcome 
+#' @param nset 
+#'
+#' @return
+#' @keywords internal
+#' @noRd
+#' 
+flattten_last_time <- function(data, id, outcome, nset = 2) {
+  temdata <- data %>%
+    dplyr::group_by_at(id) %>%
+    dplyr::mutate('occtempxxx' := dplyr::row_number()) %>% 
+    dplyr::mutate(nocctempxxx = max(.data[['occ']]))
+  setseq <- seq(1, nset, 1)-1
+  for (i in setseq) {
+    temdata <- temdata %>% 
+      dplyr::mutate(!! base::as.symbol(outcome) := 
+                      dplyr::if_else(occtempxxx == max(occtempxxx)-i, 
+                                     cummax(.data[[outcome]]), 
+                                     .data[[outcome]])) 
+  }
+  temdata2 <- temdata %>% dplyr::select(-c('occtempxxx', 'nocctempxxx'))
+  return(temdata2)
+}

@@ -3578,3 +3578,362 @@ vel_exp_unit_convert <- function(x, to = 'unit') {
   }
   out
 }
+
+
+
+
+
+
+
+
+
+#' Plot method for (conditional) equivalence testing
+#'
+#' The `plot()` method for the `bayestestR::equivalence_test()` function.
+#'
+#' @param x description
+#' @param rope_color description
+#' @param rope_alpha description
+#' @param show_intercept description
+#' @param n_columns description
+#' @param estimate this is the added parameter
+#' @param ... description
+#' 
+#' @return A ggplot2-object.
+#'
+#' @keywords internal
+#' #noRd
+#' 
+# plot.see_equivalence_test_x <- function(x,
+#                                         rope_color = "#0171D3",
+#                                         rope_alpha = 0.2,
+#                                         show_intercept = FALSE,
+#                                         n_columns = 1,
+#                                         estimate = NULL,
+#                                         ...) {
+#   
+#   
+#   ################
+#   
+#   
+#   # .intercept_names <- see:::.intercept_names
+#   
+#   .intercept_names <- c(
+#     "(intercept)_zi", "intercept (zero-inflated)", "intercept",  
+#     "zi_intercept", "(intercept)", "b_intercept",
+#     "b_zi_intercept"
+#   )
+#   
+#   # These two function are from 'see' package
+#   .is_intercept <- function(x) {
+#     x <- tolower(x)
+#     x %in% .intercept_names | grepl("(?i)intercept[^a-zA-Z]", x)
+#   }
+#   
+#   .has_multiple_panels <- function (x) {
+#     (!"Effects" %in% names(x) || insight::n_unique(x$Effects) <= 
+#        1L) && (!"Component" %in% names(x) || insight::n_unique(x$Component) <= 
+#                  1L)
+#   }
+#   
+#   .clean_parameter_names <- function (params, grid = FALSE) 
+#   {
+#     params <- unique(params)
+#     parameter_labels <- params
+#     params <- gsub("(b_|bs_|bsp_|bcs_)(.*)", "\\2", params, perl = TRUE)
+#     params <- gsub("^zi_(.*)", "\\1 (Zero-Inflated)", params, 
+#                    perl = TRUE)
+#     params <- gsub("(.*)_zi$", "\\1 (Zero-Inflated)", params, 
+#                    perl = TRUE)
+#     params <- gsub("(.*)_disp$", "\\1 (Dispersion)", params, 
+#                    perl = TRUE)
+#     params <- gsub("r_(.*)\\.(.*)\\.", "(re) \\1", params)
+#     params <- gsub("b\\[\\(Intercept\\) (.*)\\]", "(re) \\1", 
+#                    params)
+#     params <- gsub("b\\[(.*) (.*)\\]", "(re) \\2", params)
+#     params <- gsub("^smooth_sd\\[(.*)\\]", "\\1 (smooth)", params)
+#     params <- gsub("^sds_", "\\1 (Smooth)", params)
+#     params <- gsub("(.*)(\\.)(\\d)$", "\\1 \\3", params)
+#     params <- gsub("(.*)__zi\\s(.*)", "\\1 \\2 (Zero-Inflated)", 
+#                    params, perl = TRUE)
+#     params <- gsub("\\(re\\)\\s(.*)", "\\1 (Random)", params, 
+#                    perl = TRUE)
+#     cor_sd <- grepl("(sd_|cor_)(.*)", params)
+#     if (any(cor_sd)) {
+#       params[cor_sd] <- paste("SD/Cor: ", gsub("^(sd_|cor_)(.*?)__(.*)", 
+#                                                "\\3", params[cor_sd], perl = TRUE))
+#       cor_only <- !is.na(params[cor_sd]) & startsWith(params[cor_sd], 
+#                                                       "cor_")
+#       if (any(cor_only)) {
+#         params[cor_sd][which(cor_sd)[cor_only]] <- sub("__", 
+#                                                        " ~ ", params[cor_sd][which(cor_sd)[cor_only]], 
+#                                                        fixed = TRUE)
+#       }
+#     }
+#     cor_sd <- grepl("^Sigma\\[(.*)", params)
+#     if (any(cor_sd)) {
+#       parm1 <- gsub("^Sigma\\[(.*):(.*),(.*)\\]", "\\2", params[cor_sd], 
+#                     perl = TRUE)
+#       parm2 <- gsub("^Sigma\\[(.*):(.*),(.*)\\]", "\\3", params[cor_sd], 
+#                     perl = TRUE)
+#       params[which(cor_sd)] <- parm1
+#       rand_cor <- parm1 != parm2
+#       if (any(rand_cor)) {
+#         params[which(cor_sd)[rand_cor]] <- paste0(parm1[rand_cor], 
+#                                                   " ~ ", parm2[rand_cor])
+#       }
+#       params[cor_sd] <- paste("SD: ", params[cor_sd])
+#     }
+#     if (grid) {
+#       params <- trimws(gsub("(Zero-Inflated)", "", params, 
+#                             fixed = TRUE))
+#       params <- trimws(gsub("(Random)", "", params, fixed = TRUE))
+#       params <- trimws(gsub("(Dispersion)", "", params, fixed = TRUE))
+#     }
+#     else {
+#       params <- gsub("(Zero-Inflated) (Random)", "(Random, Zero-Inflated)", 
+#                      params, fixed = TRUE)
+#     }
+#     stats::setNames(params, parameter_labels)
+#   }
+#   
+#   .fix_facet_names <- function (x) 
+#   {
+#     if ("Component" %in% names(x)) {
+#       x$Component <- as.character(x$Component)
+#       if ("Effects" %in% names(x)) {
+#         x$Component[x$Component == "conditional"] <- "(Conditional)"
+#         x$Component[x$Component == "zero_inflated"] <- "(Zero-Inflated)"
+#         x$Component[x$Component == "dispersion"] <- "(Dispersion)"
+#         x$Component[x$Component == "simplex"] <- "(Monotonic Effects)"
+#       }
+#       else {
+#         x$Component[x$Component == "conditional"] <- "Conditional"
+#         x$Component[x$Component == "zero_inflated"] <- "Zero-Inflated"
+#         x$Component[x$Component == "dispersion"] <- "Dispersion"
+#         x$Component[x$Component == "simplex"] <- "Monotonic Effects"
+#       }
+#     }
+#     if ("Effects" %in% names(x)) {
+#       x$Effects <- as.character(x$Effects)
+#       x$Effects[x$Effects == "fixed"] <- "Fixed Effects"
+#       x$Effects[x$Effects == "random"] <- "Random Effects"
+#     }
+#     x
+#   }
+#   
+#   .reshape_to_long <- function(x,
+#                                names_to = "group",
+#                                values_to = "values",
+#                                columns = colnames(x),
+#                                id = "id") {
+#     if (is.numeric(columns)) columns <- colnames(x)[columns]
+#     dat <- stats::reshape(
+#       as.data.frame(x),
+#       idvar = id,
+#       ids = row.names(x),
+#       times = columns,
+#       timevar = names_to,
+#       v.names = values_to,
+#       varying = list(columns),
+#       direction = "long"
+#     )
+#     
+#     if (is.factor(dat[[values_to]])) {
+#       dat[[values_to]] <- as.character(dat[[values_to]])
+#     }
+#     
+#     dat[, 1:(ncol(dat) - 1), drop = FALSE]
+#   }
+#   
+#   
+#   ##############
+#   
+#   model_name <- attr(x, "object_name", exact = TRUE)
+#   
+#   if (is.null(model_name)) {
+#     insight::format_alert("`plot()` only works for `equivalence_test()` with model-objects.")
+#     return(x)
+#   }
+#   
+#   
+#   # retrieve model
+#   model <- tryCatch(
+#     {
+#       get(model_name, envir = parent.frame())
+#     },
+#     error = function(e) {
+#       NULL
+#     }
+#   )
+#   
+#   if (is.null(model)) {
+#     insight::format_alert(sprintf("Can't find object '%s'.", model_name))
+#     return(x)
+#   }
+#   
+#   if (inherits(model, "emmGrid")) {
+#     insight::check_if_installed("emmeans")
+#   }
+#   
+#   # if we have intercept-only models, keep at least the intercept
+#   intercepts <- which(.is_intercept(x$Parameter))
+#   if (length(intercepts) && nrow(x) > length(intercepts) && !show_intercept) {
+#     x <- x[-intercepts, ]
+#   }
+#   
+#   cp <- insight::clean_parameters(model)
+#   intercepts <- which(.is_intercept(cp$Parameter))
+#   if (length(intercepts) && nrow(x) > length(intercepts) && !show_intercept) {
+#     cp <- cp[-intercepts, ]
+#   }
+#   
+#   .rope <- c(x$ROPE_low[1], x$ROPE_high[1])
+#   
+#   # split for multiple CIs
+#   tests <- split(x, x$CI)
+#   
+#   result <- lapply(tests, function(i) {
+#     if (inherits(model, "emmGrid")) {
+#       tmp <- as.data.frame(as.matrix(emmeans::as.mcmc.emmGrid(model, names = FALSE)))[, i$Parameter, drop = FALSE]
+#     } else if (inherits(x, "equivalence_test_simulate_model")) {
+#       tmp <- as.data.frame(attr(x, "data"), stringsAsFactors = FALSE, optional = FALSE)[, i$Parameter, drop = FALSE]
+#     } else {
+#       tmp <- as.data.frame(model, stringsAsFactors = FALSE, optional = FALSE)[, i$Parameter, drop = FALSE]
+#     }
+#     
+#     tmp2 <- lapply(seq_len(nrow(i)), function(j) {
+#       p <- i$Parameter[j]
+#       tmp[[p]][tmp[[p]] < i$HDI_low[j]] <- NA
+#       tmp[[p]][tmp[[p]] > i$HDI_high[j]] <- NA
+#       tmp[[p]]
+#     })
+#     
+#     cnames <- colnames(tmp)
+#     tmp <- as.data.frame(tmp2)
+#     colnames(tmp) <- cnames
+#     
+#     tmp <- .reshape_to_long(tmp, names_to = "predictor", values_to = "estimate")
+#     # tmp$predictor <- as.factor(tmp$predictor)
+#     
+#     
+#     # tmp <- get('cc')
+#     
+# 
+#     
+#     tmp$grp <- NA
+#     for (j in seq_len(nrow(i))) {
+#       tmp$grp[tmp$predictor == i$Parameter[j]] <- i$ROPE_Equivalence[j]
+#     }
+#     
+#     tmp$predictor <- factor(tmp$predictor)
+#     tmp$predictor <- factor(tmp$predictor, levels = rev(levels(tmp$predictor)))
+#     
+#     tmp$HDI <- sprintf("%g%% HDI", 100 * i$CI[1])
+#     
+#     tmp
+#   })
+#   
+#   tmp <- do.call(rbind, result)
+#   colnames(cp)[1] <- "predictor"
+#   tmp <- merge(tmp, cp, by = "predictor")
+#   tmp$predictor <- factor(tmp$predictor, levels = rev(unique(tmp$predictor)))
+#   
+#   if (.has_multiple_panels(tmp)) {
+#     n_columns <- NULL
+#   }
+#   
+#   # get labels
+#   labels <- .clean_parameter_names(tmp$predictor, grid = !is.null(n_columns))
+#   
+#   tmp <- .fix_facet_names(tmp)
+#   
+#   # check for user defined arguments
+#   
+#   fill.color <- c("#CD423F", "#018F77", "#FCDA3B")
+#   if (length(unique(tmp$HDI)) > 1L) {
+#     x.title <- "Highest Density Region of Posterior Samples"
+#   } else {
+#     x.title <- sprintf("%g%% Highest Density Region of Posterior Samples", 100 * x$CI[1])
+#   }
+#   legend.title <- "Decision on H0"
+#   
+#   fill.color <- fill.color[sort(unique(match(x$ROPE_Equivalence, c("Accepted", "Rejected", "Undecided"))))]
+#   
+#   add.args <- lapply(match.call(expand.dots = FALSE)$`...`, function(x) x)
+#   if ("colors" %in% names(add.args)) fill.color <- eval(add.args[["colors"]])
+#   if ("x.title" %in% names(add.args)) x.title <- eval(add.args[["x.title"]])
+#   if ("legend.title" %in% names(add.args)) legend.title <- eval(add.args[["legend.title"]])
+#   if ("labels" %in% names(add.args)) labels <- eval(add.args[["labels"]])
+#   
+#   rope.line.alpha <- 1.25 * rope_alpha
+#   if (rope.line.alpha > 1) rope.line.alpha <- 1
+#   
+#   insight::check_if_installed("ggridges")
+#   
+#   p <- ggplot(tmp, aes(x = estimate, y = predictor, fill = grp)) +
+#     annotate(
+#       "rect",
+#       xmin = .rope[1],
+#       xmax = .rope[2],
+#       ymin = 0,
+#       ymax = Inf,
+#       fill = rope_color,
+#       alpha = (rope_alpha / 3),
+#       na.rm = TRUE
+#     ) +
+#     geom_vline(
+#       xintercept = .rope,
+#       linetype = "dashed",
+#       colour = rope_color,
+#       alpha = rope.line.alpha,
+#       na.rm = TRUE
+#     ) +
+#     geom_vline(
+#       xintercept = 0,
+#       colour = rope_color,
+#       linewidth = 0.8,
+#       alpha = rope.line.alpha,
+#       na.rm = TRUE
+#     ) +
+#     ggridges::geom_density_ridges2(
+#       rel_min_height = 0.01,
+#       scale = 2,
+#       alpha = 0.5,
+#       na.rm = TRUE
+#     ) +
+#     scale_fill_manual(values = fill.color) +
+#     labs(x = x.title, y = NULL, fill = legend.title) +
+#     scale_y_discrete(labels = labels) +
+#     theme(legend.position = "bottom")
+#   
+#   if (!is.null(n_columns)) {
+#     if ("Component" %in% names(x) && "Effects" %in% names(x)) {
+#       if (length(unique(tmp$HDI)) > 1L) {
+#         p <- p + facet_wrap(~ Effects + Component + HDI, scales = "free", ncol = n_columns)
+#       } else {
+#         p <- p + facet_wrap(~ Effects + Component, scales = "free", ncol = n_columns)
+#       }
+#     } else if ("Effects" %in% names(x)) {
+#       if (length(unique(tmp$HDI)) > 1L) {
+#         p <- p + facet_wrap(~ Effects + HDI, scales = "free", ncol = n_columns)
+#       } else {
+#         p <- p + facet_wrap(~Effects, scales = "free", ncol = n_columns)
+#       }
+#     } else if ("Component" %in% names(x)) {
+#       if (length(unique(tmp$HDI)) > 1L) {
+#         p <- p + facet_wrap(~ Component + HDI, scales = "free", ncol = n_columns)
+#       } else {
+#         p <- p + facet_wrap(~Component, scales = "free", ncol = n_columns)
+#       }
+#     }
+#   } else {
+#     if (length(unique(tmp$HDI)) > 1L) {
+#       p <- p + facet_wrap(~HDI, scales = "free", ncol = n_columns)
+#     }
+#   }
+#   
+#   p
+# }
+
+

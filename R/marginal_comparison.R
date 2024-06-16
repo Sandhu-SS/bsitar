@@ -701,13 +701,13 @@ marginal_comparison.bgmfit <- function(model,
            collapse_comma(allowed_methods)
       )
    
-    if(!is.null(comparisons_arguments[['by']])) {
-      checbyx <- comparisons_arguments[['by']]
-      if(all(checbyx == "")) method <- 'pkg'
-      if(is.logical(checbyx)) {
-        if(!checbyx) method <- 'pkg'
-      }
-    }
+    # if(!is.null(comparisons_arguments[['by']])) {
+    #   checbyx <- comparisons_arguments[['by']]
+    #   if(all(checbyx == "")) method <- 'pkg'
+    #   if(is.logical(checbyx)) {
+    #     if(!checbyx) method <- 'pkg'
+    #   }
+    # }
     
 
     if(method == 'pkg') {

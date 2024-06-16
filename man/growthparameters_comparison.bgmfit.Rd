@@ -41,6 +41,7 @@
   method = "custom",
   pdraws = FALSE,
   pdrawsp = FALSE,
+  pdrawsh = FALSE,
   comparison = "difference",
   type = NULL,
   by = FALSE,
@@ -337,6 +338,11 @@ for details.}
 
 \item{pdrawsp}{A character string (default \code{FALSE}) to indicate whether
 to return the posterior draws for parameters (if \code{pdrawsp =
+  'return'}). Note that summary of posterior draws for parameters is the
+default returned object.}
+
+\item{pdrawsh}{A character string (default \code{FALSE}) to indicate whether
+to return the posterior draws for parameters (if \code{pdrawsh =
   'return'}). Note that summary of posterior draws for parameters is the
 default returned object.}
 
