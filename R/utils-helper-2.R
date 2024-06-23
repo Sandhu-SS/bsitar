@@ -3488,13 +3488,13 @@ is.numeric.like <- function(x,
 
 #' Title
 #'
-#' @param data 
-#' @param id 
-#' @param outcome 
-#' @param time
-#' @param timeval
-#' @param nset 
-#' @param inc
+#' @param data data frame
+#' @param id id
+#' @param outcome outcome
+#' @param time time variable such as age
+#' @param timeval the value of time beyound which changes made
+#' @param nset number of last time point to be flattened
+#' @param inc increment for last n time point.
 #'
 #' @keywords internal
 #' @noRd
@@ -3507,6 +3507,7 @@ flattten_last_time <-
             timeval = NULL,
             nset = 1,
             inc = NULL) {
+    occtemp <- NULL;
     temdata <-
       data %>% dplyr::group_by_at(id) %>% 
       dplyr::mutate(`:=`("occtemp",
