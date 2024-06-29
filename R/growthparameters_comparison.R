@@ -584,6 +584,8 @@ growthparameters_comparison.bgmfit <- function(model,
     'cgv'
     )
   
+  if(is.null(parameter)) parameter <- 'apgv'
+  
   parameter <- base::tolower(parameter)
   
   if (is.null(parameter)) {

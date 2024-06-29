@@ -135,6 +135,8 @@ marginal_draws.bgmfit <-
            seed = 123,
            future = FALSE,
            future_session = 'multisession',
+           usedtplyr = FALSE,
+           usecollapse = TRUE,
            cores = NULL,
            fullframe = FALSE, 
            average = FALSE, 
@@ -145,6 +147,8 @@ marginal_draws.bgmfit <-
            deriv = 0,
            deriv_model = TRUE,
            method = 'pkg',
+           pdrawsp = FALSE, 
+           pdrawsh = FALSE, 
            type = NULL,
            by = NULL,
            conf_level = 0.95,
@@ -158,7 +162,6 @@ marginal_draws.bgmfit <-
            reformat = NULL,
            estimate_center = NULL,
            estimate_interval = NULL,
-           usedtplyr = FALSE,
            dummy_to_factor = NULL, 
            verbose = FALSE,
            expose_function = FALSE,
@@ -480,11 +483,15 @@ marginal_draws.bgmfit <-
         method,
         constrats_by,
         constrats_at,
-        usedtplyr
+        usedtplyr,
+        usecollapse,
+        pdrawsp,
+        pdrawsh
       )
     ))[-1]
     
-    if(call_predictions) exclude_args <- c(exclude_args, 'variables')
+    # don't exclude variables
+   # if(call_predictions) exclude_args <- c(exclude_args, 'variables')
     
     if(call_slopes) exclude_args <- c(exclude_args, 'transform', 'byfun')
     
@@ -729,6 +736,11 @@ marginal_draws.bgmfit <-
        estimate = estimate, conf.low = luci[1],conf.high = luci[2]
      )
    }
+   
+   
+   pdrawsp_est <- NULL
+   pdrawsh_est <- NULL
+   # pdraws_est <- NULL
     
    if(method == 'custom') {
      predictions_arguments[['cross']] <- NULL
@@ -772,6 +784,18 @@ marginal_draws.bgmfit <-
      } # if(call_slopes) {
      
      onex0 <- out %>% marginaleffects::posterior_draws()
+     
+     if(!isFALSE(pdrawsp)) {
+       selectchoicesr <- c("return", 'add') 
+       checkmate::assert_choice(pdrawsp, choices = selectchoicesr)
+       if(pdrawsp == 'return') {
+         return(onex0)
+       } else if(pdrawsp == 'add') {
+         pdrawsp_est <- onex0
+       } else {
+         
+       }
+     }
      
      
      setdrawidparm <- by
@@ -869,21 +893,57 @@ marginal_draws.bgmfit <-
        setdrawidparm_at <- c(constrats_at, 'term')
        setdrawidparm_at_ <- c(setdrawidparm_at, namesx)
        
-       out_sf_hy <-
+       
+       temhyy <-
          onex0 %>% 
          collapse::fgroup_by(groupvarshyp1) %>%
          collapse::fselect(set_constrats_by) %>% 
          collapse::frename('estimate' = 'draw') %>% 
          collapse::fsummarise(collapse::qDF(
            get_hypothesis_x(.data,
-                                 by = constrats_by,
-                                 hypothesis = hypothesis,
-                                 draws = 'estimate'))) %>%
+                            by = constrats_by,
+                            hypothesis = hypothesis,
+                            draws = 'estimate'))) 
+       
+       out_sf_hy <- 
+       temhyy %>%
          collapse::fgroup_by(groupvarshyp2) %>%
          collapse::fsummarise(collapse::mctl(
            get_pe_ci_collapse(.data[['estimate']]))
          ) %>%
          collapse::frename(., setdrawidparm_at_)
+       
+       
+       if(!isFALSE(pdrawsh)) {
+         selectchoicesr <- c("return", 'add') 
+         checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
+         if(pdrawsh == 'return') {
+           return(temhyy)
+         } else if(pdrawsh == 'add') {
+           pdrawsh_est <- temhyy
+         } else {
+           
+         }
+       }
+       
+       # out_sf_hy <-
+       #   onex0 %>% 
+       #   collapse::fgroup_by(groupvarshyp1) %>%
+       #   collapse::fselect(set_constrats_by) %>% 
+       #   collapse::frename('estimate' = 'draw') %>% 
+       #   collapse::fsummarise(collapse::qDF(
+       #     get_hypothesis_x(.data,
+       #                           by = constrats_by,
+       #                           hypothesis = hypothesis,
+       #                           draws = 'estimate'))) %>%
+       #   collapse::fgroup_by(groupvarshyp2) %>%
+       #   collapse::fsummarise(collapse::mctl(
+       #     get_pe_ci_collapse(.data[['estimate']]))
+       #   ) %>%
+       #   collapse::frename(., setdrawidparm_at_)
+       
+       
+       
        
      } # if(!is.null(hypothesis)) {
    } # if(method == 'custom') {
@@ -894,6 +954,34 @@ marginal_draws.bgmfit <-
      dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                  ~ round(., digits = digits))) %>%
      data.frame()
+   
+   
+   
+   if(!is.null(pdrawsh_est)) {
+     if(usecollapse) {
+       pdrawsh_est <- pdrawsh_est %>% data.frame() %>% 
+         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                     ~ round(., digits = digits)))
+     } else {
+       pdrawsh_est <- pdrawsh_est %>% data.frame() %>% 
+         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                     ~ round(., digits = digits)))
+     }
+   }
+   
+   
+   
+   if(!is.null(pdrawsp_est)) {
+     if(usecollapse) {
+       pdrawsp_est <- pdrawsp_est %>% data.frame() %>% 
+         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                     ~ round(., digits = digits)))
+     } else {
+       pdrawsp_est <- pdrawsp_est %>% data.frame() %>% 
+         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
+                                     ~ round(., digits = digits)))
+     }
+   }
    
    
    if(is.null(reformat)) {
@@ -941,6 +1029,35 @@ marginal_draws.bgmfit <-
          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
          data.frame()
      } # if(!is.null(out_sf_hy)) {
+     
+     
+     if(!is.null(pdrawsp_est)) {
+       pdrawsp_est <- pdrawsp_est %>% 
+         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+         dplyr::rename(!!as.symbol(set_names_[1]) := 
+                         dplyr::all_of('estimate')) %>% 
+         dplyr::rename(!!as.symbol(set_names_[2]) := 
+                         dplyr::all_of('conf.low')) %>% 
+         dplyr::rename(!!as.symbol(set_names_[3]) := 
+                         dplyr::all_of('conf.high')) %>% 
+         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+         data.frame()
+     } # if(!is.null(pdrawsp_est)) {
+     
+     if(!is.null(pdrawsh_est)) {
+       pdrawsh_est <- pdrawsh_est %>% 
+         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+         dplyr::rename(!!as.symbol(set_names_[1]) := 
+                         dplyr::all_of('estimate')) %>% 
+         dplyr::rename(!!as.symbol(set_names_[2]) := 
+                         dplyr::all_of('conf.low')) %>% 
+         dplyr::rename(!!as.symbol(set_names_[3]) := 
+                         dplyr::all_of('conf.high')) %>% 
+         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+         data.frame()
+     } # if(!is.null(pdrawsh_est)) {
+     
+     
    } # if (reformat) {
    
    
@@ -949,6 +1066,17 @@ marginal_draws.bgmfit <-
      out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
      out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
    } 
+   
+   
+   if(!is.null(pdrawsp_est)) {
+     pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
+     out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+   }
+   
+   if(!is.null(pdrawsh_est)) {
+     pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
+     out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
+   }
    
    return(out_sf)
   }
