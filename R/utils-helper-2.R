@@ -3571,3 +3571,35 @@ flattten_last_time <-
     return(temdata2)
   }
 
+
+
+
+#' Save list of ggplot2 objects to single pdf
+#'
+#' @param list A list of ggplot2 objects.
+#' @param filename A character string to name the pdf filr.
+#'
+#' @return Invisible NULL.
+#' @keywords internal
+#' @noRd
+#'
+#' @examples
+#' #plot histogram of each numeric variable in iris
+#' list_iris = map(names(iris[-5]), ~ggplot(iris, aes_string(.)) + geom_histogram())
+#' #save to a single pdf
+#' GG_save_pdf(list_iris, "test.pdf")
+GG_save_pdf = function(list, filename, 
+                       width = 10, height = 7,
+                       onefile = TRUE, compress = TRUE) {
+  #start pdf
+  filename <- paste0(filename, ".", "pdf")
+  grDevices::pdf(filename, width = width, height = height,
+      onefile = onefile, compress = compress)
+  #loop
+  for (p in list) {
+    print(p)
+  }
+  #end pdf
+  grDevices::dev.off()
+  invisible(NULL)
+}
