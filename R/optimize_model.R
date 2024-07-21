@@ -204,6 +204,7 @@ optimize_model.bgmfit <- function(model,
   
   if (is.null(newdata)) {
     newdata <- model$model_info$bgmfit.data
+    if(verbose) message("data used in the original model fit set as 'newdata'")
   } else {
     newdata <- newdata
   }
@@ -236,11 +237,7 @@ optimize_model.bgmfit <- function(model,
     }
   }
   
-  # added on 21.07.2024
-  datasetinname <- gsub_space(strsplit(deparse(args_o$data), "%>%")[[1]][1])
-  assign(datasetinname, newdata)
-  
-  
+
   # This to evaluate T/F to TRUE/FALSE
   for (i in names(args_o)) {
     if (is.symbol(args_o[[i]])) {
@@ -1001,11 +998,17 @@ optimize_model.bgmfit <- function(model,
       for (newargsi in names(newargs)) {
         if(!is.null(user_call[[newargsi]])) user_call[[newargsi]] <- NULL
       }
-      user_call_data_name <- user_call$data
-      assign(deparse(user_call_data_name), newdata)
+      # changed -> 21.07.2024
+      
+      # user_call_data_name <- user_call$data
+      # assign(deparse(user_call_data_name), newdata)
+      
+      newargs[['data']] <- base::str2lang("newdata")
       user_call <- rlang::call_modify(user_call, !!!newargs)
+      
       # Setting it to FALSE because we are exposing it anyways below
       user_call$expose_function <- FALSE
+      
       ####
       # Modify priors for log transformed outcome y
       transform_allowed_dist <- 
