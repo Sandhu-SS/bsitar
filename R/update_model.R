@@ -445,7 +445,7 @@ update_model.bgmfit <-
         dots$formula <- NULL
       }
       bterms <- brms::brmsterms(model$formula)
-      brmsframe <- getbrmsframe(bterms, data = model$data)
+      bframe <- getbrmsframe(bterms, data = model$data)
       model$data2 <- validate_data2(dots$data2, bterms = bterms)
       model$data <- validate_data(
         dots$data,
@@ -457,7 +457,7 @@ update_model.bgmfit <-
       model$prior <- .validate_prior(
         dots$prior,
         # bterms = bterms,
-        brmsframe = brmsframe,
+        bframe = bframe,
         # data = model$data,
         sample_prior = dots$sample_prior
       )
