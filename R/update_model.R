@@ -77,7 +77,7 @@ update_model.bgmfit <-
            envir = NULL,
            ...) {
     # changes on 21.07.2024 for brms version ‘2.21.6’
-    # deletions -> tidy_ranef standata_basis 
+    # deletions/insertions -> tidy_ranef standata_basis 
     # insertion -> bframe
     # edited -> model$prior
     if(is.null(envir)) {
@@ -243,6 +243,8 @@ update_model.bgmfit <-
       utils::getFromNamespace("get_element", "brms")
     # tidy_ranef             <-
     #   utils::getFromNamespace("tidy_ranef", "brms")
+    getframe_re      <-
+      utils::getFromNamespace("frame_re", "brms")
     validate_stanvars      <-
       utils::getFromNamespace("validate_stanvars", "brms")
     validate_threads       <-
@@ -253,6 +255,8 @@ update_model.bgmfit <-
       utils::getFromNamespace("validate_save_pars", "brms")
     # standata_basis         <-
     #   utils::getFromNamespace("standata_basis", "brms")
+    getframe_basis      <-
+      utils::getFromNamespace("frame_basis", "brms")
     algorithm_choices      <-
       utils::getFromNamespace("algorithm_choices", "brms")
     get_nl                 <-
@@ -464,6 +468,7 @@ update_model.bgmfit <-
       model$family <- get_element(model$formula, "family")
       model$autocor <- get_element(model$formula, "autocor")
       # model$ranef <- tidy_ranef(bterms, data = model$data)
+      model$ranef <- getframe_re(bterms, data = model$data)
       model$stanvars <- validate_stanvars(dots$stanvars)
       model$threads <- validate_threads(dots$threads)
       if ("sample_prior" %in% names(dots)) {
@@ -477,6 +482,7 @@ update_model.bgmfit <-
         save_all_pars = dots$save_all_pars
       )
       # model$basis <- standata_basis(bterms, data = model$data)
+      model$basis <- getframe_basis(bframe, data = model$data)
       algorithm <- match.arg(dots$algorithm, algorithm_choices())
       dots$algorithm <- model$algorithm <- algorithm
       # can only avoid recompilation when using the old backend
