@@ -236,6 +236,9 @@ optimize_model.bgmfit <- function(model,
     }
   }
   
+  # added on 21.07.2024
+  datasetinname <- gsub_space(strsplit(deparse(args_o$data), "%>%")[[1]][1])
+  assign(datasetinname, newdata)
   
   
   # This to evaluate T/F to TRUE/FALSE
