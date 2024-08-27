@@ -18,7 +18,7 @@ Description: The Super Imposition by Translation and Rotation (SITAR) model
     package offers a great flexibility in fitting models of varying complexities 
     that include joint modelling of multiple outcomes such as height and weight 
     (multivariate model). Also, the 'bsitar' package allows simultaneous analysis 
-    of a single outcome separately for sub groups defined by a factor variable such 
+    of an outcome separately for sub groups defined by a factor variable such 
     as gender. This is achieved by fitting separate models for each sub group 
     (such as males and females for gender variable). An advantage of such approach 
     is that posterior draws for each sub group are part of a single model object 
