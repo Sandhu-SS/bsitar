@@ -147,6 +147,7 @@
 #' 
 marginal_comparison.bgmfit <- function(model,
                                    resp = NULL,
+                                   dpar = NULL,
                                    ndraws = NULL,
                                    draw_ids = NULL,
                                    newdata = NULL,

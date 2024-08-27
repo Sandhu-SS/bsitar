@@ -73,6 +73,7 @@ prepare_formula <- function(x,
   s_formula_grsi <- NULL;
   sigma_formulasi <- NULL;
   sigma_formula_grsi <- NULL;
+  sigma_formula_manualsi <- NULL;
   set_higher_levels <- NULL;
   a_formula_gr_strsi_present <- NULL;
   a_formula_gr_strsi <- NULL;
@@ -340,8 +341,7 @@ prepare_formula <- function(x,
   } else {
     group_arg$groupvar <- group_arg$groupvar
   }
-  
-  
+ 
   # This to overide default 
   
   if(!is.null(sigma_str_id_all[[1]])) {
@@ -691,12 +691,14 @@ prepare_formula <- function(x,
     sigmafixed <- NULL
   }
   
-  
-  
-  
   sigmarandom <- sigma_formula_grsi
   
   
+  if(sigma_formula_manualsi != "NULL") {
+    sigmafixed <- NULL
+    sigmarandom <- NULL
+    dpar_formulasi <- NULL
+  }
   
   if(is.null(sigma_formulasi[[1]]) | sigma_formulasi == 'NULL') {
     display_message <-  paste("Please specify the fixed effect structure 
@@ -770,9 +772,23 @@ prepare_formula <- function(x,
   
   sigma_random_wb <- arandom_wb
   sigma_random_wb_ <- arandom_wb_
-  
+
   get_x_random <- function(x) {
-    x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    # 24.08.2024
+    # replace it
+    # x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+    # by
+    # xz <<- x
+    strpartstrx <- strsplit(x, "|", fixed = T)[[1]][1]
+    strpartstrx_form <- strpartstrx[1]
+    if(length(strpartstrx) >1 ) {
+      strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+      strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+      xtemp <- paste(strpartstrx_form, strpartstrx_grpa, sep = "|")
+    } else {
+      xtemp <- strpartstrx_form
+    }
+    x <- gsub("[[:space:]]", "", xtemp)
     x <- gsub("~1+1", "~1", x, fixed = T)
     if(!grepl("~", x)) x <- paste0("~", x)
     x <- sub("\\|.*", "", x)
@@ -862,7 +878,7 @@ prepare_formula <- function(x,
     }
   }
   
-  
+
   if(!is.null(sigmarandom)) {
     if(grepl("|", sigmarandom, fixed = TRUE)) {
       sigma_random_wb <- gsub("~", "", sigmarandom) # with bar
@@ -870,6 +886,8 @@ prepare_formula <- function(x,
       sigmarandom <- get_x_random(sigmarandom)
     }
   }
+  
+
   
   arandom_wb <- gsub("1+1", "1", arandom_wb, fixed = T)
   brandom_wb <- gsub("1+1", "1", brandom_wb, fixed = T)
@@ -1945,10 +1963,15 @@ prepare_formula <- function(x,
     
     sigma_gr_varss <- sigma_gr_varss 
     sigma_gr_varss_asitis <- sigmaform_gr_names_asitis
+    # 24.08.2024
+      if(grepl("~", sigma_gr_varss_asitis)) {
+        sigma_gr_varss_asitis <- strsplit(sigma_gr_varss_asitis, "~", fixed = T)[[1]][1]
+      }
+    
   } # if(sigma_set_higher_levels) {
   
-  
-  
+
+
   
   if(!set_higher_levels) hierarchical_gr_names <- NULL
   if(!set_higher_levels) hierarchical_gr_names_asitis <- NULL
@@ -2086,6 +2109,8 @@ prepare_formula <- function(x,
   }
   
   
+  
+  
   if (!is.null(autocor_formi)) {
     if(select_model == "sitar" | select_model == "rcs") {
       sform <- paste0(sform,
@@ -2168,6 +2193,10 @@ prepare_formula <- function(x,
     }
   }
   
+  
+  if(sigma_formula_manualsi != "NULL") {
+    setbformula <- paste0(setbformula, "+", sigma_formula_manualsi)
+  }
   
   # if (!is.null(familysi)) {
   #   setbformula <- paste0(setbformula, "+", familysi)
@@ -3080,6 +3109,7 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
+  setbformulax <<- setbformula
   
   attr(setbformula, "list_out") <- as.list(list_out)
   

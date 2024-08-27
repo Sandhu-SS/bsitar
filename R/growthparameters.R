@@ -344,6 +344,7 @@
 growthparameters.bgmfit <- function(model,
                                newdata = NULL,
                                resp = NULL,
+                               dpar = NULL,
                                ndraws = NULL,
                                draw_ids = NULL,
                                summary = FALSE,

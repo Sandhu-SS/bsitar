@@ -6494,7 +6494,7 @@ prepare_priors <- function(prior_argument,
           add_cla_to_name <- paste0(sep_indicator, class)
         }
         
-        
+       
         
         # This is required to set unique stanvar names for higher level sd 
         
@@ -6532,6 +6532,7 @@ prepare_priors <- function(prior_argument,
                  resp_)
         
         # name_parameter <- paste0(name_parameter, add_gr_id)
+        
        
         assign(name_parameter, evaluated_parameter)
         

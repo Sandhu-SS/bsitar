@@ -430,15 +430,27 @@
 #'  effects for the \code{sigma}. Note that \code{sigma_formula} and
 #'  \code{dpar_formula} can not be specified together. When either
 #'  \code{sigma_formula} or \code{dpar_formula} is used, the default estimation
-#'  of the \code{RSD} by [brms::brm()] is automatically turned off.
+#'  of the \code{RSD} by [brms::brm()] is automatically turned off. In case 
+#'  \code{sigma_formula} is set up via a long string that is spread over 
+#'  multiple lines, then encose it in \code{deparse1} (if R version > 4.0) or 
+#'  \code{deparse_0s}.
 #'
 #'@param sigma_formula_gr Formula for the random effect parameter, \code{sigma}
-#'  (default \code{NULL}). See \code{a_formula_gr} for details.
+#'  (default \code{NULL}). See \code{a_formula_gr} for details. In case 
+#'  \code{sigma_formula} is set up via a long string that is spread over 
+#'  multiple lines, then encose it in \code{deparse1} (if R version > 4.0) or 
+#'  \code{deparse_0s}.
 #'
 #'@param sigma_formula_gr_str Formula for the random effect parameter,
 #'  \code{sigma} when fitting a hierarchical model with three or more
 #'  levels of hierarchy. See \code{a_formula_gr_str} for details. 
-#'
+#'  
+#' @param sigma_formula_manual Formula for the random effect parameter,
+#'   \code{sigma} via a character string string that explicitly uses the
+#'   [brms::nlf()] and [brms::lf()] functions. Note that in this case, priors
+#'   need to set up manually. An example is \cr \code{deparse_0s(nlf(sigma ~ z)
+#'   + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL))))}.
+#' 
 #'@param dpar_formula Formula for the distributional fixed effect parameter,
 #'  \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.
 #'  
@@ -1213,6 +1225,9 @@
 #'  specify the priors. Note that \code{set_self_priors} is passed directly to
 #'  the [brms::brm()] without performing any checks.
 #'  
+#'#'@param add_self_priors An optional argument (default \code{NULL}) to
+#'  append part of prior object. This is for internal use only.
+#'  
 #'@param set_replace_priors An optional argument (default \code{NULL}) to
 #'  replace part of prior object. This is for internal use only.
 #' 
@@ -1629,6 +1644,7 @@ bsitar <- function(x,
                    sigma_formula = NULL,
                    sigma_formula_gr = NULL,
                    sigma_formula_gr_str = NULL,
+                   sigma_formula_manual = NULL,
                    dpar_formula = NULL,
                    autocor_formula = NULL,
                    family = gaussian(),
@@ -1745,6 +1761,7 @@ bsitar <- function(x,
                    get_init_eval = FALSE,
                    validate_priors = FALSE,
                    set_self_priors = NULL,
+                   add_self_priors = NULL,
                    set_replace_priors = NULL,
                    set_same_priors_hierarchy = FALSE,
                    outliers = NULL, 
@@ -3371,6 +3388,7 @@ bsitar <- function(x,
     "validate_priors",
     "get_init_eval",
     "set_self_priors",
+    "add_self_priors",
     "set_replace_priors",
     "set_same_priors_hierarchy",
     "outliers",
@@ -4123,8 +4141,37 @@ bsitar <- function(x,
     s_formula_grsi <- gsub("[()]", "", s_formula_grsi)
     
     
-    sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
+    
+    # sigma_formula_grsix <<- sigma_formula_grsi
+    
+    # 24.08.2024
+    # replace it
+    # sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
+    # by
+    strpartstrx <- strsplit(sigma_formula_grsi, "|", fixed = T)[[1]]
+    strpartstrx_form <- strpartstrx[1]
+      # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
+      # strpartstrx_form <- paste0(, collapse = "")
+    strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
+    if(length(strpartstrx) > 1 ) {
+      strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+      strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+      strpartstrx_grpa2 <- paste0("", strpartstrx_grpa, collapse = "|")
+      sigma_formula_grsi <- paste0(strpartstrx_form, "|", strpartstrx_grpa2)
+    } else {
+      sigma_formula_grsi <- strpartstrx_form
+    }
+      
+    # sigma_formula_grsixx <<- sigma_formula_grsi
+    
  
+    
+    
+    
+    
+    
+    
+    
     set_higher_levels <- TRUE
     if(is.null(a_fcgs_out) & 
        is.null(b_fcgs_out) & 
@@ -4762,6 +4809,7 @@ bsitar <- function(x,
         "terms_rhssi",
         "sigma_formulasi",
         "sigma_formula_grsi",
+        "sigma_formula_manualsi",
         "dpar_formulasi",
         "autocor_formi",
         "subindicatorsi",
@@ -5085,6 +5133,7 @@ bsitar <- function(x,
         "sigma_formulasi",
         "sigma_formula_grsi",
         "sigma_formula_gr_strsi",
+        "sigma_formula_manualsi",
         "autocor_formi",
         "randomsi",
         "nabci",
@@ -6412,8 +6461,34 @@ bsitar <- function(x,
       temp_prior <- set_self_priors
     }
       
-  
-      
+    
+    
+    # 24.08.2024
+    if(get_priors) {
+      tempriorstr <- brms::get_prior(formula = bformula,
+                               stanvars = bstanvars,
+                               prior = temp_prior,
+                               data = brmsdata)
+      return(tempriorstr)
+    }
+
+    
+    # temp_priorx <<- brmspriors
+    
+    # 24.08.2024
+    #sigma_formula_manual
+    
+    if (is.null(sigma_formula_manualsi[[1]][1])) {
+      temp_prior <- temp_prior
+    } else if(sigma_formula_manualsi == "NULL") {
+      temp_prior <- temp_prior
+    } else {
+      temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
+    }
+    
+    # temp_priorxx <<- brmspriors
+    
+   
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
                                     prior = temp_prior,
@@ -6962,7 +7037,7 @@ bsitar <- function(x,
       setarguments = brms_arguments,
       brmsdots = brmsdots_
     )
-  
+ 
   if(!is.null(custom_family)) {
     brm_args$family <- custom_family
   }
@@ -7046,8 +7121,10 @@ bsitar <- function(x,
   
   brm_args$prior <- brmspriors
   
-  if(!is.null(set_self_priors) & !is.null(set_replace_priors)) {
-    stop("Amongst 'set_self_priors' and 'set_replace_priors' arguments,",
+  if(!is.null(set_self_priors) & 
+     !is.null(add_self_priors) & 
+     !is.null(set_replace_priors)) {
+    stop("Amongst 'set_self_priors', 'add_self_priors' and 'set_replace_priors' arguments,",
          "\n ",
          " only one can be specified at a time")
   }
@@ -7096,7 +7173,9 @@ bsitar <- function(x,
   brmspriors <-   tempprior_hold
   
   
-  if(!is.null(set_self_priors) & is.null(set_replace_priors)) {
+  if(!is.null(set_self_priors) & 
+     is.null(add_self_priors) &
+     is.null(set_replace_priors)) {
     brmspriors <- set_self_priors
   }
   
@@ -7105,7 +7184,47 @@ bsitar <- function(x,
     brmspriors <- brmspriors
   }
   
+  # brmspriorsx <<- brmspriors
   
+  # add_self_priorsx <<- add_self_priors
+  
+  # 24.08.2024
+  if(!is.null(add_self_priors)) {
+    add_self_priors <- add_self_priors %>%  dplyr::filter(source == 'user' & coef != "")
+    
+    if (is.null(sigma_formula_manualsi[[1]][1])) {
+      brmspriors_toadd <- brmspriors
+    } else if(sigma_formula_manualsi == "NULL") {
+      brmspriors_toadd <- brmspriors
+    } else {
+      brmspriors_toadd <-  brmspriors %>% dplyr::filter(., !grepl('sigma', nlpar))
+    }
+    
+    brmspriors <- brmspriors_toadd %>% dplyr::bind_rows(., add_self_priors)
+  } # if(!is.null(add_self_priors)) {
+  
+  
+  
+  # brmspriorsxx <<- brmspriors
+  
+  
+  
+  
+  
+   # temp_priorx <<- brmspriors
+  
+  # 24.08.2024
+  #sigma_formula_manual
+  
+  if (is.null(sigma_formula_manualsi[[1]][1])) {
+    brmspriors <- brmspriors
+  } else if(sigma_formula_manualsi == "NULL") {
+    brmspriors <- brmspriors
+  } else {
+    brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
+  }
+  
+  # temp_priorxx <<- brmspriors
   
   
   
@@ -7114,8 +7233,7 @@ bsitar <- function(x,
   # brmspriors <- brmspriors %>% 
   #   dplyr::mutate(prior = dplyr::if_else(prior == "", "''", prior))
   # brmspriors <- brmspriors %>% dplyr::filter(!grepl("''", prior, fixed = F))
-  # brmspriorsx <<- brmspriors
-  
+
   
   brm_args$prior <- brmspriors
   
@@ -7159,6 +7277,7 @@ bsitar <- function(x,
     lines_all <- gsub(dvciit, dvciby, lines_all, fixed = T)
     return(lines_all)
   }
+  
   
   
   scode_final  <- do.call(brms::make_stancode, brm_args)
@@ -7209,7 +7328,7 @@ bsitar <- function(x,
     if(!is.null(init_custom)) full_custom <- TRUE
   }
   
-
+  
   if(!exe_model_fit) {
     if(get_priors) {
       return(do.call(brms::get_prior, brm_args))

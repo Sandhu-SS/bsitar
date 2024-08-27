@@ -73,6 +73,7 @@ fitted_draws.bgmfit <-
   function(model,
            newdata = NULL,
            resp = NULL,
+           dpar = NULL,
            ndraws = NULL,
            draw_ids = NULL,
            re_formula = NA,

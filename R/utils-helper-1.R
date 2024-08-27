@@ -256,24 +256,92 @@ transform.sec.axis <- function(primary,
 
 get_gr_str_coef_id <- function(tsx,
                                data) {
+  
   tsx <- strsplit(tsx, "+(", fixed = T)[[1]]
+  tsxm <<- tsx
+  tsxi <- tsx
+  tsxi_c <- c()
+  for (i in 1:length(tsxi)) {
+    strpartstrx <- tsxi[i]
+    strpartstrx <- strsplit(strpartstrx, "|", fixed = T)[[1]]
+    strpartstrx_form <- strpartstrx[1]
+    # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
+    # strpartstrx_form <- paste0(, collapse = "")
+    strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
+    if(length(strpartstrx) > 1 ) {
+      strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+      strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+      strpartstrx_grpa2 <- paste0("", strpartstrx_grpa, collapse = "|")
+      tsx_t <- paste0(strpartstrx_form, "|", strpartstrx_grpa2)
+    } else {
+      tsx_t <- strpartstrx_form
+    }
+    tsx <- c(tsxi_c, tsx_t)
+  }
+  tsxmm <<- tsx
+  
+  
   tsx_id_w_or_wo_gr <- c()
   for (tsx_id_w_or_wo_gri in 1:length(tsx)) {
     tsx_id_w_or_wo_gr_get <- get_x_random2_asitis(tsx[tsx_id_w_or_wo_gri])
     tsx_id_w_or_wo_gr <- c(tsx_id_w_or_wo_gr, tsx_id_w_or_wo_gr_get)
   }
-  tsx <- gsub("(", "", tsx, fixed = T)
-  tsx <- gsub(")", "", tsx, fixed = T)
+  
+  
+  # strpartstrx <- tsxz
+  # strpartstrx_form <-  strpartstrx # strsplit(strpartstrx, "|", fixed = T)[[1]]
+  # if(length(strpartstrx_form) > 1 ) {
+  #   strpartstrx_form_c <- c()
+  #   for (strpartstrx_form_i in 2:length(strpartstrx_form)) {
+  #     tsx_temp <- gsub("[()]", "", strpartstrx_form[strpartstrx_form_i])
+  #     strpartstrx_form_c <- c(strpartstrx_form_c, tsx_temp)
+  #   }
+  #   strpartstrx_form_c2 <- paste0("", strpartstrx_form_c, collapse = "|")
+  #   tsx <- paste0(strpartstrx_form[1], "|", strpartstrx_form_c2)
+  # } else {
+  #   tsx <- strpartstrx_form[1]
+  # }
+  
+  
+  # 
+  # tsxzz <<- tsx
+  
+  # tsx <- gsub("(", "", tsx, fixed = T)
+  # tsx <- gsub(")", "", tsx, fixed = T)
+  
+  
+  tsxzz <<- tsx
+  # "~1+logagec|55|grid,by=classid" 
+  
   tsx_c_coef  <- tsx_c_id    <- set_form_gr_it      <- list()
   set_ncov_it <- set_corr_it <- set_corr_true_false <- list()
   for (i in 1:length(tsx)) {
     tsx_c <- strsplit(tsx[i], "|", fixed = T)[[1]]
     set_corr_it_get <- tsx_c[2]
+    # tsx_cx <<- tsx_c
+    # # 24.08.2024
+    # # added
+    # strpartstrx <- tsx_c
+    # strpartstrx_form <- strpartstrx[1]
+    # # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
+    # # strpartstrx_form <- paste0(, collapse = "")
+    # #strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
+    # if(length(strpartstrx) > 1 ) {
+    #   strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+    #   strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+    #   strpartstrx_grpa2 <- paste0("", strpartstrx_grpa, collapse = "|")
+    #   tsx_c <- paste0(strpartstrx_form, "|", strpartstrx_grpa2)
+    # } else {
+    #   tsx_c <- strpartstrx_form
+    # }
+    ###
+   
     tsx_c1 <- tsx_c[1]
     tsx_c3 <- tsx_c[3]
     if(!grepl("^~", tsx_c1)) tsx_c1 <- paste0("~", tsx_c1)
     if(grepl("^~0", tsx_c1)) set_form_0_gr <- TRUE
     if(grepl("^~1", tsx_c1)) set_form_0_gr <- FALSE
+    tsx_c1x <<- tsx_c1
     set_form_gr <- tsx_c1
     tsx_c1_mat <- eval(parse(text = paste0(
       "model.matrix(",
@@ -1873,8 +1941,7 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args,
   } # if(call_pathfinder_) 
   
   
-  # print(brm_args$init)
-  
+
   ################################
   
   
@@ -3745,8 +3812,6 @@ plot_equivalence_test <-  function(x,
   x$Component <- "conditional"
   attr(x, "Cleaned_Parameter") <- x$Parameter
   attr(x, "object_name") <- "model"
-  
-  # str(x) %>% print()
   
   .rope <- c(x$ROPE_low[1], x$ROPE_high[1])
   
