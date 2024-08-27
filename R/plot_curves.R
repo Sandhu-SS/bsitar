@@ -185,7 +185,7 @@
 #'  scale models and the measurement error models.
 #'
 #'@inheritParams  growthparameters.bgmfit
-#'
+#'@inherit brms::fitted.brmsfit params
 #'@inherit brms::prepare_predictions.brmsfit params
 #'
 #'@return A plot object (default), or a \code{data.frame} when 

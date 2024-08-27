@@ -778,7 +778,6 @@ prepare_formula <- function(x,
     # replace it
     # x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
     # by
-    # xz <<- x
     strpartstrx <- strsplit(x, "|", fixed = T)[[1]][1]
     strpartstrx_form <- strpartstrx[1]
     if(length(strpartstrx) >1 ) {
@@ -3109,8 +3108,7 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
-  setbformulax <<- setbformula
-  
+
   attr(setbformula, "list_out") <- as.list(list_out)
   
   return(setbformula)

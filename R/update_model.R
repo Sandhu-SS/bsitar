@@ -30,7 +30,7 @@
 #' 
 #' @inherit growthparameters.bgmfit params
 #'
-#' @param ... Other arguments passed to \code{\link{brms}}.
+#' @param ... Other arguments passed to [brms::brm()].
 #'
 #' @return An updated object of class \code{brmsfit}.
 #'   

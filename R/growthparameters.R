@@ -304,6 +304,8 @@
 #'   quantile function. When \code{re_formual = NULL}, an additional column is 
 #'   added that denotes the individual identifier (typically \code{id}).
 #'   
+#' @inherit brms::fitted.brmsfit params
+#' 
 #' @export growthparameters.bgmfit
 #' @export
 #'

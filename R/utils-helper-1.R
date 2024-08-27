@@ -258,7 +258,6 @@ get_gr_str_coef_id <- function(tsx,
                                data) {
   
   tsx <- strsplit(tsx, "+(", fixed = T)[[1]]
-  tsxm <<- tsx
   tsxi <- tsx
   tsxi_c <- c()
   for (i in 1:length(tsxi)) {
@@ -278,8 +277,7 @@ get_gr_str_coef_id <- function(tsx,
     }
     tsx <- c(tsxi_c, tsx_t)
   }
-  tsxmm <<- tsx
-  
+
   
   tsx_id_w_or_wo_gr <- c()
   for (tsx_id_w_or_wo_gri in 1:length(tsx)) {
@@ -302,15 +300,12 @@ get_gr_str_coef_id <- function(tsx,
   #   tsx <- strpartstrx_form[1]
   # }
   
-  
-  # 
-  # tsxzz <<- tsx
+
   
   # tsx <- gsub("(", "", tsx, fixed = T)
   # tsx <- gsub(")", "", tsx, fixed = T)
   
   
-  tsxzz <<- tsx
   # "~1+logagec|55|grid,by=classid" 
   
   tsx_c_coef  <- tsx_c_id    <- set_form_gr_it      <- list()
@@ -318,7 +313,6 @@ get_gr_str_coef_id <- function(tsx,
   for (i in 1:length(tsx)) {
     tsx_c <- strsplit(tsx[i], "|", fixed = T)[[1]]
     set_corr_it_get <- tsx_c[2]
-    # tsx_cx <<- tsx_c
     # # 24.08.2024
     # # added
     # strpartstrx <- tsx_c
@@ -341,7 +335,6 @@ get_gr_str_coef_id <- function(tsx,
     if(!grepl("^~", tsx_c1)) tsx_c1 <- paste0("~", tsx_c1)
     if(grepl("^~0", tsx_c1)) set_form_0_gr <- TRUE
     if(grepl("^~1", tsx_c1)) set_form_0_gr <- FALSE
-    tsx_c1x <<- tsx_c1
     set_form_gr <- tsx_c1
     tsx_c1_mat <- eval(parse(text = paste0(
       "model.matrix(",

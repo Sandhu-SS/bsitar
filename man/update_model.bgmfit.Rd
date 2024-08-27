@@ -64,7 +64,7 @@ Therefore, it is strongly recommended to set \code{ envir = globalenv()}
 (or \code{envir = .GlobalEnv}). This is particularly true for the
 derivatives such as velocity curve.}
 
-\item{...}{Other arguments passed to \code{\link{brms}}.}
+\item{...}{Other arguments passed to \code{\link[brms:brm]{brms::brm()}}.}
 }
 \value{
 An updated object of class \code{brmsfit}.

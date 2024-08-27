@@ -9,6 +9,7 @@
   model,
   newdata = NULL,
   resp = NULL,
+  dpar = NULL,
   ndraws = NULL,
   draw_ids = NULL,
   re_formula = NA,
@@ -53,6 +54,9 @@ fitted_draws(model, ...)
 variable when processing posterior draws for the \code{univariate_by} and
 \code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
 \code{univariate_by} and \code{multivariate} models}
+
+\item{dpar}{Optional name of a predicted distributional parameter.
+If specified, expected predictions of this parameters are returned.}
 
 \item{ndraws}{A positive integer indicating the number of posterior draws to
 be used in estimation. If \code{NULL} (default), all draws are used.}
