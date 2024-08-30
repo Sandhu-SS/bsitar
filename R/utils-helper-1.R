@@ -336,6 +336,7 @@ get_gr_str_coef_id <- function(tsx,
     if(grepl("^~0", tsx_c1)) set_form_0_gr <- TRUE
     if(grepl("^~1", tsx_c1)) set_form_0_gr <- FALSE
     set_form_gr <- tsx_c1
+    
     tsx_c1_mat <- eval(parse(text = paste0(
       "model.matrix(",
       tsx_c1, ",data = data)"

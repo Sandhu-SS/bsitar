@@ -2241,6 +2241,28 @@ bsitar <- function(x,
     c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
   
   
+  # argumentsx <<- arguments
+  
+  
+  setdepar0sgub <- c("sigma_formula", "sigma_formula_gr")
+  
+  for (argumentsnamesi in names(arguments)) {
+    if(argumentsnamesi %in% setdepar0sgub) {
+      if(!is.null(arguments[[argumentsnamesi]])) {
+        arguments[[argumentsnamesi]] <- arguments[[argumentsnamesi]] %>% 
+          deparse_0() %>% gsub_space()
+      }
+    }
+  }
+  
+  # arguments$sigma_formula <- arguments$sigma_formula %>% deparse1() %>% gsub_space() # %>% str2lang()
+  # arguments$sigma_formula_gr <- arguments$sigma_formula_gr %>% deparse1() %>% gsub_space() # %>% str2lang()
+
+  # argumentsxx <<- arguments
+  
+  
+  
+  
   
   familyzzzx <- arguments$family
   if(grepl("^c\\(", deparse_0(familyzzzx), fixed = F)) {
@@ -6490,6 +6512,10 @@ bsitar <- function(x,
       temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
     }
     
+    
+    
+    # gettemp_priorxx <<- brms::get_prior(formula = bformula,, stanvars = bstanvars, data = brmsdata)
+    # 
     # temp_priorxx <<- brmspriors
     
    
@@ -6502,7 +6528,8 @@ bsitar <- function(x,
                                     prior = temp_prior,
                                     data = brmsdata)
     
-    
+    # temp_stancode2x <<- temp_stancode2
+  
 
    
     move_from_model_to_qq_for_bqinv <- 

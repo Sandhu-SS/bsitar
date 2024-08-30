@@ -231,6 +231,7 @@ prepare_formula <- function(x,
              " which currently specified as ", ept(in_gr_strsi)
         )
       }
+      
       get_gr_str_coef_id_it   <- get_gr_str_coef_id(ept(in_gr_strsi),
                                                     data = data)
       assign(paste0(set_nlpar_what, 'covcoefnames_gr_str'),
@@ -1078,6 +1079,8 @@ prepare_formula <- function(x,
   }
   
   
+  # sigmacovcoefnamesx <<- sigmacovcoefnames
+  
   if (!is.null(arandom)) {
     acovmat_gr <- eval(parse(text = paste0(
       "model.matrix(",
@@ -1781,9 +1784,13 @@ prepare_formula <- function(x,
       get_n_str_length <- 0
     }
     if(get_n_str_length != 0) {
-      str <- gsub(")+(", ")_(", str, fixed = T)
-      str_ <- sub("^[^_]*_", "", str)
-      str_ <- gsub(")_(", ")+(", str_, fixed = T)
+      # 24.08.204
+      str <- gsub(")+(", ")xxxxxx(", str, fixed = T)
+      str_ <- sub("^[^xxxxxx]*xxxxxx", "", str)
+      str_ <- gsub(")xxxxxx(", ")+(", str_, fixed = T)
+      # str <- gsub(")+(", ")_(", str, fixed = T)
+      # str_ <- sub("^[^_]*_", "", str)
+      # str_ <- gsub(")_(", ")+(", str_, fixed = T)
       form <- paste0(form, "+", str_)
     } else {
       form <- form
@@ -1943,12 +1950,30 @@ prepare_formula <- function(x,
   if(sigma_set_higher_levels) {
     
     if(sigma_formula_gr_strsi_present) {
+      # 24.08.2024
+      # sigmaform_gr_names and sigmaform_gr_names_asitis is collected as follow
+      # The "_________" does not allow split at ( or )
+      # sigma_formula_gr_strsix <<- sigma_formula_gr_strsi
+      sigmaform <- sigmaform %>% gsub_space()
+      sigmaform_temp <- sigmaform
+      # sigmaform_tempx <<- sigmaform_temp
+      sigmaform_temp <- gsub("(", "_________", sigmaform_temp, fixed = T)
+      sigmaform_temp <- gsub(")", "__________", sigmaform_temp, fixed = T)
+      sigmaform_temp <- add_higher_level_str(sigmaform_temp, sigma_formula_gr_strsi)
+      sigmaform_temp <- restore_paranthese_grgr_str_form(sigmaform_temp)
+      # sigmaform_tempxx <<- sigmaform_temp
+      sigmaform_gr_names        <- lapply(sigmaform_temp, get_x_random2)[[1]]
+      sigmaform_gr_names_asitis <- lapply(sigmaform_temp, get_x_random2_asitis)[[1]]
+      # sigmaform_gr_namesx <<- sigmaform_gr_names
+      # sigmaform_gr_names_asitisx <<- sigmaform_gr_names_asitis
+      
       sigmaform <- add_higher_level_str(sigmaform, sigma_formula_gr_strsi)
       sigmaform <- restore_paranthese_grgr_str_form(sigmaform)
-      sigmagr_varss             <- 
-        add_higher_level_str_id(sigma_formula_gr_strsi)
-      sigmaform_gr_names        <- lapply(sigmaform, get_x_random2)[[1]]
-      sigmaform_gr_names_asitis <- lapply(sigmaform, get_x_random2_asitis)[[1]]
+      sigmaform <- sigmaform %>% gsub_space()
+      sigmagr_varss <- add_higher_level_str_id(sigma_formula_gr_strsi)
+      # sigmaform_gr_names        <- lapply(sigmaform, get_x_random2)[[1]]
+      # sigmaform_gr_names_asitis <- lapply(sigmaform, get_x_random2_asitis)[[1]]
+      
     } else {
       sigmaform_gr_names <- sigmaform_gr_names_asitis <- NULL
     }
@@ -1962,11 +1987,6 @@ prepare_formula <- function(x,
     
     sigma_gr_varss <- sigma_gr_varss 
     sigma_gr_varss_asitis <- sigmaform_gr_names_asitis
-    # 24.08.2024
-      if(grepl("~", sigma_gr_varss_asitis)) {
-        sigma_gr_varss_asitis <- strsplit(sigma_gr_varss_asitis, "~", fixed = T)[[1]][1]
-      }
-    
   } # if(sigma_set_higher_levels) {
   
 
@@ -3108,7 +3128,7 @@ prepare_formula <- function(x,
     lme_rsd = lme_rsd
   )
   
-
+  # setbformulax <<- setbformula
   attr(setbformula, "list_out") <- as.list(list_out)
   
   return(setbformula)
