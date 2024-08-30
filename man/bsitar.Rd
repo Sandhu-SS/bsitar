@@ -467,16 +467,10 @@ and also allows enabling/disabling of cell mean centering when excluding
 effects for the \code{sigma}. Note that \code{sigma_formula} and
 \code{dpar_formula} can not be specified together. When either
 \code{sigma_formula} or \code{dpar_formula} is used, the default estimation
-of the \code{RSD} by \code{\link[brms:brm]{brms::brm()}} is automatically turned off. In case
-\code{sigma_formula} is set up via a long string that is spread over
-multiple lines, then enclose it in \code{deparse1} (if R version > 4.0) or
-\code{deparse_0s} (an internal function).}
+of the \code{RSD} by \code{\link[brms:brm]{brms::brm()}} is automatically turned off.}
 
 \item{sigma_formula_gr}{Formula for the random effect parameter, \code{sigma}
-(default \code{NULL}). See \code{a_formula_gr} for details. In case
-\code{sigma_formula} is set up via a long string that is spread over
-multiple lines, then enclose it in \code{deparse1} (if R version > 4.0) or
-\code{deparse_0s} (an internal function).}
+(default \code{NULL}). See \code{a_formula_gr} for details.}
 
 \item{sigma_formula_gr_str}{Formula for the random effect parameter,
 \code{sigma} when fitting a hierarchical model with three or more
