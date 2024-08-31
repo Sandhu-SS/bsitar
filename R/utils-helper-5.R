@@ -51,6 +51,7 @@ prepare_function <- function(x,
   select_model <- NULL;
   fixedsi <- NULL;
   match_sitar_d_form <- NULL;
+  match_sitar_a_form <- NULL;
   d_adjustedsi <- NULL;
   randomsi <- NULL;
   getxname <- NULL;

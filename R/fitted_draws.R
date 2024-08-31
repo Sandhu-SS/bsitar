@@ -111,6 +111,10 @@ fitted_draws.bgmfit <-
       envir <- parent.frame()
     }
     
+    # Depending on dpar 'mu' or 'sigma', subset model_info
+    model <- getmodel_info(model = model, dpar = dpar)
+    
+    
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE
@@ -219,6 +223,20 @@ fitted_draws.bgmfit <-
                                 verbose = FALSE)
     
     
+    
+    # oxx <- unlist(o)
+    # if(is.null(dpar)) {
+    #   oxx <- oxx[!grepl("sigma", oxx)]
+    # } else if(!is.null(dpar)) {
+    #   if(dpar == "mu") oxx <- oxx[!grepl("sigma", oxx)]
+    #   if(dpar == "sigma") oxx <- oxx[grepl("sigma", oxx)]
+    # }
+    # o <- as.list(oxx)
+    
+    # ox <<- o
+    
+
+
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall, 
                       usesavedfuns = usesavedfuns, 

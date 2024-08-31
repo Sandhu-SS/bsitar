@@ -9,6 +9,7 @@
   model,
   type,
   ndraws = NULL,
+  dpar = NULL,
   draw_ids = NULL,
   prefix = c("ppc", "ppd"),
   group = NULL,
@@ -55,6 +56,9 @@ types in the resulting error message.}
 
 \item{ndraws}{A positive integer indicating the number of posterior draws to
 be used in estimation. If \code{NULL} (default), all draws are used.}
+
+\item{dpar}{Optional name of a predicted distributional parameter.
+If specified, expected predictions of this parameters are returned.}
 
 \item{draw_ids}{An integer indicating the specific posterior draw(s)
 to be used in estimation (default \code{NULL}).}

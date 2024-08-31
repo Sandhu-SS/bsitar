@@ -81,6 +81,7 @@ plot_conditional_effects.bgmfit <-
            robust = TRUE,
            newdata = NULL,
            ndraws = NULL,
+           dpar = NULL,
            draw_ids = NULL,
            levels_id = NULL,
            resp = NULL,
@@ -101,6 +102,10 @@ plot_conditional_effects.bgmfit <-
     } else {
       envir <- parent.frame()
     }
+    
+    
+    # Depending on dpar 'mu' or 'sigma', subset model_info
+    model <- getmodel_info(model = model, dpar = dpar)
     
 
     if(is.null(usesavedfuns)) {

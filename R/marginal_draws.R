@@ -230,6 +230,9 @@ marginal_draws.bgmfit <-
       envir <- parent.frame()
     }
     
+    # Depending on dpar 'mu' or 'sigma', subset model_info
+    model <- getmodel_info(model = model, dpar = dpar)
+    
 
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {

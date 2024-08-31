@@ -9,6 +9,7 @@
   model,
   compare = TRUE,
   resp = NULL,
+  dpar = NULL,
   pointwise = FALSE,
   moment_match = FALSE,
   reloo = FALSE,
@@ -40,6 +41,9 @@ should be compared to each other via \code{\link[loo:loo_compare]{loo::loo_compa
 
 \item{resp}{Optional names of response variables. If specified, predictions
 are performed only for the specified response variables.}
+
+\item{dpar}{Optional name of a predicted distributional parameter.
+If specified, expected predictions of this parameters are returned.}
 
 \item{pointwise}{A flag indicating whether to compute the full
 log-likelihood matrix at once or separately for each observation.

@@ -45,6 +45,7 @@ plot_ppc.bgmfit <-
   function(model,
            type,
            ndraws = NULL,
+           dpar = NULL,
            draw_ids = NULL,
            prefix = c("ppc", "ppd"),
            group = NULL,
@@ -82,6 +83,9 @@ plot_ppc.bgmfit <-
     } else {
       envir <- parent.frame()
     }
+    
+    # Depending on dpar 'mu' or 'sigma', subset model_info
+    model <- getmodel_info(model = model, dpar = dpar)
     
 
     if(is.null(usesavedfuns)) {

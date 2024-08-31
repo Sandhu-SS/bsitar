@@ -1941,6 +1941,7 @@ setupfuns <- function(model,
     if(deriv == 0) {
       assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
       assignfun <- paste0(resp_, assignfun)
+      print(assignfun)
       assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
     } else if(deriv > 0) {
       if(deriv_model) {

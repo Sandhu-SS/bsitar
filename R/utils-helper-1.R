@@ -2497,7 +2497,7 @@ check_if_functions_exists <- function(model,
     return(invisible(NULL))
   }
   
-  
+  print(o[[1]])
   if(exists(o[[1]], mode = "function", envir = globalenv())) {
     envgtf <- TRUE
   } else {
@@ -3960,14 +3960,26 @@ plot_equivalence_test <-  function(x,
 
 
 
-# x_st <- bayestestR::equivalence_test(estimate, ci = c(0.8, 0.9),
-#                                      range = c(-1, 1)
-#                                      )
-# parms_data <-
-#   as.data.frame(model, stringsAsFactors = FALSE, optional = FALSE)[, "b_b_Intercept", drop = FALSE]
-# 
-# plot_equivalence_test(x = x_st, parms_data = parms_data)
-
+#' Save list of ggplot2 objects to single pdf
+#'
+#' @param model An object of class \code{bgmfit} 
+#' @param dpar A logical or a character string \code{'mu'} or \code{'sigma'}
+#'
+#' @return An object of class \code{bgmfit} 
+#' @keywords internal
+#' @noRd
+#'
+getmodel_info <- function(model, dpar) {
+  oxx <- model$model_info[['namesexefuns']]
+  if(is.null(dpar)) {
+    oxx <- oxx[!grepl("sigma", oxx)]
+  } else if(!is.null(dpar)) {
+    if(dpar == "mu") oxx <- oxx[!grepl("sigma", oxx)]
+    if(dpar == "sigma") oxx <- oxx[grepl("sigma", oxx)]
+  }
+  model$model_info[['namesexefuns']] <- oxx
+  model
+}
 
 
 

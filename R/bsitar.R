@@ -481,15 +481,18 @@
 #'
 #'@param sigmarandom Random effect formula for the \code{sigma} structure. See
 #'  \code{random} for details. Ignored if \code{sigma_formula_manual = NULL}.
-#'
+#'  Currently not used even when setting up the \code{sigma_formula_manual}.
+#' 
 #'@param sigmaxoffset Offset for the \code{x} for \code{sigma} structure. See
 #'  \code{xoffset} for details. Ignored if \code{sigma_formula_manual = NULL}.
 #'
 #'@param sigmabstart Start of \code{b} parameter for \code{sigma} structure. See
 #'  \code{bstart} for details. Ignored if \code{sigma_formula_manual = NULL}.
+#'  Currently not used even when setting up the \code{sigma_formula_manual}.
 #'  
 #'@param sigmacstart Start of \code{c} parameter for \code{sigma} structure. See
 #'  \code{cstart} for details. Ignored if \code{sigma_formula_manual = NULL}.
+#'  Currently not used even when setting up the \code{sigma_formula_manual}.
 #'  
 #'@param sigmaxfun Transformation of \code{x} for the \code{sigma} structure.
 #'  See \code{xfun} for details. Ignored if \code{sigma_formula_manual = NULL}.
@@ -1889,6 +1892,10 @@ bsitar <- function(x,
   
   
   
+  
+  
+  
+  
   # Check and set Alias argument for d_adjusted (SITAR)
   collect_dot_names <- c()
   for (ia in letters[4]) {
@@ -2190,6 +2197,7 @@ bsitar <- function(x,
   sigmaboundsi <- NULL;
   sigmabstartsi <- NULL;
   sigmacstartsi <- NULL;
+  sigmaids <- NULL;
   
   sigmaxoffset <- NULL;
   sigmadfs <- NULL;
@@ -2465,6 +2473,13 @@ bsitar <- function(x,
   
   # match_sitar_a_form <- FALSE
   # sigmamatch_sitar_a_form <- FALSE
+  
+  # 24.08.2024
+  if(is.null(getdotslist[['sigmad_adjusted']])) {
+    sigmad_adjusted <- FALSE
+  } else {
+    sigmad_adjusted <- getdotslist[['sigmad_adjusted']]
+  }
   
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_d_form']])) { 
@@ -3630,6 +3645,10 @@ bsitar <- function(x,
     yfuns <- rep('NULL', length(ys))
   }
   
+  
+  if(is.list(sigmaxfuns) & length(sigmaxfuns) == 0) {
+    sigmaxfuns <- rep('NULL', length(ys))
+  }
 
   if(!is.null(outliers)) {
     if(is.null(outliers$remove))    outliers$remove <- TRUE
@@ -4828,7 +4847,9 @@ bsitar <- function(x,
     }
     
     xxfunnamelist[[ii]] <- xxfun_name
-    yyfunnamelist[[ii]] <- xxfun_name
+    yyfunnamelist[[ii]] <- yyfun_name # xxfun_name
+    
+    sigmaxxfunnamelist[[ii]] <- sigmaxfun_name
     
     gkn <- function(x, df, bounds) {
       c(min(x) - bounds * (max(x) - min(x)),
@@ -5298,6 +5319,9 @@ bsitar <- function(x,
       sigmaysi <- ysi
       sigmaidsi <- idsi
       sigmadatai <- datai
+      
+      sigmaxs <- sigmaxs
+      sigmaids <- sigmaids
       
       
       sigmaget_s_r_funs <-
@@ -6533,7 +6557,7 @@ bsitar <- function(x,
       d_adjusted_name <- "d_adjusted"
       sigmafixed_name <- "sigmafixed"
       sigmarandom_name <- "sigmarandom"
-      # if(setsigma_formula_manual) sigmad_adjusted_name <- "sigmad_adjusted"
+      sigmad_adjusted_name <- "sigmad_adjusted"
     } else if (nys > 1) {
       xoffset_name <- paste0("xoffset", "_", ysi)
       knots_name <- paste0("knots", "_", ysi)
@@ -6550,7 +6574,7 @@ bsitar <- function(x,
       d_adjusted_name <- paste0("d_adjusted", "_", ysi)
       sigmafixed_name <- paste0("sigmafixed", "_", ysi)
       sigmarandom_name <- paste0("sigmarandom", "_", ysi)
-      # if(setsigma_formula_manual) sigmad_adjusted_name <- paste0("sigmad_adjusted", "_", ysi)
+      sigmad_adjusted_name <- paste0("sigmad_adjusted", "_", ysi)
     }
     
     
@@ -6562,6 +6586,9 @@ bsitar <- function(x,
     sigmafunlist_r_name <- 'sigmafunlist_r'
     sigmafunlist_rnamelist[[ii]] <- sigmafunlist_r_name
     sigmafunlist_rvaluelist[[ii]] <- sigmafunlist_r %>% unlist()
+    
+    
+    
     
     xoffsetnamelist[[ii]] <- xoffset_name
     xoffsetvaluelist[[ii]] <- xoffset
@@ -6614,8 +6641,8 @@ bsitar <- function(x,
     d_adjustednamelist[[ii]] <- d_adjusted_name
     d_adjustedvaluelist[[ii]] <- ept(d_adjustedsi)
     
-    # sigmad_adjustednamelist[[ii]] <- sigmad_adjusted_name
-    # sigmad_adjustedvaluelist[[ii]] <- ept(sigmad_adjustedsi)
+    sigmad_adjustednamelist[[ii]] <- sigmad_adjusted_name
+    sigmad_adjustedvaluelist[[ii]] <- ept(sigmad_adjustedsi)
     
     
     
@@ -8178,7 +8205,7 @@ bsitar <- function(x,
     model_info[['parameterization']] <- parameterization
     
     model_info[['d_adjusted']] <- d_adjusted
-
+    
     for (i in 1:length(funlist_rnamelist)) {
       model_info[[funlist_rnamelist[[i]]]] <- funlist_rvaluelist[[i]]
     }
@@ -8203,20 +8230,12 @@ bsitar <- function(x,
       model_info[[xfunnamelist[[i]]]] <- xfunvaluelist[[i]]
     }
     
-    for (i in 1:length(sigmaxfunnamelist)) {
-      model_info[[sigmaxfunnamelist[[i]]]] <- sigmaxfunvaluelist[[i]]
-    }
-    
     for (i in 1:length(yfunnamelist)) {
       model_info[[yfunnamelist[[i]]]] <- yfunvaluelist[[i]]
     }
     
     for (i in 1:length(xxfunnamelist)) {
       model_info[[xxfunnamelist[[i]]]] <- xxfunvaluelist[[i]]
-    }
-    
-    for (i in 1:length(sigmaxxfunnamelist)) {
-      model_info[[sigmaxxfunnamelist[[i]]]] <- sigmaxxfunvaluelist[[i]]
     }
     
     for (i in 1:length(yyfunnamelist)) {
@@ -8244,20 +8263,12 @@ bsitar <- function(x,
       model_info[[covnamelist[[i]]]] <- covvaluelist[[i]]
     }
     
-    for (i in 1:length(sigmacovnamelist)) {
-      model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
-    }
-    
     if(!is.na(univariate_by$by)) {
       model_info[['subindicators']] <- subindicators
     } 
     
     for (i in 1:length(d_adjustednamelist)) {
       model_info[[d_adjustednamelist[[i]]]] <- d_adjustedvaluelist[[i]]
-    }
-    
-    for (i in 1:length(sigmad_adjustednamelist)) {
-      model_info[[sigmad_adjustednamelist[[i]]]] <- sigmad_adjustedvaluelist[[i]]
     }
     
     
@@ -8280,9 +8291,46 @@ bsitar <- function(x,
     model_info[['decomp']] <- decomp
     model_info[['fun_scode']] <- fun_scode
     model_info[['envir']] <- enverr.
+    
+    
+    if(setsigma_formula_manual) {
+      model_info[['sigmaStanFun_name']] <- sigmaSplineFun_name
+      model_info[['sigmaxs']] <- sigmaxs
+      model_info[['sigmaids']] <- sigmaids
+      model_info[['sigmadfs']] <- sigmadfs
+      model_info[['sigmaxfuns']] <- sigmaxfuns
+      model_info[['sigmaselect_model']] <- sigmaselect_model
+      model_info[['sigmadecomp']] <- sigmadecomp
+      
+      model_info[['sigmad_adjusted']] <- sigmad_adjusted
+      for (i in 1:length(sigmad_adjustednamelist)) {
+        model_info[[sigmad_adjustednamelist[[i]]]] <- sigmad_adjustedvaluelist[[i]]
+      }
+      for (i in 1:length(sigmafunlist_rnamelist)) {
+        model_info[[sigmafunlist_rnamelist[[i]]]] <- sigmafunlist_rvaluelist[[i]]
+      }
+      for (i in 1:length(sigmaxfunnamelist)) {
+        model_info[[sigmaxfunnamelist[[i]]]] <- sigmaxfunvaluelist[[i]]
+      }
+      for (i in 1:length(sigmaxxfunnamelist)) {
+        model_info[[sigmaxxfunnamelist[[i]]]] <- sigmaxxfunvaluelist[[i]]
+      }
+      for (i in 1:length(sigmacovnamelist)) {
+        model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
+      }
+      
+    } # if(setsigma_formula_manual) {
+    
+    # model_infox <<- model_info
+    
     brmsfit$model_info <- model_info
     
     environment(brmsfit$formula) <- enverr.
+    
+    
+    
+    
+    
     
     # Now message moved to the expose_model_functions()
     if (expose_function) {

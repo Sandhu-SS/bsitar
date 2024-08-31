@@ -527,16 +527,19 @@ See \code{knots} for details. Ignored if \code{sigma_formula_manual = NULL}.}
 \code{fixed} for details. Ignored if \code{sigma_formula_manual = NULL}.}
 
 \item{sigmarandom}{Random effect formula for the \code{sigma} structure. See
-\code{random} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+\code{random} for details. Ignored if \code{sigma_formula_manual = NULL}.
+Currently not used even when setting up the \code{sigma_formula_manual}.}
 
 \item{sigmaxoffset}{Offset for the \code{x} for \code{sigma} structure. See
 \code{xoffset} for details. Ignored if \code{sigma_formula_manual = NULL}.}
 
 \item{sigmabstart}{Start of \code{b} parameter for \code{sigma} structure. See
-\code{bstart} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+\code{bstart} for details. Ignored if \code{sigma_formula_manual = NULL}.
+Currently not used even when setting up the \code{sigma_formula_manual}.}
 
 \item{sigmacstart}{Start of \code{c} parameter for \code{sigma} structure. See
-\code{cstart} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+\code{cstart} for details. Ignored if \code{sigma_formula_manual = NULL}.
+Currently not used even when setting up the \code{sigma_formula_manual}.}
 
 \item{sigmaxfun}{Transformation of \code{x} for the \code{sigma} structure.
 See \code{xfun} for details. Ignored if \code{sigma_formula_manual = NULL}.}
