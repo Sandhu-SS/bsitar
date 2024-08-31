@@ -4,11 +4,12 @@
 
 #' An internal function to prepare Stan function
 #'
-#' The \code{prepare_function}) constructs custom Stan function  which is passed
-#' on to the [bsitar::bsitar()] function. For univariate-by- subgroup model
-#' (\code{univariate_by}) and multivariate (\code{multivariate}) models (see
-#' [bsitar::bsitar()]), the \code{x}, \code{y}, \code{id}, \code{knots},
-#' \code{nknots}, are automatically matched with the sub-models.
+#' The \code{prepare_function_sigma}) constructs custom Stan function  which is
+#' passed on to the [bsitar::bsitar()] function for modelling \code{sigma}. For
+#' univariate-by- subgroup model (\code{univariate_by}) and multivariate
+#' (\code{multivariate}) models (see [bsitar::bsitar()]), the \code{x},
+#' \code{y}, \code{id}, \code{knots}, \code{nknots}, are automatically matched
+#' with the sub-models.
 #'
 #' @param x Predictor variable in the data. See [bsitar::bsitar()] for details.
 #'
@@ -35,7 +36,7 @@
 #' @keywords internal
 #' @noRd
 #'
-prepare_function <- function(x,
+prepare_function_sigma <- function(x,
                              y,
                              id,
                              knots,

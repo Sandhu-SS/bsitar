@@ -38,6 +38,16 @@ bsitar(
   sigma_formula_gr = NULL,
   sigma_formula_gr_str = NULL,
   sigma_formula_manual = NULL,
+  sigmax = NULL,
+  sigmadf = 4,
+  sigmaknots = NA,
+  sigmafixed = a + b + c,
+  sigmarandom = "",
+  sigmaxoffset = mean,
+  sigmabstart = sigmaxoffset,
+  sigmacstart = 0,
+  sigmaxfun = NULL,
+  sigmabound = 0.04,
   dpar_formula = NULL,
   autocor_formula = NULL,
   family = gaussian(),
@@ -478,11 +488,61 @@ levels of hierarchy. See \code{a_formula_gr_str} for details.}
 
 \item{sigma_formula_manual}{Formula for the random effect parameter,
 \code{sigma} via a character string string that explicitly uses the
-\code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brms:brmsformula-helpers]{brms::lf()}} functions. An example is \cr
-\code{deparse_0s(nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by
-  = NULL))))}. Note that in this case, priors need to set up manually via
-the \code{add_self_priors} argument. To see which all priors need to be
-added, use can run the code by setting \code{get_priors = TRUE}.}
+\code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brms:brmsformula-helpers]{brms::lf()}} functions (default \code{NULL}). An example
+is \cr
+\code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by
+  = NULL)))}.
+Another use case of \code{sigma_formula_manual} is to model location
+scale model for the \code{SITAR} model where same \code{SITAR} formula can
+be used to model the scale (\code{sigma}). An example is \cr
+\code{nlf(sigma ~ sigmaSITARFun(logage, sigmaa, sigmab, sigmac, sigmas1, 
+sigmas2, sigmas3, sigmas4), loop = FALSE) + 
+lf(sigmaa ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) + 
+lf(sigmab ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) + 
+lf(sigmac ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) + 
+lf(sigmas1 + sigmas2 + sigmas3 + sigmas4 ~ 1)} \cr
+where \code{sigmaSITARFun} (and all other needed sub functions) are defined
+by the \code{sigmax}, \code{sigmadf}, \code{sigmaknots}, \code{sigmafixed},
+\code{sigmarandom}, \code{sigmaxoffset}, \code{sigmaxfun} and
+\code{sigmabound} arguments. It is important to match the
+\code{sigma_formula_manual} code as \code{sigmaSITARFun} created by the above
+arguments.
+
+Note that for \code{sigma_formula_manual}, the priors need to set up manually
+via the \code{add_self_priors} argument. To see which all priors need to be
+added, the user can run the code by setting \code{get_priors = TRUE}. Also,
+no initial values are defined and therefore initials for these parameters can
+be either \code{0} or \code{random}.}
+
+\item{sigmax}{Predictor for the \code{sigma}. See \code{x} for details.
+Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmadf}{Degree of freedom for the spline function for \code{sigma}. See
+\code{df} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmaknots}{Degree of freedom for the spline function for \code{sigma}.
+See \code{knots} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmafixed}{Fixed effect formula for the \code{sigma} structure. See
+\code{fixed} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmarandom}{Random effect formula for the \code{sigma} structure. See
+\code{random} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmaxoffset}{Offset for the \code{x} for \code{sigma} structure. See
+\code{xoffset} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmabstart}{Start of \code{b} parameter for \code{sigma} structure. See
+\code{bstart} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmacstart}{Start of \code{c} parameter for \code{sigma} structure. See
+\code{cstart} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmaxfun}{Transformation of \code{x} for the \code{sigma} structure.
+See \code{xfun} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmabound}{Bounds for the \code{x} for \code{sigma} structure. See
+\code{bound} for details. Ignored if \code{sigma_formula_manual = NULL}.}
 
 \item{dpar_formula}{Formula for the distributional fixed effect parameter,
 \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.}
@@ -1503,7 +1563,10 @@ caution that CP parameterization should be considered experimental and it
 may fail if structure of the \code{\link[brms:brm]{brms::brm()}} generated \code{stancode} changes
 in future.}
 
-\item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}}
+\item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}. Can also be used to pass
+some strictly internal use arguments such as \code{match_sitar_a_form},
+\code{match_sitar_d_form}, \code{sigmamatch_sitar_a_form}, \code{displayit},
+\code{setcolh}, \code{setcolb} etc.}
 }
 \value{
 An object of class \code{brmsfit, bsiatr}, that contains the posterior

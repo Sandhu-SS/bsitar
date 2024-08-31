@@ -1,14 +1,14 @@
 
 
-#' An internal function to prepare formula
+#' An internal function to prepare formula for sigma
 #' 
-#' The \code{prepare_formula}) prepares \code{brms::brmsformual} which is  
-#' passed on to the [bsitar::bsitar()] function. For univariate-by-
-#' subgroup model (specified by using the \code{univariate_by}) and 
-#' multivariate model (specified by using the \code{multivariate}),
-#' the \code{x}, \code{y}, \code{id}, \code{knots}, \code{nknots}, are 
-#' automatically set to match the sub-model(s). See \code{brms::brmsformual} 
-#' for details. 
+#' The \code{prepare_formula_sigma}) prepares \code{brms::brmsformual} for the
+#' \code{sigma} structure  which is passed on to the [bsitar::bsitar()]
+#' function. For univariate-by- subgroup model (specified by using the
+#' \code{univariate_by}) and multivariate model (specified by using the
+#' \code{multivariate}), the \code{x}, \code{y}, \code{id}, \code{knots},
+#' \code{nknots}, are automatically set to match the sub-model(s). See
+#' \code{brms::brmsformual} for details.
 #'
 #' @param x vector of predictor (typically age in years).
 #' 
@@ -23,7 +23,7 @@
 #' @param data data frame containing variables \code{x}, \code{y} and \code{id}.
 #' 
 #' @param internal_formula_args Other internal arguments passed from the 
-#' [bsitar::bsitar()] to the \code{prepare_formula}).
+#' [bsitar::bsitar()] to the \code{prepare_formula_sigma}).
 #'
 #' @return An object of class \code{brmsformula}, which is a \code{list} 
 #'   containing formulas.
@@ -33,7 +33,7 @@
 #' @keywords internal
 #' @noRd
 #' 
-prepare_formula <- function(x,
+prepare_formula_sigma <- function(x,
                             y,
                             id,
                             knots,
@@ -3128,8 +3128,8 @@ prepare_formula <- function(x,
     lme_sd_a = lme_sd_a,
     lme_rsd = lme_rsd
   )
-  
-  # setbformulax <<- setbformula
+ 
+   # setbformulax <<- setbformula
   attr(setbformula, "list_out") <- as.list(list_out)
   
   return(setbformula)
