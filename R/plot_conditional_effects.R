@@ -73,6 +73,7 @@ plot_conditional_effects.bgmfit <-
            surface = FALSE,
            categorical = FALSE,
            ordinal = FALSE,
+           method = 'posterior_epred',
            transform = NULL,
            resolution = 100,
            select_points = 0,
