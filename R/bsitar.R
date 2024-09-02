@@ -431,13 +431,23 @@
 #'  \code{dpar_formula} can not be specified together. When either
 #'  \code{sigma_formula} or \code{dpar_formula} is used, the default estimation
 #'  of the \code{RSD} by [brms::brm()] is automatically turned off.
+#'  Note that user can specify an external function such as \code{poly} but with
+#'  only a single argument (predictor) i.e. \code{poly(age)}. The addition
+#'  arguments must be specified externally. For example, if user wants to set
+#'  \code{degree} as \code{degree}, then a copy of \code{poly} can be created
+#'  which is then modified and used in the \code{sigma_formula} as \cr
+#'  \code{mypoly = poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}.
 #'
 #'@param sigma_formula_gr Formula for the random effect parameter, \code{sigma}
-#'  (default \code{NULL}). See \code{a_formula_gr} for details.
+#'  (default \code{NULL}). See \code{a_formula_gr} for details. Like
+#'  \code{sigma_formula}, external function such as \code{poly} can used. Please
+#'  above for details \code{sigma_formula}.
 #'
 #'@param sigma_formula_gr_str Formula for the random effect parameter,
-#'  \code{sigma} when fitting a hierarchical model with three or more
-#'  levels of hierarchy. See \code{a_formula_gr_str} for details. 
+#'  \code{sigma} when fitting a hierarchical model with three or more levels of
+#'  hierarchy. See \code{a_formula_gr_str} for details. Like
+#'  \code{sigma_formula}, external function such as \code{poly} can used. Please
+#'  above for details \code{sigma_formula}.
 #'  
 #' @param sigma_formula_manual Formula for the random effect parameter,
 #'   \code{sigma} via a character string string that explicitly uses the
@@ -2354,7 +2364,7 @@ bsitar <- function(x,
   # arguments$sigma_formula <- arguments$sigma_formula %>% deparse1() %>% gsub_space() # %>% str2lang()
   # arguments$sigma_formula_gr <- arguments$sigma_formula_gr %>% deparse1() %>% gsub_space() # %>% str2lang()
 
-   # argumentsxx <<- arguments
+  #  argumentsxx <<- arguments
    # 
    # argumentsxx$sigma_formula_manual
   
@@ -5342,6 +5352,11 @@ bsitar <- function(x,
     } # if(setsigma_formula_manual) {
     
     
+    if(!setsigma_formula_manual) {
+      sigmad_adjustedsi <- 'NULL'
+    }
+    
+    
 
     #################################################
     #################################################
@@ -6640,6 +6655,7 @@ bsitar <- function(x,
     
     d_adjustednamelist[[ii]] <- d_adjusted_name
     d_adjustedvaluelist[[ii]] <- ept(d_adjustedsi)
+    
     
     sigmad_adjustednamelist[[ii]] <- sigmad_adjusted_name
     sigmad_adjustedvaluelist[[ii]] <- ept(sigmad_adjustedsi)

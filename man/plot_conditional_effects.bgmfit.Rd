@@ -15,6 +15,7 @@
   surface = FALSE,
   categorical = FALSE,
   ordinal = FALSE,
+  method = "posterior_epred",
   transform = NULL,
   resolution = 100,
   select_points = 0,
@@ -101,6 +102,11 @@ of response categories. Defaults to \code{FALSE}.}
 Logical. Indicates if effects in ordinal models
 should be visualized as a raster with the response categories
 on the y-axis. Defaults to \code{FALSE}.}
+
+\item{method}{Method used to obtain predictions. Can be set to
+\code{"posterior_epred"} (the default), \code{"posterior_predict"},
+or \code{"posterior_linpred"}. For more details, see the respective
+function documentations.}
 
 \item{transform}{A function or a character string naming
 a function to be applied on the predicted responses
