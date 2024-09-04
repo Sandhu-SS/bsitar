@@ -3987,12 +3987,20 @@ getmodel_info <- function(model, dpar) {
 
 #' Create rcs spline design matrix
 #'
-#' @param x A numeric vector i.e., predictor (e.g., age) 
-#' @param df An integer  
-#' @param knots A numeric vector
-#' @param inclx A logical to indicate whether to include or exclude \code{x}
-#' @param deriv An integer 
+#' @param x A numeric vector representing a predictor variable (e.g., age)
+#' @param df An integer. It is defined as \code{nk - 1}
+#' @param deriv An integer
+#' @param add_intercept A logical (default \code{FALSE}) to indicate whether to
+#'   add intercept column to the design matrix. This is useful when using
+#'   \code{rcs_matrix} for creating design matrix for derivatives such as
+#'   \code{deriv = 1} and \code{deriv = 2} where first (\code{deriv = 1}) or,
+#'   the first and second (\code{deriv = 2}) columns are automatically set as
+#'   \code{'0'}.
+#' @param verbose A logical (default \code{FALSE}) to indicate if infornation
+#'   need to be displayed.
 #'
+#' @inherit Hmisc::rcspline.eval params
+#' 
 #' @return An object of class \code{bgmfit} 
 #' @keywords internal
 #' @noRd
