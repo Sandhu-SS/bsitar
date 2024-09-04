@@ -95,6 +95,7 @@ plot_conditional_effects.bgmfit <-
            expose_function = FALSE,
            usesavedfuns = NULL,
            clearenvfuns = NULL,
+           funlist = NULL,
            envir = NULL,
            ...) {
     
@@ -188,6 +189,15 @@ plot_conditional_effects.bgmfit <-
                                    deriv = deriv, 
                                    all = TRUE,
                                    verbose = FALSE)
+    
+    
+    if(!is.null(funlist)) {
+      if(!is.list(funlist)) {
+        stop("funlist must be a list")
+      } else {
+        o <- funlist
+      }
+    }
     
     
     test <- setupfuns(model = model, resp = resp,

@@ -4001,13 +4001,15 @@ rcs_matrix <- function(x,
                        df, 
                        knots = NULL, 
                        deriv = 0,
+                       add_intercept = FALSE,
                        inclx = TRUE, 
-                       knots.only=FALSE,
-                       type="ordinary", 
-                       norm=2, 
-                       rpm=NULL, 
-                       pc=FALSE,
-                       fractied=0.05,
+                       knots.only = FALSE,
+                       type = "ordinary", 
+                       norm = 2, 
+                       rpm = NULL, 
+                       pc = FALSE,
+                       fractied = 0.05,
+                       verbose = FALSE,
                        ...) {
   
   nk <- df + 1
@@ -4177,8 +4179,29 @@ rcs_matrix <- function(x,
   
   if(!inclx) basis_evals <- basis_evals[,-1,drop=FALSE]
   
+  
+  if(add_intercept) {
+    if(deriv == 0) {
+      mat_intercept <- matrix(1, nrow(basis_evals), 1)
+      basis_evals <- cbind(mat_intercept, basis_evals)
+      if(verbose) message("Intercept column added. Please use ~0 + formula")
+    }
+    if(deriv == 1) {
+      mat_intercept <- matrix(0, nrow(basis_evals), 1)
+      basis_evals <- cbind(mat_intercept, basis_evals)
+      if(verbose) message("Intercept set to '0' for deriv = 1")
+    }
+    if(deriv == 2) {
+      mat_intercept <- matrix(0, nrow(basis_evals), 2)
+      basis_evals   <- basis_evals[, -1, drop = FALSE]
+      basis_evals   <- cbind(mat_intercept, basis_evals)
+      if(verbose) message("Intercept and first term (x) set to '0' for deriv = 2")
+    }
+  } # if(add_intercept) {
+  
+  
   return(basis_evals)
-} # end make_spline_matrix
+} # end rcs_matrix
 
 
 

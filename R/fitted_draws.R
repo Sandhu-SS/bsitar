@@ -89,6 +89,7 @@ fitted_draws.bgmfit <-
            deriv_model = TRUE,
            summary = TRUE,
            robust = FALSE,
+           transform = NULL,
            probs = c(0.025, 0.975),
            xrange = NULL,
            xrange_search = NULL,
@@ -101,6 +102,7 @@ fitted_draws.bgmfit <-
            expose_function = FALSE,
            usesavedfuns = NULL,
            clearenvfuns = NULL,
+           funlist = NULL,
            envir = NULL,
            ...) {
     
@@ -222,6 +224,14 @@ fitted_draws.bgmfit <-
                                 all = TRUE,
                                 verbose = FALSE)
 
+    if(!is.null(funlist)) {
+      if(!is.list(funlist)) {
+        stop("funlist must be a list")
+      } else {
+        o <- funlist
+      }
+    }
+    
 
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall, 

@@ -168,6 +168,7 @@ marginal_draws.bgmfit <-
            expose_function = FALSE,
            usesavedfuns = NULL,
            clearenvfuns = NULL,
+           funlist = NULL,
            envir = NULL,
            ...) {
     
@@ -345,6 +346,13 @@ marginal_draws.bgmfit <-
                                    all = TRUE,
                                    verbose = FALSE)
     
+    if(!is.null(funlist)) {
+      if(!is.list(funlist)) {
+        stop("funlist must be a list")
+      } else {
+        o <- funlist
+      }
+    }
     
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall, 
@@ -490,7 +498,8 @@ marginal_draws.bgmfit <-
         usedtplyr,
         usecollapse,
         pdrawsp,
-        pdrawsh
+        pdrawsh,
+        funlist
       )
     ))[-1]
     

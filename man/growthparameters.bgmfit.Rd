@@ -14,6 +14,7 @@
   draw_ids = NULL,
   summary = FALSE,
   robust = FALSE,
+  transform = NULL,
   re_formula = NA,
   peak = TRUE,
   takeoff = FALSE,
@@ -47,6 +48,7 @@
   expose_function = FALSE,
   usesavedfuns = NULL,
   clearenvfuns = NULL,
+  funlist = NULL,
   envir = NULL,
   ...
 )
@@ -85,6 +87,12 @@ get the correct estimates when \code{re_formula = NULL}.}
 standard deviation as the measure of variability. If \code{TRUE}, the
 median and the median absolute deviation (MAD) are applied instead. Ignored
 if \code{summary} is \code{FALSE}.}
+
+\item{transform}{A function applied to individual draws from the posterior
+distribution, before computing summaries. The argument \code{transform} is
+based on the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}. This should not be confused
+with the \code{transform} from the \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} which is now
+deprecated.}
 
 \item{re_formula}{Option to indicate whether or not to include the
 individual/group-level effects in the estimation. When \code{NA} (default),
@@ -332,6 +340,18 @@ function from the environment (\code{TRUE}) or not (\code{FALSE}). If
 \code{NULL} (default), then \code{clearenvfuns} is set as \code{TRUE} when
 \code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
 is \code{FALSE}.}
+
+\item{funlist}{A list (default \code{NULL}) to set function names. This is
+rarely used because required functions are automatically retrieved
+internally. A use case of \code{funlist} when \code{sigma_formula},
+\code{sigma_formula_gr}, or \code{sigma_formula_gr_str} uses a function
+such as \code{poly(age)}. See \code{bsitar::bsitar()} for details. The
+\code{funlist} provides list of function names which have been defined
+externally and are available in the \code{\link[base:environment]{base::globalenv()}}. Note that for
+functions that need distance and velocity curves such as
+\code{plot_curves(..., opt = 'dv')}, the \code{funlist} must include two
+functions where first will be used for the distance and second for the
+velocity.}
 
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.

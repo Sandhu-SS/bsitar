@@ -37,6 +37,7 @@
   expose_function = FALSE,
   usesavedfuns = NULL,
   clearenvfuns = NULL,
+  funlist = NULL,
   envir = NULL,
   ...
 )
@@ -259,6 +260,18 @@ function from the environment (\code{TRUE}) or not (\code{FALSE}). If
 \code{NULL} (default), then \code{clearenvfuns} is set as \code{TRUE} when
 \code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
 is \code{FALSE}.}
+
+\item{funlist}{A list (default \code{NULL}) to set function names. This is
+rarely used because required functions are automatically retrieved
+internally. A use case of \code{funlist} when \code{sigma_formula},
+\code{sigma_formula_gr}, or \code{sigma_formula_gr_str} uses a function
+such as \code{poly(age)}. See \code{bsitar::bsitar()} for details. The
+\code{funlist} provides list of function names which have been defined
+externally and are available in the \code{\link[base:environment]{base::globalenv()}}. Note that for
+functions that need distance and velocity curves such as
+\code{plot_curves(..., opt = 'dv')}, the \code{funlist} must include two
+functions where first will be used for the distance and second for the
+velocity.}
 
 \item{envir}{Environment used for function evaluation. The default is
 \code{NULL} which will set \code{parent.frame()} as default environment.

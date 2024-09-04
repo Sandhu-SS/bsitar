@@ -56,6 +56,12 @@
 #'   median and the median absolute deviation (MAD) are applied instead. Ignored
 #'   if \code{summary} is \code{FALSE}.
 #'   
+#' @param transform A function applied to individual draws from the posterior
+#'   distribution, before computing summaries. The argument \code{transform} is
+#'   based on the [marginaleffects::predictions()]. This should not be confused
+#'   with the \code{transform} from the [brms::posterior_predict()] which is now
+#'   deprecated.
+#'   
 #' @param re_formula Option to indicate whether or not to include the
 #'   individual/group-level effects in the estimation. When \code{NA} (default),
 #'   the individual-level effects are excluded and therefore population average
@@ -278,6 +284,18 @@
 #'   \code{NULL} (default), then \code{clearenvfuns} is set as \code{TRUE} when
 #'   \code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
 #'   is \code{FALSE}.
+#'
+#' @param funlist A list (default \code{NULL}) to set function names. This is
+#'   rarely used because required functions are automatically retrieved
+#'   internally. A use case of \code{funlist} when \code{sigma_formula},
+#'   \code{sigma_formula_gr}, or \code{sigma_formula_gr_str} uses a function
+#'   such as \code{poly(age)}. See \code{bsitar::bsitar()} for details. The
+#'   \code{funlist} provides list of function names which have been defined
+#'   externally and are available in the [base::globalenv()]. Note that for
+#'   functions that need distance and velocity curves such as
+#'   \code{plot_curves(..., opt = 'dv')}, the \code{funlist} must include two
+#'   functions where first will be used for the distance and second for the
+#'   velocity.
 #'  
 #' @param envir Environment used for function evaluation. The default is
 #'   \code{NULL} which will set \code{parent.frame()} as default environment.
@@ -351,6 +369,7 @@ growthparameters.bgmfit <- function(model,
                                draw_ids = NULL,
                                summary = FALSE,
                                robust = FALSE,
+                               transform = NULL,
                                re_formula = NA,
                                peak = TRUE,
                                takeoff = FALSE,
@@ -384,6 +403,7 @@ growthparameters.bgmfit <- function(model,
                                expose_function = FALSE,
                                usesavedfuns = NULL,
                                clearenvfuns = NULL,
+                               funlist = NULL,
                                envir = NULL,
                                ...) {
   

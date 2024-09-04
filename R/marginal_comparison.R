@@ -195,6 +195,7 @@ marginal_comparison.bgmfit <- function(model,
                                    expose_function = FALSE,
                                    usesavedfuns = NULL,
                                    clearenvfuns = NULL,
+                                   funlist = NULL,
                                    envir = NULL,
                                    ...) {
   
@@ -382,6 +383,15 @@ marginal_comparison.bgmfit <- function(model,
                                  verbose = FALSE)
   
   
+  if(!is.null(funlist)) {
+    if(!is.list(funlist)) {
+      stop("funlist must be a list")
+    } else {
+      o <- funlist
+    }
+  }
+  
+  
   test <- setupfuns(model = model, resp = resp,
                     o = o, oall = oall, 
                     usesavedfuns = usesavedfuns, 
@@ -514,7 +524,8 @@ marginal_comparison.bgmfit <- function(model,
       method,
       constrats_by,
       constrats_at,
-      usedtplyr
+      usedtplyr,
+      funlist
     )
   ))[-1]
   
