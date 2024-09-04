@@ -5924,8 +5924,7 @@ prepare_priors <- function(prior_argument,
         
       } # end if(method_location_scale == "original" )
         
-        # print(pname_)
-        
+
         # if(method_location_scale == "via_functions") {
         #   list_objs <- mget(ls())
         #   if (grepl("^location$", pname_)) {
@@ -6723,7 +6722,6 @@ prepare_priors <- function(prior_argument,
     
     # After exiting the loop for (i in 1:length(x)), execute transformation of 
     # location scale parameters for log transformed 
-    # print(fxls)
 
     # if fxls = 'log', then assign them 
     dont_allow_0 <- FALSE

@@ -539,7 +539,6 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-  
   if(method == 'custom') {
     deriv <- 1
     deriv_model <- TRUE
@@ -651,13 +650,14 @@ growthparameters_comparison.bgmfit <- function(model,
                                  verbose = FALSE)
   
   
+  
   test <- setupfuns(model = model, resp = resp,
                     o = o, oall = oall, 
                     usesavedfuns = usesavedfuns, 
                     deriv = deriv, envir = envir, 
                     deriv_model = deriv_model, 
                     ...)
-  
+ 
   if(is.null(test)) return(invisible(NULL))
   
   

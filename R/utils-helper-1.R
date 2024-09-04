@@ -2497,7 +2497,7 @@ check_if_functions_exists <- function(model,
     return(invisible(NULL))
   }
   
-  print(o[[1]])
+  
   if(exists(o[[1]], mode = "function", envir = globalenv())) {
     envgtf <- TRUE
   } else {

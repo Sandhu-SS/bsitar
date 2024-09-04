@@ -221,20 +221,6 @@ fitted_draws.bgmfit <-
                                 deriv = deriv, 
                                 all = TRUE,
                                 verbose = FALSE)
-    
-    
-    
-    # oxx <- unlist(o)
-    # if(is.null(dpar)) {
-    #   oxx <- oxx[!grepl("sigma", oxx)]
-    # } else if(!is.null(dpar)) {
-    #   if(dpar == "mu") oxx <- oxx[!grepl("sigma", oxx)]
-    #   if(dpar == "sigma") oxx <- oxx[grepl("sigma", oxx)]
-    # }
-    # o <- as.list(oxx)
-    
-    # ox <<- o
-    
 
 
     test <- setupfuns(model = model, resp = resp,

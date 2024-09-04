@@ -3114,9 +3114,7 @@ set_priors_initials <- function(a_prior_beta,
     #     )
     #   }
     # }
-    # print(class)
-    # print(define_)
-    # print(priors_)
+    
     
     out_pr <-
       list(

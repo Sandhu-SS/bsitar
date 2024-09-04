@@ -1038,14 +1038,7 @@ get_idata <-
       }
     }
     
-    
-    # for (is.facti in is.fact) {
-    #   print(levels(newdata_pred[[is.facti]]))
-    #   levels(newdata_pred[[is.facti]]) <- levels(newdata[[is.facti]])
-    # }
-    # print(str(newdata_pred %>% droplevels))
-    # print(unique(newdata_pred$class))
-    #stop()
+   
     
     newdata_pred[[timeVar]] <- unlist(times_to_pred)
     
@@ -3431,14 +3424,11 @@ get_pathfinder_init <- function(pthf = NULL,
     init_str_x <- init_structure # fit_m$stan_args$init[[1]]
     for (stri in names(init_str_x)) {
       if(is.array( init_str_x[[stri]] )) {
-        # print(dim(init_str_x[[stri]]))
         if(!is.null(path_inits[[stri]])) {
           path_inits[[stri]] <- array(path_inits[[stri]], dim = dim(init_str_x[[stri]]) )
         }
       } else if(is.vector( init_str_x[[stri]] )) {
-        # print(length(init_str_x[[stri]]))
       } else if(is.numeric( init_str_x[[stri]] )) {
-        # print(length(init_str_x[[stri]]))
       }
       out <- path_inits
     }
