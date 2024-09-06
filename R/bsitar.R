@@ -2334,8 +2334,7 @@ bsitar <- function(x,
     c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
   
   
-   # argumentsx <<- arguments
-  
+
   
   setdepar0sgub <- c("sigma_formula", 
                      "sigma_formula_gr", 
@@ -2364,9 +2363,7 @@ bsitar <- function(x,
   # arguments$sigma_formula <- arguments$sigma_formula %>% deparse1() %>% gsub_space() # %>% str2lang()
   # arguments$sigma_formula_gr <- arguments$sigma_formula_gr %>% deparse1() %>% gsub_space() # %>% str2lang()
 
-  #  argumentsxx <<- arguments
-   # 
-   # argumentsxx$sigma_formula_manual
+  
   
   
   
@@ -4389,8 +4386,7 @@ bsitar <- function(x,
     
     
     
-    # sigma_formula_grsix <<- sigma_formula_grsi
-    
+
     # 24.08.2024
     # replace it
     # sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
@@ -4409,8 +4405,7 @@ bsitar <- function(x,
       sigma_formula_grsi <- strpartstrx_form
     }
       
-    # sigma_formula_grsixx <<- sigma_formula_grsi
-    
+
  
     
     
@@ -5302,8 +5297,7 @@ bsitar <- function(x,
         sigmaadd_rcsfunmatqrinv_genquant
 
       
-      # sigmainternal_function_argsx <<- sigmainternal_function_args
-        
+
       
       
       if (verbose) {
@@ -6070,7 +6064,12 @@ bsitar <- function(x,
         # this for adding _prior_cor 
         
        counter_start_from_one_for_prior <- 0
-        for (istrx in 2:length(eval_what)) {
+       
+       # 24.08.2024
+       # Somehow now after 24.08.2024, 1:length(eval_what) needed, why?
+       
+       for (istrx in 1:length(eval_what)) {
+        # for (istrx in 2:length(eval_what)) {
           counter_start_from_one_for_prior <- 
             counter_start_from_one_for_prior + 1
           if(set_nlpar_ == 'sigma') {
@@ -6130,7 +6129,11 @@ bsitar <- function(x,
       n_higher_str   <- length(eval(parse(text = paste0(set_nlpar_what,
                                                         "covcoefnames_gr_str")),
                                     envir = set_env_what))
-      n_higher_str   <- n_higher_str - 1
+      
+      # 24.08.2024
+      # Somehow now after 24.08.2024, n_higher_str <- n_higher_str needed, why?
+      
+      # n_higher_str   <- n_higher_str - 1
       
       if(n_higher_str > 0) {
         set_assign_prior_what <- '_prior'
@@ -6333,7 +6336,12 @@ bsitar <- function(x,
         gr_str_id <- id_higher_str
         
         counter_start_from_one_for_prior <- 0
-        for (istrx in 2:length(gr_str_id)) {
+        
+        # 24.08.2024
+        # Somehow now after 24.08.2024, 2:length(eval_what) needed, why?
+        
+        for (istrx in 1:length(gr_str_id)) {
+        # for (istrx in 2:length(gr_str_id)) {
           counter_start_from_one_for_prior <- 
             counter_start_from_one_for_prior + 1
           get_corr_higher_str_tf <- corr_higher_str_tf[istrx]
@@ -6411,7 +6419,12 @@ bsitar <- function(x,
                              envir = set_env_what)
       
       n_higher_str   <- length(id_higher_str)
-      n_higher_str   <- n_higher_str - 1
+      
+      # 24.08.2024
+      # Somehow now after 24.08.2024, 2:length(eval_what) needed, why?
+      
+      # n_higher_str   <- n_higher_str - 1
+      
       corr_higher_str_tf <- eval(parse(text = paste0(set_nlpar_what, 
                                                      "_str_corr_tf")),
                                  envir = set_env_what)
@@ -7123,8 +7136,7 @@ bsitar <- function(x,
     }
 
     
-    # temp_priorx <<- brmspriors
-    
+
     # 24.08.2024
     
     if(setsigma_formula_manual) {
@@ -7139,12 +7151,7 @@ bsitar <- function(x,
     #   temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
     # }
     
-    
-    
-    # gettemp_priorxx <<- brms::get_prior(formula = bformula,, stanvars = bstanvars, data = brmsdata)
-    # 
-    # temp_priorxx <<- brmspriors
-    
+
    
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
@@ -7155,8 +7162,7 @@ bsitar <- function(x,
                                     prior = temp_prior,
                                     data = brmsdata)
     
-    # temp_stancode2x <<- temp_stancode2
-  
+
 
    
     move_from_model_to_qq_for_bqinv <- 
@@ -7856,10 +7862,8 @@ bsitar <- function(x,
     brmspriors <- brmspriors
   }
   
-  # brmspriorsx <<- brmspriors
-  
-  # add_self_priorsx <<- add_self_priors
-  
+
+
   # 24.08.2024
   if(!is.null(add_self_priors)) {
     add_self_priors <- add_self_priors %>%  dplyr::filter(source == 'user' & coef != "")
@@ -7878,14 +7882,12 @@ bsitar <- function(x,
   
   
   
-  # brmspriorsxx <<- brmspriors
+
   
   
   
   
-  
-   # temp_priorx <<- brmspriors
-  
+
   # 24.08.2024
   if(setsigma_formula_manual) {
     brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
@@ -7899,8 +7901,7 @@ bsitar <- function(x,
   #   brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
   # }
   
-  # temp_priorxx <<- brmspriors
-  
+
   
   
 
@@ -8337,8 +8338,7 @@ bsitar <- function(x,
       
     } # if(setsigma_formula_manual) {
     
-    # model_infox <<- model_info
-    
+
     brmsfit$model_info <- model_info
     
     environment(brmsfit$formula) <- enverr.
