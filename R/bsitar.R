@@ -4372,38 +4372,89 @@ bsitar <- function(x,
       }
     }
     
-    a_formula_grsi <- gsub("[()]", "", a_formula_grsi)
-    b_formula_grsi <- gsub("[()]", "", b_formula_grsi)
-    c_formula_grsi <- gsub("[()]", "", c_formula_grsi)
-    if(!is.null(d_formula_grsi)) d_formula_grsi <- gsub("[()]", "", 
-                                                        d_formula_grsi)
-    e_formula_grsi <- gsub("[()]", "", e_formula_grsi)
-    f_formula_grsi <- gsub("[()]", "", f_formula_grsi)
-    g_formula_grsi <- gsub("[()]", "", g_formula_grsi)
-    h_formula_grsi <- gsub("[()]", "", h_formula_grsi)
-    i_formula_grsi <- gsub("[()]", "", i_formula_grsi)
-    s_formula_grsi <- gsub("[()]", "", s_formula_grsi)
+    
+    
+    # 24.08.2024
+    gsub_paranth_formula_grsi <- function(x) {
+      if(!is.null(x)) {
+        x_formula_grsi <- x
+        strpartstrx <- strsplit(x_formula_grsi, "|", fixed = T)[[1]]
+        strpartstrx_form <- strpartstrx[1]
+        # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
+        # strpartstrx_form <- paste0(, collapse = "")
+        strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
+        if(length(strpartstrx) > 1 ) {
+          strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+          strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+          strpartstrx_grpa2 <- paste0("", strpartstrx_grpa, collapse = "|")
+          x_formula_grsi <- paste0(strpartstrx_form, "|", strpartstrx_grpa2)
+        } else {
+          x_formula_grsi <- strpartstrx_form
+        }
+      } else if(is.null(x)) {
+        x_formula_grsi <- NULL
+      }
+      
+      if(!is.null(x_formula_grsi)) {
+        if(grepl("^\\(", x_formula_grsi)) {
+          x_formula_grsi <- gsub("^\\(", "", x_formula_grsi)
+        }
+      }
+      
+      x_formula_grsi
+    }
+    
+    # gsub("[()]", "", a_formula_grsi) %>% print()
+    
+    a_formula_grsi <- gsub_paranth_formula_grsi(a_formula_grsi)
+    b_formula_grsi <- gsub_paranth_formula_grsi(b_formula_grsi)
+    c_formula_grsi <- gsub_paranth_formula_grsi(c_formula_grsi)
+    if(!is.null(d_formula_grsi))  d_formula_grsi <- 
+      gsub_paranth_formula_grsi(d_formula_grsi)
+    e_formula_grsi <- gsub_paranth_formula_grsi(e_formula_grsi)
+    f_formula_grsi <- gsub_paranth_formula_grsi(f_formula_grsi)
+    g_formula_grsi <- gsub_paranth_formula_grsi(g_formula_grsi)
+    h_formula_grsi <- gsub_paranth_formula_grsi(h_formula_grsi)
+    i_formula_grsi <- gsub_paranth_formula_grsi(i_formula_grsi)
+    
+    sigma_formula_grsi <- gsub_paranth_formula_grsi(sigma_formula_grsi)
+    
+    # a_formula_grsi %>% print()
+    
+    
+    # a_formula_grsi <- gsub("[()]", "", a_formula_grsi)
+    # b_formula_grsi <- gsub("[()]", "", b_formula_grsi)
+    # c_formula_grsi <- gsub("[()]", "", c_formula_grsi)
+    # if(!is.null(d_formula_grsi)) d_formula_grsi <- gsub("[()]", "", 
+    #                                                     d_formula_grsi)
+    # e_formula_grsi <- gsub("[()]", "", e_formula_grsi)
+    # f_formula_grsi <- gsub("[()]", "", f_formula_grsi)
+    # g_formula_grsi <- gsub("[()]", "", g_formula_grsi)
+    # h_formula_grsi <- gsub("[()]", "", h_formula_grsi)
+    # i_formula_grsi <- gsub("[()]", "", i_formula_grsi)
+    # s_formula_grsi <- gsub("[()]", "", s_formula_grsi)
     
     
     
 
-    # 24.08.2024
-    # replace it
-    # sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
-    # by
-    strpartstrx <- strsplit(sigma_formula_grsi, "|", fixed = T)[[1]]
-    strpartstrx_form <- strpartstrx[1]
-      # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
-      # strpartstrx_form <- paste0(, collapse = "")
-    strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
-    if(length(strpartstrx) > 1 ) {
-      strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
-      strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
-      strpartstrx_grpa2 <- paste0("", strpartstrx_grpa, collapse = "|")
-      sigma_formula_grsi <- paste0(strpartstrx_form, "|", strpartstrx_grpa2)
-    } else {
-      sigma_formula_grsi <- strpartstrx_form
-    }
+    # 
+    # # 24.08.2024
+    # # replace it
+    # # sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
+    # # by
+    # strpartstrx <- strsplit(sigma_formula_grsi, "|", fixed = T)[[1]]
+    # strpartstrx_form <- strpartstrx[1]
+    #   # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
+    #   # strpartstrx_form <- paste0(, collapse = "")
+    # strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
+    # if(length(strpartstrx) > 1 ) {
+    #   strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+    #   strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+    #   strpartstrx_grpa2 <- paste0("", strpartstrx_grpa, collapse = "|")
+    #   sigma_formula_grsi <- paste0(strpartstrx_form, "|", strpartstrx_grpa2)
+    # } else {
+    #   sigma_formula_grsi <- strpartstrx_form
+    # }
       
 
  
@@ -6754,6 +6805,7 @@ bsitar <- function(x,
   brmsdata <- dataout
   brmspriors <- priorlist
   
+  # brmspriorsx <<- brmspriors
 
   # IMP - brms does not allow different lb for sd parsm (e.e, all to be NA)
   # Error: Conflicting boundary information for coefficients of class 'sd'.

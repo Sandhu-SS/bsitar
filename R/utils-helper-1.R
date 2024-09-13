@@ -588,6 +588,43 @@ get_x_random2 <- function(x) {
 }
 
 
+
+#' An internal function to get random effect formula arguments
+#'
+#' @param x A character string of random effect formula.
+#' @param gsubit A character string to indicate split location.
+#' @keywords internal
+#' @return A list comprised of character strings.
+#' @noRd
+#'
+
+get_x_random2_new <- function(x, gsubit = NULL) {
+  x <- gsub("[[:space:]]", "", x)
+  if(is.null(gsubit)) {
+    x <- strsplit(x, ")+" )[[1]]
+  } else {
+    x <- strsplit(x, gsubit, fixed = T )[[1]]
+  }
+  x_c <- c()
+  for (xi in x) {
+    if(grepl("|", xi, fixed = T)) {
+      zx <- strsplit(xi, "|", fixed = T)[[1]]
+      zx <- zx[length(zx)]
+      zx <- sub(".*gr", "", zx)
+      zx <- gsub("[()]", "", zx)
+      zx <- strsplit(zx, ",")[[1]][1]
+    } else {
+      zx <- NULL
+    }
+    x_c <- c(x_c, zx)
+  }
+  x_c <- sub(".*\\|", "", x_c)
+ # x_c <- unique(unlist(strsplit(x_c, ":")) )
+  x_c
+}
+
+
+
 #' An internal function to get random effect formula arguments with tilde sign
 #'
 #' @param x A character string of random effect formula.
