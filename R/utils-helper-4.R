@@ -3097,9 +3097,7 @@ prepare_formula <- function(x,
   # sigma_arg_groupvarx <<- sigma_arg_groupvar
 
   # group_arg_groupvarx <<- group_arg_groupvar
-  # 
-  # group_arg_groupvar <- c("id")
-  
+
   # hierarchical_gr_names %>% print()
   # sigma_hierarchical_gr_names %>% print()
   
