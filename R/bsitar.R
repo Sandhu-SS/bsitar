@@ -6029,6 +6029,8 @@ bsitar <- function(x,
       set_randomsi_higher_levsl <- c(set_randomsi_higher_levsl, 'sigma')
     }
     
+   
+    
     evaluate_higher_level_sd_priors <- function(set_nlpar_, 
                                                 set_class,
                                                 set_prior,
@@ -6126,14 +6128,27 @@ bsitar <- function(x,
     for (set_randomsi_higher_levsli in set_randomsi_higher_levsl) {
       set_nlpar_what <- set_randomsi_higher_levsli
       set_env_what   <- environment()
-      n_higher_str   <- length(eval(parse(text = paste0(set_nlpar_what,
-                                                        "covcoefnames_gr_str")),
-                                    envir = set_env_what))
+      
+      # n_higher_str   <- length(eval(parse(text = paste0(set_nlpar_what,
+      #                                                   "covcoefnames_gr_str")),
+      #                               envir = set_env_what))
       
       # 24.08.2024
       # Somehow now after 24.08.2024, n_higher_str <- n_higher_str needed, why?
       
       # n_higher_str   <- n_higher_str - 1
+      
+      if(set_nlpar_what == "sigma") {
+        n_higher_str <- length(eval(parse(text = paste0(set_nlpar_what, "_",
+                                                        "hierarchical_gr_names")),
+                                    envir = set_env_what))
+      } else {
+        n_higher_str <- length(eval(parse(text = paste0("",
+                                                        "hierarchical_gr_names")),
+                                    envir = set_env_what))
+      }
+      n_higher_str   <- n_higher_str - 1
+     
       
       if(n_higher_str > 0) {
         set_assign_prior_what <- '_prior'
@@ -6424,6 +6439,17 @@ bsitar <- function(x,
       # Somehow now after 24.08.2024, 2:length(eval_what) needed, why?
       
       # n_higher_str   <- n_higher_str - 1
+      
+      if(set_nlpar_what == "sigma") {
+        n_higher_str <- length(eval(parse(text = paste0(set_nlpar_what, "_",
+                                                        "hierarchical_gr_names")),
+                                    envir = set_env_what))
+      } else {
+        n_higher_str <- length(eval(parse(text = paste0("",
+                                                        "hierarchical_gr_names")),
+                                    envir = set_env_what))
+      }
+      n_higher_str   <- n_higher_str - 1
       
       corr_higher_str_tf <- eval(parse(text = paste0(set_nlpar_what, 
                                                      "_str_corr_tf")),
@@ -6728,6 +6754,7 @@ bsitar <- function(x,
   brmsdata <- dataout
   brmspriors <- priorlist
   
+
   # IMP - brms does not allow different lb for sd parsm (e.e, all to be NA)
   # Error: Conflicting boundary information for coefficients of class 'sd'.
   # Because prior function automatically sets lb 0 for positive priors 

@@ -7900,6 +7900,9 @@ prepare_priors <- function(prior_argument,
     initial_out <- NULL
   }
   
+  # stanvars_datax <<- stanvars_data
+  # 
+  # stanvars_data %>% names() %>% print()
   
   return(
     list(

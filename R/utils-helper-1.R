@@ -332,6 +332,12 @@ get_gr_str_coef_id <- function(tsx,
    
     tsx_c1 <- tsx_c[1]
     tsx_c3 <- tsx_c[3]
+    
+    # 24.08.2024
+    if(grepl("^\\(", tsx_c1)) tsx_c1 <- gsub("^\\(", "", tsx_c1)
+    
+    # tsx_c1x <<- tsx_c1
+    
     if(!grepl("^~", tsx_c1)) tsx_c1 <- paste0("~", tsx_c1)
     if(grepl("^~0", tsx_c1)) set_form_0_gr <- TRUE
     if(grepl("^~1", tsx_c1)) set_form_0_gr <- FALSE
@@ -529,12 +535,48 @@ restore_paranthese_grgr_str_form <- function(strx) {
 get_x_random2 <- function(x) {
   x <- gsub("[[:space:]]", "", x)
   x <- strsplit(x, ")+" )[[1]]
+  
+  # 24.08.2024
+  # replace it 
+  # x <- strsplit(x, ")+" )[[1]]
+  # by
+  # if(any(grepl("__________", x, fixed = T))) {
+  #   x <- strsplit(x, "__________+" )[[1]]
+  # } else {
+  #   x <- strsplit(x, ")+" )[[1]]
+  # }
+  
+  
   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
-  if(any(grepl("^|gr", x))) {
+  
+  # 24.08.2024
+  # replace it
+  # x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+  # by
+  # strpartstrx <- strsplit(x, "|", fixed = T)[[1]][1]
+  # strpartstrx_form <- strpartstrx[1]
+  # if(length(strpartstrx) >1 ) {
+  #   strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+  #   strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+  #   xtemp <- paste(strpartstrx_form, strpartstrx_grpa, sep = "|")
+  # } else {
+  #   xtemp <- strpartstrx_form
+  # }
+  # x <- gsub("[[:space:]]", "", xtemp)
+  
+  # 24.08.2024
+  if(any(grepl("^|gr", x)) | !any(grepl("^|gr", x))  ) {
+  # if(any(grepl("^|gr", x))) {
     x <- sub(".*gr", "", x)
     x_c <- c()
     for (xi in 1:length(x)) {
-      gxi <- strsplit(x[xi], ",")[[1]][1]
+      # gxi <- strsplit(x[xi], ",")[[1]][1]
+      # 24.08.2024
+      if(!grepl("^\\+", x[xi])) {
+        gxi <- strsplit(x[xi], ",")[[1]][1]
+      } else {
+        gxi <- NULL
+      }
       x_c <- c(x_c, gxi)
     }
     x <- x_c
@@ -556,9 +598,38 @@ get_x_random2 <- function(x) {
 
 get_x_random2_asitis <- function(x) {
   x <- gsub("[[:space:]]", "", x)
-  x <- strsplit(x, ")+" )[[1]]
-  x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
-  if(any(grepl("^|gr", x))) {
+ #  x <- strsplit(x, ")+" )[[1]]
+  
+  # 24.08.2024
+  # replace it 
+  # x <- strsplit(x, ")+" )[[1]]
+  # by
+  # if(any(grepl("__________", x, fixed = T))) {
+  #   x <- strsplit(x, "__________+" )[[1]]
+  # } else {
+  #   x <- strsplit(x, ")+" )[[1]]
+  # }
+  
+   x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+  
+  # 24.08.2024
+  # replace it
+  # x <- gsub("[[:space:]]", "", gsub("[()]", "", x))
+  # by
+  # strpartstrx <- strsplit(x, "|", fixed = T)[[1]][1]
+  # strpartstrx_form <- strpartstrx[1]
+  # if(length(strpartstrx) >1 ) {
+  #   strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
+  #   strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
+  #   xtemp <- paste(strpartstrx_form, strpartstrx_grpa, sep = "|")
+  # } else {
+  #   xtemp <- strpartstrx_form
+  # }
+  # x <- gsub("[[:space:]]", "", xtemp)
+  
+   # 24.08.2024
+   if(any(grepl("^|gr", x)) | !any(grepl("^|gr", x))  ) {
+  # if(any(grepl("^|gr", x))) {
     x <- sub(".*gr", "", x)
     x <- strsplit(x, ",")[[1]][1]
   }
@@ -3987,20 +4058,12 @@ getmodel_info <- function(model, dpar) {
 
 #' Create rcs spline design matrix
 #'
-#' @param x A numeric vector representing a predictor variable (e.g., age)
-#' @param df An integer. It is defined as \code{nk - 1}
-#' @param deriv An integer
-#' @param add_intercept A logical (default \code{FALSE}) to indicate whether to
-#'   add intercept column to the design matrix. This is useful when using
-#'   \code{rcs_matrix} for creating design matrix for derivatives such as
-#'   \code{deriv = 1} and \code{deriv = 2} where first (\code{deriv = 1}) or,
-#'   the first and second (\code{deriv = 2}) columns are automatically set as
-#'   \code{'0'}.
-#' @param verbose A logical (default \code{FALSE}) to indicate if infornation
-#'   need to be displayed.
+#' @param x A numeric vector i.e., predictor (e.g., age) 
+#' @param df An integer  
+#' @param knots A numeric vector
+#' @param inclx A logical to indicate whether to include or exclude \code{x}
+#' @param deriv An integer 
 #'
-#' @inherit Hmisc::rcspline.eval params
-#' 
 #' @return An object of class \code{bgmfit} 
 #' @keywords internal
 #' @noRd
@@ -4009,15 +4072,13 @@ rcs_matrix <- function(x,
                        df, 
                        knots = NULL, 
                        deriv = 0,
-                       add_intercept = FALSE,
                        inclx = TRUE, 
-                       knots.only = FALSE,
-                       type = "ordinary", 
-                       norm = 2, 
-                       rpm = NULL, 
-                       pc = FALSE,
-                       fractied = 0.05,
-                       verbose = FALSE,
+                       knots.only=FALSE,
+                       type="ordinary", 
+                       norm=2, 
+                       rpm=NULL, 
+                       pc=FALSE,
+                       fractied=0.05,
                        ...) {
   
   nk <- df + 1
@@ -4187,29 +4248,8 @@ rcs_matrix <- function(x,
   
   if(!inclx) basis_evals <- basis_evals[,-1,drop=FALSE]
   
-  
-  if(add_intercept) {
-    if(deriv == 0) {
-      mat_intercept <- matrix(1, nrow(basis_evals), 1)
-      basis_evals <- cbind(mat_intercept, basis_evals)
-      if(verbose) message("Intercept column added. Please use ~0 + formula")
-    }
-    if(deriv == 1) {
-      mat_intercept <- matrix(0, nrow(basis_evals), 1)
-      basis_evals <- cbind(mat_intercept, basis_evals)
-      if(verbose) message("Intercept set to '0' for deriv = 1")
-    }
-    if(deriv == 2) {
-      mat_intercept <- matrix(0, nrow(basis_evals), 2)
-      basis_evals   <- basis_evals[, -1, drop = FALSE]
-      basis_evals   <- cbind(mat_intercept, basis_evals)
-      if(verbose) message("Intercept and first term (x) set to '0' for deriv = 2")
-    }
-  } # if(add_intercept) {
-  
-  
   return(basis_evals)
-} # end rcs_matrix
+} # end make_spline_matrix
 
 
 
