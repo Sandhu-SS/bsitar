@@ -7838,7 +7838,7 @@ prepare_priors <- function(prior_argument,
     
   } # end if(dist != 'flat') 
   
-  
+
   if(dist == 'flat') {
     prior_str_arg_out <- ""
     lowerbound <- NA

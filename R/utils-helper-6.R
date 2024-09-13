@@ -3213,6 +3213,8 @@ set_priors_initials <- function(a_prior_beta,
   
   evaluated_priors <- c_priors %>% do.call(rbind, .)
   
+  
+  if(length(stanvars_data_5) == 0) stanvars_data_5 <- NULL
 
   newlist <- c()
   for (i in 1:length(stanvars_data_5)) {
