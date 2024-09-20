@@ -1869,6 +1869,14 @@ bsitar <- function(x,
                    parameterization = 'ncp',
                    ...) {
   
+  # Note
+  # Need to work on data when using sigma_formula_manual that uses nlf() lf()
+  # This because how data will be prepared, used, and stored
+  # This is to set up separate x for mu and sigma
+  # some work done on 20.09.2024
+  # The specific areas to look for are
+  # 'prepare_data' 'data.org.in' 'sigmaxsi' 'setsigma_formula_manual'
+  
   mcall <- mcall_ <- match.call()
   
   newcall_checks <- c('threads', 'save_pars')
@@ -3667,6 +3675,15 @@ bsitar <- function(x,
     if(is.null(outliers$verbose))   outliers$verbose <- FALSE
   }
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
   data.org.in <- data
   uvarby <- NULL
   data <- prepare_data(data = data,
@@ -4645,7 +4662,9 @@ bsitar <- function(x,
     N_J_all <- length(unique(data[[idsi]]))
     
     
-    
+    ##########################
+    ##########################
+    ##########################
     setsigma_formula_manual <- FALSE
     if (is.null(sigma_formula_manualsi[[1]][1])) {
       setsigma_formula_manual <- FALSE
@@ -4657,34 +4676,32 @@ bsitar <- function(x,
     
     
     # 20.09.2024
-    if(setsigma_formula_manual) {
-      if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
-        if(identical(sigmaxsi, xsi)) {
-          if(verbose) {
-            message("Since both ", sigmaxsi, " and ", xsi, " are identical, ",
-                    "\n ", 
-                    "the ", sigmaxsi, " has been renamed as ", 
-                    paste0("sigma", xsi)
-            )
-          }
-          sigmaxsi <- paste0("sigma", xsi)
-        } else {
-          sigmaxsi <- sigmaxsi
-        }
-        data[[sigmaxsi]] <- data[[xsi]]
-      } else {
-        sigmaxsi <- paste0("sigma", xsi) 
+    if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
+      if(identical(sigmaxsi, xsi)) {
         if(verbose) {
-          message("predictor for sigma is set same as mu i.e, ", xsi, ".",
+          message("Since both ", sigmaxsi, " and ", xsi, " are identical, ",
                   "\n ", 
-                  "However, it has been renamed as ", 
+                  "the ", sigmaxsi, " has been renamed as ", 
                   paste0("sigma", xsi)
           )
         }
-        data[[sigmaxsi]] <- data[[xsi]]
+        sigmaxsi <- paste0("sigma", xsi)
+      } else {
+        sigmaxsi <- sigmaxsi
       }
-    } # if(setsigma_formula_manual) {
-    
+      data[[sigmaxsi]] <- data[[xsi]]
+    } else {
+      sigmaxsi <- paste0("sigma", xsi) 
+      if(verbose) {
+        message("predictor for sigma is set same as mu i.e, ", xsi, ".",
+                "\n ", 
+                "However, it has been renamed as ", 
+                paste0("sigma", xsi)
+        )
+      }
+      data[[sigmaxsi]] <- data[[xsi]]
+    }
+
     
     
     # data %>% str() %>% print()
@@ -6837,9 +6854,14 @@ bsitar <- function(x,
       dataout <- datai
 
     # datai[[xsi]] %>% range() %>% print()
-    # datai[[sigmaxsi]] %>% range() %>% print()
     # stop()
     
+    # 20.09.2024
+    # remove sigmaxsi if not using
+    if(!setsigma_formula_manual) datai[[sigmaxsi]] <- NULL
+    
+      
+      
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       uvarbyTF <- TRUE
     else
