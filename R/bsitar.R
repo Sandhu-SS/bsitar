@@ -477,8 +477,8 @@
 #' no initial values are defined and therefore initials for these parameters can
 #' be either \code{0} or \code{random}.
 #' 
-#'@param sigmax Predictor for the \code{sigma}. See \code{x} for details.
-#'  Ignored if \code{sigma_formula_manual = NULL}.
+#'@param sigmax Predictor for the distributional parameter \code{sigma}. See
+#'  \code{x} for details. Ignored if \code{sigma_formula_manual = NULL}.
 #'  
 #'@param sigmadf Degree of freedom for the spline function for \code{sigma}. See
 #'  \code{df} for details. Ignored if \code{sigma_formula_manual = NULL}.
@@ -4644,6 +4644,58 @@ bsitar <- function(x,
 
     N_J_all <- length(unique(data[[idsi]]))
     
+    
+    
+    setsigma_formula_manual <- FALSE
+    if (is.null(sigma_formula_manualsi[[1]][1])) {
+      setsigma_formula_manual <- FALSE
+    } else if(sigma_formula_manualsi == "NULL") {
+      setsigma_formula_manual <- FALSE
+    } else {
+      setsigma_formula_manual <- TRUE
+    }
+    
+    
+    # 20.09.2024
+    if(setsigma_formula_manual) {
+      if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
+        if(identical(sigmaxsi, xsi)) {
+          if(verbose) {
+            message("Since both ", sigmaxsi, " and ", xsi, " are identical, ",
+                    "\n ", 
+                    "the ", sigmaxsi, " has been renamed as ", 
+                    paste0("sigma", xsi)
+            )
+          }
+          sigmaxsi <- paste0("sigma", xsi)
+        } else {
+          sigmaxsi <- sigmaxsi
+        }
+        data[[sigmaxsi]] <- data[[xsi]]
+      } else {
+        sigmaxsi <- paste0("sigma", xsi) 
+        if(verbose) {
+          message("predictor for sigma is set same as mu i.e, ", xsi, ".",
+                  "\n ", 
+                  "However, it has been renamed as ", 
+                  paste0("sigma", xsi)
+          )
+        }
+        data[[sigmaxsi]] <- data[[xsi]]
+      }
+    } # if(setsigma_formula_manual) {
+    
+    
+    
+    # data %>% str() %>% print()
+    # stop()
+    
+    
+    
+    
+    
+    
+    
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
       sortbylayer <- NA
       data <- data %>%
@@ -4660,12 +4712,27 @@ bsitar <- function(x,
       
       
       
-      if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
-        sigmaxsi <- sigmaxsi
-      } else {
-        sigmaxsi <- xsi
-        if(verbose) message("predictor for sigma is set same as for mu")
-      }
+      # if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
+      #   if(identical(sigmaxsi, xsi)) {
+      #     if(verbose) {
+      #       message("Since both ", sigmaxsi, " and ", xsi, " are identical, ",
+      #               "\n ", 
+      #               "the ", sigmaxsi, " has been renamed as ", 
+      #               paste0("sigma", xsi)
+      #               )
+      #     }
+      #     sigmaxsi <- paste0("sigma", sigmaxsi)
+      #   }
+      #   sigmaxsi <- sigmaxsi
+      #   data[[sigmaxsi]] <- data[[sigmaxsi]]
+      # } else {
+      #   sigmaxsi <- paste0("sigma", xsi) 
+      #   data[[sigmaxsi]] <- data[[xsi]]
+      #   if(verbose) message("predictor for sigma is set same as for mu")
+      # }
+      # 
+      # head(data) %>% print()
+      # stop()
       
       
       datai <- data %>%
@@ -5218,14 +5285,15 @@ bsitar <- function(x,
     #################################################
     #################################################
     #################################################
-    setsigma_formula_manual <- FALSE
-    if (is.null(sigma_formula_manualsi[[1]][1])) {
-      setsigma_formula_manual <- FALSE
-    } else if(sigma_formula_manualsi == "NULL") {
-      setsigma_formula_manual <- FALSE
-    } else {
-      setsigma_formula_manual <- TRUE
-    }
+    # moved up at 42..
+    # setsigma_formula_manual <- FALSE
+    # if (is.null(sigma_formula_manualsi[[1]][1])) {
+    #   setsigma_formula_manual <- FALSE
+    # } else if(sigma_formula_manualsi == "NULL") {
+    #   setsigma_formula_manual <- FALSE
+    # } else {
+    #   setsigma_formula_manual <- TRUE
+    # }
     
     
     # Define sigma function
@@ -6751,6 +6819,7 @@ bsitar <- function(x,
     sigmad_adjustedvaluelist[[ii]] <- ept(sigmad_adjustedsi)
     
     
+    # restoring original data
     
     if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if (xfunsi == "log") {
@@ -6767,6 +6836,9 @@ bsitar <- function(x,
     else
       dataout <- datai
 
+    # datai[[xsi]] %>% range() %>% print()
+    # datai[[sigmaxsi]] %>% range() %>% print()
+    # stop()
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       uvarbyTF <- TRUE

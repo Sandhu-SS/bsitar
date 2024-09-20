@@ -47,7 +47,13 @@
 #'   [marginaleffects::plot_comparisons()] function (\code{FALSE}) or not
 #'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::comparisons()] or [marginaleffects::avg_comparisons()]
-#'   are called to compute predictions (see \code{average} for details).
+#'   are called to compute predictions (see \code{average} for details). Note
+#'   that [marginaleffects::plot_comparisons()] allows either \code{condition}
+#'   or \code{by} arguments but not both. Therefore, when argument
+#'   \code{condition} is not \code{NULL}, the \code{by} argument is set to
+#'   \code{NULL}. This step is required because \strong{marginal_draws()}
+#'   automatically assigns the \code{by} argument when model includes a co
+#'   variate.
 #'
 #' @param method A character string to specify whether to make computation at
 #'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
@@ -715,6 +721,25 @@ marginal_comparison.bgmfit <- function(model,
            "\n ", 
            collapse_comma(allowed_methods)
       )
+    
+    
+    
+    
+    # 19.09.2024
+    # For marginal_draws(...,  plot = T), either condition or by allowed
+    # Therefore, when plot = T, condition is kept and by dropped, 
+    # otherwise by is kept and condition dropped
+    
+    exclude_args_con_by <- exclude_args
+    
+    if(plot) {
+      if(!is.null(comparisons_arguments[['condition']]))
+        comparisons_arguments[['by']] <- NULL
+    } else {
+      comparisons_arguments[['condition']] <- NULL
+    }
+    
+    
    
     # if(!is.null(comparisons_arguments[['by']])) {
     #   checbyx <- comparisons_arguments[['by']]

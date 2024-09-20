@@ -524,8 +524,8 @@ added, the user can run the code by setting \code{get_priors = TRUE}. Also,
 no initial values are defined and therefore initials for these parameters can
 be either \code{0} or \code{random}.}
 
-\item{sigmax}{Predictor for the \code{sigma}. See \code{x} for details.
-Ignored if \code{sigma_formula_manual = NULL}.}
+\item{sigmax}{Predictor for the distributional parameter \code{sigma}. See
+\code{x} for details. Ignored if \code{sigma_formula_manual = NULL}.}
 
 \item{sigmadf}{Degree of freedom for the spline function for \code{sigma}. See
 \code{df} for details. Ignored if \code{sigma_formula_manual = NULL}.}

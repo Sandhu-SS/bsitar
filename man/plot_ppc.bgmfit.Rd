@@ -63,7 +63,7 @@ If specified, expected predictions of this parameters are returned.}
 \item{draw_ids}{An integer indicating the specific posterior draw(s)
 to be used in estimation (default \code{NULL}).}
 
-\item{prefix}{The prefix of the \pkg{bayesplot} function to be applied. 
+\item{prefix}{The prefix of the \pkg{bayesplot} function to be applied.
 Either `"ppc"` (posterior predictive check; the default)
 or `"ppd"` (posterior predictive distribution), the latter being the same
 as the former except that the observed data is not shown for `"ppd"`.}

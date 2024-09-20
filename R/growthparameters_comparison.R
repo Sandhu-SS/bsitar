@@ -1094,6 +1094,29 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     comparisons_arguments[['draw_ids']] <- set_draw_ids
     
+    
+    
+    
+    
+    
+    # 19.09.2024
+    # For marginal_draws(...,  plot = T), either condition or by allowed
+    # Therefore, when plot = T, condition is kept and by dropped, 
+    # otherwise by is kept and condition dropped
+    
+    exclude_args_con_by <- exclude_args
+    
+    if(plot) {
+      if(!is.null(comparisons_arguments[['condition']]))
+        comparisons_arguments[['by']] <- NULL
+    } else {
+      comparisons_arguments[['condition']] <- NULL
+    }
+    
+    
+    
+    
+    
       if(!plot) {
         if(!average) {
           out <- do.call(marginaleffects::comparisons, 

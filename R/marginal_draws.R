@@ -30,7 +30,13 @@
 #'   [marginaleffects::plot_predictions()] function (\code{FALSE}) or not
 #'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
-#'   are called to compute predictions (see \code{average} for details).
+#'   are called to compute predictions (see \code{average} for details). Note
+#'   that [marginaleffects::plot_predictions()] allows either \code{condition}
+#'   or \code{by} arguments but not both. Therefore, when argument
+#'   \code{condition} is not \code{NULL}, the \code{by} argument is set to
+#'   \code{NULL}. This step is required because \strong{marginal_draws()}
+#'   automatically assigns the \code{by} argument when model includes a co
+#'   variate.
 #' 
 #' @param deriv An integer to indicate whether to estimate distance curve or its
 #'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
@@ -456,6 +462,8 @@ marginal_draws.bgmfit <-
     
     predictions_arguments <- full.args
     
+    
+    
 
     # Drop that not required for marginaleffects::
     exclude_args <- as.character(quote(
@@ -472,7 +480,8 @@ marginal_draws.bgmfit <-
         deriv_model,
         aux_variables, 
         idata_method, 
-        condition, 
+        # 19.09.2024
+        # condition, 
         reformat, 
         dummy_to_factor, 
         expose_function,
@@ -507,6 +516,7 @@ marginal_draws.bgmfit <-
    # if(call_predictions) exclude_args <- c(exclude_args, 'variables')
     
     if(call_slopes) exclude_args <- c(exclude_args, 'transform', 'byfun')
+    
     
     for (exclude_argsi in exclude_args) {
       predictions_arguments[[exclude_argsi]] <- NULL
@@ -562,6 +572,7 @@ marginal_draws.bgmfit <-
     predictions_arguments$by         <- set_group
     
     if(is.null(predictions_arguments$by)) predictions_arguments$by < 'NULL'
+    
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
 
@@ -676,6 +687,31 @@ marginal_draws.bgmfit <-
    predictions_arguments[['draw_ids']] <- set_draw_ids
    
    
+   
+   
+   # 19.09.2024
+   # For marginal_draws(...,  plot = T), either condition or by allowed
+   # Therefore, when plot = T, condition is kept and by dropped, 
+   # otherwise by is kept and condition dropped
+   
+   exclude_args_con_by <- exclude_args
+ 
+   if(plot) {
+     if(!is.null(predictions_arguments[['condition']]))
+       predictions_arguments[['by']] <- NULL
+   } else {
+     predictions_arguments[['condition']] <- NULL
+   }
+   
+   
+   
+
+   
+   
+   
+   
+   
+   
    out_sf_hy <- NULL
    allowed_methods <- c('pkg', 'custom')
    if(!method %in% allowed_methods) 
@@ -690,7 +726,7 @@ marginal_draws.bgmfit <-
    #     if(!checbyx) method <- 'pkg'
    #   }
    # }
-   
+  
    if(method == 'pkg') {
      if(call_predictions) {
        if(!plot) {

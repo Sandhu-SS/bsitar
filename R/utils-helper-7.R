@@ -641,8 +641,9 @@ prepare_priors <- function(prior_argument,
       } else if (check_for_autoscale &
                  !is.numeric(check_for_autoscale)) {
         scale_factor <- 2.5
-        if (verbose)
-          message("scale factor for autoscale option set to 2.5")
+        if (verbose) {
+          # if(i == 1) message("scale factor for autoscale option set to 2.5")
+        }
       } else if (is.numeric(check_for_autoscale)) {
         scale_factor <- check_for_autoscale
       }

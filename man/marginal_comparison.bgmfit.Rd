@@ -234,7 +234,13 @@ number of cores avaialble minus one, i.e., \code{future::availableCores() -
 \code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}} function (\code{FALSE}) or not
 (\code{FALSE}). If \code{FALSE} (default), then
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} or \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
-are called to compute predictions (see \code{average} for details).}
+are called to compute predictions (see \code{average} for details). Note
+that \code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}} allows either \code{condition}
+or \code{by} arguments but not both. Therefore, when argument
+\code{condition} is not \code{NULL}, the \code{by} argument is set to
+\code{NULL}. This step is required because \strong{marginal_draws()}
+automatically assigns the \code{by} argument when model includes a co
+variate.}
 
 \item{showlegends}{An argument to specify whether to show legends
 (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then

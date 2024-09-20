@@ -276,7 +276,13 @@ The \code{fullframe} is mainly for internal use only.}
 \code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} function (\code{FALSE}) or not
 (\code{FALSE}). If \code{FALSE} (default), then
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}
-are called to compute predictions (see \code{average} for details).}
+are called to compute predictions (see \code{average} for details). Note
+that \code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} allows either \code{condition}
+or \code{by} arguments but not both. Therefore, when argument
+\code{condition} is not \code{NULL}, the \code{by} argument is set to
+\code{NULL}. This step is required because \strong{marginal_draws()}
+automatically assigns the \code{by} argument when model includes a co
+variate.}
 
 \item{showlegends}{An argument to specify whether to show legends
 (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
