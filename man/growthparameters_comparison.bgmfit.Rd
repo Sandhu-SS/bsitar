@@ -325,14 +325,26 @@ post draw stage by using the \code{'marginaleffects'} machinery i.e.,
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}) or via
 the custom functions written for efficiency and speed (\code{method =
   'custom'}, default). Note that \code{method = 'pkg'} does not work except
-for very simple cases and therefore and should be used cautiously. The
+for very simple cases and therefore should be used cautiously. The
 \code{method = 'custom'} is the recommended and preferred method because it
 allows computation of more than one parameter simultaneously (such as
 \code{'apgv'}) and \code{'pgv'}, see \code{'parameter'})), \code{method =
   'custom'} is applied only during the post draw stage, all comparison of
 multiple parameters simultaneously via the \code{hypothesis} argument, and
 makes it possible to add or return draws (see \code{pdraws} and
-\code{pdraws} for details).}
+\code{pdraws} for details). Please note that when \code{method =
+  'pkg'}, the \code{by} argument must not contain the predictor i.e,
+\code{age}. Also, the \code{variables} must be either \code{NULL} in which
+case \code{variables = list(age = 1e-6)} is automatically assigned
+internally, or else \code{variables} must be list in which factor variables
+should be something like \code{variables = list(class = 'pairwise')} or
+\code{variables = list(age = 1e-6, class = 'pairwise')} where class is a
+factor variable. However when \code{method = 'custom'}, the the \code{by}
+argument may contain predictor which is simply ignored. The
+\code{variables} argument must not contain predictor and factor variables
+can passed as a vector such as \code{variables = c('class')}. It is
+strongly recommended to use \code{method = 'custom'} which has been written
+for efficiency and speed.}
 
 \item{pdraws}{A character string (default \code{FALSE}) to indicate whether
 to return raw draws (if \code{pdraws = 'return'}), add raw draws (if

@@ -127,15 +127,27 @@
 #'   [marginaleffects::comparisons()] (\code{method = 'pkg'}) or via
 #'   the custom functions written for efficiency and speed (\code{method =
 #'   'custom'}, default). Note that \code{method = 'pkg'} does not work except
-#'   for very simple cases and therefore and should be used cautiously. The
+#'   for very simple cases and therefore should be used cautiously. The
 #'   \code{method = 'custom'} is the recommended and preferred method because it
 #'   allows computation of more than one parameter simultaneously (such as
 #'   \code{'apgv'}) and \code{'pgv'}, see \code{'parameter'})), \code{method =
 #'   'custom'} is applied only during the post draw stage, all comparison of
 #'   multiple parameters simultaneously via the \code{hypothesis} argument, and
 #'   makes it possible to add or return draws (see \code{pdraws} and
-#'   \code{pdraws} for details).
-#'
+#'   \code{pdraws} for details). Please note that when \code{method =
+#'   'pkg'}, the \code{by} argument must not contain the predictor i.e,
+#'   \code{age}. Also, the \code{variables} must be either \code{NULL} in which
+#'   case \code{variables = list(age = 1e-6)} is automatically assigned
+#'   internally, or else \code{variables} must be list in which factor variables
+#'   should be something like \code{variables = list(class = 'pairwise')} or
+#'   \code{variables = list(age = 1e-6, class = 'pairwise')} where class is a
+#'   factor variable. However when \code{method = 'custom'}, the the \code{by}
+#'   argument may contain predictor which is simply ignored. The
+#'   \code{variables} argument must not contain predictor and factor variables
+#'   can passed as a vector such as \code{variables = c('class')}. It is
+#'   strongly recommended to use \code{method = 'custom'} which has been written
+#'   for efficiency and speed.
+#' 
 #' @param constrats_by A character vector (default \code{FALSE}) specifying the
 #'   variable(s) by which estimates and contrast (post draw stage) via the
 #'   \code{hypothesis} argument should be computed. Note that variable(s)
@@ -866,6 +878,8 @@ growthparameters_comparison.bgmfit <- function(model,
     names(set_variables) <- xvar
   } 
   
+  # set_variables <- variables
+  # print(variables)
 
   allowed_comparison <- c('difference', 'differenceavg')
   
@@ -1114,7 +1128,7 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     
     
-    
+    # comparisons_argumentsx <<- comparisons_arguments
     
     
       if(!plot) {
@@ -1175,7 +1189,7 @@ growthparameters_comparison.bgmfit <- function(model,
       gout <- gout
     }
     
-    
+   
     if(plot) {
       return(gout)
     }
@@ -1200,6 +1214,10 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     return(gout)
   }
+  
+  
+  
+  
   
   ###############
   eval_re_formula <- eval(comparisons_arguments$re_formula)
@@ -1288,7 +1306,9 @@ growthparameters_comparison.bgmfit <- function(model,
     
     if(!is.null(predictions_arguments[['variables']])) {
       if(!is.list(eval(predictions_arguments[['variables']]))) {
-        stop("Argument 'variables' must be a named list")
+        # 21.09.2024
+        # In fact list does not work, variables = c('class') works
+       # stop("Argument 'variables' must be a named list")
       }
     }
     
