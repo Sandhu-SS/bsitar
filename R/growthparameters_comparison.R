@@ -255,10 +255,12 @@
 #'   (if \code{pdraws = 'returns'}), or add summary of draws (if \code{pdraws =
 #'   'adds'}) to the final return object. See [marginaleffects::posterior_draws()]
 #'   for details.
-#'   
+#'
 #' @param pdrawsp A character string (default \code{FALSE}) to indicate whether
 #'   to return the posterior draws for parameters (if \code{pdrawsp =
-#'   'return'}). Note that summary of posterior draws for parameters is the
+#'   'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
+#'   When \code{pdrawsp = TRUE}, then default behavior is \code{pdrawsp =
+#'   'return'}. Note that summary of posterior draws for parameters is the
 #'   default returned object.
 #'   
 #' @param pdrawsh A character string (default \code{FALSE}) to indicate whether
@@ -269,14 +271,22 @@
 #' @param bys A character string (default \code{NULL}) to specify variables 
 #' over which parameters need to be summarized.
 #' 
-#' @param future_splits A unnamed numeric list or a numeric vector of length two
-#'   (default \code{NULL}). The use can pass \code{future_splits} as a list such
-#'   as \code{future_splits = list(1:6, 7:10)} where each sequence of number are
-#'   passed to the \code{draw_ids} argument. The \code{future_splits} can be
-#'   passed as a numeric vector (e.g., future_splits = c(10, 2)) where first
-#'   element is the number of draws (see \code{draw_ids}) and the second
-#'   elements is the number of splits. In this case, the splits are created via
-#'   the [parallel::splitIndices()].
+#' @param future_splits A unnamed numeric list, a logical, or a numeric vector
+#'   of length of one or two (default \code{NULL}). The user can pass
+#'   \code{future_splits} as a list such as \code{future_splits = list(1:6,
+#'   7:10)} where each sequence of number are passed to the \code{draw_ids}
+#'   argument. The \code{future_splits} can be passed as a numeric vector (e.g.,
+#'   future_splits = c(10, 2)) where first element is the number of draws (see
+#'   \code{draw_ids}) and the second elements is the number of splits. In this
+#'   case, the splits are created via the [parallel::splitIndices()]. when
+#'   \code{future_splits} is passed as a numeric vector of length one, then
+#'   first element is internally set as \code{ndraws} or \code{draw_ids}
+#'   depending on which of them is not \code{NULL}. If \code{future_splits} is
+#'   \code{TRUE}, then numeric vector for \code{future_splits} is created based
+#'   on the \code{ndraws} and the \code{cores}. Ignored when \code{future_splits
+#'   = FALSE}. The use case of \code{future_splits} is to save memory and speed
+#'   especially on \code{Linux} system and setting [future::plan()] as
+#'   \code{multicore}.
 #' 
 #' 
 #' @inheritParams  growthparameters.bgmfit
@@ -515,6 +525,13 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
   
+  
+  ndraws_org <- ndraws
+  ndraws_exe <- FALSE
+  if(!is.null(ndraws)) {
+    ndraws_exe <- TRUE
+    ndraws <- ndraws
+  }
   
   if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
@@ -760,13 +777,18 @@ growthparameters_comparison.bgmfit <- function(model,
       future_session <- future_session
     }
     setplanis <- paste0("future::", future_session)
-    future::plan(setplanis, workers = setincores)
+    if(future_session == 'sequential') {
+      future::plan(setplanis)
+    } else {
+      future::plan(setplanis, workers = setincores)
+    }
     on.exit(future::plan(getfutureplan), add = TRUE)
   }
   
   
   
   
+  draw_ids_org <- draw_ids
   draw_ids_exe <- FALSE
   if(!is.null(draw_ids)) {
     draw_ids_exe <- TRUE
@@ -777,38 +799,84 @@ growthparameters_comparison.bgmfit <- function(model,
   future_splits_exe <- FALSE
   if(!is.null(future_splits)) {
     future_splits_exe <- TRUE
-    if(future_splits) {
-      if(!draw_ids_exe) {
-        ndraws_seq <- sample.int(ndraws)
-        chunk_size <- ndraws / setincores
-        future_splits_at <- split(ndraws_seq, ceiling(seq_along(ndraws_seq)/chunk_size))
-        future_splits_at <- unname(future_splits_at)
+    
+    if(is.logical(future_splits)) {
+      if(future_splits) {
+        if(ndraws_exe) {
+          chunk_size_den <- setincores
+          ndraws_seq <- sample.int(ndraws)
+          chunk_size <- ndraws / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(draw_ids_exe) {
+          chunk_size_den <- setincores
+          ndraws_seq <- draw_ids
+          chunk_size <- length(draw_ids) / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
         }
       } else if(!future_splits) {
+        future_splits_exe <- FALSE
         future_splits <- future_splits
-      } else if(is.list(future_splits)) {
-        future_splits_at <- future_splits
-      } else if(is.vector(future_splits)) {
-        if(!is.numeric(future_splits)) {
-          stop("future_splits must be a numeric vector of lenghth 2")
-        } else if(length(future_splits) == 1) {
-          future_splits <- c(ndraws, future_splits)
-        } else if(length(future_splits) != 2) {
-          stop("future_splits must be a numeric vector of lenghth 2")
+      }
+      
+    } else if(is.list(future_splits)) {
+      future_splits_at <- future_splits
+      
+    } else if(is.vector(future_splits)) {
+      if(!is.numeric(future_splits)) {
+        stop("future_splits must be a numeric vector of lenghth 2")
+      } else if(length(future_splits) == 1) {
+        if(draw_ids_exe) ndraws_exe <- FALSE
+        if(ndraws_exe) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- sample.int(ndraws)
+          chunk_size <- ndraws / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(draw_ids_exe) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- draw_ids
+          chunk_size <- length(draw_ids) / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(is.null(ndraws_org)) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- sample.int(ndraws)
+          chunk_size <- ndraws / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(!is.null(draw_ids_org)) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- draw_ids
+          chunk_size <- length(draw_ids) / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
         }
-        future_splits_at <- parallel::splitIndices(future_splits[1], future_splits[2])
+      } else if(length(future_splits) != 2) {
+        stop("future_splits must be a numeric vector of lenghth 2")
+      } else {
+        future_splits_at <- parallel::splitIndices(future_splits[1], 
+                                                   future_splits[2])
       }
     }
-    
-    if(future_splits_exe) {
-      if(plot) {
-        stop("future_splits can not be used when plot = TRUE")
-      }
-      if(method == 'pkg') {
-        stop("future_splits can not be used when method = 'pkg'")
-      }
-    }
+  }
   
+  
+  if(future_splits_exe) {
+    if(plot) {
+      stop("future_splits can not be used when plot = TRUE")
+    }
+    if(method == 'pkg') {
+      stop("future_splits can not be used when method = 'pkg'")
+    }
+  }
   
   
   
@@ -1671,6 +1739,7 @@ growthparameters_comparison.bgmfit <- function(model,
    
     
     if(!isFALSE(pdrawsp)) {
+      if(!is.character(pdrawsp)) pdrawsp <- "return"
       selectchoicesr <- c("return", 'add') 
       checkmate::assert_choice(pdrawsp, choices = selectchoicesr)
       if(pdrawsp == 'return') {

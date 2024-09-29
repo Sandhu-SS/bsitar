@@ -240,14 +240,22 @@ multisession whereas the \code{'multicore'} sets the multicore session.
 Note that option \code{'multicore'} is not supported on Windows systems.
 For more details, see \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
 
-\item{future_splits}{A unnamed numeric list or a numeric vector of length two
-(default \code{NULL}). The use can pass \code{future_splits} as a list such
-as \code{future_splits = list(1:6, 7:10)} where each sequence of number are
-passed to the \code{draw_ids} argument. The \code{future_splits} can be
-passed as a numeric vector (e.g., future_splits = c(10, 2)) where first
-element is the number of draws (see \code{draw_ids}) and the second
-elements is the number of splits. In this case, the splits are created via
-the \code{\link[parallel:splitIndices]{parallel::splitIndices()}}.}
+\item{future_splits}{A unnamed numeric list, a logical, or a numeric vector
+of length of one or two (default \code{NULL}). The user can pass
+\code{future_splits} as a list such as \code{future_splits = list(1:6,
+  7:10)} where each sequence of number are passed to the \code{draw_ids}
+argument. The \code{future_splits} can be passed as a numeric vector (e.g.,
+future_splits = c(10, 2)) where first element is the number of draws (see
+\code{draw_ids}) and the second elements is the number of splits. In this
+case, the splits are created via the \code{\link[parallel:splitIndices]{parallel::splitIndices()}}. when
+\code{future_splits} is passed as a numeric vector of length one, then
+first element is internally set as \code{ndraws} or \code{draw_ids}
+depending on which of them is not \code{NULL}. If \code{future_splits} is
+\code{TRUE}, then numeric vector for \code{future_splits} is created based
+on the \code{ndraws} and the \code{cores}. Ignored when \code{future_splits
+  = FALSE}. The use case of \code{future_splits} is to save memory and speed
+especially on \code{Linux} system and setting \code{\link[future:plan]{future::plan()}} as
+\code{multicore}.}
 
 \item{usedtplyr}{A logical (default \code{FALSE}) to indicate whether to use
 the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}
@@ -358,7 +366,9 @@ rather needed when testing hypotheses. Note that when \code{method =
 
 \item{pdrawsp}{A character string (default \code{FALSE}) to indicate whether
 to return the posterior draws for parameters (if \code{pdrawsp =
-  'return'}). Note that summary of posterior draws for parameters is the
+  'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
+When \code{pdrawsp = TRUE}, then default behavior is \code{pdrawsp =
+  'return'}. Note that summary of posterior draws for parameters is the
 default returned object.}
 
 \item{pdrawsh}{A character string (default \code{FALSE}) to indicate whether

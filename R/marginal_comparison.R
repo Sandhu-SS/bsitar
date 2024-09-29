@@ -290,6 +290,13 @@ marginal_comparison.bgmfit <- function(model,
   }
   
   
+  ndraws_org <- ndraws
+  ndraws_exe <- FALSE
+  if(!is.null(ndraws)) {
+    ndraws_exe <- TRUE
+    ndraws <- ndraws
+  }
+  
   if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
   }
@@ -474,14 +481,18 @@ marginal_comparison.bgmfit <- function(model,
       future_session <- future_session
     }
     setplanis <- paste0("future::", future_session)
-    future::plan(setplanis, workers = setincores)
+    if(future_session == 'sequential') {
+      future::plan(setplanis)
+    } else {
+      future::plan(setplanis, workers = setincores)
+    }
     on.exit(future::plan(getfutureplan), add = TRUE)
   }
   
   
   
   
-  
+  draw_ids_org <- draw_ids
   draw_ids_exe <- FALSE
   if(!is.null(draw_ids)) {
     draw_ids_exe <- TRUE
@@ -492,38 +503,86 @@ marginal_comparison.bgmfit <- function(model,
   future_splits_exe <- FALSE
   if(!is.null(future_splits)) {
     future_splits_exe <- TRUE
-    if(future_splits) {
-      if(!draw_ids_exe) {
-        ndraws_seq <- sample.int(ndraws)
-        chunk_size <- ndraws / setincores
-        future_splits_at <- split(ndraws_seq, ceiling(seq_along(ndraws_seq)/chunk_size))
-        future_splits_at <- unname(future_splits_at)
+    
+    if(is.logical(future_splits)) {
+      if(future_splits) {
+        if(ndraws_exe) {
+          chunk_size_den <- setincores
+          ndraws_seq <- sample.int(ndraws)
+          chunk_size <- ndraws / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(draw_ids_exe) {
+          chunk_size_den <- setincores
+          ndraws_seq <- draw_ids
+          chunk_size <- length(draw_ids) / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        }
+      } else if(!future_splits) {
+        future_splits_exe <- FALSE
+        future_splits <- future_splits
       }
-    } else if(!future_splits) {
-      future_splits <- future_splits
+      
     } else if(is.list(future_splits)) {
       future_splits_at <- future_splits
+      
     } else if(is.vector(future_splits)) {
       if(!is.numeric(future_splits)) {
         stop("future_splits must be a numeric vector of lenghth 2")
       } else if(length(future_splits) == 1) {
-        future_splits <- c(ndraws, future_splits)
+        if(draw_ids_exe) ndraws_exe <- FALSE
+        if(ndraws_exe) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- sample.int(ndraws)
+          chunk_size <- ndraws / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(draw_ids_exe) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- draw_ids
+          chunk_size <- length(draw_ids) / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(is.null(ndraws_org)) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- sample.int(ndraws)
+          chunk_size <- ndraws / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        } else if(!is.null(draw_ids_org)) {
+          chunk_size_den <- future_splits
+          ndraws_seq <- draw_ids
+          chunk_size <- length(draw_ids) / chunk_size_den
+          future_splits_at <- split(ndraws_seq, 
+                                    ceiling(seq_along(ndraws_seq)/chunk_size))
+          future_splits_at <- unname(future_splits_at)
+        }
       } else if(length(future_splits) != 2) {
         stop("future_splits must be a numeric vector of lenghth 2")
+      } else {
+        future_splits_at <- parallel::splitIndices(future_splits[1], 
+                                                   future_splits[2])
       }
-      future_splits_at <- parallel::splitIndices(future_splits[1], future_splits[2])
     }
   }
-    
-    if(future_splits_exe) {
-      if(plot) {
-        stop("future_splits can not be used when plot = TRUE")
-      }
-      if(method == 'pkg') {
-        stop("future_splits can not be used when method = 'pkg'")
-      }
+  
+  
+  if(future_splits_exe) {
+    if(plot) {
+      stop("future_splits can not be used when plot = TRUE")
     }
-    
+    if(method == 'pkg') {
+      stop("future_splits can not be used when method = 'pkg'")
+    }
+  }
+  
+  
     
     
     
