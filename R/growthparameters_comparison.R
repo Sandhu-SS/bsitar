@@ -269,6 +269,16 @@
 #' @param bys A character string (default \code{NULL}) to specify variables 
 #' over which parameters need to be summarized.
 #' 
+#' @param future_splits A unnamed numeric list or a numeric vector of length two
+#'   (default \code{NULL}). The use can pass \code{future_splits} as a list such
+#'   as \code{future_splits = list(1:6, 7:10)} where each sequence of number are
+#'   passed to the \code{draw_ids} argument. The \code{future_splits} can be
+#'   passed as a numeric vector (e.g., future_splits = c(10, 2)) where first
+#'   element is the number of draws (see \code{draw_ids}) and the second
+#'   elements is the number of splits. In this case, the splits are created via
+#'   the [parallel::splitIndices()].
+#' 
+#' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
 #' @inheritParams  marginaleffects::avg_comparisons
@@ -336,6 +346,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    seed = 123,
                                    future = FALSE,
                                    future_session = 'multisession',
+                                   future_splits = NULL,
                                    usedtplyr = FALSE,
                                    usecollapse = TRUE,
                                    parallel = FALSE,
@@ -732,16 +743,83 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   get.cores_ <- get.cores(arguments$cores)
+  
+  # 28.09.2024
+  if(is.null(get.cores_[['max.cores']])) {
+    if(is.null(arguments$cores)) get.cores_[['max.cores']] <- 1
+  }
+  
   arguments$cores <- setincores <-  get.cores_[['max.cores']]
   .cores_ps <- get.cores_[['.cores_ps']]
   
   if (future) {
-    if (future_session == 'multisession') {
-      future::plan('multisession', workers = setincores)
-    } else if (future_session == 'multicore') {
-      future::plan('multicore', workers = setincores)
+    getfutureplan <- future::plan()
+    if (future_session != 'multisession' & future_session != 'multicore') {
+      future_session <- 'sequential'
+    } else {
+      future_session <- future_session
     }
+    setplanis <- paste0("future::", future_session)
+    future::plan(setplanis, workers = setincores)
+    on.exit(future::plan(getfutureplan), add = TRUE)
   }
+  
+  
+  
+  
+  draw_ids_exe <- FALSE
+  if(!is.null(draw_ids)) {
+    draw_ids_exe <- TRUE
+    draw_ids <- draw_ids
+  }
+  
+  
+  future_splits_exe <- FALSE
+  if(!is.null(future_splits)) {
+    future_splits_exe <- TRUE
+    if(future_splits) {
+      if(!draw_ids_exe) {
+        ndraws_seq <- sample.int(ndraws)
+        chunk_size <- ndraws / setincores
+        future_splits_at <- split(ndraws_seq, ceiling(seq_along(ndraws_seq)/chunk_size))
+        future_splits_at <- unname(future_splits_at)
+        }
+      } else if(!future_splits) {
+        future_splits <- future_splits
+      } else if(is.list(future_splits)) {
+        future_splits_at <- future_splits
+      } else if(is.vector(future_splits)) {
+        if(!is.numeric(future_splits)) {
+          stop("future_splits must be a numeric vector of lenghth 2")
+        } else if(length(future_splits) == 1) {
+          future_splits <- c(ndraws, future_splits)
+        } else if(length(future_splits) != 2) {
+          stop("future_splits must be a numeric vector of lenghth 2")
+        }
+        future_splits_at <- parallel::splitIndices(future_splits[1], future_splits[2])
+      }
+    }
+    
+    if(future_splits_exe) {
+      if(plot) {
+        stop("future_splits can not be used when plot = TRUE")
+      }
+      if(method == 'pkg') {
+        stop("future_splits can not be used when method = 'pkg'")
+      }
+    }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
   
   
   
@@ -802,6 +880,8 @@ growthparameters_comparison.bgmfit <- function(model,
       seed,
       future,
       future_session,
+      future_splits,
+      cores,
       dummy_to_factor,
       verbose,
       expose_function,
@@ -1330,11 +1410,92 @@ growthparameters_comparison.bgmfit <- function(model,
     
 
 
-    if(!average) {
-      oux <- do.call(marginaleffects::predictions, predictions_arguments)
-    } else if(average) {
-      oux <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-    }
+    # if(!average) {
+    #   oux <- do.call(marginaleffects::predictions, predictions_arguments)
+    # } else if(average) {
+    #   oux <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+    # }
+    # 
+    # by_pdraws <- by
+    # 
+    # # Imp, remove xvar from the by
+    # by <- base::setdiff(eval(by), eval(xvar)) 
+    # 
+    # 
+    # 
+    # zxdraws <- oux %>% marginaleffects::posterior_draws()
+    
+    
+    
+    
+    
+    
+    
+    if(!future_splits_exe) {
+      if(!average) {
+        out <- do.call(marginaleffects::predictions, predictions_arguments)
+      } else if(average) {
+        out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+      }
+      zxdraws <- out %>% marginaleffects::posterior_draws()
+    } # if(!future_splits_exe) {
+    
+    
+    
+    
+    
+    
+    if(future_splits_exe) {
+      if(!average) {
+        myzfun <- function(x) {
+          predictions_arguments[['draw_ids']] <- x
+          out <- do.call(marginaleffects::predictions, predictions_arguments)
+          out <-  out %>% 
+            marginaleffects:: posterior_draws(shape = "long") %>% 
+            dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            dplyr::mutate(drawid = as.factor(drawid)) %>% 
+            dplyr::relocate(drawid, .before = 'draw')
+        }
+        myzfun0 <- future::future({
+          # out <- lapply(future_splits_at,  FUN = myzfun)
+          out <-  future.apply::future_lapply(future_splits_at,
+                                              future.envir = parent.frame(),
+                                              future.globals = TRUE,
+                                              future.seed = TRUE,
+                                              FUN = myzfun)
+          out <- out %>% do.call(rbind, .)
+        }, seed = TRUE, envir = parent.frame())
+      } else if(average) {
+        myzfun <- function(x) {
+          predictions_arguments[['draw_ids']] <- x
+          out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+          out <-  out %>% 
+            marginaleffects:: posterior_draws(shape = "long") %>% 
+            dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            dplyr::mutate(drawid = as.factor(drawid)) %>% 
+            dplyr::relocate(drawid, .before = 'draw')
+        }
+        myzfun0 <- future::future({
+          # out <- lapply(future_splits_at,  FUN = myzfun)
+          out <-  future.apply::future_lapply(future_splits_at,
+                                              future.envir = parent.frame(),
+                                              future.globals = TRUE,
+                                              future.seed = TRUE,
+                                              FUN = myzfun)
+          out <- out %>% do.call(rbind, .)
+        }, seed = TRUE, envir = parent.frame())
+      }
+      zxdraws <- future::value(myzfun0)
+    } # if(future_splits_exe) {
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     by_pdraws <- by
     
@@ -1342,8 +1503,8 @@ growthparameters_comparison.bgmfit <- function(model,
     by <- base::setdiff(eval(by), eval(xvar)) 
     
     
-   
-    zxdraws <- oux %>% marginaleffects::posterior_draws()
+    
+    
    
     getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
                           aggregate_by = FALSE, ...) {

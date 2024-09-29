@@ -27,6 +27,7 @@
   seed = 123,
   future = FALSE,
   future_session = "multisession",
+  future_splits = NULL,
   cores = NULL,
   average = FALSE,
   plot = FALSE,
@@ -215,6 +216,15 @@ perform parallel computations. If set to \code{TRUE}, the
 multisession whereas the \code{'multicore'} sets the multicore session.
 Note that option \code{'multicore'} is not supported on Windows systems.
 For more details, see \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
+
+\item{future_splits}{A unnamed numeric list or a numeric vector of length two
+(default \code{NULL}). The use can pass \code{future_splits} as a list such
+as \code{future_splits = list(1:6, 7:10)} where each sequence of number are
+passed to the \code{draw_ids} argument. The \code{future_splits} can be
+passed as a numeric vector (e.g., future_splits = c(10, 2)) where first
+element is the number of draws (see \code{draw_ids}) and the second
+elements is the number of splits. In this case, the splits are created via
+the \code{\link[parallel:splitIndices]{parallel::splitIndices()}}.}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations (if \code{future = TRUE}). On non-Windows systems this
