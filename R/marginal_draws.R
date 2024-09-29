@@ -439,22 +439,46 @@ marginal_draws.bgmfit <-
     
     if (future) {
       getfutureplan <- future::plan()
-      if (future_session != 'multisession' & future_session != 'multicore') {
-        future_session <- 'sequential'
-      } else {
-        future_session <- future_session
+      if (future_session == 'multisession') {
+        set_future_session <- future_session
+      } else if (future_session == 'multicore') {
+        set_future_session <- future_session
+      } else if (future_session == 'sequential') {
+        set_future_session <- future_session
       }
-      setplanis <- paste0("future::", future_session)
-      if(future_session == 'sequential') {
-        future::plan(setplanis)
-      } else {
-        future::plan(setplanis, workers = setincores)
+      # setplanis <- paste0("future::", set_future_session)
+      # if(set_future_session == 'sequential') {
+      #   future::plan(setplanis, environment = envir)
+      # } else {
+      #   future::plan(setplanis, workers = setincores, environment = envir)
+      # }
+      # on.exit(future::plan(getfutureplan), add = TRUE)
+      
+      setplanis <- set_future_session
+      fuplan <- getOption("future.plan")
+      options("future.plan" = setplanis)
+      on.exit(options("future.plan" = fuplan), add = TRUE)
+      
+      coresplan <- getOption("mc.cores")
+      options(mc.cores = setincores)
+      on.exit(options("mc.cores" = coresplan), add = TRUE)
+      
+      if (future_session == 'multicore') {
+        multthreadplan <- getOption("future.fork.multithreading.enable")
+        options(future.fork.multithreading.enable = TRUE)
+        on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
+                add = TRUE)
       }
-      on.exit(future::plan(getfutureplan), add = TRUE)
+      
+      
+      # getOption("future.plan")
+      #future::availableCores()
+      
+      # oopts <- options(future.plan = "multisession")
+      # on.exit(options(oopts))
     }
     
-    
-    
+
     
     draw_ids_org <- draw_ids
     draw_ids_exe <- FALSE
@@ -550,6 +574,8 @@ marginal_draws.bgmfit <-
       
       
       # print(future_splits_at)
+      # print(future_splits_exe)
+      # print(future::plan())
       # stop()
       
       
@@ -978,6 +1004,15 @@ marginal_draws.bgmfit <-
            if(!average) {
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               future::plan(setplanis)
+               # print(set_future_session)
+               # print(future::plan())
+               if("multisession" %in% attr(future::plan(), 'class')) {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   expose_model_functions(predictions_arguments[['model']])
+               }
                out <- do.call(marginaleffects::predictions, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
@@ -985,18 +1020,22 @@ marginal_draws.bgmfit <-
                  dplyr::mutate(drawid = as.factor(drawid)) %>% 
                  dplyr::relocate(drawid, .before = 'draw')
              }
+             
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = parent.frame(),
+                                                   future.envir = envir,
                                                    future.globals = TRUE,
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
                out <- out %>% do.call(rbind, .)
-             }, seed = TRUE, envir = parent.frame())
+             # }, seed = TRUE, envir = parent.frame())
+             }, seed = TRUE)
            } else if(average) {
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               future::plan(setplanis)
                out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
@@ -1007,12 +1046,13 @@ marginal_draws.bgmfit <-
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = parent.frame(),
+                                                   future.envir = envir,
                                                    future.globals = TRUE,
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
                out <- out %>% do.call(rbind, .)
-             }, seed = TRUE, envir = parent.frame())
+               # }, seed = TRUE, envir = parent.frame())
+             }, seed = TRUE)
            }
          } else if(plot) {
            out <- do.call(marginaleffects::plot_predictions, 
@@ -1029,6 +1069,8 @@ marginal_draws.bgmfit <-
            if(!average) {
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               future::plan(setplanis)
                out <- do.call(marginaleffects::slopes, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
@@ -1039,15 +1081,18 @@ marginal_draws.bgmfit <-
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = parent.frame(),
+                                                   future.envir = envir,
                                                    future.globals = TRUE,
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
                out <- out %>% do.call(rbind, .)
-             }, seed = TRUE, envir = parent.frame())
+               # }, seed = TRUE, envir = parent.frame())
+             }, seed = TRUE)
            } else if(average) {
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               future::plan(setplanis)
                out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
@@ -1058,12 +1103,13 @@ marginal_draws.bgmfit <-
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = parent.frame(),
+                                                   future.envir = envir,
                                                    future.globals = TRUE,
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
                out <- out %>% do.call(rbind, .)
-             }, seed = TRUE, envir = parent.frame())
+               # }, seed = TRUE, envir = parent.frame())
+             }, seed = TRUE)
            }
          } else if(plot) {
            out <- do.call(marginaleffects::plot_slopes, predictions_arguments)

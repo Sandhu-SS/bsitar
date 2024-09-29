@@ -771,18 +771,37 @@ growthparameters_comparison.bgmfit <- function(model,
   
   if (future) {
     getfutureplan <- future::plan()
-    if (future_session != 'multisession' & future_session != 'multicore') {
-      future_session <- 'sequential'
-    } else {
-      future_session <- future_session
+    if (future_session == 'multisession') {
+      set_future_session <- future_session
+    } else if (future_session == 'multicore') {
+      set_future_session <- future_session
+    } else if (future_session == 'sequential') {
+      set_future_session <- future_session
     }
-    setplanis <- paste0("future::", future_session)
-    if(future_session == 'sequential') {
-      future::plan(setplanis)
-    } else {
-      future::plan(setplanis, workers = setincores)
+    # setplanis <- paste0("future::", set_future_session)
+    # if(set_future_session == 'sequential') {
+    #   future::plan(setplanis, environment = envir)
+    # } else {
+    #   future::plan(setplanis, workers = setincores, environment = envir)
+    # }
+    # on.exit(future::plan(getfutureplan), add = TRUE)
+    
+    setplanis <- set_future_session
+    fuplan <- getOption("future.plan")
+    options("future.plan" = setplanis)
+    on.exit(options("future.plan" = fuplan), add = TRUE)
+    
+    coresplan <- getOption("mc.cores")
+    options(mc.cores = setincores)
+    on.exit(options("mc.cores" = coresplan), add = TRUE)
+    
+    if (future_session == 'multicore') {
+      multthreadplan <- getOption("future.fork.multithreading.enable")
+      options(future.fork.multithreading.enable = TRUE)
+      on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
+              add = TRUE)
     }
-    on.exit(future::plan(getfutureplan), add = TRUE)
+    
   }
   
   
@@ -1517,6 +1536,8 @@ growthparameters_comparison.bgmfit <- function(model,
       if(!average) {
         myzfun <- function(x) {
           predictions_arguments[['draw_ids']] <- x
+          predictions_arguments[['ndraws']] <- NULL
+          future::plan(setplanis)
           out <- do.call(marginaleffects::predictions, predictions_arguments)
           out <-  out %>% 
             marginaleffects:: posterior_draws(shape = "long") %>% 
@@ -1527,15 +1548,18 @@ growthparameters_comparison.bgmfit <- function(model,
         myzfun0 <- future::future({
           # out <- lapply(future_splits_at,  FUN = myzfun)
           out <-  future.apply::future_lapply(future_splits_at,
-                                              future.envir = parent.frame(),
+                                              future.envir = envir,
                                               future.globals = TRUE,
                                               future.seed = TRUE,
                                               FUN = myzfun)
           out <- out %>% do.call(rbind, .)
-        }, seed = TRUE, envir = parent.frame())
+          # }, seed = TRUE, envir = parent.frame())
+        }, seed = TRUE)
       } else if(average) {
         myzfun <- function(x) {
           predictions_arguments[['draw_ids']] <- x
+          predictions_arguments[['ndraws']] <- NULL
+          future::plan(setplanis)
           out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
           out <-  out %>% 
             marginaleffects:: posterior_draws(shape = "long") %>% 
@@ -1546,12 +1570,13 @@ growthparameters_comparison.bgmfit <- function(model,
         myzfun0 <- future::future({
           # out <- lapply(future_splits_at,  FUN = myzfun)
           out <-  future.apply::future_lapply(future_splits_at,
-                                              future.envir = parent.frame(),
+                                              future.envir = envir,
                                               future.globals = TRUE,
                                               future.seed = TRUE,
                                               FUN = myzfun)
           out <- out %>% do.call(rbind, .)
-        }, seed = TRUE, envir = parent.frame())
+          # }, seed = TRUE, envir = parent.frame())
+        }, seed = TRUE)
       }
       zxdraws <- future::value(myzfun0)
     } # if(future_splits_exe) {
