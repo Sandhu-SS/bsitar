@@ -143,6 +143,7 @@ marginal_draws.bgmfit <-
            future = FALSE,
            future_session = 'multisession',
            future_splits = NULL,
+           future_method = 'future',
            usedtplyr = FALSE,
            usecollapse = TRUE,
            cores = NULL,
@@ -570,6 +571,20 @@ marginal_draws.bgmfit <-
         }
       }
       
+    
+    if(!future_splits_exe) {
+      future_splits_exe_future <- FALSE
+      future_splits_exe_dofuture <- FALSE
+    } else if(future_splits_exe) {
+      if(future_method == 'future') {
+        future_splits_exe_future <- TRUE
+        future_splits_exe_dofuture <- FALSE
+      }
+      if(future_method == 'dofuture') {
+        future_splits_exe_future <- FALSE
+        future_splits_exe_dofuture <- TRUE
+      }
+    }
       
       
       
@@ -641,6 +656,7 @@ marginal_draws.bgmfit <-
         future,
         future_session,
         future_splits,
+        future_method,
         cores,
         verbose,
         usesavedfuns,
@@ -998,7 +1014,7 @@ marginal_draws.bgmfit <-
      
      
      
-     if(future_splits_exe) {
+     if(future_splits_exe_future) {
        if(call_predictions) {
          if(!plot) {
            if(!average) {
@@ -1016,7 +1032,10 @@ marginal_draws.bgmfit <-
                out <- do.call(marginaleffects::predictions, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 # instead of incrementing drawid, replace by the actual draw_ids
+                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
                  dplyr::mutate(drawid = as.factor(drawid)) %>% 
                  dplyr::relocate(drawid, .before = 'draw')
              }
@@ -1039,7 +1058,10 @@ marginal_draws.bgmfit <-
                out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 # instead of incrementing drawid, replace by the actual draw_ids
+                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
                  dplyr::mutate(drawid = as.factor(drawid)) %>% 
                  dplyr::relocate(drawid, .before = 'draw')
              }
@@ -1074,7 +1096,10 @@ marginal_draws.bgmfit <-
                out <- do.call(marginaleffects::slopes, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 # instead of incrementing drawid, replace by the actual draw_ids
+                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>%  
                  dplyr::mutate(drawid = as.factor(drawid)) %>% 
                  dplyr::relocate(drawid, .before = 'draw')
              }
@@ -1096,7 +1121,10 @@ marginal_draws.bgmfit <-
                out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
                out <-  out %>% 
                  marginaleffects:: posterior_draws(shape = "long") %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 # instead of incrementing drawid, replace by the actual draw_ids
+                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
                  dplyr::mutate(drawid = as.factor(drawid)) %>% 
                  dplyr::relocate(drawid, .before = 'draw')
              }
@@ -1121,7 +1149,205 @@ marginal_draws.bgmfit <-
        
        # onex0 <- out %>% marginaleffects::posterior_draws()
        onex0 <- future::value(myzfun0)
-     } # if(future_splits_exe) {
+     } # if(future_splits_exe_future) {
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     if(future_splits_exe_dofuture) {
+       `%doFuture_function%` <- doFuture::`%dofuture%`
+       # somehow .options.future = list(seed = TRUE) not working, so set below
+       dofutureplan <- getOption("doFuture.rng.onMisuse")
+       options(doFuture.rng.onMisuse = "ignore")
+       on.exit(options("doFuture.rng.onMisuse" = dofutureplan), add = TRUE)
+       
+       if(call_predictions) {
+         if(!plot) {
+           if(!average) {
+             out <- foreach::foreach(x = 1:length(future_splits_at),
+                                        .options.future = list(seed = TRUE),
+                                        .options.future = 
+                                       list(globals = c('future_splits_at'))
+             ) %doFuture_function% {
+               x <- future_splits_at[[x]]
+               predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               if("multisession" %in% attr(future::plan(), 'class')) {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   expose_model_functions(predictions_arguments[['model']])
+               }
+              tempout <- do.call(marginaleffects::predictions, predictions_arguments)
+              tempout <-  tempout %>% 
+                marginaleffects:: posterior_draws(shape = "long") %>% 
+                # instead of incrementing drawid, replace by the actual draw_ids
+                # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+                dplyr::mutate(drawid = as.factor(drawid)) %>% 
+                dplyr::relocate(drawid, .before = 'draw')
+             }
+              out <- out %>% do.call(rbind, .)
+           } else if(average) {
+             out <- foreach::foreach(x = 1:length(future_splits_at),
+                                     .options.future = list(seed = TRUE),
+                                     .options.future = 
+                                       list(globals = c('future_splits_at'))
+             ) %doFuture_function% {
+               x <- future_splits_at[[x]]
+               predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               if("multisession" %in% attr(future::plan(), 'class')) {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   expose_model_functions(predictions_arguments[['model']])
+               }
+               tempout <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+               tempout <-  tempout %>% 
+                 marginaleffects:: posterior_draws(shape = "long") %>% 
+                 # instead of incrementing drawid, replace by the actual draw_ids
+                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
+                 dplyr::relocate(drawid, .before = 'draw')
+             }
+             out <- out %>% do.call(rbind, .)
+           }
+         } else if(plot) {
+           out <- do.call(marginaleffects::plot_predictions, 
+                          predictions_arguments)
+           outp <- out
+           if(!showlegends) outp <- outp + 
+             ggplot2::theme(legend.position = 'none')
+           return(outp)
+         }
+       } # if(call_predictions) {
+       
+       if(call_slopes) {
+         if(!plot) {
+           if(!average) {
+             out <- foreach::foreach(x = 1:length(future_splits_at),
+                                     .options.future = list(seed = TRUE),
+                                     .options.future = 
+                                       list(globals = c('future_splits_at'))
+             ) %doFuture_function% {
+               x <- future_splits_at[[x]]
+               predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               if("multisession" %in% attr(future::plan(), 'class')) {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   expose_model_functions(predictions_arguments[['model']])
+               }
+               tempout <- do.call(marginaleffects::slopes, predictions_arguments)
+               tempout <-  tempout %>% 
+                 marginaleffects:: posterior_draws(shape = "long") %>% 
+                 # instead of incrementing drawid, replace by the actual draw_ids
+                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
+                 dplyr::relocate(drawid, .before = 'draw')
+             }
+             out <- out %>% do.call(rbind, .)
+           } else if(average) {
+             out <- foreach::foreach(x = 1:length(future_splits_at),
+                                     .options.future = list(seed = TRUE),
+                                     .options.future = 
+                                       list(globals = c('future_splits_at'))
+             ) %doFuture_function% {
+               x <- future_splits_at[[x]]
+               predictions_arguments[['draw_ids']] <- x
+               predictions_arguments[['ndraws']] <- NULL
+               if("multisession" %in% attr(future::plan(), 'class')) {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   expose_model_functions(predictions_arguments[['model']])
+               }
+               tempout <- do.call(marginaleffects::avg_slopes, predictions_arguments)
+               tempout <-  tempout %>% 
+                 marginaleffects:: posterior_draws(shape = "long") %>% 
+                 # instead of incrementing drawid, replace by the actual draw_ids
+                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
+                 dplyr::relocate(drawid, .before = 'draw')
+             }
+             out <- out %>% do.call(rbind, .)
+           }
+         } else if(plot) {
+           out <- do.call(marginaleffects::plot_slopes, predictions_arguments)
+           outp <- out
+           outp <- outp + ggplot2::theme(legend.position = 'none')
+           return(outp)
+         }
+       } # if(call_slopes) {
+       # onex0 <- out %>% marginaleffects::posterior_draws()
+       onex0 <- out # future::value(myzfun0)
+     } # if(future_splits_exe_dofuture) {
+     
+     
+     
+     # somehow this need consequence number
+     if(future_splits_exe) {
+       onex0 <- onex0 %>% dplyr::group_by(drawid) %>% 
+         dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
+         dplyr::mutate(drawid = as.factor(drawid)) %>% 
+         dplyr::ungroup()
+     }
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
      
      
      

@@ -287,6 +287,12 @@
 #'   = FALSE}. The use case of \code{future_splits} is to save memory and speed
 #'   especially on \code{Linux} system and setting [future::plan()] as
 #'   \code{multicore}.
+#'   
+#' @param future_method A character string to indicate whether to use
+#'   [future::future()] along with the [future.apply::future_lapply()]
+#'   (\code{future_method = 'future'}, default), or to use [foreach::foreach()]
+#'   with \code{'dofuture'} function from the \code{doFuture} package for
+#'   parallel operations.
 #' 
 #' 
 #' @inheritParams  growthparameters.bgmfit
@@ -357,6 +363,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                    future = FALSE,
                                    future_session = 'multisession',
                                    future_splits = NULL,
+                                   future_method = 'future',
                                    usedtplyr = FALSE,
                                    usecollapse = TRUE,
                                    parallel = FALSE,
@@ -900,6 +907,20 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
+  if(!future_splits_exe) {
+    future_splits_exe_future <- FALSE
+    future_splits_exe_dofuture <- FALSE
+  } else if(future_splits_exe) {
+    if(future_method == 'future') {
+      future_splits_exe_future <- TRUE
+      future_splits_exe_dofuture <- FALSE
+    }
+    if(future_method == 'dofuture') {
+      future_splits_exe_future <- FALSE
+      future_splits_exe_dofuture <- TRUE
+    }
+  }
+  
   
   
   
@@ -968,6 +989,7 @@ growthparameters_comparison.bgmfit <- function(model,
       future,
       future_session,
       future_splits,
+      future_method,
       cores,
       dummy_to_factor,
       verbose,
@@ -1532,7 +1554,7 @@ growthparameters_comparison.bgmfit <- function(model,
     
     
     
-    if(future_splits_exe) {
+    if(future_splits_exe_future) {
       if(!average) {
         myzfun <- function(x) {
           predictions_arguments[['draw_ids']] <- x
@@ -1541,7 +1563,10 @@ growthparameters_comparison.bgmfit <- function(model,
           out <- do.call(marginaleffects::predictions, predictions_arguments)
           out <-  out %>% 
             marginaleffects:: posterior_draws(shape = "long") %>% 
-            dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            # instead of incrementing drawid, replace by the actual draw_ids
+            # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+            dplyr::mutate(drawid = x[.data[['drawid']]]) %>%  
             dplyr::mutate(drawid = as.factor(drawid)) %>% 
             dplyr::relocate(drawid, .before = 'draw')
         }
@@ -1563,7 +1588,10 @@ growthparameters_comparison.bgmfit <- function(model,
           out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
           out <-  out %>% 
             marginaleffects:: posterior_draws(shape = "long") %>% 
-            dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            # instead of incrementing drawid, replace by the actual draw_ids
+            # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+            dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
             dplyr::mutate(drawid = as.factor(drawid)) %>% 
             dplyr::relocate(drawid, .before = 'draw')
         }
@@ -1579,14 +1607,81 @@ growthparameters_comparison.bgmfit <- function(model,
         }, seed = TRUE)
       }
       zxdraws <- future::value(myzfun0)
-    } # if(future_splits_exe) {
+    } # if(future_splits_exe_future) {
     
     
     
     
+    if(future_splits_exe_dofuture) {
+      `%doFuture_function%` <- doFuture::`%dofuture%`
+      # somehow .options.future = list(seed = TRUE) not working, so set below
+      dofutureplan <- getOption("doFuture.rng.onMisuse")
+      options(doFuture.rng.onMisuse = "ignore")
+      on.exit(options("doFuture.rng.onMisuse" = dofutureplan), add = TRUE)
+      
+      if(!average) {
+        out <- foreach::foreach(x = 1:length(future_splits_at),
+                                .options.future = list(seed = TRUE),
+                                .options.future = 
+                                  list(globals = c('future_splits_at'))
+        ) %doFuture_function% {
+          x <- future_splits_at[[x]]
+          predictions_arguments[['draw_ids']] <- x
+          predictions_arguments[['ndraws']] <- NULL
+          if("multisession" %in% attr(future::plan(), 'class')) {
+            if(verbose) message("need to expose functions for 'multisession'")
+            predictions_arguments[['model']] <- 
+              expose_model_functions(predictions_arguments[['model']])
+          }
+          tempout <- do.call(marginaleffects::predictions, predictions_arguments)
+          tempout <-  tempout %>% 
+            marginaleffects:: posterior_draws(shape = "long") %>% 
+            # instead of incrementing drawid, replace by the actual draw_ids
+            # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+            dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+            dplyr::mutate(drawid = as.factor(drawid)) %>% 
+            dplyr::relocate(drawid, .before = 'draw')
+        }
+        out <- out %>% do.call(rbind, .)
+      } else if(average) {
+        out <- foreach::foreach(x = 1:length(future_splits_at),
+                                .options.future = list(seed = TRUE),
+                                .options.future = 
+                                  list(globals = c('future_splits_at'))
+        ) %doFuture_function% {
+          x <- future_splits_at[[x]]
+          predictions_arguments[['draw_ids']] <- x
+          predictions_arguments[['ndraws']] <- NULL
+          if("multisession" %in% attr(future::plan(), 'class')) {
+            if(verbose) message("need to expose functions for 'multisession'")
+            predictions_arguments[['model']] <- 
+              expose_model_functions(predictions_arguments[['model']])
+          }
+          tempout <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+          tempout <-  tempout %>% 
+            marginaleffects:: posterior_draws(shape = "long") %>% 
+            # instead of incrementing drawid, replace by the actual draw_ids
+            # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+            dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+            dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+            dplyr::mutate(drawid = as.factor(drawid)) %>% 
+            dplyr::relocate(drawid, .before = 'draw')
+        }
+        out <- out %>% do.call(rbind, .)
+      }
+      zxdraws <- out # future::value(myzfun0)
+    } # if(future_splits_exe_dofuture) {
     
     
     
+    # somehow this need consequence number
+    if(future_splits_exe) {
+      zxdraws <- zxdraws %>% dplyr::group_by(drawid) %>% 
+        dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
+        dplyr::mutate(drawid = as.factor(drawid)) %>% 
+        dplyr::ungroup()
+    }
     
     
     

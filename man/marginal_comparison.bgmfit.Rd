@@ -28,6 +28,7 @@
   future = FALSE,
   future_session = "multisession",
   future_splits = NULL,
+  future_method = "future",
   cores = NULL,
   average = FALSE,
   plot = FALSE,
@@ -233,6 +234,12 @@ on the \code{ndraws} and the \code{cores}. Ignored when \code{future_splits
   = FALSE}. The use case of \code{future_splits} is to save memory and speed
 especially on \code{Linux} system and setting \code{\link[future:plan]{future::plan()}} as
 \code{multicore}.}
+
+\item{future_method}{A character string to indicate whether to use
+\code{\link[future:future]{future::future()}} along with the \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}
+(\code{future_method = 'future'}, default), or to use \code{\link[foreach:foreach]{foreach::foreach()}}
+with \code{'dofuture'} function from the \code{doFuture} package for
+parallel operations.}
 
 \item{cores}{Number of cores to be used when running the parallel
 computations (if \code{future = TRUE}). On non-Windows systems this

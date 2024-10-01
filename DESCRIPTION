@@ -60,6 +60,7 @@ Suggests:
     ggridges (>= 0.5.6), 
     jtools (>= 2.2.2),
     fastplyr (>= 0.1.0),
+    doFuture (>= 1.0.1),
     tidyr,
     nlme,
     purrr, 
