@@ -155,7 +155,9 @@ marginal_draws.bgmfit <-
            condition = NULL,
            deriv = 0,
            deriv_model = TRUE,
-           method = 'pkg',
+           method = 'custom',
+           marginals = NULL,
+           pdrawso = FALSE, 
            pdrawsp = FALSE, 
            pdrawsh = FALSE, 
            type = NULL,
@@ -232,6 +234,12 @@ marginal_draws.bgmfit <-
                                             stop = FALSE))
     }
     
+    
+    callfuns <- TRUE
+    if(!is.null(marginals)) {
+      if(method == 'custom') callfuns <- TRUE
+      if(method == 'pkg') callfuns <- FALSE
+    }
     
     if(is.null(envir)) {
       envir <- model$model_info$envir
@@ -432,7 +440,8 @@ marginal_draws.bgmfit <-
     
     # 28.09.2024
     if(is.null(get.cores_[['max.cores']])) {
-      if(is.null(arguments$cores)) get.cores_[['max.cores']] <- 1
+      if(is.null(arguments$cores)) 
+        get.cores_[['max.cores']] <- future::availableCores() - 1
     }
     
     arguments$cores <- setincores <-  get.cores_[['max.cores']]
@@ -447,22 +456,26 @@ marginal_draws.bgmfit <-
       } else if (future_session == 'sequential') {
         set_future_session <- future_session
       }
-      # setplanis <- paste0("future::", set_future_session)
-      # if(set_future_session == 'sequential') {
-      #   future::plan(setplanis, environment = envir)
-      # } else {
-      #   future::plan(setplanis, workers = setincores, environment = envir)
-      # }
-      # on.exit(future::plan(getfutureplan), add = TRUE)
       
       setplanis <- set_future_session
-      fuplan <- getOption("future.plan")
-      options("future.plan" = setplanis)
-      on.exit(options("future.plan" = fuplan), add = TRUE)
+      if(set_future_session == 'sequential') {
+        future::plan(setplanis)
+      } else {
+        future::plan(setplanis, workers = setincores)
+      }
+      on.exit(future::plan(getfutureplan), add = TRUE)
       
-      coresplan <- getOption("mc.cores")
-      options(mc.cores = setincores)
-      on.exit(options("mc.cores" = coresplan), add = TRUE)
+      # setplanis <- set_future_session
+      # fuplan <- getOption("future.plan")
+      # options("future.plan" = setplanis)
+      # future::plan(setplanis)
+      # # on.exit(options("future.plan" = fuplan), add = TRUE)
+      # on.exit(future::plan(fuplan), add = TRUE)
+      
+
+      # coresplan <- getOption("mc.cores")
+      # options(mc.cores = setincores)
+      # on.exit(options("mc.cores" = coresplan), add = TRUE)
       
       if (future_session == 'multicore') {
         multthreadplan <- getOption("future.fork.multithreading.enable")
@@ -479,7 +492,7 @@ marginal_draws.bgmfit <-
       # on.exit(options(oopts))
     }
     
-
+    
     
     draw_ids_org <- draw_ids
     draw_ids_exe <- FALSE
@@ -487,6 +500,7 @@ marginal_draws.bgmfit <-
       draw_ids_exe <- TRUE
       draw_ids <- draw_ids
     }
+    
     
     
     future_splits_exe <- FALSE
@@ -560,7 +574,7 @@ marginal_draws.bgmfit <-
         }
       }
     }
-    
+   
       
       if(future_splits_exe) {
         if(plot) {
@@ -586,12 +600,12 @@ marginal_draws.bgmfit <-
       }
     }
       
-      
-      
+    
+    # future::plan() %>% print()
       # print(future_splits_at)
       # print(future_splits_exe)
       # print(future::plan())
-      # stop()
+     #  stop()
       
       
       
@@ -671,10 +685,12 @@ marginal_draws.bgmfit <-
         estimate_interval, 
         reformat,
         method,
+        marginals,
         constrats_by,
         constrats_at,
         usedtplyr,
         usecollapse,
+        pdrawso,
         pdrawsp,
         pdrawsh,
         funlist
@@ -972,7 +988,7 @@ marginal_draws.bgmfit <-
      
      
      
-     if(!future_splits_exe) {
+     if(!future_splits_exe & callfuns) {
        if(call_predictions) {
          if(!plot) {
            if(!average) {
@@ -1004,75 +1020,93 @@ marginal_draws.bgmfit <-
            return(outp)
          }
        } # if(call_slopes) {
-       
-       onex0 <- out %>% marginaleffects::posterior_draws()
+       out <- out %>% marginaleffects::posterior_draws()
+       if(pdrawso) return(out)
+       onex0 <- out # %>% marginaleffects::posterior_draws()
      } # if(!future_splits_exe) {
-    
+     
+     # print(future_splits_exe)
+     # print(future_splits_exe)
+     # print(future_splits_exe_future)
+     # print(future_splits_exe_dofuture)
      
      
      
      
      
-     
-     if(future_splits_exe_future) {
+     if(future_splits_exe_future & callfuns) {
        if(call_predictions) {
          if(!plot) {
            if(!average) {
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               future::plan(setplanis)
-               # print(set_future_session)
-               # print(future::plan())
-               if("multisession" %in% attr(future::plan(), 'class')) {
+               `%>%` <- bsitar::`%>%`
+               future::plan() %>% print()
+               if(setplanis == "multisession") {
                  if(verbose) message("need to expose functions for 'multisession'")
                  predictions_arguments[['model']] <- 
-                   expose_model_functions(predictions_arguments[['model']])
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
                }
                out <- do.call(marginaleffects::predictions, predictions_arguments)
-               out <-  out %>% 
-                 marginaleffects:: posterior_draws(shape = "long") %>% 
-                 # instead of incrementing drawid, replace by the actual draw_ids
-                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                 dplyr::relocate(drawid, .before = 'draw')
+               # out <-  out %>% 
+               #   marginaleffects:: posterior_draws(shape = "long") %>% 
+               #   # instead of incrementing drawid, replace by the actual draw_ids
+               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+               #   dplyr::relocate(drawid, .before = 'draw')
              }
              
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = envir,
-                                                   future.globals = TRUE,
+                                                   future.envir = parent.frame(),
+                                                   # future.globals = TRUE,
+                                                   future.globals = 
+                                                     c('future_splits_at',
+                                                       'setplanis',
+                                                       'verbose',
+                                                       'predictions_arguments'),
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
-               out <- out %>% do.call(rbind, .)
+               # out <- out %>% do.call(rbind, .)
              # }, seed = TRUE, envir = parent.frame())
              }, seed = TRUE)
            } else if(average) {
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               future::plan(setplanis)
+               `%>%` <- bsitar::`%>%`
+               if(setplanis == "multisession") {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
+               }
                out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-               out <-  out %>% 
-                 marginaleffects:: posterior_draws(shape = "long") %>% 
-                 # instead of incrementing drawid, replace by the actual draw_ids
-                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                 dplyr::relocate(drawid, .before = 'draw')
+               # out <-  out %>% 
+               #   marginaleffects:: posterior_draws(shape = "long") %>% 
+               #   # instead of incrementing drawid, replace by the actual draw_ids
+               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+               #   dplyr::relocate(drawid, .before = 'draw')
              }
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = envir,
-                                                   future.globals = TRUE,
+                                                   future.envir = parent.frame(),
+                                                   # future.globals = TRUE,
+                                                   future.globals = 
+                                                     c('future_splits_at',
+                                                       'setplanis',
+                                                       'verbose',
+                                                       'predictions_arguments'),
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
-               out <- out %>% do.call(rbind, .)
+               # out <- out %>% do.call(rbind, .)
                # }, seed = TRUE, envir = parent.frame())
              }, seed = TRUE)
            }
@@ -1092,50 +1126,70 @@ marginal_draws.bgmfit <-
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               future::plan(setplanis)
+               `%>%` <- bsitar::`%>%`
+               if(setplanis == "multisession") {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
+               }
                out <- do.call(marginaleffects::slopes, predictions_arguments)
-               out <-  out %>% 
-                 marginaleffects:: posterior_draws(shape = "long") %>% 
-                 # instead of incrementing drawid, replace by the actual draw_ids
-                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>%  
-                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                 dplyr::relocate(drawid, .before = 'draw')
+               # out <-  out %>% 
+               #   marginaleffects:: posterior_draws(shape = "long") %>% 
+               #   # instead of incrementing drawid, replace by the actual draw_ids
+               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>%  
+               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+               #   dplyr::relocate(drawid, .before = 'draw')
              }
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = envir,
-                                                   future.globals = TRUE,
+                                                   future.envir = parent.frame(),
+                                                   # future.globals = TRUE,
+                                                   future.globals = 
+                                                     c('future_splits_at',
+                                                       'setplanis',
+                                                       'verbose',
+                                                       'predictions_arguments'),
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
-               out <- out %>% do.call(rbind, .)
+               # out <- out %>% do.call(rbind, .)
                # }, seed = TRUE, envir = parent.frame())
              }, seed = TRUE)
            } else if(average) {
              myzfun <- function(x) {
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               future::plan(setplanis)
+               `%>%` <- bsitar::`%>%`
+               if(setplanis == "multisession") {
+                 if(verbose) message("need to expose functions for 'multisession'")
+                 predictions_arguments[['model']] <- 
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
+               }
                out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
-               out <-  out %>% 
-                 marginaleffects:: posterior_draws(shape = "long") %>% 
-                 # instead of incrementing drawid, replace by the actual draw_ids
-                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                 dplyr::relocate(drawid, .before = 'draw')
+               # out <-  out %>% 
+               #   marginaleffects:: posterior_draws(shape = "long") %>% 
+               #   # instead of incrementing drawid, replace by the actual draw_ids
+               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+               #   dplyr::relocate(drawid, .before = 'draw')
              }
              myzfun0 <- future::future({
                # out <- lapply(future_splits_at,  FUN = myzfun)
                out <-  future.apply::future_lapply(future_splits_at,
-                                                   future.envir = envir,
-                                                   future.globals = TRUE,
+                                                   future.envir = parent.frame(),
+                                                   # future.globals = TRUE,
+                                                   future.globals = 
+                                                   c('future_splits_at',
+                                                     'setplanis',
+                                                     'verbose',
+                                                     'predictions_arguments'),
                                                    future.seed = TRUE,
                                                    FUN = myzfun)
-               out <- out %>% do.call(rbind, .)
+               # out <- out %>% do.call(rbind, .)
                # }, seed = TRUE, envir = parent.frame())
              }, seed = TRUE)
            }
@@ -1148,7 +1202,14 @@ marginal_draws.bgmfit <-
        } # if(call_slopes) {
        
        # onex0 <- out %>% marginaleffects::posterior_draws()
-       onex0 <- future::value(myzfun0)
+       posterior_draws_function <- function(x, ...) {
+         out[[x]] %>% marginaleffects::posterior_draws()
+       }
+       out <- future::value(myzfun0)
+       tempout <- lapply(1:length(out),  FUN = posterior_draws_function)
+       out <- tempout %>% do.call(rbind, .)
+       if(pdrawso) return(out)
+       onex0 <- out # future::value(myzfun0)
      } # if(future_splits_exe_future) {
      
      
@@ -1156,11 +1217,10 @@ marginal_draws.bgmfit <-
      
      
      
+    
+     # detach("package:doFuture", unload=TRUE) 
      
-     
-     
-     
-     if(future_splits_exe_dofuture) {
+     if(future_splits_exe_dofuture & callfuns) {
        `%doFuture_function%` <- doFuture::`%dofuture%`
        # somehow .options.future = list(seed = TRUE) not working, so set below
        dofutureplan <- getOption("doFuture.rng.onMisuse")
@@ -1172,53 +1232,61 @@ marginal_draws.bgmfit <-
            if(!average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                         .options.future = list(seed = TRUE),
-                                        .options.future = 
-                                       list(globals = c('future_splits_at'))
+                                        .options.future =
+                                       list(globals = c('future_splits_at',
+                                                        'setplanis',
+                                                        'verbose',
+                                                        'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               if("multisession" %in% attr(future::plan(), 'class')) {
+               `%>%` <- bsitar::`%>%`
+               if(setplanis == "multisession") {
                  if(verbose) message("need to expose functions for 'multisession'")
                  predictions_arguments[['model']] <- 
-                   expose_model_functions(predictions_arguments[['model']])
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
                }
               tempout <- do.call(marginaleffects::predictions, predictions_arguments)
-              tempout <-  tempout %>% 
-                marginaleffects:: posterior_draws(shape = "long") %>% 
-                # instead of incrementing drawid, replace by the actual draw_ids
-                # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                dplyr::relocate(drawid, .before = 'draw')
+              # tempout <-  tempout %>% 
+              #   marginaleffects:: posterior_draws(shape = "long") %>% 
+              #   # instead of incrementing drawid, replace by the actual draw_ids
+              #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+              #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+              #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+              #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+              #   dplyr::relocate(drawid, .before = 'draw')
              }
-              out <- out %>% do.call(rbind, .)
+              # out <- out %>% do.call(rbind, .)
            } else if(average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                      .options.future = list(seed = TRUE),
-                                     .options.future = 
-                                       list(globals = c('future_splits_at'))
+                                     .options.future =
+                                       list(globals = c('future_splits_at',
+                                                        'setplanis',
+                                                        'verbose',
+                                                        'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               if("multisession" %in% attr(future::plan(), 'class')) {
+               `%>%` <- bsitar::`%>%`
+               if(setplanis == "multisession") {
                  if(verbose) message("need to expose functions for 'multisession'")
                  predictions_arguments[['model']] <- 
-                   expose_model_functions(predictions_arguments[['model']])
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
                }
                tempout <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-               tempout <-  tempout %>% 
-                 marginaleffects:: posterior_draws(shape = "long") %>% 
-                 # instead of incrementing drawid, replace by the actual draw_ids
-                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                 dplyr::relocate(drawid, .before = 'draw')
+               # tempout <-  tempout %>% 
+               #   marginaleffects:: posterior_draws(shape = "long") %>% 
+               #   # instead of incrementing drawid, replace by the actual draw_ids
+               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+               #   dplyr::relocate(drawid, .before = 'draw')
              }
-             out <- out %>% do.call(rbind, .)
+             # out <- out %>% do.call(rbind, .)
            }
          } else if(plot) {
            out <- do.call(marginaleffects::plot_predictions, 
@@ -1235,53 +1303,61 @@ marginal_draws.bgmfit <-
            if(!average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                      .options.future = list(seed = TRUE),
-                                     .options.future = 
-                                       list(globals = c('future_splits_at'))
+                                     .options.future =
+                                       list(globals = c('future_splits_at',
+                                                        'setplanis',
+                                                        'verbose',
+                                                        'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               if("multisession" %in% attr(future::plan(), 'class')) {
+               `%>%` <- bsitar::`%>%`
+               if(setplanis == "multisession") {
                  if(verbose) message("need to expose functions for 'multisession'")
                  predictions_arguments[['model']] <- 
-                   expose_model_functions(predictions_arguments[['model']])
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
                }
                tempout <- do.call(marginaleffects::slopes, predictions_arguments)
-               tempout <-  tempout %>% 
-                 marginaleffects:: posterior_draws(shape = "long") %>% 
-                 # instead of incrementing drawid, replace by the actual draw_ids
-                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                 dplyr::relocate(drawid, .before = 'draw')
+               # tempout <-  tempout %>% 
+               #   marginaleffects:: posterior_draws(shape = "long") %>% 
+               #   # instead of incrementing drawid, replace by the actual draw_ids
+               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+               #   dplyr::relocate(drawid, .before = 'draw')
              }
-             out <- out %>% do.call(rbind, .)
+             # out <- out %>% do.call(rbind, .)
            } else if(average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                      .options.future = list(seed = TRUE),
-                                     .options.future = 
-                                       list(globals = c('future_splits_at'))
+                                     .options.future =
+                                       list(globals = c('future_splits_at',
+                                                        'setplanis',
+                                                        'verbose',
+                                                        'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
                predictions_arguments[['draw_ids']] <- x
                predictions_arguments[['ndraws']] <- NULL
-               if("multisession" %in% attr(future::plan(), 'class')) {
+               `%>%` <- bsitar::`%>%`
+               if(setplanis == "multisession") {
                  if(verbose) message("need to expose functions for 'multisession'")
                  predictions_arguments[['model']] <- 
-                   expose_model_functions(predictions_arguments[['model']])
+                   bsitar::expose_model_functions(predictions_arguments[['model']])
                }
                tempout <- do.call(marginaleffects::avg_slopes, predictions_arguments)
-               tempout <-  tempout %>% 
-                 marginaleffects:: posterior_draws(shape = "long") %>% 
-                 # instead of incrementing drawid, replace by the actual draw_ids
-                 # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                 dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                 dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                 dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                 dplyr::relocate(drawid, .before = 'draw')
+               # tempout <-  tempout %>% 
+               #   marginaleffects:: posterior_draws(shape = "long") %>% 
+               #   # instead of incrementing drawid, replace by the actual draw_ids
+               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
+               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
+               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
+               #   dplyr::relocate(drawid, .before = 'draw')
              }
-             out <- out %>% do.call(rbind, .)
+             # out <- out %>% do.call(rbind, .)
            }
          } else if(plot) {
            out <- do.call(marginaleffects::plot_slopes, predictions_arguments)
@@ -1291,13 +1367,19 @@ marginal_draws.bgmfit <-
          }
        } # if(call_slopes) {
        # onex0 <- out %>% marginaleffects::posterior_draws()
+       posterior_draws_function <- function(x, ...) {
+         out[[x]] %>% marginaleffects::posterior_draws()
+       }
+       tempout <- lapply(1:length(out),  FUN = posterior_draws_function)
+       out <- tempout %>% do.call(rbind, .)
+       if(pdrawso) return(out)
        onex0 <- out # future::value(myzfun0)
      } # if(future_splits_exe_dofuture) {
      
      
      
      # somehow this need consequence number
-     if(future_splits_exe) {
+     if(future_splits_exe & callfuns) {
        onex0 <- onex0 %>% dplyr::group_by(drawid) %>% 
          dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
          dplyr::mutate(drawid = as.factor(drawid)) %>% 
@@ -1305,7 +1387,16 @@ marginal_draws.bgmfit <-
      }
      
      
-     
+     if(!callfuns) {
+       if(is.list(marginals)) {
+         posterior_draws_function <- function(x, ...) {
+           marginals[[x]] %>% marginaleffects::posterior_draws()
+         }
+         tempout <- lapply(1:length(marginals),  FUN = posterior_draws_function)
+         marginals <- tempout %>% do.call(rbind, .)
+       }
+       onex0 <- marginals
+     }
      
      
      
@@ -1368,9 +1459,14 @@ marginal_draws.bgmfit <-
      }
      
      
+     # 4.10.2024
+     # The by is setting as set_group instead of by from argument
+     # Therefore checking if not FALSE
+     
      setdrawidparm <- by
      namesx <- c('estimate', 'conf.low', 'conf.high')
-     setdrawidparm_ <- c(setdrawidparm, namesx)
+     if(!isFALSE(setdrawidparm)) setdrawidparm_ <- c(setdrawidparm, namesx)
+     if( isFALSE(setdrawidparm)) setdrawidparm_ <- c(namesx)
      
      out_sf <- onex0 %>% collapse::fsubset(., drawid == 1) %>%
        collapse::fselect(., setdrawidparm_)

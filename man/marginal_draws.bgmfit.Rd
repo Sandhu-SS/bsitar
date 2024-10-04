@@ -42,7 +42,9 @@
   condition = NULL,
   deriv = 0,
   deriv_model = TRUE,
-  method = "pkg",
+  method = "custom",
+  marginals = NULL,
+  pdrawso = FALSE,
   pdrawsp = FALSE,
   pdrawsh = FALSE,
   type = NULL,
@@ -370,6 +372,21 @@ the custom functions written for efficiency and speed (\code{method =
 rather needed when testing hypotheses. Note that when \code{method =
   'custom'}, \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and not the
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} is used internally.}
+
+\item{marginals}{A \code{list}, \code{data.frame}, or a \code{tibble}
+returned from the \pkg{marginaleffects} functions (default \code{NULL}).
+The \code{marginals} is evaluated only when \code{method = 'custom'}. The
+\code{marginals} can be in a form of direct output from the
+\pkg{marginaleffects} functions or as posterior draws i.e.,
+\code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}. The \code{marginals} is mainly for
+internal use only.}
+
+\item{pdrawso}{A character string (default \code{FALSE}) to indicate whether
+to return the original posterior draws for parameters (if \code{pdrawso =
+  'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
+When \code{pdrawso = TRUE}, then default behavior is \code{pdrawso =
+  'return'}. Note that posterior draws are returned before calling the
+\code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}.}
 
 \item{pdrawsp}{A character string (default \code{FALSE}) to indicate whether
 to return the posterior draws for parameters (if \code{pdrawsp =
