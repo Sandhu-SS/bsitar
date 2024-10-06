@@ -516,10 +516,13 @@ growthparameters_comparison.bgmfit <- function(model,
   }
   
   callfuns <- TRUE
+  setmarginals <- FALSE
   if(!is.null(marginals)) {
-    if(method == 'custom') callfuns <- TRUE
+    setmarginals <- TRUE
+    if(method == 'custom') callfuns <- FALSE
     if(method == 'pkg') callfuns <- FALSE
   }
+  
   
   if(is.null(envir)) {
     envir <- model$model_info$envir
@@ -1575,9 +1578,9 @@ growthparameters_comparison.bgmfit <- function(model,
       } else if(average) {
         out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
       }
-      out <- out %>% marginaleffects::posterior_draws()
-      if(pdrawso) return(out)
-      zxdraws <- out # %>% marginaleffects::posterior_draws()
+      # out <- out %>% marginaleffects::posterior_draws()
+      # if(pdrawso) return(out)
+      # zxdraws <- out # %>% marginaleffects::posterior_draws()
     } # if(!future_splits_exe) {
     
     
@@ -1598,17 +1601,8 @@ growthparameters_comparison.bgmfit <- function(model,
                 bsitar::expose_model_functions(predictions_arguments[['model']])
             }
             out <- do.call(marginaleffects::predictions, predictions_arguments)
-            # out <-  out %>% 
-            #   marginaleffects:: posterior_draws(shape = "long") %>% 
-            #   # instead of incrementing drawid, replace by the actual draw_ids
-            #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-            #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-            #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-            #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
-            #   dplyr::relocate(drawid, .before = 'draw')
           }
           
-          myzfun0 <- future::future({
             # out <- lapply(future_splits_at,  FUN = myzfun)
             out <-  future.apply::future_lapply(future_splits_at,
                                                 future.envir = parent.frame(),
@@ -1620,9 +1614,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                                     'predictions_arguments'),
                                                 future.seed = TRUE,
                                                 FUN = myzfun)
-            # out <- out %>% do.call(rbind, .)
-            # }, seed = TRUE, envir = parent.frame())
-          }, seed = TRUE)
+            
       } else if(average) {
           myzfun <- function(x) {
             predictions_arguments[['draw_ids']] <- x
@@ -1635,17 +1627,7 @@ growthparameters_comparison.bgmfit <- function(model,
                 bsitar::expose_model_functions(predictions_arguments[['model']])
             }
             out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-            # out <-  out %>% 
-            #   marginaleffects:: posterior_draws(shape = "long") %>% 
-            #   # instead of incrementing drawid, replace by the actual draw_ids
-            #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-            #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-            #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-            #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
-            #   dplyr::relocate(drawid, .before = 'draw')
           }
-          
-          myzfun0 <- future::future({
             # out <- lapply(future_splits_at,  FUN = myzfun)
             out <-  future.apply::future_lapply(future_splits_at,
                                                 future.envir = parent.frame(),
@@ -1657,19 +1639,7 @@ growthparameters_comparison.bgmfit <- function(model,
                                                     'predictions_arguments'),
                                                 future.seed = TRUE,
                                                 FUN = myzfun)
-            # out <- out %>% do.call(rbind, .)
-            # }, seed = TRUE, envir = parent.frame())
-          }, seed = TRUE)
       }
-      out <- future::value(myzfun0)
-      posterior_draws_function <- function(x, ...) {
-        out[[x]] %>% marginaleffects::posterior_draws()
-      }
-      out <- future::value(myzfun0)
-      tempout <- lapply(1:length(out),  FUN = posterior_draws_function)
-      out <- tempout %>% do.call(rbind, .)
-      if(pdrawso) return(out)
-      zxdraws <- out # future::value(myzfun0)
     } # if(future_splits_exe_future) {
     
     
@@ -1701,14 +1671,6 @@ growthparameters_comparison.bgmfit <- function(model,
                       bsitar::expose_model_functions(predictions_arguments[['model']])
                   }
                   tempout <- do.call(marginaleffects::predictions, predictions_arguments)
-                  # tempout <-  tempout %>% 
-                  #   marginaleffects:: posterior_draws(shape = "long") %>% 
-                  #   # instead of incrementing drawid, replace by the actual draw_ids
-                  #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                  #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                  #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                  #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                  #   dplyr::relocate(drawid, .before = 'draw')
                 }
                 # out <- out %>% do.call(rbind, .)
               } else if(average) {
@@ -1730,35 +1692,26 @@ growthparameters_comparison.bgmfit <- function(model,
                       bsitar::expose_model_functions(predictions_arguments[['model']])
                   }
                   tempout <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-                  # tempout <-  tempout %>% 
-                  #   marginaleffects:: posterior_draws(shape = "long") %>% 
-                  #   # instead of incrementing drawid, replace by the actual draw_ids
-                  #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-                  #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-                  #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-                  #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
-                  #   dplyr::relocate(drawid, .before = 'draw')
                 }
-                # out <- out %>% do.call(rbind, .)
             } 
-
-         
-          # onex0 <- out %>% marginaleffects::posterior_draws()
-          posterior_draws_function <- function(x, ...) {
-            out[[x]] %>% marginaleffects::posterior_draws()
-          }
-          tempout <- lapply(1:length(out),  FUN = posterior_draws_function)
-          out <- tempout %>% do.call(rbind, .)
-          if(pdrawso) return(out)
-          zxdraws <- out # future::value(myzfun0)
         } # if(future_splits_exe_dofuture) {
     
     
     
     
-    # somehow this need consequence number
-        if(future_splits_exe & callfuns) {
-      zxdraws <- zxdraws %>% dplyr::group_by(drawid) %>% 
+    posterior_draws_function <- function(x, ...) {
+      out[[x]] %>% 
+        marginaleffects:: posterior_draws(shape = "long") %>% 
+        dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+        dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
+        dplyr::mutate(drawid = as.factor(drawid)) %>% 
+        dplyr::relocate(drawid, .before = 'draw')
+    }
+    
+    
+    consecutive_drawid_function <- function(x, ...) {
+      x %>% 
+        dplyr::group_by(drawid) %>% 
         dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
         dplyr::mutate(drawid = as.factor(drawid)) %>% 
         dplyr::ungroup()
@@ -1766,16 +1719,60 @@ growthparameters_comparison.bgmfit <- function(model,
     
     
     
-    if(!callfuns) {
-      if(is.list(marginals)) {
-        posterior_draws_function <- function(x, ...) {
-          marginals[[x]] %>% marginaleffects::posterior_draws()
-        }
-        tempout <- lapply(1:length(marginals),  FUN = posterior_draws_function)
-        marginals <- tempout %>% do.call(rbind, .)
+    # somehow this need consequence number
+    if(!future_splits_exe) {
+      if(callfuns) {
+        if(pdrawso) return(out)
+        zxdraws <- out %>% marginaleffects::posterior_draws()
       }
-      zxdraws <- marginals
+    } else if(future_splits_exe) {
+      if(callfuns) {
+        if(pdrawso) {
+          out <- out %>% do.call(rbind, .)
+          return(out)
+        }
+        zxdraws <- lapply(1:length(future_splits_at),  FUN = posterior_draws_function)
+        zxdraws <- zxdraws %>% do.call(rbind, .)
+        # Note that above zxdraws has drawid exact same as splits
+        # but somehow, we need consecutive drawid for summarising
+        zxdraws <- consecutive_drawid_function(zxdraws)
+      }
     }
+    
+    
+    
+    marginals_list_consecutive_drawid_function <- function(x, ...) {
+      if(x == 1) {
+        oux <- out[[x]]
+        oux$drawid <- as.numeric(oux$drawid)
+      } else {
+        maxpre <- max(as.numeric(levels(out[[x-1]]$drawid)))
+        oux <- out[[x]]
+        oux$drawid <- as.numeric(oux$drawid) + maxpre * x
+      }
+      oux
+    }
+    
+    
+    
+    if(setmarginals) {
+      if(is.list(marginals)) {
+        zxdraws <-
+          {. <- lapply(1:length(marginals), marginals_list_consecutive_drawid_function)
+          list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
+            unlist(lapply(., `[[`, i), FALSE, FALSE)))}
+        zxdraws$drawid <- cheapr::factor_(zxdraws$drawid)
+      } else {
+        zxdraws <- marginals
+      }
+    }
+    
+    
+    
+    
+    
+    
+    
     
     
     

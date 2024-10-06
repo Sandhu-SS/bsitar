@@ -29,6 +29,8 @@
   future_session = "multisession",
   future_splits = NULL,
   future_method = "future",
+  usedtplyr = FALSE,
+  usecollapse = TRUE,
   cores = NULL,
   average = FALSE,
   plot = FALSE,
@@ -39,6 +41,8 @@
   method = "pkg",
   marginals = NULL,
   pdrawso = FALSE,
+  pdrawsp = FALSE,
+  pdrawsh = FALSE,
   comparison = "difference",
   type = NULL,
   by = FALSE,
@@ -54,7 +58,6 @@
   reformat = NULL,
   estimate_center = NULL,
   estimate_interval = NULL,
-  usedtplyr = FALSE,
   dummy_to_factor = NULL,
   verbose = FALSE,
   expose_function = FALSE,
@@ -243,6 +246,18 @@ especially on \code{Linux} system and setting \code{\link[future:plan]{future::p
 with \code{'dofuture'} function from the \code{doFuture} package for
 parallel operations.}
 
+\item{usedtplyr}{A logical (default \code{FALSE}) to indicate whether to use
+the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}
+package uses the \pkg{data.table} package as back-end. Note that
+\code{usedtplyr}is useful only when the data has a large number of
+observation. For routine uses, the \code{usedtplyr} does not make a large
+difference in the performance because the \pkg{marginaleffects} package
+itself uses the \pkg{data.table} package. The \code{usedtplyr} argument is
+evaluated only when the \code{method = 'custom'}.}
+
+\item{usecollapse}{A logical (default \code{FALSE}) to indicate whether to
+use the \pkg{collapse} package for summarizing the draws.}
+
 \item{cores}{Number of cores to be used when running the parallel
 computations (if \code{future = TRUE}). On non-Windows systems this
 argument can be set globally via the mc.cores option. For the default
@@ -332,6 +347,18 @@ to return the original posterior draws for parameters (if \code{pdrawso =
 When \code{pdrawso = TRUE}, then default behavior is \code{pdrawso =
   'return'}. Note that posterior draws are returned before calling the
 \code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}.}
+
+\item{pdrawsp}{A character string (default \code{FALSE}) to indicate whether
+to return the posterior draws for parameters (if \code{pdrawsp =
+  'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
+When \code{pdrawsp = TRUE}, then default behavior is \code{pdrawsp =
+  'return'}. Note that summary of posterior draws for parameters is the
+default returned object.}
+
+\item{pdrawsh}{A character string (default \code{FALSE}) to indicate whether
+to return the posterior draws for parameters (if \code{pdrawsh =
+  'return'}). Note that summary of posterior draws for parameters is the
+default returned object.}
 
 \item{comparison}{For estimating growth parameters in the current use case,
 options allowed for the \code{comparison} are \code{'difference'} and
@@ -475,15 +502,6 @@ whether to compute credible intervals as equal-tailed intervals,
 \code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
 The pre-specified global options are restored on exit via the
 \code{\link[base:on.exit]{base::on.exit()}}.}
-
-\item{usedtplyr}{A logical (default \code{FALSE}) to indicate whether to use
-the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}
-package uses the \pkg{data.table} package as back-end. Note that
-\code{usedtplyr}is useful only when the data has a large number of
-observation. For routine uses, the \code{usedtplyr} does not make a large
-difference in the performance because the \pkg{marginaleffects} package
-itself uses the \pkg{data.table} package. The \code{usedtplyr} argument is
-evaluated only when the \code{method = 'custom'}.}
 
 \item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
 convert dummy variables into a factor variable. The named elements are
