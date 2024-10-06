@@ -31,6 +31,7 @@
   future_session = "multisession",
   future_splits = NULL,
   future_method = "future",
+  future_re_expose = NULL,
   usedtplyr = FALSE,
   usecollapse = TRUE,
   parallel = FALSE,
@@ -273,6 +274,15 @@ processes may not be freed automatically for Windows systems when plan is
 (\code{future_method = 'future'}, default), or to use \code{\link[foreach:foreach]{foreach::foreach()}}
 with \code{'dofuture'} function from the \code{doFuture} package for
 parallel operations.}
+
+\item{future_re_expose}{A logical to indicate whether to re expose
+\code{Stan} functions when \code{future = TRUE}. This is particularly
+relevant when \code{\link[future:plan]{future::plan()}} is set up as \code{'multisession'}. This is
+because already exposed \code{c++} \code{Stan} functions can not be passed
+across multiple sessions. When \code{future_re_expose = NULL} (default),
+the \code{future_re_expose} is automatically set as \code{TRUE} for the
+\code{'multisession'} plan. It is advised to set \code{future_re_expose =
+  TRUE} for speed gains.}
 
 \item{usedtplyr}{A logical (default \code{FALSE}) to indicate whether to use
 the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}

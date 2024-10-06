@@ -174,6 +174,7 @@ marginal_comparison.bgmfit <- function(model,
                                    future_session = 'multisession',
                                    future_splits = NULL,
                                    future_method = 'future',
+                                   future_re_expose = NULL,
                                    usedtplyr = FALSE,
                                    usecollapse = TRUE,
                                    cores = NULL,
@@ -611,8 +612,6 @@ marginal_comparison.bgmfit <- function(model,
     }
   }
   
-  
-    
     
   if(!future_splits_exe) {
     future_splits_exe_future <- FALSE
@@ -629,7 +628,46 @@ marginal_comparison.bgmfit <- function(model,
   }
     
     
+  
+  
+  if(future) {
+    need_future_re_expose_cpp <- FALSE
+    if(any(grepl("pstream__",
+                 deparse(model$model_info$exefuns[[1]])))) {
+      need_future_re_expose_cpp <- TRUE
+    }
     
+    re_expose <- FALSE
+    if(is.null(future_re_expose)) {
+      if(setplanis == "multisession") {
+        if(need_future_re_expose_cpp) {
+          re_expose <- TRUE
+          message("For multisession plan, argument 'future_re_expose' has been set as TRUE")
+        } else if(!need_future_re_expose_cpp) {
+          if(verbose) {
+            message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
+          }
+        }
+      }
+    } else if(!is.null(future_re_expose)) {
+      if(future_re_expose) {
+        re_expose <- TRUE
+      } else if(!future_re_expose) {
+        if(!need_future_re_expose_cpp) {
+          # if(expose_method_set == "R") {
+          if(verbose) {
+            message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
+          }
+        } 
+        if(need_future_re_expose_cpp & setplanis == "multisession") {
+          # if(expose_method_set != "R") {
+          stop("For plan multisession, the functions need to be re_exposed by setting future_re_expose = TRUE")
+        }
+      }
+    }
+  } # if(future) {
+  
+  
     
     
     
@@ -685,6 +723,7 @@ marginal_comparison.bgmfit <- function(model,
       future_session,
       future_splits,
       future_method,
+      future_re_expose,
       cores,
       dummy_to_factor,
       verbose,
@@ -985,7 +1024,6 @@ marginal_comparison.bgmfit <- function(model,
         } else if(average) {
           out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
         }
-        # onex0 <- out %>% marginaleffects::posterior_draws()
       } # if(!future_splits_exe) {
       
       
@@ -997,36 +1035,45 @@ marginal_comparison.bgmfit <- function(model,
             predictions_arguments[['draw_ids']] <- x
             predictions_arguments[['ndraws']] <- NULL
             `%>%` <- bsitar::`%>%`
-            if(setplanis == "multisession") {
+            if(re_expose) {
               if(verbose) message("need to expose functions for 'multisession'")
               predictions_arguments[['model']] <- 
                 bsitar::expose_model_functions(predictions_arguments[['model']])
             }
-            out <- do.call(marginaleffects::predictions, predictions_arguments)
+            # Re-assign appropriate function
+            setenv <- predictions_arguments[['model']]$model_info$envir
+            assign(o[[1]],
+                   predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                   envir = setenv)
+            do.call(marginaleffects::predictions, predictions_arguments)
           }
-            out <-  future.apply::future_lapply(future_splits_at,
-                                                future.envir = parent.frame(),
-                                                future.globals = TRUE,
-                                                future.seed = TRUE,
-                                                FUN = myzfun)
+          out <-  future.apply::future_lapply(future_splits_at,
+                                              future.envir = parent.frame(),
+                                              future.globals = TRUE,
+                                              future.seed = TRUE,
+                                              FUN = myzfun)
         } else if(average) {
           myzfun <- function(x) {
             predictions_arguments[['draw_ids']] <- x
             predictions_arguments[['ndraws']] <- NULL
             `%>%` <- bsitar::`%>%`
-            if(setplanis == "multisession") {
+            if(re_expose) {
               if(verbose) message("need to expose functions for 'multisession'")
               predictions_arguments[['model']] <- 
                 bsitar::expose_model_functions(predictions_arguments[['model']])
             }
-            out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-           
+            # Re-assign appropriate function
+            setenv <- predictions_arguments[['model']]$model_info$envir
+            assign(o[[1]],
+                   predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                   envir = setenv)
+            do.call(marginaleffects::avg_predictions, predictions_arguments)
           }
-            out <-  future.apply::future_lapply(future_splits_at,
-                                                future.envir = parent.frame(),
-                                                future.globals = TRUE,
-                                                future.seed = TRUE,
-                                                FUN = myzfun)
+          out <-  future.apply::future_lapply(future_splits_at,
+                                              future.envir = parent.frame(),
+                                              future.globals = TRUE,
+                                              future.seed = TRUE,
+                                              FUN = myzfun)
         } 
       } # if(future_splits_exe_future) {
       
@@ -1042,48 +1089,59 @@ marginal_comparison.bgmfit <- function(model,
         dofutureplan <- getOption("doFuture.rng.onMisuse")
         options(doFuture.rng.onMisuse = "ignore")
         on.exit(options("doFuture.rng.onMisuse" = dofutureplan), add = TRUE)
-        
-            if(!average) {
-              out <- foreach::foreach(x = 1:length(future_splits_at),
-                                      .options.future = list(seed = TRUE),
-                                      .options.future =
-                                        list(globals = c('future_splits_at',
-                                                         'setplanis',
-                                                         'verbose',
-                                                         'predictions_arguments'))
-              ) %doFuture_function% {
-                x <- future_splits_at[[x]]
-                predictions_arguments[['draw_ids']] <- x
-                predictions_arguments[['ndraws']] <- NULL
-                `%>%` <- bsitar::`%>%`
-                if(setplanis == "multisession") {
-                  if(verbose) message("need to expose functions for 'multisession'")
-                  predictions_arguments[['model']] <- 
-                    bsitar::expose_model_functions(predictions_arguments[['model']])
-                }
-                tempout <- do.call(marginaleffects::predictions, predictions_arguments)
-              }
-            } else if(average) {
-              out <- foreach::foreach(x = 1:length(future_splits_at),
-                                      .options.future = list(seed = TRUE),
-                                      .options.future =
-                                        list(globals = c('future_splits_at',
-                                                         'setplanis',
-                                                         'verbose',
-                                                         'predictions_arguments'))
-              ) %doFuture_function% {
-                x <- future_splits_at[[x]]
-                predictions_arguments[['draw_ids']] <- x
-                predictions_arguments[['ndraws']] <- NULL
-                `%>%` <- bsitar::`%>%`
-                if(setplanis == "multisession") {
-                  if(verbose) message("need to expose functions for 'multisession'")
-                  predictions_arguments[['model']] <- 
-                    bsitar::expose_model_functions(predictions_arguments[['model']])
-                }
-                tempout <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-              }
-          } 
+        if(!average) {
+          out <- foreach::foreach(x = 1:length(future_splits_at),
+                                  .options.future = list(seed = TRUE),
+                                  .options.future =
+                                    list(globals = c('future_splits_at',
+                                                     'verbose',
+                                                     'o', 
+                                                     're_expose',
+                                                     'predictions_arguments'))
+          ) %doFuture_function% {
+            x <- future_splits_at[[x]]
+            predictions_arguments[['draw_ids']] <- x
+            predictions_arguments[['ndraws']] <- NULL
+            `%>%` <- bsitar::`%>%`
+            if(re_expose) {
+              if(verbose) message("need to expose functions for 'multisession'")
+              predictions_arguments[['model']] <- 
+                bsitar::expose_model_functions(predictions_arguments[['model']])
+            }
+            # Re-assign appropriate function
+            setenv <- predictions_arguments[['model']]$model_info$envir
+            assign(o[[1]],
+                   predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                   envir = setenv)
+            do.call(marginaleffects::predictions, predictions_arguments)
+          }
+        } else if(average) {
+          out <- foreach::foreach(x = 1:length(future_splits_at),
+                                  .options.future = list(seed = TRUE),
+                                  .options.future =
+                                    list(globals = c('future_splits_at',
+                                                     'verbose',
+                                                     'o', 
+                                                     're_expose',
+                                                     'predictions_arguments'))
+          ) %doFuture_function% {
+            x <- future_splits_at[[x]]
+            predictions_arguments[['draw_ids']] <- x
+            predictions_arguments[['ndraws']] <- NULL
+            `%>%` <- bsitar::`%>%`
+            if(re_expose) {
+              if(verbose) message("need to expose functions for 'multisession'")
+              predictions_arguments[['model']] <- 
+                bsitar::expose_model_functions(predictions_arguments[['model']])
+            }
+            # Re-assign appropriate function
+            setenv <- predictions_arguments[['model']]$model_info$envir
+            assign(o[[1]],
+                   predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                   envir = setenv)
+            do.call(marginaleffects::avg_predictions, predictions_arguments)
+          }
+        } 
       } # if(future_splits_exe_dofuture) {
       
       
@@ -1471,6 +1529,8 @@ marginal_comparison.bgmfit <- function(model,
   if(!is.null(pdrawsh_est)) {
     out[['pdrawsh_est']] <- pdrawsh_est %>% dplyr::ungroup()
   }
+  
+  if(length(out) == 1) out <- out[[1]]
   
   return(out)
 }
