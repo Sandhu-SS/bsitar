@@ -263,7 +263,10 @@ depending on which of them is not \code{NULL}. If \code{future_splits} is
 on the \code{ndraws} and the \code{cores}. Ignored when \code{future_splits
   = FALSE}. The use case of \code{future_splits} is to save memory and speed
 especially on \code{Linux} system and setting \code{\link[future:plan]{future::plan()}} as
-\code{multicore}.}
+\code{multicore}. Note that in case future session is interrupted, the R
+processes may not be freed automatically for Windows systems when plan is
+\code{'multisession'}. In that case, the R processes can be interrupted via
+\code{\link[installr:kill_all_Rscript_s]{installr::kill_all_Rscript_s()}}.}
 
 \item{future_method}{A character string to indicate whether to use
 \code{\link[future:future]{future::future()}} along with the \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}

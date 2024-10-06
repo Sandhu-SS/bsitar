@@ -483,11 +483,14 @@ marginal_comparison.bgmfit <- function(model,
   
   # 28.09.2024
   if(is.null(get.cores_[['max.cores']])) {
-    if(is.null(arguments$cores)) get.cores_[['max.cores']] <- 1
+    if(is.null(arguments$cores)) 
+      get.cores_[['max.cores']] <- future::availableCores() - 1
   }
   
   arguments$cores <- setincores <-  get.cores_[['max.cores']]
   .cores_ps <- get.cores_[['.cores_ps']]
+  
+  
   
   if (future) {
     getfutureplan <- future::plan()
@@ -498,6 +501,7 @@ marginal_comparison.bgmfit <- function(model,
     } else if (future_session == 'sequential') {
       set_future_session <- future_session
     }
+    
     setplanis <- set_future_session
     if(set_future_session == 'sequential') {
       future::plan(setplanis)
@@ -505,26 +509,13 @@ marginal_comparison.bgmfit <- function(model,
       future::plan(setplanis, workers = setincores)
     }
     on.exit(future::plan(getfutureplan), add = TRUE)
-    
-    # setplanis <- set_future_session
-    # fuplan <- getOption("future.plan")
-    # options("future.plan" = setplanis)
-    # future::plan(setplanis)
-    # # on.exit(options("future.plan" = fuplan), add = TRUE)
-    # on.exit(future::plan(fuplan), add = TRUE)
-    
-    
-    # coresplan <- getOption("mc.cores")
-    # options(mc.cores = setincores)
-    # on.exit(options("mc.cores" = coresplan), add = TRUE)
-    
+
     if (future_session == 'multicore') {
       multthreadplan <- getOption("future.fork.multithreading.enable")
       options(future.fork.multithreading.enable = TRUE)
       on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
               add = TRUE)
     }
-    
   }
   
   
@@ -716,6 +707,7 @@ marginal_comparison.bgmfit <- function(model,
       constrats_by,
       constrats_at,
       usedtplyr,
+      usecollapse,
       funlist
     )
   ))[-1]
@@ -924,16 +916,7 @@ marginal_comparison.bgmfit <- function(model,
       comparisons_arguments[['condition']] <- NULL
     }
     
-    
-   
-    # if(!is.null(comparisons_arguments[['by']])) {
-    #   checbyx <- comparisons_arguments[['by']]
-    #   if(all(checbyx == "")) method <- 'pkg'
-    #   if(is.logical(checbyx)) {
-    #     if(!checbyx) method <- 'pkg'
-    #   }
-    # }
-    
+  
 
     if(method == 'pkg') {
         if(!plot) {
@@ -1008,13 +991,12 @@ marginal_comparison.bgmfit <- function(model,
       
       
       
-      if(future_splits_exe_future) {
+      if(future_splits_exe_future & callfuns) {
         if(!average) {
           myzfun <- function(x) {
             predictions_arguments[['draw_ids']] <- x
             predictions_arguments[['ndraws']] <- NULL
             `%>%` <- bsitar::`%>%`
-            future::plan() %>% print()
             if(setplanis == "multisession") {
               if(verbose) message("need to expose functions for 'multisession'")
               predictions_arguments[['model']] <- 
@@ -1022,20 +1004,11 @@ marginal_comparison.bgmfit <- function(model,
             }
             out <- do.call(marginaleffects::predictions, predictions_arguments)
           }
-          
-         
-            # out <- lapply(future_splits_at,  FUN = myzfun)
             out <-  future.apply::future_lapply(future_splits_at,
                                                 future.envir = parent.frame(),
-                                                # future.globals = TRUE,
-                                                future.globals = 
-                                                  c('future_splits_at',
-                                                    'setplanis',
-                                                    'verbose',
-                                                    'predictions_arguments'),
+                                                future.globals = TRUE,
                                                 future.seed = TRUE,
                                                 FUN = myzfun)
-           
         } else if(average) {
           myzfun <- function(x) {
             predictions_arguments[['draw_ids']] <- x
@@ -1049,18 +1022,11 @@ marginal_comparison.bgmfit <- function(model,
             out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
            
           }
-            # out <- lapply(future_splits_at,  FUN = myzfun)
             out <-  future.apply::future_lapply(future_splits_at,
                                                 future.envir = parent.frame(),
-                                                # future.globals = TRUE,
-                                                future.globals = 
-                                                  c('future_splits_at',
-                                                    'setplanis',
-                                                    'verbose',
-                                                    'predictions_arguments'),
+                                                future.globals = TRUE,
                                                 future.seed = TRUE,
                                                 FUN = myzfun)
-           
         } 
       } # if(future_splits_exe_future) {
       
@@ -1077,7 +1043,6 @@ marginal_comparison.bgmfit <- function(model,
         options(doFuture.rng.onMisuse = "ignore")
         on.exit(options("doFuture.rng.onMisuse" = dofutureplan), add = TRUE)
         
-   
             if(!average) {
               out <- foreach::foreach(x = 1:length(future_splits_at),
                                       .options.future = list(seed = TRUE),
@@ -1098,7 +1063,6 @@ marginal_comparison.bgmfit <- function(model,
                 }
                 tempout <- do.call(marginaleffects::predictions, predictions_arguments)
               }
-              # out <- out %>% do.call(rbind, .)
             } else if(average) {
               out <- foreach::foreach(x = 1:length(future_splits_at),
                                       .options.future = list(seed = TRUE),
@@ -1156,7 +1120,8 @@ marginal_comparison.bgmfit <- function(model,
             out <- out %>% do.call(rbind, .)
             return(out)
           }
-          onex0 <- lapply(1:length(future_splits_at),  FUN = posterior_draws_function)
+          onex0 <- lapply(1:length(future_splits_at),  
+                          FUN = posterior_draws_function)
           onex0 <- onex0 %>% do.call(rbind, .)
           # Note that above onex0 has drawid exact same as splits
           # but somehow, we need consecutive drawid for summarising
@@ -1183,9 +1148,6 @@ marginal_comparison.bgmfit <- function(model,
       
       if(setmarginals) {
         if(is.list(marginals)) {
-          # onex0 <- lapply(1:length(marginals),  FUN = marginals_list_consecutive_drawid_function)
-          # onex0 <- onex0 %>% do.call(rbind, .)
-          # onex0$drawid <- as.factor(onex0$drawid)
           onex0 <-
             {. <- lapply(1:length(marginals), marginals_list_consecutive_drawid_function)
             list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
@@ -1212,13 +1174,6 @@ marginal_comparison.bgmfit <- function(model,
           
         }
       }
-      
-      
-      
-    
-      # setdrawidparm <- by
-      # namesx <- c('estimate', 'conf.low', 'conf.high')
-      # setdrawidparm_ <- c(setdrawidparm, namesx)
       
       
       setdrawidparm <- by
@@ -1317,21 +1272,54 @@ marginal_comparison.bgmfit <- function(model,
         setdrawidparm_at <- c(constrats_at, 'term')
         setdrawidparm_at_ <- c(setdrawidparm_at, namesx)
         
-        out_sf_hy <-
+        # out_sf_hy <-
+        #   onex0 %>% 
+        #   collapse::fgroup_by(groupvarshyp1) %>%
+        #   collapse::fselect(set_constrats_by) %>% 
+        #   collapse::frename('estimate' = 'draw') %>% 
+        #   collapse::fsummarise(collapse::qDF(
+        #     get_hypothesis_x(.data,
+        #                           by = constrats_by,
+        #                           hypothesis = hypothesis,
+        #                           draws = 'estimate'))) %>%
+        #   collapse::fgroup_by(groupvarshyp2) %>%
+        #   collapse::fsummarise(collapse::mctl(
+        #     get_pe_ci_collapse(.data[['estimate']]))
+        #   ) %>%
+        #   collapse::frename(., setdrawidparm_at_)
+        
+        
+        temhyy <-
           onex0 %>% 
           collapse::fgroup_by(groupvarshyp1) %>%
           collapse::fselect(set_constrats_by) %>% 
           collapse::frename('estimate' = 'draw') %>% 
           collapse::fsummarise(collapse::qDF(
             get_hypothesis_x(.data,
-                                  by = constrats_by,
-                                  hypothesis = hypothesis,
-                                  draws = 'estimate'))) %>%
+                             by = constrats_by,
+                             hypothesis = hypothesis,
+                             draws = 'estimate'))) 
+        
+        out_sf_hy <- 
+          temhyy %>%
           collapse::fgroup_by(groupvarshyp2) %>%
           collapse::fsummarise(collapse::mctl(
             get_pe_ci_collapse(.data[['estimate']]))
           ) %>%
           collapse::frename(., setdrawidparm_at_)
+        
+        
+        if(!isFALSE(pdrawsh)) {
+          selectchoicesr <- c("return", 'add') 
+          checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
+          if(pdrawsh == 'return') {
+            return(temhyy)
+          } else if(pdrawsh == 'add') {
+            pdrawsh_est <- temhyy
+          } else {
+            
+          }
+        } # if(!isFALSE(pdrawsh)) {
         
       } # if(!is.null(hypothesis)) {
     } # if(method == 'custom') {
@@ -1343,8 +1331,7 @@ marginal_comparison.bgmfit <- function(model,
                          ~ round(., digits = digits))) %>%
     data.frame()
   
-  
-  
+ 
   if(!is.null(pdrawsh_est)) {
     if(usecollapse) {
       pdrawsh_est <- pdrawsh_est %>% data.frame() %>% 
@@ -1370,6 +1357,9 @@ marginal_comparison.bgmfit <- function(model,
                                     ~ round(., digits = digits)))
     }
   }
+  
+  
+  
   
   
  
@@ -1432,6 +1422,7 @@ marginal_comparison.bgmfit <- function(model,
         data.frame()
     } # if(!is.null(pdrawsp_est)) {
     
+    
     if(!is.null(pdrawsh_est)) {
       pdrawsh_est <- pdrawsh_est %>% 
         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
@@ -1448,23 +1439,40 @@ marginal_comparison.bgmfit <- function(model,
   } # if (reformat) {
   
   
+  
+  ###########################################
+  # convert factor variable that do not carry attributes ...
+  as_factor_as_character_factor_df <- function(df) {
+    as_factor_as_character_factor <- function(x) {
+      as.factor(as.character.factor(x))
+    }
+    df %>% dplyr::mutate_if(is.factor, as_factor_as_character_factor )
+  }
+  if(!is.null(out_sf)) out_sf <- as_factor_as_character_factor_df(out_sf)
+  if(!is.null(out_sf_hy)) out_sf_hy <- as_factor_as_character_factor_df(out_sf_hy)
+  if(!is.null(pdrawsp_est)) pdrawsp_est <- as_factor_as_character_factor_df(pdrawsp_est)
+  if(!is.null(pdrawsh_est)) pdrawsh_est <- as_factor_as_character_factor_df(pdrawsh_est)
+  ###########################################
+  
+  
+  out <- list()
+  if(!is.null(out_sf)) {
+    out[['estimate']] <- out_sf %>% dplyr::ungroup()
+  }
+  
   if(!is.null(out_sf_hy)) {
-    out_sf <- out_sf %>% dplyr::ungroup()
-    out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
-    out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
-  } 
+    out[['contrast']] <- out_sf_hy %>% dplyr::ungroup()
+  }
   
   if(!is.null(pdrawsp_est)) {
-    pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
-    out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+    out[['pdrawsp_est']] <- pdrawsp_est %>% dplyr::ungroup()
   }
   
   if(!is.null(pdrawsh_est)) {
-    pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
-    out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
+    out[['pdrawsh_est']] <- pdrawsh_est %>% dplyr::ungroup()
   }
   
-  return(out_sf)
+  return(out)
 }
 
 

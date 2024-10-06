@@ -301,7 +301,10 @@
 #'   on the \code{ndraws} and the \code{cores}. Ignored when \code{future_splits
 #'   = FALSE}. The use case of \code{future_splits} is to save memory and speed
 #'   especially on \code{Linux} system and setting [future::plan()] as
-#'   \code{multicore}.
+#'   \code{multicore}. Note that in case future session is interrupted, the R
+#'   processes may not be freed automatically for Windows systems when plan is
+#'   \code{'multisession'}. In that case, the R processes can be interrupted via
+#'   [installr::kill_all_Rscript_s()].
 #'   
 #' @param future_method A character string to indicate whether to use
 #'   [future::future()] along with the [future.apply::future_lapply()]
@@ -420,9 +423,6 @@ growthparameters_comparison.bgmfit <- function(model,
                                    funlist = NULL,
                                    envir = NULL, ...
                                    ) {
-  
-  # if future::plan('multisession') is interupted and proceeses keep running
-  # then all those R scripts can be stopped by calling installr::kill_all_Rscript_s()
   
   if(!is.null(estimate_center)) {
     ec_ <- getOption("marginaleffects_posterior_center")
@@ -797,7 +797,8 @@ growthparameters_comparison.bgmfit <- function(model,
   
   # 28.09.2024
   if(is.null(get.cores_[['max.cores']])) {
-    if(is.null(arguments$cores)) get.cores_[['max.cores']] <- 1
+    if(is.null(arguments$cores)) 
+      get.cores_[['max.cores']] <- future::availableCores() - 1
   }
   
   arguments$cores <- setincores <-  get.cores_[['max.cores']]
@@ -812,6 +813,7 @@ growthparameters_comparison.bgmfit <- function(model,
     } else if (future_session == 'sequential') {
       set_future_session <- future_session
     }
+    
     setplanis <- set_future_session
     if(set_future_session == 'sequential') {
       future::plan(setplanis)
@@ -820,25 +822,12 @@ growthparameters_comparison.bgmfit <- function(model,
     }
     on.exit(future::plan(getfutureplan), add = TRUE)
     
-    # setplanis <- set_future_session
-    # fuplan <- getOption("future.plan")
-    # options("future.plan" = setplanis)
-    # future::plan(setplanis)
-    # # on.exit(options("future.plan" = fuplan), add = TRUE)
-    # on.exit(future::plan(fuplan), add = TRUE)
-    
-    
-    # coresplan <- getOption("mc.cores")
-    # options(mc.cores = setincores)
-    # on.exit(options("mc.cores" = coresplan), add = TRUE)
-    
     if (future_session == 'multicore') {
       multthreadplan <- getOption("future.fork.multithreading.enable")
       options(future.fork.multithreading.enable = TRUE)
       on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
               add = TRUE)
     }
-    
   }
   
   
@@ -1594,7 +1583,6 @@ growthparameters_comparison.bgmfit <- function(model,
             predictions_arguments[['draw_ids']] <- x
             predictions_arguments[['ndraws']] <- NULL
             `%>%` <- bsitar::`%>%`
-            future::plan() %>% print()
             if(setplanis == "multisession") {
               if(verbose) message("need to expose functions for 'multisession'")
               predictions_arguments[['model']] <- 
@@ -1602,25 +1590,16 @@ growthparameters_comparison.bgmfit <- function(model,
             }
             out <- do.call(marginaleffects::predictions, predictions_arguments)
           }
-          
-            # out <- lapply(future_splits_at,  FUN = myzfun)
-            out <-  future.apply::future_lapply(future_splits_at,
-                                                future.envir = parent.frame(),
-                                                # future.globals = TRUE,
-                                                future.globals = 
-                                                  c('future_splits_at',
-                                                    'setplanis',
-                                                    'verbose',
-                                                    'predictions_arguments'),
-                                                future.seed = TRUE,
-                                                FUN = myzfun)
-            
+          out <-  future.apply::future_lapply(future_splits_at,
+                                              future.envir = parent.frame(),
+                                              future.globals = TRUE,
+                                              future.seed = TRUE,
+                                              FUN = myzfun)
       } else if(average) {
           myzfun <- function(x) {
             predictions_arguments[['draw_ids']] <- x
             predictions_arguments[['ndraws']] <- NULL
             `%>%` <- bsitar::`%>%`
-            future::plan() %>% print()
             if(setplanis == "multisession") {
               if(verbose) message("need to expose functions for 'multisession'")
               predictions_arguments[['model']] <- 
@@ -1628,18 +1607,11 @@ growthparameters_comparison.bgmfit <- function(model,
             }
             out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
           }
-            # out <- lapply(future_splits_at,  FUN = myzfun)
             out <-  future.apply::future_lapply(future_splits_at,
                                                 future.envir = parent.frame(),
-                                                # future.globals = TRUE,
-                                                future.globals = 
-                                                  c('future_splits_at',
-                                                    'setplanis',
-                                                    'verbose',
-                                                    'predictions_arguments'),
+                                                future.globals = TRUE,
                                                 future.seed = TRUE,
-                                                FUN = myzfun)
-      }
+                                                FUN = myzfun)      }
     } # if(future_splits_exe_future) {
     
     
@@ -1672,7 +1644,6 @@ growthparameters_comparison.bgmfit <- function(model,
                   }
                   tempout <- do.call(marginaleffects::predictions, predictions_arguments)
                 }
-                # out <- out %>% do.call(rbind, .)
               } else if(average) {
                 out <- foreach::foreach(x = 1:length(future_splits_at),
                                         .options.future = list(seed = TRUE),
@@ -2559,32 +2530,72 @@ growthparameters_comparison.bgmfit <- function(model,
     
   } # if (reformat) {
    
-  out_sf <- out_sf %>% dplyr::ungroup()
+  # out_sf <- out_sf %>% dplyr::ungroup()
+  # 
+  # if(!is.null(out_sf_hy) & is.null(pdraws_est)) {
+  #   out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
+  #   out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
+  # } else if(is.null(out_sf_hy) & !is.null(pdraws_est)) {
+  #   pdraws_est <- pdraws_est %>% dplyr::ungroup() 
+  #   out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf)
+  # } else if(!is.null(out_sf_hy) & !is.null(pdraws_est)) {
+  #   out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
+  #   pdraws_est <- pdraws_est %>% dplyr::ungroup() 
+  #   out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf, 
+  #                  contrast = out_sf_hy)
+  # }
+  # 
+  # if(!is.null(pdrawsp_est)) {
+  #   pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
+  #   out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+  # }
+  # 
+  # if(!is.null(pdrawsh_est)) {
+  #   pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
+  #   out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
+  # }
+  # 
+  # return(out_sf)
   
-  if(!is.null(out_sf_hy) & is.null(pdraws_est)) {
-    out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
-    out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
-  } else if(is.null(out_sf_hy) & !is.null(pdraws_est)) {
-    pdraws_est <- pdraws_est %>% dplyr::ungroup() 
-    out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf)
-  } else if(!is.null(out_sf_hy) & !is.null(pdraws_est)) {
-    out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
-    pdraws_est <- pdraws_est %>% dplyr::ungroup() 
-    out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf, 
-                   contrast = out_sf_hy)
+  ###########################################
+  # convert factor variable that do not carry attributes ...
+  as_factor_as_character_factor_df <- function(df) {
+    as_factor_as_character_factor <- function(x) {
+      as.factor(as.character.factor(x))
+    }
+    df %>% dplyr::mutate_if(is.factor, as_factor_as_character_factor )
+  }
+  if(!is.null(out_sf)) out_sf <- as_factor_as_character_factor_df(out_sf)
+  if(!is.null(out_sf_hy)) out_sf_hy <- as_factor_as_character_factor_df(out_sf_hy)
+  if(!is.null(pdraws_est)) pdraws_est <- as_factor_as_character_factor_df(pdraws_est)
+  if(!is.null(pdrawsp_est)) pdrawsp_est <- as_factor_as_character_factor_df(pdrawsp_est)
+  if(!is.null(pdrawsh_est)) pdrawsh_est <- as_factor_as_character_factor_df(pdrawsh_est)
+  ###########################################
+  
+  
+  out <- list()
+  if(!is.null(out_sf)) {
+    out[['estimate']] <- out_sf %>% dplyr::ungroup()
+  }
+  
+  if(!is.null(out_sf_hy)) {
+    out[['contrast']] <- out_sf_hy %>% dplyr::ungroup()
+  }
+  
+  if(!is.null(pdraws_est)) {
+    out[['pdraws_est']] <- pdraws_est %>% dplyr::ungroup()
   }
   
   if(!is.null(pdrawsp_est)) {
-    pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
-    out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+    out[['pdrawsp_est']] <- pdrawsp_est %>% dplyr::ungroup()
   }
   
   if(!is.null(pdrawsh_est)) {
-    pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
-    out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
+    out[['pdrawsh_est']] <- pdrawsh_est %>% dplyr::ungroup()
   }
   
-  return(out_sf)
+  return(out)
+  
 }
 
 

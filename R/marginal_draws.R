@@ -977,7 +977,7 @@ marginal_draws.bgmfit <-
    pdrawsp_est <- NULL
    pdrawsh_est <- NULL
    # pdraws_est <- NULL
-    
+
    if(method == 'custom') {
      predictions_arguments[['cross']] <- NULL
      predictions_arguments[['method']] <- NULL
@@ -1032,7 +1032,6 @@ marginal_draws.bgmfit <-
      
      
      
-     
      if(future_splits_exe_future & callfuns) {
        if(call_predictions) {
          if(!plot) {
@@ -1048,14 +1047,6 @@ marginal_draws.bgmfit <-
                    bsitar::expose_model_functions(predictions_arguments[['model']])
                }
                out <- do.call(marginaleffects::predictions, predictions_arguments)
-               # out <-  out %>% 
-               #   marginaleffects:: posterior_draws(shape = "long") %>% 
-               #   # instead of incrementing drawid, replace by the actual draw_ids
-               #   # dplyr::mutate(drawid = as.numeric(drawid) + min(x)-1) %>% 
-               #   dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-               #   dplyr::mutate(drawid = x[.data[['drawid']]]) %>% 
-               #   dplyr::mutate(drawid = as.factor(drawid)) %>% 
-               #   dplyr::relocate(drawid, .before = 'draw')
              }
              
              
@@ -1776,24 +1767,58 @@ marginal_draws.bgmfit <-
    } # if (reformat) {
    
    
-   if(!is.null(out_sf_hy)) {
-     out_sf <- out_sf %>% dplyr::ungroup()
-     out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
-     out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
-   } 
+   # if(!is.null(out_sf_hy)) {
+   #   out_sf <- out_sf %>% dplyr::ungroup()
+   #   out_sf_hy <- out_sf_hy %>% dplyr::ungroup()
+   #   out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
+   # } 
+   # 
+   # if(!is.null(pdrawsp_est)) {
+   #   pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
+   #   out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+   # }
+   # 
+   # if(!is.null(pdrawsh_est)) {
+   #   pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
+   #   out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
+   # }
+   # 
+   # return(out_sf)
    
+   ###########################################
+   # convert factor variable that do not carry attributes ...
+   as_factor_as_character_factor_df <- function(df) {
+     as_factor_as_character_factor <- function(x) {
+       as.factor(as.character.factor(x))
+     }
+     df %>% dplyr::mutate_if(is.factor, as_factor_as_character_factor )
+   }
+   if(!is.null(out_sf)) out_sf <- as_factor_as_character_factor_df(out_sf)
+   if(!is.null(out_sf_hy)) out_sf_hy <- as_factor_as_character_factor_df(out_sf_hy)
+   if(!is.null(pdrawsp_est)) pdrawsp_est <- as_factor_as_character_factor_df(pdrawsp_est)
+   if(!is.null(pdrawsh_est)) pdrawsh_est <- as_factor_as_character_factor_df(pdrawsh_est)
+   ###########################################
+   
+   
+   out <- list()
+   if(!is.null(out_sf)) {
+     out[['estimate']] <- out_sf %>% dplyr::ungroup()
+   }
+   
+   if(!is.null(out_sf_hy)) {
+     out[['contrast']] <- out_sf_hy %>% dplyr::ungroup()
+   }
    
    if(!is.null(pdrawsp_est)) {
-     pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
-     out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
+     out[['pdrawsp_est']] <- pdrawsp_est %>% dplyr::ungroup()
    }
    
    if(!is.null(pdrawsh_est)) {
-     pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
-     out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
+     out[['pdrawsh_est']] <- pdrawsh_est %>% dplyr::ungroup()
    }
    
-   return(out_sf)
+   return(out)
+   
   }
 
 
