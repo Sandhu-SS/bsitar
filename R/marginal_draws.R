@@ -606,42 +606,40 @@ marginal_draws.bgmfit <-
     
     
     
-    if(future) {
-      need_future_re_expose_cpp <- FALSE
-      if(any(grepl("pstream__",
-                   deparse(model$model_info$exefuns[[1]])))) {
-        need_future_re_expose_cpp <- TRUE
-      }
-      
-      re_expose <- FALSE
-      if(is.null(future_re_expose)) {
-        if(setplanis == "multisession") {
-          if(need_future_re_expose_cpp) {
-            re_expose <- TRUE
-            message("For multisession plan, argument 'future_re_expose' has been set as TRUE")
-          } else if(!need_future_re_expose_cpp) {
-            if(verbose) {
-              message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
-            }
-          }
-        }
-      } else if(!is.null(future_re_expose)) {
-        if(future_re_expose) {
+    need_future_re_expose_cpp <- FALSE
+    if(any(grepl("pstream__",
+                 deparse(model$model_info$exefuns[[1]])))) {
+      need_future_re_expose_cpp <- TRUE
+    }
+    
+    re_expose <- FALSE
+    if(is.null(future_re_expose)) {
+      if(setplanis == "multisession") {
+        if(need_future_re_expose_cpp) {
           re_expose <- TRUE
-        } else if(!future_re_expose) {
-          if(!need_future_re_expose_cpp) {
-            # if(expose_method_set == "R") {
-            if(verbose) {
-              message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
-            }
-          } 
-          if(need_future_re_expose_cpp & setplanis == "multisession") {
-            # if(expose_method_set != "R") {
-            stop("For plan multisession, the functions need to be re_exposed by setting future_re_expose = TRUE")
+          message("For multisession plan, argument 'future_re_expose' has been set as TRUE")
+        } else if(!need_future_re_expose_cpp) {
+          if(verbose) {
+            message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
           }
         }
       }
-    } # if(future) {
+    } else if(!is.null(future_re_expose)) {
+      if(future_re_expose) {
+        re_expose <- TRUE
+      } else if(!future_re_expose) {
+        if(!need_future_re_expose_cpp) {
+        # if(expose_method_set == "R") {
+          if(verbose) {
+            message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
+          }
+      } 
+      if(need_future_re_expose_cpp & setplanis == "multisession") {
+        # if(expose_method_set != "R") {
+          stop("For plan multisession, the functions need to be re_exposed by setting future_re_expose = TRUE")
+        }
+      }
+    }
     
     
     
@@ -1033,12 +1031,16 @@ marginal_draws.bgmfit <-
      predictions_arguments[['cross']] <- NULL
      predictions_arguments[['method']] <- NULL
      predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
-
      by <- predictions_arguments[['by']] 
-     # xcby <- predictions_arguments[['by']] 
-     # xvar <- intersect(xvar, xcby)   
      
      
+     if(future_splits_exe) {
+       # Note that since predictions_arguments are passed to multisession, 
+       # evaluate each argument
+       for (i in names(predictions_arguments)) {
+         predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
+       }
+     }
      
      
      if(!future_splits_exe & callfuns) {
@@ -1106,6 +1108,11 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
+                                                 # future.globals = 
+                                                 #   c('future_splits_at',
+                                                 #     'setplanis',
+                                                 #     'verbose',
+                                                 #     'predictions_arguments'),
                                                  future.seed = TRUE,
                                                  FUN = myzfun)
            } else if(average) {
@@ -1128,6 +1135,11 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
+                                                 # future.globals = 
+                                                 #   c('future_splits_at',
+                                                 #     'setplanis',
+                                                 #     'verbose',
+                                                 #     'predictions_arguments'),
                                                  future.seed = TRUE,
                                                  FUN = myzfun)
            }
@@ -1163,6 +1175,11 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
+                                                 # future.globals = 
+                                                 #   c('future_splits_at',
+                                                 #     'setplanis',
+                                                 #     'verbose',
+                                                 #     'predictions_arguments'),
                                                  future.seed = TRUE,
                                                  FUN = myzfun)
            } else if(average) {
@@ -1185,6 +1202,12 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
+                                                 # future.globals = 
+                                                 # c('future_splits_at',
+                                                 #   'setplanis',
+                                                 #   'verbose',
+                                                 #   'predictions_arguments'),
+                                                 # future.seed = TRUE,
                                                  FUN = myzfun)
            }
          } else if(plot) {
@@ -1217,6 +1240,7 @@ marginal_draws.bgmfit <-
                                         .options.future = list(seed = TRUE),
                                         .options.future =
                                        list(globals = structure(TRUE, add = c('future_splits_at',
+                                                        'setplanis',
                                                         'verbose',
                                                         'o', 
                                                         're_expose',
@@ -1243,6 +1267,7 @@ marginal_draws.bgmfit <-
                                      .options.future = list(seed = TRUE),
                                      .options.future =
                                        list(globals = c('future_splits_at',
+                                                        'setplanis',
                                                         'verbose',
                                                         'o', 
                                                         're_expose',
@@ -1282,6 +1307,7 @@ marginal_draws.bgmfit <-
                                      .options.future = list(seed = TRUE),
                                      .options.future =
                                        list(globals = c('future_splits_at',
+                                                        'setplanis',
                                                         'verbose',
                                                         'o', 
                                                         're_expose',
@@ -1308,6 +1334,7 @@ marginal_draws.bgmfit <-
                                      .options.future = list(seed = TRUE),
                                      .options.future =
                                        list(globals = c('future_splits_at',
+                                                        'setplanis',
                                                         'verbose',
                                                         'o', 
                                                         're_expose',
