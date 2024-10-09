@@ -406,12 +406,16 @@ to return the posterior draws for parameters (if \code{pdrawsp =
   'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
 When \code{pdrawsp = TRUE}, then default behavior is \code{pdrawsp =
   'return'}. Note that summary of posterior draws for parameters is the
-default returned object.}
+default returned object. The \code{pdrawsp} are the parameter estimates for
+each of the posterior sample. The summary of these \code{pdrawsp} are the
+estimates returned.}
 
 \item{pdrawsh}{A character string (default \code{FALSE}) to indicate whether
 to return the posterior draws for parameters (if \code{pdrawsh =
   'return'}). Note that summary of posterior draws for parameters is the
-default returned object.}
+default returned object. The \code{pdrawsh} are the parameter contrast
+estimates for each of the posterior sample. The summary of these
+\code{pdrawsp} are the contrast returned.}
 
 \item{type}{string indicates the type (scale) of the predictions used to
 compute contrasts or slopes. This can differ based on the model
