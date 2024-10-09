@@ -960,7 +960,7 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-  
+  re_expose <- FALSE
   if (future) {
     need_future_re_expose_cpp <- FALSE
     if(any(grepl("pstream__",
@@ -968,7 +968,6 @@ growthparameters_comparison.bgmfit <- function(model,
       need_future_re_expose_cpp <- TRUE
     }
     
-    re_expose <- FALSE
     if(is.null(future_re_expose)) {
       if(setplanis == "multisession") {
         if(need_future_re_expose_cpp) {
@@ -1003,7 +1002,12 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
-  
+  if (!future) {
+    future_splits_at <- NULL
+    future_splits_exe <- FALSE
+    future_splits_exe_future <- FALSE
+    future_splits_exe_dofuture <- FALSE
+  }
   
   
   
@@ -2507,6 +2511,8 @@ growthparameters_comparison.bgmfit <- function(model,
   
   
   
+  
+  
   if(is.null(reformat)) {
     if(is.null(hypothesis) && is.null(equivalence)) {
       reformat <- TRUE
@@ -2556,10 +2562,11 @@ growthparameters_comparison.bgmfit <- function(model,
         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 
                         dplyr::all_of('estimate')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[2]) := 
-                        dplyr::all_of('conf.low')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := 
-                        dplyr::all_of('conf.high')) %>% 
+        # For pdrawsp_est and pdrawsh_est, there are no conf columns, only estimates
+        dplyr::rename(!!as.symbol(set_names_[2]) :=
+                        dplyr::all_of('conf.low')) %>%
+        dplyr::rename(!!as.symbol(set_names_[3]) :=
+                        dplyr::all_of('conf.high')) %>%
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
         data.frame()
     } # if(!is.null(pdraws_est)) {
@@ -2569,10 +2576,11 @@ growthparameters_comparison.bgmfit <- function(model,
         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 
                         dplyr::all_of('estimate')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[2]) := 
-                        dplyr::all_of('conf.low')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := 
-                        dplyr::all_of('conf.high')) %>% 
+        # For pdrawsp_est and pdrawsh_est, there are no conf columns, only estimates
+        # dplyr::rename(!!as.symbol(set_names_[2]) := 
+        #                 dplyr::all_of('conf.low')) %>% 
+        # dplyr::rename(!!as.symbol(set_names_[3]) := 
+        #                 dplyr::all_of('conf.high')) %>% 
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
         data.frame()
     } # if(!is.null(pdrawsp_est)) {
@@ -2582,42 +2590,18 @@ growthparameters_comparison.bgmfit <- function(model,
         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 
                         dplyr::all_of('estimate')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[2]) := 
-                        dplyr::all_of('conf.low')) %>% 
-        dplyr::rename(!!as.symbol(set_names_[3]) := 
-                        dplyr::all_of('conf.high')) %>% 
+        # For pdrawsp_est and pdrawsh_est, there are no conf columns, only estimates
+        # dplyr::rename(!!as.symbol(set_names_[2]) := 
+        #                 dplyr::all_of('conf.low')) %>% 
+        # dplyr::rename(!!as.symbol(set_names_[3]) := 
+        #                 dplyr::all_of('conf.high')) %>% 
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
         data.frame()
     } # if(!is.null(pdrawsh_est)) {
     
   } # if (reformat) {
    
-  # out_sf <- out_sf %>% dplyr::ungroup()
-  # 
-  # if(!is.null(out_sf_hy) & is.null(pdraws_est)) {
-  #   out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
-  #   out_sf <- list(estimate = out_sf, contrast = out_sf_hy)
-  # } else if(is.null(out_sf_hy) & !is.null(pdraws_est)) {
-  #   pdraws_est <- pdraws_est %>% dplyr::ungroup() 
-  #   out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf)
-  # } else if(!is.null(out_sf_hy) & !is.null(pdraws_est)) {
-  #   out_sf_hy <- out_sf_hy %>% dplyr::ungroup() 
-  #   pdraws_est <- pdraws_est %>% dplyr::ungroup() 
-  #   out_sf <- list(pdraws_est = pdraws_est, estimate = out_sf, 
-  #                  contrast = out_sf_hy)
-  # }
-  # 
-  # if(!is.null(pdrawsp_est)) {
-  #   pdrawsp_est <- pdrawsp_est %>% dplyr::ungroup() 
-  #   out_sf <- base::append(out_sf, list(pdrawsp_est = pdrawsp_est), after = 0)
-  # }
-  # 
-  # if(!is.null(pdrawsh_est)) {
-  #   pdrawsh_est <- pdrawsh_est %>% dplyr::ungroup() 
-  #   out_sf <- base::append(out_sf, list(pdrawsh_est = pdrawsh_est), after = 0)
-  # }
-  # 
-  # return(out_sf)
+  
   
   ###########################################
   # convert factor variable that do not carry attributes ...

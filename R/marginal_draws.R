@@ -183,7 +183,8 @@ marginal_draws.bgmfit <-
            envir = NULL,
            ...) {
     
-
+    
+    
     if(!is.null(estimate_center)) {
       ec_ <- getOption("marginaleffects_posterior_center")
       options("marginaleffects_posterior_center" = estimate_center)
@@ -356,6 +357,8 @@ marginal_draws.bgmfit <-
     
     model$model_info[['expose_method']] <- 'NA' # Over ride 'R'
     
+    
+    
     o <- post_processing_checks(model = model,
                                 xcall = match.call(),
                                 resp = resp,
@@ -440,6 +443,9 @@ marginal_draws.bgmfit <-
     
     
     get.cores_ <- get.cores(arguments$cores)
+    
+    
+    
     
     # 28.09.2024
     if(is.null(get.cores_[['max.cores']])) {
@@ -605,7 +611,7 @@ marginal_draws.bgmfit <-
       
     
     
-    
+    re_expose <- FALSE
     if (future) {
       need_future_re_expose_cpp <- FALSE
       if(any(grepl("pstream__",
@@ -613,7 +619,7 @@ marginal_draws.bgmfit <-
         need_future_re_expose_cpp <- TRUE
       }
       
-      re_expose <- FALSE
+      
       if(is.null(future_re_expose)) {
         if(setplanis == "multisession") {
           if(need_future_re_expose_cpp) {
@@ -648,22 +654,17 @@ marginal_draws.bgmfit <-
     
     
     
-    # re_expose <- FALSE
-    # if(setplanis == "multisession") {
-    #   re_expose <- TRUE
-    # }
+   
+    if (!future) {
+      future_splits_at <- NULL
+      future_splits_exe <- FALSE
+      future_splits_exe_future <- FALSE
+      future_splits_exe_dofuture <- FALSE
+    }
+      
+      
+      
     
-    
-    
-    # future::plan() %>% print()
-      # print(future_splits_at)
-      # print(future_splits_exe)
-      # print(future::plan())
-     #  stop()
-      
-      
-      
-      
       
     
     
@@ -678,6 +679,8 @@ marginal_draws.bgmfit <-
     
     full.args$newdata <- newdata
     newdata           <- do.call(get.newdata, full.args)
+    
+    
     
     if(!is.na(uvarby)) {
       uvarby_ind <- paste0(uvarby, resp)
@@ -1392,7 +1395,6 @@ marginal_draws.bgmfit <-
      }
      
      
-     
      # somehow this need consequence number
      if(!future_splits_exe) {
        if(callfuns) {
@@ -1744,10 +1746,11 @@ marginal_draws.bgmfit <-
          # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
          dplyr::rename(!!as.symbol(set_names_[1]) := 
                          dplyr::all_of('estimate')) %>% 
-         dplyr::rename(!!as.symbol(set_names_[2]) := 
-                         dplyr::all_of('conf.low')) %>% 
-         dplyr::rename(!!as.symbol(set_names_[3]) := 
-                         dplyr::all_of('conf.high')) %>% 
+         # For pdrawsp_est and pdrawsh_est, there are no conf columns, only estimates
+         # dplyr::rename(!!as.symbol(set_names_[2]) := 
+         #                 dplyr::all_of('conf.low')) %>% 
+         # dplyr::rename(!!as.symbol(set_names_[3]) := 
+         #                 dplyr::all_of('conf.high')) %>% 
          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
          data.frame()
      } # if(!is.null(pdrawsp_est)) {
@@ -1757,13 +1760,15 @@ marginal_draws.bgmfit <-
          # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
          dplyr::rename(!!as.symbol(set_names_[1]) := 
                          dplyr::all_of('estimate')) %>% 
-         dplyr::rename(!!as.symbol(set_names_[2]) := 
-                         dplyr::all_of('conf.low')) %>% 
-         dplyr::rename(!!as.symbol(set_names_[3]) := 
-                         dplyr::all_of('conf.high')) %>% 
+         # For pdrawsp_est and pdrawsh_est, there are no conf columns, only estimates
+         # dplyr::rename(!!as.symbol(set_names_[2]) := 
+         #                 dplyr::all_of('conf.low')) %>% 
+         # dplyr::rename(!!as.symbol(set_names_[3]) := 
+         #                 dplyr::all_of('conf.high')) %>% 
          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
          data.frame()
      } # if(!is.null(pdrawsh_est)) {
+     
    } # if (reformat) {
    
    
