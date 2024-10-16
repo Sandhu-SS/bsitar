@@ -5,16 +5,14 @@
 
 ### New feature
 
-- Added three new functions to compute and compare growth curve (see  ```marginal_draws()``` and       
-  ```marginal_comparison()```) and growth parameters (via ```growthparameters_comparison()```). 
-  These three function utilize the various functions available from the ```marginaleffects```  
-  package such as ```marginaleffects::predictions()```, ```marginaleffects::avg_predictions()```, 
-  ```marginaleffects::comparisons()``` and ```marginaleffects::avg_comparisons()```. 
-  The ```marginal_draws()```, ```marginal_comparison()``` and ```growthparameters_comparison()```
-  are fully customized for the ```bsitar``` package and yet inappropriate the full flexibility offered
-  by the ```marginaleffects``` package. 
-
-- Added support for using the ```$pathfinder()``` based initial values for the MCMC sampling  
+- Added support to compute and compare growth curve by using ```marginaleffects``` package as back-end.
+  (see  ```marginal_draws()```, ```marginal_comparison()``` and ```growthparameters_comparison()```). 
+  This allows utilizing the computation flexibility offered by the ```marginaleffects``` package to  
+  estimate various quantities of interest such as adjusted growth curves (distance and velocity) and
+  growth parameters such as age at peak growth velocity. All three functions allow parallel computation 
+  via ```future``` and ```doFuture``` packages.
+  
+- An experimental support for using ```$pathfinder()``` based initial values for the MCMC sampling  
   ```$sample()``` (via argument ```pathfinder_init = TRUE```, default FALSE). The arguments for the 
   ```$pathfinder()``` can be specified as a named list via the ```pathfinder_args```. Note that this
   feature is only available when ```backend = 'cmdstanr'```. 

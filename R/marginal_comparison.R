@@ -1221,7 +1221,7 @@ marginal_comparison.bgmfit <- function(model,
       
       
       if(setmarginals) {
-        if(is.list(marginals)) {
+        if(inherits(marginals, 'list')) {
           onex0 <-
             {. <- lapply(1:length(marginals), marginals_list_consecutive_drawid_function)
             list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
@@ -1250,13 +1250,31 @@ marginal_comparison.bgmfit <- function(model,
       }
       
       
-      setdrawidparm <- by
-      namesx <- c('estimate', 'conf.low', 'conf.high')
-      if(!isFALSE(setdrawidparm)) setdrawidparm_ <- c(setdrawidparm, namesx)
-      if( isFALSE(setdrawidparm)) setdrawidparm_ <- c(namesx)
+      # 16.10.2024
+      # w hen marginals are given, then need to summarise
+      if(setmarginals) {
+        namesx <- c('estimate', 'conf.low', 'conf.high')
+        setdrawidparm_at_ <- c(by, namesx)
+        out_sf <- 
+          onex0 %>%
+          collapse::fgroup_by(by) %>%
+          collapse::fsummarise(collapse::mctl(
+            get_pe_ci_collapse(.data[['draw']]))
+          )  %>% collapse::frename(., setdrawidparm_at_)
+      } # if(setmarginals) {
       
-      out_sf <- onex0 %>% collapse::fsubset(., drawid == 1) %>%
-        collapse::fselect(., setdrawidparm_)
+      
+      
+      if(!setmarginals) {
+        setdrawidparm <- by
+        namesx <- c('estimate', 'conf.low', 'conf.high')
+        if(!isFALSE(setdrawidparm)) setdrawidparm_ <- c(setdrawidparm, namesx)
+        if( isFALSE(setdrawidparm)) setdrawidparm_ <- c(namesx)
+        
+        out_sf <- onex0 %>% collapse::fsubset(., drawid == 1) %>%
+          collapse::fselect(., setdrawidparm_)
+      }
+      
       
       
      

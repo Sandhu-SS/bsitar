@@ -1793,7 +1793,7 @@ growthparameters_comparison.bgmfit <- function(model,
     
     
     if(setmarginals) {
-      if(is.list(marginals)) {
+      if(inherits(marginals, 'list')) {
         zxdraws <-
           {. <- lapply(1:length(marginals), marginals_list_consecutive_drawid_function)
           list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
@@ -2221,7 +2221,6 @@ growthparameters_comparison.bgmfit <- function(model,
                             values_to = "draw")
      
       out_sf <- out_sf_and_later_hy %>% 
-     
         dplyr::select(-dplyr::all_of('drawid')) %>% 
         dplyr::group_by_at(setdrawidparm) %>% 
         dplyr::group_modify(., get_pe_ci2, .keep = F) %>% 

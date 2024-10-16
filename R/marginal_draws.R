@@ -1030,6 +1030,26 @@ marginal_draws.bgmfit <-
    }
    
    
+   
+   get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+     if(ec_agg == "mean")  estimate <- 
+         collapse::fmean(x, 
+                         na.rm = na.rm, 
+                         nthreads = arguments$cores) 
+     
+     if(ec_agg == "median") estimate <- 
+         collapse::fmedian(x, 
+                           na.rm = na.rm, 
+                           nthreads = arguments$cores)
+     
+     if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+                                                    na.rm = na.rm)
+     if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+     cbind(estimate, luci[1], luci[2]) 
+   }
+   
+   
+   
    pdrawsp_est <- NULL
    pdrawsh_est <- NULL
    # pdraws_est <- NULL
@@ -1454,7 +1474,8 @@ marginal_draws.bgmfit <-
 
      
      if(setmarginals) {
-       if(is.list(marginals)) {
+       if(inherits(marginals, 'list')) {
+       # if(is.list(marginals)) {
          # onex0 <- lapply(1:length(marginals),  FUN = marginals_list_consecutive_drawid_function)
          # onex0 <- onex0 %>% do.call(rbind, .)
          # onex0$drawid <- as.factor(onex0$drawid)
@@ -1467,42 +1488,6 @@ marginal_draws.bgmfit <-
          onex0 <- marginals
        }
      }
-     
-     
-
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
      
      
      
@@ -1522,20 +1507,39 @@ marginal_draws.bgmfit <-
        }
      }
      
+
+     # 16.10.2024
+     # w hen marginals are given, then need to summarise
+     if(setmarginals) {
+       namesx <- c('estimate', 'conf.low', 'conf.high')
+       setdrawidparm_at_ <- c(by, namesx)
+       out_sf <- 
+         onex0 %>%
+         collapse::fgroup_by(by) %>%
+         collapse::fsummarise(collapse::mctl(
+           get_pe_ci_collapse(.data[['draw']]))
+         )  %>% collapse::frename(., setdrawidparm_at_)
+     } # if(setmarginals) {
+     
+     
      
      # 4.10.2024
      # The by is setting as set_group instead of by from argument
      # Therefore checking if not FALSE
      
-     setdrawidparm <- by
-     namesx <- c('estimate', 'conf.low', 'conf.high')
-     if(!isFALSE(setdrawidparm)) setdrawidparm_ <- c(setdrawidparm, namesx)
-     if( isFALSE(setdrawidparm)) setdrawidparm_ <- c(namesx)
+     if(!setmarginals) {
+       setdrawidparm <- by
+       namesx <- c('estimate', 'conf.low', 'conf.high')
+       if(!isFALSE(setdrawidparm)) setdrawidparm_ <- c(setdrawidparm, namesx)
+       if( isFALSE(setdrawidparm)) setdrawidparm_ <- c(namesx)
+       
+       out_sf <- onex0 %>% collapse::fsubset(., drawid == 1) %>%
+         collapse::fselect(., setdrawidparm_)
+     }
      
-     out_sf <- onex0 %>% collapse::fsubset(., drawid == 1) %>%
-       collapse::fselect(., setdrawidparm_)
      
-     
+    
+
      
      if(!is.null(hypothesis)) {
        # For hypothesis
@@ -1600,22 +1604,22 @@ marginal_draws.bgmfit <-
        }
        
        
-       get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-         if(ec_agg == "mean")  estimate <- 
-             collapse::fmean(x, 
-                             na.rm = na.rm, 
-                             nthreads = arguments$cores) 
-         
-         if(ec_agg == "median") estimate <- 
-             collapse::fmedian(x, 
-                               na.rm = na.rm, 
-                               nthreads = arguments$cores)
-         
-         if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-                                                        na.rm = na.rm)
-         if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-         cbind(estimate, luci[1], luci[2]) 
-       }
+       # get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+       #   if(ec_agg == "mean")  estimate <- 
+       #       collapse::fmean(x, 
+       #                       na.rm = na.rm, 
+       #                       nthreads = arguments$cores) 
+       #   
+       #   if(ec_agg == "median") estimate <- 
+       #       collapse::fmedian(x, 
+       #                         na.rm = na.rm, 
+       #                         nthreads = arguments$cores)
+       #   
+       #   if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+       #                                                  na.rm = na.rm)
+       #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+       #   cbind(estimate, luci[1], luci[2]) 
+       # }
        
        set_constrats_by <- c(constrats_by, 'draw')
        namesx <- c('estimate', 'conf.low', 'conf.high')
