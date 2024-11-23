@@ -961,7 +961,24 @@ marginal_comparison.bgmfit <- function(model,
       comparisons_arguments[['condition']] <- NULL
     }
     
-  
+    
+    get_pe_ci_collapse <- function(x, na.rm = TRUE, ec_agg = 'mean', ...) {
+      if(ec_agg == "mean")  estimate <- 
+          collapse::fmean(x, 
+                          na.rm = na.rm, 
+                          nthreads = arguments$cores) 
+      
+      if(ec_agg == "median") estimate <- 
+          collapse::fmedian(x, 
+                            na.rm = na.rm, 
+                            nthreads = arguments$cores)
+      
+      if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+                                                     na.rm = na.rm)
+      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+      cbind(estimate, luci[1], luci[2]) 
+    }
+    
 
     if(method == 'pkg') {
         if(!plot) {
@@ -1016,6 +1033,7 @@ marginal_comparison.bgmfit <- function(model,
     pdrawsh_est <- NULL
   
     if(method == 'custom') {
+      
       predictions_arguments <- comparisons_arguments
       predictions_arguments[['cross']] <- NULL
       predictions_arguments[['method']] <- NULL
@@ -1204,7 +1222,6 @@ marginal_comparison.bgmfit <- function(model,
       }
       
       
-      
       marginals_list_consecutive_drawid_function <- function(x, ...) {
         if(x == 1) {
           oux <- out[[x]]
@@ -1250,6 +1267,7 @@ marginal_comparison.bgmfit <- function(model,
       }
       
       
+      
       # 16.10.2024
       # w hen marginals are given, then need to summarise
       if(setmarginals) {
@@ -1259,7 +1277,7 @@ marginal_comparison.bgmfit <- function(model,
           onex0 %>%
           collapse::fgroup_by(by) %>%
           collapse::fsummarise(collapse::mctl(
-            get_pe_ci_collapse(.data[['draw']]))
+            get_pe_ci_collapse(.data[['draw']], ec_agg = ec_agg))
           )  %>% collapse::frename(., setdrawidparm_at_)
       } # if(setmarginals) {
       
@@ -1341,22 +1359,22 @@ marginal_comparison.bgmfit <- function(model,
         }
         
         
-        get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-          if(ec_agg == "mean")  estimate <- 
-              collapse::fmean(x, 
-                              na.rm = na.rm, 
-                              nthreads = arguments$cores) 
-          
-          if(ec_agg == "median") estimate <- 
-              collapse::fmedian(x, 
-                                na.rm = na.rm, 
-                                nthreads = arguments$cores)
-          
-          if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-                                                         na.rm = na.rm)
-          if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-          cbind(estimate, luci[1], luci[2]) 
-        }
+        # get_pe_ci_collapse <- function(x, na.rm = TRUE, ec_agg, ...) {
+        #   if(ec_agg == "mean")  estimate <- 
+        #       collapse::fmean(x, 
+        #                       na.rm = na.rm, 
+        #                       nthreads = arguments$cores) 
+        #   
+        #   if(ec_agg == "median") estimate <- 
+        #       collapse::fmedian(x, 
+        #                         na.rm = na.rm, 
+        #                         nthreads = arguments$cores)
+        #   
+        #   if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+        #                                                  na.rm = na.rm)
+        #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+        #   cbind(estimate, luci[1], luci[2]) 
+        # }
         
         set_constrats_by <- c(constrats_by, 'draw')
         namesx <- c('estimate', 'conf.low', 'conf.high')
@@ -1376,7 +1394,7 @@ marginal_comparison.bgmfit <- function(model,
         #                           draws = 'estimate'))) %>%
         #   collapse::fgroup_by(groupvarshyp2) %>%
         #   collapse::fsummarise(collapse::mctl(
-        #     get_pe_ci_collapse(.data[['estimate']]))
+        #     get_pe_ci_collapse(.data[['estimate']], ec_agg = ec_agg))
         #   ) %>%
         #   collapse::frename(., setdrawidparm_at_)
         
@@ -1396,7 +1414,7 @@ marginal_comparison.bgmfit <- function(model,
           temhyy %>%
           collapse::fgroup_by(groupvarshyp2) %>%
           collapse::fsummarise(collapse::mctl(
-            get_pe_ci_collapse(.data[['estimate']]))
+            get_pe_ci_collapse(.data[['estimate']], ec_agg = ec_agg))
           ) %>%
           collapse::frename(., setdrawidparm_at_)
         
