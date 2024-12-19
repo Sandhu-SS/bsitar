@@ -54,7 +54,13 @@ Therefore, it is strongly recommended to set \code{ envir = globalenv()}
 derivatives such as velocity curve.}
 
 \item{...}{Additional arguments passed to the
-\code{\link[rstan:expose_stan_functions]{rstan::expose_stan_functions()}} function.}
+\code{\link[rstan:expose_stan_functions]{rstan::expose_stan_functions()}} function. The "..." can be used to set the
+compiler as either \code{\link[rstan:stanc]{rstan::stanc()}} or \code{\link[rstan:stan_model]{rstan::stan_model()}} and the other
+compiler specific arguments such as  \code{save_dso} for
+\code{\link[rstan:stan_model]{rstan::stan_model()}}. Note that while both \code{\link[rstan:stanc]{rstan::stanc()}} can be
+\code{\link[rstan:stan_model]{rstan::stan_model()}} used as compiler before calling the
+\code{\link[rstan:expose_stan_functions]{rstan::expose_stan_functions()}}, the total execution time for
+\code{\link[rstan:stan_model]{rstan::stan_model()}} is approximately twice than the \code{\link[rstan:stanc]{rstan::stanc()}}.}
 }
 \value{
 An object of class \code{bgmfit} if \code{returnobj=TRUE}, otherwise
