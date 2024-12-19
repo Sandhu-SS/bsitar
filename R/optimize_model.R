@@ -269,7 +269,6 @@ optimize_model.bgmfit <- function(model,
 
   
   
-  
   # The 'expose_function' must be TRUE when adding fit criteria or bayes R2
   if (need_exposed_function) {
     if(is.null(expose_function)) {
@@ -278,12 +277,14 @@ optimize_model.bgmfit <- function(model,
         message("Argument 'expose_function' set to TRUE for fit criteria")
     } else if(!is.null(expose_function)) {
       if (!args_o$expose_function) {
-        stop(
-          "Argument 'expose_function' must be set to TRUE ",
-          "\n ",
-          " when adding 'fit criteria' or 'bayes_R'"
-        )
-      }
+        if(is.null(model$model_info$exefuns )) {
+          stop(
+            "Argument 'expose_function' must be set to TRUE ",
+            "\n ",
+            " when adding 'fit criteria' or 'bayes_R'"
+          )
+        } # if(is.null(model$model_info$exefuns )) {
+      } # if (!args_o$expose_function) {
     } # if(is.null(expose_function)) {
   } # if (need_exposed_function) {
   
@@ -671,6 +672,9 @@ optimize_model.bgmfit <- function(model,
         },
         error = function(e) {
           assign('err.', TRUE, envir = enverr.)
+          # message(paste("Computation of criterias failed:", add_fit_criteria))
+          # message("Below is the returned original error message:")
+          # message(conditionMessage(e))
         }
       )
       err. <- get('err.', envir = enverr.)
@@ -734,6 +738,9 @@ optimize_model.bgmfit <- function(model,
         },
         error = function(e) {
           assign('err.', TRUE, envir = enverr.)
+          # message(paste("Computation of criterias failed:", add_fit_criteria))
+          # message("Below is the returned original error message:")
+          # message(conditionMessage(e))
         }
       )
       err. <- get('err.', envir = enverr.)
@@ -798,6 +805,9 @@ optimize_model.bgmfit <- function(model,
           },
           error = function(e) {
             assign('err.', TRUE, envir = enverr.)
+            # message(paste("Computation of criterias failed:", add_fit_criteria))
+            # message("Below is the returned original error message:")
+            # message(conditionMessage(e))
           }
         )
         err. <- get('err.', envir = enverr.)
@@ -858,6 +868,9 @@ optimize_model.bgmfit <- function(model,
           },
           error = function(e) {
             assign('err.', TRUE, envir = enverr.)
+            # message(paste("Computation of criterias failed:", add_fit_criteria))
+            # message("Below is the returned original error message:")
+            # message(conditionMessage(e))
           }
         )
         err. <- get('err.', envir = enverr.)
@@ -1503,8 +1516,15 @@ optimize_model.bgmfit <- function(model,
           },
           error = function(e) {
             assign('err.', TRUE, envir = enverr.)
+            message(paste("Computation of criterias failed:", 
+                          paste(add_fit_criteria, collapse = ", ")
+                          )
+                    )
+            message("Below is the returned original error message:")
+            message(conditionMessage(e))
           }
         )
+        
         err. <- get('err.', envir = enverr.)
         if (err.) {
           fit <- fit
@@ -1538,8 +1558,15 @@ optimize_model.bgmfit <- function(model,
           },
           error = function(e) {
             assign('err.', TRUE, envir = enverr.)
+            message(paste("Computation of criterias failed:", 
+                          paste(add_bayes_R, collapse = ", ")
+                          )
+                    )
+            message("Below is the returned original error message:")
+            message(conditionMessage(e))
           }
         )
+        
         err. <- get('err.', envir = enverr.)
         if (err.) {
           fit <- fit
