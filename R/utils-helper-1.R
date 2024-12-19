@@ -3179,6 +3179,8 @@ check_brms_args <- function(call, arg, prefix = NULL) {
     if(!is.null((newcall[[argi]]))) {
       argin <- newcall[[argi]]
       argin <- deparse(substitute(argin))
+      argin <- gsub_space(argin)
+      argin <- paste(argin, collapse=",")
       if(!grepl(prefix, argin)) {
         newargin <- paste0(argi, " = ", prefix, argin)
         newcall[[argi]] <- NULL
