@@ -32,8 +32,14 @@
 #' @inherit growthparameters.bgmfit params
 #' 
 #' @param ... Additional arguments passed to the
-#'   [rstan::expose_stan_functions()] function.
-#'
+#'   [rstan::expose_stan_functions()] function. The "..." can be used to set the
+#'   compiler as either [rstan::stanc()] or [rstan::stan_model()] and the other
+#'   compiler specific arguments such as  \code{save_dso} for
+#'   [rstan::stan_model()]. Note that while both [rstan::stanc()] can be
+#'   [rstan::stan_model()] used as compiler before calling the
+#'   [rstan::expose_stan_functions()], the total execution time for
+#'   [rstan::stan_model()] is approximately twice than the [rstan::stanc()].
+#' 
 #' @return An object of class \code{bgmfit} if \code{returnobj=TRUE}, otherwise
 #'   invisible \code{NULL}.
 #' 
@@ -97,6 +103,13 @@ expose_model_functions.bgmfit <- function(model,
   }
   
   
+  # mcall <- match.call()
+  # arguments <- as.list(mcall)[-1]
+  
+  #dots <- list(...)
+  #arguments <- c(arguments, dots)
+
+  
   if(expose) {
     if (verbose) {
       setmsgtxt <-
@@ -111,9 +124,50 @@ expose_model_functions.bgmfit <- function(model,
     } else if (!is.null(scode)) {
       exposecode <- scode
     }
-    rstan::expose_stan_functions(rstan::stanc(model_code = exposecode), 
-                                 env = fun_env)
+    # rstan::expose_stan_functions(rstan::stanc(model_code = exposecode), 
+    #                              env = fun_env)
+    
+    stanc_arguments <- list()
+    stanc_arguments[['model_code']] <- exposecode
+    stan_model_arguments <- stanc_arguments
+    dots_args <- list(...)
+    if(!is.null(dots_args)) {
+      stan_model_arguments <- c(stan_model_arguments, dots_args)
+    }
+  
+    if(is.null(dots_args[['setcompiler']])) {
+      compiled_code_via <- 'stanc'
+    } else if(!is.null(dots_args[['setcompiler']])) {
+      if(dots_args[['setcompiler']] == 'stanc') {
+        compiled_code_via <- 'stanc'
+      } else if(dots_args[['setcompiler']] == 'stan_model') {
+        compiled_code_via <- 'stan_model'
+      } else {
+        stop(paste("The 'setcompiler' argument should be 'stanc' or 'stan_model'", 
+             "or else NULL", collapse =","))
+      }
+    }
+    
+    stanc_arguments[['setcompiler']] <- NULL
+    stan_model_arguments[['setcompiler']] <- NULL
+    
+    if(compiled_code_via == 'stanc') {
+      compiled_code <- do.call(rstan::stanc, stanc_arguments)
+    }
+    if(compiled_code_via == 'stan_model') {
+      compiled_code <- do.call(rstan::stan_model, stan_model_arguments)
+    }
+    
+    compiled_code_args <- list()
+    compiled_code_args[['env']] <- fun_env
+    compiled_code_args[['stanmodel']] <- compiled_code
+    compiled_code_args[['includes']] <- NULL
+    compiled_code_args[['show_compiler_warnings']] <- FALSE
+    
+    do.call(rstan::expose_stan_functions, compiled_code_args)
   }
+  
+  
   
 
   if(expose_r_from_stan) {
