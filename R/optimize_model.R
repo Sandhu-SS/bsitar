@@ -84,13 +84,8 @@
 #'
 #' @param add_fit_criteria An optional argument (default \code{NULL}) to
 #'   indicate whether to add fit criteria to the returned model fit. Options
-#'   available are \code{'loo'} and \code{'waic'}. Please see
+#'   available are \code{'loo'}, \code{'waic'} and \code{'bayes_R2'}. Please see
 #'   [brms::add_criterion()] for details.
-#'
-#' @param add_bayes_R An optional argument (default \code{NULL}) to indicate
-#'   whether to add Bayesian R square to the returned model fit. To estimate and
-#'   add \code{bayes_R2} to the model fit, the argument \code{add_bayes_R} is
-#'   set as \code{add_bayes_R = 'bayes_R2'}.
 #'
 #' @param byresp A logical (default \code{FALSE}) to indicate if response wise
 #'   fit criteria to be calculated. This argument is evaluated only for the
@@ -99,7 +94,19 @@
 #'   response specific (\code{byresp = TRUE}). For, \code{univariate_by} model,
 #'   the only option available is to calculate separate point wise log
 #'   likelihood for each sub-model, i.e., \code{byresp = TRUE}.
-#'
+#'   
+#' @param save_each A logical (default \code{FALSE}) to indicate whether to save
+#'   each each individual model (as \code{'.rds'} file) while running the loop. 
+#'   Note that user can also specify \code{save_each} as a named list that can
+#'   can pass on the following information when saving the model: \cr
+#'   \code{'prefix'} a character string (default \code{NULL}), \cr
+#'   \code{'suffix'} a character string (default \code{NULL}), \cr
+#'   \code{'extension'} a character string, either \code{'.rds'} or 
+#'   \code{'.RData'} (default \code{'.rds'}), \cr
+#'   \code{'compress'} a character string, either \code{'xz'}, \code{'gzip'} or 
+#'   \code{'bzip2'} (default \code{'xz'}). Theses option are set as follows: \cr
+#'   \code{save_each=list(prefix='', suffix='', extension='rds', compress='xz')}
+#' 
 #' @param cores The number of cores to used in parallel processing (default
 #'   \code{1}). The argument \code{cores} is passed to the
 #'   [brms::add_criterion()].
@@ -110,8 +117,7 @@
 #' @inheritParams brms::add_criterion
 #'
 #' @return A list containing the optimized models of class \code{bgmfit}, and
-#'   the the summary statistics if \code{add_fit_criteria} and/or
-#'   \code{add_bayes_R} are specified.
+#'   the the summary statistics if \code{add_fit_criteria} are specified.
 #'  
 #' @export optimize_model.bgmfit
 #' @export
@@ -163,12 +169,12 @@ optimize_model.bgmfit <- function(model,
                                   transform_sd_coef = NULL,
                                   exclude_default_funs = TRUE,
                                   add_fit_criteria = NULL,
-                                  add_bayes_R = NULL,
                                   byresp = FALSE,
                                   model_name = NULL,
                                   overwrite = FALSE,
                                   file = NULL,
                                   force_save = FALSE,
+                                  save_each = FALSE,
                                   digits = 2,
                                   cores = 1,
                                   verbose = FALSE,
@@ -232,6 +238,29 @@ optimize_model.bgmfit <- function(model,
     }
   }
   
+  # Do some checks on save_each at the beginning and not to wait for model fit
+  if(is.list(save_each)) {
+    if(!is.null(save_each[['prefix']])) {
+      if(!is.character(save_each[['prefix']])) stop(paste0(save_each[['prefix']], " must be a character"))
+    }
+    if(!is.null(save_each[['suffix']])) {
+      if(!is.character(save_each[['suffix']])) stop(paste0(save_each[['suffix']], " must be a character"))
+    }
+    if(!is.null(save_each[['extension']])) {
+      if(!is.character(save_each[['extension']])) stop(paste0(save_each[['extension']], " must be a character"))
+    }
+    if(!is.null(save_each[['compress']])) {
+      if(!is.character(save_each[['compress']])) stop(paste0(save_each[['compress']], " must be a character"))
+    }
+    # if empty list then at least specify 'rds' extension
+    if(length(save_each) == 0) {
+      save_each[['extension']] <- 'rds'
+      if(verbose) message("extension 'rds' added to empty list specified via save_each")
+    }
+  } # else if(is.list(save_each)) {
+  
+  
+  
 
   # This to evaluate T/F to TRUE/FALSE
   for (i in names(args_o)) {
@@ -244,16 +273,25 @@ optimize_model.bgmfit <- function(model,
   }
   
   for (add_fit_criteriai in add_fit_criteria) {
-    if (!add_fit_criteriai %in% c("loo", "waic")) {
-      stop("only loo and waic criteria are supported")
+    if (!add_fit_criteriai %in% c("loo", "waic", "bayes_R2")) {
+      stop("only loo, waic and bayes_R2 criteria are supported")
     }
   }
   
-  for (bayes_Ri in add_bayes_R) {
-    if (!bayes_Ri %in% c("bayes_R2")) {
-      stop("only bayes_R2 as R square measure is supported")
-    }
+  
+  if("bayes_R2" %in% add_fit_criteria) {
+    add_bayes_R <- "bayes_R2"
+  } else {
+    add_bayes_R <- NULL
   }
+  
+  
+  # for (bayes_Ri in add_bayes_R) {
+  #   if (!bayes_Ri %in% c("bayes_R2")) {
+  #     stop("only bayes_R2 as R square measure is supported")
+  #   }
+  # }
+  
   
   
   need_exposed_function <- FALSE
@@ -261,11 +299,13 @@ optimize_model.bgmfit <- function(model,
     need_exposed_function <- TRUE
   } else if(is.list(add_fit_criteria)) {
     if(!any(is.null(add_fit_criteria[[1]]))) need_exposed_function <- TRUE
-  } else if(!is.null(add_bayes_R)) {
-    need_exposed_function <- TRUE
-  } else if(is.list(add_bayes_R)) {
-    if(!any(is.null(add_bayes_R[[1]]))) need_exposed_function <- TRUE
-  }
+  } 
+  
+  # else if(!is.null(add_bayes_R)) {
+  #   need_exposed_function <- TRUE
+  # } else if(is.list(add_bayes_R)) {
+  #   if(!any(is.null(add_bayes_R[[1]]))) need_exposed_function <- TRUE
+  # }
 
   
   
@@ -292,6 +332,7 @@ optimize_model.bgmfit <- function(model,
   
   if(!is.null(call_o_args$expose_function)) {
     args_o$expose_function <- call_o_args$expose_function
+    args_o$expose_function <- eval(args_o$expose_function)
   }
   
   
@@ -493,7 +534,7 @@ optimize_model.bgmfit <- function(model,
     
     if (!is.null(add_bayes_R)) {
       what_ <- paste(add_bayes_R, collapse = ", ")
-      if(verbose) message(" Adding", " ", what_, " ", "...")
+    #  if(verbose) message(" Adding", " ", what_, " ", "...")
       if(verbose) cat("\n")
       if (is.na(fit$model_info$univariate_by)) {
         if (!fit$model_info$multivariate) {
@@ -1575,6 +1616,64 @@ optimize_model.bgmfit <- function(model,
         } # tryCatch
       } # if (!is.null(add_bayes_R)) {
     } # if(!is.null(fit)) {
+    
+    
+    if(!is.null(save_each)) {
+      if(!is.list(save_each)) {
+        if(!isFALSE(save_each)) {
+          string_saving <- gsub_space(optimization_info)
+          string_saving <- gsub(";", "_", string_saving, fixed = T)
+          string_saving <- gsub("=", "_", string_saving, fixed = T)
+          if(is.character(save_each)) {
+            string_saving <- paste0(save_each, "", string_saving)
+          }
+          extension_is <- "rds"
+          compress_is <- 'xz'
+          string_saving <- paste0(string_saving, ".", extension_is)  
+          if(verbose) message(paste0("Saving model file as: ", string_saving))
+          saveRDS(fit, file = string_saving, compress = compress_is)
+        }
+      } else if(is.list(save_each)) {
+        string_saving <- gsub_space(optimization_info)
+        string_saving <- gsub(";", "_", string_saving, fixed = T)
+        string_saving <- gsub("=", "_", string_saving, fixed = T)
+        if(!is.null(save_each[['prefix']])) {
+          if(!is.character(save_each[['prefix']])) stop(paste0(save_each[['prefix']], " must be a character"))
+          string_saving <- paste0(save_each[['prefix']], "", string_saving)                                              
+        }
+        if(!is.null(save_each[['suffix']])) {
+          if(!is.character(save_each[['suffix']])) stop(paste0(save_each[['suffix']], " must be a character"))
+          string_saving <- paste0(string_saving,  "", save_each[['suffix']])                                              
+        }
+        if(!is.null(save_each[['extension']])) {
+          if(!is.character(save_each[['extension']])) stop(paste0(save_each[['extension']], " must be a character"))
+          extension_is <- save_each[['extension']]
+        }
+        if(is.null(save_each[['extension']])) {
+          extension_is <- 'rds'
+        }
+        if(!is.null(save_each[['compress']])) {
+          if(!is.character(save_each[['compress']])) stop(paste0(save_each[['compress']], " must be a character"))
+          compress_is <- save_each[['compress']]
+        }
+        if(is.null(save_each[['extension']])) {
+          compress_is <- 'xz'
+        }
+        extension_is <- gsub(".", "", extension_is, fixed = T)
+        string_saving <- paste0(string_saving,  ".", extension_is)
+        if(verbose) message(paste0("Saving model file as: ", string_saving))
+        if(extension_is == 'rds') {
+          saveRDS(fit, file = string_saving, compress = compress_is)
+        }
+        if(extension_is == 'RDATA') {
+          save(fit, file = string_saving, compress = compress_is)
+        }
+
+      } # else if(is.list(save_each)) {
+    } # if(!is.null(save_each)) {
+    
+    
+    
     return(fit)
   }
   

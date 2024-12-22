@@ -1576,10 +1576,11 @@ caution that CP parameterization should be considered experimental and it
 may fail if structure of the \code{\link[brms:brm]{brms::brm()}} generated \code{stancode} changes
 in future.}
 
-\item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}. Can also be used to pass
-some strictly internal use arguments such as \code{match_sitar_a_form},
+\item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}. The \code{...} can also
+be used to pass on some strictly internal arguments that are used for
+testing purposes such as \code{match_sitar_a_form},
 \code{match_sitar_d_form}, \code{sigmamatch_sitar_a_form}, \code{displayit},
-\code{setcolh}, \code{setcolb} etc.}
+\code{setcolh}, \code{setcolb}.}
 }
 \value{
 An object of class \code{brmsfit, bsiatr}, that contains the posterior

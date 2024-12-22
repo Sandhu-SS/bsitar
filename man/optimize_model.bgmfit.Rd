@@ -16,12 +16,12 @@
   transform_sd_coef = NULL,
   exclude_default_funs = TRUE,
   add_fit_criteria = NULL,
-  add_bayes_R = NULL,
   byresp = FALSE,
   model_name = NULL,
   overwrite = FALSE,
   file = NULL,
   force_save = FALSE,
+  save_each = FALSE,
   digits = 2,
   cores = 1,
   verbose = FALSE,
@@ -118,13 +118,8 @@ and similarly \code{optimize_y} is reset as \code{optimize_y = list(log,
 
 \item{add_fit_criteria}{An optional argument (default \code{NULL}) to
 indicate whether to add fit criteria to the returned model fit. Options
-available are \code{'loo'} and \code{'waic'}. Please see
+available are \code{'loo'}, \code{'waic'} and \code{'bayes_R2'}. Please see
 \code{\link[brms:add_criterion]{brms::add_criterion()}} for details.}
-
-\item{add_bayes_R}{An optional argument (default \code{NULL}) to indicate
-whether to add Bayesian R square to the returned model fit. To estimate and
-add \code{bayes_R2} to the model fit, the argument \code{add_bayes_R} is
-set as \code{add_bayes_R = 'bayes_R2'}.}
 
 \item{byresp}{A logical (default \code{FALSE}) to indicate if response wise
 fit criteria to be calculated. This argument is evaluated only for the
@@ -154,6 +149,18 @@ case, \code{file} only applies if new criteria were actually added via
 \item{force_save}{Logical; only relevant if \code{file} is specified and
 ignored otherwise. If \code{TRUE}, the fitted model object will be saved
 regardless of whether new criteria were added via \code{add_criterion}.}
+
+\item{save_each}{A logical (default \code{FALSE}) to indicate whether to save
+each each individual model (as \code{'.rds'} file) while running the loop.
+Note that user can also specify \code{save_each} as a named list that can
+can pass on the following information when saving the model: \cr
+\code{'prefix'} a character string (default \code{NULL}), \cr
+\code{'suffix'} a character string (default \code{NULL}), \cr
+\code{'extension'} a character string, either \code{'.rds'} or
+\code{'.RData'} (default \code{'.rds'}), \cr
+\code{'compress'} a character string, either \code{'xz'}, \code{'gzip'} or
+\code{'bzip2'} (default \code{'xz'}). Theses option are set as follows: \cr
+\code{save_each=list(prefix='', suffix='', extension='rds', compress='xz')}}
 
 \item{digits}{An integer (default \code{2}) to set the decimal argument for
 the \code{\link[base:Round]{base::round()}} function.}
@@ -210,8 +217,7 @@ derivatives such as velocity curve.}
 }
 \value{
 A list containing the optimized models of class \code{bgmfit}, and
-the the summary statistics if \code{add_fit_criteria} and/or
-\code{add_bayes_R} are specified.
+the the summary statistics if \code{add_fit_criteria} are specified.
 }
 \description{
 Select the best fitting SITAR model that involves choosing the

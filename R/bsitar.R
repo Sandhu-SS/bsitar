@@ -1517,10 +1517,11 @@
 #'  may fail if structure of the [brms::brm()] generated \code{stancode} changes
 #'  in future.
 #'   
-#'@param ... Further arguments passed to [brms::brm()]. Can also be used to pass
-#'  some strictly internal use arguments such as \code{match_sitar_a_form},
+#'@param ... Further arguments passed to [brms::brm()]. The \code{...} can also
+#'  be used to pass on some strictly internal arguments that are used for
+#'  testing purposes such as \code{match_sitar_a_form},
 #'  \code{match_sitar_d_form}, \code{sigmamatch_sitar_a_form}, \code{displayit},
-#'  \code{setcolh}, \code{setcolb} etc.
+#'  \code{setcolh}, \code{setcolb}.
 #'
 #'@return An object of class \code{brmsfit, bsiatr}, that contains the posterior
 #'  draws and other useful information about the model.
@@ -2465,7 +2466,9 @@ bsitar <- function(x,
   
   # For ns() based SITAR, a intercept is matched if rcs based s1 is adjusted as
   # A=a-(s1*min(knots))
-  # So, we keeping same behavious for the mu but not for sigma
+  # We keeping same form for mu (match_sitar_a_form = TRUE) but not for sigma
+  
+  # Note below that these can be controlled via ... dots
   
   
   # 24.08.2024
@@ -2473,7 +2476,7 @@ bsitar <- function(x,
   
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_a_form']])) {
-    match_sitar_a_form <- FALSE
+    match_sitar_a_form <- TRUE
   } else {
     match_sitar_a_form <- getdotslist[['match_sitar_a_form']]
   }
@@ -2486,8 +2489,11 @@ bsitar <- function(x,
     sigmamatch_sitar_a_form <- getdotslist[['sigmamatch_sitar_a_form']]
   }
   
+  
+  
   # match_sitar_a_form <- FALSE
   # sigmamatch_sitar_a_form <- FALSE
+  
   
   # 24.08.2024
   if(is.null(getdotslist[['sigmad_adjusted']])) {
