@@ -1878,7 +1878,16 @@ bsitar <- function(x,
   # The specific areas to look for are
   # 'prepare_data' 'data.org.in' 'sigmaxsi' 'setsigma_formula_manual'
   
-  mcall <- mcall_ <- match.call()
+  
+  
+  mcall <- match.call()
+  
+  # 30.12.2024 This step needed to pass on global objects such as xoffset
+  mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL)
+  
+  mcall_ <- mcall 
+  
+  
   
   newcall_checks <- c('threads', 'save_pars')
   
@@ -2221,6 +2230,8 @@ bsitar <- function(x,
   sigmaxoffset <- NULL;
   sigmadfs <- NULL;
   
+
+  
   
   # override but check using 'log_and_divide' to see if  'err.' correctly 
   # assigned and not passed to the outer .G environment 
@@ -2474,12 +2485,39 @@ bsitar <- function(x,
   # 24.08.2024
   getdotslist <- list(...)
   
+
+  
+  # Adding ns mat functionality - experimental 
+  
+  # 1 -> calls prepare_function_ns function from utils-helper-5ns
+  # 2 -> calls prepare_function_ns2 function from utils-helper-5ns2
+  
+  prepare_function_nsmat <- 2
+  
+  if(is.null(getdotslist[['smat']])) {
+    smat <- 'rcs'
+  } else {
+    if(!getdotslist[['smat']]  %in% c('rcs', 'ns')  ) {
+      stop("argument 'smat' must be either 'rcs' or 'ns'")
+    }
+    smat <- getdotslist[['smat']]
+  }
+  
+  if(smat == 'rcs') {
+    
+  } else if(smat == 'ns') {
+    getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+  }
+  
+  
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_a_form']])) {
     match_sitar_a_form <- TRUE
   } else {
     match_sitar_a_form <- getdotslist[['match_sitar_a_form']]
   }
+  
+
   
   
   # 24.08.2024
@@ -4427,8 +4465,7 @@ bsitar <- function(x,
       x_formula_grsi
     }
     
-    # gsub("[()]", "", a_formula_grsi) %>% print()
-    
+
     a_formula_grsi <- gsub_paranth_formula_grsi(a_formula_grsi)
     b_formula_grsi <- gsub_paranth_formula_grsi(b_formula_grsi)
     c_formula_grsi <- gsub_paranth_formula_grsi(c_formula_grsi)
@@ -4442,8 +4479,7 @@ bsitar <- function(x,
     
     sigma_formula_grsi <- gsub_paranth_formula_grsi(sigma_formula_grsi)
     
-    # a_formula_grsi %>% print()
-    
+
     
     # a_formula_grsi <- gsub("[()]", "", a_formula_grsi)
     # b_formula_grsi <- gsub("[()]", "", b_formula_grsi)
@@ -4709,13 +4745,7 @@ bsitar <- function(x,
     }
 
     
-    
-    # data %>% str() %>% print()
-    # stop()
-    
-    
-    
-    
+
     
     
     
@@ -5071,7 +5101,6 @@ bsitar <- function(x,
     }
     
     
-    
     eval_xoffset_bstart_args <-
       function(x, y, knots, data, eval_arg, xfunsi, arg = 'xoffset') {
         if (eval_arg == "mean") {
@@ -5286,17 +5315,46 @@ bsitar <- function(x,
     
   
     
+    if(smat == 'rcs') {
+      get_s_r_funs <- 
+        prepare_function(
+          x = xsi,
+          y = ysi,
+          id = idsi,
+          knots = knots,
+          nknots = nknots,
+          data = datai,
+          internal_function_args = internal_function_args
+        )
+    } else if(smat == 'ns') {
+      if(prepare_function_nsmat == 1) {
+        get_s_r_funs <- 
+          prepare_function_ns(
+            x = xsi,
+            y = ysi,
+            id = idsi,
+            knots = knots,
+            nknots = nknots,
+            data = datai,
+            internal_function_args = internal_function_args
+          )
+      } else if(prepare_function_nsmat == 2) {
+        get_s_r_funs <- 
+          prepare_function_ns2(
+            x = xsi,
+            y = ysi,
+            id = idsi,
+            knots = knots,
+            nknots = nknots,
+            data = datai,
+            internal_function_args = internal_function_args
+          )
+      } # else if(prepare_function_nsmat == 1) {
+      
+    } # else if(smat == 'ns') {
     
-    get_s_r_funs <- 
-      prepare_function(
-      x = xsi,
-      y = ysi,
-      id = idsi,
-      knots = knots,
-      nknots = nknots,
-      data = datai,
-      internal_function_args = internal_function_args
-    )
+    
+    
     
     funlist[ii] <- get_s_r_funs[['rcsfun']]
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
@@ -5581,16 +5639,37 @@ bsitar <- function(x,
       }
     }
     
-    formula_bf <-
-      prepare_formula(
-        x = xsi,
-        y = ysi,
-        id = idsi,
-        knots = knots,
-        nknots = nknots,
-        data = datai,
-        internal_formula_args = internal_formula_args
-      )
+    
+    # for smat 'ns', no prepare_formula_ns defined, Using same prepare_formula
+    # prepare_formula_ns could be defined by copying utils-helper-4 and
+    # renaming prepare_formula to prepare_formula_ns with necessary changes 
+    
+    
+    if(smat == 'rcs') {
+      formula_bf <-
+        prepare_formula(
+          x = xsi,
+          y = ysi,
+          id = idsi,
+          knots = knots,
+          nknots = nknots,
+          data = datai,
+          internal_formula_args = internal_formula_args
+        )
+    } else if(smat == 'ns') {
+      # prepare_formula_ns
+      formula_bf <-
+        prepare_formula(
+          x = xsi,
+          y = ysi,
+          id = idsi,
+          knots = knots,
+          nknots = nknots,
+          data = datai,
+          internal_formula_args = internal_formula_args
+        )
+    }
+    
     
     
     
@@ -6859,9 +6938,6 @@ bsitar <- function(x,
     else
       dataout <- datai
 
-    # datai[[xsi]] %>% range() %>% print()
-    # stop()
-    
     # 20.09.2024
     # remove sigmaxsi if not using
     if(!setsigma_formula_manual) datai[[sigmaxsi]] <- NULL
@@ -8528,7 +8604,7 @@ bsitar <- function(x,
     
     
     # Now message moved to the expose_model_functions()
-    if (expose_function) {
+    if (expose_function & !brm_args$empty) {
       # if (verbose) {
       #   setmsgtxt <-
       #     paste0("\n Exposing Stan functions for post-processing\n")
@@ -8556,7 +8632,8 @@ bsitar <- function(x,
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
     
-    if (!expose_function) {
+    # if (!expose_function) {
+    if (!expose_function & !brm_args$empty) {
       brmsfit <- expose_model_functions(model = brmsfit, 
                                       scode = fun_scode,
                                       expose = FALSE, 

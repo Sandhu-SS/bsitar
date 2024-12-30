@@ -63,6 +63,71 @@ gsub_space <- function(deparseobj) {
 }
 
 
+#' An internal function to get arguments from the global environments
+#'
+#' @param mcallarg A \code{mcall()} argument
+#' @param envir An environment for function evaluation.
+#' @param search_envir An environment to search for objects used as argument.
+#' @param ... Additional arguments
+#' @keywords internal
+#' @return A list comprised of function arguments.
+#' @keywords internal
+#' @noRd
+#'
+
+mcall_dictionary <- function(mcallarg, envir = NULL, xenvir = NULL, ...) {
+  mcallx <- mcallarg
+  if(is.null(envir)) {
+    enverr. <- environment()
+  } else {
+    enverr. <- envir
+  }
+  if(is.null(xenvir)) {
+    searchenvir. <- .GlobalEnv
+  } else {
+    searchenvir. <- xenvir
+  }
+  for(i in names(mcallx)) {
+    if(!is.null(mcallx[[i]])) {
+      gxz <- mcallx[[i]]
+      assign('err.', FALSE, envir = enverr.)
+      tryCatch(
+        expr = {
+          getgxz <- get(gxz, envir = searchenvir.)
+        },
+        error = function(e) {
+          assign('err.', TRUE, envir = enverr.)
+        }
+      )
+      err. <- get('err.', envir = enverr.)
+      if (err.) {
+        mcallx[[i]] <- gxz
+      } else {
+        validca <- getgxz
+        if(is.symbol(validca)) {
+          mcallx[[i]]  <- validca
+        } else if(is.character(validca)) {
+          mcallx[[i]] <-  validca
+        } else if(is.numeric(validca)) {
+          mcallx[[i]]  <- validca
+        } else if(is.data.frame(validca)) {
+          mcallx[[i]] <-  gxz # note gxz and not 
+        } else if(tibble::is_tibble(validca)) {
+          mcallx[[i]] <-  gxz # note gxz and not 
+        } else if(is.language(validca)) {
+          mcallx[[i]] <-  validca
+        } else if(is.list(validca)) {
+          mcallx[[i]] <-  validca 
+        } else if(is.vector(validca)) {
+          mcallx[[i]] <-  validca 
+        }
+      }
+    } # if(!is.null(mcallx[[i]])) {
+  } # for(i in names(mcallx)) {
+  return(mcallx)
+}
+
+
 
 #' An internal function to expose function after optimization
 #'
