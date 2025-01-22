@@ -1871,23 +1871,18 @@ bsitar <- function(x,
                    ...) {
   
   # Note
-  # Need to work on data when using sigma_formula_manual that uses nlf() lf()
-  # This because how data will be prepared, used, and stored
-  # This is to set up separate x for mu and sigma
+  # Need to work on data argument when using 'sigma_formula_manual' that calls nlf() lf()
+  # This is to deal with how 'data' be prepared, used, and stored
+  # This is needed to set up separate x for mu and sigma
   # some work done on 20.09.2024
-  # The specific areas to look for are
+  # The specific areas to look for are:
   # 'prepare_data' 'data.org.in' 'sigmaxsi' 'setsigma_formula_manual'
   
   
   
   mcall <- match.call()
   
-  # 30.12.2024 This step needed to pass on global objects such as xoffset
-  mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL)
-  
-  mcall_ <- mcall 
-  
-  
+  mcall <- mcall_ <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL)
   
   newcall_checks <- c('threads', 'save_pars')
   
@@ -1919,11 +1914,6 @@ bsitar <- function(x,
   }
   
   
-  
-  
-  
-  
-  
   # Check and set Alias argument for d_adjusted (SITAR)
   collect_dot_names <- c()
   for (ia in letters[4]) {
@@ -1949,8 +1939,6 @@ bsitar <- function(x,
   
   # Clear alias argument for formula and adjusted
   rm(dots_allias)
-  
-  
   
   mcall <- mcall_ <- mcall
   
@@ -2230,42 +2218,7 @@ bsitar <- function(x,
   sigmaxoffset <- NULL;
   sigmadfs <- NULL;
   
-
-  
-  
-  # override but check using 'log_and_divide' to see if  'err.' correctly 
-  # assigned and not passed to the outer .G environment 
-  # Seems enverr. <- environment() works fine
-  # Note that same 'enverr.' is passed to the model_info
-  
-
   enverr. <- environment()
-  
-  # assign('err.', FALSE, envir = enverr.)
-  # log_and_divide <- function(x, y){
-  #   tryCatch(
-  #     {
-  #       result = log(x) / y
-  #       return(result)
-  #     },
-  #     error=function(e) {
-  #       assign('err.', TRUE, envir = enverr.)
-  #       message('An Error Occurred')
-  #       
-  #     },
-  #     warning=function(w) {
-  #       message('A Warning Occurred')
-  #       
-  #       return(NA)
-  #     }
-  #   )
-  # }
-  # print(err.)
-  # log_and_divide(10)
-  # print(err.)
-  
-  
-  
   for (i in names(mcall)[-1]) {
     no_default_args_plus_family <- c(no_default_args, "family")
     if (!i %in% no_default_args_plus_family) {
@@ -2425,7 +2378,6 @@ bsitar <- function(x,
   
   # Override when restricting to abcd
   override_select_model <- TRUE # FALSE
-  
   if(override_select_model) arguments$select_model <- select_model <- 'sitar'
   
   # Override when restricting to rcs
@@ -2478,14 +2430,11 @@ bsitar <- function(x,
   # For ns() based SITAR, a intercept is matched if rcs based s1 is adjusted as
   # A=a-(s1*min(knots))
   # We keeping same form for mu (match_sitar_a_form = TRUE) but not for sigma
-  
   # Note below that these can be controlled via ... dots
   
   
   # 24.08.2024
   getdotslist <- list(...)
-  
-
   
   # Adding ns mat functionality - experimental 
   
@@ -5295,7 +5244,8 @@ bsitar <- function(x,
         'checkscovsi',
         'add_b_Qr_genquan_s_coef',
         'add_rcsfunmatqrinv_genquant',
-        "verbose"
+        "verbose",
+        "smat"
       )
     
     internal_function_args <- list()
@@ -7938,7 +7888,9 @@ bsitar <- function(x,
   getdotslistnames <- c("match_sitar_a_form",
                          "match_sitar_d_form",
                          "sigmamatch_sitar_a_form",
-                         "displayit", "setcolh", "setcolb")
+                         "displayit", "setcolh", "setcolb",
+                        "smat"
+                        )
   
   for (getdotslisti in getdotslistnames) {
     brmsdots_[[getdotslisti]] <- NULL
