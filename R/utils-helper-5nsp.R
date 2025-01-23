@@ -239,7 +239,7 @@ prepare_function_nsp <- function(x,
   decomp_code_qr <-
     "
       int QK = nknots - 1;
-      matrix[N, QK] Qc = Spl;
+      matrix[N, QK] Qc = spl;
       matrix[N, QK] XQ;
       matrix[QK, QK] XR;
       matrix[QK, QK] XR_inv;
@@ -769,7 +769,7 @@ prepare_function_nsp <- function(x,
     "
     int derivs = 0;
     int centvals = 0;
-    matrix[N, nknots-1] Spl;
+    matrix[N, nknots-1] spl;
     "
     
    
@@ -782,7 +782,7 @@ prepare_function_nsp <- function(x,
         backend == "mock" |
         backend == "cmdstanr") {
       fun_body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
       "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     } # if ((backend == "rstan"
@@ -792,7 +792,7 @@ prepare_function_nsp <- function(x,
         backend == "mock" &
         backend != "cmdstanr") {
       fun_body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
     "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     } # if ((backend == "rstan"
@@ -801,12 +801,12 @@ prepare_function_nsp <- function(x,
     for (i in 1:(nknots - 1)) {
       name1 <- paste0("", "s", i, sep = "")
       if (i < (nknots - 1)) {
-        # name2 <- paste0(' .* to_vector(Spl[,',i,"]') +")
-        name2 <- paste0(' .* Spl[,', i, "] +")
+        # name2 <- paste0(' .* to_vector(spl[,',i,"]') +")
+        name2 <- paste0(' .* spl[,', i, "] +")
       }
       else {
-        # name2 <- paste0(' .* to_vector(Spl[,',i,"]') ;\n")
-        name2 <- paste0(' .* Spl[,', i, "]")
+        # name2 <- paste0(' .* to_vector(spl[,',i,"]') ;\n")
+        name2 <- paste0(' .* spl[,', i, "]")
       }
       name3 <- paste0(name1, name2, sep = "")
       name4[i] <- name3
@@ -821,14 +821,14 @@ prepare_function_nsp <- function(x,
     
     if (match_sitar_d_form) {
       if (grepl("d", randomsi, fixed = T)) {
-        if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
+        if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
         if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
       }
     }
     
     if (!match_sitar_d_form) {
       if (grepl("d", fixedsi, fixed = T)) {
-        if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
+        if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
         if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
       }
     }
@@ -862,9 +862,9 @@ prepare_function_nsp <- function(x,
     
     if (!is.null(decomp)) {
       if (decomp == 'QR') {
-        returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
+        returnmu <- gsub('spl', 'XQ', returnmu, fixed = T)
         setxoffset <- paste0(setxoffset,  decomp_code_qr, vectorA)
-        returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
+        returnmu <- gsub('spl', 'XQ', returnmu, fixed = T)
       }
     }
     
@@ -948,7 +948,7 @@ prepare_function_nsp <- function(x,
     returnmu_multadd <-
       gsub("XQ",  vector_X_name, returnmu_multadd, fixed = T)
     returnmu_multadd <-
-      gsub("Spl", vector_X_name, returnmu_multadd, fixed = T)
+      gsub("spl", vector_X_name, returnmu_multadd, fixed = T)
     
     start_fun_multadd <-
       gsub(",)" , ")" , start_fun_multadd, fixed = TRUE)
@@ -1000,7 +1000,7 @@ prepare_function_nsp <- function(x,
               "\n",
               setxoffset_format)
       rcsfunmat <- gsub(vectorA, "", rcsfunmat, fixed = T)
-      rcsfunmat <- paste0(rcsfunmat, "\n", 'return Spl;')
+      rcsfunmat <- paste0(rcsfunmat, "\n", 'return spl;')
       rcsfunmat <- paste0(rcsfunmat, '\n}')
       funmats <- paste0(funmats, "\n", rcsfunmat)
     }
@@ -1307,12 +1307,12 @@ prepare_function_nsp <- function(x,
       "
     int derivs = 0;
     int centvals = 0;
-    matrix[N, nknots-1] Spl;
+    matrix[N, nknots-1] spl;
     "
     
     # Create function d0
     fnameout <- paste0(spfncname, "_", "d0")
-    spl    <- intercept_str # "Spl[,1]=X;"
+    spl    <- intercept_str # "spl[,1]=X;"
     splout <- paste0(spl, "\n", intercept_str_plus_str_d0)
 
     spl_fun_ford <- paste0(fnameout,
@@ -1328,7 +1328,7 @@ prepare_function_nsp <- function(x,
         backend == "mock" |
         backend == "cmdstanr") {
       body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
     "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -1338,7 +1338,7 @@ prepare_function_nsp <- function(x,
         backend == "mock" &
         backend != "cmdstanr") {
       body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
     "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -1356,7 +1356,7 @@ prepare_function_nsp <- function(x,
       setxoffset = setxoffset,
       # setxoffset setxoffset_d0_noqr
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'Spl')
+      # gsub_out_unscaled = c('QR', 'spl')
       body = body,
       vectorA = vectorA,
       decomp = decomp,
@@ -1368,21 +1368,21 @@ prepare_function_nsp <- function(x,
       "
     int derivs = 1;
     int centvals = 0;
-    matrix[N, nknots-1] Spl;
+    matrix[N, nknots-1] spl;
     "
     
     # Create function d1
     fnameout <- paste0(spfncname, "_", "d1")
-    spl    <- intercept_str # "Spl[,1]=X;"
-    # splout <- "Spl[,1]=rep_vector(1, N);"
-    splout <- paste0(spl, "\n", intercept_str_plus_str_d1, "\n", "Spl[,1]=rep_vector(1.0, N);")
+    spl    <- intercept_str # "spl[,1]=X;"
+    # splout <- "spl[,1]=rep_vector(1, N);"
+    splout <- paste0(spl, "\n", intercept_str_plus_str_d1, "\n", "spl[,1]=rep_vector(1.0, N);")
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
         backend == "mock" |
         backend == "cmdstanr") {
       body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
     "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -1392,7 +1392,7 @@ prepare_function_nsp <- function(x,
         backend == "mock" &
         backend != "cmdstanr") {
       body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
     "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -1410,7 +1410,7 @@ prepare_function_nsp <- function(x,
       setxoffset = setxoffset,
       # setxoffset setxoffset_d0_noqr
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'Spl')
+      # gsub_out_unscaled = c('QR', 'spl')
       body = body,
       vectorA = vectorA,
       decomp = decomp,
@@ -1422,14 +1422,14 @@ prepare_function_nsp <- function(x,
       "
     int derivs = 2;
     int centvals = 0;
-    matrix[N, nknots-1] Spl;
+    matrix[N, nknots-1] spl;
     "
     
     # Create function d2
     fnameout <- paste0(spfncname, "_", "d2")
-    spl <- intercept_str # "Spl[,1]=X;"
-    # splout <- "Spl[,1]=rep_vector(0, N);"
-    splout <- paste0(spl, "\n", intercept_str_plus_str_d2, "\n", "Spl[,1]=rep_vector(0.0, N);")
+    spl <- intercept_str # "spl[,1]=X;"
+    # splout <- "spl[,1]=rep_vector(0, N);"
+    splout <- paste0(spl, "\n", intercept_str_plus_str_d2, "\n", "spl[,1]=rep_vector(0.0, N);")
     
     
     if ((backend == "rstan" &
@@ -1437,7 +1437,7 @@ prepare_function_nsp <- function(x,
         backend == "mock" |
         backend == "cmdstanr") {
       body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
     "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -1447,7 +1447,7 @@ prepare_function_nsp <- function(x,
         backend == "mock" &
         backend != "cmdstanr") {
       body <- "
-      Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
+      spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centvals);
     "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -1466,7 +1466,7 @@ prepare_function_nsp <- function(x,
       setxoffset = setxoffset,
       # setxoffset setxoffset_d0_noqr
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'Spl')
+      # gsub_out_unscaled = c('QR', 'spl')
       body = body,
       vectorA = vectorA,
       decomp = decomp,
@@ -1999,7 +1999,7 @@ prepare_function_nsp <- function(x,
       setxoffset = setxoffset,
       # setxoffset setxoffset_d0_noqr
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'Spl')
+      # gsub_out_unscaled = c('QR', 'spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d1,
       decomp = decomp,
@@ -2019,7 +2019,7 @@ prepare_function_nsp <- function(x,
       setxoffset = setxoffset,
       # setxoffset setxoffset_d0_noqr
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'Spl')
+      # gsub_out_unscaled = c('QR', 'spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d2,
       decomp = decomp,
@@ -2118,8 +2118,8 @@ prepare_function_nsp <- function(x,
         )
       xstaring <- gsub("num_elements" , "length", xstaring, fixed = T)
       xstaring <-
-        gsub("matrix[N,nknots-1]Spl" ,
-             "Spl=matrix(0,N,nknots-1)",
+        gsub("matrix[N,nknots-1]spl" ,
+             "spl=matrix(0,N,nknots-1)",
              xstaring,
              fixed = T)
       xstaring <-
