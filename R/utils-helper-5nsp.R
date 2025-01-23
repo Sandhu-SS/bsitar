@@ -949,8 +949,10 @@ prepare_function_nsp <- function(x,
       gsub("XQ",  vector_X_name, returnmu_multadd, fixed = T)
     
     # Identifier 'xp' not in scope. Did you mean 'Xp'?
+    # vector_X_name defined as 'Xp' but somehow it is read as 'xp' -  check it
     # vector_X_name = 'xp'
-      gsub("spl", 'Xp', returnmu_multadd, fixed = T)
+    
+    returnmu_multadd <- gsub("spl", 'Xp', returnmu_multadd, fixed = T)
       
     
     start_fun_multadd <-
