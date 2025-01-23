@@ -2442,21 +2442,28 @@ bsitar <- function(x,
   # 2 -> calls prepare_function_ns2 function from utils-helper-5ns2
   
   prepare_function_nsmat <- 2
-  
+  allowed_smat <- c('rcs', 'ns', 'nsp')
   if(is.null(getdotslist[['smat']])) {
     smat <- 'rcs'
   } else {
     if(!getdotslist[['smat']]  %in% c('rcs', 'ns')  ) {
-      stop("argument 'smat' must be either 'rcs' or 'ns'")
+      paste("The options for 'smat' are:", 
+            paste(paste(paste0("'", allowed_smat, "'"), collapse =", "), 
+                  collapse =", ")
+            )
     }
     smat <- getdotslist[['smat']]
   }
   
+
   if(smat == 'rcs') {
     
   } else if(smat == 'ns') {
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+  } else if(smat == 'nsp') {
+    getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
   }
+  
   
   
   # 24.08.2024
@@ -5016,38 +5023,21 @@ bsitar <- function(x,
     nabcrei <-
       length(strsplit(gsub("\\+", " ", randomsi), " ")[[1]])
    
-    make_spline_matrix <- function(x, knots) {
-      X <- x
-      N <- length(X)
-      nk <- length(knots)
-      basis_evals <- matrix(0, N, nk - 1)
-      basis_evals[, 1] <- X
-      basis_evals[, 1] <- X
-      Xx <- matrix(0, N, nk)
-      km1 <- nk - 1
-      j <- 1
-      knot1 <- knots[1]
-      knotnk <- knots[nk]
-      knotnk1 <- knots[nk - 1]
-      kd <- (knotnk - knot1) ^ (2)
-      for (ia in 1:N) {
-        for (ja in 1:nk) {
-          Xx[ia, ja] <- ifelse(X[ia] - knots[ja] > 0, X[ia] - knots[ja], 0)
-        }
-      }
-      while (j <= nk - 2) {
-        jp1 <- j + 1
-        basis_evals[, jp1] <-
-          (
-            Xx[, j] ^ 3 - (Xx[, km1] ^ 3) * (knots[nk] - knots[j]) /
-              (knots[nk] - knots[km1]) + (Xx[, nk] ^ 3) *
-              (knots[km1] - knots[j]) / (knots[nk] - knots[km1])
-          ) /
-          (knots[nk] - knots[1]) ^ 2
-        j <- j + 1
-      }
-      return(basis_evals)
-    }
+    
+    # make_spline_matrix
+    # if(smat == 'rcs') {
+    #   make_spline_matrix(x, knots)
+    # } else if(smat == 'nsp') {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    #   GS_ns_call(x, iknots, bknots, 0, 0, 0)
+    # }
+    
+    
+    
+    
+    
+    
     
     
     eval_xoffset_bstart_args <-
@@ -5059,8 +5049,14 @@ bsitar <- function(x,
         } else if (eval_arg == "max") {
           eval_arg.o <- max(data[[x]])
         } else if (eval_arg == "apv") {
-          mat_s <- make_spline_matrix(data[[x]], knots)
-          # mat_s <- Hmisc::rcspline.eval(data[[x]], knots = knots, inclx = T, norm=2)
+          # mat_s <- make_spline_matrix(data[[x]], knots)
+          if(smat == 'rcs') {
+            mat_s <- make_spline_matrix(data[[x]], knots)
+          } else if(smat == 'nsp') {
+            iknots <- knots[2:(length(knots)-1)]
+            bknots <- c(knots[1], knots[length(knots)])
+            mat_s <- GS_ns_call(data[[x]], iknots, bknots, 0, 0, 0)
+          }
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
           eval_arg.o <- sitar::getPeak(data[[x]],
@@ -5085,7 +5081,14 @@ bsitar <- function(x,
     eval_xoffset_cstart_args <-
       function(x, y, knots, data, eval_arg, xfunsi) {
         if (eval_arg == "pv") {
-          mat_s <- make_spline_matrix(data[[x]], knots)
+          # mat_s <- make_spline_matrix(data[[x]], knots)
+          if(smat == 'rcs') {
+            mat_s <- make_spline_matrix(data[[x]], knots)
+          } else if(smat == 'nsp') {
+            iknots <- knots[2:(length(knots)-1)]
+            bknots <- c(knots[1], knots[length(knots)])
+            mat_s <- GS_ns_call(data[[x]], iknots, bknots, 0, 0, 0)
+          }
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
           eval_arg.o <- sitar::getPeak(data[[x]],
@@ -5142,10 +5145,17 @@ bsitar <- function(x,
     nknots <- length(knots)
     df <- length(knots) - 1
    
-    mat_s <- make_spline_matrix(datai[[xsi]], knots)
+    # mat_s <- make_spline_matrix(datai[[xsi]], knots)
     
+    if(smat == 'rcs') {
+      mat_s <- make_spline_matrix(datai[[xsi]], knots)
+    } else if(smat == 'nsp') {
+      iknots <- knots[2:(length(knots)-1)]
+      bknots <- c(knots[1], knots[length(knots)])
+      mat_s <- GS_ns_call(datai[[xsi]], iknots, bknots, 0, 0, 0)
+    }
     
-    
+
     
     if(sigmabstartsi == 'sigmaxoffset') {
       sigmabstartsi <- sigmaxoffsetsi
@@ -5301,7 +5311,18 @@ bsitar <- function(x,
           )
       } # else if(prepare_function_nsmat == 1) {
       
-    } # else if(smat == 'ns') {
+    } else if(smat == 'nsp') {
+      get_s_r_funs <- 
+        prepare_function_nsp(
+          x = xsi,
+          y = ysi,
+          id = idsi,
+          knots = knots,
+          nknots = nknots,
+          data = datai,
+          internal_function_args = internal_function_args
+        )
+    }
     
     
     
@@ -5608,6 +5629,17 @@ bsitar <- function(x,
         )
     } else if(smat == 'ns') {
       # prepare_formula_ns
+      formula_bf <-
+        prepare_formula(
+          x = xsi,
+          y = ysi,
+          id = idsi,
+          knots = knots,
+          nknots = nknots,
+          data = datai,
+          internal_formula_args = internal_formula_args
+        )
+    } else if(smat == 'nsp') {
       formula_bf <-
         prepare_formula(
           x = xsi,
