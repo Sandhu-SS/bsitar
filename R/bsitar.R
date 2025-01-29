@@ -274,6 +274,20 @@
 #'  \code{multivariate} models, the \code{bound} can be same for sub models
 #'  (typically), or different for each sub model (see argument \code{x} for
 #'  details on setting different arguments for sub models).
+#'  
+#'@param stype A character string or a named list to specify the spline type.
+#'  The available options are \code{'rcs'}, \code{'nks'} and \code{'nsp'}
+#'  (default). The \code{'rcs'} constructs spline design matrix by using the
+#'  truncated power basis (often referred to as Harrell's method and implemented
+#'  in [Hmisc::rcspline.eval()]) whereas both \code{'nks'} and \code{'nsp'}
+#'  implements B-spline based natural cubic spline method similar to the
+#'  [splines2::nsp()] and [splines2::nsk()]. Unlike [splines2::nsp()] and
+#'  [splines2::nsk()], which by defaults normalize the spline basis, the
+#'  \code{'nks'} and \code{'nsp'} return non normalized version. User can set
+#'  normalize as \code{TRUE} by using the list option. For example, to construct
+#'  normalized \code{'nsp'}, one can specify \code{stype = list(type = 'nsp',
+#'  normalize = TRUE}). Please see [Hmisc::rcspline.eval()], [splines2::nsk()],
+#'  and [splines2::nsp()] for details.
 #'
 #'@param terms_rhs An optional character string (default \code{NULL}) to specify
 #'  terms on the right hand side of the response variable (separated by
@@ -1689,6 +1703,7 @@ bsitar <- function(x,
                    xfun = NULL,
                    yfun = NULL,
                    bound = 0.04,
+                   stype = NULL,
                    terms_rhs = NULL,
                    a_formula = ~ 1,
                    b_formula = ~ 1,
@@ -1907,7 +1922,7 @@ bsitar <- function(x,
     }
   }
   
-  # These must be remove to avoid conflict with brms dot arguments
+  # These must be removed to avoid conflict with 'brms' dot arguments
   for (collect_dot_namesi in collect_dot_names) {
     if(!is.null(mcall[[collect_dot_namesi]])) 
       mcall[[collect_dot_namesi]] <- NULL
@@ -2436,24 +2451,259 @@ bsitar <- function(x,
   # 24.08.2024
   getdotslist <- list(...)
   
+  # spline types supported are 'rcs', 'nsp' and 'nsk'
+  # The argument . is exposed that allows setting spline type as string 
+  # However for developmental purposes, an additional option is allowed that 
+  # pass a named list ('smat') via ... that allows a more elaborate control on 
+  # various aspects of splines. These are currently tested and will be exposed
+  # later. These are 
+  # 1. type - a character tring to set spline type i.e, rcs, nsp and nsk
+  # 2. normalize - a logical (T/F) to specify to normalize H matrix
+  # 3. centerval -a real number to center the intercept a given value
+  # 4. intercept -a logical (T/F) to specify whether or not to return matrix 
+  # with intercept
+  # 5. preH - a logical (T/F) to use precomputed H matrix to compute within 
+  # the function 
+  # 6. include - a logical (T/F) to indicate if .stan splines be included 
+  # via '#include' or 
+  # read it and include as it is in the function block 
+  
+  
+  allowed_spline_type <- c('rcs', 'nsp', 'nsk')
+  allowed_spline_type_exception_msg <- 
+    paste("The options available are:", 
+          paste(paste(paste0("'", allowed_spline_type, "'"), collapse =", "), 
+                collapse =", ")
+    )
+  
+  
+  
+  # 
+  # if(!is.null(getdotslist[['smat']])) {
+  #   spline_type <- getdotslist[['smat']]
+  #   if(is.list(spline_type))  defaut_spline_type <- spline_type[[1]]
+  #   if(!is.list(spline_type)) defaut_spline_type <- spline_type
+  # } else if(is.null(getdotslist[['smat']])) {
+  #   if(is.null(stype)) {
+  #     spline_type <- 'nsp'
+  #   } else if(!is.null(stype)) {
+  #     if(is.symbol(stype)) {
+  #       spline_type <- deparse(stype) 
+  #     } else if(is.character(stype)) {
+  #       if(!stype %in% allowed_spline_type)
+  #         stop(paste0("Argument 'stype' must be a character string.", 
+  #                     "\n  ",
+  #                     allowed_spline_type_exception_msg)
+  #         )
+  #       spline_type <- stype
+  #     } else if(!is.character(stype)) {
+  #       stop(paste0("argument 'stype' must be a character string.", 
+  #                   "\n",
+  #                   allowed_spline_type_exception_msg)
+  #       )
+  #     }
+  #   }
+  #   defaut_spline_type <- spline_type
+  # } else if(is.null(getdotslist[['smat']]) & is.null(stype)) {
+  #   # Do some checks on spline_type and add default values if missing
+  # }
+
+  spline_type_via_stype <- FALSE
+  if(!is.null(getdotslist[['smat']])) {
+    spline_type <- getdotslist[['smat']]
+  } else if(!is.null(stype)) {
+    spline_type <- stype
+    spline_type_via_stype <- TRUE
+  } else {
+    spline_type <- 'rcs'
+    if(verbose) message("'rcs' set as default spline type")
+  }
+  
+  
+  # Only expose type and normalize for stype 
+  allowed_spline_type_list_names_c <- c('type', 
+                                        # 'intercept', 
+                                        # 'centerval', 
+                                        # 'preH',
+                                        # 'include',
+                                        'normalize')
+  
+  allowed_spline_type_list_names_msg <- 
+    paste("argument 'spline_type' must be a named list, allowed names are:\n", 
+          paste(paste(paste0("'", allowed_spline_type_list_names_c, "'"), collapse =", "), 
+                collapse =", ")
+    )
+    
+    
+  
+  
+  
+  spline_type_list <- list()
+  if(is.null(spline_type)) {
+    spline_type_list[['type']]        <- NULL # defaut_spline_type
+    spline_type_list[['centerval']]   <- 0
+    spline_type_list[['intercept']]   <- FALSE
+    spline_type_list[['normalize']]   <- FALSE
+    spline_type_list[['derivs']]      <- FALSE
+    spline_type_list[['preH']]        <- FALSE
+    spline_type_list[['include']]     <- TRUE
+  } else if(!is.null(spline_type)) {
+    if(is.list(spline_type)) {
+      if(length(spline_type) > 0) {
+        # if only type specified and unnamed, name it
+        if(is.null(names(spline_type))) { 
+          if(length(spline_type) == 1) {
+            names(spline_type) <- 'type'
+          } else if(length(spline_type) == 2) {
+            # if only type and normalize specified and unnamed, name them
+            # This is only in case spline type set via stype argument and not ...
+            if(spline_type_via_stype) {
+              names(spline_type) <- c('type', 'normalize')
+              if(verbose) message("stype arguments named as 'type', 'normalize'")
+            } else {
+              stop(allowed_spline_type_list_names_msg)
+            }
+          } else {
+            stop(allowed_spline_type_list_names_msg)
+          }
+        }
+        if(!is.null(spline_type[['type']])) {
+          if(!is.character(spline_type[['type']])) {
+            stop(paste0(spline_type[['type']], " must be a character string"))
+          } else {
+            spline_type_list[['type']] <- spline_type[['type']]
+          }
+        } else if(is.null(spline_type[['type']])) {
+          # spline_type_list[['type']] <- defaut_spline_type
+          # if(verbose) message(paste0("'", defaut_spline_type ,"' set as default spline type"))
+        }
+        
+        if(!is.null(spline_type[['intercept']])) {
+          if(!is.logical(as.logical(spline_type[['intercept']]))) {
+            stop(paste0(spline_type[['intercept']], " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['intercept']] <- spline_type[['intercept']]
+          }
+        } else if(is.null(spline_type[['intercept']])) {
+          spline_type_list[['intercept']] <- FALSE
+          if(verbose) message(paste0("'", FALSE ,"' set as default spline intercept"))
+        }
+        
+        if(!is.null(spline_type[['normalize']])) {
+          if(!is.logical(as.logical(spline_type[['normalize']]))) {
+            stop(paste0(spline_type[['normalize']], " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['normalize']] <- spline_type[['normalize']]
+          }
+        } else if(is.null(spline_type[['normalize']])) {
+          spline_type_list[['normalize']] <- FALSE
+          if(verbose) message(paste0("'", FALSE ,"' set as default spline normalize"))
+        }
+        
+        if(!is.null(spline_type[['derivs']])) {
+          if(!is.logical(as.logical(spline_type[['derivs']]))) {
+            stop(paste0(spline_type[['derivs']], " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['derivs']]    <-  spline_type[['derivs']] 
+          }
+        } else if(is.null(spline_type[['derivs']])) {
+          spline_type_list[['derivs']]    <- FALSE
+          # if(verbose) message(paste0("'", FALSE ,"' set as default spline derivs"))
+        }
+        
+        if(!is.null(spline_type[['preH']])) {
+          if(!is.logical(as.logical(spline_type[['preH']]))) {
+            stop(paste0(spline_type[['preH']], " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['preH']]    <-  spline_type[['preH']] 
+          }
+        } else if(is.null(spline_type[['preH']])) {
+          spline_type_list[['preH']]    <- FALSE
+          # if(verbose) message(paste0("'", FALSE ,"' set as default spline preH"))
+        }
+        
+        if(!is.null(spline_type[['include']])) {
+          if(!is.logical(as.logical(spline_type[['include']]))) {
+            stop(paste0(spline_type[['include']], " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['include']]    <-  spline_type[['include']] 
+          }
+        } else if(is.null(spline_type[['include']])) {
+          spline_type_list[['include']]    <- TRUE
+          # if(verbose) message(paste0("'", TRUE ,"' set as default spline include"))
+        }
+        
+        
+        if(!is.null(spline_type[['centerval']])) {
+          if(!is.numeric(spline_type[['centerval']])) {
+            stop(paste0(spline_type[['centerval']], " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['centerval']] <- spline_type[['centerval']]
+          }
+        } else if(is.null(spline_type[['centerval']])) {
+          spline_type_list[['centerval']] <- 0
+          if(verbose) message(paste0("'", 0 ,"' set as default spline centerval"))
+        }
+        
+      } else if(length(spline_type) == 0) {
+        spline_type_list[['type']]        <- NULL # defaut_spline_type
+        spline_type_list[['intercept']]   <- FALSE
+        spline_type_list[['centerval']]   <- 0
+        spline_type_list[['normalize']]   <- FALSE
+        spline_type_list[['derivs']]      <- FALSE
+        spline_type_list[['preH']]        <- FALSE
+        spline_type_list[['include']]     <- TRUE
+        # if(verbose & defaut_spline_type != 'rcs') {
+        #   message(paste0("'", defaut_spline_type ,"' set as default spline type"))
+        #   message(paste0("'", FALSE ,"' set as default spline intercept"))
+        #   message(paste0("'", 0 ,"' set as default spline centerval"))
+        #   message(paste0("'", FALSE ,"' set as default spline normalize"))
+        #   # message(paste0("'", FALSE ,"' set as default spline derivs"))
+        #   # message(paste0("'", FALSE ,"' set as default spline preH"))
+        #   # message(paste0("'", TRUE ,"' set as default spline include"))
+        # }
+      } # if(length(spline_type) > 0) {
+    } else if(!is.list(spline_type)) {
+      if(is.character(spline_type)) {
+        spline_type_list[['type']]        <- spline_type
+        spline_type_list[['intercept']]   <- FALSE
+        spline_type_list[['centerval']]   <- 0
+        spline_type_list[['normalize']]   <- FALSE
+        spline_type_list[['derivs']]      <- FALSE
+        spline_type_list[['preH']]        <- FALSE
+        spline_type_list[['include']]     <- TRUE
+        # if(verbose & defaut_spline_type != 'rcs') {
+        #   message(paste0("'", defaut_spline_type ,"' set as default spline type"))
+        #   message(paste0("'", FALSE ,"' set as default spline intercept"))
+        #   message(paste0("'", 0 ,"' set as default spline centerval"))
+        #   message(paste0("'", FALSE ,"' set as default spline normalize"))
+        #   # message(paste0("'", FALSE ,"' set as default spline derivs"))
+        #   # message(paste0("'", FALSE ,"' set as default spline preH"))
+        #   # message(paste0("'", TRUE ,"' set as default spline include"))
+        # }
+      } else if(!is.character(spline_type)) {
+        stop('augument spline_type must be a character string or a named list')
+      } # if(is.character(spline_type)) {
+    } # else if(!is.null(spline_type)) {
+  } # if(is.null(spline_type)) {
+  
+  
+   smat <- spline_type_list[['type']] 
+  
+   # This to check spline type set using the ... smat
+   if(!smat %in% allowed_spline_type)
+     stop(paste0("The spline type must be a character string.", 
+                 "\n  ",
+                 allowed_spline_type_exception_msg)
+     )
+
+   
   # Adding ns mat functionality - experimental 
   
   # 1 -> calls prepare_function_ns function from utils-helper-5ns
   # 2 -> calls prepare_function_ns2 function from utils-helper-5ns2
   
   prepare_function_nsmat <- 2
-  allowed_smat <- c('rcs', 'ns', 'nsp')
-  if(is.null(getdotslist[['smat']])) {
-    smat <- 'rcs'
-  } else {
-    if(!getdotslist[['smat']]  %in% c('rcs', 'ns')  ) {
-      paste("The options for 'smat' are:", 
-            paste(paste(paste0("'", allowed_smat, "'"), collapse =", "), 
-                  collapse =", ")
-            )
-    }
-    smat <- getdotslist[['smat']]
-  }
   
 
   if(smat == 'rcs') {
@@ -2462,9 +2712,73 @@ bsitar <- function(x,
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
   } else if(smat == 'nsp') {
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+  } else if(smat == 'nsk') {
+    getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
   }
   
   
+  
+  if((smat == 'nsp' | smat == 'nsk') & 
+     !is.null(getdotslist[['smat']])
+     ) {
+    smat_intercept    <- as.integer(spline_type_list[['intercept']])
+    smat_centerval    <- as.numeric(spline_type_list[['centerval']])
+    smat_normalize    <- as.integer(spline_type_list[['normalize']])
+    smat_derivs       <- as.integer(spline_type_list[['derivs']])
+    smat_preH         <- as.integer(spline_type_list[['preH']])
+    smat_include_stan <- as.integer(spline_type_list[['include']])
+    if(verbose) {
+      message(paste0("setting intercept for spline type '",
+                     spline_type_list[['type']], "' as: ", smat_intercept))
+      message(paste0("setting normalize for spline type '",
+                     spline_type_list[['type']], "' as: ", smat_normalize))
+      message(paste0("setting centerval for spline type '",
+                     spline_type_list[['type']], "' as: ", smat_centerval))
+    }
+    SplinefunxPre  <- 'GS'
+    Splinefunxsuf  <- '_call'
+    SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
+    SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
+    # when spline type set via 'stype', set normalize = F & include T
+  } else if((smat == 'nsp' | smat == 'nsk') & 
+            is.null(getdotslist[['smat']])
+            ) { 
+    smat_intercept <- 0
+    smat_centerval <- 0
+    smat_normalize <- 0
+    smat_derivs    <- 0
+    smat_preH      <- 0
+    smat_include_stan <- 1
+    SplinefunxPre  <- 'GS'
+    Splinefunxsuf  <- '_call'
+    SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
+    SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
+  } else if(smat == 'rcs') { # placeholder to assign these values to envir 
+    smat_intercept <- 0
+    smat_centerval <- 0
+    smat_normalize <- 0
+    smat_derivs    <- 0
+    smat_preH      <- 0
+    smat_include_stan <- 0
+    SplinefunxPre  <- NULL
+    Splinefunxsuf  <- NULL
+    SplinefunxR    <- NULL
+    SplinefunxStan <- NULL
+  } else {
+    # allow further checks - for later use
+  }
+  
+  # print(smat)
+  # print(smat_intercept)
+  # print(smat_derivs)
+  # print(smat_centerval)
+  # print(smat_normalize)
+  # print(smat_preH)
+  # print(smat_include_stan)
+  # stop()
+  
+  
+ 
   
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_a_form']])) {
@@ -2634,6 +2948,39 @@ bsitar <- function(x,
   
   
   brms_arguments <- mget(brms_arguments_list)
+  
+  # Set path for s files
+  if(smat == 'nsp' | smat == 'nsk') {
+    if(smat_include_stan) {
+      if(is.null(brms_arguments$stan_model_args)) {
+        brms_arguments$stan_model_args <- list()
+        brms_arguments$stan_model_args[['include_paths']] <- "./"
+        if(verbose) 
+          message("path for .stan file(s) set to './' via 'stan_model_args'")
+      } else if(!is.null(brms_arguments$stan_model_args)) {
+        if(is.list(brms_arguments$stan_model_args)) {
+          if(is.null(brms_arguments$stan_model_args[['include_paths']])) {
+            brms_arguments$stan_model_args[['include_paths']] <- "./"
+            if(verbose) 
+              message("path for .stan file(s) set to './' via 'stan_model_args'")
+          }
+        }
+      } # if(is.null(brms_arguments$stan_model_args)) {
+    } # if(smat_include_stan) {
+  } # if(smat == 'nsp' | smat == 'nsk') {
+
+  
+  if(smat == 'nsp' | smat == 'nsk') {
+    if(smat_include_stan) {
+      if(is.null( brms_arguments$stan_model_args[['include_paths']])) {
+        stop("Please specify path for .stan file(s) via 'stan_model_args'")
+      }
+    }
+  }
+  
+  
+  
+  
   
   if (eval(brms_arguments$backend) != "rstan" &
       eval(brms_arguments$backend) != "mock" &
@@ -3778,6 +4125,7 @@ bsitar <- function(x,
   
   sigmad_adjustedvaluelist <- sigmad_adjustednamelist <- funlist
   
+  # include_fun_names <- funlist
   
   
   
@@ -4691,7 +5039,7 @@ bsitar <- function(x,
     } else {
       sigmaxsi <- paste0("sigma", xsi) 
       if(verbose) {
-        message("predictor for sigma is set same as mu i.e, ", xsi, ".",
+        message("The predictor for distrubutional parameter (i.e., sigma) is set same as mu i.e, ", xsi, ".",
                 "\n ", 
                 "However, it has been renamed as ", 
                 paste0("sigma", xsi)
@@ -5030,7 +5378,7 @@ bsitar <- function(x,
     # } else if(smat == 'nsp') {
     #   iknots <- knots[2:(length(knots)-1)]
     #   bknots <- c(knots[1], knots[length(knots)])
-    #   GS_ns_call(x, iknots, bknots, 0, 0, 0)
+    #   GS_nsp_call(x, iknots, bknots, 0, 0, 0)
     # }
     
     
@@ -5055,7 +5403,19 @@ bsitar <- function(x,
           } else if(smat == 'nsp') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_ns_call(data[[x]], iknots, bknots, 0, 0, 0)
+            mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                                intercept = smat_intercept, derivs = smat_derivs, 
+                                centerval = smat_centerval, 
+                                normalize = smat_normalize,
+                                preH = smat_preH)
+          } else if(smat == 'nsk') {
+            iknots <- knots[2:(length(knots)-1)]
+            bknots <- c(knots[1], knots[length(knots)])
+            mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                                intercept = smat_intercept, derivs = smat_derivs, 
+                                centerval = smat_centerval, 
+                                normalize = smat_normalize,
+                                preH = smat_preH)
           }
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
@@ -5087,7 +5447,19 @@ bsitar <- function(x,
           } else if(smat == 'nsp') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_ns_call(data[[x]], iknots, bknots, 0, 0, 0)
+            mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                                intercept = smat_intercept, derivs = smat_derivs, 
+                                centerval = smat_centerval, 
+                                normalize = smat_normalize,
+                                preH = smat_preH)
+          } else if(smat == 'nsk') {
+            iknots <- knots[2:(length(knots)-1)]
+            bknots <- c(knots[1], knots[length(knots)])
+            mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                                 intercept = smat_intercept, derivs = smat_derivs, 
+                                 centerval = smat_centerval, 
+                                 normalize = smat_normalize,
+                                 preH = smat_preH)
           }
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
@@ -5152,8 +5524,21 @@ bsitar <- function(x,
     } else if(smat == 'nsp') {
       iknots <- knots[2:(length(knots)-1)]
       bknots <- c(knots[1], knots[length(knots)])
-      mat_s <- GS_ns_call(datai[[xsi]], iknots, bknots, 0, 0, 0)
+      mat_s <- GS_nsp_call(x = datai[[xsi]], knots = iknots, bknots = bknots, 
+                          intercept = smat_intercept, derivs = smat_derivs, 
+                          centerval = smat_centerval, 
+                          normalize = smat_normalize,
+                          preH = smat_preH)
+    } else if(smat == 'nsk') {
+      iknots <- knots[2:(length(knots)-1)]
+      bknots <- c(knots[1], knots[length(knots)])
+      mat_s <- GS_nsk_call(x = datai[[xsi]], knots = iknots, bknots = bknots, 
+                           intercept = smat_intercept, derivs = smat_derivs, 
+                           centerval = smat_centerval, 
+                           normalize = smat_normalize,
+                           preH = smat_preH)
     }
+    
     
 
     
@@ -5191,15 +5576,18 @@ bsitar <- function(x,
     getX_name       <- "getX"
     getKnots_name   <- "getKnots"
     
+    getpreH_name   <- "getpreH"
     
     if (nys > 1) {
       spfncname <- paste0(ysi, "_", SplineFun_name)
       getxname <- paste0(ysi, "_", getX_name)
       getknotsname <- paste0(ysi, "_", getKnots_name)
+      getpreHname <- paste0(ysi, "_", getKnots_name)
     } else if (nys == 1) {
       spfncname <- SplineFun_name
       getxname <- getX_name
       getknotsname <- getKnots_name
+      getpreHname <- getpreH_name
     }
     
     spfncname_c <- c(spfncname_c, spfncname)
@@ -5240,6 +5628,7 @@ bsitar <- function(x,
         "spfncname",
         "getxname",
         "getknotsname",
+        "getpreHname",
         "match_sitar_a_form",
         'match_sitar_d_form',
         "d_adjustedsi",
@@ -5255,7 +5644,17 @@ bsitar <- function(x,
         'add_b_Qr_genquan_s_coef',
         'add_rcsfunmatqrinv_genquant',
         "verbose",
-        "smat"
+        "smat",
+        "smat_intercept",
+        "smat_derivs",
+        "smat_centerval",
+        "smat_normalize",
+        "smat_preH",
+        "smat_include_stan",
+        "SplinefunxPre",
+        "Splinefunxsuf",
+        "SplinefunxR",
+        "SplinefunxStan"
       )
     
     internal_function_args <- list()
@@ -5322,6 +5721,17 @@ bsitar <- function(x,
           data = datai,
           internal_function_args = internal_function_args
         )
+    } else if(smat == 'nsk') {
+      get_s_r_funs <- 
+        prepare_function_nsp(
+          x = xsi,
+          y = ysi,
+          id = idsi,
+          knots = knots,
+          nknots = nknots,
+          data = datai,
+          internal_function_args = internal_function_args
+        )
     }
     
     
@@ -5331,6 +5741,7 @@ bsitar <- function(x,
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
     gq_funs[[ii]] <- get_s_r_funs[['gq_funs']]
     
+    include_fun_names <- get_s_r_funs[['include_fun_names']]
     
     
     #################################################
@@ -5355,6 +5766,7 @@ bsitar <- function(x,
       sigmaSplineFun_name  <- paste0("sigma", SplineFun_name)
       sigmagetX_name       <- paste0("sigma", getX_name)
       sigmagetKnots_name   <- paste0("sigma", getKnots_name)
+      sigmagetpreH_name    <- paste0("sigma", getpreH_name)
       
       # sigmaSplineFun_name  <- paste0("sigma", toupper(select_model), "", 'Fun')
       # sigmagetX_name       <- paste0("sigma", "getX")
@@ -5365,10 +5777,13 @@ bsitar <- function(x,
         sigmaspfncname <- paste0(ysi, "_", sigmaSplineFun_name)
         sigmagetxname <- paste0(ysi, "_", sigmagetX_name)
         sigmagetknotsname <- paste0(ysi, "_", sigmagetKnots_name)
+        sigmagetpreHname <- paste0(ysi, "_", sigmagetpreH_name)
+        
       } else if (nys == 1) {
         sigmaspfncname <- sigmaSplineFun_name
         sigmagetxname <- sigmagetX_name
         sigmagetknotsname <- sigmagetKnots_name
+        sigmagetpreHname <- sigmagetpreH_name
       }
       
       sigmaspfncname_c <- c(sigmaspfncname_c, sigmaspfncname)
@@ -5591,7 +6006,18 @@ bsitar <- function(x,
         "sigma_set_higher_levels",
         "select_model",
         "verbose",
-        "unusedsi"
+        "unusedsi",
+        "smat",
+        "smat_intercept",
+        "smat_derivs",
+        "smat_centerval",
+        "smat_normalize",
+        "smat_preH",
+        "smat_include_stan",
+        "SplinefunxPre",
+        "Splinefunxsuf",
+        "SplinefunxR",
+        "SplinefunxStan"
       )
     
     
@@ -5650,6 +6076,17 @@ bsitar <- function(x,
           data = datai,
           internal_formula_args = internal_formula_args
         )
+    } else if(smat == 'nsk') {
+      formula_bf <-
+        prepare_formula(
+          x = xsi,
+          y = ysi,
+          id = idsi,
+          knots = knots,
+          nknots = nknots,
+          data = datai,
+          internal_formula_args = internal_formula_args
+        )
     }
     
     
@@ -5687,6 +6124,10 @@ bsitar <- function(x,
                     names(eout)[grep(pattern = "^lm_|^lme_", names(eout))]]
     lm_val_list_not <- sort(lm_val_list_not)
     
+    
+    # print(lm_val_list)
+    # print(lm_val_list_not)
+    # stop()
     
     
     cov_list_names <- ls()[grepl(pattern = "_cov", ls())]
@@ -6218,6 +6659,8 @@ bsitar <- function(x,
     stanvar_priors <- attr(bpriors, "stanvars")
     
     initials <- attr(bpriors, "initials")
+    
+    
     
     # check and add hierarchical prior (for 3 level and more)
     # First, sd
@@ -6838,6 +7281,8 @@ bsitar <- function(x,
     funlist_r_name <- 'funlist_r'
     funlist_rnamelist[[ii]] <- funlist_r_name
     funlist_rvaluelist[[ii]] <- funlist_r %>% unlist()
+    
+    # funlist_r_name_include_fun_names <- 'include_fun_names'
     
     
     sigmafunlist_r_name <- 'sigmafunlist_r'
@@ -8132,23 +8577,7 @@ bsitar <- function(x,
     brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
   }
   
-  # if (is.null(sigma_formula_manualsi[[1]][1])) {
-  #   brmspriors <- brmspriors
-  # } else if(sigma_formula_manualsi == "NULL") {
-  #   brmspriors <- brmspriors
-  # } else {
-  #   brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
-  # }
-  
-
-  
-  
-
-  
-  # brmspriors <- brmspriors %>% 
-  #   dplyr::mutate(prior = dplyr::if_else(prior == "", "''", prior))
-  # brmspriors <- brmspriors %>% dplyr::filter(!grepl("''", prior, fixed = F))
-
+ 
   
   brm_args$prior <- brmspriors
   
@@ -8426,15 +8855,17 @@ bsitar <- function(x,
     if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {
          brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args, 
+                                      brms_arguments,
                                       pathfinder_args = pathfinder_args,
                                       pathfinder_init = pathfinder_init)
       }
       if(brm_args$backend == "rstan") {
-        brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args)
+        brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args, brms_arguments)
       }
     } else if(!fit_edited_scode) {
       if(!is.null(pathfinder_args) | pathfinder_init) {
         brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args,
+                                     brms_arguments,
                                      pathfinder_args = pathfinder_args,
                                      pathfinder_init = pathfinder_init)
       } else {
@@ -8450,8 +8881,7 @@ bsitar <- function(x,
     }
     
 
-    
-    # Add attr so that expose_model_functions() works on bgmfit
+    # Add class attributes and the model info for post-processing
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
     
     model_info <- list()
@@ -8548,6 +8978,7 @@ bsitar <- function(x,
     model_info[['fun_scode']] <- fun_scode
     model_info[['envir']] <- enverr.
     
+    model_info[['include_fun_names']] <- include_fun_names
     
     if(setsigma_formula_manual) {
       model_info[['sigmaStanFun_name']] <- sigmaSplineFun_name

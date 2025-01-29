@@ -1955,6 +1955,8 @@ sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) {
 #' @param scode A character string of model code
 #' @param sdata A list of data objects
 #' @param brm_args A list of argument passes to the [[brms::brm()]]
+#' @param brms_arguments A list of argument passes to the [[brms::brm()]] especially
+#' when passing include_paths
 #' @param pathfinder_args A list of argument allowed for pathfinder
 #' @param pathfinder_init A logical to indicate whether to use pathfinder
 #'   initials.
@@ -1964,7 +1966,7 @@ sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) {
 #' @noRd
 #'
 
-brms_via_cmdstanr <- function(scode, sdata, brm_args, 
+brms_via_cmdstanr <- function(scode, sdata, brm_args, brms_arguments,
                               pathfinder_args = NULL,
                               pathfinder_init = FALSE) {
   
@@ -2009,6 +2011,13 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args,
   }
   
   
+  if(!is.null(brms_arguments$stan_model_args$include_paths)) {
+    # set_allow_undefined <- TRUE
+    set_includes <- brms_arguments$stan_model_args$include_paths
+  } else {
+    # set_allow_undefined <- isTRUE(getOption("stanc.allow_undefined", FALSE))
+    set_includes <- NULL
+  }
   
   
   # cpp_options <- list(stan_threads = stan_threads,
@@ -2040,7 +2049,7 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args,
                             stanc_options = stanc_options,
                             dir = NULL,
                             pedantic = FALSE,
-                            include_paths = NULL,
+                            include_paths = set_includes,
                             user_header = NULL,
                             compile_model_methods = FALSE,
                             compile_hessian_method = FALSE,
@@ -2135,7 +2144,6 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args,
   cb_fit <- brms::read_csv_as_stanfit(cb_fit$output_files(), model = c_scode)
   attributes(cb_fit)$CmdStanModel <- c_scode
   
-  
   brm_args_empty <- brm_args
   brm_args_empty$empty <- TRUE
   
@@ -2157,12 +2165,14 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args,
 #' @param scode A character string of model code
 #' @param sdata A list of data objects
 #' @param brm_args A list of argument passes to the brm
-#'
+#' @param brms_arguments A list of argument passes to the [[brms::brm()]]
+#'   especially when passing include_paths
+
 #' @return An object of class \code{bgmfit}
 #' @keywords internal
 #' @noRd
 #'
-brms_via_rstan <- function(scode, sdata, brm_args) {
+brms_via_rstan <- function(scode, sdata, brm_args, brms_arguments) {
   if(!is.null(brm_args$threads$threads)) {
     stan_threads <- TRUE
   } else {
@@ -2172,7 +2182,9 @@ brms_via_rstan <- function(scode, sdata, brm_args) {
   if(stan_threads) {
     rstan::rstan_options(threads_per_chain = brm_args$threads$threads)
   }
-
+  
+  # brms_argumentsx <<- brms_arguments
+  # scodex <<- scode
   # rstan::rstan_options(auto_write = TRUE)
 
   algorithm <- "NUTS" # c("NUTS", "HMC", "Fixed_param")
@@ -2193,28 +2205,60 @@ brms_via_rstan <- function(scode, sdata, brm_args) {
     show_exceptions = FALSE
   }
 
+  if(!is.null(brms_arguments$stan_model_args$include_paths)) {
+    set_allow_undefined <- TRUE
+    set_includes <- brms_arguments$stan_model_args$include_paths
+  } else {
+    set_allow_undefined <- isTRUE(getOption("stanc.allow_undefined", FALSE))
+    set_includes <- NULL
+  }
+  
+ 
+  
   message("Compiling Stan program...")
-  c_scode <- rstan::stan_model(
-    # file,
-    model_name = "anon_model",
-    model_code = scode,
-    stanc_ret = NULL,
-    boost_lib = NULL,
-    eigen_lib = NULL,
-    save_dso = TRUE,
-    verbose = FALSE,
-    auto_write = rstan::rstan_options("auto_write"),
-    obfuscate_model_name = TRUE,
-    allow_undefined = isTRUE(getOption("stanc.allow_undefined", FALSE)),
-    allow_optimizations = isTRUE(getOption("stanc.allow_optimizations", FALSE)),
-    standalone_functions=isTRUE(getOption("stanc.standalone_functions", FALSE)),
-    use_opencl = isTRUE(getOption("stanc.use_opencl", FALSE)),
-    warn_pedantic = isTRUE(getOption("stanc.warn_pedantic", FALSE)),
-    warn_uninitialized = isTRUE(getOption("stanc.warn_uninitialized", FALSE)),
-    includes = NULL,
-    isystem = c(if (!missing(file)) dirname(file), getwd())
-  )
-
+  
+  # c_scode_stanc_ret <- rstan::stanc(
+  #   # file, 
+  #   model_name = "anon_model",
+  #   model_code = scode, 
+  #  # obfuscate_model_name = TRUE,
+  #   allow_undefined = set_allow_undefined
+  #   #,
+  #   # allow_optimizations = isTRUE(getOption("stanc.allow_optimizations", FALSE)),
+  #   # standalone_functions=isTRUE(getOption("stanc.standalone_functions", FALSE)),
+  #   # use_opencl = isTRUE(getOption("stanc.use_opencl", FALSE)),
+  #   # warn_pedantic = isTRUE(getOption("stanc.warn_pedantic", FALSE)),
+  #   # warn_uninitialized = isTRUE(getOption("stanc.warn_uninitialized", FALSE)),
+  #   # isystem = c(if (!missing(file)) dirname(file), getwd())
+  #   )
+  
+  # when set_includes nor NULL, this below does not work
+  # Need to study why it happens 
+ if(is.null(set_includes)) {
+   c_scode <- rstan::stan_model(
+     # file, 
+     model_name = "anon_model",
+     model_code = scode, 
+     stanc_ret = NULL,
+     boost_lib = NULL,
+     eigen_lib = NULL,
+     # save_dso = TRUE,
+     verbose = FALSE,
+     auto_write = rstan::rstan_options("auto_write"),
+     obfuscate_model_name = TRUE,
+     allow_undefined = set_allow_undefined,
+     allow_optimizations = isTRUE(getOption("stanc.allow_optimizations", FALSE)),
+     standalone_functions=isTRUE(getOption("stanc.standalone_functions", FALSE)),
+     use_opencl = isTRUE(getOption("stanc.use_opencl", FALSE)),
+     warn_pedantic = isTRUE(getOption("stanc.warn_pedantic", FALSE)),
+     warn_uninitialized = isTRUE(getOption("stanc.warn_uninitialized", FALSE)),
+     includes = set_includes,
+     isystem = c(if (!missing(file)) dirname(file), getwd()))
+ } else {
+   c_scode <- rstan::stan_model(
+     model_code = scode)
+ }
+  
 
   message("Start sampling")
   cb_fit <- rstan::sampling(

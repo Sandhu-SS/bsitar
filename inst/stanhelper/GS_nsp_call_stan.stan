@@ -1,11 +1,6 @@
- // functions {
-  
-  /////////////////////////////////////////////////////////////////////////
-  // Find the number of elements in vector x that equal/below/above real number y
-  // if z = 0, it translates to: num_matches and which_equal
-  // if z = 1, it translates to: num_matches_above and which_equal_above
-  // if z = -1, it translates to: num_matches_below and which_equal_below
-  /////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+  // Find elements in vector x that equal/below/above real number y
+ /////////////////////////////////////////////////////////////////////////
   int num_matches(vector x, real y, real z) {
     int n = 0;
     for (i in 1:rows(x))
@@ -44,9 +39,6 @@
     }
     return match_positions;
   }
-  
-  
-  
   /////////////////////////////////////////////////////////////////////////
   // Repeating input vector K times
   /////////////////////////////////////////////////////////////////////////
@@ -75,37 +67,27 @@
       }
     }
     return repmat;
-  }
-  
-  
-  
-/////////////////////////////////////////////////////////////////////////  
+  }  
+  /////////////////////////////////////////////////////////////////////////  
   // Function to compute B-splines and their derivatives
-///////////////////////////////////////////////////////////////////////// 
+  ///////////////////////////////////////////////////////////////////////// 
   matrix GS_bs_stan(vector x, vector knots, vector bknots, 
                     vector fullknots, vector allknots, 
                     int N, int degree, int ord, 
                     int Nintk, int Nk, int Nintervals,
-                    int intercept, int calcderiv) {
-    
-    matrix[N, Nintervals] M1 = rep_matrix(0, N, Nintervals);
-    
-    // Step 1: Initialize M1 with 0s and 1s based on the knot intervals
+                    int intercept, int calcderiv) {    
+    matrix[N, Nintervals] M1 = rep_matrix(0, N, Nintervals);    
     for(i in 1:N) {
       for (j in 1:Nintervals) {
         M1[i,j] = (allknots[j] <= x[i]  && x[i] < allknots[j + 1] ? 1 : 0);
       }
     }
-    
-    
     array[num_matches(x, bknots[2], 0)] int lastknot_index = which_equal(x, bknots[2], 0); 
     if (size(lastknot_index) > 0) {
       for(i in lastknot_index) {
         M1[i, (Nintervals - degree):Nintervals] = rep_row_vector(1, (Nintervals-(Nintervals - degree))+1);
       }
     }
-    
-    // Step 2: Recursively calculate B-spline basis functions
     matrix[N, Nintervals - 0] M2x = rep_matrix(0, N, Nintervals);
     matrix[N, Nintervals - 0] M1x = M1;
     vector[N] C1;
@@ -128,8 +110,6 @@
     }
     matrix[N, Nintervals - degree]    M2 = M2x[, 1:(Nintervals - degree)];
     matrix[N, (Nintervals - degree)+1] M1xx = M1x[, 1:(Nintervals - degree)+1];
-    
-    // Step 3: calculate derivative (if requested) return the output
     if (calcderiv) {
       matrix[N, Nintervals - degree] deriv;
       for (i in 1:(Nintervals - degree)) {
@@ -141,122 +121,7 @@
     } else {
       return M2;
     }
-  } // end matrix GS_bs_stan
-  /////////////////////////////////////////////////////////////////////////
-  // Function to calculate H matrix (as defined in GS_ns_getH_stan)
-  /////////////////////////////////////////////////////////////////////////
-  matrix GS_ns_getH_stan(vector knots, int normalize) {
-    int Nintk = num_elements(knots) - 8;
-    real C11 = 6 / ((knots[5] - knots[2]) * (knots[5] - knots[3]));
-    real C31 = 6 / ((knots[6] - knots[3]) * (knots[5] - knots[3]));
-    real C21 = -C11 - C31;
-    real Cp22 = 6 / ((knots[Nintk + 6] - knots[Nintk + 3]) * (knots[Nintk + 6] - knots[Nintk + 4]));
-    real Cp2 = 6 / ((knots[Nintk + 7] - knots[Nintk + 4]) * (knots[Nintk + 6] - knots[Nintk + 4]));
-    real Cp12 = -Cp22 - Cp2;
-    matrix[Nintk+1, Nintk+1] dH; // dummy
-    if (Nintk == 0) {
-      matrix[2, 4] H;
-      H = to_matrix(transpose([3, 0, 2, 1, 1, 2, 0, 3]), 2, 4);
-      if (normalize) {
-        vector[2] sumH = H * rep_vector(1.0, 4);
-        for (i in 1:2) {
-          if (sumH[i] != 0) {
-            H[i, ] = H[i, ] / sumH[i];
-          }
-        }
-      } // if (normalize) 
-      return transpose(H);
-    } else if (Nintk == 1) {
-      matrix[3, 5] H;
-      H = transpose(to_matrix([
-        -C21 / C11, 1, 0, 0, 0, 
-        0, -C31 / C21, 1, -Cp22 / Cp12, 0, 
-        0, 0, 0, 1, -Cp12 / Cp2
-      ], 5, 3));
-      if (normalize) {
-        vector[Nintk + 2] sumH = H * rep_vector(1.0, Nintk + 2 + 2);
-        for (i in 1:(Nintk + 2)) {
-          if (sumH[i] != 0) {
-            H[i, ] = H[i, ] / sumH[i];
-          }
-        }
-      } // if (normalize) 
-      return transpose(H);
-    } else if (Nintk == 2) {
-      matrix[Nintk + 2, 3] H1;
-      matrix[Nintk + 2, 3] H3;
-      matrix[Nintk + 2, Nintk + 2 + 2] H;
-      H1 = append_row(
-            append_row(
-              append_row(
-                rep_matrix(1, 1, 3), [0, 1, -C21 / C31]
-                ),
-                rep_matrix(0,  Nintk - 2, 3)
-              ),
-            rep_matrix(0,  2, 3)
-          );
-      H3 = append_row(
-            append_row(
-              append_row(
-                rep_matrix(0, 2, 3), rep_matrix(0, Nintk - 2, 3)
-                ),
-                [-Cp12 / Cp22, 1, 0]
-              ),
-            rep_matrix(1,  1, 3)
-          );
-      H = append_col(H1, H3);
-      if (normalize) {
-        vector[Nintk + 2] sumH = H * rep_vector(1.0, Nintk + 2 + 2);
-        for (i in 1:(Nintk + 2)) {
-          if (sumH[i] != 0) {
-            H[i, ] = H[i, ] / sumH[i];
-          }
-        }
-      } // if (normalize) 
-      return transpose(H);
-    } else if (Nintk > 2) {
-      matrix[Nintk + 2, 3] H1;
-      matrix[Nintk + 2, 3] H3;
-      matrix[Nintk + 2, Nintk - 2] H2;
-      matrix[Nintk + 2, Nintk + 2 + 2] H;
-      H1 = append_row(
-            append_row(
-              append_row(
-                rep_matrix(1, 1, 3), [0, 1, -C21 / C31]
-                ),
-                rep_matrix(0,  Nintk - 2, 3)
-              ),
-            rep_matrix(0,  2, 3)
-          );
-      H2 = append_row(
-            append_row(
-              rep_matrix(0, 2, Nintk - 2), diag_matrix(rep_vector(1, Nintk - 2))
-              ),
-              rep_matrix(0, 2, Nintk - 2)
-            );
-      H3 = append_row(
-            append_row(
-              append_row(
-                rep_matrix(0, 2, 3), rep_matrix(0, Nintk - 2, 3)
-                ),
-                [-Cp12 / Cp22, 1, 0]
-              ),
-            rep_matrix(1,  1, 3)
-          );
-      H = append_col(append_col(H1, H2), H3);
-      if (normalize) {
-      // https://discourse.mc-stan.org/t/rowsum-or-columnsum-of-a-matrix/8839/4
-        vector[Nintk + 2] sumH = H * rep_vector(1.0, Nintk + 2 + 2);
-        for (i in 1:(Nintk + 2)) {
-          if (sumH[i] != 0) {
-            H[i, ] = H[i, ] / sumH[i];
-          }
-        }
-      } // if (normalize) 
-      return transpose(H);
-    } 
-    return dH;
-  } // end matrix GS_ns_getH_stan
+  } // end matrix GS_bs_stan  
   /////////////////////////////////////////////////////////////////////////
   // Main function for B-splines and their derivatives
   /////////////////////////////////////////////////////////////////////////
@@ -264,8 +129,8 @@
                     vector fullknots, vector allknots, 
                     int N, int degree, int ord, 
                     int Nintk, int Nk, int Nintervals,
-                    int intercept, int calcderiv) {
-                    
+                    int intercept, int calcderiv, int normalize,
+                    int preH) {                    
     matrix[num_elements(x), Nintervals - degree] bs;
     matrix[num_elements(x), Nintervals - degree] bsderiv;
     if (calcderiv) {
@@ -286,7 +151,6 @@
                           Nintk, Nk, Nintervals,
                           intercept, 0);
     }
-    // Handle boundary cases for x values outside the boundary knots
     array[num_matches(x, bknots[1], -1)] int x_below_boundary  = which_equal(x, bknots[1], -1); 
     array[num_matches(x, bknots[2],  1)] int x_above_boundary  = which_equal(x, bknots[2],  1); 
     int size_x_below_boundary = size(x_below_boundary);
@@ -294,7 +158,6 @@
     if (size_x_below_boundary > 0 || size_x_above_boundary > 0) {
       matrix[2, Nintervals - degree] bs_bknots;
       matrix[2, Nintervals - degree] bsderiv_bknots;
-      // Since here we are checking boundry knots, N must be set to 2, and not N
       bs_bknots      = GS_bs_stan(bknots, knots, bknots, 
                           fullknots, allknots, 
                           2, degree, ord,
@@ -304,82 +167,61 @@
                           fullknots, allknots,
                           2, degree, ord,
                           Nintk, Nk, Nintervals,
-                          intercept, 1);
-      
+                          intercept, 1);      
     if (size_x_below_boundary > 0) {
       array[size_x_below_boundary] int xselect = x_below_boundary;
       int Nxselect = size_x_below_boundary;
       matrix[size_x_below_boundary, (Nintervals - degree)] below_azx1;
       matrix[size_x_below_boundary, (Nintervals - degree)] below_azx2;
-      matrix[size_x_below_boundary, (Nintervals - degree)] below_azx3;
-      
+      matrix[size_x_below_boundary, (Nintervals - degree)] below_azx3;      
       below_azx1 = transpose(to_matrix((repeat_vector(transpose(bs_bknots[1,]), 
                     size_x_below_boundary)), Nintervals - degree, 
                     size_x_below_boundary));
       below_azx2 = transpose(to_matrix((repeat_vector(transpose(bsderiv_bknots[1,]), 
                     size_x_below_boundary)), Nintervals - degree, 
                     size_x_below_boundary));
-      
       below_azx3 = (to_matrix((repeat_vector(((x[xselect] - bknots[1])), 
                     Nintervals - degree)), size_x_below_boundary, 
                     Nintervals - degree));
         bs[xselect, ] = below_azx1 + (below_azx2 .* below_azx3);
-       
         if (calcderiv) {
-          bsderiv[xselect, ] = (to_matrix((repeat_vector(transpose(bsderiv_bknots[1,]), 
-                    size_x_below_boundary)),size_x_below_boundary , 
-                    Nintervals - degree));
+          for(i in xselect) {
+            bsderiv[i, 1: Nintervals - degree] = (bsderiv_bknots[1,]);
+          }
         }
-      } // if (size_x_below_boundary > 0)
-      
-       
+      } // if (size_x_below_boundary > 0)      
       if (size_x_above_boundary > 0) {
         array[size_x_above_boundary] int xselect = x_above_boundary;
         int Nxselect = size_x_above_boundary; 
-        
         matrix[size_x_above_boundary, (Nintervals - degree)] below_azx1;
         matrix[size_x_above_boundary, (Nintervals - degree)] below_azx2;
         matrix[size_x_above_boundary, (Nintervals - degree)] below_azx3;
-        
         below_azx1 = transpose(to_matrix((repeat_vector(transpose(bs_bknots[2,]), 
                                                         size_x_above_boundary)), Nintervals - degree, 
                                          size_x_above_boundary));
         below_azx2 = transpose(to_matrix((repeat_vector(transpose(bsderiv_bknots[2,]), 
                                                         size_x_above_boundary)), Nintervals - degree, 
                                          size_x_above_boundary));
-        
         below_azx3 = (to_matrix((repeat_vector(((x[xselect] - bknots[2])), 
                                                Nintervals - degree)), size_x_above_boundary, 
-                                Nintervals - degree));
-        
-        bs[xselect, ] = below_azx1 + (below_azx2 .* below_azx3);
-        
+                                Nintervals - degree));        
+        bs[xselect, ] = below_azx1 + (below_azx2 .* below_azx3);        
         if (calcderiv) {
-          bsderiv[xselect, ] = (to_matrix((repeat_vector(transpose(bsderiv_bknots[2,]), 
-                                                         size_x_above_boundary)),size_x_above_boundary , 
-                                          Nintervals - degree));
+            for(i in xselect) {
+              bsderiv[i,1: Nintervals - degree ] = (bsderiv_bknots[2,]);
+           }         
         }
-      } // if (size_x_above_boundary > 0)
-      
-      
+      } // if (size_x_above_boundary > 0)    
     } // if (size_x_below_boundary > 0 || size_x_above_boundary > 0) {
-    // Compute H matrix
-    matrix[Nk+2, Nk] H = GS_ns_getH_stan(allknots, 1);
-    
-    // check intercept true/false
-    // Doing below stan complians about ncolselect not present because it is conditional
-    // An alternative is to use int intercept function argument 
-    // Here how it works 
-    //  suppose total columns are 3
-    // 3+intercept-1
-    // when intercept is true  i.e., 1 this will be 3+1-1 = 3
-    // when intercept is false i.e., 0 this will be 3+0-1 = 2
-    
+    matrix[Nk+2, Nk] H;
+    if(preH) {
+     H = GS_ns_getH_pre(Nk+2, Nk);
+    } else {
+     H = GS_ns_getH_stan(allknots, normalize);
+    }
     matrix[num_elements(x), Nk] out;
-    
     int ncolselect = Nk+intercept-1;
     matrix[num_elements(x), ncolselect] result;
-    
     if (calcderiv) {
      out = (bsderiv * H);
       if(intercept) {
@@ -395,120 +237,58 @@
        result = out[, 2:cols(out)];
       }
     }
-    
     return result;
-  } // end matrix GS_ns_stan
-  
+  } // end matrix GS_ns_stan  
   /////////////////////////////////////////////////////////////////////////
-  // call GS_ns_call_stan
+  // call GS_nsp_call_stan
   /////////////////////////////////////////////////////////////////////////
-  matrix GS_ns_call_stan(vector x, vector knotsx, vector bknotsx, int intercept, int derivs, real centerval) {
+  matrix GS_nsp_call_stan(vector x, vector knotsx, vector bknotsx, 
+                        int intercept, int derivs, real centerval, int normalize,
+                        int preH) {
   int N        = num_elements(x);
-  
   vector[num_elements(knotsx)+2] fullknots;
   vector[num_elements(fullknots)-2] knots;
   vector[2] bknots;
-  
   fullknots = append_row(append_row(rep_vector(bknotsx[1], 1), knotsx), rep_vector(bknotsx[2], 1));
   knots = segment(fullknots, 2, num_elements(fullknots)-2);
   bknots = append_row(head(bknotsx, 1), tail(bknotsx, 1)); 
- 
    int Nintk   = num_elements(knots);
    int degree  = 3;
    int ord     = degree + 1;
    int Nk      = Nintk + 2;
    int df      = Nintk + 1 + intercept;
-   
    int calcderiv;
    if(derivs > 1) {
-      reject("Second and higher order derivatives are not supported yet");
     } else {
       calcderiv = derivs;
    }
-   
    if(intercept) {
     if(centerval != 0) {
-      reject("centerval should be 0 when intercept = TRUE");
       // centerval = 0;
     }
   }
-   
   if(Nintk > 0) {
     if(bknots[1] > knots[1]) {
-      reject("Lower boundary is greater than lower internal knot");
       } else if(bknots[2] < knots[Nintk]) {
-        reject("Upper Boundary knot is less than upper internal knot");
     }
   }
-  
-  int ncolselect = Nk+intercept-1;
-    
+  int ncolselect = Nk+intercept-1; 
   matrix[N, ncolselect] out;
-  
-  ///////////////////////////////////////////////////////////
-  // Nothing like df > 1, all works well
-  ///////////////////////////////////////////////////////////
-  
-  /*
-  if(df == 1) {
-    if(!calcderiv) {
-      out[, df] = x - centerval;
-    } else {
-      out[, df] = rep_vector(1.0, N);
-    }
-  } 
-  else if(df > 1)  {
   vector[Nintk + 2*ord] allknots;
    allknots = append_row(append_row(rep_vector(bknots[1], ord), knots), 
-                          rep_vector(bknots[2], ord));
-    
+                          rep_vector(bknots[2], ord));    
    int Nintervals  = num_elements(allknots) - 1;
     out = GS_ns_stan(x, knots, bknots, fullknots, allknots, 
                         N, degree, ord, 
                         Nintk, Nk, Nintervals, 
-                        intercept, calcderiv);
+                        intercept, calcderiv, normalize, preH);                        
     if (centerval != 0) {
     matrix[1, df] cenout;
-      cenout = GS_ns_stan(centerval+rep_vector(0.0, 1), knots, bknots, fullknots, allknots,
-                        N, degree, ord, 
-                        Nintk, Nk, Nintervals, 
-                        intercept, calcderiv);
-      
-      if (!calcderiv) {
-      for(i in 1:df) out[, i] = out[, i] - cenout[1, i];
-        // out = out - cenout;
-      }
-      if (calcderiv)  {
-        out = out;
-      }
-    }
-  } 
-  */
-  
-  
-  ///////////////////////////////////////////////////////////
-  // Nothing like df > 1, all works well, so moved from ifelse
-  ///////////////////////////////////////////////////////////
-  vector[Nintk + 2*ord] allknots;
-   allknots = append_row(append_row(rep_vector(bknots[1], ord), knots), 
-                          rep_vector(bknots[2], ord));
-    
-   int Nintervals  = num_elements(allknots) - 1;
-    out = GS_ns_stan(x, knots, bknots, fullknots, allknots, 
-                        N, degree, ord, 
-                        Nintk, Nk, Nintervals, 
-                        intercept, calcderiv);
-                        
-    if (centerval != 0) {
-    matrix[1, df] cenout;
-    // for centerval, N must be 1 and not the nobs
-      cenout = GS_ns_stan(centerval+rep_vector(0.0, 1), knots, bknots, fullknots, allknots,
+    cenout = GS_ns_stan(centerval+rep_vector(0.0, 1), knots, bknots, fullknots, allknots,
                         1, degree, ord, 
                         Nintk, Nk, Nintervals, 
-                        intercept, calcderiv);
-      
+                        intercept, calcderiv, normalize, preH);      
       if (!calcderiv) {
-        // for(i in 1:cols(cenout)) out[, i] = out[, i] - cenout[1, i];
         if(intercept) {
           for (i in 2:cols(cenout)) {
             out[,i] = out[,i] - cenout[1,i];
@@ -518,15 +298,7 @@
             out[,i] = out[,i] - cenout[1,i];
           }
         }
-      } else if (calcderiv)  {
-        out = out;
-      } // if (!calcderiv) {
+      } 
     } // if (centerval != 0) {
-  
-  
   return(out);
-  } // end matrix GS_ns_call_stan
-  
-  
-// } // end of functions block
-
+  } // end matrix GS_nsp_call_stan

@@ -19,6 +19,7 @@ bsitar(
   xfun = NULL,
   yfun = NULL,
   bound = 0.04,
+  stype = NULL,
   terms_rhs = NULL,
   a_formula = ~1,
   b_formula = ~1,
@@ -321,6 +322,20 @@ variable \code{x} by a small value (default 0.04). See package
 \code{multivariate} models, the \code{bound} can be same for sub models
 (typically), or different for each sub model (see argument \code{x} for
 details on setting different arguments for sub models).}
+
+\item{stype}{A character string or a named list to specify the spline type.
+The available options are \code{'rcs'}, \code{'nks'} and \code{'nsp'}
+(default). The \code{'rcs'} constructs spline design matrix by using the
+truncated power basis (often referred to as Harrell's method and implemented
+in \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}) whereas both \code{'nks'} and \code{'nsp'}
+implements B-spline based natural cubic spline method similar to the
+\code{\link[splines2:naturalSpline]{splines2::nsp()}} and \code{\link[splines2:naturalSpline]{splines2::nsk()}}. Unlike \code{\link[splines2:naturalSpline]{splines2::nsp()}} and
+\code{\link[splines2:naturalSpline]{splines2::nsk()}}, which by defaults normalize the spline basis, the
+\code{'nks'} and \code{'nsp'} return non normalized version. User can set
+normalize as \code{TRUE} by using the list option. For example, to construct
+normalized \code{'nsp'}, one can specify \code{stype = list(type = 'nsp',
+ normalize = TRUE}). Please see \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}, \code{\link[splines2:naturalSpline]{splines2::nsk()}},
+and \code{\link[splines2:naturalSpline]{splines2::nsp()}} for details.}
 
 \item{terms_rhs}{An optional character string (default \code{NULL}) to specify
 terms on the right hand side of the response variable (separated by

@@ -186,11 +186,16 @@ expose_model_functions.bgmfit <- function(model,
   
   
   SplineFun_name <- model$model_info[['StanFun_name']]
-  spfun_collect <- c(SplineFun_name,
-                     paste0(SplineFun_name, "_", 
-                            c("d0", 
-                              "d1",
-                              "d2")))
+  # spfun_collect <- c(SplineFun_name,
+  #                    paste0(SplineFun_name, "_", 
+  #                           c("d0", 
+  #                             "d1",
+  #                             "d2")))
+  # print(spfun_collect)
+  # stop()
+  
+  spfun_collect <- model$model_info$include_fun_names
+
   
   if(sigmanlflf) {
     sigmaSplineFun_name <- model$model_info[['sigmaStanFun_name']]
@@ -204,16 +209,14 @@ expose_model_functions.bgmfit <- function(model,
   }
   
 
-  
   if(expose) {
-    additionlsfuns <- c('getX')
+    additionlsfuns <- c()
     if(sigmanlflf) {
       sigmaadditionlsfuns <- c('sigmagetX')
       additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
     }
     if(model$model_info[['select_model']] == 'sitar' |
        model$model_info[['select_model']] == 'rcs') {
-      additionlsfuns <- c(additionlsfuns, 'getKnots')
       if(sigmanlflf) {
         sigmaadditionlsfuns <- c('sigmagetKnots')
         additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
@@ -221,20 +224,59 @@ expose_model_functions.bgmfit <- function(model,
     }
     spfun_collect <- c(spfun_collect, additionlsfuns)
   }
-  
-  
+
+
   if(expose_r_from_stan) {
-    spfun_collect <- c(spfun_collect, 'getX')
+    spfun_collect <- c(spfun_collect)
     if(sigmanlflf) {
       spfun_collect <- c(spfun_collect, 'sigmagetX')
     }
     if(select_model == 'sitar' | select_model == 'rcs') {
-      spfun_collect <- c(spfun_collect, 'getKnots')
       if(sigmanlflf) {
         spfun_collect <- c(spfun_collect, 'sigmagetKnots')
       }
     }
   }
+  
+  
+  
+  
+  # if(expose) {
+  #   additionlsfuns <- c('getX')
+  #   if(sigmanlflf) {
+  #     sigmaadditionlsfuns <- c('sigmagetX')
+  #     additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
+  #   }
+  #   if(model$model_info[['select_model']] == 'sitar' |
+  #      model$model_info[['select_model']] == 'rcs') {
+  #     additionlsfuns <- c(additionlsfuns, 'getKnots')
+  #     if(sigmanlflf) {
+  #       sigmaadditionlsfuns <- c('sigmagetKnots')
+  #       additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
+  #     }
+  #   }
+  #   spfun_collect <- c(spfun_collect, additionlsfuns)
+  # }
+  # 
+  # 
+  # if(expose_r_from_stan) {
+  #   spfun_collect <- c(spfun_collect, 'getX')
+  #   if(sigmanlflf) {
+  #     spfun_collect <- c(spfun_collect, 'sigmagetX')
+  #   }
+  #   if(select_model == 'sitar' | select_model == 'rcs') {
+  #     spfun_collect <- c(spfun_collect, 'getKnots')
+  #     if(sigmanlflf) {
+  #       spfun_collect <- c(spfun_collect, 'sigmagetKnots')
+  #     }
+  #   }
+  # }
+  
+  
+  
+  
+  
+  
   
   nys <- model$model_info$nys
   ys <- model$model_info$ys

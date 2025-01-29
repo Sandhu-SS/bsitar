@@ -78,6 +78,16 @@ prepare_function <- function(x,
   }
   
   
+  # "X" for rcsfunmultadd 
+  
+  include_fun_c <- c(spfncname
+                     , 'getx' 
+                     , 'getknots'
+                     , "X"
+                     , 'd0'
+                     , 'd1' 
+                     # , 'd2'
+  )
   
   
   backend <- eval(brms_arguments$backend)
@@ -1516,6 +1526,57 @@ prepare_function <- function(x,
     )
     
     
+    # rcsfunmultadd <- NULL
+    
+    
+    include_fun_names <- c(spfncname)
+    
+    if('d0' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "_d0"))
+      spl_d0 <- spl_d0
+    } else {
+      spl_d0 <- NULL
+    }
+    
+    if('d1' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "_d1"))
+      spl_d1 <- spl_d1
+    } else {
+      spl_d1 <- NULL
+    }
+    
+    if('d2' %in% include_fun_c) {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "_d2"))
+      spl_d2 <- spl_d2
+    } else {
+      spl_d2 <- NULL
+    }
+    
+    if('getx' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, getxname)
+      getxname <- getxname
+    } else {
+      getxname <- NULL
+    }
+    
+    if('getknots' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, getknotsname)
+      getknotsname <- getknotsname
+    } else {
+      getknotsname <- NULL
+    }
+    
+    
+    if('X' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "X"))
+      rcsfunmultadd <- rcsfunmultadd
+    } else {
+      rcsfunmultadd <- NULL
+    }
+    
+    
+    
+    
     if (utils::packageVersion('rstan') < "2.26") {
       rcsfun <- paste(getx_knots_fun, rcsfun)
     }
@@ -2069,7 +2130,55 @@ prepare_function <- function(x,
     )
     
     
-    rcsfunmultadd <- NULL
+    # rcsfunmultadd <- NULL
+    
+    
+    include_fun_names <- c(spfncname)
+    
+    if('d0' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "_d0"))
+      spl_d0 <- spl_d0
+    } else {
+      spl_d0 <- NULL
+    }
+    
+    if('d1' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "_d1"))
+      spl_d1 <- spl_d1
+    } else {
+      spl_d1 <- NULL
+    }
+    
+    if('d2' %in% include_fun_c) {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "_d2"))
+      spl_d2 <- spl_d2
+    } else {
+      spl_d2 <- NULL
+    }
+    
+    if('getx' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, getxname)
+      getxname <- getxname
+    } else {
+      getxname <- NULL
+    }
+    
+    if('getknots' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, getknotsname)
+      getknotsname <- getknotsname
+    } else {
+      getknotsname <- NULL
+    }
+    
+    
+    if('X' %in% include_fun_c)  {
+      include_fun_names <- c(include_fun_names, paste0(spfncname, "X"))
+      rcsfunmultadd <- rcsfunmultadd
+    } else {
+      rcsfunmultadd <- NULL
+    }
+    
+    
     
     if (utils::packageVersion('rstan') > "2.26" & is.null(decomp)) {
       rcsfun <- paste0(getx_fun,
@@ -2111,10 +2220,29 @@ prepare_function <- function(x,
   
   
   
+  # Remove empty lines from code strings
+  remove_spaces_and_tabs <- function(x) {
+    if(!is.null(x)) {
+      x <- gsub("^ *|(?<= ) | *$", "", x, perl = TRUE)
+      # '\\L\\1' converts first letter beyoind .* to lower
+      # x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\L\\1', x, perl=T)
+      x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\1', x, perl=T)
+      x <- x[x != ""]
+      x <- gsub("\\s*\n\\s*","\n",x) 
+      xx <- x
+    } else {
+      xx <- x
+    }
+    return(xx)
+  }
+  
+  
+  
   
   #################
   extract_r_fun_from_scode <-
     function(xstaring, what = NULL, decomp, spfncname) {
+      if(is.null(xstaring)) return(xstaring)
       xstaring <- gsub("[[:space:]]" , "", xstaring)
       xstaring <- gsub(";" , ";\n", xstaring)
       xstaring <- gsub("\\{" , "{\n", xstaring)
@@ -2199,7 +2327,9 @@ prepare_function <- function(x,
                  fixed = T)
         }
       }
-      
+      xstaring <- gsub("matrixXp" , "Xp", xstaring, fixed = T) # spfnameX
+      xstaring <- gsub("mcolsmat=cols(Xp);" , "", xstaring, fixed = T) # spfnameX
+      xstaring <- gsub("[mcolsmat+1]" , "", xstaring, fixed = T) # spfnameX
       xstaring
     } # extract_r_fun_from_scode
   
@@ -2224,8 +2354,8 @@ prepare_function <- function(x,
     getx_fun_raw,
     what = 'getX',
     decomp = decomp,
-    spfncname = spfncname
-  )
+    spfncname = spfncname)
+  
   getknots_str <- NULL
   if (select_model == 'sitar' | select_model == 'rcs') {
     getknots_str <- extract_r_fun_from_scode(
@@ -2236,22 +2366,39 @@ prepare_function <- function(x,
     )
   }
   
+  
+  rcsfunmultadd_str     <- extract_r_fun_from_scode(
+    rcsfunmultadd,
+    what = 'X',
+    decomp = decomp,
+    spfncname = spfncname)
+  
+  
+  
   all_raw_str <- c(rcsfun_raw_str,
                    spl_d0_str,
                    spl_d1_str,
                    spl_d2_str,
                    getX_str,
-                   getknots_str)
+                   getknots_str,
+                   rcsfunmultadd_str)
+  
+  rcsfun <- remove_spaces_and_tabs(rcsfun)
   
   
   if (!add_rcsfunmatqrinv_genquant) {
-    out <- list(rcsfun = rcsfun, r_funs = all_raw_str)
+    out <- list(rcsfun = rcsfun, r_funs = all_raw_str,
+                include_fun_names = include_fun_names)
   } else if (add_rcsfunmatqrinv_genquant) {
     out <- list(rcsfun = rcsfun,
                 r_funs = all_raw_str,
-                gq_funs = rcsfunmatqrinv_genquant)
+                gq_funs = rcsfunmatqrinv_genquant,
+                include_fun_names = include_fun_names)
   }
   
+  print(cat(all_raw_str))
+  stop()
+
   out
 }
 

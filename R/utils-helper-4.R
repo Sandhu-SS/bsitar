@@ -137,10 +137,7 @@ prepare_formula <- function(x,
   sigmacovcoefnames_gr_str_id <- NULL;
   sigmacovcoefnames_gr_str_form <- NULL;
   brms_arguments <- NULL;
-  
   d_adjustedsi <- NULL;
-  
-  
   acovcoefnames_gr_str <- NULL;
   bcovcoefnames_gr_str <- NULL;
   ccovcoefnames_gr_str <- NULL;
@@ -151,6 +148,9 @@ prepare_formula <- function(x,
   hcovcoefnames_gr_str <- NULL;
   icovcoefnames_gr_str <- NULL;
   scovcoefnames_gr_str <- NULL;
+  
+  smat <- NULL;
+  smat_intercept <- NULL;
   
   
   
@@ -2629,10 +2629,30 @@ prepare_formula <- function(x,
     }
     
     
+    # check and adjust intercept for smat nsp nk
+    if(smat == 'nsk' | smat == 'nsp') {
+      if(smat_intercept) {
+        if (grepl("~0", s_formulasi, fixed = T)) {
+          lmform  <- as.formula(paste0(y, "~0+", "cons:mat_s"))
+        } 
+        if (grepl("~1", s_formulasi, fixed = T)) {
+          lmform  <- as.formula(paste0(y, "~0+", "mat_s"))
+        }
+      } # if(smat_intercept) {
+    } # if(smat == 'nsk'smat == 'nsp') {
+    
+    
     lm_fit  <- lm(lmform, data = data)
     lm_coef <- coef(lm_fit)
     
     lm_rsd  <- summary(lm_fit)$sigma
+    
+    # print(mat_s)
+    # print(lm_fit)
+    # print(lmform)
+    # print(smat_intercept)
+    
+    
     
     # library(ggplot2)
     # ppp <<- predict(lm_fit)
@@ -2723,6 +2743,7 @@ prepare_formula <- function(x,
       if(match_sitar_a_form) lm_a_all[1] <- lm_a_all[1] + lm_s_all[1] * min(knots)
     }
     
+   
     
     names(lm_a_all) <- acovcoefnames
     names(lm_b_all) <- bcovcoefnames
@@ -2888,6 +2909,8 @@ prepare_formula <- function(x,
     lm_fit  <- lm(lmform, data = lm_data_at_max_x)
     lm_coef <- coef(lm_fit)
     lm_rsd  <- summary(lm_fit)$sigma
+    
+    
     
     if (any(is.na(lm_coef))) {
       stop(
@@ -3380,6 +3403,7 @@ prepare_formula <- function(x,
     lme_sd_a = lme_sd_a,
     lme_rsd = lme_rsd
   )
+  
   
  
   # setbformulax <<- setbformula

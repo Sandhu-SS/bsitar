@@ -151,9 +151,9 @@ ignored otherwise. If \code{TRUE}, the fitted model object will be saved
 regardless of whether new criteria were added via \code{add_criterion}.}
 
 \item{save_each}{A logical (default \code{FALSE}) to indicate whether to save
-each each individual model (as \code{'.rds'} file) while running the loop.
-Note that user can also specify \code{save_each} as a named list that can
-can pass on the following information when saving the model: \cr
+each each model (as \code{'.rds'} file) when running the loop.
+Note that user can also specify \code{save_each} as a named list that will
+pass following information when saving each model: \cr
 \code{'prefix'} a character string (default \code{NULL}), \cr
 \code{'suffix'} a character string (default \code{NULL}), \cr
 \code{'extension'} a character string, either \code{'.rds'} or
@@ -220,10 +220,10 @@ A list containing the optimized models of class \code{bgmfit}, and
 the the summary statistics if \code{add_fit_criteria} are specified.
 }
 \description{
-Select the best fitting SITAR model that involves choosing the
-optimum degrees of freedom (\code{df}) for the natural cubic-spline curve
-and the appropriate transformations of the predictor \code{x} and response
-\code{y} variables.
+The optimize_model selects the best fitting SITAR model that
+involves choosing the optimum degrees of freedom (\code{df}) for the
+natural cubic-spline curve and the appropriate transformations of the
+predictor \code{x} and response \code{y} variables.
 }
 \examples{
 
@@ -240,12 +240,12 @@ and the appropriate transformations of the predictor \code{x} and response
 
 model <- berkeley_exfit
 
-# Below example shows dummy call to optimization to save time. 
-# Note that in case degree of freedom and both  optimize_x and optimize_y are
+# Below example shows dummy call for optimization to save time. 
+# Note that in case degree of freedom and both the optimize_x and optimize_y are
 # NULL (i.e., nothing to optimize), the original model object is returned.   
 # To explicitly get this information whether model is being optimized or not, 
-# user can set verbose = TRUE. The verbose = TRUE also useful in getting the
-# information regarding what all arguments have been changed as compared to
+# user can set verbose = TRUE. The verbose = TRUE is useful to get the
+# information about what all arguments have been changed as compared to
 # the original model.
 
 model2 <- optimize_model(model, 

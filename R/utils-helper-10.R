@@ -47,7 +47,7 @@ make_spline_matrix <- function(x, knots) {
 
 
 
-#' An internal function to b spline basis
+#' An internal function to construct b-spline basis matrix
 #' 
 #' @param x A numeric vector
 #' @param degree An integer 
@@ -77,7 +77,7 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
   }
   
   for (p in 1:degree) {
-    M2 <- matrix(0, Nobs, Nintervals - p)
+    M2 <- matrix(1, Nobs, Nintervals - p)
     for (i in 1:(Nintervals - p)) {
       if (fullknots[i + p] == fullknots[i]) {
         C1 <- 0
@@ -90,7 +90,6 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
       } else {
         C2 <- (fullknots[i + p + 1] - x) / (fullknots[i + p + 1] - fullknots[i + 1])
       }
-      
       M2[, i] <- C1 * M1[, i] + C2 * M1[, i + 1]
     }
     if(p != degree) M1 <- M2
@@ -109,13 +108,11 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
       } else {
         C1 <- degree / (fullknots[i + degree] - fullknots[i])
       }
-      
       if (fullknots[i + degree + 1] == fullknots[i + 1]) {
         C2 <- 0
       } else {
         C2 <- degree / (fullknots[i + degree + 1] - fullknots[i + 1])
       }
-      
       deriv[, i] <- C1 * M1[, i] - C2 * M1[, i + 1]
     }
     
@@ -127,7 +124,7 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
 
 
 
-#' An internal function to b spline basis
+#' An internal function to construct natural cubic spline basis matrix
 #' 
 #' @param x A numeric vector
 #' @param knots A vector
@@ -143,7 +140,7 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
 #' @noRd
 #' 
 #' 
-GS_ns <- function(x, knots, bknots, intercept, calcderiv) {
+GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize) {
   
   Nintk     <- length(knots) 
   Nk        <- Nintk + 2
@@ -175,24 +172,28 @@ GS_ns <- function(x, knots, bknots, intercept, calcderiv) {
       below_azx2 <- matrix(rep(bsderiv_bknots[1,], Nxselect), byrow = T, nrow = Nxselect) 
       below_azx3 <- (x[xselect] - bknots[1]) 
       bs[xselect, ] <- below_azx1 + below_azx2 * below_azx3
-      if (calcderiv) bsderiv[xselect, ] <- bsderiv_bknots[1, ]
+      if (calcderiv) {
+        for(i in xselect) bsderiv[i, ] <- bsderiv_bknots[1, ]
+      }
     }
     if (x_above_boundary) {
-      xselect <- which(x > bknots[2])
+      xselect <- which(x >= bknots[2])
       Nxselect <- length(xselect)
       above_azx1 <- matrix(rep(bs_bknots[2,], Nxselect), byrow = T, nrow = Nxselect)
       above_azx2 <- matrix(rep(bsderiv_bknots[2,], Nxselect), byrow = T, nrow = Nxselect) 
-      above_azx3 <- (x[xselect] - bknots[2]) 
+      above_azx3 <- (x[xselect] - bknots[2])  
+      assignabove <- above_azx1 + above_azx2 * above_azx3
       bs[xselect, ] <- above_azx1 + above_azx2 * above_azx3
-      if (calcderiv) bsderiv[xselect, ] <- bsderiv_bknots[2, ]
-    }
-  }
+       if (calcderiv) {
+        for(i in xselect) bsderiv[i, ] <- bsderiv_bknots[2, ]
+       }
+    } # if (x_above_boundary) {
+  } # if (x_below_boundary || x_above_boundary) {
   
-  H <- GS_ns_getH(allknots, 1) # , 1 normalize T/F 1/0
+  H <- GS_ns_getH(allknots, normalize) # , 1 normalize T/F 1/0
   
   out <- (bs %*% H)
   if (calcderiv) out <- (bsderiv %*% H)
-  
   if(intercept) out <- out else out <- out[, 2:ncol(out)]
   
   return(out)
@@ -217,13 +218,13 @@ GS_ns <- function(x, knots, bknots, intercept, calcderiv) {
 GS_ns_getH <- function(knots, normalize) {
   # Step 1: Define constants based on the knots
   Nintk <- length(knots) - 8
-  
   C11 <- 6 / ((knots[5] - knots[2]) * (knots[5] - knots[3]))
   C31 <- 6 / ((knots[6] - knots[3]) * (knots[5] - knots[3]))
   C21 <- -C11 - C31
   Cp22 <- 6 / ((knots[Nintk + 6] - knots[Nintk + 3]) * (knots[Nintk + 6] - knots[Nintk + 4]))
   Cp2  <- 6 / ((knots[Nintk + 7] - knots[Nintk + 4]) * (knots[Nintk + 6] - knots[Nintk + 4]))
   Cp12 <- -Cp22 - Cp2
+  
   # Step 2: Build the matrix H depending on Nintk
   if (Nintk == 0) {
     H <- t(matrix(c(3, 0, 
@@ -247,11 +248,11 @@ GS_ns_getH <- function(knots, normalize) {
                 diag(Nintk - 2), 
                 matrix(0, nrow = 2, ncol = Nintk - 2))
     
-    H3 <- rbind(matrix(0, nrow = 2, ncol = 3), 
-                matrix(0, nrow = Nintk - 2, ncol = 3), 
-                c(-Cp12 / Cp22, 1, 0), 
+    H3 <- rbind(matrix(0, nrow = 2, ncol = 3),
+                matrix(0, nrow = Nintk - 2, ncol = 3),
+                c(-Cp12 / Cp22, 1, 0),
                 matrix(1, nrow = 1, ncol = 3))
-    H <- cbind(H1, H2, H3)
+    H <- cbind(H1 , H2 , H3 )
   }
   
   if(normalize) {
@@ -261,18 +262,22 @@ GS_ns_getH <- function(knots, normalize) {
   }
  
   return(t(H))
-  
 }
 
 
-#' An internal function to b spline basis
-#' 
-#' @param x A numeric vector
-#' @param knots A vector
-#' @param bknots A vector
-#' @param intercept An integer
-#' @param derivs An integer
-#' @param calcderiv A real number
+#' An internal function to construct natural cubic spline basis matrix
+#'
+#' @param x A numeric vector for which basis matrix to be constructed
+#' @param knots A vector specifying the internal knots
+#' @param bknots A vector specifying the boundary knots
+#' @param intercept An integer to indicate whether to compute complete basis
+#'   along with intercept (\code{intercept = 1}) or to exclude intercept from
+#'   the basis (\code{intercept = 0}, default).
+#' @param derivs An integer to indicate whether to compute complete basis matrix
+#'   (\code{derivs = 0}, default) or its first derivative (\code{derivs = 1})
+#' @param centerval A real number to offset the intercept.
+#' @param normalize An integer to indicate whether to normalize the basis matrix
+#'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
 #' 
 #' @return A matrix
 #' 
@@ -282,7 +287,8 @@ GS_ns_getH <- function(knots, normalize) {
 #' @noRd
 #' 
 #' 
-GS_ns_call <- function(x, knots, bknots, intercept, derivs, centerval) {
+GS_nsp_call <- function(x, knots, bknots, intercept, derivs, 
+                        centerval, normalize, preH) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -306,11 +312,24 @@ GS_ns_call <- function(x, knots, bknots, intercept, derivs, centerval) {
   }
   
   df     <- length(knots) + 1 + intercept
-  out <- GS_ns(x, knots, bknots, intercept = intercept, calcderiv = calcderiv)
+  out <- GS_ns(x, knots, bknots, intercept = intercept, 
+               calcderiv = calcderiv, normalize = normalize)
+  
+  # if no internal knot, the out is a vector and not matrix, convert it to matrix
+  # but if no internal knot but intercept TRUE, then it is already a matrix
+  if(length(knots) == 0) {
+   if(!intercept) out <- matrix(out, length(out), 1)
+  }
+  
+  
   # Centering
   if (centerval != 0) {
-    cenout <- GS_ns(centerval, knots, bknots, intercept = intercept, calcderiv = calcderiv)
+    cenout <- GS_ns(centerval, knots, bknots, intercept = intercept, 
+                    calcderiv = calcderiv, normalize = normalize)
     if(!is.matrix(cenout)) cenout <- matrix(cenout, nrow = 1) 
+    # if(length(knots) == 0) {
+    #   if(!intercept) cenout <- matrix(cenout, length(cenout), 1)
+    # }
     if (!calcderiv) {
       if(intercept) {
         for (i in 2:ncol(cenout)) {
@@ -322,11 +341,86 @@ GS_ns_call <- function(x, knots, bknots, intercept, derivs, centerval) {
         }
       }
     } else if (calcderiv) {
-      out <- out
+      if(length(knots) == 0) {
+        if(!intercept) out <- matrix(out, length(out), 1)
+      }
     }
   } # if (centerval != 0) {
-  
+
   return(out)
 }
 
 
+
+#' An internal function to construct a variant of natural cubic spline basis
+#' matrix
+#'
+#' @param x A numeric vector for which basis matrix to be constructed
+#' @param knots A vector specifying the internal knots
+#' @param bknots A vector specifying the boundary knots
+#' @param intercept An integer to indicate whether to compute complete basis
+#'   along with intercept (\code{intercept = 1}) or to exclude intercept from
+#'   the basis (\code{intercept = 0}, default).
+#' @param derivs An integer to indicate whether to compute complete basis matrix
+#'   (\code{derivs = 0}, default) or its first derivative (\code{derivs = 1})
+#' @param centerval A real number to offset the intercept.
+#' @param normalize An integer to indicate whether to normalize the basis matrix
+#'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
+#' 
+#' @return A matrix
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+#' 
+GS_nsk_call <- function(x, knots, bknots, intercept, derivs, 
+                        centerval, normalize, preH) {
+  
+  if(derivs > 1) {
+    stop("Second and higher order derivatives are not supported yet")
+  } else {
+    calcderiv <- derivs
+  }
+  
+  temp <- c(bknots, knots)
+  if(length(knots) == 0) {
+    kx   <- c(bknots[1], bknots[2])
+  } else {
+    kx   <- c(bknots[1], knots, bknots[2])
+  }
+  
+ 
+  if (!calcderiv) {
+    basis <- GS_nsp_call(x, knots = temp[-(1:2)], bknots = bknots, intercept = intercept, 
+                        derivs = derivs, centerval = centerval, normalize = normalize)
+    
+    kbasis <- GS_nsp_call(kx, knots=knots, bknots = bknots, intercept = intercept, 
+                         derivs = derivs, centerval = centerval, normalize = normalize)
+    
+    if(intercept) {
+      out <- basis %*% solve(kbasis)
+    } else {
+      out <- (cbind(1, basis) %*% solve(cbind(1, kbasis)))[, -1]
+    }
+  } else if (calcderiv) {
+    basis <- GS_nsp_call(x, knots = temp[-(1:2)], bknots = bknots, intercept = intercept, 
+                        derivs = derivs, centerval = centerval, normalize = normalize)
+    
+    kbasis <- GS_nsp_call(kx, knots=knots, bknots = bknots, intercept = intercept, 
+                         derivs = 0, centerval = centerval, normalize = normalize)
+    
+    if(intercept) {
+      out <- basis %*% solve(kbasis)
+    } else {
+      out <- (cbind(1, basis) %*% solve(cbind(1, kbasis)))[, -1]
+    }
+  }
+  
+  if(length(knots) == 0) {
+    if(!intercept) out <- matrix(out, length(out), 1)
+  }
+  
+  return(out)
+}
