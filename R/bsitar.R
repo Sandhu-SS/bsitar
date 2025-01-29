@@ -2954,15 +2954,15 @@ bsitar <- function(x,
     if(smat_include_stan) {
       if(is.null(brms_arguments$stan_model_args)) {
         brms_arguments$stan_model_args <- list()
-        brms_arguments$stan_model_args[['include_paths']] <- "./"
+        brms_arguments$stan_model_args[['include_paths']] <- "."
         if(verbose) 
           message("path for .stan file(s) set to './' via 'stan_model_args'")
       } else if(!is.null(brms_arguments$stan_model_args)) {
         if(is.list(brms_arguments$stan_model_args)) {
           if(is.null(brms_arguments$stan_model_args[['include_paths']])) {
-            brms_arguments$stan_model_args[['include_paths']] <- "./"
+            brms_arguments$stan_model_args[['include_paths']] <- "."
             if(verbose) 
-              message("path for .stan file(s) set to './' via 'stan_model_args'")
+              message("path for .stan file(s) set to '.' via 'stan_model_args'")
           }
         }
       } # if(is.null(brms_arguments$stan_model_args)) {

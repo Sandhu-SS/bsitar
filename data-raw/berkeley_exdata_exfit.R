@@ -2,21 +2,21 @@
 
 library(bsitar)
 
-data(berkeley, package = "sitar")
-berkeley_data <- berkeley
-rm(berkeley)
-
-berkeley_exdata <- berkeley_data %>%
-  dplyr::select(id, age, height, sex) %>%
-  dplyr::filter(age %in% c(8:18) ) %>%
-  tidyr::drop_na(height) %>%
-  dplyr::mutate(sex =
-                  dplyr::recode_factor(sex, "1" = "Male", "2" = "Female")) %>%
-  dplyr::select(id, age, sex, height) %>%
-  tidyr::drop_na() %>%
-  dplyr::filter(sex == "Female") %>%
-  dplyr::select(-sex) %>%
-  droplevels() %>% data.frame()
+# data(berkeley, package = "sitar")
+# berkeley_data <- berkeley
+# rm(berkeley)
+# 
+# berkeley_exdata <- berkeley_data %>%
+#   dplyr::select(id, age, height, sex) %>%
+#   dplyr::filter(age %in% c(8:18) ) %>%
+#   tidyr::drop_na(height) %>%
+#   dplyr::mutate(sex =
+#                   dplyr::recode_factor(sex, "1" = "Male", "2" = "Female")) %>%
+#   dplyr::select(id, age, sex, height) %>%
+#   tidyr::drop_na() %>%
+#   dplyr::filter(sex == "Female") %>%
+#   dplyr::select(-sex) %>%
+#   droplevels() %>% data.frame()
 
 
 
@@ -41,22 +41,21 @@ berkeley_exdata <- berkeley_data %>%
 
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
-                        df = 5, stype = 'nps',
-                        chains = 2, cores = 2, iter = 1000, thin = 1,
-                        a_formula = ~1, s_formula = ~1, 
+                        df = 3,
+                        chains = 2, cores = 2, iter = 1000, thin = 5,
                         a_prior_beta = normal(lm, ysd, autoscale = 2.5),
-                        b_prior_beta = normal(0, 2),
-                        c_prior_beta = normal(0, 1),
+                        b_prior_beta = normal(0, 1.0),
+                        c_prior_beta = normal(0, 0.25),
                         s_prior_beta = normal(lm, lm, autoscale = 2.5),
                         a_prior_sd = normal(0, ysd, autoscale = 2.5),
-                        b_prior_sd = normal(0, 2),
-                        c_prior_sd = normal(0, 1),
+                        b_prior_sd = normal(0, 1.0),
+                        c_prior_sd = normal(0, 0.25),
                         a_init_beta = lm, 
                         b_init_beta = 0,
                         c_init_beta = 0,
                         s_init_beta = lm,
-                        backend = "cmdstanr", 
-                        normalize = F, 
+                        backend = "rstan", 
+                        normalize = FALSE, 
                         threads = brms::threading(NULL),
                         seed = 123)
 

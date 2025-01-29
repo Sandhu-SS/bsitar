@@ -3,30 +3,49 @@
 # bsitar 0.2.2
 
 
-### New feature
+### New features
 
-- Added support to compute and compare growth curve by using ```marginaleffects``` package as back-end.
+  The ```bsitar``` now supports three different types of spline types: the 'rcs', the 'nsp' and 'nsk'.
+  While 'rcs' constructs spline design matrix by using the truncated power basis, both  'nsp' and 'nsk'
+  implements B-spline based natural cubic spline basis. The truncated power basis based method is often
+  referred to as Harrell's method and implemented in the 'rcspline.eval()' function of the ```Hmisc```
+  package. The B-spline based implemention of 'nsp' and 'nsk' is same as described in the ```splines2``` 
+  package. Earlier, only 'rcs' was available. Now the default method is 'nsp'.
+
+
+  Added support to compute and compare growth curve by using ```marginaleffects``` package as back-end.
   (see  ```marginal_draws()```, ```marginal_comparison()``` and ```growthparameters_comparison()```). 
   This allows utilizing the computation flexibility offered by the ```marginaleffects``` package to  
   estimate various quantities of interest such as adjusted growth curves (distance and velocity) and
   growth parameters such as age at peak growth velocity. All three functions allow parallel computation 
   via ```future``` and ```doFuture``` packages.
-  
-- An experimental support for using ```$pathfinder()``` based initial values for the MCMC sampling  
+    
+  An experimental support for using ```$pathfinder()``` based initial values for the MCMC sampling  
   ```$sample()``` (via argument ```pathfinder_init = TRUE```, default FALSE). The arguments for the 
   ```$pathfinder()``` can be specified as a named list via the ```pathfinder_args```. Note that this
   feature is only available when ```backend = 'cmdstanr'```. 
 
 ### Minor changes
 
- - The default distribution for all parameters i.e., regression coefficients as well as the standard
+  The prior distribution for each parameter is changed from ```student_t()``` to ```normal()```. 
+
+  The default setting for initial values is now ```random``` except for population average parameter
+  size (```a_init_beta```), timing (```b_init_beta```), intensity (```c_init_beta```) and spline 
+  coefficients (```s_init_beta```). For size and spline coefficient parameters, the initail values 
+  are derived from the linear regression fit and are specified as ```a_init_beta = lm``` and 
+  ```s_init_beta = lm```. The initial value for both timing and intensity parameter is '0' i.e., 
+  ```b_init_beta = 0``` and ```c_init_beta = 0```
+
+### Minor changes
+
+  The default distribution for all parameters i.e., regression coefficients as well as the standard
    deviation (sd) for the group level random effects and the distributional parameter (sigma) changed 
    to the ```normal()```. Earlier, the distribution for regression coefficients and the sd for the 
    group level random effects was ```student_t()``` whereas distribution for sd of distributional 
    parameter (sigma) was ```exponential()```. Note that the same location and scale parameter for the 
    ```student_t()``` which were used earlier are now used for the ```normal()``` distribution. Similarly,
    the scale parameter used earlier for the ```exponential()``` for distributional parameter is now 
-  used for setting the ```normal()``` prior for the distributional parameter (location parameter as '0'.
+   used for setting the ```normal()``` prior for the distributional parameter (location parameter as '0'.
 
 - The default initials for all parameters i.e., regression coefficients as well as the standard
    deviation (sd) for the group level random effects and the distributional parameter (sigma) changed 
@@ -40,8 +59,12 @@
 
 
 ### Miscellaneous
-- Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing functions. The environment is now automatically set to match the environment of exposed functions. It is important to note that setting environment manually (via the 'envir' argument) may actually result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests. 
-- Minor corrections/changes to make R code more efficient.
+ Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing
+functions to work properly. The environment is now automatically set to match the environment of exposed 
+functions. It is important to note that setting environment manually (via the 'envir' argument) may actually 
+result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests.
+
+Minor corrections/changes to make R code more efficient.
 
 
 
