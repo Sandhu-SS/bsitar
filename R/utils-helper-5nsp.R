@@ -2539,25 +2539,30 @@ prepare_function_nsp <- function(x,
   
   rcsfun <- remove_spaces_and_tabs(rcsfun)
   
+  # smat_include_stan_path <- "./inst/stanhelper/"
+  
+  smat_include_stan_path <- ""
+  
+  
   include_str <- ""
   if(smat_include_stan) {
     if(smat_preH) {
-      set_path_str <- paste0("./inst/stanhelper/", SplinefunxStan, ".stan")
+      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
       include_str <- paste0(include_str, "#include ", set_path_str, "\n")
     } else if(!smat_preH) {
-      set_path_str <- paste0("./inst/stanhelper/", SplinefunxStan, ".stan")
+      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
       include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-      set_path_str <- paste0("./inst/stanhelper/", 'preH', ".stan")
+      set_path_str <- paste0(smat_include_stan_path, 'preH', ".stan")
       include_str <- paste0(include_str, "#include ", set_path_str, "\n")
     }
   } else if(!smat_include_stan) {
     if(smat_preH) {
-      set_path_str <- paste0("./inst/stanhelper/", SplinefunxStan, ".stan")
+      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
       include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
     } else if(!smat_preH) {
-      set_path_str <- paste0("./inst/stanhelper/", SplinefunxStan, ".stan")
+      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
       include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-      set_path_str <- paste0("./inst/stanhelper/", 'preH', ".stan")
+      set_path_str <- paste0(smat_include_stan_path, 'preH', ".stan")
       include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
     }
   }
