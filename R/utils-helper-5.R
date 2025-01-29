@@ -2396,9 +2396,7 @@ prepare_function <- function(x,
                 include_fun_names = include_fun_names)
   }
   
-  print(cat(all_raw_str))
-  stop()
-
+  
   out
 }
 

@@ -19,7 +19,7 @@ bsitar(
   xfun = NULL,
   yfun = NULL,
   bound = 0.04,
-  stype = NULL,
+  stype = "nsp",
   terms_rhs = NULL,
   a_formula = ~1,
   b_formula = ~1,

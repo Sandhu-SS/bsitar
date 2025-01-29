@@ -2380,8 +2380,6 @@ prepare_function_nsp <- function(x,
   #################
   extract_r_fun_from_scode <-
     function(xstaring, what = NULL, decomp, spfncname,...) {
-      SplinefunxR <- NULL;
-      SplinefunxStan <- NULL;
       if(is.null(xstaring)) return(xstaring)
       xstaring <- gsub("[[:space:]]" , "", xstaring)
       xstaring <- gsub(";" , ";\n", xstaring)
