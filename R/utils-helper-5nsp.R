@@ -76,6 +76,7 @@ prepare_function_nsp <- function(x,
   smat_preH <- NULL;
   SplinefunxR <- NULL;
   SplinefunxStan <- NULL;
+  smat_include_stan <- NULL;
   
   
   if (!is.null(internal_function_args)) {
