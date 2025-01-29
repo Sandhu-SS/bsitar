@@ -2539,10 +2539,14 @@ prepare_function_nsp <- function(x,
   
   rcsfun <- remove_spaces_and_tabs(rcsfun)
   
-  # smat_include_stan_path <- "./inst/stanhelper/"
+  smat_include_stan_path <- "./inst/stanhelper/"
   
-  smat_include_stan_path <- ""
+  #smat_include_stan_path <- ""
   
+  print('smat_include_stan')
+  print(smat_include_stan)
+  print('smat_preH')
+  print(smat_preH)
   
   include_str <- ""
   if(smat_include_stan) {

@@ -2979,6 +2979,7 @@ bsitar <- function(x,
   }
   
   
+  print(brms_arguments$stan_model_args[['include_paths']])
   
   
   
