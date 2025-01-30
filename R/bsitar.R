@@ -2787,10 +2787,24 @@ bsitar <- function(x,
   
   # smat_preH is not allowed because adding two #include does not
   # work in package
-  # Hence preH is added to main .stan files
+  # Hence preH is added to main .stan files 
+  # i.e., over riding smat = list(preH = 1)
   if(smat_preH == 1) {
     stop("Please set preH = 0")
+    smat_preH <- 0
+    if(verbose) message("'preH' is set to '0'")
   }
+  
+  # smat_include_stan is also not working i.e., even single #include also not
+  # working in package
+  # Hence smat_include_stan is set to 0 and will be pasted to .stan files
+  # i.e., over riding smat = list(smat_include_stan = 1)
+  if(smat_include_stan == 1) {
+    stop("Please set smat_include_stan = 0")
+    smat_include_stan <- 0
+    if(verbose) message("'smat_include_stan' is set to '0'")
+  }
+  
   
   # print(smat)
   # print(smat_intercept)
@@ -3004,7 +3018,7 @@ bsitar <- function(x,
   }
   
   
-  print(brms_arguments$stan_model_args[['include_paths']])
+  # print(brms_arguments$stan_model_args[['include_paths']])
   
   
   
@@ -8352,6 +8366,12 @@ bsitar <- function(x,
           setarguments$stan_model_args <- list(stanc_options = list("O1"))
         }
       }
+      
+      
+      if(verbose) {
+        message(setarguments$stan_model_args)
+      }
+      
       
       if (eval(setarguments$backend) == "rstan" & 
           packageVersion("rstan") < "2.26.1") {

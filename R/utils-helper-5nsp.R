@@ -2566,15 +2566,15 @@ prepare_function_nsp <- function(x,
     smat_include_stan_path <- smat_include_path
   }
    
-  print('smat_include_path')
-  print(smat_include_path)
-  
-  print('smat_include_stan')
-  print(smat_include_stan)
-  print('smat_preH')
-  print(smat_preH)
-  print('smat_include_stan_path')
-  print(smat_include_stan_path)
+  # print('smat_include_path')
+  # print(smat_include_path)
+  # 
+  # print('smat_include_stan')
+  # print(smat_include_stan)
+  # print('smat_preH')
+  # print(smat_preH)
+  # print('smat_include_stan_path')
+  # print(smat_include_stan_path)
   
   
   # smat_preH is not allowed because adding two #include does not
@@ -2615,8 +2615,8 @@ prepare_function_nsp <- function(x,
   # 
   
   
-  print('include_str')
-  print(include_str)
+  # print('include_str')
+  # print(include_str)
   
   rcsfun <- paste0(include_str, "\n", rcsfun)
  
