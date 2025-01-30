@@ -2561,6 +2561,7 @@ prepare_function_nsp <- function(x,
     # smat_include_stan_path <- paste0(smat_include_stan_path, "/")
     # smat_include_stan_path <- smat_include_stan_path # "/inst/stanhelper/"
     smat_include_stan_path <- system.file('stanhelper', package = "bsitar")
+    smat_include_stan_path <- paste0(smat_include_stan_path, "/")
   } else if(!is.null(smat_include_path)) {
     smat_include_stan_path <- smat_include_path
   }
@@ -2576,31 +2577,43 @@ prepare_function_nsp <- function(x,
   print(smat_include_stan_path)
   
   
-  
-  
+  # smat_preH is not allowed because adding two #include does not
+  # work in package
+  # Hence preH is added to main .stan files
   
   include_str <- ""
   if(smat_include_stan) {
-    if(smat_preH) {
-      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
-      include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-    } else if(!smat_preH) {
-      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
-      include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-      set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
-      include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-    }
-  } else if(!smat_include_stan) {
-    if(smat_preH) {
-      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
-      include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-    } else if(!smat_preH) {
-      set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
-      include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-      set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
-      include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-    }
+    set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+    include_str <- paste0(include_str, "#include ", set_path_str, "\n")
+  } else {
+    set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+    include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
   }
+
+  # include_str <- ""
+  # if(smat_include_stan) {
+  #   if(smat_preH) {
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
+  #   } else if(!smat_preH) {
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
+  #     set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
+  #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
+  #   }
+  # } else if(!smat_include_stan) {
+  #   if(smat_preH) {
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+  #   } else if(!smat_preH) {
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+  #     set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
+  #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+  #   }
+  # }
+  # 
+  
   
   print('include_str')
   print(include_str)

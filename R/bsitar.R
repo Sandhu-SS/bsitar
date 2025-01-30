@@ -2785,6 +2785,13 @@ bsitar <- function(x,
     # allow further checks - for later use
   }
   
+  # smat_preH is not allowed because adding two #include does not
+  # work in package
+  # Hence preH is added to main .stan files
+  if(smat_preH == 1) {
+    stop("Please set preH = 0")
+  }
+  
   # print(smat)
   # print(smat_intercept)
   # print(smat_derivs)
