@@ -11,7 +11,7 @@
   often referred to as Harrell's method, is implemented in the ``rcspline.eval()`` function of the 
   ``Hmisc`` package. The B-spline-based implementations of ``'nsp'`` and ``'nsk'`` are the same as 
   those described in the ``splines2`` package. Previously, only ``'rcs'`` was available. Now, the 
-  default method is ``'nsp'``.=
+  default method is ``'nsp'``.
 
   Added support for computing and comparing growth curves using the ``marginaleffects`` package as 
   the back-end (see ``marginal_draws()``, ``marginal_comparison()``, and ``growthparameters_comparison()``). 
