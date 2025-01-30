@@ -5076,7 +5076,8 @@ bsitar <- function(x,
         sigmaxsi <- sigmaxsi
       }
       data[[sigmaxsi]] <- data[[xsi]]
-    } else {
+    } else if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi == "NULL") {
+    # } else  {
       sigmaxsi <- paste0("sigma", xsi) 
       if(verbose) {
         message("The predictor for distrubutional parameter (i.e., sigma) is set same as mu i.e, ", xsi, ".",
@@ -8369,6 +8370,7 @@ bsitar <- function(x,
             )
         }
       }
+      
       
       
       if(verbose) {
