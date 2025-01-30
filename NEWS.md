@@ -3,68 +3,67 @@
 # bsitar 0.2.2
 
 
-### New features
+### New features/additions
 
-  The ```bsitar``` now supports three different types of spline types: the ```'rcs'```, the ```'nsp'``` and ```'nsk'```.
-  While ```'rcs'``` constructs spline design matrix by using the truncated power basis, both  ```'nsp'``` and ```'nsk'```
-  implements B-spline based natural cubic spline basis. The truncated power basis based method is often
-  referred to as Harrell's method and implemented in the ```rcspline.eval()``` function of the ```Hmisc```
-  package. The B-spline based implementation of ```'nsp'``` and ```'nsk'``` is same as described in the ```splines2``` 
-  package. Earlier, only ```'rcs'``` was available. Now the default method is ```'nsp'```.
+  The ``bsitar`` now supports three different types of splines: ``'rcs'``, ``'nsp'``, and ``'nsk'``. 
+  While ``'rcs'`` constructs the spline design matrix using the truncated power basis, both ``'nsp'`` 
+  and ``'nsk'`` implement a B-spline-based natural cubic spline basis. The truncated power basis method,
+  often referred to as Harrell's method, is implemented in the ``rcspline.eval()`` function of the 
+  ``Hmisc`` package. The B-spline-based implementations of ``'nsp'`` and ``'nsk'`` are the same as 
+  those described in the ``splines2`` package. Previously, only ``'rcs'`` was available. Now, the 
+  default method is ``'nsp'``.=
 
-
-  Added support to compute and compare growth curve by using ```marginaleffects``` package as back-end.
-  (see  ```marginal_draws()```, ```marginal_comparison()``` and ```growthparameters_comparison()```). 
-  This allows utilizing the computation flexibility offered by the ```marginaleffects``` package to  
-  estimate various quantities of interest such as adjusted growth curves (distance and velocity) and
-  growth parameters such as age at peak growth velocity. All three functions allow parallel computation 
-  via ```future``` and ```doFuture``` packages.
+  Added support for computing and comparing growth curves using the ``marginaleffects`` package as 
+  the back-end (see ``marginal_draws()``, ``marginal_comparison()``, and ``growthparameters_comparison()``). 
+  This enables the use of the computational flexibility offered by the ``marginaleffects`` package to 
+  estimate various quantities of interest, such as adjusted growth curves (distance and velocity), and 
+  growth parameters like age at peak growth velocity. All three functions support parallel computation via 
+  the ``future`` and ``doFuture`` packages.
     
-  An experimental support for using ```$pathfinder()``` based initial values for the MCMC sampling  
-  ```$sample()``` (via argument ```pathfinder_init = TRUE```, default FALSE). The arguments for the 
-  ```$pathfinder()``` can be specified as a named list via the ```pathfinder_args```. Note that this
-  feature is only available when ```backend = 'cmdstanr'```. 
+  An experimental feature has been added to use ``$pathfinder()`` based initial values for the MCMC sampling
+  ``$sample()`` (via the argument ``pathfinder_init = TRUE``, default is FALSE). The arguments for
+  ``$pathfinder()`` can be specified as a named list using ``pathfinder_args``. Note that this feature is 
+  only available when ``backend = 'cmdstanr'``.
+
+   Added a new vignette comparing growth curves and growth parameters obtained from the frequentist 
+   (``sitar`` package) and Bayesian (``bsitar`` package) versions of the SITAR model applied to the 
+   height data. 
 
 ### Minor changes
 
-  The prior distribution for each parameter is changed from ```student_t()``` to ```normal()```. 
+ The prior distribution for each parameter has been changed from ``student_t()`` to ``normal()``.
+ The prior distribution for all parameters, including regression coefficients as well as the standard
+  deviation (sd) for the group-level random effects and the distributional parameter (sigma), has been 
+  changed to ``normal()``. Previously, the distribution for regression coefficients and the sd for the 
+  group-level random effects was ``student_t()``, while the distribution for the sd of the distributional
+  parameter (sigma) was ``exponential()``. Note that the same location and scale parameters used earlier 
+  for ``student_t()`` are now used for the ``normal()`` distribution. For example, prior speciofied
+  earlier as ``student_t(3, 0, 15)`` (3 degree of freedom, location 0 and scale) has been revised as 
+  ``normal(0, 15)``.
 
-  The default setting for initial values is now ```random``` except for population average parameter
-  size (```a_init_beta```), timing (```b_init_beta```), intensity (```c_init_beta```) and spline 
-  coefficients (```s_init_beta```). For size and spline coefficient parameters, the initial values 
-  are derived from the linear regression fit and are specified as ```a_init_beta = lm``` and 
-  ```s_init_beta = lm```. The initial value for both timing and intensity parameter is '0' i.e., 
-  ```b_init_beta = 0``` and ```c_init_beta = 0```
-
-### Minor changes
-
-  The default distribution for all parameters i.e., regression coefficients as well as the standard
-   deviation (sd) for the group level random effects and the distributional parameter (sigma) changed 
-   to the ```normal()```. Earlier, the distribution for regression coefficients and the sd for the 
-   group level random effects was ```student_t()``` whereas distribution for sd of distributional 
-   parameter (sigma) was ```exponential()```. Note that the same location and scale parameter for the 
-   ```student_t()``` which were used earlier are now used for the ```normal()``` distribution. Similarly,
-   the scale parameter used earlier for the ```exponential()``` for distributional parameter is now 
-   used for setting the ```normal()``` prior for the distributional parameter (location parameter as '0'.
-
-- The default initials for all parameters i.e., regression coefficients as well as the standard
-   deviation (sd) for the group level random effects and the distributional parameter (sigma) changed 
-   to the ```random```. 
+ The default setting for initial values is now ``random`` except for the population average parameters: 
+ size (``a_init_beta``), timing (``b_init_beta``), intensity (``c_init_beta``), and spline coefficients 
+ (``s_init_beta``). For size and spline coefficient parameters, the initial values are derived from the 
+ linear regression fit and specified as ``a_init_beta = lm`` and ``s_init_beta = lm``. The initial 
+ values for both timing and intensity parameters are set to '0', i.e., ``b_init_beta = 0`` and 
+ ``c_init_beta = 0``.
 
 ### Bugfixes
 
-- bsitar(): The 'sigma_cov_init_beta = random' argument was setting wrong initial values for the covariates  
-  included in the 'sigma' formula. The initials for Intercept ('sigma_init_beta') were used for covariates too.
+ The ``sigma_cov_init_beta = random`` argument was setting incorrect initial values for the covariates 
+ included in the ``sigma`` formula. The initial values for the Intercept (``sigma_init_beta``) were 
+ incorrectly applied to the covariates as well.
 
 
 
 ### Miscellaneous
- Now user need not to set environment as 'globalenv()' i.e., ```envir = globalenv()``` for post processing
-functions to work properly. The environment is now automatically set to match the environment of exposed 
-functions. It is important to note that setting environment manually (via the 'envir' argument) may actually 
-result in errors. The 'envir' argument is now mostly for internal use only which is needed during tests.
+Users no longer need to set the environment to ``globalenv()``, i.e., ``envir = globalenv()``, for 
+post-processing functions to work properly. The environment is now automatically set to match the 
+environment of the exposed functions. It is important to note that manually setting the environment 
+(via the ``envir`` argument) may result in errors. The ``envir`` argument is now primarily for internal
+use, which is needed during tests.
 
-Minor corrections/changes to make R code more efficient.
+Minor corrections and changes have been made to improve the efficiency of the R code.
 
 
 
