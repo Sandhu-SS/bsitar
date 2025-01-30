@@ -42,6 +42,7 @@ library(bsitar)
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 3,
+                        stan_model_args = list(include_paths = "C:/Users/drsat/OneDrive/Documents/GitHub/bsitar/data-raw"),
                         chains = 2, cores = 2, iter = 1000, thin = 5,
                         a_prior_beta = normal(lm, ysd, autoscale = 2.5),
                         b_prior_beta = normal(0, 1.0),

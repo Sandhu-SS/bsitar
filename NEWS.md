@@ -8,8 +8,8 @@
   The ```bsitar``` now supports three different types of spline types: the 'rcs', the 'nsp' and 'nsk'.
   While 'rcs' constructs spline design matrix by using the truncated power basis, both  'nsp' and 'nsk'
   implements B-spline based natural cubic spline basis. The truncated power basis based method is often
-  referred to as Harrell's method and implemented in the 'rcspline.eval()' function of the ```Hmisc```
-  package. The B-spline based implemention of 'nsp' and 'nsk' is same as described in the ```splines2``` 
+  referred to as Harrell's method and implemented in the ```rcspline.eval()``` function of the ```Hmisc```
+  package. The B-spline based implementation of 'nsp' and 'nsk' is same as described in the ```splines2``` 
   package. Earlier, only 'rcs' was available. Now the default method is 'nsp'.
 
 
@@ -31,7 +31,7 @@
 
   The default setting for initial values is now ```random``` except for population average parameter
   size (```a_init_beta```), timing (```b_init_beta```), intensity (```c_init_beta```) and spline 
-  coefficients (```s_init_beta```). For size and spline coefficient parameters, the initail values 
+  coefficients (```s_init_beta```). For size and spline coefficient parameters, the initial values 
   are derived from the linear regression fit and are specified as ```a_init_beta = lm``` and 
   ```s_init_beta = lm```. The initial value for both timing and intensity parameter is '0' i.e., 
   ```b_init_beta = 0``` and ```c_init_beta = 0```

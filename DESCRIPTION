@@ -85,7 +85,8 @@ Suggests:
     grDevices,
     ggtext,
     glue,
-    stats    
+    stats,
+    here   
 URL: https://github.com/Sandhu-SS/bsitar
 BugReports: https://github.com/Sandhu-SS/bsitar/issues
 Additional_repositories:
