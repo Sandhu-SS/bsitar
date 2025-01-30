@@ -2548,18 +2548,19 @@ prepare_function_nsp <- function(x,
   
   
   if(is.null(smat_include_path)) {
-    smat_include_stan_path <- ""
-    # if(system.file('inst', package = 'bsitar') != "") {
-    #   smat_include_stan_path <- paste0(smat_include_stan_path, "/inst")
+    # smat_include_stan_path <- ""
+    # # if(system.file('inst', package = 'bsitar') != "") {
+    # #   smat_include_stan_path <- paste0(smat_include_stan_path, "/inst")
+    # # }
+    # if(system.file('include', package = 'bsitar') != "") {
+    #   smat_include_stan_path <- paste0(smat_include_stan_path, "/include")
     # }
-    if(system.file('include', package = 'bsitar') != "") {
-      smat_include_stan_path <- paste0(smat_include_stan_path, "/include")
-    }
-    if(system.file('stanhelper', package = 'bsitar') != "") {
-      smat_include_stan_path <- paste0(smat_include_stan_path, "/stanhelper")
-    }
-    smat_include_stan_path <- paste0(smat_include_stan_path, "/")
-    smat_include_stan_path <- smat_include_stan_path # "/inst/stanhelper/"
+    # if(system.file('stanhelper', package = 'bsitar') != "") {
+    #   smat_include_stan_path <- paste0(smat_include_stan_path, "/stanhelper")
+    # }
+    # smat_include_stan_path <- paste0(smat_include_stan_path, "/")
+    # smat_include_stan_path <- smat_include_stan_path # "/inst/stanhelper/"
+    smat_include_stan_path <- system.file('stanhelper', package = "bsitar")
   } else if(!is.null(smat_include_path)) {
     smat_include_stan_path <- smat_include_path
   }
@@ -2586,7 +2587,7 @@ prepare_function_nsp <- function(x,
     } else if(!smat_preH) {
       set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
       include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-      set_path_str <- paste0(smat_include_stan_path, 'preH', ".stan")
+      set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
       include_str <- paste0(include_str, "#include ", set_path_str, "\n")
     }
   } else if(!smat_include_stan) {
@@ -2596,7 +2597,7 @@ prepare_function_nsp <- function(x,
     } else if(!smat_preH) {
       set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
       include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-      set_path_str <- paste0(smat_include_stan_path, 'preH', ".stan")
+      set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
       include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
     }
   }
