@@ -1,5 +1,6 @@
 
 
+
 #' @title Fit Bayesian SITAR growth curve model
 #'
 #' @description The \strong{bsitar()} is the main function that fits the
@@ -2633,6 +2634,17 @@ bsitar <- function(x,
           # if(verbose) message(paste0("'", TRUE ,"' set as default spline include"))
         }
         
+        if(!is.null(spline_type[['path']])) {
+          if(!is.character(spline_type[['path']])) {
+            stop(paste0(spline_type[['path']], " must be a character string"))
+          } else {
+            spline_type_list[['path']]    <-  spline_type[['path']] 
+          }
+        } else if(is.null(spline_type[['path']])) {
+          spline_type_list[['path']]    <- NULL
+          # if(verbose) message(paste0("'", NULL ,"' set as default spline path"))
+        }
+        
         
         if(!is.null(spline_type[['centerval']])) {
           if(!is.numeric(spline_type[['centerval']])) {
@@ -2653,6 +2665,7 @@ bsitar <- function(x,
         spline_type_list[['derivs']]      <- FALSE
         spline_type_list[['preH']]        <- FALSE
         spline_type_list[['include']]     <- TRUE
+        spline_type_list[['path']]        <- NULL
         # if(verbose & defaut_spline_type != 'rcs') {
         #   message(paste0("'", defaut_spline_type ,"' set as default spline type"))
         #   message(paste0("'", FALSE ,"' set as default spline intercept"))
@@ -2672,6 +2685,7 @@ bsitar <- function(x,
         spline_type_list[['derivs']]      <- FALSE
         spline_type_list[['preH']]        <- FALSE
         spline_type_list[['include']]     <- TRUE
+        spline_type_list[['path']]        <- NULL
         # if(verbose & defaut_spline_type != 'rcs') {
         #   message(paste0("'", defaut_spline_type ,"' set as default spline type"))
         #   message(paste0("'", FALSE ,"' set as default spline intercept"))
@@ -2727,6 +2741,7 @@ bsitar <- function(x,
     smat_derivs       <- as.integer(spline_type_list[['derivs']])
     smat_preH         <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- as.integer(spline_type_list[['include']])
+    smat_include_path <- as.integer(spline_type_list[['path']])
     if(verbose) {
       message(paste0("setting intercept for spline type '",
                      spline_type_list[['type']], "' as: ", smat_intercept))
@@ -2749,6 +2764,7 @@ bsitar <- function(x,
     smat_derivs    <- 0
     smat_preH      <- 0
     smat_include_stan <- 1
+    smat_include_path <- NULL
     SplinefunxPre  <- 'GS'
     Splinefunxsuf  <- '_call'
     SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
@@ -2760,6 +2776,7 @@ bsitar <- function(x,
     smat_derivs    <- 0
     smat_preH      <- 0
     smat_include_stan <- 0
+    smat_include_path <- NULL
     SplinefunxPre  <- NULL
     Splinefunxsuf  <- NULL
     SplinefunxR    <- NULL
@@ -2775,6 +2792,7 @@ bsitar <- function(x,
   # print(smat_normalize)
   # print(smat_preH)
   # print(smat_include_stan)
+  # print(smat_include_path)
   # stop()
   
   
@@ -2956,7 +2974,7 @@ bsitar <- function(x,
         brms_arguments$stan_model_args <- list()
         brms_arguments$stan_model_args[['include_paths']] <- "."
         if(verbose) 
-          message("path for .stan file(s) set to './' via 'stan_model_args'")
+          message("path for .stan file(s) set to '.' via 'stan_model_args'")
       } else if(!is.null(brms_arguments$stan_model_args)) {
         if(is.list(brms_arguments$stan_model_args)) {
           if(is.null(brms_arguments$stan_model_args[['include_paths']])) {
@@ -5652,6 +5670,7 @@ bsitar <- function(x,
         "smat_normalize",
         "smat_preH",
         "smat_include_stan",
+        "smat_include_path",
         "SplinefunxPre",
         "Splinefunxsuf",
         "SplinefunxR",
@@ -6015,6 +6034,7 @@ bsitar <- function(x,
         "smat_normalize",
         "smat_preH",
         "smat_include_stan",
+        "smat_include_path",
         "SplinefunxPre",
         "Splinefunxsuf",
         "SplinefunxR",

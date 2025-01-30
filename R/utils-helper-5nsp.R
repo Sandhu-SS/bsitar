@@ -77,6 +77,7 @@ prepare_function_nsp <- function(x,
   SplinefunxR <- NULL;
   SplinefunxStan <- NULL;
   smat_include_stan <- NULL;
+  smat_include_path <- NULL;
   
   
   if (!is.null(internal_function_args)) {
@@ -2539,11 +2540,31 @@ prepare_function_nsp <- function(x,
   
   rcsfun <- remove_spaces_and_tabs(rcsfun)
   
-   smat_include_stan_path <- "/inst/stanhelper/"
+   
   
   # smat_include_stan_path <- here::here('inst', 'include')
   
   #smat_include_stan_path <- ""
+  
+  
+  if(is.null(smat_include_path)) {
+    smat_include_stan_path <- ""
+    if(system.file('inst', package = 'bsitar') != "") {
+      smat_include_stan_path <- paste0(smat_include_stan_path, "/inst")
+    }
+    if(system.file('include', package = 'bsitar') != "") {
+      smat_include_stan_path <- paste0(smat_include_stan_path, "/include")
+    }
+    if(system.file('stanhelper', package = 'bsitar') != "") {
+      smat_include_stan_path <- paste0(smat_include_stan_path, "/stanhelper")
+    }
+    smat_include_stan_path <- smat_include_stan_path # "/inst/stanhelper/"
+  } else if(!is.null(smat_include_path)) {
+    smat_include_stan_path <- smat_include_path
+  }
+   
+  print('smat_include_path')
+  print(smat_include_path)
   
   print('smat_include_stan')
   print(smat_include_stan)
@@ -2551,6 +2572,10 @@ prepare_function_nsp <- function(x,
   print(smat_preH)
   print('smat_include_stan_path')
   print(smat_include_stan_path)
+  
+  
+  
+  
   
   include_str <- ""
   if(smat_include_stan) {
