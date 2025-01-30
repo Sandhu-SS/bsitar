@@ -8363,11 +8363,10 @@ bsitar <- function(x,
       if (eval(setarguments$backend) == "cmdstanr") {
         if (is.list(eval(setarguments$stan_model_args)) &
             eval(length(setarguments$stan_model_args)) == 0) {
-          setarguments$stan_model_args <- list(stanc_options = 
-                                                 list("O1"),
-                                               cpp_options = 
-                                                 list(STAN_CPP_OPTIMS=TRUE)
-                                               )
+          setarguments$stan_model_args <- list(
+            stanc_options = list("O1")
+            # , cpp_options = list(STAN_CPP_OPTIMS=TRUE)
+            )
         }
       }
       
