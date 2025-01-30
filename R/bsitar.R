@@ -2763,7 +2763,7 @@ bsitar <- function(x,
     smat_normalize <- 0
     smat_derivs    <- 0
     smat_preH      <- 0
-    smat_include_stan <- 1
+    smat_include_stan <- 0
     smat_include_path <- NULL
     SplinefunxPre  <- 'GS'
     Splinefunxsuf  <- '_call'
@@ -2790,7 +2790,7 @@ bsitar <- function(x,
   # Hence preH is added to main .stan files 
   # i.e., over riding smat = list(preH = 1)
   if(smat_preH == 1) {
-    stop("Please set preH = 0")
+    # stop("Please set preH = 0")
     smat_preH <- 0
     if(verbose) message("'preH' is set to '0'")
   }
@@ -2800,7 +2800,7 @@ bsitar <- function(x,
   # Hence smat_include_stan is set to 0 and will be pasted to .stan files
   # i.e., over riding smat = list(smat_include_stan = 1)
   if(smat_include_stan == 1) {
-    stop("Please set smat_include_stan = 0")
+    # stop("Please set smat_include_stan = 0")
     smat_include_stan <- 0
     if(verbose) message("'smat_include_stan' is set to '0'")
   }
@@ -8366,7 +8366,7 @@ bsitar <- function(x,
           setarguments$stan_model_args <- list(stanc_options = 
                                                  list("O1"),
                                                cpp_options = 
-                                                 list(STAN_CPP_OPTIMS=true)
+                                                 list(STAN_CPP_OPTIMS=TRUE)
                                                )
         }
       }
