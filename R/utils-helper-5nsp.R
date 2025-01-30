@@ -2549,15 +2549,16 @@ prepare_function_nsp <- function(x,
   
   if(is.null(smat_include_path)) {
     smat_include_stan_path <- ""
-    if(system.file('inst', package = 'bsitar') != "") {
-      smat_include_stan_path <- paste0(smat_include_stan_path, "/inst")
-    }
+    # if(system.file('inst', package = 'bsitar') != "") {
+    #   smat_include_stan_path <- paste0(smat_include_stan_path, "/inst")
+    # }
     if(system.file('include', package = 'bsitar') != "") {
       smat_include_stan_path <- paste0(smat_include_stan_path, "/include")
     }
     if(system.file('stanhelper', package = 'bsitar') != "") {
       smat_include_stan_path <- paste0(smat_include_stan_path, "/stanhelper")
     }
+    smat_include_stan_path <- paste0(smat_include_stan_path, "/")
     smat_include_stan_path <- smat_include_stan_path # "/inst/stanhelper/"
   } else if(!is.null(smat_include_path)) {
     smat_include_stan_path <- smat_include_path

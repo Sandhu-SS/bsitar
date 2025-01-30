@@ -2741,7 +2741,7 @@ bsitar <- function(x,
     smat_derivs       <- as.integer(spline_type_list[['derivs']])
     smat_preH         <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- as.integer(spline_type_list[['include']])
-    smat_include_path <- as.integer(spline_type_list[['path']])
+    smat_include_path <- spline_type_list[['path']]
     if(verbose) {
       message(paste0("setting intercept for spline type '",
                      spline_type_list[['type']], "' as: ", smat_intercept))

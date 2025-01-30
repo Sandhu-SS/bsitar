@@ -5,12 +5,12 @@
 
 ### New features
 
-  The ```bsitar``` now supports three different types of spline types: the 'rcs', the 'nsp' and 'nsk'.
-  While 'rcs' constructs spline design matrix by using the truncated power basis, both  'nsp' and 'nsk'
+  The ```bsitar``` now supports three different types of spline types: the ```'rcs'```, the ```'nsp'``` and ```'nsk'```.
+  While ```'rcs'``` constructs spline design matrix by using the truncated power basis, both  ```'nsp'``` and ```'nsk'```
   implements B-spline based natural cubic spline basis. The truncated power basis based method is often
   referred to as Harrell's method and implemented in the ```rcspline.eval()``` function of the ```Hmisc```
-  package. The B-spline based implementation of 'nsp' and 'nsk' is same as described in the ```splines2``` 
-  package. Earlier, only 'rcs' was available. Now the default method is 'nsp'.
+  package. The B-spline based implementation of ```'nsp'``` and ```'nsk'``` is same as described in the ```splines2``` 
+  package. Earlier, only ```'rcs'``` was available. Now the default method is ```'nsp'```.
 
 
   Added support to compute and compare growth curve by using ```marginaleffects``` package as back-end.
