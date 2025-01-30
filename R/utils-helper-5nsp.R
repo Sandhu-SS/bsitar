@@ -2539,9 +2539,9 @@ prepare_function_nsp <- function(x,
   
   rcsfun <- remove_spaces_and_tabs(rcsfun)
   
-  # smat_include_stan_path <- "./inst/stanhelper/"
+   smat_include_stan_path <- "/inst/stanhelper/"
   
-  smat_include_stan_path <- here::here('inst', 'include')
+  # smat_include_stan_path <- here::here('inst', 'include')
   
   #smat_include_stan_path <- ""
   
@@ -2574,6 +2574,9 @@ prepare_function_nsp <- function(x,
       include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
     }
   }
+  
+  print('include_str')
+  print(include_str)
   
   rcsfun <- paste0(include_str, "\n", rcsfun)
  
