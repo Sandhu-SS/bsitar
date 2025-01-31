@@ -5242,7 +5242,7 @@ bsitar <- function(x,
       if (xfunsi == "log") {
         datai[[xsi]] <- log(datai[[xsi]])
         # Automatically adjust xoffset if numeric value
-        if(is.numeric.like(xoffsetsi)) {
+        if(check_is_numeric_like(xoffsetsi)) {
           zm <- as.numeric(xoffsetsi)
           xoffsetsi <- round(log(zm), 2)
           if(verbose) message("'xoffset' value '", zm, "' log transformed to '", 
@@ -5251,7 +5251,7 @@ bsitar <- function(x,
         }
       } else if (xfunsi == "sqrt") {
         datai[[xsi]] <- sqrt(datai[[xsi]])
-        if(is.numeric.like(xoffsetsi)) {
+        if(check_is_numeric_like(xoffsetsi)) {
           zm <- as.numeric(xoffsetsi)
           xoffsetsi <- round(sqrt(zm), 2)
           if(verbose) message("'xoffset' value '", zm, "' sqrt transformed to '", 
@@ -5284,12 +5284,16 @@ bsitar <- function(x,
       }
     }
     
+    # is.numeric.like -> in utilis 2 -> changed to check_is_numeric_like
+    # Thid because of notes in rmd check which says 
+    # Mismatches for apparent methods not registered
+    # This perhaps because is.numeric.like sound like is.numeric
     
     if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
       if (sigmaxfunsi == "log") {
         datai[[xsi]] <- log(datai[[xsi]])
         # Automatically adjust sigmaxoffset if numeric value
-        if(is.numeric.like(sigmaxoffsetsi)) {
+        if(check_is_numeric_like(sigmaxoffsetsi)) {
           zm <- as.numeric(sigmaxoffsetsi)
           sigmaxoffsetsi <- round(log(zm), 2)
           if(verbose) message("'sigmaxoffset' value '", zm, "' log transformed to '", 
@@ -5298,7 +5302,7 @@ bsitar <- function(x,
         }
       } else if (sigmaxfunsi == "sqrt") {
         datai[[xsi]] <- sqrt(datai[[xsi]])
-        if(is.numeric.like(sigmaxoffsetsi)) {
+        if(check_is_numeric_like(sigmaxoffsetsi)) {
           zm <- as.numeric(sigmaxoffsetsi)
           sigmaxoffsetsi <- round(sqrt(zm), 2)
           if(verbose) message("'sigmaxoffset' value '", zm, "' sqrt transformed to '", 

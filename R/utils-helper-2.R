@@ -3443,6 +3443,10 @@ get_pathfinder_init <- function(pthf = NULL,
 # check if a str obj is actually numeric
 # @description check if a str obj is actually numeric
 # https://stackoverflow.com/questions/13638377/test-for-numeric-elements-in-a-character-string
+# is.numeric.like -> changed to check_is_numeric_like -> is called in bsitar.R only
+# Thid because of notes in rmd check which says 
+# Mismatches for apparent methods not registered
+# This perhaps because is.numeric.like sound like is.numeric
 #' @param x a str vector, or a factor of str vector, or numeric vector. x will
 #'   be coerced and trimws.
 #' @param na.strings case sensitive strings that will be treated to NA.
@@ -3460,7 +3464,7 @@ get_pathfinder_init <- function(pthf = NULL,
 #' @keywords internal
 #' @noRd
 #'
-is.numeric.like <- function(x, 
+check_is_numeric_like <- function(x, 
                             naAsTrue = TRUE, 
                             na.strings = 
                               c('','.','NA','na','N/A','n/a','NaN','nan')
