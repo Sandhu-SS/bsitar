@@ -53,16 +53,20 @@ over \code{df} 4 and \code{df} 5 for the first sub model, and \code{df} 5
 and \code{df} 6 for the second sub model, the corresponding code is
 \code{optimize_df = list(list(4,5), list(5,6))}.}
 
-\item{optimize_x}{A vector specifying the transformations for the predictor
+\item{optimize_x}{A list specifying the transformations for the predictor
 variable (i.e., \code{x}). The options available are \code{NULL},
 \code{'log'}, \code{'sqrt'}, or their combinations. Note that user need not
-to enclose these options in a single or double quotes as they are take care
-of internally. The default setting is to explore all possible combination
-i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to the
-\code{optimize_df}, user can specify different \code{optimize_x} for
-\code{univariate_by} and \code{multivariate} sub models.}
+to enclose these options in a single or double quotes as they are taken
+care of internally. The default setting is to explore all possible
+combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to
+the \code{optimize_df}, user can specify different \code{optimize_x} for
+\code{univariate_by} and \code{multivariate} sub models. Note that it
+possible to pass any primitive function instead of fixed functions such as
+\code{log} and \code{sqrt}. This greatly enhances the flexibility of model
+optimization by allowing searching for a wide range of \code{x}
+transformation like \code{optimize_x = list(function(x) log(x + 3/4))}.}
 
-\item{optimize_y}{A vector specifying the transformations of the the response
+\item{optimize_y}{A list specifying the transformations of the the response
 variable (i.e., \code{y}). The approach and options available for
 \code{optimize_y} are same as described above for the \code{optimize_x}.}
 
@@ -220,10 +224,10 @@ A list containing the optimized models of class \code{bgmfit}, and
 the the summary statistics if \code{add_fit_criteria} are specified.
 }
 \description{
-The optimize_model selects the best fitting SITAR model that
+The optimization to select the best fitting SITAR model
 involves choosing the optimum degrees of freedom (\code{df}) for the
 natural cubic-spline curve and the appropriate transformations of the
-predictor \code{x} and response \code{y} variables.
+predictor \code{x} and/or the outcome \code{y} variables.
 }
 \examples{
 
