@@ -3636,3 +3636,23 @@ check_if_arg_set <- function(x) {
   return(set_x)
 }
 
+
+
+#' Check if 'bsitar' argument such as xfun is set or NULL
+#'
+#' @param x A character string 
+#' @param splitat A character at which string to be split default (\code{NULL}) 
+#'
+#' @return A logical TRUE/FALSE
+#' @keywords internal
+#' @noRd
+#'
+remove_between_first_last_parnth <- function(x, splitat = NULL) {
+  a <- sub("^.*?\\(", "", x)
+  b <- sub(")\\s*$", "", a)
+  if(!is.null(splitat)) {
+    b <- strsplit(b, splitat)[[1]]
+  }
+  b
+}
+

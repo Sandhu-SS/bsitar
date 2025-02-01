@@ -2,10 +2,10 @@
 
 #' @title Optimize SITAR model
 #' 
-#' @description The optimize_model selects the best fitting SITAR model that
+#' @description The optimization to select the best fitting SITAR model
 #'   involves choosing the optimum degrees of freedom (\code{df}) for the
 #'   natural cubic-spline curve and the appropriate transformations of the
-#'   predictor \code{x} and response \code{y} variables.
+#'   predictor \code{x} and/or the outcome \code{y} variables.
 #'
 #' @param optimize_df A list of integers specifying the degree of freedom
 #'   (\code{df}) values to be optimized. If \code{NULL} (default), the \code{df}
@@ -19,16 +19,20 @@
 #'   and \code{df} 6 for the second sub model, the corresponding code is
 #'   \code{optimize_df = list(list(4,5), list(5,6))}.
 #'
-#' @param optimize_x A vector specifying the transformations for the predictor
+#' @param optimize_x A list specifying the transformations for the predictor
 #'   variable (i.e., \code{x}). The options available are \code{NULL},
 #'   \code{'log'}, \code{'sqrt'}, or their combinations. Note that user need not
-#'   to enclose these options in a single or double quotes as they are take care
-#'   of internally. The default setting is to explore all possible combination
-#'   i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to the
-#'   \code{optimize_df}, user can specify different \code{optimize_x} for
-#'   \code{univariate_by} and \code{multivariate} sub models.
+#'   to enclose these options in a single or double quotes as they are taken
+#'   care of internally. The default setting is to explore all possible
+#'   combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to
+#'   the \code{optimize_df}, user can specify different \code{optimize_x} for
+#'   \code{univariate_by} and \code{multivariate} sub models. Note that it
+#'   possible to pass any primitive function instead of fixed functions such as
+#'   \code{log} and \code{sqrt}. This greatly enhances the flexibility of model
+#'   optimization by allowing searching for a wide range of \code{x}
+#'   transformation like \code{optimize_x = list(function(x) log(x + 3/4))}.
 #'
-#' @param optimize_y A vector specifying the transformations of the the response
+#' @param optimize_y A list specifying the transformations of the the response
 #'   variable (i.e., \code{y}). The approach and options available for
 #'   \code{optimize_y} are same as described above for the \code{optimize_x}.
 #'   
@@ -407,6 +411,21 @@ optimize_model.bgmfit <- function(model,
     if (identical(optimize_y, character(0)))
       optimize_y <- "NULL"
   }
+  
+  
+  
+  
+  if(grepl("function(", optimize_x, fixed = T)) {
+    optimize_x <- remove_between_first_last_parnth(optimize_x, splitat = ",")
+  }
+  if(grepl("function(", optimize_y, fixed = T)) {
+    optimize_y <- remove_between_first_last_parnth(optimize_y, splitat = ",")
+  }
+  
+  # expand.grid(optimize_dfx, optimize_x2, optimize_yx) %>% print()
+  # stop()
+  
+  
   
   optimize_df_x_y <-
     expand.grid(optimize_df, optimize_x, optimize_y)
@@ -1047,6 +1066,9 @@ optimize_model.bgmfit <- function(model,
       for (newargsi in names(newargs)) {
         if(!is.null(user_call[[newargsi]])) user_call[[newargsi]] <- NULL
       }
+      
+      
+      
       # changed -> 21.07.2024
       
       # user_call_data_name <- user_call$data
@@ -1436,7 +1458,26 @@ optimize_model.bgmfit <- function(model,
       
       
       
-  
+      
+      if(check_if_arg_set(user_call$xfun)) {
+        if(grepl("^list", user_call$xfun)) {
+          user_call$xfun <- ept(user_call$xfun)
+        }
+      }
+      
+      if(check_if_arg_set(user_call$yfun)) {
+        if(grepl("^list", user_call$yfun)) {
+          user_call$yfun <- ept(user_call$yfun)
+        }
+      }
+      
+      if(check_if_arg_set(user_call$sigmaxfun)) {
+        if(grepl("^list", user_call$sigmaxfun)) {
+          user_call$sigmaxfun <- ept(user_call$sigmaxfun)
+        }
+      }
+    
+     
       ###
       fit <- eval(user_call)
   
@@ -1507,6 +1548,8 @@ optimize_model.bgmfit <- function(model,
         } # if(is.null(envir)) {...
       } # if(args_o$expose_function) {
     } # else if(!all_same_args) {
+    
+    
     
     
     if(!is.null(fit)) {
@@ -1618,6 +1661,19 @@ optimize_model.bgmfit <- function(model,
     } # if(!is.null(fit)) {
     
     
+    
+    sanitize_string_for_valid <- function(x, parnthesis_to_underscrore = F) {
+      tempx <- x
+      if(parnthesis_to_underscrore) {
+        tempx <- gsub("(", "_", tempx, fixed = T)
+        tempx <- gsub(")", "_", tempx, fixed = T)
+      }
+      tempx <- gsub("([._])|[[:punct:]]", "\\1", tempx)
+      tempx
+    }
+    
+    
+    
     if(!is.null(save_each)) {
       if(!is.list(save_each)) {
         if(!isFALSE(save_each)) {
@@ -1630,6 +1686,7 @@ optimize_model.bgmfit <- function(model,
           extension_is <- "rds"
           compress_is <- 'xz'
           string_saving <- paste0(string_saving, ".", extension_is)  
+          string_saving <- sanitize_string_for_valid(string_saving)
           if(verbose) message(paste0("Saving model file as: ", string_saving))
           saveRDS(fit, file = string_saving, compress = compress_is)
         }
@@ -1661,6 +1718,7 @@ optimize_model.bgmfit <- function(model,
         }
         extension_is <- gsub(".", "", extension_is, fixed = T)
         string_saving <- paste0(string_saving,  ".", extension_is)
+        tring_saving <- sanitize_string_for_valid(string_saving)
         if(verbose) message(paste0("Saving model file as: ", string_saving))
         if(extension_is == 'rds') {
           saveRDS(fit, file = string_saving, compress = compress_is)
@@ -1671,8 +1729,6 @@ optimize_model.bgmfit <- function(model,
 
       } # else if(is.list(save_each)) {
     } # if(!is.null(save_each)) {
-    
-    
     
     return(fit)
   }
@@ -1689,6 +1745,8 @@ optimize_model.bgmfit <- function(model,
      args_o$get_init_eval) {
     exe_model_fit <- FALSE
   }
+  
+  
   
   optimize_list <- lapply(1:nrow(optimize_df_x_y), function(.x)
     optimize_fun(.x, model, exe_model_fit))
