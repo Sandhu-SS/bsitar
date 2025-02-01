@@ -2230,10 +2230,12 @@ bsitar <- function(x,
   sigmabstartsi <- NULL;
   sigmacstartsi <- NULL;
   sigmaids <- NULL;
-  
   sigmaxoffset <- NULL;
   sigmadfs <- NULL;
-  
+  ixfuntransformsi <- NULL;
+  iyfuntransformsi <- NULL;
+  isigmaxfuntransformsi <- NULL;
+
   enverr. <- environment()
   for (i in names(mcall)[-1]) {
     no_default_args_plus_family <- c(no_default_args, "family")
@@ -4082,7 +4084,8 @@ bsitar <- function(x,
                        xfuns = xfuns, 
                        yfuns = yfuns,
                        outliers = outliers,
-                       subset = FALSE)
+                       subset = FALSE,
+                       envir = enverr.)
   
   ys <- attr(data, "ys")
   subindicators <- attr(data, "subindicators")
@@ -4167,7 +4170,25 @@ bsitar <- function(x,
   
   # include_fun_names <- funlist
   
+  xfuntransformvaluelist <- xfuntransformnamelist <- funlist
+  ixfuntransformvaluelist <- ixfuntransformnamelist <- funlist
   
+  yfuntransformvaluelist <- yfuntransformnamelist <- funlist
+  iyfuntransformvaluelist <- iyfuntransformnamelist <- funlist
+  
+  sigmaxfuntransformvaluelist <- sigmaxfuntransformnamelist <- funlist
+  isigmaxfuntransformvaluelist <- isigmaxfuntransformnamelist <- funlist
+  
+  
+  # xxfuntransformsivaluelist <- xxfuntransformsinamelist <- funlist
+  # ixxfuntransformsivaluelist <- ixxfuntransformsinamelist <- funlist
+  # 
+  # yyfuntransformsivaluelist <- yyfuntransformsinamelist <- funlist
+  # iyyfuntransformsivaluelist <- iyyfuntransformsinamelist <- funlist
+  # 
+  # sigmaxxfuntransformsivaluelist <- sigmaxxfuntransformsinamelist <- funlist
+  # isigmaxxfuntransformsivaluelist <- isigmaxxfuntransformsinamelist <- funlist
+  # 
   
   
   # Start loop over response
@@ -5076,22 +5097,24 @@ bsitar <- function(x,
         sigmaxsi <- sigmaxsi
       }
       data[[sigmaxsi]] <- data[[xsi]]
-    } else if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi == "NULL") {
-    # } else  {
+    } 
+    
+    # Even if not modelling location scale model, create data[[sigmaxsi]]
+    # Need to thing how to shut it off compleletely
+    if (is.null(sigmaxsi[[1]][1]) | sigmaxsi == "NULL") {
       sigmaxsi <- paste0("sigma", xsi) 
-      if(verbose) {
-        message("The predictor for distrubutional parameter (i.e., sigma) is set same as mu i.e, ", xsi, ".",
-                "\n ", 
-                "However, it has been renamed as ", 
-                paste0("sigma", xsi)
-        )
-      }
+      # if(verbose) {
+      #   message("The predictor for distrubutional parameter (i.e., sigma) is set same as mu i.e, ", xsi, ".",
+      #           "\n ", 
+      #           "However, it has been renamed as ", 
+      #           paste0("sigma", xsi)
+      #   )
+      # }
       data[[sigmaxsi]] <- data[[xsi]]
     }
 
     
 
-    
     
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
@@ -5197,28 +5220,111 @@ bsitar <- function(x,
     if(select_model == 'logistic1e' |
        select_model == 'logistic2e' |
        select_model == 'logistic3e' |
-       parameterization == 'cp'
-    ) {
-      
+       parameterization == 'cp') {
       fit_edited_scode <- TRUE
-      
     }
     
     
+    # Refactor to use function() for transformations
+    # This will allow using optimize_x = list(function(x) log(x + 3/4))
+    # Note that instead of calling log(data[[xsi]]), 'xfuntransformsi' will be used 
     
-    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
-      if (xfunsi != "log" & xfunsi != "sqrt") {
-        stop("only log and sqrt options allowed for xfun argument")
+    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+    #   if (xfunsi != "log" & xfunsi != "sqrt") {
+    #     stop("only log and sqrt options allowed for xfun argument")
+    #   }
+    # }
+    
+    
+    # if(grepl("^list", xfunsi)) {
+    #   xfunsi <- ept(xfunsi)
+    # }
+    # 
+    # if(grepl("^list", yfunsi)) {
+    #   yfunsi <- ept(yfunsi)
+    # }
+    # 
+    # if(grepl("^list", sigmaxfunsi)) {
+    #   sigmaxfunsi <- ept(sigmaxfunsi)
+    # }
+    
+    
+    
+    
+    
+    # Check if xfunsi set
+    set_xfunsi <- check_if_arg_set(xfunsi)
+    
+    # Note that y transformation is done within the prepare_data function, see 4075
+    # data <- prepare_data(
+    
+    # Check if yfunsi set
+    set_yfunsi <- check_if_arg_set(yfunsi)
+    
+    
+    # Check if sigmaxfunsi called
+    set_sigmaxfunsi <- check_if_arg_set(sigmaxfunsi)
+   
+    
+    
+
+    if (!set_xfunsi) {
+    # if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
+      xfuntransformsi <- function(x)x
+      assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
+    }
+    
+    if (set_xfunsi) {
+    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+      if(xfunsi == "log") {
+        xfuntransformsi <- function(x)log(x)
+      } else if(xfunsi == "sqrt") {
+        xfuntransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(xfunsi))) {
+        xfuntransformsi <- ept(xfunsi)
+      } else {
+        stop(paste0("The xfun argument must be either a string ('log' or 'sqrt'),", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
       }
+      assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
+    }
+    
+   
+    
+    
+    
+    if (!set_yfunsi) {
+    # if (is.null(yfunsi[[1]][1]) | yfunsi == "NULL") {
+      yfuntransformsi <- function(x)x
+      assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
+    }
+    
+    if (set_yfunsi) {
+    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+      if(yfunsi == "log") {
+        yfuntransformsi <- function(x)log(x)
+      } else if(yfunsi == "sqrt") {
+        yfuntransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(yfunsi))) {
+        yfuntransformsi <- ept(yfunsi)
+      } else {
+        stop(paste0("The xfun argument must be either a string ('log' or 'sqrt'),", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
+      }
+      assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
     }
     
     
-    if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
-      sigmaxsi <- sigmaxsi
-    } else {
-      sigmaxsi <- xsi
-      if(verbose) message("predictor for sigma is set same as for mu")
-    }
+    
+      
+    # if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
+    #   sigmaxsi <- sigmaxsi
+    # } else {
+    #   sigmaxsi <- xsi
+    #   if(verbose) message("predictor for sigma is set same as for mu")
+    # }
     
     
     if (!is.null(sigmaxoffset[[1]][1]) & sigmaxoffset != "NULL") {
@@ -5238,39 +5344,81 @@ bsitar <- function(x,
     
     
     
-    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
-      if (xfunsi == "log") {
-        datai[[xsi]] <- log(datai[[xsi]])
-        # Automatically adjust xoffset if numeric value
-        if(check_is_numeric_like(xoffsetsi)) {
-          zm <- as.numeric(xoffsetsi)
-          xoffsetsi <- round(log(zm), 2)
-          if(verbose) message("'xoffset' value '", zm, "' log transformed to '", 
-                              xoffsetsi ,"'")
-          rm('zm')
+    # is.numeric.like -> in utilis 2 -> changed to check_is_numeric_like
+    # Thid because of notes in rmd check which says 
+    # Mismatches for apparent methods not registered
+    # This perhaps because is.numeric.like sound like is.numeric
+    
+    check_for_nan_inf <- function(x) {
+      suppressWarnings({
+        nan_inf <- FALSE
+        if(is.infinite(x)) {
+          nan_inf <- TRUE
+        } else if(is.na(x)) {
+          nan_inf <- TRUE
+        } else if(is.nan(x)) {
+          nan_inf <- TRUE
         }
-      } else if (xfunsi == "sqrt") {
-        datai[[xsi]] <- sqrt(datai[[xsi]])
-        if(check_is_numeric_like(xoffsetsi)) {
-          zm <- as.numeric(xoffsetsi)
-          xoffsetsi <- round(sqrt(zm), 2)
-          if(verbose) message("'xoffset' value '", zm, "' sqrt transformed to '", 
-                              xoffsetsi ,"'")
-          rm('zm')
-        }
-      } else {
-        stop("only log and sqrt options allowed for xfun argument")
-      }
+      })
+      nan_inf
     }
     
     
-    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+    datai[[xsi]] <- xfuntransformsi(datai[[xsi]])
+    
+    if(check_is_numeric_like(xoffsetsi)) {
+      zm <- as.numeric(xoffsetsi)
+      if(check_for_nan_inf(xfuntransformsi(zm))) {
+        if(verbose) message("'xoffset' value '", zm, "' can not be transformed to", 
+                           " match the xfun based transformation of x variable" ,"")
+      } else {
+        xoffsetsi <- round(xfuntransformsi(zm), 2)
+        if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
+                            xoffsetsi ,"'")
+      }
+      rm('zm')
+    }
+   
+    
+    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+    #   if (xfunsi == "log") {
+    #     datai[[xsi]] <- log(datai[[xsi]])
+    #     # Automatically adjust xoffset if numeric value
+    #     if(check_is_numeric_like(xoffsetsi)) {
+    #       zm <- as.numeric(xoffsetsi)
+    #       xoffsetsi <- round(log(zm), 2)
+    #       if(verbose) message("'xoffset' value '", zm, "' log transformed to '", 
+    #                           xoffsetsi ,"'")
+    #       rm('zm')
+    #     }
+    #   } else if (xfunsi == "sqrt") {
+    #     datai[[xsi]] <- sqrt(datai[[xsi]])
+    #     if(check_is_numeric_like(xoffsetsi)) {
+    #       zm <- as.numeric(xoffsetsi)
+    #       xoffsetsi <- round(sqrt(zm), 2)
+    #       if(verbose) message("'xoffset' value '", zm, "' sqrt transformed to '", 
+    #                           xoffsetsi ,"'")
+    #       rm('zm')
+    #     }
+    #   } else {
+    #     stop("only log and sqrt options allowed for xfun argument")
+    #   }
+    # }
+    
+    
+    
+    
+    
+    
+    if (set_xfunsi) {
+    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       xfunvalue <- xfunsi
     } else {
       xfunvalue <- NULL
     }
     
-    if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+    if (set_yfunsi) {
+    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
       yfunvalue <- yfunsi
     } else {
       yfunvalue <- NULL
@@ -5278,43 +5426,113 @@ bsitar <- function(x,
     
     
     
-    if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
-      if (sigmaxfunsi != "log" & sigmaxfunsi != "sqrt") {
-        stop("only log and sqrt options allowed for xfun argument")
-      }
+    # Refactor to use function() for transformations
+    # This will allow using optimize_x = list(function(x) log(x + 3/4))
+    # Note that instead of calling log(data[[xsi]]), 'sigmaxfuntransformsi' will be used 
+    
+    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
+    #   if (sigmaxfunsi != "log" & sigmaxfunsi != "sqrt") {
+    #     stop("only log and sqrt options allowed for xfun argument")
+    #   }
+    # }
+    
+    
+    if (!set_sigmaxfunsi) {
+    # if (is.null(sigmaxfunsi[[1]][1]) | sigmaxfunsi == "NULL") {
+      sigmaxfuntransformsi <- function(x)x
+      assign('sigmaxfuntransformsi', sigmaxfuntransformsi, envir = enverr.)
     }
     
-    # is.numeric.like -> in utilis 2 -> changed to check_is_numeric_like
-    # Thid because of notes in rmd check which says 
-    # Mismatches for apparent methods not registered
-    # This perhaps because is.numeric.like sound like is.numeric
     
-    if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
-      if (sigmaxfunsi == "log") {
-        datai[[xsi]] <- log(datai[[xsi]])
-        # Automatically adjust sigmaxoffset if numeric value
-        if(check_is_numeric_like(sigmaxoffsetsi)) {
-          zm <- as.numeric(sigmaxoffsetsi)
-          sigmaxoffsetsi <- round(log(zm), 2)
-          if(verbose) message("'sigmaxoffset' value '", zm, "' log transformed to '", 
-                              sigmaxoffsetsi ,"'")
-          rm('zm')
-        }
-      } else if (sigmaxfunsi == "sqrt") {
-        datai[[xsi]] <- sqrt(datai[[xsi]])
-        if(check_is_numeric_like(sigmaxoffsetsi)) {
-          zm <- as.numeric(sigmaxoffsetsi)
-          sigmaxoffsetsi <- round(sqrt(zm), 2)
-          if(verbose) message("'sigmaxoffset' value '", zm, "' sqrt transformed to '", 
-                              sigmaxoffsetsi ,"'")
-          rm('zm')
-        }
+    if (set_sigmaxfunsi) {
+    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
+      if(sigmaxfunsi == "log") {
+        sigmaxfuntransformsi <- function(x)log(x)
+      } else if(sigmaxfunsi == "sqrt") {
+        sigmaxfuntransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(sigmaxfunsi))) {
+        sigmaxfuntransformsi <- ept(sigmaxfunsi)
       } else {
-        stop("only log and sqrt options allowed for xfun argument")
+        stop(paste0("The xfun argument must be either a string ('log' or 'sqrt'),", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
+      }
+      assign('sigmaxfuntransformsi', sigmaxfuntransformsi, envir = enverr.)
+    }
+    
+    
+    
+    if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
+      datai[[sigmaxsi]] <- sigmaxfuntransformsi(datai[[sigmaxsi]])
+      if(check_is_numeric_like(sigmaxoffsetsi)) {
+        zm <- as.numeric(sigmaxoffsetsi)
+        if(check_for_nan_inf(sigmaxfuntransformsi(zm))) {
+          if(verbose) message("'sigmaxoffset' value '", zm, "' can not be transformed to", 
+                              " match the xfun based transformation of x variable" ,"")
+        } else {
+          sigmaxoffsetsi <- round(sigmaxfuntransformsi(zm), 2)
+          if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
+                              sigmaxoffsetsi ,"'")
+        }
+        rm('zm')
       }
     }
     
-    if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
+    
+    # Assign reverse functions also
+    assign("ixfuntransformsi",  sitar::ifun(base::body(xfuntransformsi)), 
+           envir = enverr.)
+    
+    
+    assign("iyfuntransformsi",  sitar::ifun(base::body(yfuntransformsi)), 
+           envir = enverr.)
+    
+    
+    assign("isigmaxfuntransformsi",  sitar::ifun(base::body(sigmaxfuntransformsi)), 
+           envir = enverr.)
+    
+    
+    
+    xfuntransformvalue  <- xfuntransformsi
+    ixfuntransformvalue <- ixfuntransformsi
+    
+    yfuntransformvalue  <- yfuntransformsi
+    iyfuntransformvalue <- iyfuntransformsi
+    
+    
+    sigmaxfuntransformvalue  <- sigmaxfuntransformsi
+    isigmaxfuntransformvalue <- isigmaxfuntransformsi
+    
+    
+    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
+    #   if (sigmaxfunsi == "log") {
+    #     datai[[xsi]] <- log(datai[[xsi]])
+    #     # Automatically adjust sigmaxoffset if numeric value
+    #     if(check_is_numeric_like(sigmaxoffsetsi)) {
+    #       zm <- as.numeric(sigmaxoffsetsi)
+    #       sigmaxoffsetsi <- round(log(zm), 2)
+    #       if(verbose) message("'sigmaxoffset' value '", zm, "' log transformed to '", 
+    #                           sigmaxoffsetsi ,"'")
+    #       rm('zm')
+    #     }
+    #   } else if (sigmaxfunsi == "sqrt") {
+    #     datai[[xsi]] <- sqrt(datai[[xsi]])
+    #     if(check_is_numeric_like(sigmaxoffsetsi)) {
+    #       zm <- as.numeric(sigmaxoffsetsi)
+    #       sigmaxoffsetsi <- round(sqrt(zm), 2)
+    #       if(verbose) message("'sigmaxoffset' value '", zm, "' sqrt transformed to '", 
+    #                           sigmaxoffsetsi ,"'")
+    #       rm('zm')
+    #     }
+    #   } else {
+    #     stop("only log and sqrt options allowed for xfun argument")
+    #   }
+    # }
+    
+    
+    
+    if (set_sigmaxfunsi) {
+    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
       sigmaxfunvalue <- sigmaxfunsi
     } else {
       sigmaxfunvalue <- NULL
@@ -5331,6 +5549,14 @@ bsitar <- function(x,
       yyfun_name <- "yvar_yfun"
       sigmaxfun_name <- "sigmaxfun"
       sigmayfun_name <- "sigmayfun"
+      
+      xfuntransform_name <- "xfuntransform"
+      ixfuntransform_name <- "ixfuntransform"
+      yfuntransform_name <- "yfuntransform"
+      iyfuntransform_name <- "iyfuntransform"
+      sigmaxfuntransform_name <- "sigmaxfuntransform"
+      isigmaxfuntransform_name <- "isigmaxfuntransform"
+      
     } else if (nys > 1) {
       xfun_name <- paste0("xfun", "_", ysi)
       yfun_name <- paste0("yfun", "_", ysi)
@@ -5338,6 +5564,14 @@ bsitar <- function(x,
       yyfun_name <- paste0("yvar_yfun", "_", ysi)
       sigmaxfun_name <- paste0("sigmaxfun", "_", ysi)
       sigmayfun_name <- paste0("sigmayfun", "_", ysi)
+      
+      xfuntransform_name <- paste0("xfuntransform", "_", ysi)
+      ixfuntransform_name <- paste0("ixfuntransform", "_", ysi)
+      yfuntransform_name <- paste0("yfuntransform", "_", ysi)
+      iyfuntransform_name <- paste0("iyfuntransform", "_", ysi)
+      sigmaxfuntransform_name <- paste0("sigmaxfuntransform", "_", ysi)
+      isigmaxfuntransform_name <- paste0("isigmaxfuntransform", "_", ysi)
+      
     }
     
     
@@ -5348,24 +5582,47 @@ bsitar <- function(x,
     yfunvaluelist[[ii]] <- yfunvalue
     yfunnamelist[[ii]] <- yfun_name
     
-    
     sigmaxfunvaluelist[[ii]] <- sigmaxfunvalue
     sigmaxfunnamelist[[ii]] <- sigmaxfun_name
     
-    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+    
+    xfuntransformvaluelist[[ii]] <- xfuntransformvalue
+    xfuntransformnamelist[[ii]]  <- xfuntransform_name
+    
+    ixfuntransformvaluelist[[ii]] <- ixfuntransformvalue
+    ixfuntransformnamelist[[ii]]  <- ixfuntransform_name
+    
+    yfuntransformvaluelist[[ii]] <- yfuntransformvalue
+    yfuntransformnamelist[[ii]]  <- yfuntransform_name
+    
+    iyfuntransformvaluelist[[ii]] <- iyfuntransformvalue
+    iyfuntransformnamelist[[ii]]  <- iyfuntransform_name
+    
+    
+    sigmaxfuntransformvaluelist[[ii]] <- sigmaxfuntransformvalue
+    sigmaxfuntransformnamelist[[ii]]  <- sigmaxfuntransform_name
+    
+    isigmaxfuntransformvaluelist[[ii]] <- isigmaxfuntransformvalue
+    isigmaxfuntransformnamelist[[ii]]  <- isigmaxfuntransform_name
+    
+    
+    if (set_xfunsi) {
+    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       xxfunvaluelist[[ii]] <- paste0(xfunsi, "(", xsi, ")")
     } else {
       xxfunvaluelist[[ii]] <- NULL
     }
     
-    if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
+    if (set_sigmaxfunsi) {
+    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
       sigmaxxfunvaluelist[[ii]] <- paste0(sigmaxfunsi, "(", sigmaxsi, ")")
     } else {
       sigmaxxfunvaluelist[[ii]] <- NULL
     }
     
     
-    if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+    if (set_yfunsi) {
+    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
       yyfunvaluelist[[ii]] <- paste0(yfunsi, "(", ysi, ")")
     } else {
       yyfunvaluelist[[ii]] <- NULL
@@ -7395,17 +7652,36 @@ bsitar <- function(x,
     sigmad_adjustedvaluelist[[ii]] <- ept(sigmad_adjustedsi)
     
     
+
+    
+   
+    
+    
+    
+    # print(xfuntransformsi)
+    # print(ixfuntransformsi)
+    # zzzx <<- datai[[xsi]]
+    # zx  <- datai[[xsi]]
+    # izx <- ixfuntransformsi(datai[[xsi]] + xoffset) 
+    # print(head(zx))
+    # print(head(izx))
+    
+ 
     # restoring original data
     
-    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
-      if (xfunsi == "log") {
-        datai[[xsi]] <- exp(datai[[xsi]] + xoffset)
-      } else if (xfunsi == "sqrt") {
-        datai[[xsi]] <- (datai[[xsi]] + xoffset) ^ 2
-      }
-    } else if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
-      datai[[xsi]] <- (datai[[xsi]] + xoffset)
-    }
+    datai[[xsi]] <- ixfuntransformsi(datai[[xsi]] + xoffset) 
+    
+    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+    #   if (xfunsi == "log") {
+    #     datai[[xsi]] <- exp(datai[[xsi]] + xoffset)
+    #   } else if (xfunsi == "sqrt") {
+    #     datai[[xsi]] <- (datai[[xsi]] + xoffset) ^ 2
+    #   }
+    # } else if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
+    #   datai[[xsi]] <- (datai[[xsi]] + xoffset)
+    # }
+    
+    
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       dataout <- rbind(dataout, datai)
@@ -9012,6 +9288,31 @@ bsitar <- function(x,
     
     for (i in 1:length(d_adjustednamelist)) {
       model_info[[d_adjustednamelist[[i]]]] <- d_adjustedvaluelist[[i]]
+    }
+    
+    
+    
+    
+    for (i in 1:length(xfuntransformnamelist)) {
+      model_info[[xfuntransformnamelist[[i]]]] <- xfuntransformvaluelist[[i]]
+    }
+    for (i in 1:length(ixfuntransformnamelist)) {
+      model_info[[ixfuntransformnamelist[[i]]]] <- ixfuntransformvaluelist[[i]]
+    }
+    
+    for (i in 1:length(yfuntransformnamelist)) {
+      model_info[[yfuntransformnamelist[[i]]]] <- yfuntransformvaluelist[[i]]
+    }
+    for (i in 1:length(iyfuntransformnamelist)) {
+      model_info[[iyfuntransformnamelist[[i]]]] <- iyfuntransformvaluelist[[i]]
+    }
+    
+    
+    for (i in 1:length(sigmaxfuntransformnamelist)) {
+      model_info[[sigmaxfuntransformnamelist[[i]]]] <- sigmaxfuntransformvaluelist[[i]]
+    }
+    for (i in 1:length(isigmaxfuntransformnamelist)) {
+      model_info[[isigmaxfuntransformnamelist[[i]]]] <- isigmaxfuntransformvaluelist[[i]]
     }
     
     
