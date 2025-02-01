@@ -19,6 +19,13 @@
   estimate various quantities of interest, such as adjusted growth curves (distance and velocity), and 
   growth parameters like age at peak growth velocity. All three functions support parallel computation via 
   the ``future`` and ``doFuture`` packages.
+
+  The ``optimize_model()`` function now allows users to specify custom functions in ``optimize_x`` and ``optimize_y`` 
+  when optimizing the Bayesian SITAR model. For example, it is now possible to use 
+  ``optimize_x = list(function(x) log(x + 3/4))```. Thanks to Tim Cole for suggesting this feature. 
+  This update greatly enhances the flexibility of ``optimize_model()`` and enables users to search for a 
+  range of optimal ``x`` and ``y`` transformations.
+   
     
   An experimental feature has been added to use ``$pathfinder()`` based initial values for the MCMC sampling
   ``$sample()`` (via the argument ``pathfinder_init = TRUE``, default is FALSE). The arguments for
