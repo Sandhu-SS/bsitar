@@ -1,6 +1,6 @@
-# bsitar (development version)
+# Prepare for release 
 
-# bsitar 0.2.2
+# bsitar 0.2.2.9000
 
 
 ### New features/additions
