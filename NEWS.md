@@ -22,7 +22,7 @@
 
   The ``optimize_model()`` function now allows users to specify custom functions in ``optimize_x`` and ``optimize_y`` 
   when optimizing the Bayesian SITAR model. For example, it is now possible to use 
-  ``optimize_x = list(function(x) log(x + 3/4))```. Thanks to Tim Cole for suggesting this feature. 
+  ``optimize_x = list(function(x) log(x + 3/4))``. Thanks to Tim Cole for suggesting this feature. 
   This update greatly enhances the flexibility of ``optimize_model()`` and enables users to search for a 
   range of optimal ``x`` and ``y`` transformations.
    
