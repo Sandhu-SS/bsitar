@@ -3597,3 +3597,42 @@ GG_save_pdf = function(list, filename,
   grDevices::dev.off()
   invisible(NULL)
 }
+
+
+
+
+#' Check if 'bsitar' argument such as xfun is set or NULL
+#'
+#' @param x A symbol or a character string 
+#'
+#' @return A logical TRUE/FALSE
+#' @keywords internal
+#' @noRd
+#'
+check_if_arg_set <- function(x) {
+  if(is.null(x)) {
+    set_x <- FALSE
+  } else if(is.character(x)) {
+    if(x == "NULL") {
+      set_x <- FALSE
+    } else {
+      set_x <- TRUE
+    }
+  } else if(is.list(x)) {
+    if(length(x) == 1) {
+      if(is.null(x[[1]])) {
+        set_x <- FALSE
+      } else {
+        set_x <- TRUE
+      }
+    } else if(length(x) > 1) {
+      if(is.null(x[[1]][1])) {
+        set_x <- FALSE
+      } else {
+        set_x <- TRUE
+      }
+    }
+  }
+  return(set_x)
+}
+
