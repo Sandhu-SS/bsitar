@@ -2,13 +2,14 @@
 
 
 
-#' An internal function to prepare Stan function
+#' An internal function to prepare Stan function for sigma (distributional) parameter
 #'
-#' The \code{prepare_function}) constructs custom Stan function  which is passed
-#' on to the [bsitar::bsitar()] function. For univariate-by- subgroup model
-#' (\code{univariate_by}) and multivariate (\code{multivariate}) models (see
-#' [bsitar::bsitar()]), the \code{x}, \code{y}, \code{id}, \code{knots},
-#' \code{nknots}, are automatically matched with the sub-models.
+#' The \code{prepare_function_sigma}) constructs custom Stan function  which is
+#' passed on to the [bsitar::bsitar()] function for modelling \code{sigma}. For
+#' univariate-by- subgroup model (\code{univariate_by}) and multivariate
+#' (\code{multivariate}) models (see [bsitar::bsitar()]), the \code{x},
+#' \code{y}, \code{id}, \code{knots}, \code{nknots}, are automatically matched
+#' with the sub-models.
 #'
 #' @param x Predictor variable in the data. See [bsitar::bsitar()] for details.
 #'
@@ -35,7 +36,7 @@
 #' @keywords internal
 #' @noRd
 #'
-prepare_function_ns2 <- function(x,
+prepare_function_sigma <- function(x,
                              y,
                              id,
                              knots,
@@ -43,9 +44,6 @@ prepare_function_ns2 <- function(x,
                              data,
                              internal_function_args) {
 
-  # search smat for see ncode changes
-  # see there also smat_defineEx <-  1, 2, 3 4
-  
   # Initiate non formalArgs()
   brms_arguments <- NULL;
   xfunsi <- NULL;
@@ -273,7 +271,6 @@ prepare_function_ns2 <- function(x,
  */"
   
   ##########
-  # spl "Spl[,1]=X;" - > x=X;
   
   create_internal_function <-
     function(y,
@@ -290,8 +287,6 @@ prepare_function_ns2 <- function(x,
              vectorA,
              decomp,
              fixedsi) {
-      # print(function_str)
-      # print(spl)
       split1 <- strsplit(function_str, gsub("\\[", "\\\\[", spl))[[1]][-1]
       split2 <- strsplit(split1, "return")[[1]][-2]
       out <- gsub(split2, body, function_str, fixed = T)
@@ -719,7 +714,6 @@ prepare_function_ns2 <- function(x,
       defineEx <- paste0("(Xm)")
     }
     
-    
     add_knotinfo <- paste0(
       "\n  int N=num_elements(",
       vector_X_name,
@@ -816,14 +810,6 @@ prepare_function_ns2 <- function(x,
     "
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
     name4 <- c()
     for (i in 1:(nknots - 1)) {
       name1 <- paste0("", "s", i, sep = "")
@@ -904,303 +890,6 @@ prepare_function_ns2 <- function(x,
     endof_fun <-
       paste0("\n    ", returnmu, "\n  } // end of spline function", sep = " ")
     
-    
-    
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    
-    # 1 -> vector[N] A= a - vals[1]   ;
-    # 2 -> vector[N] A= a - (xba + (Xm-xbb).*exp(xbc))   ;
-    # 3 -> vector[N] A= a - (xba + (Xm-(b-xbb)).*exp((c-xbc)))   ;
-    
-    smat_defineEx <- 4
-    
-    # Note that aoly sitarfun defined, do, d1, d2 etc are not proper yet
-    # smat = ns
-     # fullabcsnames_nsa  <<- c(snames)
-    fullabcsnames_nsa  <- c(snames)
-    fullabcsnames_nsas <- c("a,", "b,", "c,", "xa,", "xb,", "xc,", fullabcsnames_nsa)
-    fullabcsnames_nsas <- paste0("b", fullabcsnames_nsas)
-    fullabcsnames_v_nsa <- paste("vector", fullabcsnames_nsas, collapse = " ")
-    # fullabcsnames_vx <<- fullabcsnames_v
-    fullabcsnames_vx <- fullabcsnames_v
-    fullabcsnames_vx_nsas <- paste(fullabcsnames_vx, fullabcsnames_v_nsa, sep = ", ")
-    fullabcsnames_v <- fullabcsnames_vx_nsas
-    
-    
-    
-    
-    # smat - over write fun_body
-    # vectorA <- "\n  vector[N] A=a-vals[1];"
-    # vector[N] A= a - (xba + (Xm-xbb).*exp(xbc))   ;
-    # vector[N] A= a - (xba + (Xm-(b-xbb)).*exp((c-xbc)))   ;
-
-    if(smat_defineEx == 1) {
-      smat_defineEx <- "a-vals[1]"
-      vectorA <- paste0("\n  vector[N] A=", smat_defineEx, ";")
-    }
-    
-    if(smat_defineEx == 2) {
-      smat_defineEx <- defineEx # "(Xm-b).*exp(c)"
-      smat_defineEx <- gsub("-b)", "-bxb)", smat_defineEx, fixed = TRUE)
-      smat_defineEx <- gsub("exp(c)", "exp(bxc)", smat_defineEx, fixed = TRUE)
-      smat_defineEx <- paste0("a-(bxa+", smat_defineEx, ")")
-      vectorA <- paste0("\n  vector[N] A=", smat_defineEx, ";")
-    }
-    
-    
-    if(smat_defineEx == 3) {
-      smat_defineEx <- defineEx # "(Xm-b).*exp(c)"
-      smat_defineEx <- gsub("-b)", "-(b-bxb))", smat_defineEx, fixed = TRUE)
-      smat_defineEx <- gsub("exp(c)", "exp(c-bxc)", smat_defineEx, fixed = TRUE)
-      smat_defineEx <- paste0("a-(bxa+", smat_defineEx, ")")
-      vectorA <- paste0("\n  vector[N] A=", smat_defineEx, ";")
-    }
-    
-    
-    if(smat_defineEx == 4) {
-      smat_defineEx <- "a-bxa"
-      vectorA <- paste0("\n  vector[N] A=", smat_defineEx, ";")
-    }
-    
-    
-    
-    
-    # print(defineEx)
-    # print(smat_defineEx)
-    # print(vectorA)
-    # stop()
-    
-    
-    fun_body_smat_part_1 <- " 
-    int N=num_elements(Xp);
-    vector[N] Xm=getX(Xp);
-    vector[N] X=(Xm-b).*exp(c);
-    int nknots=5;
-    vector[nknots] knots=getKnots(); 
-    "
-    
-    set_vals_str <- "
-    vector[nknots] vals;
-    vals[1]=ba[1];
-    "
-    
-    set_vals_str_s <- c()
-    for (i in 2:nknots) {
-      set_vals_str_sx <- paste0("vals[", i, "]=", "bs", i-1, "[1];")
-      set_vals_str_s <- c(set_vals_str_s, set_vals_str_sx)
-    }
-    set_vals_str_s2 <- paste(set_vals_str_s, collapse = "\n   ")
-    set_vals_str2 <- paste(set_vals_str, set_vals_str_s2)
-    
-    fun_body_smat_part_2 <- set_vals_str2
-    
-    fun_body_smat_part_3 <- "
-    vector[N] x=X;
-    vector[nknots-1] h;
-    array[N] int i1;
-    
-    vector[nknots] zs = spline_getcoeffs(knots, vals);
-    array[N] int i = spline_findpos(knots , Xm );
-    for (ii in 1:N) {
-      i1[ii] = i[ii] + 1;
-    }
-    h = spline_geths(knots);
-    "
-    
-    # ret = (
-    #   A  +  
-    #     zs[i1] ./ 6 ./ h[i] .* square(x-knots[i]) .* (x-knots[i])   +
-    #     zs[i]  ./ 6 ./ h[i] .* square(knots[i1]-x) .* (knots[i1]-x) +
-    #     (vals[i1] ./ h[i] - h[i] .* zs[i1] ./ 6) .* (x-knots[i])    +
-    #     (vals[i] ./ h[i] - h[i] .* zs[i] ./ 6) .* (knots[i1]-x)
-    # );
-    # return ret;
-    
-    
-    # fun_body_smat_part_1 already coming from above, so not including
-    fun_body_smat_parts <- 
-      c(fun_body_smat_part_2, fun_body_smat_part_3)
-    
-    
-    fun_body_smat <- paste(fun_body_smat_parts, collapse = "\n")
-    # print(cat(fun_body_smat))
-    # stop()
-    
-    fun_body <- fun_body_smat
-    ######
-    
-    
-    musmat <- 
-    " zs[i1] ./ 6 ./ h[i] .* square(x-knots[i]) .* (x-knots[i])   +
-      zs[i]  ./ 6 ./ h[i] .* square(knots[i1]-x) .* (knots[i1]-x) +
-      (vals[i1] ./ h[i] - h[i] .* zs[i1] ./ 6) .* (x-knots[i])    +
-      (vals[i] ./ h[i] - h[i] .* zs[i] ./ 6) .* (knots[i1]-x)
-    "
-    
-    returnmu <-
-      paste0("return(",   paste0(nameadja, "+",
-                                 gsub(";", "", musmat)
-                                 # gsub(";", "", name5)
-                                 )     , ");")
-    
-    # need spaces otherwise rstan 2.21 throws error: variable s1. not found
-    returnmu <- gsub("\\s", "", returnmu)
-    returnmu <- gsub("\\." , " \\." , returnmu, fixed = FALSE)
-    returnmu <- gsub("\\*" , "\\* " , returnmu, fixed = FALSE)
-    # don't create space for +
-    # returnmu <- gsub("+" , " + " , returnmu, fixed = TRUE)
-    
-    
-    setxoffset_d0_noqr <- paste0(setxoffset,  vectorA)
-    returnmu_d0_noqr <- paste0(setxoffset,  vectorA)
-    
-    if (!is.null(decomp)) {
-      if (decomp == 'QR') {
-        returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
-        setxoffset <- paste0(setxoffset,  decomp_code_qr, vectorA)
-        returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
-      }
-    }
-    
-    if (is.null(decomp)) {
-      fun_body <- paste0(fun_body, "\n", vectorA)
-    }
-    
-    
-    
-    endof_fun <-
-      paste0("\n    ", returnmu, "\n  } // end of spline function", sep = " ")
-    
-    
-    start_fun <-
-      paste0(
-        "\nvector ",
-        spfncname,
-        "(vector ",
-        vector_X_name,
-        ", ",
-        fullabcsnames_v,
-        ") {" ,
-        collapse = " "
-      )
-    
-    
-    
-    
-    
-    rcsfun <-
-      paste(start_fun,
-            add_knotinfo,
-            fun_body,
-            "\n",
-            setxoffset,
-            endof_fun)
-    
-    
-    
-    # return(rcsfun_raw)
-    # print(cat(rcsfun_raw))
-    # stop()
-    
-    
-    # smat add addional functions too
-    smat_additional_funs <-
-      "
-    // get the vector of spacings between nodes
-    vector spline_geths(vector nodes) {
-      int n = size(nodes)-1;
-      vector[n] hs;
-      for (i in 1:n)
-      {
-        hs[i] = nodes[i+1]-nodes[i];
-      }
-      return hs;
-    }
-    
-    
-    // find in which node interval we should place each point of the vector 
-    array[] int spline_findpos(vector nodes, vector x) {
-      int n_nodes = size(nodes);
-      int n_dat = size(x);
-      array[n_dat] int ret;
-      for (i in 1:n_dat) {
-        int success = 0;
-        for (j in 1:n_nodes-1) {
-          //    if ((x[i]>=nodes[j]) && (x[i]<nodes[j+1]))
-            // The if ((x[i]>=nodes[j]) && (x[i]<nodes[j+1])) changed to -> if ((x[i]>=nodes[j]) && (x[i]<=nodes[j+1]))
-              // The new (x[i]<=nodes[j+1]) allows x with more than two decimal points
-          
-          if ((x[i]>=nodes[j]) && (x[i]<=nodes[j+1])) {
-            ret[i] = j;
-            success = 1;
-            break;
-          }
-        }
-        if (success==0)
-        {
-          reject(\"Point outside knot\");
-        }
-      }
-      return ret;
-    }
-    
-    
-    //   reject(Point outside knot); ->  reject(\"Point outside knot\");
-    
-    
-    // obtain the vector of spline coefficients given the location of the nodes and values there
-    vector spline_getcoeffs(vector nodes, vector vals) {
-      int n_nodes = size(nodes);
-      int n=n_nodes-1;
-      vector[n] hi;
-      vector[n] bi;
-      vector[n-1] vi;
-      vector[n-1] ui;
-      vector[n_nodes] ret;
-      vector[n-1] zs;
-      matrix[n-1,n-1] M = rep_matrix(0, n-1, n-1);
-      n = n_nodes-1;
-      for (i in 1:n) {
-        hi[i] = nodes[i+1]-nodes[i];
-        bi[i] =  1/hi[i]*(vals[i+1]-vals[i]);
-      }
-      for (i in 2:n) {
-        vi[i-1] = 2*(hi[i-1]+hi[i]);
-        ui[i-1] = 6*(bi[i] - bi[i-1]);
-      }
-      for (i in 1:n-1) {
-        M[i,i] = vi[i];
-      }
-      for (i in 1:n-2) {
-        M[i+1,i] = hi[i+1];
-        M[i,i+1] = hi[i+1];
-      }
-      zs = M \\ ui;
-      ret[1]=0;
-      ret[n_nodes] =0;
-      ret[2:n_nodes-1]=zs;
-      return ret;
-    }
-    "
-    
-    # zs = M \ ui ; -> zs = M \\ ui ; otherwise txt saved as zs = M  ui ;
-
-    # Note that smat_additional_funs will be added later when adding knots
-    # rcsfun_raw <- rcsfun <- paste(smat_additional_funs, rcsfun, collapse = "\n")
-    
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
-    ###########################################################################
     
     
     
@@ -1295,11 +984,10 @@ prepare_function_ns2 <- function(x,
     }
     
     
-    rcsfunmultadd <- NULL
     
-    add_rcsfunmat <- FALSE
-    add_rcsfunmatqr <- FALSE
-    add_rcsfunmatqrinv <- FALSE
+    add_rcsfunmat <- TRUE
+    add_rcsfunmatqr <- TRUE
+    add_rcsfunmatqrinv <- TRUE
     
     
     funmats <- paste0('', '')
@@ -1678,8 +1366,6 @@ prepare_function_ns2 <- function(x,
     "
     }
     
-    # spl "Spl[,1]=X;" - > x=X;
-    spl <- "vector[N] x=X;"
     
     spl_d0 <- create_internal_function(
       y = y,
@@ -1706,10 +1392,6 @@ prepare_function_ns2 <- function(x,
     fnameout <- paste0(spfncname, "_", "d1")
     spl <- "Spl[,1]=X;"
     splout <- "Spl[,1]=rep_vector(1, N);"
-    
-    # spl "Spl[,1]=X;" - > x=X;
-    spl <- "vector[N] x=X;"
-    splout <- spl
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
@@ -1750,9 +1432,6 @@ prepare_function_ns2 <- function(x,
     }
     
     
-    spl <- "vector[N] x=X;"
-    splout <- spl
-    
     spl_d1 <- create_internal_function(
       y = y,
       function_str = rcsfun,
@@ -1775,11 +1454,8 @@ prepare_function_ns2 <- function(x,
     
     # Create function d2
     fnameout <- paste0(spfncname, "_", "d2")
-    # spl <- "Spl[,1]=X;"
-    # splout <- "Spl[,1]=rep_vector(0, N);"
-    
-    spl <- "vector[N] x=X;"
-    splout <- spl
+    spl <- "Spl[,1]=X;"
+    splout <- "Spl[,1]=rep_vector(0, N);"
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
@@ -1820,8 +1496,7 @@ prepare_function_ns2 <- function(x,
     }
     
     
-    spl <- "vector[N] x=X;"
-    splout <- spl
+    
     spl_d2 <- create_internal_function(
       y = y,
       function_str = rcsfun,
@@ -1842,8 +1517,6 @@ prepare_function_ns2 <- function(x,
     )
     
     
-    # spl_d0 <- spl_d1 <- spl_d2 <- rcsfun
-    
     if (utils::packageVersion('rstan') < "2.26") {
       rcsfun <- paste(getx_knots_fun, rcsfun)
     }
@@ -1852,9 +1525,9 @@ prepare_function_ns2 <- function(x,
       rcsfun <- paste0(getx_knots_fun,
                        rcsfun,
                        rcsfunmultadd,
-                       # spl_d0,
-                       # spl_d1,
-                       # spl_d2,
+                       spl_d0,
+                       spl_d1,
+                       spl_d2,
                        sep = "\n")
     }
     
@@ -1866,18 +1539,18 @@ prepare_function_ns2 <- function(x,
             funmats,
             rcsfun,
             rcsfunmultadd,
-            # spl_d0,
-            # spl_d1,
-            # spl_d2,
+            spl_d0,
+            spl_d1,
+            spl_d2,
             sep = "\n"
           )
         } else if (!add_funmats) {
           rcsfun <- paste0(getx_knots_fun,
                            rcsfun,
                            rcsfunmultadd,
-                           # spl_d0,
-                           # spl_d1,
-                           # spl_d2,
+                           spl_d0,
+                           spl_d1,
+                           spl_d2,
                            sep = "\n")
         }
       }
@@ -2437,8 +2110,8 @@ prepare_function_ns2 <- function(x,
   } # if(select_model != 'sitar') { # pb models
   
   
-  # smat 
-  rcsfun <- paste(smat_additional_funs, rcsfun, collapse = "\n")
+  
+  
   
   #################
   extract_r_fun_from_scode <-
@@ -2579,8 +2252,6 @@ prepare_function_ns2 <- function(x,
                 r_funs = all_raw_str,
                 gq_funs = rcsfunmatqrinv_genquant)
   }
-  
-  # cat(rcsfun) %>% print()
   
   out
 }

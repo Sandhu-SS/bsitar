@@ -1758,10 +1758,10 @@ bsitar <- function(x,
                                        cor = un,
                                        rescor = TRUE),
                    a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
-                   b_prior_beta = normal(0, 3.5, autoscale = FALSE),
+                   b_prior_beta = normal(0, 2.0, autoscale = FALSE),
                    c_prior_beta = normal(0, 1.5, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = TRUE),
-                   s_prior_beta = normal(lm, lm, autoscale = FALSE),
+                   s_prior_beta = normal(lm, lm, autoscale = TRUE),
                    a_cov_prior_beta = normal(0, 5.0, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
@@ -1769,7 +1769,7 @@ bsitar <- function(x,
                    s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
                    a_prior_sd = normal(0, ysd, autoscale = TRUE),
                    b_prior_sd = normal(0, 2.0, autoscale = FALSE),
-                   c_prior_sd = normal(0, 1.25, autoscale = FALSE),
+                   c_prior_sd = normal(0, 1.0, autoscale = FALSE),
                    d_prior_sd = normal(0, 1.0, autoscale = TRUE),
                    a_cov_prior_sd = normal(0, 5.0, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
@@ -1801,11 +1801,11 @@ bsitar <- function(x,
                    mvr_prior_rescor = lkj(1),
                    init = NULL,
                    init_r = NULL,
-                   a_init_beta = random,
-                   b_init_beta = random,
-                   c_init_beta = random,
+                   a_init_beta = lm,
+                   b_init_beta = 0,
+                   c_init_beta = 0,
                    d_init_beta = random,
-                   s_init_beta = random,
+                   s_init_beta = lm,
                    a_cov_init_beta = random,
                    b_cov_init_beta = random,
                    c_cov_init_beta = random,
@@ -1887,11 +1887,11 @@ bsitar <- function(x,
                    ...) {
   
   # Note
-  # Need to work on data argument when using 'sigma_formula_manual' that calls nlf() lf()
+  # Need to work on data argument when using 'sigma_formula_manual' via nlf/lf
   # This is to deal with how 'data' be prepared, used, and stored
   # This is needed to set up separate x for mu and sigma
   # some work done on 20.09.2024
-  # The specific areas to look for are:
+  # The specific areas to look further for are:
   # 'prepare_data' 'data.org.in' 'sigmaxsi' 'setsigma_formula_manual'
   
   
@@ -1917,7 +1917,8 @@ bsitar <- function(x,
         mcall[[set_name_uns]] <- dots_allias[[set_name_dot]]
       } else if (!eval(bquote(missing(.(set_name_uns)))) ) { 
         err_msg <- paste0("both '", set_name_uns, "' and '" , 
-                          set_name_dot, "' found, ignoring '",set_name_dot, "'")
+                          set_name_dot, "' found, ignoring '",
+                          set_name_dot, "'")
         if(verbose) warning(err_msg)
       }
     }
@@ -1941,7 +1942,8 @@ bsitar <- function(x,
         mcall[[set_name_uns]] <- dots_allias[[set_name_dot]]
       } else if (!eval(bquote(missing(.(set_name_uns)))) ) { 
         err_msg <- paste0("both '", set_name_uns, "' and '" , 
-                          set_name_dot, "' found, ignoring '",set_name_dot, "'")
+                          set_name_dot, "' found, ignoring '",
+                          set_name_dot, "'")
         if(verbose) warning(err_msg)
       }
     }
@@ -1962,7 +1964,7 @@ bsitar <- function(x,
   
   # Problem with rethinking occurs during the expose_model_function
   if("rethinking" %in% (.packages())){
-    message("Package 'rethinking' detached and unloaded as it creates conflict",
+    message("Package 'rethinking' detached and unloaded ato avoid conflict",
             " \nwith the rstan version ", utils::packageVersion('rstan'))
     detach("package:rethinking", unload=TRUE) 
   }
@@ -2005,7 +2007,8 @@ bsitar <- function(x,
        }
        temp_init_call_c <- gsub("[[:space:]]", "", temp_init_call_c)
        temp_init_call_c <- paste0("list(", 
-                                  paste(temp_init_call_c, collapse = ",") , ")")
+                                  paste(temp_init_call_c, 
+                                        collapse = ",") , ")")
        temp_init_call_c <- str2lang(temp_init_call_c)
      } else if(is.symbol(temp_init_call_in)) { 
        temp_init_call_c <- deparse(substitute(temp_init_call_c))
@@ -2217,7 +2220,6 @@ bsitar <- function(x,
   onepic <- NULL;
   temp1 <- NULL;
   temp2 <- NULL;
-  
   sigma_formula_manualsi <- NULL;
   sigmaxsi <- NULL;
   sigmadfsi <- NULL;
@@ -2325,8 +2327,6 @@ bsitar <- function(x,
     c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
   
   
-
-  
   setdepar0sgub <- c("sigma_formula", 
                      "sigma_formula_gr", 
                      "sigma_formula_manual")
@@ -2351,13 +2351,7 @@ bsitar <- function(x,
     }
   }
   
-  # arguments$sigma_formula <- arguments$sigma_formula %>% deparse1() %>% gsub_space() # %>% str2lang()
-  # arguments$sigma_formula_gr <- arguments$sigma_formula_gr %>% deparse1() %>% gsub_space() # %>% str2lang()
 
-  
-  
-  
-  
   familyzzzx <- arguments$family
   if(grepl("^c\\(", deparse_0(familyzzzx), fixed = F)) {
     stop("Argument family should be a list() and not a vector 'c()'")
@@ -2479,38 +2473,6 @@ bsitar <- function(x,
                 collapse =", ")
     )
   
-  
-  
-  # 
-  # if(!is.null(getdotslist[['smat']])) {
-  #   spline_type <- getdotslist[['smat']]
-  #   if(is.list(spline_type))  defaut_spline_type <- spline_type[[1]]
-  #   if(!is.list(spline_type)) defaut_spline_type <- spline_type
-  # } else if(is.null(getdotslist[['smat']])) {
-  #   if(is.null(stype)) {
-  #     spline_type <- 'nsp'
-  #   } else if(!is.null(stype)) {
-  #     if(is.symbol(stype)) {
-  #       spline_type <- deparse(stype) 
-  #     } else if(is.character(stype)) {
-  #       if(!stype %in% allowed_spline_type)
-  #         stop(paste0("Argument 'stype' must be a character string.", 
-  #                     "\n  ",
-  #                     allowed_spline_type_exception_msg)
-  #         )
-  #       spline_type <- stype
-  #     } else if(!is.character(stype)) {
-  #       stop(paste0("argument 'stype' must be a character string.", 
-  #                   "\n",
-  #                   allowed_spline_type_exception_msg)
-  #       )
-  #     }
-  #   }
-  #   defaut_spline_type <- spline_type
-  # } else if(is.null(getdotslist[['smat']]) & is.null(stype)) {
-  #   # Do some checks on spline_type and add default values if missing
-  # }
-
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
     spline_type <- getdotslist[['smat']]
@@ -2533,17 +2495,15 @@ bsitar <- function(x,
   
   allowed_spline_type_list_names_msg <- 
     paste("argument 'spline_type' must be a named list, allowed names are:\n", 
-          paste(paste(paste0("'", allowed_spline_type_list_names_c, "'"), collapse =", "), 
+          paste(paste(paste0("'", allowed_spline_type_list_names_c, "'"), 
+                      collapse =", "), 
                 collapse =", ")
     )
     
     
-  
-  
-  
   spline_type_list <- list()
   if(is.null(spline_type)) {
-    spline_type_list[['type']]        <- NULL # defaut_spline_type
+    spline_type_list[['type']]        <- NULL
     spline_type_list[['centerval']]   <- 0
     spline_type_list[['intercept']]   <- FALSE
     spline_type_list[['normalize']]   <- FALSE
@@ -2559,7 +2519,7 @@ bsitar <- function(x,
             names(spline_type) <- 'type'
           } else if(length(spline_type) == 2) {
             # if only type and normalize specified and unnamed, name them
-            # This is only in case spline type set via stype argument and not ...
+            # This is only when spline type set via stype argument and not ...
             if(spline_type_via_stype) {
               names(spline_type) <- c('type', 'normalize')
               if(verbose) message("stype arguments named as 'type', 'normalize'")
@@ -2577,63 +2537,66 @@ bsitar <- function(x,
             spline_type_list[['type']] <- spline_type[['type']]
           }
         } else if(is.null(spline_type[['type']])) {
-          # spline_type_list[['type']] <- defaut_spline_type
-          # if(verbose) message(paste0("'", defaut_spline_type ,"' set as default spline type"))
+          # 
         }
         
         if(!is.null(spline_type[['intercept']])) {
           if(!is.logical(as.logical(spline_type[['intercept']]))) {
-            stop(paste0(spline_type[['intercept']], " must be logical i.e., TRUE/FALSE"))
+            stop(paste0(spline_type[['intercept']], 
+                        " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['intercept']] <- spline_type[['intercept']]
           }
         } else if(is.null(spline_type[['intercept']])) {
           spline_type_list[['intercept']] <- FALSE
-          if(verbose) message(paste0("'", FALSE ,"' set as default spline intercept"))
+          if(verbose) message(paste0("'", FALSE , 
+                                     "' set as default spline intercept"))
         }
         
         if(!is.null(spline_type[['normalize']])) {
           if(!is.logical(as.logical(spline_type[['normalize']]))) {
-            stop(paste0(spline_type[['normalize']], " must be logical i.e., TRUE/FALSE"))
+            stop(paste0(spline_type[['normalize']], 
+                        " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['normalize']] <- spline_type[['normalize']]
           }
         } else if(is.null(spline_type[['normalize']])) {
           spline_type_list[['normalize']] <- FALSE
-          if(verbose) message(paste0("'", FALSE ,"' set as default spline normalize"))
+          if(verbose) message(paste0("'", FALSE ,
+                                     "' set as default spline normalize"))
         }
         
         if(!is.null(spline_type[['derivs']])) {
           if(!is.logical(as.logical(spline_type[['derivs']]))) {
-            stop(paste0(spline_type[['derivs']], " must be logical i.e., TRUE/FALSE"))
+            stop(paste0(spline_type[['derivs']], 
+                        " must be logical i.e., TRUE/FALSE"))
           } else {
-            spline_type_list[['derivs']]    <-  spline_type[['derivs']] 
+            spline_type_list[['derivs']] <-  spline_type[['derivs']] 
           }
         } else if(is.null(spline_type[['derivs']])) {
           spline_type_list[['derivs']]    <- FALSE
-          # if(verbose) message(paste0("'", FALSE ,"' set as default spline derivs"))
         }
         
         if(!is.null(spline_type[['preH']])) {
           if(!is.logical(as.logical(spline_type[['preH']]))) {
-            stop(paste0(spline_type[['preH']], " must be logical i.e., TRUE/FALSE"))
+            stop(paste0(spline_type[['preH']], 
+                        " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['preH']]    <-  spline_type[['preH']] 
           }
         } else if(is.null(spline_type[['preH']])) {
           spline_type_list[['preH']]    <- FALSE
-          # if(verbose) message(paste0("'", FALSE ,"' set as default spline preH"))
         }
         
         if(!is.null(spline_type[['include']])) {
           if(!is.logical(as.logical(spline_type[['include']]))) {
-            stop(paste0(spline_type[['include']], " must be logical i.e., TRUE/FALSE"))
+            stop(paste0(spline_type[['include']], 
+                        " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['include']]    <-  spline_type[['include']] 
           }
         } else if(is.null(spline_type[['include']])) {
           spline_type_list[['include']]    <- TRUE
-          # if(verbose) message(paste0("'", TRUE ,"' set as default spline include"))
         }
         
         if(!is.null(spline_type[['path']])) {
@@ -2644,23 +2607,24 @@ bsitar <- function(x,
           }
         } else if(is.null(spline_type[['path']])) {
           spline_type_list[['path']]    <- NULL
-          # if(verbose) message(paste0("'", NULL ,"' set as default spline path"))
         }
         
         
         if(!is.null(spline_type[['centerval']])) {
           if(!is.numeric(spline_type[['centerval']])) {
-            stop(paste0(spline_type[['centerval']], " must be logical i.e., TRUE/FALSE"))
+            stop(paste0(spline_type[['centerval']], 
+                        " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['centerval']] <- spline_type[['centerval']]
           }
         } else if(is.null(spline_type[['centerval']])) {
           spline_type_list[['centerval']] <- 0
-          if(verbose) message(paste0("'", 0 ,"' set as default spline centerval"))
+          if(verbose) message(paste0("'", 0 ,
+                                     "' set as default spline centerval"))
         }
         
       } else if(length(spline_type) == 0) {
-        spline_type_list[['type']]        <- NULL # defaut_spline_type
+        spline_type_list[['type']]        <- NULL
         spline_type_list[['intercept']]   <- FALSE
         spline_type_list[['centerval']]   <- 0
         spline_type_list[['normalize']]   <- FALSE
@@ -2668,15 +2632,6 @@ bsitar <- function(x,
         spline_type_list[['preH']]        <- FALSE
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
-        # if(verbose & defaut_spline_type != 'rcs') {
-        #   message(paste0("'", defaut_spline_type ,"' set as default spline type"))
-        #   message(paste0("'", FALSE ,"' set as default spline intercept"))
-        #   message(paste0("'", 0 ,"' set as default spline centerval"))
-        #   message(paste0("'", FALSE ,"' set as default spline normalize"))
-        #   # message(paste0("'", FALSE ,"' set as default spline derivs"))
-        #   # message(paste0("'", FALSE ,"' set as default spline preH"))
-        #   # message(paste0("'", TRUE ,"' set as default spline include"))
-        # }
       } # if(length(spline_type) > 0) {
     } else if(!is.list(spline_type)) {
       if(is.character(spline_type)) {
@@ -2688,15 +2643,6 @@ bsitar <- function(x,
         spline_type_list[['preH']]        <- FALSE
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
-        # if(verbose & defaut_spline_type != 'rcs') {
-        #   message(paste0("'", defaut_spline_type ,"' set as default spline type"))
-        #   message(paste0("'", FALSE ,"' set as default spline intercept"))
-        #   message(paste0("'", 0 ,"' set as default spline centerval"))
-        #   message(paste0("'", FALSE ,"' set as default spline normalize"))
-        #   # message(paste0("'", FALSE ,"' set as default spline derivs"))
-        #   # message(paste0("'", FALSE ,"' set as default spline preH"))
-        #   # message(paste0("'", TRUE ,"' set as default spline include"))
-        # }
       } else if(!is.character(spline_type)) {
         stop('augument spline_type must be a character string or a named list')
       } # if(is.character(spline_type)) {
@@ -2713,15 +2659,6 @@ bsitar <- function(x,
                  allowed_spline_type_exception_msg)
      )
 
-   
-  # Adding ns mat functionality - experimental 
-  
-  # 1 -> calls prepare_function_ns function from utils-helper-5ns
-  # 2 -> calls prepare_function_ns2 function from utils-helper-5ns2
-  
-  prepare_function_nsmat <- 2
-  
-
   if(smat == 'rcs') {
     
   } else if(smat == 'ns') {
@@ -2735,8 +2672,7 @@ bsitar <- function(x,
   
   
   if((smat == 'nsp' | smat == 'nsk') & 
-     !is.null(getdotslist[['smat']])
-     ) {
+     !is.null(getdotslist[['smat']])) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
     smat_normalize    <- as.integer(spline_type_list[['normalize']])
@@ -2787,7 +2723,7 @@ bsitar <- function(x,
     # allow further checks - for later use
   }
   
-  # smat_preH is not allowed because adding two #include does not
+  # 'smat_preH' is not allowed because adding two #include does not
   # work in package
   # Hence preH is added to main .stan files 
   # i.e., over riding smat = list(preH = 1)
@@ -2797,28 +2733,15 @@ bsitar <- function(x,
     if(verbose) message("'preH' is set to '0'")
   }
   
-  # smat_include_stan is also not working i.e., even single #include also not
+  # 'smat_include_stan' is also not working i.e., even single #include also not
   # working in package
-  # Hence smat_include_stan is set to 0 and will be pasted to .stan files
+  # Hence 'smat_include_stan' is set to 0 and will be pasted to .stan files
   # i.e., over riding smat = list(smat_include_stan = 1)
   if(smat_include_stan == 1) {
     # stop("Please set smat_include_stan = 0")
     smat_include_stan <- 0
     if(verbose) message("'smat_include_stan' is set to '0'")
   }
-  
-  
-  # print(smat)
-  # print(smat_intercept)
-  # print(smat_derivs)
-  # print(smat_centerval)
-  # print(smat_normalize)
-  # print(smat_preH)
-  # print(smat_include_stan)
-  # print(smat_include_path)
-  # stop()
-  
-  
  
   
   # 24.08.2024
@@ -2828,8 +2751,6 @@ bsitar <- function(x,
     match_sitar_a_form <- getdotslist[['match_sitar_a_form']]
   }
   
-
-  
   
   # 24.08.2024
   if(is.null(getdotslist[['sigmamatch_sitar_a_form']])) {
@@ -2838,10 +2759,6 @@ bsitar <- function(x,
     sigmamatch_sitar_a_form <- getdotslist[['sigmamatch_sitar_a_form']]
   }
   
-  
-  
-  # match_sitar_a_form <- FALSE
-  # sigmamatch_sitar_a_form <- FALSE
   
   
   # 24.08.2024
@@ -2876,10 +2793,6 @@ bsitar <- function(x,
         stop("match_sitar_d_form = TRUE only allowed for sitar model 'sitar4r'")
     }
   }
-  
-    
-  
-  
   
   
  
@@ -3020,10 +2933,6 @@ bsitar <- function(x,
   }
   
   
-  # print(brms_arguments$stan_model_args[['include_paths']])
-  
-  
-  
   if (eval(brms_arguments$backend) != "rstan" &
       eval(brms_arguments$backend) != "mock" &
       eval(brms_arguments$backend) != "cmdstanr") {
@@ -3032,23 +2941,6 @@ bsitar <- function(x,
          "\ Please check it which you have specified as: ", 
          eval(brms_arguments$backend))
   }
-  
-  
-  
-  
-  # threads_check <- brms_arguments$threads
-  # threads_check <- deparse(substitute(threads_check))
-  # if( grepl('threading', threads_check) &
-  #     !grepl('brms::', threads_check)) {
-  #   threads_check <- paste0('brms::', threads_check)
-  # } else if( grepl('threading', threads_check) &
-  #            grepl('brms::', threads_check)) {
-  #   threads_check <- threading
-  # } else if(!grepl('threading', threads_check)) {
-  #   # stop("Argument threads should be specified as brmsfamily(threading,...)")
-  # }
-  # threads_check <- threads_check
- 
   
   
   if(is.null(getdotslist[['displayit']])) { 
@@ -3071,10 +2963,7 @@ bsitar <- function(x,
     setcolb <- getdotslist[['setcolb']]
   }
   
-  # displayit <- 'col'
-  # setcolh   <- 47 
-  # setcolb   <- 3
-  
+ 
   # Quote unquoted character (e.g., sex to 'sex')
   list_to_quoted_if_not <- function(x) {
     splitmvar <- x
@@ -3105,7 +2994,8 @@ bsitar <- function(x,
       majors2 <- gsub("\"", "", majors2)
       majors3 <- paste0("\"", majors2, "\"")
       if (gsubs_c_counter == 1) {
-        splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar, fixed = F)
+        splitmvar2 <- gsub(noquote(majors2), majors3, 
+                           splitmvar, fixed = F)
       } else {
         # splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar2, fixed = F)
         splitmvar2 <- gsub(paste0('\\<', noquote(majors2), '\\>'), majors3, 
@@ -3130,10 +3020,9 @@ bsitar <- function(x,
       )
       err. <- get('err.', envir = enverr.)
       if (!err.) {
-        # if brms::brmsfamily(family), eval eliminates family 16 1 24
+        # if brms::brmsfamily(family), eval eliminates family 16 1. 2024
         if(z != "family") c_c_ <- eval(parse(text = zzz[[z]]))
         if(z == "family") c_c_ <- zzz[[z]] 
-        # c_c_ <- eval(parse(text = zzz[[z]]))
         checkclass <- class(c_c_)
         if (checkclass == "NULL")
           checkclass_ <- NULL
@@ -3532,7 +3421,6 @@ bsitar <- function(x,
          " denoting the group idetifier")
   }
   
-
   
   # Set up sigma_group_arg arguments 
   if (!paste(deparse(substitute(sigma_group_arg)), collapse = "") == "NULL"  &
@@ -3655,9 +3543,8 @@ bsitar <- function(x,
                              deparse(substitute(sigma_group_arg)),
                              collapse = ""
                            )), ",")[[1]]) > 1) {
-    ttt <-
-      gsub("\\s", "", paste(deparse(substitute(sigma_group_arg)), 
-                            collapse = ""))
+    ttt <- gsub("\\s", "", paste(deparse(substitute(sigma_group_arg)), 
+                                 collapse = ""))
     sigma_group_arg <- list_to_quoted_if_not(ttt)
   }
   if (length(sigma_group_arg) == 0) {
@@ -3787,8 +3674,6 @@ bsitar <- function(x,
     if (is.null(univariate_by$terms))
       univariate_by$terms <- "subset"
   }
-  
-  
   
   
   
@@ -4066,13 +3951,6 @@ bsitar <- function(x,
   
   
   
-  
-  
-  
-  
-  
-  
-  
   data.org.in <- data
   uvarby <- NULL
   data <- prepare_data(data = data,
@@ -4168,8 +4046,6 @@ bsitar <- function(x,
   
   sigmad_adjustedvaluelist <- sigmad_adjustednamelist <- funlist
   
-  # include_fun_names <- funlist
-  
   xfuntransformvaluelist <- xfuntransformnamelist <- funlist
   ixfuntransformvaluelist <- ixfuntransformnamelist <- funlist
   
@@ -4178,17 +4054,7 @@ bsitar <- function(x,
   
   sigmaxfuntransformvaluelist <- sigmaxfuntransformnamelist <- funlist
   isigmaxfuntransformvaluelist <- isigmaxfuntransformnamelist <- funlist
-  
-  
-  # xxfuntransformsivaluelist <- xxfuntransformsinamelist <- funlist
-  # ixxfuntransformsivaluelist <- ixxfuntransformsinamelist <- funlist
-  # 
-  # yyfuntransformsivaluelist <- yyfuntransformsinamelist <- funlist
-  # iyyfuntransformsivaluelist <- iyyfuntransformsinamelist <- funlist
-  # 
-  # sigmaxxfuntransformsivaluelist <- sigmaxxfuntransformsinamelist <- funlist
-  # isigmaxxfuntransformsivaluelist <- isigmaxxfuntransformsinamelist <- funlist
-  # 
+ 
   
   
   # Start loop over response
@@ -4416,7 +4282,6 @@ bsitar <- function(x,
     
     
     # Model specific number of fixed and random parameters
-    
     allowed_parm_letters <- NULL
     if(select_model == 'sitar') allowed_parm_letters <- letters[1:sitar_nparms]
     if(select_model == 'pb1')   allowed_parm_letters <- letters[1:5]
@@ -4486,8 +4351,6 @@ bsitar <- function(x,
     }
     
     
-    
-    
     if(select_model == 'rcs') {
       if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
       if(!any(grepl('s', randomsi)) & rcs_add_re_spline) {
@@ -4501,9 +4364,6 @@ bsitar <- function(x,
              "Please check your 'select_model' and 'random' arguments")
       }
     }
-    
-    
-    
     
     
     # Add missing parameters to the dpar_formula
@@ -4560,7 +4420,6 @@ bsitar <- function(x,
       }
     }
     
-
     
     # Check for higher level model and update level 2 random formula
     f_checks_gr_gr_str <- function(a, b) {
@@ -4844,50 +4703,6 @@ bsitar <- function(x,
     
     sigma_formula_grsi <- gsub_paranth_formula_grsi(sigma_formula_grsi)
     
-
-    
-    # a_formula_grsi <- gsub("[()]", "", a_formula_grsi)
-    # b_formula_grsi <- gsub("[()]", "", b_formula_grsi)
-    # c_formula_grsi <- gsub("[()]", "", c_formula_grsi)
-    # if(!is.null(d_formula_grsi)) d_formula_grsi <- gsub("[()]", "", 
-    #                                                     d_formula_grsi)
-    # e_formula_grsi <- gsub("[()]", "", e_formula_grsi)
-    # f_formula_grsi <- gsub("[()]", "", f_formula_grsi)
-    # g_formula_grsi <- gsub("[()]", "", g_formula_grsi)
-    # h_formula_grsi <- gsub("[()]", "", h_formula_grsi)
-    # i_formula_grsi <- gsub("[()]", "", i_formula_grsi)
-    # s_formula_grsi <- gsub("[()]", "", s_formula_grsi)
-    
-    
-    
-
-    # 
-    # # 24.08.2024
-    # # replace it
-    # # sigma_formula_grsi <- gsub("[()]", "", sigma_formula_grsi)
-    # # by
-    # strpartstrx <- strsplit(sigma_formula_grsi, "|", fixed = T)[[1]]
-    # strpartstrx_form <- strpartstrx[1]
-    #   # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
-    #   # strpartstrx_form <- paste0(, collapse = "")
-    # strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
-    # if(length(strpartstrx) > 1 ) {
-    #   strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
-    #   strpartstrx_grpa <- gsub("[()]", "", strpartstrx_grpa)
-    #   strpartstrx_grpa2 <- paste0("", strpartstrx_grpa, collapse = "|")
-    #   sigma_formula_grsi <- paste0(strpartstrx_form, "|", strpartstrx_grpa2)
-    # } else {
-    #   sigma_formula_grsi <- strpartstrx_form
-    # }
-      
-
- 
-    
-    
-    
-    
-    
-    
     
     set_higher_levels <- TRUE
     if(is.null(a_fcgs_out) & 
@@ -5070,8 +4885,6 @@ bsitar <- function(x,
     
     
     ##########################
-    ##########################
-    ##########################
     setsigma_formula_manual <- FALSE
     if (is.null(sigma_formula_manualsi[[1]][1])) {
       setsigma_formula_manual <- FALSE
@@ -5114,9 +4927,6 @@ bsitar <- function(x,
     }
 
     
-
-    
-    
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
       sortbylayer <- NA
       data <- data %>%
@@ -5152,9 +4962,7 @@ bsitar <- function(x,
       #   if(verbose) message("predictor for sigma is set same as for mu")
       # }
       # 
-      # head(data) %>% print()
-      # stop()
-      
+     
       
       datai <- data %>%
         dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>%
@@ -5214,7 +5022,6 @@ bsitar <- function(x,
     }
     
 
-    
     fit_edited_scode <- FALSE
     
     if(select_model == 'logistic1e' |
@@ -5228,54 +5035,26 @@ bsitar <- function(x,
     # Refactor to use function() for transformations
     # This will allow using optimize_x = list(function(x) log(x + 3/4))
     # Note that instead of calling log(data[[xsi]]), 'xfuntransformsi' will be used 
-    
-    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
-    #   if (xfunsi != "log" & xfunsi != "sqrt") {
-    #     stop("only log and sqrt options allowed for xfun argument")
-    #   }
-    # }
-    
-    
-    # if(grepl("^list", xfunsi)) {
-    #   xfunsi <- ept(xfunsi)
-    # }
-    # 
-    # if(grepl("^list", yfunsi)) {
-    #   yfunsi <- ept(yfunsi)
-    # }
-    # 
-    # if(grepl("^list", sigmaxfunsi)) {
-    #   sigmaxfunsi <- ept(sigmaxfunsi)
-    # }
-    
-    
-    
-    
-    
+   
     # Check if xfunsi set
     set_xfunsi <- check_if_arg_set(xfunsi)
     
-    # Note that y transformation is done within the prepare_data function, see 4075
-    # data <- prepare_data(
+    # Note that y transformation is done within the prepare_data function,
+    # see data <- prepare_data(
     
     # Check if yfunsi set
     set_yfunsi <- check_if_arg_set(yfunsi)
     
-    
     # Check if sigmaxfunsi called
     set_sigmaxfunsi <- check_if_arg_set(sigmaxfunsi)
    
-    
-    
 
     if (!set_xfunsi) {
-    # if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
       xfuntransformsi <- function(x)x
       assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
     }
     
     if (set_xfunsi) {
-    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       if(xfunsi == "log") {
         xfuntransformsi <- function(x)log(x)
       } else if(xfunsi == "sqrt") {
@@ -5290,18 +5069,13 @@ bsitar <- function(x,
       assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
     }
     
-   
-    
-    
     
     if (!set_yfunsi) {
-    # if (is.null(yfunsi[[1]][1]) | yfunsi == "NULL") {
       yfuntransformsi <- function(x)x
       assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
     }
     
     if (set_yfunsi) {
-    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
       if(yfunsi == "log") {
         yfuntransformsi <- function(x)log(x)
       } else if(yfunsi == "sqrt") {
@@ -5315,16 +5089,6 @@ bsitar <- function(x,
       }
       assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
     }
-    
-    
-    
-      
-    # if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
-    #   sigmaxsi <- sigmaxsi
-    # } else {
-    #   sigmaxsi <- xsi
-    #   if(verbose) message("predictor for sigma is set same as for mu")
-    # }
     
     
     if (!is.null(sigmaxoffset[[1]][1]) & sigmaxoffset != "NULL") {
@@ -5343,11 +5107,6 @@ bsitar <- function(x,
     }
     
     
-    
-    # is.numeric.like -> in utilis 2 -> changed to check_is_numeric_like
-    # Thid because of notes in rmd check which says 
-    # Mismatches for apparent methods not registered
-    # This perhaps because is.numeric.like sound like is.numeric
     
     check_for_nan_inf <- function(x) {
       suppressWarnings({
@@ -5369,8 +5128,9 @@ bsitar <- function(x,
     if(check_is_numeric_like(xoffsetsi)) {
       zm <- as.numeric(xoffsetsi)
       if(check_for_nan_inf(xfuntransformsi(zm))) {
-        if(verbose) message("'xoffset' value '", zm, "' can not be transformed to", 
-                           " match the xfun based transformation of x variable" ,"")
+        if(verbose) message("'xoffset' value '", zm, 
+                            "' can not be transformed to", 
+                           " match the xfun based transformation of x " ,"")
       } else {
         xoffsetsi <- round(xfuntransformsi(zm), 2)
         if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
@@ -5380,72 +5140,26 @@ bsitar <- function(x,
     }
    
     
-    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
-    #   if (xfunsi == "log") {
-    #     datai[[xsi]] <- log(datai[[xsi]])
-    #     # Automatically adjust xoffset if numeric value
-    #     if(check_is_numeric_like(xoffsetsi)) {
-    #       zm <- as.numeric(xoffsetsi)
-    #       xoffsetsi <- round(log(zm), 2)
-    #       if(verbose) message("'xoffset' value '", zm, "' log transformed to '", 
-    #                           xoffsetsi ,"'")
-    #       rm('zm')
-    #     }
-    #   } else if (xfunsi == "sqrt") {
-    #     datai[[xsi]] <- sqrt(datai[[xsi]])
-    #     if(check_is_numeric_like(xoffsetsi)) {
-    #       zm <- as.numeric(xoffsetsi)
-    #       xoffsetsi <- round(sqrt(zm), 2)
-    #       if(verbose) message("'xoffset' value '", zm, "' sqrt transformed to '", 
-    #                           xoffsetsi ,"'")
-    #       rm('zm')
-    #     }
-    #   } else {
-    #     stop("only log and sqrt options allowed for xfun argument")
-    #   }
-    # }
-    
-    
-    
-    
-    
-    
     if (set_xfunsi) {
-    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       xfunvalue <- xfunsi
     } else {
       xfunvalue <- NULL
     }
     
     if (set_yfunsi) {
-    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
       yfunvalue <- yfunsi
     } else {
       yfunvalue <- NULL
     }
     
-    
-    
-    # Refactor to use function() for transformations
-    # This will allow using optimize_x = list(function(x) log(x + 3/4))
-    # Note that instead of calling log(data[[xsi]]), 'sigmaxfuntransformsi' will be used 
-    
-    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
-    #   if (sigmaxfunsi != "log" & sigmaxfunsi != "sqrt") {
-    #     stop("only log and sqrt options allowed for xfun argument")
-    #   }
-    # }
-    
-    
+  
     if (!set_sigmaxfunsi) {
-    # if (is.null(sigmaxfunsi[[1]][1]) | sigmaxfunsi == "NULL") {
       sigmaxfuntransformsi <- function(x)x
       assign('sigmaxfuntransformsi', sigmaxfuntransformsi, envir = enverr.)
     }
     
     
     if (set_sigmaxfunsi) {
-    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
       if(sigmaxfunsi == "log") {
         sigmaxfuntransformsi <- function(x)log(x)
       } else if(sigmaxfunsi == "sqrt") {
@@ -5453,7 +5167,7 @@ bsitar <- function(x,
       } else  if(is.function(ept(sigmaxfunsi))) {
         sigmaxfuntransformsi <- ept(sigmaxfunsi)
       } else {
-        stop(paste0("The xfun argument must be either a string ('log' or 'sqrt'),", 
+        stop(paste0("The xfun argument must be either 'log' or 'sqrt',", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
       }
@@ -5467,8 +5181,9 @@ bsitar <- function(x,
       if(check_is_numeric_like(sigmaxoffsetsi)) {
         zm <- as.numeric(sigmaxoffsetsi)
         if(check_for_nan_inf(sigmaxfuntransformsi(zm))) {
-          if(verbose) message("'sigmaxoffset' value '", zm, "' can not be transformed to", 
-                              " match the xfun based transformation of x variable" ,"")
+          if(verbose) message("'sigmaxoffset' value '", zm, 
+                              "' can not be transformed to", 
+                              " match the xfun based transformation of x" ,"")
         } else {
           sigmaxoffsetsi <- round(sigmaxfuntransformsi(zm), 2)
           if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
@@ -5504,41 +5219,12 @@ bsitar <- function(x,
     isigmaxfuntransformvalue <- isigmaxfuntransformsi
     
     
-    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
-    #   if (sigmaxfunsi == "log") {
-    #     datai[[xsi]] <- log(datai[[xsi]])
-    #     # Automatically adjust sigmaxoffset if numeric value
-    #     if(check_is_numeric_like(sigmaxoffsetsi)) {
-    #       zm <- as.numeric(sigmaxoffsetsi)
-    #       sigmaxoffsetsi <- round(log(zm), 2)
-    #       if(verbose) message("'sigmaxoffset' value '", zm, "' log transformed to '", 
-    #                           sigmaxoffsetsi ,"'")
-    #       rm('zm')
-    #     }
-    #   } else if (sigmaxfunsi == "sqrt") {
-    #     datai[[xsi]] <- sqrt(datai[[xsi]])
-    #     if(check_is_numeric_like(sigmaxoffsetsi)) {
-    #       zm <- as.numeric(sigmaxoffsetsi)
-    #       sigmaxoffsetsi <- round(sqrt(zm), 2)
-    #       if(verbose) message("'sigmaxoffset' value '", zm, "' sqrt transformed to '", 
-    #                           sigmaxoffsetsi ,"'")
-    #       rm('zm')
-    #     }
-    #   } else {
-    #     stop("only log and sqrt options allowed for xfun argument")
-    #   }
-    # }
-    
-    
     
     if (set_sigmaxfunsi) {
-    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
       sigmaxfunvalue <- sigmaxfunsi
     } else {
       sigmaxfunvalue <- NULL
     }
-    
-    
     
     
     
@@ -5549,7 +5235,6 @@ bsitar <- function(x,
       yyfun_name <- "yvar_yfun"
       sigmaxfun_name <- "sigmaxfun"
       sigmayfun_name <- "sigmayfun"
-      
       xfuntransform_name <- "xfuntransform"
       ixfuntransform_name <- "ixfuntransform"
       yfuntransform_name <- "yfuntransform"
@@ -5564,16 +5249,13 @@ bsitar <- function(x,
       yyfun_name <- paste0("yvar_yfun", "_", ysi)
       sigmaxfun_name <- paste0("sigmaxfun", "_", ysi)
       sigmayfun_name <- paste0("sigmayfun", "_", ysi)
-      
       xfuntransform_name <- paste0("xfuntransform", "_", ysi)
       ixfuntransform_name <- paste0("ixfuntransform", "_", ysi)
       yfuntransform_name <- paste0("yfuntransform", "_", ysi)
       iyfuntransform_name <- paste0("iyfuntransform", "_", ysi)
       sigmaxfuntransform_name <- paste0("sigmaxfuntransform", "_", ysi)
       isigmaxfuntransform_name <- paste0("isigmaxfuntransform", "_", ysi)
-      
     }
-    
     
     
     xfunvaluelist[[ii]] <- xfunvalue
@@ -5584,7 +5266,6 @@ bsitar <- function(x,
     
     sigmaxfunvaluelist[[ii]] <- sigmaxfunvalue
     sigmaxfunnamelist[[ii]] <- sigmaxfun_name
-    
     
     xfuntransformvaluelist[[ii]] <- xfuntransformvalue
     xfuntransformnamelist[[ii]]  <- xfuntransform_name
@@ -5598,7 +5279,6 @@ bsitar <- function(x,
     iyfuntransformvaluelist[[ii]] <- iyfuntransformvalue
     iyfuntransformnamelist[[ii]]  <- iyfuntransform_name
     
-    
     sigmaxfuntransformvaluelist[[ii]] <- sigmaxfuntransformvalue
     sigmaxfuntransformnamelist[[ii]]  <- sigmaxfuntransform_name
     
@@ -5607,14 +5287,12 @@ bsitar <- function(x,
     
     
     if (set_xfunsi) {
-    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
       xxfunvaluelist[[ii]] <- paste0(xfunsi, "(", xsi, ")")
     } else {
       xxfunvaluelist[[ii]] <- NULL
     }
     
     if (set_sigmaxfunsi) {
-    # if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
       sigmaxxfunvaluelist[[ii]] <- paste0(sigmaxfunsi, "(", sigmaxsi, ")")
     } else {
       sigmaxxfunvaluelist[[ii]] <- NULL
@@ -5622,7 +5300,6 @@ bsitar <- function(x,
     
     
     if (set_yfunsi) {
-    # if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
       yyfunvaluelist[[ii]] <- paste0(yfunsi, "(", ysi, ")")
     } else {
       yyfunvaluelist[[ii]] <- NULL
@@ -5653,7 +5330,8 @@ bsitar <- function(x,
       sigmaknots <- ept(sigmaknotssi)
     }
     if (is.numeric(ept(sigmadfsi))) {
-      sigmaknots <- (unname(gkn(datai[[sigmaxsi]], ept(sigmadfsi), ept(sigmaboundsi))))
+      sigmaknots <- (unname(gkn(datai[[sigmaxsi]], 
+                                ept(sigmadfsi), ept(sigmaboundsi))))
     }
     
     
@@ -5673,22 +5351,6 @@ bsitar <- function(x,
     nabcrei <-
       length(strsplit(gsub("\\+", " ", randomsi), " ")[[1]])
    
-    
-    # make_spline_matrix
-    # if(smat == 'rcs') {
-    #   make_spline_matrix(x, knots)
-    # } else if(smat == 'nsp') {
-    #   iknots <- knots[2:(length(knots)-1)]
-    #   bknots <- c(knots[1], knots[length(knots)])
-    #   GS_nsp_call(x, iknots, bknots, 0, 0, 0)
-    # }
-    
-    
-    
-    
-    
-    
-    
     
     eval_xoffset_bstart_args <-
       function(x, y, knots, data, eval_arg, xfunsi, arg = 'xoffset') {
@@ -5749,16 +5411,20 @@ bsitar <- function(x,
           } else if(smat == 'nsp') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
-                                intercept = smat_intercept, derivs = smat_derivs, 
+            mat_s <- GS_nsp_call(x = data[[x]], 
+                                 knots = iknots, bknots = bknots, 
+                                intercept = smat_intercept, 
+                                derivs = smat_derivs, 
                                 centerval = smat_centerval, 
                                 normalize = smat_normalize,
                                 preH = smat_preH)
           } else if(smat == 'nsk') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
-                                 intercept = smat_intercept, derivs = smat_derivs, 
+            mat_s <- GS_nsk_call(x = data[[x]], 
+                                 knots = iknots, bknots = bknots, 
+                                 intercept = smat_intercept, 
+                                 derivs = smat_derivs, 
                                  centerval = smat_centerval, 
                                  normalize = smat_normalize,
                                  preH = smat_preH)
@@ -5826,16 +5492,20 @@ bsitar <- function(x,
     } else if(smat == 'nsp') {
       iknots <- knots[2:(length(knots)-1)]
       bknots <- c(knots[1], knots[length(knots)])
-      mat_s <- GS_nsp_call(x = datai[[xsi]], knots = iknots, bknots = bknots, 
-                          intercept = smat_intercept, derivs = smat_derivs, 
+      mat_s <- GS_nsp_call(x = datai[[xsi]], 
+                           knots = iknots, bknots = bknots, 
+                          intercept = smat_intercept, 
+                          derivs = smat_derivs, 
                           centerval = smat_centerval, 
                           normalize = smat_normalize,
                           preH = smat_preH)
     } else if(smat == 'nsk') {
       iknots <- knots[2:(length(knots)-1)]
       bknots <- c(knots[1], knots[length(knots)])
-      mat_s <- GS_nsk_call(x = datai[[xsi]], knots = iknots, bknots = bknots, 
-                           intercept = smat_intercept, derivs = smat_derivs, 
+      mat_s <- GS_nsk_call(x = datai[[xsi]], 
+                           knots = iknots, bknots = bknots, 
+                           intercept = smat_intercept, 
+                           derivs = smat_derivs, 
                            centerval = smat_centerval, 
                            normalize = smat_normalize,
                            preH = smat_preH)
@@ -5860,10 +5530,8 @@ bsitar <- function(x,
     
     sigmabstart <- sigmabstart - sigmaxoffset
     
-    sigmacstart <-
-      eval_xoffset_cstart_args(sigmaxsi, ysi, sigmaknots, datai, sigmacstartsi, sigmaxfunsi)
-    
-    
+    sigmacstart <-eval_xoffset_cstart_args(sigmaxsi, ysi, sigmaknots, datai, 
+                               sigmacstartsi, sigmaxfunsi)
     
     sigmaxoffset <- round(sigmaxoffset, 8)
     datai[[sigmaxsi]] <- datai[[sigmaxsi]] - sigmaxoffset
@@ -5903,7 +5571,6 @@ bsitar <- function(x,
       decomp_editcode <- FALSE
     }
     
-    
     # For QR decomp to pass to prepare_function 
     # This to check s covs - re
     checkscovsi <-  getcovlist(s_formulasi)
@@ -5911,7 +5578,6 @@ bsitar <- function(x,
     # This can be set to TRUE for RCS
     if(!is.null(checkscovsi)) {
       add_b_Qr_genquan_s_coef <- FALSE
-      # if(select_model == 'rcs') add_b_Qr_genquan_s_coef <- TRUE
     } else {
       add_b_Qr_genquan_s_coef <- FALSE
     }
@@ -5919,8 +5585,6 @@ bsitar <- function(x,
     # This control whether to add scode for genquant block for QR model
     # Relevant in both and prepare_function
     add_rcsfunmatqrinv_genquant <- FALSE # TRUE
-    
-    
     
 
     internal_function_args_names <-
@@ -5988,31 +5652,6 @@ bsitar <- function(x,
           data = datai,
           internal_function_args = internal_function_args
         )
-    } else if(smat == 'ns') {
-      if(prepare_function_nsmat == 1) {
-        get_s_r_funs <- 
-          prepare_function_ns(
-            x = xsi,
-            y = ysi,
-            id = idsi,
-            knots = knots,
-            nknots = nknots,
-            data = datai,
-            internal_function_args = internal_function_args
-          )
-      } else if(prepare_function_nsmat == 2) {
-        get_s_r_funs <- 
-          prepare_function_ns2(
-            x = xsi,
-            y = ysi,
-            id = idsi,
-            knots = knots,
-            nknots = nknots,
-            data = datai,
-            internal_function_args = internal_function_args
-          )
-      } # else if(prepare_function_nsmat == 1) {
-      
     } else if(smat == 'nsp') {
       get_s_r_funs <- 
         prepare_function_nsp(
@@ -6063,7 +5702,6 @@ bsitar <- function(x,
     
     
     # Define sigma function
-    
     if(setsigma_formula_manual) {
       # Define names for Stan functions 
       sigmaSplineFun_name  <- paste0("sigma", SplineFun_name)
@@ -6092,8 +5730,10 @@ bsitar <- function(x,
       sigmaspfncname_c <- c(sigmaspfncname_c, sigmaspfncname)
       
       sigmaspfun_collect <-
-        c(sigmaspfun_collect, c(sigmaspfncname, paste0(sigmaspfncname, "_", c("d1",
-                                                                              "d2"))))
+        c(sigmaspfun_collect, c(sigmaspfncname, 
+                                paste0(sigmaspfncname, "_", 
+                                       c("d1",
+                                         "d2"))))
       
       sigmadecomp_editcode <- FALSE
       if(select_model == 'rcs') {
@@ -6122,16 +5762,6 @@ bsitar <- function(x,
       sigmainternal_function_args <- internal_function_args
       
       # These are defined for sigma via bsitar()
-      
-      # sigmafixedsi                     <- fixedsi
-      # sigmarandomsi                    <- randomsi
-      # sigmaspfncname                   <- spfncname
-      # sigmagetxname                    <- getxname
-      # sigmagetknotsname                <- getknotsname
-      # sigmaxfunsi                      <- xfunsi
-      # sigmaxoffset                     <- xoffset
-      # sigmamatch_sitar_a_form          <- match_sitar_a_form
-      
       # These are copied from the mu part
       sigmamatch_sitar_d_form          <- match_sitar_d_form
       sigmad_adjustedsi                <- d_adjustedsi
@@ -6242,12 +5872,6 @@ bsitar <- function(x,
     
 
     #################################################
-    #################################################
-    #################################################
-    #################################################
-    
-    
-    
     internal_formula_args_names <-
       c(
         "a_formulasi",
@@ -6340,25 +5964,9 @@ bsitar <- function(x,
       }
     }
     
-    
-    # for smat 'ns', no prepare_formula_ns defined, Using same prepare_formula
-    # prepare_formula_ns could be defined by copying utils-helper-4 and
-    # renaming prepare_formula to prepare_formula_ns with necessary changes 
-    
+   
     
     if(smat == 'rcs') {
-      formula_bf <-
-        prepare_formula(
-          x = xsi,
-          y = ysi,
-          id = idsi,
-          knots = knots,
-          nknots = nknots,
-          data = datai,
-          internal_formula_args = internal_formula_args
-        )
-    } else if(smat == 'ns') {
-      # prepare_formula_ns
       formula_bf <-
         prepare_formula(
           x = xsi,
@@ -6425,14 +6033,10 @@ bsitar <- function(x,
     
     lm_val_list_not <-
       names(eout)[!names(eout) %in%
-                    names(eout)[grep(pattern = "^lm_|^lme_", names(eout))]]
+                    names(eout)[grep(pattern = "^lm_|^lme_", 
+                                     names(eout))]]
     lm_val_list_not <- sort(lm_val_list_not)
-    
-    
-    # print(lm_val_list)
-    # print(lm_val_list_not)
-    # stop()
-    
+   
     
     cov_list_names <- ls()[grepl(pattern = "_cov", ls())]
     cov_list_names <-
@@ -6448,11 +6052,6 @@ bsitar <- function(x,
     
     
     ######################################################
-    ######################################################
-    ######################################################
-    ######################################################
-    
-    
     # formula_bf_sigma <-
     #   prepare_formula_sigma(
     #     x = xsi,
@@ -6463,14 +6062,8 @@ bsitar <- function(x,
     #     data = datai,
     #     internal_formula_args = internal_formula_args
     #   )
-    
 
     ######################################################
-    ######################################################
-    ######################################################
-    ######################################################
-    
-    
     
     loess_fit <- paste0("loess(", ysi, "~", xsi, ",", 'datai', ")")
     loess_fitx <- eval(parse(text = loess_fit))
@@ -6549,7 +6142,6 @@ bsitar <- function(x,
     
     if(is.na(ymeanxmidxmaxdiff)) ymeanxmidxmaxdiff <- (ymeanxmax + ymeanxmin)/2
     
-    ###
     # Add missing arguments when restricting to abcd
     if(is.null(pvsi))   pvsi  <- list(NULL)
     if(is.null(apvsi))  apvsi <- list(NULL)
@@ -6557,13 +6149,11 @@ bsitar <- function(x,
     
     if (!is.null(pvsi[[1]][1]) & pvsi != "NULL") {
       setpv <- (eval(parse(text = pvsi)))
-      # setpv <- log(eval(parse(text = pvsi)))
       if(grepl("sitar", select_model)) cstart <- setpv
       if(grepl("pb", select_model))    cstart <- setpv / 5.0
       if(grepl("pb", select_model))    dstart <- setpv
     } else if (!is.null(cstartsi[[1]][1]) & cstartsi != "NULL") {
       setpv <- (cstart)
-      # setpv <- log(cstart)
       if(grepl("sitar", select_model)) cstart <- setpv
       if(grepl("pb", select_model))    cstart <- setpv / 5.0
       if(grepl("pb", select_model))    dstart <- setpv
@@ -6879,12 +6469,7 @@ bsitar <- function(x,
       set_default_priors(select_model_arg, h_prior_sdsi)
     if(!is.null(i_prior_sdsi)) i_prior_sdsi <- 
       set_default_priors(select_model_arg, i_prior_sdsi)
-    
-    
-    
-    
-    
-    
+   
     set_priors_initials_agrs <- list()
 
     set_priors_initials_agrs $ a_prior_beta <- a_prior_betasi
@@ -6964,8 +6549,6 @@ bsitar <- function(x,
     
     initials <- attr(bpriors, "initials")
     
-    
-    
     # check and add hierarchical prior (for 3 level and more)
     # First, sd
     set_class_what <- 'sd'
@@ -6979,7 +6562,6 @@ bsitar <- function(x,
       set_randomsi_higher_levsl <- c(set_randomsi_higher_levsl, 'sigma')
     }
     
-   
     
     evaluate_higher_level_sd_priors <- function(set_nlpar_, 
                                                 set_class,
@@ -7078,7 +6660,6 @@ bsitar <- function(x,
     for (set_randomsi_higher_levsli in set_randomsi_higher_levsl) {
       set_nlpar_what <- set_randomsi_higher_levsli
       set_env_what   <- environment()
-      
       # n_higher_str   <- length(eval(parse(text = paste0(set_nlpar_what,
       #                                                   "covcoefnames_gr_str")),
       #                               envir = set_env_what))
@@ -7585,15 +7166,11 @@ bsitar <- function(x,
     funlist_r_name <- 'funlist_r'
     funlist_rnamelist[[ii]] <- funlist_r_name
     funlist_rvaluelist[[ii]] <- funlist_r %>% unlist()
-    
-    # funlist_r_name_include_fun_names <- 'include_fun_names'
-    
+  
     
     sigmafunlist_r_name <- 'sigmafunlist_r'
     sigmafunlist_rnamelist[[ii]] <- sigmafunlist_r_name
     sigmafunlist_rvaluelist[[ii]] <- sigmafunlist_r %>% unlist()
-    
-    
     
     
     xoffsetnamelist[[ii]] <- xoffset_name
@@ -7652,21 +7229,6 @@ bsitar <- function(x,
     sigmad_adjustedvaluelist[[ii]] <- ept(sigmad_adjustedsi)
     
     
-
-    
-   
-    
-    
-    
-    # print(xfuntransformsi)
-    # print(ixfuntransformsi)
-    # zzzx <<- datai[[xsi]]
-    # zx  <- datai[[xsi]]
-    # izx <- ixfuntransformsi(datai[[xsi]] + xoffset) 
-    # print(head(zx))
-    # print(head(izx))
-    
- 
     # restoring original data
     
     datai[[xsi]] <- ixfuntransformsi(datai[[xsi]] + xoffset) 
@@ -7733,7 +7295,7 @@ bsitar <- function(x,
   
   # brmspriorsx <<- brmspriors
 
-  # IMP - brms does not allow different lb for sd parsm (e.e, all to be NA)
+  # IMP - brms does not allow different lb for sd params (e.e, all to be NA)
   # Error: Conflicting boundary information for coefficients of class 'sd'.
   # Because prior function automatically sets lb 0 for positive priors 
   # such as exponential the following is need (again done at line 4753 )
@@ -7784,7 +7346,8 @@ bsitar <- function(x,
   
   if(setsigma_formula_manual) {
     bstanvars <-
-      brms::stanvar(scode = paste(funlist, sigmafunlist, collapse = "\n"), block = "function")
+      brms::stanvar(scode = paste(funlist, sigmafunlist, collapse = "\n"), 
+                    block = "function")
   }
   
   prior_stanvarlistlist <- c()
@@ -7901,7 +7464,8 @@ bsitar <- function(x,
      
       c_it <- "sd_"
       brmsinits_names <- names(brmsinits)
-      brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', brmsinits_names)]
+      brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', 
+                                                brmsinits_names)]
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
       temppp <- brmsinits[names(brmsinits) %in% keys]
       temppp <- unlist(unname(temppp))
@@ -7931,7 +7495,8 @@ bsitar <- function(x,
      
       c_it <- "sd_"
       brmsinits_names <- names(brmsinits)
-      brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', brmsinits_names)]
+      brmsinits_names <- brmsinits_names[!grepl('^_nu$|sd_nu', 
+                                                brmsinits_names)]
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
       temppp <- brmsinits[names(brmsinits) %in% keys]
       temppp <- unlist(unname(temppp))
@@ -8143,20 +7708,9 @@ bsitar <- function(x,
     
 
     # 24.08.2024
-    
     if(setsigma_formula_manual) {
       temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
     }
-    
-    # if (is.null(sigma_formula_manualsi[[1]][1])) {
-    #   temp_prior <- temp_prior
-    # } else if(sigma_formula_manualsi == "NULL") {
-    #   temp_prior <- temp_prior
-    # } else {
-    #   temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
-    # }
-    
-
    
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
@@ -8168,8 +7722,6 @@ bsitar <- function(x,
                                     data = brmsdata)
     
 
-
-   
     move_from_model_to_qq_for_bqinv <- 
       function(temp_stancode2x, 
                section = 'model',
@@ -8316,7 +7868,8 @@ bsitar <- function(x,
         gq_funs_2 <- paste0(qgcode, '\n', gq_funs_2)
         
         bstanvars <- bstanvars + 
-          brms::stanvar(scode = gq_funs_2, block = "genquant", position = "end")
+          brms::stanvar(scode = gq_funs_2, block = "genquant", 
+                        position = "end")
       } # if(add_rcsfunmatqrinv_genquant ) {
       
       
@@ -8353,9 +7906,6 @@ bsitar <- function(x,
                                                position = "end")
       } # if(decomp_editcode & add_rcsfunmatqrinv_genquant) {
     } # if(!is.null(decomp)) {
-    
-    
-   
     
     
     
@@ -8645,17 +8195,22 @@ bsitar <- function(x,
         if (is.list(eval(setarguments$stan_model_args)) &
             eval(length(setarguments$stan_model_args)) == 0) {
           setarguments$stan_model_args <- list(
+            # pedantic = FALSE,
             stanc_options = list("O1")
-            # , cpp_options = list(STAN_CPP_OPTIMS=TRUE)
+            # , cpp_options = list(#'STAN_CPP_OPTIMS=true',
+            #                      # 'CXXFLAGS = -O2',
+            #                      # 'STANCFLAGS+= --warn-pedantic --O0',
+            #                      'STAN_NO_RANGE_CHECKS=true'
+            #                      )
             )
         }
       }
       
       
-      
       if(verbose) {
         message(setarguments$stan_model_args)
       }
+      
       
       
       if (eval(setarguments$backend) == "rstan" & 
@@ -8691,8 +8246,6 @@ bsitar <- function(x,
   
   
   brmsdots_ <- list(...)
-  
-  
   
   # 24.08.2024
   getdotslistnames <- c("match_sitar_a_form",
@@ -8819,7 +8372,8 @@ bsitar <- function(x,
   if(!is.null(set_self_priors) & 
      !is.null(add_self_priors) & 
      !is.null(set_replace_priors)) {
-    stop("Amongst 'set_self_priors', 'add_self_priors' and 'set_replace_priors' arguments,",
+    stop("Amongst 'set_self_priors', 
+         'add_self_priors' and 'set_replace_priors' arguments,",
          "\n ",
          " only one can be specified at a time")
   }
@@ -8883,7 +8437,8 @@ bsitar <- function(x,
 
   # 24.08.2024
   if(!is.null(add_self_priors)) {
-    add_self_priors <- add_self_priors %>%  dplyr::filter(source == 'user' & coef != "")
+    add_self_priors <- add_self_priors %>%  
+      dplyr::filter(source == 'user' & coef != "")
     
     if (is.null(sigma_formula_manualsi[[1]][1])) {
       brmspriors_toadd <- brmspriors
@@ -9164,8 +8719,6 @@ bsitar <- function(x,
                                         algorithm = brm_args$algorithm,
                                         verbose = FALSE)
 
-    
-    
     if(brm_args$backend == "cmdstanr" |
        !is.null(pathfinder_args) | 
        pathfinder_init) {
@@ -9193,7 +8746,8 @@ bsitar <- function(x,
                                       pathfinder_init = pathfinder_init)
       }
       if(brm_args$backend == "rstan") {
-        brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args, brms_arguments)
+        brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args, 
+                                   brms_arguments)
       }
     } else if(!fit_edited_scode) {
       if(!is.null(pathfinder_args) | pathfinder_init) {
@@ -9218,11 +8772,8 @@ bsitar <- function(x,
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
     
     model_info <- list()
-    
     model_info[['emodel']] <- scode_final
-    
     model_info[['parameterization']] <- parameterization
-    
     model_info[['d_adjusted']] <- d_adjusted
     
     for (i in 1:length(funlist_rnamelist)) {
@@ -9291,8 +8842,6 @@ bsitar <- function(x,
     }
     
     
-    
-    
     for (i in 1:length(xfuntransformnamelist)) {
       model_info[[xfuntransformnamelist[[i]]]] <- xfuntransformvaluelist[[i]]
     }
@@ -9309,10 +8858,12 @@ bsitar <- function(x,
     
     
     for (i in 1:length(sigmaxfuntransformnamelist)) {
-      model_info[[sigmaxfuntransformnamelist[[i]]]] <- sigmaxfuntransformvaluelist[[i]]
+      model_info[[sigmaxfuntransformnamelist[[i]]]] <- 
+        sigmaxfuntransformvaluelist[[i]]
     }
     for (i in 1:length(isigmaxfuntransformnamelist)) {
-      model_info[[isigmaxfuntransformnamelist[[i]]]] <- isigmaxfuntransformvaluelist[[i]]
+      model_info[[isigmaxfuntransformnamelist[[i]]]] <- 
+        isigmaxfuntransformvaluelist[[i]]
     }
     
     
@@ -9335,7 +8886,6 @@ bsitar <- function(x,
     model_info[['decomp']] <- decomp
     model_info[['fun_scode']] <- fun_scode
     model_info[['envir']] <- enverr.
-    
     model_info[['include_fun_names']] <- include_fun_names
     
     if(setsigma_formula_manual) {
@@ -9349,10 +8899,12 @@ bsitar <- function(x,
       
       model_info[['sigmad_adjusted']] <- sigmad_adjusted
       for (i in 1:length(sigmad_adjustednamelist)) {
-        model_info[[sigmad_adjustednamelist[[i]]]] <- sigmad_adjustedvaluelist[[i]]
+        model_info[[sigmad_adjustednamelist[[i]]]] <- 
+          sigmad_adjustedvaluelist[[i]]
       }
       for (i in 1:length(sigmafunlist_rnamelist)) {
-        model_info[[sigmafunlist_rnamelist[[i]]]] <- sigmafunlist_rvaluelist[[i]]
+        model_info[[sigmafunlist_rnamelist[[i]]]] <- 
+          sigmafunlist_rvaluelist[[i]]
       }
       for (i in 1:length(sigmaxfunnamelist)) {
         model_info[[sigmaxfunnamelist[[i]]]] <- sigmaxfunvaluelist[[i]]
@@ -9363,18 +8915,12 @@ bsitar <- function(x,
       for (i in 1:length(sigmacovnamelist)) {
         model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
       }
-      
     } # if(setsigma_formula_manual) {
     
 
     brmsfit$model_info <- model_info
     
     environment(brmsfit$formula) <- enverr.
-    
-    
-    
-    
-    
     
     # Now message moved to the expose_model_functions()
     if (expose_function & !brm_args$empty) {

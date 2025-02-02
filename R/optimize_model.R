@@ -1,119 +1,123 @@
 
 
-#' @title Optimize SITAR model
+#' @title Optimize SITAR Model
 #' 
-#' @description The optimization to select the best fitting SITAR model
-#'   involves choosing the optimum degrees of freedom (\code{df}) for the
-#'   natural cubic-spline curve and the appropriate transformations of the
-#'   predictor \code{x} and/or the outcome \code{y} variables.
+#' @description The optimization process for selecting the best-fitting SITAR
+#'   model involves choosing the optimal degrees of freedom (\code{df}) for the
+#'   natural cubic spline curve, as well as determining the appropriate
+#'   transformations for the predictor (\code{x}) and/or outcome (\code{y})
+#'   variables.
 #'
-#' @param optimize_df A list of integers specifying the degree of freedom
+#' @param optimize_df A list of integers specifying the degrees of freedom
 #'   (\code{df}) values to be optimized. If \code{NULL} (default), the \code{df}
-#'   is taken from the original model. For optimization over different
-#'   \code{df}, say for example \code{df} 4 and \code{df} 5, the corresponding
-#'   code is \code{optimize_df = list(4,5)}. For \code{univariate_by} and
+#'   is taken from the original model. To optimize over different \code{df}
+#'   values, for example, \code{df} 4 and \code{df} 5, the corresponding code
+#'   would be \code{optimize_df = list(4, 5)}. For \code{univariate_by} and
 #'   \code{multivariate} models, \code{optimize_df} can be a single integer
-#'   (e.g., \code{optimize_df = 4}) or a list (e.g., \code{optimize_df =
-#'   list(4,5)}), or a a list of lists. As an example, consider optimization
-#'   over \code{df} 4 and \code{df} 5 for the first sub model, and \code{df} 5
-#'   and \code{df} 6 for the second sub model, the corresponding code is
-#'   \code{optimize_df = list(list(4,5), list(5,6))}.
+#'   (e.g., \code{optimize_df = 4}), a list (e.g., \code{optimize_df = list(4,
+#'   5)}), or a list of lists. For instance, to optimize over \code{df} 4 and
+#'   \code{df} 5 for the first submodel, and \code{df} 5 and \code{df} 6 for the
+#'   second submodel, the corresponding code would be \code{optimize_df =
+#'   list(list(4, 5), list(5, 6))}.
 #'
 #' @param optimize_x A list specifying the transformations for the predictor
-#'   variable (i.e., \code{x}). The options available are \code{NULL},
-#'   \code{'log'}, \code{'sqrt'}, or their combinations. Note that user need not
-#'   to enclose these options in a single or double quotes as they are taken
-#'   care of internally. The default setting is to explore all possible
-#'   combination i.e., \code{optimize_x = list(NULL, log,  sqrt)}. Similar to
-#'   the \code{optimize_df}, user can specify different \code{optimize_x} for
-#'   \code{univariate_by} and \code{multivariate} sub models. Note that it
-#'   possible to pass any primitive function instead of fixed functions such as
-#'   \code{log} and \code{sqrt}. This greatly enhances the flexibility of model
-#'   optimization by allowing searching for a wide range of \code{x}
-#'   transformation like \code{optimize_x = list(function(x) log(x + 3/4))}.
+#'   variable (i.e., \code{x}). The available options are \code{NULL},
+#'   \code{'log'}, \code{'sqrt'}, or their combinations. Note that the user need
+#'   not enclose these options in single or double quotes, as they are handled
+#'   internally. The default setting explores all possible combinations, i.e.,
+#'   \code{optimize_x = list(NULL, 'log', 'sqrt')}. Similar to
+#'   \code{optimize_df}, the user can specify different \code{optimize_x} values
+#'   for \code{univariate_by} and \code{multivariate} submodels. Additionally,
+#'   it is possible to pass any primitive function instead of fixed functions
+#'   like \code{log} and \code{sqrt}. This greatly enhances the flexibility of
+#'   model optimization by allowing the search for a wide range of \code{x}
+#'   transformations, such as \code{optimize_x = list(function(x) log(x +
+#'   3/4))}.
 #'
-#' @param optimize_y A list specifying the transformations of the the response
-#'   variable (i.e., \code{y}). The approach and options available for
-#'   \code{optimize_y} are same as described above for the \code{optimize_x}.
+#' @param optimize_y A list specifying the transformations of the response
+#'   variable (i.e., \code{y}). The approach and available options for
+#'   \code{optimize_y} are the same as described above for \code{optimize_x}.
 #'   
 #' @param transform_prior_class A character vector (default \code{NULL})
-#'   specifying the parameter class for which transformations of user specified
-#'   priors should be performed. The prior classes that can be transformed are
-#'   \code{'beta'}, \code{'sd'}, \code{'rsd'}, \code{'sigma'} and \code{'dpar'}
-#'   and can be specified as\cr \code{transform_prior_class = c('beta', 'sd',
-#'   'rsd', 'sigma', 'dpar'} Note that transformations can be applied only for
-#'   the location-scale based priors (such as \code{normal()}). For example, the
-#'   \code{'log'} transformation of prior is performed as follows: \cr 
-#'   \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr 
-#'   \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr 
-#'   where location and scale are the original parameters supplied by the user
-#'   and the log_location and log_scale are the equivalent parameters on the log
-#'   scale. Note that \code{transform_prior_class} is used on an experimental
-#'   basis and therefore results may not be what user intended. Thus we
-#'   recommend to explicitly set the desired prior on \code{y} scale.
+#'   specifying the parameter classes for which transformations of
+#'   user-specified priors should be performed. The prior classes that can be
+#'   transformed are \code{'beta'}, \code{'sd'}, \code{'rsd'}, \code{'sigma'},
+#'   and \code{'dpar'}, and they can be specified as: \cr
+#'   \code{transform_prior_class = c('beta', 'sd', 'rsd', 'sigma', 'dpar')}.
+#'   Note that transformations can only be applied to location-scale based
+#'   priors (such as \code{normal()}). For example, the \code{'log'}
+#'   transformation of a prior is performed as follows: \cr
+#'   \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr
+#'   \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr where
+#'   \code{location} and \code{scale} are the original parameters supplied by
+#'   the user, and \code{log_location} and \code{log_scale} are the equivalent
+#'   parameters on the log scale. Note that \code{transform_prior_class} is used
+#'   on an experimental basis, and therefore the results may not be as intended.
+#'   We recommend explicitly setting the desired prior for the \code{y} scale.
 #'  
 #' @param transform_beta_coef A character vector (default \code{NULL})
-#'   specifying the regression coefficient for which transformations are
-#'   applied. The coefficient that could be transformed are \code{'a'},
-#'   \code{'b'}, \code{'c'}, \code{'d'} and \code{'s'}. The default is
-#'   \code{transform_beta_coef = c('b',' b', 'd')} which implies that parameters
-#'   \code{'b'}, \code{'c'} and \code{'d'} will be transformed whereas parameter
-#'   \code{'a'} will be left unchanged because default prior for parameter
-#'   \code{'a'} is based on the outcome  \code{y} scale itself (e.g.,
-#'   \code{a_prior_beta = normal(ymean, ysd)}) which gets transformed
+#'   specifying the regression coefficients for which transformations are
+#'   applied. The coefficients that can be transformed are \code{'a'},
+#'   \code{'b'}, \code{'c'}, \code{'d'}, and \code{'s'}. The default is
+#'   \code{transform_beta_coef = c('b', 'c', 'd')}, which implies that the
+#'   parameters \code{'b'}, \code{'c'}, and \code{'d'} will be transformed,
+#'   while parameter \code{'a'} will be left unchanged because the default prior
+#'   for parameter \code{'a'} is based on the outcome \code{y} scale itself
+#'   (e.g., \code{a_prior_beta = normal(ymean, ysd)}), which gets transformed
 #'   automatically. Note that \code{transform_beta_coef} is ignored when
 #'   \code{transform_prior_class = NULL}.
 #' 
 #' @param transform_sd_coef A character vector (default \code{NULL}) specifying
 #'   the \code{sd} parameters for which transformations are applied. The
-#'   coefficient that could be transformed are \code{'a'}, \code{'b'},
-#'   \code{'c'}, \code{'d'} and \code{'s'}. The default is
-#'   \code{transform_beta_coef = c('b',' b', 'd')} which implies that parameters
-#'   \code{'b'}, \code{'c'} and \code{'d'} will be transformed whereas parameter
-#'   \code{'a'} will be left unchanged because default prior for parameter
-#'   \code{'a'} is based on the outcome  \code{y} scale itself (e.g.,
-#'   \code{a_prior_beta = normal(ymean, ysd)}) which gets transformed
-#'   automatically. Note that \code{transform_beta_coef} is ignored when
+#'   coefficients that can be transformed are \code{'a'}, \code{'b'},
+#'   \code{'c'}, \code{'d'}, and \code{'s'}. The default is
+#'   \code{transform_sd_coef = c('b', 'c', 'd')}, which implies that the
+#'   parameters \code{'b'}, \code{'c'}, and \code{'d'} will be transformed,
+#'   while parameter \code{'a'} will be left unchanged because the default prior
+#'   for parameter \code{'a'} is based on the outcome \code{y} scale itself
+#'   (e.g., \code{a_prior_beta = normal(ymean, ysd)}), which gets transformed
+#'   automatically. Note that \code{transform_sd_coef} is ignored when
 #'   \code{transform_prior_class = NULL}.
 #'  
-#' @param exclude_default_funs A logical to indicate whether transformations for
+#' @param exclude_default_funs A logical indicating whether transformations for
 #'   (\code{x} and \code{y}) variables used in the original model fit should be
 #'   excluded. If \code{TRUE} (default), the transformations specified for the
 #'   \code{x} and \code{y} variables in the original model fit are excluded from
-#'   the \code{optimize_x} and \code{optimize_y}. From example, if original
-#'   model is fit with \code{xvar = log} and \code{yvar = NULL}, then
+#'   \code{optimize_x} and \code{optimize_y}. For example, if the original model
+#'   is fit with \code{xvar = log} and \code{yvar = NULL}, then
 #'   \code{optimize_x} is translated into \code{optimize_x = list(NULL, sqrt)},
-#'   and similarly \code{optimize_y} is reset as \code{optimize_y = list(log,
-#'   sqrt)}.
+#'   and \code{optimize_y} is reset as \code{optimize_y = list(log, sqrt)}.
 #'
 #' @param add_fit_criteria An optional argument (default \code{NULL}) to
-#'   indicate whether to add fit criteria to the returned model fit. Options
-#'   available are \code{'loo'}, \code{'waic'} and \code{'bayes_R2'}. Please see
-#'   [brms::add_criterion()] for details.
+#'   indicate whether to add fit criteria to the returned model fit. Available
+#'   options are \code{'loo'}, \code{'waic'}, and \code{'bayes_R2'}. Please see
+#'   \code{[brms::add_criterion()]} for details.
 #'
-#' @param byresp A logical (default \code{FALSE}) to indicate if response wise
-#'   fit criteria to be calculated. This argument is evaluated only for the
-#'   \code{multivariate} model in which user can select whether to get joint
-#'   calculation of point wise log likelihood (\code{byresp = FALSE}) or
-#'   response specific (\code{byresp = TRUE}). For, \code{univariate_by} model,
-#'   the only option available is to calculate separate point wise log
-#'   likelihood for each sub-model, i.e., \code{byresp = TRUE}.
+#' @param byresp A logical (default \code{FALSE}) indicating whether
+#'   response-wise fit criteria should be calculated. This argument is evaluated
+#'   only for the \code{multivariate} model, where the user can select whether
+#'   to get a joint calculation of point-wise log likelihood (\code{byresp =
+#'   FALSE}) or response-specific calculations (\code{byresp = TRUE}). For the
+#'   \code{univariate_by} model, the only available option is to calculate
+#'   separate point-wise log likelihood for each submodel, i.e., \code{byresp =
+#'   TRUE}.
 #'   
-#' @param save_each A logical (default \code{FALSE}) to indicate whether to save
-#'   each each model (as \code{'.rds'} file) when running the loop. 
-#'   Note that user can also specify \code{save_each} as a named list that will
-#'   pass following information when saving each model: \cr
+#' @param save_each A logical (default \code{FALSE}) indicating whether to save
+#'   each model (as a \code{.rds} file) when running the loop. Note that the
+#'   user can also specify \code{save_each} as a named list to pass the
+#'   following information when saving each model: \cr
 #'   \code{'prefix'} a character string (default \code{NULL}), \cr
 #'   \code{'suffix'} a character string (default \code{NULL}), \cr
-#'   \code{'extension'} a character string, either \code{'.rds'} or 
-#'   \code{'.RData'} (default \code{'.rds'}), \cr
-#'   \code{'compress'} a character string, either \code{'xz'}, \code{'gzip'} or 
-#'   \code{'bzip2'} (default \code{'xz'}). Theses option are set as follows: \cr
-#'   \code{save_each=list(prefix='', suffix='', extension='rds', compress='xz')}
-#' 
-#' @param cores The number of cores to used in parallel processing (default
-#'   \code{1}). The argument \code{cores} is passed to the
-#'   [brms::add_criterion()].
+#'   \code{'extension'} a character string, either \code{.rds} or 
+#'   \code{.RData} (default \code{.rds}), \cr
+#'   \code{'compress'} a character string, either \code{'xz'}, \code{'gzip'}, or
+#'   \code{'bzip2'} (default \code{'xz'}). These options are set as follows: \cr
+#'   \code{save_each = list(prefix = '', suffix = '', extension = 'rds',
+#'   compress = 'xz')}.
+#'   
+#' @param cores The number of cores to use in parallel processing (default
+#'   \code{1}). The argument \code{cores} is passed to
+#'   \code{[brms::add_criterion()]}.
 #' 
 #' @param ... Other arguments passed to \code{\link{update_model}}.
 #' 
@@ -138,22 +142,23 @@
 #' 
 #' # Fit Bayesian SITAR model 
 #' 
-#' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
-#' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
-#' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+#' # To avoid model estimation, which takes time, the Bayesian SITAR model fit  
+#' # to the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
+#' # See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
-#' # Check and confirm whether model fit object 'berkeley_exfit' exists
+#' # Check and confirm whether the model fit object 'berkeley_exfit' exists
 #'  berkeley_exfit <- getNsObject(berkeley_exfit)
 #' 
 #' model <- berkeley_exfit
 #' 
-#' # Below example shows dummy call for optimization to save time. 
-#' # Note that in case degree of freedom and both the optimize_x and optimize_y are
-#' # NULL (i.e., nothing to optimize), the original model object is returned.   
-#' # To explicitly get this information whether model is being optimized or not, 
-#' # user can set verbose = TRUE. The verbose = TRUE is useful to get the
-#' # information about what all arguments have been changed as compared to
-#' # the original model.
+#' # The following example shows a dummy call for optimization to save time. 
+#' # Note that if the degree of freedom, and both the \code{optimize_x} and 
+#' # \code{optimize_y} are \code{NULL} (i.e., nothing to optimize), the original 
+#' # model object is returned.   
+#' # To explicitly check whether the model is being optimized or not, 
+#' # the user can set \code{verbose = TRUE}. This is useful for getting
+#' # information about what arguments have changed compared to the 
+#' # original model.
 #' 
 #' model2 <- optimize_model(model, 
 #'   optimize_df = NULL, 

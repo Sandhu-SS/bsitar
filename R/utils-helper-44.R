@@ -1,6 +1,6 @@
 
 
-#' An internal function to prepare formula for sigma
+#' An internal function to prepare formula for sigma (distributional) parameter
 #' 
 #' The \code{prepare_formula_sigma}) prepares \code{brms::brmsformual} for the
 #' \code{sigma} structure  which is passed on to the [bsitar::bsitar()]
