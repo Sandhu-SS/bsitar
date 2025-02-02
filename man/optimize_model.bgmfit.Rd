@@ -228,7 +228,7 @@ variables.
 
 # To avoid model estimation, which takes time, the Bayesian SITAR model fit  
 # to the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
-# See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+# See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check and confirm whether the model fit object 'berkeley_exfit' exists
  berkeley_exfit <- getNsObject(berkeley_exfit)

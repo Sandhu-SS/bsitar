@@ -2,54 +2,63 @@
 
 #' @title Estimate and compare growth curves
 #' 
-#' @description The \strong{marginal_comparison()} function estimates and compares
-#'   growth curves such as distance and velocity. This function is a wrapper around
-#'   [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()]. The
-#'   [marginaleffects::comparisons()] function computes unit-level (conditional) estimates,
-#'   whereas [marginaleffects::avg_comparisons()] returns average (marginal) estimates. A
-#'   detailed explanation is available [here](https://marginaleffects.com). Note that the 
-#'   \pkg{marginaleffects} package is highly flexible, and users are expected to have a 
-#'   strong understanding of its workings. Additionally, since the \pkg{marginaleffects} 
-#'   package is evolving rapidly, results from the current implementation should be considered 
-#'   experimental.
+#' @description The \strong{marginal_comparison()} function estimates and
+#'   compares growth curves such as distance and velocity. This function is a
+#'   wrapper around [marginaleffects::comparisons()] and
+#'   [marginaleffects::avg_comparisons()]. The [marginaleffects::comparisons()]
+#'   function computes unit-level (conditional) estimates, whereas
+#'   [marginaleffects::avg_comparisons()] returns average (marginal) estimates.
+#'   A detailed explanation is available [here](https://marginaleffects.com).
+#'   Note that the \pkg{marginaleffects} package is highly flexible, and users
+#'   are expected to have a strong understanding of its workings. Additionally,
+#'   since the \pkg{marginaleffects} package is evolving rapidly, results from
+#'   the current implementation should be considered experimental.
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @param datagrid A data frame or named list for setting up a custom grid of predictor values
-#'   to evaluate the quantities of interest. If \code{NULL} (default), no custom grid is used.
-#'   The grid can be constructed using [marginaleffects::datagrid()]. If \code{datagrid = list()},
-#'   essential arguments such as \code{model} and \code{newdata} are inferred automatically from the
-#'   respective arguments in the model fit.
+#' @param datagrid A data frame or named list for setting up a custom grid of
+#'   predictor values to evaluate the quantities of interest. If \code{NULL}
+#'   (default), no custom grid is used. The grid can be constructed using
+#'   [marginaleffects::datagrid()]. If \code{datagrid = list()}, essential
+#'   arguments such as \code{model} and \code{newdata} are inferred
+#'   automatically from the respective arguments in the model fit.
 #' 
-#' @param digits An integer (default \code{2}) for rounding the estimates to the specified number
-#'   of decimal places using [base::round()].
+#' @param digits An integer (default \code{2}) for rounding the estimates to the
+#'   specified number of decimal places using [base::round()].
 #'   
-#' @param average A logical indicating whether to call [marginaleffects::comparisons()] (if 
-#'   \code{FALSE}) or [marginaleffects::avg_comparisons()] (if \code{TRUE}). Default is \code{FALSE}.
+#' @param average A logical indicating whether to call
+#'   [marginaleffects::comparisons()] (if \code{FALSE}) or
+#'   [marginaleffects::avg_comparisons()] (if \code{TRUE}). Default is
+#'   \code{FALSE}.
 #'
 #' @param plot A logical indicating whether to plot the comparisons using
 #'   [marginaleffects::plot_comparisons()]. Default is \code{FALSE}.
 #'
-#' @param method A character string specifying whether to compute comparisons using the 
-#'   \code{'marginaleffects'} machinery (\code{method = 'pkg'}) or via custom functions for
-#'   efficiency (\code{method = 'custom'}). Default is \code{'pkg'}. The \code{'custom'} method is
-#'   useful when testing hypotheses and should be used cautiously.
-#'   
-#' @param deriv A numeric value indicating whether to estimate parameters based on the 
-#'   differentiation of the distance curve or the model's first derivative.
-#'   
-#' @param reformat A logical (default \code{TRUE}) to reformat the output from 
-#'   [marginaleffects] as a data.frame, with column names such as \code{conf.low} as \code{Q2.5}, 
-#'   \code{conf.high} as \code{Q97.5}, and dropping unnecessary columns like \code{term}, 
-#'   \code{contrast}, and \code{predicted}.
-#'   
-#' @param constrats_by A character vector (default \code{NULL}) specifying the variables by which
-#'   hypotheses should be tested (e.g., for post-draw comparisons). These variables should be a 
-#'   subset of the variables in the \code{by} argument of [marginaleffects::comparisons()].
-#'   
-#' @param constrats_at A character vector (default \code{NULL}) specifying the values at which
-#'   hypotheses should be tested. Useful for large estimates to limit testing to fewer rows.
-#'   
+#' @param method A character string specifying whether to compute comparisons
+#'   using the \pkg{marginaleffects} machinery (\code{method = 'pkg'}) or via
+#'   custom functions for efficiency (\code{method = 'custom'}). Default is
+#'   \code{'pkg'}. The \code{'custom'} method is useful when testing hypotheses
+#'   and should be used cautiously.
+#'
+#' @param deriv A numeric value indicating whether to estimate parameters based
+#'   on the differentiation of the distance curve or the model's first
+#'   derivative.
+#'
+#' @param reformat A logical (default \code{TRUE}) to reformat the output from
+#'   [marginaleffects::comparisons()] as a data.frame, with column names such as
+#'   \code{conf.low} as \code{Q2.5}, \code{conf.high} as \code{Q97.5}, and
+#'   dropping unnecessary columns like \code{term}, \code{contrast}, and
+#'   \code{predicted}.
+#'
+#' @param constrats_by A character vector (default \code{NULL}) specifying the
+#'   variables by which hypotheses should be tested (e.g., for post-draw
+#'   comparisons). These variables should be a subset of the variables in the
+#'   \code{by} argument of [marginaleffects::comparisons()].
+#'
+#' @param constrats_at A character vector (default \code{NULL}) specifying the
+#'   values at which hypotheses should be tested. Useful for large estimates to
+#'   limit testing to fewer rows.
+#'
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams growthparameters_comparison.bgmfit
 #' @inheritParams marginal_draws.bgmfit
@@ -59,19 +68,20 @@
 #' @inheritParams marginaleffects::datagrid
 #' @inheritParams brms::fitted.brmsfit
 #'
-#' @return A data frame with estimates and confidence intervals for the specified parameters, or
-#'   a list when \code{method = 'custom'} and \code{hypothesis} is not \code{NULL}.
-#' 
+#' @return A data frame with estimates and confidence intervals for the
+#'   specified parameters, or a list when \code{method = 'custom'} and
+#'   \code{hypothesis} is not \code{NULL}.
+#'
 #' @export marginal_comparison.bgmfit
 #' @export
-#' 
-#' @seealso [marginaleffects::comparisons()],
-#'   [marginaleffects::avg_comparisons()],
-#'   [marginaleffects::plot_comparisons()]
-#' 
-#' @references
-#' \insertAllCited{}
-#' 
+#'
+#' @seealso 
+#' [marginaleffects::comparisons()],
+#' [marginaleffects::avg_comparisons()], 
+#' [marginaleffects::plot_comparisons()]
+#'
+#' @references \insertAllCited{}
+#'
 #' @inherit berkeley author
 #' 
 #' @examples

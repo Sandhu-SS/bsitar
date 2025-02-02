@@ -7,6 +7,7 @@ CGV
 Dvau
 GCMs
 HMC
+Helmert
 Ij
 Kurowicka
 LKJ
@@ -50,7 +51,6 @@ frac
 ggplot
 growthparameters
 homoscedasticity
-https
 ij
 ije
 iliac
@@ -60,16 +60,15 @@ kfold
 linetype
 lm
 magrittr
-marginaleffects
 marglik
 mathbf
 mdata
-meandev
 meanotherdev
 mfit
 minmax
 modelling
 multisession
+nd
 newpage
 operatorname
 parallelization
@@ -80,9 +79,6 @@ pre
 probs
 reproducibility
 retreive
-revpairwise
-revreference
-revsequential
 rstanarm
 rstanrm
 sd

@@ -16,7 +16,8 @@
 #'   - Individual-specific distance curves
 #'   - Individual-specific velocity curves
 #'   - Unadjusted individual growth curves (i.e., observed growth curves)
-#'   - Adjusted individual growth curves (adjusted for the model-estimated random effects)
+#'   - Adjusted individual growth curves (adjusted for the model-estimated 
+#'   random effects)
 #'   
 #'   Internally, \strong{plot_curves()} calls the [growthparameters()] function
 #'   to estimate and summarize the distance and velocity curves, as well as to
@@ -36,7 +37,8 @@
 #'   - 'D': Individual-specific distance curves
 #'   - 'V': Individual-specific velocity curves
 #'   - 'u': Unadjusted individual-specific distance curves
-#'   - 'a': Adjusted individual-specific distance curves (adjusted for random effects)
+#'   - 'a': Adjusted individual-specific distance curves (adjusted for 
+#'   random effects)
 #'   
 #'   Note that 'd' and 'D' cannot be specified simultaneously, nor can 'v' and
 #'   'V'. Other combinations are allowed, e.g., 'dvau', 'Dvau', 'dVau', etc.
@@ -173,7 +175,7 @@
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model is fit to 
 #' # the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
-#' # See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+#' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
 #' # Check and confirm whether the model fit object 'berkeley_exfit' exists
 #' berkeley_exfit <- getNsObject(berkeley_exfit)

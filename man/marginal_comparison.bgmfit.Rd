@@ -91,11 +91,12 @@ in estimation (default \code{NULL}).}
 \item{newdata}{An optional data frame for estimation. If \code{NULL}
 (default), \code{newdata} is retrieved from the \code{model}.}
 
-\item{datagrid}{A data frame or named list for setting up a custom grid of predictor values
-to evaluate the quantities of interest. If \code{NULL} (default), no custom grid is used.
-The grid can be constructed using \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}. If \code{datagrid = list()},
-essential arguments such as \code{model} and \code{newdata} are inferred automatically from the
-respective arguments in the model fit.}
+\item{datagrid}{A data frame or named list for setting up a custom grid of
+predictor values to evaluate the quantities of interest. If \code{NULL}
+(default), no custom grid is used. The grid can be constructed using
+\code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}. If \code{datagrid = list()}, essential
+arguments such as \code{model} and \code{newdata} are inferred
+automatically from the respective arguments in the model fit.}
 
 \item{re_formula}{Option to indicate whether or not to include
 individual/group-level effects in the estimation. When \code{NA} (default),
@@ -137,8 +138,8 @@ the same range for individuals within the same higher grouping variable
 the entire sample. Alternatively, a numeric vector (e.g., \code{xrange =
   c(6, 20)}) can be provided to set the range within the specified values.}
 
-\item{digits}{An integer (default \code{2}) for rounding the estimates to the specified number
-of decimal places using \code{\link[base:Round]{base::round()}}.}
+\item{digits}{An integer (default \code{2}) for rounding the estimates to the
+specified number of decimal places using \code{\link[base:Round]{base::round()}}.}
 
 \item{numeric_cov_at}{An optional (named list) argument to specify the value
 of continuous covariate(s). The default \code{NULL} option sets the
@@ -246,10 +247,11 @@ R processes can be interrupted using \code{\link[installr:kill_all_Rscript_s]{in
 \item{future_method}{A character string (default \code{'future'}) to specify
 the method for parallel computation. Options include:
 \itemize{
-\item \code{'future'}: Uses \code{\link[future:future]{future::future()}} along with \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}
-for parallel execution.
-\item \code{'foreach'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} with the \code{'dofuture'} function from
-the \code{doFuture} package for parallel execution.
+\item \code{'future'}: Uses \code{\link[future:future]{future::future()}} along with
+\code{\link[future.apply:future_lapply]{future.apply::future_lapply()}} for parallel execution.
+\item \code{'foreach'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} with the
+\code{'dofuture'} function from the \code{doFuture} package for parallel
+execution.
 }}
 
 \item{future_re_expose}{A logical (default \code{NULL}) to indicate whether
@@ -258,10 +260,10 @@ especially relevant when \code{\link[future:plan]{future::plan()}} is set to \co
 as already exposed C++ \code{Stan} functions cannot be passed across
 multiple sessions.
 \itemize{
-\item When \code{future_re_expose = NULL} (the default), \code{future_re_expose} is automatically
-set to \code{TRUE} for the \code{'multisession'} plan.
-\item It is advised to explicitly set \code{future_re_expose = TRUE} for speed gains when using
-parallel processing with \code{future = TRUE}.
+\item When \code{future_re_expose = NULL} (the default), \code{future_re_expose}
+is automatically set to \code{TRUE} for the \code{'multisession'} plan.
+\item It is advised to explicitly set \code{future_re_expose = TRUE} for speed
+gains when using parallel processing with \code{future = TRUE}.
 }}
 
 \item{usedtplyr}{A logical (default \code{FALSE}) indicating whether to use
@@ -281,8 +283,10 @@ number of cores is automatically determined using
 \code{\link[future:re-exports]{future::availableCores()}}, and it will use the maximum number of cores
 available minus one (i.e., \code{future::availableCores() - 1}).}
 
-\item{average}{A logical indicating whether to call \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (if
-\code{FALSE}) or \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} (if \code{TRUE}). Default is \code{FALSE}.}
+\item{average}{A logical indicating whether to call
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (if \code{FALSE}) or
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} (if \code{TRUE}). Default is
+\code{FALSE}.}
 
 \item{plot}{A logical indicating whether to plot the comparisons using
 \code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}}. Default is \code{FALSE}.}
@@ -313,8 +317,9 @@ passed to \code{variables}. In contrast, when using an alternative approach
 can be passed to the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions.}
 
-\item{deriv}{A numeric value indicating whether to estimate parameters based on the
-differentiation of the distance curve or the model's first derivative.}
+\item{deriv}{A numeric value indicating whether to estimate parameters based
+on the differentiation of the distance curve or the model's first
+derivative.}
 
 \item{deriv_model}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the
@@ -324,10 +329,11 @@ the velocity curve, such as \code{growthparameters()} and
 distance curve (i.e., fitted values), such as \code{loo_validation()} and
 \code{plot_ppc()}.}
 
-\item{method}{A character string specifying whether to compute comparisons using the
-\code{'marginaleffects'} machinery (\code{method = 'pkg'}) or via custom functions for
-efficiency (\code{method = 'custom'}). Default is \code{'pkg'}. The \code{'custom'} method is
-useful when testing hypotheses and should be used cautiously.}
+\item{method}{A character string specifying whether to compute comparisons
+using the \pkg{marginaleffects} machinery (\code{method = 'pkg'}) or via
+custom functions for efficiency (\code{method = 'custom'}). Default is
+\code{'pkg'}. The \code{'custom'} method is useful when testing hypotheses
+and should be used cautiously.}
 
 \item{marginals}{A \code{list}, \code{data.frame}, or \code{tibble} returned
 by the \pkg{marginaleffects} functions (default \code{NULL}). This is only
@@ -410,43 +416,52 @@ now deprecated.}
 \item TRUE: Extract weights from the fitted object with \code{insight::find_weights()} and use them when taking weighted averages of estimates. Warning: \code{newdata=datagrid()} returns a single average weight, which is equivalent to using \code{wts=FALSE}
 }}
 
-\item{hypothesis}{specify a hypothesis test or custom contrast using a numeric value, vector, or matrix; a string equation; string; a formula, or a function.
+\item{hypothesis}{specify a hypothesis test or custom contrast using a number , formula, string equation, vector, matrix, or function.
 \itemize{
-\item Numeric:
-\itemize{
-\item Single value: the null hypothesis used in the computation of Z and p (before applying \code{transform}).
-\item Vector: Weights to compute a linear combination of (custom contrast between) estimates. Length equal to the number of rows generated by the same function call, but without the \code{hypothesis} argument.
-\item Matrix: Each column is a vector of weights, as describe above, used to compute a distinct linear combination of (contrast between) estimates. The column names of the matrix are used as labels in the output.
-}
-\item String equation to specify linear or non-linear hypothesis tests. If the \code{term} column uniquely identifies rows, terms can be used in the formula. Otherwise, use \code{b1}, \code{b2}, etc. to identify the position of each parameter. The \verb{b*} wildcard can be used to test hypotheses on all estimates. If a named vector is used, the names are used as labels in the output. Examples:
+\item Number: The null hypothesis used in the computation of Z and p (before applying \code{transform}).
+\item String: Equation to specify linear or non-linear hypothesis tests. If the terms in \code{coef(object)} uniquely identify estimates, they can be used in the formula. Otherwise, use \code{b1}, \code{b2}, etc. to identify the position of each parameter. The \verb{b*} wildcard can be used to test hypotheses on all estimates. If a named vector is used, the names are used as labels in the output. Examples:
 \itemize{
 \item \code{hp = drat}
 \item \code{hp + drat = 12}
 \item \code{b1 + b2 + b3 = 0}
 \item \verb{b* / b1 = 1}
 }
-\item String:
+\item Formula: \code{lhs ~ rhs | group}
 \itemize{
-\item "pairwise": pairwise differences between estimates in each row.
-\item "reference": differences between the estimates in each row and the estimate in the first row.
-\item "sequential": difference between an estimate and the estimate in the next row.
-\item "meandev": difference between an estimate and the mean of all estimates.
-\item "meanotherdev": difference between an estimate and the mean of all other estimates, excluding the current one.
-\item "revpairwise", "revreference", "revsequential": inverse of the corresponding hypotheses, as described above.
+\item \code{lhs}
+\itemize{
+\item \code{ratio}
+\item \code{difference}
+\item Leave empty for default value
 }
-\item Formula:
+\item \code{rhs}
 \itemize{
-\item \code{comparison ~ pairs | group}
-\item Left-hand side determines the type of comparison to conduct: \code{difference} or \code{ratio}. If the left-hand side is empty, \code{difference} is chosen.
-\item Right-hand side determines the pairs of estimates to compare: \code{reference}, \code{sequential}, or \code{meandev}
-\item Optional: Users can supply grouping variables after a vertical bar to conduct comparisons withing subsets.
+\item \code{pairwise} and \code{revpairwise}: pairwise differences between estimates in each row.
+\item \code{reference}: differences between the estimates in each row and the estimate in the first row.
+\item \code{sequential}: difference between an estimate and the estimate in the next row.
+\item \code{meandev}: difference between an estimate and the mean of all estimates.
+\item `meanotherdev: difference between an estimate and the mean of all other estimates, excluding the current one.
+\item \code{poly}: polynomial contrasts, as computed by the \code{stats::contr.poly()} function.
+\item \code{helmert}: Helmert contrasts, as computed by the \code{stats::contr.helmert()} function. Contrast 2nd level to the first, 3rd to the average of the first two, and so on.
+\item \code{trt_vs_ctrl}: difference between the mean of estimates (except the first) and the first estimate.
+\item \code{I(fun(x))}: custom function to manipulate the vector of estimates \code{x}. The function \code{fun()} can return multiple (potentially named) estimates.
+}
+\item \code{group} (optional)
+\itemize{
+\item Column name of \code{newdata}. Conduct hypothesis tests withing subsets of the data.
+}
 \item Examples:
 \itemize{
+\item \code{~ poly}
+\item \code{~ sequential | groupid}
 \item \code{~ reference}
 \item \code{ratio ~ pairwise}
 \item \code{difference ~ pairwise | groupid}
+\item \code{~ I(x - mean(x)) | groupid}
+\item \verb{~ I(\\(x) c(a = x[1], b = mean(x[2:3]))) | groupid}
 }
 }
+\item Matrix or Vector: Each column is a vector of weights. The the output is the dot product between these vectors of weights and the vector of estimates. The matrix can have column names to label the estimates.
 \item Function:
 \itemize{
 \item Accepts an argument \code{x}: object produced by a \code{marginaleffects} function or a data frame with column \code{rowid} and \code{estimate}
@@ -454,7 +469,7 @@ now deprecated.}
 \item The function can also accept optional input arguments: \code{newdata}, \code{by}, \code{draws}.
 \item This function approach will not work for Bayesian models or with bootstrapping. In those cases, it is easy to use \code{get_draws()} to extract and manipulate the draws directly.
 }
-\item See the Examples section below and the vignette: https://marginaleffects.com/chapters/hypothesis.html
+\item See the Examples section below and the vignette: \url{https://marginaleffects.com/chapters/hypothesis.html}
 }}
 
 \item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. See Details section below.}
@@ -466,17 +481,20 @@ the maximum and minimum values of the variable with respect to which we
 are taking the derivative. Changing \code{eps} may be necessary to avoid
 numerical problems in certain models.}
 
-\item{constrats_by}{A character vector (default \code{NULL}) specifying the variables by which
-hypotheses should be tested (e.g., for post-draw comparisons). These variables should be a
-subset of the variables in the \code{by} argument of \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}.}
+\item{constrats_by}{A character vector (default \code{NULL}) specifying the
+variables by which hypotheses should be tested (e.g., for post-draw
+comparisons). These variables should be a subset of the variables in the
+\code{by} argument of \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}.}
 
-\item{constrats_at}{A character vector (default \code{NULL}) specifying the values at which
-hypotheses should be tested. Useful for large estimates to limit testing to fewer rows.}
+\item{constrats_at}{A character vector (default \code{NULL}) specifying the
+values at which hypotheses should be tested. Useful for large estimates to
+limit testing to fewer rows.}
 
 \item{reformat}{A logical (default \code{TRUE}) to reformat the output from
-\link{marginaleffects} as a data.frame, with column names such as \code{conf.low} as \code{Q2.5},
-\code{conf.high} as \code{Q97.5}, and dropping unnecessary columns like \code{term},
-\code{contrast}, and \code{predicted}.}
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} as a data.frame, with column names such as
+\code{conf.low} as \code{Q2.5}, \code{conf.high} as \code{Q97.5}, and
+dropping unnecessary columns like \code{term}, \code{contrast}, and
+\code{predicted}.}
 
 \item{estimate_center}{A character string (default \code{NULL}) specifying
 how to center estimates: either \code{'mean'} or \code{'median'}. This
@@ -552,20 +570,22 @@ derivatives like velocity curves.}
 and \code{brms::predict()} functions.}
 }
 \value{
-A data frame with estimates and confidence intervals for the specified parameters, or
-a list when \code{method = 'custom'} and \code{hypothesis} is not \code{NULL}.
+A data frame with estimates and confidence intervals for the
+specified parameters, or a list when \code{method = 'custom'} and
+\code{hypothesis} is not \code{NULL}.
 }
 \description{
-The \strong{marginal_comparison()} function estimates and compares
-growth curves such as distance and velocity. This function is a wrapper around
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}. The
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} function computes unit-level (conditional) estimates,
-whereas \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} returns average (marginal) estimates. A
-detailed explanation is available \href{https://marginaleffects.com}{here}. Note that the
-\pkg{marginaleffects} package is highly flexible, and users are expected to have a
-strong understanding of its workings. Additionally, since the \pkg{marginaleffects}
-package is evolving rapidly, results from the current implementation should be considered
-experimental.
+The \strong{marginal_comparison()} function estimates and
+compares growth curves such as distance and velocity. This function is a
+wrapper around \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}. The \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}
+function computes unit-level (conditional) estimates, whereas
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} returns average (marginal) estimates.
+A detailed explanation is available \href{https://marginaleffects.com}{here}.
+Note that the \pkg{marginaleffects} package is highly flexible, and users
+are expected to have a strong understanding of its workings. Additionally,
+since the \pkg{marginaleffects} package is evolving rapidly, results from
+the current implementation should be considered experimental.
 }
 \examples{
 

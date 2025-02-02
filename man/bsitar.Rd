@@ -1811,10 +1811,18 @@ The frequentist version of the \emph{SITAR} model can be fit using the
 already available R package, \pkg{sitar} \insertCite{R-sitar}{bsitar}. The
 framework of the Bayesian implementation of the \emph{SITAR} model in the
 \pkg{bsitar} package is similar to the \pkg{sitar} package, with the main
-difference being that \pkg{bsitar} uses a truncated power basis approach (see
+difference being that \pkg{sitar} uses \code{\link[splines:ns]{splines::ns()}} to construct the
+B-splines based natural cubic spline design matrix, whereas \pkg{bsitar}
+implements a different strategy to create natural cubic splines. The
+\pkg{bsitar} offers three different types of splines: \pkg{nsp}, \pkg{nsk},
+and \pkg{rcs}. Both \pkg{nsp} and \pkg{nsk} use the B-splines basis to
+generate the natural cubic spline design matrix as implemented in
+\code{\link[splines2:naturalSpline]{splines2::nsp()}} and \code{\link[splines2:naturalSpline]{splines2::nsk()}}, whereas \pkg{rcs} is based on the
+truncated power basis approach (see
 \insertCite{harrell2001regression;textual}{bsitar} and
 \insertCite{R-Hmisc;textual}{bsitar} for details) to construct the spline
-design matrix, whereas \pkg{sitar} uses B-splines via \code{\link[splines:ns]{splines::ns()}}.
+design matrix. While all approaches produce the same growth curves, the
+model-estimated spline coefficients differ from each other.
 
 Like the \pkg{sitar} package \insertCite{Cole2010}{bsitar}, the \pkg{bsitar}
 package fits the \emph{SITAR} model with (usually) three random effects: size

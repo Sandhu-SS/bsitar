@@ -144,7 +144,7 @@
 #' 
 #' # To avoid model estimation, which takes time, the Bayesian SITAR model fit  
 #' # to the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
-#' # See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+#' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
 #' # Check and confirm whether the model fit object 'berkeley_exfit' exists
 #'  berkeley_exfit <- getNsObject(berkeley_exfit)
@@ -250,21 +250,26 @@ optimize_model.bgmfit <- function(model,
   # Do some checks on save_each at the beginning and not to wait for model fit
   if(is.list(save_each)) {
     if(!is.null(save_each[['prefix']])) {
-      if(!is.character(save_each[['prefix']])) stop(paste0(save_each[['prefix']], " must be a character"))
+      if(!is.character(save_each[['prefix']])) 
+        stop(paste0(save_each[['prefix']], " must be a character"))
     }
     if(!is.null(save_each[['suffix']])) {
-      if(!is.character(save_each[['suffix']])) stop(paste0(save_each[['suffix']], " must be a character"))
+      if(!is.character(save_each[['suffix']])) 
+        stop(paste0(save_each[['suffix']], " must be a character"))
     }
     if(!is.null(save_each[['extension']])) {
-      if(!is.character(save_each[['extension']])) stop(paste0(save_each[['extension']], " must be a character"))
+      if(!is.character(save_each[['extension']])) 
+        stop(paste0(save_each[['extension']], " must be a character"))
     }
     if(!is.null(save_each[['compress']])) {
-      if(!is.character(save_each[['compress']])) stop(paste0(save_each[['compress']], " must be a character"))
+      if(!is.character(save_each[['compress']])) 
+        stop(paste0(save_each[['compress']], " must be a character"))
     }
     # if empty list then at least specify 'rds' extension
     if(length(save_each) == 0) {
       save_each[['extension']] <- 'rds'
-      if(verbose) message("extension 'rds' added to empty list specified via save_each")
+      if(verbose) 
+        message("extension 'rds' added to empty list specified via save_each")
     }
   } # else if(is.list(save_each)) {
   
@@ -933,7 +938,8 @@ optimize_model.bgmfit <- function(model,
           },
           error = function(e) {
             assign('err.', TRUE, envir = enverr.)
-            # message(paste("Computation of criterias failed:", add_fit_criteria))
+            # message(paste("Computation of criterias failed:",
+            # add_fit_criteria))
             # message("Below is the returned original error message:")
             # message(conditionMessage(e))
           }
@@ -1700,22 +1706,30 @@ optimize_model.bgmfit <- function(model,
         string_saving <- gsub(";", "_", string_saving, fixed = T)
         string_saving <- gsub("=", "_", string_saving, fixed = T)
         if(!is.null(save_each[['prefix']])) {
-          if(!is.character(save_each[['prefix']])) stop(paste0(save_each[['prefix']], " must be a character"))
+          if(!is.character(save_each[['prefix']])) {
+            stop(paste0(save_each[['prefix']], " must be a character"))
+          }
           string_saving <- paste0(save_each[['prefix']], "", string_saving)                                              
         }
         if(!is.null(save_each[['suffix']])) {
-          if(!is.character(save_each[['suffix']])) stop(paste0(save_each[['suffix']], " must be a character"))
+          if(!is.character(save_each[['suffix']])) {
+            stop(paste0(save_each[['suffix']], " must be a character"))
+          }
           string_saving <- paste0(string_saving,  "", save_each[['suffix']])                                              
         }
         if(!is.null(save_each[['extension']])) {
-          if(!is.character(save_each[['extension']])) stop(paste0(save_each[['extension']], " must be a character"))
+          if(!is.character(save_each[['extension']])) {
+            stop(paste0(save_each[['extension']], " must be a character"))
+          }
           extension_is <- save_each[['extension']]
         }
         if(is.null(save_each[['extension']])) {
           extension_is <- 'rds'
         }
         if(!is.null(save_each[['compress']])) {
-          if(!is.character(save_each[['compress']])) stop(paste0(save_each[['compress']], " must be a character"))
+          if(!is.character(save_each[['compress']])) {
+            stop(paste0(save_each[['compress']], " must be a character"))
+          }
           compress_is <- save_each[['compress']]
         }
         if(is.null(save_each[['extension']])) {
@@ -1863,7 +1877,6 @@ optimize_model.bgmfit <- function(model,
     
     return(out)
   } # if(!is.null(optimize_list[[1]])) {
- 
   
 }
 

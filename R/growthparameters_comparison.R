@@ -2,13 +2,13 @@
 
 #' @title Estimate and Compare Growth Parameters
 #' 
-#' @description The \strong{growthparameters_comparison()} function estimates and
-#' compares growth parameters, such as peak growth velocity and the age at peak
-#' growth velocity. This function serves as a wrapper around
+#' @description The \strong{growthparameters_comparison()} function estimates
+#' and compares growth parameters, such as peak growth velocity and the age at
+#' peak growth velocity. This function serves as a wrapper around
 #' [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
-#' The [marginaleffects::comparisons()] function computes unit-level (conditional)
-#' estimates, whereas [marginaleffects::avg_comparisons()] returns average
-#' (marginal) estimates. A detailed explanation is available
+#' The [marginaleffects::comparisons()] function computes unit-level
+#' (conditional) estimates, whereas [marginaleffects::avg_comparisons()]
+#' returns average (marginal) estimates. A detailed explanation is available
 #' [here](https://marginaleffects.com). Note that for the current use case—
 #' estimating and comparing growth parameters—the arguments \code{variables} and
 #' \code{comparison} in [marginaleffects::comparisons()] and
@@ -244,7 +244,8 @@
 #'     \item \code{'return'}: returns the raw draws,
 #'     \item \code{'add'}: adds the raw draws to the final return object,
 #'     \item \code{'returns'}: returns the summary of the raw draws,
-#'     \item \code{'adds'}: adds the summary of raw draws to the final return object.
+#'     \item \code{'adds'}: adds the summary of raw draws to the final return
+#'     object.
 #'   }
 #'   The \code{pdraws} are the velocity estimates for each posterior sample. For
 #'   more details, see [marginaleffects::posterior_draws()].
@@ -312,10 +313,11 @@
 #' @param future_method A character string (default \code{'future'}) to specify
 #'   the method for parallel computation. Options include:
 #'   \itemize{
-#'     \item \code{'future'}: Uses [future::future()] along with [future.apply::future_lapply()]
-#'       for parallel execution.
-#'     \item \code{'foreach'}: Uses [foreach::foreach()] with the \code{'dofuture'} function from
-#'       the \code{doFuture} package for parallel execution.
+#'     \item \code{'future'}: Uses [future::future()] along with
+#'     [future.apply::future_lapply()] for parallel execution.
+#'     \item \code{'foreach'}: Uses [foreach::foreach()] with the
+#'     \code{'dofuture'} function from the \code{doFuture} package for parallel
+#'     execution.
 #'   }
 #'
 #' @param future_re_expose A logical (default \code{NULL}) to indicate whether
@@ -324,10 +326,10 @@
 #'   as already exposed C++ \code{Stan} functions cannot be passed across
 #'   multiple sessions.
 #'
-#'   - When \code{future_re_expose = NULL} (the default), \code{future_re_expose} is automatically
-#'   set to \code{TRUE} for the \code{'multisession'} plan.
-#'   - It is advised to explicitly set \code{future_re_expose = TRUE} for speed gains when using
-#'   parallel processing with \code{future = TRUE}.
+#'   - When \code{future_re_expose = NULL} (the default), \code{future_re_expose} 
+#'   is automatically set to \code{TRUE} for the \code{'multisession'} plan.
+#'   - It is advised to explicitly set \code{future_re_expose = TRUE} for speed 
+#'   gains when using parallel processing with \code{future = TRUE}.
 #'
 #' 
 #' @inheritParams  growthparameters.bgmfit

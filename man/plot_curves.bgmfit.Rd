@@ -90,7 +90,8 @@ plotting options:
 \item 'D': Individual-specific distance curves
 \item 'V': Individual-specific velocity curves
 \item 'u': Unadjusted individual-specific distance curves
-\item 'a': Adjusted individual-specific distance curves (adjusted for random effects)
+\item 'a': Adjusted individual-specific distance curves (adjusted for
+random effects)
 }
 
 Note that 'd' and 'D' cannot be specified simultaneously, nor can 'v' and
@@ -505,7 +506,8 @@ visualizing the following six curves:
 \item Individual-specific distance curves
 \item Individual-specific velocity curves
 \item Unadjusted individual growth curves (i.e., observed growth curves)
-\item Adjusted individual growth curves (adjusted for the model-estimated random effects)
+\item Adjusted individual growth curves (adjusted for the model-estimated
+random effects)
 }
 
 Internally, \strong{plot_curves()} calls the \code{\link[=growthparameters]{growthparameters()}} function
@@ -523,7 +525,7 @@ fitted and predicted values.
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model is fit to 
 # the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
-# See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+# See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check and confirm whether the model fit object 'berkeley_exfit' exists
 berkeley_exfit <- getNsObject(berkeley_exfit)
