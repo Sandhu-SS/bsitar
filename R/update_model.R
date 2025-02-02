@@ -1,36 +1,36 @@
 
 
 
-#' Update model
+#' @title Update model
 #'
-#' @description The \strong{update_model()} is a wrapper around the
-#'   \code{update()} function in the \pkg{brms} package which refits the model
-#'   as per the user specified updated arguments.
+#' @description The \strong{update_model()} function is a wrapper around the
+#'   \code{update()} function from the \pkg{brms} package, which refits the model
+#'   based on the user-specified updated arguments.
 #' 
-#' @details This is an adapted version of the \strong{update()} function from
-#'   available the the\pkg{brms} package.
+#' @details This function is an adapted version of the \strong{update()} function 
+#'   from the \pkg{brms} package.
 #' 
 #' @param model An object of class \code{bgmfit}.
 #'
 #' @param newdata An optional \code{data.frame} to be used when updating the
 #'   model. If \code{NULL} (default), the data used in the original model fit is
-#'   re used. Note that data-dependent default priors are not updated
-#'   automatically.
+#'   reused. Note that data-dependent default priors are not automatically updated.
 #'
-#' @param recompile A logical to indicate whether the Stan model should be
+#' @param recompile A logical value indicating whether the Stan model should be
 #'   recompiled. When \code{NULL} (default), \strong{update_model()} tries to
-#'   figure out internally whether recompilation is required or not. Setting
-#'   \code{recompile} to \code{FALSE} will ignore Stan code changing arguments.
+#'   internally determine whether recompilation is required. Setting
+#'   \code{recompile} to \code{FALSE} will ignore any changes in the Stan code.
 #'   
-#' @param check_newargs A logical (default \code{FALSE}) to check whether
-#'   arguments in the original \code{model} fit and the \code{update_model} are
-#'   same. When \code{check_newargs = TRUE} and arguments are same, it implies 
-#'   that update is not needed and hence the original \code{model} object is 
-#'   returned along with the message if \code{verbose = TRUE}.
+#' @param check_newargs A logical value (default \code{FALSE}) indicating whether
+#'   to check if the arguments in the original \code{model} fit and the 
+#'   \code{update_model} are identical. When \code{check_newargs = TRUE} and the 
+#'   arguments are identical, it indicates that an update is unnecessary. In this 
+#'   case, the original \code{model} object is returned, along with a message if 
+#'   \code{verbose = TRUE}.
 #' 
 #' @inherit growthparameters.bgmfit params
 #'
-#' @param ... Other arguments passed to [brms::brm()].
+#' @param ... Other arguments passed to \code{[brms::brm()]}.
 #'
 #' @return An updated object of class \code{brmsfit}.
 #'   

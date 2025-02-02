@@ -1,71 +1,73 @@
 
 
 
-#' Expose user defined Stan function for post-processing
-#' 
-#' @description The \strong{expose_model_functions()} is a wrapper around the
-#'   [rstan::expose_stan_functions()] to expose user defined
-#'   \code{Stan} function(s). These exposed functions are needed during the
-#'   post-processing of the posterior draws.
-#' 
+#' @title Expose User-Defined Stan Functions for Post-Processing
+#'
+#' @description The \strong{expose_model_functions()} function is a wrapper
+#'   around [rstan::expose_stan_functions()] that exposes user-defined Stan
+#'   function(s). These functions are necessary for post-processing the
+#'   posterior draws.
+#'
 #' @param model An object of class \code{bgmfit}.
-#' 
-#' @param scode A character string (\code{Stan code}) containing the
-#'   user-defined Stan function(s). If \code{NULL} (default), the \code{scode}
-#'   is retrieved from the \code{model}.
-#' 
+#'
+#' @param scode A character string containing the user-defined Stan function(s)
+#'   in \code{Stan} code. If \code{NULL} (the default), the \code{scode} will be
+#'   retrieved from the \code{model}.
+#'
 #' @param expose A logical (default \code{TRUE}) to indicate whether to expose
-#' functions and add them to the \code{model} as an attribute.
-#' 
-#' @param select_model A character string (default \code{NULL}) to indicate the
-#'   model name. This is for internal use only.
-#' 
-#' @param returnobj A logical (default \code{TRUE}) to indicate whether to
-#'   return the model object. When \code{expose = TRUE}, then it is advisable to
-#'  set \code{returnobj = TRUE} too.
+#'   the functions and add them as an attribute to the \code{model}.
+#'
+#' @param select_model A character string (default \code{NULL}) to specify the
+#'   model name. This parameter is for internal use only.
+#'
+#' @param returnobj A logical (default \code{TRUE}) to specify whether to return
+#'   the model object. If \code{expose = TRUE}, it is advisable to set
+#'   \code{returnobj = TRUE}.
 #'
 #' @param vectorize A logical (default \code{FALSE}) to indicate whether the
-#'   exposed functions should be vectorized via [base::Vectorize()]. Note that
-#'   currently \code{vectorize} should be set to \code{FALSE} because setting it
+#'   exposed functions should be vectorized using [base::Vectorize()]. Note that
+#'   currently, \code{vectorize} should be set to \code{FALSE}, as setting it to
 #'   \code{TRUE} may not work as expected.
-#' 
+#'
 #' @inherit growthparameters.bgmfit params
-#' 
+#'
 #' @param ... Additional arguments passed to the
 #'   [rstan::expose_stan_functions()] function. The "..." can be used to set the
-#'   compiler as either [rstan::stanc()] or [rstan::stan_model()] and the other
-#'   compiler specific arguments such as  \code{save_dso} for
-#'   [rstan::stan_model()]. Note that while both [rstan::stanc()] can be
-#'   [rstan::stan_model()] used as compiler before calling the
-#'   [rstan::expose_stan_functions()], the total execution time for
-#'   [rstan::stan_model()] is approximately twice than the [rstan::stanc()].
-#' 
-#' @return An object of class \code{bgmfit} if \code{returnobj=TRUE}, otherwise
-#'   invisible \code{NULL}.
-#' 
+#'   compiler, which can be either [rstan::stanc()] or [rstan::stan_model()].
+#'   You can also pass other compiler-specific arguments such as \code{save_dso}
+#'   for [rstan::stan_model()]. Note that while both [rstan::stanc()] and
+#'   [rstan::stan_model()] can be used as compilers before calling
+#'   [rstan::expose_stan_functions()], it is important to note that the
+#'   execution time for [rstan::stan_model()] is approximately twice as long as
+#'   [rstan::stanc()].
+#'
+#' @return An object of class \code{bgmfit} if \code{returnobj = TRUE};
+#'   otherwise, it returns \code{NULL} invisibly.
+#'
 #' @export expose_model_functions.bgmfit
 #' @export
-#' 
-#' @seealso [rstan::expose_stan_functions()] 
-#' 
+#'
+#' @seealso [rstan::expose_stan_functions()]
+#'
 #' @inherit berkeley author
 #'
 #' @examples
 #' 
 #' \donttest{
+#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
 #' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 #' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
-#' # Check and confirm whether model fit object 'berkeley_exfit' exists
+#' # Check and confirm whether the model fit object 'berkeley_exfit' exists
 #'  berkeley_exfit <- getNsObject(berkeley_exfit)
 #' 
 #' model <- berkeley_exfit
 #' 
-#' # To save time, argument expose is set as FALSE which runs a dummy test 
-#' # and avoid model compilation which often takes time
+#' # To save time, argument expose is set as FALSE, which runs a dummy test 
+#' # and avoids model compilation that often takes time.
 #' 
 #' expose_model_functions(model, expose = FALSE)
 #' }

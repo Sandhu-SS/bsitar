@@ -76,50 +76,49 @@ marginal_draws(model, ...)
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
 
-\item{resp}{A character string (default \code{NULL}) to specify response
-variable when processing posterior draws for the \code{univariate_by} and
+\item{resp}{A character string (default \code{NULL}) to specify the response
+variable when processing posterior draws for \code{univariate_by} and
 \code{multivariate} models. See \code{\link[=bsitar]{bsitar()}} for details on
-\code{univariate_by} and \code{multivariate} models}
+\code{univariate_by} and \code{multivariate} models.}
 
 \item{dpar}{Optional name of a predicted distributional parameter.
 If specified, expected predictions of this parameters are returned.}
 
 \item{ndraws}{A positive integer indicating the number of posterior draws to
-be used in estimation. If \code{NULL} (default), all draws are used.}
+use in estimation. If \code{NULL} (default), all draws are used.}
 
-\item{draw_ids}{An integer indicating the specific posterior draw(s)
-to be used in estimation (default \code{NULL}).}
+\item{draw_ids}{An integer specifying the specific posterior draw(s) to use
+in estimation (default \code{NULL}).}
 
-\item{newdata}{An optional data frame to be used in estimation. If
-\code{NULL} (default), the \code{newdata} is retrieved from the
-\code{model}.}
+\item{newdata}{An optional data frame for estimation. If \code{NULL}
+(default), \code{newdata} is retrieved from the \code{model}.}
 
-\item{datagrid}{Generate a grid of user-specified values for use in the
-\code{newdata} argument in various functions of the \pkg{marginaleffects}
-package. This is useful to define where in the predictor space we want to
-evaluate the quantities of interest. See \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} for
-details. The default value for the \code{datagrid} is \code{NULL} implying
-that no custom grid is constructed. To set a data grid, the argument should
-be a data.frame constructed by using the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}
-function, or else a named list which are internally used for setting up the
-grid. For the user convenience, we also allow setting an empty list
-\code{datagrid = list()} in which case essential arguments such as
-\code{model}, \code{newdata} are taken up from the respective arguments
-specified elsewhere. Further, the level 1 predictor (such as age) and any
-covariate included in the model fit (e.g., gender) are also automatically
+\item{datagrid}{A grid of user-specified values to be used in the
+\code{newdata} argument of various functions in the \pkg{marginaleffects}
+package. This allows you to define the regions of the predictor space
+where you want to evaluate the quantities of interest. See
+\code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} for more details. By default, the
+\code{datagrid} is set to \code{NULL}, meaning no custom grid is constructed.
+To set a custom grid, the argument should either be a data frame created
+using \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}, or a named list, which is internally
+used for constructing the grid. For convenience, you can also pass an empty
+list \code{datagrid = list()}, in which case essential arguments like
+\code{model} and \code{newdata} are inferred from the respective arguments
+specified elsewhere. Additionally, the first-level predictor (such as age)
+and any covariates included in the model (e.g., gender) are automatically
 inferred from the \code{model} object.}
 
-\item{re_formula}{Option to indicate whether or not to include the
+\item{re_formula}{Option to indicate whether or not to include
 individual/group-level effects in the estimation. When \code{NA} (default),
-the individual-level effects are excluded and therefore population average
-growth parameters are computed. When \code{NULL}, individual-level effects
-are included in the computation and hence the growth parameters estimates
-returned are individual-specific. In both situations, (i.e,, \code{NA} or
-\code{NULL}), continuous and factor covariate(s) are appropriately included
-in the estimation. The continuous covariates by default are set to their
-means (see \code{numeric_cov_at} for details) whereas factor covariates are
-left unaltered thereby allowing estimation of covariate specific population
-average and individual-specific growth parameter.}
+individual-level effects are excluded, and population average growth
+parameters are computed. When \code{NULL}, individual-level effects are
+included in the computation, and the resulting growth parameters are
+individual-specific. In both cases (\code{NA} or \code{NULL}), continuous
+and factor covariates are appropriately included in the estimation.
+Continuous covariates are set to their means by default (see
+\code{numeric_cov_at} for details), while factor covariates remain
+unaltered, allowing for the estimation of covariate-specific population
+average and individual-specific growth parameters.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -141,216 +140,228 @@ situations where relatively few levels where observed in the old_data. If
 where a new level is assigned all of the posterior draws of the same
 (randomly chosen) existing level.}
 
-\item{parameter}{A single character string, or a character vector specifying
-the growth parameter(s) to be estimated. Options are \code{'tgv'} (takeoff
-growth velocity), \code{'atgv'} (age at takeoff growth velocity),
+\item{parameter}{A single character string or a character vector specifying
+the growth parameter(s) to be estimated. Options include \code{'tgv'}
+(takeoff growth velocity), \code{'atgv'} (age at takeoff growth velocity),
 \code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
-velocity), \code{'cgv'} (cessation growth velocity), and \code{'acgv'} (age
-at cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
-(default), age at peak growth velocity (\code{'apgv'}) is estimated where
-when \code{parameter = 'all'}, all six parameters are estimated. Note that
-option \code{'all'} can not be used when argument \code{by} is \code{TRUE}.}
+velocity), \code{'cgv'} (cessation growth velocity), \code{'acgv'} (age at
+cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
+(default), age at peak growth velocity (\code{'apgv'}) is estimated. When
+\code{parameter = 'all'}, all six parameters are estimated. Note that the
+\code{'all'} option cannot be used when the \code{by} argument is set to
+\code{TRUE}.}
 
-\item{xrange}{An integer to set the predictor range (i.e., age) when
-executing the interpolation via \code{ipts}. The default \code{NULL} sets
-the individual specific predictor range whereas code \code{xrange = 1} sets
-identical range for individuals within the same higher grouping variable
-(e.g., study). Code \code{xrange  = 2} sets the identical range across the
-entire sample. Lastly, a paired numeric values can be supplied e.g.,
-\code{xrange = c(6, 20)} to set the range within those values.}
+\item{xrange}{An integer to set the predictor range (e.g., age) when
+executing the interpolation via \code{ipts}. By default, \code{NULL} sets
+the individual-specific predictor range. Setting \code{xrange = 1} applies
+the same range for individuals within the same higher grouping variable
+(e.g., study). Setting \code{xrange = 2} applies an identical range across
+the entire sample. Alternatively, a numeric vector (e.g., \code{xrange =
+  c(6, 20)}) can be provided to set the range within the specified values.}
 
-\item{acg_velocity}{A real number to set the percentage of peak growth growth
-velocity as the cessation velocity when estimating the \code{cgv} and
-\code{acgv} growth parameters. The \code{acg_velocity} should be greater
-than \code{0} and less than \code{1}. The default \code{acg_velocity =
-  0.10} indicates that a 10 per cent of the peak growth velocity will be used
-to get the cessation velocity and the corresponding age at the cessation
-velocity. For example if peak growth velocity estimate is \code{10
-  mm/year}, then cessation growth velocity is \code{1 mm/year}.}
+\item{acg_velocity}{A real number specifying the percentage of peak growth
+velocity to be used as the cessation velocity when estimating the
+\code{cgv} and \code{acgv} growth parameters. The \code{acg_velocity}
+should be greater than \code{0} and less than \code{1}. The default value
+of \code{acg_velocity = 0.10} indicates that 10 percent of the peak growth
+velocity will be used to calculate the cessation growth velocity and the
+corresponding age at cessation velocity. For example, if the peak growth
+velocity estimate is \code{10 mm/year}, then the cessation growth velocity
+will be \code{1 mm/year}.}
 
-\item{digits}{An integer (default \code{2}) to set the decimal argument for
-the \code{\link[base:Round]{base::round()}} function.}
+\item{digits}{An integer (default \code{2}) to set the decimal places for
+rounding the results using the \code{\link[base:Round]{base::round()}} function.}
 
 \item{numeric_cov_at}{An optional (named list) argument to specify the value
-of continuous covariate(s). The default \code{NULL} option set the
-continuous covariate(s) at their mean. Alternatively, a named list can be
+of continuous covariate(s). The default \code{NULL} option sets the
+continuous covariate(s) to their mean. Alternatively, a named list can be
 supplied to manually set these values. For example, \code{numeric_cov_at =
-  list(xx = 2)} will set the continuous covariate varibale 'xx' at 2. The
-argument \code{numeric_cov_at} is ignored when no continuous covariate is
+  list(xx = 2)} will set the continuous covariate variable 'xx' to 2. The
+argument \code{numeric_cov_at} is ignored when no continuous covariates are
 included in the model.}
 
 \item{aux_variables}{An optional argument to specify the variable(s) that can
 be passed to the \code{ipts} argument (see below). This is useful when
-fitting location scale models and measurement error models. An
-indication to use \code{aux_variables} is when post processing functions
-throw an error such as \code{variable 'x' not found either 'data' or
- 'data2'}}
+fitting location-scale models and measurement error models. If
+post-processing functions throw an error such as \code{variable 'x' not
+  found in either 'data' or 'data2'}, consider using \code{aux_variables}.}
 
-\item{levels_id}{An optional argument to specify the \code{ids} for
-hierarchical model (default \code{NULL}). It is used only when model is
-applied to the data with 3 or more levels of hierarchy. For a two level
-model, the \code{levels_id} is automatically inferred from the model fit.
-Even for 3 or higher level model, the \code{levels_id} is inferred from the
-model fit but under the assumption that hierarchy is specified from lowest
-to upper most level i.e, \code{id} followed by \code{study} where \code{id}
-is nested within the \code{study} Note that it is not guaranteed that the
-\code{levels_id} is sorted correctly, and therefore it is better to set it
-manually when fitting a model with three or more levels of hierarchy.}
+\item{levels_id}{An optional argument to specify the \code{ids} for the
+hierarchical model (default \code{NULL}). It is used only when the model is
+applied to data with three or more levels of hierarchy. For a two-level
+model, \code{levels_id} is automatically inferred from the model fit. For
+models with three or more levels, \code{levels_id} is inferred from the
+model fit under the assumption that hierarchy is specified from the lowest
+to the uppermost level, i.e., \code{id} followed by \code{study}, where
+\code{id} is nested within \code{study}. However, it is not guaranteed that
+\code{levels_id} is sorted correctly, so it is better to set it manually
+when fitting a model with three or more levels of hierarchy.}
 
 \item{avg_reffects}{An optional argument (default \code{NULL}) to calculate
-(marginal/average) curves and growth parameters such as APGV and PGV. If
-specified, it must be a named list indicating the \code{over} (typically
+(marginal/average) curves and growth parameters, such as APGV and PGV. If
+specified, it must be a named list indicating the \code{over} (typically a
 level 1 predictor, such as age), \code{feby} (fixed effects, typically a
-factor variable), and  \code{reby} (typically \code{NULL} indicating that
-parameters are integrated over the random effects) such as
+factor variable), and \code{reby} (typically \code{NULL}, indicating that
+parameters are integrated over the random effects). For example,
 \code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age')}.}
 
 \item{idata_method}{A character string to indicate the interpolation method.
-The number of of interpolation points is set up the \code{ipts} argument.
-Options available for \code{idata_method} are \emph{method 1} (specified as
-\code{'m1'}) and \emph{method 2} (specified as \code{'m2'}). The
-\emph{method 1} (\code{'m1'}) is adapted from the the \pkg{iapvbs} package
-and is documented here
-\url{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}
-whereas \emph{method 2} (\code{'m2'}) is based on the \pkg{JMbayes}
-package as documented here
-\url{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}.
-The \code{'m1'} method works by internally constructing the data frame based
-on the model configuration whereas the method \code{'m2'} uses the exact
-data frame used in model fit and can be accessed via \code{fit$data}. If
-\code{idata_method = NULL, default}, then method \code{'m2'} is
-automatically set. Note that method \code{'m1'} might fail in some cases
-when model involves covariates particularly when model is fit as
-\code{univariate_by}. Therefore, it is advised to switch to method
-\code{'m2'} in case \code{'m1'} results in error.}
+The number of interpolation points is set by the \code{ipts} argument.
+Available options for \code{idata_method} are \emph{method 1} (specified as
+\code{'m1'}) and \emph{method 2} (specified as \code{'m2'}).
+\itemize{
+\item \emph{Method 1} (\code{'m1'}) is adapted from the \pkg{iapvbs} package
+and is documented
+\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}.
+\item \emph{Method 2} (\code{'m2'}) is based on the \pkg{JMbayes} package
+and is documented
+\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}.
+The \code{'m1'} method works by internally constructing the data frame
+based on the model configuration, while the \code{'m2'} method uses the
+exact data frame from the model fit, accessible via \code{fit$data}. If
+\code{idata_method = NULL} (default), method \code{'m2'} is automatically
+selected. Note that method \code{'m1'} may fail in certain cases,
+especially when the model includes covariates (particularly in
+\code{univariate_by} models). In such cases, it is recommended to use
+method \code{'m2'}.
+}}
 
-\item{ipts}{An integer to set the length of the predictor variable to get a
-smooth velocity curve. The \code{NULL} will return original values whereas
-an integer such as \code{ipts = 10} (default) will interpolate the
-predictor. It is important to note that these interpolations do not alter
-the range of predictor when calculating population average and/or the
-individual specific growth curves.}
+\item{ipts}{An integer to set the length of the predictor variable for
+generating a smooth velocity curve. If \code{NULL}, the original values are
+returned. If an integer (e.g., \code{ipts = 10}, default), the predictor is
+interpolated. Note that these interpolations do not alter the range of the
+predictor when calculating population averages and/or individual-specific
+growth curves.}
 
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
-method.}
+method to ensure reproducibility.}
 
-\item{future}{A logical (default \code{FALSE}) to specify whether or not to
-perform parallel computations. If set to \code{TRUE}, the
-\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}} function is used to summarize draws.}
+\item{future}{A logical value (default \code{FALSE}) to specify whether or
+not to perform parallel computations. If set to \code{TRUE}, the
+\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}} function is used to summarize the posterior
+draws in parallel.}
 
-\item{future_session}{A character string to set the session type when
-\code{future = TRUE}. The \code{'multisession'} (default) options sets the
-multisession whereas the \code{'multicore'} sets the multicore session.
-Note that option \code{'multicore'} is not supported on Windows systems.
-For more details, see \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
+\item{future_session}{A character string specifying the session type when
+\code{future = TRUE}. The \code{'multisession'} (default) option sets the
+multisession environment, while the \code{'multicore'} option sets up a
+multicore session. Note that \code{'multicore'} is not supported on Windows
+systems. For more details, see \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
 
-\item{future_splits}{A unnamed numeric list, a logical, or a numeric vector
-of length of one or two (default \code{NULL}). The user can pass
-\code{future_splits} as a list such as \code{future_splits = list(1:6,
-  7:10)} where each sequence of number are passed to the \code{draw_ids}
-argument. The \code{future_splits} can be passed as a numeric vector (e.g.,
-future_splits = c(10, 2)) where first element is the number of draws (see
-\code{draw_ids}) and the second elements is the number of splits. In this
-case, the splits are created via the \code{\link[parallel:splitIndices]{parallel::splitIndices()}}. when
-\code{future_splits} is passed as a numeric vector of length one, then
-first element is internally set as \code{ndraws} or \code{draw_ids}
-depending on which of them is not \code{NULL}. If \code{future_splits} is
-\code{TRUE}, then numeric vector for \code{future_splits} is created based
-on the \code{ndraws} and the \code{cores}. Ignored when \code{future_splits
-  = FALSE}. The use case of \code{future_splits} is to save memory and speed
-especially on \code{Linux} system and setting \code{\link[future:plan]{future::plan()}} as
-\code{multicore}. Note that in case future session is interrupted, the R
-processes may not be freed automatically for Windows systems when plan is
-\code{'multisession'}. In that case, the R processes can be interrupted via
-\code{\link[installr:kill_all_Rscript_s]{installr::kill_all_Rscript_s()}}.}
+\item{future_splits}{A list (default \code{NULL}) that can be an unnamed
+numeric list, a logical value, or a numeric vector of length 1 or 2. It is
+used to split the processing of posterior draws into smaller subsets for
+parallel computation.
+\itemize{
+\item If passed as a list (e.g., \code{future_splits = list(1:6, 7:10)}),
+each sequence of
+numbers is passed to the \code{draw_ids} argument.
+\item If passed as a numeric vector (e.g., \code{future_splits = c(10, 2)}),
+the first element
+specifies the number of draws (see \code{draw_ids}) and the second element
+indicates the number of splits. The splits are created using
+\code{\link[parallel:splitIndices]{parallel::splitIndices()}}.
+\item If passed as a numeric vector of length 1, the first element is
+internally set as the
+number of draws (\code{ndraws} or \code{draw_ids}) depending on which one
+is not \code{NULL}.
+\item If \code{TRUE}, a numeric vector for \code{future_splits} is created
+based on the number
+of draws (\code{ndraws}) and the number of cores (\code{cores}).
+\item If \code{FALSE}, \code{future_splits} is ignored.
+The use case for \code{future_splits} is to save memory and improve
+performance, especially on \code{Linux} systems when \code{future::plan()}
+is set to \code{multicore}. Note: on Windows systems, R processes may not
+be freed automatically when using \code{'multisession'}. In such cases, the
+R processes can be interrupted using \code{\link[installr:kill_all_Rscript_s]{installr::kill_all_Rscript_s()}}.
+}}
 
-\item{future_method}{A character string to indicate whether to use
-\code{\link[future:future]{future::future()}} along with the \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}
-(\code{future_method = 'future'}, default), or to use \code{\link[foreach:foreach]{foreach::foreach()}}
-with \code{'dofuture'} function from the \code{doFuture} package for
-parallel operations.}
+\item{future_method}{A character string (default \code{'future'}) to specify
+the method for parallel computation. Options include:
+\itemize{
+\item \code{'future'}: Uses \code{\link[future:future]{future::future()}} along with \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}
+for parallel execution.
+\item \code{'foreach'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} with the \code{'dofuture'} function from
+the \code{doFuture} package for parallel execution.
+}}
 
-\item{future_re_expose}{A logical to indicate whether to re expose
-\code{Stan} functions when \code{future = TRUE}. This is particularly
-relevant when \code{\link[future:plan]{future::plan()}} is set up as \code{'multisession'}. This is
-because already exposed \code{c++} \code{Stan} functions can not be passed
-across multiple sessions. When \code{future_re_expose = NULL} (default),
-the \code{future_re_expose} is automatically set as \code{TRUE} for the
-\code{'multisession'} plan. It is advised to set \code{future_re_expose =
-  TRUE} for speed gains.}
+\item{future_re_expose}{A logical (default \code{NULL}) to indicate whether
+to re-expose \code{Stan} functions when \code{future = TRUE}. This is
+especially relevant when \code{\link[future:plan]{future::plan()}} is set to \code{'multisession'},
+as already exposed C++ \code{Stan} functions cannot be passed across
+multiple sessions.
+\itemize{
+\item When \code{future_re_expose = NULL} (the default), \code{future_re_expose} is automatically
+set to \code{TRUE} for the \code{'multisession'} plan.
+\item It is advised to explicitly set \code{future_re_expose = TRUE} for speed gains when using
+parallel processing with \code{future = TRUE}.
+}}
 
-\item{usedtplyr}{A logical (default \code{FALSE}) to indicate whether to use
-the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}
-package uses the \pkg{data.table} package as back-end. Note that
-\code{usedtplyr}is useful only when the data has a large number of
-observation. For routine uses, the \code{usedtplyr} does not make a large
-difference in the performance because the \pkg{marginaleffects} package
-itself uses the \pkg{data.table} package. The \code{usedtplyr} argument is
-evaluated only when the \code{method = 'custom'}.}
+\item{usedtplyr}{A logical (default \code{FALSE}) indicating whether to use
+the \pkg{dtplyr} package for summarizing the draws. This package uses
+\pkg{data.table} as a back-end. It is useful when the data has a large
+number of observations. For typical use cases, it does not make a
+significant performance difference. The \code{usedtplyr} argument is
+evaluated only when \code{method = 'custom'}.}
 
 \item{usecollapse}{A logical (default \code{FALSE}) to indicate whether to
 use the \pkg{collapse} package for summarizing the draws.}
 
-\item{cores}{Number of cores to be used when running the parallel
-computations (if \code{future = TRUE}). On non-Windows systems this
-argument can be set globally via the mc.cores option. For the default
-\code{NULL} option, the number of cores are set automatically by calling
-the \code{\link[future:re-exports]{future::availableCores()}}. The number of cores used are the maximum
-number of cores avaialble minus one, i.e., \code{future::availableCores() -
-  1}.}
+\item{cores}{The number of cores to be used for parallel computations if
+\code{future = TRUE}. On non-Windows systems, this argument can be set
+globally via the \code{mc.cores} option. By default, \code{NULL}, the
+number of cores is automatically determined using
+\code{\link[future:re-exports]{future::availableCores()}}, and it will use the maximum number of cores
+available minus one (i.e., \code{future::availableCores() - 1}).}
 
-\item{fullframe}{A logical to indicate whether to return \code{fullframe}
-object in which \code{newdata} is bind to the summary estimates. Note that
-\code{fullframe} can not be combined with \code{summary = FALSE}.
-Furthermore, \code{fullframe} can only be used when \code{idata_method =
-  'm2'}. A particular use case is when fitting \code{univariate_by} model.
-The \code{fullframe} is mainly for internal use only.}
+\item{fullframe}{A logical value indicating whether to return a
+\code{fullframe} object in which \code{newdata} is bound to the summary
+estimates. Note that \code{fullframe} cannot be used with \code{summary =
+  FALSE}, and it is only applicable when \code{idata_method = 'm2'}. A
+typical use case is when fitting a \code{univariate_by} model. This option
+is mainly for internal use.}
 
-\item{average}{A logical to indicate whether to internally call the
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or the
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} function. If \code{FALSE} (default),
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} is called otherwise
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} when \code{average = TRUE}.}
-
-\item{plot}{A logical to specify whether to plot predictions by calling the
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} function (\code{FALSE}) or not
-(\code{FALSE}). If \code{FALSE} (default), then
+\item{average}{A logical indicating whether to internally call the
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}
-are called to compute predictions (see \code{average} for details). Note
-that \code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} allows either \code{condition}
-or \code{by} arguments but not both. Therefore, when argument
-\code{condition} is not \code{NULL}, the \code{by} argument is set to
-\code{NULL}. This step is required because \strong{marginal_draws()}
-automatically assigns the \code{by} argument when model includes a co
-variate.}
+function. If \code{FALSE} (default), \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} is
+called; otherwise, \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} is used when
+\code{average = TRUE}.}
 
-\item{showlegends}{An argument to specify whether to show legends
-(\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
+\item{plot}{A logical specifying whether to plot predictions by calling
+\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} (\code{TRUE}) or not (\code{FALSE}).
+If \code{FALSE} (default), \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or
+\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} are called to compute predictions (see
+\code{average} for details). Note that
+\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} allows either \code{condition} or
+\code{by} arguments, but not both. Therefore, when the \code{condition}
+argument is not \code{NULL}, the \code{by} argument is set to \code{NULL}.
+This step is required because \strong{marginal_draws()} automatically
+assigns the \code{by} argument when the model includes a covariate.}
+
+\item{showlegends}{A logical value to specify whether to show legends
+(\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), the value of
 \code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
   NA}, and \code{FALSE} if \code{re_formula = NULL}.}
 
-\item{variables}{For estimating growth parameters in the current use case,
-the \code{variables} is the level 1 predictor such as
-\code{age}/\code{time}. The \code{variables} is a named list where value is
-set via the \code{esp} argument (default 1e-6). If \code{NULL}, the
-\code{variables} is set internally by retrieving the relevant information
-from the \code{model}. Otherwise, user can define it as follows:
-\code{variables = list('x' = 1e-6)} where \code{'x'} is the level 1
-predictor. Note that \code{variables = list('age' = 1e-6)} is the default
-behavior for the \pkg{marginaleffects} because velocity is typically
-calculated by differentiating the distance curve via \code{dydx} approach,
-and therefore argument \code{deriv} is automatically set as \code{0} and
-\code{deriv_model} as \code{FALSE}. If user want to estimate parameters
-based on the model based first derivative, then argument \code{deriv} must
-be set as \code{1} and internally argument \code{variables} is defined as
-\code{variables = list('age' = 0)} i.e, original level 1 predictor
-variable, \code{'x'}. It is important to consider that if default behavior
-is used i.e, \code{deriv = 0} and \code{variables = list('x' = 1e-6)}, then
-user can not pass additional arguments to the \code{variables} argument. On
-the other hand, alternative approach i.e, \code{deriv = 0} and
-\code{variables = list('x' = 0)}, additional options can be passed to the
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
-functions.}
+\item{variables}{A named list specifying the level 1 predictor, such as
+\code{age} or \code{time}, used for estimating growth parameters in the
+current use case. The \code{variables} list is set via the \code{esp}
+argument (default value is \code{1e-6}). If \code{variables} is
+\code{NULL}, the relevant information is retrieved internally from the
+\code{model}. Alternatively, users can define \code{variables} as a named
+list, e.g., \code{variables = list('x' = 1e-6)} where \code{'x'} is the
+level 1 predictor. By default, \code{variables = list('age' = 1e-6)} in the
+\pkg{marginaleffects} package, as velocity is usually computed by
+differentiating the distance curve using the \code{dydx} approach. When
+using this default, the argument \code{deriv} is automatically set to
+\code{0} and \code{deriv_model} to \code{FALSE}. If parameters are to be
+estimated based on the model's first derivative, \code{deriv} must be set
+to \code{1} and \code{variables} will be defined as \code{variables =
+  list('age' = 0)}. Note that if the default behavior is used (\code{deriv =
+  0} and \code{variables = list('x' = 1e-6)}), additional arguments cannot be
+passed to \code{variables}. In contrast, when using an alternative approach
+(\code{deriv = 0} and \code{variables = list('x' = 0)}), additional options
+can be passed to the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions.}
 
 \item{condition}{Conditional predictions
 \itemize{
@@ -365,57 +376,62 @@ functions.}
 \item Numeric variables in positions 2 and 3 are summarized by Tukey's five numbers \code{?stats::fivenum}
 }}
 
-\item{deriv}{An integer to indicate whether to estimate distance curve or its
-derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
-the distance curve whereas \code{deriv = 1} for the velocity curve.}
+\item{deriv}{An integer to indicate whether to estimate the distance curve or
+its derivative (i.e., velocity curve). The \code{deriv = 0} (default) is
+for the distance curve, whereas \code{deriv = 1} is for the velocity curve.}
 
-\item{deriv_model}{A logical to specify whether to estimate velocity curve
-from the derivative function, or the differentiation of the distance curve.
-The argument \code{deriv_model} is set to \code{TRUE} for those functions
-which need velocity curve such as \code{growthparameters()} and
-\code{plot_curves()}, and \code{NULL} for functions which explicitly use
-the distance curve (i.e., fitted values) such as \code{loo_validation()}
-and \code{plot_ppc()}.}
+\item{deriv_model}{A logical value specifying whether to estimate the
+velocity curve from the derivative function or by differentiating the
+distance curve. Set \code{deriv_model = TRUE} for functions that require
+the velocity curve, such as \code{growthparameters()} and
+\code{plot_curves()}. Set it to \code{NULL} for functions that use the
+distance curve (i.e., fitted values), such as \code{loo_validation()} and
+\code{plot_ppc()}.}
 
-\item{method}{A character string to specify whether to make computation at
-post draw stage by using the \code{'marginaleffects'} machinery i.e.,
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}) or via
-the custom functions written for efficiency and speed (\code{method =
-  'custom'}, default). Note that \code{method = 'custom'} is useful and
-rather needed when testing hypotheses. Note that when \code{method =
-  'custom'}, \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and not the
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} is used internally.}
+\item{method}{A character string specifying the computation method: whether
+to use the \pkg{marginaleffects} machinery at the post-draw stage, i.e.,
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}) or to use custom
+functions for efficiency and speed (\code{method = 'custom'}, default).
+Note that \code{method = 'custom'} is particularly useful when testing
+hypotheses. Also, when \code{method = 'custom'},
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} is used internally instead of
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}.}
 
-\item{marginals}{A \code{list}, \code{data.frame}, or a \code{tibble}
-returned from the \pkg{marginaleffects} functions (default \code{NULL}).
-The \code{marginals} is evaluated only when \code{method = 'custom'}. The
-\code{marginals} can be in a form of direct output from the
-\pkg{marginaleffects} functions or as posterior draws i.e.,
-\code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}. The \code{marginals} is mainly for
-internal use only.}
+\item{marginals}{A \code{list}, \code{data.frame}, or \code{tibble} returned
+by the \pkg{marginaleffects} functions (default \code{NULL}). This is only
+evaluated when \code{method = 'custom'}. The \code{marginals} can be the
+output from \pkg{marginaleffects} functions or posterior draws from
+\code{marginaleffects::posterior_draws()}. The \code{marginals} argument is
+primarily used for internal purposes.}
 
 \item{pdrawso}{A character string (default \code{FALSE}) to indicate whether
-to return the original posterior draws for parameters (if \code{pdrawso =
-  'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
-When \code{pdrawso = TRUE}, then default behavior is \code{pdrawso =
-  'return'}. Note that posterior draws are returned before calling the
+to return the original posterior draws for parameters. Options include:
+\itemize{
+\item \code{'return'}: returns the original posterior draws,
+\item \code{'add'}: adds the original posterior draws to the outcome.
+}
+When \code{pdrawso = TRUE}, the default behavior is \code{pdrawso =
+  'return'}. Note that the posterior draws are returned before calling
 \code{\link[marginaleffects:posterior_draws]{marginaleffects::posterior_draws()}}.}
 
 \item{pdrawsp}{A character string (default \code{FALSE}) to indicate whether
-to return the posterior draws for parameters (if \code{pdrawsp =
-  'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
-When \code{pdrawsp = TRUE}, then default behavior is \code{pdrawsp =
-  'return'}. Note that summary of posterior draws for parameters is the
-default returned object. The \code{pdrawsp} are the parameter estimates for
-each of the posterior sample. The summary of these \code{pdrawsp} are the
-estimates returned.}
+to return the posterior draws for parameters. Options include:
+\itemize{
+\item \code{'return'}: returns the posterior draws for parameters,
+\item \code{'add'}: adds the posterior draws to the outcome.
+}
+When \code{pdrawsp = TRUE}, the default behavior is \code{pdrawsp =
+  'return'}. The \code{pdrawsp} represent the parameter estimates for each of
+the posterior samples, and the summary of these are the estimates returned.}
 
 \item{pdrawsh}{A character string (default \code{FALSE}) to indicate whether
-to return the posterior draws for parameters (if \code{pdrawsh =
-  'return'}). Note that summary of posterior draws for parameters is the
-default returned object. The \code{pdrawsh} are the parameter contrast
-estimates for each of the posterior sample. The summary of these
-\code{pdrawsp} are the contrast returned.}
+to return the posterior draws for parameter contrasts. Options include:
+\itemize{
+\item \code{'return'}: returns the posterior draws for contrasts.
+}
+The summary of posterior draws for parameters is the default returned
+object. The \code{pdrawsh} represent the contrast estimates for each of the
+posterior samples, and the summary of these are the contrast returned.}
 
 \item{type}{string indicates the type (scale) of the predictions used to
 compute contrasts or slopes. This can differ based on the model
@@ -437,10 +453,10 @@ first entry in the error message is used by default.}
 \item{conf_level}{numeric value between 0 and 1. Confidence level to use to build a confidence interval.}
 
 \item{transform}{A function applied to individual draws from the posterior
-distribution, before computing summaries. The argument \code{transform} is
-based on the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}. This should not be confused
-with the \code{transform} from the \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} which is now
-deprecated.}
+distribution before computing summaries. The argument \code{transform} is
+based on the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function. This should not be
+confused with \code{transform} from \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}}, which is
+now deprecated.}
 
 \item{byfun}{A function such as \code{mean()} or \code{sum()} used to aggregate
 estimates within the subgroups defined by the \code{by} argument. \code{NULL} uses the
@@ -507,114 +523,92 @@ levels. See examples section.}
 \item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. See Details section below.}
 
 \item{constrats_by}{A character vector (default \code{NULL}) specifying the
-variable(s) by which hypotheses (post draw stage) should be tested
-(see \code{hypothesis} argument). Note that variable(s)
-specified in the \code{constrats_by} should be sub set of the variables
-included in the \code{'by'} argument.}
+variable(s) by which hypotheses (at the post-draw stage) should be tested.
+Note that the variable(s) in \code{constrats_by} should be a subset of the
+variables included in the \code{'by'} argument.}
 
 \item{constrats_at}{A character vector (default \code{NULL}) specifying the
-variable(s) at which hypotheses (post draw stage) should be tested (see
-\code{hypothesis} argument). Note that variable(s) specified in the
-\code{constrats_at} should be sub set of the variables included in the
-\code{'by'} argument. The \code{constrats_at} is particularly useful when
-number of rows in the estimates is large. This is because the
-\pkg{marginaleffects} does not allow hypotheses testing when the number of
-rows in the estimates is more that 25.}
+variable(s) at which hypotheses (at the post-draw stage) should be tested.
+\code{constrats_at} is particularly useful when the number of rows in the
+estimates is large because \pkg{marginaleffects} does not allow hypotheses
+testing when the number of rows exceeds 25.}
 
-\item{reformat}{A logical (default \code{TRUE}) to reformat the  output
-returned by the \code{marginaleffects} as a data.frame with column names
-re-defined as follows: \code{conf.low} as \code{Q2.5}, and \code{conf.high}
-as \code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following
-columns are dropped from the data frame: \code{term}, \code{contrast},
-\code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.}
+\item{reformat}{A logical (default \code{TRUE}) indicating whether to
+reformat the output returned by \code{marginaleffects} as a data frame.
+Column names are redefined as \code{conf.low} to \code{Q2.5} and
+\code{conf.high} to \code{Q97.5} (assuming \code{conf_int = 0.95}).
+Additionally, some columns (\code{term}, \code{contrast}, etc.) are dropped
+from the data frame.}
 
-\item{estimate_center}{A character string (default \code{NULL}) to specify
-whether to center estimate as \code{'mean'} or as \code{'median'}. Note
-that \code{estimate_center} is used to set the global options as follows:
-\cr
-\code{ options("marginaleffects_posterior_center" = "mean")}, or \cr
-\code{options("marginaleffects_posterior_center" = "median")} \cr
-The pre-specified global options are restored on exit via the
-\code{\link[base:on.exit]{base::on.exit()}}.}
+\item{estimate_center}{A character string (default \code{NULL}) specifying
+how to center estimates: either \code{'mean'} or \code{'median'}. This
+option sets the global options as follows:
+\code{options("marginaleffects_posterior_center" = "mean")} or
+\code{options("marginaleffects_posterior_center" = "median")}. These global
+options are restored upon function exit using \code{\link[base:on.exit]{base::on.exit()}}.}
 
 \item{estimate_interval}{A character string (default \code{NULL}) to specify
-whether to compute credible intervals as equal-tailed intervals,
-\code{'eti'} or highest density intervals, \code{'hdi'}. Note that
-\code{estimate_interval} is used to set the global options as follows: \cr
-\code{ options("marginaleffects_posterior_interval" = "eti")}, or \cr
-\code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
-The pre-specified global options are restored on exit via the
-\code{\link[base:on.exit]{base::on.exit()}}.}
+the type of credible intervals: \code{'eti'} for equal-tailed intervals or
+\code{'hdi'} for highest density intervals. This option sets the global
+options as follows: \code{options("marginaleffects_posterior_interval" =
+  "eti")} or \code{options("marginaleffects_posterior_interval" = "hdi")},
+and is restored on exit using \code{\link[base:on.exit]{base::on.exit()}}.}
 
-\item{dummy_to_factor}{A named list (default \code{NULL}) that is used to
-convert dummy variables into a factor variable. The named elements are
-\code{factor.dummy}, \code{factor.name}, and \code{factor.level}. The
-\code{factor.dummy} is a vector of character strings that need to be
-converted to a factor variable whereas the \code{factor.name} is a single
-character string that is used to name the newly created factor variable.
-The \code{factor.level} is used to name the levels of newly created factor.
-When \code{factor.name} is \code{NULL}, then the factor name is internally
-set as \code{'factor.var'}. If \code{factor.level} is \code{NULL}, then
-names of factor levels are take from the \code{factor.dummy} i.e., the
-factor levels are assigned same name as \code{factor.dummy}. Note that when
-\code{factor.level} is not \code{NULL}, its length must be same as the
-length of the \code{factor.dummy}.}
+\item{dummy_to_factor}{A named list (default \code{NULL}) to convert dummy
+variables into a factor variable. The list must include the following
+elements:
+\itemize{
+\item \code{factor.dummy}: A character vector of dummy variables to be
+converted to factors.
+\item \code{factor.name}: The name for the newly created factor variable
+(default is \code{'factor.var'} if \code{NULL}).
+\item \code{factor.level}: A vector specifying the factor levels.
+If \code{NULL}, levels are taken from \code{factor.dummy}.
+If \code{factor.level} is provided, its length must match
+\code{factor.dummy}.
+}}
 
-\item{verbose}{An optional argument (logical, default \code{FALSE}) to
-indicate whether to print information collected during setting up the
-object(s).}
+\item{verbose}{A logical argument (default \code{FALSE}) to specify whether
+to print information collected during the setup of the object(s).}
 
-\item{expose_function}{An optional logical argument to indicate whether to
-expose Stan functions (default \code{FALSE}). Note that if user has already
-exposed Stan functions during model fit by setting \code{expose_function =
-  TRUE} in the \code{\link[=bsitar]{bsitar()}}, then those exposed functions are saved and can be
-used during post processing of the posterior draws and therefore
-\code{expose_function} is by default set as \code{FALSE} in all post
-processing functions except \code{\link[=optimize_model]{optimize_model()}}. For \code{\link[=optimize_model]{optimize_model()}}, the
-default setting is \code{expose_function = NULL}. The reason is that each
-optimized model has different Stan function and therefore it need to be re
-exposed and saved. The \code{expose_function = NULL} implies that the
-setting for \code{expose_function} is taken from the original \code{model}
-fit. Note that \code{expose_function} must be set to \code{TRUE} when
-adding \code{fit criteria} and/or \code{bayes_R2} during model
-optimization.}
+\item{expose_function}{A logical argument (default \code{FALSE}) to indicate
+whether Stan functions should be exposed. If \code{TRUE}, any Stan
+functions exposed during the model fit using \code{expose_function = TRUE}
+in the \code{\link[=bsitar]{bsitar()}} function are saved and can be used in post-processing. By
+default, \code{expose_function = FALSE} in post-processing functions,
+except in \code{\link[=optimize_model]{optimize_model()}} where it is set to \code{NULL}. If
+\code{NULL}, the setting is inherited from the original model fit. It must
+be set to \code{TRUE} when adding \code{fit criteria} or \code{bayes_R2}
+during model optimization.}
 
-\item{usesavedfuns}{A logical (default \code{NULL}) to indicate whether to
-use the already exposed and saved \code{Stan} functions. Depending on
-whether the user have exposed Stan functions within the \code{\link[=bsitar]{bsitar()}} call via
-\code{expose_functions} argument in the \code{\link[=bsitar]{bsitar()}}, the \code{usesavedfuns}
-is automatically set to \code{TRUE} (if \code{expose_functions = TRUE}) or
-\code{FALSE} (if \code{expose_functions = FALSE}). Therefore, manual
-setting of \code{usesavedfuns} as \code{TRUE}/\code{FALSE} is rarely
-needed. This is for internal purposes only and mainly used during the
-testing of the functions and therefore should not be used by users as it
-might lead to unreliable estimates.}
+\item{usesavedfuns}{A logical value (default \code{NULL}) indicating whether
+to use already exposed and saved Stan functions. This is typically set
+automatically based on the \code{expose_functions} argument from the
+\code{\link[=bsitar]{bsitar()}} call. Manual specification of \code{usesavedfuns} is rarely
+needed and is intended for internal testing, as improper use can lead to
+unreliable estimates.}
 
-\item{clearenvfuns}{A logical to indicate whether to clear the exposed
-function from the environment (\code{TRUE}) or not (\code{FALSE}). If
-\code{NULL} (default), then \code{clearenvfuns} is set as \code{TRUE} when
-\code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
-is \code{FALSE}.}
+\item{clearenvfuns}{A logical value indicating whether to clear the exposed
+Stan functions from the environment (\code{TRUE}) or not (\code{FALSE}). If
+\code{NULL}, \code{clearenvfuns} is set based on the value of
+\code{usesavedfuns}: \code{TRUE} if \code{usesavedfuns = TRUE}, or
+\code{FALSE} if \code{usesavedfuns = FALSE}.}
 
-\item{funlist}{A list (default \code{NULL}) to set function names. This is
-rarely used because required functions are automatically retrieved
-internally. A use case of \code{funlist} when \code{sigma_formula},
-\code{sigma_formula_gr}, or \code{sigma_formula_gr_str} uses a function
-such as \code{poly(age)}. See \code{bsitar::bsitar()} for details. The
-\code{funlist} provides list of function names which have been defined
-externally and are available in the \code{\link[base:environment]{base::globalenv()}}. Note that for
-functions that need distance and velocity curves such as
-\code{plot_curves(..., opt = 'dv')}, the \code{funlist} must include two
-functions where first will be used for the distance and second for the
-velocity.}
+\item{funlist}{A list (default \code{NULL}) specifying function names. This
+is rarely needed, as required functions are typically retrieved
+automatically. A use case for \code{funlist} is when \code{sigma_formula},
+\code{sigma_formula_gr}, or \code{sigma_formula_gr_str} use an external
+function (e.g., \code{poly(age)}). The \code{funlist} should include
+function names defined in the \code{globalenv()}. For functions needing
+both distance and velocity curves (e.g., \code{plot_curves(..., opt =
+  'dv')}), \code{funlist} must include two functions: one for the distance
+curve and one for the velocity curve.}
 
-\item{envir}{Environment used for function evaluation. The default is
-\code{NULL} which will set \code{parent.frame()} as default environment.
-Note that since most of post processing functions are based on \pkg{brms},
-the functions needed for evaluation should be in the \code{.GlobalEnv}.
-Therefore, it is strongly recommended to set \code{ envir = globalenv()}
-(or \code{envir = .GlobalEnv}). This is particularly true for the
-derivatives such as velocity curve.}
+\item{envir}{The environment used for function evaluation. The default is
+\code{NULL}, which sets the environment to \code{parent.frame()}. Since
+most post-processing functions rely on \pkg{brms}, it is recommended to set
+\code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
+derivatives like velocity curves.}
 
 \item{...}{Additional arguments passed to the \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}}
 function. Please see \code{brms::fitted.brmsfit()} for details on
@@ -626,20 +620,20 @@ An array of predicted mean response values. See
 }
 \description{
 The \strong{marginal_draws()} function estimates and plots
-growth curves (distance and velocity) by using \pkg{marginaleffects}
-package as back-end. This function can compute growth curves (via
+growth curves (distance and velocity) by using the \pkg{marginaleffects}
+package as a back-end. This function can compute growth curves (via
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}), average growth curves (via
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}) or plot growth curves (via
+\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}), or plot growth curves (via
 \code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}}). Please see
-\href{https://marginaleffects.com/}{here} for details.
-Note that \pkg{marginaleffects} package is highly flexible and therefore it
-is expected that user has a strong understanding of its working.
-Furthermore, since \pkg{marginaleffects} package is rapidly evolving, the
+\href{https://marginaleffects.com/}{here} for details. Note that the
+\pkg{marginaleffects} package is highly flexible, and therefore, it
+is expected that the user has a strong understanding of its workings.
+Furthermore, since \pkg{marginaleffects} is rapidly evolving, the
 results obtained from the current implementation should be considered
 experimental.
 }
 \details{
-The \strong{marginal_draws()} estimates fitted values (via
+The \strong{marginal_draws()} function estimates fitted values (via
 \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}}) or the posterior draws from the posterior
 distribution (via \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}) depending on the \code{type}
 argument.
@@ -654,13 +648,12 @@ argument.
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check and confirm whether model fit object 'berkeley_exfit' exists
- berkeley_exfit <- getNsObject(berkeley_exfit)
+berkeley_exfit <- getNsObject(berkeley_exfit)
 
 model <- berkeley_exfit
 
 # Population average distance curve
 marginal_draws(model, deriv = 0, re_formula = NA)
-
 
 # Individual-specific distance curves
 marginal_draws(model, deriv = 0, re_formula = NULL)

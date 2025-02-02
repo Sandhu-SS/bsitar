@@ -1,55 +1,58 @@
 
 
-#' Predicted values from the posterior predictive distribution
-#' 
-#' @description The \strong{predict_draws()} is a wrapper around the
-#'   [brms::predict.brmsfit()] function to obtain predicted values (and their
-#'   summary) from the posterior distribution. See [brms::predict.brmsfit()] for
-#'   details.
-#' 
-#' @details The \strong{predict_draws()} function computed the fitted values
+
+
+#' @title Predicted values from the posterior predictive distribution
+#'
+#' @description The \strong{predict_draws()} function is a wrapper around the
+#'   [brms::predict.brmsfit()] function, which obtains predicted values (and
+#'   their summary) from the posterior distribution. See
+#'   [brms::predict.brmsfit()] for details.
+#'
+#' @details The \strong{predict_draws()} function computes the fitted values
 #'   from the posterior distribution. The [brms::predict.brmsfit()] function
-#'   from the \pkg{brms} package can used to get the predicted (distance) values
-#'   when outcome (e.g., height) is untransformed. However, when the outcome is
-#'   log or square root transformed, the [brms::predict.brmsfit()] function will
-#'   return the fitted curve on the log or square root scale whereas the
-#'   \strong{predict_draws()} function returns the fitted values on the original
-#'   scale. Furthermore, the \strong{predict_draws()} also compute the first
-#'   derivative of (velocity) that too on the original scale after making
-#'   required back-transformation. Except for these differences, both these
-#'   functions (i.e., [brms::predict.brmsfit()] and [predict_draws()]) work in
-#'   the same manner. In other words, user can specify all the options available
-#'   in the [brms::predict.brmsfit()].
-#' 
+#'   from the \pkg{brms} package can be used to obtain predicted (distance)
+#'   values when the outcome (e.g., height) is untransformed. However, when the
+#'   outcome is log or square root transformed, the [brms::predict.brmsfit()]
+#'   function will return the fitted curve on the log or square root scale. In
+#'   contrast, the \strong{predict_draws()} function returns the fitted values
+#'   on the original scale. Furthermore, \strong{predict_draws()} also computes
+#'   the first derivative (velocity), again on the original scale, after making
+#'   the necessary back-transformation. Aside from these differences, both
+#'   functions ([brms::predict.brmsfit()] and \strong{predict_draws()}) work
+#'   similarly. In other words, the user can specify all the options available
+#'   in [brms::predict.brmsfit()].
+#'
 #' @param ... Additional arguments passed to the [brms::predict.brmsfit()]
-#'   function. Please see [brms::predict.brmsfit()] for details on various
+#'   function. Please see [brms::predict.brmsfit()] for details on the various
 #'   options available.
-#' 
+#'
 #' @return An array of predicted response values. See [brms::predict.brmsfit()]
 #'   for details.
-#' 
+#'
 #' @inherit growthparameters.bgmfit params
 #' @inherit fitted_draws.bgmfit params
 #' @inherit brms::predict.brmsfit params
-#' 
+#'
 #' @export predict_draws.bgmfit
 #' @export
-#' 
-#' @seealso [brms::predict.brmsfit()] 
-#' 
+#'
+#' @seealso [brms::predict.brmsfit()]
+#'
 #' @inherit berkeley author
 #'
 #' @examples
-#' 
-#' # Fit Bayesian SITAR model 
-#' 
-#' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
-#' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
-#' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
-#' 
-#' # Check and confirm whether model fit object 'berkeley_exfit' exists
+#'
+#' # Fit Bayesian SITAR model
+#'
+#' # To avoid mode estimation, which takes time, the Bayesian SITAR model is fit 
+#' # to the 'berkeley_exdata' and saved as an example fit ('berkeley_exfit').
+#' # See the 'bsitar' function for details on 'berkeley_exdata' and 
+#' # berkeley_exfit'.
+#'
+#' # Check and confirm whether the model fit object 'berkeley_exfit' exists
 #'  berkeley_exfit <- getNsObject(berkeley_exfit)
-#' 
+#'
 #' model <- berkeley_exfit
 #' 
 #' # Population average distance curve
@@ -65,7 +68,7 @@
 #' # Individual-specific velocity curves
 #' predict_draws(model, deriv = 1, re_formula = NULL)
 #'  }
-#' 
+#'  
 predict_draws.bgmfit <-
   function(model,
            newdata = NULL,

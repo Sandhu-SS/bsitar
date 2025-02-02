@@ -1,331 +1,334 @@
 
 
-#' Estimate and compare growth parameters
+#' @title Estimate and Compare Growth Parameters
 #' 
-#'@description The \strong{growthparameters_comparison()} function estimates and
-#'  compare growth parameters such as peak growth velocity and the age at peak
-#'  growth velocity. This function is a wrapper around the
-#'  [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
-#'  The [marginaleffects::comparisons()] computes unit-level (conditional)
-#'  estimates whereas [marginaleffects::avg_comparisons()] return average
-#'  (marginal) estimates. A detailed explanation is available
-#'  [here](https://marginaleffects.com). Note that for the current use case,
-#'  i.e., to estimate and compare growth parameters, the arguments
-#'  \code{variables} and \code{comparion} of [marginaleffects::comparisons()]
-#'  and [marginaleffects::avg_comparisons()] are modified (see below).
-#'  Furthermore, comparison of growth parameters is performed via the
-#'  \code{hypothesis} argument of the [marginaleffects::comparisons()] and
-#'  [marginaleffects::avg_comparisons()] functions. Note that
-#'  \pkg{marginaleffects} package is highly flexible and therefore it is
-#'  expected that user has a strong understanding of its working. Furthermore,
-#'  since \pkg{marginaleffects} package is rapidly evolving, the results
-#'  obtained from the current implementation should be considered experimental.
+#' @description The \strong{growthparameters_comparison()} function estimates and
+#' compares growth parameters, such as peak growth velocity and the age at peak
+#' growth velocity. This function serves as a wrapper around
+#' [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
+#' The [marginaleffects::comparisons()] function computes unit-level (conditional)
+#' estimates, whereas [marginaleffects::avg_comparisons()] returns average
+#' (marginal) estimates. A detailed explanation is available
+#' [here](https://marginaleffects.com). Note that for the current use case—
+#' estimating and comparing growth parameters—the arguments \code{variables} and
+#' \code{comparison} in [marginaleffects::comparisons()] and
+#' [marginaleffects::avg_comparisons()] are modified (see below).
+#' Furthermore, comparisons of growth parameters are performed via the
+#' \code{hypothesis} argument of both the [marginaleffects::comparisons()] and
+#' [marginaleffects::avg_comparisons()] functions. Please note that the
+#' \pkg{marginaleffects} package is highly flexible, and users are expected to
+#' have a strong understanding of its workings. Additionally, since the
+#' \pkg{marginaleffects} package is rapidly evolving, results obtained from the
+#' current implementation should be considered experimental.
 #'
 #' @details The \code{growthparameters_comparison} function estimates and
-#'   returns the following growth parameters:
+#' returns the following growth parameters:
 #' \itemize{
-#'   \item pgv  - peak growth velocity
-#'   \item apgv - age at peak growth velocity
-#'   \item tgv  - takeoff growth velocity
-#'   \item atgv - age at takeoff growth velocity
-#'   \item cgv  - cessation growth velocity
-#'   \item acgv - age at cessation growth velocity
+#'   \item \code{pgv} - peak growth velocity
+#'   \item \code{apgv} - age at peak growth velocity
+#'   \item \code{tgv} - takeoff growth velocity
+#'   \item \code{atgv} - age at takeoff growth velocity
+#'   \item \code{cgv} - cessation growth velocity
+#'   \item \code{acgv} - age at cessation growth velocity
 #' }
 #' 
 #' The takeoff growth velocity is the lowest velocity just before the peak
-#' starts and it indicates the beginning of the pubertal growth spurt. The
-#' cessation growth velocity indicates the end of the active pubertal growth
-#' spurt and is calculated as some percentage of the peak velocity (\code{pgv}).
-#' Typically, a 10 percent of the \code{pgv} is considered as a good indicator
-#' of the cessation of the active pubertal growth spurt
-#' \insertCite{Anna2022}{bsitar}. The percentage is controlled via the
-#' \code{acg_velocity} argument which takes a positive real value bounded
-#' between 0 and 1 (default \code{0.1} implying 10 percent). 
+#' begins, indicating the start of the pubertal growth spurt. The cessation
+#' growth velocity marks the end of the active pubertal growth spurt and is
+#' calculated as a certain percentage of the peak velocity (\code{pgv}).
+#' Typically, 10 percent of \code{pgv} is considered a good indicator for the
+#' cessation of the active pubertal growth spurt \insertCite{Anna2022}{bsitar}.
+#' This percentage is controlled via the \code{acg_velocity} argument, which
+#' accepts a positive real value bounded between 0 and 1 (with the default value
+#' being \code{0.1}, indicating 10 percent).
 #' 
 #' @param model An object of class \code{bgmfit}.
 #' 
-#' @param datagrid Generate a grid of user-specified values for use in the
-#'   \code{newdata} argument in various functions of the \pkg{marginaleffects}
-#'   package. This is useful to define where in the predictor space we want to
-#'   evaluate the quantities of interest. See [marginaleffects::datagrid()] for
-#'   details. The default value for the \code{datagrid} is \code{NULL} implying
-#'   that no custom grid is constructed. To set a data grid, the argument should
-#'   be a data.frame constructed by using the [marginaleffects::datagrid()]
-#'   function, or else a named list which are internally used for setting up the
-#'   grid. For the user convenience, we also allow setting an empty list
-#'   \code{datagrid = list()} in which case essential arguments such as
-#'   \code{model}, \code{newdata} are taken up from the respective arguments
-#'   specified elsewhere. Further, the level 1 predictor (such as age) and any
-#'   covariate included in the model fit (e.g., gender) are also automatically
-#'   inferred from the \code{model} object.
+#' @param datagrid A grid of user-specified values to be used in the
+#' \code{newdata} argument of various functions in the \pkg{marginaleffects}
+#' package. This allows you to define the regions of the predictor space
+#' where you want to evaluate the quantities of interest. See
+#' [marginaleffects::datagrid()] for more details. By default, the
+#' \code{datagrid} is set to \code{NULL}, meaning no custom grid is constructed.
+#' To set a custom grid, the argument should either be a data frame created
+#' using [marginaleffects::datagrid()], or a named list, which is internally
+#' used for constructing the grid. For convenience, you can also pass an empty
+#' list \code{datagrid = list()}, in which case essential arguments like
+#' \code{model} and \code{newdata} are inferred from the respective arguments
+#' specified elsewhere. Additionally, the first-level predictor (such as age)
+#' and any covariates included in the model (e.g., gender) are automatically
+#' inferred from the \code{model} object.
 #' 
-#' @param parameter A single character string, or a character vector specifying
-#'   the growth parameter(s) to be estimated. Options are \code{'tgv'} (takeoff
-#'   growth velocity), \code{'atgv'} (age at takeoff growth velocity),
-#'   \code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
-#'   velocity), \code{'cgv'} (cessation growth velocity), and \code{'acgv'} (age
-#'   at cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
-#'   (default), age at peak growth velocity (\code{'apgv'}) is estimated where
-#'   when \code{parameter = 'all'}, all six parameters are estimated. Note that
-#'   option \code{'all'} can not be used when argument \code{by} is \code{TRUE}.
-#' 
-#' @param acg_velocity A real number to set the percentage of peak growth growth
-#'   velocity as the cessation velocity when estimating the \code{cgv} and
-#'   \code{acgv} growth parameters. The \code{acg_velocity} should be greater
-#'   than \code{0} and less than \code{1}. The default \code{acg_velocity =
-#'   0.10} indicates that a 10 per cent of the peak growth velocity will be used
-#'   to get the cessation velocity and the corresponding age at the cessation
-#'   velocity. For example if peak growth velocity estimate is \code{10
-#'   mm/year}, then cessation growth velocity is \code{1 mm/year}.
-#' 
-#' @param digits An integer (default \code{2}) to set the decimal places for the
-#'   estimated growth parameters. The \code{digits} is passed on to the
-#'   [base::round()] function.
-#'   
-#' @param average A logical to indicate whether to internally call the
-#'    [marginaleffects::comparisons()] or the
-#'    [marginaleffects::avg_comparisons()] function. If \code{FALSE} (default),
-#'    [marginaleffects::comparisons()] is called otherwise
-#'    [marginaleffects::avg_comparisons()] when \code{average = TRUE}.
+#' @param parameter A single character string or a character vector specifying
+#'  the growth parameter(s) to be estimated. Options include \code{'tgv'}
+#'  (takeoff growth velocity), \code{'atgv'} (age at takeoff growth velocity),
+#'  \code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
+#'  velocity), \code{'cgv'} (cessation growth velocity), \code{'acgv'} (age at
+#'  cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
+#'  (default), age at peak growth velocity (\code{'apgv'}) is estimated. When
+#'  \code{parameter = 'all'}, all six parameters are estimated. Note that the
+#'  \code{'all'} option cannot be used when the \code{by} argument is set to
+#'  \code{TRUE}.
 #'
-#' @param plot A logical to specify whether to plot comparisons by calling the
-#'   [marginaleffects::plot_comparisons()] function (\code{FALSE}) or not
+#' @param acg_velocity A real number specifying the percentage of peak growth
+#'   velocity to be used as the cessation velocity when estimating the
+#'   \code{cgv} and \code{acgv} growth parameters. The \code{acg_velocity}
+#'   should be greater than \code{0} and less than \code{1}. The default value
+#'   of \code{acg_velocity = 0.10} indicates that 10 percent of the peak growth
+#'   velocity will be used to calculate the cessation growth velocity and the
+#'   corresponding age at cessation velocity. For example, if the peak growth
+#'   velocity estimate is \code{10 mm/year}, then the cessation growth velocity
+#'   will be \code{1 mm/year}.
+#' 
+#' @param digits An integer (default \code{2}) specifying the number of decimal
+#'   places to round the estimated growth parameters. The \code{digits} value is
+#'   passed to the [base::round()] function.
+#'
+#' @param average A logical value indicating whether to internally call the
+#'   [marginaleffects::comparisons()] or the
+#'   [marginaleffects::avg_comparisons()] function. If \code{FALSE} (default),
+#'   [marginaleffects::comparisons()] is called, otherwise
+#'   [marginaleffects::avg_comparisons()] is used when \code{average = TRUE}.
+#'
+#' @param plot A logical value specifying whether to plot comparisons by calling
+#'   the [marginaleffects::plot_comparisons()] function (\code{TRUE}) or not
 #'   (\code{FALSE}). If \code{FALSE} (default), then
 #'   [marginaleffects::comparisons()] or [marginaleffects::avg_comparisons()]
-#'   are called to compute predictions (see \code{average} for details).
-#'   
-#' @param showlegends An argument to specify whether to show legends
-#'   (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), then
+#'   are called to compute predictions (see the \code{average} argument for
+#'   details).
+#'
+#' @param showlegends A logical value to specify whether to show legends
+#'   (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), the value of
 #'   \code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
-#'   NA}, and \code{FALSE} if \code{re_formula = NULL}. 
+#'   NA}, and \code{FALSE} if \code{re_formula = NULL}.
 #'
-#' @param variables For estimating growth parameters in the current use case,
-#'   the \code{variables} is the level 1 predictor such as
-#'   \code{age}/\code{time}. The \code{variables} is a named list where value is
-#'   set via the \code{esp} argument (default 1e-6). If \code{NULL}, the
-#'   \code{variables} is set internally by retrieving the relevant information
-#'   from the \code{model}. Otherwise, user can define it as follows:
-#'   \code{variables = list('x' = 1e-6)} where \code{'x'} is the level 1
-#'   predictor. Note that \code{variables = list('age' = 1e-6)} is the default
-#'   behavior for the \pkg{marginaleffects} because velocity is typically
-#'   calculated by differentiating the distance curve via \code{dydx} approach,
-#'   and therefore argument \code{deriv} is automatically set as \code{0} and
-#'   \code{deriv_model} as \code{FALSE}. If user want to estimate parameters
-#'   based on the model based first derivative, then argument \code{deriv} must
-#'   be set as \code{1} and internally argument \code{variables} is defined as
-#'   \code{variables = list('age' = 0)} i.e, original level 1 predictor
-#'   variable, \code{'x'}. It is important to consider that if default behavior
-#'   is used i.e, \code{deriv = 0} and \code{variables = list('x' = 1e-6)}, then
-#'   user can not pass additional arguments to the \code{variables} argument. On
-#'   the other hand, alternative approach i.e, \code{deriv = 0} and
-#'   \code{variables = list('x' = 0)}, additional options can be passed to the
-#'   [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()]
-#'   functions.
-#'   
-#' @param method A character string to specify whether to make computation at
-#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
-#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}) or via
-#'   the custom functions written for efficiency and speed (\code{method =
-#'   'custom'}, default). Note that \code{method = 'pkg'} does not work except
-#'   for very simple cases and therefore should be used cautiously. The
-#'   \code{method = 'custom'} is the recommended and preferred method because it
-#'   allows computation of more than one parameter simultaneously (such as
-#'   \code{'apgv'}) and \code{'pgv'}, see \code{'parameter'})), \code{method =
-#'   'custom'} is applied only during the post draw stage, all comparison of
-#'   multiple parameters simultaneously via the \code{hypothesis} argument, and
-#'   makes it possible to add or return draws (see \code{pdraws} and
-#'   \code{pdraws} for details). Please note that when \code{method =
-#'   'pkg'}, the \code{by} argument must not contain the predictor i.e,
-#'   \code{age}. Also, the \code{variables} must be either \code{NULL} in which
-#'   case \code{variables = list(age = 1e-6)} is automatically assigned
-#'   internally, or else \code{variables} must be list in which factor variables
-#'   should be something like \code{variables = list(class = 'pairwise')} or
-#'   \code{variables = list(age = 1e-6, class = 'pairwise')} where class is a
-#'   factor variable. However when \code{method = 'custom'}, the the \code{by}
-#'   argument may contain predictor which is simply ignored. The
-#'   \code{variables} argument must not contain predictor and factor variables
-#'   can passed as a vector such as \code{variables = c('class')}. It is
-#'   strongly recommended to use \code{method = 'custom'} which has been written
-#'   for efficiency and speed.
-#'   
-#' @param marginals A \code{list}, \code{data.frame}, or a \code{tibble}
-#'   returned from the \pkg{marginaleffects} functions (default \code{NULL}).
-#'   The \code{marginals} is evaluated only when \code{method = 'custom'}. The
-#'   \code{marginals} can be in a form of direct output from the
-#'   \pkg{marginaleffects} functions or as posterior draws i.e.,
-#'   [marginaleffects::posterior_draws()]. The \code{marginals} is mainly for
-#'   internal use only.
-#' 
+#' @param variables A named list specifying the level 1 predictor, such as
+#'   \code{age} or \code{time}, used for estimating growth parameters in the
+#'   current use case. The \code{variables} list is set via the \code{esp}
+#'   argument (default value is \code{1e-6}). If \code{variables} is
+#'   \code{NULL}, the relevant information is retrieved internally from the
+#'   \code{model}. Alternatively, users can define \code{variables} as a named
+#'   list, e.g., \code{variables = list('x' = 1e-6)} where \code{'x'} is the
+#'   level 1 predictor. By default, \code{variables = list('age' = 1e-6)} in the
+#'   \pkg{marginaleffects} package, as velocity is usually computed by
+#'   differentiating the distance curve using the \code{dydx} approach. When
+#'   using this default, the argument \code{deriv} is automatically set to
+#'   \code{0} and \code{deriv_model} to \code{FALSE}. If parameters are to be
+#'   estimated based on the model's first derivative, \code{deriv} must be set
+#'   to \code{1} and \code{variables} will be defined as \code{variables =
+#'   list('age' = 0)}. Note that if the default behavior is used (\code{deriv =
+#'   0} and \code{variables = list('x' = 1e-6)}), additional arguments cannot be
+#'   passed to \code{variables}. In contrast, when using an alternative approach
+#'   (\code{deriv = 0} and \code{variables = list('x' = 0)}), additional options
+#'   can be passed to the [marginaleffects::comparisons()] and
+#'   [marginaleffects::avg_comparisons()] functions.
+#'
+#' @param method A character string indicating whether to compute estimates
+#'   using the \code{'marginaleffects'} package (\code{method = 'pkg'}) or
+#'   custom functions for efficiency and speed (\code{method = 'custom'},
+#'   default). The \code{method = 'pkg'} option is only suitable for simple
+#'   cases and should be used with caution. \code{method = 'custom'} is the
+#'   preferred option because it allows for simultaneous estimation of multiple
+#'   parameters (e.g., \code{'apgv'} and \code{'pgv'}). This method works during
+#'   the post-draw stage, supports multiple parameter comparisons via the
+#'   \code{hypothesis} argument, and allows users to add or return draws (see
+#'   \code{pdraws} for details). If \code{method = 'pkg'}, the \code{by}
+#'   argument must not contain the predictor (e.g., \code{age}), and
+#'   \code{variables} must either be \code{NULL} (which defaults to
+#'   \code{list(age = 1e-6)}) or a list with factor variables like
+#'   \code{variables = list(class = 'pairwise')} or \code{variables = list(age =
+#'   1e-6, class = 'pairwise')}. With \code{method = 'custom'}, the \code{by}
+#'   argument can include predictors, which will be ignored, and
+#'   \code{variables} should not contain predictors, but can accept factor
+#'   variables as a vector (e.g., \code{variables = c('class')}). Using
+#'   \code{method = 'custom'} is strongly recommended for better performance and
+#'   flexibility.
+#'
+#' @param marginals A \code{list}, \code{data.frame}, or \code{tibble} returned
+#'   by the \pkg{marginaleffects} functions (default \code{NULL}). This is only
+#'   evaluated when \code{method = 'custom'}. The \code{marginals} can be the
+#'   output from \pkg{marginaleffects} functions or posterior draws from
+#'   \code{marginaleffects::posterior_draws()}. The \code{marginals} argument is
+#'   primarily used for internal purposes.
+#'
 #' @param constrats_by A character vector (default \code{FALSE}) specifying the
-#'   variable(s) by which estimates and contrast (post draw stage) via the
-#'   \code{hypothesis} argument should be computed. Note that variable(s)
-#'   specified in the \code{constrats_by} should be sub set of the variables
-#'   included in the \code{'by'} argument. If \code{constrats_by = NULL}, then
-#'   all variables are copied from the \code{'by'} argument (i.e.,
-#'   \code{constrats_by = by}) except the level-1 predictor (such as
-#'   \code{age}). This automatic behavior of setting at 'unique' values can be
-#'   turned off by using \code{constrats_by = FALSE}.  The \code{constrats_by}
-#'   argument is only evaluated when \code{method = 'custom'} and the
-#'   \code{hypothesis} is not \code{NULL}.
-#' 
-#' @param constrats_at A named list (default \code{FALSE}) to specify the values
-#'   at which estimates and contrast (post draw stage) via the \code{hypothesis}
-#'   argument should be computed. The \code{constrats_at} can be specified as a
-#'   one of the following strings \code{'max', 'min', 'unique', 'range'} (e.g.,
-#'   \code{constrats_at = list(age = 'min')}) or else as a numeric value or a
-#'   numeric vector (e.g., \code{constrats_at = list(age = c(6, 7))}). When
-#'   \code{constrats_at = NULL}, any level-1 predictor (such as \code{age}) is
-#'   be automatically set at its 'unique' values i.e., \code{constrats_at =
-#'   list(age = 'unique')}. This automatic behavior of setting at 'unique'
-#'   values can be turned off by using \code{constrats_at = FALSE}. Note that
-#'   \code{constrats_at} only subsets the data that has been set up the
-#'   [marginaleffects::datagrid()] or specified as the \code{newdata} argument.
-#'   In case no match is found, an error will be triggered. The
-#'   \code{constrats_at} argument is only evaluated when \code{method =
-#'   'custom'} and the \code{hypothesis} is not \code{NULL}.
-#'   
-#' @param constrats_subset A named list (default \code{FALSE}) to subset the
-#'   estimates (post draw stage) at which contrast are computed via the
-#'   \code{hypothesis} argument. The use of the \code{constrats_subset} argument
-#'   is similar to the \code{constrats_at} with the exception that while
-#'   \code{constrats_at} subsets the data based on the values of a variable, the
-#'   \code{constrats_at} filters the character vector of a variables such as
-#'   sub-setting individuals \code{constrats_at = list(id = c('id1', 'id2'))}
-#'   where \code{'id1'} and  \code{'id1'} are individual identifiers. The
-#'   \code{constrats_subset} argument is only evaluated when \code{method =
-#'   'custom'} and the \code{hypothesis} is not \code{NULL}.
-#'   
-#' @param deriv A numeric to specify whether to estimate parameters based on the
-#'   differentiation of the distance curve or the model based first derivative.
-#'   Please see argument \code{variables} for more details.  
-#' 
-#' @param comparison For estimating growth parameters in the current use case,
-#'   options allowed for the \code{comparison} are \code{'difference'} and
-#'   \code{'differenceavg'}. Note that \code{comparison} is a placeholder and is
-#'   only used to setup the the internal function that estimates
-#'   \code{'parameter'} via [sitar::getPeak()], [sitar::getTakeoff()] and
-#'   [sitar::getTrough()] functions to estimate various growth parameters.
-#'   Options \code{'difference'} and \code{'differenceavg'} are internally
-#'   restructured according to the user specified \code{hypothesis} argument.
-#'   
-#' @param reformat A logical (default \code{TRUE}) to reformat the  output
-#'   returned by the \code{marginaleffects} as a data.frame with column names
-#'   re-defined as follows: \code{conf.low} as \code{Q2.5}, and \code{conf.high}
-#'   as \code{Q97.5} (assuming that \code{conf_int = 0.95}). Also, following
-#'   columns are dropped from the data frame: \code{term}, \code{contrast},
-#'   \code{tmp_idx}, \code{predicted_lo}, \code{predicted_hi}, \code{predicted}.
-#'   
-#' @param estimate_center A character string (default \code{NULL}) to specify
-#'   whether to center estimate as \code{'mean'} or as \code{'median'}. Note
-#'   that \code{estimate_center} is used to set the global options as follows:
-#'   \cr
-#'   \code{ options("marginaleffects_posterior_center" = "mean")}, or \cr 
-#'   \code{options("marginaleffects_posterior_center" = "median")} \cr
-#'   The pre-specified global options are restored on exit via the
-#'   [base::on.exit()].
-#' 
-#' @param estimate_interval A character string (default \code{NULL}) to specify
-#'   whether to compute credible intervals as equal-tailed intervals,
-#'   \code{'eti'} or highest density intervals, \code{'hdi'}. Note that
-#'   \code{estimate_interval} is used to set the global options as follows: \cr
-#'   \code{ options("marginaleffects_posterior_interval" = "eti")}, or \cr
-#'   \code{ options("marginaleffects_posterior_interval" = "hdi")} \cr
-#'   The pre-specified global options are restored on exit via the
-#'   [base::on.exit()].
+#'   variable(s) by which estimates and contrasts (during the post-draw stage)
+#'   should be computed using the \code{hypothesis} argument. The variable(s) in
+#'   \code{constrats_by} should be a subset of those specified in the \code{by}
+#'   argument. If \code{constrats_by = NULL}, it will copy all variables from
+#'   \code{by}, except for the level-1 predictor (e.g., \code{age}). To disable
+#'   this automatic behavior, use \code{constrats_by = FALSE}. This argument is
+#'   evaluated only when \code{method = 'custom'} and \code{hypothesis} is not
+#'   \code{NULL}.
 #'
-#' @param usedtplyr A logical (default \code{FALSE}) to indicate whether to use
-#'   the \pkg{dtplyr} package for summarizing the draws. The \pkg{dtplyr}
-#'   package uses the \pkg{data.table} package as back-end. Note that
-#'   \code{usedtplyr}is useful only when the data has a large number of
-#'   observation. For routine uses, the \code{usedtplyr} does not make a large
-#'   difference in the performance because the \pkg{marginaleffects} package
-#'   itself uses the \pkg{data.table} package. The \code{usedtplyr} argument is
-#'   evaluated only when the \code{method = 'custom'}.
-#'   
+#' @param constrats_at A named list (default \code{FALSE}) to specify the values
+#'   at which estimates and contrasts should be computed during the post-draw
+#'   stage using the \code{hypothesis} argument. The values can be specified as
+#'   \code{'max'}, \code{'min'}, \code{'unique'}, or \code{'range'} (e.g.,
+#'   \code{constrats_at = list(age = 'min')}) or as numeric values or vectors
+#'   (e.g., \code{constrats_at = list(age = c(6, 7))}). If \code{constrats_at =
+#'   NULL}, level-1 predictors (e.g., \code{age}) are automatically set to their
+#'   unique values (i.e., \code{constrats_at = list(age = 'unique')}). To turn
+#'   off this behavior, use \code{constrats_at = FALSE}. Note that
+#'   \code{constrats_at} only affects data subsets prepared via
+#'   [marginaleffects::datagrid()] or the \code{newdata} argument. The argument
+#'   is evaluated only when \code{method = 'custom'} and \code{hypothesis} is
+#'   not \code{NULL}.
+#'
+#' @param constrats_subset A named list (default \code{FALSE}) to filter the
+#'   estimates at which contrasts are computed using the \code{hypothesis}
+#'   argument. This is similar to \code{constrats_at}, except that
+#'   \code{constrats_subset} filters based on a character vector of variable
+#'   names (e.g., \code{constrats_subset = list(id = c('id1', 'id2'))}) rather
+#'   than numeric values. The argument is evaluated only when \code{method =
+#'   'custom'} and \code{hypothesis} is not \code{NULL}.
+#'
+#' @param deriv A numeric value specifying whether to estimate parameters based
+#'   on the differentiation of the distance curve or the model's first
+#'   derivative. Please refer to the \code{variables} argument for more details.
+#' 
+#' @param comparison A character string specifying the comparison type for
+#'   growth parameter estimation. Options are \code{'difference'} and
+#'   \code{'differenceavg'}. This argument sets up the internal function for
+#'   estimating parameters using [sitar::getPeak()], [sitar::getTakeoff()], and
+#'   [sitar::getTrough()] functions. These options are restructured according to
+#'   the user-specified \code{hypothesis} argument.
+#'
+#' @param reformat A logical (default \code{TRUE}) indicating whether to
+#'   reformat the output returned by \code{marginaleffects} as a data frame.
+#'   Column names are redefined as \code{conf.low} to \code{Q2.5} and
+#'   \code{conf.high} to \code{Q97.5} (assuming \code{conf_int = 0.95}).
+#'   Additionally, some columns (\code{term}, \code{contrast}, etc.) are dropped
+#'   from the data frame.
+#'
+#' @param estimate_center A character string (default \code{NULL}) specifying
+#'   how to center estimates: either \code{'mean'} or \code{'median'}. This
+#'   option sets the global options as follows:
+#'   \code{options("marginaleffects_posterior_center" = "mean")} or
+#'   \code{options("marginaleffects_posterior_center" = "median")}. These global
+#'   options are restored upon function exit using [base::on.exit()].
+#'
+#' @param estimate_interval A character string (default \code{NULL}) to specify
+#'   the type of credible intervals: \code{'eti'} for equal-tailed intervals or
+#'   \code{'hdi'} for highest density intervals. This option sets the global
+#'   options as follows: \code{options("marginaleffects_posterior_interval" =
+#'   "eti")} or \code{options("marginaleffects_posterior_interval" = "hdi")},
+#'   and is restored on exit using [base::on.exit()].
+#'
+#' @param usedtplyr A logical (default \code{FALSE}) indicating whether to use
+#'   the \pkg{dtplyr} package for summarizing the draws. This package uses
+#'   \pkg{data.table} as a back-end. It is useful when the data has a large
+#'   number of observations. For typical use cases, it does not make a
+#'   significant performance difference. The \code{usedtplyr} argument is
+#'   evaluated only when \code{method = 'custom'}.
+#'
 #' @param usecollapse A logical (default \code{FALSE}) to indicate whether to
 #'   use the \pkg{collapse} package for summarizing the draws.
-#'   
-#' @param parallel A logical (default \code{FALSE}) to indicate whether to use
+#' 
+#' @param parallel A logical (default \code{FALSE}) indicating whether to use
 #'   parallel computation (via \pkg{doParallel} and \pkg{foreach}) when
-#'   \pkg{usecollapse = TRUE}. Note that when \pkg{parallel = TRUE}, the
-#'   [parallel::makeCluster()] sets type as \code{"PSOCK"} which works on all
-#'   operating systems including \code{Windows}. To set type as \code{"FORK"},
-#'   which is fast (but does not works on \code{Windows} system), use
-#'   \pkg{parallel = "FORK"}.
-#'  
-#' @param cores A positive integer (default \code{1}) to set up the number of
-#'   cores to be used when \pkg{parallel = TRUE}. To automatically detect the 
-#'   number of cores, please use \pkg{cores = NULL}.
-#'   
-#' @param pdraws A character string (default \code{FALSE}) to indicate whether
-#'   to return raw draws (if \code{pdraws = 'return'}), add raw draws (if
-#'   \code{pdraws = 'add'}) to the final return object, return summary of draws
-#'   (if \code{pdraws = 'returns'}), or add summary of draws (if \code{pdraws =
-#'   'adds'}) to the final return object. See [marginaleffects::posterior_draws()]
-#'   for details. The \code{pdraws} are the velocity estimates for each of the 
-#'   posterior sample.
-#'   
-#' @param pdrawso A character string (default \code{FALSE}) to indicate whether
-#'   to return the original posterior draws for parameters (if \code{pdrawso =
-#'   'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
-#'   When \code{pdrawso = TRUE}, then default behavior is \code{pdrawso =
-#'   'return'}. Note that posterior draws are returned before calling the
-#'   [marginaleffects::posterior_draws()].
+#'   \pkg{usecollapse = TRUE}. When \code{parallel = TRUE},
+#'   [parallel::makeCluster()] sets the cluster type as \code{"PSOCK"}, which
+#'   works on all operating systems, including \code{Windows}. If you want to
+#'   use a faster option for Unix-based systems, you can set \code{parallel =
+#'   "FORK"}, but note that it is not compatible with \code{Windows} systems.
+#' 
+#' @param cores A positive integer (default \code{1}) specifying the number of
+#'   CPU cores to use when \code{parallel = TRUE}. To automatically detect the
+#'   number of available cores, set \code{cores = NULL}. This is useful for
+#'   optimizing performance when working with large datasets.
 #'
+#' @param pdraws A character string (default \code{FALSE}) that indicates
+#'   whether to return the raw posterior draws. Options include:
+#'   \itemize{
+#'     \item \code{'return'}: returns the raw draws,
+#'     \item \code{'add'}: adds the raw draws to the final return object,
+#'     \item \code{'returns'}: returns the summary of the raw draws,
+#'     \item \code{'adds'}: adds the summary of raw draws to the final return object.
+#'   }
+#'   The \code{pdraws} are the velocity estimates for each posterior sample. For
+#'   more details, see [marginaleffects::posterior_draws()].
+#'
+#' @param pdrawso A character string (default \code{FALSE}) to indicate whether
+#'   to return the original posterior draws for parameters. Options include:
+#'   \itemize{
+#'     \item \code{'return'}: returns the original posterior draws,
+#'     \item \code{'add'}: adds the original posterior draws to the outcome.
+#'   }
+#'   When \code{pdrawso = TRUE}, the default behavior is \code{pdrawso =
+#'   'return'}. Note that the posterior draws are returned before calling
+#'   [marginaleffects::posterior_draws()].
+#' 
 #' @param pdrawsp A character string (default \code{FALSE}) to indicate whether
-#'   to return the posterior draws for parameters (if \code{pdrawsp =
-#'   'return'}) or add them to the outcome (if \code{pdrawsp = 'add'}).
-#'   When \code{pdrawsp = TRUE}, then default behavior is \code{pdrawsp =
-#'   'return'}. Note that summary of posterior draws for parameters is the
-#'   default returned object. The \code{pdrawsp} are the parameter estimates for
-#'   each of the posterior sample. The summary of these \code{pdrawsp} are the 
-#'   estimates returned.
-#'   
+#'   to return the posterior draws for parameters. Options include:
+#'   \itemize{
+#'     \item \code{'return'}: returns the posterior draws for parameters,
+#'     \item \code{'add'}: adds the posterior draws to the outcome.
+#'   }
+#'   When \code{pdrawsp = TRUE}, the default behavior is \code{pdrawsp =
+#'   'return'}. The \code{pdrawsp} represent the parameter estimates for each of
+#'   the posterior samples, and the summary of these are the estimates returned.
+#' 
 #' @param pdrawsh A character string (default \code{FALSE}) to indicate whether
-#'   to return the posterior draws for parameters (if \code{pdrawsh =
-#'   'return'}). Note that summary of posterior draws for parameters is the
-#'   default returned object. The \code{pdrawsh} are the parameter contrast
-#'   estimates for each of the posterior sample. The summary of these
-#'   \code{pdrawsp} are the contrast returned.
-#'   
-#' @param bys A character string (default \code{NULL}) to specify variables 
-#' over which parameters need to be summarized.
+#'   to return the posterior draws for parameter contrasts. Options include:
+#'   \itemize{
+#'     \item \code{'return'}: returns the posterior draws for contrasts.
+#'   }
+#'   The summary of posterior draws for parameters is the default returned
+#'   object. The \code{pdrawsh} represent the contrast estimates for each of the
+#'   posterior samples, and the summary of these are the contrast returned.
 #' 
-#' @param future_splits A unnamed numeric list, a logical, or a numeric vector
-#'   of length of one or two (default \code{NULL}). The user can pass
-#'   \code{future_splits} as a list such as \code{future_splits = list(1:6,
-#'   7:10)} where each sequence of number are passed to the \code{draw_ids}
-#'   argument. The \code{future_splits} can be passed as a numeric vector (e.g.,
-#'   future_splits = c(10, 2)) where first element is the number of draws (see
-#'   \code{draw_ids}) and the second elements is the number of splits. In this
-#'   case, the splits are created via the [parallel::splitIndices()]. when
-#'   \code{future_splits} is passed as a numeric vector of length one, then
-#'   first element is internally set as \code{ndraws} or \code{draw_ids}
-#'   depending on which of them is not \code{NULL}. If \code{future_splits} is
-#'   \code{TRUE}, then numeric vector for \code{future_splits} is created based
-#'   on the \code{ndraws} and the \code{cores}. Ignored when \code{future_splits
-#'   = FALSE}. The use case of \code{future_splits} is to save memory and speed
-#'   especially on \code{Linux} system and setting [future::plan()] as
-#'   \code{multicore}. Note that in case future session is interrupted, the R
-#'   processes may not be freed automatically for Windows systems when plan is
-#'   \code{'multisession'}. In that case, the R processes can be interrupted via
-#'   [installr::kill_all_Rscript_s()].
-#'   
-#' @param future_method A character string to indicate whether to use
-#'   [future::future()] along with the [future.apply::future_lapply()]
-#'   (\code{future_method = 'future'}, default), or to use [foreach::foreach()]
-#'   with \code{'dofuture'} function from the \code{doFuture} package for
-#'   parallel operations.
-#'   
-#' @param future_re_expose A logical to indicate whether to re expose
-#'   \code{Stan} functions when \code{future = TRUE}. This is particularly
-#'   relevant when [future::plan()] is set up as \code{'multisession'}. This is
-#'   because already exposed \code{c++} \code{Stan} functions can not be passed
-#'   across multiple sessions. When \code{future_re_expose = NULL} (default),
-#'   the \code{future_re_expose} is automatically set as \code{TRUE} for the
-#'   \code{'multisession'} plan. It is advised to set \code{future_re_expose =
-#'   TRUE} for speed gains.
-#' 
+#' @param bys A character string (default \code{NULL}) specifying the variables
+#'   over which the parameters need to be summarized. If \code{bys} is not
+#'   \code{NULL}, the summary statistics will be calculated for each unique
+#'   combination of the specified variables.
+#'
+#' @param future_splits A list (default \code{NULL}) that can be an unnamed
+#'   numeric list, a logical value, or a numeric vector of length 1 or 2. It is
+#'   used to split the processing of posterior draws into smaller subsets for
+#'   parallel computation.
+#'   - If passed as a list (e.g., \code{future_splits = list(1:6, 7:10)}), 
+#'   each sequence of
+#'   numbers is passed to the \code{draw_ids} argument.
+#'   - If passed as a numeric vector (e.g., \code{future_splits = c(10, 2)}), 
+#'   the first element
+#'   specifies the number of draws (see \code{draw_ids}) and the second element
+#'   indicates the number of splits. The splits are created using
+#'   [parallel::splitIndices()].
+#'   - If passed as a numeric vector of length 1, the first element is 
+#'   internally set as the
+#'   number of draws (\code{ndraws} or \code{draw_ids}) depending on which one
+#'   is not \code{NULL}.
+#'   - If \code{TRUE}, a numeric vector for \code{future_splits} is created 
+#'   based on the number
+#'   of draws (\code{ndraws}) and the number of cores (\code{cores}).
+#'   - If \code{FALSE}, \code{future_splits} is ignored.
+#'   The use case for \code{future_splits} is to save memory and improve
+#'   performance, especially on \code{Linux} systems when \code{future::plan()}
+#'   is set to \code{multicore}. Note: on Windows systems, R processes may not
+#'   be freed automatically when using \code{'multisession'}. In such cases, the
+#'   R processes can be interrupted using [installr::kill_all_Rscript_s()].
+#'
+#' @param future_method A character string (default \code{'future'}) to specify
+#'   the method for parallel computation. Options include:
+#'   \itemize{
+#'     \item \code{'future'}: Uses [future::future()] along with [future.apply::future_lapply()]
+#'       for parallel execution.
+#'     \item \code{'foreach'}: Uses [foreach::foreach()] with the \code{'dofuture'} function from
+#'       the \code{doFuture} package for parallel execution.
+#'   }
+#'
+#' @param future_re_expose A logical (default \code{NULL}) to indicate whether
+#'   to re-expose \code{Stan} functions when \code{future = TRUE}. This is
+#'   especially relevant when [future::plan()] is set to \code{'multisession'},
+#'   as already exposed C++ \code{Stan} functions cannot be passed across
+#'   multiple sessions.
+#'
+#'   - When \code{future_re_expose = NULL} (the default), \code{future_re_expose} is automatically
+#'   set to \code{TRUE} for the \code{'multisession'} plan.
+#'   - It is advised to explicitly set \code{future_re_expose = TRUE} for speed gains when using
+#'   parallel processing with \code{future = TRUE}.
+#'
 #' 
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
@@ -334,7 +337,12 @@
 #' @inheritParams  marginaleffects::datagrid
 #' @inheritParams  brms::fitted.brmsfit
 #'
-#' @return A data frame objects with estimates and CIs for computed parameter(s)
+#' @return A data frame object with estimates and credible intervals (CIs) for
+#'   the computed parameter(s). The returned data frame includes the parameter
+#'   estimates, along with lower and upper bounds of the credible intervals,
+#'   typically labeled as \code{Q2.5} and \code{Q97.5}, assuming a 95%
+#'   confidence level. The specific columns may vary depending on the
+#'   computation method and the parameters being estimated.
 #' 
 #' @import data.table
 #' 
@@ -353,15 +361,14 @@
 #' @examples
 #' 
 #' \donttest{
-#' # Fit Bayesian SITAR model 
+#' # Fit Bayesian SITAR model
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
 #' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 #' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
 #' # Note that since no covariate is part of the model fit, the below example 
-#' # doesn't make sense and included here only for the purpose of completeness.
-#' 
+#' # doesn't make sense and is included here only for the purpose of completeness.
 #' 
 #' # Check and confirm whether model fit object 'berkeley_exfit' exists
 #'  berkeley_exfit <- getNsObject(berkeley_exfit)

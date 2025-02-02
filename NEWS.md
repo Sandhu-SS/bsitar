@@ -44,7 +44,7 @@
   changed to ``normal()``. Previously, the distribution for regression coefficients and the sd for the 
   group-level random effects was ``student_t()``, while the distribution for the sd of the distributional
   parameter (sigma) was ``exponential()``. Note that the same location and scale parameters used earlier 
-  for ``student_t()`` are now used for the ``normal()`` distribution. For example, prior speciofied
+  for ``student_t()`` are now used for the ``normal()`` distribution. For example, prior specified
   earlier as ``student_t(3, 0, 15)`` (3 degree of freedom, location 0 and scale) has been revised as 
   ``normal(0, 15)``.
 

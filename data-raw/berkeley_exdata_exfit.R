@@ -58,8 +58,6 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         backend = "rstan", 
                         normalize = FALSE, 
                         threads = brms::threading(NULL),
-                        # file = "zzz",
-                        # file_refit = "always",
                         seed = 123)
 
 

@@ -37,9 +37,8 @@ optimize_model(model, ...)
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}
 
-\item{newdata}{An optional data frame to be used in estimation. If
-\code{NULL} (default), the \code{newdata} is retrieved from the
-\code{model}.}
+\item{newdata}{An optional data frame for estimation. If \code{NULL}
+(default), \code{newdata} is retrieved from the \code{model}.}
 
 \item{optimize_df}{A list of integers specifying the degrees of freedom
 (\code{df}) values to be optimized. If \code{NULL} (default), the \code{df}
@@ -169,56 +168,44 @@ following information when saving each model: \cr
 \code{save_each = list(prefix = '', suffix = '', extension = 'rds',
   compress = 'xz')}.}
 
-\item{digits}{An integer (default \code{2}) to set the decimal argument for
-the \code{\link[base:Round]{base::round()}} function.}
+\item{digits}{An integer (default \code{2}) to set the decimal places for
+rounding the results using the \code{\link[base:Round]{base::round()}} function.}
 
 \item{cores}{The number of cores to use in parallel processing (default
 \code{1}). The argument \code{cores} is passed to
 \code{[brms::add_criterion()]}.}
 
-\item{verbose}{An optional argument (logical, default \code{FALSE}) to
-indicate whether to print information collected during setting up the
-object(s).}
+\item{verbose}{A logical argument (default \code{FALSE}) to specify whether
+to print information collected during the setup of the object(s).}
 
-\item{expose_function}{An optional logical argument to indicate whether to
-expose Stan functions (default \code{FALSE}). Note that if user has already
-exposed Stan functions during model fit by setting \code{expose_function =
-  TRUE} in the \code{\link[=bsitar]{bsitar()}}, then those exposed functions are saved and can be
-used during post processing of the posterior draws and therefore
-\code{expose_function} is by default set as \code{FALSE} in all post
-processing functions except \code{\link[=optimize_model]{optimize_model()}}. For \code{\link[=optimize_model]{optimize_model()}}, the
-default setting is \code{expose_function = NULL}. The reason is that each
-optimized model has different Stan function and therefore it need to be re
-exposed and saved. The \code{expose_function = NULL} implies that the
-setting for \code{expose_function} is taken from the original \code{model}
-fit. Note that \code{expose_function} must be set to \code{TRUE} when
-adding \code{fit criteria} and/or \code{bayes_R2} during model
-optimization.}
+\item{expose_function}{A logical argument (default \code{FALSE}) to indicate
+whether Stan functions should be exposed. If \code{TRUE}, any Stan
+functions exposed during the model fit using \code{expose_function = TRUE}
+in the \code{\link[=bsitar]{bsitar()}} function are saved and can be used in post-processing. By
+default, \code{expose_function = FALSE} in post-processing functions,
+except in \code{\link[=optimize_model]{optimize_model()}} where it is set to \code{NULL}. If
+\code{NULL}, the setting is inherited from the original model fit. It must
+be set to \code{TRUE} when adding \code{fit criteria} or \code{bayes_R2}
+during model optimization.}
 
-\item{usesavedfuns}{A logical (default \code{NULL}) to indicate whether to
-use the already exposed and saved \code{Stan} functions. Depending on
-whether the user have exposed Stan functions within the \code{\link[=bsitar]{bsitar()}} call via
-\code{expose_functions} argument in the \code{\link[=bsitar]{bsitar()}}, the \code{usesavedfuns}
-is automatically set to \code{TRUE} (if \code{expose_functions = TRUE}) or
-\code{FALSE} (if \code{expose_functions = FALSE}). Therefore, manual
-setting of \code{usesavedfuns} as \code{TRUE}/\code{FALSE} is rarely
-needed. This is for internal purposes only and mainly used during the
-testing of the functions and therefore should not be used by users as it
-might lead to unreliable estimates.}
+\item{usesavedfuns}{A logical value (default \code{NULL}) indicating whether
+to use already exposed and saved Stan functions. This is typically set
+automatically based on the \code{expose_functions} argument from the
+\code{\link[=bsitar]{bsitar()}} call. Manual specification of \code{usesavedfuns} is rarely
+needed and is intended for internal testing, as improper use can lead to
+unreliable estimates.}
 
-\item{clearenvfuns}{A logical to indicate whether to clear the exposed
-function from the environment (\code{TRUE}) or not (\code{FALSE}). If
-\code{NULL} (default), then \code{clearenvfuns} is set as \code{TRUE} when
-\code{usesavedfuns} is \code{TRUE}, and \code{FALSE} if \code{usesavedfuns}
-is \code{FALSE}.}
+\item{clearenvfuns}{A logical value indicating whether to clear the exposed
+Stan functions from the environment (\code{TRUE}) or not (\code{FALSE}). If
+\code{NULL}, \code{clearenvfuns} is set based on the value of
+\code{usesavedfuns}: \code{TRUE} if \code{usesavedfuns = TRUE}, or
+\code{FALSE} if \code{usesavedfuns = FALSE}.}
 
-\item{envir}{Environment used for function evaluation. The default is
-\code{NULL} which will set \code{parent.frame()} as default environment.
-Note that since most of post processing functions are based on \pkg{brms},
-the functions needed for evaluation should be in the \code{.GlobalEnv}.
-Therefore, it is strongly recommended to set \code{ envir = globalenv()}
-(or \code{envir = .GlobalEnv}). This is particularly true for the
-derivatives such as velocity curve.}
+\item{envir}{The environment used for function evaluation. The default is
+\code{NULL}, which sets the environment to \code{parent.frame()}. Since
+most post-processing functions rely on \pkg{brms}, it is recommended to set
+\code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
+derivatives like velocity curves.}
 
 \item{...}{Other arguments passed to \code{\link{update_model}}.}
 }

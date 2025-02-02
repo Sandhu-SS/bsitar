@@ -1,72 +1,66 @@
 
 
-#' Estimate growth curves
+#' @title Estimate growth curves
 #' 
 #' @description The \strong{marginal_draws()} function estimates and plots
-#'   growth curves (distance and velocity) by using \pkg{marginaleffects}
-#'   package as back-end. This function can compute growth curves (via
+#'   growth curves (distance and velocity) by using the \pkg{marginaleffects}
+#'   package as a back-end. This function can compute growth curves (via
 #'   [marginaleffects::predictions()]), average growth curves (via
-#'   [marginaleffects::avg_predictions()]) or plot growth curves (via
+#'   [marginaleffects::avg_predictions()]), or plot growth curves (via
 #'   [marginaleffects::plot_predictions()]). Please see
-#'   [here](https://marginaleffects.com/) for details.
-#'  Note that \pkg{marginaleffects} package is highly flexible and therefore it
-#'  is expected that user has a strong understanding of its working.
-#'  Furthermore, since \pkg{marginaleffects} package is rapidly evolving, the
-#'  results obtained from the current implementation should be considered
-#'  experimental.
+#'   [here](https://marginaleffects.com/) for details. Note that the
+#'   \pkg{marginaleffects} package is highly flexible, and therefore, it
+#'   is expected that the user has a strong understanding of its workings.
+#'   Furthermore, since \pkg{marginaleffects} is rapidly evolving, the
+#'   results obtained from the current implementation should be considered
+#'   experimental.
 #'
-#' @details The \strong{marginal_draws()} estimates fitted values (via
+#' @details The \strong{marginal_draws()} function estimates fitted values (via
 #'   [brms::fitted.brmsfit()]) or the posterior draws from the posterior
 #'   distribution (via [brms::predict.brmsfit()]) depending on the \code{type}
 #'   argument.
 #'   
-#' @param average A logical to indicate whether to internally call the
-#'    [marginaleffects::predictions()] or the
-#'    [marginaleffects::avg_predictions()] function. If \code{FALSE} (default),
-#'    [marginaleffects::predictions()] is called otherwise
-#'    [marginaleffects::avg_predictions()] when \code{average = TRUE}.
+#' @param average A logical indicating whether to internally call the
+#'    [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
+#'    function. If \code{FALSE} (default), [marginaleffects::predictions()] is
+#'    called; otherwise, [marginaleffects::avg_predictions()] is used when
+#'    \code{average = TRUE}.
 #'
-#' @param plot A logical to specify whether to plot predictions by calling the
-#'   [marginaleffects::plot_predictions()] function (\code{FALSE}) or not
-#'   (\code{FALSE}). If \code{FALSE} (default), then
-#'   [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
-#'   are called to compute predictions (see \code{average} for details). Note
-#'   that [marginaleffects::plot_predictions()] allows either \code{condition}
-#'   or \code{by} arguments but not both. Therefore, when argument
-#'   \code{condition} is not \code{NULL}, the \code{by} argument is set to
-#'   \code{NULL}. This step is required because \strong{marginal_draws()}
-#'   automatically assigns the \code{by} argument when model includes a co
-#'   variate.
+#' @param plot A logical specifying whether to plot predictions by calling
+#'   [marginaleffects::plot_predictions()] (\code{TRUE}) or not (\code{FALSE}).
+#'   If \code{FALSE} (default), [marginaleffects::predictions()] or
+#'   [marginaleffects::avg_predictions()] are called to compute predictions (see
+#'   \code{average} for details). Note that
+#'   [marginaleffects::plot_predictions()] allows either \code{condition} or
+#'   \code{by} arguments, but not both. Therefore, when the \code{condition}
+#'   argument is not \code{NULL}, the \code{by} argument is set to \code{NULL}.
+#'   This step is required because \strong{marginal_draws()} automatically
+#'   assigns the \code{by} argument when the model includes a covariate.
 #' 
-#' @param deriv An integer to indicate whether to estimate distance curve or its
-#'   derivative (i.e., velocity curve). The \code{deriv = 0} (default) is for
-#'   the distance curve whereas \code{deriv = 1} for the velocity curve. 
+#' @param deriv An integer to indicate whether to estimate the distance curve or
+#'   its derivative (i.e., velocity curve). The \code{deriv = 0} (default) is
+#'   for the distance curve, whereas \code{deriv = 1} is for the velocity curve.
 #'
-#' @param method A character string to specify whether to make computation at
-#'   post draw stage by using the \code{'marginaleffects'} machinery i.e.,
-#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}) or via
-#'   the custom functions written for efficiency and speed (\code{method =
-#'   'custom'}, default). Note that \code{method = 'custom'} is useful and
-#'   rather needed when testing hypotheses. Note that when \code{method =
-#'   'custom'}, [marginaleffects::predictions()] and not the
-#'   [marginaleffects::comparisons()] is used internally.
+#' @param method A character string specifying the computation method: whether
+#'   to use the \pkg{marginaleffects} machinery at the post-draw stage, i.e.,
+#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}) or to use custom
+#'   functions for efficiency and speed (\code{method = 'custom'}, default).
+#'   Note that \code{method = 'custom'} is particularly useful when testing
+#'   hypotheses. Also, when \code{method = 'custom'},
+#'   [marginaleffects::predictions()] is used internally instead of
+#'   [marginaleffects::comparisons()].
 #' 
 #' @param constrats_by A character vector (default \code{NULL}) specifying the
-#'   variable(s) by which hypotheses (post draw stage) should be tested
-#'   (see \code{hypothesis} argument). Note that variable(s)
-#'   specified in the \code{constrats_by} should be sub set of the variables
-#'   included in the \code{'by'} argument. 
+#'   variable(s) by which hypotheses (at the post-draw stage) should be tested.
+#'   Note that the variable(s) in \code{constrats_by} should be a subset of the
+#'   variables included in the \code{'by'} argument.
 #'   
 #' @param constrats_at A character vector (default \code{NULL}) specifying the
-#'   variable(s) at which hypotheses (post draw stage) should be tested (see
-#'   \code{hypothesis} argument). Note that variable(s) specified in the
-#'   \code{constrats_at} should be sub set of the variables included in the
-#'   \code{'by'} argument. The \code{constrats_at} is particularly useful when
-#'   number of rows in the estimates is large. This is because the
-#'   \pkg{marginaleffects} does not allow hypotheses testing when the number of
-#'   rows in the estimates is more that 25.  
+#'   variable(s) at which hypotheses (at the post-draw stage) should be tested.
+#'   \code{constrats_at} is particularly useful when the number of rows in the
+#'   estimates is large because \pkg{marginaleffects} does not allow hypotheses
+#'   testing when the number of rows exceeds 25.
 #'  
-#' 
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams growthparameters_comparison.bgmfit
 #' @inheritParams marginal_comparison.bgmfit
@@ -100,13 +94,12 @@
 #' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
 #' # Check and confirm whether model fit object 'berkeley_exfit' exists
-#'  berkeley_exfit <- getNsObject(berkeley_exfit)
+#' berkeley_exfit <- getNsObject(berkeley_exfit)
 #' 
 #' model <- berkeley_exfit
 #' 
 #' # Population average distance curve
 #' marginal_draws(model, deriv = 0, re_formula = NA)
-#' 
 #' 
 #' # Individual-specific distance curves
 #' marginal_draws(model, deriv = 0, re_formula = NULL)
