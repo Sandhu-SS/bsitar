@@ -42,15 +42,15 @@ library(bsitar)
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 3,
-                        chains = 2, cores = 2, iter = 2000, thin = 20,
+                        chains = 2, cores = 2, iter = 2000, thin = 10,
                         a_prior_beta = normal(lm, ysd, autoscale = 1),
-                        b_prior_beta = normal(0, 1.5),
-                        c_prior_beta = normal(0, 0.5),
-                        s_prior_beta = normal(lm, lm, autoscale = 2.5),
+                        b_prior_beta = normal(0, 2.0),
+                        c_prior_beta = normal(0, 1.0),
+                        s_prior_beta = normal(lm, lm, autoscale = 1),
                         a_prior_sd = normal(0, ysd, autoscale = 1),
-                        b_prior_sd = normal(0, 1.0),
-                        c_prior_sd = normal(0, 0.25),
-                        rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                        b_prior_sd = normal(0, 1.5),
+                        c_prior_sd = normal(0, 1.0),
+                        rsd_prior_sigma = normal(0, lm_rsd, autoscale = FALSE),
                         a_init_beta = lm, 
                         b_init_beta = 0,
                         c_init_beta = 0,
@@ -60,6 +60,7 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         threads = brms::threading(NULL),
                         seed = 123)
 
+# berkeley_exfitx <- berkeley_exfit
 
 # plot(berkeley_exfit, nvariables = 1, combo = c('dens', 'trace'))
 
@@ -67,7 +68,11 @@ save_file_exdata      <- "berkeley_exdata_temp.rds"
 save_file_exfit       <- "berkeley_exfit_temp.rds"
 
 saveRDS(berkeley_exdata, file = save_file_exdata, compress = 'xz')
+
 saveRDS(berkeley_exfit,  file = save_file_exfit,  compress = 'xz')
+
+# saveRDS(reduce_size(berkeley_exfit), file = save_file_exfit,  compress = 'xz')
+
 
 rm(list=setdiff(ls(), c('save_file_exdata', 'save_file_exfit')))
 
@@ -89,5 +94,54 @@ usethis::use_data(berkeley_exfit, overwrite = TRUE)
 #                   overwrite = TRUE, internal = TRUE, compress = 'xz')
 
 
+
+# https://stackoverflow.com/questions/75924112/r-brms-saving-models-to-file-inside-a-function-call-saves-the-entire-local-env
+
+# hack_size <- function(x, ...) {
+#   UseMethod("hack_size")
+# }
+# hack_size.stanfit <- function(x) {
+#   x@stanmodel <- structure(numeric(0), class="stanmodel")
+#   x@.MISC <- new.env()
+#   return(x)
+# }
+# 
+# hack_size.brmsfit <- function(x) {
+#   x$fit <- hack_size(x$fit)
+#   return(x)
+# }
+# 
+# hack_size.stanreg <- function(x) {
+#   x$stanfit <- hack_size(x$stanfit)
+#   return(x)
+# }
+# 
+# 
+# hack_size.data.frame <- function(x) {
+#   environment(attr(x, "terms")) <- new.env(parent = baseenv())
+#   return(x)
+# }
+
+# hack_size.brmsfit <- function(x, formual  = FALSE, data = TRUE, fit = TRUE) {
+#   
+#   hack_size.data.frame <- function(x) {
+#     environment(attr(x, "terms")) <- new.env(parent = baseenv())
+#     return(x)
+#   }
+#   
+#   hack_size.brmsfit <- function(x) {
+#     x$fit <- hack_size(x$fit)
+#     return(x)
+#   }
+#   
+#   if(formual) x$formula <- hack_size(x$formula)
+#   if(data)    x$data    <- hack_size(x$data)
+#   if(fit)     x$fit     <- hack_size(x$fit)
+#   return(x)
+# }
+# 
+# hack_size <- function(x, ...) {
+#   UseMethod("hack_size")
+# }
 
 

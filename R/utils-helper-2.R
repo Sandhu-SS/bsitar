@@ -3601,7 +3601,7 @@ GG_save_pdf = function(list, filename,
 
 
 
-#' Check if 'bsitar' argument such as xfun is set or NULL
+#' An internal to check if 'bsitar' argument such as xfun is set or NULL
 #'
 #' @param x A symbol or a character string 
 #'
@@ -3654,5 +3654,66 @@ remove_between_first_last_parnth <- function(x, splitat = NULL) {
     b <- strsplit(b, splitat)[[1]]
   }
   b
+}
+
+
+# https://stackoverflow.com/questions/75924112/r-brms-saving-models-to-file-
+# inside-a-function-call-saves-the-entire-local-env
+
+#' An internal to reduce size of 'bsitar' fit objects
+#'
+#' @param x A model fit object 
+#' @param formula A logical TRUE/FALSE to indicate if formula need to be altered 
+#' @param data A logical TRUE/FALSE to indicate if data need to be altered  
+#' @param fit A logical TRUE/FALSE to indicate if fit need to be altered  
+#'
+#' @return A model fit object
+#' @keywords internal
+#' @noRd
+#'
+reduce_size.brmsfit <- function(x, 
+                                formula  = FALSE,
+                                formula_env = NULL,
+                                data = TRUE, 
+                                fit = TRUE) {
+  
+  reduce_size.brmsformula <- function(x, ...) {
+    if(is.null(formula_env)) {
+      environment(x$formula) <- x$model_info$envir
+    } else {
+      environment(x$formula) <- new.env(parent = baseenv())
+    }
+    return(x)
+  }
+  
+  reduce_size.data.frame <- function(x) {
+    environment(attr(x, "terms")) <- new.env(parent = baseenv())
+    return(x)
+  }
+  
+  reduce_size.brmsfit <- function(x) {
+    x$fit <- reduce_size(x$fit)
+    return(x)
+  }
+  
+  reduce_size.stanfit <- function(x) {
+    x@stanmodel <- structure(numeric(0), class="stanmodel")
+    x@.MISC <- new.env()
+    return(x)
+  }
+  
+  # reduce_size.stanreg <- function(x) {
+  #   x$stanfit <- hack_size(x$stanfit)
+  #   return(x)
+  # }
+  
+  if(formula) x$formula <- reduce_size(x$formula)
+  if(data)    x$data    <- reduce_size(x$data)
+  if(fit)     x$fit     <- reduce_size(x$fit)
+  return(x)
+}
+
+reduce_size <- function(x, ...) {
+  UseMethod("reduce_size")
 }
 

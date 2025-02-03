@@ -91,8 +91,8 @@ bsitar(
   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
   sigma_prior_sd_str = NULL,
   sigma_cov_prior_sd_str = NULL,
-  rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
-  dpar_prior_sigma = normal(0, ysd, autoscale = TRUE),
+  rsd_prior_sigma = normal(0, lm_rsd, autoscale = FALSE),
+  dpar_prior_sigma = normal(0, lm_rsd, autoscale = FALSE),
   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
   autocor_prior_unstr_acor = lkj(1),
@@ -1077,15 +1077,24 @@ hierarchical model with three or more levels of hierarchy. (default
 \code{NULL}). Follows the same approach as \code{a_cov_prior_sd_str}.}
 
 \item{rsd_prior_sigma}{Specify priors for the residual standard deviation
-parameter \code{sigma}. (default \code{normal(0, 'ysd', autoscale =
+parameter \code{sigma} (default \code{normal(0, 'ysd', autoscale =
   TRUE)}). Evaluated when both \code{dpar_formula} and \code{sigma_formula}
 are \code{NULL}. For location-scale based distributions, user can specify
 standard deviation (\code{ysd}) or the median absolute deviation
-(\code{ymad}) as the scale parameter.}
+(\code{ymad}) of outcome as the scale parameter. Also, residual standard
+deviation from the linear mixed model (\code{nlme::lme()}) or the linear
+model (\code{base::lm()}) fitted to the data. These are specified as
+\code{'lme_rsd'} and \code{'lm_rsd'}, respectively. Note that if
+\code{nlme::lme()} fails to converge, the option \code{'lm_rsd'} is set
+automatically. The argument \code{rsd_init_sigma} is evaluated when both
+\code{dpar_formula} and \code{sigma_formula} are set to \code{NULL}. The
+default prior for \code{rsd_prior_sigma} is set as \code{normal(0, lm_rsd,
+  autoscale = FALSE)}.}
 
 \item{dpar_prior_sigma}{Specify priors for the fixed effect distributional
-parameter \code{sigma}. (default \code{normal(0, 'ysd', autoscale =
-  TRUE)}). Evaluated when \code{sigma_formula} is \code{NULL}.}
+parameter \code{sigma} (default \code{normal(0, lm_rsd, autoscale =
+  FALSE)}). Evaluated when \code{sigma_formula} is \code{NULL}. See
+\code{rsd_prior_sigma} for details.}
 
 \item{dpar_cov_prior_sigma}{Specify priors for the covariate(s) included in
 the fixed effect distributional parameter \code{sigma}. (default
