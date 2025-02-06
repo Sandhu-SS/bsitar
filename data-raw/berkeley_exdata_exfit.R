@@ -29,6 +29,33 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         seed = 123)
 
 
-usethis::use_data(berkeley_exdata, overwrite = TRUE, compress = 'xz')
-usethis::use_data(berkeley_exfit,  overwrite = TRUE, compress = 'xz')
+# load("C:/Users/drsat/OneDrive/Documents/GitHub/bsitar/data/berkeley_exfit.rda")
+
+save_file_exdata      <- "berkeley_exdata_temp.rds"
+save_file_exfit       <- "berkeley_exfit_temp.rds"
+
+saveRDS(berkeley_exdata, file = save_file_exdata, compress = 'xz')
+saveRDS(berkeley_exfit,  file = save_file_exfit,  compress = 'xz')
+
+# saveRDS(reduce_size(berkeley_exfit), file = save_file_exfit,  compress = 'xz')
+
+
+rm(list=setdiff(ls(), c('save_file_exdata', 'save_file_exfit')))
+
+
+berkeley_exdata <- readRDS(file = save_file_exdata)
+berkeley_exfit  <- readRDS(file = save_file_exfit)
+
+file.remove(save_file_exdata)
+file.remove(save_file_exfit)
+
+
+# Moving from data 'rda' to sysdata internal
+
+usethis::use_data(berkeley_exdata, overwrite = TRUE)
+usethis::use_data(berkeley_exfit, overwrite = TRUE)
+
+
+# usethis::use_data(berkeley_exdata, overwrite = TRUE, compress = 'xz')
+# usethis::use_data(berkeley_exfit,  overwrite = TRUE, compress = 'xz')
 
