@@ -883,9 +883,9 @@ data_bsitar_dx2 <- plot_curves(model_bayes, opt = 'd', returndata = TRUE, newdat
   dplyr::select(-dplyr::all_of(c('distance', 'Est.Error',  'Q2.5', 'Q97.5')))
 data_all_ad <- data_all_a %>% 
   dplyr::bind_rows(., data_sitar_dx2 %>% dplyr::relocate(all_of(colnames(data))) %>% 
-                     dplyr::mutate(Curve = 'pop.avg_sitar')) %>% 
+                     dplyr::mutate(Curve = 'sitar')) %>% 
   dplyr::bind_rows(., data_bsitar_dx2 %>% dplyr::relocate(all_of(colnames(data))) %>% 
-                     dplyr::mutate(Curve = 'pop.avg_bsitar')) %>% 
+                     dplyr::mutate(Curve = 'bsitar')) %>% 
   dplyr::mutate(Curve = as.factor(Curve))
 
 
@@ -894,29 +894,34 @@ data_all_ad <- data_all_ad %>%
                                       levels=c("observed",
                                                "adjusted_sitar",
                                                "adjusted_bsitar", 
-                                               "pop.avg_sitar",
-                                               "pop.avg_bsitar" ))))
+                                               "sitar",
+                                               "bsitar" ))))
 
 data_all_alevs <- levels(data_all_ad$Curve)
 
+# This to show legend label as Model and not curve 
+data_all_ad <- data_all_ad %>% dplyr::mutate(Model = Curve)
+
 p <- 
   data_all_ad %>% 
-  dplyr::mutate(groupby = interaction(id, Curve)) %>% 
+  dplyr::mutate(groupby = interaction(id, Model)) %>% 
   ggplot(., aes(x = age)) 
 
 p + 
-  geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[4]) %>%
-              dplyr::mutate(groupby = interaction(id, Curve)),
-            aes(x = age, y = height, group = groupby, linetype = Curve),
+  geom_line(data = data_all_ad %>% dplyr::filter(Model==data_all_alevs[4]) %>%
+              dplyr::mutate(groupby = interaction(id, Model)),
+            aes(x = age, y = height, group = groupby, linetype = Model),
             color = colours[1], linewidth = linewidths[2], 
             alpha = alphas[2], show.legend = TRUE) +
-  geom_line(data = data_all_ad %>% dplyr::filter(Curve==data_all_alevs[5]) %>%
-              dplyr::mutate(groupby = interaction(id, Curve)),
-            aes(x = age, y = height, group = groupby, linetype = Curve),
+  geom_line(data = data_all_ad %>% dplyr::filter(Model==data_all_alevs[5]) %>%
+              dplyr::mutate(groupby = interaction(id, Model)),
+            aes(x = age, y = height, group = groupby, linetype = Model),
             color = colours[1], linewidth = linewidths[2], 
             alpha = alphas[2], show.legend = TRUE) +
   scale_x_continuous(breaks = seq(xrange[1], xrange[2], 1), limits = xrange) +
   theme_grids1 + theme_legends1
+
+data_all_ad <- data_all_ad %>% dplyr::select(-Model)
 
 plt_plotd <- recordPlot()
 

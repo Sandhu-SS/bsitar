@@ -119,14 +119,14 @@ Here we describe the Bayesian model specification for a two-level SITAR model al
 \\
 \mathbf R & = \begin{bmatrix} 1  & \rho_{\alpha_j\zeta_j} & \rho_{\alpha_j\gamma_j} \\\rho_{\zeta_j\alpha_j} & 1 & \rho_{\zeta_j\gamma_j} \\\rho_{\gamma_j\alpha_j} & \rho_{\gamma_j\zeta_j} & 1 \end{bmatrix} \\
 \\
-\alpha_0   & \sim \operatorname{normal}(\ y_{mean},\  {y_{sd}}) \\
-\zeta_0   & \sim \operatorname{normal}(\ 0,\ 1.5) \\
-\gamma_0  & \sim \operatorname{normal}(\ 0,\ 0.5) \\
-\beta_1 \text{,..,} \beta_r & \sim \operatorname{normal}(\ 0, \ \mathbf {X_{scaled}}) \\
-\alpha_j   & \sim \operatorname{normal_{Half}}(\ {0},\  {y_{sd}}) \\
-\zeta_j   & \sim \operatorname{normal_{Half}}(\ {0},\  {1.0}) \\
-\gamma_j   & \sim \operatorname{normal_{Half}}(\ {0},\  {0.25}) \\
-\sigma_\epsilon & \sim \operatorname{normal_{Half}}(\ {0},\  {y_{sd}}) \\
+\alpha_0   & \sim \operatorname{normal}(\ y_{mean},\  {y_{sd}},\ autoscale= TRUE) \\
+\zeta_0   & \sim \operatorname{normal}(\ 0,\ 2.0, \ autoscale= FALSE) \\
+\gamma_0  & \sim \operatorname{normal}(\ 0,\ 1.0, \ autoscale= FALSE) \\
+\beta_1 \text{,..,} \beta_r & \sim \operatorname{normal}(\ 0, \ \mathbf {X_{scaled}},\ autoscale= TRUE) \\
+\alpha_j   & \sim \operatorname{normal_{Half}}(\ {0},\  {y_{sd}}, \ autoscale= TRUE) \\
+\zeta_j   & \sim \operatorname{normal_{Half}}(\ {0},\  {2}, \ autoscale= FALSE) \\
+\gamma_j   & \sim \operatorname{normal_{Half}}(\ {0},\  {0.5}, \ autoscale= FALSE) \\
+\sigma_\epsilon & \sim \operatorname{normal_{Half}}(\ {0},\  {y_{sd}}, \ autoscale= TRUE) \\
 \mathbf R & \sim \operatorname{LKJ}(1),
 \end{aligned}
 
@@ -164,11 +164,11 @@ Below we describe the default priors used for the regression coefficients as wel
 
 * The population regression parameter `a` is assigned 'normal' prior centered at $y_{\text{mean}}$ (i.e., mean of the outcome) with scale defined as the standard deviation of the outcome $y_{\text{sd}}$ multiplied by the default scaling factor $2.5$ i.e., `normal(ymean, ysd, autoscale = TRUE)`. The prior on the standard deviation of the random effect parameter `a` is identical to the regression parameter with the exception that it is centered at mean `0` i.e., `normal(0, ysd, autoscale = TRUE)`.
 
-* For the population regression parameter `b`, the default prior follows a 'normal' distribution with mean `0` and a scale of `1.5`, i.e., `normal(0, 1.5, autoscale = FALSE)`. Note that the `autoscale` option is set to `FALSE.` Since the predictor `age` is typically mean-centered when fitting the SITAR model, this prior implies that 95% of the distribution's mass (assuming it approaches a normal curve) for 
-the timing parameter will cover range between 11 and 17 years when the predictor `age` is centered at 14 years. Depending on the mean age and whether the data correspond to males or females, the scale factor can be adjusted accordingly. The prior for the standard deviation of `b` parameter is also `normal`, with a mean of 0 and a standard deviation of `1.0` (`normal(0, 1.0, autoscale = FALSE)`), implying that 95% of the distribution's mass for the individual variability in the timing 
-parameter will cover 4 years ($\pm 2.0$) around the population average parameter `b`.
+* For the population regression parameter `b`, the default prior follows a 'normal' distribution with mean `0` and a scale of $2.0$, i.e., `normal(0, 2.0, autoscale = FALSE)`. Note that the `autoscale` option is set to `FALSE.` Since the predictor `age` is typically mean-centered when fitting the SITAR model, this prior implies that 95% of the distribution's mass (assuming it approaches a normal curve) for 
+the timing parameter will cover range between 10 and 18 years when the predictor `age` is centered at 14 years. Depending on the mean age and whether the data correspond to males or females, the scale factor can be adjusted accordingly. The prior for the standard deviation of `b` parameter is also `normal`, with a mean of 0 and a standard deviation of $1.0$ (`normal(0, 2.0, autoscale = FALSE)`), implying that 95% of the distribution's mass for the individual variability in the timing 
+parameter will cover $\pm 4.0$ years from the population average parameter `b`.
 
-* The default prior for the population average intensity regression parameter `c` is 'normal' with a mean of `0` and a scale of `0.5`, i.e., `normal(0, 0.5, autoscale = FALSE)`. Note that intensity parameter is estimated on the `exp` scale, and therefore is interpreted as percentage increase in size. For the standard deviation of `c` parameter, prior assigned is `normal(0, 0.25, autoscale = FALSE)` 
+* The default prior for the population average intensity regression parameter `c` is 'normal' with a mean of `0` and a scale of `1.0`, i.e., `normal(0, 1.0, autoscale = FALSE)`. Since the intensity parameter is estimated on the `exp` scale, this prior implies that 95% of the distribution's mass will cover intensities between `exp(-2)` and `exp(2)`, i.e., between `0.1` and `7.4` unit/year. The prior for the standard deviation parameter (i.e., the random effect parameter `c`) is also 'normal', with a mean of `0` and a standard deviation of `0.5`, i.e., `normal(0, 0.5, autoscale = FALSE)` implying that 95% of the distribution for individual variation in intensity will cover `± exp(0.5)`, i.e., between `0.6` and `1.6` unit/year.
 
 * The prior for the correlations between random effect parameters follows the Lewandowski-Kurowicka-Joe (LKJ) distribution. The `LKJ` prior is specified via a single parameter `eta`. If `eta = 1` (the default), all correlation matrices are equally likely `a priori`. If `eta > 1`, extreme correlations become less likely, whereas if `0 < eta < 1`, higher probabilities are assigned to extreme correlations.
 See [brms](https://rdrr.io/cran/brms/man/set_prior.html) for more details.
@@ -225,22 +225,22 @@ The [univariate][Bayesian SITAR model - Univariate formulation] described earlie
 \rho_{\alpha_{j}^\text{Y1}\gamma_{j}^\text{Y2}} & \rho_{\zeta_{j}^\text{Y1}\gamma_{j}^\text{Y2}} & \rho_{\gamma_{j}^\text{Y1}\gamma_{j}^\text{Y2}} & \rho_{\gamma_{j}^\text{Y2}\alpha_{j}^\text{Y2}} & \rho_{\gamma_{j}^\text{Y2}\zeta_{j}^\text{Y2}}  & 1 
 \end{bmatrix} \\
 \\
-\alpha_0^\text{Y1}   & \sim \operatorname{normal}(\ y^\text{Y1}_{mean},\  {y^\text{Y1}_{sd}}) \\
-\alpha_0^\text{Y2}   & \sim \operatorname{normal}(\ y^\text{Y2}_{mean},\  {y^\text{Y2}_{sd}}) \\
-\zeta_0^\text{Y1} & \sim \operatorname{normal}(\ 0, 1.5) \\
-\zeta_0^\text{Y2} & \sim \operatorname{normal}(\ 0, 1.5) \\
-\gamma_0^\text{Y1} & \sim \operatorname{normal}(\ 0, 0.5) \\
-\gamma_0^\text{Y2} & \sim \operatorname{normal}(\ 0, 0.5) \\
-\beta_1^\text{Y1} \text{,..,} \beta_r^\text{Y1} & \sim \operatorname{normal}(\ 0, \ \mathbf {X^\text{Y1}_{scaled}}) \\
-\beta_1^\text{Y2} \text{,..,} \beta_r^\text{Y2} & \sim \operatorname{normal}(\ 0, \ \mathbf {X^\text{Y2}_{scaled}}) \\
-\alpha_j^\text{Y1}   & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y1}_{sd}}) \\
-\alpha_j^\text{Y2}   & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y2}_{sd}}) \\
-\zeta_j^\text{Y1}  & \sim \operatorname{normal_{Half}}(\ {0},\ {1.0}) \\
-\zeta_j^\text{Y2} & \sim \operatorname{normal_{Half}}(\ {0},\ {1.0}) \\
-\gamma_j^\text{Y1} & \sim \operatorname{normal_{Half}}(\ {0},\ {0.25}) \\
-\gamma_j^\text{Y2} & \sim \operatorname{normal_{Half}}(\ {0},\ {0.25}) \\
-\sigma_{ij}^\text{Y1} & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y1}_{sd}}) \\
-\sigma_{ij}^\text{Y2} & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y2}_{sd}}) \\
+\alpha_0^\text{Y1}   & \sim \operatorname{normal}(\ y^\text{Y1}_{mean},\  {y^\text{Y1}_{sd}},\ autoscale= TRUE) \\
+\alpha_0^\text{Y2}   & \sim \operatorname{normal}(\ y^\text{Y2}_{mean},\  {y^\text{Y2}_{sd}},\ autoscale= TRUE) \\
+\zeta_0^\text{Y1} & \sim \operatorname{normal}(\ 0, 2.0,\ autoscale= FALSE) \\
+\zeta_0^\text{Y2} & \sim \operatorname{normal}(\ 0, 2.0,\ autoscale= FALSE) \\
+\gamma_0^\text{Y1} & \sim \operatorname{normal}(\ 0, 1.0,\ autoscale= FALSE) \\
+\gamma_0^\text{Y2} & \sim \operatorname{normal}(\ 0, 1.0,\ autoscale= FALSE) \\
+\beta_1^\text{Y1} \text{,..,} \beta_r^\text{Y1} & \sim \operatorname{normal}(\ 0, \ \mathbf {X^\text{Y1}_{scaled}},\ autoscale= TRUE) \\
+\beta_1^\text{Y2} \text{,..,} \beta_r^\text{Y2} & \sim \operatorname{normal}(\ 0, \ \mathbf {X^\text{Y2}_{scaled}},\ autoscale= TRUE) \\
+\alpha_j^\text{Y1}   & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y1}_{sd}},\ autoscale= TRUE) \\
+\alpha_j^\text{Y2}   & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y2}_{sd}},\ autoscale= TRUE) \\
+\zeta_j^\text{Y1}  & \sim \operatorname{normal_{Half}}(\ {0},\ {2},\ autoscale= FALSE) \\
+\zeta_j^\text{Y2} & \sim \operatorname{normal_{Half}}(\ {0},\ {2},\ autoscale= FALSE) \\
+\gamma_j^\text{Y1} & \sim \operatorname{normal_{Half}}(\ {0},\ {0.5},\ autoscale= FALSE) \\
+\gamma_j^\text{Y2} & \sim \operatorname{normal_{Half}}(\ {0},\ {0.5},\ autoscale= FALSE) \\
+\sigma_{ij}^\text{Y1} & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y1}_{sd}},\ autoscale= TRUE) \\
+\sigma_{ij}^\text{Y2} & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y2}_{sd}},\ autoscale= TRUE) \\
 \mathbf R_W & \sim \operatorname{LKJ}(1) \\
 \mathbf R_{ID} & \sim \operatorname{LKJ}(1),
 \end{aligned}

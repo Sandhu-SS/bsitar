@@ -55,6 +55,8 @@
  values for both timing and intensity parameters are set to '0', i.e., ``b_init_beta = 0`` and 
  ``c_init_beta = 0``.
 
+ Improved documentation
+
 ### Bugfixes
 
  The ``sigma_cov_init_beta = random`` argument was setting incorrect initial values for the covariates 

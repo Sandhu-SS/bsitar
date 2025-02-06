@@ -19,7 +19,7 @@ bsitar(
   xfun = NULL,
   yfun = NULL,
   bound = 0.04,
-  stype = "nsp",
+  stype = nsp,
   terms_rhs = NULL,
   a_formula = ~1,
   b_formula = ~1,
@@ -59,19 +59,19 @@ bsitar(
     gaussian),
   univariate_by = list(by = NA, cor = un, terms = subset),
   multivariate = list(mvar = FALSE, cor = un, rescor = TRUE),
-  a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
-  b_prior_beta = normal(0, 2, autoscale = FALSE),
-  c_prior_beta = normal(0, 1.5, autoscale = FALSE),
+  a_prior_beta = normal(lm, ysd, autoscale = TRUE),
+  b_prior_beta = normal(0, 1.5, autoscale = FALSE),
+  c_prior_beta = normal(0, 0.5, autoscale = FALSE),
   d_prior_beta = normal(0, 1, autoscale = TRUE),
   s_prior_beta = normal(lm, lm, autoscale = TRUE),
   a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
   d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
-  a_prior_sd = normal(0, ysd, autoscale = TRUE),
-  b_prior_sd = normal(0, 2, autoscale = FALSE),
-  c_prior_sd = normal(0, 1, autoscale = FALSE),
+  s_cov_prior_beta = normal(lm, lm, autoscale = TRUE),
+  a_prior_sd = normal(0, ysd, autoscale = FALSE),
+  b_prior_sd = normal(0, 1, autoscale = FALSE),
+  c_prior_sd = normal(0, 0.25, autoscale = FALSE),
   d_prior_sd = normal(0, 1, autoscale = TRUE),
   a_cov_prior_sd = normal(0, 5, autoscale = FALSE),
   b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -91,8 +91,8 @@ bsitar(
   sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
   sigma_prior_sd_str = NULL,
   sigma_cov_prior_sd_str = NULL,
-  rsd_prior_sigma = normal(0, lm_rsd, autoscale = FALSE),
-  dpar_prior_sigma = normal(0, lm_rsd, autoscale = FALSE),
+  rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+  dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
   dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
   autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
   autocor_prior_unstr_acor = lkj(1),
@@ -350,8 +350,8 @@ be the same for all sub-models (typically), or different for each sub-model
 (refer to \code{x} for details on setting different arguments for
 sub-models).}
 
-\item{stype}{A character string or a named list specifying the spline type to be used.
-The available options are:
+\item{stype}{A character string or a named list specifying the spline type to
+be used. The available options are:
 \itemize{
 \item \code{'rcs'}: Constructs the spline design matrix using the truncated
 power basis (Harrell's method), implemented in \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
@@ -786,7 +786,7 @@ estimate the residual correlation between response variables.
 }}
 
 \item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
-(default \code{normal(ymean, ysd, autoscale = TRUE)}). The following key
+(default \code{normal(lm, ysd, autoscale = TRUE)}). The following key
 points are applicable for all prior specifications. For full details, see
 \code{\link[brms:set_prior]{brms::prior()}}:
 \itemize{
@@ -859,7 +859,7 @@ parameter \code{a}, not for other parameters like \code{b}, \code{c}, or
 }}
 
 \item{b_prior_beta}{Specify priors for the fixed effect parameter, \code{b}.
-The default prior is \code{normal(0, 2.0, autoscale = FALSE)}. For full
+The default prior is \code{normal(0, 1.5, autoscale = FALSE)}. For full
 details on prior specification, please refer to \code{a_prior_beta}.
 
 \itemize{
@@ -874,7 +874,7 @@ specification.
 }}
 
 \item{c_prior_beta}{Specify priors for the fixed effect parameter, \code{c}.
-The default prior is \code{normal(0, 1.5, autoscale = FALSE)}. For full
+The default prior is \code{normal(0, 0.5, autoscale = FALSE)}. For full
 details on prior specification, please refer to \code{a_prior_beta}.
 
 \itemize{
@@ -979,11 +979,11 @@ lower bound is automatically set to \code{0} by \code{brms::brm()}. For
 or different for each submodel (see \code{a_prior_beta}).}
 
 \item{b_prior_sd}{Specify priors for the random effect parameter, \code{b}.
-(default \code{normal(0, 2.0, autoscale = FALSE)}). See \code{a_prior_sd}
+(default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
 for details.}
 
 \item{c_prior_sd}{Specify priors for the random effect parameter, \code{c}.
-(default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
+(default \code{normal(0, 0.25, autoscale = FALSE)}). See \code{a_prior_sd}
 for details.}
 
 \item{d_prior_sd}{Specify priors for the random effect parameter, \code{d}.
@@ -1078,7 +1078,7 @@ hierarchical model with three or more levels of hierarchy. (default
 
 \item{rsd_prior_sigma}{Specify priors for the residual standard deviation
 parameter \code{sigma} (default \code{normal(0, 'ysd', autoscale =
-  TRUE)}). Evaluated when both \code{dpar_formula} and \code{sigma_formula}
+  FALSE)}). Evaluated when both \code{dpar_formula} and \code{sigma_formula}
 are \code{NULL}. For location-scale based distributions, user can specify
 standard deviation (\code{ysd}) or the median absolute deviation
 (\code{ymad}) of outcome as the scale parameter. Also, residual standard
@@ -1086,13 +1086,11 @@ deviation from the linear mixed model (\code{nlme::lme()}) or the linear
 model (\code{base::lm()}) fitted to the data. These are specified as
 \code{'lme_rsd'} and \code{'lm_rsd'}, respectively. Note that if
 \code{nlme::lme()} fails to converge, the option \code{'lm_rsd'} is set
-automatically. The argument \code{rsd_init_sigma} is evaluated when both
-\code{dpar_formula} and \code{sigma_formula} are set to \code{NULL}. The
-default prior for \code{rsd_prior_sigma} is set as \code{normal(0, lm_rsd,
-  autoscale = FALSE)}.}
+automatically. The argument \code{rsd_prior_sigma} is evaluated when both
+\code{dpar_formula} and \code{sigma_formula} are set to \code{NULL}.}
 
 \item{dpar_prior_sigma}{Specify priors for the fixed effect distributional
-parameter \code{sigma} (default \code{normal(0, lm_rsd, autoscale =
+parameter \code{sigma} (default \code{normal(0, 'ysd', autoscale =
   FALSE)}). Evaluated when \code{sigma_formula} is \code{NULL}. See
 \code{rsd_prior_sigma} for details.}
 
@@ -1967,24 +1965,8 @@ if(exists('berkeley_exfit')) {
                   b_formula = ~1, 
                   c_formula = ~1, 
                   threads = brms::threading(NULL),
-                  chains = 2, cores = 2, iter = 6000, thin = 15)
+                  chains = 4, cores = 4, iter = 2000, thin = 6)
                   
-  # Optionally, test the sensitivity to priors by refitting the model 
-  # with flat (uniform) priors for the regression coefficients on a, b, and c.
-  model <- bsitar(x = age, y = height, id = id, 
-                  df = 3, 
-                  data = berkeley_exdata,
-                  xoffset = 'mean', 
-                  fixed = 'a+b+c', 
-                  random = 'a+b+c',
-                  a_formula = ~1, 
-                  b_formula = ~1, 
-                  c_formula = ~1, 
-                  a_prior_beta = flat,
-                  b_prior_beta = flat,
-                  c_prior_beta = flat,
-                  threads = brms::threading(NULL),
-                  chains = 2, cores = 2, iter = 6000, thin = 15)
 }
 
 # Generate model summary

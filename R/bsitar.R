@@ -717,7 +717,7 @@
 #'   }
 #'   
 #' @param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
-#'   (default \code{normal(ymean, ysd, autoscale = TRUE)}). The following key
+#'   (default \code{normal(lm, ysd, autoscale = TRUE)}). The following key
 #'   points are applicable for all prior specifications. For full details, see
 #'   [brms::prior()]:
 #'   \itemize{
@@ -790,7 +790,7 @@
 #'   }
 #'   
 #' @param b_prior_beta Specify priors for the fixed effect parameter, \code{b}.
-#'   The default prior is \code{normal(0, 2.0, autoscale = FALSE)}. For full
+#'   The default prior is \code{normal(0, 1.5, autoscale = FALSE)}. For full
 #'   details on prior specification, please refer to \code{a_prior_beta}.
 #'   
 #'   \itemize{
@@ -805,7 +805,7 @@
 #'   }
 #'   
 #' @param c_prior_beta Specify priors for the fixed effect parameter, \code{c}.
-#'   The default prior is \code{normal(0, 1.5, autoscale = FALSE)}. For full
+#'   The default prior is \code{normal(0, 0.5, autoscale = FALSE)}. For full
 #'   details on prior specification, please refer to \code{a_prior_beta}.
 #'   
 #'   \itemize{
@@ -910,11 +910,11 @@
 #'   or different for each submodel (see \code{a_prior_beta}).
 #'
 #' @param b_prior_sd Specify priors for the random effect parameter, \code{b}.
-#'   (default \code{normal(0, 2.0, autoscale = FALSE)}). See \code{a_prior_sd}
+#'   (default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
 #'   for details.
 #' 
 #' @param c_prior_sd Specify priors for the random effect parameter, \code{c}.
-#'   (default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
+#'   (default \code{normal(0, 0.25, autoscale = FALSE)}). See \code{a_prior_sd}
 #'   for details.
 #' 
 #' @param d_prior_sd Specify priors for the random effect parameter, \code{d}.
@@ -1009,7 +1009,7 @@
 #'
 #' @param rsd_prior_sigma Specify priors for the residual standard deviation
 #'   parameter \code{sigma} (default \code{normal(0, 'ysd', autoscale =
-#'   TRUE)}). Evaluated when both \code{dpar_formula} and \code{sigma_formula}
+#'   FALSE)}). Evaluated when both \code{dpar_formula} and \code{sigma_formula}
 #'   are \code{NULL}. For location-scale based distributions, user can specify
 #'   standard deviation (\code{ysd}) or the median absolute deviation
 #'   (\code{ymad}) of outcome as the scale parameter. Also, residual standard
@@ -1017,13 +1017,11 @@
 #'   model (\code{base::lm()}) fitted to the data. These are specified as
 #'   \code{'lme_rsd'} and \code{'lm_rsd'}, respectively. Note that if
 #'   \code{nlme::lme()} fails to converge, the option \code{'lm_rsd'} is set
-#'   automatically. The argument \code{rsd_init_sigma} is evaluated when both
-#'   \code{dpar_formula} and \code{sigma_formula} are set to \code{NULL}. The
-#'   default prior for \code{rsd_prior_sigma} is set as \code{normal(0, 'lm_rsd',
-#'   autoscale = FALSE)}.
+#'   automatically. The argument \code{rsd_prior_sigma} is evaluated when both
+#'   \code{dpar_formula} and \code{sigma_formula} are set to \code{NULL}.
 #'
 #' @param dpar_prior_sigma Specify priors for the fixed effect distributional
-#'   parameter \code{sigma} (default \code{normal(0, 'lm_rsd', autoscale =
+#'   parameter \code{sigma} (default \code{normal(0, 'ysd', autoscale =
 #'   FALSE)}). Evaluated when \code{sigma_formula} is \code{NULL}. See
 #'   \code{rsd_prior_sigma} for details.
 #'
@@ -1780,24 +1778,8 @@
 #'                   b_formula = ~1, 
 #'                   c_formula = ~1, 
 #'                   threads = brms::threading(NULL),
-#'                   chains = 2, cores = 2, iter = 6000, thin = 15)
+#'                   chains = 4, cores = 4, iter = 2000, thin = 6)
 #'                   
-#'   # Optionally, test the sensitivity to priors by refitting the model 
-#'   # with flat (uniform) priors for the regression coefficients on a, b, and c.
-#'   model <- bsitar(x = age, y = height, id = id, 
-#'                   df = 3, 
-#'                   data = berkeley_exdata,
-#'                   xoffset = 'mean', 
-#'                   fixed = 'a+b+c', 
-#'                   random = 'a+b+c',
-#'                   a_formula = ~1, 
-#'                   b_formula = ~1, 
-#'                   c_formula = ~1, 
-#'                   a_prior_beta = flat,
-#'                   b_prior_beta = flat,
-#'                   c_prior_beta = flat,
-#'                   threads = brms::threading(NULL),
-#'                   chains = 2, cores = 2, iter = 6000, thin = 15)
 #' }
 #' 
 #' # Generate model summary
@@ -1896,19 +1878,19 @@ bsitar <- function(x,
                    multivariate = list(mvar = FALSE,
                                        cor = un,
                                        rescor = TRUE),
-                   a_prior_beta = normal(ymean, ysd, autoscale = TRUE),
-                   b_prior_beta = normal(0, 2.0, autoscale = FALSE),
-                   c_prior_beta = normal(0, 1.5, autoscale = FALSE),
+                   a_prior_beta = normal(lm, ysd, autoscale = TRUE),
+                   b_prior_beta = normal(0, 1.5, autoscale = FALSE),
+                   c_prior_beta = normal(0, 0.5, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = TRUE),
                    s_prior_beta = normal(lm, lm, autoscale = TRUE),
                    a_cov_prior_beta = normal(0, 5.0, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
                    d_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
-                   s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
-                   a_prior_sd = normal(0, ysd, autoscale = TRUE),
-                   b_prior_sd = normal(0, 2.0, autoscale = FALSE),
-                   c_prior_sd = normal(0, 1.0, autoscale = FALSE),
+                   s_cov_prior_beta = normal(lm, lm, autoscale = TRUE),
+                   a_prior_sd = normal(0, ysd, autoscale = FALSE),
+                   b_prior_sd = normal(0, 1.0, autoscale = FALSE),
+                   c_prior_sd = normal(0, 0.25, autoscale = FALSE),
                    d_prior_sd = normal(0, 1.0, autoscale = TRUE),
                    a_cov_prior_sd = normal(0, 5.0, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
@@ -1928,8 +1910,8 @@ bsitar <- function(x,
                    sigma_cov_prior_sd = normal(0, 0.15, autoscale = FALSE),
                    sigma_prior_sd_str = NULL,
                    sigma_cov_prior_sd_str = NULL,
-                   rsd_prior_sigma = normal(0, lm_rsd, autoscale = FALSE),
-                   dpar_prior_sigma = normal(0, lm_rsd, autoscale = FALSE),
+                   rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                   dpar_prior_sigma = normal(0, ysd, autoscale = FALSE),
                    dpar_cov_prior_sigma = normal(0, 1, autoscale = FALSE),
                    autocor_prior_acor = uniform(-1, 1, autoscale = FALSE),
                    autocor_prior_unstr_acor = lkj(1),
@@ -2376,6 +2358,9 @@ bsitar <- function(x,
   ixfuntransformsi <- NULL;
   iyfuntransformsi <- NULL;
   isigmaxfuntransformsi <- NULL;
+  nsp <- NULL;
+  nsk <- NULL;
+  rcs <- NULL;
 
   enverr. <- environment()
   for (i in names(mcall)[-1]) {
@@ -2612,25 +2597,37 @@ bsitar <- function(x,
                 collapse =", ")
     )
   
+
+  
+  stype_temp_str <- deparse(substitute(stype))
+  if(grepl("^list\\(", stype_temp_str)) {
+    # stype[[1]] <- deparse(substitute(stype[[1]]))
+    # stype[[1]] <- gsub("\"", "", stype[[1]])
+    stype <- stype
+  } else {
+    stype <- stype_temp_str
+    stype <- gsub("\"", "", stype)
+  }
+  
+
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
     spline_type <- getdotslist[['smat']]
-  } else if(!is.null(stype)) {
-    if(is.list(stype)) {
-      stype <- stype
-    } else if(is.symbol(stype)) {
-      stype <- deparse(substitute(stype))
-    } else if(is.character(stype)) {
-      stype <- stype
-    }
+  } else {
     spline_type <- stype
     spline_type_via_stype <- TRUE
-  } else {
-    spline_type <- 'rcs'
-    if(verbose) message("'rcs' set as default spline type")
+  } 
+  
+  if(any(spline_type == "NULL")) {
+    spline_type_via_stype <- FALSE
   }
   
-  
+  if(is.null(getdotslist[['smat']]) & !spline_type_via_stype) {
+    spline_type <- 'rcs'
+    # if(verbose) message("'rcs' set as default spline type")
+  }
+    
+
   # Only expose type and normalize for stype 
   allowed_spline_type_list_names_c <- c('type', 
                                         # 'intercept', 
@@ -2695,8 +2692,6 @@ bsitar <- function(x,
           }
         } else if(is.null(spline_type[['intercept']])) {
           spline_type_list[['intercept']] <- FALSE
-          if(verbose) message(paste0("'", FALSE , 
-                                     "' set as default spline intercept"))
         }
         
         if(!is.null(spline_type[['normalize']])) {
@@ -2765,8 +2760,6 @@ bsitar <- function(x,
           }
         } else if(is.null(spline_type[['centerval']])) {
           spline_type_list[['centerval']] <- 0
-          if(verbose) message(paste0("'", 0 ,
-                                     "' set as default spline centerval"))
         }
         
       } else if(length(spline_type) == 0) {
@@ -2796,7 +2789,8 @@ bsitar <- function(x,
   } # if(is.null(spline_type)) {
   
   
-   smat <- spline_type_list[['type']] 
+  
+  smat <- spline_type_list[['type']] 
   
    # This to check spline type set using the ... smat
    if(!smat %in% allowed_spline_type)
@@ -2817,8 +2811,7 @@ bsitar <- function(x,
   
   
   
-  if((smat == 'nsp' | smat == 'nsk') & 
-     !is.null(getdotslist[['smat']])) {
+  if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
     smat_normalize    <- as.integer(spline_type_list[['normalize']])
@@ -2826,25 +2819,15 @@ bsitar <- function(x,
     smat_preH         <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- as.integer(spline_type_list[['include']])
     smat_include_path <- spline_type_list[['path']]
-    if(verbose) {
-      message(paste0("setting intercept for spline type '",
-                     spline_type_list[['type']], "' as: ", smat_intercept))
-      message(paste0("setting normalize for spline type '",
-                     spline_type_list[['type']], "' as: ", smat_normalize))
-      message(paste0("setting centerval for spline type '",
-                     spline_type_list[['type']], "' as: ", smat_centerval))
-    }
     SplinefunxPre  <- 'GS'
     Splinefunxsuf  <- '_call'
     SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
     SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
     # when spline type set via 'stype', set normalize = F & include T
-  } else if((smat == 'nsp' | smat == 'nsk') & 
-            is.null(getdotslist[['smat']])
-            ) { 
+  } else if((smat == 'nsp' | smat == 'nsk') & !spline_type_via_stype) {
     smat_intercept <- 0
     smat_centerval <- 0
-    smat_normalize <- 0
+    smat_normalize <- as.integer(spline_type_list[['normalize']])
     smat_derivs    <- 0
     smat_preH      <- 0
     smat_include_stan <- 0
@@ -2868,6 +2851,8 @@ bsitar <- function(x,
   } else {
     # allow further checks - for later use
   }
+   
+  # TODO work on smat_preH smat_include_stan to male them compatible
   
   # 'smat_preH' is not allowed because adding two #include does not
   # work in package
@@ -2876,7 +2861,7 @@ bsitar <- function(x,
   if(smat_preH == 1) {
     # stop("Please set preH = 0")
     smat_preH <- 0
-    if(verbose) message("'preH' is set to '0'")
+   # if(verbose) message("'preH' is set to '0'")
   }
   
   # 'smat_include_stan' is also not working i.e., even single #include also not
@@ -2886,10 +2871,23 @@ bsitar <- function(x,
   if(smat_include_stan == 1) {
     # stop("Please set smat_include_stan = 0")
     smat_include_stan <- 0
-    if(verbose) message("'smat_include_stan' is set to '0'")
+   # if(verbose) message("'smat_include_stan' is set to '0'")
   }
  
-  
+   
+   if(verbose) {
+     message(paste0("setting spline type as '", smat, "'"))
+     if(smat != "rcs") {
+       message(paste0("setting intercept for spline type '",
+                      spline_type_list[['type']], "' as: ", smat_intercept))
+       message(paste0("setting normalize for spline type '",
+                      spline_type_list[['type']], "' as: ", smat_normalize))
+       message(paste0("setting centerval for spline type '",
+                      spline_type_list[['type']], "' as: ", smat_centerval))
+     }
+   }
+   
+
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_a_form']])) {
     match_sitar_a_form <- TRUE
