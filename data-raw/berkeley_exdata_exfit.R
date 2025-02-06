@@ -37,7 +37,7 @@ save_file_exfit       <- "berkeley_exfit_temp.rds"
 saveRDS(berkeley_exdata, file = save_file_exdata, compress = 'xz')
 saveRDS(berkeley_exfit,  file = save_file_exfit,  compress = 'xz')
 
-# saveRDS(reduce_size(berkeley_exfit), file = save_file_exfit,  compress = 'xz')
+# saveRDS(xobject_size_change(berkeley_exfit), file = save_file_exfit,  compress = 'xz')
 
 
 rm(list=setdiff(ls(), c('save_file_exdata', 'save_file_exfit')))

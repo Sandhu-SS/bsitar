@@ -3671,13 +3671,13 @@ remove_between_first_last_parnth <- function(x, splitat = NULL) {
 #' @keywords internal
 #' @noRd
 #'
-reduce_size.brmsfit <- function(x, 
-                                formula  = FALSE,
-                                formula_env = NULL,
-                                data = TRUE, 
-                                fit = TRUE) {
+xobject_size_change.brmsfit <- function(x, 
+                                        formula  = FALSE,
+                                        formula_env = NULL,
+                                        data = TRUE, 
+                                        fit = TRUE) {
   
-  reduce_size.brmsformula <- function(x, ...) {
+  xobject_size_change.brmsformula <- function(x, ...) {
     if(is.null(formula_env)) {
       environment(x$formula) <- x$model_info$envir
     } else {
@@ -3686,34 +3686,34 @@ reduce_size.brmsfit <- function(x,
     return(x)
   }
   
-  reduce_size.data.frame <- function(x) {
+  xobject_size_change.data.frame <- function(x) {
     environment(attr(x, "terms")) <- new.env(parent = baseenv())
     return(x)
   }
   
-  reduce_size.brmsfit <- function(x) {
-    x$fit <- reduce_size(x$fit)
+  xobject_size_change.brmsfit <- function(x) {
+    x$fit <- xobject_size_change(x$fit)
     return(x)
   }
   
-  reduce_size.stanfit <- function(x) {
+  xobject_size_change.stanfit <- function(x) {
     x@stanmodel <- structure(numeric(0), class="stanmodel")
     x@.MISC <- new.env()
     return(x)
   }
   
-  # reduce_size.stanreg <- function(x) {
+  # xobject_size_change.stanreg <- function(x) {
   #   x$stanfit <- hack_size(x$stanfit)
   #   return(x)
   # }
   
-  if(formula) x$formula <- reduce_size(x$formula)
-  if(data)    x$data    <- reduce_size(x$data)
-  if(fit)     x$fit     <- reduce_size(x$fit)
+  if(formula) x$formula <- xobject_size_change(x$formula)
+  if(data)    x$data    <- xobject_size_change(x$data)
+  if(fit)     x$fit     <- xobject_size_change(x$fit)
   return(x)
 }
 
-reduce_size <- function(x, ...) {
-  UseMethod("reduce_size")
+xobject_size_change <- function(x, ...) {
+  UseMethod("xobject_size_change")
 }
 
