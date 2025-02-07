@@ -171,6 +171,8 @@
 #'
 #' @examples
 #' 
+#' \donttest{
+#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model is fit to 
@@ -185,7 +187,6 @@
 #' # Population average distance and velocity curves with default options
 #' plot_curves(model, opt = 'dv')
 #' 
-#' \donttest{
 #' # Individual-specific distance and velocity curves with default options
 #' # Note that \code{legendpos = 'none'} will suppress the legend positions. 
 #' # This suppression is useful when plotting individual-specific curves

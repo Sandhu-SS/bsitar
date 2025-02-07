@@ -1,4 +1,11 @@
 
+# The 'bsitar' package (version 0.3.2) was pre-test archived on 6 February 2025 because of the following 
+Package size greater than 5 MB 
+One example run took mopre than 5 sec
+
+Both these issues have been fixed.
+
+
 # The 'bsitar' package (version 0.1.1) was archived on 10 March 2024 because of the following 
 error when running model2 <- update_model(model, df = 5, sample_prior = 'only') on
 R Under development (unstable) 

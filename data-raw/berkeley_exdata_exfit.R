@@ -6,7 +6,7 @@ library(bsitar)
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 3, 
                         stype = list('nsp', F),
-                        chains = 4, cores = 4, iter = 2000, thin = 10,
+                        chains = 2, cores = 2, iter = 2000, thin = 10,
                         a_prior_beta = normal(lm, ysd, autoscale = 2.5),
                         b_prior_beta = normal(0, 1.5),
                         c_prior_beta = normal(0, 0.5),
