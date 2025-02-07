@@ -1756,11 +1756,11 @@
 #' 
 #' # To avoid time-consuming model estimation, the Bayesian SITAR model fit has 
 #' # been saved as an example fit ('berkeley_exfit'). This model was fit using 
-#' # 4 chains (2000 iterations per chain) with thinning set to 10 for memory  
+#' # 2 chains (2000 iterations per chain) with thinning set to 5 for memory  
 #' # efficiency. Users are encouraged to refit the model using default settings 
 #' # (4 chains, 2000 iterations per chain, thin = 1) as suggested by the Stan team.
-#' # Note that with thinning set to 10 (thin = 10), only tenth of sample will 
-#' # be saved and hence the effective sample size is small.
+#' # Note that with thinning set to 5 (thin = 5), only one fifth of total draws 
+#' # will be saved and hence the effective sample size is expected to be small.
 #' 
 #' # Check if the pre-saved model 'berkeley_exfit' exists
 #' # berkeley_exfit <- bsitar:::berkeley_exfit
@@ -1782,7 +1782,7 @@
 #'                   b_formula = ~1, 
 #'                   c_formula = ~1, 
 #'                   threads = brms::threading(NULL),
-#'                   chains = 4, cores = 4, iter = 2000, thin = 10)
+#'                   chains = 2, cores = 2, iter = 2000, thin = 5)
 #'                   
 #' }
 #' 
