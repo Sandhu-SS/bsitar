@@ -196,6 +196,8 @@ posterior predictive checks.
 }
 \examples{
 
+\donttest{
+
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation, which takes time, the Bayesian SITAR model is fit to 
@@ -208,7 +210,7 @@ posterior predictive checks.
 model <- berkeley_exfit
 
 plot_ppc(model, ndraws = 100)
-
+}
 
 }
 \author{

@@ -38,6 +38,8 @@
 #'
 #' @examples
 #' 
+#' \donttest{
+#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -52,7 +54,6 @@
 #' # Population average distance curve
 #' plot_conditional_effects(model, deriv = 0, re_formula = NA)
 #' 
-#' \donttest{
 #' # Individual-specific distance curves
 #' plot_conditional_effects(model, deriv = 0, re_formula = NULL)
 #' 

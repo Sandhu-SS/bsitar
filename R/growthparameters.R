@@ -320,6 +320,8 @@
 #'
 #' @examples
 #' 
+#' \donttest{
+#' 
 #' # Fit Bayesian SITAR Model 
 #' 
 #' # To avoid mode estimation, which takes time, the Bayesian SITAR model fit 
@@ -334,7 +336,6 @@
 #' # Population average age and velocity during the peak growth spurt
 #' growthparameters(model, re_formula = NA)
 #' 
-#' \donttest{
 #' # Population average age and velocity during the take-off and peak 
 #' # growth spurt (APGV, PGV, ATGV, TGV)
 #' growthparameters(model, re_formula = NA, peak = TRUE, takeoff = TRUE)

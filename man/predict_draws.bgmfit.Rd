@@ -315,6 +315,8 @@ in \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}.
 }
 \examples{
 
+\donttest{
+
 # Fit Bayesian SITAR model
 
 # To avoid mode estimation, which takes time, the Bayesian SITAR model is fit 
@@ -330,7 +332,6 @@ model <- berkeley_exfit
 # Population average distance curve
 predict_draws(model, deriv = 0, re_formula = NA)
 
-\donttest{
 # Individual-specific distance curves
 predict_draws(model, deriv = 0, re_formula = NULL)
 

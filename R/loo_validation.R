@@ -50,6 +50,8 @@
 #'
 #' @examples
 #' 
+#' \donttest{
+#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -61,7 +63,6 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' \donttest{
 #' # Perform leave-one-out cross-validation
 #' loo_validation(model, cores = 1)
 #' }

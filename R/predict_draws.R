@@ -42,6 +42,8 @@
 #' @inherit berkeley author
 #'
 #' @examples
+#' 
+#' \donttest{
 #'
 #' # Fit Bayesian SITAR model
 #'
@@ -58,7 +60,6 @@
 #' # Population average distance curve
 #' predict_draws(model, deriv = 0, re_formula = NA)
 #' 
-#' \donttest{
 #' # Individual-specific distance curves
 #' predict_draws(model, deriv = 0, re_formula = NULL)
 #' 

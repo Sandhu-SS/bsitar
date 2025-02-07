@@ -298,6 +298,8 @@ which are available in the \code{\link[brms:conditional_effects.brmsfit]{brms::c
 }
 \examples{
 
+\donttest{
+
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -312,7 +314,6 @@ model <- berkeley_exfit
 # Population average distance curve
 plot_conditional_effects(model, deriv = 0, re_formula = NA)
 
-\donttest{
 # Individual-specific distance curves
 plot_conditional_effects(model, deriv = 0, re_formula = NULL)
 

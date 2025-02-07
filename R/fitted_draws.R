@@ -45,6 +45,8 @@
 #'
 #' @examples
 #' 
+#' \donttest{
+#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid time-consuming model estimation, the Bayesian SITAR model fit to 
@@ -59,7 +61,6 @@
 #' # Population average distance curve
 #' fitted_draws(model, deriv = 0, re_formula = NA)
 #' 
-#' \donttest{
 #' # Individual-specific distance curves
 #' fitted_draws(model, deriv = 0, re_formula = NULL)
 #' 

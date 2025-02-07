@@ -1792,7 +1792,6 @@
 #' # Compare model summary with the frequentist SITAR model
 #' print(model_ml)
 #' 
-#' \donttest{
 #' # Check model fit via posterior predictive checks using plot_ppc.
 #' # This function is based on pp_check from the 'brms' package.
 #' plot_ppc(model, ndraws = 100)

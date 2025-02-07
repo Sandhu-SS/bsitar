@@ -590,6 +590,7 @@ the current implementation should be considered experimental.
 \examples{
 
 \donttest{
+
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 

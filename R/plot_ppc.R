@@ -31,6 +31,8 @@
 #'
 #' @examples
 #' 
+#' \donttest{
+#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation, which takes time, the Bayesian SITAR model is fit to 
@@ -43,7 +45,7 @@
 #' model <- berkeley_exfit
 #' 
 #' plot_ppc(model, ndraws = 100)
-#' 
+#' }
 #' 
 plot_ppc.bgmfit <-
   function(model,
