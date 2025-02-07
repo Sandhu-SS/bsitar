@@ -12,17 +12,16 @@
   those described in the ``splines2`` package. Previously, only ``'rcs'`` was available. Now, the 
   default method is ``'nsp'``.
 
-  The ``bsitar`` package allows for fitting a SITAR model with a four-parameter formulation ``(a + b + c + d)``, 
-  where a fourth parameter, ``d``, is added. The parameter ``d``, the age slope, allows the adult part  
-  of the growth curve to vary in slope. The age slope ``d`` represents the regression coefficient of ``y`` on ``x``.
-  Like the ``sitar`` package, bsitar offers two parameterizations: one in which ``x`` is adjusted for the random 
-  effects ``b`` and ``c``, and the other in which the unadjusted ``x`` is used. This is controlled by the argument 
-  ``d_adjusted`` in the ``bsitar::bsitar()`` function. When ``d_adjusted = TRUE``, the first version is applied (``x`` 
-  adjusted for random effects ``b`` and ``c`` as follows: ``(x-b)*exp(c)`` ), which means that individual developmental 
-  age, rather than chronological age, is used in the slope regression. This makes parameter d more sensitive to 
-  the timing of puberty in individuals. When ``d_adjusted = FALSE`` (the default), the unadjusted ``x`` is used. 
-  The default choice, ``d_adjusted = FALSE``, is primarily to match the behavior of the ``sitar`` package, which sets 
- ``d.adjusted = FALSE``.
+  The ``bsitar`` package allows for fitting the SITAR model with a four-parameter formulation ``(a + b + c + d)``, 
+  where a fourth parameter, ``d``, is added. The parameter ``d``, the age slope, allows the adult part  of the growth 
+  curve to vary in slope. The age slope ``d`` represents the regression coefficient of ``y`` on ``x``.
+  Like the ``sitar`` package, the ``bsitar`` offers two parameterizations: one in which ``x`` is adjusted for the random 
+  effects ``b`` and ``c`` i.e., ``(x-b)*exp(c)``, and the other in which the unadjusted ``x`` is used. This is controlled 
+  by the argument ``d_adjusted`` provided in the ``bsitar::bsitar()`` function. When ``d_adjusted = TRUE``, the first 
+  version is applied (``x`` adjusted for random effects ``b`` and ``c``), which means that individual developmental age, 
+  rather than chronological age, is used in the slope regression. This makes parameter ``d`` more sensitive to the timing 
+  of puberty in individuals. When ``d_adjusted = FALSE`` (the default), the unadjusted ``x`` is used. The default choice, 
+  ``d_adjusted = FALSE``, is primarily to match the behavior of the ``sitar`` package, which sets ``d.adjusted = FALSE``.
 
   Added support for computing and comparing growth curves using the ``marginaleffects`` package as 
   the back-end (see ``marginal_draws()``, ``marginal_comparison()``, and ``growthparameters_comparison()``). 
