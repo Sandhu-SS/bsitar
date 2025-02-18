@@ -1,6 +1,12 @@
 # bsitar (development version)
 
 
+### Bugfixes
+
+ The ``function block`` for multivariate model did not render properly.
+ 
+ The ``random`` initial values for the residual correlation parameter of multivariate model resulted in empty list warning. 
+
 # bsitar 0.3.2
 
 
