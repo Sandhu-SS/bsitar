@@ -78,6 +78,7 @@ prepare_function_nsp <- function(x,
   SplinefunxStan <- NULL;
   smat_include_stan <- NULL;
   smat_include_path <- NULL;
+  ii <- NULL;
   
   
   if (!is.null(internal_function_args)) {
@@ -86,6 +87,8 @@ prepare_function_nsp <- function(x,
       assign(eoutii, eout[[eoutii]])
     }
   }
+  
+ 
   
   # "X" for rcsfunmultadd 
   
@@ -1355,7 +1358,6 @@ prepare_function_nsp <- function(x,
       
       getpreH_fun_raw <- paste0(getpreH_fun_raw, "\n",
                                 dummy_getpreH_fun_raw)
-      
     } else {
       # dummy
       getpreH_fun_raw <-
@@ -1372,6 +1374,12 @@ prepare_function_nsp <- function(x,
           collapse = " ")
     }
     
+    
+    # For multivariate model, this approach won't work, 
+    # TODO...
+    if(ii > 1) {
+      getpreH_fun_raw <- NULL
+    }
     
     # need to add dummy functions
     
@@ -2618,7 +2626,11 @@ prepare_function_nsp <- function(x,
   # print('include_str')
   # print(include_str)
   
-  rcsfun <- paste0(include_str, "\n", rcsfun)
+  # For multivariate model, include common functions only once
+  if(ii == 1) {
+    rcsfun <- paste0(include_str, "\n", rcsfun)
+  }
+ 
  
   
   

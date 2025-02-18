@@ -3247,8 +3247,7 @@ set_priors_initials <- function(a_prior_beta,
     }
   }
   
-  
-  
+
   if (!is.null(initial_in_datazz)) {
     if (!is.null(gr_prior_cor) | !is.null(sigma_prior_cor) ) {
       list_ck <- list_ck_ <- list()
@@ -3277,6 +3276,7 @@ set_priors_initials <- function(a_prior_beta,
         } else if (grepl("^Intercept_sigma", ik_names)) {
           list_ck[[ik]] <- initial_in_datazz[[ik_j]]
           names(list_ck[[ik]]) <- ik_names
+          print(initial_in_datazz[[ik_j]])
         } else if (multivariate$mvar & multivariate$rescor &
                    grepl("^Lrescor", ik_names)) {
           list_ck_rescor[[ik]] <- initial_in_datazz[[ik_j]]
@@ -3380,9 +3380,11 @@ set_priors_initials <- function(a_prior_beta,
     if (multivariate$mvar & 
         multivariate$rescor & 
         !custom_order_prior_str_evaluating) {
-      list_ck_rescor <- list_ck_rescor[lengths(list_ck_rescor) != 0]
-      list_ck_rescor <- list_ck_rescor[[1]]
-      combined_inits <- c(combined_inits, list_ck_rescor)
+      if(!is_emptyx(list_ck_rescor)) { # 17.02.2025
+        list_ck_rescor <- list_ck_rescor[lengths(list_ck_rescor) != 0]
+        list_ck_rescor <- list_ck_rescor[[1]]
+        combined_inits <- c(combined_inits, list_ck_rescor)
+      } # 17.02.2025
     }
     
     

@@ -172,6 +172,8 @@ bsitar(
   rename = TRUE,
   pathfinder_args = NULL,
   pathfinder_init = FALSE,
+  data2 = NULL,
+  data_custom = NULL,
   sample_prior = "no",
   save_pars = NULL,
   drop_unused_levels = TRUE,
@@ -1624,6 +1626,14 @@ to \code{cmdstanr}. The arguments passed to the \code{'pathfinder'}
 algorithm are specified via \code{'pathfinder_args'}; if
 \code{'pathfinder_args'} is \code{NULL}, the default arguments from
 \code{'cmdstanr'} will be used.}
+
+\item{data2}{A named \code{list} of objects containing data, which
+cannot be passed via argument \code{data}. Required for some objects
+used in autocorrelation structures to specify dependency structures
+as well as for within-group covariance matrices.}
+
+\item{data_custom}{A \code{data.frame} object (default \code{NULL}). This is
+mainly for internal testing and not be used for routine model fitting.}
 
 \item{sample_prior}{A character string indicating whether to draw samples
 from the priors in addition to the posterior draws. Options are \code{"no"}

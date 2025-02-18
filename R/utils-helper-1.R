@@ -1,6 +1,17 @@
 
 
 
+#' Checks if argument is a \code{bgmfit} object
+#'
+#' @param x An \R object
+#'
+#' @export
+is.bgmfit <- function(x) {
+  inherits(x, "bgmfit")
+}
+
+
+
 #' An internal function to get arguments from the call
 #'
 #' @param arguments A list of default function arguments.
@@ -4434,7 +4445,27 @@ rcs_matrix <- function(x,
 
 
 
-
+#' An internal function to get arguments from the call
+#'
+#' @param x A character string
+#' @param gsubit A character string specifying the part to be replaced.
+#' @param gsubby A character string specifying the replacement
+#' @param pasteit A logical indicating whether \code{gsubit} will be pasted
+#'   before \code{gsubby}
+#' @param fixed A logical indicating whether the fixed option
+#' 
+#' @return A character string.
+#' @keywords internal
+#' @noRd
+#'
+x_gsubit_gsubby <- function(x, 
+                            gsubit, 
+                            gsubby,
+                            pasteit = TRUE, 
+                            fixed = FALSE) {
+  if(pasteit) gsubby <- paste0(gsubit, gsubby)
+  gsub(gsubit, gsubby, x, fixed = fixed)
+}
 
 
 

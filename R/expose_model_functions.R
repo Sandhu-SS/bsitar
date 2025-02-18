@@ -282,14 +282,14 @@ expose_model_functions.bgmfit <- function(model,
   
   nys <- model$model_info$nys
   ys <- model$model_info$ys
-  if(nys > 1) {
-    spfun_collect2 <- c()
-    for (ysii in ys) {
-      tempysi <- paste0(ysii, "_", spfun_collect)
-      spfun_collect2 <- c(spfun_collect2, tempysi)
-    }
-    spfun_collect <- spfun_collect2
-  }
+  # if(nys > 1) {
+  #   spfun_collect2 <- c()
+  #   for (ysii in ys) {
+  #     tempysi <- paste0(ysii, "_", spfun_collect)
+  #     spfun_collect2 <- c(spfun_collect2, tempysi)
+  #   }
+  #   spfun_collect <- spfun_collect2
+  # }
   
   
   
@@ -406,4 +406,7 @@ expose_model_functions.bgmfit <- function(model,
 expose_model_functions <- function(model, ...) {
   UseMethod("expose_model_functions")
 }
+
+
+
 
