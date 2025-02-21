@@ -178,7 +178,7 @@ standata_custom.default <- function(object, data, family = gaussian(), prior = N
   `c<-` <- NULL;
   `c<-` <- utils::getFromNamespace("c<-", "brms")
   `set_levels<-` <- NULL;
-  `set_levels<-` <- utils::getFromNamespace("set_levels", "brms")
+  `set_levels<-` <- utils::getFromNamespace("set_levels<-", "brms")
   
   
   

@@ -93,7 +93,7 @@ stancode_custom.default <- function(object, data, family = gaussian(),
   `c<-` <- NULL;
   `c<-` <- utils::getFromNamespace("c<-", "brms")
   `str_add<-` <- NULL;
-  `str_add<-` <- utils::getFromNamespace("str_add", "brms")
+  `str_add<-` <- utils::getFromNamespace("str_add<-", "brms")
   
   
   
@@ -185,7 +185,7 @@ stancode_custom.default <- function(object, data, family = gaussian(),
   `c<-` <- NULL;
   `c<-` <- utils::getFromNamespace("c<-", "brms")
   `str_add<-` <- NULL;
-  `str_add<-` <- utils::getFromNamespace("str_add", "brms")
+  `str_add<-` <- utils::getFromNamespace("str_add<-", "brms")
   
   
   
@@ -411,8 +411,8 @@ stancode_custom.default <- function(object, data, family = gaussian(),
     scode_predictor_data[["data"]],
     scode_re_data[["data"]],
     scode_Xme_data[["data"]] # ,
-    # "  int prior_only;  // should the likelihood be ignored?\n",
-    # collapse_stanvars(stanvars, "data"),
+     # "  int prior_only; \n" ,
+     # collapse_stanvars(stanvars, "data") ,
     # "}\n"
   )
   
@@ -420,17 +420,17 @@ stancode_custom.default <- function(object, data, family = gaussian(),
   #   scode_predictor_gq[[i]] <- normalize_stancode_custom(scode_predictor_gq[[i]])
   # }
   
-  scode_data_data <- normalize_stancode_custom(scode_data_data)
+#  scode_data_data <- normalize_stancode_custom(scode_data_data)
   
   # scode_data_data <- gsub(";", ";\n", scode_data_data, fixed = T)
   # scode_data_data <- gsub("{", "{\n", scode_data_data, fixed = T)
   # scode_data_data <- gsub("}", "}\n", scode_data_data, fixed = T)
   
-  for (i in c(";", "{", "}")) {
-    scode_data_data <- x_gsubit_gsubby(scode_data_data,
-                                       gsubit = i, gsubby = "\n",
-                                       pasteit = TRUE, fixed = TRUE)
-  }
+  # for (i in c(";", "{", "}")) {
+  #   scode_data_data <- x_gsubit_gsubby(scode_data_data,
+  #                                      gsubit = i, gsubby = "\n",
+  #                                      pasteit = TRUE, fixed = TRUE)
+  # }
   
   
   if(return_data) return(scode_data_data)
