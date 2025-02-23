@@ -5358,15 +5358,18 @@ bsitar <- function(x,
     
     
     # Assign reverse functions also
-    assign("ixfuntransformsi",  sitar::ifun(base::body(xfuntransformsi)), 
+    assign("ixfuntransformsi",  
+           inverse_transform(base::body(xfuntransformsi)), 
            envir = enverr.)
     
     
-    assign("iyfuntransformsi",  sitar::ifun(base::body(yfuntransformsi)), 
+    assign("iyfuntransformsi",  
+           inverse_transform(base::body(yfuntransformsi)), 
            envir = enverr.)
     
     
-    assign("isigmaxfuntransformsi",  sitar::ifun(base::body(sigmaxfuntransformsi)), 
+    assign("isigmaxfuntransformsi",  
+           inverse_transform(base::body(sigmaxfuntransformsi)), 
            envir = enverr.)
     
     
@@ -7470,15 +7473,18 @@ bsitar <- function(x,
     # }
     
     
+    # 20.09.2024
+    # remove sigmaxsi if not using
+    if(!setsigma_formula_manual) datai[[sigmaxsi]] <- NULL
+    
+    
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       dataout <- rbind(dataout, datai)
     else
       dataout <- datai
 
-    # 20.09.2024
-    # remove sigmaxsi if not using
-    if(!setsigma_formula_manual) datai[[sigmaxsi]] <- NULL
+    
     
       
       
@@ -8787,12 +8793,13 @@ bsitar <- function(x,
     if( all) matches   <- gregexpr(pattern = pattern, text = text)
     setitscode_i_temp1 <- regmatches(text, m = matches)
     if(returnmatch) return(setitscode_i_temp1)
+    # setitscode_i_temp1 <- setitscode_i_temp1[[1]]
     if(is_emptyx(setitscode_i_temp1)) {
       setitscode_i <- text
     } else {
       setitscode_i_temp2 <- paste0(setitscode_i_temp1, replacement)
       setitscode_i_temp3 <- gsub(setitscode_i_temp1, setitscode_i_temp2, 
-                                 setitscode_i_temp)
+                                 text) # setitscode_i_temp
       setitscode_i <- setitscode_i_temp3
     }
     return(setitscode_i)
@@ -8949,15 +8956,214 @@ bsitar <- function(x,
     return(xxz_c)
   } # end check_d_defined_fun
   
-
+  
+  ####################################################################
+  ####################################################################
+  
+ 
+  
+  # call.fullx <- call.full
+  # call.fullx <- call.full
+  # call.fullx$get_standata <- TRUE
+  # call.fullx$xfun <- 'log'
+  # dviacall <- gtxxx(call.fullx)
+  #call.fullx <<- call.fullx
+  # dviacallx <<- dviacall
+  # print(dviacall)
+  
+  
+  
+  ####################################################################
+  ####################################################################
+  
+  # make_stancode_custom_args <- brm_args
+  # make_standata_custom_args <- brm_args
+  # 
+  # # mandatory to make Naux variables
+  # if(is.null(data_custom)) {
+  #   data_custom <- make_stancode_custom_args[['data']]
+  # } else {
+  #   data_custom <- data_custom
+  # }
+  # 
+  # make_stancode_custom_args[['data']] <- data_custom
+  # make_standata_custom_args[['data']] <- data_custom
+  
   ####################################################################
   ####################################################################
   
   make_stancode_custom_args <- brm_args
   make_standata_custom_args <- brm_args
   
+  if(!is.null(data_custom)) {
+    make_stancode_custom_args[['data']] <- data_custom
+    make_standata_custom_args[['data']] <- data_custom
+  }
+  
+  data_custom <- make_stancode_custom_args[['data']]
+  
   ####################################################################
   ####################################################################
+  
+  
+  
+ #  data.org.in <- data <- data_custom
+ # 
+ #  data.org.in <- data
+ #  uvarby <- NULL
+ #  data <- prepare_data(data = data,
+ #                       x = xs,
+ #                       y = ys,
+ #                       id = ids,
+ #                       uvarby = univariate_by$by,
+ #                       mvar = multivariate$mvar,
+ #                       xfuns = xfuns,
+ #                       yfuns = yfuns,
+ #                       outliers = outliers,
+ #                       subset = FALSE,
+ #                       envir = enverr.)
+ # 
+ #  ys <- attr(data, "ys")
+ #  
+ #  subindicators <- attr(data, "subindicators")
+ # 
+ #  if (!is.na(univariate_by$by) & univariate_by$verbose) {
+ #    resvcts_ <- levels(data[[univariate_by$by]])
+ #    resvcts <- paste0(resvcts_, collapse = " ")
+ #    setmsgtxt <- paste0(
+ #      "\n For univariate-by-subgroup model fitting for variable '",
+ #      uvarby,
+ #      "'",
+ #      " (specified via 'univariate_by' argument)",
+ #      "\n ",
+ #      resvcts,
+ #      " response vectors created based on the factor levels",
+ #      "\n\n ",
+ #      "Please check corresponding arguments list.",
+ #      " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
+ #      resvcts_[1],
+ #      ", and  df = 5 is for ",
+ #      resvcts_[2],
+ #      " (and similalry knots, priors, initials etc)",
+ #      "\n\n ",
+ #      "If it does't correspond correctly, then either reverse the list ",
+ #      "arguments\n such as df = list(5, 4),",
+ #      " or else reverse sort the order of factor levels"
+ #    )
+ #    if (displayit == 'msg') {
+ #      message(setmsgtxt)
+ #    } else if (displayit == 'col') {
+ #      col <- setcolb
+ #      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
+ #    }
+ #  }
+ # 
+ #  
+ #  xfuntransformnamelist <<- xfuntransformnamelist
+ #  xfuntransformvaluelist <<- xfuntransformvaluelist
+ #  
+ #  
+ #  ixfuntransformvaluelist <<- xfuntransformvaluelist
+ # 
+ #  sigmaxfuntransformnamelist <<- sigmaxfuntransformnamelist
+ #  sigmaxfuntransformvaluelist <<- sigmaxfuntransformvaluelist
+ # 
+ # 
+ #  xnamelist <<- xnamelist
+ #  xvarvaluelist <<- xvarvaluelist
+ # 
+ #  ynamelist <<- ynamelist
+ #  yvarvaluelist <<- yvarvaluelist
+ #  
+ #  xoffset_name <<- xoffset_name
+ #  xoffsetvaluelist <<- xoffsetvaluelist
+ # 
+ #  dataix <<- datai
+ #  dataoutx <<- dataout
+ # 
+ #  datax <<- data
+ #  
+ #  
+ #  aa1 <- 20
+ #  aa2 <- 0
+ #  
+ #  xtfs <- function(x)(x)
+ #  
+ #  bbb <- function(x)log(x)-ept('(aa2)')
+ #  bbbb <- inverse_transform(base::body(bbb))
+ #    
+ #  xx <- bbb(aa1)
+ #  xx <- bbbb(xx)
+ #  
+ #  log(aa1) - log()
+ #  
+ #  inverse_transform(base::body(function(x)log(x)-str2lang('aa1')))
+ # 
+ # # stop()
+  
+  ####################################################################
+  ####################################################################
+  # prepare_transformations(data = data,
+  #                         xvar = xs,
+  #                         yvar = ys
+  #                         xfuns = xfuntransformvaluelist,
+  #                         yfuns = yfuntransformvaluelist,
+  #                         transform = c('x', 'y', 'sigma'),
+  #                         itransform = c('x', 'y', 'sigma'),)
+  # 
+  # 
+  # 
+  # stop()
+  
+  ####################################################################
+  ####################################################################
+  
+  strsplit_type <- function(x,
+                       split,
+                       type = "remove",
+                       perl = FALSE,
+                       ...) {
+    if (type == "remove") {
+      # use base::strsplit
+      out <- base::strsplit(x = x, split = split, perl = perl, ...)
+    } else if (type == "before") {
+      # split before the delimiter and keep it
+      out <- base::strsplit(x = x,
+                            split = paste0("(?<=.)(?=", split, ")"),
+                            perl = TRUE,
+                            ...)
+    } else if (type == "after") {
+      # split after the delimiter and keep it
+      out <- base::strsplit(x = x,
+                            split = paste0("(?<=", split, ")"),
+                            perl = TRUE,
+                            ...)
+    } else {
+      # wrong type input
+      stop("type must be remove, after or before!")
+    }
+    return(out)
+  }
+  
+  
+  ####################################################################
+  ####################################################################
+  
+  # make_stancode_custom_args <- brm_args
+  # make_standata_custom_args <- brm_args
+  # 
+  # if(!is.null(data_custom)) {
+  #   make_stancode_custom_args[['data']] <- data_custom
+  #   make_standata_custom_args[['data']] <- data_custom
+  # }
+  
+  
+  make_standata_custom_args_exclude <- c('stanvars', 'prior_only')
+  for (i in make_standata_custom_args_exclude) {
+    make_standata_custom_args[[i]] <- NULL
+  }
+  
+  
   
   data_patterns_search_for_replace <- c("Z_\\w+", 
                                         "X_\\w+", 
@@ -8978,36 +9184,24 @@ bsitar <- function(x,
     paste(data_patterns_search_for_replace, 
           collapse = "|")
   
-  
+ 
   if(is.null(data_custom)) {
     paste_x_Naux_str <- ""
   } else if(!is.null(data_custom)) {
-    make_stancode_custom_args[['data']] <- data_custom
-    make_standata_custom_args[['data']] <- data_custom
     paste_x_Naux_str <- paste0("_", x_Naux_str)
-    
     make_stancode_custom_args[['return_data']] <- TRUE
     gqdata_stanvarlist_data_si <- do.call(make_stancode_custom, 
                                           make_stancode_custom_args)
     
-    make_standata_custom_args_exclude <- c('stanvars', 'prior_only')
-    for (i in make_standata_custom_args_exclude) {
-      make_standata_custom_args[[i]] <- NULL
-    }
-    
+  
     data_custom_standata <- do.call(make_standata_custom, 
                                     make_standata_custom_args)
     
+    data_custom_standata[["prior_only"]] <- NULL
     
-    data_custom_standata_code <- strsplit(gqdata_stanvarlist_data_si, 
-                                          "\n")[[1]]
+    data_custom_standata_code <- strsplit(gqdata_stanvarlist_data_si, "\n")[[1]]
     
-    # data_patterns_search_for_replace_bar <<- data_patterns_search_for_replace_bar
-    # data_custom_standata <<- data_custom_standata
-    # gqdata_stanvarlist_data_si <<- gqdata_stanvarlist_data_si
-    # data_custom_standata_code <<- data_custom_standata_code
-    # stringr_str_extract_base_regexpr <<- stringr_str_extract_base_regexpr
-    
+    data_custom_standata_code2 <- data_custom_standata_code
     
     data_custom_standata_code2 <- c()
     for (i in 1:length(data_custom_standata_code)) {
@@ -9017,40 +9211,45 @@ bsitar <- function(x,
       }
     }
     
-    data_custom_standata[["prior_only"]] <- NULL
-    
     add_data2_c <- list()
-    counterx <- 0
-    for (i in names(data_custom_standata)) {
-      counterx <- counterx + 1
-      setitx_i <- data_custom_standata[[i]]
-      if(nys == 1) {
-        setitname_i <- paste0(i, paste_x_Naux_str)
-      } else if(nys > 1) {
-        setitname_i <- paste0(i, paste_x_Naux_str)
-      }
+    collect_datax <- list()
+    collect_scodex <- collect_stanvarname <- c()
+    for (j in data_custom_standata_code2) {
+      get_i <- tail(strsplit(j, split=" ")[[1]],1)
+      get_i2 <- gsub(";", "", get_i)
+      # get_i3 <- paste0("^", get_i2, "$")
+      get_i3 <- paste0("\\b", get_i2, "\\b")
+      get_jdat <- data_custom_standata[grepl(get_i3, 
+                                             names(data_custom_standata))]
       
-      setitscode_i <- setitscode_org <- data_custom_standata_code2[counterx]
+      get_jstanvarname <- 
+        stringr_str_extract_base_regexpr(get_i2, 
+                                         data_patterns_search_for_replace_bar, 
+                                         paste_x_Naux_str, all = T,
+                                         returnmatch = F)[[1]]
       
-      addxt <- stringr_str_extract_base_regexpr(setitscode_i, 
-                                                data_patterns_search_for_replace_bar, 
-                                                paste_x_Naux_str, all = T,
-                                                returnmatch = T)[[1]]
+      addxt <- 
+        stringr_str_extract_base_regexpr(j, 
+                                         data_patterns_search_for_replace_bar, 
+                                         paste_x_Naux_str, all = T,
+                                         returnmatch = T)[[1]]
+      
       gsubby <- paste0(addxt, paste_x_Naux_str)
-     
-      setitscode_i <- string_patterns_replacements(setitscode_i, 
-                                                     addxt, gsubby)
       
-      if(!is_emptyx(setitscode_i)) {
-          add_data2_c[[i]] <-
-            brms::stanvar(x = setitx_i,
-                          name = setitname_i,
-                          scode = setitscode_i,
-                          block = "data",
-                          position = "start",
-                          pll_args = NULL)
-        } # if(!is_emptyx(setitname_i)) {
-    } # for (i in names(data_custom_standata)) {
+      get_jcode <- string_patterns_replacements(j, addxt, gsubby)
+      
+      add_data2_c[[get_jstanvarname]] <-
+        brms::stanvar(x = get_jdat[[1]],
+                      name = get_jstanvarname,
+                      scode = get_jcode,
+                      block = "data",
+                      position = "start",
+                      pll_args = NULL)
+      
+      # collect_datax <- c(collect_datax, get_jdat)
+      # collect_stanvarname <- c(collect_stanvarname, get_jstanvarname)
+      # collect_scodex <- c(collect_scodex, get_jcode)
+    }
     
     add_data2_stanvarlistlist <- c()
     for (i in 1:length(add_data2_c)) {
@@ -9061,6 +9260,7 @@ bsitar <- function(x,
 
     brm_args$stanvars <- brm_args$stanvars + add_data2stanvars
   } # if(is.null(data_custom)) { else if(!is.null(data_custom)) {
+  
   
   ####################################################################
   ####################################################################

@@ -3657,3 +3657,90 @@ remove_between_first_last_parnth <- function(x, splitat = NULL) {
 }
 
 
+# borrowed from sitar::ifun -> inverse_transform
+
+#' An internal function to set up transformation for \code{bsitar} model
+#'
+#' @param expr A function \code{expression}.
+#'
+#' @param verbose Logical to print transformation steps.
+#'   
+#' @param envir A logical (default \code{TRUE})
+#'
+#' @return A function \code{expression}.
+#'
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'
+#' @keywords internal
+#' @noRd
+#'
+inverse_transform <- function (expr, verbose = FALSE, envir = NULL) {
+  vars <- function(expr) {
+    (av <- all.vars(expr, unique = FALSE))[grep("^pi$", av, 
+                                                invert = TRUE)]
+  }
+  recur <- function(fun, funinv = quote(x), verbose = verbose) {
+    fun <- as.expression(fun)[[1]]
+    if (verbose) {
+      print(fun)
+      print(funinv)
+      cat("---\n")
+    }
+    while (length(fun) > 1 && fun[[1]] == as.name("(")) fun <- fun[[2]]
+    if (!is.name(fun)) {
+      x1 <- which(vapply(fun, function(f) length(vars(f)) == 
+                           1, TRUE))[-1]
+      if (grepl("pi", fname <- as.name(fun[[1]]))) {
+        fun[[1]] <- as.name(sub("pi", "", fname))
+        f <- quote(x * pi)
+        f[[2]] <- fun[[2]]
+        fun[[2]] <- f
+      }
+      nf <- which(vapply(fns, function(f) f[[1]] == fun[[1]] && 
+                           length(f) == length(fun) && f[[x1]] == "x", TRUE))
+      if (length(nf) == 0) 
+        stop(paste("unrecognised name:", deparse(fun[[1]])))
+      if (length(nf) > 1 && length(fun) == 3) {
+        nft <- which(vapply(fns[nf], function(f) f[[5 - 
+                                                      x1]] == fun[[5 - x1]], TRUE))
+        if (length(nft)) 
+          nf <- nf[nft]
+      }
+      nf <- nf[[1]]
+      fn2 <- fns[[nf - 1 + 2 * (nf%%2)]]
+      x2 <- which(as.list(fn2) == "x")
+      if (length(fn2) == 3) {
+        f <- function(n) {
+        }
+        body(f) <- fn2[[5 - x2]]
+        fn2[[5 - x2]] <- f(eval(fun[[5 - x1]]))
+      }
+      fun <- fun[[x1]]
+      fn2[[x2]] <- funinv
+      funinv <- fn2
+      if (!is.name(fun)) {
+        results <- recur(fun, funinv, verbose = verbose)
+        fun <- results$fun
+        funinv <- results$funinv
+      }
+    }
+    return(list(funinv = funinv, fun = fun))
+  }
+  fns <- quote(c(x + n, x - n, x * n, x/n, x^n, x^(1/n), sqrt(x), 
+                 x^2, exp(x), log(x), expm1(x), log1p(x), n^x, log(x, 
+                                                                   n), log10(x), 10^x, log2(x), 2^x, n + x, x - n, n - 
+                   x, n - x, n * x, x/n, n/x, n/x, +x, +x, -x, -x, identity(x), 
+                 identity(x), I(x), I(x), cos(x), acos(x), sin(x), asin(x), 
+                 tan(x), atan(x), cosh(x), acosh(x), sinh(x), asinh(x), 
+                 tanh(x), atanh(x)))
+  fns[[1]] <- NULL
+  varname <- vars(expr)
+  if (length(varname) != 1) 
+    stop("expression should contain just one instance of one name")
+  fn <- function(x) {
+  }
+  body(fn) <- with(fns, recur(expr, verbose = verbose))$funinv
+  attr(fn, "varname") <- varname
+  fn
+}
+
