@@ -34,7 +34,7 @@
 #'
 #' @return An updated object of class \code{brmsfit}.
 #'   
-#' @export update_model.bgmfit
+#' @rdname update_model
 #' @export
 #'
 #' @inherit berkeley author
@@ -512,7 +512,7 @@ update_model.bgmfit <-
 
 
 
-#' @rdname update_model.bgmfit
+#' @rdname update_model
 #' @export
 update_model <- function(model, ...) {
   UseMethod("update_model")

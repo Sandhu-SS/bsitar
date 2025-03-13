@@ -16,14 +16,43 @@ is.bgmfit <- function(x) {
 #'
 #' @param arguments A list of default function arguments.
 #' @param xcall A character string specifying the name of the calling function.
-#' @keywords internal
 #' @return A list comprised of function arguments.
 #' @keywords internal
 #' @noRd
 #'
-get_args_ <- function(arguments, xcall) {
+get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
   `%!in%` <- Negate(`%in%`)
-  f_funx_arg <- formals(paste0(xcall, ".", 'bgmfit'))
+  if(is.null(xclass)) {
+    pastexclass <- paste0(".", 'bgmfit')
+  } else if(xclass == "") {
+    pastexclass <- ""
+  } else {
+    if( grepl("^\\.", xclass)) pastexclass <- xclass
+    if(!grepl("^\\.", xclass)) pastexclass <- paste0(".", xclass)
+  }
+  # f_funx_arg <- formals(paste0(xcall, pastexclass))
+  # f_funx_arg <- formals(paste0(xcall, ".", 'bgmfit'))
+  
+  # 6.03.2025 - if failed to find s3method class such as using devtools::
+  # in such case, get_xcall_byclass will search through all status calls
+  enverr. <- environment()
+  assign('err.', FALSE, envir = enverr.)
+  tryCatch(
+    expr = {
+      f_funx_arg <- formals(paste0(xcall, pastexclass))
+    },
+    error = function(e) {
+      assign('err.', TRUE, envir = enverr.)
+    }
+  )
+  err. <- get('err.', envir = enverr.)
+  if (err.) {
+    if(is.null(scallstatus)) stop("set scallstatus via sys.status()")
+    f_funx_arg <- get_xcall_byclass(scallstatus, pastexclass)
+  } else {
+    f_funx_arg <- f_funx_arg
+  }
+  
   nf_funx_arg_names <-
     intersect(names(arguments), names(f_funx_arg))
   arguments <-
@@ -263,62 +292,6 @@ plot_optimize_fit <- function(model,
 }
 
 
-#' An internal function to transform y axis when plotting with dual y axis
-#'
-#' @param primary Primary y axis.
-#' @param secondary secondary y axis.
-#' @keywords internal
-#' @return A plot object.
-#' @noRd
-#'
-
-transform.sec.axis <- function(primary,
-                               secondary,
-                               na.rm = TRUE) {
-  from <- range(secondary, na.rm = na.rm)
-  to   <- range(primary, na.rm = na.rm)
-  zero_range <- function(x, tol = 1000 * .Machine$double.eps) {
-    if (length(x) == 1) {
-      return(TRUE)
-    }
-    if (length(x) != 2)
-      stop("x must be length 1 or 2")
-    if (any(is.na(x))) {
-      return(NA)
-    }
-    if (x[1] == x[2]) {
-      return(TRUE)
-    }
-    if (all(is.infinite(x))) {
-      return(FALSE)
-    }
-    m <- min(abs(x))
-    if (m == 0) {
-      return(FALSE)
-    }
-    abs((x[1] - x[2]) / m) < tol
-  }
-  rescale.numeric_ <-
-    function(x,
-             to = c(0, 1),
-             from = range(x, na.rm = TRUE, finite = TRUE),
-             ...) {
-      if (zero_range(from) || zero_range(to)) {
-        return(ifelse(is.na(x), NA, mean(to)))
-      }
-      (x - from[1]) / diff(from) * diff(to) + to[1]
-    }
-  forward <- function(x) {
-    rescale.numeric_(x, from = from, to = to)
-  }
-  reverse <- function(x) {
-    rescale.numeric_(x, from = to, to = from)
-  }
-  list(fwd = forward, rev = reverse)
-}
-
-
-
 
 
 #' An internal function to evaluate arguments ending with _str suffix
@@ -412,8 +385,7 @@ get_gr_str_coef_id <- function(tsx,
     # 24.08.2024
     if(grepl("^\\(", tsx_c1)) tsx_c1 <- gsub("^\\(", "", tsx_c1)
     
-    # tsx_c1x <<- tsx_c1
-    
+
     if(!grepl("^~", tsx_c1)) tsx_c1 <- paste0("~", tsx_c1)
     if(grepl("^~0", tsx_c1)) set_form_0_gr <- TRUE
     if(grepl("^~1", tsx_c1)) set_form_0_gr <- FALSE
@@ -949,36 +921,36 @@ validate_response <- function(model,
     )
   }
   if (model$model_info$nys > 1 & is.null(resp)) {
-    if (!is.na(model$model_info$univariate_by)) {
+    if (!is.na(model$model_info$univariate_by$by)) {
       stop(
-        "You have fit a univariate-by-subset model for ",
-        model$model_info$univariate_by,
+        "You have fit a univariate-by-subset model for '",
+        model$model_info$univariate_by$by, "'",
         "\n ",
-        " but dit not set the the resp options appropriately",
+        " However, the 'resp' options is not set appropriately",
         " (which is NULL at present).",
         "\n ",
         " The response options are ",
-        paste(model$model_info$ys, collapse = ", ")
+        collapse_comma(model$model_info$yvars)
       )
     }
-    if (model$model_info$multivariate) {
+    if (model$model_info$multivariate$mvar) {
       stop(
         "You have fit a multivariate model ",
         "\n ",
-        " but dit not set the the resp options appropriately",
+        " However, the 'resp' options is not set appropriately",
         " (which is NULL at present).",
         "\n ",
         " The response options are ",
-        paste(model$model_info$ys, collapse = ", ")
+        collapse_comma(model$model_info$yvars)
       )
     }
   }
 
   if (!is.null(resp)) {
-    if (!resp %in% model$model_info[['ys']]) {
+    if (!resp %in% model$model_info[['yvars']]) {
       stop(
         "Response should be one of the following: ",
-        paste(model$model_info[['ys']], collapse = " "),
+        paste(model$model_info[['yvars']], collapse = " "),
         "\n ",
         " but you have specified: ",
         resp
@@ -1151,6 +1123,87 @@ rename <- function(x,
 }
 
 
+#' An internal function to get call levels
+#' 
+#' @param scallstatus A system call \code{sys.status()}
+#' @param xclass A character string (default \code{NULL}) indicating the
+#'   s3method class
+#' @keywords internal
+#' @return A language object
+#' @noRd
+#'
+get_xcall_byclass <- function(scallstatus, xclass = NULL) {
+  if(is.null(xclass)) xclass <- '.bgmfit' 
+  # xclass.i <- paste0(xclass)
+  # xstr.i <- paste0(xstr, xclass.i)
+  for (i in 1:length(scallstatus)) {
+    scall <- scallstatus[[i]]
+    scall <- gsub_space(paste(deparse(scall), collapse = ""))
+    xcall <- NULL
+    if(any(grepl(xclass, scall, fixed = F))) {
+      # if(any(grepl(xstr, scall, fixed = F)) |
+      #    any(grepl(xstr.i, scall, fixed = T))) {
+      xcall <- scall
+      break
+    } 
+    xcall
+  }
+  return(xcall)
+} 
+
+
+# not using get_xcall__
+
+#' An internal function to get call levels
+#' 
+#' @param xcall A character string setting the first calling function
+#' @param scall A system call \code{sys.calls()}
+#' @param xstr A character string
+#' @param xclass A character string (default \code{NULL}) indicating the
+#'   s3method class
+#' @keywords internal
+#' @return A language object
+#' @noRd
+#'
+get_xcall__ <- function(xcall, scall, xstr, xclass = NULL) {
+  scall <- scall[[length(scall)]]
+  if(is.null(xclass)) xclass <- 'bgmfit'
+  for (i in xstr) {
+    i.xclass <- paste0(i, ".", xclass)
+    xstr_x <- NULL
+    xstr_FALSE <- FALSE
+    if(any(grepl(i, scall, fixed = T)) |
+       any(grepl(i.xclass, scall, fixed = T))) {
+      xstr_x <- i
+      xstr_FALSE <- TRUE
+      break
+    } 
+    if(xstr_FALSE) {
+      xcall <- xstr_x
+    } else {
+      xcall <- xcall
+    }
+    xcall
+  }
+  return(xcall)
+} 
+
+
+
+
+
+#' An internal function to convert first letter to upper case
+#' 
+#' @param x A character string  
+#' @keywords internal
+#' @return A character string
+#' @noRd
+#'
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
 
 
 #' An internal function to evaluate priors specified in data block of Stan
@@ -1245,10 +1298,10 @@ priors_to_textdata <- function(model,
     }
   }
 
-  firstup <- function(x) {
-    substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-    x
-  }
+  # firstup <- function(x) {
+  #   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  #   x
+  # }
 
   if(!raw) spriors <- spriors %>% dplyr::filter(source == 'user')
   if( raw) prior_name_asit <- TRUE
@@ -1367,7 +1420,7 @@ priors_to_textdata <- function(model,
   if(is.null(sort_response)) {
     if (!is.null(model)) {
       if(length(model$model_info$nys) > 1) {
-        sort_response <- model$model_info$ys
+        sort_response <- model$model_info$yvars
       }
     }
   }
@@ -1381,8 +1434,8 @@ priors_to_textdata <- function(model,
     dplyr::arrange(match(Class, sort_class))
 
   if (!is.null(model)) {
-    if (is.na(model$model_info$univariate_by) &
-        !model$model_info$multivariate) {
+    if (is.na(model$model_info$univariate_by$by) &
+        !model$model_info$multivariate$mvar) {
       spriors <- spriors %>%  dplyr::select(-'Response')
     }
   }
@@ -1744,6 +1797,7 @@ edit_scode_ncp_to_cp <- function(stancode,
 #'  \code{deriv = 1} estimates velocity curve whereas \code{deriv = 2} is to
 #'  get acceleration curve.
 #' @param probs The percentiles to be computed by the quantile function.
+#' @param summary A logical to indicate whether to summarize the posterior draws.
 #' @param robust If FALSE (the default) the mean is used as the measure of
 #' central tendency and the standard deviation as the measure of variability.
 #' If TRUE, the median and the median absolute deviation (MAD) are applied
@@ -1758,6 +1812,7 @@ mapderivqr <- function(model,
                        deriv = 1,
                        resp = NULL,
                        probs = c(0.025, 0.975),
+                       summary = TRUE,
                        robust = FALSE) {
 
   if(is.null(probs)) probs <- c(0.025, 0.975)
@@ -1783,19 +1838,25 @@ mapderivqr <- function(model,
 
   idvar <- model$model_info[[groupvar_]]
   if(length(idvar) > 1) idvar <- idvar[1]
-  yvar  <- 'yvar'
+  
+  # check if really need to be commented out
+   # yvar  <- 'yvar'
 
 
-  if(!is.na(model$model_info$univariate_by)) {
+  # if(!is.na(model$model_info$univariate_by$by)) {
+  #   newdata <- newdata %>% data.frame() %>%
+  #     dplyr::filter(!!as.symbol(model$model_info$univariate_by$by) == 'Male')
+  # }
+
+  if(!is.na(model$model_info$univariate_by$by)) {
     newdata <- newdata %>% data.frame() %>%
-      dplyr::filter(!!as.symbol(model$model_info$univariate_by) == 'Male')
+      dplyr::filter(!!as.symbol(model$model_info$univariate_by$by) == yvar)
   }
 
-
+  ##############################################
+  # getdydx()
+  ##############################################
   getdydx <- function (x, y, id, data, ndigit = 2) {
-    ##############################################
-    # Initiate non formalArgs()
-    ##############################################
     sorder <- NULL;
     data$sorder <- as.numeric(row.names(data))
     .data <- data %>%
@@ -1828,7 +1889,10 @@ mapderivqr <- function(model,
     tempx <- apply(y0, 1, mapderiv) %>% t()
     tempx <- apply(tempx , 1, mapderiv) %>% t()
   }
-  dout <-  brms::posterior_summary(tempx , probs = probs, robust = robust)
+  
+  if(summary) {
+    dout <-  brms::posterior_summary(tempx , probs = probs, robust = robust)
+  }
   dout
 }
 

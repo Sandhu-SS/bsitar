@@ -28,7 +28,6 @@ Watanabe
 WinBUGS
 Xcode
 analysed
-autoscale
 bayes
 berkeley
 biacromial
@@ -66,6 +65,7 @@ mdata
 meanotherdev
 mfit
 minmax
+modelbased
 modelling
 multisession
 nd

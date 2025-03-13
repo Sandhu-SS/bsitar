@@ -44,7 +44,7 @@
 #' @return An object of class \code{bgmfit} if \code{returnobj = TRUE};
 #'   otherwise, it returns \code{NULL} invisibly.
 #'
-#' @export expose_model_functions.bgmfit
+#' @rdname expose_model_functions
 #' @export
 #'
 #' @seealso [rstan::expose_stan_functions()]
@@ -105,13 +105,6 @@ expose_model_functions.bgmfit <- function(model,
   }
   
   
-  # mcall <- match.call()
-  # arguments <- as.list(mcall)[-1]
-  
-  #dots <- list(...)
-  #arguments <- c(arguments, dots)
-
-  
   if(expose) {
     if (verbose) {
       setmsgtxt <-
@@ -145,7 +138,7 @@ expose_model_functions.bgmfit <- function(model,
       } else if(dots_args[['setcompiler']] == 'stan_model') {
         compiled_code_via <- 'stan_model'
       } else {
-        stop(paste("The 'setcompiler' argument should be 'stanc' or 'stan_model'", 
+        stop(paste("'setcompiler' argument should be 'stanc' or 'stan_model'", 
              "or else NULL", collapse =","))
       }
     }
@@ -188,13 +181,7 @@ expose_model_functions.bgmfit <- function(model,
   
   
   SplineFun_name <- model$model_info[['StanFun_name']]
-  # spfun_collect <- c(SplineFun_name,
-  #                    paste0(SplineFun_name, "_", 
-  #                           c("d0", 
-  #                             "d1",
-  #                             "d2")))
-  # print(spfun_collect)
-  # stop()
+ 
   
   spfun_collect <- model$model_info$include_fun_names
 
@@ -241,57 +228,9 @@ expose_model_functions.bgmfit <- function(model,
   }
   
   
-  
-  
-  # if(expose) {
-  #   additionlsfuns <- c('getX')
-  #   if(sigmanlflf) {
-  #     sigmaadditionlsfuns <- c('sigmagetX')
-  #     additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
-  #   }
-  #   if(model$model_info[['select_model']] == 'sitar' |
-  #      model$model_info[['select_model']] == 'rcs') {
-  #     additionlsfuns <- c(additionlsfuns, 'getKnots')
-  #     if(sigmanlflf) {
-  #       sigmaadditionlsfuns <- c('sigmagetKnots')
-  #       additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
-  #     }
-  #   }
-  #   spfun_collect <- c(spfun_collect, additionlsfuns)
-  # }
-  # 
-  # 
-  # if(expose_r_from_stan) {
-  #   spfun_collect <- c(spfun_collect, 'getX')
-  #   if(sigmanlflf) {
-  #     spfun_collect <- c(spfun_collect, 'sigmagetX')
-  #   }
-  #   if(select_model == 'sitar' | select_model == 'rcs') {
-  #     spfun_collect <- c(spfun_collect, 'getKnots')
-  #     if(sigmanlflf) {
-  #       spfun_collect <- c(spfun_collect, 'sigmagetKnots')
-  #     }
-  #   }
-  # }
-  
-  
-  
-  
-  
-  
-  
   nys <- model$model_info$nys
-  ys <- model$model_info$ys
-  # if(nys > 1) {
-  #   spfun_collect2 <- c()
-  #   for (ysii in ys) {
-  #     tempysi <- paste0(ysii, "_", spfun_collect)
-  #     spfun_collect2 <- c(spfun_collect2, tempysi)
-  #   }
-  #   spfun_collect <- spfun_collect2
-  # }
-  
-  
+  ys  <- model$model_info$yvars
+ 
   
   if(expose) {
     Spl_funs <- list()
@@ -340,7 +279,6 @@ expose_model_functions.bgmfit <- function(model,
   } 
   
   
-  
   if(!expose & !expose_r_from_stan) Spl_funs <- NULL
   
   allSplineFun_name <- SplineFun_name
@@ -349,7 +287,6 @@ expose_model_functions.bgmfit <- function(model,
   }
   
   model$model_info[['namesexefuns']] <- allSplineFun_name
-  # model$model_info[['namesexefuns']] <- SplineFun_name
   model$model_info[['exefuns']]      <- Spl_funs
  
   
@@ -401,7 +338,7 @@ expose_model_functions.bgmfit <- function(model,
 
 
 
-#' @rdname expose_model_functions.bgmfit
+#' @rdname expose_model_functions
 #' @export
 expose_model_functions <- function(model, ...) {
   UseMethod("expose_model_functions")

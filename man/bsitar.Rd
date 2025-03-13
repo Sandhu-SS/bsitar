@@ -18,6 +18,7 @@ bsitar(
   cstart = 0,
   xfun = NULL,
   yfun = NULL,
+  xfunxoffset = NULL,
   bound = 0.04,
   stype = nsp,
   terms_rhs = NULL,
@@ -49,6 +50,7 @@ bsitar(
   sigmacstart = 0,
   sigmaxfun = NULL,
   sigmabound = 0.04,
+  sigmaxfunxoffset = NULL,
   dpar_formula = NULL,
   autocor_formula = NULL,
   family = gaussian(),
@@ -174,6 +176,7 @@ bsitar(
   pathfinder_init = FALSE,
   data2 = NULL,
   data_custom = NULL,
+  genquant_xyadj = FALSE,
   sample_prior = "no",
   save_pars = NULL,
   drop_unused_levels = TRUE,
@@ -342,6 +345,11 @@ For \code{univariate_by} and \code{multivariate} models, the \code{yfun} can
 be the same for all sub-models (typically), or different for each sub-model
 (refer to \code{x} for details on setting different arguments for
 sub-models).}
+
+\item{xfunxoffset}{Transformation function for \code{xoffset} in the \code{x}
+structure (default \code{NULL}). See \code{xfun} for details. The
+\code{xfunxoffset} is rarely used. One potential application is when user
+internally transform the numeric \code{xoffset} value.}
 
 \item{bound}{An optional real number specifying the value by which the span
 of the predictor variable \code{x} should be extended (default is
@@ -660,6 +668,12 @@ structure. See \code{xfun} for details. Ignored if
 
 \item{sigmabound}{Bounds for the \code{x} in the \code{sigma} structure. See
 \code{bound} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmaxfunxoffset}{Transformation function for \code{sigmaxoffset}
+in the \code{sigma} structure (default \code{NULL}). See \code{sigmaxfun}
+for details. Ignored if \code{sigma_formula_manual = NULL}. The
+\code{sigmaxfunxoffset} is rarely used. One potential application is
+when user internally transform the numeric \code{sigmaxoffset} value.}
 
 \item{dpar_formula}{Formula for the distributional fixed effect parameter,
 \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.}
@@ -1635,6 +1649,10 @@ as well as for within-group covariance matrices.}
 \item{data_custom}{A \code{data.frame} object (default \code{NULL}). This is
 mainly for internal testing and not be used for routine model fitting.}
 
+\item{genquant_xyadj}{A logical (default \code{NULL}) indicating whether to
+generate \code{xyadj} in the \code{generated quantities} block of the
+\code{Stan}.}
+
 \item{sample_prior}{A character string indicating whether to draw samples
 from the priors in addition to the posterior draws. Options are \code{"no"}
 (the default), \code{"yes"}, and \code{"only"}. These prior draws can be
@@ -1991,7 +2009,7 @@ print(model_ml)
 
 # Check model fit via posterior predictive checks using plot_ppc.
 # This function is based on pp_check from the 'brms' package.
-plot_ppc(model, ndraws = 100)
+plot_ppc(model, ndraws = NULL)
 
 # Plot distance and velocity curves using plot_conditional_effects.
 # This function works like conditional_effects from the 'brms' package,

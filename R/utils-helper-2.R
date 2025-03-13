@@ -1,1057 +1,5 @@
 
 
-#' An internal function to create data frame for post-processing
-#'
-#' @inheritParams  growthparameters.bgmfit 
-#' 
-#' @param idata_method A character string to indicate the interpolation method.
-#'   Options are \emph{method 1} (specified as  \code{'m1'}, default) and
-#'   \emph{method 2} (specified as \code{'m2'}). The \code{'m1'} calls an
-#'   internal function \code{idatafunction} whereas \code{'m2'} calls the
-#'   \code{get_idata} function for data interpolation. The \emph{method 1}
-#'   (\code{'m1'}) is adapted from the the \pkg{iapvbs} and is documented here
-#'   <https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R>. The
-#'   \emph{method 2} (\code{'m2'}) is adapted from the the \pkg{JMbayes} and is
-#'   documented here
-#'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
-#'   If \code{NULL} (default), method \code{'m1'} is automatically set. 
-#' 
-#' @keywords internal
-#' 
-#' @return A data frame object. 
-#' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' 
-#' @keywords internal
-#' @noRd
-#'
-get.newdata <- function(model,
-                        newdata = NULL,
-                        resp = NULL,
-                        numeric_cov_at = NULL,
-                        aux_variables = NULL,
-                        levels_id = NULL,
-                        ipts = NULL,
-                        xrange = NULL,
-                        idata_method = NULL,
-                        dummy_to_factor = NULL,
-                        verbose = FALSE,
-                        ...) {
-  
-  if (is.null(resp)) {
-    resp_rev_ <- resp
-  } else if (!is.null(resp)) {
-    resp_rev_ <- paste0("_", resp)
-  }
-  
-
-  if (is.null(idata_method)) {
-    idata_method <- 'm2'
-  }
-  
-  
-  # Initiate non formalArgs()
-  `:=` <- NULL
-  . <- NULL;
-  
-  
-  validate_response(model, resp)
-  
-  list_c <- list()
-  xvar_ <- paste0('xvar', resp_rev_)
-  yvar_ <- paste0('yvar', resp_rev_)
-  groupvar_ <- paste0('groupvar', resp_rev_)
-  xvar <- model$model_info[[xvar_]]
-  yvar <- model$model_info[[yvar_]]
-  hierarchical_ <- paste0('hierarchical', resp_rev_)
-  
-  if (is.null(levels_id)) {
-    IDvar <- model$model_info[[groupvar_]]
-    if (!is.null(model$model_info[[hierarchical_]])) {
-      IDvar <- model$model_info[[hierarchical_]]
-    } else if (is.null(model$model_info[[hierarchical_]])) {
-      # if(!is.null(model$model_info[['ids']])) {
-      #   IDvar <- model$model_info[['ids']]
-      # }
-    }
-  } else if (!is.null(levels_id)) {
-    IDvar <- levels_id
-  }
-  
-  xfun_ <- paste0('xfun', resp_rev_)
-  yfun_ <- paste0('yfun', resp_rev_)
-  xfun <- model$model_info[[xfun_]]
-  yfun <- model$model_info[[yfun_]]
-  
-  
-  cov_ <- paste0('cov', resp_rev_)
-  cov_sigma_ <- paste0('cov_sigma', resp_rev_)
-  uvarby <- model$model_info$univariate_by
-  
-  
-  # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
-  #if(idata_method == 'm2') {
-    if(is.null(levels_id)) {
-      if(is.null(IDvar)) {
-        if(!is.null(model$model_info[['ids']])) {
-          IDvar <- model$model_info[['ids']]
-        }
-      }
-    }
-  #}
-  
- 
-  
-  if (is.null(newdata)) {
-    if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
-    if(idata_method == 'm2') newdata <- model$data
-  } else {
-    newdata <- newdata
-  }
-  
-  
-  if(!is.null(dummy_to_factor)) {
-      if(!is.list(dummy_to_factor)) {
-        stop("dummy_to_factor must be a named list as follows:",
-             "\n ",
-             "dummy_to_factor = list(factor.dummy = , factor.name = )",
-             "\n ",
-             "where factor.dummy is a vector of character strings that will" ,
-             "\n ",
-             "be converted to a factor variable, and ",
-             "\n ",
-             "factor.name is a single character string that is used to name the",
-             "\n ",
-             "newly created factor variable"
-        )
-      }
-    factor.dummy <- dummy_to_factor[['factor.dummy']]
-    factor.level <- dummy_to_factor[['factor.level']]
-    if(is.null(dummy_to_factor[['factor.name']])) {
-      factor.name <- 'factor.dummy'
-    } else {
-      factor.name <- dummy_to_factor[['factor.name']]
-    }
-    newdata <- convert_dummy_to_factor(df = newdata, 
-                                       factor.dummy = factor.dummy,
-                                       factor.level = factor.level,
-                                       factor.name = NULL)
-    
-    colnames(newdata) <- gsub('factor.var', factor.name, names(newdata))
-    newdata[[factor.name]] <- as.factor(newdata[[factor.name]])
-  }
-  
-  
-  # This is when no random effects and this groupvar is NULL
-  # Therefore, an artificial group var created
-  # see also changes made to the get_idata function lines 17
-  
-  # if (is.null(model$model_info$groupvar)) {
-  #   name_hypothetical_id <- paste0("id", resp_rev_)
-  #   model$model_info$groupvar <- name_hypothetical_id
-  #   newdata[[name_hypothetical_id]] <- as.factor("tempid")
-  # } else if (!is.null(model$model_info$groupvar)) {
-  #   if(length(newdata[[model$model_info$groupvar]]) == 0) {
-  #     # name_hypothetical_id <- paste0("hy_id", resp_rev_)
-  #     if(length(IDvar) > 1) {
-  #       name_hypothetical_id <- IDvar[1] 
-  #     } else {
-  #       name_hypothetical_id <- IDvar
-  #     }
-  #     model$model_info$groupvar <- name_hypothetical_id
-  #     newdata[[name_hypothetical_id]] <- as.factor("tempid")
-  #   }
-  # }
-  
-  newdata <- check_newdata_args(model, newdata, IDvar, resp)
-
-  
-  if (!is.na(model$model_info$univariate_by)) {
-    if (is.symbol(model$model_info$call.bgmfit$y)) {
-      setorgy <- deparse(model$model_info$call.bgmfit$y)
-    } else if (is.list(model$model_info$call.bgmfit$y)) {
-      setorgy <- unname(unlist(model$model_info$call.bgmfit$y))
-      if (is.symbol(setorgy))
-        setorgy <- deparse(setorgy)
-    } else {
-      setorgy <- model$model_info$call.bgmfit$y
-    }
-  }
-  
-  if (is.na(model$model_info$univariate_by)) {
-    setorgy <- model$model_info$ys
-  }
- 
-  
-  if (idata_method == 'm1') {
-    newdata <- prepare_data(
-      data = newdata,
-      x = model$model_info$xs,
-      y = setorgy,
-      id = model$model_info$ids,
-      uvarby = model$model_info$univariate_by,
-      mvar = model$model_info$multivariate,
-      xfuns = model$model_info$xfuns,
-      yfuns = model$model_info$yfuns,
-      outliers = model$model_info$outliers)
-  }
-  
-  
- 
-  newdata <- newdata[,!duplicated(colnames(newdata))]
-  
-  if (!is.na(model$model_info$univariate_by)) {
-    if(idata_method == 'm1') {
-      sortbylayer <- NA
-      newdata <- newdata %>%
-        dplyr::mutate(sortbylayer =
-                        forcats::fct_relevel(!!as.name(uvarby),
-                                             (levels(
-                                               !!as.name(uvarby)
-                                             )))) %>%
-        dplyr::arrange(sortbylayer) %>%
-        dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-                                                 levels =
-                                                   unique(!!as.name(IDvar)))) %>%
-        dplyr::select(-sortbylayer)
-    } # if(idata_method == 'm1') {
-    
-    subindicatorsi <- model$model_info$subindicators[grep(resp,
-                                                          model$model_info$ys)]
-    list_c[['subindicatorsi']] <- subindicatorsi
-    list_c[['uvarby']] <- uvarby
-  }
-  
-  
-  covars_extrcation <- function(str) {
-    str <- gsub("[[:space:]]", "", str)
-    for (ci in c("*", "+", ":")) {
-      str <- gsub(ci, ' ', str, fixed = T)
-    }
-    str <- strsplit(str, " ")[[1]]
-    str
-  }
-  
-  
-  cov_vars <-  model$model_info[[cov_]]
-  cov_sigma_vars <-  model$model_info[[cov_sigma_]]
-
-  
-  if (!is.null(cov_vars)) {
-    cov_vars <- covars_extrcation(cov_vars)
-  }
-  if (!is.null(cov_sigma_vars)) {
-    cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
-  }
-  
-  
-  if(is.null(cov_vars) & is.null(cov_sigma_vars)) {
-    if(!is.null(dummy_to_factor)) {
-      warning("There are no covariate(s) but have specified dummy_to_factor",
-           "\n ", 
-           "Please check if this is an error")
-    }
-  }
-  
-  
-  if(!is.null(dummy_to_factor)) {
-    cov_vars <- c(cov_vars, factor.name)
-  }
-  
-  
-  # check if cov is charcater but not factor 
-  checks_for_chr_fact <- c(cov_vars, cov_sigma_vars)
-  checks_for_chr_fact <- unique(checks_for_chr_fact)
-  for (cov_varsi in checks_for_chr_fact) {
-    if(is.character(newdata[[cov_varsi]])) {
-      if(!is.factor(newdata[[cov_varsi]])) {
-        if(verbose) {
-          message("\nVariable '", cov_varsi, "' used as a covariate in the model ",
-                  "\n ",
-                  " is a character but not factor. Converting it to factor.")
-        }
-        newdata[[cov_varsi]] <- as.factor(newdata[[cov_varsi]])
-        factor_vars <- names(newdata[sapply(newdata, is.factor)])
-      }
-    }
-  }
-    
-  factor_vars <- names(newdata[sapply(newdata, is.factor)])
-  numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
-  
-  # if (!is.null(cov_sigma_vars))
-  #   cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
-  
-  
-  
-  cov_factor_vars <- intersect(cov_vars, factor_vars)
-  cov_numeric_vars <- intersect(cov_vars, numeric_vars)
-  groupby_fstr <- c(cov_factor_vars)
-  groupby_fistr <- c(IDvar, cov_factor_vars)
-  
-  cov_sigma_factor_vars <- intersect(cov_sigma_vars, factor_vars)
-  cov_sigma_numeric_vars <- intersect(cov_sigma_vars, numeric_vars)
-  
-  if (identical(cov_factor_vars, character(0)))
-    cov_factor_vars <- NULL
-  if (identical(cov_numeric_vars, character(0)))
-    cov_numeric_vars <- NULL
-  
-  if (identical(cov_sigma_factor_vars, character(0)))
-    cov_sigma_factor_vars <- NULL
-  if (identical(cov_sigma_numeric_vars, character(0)))
-    cov_sigma_numeric_vars <- NULL
-  
-  # Merge here a b c covariate with sigma co variate
-  # IMP: Note that groupby_fstr and groupby_fistr are stil  a b c covariate
-  # This way, plot_curves and gparameters will not produce sigam cov specific
-  # curves and g parameters
-  
-  cov_factor_vars <- c(cov_factor_vars, cov_sigma_factor_vars)
-  cov_numeric_vars <- c(cov_numeric_vars, cov_sigma_numeric_vars)
-  
-  if (!is.na(model$model_info$univariate_by)) {
-    if(idata_method == 'm1') groupby_fstr <- c(uvarby, groupby_fstr)
-    if(idata_method == 'm1') groupby_fistr <- c(uvarby, groupby_fistr)
-  }
-  
-
-  set_numeric_cov_at <- function(x, numeric_cov_at) {
-    name_ <- deparse(substitute(x))
-    if (is.null((numeric_cov_at[[name_]]))) {
-      . <- mean(x, na.rm = T)
-    } else if (!is.null((numeric_cov_at[[name_]]))) {
-      if (numeric_cov_at[[name_]] == 'mean') {
-        . <- mean(x,  na.rm = T)
-      } else if (numeric_cov_at[[name_]] == 'median') {
-        . <- median(x, na.rm = T)
-      } else if (numeric_cov_at[[name_]] == 'min') {
-        . <- min(x, na.rm = T)
-      } else if (numeric_cov_at[[name_]] == 'max') {
-        . <- max(x, na.rm = T)
-      } else {
-        . <- numeric_cov_at[[name_]]
-      }
-    }
-    round(., 3)
-  }
-  
-  
-
-  get.data.grid <- function(data,
-                            xvar,
-                            yvar,
-                            IDvar,
-                            cov_numeric_vars,
-                            numeric_cov_at,
-                            aux_variables,
-                            uvarby) {
-    if (!is.null(IDvar))
-      relocate_vars <- c(xvar, IDvar)
-    if (is.null(IDvar))
-      relocate_vars <- c(xvar)
-    if (!is.na(uvarby))
-      if(idata_method == 'm1') relocate_vars <- c(relocate_vars, uvarby)
-      if(idata_method == 'm2') relocate_vars <- c(relocate_vars)
-    if (!is.null(cov_numeric_vars)) {
-      cov_numeric_vars__ <- cov_numeric_vars
-      if (identical(cov_numeric_vars__, character(0)))
-        cov_numeric_vars__ <- NULL
-      if (!is.null(cov_numeric_vars__)) {
-        for (cov_numeric_vars__i in cov_numeric_vars__) {
-          if (!is.null(numeric_cov_at)) {
-            if (!cov_numeric_vars__i %in% names(numeric_cov_at)) {
-              stop(
-                "You have used the argument 'numeric_cov_at' to specify the",
-                "\n ",
-                " value of continous covariate '",
-                cov_numeric_vars__i,
-                "'.",
-                "\n ",
-                " However, the name of this covariate is missing from the list",
-                "\n ",
-                " Please use argument 'numeric_cov_at' correctly as follows:",
-                "\n ",
-                " numeric_cov_at = list(",
-                cov_numeric_vars__i,
-                " = xx)"
-              )
-            }
-          }
-        }
-        data <-
-          data %>% dplyr::mutate_at(cov_numeric_vars__,
-                                    set_numeric_cov_at,
-                                    numeric_cov_at)
-        
-        # This is good but get.data.grid is called twice - why?
-        # hence this cat("\n"... is printed twice
-        # cat("Continous covariate(s) set at:\n")
-        # for (cov_numeric_vars__i in cov_numeric_vars__) {
-        #   cat("\n", cov_numeric_vars__i, "at",
-        #       unique(data[[cov_numeric_vars__i]]))
-        # }
-      }
-    }
-    
-     
-    if (!is.null(yvar)) {
-      if (yvar %in% colnames(data)) {
-        relocate_vars <- c(yvar, relocate_vars)
-      }
-    }
-    data %>% dplyr::relocate(dplyr::all_of(relocate_vars)) %>% data.frame()
-    
-  }
-  
-  ########
-  
-  i_data <-
-    function(model,
-             newdata,
-             resp = NULL,
-             cov_factor_vars = NULL,
-             cov_numeric_vars = NULL,
-             aux_variables = NULL,
-             levels_id = NULL,
-             ipts = NULL,
-             xrange = NULL) {
-      if (is.null(resp)) {
-        resp_rev_ <- resp
-      } else if (!is.null(resp)) {
-        resp_rev_ <- paste0("_", resp)
-      }
-      xvar_ <- paste0('xvar', resp_rev_)
-      yvar_ <- paste0('yvar', resp_rev_)
-      groupvar_ <- paste0('groupvar', resp_rev_)
-      xvar <- model$model_info[[xvar_]]
-      yvar <- model$model_info[[yvar_]]
-      
-      hierarchical_ <- paste0('hierarchical', resp_rev_)
-      if (is.null(levels_id)) {
-        IDvar <- model$model_info[[groupvar_]]
-        if (!is.null(model$model_info[[hierarchical_]])) {
-          IDvar <- model$model_info[[hierarchical_]]
-        }
-      } else if (!is.null(levels_id)) {
-        IDvar <- levels_id
-      }
-      
-      uvarby <- model$model_info$univariate_by
-      if (!is.na(uvarby))
-        cov_factor_vars <- c(uvarby, cov_factor_vars)
-      
-      
-      
-      # this idatafunction i.e., 'm1'
-      if (idata_method == 'm1') {
-        idatafunction <- function(.x,
-                                  xvar,
-                                  IDvar,
-                                  nmy,
-                                  xrange,
-                                  set_xrange,
-                                  aux_var = NULL) {
-          index__x <- NA
-          exdata <-
-            function(x,
-                     id,
-                     idmat,
-                     nmy,
-                     xrange,
-                     set_xrange,
-                     aux_var) {
-              n <- round(nmy * diff(range(x)))
-              npt <- n / diff(range(x))
-              
-              extage <- apply(idmat, 1, function(x1) {
-                index__x <-
-                  id == x1
-                
-                if (is.null(xrange)) {
-                  id.x <- x[index__x]
-                }
-                if (!is.null(xrange)) {
-                  if (length(xrange) == 1) {
-                    if (xrange == 1 & is.null(set_xrange))
-                      id.x <- x
-                    if (xrange == 2 &
-                        !is.null(set_xrange))
-                      id.x <- set_xrange
-                  }
-                  if (length(xrange) == 2) {
-                    id.x <- set_xrange
-                  }
-                }
-                
-                nt <- floor(npt * diff(range(id.x))) + 1
-                newx <- seq(min(id.x), max(id.x), length = nt)
-                
-                newid <-
-                  rep(x1, nt)
-                extx <- data.frame(x = newx, id = newid)
-                colnames(extx) <- c("x", "id")
-                extx
-              })
-              df <-
-                extage[[1]][FALSE,]
-              for (dft in extage)
-                df <- rbind(df, dft)
-              df
-            }
-          
-          inidnull <- FALSE
-          if(is.null(.x[[IDvar]])) {
-            inidnull <- TRUE
-            .x[[IDvar]] <- unique(levels(newdata[[IDvar]]))[1]
-          }
-          
-          out <- exdata(
-            x = .x[[xvar]],
-            id = .x[[IDvar]],
-            idmat = matrix(unique(.x[[IDvar]], ncol = 1)),
-            nmy = nmy,
-            xrange = xrange,
-            set_xrange = set_xrange,
-            aux_var = aux_var
-          )
-          
-          out <- out %>% dplyr::rename(!!IDvar := 'id') %>% data.frame()
-          
-          if(inidnull) out <- out %>% dplyr::select(-dplyr::all_of(IDvar))
-          
-          idxx <- NULL
-          if (!is.null(aux_var)) {
-            aux_varx <- c(aux_var, IDvar)
-            newx. <- .x %>% dplyr::select(dplyr::all_of(aux_varx)) %>%
-              dplyr::group_by(dplyr::across(dplyr::all_of(IDvar))) %>%
-              dplyr::mutate(idxx = dplyr::row_number()) %>%
-              dplyr::ungroup()
-            outx. <- out %>%
-              dplyr::group_by(dplyr::across(dplyr::all_of(IDvar))) %>%
-              dplyr::mutate(idxx = dplyr::row_number()) %>%
-              dplyr::ungroup()
-            out <- outx. %>% dplyr::left_join(., newx.,
-                                              by = c(IDvar, 'idxx')) %>%
-              dplyr::select(-idxx) %>% data.frame()
-          }
-          
-          out 
-        } # end idatafunction -> m1
-        
-        
-        if (!is.null(xrange)) {
-          if (length(xrange) < 1 | length(xrange) > 2) {
-            stop(
-              "Argument xrange should be either NULL, numeric value 1 or 2",
-              "\n ",
-              "or else a paired values indicating the range e.g., c(6, 20)"
-            )
-          }
-        }
-        
-        if (!is.null(xrange)) {
-          if (length(xrange) == 1) {
-            if (xrange == 1)
-              set_xrange <- NULL
-            if (xrange == 2)
-              set_xrange <- range(newdata[[xvar]])
-          }
-          if (length(xrange) == 2) {
-            set_xrange <- xrange
-          }
-        }
-        
-        if (is.null(xrange))
-          set_xrange <- NULL
-        
-        if (is.null(model$model_info[[hierarchical_]])) {
-          if (!is.null(ipts) & is.null(cov_factor_vars)) {
-            newdata %>% dplyr::arrange(IDvar, xvar) %>%
-              dplyr::group_modify(
-                ~ idatafunction(
-                  .x,
-                  xvar = xvar,
-                  IDvar = IDvar,
-                  nmy = ipts,
-                  xrange = xrange,
-                  set_xrange = set_xrange,
-                  aux_var = aux_variables
-                )
-              ) %>%
-              dplyr::rename(!!xvar := 'x') %>%
-              dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-              dplyr::relocate(dplyr::all_of(IDvar), dplyr::all_of(xvar)) %>%
-              data.frame() -> newdata
-          } else if (!is.null(ipts) & !is.null(cov_factor_vars)) {
-            newdata %>% dplyr::arrange(IDvar, xvar) %>%
-              dplyr::group_by(dplyr::across(dplyr::all_of(cov_factor_vars))) %>%
-              dplyr::group_modify(
-                ~ idatafunction(
-                  .x,
-                  xvar = xvar,
-                  IDvar = IDvar,
-                  nmy = ipts,
-                  xrange = xrange,
-                  set_xrange = set_xrange,
-                  aux_var = aux_variables
-                )
-              ) %>%
-              dplyr::rename(!!xvar := 'x') %>%
-              dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-              dplyr::relocate(dplyr::all_of(IDvar), dplyr::all_of(xvar)) %>%
-              data.frame() -> newdata
-          }
-        } # if(is.null(model$model_info[[hierarchical_]]))
-        
-        
-        multiNewVar <- function(df, df2, varname) {
-          df %>% dplyr::mutate(.,!!varname := df2[[varname]])
-        }
-        
-        if (!is.null(model$model_info[[hierarchical_]])) {
-          if (!is.null(ipts) & is.null(cov_factor_vars)) {
-            IDvar_ <- IDvar[1]
-            higher_ <- IDvar[2:length(IDvar)]
-            arrange_by <- c(IDvar_, xvar)
-            cov_factor_vars_by <- c(higher_, cov_factor_vars)
-            newdata_o <- newdata
-            newdata <-
-              newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
-              dplyr::group_by(
-                dplyr::across(dplyr::all_of(cov_factor_vars_by))) %>%
-              dplyr::group_modify(
-                ~ idatafunction(
-                  .x,
-                  xvar = xvar,
-                  IDvar = IDvar_,
-                  nmy = ipts,
-                  xrange = xrange,
-                  set_xrange = set_xrange,
-                  aux_var = aux_variables
-                ),
-                .keep = F
-              ) %>%
-              dplyr::rename(!!xvar := 'x') %>%
-              data.frame()
-            
-            for (i in IDvar) {
-              newdata <- newdata %>% multiNewVar(df = .,
-                                                 df2 = newdata,
-                                                 varname = i)
-            }
-            
-            newdata %>% dplyr::relocate(dplyr::all_of(IDvar), 
-                                        dplyr::all_of(xvar)) %>%
-              data.frame() -> newdata
-          }
-          
-          if (!is.null(ipts) & !is.null(cov_factor_vars)) {
-            IDvar_ <- IDvar[1]
-            higher_ <- IDvar[2:length(IDvar)]
-            arrange_by <- c(IDvar_, xvar)
-            # cov_factor_vars_by <- c(higher_, cov_factor_vars)
-            if(length(IDvar) > 1) {
-              cov_factor_vars_by <- c(higher_, cov_factor_vars)
-            } else {
-              cov_factor_vars_by <- c(cov_factor_vars)
-            }
-            newdata <-
-              newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
-              dplyr::group_by(
-                dplyr::across(dplyr::all_of(cov_factor_vars_by))) %>%
-              dplyr::group_modify(
-                ~ idatafunction(
-                  .x,
-                  xvar = xvar,
-                  IDvar = IDvar_,
-                  nmy = ipts,
-                  xrange = xrange,
-                  set_xrange = set_xrange,
-                  aux_var = aux_variables
-                )
-              ) %>%
-              dplyr::rename(!!xvar := 'x') %>% data.frame()
-            for (i in IDvar) {
-              newdata <- newdata %>% multiNewVar(df = .,
-                                                 df2 = newdata,
-                                                 varname = i)
-            }
-            newdata %>% dplyr::relocate(dplyr::all_of(IDvar), 
-                                        dplyr::all_of(xvar)) %>%
-              data.frame() -> newdata
-          }
-        } # if(!is.null(model$model_info[[hierarchical_]])) {
-      } # end of if(idata_method == 'm1') {
-      
-      
-      # this is get_idata i.e., 'm2'
-      if (idata_method == 'm2') {
-        if (!is.null(ipts)) {
-          # for 3 or more level data, idvar shoud be first of vector
-          if (is.null(model$model_info[[hierarchical_]])) {
-            IDvar_for_idata <- IDvar
-          } else if (!is.null(model$model_info[[hierarchical_]])) {
-            IDvar_for_idata <- IDvar[1]
-          }
-          newdata <-
-            get_idata(
-              newdata = newdata,
-              idVar = IDvar_for_idata,
-              timeVar = xvar,
-              times = NULL,
-              length.out = ipts,
-              xrange = xrange
-            )
-        }
-        
-      } # end if(idata_method == 'm2') {
-      
-      
-
-      if (is.null(ipts)) {
-        newdata <- newdata
-      }
-        
-      
-      
-      if (!is.null(ipts)) {
-        # outliers must be NULL
-        # Because these has already been taken care of by get.newdata
-        if (!is.na(model$model_info$univariate_by)) {
-          if (is.symbol(model$model_info$call.bgmfit$y)) {
-            setorgy <- deparse(model$model_info$call.bgmfit$y)
-          } else if (is.list(model$model_info$call.bgmfit$y)) {
-            setorgy <- unname(unlist(model$model_info$call.bgmfit$y))
-            if (is.symbol(setorgy))
-              setorgy <- deparse(setorgy)
-          } else {
-            setorgy <- model$model_info$call.bgmfit$y
-          }
-        }
-        
-        if (is.na(model$model_info$univariate_by)) {
-          setorgy <- model$model_info$ys
-        }
-        
-        if (idata_method == 'm1') {
-          newdata <- prepare_data(
-            data = newdata,
-            x = model$model_info$xs,
-            y = setorgy,
-            id = model$model_info$ids,
-            uvarby = model$model_info$univariate_by,
-            mvar = model$model_info$multivariate,
-            xfuns = model$model_info$xfuns,
-            yfuns = model$model_info$yfuns,
-            outliers = NULL) # model$model_info$outliers
-        } # if (idata_method == 'm1') {
-        
-      }
-      
-      
-      if (!is.na(model$model_info$univariate_by)) {
-        if(idata_method == 'm1') {
-          sortbylayer <- NA
-          unique_names <- unique(names(newdata))
-          newdata <- newdata %>% dplyr::select(dplyr::all_of(unique_names))
-          newdata <- newdata %>%
-            dplyr::mutate(sortbylayer =
-                            forcats::fct_relevel(!!as.name(uvarby),
-                                                 (levels(
-                                                   !!as.name(uvarby)
-                                                 )))) %>%
-            dplyr::arrange(sortbylayer) %>%
-            dplyr::mutate(!!as.name(IDvar) :=
-                            factor(!!as.name(IDvar),
-                                   levels =
-                                     unique(!!as.name(IDvar)))) %>%
-            dplyr::select(-sortbylayer)
-        } # if(idata_method == 'm1') {
-      }
-      
-      newdata.oo <- get.data.grid(
-        data = newdata,
-        xvar = xvar,
-        yvar = yvar,
-        IDvar = IDvar,
-        cov_numeric_vars = cov_numeric_vars,
-        numeric_cov_at = numeric_cov_at,
-        aux_variables = aux_variables,
-        uvarby = uvarby
-      )
-      
-      
-      #         newdata <- check_newdata_args(model, newdata, IDvar, resp)
-      
-      j_b_names <- intersect(names(newdata), names(newdata.oo))
-      j_b_names__ <- c(j_b_names, cov_numeric_vars)
-      j_b_names__ <- unique(j_b_names__)
-      
-      if(idata_method == 'm1') {
-        newdata <-
-          newdata %>% 
-          dplyr::left_join(., 
-                           newdata.oo %>%
-                             dplyr::select(dplyr::all_of(j_b_names__)),
-                           by = j_b_names)
-        
-      } else if(idata_method == 'm2') {
-        if(length(IDvar) > 1) {
-          name_hypothetical_id <- IDvar[1]
-        } else {
-          name_hypothetical_id <- IDvar
-        }
-        if(length(unique(newdata[[name_hypothetical_id]])) > 1) {
-          newdata <-
-            newdata %>% 
-            dplyr::left_join(., 
-                             newdata.oo %>%
-                               dplyr::select(dplyr::all_of(j_b_names__)),
-                             by = j_b_names)
-        } else if(length(unique(newdata[[name_hypothetical_id]])) == 1) {
-          newdata <- newdata
-        }
-      } # else if(idata_method == 'm2') {
-      
-      
-      return(newdata)
-    }
-  
-  
-  newdata <- i_data(
-    model,
-    newdata,
-    resp = resp,
-    cov_factor_vars = cov_factor_vars,
-    cov_numeric_vars = cov_numeric_vars,
-    aux_variables = aux_variables,
-    levels_id = levels_id,
-    ipts = ipts,
-    xrange = xrange
-  )
-  
- 
-  list_c[['xvar']] <- xvar
-  list_c[['yvar']] <- yvar
-  list_c[['IDvar']] <- IDvar
-  list_c[['cov_vars']] <- cov_vars
-  list_c[['cov_factor_vars']] <- cov_factor_vars
-  list_c[['cov_numeric_vars']] <- cov_numeric_vars
-  list_c[['groupby_fstr']] <- groupby_fstr
-  list_c[['groupby_fistr']] <- groupby_fistr
-  
-  attr(newdata, 'list_c') <- list_c
-  
-  return(newdata)
-} # get.newdata
-
-
-
-
-
-
-
-#' An internal function to imterpolate data for plotting smooth curves
-#' 
-#' @param model An object of class \code{bgmfit}. This is optional (default
-#'   \code{NULL}) i.e., it is not neccessary to specify the model object. When
-#'   \code{model} is specified, then values for \code{newdata}, \code{idVar},
-#'   and \code{timeVar} are automatically taken from the \code{model}.
-#'
-#' @param newdata A data frame. If \code{NULL} (default), data analysed in the
-#'   original model fit is used.
-#'
-#' @param idVar A character string to specify the group identifier. If
-#'   \code{NULL} (default), \code{id} from the model fit is used.
-#'
-#' @param timeVar  A character string to specify the time variable. If
-#'   \code{NULL} (default), \code{x} from the model fit is used.
-#'
-#' @param times  A numeric vector to specify the time range. Currently ignored.
-#'
-#' @param length.out A numeric value to specify the length of interpolation
-#'   points. Default 10.
-#'
-#' @param xrange An integer to set the predictor range (i.e., age) when
-#'   executing the interpolation via \code{ipts}. The default \code{NULL} sets
-#'   the individual specific predictor range whereas code \code{xrange = 1} sets
-#'   same range for all individuals within the higher order grouping variable
-#'   (e.g., study). Code \code{xrange  = 2} sets the identical range
-#'   dplyr::across the entire sample. Lastly, a paired numeric values can be
-#'   supplied e.g., \code{xrange = c(6, 20)} will set the range between 6 and
-#'   20.
-#' @param keeplevels A logical in case factor variables other than \code{idVar}
-#'   present
-#' @return A data frame.
-#' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' 
-#' @keywords internal
-#' @noRd
-#'
-get_idata <-
-  function(model = NULL,
-           newdata = NULL,
-           idVar = NULL,
-           timeVar = NULL,
-           times = NULL,
-           length.out = 10,
-           xrange = 1, 
-           keeplevels = FALSE, 
-           asdf = FALSE) {
-    
-    if (is.null(newdata)) {
-      newdata <- model$data
-    } else {
-      newdata <- newdata
-    }
-    
-    if(data.table::is.data.table(newdata)) {
-      setasdt <- TRUE 
-      newdata <- as.data.frame(newdata)
-    } else {
-      setasdt <- FALSE
-    }
-    
-    if(keeplevels) {
-      is.fact <- names(newdata[, sapply(newdata, is.factor)])
-      cnames  <- colnames(newdata)
-    }
-    
-    
-    if(is.null(model)) {
-      if (is.null(idVar)) stop("Specify model or idVar, both can not be NULL")
-      if (is.null(timeVar)) stop("Specify model or timeVar, both can't be NULL")
-    }
-    
-    if(!is.null(model)) {
-      if (!is.null(idVar)) stop("Specify either model or idVar, not both")
-      if (!is.null(timeVar)) stop("Specify either model or timeVar, not both")
-    }
-    
-    if(!is.null(model)) {
-      if(length(model$model_info$ids) > 1) {
-        stop("Please specify newdata, idVar, and timeVar manullay because 
-            currently value for these can not be infered from model with three 
-            or more levels of hierarchy")
-      }
-    }
-    
-    `.` <- NULL;
-    
-    if (is.null(idVar)) {
-      idVar <- model$model_info$ids
-    } else {
-      idVar <- idVar
-    }
-    
-    if (is.null(timeVar)) {
-      timeVar <- model$model_info$xvar
-    } else {
-      timeVar <- timeVar
-    }
-    
-    all_times <- TRUE
-    if (is.null(xrange))
-      xrange <- 1
-    else
-      xrange <- xrange
-    times_orig <- newdata[[timeVar]]
-    times_orig <- times_orig[!is.na(times_orig)]
-    
-    if (is.null(times) || !is.numeric(times)) {
-      times <-
-        seq(min(times_orig), max(times_orig), length.out = length.out)
-    }
-    
-    # This is when no random effects and groupvar is NULL
-    # Therefore, an artificial group var created
-    # Check utils-helper function lines 60
-    
-    if (nlevels(newdata[[idVar]]) == 1) {
-      newdata <- newdata %>%
-        dplyr::distinct(newdata[[timeVar]], .keep_all = T) %>%
-        dplyr::arrange(!!as.name(timeVar))
-    }
-    
-    id <- match(newdata[[idVar]], unique(newdata[[idVar]]))
-    
-    if(length( unique(newdata[[idVar]])) == 1) {
-      if(length.out == 1) stop("The argument 'ipts' should be > 1")
-    }
-    
-    last_time <- tapply(newdata[[timeVar]], id, max)
-    first_time <- tapply(newdata[[timeVar]], id, min)
-    
-    newdata_nomiss <- newdata[complete.cases(newdata),]
-    id_nomiss <-
-      match(newdata_nomiss[[idVar]], unique(newdata_nomiss[[idVar]]))
-    n <- length(unique(id_nomiss))
-    
-    if (xrange == 1) {
-      times_to_pred <- list()
-      for (i in 1:length(unique(newdata[[idVar]]))) {
-        numx <- as.character(i)
-        times_to_pred[[numx]] <-
-          seq(first_time[i], last_time[i], length.out = length.out)
-      }
-    }
-    
-    if (xrange == 2) {
-      times_to_pred <- lapply(last_time, function (t)
-        if (all_times)
-          times
-        else
-          times[times > t])
-    }
-    
-    id_pred <- rep(seq_len(n), sapply(times_to_pred, length))
-    
-    right_rows <- function (data, times, ids, Q_points) {
-      fids <- factor(ids, levels = unique(ids))
-      if (!is.list(Q_points))
-        Q_points <- split(Q_points, row(Q_points))
-      ind <- mapply(findInterval, Q_points, split(times, fids))
-      ind[ind < 1] <- 1
-      rownams_id <- split(row.names(data), fids)
-      ind <- mapply(`[`, rownams_id, split(ind, col(ind)))
-      data[c(ind),]
-    }
-    
-    newdata_pred <-
-      right_rows(newdata, newdata[[timeVar]], id, times_to_pred)
-    
-    
-    if(keeplevels) {
-      if(length(setdiff(is.fact, idVar)) > 0) {
-        newdata_pred <- newdata_pred %>% droplevels
-        newdata_pred <- newdata_pred %>% 
-          dplyr::select(-dplyr::all_of(setdiff(is.fact, idVar)))
-        
-        newdata_is.factx <- newdata %>% 
-          dplyr::select(dplyr::all_of(is.fact))
-        
-        newdata_pred <- newdata_pred %>% 
-          dplyr::left_join(., newdata_is.factx, by = idVar,
-                    relationship = "many-to-many")
-      }
-    }
-    
-   
-    
-    newdata_pred[[timeVar]] <- unlist(times_to_pred)
-    
-    if(keeplevels) {
-      newdata_pred <- newdata_pred %>% dplyr::select(dplyr::all_of(cnames))
-    }
-    if(setasdt) newdata_pred <- data.table::as.data.table(newdata_pred)
-    if(asdf) out <- as.data.frame(newdata_pred) else out <- newdata_pred 
-    # newdata_pred
-    out
-  }
-
-
 
 #' An internal function to edit stancode for tripple logistic model
 #' 
@@ -1735,7 +683,10 @@ post_processing_checks <- function(model,
                                    deriv = NULL,
                                    all = FALSE,
                                    envir = NULL, 
-                                   verbose = FALSE) {
+                                   verbose = FALSE, 
+                                   check_d0 = FALSE,
+                                   check_d1 = FALSE,
+                                   check_d2 = FALSE) {
   
   if(is.null(envir)) envir <- parent.frame()
   if(is.null(deriv)) deriv <- 0
@@ -1744,26 +695,53 @@ post_processing_checks <- function(model,
     stop("The class of model object should be 'bgmfit' ")
   }
   
+  
+  
+
   excall_ <- c("plot_ppc", "loo_validation")
   
-  check_it <- strsplit(deparse((xcall[1])), "\\.")[[1]][1] 
-  check_it <- gsub("\"",  "", check_it)
+  # 6.03.2025
+  # check_it <- strsplit(deparse((xcall[1])), "\\.")[[1]][1] 
+  # check_it <- gsub("\"",  "", check_it)
   
-  if (check_it %in% excall_) {
-    if(is.null(as.list(xcall)[['deriv']])) deriv <- ''
-    if (!is.null(as.list(xcall)[['deriv']])) {
-      deriv <- ''
-      if(verbose) {
-        message(
-          "\nargument 'deriv' is not allowed for the ",
-          " post-processing function",  " '",
-          check_it, "'",
-          "\n ",
-          "Therefore, it is set to missing i.e., deriv = ''"
-        )
-      }
-    } # if(!is.null(chcallls$idata_method)) {
-  }
+  xcall_check_it <- paste(deparse(substitute(xcall)), collapse = "")
+  xcall_check_it <- gsub_space(xcall_check_it)
+  check_it       <- sub(" *\\(.*", "", xcall_check_it)
+  
+
+  # `%partin%` <- function (pattern, list) {
+  #   vapply(pattern, function (p) any(grepl(p, list)), 
+  #          logical(1L), USE.NAMES = FALSE)
+  # }
+  
+  check_it_sss <- strsplit(check_it, "\\.")[[1]][1]
+  
+  # if (check_it_sss %in% excall_) {
+  #   if(grepl("deriv=", xcall_check_it)) {
+  #     stop("option deriv is not allowed for ", check_it_sss )
+  #   }
+  #   if(grepl("deriv_model", xcall_check_it)) {
+  #     stop("option deriv_model is not allowed for ", check_it_sss )
+  #   }
+  # }
+  
+
+  # if (check_it_sss %in% excall_) {
+  #   if(is.null(as.list(xcall)[['deriv']])) deriv <- ''
+  #   if (!is.null(as.list(xcall)[['deriv']])) {
+  #     deriv <- ''
+  #     if(verbose) {
+  #       message(
+  #         "\nargument 'deriv' is not allowed for the ",
+  #         " post-processing function",  " '",
+  #         check_it, "'",
+  #         "\n ",
+  #         "Therefore, it is set to missing i.e., deriv = ''"
+  #       )
+  #     }
+  #   } # if(!is.null(chcallls$idata_method)) {
+  # }
+  
   
   if (model$model_info$nys == 1 & !is.null(resp)) {
     stop(
@@ -1778,10 +756,10 @@ post_processing_checks <- function(model,
     )
   }
   if (model$model_info$nys > 1 & is.null(resp)) {
-    if (!is.na(model$model_info$univariate_by)) {
+    if (!is.na(model$model_info$univariate_by$by)) {
       stop(
         "You have fit a univariate_by model for ",
-        model$model_info$univariate_by,
+        model$model_info$univariate_by$by,
         "\n ",
         " but did not correctly specified the 'resp' option",
         " (which is NULL at present).",
@@ -1790,7 +768,7 @@ post_processing_checks <- function(model,
         paste(model$model_info$ys, collapse = ", ")
       )
     }
-    if (model$model_info$multivariate) {
+    if (model$model_info$multivariate$mvar) {
       stop(
         "You have fit a multivariate model ",
         "\n ",
@@ -1818,9 +796,9 @@ post_processing_checks <- function(model,
                                             model$model_info[['namesexefuns']], 
                                             '0')]], envir = envir)
     
-    assign(paste0(resp_, 'getX'), 
-           model$model_info$exefuns[[paste0(resp_, 'getX')]], 
-           envir = envir)
+    # assign(paste0(resp_, 'getX'), 
+    #        model$model_info$exefuns[[paste0(resp_, 'getX')]], 
+    #        envir = envir)
     
     if(model$model_info[['select_model']] == 'sitar' |
        model$model_info[['select_model']] == 'rcs') {
@@ -1841,6 +819,41 @@ post_processing_checks <- function(model,
   if(all) {
     out <- model$model_info[['exefuns']]
   } 
+  
+  # 6.03.2025
+  # check_d1
+  if(check_d1) {
+    available_d0 <- available_d1 <- available_d2 <- FALSE
+    for (i in names(model$model_info$exefuns)) {
+      check_funds <- ifelse(grepl("\\d$", i), sub(".*?(\\d+)$", "\\1", i), "")
+      if(grepl("0", check_funds)) {
+        available_d0 <- TRUE
+      }
+      if(grepl("1", check_funds)) {
+        available_d1 <- TRUE
+      }
+      if(grepl("2", check_funds)) {
+        available_d2 <- TRUE
+      }
+    }
+    
+    if(verbose) { 
+      if(!available_d0) {
+        stop("No 'd0' found")
+      }
+      if(!available_d1) {
+        message("No 'd1' found, setting 'deriv_model = FALSE', 'deriv = 0'")
+      }
+      if(!available_d2) {
+        # message("No 'd2' found, setting 'deriv_model = FALSE', 'deriv = 0'")
+      }
+    }
+    
+    out[['available_d0']] <- available_d0
+    out[['available_d1']] <- available_d1
+    out[['available_d2']] <- available_d2
+  } # if(check_d1) {
+  
   
   return(out)
 }
@@ -3656,4 +2669,426 @@ remove_between_first_last_parnth <- function(x, splitat = NULL) {
   b
 }
 
+
+# borrowed from sitar::ifun -> inverse_transform
+
+#' An internal function to set up transformation for \code{bsitar} model
+#'
+#' @param expr A function \code{expression}.
+#'
+#' @param verbose Logical to print transformation steps.
+#'   
+#' @param envir A logical (default \code{TRUE})
+#'
+#' @return A function \code{expression}.
+#'
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'
+#' @keywords internal
+#' @noRd
+#'
+inverse_transform <- function (expr, verbose = FALSE, envir = NULL) {
+  vars <- function(expr) {
+    (av <- all.vars(expr, unique = FALSE))[grep("^pi$", av, 
+                                                invert = TRUE)]
+  }
+  recur <- function(fun, funinv = quote(x), verbose = verbose) {
+    fun <- as.expression(fun)[[1]]
+    if (verbose) {
+      print(fun)
+      print(funinv)
+      cat("---\n")
+    }
+    while (length(fun) > 1 && fun[[1]] == as.name("(")) fun <- fun[[2]]
+    if (!is.name(fun)) {
+      x1 <- which(vapply(fun, function(f) length(vars(f)) == 
+                           1, TRUE))[-1]
+      if (grepl("pi", fname <- as.name(fun[[1]]))) {
+        fun[[1]] <- as.name(sub("pi", "", fname))
+        f <- quote(x * pi)
+        f[[2]] <- fun[[2]]
+        fun[[2]] <- f
+      }
+      nf <- which(vapply(fns, function(f) f[[1]] == fun[[1]] && 
+                           length(f) == length(fun) && f[[x1]] == "x", TRUE))
+      if (length(nf) == 0) 
+        stop(paste("unrecognised name:", deparse(fun[[1]])))
+      if (length(nf) > 1 && length(fun) == 3) {
+        nft <- which(vapply(fns[nf], function(f) f[[5 - 
+                                                      x1]] == fun[[5 - x1]], TRUE))
+        if (length(nft)) 
+          nf <- nf[nft]
+      }
+      nf <- nf[[1]]
+      fn2 <- fns[[nf - 1 + 2 * (nf%%2)]]
+      x2 <- which(as.list(fn2) == "x")
+      if (length(fn2) == 3) {
+        f <- function(n) {
+        }
+        body(f) <- fn2[[5 - x2]]
+        fn2[[5 - x2]] <- f(eval(fun[[5 - x1]]))
+      }
+      fun <- fun[[x1]]
+      fn2[[x2]] <- funinv
+      funinv <- fn2
+      if (!is.name(fun)) {
+        results <- recur(fun, funinv, verbose = verbose)
+        fun <- results$fun
+        funinv <- results$funinv
+      }
+    }
+    return(list(funinv = funinv, fun = fun))
+  }
+  fns <- quote(c(x + n, x - n, x * n, x/n, x^n, x^(1/n), sqrt(x), 
+                 x^2, exp(x), log(x), expm1(x), log1p(x), n^x, log(x, 
+                                                                   n), log10(x), 10^x, log2(x), 2^x, n + x, x - n, n - 
+                   x, n - x, n * x, x/n, n/x, n/x, +x, +x, -x, -x, identity(x), 
+                 identity(x), I(x), I(x), cos(x), acos(x), sin(x), asin(x), 
+                 tan(x), atan(x), cosh(x), acosh(x), sinh(x), asinh(x), 
+                 tanh(x), atanh(x)))
+  fns[[1]] <- NULL
+  varname <- vars(expr)
+  if (length(varname) != 1) 
+    stop("expression should contain just one instance of one name")
+  fn <- function(x) {
+  }
+  body(fn) <- with(fns, recur(expr, verbose = verbose))$funinv
+  attr(fn, "varname") <- varname
+  fn
+}
+
+
+
+
+#' Check if any variable has all NAs
+#'
+#' @param data A \code{data.frame}.
+#' @param factor_var A character string specifying the a factor variable name
+#'   (default \code{NULL}).
+#' @param envir An environment of evaluation (default \code{NULL}).
+#' @param return A logical to indicate if data to be returned.
+#'
+#' @return A \code{data.frame} when \code{return = TRUE}, or \code{NULL} if
+#'   \code{return = FALSE}.
+#'   
+#' @keywords internal
+#' @noRd
+#'
+check_if_any_varibale_all_NA <- function(data, 
+                                         factor_var = NULL, 
+                                         envir = NULL,
+                                         return = FALSE) {
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  if(!is.null(factor_var)) {
+    if(!is.character(factor_var)) {
+      if(is.symbol(factor_var)) {
+        factor_var <- deparse(substitute(factor_var))
+      } else {
+        stop("The factor_var must be a variable names")
+      }
+    }
+    for (l in levels(data[[factor_var]])) {
+      tempdata <- data %>% dplyr::filter(!! as.name(factor_var) == l)
+      for (i in names(tempdata)) {
+        if(all(is.na(tempdata[[i]]))) {
+          stop("The variable '", i, "' contains all NA ", 
+               "for subset '", l,  "'", 
+               ". ", "Please check data")
+        }
+      }
+    } # for (l in levels(data[[uvarby]])) {
+  } else if(is.null(factor_var)) {
+    tempdata <- data
+    for (i in names(tempdata)) {
+      if(all(is.na(tempdata[[i]]))) {
+        stop("The variable '", i, "' contains all NA ", 
+             ". ", "Please check data")
+      }
+    }
+  }
+  
+  if(return) {
+    return(data)
+  } else {
+    return(invisible(NULL))
+  }
+  
+}
+
+
+#' Check if any variable has all NAs
+#'
+#' @param data A \code{data.frame}.
+#' @param variables A vector character string specifying the the variable names.
+#' @param envir An environment of evaluation (default \code{NULL}).
+#' @param return A logical to indicate if data to be returned.
+#'
+#' @return A \code{data.frame} when \code{return = TRUE}, or \code{NULL} if
+#'   \code{return = FALSE}.
+#'   
+#' @keywords internal
+#' @noRd
+#'
+check_variable_exists <- function(data, 
+                                  variables, 
+                                  envir = NULL, 
+                                  return = FALSE) {
+  for (j in variables) {
+    if(is_emptyx(data[[j]]) | is.null(data[[j]]) ) {
+      stop(paste0("variable '", j, "' not found in the data"))
+    } 
+  }
+  if(return) {
+    return(data)
+  } else {
+    return(invisible(NULL))
+  }
+}
+
+
+#' Check if any variable has all NAs
+#'
+#' @param data A \code{data.frame}.
+#' @param variables A vector character string specifying the the variable names.
+#' @param envir An environment of evaluation (default \code{NULL}).
+#' @param return A logical to indicate if data to be returned.
+#'
+#' @return A \code{data.frame} when \code{return = TRUE}, or \code{NULL} if
+#'   \code{return = FALSE}.
+#'   
+#' @keywords internal
+#' @noRd
+#'
+check_variable_numeric_exists <- function(data, 
+                                          variables, 
+                                          envir = NULL, 
+                                          return = FALSE) {
+  for (j in variables) {
+    if(is.numeric(data[[j]])) {
+      if(length(data[[j]]) == 0) {
+        stop("The lenght of ", j, " is zero. Check your data and formual")
+      }
+    } 
+  }
+  if(return) {
+    return(data)
+  } else {
+    return(invisible(NULL))
+  }
+}
+
+
+#' Check and replace arg in simple function
+#'
+#' @param fun A \code{function}.
+#' @param checkname A character string specifying the replacement name.
+#'
+#' @return A \code{function}.
+#'   
+#' @keywords internal
+#' @noRd
+#'
+check_and_rename_funs_args_to_x <- function(fun, checkname = "x") {
+  if(!is.character(checkname)) {
+    stop("'checkname' must be a character")
+  }
+  # https://stackoverflow.com/questions/33850219/change-
+  # argument-names-inside-a-function
+  rep_vars <- function(expr, keyvals) {
+    if (!length(expr)) return()
+    if(is.symbol(expr)) {
+      expr <- deparse(expr)
+      expr <- gsub("\"", "", expr)
+      expr <- str2expression(expr) # Imp, must be an expression
+    }
+    for (i in seq_along(expr)) {
+      if (is.call(expr[[i]])) expr[[i]][-1L] <- Recall(expr[[i]][-1L], keyvals)
+      if (is.name(expr[[i]]) && deparse(expr[[i]]) %in% names(keyvals))
+        expr[[i]] <- as.name(keyvals[[deparse(expr[[i]])]])
+    }
+    return( expr )
+  }
+  
+  formalArgs_names_in <- formalArgs(args(fun))
+  
+  deparse_fun_str <- deparse(fun)
+  deparse_fun_str <- gsub_space(paste(deparse_fun_str, collapse = ""))
+  
+  if(length(formalArgs_names_in) > 1) {
+    stop("Function '", deparse(fun) , "' must have only one argument")
+  }
+  
+  if(grepl("\\{", deparse_fun_str) | grepl("}", deparse_fun_str)
+  ) {
+    stop("'", deparse_fun_str, "' must be a simple function without",
+         "curly braces '{}'.",
+         "\n ",
+         " Examples: 'function(x)x' 'function(x)log(x)' function(x)log(x+1)")
+  }
+  
+  if(grepl("return\\(", deparse_fun_str)) {
+    stop("Function '", deparse_fun_str, "' must be a simple function without",
+         "'return()'.",
+         "\n ",
+         " Examples: 'function(x)x' 'function(x)log(x)' function(x)log(x+1)")
+  }
+  
+  ##############################################################
+  if(formalArgs_names_in == checkname) {
+    return(fun)
+  } else {
+    # https://stackoverflow.com/questions/44097516/r-paste-two-
+    # string-with-an-equal-sign-between-it-stringa-stringb
+    # newvals <- c("z" = "x")
+    newvals <- checkname
+    names(newvals) <- formalArgs_names_in
+    newbod <- rep_vars(body(fun), newvals)
+    # formals(fun) <- pairlist(x =bquote())
+    formals(fun) <- ept(paste0("pairlist(", checkname, "=bquote())" ))
+    body(fun) <- newbod
+    # formals(fun) <- pairlist(x=bquote())
+    # body(fun)    <- rep_vars(body(fun), newvals)
+    return(fun)
+  }
+} 
+
+
+
+
+#' Extracted variable names from call
+#'
+#' @param model An object of class \code{bgmfit}.
+#' @param arg A character string.
+#' @param xcall A \code{mcall} object. Evaluated only when \code{model = NULL}.
+#' @param envir An environment of evaluation (default \code{NULL}).
+#'
+#' @return A character string.
+#'   
+#' @keywords internal
+#' @noRd
+#'
+extract_names_from_call <- function(model = NULL, 
+                                    arg = NULL, 
+                                    xcall = NULL, 
+                                    envir = NULL) {
+  if(!is.null(model)) {
+    if(is.null(xcall)) xcall <- model$model_info$call.full.bgmfit
+  } else if(is.null(model)) {
+    if(is.null(xcall)) stop("specify either 'model' or 'xcall'")
+  }
+  
+  if(is.null(arg)) {
+    stop("specify 'arg'")
+  } else if(!is.null(arg)) {
+    if(!is.character(arg)) stop("'arg' must be a single character")
+  }
+  extracted <- xcall[[arg]]
+  extracted <- toString(extracted)
+  extracted <- strsplit(extracted, ",")[[1]]
+  if(length(extracted) > 1) {
+    extracted <- extracted[-1]
+  }
+  extracted <- gsub_space(extracted)
+  extracted
+} # end extract_names_from_mcall
+
+
+#' An internal function to get the inverse transformation call 
+#'
+#' @param itransform A character string or \code{NULL}.
+#' @param ... Additional argumenst. Currently ignored.
+#'
+#' @return A character string.
+#'   
+#' @keywords internal
+#' @noRd
+#'
+get_itransform_call <- function(itransform, ...) {
+  if(is.null(itransform)) {
+    itransform_set <- "x"
+  } else if(!is.null(itransform)) {
+    if(is.logical(itransform)) {
+      if(itransform) {
+        itransform_set <- c('x', 'y', 'sigma')
+      }
+      if(!itransform) {
+        itransform_set <- ""
+      }
+    } else if(itransform == "") {
+      itransform_set <- ""
+    } else {
+      itransform_set <- itransform
+    }
+  } # if(is.null(itransform)) {
+  itransform_set
+}
+
+
+
+
+
+
+#' An internal function to call function via eval()
+#' 
+#' @details
+#' https://stackoverflow.com/questions/11054208/lapply-and-do-call-running-very-slow
+#' 
+#' @param what A language object (\code{function()}) to be called
+#' @param args A list (\code{arguments})
+#' @param quote A logical
+#' @param envir A calling environment
+#' @keywords internal
+#' @return A object default of class inheretited from \code{what}
+#' @noRd
+#'
+CustomDoCall <- function(what, args, quote = FALSE, envir = NULL){
+  
+  if(is.null(envir))
+    envir <-   parent.frame()
+  
+  if (quote)
+    args <- lapply(args, enquote)
+  
+  if (is.null(names(args))){
+    argn <- args
+    args <- list()
+  }else{
+    # Add all the named arguments
+    argn <- lapply(names(args)[names(args) != ""], as.name)
+    names(argn) <- names(args)[names(args) != ""]
+    # Add the unnamed arguments
+    argn <- c(argn, args[names(args) == ""])
+    args <- args[names(args) != ""]
+  }
+  
+  
+   get_class_what <- class(what)
+  
+  # if(is.character(class(what))) {
+   if (get_class_what == "character"){
+    if(is.character(what)){
+      fn <- strsplit(what, "[:]{2,3}")[[1]]
+      what <- if(length(fn)==1) {
+        get(fn[[1]], envir=envir, mode="function")
+      } else {
+        get(fn[[2]], envir=asNamespace(fn[[1]]), mode="function")
+      }
+    }
+    call <- as.call(c(list(what), argn))
+  # } else if(is.function(class(what))) { 
+  } else if (get_class_what == "function"){ 
+    f_name <- deparse(substitute(what))
+    call <- as.call(c(list(as.name(f_name)), argn))
+    args[[f_name]] <- what
+  # } else if(is.name(class(what))) { 
+  } else if (get_class_what == "name"){
+    call <- as.call(c(list(what, argn)))
+  }
+  
+  eval(call,
+       envir = args,
+       enclos = envir)
+}
 

@@ -41,7 +41,7 @@
 #'   is returned. If multiple objects are provided, an object of class
 #'   \code{loolist} is returned.
 #' 
-#' @export loo_validation.bgmfit
+#' @rdname loo_validation
 #' @export
 #' 
 #' @seealso [brms::loo()] 
@@ -165,21 +165,40 @@ loo_validation.bgmfit <-
     
     model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
-    o <- post_processing_checks(model = model,
-                                xcall = match.call(),
-                                resp = resp,
-                                envir = envir,
-                                deriv = deriv, 
-                                all = FALSE,
-                                verbose = verbose)
+    setxcall_   <- match.call()
+    post_processing_checks_args <- list()
+    post_processing_checks_args[['model']]    <- model
+    post_processing_checks_args[['xcall']]    <- setxcall_
+    post_processing_checks_args[['resp']]     <- resp
+    post_processing_checks_args[['envir']]    <- envir
+    post_processing_checks_args[['deriv']]    <- deriv
+    post_processing_checks_args[['all']]      <- FALSE
+    post_processing_checks_args[['verbose']]  <- verbose
+    post_processing_checks_args[['check_d0']] <- FALSE
+    post_processing_checks_args[['check_d1']] <- TRUE
+    post_processing_checks_args[['check_d2']] <- FALSE
     
-    oall <- post_processing_checks(model = model,
-                                   xcall = match.call(),
-                                   resp = resp,
-                                   envir = envir,
-                                   deriv = deriv, 
-                                   all = TRUE,
-                                   verbose = FALSE)
+    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    
+    post_processing_checks_args[['all']]      <- TRUE
+    oall <- do.call(post_processing_checks, post_processing_checks_args)
+    post_processing_checks_args[['all']]      <- FALSE
+    
+    # o <- post_processing_checks(model = model,
+    #                             xcall = match.call(),
+    #                             resp = resp,
+    #                             envir = envir,
+    #                             deriv = deriv, 
+    #                             all = FALSE,
+    #                             verbose = verbose)
+    # 
+    # oall <- post_processing_checks(model = model,
+    #                                xcall = match.call(),
+    #                                resp = resp,
+    #                                envir = envir,
+    #                                deriv = deriv, 
+    #                                all = TRUE,
+    #                                verbose = FALSE)
     
    
     test <- setupfuns(model = model, resp = resp,
@@ -288,7 +307,7 @@ loo_validation.bgmfit <-
 
 
 
-#' @rdname loo_validation.bgmfit
+#' @rdname loo_validation
 #' @export
 loo_validation <- function(model, ...) {
   UseMethod("loo_validation")

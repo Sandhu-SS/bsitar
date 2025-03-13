@@ -1,146 +1,78 @@
 
 
-#' An internal function to prepare initial values
-#' 
-#' For \code{univariate_by} and \code{multivariate} models (see [bsitar::bsitar()])
-#' each argument is automatically matched with the sub model.
+
+
+#' An internal function to prepare Stan function for sigma (distributional) parameter
 #'
-#' @param init_argument A list containing the prior arguments specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
-#' 
-#' @param init_internal_args An internal argument (as named list) specified in  
-#' the [bsitar::bsitar()] function and then passed from the 
-#' [bsitar::set_priors_initials()] function to the \code{prepare_priors}. 
+#' The \code{prepare_function_sigma}) constructs custom Stan function  which is
+#' passed on to the [bsitar::bsitar()] function for modelling \code{sigma}. For
+#' univariate-by- subgroup model (\code{univariate_by}) and multivariate
+#' (\code{multivariate}) models (see [bsitar::bsitar()]), the \code{x},
+#' \code{y}, \code{id}, \code{knots}, \code{nknots}, are automatically matched
+#' with the sub-models.
 #'
-#' @return A list of initial values. 
-#' 
+#' @param x Predictor variable in the data. See [bsitar::bsitar()] for details.
+#'
+#' @param y Response variable in the data. See [bsitar::bsitar()] for details.
+#'
+#' @param id A vector specifying a unique group identifier for each individual.
+#' See [bsitar::bsitar()] for details.
+#'
+#' @param knots A vector of knots used for constructing the spline design
+#' matrix. See [bsitar::bsitar()] for details.
+#'
+#' @param nknots An integer specifying the number of knots.
+#'
+#' @param data Data frame containing variables \code{x}, \code{y} and \code{id}.
+#'
+#' @param internal_function_args Internal arguments passed from the
+#'   [bsitar::bsitar()] to the \code{prepare_formula}).
+#'
+#' @return An character string which later evaluated to a custom function
+#'   and inserted into the Stan's functions block.
+#'   
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' 
+#'
 #' @keywords internal
 #' @noRd
-#' 
-prepare_initials <- function(init_argument,
-                             init_internal_args) {
-  
-  
-  
-  ##############################################
+#'
+prepare_function_sigma <- function(x,
+                             y,
+                             id,
+                             knots,
+                             nknots,
+                             data,
+                             internal_function_args) {
+
   # Initiate non formalArgs()
-  ##############################################
-  seed <- NULL;
-  initsi <- NULL;
-  parm <- NULL;
+  brms_arguments <- NULL;
+  xfunsi <- NULL;
+  Var1 <- NULL;
+  Var2 <- NULL;
+  select_model <- NULL;
+  fixedsi <- NULL;
+  match_sitar_d_form <- NULL;
+  match_sitar_a_form <- NULL;
+  d_adjustedsi <- NULL;
   randomsi <- NULL;
-  init_data <- NULL;
-  prior_argument <- NULL;
-  pstrarg <- NULL;
-  resp_ <- NULL;
-  allowed_init_options_beta <- NULL;
-  nlpar <- NULL;
-  stanvars_datazz <- NULL;
-  splitmvar_w2 <- NULL;
-  ii <- NULL;
-  allowed_init_options_sd <- NULL;
-  allowed_init_options_rate <- NULL;
-  allowed_init_options_shape <- NULL;
-  nabcrei <- NULL;
-  N_J_all <- NULL;
+  getxname <- NULL;
+  getknotsname <- NULL;
+  spfncname <- NULL;
+  xoffset <- NULL;
+  yfunsi <- NULL;
+  all_raw_str <- NULL;
+  all_raw_str <- NULL;
+  decomp <- NULL;
   nys <- NULL;
-  dpar <- NULL;
-  ndparcov <- NULL;
-  acorclass <- NULL;
-  nrep_of_parms_p <- NULL;
-  nrep_of_parms_q <- NULL;
-  cortimeNlags <- NULL;
-  gr_init_cor <- NULL;
-  
-  
-  if (!is.null(init_internal_args)) {
-    eout <- list2env(init_internal_args)
-    for (eoutii in names(eout)) {
-      assign(eoutii, eout[[eoutii]])
-    }
-  }
-  
-  if (!is.null(init_internal_args$init_argument)) {
-    eout <- list2env(init_internal_args$init_argument)
-    for (eoutii in names(eout)) {
-      assign(eoutii, eout[[eoutii]])
-    }
-  }
-  
-  if (!is.null(init_internal_args$prior_data)) {
-    eout <- list2env(init_internal_args$prior_data)
-    for (eoutii in names(eout)) {
-      assign(eoutii, eout[[eoutii]])
-    }
-  }
-  
-  if (!is.null(init_internal_args$prior_data_internal)) {
-    eout <- list2env(init_internal_args$prior_data_internal)
-    for (eoutii in names(eout)) {
-      assign(eoutii, eout[[eoutii]])
-    }
-  }
-  
-  if (!is.null(init_internal_args$prior_internal_args)) {
-    eout <- list2env(init_internal_args$prior_internal_args)
-    for (eoutii in names(eout)) {
-      assign(eoutii, eout[[eoutii]])
-    }
-  }
-  
-  
-  if (!is.null(init_internal_args$init_data)) {
-    eout <- list2env(init_internal_args$init_data)
-    for (eoutii in names(eout)) {
-      assign(eoutii, eout[[eoutii]])
-    }
-  }
-  
-  if (!is.null(init_internal_args$init_data_internal)) {
-    eout <- list2env(init_internal_args$init_data_internal)
-    for (eoutii in names(eout)) {
-      assign(eoutii, eout[[eoutii]])
-    }
-  }
+  gsub_out_unscaled <- NULL;
+  checkscovsi <- NULL;
+  add_rcsfunmatqrinv_genquant <- NULL;
+  add_b_Qr_genquan_s_coef <- NULL;
   
   
   
-  set.seed(seed)
-  
-  # For standardized group level effects as implemented in the centerized 
-  # parametrisation approach used in the brms package. 
-  init_argument_z <- "r_init_z"
-  
-  if (initsi == "0") {
-    assign(init_argument, "0")
-  }
-  if (initsi == "prior") {
-    if(system.file(package='extraDistr') == "") {
-      stop("For prior based initials (i.e., init = 'prior), 
-           package 'extraDistr' is required. Please install 'extraDistr'"
-      )
-    }
-    assign(init_argument, "prior")
-    assign(init_argument_z, "prior")
-  }
-  
-  check_form_0       <- paste0(parm, "_", 'form_0')
-  nparcov            <- paste0(parm, "ncov")
-  check_form_0_gr    <- paste0(parm, "_", 'form_0_gr')
-  nparcov_gr         <- paste0(parm, "ncov_gr")
-  check_sigma_form_0 <- paste0('sigma', "_", 'form_0')
-  
-  if(nparcov == 'nsigmacov') nparcov <- 'nsigmacov'
-  
-  abcrandomelements <-
-    strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
-  
-  
-  if (!is.null(init_data[[1]])) {
-    eout <- list2env(init_data)
+  if (!is.null(internal_function_args)) {
+    eout <- list2env(internal_function_args)
     for (eoutii in names(eout)) {
       assign(eoutii, eout[[eoutii]])
     }
@@ -149,1748 +81,2183 @@ prepare_initials <- function(init_argument,
   
   
   
-  abcrandomelements_c <- c()
-  count_ <- 0
-  for (abcrandomelements_i in abcrandomelements) {
-    count_ <- count_ + 1
-    if (exists(paste0(abcrandomelements_i, "n",  "cov_gr")) &
-        length(ept(paste0(abcrandomelements_i, "n",  "cov_gr"))) > 0) {
-      i__ <- ept(paste0(abcrandomelements_i, "n",  "cov_gr"))
-      nb <- rep(paste0(abcrandomelements_i, "cov"), i__ - 1)
-      nb <- c(nb, paste0(nb, 1:length(nb)))
-      abcrandomelements_c <- c(abcrandomelements_c, nb)
-    } else {
-      abcrandomelements_c <- c(abcrandomelements_c, abcrandomelements_i)
-    }
+  backend <- eval(brms_arguments$backend)
+
+  vector_X_name <- "Xp"
+  
+  if (nys == 1)
+    resp_ <- ""
+  if (nys > 1)
+    resp_ <- paste0("_", y)
+  
+  XR_inv_name <- 'XR_inv'
+  XR_inv_name_resp <- paste0(XR_inv_name, resp_)
+  
+  b_sx_name <- 'b_sx'
+  b_sx_name_resp <- paste0('b', resp_, "_", 'sx')
+  
+  
+  iysxi <- 's'
+  setp <- paste0(iysxi, '')
+  setnlp <- paste0('nlp', resp_, '_', iysxi)
+  setnlp_vector <- paste0('b', resp_)
+  
+  
+  if (resp_ == "") {
+    szx_name <- paste0('s', 1:(nknots - 1))
+    szx_name_resp <- paste0('b', "_", 's', 1:(nknots - 1))
+  } else {
+    szx_name <- paste0('s', 1:(nknots - 1))
+    szx_name_resp <- paste0('b', resp_, "_", szx_name)
   }
   
-  abcrandomelements <- abcrandomelements_c
-  abcrandomelements <- unique(abcrandomelements)
   
-  c_t_nabcri <- length(abcrandomelements)
-  # nabcri <- length(c_t_nabcri)
+  b_s_name <- szx_name_resp
+  
+  szxbq_vector <- paste0('v', resp_, "_", 's', 'x')
+  
+  #########
+  
+  if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+    if (xfunsi == "log") {
+      tranform_x_int <- 1
+    } else if (xfunsi == "sqrt") {
+      tranform_x_int <- 2
+    } else if (xfunsi != "log" | xfunsi == "sqrt") {
+      tranform_x_int <- 0
+    }
+  } else if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
+    tranform_x_int <- 0
+  }
   
   
-  suffix <-
-    strsplit(init_argument, "_")[[1]][length(strsplit(init_argument, "_")[[1]])]
   
   
-  # define function to check validity of the initials options specified
-  check_evalation_of_numeric_init_obj <-
-    function(eit,
-             check,
-             x,
-             pname_,
-             dist,
-             nlpar,
-             class,
-             allowed_init_options,
-             splitmvar_w2) {
-      whatin <-
-        sub("=[^=]+$", "", splitmvar_w2[grepl(eit, splitmvar_w2)])
-      const_msg <-
-        paste0(
-          " - a numeric value (e.g., 2) or a charater string such as",
-          "\n",
-          "xxx with xxx defined in the use-specified 'prior_data'",
-          "\n",
-          "argument e.g., prior_data = list(xxx = 2)"
-        )
-      if (!is.null(allowed_init_options)) {
-        allowed_init_options <-
-          paste0("random,",
-                 " 0, ",
-                 paste0(allowed_init_options, collapse = ", "))
-        allowed_init_options <- paste0(" - ", allowed_init_options)
-        const_msg <- paste0(allowed_init_options, "\n", const_msg)
-      } else {
-        const_msg <- paste0("random,", " 0, ", "Or ", const_msg)
+  set_x_y_scale_factror <- function(xfunsi = NULL,
+                                    yfunsi = NULL,
+                                    tranformations = "identity") {
+    scale_set_comb <- tranformations
+    scale_set_comb1 <-
+      paste(scale_set_comb, scale_set_comb, sep = "_")
+    scale_set_comb2 <-
+      with(subset(expand.grid(scale_set_comb, scale_set_comb),
+                  Var1 != Var2), paste0(Var1, '_', Var2))
+    scale_set_comb <- c(scale_set_comb1, scale_set_comb2)
+    
+    if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
+      if (xfunsi == "log") {
+        xscale_set <- "log"
+      } else if (xfunsi == "sqrt") {
+        xscale_set <- "sqrt"
+      } else if (xfunsi != "log" | xfunsi == "sqrt") {
+        xscale_set <- "identity"
       }
-      enverr. <- parent.frame()
-      assign('err.', FALSE, envir = enverr.)
-      tryCatch(
-        expr = {
-          out <- ept(eit)
-        },
-        error = function(e) {
-          assign('err.', TRUE, envir = enverr.)
-        }
-      )
-      err. <- get('err.', envir = enverr.)
-      if (eit == 'NULL' | eit == 'random')
-        enverr. <- parent.frame()
-        assign('err.', FALSE, envir = enverr.)
-      if (err.) {
-        if (check == 'args') {
-          if (class == 'b' | class == 'sd') {
-            stop(
-              "\nFor nlpar ",
-              nlpar,
-              ", class ",
-              class,
-              ", you have specified '",
-              eit,
-              "' as an initial argument",
-              "\n" ,
-              " But '",
-              eit,
-              "' is not found in the 'init_data_internal'",
-              "\ n",
-              " or use-specified 'init_data' argument",
-              "\n ",
-              " [see specified init argument: ",
-              init_argument,
-              "",
-              "",
-              "]",
-              "\n" ,
-              "Avilable  options are:" ,
-              "\n" ,
-              const_msg
-            )
-          } else if (class == 'sigma') {
-            stop(
-              "\nFor residual standard deviation parameter i.e., ",
-              "class ",
-              class,
-              ", you have specified '",
-              eit,
-              "' as an initial argument",
-              "\n" ,
-              " But '",
-              eit,
-              "' is not found in the 'init_data_internal'",
-              "\ n",
-              " or use-specified 'init_data' argument",
-              "\n ",
-              " [see specified init argument: ",
-              init_argument,
-              "",
-              "",
-              "]",
-              "\n" ,
-              "Avilable  options are:" ,
-              "\n" ,
-              const_msg
-            )
-          } else if (class == '' &
-                     grepl("dpar_", prior_argument) &
-                     !grepl("dpar_cov", prior_argument)) {
-            stop(
-              "\nFor for distributional Intercept parameter i.e., ",
-              "Intercept_sigma ",
-              ", you have specified '",
-              eit,
-              "' as an initial argument",
-              "\n" ,
-              " But '",
-              eit,
-              "' is not found in the 'init_data_internal'",
-              "\ n",
-              " or use-specified 'init_data' argument",
-              "\n ",
-              " [see specified init argument: ",
-              init_argument,
-              "",
-              "",
-              "]",
-              "\n" ,
-              "Avilable  options are:" ,
-              "\n" ,
-              const_msg
-            )
-          }
-          
-        }
-        if (check == 'dist') {
-          stop(
-            "For nlpar ",
-            nlpar,
-            ", class ",
-            class,
-            ", you have specified '",
-            eit,
-            "' as ",
-            "\n" ,
-            pname_,
-            " for the ",
-            dist,
-            " distribution. But '",
-            eit,
-            "' is not found (check init_data!)",
-            "\n" ,
-            "Avilable options for the ",
-            pname_,
-            " parameter of " ,
-            dist,
-            " distribution ",
-            "\n" ,
-            "for nlpar ",
-            nlpar,
-            ", class ",
-            class,
-            " are:",
-            "\n" ,
-            const_msg
-          )
-        }
-        # rm(err.)
+    } else if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
+      xscale_set <- "identity"
+    }
+    
+    if (!is.null(yfunsi[[1]][1]) & yfunsi != "NULL") {
+      if (yfunsi == "log") {
+        yscale_set <- "log"
+      } else if (yfunsi == "sqrt") {
+        yscale_set <- "sqrt"
+      } else if (yfunsi != "log" | yfunsi == "sqrt") {
+        yscale_set <- "identity"
       }
+    } else if (is.null(yfunsi[[1]][1]) | yfunsi == "NULL") {
+      yscale_set <- "identity"
     }
-  
-  
-  # define function to create correlation matrix
-  create_cor_mat <- function(n, cor = NULL) {
-    n_elements <- n
-    m <- diag(n_elements)
-    m_upper <- m_lower <- matrix(0, n_elements, n_elements)
-    nc <- n_elements * (n_elements - 1) / 2
-    if (is.null(cor)) {
-      x <- rep(0, nc)
-    } else {
-      x <- cor
-      if (length(x) != nc)
-        stop("length of correlation vector must be ",
-             nc,
-             ", but found ",
-             length(x))
+    
+    
+    
+    
+    if (xscale_set == "identity" & yscale_set == "identity") {
+      xscale_factor_str_d1 <- "rep_vector(1, N);"
+      xscale_factor_str_d2 <- "rep_vector(1, N);"
+      yscale_factor_str_d1 <- "rep_vector(1, N);"
+      yscale_factor_str_d2 <- "rep_vector(1, N);"
+    } else if (xscale_set == "log" & yscale_set == "log") {
+      xscale_factor_str_d1 <- "exp(Xm + xoffset);"
+      xscale_factor_str_d2 <- "exp(Xm + xoffset);"
+      yscale_factor_str_d1 <- "(pred_d0);"
+      yscale_factor_str_d2 <- "(pred_d0);"
+    } else if (xscale_set == "sqrt" & yscale_set == "sqrt") {
+      xscale_factor_str_d1 <- "(Xm + xoffset);"
+      xscale_factor_str_d2 <- "(Xm + xoffset);"
+      yscale_factor_str_d1 <- "(sqrt(pred_d0));"
+      yscale_factor_str_d2 <- "(sqrt(pred_d0));"
+    } else if (xscale_set == "log" & yscale_set == "identity") {
+      xscale_factor_str_d1 <- "exp(Xm + xoffset);"
+      xscale_factor_str_d2 <- "exp(Xm + xoffset);"
+      yscale_factor_str_d1 <- "rep_vector(1, N);"
+      yscale_factor_str_d2 <- "rep_vector(1, N);"
+    } else if (xscale_set == "sqrt" & yscale_set == "identity") {
+      xscale_factor_str_d1 <- "(Xm + xoffset);"
+      xscale_factor_str_d2 <- "(Xm + xoffset);"
+      yscale_factor_str_d1 <- "rep_vector(0.5, N);"
+      yscale_factor_str_d2 <- "rep_vector(0.5, N);"
+    } else if (xscale_set == "identity" & yscale_set == "log") {
+      xscale_factor_str_d1 <- "rep_vector(1, N);"
+      xscale_factor_str_d2 <- "rep_vector(1, N);"
+      yscale_factor_str_d1 <- "(pred_d0);"
+      yscale_factor_str_d2 <- "(pred_d0);"
+    } else if (xscale_set == "sqrt" & yscale_set == "log") {
+      xscale_factor_str_d1 <- "(Xm + xoffset);"
+      xscale_factor_str_d2 <- "(Xm + xoffset);"
+      yscale_factor_str_d1 <- "(rep_vector(0.5, N) .* (pred_d0));"
+      yscale_factor_str_d2 <- "(rep_vector(0.5, N) .* (pred_d0));"
+    } else if (xscale_set == "identity" & yscale_set == "sqrt") {
+      xscale_factor_str_d1 <- "rep_vector(1, N);"
+      xscale_factor_str_d2 <- "rep_vector(1, N);"
+      yscale_factor_str_d1 <-
+        "(rep_vector(2.0, N) .* sqrt(pred_d0));"
+      yscale_factor_str_d2 <-
+        "(rep_vector(2.0, N) .* sqrt(pred_d0));"
+    } else if (xscale_set == "log" & yscale_set == "sqrt") {
+      xscale_factor_str_d1 <- "exp(Xm + xoffset);"
+      xscale_factor_str_d2 <- "exp(Xm + xoffset);"
+      yscale_factor_str_d1 <-
+        "(rep_vector(2.0, N) .* sqrt(pred_d0));"
+      yscale_factor_str_d2 <-
+        "(rep_vector(2.0, N) .* sqrt(pred_d0));"
     }
-    m_lower[lower.tri(m_lower, diag = FALSE)] <- x
-    m_upper <- t(m_lower)
-    M <- m_lower + m + m_upper
-    M
-  }
+    
+    list(
+      xscale_factor_str_d1 = xscale_factor_str_d1,
+      xscale_factor_str_d2 = xscale_factor_str_d2,
+      yscale_factor_str_d1 = yscale_factor_str_d1,
+      yscale_factor_str_d2 = yscale_factor_str_d2
+    )
+    
+  } # end set_x_y_scale_factror
   
   
-  # define function evaluation initials based on priors
-  eval_prior_based_init <-
-    function(dist,
-             class,
-             lowerbound,
-             upperbound,
-             length_args,
-             ...) {
-      if (dist == "normal") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_itb    <- paste0('', ")")
-        z_replace_byn    <-
-          paste0("extraDistr::rtnorm", "\\(", length_args, ", ")
-        if (any(is.na(lowerbound)))
-          lowerbound <- '-Inf'
-        if (any(is.na(upperbound)))
-          upperbound <- 'Inf'
-        z_replace_byb   <-
-          paste0(",",  paste(lowerbound, upperbound, sep = ",")   , ")")
-        init_str_arg_out_init <-
-          gsub(z_replace_itn, z_replace_byn, pstrarg)
-        init_str_arg_out_init <-
-          gsub(z_replace_itb, z_replace_byb, init_str_arg_out_init)
-        init_str_arg_out_init <-
-          gsub("\\s", "", init_str_arg_out_init)
-      } else if (dist == "cauchy") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_itb    <- paste0('', ")")
-        if (is.na(ept(lowerbound)) & is.na(ept(upperbound))) {
-          z_replace_byn    <- paste0("rcauchy", "\\(", length_args, ", ")
-          init_str_arg_out_init <-
-            gsub(z_replace_itn, z_replace_byn, pstrarg)
-        } else if (ept(lowerbound) == 0 & is.na(upperbound)) {
-          z_replace_byn    <-
-            paste0("extraDistr::rhcauchy", "\\(", length_args, ", ")
-          init_str_arg_out_init <-
-            gsub(z_replace_itn, z_replace_byn, pstrarg)
-          init_str_arg_out_init    <-
-            paste(strsplit(init_str_arg_out_init, ",")[[1]][-2], collapse = ",")
-          init_str_arg_out_init <-
-            gsub("\\s", "", init_str_arg_out_init)
-        } else {
-          stop(
-            "For ",
-            dist,
-            " distribution prior based initials,",
-            "\n ",
-            " allowed options are unbounded distribution or half ",
-            dist,
-            " (i.e, lb = 0)",
-            "\n ",
-            " please check following initial argument: ",
-            name_initialsi
-          )
-        }
-      } else if (dist == "student_t") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_itb    <- paste0('', ")")
-        if (is.na(ept(lowerbound)) & is.na(ept(upperbound))) {
-          z_replace_byn    <-
-            paste0("extraDistr::rlst", "\\(", length_args, ", ")
-          init_str_arg_out_init <-
-            gsub(z_replace_itn, z_replace_byn, pstrarg)
-        } else if (ept(lowerbound) == 0 & is.na(upperbound)) {
-          z_replace_byn    <-
-            paste0("extraDistr::rht", "\\(", length_args, ", ")
-          init_str_arg_out_init <-
-            gsub(z_replace_itn, z_replace_byn, pstrarg)
-          init_str_arg_out_init    <-
-            paste(strsplit(init_str_arg_out_init, ",")[[1]][-3], collapse = ",")
-          init_str_arg_out_init <-
-            gsub("\\s", "", init_str_arg_out_init)
-        } else {
-          stop(
-            "For ",
-            dist,
-            " distribution prior based initials,",
-            "\n ",
-            " allowed options are unbounded distribution or half ",
-            dist,
-            " (i.e, lb = 0)",
-            "\n ",
-            " please check following initial argument: ",
-            name_initialsi
-          )
-        }
-      } else if (dist == "gamma") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_byn    <-
-          paste0("rgamma", "\\(", length_args, ", ")
-        init_str_arg_out_init <-
-          gsub(z_replace_itn, z_replace_byn, pstrarg)
-      } else if (dist == "lognormal ") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_byn    <-
-          paste0("rlnorm", "\\(", length_args, ", ")
-        init_str_arg_out_init <-
-          gsub(z_replace_itn, z_replace_byn, pstrarg)
-      } else if (dist == "exponential") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_byn    <- paste0("rexp", "\\(", length_args, ", ")
-        init_str_arg_out_init <-
-          gsub(z_replace_itn, z_replace_byn, pstrarg)
-      } else if (dist == "inv_gamma") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_byn    <-
-          paste0("extraDistr::rinvgamma", "\\(", length_args, ", ")
-        init_str_arg_out_init <-
-          gsub(z_replace_itn, z_replace_byn, pstrarg)
-      } else if (dist == "uniform") {
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_byn    <-
-          paste0("runif", "\\(", length_args, ", ")
-        init_str_arg_out_init <-
-          gsub(z_replace_itn, z_replace_byn, pstrarg)
-      } else if (dist == "xxxxxxxxx") {
-        # placeholder for fututre expansion
+  setxoffset <- paste0("real xoffset = ", xoffset, ";")
+  setxoffset_plane <- paste0("real xoffset = ", xoffset, ";")
+  
+  # https://mc-stan.org/users/documentation/case-studies/qr_regression.html
+  decomp_code_qr <-
+    "
+      int QK = nknots - 1;
+      matrix[N, QK] Qc = Spl;
+      matrix[N, QK] XQ;
+      matrix[QK, QK] XR;
+      matrix[QK, QK] XR_inv;
+      XQ = qr_thin_Q(Qc) * sqrt(N - 1);
+      XR = qr_thin_R(Qc) / sqrt(N - 1);
+      XR_inv = inverse(XR);
+      "
+  
+  decomp_code_qr <-
+    gsub("XR_inv", XR_inv_name, decomp_code_qr, fixed = T)
+  
+  
+  add_context_getx_fun <-
+    "/* Transform x variable
+ * Args:
+ * Xp: x variable
+ * Transformation code (tranform_x, 0 to 2)
+ * 0, no transformation, 1 log, 2 square rooot
+ * Note that the xoffset  is already transformed
+ * Returns:
+ * x variable with log/sqrt transformation
+ */"
+  
+  add_context_getknots_fun <-
+    "/* Knots
+ * xoffset and Knots already transformed:
+ * Returns:
+ * Knots
+ */"
+  
+  ##########
+  
+  create_internal_function <-
+    function(y,
+             function_str,
+             fname,
+             fnameout,
+             spl,
+             splout,
+             xfunsi,
+             yfunsi,
+             setxoffset,
+             gsub_out_unscaled,
+             body,
+             vectorA,
+             decomp,
+             fixedsi) {
+      split1 <- strsplit(function_str, gsub("\\[", "\\\\[", spl))[[1]][-1]
+      split2 <- strsplit(split1, "return")[[1]][-2]
+      out <- gsub(split2, body, function_str, fixed = T)
+      out <- gsub(spl, splout, out, fixed = T)
+      out <- gsub(fname, fnameout, out, fixed = T)
+      
+      if (grepl("d0", fnameout)) {
+        out <- out
+      } else if (grepl("d1", fnameout) | grepl("d2", fnameout)) {
+        out <- gsub("return(A+", "return(0+", out, fixed = T)
       }
       
-      if (class == 'cor' | class == 'rescor') {
-        setlkjcorr <- function (K, eta = 1) {
-          # set number of realizations
-          n <- 100
-          stopifnot(is.numeric(K), K >= 2, K == as.integer(K))
-          stopifnot(eta > 0)
-          #if (K == 1) return(matrix(1, 1, 1))
-          f <- function() {
-            alpha <- eta + (K - 2) / 2
-            r12 <- 2 * rbeta(1, alpha, alpha) - 1
-            R <- matrix(0, K, K)
-            R[1, 1] <- 1
-            R[1, 2] <- r12
-            R[2, 2] <- sqrt(1 - r12 ^ 2)
-            if (K > 2)
-              for (m in 2:(K - 1)) {
-                alpha <- alpha - 0.5
-                y <- rbeta(1, m / 2, alpha)
-                z <- rnorm(m, 0, 1)
-                z <- z / sqrt(crossprod(z)[1])
-                R[1:m, m + 1] <- sqrt(y) * z
-                R[m + 1, m + 1] <- sqrt(1 - y)
-              }
-            return(crossprod(R))
-          }
-          R <- replicate(n , f())
-          if (dim(R)[3] == 1) {
-            R <- R[, , 1]
-          } else {
-            R <- aperm(R, c(3, 1, 2))
-          }
-          return(R)
+      if (grepl("c", fixedsi, fixed = T)) {
+        if (grepl("d0", fnameout)) {
+          out <- gsub("]));", "]));", out, fixed = T)
+          out <-
+            gsub(
+              "end of spline function",
+              paste0("end of spline function", "_", y, "d", 0),
+              out,
+              fixed = T
+            )
+        } else if (grepl("d1", fnameout)) {
+          out <- gsub("]));", "]).*exp(c));", out, fixed = T)
+          out <-
+            gsub(
+              "end of spline function",
+              paste0("end of spline function", "_", y, "d", 1),
+              out,
+              fixed = T
+            )
+        } else if (grepl("d2", fnameout)) {
+          out <- gsub("]));", "]).*exp(c)^2);", out, fixed = T)
+          out <-
+            gsub(
+              "end of spline function",
+              paste0("end of spline function", "_", y, "d", 2),
+              out,
+              fixed = T
+            )
+        } else {
+          out <- out
+        }
+      }
+      
+      ####
+      if (grepl("d0", fnameout)) {
+        pattern <- "return\\(\\s*(.*?)\\s*\\);"
+        result <- regmatches(out, regexec(pattern, out))
+        out_unscaled <-
+          paste0("vector[N] out_unscaled=", result[[1]][2], ";")
+        
+        
+        if (!is.null(gsub_out_unscaled)) {
+          if (length(gsub_out_unscaled) != 2)
+            stop('Length of gsub_out_unscaled should be 2')
+          out_unscaled <-
+            gsub(gsub_out_unscaled[1],
+                 gsub_out_unscaled[2],
+                 out_unscaled,
+                 fixed = T)
         }
         
-        z_replace_itn    <- paste0(dist, "\\(")
-        z_replace_byn    <-
-          paste0("setlkjcorr", "\\(", length_args, ", ")
-        init_str_arg_out_init <-
-          gsub(z_replace_itn, z_replace_byn, pstrarg)
-        Rcor <- ept(init_str_arg_out_init)
-        c_r_list <- list()
-        for (i in 1:dim(Rcor)[1])
-          c_r_list[[i]] <-  Rcor[i:i, , ]
-        Rcoravg <- Reduce("+", c_r_list) / length(c_r_list)
-        outcor <- Rcoravg
+        
+        if (yfunsi == "log") {
+          out_scaled <-
+            paste0("    vector[N] out_scaled=",
+                   "exp",
+                   "(",
+                   "out_unscaled",
+                   ")",
+                   ";")
+        } else if (yfunsi == "sqrt") {
+          if ((backend == "rstan" &
+               utils::packageVersion("rstan") >= "2.26.1") |
+              backend == "mock" |
+              backend == "cmdstanr") {
+            out_scaled <-
+              paste0("    vector[N] out_scaled=",
+                     "",
+                     "(",
+                     "out_unscaled",
+                     ")^2",
+                     ";")
+          }
+          if ((backend == "rstan" &
+               utils::packageVersion("rstan") < "2.26.1") | # &
+              backend == "mock" &
+              backend != "cmdstanr") {
+            out_scaled <-
+              paste0("    vector[N] out_scaled=",
+                     "",
+                     "(",
+                     "pow(",
+                     "out_unscaled",
+                     ", 2)" ,
+                     ")",
+                     ";")
+          }
+        } else if (yfunsi != "log" & yfunsi != "sqrt") {
+          out_scaled <-
+            paste0("    vector[N] out_scaled=",
+                   "",
+                   "(",
+                   "out_unscaled",
+                   ")",
+                   ";")
+        }
+        
+        out <- gsub(result[[1]][2], "out_scaled", out, fixed = T)
+        out_return <- paste0(out_unscaled, "\n", out_scaled)
+        
+        # setxoffset <- paste0("real xoffset = ", xoffset, ";")
+        
+        if (is.null(decomp))
+          setxoffset <- paste0(setxoffset, vectorA)
+        
+        out_return <- paste0(setxoffset,
+                             "\n    ",
+                             out_return)
+        out_return_p <- paste0(out_return, "\n", "    return")
+        out <- gsub("return", out_return_p, out, fixed = T)
+        
+      } else if (grepl("d1", fnameout) | grepl("d2", fnameout)) {
+        pattern <- "return\\(\\s*(.*?)\\s*\\);"
+        result <- regmatches(out, regexec(pattern, out))
+        
+        set_x_y_scale <- set_x_y_scale_factror(
+          xfunsi = xfunsi,
+          yfunsi = yfunsi,
+          tranformations =
+            c("identity", "log", "sqrt")
+        )
+        
+        if (grepl("d1", fnameout)) {
+          xscale_factor <- set_x_y_scale[['xscale_factor_str_d1']]
+          yscale_factor <- set_x_y_scale[['yscale_factor_str_d1']]
+        } else if (grepl("d2", fnameout)) {
+          xscale_factor <- set_x_y_scale[['xscale_factor_str_d2']]
+          yscale_factor <- set_x_y_scale[['yscale_factor_str_d2']]
+        }
+        
+        xscale_factor <- gsub(";", "", xscale_factor)
+        yscale_factor <- gsub(";", "", yscale_factor)
+        out_unscaled <-
+          paste0("vector[N] out_unscaled=", result[[1]][2], ";")
+        out_scaled <- paste0(
+          "    vector[N] out_scaled=",
+          "(",
+          "(",
+          yscale_factor,
+          ")",
+          " .* ",
+          "(",
+          'out_unscaled',
+          ")",
+          ")",
+          " ./ ",
+          "(",
+          xscale_factor,
+          ")",
+          ";"
+        )
+        out <- gsub(result[[1]][2], "out_scaled", out, fixed = T)
+        out_return <- paste0(out_unscaled, "\n", out_scaled)
+        addpdo <- paste0("vector[N] pred_d0=", spl_fun_ford, ";")
+        # setxoffset <- paste0("real xoffset = ", xoffset, ";")
+        out_return <- paste0(addpdo,
+                             "\n    ",
+                             setxoffset,
+                             "\n    ",
+                             out_return)
+        out_return_p <- paste0(out_return, "\n", "    return")
+        
+        if (!is.null(decomp)) {
+          if (decomp == 'QR') {
+            if (grepl("d1", fnameout)) {
+              out_return_p <- gsub(
+                vectorA,
+                paste0(vectorA, "\n", "XQ[,1] = rep_vector(1, N);"),
+                out_return_p,
+                fixed = T
+              )
+              out_return_p <-
+                gsub(vectorA, "", out_return_p, fixed = T)
+            }
+            if (grepl("d2", fnameout)) {
+              out_return_p <- gsub(
+                vectorA,
+                paste0(vectorA, "\n", "XQ[,1] = rep_vector(0, N);"),
+                out_return_p,
+                fixed = T
+              )
+              out_return_p <-
+                gsub(vectorA, "", out_return_p, fixed = T)
+            }
+          }
+        }
+        out <- gsub("return", out_return_p, out, fixed = T)
       }
       
-      if (class != 'cor' & class != 'rescor') {
-        out  <- ept(init_str_arg_out_init)
-        if (dist == "exponential")
-          out <- 1 / out
-      } else if (class == 'cor' | class == 'rescor') {
-        out  <- outcor
+      return(out)
+    }
+  
+  
+  
+  
+  
+  ##########
+  
+  create_internal_function_nonsitar <-
+    function(y,
+             function_str,
+             fname,
+             fnameout,
+             returnmu,
+             xfunsi,
+             yfunsi,
+             setxoffset,
+             gsub_out_unscaled = NULL,
+             spl_fun_ford,
+             body,
+             decomp,
+             fixedsi) {
+      out <- function_str
+      for_out <- gsub(fname, fnameout, out)
+      
+      ####
+      if (grepl("d0", fnameout)) {
+        out_unscaled <- paste0("vector[N] out_unscaled=", body, ";")
+        
+        if (!is.null(gsub_out_unscaled)) {
+          if (length(gsub_out_unscaled) != 2)
+            stop('Length of gsub_out_unscaled should be 2')
+          out_unscaled <-
+            gsub(gsub_out_unscaled[1],
+                 gsub_out_unscaled[2],
+                 out_unscaled,
+                 fixed = T)
+        }
+        
+        
+        if (yfunsi == "log") {
+          out_scaled <-
+            paste0("    vector[N] out_scaled=",
+                   "exp",
+                   "(",
+                   "out_unscaled",
+                   ")",
+                   ";")
+        } else if (yfunsi == "sqrt") {
+          if ((backend == "rstan" &
+               utils::packageVersion("rstan") >= "2.26.1") |
+              backend == "mock" |
+              backend == "cmdstanr") {
+            out_scaled <-
+              paste0("    vector[N] out_scaled=",
+                     "",
+                     "(",
+                     "out_unscaled",
+                     ")^2.0",
+                     ";")
+          }
+          if ((backend == "rstan" &
+               utils::packageVersion("rstan") < "2.26.1") | # &
+              backend == "mock" &
+              backend != "cmdstanr") {
+            out_scaled <-
+              paste0("    vector[N] out_scaled=",
+                     "",
+                     "(",
+                     "pow(",
+                     "out_unscaled",
+                     ", 2)" ,
+                     ")",
+                     ";")
+          }
+        } else if (yfunsi != "log" & yfunsi != "sqrt") {
+          out_scaled <-
+            paste0("    vector[N] out_scaled=",
+                   "",
+                   "(",
+                   "out_unscaled",
+                   ")",
+                   ";")
+        }
+        
+        out_return <- paste0(out_unscaled, "\n", out_scaled)
+        # setxoffset <- paste0("real xoffset = ", xoffset, ";")
+        out_return <- paste0(setxoffset,
+                             "\n    ",
+                             out_return)
+        out_return_p <- paste0(out_return, "\n", "    return")
+        out_scaled_with_parentehsis <-
+          paste0("(", 'out_scaled', ")")
+        out <- paste(out_return_p, out_scaled_with_parentehsis, ";")
+        out <- paste0(gsub("return.*", "", for_out),
+                      out,
+                      "\n}")
+        
+      } else if (grepl("d1", fnameout) | grepl("d2", fnameout)) {
+        set_x_y_scale <- set_x_y_scale_factror(
+          xfunsi = xfunsi,
+          yfunsi = yfunsi,
+          tranformations =
+            c("identity", "log", "sqrt")
+        )
+        
+        if (grepl("d1", fnameout)) {
+          xscale_factor <- set_x_y_scale[['xscale_factor_str_d1']]
+          yscale_factor <- set_x_y_scale[['yscale_factor_str_d1']]
+        } else if (grepl("d2", fnameout)) {
+          xscale_factor <- set_x_y_scale[['xscale_factor_str_d2']]
+          yscale_factor <- set_x_y_scale[['yscale_factor_str_d2']]
+        }
+        
+        xscale_factor <- gsub(";", "", xscale_factor)
+        yscale_factor <- gsub(";", "", yscale_factor)
+        out_unscaled <- paste0("vector[N] out_unscaled=", body, ";")
+        out_scaled <-
+          paste0(
+            "    vector[N] out_scaled=",
+            "(",
+            "(",
+            yscale_factor,
+            ")",
+            " .* ",
+            "(",
+            'out_unscaled',
+            ")",
+            ")",
+            " ./ ",
+            "(",
+            xscale_factor,
+            ")",
+            ";"
+          )
+        addpdo <- paste0("vector[N] pred_d0=", spl_fun_ford, ";")
+        out_return <- paste0(out_unscaled, "\n", out_scaled)
+        # setxoffset <- paste0("real xoffset = ", xoffset, ";")
+        out_return <- paste0(addpdo,
+                             "\n    ",
+                             setxoffset,
+                             "\n    ",
+                             out_return)
+        out_return_p <- paste0(out_return, "\n", "    return")
+        out_scaled_with_parentehsis <-
+          paste0("(", 'out_scaled', ")")
+        out <- paste(out_return_p, out_scaled_with_parentehsis, ";")
+        out <- paste0(gsub("return.*", "", for_out),
+                      out,
+                      "\n}")
+      }
+      return(out)
+    }
+  
+  ##########
+  
+  
+  
+  if (select_model == 'sitar' | select_model == 'rcs') {
+    abcnames <-
+      paste0(strsplit(gsub("\\+", " ", fixedsi), " ")[[1]], sep = ",")
+    
+    snames <- c()
+    for (i in 1:(nknots - 1)) {
+      if (i < (nknots - 1)) {
+        name1 <- paste0("s", i, sep = ",")
+      }
+      else {
+        name1 <- paste0("s", i, sep = "")
+      }
+      snames[i] <- name1
+    }
+    
+    # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter
+    # In fact for df > 1, it forces 'd' to be random parameter only
+    if (match_sitar_d_form) {
+      if (!grepl("d", fixedsi, fixed = T) &
+          grepl("d", randomsi, fixed = T)) {
+        abcnames <- c(abcnames, "d,")
+      }
+    }
+    
+    
+    if (select_model == 'sitar' | select_model == 'rcs') {
+      if (any(grepl("s", abcnames)))
+        abcnames <- abcnames[-length(abcnames)]
+      if (match_sitar_d_form)
+        abcnames <- gsub('s', 'd', abcnames, fixed = T)
+    }
+    
+    fullabcsnames <- c(abcnames, snames)
+    fullabcsnames_v <-
+      paste("vector", fullabcsnames, collapse = " ")
+    
+    if (select_model == 'sitar') {
+      fullabcsnames_for_mat <- abcnames
+      fullabcsnames_for_mat <-
+        gsub('.{1}$', '', fullabcsnames_for_mat)
+      fullabcsnames_v_for_mat <-
+        paste("vector", fullabcsnames_for_mat, collapse = ", ")
+    }
+    
+    if (select_model == 'rcs') {
+      fullabcsnames_for_mat <- 'a'
+      fullabcsnames_v_for_mat <-
+        paste("vector", fullabcsnames_for_mat, collapse = " ")
+    }
+
+    if (grepl("b", fixedsi, fixed = T) &
+        grepl("c", fixedsi, fixed = T)) {
+      defineEx <- paste0("(Xm-b).*exp(c)")
+    }
+    if (grepl("b", fixedsi, fixed = T) &
+        !grepl("c", fixedsi, fixed = T)) {
+      defineEx <- paste0("(Xm-b)")
+    }
+    if (!grepl("b", fixedsi, fixed = T) &
+        grepl("c", fixedsi, fixed = T)) {
+      defineEx <- paste0("(Xm).*exp(c)")
+    }
+    if (!grepl("b", fixedsi, fixed = T) &
+        !grepl("c", fixedsi, fixed = T)) {
+      defineEx <- paste0("(Xm)")
+    }
+    
+    add_knotinfo <- paste0(
+      "\n  int N=num_elements(",
+      vector_X_name,
+      ");",
+      paste0(
+        "\n  vector[N] Xm=",
+        paste0(getxname,
+               "(", vector_X_name, ")"),
+        ";"
+      ),
+      paste0("\n  vector[N] X=", defineEx, ";"),
+      paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
+      paste0(
+        "\n  vector[nknots] knots=",
+        paste0(getknotsname, "(", '', ")"),
+        ";"
+      )
+    )
+    
+    
+    if (select_model == 'sitar') {
+      if(match_sitar_a_form) vectorA <- "\n  vector[N] A=a-(s1*min(knots));"
+      if(!match_sitar_a_form) vectorA <- "\n  vector[N] A=a;"
+      if (!is.null(decomp)) {
+        if (decomp == 'QR') {
+          vectorA <- "\n  vector[N] A=a;"
+          # vectorA <- "\n  vector[N] A=a-((XQ[,1].*s1)*min(knots));"
+        }
+      }
+    }
+    
+    
+    
+    if (select_model == 'rcs') {
+      vectorA <- "\n  vector[N] A=a;"
+    }
+    
+    
+    
+    # add_knotinfo <- paste0(add_knotinfo, vectorA)
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
+        backend == "cmdstanr") {
+      fun_body <- "
+    matrix[N, nknots-1] Spl;
+    matrix[nknots-1, N] rcs;
+    matrix[N, nknots] Xx;
+    int km1 = nknots - 1;
+    int jp1;
+    int j=1;
+    for(ia in 1:N) {
+     for(ja in 1:nknots) {
+      Xx[ia,ja] = (X[ia] - knots[ja] > 0 ? X[ia] - knots[ja] : 0);
+        }
+    }
+     Spl[,1]=X;
+     while (j <= nknots - 2) {
+      jp1 = j + 1;
+       Spl[,jp1] = (Xx[,j]^3-(Xx[,km1]^3)*(knots[nknots]-knots[j])/
+       (knots[nknots]-knots[km1]) + (Xx[,nknots]^3)*(knots[km1]-knots[j])/
+       (knots[nknots]-knots[km1])) / (knots[nknots]-knots[1])^2;
+        j = j + 1;
+      }"
+    }
+    
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
+        backend != "cmdstanr") {
+      fun_body <- "
+    matrix[N, nknots-1] Spl;
+    matrix[nknots-1, N] rcs;
+    matrix[N, nknots] Xx;
+    int km1 = nknots - 1;
+    int jp1;
+    int j=1;
+    for(ia in 1:N) {
+     for(ja in 1:nknots) {
+      Xx[ia,ja] = (X[ia] - knots[ja] > 0 ? X[ia] - knots[ja] : 0);
+        }
+    }
+     Spl[,1]=X;
+     while (j <= nknots - 2) {
+     for(i in 1:N) {
+      jp1 = j + 1;
+       Spl[i,jp1] = (pow(Xx[i,j],3)-(pow(Xx[i,km1],3))*(knots[nknots]-knots[j])/
+       (knots[nknots]-knots[km1]) +
+       (pow(Xx[i,nknots],3))*(knots[km1]-knots[j])/(knots[nknots]-knots[km1]))/
+       pow((knots[nknots]-knots[1]),2);
+      }
+      j = j + 1;
+    }
+    "
+    }
+    
+    name4 <- c()
+    for (i in 1:(nknots - 1)) {
+      name1 <- paste0("", "s", i, sep = "")
+      if (i < (nknots - 1)) {
+        # name2 <- paste0(' .* to_vector(Spl[,',i,"]') +")
+        name2 <- paste0(' .* Spl[,', i, "] +")
+      }
+      else {
+        # name2 <- paste0(' .* to_vector(Spl[,',i,"]') ;\n")
+        name2 <- paste0(' .* Spl[,', i, "]")
+      }
+      name3 <- paste0(name1, name2, sep = "")
+      name4[i] <- name3
+    }
+    name50 <- paste("", name4, collapse = " ")
+    
+    nameadja <- "A"
+    
+    ###########
+    # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter
+    # In fact for df > 1, it forces 'd' to be random parameter only
+    
+    if (match_sitar_d_form) {
+      if (grepl("d", randomsi, fixed = T)) {
+        if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
+        if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
+      }
+    }
+    
+    if (!match_sitar_d_form) {
+      if (grepl("d", fixedsi, fixed = T)) {
+        if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
+        if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
+      }
+    }
+    
+    
+    name5 <- paste(" (", name50, ");\n")
+    
+    if (grepl("c", fixedsi, fixed = T)) {
+      name51 <- paste(" (", name50, ") .* exp(c) ;\n")
+      name52 <- paste(" (", name50, ") .* exp(c)^2 ;\n")
+    }
+    if (!grepl("c", fixedsi, fixed = T)) {
+      name51 <- paste(" (", name50, ") ;\n")
+      name52 <- paste(" (", name50, ") ;\n")
+    }
+    
+    returnmu <-
+      paste0("return(",   paste0(nameadja, "+",
+                                 gsub(";", "", name5))     , ");")
+    
+    # need spaces otherwise rstan 2.21 throws error: variable s1. not found
+    returnmu <- gsub("\\s", "", returnmu)
+    returnmu <- gsub("\\." , " \\." , returnmu, fixed = FALSE)
+    returnmu <- gsub("\\*" , "\\* " , returnmu, fixed = FALSE)
+    # don't create space for +
+    # returnmu <- gsub("+" , " + " , returnmu, fixed = TRUE)
+    
+    
+    setxoffset_d0_noqr <- paste0(setxoffset,  vectorA)
+    returnmu_d0_noqr <- paste0(setxoffset,  vectorA)
+    
+    if (!is.null(decomp)) {
+      if (decomp == 'QR') {
+        returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
+        setxoffset <- paste0(setxoffset,  decomp_code_qr, vectorA)
+        returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
+      }
+    }
+    
+    if (is.null(decomp)) {
+      fun_body <- paste0(fun_body, "\n", vectorA)
+    }
+    
+    
+    
+    endof_fun <-
+      paste0("\n    ", returnmu, "\n  } // end of spline function", sep = " ")
+    
+    
+    
+    
+    start_fun <-
+      paste0(
+        "\nvector ",
+        spfncname,
+        "(vector ",
+        vector_X_name,
+        ", ",
+        fullabcsnames_v,
+        ") {" ,
+        collapse = " "
+      )
+    
+    
+    
+    
+    
+    rcsfun <-
+      paste(start_fun,
+            add_knotinfo,
+            fun_body,
+            "\n",
+            setxoffset,
+            endof_fun)
+    rcsfun_raw <- rcsfun
+    
+    
+    
+    rcsfunmultadd <- NULL
+    spfncname_multadd <- paste0(spfncname, "X")
+    
+    start_fun_multadd <-
+      paste0(
+        "\nvector ",
+        spfncname_multadd,
+        "(matrix ",
+        vector_X_name,
+        ", ",
+        fullabcsnames_v,
+        ") {" ,
+        "\n",
+        "  int N=num_elements(",
+        vector_X_name,
+        "[,1]);",
+        "\n",
+        "  vector[N] Xm=(",
+        vector_X_name,
+        "[,1]);",
+        # getX
+        # "\n",
+        # insert_getX_name,
+        collapse = " "
+      )
+    
+    
+    add_knotinfo_multadd <- paste0(
+      "\n  int mcolsmat=cols(",
+      vector_X_name,
+      ");",
+      paste0(
+        "\n  vector[mcolsmat+1] knots=",
+        paste0(getknotsname, "(", '', ")"),
+        ";"
+      )
+    )
+    returnmu_multadd <- returnmu
+    returnmu_multadd <-
+      gsub("XQ",  vector_X_name, returnmu_multadd, fixed = T)
+    returnmu_multadd <-
+      gsub("Spl", vector_X_name, returnmu_multadd, fixed = T)
+    
+    start_fun_multadd <-
+      gsub(",)" , ")" , start_fun_multadd, fixed = TRUE)
+    endof_fun <- paste0("\n    ",
+                        returnmu_multadd,
+                        ";",
+                        "\n  } // end of spline mat function",
+                        sep = " ")
+    
+    endof_fun <- gsub(";;", ";", endof_fun, fixed = T)
+    
+    if (grepl('s1', vectorA)) {
+      rcsfunmultadd <-
+        paste(start_fun_multadd,
+              add_knotinfo_multadd,
+              vectorA,
+              endof_fun)
+    } else {
+      rcsfunmultadd <- paste(start_fun_multadd, vectorA, endof_fun)
+    }
+    
+    
+    
+    add_rcsfunmat <- TRUE
+    add_rcsfunmatqr <- TRUE
+    add_rcsfunmatqrinv <- TRUE
+    
+    
+    funmats <- paste0('', '')
+    
+    if (add_rcsfunmat) {
+      rcsfunmat_name <- paste0(spfncname, 'smat', '')
+      start_funmat <-
+        paste0(
+          "\nmatrix ",
+          rcsfunmat_name,
+          "(vector ",
+          vector_X_name,
+          ", ",
+          fullabcsnames_v_for_mat,
+          ") {" ,
+          collapse = " "
+        )
+      setxoffset_format <- paste0(setxoffset_plane, vectorA)
+      rcsfunmat <-
+        paste(start_funmat,
+              add_knotinfo,
+              fun_body,
+              "\n",
+              setxoffset_format)
+      rcsfunmat <- gsub(vectorA, "", rcsfunmat, fixed = T)
+      rcsfunmat <- paste0(rcsfunmat, "\n", 'return Spl;')
+      rcsfunmat <- paste0(rcsfunmat, '\n}')
+      funmats <- paste0(funmats, "\n", rcsfunmat)
+    }
+    
+    if (add_rcsfunmatqr) {
+      rcsfunmatgr_name <- paste0(spfncname, 'QRsmat', '')
+      
+      start_funmat <-
+        paste0(
+          "\nmatrix ",
+          rcsfunmatgr_name,
+          "(vector ",
+          vector_X_name,
+          ", ",
+          fullabcsnames_v_for_mat,
+          ") {" ,
+          collapse = " "
+        )
+      
+      rcsfunmatqr <-
+        paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
+      rcsfunmatqr <- gsub(vectorA, "", rcsfunmatqr, fixed = T)
+      
+      
+      
+      szx <- paste0('s', 1:(nknots - 1))
+      cnt <- 0
+      cn_c <- c()
+      for (vi in szx) {
+        cnt <- cnt + 1
+        tmx <-
+          paste0(
+            paste0('s', 'x', '[,', cnt, "]", " = "),
+            XR_inv_name_resp,
+            '[',
+            cnt,
+            ",",
+            cnt,
+            "] * ",
+            vi,
+            ";"
+          )
+        cn_c <- c(cn_c, tmx)
+      }
+      rcsfunmatqr <- paste0(rcsfunmatqr, "\n", 'return XQ;')
+      rcsfunmatqr <- paste0(rcsfunmatqr, '\n}')
+      funmats <- paste0(funmats, "\n", rcsfunmatqr)
+    } # if(add_rcsfunmatqr) {
+    
+    
+    
+    if (add_rcsfunmatqrinv) {
+      rcsfunmatgrinv_name <- paste0(spfncname, 'QRsmat', 'inv')
+      
+      start_funmat <-
+        paste0(
+          "\nmatrix ",
+          rcsfunmatgrinv_name,
+          "(vector ",
+          vector_X_name,
+          ", ",
+          fullabcsnames_v_for_mat,
+          ") {" ,
+          collapse = " "
+        )
+      
+      rcsfunmatgrinv <-
+        paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
+      rcsfunmatgrinv <- gsub(vectorA, "", rcsfunmatgrinv, fixed = T)
+      
+      szx <- paste0('b_s', 1:(nknots - 1))
+      cnt <- 0
+      cn_c <- c()
+      for (vi in szx) {
+        cnt <- cnt + 1
+        tmx <-
+          paste0(
+            paste0('b_s', 'q', '[,', cnt, "]", " = "),
+            XR_inv_name_resp,
+            '_mat',
+            '[',
+            cnt,
+            ",",
+            cnt,
+            "] * ",
+            vi,
+            ";"
+          )
+        cn_c <- c(cn_c, tmx)
+      }
+      rcsfunmatgrinv <-
+        paste0(rcsfunmatgrinv, "\n", 'return ', XR_inv_name, ';')
+      rcsfunmatgrinv <- paste0(rcsfunmatgrinv, '\n}')
+      funmats <- paste0(funmats, "\n", rcsfunmatgrinv)
+    } # if(add_rcsfunmatqrinv) {
+    
+    
+    
+    
+    funmats_genquant <- ""
+    if (add_rcsfunmatqrinv_genquant) {
+      rcsfunmatgrinv_name <- paste0(spfncname, 'QRsmat', 'inv')
+      
+      setnqq <- nknots - 1
+      start_funmat <-
+        paste0(
+          "\nmatrix ",
+          rcsfunmatgrinv_name,
+          "(vector ",
+          vector_X_name,
+          ", ",
+          fullabcsnames_v_for_mat,
+          ") {" ,
+          collapse = " "
+        )
+      
+      rcsfunmatqrinv_genquant <- paste(start_funmat, '')
+      rcsfunmatqrinv_genquant <-
+        gsub(vectorA, "", rcsfunmatqrinv_genquant, fixed = T)
+      
+      szx <- paste0(setnlp, 1:(nknots - 1))
+      szxbq <- b_sx_name_resp
+      
+      szx_vector <- paste0(setnlp_vector, 1:(nknots - 1))
+      
+      
+      # setnqq <- 4
+      tems <- paste0('placeholder', '_', b_sx_name_resp)
+      # b_s_name <- paste0('b_s', '')
+      b_s_dims1 <- '[1]'
+      svector_ <-
+        paste(paste0(b_s_name,  b_s_dims1), collapse = ", ")
+      svector_ <-
+        paste0('vector[',
+               setnqq,
+               ']',
+               " ",
+               tems,
+               ' = ',
+               '[ ',
+               svector_,
+               ' ]' ,
+               "'" ,
+               ";")
+      
+      tems2 <-  paste0('temp_', b_sx_name_resp)
+      
+      tems3 <- paste0('vector[', setnqq, ']', " ", tems2, ' = ')
+      qs_vector <-
+        paste0(tems3, XR_inv_name_resp , ' * ', tems, ";")
+      
+      cn_c <- c()
+      cn_c2 <- c()
+      cnt <- 0
+      for (vi in szx) {
+        cnt <- cnt + 1
+        tmx <-
+          paste0(
+            'vector[N] ',
+            paste0(szxbq_vector, cnt, " = "),
+            XR_inv_name_resp,
+            '[',
+            cnt,
+            ",",
+            cnt,
+            "] * ",
+            vi,
+            ";"
+          )
+        cn_c <- c(cn_c, tmx)
+      }
+      cnt <- 0
+      for (vi in szx_vector) {
+        cnt <- cnt + 1
+        # '[', cnt, ',', cnt, "]"
+        tmx2 <-
+          paste0(paste0(szxbq, '[', cnt, ']', '', " = "),
+                 tems2,
+                 '[',
+                 cnt,
+                 "]",
+                 ";")
+        
+        cn_c2 <- c(cn_c2, tmx2)
       }
       
-      out
-    }
-  
-  
-  
-  ################################################
-  # class b - beta
-  if ((class == 'b' & suffix == 'beta') |
-      class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
+      # if no covariate. then only add re-scaled s betas
+      if (add_b_Qr_genquan_s_coef) {
+        cn_c <- paste(cn_c, collapse = "\n")
+        cn_c2 <- paste(cn_c2, collapse = "\n")
+        cn_c <- paste0(cn_c2, "\n", cn_c)
+        addcn_c2 <-
+          paste0('vector[', "", setnqq, ']', " ", szxbq, ';')
+        addcn_c2 <- paste0(addcn_c2, "\n", svector_)
+        addcn_c2 <- paste0(addcn_c2, "\n", qs_vector)
+        addcn_c2 <- paste0(addcn_c2, "\n", cn_c)
+      } else if (!add_b_Qr_genquan_s_coef) {
+        cn_c <- paste(cn_c, collapse = "\n")
+        addcn_c2 <- cn_c
+      }
+      replacematrixby <-
+        paste0('matrix[', setnqq, ", ", setnqq, ']', XR_inv_name_resp , ' =')
+      rcsfunmatqrinv_genquant <-
+        gsub('matrix',
+             replacematrixby,
+             rcsfunmatqrinv_genquant,
+             fixed = T)
+      rcsfunmatqrinv_genquant <-
+        gsub('{', ';', rcsfunmatqrinv_genquant, fixed = T)
+      rcsfunmatqrinv_genquant <-
+        paste0(rcsfunmatqrinv_genquant, '\n', addcn_c2)
+    } # if(add_rcsfunmatqrinv_genquant) {
     
-    if(ept("sigma_dpar") == "sigma") {
-      name_parm <- paste0(class, "_", parm, resp_)
+   
+    if (funmats == "") {
+      add_funmats <- FALSE
     } else {
-      name_parm <- paste0(class, resp_, "_", parm)
+      add_funmats <- TRUE
     }
     
-    suffix <- 'beta'
+   
     
-    allowed_init_options <- allowed_init_options_beta
     
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
+    getknots_fun_raw <-
+      paste0(
+        "vector ",
+        getknotsname,
+        "() {" ,
+        paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
+        paste0(
+          "\n  vector[nknots] knots=",
+          "[",
+          paste(knots, collapse = ","),
+          "]';"
+        ),
+        "\n  ",
+        "return(knots);",
+        "\n}  "
+        ,
+        paste0("// end of ", getknotsname),
+        collapse = " "
+      )
     
-    lowerbound <- lowerbound
-    upperbound <- upperbound
+    # add_context_getx_fun
+    getx_fun_raw <-
+      paste0(
+        "vector ",
+        getxname,
+        paste0(" (vector ", vector_X_name, ") {") ,
+        "\n  ",
+        paste0("int N=num_elements(", vector_X_name, ");"),
+        "\n  ",
+        paste0("real xoffset = ", xoffset, ";"),
+        paste0("\n  int tranform_x = ",
+               eval(parse(text = tranform_x_int)), ";"),
+        paste0("\n  vector[N] x;"),
+        "\n",
+        paste0(
+          "  if(tranform_x == 0 ) {",
+          "\n   ",
+          "x = ",
+          vector_X_name,
+          " - xoffset",
+          ";",
+          "\n  }",
+          "\n  ",
+          "if(tranform_x == 1 ) {",
+          "\n   ",
+          "x = log(",
+          vector_X_name,
+          ") - xoffset;",
+          "\n  }",
+          "\n  ",
+          "if(tranform_x == 2 ) {",
+          "\n    ",
+          "x = sqrt(",
+          vector_X_name,
+          ") - xoffset;",
+          "\n  }"
+        ),
+        "\n  ",
+        "return(x);",
+        "\n}  "
+        ,
+        paste0("// end of ", getxname),
+        collapse = " "
+      )
     
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
+    
+    
+    
+    getx_fun     <- paste0(add_context_getx_fun, "\n", getx_fun_raw)
+    getknots_fun <-
+      paste0(add_context_getknots_fun, "\n", getknots_fun_raw)
+    
+    getx_knots_fun <- paste0(getx_fun,
+                             "\n",
+                             getknots_fun)
+    
+    
+    ##########
+    
+    # Create function d0
+    fnameout <- paste0(spfncname, "_", "d0")
+    spl <- "Spl[,1]=X;"
+    splout <- spl
+    spl_fun_ford <- paste0(fnameout,
+                           "(vector ",
+                           vector_X_name,
+                           ", ",
+                           fullabcsnames_v,
+                           ")")
+    spl_fun_ford <- gsub("vector", "", spl_fun_ford, fixed = T)
+    
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
+        backend == "cmdstanr") {
+      body <- "
+     while (j <= nknots - 2) {
+      jp1 = j + 1;
+      Spl[,jp1] =
+        (1*Xx[,j]^3) * (1/((knots[nknots]-knots[1])^2))  -
+        (1*Xx[,km1]^3) * (knots[nknots]-knots[j]) /
+        ((knots[nknots]-knots[km1]) * (knots[nknots]-knots[1])^2) +
+        (1*Xx[,nknots]^3) * (knots[km1]-knots[j]) /
+        ((knots[nknots]-knots[km1]) * (knots[nknots]-knots[1])^2) ;
+      j = j + 1;
+    }
+    "
+    }
+    
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
+        backend != "cmdstanr") {
+      body <- "
+     while (j <= nknots - 2) {
+      for(i in 1:N) {
+          jp1 = j + 1;
+          Spl[i,jp1] = (1*pow(Xx[i,j],3) -
+          (1*pow(Xx[i,km1],3))*(knots[nknots]-knots[j]) /
+          (knots[nknots]-knots[km1]) +
+          (1*pow(Xx[i,nknots],3))*(knots[km1]-knots[j]) /
+          (knots[nknots]-knots[km1])) /
+          pow((knots[nknots]-knots[1]),2);
+      }
+      j = j + 1;
+    }
+    "
+    }
+    
+    
+    spl_d0 <- create_internal_function(
+      y = y,
+      function_str = rcsfun,
+      fname = spfncname,
+      fnameout = fnameout,
+      spl = spl,
+      splout = splout,
+      xfunsi = xfunsi,
+      yfunsi = yfunsi,
+      setxoffset = setxoffset,
+      # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      body = body,
+      vectorA = vectorA,
+      decomp = decomp,
+      fixedsi = fixedsi
+    )
+    
+    
+    
+    # Create function d1
+    fnameout <- paste0(spfncname, "_", "d1")
+    spl <- "Spl[,1]=X;"
+    splout <- "Spl[,1]=rep_vector(1, N);"
+    
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
+        backend == "cmdstanr") {
+      body <- "
+     while (j <= nknots - 2) {
+      jp1 = j + 1;
+      Spl[,jp1] =
+        (3*Xx[,j]^2) * (1/((knots[nknots]-knots[1])^2))  -
+        (3*Xx[,km1]^2) * (knots[nknots]-knots[j]) /
+        ((knots[nknots]-knots[km1]) * (knots[nknots]-knots[1])^2) +
+        (3*Xx[,nknots]^2) * (knots[km1]-knots[j]) /
+        ((knots[nknots]-knots[km1]) * (knots[nknots]-knots[1])^2) ;
+      j = j + 1;
+    }
+    "
+    }
+    
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
+        backend != "cmdstanr") {
+      body <- "
+     while (j <= nknots - 2) {
+      for(i in 1:N) {
+          jp1 = j + 1;
+          Spl[i,jp1] = (3*pow(Xx[i,j],2) -
+          (3*pow(Xx[i,km1],2))*(knots[nknots]-knots[j]) /
+          (knots[nknots]-knots[km1]) +
+          (3*pow(Xx[i,nknots],2))*(knots[km1]-knots[j]) /
+          (knots[nknots]-knots[km1])) /
+          pow((knots[nknots]-knots[1]),2);
+      }
+      j = j + 1;
+    }
+    "
+    }
+    
+    
+    spl_d1 <- create_internal_function(
+      y = y,
+      function_str = rcsfun,
+      fname = spfncname,
+      fnameout = fnameout,
+      spl = spl,
+      splout = splout,
+      xfunsi = xfunsi,
+      yfunsi = yfunsi,
+      setxoffset = setxoffset,
+      # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      body = body,
+      vectorA = vectorA,
+      decomp = decomp,
+      fixedsi = fixedsi
+    )
+    
+    
+    # Create function d2
+    fnameout <- paste0(spfncname, "_", "d2")
+    spl <- "Spl[,1]=X;"
+    splout <- "Spl[,1]=rep_vector(0, N);"
+    
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") >= "2.26.1") |
+        backend == "mock" |
+        backend == "cmdstanr") {
+      body <- "
+     while (j <= nknots - 2) {
+      jp1 = j + 1;
+      Spl[,jp1] =
+        (6*Xx[,j]^1) * (1/((knots[nknots]-knots[1])^2))  -
+        (6*Xx[,km1]^1) * (knots[nknots]-knots[j]) /
+        ((knots[nknots]-knots[km1]) * (knots[nknots]-knots[1])^2) +
+        (6*Xx[,nknots]^1) * (knots[km1]-knots[j]) /
+        ((knots[nknots]-knots[km1]) * (knots[nknots]-knots[1])^2) ;
+      j = j + 1;
+   }
+    "
+    }
+    
+    if ((backend == "rstan" &
+         utils::packageVersion("rstan") < "2.26.1") | # &
+        backend == "mock" &
+        backend != "cmdstanr") {
+      body <- "
+     while (j <= nknots - 2) {
+      for(i in 1:N) {
+          jp1 = j + 1;
+          Spl[i,jp1] = (6*pow(Xx[i,j],1) -
+          (6*pow(Xx[i,km1],1))*(knots[nknots]-knots[j]) /
+          (knots[nknots]-knots[km1]) +
+          (6*pow(Xx[i,nknots],1))*(knots[km1]-knots[j]) /
+          (knots[nknots]-knots[km1])) /
+          pow((knots[nknots]-knots[1]),2);
+      }
+      j = j + 1;
+    }
+    "
+    }
+    
+    
+    
+    spl_d2 <- create_internal_function(
+      y = y,
+      function_str = rcsfun,
+      fname = spfncname,
+      fnameout = fnameout,
+      spl = spl,
+      splout = splout,
+      xfunsi = xfunsi,
+      yfunsi = yfunsi,
+      setxoffset = setxoffset,
+      # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      body = body,
+      vectorA = vectorA,
+      decomp = decomp,
+      fixedsi = fixedsi
+    )
+    
+    
+    if (utils::packageVersion('rstan') < "2.26") {
+      rcsfun <- paste(getx_knots_fun, rcsfun)
+    }
+    
+    if (utils::packageVersion('rstan') > "2.26" & is.null(decomp)) {
+      rcsfun <- paste0(getx_knots_fun,
+                       rcsfun,
+                       rcsfunmultadd,
+                       spl_d0,
+                       spl_d1,
+                       spl_d2,
+                       sep = "\n")
+    }
+    
+    if (utils::packageVersion('rstan') > "2.26" & !is.null(decomp)) {
+      if (decomp == 'QR') {
+        if (add_funmats) {
+          rcsfun <- paste0(
+            getx_knots_fun,
+            funmats,
+            rcsfun,
+            rcsfunmultadd,
+            spl_d0,
+            spl_d1,
+            spl_d2,
+            sep = "\n"
+          )
+        } else if (!add_funmats) {
+          rcsfun <- paste0(getx_knots_fun,
+                           rcsfun,
+                           rcsfunmultadd,
+                           spl_d0,
+                           spl_d1,
+                           spl_d2,
+                           sep = "\n")
+        }
+      }
+    }
+    
+    
+  } # if(select_model == 'sitar') {
+  
+  
+  
+  
+  
+  if (grepl("^pb", select_model) |
+      grepl("^logistic", select_model)) {
+    abcnames <- paste0(strsplit(gsub("\\+", " ",
+                                     fixedsi), " ")[[1]], sep = ",")
+    fullabcsnames <- abcnames
+    fullabcsnames_v <-
+      paste("vector", fullabcsnames, collapse = " ")
+    defineEx <- paste0("(Xm)")
+    getx_fun_raw <-
+      paste0(
+        "vector ",
+        getxname,
+        paste0(" (vector ", vector_X_name, ") {") ,
+        "\n  ",
+        paste0("int N=num_elements(", vector_X_name, ");"),
+        "\n  ",
+        setxoffset,
+        paste0("\n  int tranform_x = ",
+               eval(parse(text = tranform_x_int)), ";"),
+        paste0("\n  vector[N] x;"),
+        "\n",
+        paste0(
+          "  if(tranform_x == 0 ) {",
+          "\n   ",
+          "x = ",
+          vector_X_name,
+          " - xoffset",
+          ";",
+          "\n  }",
+          "\n  ",
+          "if(tranform_x == 1 ) {",
+          "\n   ",
+          "x = log(",
+          vector_X_name,
+          ") - xoffset;",
+          "\n  }",
+          "\n  ",
+          "if(tranform_x == 2 ) {",
+          "\n    ",
+          "x = sqrt(",
+          vector_X_name,
+          ") - xoffset;",
+          "\n  }"
+        ),
+        "\n  ",
+        "return(x);",
+        "\n}  "
+        ,
+        paste0("// end of ", getxname),
+        collapse = " "
+      )
+    
+    
+    getx_fun     <- paste0(add_context_getx_fun, "\n", getx_fun_raw)
+    
+    # a - asymtote
+    # b - size at theta
+    # c - s0
+    # d - s1
+    # e - time (theta)
+    
+    if (select_model == 'pb1') {
+      funstring <- "a-2.0*(a-b)./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))"
+      if (utils::packageVersion('rstan') < "2.26")
+        funstring <-
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      returnmu_d1 <- "rep_vector(2.0,N).*(a-b).*(c.*exp(c.*(Xm-e))+
+      d.*exp(d.*(Xm-e)))./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))^2.0"
       
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            evaluated_init <- rep(0, nrep_of_parms)
-          } else if (ept(name_initialsi) == 'lm') {
-            if (ept(check_form_0)) {
-              lm_gsubby <- paste0("lm", "_", nlpar, "_", "all", resp_)
-            }
-            if (!ept(check_form_0)) {
-              if (!eit_cov)
-                lm_gsubby <- paste0("lm", "_", nlpar, "", "", resp_)
-              if (eit_cov)
-                lm_gsubby <-
-                  paste0("lm", "_", nlpar, "_", "cov", resp_)
-            }
-            
-            evaluated_init <- ept(lm_gsubby) %>% unname()
-          } else if (ept(name_initialsi) == 'ymean') {
-            eit <- gsub("ymean",
-                        paste0("ymean", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ymax') {
-            eit <- gsub("ymax",
-                        paste0("ymax", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ymaxs') {
-            eit <- gsub("ymaxs",
-                        paste0("ymaxs", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'median') {
-            eit <- gsub("median",
-                        paste0("median", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'bstart') {
-            eit <- gsub("bstart",
-                        paste0("bstart", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'cstart') {
-            eit <- gsub("cstart",
-                        paste0("cstart", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'dstart') {
-            eit <- gsub("dstart",
-                        paste0("dstart", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'estart') {
-            eit <- gsub("estart",
-                        paste0("estart", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-            
-          } else if (ept(name_initialsi) == 'ymeanxmin') {
-            eit <- gsub("ymeanxmin",
-                        paste0("ymeanxmin", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ymeanxmax') {
-            eit <- gsub("ymeanxmax",
-                        paste0("ymeanxmax", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ymeanxmid') {
-            eit <- gsub("ymeanxmid",
-                        paste0("ymeanxmid", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = length_args
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = dist,
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              evaluated_init <- ept(name_initialsi)
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
-      }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unlist() %>% unname()
-      tempv <- as.numeric(tempv)
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-  }
-  
-  
-  
-  if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") != "sigma") {
-    if(ept(check_form_0)) {
-      if(length(out_list[[name_parm]]) == 1) {
-        out_list[[name_parm]] <- rep(out_list[[name_parm]], ept(nparcov))
-      }
-    }
-  }
-  
-  
-  # Like a b c d e beta when ~ 0 +..., init for sigma are rep of sigma_init_beta 
-  if (class == 'b' & suffix == 'beta' & ept("sigma_dpar") == "sigma") {
-    if(ept(ept("init_argument")) != 'random' ) {
-      # edited on 07 03 2024
-      if(ept(check_form_0)) {
-        if(length(out_list[[name_parm]]) == ept(nparcov)) {
-          out_list[[name_parm]] <- out_list[[name_parm]]
-        } else if(length(out_list[[name_parm]]) == 1 & ept(nparcov) > 1) {
-          out_list[[name_parm]] <- rep(out_list[[name_parm]], ept(nparcov))
-        } else if(length(out_list[[name_parm]]) != ept(nparcov)) {
-          stop("length of initials for sigma does not match with the number",
-               " of coefficients")
-        }
-      } else if(!ept(check_form_0)) {
-        if(eit_cov) {
-          addcovsigma <- unlist(ept(ept(ept("init_argument"))))
-          addcovsigma_n <- ept(nparcov) - 1
-          if(addcovsigma_n == length(addcovsigma)) {
-            addcovsigma <- addcovsigma
-          } else if(length(addcovsigma) == 1) {
-            addcovsigma <- rep(addcovsigma, addcovsigma_n)
-          }
-          if(!is.null(ept(nparcov))) out_list[[name_parm]] <-addcovsigma
-        }
-      } 
-    } 
-  } 
-  
-  
-  ################################################
-  # class sd - sd
-  if (class == 'sd' & suffix == 'sd' & ept("sigma_dpar") != "sigma" |
-      class == 'sd' & suffix == 'sd' & ept("sigma_dpar") == "sigma"
-  ) {
-    name_parm <- paste0('sd', "_", ii)
-    suffix <- 'sd'
-    
-    if (dist == 'normal' |
-        dist == 'cauchy' |
-        dist == 'student_t' | dist == 'student_nu') {
-      allowed_init_options <- allowed_init_options_sd
-    } else if (dist == 'exponential') {
-      allowed_init_options <- allowed_init_options_rate
-    } else if (dist == 'gamma') {
-      allowed_init_options <- allowed_init_options_shape
-    } else {
-      allowed_init_options <- NULL
-    }
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    lowerbound <- 0
-    upperbound <- upperbound
-    
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
-      if (eit_cov)
-        addcovname <- 'cov'
-      else
-        addcovname <- NULL
+      returnmu_d2 <- "-rep_vector(4.0,N).*(a-b).*(c.*exp(c.*(Xm-e))+
+      d.*exp(d.*(Xm-e)))^2.0./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))^3.0+
+      rep_vector(2.0,N).*(a-b).*(c^2.0.*exp(c.*(Xm-e))+
+      d^2.0.*exp(d.*(Xm-e)))./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))^2.0"
       
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            evaluated_init <- rep(0, nrep_of_parms)
-          } else if (ept(name_initialsi) == 'ysd') {
-            eit <- gsub("ysd", paste0("ysd", resp_), ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ymad') {
-            eit <- gsub("ymad",
-                        paste0("ymad", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'lme_sd_a') {
-            eit <-
-              gsub("lme_sd_a",
-                   paste0("lme_sd_a", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-            
-            
-          } else if (ept(name_initialsi) == 'ysdxmin') {
-            eit <-
-              gsub("ysdxmin",
-                   paste0("ysdxmin", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysdxmax') {
-            eit <-
-              gsub("ysdxmax",
-                   paste0("ysdxmax", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysdxmid') {
-            eit <-
-              gsub("ysdxmid",
-                   paste0("ysdxmid", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysdxmidxmaxdiff') {
-            eit <-
-              gsub("ysdxmidxmaxdiff",
-                   paste0("ysdxmidxmaxdiff", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = length_args
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              evaluated_init <- ept(name_initialsi)
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
-      }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unlist() %>% unname()
-      tempv <- as.numeric(tempv)
-      if (ept(check_form_0_gr) & !is.null(ept(nparcov_gr))) {
-        if (length(tempv) < length(ept(nparcov_gr)) + 1)
-          tempv <- rep(tempv, length(ept(nparcov_gr)) + 1)
-      }
-      for (tempvi in 1:length(tempv)) {
-        if (tempv[tempvi] == 0)
-          tempv[tempvi] <- 1
-      }
-      if (dist == 'exponential')
-        tempv <- 1 / tempv
-      attr(tempv, 'names') <- paste0(parm, addcovname, ii)
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-  }
-  
-  
-  
-  
-  
-  ################################################
-  # class cor - cor
-  if (class == 'cor' & suffix == 'cor') {
-    name_parm <- paste0('L', "_", ii)
-    suffix <- 'cor'
-    
-    allowed_init_options <- NULL
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    if (!is.null(c_t_nabcri)) {
-      NC_dims <- c_t_nabcri
-    } else {
-      NC_dims <- nabcrei
-    }
-    
-    NC_cor_elements <- (NC_dims * (NC_dims - 1)) / 2
-    
-    lowerbound <- lowerbound
-    upperbound <- upperbound
-    
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
-      if (eit_cov)
-        addcovname <- 'cov'
-      else
-        addcovname <- NULL
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            L_elements     <- rep(0, NC_cor_elements)
-            evaluated_init <- create_cor_mat(NC_dims, L_elements)
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = NC_dims
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              if (length(ept(name_initialsi)) == 1) {
-                L_elements <- rep(ept(name_initialsi), NC_cor_elements)
-              } else if (length(ept(name_initialsi)) == NC_cor_elements) {
-                L_elements <- ept(name_initialsi)
-              } else {
-                stop(
-                  "length of correlation vector must be ",
-                  NC_cor_elements,
-                  ", but found ",
-                  length(ept(name_initialsi)),
-                  "\n ",
-                  " Please check the following init arg :",
-                  'gr_init_cor'
-                )
-              }
-              evaluated_init <- create_cor_mat(NC_dims, L_elements)
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
-      }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unname()
-      tempv <- tempv[[1]]
-      colnames(tempv) <-
-        rownames(tempv) <- paste0(abcrandomelements, addcovname, ii)
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-    
-    ####### add "r_init_z"
-    set_r_init_z <- TRUE
-    
-    if (!is.null(c_t_nabcri)) {
-      nabcrei_z <- c_t_nabcri
-    } else {
-      nabcrei_z <- nabcrei
-    }
-    
-    if (set_r_init_z) {
-      name_parm <- paste0('z', "_", addcovname, ii)
-      name_initialsi <- init_argument_z
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            evaluated_init <- matrix(0, nabcrei_z, N_J_all)
-          } else if (ept(name_initialsi) == 'prior') {
-            evaluated_init <-
-              matrix(rnorm(nabcrei_z * N_J_all, 0, 1), nabcrei_z, N_J_all)
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                is.matrix(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              if (is.numeric(ept(name_initialsi)) &
-                  length(ept(name_initialsi)) == 1) {
-                z_std <- ept(name_initialsi) %>% as.numeric()
-                if (z_std > 1 |
-                    z_std < 0)
-                  stop("sd for standardized matrix must be between 0 and 1")
-                evaluated_init <-
-                  matrix(rnorm(nabcrei_z * N_J_all, 0, z_std),
-                         nabcrei_z,
-                         N_J_all)
-              } else if (is.matrix(ept(name_initialsi))) {
-                evaluated_init <- ept(name_initialsi) %>% as.numeric()
-                if (nrow(evaluated_init) != nabcrei_z &
-                    nrow(evaluated_init) != N_J_all) {
-                  stop(
-                    "standardized matrix must have ",
-                    nabcrei_z,
-                    " rows and ",
-                    N_J_all,
-                    " columns"
-                  )
-                }
-              } else {
-                stop(
-                  "initails for standardized matrix must be a single",
-                  "\n",
-                  " value of sd between 0 and 1",
-                  "\n ",
-                  " standardized matrix must have ",
-                  nabcrei_z,
-                  " rows and ",
-                  N_J_all,
-                  "columns",
-                  "\n ",
-                  " Please check the following init arg :",
-                  'r_init_z'
-                )
-              }
-              evaluated_init <- evaluated_init
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        } else if (ept(name_initialsi) == 'NULL') {
-          evaluated_init <- NULL
-        }
-      }
-      if (!is.null(evaluated_init)) {
-        out_list[[name_parm]] <- evaluated_init
-      }
-    }
-  }
-  
-  
-  
-  
-  ################################################
-  # class Lrescor - mvr rescor
-  if (class == 'rescor' & suffix == 'rescor') {
-    name_parm <- paste0('Lrescor', "_", ii)
-    suffix <- 'rescor'
-    
-    allowed_init_options <- NULL
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    NC_dims         <- ept(nys) %>% as.numeric()
-    NC_cor_elements <- (NC_dims * (NC_dims - 1)) / 2
-    
-    lowerbound <- lowerbound
-    upperbound <- upperbound
-    
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            L_elements     <- rep(0, NC_cor_elements)
-            evaluated_init <- create_cor_mat(NC_dims, L_elements)
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = NC_dims
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              if (length(ept(name_initialsi)) == 1) {
-                L_elements <-
-                  rep(ept(name_initialsi), NC_cor_elements) %>% as.numeric()
-              } else if (length(ept(name_initialsi)) == NC_cor_elements) {
-                L_elements <- ept(name_initialsi) %>% as.numeric()
-              } else {
-                stop(
-                  "length of correlation vector must be ",
-                  NC_cor_elements,
-                  ", but found ",
-                  length(ept(name_initialsi)),
-                  "\n ",
-                  " Please check the following init arg :",
-                  'gr_init_cor'
-                )
-              }
-              evaluated_init <- create_cor_mat(NC_dims, L_elements)
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
-      }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unname()
-      tempv <- tempv[[1]]
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-  }
-  
-  ################################################
-  # class sigma
-  if (class == 'sigma' & suffix == 'sigma') {
-    name_parm <- paste0('sigma', resp_)
-    suffix <- 'sigma'
-    
-    if (dist == 'normal' |
-        dist == 'cauchy' |
-        dist == 'student_t' | dist == 'student_nu') {
-      allowed_init_options <- allowed_init_options_sd
-    } else if (dist == 'exponential') {
-      allowed_init_options <- allowed_init_options_rate
-    } else if (dist == 'gamma') {
-      allowed_init_options <- allowed_init_options_shape
-    } else {
-      allowed_init_options <- NULL
-    }
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    lowerbound <- 0
-    upperbound <- upperbound
-    
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            evaluated_init <- ept(name_initialsi) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysd') {
-            eit <- gsub("ysd", paste0("ysd", resp_), ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ymad') {
-            eit <- gsub("ymad",
-                        paste0("ymad", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'lme_rsd') {
-            eit <-
-              gsub("lme_rsd",
-                   paste0("lme_rsd", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'lm_rsd') {
-            eit <- gsub("lm_rsd",
-                        paste0("lm_rsd", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysdxmin') {
-            eit <-
-              gsub("ysdxmin",
-                   paste0("ysdxmin", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysdxmax') {
-            eit <-
-              gsub("ysdxmax",
-                   paste0("ysdxmax", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysdxmid') {
-            eit <-
-              gsub("ysdxmid",
-                   paste0("ysdxmid", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysdxmidxmaxdiff') {
-            eit <-
-              gsub("ysdxmidxmaxdiff",
-                   paste0("ysdxmidxmaxdiff", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = length_args
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              evaluated_init <- ept(name_initialsi) %>% as.numeric()
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
-      }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unlist() %>% unname()
-      tempv <- as.numeric(tempv)
-      for (tempvi in 1:length(tempv)) {
-        if (tempv[tempvi] == 0)
-          tempv[tempvi] <- 1
-      }
-      if (dist == 'exponential')
-        tempv <- 1 / tempv
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-    
-  }
-  
-  
-  # sigma modeling via dpar arguments that allows for inclusion of covariates
-  
-  if (class == '' &
-      dpar != "" & suffix == 'sigma' & !ept(check_sigma_form_0)) {
-    if (grepl("dpar_init_sigma", init_argument)) {
-      name_parm <- paste0('Intercept_sigma', resp_)
-      lowerbound <- 0
-      upperbound <- upperbound
-    }
-    
-    if (grepl("dpar_cov_init_sigma", init_argument)) {
-      name_parm <- paste0('b_sigma', resp_)
-      lowerbound <- lowerbound
-      upperbound <- upperbound
-    }
-    
-    name_parm <- paste0(name_parm, resp_)
-    
-    suffix <- 'sigma'
-    
-    
-    if (grepl('Intercept_sigma', name_parm)) {
-      if (dist == 'normal' |
-          dist == 'cauchy' |
-          dist == 'student_t' | dist == 'student_nu') {
-        allowed_init_options <- allowed_init_options_sd
-      } else if (dist == 'exponential') {
-        allowed_init_options <- allowed_init_options_rate
-      } else if (dist == 'gamma') {
-        allowed_init_options <- allowed_init_options_shape
-      } else {
-        allowed_init_options <- NULL
-      }
-    } else if (!grepl('Intercept_sigma', name_parm)) {
-      allowed_init_options <- NULL
-    }
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            evaluated_init <- ept(name_initialsi) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ysd') {
-            eit <- gsub("ysd", paste0("ysd", resp_), ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'ymad') {
-            eit <- gsub("ymad",
-                        paste0("ymad", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'lme_rsd') {
-            eit <-
-              gsub("lme_rsd",
-                   paste0("lme_rsd", resp_),
-                   ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'lm_rsd') {
-            eit <- gsub("lm_rsd",
-                        paste0("lm_rsd", resp_),
-                        ept(name_initialsi))
-            evaluated_init <- ept(eit) %>% as.numeric()
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = length_args
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              evaluated_init <- ept(name_initialsi) %>% as.numeric()
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
-      }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unlist() %>% unname()
-      tempv <- as.numeric(tempv)
-      if (grepl('Intercept_sigma', name_parm) &
-          tempv == 0)
-        tempv <- 1
-      if (dist == 'exponential')
-        tempv <- 1 / tempv
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-    
-  }
-  
-  
-  
-  if (class == '' &
-      dpar != "" & suffix == 'sigma' & ept(check_sigma_form_0)) {
-    name_parm <- paste0('b_sigma', resp_)
-    
-    suffix <- 'sigma'
-    
-    covplus1 <- ndparcov + 1
-    
-    allowed_init_options <- NULL
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    lowerbound <- lowerbound
-    upperbound <- upperbound
-    
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            evaluated_init <- rep(0, nrep_of_parms)
-          } else if (ept(name_initialsi) == 'lm_bsigma') {
-            if (ept(check_form_0)) {
-              lm_gsubby <- paste0("lm_bsigma", "_", nlpar, "_", "all", resp_)
-            }
-            if (!ept(check_form_0)) {
-              if (!eit_cov)
-                lm_gsubby <-
-                  paste0("lm_bsigma", "_", nlpar, "", "", resp_)
-              if (eit_cov)
-                lm_gsubby <-
-                  paste0("lm_bsigma", "_", nlpar, "_", "cov", resp_)
-            }
-            evaluated_init <- ept(lm_gsubby) %>% unname()
-          } else if (ept(name_initialsi) == 'coef_bsigma') {
-            evaluated_init <- ept('coef_bsigma')
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = length_args
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              evaluated_init <- ept(name_initialsi) %>% as.numeric()
-              if (length(evaluated_init) < covplus1)
-                evaluated_init <- rep(evaluated_init, covplus1)
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
-        }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
-      }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unlist() %>% unname()
-      tempv <- as.numeric(tempv)
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-    
-  }
-  
-  
-  # autocorrelation parameters (ar, ma, and arms)
-  if (class == 'ar' | class == 'ma' & suffix == 'acor') {
-    if (acorclass == 'arma') {
-      init_argument <- rep(init_argument, 2)
-      name_parm_s <- c("ar", "ma")
-    } else {
-      name_parm_s <- class
-    }
-    
-    name_parm_s <- paste0(name_parm_s, resp_)
-    
-    allowed_init_options <- NULL
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    lowerbound <- lowerbound
-    upperbound <- upperbound
-    
-    suffix <- 'acor'
-    
-    out_list <- list()
-    for (name_parm in name_parm_s) {
+      returnmu_d3 <- "rep_vector(12.0,N).*(a-b).*(c.*exp(c.*(Xm-e))+
+      d.*exp(d.*(Xm-e)))^3.0./(exp(c.*(Xm-e))+
+      exp(d.*(Xm-e)))^4.0-rep_vector(12.0,N).*(a-b).*(c.*exp(c.*(Xm-e))+
+      d.*exp(d.*(Xm-e))).*(c^2.0.*exp(c.*(Xm-e))+
+      d^2.0.*exp(d.*(Xm-e)))./(exp(c.*(Xm-e))+
+      exp(d.*(Xm-e)))^3.0+rep_vector(2.0,N).*(a-b).*(c^3.0.*exp(c.*(Xm-e))+
+      d^3.0.*exp(d.*(Xm-e)))./(exp(c.*(Xm-e))+exp(d.*(Xm-e)))^2.0"
       
-      if(grepl("ar", name_parm)) nrep_of_parms <- nrep_of_parms_p
-      if(grepl("ma", name_parm)) nrep_of_parms <- nrep_of_parms_q
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'pb') {
+    
+    # a - asymtote
+    # b - size at theta
+    # c - s0
+    # d - s1
+    # e - time (theta)
+    # f - gamma
+    
+    if (select_model == 'pb2') {
+      funstring <- "a-((a-b)./(((0.5*exp((f.*c).*(Xm-e)))+
+      (0.5*exp((f.*d).*(Xm-e))))^(1.0./f)))"
+      if (utils::packageVersion('rstan') < "2.26")
+        funstring <-
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      returnmu_d1 <-
+        "(a-b).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e)))./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e))))"
       
-      list_collect <- list()
-      start_cnt <- 0
-      for (name_initialsi in init_argument) {
-        if (grepl("_cov", name_initialsi))
-          eit_cov <- TRUE
-        else
-          eit_cov <- FALSE
-        start_cnt <- start_cnt + 1
-        if (ept(name_initialsi) != 'NULL') {
-          if (ept(name_initialsi) != 'random') {
-            if (ept(name_initialsi) == '0') {
-              evaluated_init <- rep(0, nrep_of_parms)
-            } else if (ept(name_initialsi) == 'prior') {
-              stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-              stanvname_cnt <- 0
-              for (stanvname_i in stanvname_) {
-                stanvname_cnt <- stanvname_cnt + 1
-                stanvname_cnt_name <-
-                  stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-                assign(stanvname_cnt_name,
-                       stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-                length_args <-
-                  length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              }
-              evaluated_init <-
-                eval_prior_based_init(
-                  dist = dist,
-                  class = class,
-                  lowerbound = lowerbound,
-                  upperbound = upperbound,
-                  length_args = length_args
-                )
-            } else {
-              check_evalation_of_numeric_init_obj(
-                ept(name_initialsi),
-                check = 'args',
-                x = name_initialsi,
-                pname_ = 'xxx',
-                dist = 'dis',
-                nlpar = parm,
-                class = class,
-                allowed_init_options = allowed_init_options,
-                splitmvar_w2 = splitmvar_w2
-              )
-              name_initialsi <- ept(name_initialsi)
-              if (is.numeric(ept(name_initialsi)) |
-                  !is.null(ept(name_initialsi))) {
-                evaluated_init <- ept(name_initialsi) %>% as.numeric()
-                if (evaluated_init > 1 |
-                    evaluated_init < -1)
-                  stop("initials for autocorrelation must be between -1 and 1")
-              }
-            }
-          } else if (ept(name_initialsi) == 'random') {
-            evaluated_init <- NULL
-          }
-        } else if (ept(name_initialsi) == 'NULL') {
-          evaluated_init <- NULL
+      returnmu_d2 <-
+        "-(a-b).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e)))^2.0./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f^2.0.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^2.0)+
+      (a-b).*(rep_vector(0.5,N).*f^2.0.*c^2.0.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f^2.0.*d^2.0.*exp(f.*d.*(Xm-e)))./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e))))-
+      (a-b).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e)))^2.0./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^2.0)"
+      
+      returnmu_d3 <-
+        "(a-b).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e)))^
+      3.0./((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f^3.0.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^3.0)-
+      rep_vector(3.0,N).*(a-b).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e))).*(rep_vector(0.5,N).*f^
+      2.0.*c^2.0.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f^2.0.*d^2.0.*exp(f.*d.*(Xm-e)))./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f^2.0.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^2.0)+
+      rep_vector(3.0,N).*(a-b).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e)))^3.0./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^(rep_vector(1.0,N)./f).*f^
+      2.0.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^3.0)+
+      (a-b).*(rep_vector(0.5,N).*f^3.0.*c^
+      3.0.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f^3.0.*d^3.0.*exp(f.*d.*(Xm-e)))./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e))))-
+      rep_vector(3.0,N).*(a-b).*(rep_vector(0.5,N).*f^
+      2.0.*c^2.0.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f^2.0.*d^
+      2.0.*exp(f.*d.*(Xm-e))).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e)))./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^2.0)+
+      rep_vector(2.0,N).*(a-b).*(rep_vector(0.5,N).*f.*c.*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*f.*d.*exp(f.*d.*(Xm-e)))^3.0./
+      ((rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^
+      (rep_vector(1.0,N)./f).*f.*(rep_vector(0.5,N).*exp(f.*c.*(Xm-e))+
+      rep_vector(0.5,N).*exp(f.*d.*(Xm-e)))^3.0)"
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d1, ";")
+    } # if(select_model == 'pb2') {
+    
+    
+    # a - asymtote
+    # b - size at theta
+    # c - s0
+    # d - s1
+    # e - time (theta)
+    # f - gamma
+    
+    if (select_model == 'pb3') {
+      funstring <- "a-((4.0*(a-b))./((exp(f.*(Xm-e))+
+      exp(c.*(Xm-e))).*(1.0+exp(d.*(Xm-e)))))"
+      if (utils::packageVersion('rstan') < "2.26")
+        funstring <- gsub(".*", " .* ",
+                          funstring,
+                          fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      returnmu_d1 <-
+        "rep_vector(4.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      c.*exp(c.*(Xm-e)))./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      2.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))+
+      rep_vector(4.0,N).*(a-b).*d.*exp(d.*(Xm-e))./
+      ((exp(f.*(Xm-e))+exp(c.*(Xm-e))).*(rep_vector(1.0,N)+
+      exp(d.*(Xm-e)))^2.0)"
+      
+      returnmu_d2 <-
+        "-rep_vector(8.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      c.*exp(c.*(Xm-e)))^2.0./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      3.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))-
+      rep_vector(8.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      c.*exp(c.*(Xm-e))).*d.*exp(d.*(Xm-e))./((exp(f.*(Xm-e))+
+      exp(c.*(Xm-e)))^2.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^2.0)+
+      rep_vector(4.0,N).*(a-b).*(f^2.0.*exp(f.*(Xm-e))+c^2.0.*exp(c.*(Xm-e)))./
+      ((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^2.0.*(rep_vector(1.0,N)+
+      exp(d.*(Xm-e))))-rep_vector(8.0,N).*(a-b).*d^
+      2.0.*exp(d.*(Xm-e))^2.0./((exp(f.*(Xm-e))+
+      exp(c.*(Xm-e))).*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^3.0)+
+      rep_vector(4.0,N).*(a-b).*d^2.0.*exp(d.*(Xm-e))./((exp(f.*(Xm-e))+
+      exp(c.*(Xm-e))).*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^2.0)"
+      
+      returnmu_d3 <-
+        "rep_vector(24.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      c.*exp(c.*(Xm-e)))^3.0./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      4.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))+
+      rep_vector(24.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+c.*exp(c.*(Xm-e)))^
+      2.0.*d.*exp(d.*(Xm-e))./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      3.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^2.0)-
+      rep_vector(24.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      c.*exp(c.*(Xm-e))).*(f^2.0.*exp(f.*(Xm-e))+c^2.0.*exp(c.*(Xm-e)))./
+      ((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      3.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))+
+      rep_vector(24.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      c.*exp(c.*(Xm-e))).*d^2.0.*exp(d.*(Xm-e))^
+      2.0./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      2.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^3.0)-
+      rep_vector(12.0,N).*(a-b).*(f^
+      2.0.*exp(f.*(Xm-e))+c^2.0.*exp(c.*(Xm-e))).*d.*exp(d.*(Xm-e))./
+      ((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      2.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^2.0)-
+      rep_vector(12.0,N).*(a-b).*(f.*exp(f.*(Xm-e))+
+      c.*exp(c.*(Xm-e))).*d^2.0.*exp(d.*(Xm-e))./((exp(f.*(Xm-e))+
+      exp(c.*(Xm-e)))^2.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^2.0)+
+      rep_vector(4.0,N).*(a-b).*(f^3.0.*exp(f.*(Xm-e))+c^
+      3.0.*exp(c.*(Xm-e)))./((exp(f.*(Xm-e))+exp(c.*(Xm-e)))^
+      2.0.*(rep_vector(1.0,N)+exp(d.*(Xm-e))))+
+      rep_vector(24.0,N).*(a-b).*d^3.0.*exp(d.*(Xm-e))^3.0./
+      ((exp(f.*(Xm-e))+exp(c.*(Xm-e))).*(rep_vector(1.0,N)+
+      exp(d.*(Xm-e)))^4.0)-rep_vector(24.0,N).*(a-b).*d^3.0.*exp(d.*(Xm-e))^
+      2.0./((exp(f.*(Xm-e))+
+      exp(c.*(Xm-e))).*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^3.0)+
+      rep_vector(4.0,N).*(a-b).*d^3.0.*exp(d.*(Xm-e))./
+      ((exp(f.*(Xm-e))+exp(c.*(Xm-e))).*(rep_vector(1.0,N)+exp(d.*(Xm-e)))^2.0)"
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'pb3') {
+    
+    
+    
+    # a - asymptote
+    # b - rate constant
+    # c - time at midpoint
+    
+    if (select_model == 'logistic1') {
+      funstring <- "a./(1+exp(-b.*(Xm-c)))"
+      if (utils::packageVersion('rstan') < "2.26")
+        funstring <-
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      returnmu_d1 <-
+        "a.*b.*exp(-b.*(Xm - c))./(1 + exp(-b.*(Xm - c)))^2.0"
+      
+      returnmu_d2 <-
+        "rep_vector(2.0,N).*a.*b^2.0.*exp(-b.*(Xm - c))^2.0./
+        (1 + exp(-b.*(Xm - c)))^3.0 -
+        a.*b^2.0.*exp(-b.*(Xm - c))./
+        (1 + exp(-b.*(Xm - c)))^2.0"
+      
+      returnmu_d3 <-
+        "rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^3.0./
+        (1 + exp(-b.*(Xm - c)))^4.0 -
+        rep_vector(6.0,N).*a.*b^3.0.*exp(-b.*(Xm - c))^2.0./
+        (1 + exp(-b.*(Xm - c)))^3.0 +
+        a.*b^3.0.*exp(-b.*(Xm - c))./
+        (1 + exp(-b.*(Xm - c)))^2.0"
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'logistic1') {
+    
+    
+    
+    # a - asymtote
+    # b - size at theta
+    # c - s0
+    # d - theta1
+    # e - s1
+    # f - theta2
+    
+    # wolfram suggests -> (b/(1+exp(-c*(x-d)))) + ((a-b)/(1+exp(-e*(x-f))))
+    # maple  -> ((a-b)/(1+exp(-e*(x-f)))) + (b/(1+exp(-c*(x-d))))
+    
+    # wolfram suggests
+    # (a - b)/(exp(-e (x - f)) + 1) + b/(exp(-c (x - d)) + 1)
+    
+    if (select_model == 'logistic2') {
+      funstring <-
+        "((a-b)./(1+exp(-e.*(Xm-f)))) + (b./(1+exp(-c.*(Xm-d))))"
+      if (utils::packageVersion('rstan') < "2.26")
+        funstring <-
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      returnmu_d1 <-
+        "(e .* (a - b) .* exp(e .*(f + Xm)))./(exp(e .*f) + 
+      exp(e .*Xm))^2.0 + (b .*c .* exp(c.* (d + Xm)))./(exp(c .*d) + 
+      exp(c.* Xm))^2.0"
+      
+      
+      returnmu_d2 <-
+        "(a - b) .* ((2.0 .* e^2.0 .* exp(-2.0 .* e .* (Xm - f))) ./
+      (exp(e .*(-(Xm - f))) + 1.0)^3.0- (e^2.0 .* exp(e .* (-(Xm - f))))./
+      (exp(e .* (-(Xm - f))) + 1.0)^2.0) + b .* ((2.0 .* c^2.0 .* 
+      exp(-2.0 .* c .* (Xm - d)))./(e^(-c .* (Xm - d)) + 1.0)^3.0 - 
+      (c^2.0 .* exp(-c .*(Xm - d)))./(exp(-c .* (Xm - d)) + 1.0)^2.0)"
+      
+      
+      returnmu_d3 <-
+        "(a - b) .* ((e^3.0 .* exp(e .*(-(Xm - f))))./
+      (exp(e .* (-(Xm - f))) + 1.0)^2.0 - (6.0 .* e^3.0 .* 
+      exp(-2.0 .* e .* (Xm - f)))./(exp(e .* (-(Xm - f))) + 1.0)^3.0 + 
+      (6.0 .* e^3.0 .* exp(-3.0 .* e .* (Xm - f)))./
+      (exp(e .* (-(Xm - f))) + 1.0)^4.0.0) + b .* 
+      ((c^3.0 .* exp(-c .* (Xm - d)))./(exp(-c .* (Xm - d)) + 1.0)^2.0 - 
+      (6.0 .* c^3.0 .* exp(-2.0 .* c .* (Xm - d)))./
+      (exp(-c .* (Xm - d)) + 1.0)^3.0 + (6.0 .* c^3.0 .* 
+      exp(-3.0 .* c (Xm - d)))./(exp(-c .* (Xm - d)) + 1.0)^4.0)"
+      
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'logistic2') {
+    
+    
+    
+    # a - size at infancy
+    # b - rate at infancy
+    # c - time at infancy
+    # d - size at preadolescence
+    # e - rate at preadolescence
+    # f - time at preadolescence
+    # g - size at adolescence
+    # h - rate at adolescence
+    # i - time at adolescence
+    
+    if (select_model == 'logistic3') {
+      funstring <-
+        "(a ./ (1 + exp(-b .* (Xm - c)))) +
+        (d ./ (1 + exp(-e .* (Xm - f)))) +
+        (g ./ (1 + exp(-h .* (Xm - i))))"
+      if (utils::packageVersion('rstan') < "2.26")
+        funstring <-
+          gsub(".*", " .* ", funstring, fixed = T)
+      returnmu    <- paste0("return ", "(",  funstring, ")")
+      returnmu_d0 <- funstring
+      
+      
+      returnmu_d1 <-
+        "(a .* b .* exp(-b .* (Xm - c)))./(exp(-b .* (Xm - c)) + 1)^2.0 +
+        (d .* e .* exp(-e .* (Xm - f)))./(exp(-e .* (Xm - f)) + 1)^2.0 +
+        (g .* h .* exp(-h .* (Xm - i)))./(exp(-h .* (Xm - i)) + 1)^2.0"
+      
+      returnmu_d2 <-
+        "(a .* ((rep_vector(2.0,N) .* b^2.0 .*
+                  exp(-rep_vector(2.0,N) .* b .* (Xm - c))) ./
+                 (exp(-b .* (Xm - c)) + 1)^3.0 -
+                 (b^2.0 .* exp(-b .* (Xm - c))) ./
+                 (exp(-b .* (Xm - c)) + 1.0)^2.0)) +
+        (d .* ((rep_vector(2.0,N) .* e^2.0 .*
+                  exp(-rep_vector(2.0,N) .* e .* (Xm - f))) ./
+                 (exp(-e .* (Xm - f)) + 1)^3.0 -
+                 (e^2.0 .* exp(-e .* (Xm - f))) ./
+                 (exp(-e .* (Xm - f)) + 1.0)^2.0)) +
+        (g .* ((rep_vector(2.0,N) .* h^2.0 .*
+                  exp(-rep_vector(2.0,N) .* h .* (Xm - i))) ./
+                 (exp(-h .* (Xm - i)) + 1)^3.0 -
+                 (h^2.0 .* exp(-h .* (Xm - i))) ./
+                 (exp(-h .* (Xm - i)) + 1.0)^2.0)) "
+      
+      returnmu_d3 <- returnmu_d2
+      
+      
+      
+      
+      returnmu_d1 <- paste0(returnmu_d1, ";")
+      returnmu_d2 <- paste0(returnmu_d2, ";")
+      returnmu_d3 <- paste0(returnmu_d3, ";")
+    } # if(select_model == 'logistic3') {
+    
+    
+    
+   
+    
+    
+    insert_getX_name <-
+      paste0("  vector[N] Xm = ", getxname, "(Xp);")
+    start_fun <-
+      paste0(
+        "\nvector ",
+        spfncname,
+        "(vector ",
+        vector_X_name,
+        ", ",
+        fullabcsnames_v,
+        ") {" ,
+        "\n",
+        "  int N = num_elements(Xp);",
+        "\n",
+        insert_getX_name,
+        collapse = " "
+      )
+    
+    start_fun <- gsub(",)" , ")" , start_fun, fixed = TRUE)
+    endof_fun <- paste0("\n    ", returnmu,
+                        ";", "\n  } // end of spline function", sep = " ")
+    
+    
+    rcsfun <- paste(start_fun, endof_fun)
+    rcsfun_raw <- rcsfun
+    
+    # Create function d0
+    fnameout <- paste0(spfncname, "_", "d0")
+    
+    spl_fun_ford <-
+      paste0(fnameout,
+             "(vector ",
+             vector_X_name,
+             ", ",
+             fullabcsnames_v,
+             ")")
+    spl_fun_ford <- gsub("vector", "", spl_fun_ford, fixed = T)
+    spl_fun_ford <- gsub("[[:space:]]", "", spl_fun_ford)
+    spl_fun_ford <- gsub(",)", ")", spl_fun_ford, fixed = T)
+    
+    
+    spl_d0 <- create_internal_function_nonsitar(
+      y = y,
+      function_str = rcsfun,
+      fname = spfncname,
+      fnameout = fnameout,
+      returnmu = returnmu,
+      xfunsi = xfunsi,
+      yfunsi = yfunsi,
+      setxoffset = setxoffset,
+      gsub_out_unscaled = NULL,
+      spl_fun_ford = spl_fun_ford,
+      body = returnmu_d0,
+      decomp = decomp,
+      fixedsi = fixedsi
+    )
+    
+    # Create function d1
+    fnameout <- paste0(spfncname, "_", "d1")
+    spl_d1 <- create_internal_function_nonsitar(
+      y = y,
+      function_str = rcsfun,
+      fname = spfncname,
+      fnameout = fnameout,
+      returnmu = returnmu,
+      xfunsi = xfunsi,
+      yfunsi = yfunsi,
+      setxoffset = setxoffset,
+      # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      spl_fun_ford = spl_fun_ford,
+      body = returnmu_d1,
+      decomp = decomp,
+      fixedsi = fixedsi
+    )
+    
+    # Create function d2
+    fnameout <- paste0(spfncname, "_", "d2")
+    spl_d2 <- create_internal_function_nonsitar(
+      y = y,
+      function_str = rcsfun,
+      fname = spfncname,
+      fnameout = fnameout,
+      returnmu = returnmu,
+      xfunsi = xfunsi,
+      yfunsi = yfunsi,
+      setxoffset = setxoffset,
+      # setxoffset setxoffset_d0_noqr
+      gsub_out_unscaled = NULL,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      spl_fun_ford = spl_fun_ford,
+      body = returnmu_d2,
+      decomp = decomp,
+      fixedsi = fixedsi
+    )
+    
+    
+    rcsfunmultadd <- NULL
+    
+    if (utils::packageVersion('rstan') > "2.26" & is.null(decomp)) {
+      rcsfun <- paste0(getx_fun,
+                       rcsfun,
+                       rcsfunmultadd,
+                       spl_d0,
+                       spl_d1,
+                       spl_d2,
+                       sep = "\n")
+    }
+    
+    if (utils::packageVersion('rstan') > "2.26" & !is.null(decomp)) {
+      if (decomp == 'QR') {
+        if (add_funmats) {
+          rcsfun <- paste0(getx_fun,
+                           funmats,
+                           rcsfun,
+                           rcsfunmultadd,
+                           spl_d0,
+                           spl_d1,
+                           spl_d2,
+                           sep = "\n")
+        } else if (!add_funmats) {
+          rcsfun <- paste0(getx_fun,
+                           rcsfun,
+                           rcsfunmultadd,
+                           spl_d0,
+                           spl_d1,
+                           spl_d2,
+                           sep = "\n")
         }
-        list_collect[[name_initialsi]] <- evaluated_init
-      }
-      if (!is.null(list_collect[[name_initialsi]])) {
-        tempv <- list_collect %>% unlist() %>% unname()
-        tempv <- as.numeric(tempv)
-        if(length(tempv) == 1 & nrep_of_parms == 1) {
-          tempv <- tempv
-        } else if(length(tempv) == 1 & nrep_of_parms > 1) {
-          tempv <- rep(tempv, nrep_of_parms)
-        } else if(length(tempv) != nrep_of_parms) {
-          stop("Length of initials should be either 1 of equal to dims")
-        }
-        out_list[[name_parm]] <- tempv
-      } else {
-        out_list[[name_parm]] <- NULL
       }
     }
-  }
+    
+    
+    
+  } # if(select_model != 'sitar') { # pb models
   
   
-  # autocorrelation parameters (unst) -> similar to cor / lrescor
   
-  if (class == 'Lcortime' & suffix == 'acor') {
-    
-    # name_parm <- paste0('Cortime', "_", ii)
-    
-    name_parm_s <- class
-    name_parm_s <- paste0(name_parm_s, resp_)
-    
-    name_parm <- name_parm_s # paste0('Lcortime', "_", ii)
-    
-    suffix <- 'acor'
-    
-    allowed_init_options <- NULL
-    
-    if(!exists('allowed_init_options')) allowed_init_options <- NULL
-    
-    NC_dims         <- ept(cortimeNlags) %>% as.numeric()
-    NC_cor_elements <- (NC_dims * (NC_dims - 1)) / 2
-    
-    lowerbound <- lowerbound
-    upperbound <- upperbound
-    
-    out_list <- list_collect <- list()
-    start_cnt <- 0
-    for (name_initialsi in init_argument) {
-      if (grepl("_cov", name_initialsi))
-        eit_cov <- TRUE
-      else
-        eit_cov <- FALSE
-      start_cnt <- start_cnt + 1
-      if (ept(name_initialsi) != 'NULL') {
-        if (ept(name_initialsi) != 'random') {
-          if (ept(name_initialsi) == '0') {
-            L_elements     <- rep(0, NC_cor_elements)
-            evaluated_init <- create_cor_mat(NC_dims, L_elements)
-          } else if (ept(name_initialsi) == 'prior') {
-            stanvname_ <- unique(unlist(lapply(stanvars_datazz, names)))
-            stanvname_cnt <- 0
-            for (stanvname_i in stanvname_) {
-              stanvname_cnt <- stanvname_cnt + 1
-              stanvname_cnt_name <-
-                stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$name
-              assign(stanvname_cnt_name,
-                     stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-              length_args <-
-                length(stanvars_datazz[[stanvname_cnt]][[stanvname_i]]$sdata)
-            }
-            evaluated_init <-
-              eval_prior_based_init(
-                dist = dist,
-                class = class,
-                lowerbound = lowerbound,
-                upperbound = upperbound,
-                length_args = NC_dims
-              )
-          } else {
-            check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
-              check = 'args',
-              x = name_initialsi,
-              pname_ = 'xxx',
-              dist = 'dis',
-              nlpar = parm,
-              class = class,
-              allowed_init_options = allowed_init_options,
-              splitmvar_w2 = splitmvar_w2
-            )
-            name_initialsi <- ept(name_initialsi)
-            if (is.numeric(ept(name_initialsi)) |
-                !is.null(ept(name_initialsi))) {
-              if (length(ept(name_initialsi)) == 1) {
-                L_elements <-
-                  rep(ept(name_initialsi), NC_cor_elements) %>% as.numeric()
-              } else if (length(ept(name_initialsi)) == NC_cor_elements) {
-                L_elements <- ept(name_initialsi) %>% as.numeric()
-              } else {
-                stop(
-                  "length of correlation vector must be ",
-                  NC_cor_elements,
-                  ", but found ",
-                  length(ept(name_initialsi)),
-                  "\n ",
-                  " Please check the following init arg :",
-                  'gr_init_cor'
-                )
-              }
-              evaluated_init <- create_cor_mat(NC_dims, L_elements)
-            }
-          }
-        } else if (ept(name_initialsi) == 'random') {
-          evaluated_init <- NULL
+  
+  
+  #################
+  extract_r_fun_from_scode <-
+    function(xstaring, what = NULL, decomp, spfncname) {
+      xstaring <- gsub("[[:space:]]" , "", xstaring)
+      xstaring <- gsub(";" , ";\n", xstaring)
+      xstaring <- gsub("\\{" , "{\n", xstaring)
+      xstaring <- gsub("}" , "}\n", xstaring)
+      xstaring <- gsub("vector[N]" , "", xstaring, fixed = T)
+      xstaring <- gsub("vector" , "", xstaring, fixed = T)
+      xstaring <- gsub("int" , "", xstaring, fixed = T)
+      xstaring <- gsub("real" , "", xstaring, fixed = T)
+      xstaring <- gsub(paste0("jp1;", "\n"), "", xstaring, fixed = T)
+      xstaring <- gsub("rep_vector" , "rep", xstaring, fixed = T)
+      xstaring <- gsub("rep_" , "rep", xstaring, fixed = T)
+      xstaring <-
+        gsub(
+          "Xx[ia,ja]=(X[ia]-knots[ja]>0?X[ia]-knots[ja]:0);" ,
+          "Xx[ia,ja]=ifelse(X[ia]-knots[ja]>0,X[ia]-knots[ja],0);",
+          xstaring,
+          fixed = T
+        )
+      xstaring <- gsub("num_elements" , "length", xstaring, fixed = T)
+      xstaring <-
+        gsub("matrix[N,nknots-1]Spl" ,
+             "Spl=matrix(0,N,nknots-1)",
+             xstaring,
+             fixed = T)
+      xstaring <-
+        gsub("matrix[nknots-1,N]rcs" ,
+             "rcs=matrix(0,nknots-1,N)",
+             xstaring,
+             fixed = T)
+      xstaring <-
+        gsub("matrix[N,nknots]Xx" ,
+             "Xx=matrix(0,N, nknots)",
+             xstaring,
+             fixed = T)
+      xstaring <-
+        gsub("for(iain1:N)" , "for(ia in 1:N)", xstaring, fixed = T)
+      xstaring <- gsub("for(jain1:nknots)" ,
+                       "for(ja in 1:nknots)",
+                       xstaring,
+                       fixed = T)
+      xstaring <- gsub(".*" , "*", xstaring, fixed = T)
+      xstaring <- gsub("./" , "/", xstaring, fixed = T)
+      funame__ <- strsplit(xstaring, "\\(")[[1]][1]
+      xstaring <- gsub(funame__ , paste0(funame__, "<-function"),
+                       xstaring, fixed = T)
+      xstaring <- sub("//[^//]+$", "", xstaring)
+      # To remove stanadlon ";
+      xstaring <-
+        gsub(paste0(";\n;\n", ""), ";\n", xstaring, fixed = T)
+      xstaring <- gsub("[nknots]knots" , "knots", xstaring, fixed = T)
+      
+      if (!is.null(what)) {
+        if (what == 'getX') {
+          xstaring <- gsub(paste0("x;", "\n"), "", xstaring)
         }
-      } else if (ept(name_initialsi) == 'NULL') {
-        evaluated_init <- NULL
+        if (what == 'getKnots') {
+          xstaring <- gsub("\\[", "c\\(", xstaring)
+          xstaring <- gsub("\\]'", "\\)", xstaring)
+        }
       }
-      list_collect[[name_initialsi]] <- evaluated_init
-    }
-    
-    if (!is.null(list_collect[[name_initialsi]])) {
-      tempv <- list_collect %>% unname()
-      tempv <- tempv[[1]]
-      out_list[[name_parm]] <- tempv
-    } else {
-      out_list[[name_parm]] <- NULL
-    }
-  }
-  
-  
-  
-  # standardized group level effects (part of centred parametrisation)
-  
-  if (any(grepl("_init_sd", init_argument)) &
-      gr_init_cor == "NULL") {
-    nabcrei_z <- 1
-    ####### add "r_init_z"
-    set_r_init_z <- TRUE
-    if (set_r_init_z) {
-      if (!is.null(ept(nparcov_gr))) {
-        # ept(check_form_0_gr) &
-        nabcrei_z <- nabcrei_z * ept(nparcov_gr)
-      }
-      for (name_initialsi in init_argument_z) {
-        name_parm <-
-          paste0('z',
-                 "_",
-                 strsplit(init_argument, "_")[[1]][1],
+      
+      if (!is.null(decomp)) {
+        if (decomp == 'QR') {
+          xstaring <-
+            gsub(paste0("matrix[N,QK]XQ;", "\n") , "", xstaring, fixed = T)
+          xstaring <- gsub("matrix[N,QK]" , "", xstaring, fixed = T)
+          xstaring <-
+            gsub(paste0("matrix[QK,QK]", XR_inv_name, ";", "\n") ,
                  "",
-                 addcovname,
-                 ii)
-        if (ept(name_initialsi) != 'NULL') {
-          if (ept(name_initialsi) != 'random') {
-            if (ept(name_initialsi) == '0') {
-              evaluated_init <- matrix(0, nabcrei_z, N_J_all)
-            } else if (ept(name_initialsi) == 'prior') {
-              evaluated_init <-
-                matrix(rnorm(nabcrei_z * N_J_all, 0, 1),
-                       nabcrei_z,
-                       N_J_all)
-            } else {
-              check_evalation_of_numeric_init_obj(
-                ept(name_initialsi),
-                check = 'args',
-                x = name_initialsi,
-                pname_ = 'xxx',
-                dist = 'dis',
-                nlpar = parm,
-                class = class,
-                allowed_init_options = allowed_init_options,
-                splitmvar_w2 = splitmvar_w2
-              )
-              name_initialsi <- ept(name_initialsi)
-              if (is.numeric(ept(name_initialsi)) |
-                  is.matrix(ept(name_initialsi)) |
-                  !is.null(ept(name_initialsi))) {
-                if (is.numeric(ept(name_initialsi)) &
-                    length(ept(name_initialsi)) == 1) {
-                  z_std <- ept(name_initialsi) %>% as.numeric()
-                  if (z_std > 1 |
-                      z_std < 0)
-                    stop("sd for standardized matrix must be between 0 and 1")
-                  evaluated_init <-
-                    matrix(rnorm(nabcrei_z * N_J_all, 0, z_std),
-                           nabcrei_z,
-                           N_J_all)
-                } else if (is.matrix(ept(name_initialsi))) {
-                  evaluated_init <- ept(name_initialsi) %>% as.numeric()
-                  if (nrow(evaluated_init) != nabcrei_z &
-                      nrow(evaluated_init) != N_J_all) {
-                    stop(
-                      "standardized matrix must have ",
-                      nabcrei_z,
-                      " rows and ",
-                      N_J_all,
-                      " columns"
-                    )
-                  }
-                } else {
-                  stop(
-                    "initails for standardized matrix must be a",
-                    "\n",
-                    " single value of sd between 0 and 1",
-                    "\n ",
-                    " standardized matrix must have ",
-                    nabcrei_z,
-                    " rows and ",
-                    N_J_all,
-                    "columns",
-                    "\n ",
-                    " Please check the following init arg :",
-                    'r_init_z'
-                  )
-                }
-                evaluated_init <- evaluated_init
-              }
-            }
-          } else if (ept(name_initialsi) == 'random') {
-            evaluated_init <- NULL
-          } else if (ept(name_initialsi) == 'NULL') {
-            evaluated_init <- NULL
-          }
-        }
-        if (!is.null(evaluated_init)) {
-          out_list[[name_parm]] <- evaluated_init
+                 xstaring,
+                 fixed = T)
+          xstaring <-
+            gsub(paste0("matrix[QK,QK]XR;", "\n"), "", xstaring, fixed = T)
+          xstaring <- gsub("qr_thin_Q" , "qr", xstaring, fixed = T)
+          xstaring <- gsub("qr_thin_R" , "qr.R", xstaring, fixed = T)
+          xstaring <-
+            gsub(XR_inv_name,
+                 "=inverse" ,
+                 XR_inv_name,
+                 "=chol2inv",
+                 xstaring,
+                 fixed = T)
         }
       }
-    }
+      
+      xstaring
+    } # extract_r_fun_from_scode
+  
+  
+  rcsfun_raw_str   <- extract_r_fun_from_scode(rcsfun_raw,
+                                               what = NULL,
+                                               decomp = decomp,
+                                               spfncname = spfncname)
+  spl_d0_str   <- extract_r_fun_from_scode(spl_d0,
+                                           what = NULL,
+                                           decomp = decomp,
+                                           spfncname = spfncname)
+  spl_d1_str   <- extract_r_fun_from_scode(spl_d1,
+                                           what = NULL,
+                                           decomp = decomp,
+                                           spfncname = spfncname)
+  spl_d2_str   <- extract_r_fun_from_scode(spl_d2,
+                                           what = NULL,
+                                           decomp = decomp,
+                                           spfncname = spfncname)
+  getX_str     <- extract_r_fun_from_scode(
+    getx_fun_raw,
+    what = 'getX',
+    decomp = decomp,
+    spfncname = spfncname
+  )
+  getknots_str <- NULL
+  if (select_model == 'sitar' | select_model == 'rcs') {
+    getknots_str <- extract_r_fun_from_scode(
+      getknots_fun_raw,
+      what = 'getKnots',
+      decomp = decomp,
+      spfncname = spfncname
+    )
   }
   
-  if (!exists('out_list'))
-    out_list <- NULL
+  all_raw_str <- c(rcsfun_raw_str,
+                   spl_d0_str,
+                   spl_d1_str,
+                   spl_d2_str,
+                   getX_str,
+                   getknots_str)
   
-  out_list
+  
+  if (!add_rcsfunmatqrinv_genquant) {
+    out <- list(rcsfun = rcsfun, r_funs = all_raw_str)
+  } else if (add_rcsfunmatqrinv_genquant) {
+    out <- list(rcsfun = rcsfun,
+                r_funs = all_raw_str,
+                gq_funs = rcsfunmatqrinv_genquant)
+  }
+  
+  out
 }
+
+
+
+
 
 

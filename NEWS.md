@@ -1,11 +1,22 @@
 # bsitar (development version)
 
+### Breaking changes
+
+A major rewrite of some internal functions requires re-fitting of previously saved model objects for the post-processing work properly. No changes are required from the user's perspective, except that the model should be refitted. TThe rewrite of the core functions aligns with the future expansion of the package to fit location-scale models.
+
+The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
+
+Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the \pkg{marginaleffects} package.
+
+For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
+
 
 ### Bugfixes
 
- The ``function block`` for multivariate model did not render properly.
- 
- The ``random`` initial values for the residual correlation parameter of multivariate model resulted in empty list warning. 
+The function block for the multivariate model did not render properly.
+
+The random initial values for the residual correlation parameter of the multivariate model resulted in an empty list warning.
+
 
 # bsitar 0.3.2
 

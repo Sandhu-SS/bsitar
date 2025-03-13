@@ -19,6 +19,7 @@
 #'  
 #' @return An object of class \code{bgmfit} with the specified fit criteria added.
 #' 
+#' @rdname add_model_criterion
 #' @export
 #' 
 #' @seealso [brms::add_loo], [brms::add_ic()], [brms::add_waic()],
@@ -125,21 +126,40 @@ add_model_criterion.bgmfit <-
     
     model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
-    o <- post_processing_checks(model = model,
-                                xcall = match.call(),
-                                resp = resp,
-                                envir = envir,
-                                deriv = deriv, 
-                                all = FALSE,
-                                verbose = verbose)
+    setxcall_   <- match.call()
+    post_processing_checks_args <- list()
+    post_processing_checks_args[['model']]    <- model
+    post_processing_checks_args[['xcall']]    <- setxcall_
+    post_processing_checks_args[['resp']]     <- resp
+    post_processing_checks_args[['envir']]    <- envir
+    post_processing_checks_args[['deriv']]    <- deriv
+    post_processing_checks_args[['all']]      <- FALSE
+    post_processing_checks_args[['verbose']]  <- verbose
+    post_processing_checks_args[['check_d0']] <- FALSE
+    post_processing_checks_args[['check_d1']] <- TRUE
+    post_processing_checks_args[['check_d2']] <- FALSE
     
-    oall <- post_processing_checks(model = model,
-                                   xcall = match.call(),
-                                   resp = resp,
-                                   envir = envir,
-                                   deriv = deriv, 
-                                   all = TRUE,
-                                   verbose = FALSE)
+    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    
+    post_processing_checks_args[['all']]      <- TRUE
+    oall <- do.call(post_processing_checks, post_processing_checks_args)
+    post_processing_checks_args[['all']]      <- FALSE
+    
+    # o <- post_processing_checks(model = model,
+    #                             xcall = match.call(),
+    #                             resp = resp,
+    #                             envir = envir,
+    #                             deriv = deriv, 
+    #                             all = FALSE,
+    #                             verbose = verbose)
+    # 
+    # oall <- post_processing_checks(model = model,
+    #                                xcall = match.call(),
+    #                                resp = resp,
+    #                                envir = envir,
+    #                                deriv = deriv, 
+    #                                all = TRUE,
+    #                                verbose = FALSE)
     
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall, 
@@ -226,7 +246,7 @@ add_model_criterion.bgmfit <-
   }
 
 
-#' @rdname add_model_criterion.bgmfit
+#' @rdname add_model_criterion
 #' @export
 add_model_criterion <- function(model, ...) {
   UseMethod("add_model_criterion")

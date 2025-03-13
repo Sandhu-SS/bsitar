@@ -159,7 +159,7 @@
 #' @return A plot object (default) or a \code{data.frame} when \code{returndata
 #'   = TRUE}.
 #'
-#' @export plot_curves.bgmfit
+#' @rdname plot_curves
 #' @export
 #' 
 #' @importFrom rlang .data
@@ -292,6 +292,8 @@ plot_curves.bgmfit <- function(model,
                                usesavedfuns = NULL,
                                clearenvfuns = NULL,
                                funlist = NULL,
+                               itransform = NULL,
+                               newdata_fixed = FALSE,
                                envir = NULL,
                                ...) {
   
@@ -377,10 +379,31 @@ plot_curves.bgmfit <- function(model,
     }
   }
   
-  o <- post_processing_checks(model = model,
-                              xcall = xcall,
-                              resp = resp,
-                              envir = envir)
+  
+
+  # setxcall_ <- paste(deparse(match.call()), collapse = "")
+  
+  setxcall_ <- match.call()
+  post_processing_checks_args <- list()
+  post_processing_checks_args[['model']]    <- model
+  post_processing_checks_args[['xcall']]    <- setxcall_
+  post_processing_checks_args[['resp']]     <- resp
+  post_processing_checks_args[['envir']]    <- envir
+  # post_processing_checks_args[['deriv']]    <- deriv
+  # post_processing_checks_args[['all']]      <- FALSE
+  # post_processing_checks_args[['verbose']]  <- verbose
+  post_processing_checks_args[['check_d0']] <- FALSE
+  post_processing_checks_args[['check_d1']] <- TRUE
+  post_processing_checks_args[['check_d2']] <- FALSE
+  
+  o    <- do.call(post_processing_checks, post_processing_checks_args)
+  
+ 
+  
+  # o <- post_processing_checks(model = model,
+  #                             xcall = xcall,
+  #                             resp = resp,
+  #                             envir = envir)
   
   xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   scall <- sys.calls()
@@ -395,10 +418,24 @@ plot_curves.bgmfit <- function(model,
       xcall <- "growthparameters"
     } else {
       xcall <- xcall
-    } 
+    }
   }
   
-  xcall <- get_xcall(xcall, scall)
+  
+  #   xcall <- get_xcall(xcall, scall)
+  
+  if(xcall == "do.call" | xcall == "CustomDoCall") {
+    zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
+    zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
+    zzz <- strsplit(zzz, ",")[[1]][1]
+    xcall <- strsplit(zzz, "\\.")[[1]][1]
+  } else {
+    xcall <- get_xcall(xcall, scall)
+  }
+  
+  
+  
+ 
   
   check_if_package_installed(model, xcall = xcall)
   
@@ -429,6 +466,7 @@ plot_curves.bgmfit <- function(model,
   
   # Remove argument 'deriv' if user specified it by mistake. 
   # The 'deriv' argument is set internally based on the the 'opt' argument
+  
   arguments$deriv <- NULL
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -451,6 +489,27 @@ plot_curves.bgmfit <- function(model,
     }
   }
   
+  ##################################################
+  # prepare_data2 changes
+  if (is.null(newdata)) {
+    newdata <- model$model_info$bgmfit.data
+  } else {
+    newdata <- newdata
+  } 
+  # for xyadj....
+  newdata.xyadj <- newdata
+  
+  newdata.xyadj <- get.newdata(model, newdata = newdata.xyadj, 
+                         resp = resp, 
+                         numeric_cov_at = numeric_cov_at,
+                         aux_variables = aux_variables,
+                         levels_id = levels_id,
+                         ipts = NULL,
+                         xrange = xrange,
+                         idata_method = idata_method,
+                         verbose = verbose)
+  
+  
   newdata <- get.newdata(model, newdata = newdata, 
                          resp = resp, 
                          numeric_cov_at = numeric_cov_at,
@@ -460,6 +519,8 @@ plot_curves.bgmfit <- function(model,
                          xrange = xrange,
                          idata_method = idata_method,
                          verbose = verbose)
+  
+  
   
   list_c <- attr(newdata, 'list_c')
   for (list_ci in names(list_c)) {
@@ -630,31 +691,68 @@ plot_curves.bgmfit <- function(model,
   if(length(list(...)) != 0) arguments <- c(arguments, list(...))
   
   arguments$draw_ids <- draw_ids
+  
+  
+  # 6.03.2025 - remove missing GOOD
+  for (i in names(arguments)) {
+    if(is.symbol(arguments[[i]])) {
+      if(deparse(arguments[[i]]) == "") {
+        arguments[[i]] <- NULL
+      }
+    }
+  }
+  
 
   d. <- do.call(growthparameters.bgmfit, arguments)
   
   if(is.null(d.)) return(invisible(NULL))
   
   
-  p. <- d.[['parameters']]
-  probtitles <- d.[['probtitles']]
-  groupby_str_d <- d.[['groupby_str_d']]
-  groupby_str_v <- d.[['groupby_str_v']]
+  p.                    <- d.[['parameters']]
+  probtitles            <- d.[['probtitles']]
+  groupby_str_d         <- d.[['groupby_str_d']]
+  groupby_str_v         <- d.[['groupby_str_v']]
   
-  p.as.d.out_attr <- p.
+  p.as.d.out_attr       <- p.
   
-  d.[['parameters']] <- NULL
-  d.[['probtitles']] <- NULL
+  d.[['parameters']]    <- NULL
+  d.[['probtitles']]    <- NULL
   d.[['groupby_str_d']] <- NULL
   d.[['groupby_str_v']] <- NULL
   
   d. <- d. %>% do.call(rbind, .) %>% data.frame()
   row.names(d.) <- NULL
   
-  firstup <- function(x) {
-    substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-    x
+  
+  ##############################################################
+  ##############################################################
+  # prepare_data2
+  # newdata and xvar of curves are reverse transformed here 
+  # growthparameters are are reverse transformed in growthparameters - ifunx_
+  newdata_before_itransform <- newdata
+  itransform_set <- get_itransform_call(itransform)
+  
+  # Keep flag itransform_set != "" here only 
+  # Decide if need to perform itransform here or returned data 
+  # return(d.out) will also taken care off  
+  if(any(itransform_set != "")) {
+    d. <- prepare_transformations(data = d., model = model,
+                                  itransform = itransform_set)
+    
+    newdata <- prepare_transformations(data = newdata, model = model,
+                                  itransform = itransform_set)
   }
+  
+  
+  ##############################################################
+  ##############################################################
+  
+  
+  
+  # firstup <- function(x) {
+  #   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  #   x
+  # }
   
   
   
@@ -764,891 +862,964 @@ plot_curves.bgmfit <- function(model,
   
   
   
-  add_global_label <-
-    function(pwobj,
-             Xlab = NULL,
-             Ylab = NULL,
-             Xgap = 0.08,
-             Ygap = 0.03,
-             ...) {
-      ylabgrob <- patchwork::plot_spacer()
-      if (!is.null(Ylab)) {
-        ylabgrob <- ggplot2::ggplot() +
-          ggplot2::geom_text(ggplot2::aes(x = .5, y = .5),
-                             label = Ylab,
-                             angle = 90,
-                             ...) +
-          ggplot2::theme_void()
-      }
-      if (!is.null(Xlab)) {
-        xlabgrob <- ggplot2::ggplot() +
-          ggplot2::geom_text(ggplot2::aes(x = .5, y = .5), label = Xlab, ...) +
-          ggplot2::theme_void()
-      }
-      if (!is.null(Ylab) & is.null(Xlab)) {
-        return((ylabgrob + patchwork::patchworkGrob(pwobj)) +
-                 patchwork::plot_layout(widths = 100 * c(Ygap, 1 - Ygap))
-        )
-      }
-      if (is.null(Ylab) & !is.null(Xlab)) {
-        return((ylabgrob + pwobj) +
-                 (xlabgrob) +
-                 patchwork::plot_layout(
-                   heights = 100 * c(1 - Xgap, Xgap),
-                   widths = c(0, 100),
-                   design = "
-                                   AB
-                                   CC
-                                   "
-                 )
-        )
-      }
-      if (!is.null(Ylab) & !is.null(Xlab)) {
-        return((ylabgrob + pwobj) +
-                 (xlabgrob) +
-                 patchwork::plot_layout(
-                   heights = 100 * c(1 - Xgap, Xgap),
-                   widths = 100 * c(Ygap, 1 - Ygap),
-                   design = "
-                                   AB
-                                   CC
-                                   "
-                 )
-        )
-      }
-      return(pwobj)
-    }
+  # add_global_label <-
+  #   function(pwobj,
+  #            Xlab = NULL,
+  #            Ylab = NULL,
+  #            Xgap = 0.08,
+  #            Ygap = 0.03,
+  #            ...) {
+  #     ylabgrob <- patchwork::plot_spacer()
+  #     if (!is.null(Ylab)) {
+  #       ylabgrob <- ggplot2::ggplot() +
+  #         ggplot2::geom_text(ggplot2::aes(x = .5, y = .5),
+  #                            label = Ylab,
+  #                            angle = 90,
+  #                            ...) +
+  #         ggplot2::theme_void()
+  #     }
+  #     if (!is.null(Xlab)) {
+  #       xlabgrob <- ggplot2::ggplot() +
+  #         ggplot2::geom_text(ggplot2::aes(x = .5, y = .5), label = Xlab, ...) +
+  #         ggplot2::theme_void()
+  #     }
+  #     if (!is.null(Ylab) & is.null(Xlab)) {
+  #       return((ylabgrob + patchwork::patchworkGrob(pwobj)) +
+  #                patchwork::plot_layout(widths = 100 * c(Ygap, 1 - Ygap))
+  #       )
+  #     }
+  #     if (is.null(Ylab) & !is.null(Xlab)) {
+  #       return((ylabgrob + pwobj) +
+  #                (xlabgrob) +
+  #                patchwork::plot_layout(
+  #                  heights = 100 * c(1 - Xgap, Xgap),
+  #                  widths = c(0, 100),
+  #                  design = "
+  #                                  AB
+  #                                  CC
+  #                                  "
+  #                )
+  #       )
+  #     }
+  #     if (!is.null(Ylab) & !is.null(Xlab)) {
+  #       return((ylabgrob + pwobj) +
+  #                (xlabgrob) +
+  #                patchwork::plot_layout(
+  #                  heights = 100 * c(1 - Xgap, Xgap),
+  #                  widths = 100 * c(Ygap, 1 - Ygap),
+  #                  design = "
+  #                                  AB
+  #                                  CC
+  #                                  "
+  #                )
+  #       )
+  #     }
+  #     return(pwobj)
+  #   }
   
   
   
-  trimlines_ <-
-    function(model,
-             x,
-             y,
-             id,
-             newdata = NULL,
-             resp = NULL,
-             ndraws = NULL,
-             level = 0,
-             trim = 0,
-             ...) {
-      if (is.null(ndraws))
-        ndraws  <- brms::ndraws(model)
-      else
-        ndraws <- ndraws
-      
-      o <-
-        post_processing_checks(model = model,
-                               xcall = match.call(),
-                               resp = resp,
-                               envir = envir,
-                               deriv = '')
-      
-      
-      newdata.o <- newdata
-      if (trim == 0)
-        return(newdata)
-      
-      if (missing(x)) {
-        .x <- Xx
-      } else {
-        .x <- x
-      }
-      
-      if (missing(y)) {
-        .y <- Yy
-      } else {
-        .y <- y
-      }
-      
-      if (missing(id)) {
-        .id <- IDvar
-      } else {
-        .id <- id
-      }
-      
-     
-      
-      newdata <-
-        with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
-      extra <- dplyr::as_tibble(diff(as.matrix(newdata[, 1:2])))
-      extra[[.id]] <- newdata[[.id]][-1]
-      did <- diff(as.integer(newdata[[.id]]))
-      extra$dx <- extra[[.x]]
-      extra[, 1:2] <- newdata[-1, 1:2] - extra[, 1:2] / 2
-      extra <- extra[!did, ]
-      
-      if(!is.na(uvarby)) {
-        extra[[subindicatorsi]] <- 1
-      }
-      
-      if (level == 0) {
-        re_formula <- NA
-      } else if (level == 1) {
-        re_formula <- NULL
-      }
-      
-      if (estimation_method == 'fitted') {
-        extra$ey <-
-          fitted_draws(
-            model,
-            resp = resp,
-            newdata = extra,
-            ndraws = ndraws,
-            re_formula = re_formula,
-            summary = TRUE
-          )
-      } else if (estimation_method == 'predict') {
-        extra$ey <-
-          predict_draws(
-            model,
-            resp = resp,
-            newdata = extra,
-            ndraws = ndraws,
-            re_formula = re_formula,
-            summary = TRUE
-          )
-      }
-      extra$ey <- extra$ey[, 1]
-      extra <- extra %>%
-        dplyr::mutate(dy = abs(extra[[.y]] - extra$ey),
-                      xy = extra$dx / mad(extra$dx) + dy / mad(dy))
-      outliers <- order(extra$xy, decreasing = TRUE)[1:trim]
-      extra <- extra[outliers, 1:3]
-      extra[[.y]] <- NA
-      if(!is.na(uvarby)) {
-        newdata_tt <- newdata
-        common_colsnms <- intersect(colnames(newdata) , colnames(extra))
-        newdata <-newdata %>% dplyr::select(dplyr::all_of(common_colsnms))
-      }
-      newdata <- rbind(newdata, extra)
-      newdata <-
-        with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
-      
-      if(!is.na(uvarby)) {
-        tempotnames <- c(IDvar, Xx, Yy)
-        tempot <- newdata_tt %>%  dplyr::select(-dplyr::all_of(tempotnames))
-        newdata <- cbind(newdata[-1, ], tempot) %>% data.frame()
-      }
-      
-      newdata
-    }
+  # trimlines_ <-
+  #   function(model,
+  #            x,
+  #            y,
+  #            id,
+  #            newdata = NULL,
+  #            resp = NULL,
+  #            ndraws = NULL,
+  #            level = 0,
+  #            trim = 0,
+  #            ...) {
+  #     if (is.null(ndraws))
+  #       ndraws  <- brms::ndraws(model)
+  #     else
+  #       ndraws <- ndraws
+  #     
+  #     
+  #     setxcall_ <- match.call()
+  #     post_processing_checks_args <- list()
+  #     post_processing_checks_args[['model']]    <- model
+  #     post_processing_checks_args[['xcall']]    <- setxcall_
+  #     post_processing_checks_args[['resp']]     <- resp
+  #     post_processing_checks_args[['envir']]    <- envir
+  #     post_processing_checks_args[['deriv']]    <- ''
+  #     # post_processing_checks_args[['all']]      <- FALSE
+  #     # post_processing_checks_args[['verbose']]  <- verbose
+  #     post_processing_checks_args[['check_d0']] <- FALSE
+  #     post_processing_checks_args[['check_d1']] <- TRUE
+  #     post_processing_checks_args[['check_d2']] <- FALSE
+  #     
+  #     o    <- do.call(post_processing_checks, post_processing_checks_args)
+  #     
+  #     
+  #     # o <-
+  #     #   post_processing_checks(model = model,
+  #     #                          xcall = match.call(),
+  #     #                          resp = resp,
+  #     #                          envir = envir,
+  #     #                          deriv = '')
+  #     
+  #     
+  #     newdata.o <- newdata
+  #     if (trim == 0)
+  #       return(newdata)
+  #     
+  #     if (missing(x)) {
+  #       .x <- Xx
+  #     } else {
+  #       .x <- x
+  #     }
+  #     
+  #     if (missing(y)) {
+  #       .y <- Yy
+  #     } else {
+  #       .y <- y
+  #     }
+  #     
+  #     if (missing(id)) {
+  #       .id <- IDvar
+  #     } else {
+  #       .id <- id
+  #     }
+  #     
+  #    
+  #     
+  #     newdata <-
+  #       with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
+  #     extra <- dplyr::as_tibble(diff(as.matrix(newdata[, 1:2])))
+  #     extra[[.id]] <- newdata[[.id]][-1]
+  #     did <- diff(as.integer(newdata[[.id]]))
+  #     extra$dx <- extra[[.x]]
+  #     extra[, 1:2] <- newdata[-1, 1:2] - extra[, 1:2] / 2
+  #     extra <- extra[!did, ]
+  #     
+  #     if(!is.na(uvarby)) {
+  #       extra[[subindicatorsi]] <- 1
+  #     }
+  #     
+  #     if (level == 0) {
+  #       re_formula <- NA
+  #     } else if (level == 1) {
+  #       re_formula <- NULL
+  #     }
+  #     
+  #     if (estimation_method == 'fitted') {
+  #       extra$ey <-
+  #         fitted_draws(
+  #           model,
+  #           resp = resp,
+  #           newdata = extra,
+  #           ndraws = ndraws,
+  #           re_formula = re_formula,
+  #           summary = TRUE,
+  #           fullframe = NULL, itransform = ""
+  #         )
+  #     } else if (estimation_method == 'predict') {
+  #       extra$ey <-
+  #         predict_draws(
+  #           model,
+  #           resp = resp,
+  #           newdata = extra,
+  #           ndraws = ndraws,
+  #           re_formula = re_formula,
+  #           summary = TRUE,
+  #           fullframe = NULL, itransform = ""
+  #         )
+  #     }
+  #     extra$ey <- extra$ey[, 1]
+  #     extra <- extra %>%
+  #       dplyr::mutate(dy = abs(extra[[.y]] - extra$ey),
+  #                     xy = extra$dx / mad(extra$dx) + dy / mad(dy))
+  #     outliers <- order(extra$xy, decreasing = TRUE)[1:trim]
+  #     extra <- extra[outliers, 1:3]
+  #     extra[[.y]] <- NA
+  #     if(!is.na(uvarby)) {
+  #       newdata_tt <- newdata
+  #       common_colsnms <- intersect(colnames(newdata) , colnames(extra))
+  #       newdata <-newdata %>% dplyr::select(dplyr::all_of(common_colsnms))
+  #     }
+  #     newdata <- rbind(newdata, extra)
+  #     newdata <-
+  #       with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
+  #     
+  #     if(!is.na(uvarby)) {
+  #       tempotnames <- c(IDvar, Xx, Yy)
+  #       tempot <- newdata_tt %>%  dplyr::select(-dplyr::all_of(tempotnames))
+  #       newdata <- cbind(newdata[-1, ], tempot) %>% data.frame()
+  #     }
+  #     
+  #     newdata
+  #   }
   
-  # Adapted from https://github.com/statist7/sitar/blob/master/R/xyadj.R
-  # v.adj also calculated but not returned 
-  
-  xyadj_ <-
-    function (model,
-              x,
-              y,
-              id,
-              v = 0,
-              resp = NULL,
-              ndraws = NULL,
-              newdata = NULL,
-              levels_id = NULL,
-              abc = NULL,
-              summary = FALSE,
-              conf = 0.95,
-              robust = FALSE,
-              tomean = TRUE,
-              ipts = NULL,
-              xrange = NULL,
-              aux_variables = NULL,
-              numeric_cov_at = NULL,
-              ...) {
-      if (is.null(ndraws))
-        ndraws  <- brms::ndraws(model)
-      else
-        ndraws <- ndraws
-      
-      
-      if(!is.null(ipts)) 
-        stop("It does not a make sense to interploate data when estimating",
-             "\n ",
-             " adjusted curves. Please set ipts = NULL")
-      
-      o <-
-        post_processing_checks(model = model,
-                               xcall = match.call(),
-                               resp = resp,
-                               envir = envir,
-                               deriv = '')
-      
-        newdata <- get.newdata(model, 
-                               newdata = newdata,
-                               resp = resp,
-                               numeric_cov_at = numeric_cov_at,
-                               aux_variables = aux_variables,
-                               levels_id = levels_id,
-                               ipts = ipts,
-                               xrange = xrange,
-                               idata_method = idata_method,
-                               verbose = verbose)
-        
-        
-     
-        
-     
-      
-      list_c <- attr(newdata, 'list_c')
-      for (list_ci in names(list_c)) {
-        assign(list_ci, list_c[[list_ci]])
-      }
-      check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
-                   'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
-                   'uvarby', 'subindicatorsi')
-      
-      for (check___ in check__) {
-        if(!exists(check___)) assign(check___, NULL)
-      }
-      
-      if(is.null(uvarby)) uvarby <- NA
-      
-      Xx <- xvar
-      Yy <- yvar
-      
-      
-      probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
-      probtitles <- probs[order(probs)] * 100
-      probtitles <- paste("Q", probtitles, sep = "")
-      set_names_  <- c('Estimate', 'Est.Error', probtitles)
-
-      
-      
-      xoffsetXnames <- 'xoffset'
-      randomRnames <- 'random' 
-      if (!is.null(resp)) xoffsetXnames <- paste0(xoffsetXnames, resp_rev_)
-      xoffsetXnames <- model$model_info[[xoffsetXnames]]
-      xoffset <- xoffsetXnames
-      
-      
-      d_adjustedXnames <- 'd_adjusted'
-      if (!is.null(resp)) d_adjustedXnames <- paste0(d_adjustedXnames, 
-                                                     resp_rev_)
-      d_adjustedXnames <- model$model_info[[d_adjustedXnames]]
-      d_adjusted <- d_adjustedXnames
-      
-      
-      
-      if (missing(x)) {
-        x <- newdata[[Xx]]
-      }
-      
-      if (missing(y)) {
-        y <- newdata[[Yy]]
-      }
-      
-      if (missing(v)) {
-        v <- 0
-      }
-      
-      if (missing(id)) {
-        IDvar <- model$model_info$id
-        IDvar <- IDvar[1]
-        id <- newdata[[IDvar]][1]
-        # id <- IDvar
-      }
-      
-      Xx <- xvar
-      Yy <- yvar
-      
-      # re_effx <- brms::ranef(berkeley_fit, summary = F)
-      # re_effx <- re_effx[['id']]
-      # re_effx <- re_effx[match('id', rownames(re_effx)), , drop = FALSE]
-      
-      
-      if(!is.null(ipts)) {
-        add_outcome <- model$data %>%
-          dplyr::select(dplyr::all_of(c(Yy, IDvar)))
-        newdata <- newdata %>% 
-          dplyr::left_join(., add_outcome, by = c(IDvar))
-        x <- newdata[[Xx]]
-        y <- newdata[[Yy]]
-        id <- newdata[[IDvar]][1]
-      }
-      
-      
-      # This x - xoffset is needed for bsitar based computation
-      x <- x - xoffset
-      
-      nrowdatadims <- nrow(newdata)
-      ### 
-      predprep <- brms::prepare_predictions(model, resp = resp, 
-                                            newdata = newdata)
-      rparnames <- names(predprep$nlpars)
-      
-      respstr <- "" # paste0(resp, "_")
-      septsr <- ""
-      if(any(grepl(paste0(respstr, septsr, "a"), rparnames)) |
-         any(grepl(paste0(respstr, "a", septsr), rparnames))) {
-        a_r <- TRUE
-      } else {
-        a_r <- FALSE
-      }
-      
-      if(any(grepl(paste0(respstr, septsr, "b"), rparnames)) |
-         any(grepl(paste0(respstr, "b", septsr), rparnames))) {
-        b_r <- TRUE
-      } else {
-        b_r <- FALSE
-      }
-      
-      if(any(grepl(paste0(respstr, septsr, "c"), rparnames)) |
-         any(grepl(paste0(respstr, "c", septsr), rparnames))) {
-        c_r <- TRUE
-      } else {
-        c_r <- FALSE
-      }
-      
-      if(any(grepl(paste0(respstr, septsr, "d"), rparnames)) |
-         any(grepl(paste0(respstr, "d", septsr), rparnames))) {
-        d_r <- TRUE
-      } else {
-        d_r <- FALSE
-      }
-      
-     
-      
-      if(a_r) {
-        null_a <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="a", ndraws = ndraws, re_formula = NULL, 
-                         summary = summary)
-        naaa_a <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="a", ndraws = ndraws, re_formula = NA, 
-                         summary = summary)
-      } else {
-        null_a <- matrix(0, nrowdatadims, 1)
-        naaa_a <- matrix(0, nrowdatadims, 1)
-      }
-      
-      if(b_r) {
-        null_b <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="b", ndraws = ndraws, re_formula = NULL, 
-                         summary = summary)
-        naaa_b <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="b", ndraws = ndraws, re_formula = NA, 
-                         summary = summary)
-      } else {
-        null_b <- matrix(0, nrowdatadims, 1)
-        naaa_b <- matrix(0, nrowdatadims, 1)
-      }
-      
-      if(c_r) {
-        null_c <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="c", ndraws = ndraws, re_formula = NULL, 
-                         summary = summary)
-        naaa_c <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="c", ndraws = ndraws, re_formula = NA, 
-                         summary = summary)
-      } else {
-        null_c <- matrix(0, nrowdatadims, 1)
-        naaa_c <- matrix(0, nrowdatadims, 1)
-      }
-      
-      if(d_r) {
-        null_d <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="d", ndraws = ndraws, re_formula = NULL, 
-                         summary = summary)
-        naaa_d <- fitted(model, resp = resp, newdata = newdata, 
-                         nlpar="d", ndraws = ndraws, re_formula = NA, 
-                         summary = summary)
-      } else {
-        null_d <- matrix(0, nrowdatadims, 1)
-        naaa_d <- matrix(0, nrowdatadims, 1)
-      }
-      
-      
-      if(!summary) {
-        xadj_tmt <- yadj_tmt <- vadj_tmt <- list()
-        xadj_tmf <- yadj_tmf <- vadj_tmf <- list()
-        for (i in 1:ndraws) {
-          r_a <- null_a[ i, ]
-          r_b <- null_b[ i, ]
-          r_c <- null_c[ i, ]
-          r_d <- null_d[ i, ]
-          na_a <- naaa_a[ i, ]
-          na_b <- naaa_b[ i, ]
-          na_c <- naaa_c[ i, ]
-          na_d <- naaa_d[ i, ]
-          
-          # Re create random effects - coef = fixed + random 
-          rz_a <- r_a - na_a
-          rz_b <- r_b - na_b
-          rz_c <- r_c - na_c
-          rz_d <- r_d - na_d
-          
-          r_data_ <- cbind(rz_a, rz_b, rz_c, rz_d) %>% data.frame()
-          colnames(r_data_) <- letters[1:4]
-          
-          r_data_ <- r_data_ %>% 
-            dplyr::mutate(x = x) %>% 
-            dplyr::mutate(d.adjusted = d_adjusted %||% FALSE)
-          
-          adj_tmt <- r_data_ %>%
-            dplyr::mutate(x.adj = (x - .data$b) * exp(.data$c) + xoffset,
-                          y.adj = y - .data$a - 
-                            .data$d * dplyr::if_else(.data$d.adjusted,
-                                                     .data$x.adj - xoffset,
-                                                     x),
-                          v.adj = dplyr::if_else(.data$d.adjusted,
-                                                 v / exp(.data$c) - .data$d,
-                                                 (v - .data$d) / exp(.data$c)))
-          
-          
-          adj_tmf <- r_data_ %>%
-            dplyr::mutate(x.adj = x / exp(.data$c) + .data$b + xoffset,
-                          y.adj = y + .data$a + 
-                            .data$d * dplyr::if_else(.data$d.adjusted,
-                                                     .data$x.adj - xoffset,
-                                                     x),
-                          v.adj = dplyr::if_else(.data$d.adjusted,
-                                                 (v + .data$d) * exp(.data$c),
-                                                 v * exp(.data$c) + .data$d))
-          
-          adj_tmt <- adj_tmt %>% data.frame()
-          adj_tmf <- adj_tmf %>% data.frame()
-          
-          xadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
-            unlist() %>% as.numeric()
-          yadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
-            unlist() %>% as.numeric()
-          vadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
-            unlist() %>% as.numeric()
-          xadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
-            unlist() %>% as.numeric()
-          yadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
-            unlist() %>% as.numeric()
-          vadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
-            unlist() %>% as.numeric()
-        } # for (i in 1:ndraws) {
-        
-        xadj_tmt <- array(unlist(xadj_tmt), 
-                          dim=c(length(xadj_tmt[[1]]), length(xadj_tmt)  ))
-        xadj_tmt <- t(xadj_tmt)
-        
-        yadj_tmt <- array(unlist(yadj_tmt), 
-                          dim=c(length(yadj_tmt[[1]]), length(yadj_tmt)  ))
-        yadj_tmt <- t(yadj_tmt)
-        
-        vadj_tmt <- array(unlist(vadj_tmt), 
-                          dim=c(length(vadj_tmt[[1]]), length(vadj_tmt)  ))
-        vadj_tmt <- t(vadj_tmt)
-        
-        xadj_tmf <- array(unlist(xadj_tmf), 
-                          dim=c(length(xadj_tmf[[1]]), length(xadj_tmf)  ))
-        xadj_tmf <- t(xadj_tmf)
-        
-        yadj_tmf <- array(unlist(yadj_tmf), 
-                          dim=c(length(yadj_tmf[[1]]), length(yadj_tmf)  ))
-        yadj_tmf <- t(yadj_tmf)
-        
-        vadj_tmf <- array(unlist(vadj_tmf), 
-                          dim=c(length(vadj_tmf[[1]]), length(vadj_tmf)  ))
-        vadj_tmf <- t(vadj_tmf)
-        
-        
-        xadj_tmt <- brms::posterior_summary(xadj_tmt, probs = probs, 
-                                            robust = robust) 
-        yadj_tmt <- brms::posterior_summary(yadj_tmt, probs = probs, 
-                                            robust = robust)
-        vadj_tmt <- brms::posterior_summary(vadj_tmt, probs = probs, 
-                                            robust = robust)
-        xadj_tmf <- brms::posterior_summary(xadj_tmf, probs = probs, 
-                                            robust = robust)
-        yadj_tmf <- brms::posterior_summary(yadj_tmf, probs = probs, 
-                                            robust = robust)
-        vadj_tmf <- brms::posterior_summary(vadj_tmf, probs = probs, 
-                                            robust = robust)
-        
-        if (tomean) {
-          x.adj <- xadj_tmt
-          y.adj <- yadj_tmt
-          v.adj <- vadj_tmt
-        }
-        else {
-          x.adj <- xadj_tmf
-          y.adj <- yadj_tmf
-          v.adj <- vadj_tmf
-        }
-        
-        # This was good but not required
-        # out <- cbind(x.adj[, 1], y.adj)
-        # setadnamex <- paste0("adj", "_", Xx)
-        # setadnamey <- colnames(y.adj)
-        # colnames(out) <- c(setadnamex, setadnamey)
-        # out <- cbind(newdata, out)
-        
-        # But for trimline, we need the following order 
-        out <- newdata
-        out[[Xx]] <- x.adj[, 1]
-        out[[Yy]] <- y.adj[, 1]
-        out <- out %>% dplyr::relocate(c(Xx, Yy, IDvar))
-        # now add CI also - Estimate will be same as outcome
-        out <- cbind(out, y.adj)
-      } # if(!summary) {
-      
-      
-      if(summary) {
-        r_a <- null_a[ , 1]
-        r_b <- null_b[ , 1]
-        r_c <- null_c[ , 1]
-        r_d <- null_d[ , 1]
-        na_a <- naaa_a[ , 1]
-        na_b <- naaa_b[ , 1]
-        na_c <- naaa_c[ , 1]
-        na_d <- naaa_d[ , 1]
-        
-        # Re create random effects - coef = fixed + random 
-        # Thus, random = coef - fixed
-        rz_a <- r_a - na_a
-        rz_b <- r_b - na_b
-        rz_c <- r_c - na_c
-        rz_d <- r_d - na_d
-        
-        r_data_ <- cbind(rz_a, rz_b, rz_c, rz_d) %>% data.frame()
-        colnames(r_data_) <- letters[1:4]
-        
-        r_data_ <- r_data_ %>% 
-          dplyr::mutate(x = x) %>% 
-          dplyr::mutate(d.adjusted = d_adjusted %||% FALSE)
-       
-        adj_tmt <- r_data_ %>%
-          dplyr::mutate(x.adj = (x - .data$b) * exp(.data$c) + xoffset,
-                 y.adj = y - .data$a - 
-                   .data$d * dplyr::if_else(.data$d.adjusted,
-                                            .data$x.adj - xoffset,
-                                            x),
-                 v.adj = dplyr::if_else(.data$d.adjusted,
-                                 v / exp(.data$c) - .data$d,
-                                 (v - .data$d) / exp(.data$c)))
-        
-        
-        adj_tmf <- r_data_ %>%
-          dplyr::mutate(x.adj = x / exp(.data$c) + .data$b + xoffset,
-                 y.adj = y + .data$a + 
-                   .data$d * dplyr::if_else(.data$d.adjusted,
-                                            .data$x.adj - xoffset,
-                                            x),
-                 v.adj = dplyr::if_else(.data$d.adjusted,
-                                 (v + .data$d) * exp(.data$c),
-                                 v * exp(.data$c) + .data$d))
-        
-        adj_tmt <- adj_tmt %>% data.frame()
-        adj_tmf <- adj_tmf %>% data.frame()
-        
-
-        xadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
-          unlist() %>% as.numeric()
-        yadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
-          unlist() %>% as.numeric()
-        vadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
-          unlist() %>% as.numeric()
-        xadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
-          unlist() %>% as.numeric()
-        yadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
-          unlist() %>% as.numeric()
-        vadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
-          unlist() %>% as.numeric()
-        
-        if (tomean) {
-          x.adj <- xadj_tmt
-          y.adj <- yadj_tmt
-          v.adj <- vadj_tmt
-        }
-        else {
-          x.adj <- xadj_tmf
-          y.adj <- yadj_tmf
-          v.adj <- vadj_tmf
-        }
-       
-        # This was good
-        out <- cbind(x.adj, y.adj)
-        setadnamex <- paste0("adj", "_", Xx)
-        setadnamey <- 'Estimate'
-        colnames(out) <- c(setadnamex, setadnamey)
-        out <- cbind(newdata, out)
-        
-        # But for trimline, we need folowing order 
-        out <- newdata
-        out[[Xx]] <- x.adj
-        out[[Yy]] <- y.adj
-        out <- out %>% dplyr::relocate(dplyr::all_of(c(Xx, Yy, IDvar)))
-      } # if(summary) {
-      out
-    }
-  
-  
-  
-  xyunadj_ <-
-    function (model,
-              x,
-              y = NULL,
-              id,
-              resp = NULL,
-              newdata = NULL,...) {
-      
-      o <-
-        post_processing_checks(model = model,
-                               xcall = match.call(),
-                               resp = resp,
-                               envir = envir,
-                               deriv = '')
-      
-      newdata <- get.newdata(model, newdata = newdata, resp = resp, 
-                             verbose = verbose)
-      
-      if(!is.na(uvarby)) {
-        newdata <- newdata %>%
-          dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
-          droplevels()
-      }
-      
-      if (missing(x))
-        x <- newdata[[Xx]]
-      if (missing(y))
-        y <- newdata[[Yy]]
-      if (missing(id))
-        id <- newdata[[IDvar]]
-      out <- as.data.frame(as.factor(newdata[[IDvar]]))
-      out <- cbind(x, y, out)
-      colnames(out) <- c(Xx, Yy, IDvar)
-      if(!is.na(uvarby)) {
-        out[[uvarby]] <- resp
-      }
-      out
-    }
-  
-  
-  set_lines_colors <- function(plot, ngroups, 
-                               linetype.groupby,
-                               color.groupby) {
-    nrepvals <- ngroups
-    
-    if(is.null(linetype.groupby)) {
-      linetype.groupby <- deparse(linetype.groupby)
-    } else  if(is.na(linetype.groupby)) {
-      linetype.groupby <- deparse(linetype.groupby)
-    } else {
-      linetype.groupby <- linetype.groupby
-    }
-    
-    if(is.null(color.groupby)) {
-      color.groupby <- deparse(color.groupby)
-    } else  if(is.na(color.groupby)) {
-      color.groupby <- deparse(color.groupby)
-    } else {
-      color.groupby <- color.groupby
-    }
-    
-    # https://data.library.virginia.edu/setting-up-color-palettes-in-r/
-    ggplotColors <- function(g){
-      g <- g - 1
-      d <- 360/g
-      h <- cumsum(c(15, rep(d,g - 1)))
-      O <- grDevices::hcl(h = h, c = 100, l = 65)
-      O <- c('black', O)
-      O
-    }
-    
-    # https://groups.google.com/g/ggplot2/c/XIcXU3KlxW0
-    ggplotlines <- function(g){
-      lineTypes1 <- c("solid", "22", "42", "44", "13", "1343", "73", "2262")
-      # lineTypes1 <- c("solid", "solid", "solid", "13", "1343", "73", "2262")
-      lineTypes2 <- apply(expand.grid(1:3, 1:3, 1:3, 1:3), 1, 
-                          paste0, collapse="")
-      lineTypes3 <- apply(expand.grid(1:2, 1:2, 1:2, 1:2), 1, 
-                          paste0, collapse="")
-      lineTypes <- c(lineTypes1, lineTypes2, lineTypes3)
-      lineTypes[1:g]
-    }
-    
-    default.set.line.groupby <- 'solid'
-    default.set.color.groupby <- 'black'
-      
-    line.guide <- "none"
-    color.guide <- "none"
-    
-    if(linetype.groupby == 'NA' & color.groupby == 'NA') {
-      if(nrepvals == 1) {
-        set.line.groupby <- default.set.line.groupby
-        set.color.groupby <- default.set.color.groupby
-      }
-      if(nrepvals > 1) {
-        set.line.groupby <- rep(default.set.line.groupby, nrepvals)
-        set.color.groupby <- rep(default.set.color.groupby, nrepvals)
-        line.guide <- "none"
-        color.guide <- "legend"
-      }
-    } # if(is.na(linetype.groupby) & is.na(color.groupby)) {
-    
-    
-    
-    if(linetype.groupby == 'NA' & color.groupby != 'NA') {
-      set.line.groupby <- rep(default.set.line.groupby, nrepvals)
-      if(nrepvals == 1) {
-        if(color.groupby == 'NULL') {
-          set.color.groupby <- default.set.color.groupby
-        } else if(color.groupby != 'NULL') {
-          set.color.groupby <- color.groupby[1]  
-        }
-      }
-      
-      if(nrepvals > 1) {
-        set.line.groupby <- rep(default.set.line.groupby, nrepvals)
-        if(color.groupby == 'NULL') {
-          set.color.groupby <- ggplotColors(nrepvals)
-        }
-        
-        if(color.groupby != 'NULL') {
-          if(length(color.groupby) == nrepvals) {
-            set.color.groupby <- color.groupby
-          } else if(length(color.groupby) != nrepvals) {
-            set.color.groupby <- rep(color.groupby, nrepvals)
-          }
-        }
-        line.guide <- "none"
-        color.guide <- "legend"
-      }
-    } # if(is.na(linetype.groupby) & !is.na(color.groupby)) {
-    
-    
-    if(linetype.groupby != 'NA' & color.groupby == 'NA') {
-      set.color.groupby <- rep(default.set.color.groupby, nrepvals)
-      
-      if(nrepvals == 1) {
-        if(linetype.groupby == 'NULL') {
-          set.line.groupby <- default.set.line.groupby
-        } else if(linetype.groupby != 'NULL') {
-          set.line.groupby <- linetype.groupby[1]  
-        }
-      }
-      
-      if(nrepvals > 1) {
-        if(linetype.groupby == 'NULL') {
-          set.line.groupby <- ggplotlines(nrepvals)
-          if(length(set.line.groupby) < nrepvals) {
-            set.line.groupby <- rep(set.line.groupby, nrepvals)
-          }
-        }
-        
-        if(linetype.groupby != 'NULL') {
-          if(length(linetype.groupby) == nrepvals) {
-            set.line.groupby <- linetype.groupby
-          } else if(length(color.groupby) != nrepvals) {
-            set.line.groupby <- rep(linetype.groupby, nrepvals)
-          }
-        }
-        line.guide <- "none" # "legend"
-        color.guide <- "legend"  # "none"
-      }
-    } # if(!is.na(linetype.groupby) & is.na(color.groupby)) {
-    
-    
-    
-    if(linetype.groupby != 'NA' & color.groupby != 'NA') {
-      if(nrepvals == 1) {
-        if(color.groupby == 'NULL') {
-          set.color.groupby <- 'black'
-        } else if(color.groupby != 'NULL') {
-          set.color.groupby <- color.groupby[1]   
-        }
-        
-        if(linetype.groupby == 'NULL') {
-          set.line.groupby <- 'solid'
-        } else if(linetype.groupby != 'NULL') {
-          set.line.groupby <- linetype.groupby[1]   
-        }
-      }
-      
-      if(nrepvals > 1) {
-        if(color.groupby == 'NULL') {
-          set.color.groupby <- ggplotColors(nrepvals)
-          if(length(set.color.groupby) < nrepvals) {
-            set.color.groupby <- rep(set.color.groupby, nrepvals)
-          }
-        }
-        if(linetype.groupby == 'NULL') {
-          set.line.groupby <- ggplotlines(nrepvals)
-          if(length(set.line.groupby) < nrepvals) {
-            set.line.groupby <- rep(set.line.groupby, nrepvals)
-          }
-        }
-        
-        if(color.groupby != 'NULL') {
-          if(length(color.groupby) == nrepvals) {
-            set.color.groupby <- color.groupby
-          } else if(length(color.groupby) != nrepvals) {
-            set.color.groupby <- rep(color.groupby, nrepvals)
-          }
-        }
-        if(linetype.groupby != 'NULL') {
-          if(length(linetype.groupby) == nrepvals) {
-            set.line.groupby <- linetype.groupby
-          } else if(length(linetype.groupby) != nrepvals) {
-            set.line.groupby <- rep(linetype.groupby, nrepvals)
-          }
-        }
-        line.guide <- "none"
-        color.guide <- "legend"
-      }
-    } # if(!is.na(linetype.groupby) & !is.na(set.color.groupby)) {
-    
-    
-    suppressMessages({
-      plot <- plot + 
-        ggplot2::scale_linetype_manual(values=set.line.groupby, 
-                                       guide = line.guide) +
-        ggplot2::scale_color_manual(values=set.color.groupby, 
-                                    guide = color.guide)
-    })
-    
-    plot
-  } # set_lines_colors
+  # # Adapted from https://github.com/statist7/sitar/blob/master/R/xyadj.R
+  # # v.adj also calculated but not returned 
+  # 
+  # xyadj_ <-
+  #   function (model,
+  #             x,
+  #             y,
+  #             id,
+  #             v = 0,
+  #             resp = NULL,
+  #             ndraws = NULL,
+  #             newdata = NULL,
+  #             levels_id = NULL,
+  #             abc = NULL,
+  #             summary = FALSE,
+  #             conf = 0.95,
+  #             robust = FALSE,
+  #             tomean = TRUE,
+  #             ipts = NULL,
+  #             xrange = NULL,
+  #             aux_variables = NULL,
+  #             numeric_cov_at = NULL,
+  #             ...) {
+  #     if (is.null(ndraws))
+  #       ndraws  <- brms::ndraws(model)
+  #     else
+  #       ndraws <- ndraws
+  #     
+  #     
+  #     if(!is.null(ipts)) 
+  #       stop("It does not a make sense to interploate data when estimating",
+  #            "\n ",
+  #            " adjusted curves. Please set ipts = NULL")
+  #     
+  #     setxcall_ <- match.call()
+  #     post_processing_checks_args <- list()
+  #     post_processing_checks_args[['model']]    <- model
+  #     post_processing_checks_args[['xcall']]    <- setxcall_
+  #     post_processing_checks_args[['resp']]     <- resp
+  #     post_processing_checks_args[['envir']]    <- envir
+  #     post_processing_checks_args[['deriv']]    <- ''
+  #     post_processing_checks_args[['all']]      <- FALSE
+  #     post_processing_checks_args[['verbose']]  <- verbose
+  #     post_processing_checks_args[['check_d0']] <- FALSE
+  #     post_processing_checks_args[['check_d1']] <- TRUE
+  #     post_processing_checks_args[['check_d2']] <- FALSE
+  #     
+  #     o    <- do.call(post_processing_checks, post_processing_checks_args)
+  #     
+  #    
+  #     # o <-
+  #     #   post_processing_checks(model = model,
+  #     #                          xcall = match.call(),
+  #     #                          resp = resp,
+  #     #                          envir = envir,
+  #     #                          deriv = '')
+  #     
+  #     # For any call before get.newdata, should be bgmfit.data
+  #     if (is.null(newdata)) {
+  #       newdata <- model$model_info$bgmfit.data
+  #     } else {
+  #       newdata <- newdata
+  #     }
+  #     
+  #       newdata <- get.newdata(model, 
+  #                              newdata = newdata,
+  #                              resp = resp,
+  #                              numeric_cov_at = numeric_cov_at,
+  #                              aux_variables = aux_variables,
+  #                              levels_id = levels_id,
+  #                              ipts = ipts,
+  #                              xrange = xrange,
+  #                              idata_method = idata_method,
+  #                              verbose = verbose)
+  #       
+  #       
+  #       
+  #     
+  #       
+  #     list_c <- attr(newdata, 'list_c')
+  #     for (list_ci in names(list_c)) {
+  #       assign(list_ci, list_c[[list_ci]])
+  #     }
+  #     check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+  #                  'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
+  #                  'uvarby', 'subindicatorsi')
+  #     
+  #     for (check___ in check__) {
+  #       if(!exists(check___)) assign(check___, NULL)
+  #     }
+  #     
+  #     if(is.null(uvarby)) uvarby <- NA
+  #    
+  #     Xx <- xvar
+  #     Yy <- yvar
+  #     
+  #     
+  #     probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+  #     probtitles <- probs[order(probs)] * 100
+  #     probtitles <- paste("Q", probtitles, sep = "")
+  #     set_names_  <- c('Estimate', 'Est.Error', probtitles)
+  # 
+  #     
+  #     
+  #     ######################################################
+  #     # prepare_data2 change 
+  #     # xoffsetXnames <- 'xoffset'
+  #     # randomRnames   <- 'random' 
+  #     # if (!is.null(resp)) xoffsetXnames <- paste0(xoffsetXnames, resp_rev_)
+  #     # xoffsetXnames <- model$model_info[[xoffsetXnames]]
+  #     # xoffset <- xoffsetXnames
+  #     ######################################################
+  #     
+  #     xoffset <- 0
+  #     
+  #     d_adjustedXnames <- 'd_adjusted'
+  #     if (!is.null(resp)) d_adjustedXnames <- paste0(d_adjustedXnames, 
+  #                                                    resp_rev_)
+  #     d_adjustedXnames <- model$model_info[[d_adjustedXnames]]
+  #     d_adjusted <- d_adjustedXnames
+  #     
+  #     
+  #     
+  #     if (missing(x)) {
+  #       x <- newdata[[Xx]]
+  #     }
+  #     
+  #     if (missing(y)) {
+  #       y <- newdata[[Yy]]
+  #     }
+  #     
+  #     if (missing(v)) {
+  #       v <- 0
+  #     }
+  #     
+  #     if (missing(id)) {
+  #       IDvar <- model$model_info$idvars
+  #       IDvar <- IDvar[1]
+  #       id <- newdata[[IDvar]][1]
+  #       # id <- IDvar
+  #     }
+  #     
+  #     Xx <- xvar
+  #     Yy <- yvar
+  #     
+  #     # re_effx <- brms::ranef(berkeley_fit, summary = F)
+  #     # re_effx <- re_effx[['id']]
+  #     # re_effx <- re_effx[match('id', rownames(re_effx)), , drop = FALSE]
+  #     
+  #     
+  #     if(!is.null(ipts)) {
+  #       add_outcome <- model$data %>%
+  #         dplyr::select(dplyr::all_of(c(Yy, IDvar)))
+  #       newdata <- newdata %>% 
+  #         dplyr::left_join(., add_outcome, by = c(IDvar))
+  #       x <- newdata[[Xx]]
+  #       y <- newdata[[Yy]]
+  #       id <- newdata[[IDvar]][1]
+  #     }
+  #     
+  #     ######################################################
+  #     # prepare_data2 change 
+  #     # This x - xoffset is needed for bsitar based computation
+  #     # x <- x - xoffset
+  #     ######################################################
+  #     
+  #     nrowdatadims <- nrow(newdata)
+  #     ### 
+  #     predprep <- brms::prepare_predictions(model, resp = resp, 
+  #                                           newdata = newdata)
+  #     
+  #     rparnames <- names(predprep$nlpars)
+  #     
+  #     respstr <- "" # paste0(resp, "_")
+  #     septsr  <- ""
+  #     if(any(grepl(paste0(respstr, septsr, "a"), rparnames)) |
+  #        any(grepl(paste0(respstr, "a", septsr), rparnames))) {
+  #       a_r <- TRUE
+  #     } else {
+  #       a_r <- FALSE
+  #     }
+  #     
+  #     if(any(grepl(paste0(respstr, septsr, "b"), rparnames)) |
+  #        any(grepl(paste0(respstr, "b", septsr), rparnames))) {
+  #       b_r <- TRUE
+  #     } else {
+  #       b_r <- FALSE
+  #     }
+  #     
+  #     if(any(grepl(paste0(respstr, septsr, "c"), rparnames)) |
+  #        any(grepl(paste0(respstr, "c", septsr), rparnames))) {
+  #       c_r <- TRUE
+  #     } else {
+  #       c_r <- FALSE
+  #     }
+  #     
+  #     if(any(grepl(paste0(respstr, septsr, "d"), rparnames)) |
+  #        any(grepl(paste0(respstr, "d", septsr), rparnames))) {
+  #       d_r <- TRUE
+  #     } else {
+  #       d_r <- FALSE
+  #     }
+  #     
+  #    
+  #     
+  #     if(a_r) {
+  #       null_a <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="a", ndraws = ndraws, re_formula = NULL, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #       naaa_a <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="a", ndraws = ndraws, re_formula = NA, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #     } else {
+  #       null_a <- matrix(0, nrowdatadims, 1)
+  #       naaa_a <- matrix(0, nrowdatadims, 1)
+  #     }
+  #     
+  #     if(b_r) {
+  #       null_b <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="b", ndraws = ndraws, re_formula = NULL, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #       naaa_b <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="b", ndraws = ndraws, re_formula = NA, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #     } else {
+  #       null_b <- matrix(0, nrowdatadims, 1)
+  #       naaa_b <- matrix(0, nrowdatadims, 1)
+  #     }
+  #     
+  #     if(c_r) {
+  #       null_c <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="c", ndraws = ndraws, re_formula = NULL, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #       naaa_c <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="c", ndraws = ndraws, re_formula = NA, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #     } else {
+  #       null_c <- matrix(0, nrowdatadims, 1)
+  #       naaa_c <- matrix(0, nrowdatadims, 1)
+  #     }
+  #     
+  #     if(d_r) {
+  #       null_d <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="d", ndraws = ndraws, re_formula = NULL, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #       naaa_d <- fitted(model, resp = resp, newdata = newdata, 
+  #                        nlpar="d", ndraws = ndraws, re_formula = NA, 
+  #                        summary = summary,
+  #                        fullframe = NULL, itransform = "")
+  #     } else {
+  #       null_d <- matrix(0, nrowdatadims, 1)
+  #       naaa_d <- matrix(0, nrowdatadims, 1)
+  #     }
+  #     
+  #     
+  #     if(!summary) {
+  #       xadj_tmt <- yadj_tmt <- vadj_tmt <- list()
+  #       xadj_tmf <- yadj_tmf <- vadj_tmf <- list()
+  #       for (i in 1:ndraws) {
+  #         r_a <- null_a[ i, ]
+  #         r_b <- null_b[ i, ]
+  #         r_c <- null_c[ i, ]
+  #         r_d <- null_d[ i, ]
+  #         na_a <- naaa_a[ i, ]
+  #         na_b <- naaa_b[ i, ]
+  #         na_c <- naaa_c[ i, ]
+  #         na_d <- naaa_d[ i, ]
+  #         
+  #         # Re create random effects - coef = fixed + random 
+  #         rz_a <- r_a - na_a
+  #         rz_b <- r_b - na_b
+  #         rz_c <- r_c - na_c
+  #         rz_d <- r_d - na_d
+  #         
+  #         r_data_ <- cbind(rz_a, rz_b, rz_c, rz_d) %>% data.frame()
+  #         colnames(r_data_) <- letters[1:4]
+  #         
+  #         r_data_ <- r_data_ %>% 
+  #           dplyr::mutate(x = x) %>% 
+  #           dplyr::mutate(d.adjusted = d_adjusted %||% FALSE)
+  #         
+  #         adj_tmt <- r_data_ %>%
+  #           dplyr::mutate(x.adj = (x - .data$b) * exp(.data$c) + xoffset,
+  #                         y.adj = y - .data$a - 
+  #                           .data$d * dplyr::if_else(.data$d.adjusted,
+  #                                                    .data$x.adj - xoffset,
+  #                                                    x),
+  #                         v.adj = dplyr::if_else(.data$d.adjusted,
+  #                                                v / exp(.data$c) - .data$d,
+  #                                                (v - .data$d) / exp(.data$c)))
+  #         
+  #         
+  #         adj_tmf <- r_data_ %>%
+  #           dplyr::mutate(x.adj = x / exp(.data$c) + .data$b + xoffset,
+  #                         y.adj = y + .data$a + 
+  #                           .data$d * dplyr::if_else(.data$d.adjusted,
+  #                                                    .data$x.adj - xoffset,
+  #                                                    x),
+  #                         v.adj = dplyr::if_else(.data$d.adjusted,
+  #                                                (v + .data$d) * exp(.data$c),
+  #                                                v * exp(.data$c) + .data$d))
+  #         
+  #         adj_tmt <- adj_tmt %>% data.frame()
+  #         adj_tmf <- adj_tmf %>% data.frame()
+  #         
+  #         xadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+  #           unlist() %>% as.numeric()
+  #         yadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+  #           unlist() %>% as.numeric()
+  #         vadj_tmt[[i]] <- adj_tmt %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+  #           unlist() %>% as.numeric()
+  #         xadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+  #           unlist() %>% as.numeric()
+  #         yadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+  #           unlist() %>% as.numeric()
+  #         vadj_tmf[[i]] <- adj_tmf %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+  #           unlist() %>% as.numeric()
+  #       } # for (i in 1:ndraws) {
+  #       
+  #       xadj_tmt <- array(unlist(xadj_tmt), 
+  #                         dim=c(length(xadj_tmt[[1]]), length(xadj_tmt)  ))
+  #       xadj_tmt <- t(xadj_tmt)
+  #       
+  #       yadj_tmt <- array(unlist(yadj_tmt), 
+  #                         dim=c(length(yadj_tmt[[1]]), length(yadj_tmt)  ))
+  #       yadj_tmt <- t(yadj_tmt)
+  #       
+  #       vadj_tmt <- array(unlist(vadj_tmt), 
+  #                         dim=c(length(vadj_tmt[[1]]), length(vadj_tmt)  ))
+  #       vadj_tmt <- t(vadj_tmt)
+  #       
+  #       xadj_tmf <- array(unlist(xadj_tmf), 
+  #                         dim=c(length(xadj_tmf[[1]]), length(xadj_tmf)  ))
+  #       xadj_tmf <- t(xadj_tmf)
+  #       
+  #       yadj_tmf <- array(unlist(yadj_tmf), 
+  #                         dim=c(length(yadj_tmf[[1]]), length(yadj_tmf)  ))
+  #       yadj_tmf <- t(yadj_tmf)
+  #       
+  #       vadj_tmf <- array(unlist(vadj_tmf), 
+  #                         dim=c(length(vadj_tmf[[1]]), length(vadj_tmf)  ))
+  #       vadj_tmf <- t(vadj_tmf)
+  #       
+  #       
+  #       xadj_tmt <- brms::posterior_summary(xadj_tmt, probs = probs, 
+  #                                           robust = robust) 
+  #       yadj_tmt <- brms::posterior_summary(yadj_tmt, probs = probs, 
+  #                                           robust = robust)
+  #       vadj_tmt <- brms::posterior_summary(vadj_tmt, probs = probs, 
+  #                                           robust = robust)
+  #       xadj_tmf <- brms::posterior_summary(xadj_tmf, probs = probs, 
+  #                                           robust = robust)
+  #       yadj_tmf <- brms::posterior_summary(yadj_tmf, probs = probs, 
+  #                                           robust = robust)
+  #       vadj_tmf <- brms::posterior_summary(vadj_tmf, probs = probs, 
+  #                                           robust = robust)
+  #       
+  #       if (tomean) {
+  #         x.adj <- xadj_tmt
+  #         y.adj <- yadj_tmt
+  #         v.adj <- vadj_tmt
+  #       }
+  #       else {
+  #         x.adj <- xadj_tmf
+  #         y.adj <- yadj_tmf
+  #         v.adj <- vadj_tmf
+  #       }
+  #       
+  #       # This was good but not required
+  #       # out <- cbind(x.adj[, 1], y.adj)
+  #       # setadnamex <- paste0("adj", "_", Xx)
+  #       # setadnamey <- colnames(y.adj)
+  #       # colnames(out) <- c(setadnamex, setadnamey)
+  #       # out <- cbind(newdata, out)
+  #       
+  #       # But for trimline, we need the following order 
+  #       out <- newdata
+  #       out[[Xx]] <- x.adj[, 1]
+  #       out[[Yy]] <- y.adj[, 1]
+  #       out <- out %>% dplyr::relocate(c(Xx, Yy, IDvar))
+  #       # now add CI also - Estimate will be same as outcome
+  #       out <- cbind(out, y.adj)
+  #     } # if(!summary) {
+  #     
+  #     
+  #     if(summary) {
+  #       r_a <- null_a[ , 1]
+  #       r_b <- null_b[ , 1]
+  #       r_c <- null_c[ , 1]
+  #       r_d <- null_d[ , 1]
+  #       na_a <- naaa_a[ , 1]
+  #       na_b <- naaa_b[ , 1]
+  #       na_c <- naaa_c[ , 1]
+  #       na_d <- naaa_d[ , 1]
+  #       
+  #       # Re create random effects - coef = fixed + random 
+  #       # Thus, random = coef - fixed
+  #       rz_a <- r_a - na_a
+  #       rz_b <- r_b - na_b
+  #       rz_c <- r_c - na_c
+  #       rz_d <- r_d - na_d
+  #       
+  #       r_data_ <- cbind(rz_a, rz_b, rz_c, rz_d) %>% data.frame()
+  #       colnames(r_data_) <- letters[1:4]
+  #       
+  #       r_data_ <- r_data_ %>% 
+  #         dplyr::mutate(x = x) %>% 
+  #         dplyr::mutate(d.adjusted = d_adjusted %||% FALSE)
+  #       
+  #       adj_tmt <- r_data_ %>%
+  #         dplyr::mutate(x.adj = (x - .data$b) * exp(.data$c) + xoffset,
+  #                y.adj = y - .data$a - 
+  #                  .data$d * dplyr::if_else(.data$d.adjusted,
+  #                                           .data$x.adj - xoffset,
+  #                                           x),
+  #                v.adj = dplyr::if_else(.data$d.adjusted,
+  #                                v / exp(.data$c) - .data$d,
+  #                                (v - .data$d) / exp(.data$c)))
+  #       
+  #       
+  #       adj_tmf <- r_data_ %>%
+  #         dplyr::mutate(x.adj = x / exp(.data$c) + .data$b + xoffset,
+  #                y.adj = y + .data$a + 
+  #                  .data$d * dplyr::if_else(.data$d.adjusted,
+  #                                           .data$x.adj - xoffset,
+  #                                           x),
+  #                v.adj = dplyr::if_else(.data$d.adjusted,
+  #                                (v + .data$d) * exp(.data$c),
+  #                                v * exp(.data$c) + .data$d))
+  #       
+  #       adj_tmt <- adj_tmt %>% data.frame()
+  #       adj_tmf <- adj_tmf %>% data.frame()
+  #       
+  # 
+  #       xadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+  #         unlist() %>% as.numeric()
+  #       yadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+  #         unlist() %>% as.numeric()
+  #       vadj_tmt <- adj_tmt %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+  #         unlist() %>% as.numeric()
+  #       xadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('x.adj')) %>% 
+  #         unlist() %>% as.numeric()
+  #       yadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('y.adj')) %>% 
+  #         unlist() %>% as.numeric()
+  #       vadj_tmf <- adj_tmf %>% dplyr::select(dplyr::all_of('v.adj')) %>% 
+  #         unlist() %>% as.numeric()
+  #       
+  #       if (tomean) {
+  #         x.adj <- xadj_tmt
+  #         y.adj <- yadj_tmt
+  #         v.adj <- vadj_tmt
+  #       }
+  #       else {
+  #         x.adj <- xadj_tmf
+  #         y.adj <- yadj_tmf
+  #         v.adj <- vadj_tmf
+  #       }
+  #      
+  #       # This was good
+  #       out <- cbind(x.adj, y.adj)
+  #       setadnamex <- paste0("adj", "_", Xx)
+  #       setadnamey <- 'Estimate'
+  #       colnames(out) <- c(setadnamex, setadnamey)
+  #       out <- cbind(newdata, out)
+  #       
+  #       # But for trimline, we need folowing order 
+  #       out <- newdata
+  #       out[[Xx]] <- x.adj
+  #       out[[Yy]] <- y.adj
+  #       out <- out %>% dplyr::relocate(dplyr::all_of(c(Xx, Yy, IDvar)))
+  #     } # if(summary) {
+  #     out
+  #   }
+  # 
+  # 
+  # 
+  # xyunadj_ <-
+  #   function (model,
+  #             x,
+  #             y = NULL,
+  #             id,
+  #             resp = NULL,
+  #             newdata = NULL,...) {
+  #     
+  #     setxcall_ <- match.call()
+  #     post_processing_checks_args <- list()
+  #     post_processing_checks_args[['model']]    <- model
+  #     post_processing_checks_args[['xcall']]    <- setxcall_
+  #     post_processing_checks_args[['resp']]     <- resp
+  #     post_processing_checks_args[['envir']]    <- envir
+  #     post_processing_checks_args[['deriv']]    <- ''
+  #     post_processing_checks_args[['all']]      <- FALSE
+  #     post_processing_checks_args[['verbose']]  <- verbose
+  #     post_processing_checks_args[['check_d0']] <- FALSE
+  #     post_processing_checks_args[['check_d1']] <- TRUE
+  #     post_processing_checks_args[['check_d2']] <- FALSE
+  #     
+  #     o    <- do.call(post_processing_checks, post_processing_checks_args)
+  #     
+  #     
+  #     # o <-
+  #     #   post_processing_checks(model = model,
+  #     #                          xcall = match.call(),
+  #     #                          resp = resp,
+  #     #                          envir = envir,
+  #     #                          deriv = '')
+  #     
+  #     newdata <- get.newdata(model, newdata = newdata, resp = resp, 
+  #                            verbose = verbose)
+  #     
+  #     if(!is.na(uvarby)) {
+  #       newdata <- newdata %>%
+  #         dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
+  #         droplevels()
+  #     }
+  #     
+  #     if (missing(x))
+  #       x <- newdata[[Xx]]
+  #     if (missing(y))
+  #       y <- newdata[[Yy]]
+  #     if (missing(id))
+  #       id <- newdata[[IDvar]]
+  #     out <- as.data.frame(as.factor(newdata[[IDvar]]))
+  #     out <- cbind(x, y, out)
+  #     colnames(out) <- c(Xx, Yy, IDvar)
+  #     if(!is.na(uvarby)) {
+  #       out[[uvarby]] <- resp
+  #     }
+  #     out
+  #   }
+  # 
   
   
+  # set_lines_colors <- function(plot, ngroups, 
+  #                              linetype.groupby,
+  #                              color.groupby) {
+  #   nrepvals <- ngroups
+  #   
+  #   if(is.null(linetype.groupby)) {
+  #     linetype.groupby <- deparse(linetype.groupby)
+  #   } else  if(is.na(linetype.groupby)) {
+  #     linetype.groupby <- deparse(linetype.groupby)
+  #   } else {
+  #     linetype.groupby <- linetype.groupby
+  #   }
+  #   
+  #   if(is.null(color.groupby)) {
+  #     color.groupby <- deparse(color.groupby)
+  #   } else  if(is.na(color.groupby)) {
+  #     color.groupby <- deparse(color.groupby)
+  #   } else {
+  #     color.groupby <- color.groupby
+  #   }
+  #   
+  #   # https://data.library.virginia.edu/setting-up-color-palettes-in-r/
+  #   ggplotColors <- function(g){
+  #     g <- g - 1
+  #     d <- 360/g
+  #     h <- cumsum(c(15, rep(d,g - 1)))
+  #     O <- grDevices::hcl(h = h, c = 100, l = 65)
+  #     O <- c('black', O)
+  #     O
+  #   }
+  #   
+  #   # https://groups.google.com/g/ggplot2/c/XIcXU3KlxW0
+  #   ggplotlines <- function(g){
+  #     lineTypes1 <- c("solid", "22", "42", "44", "13", "1343", "73", "2262")
+  #     # lineTypes1 <- c("solid", "solid", "solid", "13", "1343", "73", "2262")
+  #     lineTypes2 <- apply(expand.grid(1:3, 1:3, 1:3, 1:3), 1, 
+  #                         paste0, collapse="")
+  #     lineTypes3 <- apply(expand.grid(1:2, 1:2, 1:2, 1:2), 1, 
+  #                         paste0, collapse="")
+  #     lineTypes <- c(lineTypes1, lineTypes2, lineTypes3)
+  #     lineTypes[1:g]
+  #   }
+  #   
+  #   default.set.line.groupby <- 'solid'
+  #   default.set.color.groupby <- 'black'
+  #     
+  #   line.guide <- "none"
+  #   color.guide <- "none"
+  #   
+  #   if(linetype.groupby == 'NA' & color.groupby == 'NA') {
+  #     if(nrepvals == 1) {
+  #       set.line.groupby <- default.set.line.groupby
+  #       set.color.groupby <- default.set.color.groupby
+  #     }
+  #     if(nrepvals > 1) {
+  #       set.line.groupby <- rep(default.set.line.groupby, nrepvals)
+  #       set.color.groupby <- rep(default.set.color.groupby, nrepvals)
+  #       line.guide <- "none"
+  #       color.guide <- "legend"
+  #     }
+  #   } # if(is.na(linetype.groupby) & is.na(color.groupby)) {
+  #   
+  #   
+  #   
+  #   if(linetype.groupby == 'NA' & color.groupby != 'NA') {
+  #     set.line.groupby <- rep(default.set.line.groupby, nrepvals)
+  #     if(nrepvals == 1) {
+  #       if(color.groupby == 'NULL') {
+  #         set.color.groupby <- default.set.color.groupby
+  #       } else if(color.groupby != 'NULL') {
+  #         set.color.groupby <- color.groupby[1]  
+  #       }
+  #     }
+  #     
+  #     if(nrepvals > 1) {
+  #       set.line.groupby <- rep(default.set.line.groupby, nrepvals)
+  #       if(color.groupby == 'NULL') {
+  #         set.color.groupby <- ggplotColors(nrepvals)
+  #       }
+  #       
+  #       if(color.groupby != 'NULL') {
+  #         if(length(color.groupby) == nrepvals) {
+  #           set.color.groupby <- color.groupby
+  #         } else if(length(color.groupby) != nrepvals) {
+  #           set.color.groupby <- rep(color.groupby, nrepvals)
+  #         }
+  #       }
+  #       line.guide <- "none"
+  #       color.guide <- "legend"
+  #     }
+  #   } # if(is.na(linetype.groupby) & !is.na(color.groupby)) {
+  #   
+  #   
+  #   if(linetype.groupby != 'NA' & color.groupby == 'NA') {
+  #     set.color.groupby <- rep(default.set.color.groupby, nrepvals)
+  #     
+  #     if(nrepvals == 1) {
+  #       if(linetype.groupby == 'NULL') {
+  #         set.line.groupby <- default.set.line.groupby
+  #       } else if(linetype.groupby != 'NULL') {
+  #         set.line.groupby <- linetype.groupby[1]  
+  #       }
+  #     }
+  #     
+  #     if(nrepvals > 1) {
+  #       if(linetype.groupby == 'NULL') {
+  #         set.line.groupby <- ggplotlines(nrepvals)
+  #         if(length(set.line.groupby) < nrepvals) {
+  #           set.line.groupby <- rep(set.line.groupby, nrepvals)
+  #         }
+  #       }
+  #       
+  #       if(linetype.groupby != 'NULL') {
+  #         if(length(linetype.groupby) == nrepvals) {
+  #           set.line.groupby <- linetype.groupby
+  #         } else if(length(color.groupby) != nrepvals) {
+  #           set.line.groupby <- rep(linetype.groupby, nrepvals)
+  #         }
+  #       }
+  #       line.guide <- "none" # "legend"
+  #       color.guide <- "legend"  # "none"
+  #     }
+  #   } # if(!is.na(linetype.groupby) & is.na(color.groupby)) {
+  #   
+  #   
+  #   
+  #   if(linetype.groupby != 'NA' & color.groupby != 'NA') {
+  #     if(nrepvals == 1) {
+  #       if(color.groupby == 'NULL') {
+  #         set.color.groupby <- 'black'
+  #       } else if(color.groupby != 'NULL') {
+  #         set.color.groupby <- color.groupby[1]   
+  #       }
+  #       
+  #       if(linetype.groupby == 'NULL') {
+  #         set.line.groupby <- 'solid'
+  #       } else if(linetype.groupby != 'NULL') {
+  #         set.line.groupby <- linetype.groupby[1]   
+  #       }
+  #     }
+  #     
+  #     if(nrepvals > 1) {
+  #       if(color.groupby == 'NULL') {
+  #         set.color.groupby <- ggplotColors(nrepvals)
+  #         if(length(set.color.groupby) < nrepvals) {
+  #           set.color.groupby <- rep(set.color.groupby, nrepvals)
+  #         }
+  #       }
+  #       if(linetype.groupby == 'NULL') {
+  #         set.line.groupby <- ggplotlines(nrepvals)
+  #         if(length(set.line.groupby) < nrepvals) {
+  #           set.line.groupby <- rep(set.line.groupby, nrepvals)
+  #         }
+  #       }
+  #       
+  #       if(color.groupby != 'NULL') {
+  #         if(length(color.groupby) == nrepvals) {
+  #           set.color.groupby <- color.groupby
+  #         } else if(length(color.groupby) != nrepvals) {
+  #           set.color.groupby <- rep(color.groupby, nrepvals)
+  #         }
+  #       }
+  #       if(linetype.groupby != 'NULL') {
+  #         if(length(linetype.groupby) == nrepvals) {
+  #           set.line.groupby <- linetype.groupby
+  #         } else if(length(linetype.groupby) != nrepvals) {
+  #           set.line.groupby <- rep(linetype.groupby, nrepvals)
+  #         }
+  #       }
+  #       line.guide <- "none"
+  #       color.guide <- "legend"
+  #     }
+  #   } # if(!is.na(linetype.groupby) & !is.na(set.color.groupby)) {
+  #   
+  #   
+  #   suppressMessages({
+  #     plot <- plot + 
+  #       ggplot2::scale_linetype_manual(values=set.line.groupby, 
+  #                                      guide = line.guide) +
+  #       ggplot2::scale_color_manual(values=set.color.groupby, 
+  #                                   guide = color.guide)
+  #   })
+  #   
+  #   plot
+  # } # set_lines_colors
   
-  set_lines_colors_ribbon <- function(plot, guideby = NULL) {
-    getbuiltingg <- ggplot2::ggplot_build(plot)
-    get_line_  <- getbuiltingg$data[[1]]["linetype"]
-    get_color_ <- getbuiltingg$data[[1]]["colour"]
-    get_fill_  <- getbuiltingg$data[[1]]["colour"]
-    ngrpanels  <- getbuiltingg$data[[1]]["group"]
-    get_line_  <- unique(unlist(get_line_))
-    get_color_ <- unique(unlist(get_color_))
-    get_fill_  <- unique(unlist(get_fill_))
-    ngrpanels <- length(unique(unlist(ngrpanels)))
-    
-    if(length(get_line_) != ngrpanels) get_line_ <- 
-      rep(get_line_, ngrpanels)
-    if(length(get_color_) != ngrpanels) get_color_ <- 
-      rep(get_color_, ngrpanels)
-    if(length(get_fill_) != ngrpanels) get_fill_ <- 
-      rep(get_fill_, ngrpanels)
-    
-    setguide_line <- setguide_color <- setguide_fill <- 'none'
-    if(is.null(guideby)) {
-      setguide_line <- setguide_color <- setguide_fill <- 'none'
-    } else if(guideby == 'line') {
-      setguide_line <- 'legend'
-    } else if(guideby == 'color') {
-      setguide_color <- 'legend'
-    } else if(guideby == 'fill') {
-      setguide_fill <- 'legend'
-    }
-    
-    suppressMessages({
-      plot <- plot +
-        ggplot2::scale_linetype_manual(values=get_line_, 
-                                       guide = setguide_line) +
-        ggplot2::scale_color_manual(values=get_color_, 
-                                    guide = setguide_color) +
-        ggplot2::scale_fill_manual(values=get_fill_, 
-                                   guide = setguide_fill)
-    })
-    
-    plot
-  }
+  
+  
+  # set_lines_colors_ribbon <- function(plot, guideby = NULL) {
+  #   getbuiltingg <- ggplot2::ggplot_build(plot)
+  #   get_line_  <- getbuiltingg$data[[1]]["linetype"]
+  #   get_color_ <- getbuiltingg$data[[1]]["colour"]
+  #   get_fill_  <- getbuiltingg$data[[1]]["colour"]
+  #   ngrpanels  <- getbuiltingg$data[[1]]["group"]
+  #   get_line_  <- unique(unlist(get_line_))
+  #   get_color_ <- unique(unlist(get_color_))
+  #   get_fill_  <- unique(unlist(get_fill_))
+  #   ngrpanels <- length(unique(unlist(ngrpanels)))
+  #   
+  #   if(length(get_line_) != ngrpanels) get_line_ <- 
+  #     rep(get_line_, ngrpanels)
+  #   if(length(get_color_) != ngrpanels) get_color_ <- 
+  #     rep(get_color_, ngrpanels)
+  #   if(length(get_fill_) != ngrpanels) get_fill_ <- 
+  #     rep(get_fill_, ngrpanels)
+  #   
+  #   setguide_line <- setguide_color <- setguide_fill <- 'none'
+  #   if(is.null(guideby)) {
+  #     setguide_line <- setguide_color <- setguide_fill <- 'none'
+  #   } else if(guideby == 'line') {
+  #     setguide_line <- 'legend'
+  #   } else if(guideby == 'color') {
+  #     setguide_color <- 'legend'
+  #   } else if(guideby == 'fill') {
+  #     setguide_fill <- 'legend'
+  #   }
+  #   
+  #   suppressMessages({
+  #     plot <- plot +
+  #       ggplot2::scale_linetype_manual(values=get_line_, 
+  #                                      guide = setguide_line) +
+  #       ggplot2::scale_color_manual(values=get_color_, 
+  #                                   guide = setguide_color) +
+  #       ggplot2::scale_fill_manual(values=get_fill_, 
+  #                                  guide = setguide_fill)
+  #   })
+  #   
+  #   plot
+  # }
   
   
   
@@ -2315,7 +2486,6 @@ plot_curves.bgmfit <- function(model,
   }
   
   
-  
   groupby_str_au <- groupby_fistr
   
   if (grepl("a", opt, ignore.case = T) |
@@ -2325,36 +2495,125 @@ plot_curves.bgmfit <- function(model,
     }
     if (grepl("a", opt, ignore.case = T)) {
       
-      xyadj_ed <- xyadj_(model, 
-                         newdata = newdata, 
-                         ndraws = ndraws,
-                         resp = resp, 
-                         tomean = TRUE, 
-                         conf = conf, 
-                         robust = robust,
-                         summary = summary, 
-                         numeric_cov_at = numeric_cov_at,
-                         aux_variables = aux_variables,
-                         levels_id = levels_id,
-                         ipts = ipts,
-                         xrange = xrange)
-      out_a_ <-
-        d.out <- trimlines_(model, id = 'id', resp = resp, 
-                            newdata = xyadj_ed, trim = trim)
+      # if(!is.na(model$model_info$univariate_by$by)) {
+      #   stop("option = 'a' is not yet available for 'univariate_by' model")
+      # } else if(model$model_info$multivariate$mvar) {
+      #   stop("option = 'a' is not yet available for 'multivariate' model")
+      # } else {
+      #   if(!is.null(cov_vars)) {
+      #     # stop("option = 'a' is not yet available for model with covariates")
+      #   }
+      # }
+      
+      
+      
+      # prepare_data2 changes: newdata = newdata -> newdata = NULL
+      xyadj_ed <- xyadj_curves(model, 
+                               x = NULL,
+                               y = NULL,
+                               id = NULL,
+                               v = NULL,
+                               newdata = newdata.xyadj, 
+                               ndraws = ndraws,
+                               draw_ids = draw_ids,
+                               resp = resp, 
+                               tomean = TRUE,
+                               conf = conf, 
+                               robust = robust,
+                               summary = summary, 
+                               numeric_cov_at = numeric_cov_at,
+                               aux_variables = aux_variables,
+                               levels_id = levels_id,
+                               ipts = ipts,
+                               xrange = xrange, 
+                               idata_method = idata_method,
+                               verbose = verbose,
+                               deriv_model = NULL,
+                               deriv = NULL, 
+                               envir = envir,
+                               ...) 
+      
+      # prepare_data2: 
+      # d.out is for returndata = TRUE
+      # out_a_ <- d.out <- trimline... 
+      # to out_a_ <- trimline... and then after itransform d.out - out_a_
+      out_a_ <- trimlines_curves(model, 
+                                 x = Xx,
+                                 y = Yy,
+                                 id = IDvar,
+                                 newdata = xyadj_ed, 
+                                 ndraws = ndraws,
+                                 draw_ids = draw_ids,
+                                 resp = resp, 
+                                 level = 0,
+                                 trim = trim, 
+                                 estimation_method = estimation_method,
+                                 verbose = verbose,
+                                 deriv_model = NULL,
+                                 deriv = NULL, 
+                                 envir = envir,
+                                 ...)
+      
+      # Need to match out_a_ transformation because x_minimum_a_ etc.
+      if(any(itransform_set != "")) {
+        out_a_ <- prepare_transformations(data = out_a_, model = model,
+                                          itransform = itransform_set)
+      }
+      
+      d.out <- out_a_
+      
+      
+      # 6.03.2025
+      ##############################################################3
+      dots <- list(...)
+      set_get_dv <- FALSE
+      if(!is.null(dots$get_dv)) {
+        if(dots$get_dv) {
+          if(verbose) message("executing 'get_dv'!")
+          set_get_dv <- TRUE
+        }
+      }
+      
+      if(set_get_dv) {
+        return(out_a_)
+      }
+      
+      # 6.03.2025
+      if(!is.null(dots$xadj_tmt)) {
+        if(dots$xadj_tmt) {
+          return(out_a_)
+        }
+      }
+      
+      if(!is.null(dots$xadj_tmf)) {
+        if(dots$xadj_tmf) {
+          return(out_a_)
+        }
+      }
+      ##############################################################
+      
+      
+      
+      
       out_a_ <-
         out_a_ %>%
         dplyr::mutate(
           groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_au)))
           )
       
+      
+      
+     
+      
       # x_minimum_a_ <- floor(min(out_a_[[Xx]]))
       # x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
       x_minimum_a_ <- x_minimum
       x_maximum_a_ <- x_maximum
       
+      
       out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum_a_ & 
                          out_a_[[Xx]] <= x_maximum_a_, ]
-      
+
       out_a_ <- out_a_ %>% dplyr::mutate(groupby.x = groupby, 
                                          groupby.y = groupby.x)
       
@@ -2485,10 +2744,48 @@ plot_curves.bgmfit <- function(model,
     
     
     if (grepl("u", opt, ignore.case = T)) {
-      xyadj_ed <- xyunadj_(model, resp = resp)
-      out_u_ <-
-        d.out <- trimlines_(model, id = 'id', resp = resp, 
-                            newdata = xyadj_ed, trim = trim)
+      xyunadj_ed <- xyunadj_curves(model, 
+                                   x = NULL,
+                                   y = NULL,
+                                   id = NULL,
+                                   newdata = NULL,
+                                   ndraws = ndraws,
+                                   draw_ids = draw_ids,
+                                   resp = resp, 
+                                   verbose = verbose,
+                                   deriv_model = NULL,
+                                   deriv = NULL, 
+                                   envir = envir,
+                                   ...)
+      
+      # prepare_data2: 
+      # d.out is for returndata = TRUE
+      # out_u_ <- d.out <- trimline... 
+      # to out_u_ <- trimline... and then after itransform d.out - out_a_
+      out_u_ <- trimlines_curves(model, 
+                                 x = Xx,
+                                 y = Yy,
+                                 id = IDvar,
+                                 newdata = xyunadj_ed, 
+                                 ndraws = ndraws,
+                                 draw_ids = draw_ids,
+                                 resp = resp, 
+                                 level = 0,
+                                 trim = trim, 
+                                 estimation_method = estimation_method,
+                                 verbose = verbose,
+                                 deriv_model = NULL,
+                                 deriv = NULL, 
+                                 envir = envir,
+                                 ...)
+      
+      # Need to match out_a_ transformation because x_minimum_a_ etc.
+      if(any(itransform_set != "")) {
+        out_u_ <- prepare_transformations(data = out_u_, model = model,
+                                          itransform = itransform_set)
+      }
+      d.out <- out_u_
+      
       out_u_ <-
         out_u_ %>%
         dplyr::mutate(
@@ -2497,8 +2794,7 @@ plot_curves.bgmfit <- function(model,
       
       out_u_ <- out_u_ %>% dplyr::mutate(groupby.x = groupby, 
                                          groupby.y = groupby.x)
-      
-      
+    
       if(is.na(uvarby)) { 
         if(is.na(out_u_[['groupby']][1])) {
           legendlabs_mult_singel <- c('Distance', 'Velocity')
@@ -2834,7 +3130,7 @@ plot_curves.bgmfit <- function(model,
     attr(d.out, 'growthparameters') <- p.as.d.out_attr
     if(returndata_add_parms) {
       if(!is.null(p.as.d.out_attr)) {
-        print(groupby_str_v)
+        # print(groupby_str_v)
         # Note gpdata can be NULL because we have added attribute above
         d.out <- add_parms_to_curve_data(d.out, 
                                          gpdata = NULL,
@@ -2843,14 +3139,15 @@ plot_curves.bgmfit <- function(model,
                                          nonparmcols = groupby_str_v,
                                          byjoincols = groupby_str_v)
       } # if(!is.null(p.as.d.out_attr)) {
-    } # else if (returndata) {
+    } # if(returndata_add_parms) {
     return(d.out)
-  }
-}
+  } # else if (returndata) {
+  
+} # end plot_curves
 
 
 
-#' @rdname plot_curves.bgmfit
+#' @rdname plot_curves
 #' @export
 plot_curves <- function(model, ...) {
   UseMethod("plot_curves")

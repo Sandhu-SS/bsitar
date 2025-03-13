@@ -1,12 +1,13 @@
 ## code to prepare `berkeley_fit` dataset goes here
 
-library(bsitar)
+#library(bsitar)
 
+devtools::load_all()
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 3, 
                         stype = list('nsp', F),
-                        chains = 2, cores = 2, iter = 2000, thin = 5,
+                        chains = 1, cores = 2, iter = 1000, thin = 5,
                         # a_prior_beta = normal(lm, ysd, autoscale = 2.5),
                         # b_prior_beta = normal(0, 1.5),
                         # c_prior_beta = normal(0, 0.5),
@@ -24,8 +25,10 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # c_init_beta = 0,
                         # s_init_beta = lm,
                         # backend = "rstan", 
+                        sample_prior = "no",
                         normalize = FALSE, 
-                        threads = brms::threading(NULL),
+                        genquant_xyadj = TRUE,
+                        # threads = brms::threading(NULL),
                         seed = 123)
 
 
@@ -52,6 +55,14 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
 
 # usethis::use_data(berkeley_exdata, overwrite = TRUE)
 # usethis::use_data(berkeley_exfit, overwrite = TRUE)
+
+
+
+# for (i in names(berkeley_exfit$model_info)) {
+#   print(i)
+#   object.size(berkeley_exfit$model_info[[i]]) %>% print()
+# }
+
 
 
 usethis::use_data(berkeley_exdata, overwrite = TRUE, compress = 'xz')

@@ -14,7 +14,9 @@
 #'   back-transformation. Apart from these differences, both these functions
 #'   ([brms::conditional_effects] and \strong{plot_conditional_effects()}) work
 #'   in the same manner. In other words, the user can specify all the arguments
-#'   which are available in the [brms::conditional_effects()].
+#'   which are available in the [brms::conditional_effects()]. An alternative
+#'   approach is to [marginal_draws()] function (with \code{plot = TRUE}) which
+#'   is based on the \pkg{marginaleffects}.
 #' 
 #' @inherit brms::conditional_effects params description
 #' @inherit growthparameters.bgmfit params
@@ -29,7 +31,7 @@
 #'   required to generate conditional effects plots. See
 #'   [brms::conditional_effects()] for details.
 #'
-#' @export plot_conditional_effects.bgmfit
+#' @rdname plot_conditional_effects
 #' @export
 #' 
 #' @seealso [brms::conditional_effects()]
@@ -79,7 +81,7 @@ plot_conditional_effects.bgmfit <-
            resolution = 100,
            select_points = 0,
            too_far = 0,
-           prob = 0.95,
+           probs = c(0.025, 0.975),
            robust = TRUE,
            newdata = NULL,
            ndraws = NULL,
@@ -97,6 +99,8 @@ plot_conditional_effects.bgmfit <-
            usesavedfuns = NULL,
            clearenvfuns = NULL,
            funlist = NULL,
+           itransform = NULL,
+           newdata_fixed = FALSE,
            envir = NULL,
            ...) {
     
@@ -106,6 +110,13 @@ plot_conditional_effects.bgmfit <-
       envir <- parent.frame()
     }
     
+    # conf <- conf_level
+    # probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
+    
+    probtitles <- probs[order(probs)] * 100
+    probtitles <- paste("Q", probtitles, sep = "")
+    set_names_  <- c('Estimate', 'Est.Error', probtitles)
+    # set_names_  <- c('Estimate', probtitles)
     
     # Depending on dpar 'mu' or 'sigma', subset model_info
     model <- getmodel_info(model = model, dpar = dpar)
@@ -148,6 +159,64 @@ plot_conditional_effects.bgmfit <-
       idata_method <- 'm2'
     }
     
+    # 6.03.2025
+    # moved here up in the call
+    ########################################################
+    if (is.null(resp)) {
+      resp_rev_ <- resp
+    } else if (!is.null(resp)) {
+      resp_rev_ <- paste0("_", resp)
+    }
+    xvar_ <- paste0('xvar', resp_rev_)
+    yvar_ <- paste0('yvar', resp_rev_)
+    groupvar_ <- paste0('groupvar', resp_rev_)
+    xvar <- model$model_info[[xvar_]]
+    yvar <- model$model_info[[yvar_]]
+    hierarchical_ <- paste0('hierarchical', resp_rev_)
+    if (is.null(levels_id)) {
+      IDvar <- model$model_info[[groupvar_]]
+      if (!is.null(model$model_info[[hierarchical_]])) {
+        IDvar <- model$model_info[[hierarchical_]]
+      }
+    } else if (!is.null(levels_id)) {
+      IDvar <- levels_id
+    }
+    xvar  <- xvar
+    idvar <- IDvar
+    if(length(idvar) > 1) idvar <- idvar[1]
+    yvar  <- 'yvar'
+    
+    # 6.03.2025
+    ########################################################
+    # prepare_data2
+    ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+    ifunx_ <- model$model_info[[ifunx_]]
+    ########################################################
+    
+    ########################################################
+    # Define lables fun for x- axis
+    labels_ggfunx <- function(...) {
+      out <- ifunx_(list(...)[[1]]) 
+      out <- scales::number(
+        out,
+        accuracy = 1,
+        scale = 1,
+        prefix = "",
+        suffix = "",
+        big.mark = " ",
+        decimal.mark = ".",
+        style_positive = c("none", "plus", "space"),
+        style_negative = c("hyphen", "minus", "parens"),
+        scale_cut = NULL,
+        trim = TRUE
+      )
+      return(out)
+    }
+    
+    labels_ggfunx_str <- 
+      "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
+    
+    ########################################################
     
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
@@ -175,21 +244,42 @@ plot_conditional_effects.bgmfit <-
     
     model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
-    o <- post_processing_checks(model = model,
-                                xcall = match.call(),
-                                resp = resp,
-                                envir = envir,
-                                deriv = deriv, 
-                                all = FALSE,
-                                verbose = verbose)
     
-    oall <- post_processing_checks(model = model,
-                                   xcall = match.call(),
-                                   resp = resp,
-                                   envir = envir,
-                                   deriv = deriv, 
-                                   all = TRUE,
-                                   verbose = FALSE)
+    setxcall_   <- match.call()
+    post_processing_checks_args <- list()
+    post_processing_checks_args[['model']]    <- model
+    post_processing_checks_args[['xcall']]    <- setxcall_
+    post_processing_checks_args[['resp']]     <- resp
+    post_processing_checks_args[['envir']]    <- envir
+    post_processing_checks_args[['deriv']]    <- deriv
+    post_processing_checks_args[['all']]      <- FALSE
+    post_processing_checks_args[['verbose']]  <- verbose
+    post_processing_checks_args[['check_d0']] <- FALSE
+    post_processing_checks_args[['check_d1']] <- TRUE
+    post_processing_checks_args[['check_d2']] <- FALSE
+    
+    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    
+    post_processing_checks_args[['all']]      <- TRUE
+    oall <- do.call(post_processing_checks, post_processing_checks_args)
+    post_processing_checks_args[['all']]      <- FALSE
+    
+    
+    # o <- post_processing_checks(model = model,
+    #                             xcall = match.call(),
+    #                             resp = resp,
+    #                             envir = envir,
+    #                             deriv = deriv, 
+    #                             all = FALSE,
+    #                             verbose = verbose)
+    # 
+    # oall <- post_processing_checks(model = model,
+    #                                xcall = match.call(),
+    #                                resp = resp,
+    #                                envir = envir,
+    #                                deriv = deriv, 
+    #                                all = TRUE,
+    #                                verbose = FALSE)
     
     
     if(!is.null(funlist)) {
@@ -201,14 +291,70 @@ plot_conditional_effects.bgmfit <-
     }
     
     
+    # 6.03.2025
+    # see slopes will be mandatory
+    check_fun <- FALSE
+    if(deriv > 0) {
+      available_d1 <- o[['available_d1']]
+      if(!available_d1) {
+        deriv_model <- FALSE
+        call_slopes <- TRUE
+        post_processing_checks_args[['deriv']]    <- 0
+        o    <- do.call(post_processing_checks, post_processing_checks_args)
+      }
+      check_fun <- TRUE
+    }
+    full.args$deriv_model <- deriv_model
+    
+    # post_processing_checks_args[['deriv']]    <- deriv
+    
+    
+    # Unlike marginal_... functions where assign() works, for brms::fitted...
+    # the envrionment is assigned to d0/d1 functions via setupfuns()
+    # Therefore check_fun block is moved above 
+    # and deriv = 0 shoud also reflect in  setupfuns() 
+    
+    # test <- setupfuns(model = model, resp = resp,
+    #                   o = o, oall = oall, 
+    #                   usesavedfuns = usesavedfuns, 
+    #                   deriv = deriv, envir = envir, 
+    #                   deriv_model = deriv_model, 
+    #                   ...)
+    
+    
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall, 
                       usesavedfuns = usesavedfuns, 
-                      deriv = deriv, envir = envir, 
+                      deriv = post_processing_checks_args[['deriv']], 
+                      envir = envir, 
                       deriv_model = deriv_model, 
                       ...)
     
     if(is.null(test)) return(invisible(NULL))
+    
+    
+    # 6.03.2025
+    # see slopes will be mandatory
+    check_fun <- FALSE
+    if(deriv > 0) {
+      available_d1 <- o[['available_d1']]
+      if(!available_d1) {
+        deriv_model <- FALSE
+        call_slopes <- TRUE
+        post_processing_checks_args[['deriv']]    <- 0
+        o    <- do.call(post_processing_checks, post_processing_checks_args)
+      }
+      check_fun <- TRUE
+    }
+    # post_processing_checks_args[['deriv']]    <- deriv
+    
+    if(check_fun) {
+      if(!available_d1) {
+        stop("For 'deriv = 1', use 'marginal_draws(..., deriv = 1)'",
+             "\n ",
+             " instead of 'plot_conditional_effects()'") 
+      }
+    }
     
     
     if(!isTRUE(
@@ -227,6 +373,9 @@ plot_conditional_effects.bgmfit <-
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe")
     
+    # 6.03.2025
+    xcallz <- match.call()
+    
     calling.args <- post_processing_args_sanitize(model = model,
                                                   xcall = match.call(),
                                                   resp = resp,
@@ -242,49 +391,48 @@ plot_conditional_effects.bgmfit <-
       if(!is.null(newdata)) calling.args$newdata <- newdata
     }
     
+
+    calling.args_ce <- calling.args_cefd <- calling.args
+    calling.args_ce$newdata <- NULL
+    calling.args_ce$x       <- calling.args_ce$object
+    calling.args_ce$object  <- NULL
     
     if(!eval(full.args$deriv_model)) {
-      if (is.null(resp)) {
-        resp_rev_ <- resp
-      } else if (!is.null(resp)) {
-        resp_rev_ <- paste0("_", resp)
-      }
-      xvar_ <- paste0('xvar', resp_rev_)
-      yvar_ <- paste0('yvar', resp_rev_)
-      groupvar_ <- paste0('groupvar', resp_rev_)
-      xvar <- model$model_info[[xvar_]]
-      yvar <- model$model_info[[yvar_]]
-      hierarchical_ <- paste0('hierarchical', resp_rev_)
-      if (is.null(levels_id)) {
-        IDvar <- model$model_info[[groupvar_]]
-        if (!is.null(model$model_info[[hierarchical_]])) {
-          IDvar <- model$model_info[[hierarchical_]]
-        }
-      } else if (!is.null(levels_id)) {
-        IDvar <- levels_id
-      }
-      xvar  <- xvar
-      idvar <- IDvar
-      if(length(idvar) > 1) idvar <- idvar[1]
-      yvar  <- 'yvar'
-      calling.args_ce <- calling.args_cefd <- calling.args
-      calling.args_ce$newdata <- NULL
-      calling.args_ce$x <- calling.args_ce$object
-      calling.args_ce$object <- NULL
-      out_    <- do.call(brms::conditional_effects, calling.args_ce)
-      datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
-      datace[[idvar]] <- unique(levels(model$data[[idvar]]))[1]
-      calling.args_cefd$newdata <- datace
-      calling.args_cefd$model <- model
-      calling.args_cefd$object <- NULL
-      outx <-  do.call(fitted_draws, calling.args_cefd)
-      out_[[1]][['estimate__']] <- outx[, 1]
-      out_[[1]][['se__']] <- outx[, 2]
-      out_[[1]][['lower__']] <- outx[, 3]
-      out_[[1]][['upper__']] <- outx[, 4]
-      . <- out_
-    }
+      if(is.null(calling.args_ce$re_formula)) {
+        out_    <- do.call(brms::conditional_effects, calling.args_ce)
+        datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
+        datace[[idvar]] <- unique(levels(model$data[[idvar]]))[1]
+        calling.args_cefd$newdata <- datace
+        calling.args_cefd$model <- model
+        calling.args_cefd$object <- NULL
+        calling.args_cefd$xcall_str <- paste(deparse(xcallz), collapse = "")
+        outx <-  do.call(fitted_draws, calling.args_cefd)
+        out_ < out_ + ggplot2::theme(legend.position = 'none')
+        outx <- outx %>% dplyr::select(dplyr::all_of(set_names_))
+        out_[[1]][['estimate__']] <- outx[, 1]
+        out_[[1]][['se__']]       <- outx[, 2]
+        out_[[1]][['lower__']]    <- outx[, 3]
+        out_[[1]][['upper__']]    <- outx[, 4]
+        . <- out_ 
+      } else if(is.na(calling.args_ce$re_formula)) {
+        out_    <- do.call(brms::conditional_effects, calling.args_ce)
+        datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
+        datace[[idvar]] <- unique(levels(model$data[[idvar]]))[1]
+        calling.args_cefd$newdata <- datace
+        calling.args_cefd$model <- model
+        calling.args_cefd$object <- NULL
+        calling.args_cefd$xcall_str <- paste(deparse(xcallz), collapse = "")
+        outx <-  do.call(fitted_draws, calling.args_cefd)
+        outx <- outx %>% dplyr::select(dplyr::all_of(set_names_))
+        out_[[1]][['estimate__']] <- outx[, 1]
+        out_[[1]][['se__']]       <- outx[, 2]
+        out_[[1]][['lower__']]    <- outx[, 3]
+        out_[[1]][['upper__']]    <- outx[, 4]
+        . <- out_
+      } # else if(is.na(calling.args_ce$re_formula)) {
+    } # if(!eval(full.args$deriv_model)) {
     
+
     if(eval(full.args$deriv_model)) {
       calling.args_ce <- calling.args
       calling.args_ce$newdata <- NULL
@@ -333,12 +481,13 @@ plot_conditional_effects.bgmfit <-
         }
       })
     } # if(setcleanup) {
-    
+    # 6.03.2025
+    suppressMessages({. <- plot(., plot = FALSE)[[1]] + ept(labels_ggfunx_str)})
     .
   }
 
 
-#' @rdname plot_conditional_effects.bgmfit
+#' @rdname plot_conditional_effects
 #' @export
 plot_conditional_effects <- function(model, ...) {
   UseMethod("plot_conditional_effects")

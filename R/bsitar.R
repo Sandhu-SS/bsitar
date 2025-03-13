@@ -273,6 +273,11 @@
 #' (refer to \code{x} for details on setting different arguments for
 #' sub-models).
 #' 
+#' @param xfunxoffset Transformation function for \code{xoffset} in the \code{x}
+#'   structure (default \code{NULL}). See \code{xfun} for details. The
+#'   \code{xfunxoffset} is rarely used. One potential application is when user
+#'   internally transform the numeric \code{xoffset} value.
+#' 
 #' @param bound An optional real number specifying the value by which the span
 #'   of the predictor variable \code{x} should be extended (default is
 #'   \code{0.04}). This extension can help in modeling edge cases. For more
@@ -589,6 +594,12 @@
 #'
 #' @param sigmabound Bounds for the \code{x} in the \code{sigma} structure. See
 #'   \code{bound} for details. Ignored if \code{sigma_formula_manual = NULL}.
+#'   
+#' @param sigmaxfunxoffset Transformation function for \code{sigmaxoffset}
+#'   in the \code{sigma} structure (default \code{NULL}). See \code{sigmaxfun}
+#'   for details. Ignored if \code{sigma_formula_manual = NULL}. The
+#'   \code{sigmaxfunxoffset} is rarely used. One potential application is
+#'   when user internally transform the numeric \code{sigmaxoffset} value.
 #' 
 #' @param dpar_formula Formula for the distributional fixed effect parameter,
 #'   \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.
@@ -1551,7 +1562,11 @@
 #'   
 #' @param data_custom A \code{data.frame} object (default \code{NULL}). This is
 #'   mainly for internal testing and not be used for routine model fitting.
-#'
+#'   
+#' @param genquant_xyadj A logical (default \code{NULL}) indicating whether to
+#'   generate \code{xyadj} in the \code{generated quantities} block of the
+#'   \code{Stan}.
+#' 
 #' @param sample_prior A character string indicating whether to draw samples
 #'   from the priors in addition to the posterior draws. Options are \code{"no"}
 #'   (the default), \code{"yes"}, and \code{"only"}. These prior draws can be
@@ -1797,7 +1812,7 @@
 #' 
 #' # Check model fit via posterior predictive checks using plot_ppc.
 #' # This function is based on pp_check from the 'brms' package.
-#' plot_ppc(model, ndraws = 100)
+#' plot_ppc(model, ndraws = NULL)
 #' 
 #' # Plot distance and velocity curves using plot_conditional_effects.
 #' # This function works like conditional_effects from the 'brms' package,
@@ -1830,6 +1845,7 @@ bsitar <- function(x,
                    cstart = 0,
                    xfun = NULL,
                    yfun = NULL,
+                   xfunxoffset = NULL, 
                    bound = 0.04,
                    stype = nsp,
                    terms_rhs = NULL,
@@ -1861,6 +1877,7 @@ bsitar <- function(x,
                    sigmacstart = 0,
                    sigmaxfun = NULL,
                    sigmabound = 0.04,
+                   sigmaxfunxoffset = NULL,
                    dpar_formula = NULL,
                    autocor_formula = NULL,
                    family = gaussian(),
@@ -1999,6 +2016,7 @@ bsitar <- function(x,
                    pathfinder_init = FALSE,
                    data2 = NULL,
                    data_custom = NULL,
+                   genquant_xyadj  = FALSE,
                    sample_prior = "no",
                    save_pars = NULL,
                    drop_unused_levels = TRUE,
@@ -2020,9 +2038,8 @@ bsitar <- function(x,
   # This is to deal with how 'data' be prepared, used, and stored
   # This is needed to set up separate x for mu and sigma
   # some work done on 20.09.2024
-  # The specific areas to look further for are:
-  # 'prepare_data' 'data.org.in' 'sigmaxsi' 'setsigma_formula_manual'
-  
+  # The specific areas to look further are:
+  # 'prepare_data2' 'data.org.in' 'sigmaxsi' 'setsigmaxvar'
   
   
   mcall <- match.call()
@@ -2087,6 +2104,7 @@ bsitar <- function(x,
   # Clear alias argument for formula and adjusted
   rm(dots_allias)
   
+
   mcall <- mcall_ <- mcall
   
   no_default_args <- c("x", "y", "id", "data", "...")
@@ -2369,6 +2387,101 @@ bsitar <- function(x,
   nsp <- NULL;
   nsk <- NULL;
   rcs <- NULL;
+  
+  
+  ##############################################################
+  ##############################################################
+  
+  enclose_c_list_elemnts_with_quotes <- function(xcall, elements) {
+    xcall_x_c <- list()
+    for (x in elements) {
+      xcall_x <- deparse(xcall[[x]])
+      xcall_x <- paste0(xcall_x, collapse = " ")
+      xcall_x <- gsub_space(xcall_x)
+      xcall_x <- gsub("\"", "", xcall_x)
+      
+      
+      str_c       <- FALSE
+      str_list    <- FALSE
+      if(grepl("c\\(", xcall_x, fixed = F)) {
+        pater_add <- "c("
+        str_c     <- TRUE
+      } else if(grepl("list\\(",xcall_x, fixed = F)) {
+        pater_add <- "list("
+        str_list  <- TRUE
+      } else {
+        # stop(x ," must be a list or a vector")
+      }
+      
+      
+      if(str_c | str_list) {
+        xcall_x_str_get <- xcall_x
+        if(grepl("\\(", xcall_x_str_get)) {
+          xcall_x_str_get <- regmatches(xcall_x, gregexpr("(?<=\\().*(?=\\))",
+                                                          xcall_x, perl=T))[[1]]
+        } else {
+          xcall_x_str_get <- xcall_x
+        }
+      } else if(!str_c & !str_list) {
+        xcall_x_str_get <- xcall_x
+      }
+      
+      
+      
+      xcall_x_str_get <- strsplit(xcall_x_str_get, ",")[[1]]
+      
+      
+      xcall_x_i_str_c <- list()
+      xcall_x_i_str_i_get <- list()
+      for (i in 1:length(xcall_x_str_get)) {
+        xcall_x_i_str_i <- xcall_x_str_get[i]
+        if(grepl("^function\\(", xcall_x_i_str_i)) {
+          xcall_x_i_str_i_get <- str2lang(xcall_x_i_str_i)
+          # xcall_x_i_str_i <- paste0(pater_add, xcall_x_i_str_i, ")")
+          # xcall_x_str_get <- xcall_x_i_str_i
+          # xcall_x_str_get  <- list()
+          xcall_x_i_str_c[[i]] <- xcall_x_i_str_i_get
+        } else {
+          if(grepl("\\(", xcall_x_i_str_i)) {
+            xcall_x_i_str_i <- regmatches(xcall_x_i_str_i, 
+                                          gregexpr("(?<=\\().*(?=\\))",
+                                                   xcall_x_i_str_i, perl=T))[[1]]
+          } else {
+            xcall_x_i_str_i <- xcall_x_i_str_i
+          }
+          xcall_x_i_str_i <- paste0(sprintf("'%s'", xcall_x_i_str_i), 
+                                    collapse = ",")
+          
+          xcall_x_i_str_i_get <-  str2lang(xcall_x_i_str_i)
+          
+          
+          xcall_x_i_str_c[[i]] <- xcall_x_i_str_i_get
+        }
+      } # for (i in length(xcall_x_i_str)) {
+      if(!is.null(xcall_x_i_str_c)) {
+        xcall[[x]] <- xcall_x_i_str_c
+      }
+    } # for (x in elements) {
+    
+    return(xcall) 
+  } # enclose_c_list_elemnts_with_quotes
+  
+  ##############################################################
+  ##############################################################
+  
+ # Enclose primitive functions with quote "" if specified as c() or list()
+  enclose_c_list_elemnts_with_quotes_these <- c("xfun",
+                                                "yfun",
+                                                "sigmaxfun",
+                                                "xfunxoffset",
+                                                "sigmaxfunxoffset")
+
+  mcall <- enclose_c_list_elemnts_with_quotes(mcall,
+                                       enclose_c_list_elemnts_with_quotes_these)
+
+  
+  ##############################################################
+  ##############################################################
 
   enverr. <- environment()
   for (i in names(mcall)[-1]) {
@@ -2421,6 +2534,7 @@ bsitar <- function(x,
   
   arguments <- as.list(mcall)[-1]
  
+
   match.call.defaults <- function(...) {
     call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
     formals <- evalq(formals(), parent.frame(1))
@@ -2457,6 +2571,9 @@ bsitar <- function(x,
     intersect(names(arguments), names(f_funx_arg))
   arguments <-
     c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
+  
+  
+  
   
   
   setdepar0sgub <- c("sigma_formula", 
@@ -3862,14 +3979,14 @@ bsitar <- function(x,
     if (!temp_ %in% colnames(data)) {
       stop(
         paste(
-          "\nvariable",
+          "\nvariable '",
           temp_,
-          "used for setting univariate_by-univariate submodels is missing"
+          "' used for setting univariate_by-univariate submodels is missing"
         )
       )
     }
     if (!is.factor(data[[temp_]])) {
-      stop(temp_, "should be a factor variable")
+      stop("The 'univariate_by' variable '",  temp_, "' should be a factor variable")
     }
     nlevtemp_ <- nlevels(data[[temp_]])
     nys <- nlevtemp_
@@ -3899,6 +4016,7 @@ bsitar <- function(x,
     if (nys > 1) {
       .xx <- .x
     }
+    
     if (!is.character(.xx) & !is.list(.xx)) {
       .xx <- deparse_0(.xx)
     } else {
@@ -3912,7 +4030,7 @@ bsitar <- function(x,
     assign(.x, ., envir = parent.frame())
   }
   
-  eval_c_list_args <- function(.x, nys, arguments, ...) {
+  eval_c_list_args <- function(.x, nys, arguments, return_args = FALSE, ...) {
     if (is.language(arguments[[.x]]) &
         (strsplit(deparse_0(arguments[[.x]]), "\\(")[[1]][1] !=
          "c" &
@@ -3926,7 +4044,6 @@ bsitar <- function(x,
     } else {
       arguments[[.x]] <- arguments[[.x]]
     }
-    
     if (is.numeric(arguments[[.x]])) {
       arguments[[.x]] <- deparse_0(arguments[[.x]])
     } else {
@@ -3958,10 +4075,14 @@ bsitar <- function(x,
       args_s <- rep(args_s, nys)
     if (length(args_s) > nys)
       args_s <- args_s[1:nys]
+    if(return_args) {
+      return(args_s)
+    }
     assign(paste0(.xo, "s"), args_s, envir = parent.frame())
   }
   
   
+
   getArgNames <-
     function(value)
       formalArgs(deparse_0(substitute(value)[[1]]))
@@ -4038,6 +4159,7 @@ bsitar <- function(x,
     'pathfinder_args',
     'pathfinder_init',
     'data_custom',
+    'genquant_xyadj',
     "..."
   )
   
@@ -4049,12 +4171,26 @@ bsitar <- function(x,
     }
   }
   
+  # This will assign paste0(..., 's') -> return_args  = FALSE
   for (i in convert_to_list) {
     if (!i %in% single_args) {
-      eval_c_list_args(i, nys, arguments)
+      eval_c_list_args(i, nys, arguments, return_args = FALSE)
+      # eval_c_list_args(i, nys, arguments)
     }
   }
   
+  
+  # Create list for later use in data_custom -> return_args  = TRUE
+  # 24.02.2025
+  eval_c_list_args_data_custom <- list()
+  for (i in convert_to_list) {
+    if (!i %in% single_args) {
+      eval_c_list_args_data_custom[[i]] <- 
+        eval_c_list_args(i, nys, arguments, return_args = TRUE)
+    }
+  }
+  
+
   
   less_args <- extra_args <- c()
   outcomes_l <- paste0(" (", paste(ys, collapse = ", "), ")")
@@ -4081,6 +4217,8 @@ bsitar <- function(x,
     }
   }
   
+ 
+  
   if(is.list(xfuns) & length(xfuns) == 0) {
     xfuns <- rep('NULL', length(ys))
   }
@@ -4092,6 +4230,12 @@ bsitar <- function(x,
   if(is.list(sigmaxfuns) & length(sigmaxfuns) == 0) {
     sigmaxfuns <- rep('NULL', length(ys))
   }
+  
+  # For model_info
+  xfuns_user      <- xfuns
+  yfuns_user      <- yfuns
+  sigmaxfuns_user <- sigmaxfuns
+  
 
   if(!is.null(outliers)) {
     if(is.null(outliers$remove))    outliers$remove <- TRUE
@@ -4105,120 +4249,128 @@ bsitar <- function(x,
   
   
   
-  data.org.in <- data
-  uvarby <- NULL
-  data <- prepare_data(data = data,
-                       x = xs, 
-                       y = ys, 
-                       id = ids,
-                       uvarby = univariate_by$by, 
-                       mvar = multivariate$mvar,
-                       xfuns = xfuns, 
-                       yfuns = yfuns,
-                       outliers = outliers,
-                       subset = FALSE,
-                       envir = enverr.)
   
-  ys <- attr(data, "ys")
+  # prepare_data2, when 'univariate_by', first run is to get names
+  prepare_data_args <- list()
+  prepare_data_args[['data']]          <- data
+  prepare_data_args[['xvar']]          <- xs
+  prepare_data_args[['yvar']]          <- ys
+  prepare_data_args[['idvar']]         <- ids
+  prepare_data_args[['univariate_by']] <- univariate_by
+  prepare_data_args[['multivariate']]  <- multivariate
+  prepare_data_args[['outliers']]      <- outliers
+  prepare_data_args[['envir']]         <- enverr.
+  prepare_data_args[['sigmaxvar']]     <- sigmaxs
+  prepare_data_args[['nys']]           <- nys
+  prepare_data_args[['subset']]        <- FALSE
+  prepare_data_args[['returnys']]      <- FALSE
+  prepare_data_args[['verbose']]       <- FALSE
+  prepare_data_args[['displayit']]     <- displayit
+  prepare_data_args[['setcolb']]       <- setcolb
+
+  
+  
+  # .org.in will be used for data_custom
+  data.org.in    <- data
+  xs.org.in      <- xs
+  ys.org.in      <- ys
+  ids.org.in     <- ids
+  sigmaxs.org.in <- sigmaxs
+  
+  # dataz <<- heights
+  # dataz %>% dplyr::filter(sex == "Male")
+  # dataz %>% dplyr::filter(sex == "Female")
+    
+  data          <- do.call(prepare_data2, prepare_data_args)
+  xs            <- attr(data, "xs")
+  ys            <- attr(data, "ys")
+  ids           <- attr(data, "ids")
+  sigmaxs       <- attr(data, "sigmaxs")
   subindicators <- attr(data, "subindicators")
   
-  if (!is.na(univariate_by$by) & univariate_by$verbose) {
-    resvcts_ <- levels(data[[univariate_by$by]])
-    resvcts <- paste0(resvcts_, collapse = " ")
-    setmsgtxt <- paste0(
-      "\n For univariate-by-subgroup model fitting for variable '",
-      uvarby,
-      "'",
-      " (specified via 'univariate_by' argument)",
-      "\n ",
-      resvcts,
-      " response vectors created based on the factor levels",
-      "\n\n ",
-      "Please check corresponding arguments list.",
-      " E.g, df = list(4, 5) denotes that\n df = 4 is for ",
-      resvcts_[1],
-      ", and  df = 5 is for ",
-      resvcts_[2],
-      " (and similalry knots, priors, initials etc)",
-      "\n\n ",
-      "If it does't correspond correctly, then either reverse the list ",
-      "arguments\n such as df = list(5, 4),",
-      " or else reverse sort the order of factor levels"
-    )
-    if (displayit == 'msg') {
-      message(setmsgtxt)
-    } else if (displayit == 'col') {
-      col <- setcolb
-      cat(paste0("\033[0;", col, "m", setmsgtxt, "\033[0m", "\n"))
-    }
-  }
-  
+  check_variable_numeric_exists(data, c(xs, ys))
 
+  
+  
+  ###########################################################
+  ###########################################################
   dataout <- priorlist <- NULL
-  
+
   bflist <- list()
-  bflist <- initialslist <- initialslist_s <- initsilist <- bflist
-  blanketinitslist <- prior_stanvarlist <- auxillary_stanvarlist <- bflist
-  
-  data_stanvarlist <- bflist
-  
-  # gqdata_stanvarlist <- bflist
-  
+  initialslist <- initialslist_s <- blanketinitslist <-
+    prior_stanvarlist <- auxillary_stanvarlist <-
+    data_stanvarlist <- bflist
+
+
   funlist <- c()
   xoffsetvaluelist <- xoffsetnamelist <- knotsvaluelist <- funlist
-  knotsnamelist <- spfun_collect <- xfunvaluelist <- xfunnamelist <- funlist
-  yfunvaluelist <- yfunnamelist <- yyfunvaluelist <- yyfunnamelist <- funlist
-  xxfunvaluelist <- xxfunnamelist <- fixedvaluelist <- fixednamelist <- funlist
+  knotsnamelist <- spfun_collect <- funlist
+  fixedvaluelist <- fixednamelist <- funlist
   randomvaluelist <- randomnamelist <- groupvarvaluelist <- funlist
   yvarvaluelist <- ynamelist <- covvaluelist <- covnamelist <- funlist
   groupvarnamelist <- xvarvaluelist <- xnamelist <- funlist
   hierarchicalvarnamelist <- hierarchicalvarvaluelist <- funlist
   
+  idvarvaluelist <- idnamelist <- funlist
+
+  sigmaxoffsetvaluelist <- sigmaxoffsetnamelist <- funlist
+  sigmaxvarvaluelist <- sigmaxnamelist <- funlist
   sigmacovnamelist <- sigmacovvaluelist <- funlist
-  
+
+  setsigmaxvarvaluelist <- setsigmaxvarnamelist <- funlist
+
   sigma_groupvarnamelist <- sigma_groupvarvaluelist <- funlist
   sigma_hierarchicalvarnamelist <- sigma_hierarchicalvarvaluelist <- funlist
   
   funlist_r <- funlist_rnamelist <- funlist_rvaluelist <- list()
-  
+
   include_fun_nameslist <- funlist_r
   include_fun_nameslist_rnamelist <- funlist_r
   include_fun_nameslist_rvaluelist <- funlist_r
-  
-  gq_funs <- list() 
-  
+
+  gq_funs <- list()
+
   spfncname_c <- c()
-  
+
   d_adjustedvaluelist <- d_adjustednamelist <- funlist
-  
-  
+
+
   ####
   sigmaspfncname_c <- c()
   sigmaspfun_collect <- funlist
-  
+
   sigmafunlist_r <- sigmafunlist_rnamelist <- sigmafunlist_rvaluelist <- list()
-  
+
   sigmafunlist <- funlist
   sigmafunlist_r <- funlist_r
   sigmagq_funs <- gq_funs
-  
-  sigmaxfunvaluelist <- sigmaxfunnamelist <- funlist
-  sigmaxxfunvaluelist <- sigmaxxfunnamelist <- funlist
   sigmafixedvaluelist <- sigmafixednamelist <- funlist
   sigmarandomvaluelist <- sigmarandomnamelist <- sigmagroupvarvaluelist <- funlist
-  
+
   sigmad_adjustedvaluelist <- sigmad_adjustednamelist <- funlist
-  
-  xfuntransformvaluelist <- xfuntransformnamelist <- funlist
+
+  xfunvaluelist      <- xfunnamelist      <- funlist
+  yfunvaluelist      <- yfunnamelist      <- funlist
+  sigmaxfunvaluelist <- sigmaxfunnamelist <- funlist
+
+  xfuntransformvaluelist  <- xfuntransformnamelist  <- funlist
   ixfuntransformvaluelist <- ixfuntransformnamelist <- funlist
   
+  xfuntransform2valuelist  <- xfuntransform2namelist  <- funlist
+  ixfuntransform2valuelist <- ixfuntransform2namelist <- funlist
+
   yfuntransformvaluelist <- yfuntransformnamelist <- funlist
   iyfuntransformvaluelist <- iyfuntransformnamelist <- funlist
-  
+
   sigmaxfuntransformvaluelist <- sigmaxfuntransformnamelist <- funlist
   isigmaxfuntransformvaluelist <- isigmaxfuntransformnamelist <- funlist
- 
   
+  
+  sigmaxfuntransform2valuelist <- sigmaxfuntransform2namelist <- funlist
+  isigmaxfuntransform2valuelist <- isigmaxfuntransform2namelist <- funlist
+
+  ###########################################################
+  ###########################################################
   
   # Start loop over response
   for (ii in 1:length(ys)) {
@@ -4235,13 +4387,10 @@ bsitar <- function(x,
       }
     }
     
-    
     if (is.null(group_arg$groupvar)) {
       group_arg$groupvar <- idsi
     }
       
-   
-    
     if (is.null(sigma_group_arg$groupvar))
       sigma_group_arg$groupvar <- idsi
     
@@ -4259,7 +4408,6 @@ bsitar <- function(x,
     }
     
     
-    
     if (!is.numeric(ept(sigmadfsi)) & !is.numeric(ept(sigmaknotssi))) {
       stop("either df or knots must be specified for sigma")
     }
@@ -4272,25 +4420,21 @@ bsitar <- function(x,
       }
     }
     
-    
-    
-
     for (agsxi in letters[1:26]) {
       if(is.null(arguments[[paste0(agsxi, "_", "formula" , "")]])) {
-        assign(paste0(agsxi, "_", "formula" , "si") , NULL)
-        assign(paste0(agsxi, "_", "formula_gr" , "si") , NULL)
-        assign(paste0(agsxi, "_", "formula_gr_str" , "si") , NULL)
-        assign(paste0(agsxi, "_", "prior_beta" , "si") , NULL)
-        assign(paste0(agsxi, "_", "cov_prior_beta" , "si") , NULL)
-        assign(paste0(agsxi, "_", "prior_sd" , "si") , NULL)
-        assign(paste0(agsxi, "_", "cov_prior_sd" , "si") , NULL)
-        assign(paste0(agsxi, "_", "init_beta", "si" ) , NULL)
-        assign(paste0(agsxi, "_", "cov_init_beta" , "si") , NULL)
-        assign(paste0(agsxi, "_", "init_sd", "si" ) , NULL)
-        assign(paste0(agsxi, "_", "cov_init_sd" , "si") , NULL)
+        assign(paste0(agsxi, "_", "formula",        "si") , NULL)
+        assign(paste0(agsxi, "_", "formula_gr",     "si") , NULL)
+        assign(paste0(agsxi, "_", "formula_gr_str", "si") , NULL)
+        assign(paste0(agsxi, "_", "prior_beta",     "si") , NULL)
+        assign(paste0(agsxi, "_", "cov_prior_beta", "si") , NULL)
+        assign(paste0(agsxi, "_", "prior_sd",       "si") , NULL)
+        assign(paste0(agsxi, "_", "cov_prior_sd",   "si") , NULL)
+        assign(paste0(agsxi, "_", "init_beta",      "si") , NULL)
+        assign(paste0(agsxi, "_", "cov_init_beta",  "si") , NULL)
+        assign(paste0(agsxi, "_", "init_sd",        "si") , NULL)
+        assign(paste0(agsxi, "_", "cov_init_sd",    "si") , NULL)
       }
     }
-    
     
     validate_fixed_random_parms <- function(fixedsi, 
                                             randomsi, 
@@ -4380,17 +4524,12 @@ bsitar <- function(x,
         stop(msg_1, "\n ", msg_2, " \n ", see_what_formual)
       }
       
-
-      
       
       sub_parm_letters_fixed_random <- intersect(parm_letters_fixed, 
                                                  parm_letters_random)
       inv_parm_letters_fixed_random <- 
         parm_letters_random[!parm_letters_random %in% parm_letters_fixed]
       inv_parm_letters_fixed_random <- sort(inv_parm_letters_fixed_random)
-      
-      
-      
       
       if(length(inv_parm_letters_fixed_random) > 0) {
         not_allowed_parsm <- paste(paste0("'", 
@@ -4442,8 +4581,7 @@ bsitar <- function(x,
       }
     }
     
-    
-    
+  
     # Model specific number of fixed and random parameters
     allowed_parm_letters <- NULL
     if(select_model == 'sitar') allowed_parm_letters <- letters[1:sitar_nparms]
@@ -4455,7 +4593,6 @@ bsitar <- function(x,
     if(select_model == 'logistic3')   allowed_parm_letters <- letters[1:9]
     
     if(select_model == 'rcs')   allowed_parm_letters <- letters[1]
-    
     
     fixedsi_randomsi <- 
       validate_fixed_random_parms(
@@ -4656,8 +4793,6 @@ bsitar <- function(x,
     # Over ride when restricting to abcd
     if(!exists('s_formula_grsi')) s_formula_grsi <- NULL
     
-    
-    
     a_formula_grsi <- 
       test_gr_sr_str_function(a_formula_grsi, a_formula_gr_strsi)
     b_formula_grsi <- 
@@ -4828,8 +4963,6 @@ bsitar <- function(x,
         x_formula_grsi <- x
         strpartstrx <- strsplit(x_formula_grsi, "|", fixed = T)[[1]]
         strpartstrx_form <- strpartstrx[1]
-        # strpartstrx_form2 <- strsplit(strpartstrx_form, "(", fixed = T)[[1]] [1]
-        # strpartstrx_form <- paste0(, collapse = "")
         strpartstrx_form <-  gsub("~(", "~",  strpartstrx_form, fixed = T)
         if(length(strpartstrx) > 1 ) {
           strpartstrx_grpa <- strpartstrx[2:length(strpartstrx)]
@@ -5048,13 +5181,13 @@ bsitar <- function(x,
     
     
     ##########################
-    setsigma_formula_manual <- FALSE
+    setsigmaxvarsi <- FALSE
     if (is.null(sigma_formula_manualsi[[1]][1])) {
-      setsigma_formula_manual <- FALSE
+      setsigmaxvarsi <- FALSE
     } else if(sigma_formula_manualsi == "NULL") {
-      setsigma_formula_manual <- FALSE
+      setsigmaxvarsi <- FALSE
     } else {
-      setsigma_formula_manual <- TRUE
+      setsigmaxvarsi <- TRUE
     }
     
     
@@ -5091,19 +5224,21 @@ bsitar <- function(x,
 
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
-      sortbylayer <- NA
-      data <- data %>%
-        dplyr::mutate(sortbylayer =
-                        forcats::fct_relevel(!!as.name(univariate_by$by),
-                                             (levels(
-                                               !!as.name(univariate_by$by)
-                                             )))) %>%
-        dplyr::arrange(sortbylayer) %>%
-        dplyr::mutate(!!as.name(idsi) := factor(!!as.name(idsi),
-                                                levels = 
-                                                  unique(!!as.name(idsi)))) %>% 
-        dplyr::select(-sortbylayer)
+      # moving this sortbylayer to prepare_data2
+      # sortbylayer <- NA
+      # data <- data %>%
+      #   dplyr::mutate(sortbylayer =
+      #                   forcats::fct_relevel(!!as.name(univariate_by$by),
+      #                                        (levels(
+      #                                          !!as.name(univariate_by$by)
+      #                                        )))) %>%
+      #   dplyr::arrange(sortbylayer) %>%
+      #   dplyr::mutate(!!as.name(idsi) := factor(!!as.name(idsi),
+      #                                           levels = 
+      #                                             unique(!!as.name(idsi)))) %>% 
+      #   dplyr::select(-sortbylayer)
       
+      # end  moving this sortbylayer to prepare_data2
       
       
       # if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
@@ -5137,7 +5272,10 @@ bsitar <- function(x,
         stop("variable ", xsi, " not in the dataframe")
       if (!idsi %in% colnames(datai))
         stop("variable ", idsi, " not in the dataframe")
-    }
+      
+    } # if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
+    
+    
     
     if ((is.na(univariate_by$by) | univariate_by$by == "NA")) {
       datai <- data %>%
@@ -5151,8 +5289,17 @@ bsitar <- function(x,
     }
     
     
+    
+    
+    
     # 28 01 2024
     datai <- datai %>% tidyr::drop_na()
+    
+    check_variable_numeric_exists(datai, c(xsi, ysi))
+    
+    
+    
+    
     
     if(!is.null(cortimeNlags_var)) {
       if(!is.factor(datai[[cortimeNlags_var]])) {
@@ -5195,81 +5342,10 @@ bsitar <- function(x,
     }
     
     
-    # Refactor to use function() for transformations
-    # This will allow using optimize_x = list(function(x) log(x + 3/4))
-    # Note that instead of calling log(data[[xsi]]), 'xfuntransformsi' will be used 
-   
-    # Check if xfunsi set
-    set_xfunsi <- check_if_arg_set(xfunsi)
-    
-    # Note that y transformation is done within the prepare_data function,
-    # see data <- prepare_data(
-    
-    # Check if yfunsi set
-    set_yfunsi <- check_if_arg_set(yfunsi)
-    
-    # Check if sigmaxfunsi called
-    set_sigmaxfunsi <- check_if_arg_set(sigmaxfunsi)
-   
-
-    if (!set_xfunsi) {
-      xfuntransformsi <- function(x)x
-      assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
-    }
-    
-    if (set_xfunsi) {
-      if(xfunsi == "log") {
-        xfuntransformsi <- function(x)log(x)
-      } else if(xfunsi == "sqrt") {
-        xfuntransformsi <- function(x)sqrt(x)
-      } else  if(is.function(ept(xfunsi))) {
-        xfuntransformsi <- ept(xfunsi)
-      } else {
-        stop(paste0("The xfun argument must be either a string ('log' or 'sqrt'),", 
-                    "\n  ",
-                    "or a function such as function(x)log(x)"))
-      }
-      assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
-    }
     
     
-    if (!set_yfunsi) {
-      yfuntransformsi <- function(x)x
-      assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
-    }
-    
-    if (set_yfunsi) {
-      if(yfunsi == "log") {
-        yfuntransformsi <- function(x)log(x)
-      } else if(yfunsi == "sqrt") {
-        yfuntransformsi <- function(x)sqrt(x)
-      } else  if(is.function(ept(yfunsi))) {
-        yfuntransformsi <- ept(yfunsi)
-      } else {
-        stop(paste0("The xfun argument must be either a string ('log' or 'sqrt'),", 
-                    "\n  ",
-                    "or a function such as function(x)log(x)"))
-      }
-      assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
-    }
-    
-    
-    if (!is.null(sigmaxoffset[[1]][1]) & sigmaxoffset != "NULL") {
-      sigmaxoffset <- sigmaxoffset
-    } else {
-      sigmaxoffset <- xoffset
-      if(verbose) message("xoffset for sigma is set same as for mu")
-    }
-    
-    
-    if (!is.null(sigmaxoffsetsi[[1]][1]) & sigmaxoffsetsi != "NULL") {
-      sigmaxoffsetsi <- sigmaxoffsetsi
-    } else {
-      sigmaxoffsetsi <- xoffsetsi
-      if(verbose) message("xoffset for sigma is set same as for mu")
-    }
-    
-    
+    ######################################################################
+    ######################################################################
     
     check_for_nan_inf <- function(x) {
       suppressWarnings({
@@ -5286,193 +5362,6 @@ bsitar <- function(x,
     }
     
     
-    datai[[xsi]] <- xfuntransformsi(datai[[xsi]])
-    
-    if(check_is_numeric_like(xoffsetsi)) {
-      zm <- as.numeric(xoffsetsi)
-      if(check_for_nan_inf(xfuntransformsi(zm))) {
-        if(verbose) message("'xoffset' value '", zm, 
-                            "' can not be transformed to", 
-                           " match the xfun based transformation of x " ,"")
-      } else {
-        xoffsetsi <- round(xfuntransformsi(zm), 2)
-        if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
-                            xoffsetsi ,"'")
-      }
-      rm('zm')
-    }
-   
-    
-    if (set_xfunsi) {
-      xfunvalue <- xfunsi
-    } else {
-      xfunvalue <- NULL
-    }
-    
-    if (set_yfunsi) {
-      yfunvalue <- yfunsi
-    } else {
-      yfunvalue <- NULL
-    }
-    
-  
-    if (!set_sigmaxfunsi) {
-      sigmaxfuntransformsi <- function(x)x
-      assign('sigmaxfuntransformsi', sigmaxfuntransformsi, envir = enverr.)
-    }
-    
-    
-    if (set_sigmaxfunsi) {
-      if(sigmaxfunsi == "log") {
-        sigmaxfuntransformsi <- function(x)log(x)
-      } else if(sigmaxfunsi == "sqrt") {
-        sigmaxfuntransformsi <- function(x)sqrt(x)
-      } else  if(is.function(ept(sigmaxfunsi))) {
-        sigmaxfuntransformsi <- ept(sigmaxfunsi)
-      } else {
-        stop(paste0("The xfun argument must be either 'log' or 'sqrt',", 
-                    "\n  ",
-                    "or a function such as function(x)log(x)"))
-      }
-      assign('sigmaxfuntransformsi', sigmaxfuntransformsi, envir = enverr.)
-    }
-    
-    
-    
-    if (!is.null(sigmaxfunsi[[1]][1]) & sigmaxfunsi != "NULL") {
-      datai[[sigmaxsi]] <- sigmaxfuntransformsi(datai[[sigmaxsi]])
-      if(check_is_numeric_like(sigmaxoffsetsi)) {
-        zm <- as.numeric(sigmaxoffsetsi)
-        if(check_for_nan_inf(sigmaxfuntransformsi(zm))) {
-          if(verbose) message("'sigmaxoffset' value '", zm, 
-                              "' can not be transformed to", 
-                              " match the xfun based transformation of x" ,"")
-        } else {
-          sigmaxoffsetsi <- round(sigmaxfuntransformsi(zm), 2)
-          if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
-                              sigmaxoffsetsi ,"'")
-        }
-        rm('zm')
-      }
-    }
-    
-    
-    # Assign reverse functions also
-    assign("ixfuntransformsi",  sitar::ifun(base::body(xfuntransformsi)), 
-           envir = enverr.)
-    
-    
-    assign("iyfuntransformsi",  sitar::ifun(base::body(yfuntransformsi)), 
-           envir = enverr.)
-    
-    
-    assign("isigmaxfuntransformsi",  sitar::ifun(base::body(sigmaxfuntransformsi)), 
-           envir = enverr.)
-    
-    
-    
-    xfuntransformvalue  <- xfuntransformsi
-    ixfuntransformvalue <- ixfuntransformsi
-    
-    yfuntransformvalue  <- yfuntransformsi
-    iyfuntransformvalue <- iyfuntransformsi
-    
-    
-    sigmaxfuntransformvalue  <- sigmaxfuntransformsi
-    isigmaxfuntransformvalue <- isigmaxfuntransformsi
-    
-    
-    
-    if (set_sigmaxfunsi) {
-      sigmaxfunvalue <- sigmaxfunsi
-    } else {
-      sigmaxfunvalue <- NULL
-    }
-    
-    
-    
-    if (nys == 1) {
-      xfun_name <- "xfun"
-      yfun_name <- "yfun"
-      xxfun_name <- "xvar_xfun"
-      yyfun_name <- "yvar_yfun"
-      sigmaxfun_name <- "sigmaxfun"
-      sigmayfun_name <- "sigmayfun"
-      xfuntransform_name <- "xfuntransform"
-      ixfuntransform_name <- "ixfuntransform"
-      yfuntransform_name <- "yfuntransform"
-      iyfuntransform_name <- "iyfuntransform"
-      sigmaxfuntransform_name <- "sigmaxfuntransform"
-      isigmaxfuntransform_name <- "isigmaxfuntransform"
-      
-    } else if (nys > 1) {
-      xfun_name <- paste0("xfun", "_", ysi)
-      yfun_name <- paste0("yfun", "_", ysi)
-      xxfun_name <- paste0("xvar_xfun", "_", ysi)
-      yyfun_name <- paste0("yvar_yfun", "_", ysi)
-      sigmaxfun_name <- paste0("sigmaxfun", "_", ysi)
-      sigmayfun_name <- paste0("sigmayfun", "_", ysi)
-      xfuntransform_name <- paste0("xfuntransform", "_", ysi)
-      ixfuntransform_name <- paste0("ixfuntransform", "_", ysi)
-      yfuntransform_name <- paste0("yfuntransform", "_", ysi)
-      iyfuntransform_name <- paste0("iyfuntransform", "_", ysi)
-      sigmaxfuntransform_name <- paste0("sigmaxfuntransform", "_", ysi)
-      isigmaxfuntransform_name <- paste0("isigmaxfuntransform", "_", ysi)
-    }
-    
-    
-    xfunvaluelist[[ii]] <- xfunvalue
-    xfunnamelist[[ii]] <- xfun_name
-    
-    yfunvaluelist[[ii]] <- yfunvalue
-    yfunnamelist[[ii]] <- yfun_name
-    
-    sigmaxfunvaluelist[[ii]] <- sigmaxfunvalue
-    sigmaxfunnamelist[[ii]] <- sigmaxfun_name
-    
-    xfuntransformvaluelist[[ii]] <- xfuntransformvalue
-    xfuntransformnamelist[[ii]]  <- xfuntransform_name
-    
-    ixfuntransformvaluelist[[ii]] <- ixfuntransformvalue
-    ixfuntransformnamelist[[ii]]  <- ixfuntransform_name
-    
-    yfuntransformvaluelist[[ii]] <- yfuntransformvalue
-    yfuntransformnamelist[[ii]]  <- yfuntransform_name
-    
-    iyfuntransformvaluelist[[ii]] <- iyfuntransformvalue
-    iyfuntransformnamelist[[ii]]  <- iyfuntransform_name
-    
-    sigmaxfuntransformvaluelist[[ii]] <- sigmaxfuntransformvalue
-    sigmaxfuntransformnamelist[[ii]]  <- sigmaxfuntransform_name
-    
-    isigmaxfuntransformvaluelist[[ii]] <- isigmaxfuntransformvalue
-    isigmaxfuntransformnamelist[[ii]]  <- isigmaxfuntransform_name
-    
-    
-    if (set_xfunsi) {
-      xxfunvaluelist[[ii]] <- paste0(xfunsi, "(", xsi, ")")
-    } else {
-      xxfunvaluelist[[ii]] <- NULL
-    }
-    
-    if (set_sigmaxfunsi) {
-      sigmaxxfunvaluelist[[ii]] <- paste0(sigmaxfunsi, "(", sigmaxsi, ")")
-    } else {
-      sigmaxxfunvaluelist[[ii]] <- NULL
-    }
-    
-    
-    if (set_yfunsi) {
-      yyfunvaluelist[[ii]] <- paste0(yfunsi, "(", ysi, ")")
-    } else {
-      yyfunvaluelist[[ii]] <- NULL
-    }
-    
-    xxfunnamelist[[ii]] <- xxfun_name
-    yyfunnamelist[[ii]] <- yyfun_name # xxfun_name
-    
-    sigmaxxfunnamelist[[ii]] <- sigmaxfun_name
-    
     gkn <- function(x, df, bounds) {
       c(min(x) - bounds * (max(x) - min(x)),
         quantile(x, (1:(df - 1)) / df, na.rm = TRUE), # 28 01 2024
@@ -5480,40 +5369,6 @@ bsitar <- function(x,
           bounds * (max(x) - min(x)))
     }
     
-    if (is.numeric(ept(knotssi))) {
-      knots <- ept(knotssi)
-    }
-    if (is.numeric(ept(dfsi))) {
-      knots <- (unname(gkn(datai[[xsi]], ept(dfsi), ept(boundsi))))
-    }
-    
-   
-    
-    if (is.numeric(ept(sigmaknotssi))) {
-      sigmaknots <- ept(sigmaknotssi)
-    }
-    if (is.numeric(ept(sigmadfsi))) {
-      sigmaknots <- (unname(gkn(datai[[sigmaxsi]], 
-                                ept(sigmadfsi), ept(sigmaboundsi))))
-    }
-    
-    
-    if(select_model == "sitar") {
-      if (match_sitar_d_form) {
-        if (length(knots) > 2) {
-          itemp <- strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
-          itemp <- itemp[!grepl("d", itemp)]
-          fixedsi <- paste(itemp, collapse = "+")
-        }
-      }
-    }
-    
-  
-    
-    nabci <- length(strsplit(gsub("\\+", " ", fixedsi), " ")[[1]])
-    nabcrei <-
-      length(strsplit(gsub("\\+", " ", randomsi), " ")[[1]])
-   
     
     eval_xoffset_bstart_args <-
       function(x, y, knots, data, eval_arg, xfunsi, arg = 'xoffset') {
@@ -5531,18 +5386,18 @@ bsitar <- function(x,
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
             mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
-                                intercept = smat_intercept, derivs = smat_derivs, 
-                                centerval = smat_centerval, 
-                                normalize = smat_normalize,
-                                preH = smat_preH)
+                                 intercept = smat_intercept, derivs = smat_derivs, 
+                                 centerval = smat_centerval, 
+                                 normalize = smat_normalize,
+                                 preH = smat_preH)
           } else if(smat == 'nsk') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
             mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
-                                intercept = smat_intercept, derivs = smat_derivs, 
-                                centerval = smat_centerval, 
-                                normalize = smat_normalize,
-                                preH = smat_preH)
+                                 intercept = smat_intercept, derivs = smat_derivs, 
+                                 centerval = smat_centerval, 
+                                 normalize = smat_normalize,
+                                 preH = smat_preH)
           }
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
@@ -5576,11 +5431,11 @@ bsitar <- function(x,
             bknots <- c(knots[1], knots[length(knots)])
             mat_s <- GS_nsp_call(x = data[[x]], 
                                  knots = iknots, bknots = bknots, 
-                                intercept = smat_intercept, 
-                                derivs = smat_derivs, 
-                                centerval = smat_centerval, 
-                                normalize = smat_normalize,
-                                preH = smat_preH)
+                                 intercept = smat_intercept, 
+                                 derivs = smat_derivs, 
+                                 centerval = smat_centerval, 
+                                 normalize = smat_normalize,
+                                 preH = smat_preH)
           } else if(smat == 'nsk') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
@@ -5611,7 +5466,289 @@ bsitar <- function(x,
         return(out)
       }
     
+    ######################################################################
+    ######################################################################
     
+    # Refactor to use function() for transformations
+    # This will allow using optimize_x = list(function(x) log(x + 3/4))
+    # Note that instead of calling log(data[[xsi]]), 'xfuntransformsi' will be used 
+   
+    # Check if xfunsi, yfunsi and sigmaxfunsi
+    set_xfunsi      <- check_if_arg_set(xfunsi)
+    set_yfunsi      <- check_if_arg_set(yfunsi)
+    set_sigmaxfunsi <- check_if_arg_set(sigmaxfunsi)
+   
+    if (!set_xfunsi) {
+      xfuntransformsi <- function(x)x
+      assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
+    } else if (set_xfunsi) {
+      if(xfunsi == "log") {
+        xfuntransformsi <- function(x)log(x)
+      } else if(xfunsi == "sqrt") {
+        xfuntransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(xfunsi))) {
+        xfuntransformsi <- ept(xfunsi)
+      } else {
+        stop(paste0("The xfun argument must be either a string ('log' or 'sqrt'),", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
+      }
+      assign('xfuntransformsi', xfuntransformsi, envir = enverr.)
+    }
+    
+    
+    if (!set_yfunsi) {
+      yfuntransformsi <- function(x)x
+      assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
+    } else if (set_yfunsi) {
+      if(yfunsi == "log") {
+        yfuntransformsi <- function(x)log(x)
+      } else if(yfunsi == "sqrt") {
+        yfuntransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(yfunsi))) {
+        yfuntransformsi <- ept(yfunsi)
+      } else {
+        stop(paste0("The yfun argument must be either a string ('log' or 'sqrt'),", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
+      }
+      assign('yfuntransformsi', yfuntransformsi, envir = enverr.)
+    }
+    
+    
+    if (!set_sigmaxfunsi) {
+      sigmaxfuntransformsi <- function(x)x
+      assign('sigmaxfuntransformsi', sigmaxfuntransformsi, envir = enverr.)
+    } else if (set_sigmaxfunsi) {
+      if(sigmaxfunsi == "log") {
+        sigmaxfuntransformsi <- function(x)log(x)
+      } else if(sigmaxfunsi == "sqrt") {
+        sigmaxfuntransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(sigmaxfunsi))) {
+        sigmaxfuntransformsi <- ept(sigmaxfunsi)
+      } else {
+        stop(paste0("The xfun argument must be either 'log' or 'sqrt',", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
+      }
+      assign('sigmaxfuntransformsi', sigmaxfuntransformsi, envir = enverr.)
+    }
+    
+    
+    
+    
+    # if (!is.null(sigmaxoffset[[1]][1]) & sigmaxoffset != "NULL") {
+    #   sigmaxoffset <- sigmaxoffset
+    # } else {
+    #   sigmaxoffset <- xoffset
+    #   if(verbose) message("xoffset for sigma is set same as for mu")
+    # }
+    
+    
+    if (!is.null(sigmaxoffsetsi[[1]][1]) & sigmaxoffsetsi != "NULL") {
+      sigmaxoffsetsi <- sigmaxoffsetsi
+    } else {
+      sigmaxoffsetsi <- xoffsetsi
+      if(verbose) message("xoffset for sigma is set same as for mu")
+    }
+    
+    
+    # Check if xfunsi, yfunsi and sigmaxfunsi
+    set_xfunxoffsetsi      <- check_if_arg_set(xfunxoffsetsi)
+    set_sigmaxfunxoffsetsi <- check_if_arg_set(sigmaxfunxoffsetsi)
+
+    
+    if (!set_xfunxoffsetsi) {
+      xfunxoffsettransformsi <- function(x)x
+      assign('xfunxoffsettransformsi', xfunxoffsettransformsi, envir = enverr.)
+    } else if (set_xfunxoffsetsi) {
+      if(xfunxoffsetsi == "log") {
+        xfunxoffsettransformsi <- function(x)log(x)
+      } else if(xfunxoffsetsi == "sqrt") {
+        xfunxoffsettransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(xfunxoffsetsi))) {
+        xfunxoffsettransformsi <- ept(xfunxoffsetsi)
+      } else {
+        stop(paste0("The xfunxoffset argument must be either a string ('log' or 'sqrt'),", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
+      }
+      assign('xfunxoffsettransformsi', xfunxoffsettransformsi, envir = enverr.)
+    }
+    
+    
+    if (!set_sigmaxfunxoffsetsi) {
+      sigmaxfunxoffsettransformsi <- function(x)x
+      assign('sigmaxfunxoffsettransformsi', sigmaxfunxoffsettransformsi, envir = enverr.)
+    } else if (set_sigmaxfunxoffsetsi) {
+      if(sigmaxfunxoffsetsi == "log") {
+        sigmaxfunxoffsettransformsi <- function(x)log(x)
+      } else if(sigmaxfunxoffsetsi == "sqrt") {
+        sigmaxfunxoffsettransformsi <- function(x)sqrt(x)
+      } else  if(is.function(ept(sigmaxfunxoffsetsi))) {
+        sigmaxfunxoffsettransformsi <- ept(sigmaxfunxoffsetsi)
+      } else {
+        stop(paste0("The sigmaxfunxoffset argument must be either a string ('log' or 'sqrt'),", 
+                    "\n  ",
+                    "or a function such as function(x)log(x)"))
+      }
+      assign('sigmaxfunxoffsettransformsi', sigmaxfunxoffsettransformsi, envir = enverr.)
+    }
+    
+   
+    
+    
+    if(!is.null(set_xfunxoffsetsi)) {
+      if(check_is_numeric_like(xoffsetsi)) {
+        zm <- as.numeric(xoffsetsi)
+        if(check_for_nan_inf(xfunxoffsettransformsi(zm))) {
+          if(verbose) message("'xoffset' value '", zm, 
+                              "' can not be transformed to", 
+                              " match the xfun based transformation of x " ,"")
+        } else {
+          xoffsetsi <- round(xfunxoffsettransformsi(zm), 2)
+          if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
+                              xoffsetsi ,"'")
+        }
+        rm('zm')
+      }
+    }
+    
+    
+    if(!is.null(set_sigmaxfunxoffsetsi)) {
+      if(check_is_numeric_like(sigmaxoffsetsi)) {
+        zm <- as.numeric(sigmaxoffsetsi)
+        if(check_for_nan_inf(sigmaxfunxoffsettransformsi(zm))) {
+          if(verbose) message("'sigmaxoffset' value '", zm, 
+                              "' can not be transformed to", 
+                              " match the xfun based transformation of x" ,"")
+        } else {
+          sigmaxoffsetsi <- round(sigmaxfunxoffsettransformsi(zm), 2)
+          if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
+                              sigmaxoffsetsi ,"'")
+        }
+        rm('zm')
+      }
+    }
+   
+    #############################################################
+    ############################################################
+    # check functions 
+    funs_c <- c(xfuntransformsi, 
+                yfuntransformsi,
+                sigmaxfuntransformsi,
+                xfunxoffsettransformsi,
+                sigmaxfunxoffsettransformsi)
+    
+    names(funs_c) <- c("xfuntransformsi",
+                       "yfuntransformsi",
+                       "sigmaxfuntransformsi",
+                       "xfunxoffsettransformsi",
+                       "sigmaxfunxoffsettransformsi")
+    for (i in 1:length(funs_c)) {
+      set_fun <- funs_c[[i]]
+      set_fun_name <- names(funs_c)[i]
+      assign(set_fun_name, check_and_rename_funs_args_to_x(set_fun, 
+                                                           checkname = 'x') )
+    }
+   
+    ############################################################
+    ############################################################
+    
+    # Assign reverse functions also
+    assign("ixfuntransformsi",  
+           inverse_transform(base::body(xfuntransformsi)), 
+           envir = enverr.)
+    
+    
+    assign("iyfuntransformsi",  
+           inverse_transform(base::body(yfuntransformsi)), 
+           envir = enverr.)
+    
+    
+    assign("isigmaxfuntransformsi",  
+           inverse_transform(base::body(sigmaxfuntransformsi)), 
+           envir = enverr.)
+    
+   
+    #################################################################
+    #################################################################
+    check_for_validy_of_prepare_transformations    <- TRUE
+    prepare_transformations_args                   <- list()
+    prepare_transformations_args[['data']]         <- datai
+    prepare_transformations_args[['xvar']]         <- xsi
+    prepare_transformations_args[['yvar']]         <- ysi
+    prepare_transformations_args[['sigmaxvar']]    <- sigmaxsi
+    prepare_transformations_args[['xfun']]         <- xfuntransformsi
+    prepare_transformations_args[['yfun']]         <- yfuntransformsi
+    prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
+    prepare_transformations_args[['ixfun']]        <- FALSE
+    prepare_transformations_args[['iyfun']]        <- FALSE
+    prepare_transformations_args[['isigmaxfun']]   <- FALSE
+    prepare_transformations_args[['xoffset']]      <- NULL
+    prepare_transformations_args[['sigmaxoffset']] <- NULL
+    prepare_transformations_args[['model']]        <- NULL
+    prepare_transformations_args[['envir']]        <- NULL
+    prepare_transformations_args[['verbose']]      <- FALSE
+    prepare_transformations_args[['transform']]    <- ""
+    prepare_transformations_args[['itransform']]   <- ""
+    
+    # Here need to transform x, y, and sigmax 
+    # x y must because accordingly xoffset and lm matrix etc created
+    
+    if(check_for_validy_of_prepare_transformations) {
+      check_for_validy_of_prepare_transformations_0 <- datai
+    }
+    
+    datai <- do.call(prepare_transformations, prepare_transformations_args)
+    
+    if(check_for_validy_of_prepare_transformations) {
+      check_for_validy_of_prepare_transformations_1 <- datai
+    }
+    
+    
+    #################################################################
+    #################################################################
+
+   
+    if (is.numeric(ept(knotssi))) {
+      knots <- ept(knotssi)
+    }
+    if (is.numeric(ept(dfsi))) {
+      knots <- (unname(gkn(datai[[xsi]], ept(dfsi), ept(boundsi))))
+    }
+    
+    
+    
+    if (is.numeric(ept(sigmaknotssi))) {
+      sigmaknots <- ept(sigmaknotssi)
+    }
+    if (is.numeric(ept(sigmadfsi))) {
+      sigmaknots <- (unname(gkn(datai[[sigmaxsi]], 
+                                ept(sigmadfsi), ept(sigmaboundsi))))
+    }
+    
+    
+    ##################################################################
+    ##################################################################
+    
+    if(select_model == "sitar") {
+      if (match_sitar_d_form) {
+        if (length(knots) > 2) {
+          itemp <- strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
+          itemp <- itemp[!grepl("d", itemp)]
+          fixedsi <- paste(itemp, collapse = "+")
+        }
+      }
+    }
+    
+    
+    nabci   <- length(strsplit(gsub("\\+", " ", fixedsi), " ")[[1]])
+    nabcrei <- length(strsplit(gsub("\\+", " ", randomsi), " ")[[1]])
+   
+    
+    ##################################################################
+    ##################################################################
     
     if (xoffsetsi == 'NA' | xoffsetsi == '') {
       if(grepl('sitar', select_model) | grepl('rcs', select_model)) {
@@ -5621,35 +5758,215 @@ bsitar <- function(x,
       }
     }
     
-    
     if(bstartsi == 'xoffset') {
       bstartsi <- xoffsetsi
     }
     
-    
-    xoffset <-
-      eval_xoffset_bstart_args(xsi, ysi, knots, datai, 
+    xoffset <- eval_xoffset_bstart_args(xsi, ysi, knots, datai, 
                                xoffsetsi, xfunsi, arg = 'xoffset')
     
-    bstart <-
-      eval_xoffset_bstart_args(xsi, ysi, knots, datai, 
+    bstart <- eval_xoffset_bstart_args(xsi, ysi, knots, datai, 
                                bstartsi, xfunsi, arg = 'bstart')
     
     bstart <- bstart - xoffset
     
-    cstart <-
-      eval_xoffset_cstart_args(xsi, ysi, knots, datai, cstartsi, xfunsi)
+    cstart <- eval_xoffset_cstart_args(xsi, ysi, knots, datai, cstartsi, xfunsi)
     
     
-    xoffset <- round(xoffset, 8)
-    datai[[xsi]] <- datai[[xsi]] - xoffset
-    knots <- knots - xoffset
-    knots <- round(knots, 8)
-    nknots <- length(knots)
-    df <- length(knots) - 1
+    
+    if(sigmabstartsi == 'sigmaxoffset') {
+      sigmabstartsi <- sigmaxoffsetsi
+    }
+    
+    if(sigmaxoffsetsi == "apv") stop("xoffset can not be apv for sigma")
+    
+    sigmaxoffset <- eval_xoffset_bstart_args(sigmaxsi, ysi, sigmaknots, datai, 
+                               sigmaxoffsetsi, sigmaxfunsi, arg = 'offset')
+    
+    sigmabstart <- eval_xoffset_bstart_args(sigmaxsi, ysi, sigmaknots, datai, 
+                               sigmabstartsi, sigmaxfunsi, arg = 'bstart')
+    
+    sigmabstart <- sigmabstart - sigmaxoffset
+    
+    sigmacstart <-eval_xoffset_cstart_args(sigmaxsi, ysi, sigmaknots, datai, 
+                                           sigmacstartsi, sigmaxfunsi)
+    
+    
+    
+
+    
+    xoffset      <- round(xoffset, 8)
+    
+    # IMP This is_emptyx will handle numeric(0) when xoffset was set as NULL
+    if(is_emptyx(xoffset)) {
+      xoffset      <- 0
+    }
+    
+    
+    # datai[[xsi]] <- datai[[xsi]] - xoffset
+    knots        <- knots - xoffset
+    knots        <- round(knots, 8)
+    nknots       <- length(knots)
+    df           <- length(knots) - 1
+    
+    
+    sigmaxoffset      <- round(sigmaxoffset, 8)
+    
+    # IMP This is_emptyx will handle numeric(0) when xoffset was set as NULL
+    if(is_emptyx(sigmaxoffset)) {
+      sigmaxoffset      <- 0
+    }
+    
+    # datai[[sigmaxsi]] <- datai[[sigmaxsi]] - sigmaxoffset
+    sigmaknots        <- sigmaknots - sigmaxoffset
+    sigmaknots        <- round(sigmaknots, 8)
+    sigmanknots       <- length(sigmaknots)
+    sigmadf           <- length(sigmaknots) - 1
+    
+    ######################################################################
+    ######################################################################
+    
+    # Once offsets defined, make a copy of funs and ifun with offsets included
+    xfuntransform2si        <- xfuntransformsi
+    bodyoffun               <- deparse(body(xfuntransform2si))
+    addtobodyoffun          <- paste0("-", xoffset)
+    bodyoffun2              <- paste0(bodyoffun, addtobodyoffun)
+    body(xfuntransform2si)  <- str2lang(bodyoffun2)
+    ixfuntransform2si       <- inverse_transform(base::body(xfuntransform2si))
+    
+    sigmaxfuntransform2si   <- sigmaxfuntransformsi
+    bodyoffun               <- deparse(body(sigmaxfuntransform2si))
+    addtobodyoffun          <- paste0("-", sigmaxoffset)
+    bodyoffun2              <- paste0(bodyoffun, addtobodyoffun)
+    body(sigmaxfuntransform2si)   <- str2lang(bodyoffun2)
+    isigmaxfuntransform2si  <- 
+      inverse_transform(base::body(sigmaxfuntransform2si))
+    
+    
+    ######################################################################
+    ######################################################################
+    # Once xoffset, sigmaxoffset and lm matrix etc created, 
+    # inverse transform x and sigma but leave y as such 
+    # Note that xoffset and sigmaxoffset still NULL
+    prepare_transformations_args[['data']]         <- datai
+    prepare_transformations_args[['xvar']]         <- xsi
+    prepare_transformations_args[['yvar']]         <- NULL
+    prepare_transformations_args[['sigmaxvar']]    <- sigmaxsi
+    prepare_transformations_args[['xfun']]         <- xfuntransformsi
+    prepare_transformations_args[['yfun']]         <- NULL
+    prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
+    prepare_transformations_args[['ixfun']]        <- TRUE
+    prepare_transformations_args[['iyfun']]        <- FALSE
+    prepare_transformations_args[['isigmaxfun']]   <- TRUE
+    prepare_transformations_args[['xoffset']]      <- NULL
+    prepare_transformations_args[['sigmaxoffset']] <- NULL
+    prepare_transformations_args[['transform']]    <- ""
+    prepare_transformations_args[['itransform']]   <- ""
+
+    
+    datai <- do.call(prepare_transformations, prepare_transformations_args)
+    
+    if(check_for_validy_of_prepare_transformations) {
+      check_for_validy_of_prepare_transformations_2 <- datai
+    }
+    
+    ######################################################################
+    ######################################################################
+    # Now re transform x and sigmax with xoffset
+     # Now re transform x and sigmax with xoffset and sigmaxoffset
+     # but leave y as such 
+     # Note that xoffset and sigmaxoffset are not NULL
+    
+     prepare_transformations_args[['data']]         <- datai
+     prepare_transformations_args[['xvar']]         <- xsi
+     prepare_transformations_args[['yvar']]         <- NULL
+     prepare_transformations_args[['sigmaxvar']]    <- sigmaxsi
+     prepare_transformations_args[['xfun']]         <- xfuntransformsi
+     prepare_transformations_args[['yfun']]         <- NULL
+     prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
+     prepare_transformations_args[['ixfun']]        <- FALSE
+     prepare_transformations_args[['iyfun']]        <- FALSE
+     prepare_transformations_args[['isigmaxfun']]   <- FALSE
+     prepare_transformations_args[['xoffset']]      <- xoffset
+     prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffset
+     prepare_transformations_args[['transform']]    <- ""
+     prepare_transformations_args[['itransform']]   <- ""
    
-    # mat_s <- make_spline_matrix(datai[[xsi]], knots)
+    datai <- do.call(prepare_transformations, prepare_transformations_args)
     
+    if(check_for_validy_of_prepare_transformations) {
+      check_for_validy_of_prepare_transformations_3 <- datai
+    }
+    
+    #################################################################
+    #################################################################
+    # This below just for final chekes
+    if(check_for_validy_of_prepare_transformations) {
+      prepare_transformations_args[['data']]         <- 
+        check_for_validy_of_prepare_transformations_3
+      prepare_transformations_args[['ixfun']]        <- TRUE
+      prepare_transformations_args[['isigmaxfun']]   <- TRUE
+      prepare_transformations_args[['transform']]    <- ""
+      prepare_transformations_args[['itransform']]   <- ""
+      
+      check_for_validy_of_prepare_transformations_4 <- 
+        do.call(prepare_transformations, prepare_transformations_args)
+      
+      
+      prepare_transformations_args[['data']]         <- 
+        check_for_validy_of_prepare_transformations_4
+      prepare_transformations_args[['ixfun']]        <- FALSE
+      prepare_transformations_args[['isigmaxfun']]   <- FALSE
+      prepare_transformations_args[['transform']]    <- ""
+      prepare_transformations_args[['itransform']]   <- ""
+      
+      check_for_validy_of_prepare_transformations_5 <- 
+        do.call(prepare_transformations, prepare_transformations_args)
+      
+      # check_for_validy_of_prepare_transformations_0x <<-
+      #   check_for_validy_of_prepare_transformations_0
+      # 
+      # check_for_validy_of_prepare_transformations_3x <<-
+      #   check_for_validy_of_prepare_transformations_3
+      # 
+      # check_for_validy_of_prepare_transformations_4x <<-
+      #   check_for_validy_of_prepare_transformations_4
+      # 
+      # check_for_validy_of_prepare_transformations_5x <<-
+      #   check_for_validy_of_prepare_transformations_5
+     
+      # Ignore outcome ysi because it remains transformed
+      check_for_validy_of_prepare_transformations_0 <- 
+        check_for_validy_of_prepare_transformations_0 %>% dplyr::select(-ysi)
+      check_for_validy_of_prepare_transformations_4 <- 
+        check_for_validy_of_prepare_transformations_4 %>% dplyr::select(-ysi)
+      
+      check_for_validy_of_prepare_transformations_3 <- 
+        check_for_validy_of_prepare_transformations_3 %>% dplyr::select(-ysi)
+      check_for_validy_of_prepare_transformations_5 <- 
+        check_for_validy_of_prepare_transformations_5 %>% dplyr::select(-ysi)
+      
+      # 
+      if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_0,
+                    check_for_validy_of_prepare_transformations_4))) {
+        stop("Something wrong with 'prepare_transformations'")
+      }
+     
+      if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_3,
+                    check_for_validy_of_prepare_transformations_5))) {
+        stop("Something wrong with 'prepare_transformations'")
+      }
+      
+    } # end if(check_for_validy_of_prepare_transformations) {
+    
+    
+    
+    
+    ##################################################################
+    ##################################################################
+    
+    
+    # Imp - this matrix must be created after ifuns with offset
     if(smat == 'rcs') {
       mat_s <- make_spline_matrix(datai[[xsi]], knots)
     } else if(smat == 'nsp') {
@@ -5657,11 +5974,11 @@ bsitar <- function(x,
       bknots <- c(knots[1], knots[length(knots)])
       mat_s <- GS_nsp_call(x = datai[[xsi]], 
                            knots = iknots, bknots = bknots, 
-                          intercept = smat_intercept, 
-                          derivs = smat_derivs, 
-                          centerval = smat_centerval, 
-                          normalize = smat_normalize,
-                          preH = smat_preH)
+                           intercept = smat_intercept, 
+                           derivs = smat_derivs, 
+                           centerval = smat_centerval, 
+                           normalize = smat_normalize,
+                           preH = smat_preH)
     } else if(smat == 'nsk') {
       iknots <- knots[2:(length(knots)-1)]
       bknots <- c(knots[1], knots[length(knots)])
@@ -5675,59 +5992,84 @@ bsitar <- function(x,
     }
     
     
-
+    #################################################################
+    #################################################################
     
-    if(sigmabstartsi == 'sigmaxoffset') {
-      sigmabstartsi <- sigmaxoffsetsi
+    # After setting xfuntransformsi etc.., 
+    # re-assign xfunsi etc... based on xfuntransformsi, yfuntransformsi etc.., 
+    
+    xfunsi      <- strsplit(gsub_space(deparse(body(xfuntransformsi))), 
+                                "\\(")[[1]][1]
+    yfunsi      <- strsplit(gsub_space(deparse(body(yfuntransformsi))),
+                                "\\(")[[1]][1]
+    sigmaxfunsi <- strsplit(gsub_space(deparse(body(sigmaxfuntransformsi))), 
+                                "\\(")[[1]][1]
+    
+    if(xfunsi == "")      xfunsi      <- NULL
+    if(yfunsi == "")      yfunsi      <- NULL
+    if(sigmaxfunsi == "") sigmaxfunsi <- NULL
+    
+    # sqrt is same as ^0.5
+    if(grepl("\\^0.5$", xfunsi)) {
+      xfunsi      <- "sqrt"
+    }
+    if(grepl("\\^0.5$", yfunsi)) {
+      yfunsi      <- "sqrt"
+    }
+    if(grepl("\\^0.5$", sigmaxfunsi)) {
+      sigmaxfunsi <- "sqrt"
     }
     
-    if(sigmaxoffsetsi == "apv") stop("xoffset can not be apv for sigma")
+    xfunxoffsetsi <- 
+      strsplit(gsub_space(deparse(body(xfuntransformsi))), 
+                            "\\(")[[1]][1]
     
-    sigmaxoffset <-
-      eval_xoffset_bstart_args(sigmaxsi, ysi, sigmaknots, datai, 
-                               sigmaxoffsetsi, sigmaxfunsi, arg = 'offset')
+    sigmaxfunxoffsetsi <- 
+      strsplit(gsub_space(deparse(body(sigmaxfuntransformsi))), 
+                            "\\(")[[1]][1]
     
-    sigmabstart <-
-      eval_xoffset_bstart_args(sigmaxsi, ysi, sigmaknots, datai, 
-                               sigmabstartsi, sigmaxfunsi, arg = 'bstart')
+    if(xfunxoffsetsi == "")      xfunxoffsetsi      <- NULL
+    if(sigmaxfunxoffsetsi == "") sigmaxfunxoffsetsi <- NULL
     
-    sigmabstart <- sigmabstart - sigmaxoffset
+    xfunvalue             <- xfunsi
+    yfunvalue             <- yfunsi
+    sigmaxfunvalue        <- sigmaxfunsi
+    xfunxoffsetvalue      <- xfunxoffsetsi
+    sigmaxfunxoffsetvalue <- sigmaxfunxoffsetsi
     
-    sigmacstart <-eval_xoffset_cstart_args(sigmaxsi, ysi, sigmaknots, datai, 
-                               sigmacstartsi, sigmaxfunsi)
-    
-    sigmaxoffset <- round(sigmaxoffset, 8)
-    datai[[sigmaxsi]] <- datai[[sigmaxsi]] - sigmaxoffset
-    sigmaknots <- sigmaknots - sigmaxoffset
-    sigmaknots <- round(sigmaknots, 8)
-    sigmanknots <- length(sigmaknots)
-    sigmadf <- length(sigmaknots) - 1
-    
+    #################################################################
+    #################################################################
     
     # Define names for Stan functions 
-    SplineFun_name  <- paste0(toupper(select_model), "", 'Fun') # "DefFun" 
-    getX_name       <- "getX"
-    getKnots_name   <- "getKnots"
+    SplineFun_name          <- paste0(toupper(select_model), "", 'Fun')
+    getX_name               <- "getX"
+    getKnots_name           <- "getKnots"
+    getpreH_name            <- "getpreH"
+    includefunnameslistname <- 'include_fun_names'
+    funlist_r_name          <- 'funlist_r'  
+    sigmafunlist_r_name     <- 'sigmafunlist_r'
     
-    getpreH_name   <- "getpreH"
-    
-    if (nys > 1) {
-      spfncname <- paste0(ysi, "_", SplineFun_name)
-      getxname <- paste0(ysi, "_", getX_name)
-      getknotsname <- paste0(ysi, "_", getKnots_name)
-      getpreHname <- paste0(ysi, "_", getKnots_name)
-    } else if (nys == 1) {
-      spfncname <- SplineFun_name
-      getxname <- getX_name
+    if (nys == 1) {
+      spfncname    <- SplineFun_name
+      getxname     <- getX_name
       getknotsname <- getKnots_name
-      getpreHname <- getpreH_name
-    }
+      getpreHname  <- getpreH_name
+    } else if (nys > 1) {
+      spfncname    <- paste0(ysi, "_", SplineFun_name)
+      getxname     <- paste0(ysi, "_", getX_name)
+      getknotsname <- paste0(ysi, "_", getKnots_name)
+      getpreHname  <- paste0(ysi, "_", getKnots_name)
+    }  
     
     spfncname_c <- c(spfncname_c, spfncname)
     
-    spfun_collect <-
-      c(spfun_collect, c(spfncname, paste0(spfncname, "_", c("d1",
-                                                             "d2"))))
+    spfun_collect <- c(spfun_collect, 
+                       c(spfncname, paste0(spfncname, "_", 
+                                           c("d1", "d2")
+                                           )
+                         )
+                       )
+    
     
     decomp_editcode <- FALSE
     if(select_model == 'rcs') {
@@ -5764,6 +6106,7 @@ bsitar <- function(x,
         'xfunsi',
         'yfunsi',
         'xoffset',
+        'sigmaxoffset',
         'brms_arguments',
         'select_model',
         'decomp', 
@@ -5785,7 +6128,19 @@ bsitar <- function(x,
         "Splinefunxsuf",
         "SplinefunxR",
         "SplinefunxStan",
-        "ii"
+        "ii",
+        "set_xfunsi",
+        "set_yfunsi",
+        "set_sigmaxfunsi",
+        "set_xfunxoffsetsi",
+        "set_sigmaxfunxoffsetsi",
+        
+        "xfuntransformsi",
+        "yfuntransformsi",
+        "sigmaxfuntransformsi",
+        "xfunxoffsettransformsi",
+        "sigmaxfunxoffsettransformsi"
+        
       )
     
     internal_function_args <- list()
@@ -5854,19 +6209,10 @@ bsitar <- function(x,
     #################################################
     #################################################
     #################################################
-    # moved up at 42..
-    # setsigma_formula_manual <- FALSE
-    # if (is.null(sigma_formula_manualsi[[1]][1])) {
-    #   setsigma_formula_manual <- FALSE
-    # } else if(sigma_formula_manualsi == "NULL") {
-    #   setsigma_formula_manual <- FALSE
-    # } else {
-    #   setsigma_formula_manual <- TRUE
-    # }
     
     
     # Define sigma function
-    if(setsigma_formula_manual) {
+    if(setsigmaxvarsi) {
       # Define names for Stan functions 
       sigmaSplineFun_name  <- paste0("sigma", SplineFun_name)
       sigmagetX_name       <- paste0("sigma", getX_name)
@@ -5927,6 +6273,7 @@ bsitar <- function(x,
       
       # These are defined for sigma via bsitar()
       # These are copied from the mu part
+      # Note that 'sigmayfunsi' is just as placeholder
       sigmamatch_sitar_d_form          <- match_sitar_d_form
       sigmad_adjustedsi                <- d_adjustedsi
       sigmayfunsi                      <- yfunsi
@@ -5956,11 +6303,11 @@ bsitar <- function(x,
         sigmamatch_sitar_d_form
       sigmainternal_function_args[['d_adjustedsi']] <- 
         sigmad_adjustedsi
-      sigmainternal_function_args[['xfunsi']] <- 
+      sigmainternal_function_args[['sigmaxfunsi']] <- 
         sigmaxfunsi
-      sigmainternal_function_args[['yfunsi']] <- 
+      sigmainternal_function_args[['sigmayfunsi']] <- 
         sigmayfunsi
-      sigmainternal_function_args[['xoffset']] <- 
+      sigmainternal_function_args[['sigmaxoffset']] <- 
         sigmaxoffset
       sigmainternal_function_args[['brms_arguments']] <- 
         sigmabrms_arguments
@@ -6004,11 +6351,10 @@ bsitar <- function(x,
       # These are copied from the mu part
       # Note that idsi is not used and ysi is placeholder
       sigmaysi <- ysi
-      sigmaidsi <- idsi
       sigmadatai <- datai
       
-      sigmaxs <- sigmaxs
-      sigmaids <- sigmaids
+      sigmaxsi <- sigmaxsi
+      sigmaidsi <- idsi
       
       
       sigmaget_s_r_funs <-
@@ -6026,10 +6372,10 @@ bsitar <- function(x,
       sigmafunlist_r[[ii]] <- sigmaget_s_r_funs[['r_funs']]
       sigmagq_funs[[ii]] <- sigmaget_s_r_funs[['gq_funs']]
       
-    } # if(setsigma_formula_manual) {
+    } # if(setsigmaxvarsi) {
     
     
-    if(!setsigma_formula_manual) {
+    if(!setsigmaxvarsi) {
       sigmad_adjustedsi <- 'NULL'
     }
     
@@ -6178,12 +6524,12 @@ bsitar <- function(x,
       assign(eoutii, eout[[eoutii]])
     }
    
-    group_arg$groupvar <- group_arg_groupvar
+    group_arg$groupvar  <- group_arg_groupvar
     multivariate$rescor <- multivariate_rescor
-    univariate_by$by <- univariate_by_by
-    covariates_ <- covariates_
-    covariates_sigma_ <- covariates_sigma_
-    set_higher_levels <- set_higher_levels
+    univariate_by$by    <- univariate_by_by
+    covariates_         <- covariates_
+    covariates_sigma_   <- covariates_sigma_
+    set_higher_levels   <- set_higher_levels
     
     sigma_set_higher_levels <- sigma_set_higher_levels
     
@@ -7290,115 +7636,197 @@ bsitar <- function(x,
     blanketinitslist[[ii]] <- blanketinits
     
     
-    if (nys == 1) {
-      xoffset_name <- "xoffset"
-      knots_name <- "knots"
-      nknots_name <- "nknots"
-      fixed_name <- "fixed"
-      random_name <- "random"
-      groupvar_name <- "groupvar"
-      sigma_groupvar_name <- "sigma_groupvar"
-      hierarchical_name <- "hierarchical"
-      sigma_hierarchical_name <- "sigma_hierarchical"
-      xvar_name <- "xvar"
-      yvar_name <- "yvar"
-      cov_name <- "cov"
-      cov_name_sigma <- "cov_sigma"
-      d_adjusted_name <- "d_adjusted"
-      sigmafixed_name <- "sigmafixed"
-      sigmarandom_name <- "sigmarandom"
-      sigmad_adjusted_name <- "sigmad_adjusted"
-    } else if (nys > 1) {
-      xoffset_name <- paste0("xoffset", "_", ysi)
-      knots_name <- paste0("knots", "_", ysi)
-      nknots_name <- paste0("nknots", "_", ysi)
-      fixed_name <- paste0("fixed", "_", ysi)
-      random_name <- paste0("random", "_", ysi)
-      groupvar_name <- paste0("groupvar", "_", ysi)
-      sigma_groupvar_name <- paste0("sigma_groupvar", "_", ysi)
-      hierarchical_name <- paste0("hierarchical", "_", ysi)
-      sigma_hierarchical_name <- paste0("sigma_hierarchical", "_", ysi)
-      xvar_name <- paste0("xvar", "_", ysi)
-      yvar_name <- paste0("yvar", "_", ysi)
-      cov_name <- paste0("cov", "_", ysi)
-      cov_name_sigma <- paste0("cov_sigma", "_", ysi)
-      d_adjusted_name <- paste0("d_adjusted", "_", ysi)
-      sigmafixed_name <- paste0("sigmafixed", "_", ysi)
-      sigmarandom_name <- paste0("sigmarandom", "_", ysi)
-      sigmad_adjusted_name <- paste0("sigmad_adjusted", "_", ysi)
+    #################################################################
+    #################################################################
+    
+    xvar_name                    <- "xvar"
+    yvar_name                    <- "yvar"
+    idvar_name                   <- "idvar"
+    cov_name                     <- "cov"
+    cov_name_sigma               <- "cov_sigma"
+    xfun_name                    <- "xfun"
+    yfun_name                    <- "yfun"
+    sigmaxfun_name               <- "sigmaxfun"
+    xfuntransform_name           <- "xfuntransform"
+    ixfuntransform_name          <- "ixfuntransform"
+    xfuntransform2_name          <- "xfuntransform2"
+    ixfuntransform2_name         <- "ixfuntransform2"
+    yfuntransform_name           <- "yfuntransform"
+    iyfuntransform_name          <- "iyfuntransform"
+    sigmaxfuntransform_name      <- "sigmaxfuntransform"
+    isigmaxfuntransform_name     <- "isigmaxfuntransform"
+    sigmaxfuntransform2_name     <- "sigmaxfuntransform2"
+    isigmaxfuntransform2_name    <- "isigmaxfuntransform2"
+    xoffset_name                 <- "xoffset"
+    knots_name                   <- "knots"
+    nknots_name                  <- "nknots"
+    fixed_name                   <- "fixed"
+    random_name                  <- "random"
+    groupvar_name                <- "groupvar"
+    sigma_groupvar_name          <- "sigma_groupvar"
+    hierarchical_name            <- "hierarchical"
+    sigma_hierarchical_name      <- "sigma_hierarchical"
+    d_adjusted_name              <- "d_adjusted"
+    sigmafixed_name              <- "sigmafixed"
+    sigmarandom_name             <- "sigmarandom"
+    sigmad_adjusted_name         <- "sigmad_adjusted"
+    sigmaxoffset_name            <- "sigmaxoffset"
+    sigmaxvar_name               <- "sigmaxvar"
+    setsigmaxvar_name            <- "setsigmaxvar"
+    
+    # these paste0(..., 's') will be combined across ys
+    # these need to be defined only once
+    # Corresponding values xfun_names_val ... will be defined outside loop
+    if(ii == 1) {
+      xvar_names                <- paste0(xvar_name,                "s")
+      yvar_names                <- paste0(yvar_name,                "s")
+      idvar_names               <- paste0(idvar_name,                "s")
+      sigmaxvar_names           <- paste0(sigmaxvar_name,           "s")
+      cov_names                 <- paste0(cov_name,                 "s")
+      cov_name_sigmas           <- paste0(cov_name_sigma,           "s")
+      xfun_names                <- paste0(xfun_name,                "s")
+      yfun_names                <- paste0(yfun_name,                "s")
+      sigmaxfun_names           <- paste0(sigmaxfun_name,           "s")
+      xfuntransform_names       <- paste0(xfuntransform_name,       "s")
+      ixfuntransform_names      <- paste0(ixfuntransform_name,      "s")
+      xfuntransform2_names      <- paste0(xfuntransform2_name,      "s")
+      ixfuntransform2_names     <- paste0(ixfuntransform2_name,     "s")
+      yfuntransform_names       <- paste0(yfuntransform_name,       "s")
+      iyfuntransform_names      <- paste0(iyfuntransform_name,      "s")
+      sigmaxfuntransform_names  <- paste0(sigmaxfuntransform_name,  "s")
+      isigmaxfuntransform_names <- paste0(isigmaxfuntransform_name, "s")
+      sigmaxfuntransform2_names <- paste0(sigmaxfuntransform2_name, "s")
+      isigmaxfuntransform2_names<- paste0(isigmaxfuntransform2_name,"s")
+      xoffset_names             <- paste0(xoffset_name,             "s")
+      sigmaxoffset_names        <- paste0(sigmaxoffset_name,        "s")
+      setsigmaxvar_names        <- paste0(setsigmaxvar_name,        "s")
     }
     
-    include_fun_nameslist_name <- 'include_fun_names'
-    include_fun_nameslist_rnamelist[[ii]] <- include_fun_nameslist_name
-    include_fun_nameslist_rvaluelist[[ii]] <- include_fun_nameslist %>% unlist()
-    
-    funlist_r_name <- 'funlist_r'
-    funlist_rnamelist[[ii]] <- funlist_r_name
-    funlist_rvaluelist[[ii]] <- funlist_r %>% unlist()
-  
-    
-    sigmafunlist_r_name <- 'sigmafunlist_r'
-    sigmafunlist_rnamelist[[ii]] <- sigmafunlist_r_name
-    sigmafunlist_rvaluelist[[ii]] <- sigmafunlist_r %>% unlist()
-    
-    
-    xoffsetnamelist[[ii]] <- xoffset_name
-    xoffsetvaluelist[[ii]] <- xoffset
-    
-    knotsnamelist[[ii]] <- knots_name
-    knotsvaluelist[[ii]] <- knots
-    
-    fixednamelist[[ii]] <- fixed_name
-    fixedvaluelist[[ii]] <-
-      strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
-    
-    sigmafixednamelist[[ii]] <- sigmafixed_name
-    sigmafixedvaluelist[[ii]] <-
-      strsplit(gsub("\\+", " ", sigmafixedsi), " ")[[1]]
-    
-    randomnamelist[[ii]] <- random_name
-    randomvaluelist[[ii]] <-
-      strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
-    
-    sigmarandomnamelist[[ii]] <- sigmarandom_name
-    sigmarandomvaluelist[[ii]] <-
-      strsplit(gsub("\\+", " ", sigmarandomsi), " ")[[1]]
-    
-    
-    groupvarnamelist[[ii]] <- groupvar_name
-    groupvarvaluelist[[ii]] <- group_arg_groupvar
+    idvar_names
+    if (nys > 1) {
+      xvar_name                 <- paste0(xvar_name,                 "_", ysi)
+      yvar_name                 <- paste0(yvar_name,                 "_", ysi)
+      idvar_name                <- paste0(idvar_name,                 "_", ysi)
+      cov_name                  <- paste0(cov_name,                  "_", ysi)
+      cov_name_sigma            <- paste0(cov_name_sigma,            "_", ysi)
+      xfun_name                 <- paste0(xfun_name,                 "_", ysi)
+      yfun_name                 <- paste0(yfun_name,                 "_", ysi)
+      sigmaxfun_name            <- paste0(sigmaxfun_name,            "_", ysi)
+      xfuntransform_name        <- paste0(xfuntransform_name,        "_", ysi)
+      ixfuntransform_name       <- paste0(ixfuntransform_name,       "_", ysi)
+      xfuntransform2_name       <- paste0(xfuntransform2_name,       "_", ysi)
+      ixfuntransform2_name      <- paste0(ixfuntransform2_name,      "_", ysi)
+      yfuntransform_name        <- paste0(yfuntransform_name,        "_", ysi)
+      iyfuntransform_name       <- paste0(iyfuntransform_name,       "_", ysi)
+      sigmaxfuntransform_name   <- paste0(sigmaxfuntransform_name,   "_", ysi)
+      isigmaxfuntransform_name  <- paste0(isigmaxfuntransform_name,  "_", ysi)
+      sigmaxfuntransform2_name  <- paste0(sigmaxfuntransform2_name,  "_", ysi)
+      isigmaxfuntransform2_name <- paste0(isigmaxfuntransform2_name, "_", ysi)
+      xoffset_name              <- paste0(xoffset_name,              "_", ysi)
+      knots_name                <- paste0(knots_name,                "_", ysi)
+      nknots_name               <- paste0(nknots_name,               "_", ysi)
+      fixed_name                <- paste0(fixed_name,                "_", ysi)
+      random_name               <- paste0(random_name,               "_", ysi)
+      groupvar_name             <- paste0(groupvar_name,             "_", ysi)
+      sigma_groupvar_name       <- paste0(sigma_groupvar_name,       "_", ysi)
+      hierarchical_name         <- paste0(hierarchical_name,         "_", ysi)
+      sigma_hierarchical_name   <- paste0(sigma_hierarchical_name,   "_", ysi)
+      d_adjusted_name           <- paste0(d_adjusted_name,           "_", ysi)
+      sigmafixed_name           <- paste0(sigmafixed_name,           "_", ysi)
+      sigmarandom_name          <- paste0(sigmarandom_name,          "_", ysi)
+      sigmad_adjusted_name      <- paste0(sigmad_adjusted_name,      "_", ysi)
+      sigmaxoffset_name         <- paste0(sigmaxoffset_name,         "_", ysi)
+      sigmaxvar_name            <- paste0(sigmaxvar_name,            "_", ysi)
+      setsigmaxvar_name        <- paste0(setsigmaxvar_name,          "_", ysi)
+    }
     
     
-    sigma_groupvarnamelist[[ii]] <- sigma_groupvar_name
-    sigma_groupvarvaluelist[[ii]] <- sigma_arg_groupvar
+    xnamelist[[ii]]                        <- xvar_name
+    xvarvaluelist[[ii]]                    <- xsi
+    ynamelist[[ii]]                        <- yvar_name
+    yvarvaluelist[[ii]]                    <- ysi
+    idnamelist[[ii]]                       <- idvar_name
+    idvarvaluelist[[ii]]                   <- idsi
+    covnamelist[[ii]]                      <- cov_name
+    covvaluelist[[ii]]                     <- covariates_
+    knotsnamelist[[ii]]                    <- knots_name
+    knotsvaluelist[[ii]]                   <- knots
+    xfunvaluelist[[ii]]                    <- xfunvalue
+    xfunnamelist[[ii]]                     <- xfun_name
+    yfunvaluelist[[ii]]                    <- yfunvalue
+    yfunnamelist[[ii]]                     <- yfun_name
+    sigmaxfunvaluelist[[ii]]               <- sigmaxfunvalue
+    sigmaxfunnamelist[[ii]]                <- sigmaxfun_name
+    xfuntransformvaluelist[[ii]]           <- xfuntransformsi
+    xfuntransformnamelist[[ii]]            <- xfuntransform_name
+    ixfuntransformvaluelist[[ii]]          <- ixfuntransformsi
+    ixfuntransformnamelist[[ii]]           <- ixfuntransform_name
+    xfuntransform2valuelist[[ii]]          <- xfuntransform2si
+    xfuntransform2namelist[[ii]]           <- xfuntransform2_name
+    ixfuntransform2valuelist[[ii]]         <- ixfuntransform2si
+    ixfuntransform2namelist[[ii]]          <- ixfuntransform2_name
+    yfuntransformvaluelist[[ii]]           <- yfuntransformsi
+    yfuntransformnamelist[[ii]]            <- yfuntransform_name
+    iyfuntransformvaluelist[[ii]]          <- iyfuntransformsi
+    iyfuntransformnamelist[[ii]]           <- iyfuntransform_name
+    sigmaxfuntransformvaluelist[[ii]]      <- sigmaxfuntransformsi
+    sigmaxfuntransformnamelist[[ii]]       <- sigmaxfuntransform_name
+    sigmaxfuntransform2valuelist[[ii]]     <- sigmaxfuntransform2si
+    sigmaxfuntransform2namelist[[ii]]      <- sigmaxfuntransform2_name
+    isigmaxfuntransformvaluelist[[ii]]     <- isigmaxfuntransformsi
+    isigmaxfuntransformnamelist[[ii]]      <- isigmaxfuntransform_name
+    isigmaxfuntransform2valuelist[[ii]]    <- isigmaxfuntransform2si
+    isigmaxfuntransform2namelist[[ii]]     <- isigmaxfuntransform2_name
+    include_fun_nameslist_rnamelist[[ii]]  <- includefunnameslistname
+    include_fun_nameslist_rvaluelist[[ii]] <- unlist(include_fun_nameslist)
+    funlist_rnamelist[[ii]]                <- funlist_r_name
+    funlist_rvaluelist[[ii]]               <- funlist_r %>% unlist()
+    sigmafunlist_rnamelist[[ii]]           <- sigmafunlist_r_name
+    sigmafunlist_rvaluelist[[ii]]          <- unlist(sigmafunlist_r)
+    xoffsetnamelist[[ii]]                  <- xoffset_name
+    xoffsetvaluelist[[ii]]                 <- xoffset
+    sigmaxoffsetnamelist[[ii]]             <- sigmaxoffset_name
+    sigmaxoffsetvaluelist[[ii]]            <- sigmaxoffset
+    groupvarnamelist[[ii]]                 <- groupvar_name
+    groupvarvaluelist[[ii]]                <- group_arg_groupvar
+    sigma_groupvarnamelist[[ii]]           <- sigma_groupvar_name
+    sigma_groupvarvaluelist[[ii]]          <- sigma_arg_groupvar
+    hierarchicalvarnamelist[[ii]]          <- hierarchical_name
+    hierarchicalvarvaluelist[[ii]]         <- hierarchical_gr_names
+    sigma_hierarchicalvarnamelist[[ii]]    <- sigma_hierarchical_name
+    sigma_hierarchicalvarvaluelist[[ii]]   <- sigma_hierarchical_gr_names
+    sigmacovnamelist[[ii]]                 <- cov_name_sigma
+    sigmacovvaluelist[[ii]]                <- covariates_sigma_
+    d_adjustednamelist[[ii]]               <- d_adjusted_name
+    d_adjustedvaluelist[[ii]]              <- ept(d_adjustedsi)
+    sigmad_adjustednamelist[[ii]]          <- sigmad_adjusted_name
+    sigmad_adjustedvaluelist[[ii]]         <- ept(sigmad_adjustedsi)
+    sigmaxnamelist[[ii]]                   <- sigmaxvar_name
+    sigmaxvarvaluelist[[ii]]               <- sigmaxsi
     
-    hierarchicalvarnamelist[[ii]] <- hierarchical_name
-    hierarchicalvarvaluelist[[ii]] <- hierarchical_gr_names
-    
-    sigma_hierarchicalvarnamelist[[ii]] <- sigma_hierarchical_name
-    sigma_hierarchicalvarvaluelist[[ii]] <- sigma_hierarchical_gr_names
-    
-    xnamelist[[ii]] <- xvar_name
-    xvarvaluelist[[ii]] <- xsi
-    
-    ynamelist[[ii]] <- yvar_name
-    yvarvaluelist[[ii]] <- ysi
-    
-    covnamelist[[ii]] <- cov_name
-    covvaluelist[[ii]] <- covariates_
-    
-    sigmacovnamelist[[ii]] <- cov_name_sigma
-    sigmacovvaluelist[[ii]] <- covariates_sigma_
-    
-    d_adjustednamelist[[ii]] <- d_adjusted_name
-    d_adjustedvaluelist[[ii]] <- ept(d_adjustedsi)
+    setsigmaxvarnamelist[[ii]]             <- setsigmaxvar_name
+    setsigmaxvarvaluelist[[ii]]            <- setsigmaxvarsi
     
     
-    sigmad_adjustednamelist[[ii]] <- sigmad_adjusted_name
-    sigmad_adjustedvaluelist[[ii]] <- ept(sigmad_adjustedsi)
+    fixednamelist[[ii]]        <- fixed_name
+    fixedvaluelist[[ii]]       <- strsplit(gsub("\\+", " ", fixedsi), 
+                                           " ")[[1]]
+    
+    sigmafixednamelist[[ii]]   <- sigmafixed_name
+    sigmafixedvaluelist[[ii]]  <- strsplit(gsub("\\+", " ", sigmafixedsi), 
+                                           " ")[[1]]
+    
+    randomnamelist[[ii]]       <- random_name
+    randomvaluelist[[ii]]      <- strsplit(gsub("\\+", " ", randomsi), 
+                                           " ")[[1]]
+    
+    sigmarandomnamelist[[ii]]  <- sigmarandom_name
+    sigmarandomvaluelist[[ii]] <- strsplit(gsub("\\+", " ",  sigmarandomsi), 
+                                           " ")[[1]]
     
     
-    
+    #####################################################################
+    #####################################################################
     # add data scode
     x_Naux_str           <- 'Naux'
     if (nys == 1) {
@@ -7428,10 +7856,6 @@ bsitar <- function(x,
                                name_knots_name, ";")
     
     
-    
-    
-    
-    
     data_stanvarlist[[ii]] <- 
       brms::stanvar(x = x_xoffset,
                     name = name_xoffset_name,
@@ -7452,23 +7876,28 @@ bsitar <- function(x,
                     position = "start",
                     pll_args = NULL) 
     
-   
-    
+    #####################################################################
+    #####################################################################
     
     # restoring original data
+    # Just before leaving the loop, restore all inverse transformations
+  
+    prepare_transformations_args[['data']]         <- datai
+    prepare_transformations_args[['xvar']]         <- xsi
+    prepare_transformations_args[['yvar']]         <- ysi
+    prepare_transformations_args[['sigmaxvar']]    <- sigmaxsi
+    prepare_transformations_args[['xfun']]         <- xfuntransformsi
+    prepare_transformations_args[['yfun']]         <- yfuntransformsi
+    prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
+    prepare_transformations_args[['ixfun']]        <- TRUE
+    prepare_transformations_args[['iyfun']]        <- TRUE
+    prepare_transformations_args[['isigmaxfun']]   <- TRUE
+    prepare_transformations_args[['xoffset']]      <- xoffset
+    prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffset
+    prepare_transformations_args[['transform']]    <- ""
+    prepare_transformations_args[['itransform']]   <- ""
     
-    datai[[xsi]] <- ixfuntransformsi(datai[[xsi]] + xoffset) 
-    
-    # if (!is.null(xfunsi[[1]][1]) & xfunsi != "NULL") {
-    #   if (xfunsi == "log") {
-    #     datai[[xsi]] <- exp(datai[[xsi]] + xoffset)
-    #   } else if (xfunsi == "sqrt") {
-    #     datai[[xsi]] <- (datai[[xsi]] + xoffset) ^ 2
-    #   }
-    # } else if (is.null(xfunsi[[1]][1]) | xfunsi == "NULL") {
-    #   datai[[xsi]] <- (datai[[xsi]] + xoffset)
-    # }
-    
+    datai <- do.call(prepare_transformations, prepare_transformations_args)
     
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
@@ -7476,17 +7905,15 @@ bsitar <- function(x,
     else
       dataout <- datai
 
-    # 20.09.2024
-    # remove sigmaxsi if not using
-    if(!setsigma_formula_manual) datai[[sigmaxsi]] <- NULL
     
-      
-      
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       uvarbyTF <- TRUE
     else
       uvarbyTF <- FALSE
-  }  
+  }  # End of the loop
+  
+  #######################################################################
+  #######################################################################
   
   
   if (verbose) {
@@ -7514,16 +7941,174 @@ bsitar <- function(x,
     }
   }
   
+  #######################################################################
+  #######################################################################
   
+  # listoutx <<- ls()
+  
+  # eout <- list2env(listoutx)
+  # for (eoutii in names(eout)) {
+  #   assign(eoutii, eout[[eoutii]])
+  # }
+  
+  # eoutx <<- internal_function_args <- mget(listoutx)
+  # print(sigmaxs)
+  # print(cov_name)
+  # print(cov_names)
+  # stop()
+  
+  
+  xvar_names_val                <- xvarvaluelist %>% unlist()
+  yvar_names_val                <- yvarvaluelist %>% unlist()
+  idvar_names_val               <- idvarvaluelist %>% unlist()
+  cov_names_val                 <- covvaluelist %>% unlist()
+  xfun_names_val                <- xfunvaluelist %>% unlist()
+  yfun_names_val                <- yfunvaluelist %>% unlist()
+  xfuntransform_names_val       <- xfuntransformvaluelist %>% unlist()
+  xfuntransform2_names_val      <- xfuntransform2valuelist %>% unlist()
+  yfuntransform_names_val       <- yfuntransformvaluelist %>% unlist()
+  ixfuntransform_names_val      <- ixfuntransformvaluelist %>% unlist()
+  ixfuntransform2_names_val     <- ixfuntransform2valuelist %>% unlist()
+  iyfuntransform_names_val      <- iyfuntransformvaluelist %>% unlist()
+  xoffset_names_val             <- xoffsetvaluelist %>% unlist()
+  
+  # unlke bewlo sigmas infom this will be ratined always
+  setsigmaxvar_names_val        <- setsigmaxvarvaluelist %>% unlist()
+  
+  
+  sigmaxvar_names_val           <- sigmaxvarvaluelist %>% unlist()
+  cov_name_sigmas_val           <- sigmacovvaluelist %>% unlist()
+  sigmaxfun_names_val           <- sigmaxfunvaluelist %>% unlist()
+  sigmaxfuntransform_names_val  <- sigmaxfuntransformvaluelist %>% unlist()
+  sigmaxfuntransform2_names_val <- sigmaxfuntransform2valuelist %>% unlist()
+  isigmaxfuntransform_names_val <- isigmaxfuntransformvaluelist %>% unlist()
+  isigmaxfuntransform2_names_val<- isigmaxfuntransform2valuelist %>% unlist()
+  sigmaxoffset_names_val        <- sigmaxoffsetvaluelist %>% unlist()
+  
+
+  
+  
+
+  
+  #######################################################################
+  #######################################################################
+  
+  dataout_restoted.org.in <- dataout
+  
+  # Now we are out of loop, re transform 
+  prepare_transformations_args[['data']]         <- dataout
+  prepare_transformations_args[['xvar']]         <- xvarvaluelist %>% unlist()
+  prepare_transformations_args[['yvar']]         <- yvarvaluelist %>% unlist()
+  prepare_transformations_args[['sigmaxvar']]    <- sigmaxvarvaluelist %>% unlist()
+  prepare_transformations_args[['xfun']]         <- xfuntransformvaluelist %>% unlist()
+  prepare_transformations_args[['yfun']]         <- yfuntransformvaluelist %>% unlist()
+  prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformvaluelist %>% unlist()
+  prepare_transformations_args[['ixfun']]        <- FALSE
+  prepare_transformations_args[['iyfun']]        <- FALSE
+  prepare_transformations_args[['isigmaxfun']]   <- FALSE
+  prepare_transformations_args[['xoffset']]      <- xoffsetvaluelist
+  prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffsetvaluelist
+  prepare_transformations_args[['transform']]    <- ""
+  prepare_transformations_args[['itransform']]   <- ""
+  
+  dataout <- do.call(prepare_transformations, prepare_transformations_args)
+  
+  
+  
+  # If no sigmaformual used, drop sigma related info and variables 
+  ###################################################################
+  ###################################################################
+  sigmaxvar_names_val2           <- c()
+  cov_name_sigmas_val2           <- c()
+  sigmaxfun_names_val2           <- c()
+  sigmaxfuntransform_names_val2  <- c()
+  isigmaxfuntransform_names_val2 <- c()
+  sigmaxfuntransform2_names_val2  <- c()
+  isigmaxfuntransform2_names_val2 <- c()
+  sigmaxoffset_names_val2        <- c()
+  
+  for (j in 1:length(setsigmaxvar_names_val)) {
+    if(!setsigmaxvar_names_val[j]) {
+      dataout <- dataout %>% 
+        dplyr::select(-sigmaxvarvaluelist[[j]])
+      dataout_restoted.org.in <- dataout_restoted.org.in %>% 
+        dplyr::select(-sigmaxvarvaluelist[[j]])
+    }
+    
+    if(setsigmaxvar_names_val[j]) {
+      sigmaxvar_names_val2 <- c(sigmaxvar_names_val2, 
+                                sigmaxvar_names_val[j])
+      cov_name_sigmas_val2 <- c(cov_name_sigmas_val2, 
+                                cov_name_sigmas_val[j])
+      sigmaxfun_names_val2 <- c(sigmaxfun_names_val2, 
+                                sigmaxfun_names_val[j])
+      sigmaxfuntransform_names_val2 <- c(sigmaxfuntransform_names_val2, 
+                                         sigmaxfuntransform_names_val[j])
+      isigmaxfuntransform_names_val2 <- c(isigmaxfuntransform_names_val2, 
+                                          isigmaxfuntransform_names_val[j])
+      sigmaxfuntransform2_names_val2 <- c(sigmaxfuntransform2_names_val2, 
+                                         sigmaxfuntransform2_names_val[j])
+      isigmaxfuntransform2_names_val2 <- c(isigmaxfuntransform2_names_val2, 
+                                          isigmaxfuntransform2_names_val[j])
+      sigmaxoffset_names_val2 <- c(sigmaxoffset_names_val2, 
+                                   sigmaxoffset_names_val[j])
+    }
+  }
+  
+  sigmaxvar_names_val           <- sigmaxvar_names_val2
+  cov_name_sigmas_val           <- cov_name_sigmas_val2
+  sigmaxfun_names_val           <- sigmaxfun_names_val2
+  sigmaxfuntransform_names_val  <- sigmaxfuntransform_names_val2
+  isigmaxfuntransform_names_val <- isigmaxfuntransform_names_val2
+  sigmaxfuntransform2_names_val <- sigmaxfuntransform2_names_val2
+  isigmaxfuntransform2_names_val<- isigmaxfuntransform2_names_val2
+  sigmaxoffset_names_val        <- sigmaxoffset_names_val2
+  ###################################################################
+  ###################################################################
+
+  
+  
+  
+  
+  # if(!setsigmaxvar) {
+  #   for (i in 1:length( (sigmaxvarvaluelist)  )) {
+  #     if(!setsigmaxvarvaluelist[[i]]) {
+  #       dataout <- dataout %>% dplyr::select(-sigmaxvarvaluelist[[i]])
+  #     }
+  #   }
+  #   
+  #   for (i in 1:length( (sigmaxvarvaluelist)  )) {
+  #     if(!setsigmaxvarvaluelist[[i]]) {
+  #       dataout_restoted.org.in <- dataout_restoted.org.in %>% dplyr::select(-sigmaxvarvaluelist[[i]])
+  #     }
+  #   }
+  #   
+  #   sigmaxvar_names_val           <- NULL
+  #   cov_name_sigmas_val           <- NULL
+  #   sigmaxfun_names_val           <- NULL
+  #   sigmaxfuntransform_names_val  <- NULL
+  #   isigmaxfuntransform_names_val <- NULL
+  #   sigmaxoffset_names_val        <- NULL
+  #   
+  # } # if(!setsigmaxvar) {
+  
+  
+  
+  # This brmsdata i.e., brmsdata <- dataout is transformed and adjusted for offsets
   
   brmsdata <- dataout
-  brmspriors <- priorlist
+ 
+  
+  #######################################################################
+  #######################################################################
   
 
   # IMP - brms does not allow different lb for sd params (e.e, all to be NA)
   # Error: Conflicting boundary information for coefficients of class 'sd'.
   # Because prior function automatically sets lb 0 for positive priors 
   # such as exponential the following is need (again done at line 4753 )
+  
+  brmspriors <- priorlist
   
   brmspriors <- brmspriors %>% 
     dplyr::mutate(lb = dplyr::if_else(class == 'sd', NA, lb))
@@ -7554,13 +8139,34 @@ bsitar <- function(x,
   }
   
   
-  if(!setsigma_formula_manual) {
-    fun_scode <- paste(funlist, collapse = "\n")
+  # if(!setsigmaxvar) {
+  #   fun_scode <- paste(funlist, collapse = "\n")
+  # }
+  # 
+  # if(setsigmaxvar) {
+  #   fun_scode <- paste(funlist, sigmafunlist, collapse = "\n")
+  # }
+  
+  
+  
+  ###################################################################
+  ###################################################################
+  
+  fun_scode <- paste(funlist, collapse = "\n")
+  
+  for (j in 1:length(setsigmaxvar_names_val)) {
+    if(setsigmaxvar_names_val[j]) {
+      fun_scode <- paste(fun_scode, sigmafunlist[j], collapse = "\n")
+    }
   }
   
-  if(setsigma_formula_manual) {
-    fun_scode <- paste(funlist, sigmafunlist, collapse = "\n")
-  }
+  ###################################################################
+  ###################################################################
+  
+  
+  
+  
+  
   
   fun_scode <- paste0("functions {", "\n", fun_scode, "\n", "}")
   
@@ -7568,16 +8174,34 @@ bsitar <- function(x,
   
   
 
-  if(!setsigma_formula_manual) {
-    bstanvars <-
-      brms::stanvar(scode = paste(funlist, collapse = "\n"), block = "function")
+  # if(!setsigmaxvar) {
+  #   bstanvars <-
+  #     brms::stanvar(scode = paste(funlist, collapse = "\n"), block = "function")
+  # }
+  # 
+  # if(setsigmaxvar) {
+  #   bstanvars <-
+  #     brms::stanvar(scode = paste(funlist, sigmafunlist, collapse = "\n"), 
+  #                   block = "function")
+  # }
+  
+  
+  ###################################################################
+  ###################################################################
+  
+  bstanvars_scode_set <- paste(funlist, collapse = "\n")
+
+  for (j in 1:length(setsigmaxvar_names_val)) {
+    if(setsigmaxvar_names_val[j]) {
+      bstanvars_scode_set <- paste(bstanvars_scode_set, 
+                                   sigmafunlist[j], collapse = "\n")
+    }
   }
   
-  if(setsigma_formula_manual) {
-    bstanvars <-
-      brms::stanvar(scode = paste(funlist, sigmafunlist, collapse = "\n"), 
-                    block = "function")
-  }
+  bstanvars <- brms::stanvar(scode = bstanvars_scode_set, block = "function")
+  
+  ###################################################################
+  ###################################################################
   
   
   if (length(data_stanvarlist) != 0) {
@@ -7590,19 +8214,7 @@ bsitar <- function(x,
                                           collapse = "+")))
   }
   
-  # print(data_stanvarlist)
-  # print(gqdata_stanvarlist)
-  
-  # if (length(gqdata_stanvarlist) != 0) {
-  #   gqdata_stanvarlistlist <- c()
-  #   for (i in 1:nys) {
-  #     gqdata_stanvarlistlist[i] <- paste0("gqdata_stanvarlist[[", i, "]]")
-  #   }
-  #   bstanvars <-
-  #     bstanvars + eval(parse(text = paste(gqdata_stanvarlistlist, 
-  #                                         collapse = "+")))
-  # }
-  
+ 
   
   
   
@@ -7967,11 +8579,19 @@ bsitar <- function(x,
     
 
     # 24.08.2024
-    if(setsigma_formula_manual) {
-      temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
-    }
+    # if(setsigmaxvar) {
+    #   temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
+    # }
    
-    
+    ################################################################
+    ################################################################
+    for (j in 1:length(setsigmaxvar_names_val)) {
+      if(any(setsigmaxvar_names_val[j])) {
+        temp_prior <- temp_prior %>% dplyr::filter(class != "sigma")
+      }
+    }
+    ################################################################
+    ################################################################
     
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
@@ -8546,6 +9166,14 @@ bsitar <- function(x,
       setarguments = brms_arguments,
       brmsdots = brmsdots_
     )
+  
+  # 27.02.2025
+  # when fitting univariate_by, the subset is found in brm_args, why?
+  # Just drop it 
+  brm_args$subset <- NULL
+  
+  
+  
  
   if(!is.null(custom_family)) {
     brm_args$family <- custom_family
@@ -8722,10 +9350,20 @@ bsitar <- function(x,
   
 
   # 24.08.2024
-  if(setsigma_formula_manual) {
-    brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
-  }
+  # if(setsigmaxvar) {
+  #   brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
+  # }
   
+  
+  ################################################################
+  ################################################################
+  for (j in 1:length(setsigmaxvar_names_val)) {
+    if(any(setsigmaxvar_names_val[j])) {
+      brmspriors <- brmspriors %>% dplyr::filter(class != "sigma")
+    }
+  }
+  ################################################################
+  ################################################################
  
   
   brm_args$prior <- brmspriors
@@ -8780,682 +9418,916 @@ bsitar <- function(x,
   # stringr::str_extract
   stringr_str_extract_base_regexpr <- function(text, 
                                                pattern, 
-                                               replacement,
+                                               replacement = NULL, 
                                                all = FALSE,
                                                returnmatch = FALSE) {
     if(!all) matches   <- regexpr(pattern = pattern, text = text)
     if( all) matches   <- gregexpr(pattern = pattern, text = text)
     setitscode_i_temp1 <- regmatches(text, m = matches)
     if(returnmatch) return(setitscode_i_temp1)
+    # setitscode_i_temp1 <- setitscode_i_temp1[[1]]
     if(is_emptyx(setitscode_i_temp1)) {
       setitscode_i <- text
     } else {
       setitscode_i_temp2 <- paste0(setitscode_i_temp1, replacement)
       setitscode_i_temp3 <- gsub(setitscode_i_temp1, setitscode_i_temp2, 
-                                 setitscode_i_temp)
+                                 text) # setitscode_i_temp
       setitscode_i <- setitscode_i_temp3
     }
     return(setitscode_i)
-  }
+  } # end stringr_str_extract_base_regexpr
+  
   
   string_patterns_replacements <- function(string, patterns, replacements) {
     for (i in seq_along(patterns))
       string <- gsub(patterns[i], replacements[i], string, perl=T)
     string
+  } # string_patterns_replacements
+  
+  
+  build_missing_via_fun <- function(what, whatabc, bere,
+                                    setitscode_i_rep_vector_exa,
+                                    outcomes, param = 'fixed',
+                                    checkfire = NULL) {
+    
+    check_for_ipaterns <- paste0(paste0("_", whatabc, "$"), 
+                                 collapse = "|")
+    
+    grepl_defined_fixed_abci_xxx <- c()
+    for (grepl_defined_fixed_abci in what) {
+      if(grepl(check_for_ipaterns, grepl_defined_fixed_abci)) {
+        grepl_defined_fixed_abci_xxx <- c(grepl_defined_fixed_abci_xxx, 
+                                          grepl_defined_fixed_abci)
+      }
+    }
+    
+    if(length(outcomes) == 1) {
+      find_uniqie_outcomes <- "nlp"
+    } else {
+      find_uniqie_outcomes <- gsub("yvar_", "nlp_", names(outcomes))
+    }
+    
+    find_uniqie_outcomes2 <- c()
+    for (find_uniqie_outcomesi in find_uniqie_outcomes) {
+      for (i in whatabc) {
+        dhhhc <- paste0(find_uniqie_outcomesi, "_", i)
+        find_uniqie_outcomes2 <- c(find_uniqie_outcomes2, dhhhc)
+      }
+    }
+    whatabc_all_defined <- unique(find_uniqie_outcomes2)
+    
+    whatabc_not_defined <- setdiff(whatabc_all_defined,
+                                   grepl_defined_fixed_abci_xxx)
+    
+    # create fixed and be rep_vector if parm not defined in random
+    if(!is.null(checkfire)) {
+      if(param != "random") {
+        checkfire2 <- checkfire
+        names(checkfire2) <- gsub("random", "nlp", names(checkfire2))
+        whatabc_not_defined2 <- c()
+        for (f in find_uniqie_outcomes) {
+          for (w in whatabc_not_defined) {
+            if(grepl(f, w)) {
+              checkfire3 <- checkfire2[[f]]
+              j <- strsplit(w , "_(?!.*_)", perl=TRUE)[[1]][2]
+              for (i in checkfire3) {
+                if(grepl(i, j)) {
+                  whatabc_not_defined2 <- c(whatabc_not_defined2, w)
+                } # if(grepl(checkfire3x, jjj)) {
+              } # for (i in checkfire3) {
+            } # if(grepl(f, w)) {
+          } # for (w in whatabc_not_defined) {
+        } # for (f in find_uniqie_outcomes) {
+        whatabc_not_defined3 <- setdiff(whatabc_not_defined,
+                                        whatabc_not_defined2)
+        whatabc_not_defined <- whatabc_not_defined3
+      } # if(param != "random") {
+    } # if(!is.null(checkfire)) {
+    
+    
+    # this because rep_vector() not defined earlier for random parameters
+    if(param == "random") {
+      whatabc_not_defined <- whatabc_all_defined
+    }
+  
+    grepl_defined_fixed_abci_xxx2 <- c()
+    for (whatabc_not_definedi in whatabc_not_defined) {
+      for (setitscode_i_rep_vector_exai in setitscode_i_rep_vector_exa) { 
+        defined_random <- 
+          stringr_str_extract_base_regexpr(setitscode_i_rep_vector_exai, 
+                                           "nlp_\\w+", 
+                                           paste_x_Naux_str, all = T,
+                                           returnmatch = T)[[1]]
+        j <- strsplit(defined_random , "_(?!.*_)", perl=TRUE)[[1]][1]
+        jj <- strsplit(whatabc_not_definedi , "_(?!.*_)", perl=TRUE)[[1]][1]
+        if(grepl(jj, j)) {
+          build_missing <- gsub(defined_random, whatabc_not_definedi, 
+                                setitscode_i_rep_vector_exai)
+        } # if(grepl(jj, j)) {
+      } # for (setitscode_i_rep_vector_exai
+      grepl_defined_fixed_abci_xxx2 <- c(grepl_defined_fixed_abci_xxx2, 
+                                         build_missing)
+    } # for (whatabc_not_definedi in whatabc_not_defined) {
+    
+    grepl_defined_fixed_abci_xxx3 <- c()
+    for (grepl_defined_fixed_abci_xxx2i in grepl_defined_fixed_abci_xxx2) {
+      grepl_defined_fixed_abci_xxx3_be <- 
+        x_gsubit_gsubby(grepl_defined_fixed_abci_xxx2i,
+                        gsubit = "nlp_", gsubby = bere,
+                        pasteit = TRUE, fixed = FALSE)
+      grepl_defined_fixed_abci_xxx3 <- c(grepl_defined_fixed_abci_xxx3,
+                                         grepl_defined_fixed_abci_xxx3_be)
+    }
+    return(grepl_defined_fixed_abci_xxx3)
+  } # end build_missing_via_fun
+  
+  
+  
+  check_d_defined_fun <- function(what, outcomes, param = NULL, lookfor = "d") {
+    if(!is.null(param)) {
+      add_parm <- paste0("_", param)
+    } else {
+      add_parm <- NULL
+    }
+    
+    if(length(outcomes) == 1) {
+      get_unique_length_ys <- "nlp" # paste0("nlp_", outcomes[[1]])
+    } else {
+      get_unique_length_ys <- gsub("yvar_", "nlp_", names(outcomes))
+    }
+    
+    lookfor_str <- paste0("_", lookfor, "$")
+    x_c <- c()
+    for (j in what) {
+      if(grepl(lookfor_str, j)) {
+        x <- j
+      } else {
+        x <- NULL
+      }
+      x_c <- c(x_c, x)
+    }
+    # get_unique_length_ys <- sort(get_unique_length_ys)
+    # x_c <- sort(x_c)
+    if(!is.null(x_c)) {
+      xxz_c <- c()
+      for (i in get_unique_length_ys) {
+        if(any(grepl(i, x_c))) {
+          xxz <- paste0("int ", i, add_parm, "_", lookfor, "_", 'defined', " = 1;")
+        } else if(!all(grepl(i, x_c))) {
+          xxz <- paste0("int ", i, add_parm, "_", lookfor, "_", 'defined', " = 0;")
+        }
+        xxz_c <- c(xxz_c, xxz)
+      }
+    } else if(is.null(x_c)) {
+      xxz_c <- c()
+      for (i in get_unique_length_ys) {
+        xxz <- paste0("int ", i, add_parm, "_", lookfor, "_", 'defined', " = 0;")
+        xxz_c <- c(xxz_c, xxz)
+      }
+    }
+    return(xxz_c)
+  } # end check_d_defined_fun
+  
+  
+  ####################################################################
+  ####################################################################
+  
+  strsplit_type <- function(x,
+                            split,
+                            type = "remove",
+                            perl = FALSE,
+                            ...) {
+    if (type == "remove") {
+      # use base::strsplit
+      out <- base::strsplit(x = x, split = split, perl = perl, ...)
+    } else if (type == "before") {
+      # split before the delimiter and keep it
+      out <- base::strsplit(x = x,
+                            split = paste0("(?<=.)(?=", split, ")"),
+                            perl = TRUE,
+                            ...)
+    } else if (type == "after") {
+      # split after the delimiter and keep it
+      out <- base::strsplit(x = x,
+                            split = paste0("(?<=", split, ")"),
+                            perl = TRUE,
+                            ...)
+    } else {
+      # wrong type input
+      stop("type must be remove, after or before!")
+    }
+    return(out)
   }
   
   
-  ####################################################################
-  ####################################################################
-  
-  make_stancode_custom_args <- brm_args
-  make_standata_custom_args <- brm_args
-  
-  
-  # if(is.null(data_custom)) {
-  #   paste_x_Naux_str <- ""
-  # } else if(!is.null(data_custom)) {
-  #   make_stancode_custom_args[['data']] <- data_custom
-  #   make_standata_custom_args[['data']] <- data_custom
-  #   paste_x_Naux_str <- paste0("_", x_Naux_str)
-  #   
-  #   make_stancode_custom_args[['return_data']] <- TRUE
-  #   gqdata_stanvarlist_data_si <- do.call(make_stancode_custom, 
-  #                                         make_stancode_custom_args)
-  #   
-  #   make_standata_custom_args_exclude <- c('stanvars', 'prior_only')
-  #   for (i in make_standata_custom_args_exclude) {
-  #     make_standata_custom_args[[i]] <- NULL
-  #   }
-  #   
-  #   data_custom_standata <- do.call(make_standata_custom, 
-  #                                   make_standata_custom_args)
-  #   
-  #   
-  #   add_data2_c <- list()
-  #   data_custom_standata_code <- strsplit(gqdata_stanvarlist_data_si, 
-  #                                         "\n")[[1]]
-  #   counterx <- 0
-  #   for (i in names(data_custom_standata)) {
-  #     counterx <- counterx + 1
-  #     setitx_i <- data_custom_standata[[i]]
-  #     if(nys == 1) {
-  #       setitname_i <- paste0(i, paste_x_Naux_str)
-  #     } else if(nys > 1) {
-  #       setitname_i <- paste0(i, paste_x_Naux_str)
-  #     }
-  #     
-  #     setitscode_i <- data_custom_standata_code[counterx]
-  #     setitscode_i  <- gsub(";", paste0(paste_x_Naux_str, ";"), setitscode_i, fixed = T)
-  #     
-  #     # we have come out of ii loop over ysi, so recreate here temporarily
-  #     if(nys > 1) {
-  #       for (xnss in ys) {
-  #         x_N_name <- paste0("N", "_", xnss)
-  #         # check, N_height already changed to  N_height_Naux because of gsub ";"
-  #         if(!grepl(paste0(x_N_name, paste_x_Naux_str), setitscode_i)) {
-  #           setitscode_i  <- gsub(x_N_name, paste0(x_N_name, paste_x_Naux_str), 
-  #                                 setitscode_i, fixed = T)
-  #         }
-  #       }
-  #     }
-  #     
-  #     # see we have generated K_height_a but not relaceing with K_height_a_Naux
-  #     # This because number covariates remains fixed
-  #     if(!is.na(setitscode_i)) {
-  #       add_data2_c[[i]] <-
-  #         brms::stanvar(x = setitx_i,
-  #                       name = setitname_i,
-  #                       scode = setitscode_i,
-  #                       block = "data",
-  #                       position = "start",
-  #                       pll_args = NULL)
-  #     } # if(!is.na(setitname_i)) {
-  #   } # for (i in names(data_custom_standata)) {
-  #   
-  #   add_data2_stanvarlistlist <- c()
-  #   for (i in 1:length(add_data2_c)) {
-  #     add_data2_stanvarlistlist[i] <- paste0("add_data2_c[[", i, "]]")
-  #   }
-  #   add_data2stanvars <- eval(parse(text = paste(add_data2_stanvarlistlist,
-  #                                                collapse = "+")))
-  #   
-  #   brm_args$stanvars <- brm_args$stanvars + add_data2stanvars
-  # } # if(is.null(data_custom)) { else if(!is.null(data_custom)) {
   
   ####################################################################
   ####################################################################
+  ####################################################################
+  ####################################################################
   
-  data_patterns_search_for_replace <- c(" Z_\\w+", 
-                                        " X_\\w+", 
-                                        "N_\\w+", 
-                                        "K_\\w+",
-                                        "M_\\w+",
-                                        "J_\\w+",
-                                        "C_\\w+", 
-                                        "Y_\\w+", # multivariate
-                                        "\\bN\\b",
-                                        "\\bY\\b")
-  
-  
-  
-  data_patterns_search_for_replace_bar <- 
-    paste(data_patterns_search_for_replace, 
-          collapse = "|")
-  
-  
-  if(is.null(data_custom)) {
-    paste_x_Naux_str <- ""
-  } else if(!is.null(data_custom)) {
-    make_stancode_custom_args[['data']] <- data_custom
-    make_standata_custom_args[['data']] <- data_custom
-    paste_x_Naux_str <- paste0("_", x_Naux_str)
+  if(genquant_xyadj) {
+
+    make_stancode_custom_args <- brm_args
+    make_standata_custom_args <- brm_args
     
-    make_stancode_custom_args[['return_data']] <- TRUE
-    gqdata_stanvarlist_data_si <- do.call(make_stancode_custom, 
-                                          make_stancode_custom_args)
+    # Make sure threadus NULL, otherwise it will create grainsize etic
+    make_stancode_custom_args[['threads']] <- brms::threading(NULL)
+    make_standata_custom_args[['threads']] <- brms::threading(NULL)
+    
+    # check_for_validy_of_prepare_transformations makes sense only if same data
+    if(is.null(data_custom)) {
+      check_for_validy_of_prepare_transformations <- 
+        check_for_validy_of_prepare_transformations
+    } else {
+      check_for_validy_of_prepare_transformations <- FALSE
+    }
+    
+    
+    # mandatory to make Naux variables - this is must for univariate_by
+    use_data_custom <- FALSE
+    if(is.null(data_custom)) {
+      data_custom <- data.org.in
+      use_data_custom <- FALSE
+    } else {
+      data_custom <- data_custom
+      use_data_custom <- TRUE
+    }
+    
+    
+    ####################################################################
+    ####################################################################
+    
+    data_custom.org.in                   <- data_custom
+    prepare_data_args <- list()
+    prepare_data_args[['data']]          <- data_custom
+    prepare_data_args[['xvar']]          <- xs.org.in
+    prepare_data_args[['yvar']]          <- ys.org.in
+    prepare_data_args[['idvar']]         <- ids.org.in
+    prepare_data_args[['univariate_by']] <- univariate_by
+    prepare_data_args[['multivariate']]  <- multivariate
+    prepare_data_args[['outliers']]      <- outliers
+    prepare_data_args[['envir']]         <- enverr.
+    prepare_data_args[['sigmaxvar']]     <- sigmaxs.org.in
+    prepare_data_args[['nys']]           <- nys
+    prepare_data_args[['subset']]        <- FALSE
+    prepare_data_args[['returnys']]      <- FALSE
+    prepare_data_args[['verbose']]       <- FALSE
+    prepare_data_args[['displayit']]     <- displayit
+    prepare_data_args[['setcolb']]       <- setcolb
+
+    data_custom_data            <- do.call(prepare_data2, prepare_data_args)
+    
+    if(check_for_validy_of_prepare_transformations) {
+      check_for_validy_of_prepare_transformations_0_custom <- data_custom_data
+    }
+    
+    # xvarvaluelist etc must not be list but a name vector, expecially when ifun
+    prepare_transformations_args[['data']]         <- data_custom_data
+    prepare_transformations_args[['xvar']]         <- xvarvaluelist %>% unlist()
+    prepare_transformations_args[['yvar']]         <- yvarvaluelist %>% unlist()
+    prepare_transformations_args[['sigmaxvar']]    <- sigmaxvarvaluelist %>% unlist()
+    prepare_transformations_args[['xfun']]         <- xfuntransformvaluelist 
+    prepare_transformations_args[['yfun']]         <- yfuntransformvaluelist
+    prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformvaluelist
+    prepare_transformations_args[['ixfun']]        <- FALSE
+    prepare_transformations_args[['iyfun']]        <- FALSE
+    prepare_transformations_args[['isigmaxfun']]   <- FALSE
+    prepare_transformations_args[['xoffset']]      <- xoffsetvaluelist
+    prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffsetvaluelist
+    prepare_transformations_args[['transform']]    <- ""
+    prepare_transformations_args[['itransform']]   <- ""
+    
+    data_custom_data <- do.call(prepare_transformations, prepare_transformations_args)
+    
+    if(check_for_validy_of_prepare_transformations) {
+      check_for_validy_of_prepare_transformations_3_custom <- data_custom_data
+    }
+    
+    
+    if(check_for_validy_of_prepare_transformations) {
+      prepare_transformations_args[['data']]         <- data_custom_data
+      prepare_transformations_args[['yfun']]         <- NULL
+      prepare_transformations_args[['ixfun']]        <- TRUE
+      prepare_transformations_args[['isigmaxfun']]   <- TRUE
+      prepare_transformations_args[['transform']]    <- ""
+      prepare_transformations_args[['itransform']]   <- ""
+      
+      check_for_validy_of_prepare_transformations_4_custom <- 
+        do.call(prepare_transformations, prepare_transformations_args)
+      
+      prepare_transformations_args[['data']]         <- 
+        check_for_validy_of_prepare_transformations_4_custom
+      prepare_transformations_args[['ixfun']]        <- FALSE
+      prepare_transformations_args[['isigmaxfun']]   <- FALSE
+      prepare_transformations_args[['transform']]    <- ""
+      prepare_transformations_args[['itransform']]   <- ""
+      
+      check_for_validy_of_prepare_transformations_5_custom <- 
+        do.call(prepare_transformations, prepare_transformations_args)
+      
+      # check_for_validy_of_prepare_transformations_0_customx <<-
+      #   check_for_validy_of_prepare_transformations_0_custom
+      # 
+      # check_for_validy_of_prepare_transformations_3_customx <<-
+      #   check_for_validy_of_prepare_transformations_3_custom
+      # 
+      # check_for_validy_of_prepare_transformations_4_customx <<-
+      #   check_for_validy_of_prepare_transformations_4_custom
+      # 
+      # check_for_validy_of_prepare_transformations_5_customx <<-
+      #   check_for_validy_of_prepare_transformations_5_custom
+      
+      
+      # Ignore outcome ysi becuase it remains transformed
+      check_for_validy_of_prepare_transformations_0_custom <- 
+        check_for_validy_of_prepare_transformations_0_custom %>% dplyr::select(-ys)
+      check_for_validy_of_prepare_transformations_4_custom <- 
+        check_for_validy_of_prepare_transformations_4_custom %>% dplyr::select(-ys)
+      check_for_validy_of_prepare_transformations_3_custom <- 
+        check_for_validy_of_prepare_transformations_3_custom %>% dplyr::select(-ys)
+      check_for_validy_of_prepare_transformations_5_custom <- 
+        check_for_validy_of_prepare_transformations_5_custom %>% dplyr::select(-ys)
+      
+      if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_0_custom,
+                           check_for_validy_of_prepare_transformations_4_custom))) {
+        stop("Something wrong with 'prepare_transformations' for data_custom")
+      }
+      
+      if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_3_custom,
+                           check_for_validy_of_prepare_transformations_5_custom))) {
+        stop("Something wrong with 'prepare_transformations' for data_custom")
+      }
+      
+      # check_for_validy_of_prepare_transformations_0_customx <<-
+      #   check_for_validy_of_prepare_transformations_0_custom
+      # check_for_validy_of_prepare_transformations_0x <<-
+      #   check_for_validy_of_prepare_transformations_0
+      
+    } # if(check_for_validy_of_prepare_transformations) {
+    
+    
+    
+    # # setsigmaxvar
+    # for (i in 1:length( (sigmaxvarvaluelist)  )) {
+    #   if(!setsigmaxvarvaluelist[[i]]) {
+    #     data_custom_data <- data_custom_data %>% 
+    #       dplyr::select(-sigmaxvarvaluelist[[i]])
+    #   }
+    # }
+    
+    
+    ################################################################
+    ################################################################
+    for (j in 1:length(setsigmaxvar_names_val)) {
+      if(!setsigmaxvar_names_val[j]) {
+        data_custom_data <- data_custom_data %>% 
+          dplyr::select(-sigmaxvarvaluelist[[j]])
+      }
+    }
+    ################################################################
+    ################################################################
+    
+    
+    
+    
+    if(check_for_validy_of_prepare_transformations) {
+      # compare with original
+      if(!isTRUE(all.equal(dataout,
+                           data_custom_data))) {
+        stop("Something wrong with 'prepare_transformations' for data_custom")
+      }
+    }
+    
+    
+    data_custom_data_ys            <- attr(data_custom_data, "ys")
+    data_custom_data_subindicators <- attr(data_custom_data, "subindicators")
+    
+    
+    
+    ####################################################################
+    ####################################################################
+    
+    if(!is.null(data_custom_data)) {
+      make_stancode_custom_args[['data']] <- data_custom_data
+      make_standata_custom_args[['data']] <- data_custom_data
+    }
+    
     
     make_standata_custom_args_exclude <- c('stanvars', 'prior_only')
     for (i in make_standata_custom_args_exclude) {
       make_standata_custom_args[[i]] <- NULL
     }
     
-    data_custom_standata <- do.call(make_standata_custom, 
-                                    make_standata_custom_args)
+    data_patterns_search_for_replace <- c("Z_\\w+", 
+                                          "X_\\w+", 
+                                          "N_\\w+", 
+                                          "K_\\w+",
+                                          "M_\\w+",
+                                          "J_\\w+",
+                                          "C_\\w+", 
+                                          "Y_\\w+", # multivariate
+                                          "\\bnresp\\b", # multivariate
+                                          "\\bnrescor\\b", # multivariate
+                                          "\\bN\\b",
+                                          "\\bY\\b")
+    
+    data_patterns_search_for_replace_bar <- 
+      paste(data_patterns_search_for_replace, 
+            collapse = "|")
     
     
-    data_custom_standata_code <- strsplit(gqdata_stanvarlist_data_si, 
-                                          "\n")[[1]]
+    if(is.null(data_custom)) {
+      paste_x_Naux_str <- ""
+    } else if(!is.null(data_custom)) {
+      paste_x_Naux_str <- paste0("_", x_Naux_str)
+      make_stancode_custom_args[['return_data']] <- TRUE
+      gqdata_stanvarlist_data_si <- do.call(make_stancode_custom, 
+                                            make_stancode_custom_args)
+      
+      
+      data_custom_standata <- do.call(make_standata_custom, 
+                                      make_standata_custom_args)
+      
+      data_custom_standata[["prior_only"]] <- NULL
+      
+      data_custom_standata_code <- strsplit(gqdata_stanvarlist_data_si, "\n")[[1]]
+      
+      data_custom_standata_code2 <- data_custom_standata_code
+      
+      data_custom_standata_code2 <- c()
+      for (i in 1:length(data_custom_standata_code)) {
+        tweasj <- normalize_stancode_custom(data_custom_standata_code[i])
+        if(!is_emptyx(tweasj)) {
+          data_custom_standata_code2 <- c(data_custom_standata_code2, tweasj)
+        }
+      }
+      
+      add_data2_c <- list()
+      collect_datax <- list()
+      collect_scodex <- collect_stanvarname <- c()
+      for (j in data_custom_standata_code2) {
+        get_i <- tail(strsplit(j, split=" ")[[1]],1)
+        get_i2 <- gsub(";", "", get_i)
+        # get_i3 <- paste0("^", get_i2, "$")
+        get_i3 <- paste0("\\b", get_i2, "\\b")
+        get_jdat <- data_custom_standata[grepl(get_i3, 
+                                               names(data_custom_standata))]
+        
+        get_jstanvarname <- 
+          stringr_str_extract_base_regexpr(get_i2, 
+                                           data_patterns_search_for_replace_bar, 
+                                           paste_x_Naux_str, all = T,
+                                           returnmatch = F)[[1]]
+        
+        addxt <- 
+          stringr_str_extract_base_regexpr(j, 
+                                           data_patterns_search_for_replace_bar, 
+                                           paste_x_Naux_str, all = T,
+                                           returnmatch = T)[[1]]
+        
+        gsubby <- paste0(addxt, paste_x_Naux_str)
+        
+        get_jcode <- string_patterns_replacements(j, addxt, gsubby)
+        
+        add_data2_c[[get_jstanvarname]] <-
+          brms::stanvar(x = get_jdat[[1]],
+                        name = get_jstanvarname,
+                        scode = get_jcode,
+                        block = "data",
+                        position = "start",
+                        pll_args = NULL)
+        
+        # collect_datax <- c(collect_datax, get_jdat)
+        # collect_stanvarname <- c(collect_stanvarname, get_jstanvarname)
+        # collect_scodex <- c(collect_scodex, get_jcode)
+      }
+      
+      add_data2_stanvarlistlist <- c()
+      for (i in 1:length(add_data2_c)) {
+        add_data2_stanvarlistlist[i] <- paste0("add_data2_c[[", i, "]]")
+      }
+      add_data2stanvars <- eval(parse(text = paste(add_data2_stanvarlistlist,
+                                                   collapse = "+")))
+      
+      brm_args$stanvars <- brm_args$stanvars + add_data2stanvars
+    } # if(is.null(data_custom)) { else if(!is.null(data_custom)) {
     
-    add_data2_c <- list()
+    
+    ####################################################################
+    ####################################################################
+    
+    make_stancode_custom_args[['return_gq']] <- TRUE
+    gqdata_stanvarlist_si <- do.call(make_stancode_custom, 
+                                     make_stancode_custom_args)
+    
+    gq_custom_standata_code <- strsplit(gqdata_stanvarlist_si, "\n")[[1]]
+    
+    add_data2_c <- c()
+    add_data1_c <- c()
+    
+    grepl_random_abc <- c()
+    grepl_random_abc_expected <- letters[1:4]
+    add_missing_random_abc <- c()
+    grepl_fixed_abc <- c()
+    grepl_fixed_abc_expected <- letters[1:4]
+    add_missing_fixed_abc <- c()
+    setitscode_i_rep_vector_exa <- c()
+    
+    grepl_defined_fixed_abc <- c()
+    grepl_defined_random_abc <- c()
     counterx <- 0
-    for (i in names(data_custom_standata)) {
+    for (i in 1:length(gq_custom_standata_code)) {
       counterx <- counterx + 1
-      setitx_i <- data_custom_standata[[i]]
+      setitx_i <- deparse(i)
+      setitscode_i_temp <- gq_custom_standata_code[counterx]
+      
+      # Z_ -> random effect design matrix
+      setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i_temp, 
+                                                       " Z_\\w+", 
+                                                       paste_x_Naux_str)
+      # X_ -> fixed effect design matrix
+      setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i, 
+                                                       " X_\\w+", 
+                                                       paste_x_Naux_str)
+      # N_ -> outcome specific number of observations
+      setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i, 
+                                                       "N_\\w+", 
+                                                       paste_x_Naux_str)
+      # N_ -> outcome specific predictor, age
+      setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i, 
+                                                       "C_\\w+", 
+                                                       paste_x_Naux_str)
+      
+      # N -> single N denoting total number of observations
+      setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i,
+                                                       "\\bN\\b", 
+                                                       paste_x_Naux_str)
+      
+      
+      if(grepl("rep_vector", setitscode_i)) {
+        if(grepl("vector", setitscode_i) & 
+           grepl("nlp", setitscode_i) & 
+           grepl("_a", setitscode_i)) {
+          setitscode_i_rep_vector_exa <- c(setitscode_i_rep_vector_exa, 
+                                           setitscode_i)
+        }
+      }
+      
+      if(grepl("rep_vector", setitscode_i)) {
+        setitscode_i2 <- x_gsubit_gsubby(setitscode_i,
+                                         gsubit = "nlp_", gsubby = "be_",
+                                         pasteit = TRUE, fixed = FALSE)
+        add_data2_c <- c(add_data2_c, setitscode_i2)
+      }
+      
+      
+      if(grepl("+=", setitscode_i, fixed = T)) {
+        if(grepl("X_", setitscode_i, fixed = T)) {
+          setitscode_i2 <- x_gsubit_gsubby(setitscode_i,
+                                           gsubit = "nlp_", gsubby = "be_",
+                                           pasteit = TRUE, fixed = FALSE)
+          add_data2_c <- c(add_data2_c, setitscode_i2)
+          defined_fixed <- stringr_str_extract_base_regexpr(setitscode_i, 
+                                                            "nlp_\\w+", 
+                                                            paste_x_Naux_str, all = T,
+                                                            returnmatch = T)[[1]]
+          grepl_defined_fixed_abc <- c(grepl_defined_fixed_abc, defined_fixed)
+        }
+      }
+      
+      if(grepl("{", setitscode_i, fixed = T)) {
+        add_data2_c <- c(add_data2_c, setitscode_i)
+      }
+      if(grepl("+=", setitscode_i, fixed = T)) {
+        if(grepl("Z_", setitscode_i, fixed = T)) {
+          setitscode_i2 <- x_gsubit_gsubby(setitscode_i,
+                                           gsubit = "nlp_", gsubby = "re_",
+                                           pasteit = TRUE, fixed = FALSE)
+          add_data2_c <- c(add_data2_c, setitscode_i2)
+          defined_random <- stringr_str_extract_base_regexpr(setitscode_i, 
+                                                             "nlp_\\w+", 
+                                                             paste_x_Naux_str, all = T,
+                                                             returnmatch = T)[[1]]
+          grepl_defined_random_abc <- c(grepl_defined_random_abc, defined_random)
+        }
+      }
+      if(grepl("}", setitscode_i, fixed = T)) {
+        add_data2_c <- c(add_data2_c, setitscode_i)
+      }
+      
+      add_data1_c <- c(add_data1_c, setitscode_i)
+    } # end for (i in 1:length(gq_custom_standata_code)) {
+    
+    
+    randomvaluelist_forcheck        <- randomvaluelist
+    names(randomvaluelist_forcheck) <- unlist(randomnamelist)
+    
+    # fixedvaluelist_forcheck <- fixedvaluelist
+    # names(fixedvaluelist_forcheck) <- unlist(fixednamelist)
+    
+    yvarvaluelist_forcheck        <- yvarvaluelist
+    names(yvarvaluelist_forcheck) <- unlist(ynamelist)
+    
+    # add missing
+    build_missing_via_fun_org <- 
+      build_missing_via_fun(grepl_defined_fixed_abc, letters[1:4], "",
+                            setitscode_i_rep_vector_exa,
+                            outcomes = yvarvaluelist_forcheck,
+                            param = 'fixed', 
+                            checkfire = randomvaluelist_forcheck)
+    
+    build_missing_via_fun_fixed <- 
+      build_missing_via_fun(grepl_defined_fixed_abc, letters[1:4], "be_",
+                            setitscode_i_rep_vector_exa,
+                            outcomes = yvarvaluelist_forcheck,
+                            param = 'fixed', 
+                            checkfire = randomvaluelist_forcheck)
+    
+    build_missing_via_fun_random <- 
+      build_missing_via_fun(grepl_defined_random_abc, letters[1:4], "re_",
+                            setitscode_i_rep_vector_exa,
+                            outcomes = yvarvaluelist_forcheck,
+                            param = 'random', 
+                            checkfire = NULL)
+    
+    
+    
+    d_not_defined_tf <- FALSE
+    d_not_defined <- paste0("_", "d", "$")
+    for (i in build_missing_via_fun_fixed) {
+      if(grepl(d_not_defined, i)) {
+        d_not_defined_tf <- TRUE
+      }
+    }
+    for (i in build_missing_via_fun_random) {
+      if(grepl(d_not_defined, i)) {
+        d_not_defined_tf <- TRUE
+      }
+    }
+    
+    if(d_not_defined_tf) {
+      d_not_defined_scode <- paste0("int d_not_defined = 1;")
+    } else {
+      d_not_defined_scode <- paste0("int d_not_defined = 0;")
+    }
+    
+    
+    
+    build_missing_via_fun_org_si <-
+      paste(build_missing_via_fun_org, collapse = "\n")
+    
+    build_missing_via_fun_fixed_si <-
+      paste(build_missing_via_fun_fixed, collapse = "\n")
+    
+    build_missing_via_fun_random_si <-
+      paste(build_missing_via_fun_random, collapse = "\n")
+    
+    add_missing_gqdata_stanvarlist_si <-
+      paste0(build_missing_via_fun_org_si, "\n",
+             build_missing_via_fun_fixed_si, "\n",
+             build_missing_via_fun_random_si)
+    
+    
+    # check d define 
+    check_if_d_fixed <- check_d_defined_fun(grepl_defined_fixed_abc,
+                                            outcomes = yvarvaluelist_forcheck,
+                                            param = NULL, 
+                                            lookfor = "d")
+    
+    check_if_d_fixed <- x_gsubit_gsubby(check_if_d_fixed,
+                                        gsubit = "nlp_", gsubby = "be_",
+                                        pasteit = TRUE, fixed = FALSE)
+    
+    
+    check_if_d_random <- check_d_defined_fun(grepl_defined_random_abc,
+                                             outcomes = yvarvaluelist_forcheck,
+                                             param = NULL, 
+                                             lookfor = "d")
+    
+    check_if_d_random <- x_gsubit_gsubby(check_if_d_random,
+                                         gsubit = "nlp_", gsubby = "re_",
+                                         pasteit = TRUE, fixed = FALSE)
+    
+    
+    
+    check_if_d_fixed_random <- c(check_if_d_fixed, check_if_d_random)
+    check_if_d_fixed_random <- paste(check_if_d_fixed_random, collapse = "\n")
+    
+    add_missing_gqdata_stanvarlist_si <-
+      paste0(add_missing_gqdata_stanvarlist_si, "\n",
+             check_if_d_fixed_random)
+    
+    
+    add_data1_c_pasted <- paste(add_data1_c, collapse = "\n")
+    add_data2_c_pasted <- paste(add_data2_c, collapse = "\n")
+    
+    add_data12_c_pasted <- paste0(add_data1_c_pasted, "\n", 
+                                  add_data2_c_pasted)
+    
+    # add all mising rep_vector at the beginin
+    add_data12_c_pasted <- paste0(add_missing_gqdata_stanvarlist_si, "\n",
+                                  add_data12_c_pasted)
+    
+    
+    add_data2stanvars <- 
+      brms::stanvar(x = NULL,
+                    name = add_data12_c_pasted,
+                    scode = add_data12_c_pasted,
+                    block = "genquant",
+                    position = "end",
+                    pll_args = NULL)
+    
+    #######################################################################
+    #######################################################################
+    
+    gqdata_stanvarlist_si <- add_data2stanvars
+    
+    # we have come out of ii loop over ysi, so recreate here temporarily
+    add_gqdata_stanvarlist_si_c <- c()
+    for (xnss in ys) {
       if(nys == 1) {
-        setitname_i <- paste0(i, paste_x_Naux_str)
+        name_xyadj_tomeanx_t <- "tomeanx_true"
+        name_xyadj_tomeanx_f <- "tomeanx_false"
+        name_xyadj_tomeany_t <- "tomeany_true"
+        name_xyadj_tomeany_f <- "tomeany_false"
+        x_N_name <- paste0("N", "", "")
+        Naux_name_define <- paste0(x_N_name, paste_x_Naux_str)
       } else if(nys > 1) {
-        setitname_i <- paste0(i, paste_x_Naux_str)
+        name_xyadj_tomeanx_t <- paste0("tomeanx_true", "_", xnss)
+        name_xyadj_tomeanx_f <- paste0("tomeanx_false", "_", xnss)
+        name_xyadj_tomeany_t <- paste0("tomeany_true", "_", xnss)
+        name_xyadj_tomeany_f <- paste0("tomeany_false", "_", xnss)
+        x_N_name <- paste0("N", "_", xnss)
+        Naux_name_define <- paste0(x_N_name, paste_x_Naux_str)
       }
       
-      setitscode_i <- data_custom_standata_code[counterx]
       
-      addxt <- stringr_str_extract_base_regexpr(setitscode_i, 
-                                                data_patterns_search_for_replace_bar, 
-                                                paste_x_Naux_str, all = T,
-                                                returnmatch = T)[[1]]
-      gsubby <- paste0(addxt, paste_x_Naux_str)
-     
-      setitscode_i <- string_patterns_replacements(setitscode_i, 
-                                                     addxt, gsubby)
-    
-      if(!is.na(setitscode_i)) {
-          add_data2_c[[i]] <-
-            brms::stanvar(x = setitx_i,
-                          name = setitname_i,
-                          scode = setitscode_i,
-                          block = "data",
-                          position = "start",
-                          pll_args = NULL)
-        } # if(!is.na(setitname_i)) {
-    } # for (i in names(data_custom_standata)) {
-    
-    add_data2_stanvarlistlist <- c()
-    for (i in 1:length(add_data2_c)) {
-      add_data2_stanvarlistlist[i] <- paste0("add_data2_c[[", i, "]]")
-    }
-    add_data2stanvars <- eval(parse(text = paste(add_data2_stanvarlistlist,
-                                                 collapse = "+")))
-    
-    brm_args$stanvars <- brm_args$stanvars + add_data2stanvars
-  } # if(is.null(data_custom)) { else if(!is.null(data_custom)) {
-  
-  ####################################################################
-  ####################################################################
-  
-  make_stancode_custom_args[['return_gq']] <- TRUE
-  gqdata_stanvarlist_si <- do.call(make_stancode_custom, 
-                                   make_stancode_custom_args)
-  
-  gq_custom_standata_code <- strsplit(gqdata_stanvarlist_si, "\n")[[1]]
-  
-  add_data2_c <- c()
-  add_data1_c <- c()
-  
-  grepl_random_abc <- c()
-  grepl_random_abc_expected <- letters[1:4]
-  add_missing_random_abc <- c()
-  grepl_fixed_abc <- c()
-  grepl_fixed_abc_expected <- letters[1:4]
-  add_missing_fixed_abc <- c()
-  setitscode_i_rep_vector_exa <- c()
-  
-  counterx <- 0
-  for (i in 1:length(gq_custom_standata_code)) {
-    counterx <- counterx + 1
-    setitx_i <- deparse(i)
-    setitscode_i_temp <- gq_custom_standata_code[counterx]
-    
-    # Z_ -> random effect design matrix
-    setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i_temp, 
-                                                     " Z_\\w+", 
-                                                     paste_x_Naux_str)
-    # X_ -> fixed effect design matrix
-    setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i, 
-                                                     " X_\\w+", 
-                                                     paste_x_Naux_str)
-    # N_ -> outcome specific number of observations
-    setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i, 
-                                                     "N_\\w+", 
-                                                     paste_x_Naux_str)
-    # N_ -> outcome specific predictor, age
-    setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i, 
-                                                     "C_\\w+", 
-                                                     paste_x_Naux_str)
-    
-    # N -> single N denoting total number of observations
-    setitscode_i <- stringr_str_extract_base_regexpr(setitscode_i,
-                                                     "\\bN\\b", 
-                                                     paste_x_Naux_str)
-    # setitscode_i <- gsub("\\bN\\b", paste_x_Naux_str, setitscode_i,
-    # fixed = F)
-    
-    if(grepl("rep_vector", setitscode_i)) {
-      if(grepl("vector", setitscode_i) & 
-         grepl("nlp", setitscode_i) & 
-         grepl("_a", setitscode_i)) {
-        setitscode_i_rep_vector_exa <- c(setitscode_i_rep_vector_exa, 
-                                         setitscode_i)
-      }
-    }
-    
-    if(grepl("rep_vector", setitscode_i)) {
-      setitscode_i2 <- x_gsubit_gsubby(setitscode_i,
-                                       gsubit = "nlp_", gsubby = "be_",
-                                       pasteit = TRUE, fixed = FALSE)
-      add_data2_c <- c(add_data2_c, setitscode_i2)
-      setitscode_i2 <- x_gsubit_gsubby(setitscode_i,
-                                       gsubit = "nlp_", gsubby = "re_",
-                                       pasteit = TRUE, fixed = FALSE)
-      add_data2_c <- c(add_data2_c, setitscode_i2)
-    }
-    
-    if(grepl("+=", setitscode_i, fixed = T)) {
-      if(grepl("X_", setitscode_i, fixed = T)) {
-        setitscode_i2 <- x_gsubit_gsubby(setitscode_i,
-                                         gsubit = "nlp_", gsubby = "be_",
-                                         pasteit = TRUE, fixed = FALSE)
-        add_data2_c <- c(add_data2_c, setitscode_i2)
-      }
-    }
-    
-    if(grepl("{", setitscode_i, fixed = T)) {
-      add_data2_c <- c(add_data2_c, setitscode_i)
-    }
-    if(grepl("+=", setitscode_i, fixed = T)) {
-      if(grepl("Z_", setitscode_i, fixed = T)) {
-        setitscode_i2 <- x_gsubit_gsubby(setitscode_i,
-                                         gsubit = "nlp_", gsubby = "re_",
-                                         pasteit = TRUE, fixed = FALSE)
-        add_data2_c <- c(add_data2_c, setitscode_i2)
-      }
-    }
-    if(grepl("}", setitscode_i, fixed = T)) {
-      add_data2_c <- c(add_data2_c, setitscode_i)
-    }
-    
-    add_data1_c <- c(add_data1_c, setitscode_i)
-    
-  } # end for (i in 1:length(gq_custom_standata_code)) {
-  
-  
-  # add missing here itself
-  get_setdiff_fixed_abc <- setdiff(grepl_fixed_abc_expected, grepl_fixed_abc)
-  get_setdiff_random_abc <- setdiff(grepl_random_abc_expected, grepl_random_abc)
-  
-  setitscode_i_rep_vector_exai_org <- c()
-  for (setitscode_i_rep_vector_exai in setitscode_i_rep_vector_exa) {
-    if(length(get_setdiff_fixed_abc) > 0) {
-      for (get_setdiff_fixed_abci in get_setdiff_fixed_abc) {
-        gsubit <- paste0("_", "a")
-        gsubby <- paste0("_", get_setdiff_fixed_abci)
-        build_missing <- gsub(gsubit, gsubby, setitscode_i_rep_vector_exai)
-        build_missing <- x_gsubit_gsubby(build_missing,
-                                         gsubit = "nlp_", gsubby = "",
-                                         pasteit = TRUE, fixed = FALSE)
-        setitscode_i_rep_vector_exai_org <- 
-          c(setitscode_i_rep_vector_exai_org, build_missing)
-      }
-    }
-  }
-  
-  setitscode_i_rep_vector_exai_fixed <- c()
-  for (setitscode_i_rep_vector_exai in setitscode_i_rep_vector_exa) {
-    if(length(get_setdiff_fixed_abc) > 0) {
-      for (get_setdiff_fixed_abci in get_setdiff_fixed_abc) {
-        gsubit <- paste0("_", "a")
-        gsubby <- paste0("_", get_setdiff_fixed_abci)
-        build_missing <- gsub(gsubit, gsubby, setitscode_i_rep_vector_exai)
-        build_missing <- x_gsubit_gsubby(build_missing,
-                                         gsubit = "nlp_", gsubby = "be_",
-                                         pasteit = TRUE, fixed = FALSE)
-        setitscode_i_rep_vector_exai_fixed <- 
-          c(setitscode_i_rep_vector_exai_fixed, build_missing)
-      }
-    }
-  }
-  
-  setitscode_i_rep_vector_exai_random <- c()
-  for (setitscode_i_rep_vector_exai in setitscode_i_rep_vector_exa) {
-    if(length(get_setdiff_random_abc) > 0) {
-      for (get_setdiff_random_abci in get_setdiff_random_abc) {
-        gsubit <- paste0("_", "a")
-        gsubby <- paste0("_", get_setdiff_random_abci)
-        build_missing <- gsub(gsubit, gsubby, setitscode_i_rep_vector_exai)
-        build_missing <- x_gsubit_gsubby(build_missing,
-                                         gsubit = "nlp_", gsubby = "re_",
-                                         pasteit = TRUE, fixed = FALSE)
-        setitscode_i_rep_vector_exai_random <- 
-          c(setitscode_i_rep_vector_exai_random, build_missing)
-      }
-    }
-  }
-  # end add missing here itself
-  
-  add_data1_c_pasted <- paste(add_data1_c, collapse = "\n")
-  add_data2_c_pasted <- paste(add_data2_c, collapse = "\n")
-  
-  add_data12_c_pasted <- paste0(add_data1_c_pasted, "\n", add_data2_c_pasted)
-  
-
-  setitscode_i_rep_vector_exai_org_pasted <- 
-    paste(setitscode_i_rep_vector_exai_org, collapse = "\n")
-  setitscode_i_rep_vector_exai_fixed_pasted <- 
-    paste(setitscode_i_rep_vector_exai_fixed, collapse = "\n")
-  setitscode_i_rep_vector_exai_random_pasted <- 
-    paste(setitscode_i_rep_vector_exai_random, collapse = "\n")
-  
-  add_missing_gqdata_stanvarlist_si <- 
-    paste0(setitscode_i_rep_vector_exai_org_pasted, "\n", 
-           setitscode_i_rep_vector_exai_fixed_pasted, "\n",
-           setitscode_i_rep_vector_exai_random_pasted
-           )
-  
-
-  
-  add_data12_temp <- strsplit(add_data12_c_pasted, "\n")[[1]]
-  
-  add_missing_temp <- strsplit(add_missing_gqdata_stanvarlist_si, "\n")[[1]]
-  
-  add_data12_temp_rep_vector <- c()
-  for (i in add_data12_temp) {
-    if(grepl("rep_vector", i)) {
-      add_data12_temp_rep_vector <- c(add_data12_temp_rep_vector, trimws(i))
-    }
-  }
-  
-  add_missing_temp_rep_vector <- c()
-  for (i in add_missing_temp) {
-    if(grepl("rep_vector", i)) {
-      add_missing_temp_rep_vector <- c(add_missing_temp_rep_vector, trimws(i))
-    }
-  }
-  
-  add_missing_gqdata_stanvarlist_si_temp <- setdiff(add_missing_temp_rep_vector, 
-                                                    add_data12_temp_rep_vector)
- 
-  add_missing_gqdata_stanvarlist_si <- 
-    paste(add_missing_gqdata_stanvarlist_si_temp, collapse = "\n")
-  
- 
-  
-  add_data12_c_pasted <- paste0(add_data12_c_pasted, "\n", 
-                                add_missing_gqdata_stanvarlist_si)
-  
-  
-  add_data2stanvars <- 
-    brms::stanvar(x = NULL,
-                  name = add_data12_c_pasted,
-                  scode = add_data12_c_pasted,
-                  block = "genquant",
-                  position = "end",
-                  pll_args = NULL)
-  
-  #######################################################################
-  #######################################################################
-  
-  gqdata_stanvarlist_si <- add_data2stanvars
-  
-  # # we have come out of ii loop over ysi, so recreate here temporarily
-  # add_missing_gqdata_stanvarlist_si_c <- c()
-  # for (xnss in ys) {
-  #   if(nys == 1) {
-  #     name_xyadj_tomeanx_t <- "tomeanx_true"
-  #     name_xyadj_tomeanx_f <- "tomeanx_false"
-  #     name_xyadj_tomeany_t <- "tomeany_true"
-  #     name_xyadj_tomeany_f <- "tomeany_false"
-  #     name_npar_define     <- paste0("nlp", "_", "", "")
-  #     name_npar_define_be     <- paste0("nlp", "_", "be_", "")
-  #     name_npar_define_re     <- paste0("nlp", "_", "re_", "")
-  #     x_N_name <- paste0("N", "", "")
-  #     Naux_name_define <- paste0(x_N_name, paste_x_Naux_str)
-  #   } else if(nys > 1) {
-  #     name_xyadj_tomeanx_t <- paste0("tomeanx_true", "_", xnss)
-  #     name_xyadj_tomeanx_f <- paste0("tomeanx_false", "_", xnss)
-  #     name_xyadj_tomeany_t <- paste0("tomeany_true", "_", xnss)
-  #     name_xyadj_tomeany_f <- paste0("tomeany_false", "_", xnss)
-  #     name_npar_define     <- paste0("nlp", "_", "", xnss, "_")
-  #     name_npar_define_be  <- paste0("nlp", "_", "be_", xnss, "_")
-  #     name_npar_define_re  <- paste0("nlp", "_", "re_", xnss, "_")
-  #     x_N_name <- paste0("N", "_", xnss)
-  #     Naux_name_define <- paste0(x_N_name, paste_x_Naux_str)
-  #   }
-  #   
-  #   zzzxz_c <- c()
-  #   for (i in letters[1:4]) {
-  #     defvecpart_1 <- paste0("vector[", Naux_name_define, "] ")
-  #     defvecpart_2 <- paste0(name_npar_define, i)
-  #     defvecpart_3 <- paste0(" = rep_vector(0.0, ", Naux_name_define, ");")
-  #     defvecpart_all <- paste0(defvecpart_1, defvecpart_2, defvecpart_3)
-  #     if(!grepl(i, fixedsi) & !grepl(i, randomsi)) {
-  #       zzzxz_c <- c(zzzxz_c, defvecpart_all)
-  #     }
-  #   }
-  #   
-  #   zzzxz_c_be <- c()
-  #   for (i in letters[1:4]) {
-  #     defvecpart_1 <- paste0("vector[", Naux_name_define, "] ")
-  #     defvecpart_2 <- paste0(name_npar_define_be, i)
-  #     defvecpart_3 <- paste0(" = rep_vector(0.0, ", Naux_name_define, ");")
-  #     defvecpart_all <- paste0(defvecpart_1, defvecpart_2, defvecpart_3)
-  #     if(!grepl(i, fixedsi)) {
-  #       zzzxz_c_be <- c(zzzxz_c_be, defvecpart_all)
-  #     }
-  #   }
-  #   
-  #   zzzxz_c_re <- c()
-  #   for (i in letters[1:4]) {
-  #     defvecpart_1 <- paste0("vector[", Naux_name_define, "] ")
-  #     defvecpart_2 <- paste0(name_npar_define_re, i)
-  #     defvecpart_3 <- paste0(" = rep_vector(0.0, ", Naux_name_define, ");")
-  #     defvecpart_all <- paste0(defvecpart_1, defvecpart_2, defvecpart_3)
-  #     if(!grepl(i, randomsi)) {
-  #       zzzxz_c_re <- c(zzzxz_c_re, defvecpart_all)
-  #     }
-  #   }
-  #   zzzxz_c_all <- c(zzzxz_c, zzzxz_c_be, zzzxz_c_re)
-  #   add_gqdata_stanvarlist_si <- paste(zzzxz_c_all, collapse = "\n")
-  #   
-  #   
-  #   add_missing_gqdata_stanvarlist_si_c <- 
-  #     c(add_missing_gqdata_stanvarlist_si_c,
-  #       add_gqdata_stanvarlist_si)
-  # }
-  # 
-  # add_missing_gqdata_stanvarlist_si <- 
-  #   paste(add_missing_gqdata_stanvarlist_si_c, collapse = "\n")
-  # 
-  
-  
-  # we have come out of ii loop over ysi, so recreate here temporarily
-  add_gqdata_stanvarlist_si_c <- c()
-  for (xnss in ys) {
-    if(nys == 1) {
-      name_xyadj_tomeanx_t <- "tomeanx_true"
-      name_xyadj_tomeanx_f <- "tomeanx_false"
-      name_xyadj_tomeany_t <- "tomeany_true"
-      name_xyadj_tomeany_f <- "tomeany_false"
-      x_N_name <- paste0("N", "", "")
-      Naux_name_define <- paste0(x_N_name, paste_x_Naux_str)
-    } else if(nys > 1) {
-      name_xyadj_tomeanx_t <- paste0("tomeanx_true", "_", xnss)
-      name_xyadj_tomeanx_f <- paste0("tomeanx_false", "_", xnss)
-      name_xyadj_tomeany_t <- paste0("tomeany_true", "_", xnss)
-      name_xyadj_tomeany_f <- paste0("tomeany_false", "_", xnss)
-      x_N_name <- paste0("N", "_", xnss)
-      Naux_name_define <- paste0(x_N_name, paste_x_Naux_str)
-    }
-    
-    
-    
-    add_gqdata_stanvarlist_si <- 
-      paste0(
-        paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeanx_t, ";"),
-        "\n", 
-        paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeanx_f, ";"),
-        "\n", 
-        paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeany_t, ";"),
-        "\n", 
-        paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeany_f, ";")
-      )
-    add_gqdata_stanvarlist_si_c <- c(add_gqdata_stanvarlist_si_c,
-                                     add_gqdata_stanvarlist_si)
-  }
-  
-  add_gqdata_stanvarlist_si <- paste(add_gqdata_stanvarlist_si_c, collapse = "\n")
-  
-  
-  
-  
-  
-  # we have come out of ii loop over ysi, so recreate here temporarily
-  define_add_gqdata_stanvarlist_si_c <- c()
-  for (xnss in ys) {
-    if(nys == 1) {
-      name_xyadj_tomeanx_t <- "tomeanx_true"
-      name_xyadj_tomeanx_f <- "tomeanx_false"
-      name_xyadj_tomeany_t <- "tomeany_true"
-      name_xyadj_tomeany_f <- "tomeany_false"
-      xsi_as_C_name        <-  "C_1"
-      ysi_as_Y_name        <-  "Y"
-    } else if(nys > 1) {
-      name_xyadj_tomeanx_t <- paste0("tomeanx_true", "_", xnss)
-      name_xyadj_tomeanx_f <- paste0("tomeanx_false", "_", xnss)
-      name_xyadj_tomeany_t <- paste0("tomeany_true", "_", xnss)
-      name_xyadj_tomeany_f <- paste0("tomeany_false", "_", xnss)
-      xsi_as_C_name        <- paste0("C", "_", xnss, "_", "1")
-      ysi_as_Y_name        <- paste0("Y", "_", xnss)
-    }
-    
-    xsi_as_C_name <- paste0(xsi_as_C_name, paste_x_Naux_str)
-    ysi_as_Y_name <- paste0(ysi_as_Y_name, paste_x_Naux_str)
-    
-    # (x - .data$b) * exp(.data$c) + xoffset
-    define_tomeanx_t <- 
-      paste0(
-        "(", xsi_as_C_name, " - nlp_re_b)", 
-        " .* exp(nlp_re_b)", " + ", 
-        "(", "nlp_be_b", " + ", xoffset_name, ")"
-      )
-    
-    # x / exp(.data$c) + .data$b + xoffset
-    define_tomeanx_f <- 
-      paste0(
-        "", xsi_as_C_name, "", 
-        " ./ exp(nlp_re_b)", " + ",
-        "(", "nlp_be_b", " + ", xoffset_name, ")"
-      )
-    
-    
-    # y - .data$a - .data$d * if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
-    # (X[ia] - knots[ja] > 0 ? X[ia] - knots[ja] : 0);
-    define_tomeany_t <- 
-      paste0(
-        "(", ysi_as_Y_name, " - nlp_re_b)", 
-        " - nlp_re_d", " .* ", 
-        "(",
-        "mean(nlp_re_d) != 0 ? ", 
-        "(",
-        name_xyadj_tomeanx_t, " - ", paste0("(nlp_be_b", " + ", xoffset_name, ")"),
-        ")",
-        " : ",
-        xsi_as_C_name , 
-        ")"
-      ) 
-    
-    
-    # y + .data$a + .data$d * if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
-    define_tomeany_f <- 
-      paste0(
-        "(", ysi_as_Y_name, " + nlp_re_b)", 
-        " + nlp_re_d", " .* ", 
-        "(",
-        "mean(nlp_re_d) != 0 ? ", 
-        "(",
-        name_xyadj_tomeanx_f, " - ", paste0("(nlp_be_b", " + ", xoffset_name, ")"),
-        ")",
-        " : ",
-        xsi_as_C_name , 
-        ")"
-      ) 
-    
-    
-    define_tomeany_tf_all <- 
-      paste0(paste0(name_xyadj_tomeanx_t, " = ", define_tomeanx_t, ";"),
-             "\n",
-             paste0(name_xyadj_tomeanx_f, " = ", define_tomeanx_f, ";"), 
-             "\n", 
-             paste0(name_xyadj_tomeany_t, " = ", define_tomeany_t, ";"),
-             "\n",
-             paste0(name_xyadj_tomeany_f, " = ", define_tomeany_f, ";"))
-    
-    if(nys > 1) {
-      gsubit <- "nlp_re"
-      gsubby <- paste0(gsubit, "_", xnss)
-      define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, fixed = T)
       
-      gsubit <- "nlp_be"
-      gsubby <- paste0(gsubit, "_", xnss)
-      define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, fixed = T)
+      add_gqdata_stanvarlist_si <- 
+        paste0(
+          paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeanx_t, ";"),
+          "\n", 
+          paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeanx_f, ";"),
+          "\n", 
+          paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeany_t, ";"),
+          "\n", 
+          paste0("vector[", Naux_name_define, "] ", name_xyadj_tomeany_f, ";")
+        )
+      add_gqdata_stanvarlist_si_c <- c(add_gqdata_stanvarlist_si_c,
+                                       add_gqdata_stanvarlist_si)
     }
     
-    define_add_gqdata_stanvarlist_si_c <- c(define_add_gqdata_stanvarlist_si_c,
-                                            define_tomeany_tf_all)
-  }
-  
-  define_add_gqdata_stanvarlist_si <- 
-    paste(define_add_gqdata_stanvarlist_si_c, collapse = "\n")
-  
-  
-  
-  # define_add_gqdata_stanvarlist_si <- paste0(add_missing_gqdata_stanvarlist_si,
-  #                                         "\n",
-  #                                         define_add_gqdata_stanvarlist_si)
-  
-  
-  
-  
-  start_add_gqdata_stanvarlist_si <- paste0(add_gqdata_stanvarlist_si,
-                                  "\n",
-                                  "{")
-  
-  end_add_gqdata_stanvarlist_si <- paste0("\n",
-                                          define_add_gqdata_stanvarlist_si,
+    add_gqdata_stanvarlist_si <- paste(add_gqdata_stanvarlist_si_c, collapse = "\n")
+    
+    
+    
+    
+    
+    # we have come out of ii loop over ysi, so recreate here temporarily
+    define_add_gqdata_stanvarlist_si_c <- c()
+    for (xnss in ys) {
+      if(nys == 1) {
+        name_xyadj_tomeanx_t <- "tomeanx_true"
+        name_xyadj_tomeanx_f <- "tomeanx_false"
+        name_xyadj_tomeany_t <- "tomeany_true"
+        name_xyadj_tomeany_f <- "tomeany_false"
+        xsi_as_C_name        <-  "C_1"
+        ysi_as_Y_name        <-  "Y"
+      } else if(nys > 1) {
+        name_xyadj_tomeanx_t <- paste0("tomeanx_true", "_", xnss)
+        name_xyadj_tomeanx_f <- paste0("tomeanx_false", "_", xnss)
+        name_xyadj_tomeany_t <- paste0("tomeany_true", "_", xnss)
+        name_xyadj_tomeany_f <- paste0("tomeany_false", "_", xnss)
+        xsi_as_C_name        <- paste0("C", "_", xnss, "_", "1")
+        ysi_as_Y_name        <- paste0("Y", "_", xnss)
+      }
+      
+      xsi_as_C_name <- paste0(xsi_as_C_name, paste_x_Naux_str)
+      ysi_as_Y_name <- paste0(ysi_as_Y_name, paste_x_Naux_str)
+      
+      # (x - .data$b) * exp(.data$c) + xoffset
+      define_tomeanx_t <- 
+        paste0(
+          "(", xsi_as_C_name, " - nlp_re_b)", 
+          " .* exp(nlp_re_b)", " + ", 
+          "(", "nlp_be_b", " + ", xoffset_name, ")"
+        )
+      
+      # x / exp(.data$c) + .data$b + xoffset
+      define_tomeanx_f <- 
+        paste0(
+          "", xsi_as_C_name, "", 
+          " ./ exp(nlp_re_b)", " + ",
+          "(", "nlp_be_b", " + ", xoffset_name, ")"
+        )
+      
+      
+      # y - .data$a - .data$d * if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
+      # (X[ia] - knots[ja] > 0 ? X[ia] - knots[ja] : 0);
+      define_tomeany_t <- 
+        paste0(
+          "(", ysi_as_Y_name, " - nlp_re_b)", 
+          " - nlp_re_d", " .* ", 
+          "(",
+          # "mean(nlp_re_d) != 0 ? ", 
+          "nlp_be_d_defined == 1 || nlp_re_d_defined == 1 ? ", 
+          "(",
+          name_xyadj_tomeanx_t, " - ", paste0("(nlp_be_b", " + ", xoffset_name, ")"),
+          ")",
+          " : ",
+          xsi_as_C_name , 
+          ")"
+        ) 
+      
+      
+      # y + .data$a + .data$d * if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
+      define_tomeany_f <- 
+        paste0(
+          "(", ysi_as_Y_name, " + nlp_re_b)", 
+          " + nlp_re_d", " .* ", 
+          "(",
+          # "mean(nlp_re_d) != 0 ? ", 
+          "nlp_be_d_defined == 1 || nlp_re_d_defined == 1 ? ", 
+          "(",
+          name_xyadj_tomeanx_f, " - ", paste0("(nlp_be_b", " + ", xoffset_name, ")"),
+          ")",
+          " : ",
+          xsi_as_C_name , 
+          ")"
+        ) 
+      
+      
+      define_tomeany_tf_all <- 
+        paste0(paste0(name_xyadj_tomeanx_t, " = ", define_tomeanx_t, ";"),
+               "\n",
+               paste0(name_xyadj_tomeanx_f, " = ", define_tomeanx_f, ";"), 
+               "\n", 
+               paste0(name_xyadj_tomeany_t, " = ", define_tomeany_t, ";"),
+               "\n",
+               paste0(name_xyadj_tomeany_f, " = ", define_tomeany_f, ";"))
+      
+      if(nys > 1) {
+        gsubit <- "nlp_re"
+        gsubby <- paste0(gsubit, "_", xnss)
+        define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, fixed = T)
+        
+        gsubit <- "nlp_be"
+        gsubby <- paste0(gsubit, "_", xnss)
+        define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, fixed = T)
+      }
+      
+      define_add_gqdata_stanvarlist_si_c <- c(define_add_gqdata_stanvarlist_si_c,
+                                              define_tomeany_tf_all)
+    }
+    
+    define_add_gqdata_stanvarlist_si <- 
+      paste(define_add_gqdata_stanvarlist_si_c, collapse = "\n")
+    
+    
+    
+    start_add_gqdata_stanvarlist_si <- paste0(add_gqdata_stanvarlist_si,
+                                              "\n",
+                                              "{")
+    
+    end_add_gqdata_stanvarlist_si <- paste0("\n",
+                                            define_add_gqdata_stanvarlist_si,
                                             "\n",
                                             "}",
-                                          "\n")
+                                            "\n")
+    
+    
+    add_start_add_gqdata_stanvarlist_si <-
+      brms::stanvar(x = NULL,
+                    name = 'start_add_gqdata_stanvarlist_si',
+                    scode = start_add_gqdata_stanvarlist_si,
+                    block = "genquant",
+                    position = "end",
+                    pll_args = NULL)
+    
+    
+    add_end_add_gqdata_stanvarlist_si <-
+      brms::stanvar(x = NULL,
+                    name = 'end_add_gqdata_stanvarlist_si',
+                    scode = end_add_gqdata_stanvarlist_si,
+                    block = "genquant",
+                    position = "end",
+                    pll_args = NULL)
+    
+    
+    brm_args$stanvars <- 
+      brm_args$stanvars + 
+      add_start_add_gqdata_stanvarlist_si + 
+      add_data2stanvars + 
+      add_end_add_gqdata_stanvarlist_si
+    
+    
+  } # end if(genquant_xyadj) {
   
- 
-  add_start_add_gqdata_stanvarlist_si <-
-    brms::stanvar(x = NULL,
-                  name = 'start_add_gqdata_stanvarlist_si',
-                  scode = start_add_gqdata_stanvarlist_si,
-                  block = "genquant",
-                  position = "end",
-                  pll_args = NULL)
-  
-  
-  add_end_add_gqdata_stanvarlist_si <-
-    brms::stanvar(x = NULL,
-                  name = 'end_add_gqdata_stanvarlist_si',
-                  scode = end_add_gqdata_stanvarlist_si,
-                  block = "genquant",
-                  position = "end",
-                  pll_args = NULL)
-  
-
-  brm_args$stanvars <- 
-    brm_args$stanvars + 
-    add_start_add_gqdata_stanvarlist_si + 
-    add_data2stanvars + 
-    add_end_add_gqdata_stanvarlist_si
-  
-
-
   ####################################################################
   ####################################################################
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
+  ####################################################################
+  ####################################################################
   
   
   scode_final  <- do.call(brms::make_stancode, brm_args)
@@ -9661,6 +10533,8 @@ bsitar <- function(x,
     brm_args$file <- NULL
     
     
+    
+    
     brm_args <- sanitize_algorithm_args(args = brm_args,
                                         algorithm = brm_args$algorithm,
                                         verbose = FALSE)
@@ -9717,10 +10591,20 @@ bsitar <- function(x,
     # Add class attributes and the model info for post-processing
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
     
+    ##############################################################
+    ##############################################################
+    
     model_info <- list()
-    model_info[['emodel']] <- scode_final
+    
+    ##############################################################
+    ##############################################################
+    
+    if(fit_edited_scode) {
+      model_info[['emodel']]           <- scode_final
+    }
+    
     model_info[['parameterization']] <- parameterization
-    model_info[['d_adjusted']] <- d_adjusted
+    model_info[['d_adjusted']]       <- d_adjusted
     
     for (i in 1:length(funlist_rnamelist)) {
       model_info[[funlist_rnamelist[[i]]]] <- funlist_rvaluelist[[i]]
@@ -9754,15 +10638,7 @@ bsitar <- function(x,
     for (i in 1:length(yfunnamelist)) {
       model_info[[yfunnamelist[[i]]]] <- yfunvaluelist[[i]]
     }
-    
-    for (i in 1:length(xxfunnamelist)) {
-      model_info[[xxfunnamelist[[i]]]] <- xxfunvaluelist[[i]]
-    }
-    
-    for (i in 1:length(yyfunnamelist)) {
-      model_info[[yyfunnamelist[[i]]]] <- yyfunvaluelist[[i]]
-    }
-    
+   
     for (i in 1:length(groupvarnamelist)) {
       model_info[[groupvarnamelist[[i]]]] <- groupvarvaluelist[[i]]
     }
@@ -9774,6 +10650,10 @@ bsitar <- function(x,
     
     for (i in 1:length(xnamelist)) {
       model_info[[xnamelist[[i]]]] <- xvarvaluelist[[i]]
+    }
+    
+    for (i in 1:length(sigmaxnamelist)) {
+      model_info[[sigmaxnamelist[[i]]]] <- sigmaxvarvaluelist[[i]]
     }
     
     for (i in 1:length(ynamelist)) {
@@ -9792,88 +10672,212 @@ bsitar <- function(x,
       model_info[[d_adjustednamelist[[i]]]] <- d_adjustedvaluelist[[i]]
     }
     
-    
     for (i in 1:length(xfuntransformnamelist)) {
       model_info[[xfuntransformnamelist[[i]]]] <- xfuntransformvaluelist[[i]]
     }
-    for (i in 1:length(ixfuntransformnamelist)) {
-      model_info[[ixfuntransformnamelist[[i]]]] <- ixfuntransformvaluelist[[i]]
+    
+    for (i in 1:length(xfuntransform2namelist)) {
+      model_info[[xfuntransform2namelist[[i]]]] <- xfuntransform2valuelist[[i]]
     }
     
     for (i in 1:length(yfuntransformnamelist)) {
       model_info[[yfuntransformnamelist[[i]]]] <- yfuntransformvaluelist[[i]]
     }
+    
+    
+    # Inverse funs are created internally
+    for (i in 1:length(ixfuntransformnamelist)) {
+      model_info[[ixfuntransformnamelist[[i]]]] <- ixfuntransformvaluelist[[i]]
+    }
+    
+    for (i in 1:length(ixfuntransform2namelist)) {
+      model_info[[ixfuntransform2namelist[[i]]]] <- ixfuntransform2valuelist[[i]]
+    }
+
     for (i in 1:length(iyfuntransformnamelist)) {
       model_info[[iyfuntransformnamelist[[i]]]] <- iyfuntransformvaluelist[[i]]
     }
     
     
-    for (i in 1:length(sigmaxfuntransformnamelist)) {
-      model_info[[sigmaxfuntransformnamelist[[i]]]] <- 
-        sigmaxfuntransformvaluelist[[i]]
-    }
-    for (i in 1:length(isigmaxfuntransformnamelist)) {
-      model_info[[isigmaxfuntransformnamelist[[i]]]] <- 
-        isigmaxfuntransformvaluelist[[i]]
-    }
     
-    
-    model_info[['StanFun_name']] <- SplineFun_name
-    model_info[['multivariate']] <- multivariate$mvar
-    model_info[['univariate_by']] <- univariate_by$by
+    model_info[['StanFun_name']]  <- SplineFun_name
+    model_info[['multivariate']]  <- multivariate
+    model_info[['univariate_by']] <- univariate_by
     model_info[['nys']] <- nys
-    model_info[['ys']] <- ys
-    model_info[['xs']] <- xs
-    model_info[['ids']] <- ids
     model_info[['dfs']] <- dfs
-    model_info[['xfuns']] <- xfuns
-    model_info[['yfuns']] <- yfuns
+    model_info[['xfuns_user']] <- xfuns_user
+    model_info[['yfuns_user']] <- yfuns_user
     model_info[['outliers']] <- outliers
     model_info[['bgmfit.data']] <- data.org.in
     model_info[['call.full.bgmfit']] <- call.full
-    model_info[['call.bgmfit']] <- mcall_
-    model_info[['brms_arguments_list']] <- brms_arguments_list
     model_info[['select_model']] <- select_model
     model_info[['decomp']] <- decomp
     model_info[['fun_scode']] <- fun_scode
     model_info[['envir']] <- enverr.
     
-    # model_info[['include_fun_names']] <- include_fun_names
     
-    if(setsigma_formula_manual) {
-      model_info[['sigmaStanFun_name']] <- sigmaSplineFun_name
-      model_info[['sigmaxs']] <- sigmaxs
-      model_info[['sigmaids']] <- sigmaids
-      model_info[['sigmadfs']] <- sigmadfs
-      model_info[['sigmaxfuns']] <- sigmaxfuns
-      model_info[['sigmaselect_model']] <- sigmaselect_model
-      model_info[['sigmadecomp']] <- sigmadecomp
-      
-      model_info[['sigmad_adjusted']] <- sigmad_adjusted
-      for (i in 1:length(sigmad_adjustednamelist)) {
-        model_info[[sigmad_adjustednamelist[[i]]]] <- 
-          sigmad_adjustedvaluelist[[i]]
-      }
-      for (i in 1:length(sigmafunlist_rnamelist)) {
-        model_info[[sigmafunlist_rnamelist[[i]]]] <- 
-          sigmafunlist_rvaluelist[[i]]
-      }
-      for (i in 1:length(sigmaxfunnamelist)) {
-        model_info[[sigmaxfunnamelist[[i]]]] <- sigmaxfunvaluelist[[i]]
-      }
-      for (i in 1:length(sigmaxxfunnamelist)) {
-        model_info[[sigmaxxfunnamelist[[i]]]] <- sigmaxxfunvaluelist[[i]]
-      }
-      for (i in 1:length(sigmacovnamelist)) {
-        model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
-      }
-    } # if(setsigma_formula_manual) {
+    # reduce object size
+    # model_info[['brms_arguments_list']] <- brms_arguments_list
+    # model_info[['call.bgmfit']] <- mcall_
     
     
-
-    brmsfit$model_info <- model_info
+    
+    # if(setsigmaxvar) {
+    #   model_info[['sigmaStanFun_name']] <- sigmaSplineFun_name
+    #   model_info[['sigmaxs']] <- sigmaxs
+    #   model_info[['sigmaids']] <- sigmaids
+    #   model_info[['sigmadfs']] <- sigmadfs
+    #   model_info[['sigmaxfuns_user']] <- sigmaxfuns_user
+    #   model_info[['sigmaselect_model']] <- sigmaselect_model
+    #   model_info[['sigmadecomp']] <- sigmadecomp
+    #   
+    #   model_info[['sigmad_adjusted']] <- sigmad_adjusted
+    #   for (i in 1:length(sigmad_adjustednamelist)) {
+    #     model_info[[sigmad_adjustednamelist[[i]]]] <- 
+    #       sigmad_adjustedvaluelist[[i]]
+    #   }
+    #   for (i in 1:length(sigmafunlist_rnamelist)) {
+    #     model_info[[sigmafunlist_rnamelist[[i]]]] <- 
+    #       sigmafunlist_rvaluelist[[i]]
+    #   }
+    #   for (i in 1:length(sigmaxfunnamelist)) {
+    #     model_info[[sigmaxfunnamelist[[i]]]] <- sigmaxfunvaluelist[[i]]
+    #   }
+    #   
+    #   for (i in 1:length(sigmacovnamelist)) {
+    #     model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
+    #   }
+    #   
+    #   
+    #   for (i in 1:length(sigmaxfuntransformnamelist)) {
+    #     model_info[[sigmaxfuntransformnamelist[[i]]]] <- 
+    #       sigmaxfuntransformvaluelist[[i]]
+    #   }
+    #   for (i in 1:length(isigmaxfuntransformnamelist)) {
+    #     model_info[[isigmaxfuntransformnamelist[[i]]]] <- 
+    #       isigmaxfuntransformvaluelist[[i]]
+    #   }
+    #   
+    #   
+    #   for (i in 1:length(sigmaxoffsetnamelist)) {
+    #     model_info[[sigmaxoffsetnamelist[[i]]]] <- 
+    #       sigmaxoffsetvaluelist[[i]]
+    #   }
+    #   
+    #   for (i in 1:length(setsigmaxvarnamelist)) {
+    #     model_info[[setsigmaxvarnamelist[[i]]]] <- 
+    #       setsigmaxvarvaluelist[[i]]
+    #   }
+    #   
+    # } # if(setsigmaxvar) {
+    
+    
+    
+    for (j in 1:length(setsigmaxvar_names_val)) {
+      if(any(setsigmaxvar_names_val[j])) {
+        
+        model_info[['sigmaStanFun_name']] <- sigmaSplineFun_name
+        model_info[['sigmaxs']] <- sigmaxs
+        model_info[['sigmaids']] <- sigmaids
+        model_info[['sigmadfs']] <- sigmadfs
+        model_info[['sigmaxfuns_user']] <- sigmaxfuns_user
+        model_info[['sigmaselect_model']] <- sigmaselect_model
+        model_info[['sigmadecomp']] <- sigmadecomp
+        
+        model_info[['sigmad_adjusted']] <- sigmad_adjusted
+        for (i in 1:length(sigmad_adjustednamelist)) {
+          model_info[[sigmad_adjustednamelist[[i]]]] <- 
+            sigmad_adjustedvaluelist[[i]]
+        }
+        for (i in 1:length(sigmafunlist_rnamelist)) {
+          model_info[[sigmafunlist_rnamelist[[i]]]] <- 
+            sigmafunlist_rvaluelist[[i]]
+        }
+        for (i in 1:length(sigmaxfunnamelist)) {
+          model_info[[sigmaxfunnamelist[[i]]]] <- sigmaxfunvaluelist[[i]]
+        }
+        
+        for (i in 1:length(sigmacovnamelist)) {
+          model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
+        }
+        
+        
+        for (i in 1:length(sigmaxfuntransformnamelist)) {
+          model_info[[sigmaxfuntransformnamelist[[i]]]] <- 
+            sigmaxfuntransformvaluelist[[i]]
+        }
+        
+        for (i in 1:length(sigmaxfuntransform2namelist)) {
+          model_info[[sigmaxfuntransform2namelist[[i]]]] <- 
+            sigmaxfuntransform2valuelist[[i]]
+        }
+        
+        for (i in 1:length(isigmaxfuntransformnamelist)) {
+          model_info[[isigmaxfuntransformnamelist[[i]]]] <- 
+            isigmaxfuntransformvaluelist[[i]]
+        }
+        
+        for (i in 1:length(isigmaxfuntransform2namelist)) {
+          model_info[[isigmaxfuntransform2namelist[[i]]]] <- 
+            isigmaxfuntransform2valuelist[[i]]
+        }
+        
+        
+        for (i in 1:length(sigmaxoffsetnamelist)) {
+          model_info[[sigmaxoffsetnamelist[[i]]]] <- 
+            sigmaxoffsetvaluelist[[i]]
+        }
+        
+        for (i in 1:length(setsigmaxvarnamelist)) {
+          model_info[[setsigmaxvarnamelist[[i]]]] <- 
+            setsigmaxvarvaluelist[[i]]
+        }
+        
+      } # if(any(setsigmaxvar_names_val[j])) {
+    } # for (j in 1:length(setsigmaxvar_names_val)) {
+   
+    ##############################################################
+    ##############################################################
+    # these paste0(..., 's') will be combined across ys
+    model_info[[xvar_names]]                <- xvar_names_val
+    model_info[[yvar_names]]                <- yvar_names_val
+    model_info[[idvar_names]]               <- idvar_names_val
+    model_info[[sigmaxvar_names]]           <- sigmaxvar_names_val
+    model_info[[cov_names]]                 <- cov_names_val
+    model_info[[cov_name_sigmas]]           <- cov_name_sigmas_val
+    model_info[[xfun_names]]                <- xfun_names_val
+    model_info[[yfun_names]]                <- yfun_names_val
+    model_info[[sigmaxfun_names]]           <- sigmaxfun_names_val
+    
+    model_info[[xfuntransform_names]]       <- xfuntransform_names_val
+    model_info[[xfuntransform2_names]]      <- xfuntransform2_names_val
+    model_info[[ixfuntransform_names]]      <- ixfuntransform_names_val
+    model_info[[ixfuntransform2_names]]     <- ixfuntransform2_names_val
+    
+    model_info[[yfuntransform_names]]       <- yfuntransform_names_val
+    model_info[[iyfuntransform_names]]      <- iyfuntransform_names
+    
+    model_info[[sigmaxfuntransform_names]]  <- sigmaxfuntransform_names_val
+    model_info[[sigmaxfuntransform2_names]] <- sigmaxfuntransform2_names_val
+    model_info[[isigmaxfuntransform_names]] <- isigmaxfuntransform_names_val
+    model_info[[isigmaxfuntransform2_names]]<- isigmaxfuntransform2_names_val
+    model_info[[xoffset_names]]             <- xoffset_names_val
+    model_info[[sigmaxoffset_names]]        <- sigmaxoffset_names_val
+    
+    
+    model_info[[setsigmaxvar_names]]        <- setsigmaxvar_names_val
+    model_info[['genquant_xyadj']]          <- genquant_xyadj
+    
+    
+    ##############################################################
+    ##############################################################
+    
+    
+    
+    brmsfit$model_info           <- model_info
     
     environment(brmsfit$formula) <- enverr.
+    
     
 
     # Now message moved to the expose_model_functions()
@@ -9932,9 +10936,10 @@ bsitar <- function(x,
       brmsfit <- get_write_brmsfit(brmsfit, get_file, 
                                compress = get_file_compress)
     }
-    
+   
     return(brmsfit)
   } # exe_model_fit
   
-}
+  
+} # end bsitar
 

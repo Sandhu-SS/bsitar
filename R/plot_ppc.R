@@ -25,6 +25,7 @@
 #' @return A \code{ggplot} object that can be further customized using the 
 #'   \pkg{ggplot2} package.
 #' 
+#' @rdname plot_ppc
 #' @export
 #' 
 #' @inherit berkeley author
@@ -44,7 +45,7 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' plot_ppc(model, ndraws = 100)
+#' plot_ppc(model, ndraws = NULL)
 #' }
 #' 
 plot_ppc.bgmfit <-
@@ -155,21 +156,41 @@ plot_ppc.bgmfit <-
     
     model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
-    o <- post_processing_checks(model = model,
-                                xcall = match.call(),
-                                resp = resp,
-                                envir = envir,
-                                deriv = 'deriv', 
-                                all = FALSE,
-                                verbose = verbose)
     
-    oall <- post_processing_checks(model = model,
-                                   xcall = match.call(),
-                                   resp = resp,
-                                   envir = envir,
-                                   deriv = deriv, 
-                                   all = TRUE,
-                                   verbose = FALSE)
+    setxcall_   <- match.call()
+    post_processing_checks_args <- list()
+    post_processing_checks_args[['model']]    <- model
+    post_processing_checks_args[['xcall']]    <- setxcall_
+    post_processing_checks_args[['resp']]     <- resp
+    post_processing_checks_args[['envir']]    <- envir
+    post_processing_checks_args[['deriv']]    <- deriv
+    post_processing_checks_args[['all']]      <- FALSE
+    post_processing_checks_args[['verbose']]  <- verbose
+    post_processing_checks_args[['check_d0']] <- FALSE
+    post_processing_checks_args[['check_d1']] <- TRUE
+    post_processing_checks_args[['check_d2']] <- FALSE
+    
+    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    
+    post_processing_checks_args[['all']]      <- TRUE
+    oall <- do.call(post_processing_checks, post_processing_checks_args)
+    post_processing_checks_args[['all']]      <- FALSE
+    
+    # o <- post_processing_checks(model = model,
+    #                             xcall = match.call(),
+    #                             resp = resp,
+    #                             envir = envir,
+    #                             deriv = 'deriv', 
+    #                             all = FALSE,
+    #                             verbose = verbose)
+    # 
+    # oall <- post_processing_checks(model = model,
+    #                                xcall = match.call(),
+    #                                resp = resp,
+    #                                envir = envir,
+    #                                deriv = deriv, 
+    #                                all = TRUE,
+    #                                verbose = FALSE)
     
     
     test <- setupfuns(model = model, resp = resp,
@@ -260,7 +281,7 @@ plot_ppc.bgmfit <-
   }
 
 
-#' @rdname plot_ppc.bgmfit
+#' @rdname plot_ppc
 #' @export
 plot_ppc <- function(model, ...) {
   UseMethod("plot_ppc")
