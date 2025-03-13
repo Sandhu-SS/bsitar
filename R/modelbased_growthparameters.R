@@ -347,6 +347,22 @@ modelbased_growthparameters.bgmfit <-
     uvarby <- model$model_info$univariate_by$by
     
     ########################################################
+    groupvar_ <- paste0('groupvar', resp_rev_)
+    
+    hierarchical_ <- paste0('hierarchical', resp_rev_)
+    if (is.null(levels_id)) {
+      IDvar <- model$model_info[[groupvar_]]
+      if (!is.null(model$model_info[[hierarchical_]])) {
+        IDvar <- model$model_info[[hierarchical_]]
+      }
+    } else if (!is.null(levels_id)) {
+      IDvar <- levels_id
+    }
+    xvar  <- xvar
+    idvar <- IDvar
+    if(length(idvar) > 1) idvar <- idvar[1]
+    
+    ########################################################
     # prepare_data2
     ifunx_ <- paste0('ixfuntransform2', resp_rev_)
     ifunx_ <- model$model_info[[ifunx_]]
@@ -2008,7 +2024,7 @@ modelbased_growthparameters.bgmfit <-
       } else {
         drawid_c <- list()
         for (drawidi in 1:nlevels(zxdraws$drawid)) {
-          drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>%
+          drawid_c[[drawidi]] <- zxdraws %>% dplyr::filter(drawid == drawidi) %>%
             dplyr::group_by_at(by) %>%
             dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw, parm = parm),
                                 .keep = TRUE) %>%
@@ -2070,10 +2086,24 @@ modelbased_growthparameters.bgmfit <-
       #################################################################
       
        # "marginaleffects"  "marginal_draws" "fitted_draws"
+       # Using "marginaleffects" because it gives consiatent result future T/F
       
-      call_marginaleffects_marginal_draws <- "marginal_draws" 
+      call_marginaleffects_marginal_draws <- "marginaleffects" 
+      
 
       xyadj_xyv_warp_fun <- function(ApvX0, newdata, ...) {
+        newdata.in <- newdata
+        newdata <- newdata%>% 
+          fastplyr::f_group_by(!!as.name(idvar)) %>% 
+          fastplyr::f_slice(1) %>% fastplyr::f_ungroup()
+        
+        # For storing results in my_matrix returned from analyze_data()
+        nlevels_idvar <- nlevels(newdata [[idvar]])
+        
+        # Here nrow  is the number of rows - xyadj, yyadj and vyadj
+        my_matrix <- matrix(NA, nrow = 3, ncol = nlevels_idvar)
+        
+        
         ApvX0[['drawid']] <- eval_draw_ids
         
         ApvX0_for_list_c <- tibble::as_tibble(ApvX0) %>% 
@@ -2084,29 +2114,15 @@ modelbased_growthparameters.bgmfit <-
         
         newdata_for_list_c <-tibble::as_tibble(newdata) %>%
           fastplyr::f_select(-'age') %>% 
-          dplyr::mutate(tempjoinby = 'tempjoinby')
+          dplyr::mutate(tempjoinby = 'tempjoinby') 
         
         newdata_list_c <- list()
         for (i in 1:nrow(ApvX0)) {
           newdata_list_c[[i]] <- fastplyr::f_left_join(newdata_for_list_c, 
                                                        ApvX0_for_list_c[i,], 
                                                        by = "tempjoinby") %>% 
-            fastplyr::f_select(-'tempjoinby')
+            fastplyr::f_select(-'tempjoinby') 
         }
-        
-        
-        fitted_draws_args <- list()
-        fitted_draws_args[['model']] <- model
-        fitted_draws_args[['newdata']] <- newdata
-        fitted_draws_args[['ndraws']] <- ndraws
-        fitted_draws_args[['draw_ids']] <- draw_ids
-        fitted_draws_args[['re_formula']] <- NULL
-        fitted_draws_args[['summary']] <- FALSE
-        
-        fitted_draws_args_d0 <- fitted_draws_args
-        fitted_draws_args_d1 <- fitted_draws_args
-        fitted_draws_args_d0[['deriv']] <- 0
-        fitted_draws_args_d1[['deriv']] <- 1
         
         
         xyadj_curves_args <- list()
@@ -2115,6 +2131,20 @@ modelbased_growthparameters.bgmfit <-
         xyadj_curves_args[['tomean']] <- FALSE
         xyadj_curves_args[['get_dv']] <- TRUE
         
+        
+        fitted_draws_args <- list()
+        fitted_draws_args[['model']] <- model
+        fitted_draws_args[['ndraws']] <- ndraws
+        fitted_draws_args[['draw_ids']] <- draw_ids
+        fitted_draws_args[['re_formula']] <- NULL
+        fitted_draws_args[['summary']] <- FALSE
+        fitted_draws_args[['newdata']] <- newdata 
+        fitted_draws_args_d0 <- fitted_draws_args
+        fitted_draws_args_d1 <- fitted_draws_args
+        fitted_draws_args_d0[['deriv']] <- 0
+        fitted_draws_args_d1[['deriv']] <- 1
+        
+        
         marginal_draws_args <- predictions_arguments
         marginal_draws_args[['re_formula']] <- NULL
         marginal_draws_args[['peak']] <- NULL
@@ -2122,8 +2152,8 @@ modelbased_growthparameters.bgmfit <-
         marginal_draws_args[['trough']] <- NULL
         marginal_draws_args[['acgv']] <- NULL
         marginal_draws_args[['newdata_fixed']] <- TRUE
-        marginal_draws_args[['newdata']] <-  newdata
         marginal_draws_args[['pdrawsp']] <-  "return"
+        marginal_draws_args[['newdata']] <- newdata 
         
         marginal_draws_args[['comparison']] <- NULL
         
@@ -2158,122 +2188,103 @@ modelbased_growthparameters.bgmfit <-
           marginal_draws_args_d1[['by']] <- NULL
         } # if(call_marginaleffects_marginal_draws == "marginal_draws") {
         
-       
-
         
-        if(call_marginaleffects_marginal_draws == "marginaleffects") {
+        if(call_marginaleffects_marginal_draws == "marginaleffects" |
+           call_marginaleffects_marginal_draws == "marginal_draws") {
           call_predictions2 <- TRUE
           call_slopes2      <- FALSE
           if(available_d1) {
             call_predictions2 <- TRUE
             call_slopes2      <- FALSE
             post_processing_checks_args[['deriv']]    <- 0
-            o.2 <- o.2.0 <- do.call(post_processing_checks, post_processing_checks_args)
-            # marginal_draws_args_d0$model$model_info[['exefuns']][[o.2[[1]]]] <-
-            #   marginal_draws_args_d0$model$model_info[['exefuns']][[o.2[[2]]]]
+            o.2 <- o.2.0 <- do.call(post_processing_checks, 
+                                    post_processing_checks_args)
             post_processing_checks_args[['deriv']]    <- 1
-            o.2 <- o.2.1 <- do.call(post_processing_checks, post_processing_checks_args)
-            # marginal_draws_args_d1$model$model_info[['exefuns']][[o.2[[1]]]] <-
-            #   marginal_draws_args_d1$model$model_info[['exefuns']][[o.2[[2]]]]
+            o.2 <- o.2.1 <- do.call(post_processing_checks, 
+                                    post_processing_checks_args)
           } else if(!available_d1) {
             call_predictions2 <- FALSE
             call_slopes2      <- TRUE
             post_processing_checks_args[['deriv']]    <- 0
-            o.2 <- o.2.0 <- do.call(post_processing_checks, post_processing_checks_args)
-            # marginal_draws_args_d0$model$model_info[['exefuns']][[o.2[[1]]]] <-
-            #   marginal_draws_args_d0$model$model_info[['exefuns']][[o.2[[2]]]]
-            # marginal_draws_args_d1$model$model_info[['exefuns']][[o.2[[1]]]] <-
-            #   marginal_draws_args_d1$model$model_info[['exefuns']][[o.2[[2]]]]
+            o.2 <- o.2.0 <- do.call(post_processing_checks, 
+                                    post_processing_checks_args)
           }
         } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
         
         
+       
         
-         
-        my_matrix <- matrix(NA, nrow = 3, ncol = nrow(newdata))
         analyze_data <- function(data, ...) {
-          
-          # `%>%` <- magrittr::`%>%`
-          # 
-          # model <- xyadj_curves_args$model
-          # 
-          # CustomDoCall <- future.globals_list$CustomDoCall
-          # 
-          # print(CustomDoCall)
-          # 
-          # print(ls())
-          # 
-          # attr(xyadj_curves_args$model, 'class') <- NULL
-         
           xyadj_curves_args[['newdata']] <- data
           xyadj_curves_args[['draw_ids']] <- data[['drawid']] [1]
           xyadj_dv <- CustomDoCall(xyadj_curves, xyadj_curves_args)
           
-          xyadj_dv <- apply(xyadj_dv, 2, 
-                            xyadj_curves_args$model$model_info$xfuntransform2) %>% t()
+          xyadj_dv <- 
+            apply(xyadj_dv, 2, 
+                  xyadj_curves_args$model$model_info$xfuntransform2) 
           
           # i <-  data[['loopcounter']] [1]
+          
           fitted_draws_args_d0[['draw_ids']] <- data[['drawid']] [1]
           fitted_draws_args_d1[['draw_ids']] <- data[['drawid']] [1]
-          fitted_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv %>% t()
-          fitted_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv %>% t()
+          fitted_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv 
+          fitted_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv 
           
           marginal_draws_args_d0[['draw_ids']] <- data[['drawid']] [1]
           marginal_draws_args_d1[['draw_ids']] <- data[['drawid']] [1]
-          marginal_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv %>% t()
-          marginal_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv %>% t()
+          marginal_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv 
+          marginal_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv 
           
-          
-          # yyadj_dv <- do.call(marginaleffects::predictions, marginal_draws_args_d0)
-          
-          # average %>% print()
-          # call_predictions2  %>% print()
-          # call_slopes2       %>% print()
-          
-          # marginal_draws_args_d0x <<- marginal_draws_args_d0
-          # marginal_draws_args_d1x <<- marginal_draws_args_d1
           
           if(call_marginaleffects_marginal_draws == "marginaleffects") {
             if(!average) {
               if(call_predictions2) {
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                       envir = envir)
                 yyadj_dv <- do.call(marginaleffects::predictions, 
                                     marginal_draws_args_d0)
                 
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], 
+                       envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::predictions, 
                                     marginal_draws_args_d1)
               }
               if(call_slopes2) {
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                       envir = envir)
                 
                 yyadj_dv <- do.call(marginaleffects::predictions, 
                                     marginal_draws_args_d0)
                 
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                       envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::slopes, 
                                     marginal_draws_args_d1)
               }
             } else if(average) {
               if(call_predictions2) {
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                       envir = envir)
                 yyadj_dv <- do.call(marginaleffects::avg_predictions, 
                                     marginal_draws_args_d0)
                 
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], 
+                       envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::avg_predictions, 
                                     marginal_draws_args_d1)
               }
               if(call_slopes2) {
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                       envir = envir)
                 
                 yyadj_dv <- do.call(marginaleffects::avg_predictions, 
                                     marginal_draws_args_d0)
                 
-                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], envir = envir)
+                assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                       envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::avg_slopes, 
                                     marginal_draws_args_d1)
@@ -2284,14 +2295,39 @@ modelbased_growthparameters.bgmfit <-
           # print(yyadj_dv)
           # print(vyadj_dv)
           
+          
           if(call_marginaleffects_marginal_draws == "marginal_draws") {
-            # post_processing_checks_args[['deriv']]    <- 0
-            # o.2 <- o.2.0 <- do.call(post_processing_checks, post_processing_checks_args)
-            # assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], envir = envir)
-            yyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d0)
-            vyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d1)
+            if(call_predictions2) {
+              assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                     envir = envir)
+              yyadj_dv <- do.call(marginal_draws, 
+                                  marginal_draws_args_d0)
+              
+              assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], 
+                     envir = envir)
+              
+              vyadj_dv <- do.call(marginal_draws, 
+                                  marginal_draws_args_d1)
+            }
+            if(call_slopes2) {
+              assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
+                     envir = envir)
+              
+              yyadj_dv <- do.call(marginal_draws, 
+                                  marginal_draws_args_d0)
+              
+              vyadj_dv <- do.call(marginal_draws, 
+                                  marginal_draws_args_d1)
+            }
           } # if(call_marginaleffects_marginal_draws == "marginal_draws") {
           
+          
+          
+          # if(call_marginaleffects_marginal_draws == "marginal_draws") {
+          #   yyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d0)
+          #   vyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d1)
+          # } # if(call_marginaleffects_marginal_draws == "marginal_draws") {
+          # 
           
           if(call_marginaleffects_marginal_draws == "fitted_draws") {
             yyadj_dv <- CustomDoCall(fitted_draws, marginal_draws_args_d0)
@@ -2309,34 +2345,24 @@ modelbased_growthparameters.bgmfit <-
           }
           
           
-          
           my_matrix[1, ] <- xyadj_dv
           my_matrix[2, ] <- yyadj_dv
           my_matrix[3, ] <- vyadj_dv
           my_matrix
-          
         } # end analyze_data
         
         if(future) {
-          # CustomDoCall <- utils::getFromNamespace("CustomDoCall", "bsitar")
-          # xyadj_curves <- utils::getFromNamespace("xyadj_curves.bgmfit", "bsitar")
-          post_processing_checks <- NULL
-     
-          future.globals_list <- list(CustomDoCall = CustomDoCall)
-          
-          results_list <- future.apply::future_lapply(newdata_list_c, 
-                                                      future.envir = environment(),
-                                                      future.globals = future.globals_list,
-                                                      # future.packages = 'bsitar',
-                                                      future.seed = TRUE,
-                                                      FUN = analyze_data) 
+          results_list <- 
+            future.apply::future_lapply(newdata_list_c, 
+                                        future.envir = new.env(),
+                                        future.globals = F,
+                                        # future.packages = 'bsitar',
+                                        future.seed = TRUE,
+                                        FUN = analyze_data) 
           
         } else {
           results_list <- lapply(newdata_list_c, analyze_data) 
         }
-        
-        
-        
         
         
         
@@ -2353,6 +2379,43 @@ modelbased_growthparameters.bgmfit <-
         yyadj_summary <- brms::posterior_summary(yyadj_rows)
         vyadj_summary <- brms::posterior_summary(vyadj_rows)
         
+        
+        # data frame and add idavr
+        xyadj_summary <- xyadj_summary %>% data.frame() %>% 
+          dplyr::mutate(!! as.name(idvar) := newdata[[idvar]]) %>% 
+          dplyr::relocate(!! as.name(idvar))
+        
+        # add missing xvar within the range
+        xyadj_summary <- 
+          dplyr::inner_join(xyadj_summary,
+                               newdata.in %>%
+                              dplyr::select(dplyr::all_of(c(idvar, 
+                                                                    xvar))) %>%
+                                 dplyr::nest_by(dplyr::pick(1)) %>%
+                              dplyr::summarise(xmin = min(dplyr::pick(1)),
+                               xmax = max(dplyr::pick(1)),
+                               .groups = 'drop'),
+                   by = idvar) %>%
+          dplyr::mutate(missing = !between(dplyr::pick(2) %>% 
+                                             dplyr::pull(), xmin, 
+                                           xmax)) %>%
+          dplyr::select(-c(xmin, xmax))
+        
+        
+        # data frame and add idavr
+        yyadj_summary <- yyadj_summary %>% data.frame() %>% 
+          dplyr::mutate(!! as.name(idvar) := newdata[[idvar]]) %>% 
+          dplyr::relocate(!! as.name(idvar))
+        
+        yyadj_summary$missing <- xyadj_summary$missing
+        
+        vyadj_summary <- vyadj_summary %>% data.frame() %>% 
+          dplyr::mutate(!! as.name(idvar) := newdata[[idvar]]) %>% 
+          dplyr::relocate(!! as.name(idvar))
+        
+        vyadj_summary$missing <- xyadj_summary$missing
+        
+        
         out <- list()
         out[['xyadj']] <- xyadj_summary
         out[['yyadj']] <- yyadj_summary
@@ -2365,6 +2428,7 @@ modelbased_growthparameters.bgmfit <-
       xyadj_xyv <- xyadj_xyv_warp_fun(onex0, model$model_info$bgmfit.data)
       
       return(xyadj_xyv)
+      
       
       #################################################################
       #################################################################

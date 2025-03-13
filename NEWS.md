@@ -2,7 +2,7 @@
 
 ### Breaking changes
 
-A major rewrite of some internal functions requires re-fitting of previously saved model objects for the post-processing work properly. No changes are required from the user's perspective, except that the model should be refitted. TThe rewrite of the core functions aligns with the future expansion of the package to fit location-scale models.
+A major rewrite of some internal functions requires re-fitting of previously saved model objects for the post-processing work properly. No changes are required from the user's perspective, except that the model should be refitted. The rewrite of the core functions aligns with the future expansion of the package to fit location-scale models.
 
 The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
 

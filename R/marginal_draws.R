@@ -1284,7 +1284,15 @@ marginal_draws.bgmfit <-
        }
      }
      
+     # 6.03.2025
+     # comparison argument not supported for slopes
+     if(check_fun) {
+       if(!available_d1) {
+         predictions_arguments[['comparison']] <- NULL
+       }
+     }
    
+     
      if(!future_splits_exe & callfuns) {
        if(call_predictions) {
          if(!plot) {
