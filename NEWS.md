@@ -6,7 +6,7 @@ A major rewrite of some internal functions requires re-fitting of previously sav
 
 The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
 
-Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the \pkg{marginaleffects} package.
+Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the ``marginaleffects`` package.
 
 For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
 

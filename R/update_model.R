@@ -200,6 +200,7 @@ update_model.bgmfit <-
     else
       new_init_arg <- FALSE
     
+   
     
     for (ix in  exclude_args_names) {
       call_[[ix]] <- NULL
@@ -208,8 +209,11 @@ update_model.bgmfit <-
     dots <- list(...)
     dots$data <- NULL
     
-    as_one_logical         <-
-      is_equal <- needs_recompilation <- substitute_name <- NULL
+    
+    
+    
+    as_one_logical <- is_equal <- NULL
+    needs_recompilation <- substitute_name <- NULL
     
     as_one_logical         <-
       utils::getFromNamespace("as_one_logical", "brms")
@@ -408,6 +412,8 @@ update_model.bgmfit <-
       dots[names_old_stan_args] <-
         model$stan_args[names_old_stan_args]
     }
+    
+    
     
     if (is.null(recompile)) {
       dots_for_scode              <- dots

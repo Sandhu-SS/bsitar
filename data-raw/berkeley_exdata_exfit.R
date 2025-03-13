@@ -7,7 +7,7 @@ devtools::load_all()
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 3, 
                         stype = list('nsp', F),
-                        chains = 1, cores = 2, iter = 1000, thin = 5,
+                        chains = 2, cores = 2, iter = 2000, thin = 5,
                         # a_prior_beta = normal(lm, ysd, autoscale = 2.5),
                         # b_prior_beta = normal(0, 1.5),
                         # c_prior_beta = normal(0, 0.5),
@@ -27,7 +27,7 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # backend = "rstan", 
                         sample_prior = "no",
                         normalize = FALSE, 
-                        genquant_xyadj = TRUE,
+                        genquant_xyadj = FALSE,
                         # threads = brms::threading(NULL),
                         seed = 123)
 

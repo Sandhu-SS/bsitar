@@ -1,66 +1,19 @@
 
 
-#' @title Estimate growth curves
+#' @title Estimate model based individual growth parameters
 #' 
-#' @description The \strong{modelbased_growthparameters()} function estimates and plots
-#'   growth curves (distance and velocity) by using the \pkg{marginaleffects}
-#'   package as a back-end. This function can compute growth curves (via
-#'   [marginaleffects::predictions()]), average growth curves (via
-#'   [marginaleffects::avg_predictions()]), or plot growth curves (via
-#'   [marginaleffects::plot_predictions()]). Please see
-#'   [here](https://marginaleffects.com/) for details. Note that the
-#'   \pkg{marginaleffects} package is highly flexible, and therefore, it
-#'   is expected that the user has a strong understanding of its workings.
-#'   Furthermore, since \pkg{marginaleffects} is rapidly evolving, the
-#'   results obtained from the current implementation should be considered
-#'   experimental.
-#'
-#' @details The \strong{modelbased_growthparameters()} function estimates fitted values (via
-#'   [brms::fitted.brmsfit()]) or the posterior draws from the posterior
-#'   distribution (via [brms::predict.brmsfit()]) depending on the \code{type}
-#'   argument.
+#' @description The \strong{modelbased_growthparameters()} function estimates
+#'   individual growth parameters by mapping population average estimate of age
+#'   of interest (such as age at peak growth velocity or age at take off) on
+#'   individual velocity curves defined by individual level random effects.
+#'   After the individual level age parameter is found, the corresponding
+#'   distance and velocity is also estimated.
 #'   
-#' @param average A logical indicating whether to internally call the
-#'    [marginaleffects::predictions()] or [marginaleffects::avg_predictions()]
-#'    function. If \code{FALSE} (default), [marginaleffects::predictions()] is
-#'    called; otherwise, [marginaleffects::avg_predictions()] is used when
-#'    \code{average = TRUE}.
-#'
-#' @param plot A logical specifying whether to plot predictions by calling
-#'   [marginaleffects::plot_predictions()] (\code{TRUE}) or not (\code{FALSE}).
-#'   If \code{FALSE} (default), [marginaleffects::predictions()] or
-#'   [marginaleffects::avg_predictions()] are called to compute predictions (see
-#'   \code{average} for details). Note that
-#'   [marginaleffects::plot_predictions()] allows either \code{condition} or
-#'   \code{by} arguments, but not both. Therefore, when the \code{condition}
-#'   argument is not \code{NULL}, the \code{by} argument is set to \code{NULL}.
-#'   This step is required because \strong{modelbased_growthparameters()} automatically
-#'   assigns the \code{by} argument when the model includes a covariate.
+#' @details Since SITAR is a shape-invariant model, each individual curve has a  
+#' peak velocity point that can be mapped by knowing the population average age 
+#' at peak velocity. This hold true even when a individual lacks measurements at 
+#' the expected turning point.
 #' 
-#' @param deriv An integer to indicate whether to estimate the distance curve or
-#'   its derivative (i.e., velocity curve). The \code{deriv = 0} (default) is
-#'   for the distance curve, whereas \code{deriv = 1} is for the velocity curve.
-#'
-#' @param method A character string specifying the computation method: whether
-#'   to use the \pkg{marginaleffects} machinery at the post-draw stage, i.e.,
-#'   [marginaleffects::comparisons()] (\code{method = 'pkg'}) or to use custom
-#'   functions for efficiency and speed (\code{method = 'custom'}, default).
-#'   Note that \code{method = 'custom'} is particularly useful when testing
-#'   hypotheses. Also, when \code{method = 'custom'},
-#'   [marginaleffects::predictions()] is used internally instead of
-#'   [marginaleffects::comparisons()].
-#' 
-#' @param constrats_by A character vector (default \code{NULL}) specifying the
-#'   variable(s) by which hypotheses (at the post-draw stage) should be tested.
-#'   Note that the variable(s) in \code{constrats_by} should be a subset of the
-#'   variables included in the \code{'by'} argument.
-#'   
-#' @param constrats_at A character vector (default \code{NULL}) specifying the
-#'   variable(s) at which hypotheses (at the post-draw stage) should be tested.
-#'   \code{constrats_at} is particularly useful when the number of rows in the
-#'   estimates is large because \pkg{marginaleffects} does not allow hypotheses
-#'   testing when the number of rows exceeds 25.
-#'  
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams marginal_growthparameters.bgmfit
 #' @inheritParams marginal_comparisons.bgmfit
@@ -68,19 +21,36 @@
 #' @inheritParams marginaleffects::plot_predictions
 #' @inheritParams brms::fitted.brmsfit
 #' 
-#' @param ... Additional arguments passed to the [brms::fitted.brmsfit()] 
-#' function. Please see \code{brms::fitted.brmsfit()} for details on 
-#' various options available.
+#' @param ... Additional arguments passed to the function. 
 #' 
-#' @return An array of predicted mean response values. See
-#'   [brms::fitted.brmsfit] for details.
+#' @return A named list of 3 comprising individual level estimate of
+#'   \strong{age}, \strong{distance} and \strong{velocity}. Each of the list is
+#'   a data frame with one row per individual and six columns.\cr
+#'   
+#'   \strong{age} \cr \item{id}{subject identifier} \item{Estimate}{subject's
+#'   age corresponding to \code{x}.} \item{Est.Error}{SD of Estimate} \item{Q2.5
+#'   }{Lower CI} \item{Q97.5}{Upper CI}
+#'   \item{missing}{logical flags where TRUE means subject's specified age lies
+#'   outside their measurement range}
+#'   
+#'   \strong{distance} \cr \item{id}{subject identifier}
+#'   \item{Estimate}{distance corresponding to subject's age}
+#'   \item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
+#'   CI}
+#'   \item{missing}{logical flags where TRUE means subject's specified age lies
+#'   outside their measurement range}
+#'   
+#'   \strong{velocity} \cr \item{id}{subject identifier}
+#'   \item{Estimate}{velocity corresponding to subject's age}
+#'   \item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
+#'   CI}
+#'   \item{missing}{logical flags where TRUE means subject's specified age lies
+#'   outside their measurement range}
 #' 
 #' @rdname modelbased_growthparameters
 #' @export
 #' 
 #' @seealso [marginaleffects::predictions()]
-#'   [marginaleffects::avg_predictions()]
-#'   [marginaleffects::plot_predictions()]
 #' 
 #' @inherit berkeley author
 #'
@@ -276,6 +246,12 @@ modelbased_growthparameters.bgmfit <-
                                             prompt = FALSE,
                                             stop = FALSE))
     }
+    
+    
+    if(method == 'pkg') {
+      stop("use method == 'custom' for modelbased_growthparameters()")
+    }
+    
     
     callfuns     <- TRUE
     setmarginals <- FALSE
@@ -479,44 +455,105 @@ modelbased_growthparameters.bgmfit <-
     j <- NULL;
     i <- NULL;
     
+    
+    
+    # allowed_parms <- c(
+    #   'apgv',
+    #   'pgv',
+    #   'atgv',
+    #   'tgv',
+    #   'acgv',
+    #   'cgv'
+    # )
+    # 
+    # if(is.null(parameter)) parameter <- c('apgv', 'pgv')
+    # 
+    # parameter <- base::tolower(parameter)
+    # 
+    # if (is.null(parameter)) {
+    #   parm <- 'apgv' 
+    # } else if(length(parameter) == 1 && parameter == 'all') {
+    #   parm <- allowed_parms 
+    # } else if(length(parameter) == 1) {
+    #   parm <- parameter
+    # } else if(length(parameter) > 1) {
+    #   # parameter <- base::tolower(parameter)
+    #   for (parameteri in parameter) {
+    #     if(!parameteri %in% allowed_parms) {
+    #       allowed_parms_err <- c(allowed_parms, 'all')
+    #       stop("Allowed parameter options are ", 
+    #            paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
+    #       )
+    #     }
+    #   }
+    #   parm <- parameter
+    # }
+    # parm <- base::tolower(parm)
+    # 
+    # 
+    # if(length(parm) > 1) {
+    #   if(plot) stop("Please specify only one parameter")
+    # }
+    
+    
     allowed_parms <- c(
       'apgv',
-      'pgv',
       'atgv',
-      'tgv',
-      'acgv',
-      'cgv'
+      'acgv'
     )
     
-    if(is.null(parameter)) parameter <- c('apgv', 'pgv')
     
-    parameter <- base::tolower(parameter)
+    if(is.null(parameter)) {
+      parameter <- c('apgv')
+    } else if(is.numeric(parameter)) {
+      parameter <- parameter
+    } else if(is.character(parameter)) {
+      parameter <- parameter
+    } else if(is.symbol(parameter)) {
+      parameter <- deparse(parameter)
+    } else if(is.matrix(parameter)) {
+      
+    } else {
+      stop("parameter must be a character string of a numeric value")
+    }
     
-    if (is.null(parameter)) {
-      parm <- 'apgv' 
-    } else if(length(parameter) == 1 && parameter == 'all') {
-      parm <- allowed_parms 
-    } else if(length(parameter) == 1) {
-      parm <- parameter
-    } else if(length(parameter) > 1) {
-      # parameter <- base::tolower(parameter)
+   
+    
+    if(length(parameter) > 1) {
+      stop("'parameter' must a length one")
+    }
+    
+    
+    
+    parameter_numeric <- FALSE
+    if(is.numeric(parameter)) {
+      parameter_numeric <- TRUE
+    } else {
+      if(check_is_numeric_like(parameter)) {
+        parameter_numeric <- TRUE
+      }
+    }
+    
+    
+    if(is.character(parameter) & !parameter_numeric) {
+      parameter <- base::tolower(parameter)
       for (parameteri in parameter) {
         if(!parameteri %in% allowed_parms) {
-          allowed_parms_err <- c(allowed_parms, 'all')
+          allowed_parms_err <- allowed_parms # c(allowed_parms, 'all')
           stop("Allowed parameter options are ", 
                paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
           )
         }
       }
-      parm <- parameter
-    }
-    parm <- base::tolower(parm)
+    } # if(is.character(parameter)) {
     
     
+   
+    parm <- parameter
     
-    if(length(parm) > 1) {
-      if(plot) stop("Please specify only one parameter when plot = TRUE")
-    }
+    
+    # print(parameter_numeric)
+    # stop()
     
     
     conf <- conf_level
@@ -1536,7 +1573,14 @@ modelbased_growthparameters.bgmfit <-
         predictions_arguments[['byfun']]          <- NULL
         
       }
+ 
       
+      ##########################################################
+      # start new layer of parameter_numeric
+      ##########################################################
+      if(!parameter_numeric) { # start parameter_numeric
+      
+           
       ########################################################################
       ########################################################################
       ########################################################################
@@ -1628,6 +1672,7 @@ modelbased_growthparameters.bgmfit <-
           predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
         }
       }
+      
       
       if(!future_splits_exe & callfuns) {
         if(!average) {
@@ -2077,6 +2122,11 @@ modelbased_growthparameters.bgmfit <-
       }
       
       
+      } # end if(!parameter_numeric) {
+      ##########################################################
+      # end new layer of parameter_numeric
+      ##########################################################
+      
       
       #################################################################
       #################################################################
@@ -2091,7 +2141,15 @@ modelbased_growthparameters.bgmfit <-
       call_marginaleffects_marginal_draws <- "marginaleffects" 
       
 
+      # progressr::handlers(global = TRUE)
+      # progressr::handlers("progress", "beepr")
+      
       xyadj_xyv_warp_fun <- function(ApvX0, newdata, ...) {
+        xmin <- NULL;
+        xmax <- NULL;
+        
+        # p <- progressor(ApvX0 = xs)
+        
         newdata.in <- newdata
         newdata <- newdata%>% 
           fastplyr::f_group_by(!!as.name(idvar)) %>% 
@@ -2212,7 +2270,7 @@ modelbased_growthparameters.bgmfit <-
         } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
         
         
-       
+        
         
         analyze_data <- function(data, ...) {
           xyadj_curves_args[['newdata']] <- data
@@ -2292,8 +2350,8 @@ modelbased_growthparameters.bgmfit <-
             }
           } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
          
-          # print(yyadj_dv)
-          # print(vyadj_dv)
+          
+          
           
           
           if(call_marginaleffects_marginal_draws == "marginal_draws") {
@@ -2345,6 +2403,7 @@ modelbased_growthparameters.bgmfit <-
           }
           
           
+          
           my_matrix[1, ] <- xyadj_dv
           my_matrix[2, ] <- yyadj_dv
           my_matrix[3, ] <- vyadj_dv
@@ -2365,8 +2424,9 @@ modelbased_growthparameters.bgmfit <-
         }
         
         
-        
         xyvyadj_rows <- do.call(cbind, results_list)
+        
+
         xyadj_rows <- matrix(xyvyadj_rows[1,], nrow = length(results_list), 
                              byrow = T)
         yyadj_rows <- matrix(xyvyadj_rows[2,], nrow = length(results_list), 
@@ -2375,9 +2435,17 @@ modelbased_growthparameters.bgmfit <-
                              byrow = T)
         
         xyadj_rows <- apply(xyadj_rows, 2, model$model_info$ixfuntransform2)
+        
+        
+        # When only one draw, apply converts xyadj_rows to as vector
+        if(length(eval_draw_ids) == 1) {
+          xyadj_rows <- matrix(xyadj_rows, nrow = 1)
+        }
+        
         xyadj_summary <- brms::posterior_summary(xyadj_rows)
         yyadj_summary <- brms::posterior_summary(yyadj_rows)
         vyadj_summary <- brms::posterior_summary(vyadj_rows)
+        
         
         
         # data frame and add idavr
@@ -2417,12 +2485,22 @@ modelbased_growthparameters.bgmfit <-
         
         
         out <- list()
-        out[['xyadj']] <- xyadj_summary
-        out[['yyadj']] <- yyadj_summary
-        out[['vyadj']] <- vyadj_summary
+        out[['age']]      <- xyadj_summary
+        out[['distance']] <- yyadj_summary
+        out[['velocity']] <- vyadj_summary
         
         return(out)
       } # end xyadj_xyv_warp_fun
+      
+      # parameter_numeric
+      if(parameter_numeric) {
+        value <- NULL;
+        onex0 <- tibble::as_tibble(1:max(eval_draw_ids)) %>% 
+          dplyr::mutate(estimate = parameter) %>% 
+          dplyr::mutate(parameter = "xxx") %>% # dummy
+          dplyr::rename(drawid = value) %>% 
+          dplyr::relocate(drawid, parameter, estimate)
+      }
       
       
       xyadj_xyv <- xyadj_xyv_warp_fun(onex0, model$model_info$bgmfit.data)

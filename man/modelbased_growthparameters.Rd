@@ -3,7 +3,7 @@
 \name{modelbased_growthparameters.bgmfit}
 \alias{modelbased_growthparameters.bgmfit}
 \alias{modelbased_growthparameters}
-\title{Estimate growth curves}
+\title{Estimate model based individual growth parameters}
 \usage{
 \method{modelbased_growthparameters}{bgmfit}(
   model,
@@ -336,22 +336,18 @@ estimates. Note that \code{fullframe} cannot be used with \code{summary =
 typical use case is when fitting a \code{univariate_by} model. This option
 is mainly for internal use.}
 
-\item{average}{A logical indicating whether to internally call the
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}
-function. If \code{FALSE} (default), \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} is
-called; otherwise, \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} is used when
-\code{average = TRUE}.}
+\item{average}{A logical value indicating whether to internally call the
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} or the
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} function. If \code{FALSE} (default),
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} is called, otherwise
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} is used when \code{average = TRUE}.}
 
-\item{plot}{A logical specifying whether to plot predictions by calling
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} (\code{TRUE}) or not (\code{FALSE}).
-If \code{FALSE} (default), \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} are called to compute predictions (see
-\code{average} for details). Note that
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} allows either \code{condition} or
-\code{by} arguments, but not both. Therefore, when the \code{condition}
-argument is not \code{NULL}, the \code{by} argument is set to \code{NULL}.
-This step is required because \strong{modelbased_growthparameters()} automatically
-assigns the \code{by} argument when the model includes a covariate.}
+\item{plot}{A logical value specifying whether to plot comparisons by calling
+the \code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}} function (\code{TRUE}) or not
+(\code{FALSE}). If \code{FALSE} (default), then
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} or \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
+are called to compute predictions (see the \code{average} argument for
+details).}
 
 \item{showlegends}{A logical value to specify whether to show legends
 (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), the value of
@@ -379,9 +375,9 @@ passed to \code{variables}. In contrast, when using an alternative approach
 can be passed to the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions.}
 
-\item{deriv}{An integer to indicate whether to estimate the distance curve or
-its derivative (i.e., velocity curve). The \code{deriv = 0} (default) is
-for the distance curve, whereas \code{deriv = 1} is for the velocity curve.}
+\item{deriv}{A numeric value specifying whether to estimate parameters based
+on the differentiation of the distance curve or the model's first
+derivative. Please refer to the \code{variables} argument for more details.}
 
 \item{deriv_model}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the
@@ -391,14 +387,26 @@ the velocity curve, such as \code{growthparameters()} and
 distance curve (i.e., fitted values), such as \code{loo_validation()} and
 \code{plot_ppc()}.}
 
-\item{method}{A character string specifying the computation method: whether
-to use the \pkg{marginaleffects} machinery at the post-draw stage, i.e.,
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}) or to use custom
-functions for efficiency and speed (\code{method = 'custom'}, default).
-Note that \code{method = 'custom'} is particularly useful when testing
-hypotheses. Also, when \code{method = 'custom'},
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} is used internally instead of
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}.}
+\item{method}{A character string indicating whether to compute estimates
+using the \code{'marginaleffects'} package (\code{method = 'pkg'}) or
+custom functions for efficiency and speed (\code{method = 'custom'},
+default). The \code{method = 'pkg'} option is only suitable for simple
+cases and should be used with caution. \code{method = 'custom'} is the
+preferred option because it allows for simultaneous estimation of multiple
+parameters (e.g., \code{'apgv'} and \code{'pgv'}). This method works during
+the post-draw stage, supports multiple parameter comparisons via the
+\code{hypothesis} argument, and allows users to add or return draws (see
+\code{pdraws} for details). If \code{method = 'pkg'}, the \code{by}
+argument must not contain the predictor (e.g., \code{age}), and
+\code{variables} must either be \code{NULL} (which defaults to
+\code{list(age = 1e-6)}) or a list with factor variables like
+\code{variables = list(class = 'pairwise')} or \code{variables = list(age =
+  1e-6, class = 'pairwise')}. With \code{method = 'custom'}, the \code{by}
+argument can include predictors, which will be ignored, and
+\code{variables} should not contain predictors, but can accept factor
+variables as a vector (e.g., \code{variables = c('class')}). Using
+\code{method = 'custom'} is strongly recommended for better performance and
+flexibility.}
 
 \item{marginals}{A \code{list}, \code{data.frame}, or \code{tibble} returned
 by the \pkg{marginaleffects} functions (default \code{NULL}). This is only
@@ -563,16 +571,29 @@ the maximum and minimum values of the variable with respect to which we
 are taking the derivative. Changing \code{eps} may be necessary to avoid
 numerical problems in certain models.}
 
-\item{constrats_by}{A character vector (default \code{NULL}) specifying the
-variable(s) by which hypotheses (at the post-draw stage) should be tested.
-Note that the variable(s) in \code{constrats_by} should be a subset of the
-variables included in the \code{'by'} argument.}
+\item{constrats_by}{A character vector (default \code{FALSE}) specifying the
+variable(s) by which estimates and contrasts (during the post-draw stage)
+should be computed using the \code{hypothesis} argument. The variable(s) in
+\code{constrats_by} should be a subset of those specified in the \code{by}
+argument. If \code{constrats_by = NULL}, it will copy all variables from
+\code{by}, except for the level-1 predictor (e.g., \code{age}). To disable
+this automatic behavior, use \code{constrats_by = FALSE}. This argument is
+evaluated only when \code{method = 'custom'} and \code{hypothesis} is not
+\code{NULL}.}
 
-\item{constrats_at}{A character vector (default \code{NULL}) specifying the
-variable(s) at which hypotheses (at the post-draw stage) should be tested.
-\code{constrats_at} is particularly useful when the number of rows in the
-estimates is large because \pkg{marginaleffects} does not allow hypotheses
-testing when the number of rows exceeds 25.}
+\item{constrats_at}{A named list (default \code{FALSE}) to specify the values
+at which estimates and contrasts should be computed during the post-draw
+stage using the \code{hypothesis} argument. The values can be specified as
+\code{'max'}, \code{'min'}, \code{'unique'}, or \code{'range'} (e.g.,
+\code{constrats_at = list(age = 'min')}) or as numeric values or vectors
+(e.g., \code{constrats_at = list(age = c(6, 7))}). If \code{constrats_at =
+  NULL}, level-1 predictors (e.g., \code{age}) are automatically set to their
+unique values (i.e., \code{constrats_at = list(age = 'unique')}). To turn
+off this behavior, use \code{constrats_at = FALSE}. Note that
+\code{constrats_at} only affects data subsets prepared via
+\code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}} or the \code{newdata} argument. The argument
+is evaluated only when \code{method = 'custom'} and \code{hypothesis} is
+not \code{NULL}.}
 
 \item{constrats_subset}{A named list (default \code{FALSE}) to filter the
 estimates at which contrasts are computed using the \code{hypothesis}
@@ -675,33 +696,46 @@ most post-processing functions rely on \pkg{brms}, it is recommended to set
 \code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
 derivatives like velocity curves.}
 
-\item{...}{Additional arguments passed to the \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}}
-function. Please see \code{brms::fitted.brmsfit()} for details on
-various options available.}
+\item{...}{Additional arguments passed to the function.}
 }
 \value{
-An array of predicted mean response values. See
-\link[brms:fitted.brmsfit]{brms::fitted.brmsfit} for details.
+A named list of 3 comprising individual level estimate of
+\strong{age}, \strong{distance} and \strong{velocity}. Each of the list is
+a data frame with one row per individual and six columns.\cr
+
+\strong{age} \cr \item{id}{subject identifier} \item{Estimate}{subject's
+age corresponding to \code{x}.} \item{Est.Error}{SD of Estimate} \item{Q2.5
+}{Lower CI} \item{Q97.5}{Upper CI}
+\item{missing}{logical flags where TRUE means subject's specified age lies
+outside their measurement range}
+
+\strong{distance} \cr \item{id}{subject identifier}
+\item{Estimate}{distance corresponding to subject's age}
+\item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
+CI}
+\item{missing}{logical flags where TRUE means subject's specified age lies
+outside their measurement range}
+
+\strong{velocity} \cr \item{id}{subject identifier}
+\item{Estimate}{velocity corresponding to subject's age}
+\item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
+CI}
+\item{missing}{logical flags where TRUE means subject's specified age lies
+outside their measurement range}
 }
 \description{
-The \strong{modelbased_growthparameters()} function estimates and plots
-growth curves (distance and velocity) by using the \pkg{marginaleffects}
-package as a back-end. This function can compute growth curves (via
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}), average growth curves (via
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}), or plot growth curves (via
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}}). Please see
-\href{https://marginaleffects.com/}{here} for details. Note that the
-\pkg{marginaleffects} package is highly flexible, and therefore, it
-is expected that the user has a strong understanding of its workings.
-Furthermore, since \pkg{marginaleffects} is rapidly evolving, the
-results obtained from the current implementation should be considered
-experimental.
+The \strong{modelbased_growthparameters()} function estimates
+individual growth parameters by mapping population average estimate of age
+of interest (such as age at peak growth velocity or age at take off) on
+individual velocity curves defined by individual level random effects.
+After the individual level age parameter is found, the corresponding
+distance and velocity is also estimated.
 }
 \details{
-The \strong{modelbased_growthparameters()} function estimates fitted values (via
-\code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}}) or the posterior draws from the posterior
-distribution (via \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}) depending on the \code{type}
-argument.
+Since SITAR is a shape-invariant model, each individual curve has a
+peak velocity point that can be mapped by knowing the population average age
+at peak velocity. This hold true even when a individual lacks measurements at
+the expected turning point.
 }
 \examples{
 
@@ -725,8 +759,6 @@ modelbased_growthparameters(model, ndraws = 10)
 }
 \seealso{
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}}
 }
 \author{
 Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}

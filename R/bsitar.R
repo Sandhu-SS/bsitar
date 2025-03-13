@@ -10716,9 +10716,11 @@ bsitar <- function(x,
     model_info[['envir']] <- enverr.
     
     
-    # reduce object size
-    # model_info[['brms_arguments_list']] <- brms_arguments_list
-    # model_info[['call.bgmfit']] <- mcall_
+    # The brms_arguments_list required in update_model()
+    model_info[['brms_arguments_list']] <- brms_arguments_list
+    
+    # The call by user
+    model_info[['call.bgmfit']] <- mcall_
     
     
     
