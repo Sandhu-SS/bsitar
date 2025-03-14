@@ -1,5 +1,7 @@
 # bsitar
 
+<!-- Coverage and Downloads work fine, just commented out because not many tests added yet -->
+
 [![R-CMD-check](https://github.com/Sandhu-SS/bsitar/workflows/R-CMD-check/badge.svg)](https://github.com/Sandhu-SS/bsitar/actions)
 
 <!-- [![Coverage Status](https://codecov.io/github/Sandhu-SS/bsitar/coverage.svg?branch=main)](https://app.codecov.io/github/Sandhu-SS/bsitar?branch=main) -->
@@ -7,7 +9,7 @@
 [![CRAN
 Version](https://www.r-pkg.org/badges/version/bsitar)](https://cran.r-project.org/package=bsitar)
 
-[![Downloads](https://cranlogs.r-pkg.org/badges/bsitar?color=brightgreen)](https://CRAN.R-project.org/package=bsitar)
+<!-- [![Downloads](https://cranlogs.r-pkg.org/badges/bsitar?color=brightgreen)](https://CRAN.R-project.org/package=bsitar) -->
 
 ## Overview
 
