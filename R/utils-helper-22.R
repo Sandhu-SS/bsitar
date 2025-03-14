@@ -242,7 +242,7 @@ modelbased_growthparameters_call.bgmfit <-
     if(is.null(envir)) {
       envir <- model$model_info$envir
     } else {
-      envir <- parent.frame()
+      envir <- envir
     }
     
     

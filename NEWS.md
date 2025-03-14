@@ -13,7 +13,7 @@ For backward compatibility, the old functions ``marginal_comparison()`` and ``gr
 
 ## New features/additions
 
-Added support (experimental) for estimating model based individual growth parameters such as age at peak growth velocity (APGV) as well as distance and velocity at APGV.
+Added support (experimental) for estimating model based individual growth parameters such as age at peak growth velocity (APGV) as well as distance and velocity at APGV. See function ``modelbased_growthparameters()`` for details. Note that the function name and arguments may change in future release. 
  
 
 ### Bugfixes
