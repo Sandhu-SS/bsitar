@@ -95,6 +95,10 @@ jobs:
             ggtext
             devtools
 
+      - name: Install jpeg fix ubuntu dev errors
+        run: | 
+          install.packages('jpeg', type = 'source')
+        shell: Rscript {0}
 
       - name: Build Cmdstan
         run: |

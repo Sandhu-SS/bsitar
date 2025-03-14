@@ -138,8 +138,8 @@ modelbased_growthparameters_call.bgmfit <-
     ei_agg <- getOption("marginaleffects_posterior_interval")
     if(is.null(ec_agg)) ec_agg <- "mean"
     if(is.null(ei_agg)) ei_agg <- "eti"
-
-
+    
+    
     # 6.03.2025
     # Also, set 'marginaleffects_lean' to FALSE for 'posterior_draws()' to work
     lean_ <- getOption("marginaleffects_lean")
@@ -494,7 +494,7 @@ modelbased_growthparameters_call.bgmfit <-
       stop("parameter must be a character string of a numeric value")
     }
     
-   
+    
     
     if(length(parameter) > 1) {
       stop("'parameter' must a length one")
@@ -525,7 +525,7 @@ modelbased_growthparameters_call.bgmfit <-
     } # if(is.character(parameter)) {
     
     
-   
+    
     parm <- parameter
     
     
@@ -602,7 +602,7 @@ modelbased_growthparameters_call.bgmfit <-
                       deriv = deriv, envir = envir,
                       deriv_model = deriv_model,
                       ...)
-
+    
     if(is.null(test)) return(invisible(NULL))
     
     
@@ -1550,555 +1550,555 @@ modelbased_growthparameters_call.bgmfit <-
         predictions_arguments[['byfun']]          <- NULL
         
       }
- 
+      
       
       ##########################################################
       # start new layer of parameter_numeric
       ##########################################################
       if(!parameter_numeric) { # start parameter_numeric
-      
-           
-      ########################################################################
-      ########################################################################
-      ########################################################################
-      # This if(call_slopes) { borrowed from marginal_draws
-      # needed when no d1 and slopes function used to get deriv from distance
-      if(call_slopes) {
-        predictions_arguments[['comparison']]     <- NULL
         
+        
+        ########################################################################
+        ########################################################################
+        ########################################################################
+        # This if(call_slopes) { borrowed from marginal_draws
+        # needed when no d1 and slopes function used to get deriv from distance
         if(call_slopes) {
-          if (!is.null(variables)) {
-            if (!is.character(variables)) {
-              stop("'variables' argument must be a character string such as", 
-                   "\n ",
-                   " variables = ", "'", xvar, "'"
-              )
-            } else {
-              set_variables <- variables
-              if(!grepl(xvar, variables)) {
-                set_variables <- xvar
-              } else if(!is.null(set_variables[[xvar]])) {
-                
-              }
-            }
-          } else if (is.null(variables)) {
-            set_variables <- xvar
-          } 
-        } # if(call_slopes) {
-        
-        
-        # Decide if set by = NULL and then here pick and replace 'by' set_group 
-        if(is.null(by)) {
-          if(is.null(cov)) {
-            set_group <- FALSE
-          } else if(!is.null(cov)) {
-            set_group <- cov
-            if (!set_group %in% cov) {
-              stop('by must be one of the ', cov)
-            } 
-          }
-        } else if(!is.null(by)) {
-          if (!isFALSE(by)) {
-            set_group <- by
-          } else if (isFALSE(by)) {
-            set_group <- FALSE
-          }
-        }
-        
-        if(call_slopes) predictions_arguments$variables  <- set_variables
-        predictions_arguments$by         <- set_group
-        
-        if(is.null(predictions_arguments$by)) predictions_arguments$by < 'NULL'
-        
-        assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-        
-      } # end if(call_slopes)  borrowed from marginal_draws
-      
-      ########################################################################
-      ########################################################################
-      ########################################################################
-      ########################################################################
-      
-      if(!is.null(predictions_arguments[['variables']])) {
-        if(!is.list(eval(predictions_arguments[['variables']]))) {
-          # 21.09.2024
-          # In fact list does not work, variables = c('class') works
-          # stop("Argument 'variables' must be a named list")
-        }
-      }
-      
-      # Imp, add xvar to the by if missing
-      by <- predictions_arguments[['by']]
-      
-      # if(!any(grepl(xvar, by)))  by <- c(xvar, eval(by))
-      
-      if(isFALSE(by)) {
-        by <- xvar
-      } else if(!any(grepl(xvar, by))) {
-        by <- c(xvar, eval(by))
-      }
-      
-      by                            <- eval(by)
-      predictions_arguments[['by']] <- by 
-      
-      
-      if(future_splits_exe) {
-        # Note that since predictions_arguments are passed to multisession, 
-        # evaluate each argument
-        for (i in names(predictions_arguments)) {
-          predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
-        }
-      }
-      
-      
-      if(!future_splits_exe & callfuns) {
-        if(!average) {
-          if(call_predictions) {
-            out <- do.call(marginaleffects::predictions, predictions_arguments)
-          } 
-          if(call_slopes) {
-            out <- do.call(marginaleffects::slopes, predictions_arguments)
-          }
-        } else if(average) {
-          if(call_predictions) {
-            out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
-          } 
-          if(call_slopes) {
-            out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
-          }
-        }
-        
-      } # if(!future_splits_exe) {
-      
-      
-      
-      if(future_splits_exe_future & callfuns) {
-        if(!average) {
-          myzfun <- function(x) {
-            predictions_arguments[['draw_ids']] <- x
-            predictions_arguments[['ndraws']]   <- NULL
-            `%>%` <- bsitar::`%>%`
-            if(re_expose) {
-              if(verbose) message("need to expose functions for 'multisession'")
-              predictions_arguments[['model']] <- 
-                bsitar::expose_model_functions(predictions_arguments[['model']])
-            }
-            # Re-assign appropriate function
-            setenv <- predictions_arguments[['model']]$model_info$envir
-            
-            assign(
-              o[[1]],
-              predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-              envir = setenv
-            )
-            if(call_predictions) {
-              do.call(marginaleffects::predictions, predictions_arguments)
-            } 
-            if(call_slopes) {
-              do.call(marginaleffects::slopes, predictions_arguments)
-            }
-            # do.call(marginaleffects::predictions, predictions_arguments)
-          }
-          out <-  future.apply::future_lapply(future_splits_at,
-                                              future.envir = parent.frame(),
-                                              future.globals = TRUE,
-                                              future.seed = TRUE,
-                                              FUN = myzfun)
-        } else if(average) {
-          myzfun <- function(x) {
-            predictions_arguments[['draw_ids']] <- x
-            predictions_arguments[['ndraws']]   <- NULL
-            `%>%` <- bsitar::`%>%`
-            if(re_expose) {
-              if(verbose) message("need to expose functions for 'multisession'")
-              predictions_arguments[['model']] <- 
-                bsitar::expose_model_functions(predictions_arguments[['model']])
-            }
-            # Re-assign appropriate function
-            setenv <- predictions_arguments[['model']]$model_info$envir
-            
-            assign(
-              o[[1]],
-              predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-              envir = setenv
-            )
-            if(call_predictions) {
-              do.call(marginaleffects::avg_predictions, predictions_arguments)
-            } 
-            if(call_slopes) {
-              do.call(marginaleffects::avg_slopes, predictions_arguments)
-            }
-            # do.call(marginaleffects::avg_predictions, predictions_arguments)
-          }
-          out <-  future.apply::future_lapply(future_splits_at,
-                                              future.envir = parent.frame(),
-                                              future.globals = TRUE,
-                                              future.seed = TRUE,
-                                              FUN = myzfun)      
-        }
-      } # if(future_splits_exe_future) {
-      
-      
-      
-      
-      if(future_splits_exe_dofuture & callfuns) {
-        `%doFuture_function%` <- doFuture::`%dofuture%`
-        # somehow .options.future = list(seed = TRUE) not working, so set below
-        dofutureplan <- getOption("doFuture.rng.onMisuse")
-        options(doFuture.rng.onMisuse = "ignore")
-        on.exit(options("doFuture.rng.onMisuse" = dofutureplan), add = TRUE)
-        if(!average) {
-          out <- foreach::foreach(x = 1:length(future_splits_at),
-                                  .options.future = list(seed = TRUE),
-                                  .options.future =
-                                    list(globals = c('future_splits_at',
-                                                     'setplanis',
-                                                     'verbose',
-                                                     'predictions_arguments'))
-          ) %doFuture_function% {
-            x <- future_splits_at[[x]]
-            predictions_arguments[['draw_ids']] <- x
-            predictions_arguments[['ndraws']] <- NULL
-            `%>%` <- bsitar::`%>%`
-            if(re_expose) {
-              if(verbose) message("need to expose functions for 'multisession'")
-              predictions_arguments[['model']] <- 
-                bsitar::expose_model_functions(predictions_arguments[['model']])
-            }
-            # Re-assign appropriate function
-            setenv <- predictions_arguments[['model']]$model_info$envir
-            
-            assign(
-              o[[1]],
-              predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]],
-              envir = setenv
-            )
-            if(call_predictions) {
-              do.call(marginaleffects::predictions, predictions_arguments)
-            } 
-            if(call_slopes) {
-              do.call(marginaleffects::slopes, predictions_arguments)
-            }
-            # do.call(marginaleffects::predictions, predictions_arguments)
-          }
-        } else if(average) {
-          out <- foreach::foreach(x = 1:length(future_splits_at),
-                                  .options.future = list(seed = TRUE),
-                                  .options.future =
-                                    list(globals = c('future_splits_at',
-                                                     'setplanis',
-                                                     'verbose',
-                                                     'predictions_arguments'))
-          ) %doFuture_function% {
-            x <- future_splits_at[[x]]
-            predictions_arguments[['draw_ids']] <- x
-            predictions_arguments[['ndraws']] <- NULL
-            `%>%` <- bsitar::`%>%`
-            if(re_expose) {
-              if(verbose) message("need to expose functions for 'multisession'")
-              predictions_arguments[['model']] <- 
-                bsitar::expose_model_functions(predictions_arguments[['model']])
-            }
-            # Re-assign appropriate function
-            setenv <- predictions_arguments[['model']]$model_info$envir
-            
-            assign(
-              o[[1]],
-              predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-              envir = setenv
-            )
-            if(call_predictions) {
-              do.call(marginaleffects::avg_predictions, predictions_arguments)
-            } 
-            if(call_slopes) {
-              do.call(marginaleffects::avg_slopes, predictions_arguments)
-            }
-            # do.call(marginaleffects::avg_predictions, predictions_arguments)
-          }
-        } 
-      } # if(future_splits_exe_dofuture) {
-      
-      
-      
-      
-      posterior_draws_function <- function(x, ...) {
-        out[[x]] %>% 
-          marginaleffects:: posterior_draws(shape = "long") %>% 
-          dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-          dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
-          dplyr::mutate(drawid = as.factor(drawid)) %>% 
-          dplyr::relocate(drawid, .before = 'draw')
-      }
-      
-      
-      consecutive_drawid_function <- function(x, ...) {
-        x %>% 
-          dplyr::group_by(drawid) %>% 
-          dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
-          dplyr::mutate(drawid = as.factor(drawid)) %>% 
-          dplyr::ungroup()
-      }
-      
-      
-      
-      # somehow this need consequence number
-      if(!future_splits_exe) {
-        if(callfuns) {
-          if(pdrawso) return(out)
-          zxdraws <- out %>% marginaleffects::posterior_draws()
-        }
-      } else if(future_splits_exe) {
-        if(callfuns) {
-          if(pdrawso) {
-            out <- out %>% do.call(rbind, .)
-            return(out)
-          }
-          zxdraws <- lapply(1:length(future_splits_at), 
-                            FUN = posterior_draws_function)
+          predictions_arguments[['comparison']]     <- NULL
           
-          zxdraws <- zxdraws %>% do.call(rbind, .)
-          # Note that above zxdraws has drawid exact same as splits
-          # but somehow, we need consecutive drawid for summarising
-          zxdraws <- consecutive_drawid_function(zxdraws)
-        }
-      }
-      
-      
-      
-      marginals_list_consecutive_drawid_function <- function(x, ...) {
-        if(x == 1) {
-          oux <- out[[x]]
-          oux$drawid <- as.numeric(oux$drawid)
-        } else {
-          maxpre <- max(as.numeric(levels(out[[x-1]]$drawid)))
-          oux <- out[[x]]
-          oux$drawid <- as.numeric(oux$drawid) + maxpre * x
-        }
-        oux
-      }
-      
-      
-      
-      if(setmarginals) {
-        if(inherits(marginals, 'list')) {
-          zxdraws <-
-            {. <- lapply(1:length(marginals), 
-                         marginals_list_consecutive_drawid_function)
-            list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
-              unlist(lapply(., `[[`, i), FALSE, FALSE)))}
-          zxdraws$drawid <- cheapr::factor_(zxdraws$drawid)
-        } else {
-          zxdraws <- marginals
-        }
-      }
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      by_pdraws <- by
-      
-      # Imp, remove xvar from the by
-      by <- base::setdiff(eval(by), eval(xvar)) 
-      
-      
-      
-      
-      
-      getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
-                            aggregate_by = FALSE, ...) {
+          if(call_slopes) {
+            if (!is.null(variables)) {
+              if (!is.character(variables)) {
+                stop("'variables' argument must be a character string such as", 
+                     "\n ",
+                     " variables = ", "'", xvar, "'"
+                )
+              } else {
+                set_variables <- variables
+                if(!grepl(xvar, variables)) {
+                  set_variables <- xvar
+                } else if(!is.null(set_variables[[xvar]])) {
+                  
+                }
+              }
+            } else if (is.null(variables)) {
+              set_variables <- xvar
+            } 
+          } # if(call_slopes) {
+          
+          
+          # Decide if set by = NULL and then here pick and replace 'by' set_group 
+          if(is.null(by)) {
+            if(is.null(cov)) {
+              set_group <- FALSE
+            } else if(!is.null(cov)) {
+              set_group <- cov
+              if (!set_group %in% cov) {
+                stop('by must be one of the ', cov)
+              } 
+            }
+          } else if(!is.null(by)) {
+            if (!isFALSE(by)) {
+              set_group <- by
+            } else if (isFALSE(by)) {
+              set_group <- FALSE
+            }
+          }
+          
+          if(call_slopes) predictions_arguments$variables  <- set_variables
+          predictions_arguments$by         <- set_group
+          
+          if(is.null(predictions_arguments$by)) predictions_arguments$by < 'NULL'
+          
+          assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+          
+        } # end if(call_slopes)  borrowed from marginal_draws
         
-        if(data.table::is.data.table(x) | is.data.frame(x)) {
-          if(is.null(xvar)) {
-            stop("please specify the 'xvar' argument")
+        ########################################################################
+        ########################################################################
+        ########################################################################
+        ########################################################################
+        
+        if(!is.null(predictions_arguments[['variables']])) {
+          if(!is.list(eval(predictions_arguments[['variables']]))) {
+            # 21.09.2024
+            # In fact list does not work, variables = c('class') works
+            # stop("Argument 'variables' must be a named list")
           }
-          if(is.null(xvar)) {
-            stop("please specify the 'draw' argument")
-          }
-          temx <- x
-          x <- temx[[xvar]] %>% unlist() %>% as.numeric()
-          y <- temx[[draw]] %>% unlist() %>% as.numeric()
         }
         
-        # aggregate_by <- FALSE
-        if(aggregate_by) {
-          try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
-                                          prompt = FALSE))
-          xy <- grDevices::xy.coords(x, y)
-          xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
-          if(!isFALSE(by)) {
-            if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
-                                                          mean, 
-                                                          na.action = na.omit,
-                                                          drop = TRUE)
-            if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
-                                                          median, 
-                                                          na.action = na.omit,
-                                                          drop = TRUE)
-          }
-          x <- xy$x
-          y <- xy$y
-        } # if(aggregate_by) {
+        # Imp, add xvar to the by if missing
+        by <- predictions_arguments[['by']]
         
-        parm_c <- list()
-        pgvx <- NULL
-        for (parmi in parm) {
-          if('apgv' %in% parmi) {
+        # if(!any(grepl(xvar, by)))  by <- c(xvar, eval(by))
+        
+        if(isFALSE(by)) {
+          by <- xvar
+        } else if(!any(grepl(xvar, by))) {
+          by <- c(xvar, eval(by))
+        }
+        
+        by                            <- eval(by)
+        predictions_arguments[['by']] <- by 
+        
+        
+        if(future_splits_exe) {
+          # Note that since predictions_arguments are passed to multisession, 
+          # evaluate each argument
+          for (i in names(predictions_arguments)) {
+            predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
+          }
+        }
+        
+        
+        if(!future_splits_exe & callfuns) {
+          if(!average) {
+            if(call_predictions) {
+              out <- do.call(marginaleffects::predictions, predictions_arguments)
+            } 
+            if(call_slopes) {
+              out <- do.call(marginaleffects::slopes, predictions_arguments)
+            }
+          } else if(average) {
+            if(call_predictions) {
+              out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+            } 
+            if(call_slopes) {
+              out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
+            }
+          }
+          
+        } # if(!future_splits_exe) {
+        
+        
+        
+        if(future_splits_exe_future & callfuns) {
+          if(!average) {
+            myzfun <- function(x) {
+              predictions_arguments[['draw_ids']] <- x
+              predictions_arguments[['ndraws']]   <- NULL
+              `%>%` <- bsitar::`%>%`
+              if(re_expose) {
+                if(verbose) message("need to expose functions for 'multisession'")
+                predictions_arguments[['model']] <- 
+                  bsitar::expose_model_functions(predictions_arguments[['model']])
+              }
+              # Re-assign appropriate function
+              setenv <- predictions_arguments[['model']]$model_info$envir
+              
+              assign(
+                o[[1]],
+                predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                envir = setenv
+              )
+              if(call_predictions) {
+                do.call(marginaleffects::predictions, predictions_arguments)
+              } 
+              if(call_slopes) {
+                do.call(marginaleffects::slopes, predictions_arguments)
+              }
+              # do.call(marginaleffects::predictions, predictions_arguments)
+            }
+            out <-  future.apply::future_lapply(future_splits_at,
+                                                future.envir = parent.frame(),
+                                                future.globals = TRUE,
+                                                future.seed = TRUE,
+                                                FUN = myzfun)
+          } else if(average) {
+            myzfun <- function(x) {
+              predictions_arguments[['draw_ids']] <- x
+              predictions_arguments[['ndraws']]   <- NULL
+              `%>%` <- bsitar::`%>%`
+              if(re_expose) {
+                if(verbose) message("need to expose functions for 'multisession'")
+                predictions_arguments[['model']] <- 
+                  bsitar::expose_model_functions(predictions_arguments[['model']])
+              }
+              # Re-assign appropriate function
+              setenv <- predictions_arguments[['model']]$model_info$envir
+              
+              assign(
+                o[[1]],
+                predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                envir = setenv
+              )
+              if(call_predictions) {
+                do.call(marginaleffects::avg_predictions, predictions_arguments)
+              } 
+              if(call_slopes) {
+                do.call(marginaleffects::avg_slopes, predictions_arguments)
+              }
+              # do.call(marginaleffects::avg_predictions, predictions_arguments)
+            }
+            out <-  future.apply::future_lapply(future_splits_at,
+                                                future.envir = parent.frame(),
+                                                future.globals = TRUE,
+                                                future.seed = TRUE,
+                                                FUN = myzfun)      
+          }
+        } # if(future_splits_exe_future) {
+        
+        
+        
+        
+        if(future_splits_exe_dofuture & callfuns) {
+          `%doFuture_function%` <- doFuture::`%dofuture%`
+          # somehow .options.future = list(seed = TRUE) not working, so set below
+          dofutureplan <- getOption("doFuture.rng.onMisuse")
+          options(doFuture.rng.onMisuse = "ignore")
+          on.exit(options("doFuture.rng.onMisuse" = dofutureplan), add = TRUE)
+          if(!average) {
+            out <- foreach::foreach(x = 1:length(future_splits_at),
+                                    .options.future = list(seed = TRUE),
+                                    .options.future =
+                                      list(globals = c('future_splits_at',
+                                                       'setplanis',
+                                                       'verbose',
+                                                       'predictions_arguments'))
+            ) %doFuture_function% {
+              x <- future_splits_at[[x]]
+              predictions_arguments[['draw_ids']] <- x
+              predictions_arguments[['ndraws']] <- NULL
+              `%>%` <- bsitar::`%>%`
+              if(re_expose) {
+                if(verbose) message("need to expose functions for 'multisession'")
+                predictions_arguments[['model']] <- 
+                  bsitar::expose_model_functions(predictions_arguments[['model']])
+              }
+              # Re-assign appropriate function
+              setenv <- predictions_arguments[['model']]$model_info$envir
+              
+              assign(
+                o[[1]],
+                predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]],
+                envir = setenv
+              )
+              if(call_predictions) {
+                do.call(marginaleffects::predictions, predictions_arguments)
+              } 
+              if(call_slopes) {
+                do.call(marginaleffects::slopes, predictions_arguments)
+              }
+              # do.call(marginaleffects::predictions, predictions_arguments)
+            }
+          } else if(average) {
+            out <- foreach::foreach(x = 1:length(future_splits_at),
+                                    .options.future = list(seed = TRUE),
+                                    .options.future =
+                                      list(globals = c('future_splits_at',
+                                                       'setplanis',
+                                                       'verbose',
+                                                       'predictions_arguments'))
+            ) %doFuture_function% {
+              x <- future_splits_at[[x]]
+              predictions_arguments[['draw_ids']] <- x
+              predictions_arguments[['ndraws']] <- NULL
+              `%>%` <- bsitar::`%>%`
+              if(re_expose) {
+                if(verbose) message("need to expose functions for 'multisession'")
+                predictions_arguments[['model']] <- 
+                  bsitar::expose_model_functions(predictions_arguments[['model']])
+              }
+              # Re-assign appropriate function
+              setenv <- predictions_arguments[['model']]$model_info$envir
+              
+              assign(
+                o[[1]],
+                predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                envir = setenv
+              )
+              if(call_predictions) {
+                do.call(marginaleffects::avg_predictions, predictions_arguments)
+              } 
+              if(call_slopes) {
+                do.call(marginaleffects::avg_slopes, predictions_arguments)
+              }
+              # do.call(marginaleffects::avg_predictions, predictions_arguments)
+            }
+          } 
+        } # if(future_splits_exe_dofuture) {
+        
+        
+        
+        
+        posterior_draws_function <- function(x, ...) {
+          out[[x]] %>% 
+            marginaleffects:: posterior_draws(shape = "long") %>% 
+            dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+            dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
+            dplyr::mutate(drawid = as.factor(drawid)) %>% 
+            dplyr::relocate(drawid, .before = 'draw')
+        }
+        
+        
+        consecutive_drawid_function <- function(x, ...) {
+          x %>% 
+            dplyr::group_by(drawid) %>% 
+            dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
+            dplyr::mutate(drawid = as.factor(drawid)) %>% 
+            dplyr::ungroup()
+        }
+        
+        
+        
+        # somehow this need consequence number
+        if(!future_splits_exe) {
+          if(callfuns) {
+            if(pdrawso) return(out)
+            zxdraws <- out %>% marginaleffects::posterior_draws()
+          }
+        } else if(future_splits_exe) {
+          if(callfuns) {
+            if(pdrawso) {
+              out <- out %>% do.call(rbind, .)
+              return(out)
+            }
+            zxdraws <- lapply(1:length(future_splits_at), 
+                              FUN = posterior_draws_function)
+            
+            zxdraws <- zxdraws %>% do.call(rbind, .)
+            # Note that above zxdraws has drawid exact same as splits
+            # but somehow, we need consecutive drawid for summarising
+            zxdraws <- consecutive_drawid_function(zxdraws)
+          }
+        }
+        
+        
+        
+        marginals_list_consecutive_drawid_function <- function(x, ...) {
+          if(x == 1) {
+            oux <- out[[x]]
+            oux$drawid <- as.numeric(oux$drawid)
+          } else {
+            maxpre <- max(as.numeric(levels(out[[x-1]]$drawid)))
+            oux <- out[[x]]
+            oux$drawid <- as.numeric(oux$drawid) + maxpre * x
+          }
+          oux
+        }
+        
+        
+        
+        if(setmarginals) {
+          if(inherits(marginals, 'list')) {
+            zxdraws <-
+              {. <- lapply(1:length(marginals), 
+                           marginals_list_consecutive_drawid_function)
+              list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
+                unlist(lapply(., `[[`, i), FALSE, FALSE)))}
+            zxdraws$drawid <- cheapr::factor_(zxdraws$drawid)
+          } else {
+            zxdraws <- marginals
+          }
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        by_pdraws <- by
+        
+        # Imp, remove xvar from the by
+        by <- base::setdiff(eval(by), eval(xvar)) 
+        
+        
+        
+        
+        
+        getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
+                              aggregate_by = FALSE, ...) {
+          
+          if(data.table::is.data.table(x) | is.data.frame(x)) {
+            if(is.null(xvar)) {
+              stop("please specify the 'xvar' argument")
+            }
+            if(is.null(xvar)) {
+              stop("please specify the 'draw' argument")
+            }
+            temx <- x
+            x <- temx[[xvar]] %>% unlist() %>% as.numeric()
+            y <- temx[[draw]] %>% unlist() %>% as.numeric()
+          }
+          
+          # aggregate_by <- FALSE
+          if(aggregate_by) {
+            try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
+                                            prompt = FALSE))
+            xy <- grDevices::xy.coords(x, y)
+            xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
+            if(!isFALSE(by)) {
+              if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
+                                                            mean, 
+                                                            na.action = na.omit,
+                                                            drop = TRUE)
+              if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
+                                                            median, 
+                                                            na.action = na.omit,
+                                                            drop = TRUE)
+            }
+            x <- xy$x
+            y <- xy$y
+          } # if(aggregate_by) {
+          
+          parm_c <- list()
+          pgvx <- NULL
+          for (parmi in parm) {
+            if('apgv' %in% parmi) {
+              # prepare_data2
+              parm_c[[parmi]] <- sitar::getPeak(x, y)[1] %>% ifunx_() 
+            }
+            if('pgv' %in% parmi) {
+              parm_c[[parmi]] <- pgvx <- sitar::getPeak(x, y)[2]
+            }
+            if('atgv' %in% parmi) {
+              # prepare_data2
+              parm_c[[parmi]] <- sitar::getTakeoff(x, y)[1] %>% ifunx_()
+            }
+            if('tgv' %in% parmi) {
+              parm_c[[parmi]] <- sitar::getTakeoff(x, y)[2]
+            }
+            if('acgv' %in% parmi | 'acgv' %in% parmi) {
+              if(is.null(pgvx)) pgvx <- sitar::getPeak(x, y)[2]
+              cgv  <- acg_velocity * pgvx
+              vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+            }
             # prepare_data2
-            parm_c[[parmi]] <- sitar::getPeak(x, y)[1] %>% ifunx_() 
+            if('acgv' %in% parmi) parm_c[[parmi]] <- x[vcgi] %>% ifunx_()
+            if('cgv' %in% parmi)  parm_c[[parmi]] <- y[vcgi]
           }
-          if('pgv' %in% parmi) {
-            parm_c[[parmi]] <- pgvx <- sitar::getPeak(x, y)[2]
-          }
-          if('atgv' %in% parmi) {
-            # prepare_data2
-            parm_c[[parmi]] <- sitar::getTakeoff(x, y)[1] %>% ifunx_()
-          }
-          if('tgv' %in% parmi) {
-            parm_c[[parmi]] <- sitar::getTakeoff(x, y)[2]
-          }
-          if('acgv' %in% parmi | 'acgv' %in% parmi) {
-            if(is.null(pgvx)) pgvx <- sitar::getPeak(x, y)[2]
-            cgv  <- acg_velocity * pgvx
+          out <- parm_c %>% do.call(cbind, .) %>% data.frame()
+          out
+        }
+        
+        
+        if(usedtplyr) {
+          getparmsx2                     <- getparmsx
+          hypothesisargs                 <- formals(getparmsx2)
+          hypothesisargs[['xvar']]       <- xvar
+          hypothesisargs[['draw']]       <- 'draw'
+          hypothesisargs[['parm']]       <- parm
+          formals(getparmsx2)            <- hypothesisargs
+          drawidby                       <- c('drawid', by)
+          onex0 <- zxdraws %>% dtplyr::lazy_dt() %>%
+            dplyr::group_by_at(drawidby) %>% 
+            dplyr::group_modify(., getparmsx2, .keep = F) %>% 
+            dplyr::ungroup()
+          
+        } else if(usecollapse) {
+          drawidby  <- c('drawid', by)
+          drawidby_ <- c(drawidby, 'parameter', 'estimate')
+          parmest   <- 'draw'
+          
+          if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
+          if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
+          if(any(c('acgv', 'cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
+          
+          if(getpest) namesp <- cbind('apgv', 'pgv') else namesp <- NULL
+          if(gettest) namest <- cbind('atgv', 'tgv') else namest <- NULL
+          if(getcest) namesc <- cbind('acgv', 'cgv') else namesc <- NULL
+          
+          getcgvfunc <- function(x, y, p = NULL, ...) {
+            if(is.null(p)) {
+              cgv <- acg_velocity * sitar::getPeak(x, y)[2] 
+            } else {
+              cgv <- acg_velocity * p
+            }
             vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+            return(c(x = x[vcgi], y = y[vcgi]))
           }
-          # prepare_data2
-          if('acgv' %in% parmi) parm_c[[parmi]] <- x[vcgi] %>% ifunx_()
-          if('cgv' %in% parmi)  parm_c[[parmi]] <- y[vcgi]
-        }
-        out <- parm_c %>% do.call(cbind, .) %>% data.frame()
-        out
-      }
-      
-      
-      if(usedtplyr) {
-        getparmsx2                     <- getparmsx
-        hypothesisargs                 <- formals(getparmsx2)
-        hypothesisargs[['xvar']]       <- xvar
-        hypothesisargs[['draw']]       <- 'draw'
-        hypothesisargs[['parm']]       <- parm
-        formals(getparmsx2)            <- hypothesisargs
-        drawidby                       <- c('drawid', by)
-        onex0 <- zxdraws %>% dtplyr::lazy_dt() %>%
-          dplyr::group_by_at(drawidby) %>% 
-          dplyr::group_modify(., getparmsx2, .keep = F) %>% 
-          dplyr::ungroup()
-        
-      } else if(usecollapse) {
-        drawidby  <- c('drawid', by)
-        drawidby_ <- c(drawidby, 'parameter', 'estimate')
-        parmest   <- 'draw'
-        
-        if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
-        if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
-        if(any(c('acgv', 'cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
-        
-        if(getpest) namesp <- cbind('apgv', 'pgv') else namesp <- NULL
-        if(gettest) namest <- cbind('atgv', 'tgv') else namest <- NULL
-        if(getcest) namesc <- cbind('acgv', 'cgv') else namesc <- NULL
-        
-        getcgvfunc <- function(x, y, p = NULL, ...) {
-          if(is.null(p)) {
-            cgv <- acg_velocity * sitar::getPeak(x, y)[2] 
-          } else {
-            cgv <- acg_velocity * p
+          
+          funx <- function(x,...) {
+            if(getpest) {
+              dfp <- sitar::getPeak(x[,1], x[,2]) 
+              dfp[1] <- ifunx_(dfp[1]) # prepare_data2
+            } else {
+              dfp <- NULL
+            }
+            if(gettest) {
+              dft <- sitar::getTakeoff(x[,1], x[,2]) 
+              dft[1] <- ifunx_(dft[1]) # prepare_data2
+            } else {
+              dft <- NULL
+            }
+            if(getcest) {
+              dfc <- getcgvfunc(x[,1], x[,2]) 
+              dfc[1] <- ifunx_(dfc[1]) # prepare_data2
+            } else {
+              dfc <- NULL
+            }
+            cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
           }
-          vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-          return(c(x = x[vcgi], y = y[vcgi]))
-        }
-        
-        funx <- function(x,...) {
-          if(getpest) {
-            dfp <- sitar::getPeak(x[,1], x[,2]) 
-            dfp[1] <- ifunx_(dfp[1]) # prepare_data2
-          } else {
-            dfp <- NULL
+          
+          onex0 <- zxdraws %>% 
+            collapse::fgroup_by(drawidby) %>% 
+            collapse::fsummarise(collapse::mctl(funx(cbind(.data[[xvar]], 
+                                                           .data[[parmest]])), 
+                                                names = F)) %>% 
+            collapse::ftransformv(., 'V2', as.numeric) %>% 
+            collapse::frename(., drawidby_) %>% 
+            collapse::fsubset(., parameter %in% parm)
+          
+        } else {
+          drawid_c <- list()
+          for (drawidi in 1:nlevels(zxdraws$drawid)) {
+            drawid_c[[drawidi]] <- zxdraws %>% dplyr::filter(drawid == drawidi) %>%
+              dplyr::group_by_at(by) %>%
+              dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw, parm = parm),
+                                  .keep = TRUE) %>%
+              dplyr::mutate(drawid = drawidi)
           }
-          if(gettest) {
-            dft <- sitar::getTakeoff(x[,1], x[,2]) 
-            dft[1] <- ifunx_(dft[1]) # prepare_data2
-          } else {
-            dft <- NULL
-          }
-          if(getcest) {
-            dfc <- getcgvfunc(x[,1], x[,2]) 
-            dfc[1] <- ifunx_(dfc[1]) # prepare_data2
-          } else {
-            dfc <- NULL
-          }
-          cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
+          onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
         }
         
-        onex0 <- zxdraws %>% 
-          collapse::fgroup_by(drawidby) %>% 
-          collapse::fsummarise(collapse::mctl(funx(cbind(.data[[xvar]], 
-                                                         .data[[parmest]])), 
-                                              names = F)) %>% 
-          collapse::ftransformv(., 'V2', as.numeric) %>% 
-          collapse::frename(., drawidby_) %>% 
-          collapse::fsubset(., parameter %in% parm)
         
-      } else {
-        drawid_c <- list()
-        for (drawidi in 1:nlevels(zxdraws$drawid)) {
-          drawid_c[[drawidi]] <- zxdraws %>% dplyr::filter(drawid == drawidi) %>%
-            dplyr::group_by_at(by) %>%
-            dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw, parm = parm),
-                                .keep = TRUE) %>%
-            dplyr::mutate(drawid = drawidi)
-        }
-        onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
-      }
-      
-      
-      #######################################################
-      
-      # This from marginaleffects does not allow na.rm
-      # So use stats::quantile instead
-      get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
-      get_etix <- stats::quantile
-      get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
-      get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
-        if(data.table::is.data.table(x) | is.data.frame(x)) {
-          if(is.null(draw)) {
-            stop("Please specify the 'draw' argument")
+        #######################################################
+        
+        # This from marginaleffects does not allow na.rm
+        # So use stats::quantile instead
+        get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+        get_etix <- stats::quantile
+        get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
+        get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
+          if(data.table::is.data.table(x) | is.data.frame(x)) {
+            if(is.null(draw)) {
+              stop("Please specify the 'draw' argument")
+            }
+            x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
+              unlist() %>% as.numeric()
           }
-          x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
-            unlist() %>% as.numeric()
+          if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
+          if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
+          if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
+          if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+          tibble::tibble(
+            estimate = estimate, conf.low = luci[1],conf.high = luci[2]
+          )
         }
-        if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
-        if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-        if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
-        if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-        tibble::tibble(
-          estimate = estimate, conf.low = luci[1],conf.high = luci[2]
-        )
-      }
-      
-      
-      get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-        if(ec_agg == "mean")  estimate <- 
-            collapse::fmean(x, 
-                            na.rm = na.rm, 
-                            nthreads = arguments$cores) 
         
-        if(ec_agg == "median") estimate <- 
-            collapse::fmedian(x, 
+        
+        get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+          if(ec_agg == "mean")  estimate <- 
+              collapse::fmean(x, 
                               na.rm = na.rm, 
-                              nthreads = arguments$cores)
+                              nthreads = arguments$cores) 
+          
+          if(ec_agg == "median") estimate <- 
+              collapse::fmedian(x, 
+                                na.rm = na.rm, 
+                                nthreads = arguments$cores)
+          
+          if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+                                                         na.rm = na.rm)
+          if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+          cbind(estimate, luci[1], luci[2]) 
+        }
         
-        if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-                                                       na.rm = na.rm)
-        if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-        cbind(estimate, luci[1], luci[2]) 
-      }
-      
-      
+        
       } # end if(!parameter_numeric) {
       ##########################################################
       # end new layer of parameter_numeric
@@ -2112,12 +2112,12 @@ modelbased_growthparameters_call.bgmfit <-
       #################################################################
       #################################################################
       
-       # "marginaleffects"  "marginal_draws" "fitted_draws"
-       # Using "marginaleffects" because it gives consiatent result future T/F
+      # "marginaleffects"  "marginal_draws" "fitted_draws"
+      # Using "marginaleffects" because it gives consiatent result future T/F
       
       call_marginaleffects_marginal_draws <- "marginaleffects" 
       
-
+      
       # progressr::handlers(global = TRUE)
       # progressr::handlers("progress", "beepr")
       
@@ -2199,7 +2199,7 @@ modelbased_growthparameters_call.bgmfit <-
           marginal_draws_args[['deriv']] <- NULL
         } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
         
-       
+        
         if(call_marginaleffects_marginal_draws == "fitted_draws") {
           marginal_draws_args[['summary']] <- FALSE
         }
@@ -2326,7 +2326,7 @@ modelbased_growthparameters_call.bgmfit <-
               }
             }
           } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
-         
+          
           
           
           
@@ -2403,7 +2403,7 @@ modelbased_growthparameters_call.bgmfit <-
         
         xyvyadj_rows <- do.call(cbind, results_list)
         
-
+        
         xyadj_rows <- matrix(xyvyadj_rows[1,], nrow = length(results_list), 
                              byrow = T)
         yyadj_rows <- matrix(xyvyadj_rows[2,], nrow = length(results_list), 
@@ -2433,14 +2433,14 @@ modelbased_growthparameters_call.bgmfit <-
         # add missing xvar within the range
         xyadj_summary <- 
           dplyr::inner_join(xyadj_summary,
-                               newdata.in %>%
+                            newdata.in %>%
                               dplyr::select(dplyr::all_of(c(idvar, 
-                                                                    xvar))) %>%
-                                 dplyr::nest_by(dplyr::pick(1)) %>%
+                                                            xvar))) %>%
+                              dplyr::nest_by(dplyr::pick(1)) %>%
                               dplyr::summarise(xmin = min(dplyr::pick(1)),
-                               xmax = max(dplyr::pick(1)),
-                               .groups = 'drop'),
-                   by = idvar) %>%
+                                               xmax = max(dplyr::pick(1)),
+                                               .groups = 'drop'),
+                            by = idvar) %>%
           dplyr::mutate(missing = !between(dplyr::pick(2) %>% 
                                              dplyr::pull(), xmin, 
                                            xmax)) %>%
