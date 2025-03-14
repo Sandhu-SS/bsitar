@@ -12,11 +12,7 @@
   ndraws = NULL,
   draw_ids = NULL,
   newdata = NULL,
-  re_formula = NA,
   parameter = NULL,
-  acg_velocity = 0.1,
-  digits = 2,
-  seed = 123,
   future = FALSE,
   future_session = "multisession",
   future_splits = NULL,
@@ -48,18 +44,6 @@ in estimation (default \code{NULL}).}
 \item{newdata}{An optional data frame for estimation. If \code{NULL}
 (default), \code{newdata} is retrieved from the \code{model}.}
 
-\item{re_formula}{Option to indicate whether or not to include
-individual/group-level effects in the estimation. When \code{NA} (default),
-individual-level effects are excluded, and population average growth
-parameters are computed. When \code{NULL}, individual-level effects are
-included in the computation, and the resulting growth parameters are
-individual-specific. In both cases (\code{NA} or \code{NULL}), continuous
-and factor covariates are appropriately included in the estimation.
-Continuous covariates are set to their means by default (see
-\code{numeric_cov_at} for details), while factor covariates remain
-unaltered, allowing for the estimation of covariate-specific population
-average and individual-specific growth parameters.}
-
 \item{parameter}{A single character string or a character vector specifying
 the growth parameter(s) to be estimated. Options include \code{'tgv'}
 (takeoff growth velocity), \code{'atgv'} (age at takeoff growth velocity),
@@ -70,22 +54,6 @@ cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
 \code{parameter = 'all'}, all six parameters are estimated. Note that the
 \code{'all'} option cannot be used when the \code{by} argument is set to
 \code{TRUE}.}
-
-\item{acg_velocity}{A real number specifying the percentage of peak growth
-velocity to be used as the cessation velocity when estimating the
-\code{cgv} and \code{acgv} growth parameters. The \code{acg_velocity}
-should be greater than \code{0} and less than \code{1}. The default value
-of \code{acg_velocity = 0.10} indicates that 10 percent of the peak growth
-velocity will be used to calculate the cessation growth velocity and the
-corresponding age at cessation velocity. For example, if the peak growth
-velocity estimate is \code{10 mm/year}, then the cessation growth velocity
-will be \code{1 mm/year}.}
-
-\item{digits}{An integer (default \code{2}) to set the decimal places for
-rounding the results using the \code{\link[base:Round]{base::round()}} function.}
-
-\item{seed}{An integer (default \code{123}) that is passed to the estimation
-method to ensure reproducibility.}
 
 \item{future}{A logical value (default \code{FALSE}) to specify whether or
 not to perform parallel computations. If set to \code{TRUE}, the
@@ -184,10 +152,8 @@ outside their measurement range}
 \description{
 The \strong{modelbased_growthparameters()} function estimates
 individual growth parameters by mapping population average estimate of age
-of interest (such as age at peak growth velocity or age at take off) on
-individual velocity curves defined by individual level random effects.
-After the individual level age parameter is found, the corresponding
-distance and velocity is also estimated.
+of interest (such as age at peak growth velocity or age at take off) on to
+the individual velocity curves defined by individual level random effects.
 }
 \details{
 Since SITAR is a shape-invariant model, each individual curve has a

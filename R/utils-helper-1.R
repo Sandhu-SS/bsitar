@@ -3552,6 +3552,81 @@ refine_grid <- function(fullgrid = NULL,
 
 
 
+### avoid ggtext - it depends on jpeg whihc fails rmdcheck on ubuntu
+
+#' Title
+#'
+#' @param family 
+#' @param face 
+#' @param size 
+#' @param colour 
+#' @param fill 
+#' @param box.colour 
+#' @param linetype 
+#' @param linewidth 
+#' @param hjust 
+#' @param vjust 
+#' @param halign 
+#' @param valign 
+#' @param angle 
+#' @param lineheight 
+#' @param margin 
+#' @param padding 
+#' @param r 
+#' @param color 
+#' @param box.color 
+#' @param align_widths 
+#' @param align_heights 
+#' @param rotate_margins 
+#' @param debug 
+#' @param inherit.blank 
+#'
+#' @return A \code{aes()} object
+#' @keywords internal
+#' @noRd
+#'
+ggtextelementmarkdown <- function (family = NULL, 
+                                   face = NULL, 
+                                   size = NULL,
+                                   colour = NULL, 
+                                   fill = NULL, 
+                                   box.colour = NULL, 
+                                   linetype = NULL, 
+                                   linewidth = NULL, 
+                                   hjust = NULL, 
+                                   vjust = NULL, 
+                                   halign = NULL, 
+                                   valign = NULL, 
+                                   angle = NULL, 
+                                   lineheight = NULL, 
+                                   margin = NULL, 
+                                   padding = NULL, 
+                                   r = NULL, 
+                                   color = NULL, 
+                                   box.color = NULL, 
+                                   align_widths = NULL, 
+                                   align_heights = NULL, 
+                                   rotate_margins = NULL, 
+                                   debug = FALSE, 
+                                   inherit.blank = FALSE) {
+    if (!is.null(color)) 
+      colour <- color
+    if (!is.null(box.color)) 
+      box.colour <- box.color
+    structure(list(family = family, face = face, size = size, 
+                   colour = colour, fill = fill, box.colour = box.colour, 
+                   linetype = linetype, linewidth = linewidth, hjust = hjust, 
+                   vjust = vjust, halign = halign, valign = valign, 
+                   angle = angle, 
+                   lineheight = lineheight, margin = margin, padding = padding, 
+                   r = r, align_widths = align_widths, align_heights = align_heights, 
+                   rotate_margins = rotate_margins, debug = debug, 
+                   inherit.blank = inherit.blank), 
+              class = c("element_markdown", "element_text", "element"))
+  }
+
+
+
 
 # https://stackoverflow.com/questions/71339547/how-to-add-a-label-to-the-x-y-
 # axis-whenever-a-vertical-horizontal-line-is-ad
@@ -3578,8 +3653,11 @@ mark_value_on_xaxis <- function(plot, xval,
                                 color_text = 'black'
                                 ) {
   
-  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  try(insight::check_if_installed(c("ggplot2"), stop = FALSE, 
                                   prompt = FALSE))
+  
+  # try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  #                                 prompt = FALSE))
   
   p2 <- ggplot2::ggplot_build(plot)
   breaks <- p2$layout$panel_params[[1]]$x$breaks
@@ -3597,7 +3675,8 @@ mark_value_on_xaxis <- function(plot, xval,
                         color = color_line,
                         alpha = alpha) +
     ggplot2::scale_x_continuous(breaks = setx, labels = name) +
-    ggplot2::theme(axis.text.x = ggtext::element_markdown())
+    ggplot2::theme(axis.text.x = ggtextelementmarkdown())
+    # ggplot2::theme(axis.text.x = ggtext::element_markdown())
 }
 
 #' An internal function to extract xintercept label
@@ -3622,8 +3701,11 @@ mark_value_on_yaxis <- function(plot, yval,
                                 color_text = 'black'
                                 ) {
   
-  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  try(insight::check_if_installed(c("ggplot2"), stop = FALSE, 
                                   prompt = FALSE))
+  
+  # try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  #                                 prompt = FALSE))
   
   p2 <- ggplot2::ggplot_build(plot)
   breaks <- p2$layout$panel_params[[1]]$y$breaks
@@ -3642,7 +3724,8 @@ mark_value_on_yaxis <- function(plot, yval,
                         alpha = alpha
     ) +
     ggplot2::scale_y_continuous(breaks = setx, labels = name) +
-    ggplot2::theme(axis.text.y = ggtext::element_markdown())
+    ggplot2::theme(axis.text.y = ggtextelementmarkdown())
+    # ggplot2::theme(axis.text.y = ggtext::element_markdown())
 }
 
 
@@ -3668,8 +3751,11 @@ mark_value_of_xintercept <- function(plot,
                                      color_text = 'black'
                                      ) {
   
-  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  try(insight::check_if_installed(c("ggplot2"), stop = FALSE, 
                                   prompt = FALSE))
+  
+  # try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  #                                 prompt = FALSE))
   
   p <- plot
   p2 <- ggplot2::ggplot_build(p)
@@ -3683,32 +3769,7 @@ mark_value_of_xintercept <- function(plot,
   
   xval <- vals
   
-  ### avoid ggtext - it depends on jpeg whihc fails rmdcheck on ubuntu
-  ggtextelementmarkdown <- 
-  function (family = NULL, face = NULL, size = NULL, colour = NULL, 
-            fill = NULL, box.colour = NULL, linetype = NULL, linewidth = NULL, 
-            hjust = NULL, vjust = NULL, halign = NULL, valign = NULL, 
-            angle = NULL, lineheight = NULL, margin = NULL, padding = NULL, 
-            r = NULL, color = NULL, box.color = NULL, align_widths = NULL, 
-            align_heights = NULL, rotate_margins = NULL, debug = FALSE, 
-            inherit.blank = FALSE) 
-  {
-    if (!is.null(color)) 
-      colour <- color
-    if (!is.null(box.color)) 
-      box.colour <- box.color
-    structure(list(family = family, face = face, size = size, 
-                   colour = colour, fill = fill, box.colour = box.colour, 
-                   linetype = linetype, linewidth = linewidth, hjust = hjust, 
-                   vjust = vjust, halign = halign, valign = valign, 
-                   angle = angle, 
-                   lineheight = lineheight, margin = margin, padding = padding, 
-                   r = r, align_widths = align_widths, align_heights = align_heights, 
-                   rotate_margins = rotate_margins, debug = debug, 
-                   inherit.blank = inherit.blank), 
-              class = c("element_markdown", "element_text", "element"))
-  }
-  ###
+  
   
   color <- c(color_text, rep("black", length(breaks)  ))
   setx <- c(xval, breaks)
@@ -3749,8 +3810,11 @@ mark_value_of_yintercept <- function(plot,
                                      color_text = 'black'
                                      ) {
   
-  try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  try(insight::check_if_installed(c("ggplot2"), stop = FALSE, 
                                   prompt = FALSE))
+  
+  # try(insight::check_if_installed(c("ggplot2", "ggtext"), stop = FALSE, 
+  #                                 prompt = FALSE))
   
   p <- plot
   p2 <- ggplot2::ggplot_build(p)
@@ -3776,7 +3840,8 @@ mark_value_of_yintercept <- function(plot,
                         color = color_line,
                         alpha = alpha) +
     ggplot2::scale_y_continuous(breaks = setx, labels = name) +
-    ggplot2::theme(axis.text.y = ggtext::element_markdown())
+    ggplot2::theme(axis.text.y = ggtextelementmarkdown())
+    # ggplot2::theme(axis.text.y = ggtext::element_markdown())
 }
 
 

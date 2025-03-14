@@ -297,6 +297,10 @@ plot_curves.bgmfit <- function(model,
                                envir = NULL,
                                ...) {
   
+  
+  try(insight::check_if_installed(c("jtools", "ggplot2"), stop = FALSE, 
+                                  prompt = FALSE))
+  
   if(is.null(envir)) {
     envir <- model$model_info$envir
   } else {

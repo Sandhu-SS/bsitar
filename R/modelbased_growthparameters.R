@@ -4,11 +4,9 @@
 #' 
 #' @description The \strong{modelbased_growthparameters()} function estimates
 #'   individual growth parameters by mapping population average estimate of age
-#'   of interest (such as age at peak growth velocity or age at take off) on
-#'   individual velocity curves defined by individual level random effects.
-#'   After the individual level age parameter is found, the corresponding
-#'   distance and velocity is also estimated.
-#'   
+#'   of interest (such as age at peak growth velocity or age at take off) on to
+#'   the individual velocity curves defined by individual level random effects.
+#' 
 #' @details Since SITAR is a shape-invariant model, each individual curve has a  
 #' peak velocity point that can be mapped by knowing the population average age 
 #' at peak velocity. This hold true even when a individual lacks measurements at 
@@ -16,9 +14,6 @@
 #' 
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams marginal_growthparameters.bgmfit
-#' @inheritParams marginal_comparisons.bgmfit
-#' @inheritParams marginaleffects::predictions
-#' @inheritParams marginaleffects::plot_predictions
 #' @inheritParams brms::fitted.brmsfit
 #' 
 #' @param ... Additional arguments passed to the function. 
@@ -80,11 +75,7 @@ modelbased_growthparameters.bgmfit <-
            ndraws = NULL,
            draw_ids = NULL,
            newdata = NULL,
-           re_formula = NA,
            parameter = NULL,
-           acg_velocity = 0.10,
-           digits = 2,
-           seed = 123,
            future = FALSE,
            future_session = 'multisession',
            future_splits = NULL,
@@ -93,18 +84,11 @@ modelbased_growthparameters.bgmfit <-
            envir = NULL, 
            ...) {
     
-    
-   
     if(is.null(envir)) {
       envir <- model$model_info$envir
     } else {
       envir <- parent.frame()
     }
-    
-    
-    # Depending on dpar 'mu' or 'sigma', subset model_info
-    model <- getmodel_info(model = model, dpar = dpar)
-    
     
     ndraws_org <- ndraws
     ndraws_exe <- FALSE
@@ -117,17 +101,19 @@ modelbased_growthparameters.bgmfit <-
       ndraws <- brms::ndraws(model)
     }
     
+    if (is.null(newdata)) {
+      newdata <- model$model_info$bgmfit.data
+    } else {
+      newdata <- newdata
+    } 
+    
     out <- modelbased_growthparameters_call(model,
                     resp = resp,
                     dpar = dpar,
                     ndraws = ndraws,
                     draw_ids = draw_ids,
                     newdata = newdata,
-                    re_formula = re_formula,
                     parameter = parameter,
-                    acg_velocity = acg_velocity,
-                    digits = digits,
-                    seed = seed,
                     future = future,
                     future_session = future_session,
                     future_splits = future_splits,
@@ -136,9 +122,7 @@ modelbased_growthparameters.bgmfit <-
                     envir = envir, 
                     ...) 
     
-    
     return(out) 
-    
   }
 
 
