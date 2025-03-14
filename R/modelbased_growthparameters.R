@@ -2495,7 +2495,7 @@ modelbased_growthparameters.bgmfit <-
       # parameter_numeric
       if(parameter_numeric) {
         value <- NULL;
-        onex0 <- tibble::as_tibble(1:max(eval_draw_ids)) %>% 
+        onex0 <- tibble::as_tibble(1:length(eval_draw_ids)) %>% 
           dplyr::mutate(estimate = parameter) %>% 
           dplyr::mutate(parameter = "xxx") %>% # dummy
           dplyr::rename(drawid = value) %>% 
