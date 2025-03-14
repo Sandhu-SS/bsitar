@@ -85,10 +85,8 @@ Suggests:
     R.rsp,   
     graphics,
     grDevices,
-    ggtext,
     glue,
-    stats,
-    devtools
+    stats    
 URL: https://github.com/Sandhu-SS/bsitar
 BugReports: https://github.com/Sandhu-SS/bsitar/issues
 Additional_repositories:

@@ -3683,6 +3683,33 @@ mark_value_of_xintercept <- function(plot,
   
   xval <- vals
   
+  ### avoid ggtext - it depends on jpeg whihc fails rmdcheck on ubuntu
+  ggtextelementmarkdown <- 
+  function (family = NULL, face = NULL, size = NULL, colour = NULL, 
+            fill = NULL, box.colour = NULL, linetype = NULL, linewidth = NULL, 
+            hjust = NULL, vjust = NULL, halign = NULL, valign = NULL, 
+            angle = NULL, lineheight = NULL, margin = NULL, padding = NULL, 
+            r = NULL, color = NULL, box.color = NULL, align_widths = NULL, 
+            align_heights = NULL, rotate_margins = NULL, debug = FALSE, 
+            inherit.blank = FALSE) 
+  {
+    if (!is.null(color)) 
+      colour <- color
+    if (!is.null(box.color)) 
+      box.colour <- box.color
+    structure(list(family = family, face = face, size = size, 
+                   colour = colour, fill = fill, box.colour = box.colour, 
+                   linetype = linetype, linewidth = linewidth, hjust = hjust, 
+                   vjust = vjust, halign = halign, valign = valign, 
+                   angle = angle, 
+                   lineheight = lineheight, margin = margin, padding = padding, 
+                   r = r, align_widths = align_widths, align_heights = align_heights, 
+                   rotate_margins = rotate_margins, debug = debug, 
+                   inherit.blank = inherit.blank), 
+              class = c("element_markdown", "element_text", "element"))
+  }
+  ###
+  
   color <- c(color_text, rep("black", length(breaks)  ))
   setx <- c(xval, breaks)
   labs <- as.character(setx)
@@ -3695,7 +3722,8 @@ mark_value_of_xintercept <- function(plot,
                         color = color_line,
                         alpha = alpha) +
     ggplot2::scale_x_continuous(breaks = setx, labels = name) +
-    ggplot2::theme(axis.text.x = ggtext::element_markdown())
+    ggplot2::theme(axis.text.x = ggtextelementmarkdown())
+    # ggplot2::theme(axis.text.x = ggtext::element_markdown())
 }
 
 
