@@ -79,6 +79,22 @@ jobs:
             statmod
             diffobj
             betareg
+            dtplyr
+            doParallel
+            jtools
+            fastplyr
+            doFuture
+            cheapr
+            installr
+            patchwork
+            pracma
+            bookdown
+            kableExtra
+            spelling
+            Hmisc
+            ggtext
+            devtools
+
 
       - name: Build Cmdstan
         run: |
