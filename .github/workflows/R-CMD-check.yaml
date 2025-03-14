@@ -62,6 +62,9 @@ jobs:
             mice
             BH
             MCMCglmm
+            ape
+            stan-dev/cmdstanr
+            RcppEigen
             testthat
             emmeans
             projpred
@@ -75,6 +78,7 @@ jobs:
             arm
             statmod
             diffobj
+            betareg
 
       - name: Build Cmdstan
         run: |
