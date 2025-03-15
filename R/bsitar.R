@@ -5937,14 +5937,19 @@ bsitar <- function(x,
      
       # Ignore outcome ysi because it remains transformed
       check_for_validy_of_prepare_transformations_0 <- 
-        check_for_validy_of_prepare_transformations_0 %>% dplyr::select(-ysi)
+        check_for_validy_of_prepare_transformations_0 %>% 
+        # dplyr::select(-ysi)
+        dplyr::select(-dplyr::all_of(ysi))
       check_for_validy_of_prepare_transformations_4 <- 
-        check_for_validy_of_prepare_transformations_4 %>% dplyr::select(-ysi)
+        check_for_validy_of_prepare_transformations_4 %>% 
+        dplyr::select(-dplyr::all_of(ysi))
       
       check_for_validy_of_prepare_transformations_3 <- 
-        check_for_validy_of_prepare_transformations_3 %>% dplyr::select(-ysi)
+        check_for_validy_of_prepare_transformations_3 %>% 
+        dplyr::select(-dplyr::all_of(ysi))
       check_for_validy_of_prepare_transformations_5 <- 
-        check_for_validy_of_prepare_transformations_5 %>% dplyr::select(-ysi)
+        check_for_validy_of_prepare_transformations_5 %>% 
+        dplyr::select(-dplyr::all_of(ysi))
       
       # 
       if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_0,
@@ -9741,13 +9746,18 @@ bsitar <- function(x,
       
       # Ignore outcome ysi becuase it remains transformed
       check_for_validy_of_prepare_transformations_0_custom <- 
-        check_for_validy_of_prepare_transformations_0_custom %>% dplyr::select(-ys)
+        check_for_validy_of_prepare_transformations_0_custom %>% 
+        # dplyr::select(-ys)
+        dplyr::select(-dplyr::all_of(ys))
       check_for_validy_of_prepare_transformations_4_custom <- 
-        check_for_validy_of_prepare_transformations_4_custom %>% dplyr::select(-ys)
+        check_for_validy_of_prepare_transformations_4_custom %>% 
+        dplyr::select(-dplyr::all_of(ys))
       check_for_validy_of_prepare_transformations_3_custom <- 
-        check_for_validy_of_prepare_transformations_3_custom %>% dplyr::select(-ys)
+        check_for_validy_of_prepare_transformations_3_custom %>% 
+        dplyr::select(-dplyr::all_of(ys))
       check_for_validy_of_prepare_transformations_5_custom <- 
-        check_for_validy_of_prepare_transformations_5_custom %>% dplyr::select(-ys)
+        check_for_validy_of_prepare_transformations_5_custom %>% 
+        dplyr::select(-dplyr::all_of(ys))
       
       if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_0_custom,
                            check_for_validy_of_prepare_transformations_4_custom))) {

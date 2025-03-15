@@ -5,10 +5,12 @@ test_that("bsitar works fully with default backend", {
                     id = factor(rep(c("a", "b"),times=c(5,5))))
   
   expect_type(bsitar(x=x, y=y, id=id, data = dat, backend = "rstan",
+                     threads = threading(NULL),
                    get_stancode = TRUE, sample_prior = "only"),
                "character")
   
   expect_type(bsitar(x=x, y=y, id=id, data = dat, backend = "rstan",
+                     threads = threading(NULL),
                      get_standata = TRUE, sample_prior = "only"),
               "list")
   
