@@ -22,7 +22,7 @@
   aux_variables = NULL,
   ipts = 10,
   deriv = 0,
-  deriv_model = TRUE,
+  model_deriv = TRUE,
   summary = TRUE,
   robust = FALSE,
   transform = NULL,
@@ -40,7 +40,7 @@
   clearenvfuns = NULL,
   funlist = NULL,
   itransform = NULL,
-  newdata_fixed = FALSE,
+  newdata_fixed = NULL,
   envir = NULL,
   ...
 )
@@ -147,9 +147,9 @@ growth curves.}
 or its derivative (velocity curve). The default \code{deriv = 0} is for
 the distance curve, while \code{deriv = 1} is for the velocity curve.}
 
-\item{deriv_model}{A logical value specifying whether to estimate the
+\item{model_deriv}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the
-distance curve. Set \code{deriv_model = TRUE} for functions that require
+distance curve. Set \code{model_deriv = TRUE} for functions that require
 the velocity curve, such as \code{growthparameters()} and
 \code{plot_curves()}. Set it to \code{NULL} for functions that use the
 distance curve (i.e., fitted values), such as \code{loo_validation()} and
@@ -290,11 +290,22 @@ selected automatically. Note that when no match for \code{xvar} is found in
 the \code{data,frame}, the \code{itransform} will be ignored within the
 calling function, \code{'prepare_transformations()'}.}
 
-\item{newdata_fixed}{A logical (default \code{FALSE}) indicating whether to
-consider user provided \code{newdata} (\code{newdata = TRUE}) as it is
-without checking for whether the data format is appropriate for model fit
-and if not, then preparing the data internally with required
-transformations that were part of the model fitting.}
+\item{newdata_fixed}{An indicator to specify whether to check for the data
+format and structure of the user provided \code{newdata} and apply needed
+\code{prepare_data2} and \code{prepare_transformations}
+(\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
+(\code{newdata = TRUE}) as it is without checking for the data format or
+applying \code{prepare_data2} and \code{prepare_transformations}
+(\code{newdata_fixed = 0}), check for the data format and if needed,
+prepare data format using \code{prepare_data2} (\code{newdata_fixed = 1}),
+or apply \code{prepare_transformations} only assuming that data format is
+correct (\code{newdata_fixed = 2}). It is strongly recommended that user
+either leave the \code{newdata = NULL} and \code{newdata_fixed = NULL} in
+which case data used in the model fitting is automatically retrieved and
+checked for the required data format and transformations, and if needed,
+\code{prepare_data2} and \code{prepare_transformations} are applied
+internally. The other flags provided for  \code{newdata_fixed = 0, 1, 2}
+are mainly for the internal use during post-processing.}
 
 \item{envir}{The environment used for function evaluation. The default is
 \code{NULL}, which sets the environment to \code{parent.frame()}. Since
@@ -341,7 +352,7 @@ same manner, allowing users to specify all options available in
 
 # To avoid time-consuming model estimation, the Bayesian SITAR model fit to 
 # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
-# See the 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
+# See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
 # Check if the model fit object 'berkeley_exfit' exists
 berkeley_exfit <- getNsObject(berkeley_exfit)

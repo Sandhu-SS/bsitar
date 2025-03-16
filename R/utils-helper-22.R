@@ -87,7 +87,7 @@ modelbased_growthparameters_call.bgmfit <-
            showlegends = NULL, 
            variables = NULL,
            deriv = NULL,
-           deriv_model = NULL,
+           model_deriv = NULL,
            method = 'custom',
            marginals = NULL, 
            pdraws = FALSE, 
@@ -118,7 +118,7 @@ modelbased_growthparameters_call.bgmfit <-
            clearenvfuns = NULL,
            funlist = NULL,
            itransform = NULL,
-           newdata_fixed = FALSE,
+           newdata_fixed = NULL,
            envir = NULL, 
            ...) {
     
@@ -345,40 +345,40 @@ modelbased_growthparameters_call.bgmfit <-
     
     
     
-    if(is.null(deriv_model)) {
+    if(is.null(model_deriv)) {
       if(is.null(deriv)) {
-        deriv_model <- FALSE
+        model_deriv <- FALSE
       } else if(deriv == 0) {
-        deriv_model <- FALSE
+        model_deriv <- FALSE
       } else if(deriv == 1) {
-        deriv_model <- TRUE
+        model_deriv <- TRUE
       }
-    } else if(!is.null(deriv_model)) {
-      if(is.null(deriv) & !deriv_model) {
+    } else if(!is.null(model_deriv)) {
+      if(is.null(deriv) & !model_deriv) {
         deriv <- 0
-        deriv_model <- FALSE
-      } else if(is.null(deriv) & deriv_model) {
+        model_deriv <- FALSE
+      } else if(is.null(deriv) & model_deriv) {
         deriv <- 1
-        deriv_model <- TRUE
+        model_deriv <- TRUE
       }
     }
     
     
-    # if(is.null(deriv) & is.null(deriv_model)) {
+    # if(is.null(deriv) & is.null(model_deriv)) {
     #   deriv <- 0
-    #   deriv_model <- FALSE
-    # } else if(deriv == 0 & is.null(deriv_model)) {
+    #   model_deriv <- FALSE
+    # } else if(deriv == 0 & is.null(model_deriv)) {
     #   deriv <- 0
-    #   deriv_model <- FALSE
-    # } else if(deriv == 1 & is.null(deriv_model)) {
+    #   model_deriv <- FALSE
+    # } else if(deriv == 1 & is.null(model_deriv)) {
     #   deriv <- 1
-    #   deriv_model <- TRUE
-    # } else if(is.null(deriv) & !deriv_model) {
+    #   model_deriv <- TRUE
+    # } else if(is.null(deriv) & !model_deriv) {
     #   deriv <- 0
-    #   deriv_model <- FALSE
-    # } else if(is.null(deriv) & deriv_model) {
+    #   model_deriv <- FALSE
+    # } else if(is.null(deriv) & model_deriv) {
     #   deriv <- 1
-    #   deriv_model <- TRUE
+    #   model_deriv <- TRUE
     # }
     
     
@@ -395,7 +395,7 @@ modelbased_growthparameters_call.bgmfit <-
     
     if(method == 'custom') {
       deriv <- 1
-      deriv_model <- TRUE
+      model_deriv <- TRUE
       if(verbose) message("For method = 'custom', deriv is set to TRUE")
     }
     
@@ -529,10 +529,6 @@ modelbased_growthparameters_call.bgmfit <-
     parm <- parameter
     
     
-    # print(parameter_numeric)
-    # stop()
-    
-    
     conf <- conf_level
     probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
     probtitles <- probs[order(probs)] * 100
@@ -540,7 +536,7 @@ modelbased_growthparameters_call.bgmfit <-
     set_names_  <- c('Estimate', probtitles)
     
     if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") deriv_model<- FALSE
+      if(model$model_info$decomp == "QR") model_deriv<- FALSE
     }
     
     expose_method_set <- model$model_info[['expose_method']]
@@ -561,10 +557,10 @@ modelbased_growthparameters_call.bgmfit <-
     post_processing_checks_args[['check_d1']] <- TRUE
     post_processing_checks_args[['check_d2']] <- FALSE
     
-    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
     post_processing_checks_args[['all']]      <- TRUE
-    oall <- do.call(post_processing_checks, post_processing_checks_args)
+    oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
     
     # o <- post_processing_checks(model = model,
@@ -600,7 +596,7 @@ modelbased_growthparameters_call.bgmfit <-
                       o = o, oall = oall,
                       usesavedfuns = usesavedfuns,
                       deriv = deriv, envir = envir,
-                      deriv_model = deriv_model,
+                      model_deriv = model_deriv,
                       ...)
     
     if(is.null(test)) return(invisible(NULL))
@@ -617,7 +613,7 @@ modelbased_growthparameters_call.bgmfit <-
     
     ########################################################
     # Decide here -> no 'x', 'log' or 'sqrt'
-    # Then need 'deriv_model = FALSE' and 'deriv = 0'
+    # Then need 'model_deriv = FALSE' and 'deriv = 0'
     # This because print(o[[2]]) function d1 is not reliable- see prepare_function
     # This has already been taken care off in prepare_function by excluding d1
     ########################################################
@@ -637,15 +633,15 @@ modelbased_growthparameters_call.bgmfit <-
     # This been moved to post_processing_checks
     # if(!available_fund1) {
     #   deriv       <- 0
-    #   deriv_model <- FALSE
+    #   model_deriv <- FALSE
     #   if(verbose) {
-    #     message("Since no 'd1' found, setting 'deriv_model = FALSE', 'deriv = 0'")
+    #     message("Since no 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
     #   }
     # }
     ########################################################
     
     
-    # Below deriv/deriv_model will be over riddent for both 'pkg' and 'custom'
+    # Below deriv/model_deriv will be over riddent for both 'pkg' and 'custom'
     
     # This borrowed from marginal_draws
     call_predictions <- TRUE
@@ -655,12 +651,12 @@ modelbased_growthparameters_call.bgmfit <-
     o_org <- o
     if(!available_d1) {
       deriv       <- 0
-      deriv_model <- FALSE
+      model_deriv <- FALSE
       call_predictions <- FALSE
       call_slopes      <- TRUE
       # re-get o[[2]] as _do
       post_processing_checks_args[['deriv']]    <- 0
-      o    <- do.call(post_processing_checks, post_processing_checks_args)
+      o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
       o_available_d1_F <- o
     }
     
@@ -672,7 +668,7 @@ modelbased_growthparameters_call.bgmfit <-
     #                   usesavedfuns = usesavedfuns, 
     #                   deriv = post_processing_checks_args[['deriv']], 
     #                   envir = envir, 
-    #                   deriv_model = deriv_model, 
+    #                   model_deriv = model_deriv, 
     #                   ...)
     # 
     # if(is.null(test)) return(invisible(NULL))
@@ -692,36 +688,37 @@ modelbased_growthparameters_call.bgmfit <-
     
     
     
-    xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-    scall <- sys.calls()
+    # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+    # scall <- sys.calls()
+    # 
+    # get_xcall <- function(xcall, scall) {
+    #   scall <- scall[[length(scall)]]
+    #   if(any(grepl("modelbased_growthparameters_call", scall, fixed = T)) |
+    #      any(grepl("modelbased_growthparameters_call.bgmfit", scall, fixed = T))) {
+    #     xcall <- "modelbased_growthparameters_call"
+    #   } else {
+    #     xcall <- xcall
+    #   }
+    # }
+    # 
+    # 
+    # 
+    # if(xcall == "do.call" | xcall == "CustomDoCall") {
+    #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
+    #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
+    #   zzz <- strsplit(zzz, ",")[[1]][1]
+    #   xcall <- strsplit(zzz, "\\.")[[1]][1]
+    # } else {
+    #   if(!is.null(model$xcall)) {
+    #     if(model$xcall == "modelbased_growthparameters_call") {
+    #       xcall <- "modelbased_growthparameters_call"
+    #     }
+    #   } else {
+    #     scall <- sys.calls()
+    #     xcall <- get_xcall(xcall, scall)
+    #   }
+    # }
     
-    get_xcall <- function(xcall, scall) {
-      scall <- scall[[length(scall)]]
-      if(any(grepl("modelbased_growthparameters_call", scall, fixed = T)) |
-         any(grepl("modelbased_growthparameters_call.bgmfit", scall, fixed = T))) {
-        xcall <- "modelbased_growthparameters_call"
-      } else {
-        xcall <- xcall
-      }
-    }
-    
-    
-    
-    if(xcall == "do.call" | xcall == "CustomDoCall") {
-      zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-      zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-      zzz <- strsplit(zzz, ",")[[1]][1]
-      xcall <- strsplit(zzz, "\\.")[[1]][1]
-    } else {
-      if(!is.null(model$xcall)) {
-        if(model$xcall == "modelbased_growthparameters_call") {
-          xcall <- "modelbased_growthparameters_call"
-        }
-      } else {
-        scall <- sys.calls()
-        xcall <- get_xcall(xcall, scall)
-      }
-    }
     
     # if(!is.null(model$xcall)) {
     #   if(model$xcall == "modelbased_growthparameters_call") {
@@ -734,6 +731,23 @@ modelbased_growthparameters_call.bgmfit <-
     
     
     # xcall <- xcall
+    
+    # for first TRUE, use min(which(lv == TRUE))
+    
+    rlang_trace_back <- rlang::trace_back()
+    check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
+    if(all(!check_trace_back.bgmfit)) {
+      # nothing
+    } else {
+      rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
+      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
+      xcall <- rlang_call_name
+    }
+    
+    
+      
+    
     
     
     
@@ -965,7 +979,7 @@ modelbased_growthparameters_call.bgmfit <-
                                     verbose = verbose)
     
     full.args$model <- model
-    full.args$deriv_model <- deriv_model
+    full.args$model_deriv <- model_deriv
     
     
     if(is.null(full.args$hypothesis) & is.null(full.args$equivalence)) {
@@ -983,12 +997,22 @@ modelbased_growthparameters_call.bgmfit <-
     
     full.args$newdata <- newdata
     
-    if(!newdata_fixed) {
-      newdata           <- do.call(get.newdata, full.args)
-    }
+    full.args <- 
+      sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                 arguments = full.args, 
+                                 check_formalArgs = NULL,
+                                 check_formalArgs_exceptions = NULL,
+                                 check_trace_back = NULL,
+                                 envir = parent.frame())
     
-    # newdata           <- do.call(get.newdata, full.args)
+   
     
+    
+    
+    newdata           <- CustomDoCall(get.newdata, full.args)
+    
+    
+
     
     if(!is.na(uvarby)) {
       uvarby_ind <- paste0(uvarby, resp)
@@ -1018,7 +1042,7 @@ modelbased_growthparameters_call.bgmfit <-
         levels_id,
         avg_reffects,
         deriv,
-        deriv_model,
+        model_deriv,
         ipts,
         seed,
         future,
@@ -1070,14 +1094,14 @@ modelbased_growthparameters_call.bgmfit <-
     
     
     
-    if(deriv == 0 & deriv_model) 
-      stop("If argument 'deriv_model = TRUE', then 'deriv' should be '1'")
-    if(deriv == 1 & !deriv_model) 
-      stop("If argument 'deriv_model' = FALSE, then 'deriv' should be '0'")
+    if(deriv == 0 & model_deriv) 
+      stop("If argument 'model_deriv = TRUE', then 'deriv' should be '1'")
+    if(deriv == 1 & !model_deriv) 
+      stop("If argument 'model_deriv' = FALSE, then 'deriv' should be '0'")
     
     if (!is.null(variables)) {
       if (!is.list(variables)) {
-        if(!deriv_model) {
+        if(!model_deriv) {
           stop("'variables' argument must be a named list and the first ", 
                "element should be ", xvar, 
                "\n ",
@@ -2186,7 +2210,7 @@ modelbased_growthparameters_call.bgmfit <-
         marginal_draws_args[['takeoff']] <- NULL
         marginal_draws_args[['trough']] <- NULL
         marginal_draws_args[['acgv']] <- NULL
-        marginal_draws_args[['newdata_fixed']] <- TRUE
+        marginal_draws_args[['newdata_fixed']] <- 0
         marginal_draws_args[['pdrawsp']] <-  "return"
         marginal_draws_args[['newdata']] <- newdata 
         

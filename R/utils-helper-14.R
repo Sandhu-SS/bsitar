@@ -35,6 +35,7 @@ get.newdata <- function(model,
                         xrange = NULL,
                         idata_method = NULL,
                         dummy_to_factor = NULL,
+                        newdata_fixed = NULL,
                         verbose = FALSE,
                         ...) {
   
@@ -85,14 +86,11 @@ get.newdata <- function(model,
   xfun  <- model$model_info[[xfun_]]
   yfun  <- model$model_info[[yfun_]]
   
-  
   cov_       <- paste0('cov', resp_rev_)
   cov_sigma_ <- paste0('cov_sigma', resp_rev_)
   uvarby     <- model$model_info$univariate_by$by
   
-  
   # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
-  #if(idata_method == 'm2') {
   if(is.null(levels_id)) {
     if(is.null(IDvar)) {
       if(!is.null(model$model_info[['idvars']])) {
@@ -100,25 +98,15 @@ get.newdata <- function(model,
       }
     }
   }
-  #}
   
-  
-  ##################################################
-  # prepare_data2 changes 
-  # if (is.null(newdata)) {
-  #   if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
-  #   if(idata_method == 'm2') newdata <- model$data
-  # } else {
-  #   newdata <- newdata
-  # }
-  ##################################################
-  
+ 
   if (is.null(newdata)) {
     if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
     if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
   } else {
     newdata <- newdata
   }
+  newdata.in <- newdata
   
 
   if(!is.null(dummy_to_factor)) {
@@ -175,81 +163,47 @@ get.newdata <- function(model,
   # }
   
   
-  
-  
   newdata <- check_newdata_args(model, newdata, IDvar, resp)
   
   
-  ##################################################
-  # prepare_data2 changes 
-  # if (!is.na(model$model_info$univariate_by$by)) {
-  #   if (is.symbol(model$model_info$call.bgmfit$y)) {
-  #     setorgy <- deparse(model$model_info$call.bgmfit$y)
-  #   } else if (is.list(model$model_info$call.bgmfit$y)) {
-  #     setorgy <- unname(unlist(model$model_info$call.bgmfit$y))
-  #     if (is.symbol(setorgy))
-  #       setorgy <- deparse(setorgy)
-  #   } else {
-  #     setorgy <- model$model_info$call.bgmfit$y
-  #   }
-  # }
-  # 
-  # if (is.na(model$model_info$univariate_by$by)) {
-  #   setorgy <- model$model_info$ys
-  # }
-  # 
-  # 
-  # if (idata_method == 'm1') {
-  #   newdata <- prepare_data2(
-  #     # newdata <- prepare_data(
-  #     data = newdata,
-  #     x = model$model_info$xs,
-  #     y = setorgy,
-  #     id = model$model_info$ids,
-  #     uvarby = model$model_info$univariate_by$by,
-  #     mvar = model$model_info$multivariate$mvar,
-  #     xfuns = model$model_info$xfuns,
-  #     yfuns = model$model_info$yfuns,
-  #     outliers = model$model_info$outliers)
-  # }
-  ##################################################
 
   # prepare_data2 with model = model will get all the necessary info
-  newdata <- prepare_data2(data = newdata, model = model)
-  newdata <- prepare_transformations(data = newdata, model = model)
   
-
+  add_just_list_c <- FALSE
+  if(is.null(newdata_fixed)) {
+    newdata <- prepare_data2(data = newdata, model = model)
+    newdata <- prepare_transformations(data = newdata, model = model)
+  } else if(!is.null(newdata_fixed)) {
+    if(newdata_fixed == 0) {
+      # do nothing assuming that user has set up for 'uvarby' etc
+      # just apply 'dummy_to_factor'
+      # only list_c elements will be added
+      newdata <- newdata 
+      add_just_list_c <- TRUE
+    } else if(newdata_fixed == 1) {
+      newdata <- prepare_data2(data = newdata, model = model)
+    } else if(newdata_fixed == 2) {
+      newdata <- prepare_transformations(data = newdata, model = model)
+    } else if(newdata_fixed == 3) {
+      return(newdata) # i.e., not even applied 'dummy_to_factor' and return
+    } else {
+      stop("'newdata_fixed' should be either NULL or an integer, 1, 2, or 3")
+    }
+  }
+  
   
   newdata <- newdata[,!duplicated(colnames(newdata))]
   
   ##################################################
   # prepare_data2 changes 
   if (!is.na(model$model_info$univariate_by$by)) {
-    # if(idata_method == 'm1') {
-    #   sortbylayer <- NA
-    #   newdata <- newdata %>%
-    #     dplyr::mutate(sortbylayer =
-    #                     forcats::fct_relevel(!!as.name(uvarby),
-    #                                          (levels(
-    #                                            !!as.name(uvarby)
-    #                                          )))) %>%
-    #     dplyr::arrange(sortbylayer) %>%
-    #     dplyr::mutate(!!as.name(IDvar) := factor(!!as.name(IDvar),
-    #                                              levels =
-    #                                                unique(!!as.name(IDvar)))) %>%
-    #     dplyr::select(-sortbylayer)
-    # } # if(idata_method == 'm1') {
-    ##################################################
-    
-    subindicatorsi <- model$model_info$subindicators[grep(resp,
-                                                          model$model_info$yvars)]
-    # This aux_variables used in idatafunction etc in idata_method = 1
-    # otherwise subindicatorsi is not passed to fitted etc
+    subindicatorsi <- 
+      model$model_info$subindicators[grep(resp,
+                                          model$model_info$yvars)]
     aux_variables <- subindicatorsi
-    
     list_c[['subindicatorsi']] <- subindicatorsi
     list_c[['uvarby']]         <- model$model_info$univariate_by$by
-  } # end if (!is.na(model$model_info$univariate_by$by)) {
+  } 
   
   
   covars_extrcation <- function(str) {
@@ -343,6 +297,27 @@ get.newdata <- function(model,
     if(idata_method == 'm1') groupby_fstr <- c(uvarby, groupby_fstr)
     if(idata_method == 'm1') groupby_fistr <- c(uvarby, groupby_fistr)
   }
+  
+  
+  if(add_just_list_c) {
+    list_c[['xvar']] <- xvar
+    list_c[['yvar']] <- yvar
+    list_c[['IDvar']] <- IDvar
+    list_c[['cov_vars']] <- cov_vars
+    list_c[['cov_factor_vars']] <- cov_factor_vars
+    list_c[['cov_numeric_vars']] <- cov_numeric_vars
+    list_c[['groupby_fstr']] <- groupby_fstr
+    list_c[['groupby_fistr']] <- groupby_fistr
+    
+    attr(newdata, 'list_c') <- list_c
+    return(newdata)
+  }
+  
+  
+  
+  
+  
+  
   
   
   set_numeric_cov_at <- function(x, numeric_cov_at) {
@@ -740,7 +715,7 @@ get.newdata <- function(model,
               xrange = xrange,
               keeplevels = FALSE, 
               asdf = FALSE,
-              get.newdata.call = TRUE
+              newdata_fixed = 0
             )
         }
         
@@ -751,78 +726,9 @@ get.newdata <- function(model,
       if (is.null(ipts)) {
         newdata <- newdata
       }
-      
-      
+     
       ##################################################
-      # prepare_data2 changes 
-      # if (!is.null(ipts)) {
-      #   # outliers must be NULL
-      #   # Because these has already been taken care of by get.newdata
-      #   if (!is.na(model$model_info$univariate_by$by)) {
-      #     if (is.symbol(model$model_info$call.bgmfit$y)) {
-      #       setorgy <- deparse(model$model_info$call.bgmfit$y)
-      #     } else if (is.list(model$model_info$call.bgmfit$y)) {
-      #       setorgy <- unname(unlist(model$model_info$call.bgmfit$y))
-      #       if (is.symbol(setorgy))
-      #         setorgy <- deparse(setorgy)
-      #     } else {
-      #       setorgy <- model$model_info$call.bgmfit$y
-      #     }
-      #   }
-      #   
-      #   if (is.na(model$model_info$univariate_by$by)) {
-      #     setorgy <- model$model_info$ys
-      #   }
-      #   
-      #   if (idata_method == 'm1') {
-      #     newdata <- prepare_data2(
-      #       # newdata <- prepare_data(
-      #       data = newdata,
-      #       x = model$model_info$xs,
-      #       y = setorgy,
-      #       id = model$model_info$ids,
-      #       uvarby = model$model_info$univariate_by$by,
-      #       mvar = model$model_info$multivariate$mvar,
-      #       xfuns = model$model_info$xfuns,
-      #       yfuns = model$model_info$yfuns,
-      #       outliers = NULL) # model$model_info$outliers
-      #   } # if (idata_method == 'm1') {
-      #   
-      # }
-      ##################################################
-      
-      # dont repeate prepare_data2 call 
-      if (!is.null(ipts)) {
-        # prepare_data2 with model = model will get all the necessary info
-      #  newdata <- prepare_data2(data = newdata, model = model)
-      }
-      
-      
-      ##################################################
-      # prepare_data2 changes 
-      # if (!is.na(model$model_info$univariate_by$by)) {
-      #   if(idata_method == 'm1') {
-      #     sortbylayer <- NA
-      #     unique_names <- unique(names(newdata))
-      #     newdata <- newdata %>% dplyr::select(dplyr::all_of(unique_names))
-      #     newdata <- newdata %>%
-      #       dplyr::mutate(sortbylayer =
-      #                       forcats::fct_relevel(!!as.name(uvarby),
-      #                                            (levels(
-      #                                              !!as.name(uvarby)
-      #                                            )))) %>%
-      #       dplyr::arrange(sortbylayer) %>%
-      #       dplyr::mutate(!!as.name(IDvar) :=
-      #                       factor(!!as.name(IDvar),
-      #                              levels =
-      #                                unique(!!as.name(IDvar)))) %>%
-      #       dplyr::select(-sortbylayer)
-      #   } # if(idata_method == 'm1') {
-      # }
-      ##################################################
-      
-      
-      newdata.oo <- get.data.grid(
+      newdata.get.data.grid <- get.data.grid(
         data = newdata,
         xvar = xvar,
         yvar = yvar,
@@ -833,10 +739,7 @@ get.newdata <- function(model,
         uvarby = uvarby
       )
       
-      
-      #         newdata <- check_newdata_args(model, newdata, IDvar, resp)
-      
-      j_b_names <- intersect(names(newdata), names(newdata.oo))
+      j_b_names <- intersect(names(newdata), names(newdata.get.data.grid))
       j_b_names__ <- c(j_b_names, cov_numeric_vars)
       j_b_names__ <- unique(j_b_names__)
       
@@ -844,7 +747,7 @@ get.newdata <- function(model,
         newdata <-
           newdata %>% 
           dplyr::left_join(., 
-                           newdata.oo %>%
+                           newdata.get.data.grid %>%
                              dplyr::select(dplyr::all_of(j_b_names__)),
                            by = j_b_names)
         
@@ -858,14 +761,13 @@ get.newdata <- function(model,
           newdata <-
             newdata %>% 
             dplyr::left_join(., 
-                             newdata.oo %>%
+                             newdata.get.data.grid %>%
                                dplyr::select(dplyr::all_of(j_b_names__)),
                              by = j_b_names)
         } else if(length(unique(newdata[[name_hypothetical_id]])) == 1) {
           newdata <- newdata
         }
       } # else if(idata_method == 'm2') {
-      
       
       return(newdata)
     }
@@ -894,8 +796,6 @@ get.newdata <- function(model,
   list_c[['groupby_fistr']] <- groupby_fistr
   
   attr(newdata, 'list_c') <- list_c
-  
-  
   
   return(newdata)
 } # get.newdata

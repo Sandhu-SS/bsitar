@@ -113,7 +113,7 @@
 #'   \pkg{marginaleffects} package, as velocity is usually computed by
 #'   differentiating the distance curve using the \code{dydx} approach. When
 #'   using this default, the argument \code{deriv} is automatically set to
-#'   \code{0} and \code{deriv_model} to \code{FALSE}. If parameters are to be
+#'   \code{0} and \code{model_deriv} to \code{FALSE}. If parameters are to be
 #'   estimated based on the model's first derivative, \code{deriv} must be set
 #'   to \code{1} and \code{variables} will be defined as \code{variables =
 #'   list('age' = 0)}. Note that if the default behavior is used (\code{deriv =
@@ -416,7 +416,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                              showlegends = NULL, 
                                              variables = NULL,
                                              deriv = NULL,
-                                             deriv_model = NULL,
+                                             model_deriv = NULL,
                                              method = 'custom',
                                              marginals = NULL, 
                                              pdraws = FALSE, 
@@ -562,7 +562,7 @@ marginal_growthparameters.bgmfit <- function(model,
   if(is.null(envir)) {
     envir <- model$model_info$envir
   } else {
-    envir <- parent.frame()
+    envir <- envir
   }
   
   
@@ -644,40 +644,40 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   
-  if(is.null(deriv_model)) {
+  if(is.null(model_deriv)) {
     if(is.null(deriv)) {
-      deriv_model <- FALSE
+      model_deriv <- FALSE
     } else if(deriv == 0) {
-      deriv_model <- FALSE
+      model_deriv <- FALSE
     } else if(deriv == 1) {
-      deriv_model <- TRUE
+      model_deriv <- TRUE
     }
-  } else if(!is.null(deriv_model)) {
-    if(is.null(deriv) & !deriv_model) {
+  } else if(!is.null(model_deriv)) {
+    if(is.null(deriv) & !model_deriv) {
       deriv <- 0
-      deriv_model <- FALSE
-    } else if(is.null(deriv) & deriv_model) {
+      model_deriv <- FALSE
+    } else if(is.null(deriv) & model_deriv) {
       deriv <- 1
-      deriv_model <- TRUE
+      model_deriv <- TRUE
     }
   }
   
   
-  # if(is.null(deriv) & is.null(deriv_model)) {
+  # if(is.null(deriv) & is.null(model_deriv)) {
   #   deriv <- 0
-  #   deriv_model <- FALSE
-  # } else if(deriv == 0 & is.null(deriv_model)) {
+  #   model_deriv <- FALSE
+  # } else if(deriv == 0 & is.null(model_deriv)) {
   #   deriv <- 0
-  #   deriv_model <- FALSE
-  # } else if(deriv == 1 & is.null(deriv_model)) {
+  #   model_deriv <- FALSE
+  # } else if(deriv == 1 & is.null(model_deriv)) {
   #   deriv <- 1
-  #   deriv_model <- TRUE
-  # } else if(is.null(deriv) & !deriv_model) {
+  #   model_deriv <- TRUE
+  # } else if(is.null(deriv) & !model_deriv) {
   #   deriv <- 0
-  #   deriv_model <- FALSE
-  # } else if(is.null(deriv) & deriv_model) {
+  #   model_deriv <- FALSE
+  # } else if(is.null(deriv) & model_deriv) {
   #   deriv <- 1
-  #   deriv_model <- TRUE
+  #   model_deriv <- TRUE
   # }
   
   
@@ -694,7 +694,7 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(method == 'custom') {
     deriv <- 1
-    deriv_model <- TRUE
+    model_deriv <- TRUE
     if(verbose) message("For method = 'custom', deriv is set to TRUE")
   }
   
@@ -779,7 +779,7 @@ marginal_growthparameters.bgmfit <- function(model,
   set_names_  <- c('Estimate', probtitles)
   
   if(!is.null(model$model_info$decomp)) {
-    if(model$model_info$decomp == "QR") deriv_model<- FALSE
+    if(model$model_info$decomp == "QR") model_deriv<- FALSE
   }
   
   expose_method_set <- model$model_info[['expose_method']]
@@ -800,10 +800,10 @@ marginal_growthparameters.bgmfit <- function(model,
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
   
-  o    <- do.call(post_processing_checks, post_processing_checks_args)
+  o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
   post_processing_checks_args[['all']]      <- TRUE
-  oall <- do.call(post_processing_checks, post_processing_checks_args)
+  oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   post_processing_checks_args[['all']]      <- FALSE
   
   # o <- post_processing_checks(model = model,
@@ -839,7 +839,7 @@ marginal_growthparameters.bgmfit <- function(model,
                     o = o, oall = oall, 
                     usesavedfuns = usesavedfuns, 
                     deriv = deriv, envir = envir, 
-                    deriv_model = deriv_model, 
+                    model_deriv = model_deriv, 
                     ...)
   
   if(is.null(test)) return(invisible(NULL))
@@ -856,7 +856,7 @@ marginal_growthparameters.bgmfit <- function(model,
   
   ########################################################
   # Decide here -> no 'x', 'log' or 'sqrt'
-  # Then need 'deriv_model = FALSE' and 'deriv = 0'
+  # Then need 'model_deriv = FALSE' and 'deriv = 0'
   # This because print(o[[2]]) function d1 is not reliable- see prepare_function
   # This has already been taken care off in prepare_function by excluding d1
   ########################################################
@@ -876,15 +876,15 @@ marginal_growthparameters.bgmfit <- function(model,
   # This been moved to post_processing_checks
   # if(!available_fund1) {
   #   deriv       <- 0
-  #   deriv_model <- FALSE
+  #   model_deriv <- FALSE
   #   if(verbose) {
-  #     message("Since no 'd1' found, setting 'deriv_model = FALSE', 'deriv = 0'")
+  #     message("Since no 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
   #   }
   # }
   ########################################################
   
   
-  # Below deriv/deriv_model will be over riddent for both 'pkg' and 'custom'
+  # Below deriv/model_deriv will be over riddent for both 'pkg' and 'custom'
   
   # This borrowed from marginal_draws
   call_predictions <- TRUE
@@ -894,12 +894,12 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(!available_d1) {
     deriv       <- 0
-    deriv_model <- FALSE
+    model_deriv <- FALSE
     call_predictions <- FALSE
     call_slopes      <- TRUE
     # re-get o[[2]] as _do
     post_processing_checks_args[['deriv']]    <- 0
-    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   }
   
   post_processing_checks_args[['deriv']]    <- deriv
@@ -921,36 +921,36 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   
-  xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-  scall <- sys.calls()
-  
-  get_xcall <- function(xcall, scall) {
-    scall <- scall[[length(scall)]]
-    if(any(grepl("marginal_growthparameters", scall, fixed = T)) |
-       any(grepl("marginal_growthparameters.bgmfit", scall, fixed = T))) {
-      xcall <- "marginal_growthparameters"
-    } else {
-      xcall <- xcall
-    }
-  }
-  
-  
-  
-  if(xcall == "do.call" | xcall == "CustomDoCall") {
-    zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-    zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-    zzz <- strsplit(zzz, ",")[[1]][1]
-    xcall <- strsplit(zzz, "\\.")[[1]][1]
-  } else {
-    if(!is.null(model$xcall)) {
-      if(model$xcall == "marginal_growthparameters") {
-        xcall <- "marginal_growthparameters"
-      }
-    } else {
-      scall <- sys.calls()
-      xcall <- get_xcall(xcall, scall)
-    }
-  }
+  # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+  # scall <- sys.calls()
+  # 
+  # get_xcall <- function(xcall, scall) {
+  #   scall <- scall[[length(scall)]]
+  #   if(any(grepl("marginal_growthparameters", scall, fixed = T)) |
+  #      any(grepl("marginal_growthparameters.bgmfit", scall, fixed = T))) {
+  #     xcall <- "marginal_growthparameters"
+  #   } else {
+  #     xcall <- xcall
+  #   }
+  # }
+  # 
+  # 
+  # 
+  # if(xcall == "do.call" | xcall == "CustomDoCall") {
+  #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
+  #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
+  #   zzz <- strsplit(zzz, ",")[[1]][1]
+  #   xcall <- strsplit(zzz, "\\.")[[1]][1]
+  # } else {
+  #   if(!is.null(model$xcall)) {
+  #     if(model$xcall == "marginal_growthparameters") {
+  #       xcall <- "marginal_growthparameters"
+  #     }
+  #   } else {
+  #     scall <- sys.calls()
+  #     xcall <- get_xcall(xcall, scall)
+  #   }
+  # }
   
   # if(!is.null(model$xcall)) {
   #   if(model$xcall == "marginal_growthparameters") {
@@ -964,6 +964,23 @@ marginal_growthparameters.bgmfit <- function(model,
   
   # xcall <- xcall
   
+  
+  if(!is.null(model$xcall)) {
+    if(grepl("marginal_growthparameters", model$xcall)) {
+      xcall <- "marginal_growthparameters"
+    }
+  } else {
+    rlang_trace_back <- rlang::trace_back()
+    check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
+    if(all(!check_trace_back.bgmfit)) {
+      # nothing
+    } else {
+      rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
+      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
+      xcall <- rlang_call_name
+    }
+  }
   
   
   check_if_package_installed(model, xcall = xcall)
@@ -1191,7 +1208,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                   verbose = verbose)
   
   full.args$model <- model
-  full.args$deriv_model <- deriv_model
+  full.args$model_deriv <- model_deriv
   
   
   if(is.null(full.args$hypothesis) & is.null(full.args$equivalence)) {
@@ -1208,7 +1225,18 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   full.args$newdata <- newdata
-  newdata           <- do.call(get.newdata, full.args)
+  
+  
+  full.args <- 
+    sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                               arguments = full.args, 
+                               check_formalArgs = marginal_growthparameters.bgmfit,
+                               check_formalArgs_exceptions = NULL,
+                               check_trace_back = NULL,
+                               envir = parent.frame())
+  
+  
+  newdata           <- CustomDoCall(get.newdata, full.args)
   
   
   if(!is.na(uvarby)) {
@@ -1239,7 +1267,7 @@ marginal_growthparameters.bgmfit <- function(model,
       levels_id,
       avg_reffects,
       deriv,
-      deriv_model,
+      model_deriv,
       ipts,
       seed,
       future,
@@ -1290,14 +1318,14 @@ marginal_growthparameters.bgmfit <- function(model,
   }
   
   
-  if(deriv == 0 & deriv_model) 
-    stop("If argument 'deriv_model = TRUE', then 'deriv' should be '1'")
-  if(deriv == 1 & !deriv_model) 
-    stop("If argument 'deriv_model' = FALSE, then 'deriv' should be '0'")
+  if(deriv == 0 & model_deriv) 
+    stop("If argument 'model_deriv = TRUE', then 'deriv' should be '1'")
+  if(deriv == 1 & !model_deriv) 
+    stop("If argument 'model_deriv' = FALSE, then 'deriv' should be '0'")
   
   if (!is.null(variables)) {
     if (!is.list(variables)) {
-      if(!deriv_model) {
+      if(!model_deriv) {
         stop("'variables' argument must be a named list and the first ", 
              "element should be ", xvar, 
              "\n ",
@@ -1542,7 +1570,7 @@ marginal_growthparameters.bgmfit <- function(model,
           if(!isFALSE(set_group)) datagrid_arguments[['by']] <- NULL
           comparisons_arguments[['by']] <- NULL
         }
-        set_datagrid <- do.call(marginaleffects::datagrid, datagrid_arguments)
+        set_datagrid <- CustomDoCall(marginaleffects::datagrid, datagrid_arguments)
         comparisons_arguments$newdata <- set_datagrid
       } else {
         stop("datagrid should be a data frame or named list")
@@ -1583,10 +1611,10 @@ marginal_growthparameters.bgmfit <- function(model,
     
     if(!plot) {
       if(!average) {
-        if(callfuns) out <- do.call(marginaleffects::comparisons, 
+        if(callfuns) out <- CustomDoCall(marginaleffects::comparisons, 
                                     comparisons_arguments)
       } else if(average) {
-        if(callfuns) out <- do.call(marginaleffects::avg_comparisons, 
+        if(callfuns) out <- CustomDoCall(marginaleffects::avg_comparisons, 
                                     comparisons_arguments)
       }
     }
@@ -1598,7 +1626,7 @@ marginal_growthparameters.bgmfit <- function(model,
              "'marginal_growthparameters()'"
         )
       }
-      out <- do.call(marginaleffects::plot_comparisons, 
+      out <- CustomDoCall(marginaleffects::plot_comparisons, 
                      comparisons_arguments)
       outp <- out
       if(!showlegends) outp <- outp + ggplot2::theme(legend.position = 'none')
@@ -1741,7 +1769,7 @@ marginal_growthparameters.bgmfit <- function(model,
         )
       }
       
-      out_sf <- do.call(rbind, list_cout) %>% data.frame() 
+      out_sf <- CustomDoCall(rbind, list_cout) %>% data.frame() 
       if(!"parameter" %in% colnames(out_sf)) {
         out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter")
       }
@@ -1866,17 +1894,17 @@ marginal_growthparameters.bgmfit <- function(model,
     if(!future_splits_exe & callfuns) {
       if(!average) {
         if(call_predictions) {
-          out <- do.call(marginaleffects::predictions, predictions_arguments)
+          out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
         } 
         if(call_slopes) {
-          out <- do.call(marginaleffects::slopes, predictions_arguments)
+          out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
         }
       } else if(average) {
         if(call_predictions) {
-          out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+          out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
         } 
         if(call_slopes) {
-          out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
+          out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
         }
       }
       
@@ -1904,12 +1932,12 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            do.call(marginaleffects::predictions, predictions_arguments)
+            CustomDoCall(marginaleffects::predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            do.call(marginaleffects::slopes, predictions_arguments)
+            CustomDoCall(marginaleffects::slopes, predictions_arguments)
           }
-          # do.call(marginaleffects::predictions, predictions_arguments)
+          # CustomDoCall(marginaleffects::predictions, predictions_arguments)
         }
         out <-  future.apply::future_lapply(future_splits_at,
                                             future.envir = parent.frame(),
@@ -1935,12 +1963,12 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            do.call(marginaleffects::avg_predictions, predictions_arguments)
+            CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            do.call(marginaleffects::avg_slopes, predictions_arguments)
+            CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
           }
-          # do.call(marginaleffects::avg_predictions, predictions_arguments)
+          # CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
         }
         out <-  future.apply::future_lapply(future_splits_at,
                                             future.envir = parent.frame(),
@@ -1986,12 +2014,12 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            do.call(marginaleffects::predictions, predictions_arguments)
+            CustomDoCall(marginaleffects::predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            do.call(marginaleffects::slopes, predictions_arguments)
+            CustomDoCall(marginaleffects::slopes, predictions_arguments)
           }
-          # do.call(marginaleffects::predictions, predictions_arguments)
+          # CustomDoCall(marginaleffects::predictions, predictions_arguments)
         }
       } else if(average) {
         out <- foreach::foreach(x = 1:length(future_splits_at),
@@ -2020,12 +2048,12 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            do.call(marginaleffects::avg_predictions, predictions_arguments)
+            CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            do.call(marginaleffects::avg_slopes, predictions_arguments)
+            CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
           }
-          # do.call(marginaleffects::avg_predictions, predictions_arguments)
+          # CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
         }
       } 
     } # if(future_splits_exe_dofuture) {
@@ -2062,13 +2090,13 @@ marginal_growthparameters.bgmfit <- function(model,
     } else if(future_splits_exe) {
       if(callfuns) {
         if(pdrawso) {
-          out <- out %>% do.call(rbind, .)
+          out <- out %>% CustomDoCall(rbind, .)
           return(out)
         }
         zxdraws <- lapply(1:length(future_splits_at), 
                           FUN = posterior_draws_function)
         
-        zxdraws <- zxdraws %>% do.call(rbind, .)
+        zxdraws <- zxdraws %>% CustomDoCall(rbind, .)
         # Note that above zxdraws has drawid exact same as splits
         # but somehow, we need consecutive drawid for summarising
         zxdraws <- consecutive_drawid_function(zxdraws)
@@ -2183,7 +2211,7 @@ marginal_growthparameters.bgmfit <- function(model,
         if('acgv' %in% parmi) parm_c[[parmi]] <- x[vcgi] %>% ifunx_()
         if('cgv' %in% parmi)  parm_c[[parmi]] <- y[vcgi]
       }
-      out <- parm_c %>% do.call(cbind, .) %>% data.frame()
+      out <- parm_c %>% CustomDoCall(cbind, .) %>% data.frame()
       out
     }
     
@@ -2264,7 +2292,7 @@ marginal_growthparameters.bgmfit <- function(model,
                               .keep = TRUE) %>%
           dplyr::mutate(drawid = drawidi)
       }
-      onex0 <- drawid_c %>% do.call(rbind, .) %>% data.frame()
+      onex0 <- drawid_c %>% CustomDoCall(rbind, .) %>% data.frame()
     }
     
     
@@ -2590,7 +2618,7 @@ marginal_growthparameters.bgmfit <- function(model,
           dplyr::mutate(parameter = parmi) %>% 
           dplyr::relocate(parameter)
       }
-      out3 <- summary_c %>% do.call(rbind, .) %>% data.frame()
+      out3 <- summary_c %>% CustomDoCall(rbind, .) %>% data.frame()
       row.names(out3) <- NULL
       out_sf <- out3
     }
@@ -2732,7 +2760,7 @@ marginal_growthparameters.bgmfit <- function(model,
             dplyr::mutate(!! 'parameter' := parmi) %>% 
             dplyr::relocate(dplyr::all_of('parameter'))
         }
-        out_sf_hy <- parmi_ci_c %>% do.call(rbind, .) %>% data.frame()
+        out_sf_hy <- parmi_ci_c %>% CustomDoCall(rbind, .) %>% data.frame()
       }
       
       

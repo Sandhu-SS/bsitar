@@ -720,8 +720,8 @@ post_processing_checks <- function(model,
   #   if(grepl("deriv=", xcall_check_it)) {
   #     stop("option deriv is not allowed for ", check_it_sss )
   #   }
-  #   if(grepl("deriv_model", xcall_check_it)) {
-  #     stop("option deriv_model is not allowed for ", check_it_sss )
+  #   if(grepl("model_deriv", xcall_check_it)) {
+  #     stop("option model_deriv is not allowed for ", check_it_sss )
   #   }
   # }
   
@@ -842,10 +842,10 @@ post_processing_checks <- function(model,
         stop("No 'd0' found")
       }
       if(!available_d1) {
-        message("No 'd1' found, setting 'deriv_model = FALSE', 'deriv = 0'")
+        message("No 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
       }
       if(!available_d2) {
-        # message("No 'd2' found, setting 'deriv_model = FALSE', 'deriv = 0'")
+        # message("No 'd2' found, setting 'model_deriv = FALSE', 'deriv = 0'")
       }
     }
     
@@ -879,7 +879,7 @@ setupfuns <- function(model,
                       usesavedfuns = NULL,
                       deriv = NULL,
                       envir = NULL,
-                      deriv_model = NULL,
+                      model_deriv = NULL,
                       verbose = FALSE,
                       ...) {
   
@@ -949,10 +949,10 @@ setupfuns <- function(model,
       assignfun <- paste0(resp_, assignfun)
       assign(o[[1]], model$model_info[['exefuns']][[assignfun]], envir = envir)
     } else if(deriv > 0) {
-      if(deriv_model) {
+      if(model_deriv) {
         assignfun <- paste0(model$model_info[['namesexefuns']], deriv)
         assignfun <- paste0(resp_, assignfun)
-      } else if(!deriv_model) {
+      } else if(!model_deriv) {
         assignfun <- paste0(model$model_info[['namesexefuns']], '0')
         assignfun <- paste0(resp_, assignfun)
       }
@@ -3092,3 +3092,125 @@ CustomDoCall <- function(what, args, quote = FALSE, envir = NULL){
        enclos = envir)
 }
 
+# using with CustomDoCall()
+
+#' An internal function to work with CustomDoCall()
+#' 
+#' @details sanitize the argument list
+#' 
+#' @param what A character string
+#' @param arguments A list
+#' @param check_formalArgs A logical
+#' @param check_trace_back A logical
+#' @param envir A logical or a list
+#' @keywords internal
+#' @return A object default of class inherited from \code{what}
+#' @noRd
+#'
+sanitize_CustomDoCall_args <- function(what,
+                                       arguments,
+                                       check_formalArgs = NULL,
+                                       check_formalArgs_exceptions = NULL,
+                                       check_trace_back = NULL,
+                                       envir = NULL) {
+  
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  } else {
+    envir <- envir
+  }
+  
+  if(is.null(check_trace_back)) {
+    set_trace_back <- rlang::trace_back() 
+  } else {
+    set_trace_back <- check_trace_back
+  }
+  
+  if(!is.null(check_formalArgs)) {
+    if(is.function(check_formalArgs)) {
+      ownargs <- formalArgs(check_formalArgs)
+    } else if(is.list(check_formalArgs)) {
+      ownargs <- check_formalArgs
+    } else {
+      stop("check_formalArgs must be a function or a list")
+    }
+    
+    for (i in setdiff(names(arguments), ownargs)) {
+      if(!is.null(check_formalArgs_exceptions)) {
+        if(!i %in% check_formalArgs_exceptions) {
+          arguments[[i]] <- NULL
+        }
+      } else if(is.null(check_formalArgs_exceptions)) {
+        arguments[[i]] <- NULL
+      }
+    } # for (i in setdiff(names(arguments), ownargs)) {
+    
+  } # if(!is.null(check_formalArgs)) {
+  
+  eval_CustomDoCall <- FALSE
+  if(any(grepl(what, set_trace_back))) {
+    eval_CustomDoCall <- TRUE
+    # check_CustomDoCall <- what
+  }
+  
+  if(eval_CustomDoCall) {
+    for (i in names(arguments)) {
+      if(is.symbol(arguments[[i]])) {
+        if(deparse(arguments[[i]]) == "") {
+          arguments[[i]] <- NULL
+        }
+      }
+    }
+    for (i in names(arguments)) {
+      arguments[[i]] <- eval(arguments[[i]], 
+                             envir = envir)
+      
+    }
+  } # if(eval_CustomDoCall) {
+  
+  return(arguments)
+} # sanitize_CustomDoCall_args
+
+
+
+# not using
+
+#' An internal function to work with CustomDoCall()
+#' 
+#' @details
+#' https://stackoverflow.com/questions/11054208/lapply-and-do-call-running-very-slow
+#' 
+#' @param scall A language object (\code{sys.call()}) to be called
+#' @param return_tf A logical
+#' @param return_str A logical
+#' @param return_str A logical or a list
+#' @keywords internal
+#' @return A object default of class inheretited from \code{what}
+#' @noRd
+#'
+check_CustomDoCall_fun <- function(scall, 
+                                   return_tf = TRUE, 
+                                   return_str = FALSE ) {
+  check_CustomDoCall <- gsub_space(paste(deparse(scall), collapse = ""))
+  eval_CustomDoCall <- FALSE
+  if(grepl("CustomDoCall\\(", check_CustomDoCall)) {
+    eval_CustomDoCall <- TRUE
+    check_CustomDoCall <- regmatches(check_CustomDoCall, 
+                                     gregexpr("(?<=\\().*?(?=\\))", 
+                                              check_CustomDoCall, perl=T))[[1]]
+    check_CustomDoCall <- strsplit(check_CustomDoCall[1], "\\(")[[1]][1]
+  }
+  
+  if(return_tf & return_str) {
+    out <- list()
+    out[['eval_CustomDoCall']]  <- eval_CustomDoCall
+    out[['check_CustomDoCall']] <- check_CustomDoCall
+  } else if(return_tf) {
+    out <- eval_CustomDoCall
+  } else if(return_str) {
+    out <- check_CustomDoCall
+  } else {
+    out <- NULL
+  }
+  return(out)
+}

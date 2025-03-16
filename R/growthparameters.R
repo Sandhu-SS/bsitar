@@ -150,9 +150,9 @@
 #'   predictor when calculating population averages and/or individual-specific
 #'   growth curves.
 #'
-#' @param deriv_model A logical value specifying whether to estimate the
+#' @param model_deriv A logical value specifying whether to estimate the
 #'   velocity curve from the derivative function or by differentiating the
-#'   distance curve. Set \code{deriv_model = TRUE} for functions that require
+#'   distance curve. Set \code{model_deriv = TRUE} for functions that require
 #'   the velocity curve, such as \code{growthparameters()} and
 #'   \code{plot_curves()}. Set it to \code{NULL} for functions that use the
 #'   distance curve (i.e., fitted values), such as \code{loo_validation()} and
@@ -298,11 +298,22 @@
 #'   the \code{data,frame}, the \code{itransform} will be ignored within the 
 #'   calling function, \code{'prepare_transformations()'}.
 #'   
-#' @param newdata_fixed A logical (default \code{FALSE}) indicating whether to
-#'   consider user provided \code{newdata} (\code{newdata = TRUE}) as it is
-#'   without checking for whether the data format is appropriate for model fit
-#'   and if not, then preparing the data internally with required
-#'   transformations that were part of the model fitting.
+#' @param newdata_fixed An indicator to specify whether to check for the data
+#'   format and structure of the user provided \code{newdata} and apply needed
+#'   \code{prepare_data2} and \code{prepare_transformations}
+#'   (\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
+#'   (\code{newdata = TRUE}) as it is without checking for the data format or
+#'   applying \code{prepare_data2} and \code{prepare_transformations}
+#'   (\code{newdata_fixed = 0}), check for the data format and if needed,
+#'   prepare data format using \code{prepare_data2} (\code{newdata_fixed = 1}),
+#'   or apply \code{prepare_transformations} only assuming that data format is
+#'   correct (\code{newdata_fixed = 2}). It is strongly recommended that user
+#'   either leave the \code{newdata = NULL} and \code{newdata_fixed = NULL} in
+#'   which case data used in the model fitting is automatically retrieved and
+#'   checked for the required data format and transformations, and if needed,
+#'   \code{prepare_data2} and \code{prepare_transformations} are applied
+#'   internally. The other flags provided for  \code{newdata_fixed = 0, 1, 2}
+#'   are mainly for the internal use during post-processing.
 #' 
 #' @param envir The environment used for function evaluation. The default is
 #'   \code{NULL}, which sets the environment to \code{parent.frame()}. Since
@@ -386,7 +397,7 @@ growthparameters.bgmfit <- function(model,
                                avg_reffects = NULL,
                                aux_variables = NULL,
                                ipts = 10,
-                               deriv_model = TRUE,
+                               model_deriv = TRUE,
                                conf = 0.95,
                                xrange = NULL,
                                xrange_search = NULL,
@@ -406,14 +417,14 @@ growthparameters.bgmfit <- function(model,
                                clearenvfuns = NULL,
                                funlist = NULL,
                                itransform = NULL,
-                               newdata_fixed = FALSE,
+                               newdata_fixed = NULL,
                                envir = NULL,
                                ...) {
   
   if(is.null(envir)) {
     envir <- model$model_info$envir
   } else {
-    envir <- parent.frame()
+    envir <- envir
   }
   
   # Depending on dpar 'mu' or 'sigma', subset model_info
@@ -449,8 +460,8 @@ growthparameters.bgmfit <- function(model,
     ndraws <- brms::ndraws(model)
   }
   
-  if(is.null(deriv_model)) {
-    deriv_model <- TRUE
+  if(is.null(model_deriv)) {
+    model_deriv <- TRUE
   }
   
   if (is.null(idata_method)) {
@@ -513,48 +524,67 @@ growthparameters.bgmfit <- function(model,
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
   
-  oo    <- do.call(post_processing_checks, post_processing_checks_args)
+  oo    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
 
   # oo <- post_processing_checks(model = model,
   #                              xcall = match.call(),
   #                              envir = envir,
   #                              resp = resp)
   
-  xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
   
+  # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+  # 
+  # 
+  # get_xcall <- function(xcall, scall) {
+  #   scall <- scall[[length(scall)]]
+  #   if(any(grepl("plot_curves", scall, fixed = T)) |
+  #      any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
+  #     xcall <- "plot_curves"
+  #   } else if(any(grepl("growthparameters", scall, fixed = T)) |
+  #             any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
+  #     xcall <- "growthparameters"
+  #   } else {
+  #     xcall <- xcall
+  #   }
+  # }
+  # 
+  # 
+  # if(xcall == "do.call" | xcall == "CustomDoCall") {
+  #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
+  #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
+  #   zzz <- strsplit(zzz, ",")[[1]][1]
+  #   xcall <- strsplit(zzz, "\\.")[[1]][1]
+  # } else {
+  #   if(!is.null(model$xcall)) {
+  #     if(model$xcall == "plot_curves") {
+  #       xcall <- "plot_curves"
+  #     }
+  #   } else {
+  #     scall <- sys.calls()
+  #     # get_xcall__() didn't work
+  #     # xcall <- get_xcall__(xcall, scall, c("plot_curves", "growthparameters"))
+  #     xcall <- get_xcall(xcall, scall)
+  #   }
+  # } # if(xcall == "do.call") {... else {
+  # 
   
-  get_xcall <- function(xcall, scall) {
-    scall <- scall[[length(scall)]]
-    if(any(grepl("plot_curves", scall, fixed = T)) |
-       any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
+ 
+  if(!is.null(model$xcall)) {
+    if(grepl("plot_curves", model$xcall)) {
       xcall <- "plot_curves"
-    } else if(any(grepl("growthparameters", scall, fixed = T)) |
-              any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
-      xcall <- "growthparameters"
+    }
+  } else {
+    rlang_trace_back <- rlang::trace_back()
+    check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
+    if(all(!check_trace_back.bgmfit)) {
+      # nothing
     } else {
-      xcall <- xcall
+      rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
+      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
+      xcall <- rlang_call_name
     }
   }
-  
-  
-  if(xcall == "do.call" | xcall == "CustomDoCall") {
-    zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-    zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-    zzz <- strsplit(zzz, ",")[[1]][1]
-    xcall <- strsplit(zzz, "\\.")[[1]][1]
-  } else {
-    if(!is.null(model$xcall)) {
-      if(model$xcall == "plot_curves") {
-        xcall <- "plot_curves"
-      }
-    } else {
-      scall <- sys.calls()
-      # get_xcall__() didn't work
-      # xcall <- get_xcall__(xcall, scall, c("plot_curves", "growthparameters"))
-      xcall <- get_xcall(xcall, scall)
-    }
-  } # if(xcall == "do.call") {... else {
-  
   
   
   
@@ -562,15 +592,19 @@ growthparameters.bgmfit <- function(model,
   
   check_if_package_installed(model, xcall = xcall)
   
+
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   arguments$model <- model
   arguments$usesavedfuns <- usesavedfuns
   
+  if(xcall == 'plot_curves') {
+    arguments$plot <- TRUE
+  } else {
+    arguments$plot <- FALSE
+  }
+ 
   
-  
-  
-  if(xcall == 'plot_curves') arguments$plot <- TRUE else arguments$plot <- FALSE
-  
+
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
@@ -1000,6 +1034,11 @@ growthparameters.bgmfit <- function(model,
   
   
   if (arguments$plot) {
+    arguments <- sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                            arguments = arguments, 
+                                            check_formalArgs = NULL,
+                                            check_trace_back = NULL,
+                                            envir = parent.frame())
     
     
     out_summary <- list()
@@ -1007,7 +1046,6 @@ growthparameters.bgmfit <- function(model,
       arguments <- c(arguments, list(arguments$...))
     }
     
-    arguments$model <- model
     
 
     for (argumentsi in names(arguments)) {
@@ -1052,6 +1090,7 @@ growthparameters.bgmfit <- function(model,
                            xrange = xrange,
                            idata_method = idata_method,
                            dummy_to_factor = dummy_to_factor,
+                           newdata_fixed = newdata_fixed,
                            verbose = verbose)
     
     
@@ -1165,9 +1204,9 @@ growthparameters.bgmfit <- function(model,
         arguments$itransform <- ""
         
         if (estimation_method == 'fitted') {
-          out_d_ <- do.call(fitted_draws, arguments)
+          out_d_ <- CustomDoCall(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_d_ <- do.call(predict_draws, arguments)
+          out_d_ <- CustomDoCall(predict_draws, arguments)
         }
         
         if(is.null(out_d_)) return(invisible(NULL))
@@ -1224,9 +1263,9 @@ growthparameters.bgmfit <- function(model,
         arguments$itransform <- ""
         
         if (estimation_method == 'fitted') {
-          out_v_ <- do.call(fitted_draws, arguments)
+          out_v_ <- CustomDoCall(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_v_ <- do.call(predict_draws, arguments)
+          out_v_ <- CustomDoCall(predict_draws, arguments)
         }
         
         if(is.null(out_v_)) return(invisible(NULL))
@@ -1349,9 +1388,9 @@ growthparameters.bgmfit <- function(model,
         arguments$itransform <- ""
         
         if (estimation_method == 'fitted') {
-          out_d_ <- do.call(fitted_draws, arguments)
+          out_d_ <- CustomDoCall(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_d_ <- do.call(predict_draws, arguments)
+          out_d_ <- CustomDoCall(predict_draws, arguments)
         }
         
         if(is.null(out_d_)) return(invisible(NULL))
@@ -1419,9 +1458,9 @@ growthparameters.bgmfit <- function(model,
         arguments$itransform <- ""
         
         if (estimation_method == 'fitted') {
-          out_v_ <- do.call(fitted_draws, arguments)
+          out_v_ <- CustomDoCall(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
-          out_v_ <- do.call(predict_draws, arguments)
+          out_v_ <- CustomDoCall(predict_draws, arguments)
         }
         
         if(is.null(out_v_)) return(invisible(NULL))
@@ -1496,6 +1535,16 @@ growthparameters.bgmfit <- function(model,
   
   
   if (!arguments$plot) {
+    if(!is.null(arguments$deriv)) {
+      stop("argument 'deriv' is not allowed for 'growthparameters()'")
+    }
+    
+    arguments <- sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                            arguments = arguments, 
+                                            check_formalArgs = NULL,
+                                            check_trace_back = NULL,
+                                            envir = parent.frame())
+    
     if(set_get_dv) {
       ipts <- NULL
       arguments$summary <- summary <- FALSE
@@ -1518,6 +1567,7 @@ growthparameters.bgmfit <- function(model,
                            xrange = xrange,
                            idata_method = idata_method,
                            dummy_to_factor = dummy_to_factor,
+                           newdata_fixed = newdata_fixed,
                            verbose = verbose)
     
 
@@ -1615,9 +1665,9 @@ growthparameters.bgmfit <- function(model,
       arguments$itransform <- ""
      
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_draws, arguments)
+        out_v_ <- CustomDoCall(fitted_draws, arguments)
       } else if (estimation_method == 'predict') {
-        out_v_ <- do.call(predict_draws, arguments)
+        out_v_ <- CustomDoCall(predict_draws, arguments)
       }
       
      if(is.null(out_v_)) return(invisible(NULL))
@@ -1689,9 +1739,9 @@ growthparameters.bgmfit <- function(model,
       arguments$itransform <- "" 
       
       if (estimation_method == 'fitted') {
-        out_v_ <- do.call(fitted_draws, arguments)
+        out_v_ <- CustomDoCall(fitted_draws, arguments)
       } else if (estimation_method == 'predict') {
-        out_v_ <- do.call(predict_draws, arguments)
+        out_v_ <- CustomDoCall(predict_draws, arguments)
       }
       
       if(is.null(out_v_)) return(invisible(NULL))

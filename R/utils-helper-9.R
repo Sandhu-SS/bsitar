@@ -3084,8 +3084,8 @@ set_priors_initials <- function(a_prior_beta,
           stanvars_data_in_c[[acorclassi]] <-
             priors_arma_c_define[[acorclassi]]$stanvars_data_in
         }
-        priors_ <- priors_arma_c %>% do.call(rbind, .)
-        stanvars_data_in <- stanvars_data_in_c %>% do.call(rbind, .)
+        priors_ <- priors_arma_c %>% CustomDoCall(rbind, .)
+        stanvars_data_in <- stanvars_data_in_c %>% CustomDoCall(rbind, .)
       } else {
         priors_ <-  brms::prior_string(
           define_,
@@ -3211,7 +3211,7 @@ set_priors_initials <- function(a_prior_beta,
     }
   }
   
-  evaluated_priors <- c_priors %>% do.call(rbind, .)
+  evaluated_priors <- c_priors %>% CustomDoCall(rbind, .)
   
   
   if(length(stanvars_data_5) == 0) stanvars_data_5 <- NULL
@@ -3289,11 +3289,11 @@ set_priors_initials <- function(a_prior_beta,
       # This was resulting in error when spline initial random - 11 06 2024
       
       # list_ck <-
-      #   setNames(do.call(mapply, c(FUN = c, lapply(
+      #   setNames(CustomDoCall(mapply, c(FUN = c, lapply(
       #     list_ck, `[`, keys
       #   ))), keys)
       
-      list_ck <- do.call(mapply, c(FUN = c, lapply(list_ck, `[`, keys)))
+      list_ck <- CustomDoCall(mapply, c(FUN = c, lapply(list_ck, `[`, keys)))
       if(is.matrix(list_ck)) {
         list_ck <- lapply(base::seq_len(ncol(list_ck)), function(i) list_ck[,i])
       }
@@ -3339,7 +3339,7 @@ set_priors_initials <- function(a_prior_beta,
       list_ck <- list_ck[lengths(list_ck) != 0]
       keys    <- unique(unlist(lapply(list_ck, names)))
       list_ck <-
-        setNames(do.call(mapply, c(FUN = c, lapply(
+        setNames(CustomDoCall(mapply, c(FUN = c, lapply(
           list_ck, `[`, keys
         ))), keys)
       list_ck_sd <- list_ck_sd[lengths(list_ck_sd) != 0]

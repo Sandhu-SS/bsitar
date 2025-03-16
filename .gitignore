@@ -1,4 +1,6 @@
 inst/doc
+^doc$
+^doc\.html$
 .Rproj.user
 revdep/
 .Rhistory

@@ -1,7 +1,7 @@
 
 
 
-#' An internal function to imterpolate data for plotting smooth curves
+#' An internal function to interpolate data for plotting smooth curves
 #' 
 #' @param model An object of class \code{bgmfit}. This is optional (default
 #'   \code{NULL}) i.e., it is not neccessary to specify the model object. When
@@ -35,7 +35,9 @@
 #'   
 #' @param asdf
 #' 
-#' @param get.newdata.call
+#' @param newdata_fixed
+#' 
+#' @param verbose
 #'   
 #' @return A data frame.
 #' 
@@ -54,13 +56,14 @@ get_idata <-
            xrange = 1, 
            keeplevels = FALSE, 
            asdf = FALSE,
-           get.newdata.call = FALSE) {
+           newdata_fixed = NULL,
+           verbose = FALSE) {
     
-    if(get.newdata.call) {
-      if(is.null(newdata)) {
-        stop("'newdata' can not be NULL when get.newdata.call = TRUE")
-      }
-    }
+    # if(get.newdata.call) {
+    #   if(is.null(newdata)) {
+    #     stop("'newdata' can not be NULL when get.newdata.call = TRUE")
+    #   }
+    # }
     
     if (is.null(newdata)) {
       newdata <- model$model_info$bgmfit.data
@@ -69,12 +72,33 @@ get_idata <-
     }
     
     
-    
-    if(!get.newdata.call) {
-      # prepare_data2 with model = model will get all the necessary info
+    add_just_list_c <- FALSE
+    if(is.null(newdata_fixed)) {
       newdata <- prepare_data2(data = newdata, model = model)
       newdata <- prepare_transformations(data = newdata, model = model)
+    } else if(!is.null(newdata_fixed)) {
+      if(newdata_fixed == 0) {
+        # do nothing assuming that user has set up for 'uvarby' etc
+        # not even applied 'dummy_to_factor'
+        # only list_c elements will be added
+        newdata <- newdata 
+        add_just_list_c <- TRUE
+      } else if(newdata_fixed == 1) {
+        newdata <- prepare_data2(data = newdata, model = model)
+      } else if(newdata_fixed == 2) {
+        newdata <- prepare_transformations(data = newdata, model = model)
+      } else if(newdata_fixed == 3) {
+        return(newdata) # i.e., not even applied 'dummy_to_factor' and return
+      } else {
+        stop("'newdata_fixed' should be either NULL or an integer, 1, 2, or 3")
+      }
     }
+    
+    # if(!get.newdata.call) {
+    #   # prepare_data2 with model = model will get all the necessary info
+    #   newdata <- prepare_data2(data = newdata, model = model)
+    #   newdata <- prepare_transformations(data = newdata, model = model)
+    # }
     
     
     if(data.table::is.data.table(newdata)) {

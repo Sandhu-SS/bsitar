@@ -42,7 +42,7 @@
   variables = NULL,
   condition = NULL,
   deriv = 0,
-  deriv_model = TRUE,
+  model_deriv = TRUE,
   method = "custom",
   marginals = NULL,
   pdrawso = FALSE,
@@ -68,7 +68,7 @@
   clearenvfuns = NULL,
   funlist = NULL,
   itransform = NULL,
-  newdata_fixed = FALSE,
+  newdata_fixed = NULL,
   envir = NULL,
   ...
 )
@@ -356,7 +356,7 @@ level 1 predictor. By default, \code{variables = list('age' = 1e-6)} in the
 \pkg{marginaleffects} package, as velocity is usually computed by
 differentiating the distance curve using the \code{dydx} approach. When
 using this default, the argument \code{deriv} is automatically set to
-\code{0} and \code{deriv_model} to \code{FALSE}. If parameters are to be
+\code{0} and \code{model_deriv} to \code{FALSE}. If parameters are to be
 estimated based on the model's first derivative, \code{deriv} must be set
 to \code{1} and \code{variables} will be defined as \code{variables =
   list('age' = 0)}. Note that if the default behavior is used (\code{deriv =
@@ -383,9 +383,9 @@ can be passed to the \code{\link[marginaleffects:comparisons]{marginaleffects::c
 its derivative (i.e., velocity curve). The \code{deriv = 0} (default) is
 for the distance curve, whereas \code{deriv = 1} is for the velocity curve.}
 
-\item{deriv_model}{A logical value specifying whether to estimate the
+\item{model_deriv}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the
-distance curve. Set \code{deriv_model = TRUE} for functions that require
+distance curve. Set \code{model_deriv = TRUE} for functions that require
 the velocity curve, such as \code{growthparameters()} and
 \code{plot_curves()}. Set it to \code{NULL} for functions that use the
 distance curve (i.e., fitted values), such as \code{loo_validation()} and
@@ -626,11 +626,22 @@ selected automatically. Note that when no match for \code{xvar} is found in
 the \code{data,frame}, the \code{itransform} will be ignored within the
 calling function, \code{'prepare_transformations()'}.}
 
-\item{newdata_fixed}{A logical (default \code{FALSE}) indicating whether to
-consider user provided \code{newdata} (\code{newdata = TRUE}) as it is
-without checking for whether the data format is appropriate for model fit
-and if not, then preparing the data internally with required
-transformations that were part of the model fitting.}
+\item{newdata_fixed}{An indicator to specify whether to check for the data
+format and structure of the user provided \code{newdata} and apply needed
+\code{prepare_data2} and \code{prepare_transformations}
+(\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
+(\code{newdata = TRUE}) as it is without checking for the data format or
+applying \code{prepare_data2} and \code{prepare_transformations}
+(\code{newdata_fixed = 0}), check for the data format and if needed,
+prepare data format using \code{prepare_data2} (\code{newdata_fixed = 1}),
+or apply \code{prepare_transformations} only assuming that data format is
+correct (\code{newdata_fixed = 2}). It is strongly recommended that user
+either leave the \code{newdata = NULL} and \code{newdata_fixed = NULL} in
+which case data used in the model fitting is automatically retrieved and
+checked for the required data format and transformations, and if needed,
+\code{prepare_data2} and \code{prepare_transformations} are applied
+internally. The other flags provided for  \code{newdata_fixed = 0, 1, 2}
+are mainly for the internal use during post-processing.}
 
 \item{envir}{The environment used for function evaluation. The default is
 \code{NULL}, which sets the environment to \code{parent.frame()}. Since

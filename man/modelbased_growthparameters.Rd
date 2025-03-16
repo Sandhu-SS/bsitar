@@ -18,6 +18,7 @@
   future_splits = NULL,
   future_method = "future",
   future_re_expose = NULL,
+  newdata_fixed = NULL,
   envir = NULL,
   ...
 )
@@ -115,6 +116,23 @@ is automatically set to \code{TRUE} for the \code{'multisession'} plan.
 \item It is advised to explicitly set \code{future_re_expose = TRUE} for speed
 gains when using parallel processing with \code{future = TRUE}.
 }}
+
+\item{newdata_fixed}{An indicator to specify whether to check for the data
+format and structure of the user provided \code{newdata} and apply needed
+\code{prepare_data2} and \code{prepare_transformations}
+(\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
+(\code{newdata = TRUE}) as it is without checking for the data format or
+applying \code{prepare_data2} and \code{prepare_transformations}
+(\code{newdata_fixed = 0}), check for the data format and if needed,
+prepare data format using \code{prepare_data2} (\code{newdata_fixed = 1}),
+or apply \code{prepare_transformations} only assuming that data format is
+correct (\code{newdata_fixed = 2}). It is strongly recommended that user
+either leave the \code{newdata = NULL} and \code{newdata_fixed = NULL} in
+which case data used in the model fitting is automatically retrieved and
+checked for the required data format and transformations, and if needed,
+\code{prepare_data2} and \code{prepare_transformations} are applied
+internally. The other flags provided for  \code{newdata_fixed = 0, 1, 2}
+are mainly for the internal use during post-processing.}
 
 \item{envir}{The environment used for function evaluation. The default is
 \code{NULL}, which sets the environment to \code{parent.frame()}. Since

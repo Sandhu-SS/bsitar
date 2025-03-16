@@ -21,6 +21,7 @@ is.bgmfit <- function(x) {
 #' @noRd
 #'
 get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
+  
   `%!in%` <- Negate(`%in%`)
   if(is.null(xclass)) {
     pastexclass <- paste0(".", 'bgmfit')
@@ -30,6 +31,11 @@ get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
     if( grepl("^\\.", xclass)) pastexclass <- xclass
     if(!grepl("^\\.", xclass)) pastexclass <- paste0(".", xclass)
   }
+  
+  if(grepl(pastexclass, xcall)) {
+    pastexclass <- ""
+  }
+  
   # f_funx_arg <- formals(paste0(xcall, pastexclass))
   # f_funx_arg <- formals(paste0(xcall, ".", 'bgmfit'))
   
@@ -52,6 +58,10 @@ get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
   } else {
     f_funx_arg <- f_funx_arg
   }
+  
+  # scallstatus <<- scallstatus
+  # pastexclass <<- pastexclass
+  # get_xcall_byclass <<- scallstatus
   
   nf_funx_arg_names <-
     intersect(names(arguments), names(f_funx_arg))
@@ -271,13 +281,13 @@ plot_optimize_fit <- function(model,
     dots$... <- NULL
     if(is.null(what)) what <- 'plot'
     if(what == "plot") {
-      out_ <- do.call(plot_curves, dots)
+      out_ <- CustomDoCall(plot_curves, dots)
       title_ <- bx[[.x]]$model_info$optimization_info
       out_ <- out_ + ggplot2::labs(title = title_)
     }
 
     if(what == "growthparameters") {
-      out_ <- do.call(growthparameters, dots)
+      out_ <- CustomDoCall(growthparameters, dots)
     }
 
     if(!is.null(print)) {
@@ -1069,7 +1079,7 @@ setup_higher_priors <- function(new_prior_list) {
       )
     } # if(lb_i == '' & ub_i == '' ) {
   } # for (new_prior_listi in 1:length(new_prior_list)) {
-  o_l %>%  do.call(rbind, .)
+  o_l %>%  CustomDoCall(rbind, .)
 }
 
 
@@ -1872,7 +1882,7 @@ mapderivqr <- function(model,
     }
     dydx <- lapply(split(.data, as.numeric(.data$.id)),
                    function(x) {x$.v <- .dydx(x$.x, x$.y); x } )
-    dydx <- do.call(rbind, dydx) %>% data.frame() %>% dplyr::arrange(sorder)
+    dydx <- CustomDoCall(rbind, dydx) %>% data.frame() %>% dplyr::arrange(sorder)
     return(round(dydx[[".v"]], ndigit))
   }
 
@@ -2171,7 +2181,7 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args, brms_arguments,
       pathfinder_args_final[['show_exceptions']] <- FALSE
     }
     
-    cb_pathfinder <- do.call(c_scode$pathfinder, pathfinder_args_final)
+    cb_pathfinder <- CustomDoCall(c_scode$pathfinder, pathfinder_args_final)
     
     if(pathfinder_init) {
       brm_args$init <-  cb_pathfinder
@@ -2184,7 +2194,7 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args, brms_arguments,
       # brm_args_empty$empty <- TRUE
       # brm_args_empty$rename <- FALSE
       # # Create an empty brms object -> Set empty = TRUE
-      # pathfinder_bfit <- do.call(brms::brm, brm_args_empty)
+      # pathfinder_bfit <- CustomDoCall(brms::brm, brm_args_empty)
       # pathfinder_bfit$fit = cb_pathfinder
       # pathfinder_bfit <- brms::rename_pars(pathfinder_bfit)
       # return(cb_pathfinder)
@@ -2223,7 +2233,7 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args, brms_arguments,
   brm_args_empty$empty <- TRUE
   
   # Create an empty brms object -> Set empty = TRUE
-  bfit <- do.call(brms::brm, brm_args_empty)
+  bfit <- CustomDoCall(brms::brm, brm_args_empty)
   bfit$fit = cb_fit
   bfit <- brms::rename_pars(bfit)
   bfit
@@ -2361,7 +2371,7 @@ brms_via_rstan <- function(scode, sdata, brm_args, brms_arguments) {
 
   # Create an empty brms object and populate it with the rsran fit
   brm_args$empty <- TRUE
-  bfit      <- do.call(brms::brm, brm_args)
+  bfit      <- CustomDoCall(brms::brm, brm_args)
   bfit$fit  <- cb_fit
   bfit      <- brms::rename_pars(bfit)
   bfit
@@ -2467,7 +2477,7 @@ plot_lositic3 <- function(model,
   args <- list(...)
   args$model <- model
 
-  pob    <- do.call(plot_curves, args)
+  pob    <- CustomDoCall(plot_curves, args)
   fixed_ <- brms::fixef(model)
 
   xintercept_1 <- fixed_[3,1]
@@ -3081,7 +3091,7 @@ add_parms_to_curve_data <- function(data,
     dplyr::select(dplyr::any_of(nonparmcols))
 
   # Note dplyr::bind_cols instead of cbind. cbind adds again list name as prefix
-  tojoinit2all <- whati_list %>% do.call(dplyr::bind_cols, .) %>% data.frame()
+  tojoinit2all <- whati_list %>% CustomDoCall(dplyr::bind_cols, .) %>% data.frame()
 
   tojoinit12 <- cbind(tojoinit1, tojoinit2all)
 
@@ -3170,7 +3180,7 @@ rbind_fill_na1 <- function (..., deparse.level = 1) {
         if (!is.null(ncol(argl[[j]]))) 
           colnames(argl[[j]]) <- namesVEC
       }
-      r <- do.call(rbind, c(argl[-1L], list(deparse.level = deparse.level)))
+      r <- CustomDoCall(rbind, c(argl[-1L], list(deparse.level = deparse.level)))
     }
     d2 <- dim(r)
     colnames(r) <- colnames(argl[[1]])
@@ -3268,7 +3278,7 @@ cbind_fill_na1 <- function (..., deparse.level = 1) {
     argl <- lapply(argl, function(x) if (is.null(nrow(x))) 
       c(x, rep(NA, maxRow - length(x)))
       else rbind_fill_na1(x, matrix(, maxRow - nrow(x), ncol(x))))
-    r <- do.call(cbind, c(argl[-1L], list(deparse.level = deparse.level)))
+    r <- CustomDoCall(cbind, c(argl[-1L], list(deparse.level = deparse.level)))
   }
   d2 <- dim(r)
   r <- methods::cbind2(argl[[1]], r)
@@ -4230,7 +4240,7 @@ plot_equivalence_test <-  function(x,
     tmp
   })
   
-  tmp <- do.call(rbind, result)
+  tmp <- CustomDoCall(rbind, result)
   
   
   if (.has_multiple_panels(tmp)) {
@@ -4874,7 +4884,7 @@ x_gsubit_gsubby <- function(x,
 #     tmp
 #   })
 #   
-#   tmp <- do.call(rbind, result)
+#   tmp <- CustomDoCall(rbind, result)
 #   colnames(cp)[1] <- "predictor"
 #   tmp <- merge(tmp, cp, by = "predictor")
 #   tmp$predictor <- factor(tmp$predictor, levels = rev(unique(tmp$predictor)))

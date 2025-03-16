@@ -53,9 +53,8 @@ modelbased_growthparameters_nonS3 <- function(model,
   # growthparameters_args[['summary']] <- FALSE
   
   
-  # azz2 <- do.call(growthparameters, growthparameters_args)
   # azz2 <- CustomDoCall(growthparameters, growthparameters_args)
-  
+
   
   fitted_draws_args <- list()
   fitted_draws_args[['model']] <- model
@@ -180,7 +179,7 @@ modelbased_growthparameters_nonS3 <- function(model,
   # results_list <- lapply(newdata_list_c, analyze_data)
   
   results_list <- future.apply::future_lapply(newdata_list_c, analyze_data)
-  xyvyadj_rows <- do.call(cbind, results_list)
+  xyvyadj_rows <- CustomDoCall(cbind, results_list)
   xyadj_rows <- matrix(xyvyadj_rows[1,], nrow = length(results_list), byrow = T)
   yyadj_rows <- matrix(xyvyadj_rows[2,], nrow = length(results_list), byrow = T)
   vyadj_rows <- matrix(xyvyadj_rows[3,], nrow = length(results_list), byrow = T)

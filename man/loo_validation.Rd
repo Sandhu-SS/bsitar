@@ -21,7 +21,7 @@
   ndraws = NULL,
   draw_ids = NULL,
   cores = 1,
-  deriv_model = NULL,
+  model_deriv = NULL,
   verbose = FALSE,
   dummy_to_factor = NULL,
   expose_function = FALSE,
@@ -92,9 +92,9 @@ number of cores is automatically determined using
 \code{\link[future:re-exports]{future::availableCores()}}, and it will use the maximum number of cores
 available minus one (i.e., \code{future::availableCores() - 1}).}
 
-\item{deriv_model}{A logical value specifying whether to estimate the
+\item{model_deriv}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the
-distance curve. Set \code{deriv_model = TRUE} for functions that require
+distance curve. Set \code{model_deriv = TRUE} for functions that require
 the velocity curve, such as \code{growthparameters()} and
 \code{plot_curves()}. Set it to \code{NULL} for functions that use the
 distance curve (i.e., fitted values), such as \code{loo_validation()} and

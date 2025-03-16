@@ -81,13 +81,14 @@ modelbased_growthparameters.bgmfit <-
            future_splits = NULL,
            future_method = 'future',
            future_re_expose = NULL,
+           newdata_fixed = NULL,
            envir = NULL, 
            ...) {
     
     if(is.null(envir)) {
       envir <- model$model_info$envir
     } else {
-      envir <- parent.frame()
+      envir <- envir
     }
     
     ndraws_org <- ndraws
@@ -119,6 +120,7 @@ modelbased_growthparameters.bgmfit <-
                     future_splits = future_splits,
                     future_method = future_method,
                     future_re_expose = future_re_expose,
+                    newdata_fixed = newdata_fixed,
                     envir = envir, 
                     ...) 
     

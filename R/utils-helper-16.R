@@ -29,7 +29,7 @@
 #' @param numeric_cov_at 
 #' @param idata_method 
 #' @param verbose 
-#' @param deriv_model 
+#' @param model_deriv 
 #' @param deriv 
 #' @param envir 
 #' @param ... 
@@ -61,7 +61,7 @@ xyadj_curves.bgmfit <-
             numeric_cov_at = NULL,
             idata_method = NULL,
             verbose = FALSE,
-            deriv_model = NULL,
+            model_deriv = NULL,
             deriv = NULL, 
             envir = NULL,
             ...) {
@@ -111,7 +111,7 @@ xyadj_curves.bgmfit <-
     post_processing_checks_args[['check_d2']] <- FALSE
     
     # o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
-     o    <- do.call(post_processing_checks, post_processing_checks_args)
+     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
     if (is.null(ndraws))
       ndraws  <- brms::ndraws(model)
@@ -663,7 +663,7 @@ xyadj_curves <- function(model, ...) {
 #' @param resp 
 #' @param newdata 
 #' @param verbose 
-#' @param deriv_model 
+#' @param model_deriv 
 #' @param deriv 
 #' @param envir 
 #' @param ndraws 
@@ -684,7 +684,7 @@ xyunadj_curves.bgmfit <- function (model,
                                    draw_ids = NULL,
                                    resp = NULL,
                                    verbose = FALSE,
-                                   deriv_model = NULL,
+                                   model_deriv = NULL,
                                    deriv = NULL, 
                                    envir = NULL,
                                    ...) {
@@ -727,7 +727,7 @@ xyunadj_curves.bgmfit <- function (model,
   post_processing_checks_args[['check_d2']] <- FALSE
   
   # o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
-   o    <- do.call(post_processing_checks, post_processing_checks_args)
+   o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
   
   newdata <- get.newdata(model, newdata = newdata, resp = resp, 
@@ -832,7 +832,7 @@ xyunadj_curves <- function(model, ...) {
 #' @param trim 
 #' @param envir 
 #' @param verbose 
-#' @param deriv_model 
+#' @param model_deriv 
 #' @param deriv 
 #' @param draw_ids 
 #' @param estimation_method 
@@ -857,7 +857,7 @@ trimlines_curves.bgmfit <-
            trim = 0,
            estimation_method = 'fitted',
            verbose = FALSE,
-           deriv_model = NULL,
+           model_deriv = NULL,
            deriv = NULL, 
            envir = NULL,
            ...) {
@@ -909,7 +909,7 @@ trimlines_curves.bgmfit <-
     post_processing_checks_args[['check_d2']] <- FALSE
     
     # o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
-     o    <- do.call(post_processing_checks, post_processing_checks_args)
+     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
   
     uvarby <- model$model_info$univariate_by$by  
@@ -1015,10 +1015,10 @@ trimlines_curves.bgmfit <-
     
     if (estimation_method == 'fitted') {
       # extra$ey <- CustomDoCall(fitted_draws, estimation_method_args)
-       extra$ey <- do.call(fitted_draws, estimation_method_args)
+       extra$ey <- CustomDoCall(fitted_draws, estimation_method_args)
     } else if (estimation_method == 'predict') {
       # extra$ey <- CustomDoCall(predict_draws, estimation_method_args)
-       extra$ey <- do.call(predict_draws, estimation_method_args)
+       extra$ey <- CustomDoCall(predict_draws, estimation_method_args)
     }
     
     extra$ey <- extra$ey[, 1]

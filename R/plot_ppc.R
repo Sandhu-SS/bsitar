@@ -77,18 +77,19 @@ plot_ppc.bgmfit <-
            y_alpha = 1,
            y_jitter = 0.1,
            verbose = FALSE,
-           deriv_model = NULL,
+           model_deriv = NULL,
            dummy_to_factor = NULL, 
            expose_function = FALSE,
            usesavedfuns = NULL,
            clearenvfuns = NULL,
+           newdata_fixed = NULL,
            envir = NULL,
            ...) {
     
     if(is.null(envir)) {
       envir <- model$model_info$envir
     } else {
-      envir <- parent.frame()
+      envir <- envir
     }
     
     # Depending on dpar 'mu' or 'sigma', subset model_info
@@ -119,6 +120,19 @@ plot_ppc.bgmfit <-
     }
     
     
+    rlang_trace_back <- rlang::trace_back()
+    check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
+    if(all(!check_trace_back.bgmfit)) {
+      # nothing
+    } else {
+      rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
+      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
+      xcall <- rlang_call_name
+    }
+    
+    
+    
     check_if_package_installed(model, xcall = NULL)
     
     
@@ -126,8 +140,8 @@ plot_ppc.bgmfit <-
       ndraws <- brms::ndraws(model)
     }
     
-    if(is.null(deriv_model)) {
-      deriv_model <- TRUE
+    if(is.null(model_deriv)) {
+      model_deriv <- TRUE
     }
     
   
@@ -144,12 +158,12 @@ plot_ppc.bgmfit <-
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
     } else {
-      newdata <- do.call(get.newdata, full.args)
+      newdata <- CustomDoCall(get.newdata, full.args)
     }
     
     
     if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") deriv_model<- FALSE
+      if(model$model_info$decomp == "QR") model_deriv<- FALSE
     }
     
     expose_method_set <- model$model_info[['expose_method']]
@@ -170,10 +184,10 @@ plot_ppc.bgmfit <-
     post_processing_checks_args[['check_d1']] <- TRUE
     post_processing_checks_args[['check_d2']] <- FALSE
     
-    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
     post_processing_checks_args[['all']]      <- TRUE
-    oall <- do.call(post_processing_checks, post_processing_checks_args)
+    oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
     
     # o <- post_processing_checks(model = model,
@@ -197,7 +211,7 @@ plot_ppc.bgmfit <-
                       o = o, oall = oall, 
                       usesavedfuns = usesavedfuns, 
                       deriv = deriv, envir = envir, 
-                      deriv_model = deriv_model, 
+                      model_deriv = model_deriv, 
                       ...)
     
     if(is.null(test)) return(invisible(NULL))
@@ -234,7 +248,7 @@ plot_ppc.bgmfit <-
     }
    
     
-    . <- do.call(brms::pp_check, calling.args)
+    . <- CustomDoCall(brms::pp_check, calling.args)
     
    
     # Restore function(s)

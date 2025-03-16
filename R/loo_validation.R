@@ -83,7 +83,7 @@ loo_validation.bgmfit <-
            ndraws = NULL,
            draw_ids = NULL,
            cores = 1,
-           deriv_model = NULL,
+           model_deriv = NULL,
            verbose = FALSE,
            dummy_to_factor = NULL, 
            expose_function = FALSE,
@@ -95,7 +95,7 @@ loo_validation.bgmfit <-
     if(is.null(envir)) {
       envir <- model$model_info$envir
     } else {
-      envir <- parent.frame()
+      envir <- envir
     }
     
     # Depending on dpar 'mu' or 'sigma', subset model_info
@@ -135,8 +135,8 @@ loo_validation.bgmfit <-
       ndraws <- brms::ndraws(model)
     }
    
-    if(is.null(deriv_model)) {
-      deriv_model <- TRUE
+    if(is.null(model_deriv)) {
+      model_deriv <- TRUE
     }
     
     
@@ -149,16 +149,25 @@ loo_validation.bgmfit <-
     full.args$deriv <- deriv <- 0
     
     
+    full.args <- 
+      sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                 arguments = full.args, 
+                                 check_formalArgs = loo_validation.bgmfit,
+                                 check_formalArgs_exceptions = c('object'),
+                                 check_trace_back = NULL,
+                                 envir = parent.frame())
+    
+    
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
     } else {
-      newdata <- do.call(get.newdata, full.args)
+      newdata <- CustomDoCall(get.newdata, full.args)
     }
     
     
     if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") deriv_model<- FALSE
+      if(model$model_info$decomp == "QR") model_deriv<- FALSE
     }
     
     expose_method_set <- model$model_info[['expose_method']]
@@ -178,10 +187,10 @@ loo_validation.bgmfit <-
     post_processing_checks_args[['check_d1']] <- TRUE
     post_processing_checks_args[['check_d2']] <- FALSE
     
-    o    <- do.call(post_processing_checks, post_processing_checks_args)
+    o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
     post_processing_checks_args[['all']]      <- TRUE
-    oall <- do.call(post_processing_checks, post_processing_checks_args)
+    oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
     
     # o <- post_processing_checks(model = model,
@@ -205,7 +214,7 @@ loo_validation.bgmfit <-
                       o = o, oall = oall,
                       usesavedfuns = usesavedfuns,
                       deriv = deriv, envir = envir,
-                      deriv_model = deriv_model,
+                      model_deriv = model_deriv,
                       ...)
     
     if(is.null(test)) return(invisible(NULL))

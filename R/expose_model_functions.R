@@ -85,7 +85,7 @@ expose_model_functions.bgmfit <- function(model,
   if(is.null(envir)) {
     envir <- model$model_info$envir
   } else {
-    envir <- parent.frame()
+    envir <- envir
   }
   
   sigmanlflf <- FALSE
@@ -147,10 +147,10 @@ expose_model_functions.bgmfit <- function(model,
     stan_model_arguments[['setcompiler']] <- NULL
     
     if(compiled_code_via == 'stanc') {
-      compiled_code <- do.call(rstan::stanc, stanc_arguments)
+      compiled_code <- CustomDoCall(rstan::stanc, stanc_arguments)
     }
     if(compiled_code_via == 'stan_model') {
-      compiled_code <- do.call(rstan::stan_model, stan_model_arguments)
+      compiled_code <- CustomDoCall(rstan::stan_model, stan_model_arguments)
     }
     
     compiled_code_args <- list()
@@ -159,7 +159,7 @@ expose_model_functions.bgmfit <- function(model,
     compiled_code_args[['includes']] <- NULL
     compiled_code_args[['show_compiler_warnings']] <- FALSE
     
-    do.call(rstan::expose_stan_functions, compiled_code_args)
+    CustomDoCall(rstan::expose_stan_functions, compiled_code_args)
   }
   
   

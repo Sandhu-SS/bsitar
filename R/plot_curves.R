@@ -243,7 +243,7 @@ plot_curves.bgmfit <- function(model,
                                levels_id = NULL,
                                avg_reffects = NULL,
                                ipts = 10,
-                               deriv_model = TRUE,
+                               model_deriv = TRUE,
                                xrange = NULL,
                                xrange_search = NULL,
                                takeoff = FALSE,
@@ -293,7 +293,7 @@ plot_curves.bgmfit <- function(model,
                                clearenvfuns = NULL,
                                funlist = NULL,
                                itransform = NULL,
-                               newdata_fixed = FALSE,
+                               newdata_fixed = NULL,
                                envir = NULL,
                                ...) {
   
@@ -304,7 +304,7 @@ plot_curves.bgmfit <- function(model,
   if(is.null(envir)) {
     envir <- model$model_info$envir
   } else {
-    envir <- parent.frame()
+    envir <- envir
   }
   
   
@@ -400,7 +400,7 @@ plot_curves.bgmfit <- function(model,
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
   
-  o    <- do.call(post_processing_checks, post_processing_checks_args)
+  o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
  
   
@@ -409,35 +409,45 @@ plot_curves.bgmfit <- function(model,
   #                             resp = resp,
   #                             envir = envir)
   
-  xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-  scall <- sys.calls()
-  
-  get_xcall <- function(xcall, scall) {
-    scall <- scall[[length(scall)]]
-    if(any(grepl("plot_curves", scall, fixed = T)) |
-       any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
-      xcall <- "plot_curves"
-    } else if(any(grepl("growthparameters", scall, fixed = T)) |
-              any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
-      xcall <- "growthparameters"
-    } else {
-      xcall <- xcall
-    }
-  }
-  
-  
+  # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
+  # scall <- sys.calls()
+  # 
+  # get_xcall <- function(xcall, scall) {
+  #   scall <- scall[[length(scall)]]
+  #   if(any(grepl("plot_curves", scall, fixed = T)) |
+  #      any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
+  #     xcall <- "plot_curves"
+  #   } else if(any(grepl("growthparameters", scall, fixed = T)) |
+  #             any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
+  #     xcall <- "growthparameters"
+  #   } else {
+  #     xcall <- xcall
+  #   }
+  # }
+  # 
+  # 
+  # #   xcall <- get_xcall(xcall, scall)
+  # 
+  # if(xcall == "CustomDoCall" | xcall == "CustomDoCall") {
+  #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
+  #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
+  #   zzz <- strsplit(zzz, ",")[[1]][1]
+  #   xcall <- strsplit(zzz, "\\.")[[1]][1]
+  # } else {
   #   xcall <- get_xcall(xcall, scall)
+  # }
   
-  if(xcall == "do.call" | xcall == "CustomDoCall") {
-    zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-    zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-    zzz <- strsplit(zzz, ",")[[1]][1]
-    xcall <- strsplit(zzz, "\\.")[[1]][1]
+  
+  rlang_trace_back <- rlang::trace_back()
+  check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
+  if(all(!check_trace_back.bgmfit)) {
+    # nothing
   } else {
-    xcall <- get_xcall(xcall, scall)
+    rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
+    rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+    rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
+    xcall <- rlang_call_name
   }
-  
-  
   
  
   
@@ -459,8 +469,8 @@ plot_curves.bgmfit <- function(model,
     arguments$ndraws <- ndraws <- brms::ndraws(model)
   }
   
-  if(is.null(deriv_model)) {
-    arguments$deriv_model <- deriv_model <- TRUE
+  if(is.null(model_deriv)) {
+    arguments$model_deriv <- model_deriv <- TRUE
   }
   
   if (is.null(idata_method)) {
@@ -511,6 +521,7 @@ plot_curves.bgmfit <- function(model,
                          ipts = NULL,
                          xrange = xrange,
                          idata_method = idata_method,
+                         newdata_fixed = 0,
                          verbose = verbose)
   
   
@@ -522,6 +533,7 @@ plot_curves.bgmfit <- function(model,
                          ipts = ipts,
                          xrange = xrange,
                          idata_method = idata_method,
+                         newdata_fixed = newdata_fixed,
                          verbose = verbose)
   
   
@@ -707,7 +719,7 @@ plot_curves.bgmfit <- function(model,
   }
   
 
-  d. <- do.call(growthparameters.bgmfit, arguments)
+  d. <- CustomDoCall(growthparameters.bgmfit, arguments)
   
   if(is.null(d.)) return(invisible(NULL))
   
@@ -724,7 +736,7 @@ plot_curves.bgmfit <- function(model,
   d.[['groupby_str_d']] <- NULL
   d.[['groupby_str_v']] <- NULL
   
-  d. <- d. %>% do.call(rbind, .) %>% data.frame()
+  d. <- d. %>% CustomDoCall(rbind, .) %>% data.frame()
   row.names(d.) <- NULL
   
   
@@ -953,7 +965,7 @@ plot_curves.bgmfit <- function(model,
   #     post_processing_checks_args[['check_d1']] <- TRUE
   #     post_processing_checks_args[['check_d2']] <- FALSE
   #     
-  #     o    <- do.call(post_processing_checks, post_processing_checks_args)
+  #     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   #     
   #     
   #     # o <-
@@ -1102,7 +1114,7 @@ plot_curves.bgmfit <- function(model,
   #     post_processing_checks_args[['check_d1']] <- TRUE
   #     post_processing_checks_args[['check_d2']] <- FALSE
   #     
-  #     o    <- do.call(post_processing_checks, post_processing_checks_args)
+  #     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   #     
   #    
   #     # o <-
@@ -1559,7 +1571,7 @@ plot_curves.bgmfit <- function(model,
   #     post_processing_checks_args[['check_d1']] <- TRUE
   #     post_processing_checks_args[['check_d2']] <- FALSE
   #     
-  #     o    <- do.call(post_processing_checks, post_processing_checks_args)
+  #     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   #     
   #     
   #     # o <-
@@ -2532,7 +2544,7 @@ plot_curves.bgmfit <- function(model,
                                xrange = xrange, 
                                idata_method = idata_method,
                                verbose = verbose,
-                               deriv_model = NULL,
+                               model_deriv = NULL,
                                deriv = NULL, 
                                envir = envir,
                                ...) 
@@ -2553,7 +2565,7 @@ plot_curves.bgmfit <- function(model,
                                  trim = trim, 
                                  estimation_method = estimation_method,
                                  verbose = verbose,
-                                 deriv_model = NULL,
+                                 model_deriv = NULL,
                                  deriv = NULL, 
                                  envir = envir,
                                  ...)
@@ -2757,7 +2769,7 @@ plot_curves.bgmfit <- function(model,
                                    draw_ids = draw_ids,
                                    resp = resp, 
                                    verbose = verbose,
-                                   deriv_model = NULL,
+                                   model_deriv = NULL,
                                    deriv = NULL, 
                                    envir = envir,
                                    ...)
@@ -2778,7 +2790,7 @@ plot_curves.bgmfit <- function(model,
                                  trim = trim, 
                                  estimation_method = estimation_method,
                                  verbose = verbose,
-                                 deriv_model = NULL,
+                                 model_deriv = NULL,
                                  deriv = NULL, 
                                  envir = envir,
                                  ...)

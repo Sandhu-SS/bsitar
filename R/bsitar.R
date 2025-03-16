@@ -4281,7 +4281,7 @@ bsitar <- function(x,
   # dataz %>% dplyr::filter(sex == "Male")
   # dataz %>% dplyr::filter(sex == "Female")
     
-  data          <- do.call(prepare_data2, prepare_data_args)
+  data          <- CustomDoCall(prepare_data2, prepare_data_args)
   xs            <- attr(data, "xs")
   ys            <- attr(data, "ys")
   ids           <- attr(data, "ids")
@@ -5700,7 +5700,7 @@ bsitar <- function(x,
       check_for_validy_of_prepare_transformations_0 <- datai
     }
     
-    datai <- do.call(prepare_transformations, prepare_transformations_args)
+    datai <- CustomDoCall(prepare_transformations, prepare_transformations_args)
     
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_1 <- datai
@@ -5864,7 +5864,7 @@ bsitar <- function(x,
     prepare_transformations_args[['itransform']]   <- ""
 
     
-    datai <- do.call(prepare_transformations, prepare_transformations_args)
+    datai <- CustomDoCall(prepare_transformations, prepare_transformations_args)
     
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_2 <- datai
@@ -5892,7 +5892,7 @@ bsitar <- function(x,
      prepare_transformations_args[['transform']]    <- ""
      prepare_transformations_args[['itransform']]   <- ""
    
-    datai <- do.call(prepare_transformations, prepare_transformations_args)
+    datai <- CustomDoCall(prepare_transformations, prepare_transformations_args)
     
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_3 <- datai
@@ -5910,7 +5910,7 @@ bsitar <- function(x,
       prepare_transformations_args[['itransform']]   <- ""
       
       check_for_validy_of_prepare_transformations_4 <- 
-        do.call(prepare_transformations, prepare_transformations_args)
+        CustomDoCall(prepare_transformations, prepare_transformations_args)
       
       
       prepare_transformations_args[['data']]         <- 
@@ -5921,7 +5921,7 @@ bsitar <- function(x,
       prepare_transformations_args[['itransform']]   <- ""
       
       check_for_validy_of_prepare_transformations_5 <- 
-        do.call(prepare_transformations, prepare_transformations_args)
+        CustomDoCall(prepare_transformations, prepare_transformations_args)
       
       # check_for_validy_of_prepare_transformations_0x <<-
       #   check_for_validy_of_prepare_transformations_0
@@ -7058,7 +7058,7 @@ bsitar <- function(x,
     set_priors_initials_agrs $ custom_order_prior_str   <- ""
     
     
-    bpriors <- do.call(set_priors_initials, set_priors_initials_agrs)
+    bpriors <- CustomDoCall(set_priors_initials, set_priors_initials_agrs)
     
     stanvar_priors <- attr(bpriors, "stanvars")
     
@@ -7152,7 +7152,7 @@ bsitar <- function(x,
                                                 "_cov_prior_sd")]] <- 
             set_cov_prior[counter_start_from_one_for_prior]
 
-          bpriors_str <- do.call(set_priors_initials, 
+          bpriors_str <- CustomDoCall(set_priors_initials, 
                                  set_priors_initials_agrs_str, 
                                  envir = set_env_what)
 
@@ -7161,7 +7161,7 @@ bsitar <- function(x,
           temp_gr_str_stanvars <- c(temp_gr_str_stanvars, stanvars_str)
           temp_gr_str_priors[[istrx]] <- bpriors_str
         }
-        temp_gr_str_priors <- temp_gr_str_priors %>% do.call(rbind, .)
+        temp_gr_str_priors <- temp_gr_str_priors %>% CustomDoCall(rbind, .)
         out <- list(temp_gr_str_priors = temp_gr_str_priors,
                     temp_gr_str_stanvars = temp_gr_str_stanvars,
                     temp_gr_str_inits = temp_gr_str_inits)
@@ -7333,7 +7333,7 @@ bsitar <- function(x,
       } 
     } 
     
-    higher_level_priors <- temp_gr_str_priors_sd %>% do.call(rbind, .)
+    higher_level_priors <- temp_gr_str_priors_sd %>% CustomDoCall(rbind, .)
     bpriors             <- rbind(bpriors, higher_level_priors)
     
     if(length(temp_gr_str_stanvars_sd) > 0) {
@@ -7427,7 +7427,7 @@ bsitar <- function(x,
             set_priors_initials_agrs_str $ custom_order_prior_str <-
               custom_order_prior_str
             
-            bpriors_str <- do.call(set_priors_initials, 
+            bpriors_str <- CustomDoCall(set_priors_initials, 
                                    set_priors_initials_agrs_str, 
                                    envir = set_env_what)
             stanvars_str <- attr(bpriors_str, "stanvars")
@@ -7458,7 +7458,7 @@ bsitar <- function(x,
           
         } 
         
-        temp_gr_str_priors <- temp_gr_str_priors %>% do.call(rbind, .)
+        temp_gr_str_priors <- temp_gr_str_priors %>% CustomDoCall(rbind, .)
        
         out <- list(temp_gr_str_priors = temp_gr_str_priors,
                     temp_gr_str_stanvars = temp_gr_str_stanvars,
@@ -7585,7 +7585,7 @@ bsitar <- function(x,
     
     
     
-    higher_level_priors_corr <- temp_gr_str_priors_corr %>% do.call(rbind, .)
+    higher_level_priors_corr <- temp_gr_str_priors_corr %>% CustomDoCall(rbind, .)
     bpriors                  <- rbind(bpriors, higher_level_priors_corr)
    
     
@@ -7902,7 +7902,7 @@ bsitar <- function(x,
     prepare_transformations_args[['transform']]    <- ""
     prepare_transformations_args[['itransform']]   <- ""
     
-    datai <- do.call(prepare_transformations, prepare_transformations_args)
+    datai <- CustomDoCall(prepare_transformations, prepare_transformations_args)
     
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
@@ -8016,7 +8016,7 @@ bsitar <- function(x,
   prepare_transformations_args[['transform']]    <- ""
   prepare_transformations_args[['itransform']]   <- ""
   
-  dataout <- do.call(prepare_transformations, prepare_transformations_args)
+  dataout <- CustomDoCall(prepare_transformations, prepare_transformations_args)
   
   
   
@@ -8331,7 +8331,7 @@ bsitar <- function(x,
       keys <- brmsinits_names[grepl(c_it, brmsinits_names)]
       temppp <- brmsinits[names(brmsinits) %in% keys]
       brmsinits <- brmsinits[!names(brmsinits) %in% keys]
-      brmsinits[[keys[1]]] <- do.call(rbind, temppp)
+      brmsinits[[keys[1]]] <- CustomDoCall(rbind, temppp)
     } else if (multivariate$mvar &
                (multivariate$cor == "un" | multivariate$cor ==
                 "un_s") &
@@ -9235,8 +9235,8 @@ bsitar <- function(x,
                         .data$nlpar != getx[['nlpar']])
       
     }
-    p1 <- cc %>% do.call(rbind, .)
-    p2 <- zz %>% do.call(rbind, .)
+    p1 <- cc %>% CustomDoCall(rbind, .)
+    p2 <- zz %>% CustomDoCall(rbind, .)
     p1p2 <- rbind(p1, p2)
     p1p2
   }
@@ -9249,7 +9249,7 @@ bsitar <- function(x,
       dplyr::filter(.data$class == 'sd' | .data$class == 'cor')
     brmspriors_sdcor_gr <- brmspriors_sdcor$group
     
-    brmsfit_sdcor <- do.call(brms::get_prior, brm_args) %>% 
+    brmsfit_sdcor <- CustomDoCall(brms::get_prior, brm_args) %>% 
       dplyr::filter(.data$class == 'sd' | .data$class == 'cor')
     
     brmsfit_sdcor_prior_gr <- brmsfit_sdcor %>% 
@@ -9681,7 +9681,7 @@ bsitar <- function(x,
     prepare_data_args[['displayit']]     <- displayit
     prepare_data_args[['setcolb']]       <- setcolb
 
-    data_custom_data            <- do.call(prepare_data2, prepare_data_args)
+    data_custom_data            <- CustomDoCall(prepare_data2, prepare_data_args)
     
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_0_custom <- data_custom_data
@@ -9703,7 +9703,7 @@ bsitar <- function(x,
     prepare_transformations_args[['transform']]    <- ""
     prepare_transformations_args[['itransform']]   <- ""
     
-    data_custom_data <- do.call(prepare_transformations, prepare_transformations_args)
+    data_custom_data <- CustomDoCall(prepare_transformations, prepare_transformations_args)
     
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_3_custom <- data_custom_data
@@ -9719,7 +9719,7 @@ bsitar <- function(x,
       prepare_transformations_args[['itransform']]   <- ""
       
       check_for_validy_of_prepare_transformations_4_custom <- 
-        do.call(prepare_transformations, prepare_transformations_args)
+        CustomDoCall(prepare_transformations, prepare_transformations_args)
       
       prepare_transformations_args[['data']]         <- 
         check_for_validy_of_prepare_transformations_4_custom
@@ -9729,7 +9729,7 @@ bsitar <- function(x,
       prepare_transformations_args[['itransform']]   <- ""
       
       check_for_validy_of_prepare_transformations_5_custom <- 
-        do.call(prepare_transformations, prepare_transformations_args)
+        CustomDoCall(prepare_transformations, prepare_transformations_args)
       
       # check_for_validy_of_prepare_transformations_0_customx <<-
       #   check_for_validy_of_prepare_transformations_0_custom
@@ -9852,11 +9852,11 @@ bsitar <- function(x,
     } else if(!is.null(data_custom)) {
       paste_x_Naux_str <- paste0("_", x_Naux_str)
       make_stancode_custom_args[['return_data']] <- TRUE
-      gqdata_stanvarlist_data_si <- do.call(make_stancode_custom, 
+      gqdata_stanvarlist_data_si <- CustomDoCall(make_stancode_custom, 
                                             make_stancode_custom_args)
       
       
-      data_custom_standata <- do.call(make_standata_custom, 
+      data_custom_standata <- CustomDoCall(make_standata_custom, 
                                       make_standata_custom_args)
       
       data_custom_standata[["prior_only"]] <- NULL
@@ -9928,7 +9928,7 @@ bsitar <- function(x,
     ####################################################################
     
     make_stancode_custom_args[['return_gq']] <- TRUE
-    gqdata_stanvarlist_si <- do.call(make_stancode_custom, 
+    gqdata_stanvarlist_si <- CustomDoCall(make_stancode_custom, 
                                      make_stancode_custom_args)
     
     gq_custom_standata_code <- strsplit(gqdata_stanvarlist_si, "\n")[[1]]
@@ -10340,8 +10340,8 @@ bsitar <- function(x,
   ####################################################################
   
   
-  scode_final  <- do.call(brms::make_stancode, brm_args)
-  sdata        <- do.call(brms::make_standata, brm_args)
+  scode_final  <- CustomDoCall(brms::make_stancode, brm_args)
+  sdata        <- CustomDoCall(brms::make_standata, brm_args)
   
   
   if(parameterization == 'cp') {
@@ -10391,15 +10391,15 @@ bsitar <- function(x,
   
   if(!exe_model_fit) {
     if(get_priors) {
-      return(do.call(brms::get_prior, brm_args))
+      return(CustomDoCall(brms::get_prior, brm_args))
     } else if(get_standata) {
-      return(do.call(brms::make_standata, brm_args))
+      return(CustomDoCall(brms::make_standata, brm_args))
     } else if(get_stancode) {
       return(scode_final)
     } else if(get_priors_eval) {
       return(get_priors_eval_out)
     } else if(validate_priors) {
-      return(do.call(brms::validate_prior, brm_args))
+      return(CustomDoCall(brms::validate_prior, brm_args))
     } else if(get_init_eval) {
       return(brm_args$init)
     } else if(get_formula) {
@@ -10586,7 +10586,7 @@ bsitar <- function(x,
                                      pathfinder_args = pathfinder_args,
                                      pathfinder_init = pathfinder_init)
       } else {
-        brmsfit <- do.call(brms::brm, brm_args)
+        brmsfit <- CustomDoCall(brms::brm, brm_args)
       }
     } # if(fit_edited_scode) {
     
@@ -10594,7 +10594,7 @@ bsitar <- function(x,
     
     
     if(brm_args$backend == "mock") {
-      brmsfit <- do.call(brms::brm, brm_args)
+      brmsfit <- CustomDoCall(brms::brm, brm_args)
     }
     
 

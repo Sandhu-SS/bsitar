@@ -196,7 +196,7 @@ optimize_model.bgmfit <- function(model,
   if(is.null(envir)) {
     envir <- model$model_info$envir
   } else {
-    envir <- parent.frame()
+    envir <- envir
   }
   
 
@@ -241,7 +241,7 @@ optimize_model.bgmfit <- function(model,
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
   
-  o    <- do.call(post_processing_checks, post_processing_checks_args)
+  o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
   # o <-
   #   post_processing_checks(model = model,
@@ -471,7 +471,7 @@ optimize_model.bgmfit <- function(model,
         list_c[[ic]] <- model_list[[model_listi]][[summary_obj]]
       }
       summary_of_obj <-
-        list_c %>% do.call(rbind, .) %>% data.frame()
+        list_c %>% CustomDoCall(rbind, .) %>% data.frame()
     }
     if (nrow(summary_of_obj) < 1)
       summary_of_obj <- NULL
@@ -727,7 +727,7 @@ optimize_model.bgmfit <- function(model,
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_waic <-
-              list_c_ %>%  do.call(rbind, .) %>% data.frame()
+              list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
           } else if (fit$model_info$multivariate$mvar & !is.null(resp)) {
             list_c_ <- list()
             for (aci in fit$model_info$yvars) {
@@ -738,7 +738,7 @@ optimize_model.bgmfit <- function(model,
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_waic <-
-              list_c_ %>%  do.call(rbind, .) %>% data.frame()
+              list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
           } else if (fit$model_info$multivariate$mvar & is.null(resp)) {
             getit_ <- paste0('waic', '')
             summary_waic <-
@@ -791,7 +791,7 @@ optimize_model.bgmfit <- function(model,
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_bayes_R2 <-
-              list_c_ %>%  do.call(rbind, .) %>% data.frame()
+              list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
           } else if (fit$model_info$multivariate$mvar & !is.null(resp)) {
             list_c_ <- list()
             for (aci in fit$model_info$yvars) {
@@ -802,7 +802,7 @@ optimize_model.bgmfit <- function(model,
                 dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
             }
             summary_bayes_R2 <-
-              list_c_ %>%  do.call(rbind, .) %>% data.frame()
+              list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
           } else if (fit$model_info$multivariate$mvar & is.null(resp)) {
             getit_ <- paste0('bayes_R2', '')
             summary_bayes_R2 <-
@@ -857,7 +857,7 @@ optimize_model.bgmfit <- function(model,
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               summary_loo <-
-                list_c_ %>%  do.call(rbind, .) %>% data.frame()
+                list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
             } else if (fit$model_info$multivariate$mvar &
                        !is.null(resp)) {
               list_c_ <- list()
@@ -869,7 +869,7 @@ optimize_model.bgmfit <- function(model,
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               summary_loo <-
-                list_c_ %>%  do.call(rbind, .) %>% data.frame()
+                list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
             } else if (fit$model_info$multivariate$mvar &
                        is.null(resp)) {
               getit_ <- paste0('loo', '')
@@ -920,7 +920,7 @@ optimize_model.bgmfit <- function(model,
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               diagnostic_loo <-
-                list_c_ %>%  do.call(rbind, .) %>% data.frame()
+                list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
             } else if (fit$model_info$multivariate$mvar &
                        !is.null(resp)) {
               list_c_ <- list()
@@ -932,7 +932,7 @@ optimize_model.bgmfit <- function(model,
                   dplyr::mutate(outcome = aci) %>% dplyr::relocate(outcome)
               }
               diagnostic_loo <-
-                list_c_ %>%  do.call(rbind, .) %>% data.frame()
+                list_c_ %>%  CustomDoCall(rbind, .) %>% data.frame()
             } else if (fit$model_info$multivariate$mvar &
                        is.null(resp)) {
               getit_ <- paste0('loo', '')
@@ -1514,15 +1514,15 @@ optimize_model.bgmfit <- function(model,
       
       # if(!exe_model_fit) {
       #   if(get_priors) {
-      #     return(do.call(brms::get_prior, brm_args))
+      #     return(CustomDoCall(brms::get_prior, brm_args))
       #   } else if(get_standata) {
-      #     return(do.call(brms::make_standata, brm_args))
+      #     return(CustomDoCall(brms::make_standata, brm_args))
       #   } else if(get_stancode) {
       #     return(scode_final)
       #   } else if(get_priors_eval) {
       #     return(get_priors_eval_out)
       #   } else if(validate_priors) {
-      #     return(do.call(brms::validate_prior, brm_args))
+      #     return(CustomDoCall(brms::validate_prior, brm_args))
       #   } else if(get_init_eval) {
       #     return(brm_args$init)
       #   } else if(get_formula) {
@@ -1545,7 +1545,7 @@ optimize_model.bgmfit <- function(model,
           if(!is.null(fit$model_info$exefuns[[1]])) {
             envir <- environment(fit$model_info$exefuns[[1]])
           } else {
-            envir <- parent.frame()
+            envir <- envir # parent.frame()
           }
         }
         

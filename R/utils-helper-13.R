@@ -53,7 +53,7 @@ get_hypothesis_x <- function(
     }
     args <- list(x = x, newdata = newdata, by = by, draws = draws)
     args <- args[names(args) %in% argnames]
-    out <- do.call(hypothesis, args)
+    out <- CustomDoCall(hypothesis, args)
     if (!inherits(out, "data.frame") || !"term" %in% colnames(out) || !"estimate" %in% colnames(out)) {
       msg <- "The `hypothesis` function must return a data frame with `term` and `estimate` columns."
       stop(msg, call. = FALSE)
@@ -112,8 +112,8 @@ get_hypothesis_x <- function(
       out_list[[i]] <- eval_string_hypothesis(x, hypothesis[i], labs[i])
       draws_list[[i]] <- attr(out_list[[i]], "posterior_draws")
     }
-    out <- do.call(rbind, out_list)
-    attr(out, "posterior_draws") <- do.call(rbind, draws_list)
+    out <- CustomDoCall(rbind, out_list)
+    attr(out, "posterior_draws") <- CustomDoCall(rbind, draws_list)
     attr(out, "label") <- if (!is.null(attr(labs, "names"))) {
       attr(labs, "names")
     } else {
@@ -246,7 +246,7 @@ lincom_revpairwise <- function(x, by) {
       }
     }
   }
-  lincom <- do.call("cbind", mat)
+  lincom <- CustomDoCall("cbind", mat)
   colnames(lincom) <- lab_col
   return(lincom)
 }
@@ -272,7 +272,7 @@ lincom_pairwise <- function(x, by) {
       }
     }
   }
-  lincom <- do.call("cbind", mat)
+  lincom <- CustomDoCall("cbind", mat)
   colnames(lincom) <- lab_col
   return(lincom)
 }
