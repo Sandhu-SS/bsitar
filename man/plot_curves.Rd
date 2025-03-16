@@ -549,9 +549,7 @@ can plot either fitted or predicted curves. For more details, see
 fitted and predicted values.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model is fit to 

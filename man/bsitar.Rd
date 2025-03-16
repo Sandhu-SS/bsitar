@@ -1934,9 +1934,7 @@ Keep an eye on future releases for additional functionality and updates to
 enhance model fitting, diagnostics, and analysis capabilities.
 }
 \examples{
-
 \donttest{
-
 # Below, we fit a SITAR model to a subset of the Berkley height data, 
 # specifically the data for 70 girls between the ages of 8 and 18.  
 # This subset is used as an example in the vignette for the 'sitar' package.

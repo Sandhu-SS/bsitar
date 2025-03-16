@@ -345,9 +345,7 @@ same manner, allowing users to specify all options available in
 \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}}.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model 
 
 # To avoid time-consuming model estimation, the Bayesian SITAR model fit to 

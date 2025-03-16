@@ -328,9 +328,7 @@ approach is to \code{\link[=marginal_draws]{marginal_draws()}} function (with \c
 is based on the \pkg{marginaleffects}.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 

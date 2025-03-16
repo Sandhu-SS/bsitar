@@ -344,9 +344,7 @@ similarly. In other words, the user can specify all the options available
 in \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}}.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model
 
 # To avoid mode estimation, which takes time, the Bayesian SITAR model is fit 

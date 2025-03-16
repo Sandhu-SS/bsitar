@@ -2691,25 +2691,30 @@ check_if_functions_exists <- function(model,
                                       xcall = NULL, 
                                       verbose = TRUE, 
                                       usesavedfuns = FALSE, 
-                                      checks = FALSE,...) {
+                                      checks = FALSE,
+                                      envir = NULL, 
+                                      ...) {
+  # 6.03.2025 - added new argument envir = NULL, 
+  if(is.null(envir)) envir <- globalenv()
   
   if(!checks) {
     if(is.null(o)) stop("object 'o' must be specified")
   }
   
   check_brms_v <- 
-  check_pkg_version_exists('brms', 
-                           minimum_version = get_package_minversion('brms'), 
-                           prompt = FALSE,
-                           stop = FALSE,
-                           verbose = FALSE)
+    check_pkg_version_exists('brms', 
+                             minimum_version = get_package_minversion('brms'), 
+                             prompt = FALSE,
+                             stop = FALSE,
+                             verbose = FALSE)
   
   latest_brms_v <- TRUE
   if(!isTRUE(check_brms_v)) {
     latest_brms_v <- FALSE
   }
   
-  # if(exists(o[[1]], mode = "function", envir = globalenv())) {
+  # globalenv()
+  # if(exists(o[[1]], mode = "function", envir = envir)) {
   #   envgtf <- TRUE
   # } else {
   #   envgtf <- FALSE
@@ -2726,7 +2731,7 @@ check_if_functions_exists <- function(model,
   msg1 <- paste0(" Please expose user defined Stan function before calling the",
                  "\n ",
                  "'", calname.fun, "()'", " function",
-                  "\n ",
+                 "\n ",
                  " (See '?expose_model_functions()' for details).",
                  "\n ",
                  "\n ",
@@ -2799,25 +2804,25 @@ check_if_functions_exists <- function(model,
     return(invisible(NULL))
   }
   
-  
-  if(exists(o[[1]], mode = "function", envir = globalenv())) {
+  if(exists(o[[1]], mode = "function", envir = envir)) {
+    # if(exists(o[[1]], mode = "function", envir = globalenv())) {
     envgtf <- TRUE
   } else {
     envgtf <- FALSE
   }
-
+  
   if(verbose) {
     if(!envgtf) {
       if(verbose) message(msg3)
     }
   }
-
+  
   if(!envgtf) {
     en <- NULL
   } else if(envgtf) {
     en <- environment(eval(parse(text = o[[1]])))
   }
-
+  
   return(en)
 }
 

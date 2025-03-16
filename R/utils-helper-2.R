@@ -889,7 +889,7 @@ setupfuns <- function(model,
   
   if (is.null(resp)) {
     resp_ <- resp
-  } else if (!is.null(resp)) {
+  } else if (!is.null(resp)) {z
     resp_ <- paste0(resp, "_")
   }
   

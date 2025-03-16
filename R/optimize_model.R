@@ -137,9 +137,7 @@
 #' @inherit berkeley author
 #'
 #' @examples
-#' 
 #' \donttest{
-#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid model estimation, which takes time, the Bayesian SITAR model fit  

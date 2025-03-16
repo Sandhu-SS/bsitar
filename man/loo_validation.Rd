@@ -167,9 +167,7 @@ can use \code{\link[brms:add_criterion]{brms::add_criterion()}} to store informa
 model object for later use.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 

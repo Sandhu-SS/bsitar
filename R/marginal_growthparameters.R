@@ -361,7 +361,6 @@
 #' @inherit berkeley author
 #' 
 #' @examples
-#' 
 #' \donttest{
 #' # Fit Bayesian SITAR model
 #' 

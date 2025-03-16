@@ -11,9 +11,15 @@ Also, the ``growthparameters_comparison()`` function has been renamed to ``margi
 For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
 
 
-## New features/additions
+## New features/Additions
 
 Added support (experimental) for estimating model based individual growth parameters such as age at peak growth velocity (APGV) as well as distance and velocity at APGV. See function ``modelbased_growthparameters()`` for details. Note that the function name and arguments may change in future release. 
+
+
+### Minor changes/Enhancements
+
+Improved efficiency of post-processing function (average improvement in speed ~ 2x).
+
  
 
 ### Bugfixes

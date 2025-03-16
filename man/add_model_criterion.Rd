@@ -145,7 +145,6 @@ only for \link[brms:add_ic]{brms::add_loo}, while \code{summary}, \code{robust},
 \code{probs} are ignored except for the \code{\link[brms:bayes_R2.brmsfit]{brms::bayes_R2()}}.
 }
 \examples{
-
 \donttest{
 # Fit Bayesian SITAR model 
 

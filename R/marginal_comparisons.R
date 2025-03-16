@@ -85,9 +85,7 @@
 #' @inherit berkeley author
 #' 
 #' @examples
-#' 
 #' \donttest{
-#' 
 #' # Fit Bayesian SITAR model 
 #' 
 #' # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
@@ -104,6 +102,8 @@
 #' model <- berkeley_exfit
 #' 
 #' # Call marginal_comparisons to demonstrate the function
+#' # Note that since model has no covariate, the below example does't make sense
+#' 
 #' marginal_comparisons(model, draw_ids = 1)
 #' }
 #' 

@@ -180,9 +180,7 @@ at peak velocity. This hold true even when a individual lacks measurements at
 the expected turning point.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 

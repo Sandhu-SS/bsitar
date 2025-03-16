@@ -1737,9 +1737,7 @@
 #' @inherit berkeley author
 #' 
 #' @examples
-#' 
 #' \donttest{
-#' 
 #' # Below, we fit a SITAR model to a subset of the Berkley height data, 
 #' # specifically the data for 70 girls between the ages of 8 and 18.  
 #' # This subset is used as an example in the vignette for the 'sitar' package.
@@ -5178,6 +5176,12 @@ bsitar <- function(x,
     
 
     N_J_all <- length(unique(data[[idsi]]))
+    
+    
+    # print(sigma_formula_manual)
+    # print(sigma_formula_manuals)
+    # print(sigma_formula_manualsi)
+    # stop()
     
     
     ##########################

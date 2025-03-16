@@ -69,7 +69,7 @@ prepare_transformations <- function(data = NULL,
                                     xoffset = NULL,
                                     sigmaxoffset = NULL,
                                     transform = "",
-                                    itransform = c(""),
+                                    itransform = "",
                                     model = NULL,
                                     envir = NULL,
                                     verbose = FALSE) {
@@ -201,8 +201,6 @@ prepare_transformations <- function(data = NULL,
     }
   }
   
-  
-  
   # check and allow function as 'yfun' and also single to match 'yvar'
   if(!is.null(yfun)) {
     if(!is.list(yfun)) {
@@ -230,8 +228,6 @@ prepare_transformations <- function(data = NULL,
       }
     }
   }
-  
-  
   
   # check and allow function as 'sigmaxfun' and also single to match 'sigmaxvar'
   if(!is.null(sigmaxfun)) {
@@ -264,7 +260,6 @@ prepare_transformations <- function(data = NULL,
   #######################################################################
   #######################################################################
   
- 
   # if xoffset = NULL, even though it will be given 0, but name not assigned
   if(is.null(xoffset))      xoffset      <- 0
   if(is.null(sigmaxoffset)) sigmaxoffset <- 0
@@ -300,8 +295,6 @@ prepare_transformations <- function(data = NULL,
   }
   
  
-  
-  
   #######################################################################
   #######################################################################
   
@@ -343,47 +336,25 @@ prepare_transformations <- function(data = NULL,
     }
     xfun <- templist
     if(is_emptyx(xfun)) xfun <- NULL
-    # if(ixfun) {
-    #   ixfun <- itemplist
-    #   if(is_emptyx(ixfun)) ixfun <- NULL
-    # }
   }
 
   if(!is.null(yvar)) {
     templist <- itemplist <- list()
     for (i in 1:length(yvar)) {
       templist[[yvar[[i]]]] <- yfun[[i]]
-      # itemplist[[yvar[[i]]]] <- iyfun[[i]]
     }
     yfun <- templist
     if(is_emptyx(yfun)) yfun <- NULL
-
-    # iyfun <- itemplist
-    # if(is_emptyx(iyfun)) iyfun <- NULL
   }
 
   if(!is.null(sigmaxvar)) {
     templist <- itemplist <- list()
     for (i in 1:length(sigmaxvar)) {
       templist[[sigmaxvar[[i]]]] <- sigmaxfun[[i]]
-      # itemplist[[sigmaxvar[[i]]]] <- isigmaxfun[[i]]
     }
     sigmaxfun <- templist
     if(is_emptyx(sigmaxfun)) sigmaxfun <- NULL
-
-    # isigmaxfun <- itemplist
-    # if(is_emptyx(isigmaxfun)) isigmaxfun <- NULL
   }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   
   
   
@@ -397,8 +368,6 @@ prepare_transformations <- function(data = NULL,
       addtobodyoffun          <- paste0("-", evalxoffset)
       bodyoffun2              <- paste0(bodyoffun, addtobodyoffun)
       body(xfun[[i]])        <- str2lang(bodyoffun2)
-      # the environment needed if using paste0("-", "evalxoffset")
-      # environment(xfun[[i]]) <- envir
     }
   }
   
@@ -414,86 +383,9 @@ prepare_transformations <- function(data = NULL,
     }
   }
   
-  #######################################################################
-  #######################################################################
   
   #######################################################################
   #######################################################################
-  
-  # redundant, above included
-  
-  # the duplicate xvar name ans funs sorted here e.g., multivariate model - age
-  # this because list will be with duplicate names and unique names will be left
-  # if(!is.null(xvar)) {
-  #   templist <- itemplist <- list()
-  #   for (i in 1:length(xvar)) {
-  #     templist[[xvar[[i]]]]   <- xfun[[i]]
-  #     # itemplist[[xvar[[i]]]] <- ixfun[[i]]
-  #   }
-  #   xfun <- templist
-  #   # ixfun <- itemplist
-  #   if(is_emptyx(xfun)) xfun <- NULL
-  #   # if(is_emptyx(ixfun)) ixfun <- NULL
-  # }
-  # 
-  # if(!is.null(yvar)) {
-  #   templist <- itemplist <- list()
-  #   for (i in 1:length(yvar)) {
-  #     templist[[yvar[[i]]]] <- yfun[[i]]
-  #     # itemplist[[yvar[[i]]]] <- iyfun[[i]]
-  #   }
-  #   yfun <- templist
-  #   # iyfun <- itemplist
-  #   if(is_emptyx(yfun)) yfun <- NULL
-  #   # if(is_emptyx(iyfun)) iyfun <- NULL
-  # }
-  # 
-  # if(!is.null(sigmaxvar)) {
-  #   templist <- itemplist <- list()
-  #   for (i in 1:length(sigmaxvar)) {
-  #     templist[[sigmaxvar[[i]]]] <- sigmaxfun[[i]]
-  #     # itemplist[[sigmaxvar[[i]]]] <- isigmaxfun[[i]]
-  #   }
-  #   sigmaxfun <- templist
-  #   # isigmaxfun <- itemplist
-  #   if(is_emptyx(sigmaxfun)) sigmaxfun <- NULL
-  #   # if(is_emptyx(isigmaxfun)) isigmaxfun <- NULL
-  # }
-  
-  #######################################################################
-  #######################################################################
-
-  
-  #######################################################################
-  #######################################################################
-  
-  # check and tranform TRUE/FALSE ixfun iyfun isigmaxfun to NULL or funs
-  
-  # # Although below we keep option of setting ifuns, for now we allow only T/F
-  # if(missing(ixfun)) {
-  #   ixfun <- FALSE
-  #   if(verbose) message("missing 'ixfun' set as FALSE")
-  # }
-  # if(missing(iyfun)) {
-  #   iyfun <- FALSE
-  #   if(verbose) message("missing 'iyfun' set as FALSE")
-  # }
-  # if(missing(isigmaxfun)) {
-  #   iyfun <- FALSE
-  #   if(verbose) message("missing 'isigmaxfun' set as FALSE")
-  # }
-  # 
-  # if(!is.logical(ixfun)) {
-  #   stop("'ixfun' must be a logical, TRUE or FALSE")
-  # }
-  # if(!is.logical(iyfun)) {
-  #   stop("'iyfun' must be a logical, TRUE or FALSE")
-  # }
-  # if(!is.logical(isigmaxfun)) {
-  #   stop("'isigmaxfun' must be a logical, TRUE or FALSE")
-  # }
-   
-   
   
   # Since we are allowing only T/F, when ifuns = TRUE, set fun to NULL
   # Generate inverse functions if NULL 
@@ -601,15 +493,7 @@ prepare_transformations <- function(data = NULL,
   
   transform  <- transform[  transform!=""]
   itransform <- itransform[itransform!=""]
-  
-  # print(xfun)
-  # print(ixfun)
-  # print(yfun)
-  # print(iyfun)
-  # print(transform)
-  # print(itransform)
-  
-
+ 
   #######################################################################
   #######################################################################
   ## Transform
@@ -672,17 +556,6 @@ prepare_transformations <- function(data = NULL,
   
   #######################################################################
   #######################################################################
-  # print(xvar)
-  # print(yvar)
-  # print(xfun)
-  # print(ixfun)
-  # print(yfun)
-  # print(iyfun)
-  # print(transform)
-  # print(itransform)
-  
-  #######################################################################
-  #######################################################################
   ## itransform -> inverse
   if('x' %in% itransform & !is.null(ixfun)) {
     if(is.null(ixfun)) {
@@ -738,8 +611,7 @@ prepare_transformations <- function(data = NULL,
     }
   }
   
-  #######################################################################
-  #######################################################################
+
 
   return(data)
 } # prepare_transformations

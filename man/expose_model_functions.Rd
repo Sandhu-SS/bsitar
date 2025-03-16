@@ -71,9 +71,7 @@ function(s). These functions are necessary for post-processing the
 posterior draws.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 

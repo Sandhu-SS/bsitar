@@ -427,9 +427,7 @@ be possible if there are no distinct pre-peak or post-peak troughs in the
 data.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR Model 
 
 # To avoid mode estimation, which takes time, the Bayesian SITAR model fit 

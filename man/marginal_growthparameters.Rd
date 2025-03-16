@@ -763,7 +763,6 @@ accepts a positive real value bounded between 0 and 1 (with the default value
 being \code{0.1}, indicating 10 percent).
 }
 \examples{
-
 \donttest{
 # Fit Bayesian SITAR model
 

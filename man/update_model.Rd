@@ -71,9 +71,7 @@ This function is an adapted version of the \strong{update()} function
 from the \pkg{brms} package.
 }
 \examples{
-
 \donttest{
-
 # Fit Bayesian SITAR model 
 
 # To avoid mode estimation which takes time, the Bayesian SITAR model fit to 
