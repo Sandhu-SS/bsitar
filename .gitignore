@@ -2,6 +2,7 @@ inst/doc
 ^doc$
 ^doc\.html$
 .Rproj.user
+doc/
 revdep/
 .Rhistory
 
