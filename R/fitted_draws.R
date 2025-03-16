@@ -406,8 +406,8 @@ fitted_draws.bgmfit <-
                    "It is strongly recommended not to set'ipts = NULL'", "\n",
                    "Typically, ipts > 100 is needed to get smooth deriv curve")
         }
-        if(grepl("fitted_draws", rlang_trace_back[[1]]) |
-           grepl("predict_draws", rlang_trace_back[[1]])) {
+        if(any(grepl("fitted_draws", rlang_trace_back[[1]])) |
+           any(grepl("predict_draws", rlang_trace_back[[1]]))) {
           message_for_model_deriv_FALSE <- 
             paste0(message_for_model_deriv_FALSE, "\n",
                    "A better approach would be use 'marginal_draws()' ",
@@ -460,8 +460,32 @@ fitted_draws.bgmfit <-
       if(eval(full.args$deriv) > 0) { 
         # if(!is.null((eval(full.args$model_deriv)))) { # new layer if 6.03.2025
           if(!eval(full.args$model_deriv)) {
-            full.args$. <- .
-            . <- CustomDoCall(mapderivqr, full.args)
+              if(verbose) {
+                message(message_for_model_deriv_FALSE)
+              }
+              full.args <-
+                sanitize_CustomDoCall_args(what = "CustomDoCall",
+                                           arguments = full.args,
+                                           check_formalArgs = mapderivqr,
+                                           check_formalArgs_exceptions = c('object'),
+                                           check_trace_back = NULL,
+                                           envir = parent.frame())
+              calling.args_mapderivqr_args <- full.args
+              calling.args_mapderivqr_args[['summary']] <- FALSE
+              y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
+              mapderivqr_args <- list()
+              mapderivqr_args[['y0']] <- y0
+              mapderivqr_args[['model']] <- full.args[['object']]
+              mapderivqr_args[['newdata']] <- full.args[['newdata']]
+              mapderivqr_args[['deriv']] <- full.args[['deriv']]
+              mapderivqr_args[['resp']] <- full.args[['resp']]
+              mapderivqr_args[['probs']] <- full.args[['probs']]
+              mapderivqr_args[['summary']] <- full.args[['summary']]
+              mapderivqr_args[['robust']] <- full.args[['robust']]
+              . <- CustomDoCall(mapderivqr, mapderivqr_args)
+              full.args$. <- .
+            # full.args$. <- .
+            # . <- CustomDoCall(mapderivqr, full.args)
           } else {
             . <- .
           # }
@@ -469,8 +493,7 @@ fitted_draws.bgmfit <-
       }
     }
     
-    
-    
+
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
    

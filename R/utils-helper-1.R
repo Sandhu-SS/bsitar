@@ -1812,6 +1812,7 @@ edit_scode_ncp_to_cp <- function(stancode,
 #' central tendency and the standard deviation as the measure of variability.
 #' If TRUE, the median and the median absolute deviation (MAD) are applied
 #' instead. Only used if summary is TRUE.
+#'  @param ... Additional argumnets. Ignored
 #' @keywords internal
 #' @return A character string.
 #' @noRd
@@ -1823,7 +1824,8 @@ mapderivqr <- function(model,
                        resp = NULL,
                        probs = c(0.025, 0.975),
                        summary = TRUE,
-                       robust = FALSE) {
+                       robust = FALSE,
+                       ...) {
 
   if(is.null(probs)) probs <- c(0.025, 0.975)
   if(is.null(robust)) robust <- FALSE
