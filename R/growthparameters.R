@@ -453,7 +453,6 @@ growthparameters.bgmfit <- function(model,
   }
   
   
-  
   if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
   }
@@ -506,9 +505,7 @@ growthparameters.bgmfit <- function(model,
     ifunx_ <- function(x)x
   }
   
-  
-  
-  # setxcall_ <- paste(deparse(match.call()), collapse = "")
+
   setxcall_ <- match.call()
   post_processing_checks_args <- list()
   post_processing_checks_args[['model']]    <- model
@@ -524,49 +521,6 @@ growthparameters.bgmfit <- function(model,
   
   oo    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
 
-  # oo <- post_processing_checks(model = model,
-  #                              xcall = match.call(),
-  #                              envir = envir,
-  #                              resp = resp)
-  
-  
-  # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-  # 
-  # 
-  # get_xcall <- function(xcall, scall) {
-  #   scall <- scall[[length(scall)]]
-  #   if(any(grepl("plot_curves", scall, fixed = T)) |
-  #      any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
-  #     xcall <- "plot_curves"
-  #   } else if(any(grepl("growthparameters", scall, fixed = T)) |
-  #             any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
-  #     xcall <- "growthparameters"
-  #   } else {
-  #     xcall <- xcall
-  #   }
-  # }
-  # 
-  # 
-  # if(xcall == "do.call" | xcall == "CustomDoCall") {
-  #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-  #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-  #   zzz <- strsplit(zzz, ",")[[1]][1]
-  #   xcall <- strsplit(zzz, "\\.")[[1]][1]
-  # } else {
-  #   if(!is.null(model$xcall)) {
-  #     if(model$xcall == "plot_curves") {
-  #       xcall <- "plot_curves"
-  #     }
-  #   } else {
-  #     scall <- sys.calls()
-  #     # get_xcall__() didn't work
-  #     # xcall <- get_xcall__(xcall, scall, c("plot_curves", "growthparameters"))
-  #     xcall <- get_xcall(xcall, scall)
-  #   }
-  # } # if(xcall == "do.call") {... else {
-  # 
-  
- 
   if(!is.null(model$xcall)) {
     if(grepl("plot_curves", model$xcall)) {
       xcall <- "plot_curves"
@@ -584,8 +538,6 @@ growthparameters.bgmfit <- function(model,
     }
   }
   
-  
-  
   model$xcall <- xcall
   
   check_if_package_installed(model, xcall = xcall)
@@ -601,8 +553,6 @@ growthparameters.bgmfit <- function(model,
     arguments$plot <- FALSE
   }
  
-  
-
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
@@ -622,8 +572,6 @@ growthparameters.bgmfit <- function(model,
     }
   }
   
-  
-
   call_posterior_summary <- function(dat) {
     if (!robust) {
       . <- posterior::summarise_draws(dat,
@@ -865,7 +813,6 @@ growthparameters.bgmfit <- function(model,
   }
   
   
-  
   get_growthparameters <-
     function(out_v_,
              newdata,
@@ -937,7 +884,7 @@ growthparameters.bgmfit <- function(model,
                 summary = summary,
                 robust = robust, set_get_dv = set_get_dv
               )
-            ) #%>% dplyr::ungroup()
+            ) 
         } else if (summary) {
           parameters <- out__ %>%
             dplyr::group_modify(
@@ -954,7 +901,7 @@ growthparameters.bgmfit <- function(model,
                 summary = summary,
                 robust = robust, set_get_dv = set_get_dv
               )
-            ) #%>% dplyr::ungroup()
+            ) 
         }
       } else if (!is.null(re_formula)) {
         if (!summary) {
@@ -973,7 +920,7 @@ growthparameters.bgmfit <- function(model,
                 summary = summary,
                 robust = robust, set_get_dv = set_get_dv
               )
-            ) #%>% dplyr::ungroup()
+            ) 
         } else if (summary) {
           parameters <- out__ %>%
             dplyr::group_modify(
@@ -990,7 +937,7 @@ growthparameters.bgmfit <- function(model,
                 summary = summary,
                 robust = robust, set_get_dv = set_get_dv
               )
-            ) #%>% dplyr::ungroup()
+            ) 
         }
       }
       
@@ -1003,7 +950,6 @@ growthparameters.bgmfit <- function(model,
       parameters <- parameters %>% 
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                   ~ round(., digits = digits)))
-      
       
       return(parameters)
     } # end get_growthparameters
@@ -1078,7 +1024,6 @@ growthparameters.bgmfit <- function(model,
       }
     }
     
-    
     newdata <- get.newdata(model, newdata = newdata, 
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
@@ -1094,7 +1039,6 @@ growthparameters.bgmfit <- function(model,
     
     list_c <- attr(newdata, 'list_c')
     
-    
     for (list_ci in names(list_c)) {
       assign(list_ci, list_c[[list_ci]])
     }
@@ -1105,8 +1049,6 @@ growthparameters.bgmfit <- function(model,
     for (check___ in check__) {
       if(!exists(check___)) assign(check___, NULL)
     }
-    
-    
     
     newdata___ <- newdata
     
@@ -1651,7 +1593,6 @@ growthparameters.bgmfit <- function(model,
       } # else if (!grepl("^[[:upper:]]+$", velc..)) {
       
     
-      
       arguments$newdata <- newdata
       arguments$deriv <- 1
       arguments$ipts <- NULL 
@@ -1670,14 +1611,12 @@ growthparameters.bgmfit <- function(model,
       
      if(is.null(out_v_)) return(invisible(NULL))
       
-      
       # # 6.03.2025
       # if(set_get_dv) {
       #   if(verbose) message("returning draws for 'get_dv'")
       #   return(out_v_)
       # }
       
-
       out_v__apv_ <- out_v_
       if (!summary) {
         out_v <- call_posterior_summary((out_v_))
@@ -1691,7 +1630,6 @@ growthparameters.bgmfit <- function(model,
           droplevels()
       }
       
-     
       out_v__apv_ <- t(out_v__apv_)
       parameters <-
         get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary, 
@@ -1742,8 +1680,9 @@ growthparameters.bgmfit <- function(model,
         out_v_ <- CustomDoCall(predict_draws, arguments)
       }
       
-      if(is.null(out_v_)) return(invisible(NULL))
-      
+      if(is.null(out_v_)) {
+        return(invisible(NULL))
+      }
       
       arguments$summary <- summary_org
 

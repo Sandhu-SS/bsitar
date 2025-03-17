@@ -412,21 +412,7 @@ marginal_draws.bgmfit <-
     post_processing_checks_args[['all']]      <- FALSE
     
     
-    # o <- post_processing_checks(model = model,
-    #                             xcall = match.call(),
-    #                             resp = resp,
-    #                             envir = envir,
-    #                             deriv = deriv, 
-    #                             all = FALSE,
-    #                             verbose = verbose)
-    # 
-    # oall <- post_processing_checks(model = model,
-    #                                xcall = match.call(),
-    #                                resp = resp,
-    #                                envir = envir,
-    #                                deriv = deriv, 
-    #                                all = TRUE,
-    #                                verbose = FALSE)
+    
     
     if(!is.null(funlist)) {
       if(!is.list(funlist)) {
@@ -464,10 +450,6 @@ marginal_draws.bgmfit <-
     
     
     
-    
-    
-    
-    
     if(!isTRUE(
       check_pkg_version_exists('brms', 
                                minimum_version = get_package_minversion('brms'), 
@@ -481,60 +463,7 @@ marginal_draws.bgmfit <-
     }
     
     
-    # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-    # scall <- sys.calls()
-    # 
-    # get_xcall <- function(xcall, scall) {
-    #   scall <- scall[[length(scall)]]
-    #   if(any(grepl("marginal_draws", scall, fixed = T)) |
-    #      any(grepl("marginal_draws.bgmfit", scall, fixed = T))) {
-    #     xcall <- "marginal_draws"
-    #   } else {
-    #     xcall <- xcall
-    #   }
-    # }
-    
-    
-    
-    
-    # check_CustomDoCall <- gsub_space(paste(deparse(sys.calls()), collapse = ""))
-    # 
-    # eval_CustomDoCall <- FALSE
-    # # | xcall == "CustomDoCall" ?
-    # if(grepl("CustomDoCall\\(", check_CustomDoCall)) {
-    #   eval_CustomDoCall <- TRUE
-    #   check_CustomDoCall <- regmatches(check_CustomDoCall, gregexpr("(?<=\\().*?(?=\\))", check_CustomDoCall, perl=T))[[1]]
-    #   check_CustomDoCall <- strsplit(check_CustomDoCall[1], "\\(")[[1]][1]
-    #   xcall              <- check_CustomDoCall
-    # } else if(xcall == "do.call" | xcall == "CustomDoCall") {
-    #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-    #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-    #   zzz <- strsplit(zzz, ",")[[1]][1]
-    #   xcall <- strsplit(zzz, "\\.")[[1]][1]
-    # } else {
-    #   if(!is.null(model$xcall)) {
-    #     if(model$xcall == "marginal_draws") {
-    #       xcall <- "marginal_draws"
-    #     }
-    #   } else {
-    #     scall <- sys.calls()
-    #     xcall <- get_xcall(xcall, scall)
-    #   }
-    # }
-    
-    # if(!is.null(model$xcall)) {
-    #   if(model$xcall == "marginal_draws") {
-    #     xcall <- "marginal_draws"
-    #   }
-    # } else {
-    #   scall <- sys.calls()
-    #   xcall <- get_xcall(xcall, scall)
-    # }
-    # 
-    # xcall <- xcall
-    
-    
-    # for first TRUE, use min(which(lv == TRUE))
+   
     
     if(!is.null(model$xcall)) {
       if(grepl("marginal_draws", model$xcall)) {
@@ -581,20 +510,12 @@ marginal_draws.bgmfit <-
                              scallstatus = scallstatus)
     }
     
-    # arguments <- get_args_(as.list(match.call())[-1], xcall, xclass = NULL)
-    
-    # arguments <- get_args_(as.list(match.call())[-1], xcall, xclass = "")
-    
-    
+ 
     
     arguments$model <- model
     arguments$usesavedfuns <- usesavedfuns
     
-    
-    
     get.cores_ <- get.cores(arguments$cores)
-    
-    
     
     
     # 28.09.2024
@@ -624,31 +545,13 @@ marginal_draws.bgmfit <-
       }
       on.exit(future::plan(getfutureplan), add = TRUE)
       
-      # setplanis <- set_future_session
-      # fuplan <- getOption("future.plan")
-      # options("future.plan" = setplanis)
-      # future::plan(setplanis)
-      # # on.exit(options("future.plan" = fuplan), add = TRUE)
-      # on.exit(future::plan(fuplan), add = TRUE)
-      
-
-      # coresplan <- getOption("mc.cores")
-      # options(mc.cores = setincores)
-      # on.exit(options("mc.cores" = coresplan), add = TRUE)
-      
+    
       if (future_session == 'multicore') {
         multthreadplan <- getOption("future.fork.multithreading.enable")
         options(future.fork.multithreading.enable = TRUE)
         on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
                 add = TRUE)
       }
-      
-      
-      # getOption("future.plan")
-      #future::availableCores()
-      
-      # oopts <- options(future.plan = "multisession")
-      # on.exit(options(oopts))
     }
     
     
@@ -803,8 +706,6 @@ marginal_draws.bgmfit <-
     } # if (future) {
     
     
-    
-    
    
     if (!future) {
       future_splits_at <- NULL
@@ -813,11 +714,6 @@ marginal_draws.bgmfit <-
       future_splits_exe_dofuture <- FALSE
     }
       
-      
-      
-    
-    
-    
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                     # fargs = formals(), 
@@ -842,12 +738,7 @@ marginal_draws.bgmfit <-
     
     
     newdata           <- CustomDoCall(get.newdata, full.args)
-    
-    # if(!newdata_fixed) {
-    #   newdata           <- CustomDoCall(get.newdata, full.args)
-    # }
-    
-    
+  
     
     if(!is.na(uvarby)) {
       uvarby_ind <- paste0(uvarby, resp)
@@ -867,26 +758,6 @@ marginal_draws.bgmfit <-
     predictions_arguments <- full.args
     
     
-    # 6.03.2025
-    # if(eval_CustomDoCall) {
-    #     # 6.03.2025 - remove missing GOOD
-    #   ownargs <- formalArgs(marginal_draws.bgmfit)
-    #   for (i in setdiff(names(predictions_arguments), ownargs)) {
-    #     predictions_arguments[[i]] <- NULL
-    #   }
-    #   for (i in names(predictions_arguments)) {
-    #     if(is.symbol(predictions_arguments[[i]])) {
-    #       if(deparse(predictions_arguments[[i]]) == "") {
-    #         predictions_arguments[[i]] <- NULL
-    #       }
-    #     }
-    #   }
-    #   for (i in names(predictions_arguments)) {
-    #     predictions_arguments[[i]] <- eval(predictions_arguments[[i]], 
-    #                                        envir = parent.frame())
-    #     
-    #   }
-    # }
    
     predictions_arguments <- 
       sanitize_CustomDoCall_args(what = "CustomDoCall", 
@@ -953,10 +824,7 @@ marginal_draws.bgmfit <-
       )
     ))[-1]
     
-    # don't exclude variables
-   # if(call_predictions) exclude_args <- c(exclude_args, 'variables')
-    
-    
+
     
     if(call_slopes) exclude_args <- c(exclude_args, 'transform', 'byfun')
     
@@ -966,15 +834,10 @@ marginal_draws.bgmfit <-
       exclude_args <- c(exclude_args, 'parallel', 'pdraws', 'constrats_subset')
     }
     
-    
-    
     for (exclude_argsi in exclude_args) {
       predictions_arguments[[exclude_argsi]] <- NULL
     }
     
-    
-    
-
     if(call_slopes) {
       if (!is.null(variables)) {
         if (!is.character(variables)) {
@@ -998,8 +861,6 @@ marginal_draws.bgmfit <-
     
     
     # Decide if set by = NULL and then here pick and replace 'by' set_group 
-    
-    
     if(is.null(by)) {
       if(is.null(cov)) {
         set_group <- FALSE
@@ -1019,16 +880,15 @@ marginal_draws.bgmfit <-
     
     
     
-    
-    
-    
-    if(call_slopes) predictions_arguments$variables  <- set_variables
+    if(call_slopes) {
+      predictions_arguments$variables  <- set_variables
+    }
     
     predictions_arguments$by         <- set_group
     
     
     # For plot, if set_group has been set up as FALSE, convert it to NULL
-    # This because Must be of type 'character' (or 'NULL'), not 'logical'. 
+    # This because 'by' Must be of type 'character' (or 'NULL'), not 'logical'. 
     if(plot) {
       if(is.logical(predictions_arguments$by)) {
         if(!predictions_arguments$by) {
@@ -1038,7 +898,9 @@ marginal_draws.bgmfit <-
     }
     
     
-    if(is.null(predictions_arguments$by)) predictions_arguments$by < 'NULL'
+    if(is.null(predictions_arguments$by)) {
+      predictions_arguments$by < 'NULL'
+    }
     
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
@@ -1053,7 +915,6 @@ marginal_draws.bgmfit <-
     
     
     # Set up datagrid
-    
     if(!is.null(datagrid)) {
       if(is.data.frame(datagrid)) {
         set_datagrid <- datagrid
@@ -1131,7 +992,8 @@ marginal_draws.bgmfit <-
           predictions_arguments[['by']] <- 
             setdiff(predictions_arguments[['by']], cov)
         }
-        set_datagrid <- CustomDoCall(marginaleffects::datagrid, datagrid_arguments)
+        set_datagrid <- CustomDoCall(marginaleffects::datagrid, 
+                                     datagrid_arguments)
         predictions_arguments$newdata <- set_datagrid
       } else {
         stop("datagrid should be a data frame or named list")
@@ -1142,8 +1004,6 @@ marginal_draws.bgmfit <-
 
     predictions_arguments[['datagrid']] <- NULL
     
-   
-   
     # Somehow draw_ids not passed correctly if not specified explicitly as arg
     get_draw_ids <- predictions_arguments[['draw_ids']]
     if(is.null(eval(get_draw_ids))) {
@@ -1155,11 +1015,6 @@ marginal_draws.bgmfit <-
     }
    predictions_arguments[['draw_ids']] <- set_draw_ids
    
-   
-   # 19.09.2024
-   # For marginal_draws(...,  plot = T), either condition or by allowed
-   # Therefore, when plot = T, condition is kept and by dropped, 
-   # otherwise by is kept and condition dropped
    
    exclude_args_con_by <- exclude_args
    
@@ -1184,13 +1039,6 @@ marginal_draws.bgmfit <-
    
    
    
-
-   
-   
-   
-   
-   
-   
    out_sf_hy <- NULL
    allowed_methods <- c('pkg', 'custom')
    if(!method %in% allowed_methods) 
@@ -1198,13 +1046,6 @@ marginal_draws.bgmfit <-
           "\n ", 
           collapse_comma(allowed_methods)
      )
-   # if(!is.null(predictions_arguments[['by']])) {
-   #   checbyx <- predictions_arguments[['by']]
-   #   if(all(checbyx == "")) method <- 'pkg'
-   #   if(is.logical(checbyx)) {
-   #     if(!checbyx) method <- 'pkg'
-   #   }
-   # }
   
    if(method == 'pkg') {
      if(call_predictions) {
@@ -1217,7 +1058,8 @@ marginal_draws.bgmfit <-
                              predictions_arguments)
          }
        } else if(plot) {
-         . <- CustomDoCall(marginaleffects::plot_predictions, predictions_arguments)
+         . <- CustomDoCall(marginaleffects::plot_predictions,
+                           predictions_arguments)
          outp <- .
          if(!showlegends) outp <- outp + 
            ggplot2::theme(legend.position = 'none')
@@ -1228,12 +1070,15 @@ marginal_draws.bgmfit <-
      if(call_slopes) {
        if(!plot) {
          if(!average) {
-           out_sf <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
+           out_sf <- CustomDoCall(marginaleffects::slopes,
+                                  predictions_arguments)
          } else if(average) {
-           out_sf <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+           out_sf <- CustomDoCall(marginaleffects::avg_slopes, 
+                                  predictions_arguments)
          }
        } else if(plot) {
-         . <- CustomDoCall(marginaleffects::plot_slopes, predictions_arguments)
+         . <- CustomDoCall(marginaleffects::plot_slopes,
+                           predictions_arguments)
          outp <- .
          outp <- outp + ggplot2::theme(legend.position = 'none')
          # 6.03.2025
@@ -1320,55 +1165,55 @@ marginal_draws.bgmfit <-
        if(call_predictions) {
          if(!plot) {
            # 6.03.2025
-           # check_fun TRUE/FLASE only if deriv > 0, but still setting for deriv > 0
            if(!check_fun) {
              if(!average) {
-               out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+               out <- CustomDoCall(marginaleffects::predictions, 
+                                   predictions_arguments)
              } else if(average) {
-               out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+               out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                   predictions_arguments)
              }
            } # if(!check_fun) {
            if(check_fun) {
              if(deriv > 0) {
                if(available_d1) {
                  if(!average) {
-                   out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::predictions, 
+                                       predictions_arguments)
                  } else if(average) {
-                   out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                       predictions_arguments)
                  }
                } 
                if(!available_d1) {
                  if(!average) {
-                   out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::slopes, 
+                                       predictions_arguments)
                  } else if(average) {
-                   out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::avg_slopes, 
+                                       predictions_arguments)
                  }
                }
              } # if(deriv > 0) {
            } # if(check_fun) {
-           # if(!average) {
-           #   out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
-           # } else if(average) {
-           #   out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
-           # }
          } else if(plot) {
            # 6.03.2025
-           # check_fun TRUE/FLASE only if deriv > 0, but still setting for deriv > 0
            if(!check_fun) {
-             out <- CustomDoCall(marginaleffects::plot_predictions, predictions_arguments)
+             out <- CustomDoCall(marginaleffects::plot_predictions, 
+                                 predictions_arguments)
            } # if(!check_fun) {
            if(check_fun) {
              if(deriv > 0) {
                if(available_d1) {
-                 out <- CustomDoCall(marginaleffects::plot_predictions, predictions_arguments)
+                 out <- CustomDoCall(marginaleffects::plot_predictions, 
+                                     predictions_arguments)
                } 
                if(!available_d1) {
-                 out <- CustomDoCall(marginaleffects::plot_slopes, predictions_arguments)
+                 out <- CustomDoCall(marginaleffects::plot_slopes, 
+                                     predictions_arguments)
                }
              } # if(deriv > 0) {
            } # if(check_fun) {
-           # out <- CustomDoCall(marginaleffects::plot_predictions, 
-           #                predictions_arguments)
            outp <- out
            if(!showlegends) {
              outp <- outp + ggplot2::theme(legend.position = 'none')
@@ -1382,12 +1227,15 @@ marginal_draws.bgmfit <-
        if(call_slopes) {
          if(!plot) {
            if(!average) {
-             out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
+             out <- CustomDoCall(marginaleffects::slopes, 
+                                 predictions_arguments)
            } else if(average) {
-             out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+             out <- CustomDoCall(marginaleffects::avg_slopes,
+                                 predictions_arguments)
            }
          } else if(plot) {
-           out <- CustomDoCall(marginaleffects::plot_slopes, predictions_arguments)
+           out <- CustomDoCall(marginaleffects::plot_slopes, 
+                               predictions_arguments)
            outp <- out
            outp <- outp + ggplot2::theme(legend.position = 'none')
            # 6.03.2025
@@ -1397,8 +1245,6 @@ marginal_draws.bgmfit <-
        } # if(call_slopes) {
      } # if(!future_splits_exe) {
      
-     
-    
      
      
      if(future_splits_exe_future & callfuns) {
@@ -1420,21 +1266,22 @@ marginal_draws.bgmfit <-
                         predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
                         envir = setenv)
                  # 6.03.2025
-                 # check_fun TRUE/FLASE only if deriv > 0, but still setting for deriv > 0
                  if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::predictions,
+                                       predictions_arguments)
                  } # if(!check_fun) {
                  if(check_fun) {
                    if(deriv > 0) {
                      if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::predictions,
+                                           predictions_arguments)
                      } 
                      if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::slopes, 
+                                           predictions_arguments)
                      }
                    } # if(deriv > 0) {
                  } # if(check_fun) {
-               # CustomDoCall(marginaleffects::predictions, predictions_arguments)
              }
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
@@ -1462,21 +1309,22 @@ marginal_draws.bgmfit <-
                         predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
                         envir = setenv)
                  # 6.03.2025
-                 # check_fun TRUE/FLASE only if deriv > 0, but still setting for deriv > 0
                  if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                       predictions_arguments)
                  } # if(!check_fun) {
                  if(check_fun) {
                    if(deriv > 0) {
                      if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                           predictions_arguments)
                      } 
                      if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::avg_slopes,
+                                           predictions_arguments)
                      }
                    } # if(deriv > 0) {
                  } # if(check_fun) {
-               # CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
              }
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
@@ -1560,7 +1408,8 @@ marginal_draws.bgmfit <-
                                                  FUN = myzfun)
            }
          } else if(plot) {
-           out <- CustomDoCall(marginaleffects::plot_slopes, predictions_arguments)
+           out <- CustomDoCall(marginaleffects::plot_slopes,
+                               predictions_arguments)
            outp <- out
            outp <- outp + ggplot2::theme(legend.position = 'none')
            # 6.03.2025
@@ -1572,10 +1421,6 @@ marginal_draws.bgmfit <-
      
      
      
-     
-     
-    
-     # detach("package:doFuture", unload=TRUE) 
      
      if(future_splits_exe_dofuture & callfuns) {
        `%doFuture_function%` <- doFuture::`%dofuture%`
@@ -1590,7 +1435,9 @@ marginal_draws.bgmfit <-
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                         .options.future = list(seed = TRUE),
                                         .options.future =
-                                       list(globals = structure(TRUE, add = c('future_splits_at',
+                                       list(globals = 
+                                              structure(TRUE, 
+                                                        add = c('future_splits_at',
                                                         'setplanis',
                                                         'verbose',
                                                         'o', 
@@ -1612,17 +1459,19 @@ marginal_draws.bgmfit <-
                         predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
                         envir = setenv)
                  # 6.03.2025
-                 # check_fun TRUE/FLASE only if deriv > 0, but still setting for deriv > 0
                  if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::predictions, 
+                                       predictions_arguments)
                  } # if(!check_fun) {
                  if(check_fun) {
                    if(deriv > 0) {
                      if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::predictions, 
+                                           predictions_arguments)
                      } 
                      if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::slopes, 
+                                           predictions_arguments)
                      }
                    } # if(deriv > 0) {
                  } # if(check_fun) {
@@ -1654,17 +1503,19 @@ marginal_draws.bgmfit <-
                         predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
                         envir = setenv)
                  # 6.03.2025
-                 # check_fun TRUE/FLASE only if deriv > 0, but still setting for deriv > 0
                  if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+                   out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                       predictions_arguments)
                  } # if(!check_fun) {
                  if(check_fun) {
                    if(deriv > 0) {
                      if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                           predictions_arguments)
                      } 
                      if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+                       out <- CustomDoCall(marginaleffects::avg_slopes, 
+                                           predictions_arguments)
                      }
                    } # if(deriv > 0) {
                  } # if(check_fun) {
@@ -1787,7 +1638,8 @@ marginal_draws.bgmfit <-
            out <- out %>% CustomDoCall(rbind, .)
            return(out)
          }
-         onex0 <- lapply(1:length(future_splits_at),  FUN = posterior_draws_function)
+         onex0 <- lapply(1:length(future_splits_at), 
+                         FUN = posterior_draws_function)
          onex0 <- onex0 %>% CustomDoCall(rbind, .)
          # Note that above onex0 has drawid exact same as splits
          # but somehow, we need consecutive drawid for summarising
@@ -1810,38 +1662,13 @@ marginal_draws.bgmfit <-
      }
      
      
-     # trs <- lapply(1:length(out),  FUN = marginals_list_consecutive_drawid_function)
-     # trs <- trs %>% CustomDoCall(rbind, .)
-     # trs$drawid <- as.factor(trs$drawid)
-     
-     # https://stackoverflow.com/questions/19697700/how-to-speed-up-rbind
-     # This below is very fast version of combined following two steps 
-     # trs <- lapply(1:length(out),  FUN = marginals_list_consecutive_drawid_function)
-     # trs <- trs %>% CustomDoCall(rbind, .)
-     # trs <-
-     # {. <- lapply(1:length(out), marginals_list_consecutive_drawid_function)
-     #   list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
-     #                  unlist(lapply(., `[[`, i), FALSE, FALSE)))}
-     
-     # trs <- lapply(1:length(out),  FUN = marginals_list_consecutive_drawid_function)
-     # trs <- 
-     # list2DF(lapply(setNames(seq_along(.[[1]]), names(trs[[1]])), function(i)
-     #   unlist(lapply(trs, `[[`, i), FALSE, FALSE)))
-     
-     # This below is very fast version of below steps 
-     # trs$drawid <- as.factor(trs$drawid)
-     # trs$drawid <- cheapr::factor_(trs$drawid)
-
-     
      if(setmarginals) {
        if(inherits(marginals, 'list')) {
-       # if(is.list(marginals)) {
-         # onex0 <- lapply(1:length(marginals),  FUN = marginals_list_consecutive_drawid_function)
-         # onex0 <- onex0 %>% CustomDoCall(rbind, .)
-         # onex0$drawid <- as.factor(onex0$drawid)
          onex0 <-
-           {. <- lapply(1:length(marginals), marginals_list_consecutive_drawid_function)
-           list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
+           {. <- lapply(1:length(marginals), 
+                        marginals_list_consecutive_drawid_function)
+           list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), 
+                          function(i)
              unlist(lapply(., `[[`, i), FALSE, FALSE)))}
          onex0$drawid <- cheapr::factor_(onex0$drawid)
        } else {
@@ -1962,24 +1789,7 @@ marginal_draws.bgmfit <-
          }
        }
        
-       
-       # get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-       #   if(ec_agg == "mean")  estimate <- 
-       #       collapse::fmean(x, 
-       #                       na.rm = na.rm, 
-       #                       nthreads = arguments$cores) 
-       #   
-       #   if(ec_agg == "median") estimate <- 
-       #       collapse::fmedian(x, 
-       #                         na.rm = na.rm, 
-       #                         nthreads = arguments$cores)
-       #   
-       #   if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-       #                                                  na.rm = na.rm)
-       #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-       #   cbind(estimate, luci[1], luci[2]) 
-       # }
-       
+     
        set_constrats_by <- c(constrats_by, 'draw')
        namesx <- c('estimate', 'conf.low', 'conf.high')
        
@@ -2057,11 +1867,7 @@ marginal_draws.bgmfit <-
    }
    
    
-   #######################################################################
-   # prepare_data2
-   # out_sf out_sf_hy pdrawsp_est pdrawsh_est
-   #######################################################################
-   
+  
    ##############################################################
    ##############################################################
    # prepare_data2
@@ -2138,28 +1944,16 @@ marginal_draws.bgmfit <-
      
      if(!is.null(pdrawsp_est)) {
        pdrawsp_est <- pdrawsp_est %>% 
-         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
          dplyr::rename(!!as.symbol(set_names_[1]) := 
                          dplyr::all_of('estimate')) %>% 
-         # For pdrawsp_est/pdrawsh_est, there are no conf columns, only estimates
-         # dplyr::rename(!!as.symbol(set_names_[2]) := 
-         #                 dplyr::all_of('conf.low')) %>% 
-         # dplyr::rename(!!as.symbol(set_names_[3]) := 
-         #                 dplyr::all_of('conf.high')) %>% 
          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
          data.frame()
      } # if(!is.null(pdrawsp_est)) {
      
      if(!is.null(pdrawsh_est)) {
        pdrawsh_est <- pdrawsh_est %>% 
-         # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
          dplyr::rename(!!as.symbol(set_names_[1]) := 
                          dplyr::all_of('estimate')) %>% 
-         # For pdrawsp_est/pdrawsh_est, there are no conf columns, only estimates
-         # dplyr::rename(!!as.symbol(set_names_[2]) := 
-         #                 dplyr::all_of('conf.low')) %>% 
-         # dplyr::rename(!!as.symbol(set_names_[3]) := 
-         #                 dplyr::all_of('conf.high')) %>% 
          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
          data.frame()
      } # if(!is.null(pdrawsh_est)) {

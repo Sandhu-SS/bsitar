@@ -188,22 +188,6 @@ plot_ppc.bgmfit <-
     oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
     
-    # o <- post_processing_checks(model = model,
-    #                             xcall = match.call(),
-    #                             resp = resp,
-    #                             envir = envir,
-    #                             deriv = 'deriv', 
-    #                             all = FALSE,
-    #                             verbose = verbose)
-    # 
-    # oall <- post_processing_checks(model = model,
-    #                                xcall = match.call(),
-    #                                resp = resp,
-    #                                envir = envir,
-    #                                deriv = deriv, 
-    #                                all = TRUE,
-    #                                verbose = FALSE)
-    
     
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall, 

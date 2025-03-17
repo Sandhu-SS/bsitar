@@ -15,7 +15,8 @@
   surface = FALSE,
   categorical = FALSE,
   ordinal = FALSE,
-  method = "posterior_epred",
+  method = NULL,
+  estimation_method = "fitted",
   transform = NULL,
   resolution = 100,
   select_points = 0,
@@ -30,6 +31,7 @@
   resp = NULL,
   ipts = 10,
   deriv = 0,
+  summary = FALSE,
   model_deriv = NULL,
   idata_method = NULL,
   verbose = FALSE,
@@ -111,6 +113,12 @@ on the y-axis. Defaults to \code{FALSE}.}
 or \code{"posterior_linpred"}. For more details, see the respective
 function documentations.}
 
+\item{estimation_method}{A character string specifying the estimation method
+when calculating the velocity from the posterior draws. The \code{'fitted'}
+method internally calls \code{\link[=fitted_draws]{fitted_draws()}}, while the
+\code{'predict'} method calls \code{\link[=predict_draws]{predict_draws()}}. See
+\code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}} and \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details.}
+
 \item{transform}{A function or a character string naming
 a function to be applied on the predicted responses
 before summary statistics are computed. Only allowed
@@ -184,6 +192,12 @@ growth curves.}
 \item{deriv}{An integer indicating whether to estimate the distance curve
 or its derivative (velocity curve). The default \code{deriv = 0} is for
 the distance curve, while \code{deriv = 1} is for the velocity curve.}
+
+\item{summary}{A logical value indicating whether only the estimate should be
+computed (\code{TRUE}), or whether the estimate along with SE and CI should
+be returned (\code{FALSE}, default). Setting \code{summary} to \code{FALSE}
+will increase computation time. Note that \code{summary = FALSE} is
+required to obtain correct estimates when \code{re_formula = NULL}.}
 
 \item{model_deriv}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the

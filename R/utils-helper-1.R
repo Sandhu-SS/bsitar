@@ -1902,8 +1902,11 @@ mapderivqr <- function(model,
     tempx <- apply(tempx , 1, mapderiv) %>% t()
   }
   
+  
   if(summary) {
     dout <-  brms::posterior_summary(tempx , probs = probs, robust = robust)
+  } else {
+    dout <- tempx
   }
   dout
 }
@@ -4640,6 +4643,35 @@ x_gsubit_gsubby <- function(x,
   if(pasteit) gsubby <- paste0(gsubit, gsubby)
   gsub(gsubit, gsubby, x, fixed = fixed)
 }
+
+
+
+#' An internal function to strip attributed
+#'
+#' @param vec A data frame
+#' @param keep A character string or a vector
+#' 
+#' @return data frame
+#' @keywords internal
+#' @noRd
+#'
+attrstrip <- function(vec, keep = 'class'){
+  if(is.null(keep))return(vec)
+  # Attribute names
+  att_names <- names(attributes(vec))
+  # Remove class from list of attribute names
+  att_names <- att_names[!att_names %in% keep]
+  # Check that there are attributes; if not return original vector
+  if(length(att_names) == 0)return(vec)
+  # Loop through attributes and remove
+  for(i in att_names){
+    attr(vec, i) <- NULL
+  }
+  vec
+}
+
+# attrstrip(datace, keep = c('row.names', 'names', 'class'))
+
 
 
 

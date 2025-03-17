@@ -662,23 +662,6 @@ marginal_growthparameters.bgmfit <- function(model,
   }
   
   
-  # if(is.null(deriv) & is.null(model_deriv)) {
-  #   deriv <- 0
-  #   model_deriv <- FALSE
-  # } else if(deriv == 0 & is.null(model_deriv)) {
-  #   deriv <- 0
-  #   model_deriv <- FALSE
-  # } else if(deriv == 1 & is.null(model_deriv)) {
-  #   deriv <- 1
-  #   model_deriv <- TRUE
-  # } else if(is.null(deriv) & !model_deriv) {
-  #   deriv <- 0
-  #   model_deriv <- FALSE
-  # } else if(is.null(deriv) & model_deriv) {
-  #   deriv <- 1
-  #   model_deriv <- TRUE
-  # }
-  
   
   
   # 15 06 2025
@@ -805,25 +788,7 @@ marginal_growthparameters.bgmfit <- function(model,
   oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   post_processing_checks_args[['all']]      <- FALSE
   
-  # o <- post_processing_checks(model = model,
-  #                             xcall = match.call(),
-  #                             resp = resp,
-  #                             envir = envir,
-  #                             deriv = deriv, 
-  #                             all = FALSE,
-  #                             verbose = verbose, 
-  #                             check_d1 = T)
-  # 
-  # oall <- post_processing_checks(model = model,
-  #                                xcall = match.call(),
-  #                                resp = resp,
-  #                                envir = envir,
-  #                                deriv = deriv, 
-  #                                all = TRUE,
-  #                                verbose = FALSE)
-  
-  
-  
+ 
   
   if(!is.null(funlist)) {
     if(!is.list(funlist)) {
@@ -859,15 +824,7 @@ marginal_growthparameters.bgmfit <- function(model,
   # This because print(o[[2]]) function d1 is not reliable- see prepare_function
   # This has already been taken care off in prepare_function by excluding d1
   ########################################################
-  # This been moved to post_processing_checks
-  
-  # available_fund1 <- FALSE
-  # for (i in names(model$model_info$exefuns)) {
-  #   check_funds <- ifelse(grepl("\\d$", i), sub(".*?(\\d+)$", "\\1", i), "")
-  #   if(grepl("1", check_funds)) {
-  #     available_fund1 <- TRUE
-  #   }
-  # }
+
   
   ########################################################
   # If no d1, override and and deriv arguments 
@@ -884,7 +841,6 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   # Below deriv/model_deriv will be over riddent for both 'pkg' and 'custom'
-  
   # This borrowed from marginal_draws
   call_predictions <- TRUE
   call_slopes      <- FALSE
@@ -898,7 +854,8 @@ marginal_growthparameters.bgmfit <- function(model,
     call_slopes      <- TRUE
     # re-get o[[2]] as _do
     post_processing_checks_args[['deriv']]    <- 0
-    o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
+    o    <- CustomDoCall(post_processing_checks, 
+                         post_processing_checks_args)
   }
   
   post_processing_checks_args[['deriv']]    <- deriv
@@ -918,50 +875,6 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
-  
-  # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-  # scall <- sys.calls()
-  # 
-  # get_xcall <- function(xcall, scall) {
-  #   scall <- scall[[length(scall)]]
-  #   if(any(grepl("marginal_growthparameters", scall, fixed = T)) |
-  #      any(grepl("marginal_growthparameters.bgmfit", scall, fixed = T))) {
-  #     xcall <- "marginal_growthparameters"
-  #   } else {
-  #     xcall <- xcall
-  #   }
-  # }
-  # 
-  # 
-  # 
-  # if(xcall == "do.call" | xcall == "CustomDoCall") {
-  #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-  #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-  #   zzz <- strsplit(zzz, ",")[[1]][1]
-  #   xcall <- strsplit(zzz, "\\.")[[1]][1]
-  # } else {
-  #   if(!is.null(model$xcall)) {
-  #     if(model$xcall == "marginal_growthparameters") {
-  #       xcall <- "marginal_growthparameters"
-  #     }
-  #   } else {
-  #     scall <- sys.calls()
-  #     xcall <- get_xcall(xcall, scall)
-  #   }
-  # }
-  
-  # if(!is.null(model$xcall)) {
-  #   if(model$xcall == "marginal_growthparameters") {
-  #     xcall <- "marginal_growthparameters"
-  #   }
-  # } else {
-  #   scall <- sys.calls()
-  #   xcall <- get_xcall(xcall, scall)
-  # }
-  
-  
-  # xcall <- xcall
   
   
   if(!is.null(model$xcall)) {
@@ -1722,18 +1635,9 @@ marginal_growthparameters.bgmfit <- function(model,
          collapse_comma(allowed_methods)
     )
   
-  # if(!is.null(comparisons_arguments[['by']])) {
-  #   checbyx <- comparisons_arguments[['by']]
-  #   if(all(checbyx == "")) method <- 'pkg'
-  #   if(is.logical(checbyx)) {
-  #     if(!checbyx) method <- 'pkg'
-  #   }
-  # }
-  
-  
+ 
   
   if(method == 'pkg') {
-    
     if(plot) {
       out_sf <- outer_call_comparison_gparms_fun(
         parm = parm, eps = eps, 
@@ -1779,8 +1683,7 @@ marginal_growthparameters.bgmfit <- function(model,
   } # if(method == 'pkg') {
   
   
-  # Start method = 'custom'
-  
+
   pdrawsp_est <- NULL
   pdrawsh_est <- NULL
   pdraws_est <- NULL
@@ -2133,21 +2036,10 @@ marginal_growthparameters.bgmfit <- function(model,
     
     
     
-    
-    
-    
-    
-    
-    
-    
     by_pdraws <- by
     
     # Imp, remove xvar from the by
     by <- base::setdiff(eval(by), eval(xvar)) 
-    
-    
-    
-    
     
     getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
                           aggregate_by = FALSE, ...) {
@@ -2941,10 +2833,8 @@ marginal_growthparameters.bgmfit <- function(model,
     
     if(!is.null(pdraws_est)) {
       pdraws_est <- pdraws_est %>% 
-        # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 
                         dplyr::all_of('estimate')) %>% 
-        # For pdrawsp_est/pdrawsh_est, there are no conf columns, only estimates
         dplyr::rename(!!as.symbol(set_names_[2]) :=
                         dplyr::all_of('conf.low')) %>%
         dplyr::rename(!!as.symbol(set_names_[3]) :=
@@ -2955,28 +2845,16 @@ marginal_growthparameters.bgmfit <- function(model,
     
     if(!is.null(pdrawsp_est)) {
       pdrawsp_est <- pdrawsp_est %>% 
-        # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 
                         dplyr::all_of('estimate')) %>% 
-        # For pdrawsp_est/pdrawsh_est, there are no conf columns, only estimates
-        # dplyr::rename(!!as.symbol(set_names_[2]) := 
-        #                 dplyr::all_of('conf.low')) %>% 
-        # dplyr::rename(!!as.symbol(set_names_[3]) := 
-        #                 dplyr::all_of('conf.high')) %>% 
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
         data.frame()
     } # if(!is.null(pdrawsp_est)) {
     
     if(!is.null(pdrawsh_est)) {
       pdrawsh_est <- pdrawsh_est %>% 
-        # dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
         dplyr::rename(!!as.symbol(set_names_[1]) := 
                         dplyr::all_of('estimate')) %>% 
-        # For pdrawsp_est/pdrawsh_est, there are no conf columns, only estimates
-        # dplyr::rename(!!as.symbol(set_names_[2]) := 
-        #                 dplyr::all_of('conf.low')) %>% 
-        # dplyr::rename(!!as.symbol(set_names_[3]) := 
-        #                 dplyr::all_of('conf.high')) %>% 
         dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
         data.frame()
     } # if(!is.null(pdrawsh_est)) {

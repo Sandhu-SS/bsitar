@@ -3150,9 +3150,10 @@ sanitize_CustomDoCall_args <- function(what,
   eval_CustomDoCall <- FALSE
   if(any(grepl(what, set_trace_back))) {
     eval_CustomDoCall <- TRUE
-    # check_CustomDoCall <- what
   }
   
+  
+  # remove empty argument 
   if(eval_CustomDoCall) {
     for (i in names(arguments)) {
       if(is.symbol(arguments[[i]])) {
@@ -3161,11 +3162,13 @@ sanitize_CustomDoCall_args <- function(what,
         }
       }
     }
+    
     for (i in names(arguments)) {
-      arguments[[i]] <- eval(arguments[[i]], 
-                             envir = envir)
-      
+      if(!is.null(arguments[[i]])) {
+        arguments[[i]] <- eval(arguments[[i]], envir = envir)
+      }
     }
+    
   } # if(eval_CustomDoCall) {
   
   return(arguments)

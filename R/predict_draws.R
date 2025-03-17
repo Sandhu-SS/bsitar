@@ -423,72 +423,88 @@ predict_draws.bgmfit <-
                                  envir = parent.frame())
     
     
+    calling.args <- 
+      sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                 arguments = calling.args, 
+                                 check_formalArgs = NULL,
+                                 check_formalArgs_exceptions = c('object'),
+                                 check_trace_back = NULL,
+                                 envir = parent.frame())
+    
+    
     if(!check_fun) {
       . <- CustomDoCall(predict, calling.args)
     }
-    if(check_fun) {
-      if(deriv > 0) {
-        if(available_d1) {
-          . <- CustomDoCall(predict, calling.args)
-        } 
-        if(!available_d1) {
-          if(verbose) {
-            message(message_for_model_deriv_FALSE)
-          }
-          calling.args_mapderivqr_args <- calling.args
-          calling.args_mapderivqr_args[['summary']] <- FALSE
-          y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
-          mapderivqr_args <- list()
-          mapderivqr_args[['y0']] <- y0
-          mapderivqr_args[['model']] <- calling.args[['object']]
-          mapderivqr_args[['newdata']] <- calling.args[['newdata']]
-          mapderivqr_args[['deriv']] <- calling.args[['deriv']]
-          mapderivqr_args[['resp']] <- calling.args[['resp']]
-          mapderivqr_args[['probs']] <- calling.args[['probs']]
-          mapderivqr_args[['summary']] <- calling.args[['summary']]
-          mapderivqr_args[['robust']] <- calling.args[['robust']]
-          . <- CustomDoCall(mapderivqr, mapderivqr_args)
-        }
-      } # if(deriv > 0) {
-    } # if(check_fun) {
     
     
-    if(!is.null((eval(full.args$deriv)))) {
-      if(eval(full.args$deriv) > 0) { 
-        # if(!is.null((eval(full.args$model_deriv)))) { # new layer if 6.03.2025
-        if(!eval(full.args$model_deriv)) {
-          if(verbose) {
-            message(message_for_model_deriv_FALSE)
+    if(!plot_conditional_effects_calling) {
+      if(check_fun) {
+        if(deriv > 0) {
+          if(available_d1) {
+            . <- CustomDoCall(predict, calling.args)
           }
-          full.args <-
-            sanitize_CustomDoCall_args(what = "CustomDoCall",
-                                       arguments = full.args,
-                                       check_formalArgs = mapderivqr,
-                                       check_formalArgs_exceptions = c('object'),
-                                       check_trace_back = NULL,
-                                       envir = parent.frame())
-          calling.args_mapderivqr_args <- full.args
-          calling.args_mapderivqr_args[['summary']] <- FALSE
-          y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
-          mapderivqr_args <- list()
-          mapderivqr_args[['y0']] <- y0
-          mapderivqr_args[['model']] <- full.args[['object']]
-          mapderivqr_args[['newdata']] <- full.args[['newdata']]
-          mapderivqr_args[['deriv']] <- full.args[['deriv']]
-          mapderivqr_args[['resp']] <- full.args[['resp']]
-          mapderivqr_args[['probs']] <- full.args[['probs']]
-          mapderivqr_args[['summary']] <- full.args[['summary']]
-          mapderivqr_args[['robust']] <- full.args[['robust']]
-          . <- CustomDoCall(mapderivqr, mapderivqr_args)
-          full.args$. <- .
-          # full.args$. <- .
-          # . <- CustomDoCall(mapderivqr, full.args)
-        } else {
-          . <- .
-          # }
-        }
-      }
-    }
+          if(!available_d1) {
+            if(verbose) {
+              message(message_for_model_deriv_FALSE)
+            }
+            calling.args_mapderivqr_args <- calling.args
+            calling.args_mapderivqr_args[['summary']] <- FALSE
+            y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
+            mapderivqr_args <- list()
+            mapderivqr_args[['y0']] <- y0
+            mapderivqr_args[['model']] <- calling.args[['object']]
+            mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['deriv']] <- calling.args[['deriv']]
+            mapderivqr_args[['resp']] <- calling.args[['resp']]
+            mapderivqr_args[['probs']] <- calling.args[['probs']]
+            mapderivqr_args[['summary']] <- calling.args[['summary']]
+            mapderivqr_args[['robust']] <- calling.args[['robust']]
+            . <- CustomDoCall(mapderivqr, mapderivqr_args)
+          }
+        } # if(deriv > 0) {
+      } # if(check_fun) {
+    } # if(!plot_conditional_effects_calling) {
+    
+    
+    full.args <-
+      sanitize_CustomDoCall_args(what = "CustomDoCall",
+                                 arguments = full.args,
+                                 # check_formalArgs = plot_conditional_effects.bgmfit,
+                                 check_formalArgs_exceptions = c('object'),
+                                 check_trace_back = NULL,
+                                 envir = parent.frame())
+    
+    full.args$object <- full.args$model
+    
+    if(plot_conditional_effects_calling) {
+      if(check_fun) {
+        if(deriv > 0) {
+          if(available_d1) {
+            . <- CustomDoCall(predict, full.args)
+          }
+          if(!available_d1) {
+            if(verbose) {
+              message(message_for_model_deriv_FALSE)
+            }
+            calling.args_mapderivqr_args <- full.args
+            calling.args_mapderivqr_args[['summary']] <- FALSE
+            y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
+            mapderivqr_args <- list()
+            mapderivqr_args[['y0']] <- y0
+            mapderivqr_args[['model']] <- calling.args[['object']]
+            mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['deriv']] <- calling.args[['deriv']]
+            mapderivqr_args[['resp']] <- calling.args[['resp']]
+            mapderivqr_args[['probs']] <- calling.args[['probs']]
+            mapderivqr_args[['summary']] <- calling.args[['summary']]
+            mapderivqr_args[['robust']] <- calling.args[['robust']]
+            . <- CustomDoCall(mapderivqr, mapderivqr_args)
+          }
+        } # if(deriv > 0) {
+      } # if(check_fun) {
+    } # if(plot_conditional_effects_calling) {
+    
+    
     
     
     # Restore function(s)

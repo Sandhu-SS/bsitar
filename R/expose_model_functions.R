@@ -117,9 +117,7 @@ expose_model_functions.bgmfit <- function(model,
     } else if (!is.null(scode)) {
       exposecode <- scode
     }
-    # rstan::expose_stan_functions(rstan::stanc(model_code = exposecode), 
-    #                              env = fun_env)
-    
+   
     stanc_arguments <- list()
     stanc_arguments[['model_code']] <- exposecode
     stan_model_arguments <- stanc_arguments
@@ -156,13 +154,9 @@ expose_model_functions.bgmfit <- function(model,
     compiled_code_args[['stanmodel']] <- compiled_code
     compiled_code_args[['includes']] <- NULL
     compiled_code_args[['show_compiler_warnings']] <- FALSE
-    
     CustomDoCall(rstan::expose_stan_functions, compiled_code_args)
   }
   
-  
-  
-
   if(expose_r_from_stan) {
     for (funi in 1:length(model$model_info$funlist_r)) {
       assign(gsub("<-.*$", "", model$model_info$funlist_r[funi]),
@@ -179,11 +173,8 @@ expose_model_functions.bgmfit <- function(model,
   
   
   SplineFun_name <- model$model_info[['StanFun_name']]
- 
-  
-  spfun_collect <- model$model_info$include_fun_names
+  spfun_collect  <- model$model_info$include_fun_names
 
-  
   if(sigmanlflf) {
     sigmaSplineFun_name <- model$model_info[['sigmaStanFun_name']]
     sigmaspfun_collect <- c(sigmaSplineFun_name,
@@ -195,7 +186,6 @@ expose_model_functions.bgmfit <- function(model,
     spfun_collect <- c(spfun_collect, sigmaspfun_collect)
   }
   
-
   if(expose) {
     additionlsfuns <- c()
     if(sigmanlflf) {
@@ -212,7 +202,6 @@ expose_model_functions.bgmfit <- function(model,
     spfun_collect <- c(spfun_collect, additionlsfuns)
   }
 
-
   if(expose_r_from_stan) {
     spfun_collect <- c(spfun_collect)
     if(sigmanlflf) {
@@ -225,11 +214,9 @@ expose_model_functions.bgmfit <- function(model,
     }
   }
   
-  
   nys <- model$model_info$nys
   ys  <- model$model_info$yvars
  
-  
   if(expose) {
     Spl_funs <- list()
     spfun_collectic <- -1
@@ -253,8 +240,6 @@ expose_model_functions.bgmfit <- function(model,
     }
   } 
   
-  
-  
   if(expose_r_from_stan) {
     Spl_funs <- list()
     spfun_collectic <- -1
@@ -277,9 +262,12 @@ expose_model_functions.bgmfit <- function(model,
   } 
   
   
-  if(!expose & !expose_r_from_stan) Spl_funs <- NULL
+  if(!expose & !expose_r_from_stan) {
+    Spl_funs <- NULL
+  }
   
   allSplineFun_name <- SplineFun_name
+  
   if(sigmanlflf) {
     allSplineFun_name <- c(allSplineFun_name, sigmaSplineFun_name)
   }
@@ -287,7 +275,6 @@ expose_model_functions.bgmfit <- function(model,
   model$model_info[['namesexefuns']] <- allSplineFun_name
   model$model_info[['exefuns']]      <- Spl_funs
  
-  
   scode_include <- brms::stancode(model)
   model$bmodel <- scode_include
   if (nys == 1 | nys > 1) {
@@ -341,7 +328,4 @@ expose_model_functions.bgmfit <- function(model,
 expose_model_functions <- function(model, ...) {
   UseMethod("expose_model_functions")
 }
-
-
-
 

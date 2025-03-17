@@ -120,7 +120,6 @@ fitted_draws.bgmfit <-
     # Depending on dpar 'mu' or 'sigma', subset model_info
     model <- getmodel_info(model = model, dpar = dpar)
     
-    
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE
@@ -158,7 +157,6 @@ fitted_draws.bgmfit <-
       idata_method <- 'm2'
     }
     
-    
     rlang_trace_back <- rlang::trace_back()
     
     check_trace_back.bgmfit <- grepl("plot_conditional_effects", 
@@ -170,8 +168,6 @@ fitted_draws.bgmfit <-
     }
     
     
-    
-    
     check_trace_back.bgmfit <- grepl("growthparameters", 
                                      rlang_trace_back[[1]])
     if(all(!check_trace_back.bgmfit)) {
@@ -180,7 +176,6 @@ fitted_draws.bgmfit <-
       growthparameters_calling <- TRUE 
     }
     
-    
     if(any(grepl("modelbased_growthparameters", rlang_trace_back[[1]]))) {
       growthparameters_calling <- FALSE 
     }
@@ -188,9 +183,6 @@ fitted_draws.bgmfit <-
     if(any(grepl("plot_curves", rlang_trace_back[[1]]))) {
       growthparameters_calling <- FALSE 
     }
-    
-    
-    
     
     indirectcall <- FALSE
     if(!plot_conditional_effects_calling) {
@@ -208,14 +200,9 @@ fitted_draws.bgmfit <-
                                         fargs = formals(), 
                                         dargs = list(...), 
                                         verbose = verbose)
-       
         full.args$model <- model
       }
     }
-    
-    
-    
-    
     
     xcall_str <- NULL
     if(plot_conditional_effects_calling) {
@@ -228,9 +215,6 @@ fitted_draws.bgmfit <-
       full.args$xcall_str <- NULL
     }
     
-    
-    
-    
     if(!is.null(model$model_info$decomp)) {
       if(model$model_info$decomp == "QR") model_deriv<- FALSE
     }
@@ -239,7 +223,6 @@ fitted_draws.bgmfit <-
     
     model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
-    
     # 6.03.2025
     if(is.null(xcall_str)) {
       setxcall_   <- match.call()
@@ -247,7 +230,6 @@ fitted_draws.bgmfit <-
       setxcall_ <- xcall_str
     }
     
-
     post_processing_checks_args <- list()
     post_processing_checks_args[['model']]    <- model
     post_processing_checks_args[['xcall']]    <- setxcall_ 
@@ -266,7 +248,6 @@ fitted_draws.bgmfit <-
     oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
     
-
     if(!is.null(funlist)) {
       if(!is.list(funlist)) {
         stop("funlist must be a list")
@@ -288,13 +269,8 @@ fitted_draws.bgmfit <-
       }
       check_fun <- TRUE
     }
-    
-
-    # Unlike marginal_... functions where assign() works, for brms::fitted...
-    # the environment is assigned to d0/d1 functions via setupfuns()
+  
     # The deriv = 0/1 should also reflect in  setupfuns() 
-   
-    
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall,
                       usesavedfuns = usesavedfuns,
@@ -303,11 +279,10 @@ fitted_draws.bgmfit <-
                       model_deriv = model_deriv,
                       ...)
 
-
-    if(is.null(test)) return(invisible(NULL))
+    if(is.null(test)) {
+      return(invisible(NULL))
+    }
     
-    
-   
     
     if(!isTRUE(
       check_pkg_version_exists('brms', 
@@ -320,7 +295,6 @@ fitted_draws.bgmfit <-
         return(invisible(NULL))
       }
     }
-    
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe")
@@ -352,15 +326,11 @@ fitted_draws.bgmfit <-
       }
     }
     
-    
-    
     # 6.03.2025
     if(is.null(newdata) & !indirectcall ) {
       calling.args_newdata         <- calling.args
       calling.args_newdata$model   <- calling.args_newdata$object
       calling.args_newdata$newdata <- model$model_info$bgmfit.data 
-      # decide if need seprate call to get,newdata depnding on newdata_fixed
-      # For now, treating growthparameters_calling = !growthparameters_calling
       if(growthparameters_calling) {
         newdata <- CustomDoCall(get.newdata, calling.args_newdata)
       } else {
@@ -369,10 +339,6 @@ fitted_draws.bgmfit <-
       rm('calling.args_newdata')
       calling.args$newdata <- newdata
     }
-    
-    
-    
-
     
     
     # 6.03.2025
@@ -385,13 +351,11 @@ fitted_draws.bgmfit <-
       }
     }
     
-    
     # 6.03.2025
     if(is.null(full.args$newdata)) {
       full.args$newdata <- calling.args$newdata
     }
     
-
     # set up mesage
     if(check_fun) {
       if(!available_d1) {
@@ -425,75 +389,81 @@ fitted_draws.bgmfit <-
                                  check_trace_back = NULL,
                                  envir = parent.frame())
     
+    
 
     if(!check_fun) {
       . <- CustomDoCall(fitted, calling.args)
     }
-    if(check_fun) {
-      if(deriv > 0) {
-        if(available_d1) {
-          . <- CustomDoCall(fitted, calling.args)
-        } 
-        if(!available_d1) {
-          if(verbose) {
-           message(message_for_model_deriv_FALSE)
+    
+    
+    if(!plot_conditional_effects_calling) {
+      if(check_fun) {
+        if(deriv > 0) {
+          if(available_d1) {
+            . <- CustomDoCall(fitted, calling.args)
           }
-          calling.args_mapderivqr_args <- calling.args
-          calling.args_mapderivqr_args[['summary']] <- FALSE
-          y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
-          mapderivqr_args <- list()
-          mapderivqr_args[['y0']] <- y0
-          mapderivqr_args[['model']] <- calling.args[['object']]
-          mapderivqr_args[['newdata']] <- calling.args[['newdata']]
-          mapderivqr_args[['deriv']] <- calling.args[['deriv']]
-          mapderivqr_args[['resp']] <- calling.args[['resp']]
-          mapderivqr_args[['probs']] <- calling.args[['probs']]
-          mapderivqr_args[['summary']] <- calling.args[['summary']]
-          mapderivqr_args[['robust']] <- calling.args[['robust']]
-          . <- CustomDoCall(mapderivqr, mapderivqr_args)
-        }
-      } # if(deriv > 0) {
-    } # if(check_fun) {
+          if(!available_d1) {
+            if(verbose) {
+              message(message_for_model_deriv_FALSE)
+            }
+            calling.args_mapderivqr_args <- calling.args
+            calling.args_mapderivqr_args[['summary']] <- FALSE
+            y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
+            mapderivqr_args <- list()
+            mapderivqr_args[['y0']] <- y0
+            mapderivqr_args[['model']] <- calling.args[['object']]
+            mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['deriv']] <- calling.args[['deriv']]
+            mapderivqr_args[['resp']] <- calling.args[['resp']]
+            mapderivqr_args[['probs']] <- calling.args[['probs']]
+            mapderivqr_args[['summary']] <- calling.args[['summary']]
+            mapderivqr_args[['robust']] <- calling.args[['robust']]
+            . <- CustomDoCall(mapderivqr, mapderivqr_args)
+          }
+        } # if(deriv > 0) {
+      } # if(check_fun) {
+    } # if(!plot_conditional_effects_calling) {
+    
+    
+    full.args <-
+      sanitize_CustomDoCall_args(what = "CustomDoCall",
+                                 arguments = full.args,
+                                 # check_formalArgs = plot_conditional_effects.bgmfit,
+                                 check_formalArgs_exceptions = c('object'),
+                                 check_trace_back = NULL,
+                                 envir = parent.frame())
+    
+    full.args$object <- full.args$model
+
+    if(plot_conditional_effects_calling) {
+      if(check_fun) {
+        if(deriv > 0) {
+          if(available_d1) {
+            . <- CustomDoCall(fitted, full.args)
+          }
+          if(!available_d1) {
+            if(verbose) {
+              message(message_for_model_deriv_FALSE)
+            }
+            calling.args_mapderivqr_args <- full.args
+            calling.args_mapderivqr_args[['summary']] <- FALSE
+            y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
+            mapderivqr_args <- list()
+            mapderivqr_args[['y0']] <- y0
+            mapderivqr_args[['model']] <- calling.args[['object']]
+            mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['deriv']] <- calling.args[['deriv']]
+            mapderivqr_args[['resp']] <- calling.args[['resp']]
+            mapderivqr_args[['probs']] <- calling.args[['probs']]
+            mapderivqr_args[['summary']] <- calling.args[['summary']]
+            mapderivqr_args[['robust']] <- calling.args[['robust']]
+            . <- CustomDoCall(mapderivqr, mapderivqr_args)
+          }
+        } # if(deriv > 0) {
+      } # if(check_fun) {
+    } # if(plot_conditional_effects_calling) {
 
     
-    if(!is.null((eval(full.args$deriv)))) {
-      if(eval(full.args$deriv) > 0) { 
-        # if(!is.null((eval(full.args$model_deriv)))) { # new layer if 6.03.2025
-          if(!eval(full.args$model_deriv)) {
-              if(verbose) {
-                message(message_for_model_deriv_FALSE)
-              }
-              full.args <-
-                sanitize_CustomDoCall_args(what = "CustomDoCall",
-                                           arguments = full.args,
-                                           check_formalArgs = mapderivqr,
-                                           check_formalArgs_exceptions = c('object'),
-                                           check_trace_back = NULL,
-                                           envir = parent.frame())
-              calling.args_mapderivqr_args <- full.args
-              calling.args_mapderivqr_args[['summary']] <- FALSE
-              y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
-              mapderivqr_args <- list()
-              mapderivqr_args[['y0']] <- y0
-              mapderivqr_args[['model']] <- full.args[['object']]
-              mapderivqr_args[['newdata']] <- full.args[['newdata']]
-              mapderivqr_args[['deriv']] <- full.args[['deriv']]
-              mapderivqr_args[['resp']] <- full.args[['resp']]
-              mapderivqr_args[['probs']] <- full.args[['probs']]
-              mapderivqr_args[['summary']] <- full.args[['summary']]
-              mapderivqr_args[['robust']] <- full.args[['robust']]
-              . <- CustomDoCall(mapderivqr, mapderivqr_args)
-              full.args$. <- .
-            # full.args$. <- .
-            # . <- CustomDoCall(mapderivqr, full.args)
-          } else {
-            . <- .
-          # }
-        }
-      }
-    }
-    
-
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
    
@@ -569,8 +539,6 @@ fitted_draws.bgmfit <-
     } # if(!is.null(eval(full.args$fullframe))) {
 
     
-    
-    
     if(!is.null(eval(full.args$fullframe))) {
       if(eval(full.args$fullframe)) {
         if(!eval(full.args$summary)) {
@@ -609,8 +577,6 @@ fitted_draws.bgmfit <-
         uvarbyresp <- paste0(uvarby, resp)
         uvarbynewdata <- eval(full.args$newdata) %>% 
           dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
-        # why this if(setfullframe)? we are already in if(setfullframe)
-        # if(setfullframe) . <- cbind(., uvarbynewdata)
         . <- cbind(., uvarbynewdata)
         
         # 6.03.2025
@@ -631,6 +597,7 @@ fitted_draws.bgmfit <-
           . <- cbind(cbindtonewdata, .)
         }
       }
+      
       # prepare_data2
       itransform_set <- get_itransform_call(itransform)
       cbindtonewdata <- eval(full.args$newdata)
@@ -639,7 +606,6 @@ fitted_draws.bgmfit <-
                                     itransform = itransform_set) 
       } # if(any(itransform_set != "")) {
     } # if (is.na(model$model_info$univariate_by$by)) {
-    
     . 
   } # end fitted_draws
 
