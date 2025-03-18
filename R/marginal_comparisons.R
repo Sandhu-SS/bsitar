@@ -712,8 +712,15 @@ marginal_comparisons.bgmfit <- function(model,
                                check_trace_back = NULL,
                                envir = parent.frame())
   
+  full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
+  # newdata           <- CustomDoCall(get.newdata, full.args)
   
-  newdata           <- CustomDoCall(get.newdata, full.args)
+  # Interpolation points
+  full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                       nipts = NULL, 
+                                       check_fun  = check_fun, 
+                                       available_d1 = available_d1, 
+                                       xcall = NULL, verbose = verbose)
   
   if(!is.na(uvarby)) {
     uvarby_ind <- paste0(uvarby, resp)

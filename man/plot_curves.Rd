@@ -23,7 +23,7 @@
   aux_variables = NULL,
   levels_id = NULL,
   avg_reffects = NULL,
-  ipts = 10,
+  ipts = NULL,
   model_deriv = TRUE,
   xrange = NULL,
   xrange_search = NULL,

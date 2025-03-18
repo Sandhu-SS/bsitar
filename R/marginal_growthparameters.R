@@ -446,7 +446,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                              clearenvfuns = NULL,
                                              funlist = NULL,
                                              itransform = NULL,
-                                             newdata_fixed = FALSE,
+                                             newdata_fixed = NULL,
                                              envir = NULL, ...
 ) {
   
@@ -1136,6 +1136,8 @@ marginal_growthparameters.bgmfit <- function(model,
   }
   
   
+  
+  
   full.args$newdata <- newdata
   
   
@@ -1147,8 +1149,17 @@ marginal_growthparameters.bgmfit <- function(model,
                                check_trace_back = NULL,
                                envir = parent.frame())
   
+  full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
+  # newdata <- CustomDoCall(get.newdata, full.args)
   
-  newdata           <- CustomDoCall(get.newdata, full.args)
+  # Interpolation points
+  if(!exists('check_fun')) check_fun <- FALSE
+  if(!exists('available_d1')) available_d1 <- FALSE
+  full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                       nipts = NULL, 
+                                       check_fun  = check_fun, 
+                                       available_d1 = available_d1, 
+                                       xcall = NULL, verbose = verbose)
   
   
   if(!is.na(uvarby)) {

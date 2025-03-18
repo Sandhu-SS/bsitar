@@ -29,7 +29,7 @@
   draw_ids = NULL,
   levels_id = NULL,
   resp = NULL,
-  ipts = 10,
+  ipts = NULL,
   deriv = 0,
   summary = FALSE,
   model_deriv = NULL,

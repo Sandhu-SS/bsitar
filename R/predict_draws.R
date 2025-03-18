@@ -84,7 +84,7 @@ predict_draws.bgmfit <-
            levels_id = NULL,
            avg_reffects = NULL,
            aux_variables = NULL,
-           ipts = 10,
+           ipts = NULL,
            deriv = 0,
            model_deriv = TRUE,
            summary = TRUE,
@@ -413,6 +413,7 @@ predict_draws.bgmfit <-
       } # if(!available_d1) {
     } # if(check_fun) {
     
+   
     
     calling.args <- 
       sanitize_CustomDoCall_args(what = "CustomDoCall", 
@@ -422,14 +423,14 @@ predict_draws.bgmfit <-
                                  check_trace_back = NULL,
                                  envir = parent.frame())
     
-    
-    calling.args <- 
-      sanitize_CustomDoCall_args(what = "CustomDoCall", 
-                                 arguments = calling.args, 
-                                 check_formalArgs = NULL,
-                                 check_formalArgs_exceptions = c('object'),
-                                 check_trace_back = NULL,
-                                 envir = parent.frame())
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    calling.args$ipts <- ipts <- check_ipts(ipts = calling.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
     
     
     if(!check_fun) {
@@ -475,6 +476,16 @@ predict_draws.bgmfit <-
                                  envir = parent.frame())
     
     full.args$object <- full.args$model
+    
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
+    
     
     if(plot_conditional_effects_calling) {
       if(check_fun) {

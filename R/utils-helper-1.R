@@ -2659,7 +2659,6 @@ sample_n_of_groups <- function(data, size, ...) {
 #' @return A list comprised of exposed functions.
 #' @noRd
 #'
-
 check_pkg_version_exists <- function(pkg, 
                                      minimum_version = NULL, 
                                      verbose = FALSE,
@@ -4672,6 +4671,59 @@ attrstrip <- function(vec, keep = 'class'){
 
 # attrstrip(datace, keep = c('row.names', 'names', 'class'))
 
+
+
+#' An internal function to check the minimum version of the package
+#'
+#' @param pkg A character string of package names
+#' @param minver A character string of minimum version of the package
+#' @param verbose A logical (default \code{FALSE}) to check 
+#' @param ... other arguments. Currently ignored.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+check_ipts <- function(ipts = NULL, 
+                       nipts = NULL, 
+                       check_fun  = FALSE,
+                       available_d1  = FALSE,
+                       xcall = NULL,
+                       verbose = FALSE) {
+  
+  if(is.null(nipts)) {
+    niptsavailable_d1_T <- nipts <- 20
+    niptsavailable_d1_F <- nipts <- 50
+  } else {
+    niptsavailable_d1_T <- nipts
+    niptsavailable_d1_F <- nipts
+  }
+  
+  if(is.null(ipts)) {
+    if(check_fun) {
+      if(available_d1) {
+        if(is.null(xcall)) {
+          ipts <- niptsavailable_d1_T
+        } else if(!is.null(xcall)) {
+          # xcall specific 
+          if(xcall == 'fitted_draws') ipts <- niptsavailable_d1_T
+        }
+      } else if(!available_d1) {
+        if(is.null(xcall)) {
+          ipts <- niptsavailable_d1_F
+        } else if(!is.null(xcall)) {
+          # xcall specific 
+          if(xcall == 'fitted_draws') ipts <- niptsavailable_d1_F
+        }
+      }
+    }
+    if(verbose) {
+      message("Note: argument 'ipts' has been set as ipts = ", nipts,
+          " (default was 'NULL')")
+    }
+  }
+  
+  return(ipts)
+}
 
 
 

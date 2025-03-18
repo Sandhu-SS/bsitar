@@ -736,9 +736,26 @@ marginal_draws.bgmfit <-
     }
     
     
+    full.args <- 
+      sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                 arguments = full.args, 
+                                 check_formalArgs = marginal_draws.bgmfit,
+                                 check_formalArgs_exceptions = NULL,
+                                 check_trace_back = NULL,
+                                 envir = parent.frame())
     
-    newdata           <- CustomDoCall(get.newdata, full.args)
+    
+    full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
+    # newdata           <- CustomDoCall(get.newdata, full.args)
   
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
     
     if(!is.na(uvarby)) {
       uvarby_ind <- paste0(uvarby, resp)
@@ -759,13 +776,13 @@ marginal_draws.bgmfit <-
     
     
    
-    predictions_arguments <- 
-      sanitize_CustomDoCall_args(what = "CustomDoCall", 
-                                 arguments = predictions_arguments, 
-                                 check_formalArgs = marginal_draws.bgmfit,
-                                 check_formalArgs_exceptions = NULL,
-                                 check_trace_back = NULL,
-                                 envir = parent.frame())
+    # predictions_arguments <- 
+    #   sanitize_CustomDoCall_args(what = "CustomDoCall", 
+    #                              arguments = predictions_arguments, 
+    #                              check_formalArgs = marginal_draws.bgmfit,
+    #                              check_formalArgs_exceptions = NULL,
+    #                              check_trace_back = NULL,
+    #                              envir = parent.frame())
     
     
 

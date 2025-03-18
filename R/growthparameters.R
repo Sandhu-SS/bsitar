@@ -394,7 +394,7 @@ growthparameters.bgmfit <- function(model,
                                levels_id = NULL,
                                avg_reffects = NULL,
                                aux_variables = NULL,
-                               ipts = 10,
+                               ipts = NULL,
                                model_deriv = TRUE,
                                conf = 0.95,
                                xrange = NULL,
@@ -984,6 +984,17 @@ growthparameters.bgmfit <- function(model,
                                             check_trace_back = NULL,
                                             envir = parent.frame())
     
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('check_fun')) available_d1 <- FALSE
+    
+    arguments$ipts <- ipts <- check_ipts(ipts = arguments$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
+    
+    
     
     out_summary <- list()
     if(!is.null(arguments$...)) {
@@ -1484,6 +1495,15 @@ growthparameters.bgmfit <- function(model,
                                             check_formalArgs = NULL,
                                             check_trace_back = NULL,
                                             envir = parent.frame())
+    
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    arguments$ipts <- ipts <- check_ipts(ipts = arguments$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
     
     if(set_get_dv) {
       ipts <- NULL

@@ -3173,6 +3173,47 @@ prepare_formula <- function(x,
   } # for (set_randomsi_higher_levsli
   
   
+  
+  
+  # brms replace "=" with "EQ" and removes ","
+  # When using function such as Hmisc::rcspline.eval(age, nk=4,inclx = FALSE)
+  # Below we are doing gsub fro sigma only, but all names can be part of the 
+  # set_vector_for_gsub_names
+  
+  # for (i in 1:length(sigmacovcoefnames)) {
+  #   sigmacovcoefnames[i] <- gsub("=", "EQ", sigmacovcoefnames[i])
+  #   sigmacovcoefnames[i] <- gsub(",", "", sigmacovcoefnames[i])
+  # }
+  
+  set_vector_for_gsub_names <- c('sigmacovcoefnames',
+                                 'sigmacovcoefnames_gr',
+                                 'sigmacovcoefnames_gr_str')
+  
+  for (set_vector_for_gsub_names_i in 1:length(set_vector_for_gsub_names)) {
+    setnamesxx <- get(set_vector_for_gsub_names[set_vector_for_gsub_names_i])
+    if(!is.null(setnamesxx)) {
+      if(is.list(setnamesxx)) {
+        for (ij in 1:length(setnamesxx)) {
+          for (i in 1:length(setnamesxx [[ij]] )) {
+            setnamesxx[[ij]] [i] <- gsub("=", "EQ", setnamesxx[[ij]] [i])
+            setnamesxx[[ij]] [i] <- gsub(",", "",   setnamesxx[[ij]] [i])
+          }
+        }
+      } else if(!is.list(setnamesxx)) {
+        setnamesxx <- setnamesxx
+        for (i in 1:length(setnamesxx)) {
+          setnamesxx[i] <- gsub("=", "EQ", setnamesxx[i])
+          setnamesxx[i] <- gsub(",", "", setnamesxx[i])
+        }
+        setnamesxx <- setnamesxx
+      }
+    }
+    assign(set_vector_for_gsub_names[set_vector_for_gsub_names_i], setnamesxx)
+  }
+  
+ 
+  
+  
   # acovcoefnames <- gsub("[[:space:]]", gsubitbt, acovcoefnames)
   # bcovcoefnames <- gsub("[[:space:]]", gsubitbt, bcovcoefnames)
   # ccovcoefnames <- gsub("[[:space:]]", gsubitbt, ccovcoefnames)

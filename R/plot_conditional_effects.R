@@ -88,7 +88,7 @@ plot_conditional_effects.bgmfit <-
            draw_ids = NULL,
            levels_id = NULL,
            resp = NULL,
-           ipts = 10,
+           ipts = NULL,
            deriv = 0,
            summary = FALSE,
            model_deriv = NULL,
@@ -252,7 +252,14 @@ plot_conditional_effects.bgmfit <-
                                  envir = parent.frame())
     
     
-    
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
 
     
     if(!is.null(model$xcall)) {
@@ -393,6 +400,15 @@ plot_conditional_effects.bgmfit <-
                                  check_formalArgs_exceptions = c('object', 'model'),
                                  check_trace_back = NULL,
                                  envir = parent.frame())
+    
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    calling.args$ipts <- ipts <- check_ipts(ipts = calling.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
      
     
     if(check_fun) {

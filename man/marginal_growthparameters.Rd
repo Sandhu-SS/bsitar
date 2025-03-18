@@ -74,7 +74,7 @@
   clearenvfuns = NULL,
   funlist = NULL,
   itransform = NULL,
-  newdata_fixed = FALSE,
+  newdata_fixed = NULL,
   envir = NULL,
   ...
 )

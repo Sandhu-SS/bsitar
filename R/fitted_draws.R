@@ -86,7 +86,7 @@ fitted_draws.bgmfit <-
            levels_id = NULL,
            avg_reffects = NULL,
            aux_variables = NULL,
-           ipts = 10,
+           ipts = NULL,
            deriv = 0,
            model_deriv = TRUE,
            summary = TRUE,
@@ -116,6 +116,8 @@ fitted_draws.bgmfit <-
     } else {
       envir <- envir
     }
+    
+    
     
     # Depending on dpar 'mu' or 'sigma', subset model_info
     model <- getmodel_info(model = model, dpar = dpar)
@@ -269,7 +271,8 @@ fitted_draws.bgmfit <-
       }
       check_fun <- TRUE
     }
-  
+    
+    
     # The deriv = 0/1 should also reflect in  setupfuns() 
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall,
@@ -390,6 +393,15 @@ fitted_draws.bgmfit <-
                                  envir = parent.frame())
     
     
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    calling.args$ipts <- ipts <- check_ipts(ipts = calling.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
+    
 
     if(!check_fun) {
       . <- CustomDoCall(fitted, calling.args)
@@ -434,6 +446,16 @@ fitted_draws.bgmfit <-
                                  envir = parent.frame())
     
     full.args$object <- full.args$model
+    
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                            nipts = NULL, 
+                                            check_fun  = check_fun, 
+                                            available_d1 = available_d1, 
+                                            xcall = NULL, verbose = verbose)
+    
 
     if(plot_conditional_effects_calling) {
       if(check_fun) {

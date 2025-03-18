@@ -1006,7 +1006,14 @@ modelbased_growthparameters_call.bgmfit <-
                                  envir = parent.frame())
     
    
-    
+    # Interpolation points
+    if(!exists('check_fun')) check_fun <- FALSE
+    if(!exists('available_d1')) available_d1 <- FALSE
+    full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
     
     
     newdata           <- CustomDoCall(get.newdata, full.args)

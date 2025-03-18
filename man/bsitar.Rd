@@ -580,24 +580,32 @@ When either \code{sigma_formula} or \code{dpar_formula} is used, the
 default estimation of \code{RSD} by \code{\link[brms:brm]{brms::brm()}} is automatically turned
 off.
 
-Users can specify an external function, such as \code{poly}, but only with
-a single argument (the predictor), i.e., \code{poly(age)}. Additional
-arguments must be specified externally. For example, to set the degree of
-the polynomial to 3, a copy of the \code{poly} function can be created and
-modified as follows: \cr \code{mypoly = poly; formals(mypoly)[['degree']]
-  <- 3; mypoly(age)}.}
+Users can specify an external function, such as \code{poly},
+\code{splines::ns} etc. There are two ways to use external function. \cr
+
+\itemize{
+\item A conventional approach of using routine function such as \cr
+\code{sigma_formula = ~ 1 + splines::ns(age, df = 3)} \cr
+\item An external function with a single argument (the predictor), e.g.,
+\code{sigma_formula = poly(age)}. Additional arguments are specified
+externally. For example, to set the degree of the polynomial to 3, a copy
+of the \code{poly} function can be created and  modified as follows: \cr
+\code{mypoly = poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}. \cr
+An advantage of this approach is that spline coefficient names are small.\cr
+}}
 
 \item{sigma_formula_gr}{Formula for the random effect parameter, \code{sigma}
 (default \code{NULL}). See \code{a_formula_gr} for details. Similar to
-\code{sigma_formula}, external functions such as \code{poly} can be used.
-For further details, please refer to the description of
-\code{sigma_formula}.}
+\code{sigma_formula}, external functions such as \code{poly},
+\code{splines::ns} etc. can be used. For further details, please refer to
+the description of \code{sigma_formula}.}
 
 \item{sigma_formula_gr_str}{Formula for the random effect parameter,
 \code{sigma}, when fitting a hierarchical model with three or more levels
 of hierarchy. See \code{a_formula_gr_str} for details. As with
-\code{sigma_formula}, external functions such as \code{poly} can be used.
-For further details, please refer to the description of
+\code{sigma_formula}, external functions can be used. For example, \cr
+\code{sigma_formula_gr_str = (1 + splines::ns(age, df = 3) | 11 | gr(id, by
+  = NULL))} For further details, please refer to the description of
 \code{sigma_formula}.}
 
 \item{sigma_formula_manual}{Formula for the random effect parameter,

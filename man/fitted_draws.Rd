@@ -20,7 +20,7 @@
   levels_id = NULL,
   avg_reffects = NULL,
   aux_variables = NULL,
-  ipts = 10,
+  ipts = NULL,
   deriv = 0,
   model_deriv = TRUE,
   summary = TRUE,
