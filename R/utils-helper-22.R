@@ -246,8 +246,13 @@ modelbased_growthparameters_call.bgmfit <-
     }
     
     
+    # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
+    # This only when set_sigma_manual used to model a b c 
+    # Not when a function such as splines::ns etc used in sigma_formula
+   
     model <- getmodel_info(model = model, dpar = dpar)
+    
     
     
     if(is.null(usesavedfuns)) {
@@ -661,6 +666,23 @@ modelbased_growthparameters_call.bgmfit <-
     }
     
     post_processing_checks_args[['deriv']]    <- deriv
+    
+    
+    # 20.03.2025
+    if(!is.null(model$model_info[['sigma_fun_mode']])) {
+      sigma_fun_mode <- model$model_info[['sigma_fun_mode']]
+      if(dpar == "sigma") {
+        if(deriv > 0) {
+          if(sigma_fun_mode == "inline") {
+            check_fun    <- TRUE
+            available_d1 <- FALSE
+            model_deriv  <- FALSE
+            call_slopes  <- TRUE
+          }
+        }
+      }
+    }
+    
     
     
     # test <- setupfuns(model = model, resp = resp,

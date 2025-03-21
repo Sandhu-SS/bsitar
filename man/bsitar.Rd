@@ -470,7 +470,8 @@ formula part as:
 
 \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr = ~1},
 
-and use \code{group_by} as \code{group_by = list(groupvar = id, cor = un)},
+and use \code{group_by} as \cr
+\code{group_by = list(groupvar = id, cor = un)}, \cr
 where \code{id} specifies the group identifier and \code{un} sets the
 unstructured correlation structure. See the \code{group_by} argument for more
 details.}
@@ -484,9 +485,11 @@ factor variable(s), including their interactions as covariates (see
 matrix for the random effect parameter \code{b}, the user can set up the
 group identifier and the correlation structure for random effects via the
 vertical bar \code{||} approach. For example, consider only an intercept
-for the random effects \code{a}, \code{b}, and \code{c} specified as
-\code{a_formula_gr = ~1}, \code{b_formula_gr = ~1} and \code{c_formula_gr =
-  ~1}. To specify the group identifier (e.g., \code{id}) and an unstructured
+for the random effects \code{a}, \code{b}, and \code{c} specified as \cr
+\code{a_formula_gr = ~1}, \cr
+\code{b_formula_gr = ~1}, and \cr
+\code{c_formula_gr = ~1}. \cr
+To specify the group identifier (e.g., \code{id}) and an unstructured
 correlation structure, the formula argument can be specified as: \cr
 \code{a_formula_gr = ~ (1|i|id)} \cr \code{b_formula_gr = ~ (1|i|id)} \cr
 \code{c_formula_gr = ~ (1|i|id)} \cr where \code{i} within the vertical

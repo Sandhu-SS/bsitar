@@ -118,9 +118,30 @@ fitted_draws.bgmfit <-
     }
     
     
-    
+    # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
+    # This only when set_sigma_manual used to model a b c 
+    # Not when a function such as splines::ns etc used in sigma_formula
+    
     model <- getmodel_info(model = model, dpar = dpar)
+    
+    # if(model$model_info$setsigmaxvars) {
+    #   sigma_fun_mode <- "custom"
+    # } else {
+    #   sigma_fun_mode <- "inline"
+    # }
+    # 
+    # if(dpar == "mu") {
+    #   model <- getmodel_info(model = model, dpar = dpar)
+    # } else if(dpar == "sigma") {
+    #   if(sigma_fun_mode == "custom") {
+    #     model <- getmodel_info(model = model, dpar = dpar)
+    #   } else if(sigma_fun_mode == "inline") {
+    #     # nothing yet
+    #   }
+    # }
+    
+    
     
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
@@ -272,6 +293,21 @@ fitted_draws.bgmfit <-
       check_fun <- TRUE
     }
     
+    # 20.03.2025
+    if(!is.null(model$model_info[['sigma_fun_mode']])) {
+      sigma_fun_mode <- model$model_info[['sigma_fun_mode']]
+      if(dpar == "sigma") {
+        if(deriv > 0) {
+          if(sigma_fun_mode == "inline") {
+            check_fun    <- TRUE
+            available_d1 <- FALSE
+            model_deriv  <- FALSE
+            call_slopes  <- TRUE
+          }
+        }
+      }
+    }
+   
     
     # The deriv = 0/1 should also reflect in  setupfuns() 
     test <- setupfuns(model = model, resp = resp,

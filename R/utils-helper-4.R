@@ -3180,6 +3180,8 @@ prepare_formula <- function(x,
   # Below we are doing gsub fro sigma only, but all names can be part of the 
   # set_vector_for_gsub_names
   
+  # Also brms replaces - sign with M e.g., age-mean(age), also + with P
+  
   # for (i in 1:length(sigmacovcoefnames)) {
   #   sigmacovcoefnames[i] <- gsub("=", "EQ", sigmacovcoefnames[i])
   #   sigmacovcoefnames[i] <- gsub(",", "", sigmacovcoefnames[i])
@@ -3197,13 +3199,17 @@ prepare_formula <- function(x,
           for (i in 1:length(setnamesxx [[ij]] )) {
             setnamesxx[[ij]] [i] <- gsub("=", "EQ", setnamesxx[[ij]] [i])
             setnamesxx[[ij]] [i] <- gsub(",", "",   setnamesxx[[ij]] [i])
+            setnamesxx[[ij]] [i] <- gsub("[<>-]", "M",   setnamesxx[[ij]] [i])
+            setnamesxx[[ij]] [i] <- gsub("[<>+]", "P",   setnamesxx[[ij]] [i])
           }
         }
       } else if(!is.list(setnamesxx)) {
         setnamesxx <- setnamesxx
         for (i in 1:length(setnamesxx)) {
           setnamesxx[i] <- gsub("=", "EQ", setnamesxx[i])
-          setnamesxx[i] <- gsub(",", "", setnamesxx[i])
+          setnamesxx[i] <- gsub(",", "",   setnamesxx[i])
+          setnamesxx[i] <- gsub("[<>-]", "M",  setnamesxx[i])
+          setnamesxx[i] <- gsub("[<>+]", "P",  setnamesxx[i])
         }
         setnamesxx <- setnamesxx
       }
@@ -3212,6 +3218,8 @@ prepare_formula <- function(x,
   }
   
  
+  # print(sigmacovcoefnames)
+  # stop()
   
   
   # acovcoefnames <- gsub("[[:space:]]", gsubitbt, acovcoefnames)

@@ -4366,7 +4366,7 @@ plot_equivalence_test <-  function(x,
 
 
 
-#' Save list of ggplot2 objects to single pdf
+#' Get information on dpar
 #'
 #' @param model An object of class \code{bgmfit} 
 #' @param dpar A logical or a character string \code{'mu'} or \code{'sigma'}
@@ -4376,14 +4376,41 @@ plot_equivalence_test <-  function(x,
 #' @noRd
 #'
 getmodel_info <- function(model, dpar) {
+  
   oxx <- model$model_info[['namesexefuns']]
+  
   if(is.null(dpar)) {
     oxx <- oxx[!grepl("sigma", oxx)]
+    sigma_fun_mode <- NULL
   } else if(!is.null(dpar)) {
-    if(dpar == "mu") oxx <- oxx[!grepl("sigma", oxx)]
-    if(dpar == "sigma") oxx <- oxx[grepl("sigma", oxx)]
-  }
+    if(dpar == "mu") {
+      oxx <- oxx[!grepl("sigma", oxx)]
+      sigma_fun_mode <- NULL
+    } # if(dpar == "mu") {
+    if(dpar == "sigma") {
+      if(model$model_info$setsigmaxvars) {
+        if(is.null(model$model_info[['sigma_fun_mode']])) {
+          sigma_fun_mode <- "custom"
+        } else {
+          sigma_fun_mode <- model$model_info[['sigma_fun_mode']]
+        }
+      } else if(!model$model_info$setsigmaxvars) {
+        if(is.null(model$model_info[['sigma_fun_mode']])) {
+          sigma_fun_mode <- "inline"
+        } else {
+          sigma_fun_mode <- model$model_info[['sigma_fun_mode']]
+        }
+      }
+      if(sigma_fun_mode == "custom") {
+        oxx <- oxx[grepl("sigma", oxx)]
+      } else {
+        oxx <- oxx[!grepl("sigma", oxx)]
+      }
+    } # if(dpar == "sigma") {
+  } # else if(!is.null(dpar)) {
+  
   model$model_info[['namesexefuns']] <- oxx
+  model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
   model
 }
 
