@@ -1819,6 +1819,9 @@ edit_scode_ncp_to_cp <- function(stancode,
 #'
 mapderivqr <- function(model,
                        y0,
+                       xvar = NULL,
+                       idvar = NULL,
+                       levels_id = NULL,
                        newdata = NULL,
                        deriv = 1,
                        resp = NULL,
@@ -1844,12 +1847,25 @@ mapderivqr <- function(model,
   xvar_ <- paste0('xvar', resp_rev_)
   yvar_ <- paste0('yvar', resp_rev_)
   groupvar_ <- paste0('groupvar', resp_rev_)
-  xvar <- model$model_info[[xvar_]]
+  if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
   yvar <- model$model_info[[yvar_]]
   hierarchical_ <- paste0('hierarchical', resp_rev_)
 
-  idvar <- model$model_info[[groupvar_]]
+  # if(is.null(idvar)) idvar <- model$model_info[[groupvar_]]
+  
+  if(is.null(levels_id) & is.null(idvar)) {
+    idvar <- model$model_info[[groupvar_]]
+    if (!is.null(model$model_info[[hierarchical_]])) {
+      idvar <- model$model_info[[hierarchical_]]
+    }
+  } else if (!is.null(levels_id)) {
+    idvar <- levels_id
+  } else if (!is.null(idvar)) {
+    idvar <- idvar
+  }
+  
   if(length(idvar) > 1) idvar <- idvar[1]
+  
   
   # check if really need to be commented out
    # yvar  <- 'yvar'
@@ -3409,7 +3425,7 @@ check_brms_args <- function(call, arg, prefix = NULL) {
 #' 
 #' @param model model An object of class \code{bgmfit}.
 #' @param newdata A data frame
-#' @param IDvar A character string specifying the group identifier
+#' @param idvar A character string specifying the group identifier
 #' @param resp A character string specifying the response variable (default
 #'   \code{NULL})
 #' @param verbose A logical to indicate whether to print relevant information.
@@ -3418,7 +3434,7 @@ check_brms_args <- function(call, arg, prefix = NULL) {
 #' @keywords internal
 #' @noRd
 #'
-check_newdata_args <- function(model, newdata, IDvar, resp = NULL, verbose = FALSE) {
+check_newdata_args <- function(model, newdata, idvar, resp = NULL, verbose = FALSE) {
   # This is when no random effects and this groupvar is NULL
   # Therefore, an artificial group var created
   # see also changes made to the get_idata function lines 17
@@ -3437,10 +3453,10 @@ check_newdata_args <- function(model, newdata, IDvar, resp = NULL, verbose = FAL
   } else if (!is.null(model$model_info$groupvar)) {
     if(length(newdata[[model$model_info$groupvar]]) == 0) {
       # name_hypothetical_id <- paste0("hy_id", resp_rev_)
-      if(length(IDvar) > 1) {
-        name_hypothetical_id <- IDvar[1] 
+      if(length(idvar) > 1) {
+        name_hypothetical_id <- idvar[1] 
       } else {
-        name_hypothetical_id <- IDvar
+        name_hypothetical_id <- idvar
       }
       model$model_info$groupvar <- name_hypothetical_id
       newdata[[name_hypothetical_id]] <- as.factor("tempid")

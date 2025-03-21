@@ -18,6 +18,8 @@
   future_splits = NULL,
   future_method = "future",
   future_re_expose = NULL,
+  xvar = NULL,
+  idvar = NULL,
   newdata_fixed = NULL,
   envir = NULL,
   ...
@@ -116,6 +118,16 @@ is automatically set to \code{TRUE} for the \code{'multisession'} plan.
 \item It is advised to explicitly set \code{future_re_expose = TRUE} for speed
 gains when using parallel processing with \code{future = TRUE}.
 }}
+
+\item{xvar}{A character string (default \code{NULL}) specifying the
+\code{'x'} variable. Rarely used because \code{xvar} is inferred
+internally. A use case is when conflicting variables exist (e.g.,
+\code{sigma_formula}) and user wants to set a specific variable as
+\code{'x'}.}
+
+\item{idvar}{A character string (default \code{NULL}) specifying the
+\code{'id'} variable. Rarely used because \code{idvar} is inferred
+internally.}
 
 \item{newdata_fixed}{An indicator to specify whether to check for the data
 format and structure of the user provided \code{newdata} and apply needed

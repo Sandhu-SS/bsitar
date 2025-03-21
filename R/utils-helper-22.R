@@ -117,6 +117,8 @@ modelbased_growthparameters_call.bgmfit <-
            usesavedfuns = NULL,
            clearenvfuns = NULL,
            funlist = NULL,
+           xvar = NULL,
+           idvar = NULL,
            itransform = NULL,
            newdata_fixed = NULL,
            envir = NULL, 
@@ -299,7 +301,7 @@ modelbased_growthparameters_call.bgmfit <-
     }
     
     xvar_  <- paste0('xvar', resp_rev_)
-    xvar   <- model$model_info[[xvar_]]
+    if(is.null(xvar)) xvar   <- model$model_info[[xvar_]]
     cov_   <- paste0('cov', resp_rev_)
     cov    <- model$model_info[[cov_]]
     uvarby <- model$model_info$univariate_by$by
@@ -308,16 +310,18 @@ modelbased_growthparameters_call.bgmfit <-
     groupvar_ <- paste0('groupvar', resp_rev_)
     
     hierarchical_ <- paste0('hierarchical', resp_rev_)
-    if (is.null(levels_id)) {
-      IDvar <- model$model_info[[groupvar_]]
+    if(is.null(levels_id) & is.null(idvar)) {
+      idvar <- model$model_info[[groupvar_]]
       if (!is.null(model$model_info[[hierarchical_]])) {
-        IDvar <- model$model_info[[hierarchical_]]
+        idvar <- model$model_info[[hierarchical_]]
       }
     } else if (!is.null(levels_id)) {
-      IDvar <- levels_id
+      idvar <- levels_id
+    } else if (!is.null(idvar)) {
+      idvar <- idvar
     }
     xvar  <- xvar
-    idvar <- IDvar
+    idvar <- idvar
     if(length(idvar) > 1) idvar <- idvar[1]
     
     ########################################################

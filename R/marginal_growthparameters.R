@@ -445,6 +445,8 @@ marginal_growthparameters.bgmfit <- function(model,
                                              usesavedfuns = NULL,
                                              clearenvfuns = NULL,
                                              funlist = NULL,
+                                             xvar = NULL,
+                                             idvar = NULL,
                                              itransform = NULL,
                                              newdata_fixed = NULL,
                                              envir = NULL, ...
@@ -618,7 +620,7 @@ marginal_growthparameters.bgmfit <- function(model,
   }
   
   xvar_  <- paste0('xvar', resp_rev_)
-  xvar   <- model$model_info[[xvar_]]
+  if(is.null(xvar)) xvar   <- model$model_info[[xvar_]]
   cov_   <- paste0('cov', resp_rev_)
   cov    <- model$model_info[[cov_]]
   uvarby <- model$model_info$univariate_by$by

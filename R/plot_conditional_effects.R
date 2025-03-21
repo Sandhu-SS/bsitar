@@ -99,6 +99,8 @@ plot_conditional_effects.bgmfit <-
            usesavedfuns = NULL,
            clearenvfuns = NULL,
            funlist = NULL,
+           xvar = NULL,
+           idvar = NULL,
            itransform = NULL,
            newdata_fixed = NULL,
            envir = NULL,
@@ -192,16 +194,18 @@ plot_conditional_effects.bgmfit <-
     xvar <- model$model_info[[xvar_]]
     yvar <- model$model_info[[yvar_]]
     hierarchical_ <- paste0('hierarchical', resp_rev_)
-    if (is.null(levels_id)) {
-      IDvar <- model$model_info[[groupvar_]]
+    if(is.null(levels_id) & is.null(idvar)) {
+      idvar <- model$model_info[[groupvar_]]
       if (!is.null(model$model_info[[hierarchical_]])) {
-        IDvar <- model$model_info[[hierarchical_]]
+        idvar <- model$model_info[[hierarchical_]]
       }
     } else if (!is.null(levels_id)) {
-      IDvar <- levels_id
+      idvar <- levels_id
+    } else if (!is.null(idvar)) {
+      idvar <- idvar
     }
     xvar  <- xvar
-    idvar <- IDvar
+    idvar <- idvar
     if(length(idvar) > 1) idvar <- idvar[1]
     yvar  <- 'yvar'
     

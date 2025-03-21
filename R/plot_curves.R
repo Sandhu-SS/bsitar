@@ -255,6 +255,7 @@ plot_curves.bgmfit <- function(model,
                                incl_autocor = TRUE,
                                robust = FALSE,
                                transform = NULL,
+                               scale = c("response", "linear"),
                                future = FALSE,
                                future_session = 'multisession',
                                cores = NULL,
@@ -290,6 +291,8 @@ plot_curves.bgmfit <- function(model,
                                usesavedfuns = NULL,
                                clearenvfuns = NULL,
                                funlist = NULL,
+                               xvar = NULL,
+                               idvar = NULL,
                                itransform = NULL,
                                newdata_fixed = NULL,
                                envir = NULL,
@@ -342,17 +345,16 @@ plot_curves.bgmfit <- function(model,
   
   
   # Initiate non formalArgs()
-  xvar <- NULL;
+  # xvar <- NULL;
   yvar <- NULL;
-  IDvar <- NULL;
+  # IDvar <- NULL;
   groupbytest <- NULL;
-  IDvar <- NULL;
+  # IDvar <- NULL;
   subindicatorsi <- NULL;
   dy <- NULL;
-  xvar <- NULL;
   yvar <- NULL;
   subindicatorsi <- NULL;
-  IDvar <- NULL;
+  # IDvar <- NULL;
   Estimate <- NULL;
   groupby <- NULL;
   groupby_line <- NULL;
@@ -515,31 +517,30 @@ plot_curves.bgmfit <- function(model,
   } else {
     newdata <- newdata
   } 
+  
+  
+  get.newdata_args <- list()
+  get.newdata_args[['model']] <- model
+  get.newdata_args[['newdata']] <- newdata
+  get.newdata_args[['xvar']] <- xvar
+  get.newdata_args[['idvar']] <- idvar
+  get.newdata_args[['resp']] <- resp
+  get.newdata_args[['numeric_cov_at']] <- numeric_cov_at
+  get.newdata_args[['aux_variables']] <- aux_variables
+  get.newdata_args[['levels_id']] <- levels_id
+  get.newdata_args[['ipts']] <- NULL
+  get.newdata_args[['xrange']] <- xrange
+  get.newdata_args[['idata_method']] <- idata_method
+  get.newdata_args[['newdata_fixed']] <- 0
+  get.newdata_args[['verbose']] <- verbose
+  
   # for xyadj....
-  newdata.xyadj <- newdata
+  newdata.xyadj <- CustomDoCall(get.newdata, get.newdata_args)
   
-  newdata.xyadj <- get.newdata(model, newdata = newdata.xyadj, 
-                         resp = resp, 
-                         numeric_cov_at = numeric_cov_at,
-                         aux_variables = aux_variables,
-                         levels_id = levels_id,
-                         ipts = NULL,
-                         xrange = xrange,
-                         idata_method = idata_method,
-                         newdata_fixed = 0,
-                         verbose = verbose)
-  
-  
-  newdata <- get.newdata(model, newdata = newdata, 
-                         resp = resp, 
-                         numeric_cov_at = numeric_cov_at,
-                         aux_variables = aux_variables,
-                         levels_id = levels_id,
-                         ipts = ipts,
-                         xrange = xrange,
-                         idata_method = idata_method,
-                         newdata_fixed = newdata_fixed,
-                         verbose = verbose)
+  get.newdata_args[['ipts']] <- ipts
+  get.newdata_args[['newdata_fixed']] <- newdata_fixed
+ 
+  newdata <- CustomDoCall(get.newdata, get.newdata_args)
   
   
   
@@ -547,7 +548,7 @@ plot_curves.bgmfit <- function(model,
   for (list_ci in names(list_c)) {
     assign(list_ci, list_c[[list_ci]])
   }
-  check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+  check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
                'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
                'uvarby', 'subindicatorsi')
   
@@ -660,17 +661,17 @@ plot_curves.bgmfit <- function(model,
            " estimating adjusted/unadjusted curves")
     }
     
-    testdata1 <- model$data %>% dplyr::select(dplyr::all_of(IDvar)) %>% 
+    testdata1 <- model$data %>% dplyr::select(dplyr::all_of(idvar)) %>% 
       droplevels() %>% 
       dplyr::mutate(
-        groupbytest = interaction(dplyr::across(dplyr::all_of(IDvar)))
+        groupbytest = interaction(dplyr::across(dplyr::all_of(idvar)))
         ) %>% 
       dplyr::select(dplyr::all_of(groupbytest)) %>% dplyr::ungroup()
     
-    testdata2 <- newdata %>% dplyr::select(dplyr::all_of(IDvar)) %>% 
+    testdata2 <- newdata %>% dplyr::select(dplyr::all_of(idvar)) %>% 
       droplevels() %>% 
       dplyr::mutate(groupbytest = 
-                      interaction(dplyr::across(dplyr::all_of(IDvar)))) %>% 
+                      interaction(dplyr::across(dplyr::all_of(idvar)))) %>% 
       dplyr::select(dplyr::all_of(groupbytest)) %>% dplyr::ungroup()
     
     
@@ -1179,7 +1180,7 @@ plot_curves.bgmfit <- function(model,
     if (length(curves) > 1 & layout == 'single') {
       data_d <- subset(d., curve == "distance")
       data_v <- subset(d., curve == "velocity")
-      by_join_ <- c(IDvar, Xx, groupby_str_d)
+      by_join_ <- c(idvar, Xx, groupby_str_d)
       by_join_ <- unique(by_join_)
       data_dv <- dplyr::left_join(data_d, data_v, by = by_join_)
       data_dv.o <- data_dv
@@ -1586,7 +1587,7 @@ plot_curves.bgmfit <- function(model,
       out_a_ <- trimlines_curves(model, 
                                  x = Xx,
                                  y = Yy,
-                                 id = IDvar,
+                                 id = idvar,
                                  newdata = xyadj_ed, 
                                  ndraws = ndraws,
                                  draw_ids = draw_ids,
@@ -1806,7 +1807,7 @@ plot_curves.bgmfit <- function(model,
       out_u_ <- trimlines_curves(model, 
                                  x = Xx,
                                  y = Yy,
-                                 id = IDvar,
+                                 id = idvar,
                                  newdata = xyunadj_ed, 
                                  ndraws = ndraws,
                                  draw_ids = draw_ids,

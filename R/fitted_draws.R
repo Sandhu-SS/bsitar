@@ -92,6 +92,7 @@ fitted_draws.bgmfit <-
            summary = TRUE,
            robust = FALSE,
            transform = NULL,
+           scale = c("response", "linear"),
            probs = c(0.025, 0.975),
            xrange = NULL,
            xrange_search = NULL,
@@ -105,6 +106,8 @@ fitted_draws.bgmfit <-
            usesavedfuns = NULL,
            clearenvfuns = NULL,
            funlist = NULL,
+           xvar = NULL,
+           idvar = NULL,
            itransform = NULL,
            newdata_fixed = NULL,
            envir = NULL,
@@ -125,24 +128,7 @@ fitted_draws.bgmfit <-
     
     model <- getmodel_info(model = model, dpar = dpar)
     
-    # if(model$model_info$setsigmaxvars) {
-    #   sigma_fun_mode <- "custom"
-    # } else {
-    #   sigma_fun_mode <- "inline"
-    # }
-    # 
-    # if(dpar == "mu") {
-    #   model <- getmodel_info(model = model, dpar = dpar)
-    # } else if(dpar == "sigma") {
-    #   if(sigma_fun_mode == "custom") {
-    #     model <- getmodel_info(model = model, dpar = dpar)
-    #   } else if(sigma_fun_mode == "inline") {
-    #     # nothing yet
-    #   }
-    # }
-    
-    
-    
+   
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE
@@ -461,6 +447,9 @@ fitted_draws.bgmfit <-
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]
             mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['xvar']] <- calling.args[['xvar']]
+            mapderivqr_args[['idvar']] <- calling.args[['idvar']]
+            mapderivqr_args[['levels_id']] <- calling.args[['levels_id']]
             mapderivqr_args[['deriv']] <- calling.args[['deriv']]
             mapderivqr_args[['resp']] <- calling.args[['resp']]
             mapderivqr_args[['probs']] <- calling.args[['probs']]
@@ -510,6 +499,9 @@ fitted_draws.bgmfit <-
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]
             mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['xvar']] <- calling.args[['xvar']]
+            mapderivqr_args[['idvar']] <- calling.args[['idvar']]
+            mapderivqr_args[['levels_id']] <- calling.args[['levels_id']]
             mapderivqr_args[['deriv']] <- calling.args[['deriv']]
             mapderivqr_args[['resp']] <- calling.args[['resp']]
             mapderivqr_args[['probs']] <- calling.args[['probs']]
@@ -578,19 +570,29 @@ fitted_draws.bgmfit <-
         xvar_ <- paste0('xvar', resp_rev_)
         yvar_ <- paste0('yvar', resp_rev_)
         groupvar_ <- paste0('groupvar', resp_rev_)
-        xvar <- model$model_info[[xvar_]]
+        if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
         yvar <- model$model_info[[yvar_]]
         hierarchical_ <- paste0('hierarchical', resp_rev_)
-        if (is.null(levels_id)) {
-          IDvar <- model$model_info[[groupvar_]]
+        if(is.null(levels_id) & is.null(idvar)) {
+          idvar <- model$model_info[[groupvar_]]
           if (!is.null(model$model_info[[hierarchical_]])) {
-            IDvar <- model$model_info[[hierarchical_]]
+            idvar <- model$model_info[[hierarchical_]]
           }
         } else if (!is.null(levels_id)) {
-          IDvar <- levels_id
+          idvar <- levels_id
+        } else if (!is.null(idvar)) {
+          idvar <- idvar
         }
+        # if (is.null(levels_id)) {
+        #   IDvar <- model$model_info[[groupvar_]]
+        #   if (!is.null(model$model_info[[hierarchical_]])) {
+        #     IDvar <- model$model_info[[hierarchical_]]
+        #   }
+        # } else if (!is.null(levels_id)) {
+        #   IDvar <- levels_id
+        # }
         xvar  <- xvar
-        idvar <- IDvar
+        idvar <- idvar
         if(length(idvar) > 1) idvar <- idvar[1]
         yvar  <- 'yvar'
       } # if(eval(full.args$fullframe)) {

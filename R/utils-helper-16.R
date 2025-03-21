@@ -87,7 +87,7 @@ xyadj_curves.bgmfit <-
     
     xvar <- NULL;
     yvar <- NULL;
-    IDvar <- NULL;
+    idvar <- NULL;
     cov_vars <- NULL;
     cov_factor_vars <- NULL;
     cov_numeric_vars <- NULL;
@@ -173,7 +173,7 @@ xyadj_curves.bgmfit <-
     
     rm('newdata_dummy')
     
-    check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+    check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
                  'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
                  'uvarby', 'subindicatorsi')
     
@@ -255,9 +255,9 @@ xyadj_curves.bgmfit <-
     }
     
     if(is.null(id)) {
-      IDvar <- model$model_info$idvars
-      IDvar <- IDvar[1]
-      id <- newdata[[IDvar]][1]
+      idvar <- model$model_info$idvars
+      idvar <- idvar[1]
+      id <- newdata[[idvar]][1]
     }
     
 
@@ -269,12 +269,12 @@ xyadj_curves.bgmfit <-
     
     if(!is.null(ipts)) {
       add_outcome <- model$data %>%
-        dplyr::select(dplyr::all_of(c(Yy, IDvar)))
+        dplyr::select(dplyr::all_of(c(Yy, idvar)))
       newdata <- newdata %>% 
-        dplyr::left_join(., add_outcome, by = c(IDvar))
+        dplyr::left_join(., add_outcome, by = c(idvar))
       x <- newdata[[Xx]]
       y <- newdata[[Yy]]
-      id <- newdata[[IDvar]][1]
+      id <- newdata[[idvar]][1]
     }
     
     ######################################################
@@ -547,7 +547,7 @@ xyadj_curves.bgmfit <-
       out <- newdata
       out[[Xx]] <- x.adj[, 1]
       out[[Yy]] <- y.adj[, 1]
-      out <- out %>% dplyr::relocate(c(Xx, Yy, IDvar))
+      out <- out %>% dplyr::relocate(c(Xx, Yy, idvar))
       # now add CI also - Estimate will be same as outcome
       out <- cbind(out, y.adj)
     } # if(!summary) {
@@ -638,7 +638,7 @@ xyadj_curves.bgmfit <-
       out <- newdata
       out[[Xx]] <- x.adj
       out[[Yy]] <- y.adj
-      out <- out %>% dplyr::relocate(dplyr::all_of(c(Xx, Yy, IDvar)))
+      out <- out %>% dplyr::relocate(dplyr::all_of(c(Xx, Yy, idvar)))
     } # if(summary) {
     out
   } 
@@ -704,7 +704,7 @@ xyunadj_curves.bgmfit <- function (model,
   
   xvar <- NULL;
   yvar <- NULL;
-  IDvar <- NULL;
+  idvar <- NULL;
   cov_vars <- NULL;
   cov_factor_vars <- NULL;
   cov_numeric_vars <- NULL;
@@ -738,7 +738,7 @@ xyunadj_curves.bgmfit <- function (model,
   for (list_ci in names(list_c)) {
     assign(list_ci, list_c[[list_ci]])
   }
-  check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+  check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
                'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
                'uvarby', 'subindicatorsi')
   
@@ -783,9 +783,9 @@ xyunadj_curves.bgmfit <- function (model,
   
   
   if(is.null(id)) {
-    IDvar <- model$model_info$idvars
-    IDvar <- IDvar[1]
-    id <- newdata[[IDvar]][1]
+    idvar <- model$model_info$idvars
+    idvar <- idvar[1]
+    id <- newdata[[idvar]][1]
   }
   
   
@@ -795,12 +795,12 @@ xyunadj_curves.bgmfit <- function (model,
   # if (missing(y))
   #   y <- newdata[[Yy]]
   # if (missing(id))
-  #   id <- newdata[[IDvar]]
+  #   id <- newdata[[idvar]]
   
   
-  out <- as.data.frame(as.factor(newdata[[IDvar]]))
+  out <- as.data.frame(as.factor(newdata[[idvar]]))
   out <- cbind(x, y, out)
-  colnames(out) <- c(Xx, Yy, IDvar)
+  colnames(out) <- c(Xx, Yy, idvar)
   if(!is.na(uvarby)) {
     out[[uvarby]] <- resp
   }
@@ -882,7 +882,7 @@ trimlines_curves.bgmfit <-
     
     xvar <- NULL;
     yvar <- NULL;
-    IDvar <- NULL;
+    idvar <- NULL;
     cov_vars <- NULL;
     cov_factor_vars <- NULL;
     cov_numeric_vars <- NULL;
@@ -949,9 +949,9 @@ trimlines_curves.bgmfit <-
     
     
     if(is.null(id)) {
-      IDvar <- model$model_info$idvars
-      IDvar <- IDvar[1]
-      .id <- IDvar
+      idvar <- model$model_info$idvars
+      idvar <- idvar[1]
+      .id <- idvar
     } else {
       if(is.symbol(id)) {
         .id <- deparse(id)
@@ -976,7 +976,7 @@ trimlines_curves.bgmfit <-
     # }
     # 
     # if (missing(id)) {
-    #   .id <- IDvar
+    #   .id <- idvar
     # } else {
     #   .id <- id
     # }
@@ -1040,7 +1040,7 @@ trimlines_curves.bgmfit <-
       with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
     
     if(!is.na(uvarby)) {
-      tempotnames <- c(IDvar, Xx, Yy)
+      tempotnames <- c(idvar, Xx, Yy)
       tempot <- newdata_tt %>%  dplyr::select(-dplyr::all_of(tempotnames))
       newdata <- cbind(newdata[-1, ], tempot) %>% data.frame()
     }

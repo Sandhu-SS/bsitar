@@ -167,6 +167,8 @@ marginal_comparisons.bgmfit <- function(model,
                                    usesavedfuns = NULL,
                                    clearenvfuns = NULL,
                                    funlist = NULL,
+                                   xvar = NULL,
+                                   idvar = NULL,
                                    itransform = NULL,
                                    newdata_fixed = NULL,
                                    envir = NULL,
@@ -297,7 +299,7 @@ marginal_comparisons.bgmfit <- function(model,
   }
   
   xvar_  <- paste0('xvar', resp_rev_)
-  xvar   <- model$model_info[[xvar_]]
+  if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
   cov_   <- paste0('cov', resp_rev_)
   cov    <- model$model_info[[cov_]]
   uvarby <- model$model_info$univariate_by$by
@@ -836,48 +838,7 @@ marginal_comparisons.bgmfit <- function(model,
   
   
   # This below if(call_slopes)... needed for marginal_draws and not here, ?
-  
-  # if(call_slopes) {
-  #   if (!is.null(variables)) {
-  #     if (!is.character(variables)) {
-  #       stop("'variables' argument must be a character string such as", 
-  #            "\n ",
-  #            " variables = ", "'", xvar, "'"
-  #       )
-  #     } else {
-  #       set_variables <- variables
-  #       if(!grepl(xvar, variables)) {
-  #         set_variables <- xvar
-  #       } else if(!is.null(set_variables[[xvar]])) {
-  #         
-  #       }
-  #     }
-  #   } else if (is.null(variables)) {
-  #     set_variables <- xvar
-  #   } 
-  # } # if(call_slopes) {
-  
-  
-  # This below if(is.null(by)) ... needed for marginal_draws and not here, ?
-  
-  # if(is.null(by)) {
-  #   if(is.null(cov)) {
-  #     set_group <- FALSE
-  #   } else if(!is.null(cov)) {
-  #     set_group <- cov
-  #     if (!set_group %in% cov) {
-  #       stop('by must be one of the ', cov)
-  #     } 
-  #   }
-  # } else if(!is.null(by)) {
-  #   if (!isFALSE(by)) {
-  #     set_group <- by
-  #   } else if (isFALSE(by)) {
-  #     set_group <- FALSE
-  #   }
-  # }
-  
-  
+ 
   
   # isFALSE new on 26 04 2024 to use variables with custom with counterfactual
   if(method == 'custom') {

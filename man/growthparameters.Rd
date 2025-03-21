@@ -15,6 +15,7 @@
   summary = FALSE,
   robust = FALSE,
   transform = NULL,
+  scale = c("response", "linear"),
   re_formula = NA,
   peak = TRUE,
   takeoff = FALSE,
@@ -49,6 +50,8 @@
   usesavedfuns = NULL,
   clearenvfuns = NULL,
   funlist = NULL,
+  xvar = NULL,
+  idvar = NULL,
   itransform = NULL,
   newdata_fixed = NULL,
   envir = NULL,
@@ -94,6 +97,13 @@ distribution before computing summaries. The argument \code{transform} is
 based on the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function. This should not be
 confused with \code{transform} from \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}}, which is
 now deprecated.}
+
+\item{scale}{Either \code{"response"} or \code{"linear"}.
+If \code{"response"}, results are returned on the scale
+of the response variable. If \code{"linear"},
+results are returned on the scale of the linear predictor term,
+that is without applying the inverse link function or
+other transformations.}
 
 \item{re_formula}{Option to indicate whether or not to include
 individual/group-level effects in the estimation. When \code{NA} (default),
@@ -343,6 +353,16 @@ function names defined in the \code{globalenv()}. For functions needing
 both distance and velocity curves (e.g., \code{plot_curves(..., opt =
   'dv')}), \code{funlist} must include two functions: one for the distance
 curve and one for the velocity curve.}
+
+\item{xvar}{A character string (default \code{NULL}) specifying the
+\code{'x'} variable. Rarely used because \code{xvar} is inferred
+internally. A use case is when conflicting variables exist (e.g.,
+\code{sigma_formula}) and user wants to set a specific variable as
+\code{'x'}.}
+
+\item{idvar}{A character string (default \code{NULL}) specifying the
+\code{'id'} variable. Rarely used because \code{idvar} is inferred
+internally.}
 
 \item{itransform}{A character string (default \code{NULL}) indicating the
 variables names that are reverse transformed. Options are  \code{c("x",

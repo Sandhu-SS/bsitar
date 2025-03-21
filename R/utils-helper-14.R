@@ -27,6 +27,8 @@
 #'
 get.newdata <- function(model,
                         newdata = NULL,
+                        xvar = NULL,
+                        idvar = NULL,
                         resp = NULL,
                         numeric_cov_at = NULL,
                         aux_variables = NULL,
@@ -62,24 +64,36 @@ get.newdata <- function(model,
   xvar_ <- paste0('xvar', resp_rev_)
   yvar_ <- paste0('yvar', resp_rev_)
   groupvar_ <- paste0('groupvar', resp_rev_)
-  xvar <- model$model_info[[xvar_]]
+  if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
   yvar <- model$model_info[[yvar_]]
   hierarchical_ <- paste0('hierarchical', resp_rev_)
   
   
   
-  if (is.null(levels_id)) {
-    IDvar <- model$model_info[[groupvar_]]
+  # if (is.null(levels_id)) {
+  #   IDvar <- model$model_info[[groupvar_]]
+  #   if (!is.null(model$model_info[[hierarchical_]])) {
+  #     IDvar <- model$model_info[[hierarchical_]]
+  #   } else if (is.null(model$model_info[[hierarchical_]])) {
+  #     # if(!is.null(model$model_info[['idvars']])) {
+  #     #   IDvar <- model$model_info[['idvars']]
+  #     # }
+  #   }
+  # } else if (!is.null(levels_id)) {
+  #   IDvar <- levels_id
+  # }
+  
+  if(is.null(levels_id) & is.null(idvar)) {
+    idvar <- model$model_info[[groupvar_]]
     if (!is.null(model$model_info[[hierarchical_]])) {
-      IDvar <- model$model_info[[hierarchical_]]
-    } else if (is.null(model$model_info[[hierarchical_]])) {
-      # if(!is.null(model$model_info[['idvars']])) {
-      #   IDvar <- model$model_info[['idvars']]
-      # }
+      idvar <- model$model_info[[hierarchical_]]
     }
   } else if (!is.null(levels_id)) {
-    IDvar <- levels_id
+    idvar <- levels_id
+  } else if (!is.null(idvar)) {
+    idvar <- idvar
   }
+  
   
   xfun_ <- paste0('xfun', resp_rev_)
   yfun_ <- paste0('yfun', resp_rev_)
@@ -91,10 +105,10 @@ get.newdata <- function(model,
   uvarby     <- model$model_info$univariate_by$by
   
   # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
-  if(is.null(levels_id)) {
-    if(is.null(IDvar)) {
+  if(is.null(idvar)) {
+    if(is.null(idvar)) {
       if(!is.null(model$model_info[['idvars']])) {
-        IDvar <- model$model_info[['idvars']]
+        idvar <- model$model_info[['idvars']]
       }
     }
   }
@@ -163,7 +177,7 @@ get.newdata <- function(model,
   # }
   
   
-  newdata <- check_newdata_args(model, newdata, IDvar, resp)
+  newdata <- check_newdata_args(model, newdata, idvar, resp)
   
   
 
@@ -270,7 +284,7 @@ get.newdata <- function(model,
   cov_factor_vars <- intersect(cov_vars, factor_vars)
   cov_numeric_vars <- intersect(cov_vars, numeric_vars)
   groupby_fstr <- c(cov_factor_vars)
-  groupby_fistr <- c(IDvar, cov_factor_vars)
+  groupby_fistr <- c(idvar, cov_factor_vars)
   
   cov_sigma_factor_vars <- intersect(cov_sigma_vars, factor_vars)
   cov_sigma_numeric_vars <- intersect(cov_sigma_vars, numeric_vars)
@@ -302,7 +316,7 @@ get.newdata <- function(model,
   if(add_just_list_c) {
     list_c[['xvar']] <- xvar
     list_c[['yvar']] <- yvar
-    list_c[['IDvar']] <- IDvar
+    list_c[['idvar']] <- idvar
     list_c[['cov_vars']] <- cov_vars
     list_c[['cov_factor_vars']] <- cov_factor_vars
     list_c[['cov_numeric_vars']] <- cov_numeric_vars
@@ -345,14 +359,14 @@ get.newdata <- function(model,
   get.data.grid <- function(data,
                             xvar,
                             yvar,
-                            IDvar,
+                            idvar,
                             cov_numeric_vars,
                             numeric_cov_at,
                             aux_variables,
                             uvarby) {
-    if (!is.null(IDvar))
-      relocate_vars <- c(xvar, IDvar)
-    if (is.null(IDvar))
+    if (!is.null(idvar))
+      relocate_vars <- c(xvar, idvar)
+    if (is.null(idvar))
       relocate_vars <- c(xvar)
     if (!is.na(uvarby))
       if(idata_method == 'm1') relocate_vars <- c(relocate_vars, uvarby)
@@ -415,6 +429,8 @@ get.newdata <- function(model,
   i_data <-
     function(model,
              newdata,
+             xvar = NULL,
+             idvar = NULL,
              resp = NULL,
              cov_factor_vars = NULL,
              cov_numeric_vars = NULL,
@@ -430,17 +446,28 @@ get.newdata <- function(model,
       xvar_ <- paste0('xvar', resp_rev_)
       yvar_ <- paste0('yvar', resp_rev_)
       groupvar_ <- paste0('groupvar', resp_rev_)
-      xvar <- model$model_info[[xvar_]]
+      if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
       yvar <- model$model_info[[yvar_]]
       
       hierarchical_ <- paste0('hierarchical', resp_rev_)
-      if (is.null(levels_id)) {
-        IDvar <- model$model_info[[groupvar_]]
+      # if (is.null(levels_id)) {
+      #   IDvar <- model$model_info[[groupvar_]]
+      #   if (!is.null(model$model_info[[hierarchical_]])) {
+      #     IDvar <- model$model_info[[hierarchical_]]
+      #   }
+      # } else if (!is.null(levels_id)) {
+      #   IDvar <- levels_id
+      # }
+      
+      if(is.null(levels_id) & is.null(idvar)) {
+        idvar <- model$model_info[[groupvar_]]
         if (!is.null(model$model_info[[hierarchical_]])) {
-          IDvar <- model$model_info[[hierarchical_]]
+          idvar <- model$model_info[[hierarchical_]]
         }
       } else if (!is.null(levels_id)) {
-        IDvar <- levels_id
+        idvar <- levels_id
+      } else if (!is.null(idvar)) {
+        idvar <- idvar
       }
       
       uvarby <- model$model_info$univariate_by$by
@@ -453,7 +480,7 @@ get.newdata <- function(model,
       if (idata_method == 'm1') {
         idatafunction <- function(.x,
                                   xvar,
-                                  IDvar,
+                                  idvar,
                                   nmy,
                                   xrange,
                                   set_xrange,
@@ -507,38 +534,38 @@ get.newdata <- function(model,
             }
           
           inidnull <- FALSE
-          if(is.null(.x[[IDvar]])) {
+          if(is.null(.x[[idvar]])) {
             inidnull <- TRUE
-            .x[[IDvar]] <- unique(levels(newdata[[IDvar]]))[1]
+            .x[[idvar]] <- unique(levels(newdata[[idvar]]))[1]
           }
           
           out <- exdata(
             x = .x[[xvar]],
-            id = .x[[IDvar]],
-            idmat = matrix(unique(.x[[IDvar]], ncol = 1)),
+            id = .x[[idvar]],
+            idmat = matrix(unique(.x[[idvar]], ncol = 1)),
             nmy = nmy,
             xrange = xrange,
             set_xrange = set_xrange,
             aux_var = aux_var
           )
           
-          out <- out %>% dplyr::rename(!!IDvar := 'id') %>% data.frame()
+          out <- out %>% dplyr::rename(!!idvar := 'id') %>% data.frame()
           
-          if(inidnull) out <- out %>% dplyr::select(-dplyr::all_of(IDvar))
+          if(inidnull) out <- out %>% dplyr::select(-dplyr::all_of(idvar))
           
           idxx <- NULL
           if (!is.null(aux_var)) {
-            aux_varx <- c(aux_var, IDvar)
+            aux_varx <- c(aux_var, idvar)
             newx. <- .x %>% dplyr::select(dplyr::all_of(aux_varx)) %>%
-              dplyr::group_by(dplyr::across(dplyr::all_of(IDvar))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(idvar))) %>%
               dplyr::mutate(idxx = dplyr::row_number()) %>%
               dplyr::ungroup()
             outx. <- out %>%
-              dplyr::group_by(dplyr::across(dplyr::all_of(IDvar))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(idvar))) %>%
               dplyr::mutate(idxx = dplyr::row_number()) %>%
               dplyr::ungroup()
             out <- outx. %>% dplyr::left_join(., newx.,
-                                              by = c(IDvar, 'idxx')) %>%
+                                              by = c(idvar, 'idxx')) %>%
               dplyr::select(-idxx) %>% data.frame()
           }
           
@@ -575,12 +602,12 @@ get.newdata <- function(model,
         
         if (is.null(model$model_info[[hierarchical_]])) {
           if (!is.null(ipts) & is.null(cov_factor_vars)) {
-            newdata %>% dplyr::arrange(IDvar, xvar) %>%
+            newdata %>% dplyr::arrange(idvar, xvar) %>%
               dplyr::group_modify(
                 ~ idatafunction(
                   .x,
                   xvar = xvar,
-                  IDvar = IDvar,
+                  idvar = idvar,
                   nmy = ipts,
                   xrange = xrange,
                   set_xrange = set_xrange,
@@ -588,17 +615,17 @@ get.newdata <- function(model,
                 )
               ) %>%
               dplyr::rename(!!xvar := 'x') %>%
-              dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-              dplyr::relocate(dplyr::all_of(IDvar), dplyr::all_of(xvar)) %>%
+              dplyr::mutate(!!idvar := as.factor(eval(parse(text = idvar)))) %>%
+              dplyr::relocate(dplyr::all_of(idvar), dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           } else if (!is.null(ipts) & !is.null(cov_factor_vars)) {
-            newdata %>% dplyr::arrange(IDvar, xvar) %>%
+            newdata %>% dplyr::arrange(idvar, xvar) %>%
               dplyr::group_by(dplyr::across(dplyr::all_of(cov_factor_vars))) %>%
               dplyr::group_modify(
                 ~ idatafunction(
                   .x,
                   xvar = xvar,
-                  IDvar = IDvar,
+                  idvar = idvar,
                   nmy = ipts,
                   xrange = xrange,
                   set_xrange = set_xrange,
@@ -606,8 +633,8 @@ get.newdata <- function(model,
                 )
               ) %>%
               dplyr::rename(!!xvar := 'x') %>%
-              dplyr::mutate(!!IDvar := as.factor(eval(parse(text = IDvar)))) %>%
-              dplyr::relocate(dplyr::all_of(IDvar), dplyr::all_of(xvar)) %>%
+              dplyr::mutate(!!idvar := as.factor(eval(parse(text = idvar)))) %>%
+              dplyr::relocate(dplyr::all_of(idvar), dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           }
         } # if(is.null(model$model_info[[hierarchical_]]))
@@ -620,8 +647,8 @@ get.newdata <- function(model,
         
         if (!is.null(model$model_info[[hierarchical_]])) {
           if (!is.null(ipts) & is.null(cov_factor_vars)) {
-            IDvar_ <- IDvar[1]
-            higher_ <- IDvar[2:length(IDvar)]
+            IDvar_ <- idvar[1]
+            higher_ <- idvar[2:length(idvar)]
             arrange_by <- c(IDvar_, xvar)
             cov_factor_vars_by <- c(higher_, cov_factor_vars)
             newdata_o <- newdata
@@ -633,7 +660,7 @@ get.newdata <- function(model,
                 ~ idatafunction(
                   .x,
                   xvar = xvar,
-                  IDvar = IDvar_,
+                  idvar = IDvar_,
                   nmy = ipts,
                   xrange = xrange,
                   set_xrange = set_xrange,
@@ -644,23 +671,23 @@ get.newdata <- function(model,
               dplyr::rename(!!xvar := 'x') %>%
               data.frame()
             
-            for (i in IDvar) {
+            for (i in idvar) {
               newdata <- newdata %>% multiNewVar(df = .,
                                                  df2 = newdata,
                                                  varname = i)
             }
             
-            newdata %>% dplyr::relocate(dplyr::all_of(IDvar), 
+            newdata %>% dplyr::relocate(dplyr::all_of(idvar), 
                                         dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           }
           
           if (!is.null(ipts) & !is.null(cov_factor_vars)) {
-            IDvar_ <- IDvar[1]
-            higher_ <- IDvar[2:length(IDvar)]
+            IDvar_ <- idvar[1]
+            higher_ <- idvar[2:length(idvar)]
             arrange_by <- c(IDvar_, xvar)
             # cov_factor_vars_by <- c(higher_, cov_factor_vars)
-            if(length(IDvar) > 1) {
+            if(length(idvar) > 1) {
               cov_factor_vars_by <- c(higher_, cov_factor_vars)
             } else {
               cov_factor_vars_by <- c(cov_factor_vars)
@@ -673,7 +700,7 @@ get.newdata <- function(model,
                 ~ idatafunction(
                   .x,
                   xvar = xvar,
-                  IDvar = IDvar_,
+                  idvar = IDvar_,
                   nmy = ipts,
                   xrange = xrange,
                   set_xrange = set_xrange,
@@ -681,12 +708,12 @@ get.newdata <- function(model,
                 )
               ) %>%
               dplyr::rename(!!xvar := 'x') %>% data.frame()
-            for (i in IDvar) {
+            for (i in idvar) {
               newdata <- newdata %>% multiNewVar(df = .,
                                                  df2 = newdata,
                                                  varname = i)
             }
-            newdata %>% dplyr::relocate(dplyr::all_of(IDvar), 
+            newdata %>% dplyr::relocate(dplyr::all_of(idvar), 
                                         dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           }
@@ -700,16 +727,16 @@ get.newdata <- function(model,
         if (!is.null(ipts)) {
           # for 3 or more level data, idvar shoud be first of vector
           if (is.null(model$model_info[[hierarchical_]])) {
-            IDvar_for_idata <- IDvar
+            IDvar_for_idata <- idvar
           } else if (!is.null(model$model_info[[hierarchical_]])) {
-            IDvar_for_idata <- IDvar[1]
+            IDvar_for_idata <- idvar[1]
           }
           newdata <-
             get_idata(
               model = NULL,
               newdata = newdata,
-              idVar = IDvar_for_idata,
-              timeVar = xvar,
+              idvar = IDvar_for_idata,
+              xvar = xvar,
               times = NULL,
               length.out = ipts,
               xrange = xrange,
@@ -732,7 +759,7 @@ get.newdata <- function(model,
         data = newdata,
         xvar = xvar,
         yvar = yvar,
-        IDvar = IDvar,
+        idvar = idvar,
         cov_numeric_vars = cov_numeric_vars,
         numeric_cov_at = numeric_cov_at,
         aux_variables = aux_variables,
@@ -752,10 +779,10 @@ get.newdata <- function(model,
                            by = j_b_names)
         
       } else if(idata_method == 'm2') {
-        if(length(IDvar) > 1) {
-          name_hypothetical_id <- IDvar[1]
+        if(length(idvar) > 1) {
+          name_hypothetical_id <- idvar[1]
         } else {
-          name_hypothetical_id <- IDvar
+          name_hypothetical_id <- idvar
         }
         if(length(unique(newdata[[name_hypothetical_id]])) > 1) {
           newdata <-
@@ -788,7 +815,7 @@ get.newdata <- function(model,
   
   list_c[['xvar']] <- xvar
   list_c[['yvar']] <- yvar
-  list_c[['IDvar']] <- IDvar
+  list_c[['idvar']] <- idvar
   list_c[['cov_vars']] <- cov_vars
   list_c[['cov_factor_vars']] <- cov_factor_vars
   list_c[['cov_numeric_vars']] <- cov_numeric_vars

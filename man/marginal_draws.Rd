@@ -67,6 +67,8 @@
   usesavedfuns = NULL,
   clearenvfuns = NULL,
   funlist = NULL,
+  xvar = NULL,
+  idvar = NULL,
   itransform = NULL,
   newdata_fixed = NULL,
   envir = NULL,
@@ -615,6 +617,16 @@ function names defined in the \code{globalenv()}. For functions needing
 both distance and velocity curves (e.g., \code{plot_curves(..., opt =
   'dv')}), \code{funlist} must include two functions: one for the distance
 curve and one for the velocity curve.}
+
+\item{xvar}{A character string (default \code{NULL}) specifying the
+\code{'x'} variable. Rarely used because \code{xvar} is inferred
+internally. A use case is when conflicting variables exist (e.g.,
+\code{sigma_formula}) and user wants to set a specific variable as
+\code{'x'}.}
+
+\item{idvar}{A character string (default \code{NULL}) specifying the
+\code{'id'} variable. Rarely used because \code{idvar} is inferred
+internally.}
 
 \item{itransform}{A character string (default \code{NULL}) indicating the
 variables names that are reverse transformed. Options are  \code{c("x",

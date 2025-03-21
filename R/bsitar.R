@@ -4286,9 +4286,7 @@ bsitar <- function(x,
   ids.org.in     <- ids
   sigmaxs.org.in <- sigmaxs
   
-  # dataz <<- heights
-  # dataz %>% dplyr::filter(sex == "Male")
-  # dataz %>% dplyr::filter(sex == "Female")
+ 
     
   data          <- CustomDoCall(prepare_data2, prepare_data_args)
   xs            <- attr(data, "xs")
@@ -8588,13 +8586,14 @@ bsitar <- function(x,
     
     
     # 24.08.2024
-    if(get_priors) {
-      tempriorstr <- brms::get_prior(formula = bformula,
-                               stanvars = bstanvars,
-                               prior = temp_prior,
-                               data = brmsdata)
-      return(tempriorstr)
-    }
+    # 20.03.2025 - moved to final_scode
+    # if(get_priors) {
+    #   tempriorstr <- brms::get_prior(formula = bformula,
+    #                            stanvars = bstanvars,
+    #                            prior = temp_prior,
+    #                            data = brmsdata)
+    #   return(tempriorstr)
+    # }
 
     
 
@@ -9784,11 +9783,6 @@ bsitar <- function(x,
         stop("Something wrong with 'prepare_transformations' for data_custom")
       }
       
-      # check_for_validy_of_prepare_transformations_0_customx <<-
-      #   check_for_validy_of_prepare_transformations_0_custom
-      # check_for_validy_of_prepare_transformations_0x <<-
-      #   check_for_validy_of_prepare_transformations_0
-      
     } # if(check_for_validy_of_prepare_transformations) {
     
     
@@ -10356,6 +10350,11 @@ bsitar <- function(x,
   
   # brm_argsx <<- brm_args
   # CustomDoCall(brms::get_prior, brm_argsx)
+  
+  if(get_priors) {
+    tempriorstr <- CustomDoCall(brms::get_prior, brm_args)
+    return(tempriorstr)
+  }
 
   scode_final  <- CustomDoCall(brms::make_stancode, brm_args)
   sdata        <- CustomDoCall(brms::make_standata, brm_args)
@@ -10966,6 +10965,10 @@ bsitar <- function(x,
                                compress = get_file_compress)
     }
    
+    # 20.03.2025
+    # This needed for insight::get_data
+    attr(brmsfit$data, "data_name") <- deparse(mcall_$data)
+    
     return(brmsfit)
   } # exe_model_fit
   

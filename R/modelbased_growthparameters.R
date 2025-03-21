@@ -79,6 +79,8 @@ modelbased_growthparameters.bgmfit <-
            future_splits = NULL,
            future_method = 'future',
            future_re_expose = NULL,
+           xvar = NULL,
+           idvar = NULL,
            newdata_fixed = NULL,
            envir = NULL, 
            ...) {
@@ -118,6 +120,8 @@ modelbased_growthparameters.bgmfit <-
                     future_splits = future_splits,
                     future_method = future_method,
                     future_re_expose = future_re_expose,
+                    xvar = xvar,
+                    idvar = idvar,
                     newdata_fixed = newdata_fixed,
                     envir = envir, 
                     ...) 

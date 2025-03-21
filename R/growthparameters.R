@@ -287,6 +287,16 @@
 #'   both distance and velocity curves (e.g., \code{plot_curves(..., opt =
 #'   'dv')}), \code{funlist} must include two functions: one for the distance
 #'   curve and one for the velocity curve.
+#'   
+#' @param xvar A character string (default \code{NULL}) specifying the
+#'   \code{'x'} variable. Rarely used because \code{xvar} is inferred
+#'   internally. A use case is when conflicting variables exist (e.g.,
+#'   \code{sigma_formula}) and user wants to set a specific variable as
+#'   \code{'x'}.
+#'   
+#' @param idvar A character string (default \code{NULL}) specifying the
+#'   \code{'id'} variable. Rarely used because \code{idvar} is inferred
+#'   internally.
 #'
 #' @param itransform A character string (default \code{NULL}) indicating the
 #'   variables names that are reverse transformed. Options are  \code{c("x",
@@ -380,6 +390,7 @@ growthparameters.bgmfit <- function(model,
                                summary = FALSE,
                                robust = FALSE,
                                transform = NULL,
+                               scale = c("response", "linear"),
                                re_formula = NA,
                                peak = TRUE,
                                takeoff = FALSE,
@@ -414,6 +425,8 @@ growthparameters.bgmfit <- function(model,
                                usesavedfuns = NULL,
                                clearenvfuns = NULL,
                                funlist = NULL,
+                               xvar = NULL,
+                               idvar = NULL,
                                itransform = NULL,
                                newdata_fixed = NULL,
                                envir = NULL,
@@ -472,11 +485,11 @@ growthparameters.bgmfit <- function(model,
   
   
   # Initiate non formalArgs()
-  xvar <- NULL;
+  # xvar <- NULL;
   acgv_asymptote <- NULL;
   apv <- NULL;
   Parameter <- NULL;
-  IDvar <- NULL;
+  # IDvar <- NULL;
   groupby_fistr <- NULL;
   groupby_fstr <- NULL;
   subindicatorsi <- NULL;
@@ -848,7 +861,7 @@ growthparameters.bgmfit <- function(model,
           data.frame() %>%
           stats::setNames(paste0('P._D.', names(.))) %>%
           dplyr::mutate(!!xvar := newdata[[xvar]])
-        for(i in IDvar) {
+        for(i in idvar) {
           out__ <- out__ %>% multiNewVar(df=., df2 = newdata, varname=i)
         } 
       } else if (summary) {
@@ -856,7 +869,7 @@ growthparameters.bgmfit <- function(model,
           dplyr::select(1) %>%  data.frame() %>%
           stats::setNames(paste0('P._D.', names(.))) %>%
           dplyr::mutate(!!xvar := newdata[[xvar]])
-        for(i in IDvar) {
+        for(i in idvar) {
           out__ <- out__ %>% multiNewVar(df=., df2 = newdata, varname=i)
         } 
       }
@@ -1040,7 +1053,10 @@ growthparameters.bgmfit <- function(model,
       }
     }
     
-    newdata <- get.newdata(model, newdata = newdata, 
+    newdata <- get.newdata(model, 
+                           newdata = newdata, 
+                           xvar = xvar,
+                           idvar = idvar,
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
                            aux_variables = aux_variables,
@@ -1058,7 +1074,7 @@ growthparameters.bgmfit <- function(model,
     for (list_ci in names(list_c)) {
       assign(list_ci, list_c[[list_ci]])
     }
-    check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+    check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
                  'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
                  'uvarby', 'subindicatorsi')
     
@@ -1523,7 +1539,10 @@ growthparameters.bgmfit <- function(model,
     } # if (!arguments$plot) {
     
 
-    newdata <- get.newdata(model, newdata = newdata, 
+    newdata <- get.newdata(model, 
+                           newdata = newdata, 
+                           xvar = xvar,
+                           idvar = idvar,
                            resp = resp, 
                            numeric_cov_at = numeric_cov_at,
                            aux_variables = aux_variables,
@@ -1540,7 +1559,7 @@ growthparameters.bgmfit <- function(model,
     for (list_ci in names(list_c)) {
       assign(list_ci, list_c[[list_ci]])
     }
-    check__ <- c('xvar', 'yvar', 'IDvar', 'cov_vars', 'cov_factor_vars', 
+    check__ <- c('xvar', 'yvar', 'idvar', 'cov_vars', 'cov_factor_vars', 
                  'cov_numeric_vars', 'groupby_fstr', 'groupby_fistr', 
                  'uvarby', 'subindicatorsi')
     

@@ -5,16 +5,16 @@
 #' 
 #' @param model An object of class \code{bgmfit}. This is optional (default
 #'   \code{NULL}) i.e., it is not neccessary to specify the model object. When
-#'   \code{model} is specified, then values for \code{newdata}, \code{idVar},
-#'   and \code{timeVar} are automatically taken from the \code{model}.
+#'   \code{model} is specified, then values for \code{newdata}, \code{idvar},
+#'   and \code{xvar} are automatically taken from the \code{model}.
 #'
 #' @param newdata A data frame. If \code{NULL} (default), data analysed in the
 #'   original model fit is used.
 #'
-#' @param idVar A character string to specify the group identifier. If
+#' @param idvar A character string to specify the group identifier. If
 #'   \code{NULL} (default), \code{id} from the model fit is used.
 #'
-#' @param timeVar  A character string to specify the time variable. If
+#' @param xvar  A character string to specify the time variable. If
 #'   \code{NULL} (default), \code{x} from the model fit is used.
 #'
 #' @param times  A numeric vector to specify the time range. Currently ignored.
@@ -30,7 +30,7 @@
 #'   dplyr::across the entire sample. Lastly, a paired numeric values can be
 #'   supplied e.g., \code{xrange = c(6, 20)} will set the range between 6 and
 #'   20.
-#' @param keeplevels A logical in case factor variables other than \code{idVar}
+#' @param keeplevels A logical in case factor variables other than \code{idvar}
 #'   present
 #'   
 #' @param asdf
@@ -49,8 +49,8 @@
 get_idata <-
   function(model = NULL,
            newdata = NULL,
-           idVar = NULL,
-           timeVar = NULL,
+           idvar = NULL,
+           xvar = NULL,
            times = NULL,
            length.out = 10,
            xrange = 1, 
@@ -115,18 +115,18 @@ get_idata <-
     
     
     if(is.null(model)) {
-      if (is.null(idVar)) stop("Specify model or idVar, both can not be NULL")
-      if (is.null(timeVar)) stop("Specify model or timeVar, both can't be NULL")
+      if (is.null(idvar)) stop("Specify model or idvar, both can not be NULL")
+      if (is.null(xvar)) stop("Specify model or xvar, both can't be NULL")
     }
     
     if(!is.null(model)) {
-      if (!is.null(idVar)) stop("Specify either model or idVar, not both")
-      if (!is.null(timeVar)) stop("Specify either model or timeVar, not both")
+      if (!is.null(idvar)) stop("Specify either model or idvar, not both")
+      if (!is.null(xvar)) stop("Specify either model or xvar, not both")
     }
     
     if(!is.null(model)) {
       if(length(model$model_info$idvars) > 1) {
-        stop("Please specify newdata, idVar, and timeVar manullay because 
+        stop("Please specify newdata, idvar, and xvar manullay because 
             currently value for these can not be infered from model with three 
             or more levels of hierarchy")
       }
@@ -134,16 +134,16 @@ get_idata <-
     
     `.` <- NULL;
     
-    if (is.null(idVar)) {
-      idVar <- model$model_info$idvars
+    if (is.null(idvar)) {
+      idvar <- model$model_info$idvars
     } else {
-      idVar <- idVar
+      idvar <- idvar
     }
     
-    if (is.null(timeVar)) {
-      timeVar <- model$model_info$xvar
+    if (is.null(xvar)) {
+      xvar <- model$model_info$xvar
     } else {
-      timeVar <- timeVar
+      xvar <- xvar
     }
     
     all_times <- TRUE
@@ -151,7 +151,7 @@ get_idata <-
       xrange <- 1
     else
       xrange <- xrange
-    times_orig <- newdata[[timeVar]]
+    times_orig <- newdata[[xvar]]
     times_orig <- times_orig[!is.na(times_orig)]
     
     
@@ -165,31 +165,31 @@ get_idata <-
     # Therefore, an artificial group var created
     # Check utils-helper function lines 60
     
-    if (nlevels(newdata[[idVar]]) == 1) {
+    if (nlevels(newdata[[idvar]]) == 1) {
       newdata <- newdata %>%
-        dplyr::distinct(newdata[[timeVar]], .keep_all = T) %>%
-        dplyr::arrange(!!as.name(timeVar))
+        dplyr::distinct(newdata[[xvar]], .keep_all = T) %>%
+        dplyr::arrange(!!as.name(xvar))
     }
     
-    id <- match(newdata[[idVar]], unique(newdata[[idVar]]))
+    id <- match(newdata[[idvar]], unique(newdata[[idvar]]))
     
-    if(length( unique(newdata[[idVar]])) == 1) {
+    if(length( unique(newdata[[idvar]])) == 1) {
       if(length.out == 1) stop("The argument 'ipts' should be > 1")
     }
     
-    last_time  <- tapply(newdata[[timeVar]], id, max)
-    first_time <- tapply(newdata[[timeVar]], id, min)
+    last_time  <- tapply(newdata[[xvar]], id, max)
+    first_time <- tapply(newdata[[xvar]], id, min)
     
    
     
     newdata_nomiss <- newdata[complete.cases(newdata),]
     id_nomiss <-
-      match(newdata_nomiss[[idVar]], unique(newdata_nomiss[[idVar]]))
+      match(newdata_nomiss[[idvar]], unique(newdata_nomiss[[idvar]]))
     n <- length(unique(id_nomiss))
     
     if (xrange == 1) {
       times_to_pred <- list()
-      for (i in 1:length(unique(newdata[[idVar]]))) {
+      for (i in 1:length(unique(newdata[[idvar]]))) {
         numx <- as.character(i)
         times_to_pred[[numx]] <-
           seq(first_time[i], last_time[i], length.out = length.out)
@@ -211,7 +211,7 @@ get_idata <-
       if (!is.list(Q_points))
         Q_points <- split(Q_points, row(Q_points))
       # 1.3.2025
-      # Faced issue newdata[[timeVar]] not sorted 
+      # Faced issue newdata[[xvar]] not sorted 
       if(base::is.unsorted(times)) {
         times <- sort(times)
       }
@@ -230,30 +230,30 @@ get_idata <-
       if(length.out == 1) {
         stop("The 'ipts' should be either 'NULL' or > 1")
       } else {
-        newdata_pred <- right_rows(newdata, newdata[[timeVar]], id, 
+        newdata_pred <- right_rows(newdata, newdata[[xvar]], id, 
                                    times_to_pred)
       }
     }
     
-    # newdata_pred <- right_rows(newdata, newdata[[timeVar]], id, times_to_pred)
+    # newdata_pred <- right_rows(newdata, newdata[[xvar]], id, times_to_pred)
     
     if(keeplevels) {
-      if(length(setdiff(is.fact, idVar)) > 0) {
+      if(length(setdiff(is.fact, idvar)) > 0) {
         newdata_pred <- newdata_pred %>% droplevels
         newdata_pred <- newdata_pred %>% 
-          dplyr::select(-dplyr::all_of(setdiff(is.fact, idVar)))
+          dplyr::select(-dplyr::all_of(setdiff(is.fact, idvar)))
         
         newdata_is.factx <- newdata %>% 
           dplyr::select(dplyr::all_of(is.fact))
         
         newdata_pred <- newdata_pred %>% 
-          dplyr::left_join(., newdata_is.factx, by = idVar,
+          dplyr::left_join(., newdata_is.factx, by = idvar,
                     relationship = "many-to-many")
       }
     }
     
   
-    newdata_pred[[timeVar]] <- unlist(times_to_pred)
+    newdata_pred[[xvar]] <- unlist(times_to_pred)
     
     if(keeplevels) {
       newdata_pred <- newdata_pred %>% dplyr::select(dplyr::all_of(cnames))
