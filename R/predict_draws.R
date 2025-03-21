@@ -89,7 +89,7 @@ predict_draws.bgmfit <-
            model_deriv = TRUE,
            summary = TRUE,
            robust = FALSE,
-           transform = NULL,
+           transform_draws = NULL,
            probs = c(0.025, 0.975),
            xrange = NULL,
            xrange_search = NULL,
@@ -103,6 +103,8 @@ predict_draws.bgmfit <-
            usesavedfuns = NULL,
            clearenvfuns = NULL,
            funlist = NULL,
+           xvar = NULL,
+           idvar = NULL,
            itransform = NULL,
            newdata_fixed = NULL,
            envir = NULL,
@@ -115,12 +117,16 @@ predict_draws.bgmfit <-
     }
     
     # 20.03.2025
+    assign_function_to_environment(transform_draws, 'transform_draws', 
+                                   envir = NULL)
+    model$model_info[['transform_draws']] <- transform_draws
+    
+    # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
     # This only when set_sigma_manual used to model a b c 
     # Not when a function such as splines::ns etc used in sigma_formula
     
     model <- getmodel_info(model = model, dpar = dpar)
-    
     
     
     if(is.null(usesavedfuns)) {
@@ -160,7 +166,6 @@ predict_draws.bgmfit <-
       idata_method <- 'm2'
     }
     
-    
     rlang_trace_back <- rlang::trace_back()
     
     check_trace_back.bgmfit <- grepl("plot_conditional_effects", 
@@ -172,8 +177,6 @@ predict_draws.bgmfit <-
     }
     
     
-    
-    
     check_trace_back.bgmfit <- grepl("growthparameters", 
                                      rlang_trace_back[[1]])
     if(all(!check_trace_back.bgmfit)) {
@@ -182,7 +185,6 @@ predict_draws.bgmfit <-
       growthparameters_calling <- TRUE 
     }
     
-    
     if(any(grepl("modelbased_growthparameters", rlang_trace_back[[1]]))) {
       growthparameters_calling <- FALSE 
     }
@@ -190,9 +192,6 @@ predict_draws.bgmfit <-
     if(any(grepl("plot_curves", rlang_trace_back[[1]]))) {
       growthparameters_calling <- FALSE 
     }
-    
-    
-    
     
     indirectcall <- FALSE
     if(!plot_conditional_effects_calling) {
@@ -210,14 +209,9 @@ predict_draws.bgmfit <-
                                         fargs = formals(), 
                                         dargs = list(...), 
                                         verbose = verbose)
-        
         full.args$model <- model
       }
     }
-    
-    
-    
-    
     
     xcall_str <- NULL
     if(plot_conditional_effects_calling) {
@@ -230,9 +224,6 @@ predict_draws.bgmfit <-
       full.args$xcall_str <- NULL
     }
     
-    
-    
-    
     if(!is.null(model$model_info$decomp)) {
       if(model$model_info$decomp == "QR") model_deriv<- FALSE
     }
@@ -241,14 +232,12 @@ predict_draws.bgmfit <-
     
     model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
     
-    
     # 6.03.2025
     if(is.null(xcall_str)) {
       setxcall_   <- match.call()
     } else {
       setxcall_ <- xcall_str
     }
-    
     
     post_processing_checks_args <- list()
     post_processing_checks_args[['model']]    <- model
@@ -267,7 +256,6 @@ predict_draws.bgmfit <-
     post_processing_checks_args[['all']]      <- TRUE
     oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
-    
     
     if(!is.null(funlist)) {
       if(!is.list(funlist)) {
@@ -291,7 +279,6 @@ predict_draws.bgmfit <-
       check_fun <- TRUE
     }
     
-    
     # 20.03.2025
     if(!is.null(model$model_info[['sigma_fun_mode']])) {
       sigma_fun_mode <- model$model_info[['sigma_fun_mode']]
@@ -308,11 +295,7 @@ predict_draws.bgmfit <-
     }
     
     
-    # Unlike marginal_... functions where assign() works, for brms::predict...
-    # the environment is assigned to d0/d1 functions via setupfuns()
     # The deriv = 0/1 should also reflect in  setupfuns() 
-    
-    
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall,
                       usesavedfuns = usesavedfuns,
@@ -321,10 +304,9 @@ predict_draws.bgmfit <-
                       model_deriv = model_deriv,
                       ...)
     
-    
-    if(is.null(test)) return(invisible(NULL))
-    
-    
+    if(is.null(test)) {
+      return(invisible(NULL))
+    }
     
     
     if(!isTRUE(
@@ -338,7 +320,6 @@ predict_draws.bgmfit <-
         return(invisible(NULL))
       }
     }
-    
     
     misc <- c("verbose", "usesavedfuns", "clearenvfuns", 
               "envir", "fullframe")
@@ -370,15 +351,11 @@ predict_draws.bgmfit <-
       }
     }
     
-    
-    
     # 6.03.2025
     if(is.null(newdata) & !indirectcall ) {
       calling.args_newdata         <- calling.args
       calling.args_newdata$model   <- calling.args_newdata$object
       calling.args_newdata$newdata <- model$model_info$bgmfit.data 
-      # decide if need seprate call to get,newdata depnding on newdata_fixed
-      # For now, treating growthparameters_calling = !growthparameters_calling
       if(growthparameters_calling) {
         newdata <- CustomDoCall(get.newdata, calling.args_newdata)
       } else {
@@ -387,10 +364,6 @@ predict_draws.bgmfit <-
       rm('calling.args_newdata')
       calling.args$newdata <- newdata
     }
-    
-    
-    
-    
     
     
     # 6.03.2025
@@ -403,12 +376,10 @@ predict_draws.bgmfit <-
       }
     }
     
-    
     # 6.03.2025
     if(is.null(full.args$newdata)) {
       full.args$newdata <- calling.args$newdata
     }
-    
     
     # set up mesage
     if(check_fun) {
@@ -434,7 +405,6 @@ predict_draws.bgmfit <-
       } # if(!available_d1) {
     } # if(check_fun) {
     
-   
     
     calling.args <- 
       sanitize_CustomDoCall_args(what = "CustomDoCall", 
@@ -444,19 +414,34 @@ predict_draws.bgmfit <-
                                  check_trace_back = NULL,
                                  envir = parent.frame())
     
+    
     # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE
     calling.args$ipts <- ipts <- check_ipts(ipts = calling.args$ipts, 
-                                         nipts = NULL, 
-                                         check_fun  = check_fun, 
-                                         available_d1 = available_d1, 
-                                         xcall = NULL, verbose = verbose)
+                                            nipts = NULL, 
+                                            check_fun  = check_fun, 
+                                            available_d1 = available_d1, 
+                                            xcall = NULL, verbose = verbose)
     
     
     if(!check_fun) {
       . <- CustomDoCall(predict, calling.args)
     }
+    
+    
+    # TODO - check - Transformation applied to draw if deriv = 0, 
+    if(!check_fun) {
+      if(deriv == 0) {
+        if(!is.null(calling.args$model$model_info$transform_draws)) {
+          . <- calling.args$model$model_info$transform_draws(.)
+        } else if(!is.null(calling.args$object$model_info$transform_draws)) {
+          . <- calling.args$object$model_info$transform_draws(.)
+        } else {
+          if(verbose) message("transform_draws function is NULL, check it")
+        }
+      } # if(deriv = 0) {
+    } # if(!check_fun) {
     
     
     if(!plot_conditional_effects_calling) {
@@ -472,10 +457,14 @@ predict_draws.bgmfit <-
             calling.args_mapderivqr_args <- calling.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
+            y0 <- calling.args$model$model_info$transform_draws(y0)
             mapderivqr_args <- list()
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]
             mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['xvar']] <- calling.args[['xvar']]
+            mapderivqr_args[['idvar']] <- calling.args[['idvar']]
+            mapderivqr_args[['levels_id']] <- calling.args[['levels_id']]
             mapderivqr_args[['deriv']] <- calling.args[['deriv']]
             mapderivqr_args[['resp']] <- calling.args[['resp']]
             mapderivqr_args[['probs']] <- calling.args[['probs']]
@@ -521,10 +510,14 @@ predict_draws.bgmfit <-
             calling.args_mapderivqr_args <- full.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
+            y0 <- calling.args$model$model_info$transform_draws(y0)
             mapderivqr_args <- list()
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]
             mapderivqr_args[['newdata']] <- calling.args[['newdata']]
+            mapderivqr_args[['xvar']] <- calling.args[['xvar']]
+            mapderivqr_args[['idvar']] <- calling.args[['idvar']]
+            mapderivqr_args[['levels_id']] <- calling.args[['levels_id']]
             mapderivqr_args[['deriv']] <- calling.args[['deriv']]
             mapderivqr_args[['resp']] <- calling.args[['resp']]
             mapderivqr_args[['probs']] <- calling.args[['probs']]
@@ -535,8 +528,6 @@ predict_draws.bgmfit <-
         } # if(deriv > 0) {
       } # if(check_fun) {
     } # if(plot_conditional_effects_calling) {
-    
-    
     
     
     # Restore function(s)
@@ -595,25 +586,33 @@ predict_draws.bgmfit <-
         xvar_ <- paste0('xvar', resp_rev_)
         yvar_ <- paste0('yvar', resp_rev_)
         groupvar_ <- paste0('groupvar', resp_rev_)
-        xvar <- model$model_info[[xvar_]]
+        if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
         yvar <- model$model_info[[yvar_]]
         hierarchical_ <- paste0('hierarchical', resp_rev_)
-        if (is.null(levels_id)) {
-          IDvar <- model$model_info[[groupvar_]]
+        if(is.null(levels_id) & is.null(idvar)) {
+          idvar <- model$model_info[[groupvar_]]
           if (!is.null(model$model_info[[hierarchical_]])) {
-            IDvar <- model$model_info[[hierarchical_]]
+            idvar <- model$model_info[[hierarchical_]]
           }
         } else if (!is.null(levels_id)) {
-          IDvar <- levels_id
+          idvar <- levels_id
+        } else if (!is.null(idvar)) {
+          idvar <- idvar
         }
+        # if (is.null(levels_id)) {
+        #   IDvar <- model$model_info[[groupvar_]]
+        #   if (!is.null(model$model_info[[hierarchical_]])) {
+        #     IDvar <- model$model_info[[hierarchical_]]
+        #   }
+        # } else if (!is.null(levels_id)) {
+        #   IDvar <- levels_id
+        # }
         xvar  <- xvar
-        idvar <- IDvar
+        idvar <- idvar
         if(length(idvar) > 1) idvar <- idvar[1]
         yvar  <- 'yvar'
       } # if(eval(full.args$fullframe)) {
     } # if(!is.null(eval(full.args$fullframe))) {
-    
-    
     
     
     if(!is.null(eval(full.args$fullframe))) {
@@ -654,8 +653,6 @@ predict_draws.bgmfit <-
         uvarbyresp <- paste0(uvarby, resp)
         uvarbynewdata <- eval(full.args$newdata) %>% 
           dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
-        # why this if(setfullframe)? we are already in if(setfullframe)
-        # if(setfullframe) . <- cbind(., uvarbynewdata)
         . <- cbind(., uvarbynewdata)
         
         # 6.03.2025
@@ -676,6 +673,7 @@ predict_draws.bgmfit <-
           . <- cbind(cbindtonewdata, .)
         }
       }
+      
       # prepare_data2
       itransform_set <- get_itransform_call(itransform)
       cbindtonewdata <- eval(full.args$newdata)
@@ -684,7 +682,6 @@ predict_draws.bgmfit <-
                                      itransform = itransform_set) 
       } # if(any(itransform_set != "")) {
     } # if (is.na(model$model_info$univariate_by$by)) {
-    
     . 
   } # end predict_draws
 

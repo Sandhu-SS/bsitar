@@ -151,6 +151,7 @@ marginal_comparisons.bgmfit <- function(model,
                                    by = FALSE,
                                    conf_level = 0.95,
                                    transform = NULL,
+                                   transform_draws = NULL,
                                    cross = FALSE,
                                    wts = NULL,
                                    hypothesis = NULL,
@@ -246,6 +247,15 @@ marginal_comparisons.bgmfit <- function(model,
   } else {
     envir <- envir
   }
+  
+  if(!is.null(transform) & !is.null(transform_draws)) {
+    stop("Please specify either transform or transform_draws, not both")
+  }
+  
+  # 20.03.2025
+  assign_function_to_environment(transform_draws, 'transform_draws', 
+                                 envir = NULL)
+  model$model_info[['transform_draws']] <- transform_draws
   
   # 20.03.2025
   # Depending on dpar 'mu' or 'sigma', subset model_info
@@ -760,6 +770,10 @@ marginal_comparisons.bgmfit <- function(model,
   
   full.args[["..."]] <- NULL
   
+  if(!is.null(full.args[['transform_draws']])) {
+    full.args[['transform']] <- full.args[['transform_draws']]
+    if(verbose) message("'transform' set based on 'transform_draws'")
+  }
   
   comparisons_arguments <- full.args
   
@@ -807,7 +821,8 @@ marginal_comparisons.bgmfit <- function(model,
       usecollapse,
       funlist,
       itransform,
-      newdata_fixed
+      newdata_fixed,
+      transform_draws
     )
   ))[-1]
   

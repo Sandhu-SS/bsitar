@@ -100,6 +100,7 @@ modelbased_growthparameters_call.bgmfit <-
            bys = NULL,
            conf_level = 0.95,
            transform = NULL,
+           transform_draws = NULL,
            cross = FALSE,
            wts = NULL,
            hypothesis = NULL,
@@ -247,6 +248,14 @@ modelbased_growthparameters_call.bgmfit <-
       envir <- envir
     }
     
+    if(!is.null(transform) & !is.null(transform_draws)) {
+      stop("Please specify either transform or transform_draws, not both")
+    }
+    
+    # 20.03.2025
+    assign_function_to_environment(transform_draws, 'transform_draws', 
+                                   envir = NULL)
+    model$model_info[['transform_draws']] <- transform_draws
     
     # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
@@ -1061,6 +1070,12 @@ modelbased_growthparameters_call.bgmfit <-
     full.args$newdata <- newdata
     full.args[["..."]] <- NULL
     
+    if(!is.null(full.args[['transform_draws']])) {
+      full.args[['transform']] <- full.args[['transform_draws']]
+      if(verbose) message("'transform' set based on 'transform_draws'")
+    }
+    
+    
     comparisons_arguments <- full.args
     
     # Drop that not required for marginaleffects::
@@ -1113,7 +1128,8 @@ modelbased_growthparameters_call.bgmfit <-
         bys,
         funlist,
         itransform,
-        newdata_fixed
+        newdata_fixed,
+        transform_draws
       )
     ))[-1]
     

@@ -51,6 +51,7 @@
   by = FALSE,
   conf_level = 0.95,
   transform = NULL,
+  transform_draws = NULL,
   cross = FALSE,
   wts = NULL,
   hypothesis = NULL,
@@ -412,11 +413,17 @@ first entry in the error message is used by default.}
 
 \item{conf_level}{numeric value between 0 and 1. Confidence level to use to build a confidence interval.}
 
-\item{transform}{A function applied to individual draws from the posterior
-distribution before computing summaries. The argument \code{transform} is
-based on the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function. This should not be
-confused with \code{transform} from \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}}, which is
-now deprecated.}
+\item{transform}{string or function. Transformation applied to unit-level estimates and confidence intervals just before the function returns results. Functions must accept a vector and return a vector of the same length. Support string shortcuts: "exp", "ln"}
+
+\item{transform_draws}{A function is applied to individual draws from the
+posterior distribution before computing summaries (default \code{NULL}).
+The argument \code{transform_draws} is derived from the
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
+the \code{transform} argument from the deprecated
+\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
+the \code{transform_draws} argument takes precedence over the
+\code{transform} argument.}
 
 \item{cross}{\itemize{
 \item \code{FALSE}: Contrasts represent the change in adjusted predictions when one predictor changes and all other variables are held constant.

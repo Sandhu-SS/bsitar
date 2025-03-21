@@ -61,11 +61,15 @@
 #'   median and median absolute deviation (MAD) are applied instead. Ignored if
 #'   \code{summary} is \code{FALSE}.
 #'
-#' @param transform A function applied to individual draws from the posterior
-#'   distribution before computing summaries. The argument \code{transform} is
-#'   based on the [marginaleffects::predictions()] function. This should not be
-#'   confused with \code{transform} from [brms::posterior_predict()], which is
-#'   now deprecated.
+#' @param transform_draws A function is applied to individual draws from the
+#'   posterior distribution before computing summaries (default \code{NULL}).
+#'   The argument \code{transform_draws} is derived from the
+#'   [marginaleffects::predictions()] function and should not be confused with
+#'   the \code{transform} argument from the deprecated
+#'   [brms::posterior_predict()] function. It's important to note that for both
+#'   [marginaleffects::predictions()] and [marginaleffects::avg_predictions()],
+#'   the \code{transform_draws} argument takes precedence over the
+#'   \code{transform} argument.
 #'
 #' @param re_formula Option to indicate whether or not to include
 #'   individual/group-level effects in the estimation. When \code{NA} (default),
@@ -389,7 +393,7 @@ growthparameters.bgmfit <- function(model,
                                draw_ids = NULL,
                                summary = FALSE,
                                robust = FALSE,
-                               transform = NULL,
+                               transform_draws = NULL,
                                scale = c("response", "linear"),
                                re_formula = NA,
                                peak = TRUE,
@@ -437,6 +441,11 @@ growthparameters.bgmfit <- function(model,
   } else {
     envir <- envir
   }
+  
+  # 20.03.2025
+  assign_function_to_environment(transform_draws, 'transform_draws', 
+                                 envir = NULL)
+  model$model_info[['transform_draws']] <- transform_draws
   
   # 20.03.2025
   # Depending on dpar 'mu' or 'sigma', subset model_info

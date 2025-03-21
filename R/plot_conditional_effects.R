@@ -77,6 +77,7 @@ plot_conditional_effects.bgmfit <-
            method = NULL,
            estimation_method = 'fitted',
            transform = NULL,
+           transform_draws = NULL,
            resolution = 100,
            select_points = 0,
            too_far = 0,
@@ -112,13 +113,14 @@ plot_conditional_effects.bgmfit <-
       envir <- envir
     }
     
-   
+    if(!is.null(transform) & !is.null(transform_draws)) {
+      stop("Please specify either transform or transform_draws, not both")
+    }
     
-    probtitles <- probs[order(probs)] * 100
-    probtitles <- paste("Q", probtitles, sep = "")
-    set_names_  <- c('Estimate', 'Est.Error', probtitles)
-    # set_names_  <- c('Estimate', probtitles)
-    
+    # 20.03.2025
+    assign_function_to_environment(transform_draws, 'transform_draws', 
+                                   envir = NULL)
+    model$model_info[['transform_draws']] <- transform_draws
     
     # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
@@ -126,6 +128,14 @@ plot_conditional_effects.bgmfit <-
     # Not when a function such as splines::ns etc used in sigma_formula
     
     model <- getmodel_info(model = model, dpar = dpar)
+    
+    
+    
+    
+    probtitles <- probs[order(probs)] * 100
+    probtitles <- paste("Q", probtitles, sep = "")
+    set_names_  <- c('Estimate', 'Est.Error', probtitles)
+    # set_names_  <- c('Estimate', probtitles)
     
     
 
@@ -260,6 +270,11 @@ plot_conditional_effects.bgmfit <-
                                  check_formalArgs_exceptions = c('object'),
                                  check_trace_back = NULL,
                                  envir = parent.frame())
+    
+    if(!is.null(full.args[['transform_draws']])) {
+      full.args[['transform']] <- full.args[['transform_draws']]
+      if(verbose) message("'transform' set based on 'transform_draws'")
+    }
     
     
     # Interpolation points
@@ -423,6 +438,12 @@ plot_conditional_effects.bgmfit <-
                                  check_formalArgs_exceptions = c('object', 'model'),
                                  check_trace_back = NULL,
                                  envir = parent.frame())
+    
+    if(!is.null(calling.args[['transform_draws']])) {
+      calling.args[['transform']] <- calling.args[['transform_draws']]
+      if(verbose) message("'transform' set based on 'transform_draws'")
+    }
+    
     
     # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE

@@ -25,7 +25,7 @@
   model_deriv = TRUE,
   summary = TRUE,
   robust = FALSE,
-  transform = NULL,
+  transform_draws = NULL,
   probs = c(0.025, 0.975),
   xrange = NULL,
   xrange_search = NULL,
@@ -39,6 +39,8 @@
   usesavedfuns = NULL,
   clearenvfuns = NULL,
   funlist = NULL,
+  xvar = NULL,
+  idvar = NULL,
   itransform = NULL,
   newdata_fixed = NULL,
   envir = NULL,
@@ -167,11 +169,15 @@ standard deviation as the measure of variability. If \code{TRUE}, the
 median and median absolute deviation (MAD) are applied instead. Ignored if
 \code{summary} is \code{FALSE}.}
 
-\item{transform}{A function applied to individual draws from the posterior
-distribution before computing summaries. The argument \code{transform} is
-based on the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function. This should not be
-confused with \code{transform} from \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}}, which is
-now deprecated.}
+\item{transform_draws}{A function is applied to individual draws from the
+posterior distribution before computing summaries (default \code{NULL}).
+The argument \code{transform_draws} is derived from the
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
+the \code{transform} argument from the deprecated
+\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
+the \code{transform_draws} argument takes precedence over the
+\code{transform} argument.}
 
 \item{probs}{The percentiles to be computed by the \code{quantile}
 function. Only used if \code{summary} is \code{TRUE}.}
@@ -279,6 +285,16 @@ function names defined in the \code{globalenv()}. For functions needing
 both distance and velocity curves (e.g., \code{plot_curves(..., opt =
   'dv')}), \code{funlist} must include two functions: one for the distance
 curve and one for the velocity curve.}
+
+\item{xvar}{A character string (default \code{NULL}) specifying the
+\code{'x'} variable. Rarely used because \code{xvar} is inferred
+internally. A use case is when conflicting variables exist (e.g.,
+\code{sigma_formula}) and user wants to set a specific variable as
+\code{'x'}.}
+
+\item{idvar}{A character string (default \code{NULL}) specifying the
+\code{'id'} variable. Rarely used because \code{idvar} is inferred
+internally.}
 
 \item{itransform}{A character string (default \code{NULL}) indicating the
 variables names that are reverse transformed. Options are  \code{c("x",

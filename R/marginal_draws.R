@@ -157,6 +157,7 @@ marginal_draws.bgmfit <-
            by = NULL,
            conf_level = 0.95,
            transform = NULL,
+           transform_draws = NULL,
            byfun = NULL,
            wts = NULL,
            hypothesis = NULL,
@@ -255,6 +256,15 @@ marginal_draws.bgmfit <-
     } else {
       envir <- envir
     }
+    
+    if(!is.null(transform) & !is.null(transform_draws)) {
+      stop("Please specify either transform or transform_draws, not both")
+    }
+    
+    # 20.03.2025
+    assign_function_to_environment(transform_draws, 'transform_draws', 
+                                   envir = NULL)
+    model$model_info[['transform_draws']] <- transform_draws
     
     # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
@@ -792,17 +802,15 @@ marginal_draws.bgmfit <-
     full.args$newdata <- newdata
     full.args[["..."]] <- NULL
     
+    
+    
+    if(!is.null(full.args[['transform_draws']])) {
+      full.args[['transform']] <- full.args[['transform_draws']]
+      if(verbose) message("'transform' set based on 'transform_draws'")
+    }
+    
+    
     predictions_arguments <- full.args
-    
-    
-   
-    # predictions_arguments <- 
-    #   sanitize_CustomDoCall_args(what = "CustomDoCall", 
-    #                              arguments = predictions_arguments, 
-    #                              check_formalArgs = marginal_draws.bgmfit,
-    #                              check_formalArgs_exceptions = NULL,
-    #                              check_trace_back = NULL,
-    #                              envir = parent.frame())
     
     
 
@@ -857,7 +865,8 @@ marginal_draws.bgmfit <-
         pdrawsh,
         funlist,
         itransform,
-        newdata_fixed
+        newdata_fixed,
+        transform_draws
       )
     ))[-1]
     

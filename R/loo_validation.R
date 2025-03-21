@@ -96,6 +96,8 @@ loo_validation.bgmfit <-
       envir <- envir
     }
     
+   
+    
     # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
     # This only when set_sigma_manual used to model a b c 

@@ -25,7 +25,7 @@
   model_deriv = TRUE,
   summary = TRUE,
   robust = FALSE,
-  transform = NULL,
+  transform_draws = NULL,
   scale = c("response", "linear"),
   probs = c(0.025, 0.975),
   xrange = NULL,
@@ -170,11 +170,15 @@ standard deviation as the measure of variability. If \code{TRUE}, the
 median and median absolute deviation (MAD) are applied instead. Ignored if
 \code{summary} is \code{FALSE}.}
 
-\item{transform}{A function applied to individual draws from the posterior
-distribution before computing summaries. The argument \code{transform} is
-based on the \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function. This should not be
-confused with \code{transform} from \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}}, which is
-now deprecated.}
+\item{transform_draws}{A function is applied to individual draws from the
+posterior distribution before computing summaries (default \code{NULL}).
+The argument \code{transform_draws} is derived from the
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
+the \code{transform} argument from the deprecated
+\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
+the \code{transform_draws} argument takes precedence over the
+\code{transform} argument.}
 
 \item{scale}{Either \code{"response"} or \code{"linear"}.
 If \code{"response"}, results are returned on the scale

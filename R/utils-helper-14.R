@@ -448,7 +448,7 @@ get.newdata <- function(model,
       groupvar_ <- paste0('groupvar', resp_rev_)
       if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
       yvar <- model$model_info[[yvar_]]
-      
+     
       hierarchical_ <- paste0('hierarchical', resp_rev_)
       # if (is.null(levels_id)) {
       #   IDvar <- model$model_info[[groupvar_]]
@@ -600,8 +600,14 @@ get.newdata <- function(model,
           set_xrange <- NULL
        
         
+        
+
         if (is.null(model$model_info[[hierarchical_]])) {
           if (!is.null(ipts) & is.null(cov_factor_vars)) {
+            # 20.03.2025 -> need to keep all variables 
+            all_names_x   <- colnames(newdata)
+            core_names_x  <- c(idvar, xvar)
+            aux_variables <- c(aux_variables, setdiff(all_names_x, core_names_x))
             newdata %>% dplyr::arrange(idvar, xvar) %>%
               dplyr::group_modify(
                 ~ idatafunction(
@@ -619,6 +625,10 @@ get.newdata <- function(model,
               dplyr::relocate(dplyr::all_of(idvar), dplyr::all_of(xvar)) %>%
               data.frame() -> newdata
           } else if (!is.null(ipts) & !is.null(cov_factor_vars)) {
+            # 20.03.2025 -> need to keep all variables 
+            all_names_x   <- colnames(newdata)
+            core_names_x  <- c(idvar, xvar, cov_factor_vars)
+            aux_variables <- c(aux_variables, setdiff(all_names_x, core_names_x))
             newdata %>% dplyr::arrange(idvar, xvar) %>%
               dplyr::group_by(dplyr::across(dplyr::all_of(cov_factor_vars))) %>%
               dplyr::group_modify(
@@ -652,6 +662,10 @@ get.newdata <- function(model,
             arrange_by <- c(IDvar_, xvar)
             cov_factor_vars_by <- c(higher_, cov_factor_vars)
             newdata_o <- newdata
+            # 20.03.2025 -> need to keep all variables 
+            all_names_x   <- colnames(newdata)
+            core_names_x  <- c(IDvar_, xvar)
+            aux_variables <- c(aux_variables, setdiff(all_names_x, core_names_x))
             newdata <-
               newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
               dplyr::group_by(
@@ -692,6 +706,9 @@ get.newdata <- function(model,
             } else {
               cov_factor_vars_by <- c(cov_factor_vars)
             }
+            all_names_x   <- colnames(newdata)
+            core_names_x  <- c(IDvar_, xvar, cov_factor_vars_by)
+            aux_variables <- c(aux_variables, setdiff(all_names_x, core_names_x))
             newdata <-
               newdata %>% dplyr::arrange(!!as.symbol(arrange_by)) %>%
               dplyr::group_by(
@@ -803,6 +820,8 @@ get.newdata <- function(model,
   newdata <- i_data(
     model,
     newdata,
+    xvar = xvar,
+    idvar = idvar,
     resp = resp,
     cov_factor_vars = cov_factor_vars,
     cov_numeric_vars = cov_numeric_vars,

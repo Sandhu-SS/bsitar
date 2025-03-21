@@ -2956,6 +2956,65 @@ check_and_rename_funs_args_to_x <- function(fun, checkname = "x") {
 
 
 
+#' Assign function 
+#'
+#' @param fun A \code{function}.
+#' @param fun A character string
+#' @param envir An environment
+#'
+#' @return A \code{function}.
+#'   
+#' @keywords internal
+#' @noRd
+#'
+assign_function_to_environment <- function(fun, funname, envir = NULL) {
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  } else {
+    envir <- envir
+  }
+  
+  if(!is.null(fun)) {
+    if(is.function(fun) & !is.primitive(fun)) {
+      if(!is.primitive(fun)) {
+        fun <- gsub_space(paste(deparse(fun), collapse = ""))
+      }
+    } else if(!is.character(fun)) {
+      stop(paste0("The fun argument must be either a string ('log' or 'sqrt'),", 
+                  "\n  ",
+                  "or a function such as function(x)log(x)"))
+    }
+  }
+  
+  set_transform_draws      <- check_if_arg_set(fun)
+  
+  if (!set_transform_draws) {
+    fun_eval <- function(x)x
+    assign(funname, fun_eval, envir = envir)
+  } else if (set_transform_draws) {
+    if(fun == "log") {
+      fun_eval <- function(x)log(x)
+    } else if(fun == "sqrt") {
+      fun_eval <- function(x)sqrt(x)
+    } else  if(is.function(ept(fun))) {
+      fun_eval <- ept(fun)
+    } else {
+      stop(paste0("The fun argument must be either a string ('log' or 'sqrt'),", 
+                  "\n  ",
+                  "or a function such as function(x)log(x)"))
+    }
+    assign(funname, fun_eval, envir = envir)
+  }
+  
+  assign(funname, check_and_rename_funs_args_to_x(fun_eval, checkname = 'x'),
+         envir = envir)
+  
+}
+
+
+
+
+
 
 #' Extracted variable names from call
 #'

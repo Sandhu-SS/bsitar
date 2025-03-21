@@ -91,7 +91,7 @@ fitted_draws.bgmfit <-
            model_deriv = TRUE,
            summary = TRUE,
            robust = FALSE,
-           transform = NULL,
+           transform_draws = NULL,
            scale = c("response", "linear"),
            probs = c(0.025, 0.975),
            xrange = NULL,
@@ -120,7 +120,12 @@ fitted_draws.bgmfit <-
       envir <- envir
     }
     
+    # 20.03.2025
+    assign_function_to_environment(transform_draws, 'transform_draws', 
+                                   envir = NULL)
+    model$model_info[['transform_draws']] <- transform_draws
     
+
     # 20.03.2025
     # Depending on dpar 'mu' or 'sigma', subset model_info
     # This only when set_sigma_manual used to model a b c 
@@ -424,10 +429,23 @@ fitted_draws.bgmfit <-
                                          available_d1 = available_d1, 
                                          xcall = NULL, verbose = verbose)
     
-
     if(!check_fun) {
       . <- CustomDoCall(fitted, calling.args)
     }
+    
+    # TODO - check - Transformation applied to draw if deriv = 0, 
+    if(!check_fun) {
+      if(deriv == 0) {
+        if(!is.null(calling.args$model$model_info$transform_draws)) {
+          . <- calling.args$model$model_info$transform_draws(.)
+        } else if(!is.null(calling.args$object$model_info$transform_draws)) {
+          . <- calling.args$object$model_info$transform_draws(.)
+        } else {
+          if(verbose) message("transform_draws function is NULL, check it")
+        }
+      } # if(deriv = 0) {
+    } # if(!check_fun) {
+
     
     
     if(!plot_conditional_effects_calling) {
@@ -443,6 +461,7 @@ fitted_draws.bgmfit <-
             calling.args_mapderivqr_args <- calling.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
+            y0 <- calling.args$model$model_info$transform_draws(y0)
             mapderivqr_args <- list()
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]
@@ -495,6 +514,7 @@ fitted_draws.bgmfit <-
             calling.args_mapderivqr_args <- full.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
+            y0 <- calling.args$model$model_info$transform_draws(y0)
             mapderivqr_args <- list()
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]

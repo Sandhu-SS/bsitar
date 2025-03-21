@@ -13,6 +13,8 @@
   draw_ids = NULL,
   newdata = NULL,
   parameter = NULL,
+  transform = NULL,
+  transform_draws = NULL,
   future = FALSE,
   future_session = "multisession",
   future_splits = NULL,
@@ -57,6 +59,18 @@ cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
 \code{parameter = 'all'}, all six parameters are estimated. Note that the
 \code{'all'} option cannot be used when the \code{by} argument is set to
 \code{TRUE}.}
+
+\item{transform}{string or function. Transformation applied to unit-level estimates and confidence intervals just before the function returns results. Functions must accept a vector and return a vector of the same length. Support string shortcuts: "exp", "ln"}
+
+\item{transform_draws}{A function is applied to individual draws from the
+posterior distribution before computing summaries (default \code{NULL}).
+The argument \code{transform_draws} is derived from the
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
+the \code{transform} argument from the deprecated
+\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
+the \code{transform_draws} argument takes precedence over the
+\code{transform} argument.}
 
 \item{future}{A logical value (default \code{FALSE}) to specify whether or
 not to perform parallel computations. If set to \code{TRUE}, the

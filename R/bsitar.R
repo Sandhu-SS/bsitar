@@ -2397,6 +2397,10 @@ bsitar <- function(x,
   nsk <- NULL;
   rcs <- NULL;
   
+  sigma_formulasi <- NULL;
+  sigma_formula_grsi <- NULL;
+  sigma_formula_gr_strsi <- NULL;
+  
   
   ##############################################################
   ##############################################################
@@ -5204,6 +5208,38 @@ bsitar <- function(x,
     }
     
     
+    # 20.03.2025
+    try_extracting_sigmaxar <- function(search_sigma_str_x, sigma_str_x) {
+      search_sigma_str_x_c <- c()
+      for (i in search_sigma_str_x) {
+        if(grepl(paste0("\\b", i,"\\b"), sigma_str_x)) {
+          search_sigma_str_x_c <- c(search_sigma_str_x_c, i)
+        }
+      }
+      return(search_sigma_str_x_c)
+    }
+    
+    search_sigma_str_x <- colnames(data)
+    sigma_str_x <- sigma_formulasi
+    
+    # sigmaxsi <- try_extracting_sigmaxar(search_sigma_str_x, sigma_str_x)
+    # 
+    # if(length(strsplit(sigmaxsi, " ")[[1]])) {
+    #   sigmaxsi <- sigmaxsi
+    # } else {
+    #   sigmaxsi <- NULL
+    # }
+    
+    
+    # print(sigmaxsi)
+    # print(sigma_formulasi)
+    # stop()
+    
+    # TODO
+    # the stringi can be used to test if a function is used
+    # stringi::stri_extract_all_words("~1+splines2_nsk(logage,df=3)")
+    
+    
     # 20.09.2024
     if (!is.null(sigmaxsi[[1]][1]) & sigmaxsi != "NULL") {
       if(identical(sigmaxsi, xsi)) {
@@ -5222,7 +5258,7 @@ bsitar <- function(x,
     } 
     
     # Even if not modelling location scale model, create data[[sigmaxsi]]
-    # Need to thing how to shut it off compleletely
+    # Need to think how to shut it off completely
     if (is.null(sigmaxsi[[1]][1]) | sigmaxsi == "NULL") {
       sigmaxsi <- paste0("sigma", xsi) 
       # if(verbose) {

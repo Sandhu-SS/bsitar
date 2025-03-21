@@ -18,6 +18,7 @@
   method = NULL,
   estimation_method = "fitted",
   transform = NULL,
+  transform_draws = NULL,
   resolution = 100,
   select_points = 0,
   too_far = 0,
@@ -125,6 +126,16 @@ method internally calls \code{\link[=fitted_draws]{fitted_draws()}}, while the
 a function to be applied on the predicted responses
 before summary statistics are computed. Only allowed
 if \code{method = "posterior_predict"}.}
+
+\item{transform_draws}{A function is applied to individual draws from the
+posterior distribution before computing summaries (default \code{NULL}).
+The argument \code{transform_draws} is derived from the
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
+the \code{transform} argument from the deprecated
+\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
+\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
+the \code{transform_draws} argument takes precedence over the
+\code{transform} argument.}
 
 \item{resolution}{Number of support points used to generate
 the plots. Higher resolution leads to smoother plots.

@@ -254,7 +254,7 @@ plot_curves.bgmfit <- function(model,
                                sample_new_levels = "uncertainty",
                                incl_autocor = TRUE,
                                robust = FALSE,
-                               transform = NULL,
+                               transform_draws = NULL,
                                scale = c("response", "linear"),
                                future = FALSE,
                                future_session = 'multisession',
@@ -305,6 +305,12 @@ plot_curves.bgmfit <- function(model,
   } else {
     envir <- envir
   }
+  
+  # 20.03.2025
+  assign_function_to_environment(transform_draws, 'transform_draws', 
+                                 envir = NULL)
+  model$model_info[['transform_draws']] <- transform_draws
+    
   
   
   # 20.03.2025
@@ -520,27 +526,27 @@ plot_curves.bgmfit <- function(model,
   
   
   get.newdata_args <- list()
-  get.newdata_args[['model']] <- model
-  get.newdata_args[['newdata']] <- newdata
-  get.newdata_args[['xvar']] <- xvar
-  get.newdata_args[['idvar']] <- idvar
-  get.newdata_args[['resp']] <- resp
+  get.newdata_args[['model']]          <- model
+  get.newdata_args[['newdata']]        <- newdata
+  get.newdata_args[['xvar']]           <- xvar
+  get.newdata_args[['idvar']]          <- idvar
+  get.newdata_args[['resp']]           <- resp
   get.newdata_args[['numeric_cov_at']] <- numeric_cov_at
-  get.newdata_args[['aux_variables']] <- aux_variables
-  get.newdata_args[['levels_id']] <- levels_id
-  get.newdata_args[['ipts']] <- NULL
-  get.newdata_args[['xrange']] <- xrange
-  get.newdata_args[['idata_method']] <- idata_method
-  get.newdata_args[['newdata_fixed']] <- 0
-  get.newdata_args[['verbose']] <- verbose
+  get.newdata_args[['aux_variables']]  <- aux_variables
+  get.newdata_args[['levels_id']]      <- levels_id
+  get.newdata_args[['xrange']]         <- xrange
+  get.newdata_args[['idata_method']]   <- idata_method
+  get.newdata_args[['newdata_fixed']]  <- newdata_fixed
+  get.newdata_args[['verbose']]        <- verbose
+  get.newdata_args[['ipts']]           <- NULL
+  
+  
+  
   
   # for xyadj....
   newdata.xyadj <- CustomDoCall(get.newdata, get.newdata_args)
-  
-  get.newdata_args[['ipts']] <- ipts
-  get.newdata_args[['newdata_fixed']] <- newdata_fixed
- 
-  newdata <- CustomDoCall(get.newdata, get.newdata_args)
+  get.newdata_args[['ipts']]           <- ipts
+  newdata       <- CustomDoCall(get.newdata, get.newdata_args)
   
   
   
