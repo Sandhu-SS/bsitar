@@ -4344,6 +4344,8 @@ bsitar <- function(x,
   spfncname_c <- c()
 
   d_adjustedvaluelist <- d_adjustednamelist <- funlist
+  
+  SplineCallvaluelist <- SplineCallnamelist <- funlist
 
 
   ####
@@ -4616,6 +4618,8 @@ bsitar <- function(x,
     fixedsi <- fixedsi_randomsi[['fixed']]
     randomsi <- fixedsi_randomsi[['random']]
     
+    abc_fixedsi  <- strsplit(gsub("\\+", " ", fixedsi), " ")[[1]]
+    abc_randomsi <- strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
     
     # Covariate not allowed when matching to sitar 'd' form
     if(select_model == 'sitar') {
@@ -6015,35 +6019,88 @@ bsitar <- function(x,
     
     
     
+   
+    ##################################################################
+    ##################################################################
     
-    ##################################################################
-    ##################################################################
+    # Work on to make call via substitute and then create matrix. 
+    # SplineCall <- substitute(GS_nsp_call(x = datai[[xsi]], 
+    #                      knots = iknots, 
+    #                      bknots = bknots, 
+    #                      intercept = smat_intercept, 
+    #                      derivs = smat_derivs, 
+    #                      centerval = smat_centerval, 
+    #                      normalize = smat_normalize,
+    #                      preH = smat_preH)
+    #                      )
+    # SplineCall[[2]] <- quote(x)
+    # 
+    # stop()
+    
+    
+    # if(smat == 'nsp' | smat == 'nsk') {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    # }
+    
+    if(smat == 'rcs') {
+      SplineCall <- substitute(make_spline_matrix(x = set_datai_xsi, knots))
+    } else {
+      iknots <- knots[2:(length(knots)-1)]
+      bknots <- c(knots[1], knots[length(knots)])
+      SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
+                           knots = iknots,
+                           bknots = bknots,
+                           intercept = smat_intercept,
+                           derivs = smat_derivs,
+                           centerval = smat_centerval,
+                           normalize = smat_normalize,
+                           preH = smat_preH)
+                           )
+    }
+    
+    if(smat == 'nsp') {
+      SplineCall[[1]] <- quote(GS_nsp_call)
+    } else if(smat == 'nsk') {
+      SplineCall[[1]] <- quote(GS_nsk_call)
+    }
+    
+    set_datai_xsi <- datai[[xsi]]
+    mat_s         <- eval(SplineCall)
+    
+    SplineCall[[2]] <- quote(x)
+    
+    # print(mat_s)
+    # SplineCallx <<- SplineCall
+    # stop()
     
     
     # Imp - this matrix must be created after ifuns with offset
-    if(smat == 'rcs') {
-      mat_s <- make_spline_matrix(datai[[xsi]], knots)
-    } else if(smat == 'nsp') {
-      iknots <- knots[2:(length(knots)-1)]
-      bknots <- c(knots[1], knots[length(knots)])
-      mat_s <- GS_nsp_call(x = datai[[xsi]], 
-                           knots = iknots, bknots = bknots, 
-                           intercept = smat_intercept, 
-                           derivs = smat_derivs, 
-                           centerval = smat_centerval, 
-                           normalize = smat_normalize,
-                           preH = smat_preH)
-    } else if(smat == 'nsk') {
-      iknots <- knots[2:(length(knots)-1)]
-      bknots <- c(knots[1], knots[length(knots)])
-      mat_s <- GS_nsk_call(x = datai[[xsi]], 
-                           knots = iknots, bknots = bknots, 
-                           intercept = smat_intercept, 
-                           derivs = smat_derivs, 
-                           centerval = smat_centerval, 
-                           normalize = smat_normalize,
-                           preH = smat_preH)
-    }
+    # if(smat == 'rcs') {
+    #   mat_s <- make_spline_matrix(datai[[xsi]], knots)
+    # } else if(smat == 'nsp') {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    #   mat_s <- GS_nsp_call(x = datai[[xsi]], 
+    #                        knots = iknots, 
+    #                        bknots = bknots, 
+    #                        intercept = smat_intercept, 
+    #                        derivs = smat_derivs, 
+    #                        centerval = smat_centerval, 
+    #                        normalize = smat_normalize,
+    #                        preH = smat_preH)
+    # } else if(smat == 'nsk') {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    #   mat_s <- GS_nsk_call(x = datai[[xsi]], 
+    #                        knots = iknots, 
+    #                        bknots = bknots, 
+    #                        intercept = smat_intercept, 
+    #                        derivs = smat_derivs, 
+    #                        centerval = smat_centerval, 
+    #                        normalize = smat_normalize,
+    #                        preH = smat_preH)
+    # }
     
     
     #################################################################
@@ -6095,25 +6152,56 @@ bsitar <- function(x,
     #################################################################
     
     # Define names for Stan functions 
-    SplineFun_name          <- paste0(toupper(select_model), "", 'Fun')
-    getX_name               <- "getX"
-    getKnots_name           <- "getKnots"
-    getpreH_name            <- "getpreH"
+    # SplineFun_name          <- paste0(toupper(select_model), "", 'Fun')
+    # getX_name               <- "getX"
+    # getKnots_name           <- "getKnots"
+    # getpreH_name            <- "getpreH"
+    # includefunnameslistname <- 'include_fun_names'
+    # funlist_r_name          <- 'funlist_r'  
+    # sigmafunlist_r_name     <- 'sigmafunlist_r'
+    # SplineCall_name         <- "SplineCall"
+    # 
+    # if (nys == 1) {
+    #   spfncname    <- SplineFun_name
+    #   getxname     <- getX_name
+    #   getknotsname <- getKnots_name
+    #   getpreHname  <- getpreH_name
+    # } else if (nys > 1) {
+    #   spfncname    <- paste0(ysi, "_", SplineFun_name)
+    #   getxname     <- paste0(ysi, "_", getX_name)
+    #   getknotsname <- paste0(ysi, "_", getKnots_name)
+    #   getpreHname  <- paste0(ysi, "_", getKnots_name)
+    # }  
+    
+    
     includefunnameslistname <- 'include_fun_names'
     funlist_r_name          <- 'funlist_r'  
     sigmafunlist_r_name     <- 'sigmafunlist_r'
+    SplineCall_name         <- "SplineCall"
     
-    if (nys == 1) {
-      spfncname    <- SplineFun_name
-      getxname     <- getX_name
-      getknotsname <- getKnots_name
-      getpreHname  <- getpreH_name
-    } else if (nys > 1) {
-      spfncname    <- paste0(ysi, "_", SplineFun_name)
-      getxname     <- paste0(ysi, "_", getX_name)
-      getknotsname <- paste0(ysi, "_", getKnots_name)
-      getpreHname  <- paste0(ysi, "_", getKnots_name)
+    spfncname    <- paste0(toupper(select_model), "", 'Fun')
+    getxname     <- "getX"
+    getknotsname <- "getKnots"
+    getpreHname  <- "getpreH"
+    
+    SplineCallname  <- "SplineCall"
+    
+    if (nys > 1) {
+      spfncname       <- paste0(ysi, "_", spfncname)
+      getxname        <- paste0(ysi, "_", getxname)
+      getknotsname    <- paste0(ysi, "_", getknotsname)
+      getpreHname     <- paste0(ysi, "_", getpreHname)
+      SplineCallname  <- paste0(ysi, "_", SplineCallname)
     }  
+    
+    
+    SplineCallnamelist[[ii]]            <- SplineCall_name
+    SplineCallvaluelist[[ii]]           <- SplineCall
+   
+    
+    
+    
+    
     
     spfncname_c <- c(spfncname_c, spfncname)
     
@@ -6268,37 +6356,23 @@ bsitar <- function(x,
     # Define sigma function
     if(setsigmaxvarsi) {
       # Define names for Stan functions 
-      sigmaSplineFun_name  <- paste0("sigma", SplineFun_name)
-      sigmagetX_name       <- paste0("sigma", getX_name)
-      sigmagetKnots_name   <- paste0("sigma", getKnots_name)
-      sigmagetpreH_name    <- paste0("sigma", getpreH_name)
-      
-      # sigmaSplineFun_name  <- paste0("sigma", toupper(select_model), "", 'Fun')
-      # sigmagetX_name       <- paste0("sigma", "getX")
-      # sigmagetKnots_name   <- paste0("sigma", "getKnots")
-      
-      
+      sigmaspfncname      <- paste0("sigma", spfncname)
+      sigmagetxname       <- paste0("sigma", getxname)
+      sigmagetknotsname   <- paste0("sigma", getknotsname)
+      sigmagetpreHname    <- paste0("sigma", getpreHname)
       if (nys > 1) {
-        sigmaspfncname <- paste0(ysi, "_", sigmaSplineFun_name)
-        sigmagetxname <- paste0(ysi, "_", sigmagetX_name)
-        sigmagetknotsname <- paste0(ysi, "_", sigmagetKnots_name)
-        sigmagetpreHname <- paste0(ysi, "_", sigmagetpreH_name)
+        sigmaspfncname    <- paste0(ysi, "_", sigmaspfncname)
+        sigmagetxname     <- paste0(ysi, "_", sigmagetxname)
+        sigmagetknotsname <- paste0(ysi, "_", sigmagetknotsname)
+        sigmagetpreHname  <- paste0(ysi, "_", sigmagetpreHname)
         
-      } else if (nys == 1) {
-        sigmaspfncname <- sigmaSplineFun_name
-        sigmagetxname <- sigmagetX_name
-        sigmagetknotsname <- sigmagetKnots_name
-        sigmagetpreHname <- sigmagetpreH_name
-      }
-      
+      } 
       sigmaspfncname_c <- c(sigmaspfncname_c, sigmaspfncname)
-      
       sigmaspfun_collect <-
         c(sigmaspfun_collect, c(sigmaspfncname, 
                                 paste0(sigmaspfncname, "_", 
                                        c("d1",
                                          "d2"))))
-      
       sigmadecomp_editcode <- FALSE
       if(select_model == 'rcs') {
         sigmadecomp_editcode <- FALSE
@@ -6317,8 +6391,8 @@ bsitar <- function(x,
         sigmaadd_b_Qr_genquan_s_coef <- FALSE
       }
       
-      # This control whether to add scode for genquant block for QR model
-      # Relevant in both and prepare_function
+      # This controls whether to add scode for genquant block for QR model
+      # Relevant in prepare_function
       sigmaadd_rcsfunmatqrinv_genquant <- FALSE # TRUE
       
       
@@ -6326,8 +6400,8 @@ bsitar <- function(x,
       sigmainternal_function_args <- internal_function_args
       
       # These are defined for sigma via bsitar()
-      # These are copied from the mu part
-      # Note that 'sigmayfunsi' is just as placeholder
+      # Copied from the mu part
+      # Note that 'sigmayfunsi' is just placeholder
       sigmamatch_sitar_d_form          <- match_sitar_d_form
       sigmad_adjustedsi                <- d_adjustedsi
       sigmayfunsi                      <- yfunsi
@@ -7862,17 +7936,19 @@ bsitar <- function(x,
     setsigmaxvarvaluelist[[ii]]            <- setsigmaxvarsi
     
     
+    # fixednamelist[[ii]]        <- fixed_name
+    # fixedvaluelist[[ii]]       <- strsplit(gsub("\\+", " ", fixedsi), 
+    #                                        " ")[[1]]
+    
     fixednamelist[[ii]]        <- fixed_name
-    fixedvaluelist[[ii]]       <- strsplit(gsub("\\+", " ", fixedsi), 
-                                           " ")[[1]]
+    fixedvaluelist[[ii]]       <- abc_fixedsi
     
     sigmafixednamelist[[ii]]   <- sigmafixed_name
     sigmafixedvaluelist[[ii]]  <- strsplit(gsub("\\+", " ", sigmafixedsi), 
                                            " ")[[1]]
     
     randomnamelist[[ii]]       <- random_name
-    randomvaluelist[[ii]]      <- strsplit(gsub("\\+", " ", randomsi), 
-                                           " ")[[1]]
+    randomvaluelist[[ii]]      <- abc_randomsi
     
     sigmarandomnamelist[[ii]]  <- sigmarandom_name
     sigmarandomvaluelist[[ii]] <- strsplit(gsub("\\+", " ",  sigmarandomsi), 
@@ -8741,7 +8817,7 @@ bsitar <- function(x,
               htxi_5 <- paste0(htxi_name, "(", htxi_4, ");")
               htxi_5 <- gsub("mu", " XR_inv", htxi_5)
               htxi_5 <- gsub("=", " = ", htxi_5)
-              htxi_5 <- gsub(SplineFun_name, paste0(SplineFun_name, 
+              htxi_5 <- gsub(spfncname, paste0(spfncname, 
                                                     'QRsmatinv'), htxi_5)
               npsn   <- length(nlp_s_number)
               htxi_6 <- paste0("matrix[", npsn, ", ", npsn, "] ", htxi_5)
@@ -10760,9 +10836,11 @@ bsitar <- function(x,
       model_info[[iyfuntransformnamelist[[i]]]] <- iyfuntransformvaluelist[[i]]
     }
     
+    for (i in 1:length(SplineCallnamelist)) {
+      model_info[[SplineCallnamelist[[i]]]] <- SplineCallvaluelist[[i]]
+    }
     
-    
-    model_info[['StanFun_name']]  <- SplineFun_name
+    model_info[['StanFun_name']]  <- spfncname
     model_info[['multivariate']]  <- multivariate
     model_info[['univariate_by']] <- univariate_by
     model_info[['nys']] <- nys
@@ -10787,7 +10865,7 @@ bsitar <- function(x,
     
     
     # if(setsigmaxvar) {
-    #   model_info[['sigmaStanFun_name']] <- sigmaSplineFun_name
+    #   model_info[['sigmaStanFun_name']] <- sigmaspfncname
     #   model_info[['sigmaxs']] <- sigmaxs
     #   model_info[['sigmaids']] <- sigmaids
     #   model_info[['sigmadfs']] <- sigmadfs
@@ -10840,7 +10918,7 @@ bsitar <- function(x,
     for (j in 1:length(setsigmaxvar_names_val)) {
       if(any(setsigmaxvar_names_val[j])) {
         
-        model_info[['sigmaStanFun_name']] <- sigmaSplineFun_name
+        model_info[['sigmaStanFun_name']] <- sigmaspfncname
         model_info[['sigmaxs']] <- sigmaxs
         model_info[['sigmaids']] <- sigmaids
         model_info[['sigmadfs']] <- sigmadfs

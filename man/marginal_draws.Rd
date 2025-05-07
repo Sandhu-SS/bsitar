@@ -403,12 +403,12 @@ hypotheses. Also, when \code{method = 'custom'},
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} is used internally instead of
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}.}
 
-\item{marginals}{A \code{list}, \code{data.frame}, or \code{tibble} returned
-by the \pkg{marginaleffects} functions (default \code{NULL}). This is only
-evaluated when \code{method = 'custom'}. The \code{marginals} can be the
-output from \pkg{marginaleffects} functions or posterior draws from
-\code{marginaleffects::posterior_draws()}. The \code{marginals} argument is
-primarily used for internal purposes.}
+\item{marginals}{A \code{list}, \code{data.frame}, or \code{tibble} of
+velocity returned by the \pkg{marginaleffects} functions (default
+\code{NULL}). This is only evaluated when \code{method = 'custom'}. The
+\code{marginals} can be the output from \pkg{marginaleffects} functions or
+posterior draws from \code{marginaleffects::posterior_draws()}. The
+\code{marginals} argument is primarily used for internal purposes only.}
 
 \item{pdrawso}{A character string (default \code{FALSE}) to indicate whether
 to return the original posterior draws for parameters. Options include:

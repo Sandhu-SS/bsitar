@@ -1129,7 +1129,9 @@ modelbased_growthparameters_call.bgmfit <-
         funlist,
         itransform,
         newdata_fixed,
-        transform_draws
+        transform_draws,
+        incl_autocor,
+        internalmethod
       )
     ))[-1]
     
@@ -2116,6 +2118,8 @@ modelbased_growthparameters_call.bgmfit <-
             collapse::frename(., drawidby_) %>% 
             collapse::fsubset(., parameter %in% parm)
           
+        
+          
         } else {
           drawid_c <- list()
           for (drawidi in 1:nlevels(zxdraws$drawid)) {
@@ -2542,6 +2546,8 @@ modelbased_growthparameters_call.bgmfit <-
         return(out)
       } # end xyadj_xyv_warp_fun
       
+      
+      
       # parameter_numeric
       if(parameter_numeric) {
         value <- NULL;
@@ -2551,6 +2557,8 @@ modelbased_growthparameters_call.bgmfit <-
           dplyr::rename(drawid = value) %>% 
           dplyr::relocate(drawid, parameter, estimate)
       }
+      
+      
       
       
       xyadj_xyv <- xyadj_xyv_warp_fun(onex0, model$model_info$bgmfit.data)

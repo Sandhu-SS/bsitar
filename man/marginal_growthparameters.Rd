@@ -46,6 +46,7 @@
   model_deriv = NULL,
   method = "custom",
   marginals = NULL,
+  preparms = NULL,
   pdraws = FALSE,
   pdrawso = FALSE,
   pdrawsp = FALSE,
@@ -413,12 +414,17 @@ variables as a vector (e.g., \code{variables = c('class')}). Using
 \code{method = 'custom'} is strongly recommended for better performance and
 flexibility.}
 
-\item{marginals}{A \code{list}, \code{data.frame}, or \code{tibble} returned
-by the \pkg{marginaleffects} functions (default \code{NULL}). This is only
-evaluated when \code{method = 'custom'}. The \code{marginals} can be the
-output from \pkg{marginaleffects} functions or posterior draws from
-\code{marginaleffects::posterior_draws()}. The \code{marginals} argument is
-primarily used for internal purposes.}
+\item{marginals}{A \code{list}, \code{data.frame}, or \code{tibble} of
+velocity returned by the \pkg{marginaleffects} functions (default
+\code{NULL}). This is only evaluated when \code{method = 'custom'}. The
+\code{marginals} can be the output from \pkg{marginaleffects} functions or
+posterior draws from \code{marginaleffects::posterior_draws()}. The
+\code{marginals} argument is primarily used for internal purposes only.}
+
+\item{preparms}{A \code{list}, \code{data.frame}, or \code{tibble} of pre
+computed parameters (default \code{NULL}). This is only evaluated when
+\code{method = 'custom'}. The \code{preparms} argument is primarily used
+for internal purposes only.}
 
 \item{pdraws}{A character string (default \code{FALSE}) that indicates
 whether to return the raw posterior draws. Options include:

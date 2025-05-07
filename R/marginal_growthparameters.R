@@ -144,12 +144,17 @@
 #'   \code{method = 'custom'} is strongly recommended for better performance and
 #'   flexibility.
 #'
-#' @param marginals A \code{list}, \code{data.frame}, or \code{tibble} returned
-#'   by the \pkg{marginaleffects} functions (default \code{NULL}). This is only
-#'   evaluated when \code{method = 'custom'}. The \code{marginals} can be the
-#'   output from \pkg{marginaleffects} functions or posterior draws from
-#'   \code{marginaleffects::posterior_draws()}. The \code{marginals} argument is
-#'   primarily used for internal purposes.
+#' @param marginals A \code{list}, \code{data.frame}, or \code{tibble} of
+#'   velocity returned by the \pkg{marginaleffects} functions (default
+#'   \code{NULL}). This is only evaluated when \code{method = 'custom'}. The
+#'   \code{marginals} can be the output from \pkg{marginaleffects} functions or
+#'   posterior draws from \code{marginaleffects::posterior_draws()}. The
+#'   \code{marginals} argument is primarily used for internal purposes only.
+#'   
+#' @param preparms A \code{list}, \code{data.frame}, or \code{tibble} of pre
+#'   computed parameters (default \code{NULL}). This is only evaluated when
+#'   \code{method = 'custom'}. The \code{preparms} argument is primarily used
+#'   for internal purposes only.
 #'
 #' @param constrats_by A character vector (default \code{FALSE}) specifying the
 #'   variable(s) by which estimates and contrasts (during the post-draw stage)
@@ -418,6 +423,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                              model_deriv = NULL,
                                              method = 'custom',
                                              marginals = NULL, 
+                                             preparms = NULL,
                                              pdraws = FALSE, 
                                              pdrawso = FALSE,
                                              pdrawsp = FALSE, 
@@ -554,8 +560,21 @@ marginal_growthparameters.bgmfit <- function(model,
   
   callfuns     <- TRUE
   setmarginals <- FALSE
+  setpreparms  <- FALSE
+  
+  if(!is.null(marginals) & !is.null(preparms)) {
+    stop("Please specify either marginals or preparms, not both")
+  }
+  
   if(!is.null(marginals)) {
     setmarginals <- TRUE
+    if(method == 'custom') callfuns <- FALSE
+    if(method == 'pkg')    callfuns <- FALSE
+  }
+  
+  if(!is.null(preparms)) {
+    setmarginals <- TRUE
+    setpreparms  <- TRUE
     if(method == 'custom') callfuns <- FALSE
     if(method == 'pkg')    callfuns <- FALSE
   }
@@ -694,7 +713,11 @@ marginal_growthparameters.bgmfit <- function(model,
   if(method == 'custom') {
     deriv <- 1
     model_deriv <- TRUE
-    if(verbose) message("For method = 'custom', deriv is set to TRUE")
+    if(verbose) {
+      if(!setpreparms) {
+        message(" For method = 'custom', deriv is set to TRUE.\n")
+      }
+    }
   }
   
   
@@ -739,6 +762,15 @@ marginal_growthparameters.bgmfit <- function(model,
     'acgv',
     'cgv'
   )
+  
+  if(verbose) {
+    if(setpreparms) {
+      message(" For 'preparms', the argument 'parameter' is ignored.",
+              "\n All levels of parameter variable are summarised.",
+              "\n To get summary of a single variable (such as 'apgv'), you can",
+              "\n subset the parameter variable before calling the function\n")
+    }
+  }
   
   if(is.null(parameter)) parameter <- c('apgv', 'pgv')
   
@@ -911,6 +943,8 @@ marginal_growthparameters.bgmfit <- function(model,
   if(!is.null(model$xcall)) {
     if(grepl("marginal_growthparameters", model$xcall)) {
       xcall <- "marginal_growthparameters"
+    } else if(grepl("modelbased_growthparameters", model$xcall)) {
+      xcall <- "modelbased_growthparameters"
     }
   } else {
     rlang_trace_back <- rlang::trace_back()
@@ -1179,18 +1213,26 @@ marginal_growthparameters.bgmfit <- function(model,
                                check_formalArgs_exceptions = NULL,
                                check_trace_back = NULL,
                                envir = parent.frame())
-  
+ 
   full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
   # newdata <- CustomDoCall(get.newdata, full.args)
-  
+ 
   # Interpolation points
-  if(!exists('check_fun')) check_fun <- FALSE
+  if(!exists('check_fun'))    check_fun    <- FALSE
   if(!exists('available_d1')) available_d1 <- FALSE
-  full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
-                                       nipts = NULL, 
-                                       check_fun  = check_fun, 
-                                       available_d1 = available_d1, 
-                                       xcall = NULL, verbose = verbose)
+  
+  # Irrelevant for setpreparms = TRUE - unncessesary message 
+  # Note: argument 'ipts' has been set as ipts = 50 (default was 'NULL')
+  
+  if(!setpreparms) {
+    full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
+                                         nipts = NULL, 
+                                         check_fun  = check_fun, 
+                                         available_d1 = available_d1, 
+                                         xcall = NULL, verbose = verbose)
+  }
+  
+  
   
   
   if(!is.na(uvarby)) {
@@ -1250,6 +1292,7 @@ marginal_growthparameters.bgmfit <- function(model,
       reformat,
       method,
       marginals,
+      preparms,
       constrats_by,
       constrats_at,
       constrats_subset,
@@ -1266,7 +1309,9 @@ marginal_growthparameters.bgmfit <- function(model,
       funlist,
       itransform,
       newdata_fixed,
-      transform_draws
+      transform_draws,
+      incl_autocor,
+      internalmethod
     )
   ))[-1]
   
@@ -2084,11 +2129,26 @@ marginal_growthparameters.bgmfit <- function(model,
     }
     
     
+    if(setpreparms) {
+      if(inherits(preparms, 'list')) {
+        zxdraws <-
+          {. <- lapply(1:length(preparms), 
+                       marginals_list_consecutive_drawid_function)
+          list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
+            unlist(lapply(., `[[`, i), FALSE, FALSE)))}
+        zxdraws$drawid <- cheapr::factor_(zxdraws$drawid)
+      } else {
+        zxdraws <- preparms
+      }
+    }
+    
     
     by_pdraws <- by
     
     # Imp, remove xvar from the by
     by <- base::setdiff(eval(by), eval(xvar)) 
+    
+    
     
     getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
                           aggregate_by = FALSE, ...) {
@@ -2156,84 +2216,95 @@ marginal_growthparameters.bgmfit <- function(model,
     }
     
     
-    if(usedtplyr) {
-      getparmsx2                     <- getparmsx
-      hypothesisargs                 <- formals(getparmsx2)
-      hypothesisargs[['xvar']]       <- xvar
-      hypothesisargs[['draw']]       <- 'draw'
-      hypothesisargs[['parm']]       <- parm
-      formals(getparmsx2)            <- hypothesisargs
-      drawidby                       <- c('drawid', by)
-      onex0 <- zxdraws %>% dtplyr::lazy_dt() %>%
-        dplyr::group_by_at(drawidby) %>% 
-        dplyr::group_modify(., getparmsx2, .keep = F) %>% 
-        dplyr::ungroup()
-      
-    } else if(usecollapse) {
-      drawidby  <- c('drawid', by)
-      drawidby_ <- c(drawidby, 'parameter', 'estimate')
-      parmest   <- 'draw'
-      
-      if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
-      if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
-      if(any(c('acgv', 'cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
-      
-      if(getpest) namesp <- cbind('apgv', 'pgv') else namesp <- NULL
-      if(gettest) namest <- cbind('atgv', 'tgv') else namest <- NULL
-      if(getcest) namesc <- cbind('acgv', 'cgv') else namesc <- NULL
-      
-      getcgvfunc <- function(x, y, p = NULL, ...) {
-        if(is.null(p)) {
-          cgv <- acg_velocity * sitar::getPeak(x, y)[2] 
-        } else {
-          cgv <- acg_velocity * p
+    # For pre computed parameters, the below is not required
+    if(!setpreparms) {
+      if(usedtplyr) {
+        getparmsx2                     <- getparmsx
+        hypothesisargs                 <- formals(getparmsx2)
+        hypothesisargs[['xvar']]       <- xvar
+        hypothesisargs[['draw']]       <- 'draw'
+        hypothesisargs[['parm']]       <- parm
+        formals(getparmsx2)            <- hypothesisargs
+        drawidby                       <- c('drawid', by)
+        onex0 <- zxdraws %>% dtplyr::lazy_dt() %>%
+          dplyr::group_by_at(drawidby) %>% 
+          dplyr::group_modify(., getparmsx2, .keep = F) %>% 
+          dplyr::ungroup()
+        
+      } else if(usecollapse) {
+        drawidby  <- c('drawid', by)
+        drawidby_ <- c(drawidby, 'parameter', 'estimate')
+        parmest   <- 'draw'
+        
+        if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
+        if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
+        if(any(c('acgv', 'cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
+        
+        if(getpest) namesp <- cbind('apgv', 'pgv') else namesp <- NULL
+        if(gettest) namest <- cbind('atgv', 'tgv') else namest <- NULL
+        if(getcest) namesc <- cbind('acgv', 'cgv') else namesc <- NULL
+        
+        getcgvfunc <- function(x, y, p = NULL, ...) {
+          if(is.null(p)) {
+            cgv <- acg_velocity * sitar::getPeak(x, y)[2] 
+          } else {
+            cgv <- acg_velocity * p
+          }
+          vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+          return(c(x = x[vcgi], y = y[vcgi]))
         }
-        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-        return(c(x = x[vcgi], y = y[vcgi]))
+        
+        funx <- function(x,...) {
+          if(getpest) {
+            dfp <- sitar::getPeak(x[,1], x[,2]) 
+            dfp[1] <- ifunx_(dfp[1]) # prepare_data2
+          } else {
+            dfp <- NULL
+          }
+          if(gettest) {
+            dft <- sitar::getTakeoff(x[,1], x[,2]) 
+            dft[1] <- ifunx_(dft[1]) # prepare_data2
+          } else {
+            dft <- NULL
+          }
+          if(getcest) {
+            dfc <- getcgvfunc(x[,1], x[,2]) 
+            dfc[1] <- ifunx_(dfc[1]) # prepare_data2
+          } else {
+            dfc <- NULL
+          }
+          cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
+        }
+        
+        onex0 <- zxdraws %>% 
+          collapse::fgroup_by(drawidby) %>% 
+          collapse::fsummarise(collapse::mctl(funx(cbind(.data[[xvar]], 
+                                                         .data[[parmest]])), 
+                                              names = F)) %>% 
+          collapse::ftransformv(., 'V2', as.numeric) %>% 
+          collapse::frename(., drawidby_) %>% 
+          collapse::fsubset(., parameter %in% parm)
+        
+      } else {
+        drawid_c <- list()
+        for (drawidi in 1:nlevels(zxdraws$drawid)) {
+          drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>%
+            dplyr::group_by_at(by) %>%
+            dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw, parm = parm),
+                                .keep = TRUE) %>%
+            dplyr::mutate(drawid = drawidi)
+        }
+        onex0 <- drawid_c %>% CustomDoCall(rbind, .) %>% data.frame()
       }
-      
-      funx <- function(x,...) {
-        if(getpest) {
-          dfp <- sitar::getPeak(x[,1], x[,2]) 
-          dfp[1] <- ifunx_(dfp[1]) # prepare_data2
-        } else {
-          dfp <- NULL
-        }
-        if(gettest) {
-          dft <- sitar::getTakeoff(x[,1], x[,2]) 
-          dft[1] <- ifunx_(dft[1]) # prepare_data2
-        } else {
-          dft <- NULL
-        }
-        if(getcest) {
-          dfc <- getcgvfunc(x[,1], x[,2]) 
-          dfc[1] <- ifunx_(dfc[1]) # prepare_data2
-        } else {
-          dfc <- NULL
-        }
-        cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
-      }
-      
-      onex0 <- zxdraws %>% 
-        collapse::fgroup_by(drawidby) %>% 
-        collapse::fsummarise(collapse::mctl(funx(cbind(.data[[xvar]], 
-                                                       .data[[parmest]])), 
-                                            names = F)) %>% 
-        collapse::ftransformv(., 'V2', as.numeric) %>% 
-        collapse::frename(., drawidby_) %>% 
-        collapse::fsubset(., parameter %in% parm)
-      
-    } else {
-      drawid_c <- list()
-      for (drawidi in 1:nlevels(zxdraws$drawid)) {
-        drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>%
-          dplyr::group_by_at(by) %>%
-          dplyr::group_modify(., ~ getparmsx(.x[[xvar]] , .x$draw, parm = parm),
-                              .keep = TRUE) %>%
-          dplyr::mutate(drawid = drawidi)
-      }
-      onex0 <- drawid_c %>% CustomDoCall(rbind, .) %>% data.frame()
-    }
+    } else if(setpreparms) {
+      onex0 <- zxdraws
+    } # if(!setpreparms) {
+    
+    
+    
+    
+    
+    
     
     
     #######################################################
@@ -2455,6 +2526,7 @@ marginal_growthparameters.bgmfit <- function(model,
       onex1 <- onex0
     }
     
+
     #########################33
     if(isFALSE(constrats_subset)) {
       constrats_subset <- NULL
