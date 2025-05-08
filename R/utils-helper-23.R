@@ -397,9 +397,6 @@ wraper_for_drawni <- function(setdat_mat,
                               spline_eval_array,
                               xg_array,
                               xg_curve_array,
-                              xg_array_c,
-                              xg_curve_array_c,
-                              spline_eval_array_c,
                               call_R_stan,
                               GS_gps_parms_assign) {
   if(callvia == 'base') {
@@ -422,11 +419,11 @@ wraper_for_drawni <- function(setdat_mat,
   }
   set_frame_abcd <- setdat_mat[, create_abcd_names_vector, drop = FALSE]
   set_frame_smat <- setdat_mat[, create_s_names_vector,    drop = FALSE]
-  if(call_R_stan == "Stan") {
-    xg_array          <- xg_array_c
-    xg_curve_array    <- xg_curve_array_c
-    spline_eval_array <- spline_eval_array_c
-  }
+  # if(call_R_stan == "Stan") {
+  #   xg_array          <- xg_array_c
+  #   xg_curve_array    <- xg_curve_array_c
+  #   spline_eval_array <- spline_eval_array_c
+  # }
   
   mat_parm <-  GS_gps_parms_assign(
     nlp_a = set_frame_abcd[, 'a'],

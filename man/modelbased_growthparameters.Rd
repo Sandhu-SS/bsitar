@@ -789,29 +789,8 @@ derivatives like velocity curves.}
 \item{...}{Additional arguments passed to the function.}
 }
 \value{
-A named list of 3 comprising individual level estimate of
-\strong{age}, \strong{distance} and \strong{velocity}. Each of the list is
-a data frame with one row per individual and six columns.\cr
-
-\strong{age} \cr \item{id}{subject identifier} \item{Estimate}{subject's
-age corresponding to \code{x}.} \item{Est.Error}{SD of Estimate} \item{Q2.5
-}{Lower CI} \item{Q97.5}{Upper CI}
-\item{missing}{logical flags where TRUE means subject's specified age lies
-outside their measurement range}
-
-\strong{distance} \cr \item{id}{subject identifier}
-\item{Estimate}{distance corresponding to subject's age}
-\item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
-CI}
-\item{missing}{logical flags where TRUE means subject's specified age lies
-outside their measurement range}
-
-\strong{velocity} \cr \item{id}{subject identifier}
-\item{Estimate}{velocity corresponding to subject's age}
-\item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
-CI}
-\item{missing}{logical flags where TRUE means subject's specified age lies
-outside their measurement range}
+A data frame comprising growth parameter estimates for \strong{age},
+\strong{distance} and \strong{velocity}.
 }
 \description{
 The \strong{modelbased_growthparameters()} function estimates

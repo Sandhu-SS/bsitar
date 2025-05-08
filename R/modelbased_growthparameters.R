@@ -86,29 +86,8 @@
 #' 
 #' @param ... Additional arguments passed to the function. 
 #' 
-#' @return A named list of 3 comprising individual level estimate of
-#'   \strong{age}, \strong{distance} and \strong{velocity}. Each of the list is
-#'   a data frame with one row per individual and six columns.\cr
-#'   
-#'   \strong{age} \cr \item{id}{subject identifier} \item{Estimate}{subject's
-#'   age corresponding to \code{x}.} \item{Est.Error}{SD of Estimate} \item{Q2.5
-#'   }{Lower CI} \item{Q97.5}{Upper CI}
-#'   \item{missing}{logical flags where TRUE means subject's specified age lies
-#'   outside their measurement range}
-#'   
-#'   \strong{distance} \cr \item{id}{subject identifier}
-#'   \item{Estimate}{distance corresponding to subject's age}
-#'   \item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
-#'   CI}
-#'   \item{missing}{logical flags where TRUE means subject's specified age lies
-#'   outside their measurement range}
-#'   
-#'   \strong{velocity} \cr \item{id}{subject identifier}
-#'   \item{Estimate}{velocity corresponding to subject's age}
-#'   \item{Est.Error}{SD of Estimate} \item{Q2.5 }{Lower CI} \item{Q97.5}{Upper
-#'   CI}
-#'   \item{missing}{logical flags where TRUE means subject's specified age lies
-#'   outside their measurement range}
+#' @return A data frame comprising growth parameter estimates for \strong{age},
+#'   \strong{distance} and \strong{velocity}.
 #' 
 #' @rdname modelbased_growthparameters
 #' @export
@@ -1307,14 +1286,8 @@ modelbased_growthparameters.bgmfit <-
       xg_array          <- array(NA, dim = c(degree_dim, pieces_dim))
       xg_curve_array    <- array(NA, dim = c(degree_dim_set_spread, pieces_dim))
       
-      # For call_R_stan == "Stan" 
-      xg_array_c          <- NULL  
-      xg_curve_array_c    <- NULL 
-      spline_eval_array_c <- NULL 
       
-      if(call_R_stan == "Stan") {
-        xg_array_c <- xg_curve_array_c <- spline_eval_array_c <- list()
-      }
+      
       
       for (i in 1:pieces_dim) {
         xg_array[,i]          <- seq_fun_R(xknots[i], xknots[i+1], degree_dim);
@@ -1327,9 +1300,13 @@ modelbased_growthparameters.bgmfit <-
         spline_eval_array[,,i] <- eval(SplineCall);
         
         if(call_R_stan == "Stan") {
-          xg_array_c[[i]] <- xg_array[,i]
-          xg_curve_array_c[[i]] <- xg_curve_array[,i]
-          spline_eval_array_c[[i]] <-spline_eval_array[,,i];
+          xg_array_c <- xg_curve_array_c <- spline_eval_array_c <- list()
+          xg_array_c[[i]]          <- xg_array[,i]
+          xg_curve_array_c[[i]]    <- xg_curve_array[,i]
+          spline_eval_array_c[[i]] <- spline_eval_array[,,i]
+          xg_array                 <- xg_array_c
+          xg_curve_array           <- xg_curve_array_c
+          spline_eval_array        <- spline_eval_array_c
         }
       } # end for (i in 1:pieces_dim) {
       
@@ -1338,9 +1315,6 @@ modelbased_growthparameters.bgmfit <-
                                    xg_array = xg_array,
                                    xg_curve_array = xg_curve_array,
                                    subset_data_by = subset_data_by,
-                                   xg_array_c = xg_array_c,
-                                   xg_curve_array_c = xg_curve_array_c,
-                                   spline_eval_array_c = spline_eval_array_c,
                                    `%>%` = bsitar::`%>%`,
                                    subset_data_by_names = subset_data_by_names,
                                    create_abcd_names_vector = create_abcd_names_vector,
@@ -1380,9 +1354,6 @@ modelbased_growthparameters.bgmfit <-
                                                             spline_eval_array = spline_eval_array,
                                                             xg_array = xg_array,
                                                             xg_curve_array = xg_curve_array,
-                                                            xg_array_c = xg_array_c,
-                                                            xg_curve_array_c = xg_curve_array_c,
-                                                            spline_eval_array_c = spline_eval_array_c,
                                                             call_R_stan = call_R_stan,
                                                             GS_gps_parms_assign = GS_gps_parms_assign)
         } # for (drawni in 1:1) {
@@ -1432,9 +1403,6 @@ modelbased_growthparameters.bgmfit <-
                             spline_eval_array = spline_eval_array,
                             xg_array = xg_array,
                             xg_curve_array = xg_curve_array,
-                            xg_array_c = xg_array_c,
-                            xg_curve_array_c = xg_curve_array_c,
-                            spline_eval_array_c = spline_eval_array_c,
                             call_R_stan = call_R_stan,
                             GS_gps_parms_assign = GS_gps_parms_assign)
         }
