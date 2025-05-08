@@ -498,6 +498,8 @@ marginal_draws.bgmfit <-
     if(!is.null(model$xcall)) {
       if(grepl("marginal_draws", model$xcall)) {
         xcall <- "marginal_draws"
+      } else if(grepl("modelbased_growthparameters", model$xcall)) {
+        xcall <- "modelbased_growthparameters"
       }
     } else {
       rlang_trace_back <- rlang::trace_back()

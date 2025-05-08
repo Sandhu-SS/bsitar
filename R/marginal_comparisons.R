@@ -492,6 +492,8 @@ marginal_comparisons.bgmfit <- function(model,
   if(!is.null(model$xcall)) {
     if(grepl("marginal_comparisons", model$xcall)) {
       xcall <- "marginal_comparisons"
+    } else if(grepl("modelbased_growthparameters", model$xcall)) {
+      xcall <- "modelbased_growthparameters"
     }
   } else {
     rlang_trace_back <- rlang::trace_back()

@@ -746,7 +746,10 @@ subsetting altogether, set \code{subset_by = ""} (an empty string).
 
 This option is useful when multiple rows per \code{id} are present and a
 reduction to one representative row per individual is needed for downstream
-calculations.}
+calculations.
+
+For \code{parameter_method == 2} with \code{re_formula == NA}, the
+\code{subset_by = "one-row"} will provide one row per parameter.}
 
 \item{add_xtm}{A logical (default \code{FALSE}) to indicate whether to
 compute \code{x} and \code{y} adjusted to the mean. Ignored if

@@ -73,6 +73,9 @@
 #'   This option is useful when multiple rows per \code{id} are present and a
 #'   reduction to one representative row per individual is needed for downstream
 #'   calculations.
+#'   
+#'   For \code{parameter_method == 2} with \code{re_formula == NA}, the 
+#'   \code{subset_by = "one-row"} will provide one row per parameter.
 #' 
 #' @param call_R_stan A character string indicating the source of the function 
 #'   used for computation—either a native \code{R} implementation or a 
@@ -560,6 +563,8 @@ modelbased_growthparameters.bgmfit <-
       xtm <- NULL;
       ytm <- NULL;
       x <- NULL;
+      
+      xid <- NULL;
       
       
       # allowed_parms <- c(
@@ -1132,6 +1137,7 @@ modelbased_growthparameters.bgmfit <-
       # posterior_linpred_args[['subset']]                <- subset
       
       
+      model$xcall <- 'modelbased_growthparameters'
       
       
       if(parameter_method == 1) {
@@ -1479,7 +1485,6 @@ modelbased_growthparameters.bgmfit <-
       peak_data_draw  <- collapse::fsubset(peak_takeoff_data_draw, peak_indices)
       
       
-      model$xcall <- 'modelbased_growthparameters'
       
       if(nrow(peak_data_draw) > 0) {
         apgv_draw    <- peak_data_draw %>% 
@@ -1554,13 +1559,33 @@ modelbased_growthparameters.bgmfit <-
         all_takeoff_data_draw <- collapse::rowbind(atgv_draw, tgv_draw, stgv_draw)
         
         takeoff_parameters <- marginal_growthparameters(model, 
-                                                      by = c('rowdf'), 
+                                                      by = idvar, 
                                                       verbose = F,
                                                       usecollapse = TRUE)
       } # if(nrow(takeoff_data_draw) > 0) {
       
       
-      return(peak_parameters)
+      if(parm == 'apgv') {
+        out <- peak_parameters
+      }
+      
+      if(parm == 'atgv') {
+        out <- takeoff_parameters
+      }
+      
+      peak_names.ors__2 <- base::tolower(colnames(out))
+      indices_lastn     <- 2 # for est and q1 qu
+      firstup_indices   <- (length(peak_names.ors__2)-indices_lastn):length(peak_names.ors__2)
+      lower_case__2 <- peak_names.ors__2[1:(length(peak_names.ors__2)-indices_lastn-1)]
+      upper_case__2 <- firstup(peak_names.ors__2[firstup_indices])
+      
+      peak_names.ors__2 <- c(lower_case__2, upper_case__2)
+      
+      # change the case, after bind with xtm
+      out <- data.table::setnames(out, peak_names.ors__2)
+      
+      
+      return(out)
       
       ##############################################################
     } else if(parameter_method == 2) { # if(parameter_method == 1)
@@ -1695,6 +1720,13 @@ modelbased_growthparameters.bgmfit <-
         collapse::roworderv(c(idvar, xvar), decreasing = F)
 
       
+      if(is.null(re_formula)) {
+        set_pdrawsp <- 'return'
+        set_pdraws  <- FALSE
+      } else if(!is.null(re_formula)) {
+        set_pdrawsp <- FALSE
+        set_pdraws  <- 'adds'
+      }
       
       onex0 <- marginal_growthparameters(model,
                                               resp = resp,
@@ -1704,7 +1736,8 @@ modelbased_growthparameters.bgmfit <-
                                               newdata = newdata,
                                               parameter = parm,
                                        re_formula = NA,
-                                       pdrawsp = 'return',
+                                       pdrawsp = set_pdrawsp,
+                                       pdraws = set_pdraws,
                                        by = by,
                                               transform = transform,
                                               transform_draws = transform_draws,
@@ -1718,6 +1751,79 @@ modelbased_growthparameters.bgmfit <-
                                               newdata_fixed = newdata_fixed,
                                               envir = envir, 
                                               ...) 
+      
+      
+      if(!is.null(re_formula)) {
+        if(add_xtm) { 
+          stop("Please set 're_formula = NULL' for 'add_xtm = TRUE'")
+        }
+        onex0             <- onex0[['estimate']]
+        peak_names.ors__2 <- base::tolower(colnames(onex0))
+        colnames(onex0)   <- peak_names.ors__2
+        set0_newdata                 <- newdata
+        attr(set0_newdata, "list_c") <- NULL
+        set0_newdata                 <- set0_newdata %>% 
+                                        dplyr::left_join(., 
+                                                         onex0, by = by)        
+        set0_newdata[[xvar]]         <- NULL
+        
+        # below using newdata_fixed = 0, so apply fun here 
+        
+        set0_newdata[[xvar]]         <- funx_(set0_newdata[['estimate']])
+       
+        get_size <- marginal_draws(model, newdata = set0_newdata, 
+                                   deriv = 0, newdata_fixed = 0)
+        get_velc <- marginal_draws(model, newdata = set0_newdata, 
+                                   deriv = 1, newdata_fixed = 0)
+        
+        colnames(get_size) <- base::tolower(colnames(get_size))
+        colnames(get_velc) <- base::tolower(colnames(get_velc))
+        
+        get_velc <- cbind.data.frame(set0_newdata[, c("parameter", by)], 
+                                     get_velc)
+        get_velc[["parameter"]] <- 'PGV'
+        get_velc <- get_velc %>% 
+          dplyr::distinct(!! as.name(dplyr::all_of(by)), .keep_all = T)
+        
+        get_size <- cbind.data.frame(set0_newdata[, c("parameter", by)], 
+                                     get_size)
+        get_size[["parameter"]] <- 'SPGV'
+        
+        get_size <- get_size %>% 
+          dplyr::distinct(!! as.name(dplyr::all_of(by)), .keep_all = T)
+        
+        
+        onex0 <- dplyr::bind_rows(onex0, get_velc, get_size)
+        
+        marginal_draws(model, newdata = set0_newdata, 
+                       newdata_fixed = 0,
+                       deriv = 1) %>% nrow()
+        
+        
+        if(!is.null(subset_data_by)) {
+          group_by_indices <- "parameter"
+          if(subset_data_by == "one-row") {
+            group_by_indices <- group_by_indices
+          } else {
+            group_by_indices <- c(group_by_indices, subset_data_by)
+          }
+          onex0 <- onex0 %>% data.table::as.data.table()
+          onex0 <- onex0[onex0[, .I[1:1], by = group_by_indices]$V1]
+          onex0 <- onex0 %>% data.frame()
+        }
+       
+        peak_names.ors__2 <- base::tolower(colnames(onex0))
+        indices_lastn     <- 2 # for est and q1 qu
+        firstup_indices   <- (length(peak_names.ors__2)-indices_lastn):length(peak_names.ors__2)
+        lower_case__2 <- peak_names.ors__2[1:(length(peak_names.ors__2)-indices_lastn-1)]
+        upper_case__2 <- firstup(peak_names.ors__2[firstup_indices])
+        
+        peak_names.ors__2 <- c(lower_case__2, upper_case__2)
+        # change the case, after bind with xtm
+        onex0 <- data.table::setnames(onex0, peak_names.ors__2)
+        
+        return(onex0)
+      } # if(!is.null(re_formula)) {
       
       
 
@@ -1817,8 +1923,6 @@ modelbased_growthparameters.bgmfit <-
             setdat_mat_random[,"d"] 
         } # end else if(all(is.na(setx0))) {
           
-        
-        
         if(add_xtm) {
           setxx.adj_xtm <- funx_(setdat_mat_fixed[, 'xvar'])
           x.adj_xtm <- (setxx.adj_xtm - setdat_mat_random[,"b"]) * exp(setdat_mat_random[,"c"])
@@ -2058,6 +2162,9 @@ modelbased_growthparameters.bgmfit <-
                                                      by = c(by, 'xid'),
                                                      verbose = F,
                                                      usecollapse = TRUE)
+        
+        
+        
         # set to lower case for bind with xtm
         peak_names.ors__ <- colnames(peak_parameters)
         data.table::setnames(peak_parameters, tolower(names(peak_parameters)))
@@ -2101,9 +2208,20 @@ modelbased_growthparameters.bgmfit <-
         } # if(add_xtm) {
       } # if(nrow(peak_data_draw) > 0) {
       
+     peak_parameters   <- peak_parameters %>% collapse::fselect(-xid)
+     
+     peak_names.ors__2 <- peak_names.ors__[ !grepl('xid', peak_names.ors__)]
+     
+     indices_lastn     <- 2 # for est and q1 qu
+     firstup_indices   <- (length(peak_names.ors__2)-indices_lastn):length(peak_names.ors__2)
+     lower_case__2 <- peak_names.ors__2[1:(length(peak_names.ors__2)-indices_lastn-1)]
+     upper_case__2 <- firstup(peak_names.ors__2[firstup_indices])
+     
+     peak_names.ors__2 <- c(lower_case__2, upper_case__2)
 
      # change the case, after bind with xtm
-     peak_parameters <- data.table::setnames(peak_parameters, peak_names.ors__)
+     peak_parameters <- data.table::setnames(peak_parameters, peak_names.ors__2)
+     
      
       
       return(peak_parameters) 
