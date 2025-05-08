@@ -793,6 +793,8 @@ modelbased_growthparameters.bgmfit <-
       model$xcall <- xcall
       
       
+      
+      
       arguments <- get_args_(as.list(match.call())[-1], xcall)
       arguments$model <- model
       arguments$usesavedfuns <- usesavedfuns
@@ -810,6 +812,9 @@ modelbased_growthparameters.bgmfit <-
       .cores_ps <- get.cores_[['.cores_ps']]
       
       if (future) {
+        if(call_function == "Stan") {
+          stop("The future = TRUE is not yet suported for call_function = 'Stan'")
+        }
         getfutureplan <- future::plan()
         if (future_session == 'multisession') {
           set_future_session <- future_session
@@ -1004,7 +1009,7 @@ modelbased_growthparameters.bgmfit <-
                                       dargs = list(...), 
                                       verbose = verbose)
       
-      full.args$model <- model
+      full.args$model       <- model
       full.args$model_deriv <- model_deriv
       
       
@@ -1028,7 +1033,8 @@ modelbased_growthparameters.bgmfit <-
       full.args <- 
         sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                    arguments = full.args, 
-                                   check_formalArgs = marginal_growthparameters.bgmfit,
+                                   # check_formalArgs = marginal_growthparameters.bgmfit,
+                                   check_formalArgs = modelbased_growthparameters.bgmfit,
                                    check_formalArgs_exceptions = NULL,
                                    check_trace_back = NULL,
                                    envir = parent.frame())
@@ -1086,8 +1092,13 @@ modelbased_growthparameters.bgmfit <-
         if(verbose) message("'transform' set based on 'transform_draws'")
       }
       
-      comparisons_arguments <- full.args
+      modelbased_arguments <- full.args
       
+      # modelbased_argumentsx <<- modelbased_arguments
+      # stop()
+      
+
+      model$xcall <- 'modelbased_growthparameters'
       
       #######################################################################
       
@@ -1138,9 +1149,6 @@ modelbased_growthparameters.bgmfit <-
       posterior_linpred_args[['req_vars']]              <- NULL
       # subset leads to overflow error 
       # posterior_linpred_args[['subset']]                <- subset
-      
-      
-      model$xcall <- 'modelbased_growthparameters'
       
       
       if(parameter_method == 1) {
@@ -1244,12 +1252,13 @@ modelbased_growthparameters.bgmfit <-
       
       SplineCall <- model$model_info$SplineCall
       
-      
+      if(call_function == "R") {
+        # First initiate to NULL to avoid global
+        GS_gps_parms_stan   <- NULL;
+      }
       
       
       if(call_function == "Stan") {
-        # First initiate to NULL to avoid global
-        GS_gps_parms_stan   <- NULL;
         # GS_gps_parms_stan   <- model$model_info$GS_gps_parms_stan
         GS_gps_parms_stan_str_get_function_scode <- GS_gps_parms_stan_str_get()
         # if(model$model_info$expose_method == "R") {
@@ -1278,7 +1287,7 @@ modelbased_growthparameters.bgmfit <-
       } # if(call_function == "Stan") {
       
       
-      # call_function <- "R"
+      
       if(call_function == "R") {
         GS_gps_parms_assign <- GS_gps_parms_R
       } else if(call_function == "Stan") {
@@ -1308,9 +1317,7 @@ modelbased_growthparameters.bgmfit <-
         deriv_mat_dim = 6+1;
       }
       
-      # nrows = length(nlp_a);
-      # array_dim = nrows;
-      
+    
       array_dim = set_nrows_n
       
       if(return_indicator == 1) {
@@ -1562,11 +1569,15 @@ modelbased_growthparameters.bgmfit <-
         
         all_peak_data_draw <- collapse::rowbind(apgv_draw, pgv_draw, spgv_draw) 
         
-        peak_parameters <- marginal_growthparameters(model,
-                                                   preparms = all_peak_data_draw ,
-                                                   by = idvar,
-                                                   verbose = F,
-                                                   usecollapse = TRUE)
+       
+        marginal_growthparameters_args <- modelbased_arguments
+        marginal_growthparameters_args[['preparms']] <- all_peak_data_draw
+        marginal_growthparameters_args[['by']] <- idvar
+        
+        peak_parameters <- CustomDoCall(marginal_growthparameters, 
+                                        marginal_growthparameters_args)
+        
+
       } # if(nrow(peak_data_draw) > 0) {
       
       
@@ -1608,10 +1619,13 @@ modelbased_growthparameters.bgmfit <-
         
         all_takeoff_data_draw <- collapse::rowbind(atgv_draw, tgv_draw, stgv_draw)
         
-        takeoff_parameters <- marginal_growthparameters(model, 
-                                                      by = idvar, 
-                                                      verbose = F,
-                                                      usecollapse = TRUE)
+        marginal_growthparameters_args <- modelbased_arguments
+        marginal_growthparameters_args[['preparms']] <- all_takeoff_data_draw
+        marginal_growthparameters_args[['by']] <- idvar
+        
+        takeoff_parameters <- CustomDoCall(marginal_growthparameters, 
+                                           marginal_growthparameters_args)
+        
       } # if(nrow(takeoff_data_draw) > 0) {
       
       
@@ -1777,31 +1791,21 @@ modelbased_growthparameters.bgmfit <-
         set_pdraws  <- 'adds'
       }
       
-      onex0 <- marginal_growthparameters(model,
-                                              resp = resp,
-                                              dpar = dpar,
-                                              ndraws = ndraws,
-                                              draw_ids = draw_ids_seq,
-                                              newdata = newdata,
-                                              parameter = parm,
-                                       re_formula = NA,
-                                       pdrawsp = set_pdrawsp,
-                                       pdraws = set_pdraws,
-                                       by = by,
-                                              transform = transform,
-                                              transform_draws = transform_draws,
-                                              future = future,
-                                              future_session = future_session,
-                                              future_splits = future_splits,
-                                              future_method = future_method,
-                                              future_re_expose = future_re_expose,
-                                              # xvar = xvar,
-                                              # idvar = idvar,
-                                              newdata_fixed = newdata_fixed,
-                                              envir = envir, 
-                                              ...) 
+      marginal_growthparameters_args <- modelbased_arguments
+      marginal_growthparameters_args[['re_formula']] <- NA
+      marginal_growthparameters_args[['pdrawsp']]    <- set_pdrawsp
+      marginal_growthparameters_args[['pdraws']]     <- set_pdraws
+      marginal_growthparameters_args[['parameter']]  <- parm
+      marginal_growthparameters_args[['newdata']]    <- newdata
+      marginal_growthparameters_args[['draw_ids']]   <- draw_ids_seq
+      marginal_growthparameters_args[['by']]         <- by
       
+      marginal_growthparameters_args[['newdata_fixed']] <- NULL
       
+      onex0 <- CustomDoCall(marginal_growthparameters, 
+                            marginal_growthparameters_args)
+      
+
       if(!is.null(re_formula)) {
         if(add_xtm) { 
           stop("Please set 're_formula = NULL' for 'add_xtm = TRUE'")
@@ -1819,11 +1823,20 @@ modelbased_growthparameters.bgmfit <-
         # below using newdata_fixed = 0, so apply fun here 
         
         set0_newdata[[xvar]]         <- funx_(set0_newdata[['estimate']])
+        
+        marginal_draws_args <- modelbased_arguments
+        marginal_draws_args[['newdata']]       <- set0_newdata
+        marginal_draws_args[['newdata_fixed']] <- 0
+         marginal_draws_args[['by']]           <- by
+        
+        marginal_draws_args[['deriv']] <- 0
+        get_size <- CustomDoCall(marginal_draws, 
+                                 marginal_draws_args)
+        
+        marginal_draws_args[['deriv']] <- 1
+        get_velc <- CustomDoCall(marginal_draws, 
+                                 marginal_draws_args)
        
-        get_size <- marginal_draws(model, newdata = set0_newdata, 
-                                   deriv = 0, newdata_fixed = 0)
-        get_velc <- marginal_draws(model, newdata = set0_newdata, 
-                                   deriv = 1, newdata_fixed = 0)
         
         colnames(get_size) <- base::tolower(colnames(get_size))
         colnames(get_velc) <- base::tolower(colnames(get_velc))
@@ -2206,13 +2219,13 @@ modelbased_growthparameters.bgmfit <-
                                             xid_by)[, .(xid=seq_len(.N)), 
                                                     by = xid_by]$xid
         
-        peak_parameters <- marginal_growthparameters(model,
-                                                     preparms = all_peak_data_draw ,
-                                                     by = c(by, 'xid'),
-                                                     verbose = F,
-                                                     usecollapse = TRUE)
+        marginal_growthparameters_args <- modelbased_arguments
+        marginal_growthparameters_args[['preparms']] <- all_peak_data_draw
+        marginal_growthparameters_args[['by']] <- c(by, 'xid')
         
-        
+        peak_parameters <- CustomDoCall(marginal_growthparameters,
+                                        marginal_growthparameters_args)
+      
         
         # set to lower case for bind with xtm
         peak_names.ors__ <- colnames(peak_parameters)
@@ -2240,12 +2253,13 @@ modelbased_growthparameters.bgmfit <-
                                               xid_by)[, .(xid=seq_len(.N)),
                                                       by = xid_by]$xid
           
-          tm_parameters <- marginal_growthparameters(model,
-                                                     preparms = all_tm_data_draw ,
-                                                     by = c(by, 'xid'),
-                                                     verbose = F,
-                                                     usecollapse = TRUE)
+          marginal_growthparameters_args <- modelbased_arguments
+          marginal_growthparameters_args[['preparms']] <- all_tm_data_draw
+          marginal_growthparameters_args[['by']] <- c(by, 'xid')
           
+          tm_parameters <- CustomDoCall(marginal_growthparameters,
+                                          marginal_growthparameters_args)
+ 
           tm_names.ors__ <- colnames(tm_parameters)
           data.table::setnames(tm_parameters, tolower(names(tm_parameters)))
           tm_roworderv_vars <- 'parameter'

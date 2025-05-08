@@ -969,7 +969,14 @@ marginal_growthparameters.bgmfit <- function(model,
   arguments$model <- model
   arguments$usesavedfuns <- usesavedfuns
   
+  # CustomDoCall 
+  arguments <- sanitize_CustomDoCall_args(what = "CustomDoCall", 
+                                          arguments = arguments, 
+                                          check_formalArgs = NULL,
+                                          check_trace_back = NULL,
+                                          envir = parent.frame())
   
+
   get.cores_ <- get.cores(arguments$cores)
   
   # 28.09.2024
