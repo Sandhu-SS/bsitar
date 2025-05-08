@@ -81,7 +81,7 @@
   parameter_method = 1,
   subset_by = NULL,
   add_xtm = FALSE,
-  call_R_stan = "R",
+  call_function = "R",
   newdata_fixed = NULL,
   envir = NULL,
   ...
@@ -756,15 +756,18 @@ compute \code{x} and \code{y} adjusted to the mean. Ignored if
 \code{parameter_method == 1}. Note that \code{add_xtm} does not affect the
 estimation of parameters.}
 
-\item{call_R_stan}{A character string indicating the source of the function
-used for computation—either a native \code{R} implementation or a
-compiled function exposed from \code{Stan}. Valid options are
-\code{"R"} and \code{"Stan"}.
+\item{call_function}{A character string indicating the source of the function
+used for computation—either a native \code{R} implementation or a compiled
+function exposed from \code{Stan}. Valid options are \code{"R"} and
+\code{"Stan"}. The \code{call_function} is ignored when
+\code{parameter_method == 2}.
 
-Currently, only \code{call_R_stan = "R"} is supported; setting
-\code{call_R_stan = "Stan"} will result in an error. This parameter is
-included for future compatibility, allowing potential integration with
-\code{Stan}-based computational back ends.}
+Though \code{"Stan"} is much faster than \code{R}, The native \code{R}
+implementation (\code{call_function = "R"}, default) is recommended when the
+number of posterior draws is small. This is because the \code{Stan}
+function needs compilation which takes time. The future plan is to allow
+integration with \code{Stan}-based computational back ends which then be
+exposed along with other functions from \code{Stan} function block.}
 
 \item{newdata_fixed}{An indicator to specify whether to check for the data
 format and structure of the user provided \code{newdata} and apply needed

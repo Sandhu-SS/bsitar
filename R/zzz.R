@@ -2,15 +2,13 @@
 .onAttach <- function(libname, pkgname) {
   
   invisible(suppressPackageStartupMessages(
-    sapply(c("brms"),
-           requireNamespace, quietly = TRUE)
-  ))
-  
-  
+    sapply( c("brms", "future"), requireNamespace, quietly = TRUE)
+    ))
   
   if("rethinking" %in% (.packages())){
-    packageStartupMessage("Package 'rethinking' detached and unloaded as it creates conflict",
-            " \nwith the current rstan version ", utils::packageVersion('rstan'))
+    packageStartupMessage("Package 'rethinking' detached and unloaded as it",
+            " \ncreates conflict with the current rstan version ", 
+            utils::packageVersion('rstan'))
     detach("package:rethinking", unload=TRUE) 
   }
   
@@ -40,4 +38,5 @@
 # utils-helper-21-modelbased_growthparameters_nonS3 - not using
 # utils-helper-22-modelbased_growthparameters_call - not using
 # utils-helper-23-modelbased_growthparameters_helpers
+# utils-helper-24-modelbased_growthparameters - via Stan
 

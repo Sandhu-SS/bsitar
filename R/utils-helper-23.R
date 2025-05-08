@@ -397,7 +397,7 @@ wraper_for_drawni <- function(setdat_mat,
                               spline_eval_array,
                               xg_array,
                               xg_curve_array,
-                              call_R_stan,
+                              call_function,
                               GS_gps_parms_assign) {
   if(callvia == 'base') {
     drawniid <- drawni
@@ -419,29 +419,25 @@ wraper_for_drawni <- function(setdat_mat,
   }
   set_frame_abcd <- setdat_mat[, create_abcd_names_vector, drop = FALSE]
   set_frame_smat <- setdat_mat[, create_s_names_vector,    drop = FALSE]
-  # if(call_R_stan == "Stan") {
-  #   xg_array          <- xg_array_c
-  #   xg_curve_array    <- xg_curve_array_c
-  #   spline_eval_array <- spline_eval_array_c
-  # }
-  
+ 
   mat_parm <-  GS_gps_parms_assign(
     nlp_a = set_frame_abcd[, 'a'],
     nlp_b = set_frame_abcd[, 'b'],
     nlp_c = set_frame_abcd[, 'c'],
     nlp_d = set_frame_abcd[, 'd'],
     SParMat = set_frame_smat,
-    xknots,
-    spline_eval_array,
-    xg_array,
-    xg_curve_array,
-    degree,
-    shift_indicator,
-    spline_subset_indicator,
+    xknots = xknots,
+    spline_eval_array = spline_eval_array,
+    xg_array = xg_array,
+    xg_curve_array = xg_curve_array,
+    degree = degree,
+    shift_indicator = shift_indicator,
+    spline_subset_indicator = spline_subset_indicator,
     spline_precomputed_indicator = spline_precomputed_indicator,
-    set_spread,
+    set_spread = set_spread,
     return_indicator = return_indicator,
     drawni = drawniid)
+  return(mat_parm)
 }
 
 

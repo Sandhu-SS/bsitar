@@ -77,15 +77,18 @@
 #'   For \code{parameter_method == 2} with \code{re_formula == NA}, the 
 #'   \code{subset_by = "one-row"} will provide one row per parameter.
 #' 
-#' @param call_R_stan A character string indicating the source of the function 
-#'   used for computation—either a native \code{R} implementation or a 
-#'   compiled function exposed from \code{Stan}. Valid options are 
-#'   \code{"R"} and \code{"Stan"}.
+#' @param call_function A character string indicating the source of the function
+#'   used for computation—either a native \code{R} implementation or a compiled
+#'   function exposed from \code{Stan}. Valid options are \code{"R"} and
+#'   \code{"Stan"}. The \code{call_function} is ignored when
+#'   \code{parameter_method == 2}.
 #'   
-#'   Currently, only \code{call_R_stan = "R"} is supported; setting 
-#'   \code{call_R_stan = "Stan"} will result in an error. This parameter is 
-#'   included for future compatibility, allowing potential integration with 
-#'   \code{Stan}-based computational back ends.
+#'   Though \code{"Stan"} is much faster than \code{R}, The native \code{R}
+#'   implementation (\code{call_function = "R"}, default) is recommended when the
+#'   number of posterior draws is small. This is because the \code{Stan}
+#'   function needs compilation which takes time. The future plan is to allow
+#'   integration with \code{Stan}-based computational back ends which then be
+#'   exposed along with other functions from \code{Stan} function block.
 #' 
 #' @param ... Additional arguments passed to the function. 
 #' 
@@ -192,7 +195,7 @@ modelbased_growthparameters.bgmfit <-
            parameter_method = 1,
            subset_by = NULL,
            add_xtm = FALSE,
-           call_R_stan = "R",
+           call_function = "R",
            newdata_fixed = NULL,
            envir = NULL, 
            ...) {
@@ -1242,15 +1245,46 @@ modelbased_growthparameters.bgmfit <-
       SplineCall <- model$model_info$SplineCall
       
       
-      # call_R_stan <- "R"
-      if(call_R_stan == "R") {
+      
+      
+      if(call_function == "Stan") {
+        # First initiate to NULL to avoid global
+        GS_gps_parms_stan   <- NULL;
+        # GS_gps_parms_stan   <- model$model_info$GS_gps_parms_stan
+        GS_gps_parms_stan_str_get_function_scode <- GS_gps_parms_stan_str_get()
+        # if(model$model_info$expose_method == "R") {
+        #   support_GS_gps_parms_stan_str_get_function_scode <- support_GS_gps_parms_stan_str_get()
+        # } else {
+        #   support_GS_gps_parms_stan_str_get_function_scode = ""
+        # }
+        support_GS_gps_parms_stan_str_get_function_scode <- support_GS_gps_parms_stan_str_get()
+        
+        full_GS_gps_parms_stan_str_get_function_scode <- 
+          paste0(support_GS_gps_parms_stan_str_get_function_scode,
+                 "\n",
+                 GS_gps_parms_stan_str_get_function_scode)
+        
+        GS_gps_parms_stan_str_get_function_scode <-
+          paste0("functions {",
+                 "\n",
+                 full_GS_gps_parms_stan_str_get_function_scode,
+                 "\n",
+                 "} // end functions block")
+        
+        if(verbose) message("Prepraring Stan function...")
+        rmodel <- rstan::stanc(model_code = GS_gps_parms_stan_str_get_function_scode)
+        rstan::expose_stan_functions(rmodel)
+        if(verbose) message("Ready Stan function...")
+      } # if(call_function == "Stan") {
+      
+      
+      # call_function <- "R"
+      if(call_function == "R") {
         GS_gps_parms_assign <- GS_gps_parms_R
-      } else if(call_R_stan == "Stan") {
-        stop("please use call_R_stan == 'R'")
-        GS_gps_parms_stan   <- model$model_info$GS_gps_parms_stan
-        GS_gps_parms_stan   <- NULL
+      } else if(call_function == "Stan") {
         GS_gps_parms_assign <- GS_gps_parms_stan
       }
+      
       
       drawni = 1;
       spline_precomputed_indicator = 1;
@@ -1288,33 +1322,42 @@ modelbased_growthparameters.bgmfit <-
         array_mat_dim_2 = deriv_mat_dim;
       }
       
-      spline_eval_array <- array(NA, dim = c(degree_dim, pieces_dim, pieces_dim ))
-      xg_array          <- array(NA, dim = c(degree_dim, pieces_dim))
-      xg_curve_array    <- array(NA, dim = c(degree_dim_set_spread, pieces_dim))
+      
+      if(call_function == "R") {
+        spline_eval_array <- array(NA, dim = c(degree_dim, pieces_dim, pieces_dim ))
+        xg_array          <- array(NA, dim = c(degree_dim, pieces_dim))
+        xg_curve_array    <- array(NA, dim = c(degree_dim_set_spread, pieces_dim))
+      } 
+      
+      if(call_function == "Stan") {
+        spline_eval_array <- list()
+        xg_array          <- list()
+        xg_curve_array    <- list()
+      } 
       
       
+      SplineCall[[2]]        <- quote(xg)
       
-      
+      # spline_eval_array[i] <- GS_nsp_call_stan(xg_array[i], knots, bknots, 
+      #                                          intercept, derivs, centerval, 
+      #                                          normalize, preH);
+    
       for (i in 1:pieces_dim) {
-        xg_array[,i]          <- seq_fun_R(xknots[i], xknots[i+1], degree_dim);
-        xg_curve_array[,i]    <- seq_fun_R(xknots[i], xknots[i+1], degree_dim_set_spread);
-        # spline_eval_array[i] <- GS_nsp_call_stan(xg_array[i], knots, bknots, 
-        #                                          intercept, derivs, centerval, 
-        #                                          normalize, preH);
-        SplineCall[[2]]        <- quote(xg)
-        xg                     <- unlist(xg_array[,i])
-        spline_eval_array[,,i] <- eval(SplineCall);
-        
-        if(call_R_stan == "Stan") {
-          xg_array_c <- xg_curve_array_c <- spline_eval_array_c <- list()
-          xg_array_c[[i]]          <- xg_array[,i]
-          xg_curve_array_c[[i]]    <- xg_curve_array[,i]
-          spline_eval_array_c[[i]] <- spline_eval_array[,,i]
-          xg_array                 <- xg_array_c
-          xg_curve_array           <- xg_curve_array_c
-          spline_eval_array        <- spline_eval_array_c
+        if(call_function == "R") {
+          xg_array[, i]            <- seq_fun_R(xknots[i], xknots[i+1], degree_dim)
+          xg_curve_array[, i]      <- seq_fun_R(xknots[i], xknots[i+1], degree_dim_set_spread)
+          xg                       <- unlist(xg_array[,i])
+          spline_eval_array[, , i] <- eval(SplineCall);
+        }
+        if(call_function == "Stan") {
+          xg                     <- seq_fun_R(xknots[i], xknots[i+1], degree_dim)
+          xg_array[[i]]          <- xg
+          xg_curve_array[[i]]    <- seq_fun_R(xknots[i], xknots[i+1], degree_dim_set_spread)
+          spline_eval_array[[i]] <- eval(SplineCall);
         }
       } # end for (i in 1:pieces_dim) {
+      
+    
       
       if (future) {
         future_globals_list = list(spline_eval_array = spline_eval_array,
@@ -1329,7 +1372,7 @@ modelbased_growthparameters.bgmfit <-
                                    spline_precomputed_indicator = spline_precomputed_indicator,
                                    shift_indicator = shift_indicator,
                                    set_spread = set_spread,
-                                   call_R_stan = call_R_stan,
+                                   call_function = call_function,
                                    xknots = xknots,
                                    degree = degree,
                                    my_counter = my_counter,
@@ -1360,8 +1403,9 @@ modelbased_growthparameters.bgmfit <-
                                                             spline_eval_array = spline_eval_array,
                                                             xg_array = xg_array,
                                                             xg_curve_array = xg_curve_array,
-                                                            call_R_stan = call_R_stan,
+                                                            call_function = call_function,
                                                             GS_gps_parms_assign = GS_gps_parms_assign)
+      
         } # for (drawni in 1:1) {
       } else if(future) {
         setdat_mat_list <- list()
@@ -1389,7 +1433,7 @@ modelbased_growthparameters.bgmfit <-
                                                     # spline_eval_array,
                                                     # xg_array,
                                                     # xg_curve_array,
-                                                    # call_R_stan,
+                                                    # call_function,
                                                     # GS_gps_parms_assign
                                                     ) {
           wraper_for_drawni(setdat_mat = .x, 
@@ -1409,7 +1453,7 @@ modelbased_growthparameters.bgmfit <-
                             spline_eval_array = spline_eval_array,
                             xg_array = xg_array,
                             xg_curve_array = xg_curve_array,
-                            call_R_stan = call_R_stan,
+                            call_function = call_function,
                             GS_gps_parms_assign = GS_gps_parms_assign)
         }
         my_counter$reset()
@@ -1432,7 +1476,7 @@ modelbased_growthparameters.bgmfit <-
                                                             # spline_eval_array = spline_eval_array,
                                                             # xg_array = xg_array,
                                                             # xg_curve_array = xg_curve_array,
-                                                            # call_R_stan = call_R_stan,
+                                                            # call_function = call_function,
                                                             # GS_gps_parms_assign = GS_gps_parms_assign
                                                           ) ,
                                                           future.globals = future_globals_list,
@@ -1455,7 +1499,7 @@ modelbased_growthparameters.bgmfit <-
       names_parm <- c(names_parm, "drawid")
       
       parm_sort_keys      <- c('drawid','rowdf','piece') # could be c(7, 6) etc
-      parm_is.finite_keys <- c('x','d0','d1')
+      parm_is.finite_keys <- c('x','d0','d1', 'peak')
       parm_is.na_keys     <- c('x','d0','d1', 'peak')
       
       dt <- data.table::as.data.table(bind_draws_parm)
@@ -1464,12 +1508,18 @@ modelbased_growthparameters.bgmfit <-
       # Sort rows
       dt <- dt[order(dt[, .SD, .SDcols = parm_sort_keys], na.last = FALSE)]
       
+
       # This is when output is directly obtained from within Stan
-      # Set as NA 
+      # Set as NA -> not working with most recent data.table - insetad
       # dt[, parm_is.finite_keys][!is.finite(dt[, parm_is.finite_keys])] <- NA
       
+      if(call_function == "Stan") {
+        dt <- dt[, lapply(.SD, function(x) ifelse(!is.finite(x), NA, x))]
+      }
+        
       # Drop all NA rows 
       # dt <- na.omit(dt, cols=parm_is.na_keys, invert=FALSE)
+      
       
       # apply function to x
       dt[, 'x']         <- model$model_info$ixfuntransform2(dt[, 'x'])
@@ -1609,13 +1659,12 @@ modelbased_growthparameters.bgmfit <-
       SplineCall_d1[['derivs']] <- 1
       
       
-      if(call_R_stan == "R") {
+      if(call_function == "R") {
         GS_gps_parms_assign <- GS_gps_parms_R
-      } else if(call_R_stan == "Stan") {
-        stop("please use call_R_stan == 'R'")
+      } else if(call_function == "Stan") {
+        stop("please use call_function == 'R'")
         GS_gps_parms_assign <- GS_gps_parms_stan
       }
-      
       
       
      
