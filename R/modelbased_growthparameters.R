@@ -16,31 +16,73 @@
 #' @inheritParams marginal_growthparameters.bgmfit
 #' @inheritParams brms::fitted.brmsfit
 #' 
-#' @param parameter_method An integer (default \code{1}) specifying the approach
-#'   used to compute growth parameters. The \code{parameter_method = 1}
-#'   implements the true model based estimation of growth parameters because it
-#'   splits the spline curve into pieces of cubic polynomials that are then
-#'   differentiated to get the growth parameters. The \code{parameter_method =
-#'   2}, on the other hand, first gets the population average estimate of age of
-#'   interest and then plugs that into the equation that adjust the population
-#'   average age estimates to the individual estimates via the random effects.
+#' @param parameter A single character string or a character vector specifying
+#'   the growth parameter(s) to be estimated. Options include age at peak growth
+#'   velocity (\code{'apgv'}) and \code{'atgv'} (age at takeoff growth
+#'   velocity). The corresponding distance and velocity at \code{'apgv'} and
+#'   \code{'atgv'} are computed by default.
 #' 
-#' @param add_xtm A logical (default \code{FALSE}) to indicate whether to
+#' @param parameter_method An integer (default = \code{1}) that specifies the
+#'   method used to compute individual-level growth parameters from fitted
+#'   spline models.
+#'
+#'   Two methods are available:
+#'
+#'   \describe{
+#'     \item{\code{1} (Model-based differentiation)}{
+#'       This method estimates growth parameters by directly leveraging the structure
+#'       of the fitted spline model. The spline curve is segmented into pieces of
+#'       cubic polynomials. Each segment is then analytically differentiated to obtain
+#'       first and second derivatives, which represent the growth velocity and
+#'       acceleration, respectively. This approach is more faithful to the underlying
+#'       model and is recommended when the goal is to derive precise, model-consistent
+#'       growth characteristics.
+#'     }
+#'     \item{\code{2} (Plug-in adjustment using random effects)}{
+#'       This method takes a two-step approach. First, it calculates the population-level
+#'       average estimate of the age or time point of interest. Then, it adjusts this
+#'       estimate for individual subjects by incorporating random effects from the model.
+#'       This approach is computationally simpler and may be preferable when derivative
+#'       estimation from the spline model is not feasible or when interpretation in terms
+#'       of deviations from the population norm is of primary interest.
+#'     }
+#'   }
+#'
+#' @param re_formula Option to indicate whether or not to include
+#'   individual/group-level effects in the estimation. When \code{NA} (default),
+#'   individual-level effects are excluded, and population average growth
+#'   parameters are computed. When \code{NULL}, individual-level effects are
+#'   included in the computation, and the resulting growth parameters are
+#'   individual-specific.
+#' 
+#' @param add_xtm A logical (default \code{FALSE}) to indicate whether to 
 #'   compute \code{x} and \code{y} adjusted to the mean. Ignored if
-#'   \code{parameter_method == 1}.
+#'   \code{parameter_method == 1}. Note that \code{add_xtm} does not affect the 
+#'   estimation of parameters.
 #' 
-#' @param subset_by A logical (default \code{NULL}) to subset unique row per
-#'   \code{id}. This is available only if \code{parameter_method == 2}. Note
-#'   that \code{subset_by} is ignored if \code{add_xtm = TRUE}. When 
-#'   \code{subset_by = NULL}, it is automatically set as \code{by} i.e., 
-#'   \code{subset_by = by}. To over ride this automatic setting, set
-#'   \code{subset_by} as empty string (\code{subset_by = ""}).
+#' @param subset_by A logical or character string (default = \code{NULL}) that
+#'   determines how to subset the data to retain a single unique row per
+#'   \code{id}. This parameter is only used when \code{parameter_method == 2}
+#'   and is ignored if \code{add_xtm = TRUE}.
+#'
+#'   When \code{subset_by = NULL}, the function automatically sets
+#'   \code{subset_by} to the value of the \code{by} argument (i.e.,
+#'   \code{subset_by = by}). To override this default behavior and skip
+#'   subsetting altogether, set \code{subset_by = ""} (an empty string).
+#'
+#'   This option is useful when multiple rows per \code{id} are present and a
+#'   reduction to one representative row per individual is needed for downstream
+#'   calculations.
+#' 
+#' @param call_R_stan A character string indicating the source of the function 
+#'   used for computation—either a native \code{R} implementation or a 
+#'   compiled function exposed from \code{Stan}. Valid options are 
+#'   \code{"R"} and \code{"Stan"}.
 #'   
-#' @param call_R_stan A character string to indicate whether to use \code{R}
-#'   function (\code{call_R_stan = "R"}) or one exposed from \code{Stan}
-#'   (\code{call_R_stan = "Stan"}). Currently only \code{call_R_stan = "R"}
-#'   allowed.
-#' 
+#'   Currently, only \code{call_R_stan = "R"} is supported; setting 
+#'   \code{call_R_stan = "Stan"} will result in an error. This parameter is 
+#'   included for future compatibility, allowing potential integration with 
+#'   \code{Stan}-based computational back ends.
 #' 
 #' @param ... Additional arguments passed to the function. 
 #' 

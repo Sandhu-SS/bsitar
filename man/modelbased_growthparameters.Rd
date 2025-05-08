@@ -129,12 +129,7 @@ individual/group-level effects in the estimation. When \code{NA} (default),
 individual-level effects are excluded, and population average growth
 parameters are computed. When \code{NULL}, individual-level effects are
 included in the computation, and the resulting growth parameters are
-individual-specific. In both cases (\code{NA} or \code{NULL}), continuous
-and factor covariates are appropriately included in the estimation.
-Continuous covariates are set to their means by default (see
-\code{numeric_cov_at} for details), while factor covariates remain
-unaltered, allowing for the estimation of covariate-specific population
-average and individual-specific growth parameters.}
+individual-specific.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -157,15 +152,10 @@ where a new level is assigned all of the posterior draws of the same
 (randomly chosen) existing level.}
 
 \item{parameter}{A single character string or a character vector specifying
-the growth parameter(s) to be estimated. Options include \code{'tgv'}
-(takeoff growth velocity), \code{'atgv'} (age at takeoff growth velocity),
-\code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
-velocity), \code{'cgv'} (cessation growth velocity), \code{'acgv'} (age at
-cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
-(default), age at peak growth velocity (\code{'apgv'}) is estimated. When
-\code{parameter = 'all'}, all six parameters are estimated. Note that the
-\code{'all'} option cannot be used when the \code{by} argument is set to
-\code{TRUE}.}
+the growth parameter(s) to be estimated. Options include age at peak growth
+velocity (\code{'apgv'}) and \code{'atgv'} (age at takeoff growth
+velocity). The corresponding distance and velocity at \code{'apgv'} and
+\code{'atgv'} are computed by default.}
 
 \item{xrange}{An integer to set the predictor range (e.g., age) when
 executing the interpolation via \code{ipts}. By default, \code{NULL} sets
@@ -718,30 +708,60 @@ calling function, \code{'prepare_transformations()'}.}
 specified via \code{autocor} should be included in the predictions.
 Defaults to \code{TRUE}.}
 
-\item{parameter_method}{An integer (default \code{1}) specifying the approach
-used to compute growth parameters. The \code{parameter_method = 1}
-implements the true model based estimation of growth parameters because it
-splits the spline curve into pieces of cubic polynomials that are then
-differentiated to get the growth parameters. The \code{parameter_method =
-  2}, on the other hand, first gets the population average estimate of age of
-interest and then plugs that into the equation that adjust the population
-average age estimates to the individual estimates via the random effects.}
+\item{parameter_method}{An integer (default = \code{1}) that specifies the
+method used to compute individual-level growth parameters from fitted
+spline models.
 
-\item{subset_by}{A logical (default \code{NULL}) to subset unique row per
-\code{id}. This is available only if \code{parameter_method == 2}. Note
-that \code{subset_by} is ignored if \code{add_xtm = TRUE}. When
-\code{subset_by = NULL}, it is automatically set as \code{by} i.e.,
-\code{subset_by = by}. To over ride this automatic setting, set
-\code{subset_by} as empty string (\code{subset_by = ""}).}
+Two methods are available:
+
+\describe{
+\item{\code{1} (Model-based differentiation)}{
+This method estimates growth parameters by directly leveraging the structure
+of the fitted spline model. The spline curve is segmented into pieces of
+cubic polynomials. Each segment is then analytically differentiated to obtain
+first and second derivatives, which represent the growth velocity and
+acceleration, respectively. This approach is more faithful to the underlying
+model and is recommended when the goal is to derive precise, model-consistent
+growth characteristics.
+}
+\item{\code{2} (Plug-in adjustment using random effects)}{
+This method takes a two-step approach. First, it calculates the population-level
+average estimate of the age or time point of interest. Then, it adjusts this
+estimate for individual subjects by incorporating random effects from the model.
+This approach is computationally simpler and may be preferable when derivative
+estimation from the spline model is not feasible or when interpretation in terms
+of deviations from the population norm is of primary interest.
+}
+}}
+
+\item{subset_by}{A logical or character string (default = \code{NULL}) that
+determines how to subset the data to retain a single unique row per
+\code{id}. This parameter is only used when \code{parameter_method == 2}
+and is ignored if \code{add_xtm = TRUE}.
+
+When \code{subset_by = NULL}, the function automatically sets
+\code{subset_by} to the value of the \code{by} argument (i.e.,
+\code{subset_by = by}). To override this default behavior and skip
+subsetting altogether, set \code{subset_by = ""} (an empty string).
+
+This option is useful when multiple rows per \code{id} are present and a
+reduction to one representative row per individual is needed for downstream
+calculations.}
 
 \item{add_xtm}{A logical (default \code{FALSE}) to indicate whether to
 compute \code{x} and \code{y} adjusted to the mean. Ignored if
-\code{parameter_method == 1}.}
+\code{parameter_method == 1}. Note that \code{add_xtm} does not affect the
+estimation of parameters.}
 
-\item{call_R_stan}{A character string to indicate whether to use \code{R}
-function (\code{call_R_stan = "R"}) or one exposed from \code{Stan}
-(\code{call_R_stan = "Stan"}). Currently only \code{call_R_stan = "R"}
-allowed.}
+\item{call_R_stan}{A character string indicating the source of the function
+used for computation—either a native \code{R} implementation or a
+compiled function exposed from \code{Stan}. Valid options are
+\code{"R"} and \code{"Stan"}.
+
+Currently, only \code{call_R_stan = "R"} is supported; setting
+\code{call_R_stan = "Stan"} will result in an error. This parameter is
+included for future compatibility, allowing potential integration with
+\code{Stan}-based computational back ends.}
 
 \item{newdata_fixed}{An indicator to specify whether to check for the data
 format and structure of the user provided \code{newdata} and apply needed
