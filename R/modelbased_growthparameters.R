@@ -1154,6 +1154,10 @@ modelbased_growthparameters.bgmfit <-
       if(parameter_method == 1) {
       ##############################################################
         
+        if(add_xtm) {
+          stop("For add_xtm = TRUE, please use parameter_method = 1")
+        }
+        
       nlpar_fixed <- array(NA, dim = c(length(eval(draw_ids_seq)),
                                        nrow(newdata),
                                        length(create_abcd_s_names_vector)))
@@ -1533,15 +1537,15 @@ modelbased_growthparameters.bgmfit <-
       
       peak_takeoff_data_draw     <- dt
       peak_takeoff_data_draw     <- na.omit(peak_takeoff_data_draw, cols=parm_is.na_keys, invert=FALSE)
+      
       # one_peak_data_draw <- peak_data_draw[,.SD[(peak == 1 & d1 == max(d1))], by = .(drawid, rowdf) ]
       # one_peak_data_draw <- one_peak_data_draw %>% collapse::fgroup_by(drawid, rowdf, peak, piece) %>% 
       #   collapse::fmutate(xid = collapse::seqid(piece) )
       # 
       # 
+      
       peak_indices    <- peak_takeoff_data_draw[, .I[peak == 1 & d1 == max(d1) ], by = c('drawid', 'rowdf', 'piece')]$V1
       peak_data_draw  <- collapse::fsubset(peak_takeoff_data_draw, peak_indices)
-      
-      
       
       if(nrow(peak_data_draw) > 0) {
         apgv_draw    <- peak_data_draw %>% 
@@ -1576,7 +1580,6 @@ modelbased_growthparameters.bgmfit <-
         
         peak_parameters <- CustomDoCall(marginal_growthparameters, 
                                         marginal_growthparameters_args)
-        
 
       } # if(nrow(peak_data_draw) > 0) {
       
@@ -1628,7 +1631,6 @@ modelbased_growthparameters.bgmfit <-
         
       } # if(nrow(takeoff_data_draw) > 0) {
       
-      
       if(parm == 'apgv') {
         out <- peak_parameters
       }
@@ -1647,7 +1649,6 @@ modelbased_growthparameters.bgmfit <-
       
       # change the case, after bind with xtm
       out <- data.table::setnames(out, peak_names.ors__2)
-      
       
       return(out)
       
@@ -1680,17 +1681,13 @@ modelbased_growthparameters.bgmfit <-
         GS_gps_parms_assign <- GS_gps_parms_stan
       }
       
-      
      
       nlpar_fixed <- array(NA, dim = c(length(eval(draw_ids_seq)),
                                        nrow(newdata),
                                        length(create_abcd_s_names_vector)))
       
       nlpar_random <- nlpar_coeffs <- nlpar_fixed
-      
-      
-      # CustomDoCall
-      
+
       posterior_linpred_args_re_NA <-
         posterior_linpred_args_re_NULL <-
         posterior_linpred_args
@@ -1738,39 +1735,6 @@ modelbased_growthparameters.bgmfit <-
       set_frame_rows      <- set_frame_rows %>% dplyr::mutate(row_index = dplyr::row_number())
       set_frame_rows_cols <- c(get_data_cols.org, 'row_index')
 
-      # No subset here - because nlpar b0 is all rows and we need same n nrows
-      # subset will be executed later 
-      
-      # if(is.null(subset_by)) {
-      #   subset_data_by <- "acrossrows"
-      # } else {
-      #   subset_data_by <- subset_by
-      # }
-      # 
-      # subset_data_by <- NULL
-      # 
-      # if(!is.null(subset_data_by)) {
-      #   if(subset_data_by == "acrossrows") {
-      #     subset_data_by_names <- create_abcd_s_names_vector
-      #   } else if(subset_data_by == "fixed") {
-      #     subset_data_by_names <- onlyfixed
-      #   } else if(subset_data_by == "random") {
-      #     subset_data_by_names <- create_abcd_names_vector
-      #   } else {
-      #     if(!is.character(subset_by)) {
-      #       # stop("subset_by must be a single character string")
-      #     } else
-      #       subset_data_by_names <- subset_data_by
-      #   }
-      # 
-      #   set_dataf_m   <- data.table:::unique.data.table(data.table::as.data.table(set_frame_rows),
-      #                                                   by = subset_data_by_names)
-      # } else if(is.null(subset_data_by)) {
-      #   set_dataf_m <- set_frame_rows
-      #   subset_data_by_names <- NULL
-      # }
-      
-      
       set_dataf_m          <- set_frame_rows
       subset_data_by_names <- NULL
       
@@ -2013,8 +1977,6 @@ modelbased_growthparameters.bgmfit <-
         return(mat.adj)
       }
      
-
-      
       
       onex00 <- set_dataf_m_collapse %>% collapse::join(onex0, on = by,
                                               how = "left",
@@ -2022,8 +1984,6 @@ modelbased_growthparameters.bgmfit <-
                                               verbose = FALSE)
       
       onex00 <- data.table::as.data.table(onex00)
-      
-
 
       array_dim     <- set_nrows_n
       pieces_dim    <- 1
@@ -2057,17 +2017,6 @@ modelbased_growthparameters.bgmfit <-
         parm_mat_dim <- parm_mat_dim + 2
       }
       
-      # nlpar_fixed <<- nlpar_fixed
-      # extend_array <<- extend_array
-      # nlpar_fixed_names_dim3_add <<- nlpar_fixed_names_dim3_add
-      # which_dim <<- which_dim
-      
-      # nlpar_fixed <- abind::abind(nlpar_fixed, 
-      #                      array(extend_array, 
-      #                            dim = c(dim(nlpar_fixed)[1], 
-      #                                    dim(nlpar_fixed)[2], 
-      #                                    length(nlpar_fixed_names_dim3_add))), 
-      #                      along = which_dim)
       
       Sliced <- aperm(`dim<-`(t(extend_array), 
                               c(ncol(extend_array), 
@@ -2080,12 +2029,9 @@ modelbased_growthparameters.bgmfit <-
       attr(nlpar_fixed, "dimnames")[[which_dim]] <- c(nlpar_fixed_names_dim3, 
                                                       nlpar_fixed_names_dim3_add)
       
-
-      
       mat.adj            <- matrix(NA_real_, nrow = array_dim, ncol = parm_mat_dim )
       # set as data.table for rowbind()
       mat.adj            <- data.table::as.data.table(mat.adj)
-      
       if(!future) {
         collect_draws_parm <- list()
         for (drawni in 1:set_draws_n) {
@@ -2096,42 +2042,7 @@ modelbased_growthparameters.bgmfit <-
                                 create_s_names_vector = create_s_names_vector,
                                 add_xtm = add_xtm,
                                 callvia = 'base')
-        }
-        
-        # collect_draws_parm <- list()
-        # for (drawni in 1:set_draws_n) {
-        #   setdat_mat_fixed  <- nlpar_fixed [drawni, ,]
-        #   setdat_mat_random <- nlpar_random[drawni, ,]
-        #   spmat             <- setdat_mat_fixed[, create_s_names_vector]
-        #   setx0             <- setdat_mat_fixed[, 'Xestimate']
-        #   setx              <- funx_(setx0)
-        #   setx              <- setx - setdat_mat_fixed[, 'b']
-        #   
-        #   x.adj             <- setx/exp(setdat_mat_random[,"c"]) + 
-        #                         setdat_mat_random[,"b"] + 
-        #                         setdat_mat_fixed[, 'b']
-        #   
-        #   x.adj             <- ifunx_(x.adj)
-        #   
-        #   setx0             <- setx * exp(setdat_mat_fixed[, 'c'])
-        #   
-        #   y.adj             <- rowSums(eval(SplineCall_d0) * spmat) + 
-        #                        setdat_mat_random[,"a"] + 
-        #                        setdat_mat_random[,"d"] * x.adj +
-        #                        setdat_mat_fixed[, 'a']
-        #   
-        #   v.adj             <- rowSums(eval(SplineCall_d1) * spmat) * 
-        #                        exp( setdat_mat_fixed[, 'c'] + 
-        #                        setdat_mat_random[,"c"]) + 
-        #                        setdat_mat_random[,"d"] 
-        #   
-        #   mat.adj[, 1] <- x.adj
-        #   mat.adj[, 2] <- y.adj
-        #   mat.adj[, 3] <- v.adj
-        #   mat.adj[, 4] <- drawni
-        #   mat.adj[, 5] <- setdat_mat_fixed[, 'fomerge']
-        #   collect_draws_parm[[drawni]] <- mat.adj
-        # }
+        } # for (drawni in 1:set_draws_n) {
       } # if(!future) {
       
       
@@ -2139,8 +2050,7 @@ modelbased_growthparameters.bgmfit <-
       if(future) {
         # setup future
         environment(wraper_for_drawni_2) <- environment()
-        future_globals_list = list(
-                                    mat.adj = mat.adj,
+        future_globals_list = list( mat.adj = mat.adj,
                                    `%>%` = bsitar::`%>%`,
                                    my_counter = my_counter)
         # call future
@@ -2190,7 +2100,6 @@ modelbased_growthparameters.bgmfit <-
      peak_data_draw        <- collapse::fselect(peak_data_draw, 
                                                 peak_data_draw_select)
      
-    
      # One can subset peak_data_draw but not xtm_data_draw
      xtm_data_draw <- peak_data_draw
      
@@ -2200,18 +2109,25 @@ modelbased_growthparameters.bgmfit <-
                                                        by = group_by_indices]$V1]
      }
      
-     xid_by <- c("drawid", "parameter", "id") # "xid"
+     xid_by <- c("drawid", "parameter", "id") 
+     
+     if(parm == 'apgv') {
+       parameter_names_vec <- c('apgv', 'pgv', 'spgv')
+     }
+     if(parm == 'atgv') {
+       parameter_names_vec <- c('atgv', 'tgv', 'stgv')
+     }
      
       if(nrow(peak_data_draw) > 0) {
         apgv_draw    <- peak_data_draw %>% 
           collapse::fmutate(estimate = x) %>% 
-          collapse::fmutate(parameter = 'apgv') 
+          collapse::fmutate(parameter = parameter_names_vec[1]) 
         pgv_draw    <- peak_data_draw %>% 
           collapse::fmutate(estimate = d1) %>% 
-          collapse::fmutate(parameter = 'pgv') 
+          collapse::fmutate(parameter = parameter_names_vec[2]) 
         spgv_draw    <- peak_data_draw %>% 
           collapse::fmutate(estimate = d0) %>% 
-          collapse::fmutate(parameter = 'spgv')
+          collapse::fmutate(parameter = parameter_names_vec[3])
         
         all_peak_data_draw <- collapse::rowbind(apgv_draw, pgv_draw, spgv_draw)
         
@@ -2285,8 +2201,6 @@ modelbased_growthparameters.bgmfit <-
      # change the case, after bind with xtm
      peak_parameters <- data.table::setnames(peak_parameters, peak_names.ors__2)
      
-     
-      
       return(peak_parameters) 
       ##############################################################
     } # if(parameter_method == 1) { else if(parameter_method == 2) {
@@ -2299,13 +2213,5 @@ modelbased_growthparameters.bgmfit <-
 modelbased_growthparameters <- function(model, ...) {
   UseMethod("modelbased_growthparameters")
 }
-
-
-
-
-
-# tictoc::tic()
-# modelbased_growthparameters(model, re_formula = NULL, draw_ids = 1:2)
-# tictoc::toc()
 
 
