@@ -1272,7 +1272,14 @@
 #'  \itemize{
 #'    \item \code{'random'}: Random initialization.
 #'    \item \code{'prior'}: Uses prior distribution values.
+#'    \item \code{'prior'}: A vector of length equal to the number of lower 
+#'    triangle elements. For example, the initials for a model with three random 
+#'    effects parameters can be specified as specified as
+#'    \code{gr_init_cor = list(c(0.5. 0.5, 0.5))}
 #'  }
+#'  
+#'  Note that when \code{vcov_init_0 = TRUE}, the \code{gr_init_cor} will be 
+#'  set as '0'.
 #'  
 #' @param sigma_init_cor Initial values for the correlation parameters of
 #'   distributional random effects parameter \code{sigma} (default
@@ -3012,7 +3019,7 @@ bsitar <- function(x,
    # if(verbose) message("'smat_include_stan' is set to '0'")
   }
  
-   
+ 
    if(verbose) {
      message(paste0("setting spline type as '", smat, "'"))
      if(smat != "rcs") {
@@ -3367,7 +3374,7 @@ bsitar <- function(x,
     xxx
   }
   
-  
+ 
   # set multivariate arguments
   if (gsub("\\s", "",
            paste(deparse(substitute(multivariate)), collapse = "")) == "NULL" |
@@ -3704,7 +3711,7 @@ bsitar <- function(x,
          " denoting the group idetifier")
   }
   
-  
+ 
   # Set up sigma_group_arg arguments 
   if (!paste(deparse(substitute(sigma_group_arg)), collapse = "") == "NULL"  &
       !any(grepl("^list", gsub("\\s", "", paste(
@@ -4393,12 +4400,19 @@ bsitar <- function(x,
       resp <- ""
     subindicatorsi <- subindicators[ii]
     
+    
  
     for (i in convert_to_list) {
       if (!i %in% single_args) {
         assign(paste0(i, "s", "i"), eval(parse(text = paste0(i, "s")))[ii])
       }
     }
+    
+    
+    # print(gr_init_cors)
+    # print(gr_init_corsi)
+    # print("gr_init_corsi")
+    # stop()
     
     if (is.null(group_arg$groupvar)) {
       group_arg$groupvar <- idsi
@@ -4433,6 +4447,8 @@ bsitar <- function(x,
       }
     }
     
+   
+    
     for (agsxi in letters[1:26]) {
       if(is.null(arguments[[paste0(agsxi, "_", "formula" , "")]])) {
         assign(paste0(agsxi, "_", "formula",        "si") , NULL)
@@ -4448,6 +4464,8 @@ bsitar <- function(x,
         assign(paste0(agsxi, "_", "cov_init_sd",    "si") , NULL)
       }
     }
+    
+    
     
     validate_fixed_random_parms <- function(fixedsi, 
                                             randomsi, 
@@ -5035,7 +5053,7 @@ bsitar <- function(x,
       sigma_set_higher_levels <- FALSE
     }
     
-   
+    
     
     check_formuals <-
       c(
@@ -5588,7 +5606,7 @@ bsitar <- function(x,
     }
     
     
-    
+   
     
     # if (!is.null(sigmaxoffset[[1]][1]) & sigmaxoffset != "NULL") {
     #   sigmaxoffset <- sigmaxoffset
@@ -6199,7 +6217,7 @@ bsitar <- function(x,
     SplineCallvaluelist[[ii]]           <- SplineCall
    
     
-    
+   
     
     
     
@@ -6819,7 +6837,7 @@ bsitar <- function(x,
       if(!exists(gwatx__)) assign(gwatx__, 0)
     }
     
-  
+    
     
     # TODO
     # acov_sd etc setting numeric but later can be worked out to infer from
@@ -6851,6 +6869,7 @@ bsitar <- function(x,
       assign('mvr_init_rescorsi',     '0')
       assign('r_init_zsi',            '0')
     }
+    
     
     
     
@@ -8384,6 +8403,7 @@ bsitar <- function(x,
   }
   
 
+ 
   
   if (!is.null(brmsinits)) {
     if (multivariate$mvar & multivariate$cor == "un") {
@@ -8437,6 +8457,7 @@ bsitar <- function(x,
         M <- m_lower + m + m_upper
         M
       }
+      
      
       if(!is.null(t_names)) { # 17.02.2025
         tt_names <- apply(combn(t_names, 2), 2, paste, collapse = "_")
@@ -8695,6 +8716,8 @@ bsitar <- function(x,
       temp_prior <- set_self_priors
     }
       
+    # print(brmsinits)
+    # stop()
     
     
     # 24.08.2024

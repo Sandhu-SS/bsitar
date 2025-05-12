@@ -1346,7 +1346,14 @@ options are:
 \itemize{
 \item \code{'random'}: Random initialization.
 \item \code{'prior'}: Uses prior distribution values.
-}}
+\item \code{'prior'}: A vector of length equal to the number of lower
+triangle elements. For example, the initials for a model with three random
+effects parameters can be specified as specified as
+\code{gr_init_cor = list(c(0.5. 0.5, 0.5))}
+}
+
+Note that when \code{vcov_init_0 = TRUE}, the \code{gr_init_cor} will be
+set as '0'.}
 
 \item{sigma_init_cor}{Initial values for the correlation parameters of
 distributional random effects parameter \code{sigma} (default

@@ -3235,6 +3235,8 @@ set_priors_initials <- function(a_prior_beta,
   
   initial_in_datazz <- initial_in_data
   
+  
+  
   if (is.list(initial_in_datazz) & length(initial_in_datazz) == 0) {
     initial_in_datazz <- NULL
   }
@@ -3276,7 +3278,7 @@ set_priors_initials <- function(a_prior_beta,
         } else if (grepl("^Intercept_sigma", ik_names)) {
           list_ck[[ik]] <- initial_in_datazz[[ik_j]]
           names(list_ck[[ik]]) <- ik_names
-          print(initial_in_datazz[[ik_j]])
+          
         } else if (multivariate$mvar & multivariate$rescor &
                    grepl("^Lrescor", ik_names)) {
           list_ck_rescor[[ik]] <- initial_in_datazz[[ik_j]]
@@ -3555,6 +3557,8 @@ set_priors_initials <- function(a_prior_beta,
     scode_auxillary <- NULL
   }
   
+  
+  
   ##################
   out_listx <- initials
   for (ili in names(initials)) {
@@ -3585,6 +3589,7 @@ set_priors_initials <- function(a_prior_beta,
   
   # When sigma  formula is ~1+.., then first element is Intercept_sigma and the 
   # remaining are b_sigma
+  
   
   
   

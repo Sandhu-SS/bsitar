@@ -356,6 +356,8 @@ prepare_initials <- function(init_argument,
              length(x))
     }
     m_lower[lower.tri(m_lower, diag = FALSE)] <- x
+    # m_lower <- unlist(m_lower)
+    
     m_upper <- t(m_lower)
     M <- m_lower + m + m_upper
     M
@@ -895,6 +897,7 @@ prepare_initials <- function(init_argument,
   ################################################
   # class cor - cor
   if (class == 'cor' & suffix == 'cor') {
+    
     name_parm <- paste0('L', "_", ii)
     suffix <- 'cor'
     
@@ -912,6 +915,7 @@ prepare_initials <- function(init_argument,
     
     lowerbound <- lowerbound
     upperbound <- upperbound
+   
     
     out_list <- list_collect <- list()
     start_cnt <- 0
@@ -951,8 +955,23 @@ prepare_initials <- function(init_argument,
                 length_args = NC_dims
               )
           } else {
+            # 12.05.2025
+            if(grepl("list\\(", ept(name_initialsi))) {
+              name_initialsi <- ept(name_initialsi) 
+              name_initialsi <- ept(name_initialsi) %>% unlist() %>% deparse()
+            } else if(grepl("list\\(list\\(", ept(name_initialsi))) {
+              name_initialsi <- ept(name_initialsi) 
+              name_initialsi <- ept(name_initialsi) 
+              name_initialsi <- ept(name_initialsi) %>% unlist() %>% deparse()
+            }
+            if(grepl("^c\\(", name_initialsi)) {
+              set_ept_name_initialsi <- name_initialsi
+            } else {
+              set_ept_name_initialsi <- ept(name_initialsi)
+            }
+            
             check_evalation_of_numeric_init_obj(
-              ept(name_initialsi),
+              set_ept_name_initialsi,
               check = 'args',
               x = name_initialsi,
               pname_ = 'xxx',
@@ -962,7 +981,7 @@ prepare_initials <- function(init_argument,
               allowed_init_options = allowed_init_options,
               splitmvar_w2 = splitmvar_w2
             )
-            name_initialsi <- ept(name_initialsi)
+            
             if (is.numeric(ept(name_initialsi)) |
                 !is.null(ept(name_initialsi))) {
               if (length(ept(name_initialsi)) == 1) {
