@@ -104,6 +104,9 @@ prepare_function_nsp <- function(x,
   }
   
   
+  
+  
+  
   # "X" for rcsfunmultadd 
   
   include_fun_c <- c(spfncname
@@ -1099,6 +1102,11 @@ prepare_function_nsp <- function(x,
   bknotsx = append_row(head(knots, 1), tail(knots, 1));
     "
     
+    if(fast_nsk) {
+      add_knotinfo_without_addingknots_split <- add_knotinfo
+    }
+    
+    
     add_knotinfo <- paste0(add_knotinfo, knots_split)
     
     
@@ -1332,6 +1340,56 @@ prepare_function_nsp <- function(x,
             endof_fun)
     
     
+    if(fast_nsk) {
+      fast_nsk_body <- "
+  vector[nknots] yknots;
+  vector[nknots] spl_coeffs;
+  array[N] int x_pos_knots;"
+      
+      nknotsxxi_c <- c()
+      for(nknotsxxi in 1:nknots) {
+        if(nknotsxxi == 1) {
+          addxx <- "
+  yknots[1] = 0;"
+        } else {
+          addxx <- paste0("  yknots[", nknotsxxi, "] = ", "s", nknotsxxi-1, "[1];" )
+        }
+        nknotsxxi_c <- c(nknotsxxi_c, addxx)
+      }
+      nknotsxxi_c <- paste(nknotsxxi_c, collapse = "\n")
+      
+      
+      
+      add_to_nknotsxxi_c <- "
+ //     vector[nknots] xknots = knots;
+  vector[nknots] xknots = (knots - mean(b) )  ;
+  vector[N] btemp =  rep_vector(0.0, N);
+  vector[N] ctemp =  rep_vector(0.0, N);
+//  vector[N] X2 = Xm - b;
+  spl_coeffs = spline_getcoeffs( knots, yknots ) ;
+  x_pos_knots = spline_findpos( knots, X, b, exp(ctemp) ) ;
+  vector[N] add_spl = spline_eval(knots, yknots, spl_coeffs, X, x_pos_knots)   ;
+  vector[N] A=a;"
+      
+      endof_fun_fast_nsk <- "
+  return(A+add_spl);
+  } // end of spline function
+  "
+      
+      fast_nsk_body <- paste(fast_nsk_body, nknotsxxi_c, add_to_nknotsxxi_c)
+      
+      fast_nsk_rcsfun <-
+        paste(start_fun,
+              add_knotinfo_without_addingknots_split,
+              fast_nsk_body,
+              endof_fun_fast_nsk)
+    } # if(fast_nks) {
+    
+    
+    
+    
+    # cat(rcsfun)
+    # stop()
     
     ######################################################################
     # funsi to transform and itransform
@@ -1394,9 +1452,14 @@ prepare_function_nsp <- function(x,
     )
     
     
+    
+    
     returnmu_multadd <- returnmu
     returnmu_multadd <- gsub("XQ",  vector_X_name, returnmu_multadd, fixed = T)
     returnmu_multadd <- gsub("spl", vector_X_name, returnmu_multadd, fixed = T)
+    
+    
+   
     
     
     start_fun_multadd <-
@@ -3107,7 +3170,17 @@ prepare_function_nsp <- function(x,
     rcsfun <- paste0(include_str, "\n", rcsfun)
   }
  
+  # cat(getknots_fun_raw)
+  # cat(fast_nks_rcsfun)
+  # stop()
  
+  if(fast_nsk) {
+    rcsfun <- paste0(fast_nsk_rcsfun_str_get(), 
+                     "\n",
+                     getknots_fun_raw, 
+                     "\n", 
+                     fast_nsk_rcsfun)
+  }
   
   
   if (!add_rcsfunmatqrinv_genquant) {
@@ -3123,7 +3196,7 @@ prepare_function_nsp <- function(x,
   # print(include_fun_names)
   # stop()
   
- #  print(cat(all_raw_str))
+ #  print(cat(rcsfun))
  # #  outx <<- all_raw_str
  #   stop()
   

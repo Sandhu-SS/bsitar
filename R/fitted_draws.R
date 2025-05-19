@@ -533,6 +533,7 @@ fitted_draws.bgmfit <-
       } # if(check_fun) {
     } # if(plot_conditional_effects_calling) {
 
+   
     
     # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)

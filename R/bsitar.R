@@ -1678,6 +1678,8 @@
 #'   \code{\link[future:plan]{plan}} (see the examples section below). This
 #'   argument can be set globally for the current \R session via the
 #'   \code{"future"} option.
+#'   
+#' @param fast_nsk Currently ignored.
 #'
 #' @param parameterization A character string specifying the type of
 #'   parameterization to use for drawing group-level random effects. Options
@@ -2046,6 +2048,7 @@ bsitar <- function(x,
                    file_compress = TRUE,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
+                   fast_nsk = FALSE,
                    parameterization = 'ncp',
                    ...) {
   
@@ -2735,14 +2738,6 @@ bsitar <- function(x,
   # read it and include as it is in the function block 
   
   
-  # 14.05.2025
-  fast_nsk <- FALSE
-  if(!is.null(getdotslist[['fast']])) {
-    fast_nsk <- TRUE
-  } 
-  
-  
-  
   allowed_spline_type <- c('rcs', 'nsp', 'nsk')
   allowed_spline_type_exception_msg <- 
     paste("The options available are:", 
@@ -3040,6 +3035,29 @@ bsitar <- function(x,
      }
    }
    
+  
+  
+  # fast_nsk <- TRUE
+  
+  # 14.05.2025
+  # fast_nsk <- FALSE
+  # if(!is.null(getdotslist[['fast']])) {
+  #   if(getdotslist[['fast']]) {
+  #     fast_nsk <- TRUE
+  #   } else {
+  #     fast_nsk <- FALSE
+  #   }
+  # } 
+  
+  
+  if(fast_nsk) {
+    if(smat != 'nsk') {
+      stop("For 'fast = TRUE', the stype must be 'nsk'")
+    }
+  }
+  
+
+  
 
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_a_form']])) {
@@ -4188,6 +4206,7 @@ bsitar <- function(x,
     'pathfinder_init',
     'data_custom',
     'genquant_xyadj',
+    "fast_nsk",
     "..."
   )
   
@@ -6206,6 +6225,10 @@ bsitar <- function(x,
     SplineCall_name         <- "SplineCall"
     
     spfncname    <- paste0(toupper(select_model), "", 'Fun')
+    
+    # 19.05.2025 -> let spfncname name be common without response
+    spfncname_common <- spfncname
+    
     getxname     <- "getX"
     getknotsname <- "getKnots"
     getpreHname  <- "getpreH"
@@ -6307,7 +6330,9 @@ bsitar <- function(x,
         "yfuntransformsi",
         "sigmaxfuntransformsi",
         "xfunxoffsettransformsi",
-        "sigmaxfunxoffsettransformsi"
+        "sigmaxfunxoffsettransformsi",
+        
+        "fast_nsk"
         
       )
     
@@ -6326,7 +6351,7 @@ bsitar <- function(x,
       }
     }
     
-  
+    
     
     if(smat == 'rcs') {
       get_s_r_funs <- 
@@ -6383,6 +6408,9 @@ bsitar <- function(x,
     if(setsigmaxvarsi) {
       # Define names for Stan functions 
       sigmaspfncname      <- paste0("sigma", spfncname)
+      # 19.05.2025 -> let spfncname name be common without response
+      sigmaspfncname_common <- sigmaspfncname
+      
       sigmagetxname       <- paste0("sigma", getxname)
       sigmagetknotsname   <- paste0("sigma", getknotsname)
       sigmagetpreHname    <- paste0("sigma", getpreHname)
@@ -9334,7 +9362,8 @@ bsitar <- function(x,
   # Just drop it 
   brm_args$subset <- NULL
   
-  
+  # 14.05.2025
+  brm_args$fast_nsk <- NULL
   
  
   if(!is.null(custom_family)) {
@@ -10871,7 +10900,8 @@ bsitar <- function(x,
       model_info[[SplineCallnamelist[[i]]]] <- SplineCallvaluelist[[i]]
     }
     
-    model_info[['StanFun_name']]  <- spfncname
+    
+    model_info[['StanFun_name']]  <- spfncname_common # spfncname
     model_info[['multivariate']]  <- multivariate
     model_info[['univariate_by']] <- univariate_by
     model_info[['nys']] <- nys
@@ -10949,7 +10979,7 @@ bsitar <- function(x,
     for (j in 1:length(setsigmaxvar_names_val)) {
       if(any(setsigmaxvar_names_val[j])) {
         
-        model_info[['sigmaStanFun_name']] <- sigmaspfncname
+        model_info[['sigmaStanFun_name']] <- sigmaspfncname_common # sigmaspfncname
         model_info[['sigmaxs']] <- sigmaxs
         model_info[['sigmaids']] <- sigmaids
         model_info[['sigmadfs']] <- sigmadfs
