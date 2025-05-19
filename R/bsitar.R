@@ -1679,7 +1679,7 @@
 #'   argument can be set globally for the current \R session via the
 #'   \code{"future"} option.
 #'   
-#' @param fast_nsk Currently ignored.
+#' @param fast_nsk Currently ignored. Placeholder for future development. 
 #'
 #' @param parameterization A character string specifying the type of
 #'   parameterization to use for drawing group-level random effects. Options

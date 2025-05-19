@@ -94,6 +94,7 @@ prepare_function_nsp <- function(x,
   sigmaxfunxoffsettransformsi <- NULL;
   
   sigmaxoffset <- NULL;
+  fast_nsk  <- NULL;
   
   
   if (!is.null(internal_function_args)) {

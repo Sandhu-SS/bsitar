@@ -110,11 +110,11 @@ bsitar(
   c_init_beta = 0,
   d_init_beta = random,
   s_init_beta = lm,
-  a_cov_init_beta = random,
-  b_cov_init_beta = random,
-  c_cov_init_beta = random,
-  d_cov_init_beta = random,
-  s_cov_init_beta = random,
+  a_cov_init_beta = 0,
+  b_cov_init_beta = 0,
+  c_cov_init_beta = 0,
+  d_cov_init_beta = 0,
+  s_cov_init_beta = 0,
   a_init_sd = random,
   b_init_sd = random,
   c_init_sd = random,
@@ -190,6 +190,7 @@ bsitar(
   file_compress = TRUE,
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
+  fast_nsk = FALSE,
   parameterization = "ncp",
   ...
 )
@@ -1768,6 +1769,8 @@ package is used for parallel execution of the chains. In this case, the
 \code{\link[future:plan]{plan}} (see the examples section below). This
 argument can be set globally for the current \R session via the
 \code{"future"} option.}
+
+\item{fast_nsk}{Currently ignored. Placeholder for future development.}
 
 \item{parameterization}{A character string specifying the type of
 parameterization to use for drawing group-level random effects. Options
