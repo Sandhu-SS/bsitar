@@ -1966,11 +1966,11 @@ bsitar <- function(x,
                    c_init_beta = 0,
                    d_init_beta = random,
                    s_init_beta = lm,
-                   a_cov_init_beta = random,
-                   b_cov_init_beta = random,
-                   c_cov_init_beta = random,
-                   d_cov_init_beta = random,
-                   s_cov_init_beta = random,
+                   a_cov_init_beta = 0,
+                   b_cov_init_beta = 0,
+                   c_cov_init_beta = 0,
+                   d_cov_init_beta = 0,
+                   s_cov_init_beta = 0,
                    a_init_sd = random,
                    b_init_sd = random,
                    c_init_sd = random,
@@ -2733,6 +2733,14 @@ bsitar <- function(x,
   # 6. include - a logical (T/F) to indicate if .stan splines be included 
   # via '#include' or 
   # read it and include as it is in the function block 
+  
+  
+  # 14.05.2025
+  fast_nsk <- FALSE
+  if(!is.null(getdotslist[['fast']])) {
+    fast_nsk <- TRUE
+  } 
+  
   
   
   allowed_spline_type <- c('rcs', 'nsp', 'nsk')
