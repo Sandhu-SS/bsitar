@@ -10753,8 +10753,24 @@ bsitar <- function(x,
       on.exit(options("cmdstanr_warn_inits" = cwarninits), add = TRUE)
     }
     
+  
+    # 23.05.2025
+    # For stanc_options "01", compilation hangs for cmdstanr when thread != NULL
+    # This does't happen for brms e,g,, 
+    # fit6 <- brm(bf(y ~ x, sigma ~ 0 + x), data = data_het,
+    #             stan_model_args = list(stanc_options = list("O1")),
+    #             backend = 'cmdstanr')
     
+    # So investigate it but for now set stanc_options NULL
     
+    if(is.null(brm_argsx$threads$threads)) {
+      if(brm_args$backend == "cmdstanr") {
+        # brm_args$stan_model_args <- list()
+        brm_args$stan_model_args$stanc_options <- NULL
+      }
+    }
+    
+
 
     if(fit_edited_scode) {
       if(brm_args$backend == "cmdstanr") {
