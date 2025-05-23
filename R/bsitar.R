@@ -10763,7 +10763,7 @@ bsitar <- function(x,
     
     # So investigate it but for now set stanc_options NULL
     
-    if(is.null(brm_argsx$threads$threads)) {
+    if(is.null(brm_args$threads$threads)) {
       if(brm_args$backend == "cmdstanr") {
         # brm_args$stan_model_args <- list()
         brm_args$stan_model_args$stanc_options <- NULL
