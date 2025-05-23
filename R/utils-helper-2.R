@@ -3278,3 +3278,58 @@ check_CustomDoCall_fun <- function(scall,
   }
   return(out)
 }
+
+
+
+
+#' An internal function to replace part of string
+#' 
+#' @details
+#' gemini
+#' 
+#' @param original_string A string
+#' @param start_pattern A string
+#' @param end_pattern A string
+#' @param replacement_text A string
+#' @param catit A logica
+#' @keywords internal
+#' @return A string
+#' @noRd
+#'
+replace_string_part <- function(original_string, 
+                                start_pattern, 
+                                end_pattern, 
+                                replacement_text,
+                                catit = F) {
+  start_pattern_raw <- start_pattern
+  end_pattern_raw   <- end_pattern
+  # Helper function to escape special regex characters
+  escape_regex <- function(string) {
+    # These are the common special regex characters that need escaping.
+    # Order matters for some, e.g., escape '\' before '['
+    special_chars <- c("\\", ".", "+", "*", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|")
+    
+    # Use 'fixed = TRUE' to treat the search pattern as a literal string
+    # when replacing, so we don't accidentally escape the escapes themselves.
+    for (char in special_chars) {
+      string <- gsub(char, paste0("\\", char), string, fixed = TRUE)
+    }
+    return(string)
+  }
+  
+  start_pattern_escaped <- escape_regex(start_pattern_raw)
+  end_pattern_escaped <- escape_regex(end_pattern_raw)
+  # Construct the full regex pattern with (?s) flag for DOTALL mode
+  regex_pattern <- paste0(
+    start_pattern_escaped,
+    "(?s).*?", # (?s) makes the dot match newlines; .*? is non-greedy
+    end_pattern_escaped
+  )
+  
+  # Perform the replacement
+  new_string <- gsub(regex_pattern, replacement_text, original_string, perl = TRUE)
+  if(catit) new_string <- cat(new_string)
+  return(new_string)
+}
+
+
