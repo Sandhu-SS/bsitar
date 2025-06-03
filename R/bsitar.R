@@ -1680,6 +1680,8 @@
 #'   \code{"future"} option.
 #'   
 #' @param fast_nsk Currently ignored. Placeholder for future development. 
+#' 
+#' @param sum_zero Currently ignored. Placeholder for future development.
 #'
 #' @param parameterization A character string specifying the type of
 #'   parameterization to use for drawing group-level random effects. Options
@@ -2048,7 +2050,8 @@ bsitar <- function(x,
                    file_compress = TRUE,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
-                   fast_nsk = FALSE,
+                   fast_nsk = 0L,
+                   sum_zero = FALSE,
                    parameterization = 'ncp',
                    ...) {
   
@@ -2958,8 +2961,7 @@ bsitar <- function(x,
   }
   
   
-  
-  if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
+  if((smat == 'nsp' | smat == 'nsk') & !spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
     smat_normalize    <- as.integer(spline_type_list[['normalize']])
@@ -2972,7 +2974,7 @@ bsitar <- function(x,
     SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
     SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
     # when spline type set via 'stype', set normalize = F & include T
-  } else if((smat == 'nsp' | smat == 'nsk') & !spline_type_via_stype) {
+  } else if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
     smat_intercept <- 0
     smat_centerval <- 0
     smat_normalize <- as.integer(spline_type_list[['normalize']])
@@ -2999,19 +3001,23 @@ bsitar <- function(x,
   } else {
     # allow further checks - for later use
   }
-   
+  
+
   # TODO work on smat_preH smat_include_stan to male them compatible
   
   # 'smat_preH' is not allowed because adding two #include does not
   # work in package
   # Hence preH is added to main .stan files 
   # i.e., over riding smat = list(preH = 1)
+  # why ???
   if(smat_preH == 1) {
     # stop("Please set preH = 0")
-    smat_preH <- 0
+ #   smat_preH <- 0
    # if(verbose) message("'preH' is set to '0'")
   }
   
+  
+
   # 'smat_include_stan' is also not working i.e., even single #include also not
   # working in package
   # Hence 'smat_include_stan' is set to 0 and will be pasted to .stan files
@@ -3037,20 +3043,12 @@ bsitar <- function(x,
    
   
   
-  # fast_nsk <- TRUE
-  
-  # 14.05.2025
-  # fast_nsk <- FALSE
-  # if(!is.null(getdotslist[['fast']])) {
-  #   if(getdotslist[['fast']]) {
-  #     fast_nsk <- TRUE
-  #   } else {
-  #     fast_nsk <- FALSE
-  #   }
-  # } 
+  if(!is.numeric(fast_nsk)) {
+    stop("'fast_nsk' must be an integer between 0 and 3")
+  }
   
   
-  if(fast_nsk) {
+  if(fast_nsk > 0) {
     if(smat != 'nsk') {
       stop("For 'fast = TRUE', the stype must be 'nsk'")
     }
@@ -4207,6 +4205,7 @@ bsitar <- function(x,
     'data_custom',
     'genquant_xyadj',
     "fast_nsk",
+    "sum_zero",
     "..."
   )
   
@@ -5439,7 +5438,9 @@ bsitar <- function(x,
       fit_edited_scode <- TRUE
     }
     
-    
+    if(sum_zero) {
+      fit_edited_scode <- TRUE
+    }
     
     
     ######################################################################
@@ -6332,7 +6333,9 @@ bsitar <- function(x,
         "xfunxoffsettransformsi",
         "sigmaxfunxoffsettransformsi",
         
-        "fast_nsk"
+        "fast_nsk",
+        
+        "sum_zero"
         
       )
     
@@ -9016,14 +9019,16 @@ bsitar <- function(x,
     } 
     
     
-    
+    cp_via <- "multi_normal_cholesky_lpdf"
+    # cp_via <- "multi_normal_lpdf"
     
     if(vcov_init_0e) {
       if(parameterization == 'cp') {
         initialsx2 <- brmsinits
         temp_stancode2cp <- edit_scode_ncp_to_cp(temp_stancode2, 
                                                  genq_only = FALSE, 
-                                                 normalize = normalize)
+                                                 normalize = normalize, 
+                                                 cp_via = cp_via)
         
         newinits <- set_init_gr_effects(temp_stancode2cp, 
                                         temp_standata2, 
@@ -9469,17 +9474,17 @@ bsitar <- function(x,
   
   
   
-  exe_model_fit <- TRUE
-  if(get_stancode |
-     get_standata |
-     get_formula |
-     get_stanvars |
-     get_priors |
-     get_priors_eval |
-     validate_priors |
-     get_init_eval) {
-    exe_model_fit <- FALSE
-  }
+  # exe_model_fit <- TRUE
+  # if(get_stancode |
+  #    get_standata |
+  #    get_formula |
+  #    get_stanvars |
+  #    get_priors |
+  #    get_priors_eval |
+  #    validate_priors |
+  #    get_init_eval) {
+  #   exe_model_fit <- FALSE
+  # }
   
   
   
@@ -10535,7 +10540,8 @@ bsitar <- function(x,
   if(parameterization == 'cp') {
     scode_final <- edit_scode_ncp_to_cp(scode_final, 
                                         genq_only = FALSE, 
-                                        normalize = normalize)
+                                        normalize = normalize, 
+                                        cp_via = cp_via)
   } else if(parameterization == 'ncp') {
     scode_final <- scode_final
   }
@@ -10577,27 +10583,56 @@ bsitar <- function(x,
   }
   
   
-  if(!exe_model_fit) {
-    if(get_priors) {
-      return(CustomDoCall(brms::get_prior, brm_args))
-    } else if(get_standata) {
-      return(CustomDoCall(brms::make_standata, brm_args))
-    } else if(get_stancode) {
-      return(scode_final)
-    } else if(get_priors_eval) {
-      return(get_priors_eval_out)
-    } else if(validate_priors) {
-      return(CustomDoCall(brms::validate_prior, brm_args))
-    } else if(get_init_eval) {
-      return(brm_args$init)
-    } else if(get_formula) {
-      return(brm_args$formula)
-    } else if(get_stanvars) {
-      return(brm_args$stanvars)
-    }
-  } 
   
   
+  exe_model_fit <- TRUE
+  if(get_stancode |
+     get_standata |
+     get_formula |
+     get_stanvars |
+     get_priors |
+     get_priors_eval |
+     validate_priors |
+     get_init_eval) {
+    exe_model_fit <- FALSE
+  }
+  
+  
+ 
+  
+  if(!fit_edited_scode) {
+   if(!exe_model_fit) {
+      if(get_priors) {
+        return(CustomDoCall(brms::get_prior, brm_args))
+      } else if(get_standata) {
+        return(CustomDoCall(brms::make_standata, brm_args))
+      } else if(get_stancode) {
+        return(scode_final)
+      } else if(get_priors_eval) {
+        return(get_priors_eval_out)
+      } else if(validate_priors) {
+        return(CustomDoCall(brms::validate_prior, brm_args))
+      } else if(get_init_eval) {
+        return(brm_args$init)
+      } else if(get_formula) {
+        return(brm_args$formula)
+      } else if(get_stanvars) {
+        return(brm_args$stanvars)
+      }
+     } # if(!fit_edited_scode) {
+  } # if(!exe_model_fit) {
+  
+  
+  # over ride exe_model_fit TRUE
+  # This to not by pass below return statements
+  fit_edited_scode_exe_model_fit <- exe_model_fit
+  exe_model_fit <- TRUE
+  
+  # exe_model_fit %>% print()
+  # fit_edited_scode %>% print()
+  # fit_edited_scode_exe_model_fit %>% print()
+  
+
   if(exe_model_fit) {
     if(brm_args$backend == "rstan") {
       if(length(brm_args$init) == 1) {
@@ -10770,9 +10805,229 @@ bsitar <- function(x,
       }
     }
     
+    # https://discourse.mc-stan.org/t/proper-use-of-sum-to-zero-vector-in-nested-multilevel-models/39536/14
+    # sqrt( N * inv(N - 1))
+    # https://discourse.mc-stan.org/t/sum-to-zero-constraints-and-multi-level-models-best-practise-example-code/39349/12
+    # real<lower=0> sigma_zu = sqrt(J / (J - 1.0)); 
+    
+    
+    
+    # scode_finalx <<- scode_final
+    # scode_final_sum_zero <- scode_finalx
+    
+    if(parameterization == "ncp") {
+      if(sum_zero) {
+        scode_final_sum_zero <- scode_final_sum_zero_int <- scode_final
+        for (i in 1:100) {
+          char_to_search <- paste0("z_", i)
+          found_char <- grepl(char_to_search, scode_final_sum_zero, fixed = T)
+          if(found_char) {
+            gsub_it <- "transformed data {"
+            # gsub_by_add <- paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " / (N_", i, " - 1.0))", ";")
+            gsub_by_add <-   paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " * inv(N_", i, " - 1.0))", ";")
+            
+            gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            
+            gsub_it <- paste0("matrix[M_", i, ", N_", i, "] z_", i, ";")
+            gsub_by <- paste0("array[M_", i, "] sum_to_zero_vector[N_", i, "] uz_", i, ";")
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            gsub_it <- paste0("matrix[N_", i, ", M_", i, "] r_", i, ";")
+            gsub_by_add <- paste0("  matrix[M_", i, ", N_", i, "] z_", i, ";", 
+                                  "\n", 
+                                  paste0("  for(i in 1:M_", i, ") z_", i, 
+                                         "[i, ] = uz_", i, "[i][]'", ";")) # note []
+            gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            if(brm_args$normalize) {
+              gsub_it <- paste0("target += std_normal_lpdf(to_vector(z_", i, "))", ";")
+            } else {
+              gsub_it <- paste0("target += std_normal_lupdf(to_vector(z_", i, "))", ";")
+            }
+            gsub_by <- paste0("for(i in 1:M_", i, ") target += normal_lpdf(uz_", i, 
+                              "[i][] | 0.0, sigmauz_", i, ")", ";") # note []
+            # gsub_by <- paste0(gsub_by, "\n", "  for(i in 1:M_", i, ") target += log(uz_",i, "[i])", ";" )
+            # gsub_by <- paste0(gsub_by, "\n", "  for(i in 1:M_", i, ") target += log(uz_",i, "[i][])", ";" )
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            # z_x_c <- c(z_x_c, char_to_search)
+          } # if(found_char) {
+        } # for (i in 1:10) {
+        
+        
+        # scode_final_sum_zerox <<- scode_final_sum_zero
+        # gsub_itx <<- gsub_it
+        # gsub_byx <<- gsub_by
+        
+        if(is.null(brm_args$init)) {
+          brm_args$init <- brm_args$init
+        } else if(!is.list(brm_args$init)) {
+          if(brm_args$init == 0) brm_args$init <- brm_args$init
+        } else {
+          for (variablexx in 1:length(brm_args$init)) {
+            for (i in 1:100) {
+              char_to_search <- paste0("z_", i)
+              found_char <- grepl(char_to_search, scode_final_sum_zero_int, fixed = T)
+              if(found_char) {
+                brm_args$init[[variablexx]] [[paste0("uz_", i)]] <- 
+                  brm_args$init[[variablexx]] [[paste0("z_", i)]]
+                
+                brm_args$init[[variablexx]] [[paste0("z_", i)]] <- NULL
+              } # if(found_char) {
+            } # for (i in 1:10) {
+          } # for (variablexx in 1:length(brm_args$init)) {
+        }
+        
+        brm_args$sum_zero <-  NULL
+        brms_arguments$sum_zero <-  NULL
+        scode_final <- scode_final_sum_zero
+      } # if(sum_zero) {
+    } # if(parameterization == "ncp") {
+    
+    
+    
+    
+    if(parameterization == "cp") {
+      if(sum_zero) {
+        scode_final_sum_zero <- scode_final_sum_zero_int <- scode_final
+        for (i in 1:100) {
+          char_to_search <- paste0("r_", i)
+          found_char <- grepl(char_to_search, scode_final_sum_zero, fixed = T)
+          if(found_char) {
+            gsub_it <- "transformed data {"
+            # gsub_by_add <- paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " / (N_", i, " - 1.0))", ";")
+            gsub_by_add <-   paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " * inv(N_", i, " - 1.0))", ";")
+            
+            gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            
+            gsub_it <- paste0("matrix[N_", i, ", M_", i, "] r_", i, ";")
+            gsub_by <- paste0("array[M_", i, "] sum_to_zero_vector[N_", i, "] uz_", i, ";")
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            gsub_it <- paste0("real lprior = 0;")
+            gsub_by_add <- paste0("  matrix[N_", i, ", M_", i, "] r_", i, ";", 
+                                  "\n", 
+                                  paste0("  for(i in 1:M_", i, ") r_", i, 
+                                         "[, i] = uz_", i, "[i]", ";"),
+                                  "\n",
+                                  paste0("  for(i in 1:M_", i, ") ", 
+                                         "lprior += log_sum_exp(uz_", i, "[i]", ")", ";")
+                                  ) # note []
+            gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            if(cp_via == "multi_normal_cholesky_lpdf") {
+              pasetitsd <- paste0(" .* ", "rep_vector(sigmauz_", i, ", ", "M_", i, ")")
+              gsub_it <- paste0("diag_pre_multiply(sd_", i)
+              gsub_by <- paste0(gsub_it, pasetitsd)
+            } else if(cp_via == "multi_normal_lpdf") {
+              pasetitsd <- paste0(" .* ", "rep_vector(sigmauz_", i, ", ", "M_", i, ")")
+              gsub_it <- paste0("quad_form_diag(multiply_lower_tri_self_transpose(L_", i, "), ", "sd_", i)
+              gsub_by <- paste0(gsub_it, pasetitsd)
+            }
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            # z_x_c <- c(z_x_c, char_to_search)
+          } # if(found_char) {
+        } # for (i in 1:10) {
+        
+        
+        # scode_final_sum_zerox <<- scode_final_sum_zero
+        # gsub_itx <<- gsub_it
+        # gsub_byx <<- gsub_by
+        
+        # if(is.null(brm_args$init)) {
+        #   brm_args$init <- brm_args$init
+        # } else if(!is.list(brm_args$init)) {
+        #   if(brm_args$init == 0) brm_args$init <- brm_args$init
+        # } else {
+        #   for (variablexx in 1:length(brm_args$init)) {
+        #     for (i in 1:100) {
+        #       char_to_search <- paste0("z_", i)
+        #       found_char <- grepl(char_to_search, scode_final_sum_zero_int, fixed = T)
+        #       if(found_char) {
+        #         brm_args$init[[variablexx]] [[paste0("uz_", i)]] <- 
+        #           brm_args$init[[variablexx]] [[paste0("z_", i)]]
+        #         
+        #         brm_args$init[[variablexx]] [[paste0("z_", i)]] <- NULL
+        #       } # if(found_char) {
+        #     } # for (i in 1:10) {
+        #   } # for (variablexx in 1:length(brm_args$init)) {
+        # }
+        
+        brm_args$sum_zero <-  NULL
+        brms_arguments$sum_zero <-  NULL
+        scode_final <- scode_final_sum_zero
+      } # if(sum_zero) {
+    } # if(parameterization == "cp") {
+    
+    
+    
+    
+    # scode_finalxx <<- scode_final
+    # stop()
+    
+    # if(sum_zero) {
+    #   scode_final_sum_zero <- scode_final
+    #   gsub_it <- "matrix[M_1, N_1] z_1;"
+    #   gsub_by <- "array[M_1] sum_to_zero_vector[N_1] uz_1;"
+    #   scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+    #   gsub_it <- "matrix[N_1, M_1] r_1;"
+    #   gsub_by <- paste0(gsub_it, "\n", 
+    #                     "  matrix[M_1, N_1] z_1;", "\n",
+    #                     "  for(i in 1:M_1) z_1[i, ] = uz_1[i]';")
+    #   scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+    #   gsub_it <- "target += std_normal_lpdf(to_vector(z_1));"
+    #   gsub_by <- "for(i in 1:M_1) target += normal_lpdf(uz_1[i] | 0.0, sigmauz_1);"
+    #   scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+    #   
+    #   for (variablexx in 1:length(brm_args$init)) {
+    #     brm_args$init[[variablexx]]$z_u <- brm_args$init[[variablexx]]$z_1
+    #   }
+    #   
+    #   # brm_args$stanvars <- brm_args$stanvars + 
+    #   #   brms::stanvar(scode = 
+    #   #                   "real<lower=0> sigma_z_u = sqrt(N_1 / (N_1 - 1.0));", 
+    #   #                 name = "sigma_z_u",
+    #   #                 block = 'tdata')
+    #   
+    #   brm_args$sum_zero <-  NULL
+    #   brms_arguments$sum_zero <-  NULL
+    #   scode_final <- scode_final_sum_zero
+    # }
+    
+    # scode_finalx <<- scode_final
+    # brm_argsx <<- brm_args
+    # stop()
 
-
+    # exe_model_fit %>% print()
+    # fit_edited_scode %>% print()
+    
+    # cat(scode_final)
+    
+    if(!fit_edited_scode_exe_model_fit & fit_edited_scode) {
+    # if(!fit_edited_scode_exe_model_fit) {
+      # if(fit_edited_scode) {
+        if(get_priors) {
+          return(brm_args$prior)
+        } else if(get_standata) {
+          return(sdata)
+        } else if(get_stancode) {
+          return(scode_final)
+        } else if(get_priors_eval) {
+          return(brm_args$prior)
+        } else if(validate_priors) {
+          return(CustomDoCall(brms::validate_prior, brm_args))
+        } else if(get_init_eval) {
+          return(brm_args$init)
+        } else if(get_formula) {
+          return(brm_args$formula)
+        } else if(get_stanvars) {
+          return(brm_args$stanvars)
+        }
+      # } # if(fit_edited_scode) {
+    } # f(!exe_model_fit) {
+    
+    
     if(fit_edited_scode) {
+      if(verbose) message("Fitting model via edited stancode")
       if(brm_args$backend == "cmdstanr") {
          brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args, 
                                       brms_arguments,

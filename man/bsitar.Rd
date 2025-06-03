@@ -190,7 +190,8 @@ bsitar(
   file_compress = TRUE,
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
-  fast_nsk = FALSE,
+  fast_nsk = 0L,
+  sum_zero = FALSE,
   parameterization = "ncp",
   ...
 )
@@ -1771,6 +1772,8 @@ argument can be set globally for the current \R session via the
 \code{"future"} option.}
 
 \item{fast_nsk}{Currently ignored. Placeholder for future development.}
+
+\item{sum_zero}{Currently ignored. Placeholder for future development.}
 
 \item{parameterization}{A character string specifying the type of
 parameterization to use for drawing group-level random effects. Options

@@ -2278,7 +2278,10 @@ set_init_gr_effects <- function(xscode,
     
     
     if(parameterization == 'cp') {
-      if (grepl("r", parm_c, fixed = T)) {
+      # if (grepl("r", parm_c, fixed = T)) {
+      if (grepl("r", parm_c, fixed = T) & 
+          !grepl("Lrescor", parm_c, fixed = T)) {
+        
         if (length(str_d_) == 1) {
           dim1 <- xsdata[[str_d_[1]]]
           out <- rep(set_value, dim1)
@@ -2287,7 +2290,7 @@ set_init_gr_effects <- function(xscode,
           dim2 <- xsdata[[str_d_[2]]]
           out <- matrix(set_value, dim1, dim2)
         }
-        
+       
         if (is.vector(out)) {
           out <- array(out, dim = length(out))
         }
@@ -2295,6 +2298,7 @@ set_init_gr_effects <- function(xscode,
         if (ncol(out) == 1) {
           out <- t(out)
         }
+       
       } # if(grepl("r", parm_c, fixed = T)) {
     } # if(parameterization == 'cp') {
     

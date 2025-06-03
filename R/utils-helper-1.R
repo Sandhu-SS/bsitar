@@ -1547,7 +1547,8 @@ collapse_comma <- function(...) {
 #'
 edit_scode_ncp_to_cp <- function(stancode,
                                  genq_only = FALSE,
-                                 normalize = TRUE) {
+                                 normalize = TRUE, 
+                                 cp_via = "multi_normal_cholesky_lpdf") {
 
   # Rename transformed parameters and parameters for ease of processing
   true_name_tp  <- 'transformed parameters'
@@ -1692,6 +1693,8 @@ edit_scode_ncp_to_cp <- function(stancode,
   } else if(!normalize) {
     lprior_target <- "lprior"
   }
+  
+  # lprior_target <- "lprior"
 
   m_n_c_l_c <- c()
   for (h1i in 1:length(pattern_r)) {
@@ -1700,16 +1703,34 @@ edit_scode_ncp_to_cp <- function(stancode,
     pattern_Mi  <- pattern_M[h1i]
     pattern_Li  <- pattern_L[h1i]
     pattern_sdi <- pattern_sd[h1i]
-    m_n_c_l <-
-      paste0("  for(i in 1:", pattern_Ni, ') {\n',
-             "    ", lprior_target, " +=  multi_normal_cholesky_lpdf(",
-             pattern_ri, "[i, ] |\n",
-             "    rep_row_vector(0, ",
-             pattern_Mi, "),\n",
-             "    diag_pre_multiply(",
-             pattern_sdi, ", ", pattern_Li, "));",
-             "  \n  }"
-      )
+    if(cp_via == "multi_normal_cholesky_lpdf") {
+      m_n_c_l <-
+        paste0("  for(i in 1:", pattern_Ni, ') {\n',
+               "    ", lprior_target, " +=  multi_normal_cholesky_lpdf(",
+               pattern_ri, "[i, ] |\n",
+               "    rep_row_vector(0, ",
+               pattern_Mi, "),\n",
+               "    diag_pre_multiply(",
+               pattern_sdi, ", ", pattern_Li, "));",
+               "  \n  }"
+        )
+    } # if(cp_via == "multi_normal_cholesky_lpdf") {
+    
+    if(cp_via == "multi_normal_lpdf") {
+      m_n_c_l <-
+        paste0("  for(i in 1:", pattern_Ni, ') {\n',
+               "    ", lprior_target, " +=  multi_normal_lpdf(",
+               pattern_ri, "[i, ] |\n",
+               "    rep_row_vector(0, ",
+               pattern_Mi, "),\n",
+               paste0("    quad_form_diag(multiply_lower_tri_self_transpose(", 
+                      pattern_Li, "), ", pattern_sdi, "));"),
+               # "    diag_pre_multiply(",
+               # pattern_sdi, ", ", pattern_Li, "));",
+               "  \n  }"
+        )
+    } # if(cp_via == "multi_normal_lpdf") {
+    
     m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
   } # for (h1i in 1:length(pattern_r)) {
 

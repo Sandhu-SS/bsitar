@@ -441,19 +441,22 @@ the \code{transform_draws} argument takes precedence over the
 \item{hypothesis}{specify a hypothesis test or custom contrast using a number , formula, string equation, vector, matrix, or function.
 \itemize{
 \item Number: The null hypothesis used in the computation of Z and p (before applying \code{transform}).
-\item String: Equation to specify linear or non-linear hypothesis tests. If the terms in \code{coef(object)} uniquely identify estimates, they can be used in the formula. Otherwise, use \code{b1}, \code{b2}, etc. to identify the position of each parameter. The \verb{b*} wildcard can be used to test hypotheses on all estimates. If a named vector is used, the names are used as labels in the output. Examples:
+\item String: Equation to specify linear or non-linear hypothesis tests. Two-tailed tests must include an equal \code{=} sign. One-tailed tests must start with \code{<} or \code{>}. If the terms in \code{coef(object)} uniquely identify estimates, they can be used in the formula. Otherwise, use \code{b1}, \code{b2}, etc. to identify the position of each parameter. The \verb{b*} wildcard can be used to test hypotheses on all estimates. When the hypothesis string represents a two-sided equation, the \code{estimate} column holds the value of the left side minus the right side of the equation. If a named vector is used, the names are used as labels in the output. Examples:
 \itemize{
 \item \code{hp = drat}
 \item \code{hp + drat = 12}
 \item \code{b1 + b2 + b3 = 0}
 \item \verb{b* / b1 = 1}
+\item \verb{<= 0}
+\item \verb{>= -3.5}
+\item \code{b1 >= 10}
 }
 \item Formula: \code{lhs ~ rhs | group}
 \itemize{
 \item \code{lhs}
 \itemize{
-\item \code{ratio}
-\item \code{difference}
+\item \code{ratio} (null = 1)
+\item \code{difference} (null = 0)
 \item Leave empty for default value
 }
 \item \code{rhs}
@@ -492,6 +495,7 @@ the \code{transform_draws} argument takes precedence over the
 \item This function approach will not work for Bayesian models or with bootstrapping. In those cases, it is easy to use \code{get_draws()} to extract and manipulate the draws directly.
 }
 \item See the Examples section below and the vignette: \url{https://marginaleffects.com/chapters/hypothesis.html}
+\item Warning: When calling \code{predictions()} with \code{type="invlink(link)"} (the default in some models), \code{hypothesis} is tested and p values are computed on the link scale.
 }}
 
 \item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. See Details section below.}

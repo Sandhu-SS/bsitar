@@ -131,6 +131,9 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
 #' @param bknots A vector
 #' @param intercept An integer
 #' @param calcderiv A real number
+#' @param preH A logical (as.integer()) indicating whether to use pre computed 
+#' H matrix
+#' @param MatpreH A matrix (pre computed H matrix)
 #' 
 #' @return A matrix
 #' 
@@ -140,7 +143,7 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
 #' @noRd
 #' 
 #' 
-GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize) {
+GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH, MatpreH) {
   
   Nintk     <- length(knots) 
   Nk        <- Nintk + 2
@@ -190,7 +193,23 @@ GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize) {
     } # if (x_above_boundary) {
   } # if (x_below_boundary || x_above_boundary) {
   
-  H <- GS_ns_getH(allknots, normalize) # , 1 normalize T/F 1/0
+  # H <- GS_ns_getH(allknots, normalize) # , 1 normalize T/F 1/0
+  
+  
+  if(preH) {
+    if(is.null(MatpreH)) {
+      H <- GS_ns_getH(allknots, normalize) 
+    } else if(!is.null(MatpreH)) {
+      if(MatpreH[1,1] == 1) {
+        H <- GS_ns_getH(allknots, normalize) 
+      } else {
+        H <- MatpreH
+      }
+    }
+  } else if(!preH) {
+    H <- GS_ns_getH(allknots, normalize) 
+  }
+  
   
   out <- (bs %*% H)
   if (calcderiv) out <- (bsderiv %*% H)
@@ -278,6 +297,9 @@ GS_ns_getH <- function(knots, normalize) {
 #' @param centerval A real number to offset the intercept.
 #' @param normalize An integer to indicate whether to normalize the basis matrix
 #'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
+#' @param preH A logical (as.integer()) indicating whether to use pre computed 
+#' H matrix
+#' @param MatpreH A matrix (pre computed H matrix)
 #' 
 #' @return A matrix
 #' 
@@ -288,7 +310,7 @@ GS_ns_getH <- function(knots, normalize) {
 #' 
 #' 
 GS_nsp_call <- function(x, knots, bknots, intercept, derivs, 
-                        centerval, normalize, preH) {
+                        centerval, normalize, preH, MatpreH = NULL) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -313,7 +335,8 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
   
   df     <- length(knots) + 1 + intercept
   out <- GS_ns(x, knots, bknots, intercept = intercept, 
-               calcderiv = calcderiv, normalize = normalize)
+               calcderiv = calcderiv, normalize = normalize,
+               preH = preH, MatpreH = MatpreH)
   
   # if no internal knot, the out is a vector and not matrix, convert it to matrix
   # but if no internal knot but intercept TRUE, then it is already a matrix
@@ -325,7 +348,9 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
   # Centering
   if (centerval != 0) {
     cenout <- GS_ns(centerval, knots, bknots, intercept = intercept, 
-                    calcderiv = calcderiv, normalize = normalize)
+                    calcderiv = calcderiv, normalize = normalize,
+                    preH = preH, MatpreH = MatpreH)
+    
     if(!is.matrix(cenout)) cenout <- matrix(cenout, nrow = 1) 
     # if(length(knots) == 0) {
     #   if(!intercept) cenout <- matrix(cenout, length(cenout), 1)
@@ -366,6 +391,9 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
 #' @param centerval A real number to offset the intercept.
 #' @param normalize An integer to indicate whether to normalize the basis matrix
 #'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
+#' @param preH A logical (as.integer()) indicating whether to use pre computed 
+#' H matrix
+#' @param MatpreH A matrix (pre computed H matrix)
 #' 
 #' @return A matrix
 #' 
@@ -376,7 +404,7 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
 #' 
 #' 
 GS_nsk_call <- function(x, knots, bknots, intercept, derivs, 
-                        centerval, normalize, preH) {
+                        centerval, normalize, preH, MatpreH = NULL) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -394,10 +422,12 @@ GS_nsk_call <- function(x, knots, bknots, intercept, derivs,
  
   if (!calcderiv) {
     basis <- GS_nsp_call(x, knots = temp[-(1:2)], bknots = bknots, intercept = intercept, 
-                        derivs = derivs, centerval = centerval, normalize = normalize)
+                        derivs = derivs, centerval = centerval, normalize = normalize,
+                        preH = preH, MatpreH = MatpreH)
     
     kbasis <- GS_nsp_call(kx, knots=knots, bknots = bknots, intercept = intercept, 
-                         derivs = derivs, centerval = centerval, normalize = normalize)
+                         derivs = derivs, centerval = centerval, normalize = normalize,
+                         preH = preH, MatpreH = MatpreH)
     
     if(intercept) {
       out <- basis %*% solve(kbasis)
@@ -406,10 +436,12 @@ GS_nsk_call <- function(x, knots, bknots, intercept, derivs,
     }
   } else if (calcderiv) {
     basis <- GS_nsp_call(x, knots = temp[-(1:2)], bknots = bknots, intercept = intercept, 
-                        derivs = derivs, centerval = centerval, normalize = normalize)
+                        derivs = derivs, centerval = centerval, normalize = normalize,
+                        preH = preH, MatpreH = MatpreH)
     
     kbasis <- GS_nsp_call(kx, knots=knots, bknots = bknots, intercept = intercept, 
-                         derivs = 0, centerval = centerval, normalize = normalize)
+                         derivs = 0, centerval = centerval, normalize = normalize,
+                         preH = preH, MatpreH = MatpreH)
     
     if(intercept) {
       out <- basis %*% solve(kbasis)

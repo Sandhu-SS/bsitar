@@ -105,7 +105,33 @@ prepare_function_nsp <- function(x,
   }
   
   
+  # fast_nsk - originally was for spline_coef based code
+  # Now if fast_nsk, fast_nsk will be propagated to fast_nsk = 1
+  # and fast_nsk will set to FALSE
   
+  # fast_nsk_int <- 0
+  # if(fast_nsk) {
+  #   fast_nsk_int <- 1
+  # }
+  
+  fast_nsk_int <- as.integer(fast_nsk)
+  fast_nsk <- FALSE
+  
+  # if(fast_nsk_int == 0) {
+  #   fast_nsk <- FALSE
+  # } else if(fast_nsk_int > 0) {
+  #   fast_nsk <- TRUE
+  # }
+  
+  # fast_nsk_int %>% print()
+  # fast_nsk %>% print()
+  # stop()
+  
+  
+  add_fast <- ""
+  if(fast_nsk_int != 0) {
+    add_fast <- paste0("_", "fast", "_", fast_nsk_int)
+  }
   
   
   # "X" for rcsfunmultadd 
@@ -207,16 +233,18 @@ prepare_function_nsp <- function(x,
   iyfuntransformsi        <- inverse_transform(base::body(yfuntransformsi))
   
   
-  xfuntransformsi       <<- xfuntransformsi
-  yfuntransformsi       <<- yfuntransformsi
-  ixfuntransformsi      <<- ixfuntransformsi
-  iyfuntransformsi      <<- iyfuntransformsi
   
-  sigmaxfuntransformsi  <<- sigmaxfuntransformsi
-  isigmaxfuntransformsi <<- isigmaxfuntransformsi
+  # why <<- detected on 30.05.2025
   
-  # formalArgs(args(xfuntransformsi))
+  # xfuntransformsi       <<- xfuntransformsi
+  # yfuntransformsi       <<- yfuntransformsi
+  # ixfuntransformsi      <<- ixfuntransformsi
+  # iyfuntransformsi      <<- iyfuntransformsi
+  # 
+  # sigmaxfuntransformsi  <<- sigmaxfuntransformsi
+  # isigmaxfuntransformsi <<- isigmaxfuntransformsi
   
+
   
  
 
@@ -473,7 +501,7 @@ prepare_function_nsp <- function(x,
     
   } # end set_x_y_scale_factror
   
-  
+ 
   ######################################################################
   # funsi to transform and itransform
   # setxoffset       <- paste0("real xoffset = ", xoffset, ";")
@@ -1148,8 +1176,57 @@ prepare_function_nsp <- function(x,
       matrix_cols_str <- "matrix[N, nknots] spl;"
     }
     
-    # paste0(spfncname, "X")
+    
+    # paste0(spfncname, "X") %>% print()
+    
+    
+    if(smat_preH) {
+      bknots   <- c(knots[1], knots[length(knots)])
+      iknots   <- knots[2:(length(knots)-1)]
+      allknots <- c(rep(bknots[1], 4), iknots, rep(bknots[2], 4))
+      precomputedH_R <- GS_ns_getH(allknots, smat_normalize)
+      
+      
+      
+      precomputedH_c <- list()
+      for (i in 1:nrow(precomputedH_R)) {
+        getrowx <- precomputedH_R[i, ]
+        getrowx <- deparse(getrowx)
+        getrowx <- gsub("c(", "[", getrowx, fixed = T)
+        getrowx <- gsub(")", "]", getrowx, fixed = T)
+        precomputedH_c[[i]] <- getrowx
+      }
+      precomputedH_c <- paste(unlist(precomputedH_c), collapse = ",")
+      precomputedH_Stan <- paste0("[", precomputedH_c, "];")
+    }
+    
    
+    if(smat_preH) {
+      setMatpreH = paste0("\nmatrix[nknots + 2, nknots] ", "MatpreH = ", precomputedH_Stan, "")
+    } else {
+      # placeholder when preH = 0
+      setMatpreH = paste0("\nmatrix[1, 1] ", "MatpreH = ", "[[1],[1]]", ";")
+    }
+    
+    if(smat_preH) {
+      setMatpreH_for_functions_R <- "
+      bknots   = c(knots[1], knots[length(knots)])
+      iknots   = knots[2:(length(knots)-1)]
+      allknots = c(rep(bknots[1], 4), iknots, rep(bknots[2], 4))
+      MatpreH  = GS_ns_getH(allknots, smat_normalize)"
+    } else {
+      setMatpreH_for_functions_R = "MatpreH <- matrix(1, 1)" 
+    }
+    
+    
+    if(add_fast == "") {
+      SplinefunxStan_str <- "X, iknotsx, bknotsx, intercept, derivs, centerval, normalize, preH"
+      setMatpreH <- NULL
+    } else {
+      SplinefunxStan_str <- "X, iknotsx, bknotsx, intercept, derivs, centerval, normalize, preH, MatpreH"
+    }
+    
+    
     intercept_str_plus_str <- 
     paste0("int derivs = ", 0, ";",
            "\n",
@@ -1163,11 +1240,17 @@ prepare_function_nsp <- function(x,
            )
     
     
+    # do this for intercept_str_plus_str_d0, _d1, _d2 
+    intercept_str_plus_str <- paste0(intercept_str_plus_str, setMatpreH)
+    
+    
+    
+    
     fun_body_str <- 
       paste0("\nspl = ", 
              SplinefunxStan, 
              "(", 
-             "X, iknotsx, bknotsx, intercept, derivs, centerval, normalize, preH",
+             SplinefunxStan_str,
              ")",
              ";"
              )
@@ -1384,7 +1467,7 @@ prepare_function_nsp <- function(x,
               add_knotinfo_without_addingknots_split,
               fast_nsk_body,
               endof_fun_fast_nsk)
-    } # if(fast_nks) {
+    } # if(fast_nsk) {
     
     
     
@@ -1780,81 +1863,125 @@ prepare_function_nsp <- function(x,
     }
     
     
-    getpreHname <- "GS_ns_getH_pre"
     
-    if(smat_preH) {
-      # Unlike getknotsname, which is outcome suffixed, 
-      # the getpreHname must be consistant and same whiich is used in 
-      # GS_nsp_call_stan.stan file 
-      # eventhough getpreHname is defined in 'bsitar', it is ignored
-      bknots   <- c(knots[1], knots[length(knots)])
-      iknots   <- knots[2:(length(knots)-1)]
-      allknots <- c(rep(bknots[1], 4), iknots, rep(bknots[2], 4))
-      # zzzzzzz <- GS_ns_getH(c(1,2,3,4,5,6,7,8,9), 1)
-      precomputedH <- GS_ns_getH(allknots, smat_normalize)
-      
-      getpreH_fun_raw <-
-        paste0(
+    # 29.05.2025 - now not needed, matrix wthin sitarfun
+
+    if(add_fast == "") {
+      getpreHname <- "GS_ns_getH_pre"
+      if(smat_preH) {
+        # # Unlike getknotsname, which is outcome suffixed,
+        # # the getpreHname must be consistant and same whiich is used in
+        # # GS_nsp_call_stan.stan file
+        # # eventhough getpreHname is defined in 'bsitar', it is ignored
+        # bknots   <- c(knots[1], knots[length(knots)])
+        # iknots   <- knots[2:(length(knots)-1)]
+        # allknots <- c(rep(bknots[1], 4), iknots, rep(bknots[2], 4))
+        # # zzzzzzz <- GS_ns_getH(c(1,2,3,4,5,6,7,8,9), 1)
+        # precomputedH_R <- GS_ns_getH(allknots, smat_normalize)
+        #
+        # precomputedH_c <- list()
+        # for (i in 1:nrow(precomputedH_R)) {
+        #   getrowx <- precomputedH_R[i, ]
+        #   getrowx <- deparse(getrowx)
+        #   getrowx <- gsub("c(", "[", getrowx, fixed = T)
+        #   getrowx <- gsub(")", "]", getrowx, fixed = T)
+        #   precomputedH_c[[i]] <- getrowx
+        # }
+        # precomputedH_c <- paste(unlist(precomputedH_c), collapse = ",")
+        # precomputedH_Stan <- paste0("[", precomputedH_c, "];")
+        
+        
+        # getpreH_fun_raw <-
+        #   paste0(
+        #     "matrix ",
+        #     getpreHname,
+        #     "(int nrows, int ncols) {" ,
+        #     paste0(
+        #       "\n  matrix[nrows, ncols] H=", "to_matrix(",
+        #       "[",
+        #       paste(precomputedH_R, collapse = ","),
+        #       "]", "",
+        #       ", nrows, ncols)",
+        #       ";"
+        #     ),
+        #     "\n  ",
+        #     "return(H);",
+        #     "\n}  "
+        #     ,
+        #     paste0("// end of ", getpreHname),
+        #     collapse = " ")
+        
+        dummy_getpreH_fun_raw <- paste0(
           "matrix ",
-          getpreHname,
-          "(int nrows, int ncols) {" ,
-          paste0(
-            "\n  matrix[nrows, ncols] H=", "to_matrix(",
-            "[",
-            paste(precomputedH, collapse = ","),
-            "]", "",
-            ", nrows, ncols)",
-            ";"
-          ),
-          "\n  ",
-          "return(H);",
-          "\n}  "
-          ,
-          paste0("// end of ", getpreHname),
-          collapse = " ")
-      
-      dummy_getpreH_fun_raw <- paste0(
-        "matrix ",
-        'GS_ns_getH_stan',
-        "(vector nrows, int ncols) {\n" ,
-        # "H = [1,3];\n",
-        # "return(H);",
-        "return([[1,2],[2,3]]);",
-        "\n}  "
-        ,
-        paste0("// end of ", 'GS_ns_getH_stan'),
-        collapse = " ")
-      
-      getpreH_fun_raw <- paste0(getpreH_fun_raw, "\n",
-                                dummy_getpreH_fun_raw)
-    } else {
-      # dummy
-      getpreH_fun_raw <-
-        paste0(
-          "matrix ",
-          getpreHname,
-          "(int nrows, int ncols) {\n" ,
+          'GS_ns_getH_stan',
+          "(vector nrows, int ncols) {\n" ,
           # "H = [1,3];\n",
           # "return(H);",
           "return([[1,2],[2,3]]);",
           "\n}  "
           ,
-          paste0("// end of ", getpreHname),
+          paste0("// end of ", 'GS_ns_getH_stan'),
           collapse = " ")
-    }
-    
-    
-    # For multivariate model, this approach won't work, 
-    # TODO...
-    if(ii > 1) {
+        
+        # print(smat_preH)
+        
+        getpreH_fun_raw <-
+          paste0(
+            "matrix ",
+            getpreHname,
+            "(int nrows, int ncols) {\n" ,
+            # "() {" ,
+            "\n",
+            paste0("return ", precomputedH_Stan, ""),
+            "\n",
+            "}",
+            paste0("// end of ", getpreHname),
+            collapse = " ")
+        
+        
+        dummy_getpreH_fun_raw <- ""
+        
+        getpreH_fun_raw <- paste0(getpreH_fun_raw, "\n",
+                                  dummy_getpreH_fun_raw)
+      } else {
+        # dummy
+        getpreH_fun_raw <-
+          paste0(
+            "matrix ",
+            getpreHname,
+            "(int nrows, int ncols) {\n" ,
+            # "() {\n" ,
+            # "H = [1,3];\n",
+            # "return(H);",
+            "return([[1,2],[2,3]]);",
+            "\n}  "
+            ,
+            paste0("// end of ", getpreHname),
+            collapse = " ")
+      }
+      
+      
+      
+      # For multivariate model, this approach won't work,
+      # TODO...
+      if(ii > 1) {
+        getpreH_fun_raw <- NULL
+      }
+      
+      # need to add dummy functions
+      
+      # print(getpreH_fun_raw)
+      # print(smat_preH)
+    } else if(add_fast != "") {
+      # 29.05.2025 - now not needed, matrix wthin sitarfun
       getpreH_fun_raw <- NULL
     }
     
-    # need to add dummy functions
     
-    # print(getpreH_fun_raw)
-    # print(smat_preH)
-
+    # # 29.05.2025 - now not needed, matrix wthin sitarfun
+    # getpreH_fun_raw <- NULL
+    
+    
     
     
     getknots_fun_raw <-
@@ -1951,6 +2078,8 @@ prepare_function_nsp <- function(x,
     
     ##########
     
+   
+    
     intercept_str_plus_str_d0 <- 
       paste0("int derivs = ", 0, ";",
              "\n",
@@ -1963,6 +2092,12 @@ prepare_function_nsp <- function(x,
              matrix_cols_str
       )
     
+    # do this for intercept_str_plus_str_d1 and intercept_str_plus_str_d2 also
+     intercept_str_plus_str_d0 <- paste0(intercept_str_plus_str_d0, setMatpreH)
+    
+     
+    # cat(intercept_str_plus_str_d0)
+    # stop()
     
     # Create function d0
     fnameout <- paste0(spfncname, "_", "d0")
@@ -2038,6 +2173,7 @@ prepare_function_nsp <- function(x,
              matrix_cols_str
       )
     
+    intercept_str_plus_str_d1 <- paste0(intercept_str_plus_str_d1, setMatpreH)
     
    
     
@@ -2108,6 +2244,8 @@ prepare_function_nsp <- function(x,
              "\n",
              matrix_cols_str
       )
+    
+    intercept_str_plus_str_d2 <- paste0(intercept_str_plus_str_d2, setMatpreH)
     
     
     
@@ -2933,6 +3071,19 @@ prepare_function_nsp <- function(x,
       xstaring <- gsub("vector" , "", xstaring, fixed = T)
       xstaring <- gsub("int" , "", xstaring, fixed = T)
       if(smat == 'nsp' | smat == 'nsk') {
+        # 29.05.2025
+        if(smat_preH) {
+          start_pattern <- "matrix[nknots+2,nknots]MatpreH"
+          end_pattern <- ";"
+          replacementx <- setMatpreH_for_functions_R
+        } else {
+          start_pattern <- "matrix[1,1]MatpreH"
+          end_pattern <- ";"
+          replacementx <- setMatpreH_for_functions_R
+        }
+        xstaring <- replace_string_part(xstaring, start_pattern, end_pattern, replacementx)
+        xstaring <- gsub("smat_normalize" , "normalize", xstaring, fixed = T)
+        
         xstaring <- gsub("ercept" , "intercept", xstaring, fixed = T)
         xstaring <- gsub("[nknots-2]iknotsx;", "", xstaring, fixed = T)
         xstaring <- gsub("[2]bknotsx;", "", xstaring, fixed = T)
@@ -2974,6 +3125,8 @@ prepare_function_nsp <- function(x,
              "Xx=matrix(0,N, nknots)",
              xstaring,
              fixed = T)
+      
+     
       xstaring <-
         gsub("for(iain1:N)" , "for(ia in 1:N)", xstaring, fixed = T)
       xstaring <- gsub("for(jain1:nknots)" ,
@@ -3129,32 +3282,67 @@ prepare_function_nsp <- function(x,
   # work in package
   # Hence preH is added to main .stan files
   
+  SplinefunxStan_file <- SplinefunxStan
+  
+  
+  
+
   include_str <- ""
   if(smat_include_stan) {
-    set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+    set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-  } else {
-    set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
-    include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-  }
+  } else if(!smat_include_stan) {
+    set_path_str  <- paste0(smat_include_stan_path, paste0(SplinefunxStan_file, add_fast), ".stan")
+    file_main_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+    
+    set_path_str  <- paste0(smat_include_stan_path, paste0("preH", ""), ".stan")
+    file_preH_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+    
+    set_path_str  <- paste0(smat_include_stan_path, paste0("auxillary", ""), ".stan")
+    file_auxillary_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+    
+    if(add_fast == "") {
+      # file_preH_str is part of the non fast file
+      include_str <- paste0(file_main_str)
+      # include_str <- paste0(file_auxillary_str, "\n", file_preH_str, "\n", file_main_str)
+    } else {
+      if(smat_preH) {
+        include_str <- file_main_str
+        gsub_it <- "H = GS_ns_getH_stan(allknots, normalize);\n"
+        gsub_by <- ""
+        include_str <- gsub(gsub_it, gsub_by, include_str, fixed = T)
+      } else if(!smat_preH) {
+        include_str <- paste0(file_preH_str, "\n", file_main_str)
+      }
+    } # if(add_fast == "") {
+    
+    
+  } # else if(!smat_include_stan) {
+  
+  # smat_include_stan %>% print()
+  # 
+  # cat(include_str)
+  # stop()
+  
+  
 
   # include_str <- ""
   # if(smat_include_stan) {
   #   if(smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
   #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
   #   } else if(!smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
   #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
   #     set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
   #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
   #   }
   # } else if(!smat_include_stan) {
   #   if(smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
   #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
   #   } else if(!smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan, ".stan")
+  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
   #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
   #     set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
   #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
@@ -3172,16 +3360,21 @@ prepare_function_nsp <- function(x,
   }
  
   # cat(getknots_fun_raw)
-  # cat(fast_nks_rcsfun)
+  # cat(fast_nsk_rcsfun)
   # stop()
+  
+  
+  # This fast_nsk_rcsfun_str_get was based on point spline_coefs
  
-  if(fast_nsk) {
-    rcsfun <- paste0(fast_nsk_rcsfun_str_get(), 
-                     "\n",
-                     getknots_fun_raw, 
-                     "\n", 
-                     fast_nsk_rcsfun)
-  }
+  # if(fast_nsk) {
+  #   rcsfun <- paste0(fast_nsk_rcsfun_str_get(), 
+  #                    "\n",
+  #                    getknots_fun_raw, 
+  #                    "\n", 
+  #                    fast_nsk_rcsfun)
+  # }
+  
+  
   
   
   if (!add_rcsfunmatqrinv_genquant) {
@@ -3198,8 +3391,8 @@ prepare_function_nsp <- function(x,
   # stop()
   
  #  print(cat(rcsfun))
- # #  outx <<- all_raw_str
- #   stop()
+  # outx <<- all_raw_str
+  #  stop()
   
   out
 }
