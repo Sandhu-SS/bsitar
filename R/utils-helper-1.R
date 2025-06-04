@@ -1535,6 +1535,317 @@ collapse_comma <- function(...) {
 
 
 
+
+#' An internal function to edit stancode for NCP parametarization
+#' @param stancode A string character of stan code
+#' @param genq_only A logical (default \code{FALSE}) to indicate whether to
+#' return only the generated quantity sub code.
+#' @param normalize A logical (default \code{TRUE}) to indicate whether to
+#' include the normalizing constant in the prior target density.
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+
+edit_scode_ncp_to_cp_new <- function(stancode,
+                                     genq_only = FALSE,
+                                     normalize = TRUE, 
+                                     cp_via = "multi_normal_cholesky_lpdf") {
+  
+  # Rename transformed parameters and parameters for ease of processing
+  true_name_tp  <- 'transformed parameters'
+  true_name_p   <- 'parameters'
+  tempt_name_tp <- 'transformed_parameters_'
+  tempt_name_p  <- 'parameters_'
+  
+  clines_tp <- get_par_names_from_stancode(stancode,
+                                           section =  true_name_tp,
+                                           semicolan = TRUE,
+                                           full = TRUE)
+  
+  clines_p <- get_par_names_from_stancode(stancode,
+                                          section =  true_name_p,
+                                          semicolan = TRUE,
+                                          full = TRUE)
+  
+  clines_m <- get_par_names_from_stancode(stancode,
+                                          section =  'model',
+                                          semicolan = TRUE,
+                                          full = TRUE)
+  
+  
+  editedcode    <- stancode
+  editedcode    <- gsub(true_name_tp, tempt_name_tp, editedcode, fixed = T)
+  editedcode    <- gsub(true_name_p,  tempt_name_p,  editedcode, fixed = T)
+  
+  editedcode2 <- editedcode
+  
+  clines_tp2 <- c()
+  for (il in clines_tp) {
+    il <- gsub(pattern = "//", replacement = "//", x = il, fixed = T)
+    il <- gsub(pattern = "//[^\\\n]*", replacement = "", x = il)
+    if(!grepl('^lprior', gsub_space(il)) &
+       !grepl('^reallprior', gsub_space(il)) &
+       !grepl('^-', gsub_space(il))) {
+      if(!is_emptyx(il)) {
+        clines_tp2 <- c(clines_tp2, il)
+      }
+    }
+  }
+  
+  clines_tp <- clines_tp2
+  
+  how_many_r_1 <- 0
+  move_to_p <- move_to_m <- c()
+  for (clines_tpi in clines_tp) {
+    for (igr in 1:100) {
+      if(grepl(paste0("r_", igr), clines_tpi)) {
+        if(grepl("^matrix", clines_tpi) |
+           grepl("^array", clines_tpi) # This for z_1 when only one sd
+        ) {
+          how_many_r_1 <- how_many_r_1 + 1
+          move_to_p <- c(move_to_p, clines_tpi)
+          clines_tpi <- ""
+        }
+        if(!grepl(paste0("^", "r_", igr, " = "), clines_tpi) &
+           !grepl(paste0("^", "r_", igr, "="), clines_tpi) &
+           !grepl("//", clines_tpi) &
+           clines_tpi != "") {
+          move_to_m <- c(move_to_m, clines_tpi)
+        }
+      }
+    }
+  }
+  
+  
+  prepare_p <- c()
+  for (clines_pi in clines_p) {
+    if(grepl("z_", clines_pi)) {
+      for (igr in 1:100) {
+        if(grepl(paste0("z_", igr), clines_pi)) {
+          if(grepl("^matrix", clines_pi) |
+             grepl("^array", clines_pi) # This for z_1 when only one sd
+          ) {
+            if(grepl("^array", clines_pi)) {
+              # new 03.06.2025
+              # what_p <- paste0("// ", clines_pi)
+              what_p <- gsub(clines_pi, "", what_p, fixed = T)
+            } else {
+              # what_p <- paste0("// ", clines_pi)
+              what_p <- gsub(clines_pi, "", what_p, fixed = T)
+            }
+          }
+        }
+      }
+    } else {
+      what_p <- paste0("", clines_pi)
+    }
+    prepare_p <- c(prepare_p, what_p)
+  }
+  
+  
+  
+  
+  move_to_p <- paste(move_to_p, collapse = "\n")
+  prepare_p <- paste(prepare_p, collapse = "\n")
+  prepare_p <- paste0(prepare_p, "\n", move_to_p)
+  
+  # Remove duplicate - this happens when some parms are single vector
+  # For example, sigma_gr ~ 1
+  prepare_p <- strsplit(prepare_p, "\n", fixed = T)[[1]] %>%
+    data.frame() %>%
+    dplyr::distinct() %>%
+    unlist() %>%
+    as.vector()
+  
+  prepare_p <- paste(prepare_p, collapse = "\n")
+  
+  ## Match data from regexpr()
+  pattern_r <- pattern_N <- pattern_M <- pattern_sd <- pattern_L <-  c()
+  for (rxi in 1:100) {
+    pattern     <- paste0('r_', rxi)
+    pattern_    <- regexpr(pattern, prepare_p)
+    pattern_ri  <- regmatches(prepare_p, pattern_)
+    pattern_Ni  <- gsub('r_', 'N_', pattern_ri, fixed = T)
+    pattern_Mi  <- gsub('r_', 'M_', pattern_ri, fixed = T)
+    pattern_Li  <- gsub('r_', 'L_', pattern_ri, fixed = T)
+    pattern_sdi <- gsub('r_', 'sd_', pattern_ri, fixed = T)
+    pattern_r   <- c(pattern_r, pattern_ri)
+    pattern_N   <- c(pattern_N, pattern_Ni)
+    pattern_M   <- c(pattern_M, pattern_Mi)
+    pattern_L   <- c(pattern_L, pattern_Li)
+    pattern_sd  <- c(pattern_sd, pattern_sdi)
+  }
+  
+  
+  # Add space to model block elements
+  zz_c <- c()
+  for (iz in move_to_m) {
+    zz_c <- c(zz_c, paste0("  ", iz))
+  }
+  move_to_m <- paste(zz_c, collapse = '\n')
+  
+  # Add space to parameters elements
+  zz <- strsplit(prepare_p, "\n")[[1]]
+  zz_c <- c()
+  for (iz in 1:length(zz)) {
+    zz_c <- c(zz_c, paste0("  ", zz[iz]))
+  }
+  prepare_p <- paste(zz_c, collapse = '\n')
+  
+  # new 03.06.2025
+  # if(normalize) {
+  #   lprior_target <- "target"
+  # } else if(!normalize) {
+  #   lprior_target <- "lprior"
+  # }
+  
+  # new 03.06.2025
+  lprior_target <- "lprior"
+  
+  m_n_c_l_c <- c()
+  for (h1i in 1:length(pattern_r)) {
+    pattern_ri  <- pattern_r[h1i]
+    pattern_Ni  <- pattern_N[h1i]
+    pattern_Mi  <- pattern_M[h1i]
+    pattern_Li  <- pattern_L[h1i]
+    pattern_sdi <- pattern_sd[h1i]
+    if(cp_via == "multi_normal_cholesky_lpdf") {
+      m_n_c_l <-
+        paste0("  for(i in 1:", pattern_Ni, ') {\n',
+               "    ", lprior_target, " +=  multi_normal_cholesky_lpdf(",
+               pattern_ri, "[i, ] |\n",
+               "    rep_row_vector(0, ",
+               pattern_Mi, "),\n",
+               "    diag_pre_multiply(",
+               pattern_sdi, ", ", pattern_Li, "));",
+               "  \n  }"
+        )
+    } # if(cp_via == "multi_normal_cholesky_lpdf") {
+    
+    if(cp_via == "multi_normal_lpdf") {
+      m_n_c_l <-
+        paste0("  for(i in 1:", pattern_Ni, ') {\n',
+               "    ", lprior_target, " +=  multi_normal_lpdf(",
+               pattern_ri, "[i, ] |\n",
+               "    rep_row_vector(0, ",
+               pattern_Mi, "),\n",
+               paste0("    quad_form_diag(multiply_lower_tri_self_transpose(", 
+                      pattern_Li, "), ", pattern_sdi, "));"),
+               # "    diag_pre_multiply(",
+               # pattern_sdi, ", ", pattern_Li, "));",
+               "  \n  }"
+        )
+    } # if(cp_via == "multi_normal_lpdf") {
+    
+    m_n_c_l_c <- c(m_n_c_l_c, m_n_c_l)
+  } # for (h1i in 1:length(pattern_r)) {
+  
+  m_n_c_l_c <- paste(m_n_c_l_c, collapse = "\n")
+  
+  for (il in clines_p) {
+    if(!grepl("^array", il)) {
+      editedcode2 <- gsub(pattern = "//", replacement = "//",
+                          x = editedcode2, fixed = T)
+      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "",
+                          x = editedcode2)
+      editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+    }
+  }
+  
+  for (il in clines_tp) {
+    if(!grepl("^array", il)) {
+      editedcode2 <- gsub(pattern = "//", replacement = "//",
+                          x = editedcode2, fixed = T)
+      editedcode2 <- gsub(pattern = "//[^\\\n]*", replacement = "",
+                          x = editedcode2)
+      editedcode2 <- gsub(paste0(il, ""), "", editedcode2, fixed = T)
+    }
+  }
+  
+  # Below to flatten code without any empty splace or lines
+  # editedcode2 <- gsub("(?m)^\\h*\\R?", "", editedcode2, perl=TRUE)
+  # editedcode2 <- gsub("\r", "", editedcode2, fixed=TRUE)
+  p_block_syb_by <- paste0("", tempt_name_p, " {")
+  p_block_syb_it <- paste0(p_block_syb_by, "\n", prepare_p)
+  editedcode2 <- gsub(paste0("", p_block_syb_by), p_block_syb_it,
+                      editedcode2, fixed=T, perl=F)
+  
+  
+  # Remove empty lines
+  zz <- strsplit(editedcode2, "\n")[[1]]
+  zz_c <- c()
+  for (iz in 1:length(zz)) {
+    if(!is_emptyx(gsub_space(zz[iz]))) {
+      zz_in <- zz[iz]
+      # comment out to_vector(z_
+      if(how_many_r_1 > 0) {
+        if(grepl("to_vector(z_", zz_in, fixed = T))
+          # new 03.06.2025
+          # zz_in <- paste0("  //", zz_in)
+          zz_in <- gsub(zz_in, "", zz_in, fixed = T)
+        if(grepl("scale_r_cor(z_", zz_in, fixed = T))
+          # new 03.06.2025
+          # zz_in <- paste0("  //", zz_in)
+          zz_in <- gsub(zz_in, "", zz_in, fixed = T)
+      }
+      zz_c <- c(zz_c, zz_in)
+    }
+  }
+  
+  editedcode2 <- paste(zz_c, collapse = '\n')
+  
+  add_to_model_block <- paste0(m_n_c_l_c, "\n", move_to_m)
+  add_to_genq_block <- paste0( move_to_m)
+  
+  
+  # lprior_code <- "real lprior = 0;"
+  
+  # new 03.06.2025
+  # if(normalize) {
+  #   lprior_code <- "model {"
+  # } else if(!normalize) {
+  #   lprior_code <- "real lprior = 0;"
+  # }
+  
+  # new 03.06.2025
+  lprior_code <- "real lprior = 0;"
+  
+  editedcode2 <- gsub(lprior_code, paste0(lprior_code, "\n",
+                                          add_to_model_block, "\n"),
+                      editedcode2, fixed = T)
+  
+  # new 03.06.2025
+  # genq_code <- "generated quantities {"
+  # editedcode2 <- gsub(genq_code, paste0(genq_code, "\n",
+  #                                       add_to_genq_block),
+  #                     editedcode2, fixed = T)
+  
+  editedcode2 <- gsub(tempt_name_tp, true_name_tp, editedcode2, fixed = T)
+  editedcode2 <- gsub(tempt_name_p,  true_name_p,  editedcode2, fixed = T)
+  
+  # If only one random effects and hence no r_1 etc, then return original code
+  if(identical(pattern_r, character(0))) {
+    return(stancode)
+  } else if(!identical(pattern_r, character(0))) {
+    if(genq_only) return(add_to_genq_block)
+    return(editedcode2)
+  }
+  
+}
+
+
+# set_stancode <- fit_1f022x$bmodel
+# 
+# edit_scode_ncp_to_cp_new(stancode = set_stancode,
+#                          genq_only = FALSE,
+#                          normalize = TRUE, 
+#                          cp_via = "multi_normal_cholesky_lpdf") %>% cat()
+
+
+
+
+
 #' An internal function to edit stancode for NCP parametarization
 #' @param stancode A string character of stan code
 #' @param genq_only A logical (default \code{FALSE}) to indicate whether to

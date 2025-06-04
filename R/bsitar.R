@@ -2063,7 +2063,6 @@ bsitar <- function(x,
   # The specific areas to look further are:
   # 'prepare_data2' 'data.org.in' 'sigmaxsi' 'setsigmaxvar'
   
-  
   mcall <- match.call()
   
   mcall <- mcall_ <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL)
@@ -2126,7 +2125,6 @@ bsitar <- function(x,
   # Clear alias argument for formula and adjusted
   rm(dots_allias)
   
-
   mcall <- mcall_ <- mcall
   
   no_default_args <- c("x", "y", "id", "data", "...")
@@ -2414,6 +2412,31 @@ bsitar <- function(x,
   sigma_formula_grsi <- NULL;
   sigma_formula_gr_strsi <- NULL;
   
+  
+  
+  ##############################################################
+  # cp -> multi_normal_cholesky_lpdf / multi_normal_lpdf
+  ##############################################################
+  
+  if(parameterization == 'cp') {
+    cp_via <- "multi_normal_cholesky_lpdf"
+  } else if(parameterization == 'multi_normal_cholesky_lpdf' |
+            parameterization == 'multi_normal_cholesky' |
+            parameterization == 'normal_cholesky' |
+            parameterization == 'normal_chol') {
+    cp_via <- "multi_normal_cholesky_lpdf"
+    parameterization <- 'cp'
+  } else if(parameterization == 'multi_normal_lpdf' |
+            parameterization == 'multi_normal' |
+            parameterization == 'normal' |
+            parameterization == 'normal') {
+    cp_via <- "multi_normal_lpdf"
+    parameterization <- 'cp'
+  } else if(parameterization == 'ncp') {
+    cp_via <- NULL
+  } else {
+    cp_via <- NULL
+  }
   
   ##############################################################
   ##############################################################
@@ -9019,13 +9042,12 @@ bsitar <- function(x,
     } 
     
     
-    cp_via <- "multi_normal_cholesky_lpdf"
-    # cp_via <- "multi_normal_lpdf"
+    
     
     if(vcov_init_0e) {
       if(parameterization == 'cp') {
         initialsx2 <- brmsinits
-        temp_stancode2cp <- edit_scode_ncp_to_cp(temp_stancode2, 
+        temp_stancode2cp <- edit_scode_ncp_to_cp_new(temp_stancode2, 
                                                  genq_only = FALSE, 
                                                  normalize = normalize, 
                                                  cp_via = cp_via)
@@ -10538,7 +10560,7 @@ bsitar <- function(x,
   
   
   if(parameterization == 'cp') {
-    scode_final <- edit_scode_ncp_to_cp(scode_final, 
+    scode_final <- edit_scode_ncp_to_cp_new(scode_final, 
                                         genq_only = FALSE, 
                                         normalize = normalize, 
                                         cp_via = cp_via)
@@ -10933,24 +10955,27 @@ bsitar <- function(x,
         # gsub_itx <<- gsub_it
         # gsub_byx <<- gsub_by
         
-        # if(is.null(brm_args$init)) {
-        #   brm_args$init <- brm_args$init
-        # } else if(!is.list(brm_args$init)) {
-        #   if(brm_args$init == 0) brm_args$init <- brm_args$init
-        # } else {
-        #   for (variablexx in 1:length(brm_args$init)) {
-        #     for (i in 1:100) {
-        #       char_to_search <- paste0("z_", i)
-        #       found_char <- grepl(char_to_search, scode_final_sum_zero_int, fixed = T)
-        #       if(found_char) {
-        #         brm_args$init[[variablexx]] [[paste0("uz_", i)]] <- 
-        #           brm_args$init[[variablexx]] [[paste0("z_", i)]]
-        #         
-        #         brm_args$init[[variablexx]] [[paste0("z_", i)]] <- NULL
-        #       } # if(found_char) {
-        #     } # for (i in 1:10) {
-        #   } # for (variablexx in 1:length(brm_args$init)) {
-        # }
+        if(is.null(brm_args$init)) {
+          brm_args$init <- brm_args$init
+        } else if(!is.list(brm_args$init)) {
+          if(brm_args$init == 0) brm_args$init <- brm_args$init
+        } else {
+          for (variablexx in 1:length(brm_args$init)) {
+            for (i in 1:100) {
+              char_to_search <- paste0("r_", i)
+              found_char <- grepl(char_to_search, scode_final_sum_zero_int, fixed = T)
+              if(found_char) {
+                if(!is.null(brm_args$init[[variablexx]] [[char_to_search]])) {
+                  brm_args$init[[variablexx]] [[paste0("uz_", i)]] <-
+                    brm_args$init[[variablexx]] [[char_to_search]] %>% t() # imp t()
+                }
+                brm_args$init[[variablexx]] [[char_to_search]] <- NULL
+                brm_args$init[[variablexx]] [[paste0("z_", i)]] <- NULL
+                
+              } # if(found_char) {
+            } # for (i in 1:10) {
+          } # for (variablexx in 1:length(brm_args$init)) {
+        }
         
         brm_args$sum_zero <-  NULL
         brms_arguments$sum_zero <-  NULL

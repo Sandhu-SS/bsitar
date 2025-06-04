@@ -28,7 +28,7 @@ array[] int which_equal(vector x, real y, real z) {
 }
 
 // B-spline basis and derivative (dense, robust, original logic)
-matrix GS_bs_stan_dense(
+matrix GS_bs_stan(
   vector x, vector knots, vector bknots, 
   vector fullknots, vector allknots, 
   int N, int degree, int ord, 
@@ -79,7 +79,7 @@ matrix GS_bs_stan_dense(
 }
 
 // Tuple version for both basis and derivative (dense)
-tuple(matrix, matrix) GS_bs_stan_tuple_dense(
+tuple(matrix, matrix) GS_bs_stan_tuple(
   vector x, vector knots, vector bknots, 
   vector fullknots, vector allknots, 
   int N, int degree, int ord, 
@@ -132,10 +132,10 @@ matrix GS_ns_stan(
   matrix MatpreH
 ) {
   int n_basis = Nintervals - degree;
-  matrix[N, n_basis] bs = GS_bs_stan_dense(x, knots, bknots, fullknots, allknots, N, degree, ord, Nintk, Nk, Nintervals, intercept, 0);
+  matrix[N, n_basis] bs = GS_bs_stan(x, knots, bknots, fullknots, allknots, N, degree, ord, Nintk, Nk, Nintervals, intercept, 0);
   matrix[N, n_basis] bsderiv;
   if (calcderiv) {
-    bsderiv = GS_bs_stan_dense(x, knots, bknots, fullknots, allknots, N, degree, ord, Nintk, Nk, Nintervals, intercept, 1);
+    bsderiv = GS_bs_stan(x, knots, bknots, fullknots, allknots, N, degree, ord, Nintk, Nk, Nintervals, intercept, 1);
   }
 
   int n_below = num_matches(x, bknots[1], -1);
@@ -147,7 +147,7 @@ matrix GS_ns_stan(
 
   if (n_below > 0 || n_above > 0) {
     tuple(matrix[2, n_basis], matrix[2, n_basis]) my_tuple =
-      GS_bs_stan_tuple_dense(bknots, knots, bknots, fullknots, allknots, 2, degree, ord, Nintk, Nk, Nintervals, intercept, 0);
+      GS_bs_stan_tuple(bknots, knots, bknots, fullknots, allknots, 2, degree, ord, Nintk, Nk, Nintervals, intercept, 0);
     matrix[2, n_basis] bs_bknots = my_tuple.1;
     matrix[2, n_basis] bsderiv_bknots = my_tuple.2;
 
