@@ -422,8 +422,8 @@ update_model.bgmfit <-
         dots_for_scode$init         <- NULL
       dots_for_scode              <- c(dots_for_scode, call_)
       dots_for_scode$get_stancode <- TRUE
-      new_stancode <-
-        suppressMessages(CustomDoCall(bsitar, dots_for_scode))
+      new_stancode <- suppressMessages(do.call(bsitar, dots_for_scode))
+      # new_stancode <- suppressMessages(CustomDoCall(bsitar, dots_for_scode))
       
       
       new_stancode <- sub("^[^\n]+\n", "", new_stancode)
@@ -445,7 +445,8 @@ update_model.bgmfit <-
         if (!new_init_arg)
           dots_for_recompile$init     <- NULL
         dots_for_recompile          <- c(dots_for_recompile, call_)
-        model <- CustomDoCall(bsitar, dots_for_recompile)
+        model <- do.call(bsitar, dots_for_recompile)
+        # model <- CustomDoCall(bsitar, dots_for_recompile)
       }
     } else {
       if (!is.null(dots$formula)) {
@@ -502,7 +503,8 @@ update_model.bgmfit <-
           dots_for_norecompile$init     <- NULL
           dots_for_norecompile          <-
             c(dots_for_norecompile, call_)
-          model <- CustomDoCall(bsitar, dots_for_norecompile)
+          model <- do.call(bsitar, dots_for_norecompile)
+          # model <- CustomDoCall(bsitar, dots_for_norecompile)
         } # if(!new_init_arg) {
         if (new_init_arg) {
           # TODO

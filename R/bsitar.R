@@ -2144,7 +2144,9 @@ bsitar <- function(x,
   
   
  quote_random_as_init_arg <- function(temp_init_call_in, mcall,...) {
-   if(is.null(temp_init_call_in)) temp_init_call_c <- temp_init_call_in
+   if(is.null(temp_init_call_in)) {
+     temp_init_call_c <- temp_init_call_in
+   } 
    if(is.symbol(temp_init_call_in) | is.numeric(temp_init_call_in)) {
      if(!is.character(temp_init_call_in)) {
        temp_init_call_c <- deparse(temp_init_call_in)
@@ -2188,8 +2190,8 @@ bsitar <- function(x,
  } # quote_random_as_init_arg
   
  
- 
   mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
+ 
   
   for (inxc in letters[1:26]) {
     what_inxc <- paste0(inxc, "_", "init", "_", "beta", "")
@@ -2531,7 +2533,7 @@ bsitar <- function(x,
   
   ##############################################################
   ##############################################################
-
+  
   enverr. <- environment()
   for (i in names(mcall)[-1]) {
     no_default_args_plus_family <- c(no_default_args, "family")
@@ -2771,7 +2773,13 @@ bsitar <- function(x,
                 collapse =", ")
     )
   
-
+  
+  
+  
+  # 5.06.2025 -> this was needed for CustomDoCall in update_model
+ # stype <- eval(stype)
+  
+  
   
   stype_temp_str <- deparse(substitute(stype))
   if(grepl("^list\\(", stype_temp_str)) {
@@ -2783,6 +2791,7 @@ bsitar <- function(x,
     stype <- gsub("\"", "", stype)
   }
   
+ 
 
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
@@ -2801,6 +2810,7 @@ bsitar <- function(x,
     # if(verbose) message("'rcs' set as default spline type")
   }
     
+  
 
   # Only expose type and normalize for stype 
   allowed_spline_type_list_names_c <- c('type', 
@@ -2817,15 +2827,24 @@ bsitar <- function(x,
                 collapse =", ")
     )
     
+  
     
   spline_type_list <- list()
   if(is.null(spline_type)) {
     spline_type_list[['type']]        <- NULL
     spline_type_list[['centerval']]   <- 0
     spline_type_list[['intercept']]   <- FALSE
-    spline_type_list[['normalize']]   <- FALSE
+    if(is.null(spline_type[['normalize']])) {
+      spline_type_list[['normalize']]   <- TRUE # set default normalize = TRUE
+    } else {
+      spline_type_list[['normalize']]   <- spline_type[['normalize']]
+    }
     spline_type_list[['derivs']]      <- FALSE
-    spline_type_list[['preH']]        <- FALSE
+    if(is.null(spline_type[['preH']])) {
+      spline_type_list[['preH']]   <- TRUE # set default preH = TRUE
+    } else {
+      spline_type_list[['preH']]   <- spline_type[['preH']]
+    }
     spline_type_list[['include']]     <- TRUE
   } else if(!is.null(spline_type)) {
     if(is.list(spline_type)) {
@@ -2840,6 +2859,13 @@ bsitar <- function(x,
             if(spline_type_via_stype) {
               names(spline_type) <- c('type', 'normalize')
               if(verbose) message("stype arguments named as 'type', 'normalize'")
+            } else {
+              stop(allowed_spline_type_list_names_msg)
+            }
+          } else if(length(spline_type) == 3) {
+            if(spline_type_via_stype) {
+              names(spline_type) <- c('type', 'normalize', "preH")
+              if(verbose) message("stype arguments named as 'type', 'normalize', 'preH'")
             } else {
               stop(allowed_spline_type_list_names_msg)
             }
@@ -2966,6 +2992,7 @@ bsitar <- function(x,
   
   smat <- spline_type_list[['type']] 
   
+
    # This to check spline type set using the ... smat
    if(!smat %in% allowed_spline_type)
      stop(paste0("The spline type must be a character string.", 
@@ -3000,9 +3027,21 @@ bsitar <- function(x,
   } else if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
     smat_intercept <- 0
     smat_centerval <- 0
-    smat_normalize <- as.integer(spline_type_list[['normalize']])
+    # set default normalize = TRUE
+    if(!spline_type_list[['normalize']]) {
+      smat_normalize   <- 1 
+    } else {
+      smat_normalize   <- spline_type_list[['normalize']] %>% as.integer()
+    }
+    # smat_normalize <- as.integer(spline_type_list[['normalize']])
     smat_derivs    <- 0
-    smat_preH      <- 0
+    # set default preH = TRUE
+    if(!spline_type_list[['preH']]) {
+      smat_preH   <- 1 
+    } else {
+      smat_preH   <- spline_type_list[['preH']] %>% as.integer()
+    }
+    # smat_preH <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- 0
     smat_include_path <- NULL
     SplinefunxPre  <- 'GS'
@@ -3024,6 +3063,13 @@ bsitar <- function(x,
   } else {
     # allow further checks - for later use
   }
+  
+  # print(spline_type_via_stype)
+  # 
+  # print(smat)
+  # print(smat_normalize)
+  # print(smat_preH)
+  # stop()
   
 
   # TODO work on smat_preH smat_include_stan to male them compatible
@@ -11211,7 +11257,6 @@ bsitar <- function(x,
     model_info[['decomp']] <- decomp
     model_info[['fun_scode']] <- fun_scode
     model_info[['envir']] <- enverr.
-    
     
     # The brms_arguments_list required in update_model()
     model_info[['brms_arguments_list']] <- brms_arguments_list
