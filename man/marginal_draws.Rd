@@ -369,7 +369,7 @@ passed to \code{variables}. In contrast, when using an alternative approach
 can be passed to the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions.}
 
-\item{condition}{Conditional predictions
+\item{condition}{Conditional predictions.
 \itemize{
 \item Character vector (max length 4): Names of the predictors to display.
 \item Named list (max length 4): List names correspond to predictors. List elements can be:
