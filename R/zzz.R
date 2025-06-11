@@ -39,4 +39,8 @@
 # utils-helper-22-modelbased_growthparameters_call - not using
 # utils-helper-23-modelbased_growthparameters_helpers
 # utils-helper-24-modelbased_growthparameters - via Stan
+# utils-helper-25-fast_nsk_rcsfun_str_get
+# utils-helper-26-generate_age_list
+
+
 
