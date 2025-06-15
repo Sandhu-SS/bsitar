@@ -1307,19 +1307,42 @@ prepare_function_nsp <- function(x,
     # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter
     # In fact for df > 1, it forces 'd' to be random parameter only
     
+    dparm_set_fixed_or_random <- FALSE
+    
     if (match_sitar_d_form) {
       if (grepl("d", randomsi, fixed = T)) {
-        if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
-        if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
+        # if( ept(d_adjustedsi)) nameadja <- "A+(d . * X)"
+        # # if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
+        # if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
+        dparm_set_fixed_or_random <- TRUE
+        if( ept(d_adjustedsi)) nameadja_dparm <- "(d .* X)"
+        if(!ept(d_adjustedsi)) nameadja_dparm <- "(d .* Xm)"
+        nameadja <- paste0("A+", nameadja_dparm)
       }
     }
     
     if (!match_sitar_d_form) {
       if (grepl("d", fixedsi, fixed = T)) {
-        if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
-        if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
+        # if( ept(d_adjustedsi)) nameadja <- "A+(d . * X)"
+        # # if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
+        # if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
+        dparm_set_fixed_or_random <- TRUE
+        if( ept(d_adjustedsi)) nameadja_dparm <- "(d .* X)"
+        if(!ept(d_adjustedsi)) nameadja_dparm <- "(d .* Xm)"
+        nameadja <- paste0("A+", nameadja_dparm)
       }
     }
+    
+    # This belwo to replace linear term for derivatives
+    if(dparm_set_fixed_or_random) {
+      gsubby_nameadja_dparm    <- nameadja_dparm
+      gsubit_nameadja_dparm_d1 <- "(d * 1.0)"
+      gsubit_nameadja_dparm_d2 <- "(d * 0.0)"
+    }
+    
+
+    
+    
     
     
     name5 <- paste(" (", name50, ");\n")
@@ -2233,6 +2256,9 @@ prepare_function_nsp <- function(x,
     )
     
     
+    
+    
+    
     intercept_str_plus_str_d2 <- 
       paste0("int derivs = ", 2, ";",
              "\n",
@@ -2305,6 +2331,16 @@ prepare_function_nsp <- function(x,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
       isigmaxfuntransformsi = isigmaxfuntransformsi
     )
+    
+    
+    
+    if(dparm_set_fixed_or_random) {
+      spl_d1 <- gsub(gsubby_nameadja_dparm, gsubit_nameadja_dparm_d1, spl_d1, fixed = T)
+      spl_d2 <- gsub(gsubby_nameadja_dparm, gsubit_nameadja_dparm_d2, spl_d2, fixed = T)
+    }
+    
+    
+    
     
     
     # rcsfunmultadd <- NULL

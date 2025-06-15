@@ -919,7 +919,10 @@ applied.
 
 \item{d_prior_beta}{Specify priors for the fixed effect parameter, \code{d}.
 The default prior is \code{normal(0, 1.0, autoscale = FALSE)}. For full
-details on prior specification, please refer to \code{a_prior_beta}.
+details on prior specification, please refer to \code{a_prior_beta}. Note
+that to set the scale of location-scale based priors, the user can set scale
+as standard deviation \code{'xsd'} or the median absolute deviation
+\code{'xmad'} of the predictor variable \code{'x'}.
 
 \itemize{
 \item Allowed distributions include \code{normal}, \code{student_t},

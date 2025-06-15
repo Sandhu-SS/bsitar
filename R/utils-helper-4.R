@@ -2628,7 +2628,6 @@ prepare_formula <- function(x,
       }
     }
     
-    
     # check and adjust intercept for smat nsp nk
     if(smat == 'nsk' | smat == 'nsp') {
       if(smat_intercept) {
@@ -2714,11 +2713,33 @@ prepare_formula <- function(x,
     }
     
     
+    if (!is.null(dfixed)) {
+      mat_dparm     <- dcovmat
+      lmform_dparm  <- as.formula(paste0(y, "~0+", "dcovmat", ":", x))
+      # lmform_dparm  <- as.formula(paste0(y, "~0+", "", x))
+      
+      lm_fit_dparm  <- lm(lmform_dparm, data = data)
+      lm_dparm_coef <- coef(lm_fit_dparm)
+      
+      # belwo if as.formula(paste0(y, "~0+", "dcovmat", "+", x))
+      # lm_d_all      <- lm_dparm_coef[2:(ncol(dcovmat)+1)] # note 2: ...+1 
+      
+      # belwo if as.formula(paste0(y, "~0+", "dcovmat", ":", x))
+      lm_d_all      <- lm_dparm_coef[1:ncol(dcovmat)]
+      
+      # print(lmform_dparm)
+      # print(lm_fit_dparm)
+      # print(lm_d_all)
+      # stop()
+    } # if (!is.null(dfixed)) {
+    
+    
     
     
     
     
     lm_a_all <- lm_coef[1:ncol(acovmat)]
+    
     if (!is.null(bfixed)) {
       lm_b_all <- rep(0, ncol(bcovmat))
     } else {
@@ -2730,10 +2751,16 @@ prepare_formula <- function(x,
       lm_c_all <- NULL
     }
     if (!is.null(dfixed)) {
-      lm_d_all <- rep(0, ncol(dcovmat))
+      lm_d_all <- lm_d_all # rep(0, ncol(dcovmat))
     } else {
       lm_d_all <- NULL
     }
+    
+    
+    # print(lm_d_all)
+    # stop()
+    
+    
     
     lm_s_all <- lm_coef[(ncol(acovmat) + 1):length(lm_coef)]
     
@@ -2754,6 +2781,9 @@ prepare_formula <- function(x,
     lm_b <- lm_b_all[1]
     lm_c <- lm_c_all[1]
     lm_d <- lm_d_all[1]
+    
+    # print(lm_d)
+    # stop
     
     if (!is.null(ancov)) {
       lm_a_cov <- lm_a_all[2:length(lm_a_all)]

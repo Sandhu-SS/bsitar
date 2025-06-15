@@ -3688,6 +3688,12 @@ prepare_priors <- function(prior_argument,
             } else if (x_i == paste0("ysdxmid", empty_sufx)) {
               eit <-  gsub("ysdxmid", paste0("ysdxmid", resp_), x_i)
               evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("xsd", empty_sufx)) {
+              eit <-  gsub("xsd", paste0("xsd", resp_), x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("xmad", empty_sufx)) {
+              eit <-  gsub("xmad", paste0("xmad", resp_), x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
                 prior_argument,
