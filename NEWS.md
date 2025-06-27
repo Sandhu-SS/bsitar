@@ -10,12 +10,16 @@ Also, the ``growthparameters_comparison()`` function has been renamed to ``margi
 
 For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
 
+The default ``stype`` set to ``nsk`` instead of ``nsp``. 
+
 
 ## New features/Additions
 
 Added experimental support for estimating model-based individual growth parameters, such as age at peak growth velocity (APGV), as well as distance and velocity at APGV. For details, refer to the function ``modelbased_growthparameters()``. Note that the function name and its arguments may change in future releases.
 
 Support has been added to allow the use of external functions, such as ``splines::ns()``, for modeling the distributional parameter ``sigma``. Users can now specify functions for both the fixed ``sigma_formula`` and random ``sigma_formula_gr`` effects. Further, different functions can be used in the fixed and random effects formulas. For example. For example. ``sigma_formula = ~ 1 + splines::ns(age, df = 3)``, and ``sigma_formula_gr = ~ 1 + stats::poly(age, degree = 2)``
+
+Added support for ``tag`` feature implementing parameter specific prior sensitivity analysis in ``priorsense`` package via ``brms``.
 
 
 ### Minor changes/Enhancements

@@ -1341,8 +1341,8 @@ prepare_function_nsp <- function(x,
     }
     
 
-    
-    
+    # dparm_set_fixed_or_random <- FALSE
+    # nameadja <- "A"
     
     
     name5 <- paste(" (", name50, ");\n")

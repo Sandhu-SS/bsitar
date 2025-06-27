@@ -110,6 +110,8 @@ prepare_priors <- function(prior_argument,
   group <- NULL;
   normalize <- NULL;
   initsi <- NULL;
+  tag <- NULL;
+  
   
   eout <- list2env(prior_internal_args)
   for (eoutii in names(eout)) {
@@ -322,6 +324,14 @@ prepare_priors <- function(prior_argument,
   
   dist <- strsplit(gsub("\\s", "", prior_str_arg), "\\(")[[1]][1]
   
+  
+  # TODO: Work on expanding dist check for all possible distributions
+  if(dist == 'norm') {
+    stop("It seems you have misspelled 'normal' distribution as 'norm'")
+  }
+  
+  
+  
   if(dist != 'flat') {
     
     add_missing_mandate_names <- function(x, testi, testi2) {
@@ -511,13 +521,14 @@ prepare_priors <- function(prior_argument,
       "sethp",
       "fxl",
       "fxs",
-      "fxls"
+      "fxls",
+      "tag"
     )
     
     
     optional_prior_names <-
       c("lb", "ub", "autoscale", "addrange", "sethp", 
-        "fxl", "fxs", "fxls")
+        "fxl", "fxs", "fxls", "tag")
     
     # Add missing optional_prior_names
     missing_optional_prior_names <-
@@ -542,16 +553,20 @@ prepare_priors <- function(prior_argument,
     
     incorrect_names <- splitmvar_w3[!splitmvar_w3 %in% min_par_names]
     
+    
+    
 
     if (!identical(incorrect_names, character(0))) {
       ttt_n1 <- paste(incorrect_names, collapse = ", ")
       ttt_nn2 <- paste(vacoublary_prior_parnames, collapse = ", ")
       stop(
-        "\nFollowing are incorrect/misspelled/not allowed options in prior:\n ",
+        "\nFollowing are incorrect / misspelled / not allowed options in prior:\n ",
         ttt_n1,
         "\n",
-        "Available prior parameter names are:\n",
+        "\n",
+        "Available prior argument names are:\n",
         ttt_nn2,
+        "\n",
         "\n",
         "For ",
         dist,
@@ -6592,8 +6607,7 @@ prepare_priors <- function(prior_argument,
         name_ub <- gsub(resp_, paste0("_", 'ub', "", resp_),  name_parameter)
       }
       
-      
-      
+     
       if (grepl("^lb$", pname_)  & !grepl("b_", x_i, fixed = T) ) {
         # if (grepl("^lb$", pname_)) {
         if (!(is.na(eval(parse(text = x_i))) |
@@ -6636,7 +6650,7 @@ prepare_priors <- function(prior_argument,
         assign(name_lb, lowerbound)
       }
       
-      
+     
       if (grepl("^ub$", pname_) & !grepl("b_", x_i, fixed = T) ) {
         # if (grepl("^ub$", pname_)) {
         if (!(is.na(eval(parse(text = x_i))) |
@@ -7907,17 +7921,15 @@ prepare_priors <- function(prior_argument,
     initial_out <- NULL
   }
   
-  # stanvars_datax <<- stanvars_data
-  # 
-  # stanvars_data %>% names() %>% print()
-  
+
   return(
     list(
       prior_str_arg = prior_str_arg_out,
       lowerbound = lowerbound,
       upperbound = upperbound,
       stanvars_data = stanvars_data,
-      initial_out = initial_out
+      initial_out = initial_out,
+      tag = tag
     )
   )
 }

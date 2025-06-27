@@ -1870,7 +1870,7 @@ bsitar <- function(x,
                    yfun = NULL,
                    xfunxoffset = NULL, 
                    bound = 0.04,
-                   stype = nsp,
+                   stype = nsk,
                    terms_rhs = NULL,
                    a_formula = ~ 1,
                    b_formula = ~ 1,
@@ -1927,7 +1927,7 @@ bsitar <- function(x,
                    a_prior_beta = normal(lm, ysd, autoscale = TRUE),
                    b_prior_beta = normal(0, 1.5, autoscale = FALSE),
                    c_prior_beta = normal(0, 0.5, autoscale = FALSE),
-                   d_prior_beta = normal(0, 1.0, autoscale = TRUE),
+                   d_prior_beta = normal(0, 1.0, autoscale = FALSE),
                    s_prior_beta = normal(lm, lm, autoscale = TRUE),
                    a_cov_prior_beta = normal(0, 5.0, autoscale = FALSE),
                    b_cov_prior_beta = normal(0, 1.0, autoscale = FALSE),
@@ -1937,7 +1937,7 @@ bsitar <- function(x,
                    a_prior_sd = normal(0, ysd, autoscale = FALSE),
                    b_prior_sd = normal(0, 1.0, autoscale = FALSE),
                    c_prior_sd = normal(0, 0.25, autoscale = FALSE),
-                   d_prior_sd = normal(0, 1.0, autoscale = TRUE),
+                   d_prior_sd = normal(0, 1.0, autoscale = FALSE),
                    a_cov_prior_sd = normal(0, 5.0, autoscale = FALSE),
                    b_cov_prior_sd = normal(0, 1.0, autoscale = FALSE),
                    c_cov_prior_sd = normal(0, 0.1, autoscale = FALSE),
@@ -1971,7 +1971,7 @@ bsitar <- function(x,
                    a_init_beta = lm,
                    b_init_beta = 0,
                    c_init_beta = 0,
-                   d_init_beta = random,
+                   d_init_beta = 0,
                    s_init_beta = lm,
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
@@ -1999,7 +1999,7 @@ bsitar <- function(x,
                    autocor_init_unstr_acor = random,
                    mvr_init_rescor = random,
                    r_init_z = random,
-                   vcov_init_0 = FALSE,
+                   vcov_init_0 = TRUE,
                    jitter_init_beta = NULL,
                    jitter_init_sd = NULL,
                    jitter_init_cor = NULL,
@@ -2704,6 +2704,7 @@ bsitar <- function(x,
   }
   
   
+  
   if(is.character(arguments$select_model)) {
     select_model <- arguments$select_model
   } else if(is.symbol(arguments$select_model)) {
@@ -2782,20 +2783,35 @@ bsitar <- function(x,
   # 5.06.2025 -> this was needed for CustomDoCall in update_model
  # stype <- eval(stype)
   
+
+  
+
+  
+  
+  quote_allowed_spline_type <- function(aaax, allowed_spline_type) {
+    for (ix in allowed_spline_type) {
+      gsub_it <- ix
+      gsub_by <- paste0("'", ix, "'")
+      aaax <- gsub(gsub_it, gsub_by, aaax, fixed = TRUE)
+      if(grepl("\"", aaax, fixed = TRUE)) {
+        aaax <- gsub("\"", "", aaax, fixed = TRUE)
+      }
+    }
+    return(aaax)
+  }
   
   
   stype_temp_str <- deparse(substitute(stype))
   if(grepl("^list\\(", stype_temp_str)) {
-    # stype[[1]] <- deparse(substitute(stype[[1]]))
-    # stype[[1]] <- gsub("\"", "", stype[[1]])
-    stype <- stype
+    stype_temp_str <-  quote_allowed_spline_type(stype_temp_str, allowed_spline_type)
+    stype <- ept(stype_temp_str)
+    stype[['type']] <- stype[[1]]
   } else {
     stype <- stype_temp_str
     stype <- gsub("\"", "", stype)
   }
   
  
-
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
     spline_type <- getdotslist[['smat']]
@@ -2813,7 +2829,6 @@ bsitar <- function(x,
     # if(verbose) message("'rcs' set as default spline type")
   }
     
-  
 
   # Only expose type and normalize for stype 
   allowed_spline_type_list_names_c <- c('type', 
@@ -2831,26 +2846,25 @@ bsitar <- function(x,
     )
     
   
+  
     
   spline_type_list <- list()
   if(is.null(spline_type)) {
     spline_type_list[['type']]        <- NULL
     spline_type_list[['centerval']]   <- 0
     spline_type_list[['intercept']]   <- FALSE
-    if(is.null(spline_type[['normalize']])) {
-      spline_type_list[['normalize']]   <- TRUE # set default normalize = TRUE
-    } else {
-      spline_type_list[['normalize']]   <- spline_type[['normalize']]
-    }
+    spline_type_list[['normalize']]   <- TRUE
     spline_type_list[['derivs']]      <- FALSE
-    if(is.null(spline_type[['preH']])) {
-      spline_type_list[['preH']]   <- TRUE # set default preH = TRUE
-    } else {
-      spline_type_list[['preH']]   <- spline_type[['preH']]
-    }
+    spline_type_list[['preH']]        <- TRUE
     spline_type_list[['include']]     <- TRUE
   } else if(!is.null(spline_type)) {
     if(is.list(spline_type)) {
+      if(is.null(spline_type[['normalize']])) {
+        spline_type[['normalize']]   <- TRUE
+      } 
+      if(is.null(spline_type[['preH']])) {
+        spline_type[['preH']]   <- TRUE
+      } 
       if(length(spline_type) > 0) {
         # if only type specified and unnamed, name it
         if(is.null(names(spline_type))) { 
@@ -2975,14 +2989,14 @@ bsitar <- function(x,
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
       } # if(length(spline_type) > 0) {
-    } else if(!is.list(spline_type)) {
+    } else if(!is.list(spline_type)) { 
       if(is.character(spline_type)) {
         spline_type_list[['type']]        <- spline_type
         spline_type_list[['intercept']]   <- FALSE
         spline_type_list[['centerval']]   <- 0
-        spline_type_list[['normalize']]   <- FALSE
+        spline_type_list[['normalize']]   <- TRUE
         spline_type_list[['derivs']]      <- FALSE
-        spline_type_list[['preH']]        <- FALSE
+        spline_type_list[['preH']]        <- TRUE
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
       } else if(!is.character(spline_type)) {
@@ -3004,7 +3018,7 @@ bsitar <- function(x,
      )
 
   if(smat == 'rcs') {
-    
+    # nothing
   } else if(smat == 'ns') {
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
   } else if(smat == 'nsp') {
@@ -3031,20 +3045,20 @@ bsitar <- function(x,
     smat_intercept <- 0
     smat_centerval <- 0
     # set default normalize = TRUE
-    if(!spline_type_list[['normalize']]) {
-      smat_normalize   <- 1 
-    } else {
-      smat_normalize   <- spline_type_list[['normalize']] %>% as.integer()
-    }
-    # smat_normalize <- as.integer(spline_type_list[['normalize']])
+    # if(!spline_type_list[['normalize']]) {
+    #  # smat_normalize   <- 1 
+    # } else {
+    #   smat_normalize   <- spline_type_list[['normalize']] %>% as.integer()
+    # }
+    smat_normalize <- as.integer(spline_type_list[['normalize']])
     smat_derivs    <- 0
     # set default preH = TRUE
-    if(!spline_type_list[['preH']]) {
-      smat_preH   <- 1 
-    } else {
-      smat_preH   <- spline_type_list[['preH']] %>% as.integer()
-    }
-    # smat_preH <- as.integer(spline_type_list[['preH']])
+    # if(!spline_type_list[['preH']]) {
+    #  # smat_preH   <- 1 
+    # } else {
+    #   smat_preH   <- spline_type_list[['preH']] %>% as.integer()
+    # }
+    smat_preH <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- 0
     smat_include_path <- NULL
     SplinefunxPre  <- 'GS'
@@ -3068,7 +3082,7 @@ bsitar <- function(x,
   }
   
   # print(spline_type_via_stype)
-  # 
+  # print(spline_type_list[['normalize']])
   # print(smat)
   # print(smat_normalize)
   # print(smat_preH)

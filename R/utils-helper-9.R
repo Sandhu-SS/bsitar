@@ -1819,6 +1819,7 @@ set_priors_initials <- function(a_prior_beta,
       lowerbound       <- out_p_str$lowerbound
       upperbound       <- out_p_str$upperbound
       initial_in       <- out_p_str$initial_out
+      tag              <- out_p_str$tag # add tag
       
       return(
         list(
@@ -1827,7 +1828,8 @@ set_priors_initials <- function(a_prior_beta,
           upperbound = upperbound,
           define_ = prior_str_arg,
           stanvars_data_in = stanvars_data_in,
-          initial_in = initial_in
+          initial_in = initial_in,
+          tag = tag
         )
       )
     }
@@ -1981,6 +1983,8 @@ set_priors_initials <- function(a_prior_beta,
     stanvars_data_in <- priors_parms$stanvars_data_in
     initial_in       <- priors_parms$initial_in
     
+    tag              <- priors_parms$tag
+    
     
     if (class == 'b') {
       # Need to remove lb and ub if specifying coef, otherwise
@@ -2100,7 +2104,8 @@ set_priors_initials <- function(a_prior_beta,
             resp = resp,
             dpar = dpar,
             lb = lowerbound,
-            ub = upperbound
+            ub = upperbound,
+            tag = tag
           )
       }
       
@@ -2126,7 +2131,8 @@ set_priors_initials <- function(a_prior_beta,
             resp = resp,
             dpar = dpar,
             lb = lowerbound,
-            ub = upperbound
+            ub = upperbound,
+            tag = tag
           )
       }
       
@@ -2145,7 +2151,8 @@ set_priors_initials <- function(a_prior_beta,
               resp = resp,
               dpar = dpar,
               lb = lowerbound,
-              ub = upperbound
+              ub = upperbound,
+              tag = tag
             )
           } else {
             priors_ <-   brms::prior_string(
@@ -2154,7 +2161,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           }
         }
@@ -2170,7 +2178,8 @@ set_priors_initials <- function(a_prior_beta,
               resp = resp,
               dpar = dpar,
               lb = lowerbound,
-              ub = upperbound
+              ub = upperbound,
+              tag = tag
             )
           } else {
             priors_ <-   brms::prior_string(
@@ -2179,7 +2188,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           }
         }
@@ -2202,7 +2212,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           
         }
@@ -2223,7 +2234,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2243,7 +2255,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2264,7 +2277,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2285,7 +2299,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2307,7 +2322,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2328,7 +2344,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2350,7 +2367,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2371,7 +2389,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2396,7 +2415,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           
         }
@@ -2423,7 +2443,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           
         }
@@ -2498,7 +2519,8 @@ set_priors_initials <- function(a_prior_beta,
             resp = resp,
             dpar = dpar,
             lb = lowerbound,
-            ub = upperbound
+            ub = upperbound,
+            tag = tag
           )
       }
       
@@ -2525,7 +2547,8 @@ set_priors_initials <- function(a_prior_beta,
             resp = resp,
             dpar = dpar,
             lb = lowerbound,
-            ub = upperbound
+            ub = upperbound,
+            tag = tag
           )
       }
       
@@ -2543,7 +2566,8 @@ set_priors_initials <- function(a_prior_beta,
               resp = resp,
               dpar = dpar,
               lb = lowerbound,
-              ub = upperbound
+              ub = upperbound,
+              tag = tag
             )
           } else {
             priors_ <-   brms::prior_string(
@@ -2553,7 +2577,8 @@ set_priors_initials <- function(a_prior_beta,
               coef = coef,
               group = group,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           }
         }
@@ -2570,7 +2595,8 @@ set_priors_initials <- function(a_prior_beta,
               resp = resp,
               dpar = dpar,
               lb = lowerbound,
-              ub = upperbound
+              ub = upperbound,
+              tag = tag
             )
           } else {
             priors_ <-   brms::prior_string(
@@ -2580,7 +2606,8 @@ set_priors_initials <- function(a_prior_beta,
               coef = coef,
               group = group,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           }
         }
@@ -2603,7 +2630,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2624,7 +2652,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2645,7 +2674,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2668,7 +2698,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2690,7 +2721,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2713,7 +2745,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2736,7 +2769,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2758,7 +2792,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2780,7 +2815,8 @@ set_priors_initials <- function(a_prior_beta,
               group = group,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -2805,7 +2841,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
           
         }
@@ -2833,7 +2870,8 @@ set_priors_initials <- function(a_prior_beta,
                 group = group,
                 coef = coef,
                 resp = resp,
-                dpar = dpar
+                dpar = dpar,
+                tag = tag
               )
           }
         }
@@ -2858,10 +2896,13 @@ set_priors_initials <- function(a_prior_beta,
     if (class == 'cor') {
       # if(sigma_dpar == "sigma") group <- ""
       if (ii == 1) {
-        priors_ <-  brms::prior_string(define_,
-                                       class = class,
-                                       group = group,
-                                       dpar = dpar) # resp = resp,
+        priors_ <-  
+          brms::prior_string(define_,
+                             class = class,
+                             group = group,
+                             dpar = dpar,
+                             # resp = resp,
+                             tag = tag)
       } else {
         priors_ <- ""
       }
@@ -2870,10 +2911,12 @@ set_priors_initials <- function(a_prior_beta,
     
     if (class == 'rescor') {
       if (ii == 1) {
-        priors_ <-  brms::prior_string(define_,
-                                       class = class,
-                                       group = "",
-                                       dpar = "")
+        priors_ <-  
+          brms::prior_string(define_,
+                             class = class,
+                             group = "",
+                             dpar = "",
+                             tag = tag)
       } else {
         priors_ <- ""
       }
@@ -2883,13 +2926,15 @@ set_priors_initials <- function(a_prior_beta,
     
     # residual standard deviation (sigma) prior
     if (class == 'sigma' & dpar == "") {
-      priors_ <-  brms::prior_string(
+      priors_ <-  
+        brms::prior_string(
         define_,
         class = class,
         lb = lowerbound,
         ub = upperbound,
         resp = resp,
-        dpar = dpar
+        dpar = dpar,
+        tag = tag
       )
       
     }
@@ -2943,7 +2988,8 @@ set_priors_initials <- function(a_prior_beta,
               resp = resp,
               dpar = dpar,
               lb = lowerbound,
-              ub = upperbound
+              ub = upperbound,
+              tag = tag
             )
         }
         
@@ -2970,7 +3016,8 @@ set_priors_initials <- function(a_prior_beta,
               resp = resp,
               dpar = dpar,
               lb = lowerbound,
-              ub = upperbound
+              ub = upperbound,
+              tag = tag
             )
         }
         
@@ -3026,7 +3073,8 @@ set_priors_initials <- function(a_prior_beta,
               nlpar = nlpar,
               coef = coef,
               resp = resp,
-              dpar = dpar
+              dpar = dpar,
+              tag = tag
             )
         }
       }
@@ -3051,7 +3099,8 @@ set_priors_initials <- function(a_prior_beta,
             nlpar = nlpar,
             coef = coef,
             resp = resp,
-            dpar = dpar
+            dpar = dpar,
+            tag = tag
           )
       }
     }
@@ -3071,14 +3120,16 @@ set_priors_initials <- function(a_prior_beta,
             priors_arma_c_define[[acorclassi]]$lowerbound
           upperbound <-
             priors_arma_c_define[[acorclassi]]$upperbound
-          priors_temp <-  brms::prior_string(
+          priors_temp <- 
+            brms::prior_string(
             define_,
             class = acorclassi,
             lb = lowerbound,
             ub = upperbound,
             coef = coef,
             resp = resp,
-            dpar = dpar
+            dpar = dpar,
+            tag = tag
           )
           priors_arma_c[[acorclassi]] <- priors_temp
           stanvars_data_in_c[[acorclassi]] <-
@@ -3087,14 +3138,16 @@ set_priors_initials <- function(a_prior_beta,
         priors_ <- priors_arma_c %>% CustomDoCall(rbind, .)
         stanvars_data_in <- stanvars_data_in_c %>% CustomDoCall(rbind, .)
       } else {
-        priors_ <-  brms::prior_string(
+        priors_ <- 
+          brms::prior_string(
           define_,
           class = class,
           lb = lowerbound,
           ub = upperbound,
           coef = coef,
           resp = resp,
-          dpar = dpar
+          dpar = dpar,
+          tag = tag
         )
       }
     }
