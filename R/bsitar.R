@@ -2070,10 +2070,42 @@ bsitar <- function(x,
   
   mcall <- mcall_ <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL)
   
+
+  #######
+  # check and allow setting threads as NULL or integer such as threads = 2
+  # Instead of compulsory setting threads = threading() or brms::threading()
+  mcall_threads_ <- mcall$threads
+  
+  if(!grepl("threading", deparse(mcall_threads_) )) {
+    if(!is.list(mcall_threads_)) {
+      temp_threads_ <- mcall_threads_
+      if(is.null(temp_threads_)) {
+        temp_threads_ <- temp_threads_
+      } else if(is.numeric(temp_threads_)) {
+        temp_threads_ <- as.integer(temp_threads_)
+      } else if(as.integer(temp_threads_)) {
+        temp_threads_ <- temp_threads_
+      } else {
+        stop("Argument 'threads' must be 'NULL' or an 'integer'")
+      }
+      mcall_threads_         <- brms::threading()
+      if(!is.null(temp_threads_)) {
+        mcall_threads_$threads <- temp_threads_
+      }
+    } # if(!is.list(mcall_threads_)) {
+  } # if(!grepl("threading", deparse(mcall_threads_) )) {
+  mcall$threads          <- mcall_threads_
+  ######
+  
+  
+  
+  
   newcall_checks <- c('threads', 'save_pars')
   
   newcall <- check_brms_args(mcall, newcall_checks)
   mcall <- mcall_ <- newcall
+  
+  
   
   # Check and set Alias argument for a b c ... formula
   dots_allias <- list(...)
@@ -9301,7 +9333,7 @@ bsitar <- function(x,
           setarguments$seed <- seed
         }
         
-        cores_ <- eval(setarguments$cores)
+        cores_   <- eval(setarguments$cores)
         threads_ <- eval(setarguments$threads)
         
         if(cores_ == "maximise") {
@@ -9327,6 +9359,10 @@ bsitar <- function(x,
         
         
         if(!is.list(threads_)) {
+          # NULL -> 'NULL
+          if(is.null(threads_)) {
+            threads_ <- deparse(threads_)
+          }
           if( is.character(threads_) & threads_ == "maximise") {
             max.threads <- 
               as.numeric(future::availableCores(methods = "system", omit = 0))

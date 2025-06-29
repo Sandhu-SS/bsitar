@@ -351,6 +351,18 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
+  # Depending on brms version, adjyst for tag option
+  brms_prior_string <- utils::getFromNamespace('set_prior', 'brms')
+  if(utils::packageVersion('brms') > "2.22.0") {
+    brms_prior_string             <- brms_prior_string
+  } else {
+    brms_prior_string_add_arg     <- formals(brms_prior_string)
+    brms_prior_string_add_arg$tag <- quote(NA)
+    formals(brms_prior_string)    <- brms_prior_string_add_arg
+  }
+  
+  
+  
   # Depending on select_model, assign null values to all not part of the model
   for (set_randomsi_higher_levsli in c(letters[1:20])) {
     set_nlpar_what <- set_randomsi_higher_levsli
@@ -1821,6 +1833,8 @@ set_priors_initials <- function(a_prior_beta,
       initial_in       <- out_p_str$initial_out
       tag              <- out_p_str$tag # add tag
       
+     
+      
       return(
         list(
           dist = dist,
@@ -2096,7 +2110,8 @@ set_priors_initials <- function(a_prior_beta,
         
         
         priors_ <-
-          brms::prior_string(
+          # brms::prior_string(
+          brms_prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -2123,7 +2138,8 @@ set_priors_initials <- function(a_prior_beta,
           }
         }
         priors_ <-
-          brms::prior_string(
+          # brms::prior_string(
+          brms_prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -2137,14 +2153,14 @@ set_priors_initials <- function(a_prior_beta,
       }
       
       
-      
-      
       # nlpar s - betas
       if (nlpar == 's' & cov_nlpar == "") {
         nlpar <- paste0(nlpar, 1:df)
         if (grepl("~1", s_formulasi, fixed = T)) {
           if (all(coef == "")) {
-            priors_ <- brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2155,7 +2171,9 @@ set_priors_initials <- function(a_prior_beta,
               tag = tag
             )
           } else {
-            priors_ <-   brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2171,7 +2189,9 @@ set_priors_initials <- function(a_prior_beta,
                        times = 1,
                        each = length(scovcoefnames))
           if (all(coef == "")) {
-            priors_ <- brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2182,7 +2202,9 @@ set_priors_initials <- function(a_prior_beta,
               tag = tag
             )
           } else {
-            priors_ <-   brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2206,7 +2228,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- acovcoefnames[2:length(acovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2228,7 +2251,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- bcovcoefnames[2:length(bcovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2249,7 +2273,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ccovcoefnames[2:length(ccovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2271,7 +2296,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- dcovcoefnames[2:length(dcovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2293,7 +2319,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ecovcoefnames[2:length(ecovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2316,7 +2343,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- fcovcoefnames[2:length(fcovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2338,7 +2366,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- gcovcoefnames[2:length(gcovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2361,7 +2390,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- hcovcoefnames[2:length(hcovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2383,7 +2413,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- icovcoefnames[2:length(icovcoefnames)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2409,7 +2440,8 @@ set_priors_initials <- function(a_prior_beta,
           
           dpar <- sigma_dpar
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2437,7 +2469,8 @@ set_priors_initials <- function(a_prior_beta,
           nlpar <- rep(nlpar, times = length(coef), each = 1)
           coef <- rep(coef , times = 1, each = df)
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2510,7 +2543,8 @@ set_priors_initials <- function(a_prior_beta,
           setcoef <- coef
         }
         priors_ <-
-          brms::prior_string(
+          # brms::prior_string(
+          brms_prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -2538,7 +2572,8 @@ set_priors_initials <- function(a_prior_beta,
           }
         }
         priors_ <-
-          brms::prior_string(
+          # brms::prior_string(
+          brms_prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -2558,7 +2593,9 @@ set_priors_initials <- function(a_prior_beta,
         nlpar <- paste0(nlpar, 1:df)
         if (grepl("~1", s_formula_grsi, fixed = T)) {
           if (all(coef == "")) {
-            priors_ <- brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2570,7 +2607,9 @@ set_priors_initials <- function(a_prior_beta,
               tag = tag
             )
           } else {
-            priors_ <-   brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2587,7 +2626,9 @@ set_priors_initials <- function(a_prior_beta,
                        times = 1,
                        each = length(scovcoefnames_gr))
           if (all(coef == "")) {
-            priors_ <- brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2599,7 +2640,9 @@ set_priors_initials <- function(a_prior_beta,
               tag = tag
             )
           } else {
-            priors_ <-   brms::prior_string(
+            priors_ <- 
+              # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2623,7 +2666,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- acovcoefnames_gr[2:length(acovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2645,7 +2689,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- bcovcoefnames_gr[2:length(bcovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2667,7 +2712,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ccovcoefnames_gr[2:length(ccovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2691,7 +2737,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- dcovcoefnames_gr[2:length(dcovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2714,7 +2761,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- ecovcoefnames_gr[2:length(ecovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2738,7 +2786,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- fcovcoefnames_gr[2:length(fcovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2762,7 +2811,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- gcovcoefnames_gr[2:length(gcovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2785,7 +2835,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- hcovcoefnames_gr[2:length(hcovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2808,7 +2859,8 @@ set_priors_initials <- function(a_prior_beta,
             coef <- hcovcoefnames_gr[2:length(hcovcoefnames_gr)]
           }
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2835,7 +2887,8 @@ set_priors_initials <- function(a_prior_beta,
           nlpar <- rep(nlpar, times = length(coef), each = 1)
           coef <- rep(coef , times = 1, each = df)
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -2863,7 +2916,8 @@ set_priors_initials <- function(a_prior_beta,
             }
             dpar <- sigma_dpar
             priors_ <-
-              brms::prior_string(
+              # brms::prior_string(
+              brms_prior_string(
                 define_,
                 class = class,
                 nlpar = nlpar,
@@ -2897,12 +2951,14 @@ set_priors_initials <- function(a_prior_beta,
       # if(sigma_dpar == "sigma") group <- ""
       if (ii == 1) {
         priors_ <-  
-          brms::prior_string(define_,
-                             class = class,
-                             group = group,
-                             dpar = dpar,
-                             # resp = resp,
-                             tag = tag)
+          # brms::prior_string(
+          brms_prior_string(
+            define_,
+            class = class,
+            group = group,
+            dpar = dpar,
+            # resp = resp,
+            tag = tag)
       } else {
         priors_ <- ""
       }
@@ -2912,11 +2968,13 @@ set_priors_initials <- function(a_prior_beta,
     if (class == 'rescor') {
       if (ii == 1) {
         priors_ <-  
-          brms::prior_string(define_,
-                             class = class,
-                             group = "",
-                             dpar = "",
-                             tag = tag)
+          # brms::prior_string(
+          brms_prior_string(
+            define_,
+            class = class,
+            group = "",
+            dpar = "",
+            tag = tag)
       } else {
         priors_ <- ""
       }
@@ -2927,7 +2985,8 @@ set_priors_initials <- function(a_prior_beta,
     # residual standard deviation (sigma) prior
     if (class == 'sigma' & dpar == "") {
       priors_ <-  
-        brms::prior_string(
+        # brms::prior_string(
+      brms_prior_string(
         define_,
         class = class,
         lb = lowerbound,
@@ -2980,7 +3039,8 @@ set_priors_initials <- function(a_prior_beta,
           }
           
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -3008,7 +3068,8 @@ set_priors_initials <- function(a_prior_beta,
           }
           
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -3067,7 +3128,8 @@ set_priors_initials <- function(a_prior_beta,
           }
           
           priors_ <-
-            brms::prior_string(
+            # brms::prior_string(
+            brms_prior_string(
               define_,
               class = class,
               nlpar = nlpar,
@@ -3093,7 +3155,8 @@ set_priors_initials <- function(a_prior_beta,
         }
         
         priors_ <-
-          brms::prior_string(
+          # brms::prior_string(
+          brms_prior_string(
             define_,
             class = class,
             nlpar = nlpar,
@@ -3121,7 +3184,8 @@ set_priors_initials <- function(a_prior_beta,
           upperbound <-
             priors_arma_c_define[[acorclassi]]$upperbound
           priors_temp <- 
-            brms::prior_string(
+            # brms::prior_string(
+          brms_prior_string(
             define_,
             class = acorclassi,
             lb = lowerbound,
@@ -3139,7 +3203,8 @@ set_priors_initials <- function(a_prior_beta,
         stanvars_data_in <- stanvars_data_in_c %>% CustomDoCall(rbind, .)
       } else {
         priors_ <- 
-          brms::prior_string(
+          # brms::prior_string(
+        brms_prior_string(
           define_,
           class = class,
           lb = lowerbound,
@@ -3153,6 +3218,7 @@ set_priors_initials <- function(a_prior_beta,
     }
     
    # For sd flat prior, brms assigns ~ flat prior above via brms::prior_string
+   # brms_prior_string(
     
     # if(class == "sd") {
     #   if(define_ == "") {

@@ -41,7 +41,7 @@ Imports:
     rlang (>= 1.1.2),
     Rdpack (>= 2.6.2),
     insight (>= 1.2.0),
-    data.table (>= 1.17.4),
+    data.table (>= 1.17.6),
     collapse (>= 2.1.1), 
     marginaleffects (>= 0.28.0),
     sitar, 
