@@ -354,13 +354,13 @@ set_priors_initials <- function(a_prior_beta,
   # Depending on brms version, adjust for tag option
   brms_prior_string <- utils::getFromNamespace('prior_string', 'brms')
   
-  # if(utils::packageVersion('brms') > "2.22.0") {
-  #   brms_prior_string             <- brms_prior_string
-  # } else {
-  #   brms_prior_string_add_arg     <- formals(brms_prior_string)
-  #   brms_prior_string_add_arg$tag <- quote(NA)
-  #   formals(brms_prior_string)    <- brms_prior_string_add_arg
-  # }
+  if(utils::packageVersion('brms') > "2.22.0") {
+    brms_prior_string             <- brms_prior_string
+  } else {
+    brms_prior_string_add_arg     <- formals(brms_prior_string)
+    brms_prior_string_add_arg$tag <- quote("")
+    formals(brms_prior_string)    <- brms_prior_string_add_arg
+  }
   
 
   # Depending on select_model, assign null values to all not part of the model
