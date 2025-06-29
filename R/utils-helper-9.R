@@ -351,18 +351,18 @@ set_priors_initials <- function(a_prior_beta,
   }
   
   
-  # Depending on brms version, adjyst for tag option
-  brms_prior_string <- utils::getFromNamespace('set_prior', 'brms')
-  if(utils::packageVersion('brms') > "2.22.0") {
-    brms_prior_string             <- brms_prior_string
-  } else {
-    brms_prior_string_add_arg     <- formals(brms_prior_string)
-    brms_prior_string_add_arg$tag <- quote(NA)
-    formals(brms_prior_string)    <- brms_prior_string_add_arg
-  }
+  # Depending on brms version, adjust for tag option
+  brms_prior_string <- utils::getFromNamespace('prior_string', 'brms')
   
+  # if(utils::packageVersion('brms') > "2.22.0") {
+  #   brms_prior_string             <- brms_prior_string
+  # } else {
+  #   brms_prior_string_add_arg     <- formals(brms_prior_string)
+  #   brms_prior_string_add_arg$tag <- quote(NA)
+  #   formals(brms_prior_string)    <- brms_prior_string_add_arg
+  # }
   
-  
+
   # Depending on select_model, assign null values to all not part of the model
   for (set_randomsi_higher_levsli in c(letters[1:20])) {
     set_nlpar_what <- set_randomsi_higher_levsli
@@ -1831,9 +1831,12 @@ set_priors_initials <- function(a_prior_beta,
       lowerbound       <- out_p_str$lowerbound
       upperbound       <- out_p_str$upperbound
       initial_in       <- out_p_str$initial_out
-      tag              <- out_p_str$tag # add tag
+      tag              <- out_p_str$tag
       
-     
+      if(tag == "NA") {
+        tag <- ""
+      }
+      
       
       return(
         list(
