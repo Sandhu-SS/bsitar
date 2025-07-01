@@ -81,6 +81,7 @@ prepare_function <- function(x,
   }
   
   
+  
   # "X" for rcsfunmultadd 
   
   include_fun_c <- c(spfncname
@@ -1197,7 +1198,6 @@ prepare_function <- function(x,
     }
     
     
-    
     endof_fun <-
       paste0("\n    ", returnmu, "\n  } // end of spline function", sep = " ")
     
@@ -1251,6 +1251,8 @@ prepare_function <- function(x,
       }
     }
     ######################################################################
+    
+    # cat(rcsfun)
     
     
     rcsfun_raw <- rcsfun
@@ -1366,6 +1368,7 @@ prepare_function <- function(x,
       funmats <- paste0(funmats, "\n", rcsfunmat)
     }
     
+    
     if (add_rcsfunmatqr) {
       rcsfunmatgr_name <- paste0(spfncname, 'QRsmat', '')
       
@@ -1387,7 +1390,12 @@ prepare_function <- function(x,
       #   paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
       ######################################################################
       
-      rcsfunmatqr <- paste(start_funmat, add_knotinfo, fun_body)
+      
+      # 01.07.2025
+      fun_bodyqr <- paste0(fun_body, "\n", decomp_code_qr_vectorA)
+      rcsfunmatqr <- paste(start_funmat, add_knotinfo, fun_bodyqr)
+      
+      # rcsfunmatqr <- paste(start_funmat, add_knotinfo, fun_body)
       
       
       rcsfunmatqr <- gsub(vectorA, "", rcsfunmatqr, fixed = T)
@@ -1441,7 +1449,15 @@ prepare_function <- function(x,
       #   paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
       ######################################################################
       
-      rcsfunmatgrinv <- paste(start_funmat, add_knotinfo, fun_body)
+      
+      # 01.07.2025
+      fun_bodyqrinv <- paste0(fun_body, "\n", decomp_code_qr_vectorA)
+      rcsfunmatgrinv <- paste(start_funmat, add_knotinfo, fun_bodyqrinv)
+
+      # fun_body <- fun_bodyqr
+      
+     # rcsfunmatgrinv <- start_funmat
+      # rcsfunmatgrinv <- paste(start_funmat, add_knotinfo, fun_body)
       
       
       rcsfunmatgrinv <- gsub(vectorA, "", rcsfunmatgrinv, fixed = T)
@@ -1472,7 +1488,8 @@ prepare_function <- function(x,
       funmats <- paste0(funmats, "\n", rcsfunmatgrinv)
     } # if(add_rcsfunmatqrinv) {
     
-    
+    # cat(rcsfunmatgrinv)
+    # stop()
     
     
     funmats_genquant <- ""
@@ -1731,6 +1748,16 @@ prepare_function <- function(x,
     "
     }
     
+    # 01.07.2025
+    if (!is.null(decomp)) {
+      body_d0 <- paste0(body, "\n", decomp_code_qr)
+    } else {
+      body_d0 <- body
+    }
+    
+    
+    
+    
     ######################################################################
     # funsi to transform and itransform
     spl_d0 <- create_internal_function(
@@ -1745,7 +1772,7 @@ prepare_function <- function(x,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
       # gsub_out_unscaled = c('QR', 'Spl')
-      body = body,
+      body = body_d0,
       vectorA = vectorA,
       decomp = decomp,
       fixedsi = fixedsi,
@@ -1802,6 +1829,14 @@ prepare_function <- function(x,
     "
     }
     
+    # 01.07.2025
+    if (!is.null(decomp)) {
+      body_d1 <- paste0(body, "\n", decomp_code_qr)
+    } else {
+      body_d1 <- body
+    }
+    
+    
     ######################################################################
     # funsi to transform and itransform
     spl_d1 <- create_internal_function(
@@ -1816,7 +1851,7 @@ prepare_function <- function(x,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
       # gsub_out_unscaled = c('QR', 'Spl')
-      body = body,
+      body = body_d1,
       vectorA = vectorA,
       decomp = decomp,
       fixedsi = fixedsi,
@@ -1873,6 +1908,14 @@ prepare_function <- function(x,
     }
     
     
+    # 01.07.2025
+    if (!is.null(decomp)) {
+      body_d2 <- paste0(body, "\n", decomp_code_qr)
+    } else {
+      body_d2 <- body
+    }
+    
+    
     ######################################################################
     # funsi to transform and itransform
     spl_d2 <- create_internal_function(
@@ -1887,7 +1930,7 @@ prepare_function <- function(x,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
       # gsub_out_unscaled = c('QR', 'Spl')
-      body = body,
+      body = body_d2,
       vectorA = vectorA,
       decomp = decomp,
       fixedsi = fixedsi,
@@ -2738,11 +2781,18 @@ prepare_function <- function(x,
             gsub(paste0("matrix[QK,QK]XR;", "\n"), "", xstaring, fixed = T)
           xstaring <- gsub("qr_thin_Q" , "qr", xstaring, fixed = T)
           xstaring <- gsub("qr_thin_R" , "qr.R", xstaring, fixed = T)
+          # xstaring <-
+          #   gsub(XR_inv_name,
+          #        "=inverse" ,
+          #        XR_inv_name,
+          #        "=chol2inv",
+          #        xstaring,
+          #        fixed = T)
           xstaring <-
-            gsub(XR_inv_name,
-                 "=inverse" ,
-                 XR_inv_name,
-                 "=chol2inv",
+            gsub(paste0(XR_inv_name,
+                 "=inverse"),
+                 paste0(XR_inv_name,
+                 "=chol2inv"),
                  xstaring,
                  fixed = T)
         }
@@ -2809,7 +2859,7 @@ prepare_function <- function(x,
   
   rcsfun <- remove_spaces_and_tabs(rcsfun)
   
-  
+
   if (!add_rcsfunmatqrinv_genquant) {
     out <- list(rcsfun = rcsfun, r_funs = all_raw_str,
                 include_fun_names = include_fun_names)
@@ -2820,6 +2870,8 @@ prepare_function <- function(x,
                 include_fun_names = include_fun_names)
   }
   
+  # cat(rcsfun)
+  # stop()
   
   out
 }

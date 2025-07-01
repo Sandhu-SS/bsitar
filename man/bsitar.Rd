@@ -192,6 +192,7 @@ bsitar(
   future = getOption("future", FALSE),
   fast_nsk = 0L,
   sum_zero = FALSE,
+  global_args = FALSE,
   parameterization = "ncp",
   ...
 )
@@ -1778,6 +1779,8 @@ argument can be set globally for the current \R session via the
 
 \item{sum_zero}{Currently ignored. Placeholder for future development.}
 
+\item{global_args}{Currently ignored. Placeholder for future development.}
+
 \item{parameterization}{A character string specifying the type of
 parameterization to use for drawing group-level random effects. Options
 are: \code{'ncp'} for Non-Centered Parameterization (NCP), and \code{'cp'}
@@ -1801,13 +1804,13 @@ using \code{\link[rstan:rstan]{rstan::rstan()}} or \code{"cmdstanr"}, depending 
 and may fail if the structure of the generated \code{stancode} changes in
 future versions of \code{\link[brms:brm]{brms::brm()}}.}
 
-\item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}. This can include
+\item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}. This may include
 additional arguments that are either passed directly to the underlying
-model fitting function or used for internal purposes. Specifically, the
+model fitting function, or used for internal purposes. Specifically, the
 \code{...} can also be used to pass arguments used for testing and
 debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
 \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
-\code{setcolb}.
+\code{setcolb}, \code{decomp}, \code{qr_gq}
 
 These internal arguments are typically not used in regular model fitting but
 can be relevant for certain testing scenarios or advanced customization.

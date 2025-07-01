@@ -1685,6 +1685,8 @@
 #' @param fast_nsk Currently ignored. Placeholder for future development. 
 #' 
 #' @param sum_zero Currently ignored. Placeholder for future development.
+#' 
+#' @param global_args Currently ignored. Placeholder for future development.
 #'
 #' @param parameterization A character string specifying the type of
 #'   parameterization to use for drawing group-level random effects. Options
@@ -1709,13 +1711,13 @@
 #'  and may fail if the structure of the generated \code{stancode} changes in
 #'  future versions of [brms::brm()].
 #'   
-#' @param ... Further arguments passed to [brms::brm()]. This can include
+#' @param ... Further arguments passed to [brms::brm()]. This may include
 #'   additional arguments that are either passed directly to the underlying
-#'   model fitting function or used for internal purposes. Specifically, the
+#'   model fitting function, or used for internal purposes. Specifically, the
 #'   \code{...} can also be used to pass arguments used for testing and
 #'   debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
 #'   \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
-#'   \code{setcolb}.
+#'   \code{setcolb}, \code{decomp}, \code{qr_gq}
 #'  
 #'  These internal arguments are typically not used in regular model fitting but
 #'  can be relevant for certain testing scenarios or advanced customization.
@@ -2055,6 +2057,7 @@ bsitar <- function(x,
                    future = getOption("future", FALSE),
                    fast_nsk = 0L,
                    sum_zero = FALSE,
+                   global_args = FALSE,
                    parameterization = 'ncp',
                    ...) {
   
@@ -2068,7 +2071,15 @@ bsitar <- function(x,
   
   mcall <- match.call()
   
-  mcall <- mcall_ <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL)
+  no_default_args <- c("x", "y", "id", "data", "...")
+  
+  if(global_args) {
+    mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL, 
+                                        exceptions = no_default_args)
+  }
+  mcall_ <- mcall
+  
+  
   
 
   #######
@@ -2161,8 +2172,6 @@ bsitar <- function(x,
   rm(dots_allias)
   
   mcall <- mcall_ <- mcall
-  
-  no_default_args <- c("x", "y", "id", "data", "...")
   
   # Problem with rethinking occurs during the expose_model_function
   if("rethinking" %in% (.packages())){
@@ -2727,13 +2736,39 @@ bsitar <- function(x,
   override_select_model <- TRUE # FALSE
   if(override_select_model) arguments$select_model <- select_model <- 'sitar'
   
-  # Override when restricting to rcs
-  if(select_model != 'rcs') decomp <- NULL
   
-  if(!is.null(decomp)) {
-    if(select_model != 'rcs') 
-      stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
+  # # Override when restricting to rcs
+  # if(select_model != 'rcs') decomp <- NULL
+  # 
+  # if(!is.null(decomp)) {
+  #   if(select_model != 'rcs') 
+  #     stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
+  # }
+  
+  
+  
+  # 01.07/2025
+  getdotslist <- list(...)
+  
+  
+  
+  # getdotslist decomp
+  if(is.null(getdotslist[['decomp']])) {
+    # Override when restricting to rcs
+    if(select_model != 'rcs') decomp <- NULL
+    
+    if(!is.null(decomp)) {
+      if(select_model != 'rcs') 
+        stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
+    }
+  } else if(!is.null(getdotslist[['decomp']])) {
+    if(getdotslist[['decomp']] != 'QR') {
+      stop("Argument 'decomp' should be either 'NULL' or 'QR'")
+    }
+    decomp <- getdotslist[['decomp']]
   }
+  
+  
   
   
   
@@ -2781,8 +2816,10 @@ bsitar <- function(x,
   # Note below that these can be controlled via ... dots
   
   
+  # 01.07/2025 -> getdotslist moved up to allow passing decomp 
   # 24.08.2024
-  getdotslist <- list(...)
+  # getdotslist <- list(...)
+  
   
   # spline types supported are 'rcs', 'nsp' and 'nsk'
   # The argument . is exposed that allows setting spline type as string 
@@ -4323,6 +4360,7 @@ bsitar <- function(x,
     'data_custom',
     'genquant_xyadj',
     "fast_nsk",
+    "global_args",
     "sum_zero",
     "..."
   )
@@ -6399,7 +6437,12 @@ bsitar <- function(x,
     
     # This control whether to add scode for genquant block for QR model
     # Relevant in both and prepare_function
-    add_rcsfunmatqrinv_genquant <- FALSE # TRUE
+    if(is.null(getdotslist[['qr_gq']])) {
+      add_rcsfunmatqrinv_genquant <- FALSE # TRUE
+    } else {
+      add_rcsfunmatqrinv_genquant <- getdotslist[['qr_gq']]
+    }
+    
     
 
     internal_function_args_names <-
@@ -9449,7 +9492,7 @@ bsitar <- function(x,
                          "match_sitar_d_form",
                          "sigmamatch_sitar_a_form",
                          "displayit", "setcolh", "setcolb",
-                        "smat"
+                        "smat", "decomp", "qr_gq"
                         )
   
   for (getdotslisti in getdotslistnames) {
