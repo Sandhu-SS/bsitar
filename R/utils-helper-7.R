@@ -69,32 +69,36 @@ prepare_function_nsp <- function(x,
   smat <- NULL;
   SplinefunxPre <- NULL;
   Splinefunxsuf <- NULL;
-  
   smat_intercept <- NULL;
   smat_centerval <- NULL;
   smat_normalize <- NULL;
   smat_preH <- NULL;
+  smat_sfirst <- NULL;
+  smat_sparse <- NULL;
   SplinefunxR <- NULL;
   SplinefunxStan <- NULL;
   smat_include_stan <- NULL;
   smat_include_path <- NULL;
   ii <- NULL;
-  
   set_xfunsi <- NULL;
   set_yfunsi <- NULL;
   set_sigmaxfunsi <- NULL;
   set_xfunxoffsetsi <- NULL;
   set_sigmaxfunxoffsetsi <- NULL;
-  
-  
   xfuntransformsi <- NULL;
   yfuntransformsi <- NULL;
   sigmaxfuntransformsi <- NULL;
   xfunxoffsettransformsi <- NULL;
   sigmaxfunxoffsettransformsi <- NULL;
-  
   sigmaxoffset <- NULL;
   fast_nsk  <- NULL;
+  # Add QR
+  decomp <- NULL;
+  QR_Xmat <- NULL;
+  QR_center <- NULL;
+  QR_complete <- NULL;
+  QR_flip <- NULL;
+  QR_scale <- NULL;
   
   
   if (!is.null(internal_function_args)) {
@@ -178,6 +182,7 @@ prepare_function_nsp <- function(x,
   
   b_s_name <- szx_name_resp
   
+  # This in generated quantity block for QR
   szxbq_vector <- paste0('v', resp_, "_", 's', 'x')
   
   
@@ -512,21 +517,80 @@ prepare_function_nsp <- function(x,
   ######################################################################
   
   
-  # https://mc-stan.org/users/documentation/case-studies/qr_regression.html
-  decomp_code_qr <-
-    "
+  # # https://mc-stan.org/users/documentation/case-studies/qr_regression.html
+  # decomp_code_qr <-
+  #   "
+  #     int QK = nknots - 1;
+  #     matrix[N, QK] Qc = Spl;
+  #     matrix[N, QK] XQ;
+  #     matrix[QK, QK] XR;
+  #     matrix[QK, QK] XR_inv;
+  #     XQ = qr_thin_Q(Qc) * sqrt(N - 1);
+  #     XR = qr_thin_R(Qc) / sqrt(N - 1);
+  #     XR_inv = inverse(XR);
+  #     "
+  
+  
+  
+  # Add QR
+  if (!is.null(decomp)) {
+    if (decomp == 'QR') {
+      decomp_code_qr <-
+        "
       int QK = nknots - 1;
-      matrix[N, QK] Qc = spl;
+      matrix[N, QK] forgsub_QR_Xmat = Spl;
+      forgsub_QR_center
       matrix[N, QK] XQ;
       matrix[QK, QK] XR;
       matrix[QK, QK] XR_inv;
-      XQ = qr_thin_Q(Qc) * sqrt(N - 1);
-      XR = qr_thin_R(Qc) / sqrt(N - 1);
+      XQ = qr_thin_Q(Qc) * forgsub_QR_scale;
+      XR = qr_thin_R(Qc) / forgsub_QR_scale;
       XR_inv = inverse(XR);
       "
+      
+      decomp_code_qr <- gsub('forgsub_QR_Xmat', QR_Xmat, decomp_code_qr, fixed = T)
+      
+      # When using within-chain parrallel, N is reduce sum based, not total N
+      if(is.null(QR_scale)) {
+        QR_scale_str   <- sqrt(length(data[[x]])-1)
+        QR_scale_str   <- round(QR_scale_str, 2)
+        QR_scale_str   <- deparse(QR_scale_str)
+      } else {
+        if(is.numeric(QR_scale)) {
+          QR_scale_str <- QR_scale
+          QR_scale_str   <- deparse(QR_scale_str)
+        } else if(is.character(QR_scale)) {
+          # QR_scale_str <- QR_scale
+          # QR_scale_str <- gsub("N", "length(data[[x]])", QR_scale_str, fixed = T)
+          # QR_scale_str <- ept(QR_scale_str)
+          # QR_scale_str   <- round(QR_scale_str, 2)
+          # QR_scale_str   <- deparse(QR_scale_str)
+          QR_scale_str  <- QR_scale
+        } else {
+          stop("'QR_scale' must be a numeric or string such as sqrt(N-1)")
+        }
+      }
+      
+      decomp_code_qr <- gsub('forgsub_QR_scale', QR_scale_str, decomp_code_qr, fixed = T)
+      
+      if(QR_center) {
+        QR_center_str <- "for(i in 1:QK) Qc[, i] = Qc[, i] - mean(Qc[, i]);"
+        decomp_code_qr <- gsub('forgsub_QR_center', QR_center_str, decomp_code_qr, fixed = T)
+      } else {
+        decomp_code_qr <- gsub('forgsub_QR_center', "", decomp_code_qr, fixed = T)
+      }
+      
+      # decomp_code_qr_print <- "print(N-1);\n print(sqrt(N-1));"
+      # decomp_code_qr <- paste0(decomp_code_qr, "\n", decomp_code_qr_print, "\n")
+      
+      # cat(decomp_code_qr)
+      # stop()
+      
+      decomp_code_qr <- gsub("XR_inv", XR_inv_name, decomp_code_qr, fixed = T)
+    } # if (decomp == 'QR') {
+  } # if (!is.null(decomp)) {
   
-  decomp_code_qr <-
-    gsub("XR_inv", XR_inv_name, decomp_code_qr, fixed = T)
+  
   
   
   ######################################################################
@@ -559,7 +623,7 @@ prepare_function_nsp <- function(x,
              function_str,
              fname,
              fnameout,
-             spl,
+             spl_str,
              splout,
              xfunsi,
              yfunsi,
@@ -576,10 +640,10 @@ prepare_function_nsp <- function(x,
              sigmaxfuntransformsi = NULL,
              isigmaxfuntransformsi = NULL
              ) {
-      split1 <- strsplit(function_str, gsub("\\[", "\\\\[", spl))[[1]][-1]
+      split1 <- strsplit(function_str, gsub("\\[", "\\\\[", spl_str))[[1]][-1]
       split2 <- strsplit(split1, "return")[[1]][-2]
       out <- gsub(split2, body, function_str, fixed = T)
-      out <- gsub(spl, splout, out, fixed = T)
+      out <- gsub(spl_str, splout, out, fixed = T)
       out <- gsub(fname, fnameout, out, fixed = T)
       
       if (grepl("d0", fnameout)) {
@@ -789,6 +853,7 @@ prepare_function_nsp <- function(x,
         
         out_return_p <- paste0(out_return, "\n", "    return")
         
+        # add QR
         if (!is.null(decomp)) {
           if (decomp == 'QR') {
             if (grepl("d1", fnameout)) {
@@ -798,8 +863,7 @@ prepare_function_nsp <- function(x,
                 out_return_p,
                 fixed = T
               )
-              out_return_p <-
-                gsub(vectorA, "", out_return_p, fixed = T)
+              out_return_p <-gsub(vectorA, "", out_return_p, fixed = T)
             }
             if (grepl("d2", fnameout)) {
               out_return_p <- gsub(
@@ -808,8 +872,7 @@ prepare_function_nsp <- function(x,
                 out_return_p,
                 fixed = T
               )
-              out_return_p <-
-                gsub(vectorA, "", out_return_p, fixed = T)
+              out_return_p <- gsub(vectorA, "", out_return_p, fixed = T)
             }
           }
         }
@@ -1027,6 +1090,28 @@ prepare_function_nsp <- function(x,
       snames[i] <- name1
     }
     
+    
+    
+    
+    
+    # add smat_sfirst
+    if(smat_sfirst) {
+      smat_sfirst_vector_c <- c()
+      for (i in 1:(nknots - 1)) {
+        sfirst_vectori <- paste0("sfirst_vector[", i, "]", " = ", 
+                                 paste0("s", i, sep = ""), "[", 1, "]", ";")
+        smat_sfirst_vector_c <- c(smat_sfirst_vector_c, sfirst_vectori)
+      }
+      smat_sfirst_vector_c2  <- paste(smat_sfirst_vector_c, collapse = "\n") 
+      smat_sfirst_vector_str <- paste0("vector[", (nknots - 1), "]", 
+                                       " ", "sfirst_vector;")
+      smat_sfirst_vector_str <- paste0(smat_sfirst_vector_str, "\n", 
+                                       smat_sfirst_vector_c2)
+    }
+    
+    
+    
+    
     # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter
     # In fact for df > 1, it forces 'd' to be random parameter only
     if (match_sitar_d_form) {
@@ -1139,22 +1224,25 @@ prepare_function_nsp <- function(x,
     add_knotinfo <- paste0(add_knotinfo, knots_split)
     
     
+    # add QR
     if (select_model == 'sitar') {
-      if(match_sitar_a_form) vectorA <- "\n  vector[N] A=a-(s1*min(knots));"
-      if(!match_sitar_a_form) vectorA <- "\n  vector[N] A=a;"
-      if (!is.null(decomp)) {
+      if (is.null(decomp)) {
+        if( match_sitar_a_form) vectorA <- "\n  vector[N] A=a-(s1*min(knots));"
+        if(!match_sitar_a_form) vectorA <- "\n  vector[N] A=a;"
+      } else if (!is.null(decomp)) {
         if (decomp == 'QR') {
-          vectorA <- "\n  vector[N] A=a;"
-          # vectorA <- "\n  vector[N] A=a-((XQ[,1].*s1)*min(knots));"
-        }
-      }
-    }
+          # A=a-(s1*min(knots));"
+          if( match_sitar_a_form) vectorA <- "\n  vector[N] A=a+(s1);"
+          if(!match_sitar_a_form) vectorA <- "\n  vector[N] A=a;"
+        } # if (decomp == 'QR') {
+      } # if (!is.null(decomp)) {
+    } # if (select_model == 'sitar') {
     
     
     if (select_model == 'sitar') { 
       if(smat == 'nsk' | smat == 'nsp') {
         if(smat_intercept) {
-        #  vectorA <- "\n  vector[N] A=a.*spl[,1];"
+        #  vectorA <- "\n  vector[N] A=a.*Spl[,1];"
         } # if(smat_intercept) {
       } # if(smat == 'nsk'smat == 'nsp') {
     }
@@ -1170,10 +1258,10 @@ prepare_function_nsp <- function(x,
     
     if(smat_intercept == 0) {
       intercept_str <- "int intercept = 0;"
-      matrix_cols_str <- "matrix[N, nknots-1] spl;"
+      matrix_cols_str <- "matrix[N, nknots-1] Spl;"
     } else if(smat_intercept == 1) {
       intercept_str <- "int intercept = 1;"
-      matrix_cols_str <- "matrix[N, nknots] spl;"
+      matrix_cols_str <- "matrix[N, nknots] Spl;"
     }
     
     
@@ -1236,6 +1324,10 @@ prepare_function_nsp <- function(x,
            "\n",
            "int preH = ", smat_preH,  ";",
            "\n",
+           "int sfirst = ", smat_sfirst,  ";",
+           "\n",
+           "int sparse = ", smat_sparse,  ";",
+           "\n",
            matrix_cols_str
            )
     
@@ -1244,10 +1336,9 @@ prepare_function_nsp <- function(x,
     intercept_str_plus_str <- paste0(intercept_str_plus_str, setMatpreH)
     
     
-    
-    
+    # "\nspl = ", -> "Spl = ", 
     fun_body_str <- 
-      paste0("\nspl = ", 
+      paste0("Spl = ", 
              SplinefunxStan, 
              "(", 
              SplinefunxStan_str,
@@ -1263,7 +1354,7 @@ prepare_function_nsp <- function(x,
         backend == "cmdstanr") {
       fun_body <- fun_body_str
       # fun_body <- "
-      # spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+      # Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
       # "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     } # if ((backend == "rstan"
@@ -1274,7 +1365,7 @@ prepare_function_nsp <- function(x,
         backend != "cmdstanr") {
       fun_body <- fun_body_str
     #   fun_body <- "
-    #   spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
     # "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     } # if ((backend == "rstan"
@@ -1283,18 +1374,18 @@ prepare_function_nsp <- function(x,
     for (i in 1:(nknots - 1)) {
       name1 <- paste0("", "s", i, sep = "")
       if (i < (nknots - 1)) {
-        # name2 <- paste0(' .* to_vector(spl[,',i,"]') +")
-        name2 <- paste0(' .* spl[,', i, "] +")
+        # name2 <- paste0(' .* to_vector(Spl[,',i,"]') +")
+        name2 <- paste0(' .* Spl[,', i, "] +")
         # check and adjust intercept for smat nsp nk
         if(smat == 'nsk' | smat == 'nsp') {
           if(smat_intercept) {
-            name2  <- paste0(' .* spl[,', i, "+intercept] +")
+            name2  <- paste0(' .* Spl[,', i, "+intercept] +")
           } # if(smat_intercept) {
         } # if(smat == 'nsk'smat == 'nsp') {
       }
       else {
-        # name2 <- paste0(' .* to_vector(spl[,',i,"]') ;\n")
-        name2 <- paste0(' .* spl[,', i, "]")
+        # name2 <- paste0(' .* to_vector(Spl[,',i,"]') ;\n")
+        name2 <- paste0(' .* Spl[,', i, "]")
       }
       name3 <- paste0(name1, name2, sep = "")
       name4[i] <- name3
@@ -1312,7 +1403,7 @@ prepare_function_nsp <- function(x,
     if (match_sitar_d_form) {
       if (grepl("d", randomsi, fixed = T)) {
         # if( ept(d_adjustedsi)) nameadja <- "A+(d . * X)"
-        # # if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
+        # # if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
         # if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
         dparm_set_fixed_or_random <- TRUE
         if( ept(d_adjustedsi)) nameadja_dparm <- "(d .* X)"
@@ -1324,7 +1415,7 @@ prepare_function_nsp <- function(x,
     if (!match_sitar_d_form) {
       if (grepl("d", fixedsi, fixed = T)) {
         # if( ept(d_adjustedsi)) nameadja <- "A+(d . * X)"
-        # # if( ept(d_adjustedsi)) nameadja <- "A+(d . * spl[,1])"
+        # # if( ept(d_adjustedsi)) nameadja <- "A+(d . * Spl[,1])"
         # if(!ept(d_adjustedsi)) nameadja <- "A+(d . * Xm)"
         dparm_set_fixed_or_random <- TRUE
         if( ept(d_adjustedsi)) nameadja_dparm <- "(d .* X)"
@@ -1391,16 +1482,18 @@ prepare_function_nsp <- function(x,
     # }
     ######################################################################
     
+    # add QR
     if (!is.null(decomp)) {
       if (decomp == 'QR') {
         returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
         decomp_code_qr_vectorA <- paste0(decomp_code_qr, vectorA)
         returnmu <- gsub('Spl', 'XQ', returnmu, fixed = T)
       }
+    } else if (is.null(decomp)) {
+      decomp_code_qr_vectorA <- NULL
     }
     
-    
-    
+
     
     if (is.null(decomp)) {
       fun_body <- paste0(fun_body, "\n", vectorA)
@@ -1426,6 +1519,25 @@ prepare_function_nsp <- function(x,
         collapse = " "
       )
     
+    
+    
+    
+    ######################################################################
+    # Remove empty lines from code strings
+    remove_spaces_and_tabs <- function(x) {
+      if(!is.null(x)) {
+        x <- gsub("^ *|(?<= ) | *$", "", x, perl = TRUE)
+        # '\\L\\1' converts first letter beyoind .* to lower
+        # x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\L\\1', x, perl=T)
+        x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\1', x, perl=T)
+        x <- x[x != ""]
+        x <- gsub("\\s*\n\\s*","\n",x) 
+        xx <- x
+      } else {
+        xx <- x
+      }
+      return(xx)
+    }
     
     
     
@@ -1563,7 +1675,7 @@ prepare_function_nsp <- function(x,
     
     returnmu_multadd <- returnmu
     returnmu_multadd <- gsub("XQ",  vector_X_name, returnmu_multadd, fixed = T)
-    returnmu_multadd <- gsub("spl", vector_X_name, returnmu_multadd, fixed = T)
+    returnmu_multadd <- gsub("Spl", vector_X_name, returnmu_multadd, fixed = T)
     
     
    
@@ -1593,8 +1705,8 @@ prepare_function_nsp <- function(x,
     
     # paste0(spfncname, "X")
     
-    # vectorAx <- "\n  vector[N] A=a.*spl[,1];"
-    vectorAx <- gsub("spl", vector_X_name, vectorA, fixed = T)
+    # vectorAx <- "\n  vector[N] A=a.*Spl[,1];"
+    vectorAx <- gsub("Spl", vector_X_name, vectorA, fixed = T)
 
     if (grepl('s1', vectorA)) {
       rcsfunmultadd <-
@@ -1650,7 +1762,7 @@ prepare_function_nsp <- function(x,
       
       
       rcsfunmat <- gsub(vectorA, "", rcsfunmat, fixed = T)
-      rcsfunmat <- paste0(rcsfunmat, "\n", 'return spl;')
+      rcsfunmat <- paste0(rcsfunmat, "\n", 'return Spl;')
       rcsfunmat <- paste0(rcsfunmat, '\n}')
       funmats <- paste0(funmats, "\n", rcsfunmat)
     }
@@ -1676,8 +1788,10 @@ prepare_function_nsp <- function(x,
       #   paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
       ######################################################################
       
-      rcsfunmatqr <- paste(start_funmat, add_knotinfo, fun_body)
-      
+      # add QR
+      # rcsfunmatqr <- paste(start_funmat, add_knotinfo, fun_body)
+      fun_bodyqr <- paste0(fun_body, "\n", decomp_code_qr_vectorA)
+      rcsfunmatqr <- paste(start_funmat, add_knotinfo, fun_bodyqr)
       
       rcsfunmatqr <- gsub(vectorA, "", rcsfunmatqr, fixed = T)
       
@@ -1730,7 +1844,11 @@ prepare_function_nsp <- function(x,
       #   paste(start_funmat, add_knotinfo, fun_body, "\n", setxoffset)
       ######################################################################
       
-      rcsfunmatgrinv <- paste(start_funmat, add_knotinfo, fun_body)
+      
+      # add QR
+      # rcsfunmatgrinv <- paste(start_funmat, add_knotinfo, fun_body)
+      fun_bodyqrinv <- paste0(fun_body, "\n", decomp_code_qr_vectorA)
+      rcsfunmatgrinv <- paste(start_funmat, add_knotinfo, fun_bodyqrinv)
       
       
       rcsfunmatgrinv <- gsub(vectorA, "", rcsfunmatgrinv, fixed = T)
@@ -2124,8 +2242,8 @@ prepare_function_nsp <- function(x,
     
     # Create function d0
     fnameout <- paste0(spfncname, "_", "d0")
-    spl    <- intercept_str # "spl[,1]=X;"
-    splout <- paste0(spl, "\n", intercept_str_plus_str_d0)
+    spl_str    <- intercept_str # "Spl[,1]=X;"
+    splout <- paste0(spl_str, "\n", intercept_str_plus_str_d0)
 
     spl_fun_ford <- paste0(fnameout,
                            "(vector ",
@@ -2141,7 +2259,7 @@ prepare_function_nsp <- function(x,
         backend == "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
     #   body <- "
-    #   spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
     # "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -2152,10 +2270,19 @@ prepare_function_nsp <- function(x,
         backend != "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
     #   body <- "
-    #   spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
     # "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
+    
+    
+    # add QR
+    if (!is.null(decomp)) {
+      body_d0 <- paste0(body, "\n", decomp_code_qr)
+    } else {
+      body_d0 <- body
+    }
+    
     
     ######################################################################
     # funsi to transform and itransform
@@ -2164,14 +2291,15 @@ prepare_function_nsp <- function(x,
       function_str = rcsfun,
       fname = spfncname,
       fnameout = fnameout,
-      spl = spl,
+      spl_str = spl_str,
       splout = splout,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'spl')
-      body = body,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      # body = body,
+      body = body_d0,
       vectorA = vectorA,
       decomp = decomp,
       fixedsi = fixedsi,
@@ -2202,18 +2330,18 @@ prepare_function_nsp <- function(x,
     
     # Create function d1
     fnameout <- paste0(spfncname, "_", "d1")
-    spl    <- intercept_str # "spl[,1]=X;"
-    # splout <- "spl[,1]=rep_vector(1, N);"
-    splout <- paste0(spl, "\n", intercept_str_plus_str_d1)
+    spl_str    <- intercept_str # "Spl[,1]=X;"
+    # splout <- "Spl[,1]=rep_vector(1, N);"
+    splout <- paste0(spl_str, "\n", intercept_str_plus_str_d1)
     
     if ((backend == "rstan" &
          utils::packageVersion("rstan") >= "2.26.1") |
         backend == "mock" |
         backend == "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
-      # body <- paste0(body, "\n", "spl[,1]=rep_vector(1.0, N);", "\n")
+      # body <- paste0(body, "\n", "Spl[,1]=rep_vector(1.0, N);", "\n")
     #   body <- "
-    #   spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
     # "
      # fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -2224,9 +2352,18 @@ prepare_function_nsp <- function(x,
         backend != "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
     #   body <- "
-    #   spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
     # "
   #    fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
+    }
+    
+    
+    # add QR
+    if (!is.null(decomp)) {
+      decomp_code_qr_d1 <- paste0(decomp_code_qr, "XQ[,1]=rep_vector(1, N);", "\n")
+      body_d1 <- paste0(body, "\n", decomp_code_qr_d1)
+    } else {
+      body_d1 <- body
     }
     
     ######################################################################
@@ -2236,14 +2373,15 @@ prepare_function_nsp <- function(x,
       function_str = rcsfun,
       fname = spfncname,
       fnameout = fnameout,
-      spl = spl,
+      spl_str = spl_str,
       splout = splout,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'spl')
-      body = body,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      # body = body,
+      body = body_d1,
       vectorA = vectorA,
       decomp = decomp,
       fixedsi = fixedsi,
@@ -2277,9 +2415,9 @@ prepare_function_nsp <- function(x,
     
     # Create function d2
     fnameout <- paste0(spfncname, "_", "d2")
-    spl <- intercept_str # "spl[,1]=X;"
-    # splout <- "spl[,1]=rep_vector(0, N);"
-    splout <- paste0(spl, "\n", intercept_str_plus_str_d2)
+    spl_str <- intercept_str # "Spl[,1]=X;"
+    # splout <- "Spl[,1]=rep_vector(0, N);"
+    splout <- paste0(spl_str, "\n", intercept_str_plus_str_d2)
     
     
     if ((backend == "rstan" &
@@ -2287,9 +2425,9 @@ prepare_function_nsp <- function(x,
         backend == "mock" |
         backend == "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
-      # body <- paste0(body, "\n", "spl[,1]=rep_vector(1.0, N);", "\n")
+      # body <- paste0(body, "\n", "Spl[,1]=rep_vector(1.0, N);", "\n")
     #   body <- "
-    #   spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
     # "
  #     fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
@@ -2300,11 +2438,18 @@ prepare_function_nsp <- function(x,
         backend != "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
     #   body <- "
-    #   spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
+    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
     # "
    #   fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
     
+    
+    # add QR
+    if (!is.null(decomp)) {
+      body_d2 <- paste0(body, "\n", decomp_code_qr)
+    } else {
+      body_d2 <- body
+    }
     
     ######################################################################
     # funsi to transform and itransform
@@ -2313,14 +2458,15 @@ prepare_function_nsp <- function(x,
       function_str = rcsfun,
       fname = spfncname,
       fnameout = fnameout,
-      spl = spl,
+      spl_str = spl_str,
       splout = splout,
       xfunsi = xfunsi,
       yfunsi = yfunsi,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'spl')
-      body = body,
+      # gsub_out_unscaled = c('QR', 'Spl')
+      # body = body,
+      body = body_d2,
       vectorA = vectorA,
       decomp = decomp,
       fixedsi = fixedsi,
@@ -2376,6 +2522,143 @@ prepare_function_nsp <- function(x,
     # } else {
     #   getxname <- NULL
     # }
+    ######################################################################
+    
+    # // Tuple version for both basis and derivative (dense)
+    # tuple(matrix, matrix) GS_bs_stan_tuple(
+    
+    # add smat_sfirst
+    # add smat_sparse
+    # edit rcsfun here before merging with other functions
+    edit_rcsfun_for_smat_sfirst <- function(rcsfun_raw, 
+                                            decomp,
+                                            smat_sfirst,
+                                            smat_sparse) {
+      
+      smat_sfirst <- as.logical(smat_sfirst)
+      smat_sparse <- as.logical(smat_sparse)
+
+      if(is.null(decomp) & !smat_sfirst & !smat_sparse) {
+        return(rcsfun_raw)
+      }
+      
+      # add QR
+      # For rcsfun (also see if to do for rcsfun_d0), don;t compute unnecessary
+      if (!is.null(decomp)) {
+        if (decomp == 'QR') {
+          rcsfun_raw <- replace_string_part(rcsfun_raw, 
+                                            paste0("matrix[QK, QK] XR", ""), 
+                                            ";", 
+                                            "")
+          rcsfun_raw <- replace_string_part(rcsfun_raw, 
+                                            paste0("XR = qr_", ""), 
+                                            ";", 
+                                            "")
+          rcsfun_raw <- replace_string_part(rcsfun_raw, 
+                                            paste0("XR_inv = ", ""), 
+                                            ";", 
+                                            "")
+          rcsfun_raw <- remove_spaces_and_tabs(rcsfun_raw)
+        }
+      }
+      
+      if (!is.null(decomp)) {
+        if (decomp == 'QR') {
+          matname_subst <- 'XQ'
+        }
+      } else {
+        matname_subst <- 'Spl'
+      }
+      
+      
+      
+      # For sparse checks 
+      check_sparsity_percentage <- FALSE
+      if(check_sparsity_percentage) {
+        if(smat_sfirst & smat_sparse) {
+          sparsity_percentage_str <- 
+            "int num_non_zero_elements = size(wX); 
+          int total_elements = rows(gsubforX) * cols(gsubforX);
+          real sparsity_percentage;
+          if (total_elements > 0) {
+            sparsity_percentage = 100.0 * (1.0 - 
+            (num_non_zero_elements * 1.0) / (total_elements * 1.0));
+          } else {
+            sparsity_percentage = 0.0; 
+          }
+          print(sparsity_percentage);"
+          sparsity_percentage_str <- gsub("gsubforX", 
+                                          matname_subst, 
+                                          sparsity_percentage_str, fixed = T)
+        }
+      } # if(check_sparsity_percentage) {
+      
+      
+      # add sfirst
+      # add sparse
+      if(smat_sfirst & !smat_sparse) {
+        smat_sfirst_vector_str_return <- paste0("return", 
+                                                "(",
+                                                "A + ", 
+                                                matname_subst,
+                                                " * ",
+                                                'sfirst_vector',
+                                                ");")
+        smat_sfirst_vector_str_return <- paste0(smat_sfirst_vector_str, "\n",
+                                                smat_sfirst_vector_str_return)
+      } else if(smat_sfirst & smat_sparse) {
+        csr_matrix_return <- paste0("csr_matrix_times_vector(",
+                                    "rows(", matname_subst, ")", ",",
+                                    "cols(", matname_subst, ")", ",",
+                                    "wX", ",",
+                                    "vX", ",",
+                                    "uX", ",",
+                                    'sfirst_vector',
+                                    ")"
+        )
+        # csr_matrix_times_vector(rows(X), cols(X), wX, vX, uX, b);
+        csr_matrix_str <-
+          "vector[rows(csr_extract_w(gsubforX))] wX = csr_extract_w(gsubforX);
+          array[size(csr_extract_v(gsubforX))] int vX = csr_extract_v(gsubforX);
+          array[size(csr_extract_u(gsubforX))] int uX = csr_extract_u(gsubforX);"
+        
+        csr_matrix_str <- gsub("gsubforX", matname_subst, csr_matrix_str, fixed = T)
+        
+        if(check_sparsity_percentage) {
+          csr_matrix_str <- paste0(csr_matrix_str, "\n", sparsity_percentage_str)
+        } # if(check_sparsity_percentage) {
+        
+        
+        smat_sfirst_vector_str_return <- paste0("return", 
+                                                "(",
+                                                "A + ", 
+                                                csr_matrix_return,
+                                                ");")
+        
+        smat_sfirst_vector_str <- paste0(smat_sfirst_vector_str, "\n",
+                                         csr_matrix_str)
+        
+        smat_sfirst_vector_str_return <- paste0(smat_sfirst_vector_str, "\n",
+                                                smat_sfirst_vector_str_return)
+      }
+      
+      rcsfun_raw <- replace_string_part(rcsfun_raw, 
+                                        "return(", 
+                                        ";", 
+                                        smat_sfirst_vector_str_return)
+      
+      return(rcsfun_raw)
+    } # edit_rcsfun_for_smat_sfirst
+    
+    
+    rcsfun <- edit_rcsfun_for_smat_sfirst(rcsfun, 
+                                          decomp,
+                                          smat_sfirst,
+                                          smat_sparse)
+    
+    # cat(rcsfun)
+    # stop()
+    
     ######################################################################
     
 
@@ -2906,6 +3189,8 @@ prepare_function_nsp <- function(x,
     spl_fun_ford <- gsub(",)", ")", spl_fun_ford, fixed = T)
     
     
+    
+    
     ######################################################################
     # funsi to transform and itransform
     spl_d0 <- create_internal_function_nonsitar(
@@ -2944,7 +3229,7 @@ prepare_function_nsp <- function(x,
       yfunsi = yfunsi,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'spl')
+      # gsub_out_unscaled = c('QR', 'Spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d1,
       decomp = decomp,
@@ -2971,7 +3256,7 @@ prepare_function_nsp <- function(x,
       yfunsi = yfunsi,
       # setxoffset = setxoffset,
       gsub_out_unscaled = NULL,
-      # gsub_out_unscaled = c('QR', 'spl')
+      # gsub_out_unscaled = c('QR', 'Spl')
       spl_fun_ford = spl_fun_ford,
       body = returnmu_d2,
       decomp = decomp,
@@ -3076,21 +3361,7 @@ prepare_function_nsp <- function(x,
   
   
 
-  # Remove empty lines from code strings
-  remove_spaces_and_tabs <- function(x) {
-    if(!is.null(x)) {
-      x <- gsub("^ *|(?<= ) | *$", "", x, perl = TRUE)
-      # '\\L\\1' converts first letter beyoind .* to lower
-      # x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\L\\1', x, perl=T)
-      x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\1', x, perl=T)
-      x <- x[x != ""]
-      x <- gsub("\\s*\n\\s*","\n",x) 
-      xx <- x
-    } else {
-     xx <- x
-    }
-    return(xx)
-  }
+  
   
   
   
@@ -3123,15 +3394,15 @@ prepare_function_nsp <- function(x,
         xstaring <- gsub("ercept" , "intercept", xstaring, fixed = T)
         xstaring <- gsub("[nknots-2]iknotsx;", "", xstaring, fixed = T)
         xstaring <- gsub("[2]bknotsx;", "", xstaring, fixed = T)
-        xstaring <- gsub("spl=matrix(0,N,nknots-1);" , "", xstaring, fixed = T)
-        xstaring <- gsub("spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
-        xstaring <- gsub("spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
+        xstaring <- gsub("Spl=matrix(0,N,nknots-1);" , "", xstaring, fixed = T)
+        xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
+        xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
         xstaring <- gsub("segment(knots,2,nknots-2);", "knots[2:(length(knots)-1)];", xstaring, fixed = T)
         xstaring <- gsub("append_row(head(knots,1),tail(knots,1));", "c(knots[1], knots[length(knots)]);", xstaring, fixed = T)
         xstaring <- gsub(SplinefunxStan , SplinefunxR, xstaring, fixed = T)
-        xstaring <- gsub("matrix[N,nknots]spl;" , "", xstaring, fixed = T)
-        xstaring <- gsub("spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
-        xstaring <- gsub("spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
+        xstaring <- gsub("matrix[N,nknots]Spl;" , "", xstaring, fixed = T)
+        xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
+        xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
         xstaring <- remove_spaces_and_tabs(xstaring)
       }
       xstaring <- gsub("real" , "", xstaring, fixed = T)
@@ -3147,8 +3418,8 @@ prepare_function_nsp <- function(x,
         )
       xstaring <- gsub("num_elements" , "length", xstaring, fixed = T)
       xstaring <-
-        gsub("matrix[N,nknots-1]spl" ,
-             "spl=matrix(0,N,nknots-1)",
+        gsub("matrix[N,nknots-1]Spl" ,
+             "Spl=matrix(0,N,nknots-1)",
              xstaring,
              fixed = T)
       xstaring <-
@@ -3191,29 +3462,75 @@ prepare_function_nsp <- function(x,
         }
       }
       
+      
+      # add QR
       if (!is.null(decomp)) {
         if (decomp == 'QR') {
-          xstaring <-
-            gsub(paste0("matrix[N,QK]XQ;", "\n") , "", xstaring, fixed = T)
-          xstaring <- gsub("matrix[N,QK]" , "", xstaring, fixed = T)
-          xstaring <-
-            gsub(paste0("matrix[QK,QK]", XR_inv_name, ";", "\n") ,
-                 "",
-                 xstaring,
-                 fixed = T)
-          xstaring <-
-            gsub(paste0("matrix[QK,QK]XR;", "\n"), "", xstaring, fixed = T)
-          xstaring <- gsub("qr_thin_Q" , "qr", xstaring, fixed = T)
-          xstaring <- gsub("qr_thin_R" , "qr.R", xstaring, fixed = T)
-          xstaring <-
-            gsub(XR_inv_name,
-                 "=inverse" ,
-                 XR_inv_name,
-                 "=chol2inv",
-                 xstaring,
-                 fixed = T)
-        }
-      }
+          # Prepare for next setp QR
+          # QR_Xmat      <- 'Qc'
+          # QR_center    <- 'FALSE'
+          # QR_complete  <- 'FALSE'
+          # QR_flip      <- 'TRUE'
+          # QR_scale     <- 'NULL'
+          set_QR_decomp_R <- paste0("QR_decomp_R(", 
+                                    "X=",        QR_Xmat,     "," ,
+                                    "center=",   QR_center, "," ,
+                                    "complete=", QR_complete, "," ,
+                                    "flip=",     QR_flip,     "," ,
+                                    "scale=",    QR_scale, ")"
+          )
+          set_QR_Xmat <- "QRRinv"
+          set_QR_decomp_R <- paste0(set_QR_Xmat, "=", set_QR_decomp_R)
+          
+          getQmat    <- paste0(set_QR_Xmat, "[[", "'Q'", "]]")
+          getRmat    <- paste0(set_QR_Xmat, "[[", "'R'", "]]")
+          getRinvmat <- paste0(set_QR_Xmat, "[[", "'Rinv'", "]]")
+          
+          getQmat    <- paste0("XQ", "=", getQmat)
+          getRmat    <- paste0("XR", "=", getRmat)
+          getRinvmat <- paste0(XR_inv_name, "=", getRinvmat)
+          
+          set_QR_decomp_str <- paste0("Qc=Spl;", "\n", 
+                                      set_QR_decomp_R, "\n", 
+                                      getQmat, "\n", 
+                                      getRmat, "\n", 
+                                      getRinvmat
+          )
+          # make QR chnages
+          xstaring <- replace_string_part(xstaring, 
+                                          paste0("matrix[N,QK]Qc=Spl;", "\n"), 
+                                          "inverse(XR);", 
+                                          set_QR_decomp_str)
+        } # if (decomp == 'QR') {
+      } # if (!is.null(decomp)) {
+      
+      
+      
+      # if (!is.null(decomp)) {
+      #   if (decomp == 'QR') {
+      #     xstaring <-
+      #       gsub(paste0("matrix[N,QK]XQ;", "\n") , "", xstaring, fixed = T)
+      #     xstaring <- gsub("matrix[N,QK]" , "", xstaring, fixed = T)
+      #     xstaring <-
+      #       gsub(paste0("matrix[QK,QK]", XR_inv_name, ";", "\n") ,
+      #            "",
+      #            xstaring,
+      #            fixed = T)
+      #     xstaring <-
+      #       gsub(paste0("matrix[QK,QK]XR;", "\n"), "", xstaring, fixed = T)
+      #     xstaring <- gsub("qr_thin_Q" , "qr", xstaring, fixed = T)
+      #     xstaring <- gsub("qr_thin_R" , "qr.R", xstaring, fixed = T)
+      #     xstaring <-
+      #       gsub(XR_inv_name,
+      #            "=inverse" ,
+      #            XR_inv_name,
+      #            "=chol2inv",
+      #            xstaring,
+      #            fixed = T)
+      #   }
+      # }
+      
+      
       xstaring <- gsub("matrixXp" , "Xp", xstaring, fixed = T) # spfnameX
       xstaring
     } # extract_r_fun_from_scode
@@ -3426,9 +3743,9 @@ prepare_function_nsp <- function(x,
   # print(include_fun_names)
   # stop()
   
- #  print(cat(rcsfun))
+  # print(cat(rcsfun))
   # outx <<- all_raw_str
-  #  stop()
+   # stop()
   
   out
 }

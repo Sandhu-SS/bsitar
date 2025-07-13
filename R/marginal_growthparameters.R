@@ -772,29 +772,62 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  if(is.null(parameter)) parameter <- c('apgv', 'pgv')
   
-  parameter <- base::tolower(parameter)
+  # 01.07.2025
+  if(is.null(parameter)) {
+    parm <- c('apgv', 'pgv')
+  } else if(!is.null(parameter)) {
+    parameter <- base::tolower(parameter)
+    if(length(parameter) == 1 && parameter == 'all') {
+      parm <- allowed_parms 
+    } else if(length(parameter) == 1) {
+      parm <- parameter
+    } 
+  } # if(is.null(parameter)) { if(!is.null(parameter)) {
   
-  if (is.null(parameter)) {
-    parm <- 'apgv' 
-  } else if(length(parameter) == 1 && parameter == 'all') {
-    parm <- allowed_parms 
-  } else if(length(parameter) == 1) {
-    parm <- parameter
-  } else if(length(parameter) > 1) {
-    # parameter <- base::tolower(parameter)
-    for (parameteri in parameter) {
-      if(!parameteri %in% allowed_parms) {
-        allowed_parms_err <- c(allowed_parms, 'all')
-        stop("Allowed parameter options are ", 
-             paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
-        )
-      }
-    }
-    parm <- parameter
-  }
+  
   parm <- base::tolower(parm)
+  for (parameteri in parm) {
+    if(!parameteri %in% allowed_parms) {
+      allowed_parms_err <- c(allowed_parms, 'all')
+      stop("parameter '", parameteri, "' ", "not allowed",
+           "\n  ",
+           "Allowed parameter options are: ", 
+           paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
+      )
+    }
+  }
+  
+  
+  
+
+  
+  
+  # parameter <- c('apgv', 'pgv')
+  # 
+  # parameter <- base::tolower(parameter)
+  # 
+  # if (is.null(parameter)) {
+  #   parm <- 'apgv' 
+  # } else if(length(parameter) == 1 && parameter == 'all') {
+  #   parm <- allowed_parms 
+  # } else if(length(parameter) == 1) {
+  #   parm <- parameter
+  # } else if(length(parameter) > 1) {
+  #   # parameter <- base::tolower(parameter)
+  #   for (parameteri in parameter) {
+  #     if(!parameteri %in% allowed_parms) {
+  #       allowed_parms_err <- c(allowed_parms, 'all')
+  #       stop("Allowed parameter options are ", 
+  #            paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
+  #       )
+  #     }
+  #   }
+  #   parm <- parameter
+  # }
+  # parm <- base::tolower(parm)
+  
+  
   
   
   
@@ -809,9 +842,14 @@ marginal_growthparameters.bgmfit <- function(model,
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', probtitles)
   
+  
+  
+  # 01.07.2025 - commented out decomp
   if(!is.null(model$model_info$decomp)) {
-    if(model$model_info$decomp == "QR") model_deriv<- FALSE
+   # if(model$model_info$decomp == "QR") model_deriv <- FALSE
   }
+  
+  
   
   expose_method_set <- model$model_info[['expose_method']]
   
@@ -1330,11 +1368,12 @@ marginal_growthparameters.bgmfit <- function(model,
     comparisons_arguments[[exclude_argsi]] <- NULL
   }
   
-  
-  if(deriv == 0 & model_deriv) 
-    stop("If argument 'model_deriv = TRUE', then 'deriv' should be '1'")
-  if(deriv == 1 & !model_deriv) 
-    stop("If argument 'model_deriv' = FALSE, then 'deriv' should be '0'")
+  # 0.1.07.2025
+  # eliminated checks
+  # if(deriv == 0 & model_deriv) 
+  #   stop("If argument 'model_deriv = TRUE', then 'deriv' should be '1'")
+  # if(deriv == 1 & !model_deriv)
+  #   stop("If argument 'model_deriv' = FALSE, then 'deriv' should be '0'")
   
   if (!is.null(variables)) {
     if (!is.list(variables)) {

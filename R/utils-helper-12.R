@@ -143,7 +143,8 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
 #' @noRd
 #' 
 #' 
-GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH, MatpreH) {
+GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH, 
+                  MatpreH = NULL) {
   
   Nintk     <- length(knots) 
   Nk        <- Nintk + 2
@@ -310,7 +311,8 @@ GS_ns_getH <- function(knots, normalize) {
 #' 
 #' 
 GS_nsp_call <- function(x, knots, bknots, intercept, derivs, 
-                        centerval, normalize, preH, MatpreH = NULL) {
+                        centerval, normalize, preH, MatpreH = NULL,
+                        sfirst = FALSE, sparse = FALSE) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -404,7 +406,8 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
 #' 
 #' 
 GS_nsk_call <- function(x, knots, bknots, intercept, derivs, 
-                        centerval, normalize, preH, MatpreH = NULL) {
+                        centerval, normalize, preH, MatpreH = NULL,
+                        sfirst = FALSE, sparse = FALSE) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")

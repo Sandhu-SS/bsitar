@@ -229,9 +229,12 @@ fitted_draws.bgmfit <-
       full.args$xcall_str <- NULL
     }
     
+    
+    # 01.07.2025 - commented out decomp
     if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") model_deriv<- FALSE
+    #  if(model$model_info$decomp == "QR") model_deriv<- FALSE
     }
+    
     
     expose_method_set <- model$model_info[['expose_method']]
     

@@ -1833,9 +1833,15 @@ set_priors_initials <- function(a_prior_beta,
       initial_in       <- out_p_str$initial_out
       tag              <- out_p_str$tag
       
-      if(tag == "NA") {
+      # !is.null(tag) for flat priors
+      if(!is.null(tag)) {
+        if(tag == "NA") {
+          tag <- ""
+        }
+      } else if(is.null(tag)) {
         tag <- ""
       }
+      
       
       
       return(

@@ -95,9 +95,10 @@ expose_model_functions.bgmfit <- function(model,
   
   if(is.null(select_model)) select_model <- model$model_info$select_model
   
+  # changed from expose_r_from_stan <- FALSE to TRUE for QR
   if(!expose) {
     if (is.null(model$model_info$decomp))  expose_r_from_stan <- TRUE
-    if (!is.null(model$model_info$decomp)) expose_r_from_stan <- FALSE
+    if (!is.null(model$model_info$decomp)) expose_r_from_stan <- TRUE # FALSE
   } else {
     expose_r_from_stan <- FALSE
   }

@@ -1810,7 +1810,7 @@ model fitting function, or used for internal purposes. Specifically, the
 \code{...} can also be used to pass arguments used for testing and
 debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
 \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
-\code{setcolb}, \code{decomp}, \code{qr_gq}
+\code{setcolb}, \code{decomp}
 
 These internal arguments are typically not used in regular model fitting but
 can be relevant for certain testing scenarios or advanced customization.

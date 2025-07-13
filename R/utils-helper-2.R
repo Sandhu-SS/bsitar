@@ -3337,3 +3337,174 @@ replace_string_part <- function(original_string,
 }
 
 
+
+#' An internal function to perform QR  decomposition
+#' 
+#' @details
+#' gemini
+#' 
+#' @param X A string
+#' @param complete A string
+#' @param flip A logical to indicate whether to flip negative sign or not. 
+#' @param scale A string
+#' @keywords internal
+#' @return A list comprise of Q, R AND Rinv matrices
+#' @noRd
+#'
+QR_decomp_R <- function(X, center = FALSE, complete = FALSE, flip = TRUE, scale = NULL) {
+  
+  if(is.null(scale)) {
+    QR_scale_str <- sqrt(nrow(X) - 1)
+  } else {
+    if(is.numeric(scale)) {
+      QR_scale_str <- scale
+    } else if(is.character(scale)) {
+      QR_scale_str <- scale
+      QR_scale_str <- gsub("N", "nrow(X)", QR_scale_str, fixed = T)
+      QR_scale_str <- ept(QR_scale_str)
+    } else {
+      stop("'scale' must be a numeric or string such as sqrt(N-1)")
+    }
+  }
+  scale   <- round(QR_scale_str, 2)
+
+  
+  if(center) {
+    for(i in 1:ncol(X)) {
+      X[,i] <- X[,i] - mean(X[,i])
+    }
+  }
+  
+  qr_result_R <- qr(X)
+  Q_X_R <- qr.Q(qr_result_R, complete = complete) * scale
+  R_X_R <- qr.R(qr_result_R, complete = complete) / scale
+  
+ 
+  # Stan ensures diagonal elements of R are positive. R's qr() does not.
+  # We need to check if any diagonal elements of R_X_R are negative and flip signs.
+  if(flip) {
+    diag_R_R <- diag(R_X_R)
+    sign_flips <- sign(diag_R_R)
+    sign_flips[sign_flips == 0] <- 1 # Treat zero as positive (no flip)
+    # Apply sign flips to both Q and R from R
+    # Multiply columns of Q by sign_flips and rows of R by sign_flips
+    Q <- Q_X_R %*% diag(sign_flips)
+    R <- diag(sign_flips) %*% R_X_R
+  } else {
+    Q <- Q_X_R
+    R <- R_X_R
+  }
+  
+  # if(complete) {
+  #  # stop("use complete = 'FALSE' for Rinv")
+  #   Rinv <- NULL
+  # } else {
+  #   Rinv <- solve(R)
+  # }
+  
+  Rinv <- solve(R)
+  
+  list(Q = Q, R = R, Rinv = Rinv)
+}
+
+
+
+
+
+#' An internal function to compute average prediction from individual curves
+#' 
+#' @details
+#' gemini
+#' 
+#' @param data A data frame
+#' @param idvar A string
+#' @param xvar A string
+#' @param yvar NULL
+#' @param name A string
+#' @param xvar_orig TRUE
+#' @param min_xvar NULL
+#' @param max_xvar NULL
+#' @param length.out NULL
+#' @keywords internal
+#' @return A list comprise of Q, R AND Rinv matrices
+#' @noRd
+#'
+mean_curve_over_ids <- function(data, 
+                                idvar, 
+                                xvar, 
+                                yvar, 
+                                name = NULL,
+                                xvar_orig = TRUE,
+                                min_xvar = NULL, 
+                                max_xvar = NULL, 
+                                length.out = NULL) {
+  
+  
+  if(is.null(length.out)) {
+    set.length.out <- nrow(data)
+  } else {
+    set.length.out <- 100
+  }
+  
+  if(is.null(min_xvar)) {
+    set.min_xvar <- min(data[[xvar]])
+  } else {
+    set.min_xvar <- min_xvar
+  }
+  
+  if(is.null(max_xvar)) {
+    set.max_xvar <- max(data[[xvar]])
+  } else {
+    set.max_xvar <- max_xvar
+  }
+  
+  min_age <- set.min_xvar
+  max_age <- set.max_xvar
+  
+  if(xvar_orig) {
+    common_age_x <- data[[xvar]] 
+  } else {
+    common_age_x <- seq(min_age, max_age, length.out = set.length.out) 
+  }
+  
+  if(is.null(name)) {
+    yvar_name <- "avg_pred"
+  } else {
+    yvar_name <- name
+  }
+  
+  num_individuals <- length(unique(data[[idvar]]))
+  
+  interpolated_measurements <- matrix(NA, nrow = length(common_age_x), ncol = num_individuals)
+  
+  
+  individual_data_list <- split(data, data[[idvar]])
+  
+  for (i in 1:num_individuals) {
+    current_individual_data <- individual_data_list[[i]]
+    # Use approx() for linear interpolation
+    # This function naturally handles uneven 'x' (age) points and different 'length' of data
+    interpolated_measurements[, i] <- stats::approx(
+      x = current_individual_data[[xvar]],
+      y = current_individual_data[[yvar]],
+      xout = common_age_x,
+      rule = 2 # Extrapolate with the closest known value if common_age_x goes beyond individual's observed age range
+    )$y
+  }
+  
+  mean_measurement_y <- rowMeans(interpolated_measurements, na.rm = TRUE)
+  
+  if(nrow(data) == length(mean_measurement_y)) {
+    mean_curve_df <- data
+    mean_curve_df[[yvar_name]] <- mean_measurement_y
+  } else {
+    # Create a data frame for the mean curve
+    mean_curve_df <- data.frame(
+      xvar = common_age_x,
+      yvar_name = mean_measurement_y,
+      idvar = "Mean Curve" # Assign a distinct ID for the mean curve
+    )
+  }
+  return(mean_curve_df) 
+}
+

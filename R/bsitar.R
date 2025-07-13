@@ -1717,7 +1717,7 @@
 #'   \code{...} can also be used to pass arguments used for testing and
 #'   debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
 #'   \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
-#'   \code{setcolb}, \code{decomp}, \code{qr_gq}
+#'   \code{setcolb}, \code{decomp}
 #'  
 #'  These internal arguments are typically not used in regular model fitting but
 #'  can be relevant for certain testing scenarios or advanced customization.
@@ -2752,21 +2752,120 @@ bsitar <- function(x,
   
   
   
+  # # getdotslist decomp
+  # if(is.null(getdotslist[['decomp']])) {
+  #   # Override when restricting to rcs
+  #   if(select_model != 'rcs') decomp <- NULL
+  #   
+  #   if(!is.null(decomp)) {
+  #     if(select_model != 'rcs') 
+  #       stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
+  #   }
+  # } else if(!is.null(getdotslist[['decomp']])) {
+  #   if(getdotslist[['decomp']] != 'QR') {
+  #     stop("Argument 'decomp' should be either 'NULL' or 'QR'")
+  #   }
+  #   decomp <- getdotslist[['decomp']]
+  # }
+  
+  
+  
+  
   # getdotslist decomp
-  if(is.null(getdotslist[['decomp']])) {
-    # Override when restricting to rcs
-    if(select_model != 'rcs') decomp <- NULL
-    
-    if(!is.null(decomp)) {
-      if(select_model != 'rcs') 
-        stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
-    }
-  } else if(!is.null(getdotslist[['decomp']])) {
-    if(getdotslist[['decomp']] != 'QR') {
-      stop("Argument 'decomp' should be either 'NULL' or 'QR'")
-    }
-    decomp <- getdotslist[['decomp']]
-  }
+  # QR_Xmat -> not important. Internally set as Qc
+  # QR_center -> to center spl matrix before applying QR decom
+  # QR_complete -> whether to get complete QR matrix. Don't change, must be FALSE
+  # QR_flip -> to flip negative to positive of Q R matrices. This matches R with Stan
+  # QR_scale -> scaling, default sqrt(N-1) when QR_scale = NULL
+  # qr_gq -> controls wheter to add v_sx vectors to gen quant
+  
+  QR_decomp_args <- getdotslist[['decomp']]
+  if(is.null(QR_decomp_args)) {
+    decomp <- NULL
+    QR_Xmat      <- NULL
+    QR_center    <- NULL
+    QR_complete  <- NULL
+    QR_flip      <- NULL
+    QR_scale     <- NULL
+    QR_gq        <- FALSE
+  } else if(!is.null(QR_decomp_args)) {
+    if(is.list(QR_decomp_args)) {
+      if(is.null(QR_decomp_args[['decomp']])) {
+        decomp      <- 'QR'
+      } else {
+        decomp      <- QR_decomp_args[['decomp']]
+      }
+      if(is.null(QR_decomp_args[['Xmat']])) {
+        QR_Xmat      <- 'Qc'
+      } else {
+        QR_Xmat      <- QR_decomp_args[['Xmat']]
+      }
+      if(is.null(QR_decomp_args[['center']])) {
+        QR_center      <- FALSE
+      } else {
+        QR_center      <- QR_decomp_args[['center']]
+      }
+      if(is.null(QR_decomp_args[['complete']])) {
+        QR_complete      <- FALSE
+      } else {
+        QR_complete      <- QR_decomp_args[['complete']]
+      }
+      if(is.null(QR_decomp_args[['flip']])) {
+        QR_flip      <- TRUE
+      } else {
+        QR_flip      <- QR_decomp_args[['flip']]
+      }
+      if(is.null(QR_decomp_args[['scale']])) {
+        QR_scale      <- "sqrt(N-1)"
+      } else {
+        QR_scale      <- QR_decomp_args[['scale']]
+      }
+      if(is.null(QR_decomp_args[['gq']])) {
+        QR_gq      <- FALSE
+      } else {
+        QR_gq      <- QR_decomp_args[['gq']]
+      }
+    } else if(!is.list(QR_decomp_args)) {
+      if(!is.character(QR_decomp_args)) {
+        stop("argument 'decomp' must be a list or character")
+      } else {
+        if(QR_decomp_args != "QR") {
+          stop("only 'QR' decomp allowed")
+        }
+        decomp       <- QR_decomp_args
+        QR_Xmat      <- 'Qc'
+        QR_center    <- FALSE
+        QR_complete  <- FALSE
+        QR_flip      <- TRUE
+        QR_scale     <- NULL
+        QR_gq        <- FALSE
+      }
+    } # else if(!is.list(QR_decomp_args)) {
+  } # else if(!is.null(QR_decomp_args)) {
+  
+  
+  add_rcsfunmatqrinv_genquant <- QR_gq
+  
+  # rm('QR_decomp_args')
+  
+  # QR_Xmat      <- NULL
+  # QR_center    <- NULL
+  # QR_complete  <- NULL
+  # QR_flip      <- NULL
+  # QR_scale     <- NULL
+  # 
+  # if (!is.null(decomp)) {
+  #   if (decomp == 'QR') {
+  #     QR_Xmat      <- 'Qc'
+  #     QR_center    <- FALSE
+  #     QR_complete  <- FALSE
+  #     QR_flip      <- TRUE
+  #     QR_scale     <- NULL
+  #   }
+  # }
+  
+  
+  
   
   
   
@@ -2837,6 +2936,13 @@ bsitar <- function(x,
   # 6. include - a logical (T/F) to indicate if .stan splines be included 
   # via '#include' or 
   # read it and include as it is in the function block 
+  # 7. sfirst - a logical (T/F) to indicate whether to include only the first
+  # elements from s1, s2, s2,.. vectors in functions block e.g., s1[1], s2[1]
+  # This sfirst should be used only when splines have no covariate or random effect
+  # This typically is the case of sitar model
+  # 8. sparse - a logical (T/F) to indicate whether to use sparse in the function
+  # block where Spl * s vector is used. For this sparse, sfirst need to be T.
+  # Again, this is helpful in case of sitar model
   
   
   allowed_spline_type <- c('rcs', 'nsp', 'nsk')
@@ -2880,10 +2986,34 @@ bsitar <- function(x,
     stype <- gsub("\"", "", stype)
   }
   
- 
+  
+  allowed_smat_options <- c('type', 'centerval', 'intercept', 
+                            'normalize', 'derivs', 'preH', 'include',
+                            "sfirst", "sparse")
+  
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
     spline_type <- getdotslist[['smat']]
+    if(!is.list(spline_type)) {
+      stop("'smat' set via '...' must be a named list")
+    }
+    checknamessmat <- names(spline_type)
+    checknamessmat <- checknamessmat[nzchar(checknamessmat)] 
+    if(length(checknamessmat) != length(spline_type)) {
+      stop("Each element of 'smat' set via '...' must be named.",
+           "\n  ", 
+           "Allowed options are:",
+           "\n  ", 
+           collapse_comma(allowed_smat_options))
+    } 
+    for (checknamessmati in checknamessmat) {
+      if(!checknamessmati %in% allowed_smat_options)
+        stop("Option  '", checknamessmati, "' is invalid for 'smat'",
+             "\n  ", 
+             "Allowed options are:",
+             "\n  ", 
+             collapse_comma(allowed_smat_options))
+    }
   } else {
     spline_type <- stype
     spline_type_via_stype <- TRUE
@@ -2898,6 +3028,8 @@ bsitar <- function(x,
     # if(verbose) message("'rcs' set as default spline type")
   }
     
+  
+  
 
   # Only expose type and normalize for stype 
   allowed_spline_type_list_names_c <- c('type', 
@@ -2926,6 +3058,8 @@ bsitar <- function(x,
     spline_type_list[['derivs']]      <- FALSE
     spline_type_list[['preH']]        <- TRUE
     spline_type_list[['include']]     <- TRUE
+    spline_type_list[['sfirst']]      <- FALSE
+    spline_type_list[['sparse']]      <- FALSE
   } else if(!is.null(spline_type)) {
     if(is.list(spline_type)) {
       if(is.null(spline_type[['normalize']])) {
@@ -2933,6 +3067,12 @@ bsitar <- function(x,
       } 
       if(is.null(spline_type[['preH']])) {
         spline_type[['preH']]   <- TRUE
+      } 
+      if(is.null(spline_type[['sfirst']])) {
+        spline_type[['sfirst']]   <- FALSE
+      } 
+      if(is.null(spline_type[['sparse']])) {
+        spline_type[['sparse']]   <- FALSE
       } 
       if(length(spline_type) > 0) {
         # if only type specified and unnamed, name it
@@ -3048,6 +3188,30 @@ bsitar <- function(x,
           spline_type_list[['centerval']] <- 0
         }
         
+        
+        if(!is.null(spline_type[['sfirst']])) {
+          if(!is.logical(as.logical(spline_type[['sfirst']]))) {
+            stop(paste0(spline_type[['sfirst']], 
+                        " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['sfirst']] <- spline_type[['sfirst']]
+          }
+        } else if(is.null(spline_type[['sfirst']])) {
+          spline_type_list[['sfirst']] <- FALSE
+        }
+        
+        if(!is.null(spline_type[['sparse']])) {
+          if(!is.logical(as.logical(spline_type[['sparse']]))) {
+            stop(paste0(spline_type[['sparse']], 
+                        " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['sparse']] <- spline_type[['sparse']]
+          }
+        } else if(is.null(spline_type[['sparse']])) {
+          spline_type_list[['sparse']] <- FALSE
+        }
+        
+        
       } else if(length(spline_type) == 0) {
         spline_type_list[['type']]        <- NULL
         spline_type_list[['intercept']]   <- FALSE
@@ -3057,6 +3221,8 @@ bsitar <- function(x,
         spline_type_list[['preH']]        <- FALSE
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
+        spline_type_list[['sfirst']]      <- FALSE
+        spline_type_list[['sparse']]      <- FALSE
       } # if(length(spline_type) > 0) {
     } else if(!is.list(spline_type)) { 
       if(is.character(spline_type)) {
@@ -3068,6 +3234,8 @@ bsitar <- function(x,
         spline_type_list[['preH']]        <- TRUE
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
+        spline_type_list[['sfirst']]      <- FALSE
+        spline_type_list[['sparse']]      <- FALSE
       } else if(!is.character(spline_type)) {
         stop('augument spline_type must be a character string or a named list')
       } # if(is.character(spline_type)) {
@@ -3086,8 +3254,11 @@ bsitar <- function(x,
                  allowed_spline_type_exception_msg)
      )
 
+  
+  # 
   if(smat == 'rcs') {
-    # nothing
+    # QR
+    
   } else if(smat == 'ns') {
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
   } else if(smat == 'nsp') {
@@ -3110,6 +3281,8 @@ bsitar <- function(x,
     SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
     SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
     # when spline type set via 'stype', set normalize = F & include T
+    smat_sfirst         <- as.integer(spline_type_list[['sfirst']])
+    smat_sparse         <- as.integer(spline_type_list[['sparse']]) 
   } else if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
     smat_intercept <- 0
     smat_centerval <- 0
@@ -3134,6 +3307,8 @@ bsitar <- function(x,
     Splinefunxsuf  <- '_call'
     SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
     SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
+    smat_sfirst         <- as.integer(spline_type_list[['sfirst']])
+    smat_sparse         <- as.integer(spline_type_list[['sparse']])   
   } else if(smat == 'rcs') { # placeholder to assign these values to envir 
     smat_intercept <- 0
     smat_centerval <- 0
@@ -3146,8 +3321,19 @@ bsitar <- function(x,
     Splinefunxsuf  <- NULL
     SplinefunxR    <- NULL
     SplinefunxStan <- NULL
+    
+    smat_sfirst         <- as.integer(spline_type_list[['sfirst']])
+    smat_sparse         <- as.integer(spline_type_list[['sparse']])  
   } else {
     # allow further checks - for later use
+  }
+  
+  
+  
+  if(smat_sparse) {
+    if(!smat_sfirst) {
+      stop("If 'smat_sparse = TRUE', then 'smat_sfirst' must also be set as 'TRUE'")
+    }
   }
   
   # print(spline_type_via_stype)
@@ -3157,6 +3343,10 @@ bsitar <- function(x,
   # print(smat_preH)
   # stop()
   
+  # print(smat_sfirst)
+  # print(smat_sparse)
+  # stop()
+
 
   # TODO work on smat_preH smat_include_stan to male them compatible
   
@@ -3214,10 +3404,24 @@ bsitar <- function(x,
 
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_a_form']])) {
-    match_sitar_a_form <- TRUE
+    if(is.null(decomp)) {
+      match_sitar_a_form <- TRUE
+    } else if(!is.null(decomp)) {
+      if(decomp == 'QR') {
+        getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+      } # if(decomp == 'QR') {
+    } # if(!is.null(decomp)) {
+    # match_sitar_a_form <- TRUE
   } else {
     match_sitar_a_form <- getdotslist[['match_sitar_a_form']]
   }
+  
+  if(verbose) {
+    message("The 'a' form for sitar model has been set as ", 
+            "'", match_sitar_a_form, "'",
+            " (see '...$match_sitar_a_form')")
+  }
+  
   
   
   # 24.08.2024
@@ -5644,7 +5848,8 @@ bsitar <- function(x,
                                  intercept = smat_intercept, derivs = smat_derivs, 
                                  centerval = smat_centerval, 
                                  normalize = smat_normalize,
-                                 preH = smat_preH)
+                                 preH = smat_preH,
+                                 sfirst = smat_sfirst, sparse = smat_sparse)
           } else if(smat == 'nsk') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
@@ -5652,7 +5857,8 @@ bsitar <- function(x,
                                  intercept = smat_intercept, derivs = smat_derivs, 
                                  centerval = smat_centerval, 
                                  normalize = smat_normalize,
-                                 preH = smat_preH)
+                                 preH = smat_preH,
+                                 sfirst = smat_sfirst, sparse = smat_sparse)
           }
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
@@ -5690,7 +5896,8 @@ bsitar <- function(x,
                                  derivs = smat_derivs, 
                                  centerval = smat_centerval, 
                                  normalize = smat_normalize,
-                                 preH = smat_preH)
+                                 preH = smat_preH,
+                                 sfirst = smat_sfirst, sparse = smat_sparse)
           } else if(smat == 'nsk') {
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
@@ -5700,7 +5907,8 @@ bsitar <- function(x,
                                  derivs = smat_derivs, 
                                  centerval = smat_centerval, 
                                  normalize = smat_normalize,
-                                 preH = smat_preH)
+                                 preH = smat_preH,
+                                 sfirst = smat_sfirst, sparse = smat_sparse)
           }
           lmform <- as.formula(paste0(y, "~1+", "mat_s"))
           lmfit <- lm(lmform, data = data)
@@ -6225,15 +6433,17 @@ bsitar <- function(x,
     ##################################################################
     ##################################################################
     
-    # Work on to make call via substitute and then create matrix. 
-    # SplineCall <- substitute(GS_nsp_call(x = datai[[xsi]], 
-    #                      knots = iknots, 
-    #                      bknots = bknots, 
-    #                      intercept = smat_intercept, 
-    #                      derivs = smat_derivs, 
-    #                      centerval = smat_centerval, 
+    # Work on to make call via substitute and then create matrix.
+    # SplineCall <- substitute(GS_nsp_call(x = datai[[xsi]],
+    #                      knots = iknots,
+    #                      bknots = bknots,
+    #                      intercept = smat_intercept,
+    #                      derivs = smat_derivs,
+    #                      centerval = smat_centerval,
     #                      normalize = smat_normalize,
-    #                      preH = smat_preH)
+    #                      preH = smat_preH,
+    #                      sfirst = smat_sfirst,
+    #                      sparse = smat_sparse)
     #                      )
     # SplineCall[[2]] <- quote(x)
     # 
@@ -6257,8 +6467,10 @@ bsitar <- function(x,
                            derivs = smat_derivs,
                            centerval = smat_centerval,
                            normalize = smat_normalize,
-                           preH = smat_preH)
-                           )
+                           preH = smat_preH,
+                           sfirst = smat_sfirst,
+                           sparse = smat_sparse
+                           ))
     }
     
     if(smat == 'nsp') {
@@ -6283,25 +6495,29 @@ bsitar <- function(x,
     # } else if(smat == 'nsp') {
     #   iknots <- knots[2:(length(knots)-1)]
     #   bknots <- c(knots[1], knots[length(knots)])
-    #   mat_s <- GS_nsp_call(x = datai[[xsi]], 
-    #                        knots = iknots, 
-    #                        bknots = bknots, 
-    #                        intercept = smat_intercept, 
-    #                        derivs = smat_derivs, 
-    #                        centerval = smat_centerval, 
+    #   mat_s <- GS_nsp_call(x = datai[[xsi]],
+    #                        knots = iknots,
+    #                        bknots = bknots,
+    #                        intercept = smat_intercept,
+    #                        derivs = smat_derivs,
+    #                        centerval = smat_centerval,
     #                        normalize = smat_normalize,
-    #                        preH = smat_preH)
+    #                        preH = smat_preH,
+    #                        sfirst = smat_sfirst,
+    #                        sparse = smat_sparse)
     # } else if(smat == 'nsk') {
     #   iknots <- knots[2:(length(knots)-1)]
     #   bknots <- c(knots[1], knots[length(knots)])
-    #   mat_s <- GS_nsk_call(x = datai[[xsi]], 
-    #                        knots = iknots, 
-    #                        bknots = bknots, 
-    #                        intercept = smat_intercept, 
-    #                        derivs = smat_derivs, 
-    #                        centerval = smat_centerval, 
+    #   mat_s <- GS_nsk_call(x = datai[[xsi]],
+    #                        knots = iknots,
+    #                        bknots = bknots,
+    #                        intercept = smat_intercept,
+    #                        derivs = smat_derivs,
+    #                        centerval = smat_centerval,
     #                        normalize = smat_normalize,
-    #                        preH = smat_preH)
+    #                        preH = smat_preH,
+    #                        sfirst = smat_sfirst,
+    #                        sparse = smat_sparse)
     # }
     
     
@@ -6419,10 +6635,15 @@ bsitar <- function(x,
                        )
     
     
+    # QR
+    # Also, decomp_editcode = TRUE conflicts with init != random
+    
     decomp_editcode <- FALSE
     if(select_model == 'rcs') {
       decomp_editcode <- FALSE
     }
+    
+
     
     # For QR decomp to pass to prepare_function 
     # This to check s covs - re
@@ -6435,13 +6656,16 @@ bsitar <- function(x,
       add_b_Qr_genquan_s_coef <- FALSE
     }
     
-    # This control whether to add scode for genquant block for QR model
-    # Relevant in both and prepare_function
-    if(is.null(getdotslist[['qr_gq']])) {
-      add_rcsfunmatqrinv_genquant <- FALSE # TRUE
-    } else {
-      add_rcsfunmatqrinv_genquant <- getdotslist[['qr_gq']]
-    }
+    # # This control whether to add scode for genquant block for QR model
+    # # Relevant in both and prepare_function
+    # if(is.null(getdotslist[['qr_gq']])) {
+    #   add_rcsfunmatqrinv_genquant <- FALSE # TRUE
+    # } else {
+    #   add_rcsfunmatqrinv_genquant <- getdotslist[['qr_gq']]
+    # }
+    # 
+    # # print(add_rcsfunmatqrinv_genquant)
+    
     
     
 
@@ -6475,6 +6699,8 @@ bsitar <- function(x,
         "smat_centerval",
         "smat_normalize",
         "smat_preH",
+        "smat_sfirst",
+        "smat_sparse",
         "smat_include_stan",
         "smat_include_path",
         "SplinefunxPre",
@@ -6496,7 +6722,13 @@ bsitar <- function(x,
         
         "fast_nsk",
         
-        "sum_zero"
+        "sum_zero",
+        
+        "QR_Xmat",
+        "QR_center",
+        "QR_complete",
+        "QR_flip",
+        "QR_scale"
         
       )
     
@@ -6515,8 +6747,10 @@ bsitar <- function(x,
       }
     }
     
-    
-    
+    # prepare_function_nsp -> just before adding  QR
+    # So, prepare_function_nsp in 'utils-helper-7' is the original function
+    # prepare_function_nspqr -> adding  QR - in 'utils-helper-7qr'
+    # now remover _nsp, and rename _nspqr to _nsp
     if(smat == 'rcs') {
       get_s_r_funs <- 
         prepare_function(
@@ -6726,6 +6960,23 @@ bsitar <- function(x,
     }
     
     
+    ################################################
+    # if decomp = QR
+    # make mat_s as Q, so that correct lm based initials
+    if(!is.null(decomp)) {
+      # if(select_model != 'rcs') {
+      #   stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
+      # }
+      if(decomp == 'QR') {
+        QR_decomp_R_out <- QR_decomp_R(X = mat_s, 
+                                       center = QR_center, 
+                                       complete = QR_complete, 
+                                       flip = QR_flip, 
+                                       scale = QR_scale)
+        mat_s <- QR_decomp_R_out[['Q']]
+      }
+    }
+    
 
     #################################################
     internal_formula_args_names <-
@@ -6796,6 +7047,8 @@ bsitar <- function(x,
         "smat_centerval",
         "smat_normalize",
         "smat_preH",
+        "smat_sfirst",
+        "smat_sparse",
         "smat_include_stan",
         "smat_include_path",
         "SplinefunxPre",
@@ -8956,7 +9209,7 @@ bsitar <- function(x,
                                     prior = temp_prior,
                                     data = brmsdata)
     
-
+    
     move_from_model_to_qq_for_bqinv <- 
       function(temp_stancode2x, 
                section = 'model',
@@ -9069,6 +9322,8 @@ bsitar <- function(x,
       return(zz_c2)
     }
     
+  
+   
    
     
     if(!is.null(decomp)) {
@@ -9492,7 +9747,7 @@ bsitar <- function(x,
                          "match_sitar_d_form",
                          "sigmamatch_sitar_a_form",
                          "displayit", "setcolh", "setcolb",
-                        "smat", "decomp", "qr_gq"
+                        "smat", "decomp"
                         )
   
   for (getdotslisti in getdotslistnames) {
