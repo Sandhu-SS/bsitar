@@ -2942,7 +2942,16 @@ bsitar <- function(x,
   # This typically is the case of sitar model
   # 8. sparse - a logical (T/F) to indicate whether to use sparse in the function
   # block where Spl * s vector is used. For this sparse, sfirst need to be T.
+  # Again, this is helpful in case of sitar model.
+  # Note that according to stan documentation, sparse = T speeds up the computation
+  # only when sparsity > 90 %. The sparcity in sitar model is '0'% except when 
+  # type = 'rcs' and decomp = NULL.
+  # 9. smat_check_sparsity - a logical (T/F) to check the sparsity (%) in the 
+  # function block where Spl * s vector is used. For this sparse, both 'sfirst'
+  # 'sparse' need to be T, also chains = 1, and iter = 2. (since this is printed)
   # Again, this is helpful in case of sitar model
+  
+  
   
   
   allowed_spline_type <- c('rcs', 'nsp', 'nsk')
@@ -2989,7 +2998,7 @@ bsitar <- function(x,
   
   allowed_smat_options <- c('type', 'centerval', 'intercept', 
                             'normalize', 'derivs', 'preH', 'include',
-                            "sfirst", "sparse")
+                            "sfirst", "sparse", "check_sparsity")
   
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
@@ -3060,6 +3069,7 @@ bsitar <- function(x,
     spline_type_list[['include']]     <- TRUE
     spline_type_list[['sfirst']]      <- FALSE
     spline_type_list[['sparse']]      <- FALSE
+    spline_type_list[['check_sparsity']]      <- FALSE
   } else if(!is.null(spline_type)) {
     if(is.list(spline_type)) {
       if(is.null(spline_type[['normalize']])) {
@@ -3073,6 +3083,9 @@ bsitar <- function(x,
       } 
       if(is.null(spline_type[['sparse']])) {
         spline_type[['sparse']]   <- FALSE
+      } 
+      if(is.null(spline_type[['check_sparsity']])) {
+        spline_type[['check_sparsity']]   <- FALSE
       } 
       if(length(spline_type) > 0) {
         # if only type specified and unnamed, name it
@@ -3176,11 +3189,12 @@ bsitar <- function(x,
           spline_type_list[['path']]    <- NULL
         }
         
-        
+        # change check message same as 'centerval' for other
         if(!is.null(spline_type[['centerval']])) {
           if(!is.numeric(spline_type[['centerval']])) {
-            stop(paste0(spline_type[['centerval']], 
-                        " must be logical i.e., TRUE/FALSE"))
+            stop("Argument 'centerval' must be a numeric value",
+                 " but instead specified as ", 
+                 "'", paste0(spline_type[['centerval']], "'"))
           } else {
             spline_type_list[['centerval']] <- spline_type[['centerval']]
           }
@@ -3211,6 +3225,17 @@ bsitar <- function(x,
           spline_type_list[['sparse']] <- FALSE
         }
         
+        if(!is.null(spline_type[['check_sparsity']])) {
+          if(!is.logical(as.logical(spline_type[['check_sparsity']]))) {
+            stop(paste0(spline_type[['check_sparsity']], 
+                        " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['check_sparsity']] <- spline_type[['check_sparsity']]
+          }
+        } else if(is.null(spline_type[['check_sparsity']])) {
+          spline_type_list[['check_sparsity']] <- FALSE
+        }
+        
         
       } else if(length(spline_type) == 0) {
         spline_type_list[['type']]        <- NULL
@@ -3223,6 +3248,7 @@ bsitar <- function(x,
         spline_type_list[['path']]        <- NULL
         spline_type_list[['sfirst']]      <- FALSE
         spline_type_list[['sparse']]      <- FALSE
+        spline_type_list[['check_sparsity']]  <- FALSE
       } # if(length(spline_type) > 0) {
     } else if(!is.list(spline_type)) { 
       if(is.character(spline_type)) {
@@ -3236,6 +3262,7 @@ bsitar <- function(x,
         spline_type_list[['path']]        <- NULL
         spline_type_list[['sfirst']]      <- FALSE
         spline_type_list[['sparse']]      <- FALSE
+        spline_type_list[['check_sparsity']]  <- FALSE
       } else if(!is.character(spline_type)) {
         stop('augument spline_type must be a character string or a named list')
       } # if(is.character(spline_type)) {
@@ -3268,6 +3295,12 @@ bsitar <- function(x,
   }
   
   
+  SplinefunxPre     <- 'GS'
+  Splinefunxsuf     <- '_call'
+  SplinefunxR       <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
+  SplinefunxStan    <- paste0(SplinefunxR, "_", 'stan')
+  
+  
   if((smat == 'nsp' | smat == 'nsk') & !spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
@@ -3276,58 +3309,45 @@ bsitar <- function(x,
     smat_preH         <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- as.integer(spline_type_list[['include']])
     smat_include_path <- spline_type_list[['path']]
-    SplinefunxPre  <- 'GS'
-    Splinefunxsuf  <- '_call'
-    SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
-    SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
-    # when spline type set via 'stype', set normalize = F & include T
-    smat_sfirst         <- as.integer(spline_type_list[['sfirst']])
-    smat_sparse         <- as.integer(spline_type_list[['sparse']]) 
+    smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_sparse       <- as.integer(spline_type_list[['sparse']])
+    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
+  } else if((smat == 'rcs') & !spline_type_via_stype) {
+    smat_intercept    <- as.integer(spline_type_list[['intercept']])
+    smat_centerval    <- as.numeric(spline_type_list[['centerval']])
+    smat_normalize    <- as.integer(spline_type_list[['normalize']])
+    smat_derivs       <- as.integer(spline_type_list[['derivs']])
+    smat_preH         <- as.integer(spline_type_list[['preH']])
+    smat_include_stan <- as.integer(spline_type_list[['include']])
+    smat_include_path <- spline_type_list[['path']]
+    smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
+    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
-    smat_intercept <- 0
-    smat_centerval <- 0
-    # set default normalize = TRUE
-    # if(!spline_type_list[['normalize']]) {
-    #  # smat_normalize   <- 1 
-    # } else {
-    #   smat_normalize   <- spline_type_list[['normalize']] %>% as.integer()
-    # }
-    smat_normalize <- as.integer(spline_type_list[['normalize']])
-    smat_derivs    <- 0
-    # set default preH = TRUE
-    # if(!spline_type_list[['preH']]) {
-    #  # smat_preH   <- 1 
-    # } else {
-    #   smat_preH   <- spline_type_list[['preH']] %>% as.integer()
-    # }
-    smat_preH <- as.integer(spline_type_list[['preH']])
+    smat_intercept    <- 0
+    smat_centerval    <- 0
+    smat_normalize    <- as.integer(spline_type_list[['normalize']])
+    smat_derivs       <- 0
+    smat_preH         <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- 0
     smat_include_path <- NULL
-    SplinefunxPre  <- 'GS'
-    Splinefunxsuf  <- '_call'
-    SplinefunxR    <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
-    SplinefunxStan <- paste0(SplinefunxR, "_", 'stan')
-    smat_sfirst         <- as.integer(spline_type_list[['sfirst']])
-    smat_sparse         <- as.integer(spline_type_list[['sparse']])   
-  } else if(smat == 'rcs') { # placeholder to assign these values to envir 
-    smat_intercept <- 0
-    smat_centerval <- 0
-    smat_normalize <- 0
-    smat_derivs    <- 0
-    smat_preH      <- 0
+    smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
+    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
+  } else if((smat == 'rcs') & spline_type_via_stype) {
+    smat_intercept    <- 0
+    smat_centerval    <- 0
+    smat_normalize    <- as.integer(spline_type_list[['normalize']])
+    smat_derivs       <- 0
+    smat_preH         <- as.integer(spline_type_list[['preH']])
     smat_include_stan <- 0
     smat_include_path <- NULL
-    SplinefunxPre  <- NULL
-    Splinefunxsuf  <- NULL
-    SplinefunxR    <- NULL
-    SplinefunxStan <- NULL
-    
-    smat_sfirst         <- as.integer(spline_type_list[['sfirst']])
-    smat_sparse         <- as.integer(spline_type_list[['sparse']])  
+    smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
+    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
   } else {
     # allow further checks - for later use
   }
-  
   
   
   if(smat_sparse) {
@@ -3335,6 +3355,20 @@ bsitar <- function(x,
       stop("If 'smat_sparse = TRUE', then 'smat_sfirst' must also be set as 'TRUE'")
     }
   }
+  
+  
+
+  if(smat_check_sparsity) {
+    if(!smat_sfirst | !smat_sparse) {
+      stop("If 'check_sparsity = TRUE', then both 'smat_sfirst' and 'smat_sparse'
+           must also be set as 'TRUE'")
+    }
+    if(arguments$chains > 1) stop("'chains' must be set as '1' when check_sparsity = TRUE'")
+    if(arguments$iter > 2) stop("'iter' must be set as '2' when check_sparsity = TRUE'")
+  }
+  
+  
+  
   
   # print(spline_type_via_stype)
   # print(spline_type_list[['normalize']])
@@ -6701,6 +6735,7 @@ bsitar <- function(x,
         "smat_preH",
         "smat_sfirst",
         "smat_sparse",
+        "smat_check_sparsity",
         "smat_include_stan",
         "smat_include_path",
         "SplinefunxPre",
@@ -6751,40 +6786,59 @@ bsitar <- function(x,
     # So, prepare_function_nsp in 'utils-helper-7' is the original function
     # prepare_function_nspqr -> adding  QR - in 'utils-helper-7qr'
     # now remover _nsp, and rename _nspqr to _nsp
-    if(smat == 'rcs') {
-      get_s_r_funs <- 
-        prepare_function(
-          x = xsi,
-          y = ysi,
-          id = idsi,
-          knots = knots,
-          nknots = nknots,
-          data = datai,
-          internal_function_args = internal_function_args
-        )
-    } else if(smat == 'nsp') {
-      get_s_r_funs <- 
-        prepare_function_nsp(
-          x = xsi,
-          y = ysi,
-          id = idsi,
-          knots = knots,
-          nknots = nknots,
-          data = datai,
-          internal_function_args = internal_function_args
-        )
-    } else if(smat == 'nsk') {
-      get_s_r_funs <- 
-        prepare_function_nsp(
-          x = xsi,
-          y = ysi,
-          id = idsi,
-          knots = knots,
-          nknots = nknots,
-          data = datai,
-          internal_function_args = internal_function_args
-        )
-    }
+    
+    # Now common function for all splines types
+    # prepare_function_nsp_rcs
+    # prepare_function_nsp_rcs_dout
+    
+    get_s_r_funs <- prepare_function_nsp_rcs(
+      x = xsi,
+      y = ysi,
+      id = idsi,
+      knots = knots,
+      nknots = nknots,
+      data = datai,
+      internal_function_args = internal_function_args)
+    
+    
+    
+    # if(smat == 'rcs') {
+    #   get_s_r_funs <-
+    #     prepare_function_nsp_rcs(
+    #     # prepare_function(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_function_args = internal_function_args
+    #     )
+    # } else if(smat == 'nsp') {
+    #   get_s_r_funs <- 
+    #     prepare_function_nsp_rcs(
+    #     # prepare_function_nsp(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_function_args = internal_function_args
+    #     )
+    # } else if(smat == 'nsk') {
+    #   get_s_r_funs <- 
+    #     prepare_function_nsp_rcs(
+    #     # prepare_function_nsp(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_function_args = internal_function_args
+    #     )
+    # }
     
     
     
@@ -7049,6 +7103,7 @@ bsitar <- function(x,
         "smat_preH",
         "smat_sfirst",
         "smat_sparse",
+        "smat_check_sparsity",
         "smat_include_stan",
         "smat_include_path",
         "SplinefunxPre",

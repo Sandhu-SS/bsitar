@@ -20,8 +20,8 @@
 # utils-helper-3-prepare_data2
 # utils-helper-4-prepare_formula
 # utils-helper-5-prepare_formula_sigma
-# utils-helper-6-prepare_function
-# utils-helper-7-prepare_function_nsp
+# utils-helper-6-export rcs string for stan, and aux R functions
+# utils-helper-7-prepare_function_nsp_rcs
 # utils-helper-8-prepare_function_sigma
 # utils-helper-9-set_priors_initials
 # utils-helper-10-prepare_priors

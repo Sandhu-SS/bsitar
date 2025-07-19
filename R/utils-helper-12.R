@@ -301,6 +301,8 @@ GS_ns_getH <- function(knots, normalize) {
 #' @param preH A logical (as.integer()) indicating whether to use pre computed 
 #' H matrix
 #' @param MatpreH A matrix (pre computed H matrix)
+#' @param sfirst Ignored
+#' @param sparse Ignored
 #' 
 #' @return A matrix
 #' 
@@ -396,6 +398,8 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
 #' @param preH A logical (as.integer()) indicating whether to use pre computed 
 #' H matrix
 #' @param MatpreH A matrix (pre computed H matrix)
+#' @param sfirst Ignored
+#' @param sparse Ignored
 #' 
 #' @return A matrix
 #' 
@@ -459,3 +463,355 @@ GS_nsk_call <- function(x, knots, bknots, intercept, derivs,
   
   return(out)
 }
+
+
+
+#' An internal function to construct a variant of natural cubic spline basis
+#' matrix (truncated power basis based restricted cubic spline)
+#'
+#' @param x A numeric vector for which basis matrix to be constructed
+#' @param knots A vector specifying the internal knots
+#' @param bknots A vector specifying the boundary knots
+#' @param intercept An integer to indicate whether to compute complete basis
+#'   along with intercept (\code{intercept = 1}) or to exclude intercept from
+#'   the basis (\code{intercept = 0}, default). This is useful when using
+#'   \code{rcs_matrix} for creating design matrix for derivatives such as
+#'   \code{deriv = 1} and \code{deriv = 2} where first (\code{deriv = 1}) or,
+#'   the first and second (\code{deriv = 2}) columns are automatically set as
+#'   \code{'0'}.
+#' @param derivs An integer to indicate whether to compute complete basis matrix
+#'   (\code{derivs = 0}, default) or its first derivative (\code{derivs = 1})
+#' @param centerval Ignored
+#' @param normalize Ignored
+#' @param preH Ignored
+#' @param MatpreH Ignored
+#' @param sfirst Ignored
+#' @param sparse Ignored
+#' @param inclx A logical indicating whether to include \code{x} as first term.
+#' @param df An integer. It is defined as \code{nk - 1}
+#' @param fullknots combined internal knots and boundary knots
+#' @param fullknots.only A logical indicating whether to return knots only.
+#' @param type An integer to indicate type, \code{0} for \code{'ordinary'} and
+#'   \code{1} for \code{'integral'}. This string to integer for easy to code
+#'   \code{'rcs_matrix_stan'}. Note that this \code{'type'} argument is not used
+#'   even in \code{'rcs_matrix'}
+#' @param verbose A logical (default \code{FALSE}) to indicate if infornation
+#'   need to be displayed.
+#'   
+#' @inherit Hmisc::rcspline.eval params
+#' 
+#' @return A matrix
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+GS_rcs_call <- function(x, 
+                        knots = NULL, 
+                        bknots = NULL, 
+                        intercept = NULL, 
+                        derivs = 0, 
+                        centerval = NULL, 
+                        normalize = NULL, 
+                        preH = NULL, 
+                        MatpreH = NULL,
+                        sfirst = FALSE, 
+                        sparse = FALSE,
+                        inclx = TRUE, 
+                        df = NULL, 
+                        fullknots = NULL,
+                        fullknots.only = FALSE,
+                        type = 0, 
+                        norm = 2, 
+                        rpm = NULL, 
+                        pc = FALSE,
+                        fractied = 0.05,
+                        verbose = FALSE) {
+  
+  
+  if(is.null(knots) & is.null(bknots) & is.null(fullknots) & is.null(df)) {
+    stop("Specify 'df' or 'knots' 
+    Note that knots can be specified by using 'fullknots', 
+    or else via 'knots' and 'bknots'")
+  }
+  
+  if(is.null(fullknots)) {
+    if(is.null(knots) | is.null(bknots)) {
+      if(is.null(df)) {
+        stop("please specify both knots and bknots, fullknots, or df")
+      }
+    }
+    if(is.null(df)) fullknots <- c(bknots[1], knots, knots, bknots[2])
+  } else if(!is.null(fullknots)) {
+    fullknots <- fullknots
+  }
+  
+  
+  # Here onward, knots = fullknots
+  # knots <- fullknots
+  
+  if(is.null(df) & is.null(fullknots)) {
+    stop("please specify either df or fullknots, not both")
+  }
+  if(!is.null(df) & !is.null(fullknots)) {
+    stop("please specify either df or fullknots, not both")
+  }
+  
+  if(is.null(df) & !is.null(fullknots)) {
+    nk <- length(fullknots)
+  } else if(!is.null(df) & is.null(fullknots)) {
+    nk <- df + 1
+  } else {
+    stop()
+  }
+  
+  # borrow from Hmisc::rcspline.eval
+  
+  if (!length(fullknots)) {
+    xx <- x[!is.na(x)]
+    n <- length(xx)
+    if (n < 6) 
+      stop("fullknots not specified, and < 6 non-missing observations")
+    if (nk < 3) 
+      stop("nk must be >= 3")
+    xu <- sort(unique(xx))
+    nxu <- length(xu)
+    if ((nxu - 2) <= nk) {
+      warning(sprintf("%s fullknots requested with %s unique values of x.
+                      fullknots set to %s interior values.", 
+                      nk, nxu, nxu - 2))
+      fullknots <- xu[-c(1, length(xu))]
+    }
+    else {
+      outer <- if (nk > 3) 
+        0.05
+      else 0.1
+      if (nk > 6) 
+        outer <- 0.025
+      fullknots <- numeric(nk)
+      overrideFirst <- overrideLast <- FALSE
+      nke <- nk
+      firstknot <- lastknot <- numeric(0)
+      if (fractied > 0 && fractied < 1) {
+        f <- table(xx)/n
+        if (max(f[-c(1, length(f))]) < fractied) {
+          if (f[1] >= fractied) {
+            firstknot <- min(xx[xx > min(xx)])
+            xx <- xx[xx > firstknot]
+            nke <- nke - 1
+            overrideFirst <- TRUE
+          }
+          if (f[length(f)] >= fractied) {
+            lastknot <- max(xx[xx < max(xx)])
+            xx <- xx[xx < lastknot]
+            nke <- nke - 1
+            overrideLast <- TRUE
+          }
+        }
+      }
+      if (nke == 1) 
+        fullknots <- median(xx)
+      else {
+        if (nxu <= nke) 
+          fullknots <- xu
+        else {
+          p <- if (nke == 2) 
+            seq(0.5, 1 - outer, length = nke)
+          else seq(outer, 1 - outer, length = nke)
+          fullknots <- quantile(xx, p)
+          if (length(unique(fullknots)) < min(nke, 3)) {
+            fullknots <- quantile(xx, seq(outer, 1 - outer, 
+                                          length = 2 * nke))
+            if (length(firstknot) && length(unique(fullknots)) < 
+                3) {
+              midval <- if (length(firstknot) && length(lastknot)) 
+                (firstknot + lastknot)/2
+              else median(xx)
+              fullknots <- 
+                sort(c(firstknot, 
+                       midval, 
+                       if (length(lastknot)) lastknot else quantile(xx, 1-outer)))
+            }
+            if ((nu <- length(unique(fullknots))) < 3) {
+              cat("Fewer than 3 unique fullknots  Frequency table of variable:\n")
+              print(table(x))
+              stop()
+            }
+            warning(paste("could not obtain", nke, 
+                          "interior fullknots with default algorithm.\n", 
+                          "Used alternate algorithm to obtain", nu, 
+                          "fullknots"))
+          }
+        }
+        if (length(xx) < 100) {
+          xx <- sort(xx)
+          if (!overrideFirst) 
+            fullknots[1] <- xx[5]
+          if (!overrideLast) 
+            fullknots[nke] <- xx[length(xx) - 4]
+        }
+      }
+      fullknots <- c(firstknot, fullknots, lastknot)
+    }
+  }
+  fullknots <- sort(unique(fullknots))
+  nk <- length(fullknots)
+  if (nk < 3) {
+    cat("fewer than 3 unique fullknots  Frequency table of variable:\n")
+    print(table(x))
+    stop()
+  }
+  if (fullknots.only) 
+    return(fullknots)
+  if (length(rpm)) 
+    x[is.na(x)] <- rpm
+  # end of borrow from Hmisc::rcspline.eval
+  ##
+  
+  X <- x
+  N <- length(X)
+  nk <- length(fullknots)
+  
+  basis_evals <- matrix(0, N, nk-1)
+  
+  if(inclx) basis_evals[,1] = X
+  
+  if(derivs == 0) basis_evals[,1] = X;
+  if(derivs == 1) basis_evals[,1] = 1;
+  if(derivs == 2) basis_evals[,1] = 0;
+  
+  Xx <- matrix(0, N, nk)
+  km1 = nk - 1;
+  j = 1;
+  knot1   <- fullknots[1     ]
+  knotnk  <- fullknots[nk    ]
+  knotnk1 <- fullknots[nk - 1]
+  kd <-     (knotnk - knot1) ^ (2)
+  
+  for(ia in 1:N) {
+    for(ja in 1:nk) {
+      Xx[ia,ja] = ifelse(X[ia] - fullknots[ja] > 0, X[ia] - fullknots[ja], 0)
+    }
+  }
+  
+  if(derivs == 0) {
+    while (j <= nk - 2) {
+      jp1 = j + 1;
+      basis_evals[,jp1] = 
+        (Xx[,j]^3-(Xx[,km1]^3)*(fullknots[nk]-fullknots[j])/
+           (fullknots[nk]-fullknots[km1]) + (Xx[,nk]^3)*(fullknots[km1]-fullknots[j])/
+           (fullknots[nk]-fullknots[km1])) / (fullknots[nk]-fullknots[1])^2;
+      j = j + 1;
+    }
+  }
+  
+  if(derivs == 1) {
+    while (j <= nk - 2) {
+      jp1 = j + 1;
+      basis_evals[,jp1] =
+        (3*Xx[,j]^2) * (1/((fullknots[nk]-fullknots[1])^2))  - 
+        (3*Xx[,km1]^2)*(fullknots[nk]-fullknots[j]) /
+        ((fullknots[nk]-fullknots[km1]) * (fullknots[nk]-fullknots[1])^2) + 
+        (3*Xx[,nk]^2)*(fullknots[km1]-fullknots[j])/
+        ((fullknots[nk]-fullknots[km1]) * (fullknots[nk]-fullknots[1])^2) ;
+      j = j + 1;
+    }
+  }
+  
+  if(derivs == 2) {
+    while (j <= nk - 2) {
+      jp1 = j + 1;
+      basis_evals[,jp1] =
+        (6*Xx[,j]^1) * (1/((fullknots[nk]-fullknots[1])^2))  - 
+        (6*Xx[,km1]^1)*(fullknots[nk]-fullknots[j]) /
+        ((fullknots[nk]-fullknots[km1]) * (fullknots[nk]-fullknots[1])^2) + 
+        (6*Xx[,nk]^1)*(fullknots[km1]-fullknots[j])/
+        ((fullknots[nk]-fullknots[km1]) * (fullknots[nk]-fullknots[1])^2) ;
+      j = j + 1;
+    }
+  }
+  
+  if(!inclx) basis_evals <- basis_evals[,-1,drop=FALSE]
+  
+  if(intercept) {
+    if(derivs == 0) {
+      mat_intercept <- matrix(1, nrow(basis_evals), 1)
+      basis_evals <- cbind(mat_intercept, basis_evals)
+      if(verbose) message("Intercept column added. Please use ~0 + formula")
+    }
+    if(derivs == 1) {
+      mat_intercept <- matrix(0, nrow(basis_evals), 1)
+      basis_evals <- cbind(mat_intercept, basis_evals)
+      if(verbose) message("Intercept set to '0' for deriv = 1")
+    }
+    if(derivs == 2) {
+      mat_intercept <- matrix(0, nrow(basis_evals), 2)
+      basis_evals   <- basis_evals[, -1, drop = FALSE]
+      basis_evals   <- cbind(mat_intercept, basis_evals)
+      if(verbose) message("Intercept and first term (x) set to '0' for derivs = 2")
+    }
+  } # if(intercept) {
+  return(basis_evals)
+} # GS_rcs_call
+
+
+
+#' An internal function to split full knots into internal knots and boundary knots 
+#'
+#' @param fullknots A numeric matrix
+#' 
+#' @return A list comprised of matrix knots and matrix bknots 
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+split_fullknots_knots_bknots <- function(fullknots) {
+  nk_first <- 1
+  nk_last  <- length(fullknots)
+  knots    <- knots[2:(nk_last-1)]
+  bknots   <-  c(fullknots[nk_first], fullknots[nk_last])
+  list(knots = knots, bknots = bknots)
+}
+
+
+
+#' An internal function to perform elementwise multipication and rowsum 
+#' This is used in R inverse wide in QR rcs _d1
+#' @param matb A numeric matrix of betas with dim(N, N)
+#' @param matx A numeric matrix of predictor with dim(N, M)
+#' @param rowsum A logical whether to return rowsum
+#' 
+#' @return A matrix or a vector
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+prodrowsum_beta_Rinv_wide <- function(matb, matx, rowsum = TRUE) {
+  matrix_X <- matx
+  matrix_Y <- matb
+  num_cols <- ncol(matrix_X)
+  num_rows <- nrow(matrix_X)
+  result_matrix_loop <- matrix(NA, nrow = num_rows, ncol = num_cols)
+  for (j in 1:num_cols) { # Outer loop iterates through columns
+    for (i in 1:num_rows) { # Inner loop iterates through rows
+      # Perform element-wise multiplication for the current (row, column)
+      result_matrix_loop[i, j] <- matrix_X[i, j] * matrix_Y[i, j]
+    }
+  }
+  if(rowsum) {
+    out <- Matrix::rowSums(result_matrix_loop)
+  } else {
+    out <- result_matrix_loop
+  }
+  return(out)
+}
+
+
+
+
+

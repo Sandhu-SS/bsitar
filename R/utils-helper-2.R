@@ -3291,28 +3291,48 @@ check_CustomDoCall_fun <- function(scall,
 #' @details
 #' gemini
 #' 
-#' @param original_string A string
-#' @param start_pattern A string
-#' @param end_pattern A string
-#' @param replacement_text A string
-#' @param catit A logica
+#' @param x A string
+#' @param start A string
+#' @param end A string
+#' @param replace A string
+#' @param extract A logica to indicate whether the matched pattern
+#' @param cat_str A logica
+#' 
 #' @keywords internal
 #' @return A string
 #' @noRd
 #'
-replace_string_part <- function(original_string, 
-                                start_pattern, 
-                                end_pattern, 
-                                replacement_text,
-                                catit = F) {
+replace_string_part <- function(x, 
+                                start, 
+                                end, 
+                                replace = "",
+                                extract = FALSE,
+                                cat_str = FALSE ) {
+  
+  if(!is.character(x))       stop("Argument 'x' must be a character string")
+  if(!is.character(start))   stop("Argument 'start' must be a character string")
+  if(!is.character(end))     stop("Argument 'end' must be a character string")
+  if(!is.character(replace)) stop("Argument 'replace' must be a character string")
+  if(!is.logical(extract))   stop("Argument 'extract' must be a logical (TRUE/FALSE)")
+  if(!is.logical(cat_str))   stop("Argument 'cat_str' must be a logical (TRUE/FALSE)")
+  
+  original_string  <- x
+  start_pattern    <- start
+  end_pattern      <- end
+  replacement_text <- replace
+  extract_pattern  <- extract
+  catit            <- cat_str
+  
+  
+  
   start_pattern_raw <- start_pattern
   end_pattern_raw   <- end_pattern
   # Helper function to escape special regex characters
-  escape_regex <- function(string) {
-    # These are the common special regex characters that need escaping.
-    # Order matters for some, e.g., escape '\' before '['
-    special_chars <- c("\\", ".", "+", "*", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|")
-    
+  # These are the common special regex characters that need escaping.
+  # Order matters for some, e.g., escape '\' before '['
+  
+  special_chars <- c("\\", ".", "+", "*", "?", "^", "$", "(", ")", "[", "]", "{", "}", "|")
+  escape_regex <- function(string, special_chars) {
     # Use 'fixed = TRUE' to treat the search pattern as a literal string
     # when replacing, so we don't accidentally escape the escapes themselves.
     for (char in special_chars) {
@@ -3321,20 +3341,79 @@ replace_string_part <- function(original_string,
     return(string)
   }
   
-  start_pattern_escaped <- escape_regex(start_pattern_raw)
-  end_pattern_escaped <- escape_regex(end_pattern_raw)
+  start_pattern_escaped <- escape_regex(start_pattern_raw, special_chars)
+  end_pattern_escaped   <- escape_regex(end_pattern_raw, special_chars)
   # Construct the full regex pattern with (?s) flag for DOTALL mode
   regex_pattern <- paste0(
     start_pattern_escaped,
-    "(?s).*?", # (?s) makes the dot match newlines; .*? is non-greedy
+    # (?s) makes the dot match newlines; .*? is non-greedy
+    "(?s).*?", 
     end_pattern_escaped
   )
   
-  # Perform the replacement
-  new_string <- gsub(regex_pattern, replacement_text, original_string, perl = TRUE)
-  if(catit) new_string <- cat(new_string)
-  return(new_string)
+  
+ 
+  # if(extract_pattern) {
+  #   export_pattern <- paste0(start_pattern_escaped, end_pattern_escaped)
+  #   clean_the_export_pattern <- function(string, special_chars) {
+  #     for (char in special_chars) {
+  #       string <- gsub(paste0("\\", char), char, string, fixed = TRUE)
+  #     }
+  #     return(string)
+  #   } # end clean_the_export_pattern
+  #   export_pattern <- clean_the_export_pattern(export_pattern, special_chars)
+  #   return(export_pattern)
+  # } # if(extract_pattern) {
+  
+  # Perform the replacement or extract
+  if(extract_pattern) {
+    match_info <- regexpr(regex_pattern, original_string, perl = TRUE)
+    out_str    <- regmatches(original_string, match_info)
+  } else if(!extract_pattern) {
+    out_str <- gsub(regex_pattern, replacement_text, original_string, perl = TRUE)
+  }
+  if(catit) {
+    out_str <- cat(out_str)
+  }
+  return(out_str)
 }
+
+
+
+
+
+#' An internal function to inverse matrix 
+#' @param x A numeric matrix of betas with dim(N, N)
+#'  
+#' @return A matrix
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+trysolveit <- function(x) {
+  enverr. <- environment()
+  assign('err.', FALSE, envir = enverr.)
+  tryCatch(
+    expr = {
+      solvedit <- solve(x)
+    },
+    error = function(e) {
+      assign('err.', TRUE, envir = enverr.)
+    }
+  )
+  err. <- get('err.', envir = enverr.)
+  if (err.) {
+    solvedit <- MASS::ginv(x)
+  } else {
+    solvedit <- solvedit
+  }
+  return(solvedit)
+}
+
+
+
 
 
 
@@ -3351,7 +3430,8 @@ replace_string_part <- function(original_string,
 #' @return A list comprise of Q, R AND Rinv matrices
 #' @noRd
 #'
-QR_decomp_R <- function(X, center = FALSE, complete = FALSE, flip = TRUE, scale = NULL) {
+QR_decomp_R <- function(X, center = FALSE, complete = FALSE, 
+                        flip = TRUE, scale = NULL) {
   
   if(is.null(scale)) {
     QR_scale_str <- sqrt(nrow(X) - 1)
@@ -3402,7 +3482,8 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE, flip = TRUE, scale 
   #   Rinv <- solve(R)
   # }
   
-  Rinv <- solve(R)
+  # gemini https://gemini.google.com/app/1af6d967c1f4e5b9
+  Rinv <- trysolveit(R)
   
   list(Q = Q, R = R, Rinv = Rinv)
 }
