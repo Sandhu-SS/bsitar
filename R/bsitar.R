@@ -718,25 +718,44 @@
 #'   \code{'weights'}. See \code{brms::`addition-terms`} for more details.
 #'   }
 #' 
-#' @param multivariate Set up the multivariate model fitting (default \code{NULL}) 
-#'   using a named list with the following elements:
-#'   \itemize{
-#'   \item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit
-#'   a multivariate model.
-#'   \item \code{cor} (optional, character string): Specifies the correlation
-#'   structure. Available options are:
-#'   \itemize{
-#'   \item \code{un} (default): Models a full unstructured correlation, where
-#'   group-level random effects across response variables are drawn from a joint
-#'   multivariate normal distribution with shared correlation parameters. \item
-#'   \code{diagonal}: Estimates only the variance parameters for each sub-model,
-#'   with the correlation parameters set to zero. \item \code{un_s}: Estimates
-#'   unstructured variance-covariance parameters separately for each response
-#'   variable.
-#'   }
-#'   \item \code{rescor} (logical, default \code{TRUE}): Indicates whether to
-#'   estimate the residual correlation between response variables.
-#'   }
+#' @param multivariate Set up the multivariate model fitting (default
+#'  \code{NULL}) using a named list with the following elements:
+#'  \itemize{
+#'  \item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit a
+#'  multivariate model.
+#'  \item \code{cor} (optional, character string): Specifies the correlation
+#'  structure for group-level random effects. Available options are:
+#'  \itemize{
+#'  \item \code{"un"} (default): Models a full unstructured correlation, where
+#'  group-level random effects across response variables are drawn from a joint
+#'  multivariate normal distribution with shared correlation parameters.
+#'  \item \code{"diagonal"}: Estimates only the variance parameters for each
+#'  sub-model, with the correlation parameters set to zero.
+#'  \item \code{"un_s"}: Estimates unstructured variance-covariance parameters
+#'  separately for each response variable.
+#'  }
+#'  \item \code{rescor} (logical, default \code{TRUE}): Indicates whether to
+#'  estimate the residual correlation between response variables.
+#'  \item \code{rcorr_by} (character string, default \code{NULL}): The variable
+#'  by which separate residual correlations between response variables are
+#'  estimated. This must be a factor variable present in the \code{data}.
+#'  Ignored when \code{rescor = FALSE}.
+#'  \item \code{rcorr_gr} (character string, default \code{NULL}): The grouping
+#'  variable (typically a level 2 variable like \code{id}) for which residual
+#'  correlations between response variables are estimated. This must be a
+#'  factor variable present in the \code{data}. Ignored when \code{rescor = FALSE}.
+#'  \item \code{rcorr_method} (character string, default \code{NULL}): Specifies
+#'  the method for estimating residual correlations: \code{"lkj"} (uses an LKJ
+#'  distribution) or \code{"cde"} (uses the Cholesky decomposition of the
+#'  covariance matrix with a uniform prior of \code{-1, 1} for each off-diagonal
+#'  element). If \code{NULL}, \code{"lkj"} is set as the default. Ignored when
+#'  \code{rescor = FALSE}.
+#'  \item \code{rcorr_prior} (numeric vector, default \code{NULL}): Used to specify
+#'  the LKJ prior for each level of \code{rcorr_by} when \code{rcorr_method = "lkj"}.
+#'  The length of \code{rcorr_prior} should be either one (to use the same prior
+#'  for all levels) or equal to the number of levels in \code{rcorr_by}. Ignored
+#'  when \code{rescor = FALSE}.
+#'  }
 #'   
 #' @param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
 #'   (default \code{normal(lm, ysd, autoscale = TRUE)}). The following key
@@ -1922,10 +1941,16 @@ bsitar <- function(x,
                      cov = NULL,
                      dist = gaussian
                    ),
-                   univariate_by = list(by = NA, cor = un, terms = subset),
+                   univariate_by = list(by = NA, 
+                                        cor = un, 
+                                        terms = subset),
                    multivariate = list(mvar = FALSE,
                                        cor = un,
-                                       rescor = TRUE),
+                                       rescor = TRUE,
+                                       rcorr_by = NULL,
+                                       rcorr_gr = NULL,
+                                       rcorr_method = NULL,
+                                       rcorr_prior = NULL),
                    a_prior_beta = normal(lm, ysd, autoscale = TRUE),
                    b_prior_beta = normal(0, 1.5, autoscale = FALSE),
                    c_prior_beta = normal(0, 0.5, autoscale = FALSE),
@@ -2303,7 +2328,7 @@ bsitar <- function(x,
   apvsi <- NULL;
   pvsi <- NULL;
   group_arg_groupvar <- NULL;
-  multivariate_rescor <- NULL;
+  multivariate_rescor <- NULL; # why ?
   univariate_by_by <- NULL;
   sigma_arg_groupvar <- NULL;
   a_init_betasi <- NULL;
@@ -4352,12 +4377,28 @@ bsitar <- function(x,
       multivariate$cor <- "un"
     if (is.null(multivariate$rescor))
       multivariate$rescor <- TRUE
+    if (is.null(multivariate$rcorr_by))
+      multivariate$rcorr_by <- NULL
+    if (is.null(multivariate$rcorr_gr))
+      multivariate$rcorr_gr <- NULL
+    if (is.null(multivariate$rcorr_prior))
+      multivariate$rcorr_prior <- NULL
+    if (is.null(multivariate$rcorr_method))
+      multivariate$rcorr_method <- NULL
   }
   if (!multivariate$mvar) {
     if (is.null(multivariate$cor))
       multivariate$cor <- "un"
     if (is.null(multivariate$rescor))
-      multivariate$rescor <- TRUE
+      multivariate$rescor <- FALSE # TRUE -> FALSE
+    if (is.null(multivariate$rcorr_by))
+      multivariate$rcorr_by <- NULL
+    if (is.null(multivariate$rcorr_gr))
+      multivariate$rcorr_gr <- NULL
+    if (is.null(multivariate$rcorr_prior))
+      multivariate$rcorr_prior <- NULL
+    if (is.null(multivariate$rcorr_method))
+      multivariate$rcorr_method <- NULL
   }
   
   
@@ -5837,6 +5878,19 @@ bsitar <- function(x,
     }
     
     
+    
+    # add_rescor_by
+    set_rescor_by <- FALSE
+    if (nys > 1) {
+      if(multivariate$mvar) {
+        if(!is.null(multivariate$rcorr_by)) {
+          fit_edited_scode <- TRUE
+          set_rescor_by    <- TRUE
+        } # if(!is.null(multivariate$rcorr_by)) {
+      } # if(multivariate$mvar) {
+    } # if (nys > 1) {
+    
+
     ######################################################################
     ######################################################################
     
@@ -7179,7 +7233,7 @@ bsitar <- function(x,
     }
    
     group_arg$groupvar  <- group_arg_groupvar
-    multivariate$rescor <- multivariate_rescor
+    multivariate$rescor <- multivariate_rescor  # why ?
     univariate_by$by    <- univariate_by_by
     covariates_         <- covariates_
     covariates_sigma_   <- covariates_sigma_
@@ -7706,7 +7760,6 @@ bsitar <- function(x,
     set_priors_initials_agrs $ init_data_internal       <- init_data_internal
     set_priors_initials_agrs $ init_args_internal       <- init_args_internal
     set_priors_initials_agrs $ custom_order_prior_str   <- ""
-    
     
     bpriors <- CustomDoCall(set_priors_initials, set_priors_initials_agrs)
     
@@ -8783,6 +8836,8 @@ bsitar <- function(x,
   bformula <- ept(paste(bflist_c, collapse = "+"))
   
   
+  
+  
   if (nys > 1) {
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
       bformula <- bformula + brms::set_rescor(FALSE)
@@ -8898,6 +8953,93 @@ bsitar <- function(x,
         auxillary_stanvarlistlist, collapse = "+"
       )))
   }
+ 
+  
+  # add_rescor_by
+  Rescor_by_levels <- NULL
+  if (set_rescor_by) {
+      if(!is.null(multivariate$rcorr_by)) {
+        
+        if(!is.null(multivariate$rcorr_gr)) {
+          Rescor_gr_id  <- multivariate$rcorr_gr 
+        } else {
+          if(verbose) message("Rescor_gr_id set as group_arg$groupvar")
+          Rescor_gr_id <- group_arg$groupvar # 'id'
+        }
+        Rescor_gr_id_integer     <- as.integer(brmsdata[[Rescor_gr_id]])
+        
+        Rescor_by_id   <- multivariate$rcorr_by
+        if(!is.factor(brmsdata[[Rescor_by_id]])) {
+          stop("'", multivariate$rcorr_by, "'",
+               " set as 'rcorr_by' must be a factor variable")
+        }
+        # Rescor_by_id_integer     <- as.integer(brmsdata[[Rescor_by_id]])
+        
+        Rescor_by_levels <- levels(brmsdata[[Rescor_by_id]])
+        
+        
+        Rescor_by_id_integer <- brmsdata %>% 
+          dplyr:: group_by(!!as.name(Rescor_gr_id)) %>%
+          dplyr:: filter(dplyr::row_number() == 1) %>% 
+          dplyr::pull(Rescor_by_id) %>% 
+          as.vector() %>% as.integer()
+        Rescor_by_id_integer_max <- max(Rescor_by_id_integer)
+        
+        
+        
+        if(!is.null(multivariate$rcorr_method)) {
+          Rescor_method  <- multivariate$rcorr_method 
+        } else {
+          Rescor_method <- 'lkj'
+        }
+        
+        if(!is.null(multivariate$rcorr_prior)) {
+          Rescor_prior  <- multivariate$rcorr_prior 
+          if(length(Rescor_prior) == 1) {
+            Rescor_prior <- rep(Rescor_prior, Rescor_by_id_integer_max) %>% as.vector()
+          } else {
+            if(length(Rescor_prior) != Rescor_by_id_integer_max) {
+              stop("lenght of 'rcorr_prior' must be either 1 or same as levels of 'rescor_by'")
+            }
+          }
+        } else {
+          Rescor_prior <- rep(1, Rescor_by_id_integer_max) %>% as.vector()
+        }     
+        # create stanvars 
+        Rescor_by_stanvars <- 
+          brms::stanvar(x = Rescor_by_id_integer_max, 
+                        name = 'Rescor_Nby',
+                        scode = "int Rescor_Nby;", 
+                        block = 'data') + 
+          brms::stanvar(x = Rescor_gr_id_integer, 
+                        name = 'Rescor_gr_id',
+                        scode = "array[N] int<lower=1, upper=N_1> Rescor_gr_id;", 
+                        block = 'data') + 
+          brms::stanvar(x = Rescor_by_id_integer, 
+                        name = 'Rescor_by_id',
+                        scode = "array[N_1] int<lower=1, upper=Rescor_Nby> Rescor_by_id;",  
+                        block = 'data') 
+        if(Rescor_method == 'lkj') {
+          Rescor_by_stanvars <- Rescor_by_stanvars + 
+            brms::stanvar(x = Rescor_prior, 
+                          name = 'Rescor_prior',
+                          scode = "vector[Rescor_Nby] Rescor_prior;",  
+                          block = 'data') 
+        }
+        bstanvars <- bstanvars + Rescor_by_stanvars
+        # end create stanvars 
+      } # if(!is.null(multivariate$rescor_by)) {
+  } # if (set_rescor_by) {
+  
+
+  
+  
+  
+  # stop()
+  
+  # rescor_by rescor_gr rescor_method rescor_lkj   multivariate$mvar
+  
+  
   
   
   if (is.list(initialslist) & length(initialslist) == 0) {
@@ -9004,6 +9146,9 @@ bsitar <- function(x,
       }
     }  
     
+    
+    
+    
     # keep only one Lrescor
     if (multivariate$mvar & multivariate$rescor) {
       c_it <- "Lrescor_"
@@ -9015,6 +9160,22 @@ bsitar <- function(x,
         brmsinits[["Lrescor"]] <- temppp[[1]]
       } # 17.02.2025
     }
+    
+    # add_rescor_by
+    if (set_rescor_by) {
+      matrix_to_repated_as_array <- brmsinits[["Lrescor"]]
+      array_of_matrices_array <- array(
+        data = rep(matrix_to_repated_as_array, Rescor_by_id_integer_max),
+        dim = c(nrow(matrix_to_repated_as_array),
+                ncol(matrix_to_repated_as_array),
+                Rescor_by_id_integer_max)
+      )
+      # This is how rstan restructures Lrescor initials
+      reordered_array <- aperm(array_of_matrices_array, perm = c(3, 2, 1))
+      brmsinits[["Lrescor"]] <- reordered_array 
+    }
+    
+    
     
     if ((multivariate$mvar &
          multivariate$cor == "diagonal") |
@@ -11437,9 +11598,14 @@ bsitar <- function(x,
     
     
     
-    
-    # scode_finalxx <<- scode_final
-    # stop()
+    # add_rescor_by
+    if (set_rescor_by) {
+      scode_final <- 
+        edit_stancode_for_multivariate_rescor_by(stan_code = scode_final, 
+                                    threads = brm_args$threads$threads,
+                                    corr_method = Rescor_method) 
+    }
+
     
     # if(sum_zero) {
     #   scode_final_sum_zero <- scode_final
@@ -11479,6 +11645,8 @@ bsitar <- function(x,
     
     # cat(scode_final)
     
+    
+    
     if(!fit_edited_scode_exe_model_fit & fit_edited_scode) {
     # if(!fit_edited_scode_exe_model_fit) {
       # if(fit_edited_scode) {
@@ -11506,21 +11674,24 @@ bsitar <- function(x,
     if(fit_edited_scode) {
       if(verbose) message("Fitting model via edited stancode")
       if(brm_args$backend == "cmdstanr") {
-         brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args, 
-                                      brms_arguments,
+         brmsfit <- brms_via_cmdstanr(scode_final, sdata,  
+                                      brm_args, brms_arguments,
                                       pathfinder_args = pathfinder_args,
-                                      pathfinder_init = pathfinder_init)
+                                      pathfinder_init = pathfinder_init,
+                                      Rescor_by_levels = Rescor_by_levels)
       }
       if(brm_args$backend == "rstan") {
-        brmsfit  <- brms_via_rstan(scode_final, sdata, brm_args, 
-                                   brms_arguments)
+        brmsfit  <- brms_via_rstan(scode_final, sdata,
+                                   brm_args, brms_arguments,
+                                   Rescor_by_levels = Rescor_by_levels)
       }
     } else if(!fit_edited_scode) {
       if(!is.null(pathfinder_args) | pathfinder_init) {
         brmsfit <- brms_via_cmdstanr(scode_final, sdata, brm_args,
                                      brms_arguments,
                                      pathfinder_args = pathfinder_args,
-                                     pathfinder_init = pathfinder_init)
+                                     pathfinder_init = pathfinder_init,
+                                     Rescor_by_levels = Rescor_by_levels)
       } else {
         brmsfit <- CustomDoCall(brms::brm, brm_args)
       }

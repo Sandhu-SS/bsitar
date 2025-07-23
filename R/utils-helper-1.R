@@ -2322,6 +2322,343 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 
 
 
+#' An internal function to edit code for rescorr by group fit via cmdstanr/rstan
+#'
+#' @param stan_code A character string
+#' @param threads An integer of \code{NULL} 
+#' @param corr_method A character string
+#' 
+#' @return A list
+#' @keywords internal
+#' @noRd
+#'
+edit_stancode_for_multivariate_rescor_by <- function(stan_code, 
+                                                     threads = NULL,
+                                                     corr_method = 'lkj') {
+  if(is.null(corr_method)) {
+    via <- 'cde'
+  } else if(corr_method == 'lkj') {
+    via <- 'lkj'
+  } else if(corr_method == 'cde') {
+    via <- 'cde'
+  } else {
+    stop("corr_method must be either 'lkj' or 'cde'")
+  }
+  
+  brms_code_edited <- stan_code
+  
+  gsub_it <- "cholesky_factor_corr[nresp] Lrescor;"
+  gsub_by <- "array[Rescor_Nby] cholesky_factor_corr[nresp] Lrescor;"
+  if(corr_method == 'lkj') {
+    gsub_by <- "array[Rescor_Nby] cholesky_factor_corr[nresp] Lrescor;"
+  } else if(corr_method == 'cde') {
+    gsub_by <- "array[Rescor_Nby] vector<lower=-1, upper=1>[N_rhos] CoefRescor;"
+  }
+  brms_code_edited <- gsub(gsub_it, gsub_by, brms_code_edited, fixed = T)
+  
+  
+  gsub_it <- "corr_matrix[nresp] Rescor = multiply_lower_tri_self_transpose(Lrescor);"
+  gsub_by <- "array[Rescor_Nby] corr_matrix[nresp] Rescor;
+        for (c in 1:Rescor_Nby) Rescor[c] = multiply_lower_tri_self_transpose(Lrescor[c]);"
+  brms_code_edited <- gsub(gsub_it, gsub_by, brms_code_edited, fixed = T)
+  
+  gsub_it <- "vector<lower=-1,upper=1>[nrescor] rescor;"
+  gsub_by <- "array[Rescor_Nby] vector<lower=-1,upper=1>[nrescor] rescor;"
+  brms_code_edited <- gsub(gsub_it, gsub_by, brms_code_edited, fixed = T)
+  
+  gsub_it <- "rescor[choose(k - 1, 2) + j] = Rescor[j, k];"
+  gsub_by <- "for (c in 1:Rescor_Nby) rescor[c, choose(k - 1, 2) + j] = Rescor[c, j, k];"
+  brms_code_edited <- gsub(gsub_it, gsub_by, brms_code_edited, fixed = T)
+  
+  gsub_it_start <- "lprior += lkj_corr_cholesky_lpdf(Lrescor"
+  gsub_it_end   <- ");"
+  if(corr_method == 'lkj') {
+    gsub_by <- "for (c in 1:Rescor_Nby) lprior += lkj_corr_cholesky_lpdf(Lrescor[c] | Rescor_prior[c]);"
+  } else if(corr_method == 'cde') {
+    gsub_by <- "for (c in 1:Rescor_Nby) lprior += uniform_lpdf(CoefRescor[c] | -1, 1);"
+  }
+  brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                          start = gsub_it_start, 
+                                          end =  gsub_it_end,
+                                          replace = gsub_by)
+  
+  
+  # only 'cde' specific changes to transformed data and transformed parameters
+  if(corr_method == 'lkj') {
+    brms_code_edited <- brms_code_edited
+  } else if(corr_method == 'cde') {
+    gsub_it_start <- "transformed data"
+    gsub_it_end   <- "{"
+    gsub_by <- "transformed data {
+          // Compute number of unique corrs
+          int N_rhos = nresp * (nresp - 1) / 2;"
+    brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                            start = gsub_it_start, 
+                                            end =  gsub_it_end,
+                                            replace = gsub_by)
+    gsub_it_start <- "transformed parameters"
+    gsub_it_end   <- "{"
+    gsub_by <- "transformed parameters {
+          // Imp to use local because otherwise interger such as int ind = 0 not allowed in tparameters
+          array[Rescor_Nby] matrix[nresp, nresp] Rrescor; 
+          array[Rescor_Nby] matrix[nresp, nresp] Lrescor;
+          { // start local
+              // array[Rescor_Nby] vector[nresp] diag_elements_array = rep_vector(1.0, nresp);
+              for (c in 1:Rescor_Nby) {
+                matrix[nresp, nresp] current_Rrescor;
+                for (i in 1:nresp) {
+                   current_Rrescor[i, i] = 1.0;
+                  // current_Rrescor[i, i] = diag_elements_array[c, i];
+                }
+                int ind = 1; 
+                for (j in 1:(nresp-1)) { 
+                  for (i in (j+1):nresp) { 
+                    current_Rrescor[i, j] = CoefRescor[c, ind]; 
+                    current_Rrescor[j, i] = CoefRescor[c, ind]; 
+                    ind += 1;
+                  }
+                }
+                Rrescor[c] = current_Rrescor;
+                Lrescor[c] = cholesky_decompose(Rrescor[c]);
+              }
+          }  // end local"
+    brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                            start = gsub_it_start, 
+                                            end =  gsub_it_end,
+                                            replace = gsub_by)
+  } # if(corr_method == 'lkj') { else if(corr_method == 'cde') {
+  # End only 'cde' specific changes to transformed data and transformed parameters
+  
+  
+  # thread specific changes for both 'lkj' and 'cde'
+  
+  # int current_id = Rescor_gr_id[nn] ;
+  # int Index_Rescor = Rescor_by_id[current_id] ;
+  #  Rescor_by_id[Rescor_gr_id[nn]] -> thread !=NULL
+  #  Rescor_by_id[Rescor_gr_id[n]] -> thread ==NULL
+  gsub_it_start <- "LSigma[n] = diag_pre_multiply"
+  gsub_it_end   <- ");"
+  if(is.null(threads)) {
+    gsub_by <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[n]];
+        LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
+  } else if(!is.null(threads)) {
+    gsub_by <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[nn]];
+        LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
+  }
+  brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                          start = gsub_it_start, 
+                                          end =  gsub_it_end,
+                                          replace = gsub_by)
+  
+  # End thread specific changes for both 'lkj' and 'cde'
+  
+  
+  # reduce_sum specific changes for both 'lkj' and 'cde'
+  if(is.null(threads)) {
+    brms_code_edited <- brms_code_edited
+  } else if(!is.null(threads)) {
+    gsub_it   <- "matrix Lrescor,"
+    gsub_by   <- "array[] matrix Lrescor,"
+    brms_code_edited <- gsub(gsub_it, gsub_by, brms_code_edited, fixed = TRUE)
+    
+  } # if(is.null(threads)) { else if(!is.null(threads)) {
+  
+  
+  ########################################
+  
+  # when sigma is modelled as a single paramter for each outcome, 
+  # them code is different from when sigma is observation specific e.g.,
+  # sigma_formula = ~ 0 + class_id
+  # This information is picked by looking for sigma[n]
+  # When sigma is observation specific, then sigma[n] is used in the 
+  # loop similar to the Mu[n]
+  
+  ########################################
+  
+  
+  
+  if(grepl("sigma[n]", brms_code_edited, fixed = T)) {
+    sigma_single_parm <- FALSE
+  } else if(!grepl("sigma[n]", brms_code_edited, fixed = T)) {
+    sigma_single_parm <- TRUE
+  } else {
+    stop("something wrong with sigma rescor")
+  }
+  
+  ########################################
+  
+  # when sigma is observation specific, i.e., sigma_single_parm = FALSE
+  # then return the above code
+  # But when sigma_single_parm = TRUE, then we need addition chnages
+  # as implemented below
+  
+  ########################################
+  
+  if(!sigma_single_parm) {
+    return(brms_code_edited)
+  }
+  
+  
+  
+  
+  gsub_it_start <- "Mu[n] = transpose"
+  gsub_it_end   <- ");"
+  mu_n <- replace_string_part(x = brms_code_edited,
+                              start = gsub_it_start, 
+                              end =  gsub_it_end,
+                              replace = "",
+                              extract = T)
+  
+  
+  gsub_it_start <- "sigma ="
+  gsub_it_end   <- ");"
+  sigma_n <- replace_string_part(x = brms_code_edited,
+                                 start = gsub_it_start, 
+                                 end =  gsub_it_end,
+                                 replace = "",
+                                 extract = T)
+  gsub_it_start <- "vector[nresp] sigma ="
+  gsub_it_end   <- ");"
+  brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                          start = gsub_it_start, 
+                                          end =  gsub_it_end,
+                                          replace = "array[N] vector[nresp] sigma;",
+                                          extract = F)
+  
+  gsub_it_start <- "matrix[nresp, nresp] LSigma ="
+  gsub_it_end   <- ");"
+  brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                          start = gsub_it_start, 
+                                          end =  gsub_it_end,
+                                          replace = "array[N] matrix[nresp, nresp] LSigma;",
+                                          extract = F)
+  
+  sigma_n <- gsub("sigma =", "sigma[n] =", sigma_n, fixed = T)
+  # sigma_n <- gsub(",", "[n],", sigma_n, fixed = T)
+  # sigma_n <- gsub("])", "[n]])", sigma_n, fixed = T)
+  
+  if(is.null(threads)) {
+    plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[n]];
+        LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
+  } else if(!is.null(threads)) {
+    plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[nn]];
+      LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
+  }
+  
+  mu_n_sigma_n_plus_mis <- paste0(mu_n, "\n      ", 
+                                  sigma_n, "\n      ",
+                                  plus_mis)
+  
+  brms_code_edited <- gsub(mu_n, mu_n_sigma_n_plus_mis, brms_code_edited, fixed = T)
+  
+  
+  if(is.null(threads)) {
+    gsub_it_target_n <- "target += multi_normal_cholesky_lpdf(Y | Mu, LSigma);"
+    gsub_by_target_n <- "for (n in 1:N) {
+    target += multi_normal_cholesky_lpdf(Y[n] | Mu[n], LSigma[n]);
+  }"
+  } else if(!is.null(threads)) {
+    gsub_it_target_n <- "ptarget += multi_normal_cholesky_lpdf(Y[start:end] | Mu, LSigma);"
+    gsub_by_target_n <- 
+      "for (n in 1:N) {
+     int nn = n + start - 1;
+     ptarget += multi_normal_cholesky_lpdf(Y[nn] | Mu[n], LSigma[n]);
+    }"
+  }
+  
+  brms_code_edited <- gsub(gsub_it_target_n, gsub_by_target_n, brms_code_edited, fixed = T)
+  
+  
+  # print(sigma_n)
+  # stop()
+  
+  # End reduce_sum specific changes for both 'lkj' and 'cde'
+  return(brms_code_edited)
+}
+
+
+
+
+
+#' custom_rename_pars for residual corr by group fit via cmdstanr
+#'
+#' @param x A brms objects
+#' @param Rescor_by_levels levels of group levels
+#' @param ... Other arguments
+#' 
+#' @return A list
+#' @keywords internal
+#' @noRd
+#'
+custom_rename_pars <- function (x, Rescor_by_levels = NULL, ...) {
+  
+  if (!length(x$fit@sim)) {
+    return(x)
+  }
+  
+  brmsframe <- rename_predictor <- rename_re <- rename_Xme <- 
+    save_old_par_order <- do_renaming <- repair_stanfit <-
+    compute_quantities <- reorder_pars <- is.rlist <- NULL;
+  
+  getfrom_ <- c('brmsframe', 'rename_predictor', 'rename_re', 'rename_Xme', 
+                'save_old_par_order', 'do_renaming', 'repair_stanfit', 
+                "compute_quantities", "reorder_pars", "is.rlist")
+  
+  for (i in getfrom_) {
+    assign(i, utils::getFromNamespace(i, 'brms'))
+    }
+  
+  rename_predictor.mvbrmsterms <- function (x, pars, 
+                                            Rescor_by_levels = NULL,
+                                            rescor_names = NULL, ...) {
+    
+    `c<-` <- `lc<-` <- get_cornames <- rlist <- NULL;
+    
+    getfrom_ <- c("c<-", "lc<-", 'get_cornames', 'rlist')
+    for (i in getfrom_) {
+      assign(i, utils::getFromNamespace(i, 'brms'))
+      }
+  
+    out <- list()
+    for (i in seq_along(x$terms)) {
+      c(out) <- rename_predictor(x$terms[[i]], pars = pars, 
+                                 ...)
+    }
+    if (x$rescor) {
+      if(is.null(rescor_names)) {
+        rescor_names <- get_cornames(x$responses, type = "rescor", 
+                                     brackets = FALSE)
+        if(!is.null(Rescor_by_levels)) {
+          rescor_names_Rescor_by_levels <- c()
+          for (i in Rescor_by_levels) {
+            tx_i <- gsub("rescor", paste0("rescor", "_", i), rescor_names, fixed = T )
+            rescor_names_Rescor_by_levels <- c(rescor_names_Rescor_by_levels, tx_i)
+          }
+          rescor_names <- rescor_names_Rescor_by_levels
+        }
+      } # if(is.null(rescor_names)) {
+      lc(out) <- rlist(grepl("^rescor\\[", pars), rescor_names)
+    }
+    out
+  }
+
+
+  bframe <- brmsframe(x$formula, x$data)
+  pars <- variables(x)
+  to_rename <- c(rename_predictor(bframe, pars = pars, prior = x$prior, 
+                                  Rescor_by_levels = Rescor_by_levels,
+                                  rescor_names = NULL),  
+                 rename_re(bframe, pars = pars), rename_Xme(bframe, pars = pars))
+  x <- save_old_par_order(x)
+  x <- do_renaming(x, to_rename)
+  x$fit <- repair_stanfit(x$fit)
+  x <- compute_quantities(x)
+  x <- reorder_pars(x)
+  x
+}
+
+
+
 
 #' Sanitize pathfinder arguments for fit via cmdstanr
 #'
@@ -2411,9 +2748,13 @@ sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) {
 #' @noRd
 #'
 
-brms_via_cmdstanr <- function(scode, sdata, brm_args, brms_arguments,
+brms_via_cmdstanr <- function(scode, 
+                              sdata, 
+                              brm_args, 
+                              brms_arguments,
                               pathfinder_args = NULL,
-                              pathfinder_init = FALSE) {
+                              pathfinder_init = FALSE,
+                              Rescor_by_levels = NULL) {
   
   try(zz <- insight::check_if_installed(c("cmdstanr"), 
                                         minimum_version = 
@@ -2593,9 +2934,11 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args, brms_arguments,
   brm_args_empty$empty <- TRUE
   
   # Create an empty brms object -> Set empty = TRUE
-  bfit <- CustomDoCall(brms::brm, brm_args_empty)
-  bfit$fit = cb_fit
-  bfit <- brms::rename_pars(bfit)
+  bfit     <- CustomDoCall(brms::brm, brm_args_empty)
+  bfit$fit <- cb_fit
+  bfit     <- custom_rename_pars(x = bfit, 
+                                 Rescor_by_levels = Rescor_by_levels)
+  # bfit <- brms::rename_pars(bfit)
   bfit
 }
 
@@ -2617,7 +2960,11 @@ brms_via_cmdstanr <- function(scode, sdata, brm_args, brms_arguments,
 #' @keywords internal
 #' @noRd
 #'
-brms_via_rstan <- function(scode, sdata, brm_args, brms_arguments) {
+brms_via_rstan <- function(scode, 
+                           sdata, 
+                           brm_args, 
+                           brms_arguments,
+                           Rescor_by_levels = NULL) {
   if(!is.null(brm_args$threads$threads)) {
     stan_threads <- TRUE
   } else {
@@ -2733,7 +3080,9 @@ brms_via_rstan <- function(scode, sdata, brm_args, brms_arguments) {
   brm_args$empty <- TRUE
   bfit      <- CustomDoCall(brms::brm, brm_args)
   bfit$fit  <- cb_fit
-  bfit      <- brms::rename_pars(bfit)
+  bfit      <- custom_rename_pars(x = bfit, 
+                                  Rescor_by_levels = Rescor_by_levels) 
+  # bfit      <- brms::rename_pars(bfit)
   bfit
 }
 

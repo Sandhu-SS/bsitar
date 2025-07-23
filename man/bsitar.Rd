@@ -60,7 +60,8 @@ bsitar(
   sigma_group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist =
     gaussian),
   univariate_by = list(by = NA, cor = un, terms = subset),
-  multivariate = list(mvar = FALSE, cor = un, rescor = TRUE),
+  multivariate = list(mvar = FALSE, cor = un, rescor = TRUE, rcorr_by = NULL, rcorr_gr =
+    NULL, rcorr_method = NULL, rcorr_prior = NULL),
   a_prior_beta = normal(lm, ysd, autoscale = TRUE),
   b_prior_beta = normal(0, 1.5, autoscale = FALSE),
   c_prior_beta = normal(0, 0.5, autoscale = FALSE),
@@ -795,24 +796,43 @@ setting up the sub-models. Options are \code{'subset'} (default) and
 \code{'weights'}. See \code{brms::`addition-terms`} for more details.
 }}
 
-\item{multivariate}{Set up the multivariate model fitting (default \code{NULL})
-using a named list with the following elements:
+\item{multivariate}{Set up the multivariate model fitting (default
+\code{NULL}) using a named list with the following elements:
 \itemize{
-\item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit
-a multivariate model.
+\item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit a
+multivariate model.
 \item \code{cor} (optional, character string): Specifies the correlation
-structure. Available options are:
+structure for group-level random effects. Available options are:
 \itemize{
-\item \code{un} (default): Models a full unstructured correlation, where
+\item \code{"un"} (default): Models a full unstructured correlation, where
 group-level random effects across response variables are drawn from a joint
-multivariate normal distribution with shared correlation parameters. \item
-\code{diagonal}: Estimates only the variance parameters for each sub-model,
-with the correlation parameters set to zero. \item \code{un_s}: Estimates
-unstructured variance-covariance parameters separately for each response
-variable.
+multivariate normal distribution with shared correlation parameters.
+\item \code{"diagonal"}: Estimates only the variance parameters for each
+sub-model, with the correlation parameters set to zero.
+\item \code{"un_s"}: Estimates unstructured variance-covariance parameters
+separately for each response variable.
 }
 \item \code{rescor} (logical, default \code{TRUE}): Indicates whether to
 estimate the residual correlation between response variables.
+\item \code{rcorr_by} (character string, default \code{NULL}): The variable
+by which separate residual correlations between response variables are
+estimated. This must be a factor variable present in the \code{data}.
+Ignored when \code{rescor = FALSE}.
+\item \code{rcorr_gr} (character string, default \code{NULL}): The grouping
+variable (typically a level 2 variable like \code{id}) for which residual
+correlations between response variables are estimated. This must be a
+factor variable present in the \code{data}. Ignored when \code{rescor = FALSE}.
+\item \code{rcorr_method} (character string, default \code{NULL}): Specifies
+the method for estimating residual correlations: \code{"lkj"} (uses an LKJ
+distribution) or \code{"cde"} (uses the Cholesky decomposition of the
+covariance matrix with a uniform prior of \code{-1, 1} for each off-diagonal
+element). If \code{NULL}, \code{"lkj"} is set as the default. Ignored when
+\code{rescor = FALSE}.
+\item \code{rcorr_prior} (numeric vector, default \code{NULL}): Used to specify
+the LKJ prior for each level of \code{rcorr_by} when \code{rcorr_method = "lkj"}.
+The length of \code{rcorr_prior} should be either one (to use the same prior
+for all levels) or equal to the number of levels in \code{rcorr_by}. Ignored
+when \code{rescor = FALSE}.
 }}
 
 \item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
