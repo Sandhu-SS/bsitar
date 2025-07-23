@@ -5883,9 +5883,9 @@ bsitar <- function(x,
     set_rescor_by <- FALSE
     if (nys > 1) {
       if(multivariate$mvar) {
-        if(!is.null(multivariate$rcorr_by)) {
-          fit_edited_scode <- TRUE
-          set_rescor_by    <- TRUE
+        if(multivariate$rescor) {
+          if(!is.null(multivariate$rcorr_by)) fit_edited_scode <- TRUE
+          if(!is.null(multivariate$rcorr_by)) set_rescor_by    <- TRUE
         } # if(!is.null(multivariate$rcorr_by)) {
       } # if(multivariate$mvar) {
     } # if (nys > 1) {
@@ -8973,18 +8973,21 @@ bsitar <- function(x,
           stop("'", multivariate$rcorr_by, "'",
                " set as 'rcorr_by' must be a factor variable")
         }
-        # Rescor_by_id_integer     <- as.integer(brmsdata[[Rescor_by_id]])
-        
         Rescor_by_levels <- levels(brmsdata[[Rescor_by_id]])
+        Rescor_by_levels <- paste0(Rescor_by_id, Rescor_by_levels)
         
+        # brmsdatax <<- brmsdata
+        # Rescor_gr_idx <<- Rescor_gr_id
+        # Rescor_by_idx <<- Rescor_by_id
         
         Rescor_by_id_integer <- brmsdata %>% 
           dplyr:: group_by(!!as.name(Rescor_gr_id)) %>%
           dplyr:: filter(dplyr::row_number() == 1) %>% 
           dplyr::pull(Rescor_by_id) %>% 
-          as.vector() %>% as.integer()
-        Rescor_by_id_integer_max <- max(Rescor_by_id_integer)
+          as.vector() 
         
+        Rescor_by_id_integer     <- as.integer(as.factor(Rescor_by_id_integer))
+        Rescor_by_id_integer_max <- max(Rescor_by_id_integer)
         
         
         if(!is.null(multivariate$rcorr_method)) {
@@ -11603,6 +11606,7 @@ bsitar <- function(x,
       scode_final <- 
         edit_stancode_for_multivariate_rescor_by(stan_code = scode_final, 
                                     threads = brm_args$threads$threads,
+                                    normalize = brm_args$normalize,
                                     corr_method = Rescor_method) 
     }
 

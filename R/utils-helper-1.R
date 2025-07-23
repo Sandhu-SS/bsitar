@@ -1549,6 +1549,7 @@ collapse_comma <- function(...) {
 #' return only the generated quantity sub code.
 #' @param normalize A logical (default \code{TRUE}) to indicate whether to
 #' include the normalizing constant in the prior target density.
+#' @param cp_via A string character of stan code
 #' @keywords internal
 #' @return A character string.
 #' @noRd
@@ -1830,6 +1831,10 @@ edit_scode_ncp_to_cp_new <- function(stancode,
   
   editedcode2 <- gsub(tempt_name_tp, true_name_tp, editedcode2, fixed = T)
   editedcode2 <- gsub(tempt_name_p,  true_name_p,  editedcode2, fixed = T)
+  
+  if(!normalize) {
+    editedcode2 <- gsub("_lpdf", "_lupdf", editedcode2, fixed = T)
+  }
   
   # If only one random effects and hence no r_1 etc, then return original code
   if(identical(pattern_r, character(0))) {
@@ -2125,6 +2130,10 @@ edit_scode_ncp_to_cp <- function(stancode,
 
   editedcode2 <- gsub(tempt_name_tp, true_name_tp, editedcode2, fixed = T)
   editedcode2 <- gsub(tempt_name_p,  true_name_p,  editedcode2, fixed = T)
+  
+  if(!normalize) {
+    editedcode2 <- gsub("_lpdf", "_lupdf", editedcode2, fixed = T)
+  }
 
   # If only one random effects and hence no r_1 etc, then return original code
   if(identical(pattern_r, character(0))) {
@@ -2135,6 +2144,7 @@ edit_scode_ncp_to_cp <- function(stancode,
   }
 
 }
+
 
 
 #' An internal function to get derivatives from distance curve for QR decomp
@@ -2334,6 +2344,7 @@ is_emptyx <- function(x, first.only = TRUE, all.na.empty = TRUE) {
 #'
 edit_stancode_for_multivariate_rescor_by <- function(stan_code, 
                                                      threads = NULL,
+                                                     normalize = TRUE,
                                                      corr_method = 'lkj') {
   if(is.null(corr_method)) {
     via <- 'cde'
@@ -2370,6 +2381,7 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   gsub_by <- "for (c in 1:Rescor_Nby) rescor[c, choose(k - 1, 2) + j] = Rescor[c, j, k];"
   brms_code_edited <- gsub(gsub_it, gsub_by, brms_code_edited, fixed = T)
   
+  
   gsub_it_start <- "lprior += lkj_corr_cholesky_lpdf(Lrescor"
   gsub_it_end   <- ");"
   if(corr_method == 'lkj') {
@@ -2377,10 +2389,17 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   } else if(corr_method == 'cde') {
     gsub_by <- "for (c in 1:Rescor_Nby) lprior += uniform_lpdf(CoefRescor[c] | -1, 1);"
   }
+  if(!normalize) {
+    gsub_it_start <- gsub("_lpdf", "_lupdf", gsub_it_start, fixed = T)
+    gsub_by       <- gsub("_lpdf", "_lupdf", gsub_by, fixed = T)
+  }
+  
+  
   brms_code_edited <- replace_string_part(x = brms_code_edited,
                                           start = gsub_it_start, 
                                           end =  gsub_it_end,
                                           replace = gsub_by)
+  
   
   
   # only 'cde' specific changes to transformed data and transformed parameters
@@ -2495,85 +2514,87 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   ########################################
   
   if(!sigma_single_parm) {
-    return(brms_code_edited)
-  }
-  
-  
-  
-  
-  gsub_it_start <- "Mu[n] = transpose"
-  gsub_it_end   <- ");"
-  mu_n <- replace_string_part(x = brms_code_edited,
-                              start = gsub_it_start, 
-                              end =  gsub_it_end,
-                              replace = "",
-                              extract = T)
-  
-  
-  gsub_it_start <- "sigma ="
-  gsub_it_end   <- ");"
-  sigma_n <- replace_string_part(x = brms_code_edited,
-                                 start = gsub_it_start, 
-                                 end =  gsub_it_end,
-                                 replace = "",
-                                 extract = T)
-  gsub_it_start <- "vector[nresp] sigma ="
-  gsub_it_end   <- ");"
-  brms_code_edited <- replace_string_part(x = brms_code_edited,
-                                          start = gsub_it_start, 
-                                          end =  gsub_it_end,
-                                          replace = "array[N] vector[nresp] sigma;",
-                                          extract = F)
-  
-  gsub_it_start <- "matrix[nresp, nresp] LSigma ="
-  gsub_it_end   <- ");"
-  brms_code_edited <- replace_string_part(x = brms_code_edited,
-                                          start = gsub_it_start, 
-                                          end =  gsub_it_end,
-                                          replace = "array[N] matrix[nresp, nresp] LSigma;",
-                                          extract = F)
-  
-  sigma_n <- gsub("sigma =", "sigma[n] =", sigma_n, fixed = T)
-  # sigma_n <- gsub(",", "[n],", sigma_n, fixed = T)
-  # sigma_n <- gsub("])", "[n]])", sigma_n, fixed = T)
-  
-  if(is.null(threads)) {
-    plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[n]];
+    out_edited_code <- brms_code_edited
+  } else if(sigma_single_parm) {
+    gsub_it_start <- "Mu[n] = transpose"
+    gsub_it_end   <- ");"
+    mu_n <- replace_string_part(x = brms_code_edited,
+                                start = gsub_it_start, 
+                                end =  gsub_it_end,
+                                replace = "",
+                                extract = T)
+    
+    
+    gsub_it_start <- "sigma ="
+    gsub_it_end   <- ");"
+    sigma_n <- replace_string_part(x = brms_code_edited,
+                                   start = gsub_it_start, 
+                                   end =  gsub_it_end,
+                                   replace = "",
+                                   extract = T)
+    gsub_it_start <- "vector[nresp] sigma ="
+    gsub_it_end   <- ");"
+    brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                            start = gsub_it_start, 
+                                            end =  gsub_it_end,
+                                            replace = "array[N] vector[nresp] sigma;",
+                                            extract = F)
+    
+    gsub_it_start <- "matrix[nresp, nresp] LSigma ="
+    gsub_it_end   <- ");"
+    brms_code_edited <- replace_string_part(x = brms_code_edited,
+                                            start = gsub_it_start, 
+                                            end =  gsub_it_end,
+                                            replace = "array[N] matrix[nresp, nresp] LSigma;",
+                                            extract = F)
+    
+    sigma_n <- gsub("sigma =", "sigma[n] =", sigma_n, fixed = T)
+    # sigma_n <- gsub(",", "[n],", sigma_n, fixed = T)
+    # sigma_n <- gsub("])", "[n]])", sigma_n, fixed = T)
+    
+    if(is.null(threads)) {
+      plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[n]];
         LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
-  } else if(!is.null(threads)) {
-    plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[nn]];
+    } else if(!is.null(threads)) {
+      plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[nn]];
       LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
-  }
-  
-  mu_n_sigma_n_plus_mis <- paste0(mu_n, "\n      ", 
-                                  sigma_n, "\n      ",
-                                  plus_mis)
-  
-  brms_code_edited <- gsub(mu_n, mu_n_sigma_n_plus_mis, brms_code_edited, fixed = T)
-  
-  
-  if(is.null(threads)) {
-    gsub_it_target_n <- "target += multi_normal_cholesky_lpdf(Y | Mu, LSigma);"
-    gsub_by_target_n <- "for (n in 1:N) {
+    }
+    
+    mu_n_sigma_n_plus_mis <- paste0(mu_n, "\n      ", 
+                                    sigma_n, "\n      ",
+                                    plus_mis)
+    
+    brms_code_edited <- gsub(mu_n, mu_n_sigma_n_plus_mis, brms_code_edited, fixed = T)
+    
+    
+    if(is.null(threads)) {
+      gsub_it_target_n <- "target += multi_normal_cholesky_lpdf(Y | Mu, LSigma);"
+      gsub_by_target_n <- "for (n in 1:N) {
     target += multi_normal_cholesky_lpdf(Y[n] | Mu[n], LSigma[n]);
   }"
-  } else if(!is.null(threads)) {
-    gsub_it_target_n <- "ptarget += multi_normal_cholesky_lpdf(Y[start:end] | Mu, LSigma);"
-    gsub_by_target_n <- 
-      "for (n in 1:N) {
+    } else if(!is.null(threads)) {
+      gsub_it_target_n <- "ptarget += multi_normal_cholesky_lpdf(Y[start:end] | Mu, LSigma);"
+      gsub_by_target_n <- 
+        "for (n in 1:N) {
      int nn = n + start - 1;
      ptarget += multi_normal_cholesky_lpdf(Y[nn] | Mu[n], LSigma[n]);
     }"
-  }
+    }
+    
+    if(!normalize) {
+      gsub_it_start <- gsub("_lpdf", "_lupdf", gsub_it_start, fixed = T)
+      gsub_by       <- gsub("_lpdf", "_lupdf", gsub_by, fixed = T)
+    }
+    
+    brms_code_edited <- gsub(gsub_it_target_n, gsub_by_target_n, brms_code_edited, fixed = T)
+    
+    out_edited_code <- brms_code_edited
+  } # if(!sigma_single_parm) { else if(sigma_single_parm) {
   
-  brms_code_edited <- gsub(gsub_it_target_n, gsub_by_target_n, brms_code_edited, fixed = T)
-  
-  
-  # print(sigma_n)
+  # cat(out_edited_code)
   # stop()
   
-  # End reduce_sum specific changes for both 'lkj' and 'cde'
-  return(brms_code_edited)
+  return(out_edited_code)
 }
 
 

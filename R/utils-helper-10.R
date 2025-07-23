@@ -7032,8 +7032,7 @@ prepare_priors <- function(prior_argument,
       if (nrep_of_parms != 1) {
         for (i in 1:nrep_of_parms) {
           if (normalize) {
-            dist_student_1 <-
-              "lpdf"
+            dist_student_1 <- "lpdf"
             dist_student_2 <- "lccdf"
             svarblock <- 'model' # 'tparameters'
             define_studentdisttype_1 <-
@@ -7102,8 +7101,7 @@ prepare_priors <- function(prior_argument,
       
       if (nrep_of_parms == 1) {
         if (normalize) {
-          dist_student_1 <-
-            "lpdf"
+          dist_student_1 <- "lpdf"
           dist_student_2 <- "lccdf"
           svarblock <- 'model' # 'tparameters'
           define_studentdisttype_1 <-
@@ -7306,8 +7304,7 @@ prepare_priors <- function(prior_argument,
           sethp_dist == "exponential") {
         if (sethp_dist == "normal") {
           if (normalize) {
-            dist_1 <-
-              "lpdf"
+            dist_1 <- "lpdf"
             dist_2 <- "lccdf"
             svarblock <- 'model' # 'tparameters'
             define_disttype_1 <- paste0(sethp_dist, "_", dist_1)
@@ -7366,8 +7363,7 @@ prepare_priors <- function(prior_argument,
         }
         if (sethp_dist == "cauchy") {
           if (normalize) {
-            dist_1 <-
-              "lpdf"
+            dist_1 <- "lpdf"
             dist_2 <- "lccdf"
             svarblock <- 'model' # 'tparameters'
             define_disttype_1 <- paste0(sethp_dist, "_", dist_1)
@@ -7426,8 +7422,7 @@ prepare_priors <- function(prior_argument,
         }
         if (sethp_dist == "student_t") {
           if (normalize) {
-            dist_1 <-
-              "lpdf"
+            dist_1 <- "lpdf"
             dist_2 <- "lccdf"
             svarblock <- 'model' # 'tparameters'
             define_disttype_1 <- paste0(sethp_dist, "_", dist_1)
@@ -7493,8 +7488,7 @@ prepare_priors <- function(prior_argument,
         if (sethp_dist == "student_nu") {
           sethp_dist_student_t <- "student_t"
           if (normalize) {
-            dist_1 <-
-              "lpdf"
+            dist_1 <- "lpdf"
             dist_2 <- "lccdf"
             svarblock <- 'model' # 'tparameters'
             define_disttype_1 <-
@@ -7563,8 +7557,7 @@ prepare_priors <- function(prior_argument,
           # nu gamma
           sethp_dist_student_nu <- "gamma"
           if (normalize) {
-            dist_student_1 <-
-              "lpdf"
+            dist_student_1 <- "lpdf"
             dist_student_2 <- "lccdf"
             svarblock <- 'model' # 'tparameters'
             define_studentdisttype_1 <-
@@ -7630,8 +7623,7 @@ prepare_priors <- function(prior_argument,
         
         if (sethp_dist == "exponential") {
           if (normalize) {
-            dist_1 <-
-              "lpdf"
+            dist_1 <- "lpdf"
             dist_2 <- "lccdf"
             svarblock <- 'model' # 'tparameters'
             define_disttype_1 <- paste0(sethp_dist, "_", dist_1)
@@ -7679,8 +7671,7 @@ prepare_priors <- function(prior_argument,
       } else {
         sethp_dist <- 'normal'
         if (normalize) {
-          dist_1 <-
-            "lpdf"
+          dist_1 <- "lpdf"
           dist_2 <- "lccdf"
           svarblock <- 'model' # 'tparameters'
           define_disttype_1 <- paste0(sethp_dist, "_", dist_1)
