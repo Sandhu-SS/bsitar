@@ -131,36 +131,35 @@ prepare_function_nsp_rcs <- function(x,
   # So, keep it FALSE 
   dparm_part_of_SplQc <- FALSE
   
-  
-  
-  # fast_nsk - originally was for spline_coef based code
-  # Now if fast_nsk, fast_nsk will be propagated to fast_nsk = 1
-  # and fast_nsk will set to FALSE
-  
-  # fast_nsk_int <- 0
-  # if(fast_nsk) {
-  #   fast_nsk_int <- 1
-  # }
-  
   fast_nsk_int <- as.integer(fast_nsk)
   fast_nsk <- FALSE
-  
   
   add_fast <- ""
   if(fast_nsk_int != 0) {
     add_fast <- paste0("_", "fast", "_", fast_nsk_int)
   }
   
-  # "X" for rcsfunmultadd 
+  
+  
+  # 22.07.2025
+  # now knots are added within the main functions, and not via getknots()
+  add_separte_getknots_fun <- FALSE
   
   include_fun_c <- c(spfncname
                      # , 'getx'  NOW NOT USING getx
-                     , 'getknots'
+                     # , 'getknots'
                      # , "X"
                      , 'd0'
                      , 'd1' 
                      # , 'd2'
                      )
+  
+  if(add_separte_getknots_fun) {
+    include_fun_c <- c('getknots', include_fun_c)
+  }
+  
+  
+  
   
   backend <- eval(brms_arguments$backend)
 
@@ -901,7 +900,22 @@ prepare_function_nsp_rcs <- function(x,
    
     ######################################################################
     
+    # 22.07.2025
+    if(!add_separte_getknots_fun) {
+      knots_stan_str <- paste0("[",paste(knots, collapse = ","),"]'")
+      add_knotinfo_str <- paste0( "\n  vector[nknots] knots=",
+                                  knots_stan_str,  ";")
+      add_knotinfo_str <- paste0(add_knotinfo_str, "\n")
+    } else {
+      add_knotinfo_str <-       paste0(
+        "\n  vector[nknots] knots=",
+        paste0(getknotsname, "(", '', ")"),
+        ";")
+      add_knotinfo_str <- paste0(add_knotinfo_str, "\n")
+    }
     
+    
+    # 22.07.2025
     add_knotinfo <- paste0(
       "\n  int N=num_elements(",
       vector_X_name,
@@ -914,12 +928,14 @@ prepare_function_nsp_rcs <- function(x,
       ),
       paste0("\n  vector[N] X=", defineEx, ";"),
       paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
-      paste0(
-        "\n  vector[nknots] knots=",
-        paste0(getknotsname, "(", '', ")"),
-        ";"
-      )
+      # paste0(
+      #   "\n  vector[nknots] knots=",
+      #   paste0(getknotsname, "(", '', ")"),
+      #   ";"
+      # )
+      add_knotinfo_str
     )
+    
     
     
     knots_split <- 
@@ -1011,6 +1027,7 @@ prepare_function_nsp_rcs <- function(x,
       allknots <- c(rep(bknots[1], 4), iknots, rep(bknots[2], 4))
       precomputedH_R <- GS_ns_getH(allknots, smat_normalize)
       
+      precomputedH_R_str <- "GS_ns_getH(allknots, smat_normalize)"
       
       
       precomputedH_c <- list()
@@ -1413,15 +1430,17 @@ prepare_function_nsp_rcs <- function(x,
       )
     
     
+    # 22.07.2025
     add_knotinfo_multadd <- paste0(
       "\n  int mcolsmat=cols(",
       vector_X_name,
       ");",
-      paste0(
-        "\n  vector[mcolsmat+1] knots=",
-        paste0(getknotsname, "(", '', ")"),
-        ";"
-      )
+      # paste0(
+      #   "\n  vector[mcolsmat+1] knots=",
+      #   paste0(getknotsname, "(", '', ")"),
+      #   ";"
+      # )
+      add_knotinfo_str
     )
     
     returnmu_multadd <- returnmu
@@ -1732,6 +1751,11 @@ prepare_function_nsp_rcs <- function(x,
     }
     
     
+    # 22.07.2025
+    if(!add_rcsfunmatqrinv_genquant) {
+      add_funmats <- FALSE
+    }
+    
     
     # 29.05.2025 - now not needed, matrix wthin sitarfun
 
@@ -1802,26 +1826,42 @@ prepare_function_nsp_rcs <- function(x,
     }
     
    
+    if(smat == 'rcs') {
+      getpreH_fun_raw  <- NULL
+    }
     
-    getknots_fun_raw <-
-      paste0(
-        "vector ",
-        getknotsname,
-        "() {" ,
-        paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
+    # 22.07.2025
+    if(!add_separte_getknots_fun) {
+      knots_stan_str <- paste0("[",paste(knots, collapse = ","),"]'")
+    } else {
+      knots_stan_str <- NULL
+    }
+    
+    if(!add_separte_getknots_fun) {
+      getknots_fun_raw <- NULL
+    } else {
+      getknots_fun_raw <-
         paste0(
-          "\n  vector[nknots] knots=",
-          "[",
-          paste(knots, collapse = ","),
-          "]';"
-        ),
-        "\n  ",
-        "return(knots);",
-        "\n}  "
-        ,
-        paste0("// end of ", getknotsname),
-        collapse = " "
-      )
+          "vector ",
+          getknotsname,
+          "() {" ,
+          paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
+          paste0(
+            "\n  vector[nknots] knots=",
+            "[",
+            paste(knots, collapse = ","),
+            "]';"
+          ),
+          "\n  ",
+          "return(knots);",
+          "\n}  "
+          ,
+          paste0("// end of ", getknotsname),
+          collapse = " "
+        )
+    }
+    
+    
     
     
     
@@ -1830,7 +1870,15 @@ prepare_function_nsp_rcs <- function(x,
     ######################################################################
     
     # see here - replaced 'getknots_fun with 'getx_knots_fun'
-    getx_knots_fun <- paste0(add_context_getknots_fun, "\n", getknots_fun_raw)
+    
+    # 22.07.2025
+    if(add_separte_getknots_fun) {
+      getx_knots_fun <- paste0(add_context_getknots_fun, "\n", getknots_fun_raw)
+    } else {
+      getx_knots_fun <- ""
+    }
+    
+    
     
     if(!is.null(getpreH_fun_raw)) {
       getx_knots_fun <- paste0(getx_knots_fun,
@@ -1838,7 +1886,7 @@ prepare_function_nsp_rcs <- function(x,
                                getpreH_fun_raw)
     }
     
-  
+    
     
     intercept_str_plus_str_d0 <- 
       paste0("int derivs = ", 0, ";",
@@ -2384,27 +2432,11 @@ prepare_function_nsp_rcs <- function(x,
         }
       } else if(!dparm_set_fixed_or_random) {
         QR_get_dq_str <- "matrix[N, nknots - 1] sfull_betas;
-        vector[N] QRdbeta = d;
         sfull_betas = sfull_matrix * transpose(XR_inv);"
       }
       
+
       
-      # if(dparm_set_fixed_or_random) {
-      #   QR_get_dq_str <- "matrix[N, nknots - 1] sfull_betas;
-      #   vector[N] QRdbeta = d * (transpose(XR_inv[cols(XQ):cols(XQ), cols(XQ):cols(XQ)]))[1,1];
-      #   sfull_betas = sfull_matrix * transpose(XR_inv[1:(cols(XQ)-1), 1:(cols(XQ)-1)]);"
-      # } else {
-      #   QR_get_dq_str <- "matrix[N, nknots - 1] sfull_betas;
-      #   vector[N] QRdbeta = d;
-      #   sfull_betas = sfull_matrix * transpose(XR_inv);"
-      # }
-      
-      # // sfull_betas = sfull_matrix * transpose(XR_inv[1:(cols(XQ)-1), 1:(cols(XQ)-1)]);
-  
-      # 'XQ[:, 1:(cols(Spl)-1)]'
-      
-      # "XR_inv[1:(cols(XQ)-1), 1:(cols(XQ)-1)]"
-    
         
         
         QR_get_dq_str <- paste0(smat_sfull_matrix_str, "\n", QR_get_dq_str)
@@ -3113,12 +3145,20 @@ prepare_function_nsp_rcs <- function(x,
           end_pattern <- ";"
           replacementx <- setMatpreH_for_functions_R
         }
-        rcsfun_raw <- replace_string_part(x = xstaring, 
+        
+        xstaring <- replace_string_part(x = xstaring, 
                                           start = start_pattern,  
                                           end =  end_pattern,
                                           replace = replacementx,
                                           extract = FALSE,
                                           cat_str = FALSE)
+        
+        # 22.07.2025
+        if(!add_separte_getknots_fun) {
+          xstaring <- gsub("knots=[" , "knots=c(", xstaring, fixed = T)
+          xstaring <- gsub("]';" , ");", xstaring, fixed = T)
+        }
+        
         
         xstaring <- gsub("smat_normalize" , "normalize", xstaring, fixed = T)
         
@@ -3370,6 +3410,11 @@ prepare_function_nsp_rcs <- function(x,
   ######################################################################
   
   getknots_str <- NULL
+  # 22.07.2025
+  if(!add_separte_getknots_fun) {
+    getknots_fun_raw <- NULL
+  }
+  
   if (select_model == 'sitar' | select_model == 'rcs') {
     getknots_str <- extract_r_fun_from_scode(
       getknots_fun_raw,
@@ -3472,15 +3517,9 @@ prepare_function_nsp_rcs <- function(x,
         include_str <- paste0(file_preH_str, "\n", file_main_str)
       }
     } # if(add_fast == "") {
-    
-    
   } # else if(!smat_include_stan) {
   
-  # smat_include_stan %>% print()
-  # 
-  # cat(include_str)
-  # stop()
-  
+ 
   
 
   # include_str <- ""
@@ -3516,23 +3555,7 @@ prepare_function_nsp_rcs <- function(x,
     rcsfun <- paste0(include_str, "\n", rcsfun)
   }
  
-  # cat(getknots_fun_raw)
-  # cat(fast_nsk_rcsfun)
-  # stop()
-  
-  
-  # This fast_nsk_rcsfun_str_get was based on point spline_coefs
  
-  # if(fast_nsk) {
-  #   rcsfun <- paste0(fast_nsk_rcsfun_str_get(), 
-  #                    "\n",
-  #                    getknots_fun_raw, 
-  #                    "\n", 
-  #                    fast_nsk_rcsfun)
-  # }
-  
-  
-  
   
   if (!add_rcsfunmatqrinv_genquant) {
     out <- list(rcsfun = rcsfun, r_funs = all_raw_str, 
@@ -3547,9 +3570,10 @@ prepare_function_nsp_rcs <- function(x,
   # print(include_fun_names)
   # stop()
   
-  # print(cat(rcsfun))
-   # outx <<- all_raw_str
-   # stop()
+  
+   # print(cat(rcsfun))
+     # outx <<- all_raw_str
+     # stop()
   
   out
 }
