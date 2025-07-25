@@ -2088,9 +2088,9 @@ bsitar <- function(x,
   
   # Note
   # Need to work on data argument when using 'sigma_formula_manual' via nlf/lf
-  # This is to deal with how 'data' be prepared, used, and stored
+  # This is to deal with how 'data' should be prepared, used, and stored
   # This is needed to set up separate x for mu and sigma
-  # some work done on 20.09.2024
+  # Some work done on 20.09.2024
   # The specific areas to look further are:
   # 'prepare_data2' 'data.org.in' 'sigmaxsi' 'setsigmaxvar'
   
@@ -2105,13 +2105,9 @@ bsitar <- function(x,
   mcall_ <- mcall
   
   
-  
-
-  #######
   # check and allow setting threads as NULL or integer such as threads = 2
   # Instead of compulsory setting threads = threading() or brms::threading()
   mcall_threads_ <- mcall$threads
-  
   if(!grepl("threading", deparse(mcall_threads_) )) {
     if(!is.list(mcall_threads_)) {
       temp_threads_ <- mcall_threads_
@@ -2131,17 +2127,11 @@ bsitar <- function(x,
     } # if(!is.list(mcall_threads_)) {
   } # if(!grepl("threading", deparse(mcall_threads_) )) {
   mcall$threads          <- mcall_threads_
-  ######
-  
-  
   
   
   newcall_checks <- c('threads', 'save_pars')
-  
   newcall <- check_brms_args(mcall, newcall_checks)
   mcall <- mcall_ <- newcall
-  
-  
   
   # Check and set Alias argument for a b c ... formula
   dots_allias <- list(...)
@@ -2520,7 +2510,6 @@ bsitar <- function(x,
       xcall_x <- gsub_space(xcall_x)
       xcall_x <- gsub("\"", "", xcall_x)
       
-      
       str_c       <- FALSE
       str_list    <- FALSE
       if(grepl("c\\(", xcall_x, fixed = F)) {
@@ -2532,7 +2521,6 @@ bsitar <- function(x,
       } else {
         # stop(x ," must be a list or a vector")
       }
-      
       
       if(str_c | str_list) {
         xcall_x_str_get <- xcall_x
@@ -2546,10 +2534,7 @@ bsitar <- function(x,
         xcall_x_str_get <- xcall_x
       }
       
-      
-      
       xcall_x_str_get <- strsplit(xcall_x_str_get, ",")[[1]]
-      
       
       xcall_x_i_str_c <- list()
       xcall_x_i_str_i_get <- list()
@@ -2582,7 +2567,6 @@ bsitar <- function(x,
         xcall[[x]] <- xcall_x_i_str_c
       }
     } # for (x in elements) {
-    
     return(xcall) 
   } # enclose_c_list_elemnts_with_quotes
   
@@ -2653,7 +2637,6 @@ bsitar <- function(x,
   
   
   arguments <- as.list(mcall)[-1]
- 
 
   match.call.defaults <- function(...) {
     call <- evalq(match.call(expand.dots = FALSE), parent.frame(1))
@@ -2777,30 +2760,11 @@ bsitar <- function(x,
   
   
   
-  # # getdotslist decomp
-  # if(is.null(getdotslist[['decomp']])) {
-  #   # Override when restricting to rcs
-  #   if(select_model != 'rcs') decomp <- NULL
-  #   
-  #   if(!is.null(decomp)) {
-  #     if(select_model != 'rcs') 
-  #       stop("Decomposition (decomp = 'QR') is allowed only for the RCS model")
-  #   }
-  # } else if(!is.null(getdotslist[['decomp']])) {
-  #   if(getdotslist[['decomp']] != 'QR') {
-  #     stop("Argument 'decomp' should be either 'NULL' or 'QR'")
-  #   }
-  #   decomp <- getdotslist[['decomp']]
-  # }
-  
-  
-  
-  
   # getdotslist decomp
   # QR_Xmat -> not important. Internally set as Qc
-  # QR_center -> to center spl matrix before applying QR decom
+  # QR_center -> center spl matrix before applying QR decom
   # QR_complete -> whether to get complete QR matrix. Don't change, must be FALSE
-  # QR_flip -> to flip negative to positive of Q R matrices. This matches R with Stan
+  # QR_flip -> flip negative to positive of Q R matrices. This matches R with Stan
   # QR_scale -> scaling, default sqrt(N-1) when QR_scale = NULL
   # qr_gq -> controls wheter to add v_sx vectors to gen quant
   
@@ -3012,7 +2976,8 @@ bsitar <- function(x,
   
   stype_temp_str <- deparse(substitute(stype))
   if(grepl("^list\\(", stype_temp_str)) {
-    stype_temp_str <-  quote_allowed_spline_type(stype_temp_str, allowed_spline_type)
+    stype_temp_str <-  quote_allowed_spline_type(stype_temp_str, 
+                                                 allowed_spline_type)
     stype <- ept(stype_temp_str)
     stype[['type']] <- stype[[1]]
   } else {

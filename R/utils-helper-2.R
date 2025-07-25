@@ -2721,7 +2721,8 @@ inverse_transform <- function (expr, verbose = FALSE, envir = NULL) {
         stop(paste("unrecognised name:", deparse(fun[[1]])))
       if (length(nf) > 1 && length(fun) == 3) {
         nft <- which(vapply(fns[nf], function(f) f[[5 - 
-                                                      x1]] == fun[[5 - x1]], TRUE))
+                                                      x1]] == fun[[5 - x1]], 
+                            TRUE))
         if (length(nft)) 
           nf <- nf[nft]
       }
@@ -2747,7 +2748,8 @@ inverse_transform <- function (expr, verbose = FALSE, envir = NULL) {
   }
   fns <- quote(c(x + n, x - n, x * n, x/n, x^n, x^(1/n), sqrt(x), 
                  x^2, exp(x), log(x), expm1(x), log1p(x), n^x, log(x, 
-                                                                   n), log10(x), 10^x, log2(x), 2^x, n + x, x - n, n - 
+                                                                   n), 
+                 log10(x), 10^x, log2(x), 2^x, n + x, x - n, n - 
                    x, n - x, n * x, x/n, n/x, n/x, +x, +x, -x, -x, identity(x), 
                  identity(x), I(x), I(x), cos(x), acos(x), sin(x), asin(x), 
                  tan(x), atan(x), cosh(x), acosh(x), sinh(x), asinh(x), 
@@ -3309,12 +3311,18 @@ replace_string_part <- function(x,
                                 extract = FALSE,
                                 cat_str = FALSE ) {
   
-  if(!is.character(x))       stop("Argument 'x' must be a character string")
-  if(!is.character(start))   stop("Argument 'start' must be a character string")
-  if(!is.character(end))     stop("Argument 'end' must be a character string")
-  if(!is.character(replace)) stop("Argument 'replace' must be a character string")
-  if(!is.logical(extract))   stop("Argument 'extract' must be a logical (TRUE/FALSE)")
-  if(!is.logical(cat_str))   stop("Argument 'cat_str' must be a logical (TRUE/FALSE)")
+  if(!is.character(x))       
+    stop("Argument 'x' must be a character string")
+  if(!is.character(start))   
+    stop("Argument 'start' must be a character string")
+  if(!is.character(end))     
+    stop("Argument 'end' must be a character string")
+  if(!is.character(replace)) 
+    stop("Argument 'replace' must be a character string")
+  if(!is.logical(extract))   
+    stop("Argument 'extract' must be a logical (TRUE/FALSE)")
+  if(!is.logical(cat_str))   
+    stop("Argument 'cat_str' must be a logical (TRUE/FALSE)")
   
   original_string  <- x
   start_pattern    <- start
@@ -3588,4 +3596,71 @@ mean_curve_over_ids <- function(data,
   }
   return(mean_curve_df) 
 }
+
+
+
+#' An internal function to clean individual curves
+#' 
+#' @details
+#' 
+#' @param data A data frame
+#' @param idvar A character string specifying the individual identifier
+#' @param xvar A character string specifying the age variable
+#' @param yvar A character string specifying the outcome
+#' @param rate A numeric value to set the growth rate (mm/year)
+#' 
+#' @keywords internal
+#' @return A data frame
+#' @noRd
+#'
+get_clean_data <- function(data, idvar, xvar, yvar, rate = 10.0) {
+  names_in        <- colnames(data)
+  max_growth_rate <- rate
+  idvar           <- deparse(dplyr::ensym(idvar))
+  xvar            <-  deparse(dplyr::ensym(xvar))
+  yvar            <- deparse(dplyr::ensym(yvar))
+  ept <- function (x) {
+    eval(parse(text = x), envir = parent.frame())
+  }
+  z________idvar     <- z________xvar      <- z________yvar     <- NULL;
+  y1_diff_prev       <- age_diff_prev      <- growth_rate_prev  <- NULL;
+  y1_diff_next       <- age_diff_next      <- growth_rate_next  <- NULL;
+  rate_extreme_prev  <- is_decreasing_prev <- rate_extreme_next <- NULL;
+  is_decreasing_next <- is_outlier         <- NULL;
+  data_with_checks <- data %>%
+    dplyr::mutate(z________idvar := ept(idvar)) %>%
+    dplyr::mutate(z________xvar := ept(xvar)) %>% 
+    dplyr::mutate(z________yvar := ept(yvar)) %>% 
+    dplyr::arrange(z________idvar, z________xvar) %>%
+    dplyr::group_by(z________idvar) %>%
+    dplyr::mutate(
+      # Interval to previous
+      y1_diff_prev = z________yvar - dplyr::lag(z________yvar),
+      age_diff_prev = z________xvar - dplyr::lag(z________xvar),
+      growth_rate_prev = y1_diff_prev / age_diff_prev,
+      rate_extreme_prev = !is.na(growth_rate_prev) & 
+        growth_rate_prev > max_growth_rate,
+      is_decreasing_prev = !is.na(y1_diff_prev) & y1_diff_prev < 0,
+      # Interval to next
+      y1_diff_next = dplyr::lead(z________yvar) - z________yvar,
+      age_diff_next = dplyr::lead(z________xvar) - z________xvar,
+      growth_rate_next = y1_diff_next / age_diff_next,
+      rate_extreme_next = !is.na(growth_rate_next) & 
+        growth_rate_next > max_growth_rate,
+      is_decreasing_next = !is.na(y1_diff_next) & y1_diff_next < 0,
+      # Combine: if growth rate or decrease is outlier before or after
+      is_outlier = rate_extreme_prev | is_decreasing_prev |
+        rate_extreme_next | is_decreasing_next
+    ) %>% dplyr::ungroup()
+  # Inspect flagged outliers
+  flagged_obs <- data_with_checks %>% dplyr::filter(is_outlier == TRUE)
+  data_cleaned <- data_with_checks %>% dplyr::filter(is_outlier == FALSE)
+  names_unwanted <- colnames(data_cleaned)
+  names_unwanted <- setdiff(names_unwanted, names_in)
+  data_cleaned <- data_cleaned %>% dplyr::select(-dplyr::all_of(names_unwanted))
+  return(data_cleaned)
+}
+
+
+
 
