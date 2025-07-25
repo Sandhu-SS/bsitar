@@ -3290,8 +3290,7 @@ check_CustomDoCall_fun <- function(scall,
 
 #' An internal function to replace part of string
 #' 
-#' @details
-#' gemini
+#' @details An internal function to extract / replace an exact part of string
 #' 
 #' @param x A string
 #' @param start A string
@@ -3391,6 +3390,9 @@ replace_string_part <- function(x,
 
 
 #' An internal function to inverse matrix 
+#' 
+#' @details An internal function to inverse matrix 
+#' 
 #' @param x A numeric matrix of betas with dim(N, N)
 #'  
 #' @return A matrix
@@ -3427,13 +3429,16 @@ trysolveit <- function(x) {
 
 #' An internal function to perform QR  decomposition
 #' 
-#' @details
-#' gemini
+#' @details An internal function to perform QR decomposition 
 #' 
-#' @param X A string
-#' @param complete A string
+#' @param X A numeric matrix
+#' @param center A logical to indicate whether to center each column of matrix
+#' before applying the QR decomposition 
+#' @param complete A logical to indicate whether to get the full matrix or not
 #' @param flip A logical to indicate whether to flip negative sign or not. 
-#' @param scale A string
+#' @param scale A string to pass on the scaling factor. Typically it is 
+#' \code{'sqrt(N-1)'} that is the default in Stan. 
+#' 
 #' @keywords internal
 #' @return A list comprise of Q, R AND Rinv matrices
 #' @noRd
@@ -3455,19 +3460,14 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE,
     }
   }
   scale   <- round(QR_scale_str, 2)
-
-  
   if(center) {
     for(i in 1:ncol(X)) {
       X[,i] <- X[,i] - mean(X[,i])
     }
   }
-  
   qr_result_R <- qr(X)
   Q_X_R <- qr.Q(qr_result_R, complete = complete) * scale
   R_X_R <- qr.R(qr_result_R, complete = complete) / scale
-  
- 
   # Stan ensures diagonal elements of R are positive. R's qr() does not.
   # We need to check if any diagonal elements of R_X_R are negative and flip signs.
   if(flip) {
@@ -3489,10 +3489,8 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE,
   # } else {
   #   Rinv <- solve(R)
   # }
-  
   # gemini https://gemini.google.com/app/1af6d967c1f4e5b9
   Rinv <- trysolveit(R)
-  
   list(Q = Q, R = R, Rinv = Rinv)
 }
 
@@ -3502,8 +3500,7 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE,
 
 #' An internal function to compute average prediction from individual curves
 #' 
-#' @details
-#' gemini
+#' @details An internal function to compute average prediction
 #' 
 #' @param data A data frame
 #' @param idvar A string
@@ -3601,19 +3598,25 @@ mean_curve_over_ids <- function(data,
 
 #' An internal function to clean individual curves
 #' 
-#' @details
+#' @details An internal function to clean individual curves
 #' 
 #' @param data A data frame
 #' @param idvar A character string specifying the individual identifier
 #' @param xvar A character string specifying the age variable
 #' @param yvar A character string specifying the outcome
+#' @param carryforward A logical to indicate whether or not to carryforward
 #' @param rate A numeric value to set the growth rate (mm/year)
 #' 
 #' @keywords internal
 #' @return A data frame
 #' @noRd
 #'
-get_clean_data <- function(data, idvar, xvar, yvar, rate = 10.0) {
+get_clean_data <- function(data, 
+                           idvar, 
+                           xvar, 
+                           yvar, 
+                           carryforward = FALSE,
+                           rate = 10.0) {
   names_in        <- colnames(data)
   max_growth_rate <- rate
   idvar           <- deparse(dplyr::ensym(idvar))
@@ -3626,7 +3629,7 @@ get_clean_data <- function(data, idvar, xvar, yvar, rate = 10.0) {
   y1_diff_prev       <- age_diff_prev      <- growth_rate_prev  <- NULL;
   y1_diff_next       <- age_diff_next      <- growth_rate_next  <- NULL;
   rate_extreme_prev  <- is_decreasing_prev <- rate_extreme_next <- NULL;
-  is_decreasing_next <- is_outlier         <- NULL;
+  is_decreasing_next <- is_outlier         <- copod_cleaned     <- NULL;
   data_with_checks <- data %>%
     dplyr::mutate(z________idvar := ept(idvar)) %>%
     dplyr::mutate(z________xvar := ept(xvar)) %>% 
@@ -3652,13 +3655,313 @@ get_clean_data <- function(data, idvar, xvar, yvar, rate = 10.0) {
       is_outlier = rate_extreme_prev | is_decreasing_prev |
         rate_extreme_next | is_decreasing_next
     ) %>% dplyr::ungroup()
-  # Inspect flagged outliers
-  flagged_obs <- data_with_checks %>% dplyr::filter(is_outlier == TRUE)
-  data_cleaned <- data_with_checks %>% dplyr::filter(is_outlier == FALSE)
+  
+  ###################################################################
+  zoo_na.locf.default_func <- function (object, 
+                                        na.rm = TRUE, 
+                                        fromLast, 
+                                        rev, 
+                                        maxgap = Inf, 
+                                        rule = 2, ...) {
+    
+    zoo_na.locf.default_func <- na.approx <- na.trim <- NULL;
+    ###
+    zoo_na.locf0_fun <- function (object, 
+                                  fromLast = FALSE, 
+                                  maxgap = Inf, 
+                                  coredata = NULL) {
+      zoo_na.locf.default_func <- na.approx <- na.trim <- NULL;
+      .fill_short_gaps <- function (x, fill, maxgap) {
+        if (maxgap <= 0) 
+          return(x)
+        if (maxgap >= length(x)) 
+          return(fill)
+        naruns <- rle(is.na(x))
+        naruns$values[naruns$lengths > maxgap] <- FALSE
+        naok <- inverse.rle(naruns)
+        x[naok] <- fill[naok]
+        return(x)
+      }
+      
+      if (is.null(coredata)) 
+        coredata <- inherits(object, "ts") || inherits(object, 
+                                                       "zoo") || inherits(object, "its") || inherits(object, 
+                                                                                                     "irts")
+      if (coredata) {
+        x <- object
+        object <- if (fromLast) 
+          rev(coredata(object))
+        else coredata(object)
+      }
+      else {
+        if (fromLast) 
+          object <- rev(object)
+      }
+      ok <- which(!is.na(object))
+      if (is.na(object[1L])) 
+        ok <- c(1L, ok)
+      gaps <- diff(c(ok, length(object) + 1L))
+      object <- if (any(gaps > maxgap)) {
+        .fill_short_gaps(object, rep(object[ok], gaps), maxgap = maxgap)
+      }
+      else {
+        rep(object[ok], gaps)
+      }
+      if (fromLast) 
+        object <- rev(object)
+      if (coredata) {
+        x[] <- object
+        return(x)
+      }
+      else {
+        return(object)
+      }
+    } # end of zoo_na.locf0_fun
+    
+    ###
+    
+    L <- list(...)
+    if ("x" %in% names(L) || "xout" %in% names(L)) {
+      if (!missing(fromLast)) {
+        stop("fromLast not supported if x or xout is specified")
+      }
+      return(na.approx(object, na.rm = na.rm, maxgap = maxgap, 
+                       method = "constant", rule = rule, ...))
+    }
+    if (!missing(rev)) {
+      warning("na.locf.default: rev= deprecated. Use fromLast= instead.")
+      if (missing(fromLast)) 
+        fromLast <- rev
+    }
+    else if (missing(fromLast)) 
+      fromLast <- FALSE
+    rev <- base::rev
+    # na.locf0
+    object[] <- if (length(dim(object)) == 0) 
+      zoo_na.locf0_fun(object, fromLast = fromLast, maxgap = maxgap)
+    else apply(object, length(dim(object)), zoo_na.locf0_fun, fromLast = fromLast, 
+               maxgap = maxgap)
+    if (na.rm) 
+      na.trim(object, is.na = "all")
+    else object
+  } # end of zoo_na.locf.default_func
+  
+  ###################################################################
+  
+  if (carryforward) stop("carryforward = TRUE not working yet, set it as FALSE")
+ 
+  if (carryforward) {
+    data_cleaned <- data_with_checks %>%
+      dplyr::group_by(z________idvar) %>%
+      # Create a new column for the cleaned data
+      dplyr::mutate(
+        # Temporarily set outliers to NA to prepare for imputation
+        copod_cleaned = dplyr::if_else(is_outlier, NA_real_, z________yvar),
+        # Pass 1: Last Observation Carried Forward - zoo::na.locf
+        copod_cleaned = zoo_na.locf.default_func(copod_cleaned, na.rm = FALSE),
+        # Pass 2: Next Observation Carried Backward (to fix any leading NAs)
+        copod_cleaned = zoo_na.locf.default_func(copod_cleaned, fromLast = TRUE, 
+                                                 na.rm = FALSE)
+      ) %>% 
+      dplyr::mutate(z________yvar = copod_cleaned) %>% 
+      dplyr::select(-copod_cleaned) %>% 
+      dplyr::ungroup()
+  } else if (!carryforward) {
+    # Inspect flagged outliers
+    flagged_obs <- data_with_checks %>% dplyr::filter(is_outlier == TRUE)
+    data_cleaned <- data_with_checks %>% dplyr::filter(is_outlier == FALSE)
+  }
   names_unwanted <- colnames(data_cleaned)
   names_unwanted <- setdiff(names_unwanted, names_in)
   data_cleaned <- data_cleaned %>% dplyr::select(-dplyr::all_of(names_unwanted))
   return(data_cleaned)
+}
+
+
+
+
+
+#' An internal function to clean individual curves using growthcleanr
+#' 
+#' @details An internal function to clean individual curves
+#' 
+#' @param data A data frame
+#' @param idvar A character string specifying the individual identifier
+#' @param xvar A character string specifying the age variable
+#' @param yvar A character string specifying the outcome
+#' @param xvar_unit A character string specifying the unit of xvar that need
+#' to be converted in age days 
+#' @param adjustcarryforward Adjust carry forward values in cleaned data
+#' @param exclude_opt passed on to \code{adjustcarryforward} function. The 
+#' \code{adjustcarryforward} uses absolute height velocity to identify values
+#' excluded as carried forward values for re inclusion. \code{exclude_opt}
+#' is a number from 0 to 3 indicating which option to use to handle strings
+#' of carried-forwards: 
+#'    0. no change.
+#'    1. when deciding to exclude values, if we have a string of carried forwards,
+#'    drop the most deviant value, and all CFs in the same string, and move on as
+#'    normal.
+#'    2. when deciding to exclude values, if the most deviant in a
+#'    string of carried forwards is flagged, check all the CFs in that
+#'    string from 1:N. Exclude all after the first that is flagged for
+#'    exclusion when comparing to the Include before and after. Do not
+#'    remove things designated as include.
+#'    3. when deciding to exclude values, if the most deviant in a
+#'    string of carried forwards is flagged, check all the CFs in that
+#'    string from 1:N. Exclude all after the first that is flagged for
+#'    exclusion when comparing to the Include before and after. Make sure
+#'    remove things designated as include.
+#' 
+#' @param gender sex = 0 = male, sex = 1 = female, if NULL, then set as 0
+#' 
+#' @inherit growthcleanr::cleangrowth params
+#' 
+#' @keywords internal
+#' @return A data frame
+#' @noRd
+#'
+get_clean_data_growthcleanr <- function(data, 
+                                        idvar, 
+                                        xvar, 
+                                        yvar,
+                                        xvar_unit = 'year',
+                                        param = "LENGTHCM",
+                                        gender = NULL,
+                                        recover.unit.error = FALSE,
+                                        sd.extreme = 25,
+                                        z.extreme = 25,
+                                        lt3.exclude.mode = "default",
+                                        height.tolerance.cm = 2.0,
+                                        error.load.mincount = 2,
+                                        error.load.threshold = 0.5,
+                                        sd.recenter = NA,
+                                        sdmedian.filename = "",
+                                        sdrecentered.filename = "",
+                                        include.carryforward = T,
+                                        adjustcarryforward = T,
+                                        exclude_opt = 0,
+                                        ewma.exp = -1.5,
+                                        ref.data.path = "",
+                                        log.path = NA,
+                                        parallel = FALSE,
+                                        num.batches = NA,
+                                        quietly = TRUE,
+                                        adult_cutpoint = 20,
+                                        weight_cap = Inf,
+                                        adult_columns_filename = "",
+                                        prelim_infants = FALSE) {
+  # ‘HEIGHTCM’, ‘LENGTHCM’, or ‘WEIGHTKG’
+  
+  try(insight::check_if_installed(c("growthcleanr"), stop = FALSE, 
+                                  prompt = FALSE))
+  
+  names_in        <- colnames(data)
+  idvar           <- deparse(dplyr::ensym(idvar))
+  xvar            <-  deparse(dplyr::ensym(xvar))
+  yvar            <- deparse(dplyr::ensym(yvar))
+  ept <- function (x) {
+    eval(parse(text = x), envir = parent.frame())
+  }
+  z________idvar     <- z________xvar      <- z________yvar     <- NULL;
+  z________param       <- z________sexvar      <- gcr_result  <- NULL;
+  locf0_fun       <- fill_short_gaps      <- na.approx  <- NULL;
+  na.trim  <- is_decreasing_prev <- rate_extreme_next <- NULL;
+  # is_decreasing_next <- is_outlier         <- NULL;
+  
+  if(xvar_unit == 'year') {
+    xvar_days_multi = 12 * 30.4375
+  } else if(xvar_unit == 'month') {
+    xvar_days_multi = 1 * 30.4375
+  } else if(xvar_unit == 'day') {
+    xvar_days_multi = 1 * 1
+  }
+  
+  if(is.null(gender)) {
+    gender <- 0
+  }
+  
+  datafor_growthcleanr <- data %>%
+    dplyr::mutate(z________idvar := ept(idvar)) %>%
+    dplyr::mutate(z________xvar := ept(xvar)) %>% 
+    dplyr::mutate(z________yvar := ept(yvar)) %>% 
+    dplyr::mutate(z________param = param) %>% 
+    dplyr::mutate(z________xvar = z________xvar * xvar_days_multi) %>%
+    dplyr::mutate(z________sexvar = gender) 
+  
+  # prepare data as a data.table
+  datafor_growthcleanr <- data.table:: as.data.table(datafor_growthcleanr)
+  
+  # set the data.table key for better indexing
+  data.table::setkey(datafor_growthcleanr, 
+                     z________idvar, 
+                     z________xvar,
+                     z________param)
+  
+  # generate new exclusion flag field using function
+  cleaned_data <- datafor_growthcleanr[, 
+                                       gcr_result := growthcleanr::cleangrowth(
+                                         subjid = z________idvar, 
+                                         param = z________param, 
+                                         agedays = z________xvar, 
+                                         sex = z________sexvar, 
+                                         measurement = z________yvar,
+                                         recover.unit.error = recover.unit.error,
+                                         sd.extreme = sd.extreme,
+                                         z.extreme = z.extreme,
+                                         lt3.exclude.mode = lt3.exclude.mode,
+                                         height.tolerance.cm = height.tolerance.cm,
+                                         error.load.mincount = error.load.mincount,
+                                         error.load.threshold = error.load.threshold,
+                                         sd.recenter = sd.recenter,
+                                         sdmedian.filename = sdmedian.filename,
+                                         sdrecentered.filename = sdrecentered.filename,
+                                         include.carryforward = include.carryforward,
+                                         ewma.exp = ewma.exp,
+                                         ref.data.path = ref.data.path,
+                                         log.path = log.path,
+                                         parallel = parallel,
+                                         num.batches = num.batches,
+                                         quietly = quietly,
+                                         adult_cutpoint = adult_cutpoint,
+                                         weight_cap = weight_cap,
+                                         adult_columns_filename = adult_columns_filename,
+                                         prelim_infants = prelim_infants
+                                       )]
+  
+  
+  if(adjustcarryforward) {
+    cleaned_data <- growthcleanr::adjustcarryforward(subjid = cleaned_data$subjid,
+                                     param = cleaned_data$param,
+                                     agedays = cleaned_data$agedays,
+                                     sex = cleaned_data$sex,
+                                     measurement = cleaned_data$measurement,
+                                     orig.exclude = cleaned_data$gcr_result,
+                                     exclude_opt = exclude_opt,
+                                     sd.recenter = NA,
+                                     ewma.exp = -1.5,
+                                     ref.data.path = "",
+                                     quietly = TRUE,
+                                     minfactor = 0.5,
+                                     maxfactor = 2,
+                                     banddiff = 3,
+                                     banddiff_plus = 5.5,
+                                     min_ht.exp_under = 2,
+                                     min_ht.exp_over = 0,
+                                     max_ht.exp_under = 0.33,
+                                     max_ht.exp_over = 1.5)
+  }
+  
+  # extract data limited only to values flagged for inclusion:
+  only_included_data <- cleaned_data[gcr_result == "Include"]
+  
+  only_included_data <- only_included_data %>% data.frame()
+  
+  names_unwanted <- colnames(only_included_data)
+  names_unwanted <- setdiff(names_unwanted, names_in)
+  only_included_data <- only_included_data %>% 
+    dplyr::select(-dplyr::all_of(names_unwanted))
+  
+  return(only_included_data)
 }
 
 
