@@ -2410,7 +2410,7 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
     gsub_it_end   <- "{"
     gsub_by <- "transformed data {
           // Compute number of unique corrs
-          int N_rhos = nresp * (nresp - 1) / 2;"
+          int N_rhos = nresp * (nresp - 1) / 2.0;"
     brms_code_edited <- replace_string_part(x = brms_code_edited,
                                             start = gsub_it_start, 
                                             end =  gsub_it_end,
