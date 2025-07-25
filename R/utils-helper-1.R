@@ -2406,15 +2406,15 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   if(corr_method == 'lkj') {
     brms_code_edited <- brms_code_edited
   } else if(corr_method == 'cde') {
-    gsub_it_start <- "transformed data"
-    gsub_it_end   <- "{"
-    gsub_by <- "transformed data {
-          // Compute number of unique corrs
-          int N_rhos = nresp * (nresp - 1) / 2.0;"
-    brms_code_edited <- replace_string_part(x = brms_code_edited,
-                                            start = gsub_it_start, 
-                                            end =  gsub_it_end,
-                                            replace = gsub_by)
+    # gsub_it_start <- "transformed data"
+    # gsub_it_end   <- "{"
+    # gsub_by <- "transformed data {
+    #       // Compute number of unique corrs
+    #       int N_rhos = nresp * (nresp - 1) / 2;"
+    # brms_code_edited <- replace_string_part(x = brms_code_edited,
+    #                                         start = gsub_it_start, 
+    #                                         end =  gsub_it_end,
+    #                                         replace = gsub_by)
     gsub_it_start <- "transformed parameters"
     gsub_it_end   <- "{"
     gsub_by <- "transformed parameters {
@@ -2830,6 +2830,10 @@ brms_via_cmdstanr <- function(scode,
   # cpp_options <- list(stan_threads = stan_threads,
   #                     stan_opencl = stan_opencl)
   
+  # print(stan_threads)
+  # print(brm_args$threads$threads)
+  # stop()
+  
   cpp_options <- list(stan_threads = stan_threads)
   
   
@@ -3123,6 +3127,7 @@ brms_via_rstan <- function(scode,
 inits_lb <- function(x, lb = 0) {
   if(x < 1) 1+log(1+x) + lb else log(x) + lb
 }
+
 
 
 # Adapted from https://rdrr.io/cran/rempsyc/src/R/utils.R

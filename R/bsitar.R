@@ -8994,6 +8994,13 @@ bsitar <- function(x,
                           scode = "vector[Rescor_Nby] Rescor_prior;",  
                           block = 'data') 
         }
+        if(Rescor_method == 'cde') {
+          Rescor_by_stanvars <- Rescor_by_stanvars + 
+            brms::stanvar(x = (nys * (nys - 1) / 2), 
+                          name = 'N_rhos',
+                          scode = "int N_rhos;",  
+                          block = 'data') 
+        }
         bstanvars <- bstanvars + Rescor_by_stanvars
         # end create stanvars 
       } # if(!is.null(multivariate$rescor_by)) {
