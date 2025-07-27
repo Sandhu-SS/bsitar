@@ -537,16 +537,44 @@
 #'   = NULL))} For further details, please refer to the description of
 #'   \code{sigma_formula}.
 #'  
-#' @param sigma_formula_manual Formula for the random effect parameter,
-#'  \code{sigma}, provided as a character string that explicitly uses the
-#'  [brms::nlf()] and [brms::lf()] functions (default \code{NULL}). An example
-#'  is: \cr
-#'  \code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL)))}.
-#'   
-#'  Another use case for \code{sigma_formula_manual} is modeling a
-#'  location-scale model in the \code{SITAR} framework, where the same
-#'  \code{SITAR} formula can be used to model the scale (\code{sigma}). An
-#'  example is: \cr
+#' @param sigma_formula_manual Formula for the \code{sigma} distributional
+#'   parameter. This should be provided as a character string that explicitly
+#'   uses the [brms::nlf()] and [brms::lf()] functions (default \code{NULL}).
+#'   Note that \code{sigma_formula_manual} should be considered as an 
+#'   experimental feature and therefore should be used cautiously.
+#'
+#'   **Basic Usage Example:**
+#'   \code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL)))}
+#'
+#'   **Modeling \code{sigma} as a Function of the Mean:**
+#'   It can also be used to model \code{sigma} as a function of the mean
+#'   (\code{mu}), for example: \code{sigma_formula_manual = nlf(sigma ~ tau *
+#'   sqrt(SITARFun(age, a, b, c, s1, s2, s3))) + lf(tau ~ 1)} Here,
+#'   \code{SITARFun()} is the function that computes \code{mu}.
+#'   **Important Considerations:**
+#'   * Using \code{SITARFun()} in this way will recompute \code{mu}.
+#'   * For \code{multivariate} models, \code{SITARFun()} can only be used if all sub-models
+#'   compute \code{mu} using the exact same \code{SITARFun()} definition for
+#'   each outcome.
+#'
+#'   **Experimental Approach for Direct \code{mu} Usage:**
+#'   To overcome the limitations of recomputing \code{mu} or \code{multivariate}
+#'   model restrictions, an experimental approach allows for direct use of
+#'   \code{mu}. This involves setting \code{sigma_formula_manual} as:
+#'   \code{sigma_formula_manual = "nlf(sigma ~ sigmatau * sqrt()) + lf(sigmatau
+#'   ~ 1)"} After this, you will need to manually edit the \code{stancode} and
+#'   refit the model using \code{rstan}.
+#'
+#'   When using the \code{sigmatau} parameter name in this experimental setup,
+#'   priors specified via \code{sigma_prior_beta}, \code{sigma_cov_prior_beta},
+#'   \code{sigma_prior_sd}, \code{sigma_cov_prior_sd}, and
+#'   \code{sigma_cov_prior_sd_str} will be automatically applied to
+#'   \code{sigmatau}. This prior assignment is handled internally.
+#'
+#'   **Location-Scale SITAR Model Example:**
+#'   Another common use case for \code{sigma_formula_manual} is modeling
+#'   \code{sigma} in a location-scale \code{SITAR} model, where the same
+#'   \code{SITAR} formula can be applied to the scale parameter. An example is:
 #'   
 #'  \code{nlf(sigma ~ sigmaSITARFun(logage, sigmaa, sigmab, sigmac, sigmas1,
 #'  sigmas2, sigmas3, sigmas4), loop = FALSE) +
@@ -1444,7 +1472,10 @@
 #'   retrieve the Stan variables (see \code{[brms::stanvar()]} for details).
 #'
 #' @param get_priors An optional argument (logical, default \code{FALSE}) to
-#'   retrieve the priors (see \code{[brms::get_prior()]} for details).
+#'   retrieve the priors (see \code{[brms::get_prior()]} for details). Note 
+#'   that \code{get_priors = TRUE} will return priors based on the final code.
+#'   In case user want to return the basic default priors, then it can be 
+#'   achieved by setting \code{get_priors = "default"}. 
 #'
 #' @param get_priors_eval An optional argument (logical, default \code{FALSE})
 #'   to retrieve the priors specified by the user.
@@ -2472,6 +2503,10 @@ bsitar <- function(x,
   sigma_formulasi <- NULL;
   sigma_formula_grsi <- NULL;
   sigma_formula_gr_strsi <- NULL;
+  
+  dpar <- NULL;
+  nlpar <- NULL;
+  set_prior_for_sigma_by_mean_using_sigma_formual <- NULL;
   
   
   
@@ -4606,7 +4641,8 @@ bsitar <- function(x,
     "fast_nsk",
     "global_args",
     "sum_zero",
-    "..."
+    "...",
+    "data2"
   )
   
   
@@ -5481,6 +5517,49 @@ bsitar <- function(x,
     
     
     
+    
+    # add_sigma_by_mean
+    set_model_sigma_by_mean <- FALSE
+    if(grepl("sqrt())", sigma_formula_manualsi, fixed = T)) {
+      set_model_sigma_by_mean <- TRUE
+    }
+    
+
+    # add_sigma_by_mean
+    set_prior_for_sigma_by_mean_using_sigma_formual <- FALSE
+    if(set_model_sigma_by_mean) {
+      get_lf_part_sigma_formula_manualsi <- strsplit(sigma_formula_manualsi, "+lf", fixed = T)[[1]][2]
+      get_lf_part_sigma_formula_manualsi <- paste0("lf", get_lf_part_sigma_formula_manualsi)
+      get_lf_part_sigma_formula_manualsi_form <- ept(get_lf_part_sigma_formula_manualsi)[[1]]
+      
+      sigma_formulasi <- get_lf_part_sigma_formula_manualsi_form[[3]] %>% deparse()
+      sigma_formulasi <- paste0(gsub_space(sigma_formulasi), collapse = "")
+      
+      sigma_formulasi_check <- strsplit(sigma_formulasi, "+(", fixed = T)[[1]]
+      sigma_formulasi <- sigma_formulasi_check[1]
+      sigma_formulasi <- paste0("~", sigma_formulasi)
+      if(length(sigma_formulasi_check) == 1) {
+        sigma_formula_gr_strsi <- NULL
+      } else {
+        sigma_formula_gr_strsi <- sub(".*?\\+\\(", "", sigma_formulasi_check)
+        sigma_formula_gr_strsi <- sigma_formula_gr_strsi[2:length(sigma_formula_gr_strsi)]
+        sigma_formula_gr_strsi <- paste(sigma_formula_gr_strsi, collapse = "+")
+        sigma_formula_gr_strsi <- paste0(gsub_space(sigma_formula_gr_strsi), collapse = "")
+        sigma_formula_gr_strsi <- paste0("(", sigma_formula_gr_strsi)
+      }
+      set_prior_for_sigma_by_mean_using_sigma_formual <- TRUE
+    }
+    
+    
+    
+
+    # print(sigma_formulasi)
+    # print(sigma_formula_gr_strsi)
+    # stop()
+    
+    
+    
+    
     check_formuals <-
       c(
         "a_formulasi",
@@ -5645,6 +5724,9 @@ bsitar <- function(x,
     # stop()
     
     
+    
+    
+    
     ##########################
     setsigmaxvarsi <- FALSE
     if (is.null(sigma_formula_manualsi[[1]][1])) {
@@ -5653,6 +5735,11 @@ bsitar <- function(x,
       setsigmaxvarsi <- FALSE
     } else {
       setsigmaxvarsi <- TRUE
+    }
+    
+    # add_sigma_by_mean
+    if(set_model_sigma_by_mean) {
+      setsigmaxvarsi <- FALSE
     }
     
     
@@ -5828,7 +5915,13 @@ bsitar <- function(x,
       }
     }
     
-
+    
+    
+    
+    
+    
+   
+    
     fit_edited_scode <- FALSE
     
     if(select_model == 'logistic1e' |
@@ -5838,10 +5931,16 @@ bsitar <- function(x,
       fit_edited_scode <- TRUE
     }
     
+    
     if(sum_zero) {
       fit_edited_scode <- TRUE
     }
     
+    
+    # add_sigma_by_mean
+    if(set_model_sigma_by_mean) {
+      fit_edited_scode <- TRUE
+    }
     
     
     # add_rescor_by
@@ -7128,7 +7227,8 @@ bsitar <- function(x,
         "SplinefunxPre",
         "Splinefunxsuf",
         "SplinefunxR",
-        "SplinefunxStan"
+        "SplinefunxStan",
+        "set_prior_for_sigma_by_mean_using_sigma_formual"
       )
     
     
@@ -7725,6 +7825,9 @@ bsitar <- function(x,
     set_priors_initials_agrs $ init_data_internal       <- init_data_internal
     set_priors_initials_agrs $ init_args_internal       <- init_args_internal
     set_priors_initials_agrs $ custom_order_prior_str   <- ""
+    
+    # add_sigma_by_mean
+    # set_priors_initials_agrsx <<- set_priors_initials_agrs
     
     bpriors <- CustomDoCall(set_priors_initials, set_priors_initials_agrs)
     
@@ -8785,6 +8888,14 @@ bsitar <- function(x,
   
   brmspriors <- priorlist
   
+  # add_sigma_by_mean
+  if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+    brmspriors <- brmspriors %>% 
+      dplyr:: mutate(nlpar = dplyr::if_else(dpar == "sigma", "sigmatau", nlpar)) %>% 
+      dplyr:: mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar))
+  }
+  
+  
   brmspriors <- brmspriors %>% 
     dplyr::mutate(lb = dplyr::if_else(class == 'sd', NA, lb))
   brmspriors <- brmspriors %>% 
@@ -8940,10 +9051,6 @@ bsitar <- function(x,
         }
         Rescor_by_levels <- levels(brmsdata[[Rescor_by_id]])
         Rescor_by_levels <- paste0(Rescor_by_id, Rescor_by_levels)
-        
-        # brmsdatax <<- brmsdata
-        # Rescor_gr_idx <<- Rescor_gr_id
-        # Rescor_by_idx <<- Rescor_by_id
         
         Rescor_by_id_integer <- brmsdata %>% 
           dplyr:: group_by(!!as.name(Rescor_gr_id)) %>%
@@ -9363,16 +9470,22 @@ bsitar <- function(x,
     # print(brmsinits)
     # stop()
     
-    
+
     # 24.08.2024
     # 20.03.2025 - moved to final_scode
-    # if(get_priors) {
-    #   tempriorstr <- brms::get_prior(formula = bformula,
-    #                            stanvars = bstanvars,
-    #                            prior = temp_prior,
-    #                            data = brmsdata)
-    #   return(tempriorstr)
-    # }
+    # but added support for returning tempriorstr if get_priors == "default"
+    
+    if(!is.logical(get_priors)) {
+      if(get_priors == "default") {
+        tempriorstr <- brms::get_prior(formula = bformula,
+                                       stanvars = bstanvars,
+                                       prior = temp_prior,
+                                       data = brmsdata)
+        return(tempriorstr)
+      }
+    } # if(!is.logical(get_priors)) {
+    
+    
 
     
 
@@ -9391,6 +9504,26 @@ bsitar <- function(x,
     ################################################################
     ################################################################
     
+    
+
+    # bformula <<- bformula
+    # bstanvars <<- bstanvars
+    # temp_prior <<- temp_prior
+    # data2 <<- data2
+    # brmsdata <<- brmsdata
+    
+    # add_sigma_by_mean
+    if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+      temp_prior <- temp_prior %>% 
+        dplyr:: mutate(nlpar = dplyr::if_else(dpar == "sigma", "sigmatau", nlpar)) %>% 
+        dplyr:: mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar) )
+    }
+    
+    
+    
+    
+    # temp_prior <- temp_prior %>% dplyr::filter(class == 'sigma')
+    
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
                                     prior = temp_prior,
@@ -9399,6 +9532,9 @@ bsitar <- function(x,
                                     stanvars = bstanvars,
                                     prior = temp_prior,
                                     data = brmsdata)
+    
+    # print("mmm")
+    # stop()
     
     
     move_from_model_to_qq_for_bqinv <- 
@@ -9956,6 +10092,8 @@ bsitar <- function(x,
   if(!is.null(custom_stanvars)) {
     bstanvars <- bstanvars + custom_stanvars
   }
+  
+  
   
   brm_args <-
     setup_brms_args(
@@ -11581,6 +11719,30 @@ bsitar <- function(x,
                                     normalize = brm_args$normalize,
                                     corr_method = Rescor_method) 
     }
+    
+    
+
+
+    # add_sigma_by_mean
+    if(set_model_sigma_by_mean) {
+      for (i in ys) {
+        gsub_it_start     <- paste0("sigma", "_", i, "[n]")
+        gsub_it_end       <- paste0("sqrt", "(", ""  ,")")
+        extract_sigma_by_mean_o <- replace_string_part(x = scode_final,
+                                                       start = gsub_it_start, 
+                                                       end =  gsub_it_end,
+                                                       replace = "",
+                                                       extract = T)
+        onlum <- paste0("mu", "_", i, "[n]")
+        extract_sigma_by_mean <- gsub(paste0("sqrt", "(", ""  ,")"), 
+                                      paste0("sqrt", "(", onlum  ,")"),
+                                      extract_sigma_by_mean_o, fixed = T)
+        scode_final <- gsub(extract_sigma_by_mean_o, extract_sigma_by_mean, 
+                            scode_final, fixed = T)
+      } # for (i in ys) {
+    } # if(set_model_sigma_by_mean) {
+
+
 
     
     # if(sum_zero) {

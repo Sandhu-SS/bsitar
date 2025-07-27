@@ -151,6 +151,7 @@ prepare_formula <- function(x,
   
   smat <- NULL;
   smat_intercept <- NULL;
+  set_prior_for_sigma_by_mean_using_sigma_formual <- NULL;
   
   
   
@@ -709,8 +710,12 @@ prepare_formula <- function(x,
   sigmarandom <- sigma_formula_grsi
   
   
+  # add_sigma_by_mean
   if(sigma_formula_manualsi != "NULL") {
-    sigmafixed <- NULL
+    if(!set_prior_for_sigma_by_mean_using_sigma_formual) {
+      sigmafixed <- NULL
+    }
+    # sigmafixed <- NULL
     sigmarandom <- NULL
     dpar_formulasi <- NULL
   }
@@ -2311,6 +2316,8 @@ prepare_formula <- function(x,
   
   
   
+ 
+  
   if(select_model == "sitar" | select_model == "rcs") {
     setbformula <- paste0("brms::bf(",
                           abcsformfit,
@@ -2321,6 +2328,9 @@ prepare_formula <- function(x,
                           ", " ,
                           "nl=TRUE,loop=FALSE)")
   }
+  
+  
+  
   
   
   if(select_model != "sitar" & select_model != "rcs") {
@@ -3484,10 +3494,18 @@ prepare_formula <- function(x,
   )
   
   
- 
-  # setbformulax <<- setbformula
-  attr(setbformula, "list_out") <- as.list(list_out)
   
+  # add_sigma_by_mean
+  # sigmaform which is actuallu lf(sigmatau ~) that was used for prior setting
+  if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+    sigmaform_rm <- gsub_space(sigmaform) 
+    sigmaform_rm <- paste0(sigmaform_rm, ",")
+    setbformula <- gsub(sigmaform_rm, "", setbformula, fixed = TRUE)
+  }
+ 
+   # setbformulax <<- setbformula
+  attr(setbformula, "list_out") <- as.list(list_out)
+ # stop()
   return(setbformula)
 }
 

@@ -615,16 +615,46 @@ of hierarchy. See \code{a_formula_gr_str} for details. As with
   = NULL))} For further details, please refer to the description of
 \code{sigma_formula}.}
 
-\item{sigma_formula_manual}{Formula for the random effect parameter,
-\code{sigma}, provided as a character string that explicitly uses the
-\code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brms:brmsformula-helpers]{brms::lf()}} functions (default \code{NULL}). An example
-is: \cr
-\code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL)))}.
+\item{sigma_formula_manual}{Formula for the \code{sigma} distributional
+parameter. This should be provided as a character string that explicitly
+uses the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brms:brmsformula-helpers]{brms::lf()}} functions (default \code{NULL}).
+Note that \code{sigma_formula_manual} should be considered as an
+experimental feature and therefore should be used cautiously.
 
-Another use case for \code{sigma_formula_manual} is modeling a
-location-scale model in the \code{SITAR} framework, where the same
-\code{SITAR} formula can be used to model the scale (\code{sigma}). An
-example is: \cr
+\strong{Basic Usage Example:}
+\code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL)))}
+
+\strong{Modeling \code{sigma} as a Function of the Mean:}
+It can also be used to model \code{sigma} as a function of the mean
+(\code{mu}), for example: \code{sigma_formula_manual = nlf(sigma ~ tau *
+  sqrt(SITARFun(age, a, b, c, s1, s2, s3))) + lf(tau ~ 1)} Here,
+\code{SITARFun()} is the function that computes \code{mu}.
+\strong{Important Considerations:}
+\itemize{
+\item Using \code{SITARFun()} in this way will recompute \code{mu}.
+\item For \code{multivariate} models, \code{SITARFun()} can only be used if all sub-models
+compute \code{mu} using the exact same \code{SITARFun()} definition for
+each outcome.
+}
+
+\strong{Experimental Approach for Direct \code{mu} Usage:}
+To overcome the limitations of recomputing \code{mu} or \code{multivariate}
+model restrictions, an experimental approach allows for direct use of
+\code{mu}. This involves setting \code{sigma_formula_manual} as:
+\code{sigma_formula_manual = "nlf(sigma ~ sigmatau * sqrt()) + lf(sigmatau
+  ~ 1)"} After this, you will need to manually edit the \code{stancode} and
+refit the model using \code{rstan}.
+
+When using the \code{sigmatau} parameter name in this experimental setup,
+priors specified via \code{sigma_prior_beta}, \code{sigma_cov_prior_beta},
+\code{sigma_prior_sd}, \code{sigma_cov_prior_sd}, and
+\code{sigma_cov_prior_sd_str} will be automatically applied to
+\code{sigmatau}. This prior assignment is handled internally.
+
+\strong{Location-Scale SITAR Model Example:}
+Another common use case for \code{sigma_formula_manual} is modeling
+\code{sigma} in a location-scale \code{SITAR} model, where the same
+\code{SITAR} formula can be applied to the scale parameter. An example is:
 
 \code{nlf(sigma ~ sigmaSITARFun(logage, sigmaa, sigmab, sigmac, sigmas1,
  sigmas2, sigmas3, sigmas4), loop = FALSE) +
@@ -1522,7 +1552,10 @@ retrieve the model formula (see \code{[brms::brmsformula()]} for details).}
 retrieve the Stan variables (see \code{[brms::stanvar()]} for details).}
 
 \item{get_priors}{An optional argument (logical, default \code{FALSE}) to
-retrieve the priors (see \code{[brms::get_prior()]} for details).}
+retrieve the priors (see \code{[brms::get_prior()]} for details). Note
+that \code{get_priors = TRUE} will return priors based on the final code.
+In case user want to return the basic default priors, then it can be
+achieved by setting \code{get_priors = "default"}.}
 
 \item{get_priors_eval}{An optional argument (logical, default \code{FALSE})
 to retrieve the priors specified by the user.}
