@@ -13,6 +13,7 @@
   returnobj = TRUE,
   vectorize = FALSE,
   verbose = FALSE,
+  sigmafun = FALSE,
   envir = NULL,
   ...
 )
@@ -43,6 +44,9 @@ currently, \code{vectorize} should be set to \code{FALSE}, as setting it to
 
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}
+
+\item{sigmafun}{A logical (default \code{FALSE}) to indicate whether to return
+the sigma functions. This parameter is for internal use only.}
 
 \item{envir}{The environment used for function evaluation. The default is
 \code{NULL}, which sets the environment to \code{parent.frame()}. Since

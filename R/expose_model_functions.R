@@ -28,6 +28,9 @@
 #'   exposed functions should be vectorized using [base::Vectorize()]. Note that
 #'   currently, \code{vectorize} should be set to \code{FALSE}, as setting it to
 #'   \code{TRUE} may not work as expected.
+#'   
+#' @param sigmafun A logical (default \code{FALSE}) to indicate whether to return
+#'   the sigma functions. This parameter is for internal use only.
 #'
 #' @inherit growthparameters.bgmfit params
 #'
@@ -77,6 +80,7 @@ expose_model_functions.bgmfit <- function(model,
                                  returnobj = TRUE,
                                  vectorize = FALSE,
                                  verbose = FALSE,
+                                 sigmafun = FALSE,
                                  envir = NULL,
                                  ...) {
   
@@ -90,6 +94,14 @@ expose_model_functions.bgmfit <- function(model,
   if(!is.null(model$model_info[['sigmaStanFun_name']])) {
     sigmanlflf <- TRUE
   }
+  
+  
+  # Over ride option of exposing sigma functions
+  if(!sigmafun) {
+    sigmanlflf <- FALSE
+  }
+  
+  
   
   fun_env <- envir
   

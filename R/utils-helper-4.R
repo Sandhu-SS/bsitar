@@ -707,16 +707,21 @@ prepare_formula <- function(x,
     sigmafixed <- NULL
   }
   
+  
+  
   sigmarandom <- sigma_formula_grsi
   
   
+  
   # add_sigma_by_mean
+  # we might need to set sigmafixed sigmarandom <- NULL for location scale
   if(sigma_formula_manualsi != "NULL") {
-    if(!set_prior_for_sigma_by_mean_using_sigma_formual) {
-      sigmafixed <- NULL
-    }
+    # if(!set_prior_for_sigma_by_mean_using_sigma_formual) {
+    #   sigmafixed <- NULL
+    #   sigmarandom <- NULL
+    # }
     # sigmafixed <- NULL
-    sigmarandom <- NULL
+    # sigmarandom <- NULL
     dpar_formulasi <- NULL
   }
   
@@ -897,7 +902,31 @@ prepare_formula <- function(x,
     }
   }
   
+  
+  
+  
+  
+  # add_sigma_by_mean
+  # if(sigma_formula_manualsi != "NULL") {
+  #   if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+  #     sigmarandom_str_full <- replace_string_part(x = sigmarandom,
+  #                                                 start = "(",
+  #                                                 end = "|",
+  #                                                 replace = "",
+  #                                                 extract = T)
+  #     
+  #     sigmarandom_str_full <- substr(sigmarandom_str_full, 2,
+  #                                    nchar(sigmarandom_str_full) - 1)
+  #     
+  #     if(!grepl("^~", sigmarandom_str_full)) {
+  #       sigmarandom_str_full <- paste0("~", sigmarandom_str_full)
+  #     }
+  #    
+  #   } # if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+  # } # if(sigma_formula_manualsi != "NULL") {
+  
 
+  
   if(!is.null(sigmarandom)) {
     if(grepl("|", sigmarandom, fixed = TRUE)) {
       sigma_random_wb <- gsub("~", "", sigmarandom) # with bar
@@ -905,6 +934,16 @@ prepare_formula <- function(x,
       sigmarandom <- get_x_random(sigmarandom)
     }
   }
+  
+  
+  # add_sigma_by_mean
+  # if(sigma_formula_manualsi != "NULL") {
+  #   if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+  #     sigmarandom <- sigmarandom_str_full
+  #   }
+  # }
+  
+  
   
 
   
@@ -1267,7 +1306,6 @@ prepare_formula <- function(x,
   
   
   
-  
   if (!is.null(sigmarandom)) {
     sigma_covmat_gr <- eval(parse(text = paste0(
       "model.matrix(",
@@ -1426,7 +1464,11 @@ prepare_formula <- function(x,
     sigma_form_gr <- NULL
   }
   
-  
+  # print(sigma_set_higher_levels)
+  # print(sigma_formula_gr_strsi_present)
+  # print(sigma_formula_gr_strsi)
+  # print(sigmarandom)
+  # stop()
   
   if (!is.null(group_arg)) {
     gr_prefixss <- "gr"
@@ -2093,43 +2135,34 @@ prepare_formula <- function(x,
   
   
   if(sigma_set_higher_levels) {
-    
     if(sigma_formula_gr_strsi_present) {
       # 24.08.2024
       # sigmaform_gr_names and sigmaform_gr_names_asitis is collected as follow
       # The "_________" does not allow split at ( or )
       # sigma_formula_gr_strsix <<- sigma_formula_gr_strsi
-      
-      
       sigmaform <- sigmaform %>% gsub_space()
       sigmaform_temp <- sigmaform
       setparantopen <- "######"
       setparantclose <- "########"
-       # sigmaform_tempx <<- sigmaform_temp
       sigmaform_temp <- gsub("(", setparantopen, sigmaform_temp, fixed = T)
       sigmaform_temp <- gsub(")", setparantclose, sigmaform_temp, fixed = T)
-      sigmaform_temp <- add_higher_level_str(sigmaform_temp, sigma_formula_gr_strsi)
+      sigmaform_temp <- add_higher_level_str(sigmaform_temp, 
+                                             sigma_formula_gr_strsi)
       sigmaform_temp <- restore_paranthese_grgr_str_form(sigmaform_temp)
-         # sigmaform_tempxx <<- sigmaform_temp
       # sigmaform_gr_names        <- lapply(sigmaform_temp, get_x_random2)[[1]]
       sigmaform_gr_names        <- lapply(sigmaform_temp,
                                           get_x_random2_new,
                                           gsubit = setparantclose)[[1]]
 
-      sigmaform_gr_names_asitis <- lapply(sigmaform_temp, get_x_random2_asitis)[[1]]
-       # sigmaform_gr_namesx <<- sigmaform_gr_names
-       # sigmaform_gr_names_asitisx <<- sigmaform_gr_names_asitis
-
+      sigmaform_gr_names_asitis <- lapply(sigmaform_temp, 
+                                          get_x_random2_asitis)[[1]]
       sigmaform <- add_higher_level_str(sigmaform, sigma_formula_gr_strsi)
       sigmaform <- restore_paranthese_grgr_str_form(sigmaform)
       sigmaform <- sigmaform %>% gsub_space()
       sigmagr_varss <- add_higher_level_str_id(sigma_formula_gr_strsi)
       # sigmaform_gr_names        <- lapply(sigmaform, get_x_random2)[[1]]
       # sigmaform_gr_names_asitis <- lapply(sigmaform, get_x_random2_asitis)[[1]]
-
-      
       # Somehow the below - getvassetc-  did not work out for sigma
-      
       # This is ######## to accomodate formalu in formula such as poly(age)
       # getvassetc <- getforvasasits(sigmaform, sigma_formula_gr_strsi,
       #                              setparantopen = "######", 

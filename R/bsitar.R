@@ -543,35 +543,56 @@
 #'   Note that \code{sigma_formula_manual} should be considered as an 
 #'   experimental feature and therefore should be used cautiously.
 #'
-#'   **Basic Usage Example:**
+#'   *Basic Usage Example:*
 #'   \code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL)))}
 #'
 #'   **Modeling \code{sigma} as a Function of the Mean:**
-#'   It can also be used to model \code{sigma} as a function of the mean
-#'   (\code{mu}), for example: \code{sigma_formula_manual = nlf(sigma ~ tau *
-#'   sqrt(SITARFun(age, a, b, c, s1, s2, s3))) + lf(tau ~ 1)} Here,
-#'   \code{SITARFun()} is the function that computes \code{mu}.
-#'   **Important Considerations:**
-#'   * Using \code{SITARFun()} in this way will recompute \code{mu}.
+#'   \code{sigma_formula_manual} can also be used to model \code{sigma} as a
+#'   function of the mean (\code{mu}), for example: \cr
+#'   \code{sigma_formula_manual = nlf(sigma ~ tau *
+#'   sqrt(SITARFun(age, a, b, c, s1, s2, s3))) + lf(tau ~ 1)} \cr
+#'   Here, \code{SITARFun()} is the function that computes \code{mu}.
+#'   
+#'   *Important limitations in using above approach for modelling sigma as function of mean:*
+#'   * Using \code{SITARFun()} in this way will recompute \code{mu}. This is 
+#'   computationally expensive when fitting non linear model.
 #'   * For \code{multivariate} models, \code{SITARFun()} can only be used if all sub-models
 #'   compute \code{mu} using the exact same \code{SITARFun()} definition for
 #'   each outcome.
 #'
-#'   **Experimental Approach for Direct \code{mu} Usage:**
-#'   To overcome the limitations of recomputing \code{mu} or \code{multivariate}
-#'   model restrictions, an experimental approach allows for direct use of
-#'   \code{mu}. This involves setting \code{sigma_formula_manual} as:
-#'   \code{sigma_formula_manual = "nlf(sigma ~ sigmatau * sqrt()) + lf(sigmatau
-#'   ~ 1)"} After this, you will need to manually edit the \code{stancode} and
-#'   refit the model using \code{rstan}.
+#'   *Experimental Approach for Direct \code{mu} Usage:*
+#'   To overcome the above limitations of recomputing \code{mu} or
+#'   \code{multivariate} model restrictions, an experimental approach allows for
+#'   direct use of \code{mu}. This involves setting \code{sigma_formula_manual}
+#'   as:
+#'   \code{sigma_formula_manual = "nlf(sigma ~ tau * sqrt()) + lf(tau
+#'   ~ 1)"}. \cr
+#'   Note the empty \code{sqrt()} function. The \code{sqrt()} will be replace by
+#'   \code{mu} by  manually editing the \code{stancode} and refit the model
+#'   using \code{rstan}.
 #'
-#'   When using the \code{sigmatau} parameter name in this experimental setup,
-#'   priors specified via \code{sigma_prior_beta}, \code{sigma_cov_prior_beta},
-#'   \code{sigma_prior_sd}, \code{sigma_cov_prior_sd}, and
-#'   \code{sigma_cov_prior_sd_str} will be automatically applied to
-#'   \code{sigmatau}. This prior assignment is handled internally.
+#'   In this approach, priors specified via \code{sigma_prior_beta},
+#'   \code{sigma_cov_prior_beta}, \code{sigma_prior_sd},
+#'   \code{sigma_cov_prior_sd}, and \code{sigma_cov_prior_sd_str} will be
+#'   automatically applied to linear predictors defined in the \code{lf()}. All
+#'   steps including setting up the basic code, editing, prior assignment, and
+#'   model fit are handled internally.
+#'   
+#'   For \code{multivariate} model, the \code{sigma_formula_manual} can be used
+#'   set up different form and predictor variables for each outcome separately 
+#'   by using the list approach as shown below: \cr 
+#'   \code{sigma_formula_manual = list(
+#'   nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+#'   (1 + age | 550 | gr(id, by = class))) ,
+#'   nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+#'   (1 + age | 550 | gr(id, by = class)))
+#'   )}. \cr
+#'   Note that parameter name \code{tau} (which could any string such as
+#'   \code{sigmatau}) should be same across all outcomes. The appropriate
+#'   response assignment is done internally. Also, parameter should not contain
+#'   dots or underscores.
 #'
-#'   **Location-Scale SITAR Model Example:**
+#'   *Location-Scale SITAR Model Example:*
 #'   Another common use case for \code{sigma_formula_manual} is modeling
 #'   \code{sigma} in a location-scale \code{SITAR} model, where the same
 #'   \code{SITAR} formula can be applied to the scale parameter. An example is:
@@ -2712,11 +2733,16 @@ bsitar <- function(x,
   
   
   
-  
-  
+  # why this setdepar0sgub? it did't let pass resp specific 
+  # ..si for sigma_formula_manual
+  # Check whether it isntrully needed for sigma_formula and sigma_formula_gr
   setdepar0sgub <- c("sigma_formula", 
-                     "sigma_formula_gr", 
-                     "sigma_formula_manual")
+                     "sigma_formula_gr")
+  
+  
+  # setdepar0sgub <- c("sigma_formula", 
+  #                    "sigma_formula_gr", 
+  #                    "sigma_formula_manual")
   
   for (argumentsnamesi in names(arguments)) {
     if(argumentsnamesi %in% setdepar0sgub) {
@@ -5161,6 +5187,205 @@ bsitar <- function(x,
     }
     
     
+    
+    
+    
+    ###########################################################################
+    # sigma_formula_manual
+    ###########################################################################
+    # This below for sigma_formula_manual
+    # The objective is set sigma_formulasi and sigma_formula_gr_strsi 
+    # by extracting relevant portion. These 'sigma_formulasi' and 
+    # 'sigma_formula_gr_strsi' formuale are used for prior setting and covars
+    # Also, 'add_default_args_to_nlf_lf' can be used for 'dpar_formuala'
+    # Add missing parameters to the sigma_formula_manual
+    # This check might be needed for dpar_formual
+    add_default_args_to_nlf_lf <- function(str,  nys, ysi, check = FALSE) {
+      # dpar argument is now not neded
+      str <- paste(gsub_space(str), collapse = "")
+      str <- gsub("\"" , "'", str, fixed = T)
+      temp_str <- gsub("\\+(nlf|lf)\\(", "###SPLIT###\\1(", str, perl = TRUE)
+      split_result <- strsplit(temp_str, split = "###SPLIT###", fixed = TRUE)[[1]]
+      
+      split_result_c <- c()
+      for (i in 1:length(split_result)) {
+        split_result_ith <- split_result[i]
+        
+        if (!is.null(split_result_ith)) {
+          if(check) {
+            if (grepl("^1$", split_result_ith)) {
+              split_result_ith <- paste0("lf(", "sigma", "~", split_result_ith, ")")
+            } else if (grepl("^~1", split_result_ith)) {
+              split_result_ith <- paste0("lf(", "sigma", split_result_ith, ")")
+            } else if (grepl("^sigma~1", split_result_ith)) {
+              split_result_ith <- paste0("lf(", "", split_result_ith, ")")
+            } else {
+              split_result_ith <- split_result_ith
+            }
+          } # if(check) {
+          if (grepl("lf\\(", split_result_ith) |
+              grepl("nlf\\(", split_result_ith)) {
+            if (!grepl("^lf\\(", split_result_ith) &
+                grepl("nlf\\(", split_result_ith)) {
+              lf_list <- c('flist',
+                           # 'dpar',
+                           'resp',
+                           'loop')
+            } else if (grepl("^lf\\(", split_result_ith) &
+                       !grepl("^nlf\\(", split_result_ith)) {
+              lf_list <- c('flist',
+                           # 'dpar',
+                           'resp',
+                           'center',
+                           'cmc',
+                           'sparse',
+                           'decomp')
+            }
+            lf_list_c <- c()
+            for (lf_listi in lf_list) {
+              if (!grepl(lf_listi, split_result_ith)) {
+                if (lf_listi == 'flist') {
+                  o. <- paste0(lf_listi, "=", 'NULL')
+                } else if (lf_listi == 'dpar') {
+                  o. <- paste0(lf_listi, "=", paste0("'", 'sigma', "'"))
+                } else if (lf_listi == 'center') {
+                  o. <- paste0(lf_listi, "=", 'NULL')
+                } else if (lf_listi == 'cmc') {
+                  o. <- paste0(lf_listi, "=", 'NULL')
+                } else if (lf_listi == 'sparse') {
+                  o. <- paste0(lf_listi, "=", 'NULL')
+                } else if (lf_listi == 'decomp') {
+                  o. <- paste0(lf_listi, "=", 'NULL')
+                } else if (lf_listi == 'resp') {
+                  if (nys > 1) {
+                    o. <- paste0(lf_listi, "=", paste0("'", ysi, "'"))
+                    # o. <- paste0(lf_listi, "=", 'NULL')
+                  } else {
+                    o. <- paste0(lf_listi, "=", 'NULL')
+                  }
+                } else if (lf_listi == 'loop') {
+                  o. <- paste0(lf_listi, "=", 'FALSE')
+                } else {
+                  o. <- o.
+                }
+                lf_list_c <- c(lf_list_c, o.)
+              }
+            }
+            lf_list_c <- paste(lf_list_c, collapse = ",")
+            if (lf_list_c != "")
+              lf_list_c <- paste0(",", lf_list_c)
+            split_result_ith <- gsub(")$", lf_list_c, split_result_ith)
+            split_result_ith <- paste0(split_result_ith, ")")
+          }
+        } # if (!is.null(split_result_ith)) {
+        split_result_ith <- paste(gsub_space(split_result_ith), collapse = "")
+        split_result_c <- c(split_result_c, split_result_ith)
+      } # for (i in 1:length(split_result)) {
+      out <- paste(split_result_c, collapse = "+")
+      out <- paste(gsub_space(out), collapse = "")
+      return(out)
+    } # end add_default_args_to_nlf_lf <- function(str) {
+    
+    extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
+      if(is.null(str) | length(str) == 0) {
+        if(verbose)  print("String is NULL")
+        return(invisible(NULL))
+      } else if(!is.null(str)) {
+        if(is.character(str)) {
+          if(str == "NULL") return(invisible(NULL))
+        }
+        if(verbose)  print("String is NULL")
+      } else if(is.null(str)) {
+        if(verbose)  print("String is NULL")
+        return(invisible(NULL))
+      } 
+      pattern <- paste0(start, "(.*?)\\", end)
+      match_info <- regexpr(pattern, str, perl = TRUE)
+      if (match_info[1] != -1) { # Check if a match was found
+        full_match <- regmatches(str, match_info)
+        extracted_string <- gsub("^~|\\*$", "", full_match, perl = TRUE)
+        return(extracted_string)
+      } else {
+        if(verbose)  print("No match found.")
+        return(invisible(NULL))
+      }
+    } # end of extract_between_specl_chars
+    
+    
+    # Add missing parameters to the sigma_formula_manual
+    sigma_formula_manualsi <- add_default_args_to_nlf_lf(str = sigma_formula_manualsi, 
+                                                         nys = nys, ysi = ysi, 
+                                                         check = FALSE)
+    
+    sigmatau_str_full <- replace_string_part(x = sigma_formula_manualsi,
+                                             start = "sigma~",
+                                             end = "sqrt()",
+                                             replace = "",
+                                             extract = T)
+    
+    sigmatau_strsi <- extract_between_specl_chars(sigmatau_str_full, 
+                                                  start = "~", end = "*",
+                                                  verbose = FALSE)
+    
+    
+    if(is.null(sigmatau_strsi)) {
+      set_model_sigma_by_mean <- FALSE
+    } else {
+      set_model_sigma_by_mean <- TRUE
+    }
+    
+    sigma_formula_manualsi_for_parms <- sigma_formula_manualsi
+    sigma_formula_manualsi_for_parms <- gsub("+lf", ",lf", sigma_formula_manualsi_for_parms, fixed = T)
+    sigma_formula_manualsi_for_parms <- paste0("c(", sigma_formula_manualsi_for_parms, ")")
+    
+    # add_sigma_by_mean
+    set_prior_for_sigma_by_mean_using_sigma_formual <- FALSE
+    if(set_model_sigma_by_mean) {
+      get_lf_part_sigma_formula_manualsi <- ept(sigma_formula_manualsi_for_parms)
+      nthtau <- length(get_lf_part_sigma_formula_manualsi)
+      get_lf_part_sigma_formula_manualsi_form <- get_lf_part_sigma_formula_manualsi[[nthtau]]
+      sigma_formulasi <- get_lf_part_sigma_formula_manualsi_form %>% deparse()
+      sigma_formulasi <- paste0(gsub_space(sigma_formulasi), collapse = "")
+      sigma_formulasi_check <- strsplit(sigma_formulasi, "+(", fixed = T)[[1]]
+      sigma_formulasi <- sigma_formulasi_check[1]
+      if(length(strsplit(sigma_formulasi, "~", fixed = T)[[1]]) > 1) {
+        sigma_formulasi <- strsplit(sigma_formulasi, "~", fixed = T)[[1]][-1]
+      } else {
+        sigma_formulasi <- sigma_formulasi
+      }
+      sigma_formulasi <- paste0("~", sigma_formulasi)
+      if(length(sigma_formulasi_check) == 1) {
+        sigma_formula_gr_strsi <- NULL
+      } else {
+        sigma_formula_gr_strsi <- sub(".*?\\+\\(", "", sigma_formulasi_check)
+        sigma_formula_gr_strsi <- sigma_formula_gr_strsi[2:length(sigma_formula_gr_strsi)]
+        sigma_formula_gr_strsi <- paste(sigma_formula_gr_strsi, collapse = "+")
+        sigma_formula_gr_strsi <- paste0(gsub_space(sigma_formula_gr_strsi), collapse = "")
+        sigma_formula_gr_strsi <- paste0("(", sigma_formula_gr_strsi)
+      }
+      # sigma_set_higher_levels <- TRUE
+      # if(!grepl("^~", sigma_formula_gr_strsi)) {
+      #   sigma_formula_gr_strsi <- paste0("~", sigma_formula_gr_strsi)
+      # }
+      set_prior_for_sigma_by_mean_using_sigma_formual <- TRUE
+    }
+    ###########################################################################
+    # end of sigma_formula_manual - # add_sigma_by_mean
+    ###########################################################################
+    
+    # print(sigma_formulasi)
+    # print(sigma_formula_gr_strsi)
+    # print("mmm")
+    # stop()
+    
+    
+    
+    
+    
+    
+    
+    
+    
     # Add missing parameters to the dpar_formula
     if (!is.null(dpar_formulasi)) {
       if (grepl("^1$", dpar_formulasi)) {
@@ -5283,6 +5508,7 @@ bsitar <- function(x,
       }
       out
     } 
+    
     
     
     # Over ride when restricting to abcd
@@ -5516,47 +5742,197 @@ bsitar <- function(x,
     }
     
     
-    
-    
-    # add_sigma_by_mean
-    set_model_sigma_by_mean <- FALSE
-    if(grepl("sqrt())", sigma_formula_manualsi, fixed = T)) {
-      set_model_sigma_by_mean <- TRUE
-    }
+   #  ###########################################################################
+   #  # sigma_formula_manual
+   #  ###########################################################################
+   #  # This below for sigma_formula_manual
+   #  # The objective is set sigma_formulasi and sigma_formula_gr_strsi 
+   #  # by extracting relevant portion. These 'sigma_formulasi' and 
+   #  # 'sigma_formula_gr_strsi' formuale are used for prior setting and covars
+   #  # Also, 'add_default_args_to_nlf_lf' can be used for 'dpar_formuala'
+   #  # Add missing parameters to the sigma_formula_manual
+   #  # This check might be needed for dpar_formual
+   #  add_default_args_to_nlf_lf <- function(str,  nys, ysi, check = FALSE) {
+   #    # dpar argument is now not neded
+   #    str <- paste(gsub_space(str), collapse = "")
+   #    str <- gsub("\"" , "'", str, fixed = T)
+   #    temp_str <- gsub("\\+(nlf|lf)\\(", "###SPLIT###\\1(", str, perl = TRUE)
+   #    split_result <- strsplit(temp_str, split = "###SPLIT###", fixed = TRUE)[[1]]
+   #    
+   #    split_result_c <- c()
+   #    for (i in 1:length(split_result)) {
+   #      split_result_ith <- split_result[i]
+   #      
+   #      if (!is.null(split_result_ith)) {
+   #        if(check) {
+   #          if (grepl("^1$", split_result_ith)) {
+   #            split_result_ith <- paste0("lf(", "sigma", "~", split_result_ith, ")")
+   #          } else if (grepl("^~1", split_result_ith)) {
+   #            split_result_ith <- paste0("lf(", "sigma", split_result_ith, ")")
+   #          } else if (grepl("^sigma~1", split_result_ith)) {
+   #            split_result_ith <- paste0("lf(", "", split_result_ith, ")")
+   #          } else {
+   #            split_result_ith <- split_result_ith
+   #          }
+   #        } # if(check) {
+   #        if (grepl("lf\\(", split_result_ith) |
+   #            grepl("nlf\\(", split_result_ith)) {
+   #          if (!grepl("^lf\\(", split_result_ith) &
+   #              grepl("nlf\\(", split_result_ith)) {
+   #            lf_list <- c('flist',
+   #                         # 'dpar',
+   #                         'resp',
+   #                         'loop')
+   #          } else if (grepl("^lf\\(", split_result_ith) &
+   #                     !grepl("^nlf\\(", split_result_ith)) {
+   #            lf_list <- c('flist',
+   #                         # 'dpar',
+   #                         'resp',
+   #                         'center',
+   #                         'cmc',
+   #                         'sparse',
+   #                         'decomp')
+   #          }
+   #          lf_list_c <- c()
+   #          for (lf_listi in lf_list) {
+   #            if (!grepl(lf_listi, split_result_ith)) {
+   #              if (lf_listi == 'flist') {
+   #                o. <- paste0(lf_listi, "=", 'NULL')
+   #              } else if (lf_listi == 'dpar') {
+   #                o. <- paste0(lf_listi, "=", paste0("'", 'sigma', "'"))
+   #              } else if (lf_listi == 'center') {
+   #                o. <- paste0(lf_listi, "=", 'NULL')
+   #              } else if (lf_listi == 'cmc') {
+   #                o. <- paste0(lf_listi, "=", 'NULL')
+   #              } else if (lf_listi == 'sparse') {
+   #                o. <- paste0(lf_listi, "=", 'NULL')
+   #              } else if (lf_listi == 'decomp') {
+   #                o. <- paste0(lf_listi, "=", 'NULL')
+   #              } else if (lf_listi == 'resp') {
+   #                if (nys > 1) {
+   #                  o. <- paste0(lf_listi, "=", paste0("'", ysi, "'"))
+   #                  # o. <- paste0(lf_listi, "=", 'NULL')
+   #                } else {
+   #                  o. <- paste0(lf_listi, "=", 'NULL')
+   #                }
+   #              } else if (lf_listi == 'loop') {
+   #                o. <- paste0(lf_listi, "=", 'FALSE')
+   #              } else {
+   #                o. <- o.
+   #              }
+   #              lf_list_c <- c(lf_list_c, o.)
+   #            }
+   #          }
+   #          lf_list_c <- paste(lf_list_c, collapse = ",")
+   #          if (lf_list_c != "")
+   #            lf_list_c <- paste0(",", lf_list_c)
+   #          split_result_ith <- gsub(")$", lf_list_c, split_result_ith)
+   #          split_result_ith <- paste0(split_result_ith, ")")
+   #        }
+   #      } # if (!is.null(split_result_ith)) {
+   #      split_result_ith <- paste(gsub_space(split_result_ith), collapse = "")
+   #      split_result_c <- c(split_result_c, split_result_ith)
+   #    } # for (i in 1:length(split_result)) {
+   #    out <- paste(split_result_c, collapse = "+")
+   #    out <- paste(gsub_space(out), collapse = "")
+   #    return(out)
+   #  } # end add_default_args_to_nlf_lf <- function(str) {
+   #  
+   #  extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
+   #    if(is.null(str) | length(str) == 0) {
+   #      if(verbose)  print("String is NULL")
+   #      return(invisible(NULL))
+   #    } else if(!is.null(str)) {
+   #      if(is.character(str)) {
+   #        if(str == "NULL") return(invisible(NULL))
+   #      }
+   #      if(verbose)  print("String is NULL")
+   #    } else if(is.null(str)) {
+   #      if(verbose)  print("String is NULL")
+   #      return(invisible(NULL))
+   #    } 
+   #    pattern <- paste0(start, "(.*?)\\", end)
+   #    match_info <- regexpr(pattern, str, perl = TRUE)
+   #    if (match_info[1] != -1) { # Check if a match was found
+   #      full_match <- regmatches(str, match_info)
+   #      extracted_string <- gsub("^~|\\*$", "", full_match, perl = TRUE)
+   #      return(extracted_string)
+   #    } else {
+   #      if(verbose)  print("No match found.")
+   #      return(invisible(NULL))
+   #    }
+   #  } # end of extract_between_specl_chars
+   #  
+   #  
+   # # Add missing parameters to the sigma_formula_manual
+   # sigma_formula_manualsi <- add_default_args_to_nlf_lf(str = sigma_formula_manualsi, 
+   #                                   nys = nys, ysi = ysi, 
+   #                                   check = FALSE)
+   # 
+   # sigmatau_str_full <- replace_string_part(x = sigma_formula_manualsi,
+   #                           start = "sigma~",
+   #                           end = "sqrt()",
+   #                           replace = "",
+   #                           extract = T)
+   # 
+   # sigmatau_strsi <- extract_between_specl_chars(sigmatau_str_full, 
+   #                                             start = "~", end = "*",
+   #                                             verbose = FALSE)
+   # 
+   # 
+   # if(is.null(sigmatau_strsi)) {
+   #   set_model_sigma_by_mean <- FALSE
+   # } else {
+   #   set_model_sigma_by_mean <- TRUE
+   # }
+   # 
+   #  sigma_formula_manualsi_for_parms <- sigma_formula_manualsi
+   #  sigma_formula_manualsi_for_parms <- gsub("+lf", ",lf", sigma_formula_manualsi_for_parms, fixed = T)
+   #  sigma_formula_manualsi_for_parms <- paste0("c(", sigma_formula_manualsi_for_parms, ")")
+   #  
+   #  # add_sigma_by_mean
+   #  set_prior_for_sigma_by_mean_using_sigma_formual <- FALSE
+   #  if(set_model_sigma_by_mean) {
+   #    get_lf_part_sigma_formula_manualsi <- ept(sigma_formula_manualsi_for_parms)
+   #    nthtau <- length(get_lf_part_sigma_formula_manualsi)
+   #    get_lf_part_sigma_formula_manualsi_form <- get_lf_part_sigma_formula_manualsi[[nthtau]]
+   #    sigma_formulasi <- get_lf_part_sigma_formula_manualsi_form %>% deparse()
+   #    sigma_formulasi <- paste0(gsub_space(sigma_formulasi), collapse = "")
+   #    sigma_formulasi_check <- strsplit(sigma_formulasi, "+(", fixed = T)[[1]]
+   #    sigma_formulasi <- sigma_formulasi_check[1]
+   #    if(length(strsplit(sigma_formulasi, "~", fixed = T)[[1]]) > 1) {
+   #      sigma_formulasi <- strsplit(sigma_formulasi, "~", fixed = T)[[1]][-1]
+   #    } else {
+   #      sigma_formulasi <- sigma_formulasi
+   #    }
+   #    sigma_formulasi <- paste0("~", sigma_formulasi)
+   #    if(length(sigma_formulasi_check) == 1) {
+   #      sigma_formula_gr_strsi <- NULL
+   #    } else {
+   #      sigma_formula_gr_strsi <- sub(".*?\\+\\(", "", sigma_formulasi_check)
+   #      sigma_formula_gr_strsi <- sigma_formula_gr_strsi[2:length(sigma_formula_gr_strsi)]
+   #      sigma_formula_gr_strsi <- paste(sigma_formula_gr_strsi, collapse = "+")
+   #      sigma_formula_gr_strsi <- paste0(gsub_space(sigma_formula_gr_strsi), collapse = "")
+   #      sigma_formula_gr_strsi <- paste0("(", sigma_formula_gr_strsi)
+   #    }
+   #     # sigma_formula_grsi <- sigma_formula_gr_strsi
+   #    sigma_set_higher_levels <- TRUE
+   #    if(!grepl("^~", sigma_formula_gr_strsi)) {
+   #      sigma_formula_gr_strsi <- paste0("~", sigma_formula_gr_strsi)
+   #    }
+   #    set_prior_for_sigma_by_mean_using_sigma_formual <- TRUE
+   #  }
+   #  ###########################################################################
+   #  # end of sigma_formula_manual - # add_sigma_by_mean
+   #  ###########################################################################
+   #  
+   #  
+   #  # print(sigma_formulasi)
+   #  # print(sigma_formula_gr_strsi)
+   #  # print("mmm")
+   #  # stop()
     
 
-    # add_sigma_by_mean
-    set_prior_for_sigma_by_mean_using_sigma_formual <- FALSE
-    if(set_model_sigma_by_mean) {
-      get_lf_part_sigma_formula_manualsi <- strsplit(sigma_formula_manualsi, "+lf", fixed = T)[[1]][2]
-      get_lf_part_sigma_formula_manualsi <- paste0("lf", get_lf_part_sigma_formula_manualsi)
-      get_lf_part_sigma_formula_manualsi_form <- ept(get_lf_part_sigma_formula_manualsi)[[1]]
-      
-      sigma_formulasi <- get_lf_part_sigma_formula_manualsi_form[[3]] %>% deparse()
-      sigma_formulasi <- paste0(gsub_space(sigma_formulasi), collapse = "")
-      
-      sigma_formulasi_check <- strsplit(sigma_formulasi, "+(", fixed = T)[[1]]
-      sigma_formulasi <- sigma_formulasi_check[1]
-      sigma_formulasi <- paste0("~", sigma_formulasi)
-      if(length(sigma_formulasi_check) == 1) {
-        sigma_formula_gr_strsi <- NULL
-      } else {
-        sigma_formula_gr_strsi <- sub(".*?\\+\\(", "", sigma_formulasi_check)
-        sigma_formula_gr_strsi <- sigma_formula_gr_strsi[2:length(sigma_formula_gr_strsi)]
-        sigma_formula_gr_strsi <- paste(sigma_formula_gr_strsi, collapse = "+")
-        sigma_formula_gr_strsi <- paste0(gsub_space(sigma_formula_gr_strsi), collapse = "")
-        sigma_formula_gr_strsi <- paste0("(", sigma_formula_gr_strsi)
-      }
-      set_prior_for_sigma_by_mean_using_sigma_formual <- TRUE
-    }
-    
-    
-    
-
-    # print(sigma_formulasi)
-    # print(sigma_formula_gr_strsi)
-    # stop()
-    
     
     
     
@@ -5741,7 +6117,7 @@ bsitar <- function(x,
     if(set_model_sigma_by_mean) {
       setsigmaxvarsi <- FALSE
     }
-    
+   
     
     # 20.03.2025
     try_extracting_sigmaxar <- function(search_sigma_str_x, sigma_str_x) {
@@ -7039,16 +7415,11 @@ bsitar <- function(x,
       sigmaadd_rcsfunmatqrinv_genquant <- add_rcsfunmatqrinv_genquant
       
       
-      sigmainternal_function_args[['fixedsi']] <- 
-        sigmafixedsi
-      sigmainternal_function_args[['randomsi']] <- 
-        sigmarandomsi
-      sigmainternal_function_args[['spfncname']] <- 
-        sigmaspfncname
-      sigmainternal_function_args[['getxname']] <- 
-        sigmagetxname
-      sigmainternal_function_args[['getknotsname']] <- 
-        sigmagetknotsname
+      sigmainternal_function_args[['fixedsi']] <- sigmafixedsi
+      sigmainternal_function_args[['randomsi']] <- sigmarandomsi
+      sigmainternal_function_args[['spfncname']] <- sigmaspfncname
+      sigmainternal_function_args[['getxname']] <- sigmagetxname
+      sigmainternal_function_args[['getknotsname']] <- sigmagetknotsname
       sigmainternal_function_args[['match_sitar_a_form']] <- 
         sigmamatch_sitar_a_form
       sigmainternal_function_args[['match_sitar_d_form']] <- 
@@ -7286,6 +7657,7 @@ bsitar <- function(x,
     
     
     
+    formula_bf_to_check_loop <- formula_bf
     
     list_out <- attr(formula_bf, "list_out")
    
@@ -8887,13 +9259,25 @@ bsitar <- function(x,
   # such as exponential the following is need (again done at line 4753 )
   
   brmspriors <- priorlist
-  
+  # brmspriorsx <<- brmspriors
   # add_sigma_by_mean
   if(set_prior_for_sigma_by_mean_using_sigma_formual) {
     brmspriors <- brmspriors %>% 
-      dplyr:: mutate(nlpar = dplyr::if_else(dpar == "sigma", "sigmatau", nlpar)) %>% 
-      dplyr:: mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar))
+      dplyr:: mutate(nlpar = dplyr::if_else(dpar == "sigma", sigmatau_strsi, nlpar)) %>% 
+      dplyr:: mutate(class = dplyr::if_else(dpar == "sigma" & class != 'sd', "b", class) ) %>% 
+      dplyr:: mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar) )
   }
+  
+  
+ # brmspriorsx %>% dplyr::filter(dpar == 'sigma')
+  
+  
+  # brmspriorsxx <<- brmspriors
+ 
+  # brmspriorsxx%>% dplyr::filter(nlpar == 'tau')
+  
+   # stop()
+  
   
   
   brmspriors <- brmspriors %>% 
@@ -9505,24 +9889,73 @@ bsitar <- function(x,
     ################################################################
     
     
+    # attr(bformula$forms$copad$pforms$mucopad, "nl") <- TRUE
+    # attr(bformula$forms$copod$pforms$mucopad, "nl") <- TRUE
+    # 
+    # attr(bformula$forms$copad$pforms$mucopad, "loop") <- TRUE
+    # attr(bformula$forms$copod$pforms$mucopad, "loop") <- TRUE
+    
 
     # bformula <<- bformula
     # bstanvars <<- bstanvars
     # temp_prior <<- temp_prior
     # data2 <<- data2
     # brmsdata <<- brmsdata
+    # 
+    # temp_priorx <<- temp_prior
+    # brms::prior_summary(fit_f) %>% dplyr::filter(nlpar == 'tau')
     
+
     # add_sigma_by_mean
     if(set_prior_for_sigma_by_mean_using_sigma_formual) {
       temp_prior <- temp_prior %>% 
-        dplyr:: mutate(nlpar = dplyr::if_else(dpar == "sigma", "sigmatau", nlpar)) %>% 
+        dplyr:: mutate(nlpar = dplyr::if_else(dpar == "sigma", sigmatau_strsi, nlpar)) %>% 
+        dplyr:: mutate(class = dplyr::if_else(dpar == "sigma" & class != 'sd', "b", class) ) %>% 
         dplyr:: mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar) )
+      
+     
+      
+      # temp_prior <- temp_prior %>% 
+      #   dplyr:: mutate(prior = dplyr::if_else(nlpar == "mucopad", 
+      #                                         "prior(constant(mucopadp, broadcast = FALSE)",
+      #                                         prior))
+      # temp_prior <- temp_prior %>% 
+      #   dplyr:: mutate(prior = dplyr::if_else(nlpar == "mucopod", 
+      #                                         "prior(constant(mucopodp, broadcast = FALSE)",
+      #                                         prior))
+      # temp_prior <- temp_prior +
+      #   prior(constant(mucopadp, broadcast = FALSE), class = "b", nlpar = 'mucopad', 
+      #         coef = 'Intercept',
+      #         resp = 'copad') +
+      #   prior(constant(mucopodp, broadcast = FALSE), class = "b", nlpar = 'mucopod', 
+      #         coef = 'Intercept',
+      #         resp = 'copod')
     }
     
     
     
     
+    
+    # temp_priorxx <<- temp_prior
+    # 
+    # stop()
+
+
+    # temp_prior3 <- temp_prior %>% dplyr::filter(dpar != 'sigma')
+    
     # temp_prior <- temp_prior %>% dplyr::filter(class == 'sigma')
+    
+    # temp_prior2 <- temp_prior + 
+    # prior(constant(0, broadcast = FALSE), class = "b", nlpar='mucopad') +
+    #   prior(constant(0, broadcast = FALSE), class = "b", nlpar='mucopod')
+    
+    # bstanvars <- bstanvars + 
+    #   brms::stanvar(scode = "vector[N] mucopad = mucopadp;", block = 'tparameters') +
+    #   brms::stanvar(scode = "vector[N] mucopod = mucopodp;", block = 'tparameters') +
+    #   brms::stanvar(rep(0, nrow(brmsdata)), name = 'mucopadp') +
+    #   brms::stanvar(rep(0, nrow(brmsdata)), name = 'mucopodp')
+    
+    # bstanvars2 <<- bstanvars
     
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
@@ -9533,6 +9966,7 @@ bsitar <- function(x,
                                     prior = temp_prior,
                                     data = brmsdata)
     
+    # temp_stancode2x <<- temp_stancode2
     # print("mmm")
     # stop()
     
@@ -11281,6 +11715,19 @@ bsitar <- function(x,
     return(tempriorstr)
   }
 
+  # brm_argsx <<- brm_args
+  # 'Nby_1', 'Jby_1', 'Nby_3', 'Jby_3'
+  
+  # brm_args_genquant_xyadj <- brm_args
+  # brm_args_genquant_xyadj $ stanvars[['Nby_1']] <- NULL
+  # brm_args_genquant_xyadj $ stanvars[['Jby_1']] <- NULL
+  # brm_args_genquant_xyadj $ stanvars[['Nby_3']] <- NULL
+  # brm_args_genquant_xyadj $ stanvars[['Jby_3']] <- NULL
+  # 
+  # scode_final  <- CustomDoCall(brms::make_stancode, brm_args_genquant_xyadj)
+  # sdata        <- CustomDoCall(brms::make_standata, brm_args_genquant_xyadj)
+  
+  
   scode_final  <- CustomDoCall(brms::make_stancode, brm_args)
   sdata        <- CustomDoCall(brms::make_standata, brm_args)
   
@@ -11722,27 +12169,56 @@ bsitar <- function(x,
     
     
 
-
     # add_sigma_by_mean
+    
     if(set_model_sigma_by_mean) {
       for (i in ys) {
-        gsub_it_start     <- paste0("sigma", "_", i, "[n]")
+        # sigma_has_loop
+        # if(attr(bformula[['forms']][[i]][['pforms']][['sigma']],"loop")) {
+        #   gsub_it_start     <- paste0("sigma", "_", i, "[n]")
+        #   onlum <- paste0("mu", "_", i, "[n]")
+        # } else {
+        #   gsub_it_start     <- paste0("sigma", "_", i, "")
+        #   onlum <- paste0("mu", "_", i, "")
+        # } # if(attr(bformula[['forms']][[i]][['pforms']][['sigma']],"loop")) { else
+        
+        sigma_has_loop <- attr(bformula[['forms']][[i]][['pforms']][['sigma']],"loop")
+        if(sigma_has_loop) {
+          gsub_it_start     <- paste0("sigma", "_", i, "[n]")
+          onlum <- paste0("mu", "_", i, "[n]")
+        } else {
+          # this " =" restric to relevant portion
+          gsub_it_start     <- paste0("sigma", "_", i, " =") 
+          onlum <- paste0("mu", "_", i, "")
+        }
+        
         gsub_it_end       <- paste0("sqrt", "(", ""  ,")")
         extract_sigma_by_mean_o <- replace_string_part(x = scode_final,
-                                                       start = gsub_it_start, 
+                                                       start = gsub_it_start,
                                                        end =  gsub_it_end,
                                                        replace = "",
                                                        extract = T)
-        onlum <- paste0("mu", "_", i, "[n]")
-        extract_sigma_by_mean <- gsub(paste0("sqrt", "(", ""  ,")"), 
+        
+        extract_sigma_by_mean <- gsub(paste0("sqrt", "(", ""  ,")"),
                                       paste0("sqrt", "(", onlum  ,")"),
                                       extract_sigma_by_mean_o, fixed = T)
-        scode_final <- gsub(extract_sigma_by_mean_o, extract_sigma_by_mean, 
+
+        
+        if(!sigma_has_loop) {
+          extract_sigma_by_mean <- gsub(paste0(sigmatau_strsi, " ", "*"), 
+                                        paste0(sigmatau_strsi, " ", ".*"), 
+                                        extract_sigma_by_mean, fixed = T)
+        }
+        
+        scode_final <- gsub(extract_sigma_by_mean_o, extract_sigma_by_mean,
                             scode_final, fixed = T)
       } # for (i in ys) {
     } # if(set_model_sigma_by_mean) {
 
 
+    # cat(scode_final)
+    # print(set_model_sigma_by_mean)
+    # stop()
 
     
     # if(sum_zero) {
@@ -11845,6 +12321,49 @@ bsitar <- function(x,
 
     # Add class attributes and the model info for post-processing
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
+    
+    
+    ##############################################################
+    ##############################################################
+    # restore sigma sqrt form
+    if(set_model_sigma_by_mean) {
+      function_restore_mu_sigam_form <- function(fit_f, ys) {
+        bflist <- list()
+        bflist_counter <- 1
+        for (outrespbames in ys) {
+          bflist_counter <- bflist_counter + 1
+          base_forms   <- fit_f[['formula']][['forms']][[outrespbames]]
+          sigma_forms  <- base_forms[['pforms']][['sigma']]
+          base_mu_fun  <- base_forms[['formula']][[3]]
+          base_mu_fun  <- base_mu_fun %>% deparse()
+          edit_attr    <- attributes(sigma_forms)
+          copad_edit   <- sigma_forms
+          copad_edit   <- copad_edit %>% deparse()
+          copad_edit <- gsub(paste0("sqrt", "(", ""  ,")"), 
+                             paste0("sqrt", "(", base_mu_fun  ,")"),
+                             copad_edit, fixed = T)
+          sigma_forms <- str2lang(copad_edit)
+          attributes(sigma_forms) <- edit_attr
+          fit_f[['formula']][['forms']][[outrespbames]][['pforms']][['sigma']] <- sigma_forms
+          bflist[[bflist_counter]] <- 1
+        } # for (outrespbames in ys) {  return(fit_f[['formula']])
+        # bflist_c_list <- list()
+        # bflist_c <- c()
+        # for (il in 1:length(bflist)) {
+        #   bflist_c_list[[il]] <- ept(bflist[[il]])
+        #   bflist_c <- c(bflist_c, paste0("bflist_c_list[[", il, "]]"))
+        # }
+        # bformula <- ept(paste(bflist_c, collapse = "+"))
+        return(fit_f[['formula']])
+      } # function_restore_mu_sigam_form
+      
+      function_restore_mu_sigam_form_new <- function_restore_mu_sigam_form(brmsfit,
+                                                                           ys = ys)
+      brmsfit$formula <- function_restore_mu_sigam_form_new
+    } # if(set_model_sigma_by_mean) {
+    
+    
+
     
     ##############################################################
     ##############################################################
@@ -12164,6 +12683,7 @@ bsitar <- function(x,
                                       returnobj = TRUE,
                                       vectorize = FALSE,
                                       verbose = TRUE,
+                                      sigmafun = FALSE, # this for temp
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
@@ -12177,6 +12697,7 @@ bsitar <- function(x,
                                       returnobj = TRUE,
                                       vectorize = FALSE,
                                       verbose = TRUE,
+                                      sigmafun = FALSE, # this for temp
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'R'
     } 

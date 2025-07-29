@@ -621,37 +621,58 @@ uses the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brm
 Note that \code{sigma_formula_manual} should be considered as an
 experimental feature and therefore should be used cautiously.
 
-\strong{Basic Usage Example:}
+\emph{Basic Usage Example:}
 \code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL)))}
 
 \strong{Modeling \code{sigma} as a Function of the Mean:}
-It can also be used to model \code{sigma} as a function of the mean
-(\code{mu}), for example: \code{sigma_formula_manual = nlf(sigma ~ tau *
-  sqrt(SITARFun(age, a, b, c, s1, s2, s3))) + lf(tau ~ 1)} Here,
-\code{SITARFun()} is the function that computes \code{mu}.
-\strong{Important Considerations:}
+\code{sigma_formula_manual} can also be used to model \code{sigma} as a
+function of the mean (\code{mu}), for example: \cr
+\code{sigma_formula_manual = nlf(sigma ~ tau *
+  sqrt(SITARFun(age, a, b, c, s1, s2, s3))) + lf(tau ~ 1)} \cr
+Here, \code{SITARFun()} is the function that computes \code{mu}.
+
+\emph{Important limitations in using above approach for modelling sigma as function of mean:}
 \itemize{
-\item Using \code{SITARFun()} in this way will recompute \code{mu}.
+\item Using \code{SITARFun()} in this way will recompute \code{mu}. This is
+computationally expensive when fitting non linear model.
 \item For \code{multivariate} models, \code{SITARFun()} can only be used if all sub-models
 compute \code{mu} using the exact same \code{SITARFun()} definition for
 each outcome.
 }
 
-\strong{Experimental Approach for Direct \code{mu} Usage:}
-To overcome the limitations of recomputing \code{mu} or \code{multivariate}
-model restrictions, an experimental approach allows for direct use of
-\code{mu}. This involves setting \code{sigma_formula_manual} as:
-\code{sigma_formula_manual = "nlf(sigma ~ sigmatau * sqrt()) + lf(sigmatau
-  ~ 1)"} After this, you will need to manually edit the \code{stancode} and
-refit the model using \code{rstan}.
+\emph{Experimental Approach for Direct \code{mu} Usage:}
+To overcome the above limitations of recomputing \code{mu} or
+\code{multivariate} model restrictions, an experimental approach allows for
+direct use of \code{mu}. This involves setting \code{sigma_formula_manual}
+as:
+\code{sigma_formula_manual = "nlf(sigma ~ tau * sqrt()) + lf(tau
+  ~ 1)"}. \cr
+Note the empty \code{sqrt()} function. The \code{sqrt()} will be replace by
+\code{mu} by  manually editing the \code{stancode} and refit the model
+using \code{rstan}.
 
-When using the \code{sigmatau} parameter name in this experimental setup,
-priors specified via \code{sigma_prior_beta}, \code{sigma_cov_prior_beta},
-\code{sigma_prior_sd}, \code{sigma_cov_prior_sd}, and
-\code{sigma_cov_prior_sd_str} will be automatically applied to
-\code{sigmatau}. This prior assignment is handled internally.
+In this approach, priors specified via \code{sigma_prior_beta},
+\code{sigma_cov_prior_beta}, \code{sigma_prior_sd},
+\code{sigma_cov_prior_sd}, and \code{sigma_cov_prior_sd_str} will be
+automatically applied to linear predictors defined in the \code{lf()}. All
+steps including setting up the basic code, editing, prior assignment, and
+model fit are handled internally.
 
-\strong{Location-Scale SITAR Model Example:}
+For \code{multivariate} model, the \code{sigma_formula_manual} can be used
+set up different form and predictor variables for each outcome separately
+by using the list approach as sgown below: \cr
+\code{sigma_formula_manual = list(
+  nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+  (1 + age | 550 | gr(id, by = class))) ,
+  nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+  (1 + age | 550 | gr(id, by = class)))
+  )}. \cr
+Note that parameter name \code{tau} (which could any string such as
+\code{sigmatau}) should be same across all outcomes. The appropriate
+response assignment is done internally. Also, parameter should not contain
+dots or underscores.
+
+\emph{Location-Scale SITAR Model Example:}
 Another common use case for \code{sigma_formula_manual} is modeling
 \code{sigma} in a location-scale \code{SITAR} model, where the same
 \code{SITAR} formula can be applied to the scale parameter. An example is:
