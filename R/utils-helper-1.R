@@ -2462,7 +2462,7 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
         LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
   } else if(!is.null(threads)) {
     gsub_by <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[nn]];
-        LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
+      LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
   }
   brms_code_edited <- replace_string_part(x = brms_code_edited,
                                           start = gsub_it_start, 
@@ -2554,7 +2554,7 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
     
     if(is.null(threads)) {
       plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[n]];
-        LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
+      LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
     } else if(!is.null(threads)) {
       plus_mis <- "int Index_Rescor = Rescor_by_id[Rescor_gr_id[nn]];
       LSigma[n] = diag_pre_multiply(sigma[n], Lrescor[Index_Rescor]);"
@@ -2582,8 +2582,8 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
     }
     
     if(!normalize) {
-      gsub_it_start <- gsub("_lpdf", "_lupdf", gsub_it_start, fixed = T)
-      gsub_by       <- gsub("_lpdf", "_lupdf", gsub_by, fixed = T)
+      gsub_it_target_n <- gsub("_lpdf", "_lupdf", gsub_it_target_n, fixed = T)
+      gsub_by_target_n <- gsub("_lpdf", "_lupdf", gsub_by_target_n, fixed = T)
     }
     
     brms_code_edited <- gsub(gsub_it_target_n, gsub_by_target_n, brms_code_edited, fixed = T)

@@ -151,7 +151,8 @@ prepare_formula <- function(x,
   
   smat <- NULL;
   smat_intercept <- NULL;
-  set_prior_for_sigma_by_mean_using_sigma_formual <- NULL;
+  set_model_sigma_by_mu <- NULL;
+  set_model_sigma_by_mu_prior_using_sigma_formula <- NULL;
   
   
   
@@ -715,15 +716,42 @@ prepare_formula <- function(x,
   
   # add_sigma_by_mean
   # we might need to set sigmafixed sigmarandom <- NULL for location scale
+  # if(sigma_formula_manualsi != "NULL") {
+  #   # if(!set_model_sigma_by_mu_prior_using_sigma_formula) {
+  #   #   sigmafixed <- NULL
+  #   #   sigmarandom <- NULL
+  #   # }
+  #   # sigmafixed <- NULL
+  #   # sigmarandom <- NULL
+  #   dpar_formulasi <- NULL
+  # }
+  
+  
+  
+  # add_sigma_by_mean
+  # This below will allow setting set_model_sigma_by_mu prior using 
+  # sigma_formula and sigma_formula_gr
+  # Also, dpar_formulasi must be NULL when using sigma_formula_manualsi
+  
   if(sigma_formula_manualsi != "NULL") {
-    # if(!set_prior_for_sigma_by_mean_using_sigma_formual) {
-    #   sigmafixed <- NULL
-    #   sigmarandom <- NULL
-    # }
-    # sigmafixed <- NULL
-    # sigmarandom <- NULL
     dpar_formulasi <- NULL
-  }
+    if(set_model_sigma_by_mu) {
+      if(set_model_sigma_by_mu_prior_using_sigma_formula) {
+        sigmafixed <- sigmafixed
+        sigmarandom <- sigmarandom
+      } else {
+        sigmafixed <- NULL
+        sigmarandom <- NULL
+      } # if(set_model_sigma_by_mu_prior_using_sigma_formula) { else
+    } # if(set_model_sigma_by_mu) {
+
+    if(!set_model_sigma_by_mu) {
+      sigmafixed <- NULL
+      sigmarandom <- NULL
+    }
+  } # if(sigma_formula_manualsi != "NULL") {
+  
+  
   
   if(is.null(sigma_formulasi[[1]]) | sigma_formulasi == 'NULL') {
     display_message <-  paste("Please specify the fixed effect structure 
@@ -908,7 +936,7 @@ prepare_formula <- function(x,
   
   # add_sigma_by_mean
   # if(sigma_formula_manualsi != "NULL") {
-  #   if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+  #   if(set_model_sigma_by_mu) {
   #     sigmarandom_str_full <- replace_string_part(x = sigmarandom,
   #                                                 start = "(",
   #                                                 end = "|",
@@ -922,7 +950,7 @@ prepare_formula <- function(x,
   #       sigmarandom_str_full <- paste0("~", sigmarandom_str_full)
   #     }
   #    
-  #   } # if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+  #   } # if(set_model_sigma_by_mu) {
   # } # if(sigma_formula_manualsi != "NULL") {
   
 
@@ -938,7 +966,7 @@ prepare_formula <- function(x,
   
   # add_sigma_by_mean
   # if(sigma_formula_manualsi != "NULL") {
-  #   if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+  #   if(set_model_sigma_by_mu) {
   #     sigmarandom <- sigmarandom_str_full
   #   }
   # }
@@ -3530,7 +3558,7 @@ prepare_formula <- function(x,
   
   # add_sigma_by_mean
   # sigmaform which is actuallu lf(sigmatau ~) that was used for prior setting
-  if(set_prior_for_sigma_by_mean_using_sigma_formual) {
+  if(set_model_sigma_by_mu) {
     sigmaform_rm <- gsub_space(sigmaform) 
     sigmaform_rm <- paste0(sigmaform_rm, ",")
     setbformula <- gsub(sigmaform_rm, "", setbformula, fixed = TRUE)

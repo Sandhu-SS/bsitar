@@ -660,7 +660,7 @@ model fit are handled internally.
 
 For \code{multivariate} model, the \code{sigma_formula_manual} can be used
 set up different form and predictor variables for each outcome separately
-by using the list approach as sgown below: \cr
+by using the list approach as shown below: \cr
 \code{sigma_formula_manual = list(
   nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
   (1 + age | 550 | gr(id, by = class))) ,
