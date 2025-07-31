@@ -109,6 +109,14 @@ prepare_function_nsp_rcs <- function(x,
   QR_scale <- NULL;
   
   
+  # add_sigma_by_ls, only include main function and _d0/_d1/_d2
+  if(deparse(substitute(x)) == "sigmaxsi") {
+    called_for_ls <- TRUE
+  } else {
+    called_for_ls <- FALSE
+  }
+ 
+
   if (!is.null(internal_function_args)) {
     eout <- list2env(internal_function_args)
     for (eoutii in names(eout)) {
@@ -3432,6 +3440,8 @@ prepare_function_nsp_rcs <- function(x,
     spfncname = spfncname)
   
 
+ 
+  
   
   all_raw_str <- c(rcsfun_raw_str,
                    spl_d0_str,
@@ -3549,6 +3559,13 @@ prepare_function_nsp_rcs <- function(x,
   
   # print('include_str')
   # print(include_str)
+  
+  
+  # add_sigma_by_ls, only include main function and _d0/_d1/_d2
+  if(called_for_ls) {
+    include_str <- ""
+  }
+  
   
   # For multivariate model, include common functions only once
   if(ii == 1) {

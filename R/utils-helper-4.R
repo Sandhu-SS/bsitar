@@ -714,7 +714,7 @@ prepare_formula <- function(x,
   
   
   
-  # add_sigma_by_mean
+  # add_sigma_by_mu
   # we might need to set sigmafixed sigmarandom <- NULL for location scale
   # if(sigma_formula_manualsi != "NULL") {
   #   # if(!set_model_sigma_by_mu_prior_using_sigma_formula) {
@@ -728,7 +728,7 @@ prepare_formula <- function(x,
   
   
   
-  # add_sigma_by_mean
+  # add_sigma_by_mu
   # This below will allow setting set_model_sigma_by_mu prior using 
   # sigma_formula and sigma_formula_gr
   # Also, dpar_formulasi must be NULL when using sigma_formula_manualsi
@@ -934,7 +934,7 @@ prepare_formula <- function(x,
   
   
   
-  # add_sigma_by_mean
+  # add_sigma_by_mu
   # if(sigma_formula_manualsi != "NULL") {
   #   if(set_model_sigma_by_mu) {
   #     sigmarandom_str_full <- replace_string_part(x = sigmarandom,
@@ -964,7 +964,7 @@ prepare_formula <- function(x,
   }
   
   
-  # add_sigma_by_mean
+  # add_sigma_by_mu
   # if(sigma_formula_manualsi != "NULL") {
   #   if(set_model_sigma_by_mu) {
   #     sigmarandom <- sigmarandom_str_full
@@ -3556,7 +3556,7 @@ prepare_formula <- function(x,
   
   
   
-  # add_sigma_by_mean
+  # add_sigma_by_mu
   # sigmaform which is actuallu lf(sigmatau ~) that was used for prior setting
   if(set_model_sigma_by_mu) {
     sigmaform_rm <- gsub_space(sigmaform) 

@@ -126,7 +126,7 @@ predict_draws.bgmfit <-
     # This only when set_sigma_manual used to model a b c 
     # Not when a function such as splines::ns etc used in sigma_formula
     
-    model <- getmodel_info(model = model, dpar = dpar)
+    model <- getmodel_info(model = model, dpar = dpar, resp = resp)
     
     
     if(is.null(usesavedfuns)) {
@@ -431,12 +431,30 @@ predict_draws.bgmfit <-
     
     
     # TODO - check - Transformation applied to draw if deriv = 0, 
+    # if(!check_fun) {
+    #   if(deriv == 0) {
+    #     if(!is.null(calling.args$model$model_info$transform_draws)) {
+    #       . <- calling.args$model$model_info$transform_draws(.)
+    #     } else if(!is.null(calling.args$object$model_info$transform_draws)) {
+    #       . <- calling.args$object$model_info$transform_draws(.)
+    #     } else {
+    #       if(verbose) message("transform_draws function is NULL, check it")
+    #     }
+    #   } # if(deriv = 0) {
+    # } # if(!check_fun) {
+    
+    
+    # TODO - check - Transformation applied to draw if deriv = 0, 
     if(!check_fun) {
       if(deriv == 0) {
-        if(!is.null(calling.args$model$model_info$transform_draws)) {
-          . <- calling.args$model$model_info$transform_draws(.)
-        } else if(!is.null(calling.args$object$model_info$transform_draws)) {
-          . <- calling.args$object$model_info$transform_draws(.)
+        if(!is.null(calling.args$model$
+                    model_info$transform_draws)) {
+          . <- calling.args$model$
+            model_info$transform_draws(.)
+        } else if(!is.null(calling.args$object$
+                           model_info$transform_draws)) {
+          . <- calling.args$object$
+            model_info$transform_draws(.)
         } else {
           if(verbose) message("transform_draws function is NULL, check it")
         }
@@ -457,7 +475,18 @@ predict_draws.bgmfit <-
             calling.args_mapderivqr_args <- calling.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
-            y0 <- calling.args$model$model_info$transform_draws(y0)
+            # y0 <- calling.args$model$model_info$transform_draws(y0)
+            if(!is.null(calling.args_mapderivqr_args$model$
+                        model_info$transform_draws)) {
+              y0 <- calling.args_mapderivqr_args$model$
+                model_info$transform_draws(y0)
+            } else if(!is.null(calling.args_mapderivqr_args$object$
+                               model_info$transform_draws)) {
+              y0 <- calling.args_mapderivqr_args$object$
+                model_info$transform_draws(y0)
+            } else {
+              stop("transform_draws function is NULL, check it")
+            }
             mapderivqr_args <- list()
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]
@@ -510,7 +539,18 @@ predict_draws.bgmfit <-
             calling.args_mapderivqr_args <- full.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(predict, calling.args_mapderivqr_args)
-            y0 <- calling.args$model$model_info$transform_draws(y0)
+            # y0 <- calling.args$model$model_info$transform_draws(y0)
+            if(!is.null(calling.args_mapderivqr_args$model$
+                        model_info$transform_draws)) {
+              y0 <- calling.args_mapderivqr_args$model$
+                model_info$transform_draws(y0)
+            } else if(!is.null(calling.args_mapderivqr_args$object$
+                               model_info$transform_draws)) {
+              y0 <- calling.args_mapderivqr_args$object$
+                model_info$transform_draws(y0)
+            } else {
+              stop("transform_draws function is NULL, check it")
+            }
             mapderivqr_args <- list()
             mapderivqr_args[['y0']] <- y0
             mapderivqr_args[['model']] <- calling.args[['object']]

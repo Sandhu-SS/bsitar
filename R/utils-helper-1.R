@@ -2600,7 +2600,6 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
 
 
 
-
 #' custom_rename_pars for residual corr by group fit via cmdstanr
 #'
 #' @param x A brms objects
@@ -5100,12 +5099,22 @@ plot_equivalence_test <-  function(x,
 #'
 #' @param model An object of class \code{bgmfit} 
 #' @param dpar A logical or a character string \code{'mu'} or \code{'sigma'}
+#' @param resp A character string
 #'
 #' @return An object of class \code{bgmfit} 
 #' @keywords internal
 #' @noRd
 #'
-getmodel_info <- function(model, dpar) {
+getmodel_info <- function(model, dpar, resp) {
+  
+  if (is.null(resp)) {
+    setsigmaxvars_ <- 'setsigmaxvar'
+  } else if (!is.null(resp)) {
+    setsigmaxvars_ <- paste0('setsigmaxvar', "_", resp)
+  }
+  
+  sigma_model <- model$model_info[['sigma_model']]
+  
   
   oxx <- model$model_info[['namesexefuns']]
   
@@ -5118,13 +5127,13 @@ getmodel_info <- function(model, dpar) {
       sigma_fun_mode <- NULL
     } # if(dpar == "mu") {
     if(dpar == "sigma") {
-      if(model$model_info$setsigmaxvars) {
+      if(model$model_info[[setsigmaxvars_]]) {
         if(is.null(model$model_info[['sigma_fun_mode']])) {
           sigma_fun_mode <- "custom"
         } else {
           sigma_fun_mode <- model$model_info[['sigma_fun_mode']]
         }
-      } else if(!model$model_info$setsigmaxvars) {
+      } else if(!model$model_info[[setsigmaxvars_]]) {
         if(is.null(model$model_info[['sigma_fun_mode']])) {
           sigma_fun_mode <- "inline"
         } else {

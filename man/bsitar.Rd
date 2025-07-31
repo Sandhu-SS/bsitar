@@ -674,7 +674,7 @@ dots or underscores.
 
 \emph{Location-Scale SITAR Model Example:}
 Another common use case for \code{sigma_formula_manual} is modeling
-\code{sigma} in a location-scale \code{SITAR} model, where the same
+\code{sigma} in a location scale \code{SITAR} model, where the same
 \code{SITAR} formula can be applied to the scale parameter. An example is:
 
 \code{nlf(sigma ~ sigmaSITARFun(logage, sigmaa, sigmab, sigmac, sigmas1,

@@ -851,6 +851,16 @@ post_processing_checks <- function(model,
       }
     }
     
+    sigma_model <- model$model_info[['sigma_model']]
+    
+    # When sigma_model == 'ls', then only sigma function is defined in stan
+    if(!is.null(sigma_model)) {
+      if(sigma_model == "mu") {
+        available_d1 <- FALSE
+        available_d2 <- FALSE
+      }
+    }
+    
     out[['available_d0']] <- available_d0
     out[['available_d1']] <- available_d1
     out[['available_d2']] <- available_d2

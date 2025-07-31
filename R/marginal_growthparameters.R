@@ -601,7 +601,7 @@ marginal_growthparameters.bgmfit <- function(model,
   # This only when set_sigma_manual used to model a b c 
   # Not when a function such as splines::ns etc used in sigma_formula
   
-  model <- getmodel_info(model = model, dpar = dpar)
+  model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
   
   
