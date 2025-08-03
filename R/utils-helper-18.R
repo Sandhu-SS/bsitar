@@ -14,7 +14,6 @@
 #'   Bayesian model with \pkg{Stan}.
 #'   
 #' @keywords internal
-#' @keywords internal
 #' @noRd
 #' 
 standata_custom <- function(object, ...) {

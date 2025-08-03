@@ -2240,7 +2240,7 @@ bsitar <- function(x,
   
   mcall <- mcall_ <- mcall
   
-  # Problem with rethinking occurs during the expose_model_function
+  # Problem with rethinking occurs during the 'expose_model_function()'
   if("rethinking" %in% (.packages())){
     message("Package 'rethinking' detached and unloaded ato avoid conflict",
             " \nwith the rstan version ", utils::packageVersion('rstan'))
@@ -2516,7 +2516,7 @@ bsitar <- function(x,
   sigmadfs <- NULL;
   ixfuntransformsi <- NULL;
   iyfuntransformsi <- NULL;
-  isigmaxfuntransformsi <- NULL;
+  sigmaixfuntransformsi <- NULL;
   nsp <- NULL;
   nsk <- NULL;
   rcs <- NULL;
@@ -2598,9 +2598,6 @@ bsitar <- function(x,
         xcall_x_i_str_i <- xcall_x_str_get[i]
         if(grepl("^function\\(", xcall_x_i_str_i)) {
           xcall_x_i_str_i_get <- str2lang(xcall_x_i_str_i)
-          # xcall_x_i_str_i <- paste0(pater_add, xcall_x_i_str_i, ")")
-          # xcall_x_str_get <- xcall_x_i_str_i
-          # xcall_x_str_get  <- list()
           xcall_x_i_str_c[[i]] <- xcall_x_i_str_i_get
         } else {
           if(grepl("\\(", xcall_x_i_str_i)) {
@@ -2650,11 +2647,9 @@ bsitar <- function(x,
       assign('err.', FALSE, envir = enverr.)
       tryCatch(
         expr = {
-          # suppressWarnings 14 01 2024
           if (is.function(suppressWarnings(eval(mcall[[i]])))) {
             checks. <- deparse_0(mcall[[i]])
           } else {
-            # suppressWarnings 14 01 2024
             suppressWarnings(checks. <- eval(mcall[[i]]))
           }
         },
@@ -2733,7 +2728,6 @@ bsitar <- function(x,
   
   
   
-  
   # add_sigma_by_mu - add_sigma_by_ls
   # 'sigma_formula_manual' is used to set sigma by mu ('add_sigma_by_mu') and 
   # location scale mode ('add_sigma_by_ls'). For 'add_sigma_by_mu' no need to add
@@ -2758,11 +2752,6 @@ bsitar <- function(x,
   }
   
   sigma_formula_manual <- sigma_formula_manual_fun_str
-  
-  # print(sigma_formula_manual)
-  # stop()
-  
-  
   
   # why this setdepar0sgub? it did't let pass resp specific 
   # ..si for sigma_formula_manual
@@ -2929,31 +2918,7 @@ bsitar <- function(x,
   
   add_rcsfunmatqrinv_genquant <- QR_gq
   
-  # rm('QR_decomp_args')
-  
-  # QR_Xmat      <- NULL
-  # QR_center    <- NULL
-  # QR_complete  <- NULL
-  # QR_flip      <- NULL
-  # QR_scale     <- NULL
-  # 
-  # if (!is.null(decomp)) {
-  #   if (decomp == 'QR') {
-  #     QR_Xmat      <- 'Qc'
-  #     QR_center    <- FALSE
-  #     QR_complete  <- FALSE
-  #     QR_flip      <- TRUE
-  #     QR_scale     <- NULL
-  #   }
-  # }
-  
-  
-  
-  
-  
-  
-  
-  
+ 
   if(is.character(arguments$select_model)) {
     select_model <- arguments$select_model
   } else if(is.symbol(arguments$select_model)) {
@@ -3048,12 +3013,7 @@ bsitar <- function(x,
   
   
   # 5.06.2025 -> this was needed for CustomDoCall in update_model
- # stype <- eval(stype)
-  
-
-  
-
-  
+  # stype <- eval(stype)
   
   quote_allowed_spline_type <- function(aaax, allowed_spline_type) {
     for (ix in allowed_spline_type) {
@@ -3066,7 +3026,6 @@ bsitar <- function(x,
     }
     return(aaax)
   }
-  
   
   stype_temp_str <- deparse(substitute(stype))
   if(grepl("^list\\(", stype_temp_str)) {
@@ -3122,8 +3081,6 @@ bsitar <- function(x,
   }
     
   
-  
-
   # Only expose type and normalize for stype 
   allowed_spline_type_list_names_c <- c('type', 
                                         # 'intercept', 
@@ -3139,8 +3096,6 @@ bsitar <- function(x,
                 collapse =", ")
     )
     
-  
-  
     
   spline_type_list <- list()
   if(is.null(spline_type)) {
@@ -3452,34 +3407,6 @@ bsitar <- function(x,
   }
   
   
-  
-  
-  # print(spline_type_via_stype)
-  # print(spline_type_list[['normalize']])
-  # print(smat)
-  # print(smat_normalize)
-  # print(smat_preH)
-  # stop()
-  
-  # print(smat_sfirst)
-  # print(smat_sparse)
-  # stop()
-
-
-  # TODO work on smat_preH smat_include_stan to male them compatible
-  
-  # 'smat_preH' is not allowed because adding two #include does not
-  # work in package
-  # Hence preH is added to main .stan files 
-  # i.e., over riding smat = list(preH = 1)
-  # why ???
-  if(smat_preH == 1) {
-    # stop("Please set preH = 0")
- #   smat_preH <- 0
-   # if(verbose) message("'preH' is set to '0'")
-  }
-  
-  
 
   # 'smat_include_stan' is also not working i.e., even single #include also not
   # working in package
@@ -3516,8 +3443,6 @@ bsitar <- function(x,
       stop("For 'fast = TRUE', the stype must be 'nsk'")
     }
   }
-  
-
   
 
   # 24.08.2024
@@ -4857,8 +4782,8 @@ bsitar <- function(x,
   idvarvaluelist <- idnamelist <- funlist
 
   sigmaxoffsetvaluelist <- sigmaxoffsetnamelist <- funlist
-  sigmaxvarvaluelist <- sigmaxnamelist <- funlist
-  sigmacovnamelist <- sigmacovvaluelist <- funlist
+  sigmaxvarvaluelist    <- sigmaxnamelist <- funlist
+  sigmacovnamelist      <- sigmacovvaluelist <- funlist
 
   setsigmaxvarvaluelist <- setsigmaxvarnamelist <- funlist
 
@@ -4908,11 +4833,11 @@ bsitar <- function(x,
   iyfuntransformvaluelist <- iyfuntransformnamelist <- funlist
 
   sigmaxfuntransformvaluelist <- sigmaxfuntransformnamelist <- funlist
-  isigmaxfuntransformvaluelist <- isigmaxfuntransformnamelist <- funlist
+  sigmaixfuntransformvaluelist <- sigmaixfuntransformnamelist <- funlist
   
   
   sigmaxfuntransform2valuelist <- sigmaxfuntransform2namelist <- funlist
-  isigmaxfuntransform2valuelist <- isigmaxfuntransform2namelist <- funlist
+  sigmaixfuntransform2valuelist <- sigmaixfuntransform2namelist <- funlist
 
   ###########################################################
   ###########################################################
@@ -5398,7 +5323,7 @@ bsitar <- function(x,
     
     # add_sigma_by_ls - 
     # Extract sigmaspfncname
-    expose_sigmafun <- FALSE
+    expose_sigmafun       <- FALSE
     if(set_model_sigma_by_ls) {
       expose_sigmafun <- TRUE
       sigmaspfncname_temp <- gsub("~", "", sigma_formula_manualsi_str_full, 
@@ -6056,19 +5981,10 @@ bsitar <- function(x,
       setsigmaxvarsi <- TRUE
     } 
     
+   # print(sigmaxsi)
+   # stop()
+    
    
-    
-    
-    # 20.03.2025
-    # TODO
-    # the stringi can be used to test if a function is used
-    # stringi::stri_extract_all_words("~1+splines2_nsk(logage,df=3)")
-    
-    
-    
-    
-    
-    
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA")) {
       datai <- data %>%
@@ -6377,19 +6293,19 @@ bsitar <- function(x,
     
    
     
-    # if (!is.null(sigmaxoffset[[1]][1]) & sigmaxoffset != "NULL") {
-    #   sigmaxoffset <- sigmaxoffset
-    # } else {
-    #   sigmaxoffset <- xoffset
-    #   if(verbose) message("xoffset for sigma is set same as for mu")
-    # }
-    
     
     if (!is.null(sigmaxoffsetsi[[1]][1]) & sigmaxoffsetsi != "NULL") {
       sigmaxoffsetsi <- sigmaxoffsetsi
     } else {
       sigmaxoffsetsi <- xoffsetsi
       if(verbose) message("xoffset for sigma is set same as for mu")
+    }
+    
+    
+    
+    # add_sigma_by_ls - sigmaxoffsetsi only relevant for location scale model
+    if(!set_model_sigma_by_ls) {
+      sigmaxoffsetsi <- 0
     }
     
     
@@ -6508,7 +6424,7 @@ bsitar <- function(x,
            envir = enverr.)
     
     
-    assign("isigmaxfuntransformsi",  
+    assign("sigmaixfuntransformsi",  
            inverse_transform(base::body(sigmaxfuntransformsi)), 
            envir = enverr.)
     
@@ -6526,7 +6442,7 @@ bsitar <- function(x,
     prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
     prepare_transformations_args[['ixfun']]        <- FALSE
     prepare_transformations_args[['iyfun']]        <- FALSE
-    prepare_transformations_args[['isigmaxfun']]   <- FALSE
+    prepare_transformations_args[['sigmaixfun']]   <- FALSE
     prepare_transformations_args[['xoffset']]      <- NULL
     prepare_transformations_args[['sigmaxoffset']] <- NULL
     prepare_transformations_args[['model']]        <- NULL
@@ -6679,7 +6595,7 @@ bsitar <- function(x,
     addtobodyoffun          <- paste0("-", sigmaxoffset)
     bodyoffun2              <- paste0(bodyoffun, addtobodyoffun)
     body(sigmaxfuntransform2si)   <- str2lang(bodyoffun2)
-    isigmaxfuntransform2si  <- 
+    sigmaixfuntransform2si  <- 
       inverse_transform(base::body(sigmaxfuntransform2si))
     
     
@@ -6697,7 +6613,7 @@ bsitar <- function(x,
     prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
     prepare_transformations_args[['ixfun']]        <- TRUE
     prepare_transformations_args[['iyfun']]        <- FALSE
-    prepare_transformations_args[['isigmaxfun']]   <- TRUE
+    prepare_transformations_args[['sigmaixfun']]   <- TRUE
     prepare_transformations_args[['xoffset']]      <- NULL
     prepare_transformations_args[['sigmaxoffset']] <- NULL
     prepare_transformations_args[['transform']]    <- ""
@@ -6726,7 +6642,7 @@ bsitar <- function(x,
      prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
      prepare_transformations_args[['ixfun']]        <- FALSE
      prepare_transformations_args[['iyfun']]        <- FALSE
-     prepare_transformations_args[['isigmaxfun']]   <- FALSE
+     prepare_transformations_args[['sigmaixfun']]   <- FALSE
      prepare_transformations_args[['xoffset']]      <- xoffset
      prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffset
      prepare_transformations_args[['transform']]    <- ""
@@ -6745,7 +6661,7 @@ bsitar <- function(x,
       prepare_transformations_args[['data']]         <- 
         check_for_validy_of_prepare_transformations_3
       prepare_transformations_args[['ixfun']]        <- TRUE
-      prepare_transformations_args[['isigmaxfun']]   <- TRUE
+      prepare_transformations_args[['sigmaixfun']]   <- TRUE
       prepare_transformations_args[['transform']]    <- ""
       prepare_transformations_args[['itransform']]   <- ""
       
@@ -6756,7 +6672,7 @@ bsitar <- function(x,
       prepare_transformations_args[['data']]         <- 
         check_for_validy_of_prepare_transformations_4
       prepare_transformations_args[['ixfun']]        <- FALSE
-      prepare_transformations_args[['isigmaxfun']]   <- FALSE
+      prepare_transformations_args[['sigmaixfun']]   <- FALSE
       prepare_transformations_args[['transform']]    <- ""
       prepare_transformations_args[['itransform']]   <- ""
       
@@ -7531,13 +7447,16 @@ bsitar <- function(x,
     multivariate$rescor <- multivariate_rescor  # why ?
     univariate_by$by    <- univariate_by_by
     covariates_         <- covariates_
-    covariates_sigma_   <- covariates_sigma_
+    sigmacovariates_    <- sigmacovariates_
     set_higher_levels   <- set_higher_levels
     
     sigma_set_higher_levels <- sigma_set_higher_levels
     
     
     sigma_group_arg$groupvar <- sigma_arg_groupvar
+    
+    # print(sigmacovariates_)
+    # stop()
     
     
     lm_val_list <-
@@ -8649,7 +8568,7 @@ bsitar <- function(x,
     yvar_name                    <- "yvar"
     idvar_name                   <- "idvar"
     cov_name                     <- "cov"
-    cov_name_sigma               <- "cov_sigma"
+    sigmacov_name                <- "sigmacov"
     xfun_name                    <- "xfun"
     yfun_name                    <- "yfun"
     sigmaxfun_name               <- "sigmaxfun"
@@ -8660,9 +8579,9 @@ bsitar <- function(x,
     yfuntransform_name           <- "yfuntransform"
     iyfuntransform_name          <- "iyfuntransform"
     sigmaxfuntransform_name      <- "sigmaxfuntransform"
-    isigmaxfuntransform_name     <- "isigmaxfuntransform"
+    sigmaixfuntransform_name     <- "sigmaixfuntransform"
     sigmaxfuntransform2_name     <- "sigmaxfuntransform2"
-    isigmaxfuntransform2_name    <- "isigmaxfuntransform2"
+    sigmaixfuntransform2_name    <- "sigmaixfuntransform2"
     xoffset_name                 <- "xoffset"
     knots_name                   <- "knots"
     nknots_name                  <- "nknots"
@@ -8686,10 +8605,10 @@ bsitar <- function(x,
     if(ii == 1) {
       xvar_names                <- paste0(xvar_name,                "s")
       yvar_names                <- paste0(yvar_name,                "s")
-      idvar_names               <- paste0(idvar_name,                "s")
+      idvar_names               <- paste0(idvar_name,               "s")
       sigmaxvar_names           <- paste0(sigmaxvar_name,           "s")
       cov_names                 <- paste0(cov_name,                 "s")
-      cov_name_sigmas           <- paste0(cov_name_sigma,           "s")
+      sigmacov_names            <- paste0(sigmacov_name,            "s")
       xfun_names                <- paste0(xfun_name,                "s")
       yfun_names                <- paste0(yfun_name,                "s")
       sigmaxfun_names           <- paste0(sigmaxfun_name,           "s")
@@ -8700,21 +8619,21 @@ bsitar <- function(x,
       yfuntransform_names       <- paste0(yfuntransform_name,       "s")
       iyfuntransform_names      <- paste0(iyfuntransform_name,      "s")
       sigmaxfuntransform_names  <- paste0(sigmaxfuntransform_name,  "s")
-      isigmaxfuntransform_names <- paste0(isigmaxfuntransform_name, "s")
+      sigmaixfuntransform_names <- paste0(sigmaixfuntransform_name, "s")
       sigmaxfuntransform2_names <- paste0(sigmaxfuntransform2_name, "s")
-      isigmaxfuntransform2_names<- paste0(isigmaxfuntransform2_name,"s")
+      sigmaixfuntransform2_names<- paste0(sigmaixfuntransform2_name,"s")
       xoffset_names             <- paste0(xoffset_name,             "s")
       sigmaxoffset_names        <- paste0(sigmaxoffset_name,        "s")
       setsigmaxvar_names        <- paste0(setsigmaxvar_name,        "s")
     }
     
-    idvar_names
+    # idvar_names
     if (nys > 1) {
       xvar_name                 <- paste0(xvar_name,                 "_", ysi)
       yvar_name                 <- paste0(yvar_name,                 "_", ysi)
-      idvar_name                <- paste0(idvar_name,                 "_", ysi)
+      idvar_name                <- paste0(idvar_name,                "_", ysi)
       cov_name                  <- paste0(cov_name,                  "_", ysi)
-      cov_name_sigma            <- paste0(cov_name_sigma,            "_", ysi)
+      sigmacov_name             <- paste0(sigmacov_name,             "_", ysi)
       xfun_name                 <- paste0(xfun_name,                 "_", ysi)
       yfun_name                 <- paste0(yfun_name,                 "_", ysi)
       sigmaxfun_name            <- paste0(sigmaxfun_name,            "_", ysi)
@@ -8725,9 +8644,9 @@ bsitar <- function(x,
       yfuntransform_name        <- paste0(yfuntransform_name,        "_", ysi)
       iyfuntransform_name       <- paste0(iyfuntransform_name,       "_", ysi)
       sigmaxfuntransform_name   <- paste0(sigmaxfuntransform_name,   "_", ysi)
-      isigmaxfuntransform_name  <- paste0(isigmaxfuntransform_name,  "_", ysi)
+      sigmaixfuntransform_name  <- paste0(sigmaixfuntransform_name,  "_", ysi)
       sigmaxfuntransform2_name  <- paste0(sigmaxfuntransform2_name,  "_", ysi)
-      isigmaxfuntransform2_name <- paste0(isigmaxfuntransform2_name, "_", ysi)
+      sigmaixfuntransform2_name <- paste0(sigmaixfuntransform2_name, "_", ysi)
       xoffset_name              <- paste0(xoffset_name,              "_", ysi)
       knots_name                <- paste0(knots_name,                "_", ysi)
       nknots_name               <- paste0(nknots_name,               "_", ysi)
@@ -8779,10 +8698,10 @@ bsitar <- function(x,
     sigmaxfuntransformnamelist[[ii]]       <- sigmaxfuntransform_name
     sigmaxfuntransform2valuelist[[ii]]     <- sigmaxfuntransform2si
     sigmaxfuntransform2namelist[[ii]]      <- sigmaxfuntransform2_name
-    isigmaxfuntransformvaluelist[[ii]]     <- isigmaxfuntransformsi
-    isigmaxfuntransformnamelist[[ii]]      <- isigmaxfuntransform_name
-    isigmaxfuntransform2valuelist[[ii]]    <- isigmaxfuntransform2si
-    isigmaxfuntransform2namelist[[ii]]     <- isigmaxfuntransform2_name
+    sigmaixfuntransformvaluelist[[ii]]     <- sigmaixfuntransformsi
+    sigmaixfuntransformnamelist[[ii]]      <- sigmaixfuntransform_name
+    sigmaixfuntransform2valuelist[[ii]]    <- sigmaixfuntransform2si
+    sigmaixfuntransform2namelist[[ii]]     <- sigmaixfuntransform2_name
     include_fun_nameslist_rnamelist[[ii]]  <- includefunnameslistname
     include_fun_nameslist_rvaluelist[[ii]] <- unlist(include_fun_nameslist)
     funlist_rnamelist[[ii]]                <- funlist_r_name
@@ -8801,8 +8720,8 @@ bsitar <- function(x,
     hierarchicalvarvaluelist[[ii]]         <- hierarchical_gr_names
     sigma_hierarchicalvarnamelist[[ii]]    <- sigma_hierarchical_name
     sigma_hierarchicalvarvaluelist[[ii]]   <- sigma_hierarchical_gr_names
-    sigmacovnamelist[[ii]]                 <- cov_name_sigma
-    sigmacovvaluelist[[ii]]                <- covariates_sigma_
+    sigmacovnamelist[[ii]]                 <- sigmacov_name
+    sigmacovvaluelist[[ii]]                <- sigmacovariates_
     d_adjustednamelist[[ii]]               <- d_adjusted_name
     d_adjustedvaluelist[[ii]]              <- ept(d_adjustedsi)
     sigmad_adjustednamelist[[ii]]          <- sigmad_adjusted_name
@@ -8899,7 +8818,7 @@ bsitar <- function(x,
     prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformsi
     prepare_transformations_args[['ixfun']]        <- TRUE
     prepare_transformations_args[['iyfun']]        <- TRUE
-    prepare_transformations_args[['isigmaxfun']]   <- TRUE
+    prepare_transformations_args[['sigmaixfun']]   <- TRUE
     prepare_transformations_args[['xoffset']]      <- xoffset
     prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffset
     prepare_transformations_args[['transform']]    <- ""
@@ -9000,15 +8919,16 @@ bsitar <- function(x,
   setsigmaxvar_names_val        <- setsigmaxvarvaluelist %>% unlist()
   
   sigmaxvar_names_val           <- sigmaxvarvaluelist %>% unlist()
-  cov_name_sigmas_val           <- sigmacovvaluelist %>% unlist()
+  sigmacov_names_val            <- sigmacovvaluelist %>% unlist()
   sigmaxfun_names_val           <- sigmaxfunvaluelist %>% unlist()
   sigmaxfuntransform_names_val  <- sigmaxfuntransformvaluelist %>% unlist()
   sigmaxfuntransform2_names_val <- sigmaxfuntransform2valuelist %>% unlist()
-  isigmaxfuntransform_names_val <- isigmaxfuntransformvaluelist %>% unlist()
-  isigmaxfuntransform2_names_val<- isigmaxfuntransform2valuelist %>% unlist()
+  sigmaixfuntransform_names_val <- sigmaixfuntransformvaluelist %>% unlist()
+  sigmaixfuntransform2_names_val<- sigmaixfuntransform2valuelist %>% unlist()
   sigmaxoffset_names_val        <- sigmaxoffsetvaluelist %>% unlist()
   
-
+  
+  
   #######################################################################
   #######################################################################
   
@@ -9024,7 +8944,7 @@ bsitar <- function(x,
   prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformvaluelist %>% unlist()
   prepare_transformations_args[['ixfun']]        <- FALSE
   prepare_transformations_args[['iyfun']]        <- FALSE
-  prepare_transformations_args[['isigmaxfun']]   <- FALSE
+  prepare_transformations_args[['sigmaixfun']]   <- FALSE
   prepare_transformations_args[['xoffset']]      <- xoffsetvaluelist
   prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffsetvaluelist
   prepare_transformations_args[['transform']]    <- ""
@@ -9036,13 +8956,15 @@ bsitar <- function(x,
   ###################################################################
   ###################################################################
   sigmaxvar_names_val2            <- c()
-  cov_name_sigmas_val2            <- c()
+  sigmacov_names_val2             <- c()
   sigmaxfun_names_val2            <- c()
   sigmaxfuntransform_names_val2   <- c()
-  isigmaxfuntransform_names_val2  <- c()
+  sigmaixfuntransform_names_val2  <- c()
   sigmaxfuntransform2_names_val2  <- c()
-  isigmaxfuntransform2_names_val2 <- c()
+  sigmaixfuntransform2_names_val2 <- c()
   sigmaxoffset_names_val2         <- c()
+  
+ 
   
   for (j in 1:length(setsigmaxvar_names_val)) {
     if(!setsigmaxvar_names_val[j]) {
@@ -9055,31 +8977,41 @@ bsitar <- function(x,
     if(setsigmaxvar_names_val[j]) {
       sigmaxvar_names_val2 <- c(sigmaxvar_names_val2, 
                                 sigmaxvar_names_val[j])
-      cov_name_sigmas_val2 <- c(cov_name_sigmas_val2, 
-                                cov_name_sigmas_val[j])
+      sigmacov_names_val2 <- c(sigmacov_names_val2, 
+                               sigmacov_names_val[j])
       sigmaxfun_names_val2 <- c(sigmaxfun_names_val2, 
                                 sigmaxfun_names_val[j])
       sigmaxfuntransform_names_val2 <- c(sigmaxfuntransform_names_val2, 
                                          sigmaxfuntransform_names_val[j])
-      isigmaxfuntransform_names_val2 <- c(isigmaxfuntransform_names_val2, 
-                                          isigmaxfuntransform_names_val[j])
+      sigmaixfuntransform_names_val2 <- c(sigmaixfuntransform_names_val2, 
+                                          sigmaixfuntransform_names_val[j])
       sigmaxfuntransform2_names_val2 <- c(sigmaxfuntransform2_names_val2, 
                                          sigmaxfuntransform2_names_val[j])
-      isigmaxfuntransform2_names_val2 <- c(isigmaxfuntransform2_names_val2, 
-                                          isigmaxfuntransform2_names_val[j])
+      sigmaixfuntransform2_names_val2 <- c(sigmaixfuntransform2_names_val2, 
+                                           sigmaixfuntransform2_names_val[j])
       sigmaxoffset_names_val2 <- c(sigmaxoffset_names_val2, 
                                    sigmaxoffset_names_val[j])
     }
   }
   
-  sigmaxvar_names_val           <- sigmaxvar_names_val2
-  cov_name_sigmas_val           <- cov_name_sigmas_val2
-  sigmaxfun_names_val           <- sigmaxfun_names_val2
-  sigmaxfuntransform_names_val  <- sigmaxfuntransform_names_val2
-  isigmaxfuntransform_names_val <- isigmaxfuntransform_names_val2
-  sigmaxfuntransform2_names_val <- sigmaxfuntransform2_names_val2
-  isigmaxfuntransform2_names_val<- isigmaxfuntransform2_names_val2
-  sigmaxoffset_names_val        <- sigmaxoffset_names_val2
+  # 02.08.2025
+  # why to shutt off sigmacov_names_val etc ?
+  # print(setsigmaxvar_names_val)
+  # print(sigmacov_names_val)
+  # stop()
+  
+  
+  # 02.08.2025 - Be careful, commented out 
+  # sigmaxvar_names_val           <- sigmaxvar_names_val2
+  # sigmacov_names_val            <- sigmacov_names_val2
+  # sigmaxfun_names_val           <- sigmaxfun_names_val2
+  # sigmaxfuntransform_names_val  <- sigmaxfuntransform_names_val2
+  # sigmaixfuntransform_names_val <- sigmaixfuntransform_names_val2
+  # sigmaxfuntransform2_names_val <- sigmaxfuntransform2_names_val2
+  # sigmaixfuntransform2_names_val<- sigmaixfuntransform2_names_val2
+  # sigmaxoffset_names_val        <- sigmaxoffset_names_val2
+  
+  
   ###################################################################
   ###################################################################
 
@@ -9101,10 +9033,10 @@ bsitar <- function(x,
   #   }
   #   
   #   sigmaxvar_names_val           <- NULL
-  #   cov_name_sigmas_val           <- NULL
+  #   sigmacov_names_val            <- NULL
   #   sigmaxfun_names_val           <- NULL
   #   sigmaxfuntransform_names_val  <- NULL
-  #   isigmaxfuntransform_names_val <- NULL
+  #   sigmaixfuntransform_names_val <- NULL
   #   sigmaxoffset_names_val        <- NULL
   #   
   # } # if(!setsigmaxvar) {
@@ -10896,7 +10828,7 @@ bsitar <- function(x,
     prepare_transformations_args[['sigmaxfun']]    <- sigmaxfuntransformvaluelist
     prepare_transformations_args[['ixfun']]        <- FALSE
     prepare_transformations_args[['iyfun']]        <- FALSE
-    prepare_transformations_args[['isigmaxfun']]   <- FALSE
+    prepare_transformations_args[['sigmaixfun']]   <- FALSE
     prepare_transformations_args[['xoffset']]      <- xoffsetvaluelist
     prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffsetvaluelist
     prepare_transformations_args[['transform']]    <- ""
@@ -10913,7 +10845,7 @@ bsitar <- function(x,
       prepare_transformations_args[['data']]         <- data_custom_data
       prepare_transformations_args[['yfun']]         <- NULL
       prepare_transformations_args[['ixfun']]        <- TRUE
-      prepare_transformations_args[['isigmaxfun']]   <- TRUE
+      prepare_transformations_args[['sigmaixfun']]   <- TRUE
       prepare_transformations_args[['transform']]    <- ""
       prepare_transformations_args[['itransform']]   <- ""
       
@@ -10923,7 +10855,7 @@ bsitar <- function(x,
       prepare_transformations_args[['data']]         <- 
         check_for_validy_of_prepare_transformations_4_custom
       prepare_transformations_args[['ixfun']]        <- FALSE
-      prepare_transformations_args[['isigmaxfun']]   <- FALSE
+      prepare_transformations_args[['sigmaixfun']]   <- FALSE
       prepare_transformations_args[['transform']]    <- ""
       prepare_transformations_args[['itransform']]   <- ""
       
@@ -12354,9 +12286,9 @@ bsitar <- function(x,
     #     model_info[[sigmaxfuntransformnamelist[[i]]]] <- 
     #       sigmaxfuntransformvaluelist[[i]]
     #   }
-    #   for (i in 1:length(isigmaxfuntransformnamelist)) {
-    #     model_info[[isigmaxfuntransformnamelist[[i]]]] <- 
-    #       isigmaxfuntransformvaluelist[[i]]
+    #   for (i in 1:length(sigmaixfuntransformnamelist)) {
+    #     model_info[[sigmaixfuntransformnamelist[[i]]]] <- 
+    #       sigmaixfuntransformvaluelist[[i]]
     #   }
     #   
     #   
@@ -12374,13 +12306,36 @@ bsitar <- function(x,
     
     
     
-    for (i in 1:length(setsigmaxvarnamelist)) {
-      model_info[[setsigmaxvarnamelist[[i]]]] <- 
-        setsigmaxvarvaluelist[[i]]
+    
+    
+    # 02.08.2025 
+    # The below double loop 'for (j .. if(any' is for _ls mode
+    # The info relevant for other sigma model are now taken out of this loop
+    
+    # for (i in 1:length(setsigmaxvarnamelist)) {
+    #   model_info[[setsigmaxvarnamelist[[i]]]] <- 
+    #     setsigmaxvarvaluelist[[i]]
+    # }
+    # for (i in 1:length(sigmacovnamelist)) {
+    #   model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
+    # }
+    
+    if(!exists('sigmaspfncname_common')) sigmaspfncname_common <- NULL
+    if(!exists('sigmaselect_model')) sigmaselect_model <- NULL
+    if(!exists('sigmadecomp')) sigmadecomp <- NULL
+    # if(!exists('sigmaspfncname_common')) sigmaspfncname_common <- NULL
+    
+    # print(sigmafunlist_rnamelist)
+    # print(sigmafunlist_rvaluelist)
+
+    if(length(sigmafunlist_rvaluelist) == 0) {
+      sigmafunlist_rvaluelist <- as.list(rep("", nys))
     }
     
-    for (j in 1:length(setsigmaxvar_names_val)) {
-      if(any(setsigmaxvar_names_val[j])) {
+    
+   # sigmafunlist_rvaluelist sigmafunlist_rvaluelist
+    # for (j in 1:length(setsigmaxvar_names_val)) {
+    #   if(any(setsigmaxvar_names_val[j])) {
         
         model_info[['sigmaStanFun_name']] <- sigmaspfncname_common 
         model_info[['sigmaxs']] <- sigmaxs
@@ -12389,8 +12344,8 @@ bsitar <- function(x,
         model_info[['sigmaxfuns_user']] <- sigmaxfuns_user
         model_info[['sigmaselect_model']] <- sigmaselect_model
         model_info[['sigmadecomp']] <- sigmadecomp
-        
         model_info[['sigmad_adjusted']] <- sigmad_adjusted
+        
         for (i in 1:length(sigmad_adjustednamelist)) {
           model_info[[sigmad_adjustednamelist[[i]]]] <- 
             sigmad_adjustedvaluelist[[i]]
@@ -12407,7 +12362,6 @@ bsitar <- function(x,
           model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
         }
         
-        
         for (i in 1:length(sigmaxfuntransformnamelist)) {
           model_info[[sigmaxfuntransformnamelist[[i]]]] <- 
             sigmaxfuntransformvaluelist[[i]]
@@ -12418,14 +12372,14 @@ bsitar <- function(x,
             sigmaxfuntransform2valuelist[[i]]
         }
         
-        for (i in 1:length(isigmaxfuntransformnamelist)) {
-          model_info[[isigmaxfuntransformnamelist[[i]]]] <- 
-            isigmaxfuntransformvaluelist[[i]]
+        for (i in 1:length(sigmaixfuntransformnamelist)) {
+          model_info[[sigmaixfuntransformnamelist[[i]]]] <- 
+            sigmaixfuntransformvaluelist[[i]]
         }
         
-        for (i in 1:length(isigmaxfuntransform2namelist)) {
-          model_info[[isigmaxfuntransform2namelist[[i]]]] <- 
-            isigmaxfuntransform2valuelist[[i]]
+        for (i in 1:length(sigmaixfuntransform2namelist)) {
+          model_info[[sigmaixfuntransform2namelist[[i]]]] <- 
+            sigmaixfuntransform2valuelist[[i]]
         }
         
         
@@ -12434,13 +12388,15 @@ bsitar <- function(x,
             sigmaxoffsetvaluelist[[i]]
         }
         
-        # for (i in 1:length(setsigmaxvarnamelist)) {
-        #   model_info[[setsigmaxvarnamelist[[i]]]] <- 
-        #     setsigmaxvarvaluelist[[i]]
-        # }
+        for (i in 1:length(setsigmaxvarnamelist)) {
+          model_info[[setsigmaxvarnamelist[[i]]]] <-
+            setsigmaxvarvaluelist[[i]]
+        }
         
-      } # if(any(setsigmaxvar_names_val[j])) {
-    } # for (j in 1:length(setsigmaxvar_names_val)) {
+    #   } # if(any(setsigmaxvar_names_val[j])) {
+    # } # for (j in 1:length(setsigmaxvar_names_val)) {
+    
+    
    
     ##############################################################
     ##############################################################
@@ -12450,7 +12406,7 @@ bsitar <- function(x,
     model_info[[idvar_names]]               <- idvar_names_val
     model_info[[sigmaxvar_names]]           <- sigmaxvar_names_val
     model_info[[cov_names]]                 <- cov_names_val
-    model_info[[cov_name_sigmas]]           <- cov_name_sigmas_val
+    model_info[[sigmacov_names]]            <- sigmacov_names_val
     model_info[[xfun_names]]                <- xfun_names_val
     model_info[[yfun_names]]                <- yfun_names_val
     model_info[[sigmaxfun_names]]           <- sigmaxfun_names_val
@@ -12465,11 +12421,10 @@ bsitar <- function(x,
     
     model_info[[sigmaxfuntransform_names]]  <- sigmaxfuntransform_names_val
     model_info[[sigmaxfuntransform2_names]] <- sigmaxfuntransform2_names_val
-    model_info[[isigmaxfuntransform_names]] <- isigmaxfuntransform_names_val
-    model_info[[isigmaxfuntransform2_names]]<- isigmaxfuntransform2_names_val
+    model_info[[sigmaixfuntransform_names]] <- sigmaixfuntransform_names_val
+    model_info[[sigmaixfuntransform2_names]]<- sigmaixfuntransform2_names_val
     model_info[[xoffset_names]]             <- xoffset_names_val
     model_info[[sigmaxoffset_names]]        <- sigmaxoffset_names_val
-    
     
     model_info[[setsigmaxvar_names]]        <- setsigmaxvar_names_val
     model_info[['genquant_xyadj']]          <- genquant_xyadj

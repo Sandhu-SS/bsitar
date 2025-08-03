@@ -6,6 +6,8 @@
 #'   individual growth parameters by mapping population average estimate of age
 #'   of interest (such as age at peak growth velocity or age at take off) on to
 #'   the individual velocity curves defined by individual level random effects.
+#'   Note that option \code{'dpar'} can not be used along with \code{'nlpar'} in 
+#'   [brms::posterior_linpred()].
 #' 
 #' @details Since SITAR is a shape-invariant model, each individual curve has a  
 #' peak velocity point that can be mapped by knowing the population average age 
@@ -322,6 +324,18 @@ modelbased_growthparameters.bgmfit <-
       
       model <- getmodel_info(model = model, dpar = dpar, resp = resp)
       
+      # 02.08.2025
+      add_prefix_to_fun <- ""
+      if(!is.null(dpar)) {
+        if(dpar == "mu") {
+          add_prefix_to_fun <- ""
+        } else if(dpar == "sigma") {
+          add_prefix_to_fun <- "sigma"
+        }
+      }
+      
+      
+      
       
       
       if(is.null(usesavedfuns)) {
@@ -454,11 +468,14 @@ modelbased_growthparameters.bgmfit <-
       
       # for x.adh
       funx_ <- paste0('xfuntransform2', resp_rev_)
+      # 02.08.2025
+      funx_ <- paste0(add_prefix_to_fun, funx_)
       funx_ <- model$model_info[[funx_]]
       
       ########################################################
       # prepare_data2
       ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+      ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
       ifunx_ <- model$model_info[[ifunx_]]
       ########################################################
       

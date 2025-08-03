@@ -152,7 +152,7 @@ prepare_data2 <- function(data = NULL,
     # }
   } # if... else if(!is.null(model)) {
   
-  # Note that from within bsitar() sigmaxvar alwayes created and later dropped
+  # Note that from within bsitar() sigmaxvar always created and later dropped
   if(is.null(model)) {
     if(is.null(nys)) {
       setsigmaxvars <- rep(TRUE, length(xvar))
@@ -244,6 +244,7 @@ prepare_data2 <- function(data = NULL,
   ##################################################################
   ##################################################################
   # Here not working of outcome specific but for any, check later
+  
   for (j in 1:length(setsigmaxvars)) {
     if(any(setsigmaxvars[j])) {
       

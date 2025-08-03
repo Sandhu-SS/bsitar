@@ -312,6 +312,10 @@ plot_curves.bgmfit <- function(model,
   model$model_info[['transform_draws']] <- transform_draws
     
   
+  # 02.08.2025 - this for post_processing_checks
+  model$model_info[['model_deriv']] <- model_deriv
+  model$model_info[['dpar']]        <- dpar
+  
   
   # 20.03.2025
   # Depending on dpar 'mu' or 'sigma', subset model_info

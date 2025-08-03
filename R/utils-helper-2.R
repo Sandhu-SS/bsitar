@@ -695,54 +695,14 @@ post_processing_checks <- function(model,
     stop("The class of model object should be 'bgmfit' ")
   }
   
-  
-  
-
   excall_ <- c("plot_ppc", "loo_validation")
-  
-  # 6.03.2025
-  # check_it <- strsplit(deparse((xcall[1])), "\\.")[[1]][1] 
-  # check_it <- gsub("\"",  "", check_it)
-  
+
   xcall_check_it <- paste(deparse(substitute(xcall)), collapse = "")
   xcall_check_it <- gsub_space(xcall_check_it)
   check_it       <- sub(" *\\(.*", "", xcall_check_it)
-  
-
-  # `%partin%` <- function (pattern, list) {
-  #   vapply(pattern, function (p) any(grepl(p, list)), 
-  #          logical(1L), USE.NAMES = FALSE)
-  # }
-  
+ 
   check_it_sss <- strsplit(check_it, "\\.")[[1]][1]
-  
-  # if (check_it_sss %in% excall_) {
-  #   if(grepl("deriv=", xcall_check_it)) {
-  #     stop("option deriv is not allowed for ", check_it_sss )
-  #   }
-  #   if(grepl("model_deriv", xcall_check_it)) {
-  #     stop("option model_deriv is not allowed for ", check_it_sss )
-  #   }
-  # }
-  
-
-  # if (check_it_sss %in% excall_) {
-  #   if(is.null(as.list(xcall)[['deriv']])) deriv <- ''
-  #   if (!is.null(as.list(xcall)[['deriv']])) {
-  #     deriv <- ''
-  #     if(verbose) {
-  #       message(
-  #         "\nargument 'deriv' is not allowed for the ",
-  #         " post-processing function",  " '",
-  #         check_it, "'",
-  #         "\n ",
-  #         "Therefore, it is set to missing i.e., deriv = ''"
-  #       )
-  #     }
-  #   } # if(!is.null(chcallls$idata_method)) {
-  # }
-  
-  
+ 
   if (model$model_info$nys == 1 & !is.null(resp)) {
     stop(
       "You have fit a univariate model",
@@ -786,9 +746,6 @@ post_processing_checks <- function(model,
     resp_ <- paste0(resp, "_")
   }
   
- 
-  
-  
   # assign expose default funs 
   if(model$model_info[['expose_method']] == 'R') {
     assign(paste0(resp_, 
@@ -797,11 +754,7 @@ post_processing_checks <- function(model,
            model$model_info$exefuns[[paste0(resp_, 
                                             model$model_info[['namesexefuns']], 
                                             '0')]], envir = envir)
-    
-    # assign(paste0(resp_, 'getX'), 
-    #        model$model_info$exefuns[[paste0(resp_, 'getX')]], 
-    #        envir = envir)
-    
+
     if(model$model_info[['select_model']] == 'sitar' |
        model$model_info[['select_model']] == 'rcs') {
       assign(paste0(resp_, 'getKnots'), 
@@ -860,6 +813,24 @@ post_processing_checks <- function(model,
         available_d2 <- FALSE
       }
     }
+    
+    # Force available_d1 = FALSE when model_deriv = FALSE
+    if(!is.null(model$model_info[['model_deriv']])) {
+      if(!model$model_info[['model_deriv']]) {
+        available_d1 <- FALSE
+        available_d2 <- FALSE
+      }
+    }
+    
+    
+    # if(model$model_info[['dpar']] == 'sigma') {
+    #   for (i in 1:length(out)) {
+    #     out[[i]] <- ""
+    #   }
+    # }
+    
+    # print(out)
+    # stop()
     
     out[['available_d0']] <- available_d0
     out[['available_d1']] <- available_d1

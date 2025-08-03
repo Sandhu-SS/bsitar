@@ -264,6 +264,15 @@ marginal_comparisons.bgmfit <- function(model,
   
   model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
+  # 02.08.2025
+  add_prefix_to_fun <- ""
+  if(!is.null(dpar)) {
+    if(dpar == "mu") {
+      add_prefix_to_fun <- ""
+    } else if(dpar == "sigma") {
+      add_prefix_to_fun <- "sigma"
+    }
+  }
   
   
   if(is.null(usesavedfuns)) {
@@ -317,6 +326,8 @@ marginal_comparisons.bgmfit <- function(model,
   ########################################################
   # prepare_data2
   ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+  # 02.08.2025
+  ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
   ifunx_ <- model$model_info[[ifunx_]]
   ########################################################
   

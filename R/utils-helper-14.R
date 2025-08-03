@@ -101,8 +101,11 @@ get.newdata <- function(model,
   yfun  <- model$model_info[[yfun_]]
   
   cov_       <- paste0('cov', resp_rev_)
-  cov_sigma_ <- paste0('cov_sigma', resp_rev_)
+  # cov_sigma_ <- paste0('cov_sigma', resp_rev_)
+  cov_sigma_ <- paste0('sigma', cov_)
   uvarby     <- model$model_info$univariate_by$by
+  
+  
   
   # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
   if(is.null(idvar)) {
@@ -230,8 +233,11 @@ get.newdata <- function(model,
   }
   
   
+  
+  
   cov_vars       <-  model$model_info[[cov_]]
   cov_sigma_vars <-  model$model_info[[cov_sigma_]]
+  
   
   
   if (!is.null(cov_vars)) {
@@ -289,6 +295,10 @@ get.newdata <- function(model,
   cov_sigma_factor_vars <- intersect(cov_sigma_vars, factor_vars)
   cov_sigma_numeric_vars <- intersect(cov_sigma_vars, numeric_vars)
   
+  # print(cov_vars)
+  # print(cov_sigma_vars)
+  # stop()
+  
   if (identical(cov_factor_vars, character(0)))
     cov_factor_vars <- NULL
   if (identical(cov_numeric_vars, character(0)))
@@ -303,6 +313,9 @@ get.newdata <- function(model,
   # IMP: Note that groupby_fstr and groupby_fistr are stil  a b c covariate
   # This way, plot_curves and gparameters will not produce sigam cov specific
   # curves and g parameters
+  
+  # print(cov_sigma_factor_vars)
+  # stop()
   
   cov_factor_vars <- c(cov_factor_vars, cov_sigma_factor_vars)
   cov_numeric_vars <- c(cov_numeric_vars, cov_sigma_numeric_vars)

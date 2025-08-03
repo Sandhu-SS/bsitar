@@ -807,6 +807,8 @@ The \strong{modelbased_growthparameters()} function estimates
 individual growth parameters by mapping population average estimate of age
 of interest (such as age at peak growth velocity or age at take off) on to
 the individual velocity curves defined by individual level random effects.
+Note that option \code{'dpar'} can not be used along with \code{'nlpar'} in
+\code{\link[brms:posterior_linpred.brmsfit]{brms::posterior_linpred()}}.
 }
 \details{
 Since SITAR is a shape-invariant model, each individual curve has a

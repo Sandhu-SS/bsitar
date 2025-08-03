@@ -27,7 +27,7 @@
 #' @param iyfun Optional name(s) of the inverse transformation function(s)
 #'   applied to the outcome variable. Default \code{NULL}.
 #'
-#' @param isigmaxfun Optional name(s) of the inverse transformation function(s)
+#' @param sigmaixfun Optional name(s) of the inverse transformation function(s)
 #'   applied to the predictor variable (typically age)  for \code{sigma}.
 #'   Default \code{NULL}.
 #' 
@@ -65,7 +65,7 @@ prepare_transformations <- function(data = NULL,
                                     sigmaxfun = NULL,
                                     ixfun = FALSE,
                                     iyfun = FALSE,
-                                    isigmaxfun = FALSE,
+                                    sigmaixfun = FALSE,
                                     xoffset = NULL,
                                     sigmaxoffset = NULL,
                                     transform = "",
@@ -158,9 +158,9 @@ prepare_transformations <- function(data = NULL,
     }
      
     if('sigma' %in% itransform) {
-      isigmaxfun <- TRUE
+      sigmaixfun <- TRUE
     } else if(!'sigma' %in% itransform) {
-      isigmaxfun <- FALSE
+      sigmaixfun <- FALSE
     }
   } # ... if(!is.null(model)) {
   
@@ -168,7 +168,7 @@ prepare_transformations <- function(data = NULL,
   # Over ride when variable itself is NULL
   if(is.null(xvar))      ixfun      <- FALSE
   if(is.null(yvar))      iyfun      <- FALSE
-  if(is.null(sigmaxvar)) isigmaxfun <- FALSE
+  if(is.null(sigmaxvar)) sigmaixfun <- FALSE
   
   
   #######################################################################
@@ -298,7 +298,7 @@ prepare_transformations <- function(data = NULL,
   #######################################################################
   #######################################################################
   
-  # check and tranform TRUE/FALSE ixfun iyfun isigmaxfun to NULL or funs
+  # check and tranform TRUE/FALSE ixfun iyfun sigmaixfun to NULL or funs
   
   # Although below we keep option of setting ifuns, for now we allow only T/F
   if(missing(ixfun)) {
@@ -309,9 +309,9 @@ prepare_transformations <- function(data = NULL,
     iyfun <- FALSE
     if(verbose) message("missing 'iyfun' set as FALSE")
   }
-  if(missing(isigmaxfun)) {
+  if(missing(sigmaixfun)) {
     iyfun <- FALSE
-    if(verbose) message("missing 'isigmaxfun' set as FALSE")
+    if(verbose) message("missing 'sigmaixfun' set as FALSE")
   }
   
   if(!is.logical(ixfun)) {
@@ -320,8 +320,8 @@ prepare_transformations <- function(data = NULL,
   if(!is.logical(iyfun)) {
     stop("'iyfun' must be a logical, TRUE or FALSE")
   }
-  if(!is.logical(isigmaxfun)) {
-    stop("'isigmaxfun' must be a logical, TRUE or FALSE")
+  if(!is.logical(sigmaixfun)) {
+    stop("'sigmaixfun' must be a logical, TRUE or FALSE")
   }
   
   
@@ -440,28 +440,28 @@ prepare_transformations <- function(data = NULL,
   }
   
   
-  if(!is.logical(isigmaxfun)) {
-    if(is.null(isigmaxfun)) {
+  if(!is.logical(sigmaixfun)) {
+    if(is.null(sigmaixfun)) {
       if(!is.null(sigmaxfun)) {
-        isigmaxfun <- list()
+        sigmaixfun <- list()
         for (i in names(sigmaxfun)) {
-          isigmaxfun[[i]] <- inverse_transform(base::body(sigmaxfun[[i]]))
+          sigmaixfun[[i]] <- inverse_transform(base::body(sigmaxfun[[i]]))
         }
       } else {
-        # stop("Please specify 'isigmaxfun'")
+        # stop("Please specify 'sigmaixfun'")
       }
     }
-  } else if(is.logical(isigmaxfun)) { # i.e., ixfun T/F
-    if(isigmaxfun) {
+  } else if(is.logical(sigmaixfun)) { # i.e., ixfun T/F
+    if(sigmaixfun) {
       if(!is.null(sigmaxfun)) {
-        isigmaxfun <- list()
+        sigmaixfun <- list()
         for (i in names(sigmaxfun)) {
-          isigmaxfun[[i]] <- inverse_transform(base::body(sigmaxfun[[i]]))
+          sigmaixfun[[i]] <- inverse_transform(base::body(sigmaxfun[[i]]))
         }
       }
       sigmaxfun <- NULL
-    } else if(!isigmaxfun) {
-      isigmaxfun <- NULL
+    } else if(!sigmaixfun) {
+      sigmaixfun <- NULL
     }
   }
   
@@ -478,7 +478,7 @@ prepare_transformations <- function(data = NULL,
     if(is.null(iyfun)) transform <- c(transform, 'y')
   }
   if(!is.null(sigmaxfun)) {
-    if(is.null(isigmaxfun)) transform <- c(transform, 'sigma')
+    if(is.null(sigmaixfun)) transform <- c(transform, 'sigma')
   }
   
   if(!is.null(ixfun)) {
@@ -487,7 +487,7 @@ prepare_transformations <- function(data = NULL,
   if(!is.null(iyfun)) {
     itransform <- c(itransform, 'y')
   }
-  if(!is.null(isigmaxfun)) {
+  if(!is.null(sigmaixfun)) {
     itransform <- c(itransform, 'sigma')
   }
   
@@ -593,16 +593,16 @@ prepare_transformations <- function(data = NULL,
     }
   }
   
-  if('sigma' %in% itransform & !is.null(isigmaxfun)) {
-    if(is.null(isigmaxfun)) {
-      stop("you requested transformation of 'sigma' but isigmaxfun is 'NULL'")
+  if('sigma' %in% itransform & !is.null(sigmaixfun)) {
+    if(is.null(sigmaixfun)) {
+      stop("you requested transformation of 'sigma' but sigmaixfun is 'NULL'")
     } else if(is.null(sigmaxvar)) {
       stop("you requested transformation of 'sigma' but sigmaxvar is 'NULL'")
     } else {
-      if(length(sigmaxvar) != length(isigmaxfun)) 
-        stop("Number of 'sigmaxvar' and 'isigmaxfun' differs")
-      for (i in names(isigmaxfun)) {
-        evalfuns <- isigmaxfun[[i]]
+      if(length(sigmaxvar) != length(sigmaixfun)) 
+        stop("Number of 'sigmaxvar' and 'sigmaixfun' differs")
+      for (i in names(sigmaixfun)) {
+        evalfuns <- sigmaixfun[[i]]
         if(tibble::is_tibble(data) | is.data.frame(data)) {
           if(!is.null(data[[i]])) data[[i]] <- evalfuns(data[[i]])
         }

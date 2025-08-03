@@ -233,9 +233,9 @@ prepare_function_nsp_rcs <- function(x,
   ixfuntransformsi        <- list()
   ixfuntransformsi        <- inverse_transform(base::body(xfuntransformsi))
   
-  # Make inverse isigmaxfuntransformsi of sigmaxfuntransformsi
-  isigmaxfuntransformsi        <- list()
-  isigmaxfuntransformsi        <- inverse_transform(base::body(sigmaxfuntransformsi))
+  # Make inverse sigmaixfuntransformsi of sigmaxfuntransformsi
+  sigmaixfuntransformsi        <- list()
+  sigmaixfuntransformsi        <- inverse_transform(base::body(sigmaxfuntransformsi))
   
   # Make inverse iyfuntransformsi of yfuntransformsi
   iyfuntransformsi        <- list()
@@ -250,7 +250,7 @@ prepare_function_nsp_rcs <- function(x,
                                     ixfuntransformsi = NULL,
                                     iyfuntransformsi = NULL,
                                     sigmaxfuntransformsi = NULL,
-                                    isigmaxfuntransformsi = NULL,
+                                    sigmaixfuntransformsi = NULL,
                                     tranformations = "identity") {
     
     scale_set_comb  <- tranformations
@@ -489,7 +489,7 @@ prepare_function_nsp_rcs <- function(x,
              ixfuntransformsi = NULL,
              iyfuntransformsi = NULL,
              sigmaxfuntransformsi = NULL,
-             isigmaxfuntransformsi = NULL
+             sigmaixfuntransformsi = NULL
              ) {
       split1 <- strsplit(function_str, gsub("\\[", "\\\\[", spl_str))[[1]][-1]
       split2 <- strsplit(split1, "return")[[1]][-2]
@@ -593,7 +593,7 @@ prepare_function_nsp_rcs <- function(x,
           ixfuntransformsi      = ixfuntransformsi,
           iyfuntransformsi      = iyfuntransformsi,
           sigmaxfuntransformsi  = sigmaxfuntransformsi,
-          isigmaxfuntransformsi = isigmaxfuntransformsi,
+          sigmaixfuntransformsi = sigmaixfuntransformsi,
           tranformations        = c("identity", "log", "sqrt")
         )
         
@@ -693,7 +693,7 @@ prepare_function_nsp_rcs <- function(x,
              ixfuntransformsi = NULL,
              iyfuntransformsi = NULL,
              sigmaxfuntransformsi = NULL,
-             isigmaxfuntransformsi = NULL
+             sigmaixfuntransformsi = NULL
              ) {
       out <- function_str
       for_out <- gsub(fname, fnameout, out)
@@ -746,7 +746,7 @@ prepare_function_nsp_rcs <- function(x,
           ixfuntransformsi      = ixfuntransformsi,
           iyfuntransformsi      = iyfuntransformsi,
           sigmaxfuntransformsi  = sigmaxfuntransformsi,
-          isigmaxfuntransformsi = isigmaxfuntransformsi,
+          sigmaixfuntransformsi = sigmaixfuntransformsi,
           tranformations        = c("identity", "log", "sqrt")
         )
         
@@ -1978,7 +1978,7 @@ prepare_function_nsp_rcs <- function(x,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      isigmaxfuntransformsi = isigmaxfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     
@@ -2051,7 +2051,7 @@ prepare_function_nsp_rcs <- function(x,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      isigmaxfuntransformsi = isigmaxfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     
@@ -2127,7 +2127,7 @@ prepare_function_nsp_rcs <- function(x,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      isigmaxfuntransformsi = isigmaxfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     
@@ -2980,7 +2980,7 @@ prepare_function_nsp_rcs <- function(x,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      isigmaxfuntransformsi = isigmaxfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     # Create function d1
@@ -3007,7 +3007,7 @@ prepare_function_nsp_rcs <- function(x,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      isigmaxfuntransformsi = isigmaxfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     # Create function d2
@@ -3034,7 +3034,7 @@ prepare_function_nsp_rcs <- function(x,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      isigmaxfuntransformsi = isigmaxfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     

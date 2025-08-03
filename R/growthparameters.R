@@ -454,6 +454,15 @@ growthparameters.bgmfit <- function(model,
   
   model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
+  # 02.08.2025
+  add_prefix_to_fun <- ""
+  if(!is.null(dpar)) {
+    if(dpar == "mu") {
+      add_prefix_to_fun <- ""
+    } else if(dpar == "sigma") {
+      add_prefix_to_fun <- "sigma"
+    }
+  }
   
 
   if(is.null(usesavedfuns)) {
@@ -515,7 +524,10 @@ growthparameters.bgmfit <- function(model,
     resp_rev_ <- paste0("_", resp)
   }
   ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+  # 02.08.2025
+  ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
   ifunx_ <- model$model_info[[ifunx_]]
+  
   ########################################################
   # 6.03.2025
   dots <- list(...)
@@ -1091,6 +1103,8 @@ growthparameters.bgmfit <- function(model,
       if(!exists(check___)) assign(check___, NULL)
     }
     
+    
+    
     newdata___ <- newdata
     
     if(!is.null(avg_reffects)) {
@@ -1144,6 +1158,7 @@ growthparameters.bgmfit <- function(model,
       }
       
       
+      
       if (velc.. != "") {
         if (grepl("^[[:upper:]]+$", velc..)) {
           groupby_str_v <- groupby_fistr
@@ -1157,6 +1172,8 @@ growthparameters.bgmfit <- function(model,
         groupby_str_v <- NULL
       }
       
+      
+      
       if (dist.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", dist..)) {
@@ -1169,12 +1186,22 @@ growthparameters.bgmfit <- function(model,
             groupby_fstr_xvars <- c(xvar)
           }
           
+          # newdata <- newdata %>%
+          #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+          #   dplyr::slice(1) %>% dplyr::ungroup()
+          
+          # Imp to keep only one unique id per group for deriv = 1 using diff y0
+          tempidname <- idvar[1] 
           newdata <- newdata %>%
-            dplyr::group_by(
-              dplyr::across(dplyr::all_of(groupby_fstr_xvars))
-              ) %>%
-            dplyr::slice(1) %>% dplyr::ungroup()
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+            dplyr::slice(1) %>% # droplevels() %>% 
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
+            dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
+            dplyr::ungroup()
+          
         }
+        
+        
         
         arguments$newdata <- newdata
         arguments$deriv <- 0
@@ -1229,12 +1256,18 @@ growthparameters.bgmfit <- function(model,
             groupby_fstr_xvars <- c(xvar)
             
           }
+          
+          # Imp to keep only one unique id per group for deriv = 1 using diff y0
+          tempidname <- idvar[1] 
           newdata <- newdata %>%
-            dplyr::group_by(
-              dplyr::across(dplyr::all_of(groupby_fstr_xvars))
-              ) %>%
-            dplyr::slice(1) %>% dplyr::ungroup()
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+            dplyr::slice(1) %>% # droplevels() %>% 
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
+            dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
+            dplyr::ungroup()
+          
         }
+        
         arguments$newdata <- newdata
         arguments$deriv <- 1
         arguments$ipts <- NULL 
@@ -1625,23 +1658,18 @@ growthparameters.bgmfit <- function(model,
           
         }
         
-        # 6.03.2025
-        # Not must to have full data, the apgv is a single return per draw
-        # if(set_get_dv) {
-        #   newdata <- newdata
-        #   if(verbose) message("setting 'newdata = newdata' for 'get_dv'")
-        # }
-        # # This below is to reduce data size for NA, to fasten up execution
-        # if(!set_get_dv) {
-        #   newdata <- newdata %>%
-        #     dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-        #     dplyr::slice(1) %>% dplyr::ungroup()
-        # }
-          
-        # keeping original format, as before 6.03.2025
+        # newdata <- newdata %>%
+        #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+        #   dplyr::slice(1) %>% dplyr::ungroup()
+        
+        # Imp to keep only one unique id per group for deriv = 1 using diff y0
+        tempidname <- idvar[1] 
         newdata <- newdata %>%
           dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-          dplyr::slice(1) %>% dplyr::ungroup()
+          dplyr::slice(1) %>% # droplevels() %>% 
+          dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
+          dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
+          dplyr::ungroup()
         
       } # else if (!grepl("^[[:upper:]]+$", velc..)) {
       
