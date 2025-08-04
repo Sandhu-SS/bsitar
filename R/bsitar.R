@@ -4855,12 +4855,7 @@ bsitar <- function(x,
       }
     }
     
-    
-    # print(gr_init_cors)
-    # print(gr_init_corsi)
-    # print("gr_init_corsi")
-    # stop()
-    
+ 
     if (is.null(group_arg$groupvar)) {
       group_arg$groupvar <- idsi
     }
@@ -6601,43 +6596,7 @@ bsitar <- function(x,
     
     SplineCall[[2]] <- quote(x)
     
-    # print(mat_s)
-    # SplineCallx <<- SplineCall
-    # stop()
-    
-    
-    # Imp - this matrix must be created after ifuns with offset
-    # if(smat == 'rcs') {
-    #   mat_s <- make_spline_matrix(datai[[xsi]], knots)
-    # } else if(smat == 'nsp') {
-    #   iknots <- knots[2:(length(knots)-1)]
-    #   bknots <- c(knots[1], knots[length(knots)])
-    #   mat_s <- GS_nsp_call(x = datai[[xsi]],
-    #                        knots = iknots,
-    #                        bknots = bknots,
-    #                        intercept = smat_intercept,
-    #                        derivs = smat_derivs,
-    #                        centerval = smat_centerval,
-    #                        normalize = smat_normalize,
-    #                        preH = smat_preH,
-    #                        sfirst = smat_sfirst,
-    #                        sparse = smat_sparse)
-    # } else if(smat == 'nsk') {
-    #   iknots <- knots[2:(length(knots)-1)]
-    #   bknots <- c(knots[1], knots[length(knots)])
-    #   mat_s <- GS_nsk_call(x = datai[[xsi]],
-    #                        knots = iknots,
-    #                        bknots = bknots,
-    #                        intercept = smat_intercept,
-    #                        derivs = smat_derivs,
-    #                        centerval = smat_centerval,
-    #                        normalize = smat_normalize,
-    #                        preH = smat_preH,
-    #                        sfirst = smat_sfirst,
-    #                        sparse = smat_sparse)
-    # }
-    
-    
+   
     #################################################################
     #################################################################
     
@@ -7060,25 +7019,14 @@ bsitar <- function(x,
           sigmaidsi == "NULL") {
         sigmaidsi <- idsi
       }
-      
-      print(sigmaidsi)
-      stop
+
       
       # These are copied from the mu part
       # Note that idsi is not used and ysi is placeholder
       sigmaysi   <- ysi
       sigmadatai <- datai
       sigmaxsi   <- sigmaxsi
-      
-      
-      # print(ysi)
-      # print(sigmaspfncname)
-      # stop()
-      
-      # print(sigmainternal_function_args[['spfncname']])
-      # print(sigmaspfncname)
-      # stop()
-      
+ 
       
       # prepare_function_sigma - not used now
       sigmaget_s_r_funs <-
@@ -7284,14 +7232,9 @@ bsitar <- function(x,
     sigmacovariates_    <- sigmacovariates_
     set_higher_levels   <- set_higher_levels
     
-    sigma_set_higher_levels <- sigma_set_higher_levels
-    
-    
+    sigma_set_higher_levels  <- sigma_set_higher_levels
     sigma_group_arg$groupvar <- sigma_arg_groupvar
-    
-    # print(sigmacovariates_)
-    # stop()
-    
+
     
     lm_val_list <-
       names(eout)[grep(pattern = "^lm_|^lme_", names(eout))]
@@ -8843,7 +8786,6 @@ bsitar <- function(x,
   # print(sigmacov_names_val)
   # stop()
   
-  
   # 02.08.2025 - Be careful, commented out 
   # sigmaxvar_names_val           <- sigmaxvar_names_val2
   # sigmacov_names_val            <- sigmacov_names_val2
@@ -9473,10 +9415,7 @@ bsitar <- function(x,
     } else if(!is.null(set_self_priors)) {
       temp_prior <- set_self_priors
     }
-      
-    # print(brmsinits)
-    # stop()
-    
+
 
     # 24.08.2024
     # 20.03.2025 - moved to final_scode
@@ -11399,11 +11338,7 @@ bsitar <- function(x,
   # This to not by pass below return statements
   fit_edited_scode_exe_model_fit <- exe_model_fit
   exe_model_fit <- TRUE
-  
-  # exe_model_fit %>% print()
-  # fit_edited_scode %>% print()
-  # fit_edited_scode_exe_model_fit %>% print()
-  
+
 
   if(exe_model_fit) {
     if(brm_args$backend == "rstan") {
@@ -11791,73 +11726,26 @@ bsitar <- function(x,
     } # if(set_model_sigma_by_mu) {
 
 
-    # cat(scode_final)
-    # print(set_model_sigma_by_mu)
-    # stop()
-
-    
-    # if(sum_zero) {
-    #   scode_final_sum_zero <- scode_final
-    #   gsub_it <- "matrix[M_1, N_1] z_1;"
-    #   gsub_by <- "array[M_1] sum_to_zero_vector[N_1] uz_1;"
-    #   scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
-    #   gsub_it <- "matrix[N_1, M_1] r_1;"
-    #   gsub_by <- paste0(gsub_it, "\n", 
-    #                     "  matrix[M_1, N_1] z_1;", "\n",
-    #                     "  for(i in 1:M_1) z_1[i, ] = uz_1[i]';")
-    #   scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
-    #   gsub_it <- "target += std_normal_lpdf(to_vector(z_1));"
-    #   gsub_by <- "for(i in 1:M_1) target += normal_lpdf(uz_1[i] | 0.0, sigmauz_1);"
-    #   scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
-    #   
-    #   for (variablexx in 1:length(brm_args$init)) {
-    #     brm_args$init[[variablexx]]$z_u <- brm_args$init[[variablexx]]$z_1
-    #   }
-    #   
-    #   # brm_args$stanvars <- brm_args$stanvars + 
-    #   #   brms::stanvar(scode = 
-    #   #                   "real<lower=0> sigma_z_u = sqrt(N_1 / (N_1 - 1.0));", 
-    #   #                 name = "sigma_z_u",
-    #   #                 block = 'tdata')
-    #   
-    #   brm_args$sum_zero <-  NULL
-    #   brms_arguments$sum_zero <-  NULL
-    #   scode_final <- scode_final_sum_zero
-    # }
-    
-    # scode_finalx <<- scode_final
-    # brm_argsx <<- brm_args
-    # stop()
-
-    # exe_model_fit %>% print()
-    # fit_edited_scode %>% print()
-    
-    # cat(scode_final)
-    
-    
     
     if(!fit_edited_scode_exe_model_fit & fit_edited_scode) {
-    # if(!fit_edited_scode_exe_model_fit) {
-      # if(fit_edited_scode) {
-        if(get_priors) {
-          return(brm_args$prior)
-        } else if(get_standata) {
-          return(sdata)
-        } else if(get_stancode) {
-          return(scode_final)
-        } else if(get_priors_eval) {
-          return(brm_args$prior)
-        } else if(validate_priors) {
-          return(CustomDoCall(brms::validate_prior, brm_args))
-        } else if(get_init_eval) {
-          return(brm_args$init)
-        } else if(get_formula) {
-          return(brm_args$formula)
-        } else if(get_stanvars) {
-          return(brm_args$stanvars)
-        }
-      # } # if(fit_edited_scode) {
-    } # f(!exe_model_fit) {
+      if(get_priors) {
+        return(brm_args$prior)
+      } else if(get_standata) {
+        return(sdata)
+      } else if(get_stancode) {
+        return(scode_final)
+      } else if(get_priors_eval) {
+        return(brm_args$prior)
+      } else if(validate_priors) {
+        return(CustomDoCall(brms::validate_prior, brm_args))
+      } else if(get_init_eval) {
+        return(brm_args$init)
+      } else if(get_formula) {
+        return(brm_args$formula)
+      } else if(get_stanvars) {
+        return(brm_args$stanvars)
+      }
+    } 
     
     
     if(fit_edited_scode) {
@@ -11914,19 +11802,20 @@ bsitar <- function(x,
           edit_attr    <- attributes(sigma_forms)
           copad_edit   <- sigma_forms
           copad_edit   <- copad_edit %>% deparse()
-          set_model_sigma_by_mu_fun_str <- set_model_sigma_by_mu_fun_str_c[[ithx]]
-          # copad_edit <- gsub(paste0("sqrt", "(", ""  ,")"), 
-          #                    paste0("sqrt", "(", base_mu_fun  ,")"),
-          #                    copad_edit, fixed = T)
-          copad_edit <- gsub(paste0(set_model_sigma_by_mu_fun_str, "(", ""  ,")"), 
-                             paste0(set_model_sigma_by_mu_fun_str, "(", base_mu_fun  ,")"),
+          set_model_sigma_by_mu_fun_str <- 
+            set_model_sigma_by_mu_fun_str_c[[ithx]]
+          copad_edit <- gsub(paste0(set_model_sigma_by_mu_fun_str, 
+                                    "(", ""  ,")"), 
+                             paste0(set_model_sigma_by_mu_fun_str, 
+                                    "(", base_mu_fun  ,")"),
                              copad_edit, fixed = T)
           sigma_forms <- str2lang(copad_edit)
           attributes(sigma_forms) <- edit_attr
-          fit_f[['formula']][['forms']][[outrespbames]][['pforms']][['sigma']] <- sigma_forms
-        } # for (outrespbames in ys) {  return(fit_f[['formula']])
+          fit_f[['formula']][['forms']][[outrespbames]][['pforms']][['sigma']] <- 
+            sigma_forms
+        } 
         return(fit_f[['formula']])
-      } # function_restore_mu_sigam_form
+      } 
       
       function_restore_mu_sigam_form_new <- 
         function_restore_mu_sigam_form(brmsfit,
@@ -12073,80 +11962,14 @@ bsitar <- function(x,
     model_info[['call.bgmfit']] <- mcall_
     
     
-    
-    # if(setsigmaxvar) {
-    #   model_info[['sigmaStanFun_name']] <- sigmaspfncname
-    #   model_info[['sigmaxs']] <- sigmaxs
-    #   model_info[['sigmaids']] <- sigmaids
-    #   model_info[['sigmadfs']] <- sigmadfs
-    #   model_info[['sigmaxfuns_user']] <- sigmaxfuns_user
-    #   model_info[['sigmaselect_model']] <- sigmaselect_model
-    #   model_info[['sigmadecomp']] <- sigmadecomp
-    #   
-    #   model_info[['sigmad_adjusted']] <- sigmad_adjusted
-    #   for (i in 1:length(sigmad_adjustednamelist)) {
-    #     model_info[[sigmad_adjustednamelist[[i]]]] <- 
-    #       sigmad_adjustedvaluelist[[i]]
-    #   }
-    #   for (i in 1:length(sigmafunlist_rnamelist)) {
-    #     model_info[[sigmafunlist_rnamelist[[i]]]] <- 
-    #       sigmafunlist_rvaluelist[[i]]
-    #   }
-    #   for (i in 1:length(sigmaxfunnamelist)) {
-    #     model_info[[sigmaxfunnamelist[[i]]]] <- sigmaxfunvaluelist[[i]]
-    #   }
-    #   
-    #   for (i in 1:length(sigmacovnamelist)) {
-    #     model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
-    #   }
-    #   
-    #   
-    #   for (i in 1:length(sigmaxfuntransformnamelist)) {
-    #     model_info[[sigmaxfuntransformnamelist[[i]]]] <- 
-    #       sigmaxfuntransformvaluelist[[i]]
-    #   }
-    #   for (i in 1:length(sigmaixfuntransformnamelist)) {
-    #     model_info[[sigmaixfuntransformnamelist[[i]]]] <- 
-    #       sigmaixfuntransformvaluelist[[i]]
-    #   }
-    #   
-    #   
-    #   for (i in 1:length(sigmaxoffsetnamelist)) {
-    #     model_info[[sigmaxoffsetnamelist[[i]]]] <- 
-    #       sigmaxoffsetvaluelist[[i]]
-    #   }
-    #   
-    #   for (i in 1:length(setsigmaxvarnamelist)) {
-    #     model_info[[setsigmaxvarnamelist[[i]]]] <- 
-    #       setsigmaxvarvaluelist[[i]]
-    #   }
-    #   
-    # } # if(setsigmaxvar) {
-    
-    
-    
-    
-    
     # 02.08.2025 
     # The below double loop 'for (j .. if(any' is for _ls mode
     # The info relevant for other sigma model are now taken out of this loop
-    
-    # for (i in 1:length(setsigmaxvarnamelist)) {
-    #   model_info[[setsigmaxvarnamelist[[i]]]] <- 
-    #     setsigmaxvarvaluelist[[i]]
-    # }
-    # for (i in 1:length(sigmacovnamelist)) {
-    #   model_info[[sigmacovnamelist[[i]]]] <- sigmacovvaluelist[[i]]
-    # }
+   
     
     if(!exists('sigmaspfncname_common')) sigmaspfncname_common <- NULL
     if(!exists('sigmaselect_model')) sigmaselect_model <- NULL
     if(!exists('sigmadecomp')) sigmadecomp <- NULL
-    # if(!exists('sigmaspfncname_common')) sigmaspfncname_common <- NULL
-    
-    # print(sigmafunlist_rnamelist)
-    # print(sigmafunlist_rvaluelist)
-
     if(length(sigmafunlist_rvaluelist) == 0) {
       sigmafunlist_rvaluelist <- as.list(rep("", nys))
     }
@@ -12248,22 +12071,14 @@ bsitar <- function(x,
     
     model_info[[setsigmaxvar_names]]        <- setsigmaxvar_names_val
     model_info[['genquant_xyadj']]          <- genquant_xyadj
-    
     model_info[['sigma_model']]             <- sigma_model
     
     
-    
-    
     ##############################################################
     ##############################################################
-    
-    
     
     brmsfit$model_info           <- model_info
-    
     environment(brmsfit$formula) <- enverr.
-    
-    
 
     # Now message moved to the expose_model_functions()
     if (expose_function & !brm_args$empty) {
@@ -12332,5 +12147,6 @@ bsitar <- function(x,
   } # exe_model_fit
   
   
-} # end bsitar
+} # end bsitar()
+
 
