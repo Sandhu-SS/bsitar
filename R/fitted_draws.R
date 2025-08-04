@@ -134,6 +134,10 @@ fitted_draws.bgmfit <-
     # This only when set_sigma_manual used to model a b c 
     # Not when a function such as splines::ns etc used in sigma_formula
     
+    if(is.null(dpar)) {
+      dpar <- "mu"
+    }
+    
     model <- getmodel_info(model = model, dpar = dpar, resp = resp)
     
    
@@ -367,11 +371,13 @@ fitted_draws.bgmfit <-
       calling.args_newdata         <- calling.args
       calling.args_newdata$model   <- calling.args_newdata$object
       calling.args_newdata$newdata <- model$model_info$bgmfit.data 
-      if(growthparameters_calling) {
-        newdata <- CustomDoCall(get.newdata, calling.args_newdata)
-      } else {
-        newdata <- CustomDoCall(get.newdata, calling.args_newdata)
-      }
+      calling.args_newdata$dpar    <- dpar
+      newdata <- CustomDoCall(get.newdata, calling.args_newdata)
+      # if(growthparameters_calling) {
+      #   newdata <- CustomDoCall(get.newdata, calling.args_newdata)
+      # } else {
+      #   newdata <- CustomDoCall(get.newdata, calling.args_newdata)
+      # }
       rm('calling.args_newdata')
       calling.args$newdata <- newdata
     }
@@ -381,6 +387,7 @@ fitted_draws.bgmfit <-
     if(!indirectcall & !growthparameters_calling) {
       if(is.null(newdata)) {
         calling.args_newdata         <- calling.args
+        calling.args_newdata$dpar    <- dpar
         newdata <- CustomDoCall(get.newdata, calling.args_newdata)
         rm('calling.args_newdata')
         calling.args$newdata <- newdata

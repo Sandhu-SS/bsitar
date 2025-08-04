@@ -30,6 +30,7 @@ get.newdata <- function(model,
                         xvar = NULL,
                         idvar = NULL,
                         resp = NULL,
+                        dpar = NULL,
                         numeric_cov_at = NULL,
                         aux_variables = NULL,
                         levels_id = NULL,
@@ -47,6 +48,9 @@ get.newdata <- function(model,
     resp_rev_ <- paste0("_", resp)
   }
  
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
   
   if (is.null(idata_method)) {
     idata_method <- 'm2'
@@ -68,21 +72,6 @@ get.newdata <- function(model,
   yvar <- model$model_info[[yvar_]]
   hierarchical_ <- paste0('hierarchical', resp_rev_)
   
-  
-  
-  # if (is.null(levels_id)) {
-  #   IDvar <- model$model_info[[groupvar_]]
-  #   if (!is.null(model$model_info[[hierarchical_]])) {
-  #     IDvar <- model$model_info[[hierarchical_]]
-  #   } else if (is.null(model$model_info[[hierarchical_]])) {
-  #     # if(!is.null(model$model_info[['idvars']])) {
-  #     #   IDvar <- model$model_info[['idvars']]
-  #     # }
-  #   }
-  # } else if (!is.null(levels_id)) {
-  #   IDvar <- levels_id
-  # }
-  
   if(is.null(levels_id) & is.null(idvar)) {
     idvar <- model$model_info[[groupvar_]]
     if (!is.null(model$model_info[[hierarchical_]])) {
@@ -94,18 +83,9 @@ get.newdata <- function(model,
     idvar <- idvar
   }
   
-  
-  xfun_ <- paste0('xfun', resp_rev_)
-  yfun_ <- paste0('yfun', resp_rev_)
-  xfun  <- model$model_info[[xfun_]]
-  yfun  <- model$model_info[[yfun_]]
-  
   cov_       <- paste0('cov', resp_rev_)
-  # cov_sigma_ <- paste0('cov_sigma', resp_rev_)
-  cov_sigma_ <- paste0('sigma', cov_)
+  sigmacov_  <- paste0('sigma', cov_)
   uvarby     <- model$model_info$univariate_by$by
-  
-  
   
   # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
   if(is.null(idvar)) {
@@ -125,7 +105,6 @@ get.newdata <- function(model,
   }
   newdata.in <- newdata
   
-
   if(!is.null(dummy_to_factor)) {
     if(!is.list(dummy_to_factor)) {
       stop("dummy_to_factor must be a named list as follows:",
@@ -236,19 +215,19 @@ get.newdata <- function(model,
   
   
   cov_vars       <-  model$model_info[[cov_]]
-  cov_sigma_vars <-  model$model_info[[cov_sigma_]]
+  sigmacov_vars <-  model$model_info[[sigmacov_]]
   
   
-  
+
   if (!is.null(cov_vars)) {
     cov_vars <- covars_extrcation(cov_vars)
   }
-  if (!is.null(cov_sigma_vars)) {
-    cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
+  if (!is.null(sigmacov_vars)) {
+    sigmacov_vars <- covars_extrcation(sigmacov_vars)
   }
   
-  
-  if(is.null(cov_vars) & is.null(cov_sigma_vars)) {
+
+  if(is.null(cov_vars) & is.null(sigmacov_vars)) {
     if(!is.null(dummy_to_factor)) {
       warning("There are no covariate(s) but have specified dummy_to_factor",
               "\n ", 
@@ -263,7 +242,7 @@ get.newdata <- function(model,
   
   
   # check if cov is charcater but not factor 
-  checks_for_chr_fact <- c(cov_vars, cov_sigma_vars)
+  checks_for_chr_fact <- c(cov_vars, sigmacov_vars)
   checks_for_chr_fact <- unique(checks_for_chr_fact)
   for (cov_varsi in checks_for_chr_fact) {
     if(is.character(newdata[[cov_varsi]])) {
@@ -279,52 +258,57 @@ get.newdata <- function(model,
     }
   }
   
-  factor_vars <- names(newdata[sapply(newdata, is.factor)])
+  factor_vars  <- names(newdata[sapply(newdata, is.factor)])
   numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
   
-  # if (!is.null(cov_sigma_vars))
-  #   cov_sigma_vars <- covars_extrcation(cov_sigma_vars)
-  
-  
-  
-  cov_factor_vars <- intersect(cov_vars, factor_vars)
+
+  cov_factor_vars  <- intersect(cov_vars, factor_vars)
   cov_numeric_vars <- intersect(cov_vars, numeric_vars)
-  groupby_fstr <- c(cov_factor_vars)
-  groupby_fistr <- c(idvar, cov_factor_vars)
+  groupby_fstr     <- c(cov_factor_vars)
+  groupby_fistr    <- c(idvar, cov_factor_vars)
   
-  cov_sigma_factor_vars <- intersect(cov_sigma_vars, factor_vars)
-  cov_sigma_numeric_vars <- intersect(cov_sigma_vars, numeric_vars)
+  sigmacov_factor_vars  <- intersect(sigmacov_vars, factor_vars)
+  sigmacov_numeric_vars <- intersect(sigmacov_vars, numeric_vars)
   
-  # print(cov_vars)
-  # print(cov_sigma_vars)
-  # stop()
+  sigmagroupby_fstr     <- c(sigmacov_factor_vars)
+  sigmagroupby_fistr    <- c(idvar, sigmacov_factor_vars)
+
   
   if (identical(cov_factor_vars, character(0)))
     cov_factor_vars <- NULL
   if (identical(cov_numeric_vars, character(0)))
     cov_numeric_vars <- NULL
   
-  if (identical(cov_sigma_factor_vars, character(0)))
-    cov_sigma_factor_vars <- NULL
-  if (identical(cov_sigma_numeric_vars, character(0)))
-    cov_sigma_numeric_vars <- NULL
-  
-  # Merge here a b c covariate with sigma co variate
-  # IMP: Note that groupby_fstr and groupby_fistr are stil  a b c covariate
-  # This way, plot_curves and gparameters will not produce sigam cov specific
-  # curves and g parameters
-  
-  # print(cov_sigma_factor_vars)
-  # stop()
-  
-  cov_factor_vars <- c(cov_factor_vars, cov_sigma_factor_vars)
-  cov_numeric_vars <- c(cov_numeric_vars, cov_sigma_numeric_vars)
+  if (identical(sigmacov_factor_vars, character(0)))
+    sigmacov_factor_vars <- NULL
+  if (identical(sigmacov_numeric_vars, character(0)))
+    sigmacov_numeric_vars <- NULL
+
+  cov_factor_vars  <- c(cov_factor_vars, sigmacov_factor_vars)
+  cov_numeric_vars <- c(cov_numeric_vars, sigmacov_numeric_vars)
   
   if (!is.na(model$model_info$univariate_by$by)) {
     if(idata_method == 'm1') groupby_fstr <- c(uvarby, groupby_fstr)
     if(idata_method == 'm1') groupby_fistr <- c(uvarby, groupby_fistr)
   }
   
+  
+  if(dpar == "mu") {
+    cov_vars         <- cov_vars
+    cov_factor_vars  <- cov_factor_vars
+    cov_numeric_vars <- cov_numeric_vars
+    groupby_fstr     <- groupby_fstr
+    groupby_fstr     <- groupby_fistr
+  } else if(dpar == "sigma") {
+    cov_vars         <- sigmacov_vars
+    cov_factor_vars  <- sigmacov_factor_vars
+    cov_numeric_vars <- sigmacov_numeric_vars
+    groupby_fstr     <- sigmagroupby_fstr
+    groupby_fistr    <- sigmagroupby_fistr
+  }
+  
+  # print(cov_vars)
+  # stop()
   
   if(add_just_list_c) {
     list_c[['xvar']] <- xvar
@@ -463,14 +447,6 @@ get.newdata <- function(model,
       yvar <- model$model_info[[yvar_]]
      
       hierarchical_ <- paste0('hierarchical', resp_rev_)
-      # if (is.null(levels_id)) {
-      #   IDvar <- model$model_info[[groupvar_]]
-      #   if (!is.null(model$model_info[[hierarchical_]])) {
-      #     IDvar <- model$model_info[[hierarchical_]]
-      #   }
-      # } else if (!is.null(levels_id)) {
-      #   IDvar <- levels_id
-      # }
       
       if(is.null(levels_id) & is.null(idvar)) {
         idvar <- model$model_info[[groupvar_]]
@@ -844,6 +820,19 @@ get.newdata <- function(model,
     xrange = xrange
   )
   
+  if(dpar == "mu") {
+    cov_vars         <- cov_vars
+    cov_factor_vars  <- cov_factor_vars
+    cov_numeric_vars <- cov_numeric_vars
+    groupby_fstr     <- groupby_fstr
+    groupby_fstr     <- groupby_fistr
+  } else if(dpar == "sigma") {
+    cov_vars         <- sigmacov_vars
+    cov_factor_vars  <- sigmacov_factor_vars
+    cov_numeric_vars <- sigmacov_numeric_vars
+    groupby_fstr     <- sigmagroupby_fstr
+    groupby_fistr    <- sigmagroupby_fistr
+  }
   
   list_c[['xvar']] <- xvar
   list_c[['yvar']] <- yvar

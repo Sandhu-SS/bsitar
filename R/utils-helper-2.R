@@ -3477,6 +3477,188 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE,
 
 
 
+#' An internal function to add default options to nlf() and lf() functions
+#' 
+#' @details The \code{'add_default_args_to_nlf_lf'} function is used when 
+#' using sigma_formula_manual for modelling sigma by mu and location scale
+#' model. This \code{'add_default_args_to_nlf_lf'} is can also be used to 
+#' extract co variate from the population part of the lf() form. The 
+#' \code{'add_default_args_to_nlf_lf'} can be used for dpar_formula.
+#' 
+#' @param str A string
+#' @param nys An integer to know whether to set the resp variable (if nys > 1) 
+#' @param ysi A string to indicate the response variable name. Should be of 
+#' length one because \code{'add_default_args_to_nlf_lf'} opetates within the
+#' loop i.e., at the level of sigma_formula_manualsi
+#' @param check A logical (\code{FALSE}). It should be set as \code{TRUE} when
+#' using \code{'add_default_args_to_nlf_lf'} for dpar_formual
+#' @param extract_covar A logical (\code{FALSE}). Set it as \code{TRUE} if 
+#' want to extract co variate from the population part of the lf() form.
+#' @param verbose A logical (\code{FALSE}).
+#' @keywords internal
+#' @return A string \code{extract_covar = FALSE} or a vector of string when 
+#' \code{extract_covar = TRUE}
+#' @noRd
+#'
+add_default_args_to_nlf_lf <- function(str, 
+                                       nys, 
+                                       ysi, 
+                                       check = FALSE,
+                                       extract_covar = FALSE, 
+                                       verbose = FALSE) {
+  if(length(ysi) > 1) {
+    if(verbose)
+      message("The length of ysi is > 1, only the first element is used")
+  }
+  str <- paste(gsub_space(str), collapse = "")
+  str <- gsub("\"" , "'", str, fixed = T)
+  temp_str <- gsub("\\+(nlf|lf)\\(", "###SPLIT###\\1(", str, perl = TRUE)
+  split_result <- strsplit(temp_str, split = "###SPLIT###", fixed = TRUE)[[1]]
+  split_result_c <- c()
+  get_lf_covars_c <- c()
+  for (i in 1:length(split_result)) {
+    split_result_ith <- split_result[i]
+    if (!is.null(split_result_ith)) {
+      if(check) {
+        if (grepl("^1$", split_result_ith)) {
+          split_result_ith <- paste0("lf(", "sigma", "~", split_result_ith, ")")
+        } else if (grepl("^~1", split_result_ith)) {
+          split_result_ith <- paste0("lf(", "sigma", split_result_ith, ")")
+        } else if (grepl("^sigma~1", split_result_ith)) {
+          split_result_ith <- paste0("lf(", "", split_result_ith, ")")
+        } else {
+          split_result_ith <- split_result_ith
+        }
+      } # if(check) {
+      if (grepl("lf\\(", split_result_ith) |
+          grepl("nlf\\(", split_result_ith)) {
+        if (!grepl("^lf\\(", split_result_ith) &
+            grepl("nlf\\(", split_result_ith)) {
+          lf_list <- c('flist',
+                       # 'dpar',
+                       'resp',
+                       'loop')
+        } else if (grepl("^lf\\(", split_result_ith) &
+                   !grepl("^nlf\\(", split_result_ith)) {
+          lf_list <- c('flist',
+                       # 'dpar',
+                       'resp',
+                       'center',
+                       'cmc',
+                       'sparse',
+                       'decomp')
+          # Start extraction of covariates from lf() 
+          get_lf_part_sigma_formula_manualsi <- ept(split_result_ith)[[1]]
+          nthtau <- length(get_lf_part_sigma_formula_manualsi)
+          get_lf_part_sigma_formula_manualsi_form <- 
+            get_lf_part_sigma_formula_manualsi[[nthtau]]
+          sigma_formulasi <- get_lf_part_sigma_formula_manualsi_form %>% deparse()
+          sigma_formulasi <- paste0(gsub_space(sigma_formulasi), collapse = "")
+          sigma_formulasi_check <- strsplit(sigma_formulasi, "+(", fixed = T)[[1]]
+          sigma_formulasi <- sigma_formulasi_check[1]
+          if(length(strsplit(sigma_formulasi, "~", fixed = T)[[1]]) > 1) {
+            sigma_formulasi <- strsplit(sigma_formulasi, "~", fixed = T)[[1]][-1]
+          } else {
+            sigma_formulasi <- sigma_formulasi
+          }
+          sigma_formulasi <- paste0("~", sigma_formulasi)
+          sigma_formulasi_covar <- all.vars(ept(sigma_formulasi))
+          if(length(sigma_formulasi_covar) == 0) {
+            sigma_formulasi_covar <- NULL
+          }
+          get_lf_covars_c <- c(get_lf_covars_c, sigma_formulasi_covar)
+          # End extraction of covariates from lf() 
+        } # end else if (grepl("^lf\\(", split_result_ith) &
+        lf_list_c <- c()
+        for (lf_listi in lf_list) {
+          if (!grepl(lf_listi, split_result_ith)) {
+            if (lf_listi == 'flist') {
+              o. <- paste0(lf_listi, "=", 'NULL')
+            } else if (lf_listi == 'dpar') {
+              o. <- paste0(lf_listi, "=", paste0("'", 'sigma', "'"))
+            } else if (lf_listi == 'center') {
+              o. <- paste0(lf_listi, "=", 'NULL')
+            } else if (lf_listi == 'cmc') {
+              o. <- paste0(lf_listi, "=", 'NULL')
+            } else if (lf_listi == 'sparse') {
+              o. <- paste0(lf_listi, "=", 'NULL')
+            } else if (lf_listi == 'decomp') {
+              o. <- paste0(lf_listi, "=", 'NULL')
+            } else if (lf_listi == 'resp') {
+              # Imp: even when nys > 1, ysi should be a single resp varible 
+              # That's why this is implemented at the level of _si
+              if (nys > 1) {
+                o. <- paste0(lf_listi, "=", paste0("'", ysi[1], "'"))
+                # o. <- paste0(lf_listi, "=", 'NULL')
+              } else {
+                o. <- paste0(lf_listi, "=", 'NULL')
+              }
+            } else if (lf_listi == 'loop') {
+              o. <- paste0(lf_listi, "=", 'FALSE')
+            } else {
+              o. <- o.
+            }
+            lf_list_c <- c(lf_list_c, o.)
+          }
+        }
+        lf_list_c <- paste(lf_list_c, collapse = ",")
+        if (lf_list_c != "")
+          lf_list_c <- paste0(",", lf_list_c)
+        split_result_ith <- gsub(")$", lf_list_c, split_result_ith)
+        split_result_ith <- paste0(split_result_ith, ")")
+      }
+    } # if (!is.null(split_result_ith)) {
+    split_result_ith <- paste(gsub_space(split_result_ith), collapse = "")
+    split_result_c <- c(split_result_c, split_result_ith)
+  } # for (i in 1:length(split_result)) {
+  out <- paste(split_result_c, collapse = "+")
+  out <- paste(gsub_space(out), collapse = "")
+  if(extract_covar) {
+    return(get_lf_covars_c)
+  }
+  return(out)
+} # end add_default_args_to_nlf_lf <- function(str) {
+
+
+
+#' An internal function to extract portion of string between pair of characters
+#' 
+#' @details An internal function to compute average prediction
+#' 
+#' @param str A string
+#' @param start A string
+#' @param end A string
+#' @param verbose A logical (\code{FALSE}).
+#' @keywords internal
+#' @return A string
+#' @noRd
+#'
+extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
+  if(is.null(str) | length(str) == 0) {
+    if(verbose)  print("String is NULL")
+    return(invisible(NULL))
+  } else if(!is.null(str)) {
+    if(is.character(str)) {
+      if(str == "NULL") return(invisible(NULL))
+    }
+    if(verbose)  print("String is NULL")
+  } else if(is.null(str)) {
+    if(verbose)  print("String is NULL")
+    return(invisible(NULL))
+  } 
+  pattern <- paste0(start, "(.*?)\\", end)
+  match_info <- regexpr(pattern, str, perl = TRUE)
+  if (match_info[1] != -1) { # Check if a match was found
+    full_match <- regmatches(str, match_info)
+    extracted_string <- gsub("^~|\\*$", "", full_match, perl = TRUE)
+    return(extracted_string)
+  } else {
+    if(verbose)  print("No match found.")
+    return(invisible(NULL))
+  }
+} 
+
+
 
 
 #' An internal function to compute average prediction from individual curves

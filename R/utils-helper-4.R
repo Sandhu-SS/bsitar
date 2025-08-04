@@ -152,8 +152,11 @@ prepare_formula <- function(x,
   smat <- NULL;
   smat_intercept <- NULL;
   set_model_sigma_by_mu <- NULL;
+  set_model_sigma_by_ls <- NULL;
   set_model_sigma_by_mu_prior_using_sigma_formula <- NULL;
   
+  nys <- NULL;
+  ysi <- NULL;
   
   
   if (!is.null(internal_formula_args)) {
@@ -2565,13 +2568,18 @@ prepare_formula <- function(x,
   # sigmacovariates  <- getcovlist(sigma_formulasi)
   # sigmacovariates_ <- unique(sigmacovariates)
   
-  sigmacovariates  <- all.vars(ept(sigma_formulasi), functions = F)
+  # should add_default_args_to_nlf_lf for set_model_sigma_by_mu?
+  if(set_model_sigma_by_ls) {
+    sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi, 
+                                                   nys = nys, ysi = ysi,
+                                                   extract_covar = TRUE)
+  } else if(set_model_sigma_by_mu) {
+    sigmacovariates  <- getcovlist(sigma_formulasi)
+  } else {
+    sigmacovariates  <- getcovlist(sigma_formulasi)
+  }
   sigmacovariates_ <- unique(sigmacovariates)
   
-  # sigma_formulasix <<- sigma_formulasi
-  # print(sigma_formulasi)
-  # print(sigmacovariates_)
-  # stop()
   
   
   

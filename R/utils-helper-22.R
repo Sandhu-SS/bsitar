@@ -1050,8 +1050,8 @@ modelbased_growthparameters_call.bgmfit <-
                                          available_d1 = available_d1, 
                                          xcall = NULL, verbose = verbose)
     
-    
-    newdata           <- CustomDoCall(get.newdata, full.args)
+    full.args$dpar <- dpar
+    newdata        <- CustomDoCall(get.newdata, full.args)
     
     
 

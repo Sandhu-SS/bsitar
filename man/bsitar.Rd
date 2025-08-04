@@ -41,6 +41,7 @@ bsitar(
   sigma_formula_gr_str = NULL,
   sigma_formula_manual = NULL,
   sigmax = NULL,
+  sigmaid = NULL,
   sigmadf = 4,
   sigmaknots = NA,
   sigmafixed = a + b + c,
@@ -699,6 +700,14 @@ parameters should be set to either \code{0} or \code{random}.}
 
 \item{sigmax}{Predictor for the distributional parameter \code{sigma}. See
 \code{x} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmaid}{A factor variable uniquely identifying the groups (e.g.,
+individuals) in the data frame. If \code{NULL} (default), then
+\code{sigmaid} is set same as \code{id}. For \code{univariate_by} and
+\code{multivariate} models, the \code{sigmaid} can be the same (typically)
+for all sub-models, or different for each sub-model (see the \code{id}
+argument for details on setting different arguments for sub-models).
+Ignored if \code{sigma_formula_manual = NULL}.}
 
 \item{sigmadf}{Degree of freedom for the spline function used for
 \code{sigma}. See \code{df} for details. Ignored if

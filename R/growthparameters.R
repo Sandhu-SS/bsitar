@@ -452,6 +452,10 @@ growthparameters.bgmfit <- function(model,
   # This only when set_sigma_manual used to model a b c 
   # Not when a function such as splines::ns etc used in sigma_formula
   
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
+  
   model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
   # 02.08.2025
@@ -1079,6 +1083,7 @@ growthparameters.bgmfit <- function(model,
                            xvar = xvar,
                            idvar = idvar,
                            resp = resp, 
+                           dpar = dpar,
                            numeric_cov_at = numeric_cov_at,
                            aux_variables = aux_variables,
                            levels_id = levels_id,
@@ -1586,6 +1591,7 @@ growthparameters.bgmfit <- function(model,
                            xvar = xvar,
                            idvar = idvar,
                            resp = resp, 
+                           dpar = dpar,
                            numeric_cov_at = numeric_cov_at,
                            aux_variables = aux_variables,
                            levels_id = levels_id,

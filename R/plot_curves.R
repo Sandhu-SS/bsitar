@@ -312,6 +312,10 @@ plot_curves.bgmfit <- function(model,
   model$model_info[['transform_draws']] <- transform_draws
     
   
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
+  
   # 02.08.2025 - this for post_processing_checks
   model$model_info[['model_deriv']] <- model_deriv
   model$model_info[['dpar']]        <- dpar
@@ -321,6 +325,7 @@ plot_curves.bgmfit <- function(model,
   # Depending on dpar 'mu' or 'sigma', subset model_info
   # This only when set_sigma_manual used to model a b c 
   # Not when a function such as splines::ns etc used in sigma_formula
+  
   
   model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
@@ -548,6 +553,7 @@ plot_curves.bgmfit <- function(model,
   
   
   # for xyadj....
+  get.newdata_args$dpar    <- dpar
   newdata.xyadj <- CustomDoCall(get.newdata, get.newdata_args)
   get.newdata_args[['ipts']]           <- ipts
   newdata       <- CustomDoCall(get.newdata, get.newdata_args)

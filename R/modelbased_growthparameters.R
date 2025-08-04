@@ -317,10 +317,19 @@ modelbased_growthparameters.bgmfit <-
                                      envir = NULL)
       model$model_info[['transform_draws']] <- transform_draws
       
+      
+      if(!is.null(dpar)) {
+        stop("Cannot use 'dpar' and 'nlpar' at the same time for", 
+             " posterior_epred.brmsprep().")
+      }
+      
+      
       # 20.03.2025
       # Depending on dpar 'mu' or 'sigma', subset model_info
       # This only when set_sigma_manual used to model a b c 
       # Not when a function such as splines::ns etc used in sigma_formula
+      
+      
       
       model <- getmodel_info(model = model, dpar = dpar, resp = resp)
       
@@ -1064,9 +1073,9 @@ modelbased_growthparameters.bgmfit <-
       }
       
       
+      full.args$dpar    <- dpar
       full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
-      # newdata <- CustomDoCall(get.newdata, full.args)
-      
+
       # Interpolation points
       if(!exists('check_fun'))    check_fun    <- FALSE
       if(!exists('available_d1')) available_d1 <- FALSE

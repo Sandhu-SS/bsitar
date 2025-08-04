@@ -93,13 +93,7 @@ get_idata <-
         stop("'newdata_fixed' should be either NULL or an integer, 1, 2, or 3")
       }
     }
-    
-    # if(!get.newdata.call) {
-    #   # prepare_data2 with model = model will get all the necessary info
-    #   newdata <- prepare_data2(data = newdata, model = model)
-    #   newdata <- prepare_transformations(data = newdata, model = model)
-    # }
-    
+
     
     if(data.table::is.data.table(newdata)) {
       setasdt <- TRUE 

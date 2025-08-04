@@ -271,6 +271,10 @@ marginal_draws.bgmfit <-
     # This only when set_sigma_manual used to model a b c 
     # Not when a function such as splines::ns etc used in sigma_formula
     
+    if(is.null(dpar)) {
+      dpar <- "mu"
+    }
+    
     model <- getmodel_info(model = model, dpar = dpar, resp = resp)
     
     # 02.08.2025
@@ -789,9 +793,9 @@ marginal_draws.bgmfit <-
                                  envir = parent.frame())
     
     
+    full.args$dpar    <- dpar
     full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
-    # newdata           <- CustomDoCall(get.newdata, full.args)
-  
+
     # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE

@@ -262,6 +262,10 @@ marginal_comparisons.bgmfit <- function(model,
   # This only when set_sigma_manual used to model a b c 
   # Not when a function such as splines::ns etc used in sigma_formula
   
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
+  
   model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
   # 02.08.2025
@@ -758,9 +762,10 @@ marginal_comparisons.bgmfit <- function(model,
                                check_trace_back = NULL,
                                envir = parent.frame())
   
-  full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
-  # newdata           <- CustomDoCall(get.newdata, full.args)
   
+  full.args$dpar    <- dpar
+  full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
+
   # Interpolation points
   full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
                                        nipts = NULL, 

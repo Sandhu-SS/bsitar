@@ -103,6 +103,10 @@ loo_validation.bgmfit <-
     # This only when set_sigma_manual used to model a b c 
     # Not when a function such as splines::ns etc used in sigma_formula
     
+    if(is.null(dpar)) {
+      dpar <- "mu"
+    }
+    
     model <- getmodel_info(model = model, dpar = dpar, resp = resp)
     
 
@@ -167,6 +171,7 @@ loo_validation.bgmfit <-
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
     } else {
+      full.args$dpar    <- dpar
       newdata <- CustomDoCall(get.newdata, full.args)
     }
     
