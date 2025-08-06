@@ -17,6 +17,7 @@ test_that("bsitar works fully with default settings", {
                        sample_prior = "no",
                        threads = threading(NULL),
                        # init = '0',
+                       vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
                        seed = 123)
   
@@ -33,6 +34,7 @@ test_that("bsitar works fully with default settings", {
                        sample_prior = "no",
                        threads = threading(NULL),
                        # init = '0',
+                       vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
                        seed = 123)
   
@@ -50,6 +52,7 @@ test_that("bsitar works fully with default settings", {
                        sample_prior = "no",
                        threads = threading(NULL),
                        # init = '0',
+                       vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
                        seed = 123)
   }))
