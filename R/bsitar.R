@@ -1761,8 +1761,6 @@
 #'   argument can be set globally for the current \R session via the
 #'   \code{"future"} option.
 #'   
-#' @param fast_nsk Currently ignored. Placeholder for future development. 
-#' 
 #' @param sum_zero Currently ignored. Placeholder for future development.
 #' 
 #' @param global_args Currently ignored. Placeholder for future development.
@@ -2141,7 +2139,6 @@ bsitar <- function(x,
                    file_compress = TRUE,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
-                   fast_nsk = 0L,
                    sum_zero = FALSE,
                    global_args = FALSE,
                    parameterization = 'ncp',
@@ -2960,7 +2957,7 @@ bsitar <- function(x,
   # getdotslist <- list(...)
   
   
-  # spline types supported are 'rcs', 'nsp' and 'nsk'
+  # spline types supported are 'rcs', 'nsp' and 'nsk', 'bsp', 'isp', 'msp'
   # The argument . is exposed that allows setting spline type as string 
   # However for developmental purposes, an additional option is allowed that 
   # pass a named list ('smat') via ... that allows a more elaborate control on 
@@ -2986,15 +2983,16 @@ bsitar <- function(x,
   # Note that according to stan documentation, sparse = T speeds up the computation
   # only when sparsity > 90 %. The sparcity in sitar model is '0'% except when 
   # type = 'rcs' and decomp = NULL.
-  # 9. smat_check_sparsity - a logical (T/F) to check the sparsity (%) in the 
+  # 9. check_sparsity - a logical (T/F) to check the sparsity (%) in the 
   # function block where Spl * s vector is used. For this sparse, both 'sfirst'
   # 'sparse' need to be T, also chains = 1, and iter = 2. (since this is printed)
   # Again, this is helpful in case of sitar model
+  # 10. degree - an integers
   
   
   
   
-  allowed_spline_type <- c('rcs', 'nsp', 'nsk')
+  allowed_spline_type <- c('rcs', 'nsp', 'nsk', 'bsp', 'isp', 'msp')
   allowed_spline_type_exception_msg <- 
     paste("The options available are:", 
           paste(paste(paste0("'", allowed_spline_type, "'"), collapse =", "), 
@@ -3031,7 +3029,7 @@ bsitar <- function(x,
   }
   
   
-  allowed_smat_options <- c('type', 'centerval', 'intercept', 
+  allowed_smat_options <- c('type', 'centerval', 'intercept', 'degree',
                             'normalize', 'derivs', 'preH', 'include',
                             "sfirst", "sparse", "check_sparsity")
   
@@ -3093,6 +3091,7 @@ bsitar <- function(x,
   if(is.null(spline_type)) {
     spline_type_list[['type']]        <- NULL
     spline_type_list[['centerval']]   <- 0
+    spline_type_list[['degree']]      <- 3L
     spline_type_list[['intercept']]   <- FALSE
     spline_type_list[['normalize']]   <- TRUE
     spline_type_list[['derivs']]      <- FALSE
@@ -3152,6 +3151,20 @@ bsitar <- function(x,
         } else if(is.null(spline_type[['type']])) {
           # 
         }
+        
+        # change check message same as 'centerval' for other
+        if(!is.null(spline_type[['degree']])) {
+          if(!is.numeric(spline_type[['degree']])) {
+            stop("Argument 'degree' must be a numeric value",
+                 " but instead specified as ", 
+                 "'", paste0(spline_type[['degree']], "'"))
+          } else {
+            spline_type_list[['degree']] <- spline_type[['degree']]
+          }
+        } else if(is.null(spline_type[['degree']])) {
+          spline_type_list[['degree']] <- 3
+        }
+        
         
         if(!is.null(spline_type[['intercept']])) {
           if(!is.logical(as.logical(spline_type[['intercept']]))) {
@@ -3272,6 +3285,7 @@ bsitar <- function(x,
         spline_type_list[['type']]        <- NULL
         spline_type_list[['intercept']]   <- FALSE
         spline_type_list[['centerval']]   <- 0
+        spline_type_list[['degree']]      <- 3L
         spline_type_list[['normalize']]   <- FALSE
         spline_type_list[['derivs']]      <- FALSE
         spline_type_list[['preH']]        <- FALSE
@@ -3286,6 +3300,7 @@ bsitar <- function(x,
         spline_type_list[['type']]        <- spline_type
         spline_type_list[['intercept']]   <- FALSE
         spline_type_list[['centerval']]   <- 0
+        spline_type_list[['degree']]      <- 3L
         spline_type_list[['normalize']]   <- TRUE
         spline_type_list[['derivs']]      <- FALSE
         spline_type_list[['preH']]        <- TRUE
@@ -3335,6 +3350,7 @@ bsitar <- function(x,
   if((smat == 'nsp' | smat == 'nsk') & !spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
+    smat_degree       <- as.integer(spline_type_list[['degree']])
     smat_normalize    <- as.integer(spline_type_list[['normalize']])
     smat_derivs       <- as.integer(spline_type_list[['derivs']])
     smat_preH         <- as.integer(spline_type_list[['preH']])
@@ -3346,6 +3362,7 @@ bsitar <- function(x,
   } else if((smat == 'rcs') & !spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
+    smat_degree       <- as.integer(spline_type_list[['degree']])
     smat_normalize    <- as.integer(spline_type_list[['normalize']])
     smat_derivs       <- as.integer(spline_type_list[['derivs']])
     smat_preH         <- as.integer(spline_type_list[['preH']])
@@ -3357,6 +3374,7 @@ bsitar <- function(x,
   } else if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
     smat_intercept    <- 0
     smat_centerval    <- 0
+    smat_degree       <- 3L
     smat_normalize    <- as.integer(spline_type_list[['normalize']])
     smat_derivs       <- 0
     smat_preH         <- as.integer(spline_type_list[['preH']])
@@ -3368,6 +3386,7 @@ bsitar <- function(x,
   } else if((smat == 'rcs') & spline_type_via_stype) {
     smat_intercept    <- 0
     smat_centerval    <- 0
+    smat_degree       <- 3L
     smat_normalize    <- as.integer(spline_type_list[['normalize']])
     smat_derivs       <- 0
     smat_preH         <- as.integer(spline_type_list[['preH']])
@@ -3398,7 +3417,15 @@ bsitar <- function(x,
     if(arguments$iter > 2) stop("'iter' must be set as '2' when check_sparsity = TRUE'")
   }
   
+ 
   
+  if(smat == 'nsp' | smat == 'nsk' | smat == 'rcs') {
+    if(smat_degree != 3) {
+      stop("'nsp', 'nsk' and 'rcs', the degree must be 3")
+    }
+  }
+     
+    
 
   # 'smat_include_stan' is also not working i.e., even single #include also not
   # working in package
@@ -3414,6 +3441,8 @@ bsitar <- function(x,
    if(verbose) {
      message(paste0("setting spline type as '", smat, "'"))
      if(smat != "rcs") {
+       message(paste0("setting degree for spline type '",
+                      spline_type_list[['degree']], "' as: ", smat_degree))
        message(paste0("setting intercept for spline type '",
                       spline_type_list[['type']], "' as: ", smat_intercept))
        message(paste0("setting normalize for spline type '",
@@ -3423,19 +3452,32 @@ bsitar <- function(x,
      }
    }
    
-  
-  
-  if(!is.numeric(fast_nsk)) {
-    stop("'fast_nsk' must be an integer between 0 and 3")
-  }
-  
-  
-  if(fast_nsk > 0) {
-    if(smat != 'nsk') {
-      stop("For 'fast = TRUE', the stype must be 'nsk'")
+
+  # Handle fast_nsk
+  if(arguments$backend == "cmdstanr") {
+    fast_nsk <- 2L
+  } else if(arguments$backend == "rstan" | 
+            eval(getOption("brms.backend", "rstan")) == "rstan"
+            ) {
+    if(utils::packageVersion('rstan') > '2.35.0') {
+      fast_nsk <- 2L
+    } else {
+      fast_nsk <- 0L
     }
+  } else {
+    fast_nsk <- 0L
   }
   
+  # if smat != 'nsk' | 'nsp' -> set fast_nsk <- 0L
+  if(smat == 'nsp') {
+    fast_nsk <- fast_nsk
+  } else if(smat == 'nsk') {
+    fast_nsk <- fast_nsk
+  } else {
+    fast_nsk <- 0L
+  }
+  
+ 
 
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_a_form']])) {
@@ -5957,6 +5999,7 @@ bsitar <- function(x,
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
             mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                                 degree = smat_degree,
                                  intercept = smat_intercept, derivs = smat_derivs, 
                                  centerval = smat_centerval, 
                                  normalize = smat_normalize,
@@ -5966,6 +6009,7 @@ bsitar <- function(x,
             iknots <- knots[2:(length(knots)-1)]
             bknots <- c(knots[1], knots[length(knots)])
             mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                                 degree = smat_degree,
                                  intercept = smat_intercept, derivs = smat_derivs, 
                                  centerval = smat_centerval, 
                                  normalize = smat_normalize,
@@ -6004,6 +6048,7 @@ bsitar <- function(x,
             bknots <- c(knots[1], knots[length(knots)])
             mat_s <- GS_nsp_call(x = data[[x]], 
                                  knots = iknots, bknots = bknots, 
+                                 degree = smat_degree,
                                  intercept = smat_intercept, 
                                  derivs = smat_derivs, 
                                  centerval = smat_centerval, 
@@ -6015,6 +6060,7 @@ bsitar <- function(x,
             bknots <- c(knots[1], knots[length(knots)])
             mat_s <- GS_nsk_call(x = data[[x]], 
                                  knots = iknots, bknots = bknots, 
+                                 degree = smat_degree,
                                  intercept = smat_intercept, 
                                  derivs = smat_derivs, 
                                  centerval = smat_centerval, 
@@ -6549,6 +6595,7 @@ bsitar <- function(x,
     # SplineCall <- substitute(GS_nsp_call(x = datai[[xsi]],
     #                      knots = iknots,
     #                      bknots = bknots,
+    #                      degree = smat_degree,
     #                      intercept = smat_intercept,
     #                      derivs = smat_derivs,
     #                      centerval = smat_centerval,
@@ -6575,6 +6622,7 @@ bsitar <- function(x,
       SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
                            knots = iknots,
                            bknots = bknots,
+                           degree = smat_degree,
                            intercept = smat_intercept,
                            derivs = smat_derivs,
                            centerval = smat_centerval,
@@ -6771,6 +6819,7 @@ bsitar <- function(x,
         'add_rcsfunmatqrinv_genquant',
         "verbose",
         "smat",
+        "smat_degree",
         "smat_intercept",
         "smat_derivs",
         "smat_centerval",
@@ -7140,6 +7189,7 @@ bsitar <- function(x,
         "verbose",
         "unusedsi",
         "smat",
+        "smat_degree",
         "smat_intercept",
         "smat_derivs",
         "smat_centerval",

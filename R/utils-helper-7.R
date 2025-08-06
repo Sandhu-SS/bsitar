@@ -76,6 +76,7 @@ prepare_function_nsp_rcs <- function(x,
   smat <- NULL;
   SplinefunxPre <- NULL;
   Splinefunxsuf <- NULL;
+  smat_degree <- NULL;
   smat_intercept <- NULL;
   smat_centerval <- NULL;
   smat_normalize <- NULL;
@@ -1033,9 +1034,9 @@ prepare_function_nsp_rcs <- function(x,
       bknots   <- c(knots[1], knots[length(knots)])
       iknots   <- knots[2:(length(knots)-1)]
       allknots <- c(rep(bknots[1], 4), iknots, rep(bknots[2], 4))
-      precomputedH_R <- GS_ns_getH(allknots, smat_normalize)
+      precomputedH_R <- GS_getH(allknots, smat_normalize)
       
-      precomputedH_R_str <- "GS_ns_getH(allknots, smat_normalize)"
+      precomputedH_R_str <- "GS_getH(allknots, smat_normalize)"
       
       
       precomputedH_c <- list()
@@ -1051,34 +1052,39 @@ prepare_function_nsp_rcs <- function(x,
     }
     
    
-    if(smat_preH) {
-      setMatpreH = paste0("\nmatrix[nknots + 2, nknots] ", "MatpreH = ", precomputedH_Stan, "")
-    } else {
-      # placeholder when preH = 0
-      setMatpreH = paste0("\nmatrix[1, 1] ", "MatpreH = ", "[[1],[1]]", ";")
-    }
+    # if(smat_preH) {
+    #   setMatpreH = paste0("\nmatrix[nknots + 2, nknots] ", "MatpreH = ", precomputedH_Stan, "")
+    # } else {
+    #   # placeholder when preH = 0
+    #   setMatpreH = paste0("\nmatrix[1, 1] ", "MatpreH = ", "[[1],[1]]", ";")
+    # }
+    
     
     if(smat_preH) {
       setMatpreH_for_functions_R <- "
       bknots   = c(knots[1], knots[length(knots)])
       iknots   = knots[2:(length(knots)-1)]
       allknots = c(rep(bknots[1], 4), iknots, rep(bknots[2], 4))
-      MatpreH  = GS_ns_getH(allknots, smat_normalize)"
+      MatpreH  = GS_getH(allknots, smat_normalize)"
     } else {
       setMatpreH_for_functions_R = "MatpreH <- matrix(1, 1)" 
     }
     
+    setMatpreH <- NULL
+    # if(add_fast == "") {
+    #   SplinefunxStan_str <- "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH"
+    #   setMatpreH <- NULL
+    # } else {
+    #   SplinefunxStan_str <- "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH, MatpreH"
+    # }
     
-    if(add_fast == "") {
-      SplinefunxStan_str <- "X, iknotsx, bknotsx, intercept, derivs, centerval, normalize, preH"
-      setMatpreH <- NULL
-    } else {
-      SplinefunxStan_str <- "X, iknotsx, bknotsx, intercept, derivs, centerval, normalize, preH, MatpreH"
-    }
+    SplinefunxStan_str <- "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH"
     
     
     intercept_str_plus_str <- 
     paste0("int derivs = ", 0, ";",
+           "\n",
+           "int degree = ", smat_degree,  ";",
            "\n",
            "real centerval = ", smat_centerval,  ";",
            "\n",
@@ -1117,6 +1123,7 @@ prepare_function_nsp_rcs <- function(x,
                                ")",
                                ";")
       } # if(!dparm_part_of_SplQc) {
+      fun_body_str <- paste0("\n", fun_body_str)
     } # if (!dparm_set_fixed_or_random) { else if (dparm_set_fixed_or_random) {
     
     
@@ -1471,6 +1478,8 @@ prepare_function_nsp_rcs <- function(x,
                                        "\n",
                                        "int derivs = ", 0, ";",
                                        "\n",
+                                       "int degree = ", smat_degree,  ";",
+                                       "\n",
                                        "real centerval = ", smat_centerval,  ";",
                                        "\n",
                                        "int normalize = ", smat_normalize,  ";"
@@ -1768,18 +1777,18 @@ prepare_function_nsp_rcs <- function(x,
     # 29.05.2025 - now not needed, matrix wthin sitarfun
 
     if(add_fast == "") {
-      getpreHname <- "GS_ns_getH_pre"
+      getpreHname <- "GS_getH_pre"
       if(smat_preH) {
         dummy_getpreH_fun_raw <- paste0(
           "matrix ",
-          'GS_ns_getH_stan',
+          'GS_getH_stan',
           "(vector nrows, int ncols) {\n" ,
           # "H = [1,3];\n",
           # "return(H);",
           "return([[1,2],[2,3]]);",
           "\n}  "
           ,
-          paste0("// end of ", 'GS_ns_getH_stan'),
+          paste0("// end of ", 'GS_getH_stan'),
           collapse = " ")
         
         getpreH_fun_raw <-
@@ -1899,6 +1908,8 @@ prepare_function_nsp_rcs <- function(x,
     intercept_str_plus_str_d0 <- 
       paste0("int derivs = ", 0, ";",
              "\n",
+             "int degree = ", smat_degree,  ";",
+             "\n",
              "real centerval = ", smat_centerval,  ";",
              "\n",
              "int normalize = ", smat_normalize,  ";",
@@ -1928,9 +1939,6 @@ prepare_function_nsp_rcs <- function(x,
         backend == "mock" |
         backend == "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
-    #   body <- "
-    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
-    # "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
     
@@ -1939,9 +1947,6 @@ prepare_function_nsp_rcs <- function(x,
         backend == "mock" &
         backend != "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
-    #   body <- "
-    #   Spl = GS_ns_call_stan(X, iknotsx, bknotsx, intercept, derivs, centerval, normalize);
-    # "
       fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
     
@@ -1984,6 +1989,8 @@ prepare_function_nsp_rcs <- function(x,
     
     intercept_str_plus_str_d1 <- 
       paste0("int derivs = ", 1, ";",
+             "\n",
+             "int degree = ", smat_degree,  ";",
              "\n",
              "real centerval = ", smat_centerval,  ";",
              "\n",
@@ -2060,6 +2067,8 @@ prepare_function_nsp_rcs <- function(x,
     
     intercept_str_plus_str_d2 <- 
       paste0("int derivs = ", 2, ";",
+             "\n",
+             "int degree = ", smat_degree,  ";",
              "\n",
              "real centerval = ", smat_centerval,  ";",
              "\n",
@@ -3145,21 +3154,21 @@ prepare_function_nsp_rcs <- function(x,
       if(smat == 'nsp' | smat == 'nsk' | smat == 'rcs') { # added smat == 'rcs'
         # 29.05.2025
         if(smat_preH) {
-          start_pattern <- "matrix[nknots+2,nknots]MatpreH"
-          end_pattern <- ";"
-          replacementx <- setMatpreH_for_functions_R
+          # start_pattern <- "matrix[nknots+2,nknots]MatpreH"
+          # end_pattern <- ";"
+          # replacementx <- setMatpreH_for_functions_R
         } else {
-          start_pattern <- "matrix[1,1]MatpreH"
-          end_pattern <- ";"
-          replacementx <- setMatpreH_for_functions_R
+          # start_pattern <- "matrix[1,1]MatpreH"
+          # end_pattern <- ";"
+          # replacementx <- setMatpreH_for_functions_R
         }
         
-        xstaring <- replace_string_part(x = xstaring, 
-                                          start = start_pattern,  
-                                          end =  end_pattern,
-                                          replace = replacementx,
-                                          extract = FALSE,
-                                          cat_str = FALSE)
+        # xstaring <- replace_string_part(x = xstaring, 
+        #                                   start = start_pattern,  
+        #                                   end =  end_pattern,
+        #                                   replace = replacementx,
+        #                                   extract = FALSE,
+        #                                   cat_str = FALSE)
         
         # 22.07.2025
         if(!add_separte_getknots_fun) {
@@ -3497,71 +3506,187 @@ prepare_function_nsp_rcs <- function(x,
   SplinefunxStan_file <- SplinefunxStan
   
   
+  funx_names      <- paste0(SplinefunxStan_file, add_fast)
+  funx_names.stan <- paste0(funx_names, ".stan")
+  set_path_str    <- paste0(smat_include_stan_path, funx_names, funx_names.stan)
   
-
-  include_str <- ""
-  if(smat_include_stan) {
-    set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
-    include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-  } else if(!smat_include_stan) {
-    set_path_str  <- paste0(smat_include_stan_path, paste0(SplinefunxStan_file, add_fast), ".stan")
-    file_main_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-    
-    set_path_str  <- paste0(smat_include_stan_path, paste0("preH", ""), ".stan")
-    file_preH_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-    
-    set_path_str  <- paste0(smat_include_stan_path, paste0("auxillary", ""), ".stan")
-    file_auxillary_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-    
-    if(add_fast == "") {
-      # file_preH_str is part of the non fast file
-      include_str <- paste0(file_main_str)
-      # include_str <- paste0(file_auxillary_str, "\n", file_preH_str, "\n", file_main_str)
-    } else {
-      if(smat_preH) {
-        include_str <- file_main_str
-        gsub_it <- "H = GS_ns_getH_stan(allknots, normalize);\n"
-        gsub_by <- ""
-        include_str <- gsub(gsub_it, gsub_by, include_str, fixed = T)
-      } else if(!smat_preH) {
-        include_str <- paste0(file_preH_str, "\n", file_main_str)
-      }
-    } # if(add_fast == "") {
-  } # else if(!smat_include_stan) {
   
- 
+  
+  ###########################################################################
+  # nsk
+  ###########################################################################
+  if(funx_names == "GS_nsk_call_stan_fast_2") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_nsp_nsk_stan_fast_2',
+                                     'GS_nsp_call_stan',
+                                     'GS_nsk_call_stan')
+  } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  if(funx_names == "GS_nsk_call_stan_fast_2") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_nsp_nsk_stan_fast_1',
+                                     'GS_nsp_call_stan',
+                                     'GS_nsk_call_stan')
+  } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  if(funx_names == "GS_nsk_call_stan") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_stan',
+                                     'GS_nsp_nsk_stan',
+                                     'GS_nsp_call_stan',
+                                     'GS_nsk_call_stan')
+  } # if(funx_names == "GS_nsk_call_stan") {
+  ###########################################################################
+  # nsp
+  ###########################################################################
+  if(funx_names == "GS_nsp_call_stan_fast_2") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_nsp_nsk_stan_fast_2',
+                                     'GS_nsp_call_stan')
+  } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  if(funx_names == "GS_nsp_call_stan_fast_2") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_nsp_nsk_stan_fast_1',
+                                     'GS_nsp_call_stan')
+  } # if(funx_names == "GS_ns_call_stan_fast_1") {
+  if(funx_names == "GS_nsp_call_stan") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_stan',
+                                     'GS_nsp_nsk_stan',
+                                     'GS_nsp_call_stan')
+  } # if(funx_names == "GS_nsk_call_stan") {
+  ###########################################################################
+  # rcs
+  ###########################################################################
+  if(funx_names == "GS_rcs_call_stan") {
+    functions_to_add_stan_block <- c('GS_rcs_call_stan')
+  }
+  
+  ###########################################################################
+  # preH -> if !smat_preH 
+  ###########################################################################
+  if(!smat_preH) {
+    functions_to_add_stan_block <- c('GS_preH_stan',
+                                     functions_to_add_stan_block)
+  }
+  ###########################################################################
+  # Handling of !smat_preH & smat_preH 
+  ###########################################################################
+  all_funs_for_stan_block_str <- ""
+  for (i in functions_to_add_stan_block) {
+    R_str_name    <- paste0(i, "_", "R_str")
+    R_str_call    <- paste0(R_str_name, "()")
+    R_str_fun_str <- ept(R_str_call)
+    all_funs_for_stan_block_str <- paste0(all_funs_for_stan_block_str, 
+                                          # "\n ",
+                                          R_str_fun_str)
+  }
+  if(smat_preH) {
+    gsub_it <- "H = GS_getH_stan(allknots, normalize);"
+    gsub_by <- "// H = GS_getH_stan(allknots, normalize);"
+    all_funs_for_stan_block_str <- gsub(gsub_it, gsub_by, 
+                                        all_funs_for_stan_block_str, fixed = T)
+    gsub_it <- "MatpreH;"
+    gsub_by <- precomputedH_Stan
+    all_funs_for_stan_block_str <- gsub(gsub_it, gsub_by, 
+                                        all_funs_for_stan_block_str, fixed = T)
+  } else if(!smat_preH) {
+    gsub_it <- "H = MatpreH;"
+    gsub_by <- "// H = MatpreH;"
+    all_funs_for_stan_block_str <- gsub(gsub_it, gsub_by, 
+                                        all_funs_for_stan_block_str, fixed = T)
+  }
+  
+  include_str <- all_funs_for_stan_block_str
+  
+  
+  
+  # cat(include_str)
+  # stop()
   
 
   # include_str <- ""
   # if(smat_include_stan) {
-  #   if(smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
-  #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-  #   } else if(!smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
-  #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-  #     set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
-  #     include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-  #   }
+  #   set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
+  #   include_str <- paste0(include_str, "#include ", set_path_str, "\n")
   # } else if(!smat_include_stan) {
-  #   if(smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
-  #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-  #   } else if(!smat_preH) {
-  #     set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
-  #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-  #     set_path_str <- paste0(smat_include_stan_path, "preH", ".stan")
-  #     include_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-  #   }
-  # }
+  #   funx_names      <- paste0(SplinefunxStan_file, add_fast)
+  #   funx_names.stan <- paste0(funx_names, ".stan")
+  #   set_path_str    <- paste0(smat_include_stan_path, funx_names, funx_names.stan)
+  #   if(exists(set_path_str)) {
+  #     file_main_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+  #   } else if(!exists(set_path_str)) {
+  #     if(funx_names == "GS_nsk_call_stan_fast_2") {
+  #       functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+  #                                        'GS_bsp_tuple_stan',
+  #                                        'GS_nsp_nsk_stan_fast_2',
+  #                                        'GS_nsp_call_stan',
+  #                                        'GS_nsk_call_stan')
+  #     } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  #     if(funx_names == "GS_nsk_call_stan_fast_2") {
+  #       functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+  #                                        'GS_bsp_tuple_stan',
+  #                                        'GS_nsp_nsk_stan_fast_1',
+  #                                        'GS_nsp_call_stan',
+  #                                        'GS_nsk_call_stan')
+  #     } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  #     if(funx_names == "GS_nsk_call_stan") {
+  #       functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+  #                                        'GS_bsp_stan',
+  #                                        'GS_nsp_nsk_stan',
+  #                                        'GS_nsp_call_stan',
+  #                                        'GS_nsk_call_stan')
+  #     } # if(funx_names == "GS_nsk_call_stan") {
+  #     if(!smat_preH) {
+  #       functions_to_add_stan_block <- c('GS_preH_stan',
+  #                                        functions_to_add_stan_block)
+  #     }
+  #     all_funs_for_stan_block_str <- ""
+  #     for (i in functions_to_add_stan_block) {
+  #       R_str_name    <- paste0(i, "_", "R_str")
+  #       R_str_call    <- paste0(R_str_name, "()")
+  #       R_str_fun_str <- ept(R_str_call)
+  #       all_funs_for_stan_block_str <- paste0(all_funs_for_stan_block_str, 
+  #                                             "\n ",
+  #                                             R_str_fun_str)
+  #     }
+  #     include_str <- all_funs_for_stan_block_str
+  #   } # else if(!exists(set_path_str)) {
+  #   
+  #   
+  #   set_path_str  <- paste0(smat_include_stan_path, paste0("preH", ""), ".stan")
+  #   file_preH_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+  #   
+  #   set_path_str  <- paste0(smat_include_stan_path, paste0("auxillary", ""), ".stan")
+  #   file_auxillary_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
+  #   
+  #   if(add_fast == "") {
+  #     # file_preH_str is part of the non fast file
+  #     include_str <- paste0(file_main_str)
+  #     # include_str <- paste0(file_auxillary_str, "\n", file_preH_str, "\n", file_main_str)
+  #   } else {
+  #     if(smat_preH) {
+  #       include_str <- file_main_str
+  #       gsub_it <- "H = GS_getH_stan(allknots, normalize);\n"
+  #       gsub_by <- ""
+  #       include_str <- gsub(gsub_it, gsub_by, include_str, fixed = T)
+  #     } else if(!smat_preH) {
+  #       include_str <- paste0(file_preH_str, "\n", file_main_str)
+  #     }
+  #   } # if(add_fast == "") {
+  # } # else if(!smat_include_stan) {
+  # 
   # 
   
   
-  # print('include_str')
-  # print(include_str)
+ 
   
   
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
+  # This assumes that same function is used for both mu and sigma
+  # If this assumption is wrong, then need to re work on names
   if(called_for_ls) {
     include_str <- ""
   }

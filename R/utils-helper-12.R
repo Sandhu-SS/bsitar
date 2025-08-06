@@ -12,7 +12,8 @@
 #' @keywords internal
 #' @noRd
 #' 
-make_spline_matrix <- function(x, knots) {
+make_spline_matrix <- function(x, 
+                               knots) {
   X <- x
   N <- length(X)
   nk <- length(knots)
@@ -63,7 +64,11 @@ make_spline_matrix <- function(x, knots) {
 #' @noRd
 #' 
 #' 
-GS_bs <- function(x, degree, knots, bknots, calcderiv) {
+GS_bsp <- function(x, 
+                   knots, 
+                   bknots, 
+                   degree, 
+                   calcderiv) {
   Nobs       <- length(x)
   fullknots  <- c(rep(bknots[1], degree+1), knots, rep(bknots[2], degree+1))
   Nintervals <- length(fullknots) - 1
@@ -133,7 +138,6 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
 #' @param calcderiv A real number
 #' @param preH A logical (as.integer()) indicating whether to use pre computed 
 #' H matrix
-#' @param MatpreH A matrix (pre computed H matrix)
 #' 
 #' @return A matrix
 #' 
@@ -143,8 +147,14 @@ GS_bs <- function(x, degree, knots, bknots, calcderiv) {
 #' @noRd
 #' 
 #' 
-GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH, 
-                  MatpreH = NULL) {
+GS_nsp_nsk <- function(x, 
+                       knots, 
+                       bknots, 
+                       degree, 
+                       intercept, 
+                       calcderiv, 
+                       normalize, 
+                       preH) {
   
   Nintk     <- length(knots) 
   Nk        <- Nintk + 2
@@ -154,11 +164,15 @@ GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH,
   bsderiv   <- matrix(0, length(x), Nk)
   # Compute B-spline values and derivatives
   if (calcderiv) {
-    bs      <- GS_bs(x, 3, knots, bknots, 0)
-    bsderiv <- GS_bs(x, 3, knots, bknots, 1)
+    bs      <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+                      calcderiv = 0)
+    bsderiv <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+                      calcderiv = 1)
   } else {
-    bs      <- GS_bs(x, 3, knots, bknots, 0)
+    bs      <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+                      calcderiv = 0)
   }
+  
   # Handle boundary cases (for values below and above the boundary knots)
   x_below_boundary <- sum(x < bknots[1])
   x_above_boundary <- sum(x > bknots[2])
@@ -166,8 +180,10 @@ GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH,
   if (x_below_boundary || x_above_boundary) {
     bs_bknots <- matrix(0, 2, Nk)
     bsderiv_bknots <- matrix(0, 2, Nk)
-    bs_bknots      <- GS_bs(bknots, 3, knots, bknots, 0)
-    bsderiv_bknots <- GS_bs(bknots, 3, knots, bknots, 1)
+    bs_bknots      <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+                             calcderiv = 0)
+    bsderiv_bknots <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+                             calcderiv = 1)
    
     if (x_below_boundary) {
       xselect <- which(x < bknots[1])
@@ -194,21 +210,21 @@ GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH,
     } # if (x_above_boundary) {
   } # if (x_below_boundary || x_above_boundary) {
   
-  # H <- GS_ns_getH(allknots, normalize) # , 1 normalize T/F 1/0
+  # H <- GS_getH(allknots, normalize) # , 1 normalize T/F 1/0
   
-  
+  MatpreH <- NULL
   if(preH) {
     if(is.null(MatpreH)) {
-      H <- GS_ns_getH(allknots, normalize) 
+      H <- GS_getH(allknots, normalize) 
     } else if(!is.null(MatpreH)) {
       if(MatpreH[1,1] == 1) {
-        H <- GS_ns_getH(allknots, normalize) 
+        H <- GS_getH(allknots, normalize) 
       } else {
         H <- MatpreH
       }
     }
   } else if(!preH) {
-    H <- GS_ns_getH(allknots, normalize) 
+    H <- GS_getH(allknots, normalize) 
   }
   
   
@@ -235,7 +251,8 @@ GS_ns <- function(x, knots, bknots, intercept, calcderiv, normalize, preH,
 #' @noRd
 #' 
 #' 
-GS_ns_getH <- function(knots, normalize) {
+GS_getH <- function(knots, 
+                    normalize) {
   # Step 1: Define constants based on the knots
   Nintk <- length(knots) - 8
   C11 <- 6 / ((knots[5] - knots[2]) * (knots[5] - knots[3]))
@@ -300,7 +317,6 @@ GS_ns_getH <- function(knots, normalize) {
 #'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
 #' @param preH A logical (as.integer()) indicating whether to use pre computed 
 #' H matrix
-#' @param MatpreH A matrix (pre computed H matrix)
 #' @param sfirst Ignored
 #' @param sparse Ignored
 #' 
@@ -312,9 +328,17 @@ GS_ns_getH <- function(knots, normalize) {
 #' @noRd
 #' 
 #' 
-GS_nsp_call <- function(x, knots, bknots, intercept, derivs, 
-                        centerval, normalize, preH, MatpreH = NULL,
-                        sfirst = FALSE, sparse = FALSE) {
+GS_nsp_call <- function(x, 
+                        knots, 
+                        bknots, 
+                        degree,
+                        intercept, 
+                        derivs, 
+                        centerval, 
+                        normalize, 
+                        preH, 
+                        sfirst = FALSE, 
+                        sparse = FALSE) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -338,9 +362,14 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
   }
   
   df     <- length(knots) + 1 + intercept
-  out <- GS_ns(x, knots, bknots, intercept = intercept, 
-               calcderiv = calcderiv, normalize = normalize,
-               preH = preH, MatpreH = MatpreH)
+  out <- GS_nsp_nsk(x, 
+                    knots, 
+                    bknots, 
+                    degree = degree, 
+                    intercept = intercept, 
+                    calcderiv = calcderiv, 
+                    normalize = normalize,
+                    preH = preH)
   
   # if no internal knot, the out is a vector and not matrix, convert it to matrix
   # but if no internal knot but intercept TRUE, then it is already a matrix
@@ -351,9 +380,13 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
   
   # Centering
   if (centerval != 0) {
-    cenout <- GS_ns(centerval, knots, bknots, intercept = intercept, 
-                    calcderiv = calcderiv, normalize = normalize,
-                    preH = preH, MatpreH = MatpreH)
+    cenout <- GS_nsp_nsk(centerval, 
+                         knots, bknots, 
+                         degree = degree, 
+                         intercept = intercept, 
+                         calcderiv = calcderiv, 
+                         normalize = normalize,
+                         preH = preH)
     
     if(!is.matrix(cenout)) cenout <- matrix(cenout, nrow = 1) 
     # if(length(knots) == 0) {
@@ -397,7 +430,6 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
 #'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
 #' @param preH A logical (as.integer()) indicating whether to use pre computed 
 #' H matrix
-#' @param MatpreH A matrix (pre computed H matrix)
 #' @param sfirst Ignored
 #' @param sparse Ignored
 #' 
@@ -409,9 +441,17 @@ GS_nsp_call <- function(x, knots, bknots, intercept, derivs,
 #' @noRd
 #' 
 #' 
-GS_nsk_call <- function(x, knots, bknots, intercept, derivs, 
-                        centerval, normalize, preH, MatpreH = NULL,
-                        sfirst = FALSE, sparse = FALSE) {
+GS_nsk_call <- function(x, 
+                        knots, 
+                        bknots, 
+                        degree, 
+                        intercept, 
+                        derivs, 
+                        centerval, 
+                        normalize, 
+                        preH, 
+                        sfirst = FALSE, 
+                        sparse = FALSE) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -428,13 +468,25 @@ GS_nsk_call <- function(x, knots, bknots, intercept, derivs,
   
  
   if (!calcderiv) {
-    basis <- GS_nsp_call(x, knots = temp[-(1:2)], bknots = bknots, intercept = intercept, 
-                        derivs = derivs, centerval = centerval, normalize = normalize,
-                        preH = preH, MatpreH = MatpreH)
+    basis <- GS_nsp_call(x, 
+                         knots = temp[-(1:2)], 
+                         bknots = bknots, 
+                         degree = degree,
+                         intercept = intercept, 
+                         derivs = derivs, 
+                         centerval = centerval, 
+                         normalize = normalize,
+                         preH = preH)
     
-    kbasis <- GS_nsp_call(kx, knots=knots, bknots = bknots, intercept = intercept, 
-                         derivs = derivs, centerval = centerval, normalize = normalize,
-                         preH = preH, MatpreH = MatpreH)
+    kbasis <- GS_nsp_call(kx, 
+                          knots=knots, 
+                          bknots = bknots, 
+                          degree = degree,
+                          intercept = intercept, 
+                          derivs = derivs, 
+                          centerval = centerval, 
+                          normalize = normalize,
+                          preH = preH)
     
     if(intercept) {
       out <- basis %*% solve(kbasis)
@@ -442,13 +494,25 @@ GS_nsk_call <- function(x, knots, bknots, intercept, derivs,
       out <- (cbind(1, basis) %*% solve(cbind(1, kbasis)))[, -1]
     }
   } else if (calcderiv) {
-    basis <- GS_nsp_call(x, knots = temp[-(1:2)], bknots = bknots, intercept = intercept, 
-                        derivs = derivs, centerval = centerval, normalize = normalize,
-                        preH = preH, MatpreH = MatpreH)
+    basis <- GS_nsp_call(x, 
+                         knots = temp[-(1:2)], 
+                         bknots = bknots, 
+                         degree = degree,
+                         intercept = intercept, 
+                         derivs = derivs, 
+                         centerval = centerval, 
+                         normalize = normalize,
+                         preH = preH)
     
-    kbasis <- GS_nsp_call(kx, knots=knots, bknots = bknots, intercept = intercept, 
-                         derivs = 0, centerval = centerval, normalize = normalize,
-                         preH = preH, MatpreH = MatpreH)
+    kbasis <- GS_nsp_call(kx, 
+                          knots=knots, 
+                          bknots = bknots, 
+                          degree = degree,
+                          intercept = intercept, 
+                          derivs = 0, 
+                          centerval = centerval, 
+                          normalize = normalize,
+                          preH = preH)
     
     if(intercept) {
       out <- basis %*% solve(kbasis)
@@ -484,7 +548,6 @@ GS_nsk_call <- function(x, knots, bknots, intercept, derivs,
 #' @param centerval Ignored
 #' @param normalize Ignored
 #' @param preH Ignored
-#' @param MatpreH Ignored
 #' @param sfirst Ignored
 #' @param sparse Ignored
 #' @param inclx A logical indicating whether to include \code{x} as first term.
@@ -509,13 +572,13 @@ GS_nsk_call <- function(x, knots, bknots, intercept, derivs,
 #' 
 GS_rcs_call <- function(x, 
                         knots = NULL, 
-                        bknots = NULL, 
+                        bknots = NULL,
+                        degree = NULL,
                         intercept = NULL, 
                         derivs = 0, 
                         centerval = NULL, 
                         normalize = NULL, 
                         preH = NULL, 
-                        MatpreH = NULL,
                         sfirst = FALSE, 
                         sparse = FALSE,
                         inclx = TRUE, 
@@ -791,7 +854,9 @@ split_fullknots_knots_bknots <- function(fullknots) {
 #' @keywords internal
 #' @noRd
 #' 
-prodrowsum_beta_Rinv_wide <- function(matb, matx, rowsum = TRUE) {
+prodrowsum_beta_Rinv_wide <- function(matb, 
+                                      matx, 
+                                      rowsum = TRUE) {
   matrix_X <- matx
   matrix_Y <- matb
   num_cols <- ncol(matrix_X)

@@ -192,7 +192,6 @@ bsitar(
   file_compress = TRUE,
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
-  fast_nsk = 0L,
   sum_zero = FALSE,
   global_args = FALSE,
   parameterization = "ncp",
@@ -1857,8 +1856,6 @@ package is used for parallel execution of the chains. In this case, the
 \code{\link[future:plan]{plan}} (see the examples section below). This
 argument can be set globally for the current \R session via the
 \code{"future"} option.}
-
-\item{fast_nsk}{Currently ignored. Placeholder for future development.}
 
 \item{sum_zero}{Currently ignored. Placeholder for future development.}
 
