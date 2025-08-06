@@ -2,7 +2,7 @@
 
 #library(bsitar)
 
-devtools::load_all()
+# devtools::load_all()
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 3, 

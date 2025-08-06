@@ -1175,13 +1175,15 @@ GS_rcs_call_stan_R_str <- function() {
 
 
 
-
-
+# 
+# 
+# 
+# 
 # GS_rcs_call_stan_get <- function() {
-#   GS_rcs_call_stan_str <- 
+#   GS_rcs_call_stan_str <-
 #     "
 #   //  functions { // comment out functions{
-#   
+# 
 #   /**
 #    * Calculates the Restricted Cubic Spline (RCS) basis matrix.
 #    *
@@ -1190,7 +1192,7 @@ GS_rcs_call_stan_R_str <- function() {
 #    *
 #    * IMPORTANT: Knot selection logic (e.g., quantiles, `Hmisc::rcspline.eval`)
 #    * must be performed OUTSIDE of Stan, in your data preparation script (R, Python, etc.).
-#    * The inclx is now defined within the functiin and not as an argument. 
+#    * The inclx is now defined within the functiin and not as an argument.
 #    * The arguments are exact same as GS_nsp/nsk stan
 #    *
 #    * Args:
@@ -1204,32 +1206,32 @@ GS_rcs_call_stan_R_str <- function() {
 #    * A matrix where rows correspond to observations in `x` and columns
 #    * correspond to the basis functions.
 #    */
-#    
-#   matrix GS_rcs_call_stan(vector x, 
-#                         vector knotsx, 
+# 
+#   matrix GS_rcs_call_stan(vector x,
+#                         vector knotsx,
 #                         vector bknotsx,
-#                         int intercept, 
-#                         int derivs, 
+#                         int intercept,
+#                         int derivs,
 #                         int centerval,
 #                         int normalize,
 #                         int preH) {
-#                         
-#     int inclx = 1;                  
+# 
+#     int inclx = 1;
 #     int N = num_elements(x);
-#     
+# 
 #     vector[num_elements(knotsx)+2] fullknots;
 #     vector[num_elements(fullknots)-2] knots;
 #     vector[2] bknots;
 #     fullknots = append_row(append_row(rep_vector(bknotsx[1], 1), knotsx), rep_vector(bknotsx[2], 1));
 #     knots = segment(fullknots, 2, num_elements(fullknots)-2);
-#     bknots = append_row(head(bknotsx, 1), tail(bknotsx, 1)); 
-#     
+#     bknots = append_row(head(bknotsx, 1), tail(bknotsx, 1));
+# 
 #     int nk = num_elements(fullknots);
-#     
+# 
 #     if (nk < 3) {
 #       reject(\"rcs_matrix: Number of fullknots must be at least 3.\");
 #     }
-#     
+# 
 #     matrix[N, nk - 1] basis_evals;
 #     real knot1 = fullknots[1];
 #     real knot_nk = fullknots[nk];
@@ -1237,7 +1239,7 @@ GS_rcs_call_stan_R_str <- function() {
 #     real denom_common = (knot_nk - knot1)^2;
 #     real denom_spline_diff = (knot_nk - knot_nk_minus_1);
 # 
-#     matrix[N, nk] Xx_pos; 
+#     matrix[N, nk] Xx_pos;
 #     for (n_idx in 1:N) {
 #       for (k_idx in 1:nk) {
 #         Xx_pos[n_idx, k_idx] = fmax(0.0, x[n_idx] - fullknots[k_idx]);
@@ -1255,7 +1257,7 @@ GS_rcs_call_stan_R_str <- function() {
 #     }
 # 
 #     for (j in 1:(nk - 2)) {
-#       int jp1 = j + 1; 
+#       int jp1 = j + 1;
 #       if (derivs == 0) {
 #         basis_evals[:, jp1] =
 #           (pow(Xx_pos[:, j], 3) -
@@ -1274,17 +1276,17 @@ GS_rcs_call_stan_R_str <- function() {
 #       }
 #     }
 # 
-#     matrix[N, 0] final_basis_evals_empty = rep_matrix(0.0, N, 0); 
+#     matrix[N, 0] final_basis_evals_empty = rep_matrix(0.0, N, 0);
 # 
 #     if (intercept == 1) {
 #       if (derivs == 0) {
 #         if (inclx == 1) {
 #           matrix[N, nk] temp_basis;
 #           temp_basis[:, 1] = rep_vector(1.0, N);
-#           temp_basis[:, 2:(nk)] = basis_evals; 
+#           temp_basis[:, 2:(nk)] = basis_evals;
 #           return temp_basis;
 #         } else {
-#           matrix[N, nk-1] temp_basis; 
+#           matrix[N, nk-1] temp_basis;
 #           temp_basis[:, 1] = rep_vector(1.0, N);
 #           temp_basis[:, 2:(nk-1)] = basis_evals[:, 2:(nk-1)];
 #           return temp_basis;
@@ -1292,35 +1294,35 @@ GS_rcs_call_stan_R_str <- function() {
 #       } else if (derivs == 1) {
 #         if (inclx == 1) {
 #             matrix[N, nk] temp_basis;
-#             temp_basis[:, 1] = rep_vector(0.0, N); 
-#             temp_basis[:, 2:(nk)] = basis_evals; 
+#             temp_basis[:, 1] = rep_vector(0.0, N);
+#             temp_basis[:, 2:(nk)] = basis_evals;
 #             return temp_basis;
 #         } else {
-#             matrix[N, nk-1] temp_basis; 
-#             temp_basis[:, 1] = rep_vector(0.0, N); 
-#             temp_basis[:, 2:(nk-1)] = basis_evals[:, 2:(nk-1)]; 
+#             matrix[N, nk-1] temp_basis;
+#             temp_basis[:, 1] = rep_vector(0.0, N);
+#             temp_basis[:, 2:(nk-1)] = basis_evals[:, 2:(nk-1)];
 #             return temp_basis;
 #         }
 #       } else if (derivs == 2) {
 #         if (inclx == 1) {
-#              matrix[N, nk] temp_basis; 
-#              temp_basis[:, 1] = rep_vector(0.0, N); 
-#              temp_basis[:, 2] = rep_vector(0.0, N); 
+#              matrix[N, nk] temp_basis;
+#              temp_basis[:, 1] = rep_vector(0.0, N);
+#              temp_basis[:, 2] = rep_vector(0.0, N);
 #              print(temp_basis);
 #              print(basis_evals);
-#              temp_basis[:, 3:(nk - 0)] = basis_evals[:, 2:(nk - 1)]; 
+#              temp_basis[:, 3:(nk - 0)] = basis_evals[:, 2:(nk - 1)];
 #              return temp_basis;
 #         } else {
-#              matrix[N, nk -1] temp_basis; 
-#              temp_basis[:, 1] = rep_vector(0.0, N); 
-#              temp_basis[:, 2] = rep_vector(0.0, N); 
-#              temp_basis[:, 3:(nk-1)] = basis_evals[:, 3:(nk - 1)]; 
+#              matrix[N, nk -1] temp_basis;
+#              temp_basis[:, 1] = rep_vector(0.0, N);
+#              temp_basis[:, 2] = rep_vector(0.0, N);
+#              temp_basis[:, 3:(nk-1)] = basis_evals[:, 3:(nk - 1)];
 #              return temp_basis;
 #         }
 #       }
 #     } else { // intercept == 0
 #       if (inclx == 0) {
-#         return basis_evals[:, 2:(nk-1)]; 
+#         return basis_evals[:, 2:(nk-1)];
 #       } else {
 #         return basis_evals;
 #       }
@@ -1328,11 +1330,11 @@ GS_rcs_call_stan_R_str <- function() {
 #     // Should not reach here
 #     return final_basis_evals_empty;
 #   }
-#   
+# 
 # // } // comment out functions{
 # 
 #   "
 #   return(GS_rcs_call_stan_str)
 # } # GS_rcs_call_stan_get
 # 
-
+# 
