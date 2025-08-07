@@ -4129,6 +4129,277 @@ get_clean_data_growthcleanr <- function(data,
 
 
 
+
+
+#' Create rcs spline design matrix. 
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+check_for_nan_inf <- function(x) {
+  suppressWarnings({
+    nan_inf <- FALSE
+    if(is.infinite(x)) {
+      nan_inf <- TRUE
+    } else if(is.na(x)) {
+      nan_inf <- TRUE
+    } else if(is.nan(x)) {
+      nan_inf <- TRUE
+    }
+  })
+  nan_inf
+}
+
+
+
+#' Create rcs spline design matrix. 
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+gkn <- function(x, df, bounds) {
+  c(min(x) - bounds * (max(x) - min(x)),
+    quantile(x, (1:(df - 1)) / df, na.rm = TRUE), # 28 01 2024
+    max(x) +
+      bounds * (max(x) - min(x)))
+}
+
+
+
+#' Create rcs spline design matrix. 
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+eval_xoffset_bstart_args <- function(x, 
+                                     y, 
+                                     knots, 
+                                     data, 
+                                     eval_arg, 
+                                     xfunsi, 
+                                     arg = 'xoffset',
+                                     smat,
+                                     degree, 
+                                     intercept, 
+                                     derivs, 
+                                     centerval, 
+                                     normalize,
+                                     preH, 
+                                     sfirst, 
+                                     sparse) {
+    if (eval_arg == "mean") {
+      eval_arg.o <- mean(data[[x]])
+    } else if (eval_arg == "min") {
+      eval_arg.o <- min(data[[x]])
+    } else if (eval_arg == "max") {
+      eval_arg.o <- max(data[[x]])
+    } else if (eval_arg == "apv") {
+      # mat_s <- make_spline_matrix(data[[x]], knots)
+      if(smat == 'rcs') {
+        mat_s <- make_spline_matrix(data[[x]], knots)
+      } else if(smat == 'nsp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'nsk') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'bsp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_bsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'msp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_msp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'isp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_isp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      }
+      lmform <- as.formula(paste0(y, "~1+", "mat_s"))
+      lmfit <- lm(lmform, data = data)
+      eval_arg.o <- sitar::getPeak(data[[x]],
+                                   predict(smooth.spline(data[[x]],
+                                                         fitted(lmfit)),
+                                           data[[x]], deriv = 1)$y)[1]
+      if(is.na(eval_arg.o)) {
+        stop(arg, " specified as '", eval_arg, "' returned NA.",
+             "\n ",
+             " Please change ", arg,
+             " argument to 'mean' or a numeric value.")
+      }
+    } else {
+      eval_arg.o <- ept(eval_arg)
+    }
+    out <- as.numeric(eval_arg.o)
+    out <- round(out, 3)
+    return(out)
+  }
+
+
+
+#' Create rcs spline design matrix. 
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+eval_xoffset_cstart_args <- function(x, 
+                                     y, 
+                                     knots, 
+                                     data, 
+                                     eval_arg, 
+                                     xfunsi,
+                                     smat,
+                                     degree, 
+                                     intercept, 
+                                     derivs, 
+                                     centerval, 
+                                     normalize,
+                                     preH, 
+                                     sfirst, 
+                                     sparse) {
+    if (eval_arg == "pv") {
+      # mat_s <- make_spline_matrix(data[[x]], knots)
+      if(smat == 'rcs') {
+        mat_s <- make_spline_matrix(data[[x]], knots)
+      } else if(smat == 'nsp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_nsp_call(x = data[[x]], 
+                             knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'nsk') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_nsk_call(x = data[[x]], 
+                             knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'bsp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_bsp_call(x = data[[x]], 
+                             knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'msp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_msp_call(x = data[[x]], 
+                             knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      } else if(smat == 'isp') {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_nsk_call(x = data[[x]], 
+                             knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
+      }
+      lmform <- as.formula(paste0(y, "~1+", "mat_s"))
+      lmfit <- lm(lmform, data = data)
+      eval_arg.o <- sitar::getPeak(data[[x]],
+                                   predict(smooth.spline(data[[x]],
+                                                         fitted(lmfit)),
+                                           data[[x]], deriv = 1)$y)[2]
+      if(is.na(eval_arg.o)) {
+        stop("cstart specified as '", eval_arg, "' returned NA.",
+             "\n ",
+             " Please change cstart argument to 'mean' or a numeric value.")
+      }
+    } else {
+      eval_arg.o <- ept(eval_arg)
+    }
+    out <- as.numeric(eval_arg.o)
+    out <- round(out, 3)
+    return(out)
+  }
+
+
+
+
+
+
+
+
 #' Create rcs spline design matrix. 
 #'  
 #' @details
@@ -4360,6 +4631,9 @@ rcs_matrix <- function(x,
   
   return(basis_evals)
 } # end rcs_matrix
+
+
+
 
 
 

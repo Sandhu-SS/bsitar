@@ -298,7 +298,7 @@ get.newdata <- function(model,
     cov_factor_vars  <- cov_factor_vars
     cov_numeric_vars <- cov_numeric_vars
     groupby_fstr     <- groupby_fstr
-    groupby_fstr     <- groupby_fistr
+    groupby_fistr    <- groupby_fistr
   } else if(dpar == "sigma") {
     cov_vars         <- sigmacov_vars
     cov_factor_vars  <- sigmacov_factor_vars
@@ -825,7 +825,7 @@ get.newdata <- function(model,
     cov_factor_vars  <- cov_factor_vars
     cov_numeric_vars <- cov_numeric_vars
     groupby_fstr     <- groupby_fstr
-    groupby_fstr     <- groupby_fistr
+    groupby_fistr    <- groupby_fistr
   } else if(dpar == "sigma") {
     cov_vars         <- sigmacov_vars
     cov_factor_vars  <- sigmacov_factor_vars

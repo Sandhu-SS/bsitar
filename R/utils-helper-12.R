@@ -879,4 +879,262 @@ prodrowsum_beta_Rinv_wide <- function(matb,
 
 
 
+##########################################################################
+
+#' An internal function to construct a variant of natural cubic spline basis
+#' matrix
+#'
+#' @param x A numeric vector for which basis matrix to be constructed
+#' @param knots A vector specifying the internal knots
+#' @param bknots A vector specifying the boundary knots
+#' @param intercept An integer to indicate whether to compute complete basis
+#'   along with intercept (\code{intercept = 1}) or to exclude intercept from
+#'   the basis (\code{intercept = 0}, default).
+#' @param derivs An integer to indicate whether to compute complete basis matrix
+#'   (\code{derivs = 0}, default) or its first derivative (\code{derivs = 1})
+#' @param centerval A real number to offset the intercept.
+#' @param normalize An integer to indicate whether to normalize the basis matrix
+#'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
+#' @param preH A logical (as.integer()) indicating whether to use pre computed 
+#' H matrix
+#' @param sfirst Ignored
+#' @param sparse Ignored
+#' @param df An integer
+#' @param Boundary.knots Ignored
+#' @param periodic Ignored
+#' @param integral Ignored
+#' @param warn.outside Ignored
+#' 
+#' @return A matrix
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+#' 
+GS_bsp_call <- function(x, 
+                        knots = NULL,
+                        bknots = NULL,
+                        degree, 
+                        intercept, 
+                        derivs, 
+                        centerval, 
+                        normalize, 
+                        preH, 
+                        sfirst = FALSE, 
+                        sparse = FALSE,
+                        df = NULL, 
+                        Boundary.knots = NULL,
+                        fullknots = NULL,
+                        periodic = FALSE, 
+                        integral = FALSE, 
+                        warn.outside = getOption("splines2.warn.outside", TRUE)
+) {
+  
+  
+  if(!is.null(fullknots)) {
+    if(!is.null(knots)) stop("'knots' must be NULL if specified 'fullknots'")
+    if(!is.null(bknots)) stop("'bknots' must be NULL if specified 'fullknots'")
+    get_knots_bknots <- split_fullknots_knots_bknots(fullknots)
+    knots  <- get_knots_bknots[['knots']]
+    bknots <- get_knots_bknots[['bknots']]
+  } else if(is.null(fullknots)) { 
+    if(is.null(df)) {
+      # for bsp msp and isp, knots = NULL  is a valid approach
+      if(is.null(knots) | is.null(bknots)) {
+       # stop("Both knots and bknots must be specified when fullknots and df NULL")
+      }
+      knots  <- knots
+      bknots <- bknots
+    }
+  }
+  
+  # print(df)
+  # print(knots)
+  # print(bknots)
+  # stop()
+  
+  out <- splines2::bsp(x = x, 
+                       df = df, 
+                       knots = knots, 
+                       degree = degree, 
+                       intercept = intercept, 
+                       Boundary.knots = bknots, 
+                       periodic = periodic, 
+                       derivs = derivs, 
+                       integral = integral, 
+                       warn.outside = warn.outside)
+  
+  return(out)
+}
+
+
+#' An internal function to construct a variant of natural cubic spline basis
+#' matrix
+#'
+#' @param x A numeric vector for which basis matrix to be constructed
+#' @param knots A vector specifying the internal knots
+#' @param bknots A vector specifying the boundary knots
+#' @param intercept An integer to indicate whether to compute complete basis
+#'   along with intercept (\code{intercept = 1}) or to exclude intercept from
+#'   the basis (\code{intercept = 0}, default).
+#' @param derivs An integer to indicate whether to compute complete basis matrix
+#'   (\code{derivs = 0}, default) or its first derivative (\code{derivs = 1})
+#' @param centerval A real number to offset the intercept.
+#' @param normalize An integer to indicate whether to normalize the basis matrix
+#'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
+#' @param preH A logical (as.integer()) indicating whether to use pre computed 
+#' H matrix
+#' @param sfirst Ignored
+#' @param sparse Ignored
+#' @param df An integer
+#' @param Boundary.knots Ignored
+#' @param periodic Ignored
+#' @param integral Ignored
+#' @param warn.outside Ignored
+#' 
+#' @return A matrix
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+#' 
+GS_msp_call <- function(x, 
+                        knots = NULL,
+                        bknots = NULL,
+                        degree, 
+                        intercept, 
+                        derivs, 
+                        centerval, 
+                        normalize, 
+                        preH, 
+                        sfirst = FALSE, 
+                        sparse = FALSE,
+                        df = NULL, 
+                        Boundary.knots = NULL,
+                        fullknots = NULL,
+                        periodic = FALSE, 
+                        integral = FALSE, 
+                        warn.outside = getOption("splines2.warn.outside", TRUE)
+                        ) {
+  
+  if(!is.null(fullknots)) {
+    if(!is.null(knots)) stop("'knots' must be NULL if specified 'fullknots'")
+    if(!is.null(bknots)) stop("'bknots' must be NULL if specified 'fullknots'")
+    get_knots_bknots <- split_fullknots_knots_bknots(fullknots)
+    knots  <- get_knots_bknots[['knots']]
+    bknots <- get_knots_bknots[['bknots']]
+  } else if(is.null(fullknots)) { 
+    if(is.null(df)) {
+      # for bsp msp and isp, knots = NULL  is a valid approach
+      if(is.null(knots) | is.null(bknots)) {
+        # stop("Both knots and bknots must be specified when fullknots and df NULL")
+      }
+      knots  <- knots
+      bknots <- bknots
+    }
+  }
+  
+  out <- splines2::msp(x = x, 
+                       df = df, 
+                       knots = knots, 
+                       degree = degree, 
+                       intercept = intercept, 
+                       Boundary.knots = bknots, 
+                       periodic = periodic, 
+                       derivs = derivs, 
+                       integral = integral, 
+                       warn.outside = warn.outside)
+  
+  return(out)
+}
+
+
+
+#' An internal function to construct a variant of natural cubic spline basis
+#' matrix
+#'
+#' @param x A numeric vector for which basis matrix to be constructed
+#' @param knots A vector specifying the internal knots
+#' @param bknots A vector specifying the boundary knots
+#' @param intercept An integer to indicate whether to compute complete basis
+#'   along with intercept (\code{intercept = 1}) or to exclude intercept from
+#'   the basis (\code{intercept = 0}, default).
+#' @param derivs An integer to indicate whether to compute complete basis matrix
+#'   (\code{derivs = 0}, default) or its first derivative (\code{derivs = 1})
+#' @param centerval A real number to offset the intercept.
+#' @param normalize An integer to indicate whether to normalize the basis matrix
+#'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
+#' @param preH A logical (as.integer()) indicating whether to use pre computed 
+#' H matrix
+#' @param sfirst Ignored
+#' @param sparse Ignored
+#' @param df An integer
+#' @param Boundary.knots Ignored
+#' @param periodic Ignored
+#' @param integral Ignored
+#' @param warn.outside Ignored
+#' 
+#' @return A matrix
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+#' 
+GS_isp_call <- function(x, 
+                        knots = NULL,
+                        bknots = NULL,
+                        degree, 
+                        intercept, 
+                        derivs, 
+                        centerval, 
+                        normalize, 
+                        preH, 
+                        sfirst = FALSE, 
+                        sparse = FALSE,
+                        df = NULL, 
+                        Boundary.knots = NULL,
+                        fullknots = NULL,
+                        # periodic = FALSE, 
+                        integral = FALSE, 
+                        warn.outside = getOption("splines2.warn.outside", TRUE)
+) {
+  
+  
+  if(!is.null(fullknots)) {
+    if(!is.null(knots)) stop("'knots' must be NULL if specified 'fullknots'")
+    if(!is.null(bknots)) stop("'bknots' must be NULL if specified 'fullknots'")
+    get_knots_bknots <- split_fullknots_knots_bknots(fullknots)
+    knots  <- get_knots_bknots[['knots']]
+    bknots <- get_knots_bknots[['bknots']]
+  } else if(is.null(fullknots)) { 
+    if(is.null(df)) {
+      # for bsp msp and isp, knots = NULL  is a valid approach
+      if(is.null(knots) | is.null(bknots)) {
+        # stop("Both knots and bknots must be specified when fullknots and df NULL")
+      }
+      knots  <- knots
+      bknots <- bknots
+    }
+  }
+  
+  out <- splines2::isp(x = x, 
+                       df = df, 
+                       knots = knots, 
+                       degree = degree, 
+                       intercept = intercept, 
+                       Boundary.knots = bknots, 
+                       # periodic = periodic, 
+                       derivs = derivs, 
+                       integral = integral, 
+                       warn.outside = warn.outside)
+  
+  return(out)
+}
+
 

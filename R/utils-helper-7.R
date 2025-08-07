@@ -8,7 +8,7 @@
 #' Imp Note: now when d parameter is part of the fixed / random effects, then 
 #' X or Xm, depending upon the d_adjusted, is inlcuded part of the Spl or Qc
 #' matrix as the last column, So the last column is used in d.* operation and
-#' and nlnots-1 columns (Qk[:, 1:cols(Qc)-1]) (Spl[:, 1:cols(Spl)-1])
+#' and nknots-1 columns (Qk[:, 1:cols(Qc)-1]) (Spl[:, 1:cols(Spl)-1])
 #'  
 #' The \code{prepare_function}) constructs custom Stan function  which is passed
 #' on to the [bsitar::bsitar()] function. For univariate-by- subgroup model
@@ -108,6 +108,7 @@ prepare_function_nsp_rcs <- function(x,
   QR_complete <- NULL;
   QR_flip <- NULL;
   QR_scale <- NULL;
+  SbasisN <- NULL;
   
   
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
@@ -124,6 +125,10 @@ prepare_function_nsp_rcs <- function(x,
       assign(eoutii, eout[[eoutii]])
     }
   }
+  
+  # SbasisN = nknots-1 -> for nsp nsk and rcs
+  # print(SbasisN)
+  # stop()
   
   
   if (grepl("d", fixedsi, fixed = T)) {
@@ -193,10 +198,10 @@ prepare_function_nsp_rcs <- function(x,
   
   
   if (resp_ == "") {
-    szx_name <- paste0('s', 1:(nknots - 1))
-    szx_name_resp <- paste0('b', "_", 's', 1:(nknots - 1))
+    szx_name <- paste0('s', 1:(SbasisN))
+    szx_name_resp <- paste0('b', "_", 's', 1:(SbasisN))
   } else {
-    szx_name <- paste0('s', 1:(nknots - 1))
+    szx_name <- paste0('s', 1:(SbasisN))
     szx_name_resp <- paste0('b', resp_, "_", szx_name)
   }
   
@@ -809,8 +814,8 @@ prepare_function_nsp_rcs <- function(x,
       paste0(strsplit(gsub("\\+", " ", fixedsi), " ")[[1]], sep = ",")
     
     snames <- c()
-    for (i in 1:(nknots - 1)) {
-      if (i < (nknots - 1)) {
+    for (i in 1:(SbasisN)) {
+      if (i < (SbasisN)) {
         name1 <- paste0("s", i, sep = ",")
       }
       else {
@@ -823,13 +828,13 @@ prepare_function_nsp_rcs <- function(x,
     # add smat_sfirst
     if(smat_sfirst) {
       smat_sfirst_vector_c <- c()
-      for (i in 1:(nknots - 1)) {
+      for (i in 1:(SbasisN)) {
         sfirst_vectori <- paste0("sfirst_vector[", i, "]", " = ", 
                                  paste0("s", i, sep = ""), "[", 1, "]", ";")
         smat_sfirst_vector_c <- c(smat_sfirst_vector_c, sfirst_vectori)
       }
       smat_sfirst_vector_c2  <- paste(smat_sfirst_vector_c, collapse = "\n") 
-      smat_sfirst_vector_str <- paste0("vector[", 'nknots - 1', "]", 
+      smat_sfirst_vector_str <- paste0("vector[", 'SbasisN', "]", 
                                        " ", "sfirst_vector;")
       smat_sfirst_vector_str <- paste0(smat_sfirst_vector_str, "\n", 
                                        smat_sfirst_vector_c2)
@@ -839,13 +844,13 @@ prepare_function_nsp_rcs <- function(x,
     # For _d1 (and even for _d0), the full matrix is used for predictions
     if(smat_sfirst | !smat_sfirst) {
       smat_sfull_matrix_c <- c()
-      for (i in 1:(nknots - 1)) {
+      for (i in 1:(SbasisN)) {
         sfull_matrixi <- paste0("sfull_matrix[, ", i, "]", " = ", 
                                  paste0("s", i, sep = ""), "", ";")
         smat_sfull_matrix_c <- c(smat_sfull_matrix_c, sfull_matrixi)
       }
       smat_sfull_matrix_c2  <- paste(smat_sfull_matrix_c, collapse = "\n") 
-      smat_sfull_matrix_c_str <- paste0("matrix[", "N", ", ", 'nknots - 1', "]", 
+      smat_sfull_matrix_c_str <- paste0("matrix[", "N", ", ", 'SbasisN', "]", 
                                        " ", "sfull_matrix;")
       smat_sfull_matrix_str <- paste0(smat_sfull_matrix_c_str, "\n", 
                                        smat_sfull_matrix_c2)
@@ -937,6 +942,9 @@ prepare_function_nsp_rcs <- function(x,
       ),
       paste0("\n  vector[N] X=", defineEx, ";"),
       paste0("\n  int nknots=", eval(parse(text = nknots)), ";"),
+      
+      paste0("\n  int SbasisN=", SbasisN, ";"),
+      
       # paste0(
       #   "\n  vector[nknots] knots=",
       #   paste0(getknotsname, "(", '', ")"),
@@ -953,6 +961,8 @@ prepare_function_nsp_rcs <- function(x,
       iknotsx  = segment(knots, 2, nknots-2);
       bknotsx = append_row(head(knots, 1), tail(knots, 1));
     "
+    
+    
     
     if(fast_nsk) {
       add_knotinfo_without_addingknots_split <- add_knotinfo
@@ -998,28 +1008,28 @@ prepare_function_nsp_rcs <- function(x,
     if(!dparm_set_fixed_or_random) {
       if(smat_intercept == 0) {
         intercept_str <- "int intercept = 0;"
-        matrix_cols_str <- "matrix[N, nknots-1] Spl;\n"
+        matrix_cols_str <- "matrix[N, SbasisN] Spl;\n"
       } else if(smat_intercept == 1) {
         intercept_str <- "int intercept = 1;"
-        matrix_cols_str <- "matrix[N, nknots] Spl;\n"
+        matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
       }
     } else if(dparm_set_fixed_or_random) {
       if(dparm_part_of_SplQc) {
         if(smat_intercept == 0) {
           intercept_str <- "int intercept = 0;"
-          matrix_cols_str <- "matrix[N, nknots-1+1] Spl;\n"
+          matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
         } else if(smat_intercept == 1) {
           intercept_str <- "int intercept = 1;"
-          matrix_cols_str <- "matrix[N, nknots+1] Spl;\n"
+          matrix_cols_str <- "matrix[N, SbasisN+1+1] Spl;\n"
         }
       } # if(dparm_part_of_SplQc) {
       if(!dparm_part_of_SplQc) {
         if(smat_intercept == 0) {
           intercept_str <- "int intercept = 0;"
-          matrix_cols_str <- "matrix[N, nknots-1] Spl;\n"
+          matrix_cols_str <- "matrix[N, SbasisN] Spl;\n"
         } else if(smat_intercept == 1) {
           intercept_str <- "int intercept = 1;"
-          matrix_cols_str <- "matrix[N, nknots] Spl;\n"
+          matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
         }
       }
     } # if(!dparm_set_fixed_or_random) { else if(dparm_set_fixed_or_random) {
@@ -1051,14 +1061,7 @@ prepare_function_nsp_rcs <- function(x,
       precomputedH_Stan <- paste0("[", precomputedH_c, "];")
     }
     
-   
-    # if(smat_preH) {
-    #   setMatpreH = paste0("\nmatrix[nknots + 2, nknots] ", "MatpreH = ", precomputedH_Stan, "")
-    # } else {
-    #   # placeholder when preH = 0
-    #   setMatpreH = paste0("\nmatrix[1, 1] ", "MatpreH = ", "[[1],[1]]", ";")
-    # }
-    
+
     
     if(smat_preH) {
       setMatpreH_for_functions_R <- "
@@ -1168,9 +1171,9 @@ prepare_function_nsp_rcs <- function(x,
     
     
     name4 <- c()
-    for (i in 1:(nknots - 1)) {
+    for (i in 1:(SbasisN)) {
       name1 <- paste0("", "s", i, sep = "")
-      if (i < (nknots - 1)) {
+      if (i < (SbasisN)) {
         name2 <- paste0(' .* Spl[,', i, "] +")
         if(smat == 'nsk' | smat == 'nsp') {
           if(smat_intercept) {
@@ -1233,7 +1236,7 @@ prepare_function_nsp_rcs <- function(x,
     
     if(dparm_set_fixed_or_random) {
       if(dparm_part_of_SplQc) {
-        nameadja_dparm <- paste0("(", "d .* ", "Spl[,", nknots, "]", ")")
+        nameadja_dparm <- paste0("(", "d .* ", "Spl[,", SbasisN+1, "]", ")")
         nameadja <- paste0("A+", nameadja_dparm)
       }
     }
@@ -1244,7 +1247,7 @@ prepare_function_nsp_rcs <- function(x,
     
     # if (!is.null(decomp)) {
     #   if (decomp == 'QR') {
-    #     # nameadja <- gsub("X", paste0("XQ[,", nknots, "]"), nameadja, fixed = T)
+    #     # nameadja <- gsub("X", paste0("XQ[,", SbasisN+1, "]"), nameadja, fixed = T)
     #   }
     # } 
     
@@ -1353,12 +1356,12 @@ prepare_function_nsp_rcs <- function(x,
     
     if(fast_nsk) {
       fast_nsk_body <- "
-      vector[nknots] yknots;
-      vector[nknots] spl_coeffs;
+      vector[SbasisN+1] yknots;
+      vector[SbasisN+1] spl_coeffs;
       array[N] int x_pos_knots;"
       
       nknotsxxi_c <- c()
-      for(nknotsxxi in 1:nknots) {
+      for(nknotsxxi in 1:(SbasisN+1)) {
         if(nknotsxxi == 1) {
           addxx <- "yknots[1] = 0;"
         } else {
@@ -1371,8 +1374,8 @@ prepare_function_nsp_rcs <- function(x,
       
       
       add_to_nknotsxxi_c <- "
-      //     vector[nknots] xknots = knots;
-      vector[nknots] xknots = (knots - mean(b) )  ;
+      //     vector[SbasisN+1] xknots = knots;
+      vector[SbasisN+1] xknots = (knots - mean(b) )  ;
       vector[N] btemp =  rep_vector(0.0, N);
       vector[N] ctemp =  rep_vector(0.0, N);
       //  vector[N] X2 = Xm - b;
@@ -1565,7 +1568,7 @@ prepare_function_nsp_rcs <- function(x,
       
       rcsfunmatqr <- gsub(vectorA, "", rcsfunmatqr, fixed = T)
       
-      szx <- paste0('s', 1:(nknots - 1))
+      szx <- paste0('s', 1:(SbasisN))
       cnt <- 0
       cn_c <- c()
       for (vi in szx) {
@@ -1617,7 +1620,7 @@ prepare_function_nsp_rcs <- function(x,
       
       rcsfunmatgrinv <- gsub(vectorA, "", rcsfunmatgrinv, fixed = T)
       
-      szx <- paste0('b_s', 1:(nknots - 1))
+      szx <- paste0('b_s', 1:(SbasisN))
       cnt <- 0
       cn_c <- c()
       for (vi in szx) {
@@ -1650,7 +1653,7 @@ prepare_function_nsp_rcs <- function(x,
     if (add_rcsfunmatqrinv_genquant) {
       rcsfunmatgrinv_name <- paste0(spfncname, 'QRsmat', 'inv')
       
-      setnqq <- nknots - 1
+      setnqq <- SbasisN
       start_funmat <-
         paste0(
           "\nmatrix ",
@@ -1667,10 +1670,10 @@ prepare_function_nsp_rcs <- function(x,
       rcsfunmatqrinv_genquant <-
         gsub(vectorA, "", rcsfunmatqrinv_genquant, fixed = T)
       
-      szx <- paste0(setnlp, 1:(nknots - 1))
+      szx <- paste0(setnlp, 1:(SbasisN))
       szxbq <- b_sx_name_resp
       
-      szx_vector <- paste0(setnlp_vector, 1:(nknots - 1))
+      szx_vector <- paste0(setnlp_vector, 1:(SbasisN))
       
       
       # setnqq <- 4
@@ -1846,6 +1849,11 @@ prepare_function_nsp_rcs <- function(x,
     if(smat == 'rcs') {
       getpreH_fun_raw  <- NULL
     }
+    
+    if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+      getpreH_fun_raw  <- NULL
+    }
+    
     
     # 22.07.2025
     if(!add_separte_getknots_fun) {
@@ -2435,7 +2443,7 @@ prepare_function_nsp_rcs <- function(x,
       if(dparm_set_fixed_or_random) {
         if(dparm_part_of_SplQc) {
           QR_get_dq_str <- "
-          matrix[N, nknots - 1] sfull_betas;
+          matrix[N, SbasisN] sfull_betas;
           matrix[N, cols(XQ)] sfull_betas_temp;
           matrix[N, cols(XQ)] sfull_matrix_temp;
           sfull_matrix_temp[:, cols(XQ)] = d;
@@ -2443,12 +2451,12 @@ prepare_function_nsp_rcs <- function(x,
           sfull_betas = sfull_betas_temp[:, 1:(cols(XQ)-1)];
           vector[N] QRdbeta = sfull_betas_temp[:, cols(XQ)];"
         } else if(!dparm_part_of_SplQc) {
-          QR_get_dq_str <- "matrix[N, nknots - 1] sfull_betas;
+          QR_get_dq_str <- "matrix[N, SbasisN] sfull_betas;
         vector[N] QRdbeta = d;
         sfull_betas = sfull_matrix * transpose(XR_inv);"
         }
       } else if(!dparm_set_fixed_or_random) {
-        QR_get_dq_str <- "matrix[N, nknots - 1] sfull_betas;
+        QR_get_dq_str <- "matrix[N, SbasisN] sfull_betas;
         sfull_betas = sfull_matrix * transpose(XR_inv);"
       }
       
@@ -2469,7 +2477,7 @@ prepare_function_nsp_rcs <- function(x,
                                              extract = TRUE,
                                              cat_str = FALSE)
        set_new_retunx <- find_ond_retunx
-       for (i in 1:(nknots-1)) {
+       for (i in 1:(SbasisN)) {
          set_new_retunx <- gsub(paste0("s", i), 
                                 paste0("sfull_betas[,", i,"]"), set_new_retunx, fixed = T )
        }
@@ -3137,12 +3145,13 @@ prepare_function_nsp_rcs <- function(x,
   
   
   #################
-  extract_r_fun_from_scode <-
-    function(xstaring, what = NULL, decomp, spfncname,...) {
+  extract_r_fun_from_scode <- function(xstaring, 
+                                       what = NULL, 
+                                       decomp, 
+                                       spfncname,...) {
       if(is.null(xstaring)) {
         return(xstaring)
       }
-      
       getfunnamestr <- deparse(substitute(xstaring))
       xstaring <- gsub("[[:space:]]" , "", xstaring)
       xstaring <- gsub(";" , ";\n", xstaring)
@@ -3151,48 +3160,25 @@ prepare_function_nsp_rcs <- function(x,
       xstaring <- gsub("vector[N]" , "", xstaring, fixed = T)
       xstaring <- gsub("vector" , "", xstaring, fixed = T)
       xstaring <- gsub("int" , "", xstaring, fixed = T)
-      if(smat == 'nsp' | smat == 'nsk' | smat == 'rcs') { # added smat == 'rcs'
-        # 29.05.2025
-        if(smat_preH) {
-          # start_pattern <- "matrix[nknots+2,nknots]MatpreH"
-          # end_pattern <- ";"
-          # replacementx <- setMatpreH_for_functions_R
-        } else {
-          # start_pattern <- "matrix[1,1]MatpreH"
-          # end_pattern <- ";"
-          # replacementx <- setMatpreH_for_functions_R
-        }
-        
-        # xstaring <- replace_string_part(x = xstaring, 
-        #                                   start = start_pattern,  
-        #                                   end =  end_pattern,
-        #                                   replace = replacementx,
-        #                                   extract = FALSE,
-        #                                   cat_str = FALSE)
-        
-        # 22.07.2025
-        if(!add_separte_getknots_fun) {
-          xstaring <- gsub("knots=[" , "knots=c(", xstaring, fixed = T)
-          xstaring <- gsub("]';" , ");", xstaring, fixed = T)
-        }
-        
-        
-        xstaring <- gsub("smat_normalize" , "normalize", xstaring, fixed = T)
-        
-        xstaring <- gsub("ercept" , "intercept", xstaring, fixed = T)
-        xstaring <- gsub("[nknots-2]iknotsx;", "", xstaring, fixed = T)
-        xstaring <- gsub("[2]bknotsx;", "", xstaring, fixed = T)
-        xstaring <- gsub("Spl=matrix(0,N,nknots-1);" , "", xstaring, fixed = T)
-        xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
-        xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
-        xstaring <- gsub("segment(knots,2,nknots-2);", "knots[2:(length(knots)-1)];", xstaring, fixed = T)
-        xstaring <- gsub("append_row(head(knots,1),tail(knots,1));", "c(knots[1], knots[length(knots)]);", xstaring, fixed = T)
-        xstaring <- gsub(SplinefunxStan , SplinefunxR, xstaring, fixed = T)
-        xstaring <- gsub("matrix[N,nknots]Spl;" , "", xstaring, fixed = T)
-        xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
-        xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
-        xstaring <- remove_spaces_and_tabs(xstaring)
+      if(!add_separte_getknots_fun) {
+        xstaring <- gsub("knots=[" , "knots=c(", xstaring, fixed = T)
+        xstaring <- gsub("]';" , ");", xstaring, fixed = T)
       }
+      xstaring <- gsub("smat_normalize" , "normalize", xstaring, fixed = T)
+      xstaring <- gsub("ercept" , "intercept", xstaring, fixed = T)
+      xstaring <- gsub("[nknots-2]iknotsx;", "", xstaring, fixed = T)
+      xstaring <- gsub("[2]bknotsx;", "", xstaring, fixed = T)
+      xstaring <- gsub("Spl=matrix(0,N,SbasisN);" , "", xstaring, fixed = T)
+      xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
+      xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
+      xstaring <- gsub("segment(knots,2,nknots-2);", "knots[2:(length(knots)-1)];", xstaring, fixed = T)
+      xstaring <- gsub("append_row(head(knots,1),tail(knots,1));", "c(knots[1], knots[length(knots)]);", xstaring, fixed = T)
+      xstaring <- gsub(SplinefunxStan , SplinefunxR, xstaring, fixed = T)
+      xstaring <- gsub("matrix[N,nknots]Spl;" , "", xstaring, fixed = T)
+      xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
+      xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
+      xstaring <- remove_spaces_and_tabs(xstaring)
+      
       xstaring <- gsub("real" , "", xstaring, fixed = T)
       xstaring <- gsub(paste0("jp1;", "\n"), "", xstaring, fixed = T)
       xstaring <- gsub("rep_vector" , "rep", xstaring, fixed = T)
@@ -3206,26 +3192,26 @@ prepare_function_nsp_rcs <- function(x,
         )
       xstaring <- gsub("num_elements" , "length", xstaring, fixed = T)
       xstaring <-
-        gsub("matrix[N,nknots-1]Spl" ,
-             "Spl=matrix(0,N,nknots-1)",
+        gsub("matrix[N,SbasisN]Spl" ,
+             "Spl=matrix(0,N,SbasisN)",
              xstaring,
              fixed = T)
       xstaring <-
-        gsub("matrix[nknots-1,N]rcs" ,
-             "rcs=matrix(0,nknots-1,N)",
+        gsub("matrix[SbasisN,N]rcs" ,
+             "rcs=matrix(0,SbasisN,N)",
              xstaring,
              fixed = T)
       xstaring <-
-        gsub("matrix[N,nknots]Xx" ,
-             "Xx=matrix(0,N, nknots)",
+        gsub("matrix[N,SbasisN+1]Xx" ,
+             "Xx=matrix(0,N, SbasisN+1)",
              xstaring,
              fixed = T)
       
      
       xstaring <-
         gsub("for(iain1:N)" , "for(ia in 1:N)", xstaring, fixed = T)
-      xstaring <- gsub("for(jain1:nknots)" ,
-                       "for(ja in 1:nknots)",
+      xstaring <- gsub("for(jain1:(SbasisN+1))" ,
+                       "for(ja in 1:(SbasisN+1))",
                        xstaring,
                        fixed = T)
       xstaring <- gsub(".*" , "*", xstaring, fixed = T)
@@ -3239,16 +3225,18 @@ prepare_function_nsp_rcs <- function(x,
         gsub(paste0(";\n;\n", ""), ";\n", xstaring, fixed = T)
       xstaring <- gsub("[nknots]knots" , "knots", xstaring, fixed = T)
       
-      if (!is.null(what)) {
-        # NOW NOT USING getx
-        # if (what == 'getX') {
-        #   xstaring <- gsub(paste0("x;", "\n"), "", xstaring)
-        # }
-        if (what == 'getKnots') {
-          xstaring <- gsub("\\[", "c\\(", xstaring)
-          xstaring <- gsub("\\]'", "\\)", xstaring)
-        }
-      }
+      # Both getX and getKnots are not part of the code
+      # if (!is.null(what)) {
+      #   # NOW NOT USING getx
+      #   # if (what == 'getX') {
+      #   #   xstaring <- gsub(paste0("x;", "\n"), "", xstaring)
+      #   # }
+      #   if (what == 'getKnots') {
+      #     xstaring <- gsub("\\[", "c\\(", xstaring)
+      #     xstaring <- gsub("\\]'", "\\)", xstaring)
+      #   }
+      # }
+      
       
       if(dparm_set_fixed_or_random) {
         if(dparm_part_of_SplQc) {
@@ -3286,23 +3274,23 @@ prepare_function_nsp_rcs <- function(x,
       if(dparm_set_fixed_or_random) {
         if(dparm_part_of_SplQc) {
           if(smat_intercept == 0) {
-            xstaring <- gsub("matrix[N,nknots-1+1]Spl;" ,
+            xstaring <- gsub("matrix[N,SbasisN+1]Spl;" ,
                              "",
                              xstaring, fixed = T)
-            xstaring <- gsub("matrix[N,nknots-1+1]SplQRd0;" ,
+            xstaring <- gsub("matrix[N,SbasisN+1]SplQRd0;" ,
                              "",
                              xstaring, fixed = T)
-            xstaring <- gsub("matrix[N,nknots-1+1]SplQRd1;" ,
+            xstaring <- gsub("matrix[N,SbasisN+1]SplQRd1;" ,
                              "",
                              xstaring, fixed = T)
           } else if(smat_intercept == 1) {
-            xstaring <- gsub("matrix[N,nknots+1]Spl;" ,
+            xstaring <- gsub("matrix[N,SbasisN+1+1]Spl;" ,
                              "",
                              xstaring, fixed = T)
-            xstaring <- gsub("matrix[N,nknots+1]SplQRd0;" ,
+            xstaring <- gsub("matrix[N,SbasisN+1+1]SplQRd0;" ,
                              "",
                              xstaring, fixed = T)
-            xstaring <- gsub("matrix[N,nknots+1]SplQRd1;" ,
+            xstaring <- gsub("matrix[N,SbasisN+1+1]SplQRd1;" ,
                              "",
                              xstaring, fixed = T)
           }
@@ -3310,10 +3298,8 @@ prepare_function_nsp_rcs <- function(x,
       } # if(dparm_set_fixed_or_random) {
       
       
-      xstaring <- gsub("vector[N]QRdbeta=d" ,
-                       "QRdbeta=d",
-                       xstaring, fixed = T)
-      
+      xstaring <- gsub("vector[N]QRdbeta=d" , "QRdbeta=d", xstaring, fixed = T)
+  
       # add QR
       # make QR chnages
       if (!is.null(decomp)) {
@@ -3371,21 +3357,21 @@ prepare_function_nsp_rcs <- function(x,
                              "sfull_betas=sfull_matrix %*% t(XR_inv)",
                              xstaring, fixed = T)
 
-            xstaring <- gsub("Spl=matrix(0,N,nknots-1)QRd0" ,
-                             "QRd0=matrix(0,N,nknots-1)",
+            xstaring <- gsub("Spl=matrix(0,N,SbasisN)QRd0" ,
+                             "QRd0=matrix(0,N,SbasisN)",
                              xstaring, fixed = T)
-            xstaring <- gsub("Spl=matrix(0,N,nknots-1)QRd1" ,
-                             "QRd1=matrix(0,N,nknots-1)",
+            xstaring <- gsub("Spl=matrix(0,N,SbasisN)QRd1" ,
+                             "QRd1=matrix(0,N,SbasisN)",
                              xstaring, fixed = T)
-            xstaring <- gsub("matrix[N,nknots-1]sfull_matrix" ,
-                             "sfull_matrix=matrix(0,N,nknots-1)",
+            xstaring <- gsub("matrix[N,SbasisN]sfull_matrix" ,
+                             "sfull_matrix=matrix(0,N,SbasisN)",
                              xstaring, fixed = T)
-            xstaring <- gsub("matrix[N,nknots-1]R_tall" ,
-                             "R_tall=matrix(0,N,nknots-1)",
+            xstaring <- gsub("matrix[N,SbasisN]R_tall" ,
+                             "R_tall=matrix(0,N,SbasisN)",
                              xstaring, fixed = T)
             
-            xstaring <- gsub("matrix[N,nknots-1]sfull_betas" ,
-                             "sfull_betas=matrix(0,N,nknots-1)",
+            xstaring <- gsub("matrix[N,SbasisN]sfull_betas" ,
+                             "sfull_betas=matrix(0,N,SbasisN)",
                              xstaring, fixed = T)
             
             xstaring <- gsub("(SplQRd1*sfull_betas)*rep(1.0,QK)" ,
@@ -3558,6 +3544,67 @@ prepare_function_nsp_rcs <- function(x,
                                      'GS_nsp_call_stan')
   } # if(funx_names == "GS_nsk_call_stan") {
   ###########################################################################
+  # bsp
+  ###########################################################################
+  if(funx_names == "GS_bsp_call_stan_fast_2") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_bsp_nsk_stan_fast_2',
+                                     'GS_bsp_call_stan')
+  }
+  if(funx_names == "GS_bsp_call_stan_fast_1") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_tuple_stan',
+                                     'GS_bsp_nsk_stan_fast_1',
+                                     'GS_bsp_call_stan')
+  } 
+  if(funx_names == "GS_bsp_call_stan") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_stan',
+                                     'GS_bsp_intermediate_stan',
+                                     'GS_bsp_call_stan')
+  }
+  ###########################################################################
+  # msp
+  ###########################################################################
+  if(funx_names == "GS_msp_call_stan_fast_2") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_msp_tuple_stan',
+                                     'GS_msp_nsk_stan_fast_2',
+                                     'GS_msp_call_stan')
+  }
+  if(funx_names == "GS_msp_call_stan_fast_1") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_msp_tuple_stan',
+                                     'GS_msp_nsk_stan_fast_1',
+                                     'GS_msp_call_stan')
+  } 
+  if(funx_names == "GS_msp_call_stan") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_msp_stan',
+                                     'GS_msp_call_stan')
+  }
+  ###########################################################################
+  # isp
+  ###########################################################################
+  if(funx_names == "GS_isp_call_stan_fast_2") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_msp_tuple_stan',
+                                     'GS_msp_nsk_stan_fast_2',
+                                     'GS_msp_call_stan')
+  }
+  if(funx_names == "GS_isp_call_stan_fast_1") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_msp_tuple_stan',
+                                     'GS_msp_nsk_stan_fast_1',
+                                     'GS_msp_call_stan')
+  } 
+  if(funx_names == "GS_isp_call_stan") {
+    functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_msp_stan',
+                                     'GS_msp_call_stan')
+  }
+  ###########################################################################
   # rcs
   ###########################################################################
   if(funx_names == "GS_rcs_call_stan") {
@@ -3601,88 +3648,10 @@ prepare_function_nsp_rcs <- function(x,
   
   include_str <- all_funs_for_stan_block_str
   
-  
-  
   # cat(include_str)
   # stop()
   
 
-  # include_str <- ""
-  # if(smat_include_stan) {
-  #   set_path_str <- paste0(smat_include_stan_path, SplinefunxStan_file, ".stan")
-  #   include_str <- paste0(include_str, "#include ", set_path_str, "\n")
-  # } else if(!smat_include_stan) {
-  #   funx_names      <- paste0(SplinefunxStan_file, add_fast)
-  #   funx_names.stan <- paste0(funx_names, ".stan")
-  #   set_path_str    <- paste0(smat_include_stan_path, funx_names, funx_names.stan)
-  #   if(exists(set_path_str)) {
-  #     file_main_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-  #   } else if(!exists(set_path_str)) {
-  #     if(funx_names == "GS_nsk_call_stan_fast_2") {
-  #       functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-  #                                        'GS_bsp_tuple_stan',
-  #                                        'GS_nsp_nsk_stan_fast_2',
-  #                                        'GS_nsp_call_stan',
-  #                                        'GS_nsk_call_stan')
-  #     } # if(funx_names == "GS_nsk_call_stan_fast_1") {
-  #     if(funx_names == "GS_nsk_call_stan_fast_2") {
-  #       functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-  #                                        'GS_bsp_tuple_stan',
-  #                                        'GS_nsp_nsk_stan_fast_1',
-  #                                        'GS_nsp_call_stan',
-  #                                        'GS_nsk_call_stan')
-  #     } # if(funx_names == "GS_nsk_call_stan_fast_1") {
-  #     if(funx_names == "GS_nsk_call_stan") {
-  #       functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-  #                                        'GS_bsp_stan',
-  #                                        'GS_nsp_nsk_stan',
-  #                                        'GS_nsp_call_stan',
-  #                                        'GS_nsk_call_stan')
-  #     } # if(funx_names == "GS_nsk_call_stan") {
-  #     if(!smat_preH) {
-  #       functions_to_add_stan_block <- c('GS_preH_stan',
-  #                                        functions_to_add_stan_block)
-  #     }
-  #     all_funs_for_stan_block_str <- ""
-  #     for (i in functions_to_add_stan_block) {
-  #       R_str_name    <- paste0(i, "_", "R_str")
-  #       R_str_call    <- paste0(R_str_name, "()")
-  #       R_str_fun_str <- ept(R_str_call)
-  #       all_funs_for_stan_block_str <- paste0(all_funs_for_stan_block_str, 
-  #                                             "\n ",
-  #                                             R_str_fun_str)
-  #     }
-  #     include_str <- all_funs_for_stan_block_str
-  #   } # else if(!exists(set_path_str)) {
-  #   
-  #   
-  #   set_path_str  <- paste0(smat_include_stan_path, paste0("preH", ""), ".stan")
-  #   file_preH_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-  #   
-  #   set_path_str  <- paste0(smat_include_stan_path, paste0("auxillary", ""), ".stan")
-  #   file_auxillary_str <- paste0(include_str, "\n", paste(readLines(set_path_str), collapse = "\n"))
-  #   
-  #   if(add_fast == "") {
-  #     # file_preH_str is part of the non fast file
-  #     include_str <- paste0(file_main_str)
-  #     # include_str <- paste0(file_auxillary_str, "\n", file_preH_str, "\n", file_main_str)
-  #   } else {
-  #     if(smat_preH) {
-  #       include_str <- file_main_str
-  #       gsub_it <- "H = GS_getH_stan(allknots, normalize);\n"
-  #       gsub_by <- ""
-  #       include_str <- gsub(gsub_it, gsub_by, include_str, fixed = T)
-  #     } else if(!smat_preH) {
-  #       include_str <- paste0(file_preH_str, "\n", file_main_str)
-  #     }
-  #   } # if(add_fast == "") {
-  # } # else if(!smat_include_stan) {
-  # 
-  # 
-  
-  
- 
-  
   
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
   # This assumes that same function is used for both mu and sigma
@@ -3714,7 +3683,7 @@ prepare_function_nsp_rcs <- function(x,
   
   
    # print(cat(rcsfun))
-     # outx <<- all_raw_str
+     # outx <<- all_raw_str %>% cat()
      # stop()
   
   out

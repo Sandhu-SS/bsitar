@@ -3347,7 +3347,9 @@ bsitar <- function(x,
   SplinefunxStan    <- paste0(SplinefunxR, "_", 'stan')
   
   
-  if((smat == 'nsp' | smat == 'nsk') & !spline_type_via_stype) {
+  if((smat == 'nsp' | smat == 'nsk' |
+      smat == 'bsp' | smat == 'msp' | smat == 'isp') & 
+     !spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
     smat_degree       <- as.integer(spline_type_list[['degree']])
@@ -3371,7 +3373,9 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
     smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
-  } else if((smat == 'nsp' | smat == 'nsk') & spline_type_via_stype) {
+  } else if((smat == 'nsp' | smat == 'nsk' |
+             smat == 'bsp' | smat == 'msp' | smat == 'isp') & 
+            spline_type_via_stype) {
     smat_intercept    <- 0
     smat_centerval    <- 0
     smat_degree       <- 3L
@@ -3394,7 +3398,7 @@ bsitar <- function(x,
     smat_include_path <- NULL
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
-    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
+    smat_check_sparsity <- as.integer(spline_type_list[['check_sparsity']])
   } else {
     # allow further checks - for later use
   }
@@ -5960,133 +5964,199 @@ bsitar <- function(x,
     ######################################################################
     ######################################################################
     
-    check_for_nan_inf <- function(x) {
-      suppressWarnings({
-        nan_inf <- FALSE
-        if(is.infinite(x)) {
-          nan_inf <- TRUE
-        } else if(is.na(x)) {
-          nan_inf <- TRUE
-        } else if(is.nan(x)) {
-          nan_inf <- TRUE
-        }
-      })
-      nan_inf
-    }
-    
-    
-    gkn <- function(x, df, bounds) {
-      c(min(x) - bounds * (max(x) - min(x)),
-        quantile(x, (1:(df - 1)) / df, na.rm = TRUE), # 28 01 2024
-        max(x) +
-          bounds * (max(x) - min(x)))
-    }
-    
-    
-    eval_xoffset_bstart_args <-
-      function(x, y, knots, data, eval_arg, xfunsi, arg = 'xoffset') {
-        if (eval_arg == "mean") {
-          eval_arg.o <- mean(data[[x]])
-        } else if (eval_arg == "min") {
-          eval_arg.o <- min(data[[x]])
-        } else if (eval_arg == "max") {
-          eval_arg.o <- max(data[[x]])
-        } else if (eval_arg == "apv") {
-          # mat_s <- make_spline_matrix(data[[x]], knots)
-          if(smat == 'rcs') {
-            mat_s <- make_spline_matrix(data[[x]], knots)
-          } else if(smat == 'nsp') {
-            iknots <- knots[2:(length(knots)-1)]
-            bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
-                                 degree = smat_degree,
-                                 intercept = smat_intercept, derivs = smat_derivs, 
-                                 centerval = smat_centerval, 
-                                 normalize = smat_normalize,
-                                 preH = smat_preH,
-                                 sfirst = smat_sfirst, sparse = smat_sparse)
-          } else if(smat == 'nsk') {
-            iknots <- knots[2:(length(knots)-1)]
-            bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
-                                 degree = smat_degree,
-                                 intercept = smat_intercept, derivs = smat_derivs, 
-                                 centerval = smat_centerval, 
-                                 normalize = smat_normalize,
-                                 preH = smat_preH,
-                                 sfirst = smat_sfirst, sparse = smat_sparse)
-          }
-          lmform <- as.formula(paste0(y, "~1+", "mat_s"))
-          lmfit <- lm(lmform, data = data)
-          eval_arg.o <- sitar::getPeak(data[[x]],
-                                       predict(smooth.spline(data[[x]],
-                                                             fitted(lmfit)),
-                                               data[[x]], deriv = 1)$y)[1]
-          if(is.na(eval_arg.o)) {
-            stop(arg, " specified as '", eval_arg, "' returned NA.",
-                 "\n ",
-                 " Please change ", arg,
-                 " argument to 'mean' or a numeric value.")
-          }
-        } else {
-          eval_arg.o <- ept(eval_arg)
-        }
-        out <- as.numeric(eval_arg.o)
-        out <- round(out, 3)
-        return(out)
-      }
-    
-    
-    eval_xoffset_cstart_args <-
-      function(x, y, knots, data, eval_arg, xfunsi) {
-        if (eval_arg == "pv") {
-          # mat_s <- make_spline_matrix(data[[x]], knots)
-          if(smat == 'rcs') {
-            mat_s <- make_spline_matrix(data[[x]], knots)
-          } else if(smat == 'nsp') {
-            iknots <- knots[2:(length(knots)-1)]
-            bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_nsp_call(x = data[[x]], 
-                                 knots = iknots, bknots = bknots, 
-                                 degree = smat_degree,
-                                 intercept = smat_intercept, 
-                                 derivs = smat_derivs, 
-                                 centerval = smat_centerval, 
-                                 normalize = smat_normalize,
-                                 preH = smat_preH,
-                                 sfirst = smat_sfirst, sparse = smat_sparse)
-          } else if(smat == 'nsk') {
-            iknots <- knots[2:(length(knots)-1)]
-            bknots <- c(knots[1], knots[length(knots)])
-            mat_s <- GS_nsk_call(x = data[[x]], 
-                                 knots = iknots, bknots = bknots, 
-                                 degree = smat_degree,
-                                 intercept = smat_intercept, 
-                                 derivs = smat_derivs, 
-                                 centerval = smat_centerval, 
-                                 normalize = smat_normalize,
-                                 preH = smat_preH,
-                                 sfirst = smat_sfirst, sparse = smat_sparse)
-          }
-          lmform <- as.formula(paste0(y, "~1+", "mat_s"))
-          lmfit <- lm(lmform, data = data)
-          eval_arg.o <- sitar::getPeak(data[[x]],
-                                       predict(smooth.spline(data[[x]],
-                                                             fitted(lmfit)),
-                                               data[[x]], deriv = 1)$y)[2]
-          if(is.na(eval_arg.o)) {
-            stop("cstart specified as '", eval_arg, "' returned NA.",
-                 "\n ",
-                 " Please change cstart argument to 'mean' or a numeric value.")
-          }
-        } else {
-          eval_arg.o <- ept(eval_arg)
-        }
-        out <- as.numeric(eval_arg.o)
-        out <- round(out, 3)
-        return(out)
-      }
-    
+    # check_for_nan_inf <- function(x) {
+    #   suppressWarnings({
+    #     nan_inf <- FALSE
+    #     if(is.infinite(x)) {
+    #       nan_inf <- TRUE
+    #     } else if(is.na(x)) {
+    #       nan_inf <- TRUE
+    #     } else if(is.nan(x)) {
+    #       nan_inf <- TRUE
+    #     }
+    #   })
+    #   nan_inf
+    # }
+    # 
+    # 
+    # gkn <- function(x, df, bounds) {
+    #   c(min(x) - bounds * (max(x) - min(x)),
+    #     quantile(x, (1:(df - 1)) / df, na.rm = TRUE), # 28 01 2024
+    #     max(x) +
+    #       bounds * (max(x) - min(x)))
+    # }
+    # 
+    # 
+    # eval_xoffset_bstart_args <-
+    #   function(x, y, knots, data, eval_arg, xfunsi, arg = 'xoffset') {
+    #     if (eval_arg == "mean") {
+    #       eval_arg.o <- mean(data[[x]])
+    #     } else if (eval_arg == "min") {
+    #       eval_arg.o <- min(data[[x]])
+    #     } else if (eval_arg == "max") {
+    #       eval_arg.o <- max(data[[x]])
+    #     } else if (eval_arg == "apv") {
+    #       # mat_s <- make_spline_matrix(data[[x]], knots)
+    #       if(smat == 'rcs') {
+    #         mat_s <- make_spline_matrix(data[[x]], knots)
+    #       } else if(smat == 'nsp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'nsk') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'bsp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_bsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'msp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_msp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'isp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_isp_call(x = data[[x]], knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       }
+    #       lmform <- as.formula(paste0(y, "~1+", "mat_s"))
+    #       lmfit <- lm(lmform, data = data)
+    #       eval_arg.o <- sitar::getPeak(data[[x]],
+    #                                    predict(smooth.spline(data[[x]],
+    #                                                          fitted(lmfit)),
+    #                                            data[[x]], deriv = 1)$y)[1]
+    #       if(is.na(eval_arg.o)) {
+    #         stop(arg, " specified as '", eval_arg, "' returned NA.",
+    #              "\n ",
+    #              " Please change ", arg,
+    #              " argument to 'mean' or a numeric value.")
+    #       }
+    #     } else {
+    #       eval_arg.o <- ept(eval_arg)
+    #     }
+    #     out <- as.numeric(eval_arg.o)
+    #     out <- round(out, 3)
+    #     return(out)
+    #   }
+    # 
+    # 
+    # eval_xoffset_cstart_args <-
+    #   function(x, y, knots, data, eval_arg, xfunsi) {
+    #     if (eval_arg == "pv") {
+    #       # mat_s <- make_spline_matrix(data[[x]], knots)
+    #       if(smat == 'rcs') {
+    #         mat_s <- make_spline_matrix(data[[x]], knots)
+    #       } else if(smat == 'nsp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_nsp_call(x = data[[x]], 
+    #                              knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, 
+    #                              derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'nsk') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_nsk_call(x = data[[x]], 
+    #                              knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, 
+    #                              derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'bsp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_bsp_call(x = data[[x]], 
+    #                              knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, 
+    #                              derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'msp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_msp_call(x = data[[x]], 
+    #                              knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, 
+    #                              derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       } else if(smat == 'isp') {
+    #         iknots <- knots[2:(length(knots)-1)]
+    #         bknots <- c(knots[1], knots[length(knots)])
+    #         mat_s <- GS_nsk_call(x = data[[x]], 
+    #                              knots = iknots, bknots = bknots, 
+    #                              degree = smat_degree,
+    #                              intercept = smat_intercept, 
+    #                              derivs = smat_derivs, 
+    #                              centerval = smat_centerval, 
+    #                              normalize = smat_normalize,
+    #                              preH = smat_preH,
+    #                              sfirst = smat_sfirst, sparse = smat_sparse)
+    #       }
+    #       lmform <- as.formula(paste0(y, "~1+", "mat_s"))
+    #       lmfit <- lm(lmform, data = data)
+    #       eval_arg.o <- sitar::getPeak(data[[x]],
+    #                                    predict(smooth.spline(data[[x]],
+    #                                                          fitted(lmfit)),
+    #                                            data[[x]], deriv = 1)$y)[2]
+    #       if(is.na(eval_arg.o)) {
+    #         stop("cstart specified as '", eval_arg, "' returned NA.",
+    #              "\n ",
+    #              " Please change cstart argument to 'mean' or a numeric value.")
+    #       }
+    #     } else {
+    #       eval_arg.o <- ept(eval_arg)
+    #     }
+    #     out <- as.numeric(eval_arg.o)
+    #     out <- round(out, 3)
+    #     return(out)
+    #   }
+    # 
     ######################################################################
     ######################################################################
     
@@ -6330,15 +6400,22 @@ bsitar <- function(x,
     }
     
     
-    #################################################################
-    #################################################################
+    
 
    
     if (is.numeric(ept(knotssi))) {
       knots <- ept(knotssi)
     }
+    
     if (is.numeric(ept(dfsi))) {
       knots <- (unname(gkn(datai[[xsi]], ept(dfsi), ept(boundsi))))
+      if(verbose) {
+        message("For '", smat, "' knots are created internally based on 'df'",
+                "\n ",
+                " Note that knots are constructed and then adjusted by xoffset",
+                "\n ",
+                " such as knots - xoffset") 
+      }
     }
     
     
@@ -6349,10 +6426,63 @@ bsitar <- function(x,
       # Since sigmadf is automatically set as df, need to shut it off
       sigmadfsi  <- "NA"
     }
+    
     if (is.numeric(ept(sigmadfsi))) {
       sigmaknots <- (unname(gkn(datai[[sigmaxsi]], 
                                 ept(sigmadfsi), ept(sigmaboundsi))))
+      # if(verbose) {
+      #   message("For '", smat, "' knots are created internally based on 'df'",
+      #           "\n (sigma)",
+      #           " Note that knots are constructed and then adjusted by xoffset",
+      #           "\n ",
+      #           " such as knots - xoffset") 
+      # }
     }
+    
+    
+    
+    #################################################################
+    #################################################################
+    # 07.08.2025
+    # How to get knots for bsp msp isp ?
+    
+    if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+      temp_mat_s <- GS_msp_call(x = datai[[xsi]], knots = NULL, bknots = NULL, 
+                               df = ept(dfsi),
+                               degree = smat_degree,
+                               intercept = smat_intercept, 
+                               derivs = smat_derivs, 
+                               centerval = smat_centerval, 
+                               normalize = smat_normalize,
+                               preH = smat_preH,
+                               sfirst = smat_sfirst, 
+                               sparse = smat_sparse)
+      
+      temp_mat_s_knots <- attr(temp_mat_s, "knots") 
+      if(is_emptyx(temp_mat_s_knots)) {
+        temp_mat_s_knots <- NULL 
+      }
+      temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
+      knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
+      if(verbose) {
+        message("For '", smat, "' knots are created internally based on 'df'",
+                "\n ",
+                " Note that no 'bounds' are applied and knots are constructed",
+                "\n ",
+                " and then adjusted by xoffset such as knots - xoffset") 
+      }
+    }
+    
+
+    
+    
+    
+    
+    
+    
+    #################################################################
+    #################################################################
+    
     
     
     
@@ -6387,17 +6517,59 @@ bsitar <- function(x,
       bstartsi <- xoffsetsi
     }
     
-    xoffset <- eval_xoffset_bstart_args(xsi, ysi, knots, datai, 
-                               xoffsetsi, xfunsi, arg = 'xoffset')
+    xoffset <- eval_xoffset_bstart_args(xsi, 
+                                        ysi, 
+                                        knots, datai, 
+                                        xoffsetsi, 
+                                        xfunsi, 
+                                        arg = 'xoffset',
+                                        smat = smat,
+                                        degree = smat_degree,
+                                        intercept = smat_intercept, 
+                                        derivs = smat_derivs,
+                                        centerval = smat_centerval,
+                                        normalize = smat_normalize,
+                                        preH = smat_preH,
+                                        sfirst = smat_sfirst, 
+                                        sparse = smat_sparse)
     
-    bstart <- eval_xoffset_bstart_args(xsi, ysi, knots, datai, 
-                               bstartsi, xfunsi, arg = 'bstart')
+    bstart <- eval_xoffset_bstart_args(xsi, 
+                                       ysi, 
+                                       knots, 
+                                       datai, 
+                                       bstartsi, 
+                                       xfunsi, 
+                                       arg = 'bstart',
+                                       smat = smat,
+                                       degree = smat_degree,
+                                       intercept = smat_intercept, 
+                                       derivs = smat_derivs,
+                                       centerval = smat_centerval,
+                                       normalize = smat_normalize,
+                                       preH = smat_preH,
+                                       sfirst = smat_sfirst, 
+                                       sparse = smat_sparse)
     
     bstart <- bstart - xoffset
     
-    cstart <- eval_xoffset_cstart_args(xsi, ysi, knots, datai, cstartsi, xfunsi)
+    cstart <- eval_xoffset_cstart_args(xsi, 
+                                       ysi, 
+                                       knots, 
+                                       datai, 
+                                       cstartsi, 
+                                       xfunsi,
+                                       smat = smat,
+                                       degree = smat_degree,
+                                       intercept = smat_intercept, 
+                                       derivs = smat_derivs,
+                                       centerval = smat_centerval,
+                                       normalize = smat_normalize,
+                                       preH = smat_preH,
+                                       sfirst = smat_sfirst, 
+                                       sparse = smat_sparse)
     
-    
+   
+                                 
     
     if(sigmabstartsi == 'sigmaxoffset') {
       sigmabstartsi <- sigmaxoffsetsi
@@ -6407,16 +6579,59 @@ bsitar <- function(x,
       stop("xoffset can not be apv for sigma")
     }
     
-    sigmaxoffset <- eval_xoffset_bstart_args(sigmaxsi, ysi, sigmaknots, datai, 
-                               sigmaxoffsetsi, sigmaxfunsi, arg = 'offset')
+    sigmaxoffset <- eval_xoffset_bstart_args(sigmaxsi, 
+                                             ysi, 
+                                             sigmaknots, 
+                                             datai, 
+                                             sigmaxoffsetsi, 
+                                             sigmaxfunsi, 
+                                             arg = 'offset',
+                                             smat = smat,
+                                             degree = smat_degree,
+                                             intercept = smat_intercept, 
+                                             derivs = smat_derivs,
+                                             centerval = smat_centerval,
+                                             normalize = smat_normalize,
+                                             preH = smat_preH,
+                                             sfirst = smat_sfirst, 
+                                             sparse = smat_sparse)
     
-    sigmabstart <- eval_xoffset_bstart_args(sigmaxsi, ysi, sigmaknots, datai, 
-                               sigmabstartsi, sigmaxfunsi, arg = 'bstart')
+    sigmabstart <- eval_xoffset_bstart_args(sigmaxsi, 
+                                            ysi, 
+                                            sigmaknots,
+                                            datai, 
+                                            sigmabstartsi, 
+                                            sigmaxfunsi, 
+                                            arg = 'bstart',
+                                            smat = smat,
+                                            degree = smat_degree,
+                                            intercept = smat_intercept, 
+                                            derivs = smat_derivs,
+                                            centerval = smat_centerval,
+                                            normalize = smat_normalize,
+                                            preH = smat_preH,
+                                            sfirst = smat_sfirst, 
+                                            sparse = smat_sparse)
     
     sigmabstart <- sigmabstart - sigmaxoffset
     
-    sigmacstart <-eval_xoffset_cstart_args(sigmaxsi, ysi, sigmaknots, datai, 
-                                           sigmacstartsi, sigmaxfunsi)
+    sigmacstart <-eval_xoffset_cstart_args(sigmaxsi, 
+                                           ysi, 
+                                           sigmaknots, 
+                                           datai, 
+                                           sigmacstartsi, 
+                                           sigmaxfunsi,
+                                           smat = smat,
+                                           degree = smat_degree,
+                                           intercept = smat_intercept, 
+                                           derivs = smat_derivs,
+                                           centerval = smat_centerval,
+                                           normalize = smat_normalize,
+                                           preH = smat_preH,
+                                           sfirst = smat_sfirst, 
+                                           sparse = smat_sparse)
+    
+    
     
     
     
@@ -6431,12 +6646,31 @@ bsitar <- function(x,
       sigmaxoffset      <- 0
     }
     
+   
     
-    # datai[[xsi]] <- datai[[xsi]] - xoffset
-    knots        <- knots - xoffset
-    knots        <- round(knots, 8)
-    nknots       <- length(knots)
-    df           <- length(knots) - 1
+    if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+      if(!is.null(knots)) {
+        knots        <- knots - xoffset
+        knots        <- round(knots, 8)
+        nknots       <- length(knots)
+        df           <- length(knots) - 1
+      } else if(is.null(knots)) {
+        knots        <- NULL
+        knots        <- NULL
+        nknots       <- NULL
+        df           <- NULL
+      }
+    } else {
+      knots        <- knots - xoffset
+      knots        <- round(knots, 8)
+      nknots       <- length(knots)
+      df           <- length(knots) - 1
+    }
+    
+    # knots        <- knots - xoffset
+    # knots        <- round(knots, 8)
+    # nknots       <- length(knots)
+    # df           <- length(knots) - 1
     
     # datai[[sigmaxsi]] <- datai[[sigmaxsi]] - sigmaxoffset
     sigmaknots   <- sigmaknots - sigmaxoffset
@@ -6614,36 +6848,88 @@ bsitar <- function(x,
     #   bknots <- c(knots[1], knots[length(knots)])
     # }
     
-    if(smat == 'rcs') {
-      SplineCall <- substitute(make_spline_matrix(x = set_datai_xsi, knots))
+   
+    
+    
+    # Use this same approach -SplineCall- for 'rcs' also
+    # This makes 'make_spline_matrix' useless ?
+    
+    if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+      if(length(knots) > 2) {
+        iknots <- knots[2:(length(knots)-1)]
+        bknots <- c(knots[1], knots[length(knots)])
+      } else if(length(knots) == 2) {
+        iknots <- NULL
+        bknots <- knots
+      }
     } else {
       iknots <- knots[2:(length(knots)-1)]
       bknots <- c(knots[1], knots[length(knots)])
-      SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
-                           knots = iknots,
-                           bknots = bknots,
-                           degree = smat_degree,
-                           intercept = smat_intercept,
-                           derivs = smat_derivs,
-                           centerval = smat_centerval,
-                           normalize = smat_normalize,
-                           preH = smat_preH,
-                           sfirst = smat_sfirst,
-                           sparse = smat_sparse
-                           ))
     }
     
-    if(smat == 'nsp') {
+    # iknots <- knots[2:(length(knots)-1)]
+    # bknots <- c(knots[1], knots[length(knots)])
+    
+    # print(knots)
+    # print(iknots)
+    # print(bknots)
+    # stop()
+    
+    SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
+                                      knots = iknots,
+                                      bknots = bknots,
+                                      degree = smat_degree,
+                                      intercept = smat_intercept,
+                                      derivs = smat_derivs,
+                                      centerval = smat_centerval,
+                                      normalize = smat_normalize,
+                                      preH = smat_preH,
+                                      sfirst = smat_sfirst,
+                                      sparse = smat_sparse)
+                             )
+    
+    
+    # if(smat == 'rcs') {
+    #   SplineCall <- substitute(make_spline_matrix(x = set_datai_xsi, knots))
+    # } else {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    #   SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
+    #                        knots = iknots,
+    #                        bknots = bknots,
+    #                        degree = smat_degree,
+    #                        intercept = smat_intercept,
+    #                        derivs = smat_derivs,
+    #                        centerval = smat_centerval,
+    #                        normalize = smat_normalize,
+    #                        preH = smat_preH,
+    #                        sfirst = smat_sfirst,
+    #                        sparse = smat_sparse
+    #                        ))
+    # }
+    
+    
+    
+    
+    if(smat == 'rcs') {
+      SplineCall[[1]] <- quote(GS_rcs_call)
+    } else if(smat == 'nsp') {
       SplineCall[[1]] <- quote(GS_nsp_call)
     } else if(smat == 'nsk') {
       SplineCall[[1]] <- quote(GS_nsk_call)
+    } else if(smat == 'bsp') {
+      SplineCall[[1]] <- quote(GS_bsp_call)
+    } else if(smat == 'msp') {
+      SplineCall[[1]] <- quote(GS_msp_call)
+    } else if(smat == 'isp') {
+      SplineCall[[1]] <- quote(GS_isp_call)
     }
     
-    set_datai_xsi <- datai[[xsi]]
-    mat_s         <- eval(SplineCall)
-    
+    set_datai_xsi   <- datai[[xsi]]
+    mat_s           <- eval(SplineCall)
     SplineCall[[2]] <- quote(x)
     
+   
    
     #################################################################
     #################################################################
@@ -6793,6 +7079,18 @@ bsitar <- function(x,
     
     
     
+    
+    
+    
+    # In function call, earlier the number of spline coef were set using
+    # nknots - 1. This worked well for nsp. nsk and rcs. 
+    # However, for bsp, msp and isp, it is more tricky. Instead, the 
+    # Now the number of spline coefficients will be set as ncol(mat_s)
+    # print(nknots)
+    # print(ncol(mat_s))
+    # stop()
+    
+    SbasisN <- ncol(mat_s)
 
     internal_function_args_names <-
       c(
@@ -6840,22 +7138,19 @@ bsitar <- function(x,
         "set_sigmaxfunsi",
         "set_xfunxoffsetsi",
         "set_sigmaxfunxoffsetsi",
-        
         "xfuntransformsi",
         "yfuntransformsi",
         "sigmaxfuntransformsi",
         "xfunxoffsettransformsi",
         "sigmaxfunxoffsettransformsi",
-        
         "fast_nsk",
-        
         "sum_zero",
-        
         "QR_Xmat",
         "QR_center",
         "QR_complete",
         "QR_flip",
-        "QR_scale"
+        "QR_scale",
+        "SbasisN"
         
       )
     
@@ -7077,7 +7372,6 @@ bsitar <- function(x,
       sigmaxsi   <- sigmaxsi
  
       
-      # prepare_function_sigma - not used now
       sigmaget_s_r_funs <-
         prepare_function_nsp_rcs(
           x = sigmaxsi,
@@ -7097,6 +7391,7 @@ bsitar <- function(x,
                                        sigmaget_s_r_funs[['include_fun_names']])
       
     } # if(set_model_sigma_by_ls) {
+    
     
     ##########################################################################
     # prepare sigma function - end
@@ -7206,7 +7501,8 @@ bsitar <- function(x,
         "SplinefunxStan",
         "set_model_sigma_by_mu",
         "set_model_sigma_by_ls",
-        "set_model_sigma_by_mu_prior_using_sigma_formula"
+        "set_model_sigma_by_mu_prior_using_sigma_formula",
+        "SbasisN"
       )
     
     
@@ -7225,42 +7521,57 @@ bsitar <- function(x,
       }
     }
     
-
-    if(smat == 'rcs') {
-      formula_bf <-
-        prepare_formula(
-          x = xsi,
-          y = ysi,
-          id = idsi,
-          knots = knots,
-          nknots = nknots,
-          data = datai,
-          internal_formula_args = internal_formula_args
-        )
-    } else if(smat == 'nsp') {
-      formula_bf <-
-        prepare_formula(
-          x = xsi,
-          y = ysi,
-          id = idsi,
-          knots = knots,
-          nknots = nknots,
-          data = datai,
-          internal_formula_args = internal_formula_args
-        )
-    } else if(smat == 'nsk') {
-      formula_bf <-
-        prepare_formula(
-          x = xsi,
-          y = ysi,
-          id = idsi,
-          knots = knots,
-          nknots = nknots,
-          data = datai,
-          internal_formula_args = internal_formula_args
-        )
-    }
     
+    
+    
+    
+
+    # if(smat == 'rcs') {
+    #   formula_bf <-
+    #     prepare_formula(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_formula_args = internal_formula_args
+    #     )
+    # } else if(smat == 'nsp') {
+    #   formula_bf <-
+    #     prepare_formula(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_formula_args = internal_formula_args
+    #     )
+    # } else if(smat == 'nsk') {
+    #   formula_bf <-
+    #     prepare_formula(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_formula_args = internal_formula_args
+    #     )
+    # }
+    
+    
+    formula_bf <-
+      prepare_formula(
+        x = xsi,
+        y = ysi,
+        id = idsi,
+        knots = knots,
+        nknots = nknots,
+        data = datai,
+        internal_formula_args = internal_formula_args
+      )
     
     
     formula_bf_to_check_loop <- formula_bf
@@ -7559,7 +7870,8 @@ bsitar <- function(x,
         'cortimeNlags_var',
         'cortimeNlags',
         "select_model",
-        "verbose"
+        "verbose",
+        "SbasisN"
       )
     
     
@@ -7802,6 +8114,8 @@ bsitar <- function(x,
     set_priors_initials_agrs $ init_data_internal       <- init_data_internal
     set_priors_initials_agrs $ init_args_internal       <- init_args_internal
     set_priors_initials_agrs $ custom_order_prior_str   <- ""
+    
+   # set_priors_initials_agrs $ SbasisN   <- SbasisN
     
     # add_sigma_by_mu
     # set_priors_initials_agrsx <<- set_priors_initials_agrs
@@ -10516,16 +10830,19 @@ bsitar <- function(x,
       xxz_c <- c()
       for (i in get_unique_length_ys) {
         if(any(grepl(i, x_c))) {
-          xxz <- paste0("int ", i, add_parm, "_", lookfor, "_", 'defined', " = 1;")
+          xxz <- paste0("int ", i, add_parm, "_", lookfor, 
+                        "_", 'defined', " = 1;")
         } else if(!all(grepl(i, x_c))) {
-          xxz <- paste0("int ", i, add_parm, "_", lookfor, "_", 'defined', " = 0;")
+          xxz <- paste0("int ", i, add_parm, "_", lookfor, 
+                        "_", 'defined', " = 0;")
         }
         xxz_c <- c(xxz_c, xxz)
       }
     } else if(is.null(x_c)) {
       xxz_c <- c()
       for (i in get_unique_length_ys) {
-        xxz <- paste0("int ", i, add_parm, "_", lookfor, "_", 'defined', " = 0;")
+        xxz <- paste0("int ", i, add_parm, "_", 
+                      lookfor, "_", 'defined', " = 0;")
         xxz_c <- c(xxz_c, xxz)
       }
     }
@@ -10620,7 +10937,7 @@ bsitar <- function(x,
     prepare_data_args[['displayit']]     <- displayit
     prepare_data_args[['setcolb']]       <- setcolb
 
-    data_custom_data            <- CustomDoCall(prepare_data2, prepare_data_args)
+    data_custom_data  <- CustomDoCall(prepare_data2, prepare_data_args)
     
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_0_custom <- data_custom_data
@@ -10642,7 +10959,8 @@ bsitar <- function(x,
     prepare_transformations_args[['transform']]    <- ""
     prepare_transformations_args[['itransform']]   <- ""
     
-    data_custom_data <- CustomDoCall(prepare_transformations, prepare_transformations_args)
+    data_custom_data <- CustomDoCall(prepare_transformations, 
+                                     prepare_transformations_args)
     
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_3_custom <- data_custom_data
@@ -10699,12 +11017,14 @@ bsitar <- function(x,
         dplyr::select(-dplyr::all_of(ys))
       
       if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_0_custom,
-                           check_for_validy_of_prepare_transformations_4_custom))) {
+                           check_for_validy_of_prepare_transformations_4_custom
+                           ))) {
         stop("Something wrong with 'prepare_transformations' for data_custom")
       }
       
       if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_3_custom,
-                           check_for_validy_of_prepare_transformations_5_custom))) {
+                           check_for_validy_of_prepare_transformations_5_custom
+                           ))) {
         stop("Something wrong with 'prepare_transformations' for data_custom")
       }
       
@@ -10795,7 +11115,8 @@ bsitar <- function(x,
       
       data_custom_standata[["prior_only"]] <- NULL
       
-      data_custom_standata_code <- strsplit(gqdata_stanvarlist_data_si, "\n")[[1]]
+      data_custom_standata_code <- 
+        strsplit(gqdata_stanvarlist_data_si, "\n")[[1]]
       
       data_custom_standata_code2 <- data_custom_standata_code
       
@@ -10932,10 +11253,11 @@ bsitar <- function(x,
                                            gsubit = "nlp_", gsubby = "be_",
                                            pasteit = TRUE, fixed = FALSE)
           add_data2_c <- c(add_data2_c, setitscode_i2)
-          defined_fixed <- stringr_str_extract_base_regexpr(setitscode_i, 
-                                                            "nlp_\\w+", 
-                                                            paste_x_Naux_str, all = T,
-                                                            returnmatch = T)[[1]]
+          defined_fixed <- 
+            stringr_str_extract_base_regexpr(setitscode_i, 
+                                             "nlp_\\w+", 
+                                             paste_x_Naux_str, all = T,
+                                             returnmatch = T)[[1]]
           grepl_defined_fixed_abc <- c(grepl_defined_fixed_abc, defined_fixed)
         }
       }
@@ -10949,10 +11271,11 @@ bsitar <- function(x,
                                            gsubit = "nlp_", gsubby = "re_",
                                            pasteit = TRUE, fixed = FALSE)
           add_data2_c <- c(add_data2_c, setitscode_i2)
-          defined_random <- stringr_str_extract_base_regexpr(setitscode_i, 
-                                                             "nlp_\\w+", 
-                                                             paste_x_Naux_str, all = T,
-                                                             returnmatch = T)[[1]]
+          defined_random <- 
+            stringr_str_extract_base_regexpr(setitscode_i, 
+                                             "nlp_\\w+", 
+                                             paste_x_Naux_str, all = T,
+                                             returnmatch = T)[[1]]
           grepl_defined_random_abc <- c(grepl_defined_random_abc, defined_random)
         }
       }
@@ -11122,7 +11445,8 @@ bsitar <- function(x,
                                        add_gqdata_stanvarlist_si)
     }
     
-    add_gqdata_stanvarlist_si <- paste(add_gqdata_stanvarlist_si_c, collapse = "\n")
+    add_gqdata_stanvarlist_si <- paste(add_gqdata_stanvarlist_si_c, 
+                                       collapse = "\n")
     
     
     
@@ -11167,7 +11491,7 @@ bsitar <- function(x,
         )
       
       
-      # y - .data$a - .data$d * if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
+      # y - .data$a -.data$d*if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
       # (X[ia] - knots[ja] > 0 ? X[ia] - knots[ja] : 0);
       define_tomeany_t <- 
         paste0(
@@ -11185,7 +11509,7 @@ bsitar <- function(x,
         ) 
       
       
-      # y + .data$a + .data$d * if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
+      # y + .data$a + .data$d*if_else(.data$d.adjusted,.data$x.adj - xoffset,x) 
       define_tomeany_f <- 
         paste0(
           "(", ysi_as_Y_name, " + nlp_re_b)", 
@@ -11214,15 +11538,17 @@ bsitar <- function(x,
       if(nys > 1) {
         gsubit <- "nlp_re"
         gsubby <- paste0(gsubit, "_", xnss)
-        define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, fixed = T)
+        define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, 
+                                      fixed = T)
         
         gsubit <- "nlp_be"
         gsubby <- paste0(gsubit, "_", xnss)
-        define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, fixed = T)
+        define_tomeany_tf_all <- gsub(gsubit, gsubby, define_tomeany_tf_all, 
+                                      fixed = T)
       }
       
-      define_add_gqdata_stanvarlist_si_c <- c(define_add_gqdata_stanvarlist_si_c,
-                                              define_tomeany_tf_all)
+      define_add_gqdata_stanvarlist_si_c <- 
+        c(define_add_gqdata_stanvarlist_si_c, define_tomeany_tf_all)
     }
     
     define_add_gqdata_stanvarlist_si <- 
@@ -11471,29 +11797,26 @@ bsitar <- function(x,
     }
  
     
-    # Set refresh based on thin argument
+    # Set refresh based on thin argument when thin > 1
     if(!is.null(brm_args$refresh) & brm_args$thin > 1) {
       brm_args$refresh <- 
         ceiling((brm_args$refresh * brm_args$thin) / brm_args$thin)
+    } else {
+      brm_args$refresh <- brm_args$refresh
     }
     
-    brm_args$refresh <- NULL
+    
     
     
     # Get and evaluate file argument
     # This to save object 'file' at the end with model info
-    get_file <- brm_args$file
-    get_file_refit <- brm_args$file_refit
-    
+    get_file          <- brm_args$file
+    get_file_refit    <- brm_args$file_refit
     get_file_compress <- brm_args$file_compress
+    get_write_brmsfit <- utils::getFromNamespace("write_brmsfit", "brms")
+    get_read_brmsfit  <- utils::getFromNamespace("read_brmsfit", "brms")
     
-    get_write_brmsfit          <-
-      utils::getFromNamespace("write_brmsfit", "brms")
-    
-    get_read_brmsfit          <-
-      utils::getFromNamespace("read_brmsfit", "brms")
-    
-    get_file_refit_options          <-
+    get_file_refit_options <- 
       utils::getFromNamespace("file_refit_options", "brms")
     
     get_file_refit <- match.arg(get_file_refit, get_file_refit_options())
@@ -11521,9 +11844,6 @@ bsitar <- function(x,
     
     # Set it to NULL to avoid re saving later
     brm_args$file <- NULL
-    
-    
-    
     
     brm_args <- sanitize_algorithm_args(args = brm_args,
                                         algorithm = brm_args$algorithm,
@@ -11562,15 +11882,6 @@ bsitar <- function(x,
       }
     }
     
-    # https://discourse.mc-stan.org/t/proper-use-of-sum-to-zero-vector-in-nested-multilevel-models/39536/14
-    # sqrt( N * inv(N - 1))
-    # https://discourse.mc-stan.org/t/sum-to-zero-constraints-and-multi-level-models-best-practise-example-code/39349/12
-    # real<lower=0> sigma_zu = sqrt(J / (J - 1.0)); 
-    
-    
-    
-    # scode_finalx <<- scode_final
-    # scode_final_sum_zero <- scode_finalx
     
     if(parameterization == "ncp") {
       if(sum_zero) {
@@ -11580,40 +11891,45 @@ bsitar <- function(x,
           found_char <- grepl(char_to_search, scode_final_sum_zero, fixed = T)
           if(found_char) {
             gsub_it <- "transformed data {"
-            # gsub_by_add <- paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " / (N_", i, " - 1.0))", ";")
-            gsub_by_add <-   paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " * inv(N_", i, " - 1.0))", ";")
+            gsub_by_add <-   paste0("  real<lower=0> sigmauz_", i, 
+                                    " = sqrt(N_", i, " * inv(N_", i, 
+                                    " - 1.0))", ";")
             
             gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, 
+                                         scode_final_sum_zero, fixed = T)
             
             gsub_it <- paste0("matrix[M_", i, ", N_", i, "] z_", i, ";")
-            gsub_by <- paste0("array[M_", i, "] sum_to_zero_vector[N_", i, "] uz_", i, ";")
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            gsub_by <- paste0("array[M_", i, "] sum_to_zero_vector[N_", i,
+                              "] uz_", i, ";")
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, 
+                                         scode_final_sum_zero, fixed = T)
             gsub_it <- paste0("matrix[N_", i, ", M_", i, "] r_", i, ";")
             gsub_by_add <- paste0("  matrix[M_", i, ", N_", i, "] z_", i, ";", 
                                   "\n", 
                                   paste0("  for(i in 1:M_", i, ") z_", i, 
-                                         "[i, ] = uz_", i, "[i][]'", ";")) # note []
+                                         "[i, ] = uz_", i, "[i][]'", 
+                                         ";")) #note[]
             gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, 
+                                         scode_final_sum_zero, fixed = T)
             if(brm_args$normalize) {
-              gsub_it <- paste0("target += std_normal_lpdf(to_vector(z_", i, "))", ";")
+              gsub_it <- paste0("target += std_normal_lpdf(to_vector(z_", i,
+                                "))", ";")
             } else {
-              gsub_it <- paste0("target += std_normal_lupdf(to_vector(z_", i, "))", ";")
+              gsub_it <- paste0("target += std_normal_lupdf(to_vector(z_", i, 
+                                "))", ";")
             }
-            gsub_by <- paste0("for(i in 1:M_", i, ") target += normal_lpdf(uz_", i, 
-                              "[i][] | 0.0, sigmauz_", i, ")", ";") # note []
-            # gsub_by <- paste0(gsub_by, "\n", "  for(i in 1:M_", i, ") target += log(uz_",i, "[i])", ";" )
-            # gsub_by <- paste0(gsub_by, "\n", "  for(i in 1:M_", i, ") target += log(uz_",i, "[i][])", ";" )
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
-            # z_x_c <- c(z_x_c, char_to_search)
+            gsub_by <- paste0("for(i in 1:M_", i, ") target += normal_lpdf(uz_", 
+                              i, 
+                              "[i][] | 0.0, sigmauz_", i, ")", 
+                              ";") # note []
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, 
+                                         scode_final_sum_zero, fixed = T)
           } # if(found_char) {
         } # for (i in 1:10) {
         
-        
-        # scode_final_sum_zerox <<- scode_final_sum_zero
-        # gsub_itx <<- gsub_it
-        # gsub_byx <<- gsub_by
+   
         
         if(is.null(brm_args$init)) {
           brm_args$init <- brm_args$init
@@ -11623,7 +11939,8 @@ bsitar <- function(x,
           for (variablexx in 1:length(brm_args$init)) {
             for (i in 1:100) {
               char_to_search <- paste0("z_", i)
-              found_char <- grepl(char_to_search, scode_final_sum_zero_int, fixed = T)
+              found_char <- grepl(char_to_search, 
+                                  scode_final_sum_zero_int, fixed = T)
               if(found_char) {
                 brm_args$init[[variablexx]] [[paste0("uz_", i)]] <- 
                   brm_args$init[[variablexx]] [[paste0("z_", i)]]
@@ -11651,15 +11968,19 @@ bsitar <- function(x,
           found_char <- grepl(char_to_search, scode_final_sum_zero, fixed = T)
           if(found_char) {
             gsub_it <- "transformed data {"
-            # gsub_by_add <- paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " / (N_", i, " - 1.0))", ";")
-            gsub_by_add <-   paste0("  real<lower=0> sigmauz_", i, " = sqrt(N_", i, " * inv(N_", i, " - 1.0))", ";")
+            gsub_by_add <-   paste0("  real<lower=0> sigmauz_", i, 
+                                    " = sqrt(N_", i, " * inv(N_", i, 
+                                    " - 1.0))", ";")
             
             gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, 
+                                         scode_final_sum_zero, fixed = T)
             
             gsub_it <- paste0("matrix[N_", i, ", M_", i, "] r_", i, ";")
-            gsub_by <- paste0("array[M_", i, "] sum_to_zero_vector[N_", i, "] uz_", i, ";")
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            gsub_by <- paste0("array[M_", i, "] sum_to_zero_vector[N_", i,
+                              "] uz_", i, ";")
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, 
+                                         scode_final_sum_zero, fixed = T)
             gsub_it <- paste0("real lprior = 0;")
             gsub_by_add <- paste0("  matrix[N_", i, ", M_", i, "] r_", i, ";", 
                                   "\n", 
@@ -11667,28 +11988,29 @@ bsitar <- function(x,
                                          "[, i] = uz_", i, "[i]", ";"),
                                   "\n",
                                   paste0("  for(i in 1:M_", i, ") ", 
-                                         "lprior += log_sum_exp(uz_", i, "[i]", ")", ";")
-                                  ) # note []
+                                         "lprior += log_sum_exp(uz_", i, 
+                                         "[i]", ")", ";")) # note []
             gsub_by <- paste0(gsub_it, "\n", gsub_by_add)
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, 
+                                         scode_final_sum_zero, fixed = T)
             if(cp_via == "multi_normal_cholesky_lpdf") {
-              pasetitsd <- paste0(" .* ", "rep_vector(sigmauz_", i, ", ", "M_", i, ")")
+              pasetitsd <- paste0(" .* ", "rep_vector(sigmauz_", i, ", 
+                                  ", "M_", i, ")")
               gsub_it <- paste0("diag_pre_multiply(sd_", i)
               gsub_by <- paste0(gsub_it, pasetitsd)
             } else if(cp_via == "multi_normal_lpdf") {
-              pasetitsd <- paste0(" .* ", "rep_vector(sigmauz_", i, ", ", "M_", i, ")")
-              gsub_it <- paste0("quad_form_diag(multiply_lower_tri_self_transpose(L_", i, "), ", "sd_", i)
+              pasetitsd <- paste0(" .* ", "rep_vector(sigmauz_", i, 
+                                  ", ", "M_", i, ")")
+              gsub_it <- paste0("quad_form_diag(multiply_lower_tri_self_transpose(L_", 
+                                i, "), ", "sd_", i)
               gsub_by <- paste0(gsub_it, pasetitsd)
             }
-            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, fixed = T)
-            # z_x_c <- c(z_x_c, char_to_search)
+            scode_final_sum_zero <- gsub(gsub_it, gsub_by, scode_final_sum_zero, 
+                                         fixed = T)
           } # if(found_char) {
         } # for (i in 1:10) {
         
-        
-        # scode_final_sum_zerox <<- scode_final_sum_zero
-        # gsub_itx <<- gsub_it
-        # gsub_byx <<- gsub_by
+  
         
         if(is.null(brm_args$init)) {
           brm_args$init <- brm_args$init
@@ -11698,15 +12020,15 @@ bsitar <- function(x,
           for (variablexx in 1:length(brm_args$init)) {
             for (i in 1:100) {
               char_to_search <- paste0("r_", i)
-              found_char <- grepl(char_to_search, scode_final_sum_zero_int, fixed = T)
+              found_char <- grepl(char_to_search, 
+                                  scode_final_sum_zero_int, fixed = T)
               if(found_char) {
                 if(!is.null(brm_args$init[[variablexx]] [[char_to_search]])) {
                   brm_args$init[[variablexx]] [[paste0("uz_", i)]] <-
-                    brm_args$init[[variablexx]] [[char_to_search]] %>% t() # imp t()
+                    brm_args$init[[variablexx]] [[char_to_search]] %>% t()#impt()
                 }
                 brm_args$init[[variablexx]] [[char_to_search]] <- NULL
                 brm_args$init[[variablexx]] [[paste0("z_", i)]] <- NULL
-                
               } # if(found_char) {
             } # for (i in 1:10) {
           } # for (variablexx in 1:length(brm_args$init)) {
@@ -11736,7 +12058,8 @@ bsitar <- function(x,
       ithx <- 0
       for (i in ys) {
         ithx <- ithx + 1
-        sigma_has_loop <- attr(bformula[['forms']][[i]][['pforms']][['sigma']],"loop")
+        sigma_has_loop <- 
+          attr(bformula[['forms']][[i]][['pforms']][['sigma']],"loop")
         if(sigma_has_loop) {
           gsub_it_start     <- paste0("sigma", "_", i, "[n]")
           onlum <- paste0("mu", "_", i, "[n]")
@@ -11748,19 +12071,18 @@ bsitar <- function(x,
         set_model_sigma_by_mu_fun_str <- set_model_sigma_by_mu_fun_str_c[[ithx]]
         sigmatau_strsi <- sigmatau_strsi_c[[ithx]]
         # gsub_it_end       <- paste0("sqrt", "(", ""  ,")")
-        gsub_it_end       <- paste0(set_model_sigma_by_mu_fun_str, "(", ""  ,")")
+        gsub_it_end       <- paste0(set_model_sigma_by_mu_fun_str, 
+                                    "(", ""  ,")")
         extract_sigma_by_mean_o <- replace_string_part(x = scode_final,
                                                        start = gsub_it_start,
                                                        end =  gsub_it_end,
                                                        replace = "",
                                                        extract = T)
         
-        # extract_sigma_by_mean <- gsub(paste0("sqrt", "(", ""  ,")"),
-        #                               paste0("sqrt", "(", onlum  ,")"),
-        #                               extract_sigma_by_mean_o, fixed = T)
-        
-        extract_sigma_by_mean <- gsub(paste0(set_model_sigma_by_mu_fun_str, "(", ""  ,")"),
-                                      paste0(set_model_sigma_by_mu_fun_str, "(", onlum  ,")"),
+        extract_sigma_by_mean <- gsub(paste0(set_model_sigma_by_mu_fun_str, 
+                                             "(", ""  ,")"),
+                                      paste0(set_model_sigma_by_mu_fun_str, 
+                                             "(", onlum  ,")"),
                                       extract_sigma_by_mean_o, fixed = T)
 
         
@@ -11840,8 +12162,8 @@ bsitar <- function(x,
     ##############################################################
     # restore sigma sqrt form
     if(set_model_sigma_by_mu) {
-      function_restore_mu_sigam_form <- function(fit_f, ys,
-                                                 set_model_sigma_by_mu_fun_str_c) {
+      function_restore_mu_sigam_form <- 
+        function(fit_f, ys, set_model_sigma_by_mu_fun_str_c) {
         ithx <- 0
         for (outrespbames in ys) {
           ithx <- ithx + 1
@@ -12155,7 +12477,7 @@ bsitar <- function(x,
                                       returnobj = TRUE,
                                       vectorize = FALSE,
                                       verbose = TRUE,
-                                      sigmafun = expose_sigmafun, # add_sigma_by_ls
+                                      sigmafun = expose_sigmafun,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
@@ -12169,7 +12491,7 @@ bsitar <- function(x,
                                       returnobj = TRUE,
                                       vectorize = FALSE,
                                       verbose = TRUE,
-                                      sigmafun = expose_sigmafun, # add_sigma_by_ls
+                                      sigmafun = expose_sigmafun,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'R'
     } 

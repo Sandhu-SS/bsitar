@@ -111,6 +111,7 @@ prepare_priors <- function(prior_argument,
   normalize <- NULL;
   initsi <- NULL;
   tag <- NULL;
+  SbasisN <- NULL;
   
   
   eout <- list2env(prior_internal_args)

@@ -157,6 +157,9 @@ prepare_formula <- function(x,
   
   nys <- NULL;
   ysi <- NULL;
+  SbasisN <- NULL;
+  
+  # SbasisN = nknots - 1 for nsp nsk and rcs
   
   
   if (!is.null(internal_formula_args)) {
@@ -475,8 +478,8 @@ prepare_formula <- function(x,
     paste0(strsplit(gsub("\\+", " ", fixedsi), " ")[[1]], sep = ",")
   
   snames <- c()
-  for (i in 1:(nknots - 1)) {
-    if (i < (nknots - 1)) {
+  for (i in 1:(SbasisN)) {
+    if (i < (SbasisN)) {
       name1 <- paste0("s", i, sep = ",")
     }
     else {
@@ -2920,8 +2923,8 @@ prepare_formula <- function(x,
     names(lm_sdx_all) <- names_mat_s_scovmat
     
     
-    lm_s   <- lm_s_all[1:(nknots - 1)]
-    lm_sdx <- lm_sdx_all[1:(nknots - 1)]
+    lm_s   <- lm_s_all[1:(SbasisN)]
+    lm_sdx <- lm_sdx_all[1:(SbasisN)]
     
     
     if (!is.null(s_covariate) & length(s_covariate) > 1) {
@@ -2954,9 +2957,9 @@ prepare_formula <- function(x,
         lm_s_all <- lm_coef[(ncol(acovmat) + 1):length(lm_coef)]
         names(lm_s_all) <- names_mat_s_scovmat
         names(lm_sdx_all) <- names_mat_s_scovmat
-        lm_s <- lm_s_all[1:(nknots - 1)]
-        lm_sdx <- lm_sdx_all[1:(nknots - 1)]
-        if (length(lm_s_all) > (nknots - 1)) {
+        lm_s <- lm_s_all[1:(SbasisN)]
+        lm_sdx <- lm_sdx_all[1:(SbasisN)]
+        if (length(lm_s_all) > (SbasisN)) {
           lm_s_cov <- lm_s_all[nknots:length(lm_s_all)]
           lm_sdx_cov <- lm_sdx_all[nknots:length(lm_sdx_all)]
           tnames_s <-

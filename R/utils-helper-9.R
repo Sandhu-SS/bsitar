@@ -336,7 +336,7 @@ set_priors_initials <- function(a_prior_beta,
   cortimeNlags <- NULL;
   . <- NULL;
   d_adjustedsi <- NULL;
-  
+  SbasisN <- NULL;
   
   
   eout <- list2env(prior_data_internal)
@@ -1361,6 +1361,13 @@ set_priors_initials <- function(a_prior_beta,
     
     
     
+    # avoid this condition, set for df = SbasisN for all splines
+    # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+    # }
+    
+    df <- SbasisN
+    
+    
     if (class == "b" & nlpar == 'a') {
       if (a_form_0) {
         nrep_of_parms <- length(acovcoefnames)
@@ -1704,6 +1711,7 @@ set_priors_initials <- function(a_prior_beta,
       zz <- prior_str_arg <- eval(parse(text = x))
       zz <- strsplit(zz, "\\(")[[1]]
       dist <- zz[1]
+      
       
       
       #################
