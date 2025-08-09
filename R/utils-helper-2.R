@@ -702,44 +702,48 @@ post_processing_checks <- function(model,
   check_it       <- sub(" *\\(.*", "", xcall_check_it)
  
   check_it_sss <- strsplit(check_it, "\\.")[[1]][1]
+  
+  # Now using checkresp_info which is also used in getmodel_info
+  checkresp_info(model, resp)
  
-  if (model$model_info$nys == 1 & !is.null(resp)) {
-    stop(
-      "You have fit a univariate model",
-      " but set resp option as: ",
-      resp,
-      ".",
-      "\n ",
-      " For univariate model, the resp option should be NULL",
-      "\n ",
-      " (i.e., resp = NULL)"
-    )
-  }
-  if (model$model_info$nys > 1 & is.null(resp)) {
-    if (!is.na(model$model_info$univariate_by$by)) {
-      stop(
-        "You have fit a univariate_by model for ",
-        model$model_info$univariate_by$by,
-        "\n ",
-        " but did not correctly specified the 'resp' option",
-        " (which is NULL at present).",
-        "\n ",
-        " The response options are: ",
-        paste(model$model_info$ys, collapse = ", ")
-      )
-    }
-    if (model$model_info$multivariate$mvar) {
-      stop(
-        "You have fit a multivariate model ",
-        "\n ",
-        " but dit not set the the resp options correctly",
-        " (which is NULL at present).",
-        "\n ",
-        " The response options are: ",
-        paste(model$model_info$ys, collapse = ", ")
-      )
-    }
-  }
+  # if (model$model_info$nys == 1 & !is.null(resp)) {
+  #   stop(
+  #     "You have fit a univariate model",
+  #     " but set resp option as: ",
+  #     resp,
+  #     ".",
+  #     "\n ",
+  #     " For univariate model, the resp option should be NULL",
+  #     "\n ",
+  #     " (i.e., resp = NULL)"
+  #   )
+  # }
+  # if (model$model_info$nys > 1 & is.null(resp)) {
+  #   if (!is.na(model$model_info$univariate_by$by)) {
+  #     stop(
+  #       "You have fit a univariate_by model for ",
+  #       model$model_info$univariate_by$by,
+  #       "\n ",
+  #       " but did not correctly specified the 'resp' option",
+  #       " (which is NULL at present).",
+  #       "\n ",
+  #       " The response options are: ",
+  #       paste(model$model_info$ys, collapse = ", ")
+  #     )
+  #   }
+  #   if (model$model_info$multivariate$mvar) {
+  #     stop(
+  #       "You have fit a multivariate model ",
+  #       "\n ",
+  #       " but dit not set the the resp options correctly",
+  #       " (which is NULL at present).",
+  #       "\n ",
+  #       " The response options are: ",
+  #       paste(model$model_info$ys, collapse = ", ")
+  #     )
+  #   }
+  # }
+  
   if (is.null(resp)) {
     resp_ <- resp
   } else if (!is.null(resp)) {

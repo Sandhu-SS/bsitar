@@ -3152,16 +3152,16 @@ check_and_install_if_not_installed <- function(pkgs,
     if(verbose) {
       message('Checking required packages for ', getfun, " ",
               "\n ",
-              paste(pkgs, collapse = ", "))
+              collapse_comma(pkgs))
     } # if(verbose) {
   } # if(!is.null(getfun)) {
 
   # Dont install package in function
   # CRAN does not accept it, so comment it out
-
+  
   if(installpkg) {
     # message('Installing required packages',
-    #         paste(required_pkgs, collapse = ", "))
+    #         collapse_comma(required_pkgs))
     #
     # utils::install.packages(required_pkgs,
     #                         repos = "http://cran.us.r-project.org")
@@ -3836,7 +3836,7 @@ add_parms_to_curve_data <- function(data,
   mergebycols <- intersect(nonparmcols, byjoincols)
   setdiffcols <- setdiff(byjoincols, nonparmcols)
   if(length(setdiffcols) != 0) {
-    stop("Variable(s) ", "'", paste(setdiffcols, collapse = ", "), "'",
+    stop("Variable(s) ", collapse_comma(setdiffcols),
          " missing in nonparmcols" )
   }
 
@@ -5096,6 +5096,61 @@ plot_equivalence_test <-  function(x,
 
 
 #' Get information on dpar
+#' 
+#' @details
+#' This checkresp_info is used in getmodel_info and post_processing_checks 
+#' functions
+#' 
+#' @param model An object of class \code{bgmfit} 
+#' @param resp A character string
+#'
+#' @return An object of class \code{bgmfit} 
+#' @keywords internal
+#' @noRd
+#'
+checkresp_info <- function(model, resp) {
+  if (model$model_info$nys == 1 & !is.null(resp)) {
+    stop(
+      "You have fit a univariate model",
+      " but set resp option as: ",
+      resp,
+      ".",
+      "\n ",
+      " For univariate model, the resp option should be NULL",
+      "\n ",
+      " (i.e., resp = NULL)"
+    )
+  }
+  if (model$model_info$nys > 1 & is.null(resp)) {
+    if (!is.na(model$model_info$univariate_by$by)) {
+      stop(
+        "You have fit a univariate_by model for ",
+        model$model_info$univariate_by$by,
+        "\n ",
+        " but did not correctly specified the 'resp' option",
+        " (which is NULL at present).",
+        "\n ",
+        " The response options are: ",
+        collapse_comma(model$model_info$yvars)
+      )
+    }
+    if (model$model_info$multivariate$mvar) {
+      stop(
+        "You have fit a multivariate model ",
+        "\n ",
+        " but dit not set the the resp options correctly",
+        " (which is NULL at present).",
+        "\n ",
+        " The response options are: ",
+        collapse_comma(model$model_info$yvars)
+      )
+    }
+  }
+  return(invisible(NULL))
+}
+
+
+#' Get information on dpar
 #'
 #' @param model An object of class \code{bgmfit} 
 #' @param dpar A logical or a character string \code{'mu'} or \code{'sigma'}
@@ -5106,6 +5161,8 @@ plot_equivalence_test <-  function(x,
 #' @noRd
 #'
 getmodel_info <- function(model, dpar, resp) {
+  
+  checkresp_info(model, resp)
   
   if (is.null(resp)) {
     setsigmaxvars_ <- 'setsigmaxvar'
