@@ -4190,6 +4190,8 @@ eval_xoffset_bstart_args <- function(x,
                                      preH, 
                                      sfirst, 
                                      sparse) {
+  iknots <- checkgetiknotsbknots(knots, 'iknots')
+  bknots <- checkgetiknotsbknots(knots, 'bknots')
     if (eval_arg == "mean") {
       eval_arg.o <- mean(data[[x]])
     } else if (eval_arg == "min") {
@@ -4197,12 +4199,22 @@ eval_xoffset_bstart_args <- function(x,
     } else if (eval_arg == "max") {
       eval_arg.o <- max(data[[x]])
     } else if (eval_arg == "apv") {
-      # mat_s <- make_spline_matrix(data[[x]], knots)
       if(smat == 'rcs') {
-        mat_s <- make_spline_matrix(data[[x]], knots)
+        # mat_s <- make_spline_matrix(data[[x]], knots)
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_rcs_call(x = data[[x]], knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
       } else if(smat == 'nsp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4213,8 +4225,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'nsk') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4225,8 +4237,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'bsp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_bsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4237,8 +4249,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'msp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_msp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4249,8 +4261,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'isp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_isp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4304,13 +4316,27 @@ eval_xoffset_cstart_args <- function(x,
                                      preH, 
                                      sfirst, 
                                      sparse) {
+  iknots <- checkgetiknotsbknots(knots, 'iknots')
+  bknots <- checkgetiknotsbknots(knots, 'bknots')
     if (eval_arg == "pv") {
       # mat_s <- make_spline_matrix(data[[x]], knots)
       if(smat == 'rcs') {
-        mat_s <- make_spline_matrix(data[[x]], knots)
+        # mat_s <- make_spline_matrix(data[[x]], knots)
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
+        mat_s <- GS_nsp_call(x = data[[x]], 
+                             knots = iknots, bknots = bknots, 
+                             degree = degree,
+                             intercept = intercept, 
+                             derivs = derivs, 
+                             centerval = centerval, 
+                             normalize = normalize,
+                             preH = preH,
+                             sfirst = sfirst, 
+                             sparse = sparse)
       } else if(smat == 'nsp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsp_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4322,8 +4348,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'nsk') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsk_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4335,8 +4361,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'bsp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_bsp_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4348,8 +4374,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'msp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_msp_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4361,8 +4387,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'isp') {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsk_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4392,247 +4418,6 @@ eval_xoffset_cstart_args <- function(x,
     out <- round(out, 3)
     return(out)
   }
-
-
-
-
-
-
-
-
-#' Create rcs spline design matrix. 
-#'  
-#' @details
-#' This 'rcs_matrix' function has been replaced by 'GS_rcs_call' which has 
-#'  stan counter part as 'GS_rcs_call_stan'. But still keeping 'rcs_matrix'
-#'  for time being
-#' 
-#'
-#' @param x A numeric vector representing a predictor variable (e.g., age)
-#' @param df An integer. It is defined as \code{nk - 1}
-#' @param deriv An integer
-#' @param add_intercept A logical (default \code{FALSE}) to indicate whether to
-#'   add intercept column to the design matrix. This is useful when using
-#'   \code{rcs_matrix} for creating design matrix for derivatives such as
-#'   \code{deriv = 1} and \code{deriv = 2} where first (\code{deriv = 1}) or,
-#'   the first and second (\code{deriv = 2}) columns are automatically set as
-#'   \code{'0'}.
-#' @param verbose A logical (default \code{FALSE}) to indicate if infornation
-#'   need to be displayed.
-#'
-#' @inherit Hmisc::rcspline.eval params
-#' 
-#' @return An object of class \code{bgmfit} 
-#' @keywords internal
-#' @noRd
-#'
-rcs_matrix <- function(x, 
-                       df, 
-                       knots = NULL, 
-                       deriv = 0,
-                       add_intercept = FALSE,
-                       inclx = TRUE, 
-                       knots.only = FALSE,
-                       type = "ordinary", 
-                       norm = 2, 
-                       rpm = NULL, 
-                       pc = FALSE,
-                       fractied = 0.05,
-                       verbose = FALSE,
-                       ...) {
-  
-  nk <- df + 1
-  ##
-  # borrow from Hmisc::rcspline.eval
-  
-  if (!length(knots)) {
-    xx <- x[!is.na(x)]
-    n <- length(xx)
-    if (n < 6) 
-      stop("knots not specified, and < 6 non-missing observations")
-    if (nk < 3) 
-      stop("nk must be >= 3")
-    xu <- sort(unique(xx))
-    nxu <- length(xu)
-    if ((nxu - 2) <= nk) {
-      warning(sprintf("%s knots requested with %s unique values of x.  knots set to %s interior values.", 
-                      nk, nxu, nxu - 2))
-      knots <- xu[-c(1, length(xu))]
-    }
-    else {
-      outer <- if (nk > 3) 
-        0.05
-      else 0.1
-      if (nk > 6) 
-        outer <- 0.025
-      knots <- numeric(nk)
-      overrideFirst <- overrideLast <- FALSE
-      nke <- nk
-      firstknot <- lastknot <- numeric(0)
-      if (fractied > 0 && fractied < 1) {
-        f <- table(xx)/n
-        if (max(f[-c(1, length(f))]) < fractied) {
-          if (f[1] >= fractied) {
-            firstknot <- min(xx[xx > min(xx)])
-            xx <- xx[xx > firstknot]
-            nke <- nke - 1
-            overrideFirst <- TRUE
-          }
-          if (f[length(f)] >= fractied) {
-            lastknot <- max(xx[xx < max(xx)])
-            xx <- xx[xx < lastknot]
-            nke <- nke - 1
-            overrideLast <- TRUE
-          }
-        }
-      }
-      if (nke == 1) 
-        knots <- median(xx)
-      else {
-        if (nxu <= nke) 
-          knots <- xu
-        else {
-          p <- if (nke == 2) 
-            seq(0.5, 1 - outer, length = nke)
-          else seq(outer, 1 - outer, length = nke)
-          knots <- quantile(xx, p)
-          if (length(unique(knots)) < min(nke, 3)) {
-            knots <- quantile(xx, seq(outer, 1 - outer, 
-                                      length = 2 * nke))
-            if (length(firstknot) && length(unique(knots)) < 
-                3) {
-              midval <- if (length(firstknot) && length(lastknot)) 
-                (firstknot + lastknot)/2
-              else median(xx)
-              knots <- sort(c(firstknot, 
-                              midval, if (length(lastknot)) lastknot else quantile(xx, 
-                                                                                   1 - outer)))
-            }
-            if ((nu <- length(unique(knots))) < 3) {
-              cat("Fewer than 3 unique knots.  Frequency table of variable:\n")
-              print(table(x))
-              stop()
-            }
-            warning(paste("could not obtain", nke, "interior knots with default algorithm.\n", 
-                          "Used alternate algorithm to obtain", nu, 
-                          "knots"))
-          }
-        }
-        if (length(xx) < 100) {
-          xx <- sort(xx)
-          if (!overrideFirst) 
-            knots[1] <- xx[5]
-          if (!overrideLast) 
-            knots[nke] <- xx[length(xx) - 4]
-        }
-      }
-      knots <- c(firstknot, knots, lastknot)
-    }
-  }
-  knots <- sort(unique(knots))
-  nk <- length(knots)
-  if (nk < 3) {
-    cat("fewer than 3 unique knots.  Frequency table of variable:\n")
-    print(table(x))
-    stop()
-  }
-  if (knots.only) 
-    return(knots)
-  if (length(rpm)) 
-    x[is.na(x)] <- rpm
-  # end of borrow from Hmisc::rcspline.eval
-  ##
-  
-  X <- x
-  N <- length(X)
-  nk <- length(knots)
-  
-  basis_evals <- matrix(0, N, nk-1)
-  
-  if(inclx) basis_evals[,1] = X
-  
-  if(deriv == 0) basis_evals[,1] = X;
-  if(deriv == 1) basis_evals[,1] = 1;
-  if(deriv == 2) basis_evals[,1] = 0;
-  
-  Xx <- matrix(0, N, nk)
-  km1 = nk - 1;
-  j = 1;
-  knot1   <- knots[1     ]
-  knotnk  <- knots[nk    ]
-  knotnk1 <- knots[nk - 1]
-  kd <-     (knotnk - knot1) ^ (2)
-  
-  for(ia in 1:N) {
-    for(ja in 1:nk) {
-      Xx[ia,ja] = ifelse(X[ia] - knots[ja] > 0, X[ia] - knots[ja], 0)
-    }
-  }
-  
-  if(deriv == 0) {
-    while (j <= nk - 2) {
-      jp1 = j + 1;
-      basis_evals[,jp1] = 
-        (Xx[,j]^3-(Xx[,km1]^3)*(knots[nk]-knots[j])/
-           (knots[nk]-knots[km1]) + (Xx[,nk]^3)*(knots[km1]-knots[j])/
-           (knots[nk]-knots[km1])) / (knots[nk]-knots[1])^2;
-      j = j + 1;
-    }
-  }
-  
-  if(deriv == 1) {
-    while (j <= nk - 2) {
-      jp1 = j + 1;
-      basis_evals[,jp1] =
-        (3*Xx[,j]^2) * (1/((knots[nk]-knots[1])^2))  - 
-        (3*Xx[,km1]^2)*(knots[nk]-knots[j]) /
-        ((knots[nk]-knots[km1]) * (knots[nk]-knots[1])^2) + 
-        (3*Xx[,nk]^2)*(knots[km1]-knots[j])/
-        ((knots[nk]-knots[km1]) * (knots[nk]-knots[1])^2) ;
-      j = j + 1;
-    }
-  }
-  
-  if(deriv == 2) {
-    while (j <= nk - 2) {
-      jp1 = j + 1;
-      basis_evals[,jp1] =
-        (6*Xx[,j]^1) * (1/((knots[nk]-knots[1])^2))  - 
-        (6*Xx[,km1]^1)*(knots[nk]-knots[j]) /
-        ((knots[nk]-knots[km1]) * (knots[nk]-knots[1])^2) + 
-        (6*Xx[,nk]^1)*(knots[km1]-knots[j])/
-        ((knots[nk]-knots[km1]) * (knots[nk]-knots[1])^2) ;
-      j = j + 1;
-    }
-  }
-  
-  if(!inclx) basis_evals <- basis_evals[,-1,drop=FALSE]
-  
-  
-  if(add_intercept) {
-    if(deriv == 0) {
-      mat_intercept <- matrix(1, nrow(basis_evals), 1)
-      basis_evals <- cbind(mat_intercept, basis_evals)
-      if(verbose) message("Intercept column added. Please use ~0 + formula")
-    }
-    if(deriv == 1) {
-      mat_intercept <- matrix(0, nrow(basis_evals), 1)
-      basis_evals <- cbind(mat_intercept, basis_evals)
-      if(verbose) message("Intercept set to '0' for deriv = 1")
-    }
-    if(deriv == 2) {
-      mat_intercept <- matrix(0, nrow(basis_evals), 2)
-      basis_evals   <- basis_evals[, -1, drop = FALSE]
-      basis_evals   <- cbind(mat_intercept, basis_evals)
-      if(verbose) message("Intercept and first term (x) set to '0' for deriv = 2")
-    }
-  } # if(add_intercept) {
-  
-  
-  return(basis_evals)
-} # end rcs_matrix
-
-
 
 
 

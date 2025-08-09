@@ -3386,6 +3386,11 @@ prepare_formula <- function(x,
   # hierarchical_gr_names %>% print()
   # sigma_hierarchical_gr_names %>% print()
   
+   
+  # print(lm_s_all)
+  # print(scovcoefnames)
+  # stop()
+  
   
   list_out <- list(
     aform = aform, 

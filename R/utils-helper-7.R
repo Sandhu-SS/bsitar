@@ -127,7 +127,8 @@ prepare_function_nsp_rcs <- function(x,
   }
   
   # SbasisN = nknots-1 -> for nsp nsk and rcs
-  # print(SbasisN)
+  # intercept issue - SbasisN remains same intercept T/F for splines2
+  # For smat == 'rcs', intercept need additional column
   # stop()
   
   
@@ -1011,7 +1012,13 @@ prepare_function_nsp_rcs <- function(x,
         matrix_cols_str <- "matrix[N, SbasisN] Spl;\n"
       } else if(smat_intercept == 1) {
         intercept_str <- "int intercept = 1;"
-        matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
+        # intercept issue
+        if(smat == 'rcs') {
+          matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
+        } else {
+          matrix_cols_str <- "matrix[N, SbasisN] Spl;\n"
+        }
+        # matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
       }
     } else if(dparm_set_fixed_or_random) {
       if(dparm_part_of_SplQc) {
@@ -1020,7 +1027,13 @@ prepare_function_nsp_rcs <- function(x,
           matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
         } else if(smat_intercept == 1) {
           intercept_str <- "int intercept = 1;"
-          matrix_cols_str <- "matrix[N, SbasisN+1+1] Spl;\n"
+          # intercept issue
+          if(smat == 'rcs') {
+            matrix_cols_str <- "matrix[N, SbasisN+1+1] Spl;\n"
+          } else {
+            matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
+          }
+          # matrix_cols_str <- "matrix[N, SbasisN+1+1] Spl;\n"
         }
       } # if(dparm_part_of_SplQc) {
       if(!dparm_part_of_SplQc) {
@@ -1029,7 +1042,13 @@ prepare_function_nsp_rcs <- function(x,
           matrix_cols_str <- "matrix[N, SbasisN] Spl;\n"
         } else if(smat_intercept == 1) {
           intercept_str <- "int intercept = 1;"
-          matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
+          # intercept issue
+          if(smat == 'rcs') {
+            matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
+          } else {
+            matrix_cols_str <- "matrix[N, SbasisN] Spl;\n"
+          }
+          # matrix_cols_str <- "matrix[N, SbasisN+1] Spl;\n"
         }
       }
     } # if(!dparm_set_fixed_or_random) { else if(dparm_set_fixed_or_random) {
@@ -1074,13 +1093,6 @@ prepare_function_nsp_rcs <- function(x,
     }
     
     setMatpreH <- NULL
-    # if(add_fast == "") {
-    #   SplinefunxStan_str <- "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH"
-    #   setMatpreH <- NULL
-    # } else {
-    #   SplinefunxStan_str <- "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH, MatpreH"
-    # }
-    
     SplinefunxStan_str <- "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH"
     
     
@@ -1130,7 +1142,8 @@ prepare_function_nsp_rcs <- function(x,
     } # if (!dparm_set_fixed_or_random) { else if (dparm_set_fixed_or_random) {
     
     
-    
+    # just to check what X is pr(Xp)
+    # fun_body_str <- paste0(fun_body_str, "\nprint(X);")
     
     
     
@@ -1168,18 +1181,44 @@ prepare_function_nsp_rcs <- function(x,
    
     
     
+    # intercept issue
+    # name4 <- c()
+    # for (i in 1:(SbasisN)) {
+    #   name1 <- paste0("", "s", i, sep = "")
+    #   if (i < (SbasisN)) {
+    #     name2 <- paste0(' .* Spl[,', i, "] +")
+    #     # intercept issue - SbasisN remains same intercept T/F for splines2
+    #     # intercept issue
+    #     if(smat == 'nsk' | smat == 'nsp') {
+    #       if(smat_intercept) {
+    #         name2  <- paste0(' .* Spl[,', i, "+intercept] +")
+    #       } 
+    #     } 
+    #   }
+    #   else {
+    #     name2 <- paste0(' .* Spl[,', i, "]")
+    #   }
+    #   name3 <- paste0(name1, name2, sep = "")
+    #   name4[i] <- name3
+    # }
     
     
+    
+    
+    # intercept issue
+    # intercept issue - double check paste0(' .* Spl[,', i, "+intercept] +")
     name4 <- c()
     for (i in 1:(SbasisN)) {
       name1 <- paste0("", "s", i, sep = "")
       if (i < (SbasisN)) {
         name2 <- paste0(' .* Spl[,', i, "] +")
-        if(smat == 'nsk' | smat == 'nsp') {
-          if(smat_intercept) {
-            name2  <- paste0(' .* Spl[,', i, "+intercept] +")
-          } # if(smat_intercept) {
-        } # if(smat == 'nsk'smat == 'nsp') {
+        # intercept issue
+        # if(smat == 'nsk' | smat == 'nsp') {
+        #   if(smat_intercept) {
+        #     name2  <- paste0(' .* Spl[,', i, "+intercept] +")
+        #   } 
+        # } 
+        name2 <- paste0(' .* Spl[,', i, "] +")
       }
       else {
         name2 <- paste0(' .* Spl[,', i, "]")
@@ -1187,6 +1226,8 @@ prepare_function_nsp_rcs <- function(x,
       name3 <- paste0(name1, name2, sep = "")
       name4[i] <- name3
     }
+    
+    
     
     name50 <- paste("", name4, collapse = " ")
     
@@ -3385,6 +3426,23 @@ prepare_function_nsp_rcs <- function(x,
       xstaring <- gsub("cols" , "ncol", xstaring, fixed = T)
       
       xstaring <- gsub("matrixXp" , "Xp", xstaring, fixed = T) # spfnameX
+      
+      # This needed because \code{bsp}, \code{msp}, and \code{isp} may have NULL
+      # / numeric(0). This same approach based on the 
+      # function checkgetiknotsbknots() is used in bsitar and other funs
+      # Note that in Stan, when knots = NULL, the vector is empty []
+      gsub_it <- "iknotsx=knots[2:(length(knots)-1)]"
+      gsub_by <- "iknotsx=checkgetiknotsbknots(knots,'iknots')"
+      xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+      gsub_it <- "bknotsx=c(knots[1], knots[length(knots)])"
+      gsub_by <- "bknotsx=checkgetiknotsbknots(knots,'bknots')"
+      xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+      
+      # # pr(Xp)
+      # gsub_it <- "pr(X)"
+      # gsub_by <- "print(X)"
+      # xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+      
       xstaring
     } # extract_r_fun_from_scode
   
@@ -3581,6 +3639,7 @@ prepare_function_nsp_rcs <- function(x,
   } 
   if(funx_names == "GS_msp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
+                                     'GS_bsp_stan',
                                      'GS_msp_stan',
                                      'GS_msp_call_stan')
   }
@@ -3589,20 +3648,23 @@ prepare_function_nsp_rcs <- function(x,
   ###########################################################################
   if(funx_names == "GS_isp_call_stan_fast_2") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-                                     'GS_msp_tuple_stan',
-                                     'GS_msp_nsk_stan_fast_2',
-                                     'GS_msp_call_stan')
+                                     'GS_bsp_tuple_stan',
+                                     'GS_isp_tuple_stan',
+                                     'GS_isp_nsk_stan_fast_2',
+                                     'GS_isp_call_stan')
   }
   if(funx_names == "GS_isp_call_stan_fast_1") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-                                     'GS_msp_tuple_stan',
-                                     'GS_msp_nsk_stan_fast_1',
-                                     'GS_msp_call_stan')
+                                     'GS_bsp_tuple_stan',
+                                     'GS_isp_tuple_stan',
+                                     'GS_isp_nsk_stan_fast_1',
+                                     'GS_isp_call_stan')
   } 
   if(funx_names == "GS_isp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
-                                     'GS_msp_stan',
-                                     'GS_msp_call_stan')
+                                     'GS_bsp_stan',
+                                     'GS_isp_stan',
+                                     'GS_isp_call_stan')
   }
   ###########################################################################
   # rcs
@@ -3683,7 +3745,7 @@ prepare_function_nsp_rcs <- function(x,
   
   
    # print(cat(rcsfun))
-     # outx <<- all_raw_str %>% cat()
+     # outx <<- all_raw_str # %>% cat()
      # stop()
   
   out

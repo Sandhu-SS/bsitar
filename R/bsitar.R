@@ -2992,7 +2992,7 @@ bsitar <- function(x,
   
   
   
-  allowed_spline_type <- c('rcs', 'nsp', 'nsk', 'bsp', 'isp', 'msp')
+  allowed_spline_type <- c('rcs', 'nsp', 'nsk', 'bsp', 'msp', 'isp', 'moi')
   allowed_spline_type_exception_msg <- 
     paste("The options available are:", 
           paste(paste(paste0("'", allowed_spline_type, "'"), collapse =", "), 
@@ -3328,17 +3328,22 @@ bsitar <- function(x,
      )
 
   
-  # 
+  # Except for rcs, match_sitar_a_form should be FALSE
   if(smat == 'rcs') {
     # QR
-    
   } else if(smat == 'ns') {
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
   } else if(smat == 'nsp') {
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
   } else if(smat == 'nsk') {
     getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
-  }
+  } else if(smat == 'bsp') {
+    getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+  } else if(smat == 'msp') {
+    getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+  } else if(smat == 'isp') {
+    getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+  } 
   
   
   SplinefunxPre     <- 'GS'
@@ -3429,6 +3434,12 @@ bsitar <- function(x,
     }
   }
      
+  
+  # print(smat_intercept);
+  # print(smat_sfirst);
+  # print(smat_sparse);
+  # print(smat_check_sparsity);
+  # stop()
     
 
   # 'smat_include_stan' is also not working i.e., even single #include also not
@@ -6854,26 +6865,28 @@ bsitar <- function(x,
     # Use this same approach -SplineCall- for 'rcs' also
     # This makes 'make_spline_matrix' useless ?
     
-    if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-      if(length(knots) > 2) {
-        iknots <- knots[2:(length(knots)-1)]
-        bknots <- c(knots[1], knots[length(knots)])
-      } else if(length(knots) == 2) {
-        iknots <- NULL
-        bknots <- knots
-      }
-    } else {
-      iknots <- knots[2:(length(knots)-1)]
-      bknots <- c(knots[1], knots[length(knots)])
-    }
+    # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+    #   if(length(knots) > 2) {
+    #     iknots <- knots[2:(length(knots)-1)]
+    #     bknots <- c(knots[1], knots[length(knots)])
+    #   } else if(length(knots) == 2) {
+    #     iknots <- NULL
+    #     bknots <- knots
+    #   }
+    # } else {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    # }
     
+    
+    # Need to do this in the R functions extracted from the stan code
     # iknots <- knots[2:(length(knots)-1)]
     # bknots <- c(knots[1], knots[length(knots)])
+    # so using checkgetiknotsbknots()
     
-    # print(knots)
-    # print(iknots)
-    # print(bknots)
-    # stop()
+    iknots <- checkgetiknotsbknots(knots, 'iknots')
+    bknots <- checkgetiknotsbknots(knots, 'bknots')
+    
     
     SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
                                       knots = iknots,
@@ -6887,27 +6900,6 @@ bsitar <- function(x,
                                       sfirst = smat_sfirst,
                                       sparse = smat_sparse)
                              )
-    
-    
-    # if(smat == 'rcs') {
-    #   SplineCall <- substitute(make_spline_matrix(x = set_datai_xsi, knots))
-    # } else {
-    #   iknots <- knots[2:(length(knots)-1)]
-    #   bknots <- c(knots[1], knots[length(knots)])
-    #   SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
-    #                        knots = iknots,
-    #                        bknots = bknots,
-    #                        degree = smat_degree,
-    #                        intercept = smat_intercept,
-    #                        derivs = smat_derivs,
-    #                        centerval = smat_centerval,
-    #                        normalize = smat_normalize,
-    #                        preH = smat_preH,
-    #                        sfirst = smat_sfirst,
-    #                        sparse = smat_sparse
-    #                        ))
-    # }
-    
     
     
     

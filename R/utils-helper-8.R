@@ -370,7 +370,7 @@ GS_isp_call_stan_R_str <- function() {
   /////////////////////////////////////////////////////////////////////////
   matrix GS_isp_call_stan(vector x, vector knotsx, vector bknotsx, 
                         int degree, int intercept, int derivs, real centerval, int normalize,
-                        int preH, matrix MatpreH) {
+                        int preH) {
   int N = num_elements(x);
   vector[num_elements(knotsx) + 2] fullknots = append_row(append_row(rep_vector(bknotsx[1], 1), knotsx), rep_vector(bknotsx[2], 1));
   vector[num_elements(fullknots) - 2] knots = segment(fullknots, 2, num_elements(fullknots) - 2);
@@ -389,10 +389,10 @@ GS_isp_call_stan_R_str <- function() {
   
   vector[Nintk + 2 * ord] allknots = append_row(append_row(rep_vector(bknots[1], ord), knots), rep_vector(bknots[2], ord));
   int Nintervals = num_elements(allknots) - 1;
-  matrix[N, ncolselect] out = GS_isp_stan(x, knots, bknots, fullknots, allknots, N, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH, MatpreH);
+  matrix[N, ncolselect] out = GS_isp_stan(x, knots, bknots, fullknots, allknots, N, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH);
 
   if (centerval != 0) {
-    matrix[1, df] cenout = GS_isp_stan(centerval + rep_vector(0.0, 1), knots, bknots, fullknots, allknots, 1, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH, MatpreH);
+    matrix[1, df] cenout = GS_isp_stan(centerval + rep_vector(0.0, 1), knots, bknots, fullknots, allknots, 1, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH);
     if (!calcderiv) {
       if (intercept) {
         for (i in 2:cols(cenout)) out[, i] -= cenout[1, i];
@@ -526,7 +526,7 @@ matrix GS_msp_stan(
 
 
 ################################################################################
-# GS_msp_call_stan
+# GS_msp_call_stan_R_str
 ################################################################################
 
 #' An internal function 
@@ -539,14 +539,14 @@ matrix GS_msp_stan(
 #' @keywords internal
 #' @noRd
 #'
-GS_msp_call_stan <- function() {
+GS_msp_call_stan_R_str <- function() {
   set_stan_str <- "
    /////////////////////////////////////////////////////////////////////////
   // call GS_bsp_call_stan
   /////////////////////////////////////////////////////////////////////////
   matrix GS_msp_call_stan(vector x, vector knotsx, vector bknotsx, 
                         int degree, int intercept, int derivs, real centerval, int normalize,
-                        int preH, matrix MatpreH) {
+                        int preH) {
   int N = num_elements(x);
   vector[num_elements(knotsx) + 2] fullknots = append_row(append_row(rep_vector(bknotsx[1], 1), knotsx), rep_vector(bknotsx[2], 1));
   vector[num_elements(fullknots) - 2] knots = segment(fullknots, 2, num_elements(fullknots) - 2);
@@ -602,10 +602,10 @@ GS_msp_call_stan <- function() {
   } // end if(degree == 0) {
   
   
-  matrix[N, ncolselect] out = GS_msp_stan(x, knots, bknots, fullknots_mspl, allknots, N, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH, MatpreH);
+  matrix[N, ncolselect] out = GS_msp_stan(x, knots, bknots, fullknots_mspl, allknots, N, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH);
 
   if (centerval != 0) {
-    matrix[1, df] cenout = GS_msp_stan(centerval + rep_vector(0.0, 1), knots, bknots, fullknots_mspl, allknots, 1, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH, MatpreH);
+    matrix[1, df] cenout = GS_msp_stan(centerval + rep_vector(0.0, 1), knots, bknots, fullknots_mspl, allknots, 1, degree_in, ord, Nintk, Nk, Nintervals, intercept, calcderiv, normalize, preH);
     if (!calcderiv) {
       if (intercept) {
         for (i in 2:cols(cenout)) out[, i] -= cenout[1, i];
@@ -619,6 +619,6 @@ GS_msp_call_stan <- function() {
 } 
 "
   return(set_stan_str)
-} # GS_msp_call_stan
+} # GS_msp_call_stan_R_str
 
 

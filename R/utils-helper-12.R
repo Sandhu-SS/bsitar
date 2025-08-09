@@ -1,52 +1,5 @@
 
 
-#' An internal function to compute rcs spline basis
-#' 
-#' @param x A numeric vector 
-#' @param knots A vector 
-#' 
-#' @return A matrix
-#' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#' 
-#' @keywords internal
-#' @noRd
-#' 
-make_spline_matrix <- function(x, 
-                               knots) {
-  X <- x
-  N <- length(X)
-  nk <- length(knots)
-  basis_evals <- matrix(0, N, nk - 1)
-  basis_evals[, 1] <- X
-  basis_evals[, 1] <- X
-  Xx <- matrix(0, N, nk)
-  km1 <- nk - 1
-  j <- 1
-  knot1 <- knots[1]
-  knotnk <- knots[nk]
-  knotnk1 <- knots[nk - 1]
-  kd <- (knotnk - knot1) ^ (2)
-  for (ia in 1:N) {
-    for (ja in 1:nk) {
-      Xx[ia, ja] <- ifelse(X[ia] - knots[ja] > 0, X[ia] - knots[ja], 0)
-    }
-  }
-  while (j <= nk - 2) {
-    jp1 <- j + 1
-    basis_evals[, jp1] <-
-      (
-        Xx[, j] ^ 3 - (Xx[, km1] ^ 3) * (knots[nk] - knots[j]) /
-          (knots[nk] - knots[km1]) + (Xx[, nk] ^ 3) *
-          (knots[km1] - knots[j]) / (knots[nk] - knots[km1])
-      ) /
-      (knots[nk] - knots[1]) ^ 2
-    j <- j + 1
-  }
-  return(basis_evals)
-}
-
-
 
 #' An internal function to construct b-spline basis matrix
 #' 
@@ -841,6 +794,68 @@ split_fullknots_knots_bknots <- function(fullknots) {
 
 
 
+
+
+#' An internal function to split full knots into internal knots and boundary knots 
+#' 
+#' @details
+#' This needed because \code{bsp}, \code{msp}, and \code{isp} may have NULL
+#' numeric(0) internal knots Need to do this in the R functions extracted from
+#' the stan code \code{iknots = knots[2:(length(knots)-1)]} \code{bknots =
+#' c(knots[1], knots[length(knots)])}
+#' 
+#'
+#' @param knots The \code{knots} here must be fullknots
+#' @param return A character string to idicate whether to return iknots or bknots
+#' 
+#' @return A list comprised of matrix knots and matrix bknots 
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+checkgetiknotsbknots <- function(knots, return = NULL) {
+  # not smat specific but check for all stypes
+  # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+  #   if(length(knots) > 2) {
+  #     iknots <- knots[2:(length(knots)-1)]
+  #     bknots <- c(knots[1], knots[length(knots)])
+  #   } else if(length(knots) == 2) {
+  #     iknots <- NULL
+  #     bknots <- knots
+  #   }
+  # } else {
+  #   iknots <- knots[2:(length(knots)-1)]
+  #   bknots <- c(knots[1], knots[length(knots)])
+  # }
+  
+  if(is.null(return)) {
+    stop("argument 'return' must be specified, either iknots or bknots")
+  } else if(is.symbol(return)) {
+    stop("argument 'return' must be a character string")
+  }
+  
+  if(length(knots) > 2) {
+    iknots <- knots[2:(length(knots)-1)]
+    bknots <- c(knots[1], knots[length(knots)])
+  } else if(length(knots) == 2) {
+    iknots <- NULL
+    bknots <- knots
+  }
+  
+  if(return == 'iknots') {
+    out <- iknots
+  } else if(return == 'bknots') {
+    out <- bknots
+  } else {
+    stop("return must be either iknots or bknots")
+  }
+  return(out)
+}
+
+
+
 #' An internal function to perform elementwise multipication and rowsum 
 #' This is used in R inverse wide in QR rcs _d1
 #' @param matb A numeric matrix of betas with dim(N, N)
@@ -933,6 +948,11 @@ GS_bsp_call <- function(x,
 ) {
   
   
+  # print(x)
+  # print(knots)
+  # print(bknots)
+  #stop()
+  
   if(!is.null(fullknots)) {
     if(!is.null(knots)) stop("'knots' must be NULL if specified 'fullknots'")
     if(!is.null(bknots)) stop("'bknots' must be NULL if specified 'fullknots'")
@@ -950,11 +970,7 @@ GS_bsp_call <- function(x,
     }
   }
   
-  # print(df)
-  # print(knots)
-  # print(bknots)
-  # stop()
-  
+ 
   out <- splines2::bsp(x = x, 
                        df = df, 
                        knots = knots, 

@@ -344,11 +344,16 @@ set_priors_initials <- function(a_prior_beta,
     assign(eoutii, eout[[eoutii]])
   }
   
-  
   eout <- list2env(prior_args_internal)
   for (eoutii in names(eout)) {
     assign(eoutii, eout[[eoutii]])
   }
+  
+  # avoid this condition, set for df = SbasisN for all splines
+  # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+  # }
+  
+  df <- SbasisN
   
   
   # Depending on brms version, adjust for tag option
@@ -1361,11 +1366,7 @@ set_priors_initials <- function(a_prior_beta,
     
     
     
-    # avoid this condition, set for df = SbasisN for all splines
-    # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-    # }
-    
-    df <- SbasisN
+   
     
     
     if (class == "b" & nlpar == 'a') {
@@ -3524,7 +3525,6 @@ set_priors_initials <- function(a_prior_beta,
         combined_inits <- c(combined_inits, list_ck_rescor)
       } # 17.02.2025
     }
-    
     
     # Convert vector of 's' initials to named individual (s1, s2)
     if(select_model == "sitar" | select_model == 'rcs') {
