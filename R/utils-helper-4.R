@@ -151,13 +151,14 @@ prepare_formula <- function(x,
   
   smat <- NULL;
   smat_intercept <- NULL;
-  set_model_sigma_by_mu <- NULL;
+  set_model_sigma_by_me <- NULL;
   set_model_sigma_by_ls <- NULL;
-  set_model_sigma_by_mu_prior_using_sigma_formula <- NULL;
+  sigma_formula_manual_prior_via_sigma_formula <- NULL;
   
   nys <- NULL;
   ysi <- NULL;
   SbasisN <- NULL;
+  sigma_formula_manualsi_set <- NULL;
   
   # SbasisN = nknots - 1 for nsp nsk and rcs
   
@@ -721,41 +722,25 @@ prepare_formula <- function(x,
   
   
   # add_sigma_by_mu
-  # we might need to set sigmafixed sigmarandom <- NULL for location scale
-  # if(sigma_formula_manualsi != "NULL") {
-  #   # if(!set_model_sigma_by_mu_prior_using_sigma_formula) {
-  #   #   sigmafixed <- NULL
-  #   #   sigmarandom <- NULL
-  #   # }
-  #   # sigmafixed <- NULL
-  #   # sigmarandom <- NULL
-  #   dpar_formulasi <- NULL
-  # }
-  
-  
-  
-  # add_sigma_by_mu
-  # This below will allow setting set_model_sigma_by_mu prior using 
+  # This below will allow setting prior using 
   # sigma_formula and sigma_formula_gr
   # Also, dpar_formulasi must be NULL when using sigma_formula_manualsi
   
-  if(sigma_formula_manualsi != "NULL") {
-    dpar_formulasi <- NULL
-    if(set_model_sigma_by_mu) {
-      if(set_model_sigma_by_mu_prior_using_sigma_formula) {
-        sigmafixed <- sigmafixed
-        sigmarandom <- sigmarandom
-      } else {
-        sigmafixed <- NULL
-        sigmarandom <- NULL
-      } # if(set_model_sigma_by_mu_prior_using_sigma_formula) { else
-    } # if(set_model_sigma_by_mu) {
+  # when sigma_formula_manualsi = TRUE, then dpar_formulasi is always NULL
+  # But if sigma_formulasi and sigma_formula_gr_strsi are used to set prior
+  # then they must not be set as NULL
 
-    if(!set_model_sigma_by_mu) {
+  if(sigma_formula_manualsi_set) {
+    dpar_formulasi <- NULL
+    if(sigma_formula_manual_prior_via_sigma_formula) {
+      sigmafixed <- sigmafixed
+      sigmarandom <- sigmarandom
+    } else {
       sigmafixed <- NULL
       sigmarandom <- NULL
     }
-  } # if(sigma_formula_manualsi != "NULL") {
+  }
+  
   
   
   
@@ -938,29 +923,6 @@ prepare_formula <- function(x,
   
   
   
-  
-  
-  # add_sigma_by_mu
-  # if(sigma_formula_manualsi != "NULL") {
-  #   if(set_model_sigma_by_mu) {
-  #     sigmarandom_str_full <- replace_string_part(x = sigmarandom,
-  #                                                 start = "(",
-  #                                                 end = "|",
-  #                                                 replace = "",
-  #                                                 extract = T)
-  #     
-  #     sigmarandom_str_full <- substr(sigmarandom_str_full, 2,
-  #                                    nchar(sigmarandom_str_full) - 1)
-  #     
-  #     if(!grepl("^~", sigmarandom_str_full)) {
-  #       sigmarandom_str_full <- paste0("~", sigmarandom_str_full)
-  #     }
-  #    
-  #   } # if(set_model_sigma_by_mu) {
-  # } # if(sigma_formula_manualsi != "NULL") {
-  
-
-  
   if(!is.null(sigmarandom)) {
     if(grepl("|", sigmarandom, fixed = TRUE)) {
       sigma_random_wb <- gsub("~", "", sigmarandom) # with bar
@@ -968,17 +930,7 @@ prepare_formula <- function(x,
       sigmarandom <- get_x_random(sigmarandom)
     }
   }
-  
-  
-  # add_sigma_by_mu
-  # if(sigma_formula_manualsi != "NULL") {
-  #   if(set_model_sigma_by_mu) {
-  #     sigmarandom <- sigmarandom_str_full
-  #   }
-  # }
-  
-  
-  
+ 
 
   
   arandom_wb <- gsub("1+1", "1", arandom_wb, fixed = T)
@@ -2166,7 +2118,7 @@ prepare_formula <- function(x,
     gr_varss <- gr_varss
   } # if(set_higher_levels) {
   
-  
+ 
   
   if(sigma_set_higher_levels) {
     if(sigma_formula_gr_strsi_present) {
@@ -2571,17 +2523,34 @@ prepare_formula <- function(x,
   # sigmacovariates  <- getcovlist(sigma_formulasi)
   # sigmacovariates_ <- unique(sigmacovariates)
   
-  # should add_default_args_to_nlf_lf for set_model_sigma_by_mu?
-  if(set_model_sigma_by_ls) {
-    sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi, 
-                                                    nys = nys, 
+  # if(set_model_sigma_by_ls) {
+  #   sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi,
+  #                                                   nys = nys,
+  #                                                   ysi = ysi,
+  #                                                   extract_covar = TRUE,
+  #                                                   extract_nlpar = FALSE,
+  #                                                   data_varnames = NULL,
+  #                                                   verbose = FALSE)
+  # } else if(set_model_sigma_by_me | set_model_sigma_by_fi) {
+  #   sigmacovariates  <- getcovlist(sigma_formulasi)
+  # } else {
+  #   sigmacovariates  <- getcovlist(sigma_formulasi)
+  # }
+  # sigmacovariates_ <- unique(sigmacovariates)
+  
+  
+  if(sigma_formula_manualsi_set) {
+    if(set_model_sigma_by_ls) {
+      sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi,
+                                                    nys = nys,
                                                     ysi = ysi,
                                                     extract_covar = TRUE,
                                                     extract_nlpar = FALSE,
                                                     data_varnames = NULL,
                                                     verbose = FALSE)
-  } else if(set_model_sigma_by_mu) {
-    sigmacovariates  <- getcovlist(sigma_formulasi)
+    } else {
+      sigmacovariates  <- getcovlist(sigma_formulasi)
+    }
   } else {
     sigmacovariates  <- getcovlist(sigma_formulasi)
   }
@@ -3582,15 +3551,15 @@ prepare_formula <- function(x,
   
   # add_sigma_by_mu
   # sigmaform which is actuallu lf(sigmatau ~) that was used for prior setting
-  if(set_model_sigma_by_mu) {
+  if(sigma_formula_manual_prior_via_sigma_formula) {
     sigmaform_rm <- gsub_space(sigmaform) 
     sigmaform_rm <- paste0(sigmaform_rm, ",")
     setbformula <- gsub(sigmaform_rm, "", setbformula, fixed = TRUE)
   }
  
-   # setbformulax <<- setbformula
+  #  setbformulax <<- setbformula
   attr(setbformula, "list_out") <- as.list(list_out)
- # stop()
+  # stop()
   return(setbformula)
 }
 
