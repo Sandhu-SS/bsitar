@@ -5387,7 +5387,134 @@ find_function_used_in_R_files <- function(package_name,
 
 
 
+#' Function to check if a string contains only letters
+#' 
+#' @details
+#' This will check a word only and flag presence of any paranthesis, comma etc
+#' 
+#' @param x A string
+#' 
+#' @return A logical
+#'
+#' @keywords internal
+#' @noRd
+#' 
+is_only_letters <- function(x) {
+  # The regex checks for one or more alphabetic characters
+  # from the beginning (^) to the end ($) of the string.
+  grepl("^[[:alpha:]]+$", x)
+}
 
+
+
+
+#' Function to check if a string contains only letters
+#' 
+#' @details
+#' This will get sigma method specified in nlf() via sigma_formula_manualsi
+#' such as method=fitted
+#' 
+#' @param x A string
+#' @param search A string to look for custom argument 
+#' @param clean A logical to indicate removal of custom argument
+#' 
+#' @return A string
+#'
+#' @keywords internal
+#' @noRd
+#' 
+get_nlf_custom_arg <- function(str, 
+                               search, 
+                               allowed_nlf_custom_arg = NULL,
+                               clean = TRUE) {
+  
+  search.o <- search
+  search <- paste0(search, "=")
+  if(!grepl(search, str)) {
+    return(str)
+  }
+  
+  look_for_sigma_method_paran <- 
+    replace_string_part(x = str,
+                        start = search,
+                        end = ")",
+                        replace = "",
+                        extract = T)
+  
+  look_for_sigma_method_comma <- 
+    replace_string_part(x = str,
+                        start = search,
+                        end = ",",
+                        replace = "",
+                        extract = T)
+  
+  look_for_sigma_method_paran <- substr(look_for_sigma_method_paran, 1, 
+                                        nchar(look_for_sigma_method_paran) - 1)
+  look_for_sigma_method_comma <- substr(look_for_sigma_method_comma, 1, 
+                                        nchar(look_for_sigma_method_comma) - 1)
+  
+  look_for_sigma_method_paran <- gsub(search, "", 
+                                      look_for_sigma_method_paran, fixed = T)
+  look_for_sigma_method_comma <- gsub(search, "", 
+                                      look_for_sigma_method_comma, fixed = T)
+  
+  if(is_only_letters(look_for_sigma_method_paran)) {
+    out <- look_for_sigma_method_paran
+  } else if(is_only_letters(look_for_sigma_method_comma)) {
+    out <- look_for_sigma_method_comma
+  } else {
+    out <- NULL
+  }
+  
+  if(!is.null(out)) {
+    if(!is.null(allowed_nlf_custom_arg)) {
+      if(!out %in% allowed_nlf_custom_arg) {
+        stop(paste0("The custom arg '", search.o, "' used in nlf() ",
+                    "must be one of the following:", 
+                    "\n  ",
+                    collapse_comma(allowed_nlf_custom_arg)))
+      }
+    }
+  }
+  
+  
+  if(!clean) {
+    return(out)
+  }
+  
+  # clean up by removing method=   part
+  if(!is.null(out)) {
+    str <- gsub(paste0(",", search, out), "", str, fixed = T)
+    out <- c(str, out)
+  }
+  
+  return(out)
+}
+
+
+
+
+#' A function that asks the user to continue or exit.
+#' 
+#' @details
+#' A wrapper around \code{'utils::menu()'}
+#'
+#' @return NULL
+#'
+#' @keywords internal
+#' @noRd
+#' 
+user_prompt <- function() {
+  choice <- utils::menu(
+    choices = c("Press 1 to continue", "Press 0 or esc to exit")
+    , title = "Do you want to proceed?"
+  )
+  # cat("Press [Enter] to continue or [Esc] to exit...")
+  # menu() returns 0 if the user presses Esc or selects '0'.
+  # It returns the number of the choice otherwise.
+  # We check if the user selected the first option.
+  return(choice == 1)
+}
 
 
 

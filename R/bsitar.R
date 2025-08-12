@@ -5215,6 +5215,36 @@ bsitar <- function(x,
     sigma_formula_manualsi <- gsub("\"" , "'", 
                                    sigma_formula_manualsi, fixed = T)
     
+   
+    method_nlf_custom_arg <- c("fitted", "varexp", "varpower", "mu", "ls")
+    prior_nlf_custom_arg <- c("self")
+    
+    # for nys > 1, get below ars once only otherwise it will lead to ""
+    # another option is to create list.. [[ii]] but we are replacing priors
+    # for sigma_formula_manualsi at once for all outcomes. Therefore it is 
+    # assumed that same behavious is expected
+    if(ii == 1) {
+      get_nlf_newstr <- 
+        get_nlf_custom_arg(str = sigma_formula_manualsi,
+                           search = "method",
+                           allowed_nlf_custom_arg = method_nlf_custom_arg,
+                           clean = TRUE)
+      sigma_formula_manualsi <- get_nlf_newstr[1]
+      nlf_sigma_method_arg   <- get_nlf_newstr[2]
+      
+      get_nlf_newstr <- 
+        get_nlf_custom_arg(str = sigma_formula_manualsi,
+                           search = "prior",
+                           allowed_nlf_custom_arg = prior_nlf_custom_arg,
+                           clean = TRUE)
+      sigma_formula_manualsi <- get_nlf_newstr[1]
+      nlf_sigma_prior_arg    <- get_nlf_newstr[2]
+      if(is.na(nlf_sigma_prior_arg)) {
+        nlf_sigma_prior_arg <- ""
+      }
+    } # if(ii == 1) {
+    
+    
     # get set_model_sigma_by_mu_fun_str
     sigma_formula_manualsi_str_full <- 
       replace_string_part(x = sigma_formula_manualsi,
@@ -5227,7 +5257,11 @@ bsitar <- function(x,
       sigma_formula_manualsi_str_full <- "NULL"
     }
     
-    sigma_model <- NULL
+    
+    # better to get sigma_model from method=
+    sigma_model    <- NULL
+    sigmatau_strsi <- NULL
+    
     if(is.null(sigma_formula_manualsi_str_full)) {
       set_model_sigma_by_mu <- FALSE
       set_model_sigma_by_ls <- FALSE
@@ -5283,6 +5317,9 @@ bsitar <- function(x,
     
     set_model_sigma_by_mu_prior_using_sigma_formula <- FALSE
     
+    # print(sigma_formula_manualsi_str_full)
+    # stop()
+    
     if(set_model_sigma_by_mu) {
       # Add missing parameters to the sigma_formula_manual
       sigma_formula_manualsi <- 
@@ -5291,35 +5328,63 @@ bsitar <- function(x,
                                    ysi = ysi, 
                                    check = FALSE,
                                    extract_covar = FALSE,
+                                   extract_nlpar = FALSE, 
+                                   data_varnames = colnames(data),
                                    verbose = FALSE)
       
       # get set_model_sigma_by_mu_fun_str
+      # set_model_sigma_by_mu_fun_str_full <- 
+      #   replace_string_part(x = sigma_formula_manualsi,
+      #                       start = "*",
+      #                       end = "()",
+      #                       replace = "",
+      #                       extract = T)
+      # 
+      # set_model_sigma_by_mu_fun_str <- gsub("*", "",
+      #                                       set_model_sigma_by_mu_fun_str_full,
+      #                                       fixed = T)
+      # set_model_sigma_by_mu_fun_str <- gsub("()", "",
+      #                                       set_model_sigma_by_mu_fun_str,
+      #                                       fixed = T)
+      
       set_model_sigma_by_mu_fun_str_full <- 
         replace_string_part(x = sigma_formula_manualsi,
-                            start = "*",
+                            start = "~",
                             end = "()",
                             replace = "",
                             extract = T)
       
-      set_model_sigma_by_mu_fun_str <- gsub("*", "", 
-                                            set_model_sigma_by_mu_fun_str_full, 
-                                            fixed = T)
-      set_model_sigma_by_mu_fun_str <- gsub("()", "", 
-                                            set_model_sigma_by_mu_fun_str, 
-                                            fixed = T)
+      set_model_sigma_by_mu_fun_str_full <- 
+        gsub("~", "", set_model_sigma_by_mu_fun_str_full, fixed = T)
+      
+      set_model_sigma_by_mu_fun_str <- set_model_sigma_by_mu_fun_str_full
+      # print(set_model_sigma_by_mu_fun_str_full)
+      # stop()
       
       set_model_sigma_by_mu_fun_str_c[[ii]] <- set_model_sigma_by_mu_fun_str
+      
       # get sigmatau_strsi
-      sigmatau_str_full <- 
-        replace_string_part(x = sigma_formula_manualsi,
-                            start = "sigma~",
-                            end = paste0(set_model_sigma_by_mu_fun_str, 
-                                         "(", ""  ,")"),
-                            replace = "",
-                            extract = T)
-      sigmatau_strsi <- extract_between_specl_chars(sigmatau_str_full, 
-                                                    start = "~", end = "*",
-                                                    verbose = FALSE)
+      # sigmatau_str_full <- 
+      #   replace_string_part(x = sigma_formula_manualsi,
+      #                       start = "sigma~",
+      #                       end = paste0(set_model_sigma_by_mu_fun_str, 
+      #                                    "(", ""  ,")"),
+      #                       replace = "",
+      #                       extract = T)
+      # sigmatau_strsi <- extract_between_specl_chars(sigmatau_str_full, 
+      #                                               start = "~", end = "*",
+      #                                               verbose = FALSE)
+      
+      sigmatau_strsi <- 
+        add_default_args_to_nlf_lf(str = sigma_formula_manualsi, 
+                                   nys = nys, 
+                                   ysi = ysi, 
+                                   check = FALSE,
+                                   extract_covar = FALSE,
+                                   extract_nlpar = TRUE, 
+                                   data_varnames = colnames(data),
+                                   verbose = FALSE)
+      
       sigmatau_strsi_c[[ii]] <- sigmatau_strsi
       
       
@@ -6789,17 +6854,6 @@ bsitar <- function(x,
       check_for_validy_of_prepare_transformations_5 <- 
         CustomDoCall(prepare_transformations, prepare_transformations_args)
       
-      # check_for_validy_of_prepare_transformations_0x <<-
-      #   check_for_validy_of_prepare_transformations_0
-      # 
-      # check_for_validy_of_prepare_transformations_3x <<-
-      #   check_for_validy_of_prepare_transformations_3
-      # 
-      # check_for_validy_of_prepare_transformations_4x <<-
-      #   check_for_validy_of_prepare_transformations_4
-      # 
-      # check_for_validy_of_prepare_transformations_5x <<-
-      #   check_for_validy_of_prepare_transformations_5
      
       # Ignore outcome ysi because it remains transformed
       check_for_validy_of_prepare_transformations_0 <- 
@@ -8106,12 +8160,7 @@ bsitar <- function(x,
     set_priors_initials_agrs $ init_data_internal       <- init_data_internal
     set_priors_initials_agrs $ init_args_internal       <- init_args_internal
     set_priors_initials_agrs $ custom_order_prior_str   <- ""
-    
-   # set_priors_initials_agrs $ SbasisN   <- SbasisN
-    
-    # add_sigma_by_mu
-    # set_priors_initials_agrsx <<- set_priors_initials_agrs
-    
+  
     bpriors <- CustomDoCall(set_priors_initials, set_priors_initials_agrs)
     
     stanvar_priors <- attr(bpriors, "stanvars")
@@ -8995,14 +9044,31 @@ bsitar <- function(x,
            )
     }
     # check for _mu
-    if(length(unique(unlist(sigmatau_strsi_c))) > 1) {
-      stop("The names of 'tau' parameters defined for modelling sigma as a",
+    if(! all_inner_lengths_equal_in_list(sigmatau_strsi_c) ) {
+      stop("The number of 'nlpar' parameters defined for modelling sigma as a",
            "\n  function of mean should be same across all responses.",
            "\n  (the response specific renaming is done internally)",
            "\n  Currently specified names are: ", 
-           collapse_comma(unique(unlist(sigmatau_strsi_c))))
+           collapse_comma(sigmatau_strsi_c)
+           )
+    }
+    
+    if(!all_elements_identical_in_list(sigmatau_strsi_c)) {
+    # if(all(sapply(sigmatau_strsi_c, identical, sigmatau_strsi_c[[1]]))) {
+    # if(length(unique(unlist(sigmatau_strsi_c))) > 1) {
+      stop("The names of 'nlpar' parameters defined for modelling sigma as a",
+           "\n  function of mean should be same across all responses.",
+           "\n  (the response specific renaming is done internally)",
+           "\n  Currently specified names are: ", 
+           collapse_comma(unique(unlist(sigmatau_strsi_c)))
+           )
     }
   } # if(nys > 1) {
+  
+  
+  
+  
+ 
   
 
   
@@ -9097,44 +9163,48 @@ bsitar <- function(x,
   # If no sigmaformual used, drop sigma related info and variables 
   ###################################################################
   ###################################################################
-  sigmaxvar_names_val2            <- c()
-  sigmacov_names_val2             <- c()
-  sigmaxfun_names_val2            <- c()
-  sigmaxfuntransform_names_val2   <- c()
-  sigmaixfuntransform_names_val2  <- c()
-  sigmaxfuntransform2_names_val2  <- c()
-  sigmaixfuntransform2_names_val2 <- c()
-  sigmaxoffset_names_val2         <- c()
+  # 02.08.2025
   
- 
+  # sigmaxvar_names_val2            <- c()
+  # sigmacov_names_val2             <- c()
+  # sigmaxfun_names_val2            <- c()
+  # sigmaxfuntransform_names_val2   <- c()
+  # sigmaixfuntransform_names_val2  <- c()
+  # sigmaxfuntransform2_names_val2  <- c()
+  # sigmaixfuntransform2_names_val2 <- c()
+  # sigmaxoffset_names_val2         <- c()
+  # 
+  # 
+  # 
+  # for (j in 1:length(setsigmaxvar_names_val)) {
+  #   if(!setsigmaxvar_names_val[j]) {
+  #     dataout <- dataout %>% 
+  #       dplyr::select(-sigmaxvarvaluelist[[j]])
+  #     dataout_restoted.org.in <- dataout_restoted.org.in %>% 
+  #       dplyr::select(-sigmaxvarvaluelist[[j]])
+  #   }
+  #   
+  #   if(setsigmaxvar_names_val[j]) {
+  #     sigmaxvar_names_val2 <- c(sigmaxvar_names_val2, 
+  #                               sigmaxvar_names_val[j])
+  #     sigmacov_names_val2 <- c(sigmacov_names_val2, 
+  #                              sigmacov_names_val[j])
+  #     sigmaxfun_names_val2 <- c(sigmaxfun_names_val2, 
+  #                               sigmaxfun_names_val[j])
+  #     sigmaxfuntransform_names_val2 <- c(sigmaxfuntransform_names_val2, 
+  #                                        sigmaxfuntransform_names_val[j])
+  #     sigmaixfuntransform_names_val2 <- c(sigmaixfuntransform_names_val2, 
+  #                                         sigmaixfuntransform_names_val[j])
+  #     sigmaxfuntransform2_names_val2 <- c(sigmaxfuntransform2_names_val2, 
+  #                                        sigmaxfuntransform2_names_val[j])
+  #     sigmaixfuntransform2_names_val2 <- c(sigmaixfuntransform2_names_val2, 
+  #                                          sigmaixfuntransform2_names_val[j])
+  #     sigmaxoffset_names_val2 <- c(sigmaxoffset_names_val2, 
+  #                                  sigmaxoffset_names_val[j])
+  #   }
+  # }
+  # 
   
-  for (j in 1:length(setsigmaxvar_names_val)) {
-    if(!setsigmaxvar_names_val[j]) {
-      dataout <- dataout %>% 
-        dplyr::select(-sigmaxvarvaluelist[[j]])
-      dataout_restoted.org.in <- dataout_restoted.org.in %>% 
-        dplyr::select(-sigmaxvarvaluelist[[j]])
-    }
-    
-    if(setsigmaxvar_names_val[j]) {
-      sigmaxvar_names_val2 <- c(sigmaxvar_names_val2, 
-                                sigmaxvar_names_val[j])
-      sigmacov_names_val2 <- c(sigmacov_names_val2, 
-                               sigmacov_names_val[j])
-      sigmaxfun_names_val2 <- c(sigmaxfun_names_val2, 
-                                sigmaxfun_names_val[j])
-      sigmaxfuntransform_names_val2 <- c(sigmaxfuntransform_names_val2, 
-                                         sigmaxfuntransform_names_val[j])
-      sigmaixfuntransform_names_val2 <- c(sigmaixfuntransform_names_val2, 
-                                          sigmaixfuntransform_names_val[j])
-      sigmaxfuntransform2_names_val2 <- c(sigmaxfuntransform2_names_val2, 
-                                         sigmaxfuntransform2_names_val[j])
-      sigmaixfuntransform2_names_val2 <- c(sigmaixfuntransform2_names_val2, 
-                                           sigmaixfuntransform2_names_val[j])
-      sigmaxoffset_names_val2 <- c(sigmaxoffset_names_val2, 
-                                   sigmaxoffset_names_val[j])
-    }
-  }
   
   # 02.08.2025
   # why to shutt off sigmacov_names_val etc ?
@@ -9199,28 +9269,128 @@ bsitar <- function(x,
   # such as exponential the following is need (again done at line 4753 )
   
   
-  brmspriors <- priorlist
-  # brmspriorsx <<- brmspriors
-  # add_sigma_by_mu
-  if(set_model_sigma_by_mu_prior_using_sigma_formula) {
-    brmspriors <- brmspriors %>% 
-      dplyr::mutate(nlpar = dplyr::if_else(dpar == "sigma", 
-                                            sigmatau_strsi, nlpar)) %>% 
-      dplyr::mutate(class = dplyr::if_else(dpar == "sigma" & class != 'sd', "b", 
-                                           class) ) %>% 
-      dplyr::mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar) )
+  #######################################################################
+  #######################################################################
+  
+  # add_sigma_by_mu -  write messgaes
+  if(set_model_sigma_by_mu_prior_using_sigma_formula & !is.null(sigmatau_strsi)) {
+    warn_sigma_self_prior_msg <- 
+      paste0(" There are custom nlpar parameters for the distributional",
+             "\n  ",
+             "parameters sigma (", 
+             collapse_comma(sigmatau_strsi), ")",
+             "\n  ",
+             "For each of these nlpar parameter, no prior is set",
+             "\n  ",
+             "as you have set prior=self in the nlf() function call.",
+             "\n  ",
+             "Therefore, defaut priors set by 'brms' will be used automatically",
+             "\n  ",
+             "If you want to use priors genearted by the 'bsitar()' for the",
+             "\n  ",
+             "distributional parameters sigma, then please remove prior=self",
+             "\n  ",
+             "from the nlf(). In that case, same priors will be set for each",
+             "\n  ",
+             "nlpar parameter across all outcomes, Note that in case you stick",
+             "\n  ",
+             "to use the  nlf(..., prior=self), then you can supply custom",
+             "\n  ",
+             "priors that will be added to the prior object",
+             "\n  ",
+             "These priors can be set using 'add_self_priors = xxx' in bsitar()",
+             "\n  ",
+             "call where xxx is the prior object with your custom priors")
+    
+    user_prompt_msg <- 
+      paste0(" There are more than one nlpar parameters for the  ",
+             "\n ",
+             "distributional parameters sigma (", 
+             collapse_comma(sigmatau_strsi), ")",
+             "\n ",
+             "For each of these nlpar parameters, same priors will be set.",
+             "\n ",
+             "If you want to use self defined priors, then exit and use ",
+             "\n ",
+             "prior=self in the nlf() function such as nlf(..., prior=self)",
+             "\n ",
+             "In that case, use 'add_self_priors = xxx' in bsitar() call",
+             "\n ",
+             "where xxx is the prior object with your custom priors") 
   }
   
+  #######################################################################
+  #######################################################################
   
- # brmspriorsx %>% dplyr::filter(dpar == 'sigma')
+  brmspriors <- priorlist
+
+  priorobject <- brmspriors
+  
+  check_prompt <- FALSE
+  check_verbose <- verbose
+  
+  # add_sigma_by_mu
+  if(set_model_sigma_by_mu_prior_using_sigma_formula & !is.null(sigmatau_strsi)) {
+    set_user_prompt <- check_prompt
+    if(length(sigmatau_strsi) > 1) {
+      if(set_user_prompt) {
+        message(user_prompt_msg)
+        if (user_prompt()) {
+          #
+        } else {
+          return(invisible(NULL))
+        }
+      } # if(set_user_prompt) {
+    } # if(length(sigmatau_strsi) > 1) {
+    priorobject_no_sigam   <- priorobject %>% dplyr::filter(dpar != 'sigma')
+    if(nlf_sigma_prior_arg != 'self') {
+      priorobject_only_sigam <- priorobject %>% dplyr::filter(dpar == 'sigma')
+      priorobject_only_sigam_sigmatau_strsi_c <- list()
+      counter_sigmatau_strsi <- 0
+      for (i in sigmatau_strsi) {
+        counter_sigmatau_strsi <- counter_sigmatau_strsi + 1
+        if(nlf_sigma_method_arg == "fitted") {
+          if(counter_sigmatau_strsi == length(sigmatau_strsi)) {
+            # wanted but 
+            # Prior argument 'coef' may not be specified when using boundaries.
+            # set_lb = "0"
+            set_lb = ""
+          } else {
+            set_lb = ""
+          }
+        } else {
+          set_lb = ""
+        }
+        priorobject_sigmatau_strsi <- 
+          priorobject_only_sigam %>% 
+          dplyr::mutate(nlpar = dplyr::if_else(dpar == "sigma", 
+                                               i, nlpar)) %>% 
+          dplyr::mutate(class = dplyr::if_else(dpar == "sigma" & class != 'sd', "b", 
+                                               class)) %>% 
+          dplyr::mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar)) %>% 
+          dplyr::mutate(lb = dplyr::if_else(nlpar == i, set_lb, lb))
+        
+        priorobject_only_sigam_sigmatau_strsi_c[[i]] <- priorobject_sigmatau_strsi
+      }
+      priorobject <- rbind(priorobject_no_sigam, 
+                           do.call(rbind, priorobject_only_sigam_sigmatau_strsi_c))
+    } else if(nlf_sigma_prior_arg == 'self') {
+      priorobject <- priorobject_no_sigam
+      if(check_verbose) {
+        message(warn_sigma_self_prior_msg)
+      }
+    } # else if(nlf_sigma_prior_arg == 'self') {
+  } # if(set_model_sigma_by_mu_prior_using_sigma_formula & !is.null(sigmatau_strsi)) {
   
   
-  # brmspriorsxx <<- brmspriors
- 
-  # brmspriorsxx%>% dplyr::filter(nlpar == 'tau')
+  brmspriors <- priorobject
+
   
-   # stop()
-  
+
+  #######################################################################
+  #######################################################################
+# brmspriorsxx <<- brmspriors
+# stop()
   
   
   brmspriors <- brmspriors %>% 
@@ -9807,30 +9977,69 @@ bsitar <- function(x,
     ################################################################
     
     
-    # attr(bformula$forms$copad$pforms$mucopad, "nl") <- TRUE
-    # attr(bformula$forms$copod$pforms$mucopad, "nl") <- TRUE
-    # 
-    # attr(bformula$forms$copad$pforms$mucopad, "loop") <- TRUE
-    # attr(bformula$forms$copod$pforms$mucopad, "loop") <- TRUE
-    
-
     # bformula <<- bformula
     # bstanvars <<- bstanvars
     # temp_prior <<- temp_prior
     # data2 <<- data2
     # brmsdata <<- brmsdata
     # 
-    # temp_priorx <<- temp_prior
-    # brms::prior_summary(fit_f) %>% dplyr::filter(nlpar == 'tau')
     
-
+    priorobject <- temp_prior
     # add_sigma_by_mu
-    if(set_model_sigma_by_mu_prior_using_sigma_formula) {
-      temp_prior <- temp_prior %>% 
-        dplyr:: mutate(nlpar = dplyr::if_else(dpar == "sigma", sigmatau_strsi, nlpar)) %>% 
-        dplyr:: mutate(class = dplyr::if_else(dpar == "sigma" & class != 'sd', "b", class) ) %>% 
-        dplyr:: mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar))
-    }
+    if(set_model_sigma_by_mu_prior_using_sigma_formula & !is.null(sigmatau_strsi)) {
+      set_user_prompt <- FALSE # already prompted at level of brmsprior
+      if(length(sigmatau_strsi) > 1) {
+        if(set_user_prompt) {
+          message(user_prompt_msg)
+          if (user_prompt()) {
+            #
+          } else {
+            return(invisible(NULL))
+          }
+        } # if(set_user_prompt) {
+      } # if(length(sigmatau_strsi) > 1) {
+      priorobject_no_sigam   <- priorobject %>% dplyr::filter(dpar != 'sigma')
+      if(nlf_sigma_prior_arg != 'self') {
+        priorobject_only_sigam <- priorobject %>% dplyr::filter(dpar == 'sigma')
+        priorobject_only_sigam_sigmatau_strsi_c <- list()
+        counter_sigmatau_strsi <- 0
+        for (i in sigmatau_strsi) {
+          counter_sigmatau_strsi <- counter_sigmatau_strsi + 1
+          if(nlf_sigma_method_arg == "fitted") {
+            if(counter_sigmatau_strsi == length(sigmatau_strsi)) {
+              # wanted but 
+              # Prior argument 'coef' may not be specified when using boundaries.
+              # set_lb = "0"
+            } else {
+              set_lb = ""
+            }
+          } else {
+            set_lb = ""
+          }
+          priorobject_sigmatau_strsi <- 
+            priorobject_only_sigam %>% 
+            dplyr::mutate(nlpar = dplyr::if_else(dpar == "sigma", 
+                                                 i, nlpar)) %>% 
+            dplyr::mutate(class = dplyr::if_else(dpar == "sigma" & class != 'sd', "b", 
+                                                 class)) %>% 
+            dplyr::mutate(dpar = dplyr::if_else(dpar == "sigma", "", dpar)) %>% 
+            dplyr::mutate(lb = dplyr::if_else(nlpar == i, set_lb, lb))
+          
+          priorobject_only_sigam_sigmatau_strsi_c[[i]] <- priorobject_sigmatau_strsi
+        }
+        priorobject <- rbind(priorobject_no_sigam, 
+                             do.call(rbind, priorobject_only_sigam_sigmatau_strsi_c))
+      } else if(nlf_sigma_prior_arg == 'self') {
+        priorobject <- priorobject_no_sigam
+        if(check_verbose) {
+          message(warn_sigma_self_prior_msg)
+        }
+      } # else if(nlf_sigma_prior_arg == 'self') {
+    } # if(set_model_sigma_by_mu_prior_using_sigma_formula & !is.null(sigmatau_strsi)) {
+    
+    
+    temp_prior <- priorobject
+    
     
     
     temp_stancode2 <- brms::make_stancode(formula = bformula,
@@ -12045,7 +12254,6 @@ bsitar <- function(x,
     
     
     # add_sigma_by_mu
-    
     if(set_model_sigma_by_mu) {
       ithx <- 0
       for (i in ys) {
@@ -12056,39 +12264,50 @@ bsitar <- function(x,
           gsub_it_start     <- paste0("sigma", "_", i, "[n]")
           onlum <- paste0("mu", "_", i, "[n]")
         } else {
-          # this " =" restric to relevant portion
+          # this " =" restrict to relevant portion
           gsub_it_start     <- paste0("sigma", "_", i, " =") 
           onlum <- paste0("mu", "_", i, "")
         }
         set_model_sigma_by_mu_fun_str <- set_model_sigma_by_mu_fun_str_c[[ithx]]
         sigmatau_strsi <- sigmatau_strsi_c[[ithx]]
-        # gsub_it_end       <- paste0("sqrt", "(", ""  ,")")
-        gsub_it_end       <- paste0(set_model_sigma_by_mu_fun_str, 
-                                    "(", ""  ,")")
+        # if(grepl("()", set_model_sigma_by_mu_fun_str, fixed = T)) {
+        #   gsub_it_end  <- set_model_sigma_by_mu_fun_str
+        # } else {
+        #   gsub_it_end       <- paste0(set_model_sigma_by_mu_fun_str,
+        #                               "(", ""  ,")")
+        # }
+      
+        # best, just keep ()
+        gsub_it_end <- "()"
+        scode_final <<- scode_final
+        gsub_it_start <<- gsub_it_start
+        gsub_it_end <<- gsub_it_end
+        set_model_sigma_by_mu_fun_str <<- set_model_sigma_by_mu_fun_str
+        
+        
         extract_sigma_by_mean_o <- replace_string_part(x = scode_final,
                                                        start = gsub_it_start,
                                                        end =  gsub_it_end,
                                                        replace = "",
                                                        extract = T)
-        
-        extract_sigma_by_mean <- gsub(paste0(set_model_sigma_by_mu_fun_str, 
+        extract_sigma_by_mean <- gsub(paste0("", 
                                              "(", ""  ,")"),
-                                      paste0(set_model_sigma_by_mu_fun_str, 
+                                      paste0("", 
                                              "(", onlum  ,")"),
                                       extract_sigma_by_mean_o, fixed = T)
-
         
         if(!sigma_has_loop) {
-          extract_sigma_by_mean <- gsub(paste0(sigmatau_strsi, " ", "*"), 
-                                        paste0(sigmatau_strsi, " ", ".*"), 
+          extract_sigma_by_mean <- gsub(paste0("", " ", "*"), 
+                                        paste0("", " ", ".*"), 
                                         extract_sigma_by_mean, fixed = T)
         }
-        
         scode_final <- gsub(extract_sigma_by_mean_o, extract_sigma_by_mean,
                             scode_final, fixed = T)
       } # for (i in ys) {
     } # if(set_model_sigma_by_mu) {
 
+    # print(scode_final)
+    # stop()
 
     
     if(!fit_edited_scode_exe_model_fit & fit_edited_scode) {
@@ -12168,11 +12387,16 @@ bsitar <- function(x,
           copad_edit   <- copad_edit %>% deparse()
           set_model_sigma_by_mu_fun_str <- 
             set_model_sigma_by_mu_fun_str_c[[ithx]]
-          copad_edit <- gsub(paste0(set_model_sigma_by_mu_fun_str, 
+          copad_edit <- gsub(paste0("", 
                                     "(", ""  ,")"), 
-                             paste0(set_model_sigma_by_mu_fun_str, 
+                             paste0("", 
                                     "(", base_mu_fun  ,")"),
                              copad_edit, fixed = T)
+          # copad_edit <- gsub(paste0(set_model_sigma_by_mu_fun_str, 
+          #                           "(", ""  ,")"), 
+          #                    paste0(set_model_sigma_by_mu_fun_str, 
+          #                           "(", base_mu_fun  ,")"),
+          #                    copad_edit, fixed = T)
           sigma_forms <- str2lang(copad_edit)
           attributes(sigma_forms) <- edit_attr
           fit_f[['formula']][['forms']][[outrespbames]][['pforms']][['sigma']] <- 

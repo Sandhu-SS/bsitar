@@ -2574,8 +2574,12 @@ prepare_formula <- function(x,
   # should add_default_args_to_nlf_lf for set_model_sigma_by_mu?
   if(set_model_sigma_by_ls) {
     sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi, 
-                                                   nys = nys, ysi = ysi,
-                                                   extract_covar = TRUE)
+                                                    nys = nys, 
+                                                    ysi = ysi,
+                                                    extract_covar = TRUE,
+                                                    extract_nlpar = FALSE,
+                                                    data_varnames = NULL,
+                                                    verbose = FALSE)
   } else if(set_model_sigma_by_mu) {
     sigmacovariates  <- getcovlist(sigma_formulasi)
   } else {

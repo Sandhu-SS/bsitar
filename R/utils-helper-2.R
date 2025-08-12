@@ -3496,6 +3496,8 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE,
 #' loop i.e., at the level of sigma_formula_manualsi
 #' @param check A logical (\code{FALSE}). It should be set as \code{TRUE} when
 #' using \code{'add_default_args_to_nlf_lf'} for dpar_formual
+#' @param extract_nlpar A logical (\code{FALSE}). Set it as \code{TRUE} if 
+#' want to extract \code{nlpar} from the nlf() form.
 #' @param extract_covar A logical (\code{FALSE}). Set it as \code{TRUE} if 
 #' want to extract co variate from the population part of the lf() form.
 #' @param verbose A logical (\code{FALSE}).
@@ -3509,7 +3511,14 @@ add_default_args_to_nlf_lf <- function(str,
                                        ysi, 
                                        check = FALSE,
                                        extract_covar = FALSE, 
+                                       extract_nlpar = FALSE, 
+                                       data_varnames = NULL,
                                        verbose = FALSE) {
+  
+  if(extract_covar & extract_nlpar) {
+    stop("specify either 'extract_covar' or 'extract_nlpar', not both")
+  }
+  
   if(length(ysi) > 1) {
     if(verbose)
       message("The length of ysi is > 1, only the first element is used")
@@ -3520,6 +3529,7 @@ add_default_args_to_nlf_lf <- function(str,
   split_result <- strsplit(temp_str, split = "###SPLIT###", fixed = TRUE)[[1]]
   split_result_c <- c()
   get_lf_covars_c <- c()
+  get_nlf_nlpars_c <- c()
   for (i in 1:length(split_result)) {
     split_result_ith <- split_result[i]
     if (!is.null(split_result_ith)) {
@@ -3542,6 +3552,9 @@ add_default_args_to_nlf_lf <- function(str,
                        # 'dpar',
                        'resp',
                        'loop')
+          getnlpar <- ept(split_result_ith) [[1]][-2] %>% all.vars()
+          getnlpar <- setdiff(getnlpar, data_varnames)
+          get_nlf_nlpars_c <- c(get_nlf_nlpars_c, getnlpar)
         } else if (grepl("^lf\\(", split_result_ith) &
                    !grepl("^nlf\\(", split_result_ith)) {
           lf_list <- c('flist',
@@ -3619,6 +3632,8 @@ add_default_args_to_nlf_lf <- function(str,
   out <- paste(gsub_space(out), collapse = "")
   if(extract_covar) {
     return(get_lf_covars_c)
+  } else if(extract_nlpar) {
+    return(get_nlf_nlpars_c)
   }
   return(out)
 } # end add_default_args_to_nlf_lf <- function(str) {
@@ -3661,6 +3676,45 @@ extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
     return(invisible(NULL))
   }
 } 
+
+
+#' An internal function to check if all inner lists have the same length
+#' 
+#' @details An internal function
+#' 
+#' @param x A list
+#' @keywords internal
+#' @return A string
+#' @noRd
+#'
+all_inner_lengths_equal_in_list <- function(x) {
+  # Handle empty or single-element lists gracefully
+  if (length(x) < 2) {
+    return(TRUE)
+  }
+  # Get lengths of all inner lists and check for uniqueness
+  length(unique(sapply(x, length))) == 1
+}
+
+
+
+#' An internal function to check if all inner lists elements are identical
+#' 
+#' @details An internal function
+#' 
+#' @param x A list
+#' @keywords internal
+#' @return A string
+#' @noRd
+#'
+all_elements_identical_in_list <- function(x) {
+  if (length(x) < 2) {
+    return(TRUE)
+  }
+  # Compare every inner list to the first inner list
+  all(sapply(x, identical, x[[1]]))
+}
+
 
 
 
