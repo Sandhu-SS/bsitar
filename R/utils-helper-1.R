@@ -5458,6 +5458,12 @@ get_nlf_custom_arg <- function(str,
   look_for_sigma_method_comma <- gsub(search, "", 
                                       look_for_sigma_method_comma, fixed = T)
   
+  look_for_sigma_method_paran.o <- look_for_sigma_method_paran
+  if(grepl("'", look_for_sigma_method_paran, fixed = T)) {
+    look_for_sigma_method_paran <- gsub("'", "", 
+                                        look_for_sigma_method_paran, fixed=T)
+  }
+  
   if(is_only_letters(look_for_sigma_method_paran)) {
     out <- look_for_sigma_method_paran
   } else if(is_only_letters(look_for_sigma_method_comma)) {
@@ -5472,21 +5478,45 @@ get_nlf_custom_arg <- function(str,
         stop(paste0("The custom arg '", search.o, "' used in nlf() ",
                     "must be one of the following:", 
                     "\n  ",
-                    collapse_comma(allowed_nlf_custom_arg)))
+                    collapse_comma(allowed_nlf_custom_arg),
+                    "\n  ",
+                    " Note these are either full names or two letter codes:",
+                    "\n  ",
+                    " fi = fitted, ve = varexp, vp = varpower", 
+                    "cp = varconstpower, me = mean",
+                    "\n  "
+                    ))
       }
     }
   }
+  
+ 
+  if(out == "fi") out <- "fitted"
+  if(out == "ve") out <- "varexp"
+  if(out == "vp") out <- "varpower"
+  if(out == "cp") out <- "varconstpower"
+  if(out == "me") out <- "mean"
+  if(out == "ls") out <- "ls"
   
   
   if(!clean) {
     return(out)
   }
   
+
   # clean up by removing method=   part
   if(!is.null(out)) {
-    str <- gsub(paste0(",", search, out), "", str, fixed = T)
+    str <- gsub(paste0(",", search, look_for_sigma_method_paran.o), "", 
+                str, fixed = T)
     out <- c(str, out)
   }
+  
+  
+  # 
+  #  print(str)
+  #  print(out)
+  # # print(search)
+  #  stop()
   
   return(out)
 }

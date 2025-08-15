@@ -1370,20 +1370,20 @@ prepare_function_nsp_rcs <- function(x,
     
     ######################################################################
     # Remove empty lines from code strings
-    remove_spaces_and_tabs <- function(x) {
-      if(!is.null(x)) {
-        x <- gsub("^ *|(?<= ) | *$", "", x, perl = TRUE)
-        # '\\L\\1' converts first letter beyoind .* to lower
-        # x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\L\\1', x, perl=T)
-        x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\1', x, perl=T)
-        x <- x[x != ""]
-        x <- gsub("\\s*\n\\s*","\n",x) 
-        xx <- x
-      } else {
-        xx <- x
-      }
-      return(xx)
-    }
+    # remove_spaces_and_tabs <- function(x) {
+    #   if(!is.null(x)) {
+    #     x <- gsub("^ *|(?<= ) | *$", "", x, perl = TRUE)
+    #     # '\\L\\1' converts first letter beyoind .* to lower
+    #     # x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\L\\1', x, perl=T)
+    #     x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\1', x, perl=T)
+    #     x <- x[x != ""]
+    #     x <- gsub("\\s*\n\\s*","\n",x) 
+    #     xx <- x
+    #   } else {
+    #     xx <- x
+    #   }
+    #   return(xx)
+    # }
     
     
     ######################################################################

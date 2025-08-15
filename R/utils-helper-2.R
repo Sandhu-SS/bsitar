@@ -3283,6 +3283,8 @@ check_CustomDoCall_fun <- function(scall,
 #' @param replace A string
 #' @param extract A logica to indicate whether the matched pattern
 #' @param cat_str A logica
+#' @param exclude_start A logica
+#' @param exclude_end A logica
 #' 
 #' @keywords internal
 #' @return A string
@@ -3293,7 +3295,9 @@ replace_string_part <- function(x,
                                 end, 
                                 replace = "",
                                 extract = FALSE,
-                                cat_str = FALSE ) {
+                                cat_str = FALSE,
+                                exclude_start = FALSE,
+                                exclude_end = FALSE) {
   
   if(!is.character(x))       
     stop("Argument 'x' must be a character string")
@@ -3364,12 +3368,320 @@ replace_string_part <- function(x,
   } else if(!extract_pattern) {
     out_str <- gsub(regex_pattern, replacement_text, original_string, perl = TRUE)
   }
+  
+  
+  if(exclude_start) {
+    if(start != "") {
+      out_str <- gsub(start, "", out_str, fixed = TRUE)
+    }
+  }
+  if(exclude_end) {
+    if(end != "") {
+      out_str <- gsub(end, "", out_str, fixed = TRUE)
+    }
+  }
+  
   if(catit) {
     out_str <- cat(out_str)
   }
   return(out_str)
 }
 
+
+
+#' An internal function to extrcat R function from stan function block
+#' 
+#' @details An internal function to inverse matrix 
+#' This is exact same as extract_r_fun_from_scode that is used in utility 7
+#' Here we use it for sigma_formula_manual but can be adapted for utility 7
+#' 
+#' @param xstaring A string
+#' @param what A string
+#' @param decomp A string
+#' @param SplinefunxStan A string
+#' @param SplinefunxR A string
+#'  
+#' @return A string
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+extract_r_fun_from_scode_sigma <- function(xstaring, 
+                                           what = NULL, 
+                                           decomp = NULL,
+                                           SplinefunxStan,
+                                           SplinefunxR) {
+  if(is.null(xstaring)) {
+    return(xstaring)
+  }
+  
+  dparm_part_of_SplQc <- NULL;
+  smat_intercept <- NULL;
+  QR_Xmat <- NULL;
+  QR_center <- NULL;
+  QR_complete <- NULL;
+  QR_flip <- NULL;
+  QR_scale <- NULL;
+  XR_inv_name <- NULL;
+ 
+  
+  add_separte_getknots_fun <- FALSE
+  dparm_set_fixed_or_random <- FALSE
+  
+  getfunnamestr <- deparse(substitute(xstaring))
+  xstaring <- gsub("[[:space:]]" , "", xstaring)
+  xstaring <- gsub(";" , ";\n", xstaring)
+  xstaring <- gsub("\\{" , "{\n", xstaring)
+  xstaring <- gsub("}" , "}\n", xstaring)
+  xstaring <- gsub("vector[N]" , "", xstaring, fixed = T)
+  xstaring <- gsub("vector" , "", xstaring, fixed = T)
+  xstaring <- gsub("int" , "", xstaring, fixed = T)
+  if(!add_separte_getknots_fun) {
+    xstaring <- gsub("knots=[" , "knots=c(", xstaring, fixed = T)
+    xstaring <- gsub("]';" , ");", xstaring, fixed = T)
+  }
+  xstaring <- gsub("smat_normalize" , "normalize", xstaring, fixed = T)
+  xstaring <- gsub("ercept" , "intercept", xstaring, fixed = T)
+  xstaring <- gsub("[nknots-2]iknotsx;", "", xstaring, fixed = T)
+  xstaring <- gsub("[2]bknotsx;", "", xstaring, fixed = T)
+  xstaring <- gsub("Spl=matrix(0,N,SbasisN);" , "", xstaring, fixed = T)
+  xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
+  xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
+  xstaring <- gsub("segment(knots,2,nknots-2);", "knots[2:(length(knots)-1)];", xstaring, fixed = T)
+  xstaring <- gsub("append_row(head(knots,1),tail(knots,1));", "c(knots[1], knots[length(knots)]);", xstaring, fixed = T)
+  xstaring <- gsub(SplinefunxStan , SplinefunxR, xstaring, fixed = T)
+  xstaring <- gsub("matrix[N,nknots]Spl;" , "", xstaring, fixed = T)
+  xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
+  xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
+  xstaring <- remove_spaces_and_tabs(xstaring)
+  
+  xstaring <- gsub("real" , "", xstaring, fixed = T)
+  xstaring <- gsub(paste0("jp1;", "\n"), "", xstaring, fixed = T)
+  xstaring <- gsub("rep_vector" , "rep", xstaring, fixed = T)
+  xstaring <- gsub("rep_" , "rep", xstaring, fixed = T)
+  xstaring <-
+    gsub(
+      "Xx[ia,ja]=(X[ia]-knots[ja]>0?X[ia]-knots[ja]:0);" ,
+      "Xx[ia,ja]=ifelse(X[ia]-knots[ja]>0,X[ia]-knots[ja],0);",
+      xstaring,
+      fixed = T
+    )
+  xstaring <- gsub("num_elements" , "length", xstaring, fixed = T)
+  xstaring <-
+    gsub("matrix[N,SbasisN]Spl" ,
+         "Spl=matrix(0,N,SbasisN)",
+         xstaring,
+         fixed = T)
+  xstaring <-
+    gsub("matrix[SbasisN,N]rcs" ,
+         "rcs=matrix(0,SbasisN,N)",
+         xstaring,
+         fixed = T)
+  xstaring <-
+    gsub("matrix[N,SbasisN+1]Xx" ,
+         "Xx=matrix(0,N, SbasisN+1)",
+         xstaring,
+         fixed = T)
+  
+  
+  xstaring <-
+    gsub("for(iain1:N)" , "for(ia in 1:N)", xstaring, fixed = T)
+  xstaring <- gsub("for(jain1:(SbasisN+1))" ,
+                   "for(ja in 1:(SbasisN+1))",
+                   xstaring,
+                   fixed = T)
+  xstaring <- gsub(".*" , "*", xstaring, fixed = T)
+  xstaring <- gsub("./" , "/", xstaring, fixed = T)
+  funame__ <- strsplit(xstaring, "\\(")[[1]][1]
+  xstaring <- gsub(funame__ , paste0(funame__, "<-function"),
+                   xstaring, fixed = T)
+  xstaring <- sub("//[^//]+$", "", xstaring)
+  # To remove stanadlon ";
+  xstaring <-
+    gsub(paste0(";\n;\n", ""), ";\n", xstaring, fixed = T)
+  xstaring <- gsub("[nknots]knots" , "knots", xstaring, fixed = T)
+  
+  
+  if(dparm_set_fixed_or_random) {
+    if(dparm_part_of_SplQc) {
+      xstaring <- gsub("vector[N]dpredictor=Xm;" ,
+                       "dpredictor=Xm;",
+                       xstaring, fixed = T)
+      xstaring <- gsub("append_col" ,
+                       "cbind",
+                       xstaring, fixed = T)
+      xstaring <- gsub("rep_vector" ,
+                       "rep",
+                       xstaring, fixed = T)
+      xstaring <- gsub("transpose" ,
+                       "t",
+                       xstaring, fixed = T)
+      
+      xstaring <- gsub("[:" ,
+                       "[",
+                       xstaring, fixed = T)
+      
+      xstaring <- gsub("matrix[N,ncol(XQ)]sfull_betas_temp" ,
+                       "sfull_betas_temp=matrix(NA,N,ncol(XQ))",
+                       xstaring, fixed = T)
+      xstaring <- gsub("matrix[N,ncol(XQ)]sfull_matrix_temp" ,
+                       "sfull_matrix_temp=matrix(NA,N,ncol(XQ))",
+                       xstaring, fixed = T)
+      
+      xstaring <- gsub("sfull_betas_temp=sfull_matrix_temp*" ,
+                       "sfull_betas_temp=sfull_matrix_temp %*% ",
+                       xstaring, fixed = T)
+    } # if(dparm_part_of_SplQc) {
+  } # if(dparm_set_fixed_or_random) {
+  
+  
+  if(dparm_set_fixed_or_random) {
+    if(dparm_part_of_SplQc) {
+      if(smat_intercept == 0) {
+        xstaring <- gsub("matrix[N,SbasisN+1]Spl;" ,
+                         "",
+                         xstaring, fixed = T)
+        xstaring <- gsub("matrix[N,SbasisN+1]SplQRd0;" ,
+                         "",
+                         xstaring, fixed = T)
+        xstaring <- gsub("matrix[N,SbasisN+1]SplQRd1;" ,
+                         "",
+                         xstaring, fixed = T)
+      } else if(smat_intercept == 1) {
+        xstaring <- gsub("matrix[N,SbasisN+1+1]Spl;" ,
+                         "",
+                         xstaring, fixed = T)
+        xstaring <- gsub("matrix[N,SbasisN+1+1]SplQRd0;" ,
+                         "",
+                         xstaring, fixed = T)
+        xstaring <- gsub("matrix[N,SbasisN+1+1]SplQRd1;" ,
+                         "",
+                         xstaring, fixed = T)
+      }
+    } # if(dparm_part_of_SplQc) {
+  } # if(dparm_set_fixed_or_random) {
+  
+  
+  xstaring <- gsub("vector[N]QRdbeta=d" , "QRdbeta=d", xstaring, fixed = T)
+  
+  # add QR
+  # make QR chnages
+  if (!is.null(decomp)) {
+    if (decomp == 'QR') {
+      if(getfunnamestr == "rcsfun_raw" |
+         getfunnamestr == "spl_d0" |
+         getfunnamestr == "spl_d1" |
+         getfunnamestr == "spl_d2") {
+        
+        set_QR_decomp_R <- paste0("QR_decomp_R(", 
+                                  "X=",        QR_Xmat,     "," ,
+                                  "center=",   QR_center, "," ,
+                                  "complete=", QR_complete, "," ,
+                                  "flip=",     QR_flip,     "," ,
+                                  "scale=",    QR_scale, ")")
+        set_QR_Xmat <- "QRRinv"
+        set_QR_decomp_R <- paste0(set_QR_Xmat, "=", set_QR_decomp_R)
+        
+        getQmat    <- paste0(set_QR_Xmat, "[[", "'Q'", "]]")
+        getRmat    <- paste0(set_QR_Xmat, "[[", "'R'", "]]")
+        getRinvmat <- paste0(set_QR_Xmat, "[[", "'Rinv'", "]]")
+        
+        getQmat    <- paste0("XQ", "=", getQmat)
+        getRmat    <- paste0("XR", "=", getRmat)
+        getRinvmat <- paste0(XR_inv_name, "=", getRinvmat)
+        
+        if(getfunnamestr == "rcsfun_raw") {
+          Qc_str_name     <- paste0("Qc=Spl;", "\n")
+          Qc_str_mat_name <- paste0("matrix[N,QK]Qc=Spl;", "\n")
+        } else if(getfunnamestr == "spl_d0") {
+          Qc_str_name     <- paste0("Qc=Spl;", "\n")
+          Qc_str_mat_name <- paste0("matrix[N,QK]Qc=Spl;", "\n")
+        } else if(getfunnamestr == "spl_d1") {
+          Qc_str_name     <- paste0("Qc=SplQRd0;", "\n")
+          Qc_str_mat_name <- paste0("matrix[N,QK]Qc=SplQRd0;", "\n")
+        } else if(getfunnamestr == "spl_d2") {
+          
+        } 
+        
+        set_QR_decomp_str <- paste0(Qc_str_name, 
+                                    set_QR_decomp_R, "\n", 
+                                    getQmat, "\n", 
+                                    getRmat, "\n", 
+                                    getRinvmat)
+        
+        xstaring <- replace_string_part(x = xstaring, 
+                                        start = Qc_str_mat_name,
+                                        end =  "inverse(XR);", 
+                                        replace = set_QR_decomp_str,
+                                        extract = FALSE,
+                                        cat_str = FALSE)
+        
+        
+        xstaring <- gsub("sfull_betas=sfull_matrix*transpose(XR_inv)" ,
+                         "sfull_betas=sfull_matrix %*% t(XR_inv)",
+                         xstaring, fixed = T)
+        
+        xstaring <- gsub("Spl=matrix(0,N,SbasisN)QRd0" ,
+                         "QRd0=matrix(0,N,SbasisN)",
+                         xstaring, fixed = T)
+        xstaring <- gsub("Spl=matrix(0,N,SbasisN)QRd1" ,
+                         "QRd1=matrix(0,N,SbasisN)",
+                         xstaring, fixed = T)
+        xstaring <- gsub("matrix[N,SbasisN]sfull_matrix" ,
+                         "sfull_matrix=matrix(0,N,SbasisN)",
+                         xstaring, fixed = T)
+        xstaring <- gsub("matrix[N,SbasisN]R_tall" ,
+                         "R_tall=matrix(0,N,SbasisN)",
+                         xstaring, fixed = T)
+        
+        xstaring <- gsub("matrix[N,SbasisN]sfull_betas" ,
+                         "sfull_betas=matrix(0,N,SbasisN)",
+                         xstaring, fixed = T)
+        
+        xstaring <- gsub("(SplQRd1*sfull_betas)*rep(1.0,QK)" ,
+                         "Matrix::rowSums(SplQRd1 %*% sfull_betas)",
+                         xstaring, fixed = T)
+        
+      } # if(getfunnamestr == "rcsfun_raw" |....
+    } # if (decomp == 'QR') {
+  } # if (!is.null(decomp)) {
+  
+  xstaring <- gsub("cols" , "ncol", xstaring, fixed = T)
+  
+  xstaring <- gsub("matrixXp" , "Xp", xstaring, fixed = T) # spfnameX
+  
+  # This needed because \code{bsp}, \code{msp}, and \code{isp} may have NULL
+  # / numeric(0). This same approach based on the 
+  # function checkgetiknotsbknots() is used in bsitar and other funs
+  # Note that in Stan, when knots = NULL, the vector is empty []
+  gsub_it <- "iknotsx=knots[2:(length(knots)-1)]"
+  gsub_by <- "iknotsx=checkgetiknotsbknots(knots,'iknots')"
+  xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+  gsub_it <- "bknotsx=c(knots[1], knots[length(knots)])"
+  gsub_by <- "bknotsx=checkgetiknotsbknots(knots,'bknots')"
+  xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+  
+  # for sigma var func
+  gsub_it <- "){"
+  gsub_by <- ") {"
+  xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+  
+  gsub_it <- "N=size(x);"
+  gsub_by <- "N=length(x);"
+  xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+  
+  gsub_it <- "out;"
+  gsub_by <- "out=rep(NA,N);"
+  xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+  
+  gsub_it <- "for(iin1:N) {"
+  gsub_by <- "for(i in 1:N) {"
+  xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+  
+  xstaring
+} # extract_r_fun_from_scode_sigma
 
 
 
@@ -3716,6 +4028,30 @@ all_elements_identical_in_list <- function(x) {
 }
 
 
+
+#' An internal function to Remove empty lines from code strings
+#' 
+#' @details Remove empty lines from code strings
+#' 
+#' @param x A string
+#' @keywords internal
+#' @return A string
+#' @noRd
+#'
+remove_spaces_and_tabs <- function(x) {
+  if(!is.null(x)) {
+    x <- gsub("^ *|(?<= ) | *$", "", x, perl = TRUE)
+    # '\\L\\1' converts first letter beyoind .* to lower
+    # x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\L\\1', x, perl=T)
+    x <- gsub("(\\..*?[A-Z]|^[A-Z])", '\\1', x, perl=T)
+    x <- x[x != ""]
+    x <- gsub("\\s*\n\\s*","\n",x) 
+    xx <- x
+  } else {
+    xx <- x
+  }
+  return(xx)
+}
 
 
 

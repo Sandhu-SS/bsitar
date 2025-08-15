@@ -30,7 +30,7 @@
 #'   \code{TRUE} may not work as expected.
 #'   
 #' @param sigmafun A logical (default \code{FALSE}) to indicate whether to return
-#'   the sigma functions. This parameter is for internal use only.
+#'   the sigma functions. This parameter is for internal use only. Ignored
 #'
 #' @inherit growthparameters.bgmfit params
 #'
@@ -90,17 +90,19 @@ expose_model_functions.bgmfit <- function(model,
     envir <- envir
   }
   
-  sigmanlflf <- FALSE
-  if(!is.null(model$model_info[['sigmaStanFun_name']])) {
-    sigmanlflf <- TRUE
+  
+  expose_sigma_ls_model_fun <- FALSE
+  expose_sigma_var_model_fun <- FALSE
+  if(!is.null(model$model_info$sigma_model)) {
+    if(model$model_info$sigma_model == "ls") {
+      expose_sigma_ls_model_fun <- TRUE
+    } else {
+      expose_sigma_var_model_fun <- TRUE
+    }
+  } else {
+    expose_sigma_ls_model_fun <- FALSE
+    expose_sigma_var_model_fun <- FALSE
   }
-  
-  
-  # Over ride option of exposing sigma functions
-  if(!sigmafun) {
-    sigmanlflf <- FALSE
-  }
-  
   
   
   fun_env <- envir
@@ -126,7 +128,12 @@ expose_model_functions.bgmfit <- function(model,
   
   if(expose) {
     if (is.null(scode)) {
-      exposecode <- brms::stancode(model)
+      if(model$model_info[['fit_edited_scode']]) {
+        exposecode <- model$model_info$emodel
+      } else {
+        exposecode <- brms::stancode(model)
+      }
+      # exposecode <- brms::stancode(model)
     } else if (!is.null(scode)) {
       exposecode <- scode
     }
@@ -176,65 +183,27 @@ expose_model_functions.bgmfit <- function(model,
              ept(model$model_info$funlist_r[funi]), envir = envir)
     }
     
-    if(sigmanlflf) {
+    if(expose_sigma_ls_model_fun) {
       for (funi in 1:length(model$model_info$sigmafunlist_r)) {
         assign(gsub("<-.*$", "", model$model_info$sigmafunlist_r[funi]),
                ept(model$model_info$sigmafunlist_r[funi]), envir = envir)
       }
-    }
+    } # expose_sigma_ls_model_fun
+    
+    if(expose_sigma_var_model_fun) {
+      for (funi in 1:length(model$model_info$sigmavarfunlist_r)) {
+        assign(gsub("<-.*$", "", model$model_info$sigmavarfunlist_r[funi]),
+               ept(model$model_info$sigmavarfunlist_r[funi]), envir = envir)
+      }
+    } # expose_sigma_ls_model_fun
+    
   } # if(expose_r_from_stan) {
   
   
   SplineFun_name      <- model$model_info[['StanFun_name']]
   sigmaSplineFun_name <- model$model_info[['sigmaStanFun_name']]
+  sigmavarSplineFun_name <- model$model_info[['sigmavarStanFun_name']]
   spfun_collect       <- model$model_info$include_fun_names
-  
-  
-
-  # if(sigmanlflf) {
-  #   sigmaSplineFun_name <- model$model_info[['sigmaStanFun_name']]
-  #   sigmaspfun_collect <- c(sigmaSplineFun_name,
-  #                      paste0(sigmaSplineFun_name, "_", 
-  #                             c("d0", 
-  #                               "d1",
-  #                               "d2")))
-  #   
-  #   
-  #   
-  #   spfun_collect <- c(spfun_collect, sigmaspfun_collect)
-  # }
-  
-  
-  
-  # if(expose) {
-  #   additionlsfuns <- c()
-  #   if(sigmanlflf) {
-  #     sigmaadditionlsfuns <- c('sigmagetX')
-  #     additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
-  #   }
-  #   if(model$model_info[['select_model']] == 'sitar' |
-  #      model$model_info[['select_model']] == 'rcs') {
-  #     if(sigmanlflf) {
-  #       sigmaadditionlsfuns <- c('sigmagetKnots')
-  #       additionlsfuns <- c(additionlsfuns, sigmaadditionlsfuns)
-  #     }
-  #   }
-  #   spfun_collect <- c(spfun_collect, additionlsfuns)
-  # }
-
-  
-  # if(expose_r_from_stan) {
-  #   spfun_collect <- c(spfun_collect)
-  #   if(sigmanlflf) {
-  #     spfun_collect <- c(spfun_collect, 'sigmagetX')
-  #   }
-  #   if(select_model == 'sitar' | select_model == 'rcs') {
-  #     if(sigmanlflf) {
-  #       spfun_collect <- c(spfun_collect, 'sigmagetKnots')
-  #     }
-  #   }
-  # }
-  
   
   nys <- model$model_info$nys
   ys  <- model$model_info$yvars
@@ -283,16 +252,18 @@ expose_model_functions.bgmfit <- function(model,
     }
   } 
   
-  
+
   if(!expose & !expose_r_from_stan) {
     Spl_funs <- NULL
   }
   
   allSplineFun_name <- SplineFun_name
   
-  if(sigmanlflf) {
+  if(expose_sigma_ls_model_fun) {
     allSplineFun_name <- c(allSplineFun_name, sigmaSplineFun_name)
-  }
+  } else if(expose_sigma_var_model_fun) {
+    allSplineFun_name <- c(allSplineFun_name, sigmavarSplineFun_name)
+  } 
   
   model$model_info[['namesexefuns']] <- allSplineFun_name
   model$model_info[['exefuns']]      <- Spl_funs
@@ -350,4 +321,7 @@ expose_model_functions.bgmfit <- function(model,
 expose_model_functions <- function(model, ...) {
   UseMethod("expose_model_functions")
 }
+
+
+
 

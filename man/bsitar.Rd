@@ -616,39 +616,72 @@ of hierarchy. See \code{a_formula_gr_str} for details. As with
 \code{sigma_formula}.}
 
 \item{sigma_formula_manual}{Formula for the \code{sigma} distributional
-parameter. This should be provided as a character string that explicitly
-uses the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brms:brmsformula-helpers]{brms::lf()}} functions (default \code{NULL}).
-Note that \code{sigma_formula_manual} should be considered as an
-experimental feature and therefore should be used cautiously.
+parameter. This should be provided as a character string or as a list that
+explicitly uses the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brms:brmsformula-helpers]{brms::lf()}} functions (default
+\code{NULL}). Note that \code{sigma_formula_manual} should be considered as
+an experimental feature and therefore should be used cautiously. Besides a
+basic, the the \code{sigma_formula_manual} is primarily used to calculates
+variance weights for modelling heteroscedasticity (where the variance of
+residuals depends on a specified co variate) as implemented in the
+\pkg{nlme} package. The variance structures supported are
+\code{\link[nlme:varPower]{nlme::varPower()}}, \code{\link[nlme:varConstPower]{nlme::varConstPower()}}, \code{\link[nlme:varExp]{nlme::varExp()}},
+\code{\link[nlme:varExp]{nlme::varExp()}} \code{fitted} as a predictor, and modeling \code{sigma} as
+a function of the mean as documented in the \pkg{nlme} package. Lastly, as
+a special case, the \code{sigma_formula_manual} can also be used to fit a
+full location- scale model where distributional parameter \code{sigma}
+(scale parameter) is modeled via an explicit function that is exact same
+the one used to model the \code{mu} (location parameter).
 
 \emph{Basic Usage Example:}
-\code{nlf(sigma ~ z) + lf(z ~ 1 + age + (1 + age |55| gr(id, by = NULL)))}
+\code{sigma_formula_manual = list(nlf(sigma ~ z) + lf(z ~ 1 +
+  (1 |55| gr(id, by = NULL)))})
 
-\strong{Modeling \code{sigma} as a Function of the Mean:}
-\code{sigma_formula_manual} can also be used to model \code{sigma} as a
-function of the mean (\code{mu}), for example: \cr
-\code{sigma_formula_manual = nlf(sigma ~ tau *
-  sqrt(SITARFun(age, a, b, c, s1, s2, s3))) + lf(tau ~ 1)} \cr
-Here, \code{SITARFun()} is the function that computes \code{mu}.
+\emph{Modeling heteroscedasticity as a power variance function:}
+\code{\link[nlme:varPower]{nlme::varPower()}}
 
-\emph{Important limitations in using above approach for modelling sigma as function of mean:}
+\emph{Modeling heteroscedasticity as constant plus a power variance function:}
+\code{\link[nlme:varConstPower]{nlme::varConstPower()}}
+
+\emph{Modeling heteroscedasticity as a exponential variance function:}
+\code{\link[nlme:varExp]{nlme::varExp()}}
+
+\emph{Modeling heteroscedasticity as a exponential variance function where fitted}
+\emph{values (mu) is  the predictor:}
+\code{\link[nlme:varExp]{nlme::varExp()}}
+
+\emph{Modeling heteroscedasticity as a exponential variance function where sqrt()}
 \itemize{
-\item Using \code{SITARFun()} in this way will recompute \code{mu}. This is
-computationally expensive when fitting non linear model.
-\item For \code{multivariate} models, \code{SITARFun()} can only be used if all sub-models
-compute \code{mu} using the exact same \code{SITARFun()} definition for
-each outcome.
+\item of fitted values is the predictor:*
+\code{\link[nlme:varExp]{nlme::varExp()}}
 }
 
-\emph{Experimental Approach for Direct \code{mu} Usage:}
-To overcome the above limitations of recomputing \code{mu} or
+\emph{Modeling sigma as a function of the Mean:}
+\code{sigma_formula_manual} can be used to model \code{sigma} as a function
+of the mean (\code{sqrt(mu)}), as described in the \code{brms} user manual.
+The \code{sigma_formula_manual} is set as follows: \cr
+\code{sigma_formula_manual = nlf(sigma ~ tau *
+  sqrt(SITARFun(age, a, b, c, s1, s2, s3)), method=mean) + lf(tau ~ 1)} \cr
+Here, \code{SITARFun()} is the function that computes \code{mu}. The
+argument \code{method=mean} must be included in the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} function.
+
+\emph{Limitations of the above approach for modelling sigma as function of mean:}
+\itemize{
+\item Using \code{SITARFun()} in this way will recompute \code{mu}. This is
+computationally expensive when fitting a non linear model.
+\item For \code{multivariate} models, \code{SITARFun()} can only be used if all
+sub-models compute \code{mu} using the exact same \code{SITARFun()}
+definition for each outcome.
+}
+
+\emph{Experimental Approach for Direct \code{sqrt(mu)} Usage:}
+To overcome the above limitations of recomputing \code{mu} and
 \code{multivariate} model restrictions, an experimental approach allows for
 direct use of \code{mu}. This involves setting \code{sigma_formula_manual}
 as:
 \code{sigma_formula_manual = "nlf(sigma ~ tau * sqrt()) + lf(tau
   ~ 1)"}. \cr
 Note the empty \code{sqrt()} function. The \code{sqrt()} will be replace by
-\code{mu} by  manually editing the \code{stancode} and refit the model
+\code{sqrt(mu)} by  manually editing the \code{stancode} and refit the model
 using \code{rstan}.
 
 In this approach, priors specified via \code{sigma_prior_beta},
@@ -671,6 +704,22 @@ Note that parameter name \code{tau} (which could any string such as
 \code{sigmatau}) should be same across all outcomes. The appropriate
 response assignment is done internally. Also, parameter should not contain
 dots or underscores.
+
+\emph{Modeling as a Function of the fitted value:}
+Following the exact same approach as shown above for \code{Modeling
+  sigma as a Function of the Mean}, the \code{sigma_formula_manual}
+can be used to implement modelling variance as a function of the fitted
+value as implemented in \code{\link[nlme:varExp]{nlme::varExp()}} with \code{form~fitted(.)} i.e.,
+\code{nlme::varExp(form~fitted(.))}. For this, \code{sigma_formula_manual}
+is set up as follows: \cr
+\code{sigma_formula_manual = nlf(sigma ~ 0 + sigmacons * cons + sigmacons2
+  # abs(SITARFun(age, a, b, c, s1, s2, s3)), method=fitted) + lf(sigmacons + 
+  sigmacons2 ~ 1)} \cr
+Here, \code{SITARFun()} is the function that computes \code{mu}. Note that
+here we replaced \code{sqrt} with \code{abs} and used \code{method=mean}
+instead of \code{method=mean} in the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} function. The remaining
+implementation is same as described above for \code{Modeling sigma
+  as a Function of the Mean}
 
 \emph{Location-Scale SITAR Model Example:}
 Another common use case for \code{sigma_formula_manual} is modeling
