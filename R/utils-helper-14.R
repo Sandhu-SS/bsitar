@@ -96,14 +96,58 @@ get.newdata <- function(model,
     }
   }
   
+  
+  
  
-  if (is.null(newdata)) {
-    if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
-    if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
-  } else {
-    newdata <- newdata
+  # if (is.null(newdata)) {
+  #   if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
+  #   if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
+  # } else {
+  #   newdata <- newdata
+  # }
+  
+  
+  
+  if(dpar == "sigma") {
+    if (is.null(resp)) {
+      resp_    <- resp
+      revresp_ <- ""
+    } else if (!is.null(resp)) {
+      resp_    <- paste0(resp, "_")
+      revresp_ <- paste0("_", resp)
+    }
+    sigma_model_      <- paste0('sigmamodel', revresp_)
+    sigma_model       <- model$model_info[[sigma_model_]]
   }
+  
+  
+  
+  if(dpar == "mu") {
+    if (is.null(newdata)) {
+      if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
+      if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
+    } else {
+      newdata <- newdata
+    }
+  } else if(dpar == "sigma") {
+    if(is.null(newdata)) {
+      if(!is.null(sigma_model)) {
+        if(sigma_model != "ls") {
+          newdata <- model$model_info$bgmfit.data
+          if(verbose) {
+            message("For dpar = 'sigma', the data used for model fitting is used")
+          }
+        }
+      }
+    }
+  }
+  
   newdata.in <- newdata
+  
+  
+  
+  
+  
   
   if(!is.null(dummy_to_factor)) {
     if(!is.list(dummy_to_factor)) {
@@ -162,6 +206,22 @@ get.newdata <- function(model,
   newdata <- check_newdata_args(model, newdata, idvar, resp)
   
   
+  if(dpar == "sigma") {
+    if(is.null(newdata_fixed)) {
+      if(!is.null(sigma_model)) {
+        if(sigma_model != "ls") {
+          newdata_fixed <- 1
+          idata_method <- 'm2'
+          if(verbose) {
+            message("For dpar = 'sigma', the data used for model fitting is used")
+          }
+        }
+      }
+    }
+  }
+  
+  
+  
 
   # prepare_data2 with model = model will get all the necessary info
   
@@ -215,10 +275,15 @@ get.newdata <- function(model,
   
   
   cov_vars       <-  model$model_info[[cov_]]
-  sigmacov_vars <-  model$model_info[[sigmacov_]]
+  sigmacov_vars  <-  model$model_info[[sigmacov_]]
   
+  # Now instead of NULL, bsitar loop ii return NA when no covar
+  cov_vars      <- cov_vars[!is.na(cov_vars)]
+  sigmacov_vars <- sigmacov_vars[!is.na(sigmacov_vars)]
   
-
+  if(length(cov_vars) == 0) cov_vars <- NULL
+  if(length(sigmacov_vars) == 0) sigmacov_vars <- NULL
+  
   if (!is.null(cov_vars)) {
     cov_vars <- covars_extrcation(cov_vars)
   }

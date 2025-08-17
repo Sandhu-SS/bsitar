@@ -745,9 +745,11 @@ post_processing_checks <- function(model,
   # }
   
   if (is.null(resp)) {
-    resp_ <- resp
+    resp_    <- resp
+    revresp_ <- ""
   } else if (!is.null(resp)) {
-    resp_ <- paste0(resp, "_")
+    resp_    <- paste0(resp, "_")
+    revresp_ <- paste0("_", resp)
   }
   
   # assign expose default funs 
@@ -808,15 +810,59 @@ post_processing_checks <- function(model,
       }
     }
     
-    sigma_model <- model$model_info[['sigma_model']]
+    # sigma_model <- model$model_info[['sigma_model']]
     
     # When sigma_model == 'ls', then only sigma function is defined in stan
+    # if(!is.null(sigma_model)) {
+    #   if(sigma_model == "mu") {
+    #     available_d1 <- FALSE
+    #     available_d2 <- FALSE
+    #   }
+    # }
+    
+    sigma_model_      <- paste0('sigma_model', revresp_)
+    sigma_model_name_ <- paste0('sigmabasicfunname', revresp_)
+    sigma_model_attr_ <- paste0('sigmabasicfunattr', revresp_)
+    
+    sigma_model       <- model$model_info[[sigma_model_]]
+    sigma_model_name  <- model$model_info[[sigma_model_name_]]
+    sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
+    
+    check_namespace_for_sigma_d1 <- c('splines2', 'bsitar')
+    
+    check_namespace_for_sigma_d1_test <- 
+      setdiff(sigma_model_attr, check_namespace_for_sigma_d1)
+    
     if(!is.null(sigma_model)) {
-      if(sigma_model == "mu") {
-        available_d1 <- FALSE
-        available_d2 <- FALSE
+      if(sigma_model == "ls") {
+        available_d1 <- available_d1
+        available_d2 <- available_d2
+      } else if(sigma_model == "basic") {
+        if(length(check_namespace_for_sigma_d1_test) == 0) {
+          available_d1 <- available_d1
+          available_d2 <- available_d2
+          if(deriv > 0) {
+            for (i in sigma_model_name) {
+              model$model_info$exefuns[[i]] <- 
+                formals(model$model_info$exefuns[[i]])[['derivs']] <- deriv
+            }
+          }
+        } else {
+          available_d1 <- FALSE
+          available_d2 <- FALSE
+        }
+      } else {
+        available_d1 <- available_d1
+        available_d2 <- available_d2
       }
+    } else if(is.null(sigma_model)) {
+      available_d1 <- available_d1
+      available_d2 <- available_d2
     }
+    
+    
+    
+    
     
     # Force available_d1 = FALSE when model_deriv = FALSE
     if(!is.null(model$model_info[['model_deriv']])) {
@@ -3138,10 +3184,10 @@ CustomDoCall <- function(what, args, quote = FALSE, envir = NULL){
   } else if (get_class_what == "name"){
     call <- as.call(c(list(what, argn)))
   }
+   
+  args$verbose <- eval(args$verbose)
   
-  eval(call,
-       envir = args,
-       enclos = envir)
+  eval(call, envir = args, enclos = envir)
 }
 
 # using with CustomDoCall()

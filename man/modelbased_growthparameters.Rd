@@ -773,8 +773,8 @@ function needs compilation which takes time. The future plan is to allow
 integration with \code{Stan}-based computational back ends which then be
 exposed along with other functions from \code{Stan} function block.}
 
-\item{newdata_fixed}{An indicator to specify whether to check for the data
-format and structure of the user provided \code{newdata} and apply needed
+\item{newdata_fixed}{An indicator to specify whether to check data
+format and structure for the user provided \code{newdata}, and apply needed
 \code{prepare_data2} and \code{prepare_transformations}
 (\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
 (\code{newdata = TRUE}) as it is without checking for the data format or

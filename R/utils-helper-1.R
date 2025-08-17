@@ -2750,6 +2750,76 @@ sanitize_pathfinder_args <- function(sdata, pathfinder_args, brm_args, ...) {
 
 
 
+#' check system info
+#'
+#' 
+#' @return A logical
+#' @keywords internal
+#' @noRd
+#'
+
+check_system_info <- function(..., verbose = FALSE) {
+  # Get system information
+  system_info <- Sys.info()
+  # Check the operating system name
+  os_name <- system_info['sysname']
+  # Conditional check for Windows or Linux
+  if (os_name == "Windows") {
+    if(verbose) print("The system is running on Windows.")
+  } else if (os_name == "Linux") {
+    if(verbose) print("The system is running on Linux.")
+  } else {
+    if(verbose) print(paste("The system is running on:", os_name))
+  }
+  return(os_name)
+}
+
+
+
+#' check if cmdstanr available is available
+#'
+#' 
+#' @return A logical
+#' @keywords internal
+#' @noRd
+#'
+check_if_cmdstanr_available <- function() {
+  
+  minimum_version <- get_package_minversion('cmdstanr')
+  
+  try(zz <- insight::check_if_installed(c("cmdstanr"), 
+                                        minimum_version = minimum_version, 
+                                        prompt = FALSE,
+                                        stop = FALSE))
+  
+  
+  if(!isTRUE(zz)) {
+    message("Please install the latest version of the 'cmdstanr' 
+              package",
+            "\n ",
+            paste0("install.packages('cmdstanr', "   ,
+                   "repos = c('https://mc-stan.org/r-packages/', "   ,
+                   "getOption('repos')))")
+    )
+    return(invisible(NULL))
+  } 
+  
+  if(isTRUE(zz)) {
+    write_stan_file <- utils::getFromNamespace("write_stan_file", "cmdstanr")
+    cmdstan_model   <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
+    expose_model   <- utils::getFromNamespace("expose_functions", "cmdstanr")
+    get_cmdstan_path   <- utils::getFromNamespace("cmdstan_path", "cmdstanr")
+    get_cmdstan_default_path   <- utils::getFromNamespace("cmdstan_default_path", "cmdstanr")
+    get_cmdstan_default_install_path   <- utils::getFromNamespace("cmdstan_default_install_path", "cmdstanr")
+    set_cmdstan_path   <- utils::getFromNamespace("set_cmdstan_path", "cmdstanr")
+
+  }
+  
+  return(zz)
+}
+
+
+
 # Commenting out for CRAN initial release
 
 #' Fit model via cmdstanr
@@ -2776,29 +2846,36 @@ brms_via_cmdstanr <- function(scode,
                               pathfinder_init = FALSE,
                               Rescor_by_levels = NULL) {
   
-  try(zz <- insight::check_if_installed(c("cmdstanr"), 
-                                        minimum_version = 
-                                          get_package_minversion(
-                                            'cmdstanr'
-                                          ), 
-                                        prompt = FALSE,
-                                        stop = FALSE))
+  # try(zz <- insight::check_if_installed(c("cmdstanr"),
+  #                                       minimum_version =
+  #                                         get_package_minversion(
+  #                                           'cmdstanr'
+  #                                         ),
+  #                                       prompt = FALSE,
+  #                                       stop = FALSE))
+  # 
+  # 
+  # if(!isTRUE(zz)) {
+  #   message("Please install the latest version of the 'cmdstanr'
+  #             package",
+  #           "\n ",
+  #           paste0("install.packages('cmdstanr', "   ,
+  #                  "repos = c('https://mc-stan.org/r-packages/', "   ,
+  #                  "getOption('repos')))")
+  #   )
+  #   return(invisible(NULL))
+  # }
+  # 
+  # if(isTRUE(zz)) {
+  #   write_stan_file <- utils::getFromNamespace("write_stan_file", "cmdstanr")
+  #   cmdstan_model   <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
+  # }
   
   
-  if(!isTRUE(zz)) {
-    message("Please install the latest version of the 'cmdstanr' 
-              package",
-            "\n ",
-            paste0("install.packages('cmdstanr', "   ,
-                   "repos = c('https://mc-stan.org/r-packages/', "   ,
-                   "getOption('repos')))")
-    )
-    return(invisible(NULL))
-  } 
   
-  if(isTRUE(zz)) {
+  if(isTRUE(check_if_cmdstanr_available())) {
     write_stan_file <- utils::getFromNamespace("write_stan_file", "cmdstanr")
-    cmdstan_model <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
+    cmdstan_model   <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
   }
   
   
@@ -5164,13 +5241,69 @@ getmodel_info <- function(model, dpar, resp) {
   
   checkresp_info(model, resp)
   
+  
   if (is.null(resp)) {
-    setsigmaxvars_ <- 'setsigmaxvar'
+    resp_    <- resp
+    revresp_ <- ""
   } else if (!is.null(resp)) {
-    setsigmaxvars_ <- paste0('setsigmaxvar', "_", resp)
+    resp_    <- paste0(resp, "_")
+    revresp_ <- paste0("_", resp)
   }
   
-  sigma_model <- model$model_info[['sigma_model']]
+  # if (is.null(resp)) {
+  #   setsigmaxvars_ <- 'setsigmaxvar'
+  # } else if (!is.null(resp)) {
+  #   setsigmaxvars_ <- paste0('setsigmaxvar', "_", resp)
+  # }
+  
+  setsigmaxvars_ <- paste0('setsigmaxvar', revresp_)
+  
+  sigma_model_      <- paste0('sigma_model', revresp_)
+  sigma_model_name_ <- paste0('sigmabasicfunname', revresp_)
+  sigma_model_attr_ <- paste0('sigmabasicfunattr', revresp_)
+  
+  sigma_model       <- model$model_info[[sigma_model_]]
+  sigma_model_name  <- model$model_info[[sigma_model_name_]]
+  sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
+  
+  check_namespace_for_sigma_d1 <- c('splines2', 'bsitar')
+  
+  check_namespace_for_sigma_d1_test <- 
+    setdiff(sigma_model_attr, check_namespace_for_sigma_d1)
+  
+  # here only sigma_model_is_ls is need, the remaining full code is from 
+  # post_processing_checks
+  deriv <- 0
+  available_d1 <- NULL
+  available_d2 <- NULL
+  sigma_model_is_ls <- FALSE
+  if(!is.null(sigma_model)) {
+    if(sigma_model == "ls") {
+      sigma_model_is_ls <- TRUE
+      available_d1 <- available_d1
+      available_d2 <- available_d2
+    } else if(sigma_model == "basic") {
+      if(length(check_namespace_for_sigma_d1_test) == 0) {
+        available_d1 <- available_d1
+        available_d2 <- available_d2
+        if(deriv > 0) {
+          for (i in sigma_model_name) {
+            model$model_info$exefuns[[i]] <- 
+              formals(model$model_info$exefuns[[i]])[['derivs']] <- deriv
+          }
+        }
+      } else {
+        available_d1 <- FALSE
+        available_d2 <- FALSE
+      }
+    } else {
+      available_d1 <- available_d1
+      available_d2 <- available_d2
+    }
+  } else if(is.null(sigma_model)) {
+    available_d1 <- available_d1
+    available_d2 <- available_d2
+  }
   
   
   oxx <- model$model_info[['namesexefuns']]
@@ -5205,9 +5338,13 @@ getmodel_info <- function(model, dpar, resp) {
     } # if(dpar == "sigma") {
   } # else if(!is.null(dpar)) {
   
-  model$model_info[['namesexefuns']] <- oxx
-  model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
-  model
+  if(sigma_model_is_ls) {
+    model$model_info[['namesexefuns']] <- oxx
+    model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
+  }
+  # model$model_info[['namesexefuns']] <- oxx
+  # model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
+  return(model)
 }
 
 
@@ -5491,6 +5628,8 @@ get_nlf_custom_arg <- function(str,
   }
   
  
+  if(out == "no") out <- "none"
+  if(out == "ba") out <- "basic"
   if(out == "fi") out <- "fitted"
   if(out == "ve") out <- "varexp"
   if(out == "vp") out <- "varpower"
@@ -5512,14 +5651,162 @@ get_nlf_custom_arg <- function(str,
   }
   
   
-  # 
-  #  print(str)
-  #  print(out)
-  # # print(search)
-  #  stop()
-  
   return(out)
 }
+
+
+
+#' Function to extract function names and code from a string
+#' 
+#' @details
+#' This will get function names and code specified in nlf() via
+#' sigma_formula_manualsi such 
+#' code{"lf(z~1+splines2:::bsp(age)+(1++splines2::nsp(age)|55|gr(id,by=NULL)))"}
+#' 
+#' @param str A string
+#' @param replace_ns Replace namespace \code{'::'} and \code{':::'} with 
+#' \code{'_'} in the \code{str} (if \code{replace_ns = TRUE})
+#' 
+#' @return A list
+#'
+#' @keywords internal
+#' @noRd
+#' 
+get_function_names_code_from_string <- function(str,
+                                                replace_ns = TRUE) {
+  token <- NULL;
+  text <- NULL;
+  parent <- NULL;
+  . <- NULL;
+  
+  str <- paste0(gsub_space(str), collapse = ",")
+  
+  set_getParseData <- utils::getParseData(parse(text=str, keep.source=TRUE)) 
+  
+  packages_included <- set_getParseData %>% 
+    dplyr::filter(token=="SYMBOL_PACKAGE") %>% dplyr::pull(text)
+  
+  packages_included <- unique(packages_included)
+  
+  insight::check_if_installed(packages_included)
+  
+  functions_namespace_included_id <- set_getParseData %>% 
+    dplyr::filter(token=="NS_GET" | token=="NS_GET_INT") %>% 
+    dplyr::pull(parent)
+  
+  
+  functions_namespace_included_c <- c()
+  functions_namespace_attr_c <- c()
+  functions_namespace_included_c_without_ns <- c()
+  functions_namespace_str_c <- c()
+  if(length(functions_namespace_included_id) > 0) {
+    itcx <- 0
+    for (i in 1:length(functions_namespace_included_id)) {
+      itcx <- itcx + 1
+      fid_i <- functions_namespace_included_id[i]
+      get_ns <- set_getParseData %>% dplyr::filter(parent == fid_i) %>% 
+        dplyr::pull(text) %>% paste0(., collapse = "")
+      # remove these from set_getParseData
+      set_getParseData <- set_getParseData %>% dplyr::filter(!parent == fid_i)
+      get_without_ns <- gsub("::", "_", get_ns, fixed = T)
+      get_without_ns <- gsub("_:", "_", get_without_ns, fixed = T)
+      # namespace name of the function with ns :: / :::
+      functions_ns <- environmentName(environment(ept(get_ns)))
+      # function names with ns :: / :::
+      functions_namespace_included_c <- 
+        c(functions_namespace_included_c, get_ns)
+      # function names with ns :: / ::: replaced by _
+      functions_namespace_included_c_without_ns <- 
+        c(functions_namespace_included_c_without_ns, get_without_ns)
+      # assign function with ns :: / ::: to ns :: / ::: replaced by _
+      functions_namespace_str <- paste(deparse(ept(get_ns)), collapse = "\n")
+      functions_namespace_str <- paste0(get_without_ns, "<-", 
+                                        functions_namespace_str)
+      functions_namespace_attr_c <- c(functions_namespace_attr_c, functions_ns)
+      functions_namespace_str <- trimws(functions_namespace_str)
+      functions_namespace_str_c <- 
+        c(functions_namespace_str_c, functions_namespace_str)
+      if(replace_ns) {
+        str <- gsub(get_ns, get_without_ns, str, fixed = T)
+      }
+    }
+  } # if(length(functions_namespace_included_id) > 0) {
+  
+  
+  
+  
+  
+  
+  functions_global_included_id <- set_getParseData %>% 
+    dplyr::filter(token=="SYMBOL_FUNCTION_CALL") %>% dplyr::pull(parent)
+  
+  
+  functions_global_included_c <- c()
+  functions_global_attr_c <- c()
+  functions_global_included_c_without_ns <- c()
+  functions_global_str_c <- c()
+  if(length(functions_global_included_id) > 0) {
+    itcx <- 0
+    for (i in 1:length(functions_global_included_id)) {
+      itcx <- itcx + 1
+      fid_i <- functions_global_included_id[i]
+      get_ns <- set_getParseData %>% dplyr::filter(parent==fid_i) %>% 
+        dplyr::pull(text) %>% paste0(., collapse = "")
+      functions_ns <- environmentName(environment(ept(get_ns)))
+      get_without_ns <- get_ns
+      if(functions_ns == "brms") {
+        # exclude from brms
+      } else {
+        functions_global_included_c <- 
+          c(functions_global_included_c, get_ns)
+        functions_global_included_c_without_ns <- 
+          c(functions_global_included_c_without_ns, get_without_ns)
+        functions_global_str <- paste(deparse(ept(get_ns)), collapse = "\n")
+        functions_global_str <- paste0(get_without_ns, "<-", 
+                                       functions_global_str)
+        functions_global_attr_c <- c(functions_global_attr_c, functions_ns)
+        functions_global_str <- trimws(functions_global_str)
+        functions_global_str_c <- 
+          c(functions_global_str_c, functions_global_str)
+      } # if(functions_ns == "brms") {
+    }
+  } # if(length(functions_global_included_id) > 0) {
+  
+  
+  ns_name          <- functions_namespace_included_c %>% unique()
+  ns_name_used     <- functions_namespace_included_c_without_ns %>% unique()
+  ns_attr_used     <- functions_namespace_attr_c %>% unique()
+  global_name      <- functions_global_included_c %>% unique()
+  global_name_used <- functions_global_included_c %>% unique()
+  global_attr_used <- functions_global_attr_c %>% unique()
+  ns_code_used     <- functions_namespace_str_c %>% unique()
+  global_code_used <- functions_global_str_c %>% unique()
+  
+  # Full list
+  # out <- list(str = str, 
+  #             ns_name          = ns_name,
+  #             ns_name_used     = ns_name_used,
+  #             ns_attr_used     = ns_attr_used,
+  #             global_name      = global_name,
+  #             global_name_used = global_name_used,
+  #             global_attr_used = global_attr_used,
+  #             ns_code_used     = ns_code_used,
+  #             global_code_used = global_code_used)
+  
+  # needed list
+  name <- c(ns_name_used, global_name_used)
+  code <- c(ns_code_used, global_code_used)
+  attr <- c(ns_attr_used, global_attr_used)
+  
+  out <- list(str  = str, 
+              name = name,
+              code = code,
+              attr = attr)
+  
+  return(out)
+} 
+
+
 
 
 

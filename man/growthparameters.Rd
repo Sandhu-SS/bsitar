@@ -378,8 +378,8 @@ selected automatically. Note that when no match for \code{xvar} is found in
 the \code{data,frame}, the \code{itransform} will be ignored within the
 calling function, \code{'prepare_transformations()'}.}
 
-\item{newdata_fixed}{An indicator to specify whether to check for the data
-format and structure of the user provided \code{newdata} and apply needed
+\item{newdata_fixed}{An indicator to specify whether to check data
+format and structure for the user provided \code{newdata}, and apply needed
 \code{prepare_data2} and \code{prepare_transformations}
 (\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
 (\code{newdata = TRUE}) as it is without checking for the data format or

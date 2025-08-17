@@ -546,23 +546,57 @@ GS_rcs_call <- function(x,
                         verbose = FALSE) {
   
   
+  # if everything is missing, then set df
+  # next preferance should be fullknots
   if(is.null(knots) & is.null(bknots) & is.null(fullknots) & is.null(df)) {
+    if(verbose) message("'df' is set as 3 for the rcs model")
+    df <- 3
+  } else if(!is.null(fullknots)) {
+    if(!is.null(knots) & !is.null(bknots)) {
+      stop("When specifying 'fullknots', 'knots' and 'bknots' should be NULL")
+    }
+    fullknots <- fullknots
+  } else if(is.null(fullknots)) {
+    if(!is.null(knots) & !is.null(bknots)) {
+      fullknots <- c(bknots[1], knots, knots, bknots[2])
+    } else if(is.null(knots) | is.null(bknots)) {
+      if(is.null(df)) {
+        stop("please specify both knots and bknots, fullknots, or df")
+      }
+    }
+  } else {
     stop("Specify 'df' or 'knots' 
     Note that knots can be specified by using 'fullknots', 
     or else via 'knots' and 'bknots'")
   }
   
-  if(is.null(fullknots)) {
-    if(is.null(knots) | is.null(bknots)) {
-      if(is.null(df)) {
-        stop("please specify both knots and bknots, fullknots, or df")
-      }
-    }
-    if(is.null(df)) fullknots <- c(bknots[1], knots, knots, bknots[2])
-  } else if(!is.null(fullknots)) {
-    fullknots <- fullknots
-  }
   
+  # if(is.null(knots) & is.null(bknots) & is.null(fullknots) & is.null(df)) {
+  #   stop("Specify 'df' or 'knots' 
+  #   Note that knots can be specified by using 'fullknots', 
+  #   or else via 'knots' and 'bknots'")
+  # }
+  # 
+  # if(is.null(fullknots)) {
+  #   if(is.null(knots) | is.null(bknots)) {
+  #     if(is.null(df)) {
+  #       stop("please specify both knots and bknots, fullknots, or df")
+  #     }
+  #   }
+  #   if(is.null(df)) fullknots <- c(bknots[1], knots, knots, bknots[2])
+  # } else if(!is.null(fullknots)) {
+  #   fullknots <- fullknots
+  # }
+  
+  
+  
+  
+  
+  
+  
+  if(is.null(intercept)) {
+    intercept <- FALSE
+  }
   
   # Here onward, knots = fullknots
   # knots <- fullknots

@@ -389,6 +389,29 @@ plot_curves.bgmfit <- function(model,
   ':=' <- NULL;
   . <- NULL;
   
+  
+  
+  if(dpar == "sigma") {
+    if (is.null(resp)) {
+      resp_    <- resp
+      revresp_ <- ""
+    } else if (!is.null(resp)) {
+      resp_    <- paste0(resp, "_")
+      revresp_ <- paste0("_", resp)
+    }
+    sigma_model_      <- paste0('sigmamodel', revresp_)
+    sigma_model       <- model$model_info[[sigma_model_]]
+    if(is.null(xvar)) {
+      if(!is.null(sigma_model)) {
+        if(sigma_model != "ls") {
+            stop("For plotting dpar = 'sigma', the xvar should be specified")
+        }
+      }
+    }
+  }
+  
+  
+  
   xcall <- match.call()
   match.call.list.in <- as.list(match.call())[-1]
   

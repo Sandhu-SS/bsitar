@@ -151,7 +151,8 @@ prepare_formula <- function(x,
   
   smat <- NULL;
   smat_intercept <- NULL;
-  set_model_sigma_by_me <- NULL;
+  set_model_sigma_by_ba <- NULL;
+  set_model_sigma_by_no <- NULL;
   set_model_sigma_by_ls <- NULL;
   sigma_formula_manual_prior_via_sigma_formula <- NULL;
   
@@ -730,6 +731,7 @@ prepare_formula <- function(x,
   # But if sigma_formulasi and sigma_formula_gr_strsi are used to set prior
   # then they must not be set as NULL
 
+  # set_model_sigma_by_no
   if(sigma_formula_manualsi_set) {
     dpar_formulasi <- NULL
     if(sigma_formula_manual_prior_via_sigma_formula) {
@@ -2523,20 +2525,6 @@ prepare_formula <- function(x,
   # sigmacovariates  <- getcovlist(sigma_formulasi)
   # sigmacovariates_ <- unique(sigmacovariates)
   
-  # if(set_model_sigma_by_ls) {
-  #   sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi,
-  #                                                   nys = nys,
-  #                                                   ysi = ysi,
-  #                                                   extract_covar = TRUE,
-  #                                                   extract_nlpar = FALSE,
-  #                                                   data_varnames = NULL,
-  #                                                   verbose = FALSE)
-  # } else if(set_model_sigma_by_me | set_model_sigma_by_fi) {
-  #   sigmacovariates  <- getcovlist(sigma_formulasi)
-  # } else {
-  #   sigmacovariates  <- getcovlist(sigma_formulasi)
-  # }
-  # sigmacovariates_ <- unique(sigmacovariates)
   
   
   if(sigma_formula_manualsi_set) {
