@@ -2780,29 +2780,43 @@ bsitar <- function(x,
   # Also, if(is.language(sigma_formula_manual_fun)) check is mandatory only for'
   # 'add_sigma_by_ls'
 
-  sigma_formula_manual_fun <- substitute(sigma_formula_manual)
+  sigma_formula_manual_fun     <- substitute(sigma_formula_manual)
   sigma_formula_manual_fun_str <- deparse(sigma_formula_manual_fun)
   sigma_formula_manual_fun_str <- paste(gsub_space(sigma_formula_manual_fun_str),
                                         collapse = "")
   
-  if(is.language(sigma_formula_manual_fun)) {
-    if(!grepl("^list\\(", sigma_formula_manual_fun_str)) {
-      stop("'sigma_formula_manual' must be a list or a string")
+  count_number_nlf <- gregexpr("nlf\\(", sigma_formula_manual_fun_str)[[1]][1]
+
+  if(count_number_nlf > 1) {
+    if(is.language(sigma_formula_manual_fun)) {
+      if(!grepl("^list\\(", sigma_formula_manual_fun_str)) {
+        stop("Argument 'sigma_formula_manual' must be a list or a string")
+      }
     }
   }
   
   sigma_formula_manual <- sigma_formula_manual_fun_str
   
-  # why this setdepar0sgub? it did't let pass resp specific 
-  # ..si for sigma_formula_manual
-  # Check whether it isntrully needed for sigma_formula and sigma_formula_gr
-  setdepar0sgub <- c("sigma_formula", 
-                     "sigma_formula_gr")
+  
+  setdepar0sgub <- c("sigma_formula", "sigma_formula_gr")
+  if(count_number_nlf > 1) {
+    setdepar0sgub <- setdepar0sgub
+  } else {
+    setdepar0sgub <- c(setdepar0sgub, "sigma_formula_manual")
+  }
   
   
+  # # why this setdepar0sgub? it did't let pass resp specific 
+  # # ..si for sigma_formula_manual
+  # # Check whether it isntrully needed for sigma_formula and sigma_formula_gr
   # setdepar0sgub <- c("sigma_formula", 
-  #                    "sigma_formula_gr", 
-  #                    "sigma_formula_manual")
+  #                    "sigma_formula_gr")
+  # 
+  # # setdepar0sgub <- c("sigma_formula", 
+  # #                    "sigma_formula_gr", 
+  # #                    "sigma_formula_manual")
+  
+  
   
   for (argumentsnamesi in names(arguments)) {
     if(argumentsnamesi %in% setdepar0sgub) {
@@ -5298,6 +5312,7 @@ bsitar <- function(x,
     add_arg_to_sigma_formula_manual <- function(x,
                                                 arg,
                                                 what) {
+      
       gsub_it <- replace_string_part(x = x, 
                                      start = "nlf(", 
                                      end = ")",  replace = "",
@@ -5308,6 +5323,7 @@ bsitar <- function(x,
       out <- gsub(gsub_it, gsub_by, x, fixed = T)
       out
     }
+    
     
 
     sigma_formula_manualsi_set <- FALSE
@@ -5575,6 +5591,26 @@ bsitar <- function(x,
                                    verbose = FALSE)
       
       sigmatau_strsi_c[[ii]] <- sigmatau_strsi
+      
+      
+      if(set_model_sigma_by_ba) {
+        # replace functions with :: / ::: with _ in sigma_formula_manualsi
+        getouttemp <- get_function_names_code_from_string(sigma_formula_manualsi)
+       
+        sigma_formula_manualsi <- getouttemp[['str']]
+        # Also, assign those functions to the environment 
+        package_env <- as.environment("package:bsitar")
+        if(length(getouttemp[['code']] != 0)) {
+          for (funi in 1:length(getouttemp[['code']])) {
+            assign(gsub("<-.*$", "", getouttemp[['code']][funi]),
+                   ept(getouttemp[['code']][funi]) , envir = package_env )
+          }
+        }
+        # , envir = enverr. -> 
+        # Error in eval(call[[1L]]) : object 'splines2_nsk' not found
+        # print(splines2_nsk)
+        # stop()
+      }
       
       ##########################################################################
       if(sigma_formula_manual_prior_via_sigma_formula) {
@@ -7616,24 +7652,17 @@ bsitar <- function(x,
    
     if(set_model_sigma_by_ba) {
       sigmabasicget_s_r_funs <- list()
-      
-      getouttemp <- get_function_names_code_from_string(sigma_formula_manualsi)
-      
+      # This getouttemp has been collected above, search below line 
+      # replace functions with :: / ::: with _ in sigma_formula_manualsi
+      # getouttemp <- get_function_names_code_from_string(sigma_formula_manualsi)
       sigmabasicget_s_r_funs[['rcsfun']] <- NULL
       sigmabasicget_s_r_funs[['r_funs']] <-  getouttemp[['code']]
       sigmabasicget_s_r_funs[['gq_funs']] <- NULL
       sigmabasicget_s_r_funs[['include_fun_names']] <- getouttemp[['name']]
       
-      # sigmabasicget_s_r_funs[['attr']] <- getouttemp[['attr']]
-      
       sigmabasicfunnamesi <- getouttemp[['name']]
       sigmabasicfunattrsi <- getouttemp[['attr']]
-      
-      # print(sigmabasicfunattrsi)
-      # # getouttempx <<- getouttemp
-      # # 
-      #  stop()
-
+    
       sigmabasicfunlist[ii]     <- sigmabasicget_s_r_funs[['rcsfun']]
       sigmabasicfunlist_r[[ii]] <- sigmabasicget_s_r_funs[['r_funs']]
       sigmabasicgq_funs[[ii]]   <- sigmabasicget_s_r_funs[['gq_funs']]

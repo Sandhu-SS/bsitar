@@ -5227,6 +5227,27 @@ checkresp_info <- function(model, resp) {
 }
 
 
+
+#' allowed_namespace_for_sigma_d1
+#'
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+allowed_namespace_for_sigma_d1 <- function() {
+  c('splines2', 'bsitar')
+}
+
+#' exclude_global_for_sigma_d1
+#'
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+exclude_global_for_sigma_d1 <- function() {
+  c('brms')
+}
+
 #' Get information on dpar
 #'
 #' @param model An object of class \code{bgmfit} 
@@ -5266,10 +5287,7 @@ getmodel_info <- function(model, dpar, resp) {
   sigma_model_name  <- model$model_info[[sigma_model_name_]]
   sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
   
-  check_namespace_for_sigma_d1 <- c('splines2', 'bsitar')
-  
-  check_namespace_for_sigma_d1_test <- 
-    setdiff(sigma_model_attr, check_namespace_for_sigma_d1)
+
   
   # here only sigma_model_is_ls is need, the remaining full code is from 
   # post_processing_checks
@@ -5283,7 +5301,7 @@ getmodel_info <- function(model, dpar, resp) {
       available_d1 <- available_d1
       available_d2 <- available_d2
     } else if(sigma_model == "basic") {
-      if(length(check_namespace_for_sigma_d1_test) == 0) {
+      if(all(sigma_model_attr %in% allowed_namespace_for_sigma_d1())) {
         available_d1 <- available_d1
         available_d2 <- available_d2
         if(deriv > 0) {
@@ -5706,30 +5724,38 @@ get_function_names_code_from_string <- function(str,
       fid_i <- functions_namespace_included_id[i]
       get_ns <- set_getParseData %>% dplyr::filter(parent == fid_i) %>% 
         dplyr::pull(text) %>% paste0(., collapse = "")
+      functions_ns <- environmentName(environment(ept(get_ns)))
       # remove these from set_getParseData
       set_getParseData <- set_getParseData %>% dplyr::filter(!parent == fid_i)
-      get_without_ns <- gsub("::", "_", get_ns, fixed = T)
-      get_without_ns <- gsub("_:", "_", get_without_ns, fixed = T)
-      # namespace name of the function with ns :: / :::
-      functions_ns <- environmentName(environment(ept(get_ns)))
-      # function names with ns :: / :::
-      functions_namespace_included_c <- 
-        c(functions_namespace_included_c, get_ns)
-      # function names with ns :: / ::: replaced by _
-      functions_namespace_included_c_without_ns <- 
-        c(functions_namespace_included_c_without_ns, get_without_ns)
-      # assign function with ns :: / ::: to ns :: / ::: replaced by _
-      functions_namespace_str <- paste(deparse(ept(get_ns)), collapse = "\n")
-      functions_namespace_str <- paste0(get_without_ns, "<-", 
-                                        functions_namespace_str)
-      functions_namespace_attr_c <- c(functions_namespace_attr_c, functions_ns)
-      functions_namespace_str <- trimws(functions_namespace_str)
-      functions_namespace_str_c <- 
-        c(functions_namespace_str_c, functions_namespace_str)
-      if(replace_ns) {
-        str <- gsub(get_ns, get_without_ns, str, fixed = T)
+      # replace :: / ::: only for splines2, bsitar or ither defined in 
+      # allowed_namespace_for_sigma_d1
+      if(functions_ns %in%  allowed_namespace_for_sigma_d1()) {
+        get_without_ns <- gsub("::", "_", get_ns, fixed = T)
+        get_without_ns <- gsub("_:", "_", get_without_ns, fixed = T)
+        # namespace name of the function with ns :: / :::
+        functions_namespace_included_c <- c(functions_namespace_included_c, 
+                                            get_ns)
+        functions_namespace_included_c_without_ns <- 
+          c(functions_namespace_included_c_without_ns, get_without_ns)
+        # assign function with ns :: / ::: to ns :: / ::: replaced by _
+        functions_namespace_str <- paste(deparse(ept(get_ns)), collapse = "\n")
+        functions_namespace_str <- paste0(get_without_ns, "<-", 
+                                          functions_namespace_str)
+        functions_namespace_attr_c <- c(functions_namespace_attr_c, functions_ns)
+        functions_namespace_str <- trimws(functions_namespace_str)
+        if(functions_ns == 'splines2') {
+          gsub_it <- ".engine"
+          gsub_by <- paste0(functions_ns, ":::", gsub_it)
+          functions_namespace_str <- gsub(gsub_it, gsub_by, 
+                                          functions_namespace_str, fixed = T)
+        }
+        functions_namespace_str_c <- 
+          c(functions_namespace_str_c, functions_namespace_str)
+        if(replace_ns) {
+          str <- gsub(get_ns, get_without_ns, str, fixed = T)
+        }
       }
-    }
+    } # if(functions_ns  %in%  allowed_namespace_for_sigma_d1()) {
   } # if(length(functions_namespace_included_id) > 0) {
   
   
@@ -5754,11 +5780,9 @@ get_function_names_code_from_string <- function(str,
         dplyr::pull(text) %>% paste0(., collapse = "")
       functions_ns <- environmentName(environment(ept(get_ns)))
       get_without_ns <- get_ns
-      if(functions_ns == "brms") {
-        # exclude from brms
-      } else {
-        functions_global_included_c <- 
-          c(functions_global_included_c, get_ns)
+      # exclude functions from brms etc exclude_global_for_sigma_d1
+      if(!functions_ns %in%  exclude_global_for_sigma_d1()) {
+        functions_global_included_c <- c(functions_global_included_c, get_ns)
         functions_global_included_c_without_ns <- 
           c(functions_global_included_c_without_ns, get_without_ns)
         functions_global_str <- paste(deparse(ept(get_ns)), collapse = "\n")
@@ -5768,7 +5792,7 @@ get_function_names_code_from_string <- function(str,
         functions_global_str <- trimws(functions_global_str)
         functions_global_str_c <- 
           c(functions_global_str_c, functions_global_str)
-      } # if(functions_ns == "brms") {
+      } # exclude functions from brms
     }
   } # if(length(functions_global_included_id) > 0) {
   
