@@ -333,18 +333,7 @@ modelbased_growthparameters.bgmfit <-
       
       model <- getmodel_info(model = model, dpar = dpar, resp = resp)
       
-      # 02.08.2025
-      add_prefix_to_fun <- ""
-      if(!is.null(dpar)) {
-        if(dpar == "mu") {
-          add_prefix_to_fun <- ""
-        } else if(dpar == "sigma") {
-          add_prefix_to_fun <- "sigma"
-        }
-      }
-      
-      
-      
+     
       
       
       if(is.null(usesavedfuns)) {
@@ -476,23 +465,59 @@ modelbased_growthparameters.bgmfit <-
       
       
       # for x.adh
-      funx_ <- paste0('xfuntransform2', resp_rev_)
-      # 02.08.2025
-      funx_ <- paste0(add_prefix_to_fun, funx_)
-      funx_ <- model$model_info[[funx_]]
+      # funx_ <- paste0('xfuntransform2', resp_rev_)
+      # # 02.08.2025
+      # funx_ <- paste0(add_prefix_to_fun, funx_)
+      # funx_ <- model$model_info[[funx_]]
+      
+      
+      check_set_fun <- check_set_fun_transform(model = model, 
+                                               which = 'xfuntransform2',
+                                               dpar = dpar, 
+                                               resp= resp, 
+                                               transform = NULL,
+                                               auto = FALSE, 
+                                               verbose = verbose)
+      
+      funx_ <- check_set_fun[['setfun']]
+      if(check_set_fun[['was_null']]) {
+        model$model_info[[check_set_fun[['setfunname']]]] <- funx_
+      }
+      
+      
       
       ########################################################
-      # prepare_data2
-      ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-      ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
-      ifunx_ <- model$model_info[[ifunx_]]
+      ########################################################
+      
+      check_set_fun <- check_set_fun_transform(model = model, 
+                                               which = 'ixfuntransform2',
+                                               dpar = dpar, 
+                                               resp= resp, 
+                                               transform = itransform,
+                                               auto = TRUE, 
+                                               verbose = verbose)
+      
+      ifunx_ <- check_set_fun[['setfun']]
+      if(check_set_fun[['was_null']]) {
+        model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
+      }
+      
       ########################################################
       
       # Over ride 'ifunx_()' i.e, return xvar on scale used in model fit
       # This is restricted to  when using 'pdrawsp' etc. 
       # use cae ->  get_dv
       # 6.03.205
-      itransform_set <- get_itransform_call(itransform)
+      
+      # itransform_set <- get_itransform_call(itransform)
+      itransform_set <- get_itransform_call(itransform = itransform,
+                                            model = model, 
+                                            newdata = newdata,
+                                            dpar = dpar, 
+                                            resp = resp,
+                                            auto = FALSE,
+                                            verbose = verbose)
+      
       if(itransform_set == "") {
         if(!isFALSE(pdrawsp)) {
           if(!is.character(pdrawsp)) pdrawsp <- "return"

@@ -458,15 +458,7 @@ growthparameters.bgmfit <- function(model,
   
   model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
-  # 02.08.2025
-  add_prefix_to_fun <- ""
-  if(!is.null(dpar)) {
-    if(dpar == "mu") {
-      add_prefix_to_fun <- ""
-    } else if(dpar == "sigma") {
-      add_prefix_to_fun <- "sigma"
-    }
-  }
+  
   
 
   if(is.null(usesavedfuns)) {
@@ -520,18 +512,78 @@ growthparameters.bgmfit <- function(model,
   . <- NULL;
   XXi <- NULL;
   
-  ########################################################
-  # prepare_data2
-  if (is.null(resp)) {
-    resp_rev_ <- resp
-  } else if (!is.null(resp)) {
-    resp_rev_ <- paste0("_", resp)
-  }
-  ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-  # 02.08.2025
-  ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
-  ifunx_ <- model$model_info[[ifunx_]]
   
+  msg_nrow_data_1 <- 
+    paste0(" Subsetting dataframe for unique length of predictor variable ", 
+           'xvar', 
+           "\n ", 
+           "resulted in a single row of dataframe.",
+           "\n ",
+           "If this is intentional, then ignore this message.",
+           "\n ",
+           "The data were subsetted for a unique combination of following:\n",
+           'groupby_fstr_xvars',
+           "\n "
+    )
+  
+  msg_xvar_all_same <- 
+    paste0("The number of unique values for predictor variable ", 
+           'xvar', 
+           "\n ", 
+           "is one i.e., all values are exact same.",
+           "\n ",
+           "If this is intentional, then ignore this message")
+  
+  ########################################################
+  # # 02.08.2025
+  # add_prefix_to_fun <- ""
+  # if(!is.null(dpar)) {
+  #   if(dpar == "mu") {
+  #     add_prefix_to_fun <- ""
+  #   } else if(dpar == "sigma") {
+  #     add_prefix_to_fun <- "sigma"
+  #   }
+  # }
+  # # prepare_data2
+  # if (is.null(resp)) {
+  #   resp_rev_ <- resp
+  # } else if (!is.null(resp)) {
+  #   resp_rev_ <- paste0("_", resp)
+  # }
+  # ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+  # # 02.08.2025
+  # ifunx_ <- ifunx_name <- paste0(add_prefix_to_fun, ifunx_)
+  # ifunx_ <- model$model_info[[ifunx_]]
+  # 
+  # # new 
+  # if(is.null(ifunx_)) {
+  #   if(!is.null(itransform)) {
+  #     if(itransform != "") {
+  #       model$model_info[[ifunx_name]] <- ifunx_ <- itransform
+  #     }
+  #   } else if(is.null(itransform)) {
+  #     #
+  #   }
+  # }
+  
+  
+  
+  check_set_fun <- check_set_fun_transform(model = model, 
+                                           which = 'ixfuntransform2',
+                                           dpar = dpar, 
+                                           resp= resp, 
+                                           transform = itransform,
+                                           auto = TRUE, 
+                                           verbose = verbose)
+  
+  ifunx_ <- check_set_fun[['setfun']]
+  if(check_set_fun[['was_null']]) {
+    model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
+  }
+  
+  
+  
+
   ########################################################
   # 6.03.2025
   dots <- list(...)
@@ -589,6 +641,50 @@ growthparameters.bgmfit <- function(model,
   arguments <- get_args_(as.list(match.call())[-1], xcall)
   arguments$model <- model
   arguments$usesavedfuns <- usesavedfuns
+  
+  # For 'plot_curves', 'check_set_xvar_sigma' has been called there itself
+  if(xcall != 'plot_curves') {
+    if(dpar == "sigma") {
+      sigma_model <- get_sigmamodel_info(model = model,
+                                         newdata = newdata,
+                                         dpar = dpar, 
+                                         resp = resp, 
+                                         what = 'model',
+                                         cov = NULL, 
+                                         all = FALSE, 
+                                         verbose = verbose)
+      
+      arguments$model$model_info[['which_sigma_model']] <- sigma_model
+      
+      if(sigma_model == "basic") {
+        xvar <- check_set_xvar_sigma(model = model, 
+                                     dpar = dpar, 
+                                     xvar = xvar, 
+                                     resp = resp, 
+                                     auto = TRUE,
+                                     verbose = verbose)
+        
+        newdata <- set_sigma_grid_newdata(model = model,
+                                          newdata = newdata,
+                                          resp = resp, 
+                                          dpar = NULL, 
+                                          idvar = NULL,
+                                          xvar = xvar,
+                                          auto = TRUE,
+                                          xrange = NULL,
+                                          length.out = NULL,
+                                          grid_type= NULL,
+                                          verbose = verbose)
+        
+        arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
+        arguments$newdata <- newdata
+      } # if(sigma_model == "basic") {
+      
+    } # if(dpar == "sigma") {
+  }
+  
+  
+
   
   if(xcall == 'plot_curves') {
     arguments$plot <- TRUE
@@ -909,7 +1005,7 @@ growthparameters.bgmfit <- function(model,
       } else if (is.null(groupby_str)) {
         out__ <- cbind(out__, newdata)
       }
-      
+    #  print(ifunx_)
       if (is.null(re_formula)) {
         if (!summary) {
           parameters <- out__ %>%
@@ -1078,6 +1174,10 @@ growthparameters.bgmfit <- function(model,
       }
     }
     
+   
+    
+    
+    
     newdata <- get.newdata(model, 
                            newdata = newdata, 
                            xvar = xvar,
@@ -1093,7 +1193,7 @@ growthparameters.bgmfit <- function(model,
                            dummy_to_factor = dummy_to_factor,
                            newdata_fixed = newdata_fixed,
                            verbose = verbose)
-    
+
     
     list_c <- attr(newdata, 'list_c')
     
@@ -1190,22 +1290,36 @@ growthparameters.bgmfit <- function(model,
           } else if (is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(xvar)
           }
-          
-          # newdata <- newdata %>%
-          #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-          #   dplyr::slice(1) %>% dplyr::ungroup()
-          
+     
           # Imp to keep only one unique id per group for deriv = 1 using diff y0
-          tempidname <- idvar[1] 
-          newdata <- newdata %>%
-            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-            dplyr::slice(1) %>% # droplevels() %>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
-            dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
-            dplyr::ungroup()
+          if(dpar != "sigma") {
+            tempidname <- idvar[1] 
+            newdata <- newdata %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+              dplyr::slice(1) %>% # droplevels() %>% 
+              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
+              dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
+              dplyr::ungroup()
+          } # if(dpar != "sigma") {
+          
+          if(nrow(newdata) == 1) {
+            if(verbose) {
+              old     <- c('xvar', 'groupby_fstr_xvars')
+              new     <- sapply(old, function(x) collapse_comma(ept(x)) )
+              message(multi_gsub_exact(msg_nrow_data_1, old, new) )
+              old <- new <- NULL
+            }
+          } else if(nrow(newdata) > 1) {
+            if(length(unique(newdata[[xvar]])) == 1)
+              if(verbose) {
+                old     <- c('xvar')
+                new     <- sapply(old, function(x) collapse_comma(ept(x)) )
+                message(multi_gsub_exact(msg_xvar_all_same, old, new) )
+                old <- new <- NULL
+              }
+          }
           
         }
-        
         
         
         arguments$newdata <- newdata
@@ -1216,6 +1330,7 @@ growthparameters.bgmfit <- function(model,
         arguments$fullframe <- NULL 
         arguments$itransform <- ""
         
+        
         if (estimation_method == 'fitted') {
           out_d_ <- CustomDoCall(fitted_draws, arguments)
         } else if (estimation_method == 'predict') {
@@ -1223,7 +1338,6 @@ growthparameters.bgmfit <- function(model,
         }
         
         if(is.null(out_d_)) return(invisible(NULL))
-        
         
         if (!summary) {
           out_d <- call_posterior_summary((out_d_))
@@ -1263,13 +1377,33 @@ growthparameters.bgmfit <- function(model,
           }
           
           # Imp to keep only one unique id per group for deriv = 1 using diff y0
-          tempidname <- idvar[1] 
-          newdata <- newdata %>%
-            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-            dplyr::slice(1) %>% # droplevels() %>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
-            dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
-            dplyr::ungroup()
+          if(dpar != "sigma") {
+            tempidname <- idvar[1] 
+            newdata <- newdata %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+              dplyr::slice(1) %>% # droplevels() %>% 
+              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
+              dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
+              dplyr::ungroup()
+          } # if(dpar != "sigma") {
+          
+          if(nrow(newdata) == 1) {
+            if(verbose) {
+              old     <- c('xvar', 'groupby_fstr_xvars')
+              new     <- sapply(old, function(x) collapse_comma(ept(x)) )
+              message(multi_gsub_exact(msg_nrow_data_1, old, new) )
+              old <- new <- NULL
+            }
+          } else if(nrow(newdata) > 1) {
+            if(length(unique(newdata[[xvar]])) == 1)
+              if(verbose) {
+                old     <- c('xvar')
+                new     <- sapply(old, function(x) collapse_comma(ept(x)) )
+                message(multi_gsub_exact(msg_xvar_all_same, old, new) )
+                old <- new <- NULL
+              }
+          }
+          
           
         }
         
@@ -1280,6 +1414,7 @@ growthparameters.bgmfit <- function(model,
         # 6.03.2025
         arguments$fullframe <- NULL 
         arguments$itransform <- ""
+        
         
         if (estimation_method == 'fitted') {
           out_v_ <- CustomDoCall(fitted_draws, arguments)
@@ -1405,6 +1540,8 @@ growthparameters.bgmfit <- function(model,
         # 6.03.2025
         arguments$fullframe <- NULL 
         arguments$itransform <- ""
+        
+        
         
         if (estimation_method == 'fitted') {
           out_d_ <- CustomDoCall(fitted_draws, arguments)
@@ -1585,6 +1722,7 @@ growthparameters.bgmfit <- function(model,
       }
     } # if (!arguments$plot) {
     
+    
 
     newdata <- get.newdata(model, 
                            newdata = newdata, 
@@ -1664,18 +1802,35 @@ growthparameters.bgmfit <- function(model,
           
         }
         
-        # newdata <- newdata %>%
-        #   dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-        #   dplyr::slice(1) %>% dplyr::ungroup()
-        
         # Imp to keep only one unique id per group for deriv = 1 using diff y0
-        tempidname <- idvar[1] 
-        newdata <- newdata %>%
-          dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
-          dplyr::slice(1) %>% # droplevels() %>% 
-          dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
-          dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
-          dplyr::ungroup()
+        if(dpar != "sigma") {
+          tempidname <- idvar[1] 
+          newdata <- newdata %>%
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+            dplyr::slice(1) %>% # droplevels() %>% 
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
+            dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
+            dplyr::ungroup()
+        } # if(dpar != "sigma") {
+        
+        if(nrow(newdata) == 1) {
+          if(verbose) {
+            old     <- c('xvar', 'groupby_fstr_xvars')
+            new     <- sapply(old, function(x) collapse_comma(ept(x)) )
+            message(multi_gsub_exact(msg_nrow_data_1, old, new) )
+            old <- new <- NULL
+          }
+        } else if(nrow(newdata) > 1) {
+          if(length(unique(newdata[[xvar]])) == 1)
+            if(verbose) {
+              old     <- c('xvar')
+              new     <- sapply(old, function(x) collapse_comma(ept(x)) )
+              message(multi_gsub_exact(msg_xvar_all_same, old, new) )
+              old <- new <- NULL
+            }
+        }
+        
+        
         
       } # else if (!grepl("^[[:upper:]]+$", velc..)) {
       
@@ -1689,6 +1844,14 @@ growthparameters.bgmfit <- function(model,
       # 6.03.2025
       arguments$fullframe <- NULL 
       arguments$itransform <- ""
+      
+      
+      
+      # argumentsx <<- arguments
+      # nrow(eval(arguments$newdata)) %>% print()
+      # print("mmmm")
+      # CustomDoCall(fitted_draws, argumentsx) %>% print()
+      # stop()
      
       if (estimation_method == 'fitted') {
         out_v_ <- CustomDoCall(fitted_draws, arguments)
@@ -1696,6 +1859,7 @@ growthparameters.bgmfit <- function(model,
         out_v_ <- CustomDoCall(predict_draws, arguments)
       }
       
+
      if(is.null(out_v_)) return(invisible(NULL))
       
       # # 6.03.2025
@@ -1716,6 +1880,7 @@ growthparameters.bgmfit <- function(model,
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
           droplevels()
       }
+      
       
       out_v__apv_ <- t(out_v__apv_)
       parameters <-
@@ -1800,6 +1965,7 @@ growthparameters.bgmfit <- function(model,
           droplevels()
       }
       
+      
       newdata <- newdata %>%
         dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
                         .keep_all = TRUE) %>% 
@@ -1815,7 +1981,16 @@ growthparameters.bgmfit <- function(model,
    
     # 6.03.2025
     # itransform is not doing anything, it will be ignored in prepare_transform
-    itransform_set <- get_itransform_call(itransform)
+    # itransform_set <- get_itransform_call(itransform)
+    
+    itransform_set <- get_itransform_call(itransform = itransform,
+                                          model = model, 
+                                          newdata = newdata,
+                                          dpar = dpar, 
+                                          resp = resp,
+                                          auto = FALSE,
+                                          verbose = verbose)
+    
     if(any(itransform_set != "")) {
       parameters <- prepare_transformations(data = parameters, model = model,
                                         itransform = itransform_set)

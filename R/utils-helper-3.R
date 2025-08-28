@@ -35,8 +35,12 @@
 #'
 #' @param sigmaxvar An optional (default \code{NULL}) predictor (typically age)
 #'   variable for \code{sigma}
-#'
+#'   
 #' @param returnys A logical (default \code{FALSE})
+#' 
+#' @param model A placeholder Ignored (default \code{NULL})
+#'
+#' @param resp A placeholder Ignored (default \code{NULL})
 #'
 #' @param verbose A logical (default \code{FALSE})
 #'
@@ -68,6 +72,7 @@ prepare_data2 <- function(data = NULL,
                           displayit = "",
                           setcolb = "",
                           model = NULL,
+                          resp = NULL,
                           envir = NULL) {
 
   . <- NULL;
@@ -147,20 +152,48 @@ prepare_data2 <- function(data = NULL,
       if(verbose) message("'nys' is extracted from the 'model'")
     } 
     # if(is.null(sigma_formula_manual)) {
-      setsigmaxvars <- model$model_info$setsigmaxvars
-      if(verbose) message("'setsigmaxvars' is extracted from the 'model'")
+      # setsigmaxvars <- model$model_info$setsigmaxvars
+      # if(verbose) message("'setsigmaxvars' is extracted from the 'model'")
     # }
   } # if... else if(!is.null(model)) {
   
   # Note that from within bsitar() sigmaxvar always created and later dropped
-  if(is.null(model)) {
-    if(is.null(nys)) {
-      setsigmaxvars <- rep(TRUE, length(xvar))
-    } else {
-      setsigmaxvars <- rep(TRUE, nys)
-    }
-  }
+  # if(is.null(model)) {
+  #   if(is.null(nys)) {
+  #     setsigmaxvars <- rep(TRUE, length(xvar))
+  #   } else {
+  #     setsigmaxvars <- rep(TRUE, nys)
+  #   }
+  # }
 
+  
+  
+  # Note now no default that from within bsitar() sigmaxvar always created and later dropped
+  # if(is.null(model)) {
+  #   setsigmaxvars <- rep(NA, length(xvar))
+  #   for (i in 1:length(sigmaxvar)) {
+  #     if(sigmaxvar[i] == "FALSE") {
+  #       setsigmaxvars[i] <- FALSE
+  #     } else {
+  #       setsigmaxvars[i] <- TRUE
+  #     }
+  #   }
+  # }
+  
+  
+  # sigmaxvar <- gsub_space(sigmaxvar)
+  # sigmaxvar <- deparse(sigmaxvar)
+  # sigmaxvar <- gsub("\"", "", sigmaxvar, fixed = T)
+  
+  
+  # print(sigmaxvar)
+  # print(setsigmaxvars)
+  
+#  stop()
+  
+  # setsigmaxvars <- sigmaxvar
+  
+  
   data <- data %>% droplevels()
   
   
@@ -221,7 +254,7 @@ prepare_data2 <- function(data = NULL,
   # 24.02.2025
   xs      <- xvar
   ids     <- idvar
-  sigmaxs <- sigmaxvar
+  # sigmaxs <- sigmaxvar
   
   if (nys > 1) {
     unique_xs  <- unique(xs)
@@ -243,69 +276,56 @@ prepare_data2 <- function(data = NULL,
   
   ##################################################################
   ##################################################################
-  # Here not working of outcome specific but for any, check later
   
-  for (j in 1:length(setsigmaxvars)) {
-    if(any(setsigmaxvars[j])) {
-      
-      if(is_emptyx(sigmaxs)) {
-        sigmaxvar <- sigmaxs
-        sigmaxs <- c()
-        for (i in xs) {
-          tempnamesigma <- paste0('sigma', i)
-          data[[tempnamesigma]] <- data[[i]]
-          sigmaxs <- c(sigmaxs, tempnamesigma)
-          rm('tempnamesigma')
-        }
-      } # if(is_emptyx(sigmaxs)) {
-      
-      # if somehow sigmaxvar names are available but actual variables not created
-      if(!is_emptyx(sigmaxs)) {
-        counterxs <- 0
-        for (i in sigmaxs) {
-          counterxs <- counterxs + 1
-          if(is.null(data[[i]])) {
-            data[[i]] <- data[[xs[counterxs]]]
-          }
-        }
+  if(!is.null(model)) {
+    if (is.null(resp)) {
+      resp_    <- resp
+      revresp_ <- ""
+    } else if (!is.null(resp)) {
+      resp_    <- paste0(resp, "_")
+      revresp_ <- paste0("_", resp)
+    }
+    
+    sigma_model_      <- paste0('sigmamodel', revresp_)
+    sigma_model_name_ <- paste0('sigmabasicfunname', revresp_)
+    sigma_model_attr_ <- paste0('sigmabasicfunattr', revresp_)
+    
+    sigma_model       <- model$model_info[[sigma_model_]]
+    sigma_model_name  <- model$model_info[[sigma_model_name_]]
+    sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
+  }
+  
+  
+  
+  ##################################################################
+  ##################################################################
+  sigmaxs_c <- c()
+  for (j in 1:nys) {
+    if(is.na(sigmaxvar[j]) |  sigmaxvar[j] == "NA") {
+      addsigmaxvar <- NA
+    } else if(isTRUE(sigmaxvar[j]) |  sigmaxvar[j] == "TRUE") {
+      addsigmaxvar <- paste0('sigma', xs[j])
+      data[[addsigmaxvar]] <- data[[xs[j]]]
+    } else {
+      addsigmaxvar <- tempbane <- sigmaxvar[j]
+      if(!addsigmaxvar %in% names(data)) {
+        stop("The variable ", collapse_comma(addsigmaxvar), " used in the ",
+             "\n ",
+             " 'sigmax' argument is not available in the dataframe")
       }
-      
-    } # if(setsigmaxvars[j]) {
-  } # for (j in 1:length(setsigmaxvars)) {
+      addsigmaxvar <- paste0(addsigmaxvar, "_", ys[j])
+      data[[addsigmaxvar]] <- data[[tempbane]]
+    }
+    sigmaxs_c <- c(sigmaxs_c, addsigmaxvar)
+  } # for (j in 1:nys) {
   
-  
-  ##################################################################
-  ##################################################################
-  
-  # if(is_emptyx(sigmaxs)) {
-  #   sigmaxvar <- sigmaxs
-  #   sigmaxs <- c()
-  #   for (i in xs) {
-  #     tempnamesigma <- paste0('sigma', i)
-  #     data[[tempnamesigma]] <- data[[i]]
-  #     sigmaxs <- c(sigmaxs, tempnamesigma)
-  #     rm('tempnamesigma')
-  #   }
-  # } # if(is_emptyx(sigmaxs)) {
-  # 
-  # # if somehow sigmaxvar names are available but actual variables not created
-  # if(!is_emptyx(sigmaxs)) {
-  #   counterxs <- 0
-  #   for (i in sigmaxs) {
-  #     counterxs <- counterxs + 1
-  #     if(is.null(data[[i]])) {
-  #       data[[i]] <- data[[xs[counterxs]]]
-  #     }
-  #   }
-  # }
- 
-  
+  sigmaxs <- sigmaxs_c
   
   
   xvar      <- xs
   yvar      <- ys
   idvar     <- ids
-  sigmaxvar <- sigmaxs
+  # sigmaxvar <- sigmaxs
   
   org.data <- data
   
@@ -494,8 +514,11 @@ prepare_data2 <- function(data = NULL,
   attr(data, "xs") <- xvar
   attr(data, "ys") <- yvar
   attr(data, "ids") <- idvar
-  attr(data, "sigmaxs") <- sigmaxvar
+  attr(data, "sigmaxs") <- sigmaxs # sigmaxvar
   
+  # data$age <- data$age + 13
+#  head(data) %>% print()
+ # stop()
 
   return(data)
 }

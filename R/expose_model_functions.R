@@ -32,15 +32,15 @@
 #' @param sigmafun A logical (default \code{FALSE}) to indicate whether to return
 #'   the sigma functions. This parameter is for internal use only. Ignored
 #'   
-#' @param expose_backend A character string (default \code{NULL}) to set up the
+#' @param backend A character string (default \code{NULL}) to set up the
 #'   the \code{backend} method (\code{'rstan'} or \code{'cmdstanr'}) for
 #'   compiling and exposing \code{stan} functions. If \code{NULL}, then the
-#'   \code{expose_backend} is same as the \code{backend} method used for model
-#'   fitting. Note that when \code{expose_backend = FALSE}, then default
+#'   \code{backend} is same as the \code{backend} method used for model
+#'   fitting. Note that when \code{backend = FALSE}, then default
 #'   \code{backend}  will be set as \code{'rstan'}. This is particularly useful
-#'   because \code{expose_backend = 'cmdstanr'} will fail on \code{WSL} system.
+#'   because \code{backend = 'cmdstanr'} will fail on \code{WSL} system.
 #'   
-#' @param cmdstan_path A character string to set up the path of installed
+#' @param path A character string to set up the path of installed
 #'   \code{CmdStan}. If \code{NULL} (default)
 #'
 #' @inherit growthparameters.bgmfit params
@@ -92,8 +92,8 @@ expose_model_functions.bgmfit <- function(model,
                                  vectorize = FALSE,
                                  verbose = FALSE,
                                  sigmafun = FALSE,
-                                 expose_backend = NULL,
-                                 cmdstan_path = NULL,
+                                 backend = NULL,
+                                 path = NULL,
                                  envir = NULL,
                                  ...) {
   
@@ -124,15 +124,19 @@ expose_model_functions.bgmfit <- function(model,
   sigma_model_all       <- model$model_info[[sigma_model_all_]]
   
   
+  
   expose_sigma_ls_model_fun <- FALSE
   expose_sigma_var_model_fun <- FALSE
   expose_sigma_basic_model_fun <- FALSE
   if(!is.null(sigma_model_all)) {
-    if(any(grepl("ls", sigma_model_all))) {
+    if(all(grepl("ls", sigma_model_all))) {
       expose_sigma_ls_model_fun <- TRUE
-    } else if(any(grepl("basic", sigma_model_all))) {
+    } else if(all(grepl("basic", sigma_model_all))) {
       expose_sigma_basic_model_fun <- TRUE
+    } else if(any(grepl("ls", sigma_model_all)) |
+              any(grepl("basic", sigma_model_all))) {
     } else {
+      expose_sigma_ls_model_fun <- TRUE
       expose_sigma_var_model_fun <- TRUE
     }
   } else if(is.null(sigma_model_all)) {
@@ -182,23 +186,23 @@ expose_model_functions.bgmfit <- function(model,
   
   
   
-  if(is.null(expose_backend)) {
-    expose_backend <- model$backend
-  } else if(!is.null(expose_backend)) {
-    if(isFALSE(expose_backend)) {
-      expose_backend <- 'rstan'
+  if(is.null(backend)) {
+    backend <- model$backend
+  } else if(!is.null(backend)) {
+    if(isFALSE(backend)) {
+      backend <- 'rstan'
     } else {
-      expose_backend <- expose_backend
+      backend <- backend
     }
   }
   
   
   if(!expose) {
-    expose_backend <- "rstan"
+    backend <- "rstan"
   }
   
   
-  if(expose_backend == "cmdstanr") {
+  if(backend == "cmdstanr") {
     if(isTRUE(check_if_cmdstanr_available())) {
       write_stan_file <- 
         utils::getFromNamespace("write_stan_file", "cmdstanr")
@@ -206,33 +210,33 @@ expose_model_functions.bgmfit <- function(model,
         utils::getFromNamespace("cmdstan_model", "cmdstanr")
       expose_model   <- 
         utils::getFromNamespace("expose_functions", "cmdstanr")
-      get_cmdstan_path   <- 
-        utils::getFromNamespace("cmdstan_path", "cmdstanr")
+      get_path   <- 
+        utils::getFromNamespace("path", "cmdstanr")
       get_cmdstan_default_path   <- 
         utils::getFromNamespace("cmdstan_default_path", "cmdstanr")
       get_cmdstan_default_install_path   <- 
         utils::getFromNamespace("cmdstan_default_install_path", "cmdstanr")
-      set_cmdstan_path   <- 
-        utils::getFromNamespace("set_cmdstan_path", "cmdstanr")
+      set_path   <- 
+        utils::getFromNamespace("set_path", "cmdstanr")
       
-      restore_cmdstan_path <- get_cmdstan_path()
-      if(is.null(cmdstan_path)) {
-        if(grepl("wsl", get_cmdstan_path(), fixed = TRUE)) {
+      restore_path <- get_path()
+      if(is.null(path)) {
+        if(grepl("wsl", get_path(), fixed = TRUE)) {
           if(!grepl("wsl", get_cmdstan_default_path(), fixed = TRUE)) {
-            cmdstan_path <- get_cmdstan_default_path()
-            print(cmdstan_path)
+            path <- get_cmdstan_default_path()
+            print(path)
           } else {
             stop("cmdstanr 'expose_functions' does not work for 'WSL'")
           }
         }
       } else {
-        cmdstan_path <- cmdstan_path
+        path <- path
       }
       suppressWarnings(suppressMessages({
-        set_cmdstan_path(cmdstan_path)
+        set_path(path)
       }))
     } # if(isTRUE(check_if_cmdstanr_available())) {
-  } # if(expose_backend == "cmdstanr") {
+  } # if(backend == "cmdstanr") {
   
   
   
@@ -240,7 +244,7 @@ expose_model_functions.bgmfit <- function(model,
 
   
 
-  if(expose &  expose_backend == "cmdstanr") {
+  if(expose &  backend == "cmdstanr") {
     if(is.null(model$functions$fun_names)) {
       suppressWarnings(suppressMessages({
         c_model <- cmdstan_model(write_stan_file(exposecode),
@@ -257,14 +261,14 @@ expose_model_functions.bgmfit <- function(model,
                                  compile_standalone = TRUE)
         # c_model <- attr(model$fit, 'CmdStanModel')
         c_model$expose_model
-        set_cmdstan_path(restore_cmdstan_path)
+        set_path(restore_path)
       }))
     } # if(is.null(model$functions$fun_names)) {
     
     if(!is.null(model$functions$fun_names)) {
       c_model <- attr(model$fit, 'CmdStanModel')
     }
-  } # if(expose &  expose_backend == "cmdstanr") {
+  } # if(expose &  backend == "cmdstanr") {
   
 
   
@@ -273,7 +277,7 @@ expose_model_functions.bgmfit <- function(model,
   
   
   
-  if(expose & expose_backend == "rstan") {
+  if(expose & backend == "rstan") {
     stanc_arguments <- list()
     stanc_arguments[['model_code']] <- exposecode
     stan_model_arguments <- stanc_arguments
@@ -341,9 +345,13 @@ expose_model_functions.bgmfit <- function(model,
     
     if(expose_sigma_basic_model_fun) {
       for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
-        assign(gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi]),
-               ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
-      }
+        # no use of attaching explicit namespace -> not possible also
+        if(!grepl("::", model$model_info$sigmabasicfunlist_r[funi]) &
+           !grepl(":::", model$model_info$sigmabasicfunlist_r[funi])) {
+          assign(gsub("<-.*$", "", model$model_info$sigmabasicfunlist_r[funi]),
+                 ept(model$model_info$sigmabasicfunlist_r[funi]), envir = envir)
+        } # if(!grepl("::",
+      } # for (funi in 1:l
     } # expose_sigma_basic_model_fun
     
   } # if(expose_r_from_stan) {
@@ -358,7 +366,7 @@ expose_model_functions.bgmfit <- function(model,
   
   
   
-  if(expose & expose_backend == "rstan") {
+  if(expose & backend == "rstan") {
   # if(expose) {
     Spl_funs <- list()
     spfun_collectic <- -1
@@ -385,7 +393,7 @@ expose_model_functions.bgmfit <- function(model,
   
 
   
-  if(expose & expose_backend == "cmdstanr") {
+  if(expose & backend == "cmdstanr") {
     spfun_collect      <- c_model$functions
     Spl_funs <- list()
     for (spfun_collecti in spfun_collect$fun_names) {

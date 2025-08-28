@@ -24,7 +24,10 @@ GS_bsp <- function(x,
                    calcderiv) {
   Nobs       <- length(x)
   fullknots  <- c(rep(bknots[1], degree+1), knots, rep(bknots[2], degree+1))
+  # allknots  <- c(rep(bknots[1], 4), knots,rep(bknots[2], 4))
+  # fullknots <- allknots
   Nintervals <- length(fullknots) - 1
+  
   M1         <- matrix(0, Nobs, Nintervals)
   for (i in 1:Nintervals) {
     M1[, i] <- as.numeric(fullknots[i] <= x  & x < fullknots[i + 1])
@@ -46,7 +49,8 @@ GS_bsp <- function(x,
       if (fullknots[i + p + 1] == fullknots[i + 1]) {
         C2 <- 0
       } else {
-        C2 <- (fullknots[i + p + 1] - x) / (fullknots[i + p + 1] - fullknots[i + 1])
+        C2 <- (fullknots[i + p + 1] - x) / (fullknots[i + p + 1] - 
+                                              fullknots[i + 1])
       }
       M2[, i] <- C1 * M1[, i] + C2 * M1[, i + 1]
     }
@@ -57,7 +61,7 @@ GS_bsp <- function(x,
   if(!calcderiv) {
     out <- splinevars
   }
-  
+ 
   if(calcderiv) {
     deriv <- matrix(NA, Nobs, Nintervals - degree)
     for (i in 1:(Nintervals - degree)) {
@@ -117,32 +121,48 @@ GS_nsp_nsk <- function(x,
   bsderiv   <- matrix(0, length(x), Nk)
   # Compute B-spline values and derivatives
   if (calcderiv) {
-    bs      <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+    bs      <- GS_bsp(x = x, 
+                      knots = knots, 
+                      bknots = bknots, 
+                      degree = degree, 
                       calcderiv = 0)
-    bsderiv <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+    bsderiv <- GS_bsp(x = x, 
+                      knots = knots, 
+                      bknots = bknots, 
+                      degree = degree, 
                       calcderiv = 1)
   } else {
-    bs      <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+    bs      <- GS_bsp(x = x, 
+                      knots = knots, 
+                      bknots = bknots, 
+                      degree = degree, 
                       calcderiv = 0)
   }
   
   # Handle boundary cases (for values below and above the boundary knots)
   x_below_boundary <- sum(x < bknots[1])
   x_above_boundary <- sum(x > bknots[2])
-  
   if (x_below_boundary || x_above_boundary) {
-    bs_bknots <- matrix(0, 2, Nk)
+    bs_bknots      <- matrix(0, 2, Nk)
     bsderiv_bknots <- matrix(0, 2, Nk)
-    bs_bknots      <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+    bs_bknots      <- GS_bsp(x = bknots, 
+                             knots = knots, 
+                             bknots = bknots, 
+                             degree = degree, 
                              calcderiv = 0)
-    bsderiv_bknots <- GS_bsp(x = x, knots = knots, bknots = bknots, degree = degree, 
+    bsderiv_bknots <- GS_bsp(x = bknots, 
+                             knots = knots, 
+                             bknots = bknots, 
+                             degree = degree, 
                              calcderiv = 1)
    
     if (x_below_boundary) {
-      xselect <- which(x < bknots[1])
-      Nxselect <- length(xselect)
-      below_azx1 <- matrix(rep(bs_bknots[1,], Nxselect), byrow = T, nrow = Nxselect) 
-      below_azx2 <- matrix(rep(bsderiv_bknots[1,], Nxselect), byrow = T, nrow = Nxselect) 
+      xselect    <- which(x < bknots[1])
+      Nxselect   <- length(xselect)
+      below_azx1 <- matrix(rep(bs_bknots[1,], Nxselect), 
+                           byrow = T, nrow = Nxselect) 
+      below_azx2 <- matrix(rep(bsderiv_bknots[1,], Nxselect), 
+                           byrow = T, nrow = Nxselect) 
       below_azx3 <- (x[xselect] - bknots[1]) 
       bs[xselect, ] <- below_azx1 + below_azx2 * below_azx3
       if (calcderiv) {
@@ -150,11 +170,13 @@ GS_nsp_nsk <- function(x,
       }
     }
     if (x_above_boundary) {
-      xselect <- which(x >= bknots[2])
-      Nxselect <- length(xselect)
-      above_azx1 <- matrix(rep(bs_bknots[2,], Nxselect), byrow = T, nrow = Nxselect)
-      above_azx2 <- matrix(rep(bsderiv_bknots[2,], Nxselect), byrow = T, nrow = Nxselect) 
-      above_azx3 <- (x[xselect] - bknots[2])  
+      xselect     <- which(x >= bknots[2])
+      Nxselect    <- length(xselect)
+      above_azx1  <- matrix(rep(bs_bknots[2,], Nxselect), 
+                           byrow = T, nrow = Nxselect)
+      above_azx2  <- matrix(rep(bsderiv_bknots[2,], Nxselect), 
+                           byrow = T, nrow = Nxselect) 
+      above_azx3  <- (x[xselect] - bknots[2])  
       assignabove <- above_azx1 + above_azx2 * above_azx3
       bs[xselect, ] <- above_azx1 + above_azx2 * above_azx3
        if (calcderiv) {
@@ -211,8 +233,10 @@ GS_getH <- function(knots,
   C11 <- 6 / ((knots[5] - knots[2]) * (knots[5] - knots[3]))
   C31 <- 6 / ((knots[6] - knots[3]) * (knots[5] - knots[3]))
   C21 <- -C11 - C31
-  Cp22 <- 6 / ((knots[Nintk + 6] - knots[Nintk + 3]) * (knots[Nintk + 6] - knots[Nintk + 4]))
-  Cp2  <- 6 / ((knots[Nintk + 7] - knots[Nintk + 4]) * (knots[Nintk + 6] - knots[Nintk + 4]))
+  Cp22 <- 6 / ((knots[Nintk + 6] - knots[Nintk + 3]) * (knots[Nintk + 6] -
+                                                          knots[Nintk + 4]))
+  Cp2  <- 6 / ((knots[Nintk + 7] - knots[Nintk + 4]) * (knots[Nintk + 6] - 
+                                                          knots[Nintk + 4]))
   Cp12 <- -Cp22 - Cp2
   
   # Step 2: Build the matrix H depending on Nintk
@@ -324,12 +348,11 @@ GS_nsp_call <- function(x,
                     normalize = normalize,
                     preH = preH)
   
-  # if no internal knot, the out is a vector and not matrix, convert it to matrix
+  # if no internal knot, the out is a vector, not matrix, convert it to matrix
   # but if no internal knot but intercept TRUE, then it is already a matrix
   if(length(knots) == 0) {
    if(!intercept) out <- matrix(out, length(out), 1)
   }
-  
   
   # Centering
   if (centerval != 0) {
@@ -997,7 +1020,7 @@ GS_bsp_call <- function(x,
     if(is.null(df)) {
       # for bsp msp and isp, knots = NULL  is a valid approach
       if(is.null(knots) | is.null(bknots)) {
-       # stop("Both knots and bknots must be specified when fullknots and df NULL")
+       # stop("Both knots and bknots must be specified when fullknots/df NULL")
       }
       knots  <- knots
       bknots <- bknots
@@ -1081,7 +1104,7 @@ GS_msp_call <- function(x,
     if(is.null(df)) {
       # for bsp msp and isp, knots = NULL  is a valid approach
       if(is.null(knots) | is.null(bknots)) {
-        # stop("Both knots and bknots must be specified when fullknots and df NULL")
+        # stop("Both knots and bknots must be specified when fullknots/df NULL")
       }
       knots  <- knots
       bknots <- bknots
@@ -1166,7 +1189,7 @@ GS_isp_call <- function(x,
     if(is.null(df)) {
       # for bsp msp and isp, knots = NULL  is a valid approach
       if(is.null(knots) | is.null(bknots)) {
-        # stop("Both knots and bknots must be specified when fullknots and df NULL")
+        # stop("Both knots and bknots must be specified when fullknots/df NULL")
       }
       knots  <- knots
       bknots <- bknots

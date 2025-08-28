@@ -487,6 +487,18 @@ outliers <-
 #' are \code{'b'}, \code{'sd'} and \code{'cor'}. Default \code{NULL} indicates 
 #' that class name in infered automatically. 
 #' 
+#' @param sanitize_CustomDoCall_args A logical to indicate whether to sanitize
+#' the \code{sanitize_CustomDoCall_args}
+#' 
+#' @param check_formalArgs Argument passed to \code{sanitize_CustomDoCall_args}
+#' 
+#' @param check_formalArgs_exceptions Argument passed to
+#'  \code{sanitize_CustomDoCall_args}
+#' 
+#' @param check_trace_back Argument passed to \code{sanitize_CustomDoCall_args}
+#' 
+#' @param envir A environment passed on to the \code{sanitize_CustomDoCall_args}
+#' 
 #' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
 #'  \code{warnings} and \code{messages} during the function evaluation.
 #'
@@ -500,15 +512,35 @@ outliers <-
 evaluate_call_args <- function(cargs = NULL,
                             fargs = NULL,
                             dargs = NULL,
+                            sanitize_CustomDoCall_args = FALSE,
+                            check_formalArgs  = NULL,
+                            check_formalArgs_exceptions  = NULL,
+                            check_trace_back  = NULL,
+                            envir = NULL,
                             verbose = FALSE) {
+  
   for (fargsi in names(dargs)) {
     if(is.null(cargs[[fargsi]])) cargs[[fargsi]] <- fargs[[fargsi]]
   }
   for (fargsi in names(fargs)) {
     if(is.null(cargs[[fargsi]])) cargs[[fargsi]] <- fargs[[fargsi]]
   }
+  
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  
+  if(sanitize_CustomDoCall_args) {
+    cargs <- sanitize_CustomDoCall_args(what = "CustomDoCall",
+                                        arguments = cargs,
+                                        check_formalArgs = check_formalArgs,
+                                        check_formalArgs_exceptions = 
+                                          check_formalArgs_exceptions,
+                                        check_trace_back = check_trace_back,
+                                        envir = envir)
+  }
  
-  cargs
+  return(cargs)
 }
 
 
@@ -639,257 +671,6 @@ post_processing_args_sanitize <- function(model,
   return(allargs)
 }
 
-
-
-#' An internal function to perform checks when calling post-processing functions
-#'
-#' @description The \code{post_processing_checks} perform essential checks (such
-#'   as the validity of model class, response etc.) during post-processing of
-#'   posterior draws.
-#'
-#' @param model An object of class \code{bgmfit}.
-#'
-#' @param xcall The \code{match.call()} from the post-processing function.
-#'
-#' @param resp Response variable (default \code{NULL}) specified as a character
-#'   string. This is needed when processing \code{univariate_by} and
-#'   \code{multivariate} models (see \code{bgmfit} function for details).
-#'
-#' @param deriv An integer value to specify whether to estimate distance curve
-#'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
-#'   the model estimated curve(s)). A value \code{0} (default) is for distance
-#'   curve and  \code{1} for the velocity curve.
-#'   
-#' @param all A logical (default \code{NULL}) to specify whether to return all
-#'   the exposed functions.
-#'
-#' @param envir Indicator to set the environment of function evaluation. The
-#'   default is \code{parent.frame}.
-#'   
-#' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
-#'  \code{warnings} and \code{messages} during the function evaluation.
-#'
-#' @return A string with the error captured or else a list with necessary
-#'   information needed when executing the post-processing function
-#'   
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
-#'
-#' @keywords internal
-#' @noRd
-#'
-post_processing_checks <- function(model, 
-                                   xcall, 
-                                   resp = NULL, 
-                                   deriv = NULL,
-                                   all = FALSE,
-                                   envir = NULL, 
-                                   verbose = FALSE, 
-                                   check_d0 = FALSE,
-                                   check_d1 = FALSE,
-                                   check_d2 = FALSE) {
-  
-  if(is.null(envir)) envir <- parent.frame()
-  if(is.null(deriv)) deriv <- 0
-  
-  if(!'bgmfit' %in% class(model)) {
-    stop("The class of model object should be 'bgmfit' ")
-  }
-  
-  excall_ <- c("plot_ppc", "loo_validation")
-
-  xcall_check_it <- paste(deparse(substitute(xcall)), collapse = "")
-  xcall_check_it <- gsub_space(xcall_check_it)
-  check_it       <- sub(" *\\(.*", "", xcall_check_it)
- 
-  check_it_sss <- strsplit(check_it, "\\.")[[1]][1]
-  
-  # Now using checkresp_info which is also used in getmodel_info
-  checkresp_info(model, resp)
- 
-  # if (model$model_info$nys == 1 & !is.null(resp)) {
-  #   stop(
-  #     "You have fit a univariate model",
-  #     " but set resp option as: ",
-  #     resp,
-  #     ".",
-  #     "\n ",
-  #     " For univariate model, the resp option should be NULL",
-  #     "\n ",
-  #     " (i.e., resp = NULL)"
-  #   )
-  # }
-  # if (model$model_info$nys > 1 & is.null(resp)) {
-  #   if (!is.na(model$model_info$univariate_by$by)) {
-  #     stop(
-  #       "You have fit a univariate_by model for ",
-  #       model$model_info$univariate_by$by,
-  #       "\n ",
-  #       " but did not correctly specified the 'resp' option",
-  #       " (which is NULL at present).",
-  #       "\n ",
-  #       " The response options are: ",
-  #       paste(model$model_info$ys, collapse = ", ")
-  #     )
-  #   }
-  #   if (model$model_info$multivariate$mvar) {
-  #     stop(
-  #       "You have fit a multivariate model ",
-  #       "\n ",
-  #       " but dit not set the the resp options correctly",
-  #       " (which is NULL at present).",
-  #       "\n ",
-  #       " The response options are: ",
-  #       paste(model$model_info$ys, collapse = ", ")
-  #     )
-  #   }
-  # }
-  
-  if (is.null(resp)) {
-    resp_    <- resp
-    revresp_ <- ""
-  } else if (!is.null(resp)) {
-    resp_    <- paste0(resp, "_")
-    revresp_ <- paste0("_", resp)
-  }
-  
-  # assign expose default funs 
-  if(model$model_info[['expose_method']] == 'R') {
-    assign(paste0(resp_, 
-                  model$model_info[['namesexefuns']], 
-                  '0'), 
-           model$model_info$exefuns[[paste0(resp_, 
-                                            model$model_info[['namesexefuns']], 
-                                            '0')]], envir = envir)
-
-    if(model$model_info[['select_model']] == 'sitar' |
-       model$model_info[['select_model']] == 'rcs') {
-      assign(paste0(resp_, 'getKnots'), 
-             model$model_info$exefuns[[paste0(resp_, 'getKnots')]], 
-             envir = envir)
-    }
-  }
- 
-  if(!all) {
-    out <-
-      list(
-        paste0(resp_, model$model_info[['namesexefuns']], ''),
-        paste0(resp_, model$model_info[['namesexefuns']], deriv)
-      ) 
-  }
-  
-  if(all) {
-    out <- model$model_info[['exefuns']]
-  } 
-  
-  # 6.03.2025
-  # check_d1
-  if(check_d1) {
-    available_d0 <- available_d1 <- available_d2 <- FALSE
-    for (i in names(model$model_info$exefuns)) {
-      check_funds <- ifelse(grepl("\\d$", i), sub(".*?(\\d+)$", "\\1", i), "")
-      if(grepl("0", check_funds)) {
-        available_d0 <- TRUE
-      }
-      if(grepl("1", check_funds)) {
-        available_d1 <- TRUE
-      }
-      if(grepl("2", check_funds)) {
-        available_d2 <- TRUE
-      }
-    }
-    
-    if(verbose) { 
-      if(!available_d0) {
-        stop("No 'd0' found")
-      }
-      if(!available_d1) {
-        message("No 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
-      }
-      if(!available_d2) {
-        # message("No 'd2' found, setting 'model_deriv = FALSE', 'deriv = 0'")
-      }
-    }
-    
-    # sigma_model <- model$model_info[['sigma_model']]
-    
-    # When sigma_model == 'ls', then only sigma function is defined in stan
-    # if(!is.null(sigma_model)) {
-    #   if(sigma_model == "mu") {
-    #     available_d1 <- FALSE
-    #     available_d2 <- FALSE
-    #   }
-    # }
-    
-    sigma_model_      <- paste0('sigma_model', revresp_)
-    sigma_model_name_ <- paste0('sigmabasicfunname', revresp_)
-    sigma_model_attr_ <- paste0('sigmabasicfunattr', revresp_)
-    
-    sigma_model       <- model$model_info[[sigma_model_]]
-    sigma_model_name  <- model$model_info[[sigma_model_name_]]
-    sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
-    
-    check_namespace_for_sigma_d1 <- c('splines2', 'bsitar')
-    
-    check_namespace_for_sigma_d1_test <- 
-      setdiff(sigma_model_attr, check_namespace_for_sigma_d1)
-    
-    if(!is.null(sigma_model)) {
-      if(sigma_model == "ls") {
-        available_d1 <- available_d1
-        available_d2 <- available_d2
-      } else if(sigma_model == "basic") {
-        if(length(check_namespace_for_sigma_d1_test) == 0) {
-          available_d1 <- available_d1
-          available_d2 <- available_d2
-          if(deriv > 0) {
-            for (i in sigma_model_name) {
-              model$model_info$exefuns[[i]] <- 
-                formals(model$model_info$exefuns[[i]])[['derivs']] <- deriv
-            }
-          }
-        } else {
-          available_d1 <- FALSE
-          available_d2 <- FALSE
-        }
-      } else {
-        available_d1 <- available_d1
-        available_d2 <- available_d2
-      }
-    } else if(is.null(sigma_model)) {
-      available_d1 <- available_d1
-      available_d2 <- available_d2
-    }
-    
-    
-    
-    
-    
-    # Force available_d1 = FALSE when model_deriv = FALSE
-    if(!is.null(model$model_info[['model_deriv']])) {
-      if(!model$model_info[['model_deriv']]) {
-        available_d1 <- FALSE
-        available_d2 <- FALSE
-      }
-    }
-    
-    
-    # if(model$model_info[['dpar']] == 'sigma') {
-    #   for (i in 1:length(out)) {
-    #     out[[i]] <- ""
-    #   }
-    # }
-    
-    # print(out)
-    # stop()
-    
-    out[['available_d0']] <- available_d0
-    out[['available_d1']] <- available_d1
-    out[['available_d2']] <- available_d2
-  } # if(check_d1) {
-  
-  
-  return(out)
-}
 
 
 
@@ -3027,27 +2808,30 @@ assign_function_to_environment <- function(fun, funname, envir = NULL) {
   
   set_transform_draws      <- check_if_arg_set(fun)
   
+  allowedstrfun <- c("identity", "log", "sqrt")
+  
   if (!set_transform_draws) {
     fun_eval <- function(x)x
     assign(funname, fun_eval, envir = envir)
   } else if (set_transform_draws) {
-    if(fun == "log") {
+    if(fun == "identity") {
+      fun_eval <- function(x)x
+    } else if(fun == "log") {
       fun_eval <- function(x)log(x)
     } else if(fun == "sqrt") {
       fun_eval <- function(x)sqrt(x)
     } else  if(is.function(ept(fun))) {
       fun_eval <- ept(fun)
     } else {
-      stop(paste0("The fun argument must be either a string ('log' or 'sqrt'),", 
-                  "\n  ",
-                  "or a function such as function(x)log(x)"))
+      stop("The 'fun' argument must must be either ", 
+           collapse_comma(allowedstrfun),
+           "\n ",
+           " or else a valid function such as function(x) x")
     }
     assign(funname, fun_eval, envir = envir)
   }
-  
   assign(funname, check_and_rename_funs_args_to_x(fun_eval, checkname = 'x'),
          envir = envir)
-  
 }
 
 
@@ -3096,31 +2880,83 @@ extract_names_from_call <- function(model = NULL,
 #' An internal function to get the inverse transformation call 
 #'
 #' @param itransform A character string or \code{NULL}.
-#' @param ... Additional argumenst. Currently ignored.
+#' @param dpar A character string or \code{NULL}.
+#' @param auto A logical \code{TRUE}.
+#' @param verbose A logical \code{FALSE}.
 #'
 #' @return A character string.
 #'   
 #' @keywords internal
 #' @noRd
 #'
-get_itransform_call <- function(itransform, ...) {
+get_itransform_call <- function(itransform,
+                                model = NULL, 
+                                newdata = NULL,
+                                dpar = NULL,
+                                resp = NULL,
+                                auto = TRUE,
+                                verbose = FALSE) {
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
   if(is.null(itransform)) {
     itransform_set <- "x"
+    if(dpar == "sigma") {
+      itransform_set <- c(itransform_set, 'sigma')
+    }
   } else if(!is.null(itransform)) {
     if(is.logical(itransform)) {
       if(itransform) {
-        itransform_set <- c('x', 'y', 'sigma')
+        itransform_set <- c('x', 'y') # c('x', 'y', 'sigma')
+        if(dpar == "sigma") {
+          itransform_set <- c(itransform_set, 'sigma')
+        }
       }
       if(!itransform) {
         itransform_set <- ""
       }
-    } else if(itransform == "") {
-      itransform_set <- ""
-    } else {
-      itransform_set <- itransform
+    } else if(is.character(itransform)) {
+      if(itransform == "") {
+        itransform_set <- ""
+      } else {
+        itransform_set <- "x"
+        if(dpar == "sigma") {
+          itransform_set <- c(itransform_set, 'sigma')
+        }
+      }
+    } else if(is.function(itransform)) {
+      itransform_set <- "x"
+      if(dpar == "sigma") {
+        itransform_set <- c(itransform_set, 'sigma')
+      }
+      # itransform_set <- itransform
     }
   } # if(is.null(itransform)) {
-  itransform_set
+  if(!is.character(itransform_set)) {
+    stop("'get_itransform_call()' must return a character string or a vector: ",
+         "\n  ", 
+         collapse_comma(c('x', 'y', 'sigma')))
+  }
+  
+  
+  if(!is.null(model)) {
+    sigma_model <- get_sigmamodel_info(model = model,
+                                       newdata = newdata,
+                                       dpar = dpar, 
+                                       resp = resp, 
+                                       what = 'model',
+                                       cov = NULL, 
+                                       all = FALSE, 
+                                       verbose = verbose)
+    
+    if(!is.null(sigma_model)) {
+      if(sigma_model != "ls") {
+        itransform_set <- "sigma"
+      }
+    }
+  } # if(!is.null(model)) {
+  
+  return(itransform_set)
 }
 
 

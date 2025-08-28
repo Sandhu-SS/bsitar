@@ -109,38 +109,45 @@ get.newdata <- function(model,
   
   
   if(dpar == "sigma") {
-    if (is.null(resp)) {
-      resp_    <- resp
-      revresp_ <- ""
-    } else if (!is.null(resp)) {
-      resp_    <- paste0(resp, "_")
-      revresp_ <- paste0("_", resp)
+    sigma_model <- get_sigmamodel_info(model = model,
+                                       newdata = newdata, # what = 'model' ignored 
+                                       dpar = dpar, 
+                                       resp = resp, 
+                                       what = 'model',
+                                       cov = NULL, 
+                                       all = FALSE, 
+                                       verbose = verbose)
     }
-    sigma_model_      <- paste0('sigmamodel', revresp_)
-    sigma_model       <- model$model_info[[sigma_model_]]
+  
+  
+  
+  if (is.null(newdata)) {
+    if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
+    if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
+  } else {
+    newdata <- newdata
   }
   
-  
-  
-  if(dpar == "mu") {
-    if (is.null(newdata)) {
-      if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
-      if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
-    } else {
-      newdata <- newdata
-    }
-  } else if(dpar == "sigma") {
-    if(is.null(newdata)) {
-      if(!is.null(sigma_model)) {
-        if(sigma_model != "ls") {
-          newdata <- model$model_info$bgmfit.data
-          if(verbose) {
-            message("For dpar = 'sigma', the data used for model fitting is used")
-          }
-        }
-      }
-    }
-  }
+  # if(dpar == "mu") {
+  #   if (is.null(newdata)) {
+  #     if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
+  #     if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
+  #   } else {
+  #     newdata <- newdata
+  #   }
+  # } else if(dpar == "sigma") {
+  #   if(is.null(newdata)) {
+  #     if(!is.null(sigma_model)) {
+  #       if(sigma_model != "ls") {
+  #         # newdata <- model$model_info$bgmfit.data
+  #         newdata <- newdata
+  #         if(verbose) {
+  #           message("For dpar = 'sigma', the data used for model fitting is used")
+  #         }
+  #       }
+  #     }
+  #   }
+  # }
   
   newdata.in <- newdata
   
@@ -210,8 +217,8 @@ get.newdata <- function(model,
     if(is.null(newdata_fixed)) {
       if(!is.null(sigma_model)) {
         if(sigma_model != "ls") {
-          newdata_fixed <- 1
-          idata_method <- 'm2'
+          # newdata_fixed <- 1
+          # idata_method <- 'm2'
           if(verbose) {
             message("For dpar = 'sigma', the data used for model fitting is used")
           }
@@ -262,14 +269,7 @@ get.newdata <- function(model,
   } 
   
   
-  covars_extrcation <- function(str) {
-    str <- gsub("[[:space:]]", "", str)
-    for (ci in c("*", "+", ":")) {
-      str <- gsub(ci, ' ', str, fixed = T)
-    }
-    str <- strsplit(str, " ")[[1]]
-    str
-  }
+  
   
   
   

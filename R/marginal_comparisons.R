@@ -268,15 +268,6 @@ marginal_comparisons.bgmfit <- function(model,
   
   model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
-  # 02.08.2025
-  add_prefix_to_fun <- ""
-  if(!is.null(dpar)) {
-    if(dpar == "mu") {
-      add_prefix_to_fun <- ""
-    } else if(dpar == "sigma") {
-      add_prefix_to_fun <- "sigma"
-    }
-  }
   
   
   if(is.null(usesavedfuns)) {
@@ -329,11 +320,26 @@ marginal_comparisons.bgmfit <- function(model,
   
   ########################################################
   # prepare_data2
-  ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-  # 02.08.2025
-  ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
-  ifunx_ <- model$model_info[[ifunx_]]
+  # ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+  # # 02.08.2025
+  # ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
+  # ifunx_ <- model$model_info[[ifunx_]]
+  
   ########################################################
+  
+  check_set_fun <- check_set_fun_transform(model = model, 
+                                           which = 'ixfuntransform2',
+                                           dpar = dpar, 
+                                           resp= resp, 
+                                           transform = itransform,
+                                           auto = TRUE, 
+                                           verbose = verbose)
+  
+  ifunx_ <- check_set_fun[['setfun']]
+  if(check_set_fun[['was_null']]) {
+    model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
+  }
+
   
   ########################################################
   # Define lables fun for x- axis
@@ -1892,7 +1898,15 @@ marginal_comparisons.bgmfit <- function(model,
   ##############################################################
   ##############################################################
   # prepare_data2
-  itransform_set <- get_itransform_call(itransform)
+  # itransform_set <- get_itransform_call(itransform)
+  itransform_set <- get_itransform_call(itransform = itransform,
+                                        model = model, 
+                                        newdata = newdata,
+                                        dpar = dpar, 
+                                        resp = resp,
+                                        auto = TRUE,
+                                        verbose = verbose)
+  
   if(any(itransform_set != "")) {
     if(!is.null(out_sf)) {
       out_sf <- prepare_transformations(data = out_sf, model = model,

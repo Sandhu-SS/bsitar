@@ -181,7 +181,6 @@ marginal_draws.bgmfit <-
            ...) {
     
     
-    
     if(!is.null(estimate_center)) {
       ec_ <- getOption("marginaleffects_posterior_center")
       options("marginaleffects_posterior_center" = estimate_center)
@@ -277,16 +276,18 @@ marginal_draws.bgmfit <-
     
     model <- getmodel_info(model = model, dpar = dpar, resp = resp)
     
-    # 02.08.2025
-    add_prefix_to_fun <- ""
-    if(!is.null(dpar)) {
-      if(dpar == "mu") {
-        add_prefix_to_fun <- ""
-      } else if(dpar == "sigma") {
-        add_prefix_to_fun <- "sigma"
-      }
-    }
     
+    # Run this for full data via modified get_data() for insight
+    # To avoid CRAN issues, this must be run only when model$test_mode = FALSE
+    # The berkeley_exfit used for CRAN has model$test_mode = TRUE
+    
+    if(!model$test_mode) {
+      unlock_replace_bind(package = "insight", what = "get_data",
+                      replacement = custom_get_data.brmsfit, ept_str = T)
+    }
+    # unlock_replace_bind(package = "insight", what = "get_data",
+    #                 replacement = custom_get_data.brmsfit, ept_str = T)
+   
 
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
@@ -338,11 +339,20 @@ marginal_draws.bgmfit <-
     
     
     ########################################################
-    # prepare_data2
-    ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-    # 02.08.2025
-    ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
-    ifunx_ <- model$model_info[[ifunx_]]
+    
+    check_set_fun <- check_set_fun_transform(model = model, 
+                                             which = 'ixfuntransform2',
+                                             dpar = dpar, 
+                                             resp= resp, 
+                                             transform = itransform,
+                                             auto = TRUE, 
+                                             verbose = verbose)
+    
+    ifunx_ <- check_set_fun[['setfun']]
+    if(check_set_fun[['was_null']]) {
+      model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
+    }
+    
     ########################################################
     
     ########################################################
@@ -545,7 +555,7 @@ marginal_draws.bgmfit <-
     
     
   
-    scallstatus = sys.status()
+    scallstatus <- sys.status()
     
     
     if(xcall == "modelbased_growthparameters_nonS3" |
@@ -560,11 +570,10 @@ marginal_draws.bgmfit <-
     
  
     
-    arguments$model <- model
+    arguments$model        <- model
     arguments$usesavedfuns <- usesavedfuns
     
-    get.cores_ <- get.cores(arguments$cores)
-    
+    get.cores_             <- get.cores(arguments$cores)
     
     # 28.09.2024
     if(is.null(get.cores_[['max.cores']])) {
@@ -1111,6 +1120,7 @@ marginal_draws.bgmfit <-
           collapse_comma(allowed_methods)
      )
   
+   
    if(method == 'pkg') {
      if(call_predictions) {
        if(!plot) {
@@ -1935,7 +1945,15 @@ marginal_draws.bgmfit <-
    ##############################################################
    ##############################################################
    # prepare_data2
-   itransform_set <- get_itransform_call(itransform)
+   # itransform_set <- get_itransform_call(itransform)
+   itransform_set <- get_itransform_call(itransform = itransform,
+                                         model = model, 
+                                         newdata = newdata,
+                                         dpar = dpar, 
+                                         resp = resp,
+                                         auto = TRUE,
+                                         verbose = verbose)
+   
    if(any(itransform_set != "")) {
      if(!is.null(out_sf)) {
        out_sf <- prepare_transformations(data = out_sf, model = model,

@@ -57,6 +57,7 @@ test_that("bsitar works fully with default settings", {
                        seed = 123)
   }))
 
+  test_fit[['test_mode']] <- TRUE
   
   true_sbetas <- c(128.06, 0.00, 0.00, 21.64, 34.49, 5.89, 149.05)
   

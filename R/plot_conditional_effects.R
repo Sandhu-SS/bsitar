@@ -133,15 +133,6 @@ plot_conditional_effects.bgmfit <-
     
     model <- getmodel_info(model = model, dpar = dpar, resp = resp)
     
-    # 02.08.2025
-    add_prefix_to_fun <- ""
-    if(!is.null(dpar)) {
-      if(dpar == "mu") {
-        add_prefix_to_fun <- ""
-      } else if(dpar == "sigma") {
-        add_prefix_to_fun <- "sigma"
-      }
-    }
     
     
     probtitles <- probs[order(probs)] * 100
@@ -233,11 +224,20 @@ plot_conditional_effects.bgmfit <-
     
     # 6.03.2025
     ########################################################
-    # prepare_data2
-    ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-    # 02.08.2025
-    ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
-    ifunx_ <- model$model_info[[ifunx_]]
+    
+    check_set_fun <- check_set_fun_transform(model = model, 
+                                             which = 'ixfuntransform2',
+                                             dpar = dpar, 
+                                             resp= resp, 
+                                             transform = itransform,
+                                             auto = TRUE, 
+                                             verbose = verbose)
+    
+    ifunx_ <- check_set_fun[['setfun']]
+    if(check_set_fun[['was_null']]) {
+      model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
+    }
+    
     ########################################################
     
     ########################################################

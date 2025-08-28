@@ -40,7 +40,7 @@ bsitar(
   sigma_formula_gr = NULL,
   sigma_formula_gr_str = NULL,
   sigma_formula_manual = NULL,
-  sigmax = NULL,
+  sigmax = FALSE,
   sigmaid = NULL,
   sigmadf = 4,
   sigmaknots = NA,

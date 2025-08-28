@@ -2161,9 +2161,10 @@ edit_scode_ncp_to_cp <- function(stancode,
 #' central tendency and the standard deviation as the measure of variability.
 #' If TRUE, the median and the median absolute deviation (MAD) are applied
 #' instead. Only used if summary is TRUE.
-#'  @param ... Additional argumnets. Ignored
+#' @param dpar A character string
+#' @param verbose Print relevant information 
 #' @keywords internal
-#' @return A character string.
+#' @return A matrix
 #' @noRd
 #'
 mapderivqr <- function(model,
@@ -2177,19 +2178,32 @@ mapderivqr <- function(model,
                        probs = c(0.025, 0.975),
                        summary = TRUE,
                        robust = FALSE,
-                       ...) {
+                       dpar = NULL,
+                       verbose = FALSE) {
 
-  if(is.null(probs)) probs <- c(0.025, 0.975)
-  if(is.null(robust)) robust <- FALSE
+  if(is.null(probs)) {
+    probs  <- c(0.025, 0.975)
+  }
+  if(is.null(robust)) {
+    robust <- FALSE
+  }
 
-  if(is.null(newdata)) newdata <- model$data
-
+  if(is.null(newdata)) {
+    newdata <- model$data
+  }
+  
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
     resp_rev_ <- paste0("_", resp)
   }
-
+  
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  } else {
+    dpar <- dpar
+  }
+  
   validate_response(model, resp)
 
   list_c <- list()
@@ -2199,8 +2213,11 @@ mapderivqr <- function(model,
   if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
   yvar <- model$model_info[[yvar_]]
   hierarchical_ <- paste0('hierarchical', resp_rev_)
-
-  # if(is.null(idvar)) idvar <- model$model_info[[groupvar_]]
+  
+  
+  if(dpar == "sigma") {
+    
+  }
   
   if(is.null(levels_id) & is.null(idvar)) {
     idvar <- model$model_info[[groupvar_]]
@@ -2220,15 +2237,20 @@ mapderivqr <- function(model,
    # yvar  <- 'yvar'
 
 
-  # if(!is.na(model$model_info$univariate_by$by)) {
-  #   newdata <- newdata %>% data.frame() %>%
-  #     dplyr::filter(!!as.symbol(model$model_info$univariate_by$by) == 'Male')
-  # }
-
   if(!is.na(model$model_info$univariate_by$by)) {
     newdata <- newdata %>% data.frame() %>%
       dplyr::filter(!!as.symbol(model$model_info$univariate_by$by) == yvar)
   }
+  
+  
+  if(!is.factor(newdata[[idvar]])) {
+    newdata[[idvar]] <- as.factor(newdata[[idvar]])
+    if(verbose) {
+      message("The ", idvar, 
+              " used in 'mapderivqr' has been converted to 'as.factor()'")
+    }
+  }
+  
 
   ##############################################
   # getdydx()
@@ -2247,6 +2269,7 @@ mapderivqr <- function(model,
       c(diff(y[i1])/diff(x[i1]), (y[-i1] - y[-i2])/(x[-i1] - x[-i2]),
         diff(y[i2])/diff(x[i2]))
     }
+    
     dydx <- lapply(split(.data, as.numeric(.data$.id)),
                    function(x) {x$.v <- .dydx(x$.x, x$.y); x } )
     dydx <- CustomDoCall(rbind, dydx) %>% data.frame() %>% dplyr::arrange(sorder)
@@ -2258,6 +2281,19 @@ mapderivqr <- function(model,
     newdata[[y]] <- .xrow
     getdydx(x = x, y = y, id = id, data = newdata)
   }
+  
+  if(is.symbol(y0)) {
+    y0 <-  newdata[[deparse(y0)]]
+    y0 <- as.matrix(y0) %>% t()
+  } else if(is.character(y0)) {
+    y0 <- newdata[[y0]]
+    y0 <- as.matrix(y0) %>% t()
+  } else if(is.vector(y0)) {
+    y0 <- as.matrix(y0) %>% t()
+  } else if(is.matrix(y0)) {
+    y0 <- y0
+  }
+  
 
   if(deriv == 1) {
     tempx <- apply(y0, 1, mapderiv) %>% t()
@@ -2267,14 +2303,232 @@ mapderivqr <- function(model,
     tempx <- apply(tempx , 1, mapderiv) %>% t()
   }
   
-  
   if(summary) {
     dout <-  brms::posterior_summary(tempx , probs = probs, robust = robust)
   } else {
     dout <- tempx
   }
-  dout
+  
+  if(all(is.infinite(dout))) {
+    stop("The 'mapderivqr()' resulted in all infinite values.",
+         "\n  ", 
+         "This could be because of an ncorrect xvar used.",
+         "\n  ", 
+         "The currect xvar used in mapderivqr() is: ", 
+         collapse_comma(xvar))
+  }
+  
+  return(dout)
 }
+
+
+
+#' An internal function to get derivatives from distance curve
+#' 
+#' @param x An object of class \code{bgmfit}.
+#' @param y A matrix comprised of distance curves.
+#' @param method A data frame. If \code{NULL}, data used in original model
+#' fit used.
+#' @param length.out An integer (\code{1 or 2}) to specify derivative. Default
+#'  \code{deriv = 1} estimates velocity curve whereas \code{deriv = 2} is to
+#'  get acceleration curve.
+#' @param df The percentiles to be computed by the quantile function.
+#' @param verbose Print relevant information 
+#' @keywords internal
+#' @return A data frame
+#' @noRd
+#'
+get_d1_from_d0 <- function(x,
+                           y,
+                           method = 1, 
+                           length.out = NULL, 
+                           df = NULL, 
+                           verbose = FALSE) {
+  x_data <- x
+  y_data <- y
+  out <- list()
+  if(method == 1) { # method == 1 -> direct
+    direct_diff <- function(x, y) {
+      # Sort data to ensure proper ordering
+      sorted_idx <- order(x)
+      x_sorted <- x[sorted_idx]
+      y_sorted <- y[sorted_idx]
+      # Calculate derivatives
+      dydx <- diff(y_sorted) / diff(x_sorted)
+      x_mid <- x_sorted[-length(x_sorted)] + diff(x_sorted)/2
+      return(data.frame(x = x_mid, y = dydx))
+    }
+    temp <- direct_diff(x_data, y_data)
+    out[['x']] <- temp$x
+    out[['y']] <- temp$y
+  } else if(method == 2) { # method == 2 -> Smoothing Spline + Derivative
+    smooth_diff <- function(x, y, df, length.out) {
+      if (is.null(df))         df <- length(x) * 0.3 
+      if (is.null(length.out)) length.out <- 100
+      smooth_fit <-  stats::smooth.spline(x, y, df = df)
+      # Generate fine-grid predictions
+      x_fine <- seq(min(x), max(x), length.out = length.out)
+      # y_smooth <- stats::predict(smooth_fit, x_fine)$y
+      # # Calculate derivative from smoothed curve
+      # dy_smooth <- diff(y_smooth)
+      # dx_smooth <- diff(x_fine)
+      # deriv_smooth <- dy_smooth / dx_smooth
+      # x_deriv_smooth <- x_fine[-length(x_fine)] + diff(x_fine)/2
+      deriv_smooth <- stats::predict(smooth_fit, x_fine, deriv = 1)$y
+      x_deriv_smooth <- x_fine
+      return(data.frame(x = x_deriv_smooth, y = deriv_smooth))
+    }
+    temp <- smooth_diff(x_data, y_data, df = df, length.out = length.out)
+    out[['x']] <- temp$x
+    out[['y']] <- temp$y
+  } else if(method == 3) { # method == 3 -> Centered difference
+    # Centered difference: f'(x) ≈ (f(x+h) - f(x-h)) / 2h
+    centered_diff <- function(x, y) {
+      n <- length(x)
+      deriv <- numeric(n-2)
+      x_mid <- numeric(n-2)
+      for (i in 2:(n-1)) {
+        h1 <- x[i] - x[i-1]
+        h2 <- x[i+1] - x[i]
+        deriv[i-1] <- (y[i+1] - y[i-1]) / (h1 + h2)
+        x_mid[i-1] <- x[i]
+      }
+      return(data.frame(x = x_mid, y = deriv))
+    }
+    temp <- centered_diff(x_data, y_data)
+    out[['x']] <- temp$x
+    out[['y']] <- temp$y
+  } else if(method == 4) { # method == 4 -> Higher-Order (4th) Finite Differences
+    # 5-point stencil for higher accuracy
+    higher_order_diff <- function(x, y) {
+      n <- length(x)
+      if (n < 5) stop("Need at least 5 points")
+      h <- mean(diff(x))  # assumes uniform spacing
+      deriv <- (-y[5:n] + 8*y[4:(n-1)] - 8*y[2:(n-3)] + y[1:(n-4)]) / (12*h)
+      x_mid <- x[3:(n-2)]
+      return(data.frame(x = x_mid, y = deriv))
+    }
+    temp <- higher_order_diff(x_data, y_data)
+    out[['x']] <- temp$x
+    out[['y']] <- temp$y
+  } else if(method == 5) { # method == 5 -> Richardson Extrapolation
+    richardson_deriv <- function(x, y) {
+      # Compute derivatives at two different step sizes
+      h <- mean(diff(x))
+      # Coarse derivative (step size h)
+      deriv_h <- diff(y) / diff(x)
+      x_h <- x[-length(x)] + diff(x)/2
+      # Fine derivative (step size h/2) - interpolate to half points
+      x_fine <- seq(min(x), max(x), by = h/2)
+      y_interp <- stats::approx(x, y, x_fine)$y
+      deriv_h2 <- diff(y_interp) / diff(x_fine)
+      x_h2 <- x_fine[-length(x_fine)] + diff(x_fine)/2
+      # Richardson extrapolation: (4*D_h/2 - D_h) / 3
+      deriv_fine_interp <- stats::approx(x_h2, deriv_h2, x_h)$y
+      richardson_est <- (4 * deriv_fine_interp - deriv_h) / 3
+      return(data.frame(x = x_h, y = richardson_est))
+    }
+    temp <- richardson_deriv(x_data, y_data)
+    out[['x']] <- temp$x
+    out[['y']] <- temp$y
+  } else if(method == 6) { # method == 6 -> .dydx
+    # .dydx_deriv <- function(x, y) {
+    #   data <- cbind.data.frame(x, y)
+    #   data$sorder <- as.numeric(row.names(data))
+    #   x_sorted <- data$x
+    #   y_sorted <- data$y
+    #   # sorted_idx <- order(x)
+    #   # x_sorted <- x[sorted_idx]
+    #   # y_sorted <- y[sorted_idx]
+    #   .dydx <- function(x, y) {
+    #     n <- length(x); i1 <- 1:2; i2 <- (n - 1):n
+    #     c(diff(y[i1])/diff(x[i1]), (y[-i1] - y[-i2])/(x[-i1] - x[-i2]),
+    #       diff(y[i2])/diff(x[i2]))
+    #   }
+    #   deriv_vals <- .dydx(x_sorted, y_sorted)
+    #   data$v <- deriv_vals
+    #   data <- data %>% dplyr::arrange(sorder) %>% dplyr::select(-sorder)
+    #   out <- data.frame(x = data$x, y = data$v)
+    #   return(out)
+    # }
+    
+    .dydx_deriv <- function(x, y) {
+      sorted_idx <- order(x)
+      x_sorted <- x[sorted_idx]
+      y_sorted <- y[sorted_idx]
+      .dydx <- function(x, y) {
+        n <- length(x); i1 <- 1:2; i2 <- (n - 1):n
+        c(diff(y[i1])/diff(x[i1]), (y[-i1] - y[-i2])/(x[-i1] - x[-i2]),
+          diff(y[i2])/diff(x[i2]))
+      }
+      deriv_vals <- .dydx(x_sorted, y_sorted)
+      return(data.frame(x = x_sorted, y = deriv_vals))
+    }
+    temp <- .dydx_deriv(x_data, y_data)
+    out[['x']] <- temp$x
+    out[['y']] <- temp$y
+  } else if(method == 7) { # method == 7 -> Functional Data Analysis (FDA)
+    stop("'method' should be between 1 and 6")
+    # don't create dependency on fda package
+    
+    # fda_derivative <- function(x, y, df, length.out) {
+    #   if (is.null(df)) df <- 15
+    #   if (is.null(length.out)) length.out <- 100
+    #   # Create B-spline basis
+    #   basis <- fda::create.bspline.basis(range(x), nbasis = df)
+    #   # Smooth data
+    #   smooth_obj <- fda::smooth.basis(x, y, basis)
+    #   # Get derivative
+    #   deriv_obj <- fda:::deriv.fd(smooth_obj$fd, 1)
+    #   # Evaluate on fine grid
+    #   x_fine <- seq(min(x), max(x), length.out = length.out)
+    #   deriv_vals <- fda::eval.fd(x_fine, deriv_obj)
+    #   return(data.frame(x = x_fine, y = deriv_vals))
+    # }
+    # temp <- fda_derivative(x_data, y_data, df = df, length.out = length.out)
+    # temp$y <- temp$rep1;  temp$rep1 <- NULL
+    # out[['x']] <- temp$x
+    # out[['y']] <- temp$y
+    
+  } else if(method == 8) { # method == 8 -> Smoothing Spline + Derivative
+    stop("'method' should be between 1 and 7")
+  }
+  
+  out_d <- data.frame(x = out$x, y = out$y)
+  # return(out)
+  return(out_d)
+}
+
+
+# # Your empirical sigmoid-like data
+# x_data <- c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+# y_data <- c(0.1, 0.15, 0.25, 0.45, 0.7, 0.85, 0.92, 0.96, 0.98, 0.99, 0.995)
+# 
+# ipts <- 10
+# df   <- 10
+# 
+# plot(get_d1_from_d0(x_data, y_data, method = 1)$x, 
+#      get_d1_from_d0(x_data, y_data, method = 1)$y, xlab = "x", ylab = "y")
+# 
+# lines(get_d1_from_d0(x_data, y_data, method = 1, length.out = ipts, df = df)$x, 
+#       get_d1_from_d0(x_data, y_data, method = 1, length.out = ipts, df = df)$y)
+# lines(get_d1_from_d0(x_data, y_data, method = 2, length.out = ipts, df = df)$x, 
+#       get_d1_from_d0(x_data, y_data, method = 2, length.out = ipts, df = df)$y)
+# lines(get_d1_from_d0(x_data, y_data, method = 3, length.out = ipts, df = df)$x, 
+#       get_d1_from_d0(x_data, y_data, method = 3, length.out = ipts, df = df)$y)
+# lines(get_d1_from_d0(x_data, y_data, method = 4, length.out = ipts, df = df)$x, 
+#       get_d1_from_d0(x_data, y_data, method = 4, length.out = ipts, df = df)$y)
+# lines(get_d1_from_d0(x_data, y_data, method = 5, length.out = ipts, df = df)$x, 
+#       get_d1_from_d0(x_data, y_data, method = 5, length.out = ipts, df = df)$y)
+# lines(get_d1_from_d0(x_data, y_data, method = 6, length.out = ipts, df = df)$x, 
+#       get_d1_from_d0(x_data, y_data, method = 6, length.out = ipts, df = df)$y)
+# lines(get_d1_from_d0(x_data, y_data, method = 7, length.out = ipts, df = df)$x, 
+#       get_d1_from_d0(x_data, y_data, method = 7, length.out = ipts, df = df)$y)
+# 
+
+
+
+
 
 
 
@@ -2597,6 +2851,212 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   return(out_edited_code)
 }
 
+
+#' custom_get_data.brmsfit for for \code{insight get_data}
+#'
+#' @param x A brms objects
+#' @param effects levels of group levels - see [insight::get_data()]
+#' @param component levels of group levels - see [insight::get_data()]
+#' @param source levels of group levels - see [insight::get_data()]
+#' @param verbose levels of group levels - see [insight::get_data()]
+#' @param ... Other arguments
+#' 
+#' @return A list
+#' @keywords internal
+#' @noRd
+#'
+custom_get_data.brmsfit <- function (x, 
+                                     effects = "all", 
+                                     component = "all", 
+                                     source = "environment", 
+                                     verbose = FALSE, 
+                                     ...) {
+  
+  
+  .get_data_from_environment <-  .all_elements <-  find_variables <- 
+    .is_multi_membership <- .return_combined_data <- 
+    .prepare_get_data <- is_multivariate <- 
+    .clean_brms_mm <- find_random_slopes <- is_empty_object <- NULL;
+  
+  
+  getfrom_ <- c('.get_data_from_environment', '.all_elements', 
+                'find_variables', '.is_multi_membership', 
+                '.return_combined_data', '.prepare_get_data', 
+                'is_multivariate', 
+                '.clean_brms_mm',
+                'find_random_slopes',
+                'is_empty_object')
+  
+  for (i in getfrom_) {
+    assign(i, utils::getFromNamespace(i, 'insight'))
+  }
+  
+  
+  return_option <- 3
+  clean.Vx      <- TRUE
+  
+  data_name <- attr(x$data, "data_name")
+  model_data <- .get_data_from_environment(x, effects = effects, 
+                                           component = component, 
+                                           source = source, verbose = verbose, 
+                                           data_name = data_name, ...)
+  
+  # if (!is.null(model_data)) {
+  #   return(model_data)
+  # }
+  
+  # option 1
+  if(return_option == 1) {
+    if (!is.null(model_data)) {
+      out <- model_data
+    }
+  }
+  
+  
+  effects <- match.arg(effects, choices = c("all", "fixed", 
+                                            "random"))
+  component <- match.arg(component, choices = c("all", .all_elements()))
+  
+  
+  model.terms <- find_variables(x, effects = "all", component = "all", 
+                                flatten = FALSE)
+  
+  
+  mf <- stats::model.frame(x)
+  
+  if (.is_multi_membership(x)) {
+    model.terms <- lapply(model.terms, .clean_brms_mm)
+    rs <- setdiff(unlist(find_random_slopes(x), use.names = FALSE), 
+                  unlist(model.terms, use.names = FALSE))
+    if (!is_empty_object(rs)) 
+      model.terms$random <- c(rs, model.terms$random)
+  }
+  
+  # option 2
+  if(return_option == 2) {
+    outmf <- .return_combined_data(x, .prepare_get_data(x, mf, effects = effects, 
+                                                        verbose = verbose), effects, component, model.terms, 
+                                   is_mv = is_multivariate(x), verbose = verbose) 
+    
+    new_cols             <- setdiff(names(outmf), names(model_data))
+    model_data[new_cols] <- outmf[new_cols]
+    out                  <- model_data
+  }
+  
+  
+  # option 3
+  if(return_option == 3) {
+    out <- .prepare_get_data(x, mf, effects = effects, verbose = verbose)
+    # clean up term created by functions
+    if(clean.Vx) {
+      out <- out[, -grep("\\.V\\d+$", names(out))]
+    }
+  }
+  
+  return(out)
+}
+
+
+
+##################################################################
+# This works for marginaleffect package functions
+# via unlock_replace_bind ept_str -> for CRAN
+##################################################################
+
+# Unlock the binding
+# unlockBinding("get_data", getNamespace("insight"))
+
+# Replace the function
+# assign("get_data", custom_get_data.brmsfit, envir = getNamespace("insight"))
+
+# Lock it back (optional)
+# lockBinding("get_data", getNamespace("insight"))
+
+##################################################################
+
+
+#' unlock_replace_bind for for \code{insight get_data}
+#'
+#' @param package A brms objects
+#' @param what levels of group levels - see [insight::get_data()]
+#' @param replacement levels of group levels - see [insight::get_data()]
+#' @param ept_str levels of group levels - see [insight::get_data()]
+#' @param verbose levels of group levels - see [insight::get_data()]
+#' 
+#' @return A function
+#' @keywords internal
+#' @noRd
+#'
+unlock_replace_bind <- function(package, 
+                                what, 
+                                replacement, 
+                                ept_str = TRUE, 
+                                verbose = FALSE) {
+  # Unlock the binding, Replace the functionm Lock it back (optional)
+  # !ept_str won't pass CRAN checks
+  if(!ept_str) {
+    # unlockBinding(what, getNamespace(package))
+    # assign(what, replacement, envir = getNamespace(package))
+    # lockBinding(what, getNamespace(package))
+  } else if(ept_str) {
+    what <- collapse_comma(what)
+    package <- collapse_comma(package)
+    replacement_str <- collapse_comma('replacement')
+    assign(replacement_str, replacement)
+    step_1 <- paste0("unlockBinding(", what, ", getNamespace(", package, "))")
+    step_2 <- paste0("assign(", what, ",", 
+                     ept(replacement_str), ",  envir=getNamespace(", package, "))")
+    step_3 <- paste0("lockBinding(", what, ", getNamespace(", package, "))")
+    ept(step_1)
+    ept(step_2)
+    ept(step_3)
+  }
+}
+
+
+
+##################################################################
+# Below is an example of  getting d1 from do via transfor function
+##################################################################
+
+
+# devtools::load_all("E:/Rpackages/bsitar/R_bayespb/")
+# setnewdata <- prepare_data2(model = fit_f)
+# setsigmadata <- setnewdata
+# 
+# # grid_type -> "dataframe" or default mean_or_mode
+# setsigmadata <- 
+#   marginaleffects::datagrid(  
+#     newdata = setnewdata,
+#     # FUN = function(x)x,
+#     # 'sagelogabs' = setnewdata$sagelogabs,
+#     # 'age' = setnewdata$age,
+#     by = c('sagelogabs', 'class'),
+#     grid_type = "dataframe",
+#     FUN = NULL
+#   )
+# 
+# setsigmadata <- setsigmadata %>% dplyr::arrange(sagelogabs, class)
+# 
+# # method 2 and 7 - or 6 also
+# d1_from_d0 <- function(ydraw, x = setsigmadata$sagelogabs, df = NULL) {
+#   vout <- apply(as.matrix(ydraw), 2, function(yi) 
+#     get_d1_from_d0(x=x, y=yi, method = 2, length.out = length(yi), df = df)$y)
+#   attr(vout, "dimnames")[[1]] <- attr(ydraw, "dimnames")[[1]]
+#   vout
+# }
+# 
+# marginaleffects::plot_predictions(fit_f, re_formula = NA,  
+#                                   newdata = setsigmadata, 
+#                                   transform = d1_from_d0,
+#                                   draw = T,
+#                                   resp = 'copad',
+#                                   dpar = 'sigma', 
+#                                   by = c('sagelogabs', 'class'), 
+#                                   draw_ids = 1:1) 
+
+
+##################################################################
 
 
 
@@ -5260,6 +5720,19 @@ exclude_global_for_sigma_d1 <- function() {
 #'
 getmodel_info <- function(model, dpar, resp) {
   
+  if(is.null(model$test_mode)) {
+    stop("model must have attached 'test_mode' as model[['test_mode']]",
+         "\n ", 
+         " that must be set as either TRUE/FALSE",
+         "\n ", 
+         "The berkeley_exfit used for CRAN has model[['test_mode']] = TRUE",
+         "\n ", 
+         "The model[['test_mode']] = FLASE is used to get full data via the",
+         "\n ", 
+         "insight::get_data() that is needed for marginaleffects functions"
+         )
+  }
+  
   checkresp_info(model, resp)
   
   
@@ -5271,15 +5744,9 @@ getmodel_info <- function(model, dpar, resp) {
     revresp_ <- paste0("_", resp)
   }
   
-  # if (is.null(resp)) {
-  #   setsigmaxvars_ <- 'setsigmaxvar'
-  # } else if (!is.null(resp)) {
-  #   setsigmaxvars_ <- paste0('setsigmaxvar', "_", resp)
-  # }
-  
   setsigmaxvars_ <- paste0('setsigmaxvar', revresp_)
   
-  sigma_model_      <- paste0('sigma_model', revresp_)
+  sigma_model_      <- paste0('sigmamodel', revresp_)
   sigma_model_name_ <- paste0('sigmabasicfunname', revresp_)
   sigma_model_attr_ <- paste0('sigmabasicfunattr', revresp_)
   
@@ -5287,41 +5754,16 @@ getmodel_info <- function(model, dpar, resp) {
   sigma_model_name  <- model$model_info[[sigma_model_name_]]
   sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
   
-
-  
   # here only sigma_model_is_ls is need, the remaining full code is from 
   # post_processing_checks
-  deriv <- 0
-  available_d1 <- NULL
-  available_d2 <- NULL
+  
   sigma_model_is_ls <- FALSE
   if(!is.null(sigma_model)) {
     if(sigma_model == "ls") {
       sigma_model_is_ls <- TRUE
-      available_d1 <- available_d1
-      available_d2 <- available_d2
-    } else if(sigma_model == "basic") {
-      if(all(sigma_model_attr %in% allowed_namespace_for_sigma_d1())) {
-        available_d1 <- available_d1
-        available_d2 <- available_d2
-        if(deriv > 0) {
-          for (i in sigma_model_name) {
-            model$model_info$exefuns[[i]] <- 
-              formals(model$model_info$exefuns[[i]])[['derivs']] <- deriv
-          }
-        }
-      } else {
-        available_d1 <- FALSE
-        available_d2 <- FALSE
-      }
-    } else {
-      available_d1 <- available_d1
-      available_d2 <- available_d2
     }
-  } else if(is.null(sigma_model)) {
-    available_d1 <- available_d1
-    available_d2 <- available_d2
   }
+  
   
   
   oxx <- model$model_info[['namesexefuns']]
@@ -5356,6 +5798,7 @@ getmodel_info <- function(model, dpar, resp) {
     } # if(dpar == "sigma") {
   } # else if(!is.null(dpar)) {
   
+  
   if(sigma_model_is_ls) {
     model$model_info[['namesexefuns']] <- oxx
     model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
@@ -5363,6 +5806,242 @@ getmodel_info <- function(model, dpar, resp) {
   # model$model_info[['namesexefuns']] <- oxx
   # model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
   return(model)
+}
+
+
+
+#' An internal function to perform checks when calling post-processing functions
+#'
+#' @description The \code{post_processing_checks} perform essential checks (such
+#'   as the validity of model class, response etc.) during post-processing of
+#'   posterior draws.
+#'
+#' @param model An object of class \code{bgmfit}.
+#'
+#' @param xcall The \code{match.call()} from the post-processing function.
+#'
+#' @param resp Response variable (default \code{NULL}) specified as a character
+#'   string. This is needed when processing \code{univariate_by} and
+#'   \code{multivariate} models (see \code{bgmfit} function for details).
+#'
+#' @param deriv An integer value to specify whether to estimate distance curve
+#'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
+#'   the model estimated curve(s)). A value \code{0} (default) is for distance
+#'   curve and  \code{1} for the velocity curve.
+#'   
+#' @param all A logical (default \code{NULL}) to specify whether to return all
+#'   the exposed functions.
+#'
+#' @param envir Indicator to set the environment of function evaluation. The
+#'   default is \code{parent.frame}.
+#'   
+#' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
+#'  \code{warnings} and \code{messages} during the function evaluation.
+#'
+#' @return A string with the error captured or else a list with necessary
+#'   information needed when executing the post-processing function
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'
+#' @keywords internal
+#' @noRd
+#'
+post_processing_checks <- function(model, 
+                                   xcall, 
+                                   resp = NULL, 
+                                   deriv = NULL,
+                                   all = FALSE,
+                                   envir = NULL, 
+                                   verbose = FALSE, 
+                                   check_d0 = FALSE,
+                                   check_d1 = FALSE,
+                                   check_d2 = FALSE) {
+  
+  if(is.null(envir)) envir <- parent.frame()
+  if(is.null(deriv)) deriv <- 0
+  
+  if(!'bgmfit' %in% class(model)) {
+    stop("The class of model object should be 'bgmfit' ")
+  }
+  
+  excall_ <- c("plot_ppc", "loo_validation")
+  
+  xcall_check_it <- paste(deparse(substitute(xcall)), collapse = "")
+  xcall_check_it <- gsub_space(xcall_check_it)
+  check_it       <- sub(" *\\(.*", "", xcall_check_it)
+  
+  check_it_sss <- strsplit(check_it, "\\.")[[1]][1]
+  
+  # Now using checkresp_info which is also used in getmodel_info
+  checkresp_info(model, resp)
+  
+  
+  if (is.null(resp)) {
+    resp_    <- resp
+    revresp_ <- ""
+  } else if (!is.null(resp)) {
+    resp_    <- paste0(resp, "_")
+    revresp_ <- paste0("_", resp)
+  }
+  
+  # assign expose default funs 
+  if(model$model_info[['expose_method']] == 'R') {
+    assign(paste0(resp_, 
+                  model$model_info[['namesexefuns']], 
+                  '0'), 
+           model$model_info$exefuns[[paste0(resp_, 
+                                            model$model_info[['namesexefuns']], 
+                                            '0')]], envir = envir)
+    
+    if(model$model_info[['select_model']] == 'sitar' |
+       model$model_info[['select_model']] == 'rcs') {
+      assign(paste0(resp_, 'getKnots'), 
+             model$model_info$exefuns[[paste0(resp_, 'getKnots')]], 
+             envir = envir)
+    }
+  }
+  
+  if(!all) {
+    out <-
+      list(
+        paste0(resp_, model$model_info[['namesexefuns']], ''),
+        paste0(resp_, model$model_info[['namesexefuns']], deriv)
+      ) 
+  }
+  
+  if(all) {
+    out <- model$model_info[['exefuns']]
+  } 
+  
+  # 6.03.2025
+  # check_d1
+  if(check_d1) {
+    available_d0 <- available_d1 <- available_d2 <- FALSE
+    for (i in names(model$model_info$exefuns)) {
+      check_funds <- ifelse(grepl("\\d$", i), sub(".*?(\\d+)$", "\\1", i), "")
+      if(grepl("0", check_funds)) {
+        available_d0 <- TRUE
+      }
+      if(grepl("1", check_funds)) {
+        available_d1 <- TRUE
+      }
+      if(grepl("2", check_funds)) {
+        available_d2 <- TRUE
+      }
+    }
+    
+    if(verbose) { 
+      if(!available_d0) {
+        stop("No 'd0' found")
+      }
+      if(!available_d1) {
+        message("No 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
+      }
+      if(!available_d2) {
+        # message("No 'd2' found, setting 'model_deriv = FALSE', 'deriv = 0'")
+      }
+    }
+    
+    # sigma_model <- model$model_info[['sigma_model']]
+    
+    # When sigma_model == 'ls', then only sigma function is defined in stan
+    # if(!is.null(sigma_model)) {
+    #   if(sigma_model == "mu") {
+    #     available_d1 <- FALSE
+    #     available_d2 <- FALSE
+    #   }
+    # }
+    
+    
+    
+    setsigmaxvars_ <- paste0('setsigmaxvar', revresp_)
+    
+    sigma_model_      <- paste0('sigmamodel', revresp_)
+    sigma_model_name_ <- paste0('sigmabasicfunname', revresp_)
+    sigma_model_attr_ <- paste0('sigmabasicfunattr', revresp_)
+    
+    sigma_model       <- model$model_info[[sigma_model_]]
+    sigma_model_name  <- model$model_info[[sigma_model_name_]]
+    sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
+    
+    # print(sigma_model_attr)
+    # print(allowed_namespace_for_sigma_d1())
+    
+    # here only sigma_model_is_ls is need, the remaining full code is from 
+    # post_processing_checks
+    
+    sigma_model_is_ba_set_d0_as_d1 <- FALSE
+    sigma_model_is_ba_set_d0_as_d1_funs <- list()
+    sigma_model_is_ls <- FALSE
+    if(!is.null(sigma_model)) {
+      if(sigma_model == "ls") {
+        sigma_model_is_ls <- TRUE
+        available_d1 <- available_d1
+        available_d2 <- available_d2
+      } else if(sigma_model == "basic") {
+        if(all(sigma_model_attr %in% allowed_namespace_for_sigma_d1())) {
+          sigma_model_is_ba_set_d0_as_d1 <- TRUE
+          available_d1 <- available_d1
+          available_d2 <- available_d2
+          if(deriv > 0) {
+            # stixt <- 0
+            for (i in sigma_model_name) {
+              # stixt <- stixt + 1
+              tempfunx <- model$model_info$exefuns[[i]]
+              formals(tempfunx)[['derivs']] <- deriv
+              sigma_model_is_ba_set_d0_as_d1_funs[[i]] <- tempfunx
+            }
+          }
+        } else {
+          sigma_model_is_ba_set_d0_as_d1 <- FALSE
+          available_d1 <- FALSE
+          available_d2 <- FALSE
+        }
+      } else {
+        available_d1 <- available_d1
+        available_d2 <- available_d2
+      }
+    } else if(is.null(sigma_model)) {
+      available_d1 <- available_d1
+      available_d2 <- available_d2
+    }
+    
+    # available_d1 <- FALSE
+    # available_d2 <- FALSE
+    
+    
+    
+    
+    
+    # Force available_d1 = FALSE when model_deriv = FALSE
+    if(!is.null(model$model_info[['model_deriv']])) {
+      if(!model$model_info[['model_deriv']]) {
+        available_d1 <- FALSE
+        available_d2 <- FALSE
+      }
+    }
+    
+    
+    if(!is.null(sigma_model)) {
+      if(sigma_model == "basic") {
+        if(sigma_model_is_ba_set_d0_as_d1) {
+          out[['sigma_model_is_ba_set_d0_as_d1_funs']] <- sigma_model_is_ba_set_d0_as_d1_funs
+          out[['sigma_model_is_ba_set_d0_as_d1_val']] <- 0
+        }
+        out[['sigma_model_is_ba_set_d0_as_d1']] <- sigma_model_is_ba_set_d0_as_d1
+      }
+    }
+    
+    
+    out[['sigma_model']] <- sigma_model
+    
+    out[['available_d0']] <- available_d0
+    out[['available_d1']] <- available_d1
+    out[['available_d2']] <- available_d2
+  } # if(check_d1) {
+  
+  
+  return(out)
 }
 
 
@@ -5388,6 +6067,812 @@ x_gsubit_gsubby <- function(x,
                             fixed = FALSE) {
   if(pasteit) gsubby <- paste0(gsubit, gsubby)
   gsub(gsubit, gsubby, x, fixed = fixed)
+}
+
+
+
+
+
+#' An internal function to get arguments from the call
+#'
+#' @param str A character string
+#' @param x A character string specifying the part to be looked for
+#' @param allowed_left A character string specifying the allowed valid character
+#' on the left side. Typically period and an underscore 
+#' @param allowed_right A character string specifying the allowed valid character
+#' on the right side. Typically period and an underscore 
+#' 
+#' @return A character string.
+#' @keywords internal
+#' @noRd
+#'
+check_if_varname_exact <- function(str, 
+                            x, 
+                            allowed_left = "._", 
+                            allowed_right = "._") {
+  
+  make_check_left  <- paste0("(^|[^[:alnum:]", allowed_left, "])")
+  make_check_right <- paste0("($|[^[:alnum:]", allowed_right, "])")
+  patxsi_not <- paste0(make_check_left, x, make_check_right)
+  if(grepl(patxsi_not, str, fixed = FALSE)) {
+    stop("The predictor in '", str, "/ should not be ", 
+         collapse_comma(x), 
+         "\n ", 
+         " which has already been defined and used in the model",
+         "\n  ", 
+         "Please rename it (e.g., '", paste0('z_', x), 
+         "') and define it in the data")
+  }
+}
+
+
+
+#' An internal function to get arguments from the call
+#'
+#' @param x A character string
+#' @param patterns A character string specifying patterns to be replaced 
+#' @param replacements A character string specifying the replacements
+#' 
+#' @return A character string.
+#' @keywords internal
+#' @noRd
+#'
+multi_gsub_exact <- function(x, patterns, replacements) {
+  patterns <- paste0("\\b", patterns, "\\b")
+  Reduce(
+    function(s, i) gsub(patterns[i], replacements[i], s),
+    seq_along(patterns),
+    init = x
+  )
+}
+
+
+
+#' An internal function to get arguments from the call
+#'
+#' @param str A character string
+#' @param x A character string specifying \code{T/F} to be replaced by full. if
+#' \code{NULL}, both \code{T/F} checked 
+#' @param what A character string specifying the full form \code{TRUE/FALSE}. if
+#' \code{NULL}, both \code{TRUE/FALSE} used as full. Note that length of what 
+#' should match the length of x 
+#' @param allowed_left A character string specifying the allowed valid character
+#' on the left side. Typically it is \code{'='} that is used after argument 
+#' @param allowed_right A character string specifying the allowed valid character
+#' on the right side. Typically empty string
+#' 
+#' @return A character string.
+#' @keywords internal
+#' @noRd
+#'
+check_and_replace_sort_to_full <- function(str, 
+                                   x = NULL, 
+                                   what = NULL, 
+                                   allowed_left = NULL, 
+                                   allowed_right = NULL) {
+  
+  if(!is.null(what)) {
+    if(is.null(x)) stop("'x' must be specified when 'what' is not NULL")
+    if(length(what) != length(what)) stop("lengths of 'x' and 'what' must be same")
+  }
+  
+  if(is.null(x)) {
+    x <- c("T", "F")
+    if(is.null(what)) {
+      what <- c("TRUE", "FALSE")
+    }
+  }
+  
+  if(is.null(allowed_left)) {
+    allowed_left <- rep("", length(x))
+  }
+  if(is.null(allowed_right)) {
+    allowed_right <- rep("", length(x))
+  }
+  
+  make_check_left  <- allowed_left
+  make_check_right <- allowed_right
+  
+  # make_check_left  <- paste0("\\b", allowed_left, "")
+  # make_check_right <- paste0("\\b", allowed_right, "")
+ 
+  if(length(str) > 1) {
+    for (i in 1:length(str)) {
+      str_i <- str[i]
+      for (i in 1:length(x)) {
+        patTF <- paste0(make_check_left, x[i], make_check_right)
+        if(x[i] %in% str) {
+          str <- gsub(patTF, what[i], str, fixed = F)
+        }
+      }
+    }
+  }
+  
+  if(length(str) == 1) {
+    for (i in 1:length(str)) {
+      str_i <- str[i]
+      for (i in 1:length(x)) {
+        patTF <- paste0(make_check_left, x[i], make_check_right)
+        if(grepl(patTF, str_i, fixed = FALSE)) {
+          str <- gsub(x[i], what[i], str, fixed = F)
+        }
+      }
+    }
+  }
+  return(str)
+}
+
+
+
+#' An internal function to check and set xvar for dpar sigma
+#'
+#' @param model An object of class bgmfit
+#' @param newdata A data frame
+#' @param dpar A character string 
+#' @param resp A character string 
+#' @param all A logical \code{TRUE} for \code{what = 'model'}, will return all 
+#' models otherwise resp specific. For for \code{what = 'cov'},  \code{TRUE} 
+#' will return all co variates (factor and numeric) otherwise resp specific
+#' (factor and numeric)
+#' @param cov A character string, \code{'numeric'} will return only numeric
+#' co variate whereas \code{'factor'} will return only factor covariates. 
+#' \code{'all'} will return both factor and numeric covaraites 
+#' @param auto ignored
+#' @param verbose print information
+#' 
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+get_sigmamodel_info <- function(model,
+                           newdata = NULL,
+                           dpar = NULL, 
+                           resp = NULL, 
+                           what = 'model',
+                           cov = NULL, 
+                           all = FALSE, 
+                           verbose = FALSE) {
+  if(is.null(newdata)) {
+    newdata <- model$data
+  }
+  
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
+  if(dpar == "mu") {
+     return(NULL)
+  }
+  
+  if(is.null(cov)) {
+    cov <- "all"
+  }
+  
+  if(is.null(newdata)) {
+    newdata <- model$data
+  }
+  
+  
+  
+  if(dpar == "sigma") {
+    if(what == 'model') {
+      if(all) {
+        sigma_model_      <- paste0('sigmamodel', "_", all)
+        sigma_model       <- model$model_info[[sigma_model_]]
+        out <- sigma_model
+      } else if(!all) {
+        if (is.null(resp)) {
+          resp_    <- resp
+          revresp_ <- ""
+        } else if (!is.null(resp)) {
+          resp_    <- paste0(resp, "_")
+          revresp_ <- paste0("_", resp)
+        }
+        sigma_model_      <- paste0('sigmamodel', revresp_)
+        sigma_model       <- model$model_info[[sigma_model_]]
+        out <- sigma_model
+      }
+    } # if(what == 'model') {
+    if(what == 'cov' | what == 'covariate' | what == 'covariates') {
+      if(all) {
+        sigmacov_sigma_model_ <- paste0('sigmacov', 's')
+        sigmacov_cov_vars     <- model$model_info[[sigmacov_sigma_model_]]
+        sigmacov_factor_vars  <- names(newdata[sapply(newdata, is.factor)])
+        sigmacov_numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
+        
+        sigmacov_cov_factor_vars  <- intersect(sigmacov_cov_vars, 
+                                               sigmacov_factor_vars)
+        sigmacov_cov_numeric_vars <- intersect(sigmacov_cov_vars, 
+                                               sigmacov_numeric_vars)
+        if(cov == "numeric") {
+          out <- sigmacov_cov_numeric_vars
+        } else if(cov == "factor") {
+          out <- sigmacov_cov_factor_vars
+        } else if(cov == "all") {
+          out <- c(sigmacov_cov_factor_vars, sigmacov_cov_numeric_vars)
+        }
+      } else if(!all) {
+        if (is.null(resp)) {
+          resp_    <- resp
+          revresp_ <- ""
+        } else if (!is.null(resp)) {
+          resp_    <- paste0(resp, "_")
+          revresp_ <- paste0("_", resp)
+        }
+        sigmacov_sigma_model_ <- paste0('sigmacov', revresp_)
+        sigmacov_cov_vars     <- model$model_info[[sigmacov_sigma_model_]]
+        sigmacov_factor_vars  <- names(newdata[sapply(newdata, is.factor)])
+        sigmacov_numeric_vars <- names(newdata[sapply(newdata, is.numeric)])
+        
+        sigmacov_cov_factor_vars  <- intersect(sigmacov_cov_vars, 
+                                               sigmacov_factor_vars)
+        sigmacov_cov_numeric_vars <- intersect(sigmacov_cov_vars, 
+                                               sigmacov_numeric_vars)
+        
+        if(cov == "numeric") {
+          out <- sigmacov_cov_numeric_vars
+        } else if(cov == "factor") {
+          out <- sigmacov_cov_factor_vars
+        } else if(cov == "all") {
+          out <- c(sigmacov_cov_factor_vars, sigmacov_cov_numeric_vars)
+        }
+      }
+    } # if(what == 'cov' | what == 'covariate' | what == 'covariates') {
+    
+  } # if(dpar == "sigma") {
+  return(out)
+}
+
+
+#' An internal function to check and set xvar for dpar sigma
+#'
+#' @param model An object of class bgmfit
+#' @param newdata A data frame
+#' @param dpar A character string 
+#' @param xvar A character string 
+#' @param resp A character string 
+#' @param dpar A character string 
+#' @param auto Set \code{'xvar'} as \code{'sigmacov_cov_numeric_vars'} if it
+#' is of length one.
+#' @param verbose print information
+#' 
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+check_set_xvar_sigma <- function(model, 
+                                 newdata = NULL,
+                                 dpar = NULL, 
+                                 xvar = NULL, 
+                                 resp = NULL, 
+                                 auto = TRUE,
+                                 verbose = FALSE) {
+  if(is.null(newdata)) {
+    newdata <- model$data
+  }
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
+  if(dpar == "mu") {
+    return(xvar)
+  }
+  
+  if(dpar == "sigma") {
+    sigma_model <- get_sigmamodel_info(model,
+                                       newdata = newdata,
+                                       dpar = dpar, 
+                                       resp = resp, 
+                                       what = 'model',
+                                       cov = NULL, 
+                                       all = FALSE, 
+                                       verbose = FALSE)
+      
+      sigmacov_cov_factor_vars <- get_sigmamodel_info(model,
+                                                     newdata = newdata,
+                                                     dpar = dpar, 
+                                                     resp = resp, 
+                                                     what = 'cov',
+                                                     cov = "factor", 
+                                                     all = FALSE, 
+                                                     verbose = FALSE)
+        
+       
+      sigmacov_cov_numeric_vars <- get_sigmamodel_info(model,
+                                                       newdata = newdata,
+                                                       dpar = dpar, 
+                                                       resp = resp, 
+                                                       what = 'cov',
+                                                       cov = "numeric", 
+                                                       all = FALSE, 
+                                                       verbose = FALSE)
+
+      if(length(sigmacov_cov_factor_vars) == 0) {
+        sigmacov_cov_factor_vars <- NULL
+      }
+      if(length(sigmacov_cov_numeric_vars) == 0) {
+        sigmacov_cov_numeric_vars <- NULL
+      }
+     
+      
+    create_msg_xvar_null <- 
+      paste0("For plotting dpar = 'sigma', the 'xvar' should be specified",
+             "\n  ",
+             "The available options are:\n ", 
+             collapse_comma(sigmacov_cov_numeric_vars))
+    
+    
+    create_msg_xvar_not_null_and_one <- 
+      paste0(" The 'xvar' required for plot is automatically set as: ", 
+              collapse_comma(sigmacov_cov_numeric_vars),
+              "\n ",
+              "Note that this 'auto' option works only if there ",
+              "\n ",
+              "is one unique numeric variable in the sigma formula")
+    
+    create_msg_xvar_not_null_and_more_than_one <- 
+      paste0(" The 'xvar' required for plot can not be set automatically because", 
+             "\n ",
+             " of more than one numeric variables used in the sigma formula ",
+             collapse_comma(sigmacov_cov_numeric_vars),
+             "\n ",
+             "Note that the 'auto' option works only if there ",
+             "\n ",
+             "is one unique numeric variable in the sigma formula")
+    
+    create_msg_xvar_used <- 
+      paste0("For plotting dpar = 'sigma', you have specified ", 
+             collapse_comma(xvar), 
+             "\n  ",
+             "as 'xvar' which is invalid",
+             "\n  ",
+             "The available options for 'xvar' are:\n ", 
+             collapse_comma(sigmacov_cov_numeric_vars))
+    
+    if(is.null(xvar)) {
+      if(!is.null(sigma_model)) {
+        if(sigma_model != "ls") {
+          if(!auto) {
+            stop(create_msg_xvar_null)
+          } else if(auto) {
+            if(length(sigmacov_cov_numeric_vars) > 0) {
+              if(length(sigmacov_cov_numeric_vars) == 1) {
+                xvar <- sigmacov_cov_numeric_vars
+                if(verbose) {
+                  message(create_msg_xvar_not_null_and_one)
+                }
+              } else {
+                stop(create_msg_xvar_not_null_and_more_than_one)
+              }
+            }
+          }
+        }
+      }
+    } else if(!is.null(xvar)) {
+      for (i in xvar) {
+        if(!i %in% sigmacov_cov_numeric_vars) {
+          stop(create_msg_xvar_used)
+        }
+      }
+    }
+  } # if(dpar == "sigma") {
+  
+  if(is.null(xvar)) {
+    return(invisible(NULL))
+  } else {
+    return(xvar)
+  }
+  
+  
+} # check_set_xvar_sigma
+
+
+
+
+
+#' An internal function to check and set ifunx for dpar mu and sigma
+#'
+#' @param model An object of class bgmfit
+#' @param dpar A character string 
+#' @param resp A character string 
+#' @param itransform A character string ora function
+#' @param auto Set \code{'xvar'} as \code{'sigmacov_cov_numeric_vars'} if it
+#' is of length one.
+#' @param verbose print information
+#' 
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+check_set_fun_transform <- function(model, 
+                                    which = NULL,
+                                    dpar = NULL, 
+                                    resp = NULL, 
+                                    transform = NULL,
+                                    auto = TRUE, 
+                                    verbose = FALSE) {
+  
+  if(is.null(which)) {
+    which <- "ixfuntransform2"
+  }
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
+  add_prefix_to_fun <- ""
+  if(!is.null(dpar)) {
+    if(dpar == "mu") {
+      add_prefix_to_fun <- ""
+    } else if(dpar == "sigma") {
+      add_prefix_to_fun <- "sigma"
+    }
+  } 
+  # prepare_data2
+  if (is.null(resp)) {
+    resp_rev_ <- resp
+  } else if (!is.null(resp)) {
+    resp_rev_ <- paste0("_", resp)
+  }
+  setfun <- paste0(which, resp_rev_)
+  # 02.08.2025
+  setfun <- setfunname <- paste0(add_prefix_to_fun, setfun)
+  setfun <- model$model_info[[setfun]]
+  
+  if(is.null(setfun)) {
+    was_null <- TRUE
+  } else {
+    was_null <- FALSE
+  }
+  
+  allowedstrfun <- c("identity", "log", "exp")
+  
+  if(is.null(setfun)) {
+    if(!is.null(transform)) {
+      if(is.character(transform)) {
+        transform <- paste(gsub_space(transform), collapse = "")
+        if(transform != "") {
+          if(grepl("function(", transform, fixed = T)) {
+            setfun <-  ept(transform)
+          } else if(transform == "identity") {
+            setfun <- function(x)x
+          } else if(transform == "log") {
+            setfun <- function(x)log(x)
+          } else if(transform == "exp") {
+            setfun <- function(x)exp(x)
+          } else {
+            stop("The argument 'transform' must be either ", 
+                 collapse_comma(allowedstrfun),
+                 "\n ",
+                 " or else a valid function such as function(x) x")
+          }
+          # model$model_info[[setfunname]] <- setfun
+        }
+      } else if(is.function(transform)) {
+        setfun <- transform
+      }
+    } else if(is.null(transform)) {
+      #
+    }
+  }
+  
+  setfunas_char <- 'setfun'
+  if(is.null(setfun)) {
+    if(is.null(transform)) {
+      if(auto) {
+        setfun <- function(x)x
+        if(verbose) {
+          message(paste0("For dpar = '", dpar, "', the ", 
+                         setfunas_char, 
+                         " was 'NULL', now set as function(x)x"))
+        }
+      } # if(auto) {
+    } # if(is.null(transform)) {
+    if(!is.null(transform)) {
+      setfun <- transform
+    } # if(!is.null(transform)) {
+  } # if(is.null(setfun)) {
+  
+  
+  if(is.character(setfun)) {
+    assign('setfun', ept(setfun))
+  } else {
+    assign('setfun', eval(setfun))
+  }
+  
+  setfun <- as.function(setfun)
+  
+  out <- list(setfun = setfun, setfunname = setfunname, was_null = was_null)
+  return(out)
+}
+
+
+
+#' An internal function to extract basic information from the model_info
+#'
+#' @param model An object of class bgmfit
+#' @param dpar A character string 
+#' @param resp A character string 
+#' @param what A character string indicating what to extrcat. Options are
+#'   \code{'xvar'}, \code{'yvar'}, \code{'idvar'}, \code{'cov_vars'},
+#'   \code{'uvarby'}.
+#' @param component A character string indicating \code{'what'} should be for
+#'   \code{'mu'} or  \code{'sigma'}. For example if \code{'mu'}, then
+#'   \code{'xvar'} will be extracted and if \code{'sigma'}, then
+#'   \code{'sigmaxvar'} will be extracted.
+#' 
+#' @param auto ignored
+#' @param verbose print information
+#' 
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+get_basic_info <- function(model = model, 
+                           dpar = dpar, 
+                           resp = resp, 
+                           what = 'xvar',
+                           component = "mu",
+                           auto = TRUE,
+                           verbose = verbose) {
+  if (is.null(resp)) {
+    resp_rev_ <- resp
+  } else if (!is.null(resp)) {
+    resp_rev_ <- paste0("_", resp)
+  }
+  
+  if(is.null(dpar)) {
+    dpar <- "mu"
+  }
+  levels_id <- NULL
+  idvar <- NULL
+  sigmalevels_id <- NULL
+  sigmaidvar <- NULL
+  
+  
+  validate_response(model, resp)
+  
+  list_c <- list()
+  xvar_ <- paste0('xvar', resp_rev_)
+  yvar_ <- paste0('yvar', resp_rev_)
+  groupvar_ <- paste0('groupvar', resp_rev_)
+  hierarchical_ <- paste0('hierarchical', resp_rev_)
+  
+  sigmaxvar_ <- paste0('sigma', xvar_)
+  sigmayvar_ <- paste0('sigma', yvar_)
+  sigmagroupvar_ <- paste0('sigma', groupvar_)
+  sigmahierarchical_ <- paste0('sigma', hierarchical_)
+  
+  xvar <- model$model_info[[xvar_]]
+  yvar <- model$model_info[[yvar_]]
+  
+  sigmaxvar <- model$model_info[[sigmaxvar_]]
+  sigmayvar <- model$model_info[[sigmayvar_]]
+  
+  
+  if(is.null(levels_id) & is.null(idvar)) {
+    idvar <- model$model_info[[groupvar_]]
+    if (!is.null(model$model_info[[hierarchical_]])) {
+      idvar <- model$model_info[[hierarchical_]]
+    }
+  } else if (!is.null(levels_id)) {
+    idvar <- levels_id
+  } else if (!is.null(idvar)) {
+    idvar <- idvar
+  }
+  
+  # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
+  if(is.null(idvar)) {
+    if(!is.null(model$model_info[['idvars']])) {
+      idvar <- model$model_info[['idvars']]
+    }
+  }
+  
+  
+  if(is.null(sigmalevels_id) & is.null(sigmaidvar)) {
+    sigmaidvar <- model$model_info[[sigmagroupvar_]]
+    if (!is.null(model$model_info[[hierarchical_]])) {
+      sigmaidvar <- model$model_info[[hierarchical_]]
+    }
+  } else if (!is.null(sigmalevels_id)) {
+    sigmaidvar <- sigmalevels_id
+  } else if (!is.null(sigmaidvar)) {
+    sigmaidvar <- sigmaidvar
+  }
+  
+  # When no random effects and hierarchical, sigmaidvar <- NULL problem 02 03 2024
+  if(is.null(sigmaidvar)) {
+    if(!is.null(model$model_info[['sigmaidvars']])) {
+      sigmaidvar <- model$model_info[['sigmaidvars']]
+    }
+  }
+  
+  
+  cov_          <- paste0('cov', resp_rev_)
+  sigmacov_     <- paste0('sigma', cov_)
+  cov_vars      <-  model$model_info[[cov_]]
+  sigmacov_vars <-  model$model_info[[sigmacov_]]
+  
+  cov_vars      <- cov_vars[!is.na(cov_vars)]
+  sigmacov_vars <- sigmacov_vars[!is.na(sigmacov_vars)]
+  
+  if(length(cov_vars) == 0) cov_vars <- NULL
+  if(length(sigmacov_vars) == 0) sigmacov_vars <- NULL
+  
+  if (!is.null(cov_vars)) {
+    cov_vars <- covars_extrcation(cov_vars)
+  }
+  if (!is.null(sigmacov_vars)) {
+    sigmacov_vars <- covars_extrcation(sigmacov_vars)
+  }
+  
+  
+  uvarby     <- model$model_info$univariate_by$by
+  
+  
+  out <- list()
+  if(component == "mu") {
+    if('xvar' %in% what)     out[[what]] <- xvar
+    if('yvar' %in% what)     out[[what]] <- yvar
+    if('idvar' %in% what)    out[[what]] <- idvar
+    if('cov_vars' %in% what) out[[what]] <- cov_vars
+    if('uvarby' %in% what)   out[[what]] <- uvarby
+  } else if(component == "sigma") {
+    if('xvar' %in% what)     out[[what]] <- sigmaxvar
+    if('yvar' %in% what)     out[[what]] <- sigmayvar
+    if('idvar' %in% what)    out[[what]] <- sigmaidvar
+    if('cov_vars' %in% what) out[[what]] <- sigmacov_vars
+  }
+  
+  if(length(out) == 1) {
+    out <- out[[1]]
+  }
+  
+  return(out)
+} # get_basic_info
+
+
+
+
+#' An internal function to extract basic information from the model_info
+#'
+#' @param model An object of class bgmfit
+#' @param dpar A character string 
+#' @param resp A character string 
+#' @param what A character string indicating what to extrcat. Options are
+#'   \code{'xvar'}, \code{'yvar'}, \code{'idvar'}, \code{'cov_vars'},
+#'   \code{'uvarby'}.
+#' @param component A character string indicating \code{'what'} should be for
+#'   \code{'mu'} or  \code{'sigma'}. For example if \code{'mu'}, then
+#'   \code{'xvar'} will be extracted and if \code{'sigma'}, then
+#'   \code{'sigmaxvar'} will be extracted.
+#' 
+#' @param auto ignored
+#' @param verbose print information
+#' 
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+set_sigma_grid_newdata <- function(model, 
+                                   newdata = NULL,
+                                   resp = NULL, 
+                                   dpar = NULL, 
+                                   idvar = NULL,
+                                   xvar = NULL,
+                                   auto = TRUE,
+                                   xrange = NULL,
+                                   length.out = NULL,
+                                   grid_type = NULL,
+                                   verbose = verbose) {
+  
+  xvar_temp <- idvar_temp <- NULL;
+  
+  if (is.null(resp)) {
+    resp_rev_ <- resp
+  } else if (!is.null(resp)) {
+    resp_rev_ <- paste0("_", resp)
+  }
+  
+  if(is.null(dpar)) {
+    dpar <- "sigma"
+  }
+  
+  if(is.null(newdata)) {
+    newdata <- model$model_info$bgmfit.data
+  }
+  
+  if(is.null(idvar)) {
+    idvar <- get_basic_info(model = model, 
+                            dpar = dpar, 
+                            resp = resp, 
+                            auto = TRUE,
+                            what = 'idvar',
+                            component = "sigma",
+                            verbose = verbose)
+    idvar <- idvar[1]
+  }
+  
+  if(is.null(xvar)) {
+    xvar <- get_basic_info(model = model, 
+                           dpar = dpar, 
+                           resp = resp, 
+                           auto = TRUE,
+                           what = 'xvar',
+                           component = "sigma",
+                           verbose = verbose)
+  }
+  
+  if(is.null(xvar)) {
+    xvar <- check_set_xvar_sigma(model = model, 
+                                 dpar = dpar, 
+                                 xvar = xvar, 
+                                 resp = resp, 
+                                 auto = TRUE,
+                                 verbose = verbose)
+  }
+  
+  if(is.null(xvar) | is.na(xvar)) {
+    stop("'xvar' not found for 'set_sigma_grid_newdata()'")
+  }
+  
+  
+  
+  if(is.null(xrange)) {
+    setxvarvec <- newdata[[xvar]]
+  } else if(!is.null(xrange)) {
+    if(length(xrange) != 2) {
+      stop("'xrange' must be a vector of lenght 2")
+    }
+    if(is.null(length.out)) {
+      length.out <- 10
+    }
+    setxvarvec <- seq.int(xrange[1], xrange[2], length.out = length.out)
+  }
+  
+  if(is.null(grid_type)) {
+    grid_type <- "mean_or_mode"
+  }
+  
+  if(!is.factor(newdata[[idvar]])) {
+    newdata[[idvar]] <- as.factor(newdata[[idvar]])
+    if(verbose) {
+      message("The ", idvar, 
+              " used in 'mapderivqr' has been converted to 'as.factor()'")
+    }
+  }
+  
+  newdata <- marginaleffects::datagrid(newdata = newdata,
+                                       xvar_temp = setxvarvec,
+                                       idvar_temp = levels(newdata[[idvar]]),
+                                       grid_type = grid_type)
+  newdata <- newdata %>% 
+    dplyr::mutate(!! as.name(xvar) := xvar_temp) %>% 
+    dplyr::mutate(!! as.name(idvar) := idvar_temp) %>% 
+    dplyr::select(-c(xvar_temp, idvar_temp))
+  
+  attr(newdata, 'xvar_for_sigma_model_basic') <- idvar
+  attr(newdata, 'idvar_for_sigma_model_basic')  <- xvar
+  
+  return(newdata)
+}
+
+
+
+
+
+
+#' An internal function to extract co variates
+#'
+#' @param str A character string
+#' 
+#' @return A character string
+#' @keywords internal
+#' @noRd
+#'
+covars_extrcation <- function(str) {
+  str <- gsub("[[:space:]]", "", str)
+  for (ci in c("*", "+", ":")) {
+    str <- gsub(ci, ' ', str, fixed = T)
+  }
+  str <- strsplit(str, " ")[[1]]
+  str
 }
 
 
@@ -5749,13 +7234,41 @@ get_function_names_code_from_string <- function(str,
           functions_namespace_str <- gsub(gsub_it, gsub_by, 
                                           functions_namespace_str, fixed = T)
         }
-        functions_namespace_str_c <- 
-          c(functions_namespace_str_c, functions_namespace_str)
+        functions_namespace_str_c <- c(functions_namespace_str_c, 
+                                       functions_namespace_str)
         if(replace_ns) {
           str <- gsub(get_ns, get_without_ns, str, fixed = T)
         }
-      }
     } # if(functions_ns  %in%  allowed_namespace_for_sigma_d1()) {
+    
+    if(!functions_ns %in%  allowed_namespace_for_sigma_d1()) {
+      get_without_ns <- gsub("::", "::", get_ns, fixed = T)
+      get_without_ns <- gsub(":::", ":::", get_without_ns, fixed = T)
+      # namespace name of the function with ns :: / :::
+      functions_namespace_included_c <- c(functions_namespace_included_c, 
+                                          get_ns)
+      functions_namespace_included_c_without_ns <- 
+        c(functions_namespace_included_c_without_ns, get_without_ns)
+      # assign function with ns :: / ::: to ns :: / ::: replaced by _
+      functions_namespace_str <- paste(deparse(ept(get_ns)), collapse = "\n")
+      functions_namespace_str <- paste0(get_without_ns, "<-", 
+                                        functions_namespace_str)
+      functions_namespace_attr_c <- c(functions_namespace_attr_c, functions_ns)
+      functions_namespace_str <- trimws(functions_namespace_str)
+      if(functions_ns == 'splines2') {
+        gsub_it <- ".engine"
+        gsub_by <- paste0(functions_ns, ":::", gsub_it)
+        functions_namespace_str <- gsub(gsub_it, gsub_by, 
+                                        functions_namespace_str, fixed = T)
+      }
+      functions_namespace_str_c <- c(functions_namespace_str_c, 
+                                     functions_namespace_str)
+      if(replace_ns) {
+        str <- gsub(get_ns, get_without_ns, str, fixed = T)
+      }
+    } # if(!functions_ns %in%  allowed_namespace_for_sigma_d1()) {
+    
+   } # for (i in 1:length(functions_namespace_included_id)) {
   } # if(length(functions_namespace_included_id) > 0) {
   
   
