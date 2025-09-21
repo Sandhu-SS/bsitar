@@ -23,7 +23,6 @@ SEs
 Spl
 TGV
 TOST
-Unadjusted
 Variational
 Watanabe
 WinBUGS
@@ -54,8 +53,6 @@ homoscedasticity
 ij
 ije
 iliac
-init
-jitter
 kfold
 linetype
 lm
@@ -79,17 +76,14 @@ ppc
 ppd
 pre
 probs
-reproducibility
 retreive
 rstanarm
 rstanrm
 sd
-sigmoid
 standardisation
 threenum
-unadjusted
-untransformed
+varConstPower
+varExp
 varibales
-vectorized
+varpower
 waic
-warmup

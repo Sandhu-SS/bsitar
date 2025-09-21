@@ -42,6 +42,7 @@
   clearenvfuns = NULL,
   funlist = NULL,
   xvar = NULL,
+  difx = NULL,
   idvar = NULL,
   itransform = NULL,
   newdata_fixed = NULL,
@@ -127,7 +128,7 @@ a function to be applied on the predicted responses
 before summary statistics are computed. Only allowed
 if \code{method = "posterior_predict"}.}
 
-\item{transform_draws}{A function is applied to individual draws from the
+\item{transform_draws}{A function applied to individual draws from the
 posterior distribution before computing summaries (default \code{NULL}).
 The argument \code{transform_draws} is derived from the
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
@@ -135,7 +136,13 @@ the \code{transform} argument from the deprecated
 \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
 the \code{transform_draws} argument takes precedence over the
-\code{transform} argument.}
+\code{transform} argument. Note that when \code{transform_draws = NULL}, an
+attempt is made to automatically set \code{transform_draws = 'exp'} for
+\code{dpar = 'sigma'}. User can set  \code{transform_draws = FALSE} to turn
+off this automatic assignment of \code{'exp'} to the
+\code{transform_draws}. It is also important to set \code{transform_draws =
+  FALSE} when computing the first derivative (velocity) for \code{dpar =
+  'sigma'}.}
 
 \item{resolution}{Number of support points used to generate
 the plots. Higher resolution leads to smoother plots.
@@ -202,9 +209,9 @@ interpolated. Note that these interpolations do not alter the range of the
 predictor when calculating population averages and/or individual-specific
 growth curves.}
 
-\item{deriv}{An integer indicating whether to estimate the distance curve
-or its derivative (velocity curve). The default \code{deriv = 0} is for
-the distance curve, while \code{deriv = 1} is for the velocity curve.}
+\item{deriv}{An integer indicating whether to estimate the distance curve or
+its derivative (velocity curve). The default \code{deriv = 0} is for the
+distance curve, while \code{deriv = 1} is for the velocity curve.}
 
 \item{summary}{A logical value indicating whether only the estimate should be
 computed (\code{TRUE}), or whether the estimate along with SE and CI should
@@ -296,6 +303,15 @@ curve and one for the velocity curve.}
 internally. A use case is when conflicting variables exist (e.g.,
 \code{sigma_formula}) and user wants to set a specific variable as
 \code{'x'}.}
+
+\item{difx}{A character string (default \code{NULL}) specifying the
+\code{'x'} variable that should be used for manual differentiation of the
+distance curve. Internally, the \code{xvar} is set as \code{difx} if
+specified. The argument \code{difx} is evaluated only when \code{dpar =
+  'sigma'}, ignored otherwise. Note that argument \code{xvar} itself is rarely
+used because \code{xvar} is inferred internally. A use case is when
+conflicting variables exist (e.g., \code{sigma_formula}) and user wants to
+set a specific variable as \code{'x'}.}
 
 \item{idvar}{A character string (default \code{NULL}) specifying the
 \code{'id'} variable. Rarely used because \code{idvar} is inferred

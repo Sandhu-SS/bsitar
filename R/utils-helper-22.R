@@ -333,12 +333,42 @@ modelbased_growthparameters_call.bgmfit <-
     idvar <- idvar
     if(length(idvar) > 1) idvar <- idvar[1]
     
+    
+    
+    
     ########################################################
-    # prepare_data2
-    ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-    ifunx_ <- model$model_info[[ifunx_]]
+    # funx_ <- paste0('xfuntransform2', resp_rev_)
+    
+    
+    check_set_fun <- check_set_fun_transform(model = model, 
+                                             which = 'xfuntransform2',
+                                             dpar = dpar, 
+                                             resp= resp, 
+                                             transform = NULL,
+                                             auto = FALSE, 
+                                             verbose = verbose)
+    
+    funx_ <- check_set_fun[['setfun']]
+    if(check_set_fun[['was_null']]) {
+      model$model_info[[check_set_fun[['setfunname']]]] <- funx_
+    }
+    
+    
     ########################################################
-    funx_ <- paste0('xfuntransform2', resp_rev_)
+    
+    check_set_fun <- check_set_fun_transform(model = model, 
+                                             which = 'ixfuntransform2',
+                                             dpar = dpar, 
+                                             resp= resp, 
+                                             transform = itransform,
+                                             auto = TRUE, 
+                                             verbose = verbose)
+    
+    ifunx_ <- check_set_fun[['setfun']]
+    if(check_set_fun[['was_null']]) {
+      model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
+    }
+    
     
     
     ########################################################
@@ -348,7 +378,16 @@ modelbased_growthparameters_call.bgmfit <-
     # This is restricted to  when using 'pdrawsp' etc. 
     # use cae ->  get_dv
     # 6.03.205
-    itransform_set <- get_itransform_call(itransform)
+    # itransform_set <- get_itransform_call(itransform)
+    
+    itransform_set <- get_itransform_call(itransform = itransform,
+                                          model = model, 
+                                          newdata = newdata,
+                                          dpar = dpar, 
+                                          resp = resp,
+                                          auto = FALSE,
+                                          verbose = verbose)
+    
     if(itransform_set == "") {
       if(!isFALSE(pdrawsp)) {
         if(!is.character(pdrawsp)) pdrawsp <- "return"
@@ -1051,7 +1090,13 @@ modelbased_growthparameters_call.bgmfit <-
                                          xcall = NULL, verbose = verbose)
     
     full.args$dpar <- dpar
-    newdata        <- CustomDoCall(get.newdata, full.args)
+    
+    get.newdata_args <- list()
+    for (i in methods::formalArgs(get.newdata)) {
+      get.newdata_args[[i]] <- full.args[[i]]
+    }
+    
+    newdata        <- CustomDoCall(get.newdata, get.newdata_args)
     
     
 

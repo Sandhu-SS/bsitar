@@ -2,16 +2,10 @@
 
 ### Breaking changes
 
-A major rewrite of some internal functions requires re-fitting of previously saved model objects for the post-processing work properly. No changes are required from the user's perspective, except that the model should be refitted. The rewrite of the core functions aligns with the future expansion of the package to fit location-scale models.
+A major refactoring of the internal code to streamline the integration of modelling the distributional parameter sigma, aligning it more closely with the location parameter mu. This update marks the first step in a series of improvements aimed at enabling robust modelling of location-scale models. Additionally, the core functions are significantly rewritten to enhance the speed and efficiency of model fitting. Note: This release should be considered experimental. Future versions may introduce further significant changes. Additionally, documentation has not yet been fully updated to reflect these modifications.
 
-The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
-
-Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the ``marginaleffects`` package.
-
-For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
-
-The default ``stype`` set to ``nsk`` instead of ``nsp``. 
-
+Due to the above changes, previously saved model objects will need to be refitted for post-processing to work correctly.
+No other changes are required from the user’s perspective—only that the model should be re-run.
 
 ## New features/Additions
 
@@ -25,6 +19,14 @@ Added support for ``tag`` feature implementing parameter specific prior sensitiv
 ### Minor changes/Enhancements
 
 The efficiency of the post-processing function has been improved (average improvement in speed ~ 2x).
+
+The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
+
+Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the ``marginaleffects`` package.
+
+For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
+
+The default ``stype`` set to ``nsk`` instead of ``nsp``. 
 
  
 

@@ -238,6 +238,7 @@ plot_curves.bgmfit <- function(model,
                                re_formula = NULL,
                                numeric_cov_at = NULL,
                                aux_variables = NULL,
+                               grid_add = NULL,
                                levels_id = NULL,
                                avg_reffects = NULL,
                                ipts = NULL,
@@ -292,6 +293,7 @@ plot_curves.bgmfit <- function(model,
                                clearenvfuns = NULL,
                                funlist = NULL,
                                xvar = NULL,
+                               difx = NULL,
                                idvar = NULL,
                                itransform = NULL,
                                newdata_fixed = NULL,
@@ -306,28 +308,22 @@ plot_curves.bgmfit <- function(model,
     envir <- envir
   }
   
-  # 20.03.2025
-  assign_function_to_environment(transform_draws, 'transform_draws', 
-                                 envir = NULL)
-  model$model_info[['transform_draws']] <- transform_draws
-    
+  
   
   if(is.null(dpar)) {
     dpar <- "mu"
   }
   
+  model <- getmodel_info(model = model, 
+                         dpar = dpar, 
+                         resp = resp, 
+                         deriv = NULL, 
+                         verbose = verbose)
+  
+  
   # 02.08.2025 - this for post_processing_checks
   model$model_info[['model_deriv']] <- model_deriv
   model$model_info[['dpar']]        <- dpar
-  
-  
-  # 20.03.2025
-  # Depending on dpar 'mu' or 'sigma', subset model_info
-  # This only when set_sigma_manual used to model a b c 
-  # Not when a function such as splines::ns etc used in sigma_formula
-  
-  
-  model <- getmodel_info(model = model, dpar = dpar, resp = resp)
   
   
 
@@ -360,7 +356,6 @@ plot_curves.bgmfit <- function(model,
   
   
   # Initiate non formalArgs()
-  # xvar <- NULL;
   yvar <- NULL;
   # IDvar <- NULL;
   groupbytest <- NULL;
@@ -390,28 +385,7 @@ plot_curves.bgmfit <- function(model,
   . <- NULL;
   
   
-  
-  if(dpar == "sigma") {
-    if (is.null(resp)) {
-      resp_    <- resp
-      revresp_ <- ""
-    } else if (!is.null(resp)) {
-      resp_    <- paste0(resp, "_")
-      revresp_ <- paste0("_", resp)
-    }
-    sigma_model_      <- paste0('sigmamodel', revresp_)
-    sigma_model       <- model$model_info[[sigma_model_]]
-    if(is.null(xvar)) {
-      if(!is.null(sigma_model)) {
-        if(sigma_model != "ls") {
-            stop("For plotting dpar = 'sigma', the xvar should be specified")
-        }
-      }
-    }
-  }
-  
-  
-  
+ 
   xcall <- match.call()
   match.call.list.in <- as.list(match.call())[-1]
   
@@ -446,41 +420,6 @@ plot_curves.bgmfit <- function(model,
   post_processing_checks_args[['check_d2']] <- FALSE
   
   o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
-  
- 
-  
-  # o <- post_processing_checks(model = model,
-  #                             xcall = xcall,
-  #                             resp = resp,
-  #                             envir = envir)
-  
-  # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-  # scall <- sys.calls()
-  # 
-  # get_xcall <- function(xcall, scall) {
-  #   scall <- scall[[length(scall)]]
-  #   if(any(grepl("plot_curves", scall, fixed = T)) |
-  #      any(grepl("plot_curves.bgmfit", scall, fixed = T))) {
-  #     xcall <- "plot_curves"
-  #   } else if(any(grepl("growthparameters", scall, fixed = T)) |
-  #             any(grepl("growthparameters.bgmfit", scall, fixed = T))) {
-  #     xcall <- "growthparameters"
-  #   } else {
-  #     xcall <- xcall
-  #   }
-  # }
-  # 
-  # 
-  # #   xcall <- get_xcall(xcall, scall)
-  # 
-  # if(xcall == "CustomDoCall" | xcall == "CustomDoCall") {
-  #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-  #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-  #   zzz <- strsplit(zzz, ",")[[1]][1]
-  #   xcall <- strsplit(zzz, "\\.")[[1]][1]
-  # } else {
-  #   xcall <- get_xcall(xcall, scall)
-  # }
   
   
   rlang_trace_back <- rlang::trace_back()
@@ -557,6 +496,140 @@ plot_curves.bgmfit <- function(model,
   } 
   
   
+  
+  if (opt == 'd' | opt == 'D') {
+    only_distance_curve <- TRUE
+  } else {
+    only_distance_curve <- FALSE
+  }
+  
+  if (grepl("v", opt, ignore.case = F) |
+      grepl("V", opt, ignore.case = F)) {
+    need_velocity_curve <- TRUE
+  } else {
+    need_velocity_curve <- FALSE
+  }
+  
+  if(only_distance_curve) {
+    need_velocity_curve <- FALSE
+  }
+  
+  if(need_velocity_curve) {
+    need_xvar_must <- TRUE
+  } else {
+    need_xvar_must <- FALSE
+  }
+  
+  # if plot, need xvar
+  if(returndata) {
+    need_xvar_must <- need_xvar_must
+  } else {
+    need_xvar_must <- TRUE
+  }
+  
+  
+  arguments$model$model_info[['difx']] <- difx
+
+  if(dpar == "sigma") {
+    sigma_model <- get_sigmamodel_info(model = model,
+                                       newdata = newdata,
+                                       dpar = dpar, 
+                                       resp = resp, 
+                                       what = 'model',
+                                       cov = NULL, 
+                                       all = FALSE, 
+                                       verbose = verbose)
+    
+    arguments$model$model_info[['which_sigma_model']] <- 
+      model$model_info[['which_sigma_model']] <- sigma_model
+    
+    if(is.null(transform_draws)) {
+      transform_draws <- 
+        check_set_transform_draws_sigma(model = model, 
+                                        dpar = dpar, 
+                                        xvar = xvar, 
+                                        resp = resp, 
+                                        auto = TRUE,
+                                        transform_draws = transform_draws,
+                                        itransform = itransform,
+                                        verbose = verbose)
+      
+      # Imp to assign arguments[['transform_draws']] 
+      arguments[['transform_draws']] <- transform_draws
+    }
+    
+   
+    if(sigma_model == "basic") {
+      if(!is.null(ipts)) {
+        stop("For sigma_model = ",  
+             collapse_comma(sigma_model), ", the ipts should be NULL", 
+             "\n  ", 
+             "Currently, you have set this argument as ipts = ", ipts)
+      }
+    }
+    
+    msg_sigma_model_no_xvar <- 
+    paste0("Although 'xvar' is strictly not required for estimating 
+           distance curve when sigma_model = ",  collapse_comma(sigma_model), 
+           " but still it is better to specify 'xvar' to correctly label
+           and plot x-axis. Otherwise x-axis wil be based on the xvar
+           from the 'mu' part"
+           )
+    
+    clean_msg_sigma_model_no_xvar <- trimws(gsub("\\s+", " ",
+                                                 msg_sigma_model_no_xvar))
+    
+   
+    if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
+    # if(sigma_model == "basic" && !need_velocity_curve) {
+      if(is.null(xvar)) {
+        if(verbose) {
+          message(clean_msg_sigma_model_no_xvar)
+        }
+      }
+    }
+    
+    if(sigma_model != "ls" && need_velocity_curve) {
+    # if(sigma_model == "basic" && need_velocity_curve) {
+      # for deriv > 0, imp each id to have enough data points
+      xvar <- check_set_xvar_sigma(model = model, 
+                                   dpar = dpar, 
+                                   xvar = xvar, 
+                                   resp = resp, 
+                                   auto = TRUE,
+                                   verbose = verbose)
+      
+      newdata <- set_sigma_grid_newdata(model = model,
+                                        newdata = newdata,
+                                        resp = resp, 
+                                        dpar = NULL, 
+                                        idvar = NULL,
+                                        xvar = xvar,
+                                        difx = difx,
+                                        difx_asit = FALSE,
+                                        auto = TRUE,
+                                        xrange = NULL,
+                                        length.out = NULL,
+                                        grid_add = grid_add,
+                                        grid_type= NULL,
+                                        verbose = verbose)
+      
+      
+      
+      arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
+      arguments$newdata <- newdata
+    } # if(sigma_model == "basic") {
+  } # if(dpar == "sigma") {
+  
+  assign_function_to_environment(transform_draws, 'transform_draws',
+                                 envir = NULL)
+
+  arguments$model$model_info[['transform_draws']] <-
+  model$model_info[['transform_draws']] <- transform_draws
+  
+ 
+
+  
   get.newdata_args <- list()
   get.newdata_args[['model']]          <- model
   get.newdata_args[['newdata']]        <- newdata
@@ -574,13 +647,15 @@ plot_curves.bgmfit <- function(model,
   
   
   
-  
   # for xyadj....
-  get.newdata_args$dpar    <- dpar
+  get.newdata_args$dpar      <- dpar
   newdata.xyadj <- CustomDoCall(get.newdata, get.newdata_args)
-  get.newdata_args[['ipts']]           <- ipts
+  
+  get.newdata_args[['ipts']] <- ipts
   newdata       <- CustomDoCall(get.newdata, get.newdata_args)
   
+  # So that attr(newdata, 'list_c') pass on to growthparameters()
+  arguments$newdata <- newdata
   
   
   list_c <- attr(newdata, 'list_c')
@@ -596,6 +671,7 @@ plot_curves.bgmfit <- function(model,
   }
   
   if(is.null(uvarby)) uvarby <- NA
+  
   
   Xx <- xvar
   Yy <- yvar
@@ -764,6 +840,58 @@ plot_curves.bgmfit <- function(model,
   }
   
 
+  
+  ########################################################
+  # 02.08.2025
+  # add_prefix_to_fun <- ""
+  # if(!is.null(dpar)) {
+  #   if(dpar == "mu") {
+  #     add_prefix_to_fun <- ""
+  #   } else if(dpar == "sigma") {
+  #     add_prefix_to_fun <- "sigma"
+  #   }
+  # } 
+  # # prepare_data2
+  # if (is.null(resp)) {
+  #   resp_rev_ <- resp
+  # } else if (!is.null(resp)) {
+  #   resp_rev_ <- paste0("_", resp)
+  # }
+  # ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+  # # 02.08.2025
+  # ifunx_ <- ifunx_name <- paste0(add_prefix_to_fun, ifunx_)
+  # ifunx_ <- model$model_info[[ifunx_]]
+  # 
+  # if(is.null(ifunx_)) {
+  #   if(!is.null(itransform)) {
+  #     if(itransform != "") {
+  #       model$model_info[[ifunx_name]] <- ifunx_ <- itransform
+  #     }
+  #   } else if(is.null(itransform)) {
+  #     #
+  #   }
+  # }
+  
+  
+  
+  check_set_fun <- check_set_fun_transform(model = model, 
+                                           which = 'ixfuntransform2',
+                                           dpar = dpar, 
+                                           resp= resp, 
+                                           transform = itransform,
+                                           auto = TRUE, 
+                                           verbose = verbose)
+  
+  ifunx_ <- check_set_fun[['setfun']]
+  if(check_set_fun[['was_null']]) {
+    model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
+  }
+  
+
+  
+  ########################################################
+  
+
   d. <- CustomDoCall(growthparameters.bgmfit, arguments)
   
   if(is.null(d.)) return(invisible(NULL))
@@ -791,11 +919,43 @@ plot_curves.bgmfit <- function(model,
   # newdata and xvar of curves are reverse transformed here 
   # growthparameters are are reverse transformed in growthparameters - ifunx_
   newdata_before_itransform <- newdata
-  itransform_set <- get_itransform_call(itransform)
+  # itransform_set -> what to transform -> c('x', 'y', 'sigma')
+  itransform_set <- get_itransform_call(itransform = itransform,
+                                        model = model, 
+                                        newdata = newdata,
+                                        dpar = dpar, 
+                                        resp = resp,
+                                        auto = TRUE,
+                                        verbose = verbose)
+  
+  itransform_set_x_for_sigma_model <- c("varpower", 
+                                        "varconstpower",
+                                        "varexp", 
+                                        "fitted",
+                                        "fittedz",
+                                        "fittedpower", 
+                                        "fittedexp", 
+                                        "mean", 
+                                        "meanpower", 
+                                        "meanexp", 
+                                        "residual",
+                                        "residualpower",
+                                        "residualexp")
+  
+  if(!is.null(model$model_info[['which_sigma_model']])) {
+    sigma_model <- model$model_info[['which_sigma_model']]
+    if(sigma_model %in% itransform_set_x_for_sigma_model) {
+      if(!is.null(itransform)) {
+        itransform_set <- c(itransform_set, 'x')
+      }
+    }
+  }
+  
+  
   
   # Keep flag itransform_set != "" here only 
   # Decide if need to perform itransform here or returned data 
-  # return(d.out) will also taken care off  
+  # return(d.out) will also be taken care off  
   if(any(itransform_set != "")) {
     d. <- prepare_transformations(data = d., model = model,
                                   itransform = itransform_set)
@@ -807,17 +967,7 @@ plot_curves.bgmfit <- function(model,
   
   ##############################################################
   ##############################################################
-  
-  
-  
-  # firstup <- function(x) {
-  #   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  #   x
-  # }
-  
-  
-  
-  
+
   curve.d <- 'distance'
   curve.v <- 'velocity'
   
@@ -871,17 +1021,18 @@ plot_curves.bgmfit <- function(model,
   }
   
   if (is.null(label.y)) {
-    label.d <- firstup(curve.d)
-    label.v <- firstup(curve.v)
-    label.adj <- firstup('adjusted')
+    label.d     <- firstup(curve.d)
+    label.v     <- firstup(curve.v)
+    label.adj   <- firstup('adjusted')
     label.unadj <- firstup('unadjusted')
   } else {
-    label.d <- label.v <- label.y
-    label.adj <- label.unadj <- label.y
+    label.d     <- label.v     <- label.y
+    label.adj   <- label.unadj <- label.y
   }
   
   if (is.null(label.x)) {
-    label.x <- paste0(firstup(Xx), "")
+    label.x     <- paste0(Xx, "")
+    # label.x     <- paste0(firstup(Xx), "")
   }
   
   
@@ -1362,7 +1513,16 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
+      # data_dvx <<- data_dv
+      # print(str(data_dv))
+      # print(Xx)
+
       
+      if(length( unique(round(data_dv$Estimate.y, 6))) == 1) {
+        stop("The velocity estimates are identical over the entire range of x",
+             "\n  ", 
+             "Can't draw distance and velocity curves together")
+      }
       
       
       plot.o <- data_dv %>%
