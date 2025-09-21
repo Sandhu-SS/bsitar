@@ -2,16 +2,12 @@
 
 ### Breaking changes
 
-<<<<<<< HEAD
 A major refactoring of the internal code to streamline the integration of modelling the distributional parameter sigma, aligning it more closely with the location parameter mu. This update marks the first step in a series of improvements aimed at enabling robust modelling of location-scale models. Additionally, the core functions are significantly rewritten to enhance the speed and efficiency of model fitting. Note: This release should be considered experimental. Future versions may introduce further significant changes. Additionally, documentation has not yet been fully updated to reflect these modifications.
-=======
-A major refactoring of the internal codebase to streamline the integration of modelling the distributional parameter sigma, aligning it more closely with the location parameter mu. This update marks the first step in a series of improvements aimed at enabling robust modelling of location-scale models. Additionally, the core functions are significantly rewritten to enhance the speed and efficiency of model fitting. Note: This release should be considered experimental. Future versions may introduce further significant changes. Additionally, documentation has not yet been fully updated to reflect these modifications.
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 
 Due to the above changes, previously saved model objects will need to be refitted for post-processing to work correctly.
 No other changes are required from the user’s perspective—only that the model should be re-run.
 
-Major change part 2
+Major change part - 2
 
 ## New features/Additions
 
