@@ -607,6 +607,7 @@ marginal_growthparameters.bgmfit <- function(model,
                          deriv = NULL, 
                          verbose = verbose)
   
+<<<<<<< HEAD
   # For sigma
   # Run this to get full data via modified get_data() for insight
   # See 'custom_get_data.brmsfit' in utils-helper-1
@@ -640,6 +641,8 @@ marginal_growthparameters.bgmfit <- function(model,
               "'To over ride this approach, set model[['test_mode']] = TRUE")
     }
   } # if(!model$test_mode) {
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
  
   
   
@@ -728,7 +731,10 @@ marginal_growthparameters.bgmfit <- function(model,
     model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
   }
   
+<<<<<<< HEAD
   
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   ########################################################
   
   # Over ride 'ifunx_()' i.e, return xvar on scale used in model fit
@@ -744,9 +750,13 @@ marginal_growthparameters.bgmfit <- function(model,
                                         auto = TRUE,
                                         verbose = verbose)
   
+<<<<<<< HEAD
   # why this itransform_set == "" cindition ?
   if(all(itransform_set == "")) {
   # if(itransform_set == "") {
+=======
+  if(itransform_set == "") {
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     if(!isFALSE(pdrawsp)) {
       if(!is.character(pdrawsp)) pdrawsp <- "return"
       selectchoicesr <- c("return", 'add') 

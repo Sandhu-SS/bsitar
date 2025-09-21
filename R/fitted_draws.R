@@ -122,6 +122,11 @@ fitted_draws.bgmfit <-
       envir <- envir
     }
     
+<<<<<<< HEAD
+=======
+    
+  
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     # 20.03.2025
     assign_function_to_environment(transform_draws, 'transform_draws', 
                                    envir = NULL)
@@ -205,6 +210,7 @@ fitted_draws.bgmfit <-
     }
     
     
+<<<<<<< HEAD
     ########################################################
     
     # For sigma
@@ -225,6 +231,8 @@ fitted_draws.bgmfit <-
     }
     
     ########################################################
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     
     indirectcall <- FALSE
     if(!plot_conditional_effects_calling) {
@@ -348,6 +356,7 @@ fitted_draws.bgmfit <-
       check_fun <- TRUE
     }
     
+<<<<<<< HEAD
     
     ############################################
     
@@ -398,6 +407,68 @@ fitted_draws.bgmfit <-
     
     ############################################
    
+=======
+    
+    
+    ############################################
+    
+    # if sigma_model == "basic" and all function can be set with deriv 0 -> 1
+    # out[['sigma_model_is_ba_set_d0_as_d1_val']] is zero
+    
+    if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
+      if(o[['sigma_model_is_ba_set_d0_as_d1']]) {
+        deriv <- o[['sigma_model_is_ba_set_d0_as_d1_val']]
+        sigma_model_is_ba_set_d0_as_d1_funs <- 
+          o[['sigma_model_is_ba_set_d0_as_d1_funs']]
+        for (i in names(sigma_model_is_ba_set_d0_as_d1_funs)) {
+          # model$model_info$exefuns[[i]] <- NULL
+          # assign(i, sigma_model_is_ba_set_d0_as_d1_funs[[i]], envir = envir)
+          model$model_info$exefuns[[i]] <- 
+            sigma_model_is_ba_set_d0_as_d1_funs[[i]]
+        }
+        check_fun <- FALSE
+      } # o[['sigma_model_is_ba_set_d0_as_d1']]
+    } # if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
+    
+    
+    if(dpar == "sigma") {
+      if(deriv > 0) {
+        if(!is.null(o[['sigma_model']])) {
+          if(o[['sigma_model']] == "ls") {
+            
+          } else if(o[['sigma_model']] != "ls") {
+            if(!o[['sigma_model_is_ba_set_d0_as_d1']]) {
+              check_fun    <- TRUE
+              available_d1 <- FALSE
+              model_deriv  <- FALSE
+              call_slopes  <- TRUE
+            }
+          }
+        }
+      } # if(deriv > 0) {
+    } # if(dpar == "sigma") {
+    
+    
+    ############################################
+    
+    # 20.03.2025
+    # if(!is.null(model$model_info[['sigma_fun_mode']])) {
+    #   sigma_fun_mode <- model$model_info[['sigma_fun_mode']]
+    #   if(dpar == "sigma") {
+    #     if(deriv > 0) {
+    #       if(sigma_fun_mode == "inline") {
+    #         check_fun    <- TRUE
+    #         available_d1 <- FALSE
+    #         model_deriv  <- FALSE
+    #         call_slopes  <- TRUE
+    #       }
+    #     }
+    #   }
+    # }
+   
+    
+    
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     # The deriv = 0/1 should also reflect in  setupfuns() 
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall,
@@ -462,11 +533,15 @@ fitted_draws.bgmfit <-
       calling.args_newdata$model   <- calling.args_newdata$object
       calling.args_newdata$newdata <- model$model_info$bgmfit.data 
       calling.args_newdata$dpar    <- dpar
+<<<<<<< HEAD
       get.newdata_args <- list()
       for (i in methods::formalArgs(get.newdata)) {
         get.newdata_args[[i]] <- calling.args_newdata[[i]]
       }
       newdata <- CustomDoCall(get.newdata, get.newdata_args)
+=======
+      newdata <- CustomDoCall(get.newdata, calling.args_newdata)
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
       rm('calling.args_newdata')
       rm('get.newdata_args')
       calling.args$newdata <- newdata
@@ -561,6 +636,11 @@ fitted_draws.bgmfit <-
     
     
     
+<<<<<<< HEAD
+=======
+   
+    
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     if(!indirectcall) {
       # NOT FROM plot_curves() and growthparameters()
       # for deriv > 0, imp each id to have enough data points
@@ -575,6 +655,7 @@ fitted_draws.bgmfit <-
                                            all = FALSE, 
                                            verbose = verbose)
         
+<<<<<<< HEAD
         calling.args$model$model_info[['which_sigma_model']] <- 
           model$model_info[['which_sigma_model']] <- sigma_model
         
@@ -655,12 +736,48 @@ fitted_draws.bgmfit <-
           calling.args[['xvar']] <- xvar
           calling.args[['difx']] <- difx
           calling.args$newdata <- newdata
+=======
+        calling.args$model$model_info[['which_sigma_model']] <- sigma_model
+        if(sigma_model == "basic") {
+          if(deriv > 0) {
+            xvar <- check_set_xvar_sigma(model = model, 
+                                         dpar = dpar, 
+                                         xvar = xvar, 
+                                         resp = resp, 
+                                         auto = TRUE,
+                                         verbose = verbose)
+            
+            newdata <- set_sigma_grid_newdata(model = model,
+                                              newdata = newdata,
+                                              resp = resp, 
+                                              dpar = NULL, 
+                                              idvar = NULL,
+                                              xvar = xvar,
+                                              auto = TRUE,
+                                              xrange = NULL,
+                                              length.out = NULL,
+                                              grid_type= NULL,
+                                              verbose = verbose)
+            
+            calling.args[['xvar']] <- xvar
+            calling.args$newdata <- newdata
+          } # if(deriv > 0) {
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
         } # if(sigma_model == "basic") {
       } # if(dpar == "sigma") {
     } # if(!indirectcall) {
     
     
     
+<<<<<<< HEAD
+=======
+    # print(calling.args[['newdata']])
+    # print(calling.args[['xvar']])
+    # print(indirectcall)
+    # print(deriv)
+
+    
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     if(indirectcall) {
       # plot_curves() and growthparameters()
       if(dpar == "sigma") {
@@ -672,20 +789,29 @@ fitted_draws.bgmfit <-
             calling.args[['xvar']] <- xvar
           }
         } # if(!is.null(model$model_info[["which_sigma_model"]])) {
+<<<<<<< HEAD
       } # if(dpar == "sigma") {
       
       if(dpar != "sigma") {
         calling.args[['xvar']] <- xvar
       } # if(dpar != "sigma") {
       
+=======
+      } else if(dpar != "sigma") {
+        calling.args[['xvar']] <- xvar
+      } # if(dpar == "sigma") { else...
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     } # if(indirectcall) {
   
     
     
+<<<<<<< HEAD
     if(!is.null(attr(calling.args$newdata, 'difx'))) {
       calling.args[['difx']] <- difx <- attr(calling.args$newdata, 'difx')
     } 
     
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     
     
     if(!plot_conditional_effects_calling) {
@@ -729,8 +855,11 @@ fitted_draws.bgmfit <-
             mapderivqr_args[['robust']] <- calling.args[['robust']]
             mapderivqr_args[['dpar']] <- calling.args[['dpar']]
             mapderivqr_args[['verbose']] <- calling.args[['verbose']]
+<<<<<<< HEAD
               # mapderivqr_argsx <<- mapderivqr_args
             # mapderivqr_argsx$newdata$age <- seq.int(0, 20, length.out = 770)
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
             . <- CustomDoCall(mapderivqr, mapderivqr_args)
           }
         } # if(deriv > 0) {

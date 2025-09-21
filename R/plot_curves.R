@@ -497,6 +497,7 @@ plot_curves.bgmfit <- function(model,
   
   
   
+<<<<<<< HEAD
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
   } else {
@@ -530,6 +531,9 @@ plot_curves.bgmfit <- function(model,
   
   arguments$model$model_info[['difx']] <- difx
 
+=======
+  
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   if(dpar == "sigma") {
     sigma_model <- get_sigmamodel_info(model = model,
                                        newdata = newdata,
@@ -540,6 +544,7 @@ plot_curves.bgmfit <- function(model,
                                        all = FALSE, 
                                        verbose = verbose)
     
+<<<<<<< HEAD
     arguments$model$model_info[['which_sigma_model']] <- 
       model$model_info[['which_sigma_model']] <- sigma_model
     
@@ -591,6 +596,11 @@ plot_curves.bgmfit <- function(model,
     
     if(sigma_model != "ls" && need_velocity_curve) {
     # if(sigma_model == "basic" && need_velocity_curve) {
+=======
+    arguments$model$model_info[['which_sigma_model']] <- sigma_model
+    
+    if(sigma_model == "basic") {
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
       # for deriv > 0, imp each id to have enough data points
       xvar <- check_set_xvar_sigma(model = model, 
                                    dpar = dpar, 
@@ -605,6 +615,7 @@ plot_curves.bgmfit <- function(model,
                                         dpar = NULL, 
                                         idvar = NULL,
                                         xvar = xvar,
+<<<<<<< HEAD
                                         difx = difx,
                                         difx_asit = FALSE,
                                         auto = TRUE,
@@ -628,6 +639,21 @@ plot_curves.bgmfit <- function(model,
   model$model_info[['transform_draws']] <- transform_draws
   
  
+=======
+                                        auto = TRUE,
+                                        xrange = NULL,
+                                        length.out = NULL,
+                                        grid_type= NULL,
+                                        verbose = verbose)
+      
+      arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
+      arguments$newdata <- newdata
+    } # if(sigma_model == "basic") {
+    
+  } # if(dpar == "sigma") {
+  
+  
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 
   
   get.newdata_args <- list()
@@ -928,6 +954,7 @@ plot_curves.bgmfit <- function(model,
                                         auto = TRUE,
                                         verbose = verbose)
   
+<<<<<<< HEAD
   itransform_set_x_for_sigma_model <- c("varpower", 
                                         "varconstpower",
                                         "varexp", 
@@ -952,6 +979,8 @@ plot_curves.bgmfit <- function(model,
   }
   
   
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   # Keep flag itransform_set != "" here only 
   # Decide if need to perform itransform here or returned data 

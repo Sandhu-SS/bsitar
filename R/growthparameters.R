@@ -486,6 +486,10 @@ growthparameters.bgmfit <- function(model,
                          verbose = verbose)
   
   
+<<<<<<< HEAD
+=======
+  
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
 
   if(is.null(usesavedfuns)) {
@@ -669,6 +673,7 @@ growthparameters.bgmfit <- function(model,
   arguments$model <- model
   arguments$usesavedfuns <- usesavedfuns
   
+<<<<<<< HEAD
   
   
   # For 'plot_curves', 'check_set_xvar_sigma' has been called there itself
@@ -676,6 +681,10 @@ growthparameters.bgmfit <- function(model,
     need_velocity_curve <- TRUE
     need_xvar_must      <- TRUE
     arguments$model$model_info[['difx']] <- difx
+=======
+  # For 'plot_curves', 'check_set_xvar_sigma' has been called there itself
+  if(xcall != 'plot_curves') {
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     if(dpar == "sigma") {
       sigma_model <- get_sigmamodel_info(model = model,
                                          newdata = newdata,
@@ -686,6 +695,7 @@ growthparameters.bgmfit <- function(model,
                                          all = FALSE, 
                                          verbose = verbose)
       
+<<<<<<< HEAD
       arguments$model$model_info[['which_sigma_model']] <- 
         model$model_info[['which_sigma_model']] <- sigma_model
       
@@ -738,6 +748,11 @@ growthparameters.bgmfit <- function(model,
       if(sigma_model != "ls" && need_velocity_curve) {
         # if(sigma_model == "basic" && need_velocity_curve) {
         # for deriv > 0, imp each id to have enough data points
+=======
+      arguments$model$model_info[['which_sigma_model']] <- sigma_model
+      
+      if(sigma_model == "basic") {
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
         xvar <- check_set_xvar_sigma(model = model, 
                                      dpar = dpar, 
                                      xvar = xvar, 
@@ -751,6 +766,7 @@ growthparameters.bgmfit <- function(model,
                                           dpar = NULL, 
                                           idvar = NULL,
                                           xvar = xvar,
+<<<<<<< HEAD
                                           difx = difx,
                                           difx_asit = FALSE,
                                           auto = TRUE,
@@ -777,6 +793,23 @@ growthparameters.bgmfit <- function(model,
   
   
   
+=======
+                                          auto = TRUE,
+                                          xrange = NULL,
+                                          length.out = NULL,
+                                          grid_type= NULL,
+                                          verbose = verbose)
+        
+        arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
+        arguments$newdata <- newdata
+      } # if(sigma_model == "basic") {
+      
+    } # if(dpar == "sigma") {
+  }
+  
+  
+
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   if(xcall == 'plot_curves') {
     arguments$plot <- TRUE
@@ -1268,6 +1301,29 @@ growthparameters.bgmfit <- function(model,
     }
     
    
+<<<<<<< HEAD
+=======
+    
+    
+    
+    newdata <- get.newdata(model, 
+                           newdata = newdata, 
+                           xvar = xvar,
+                           idvar = idvar,
+                           resp = resp, 
+                           dpar = dpar,
+                           numeric_cov_at = numeric_cov_at,
+                           aux_variables = aux_variables,
+                           levels_id = levels_id,
+                           ipts = ipts,
+                           xrange = xrange,
+                           idata_method = idata_method,
+                           dummy_to_factor = dummy_to_factor,
+                           newdata_fixed = newdata_fixed,
+                           verbose = verbose)
+
+    
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     list_c <- attr(newdata, 'list_c')
     
     # The newdata has already been created in plot_curves() with attached list_c
@@ -1928,6 +1984,11 @@ growthparameters.bgmfit <- function(model,
               old <- new <- NULL
             }
         }
+<<<<<<< HEAD
+=======
+        
+        
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
         
       } # else if (!grepl("^[[:upper:]]+$", velc..)) {
       
@@ -1956,10 +2017,13 @@ growthparameters.bgmfit <- function(model,
         out_v_ <- CustomDoCall(predict_draws, arguments)
       }
       
+<<<<<<< HEAD
       # out_v_x <<- out_v_
       # out_v_x %>% range()
       # print(xvar)
       
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 
      if(is.null(out_v_)) return(invisible(NULL))
       
@@ -2084,8 +2148,11 @@ growthparameters.bgmfit <- function(model,
     # itransform is not doing anything, it will be ignored in prepare_transform
     # itransform_set <- get_itransform_call(itransform)
     
+<<<<<<< HEAD
     newdata_before_itransform <- newdata
     
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     itransform_set <- get_itransform_call(itransform = itransform,
                                           model = model, 
                                           newdata = newdata,
@@ -2094,6 +2161,7 @@ growthparameters.bgmfit <- function(model,
                                           auto = FALSE,
                                           verbose = verbose)
     
+<<<<<<< HEAD
     itransform_set_x_for_sigma_model <- c("varpower", 
                                           "varconstpower",
                                           "varexp", 
@@ -2117,6 +2185,8 @@ growthparameters.bgmfit <- function(model,
       }
     }
     
+=======
+>>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     if(any(itransform_set != "")) {
       parameters <- prepare_transformations(data = parameters, model = model,
                                         itransform = itransform_set)
