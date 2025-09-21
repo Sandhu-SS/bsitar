@@ -2,15 +2,27 @@
 
 ### Breaking changes
 
-A major rewrite of some internal functions requires re-fitting of previously saved model objects for the post-processing work properly. No changes are required from the user's perspective, except that the model should be refitted. The rewrite of the core functions aligns with the future expansion of the package to fit location-scale models.
+A major refactoring of the internal code to streamline the integration of modelling the distributional parameter sigma, aligning it more closely with the location parameter mu. This update marks the first step in a series of improvements aimed at enabling robust modelling of location-scale models. Additionally, the core functions are significantly rewritten to enhance the speed and efficiency of model fitting. Note: This release should be considered experimental. Future versions may introduce further significant changes. Additionally, documentation has not yet been fully updated to reflect these modifications.
 
-The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
+Due to the above changes, previously saved model objects will need to be refitted for post-processing to work correctly.
+No other changes are required from the user’s perspective—only that the model should be re-run.
 
-Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the ``marginaleffects`` package.
+Update documentation to provide comprehensive details on modeling the distributional parameter ``sigma``, which represents the residual standard deviation in Bayesian hierarchical models. 
 
-For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
+The sigma parameter controls the residual variance structure and can be modeled as either a constant or a function of covariates to accommodate heteroskedasticity. This flexibility allows researchers to specify complex variance relationships that better reflect the underlying data-generating process.
 
-The default ``stype`` set to ``nsk`` instead of ``nsp``. 
+Modeling Approaches
+Constant Variance: By default, ``sigma`` is treated as a constant parameter across all observations, assuming homoskedastic residuals.
+
+Covariate-Dependent Variance: The distributional parameter can be modeled as a function of predictors using the formula syntax sigma ~ covariates. This approach enables heteroskedastic modeling where residual variance changes systematically with covariates. 
+
+Variance Function Specifications: Common variance structures include exponential relationships (sigma ~ exp(age)), power functions (sigma ~ pow(abs(fitted_values), power)), and linear combinations of multiple predictors. The ``bsitar`` package provide six different types of variance function that are adapted from the ``nlme`` package.
+
+Random Effects Integration
+At higher hierarchical levels, ``sigma`` can incorporate random effects to model between-group variance heterogeneity. This is particularly valuable in multilevel growth models where different clusters exhibit varying degrees of residual scatter.
+
+Prior Specification
+Appropriate prior distributions for ``sigma`` parameters typically include half-normal, half-Cauchy, or exponential priors that respect the positive constraint while providing regularization for model stability.
 
 
 ## New features/Additions
@@ -25,6 +37,14 @@ Added support for ``tag`` feature implementing parameter specific prior sensitiv
 ### Minor changes/Enhancements
 
 The efficiency of the post-processing function has been improved (average improvement in speed ~ 2x).
+
+The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
+
+Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the ``marginaleffects`` package.
+
+For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
+
+The default ``stype`` set to ``nsk`` instead of ``nsp``. 
 
  
 

@@ -39,8 +39,7 @@ get.newdata <- function(model,
                         idata_method = NULL,
                         dummy_to_factor = NULL,
                         newdata_fixed = NULL,
-                        verbose = FALSE,
-                        ...) {
+                        verbose = FALSE) {
   
   if (is.null(resp)) {
     resp_rev_ <- resp
@@ -62,21 +61,69 @@ get.newdata <- function(model,
   . <- NULL;
   
   
+  
+  
   validate_response(model, resp)
   
   list_c <- list()
-  xvar_ <- paste0('xvar', resp_rev_)
-  yvar_ <- paste0('yvar', resp_rev_)
-  groupvar_ <- paste0('groupvar', resp_rev_)
-  if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
-  yvar <- model$model_info[[yvar_]]
+  
+  
+  # For sigma
+  xvar_      <- paste0('xvar', resp_rev_)
+  sigmaxvar_ <- paste0('sigma', xvar_)
+  cov_       <- paste0('cov', resp_rev_)
+  sigmacov_  <- paste0('sigma', cov_)
+  uvarby     <- model$model_info$univariate_by$by
+  
+  if(dpar == "mu") {
+    if(is.null(xvar)) {
+      xvar   <- model$model_info[[xvar_]]
+    }
+    cov    <- model$model_info[[cov_]]
+  } else if(dpar == "sigma") {
+    
+    if(!is.na(model$model_info[[sigmaxvar_]])) {
+      xvar   <- model$model_info[[sigmaxvar_]]
+    } else if(is.na(model$model_info[[sigmaxvar_]]) & 
+              !is.null(model$model_info[[xvar_]])) {
+      xvar   <- model$model_info[[xvar_]]
+    }
+    
+    cov    <- model$model_info[[sigmacov_]]
+    
+  } # if(dpar == "mu") { else if(dpar == "sigma") {
+  
+  
+  
+  # # For sigma
+  # xvar_      <- paste0('xvar', resp_rev_)
+  # sigmaxvar_ <- paste0('sigma', xvar_)
+  # cov_       <- paste0('cov', resp_rev_)
+  # sigmacov_  <- paste0('sigma', cov_)
+  # uvarby     <- model$model_info$univariate_by$by
+  # if(dpar == "mu") {
+  #   if(is.null(xvar)) {
+  #     xvar   <- model$model_info[[xvar_]]
+  #   }
+  #   cov    <- model$model_info[[cov_]]
+  # }
+  
+  
+  
+  
+  groupvar_     <- paste0('groupvar', resp_rev_)
+  yvar_         <- paste0('yvar', resp_rev_)
+  yvar          <- model$model_info[[yvar_]]
   hierarchical_ <- paste0('hierarchical', resp_rev_)
+  
   
   if(is.null(levels_id) & is.null(idvar)) {
     idvar <- model$model_info[[groupvar_]]
     if (!is.null(model$model_info[[hierarchical_]])) {
       idvar <- model$model_info[[hierarchical_]]
     }
+    # 29.08.2025 - re assign idvar to groupvar_ if hierarchical_
+    model$model_info[[groupvar_]] <- idvar # idvar[1]
   } else if (!is.null(levels_id)) {
     idvar <- levels_id
   } else if (!is.null(idvar)) {
@@ -97,6 +144,9 @@ get.newdata <- function(model,
   }
   
   
+  # print(groupvar_)
+  # model$model_info[[groupvar_]] %>% print()
+  # stop()
   
  
   # if (is.null(newdata)) {
@@ -109,38 +159,57 @@ get.newdata <- function(model,
   
   
   if(dpar == "sigma") {
-    if (is.null(resp)) {
-      resp_    <- resp
-      revresp_ <- ""
-    } else if (!is.null(resp)) {
-      resp_    <- paste0(resp, "_")
-      revresp_ <- paste0("_", resp)
+    sigma_model <- get_sigmamodel_info(model = model,
+                                       newdata = NULL, # what = 'model' ignored 
+                                       dpar = dpar, 
+                                       resp = resp, 
+                                       what = 'model',
+                                       cov = NULL, 
+                                       all = FALSE, 
+                                       verbose = verbose)
     }
-    sigma_model_      <- paste0('sigmamodel', revresp_)
-    sigma_model       <- model$model_info[[sigma_model_]]
+  
+  
+  
+  if (is.null(newdata)) {
+    if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
+    if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
+  } else {
+    newdata <- newdata
+  }
+  
+  
+  if(data.table::is.data.table(newdata)) {
+    newdata <- newdata %>% data.frame()
+    newdata_was_data_table <- TRUE
+  } else {
+    newdata <- newdata
+    newdata_was_data_table <- FALSE
   }
   
   
   
-  if(dpar == "mu") {
-    if (is.null(newdata)) {
-      if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
-      if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
-    } else {
-      newdata <- newdata
-    }
-  } else if(dpar == "sigma") {
-    if(is.null(newdata)) {
-      if(!is.null(sigma_model)) {
-        if(sigma_model != "ls") {
-          newdata <- model$model_info$bgmfit.data
-          if(verbose) {
-            message("For dpar = 'sigma', the data used for model fitting is used")
-          }
-        }
-      }
-    }
-  }
+  
+  # if(dpar == "mu") {
+  #   if (is.null(newdata)) {
+  #     if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
+  #     if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
+  #   } else {
+  #     newdata <- newdata
+  #   }
+  # } else if(dpar == "sigma") {
+  #   if(is.null(newdata)) {
+  #     if(!is.null(sigma_model)) {
+  #       if(sigma_model != "ls") {
+  #         # newdata <- model$model_info$bgmfit.data
+  #         newdata <- newdata
+  #         if(verbose) {
+  #           message("For dpar = 'sigma', the data used for model fitting is used")
+  #         }
+  #       }
+  #     }
+  #   }
+  # }
   
   newdata.in <- newdata
   
@@ -203,15 +272,19 @@ get.newdata <- function(model,
   # }
   
   
-  newdata <- check_newdata_args(model, newdata, idvar, resp)
+  
+  
+  newdata <- check_newdata_args(model, newdata, idvar, resp, verbose = verbose)
+  
+  
   
   
   if(dpar == "sigma") {
     if(is.null(newdata_fixed)) {
       if(!is.null(sigma_model)) {
         if(sigma_model != "ls") {
-          newdata_fixed <- 1
-          idata_method <- 'm2'
+          # newdata_fixed <- 1
+          # idata_method <- 'm2'
           if(verbose) {
             message("For dpar = 'sigma', the data used for model fitting is used")
           }
@@ -221,14 +294,25 @@ get.newdata <- function(model,
   }
   
   
-  
 
   # prepare_data2 with model = model will get all the necessary info
+  
+  if(dpar == "mu") {
+    itransform_set <- 'x'
+    transform_set  <- 'x'
+  } else if(dpar == "sigma") {
+    itransform_set <- 'sigma'
+    transform_set  <- 'sigma'
+  }
+  
   
   add_just_list_c <- FALSE
   if(is.null(newdata_fixed)) {
     newdata <- prepare_data2(data = newdata, model = model)
-    newdata <- prepare_transformations(data = newdata, model = model)
+    newdata <- prepare_transformations(data = newdata, 
+                                       # itransform = itransform_set, 
+                                       # transform = transform_set,
+                                       model = model)
   } else if(!is.null(newdata_fixed)) {
     if(newdata_fixed == 0) {
       # do nothing assuming that user has set up for 'uvarby' etc
@@ -250,6 +334,7 @@ get.newdata <- function(model,
   
   newdata <- newdata[,!duplicated(colnames(newdata))]
   
+  
   ##################################################
   # prepare_data2 changes 
   if (!is.na(model$model_info$univariate_by$by)) {
@@ -262,14 +347,7 @@ get.newdata <- function(model,
   } 
   
   
-  covars_extrcation <- function(str) {
-    str <- gsub("[[:space:]]", "", str)
-    for (ci in c("*", "+", ":")) {
-      str <- gsub(ci, ' ', str, fixed = T)
-    }
-    str <- strsplit(str, " ")[[1]]
-    str
-  }
+  
   
   
   
@@ -280,6 +358,8 @@ get.newdata <- function(model,
   # Now instead of NULL, bsitar loop ii return NA when no covar
   cov_vars      <- cov_vars[!is.na(cov_vars)]
   sigmacov_vars <- sigmacov_vars[!is.na(sigmacov_vars)]
+  
+  
   
   if(length(cov_vars) == 0) cov_vars <- NULL
   if(length(sigmacov_vars) == 0) sigmacov_vars <- NULL
@@ -309,6 +389,7 @@ get.newdata <- function(model,
   # check if cov is charcater but not factor 
   checks_for_chr_fact <- c(cov_vars, sigmacov_vars)
   checks_for_chr_fact <- unique(checks_for_chr_fact)
+  # print(sigmacov_vars)
   for (cov_varsi in checks_for_chr_fact) {
     if(is.character(newdata[[cov_varsi]])) {
       if(!is.factor(newdata[[cov_varsi]])) {
@@ -431,8 +512,11 @@ get.newdata <- function(model,
     if (is.null(idvar))
       relocate_vars <- c(xvar)
     if (!is.na(uvarby))
-      if(idata_method == 'm1') relocate_vars <- c(relocate_vars, uvarby)
-    if(idata_method == 'm2') relocate_vars <- c(relocate_vars)
+      if(idata_method == 'm1') {
+        relocate_vars <- c(relocate_vars, uvarby)
+      } else if(idata_method == 'm2') {
+        relocate_vars <- c(relocate_vars)
+      }
     if (!is.null(cov_numeric_vars)) {
       cov_numeric_vars__ <- cov_numeric_vars
       if (identical(cov_numeric_vars__, character(0)))
@@ -480,8 +564,10 @@ get.newdata <- function(model,
         relocate_vars <- c(yvar, relocate_vars)
       }
     }
-    data %>% dplyr::relocate(dplyr::all_of(relocate_vars)) %>% data.frame()
     
+    data %>% 
+      dplyr::relocate(dplyr::all_of(relocate_vars)) %>% 
+      data.frame()
   }
   
   ########
@@ -637,6 +723,7 @@ get.newdata <- function(model,
             )
           }
         }
+        
         
         if (!is.null(xrange)) {
           if (length(xrange) == 1) {
@@ -841,6 +928,7 @@ get.newdata <- function(model,
       j_b_names__ <- c(j_b_names, cov_numeric_vars)
       j_b_names__ <- unique(j_b_names__)
       
+      
       if(idata_method == 'm1') {
         newdata <-
           newdata %>% 
@@ -909,6 +997,10 @@ get.newdata <- function(model,
   list_c[['groupby_fistr']] <- groupby_fistr
   
   attr(newdata, 'list_c') <- list_c
+  
+  if(newdata_was_data_table) {
+    newdata <- data.table::as.data.table(newdata)
+  }
   
   return(newdata)
 } # get.newdata

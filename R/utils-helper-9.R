@@ -236,7 +236,7 @@ set_priors_initials <- function(a_prior_beta,
                                 init_args_internal     = NULL,
                                 custom_order_prior_str = NULL) {
   
-  # Initiate non formalArgs()
+  # Initiate non methods::formalArgs()
   resp <- NULL;
   autocor_formi <- NULL;
   randomsi <- NULL;
@@ -411,7 +411,7 @@ set_priors_initials <- function(a_prior_beta,
   
   getArgNames <-
     function(value)
-      formalArgs(deparse(substitute(value)[[1]]))
+      methods::formalArgs(deparse(substitute(value)[[1]]))
   
   mvar <- multivariate$mvar
   
@@ -3526,6 +3526,8 @@ set_priors_initials <- function(a_prior_beta,
       } # 17.02.2025
     }
     
+    
+    
     # Convert vector of 's' initials to named individual (s1, s2)
     if(select_model == "sitar" | select_model == 'rcs') {
       # Don't let when evaluating _str higher custom order
@@ -3568,11 +3570,13 @@ set_priors_initials <- function(a_prior_beta,
           names(subset_sparms_numeric) <- subset_sparms2names
           subset_sparms3 <- list()
           for (isi in 1:df) {
+            # added  "$"  in subset_sparms_numeric for correct init when df > 10
             subset_sparms3[[paste0("b", resp_, "_s", isi)]] <-
-              subset_sparms_numeric[grep(paste0("b", resp_, "_s", isi),
+              subset_sparms_numeric[grep(paste0("b", resp_, "_s", isi, "$"),
                                          names(subset_sparms_numeric))]
           }
           subset_sparms <- subset_sparms3
+          
           subset_sparms <-
             subset_sparms[!names(subset_sparms) %in% subset_sparms_name]
           combined_inits <-
@@ -3595,9 +3599,13 @@ set_priors_initials <- function(a_prior_beta,
       
     } # if(select_model == "sitar") {
     
-    if(select_model != "sitar" & select_model != 'rcs') initials <- combined_inits
+    if(select_model != "sitar" & select_model != 'rcs') {
+      initials <- combined_inits
+    }
     
   } # if (!is.null(initial_in_datazz)) {
+  
+  
   
   
   
