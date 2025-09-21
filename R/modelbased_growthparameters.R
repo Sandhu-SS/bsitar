@@ -332,22 +332,11 @@ modelbased_growthparameters.bgmfit <-
       #   dpar <- "mu"
       # }
       
-<<<<<<< HEAD
       model <- getmodel_info(model = model, 
                              dpar = dpar, 
                              resp = resp, 
                              deriv = NULL, 
                              verbose = verbose)
-=======
-      # 20.03.2025
-      # Depending on dpar 'mu' or 'sigma', subset model_info
-      # This only when set_sigma_manual used to model a b c 
-      # Not when a function such as splines::ns etc used in sigma_formula
-      
-      
-      
-      model <- getmodel_info(model = model, dpar = dpar, resp = resp)
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
       
      
       

@@ -2139,7 +2139,7 @@ bsitar <- function(x,
                    sigma_formula_gr = NULL,
                    sigma_formula_gr_str = NULL,
                    sigma_formula_manual = NULL,
-                   sigmax = FALSE,
+                   sigmax = NULL,
                    sigmaid  = NULL,
                    sigmadf = 4,
                    sigmaknots = NA,
@@ -2325,11 +2325,7 @@ bsitar <- function(x,
   # This because i want NULL to be evaluated as TRUE and not FALSE in 
   # check_and_replace_sort_to_full()
   if(is.null(mcall[['sigmax']])) {
-<<<<<<< HEAD
   #  mcall[['sigmax']] <- TRUE
-=======
-    mcall[['sigmax']] <- TRUE
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   }
  
   mcall_ <- mcall
@@ -3747,7 +3743,6 @@ bsitar <- function(x,
   }
   
   
-<<<<<<< HEAD
   if(smat == 'isp') {
     smat_moi <- TRUE
   } else {
@@ -3755,13 +3750,6 @@ bsitar <- function(x,
   }
   
   
-=======
-  # fast_nsk %>% print()
-  # stop()
-  
-  # over ride for time being
-  # fast_nsk <- 1L
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
  
 
   # 24.08.2024
@@ -5042,7 +5030,6 @@ bsitar <- function(x,
   }
   
   
-<<<<<<< HEAD
   if(is_emptyx(sigmaxs)) {
     sigmaxs <- NA
   }
@@ -5052,25 +5039,11 @@ bsitar <- function(x,
                                    x = c("T", "F", "FALSE", "NULL", "NA"),
                                    # what = c("TRUE", "NA", "NA", "TRUE", "NA"), 
                                    what = c("TRUE", "NA", "NA", "NA", "NA"), 
-=======
-  # Now if sigmax -> sigmaxs = FALSE, then no xs will be set as sigmax
-  sigmaxs <- check_and_replace_sort_to_full(str = sigmaxs,
-                                   x = c("T", "F", "FALSE", "NULL"),
-                                   # what = c("TRUE", "FALSE", "NULL"), 
-                                   what = c("TRUE", "NA", "NA", "TRUE"), 
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
                                    allowed_left = "(^|[^[:alnum:]])",
                                    allowed_right = "($|[^[:alnum:]])"
                                    )
   
-<<<<<<< HEAD
 
-=======
-  
-  
-  # sigmaxs %>% print()
-  # stop()
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   # prepare_data2, when 'univariate_by', first run is to get names
   prepare_data_args <- list()
@@ -5109,16 +5082,6 @@ bsitar <- function(x,
   subindicators <- attr(data, "subindicators")
   
   check_variable_numeric_exists(data, c(xs, ys))
-<<<<<<< HEAD
-=======
-
-  # data %>% names() %>% print()
-  # 
-  # data[["FALSE"]] <- NULL
-  # print(xs)
-  # print(sigmaxs)
-  #  stop()
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
  
   
@@ -5617,50 +5580,7 @@ bsitar <- function(x,
                            allowed_right = "($|[^[:alnum:]])"
     )
     
-<<<<<<< HEAD
 
-=======
-    
-    
-    # patTF <- "=T($|[^[:alnum:]])"
-    # if(grepl(patTF, sigma_formula_manualsi, fixed = FALSE)) {
-    #   sigma_formula_manualsi <- gsub("T", "TRUE", 
-    #                                  sigma_formula_manualsi, fixed = T)
-    # }
-    # patTF <- "=F($|[^[:alnum:]])"
-    # if(grepl(patTF, sigma_formula_manualsi, fixed = FALSE)) {
-    #   sigma_formula_manualsi <- gsub("F", "FALSE", 
-    #                                  sigma_formula_manualsi, fixed = T)
-    # }
-    # patTF <- NULL
-    
-    check_if_varname_exact(str = sigma_formula_manualsi,
-                           x = xsi,
-                           allowed_left = "._",
-                           allowed_right = "._")
-    
-    # # pat <- "(^|[^[:alnum:]._])age($|[^[:alnum:]._])"   
-    # patxsi_not <- paste0("(^|[^[:alnum:]._])", xsi, "($|[^[:alnum:]._])")
-    # if(grepl(patxsi_not, sigma_formula_manualsi, fixed = FALSE)) {
-    #   stop("The predictor in sigma_formula_manual should not be ", 
-    #        collapse_comma(xsi), 
-    #        "\n ", 
-    #        " which has already been defined for the 'mu' parameter",
-    #        "\n  ", 
-    #        "Please rename it (e.g., '", paste0('sigma_', xsi), 
-    #        "') and define it in the data")
-    # }
-    # patxsi_not <- NULL
-    
-
-    # print(sigma_formula_manualsi)
-    # zz <<- sigma_formula_manualsi
-    # stop()
-    
-    
-    # sigma_formula_manualx <<- sigma_formula_manual
-    # stop()
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     
     if(!sigma_formula_manualsi_set) {
       set_model_sigma_by_ba <- FALSE
@@ -7155,18 +7075,6 @@ bsitar <- function(x,
     
 
     
-    
-    if(!set_model_sigma_by_ls) {
-      datai[[sigmaxsi]] <- NULL
-      sigmaxsi    <- NA
-      sigmaxs[ii] <- NA
-    }
-    
-
-    
-    # print(sigmaxsi)
-    # stop()
-    
     #################################################################
     #################################################################
     check_for_validy_of_prepare_transformations    <- TRUE
@@ -7362,7 +7270,6 @@ bsitar <- function(x,
                                        normalize = smat_normalize,
                                        preH = smat_preH,
                                        sfirst = smat_sfirst, 
-<<<<<<< HEAD
                                        sparse = smat_sparse,
                                        arg = 'cstart',
                                        dpar = "mu",
@@ -7371,12 +7278,6 @@ bsitar <- function(x,
     
     xoffset      <- round(xoffset, 8)
     
-=======
-                                       sparse = smat_sparse)
-    
-    
-    xoffset      <- round(xoffset, 8)
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     if(is_emptyx(xoffset)) {
       xoffset      <- 0
     }
@@ -7538,132 +7439,6 @@ bsitar <- function(x,
     ##########################################################################
     
     
-<<<<<<< HEAD
-=======
-    
-    
-    ##########################################################################
-    ##########################################################################
-   
-                 
-    # should be ger _ls
-    if(!is.na(sigmaxsi) &  sigmaxsi != "NA") {
-      if (is.numeric(ept(sigmaknotssi))) {
-        sigmaknots <- ept(sigmaknotssi)
-        # sigmaknotssi should take precedence over sigmadf
-        # Since sigmadf is automatically set as df, need to shut it off
-        sigmadfsi  <- "NA"
-      }
-      
-      if (is.numeric(ept(sigmadfsi))) {
-        sigmaknots <- (unname(gkn(datai[[sigmaxsi]], 
-                                  ept(sigmadfsi), ept(sigmaboundsi))))
-      }
-      
-      if(sigmabstartsi == 'sigmaxoffset') {
-        sigmabstartsi <- sigmaxoffsetsi
-      }
-      
-      if(sigmaxoffsetsi == "apv") {
-        stop("xoffset can not be apv for sigma")
-      }
-      
-      sigmaxoffset <- eval_xoffset_bstart_args(sigmaxsi, 
-                                               ysi, 
-                                               sigmaknots, 
-                                               datai, 
-                                               sigmaxoffsetsi, 
-                                               sigmaxfunsi, 
-                                               arg = 'offset',
-                                               smat = smat,
-                                               degree = smat_degree,
-                                               intercept = smat_intercept, 
-                                               derivs = smat_derivs,
-                                               centerval = smat_centerval,
-                                               normalize = smat_normalize,
-                                               preH = smat_preH,
-                                               sfirst = smat_sfirst, 
-                                               sparse = smat_sparse)
-      
-      sigmabstart <- eval_xoffset_bstart_args(sigmaxsi, 
-                                              ysi, 
-                                              sigmaknots,
-                                              datai, 
-                                              sigmabstartsi, 
-                                              sigmaxfunsi, 
-                                              arg = 'bstart',
-                                              smat = smat,
-                                              degree = smat_degree,
-                                              intercept = smat_intercept, 
-                                              derivs = smat_derivs,
-                                              centerval = smat_centerval,
-                                              normalize = smat_normalize,
-                                              preH = smat_preH,
-                                              sfirst = smat_sfirst, 
-                                              sparse = smat_sparse)
-      
-      sigmabstart <- sigmabstart - sigmaxoffset
-      
-      sigmacstart <-eval_xoffset_cstart_args(sigmaxsi, 
-                                             ysi, 
-                                             sigmaknots, 
-                                             datai, 
-                                             sigmacstartsi, 
-                                             sigmaxfunsi,
-                                             smat = smat,
-                                             degree = smat_degree,
-                                             intercept = smat_intercept, 
-                                             derivs = smat_derivs,
-                                             centerval = smat_centerval,
-                                             normalize = smat_normalize,
-                                             preH = smat_preH,
-                                             sfirst = smat_sfirst, 
-                                             sparse = smat_sparse)
-      
-      
-      
-      
-      sigmaxoffset <- round(sigmaxoffset, 8)
-      
-      # IMP This is_emptyx will handle numeric(0) when xoffset was set as NULL
-      
-      if(is_emptyx(sigmaxoffset)) {
-        sigmaxoffset      <- 0
-      }
-      
-      
-      if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-        if(!is.null(knots)) {
-          sigmaknots        <- sigmaknots - sigmaxoffset
-          sigmaknots        <- round(sigmaknots, 8)
-          sigmanknots       <- length(sigmaknots)
-          sigmadf           <- length(sigmaknots) - 1
-        } else if(is.null(knots)) {
-          sigmaknots        <- NULL
-          sigmaknots        <- NULL
-          sigmanknots       <- NULL
-          sigmadf           <- NULL
-        }
-      } else {
-        sigmaknots        <- sigmaknots - sigmaxoffset
-        sigmaknots        <- round(sigmaknots, 8)
-        sigmanknots       <- length(sigmaknots)
-        sigmadf           <- length(sigmaknots) - 1
-      }
-      
-      # datai[[sigmaxsi]] <- datai[[sigmaxsi]] - sigmaxoffset
-      # sigmaknots   <- sigmaknots - sigmaxoffset
-      # sigmaknots   <- round(sigmaknots, 8)
-      # sigmanknots  <- length(sigmaknots)
-      # sigmadf      <- length(sigmaknots) - 1
-    } # if(!is.na(sigmaxsi) &  sigmaxsi != "NA") {
-    
-    
-    ##########################################################################
-    ##########################################################################
-    
-    
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     
     ######################################################################
     ######################################################################
@@ -7725,7 +7500,6 @@ bsitar <- function(x,
     # but leave y as such 
     # Note below that 'xoffset' and 'sigmaxoffset' are not NULL
     
-   
      prepare_transformations_args[['data']]         <- datai
      prepare_transformations_args[['xvar']]         <- xsi
      prepare_transformations_args[['yvar']]         <- NULL
@@ -8055,16 +7829,12 @@ bsitar <- function(x,
         "QR_flip",
         "QR_scale",
         "SbasisN",
-<<<<<<< HEAD
         "sigmaxsi",
         'familysi',
         'sigmaxfunsi',
         'sigmayfunsi',
         'sigmayfuntransformsi',
         'family_link_sigma'
-=======
-        "sigmaxsi"
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
         
       )
     
@@ -8083,22 +7853,7 @@ bsitar <- function(x,
       }
     }
     
-<<<<<<< HEAD
   
-=======
-    # prepare_function_nsp -> just before adding  QR
-    # So, prepare_function_nsp in 'utils-helper-7' is the original function
-    # prepare_function_nspqr -> adding  QR - in 'utils-helper-7qr'
-    # now remover _nsp, and rename _nspqr to _nsp
-    
-    # Now common function for all splines types
-    # prepare_function_nsp_rcs_old
-    # prepare_function_nsp_rcs_dout
-    
-    # prepare_function_nsp_rcs_old - this was 4th August - via stanhelpers
-    # prepare_function_nsp_rcs - most recent 
-    
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     get_s_r_funs <- prepare_function_nsp_rcs(
       x = xsi,
       y = ysi,
@@ -8109,11 +7864,7 @@ bsitar <- function(x,
       internal_function_args = internal_function_args)
     
     
-<<<<<<< HEAD
     funlist[ii]     <- get_s_r_funs[['rcsfun']]
-=======
-    funlist[ii] <- get_s_r_funs[['rcsfun']]
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
     gq_funs[[ii]]   <- get_s_r_funs[['gq_funs']]
     
@@ -9841,12 +9592,9 @@ bsitar <- function(x,
     # datai[[xsi]] %>% length() %>% print()
     # print("mmm")
     # stop()
-<<<<<<< HEAD
     
     
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     
     #################################################################
     #################################################################

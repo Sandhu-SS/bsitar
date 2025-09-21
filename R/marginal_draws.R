@@ -273,7 +273,6 @@ marginal_draws.bgmfit <-
                            deriv = NULL, 
                            verbose = verbose)
     
-<<<<<<< HEAD
     
     # For sigma
     # Run this to get full data via modified get_data() for insight
@@ -298,20 +297,6 @@ marginal_draws.bgmfit <-
     } # if(!model$test_mode) {
     
     
-=======
-    
-    # Run this for full data via modified get_data() for insight
-    # To avoid CRAN issues, this must be run only when model$test_mode = FALSE
-    # The berkeley_exfit used for CRAN has model$test_mode = TRUE
-    
-    if(!model$test_mode) {
-      unlock_replace_bind(package = "insight", what = "get_data",
-                      replacement = custom_get_data.brmsfit, ept_str = T)
-    }
-    # unlock_replace_bind(package = "insight", what = "get_data",
-    #                 replacement = custom_get_data.brmsfit, ept_str = T)
-   
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
@@ -397,12 +382,9 @@ marginal_draws.bgmfit <-
       model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
     }
     
-<<<<<<< HEAD
      
     # print(model$xcall)
     
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     ########################################################
     
     
@@ -1455,12 +1437,9 @@ marginal_draws.bgmfit <-
      )
   
    
-<<<<<<< HEAD
    
    
    
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
    if(method == 'pkg') {
      # predictions_arguments.org <- predictions_arguments
      if(call_predictions) {
@@ -2625,10 +2604,7 @@ marginal_draws.bgmfit <-
    ##############################################################
    ##############################################################
    # prepare_data2
-<<<<<<< HEAD
    newdata_before_itransform <- newdata
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
    # itransform_set <- get_itransform_call(itransform)
    itransform_set <- get_itransform_call(itransform = itransform,
                                          model = model, 
@@ -2637,7 +2613,6 @@ marginal_draws.bgmfit <-
                                          resp = resp,
                                          auto = TRUE,
                                          verbose = verbose)
-<<<<<<< HEAD
 
    itransform_set_x_for_sigma_model <- c("varpower", 
                                          "varconstpower",
@@ -2664,9 +2639,6 @@ marginal_draws.bgmfit <-
    
    
 
-=======
-   
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
    if(any(itransform_set != "")) {
      if(!is.null(out_sf)) {
        out_sf <- prepare_transformations(data = out_sf, model = model,

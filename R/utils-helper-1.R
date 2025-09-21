@@ -2180,10 +2180,7 @@ mapderivqr <- function(model,
                        summary = TRUE,
                        robust = FALSE,
                        dpar = NULL,
-<<<<<<< HEAD
                        itransform = NULL,
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
                        verbose = FALSE) {
 
   if(is.null(probs)) {
@@ -2253,7 +2250,6 @@ mapderivqr <- function(model,
   hierarchical_ <- paste0('hierarchical', resp_rev_)
   
   
-<<<<<<< HEAD
   if(is.null(difx)) {
     xvar <- xvar
   } else if(!is.null(difx)) {
@@ -2265,8 +2261,6 @@ mapderivqr <- function(model,
   }
   
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   if(dpar == "sigma") {
     
   }
@@ -2304,7 +2298,6 @@ mapderivqr <- function(model,
               " used in 'mapderivqr' has been converted to 'as.factor()'")
     }
   }
-<<<<<<< HEAD
  
   
   ##############################################
@@ -2323,8 +2316,6 @@ mapderivqr <- function(model,
   
   ##############################################
 
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
 
   ##############################################
@@ -2369,10 +2360,7 @@ mapderivqr <- function(model,
     y0 <- y0
   }
   
-<<<<<<< HEAD
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 
   if(deriv == 1) {
     tempx <- apply(y0, 1, mapderiv) %>% t()
@@ -2404,7 +2392,6 @@ mapderivqr <- function(model,
 
 #' An internal function to get derivatives from distance curve
 #' 
-<<<<<<< HEAD
 #' @details
 #' Note \code{y} is before \code{x}. This is because we need to set the 
 #' \code{x} variable, and \code{y} is the default from the marginaleffect 
@@ -2413,10 +2400,6 @@ mapderivqr <- function(model,
 #' 
 #' @param y The distance curve.
 #' @param x The predictor for differentiation.
-=======
-#' @param x An object of class \code{bgmfit}.
-#' @param y A matrix comprised of distance curves.
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 #' @param method A data frame. If \code{NULL}, data used in original model
 #' fit used.
 #' @param length.out An integer (\code{1 or 2}) to specify derivative. Default
@@ -2428,13 +2411,8 @@ mapderivqr <- function(model,
 #' @return A data frame
 #' @noRd
 #'
-<<<<<<< HEAD
 get_d1_from_d0 <- function(y,
                            x,
-=======
-get_d1_from_d0 <- function(x,
-                           y,
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
                            method = 1, 
                            length.out = NULL, 
                            df = NULL, 
@@ -2968,29 +2946,20 @@ custom_get_data.brmsfit <- function (x,
                                      ...) {
   
   
-<<<<<<< HEAD
   
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   .get_data_from_environment <-  .all_elements <-  find_variables <- 
     .is_multi_membership <- .return_combined_data <- 
     .prepare_get_data <- is_multivariate <- 
     .clean_brms_mm <- find_random_slopes <- is_empty_object <- NULL;
   
   
-<<<<<<< HEAD
   getfrom_ <- c('.get_data_from_environment', 
                 '.all_elements', 
                 'find_variables', 
                 '.is_multi_membership', 
                 '.return_combined_data', 
                 '.prepare_get_data', 
-=======
-  getfrom_ <- c('.get_data_from_environment', '.all_elements', 
-                'find_variables', '.is_multi_membership', 
-                '.return_combined_data', '.prepare_get_data', 
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
                 'is_multivariate', 
                 '.clean_brms_mm',
                 'find_random_slopes',
@@ -3000,7 +2969,6 @@ custom_get_data.brmsfit <- function (x,
     assign(i, utils::getFromNamespace(i, 'insight'))
   }
   
-<<<<<<< HEAD
   return_option <- 3
   clean.x       <- TRUE
   
@@ -3027,11 +2995,6 @@ custom_get_data.brmsfit <- function (x,
     return(out)
   }
   
-=======
-  
-  return_option <- 3
-  clean.Vx      <- TRUE
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   data_name <- attr(x$data, "data_name")
   model_data <- .get_data_from_environment(x, effects = effects, 
@@ -3050,10 +3013,6 @@ custom_get_data.brmsfit <- function (x,
     }
   }
   
-<<<<<<< HEAD
-=======
-  
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   effects <- match.arg(effects, choices = c("all", "fixed", 
                                             "random"))
   component <- match.arg(component, choices = c("all", .all_elements()))
@@ -3089,7 +3048,6 @@ custom_get_data.brmsfit <- function (x,
   if(return_option == 3) {
     out <- .prepare_get_data(x, mf, effects = effects, verbose = verbose)
     # clean up term created by functions
-<<<<<<< HEAD
     if(clean.x) {
       # out <- out[, -grep("\\.V\\d+$", names(out))]
       out <- out %>% dplyr::select(!dplyr::matches("\\.V\\d+$"))
@@ -3102,13 +3060,6 @@ custom_get_data.brmsfit <- function (x,
   # out %>% head() %>% print()
   # stop()
   
-=======
-    if(clean.Vx) {
-      out <- out[, -grep("\\.V\\d+$", names(out))]
-    }
-  }
-  
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   return(out)
 }
 
@@ -5918,19 +5869,6 @@ getmodel_info <- function(model,
     }
   }
   
-  if(is.null(model$test_mode)) {
-    stop("model must have attached 'test_mode' as model[['test_mode']]",
-         "\n ", 
-         " that must be set as either TRUE/FALSE",
-         "\n ", 
-         "The berkeley_exfit used for CRAN has model[['test_mode']] = TRUE",
-         "\n ", 
-         "The model[['test_mode']] = FLASE is used to get full data via the",
-         "\n ", 
-         "insight::get_data() that is needed for marginaleffects functions"
-         )
-  }
-  
   checkresp_info(model, resp)
   
   
@@ -6312,7 +6250,6 @@ check_if_varname_exact <- function(str,
   make_check_right <- paste0("($|[^[:alnum:]", allowed_right, "])")
   patxsi_not <- paste0(make_check_left, x, make_check_right)
   if(grepl(patxsi_not, str, fixed = FALSE)) {
-<<<<<<< HEAD
     stop("Predictor ", collapse_comma(x), "",
          " has already been used for modelling the 'mu'",
          "\n  ", 
@@ -6332,15 +6269,6 @@ check_if_varname_exact <- function(str,
          collapse_comma(paste0(x, "2")), 
          ", or any other name"
          )
-=======
-    stop("The predictor in '", str, "/ should not be ", 
-         collapse_comma(x), 
-         "\n ", 
-         " which has already been defined and used in the model",
-         "\n  ", 
-         "Please rename it (e.g., '", paste0('z_', x), 
-         "') and define it in the data")
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   }
 }
 
@@ -6562,11 +6490,8 @@ get_sigmamodel_info <- function(model,
 }
 
 
-<<<<<<< HEAD
 
 
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 #' An internal function to check and set xvar for dpar sigma
 #'
 #' @param model An object of class bgmfit
@@ -6600,7 +6525,6 @@ check_set_xvar_sigma <- function(model,
     return(xvar)
   }
   
-<<<<<<< HEAD
   
   set_sigma_xvar_as_mu_if <- c("varpower", 
                                "varconstpower",
@@ -6617,8 +6541,6 @@ check_set_xvar_sigma <- function(model,
                                "residualexp")
   
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   if(dpar == "sigma") {
     sigma_model <- get_sigmamodel_info(model,
                                        newdata = newdata,
@@ -6628,7 +6550,6 @@ check_set_xvar_sigma <- function(model,
                                        cov = NULL, 
                                        all = FALSE, 
                                        verbose = FALSE)
-<<<<<<< HEAD
     
     if(!is.null(sigma_model)) {
       if(sigma_model %in% set_sigma_xvar_as_mu_if) {
@@ -6668,15 +6589,10 @@ check_set_xvar_sigma <- function(model,
       
      
     sigmacov_cov_numeric_vars <- get_sigmamodel_info(model,
-=======
-      
-      sigmacov_cov_factor_vars <- get_sigmamodel_info(model,
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
                                                      newdata = newdata,
                                                      dpar = dpar, 
                                                      resp = resp, 
                                                      what = 'cov',
-<<<<<<< HEAD
                                                      cov = "numeric", 
                                                      all = FALSE, 
                                                      verbose = FALSE)
@@ -6702,32 +6618,6 @@ check_set_xvar_sigma <- function(model,
       
     create_msg_xvar_null <- 
       paste0("For dpar = 'sigma', the 'xvar' should be specified",
-=======
-                                                     cov = "factor", 
-                                                     all = FALSE, 
-                                                     verbose = FALSE)
-        
-       
-      sigmacov_cov_numeric_vars <- get_sigmamodel_info(model,
-                                                       newdata = newdata,
-                                                       dpar = dpar, 
-                                                       resp = resp, 
-                                                       what = 'cov',
-                                                       cov = "numeric", 
-                                                       all = FALSE, 
-                                                       verbose = FALSE)
-
-      if(length(sigmacov_cov_factor_vars) == 0) {
-        sigmacov_cov_factor_vars <- NULL
-      }
-      if(length(sigmacov_cov_numeric_vars) == 0) {
-        sigmacov_cov_numeric_vars <- NULL
-      }
-     
-      
-    create_msg_xvar_null <- 
-      paste0("For plotting dpar = 'sigma', the 'xvar' should be specified",
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
              "\n  ",
              "The available options are:\n ", 
              collapse_comma(sigmacov_cov_numeric_vars))
@@ -6752,11 +6642,7 @@ check_set_xvar_sigma <- function(model,
              "is one unique numeric variable in the sigma formula")
     
     create_msg_xvar_used <- 
-<<<<<<< HEAD
       paste0("For dpar = 'sigma', you have specified ", 
-=======
-      paste0("For plotting dpar = 'sigma', you have specified ", 
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
              collapse_comma(xvar), 
              "\n  ",
              "as 'xvar' which is invalid",
@@ -6786,11 +6672,7 @@ check_set_xvar_sigma <- function(model,
     } else if(!is.null(xvar)) {
       for (i in xvar) {
         if(!i %in% sigmacov_cov_numeric_vars) {
-<<<<<<< HEAD
           if(sigma_model == "basic") stop(create_msg_xvar_used)
-=======
-          stop(create_msg_xvar_used)
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
         }
       }
     }
@@ -6802,16 +6684,11 @@ check_set_xvar_sigma <- function(model,
     return(xvar)
   }
   
-<<<<<<< HEAD
-=======
-  
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 } # check_set_xvar_sigma
 
 
 
 
-<<<<<<< HEAD
 #' An internal function to check and set xvar for dpar sigma
 #'
 #' @param cov A character vector of all co variates (factor and numeric)
@@ -7017,8 +6894,6 @@ check_set_transform_draws_sigma <- function(model,
 
 
 
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 
 #' An internal function to check and set ifunx for dpar mu and sigma
 #'
@@ -7257,14 +7132,10 @@ get_basic_info <- function(model = model,
   
   uvarby     <- model$model_info$univariate_by$by
   
-<<<<<<< HEAD
   if(is.null(sigmaidvar)) {
     sigmaidvar <- idvar
   }
 
-=======
-  
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   out <- list()
   if(component == "mu") {
     if('xvar' %in% what)     out[[what]] <- xvar
@@ -7315,7 +7186,6 @@ set_sigma_grid_newdata <- function(model,
                                    dpar = NULL, 
                                    idvar = NULL,
                                    xvar = NULL,
-<<<<<<< HEAD
                                    difx = NULL,
                                    difx_asit = FALSE,
                                    auto = TRUE,
@@ -7324,13 +7194,6 @@ set_sigma_grid_newdata <- function(model,
                                    grid_add = NULL,
                                    grid_type = NULL,
                                    verbose = FALSE) {
-=======
-                                   auto = TRUE,
-                                   xrange = NULL,
-                                   length.out = NULL,
-                                   grid_type = NULL,
-                                   verbose = verbose) {
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   xvar_temp <- idvar_temp <- NULL;
   
@@ -7348,7 +7211,6 @@ set_sigma_grid_newdata <- function(model,
     newdata <- model$model_info$bgmfit.data
   }
   
-<<<<<<< HEAD
   if(is.null(difx)) {
     difx_range <- NULL
     difx_name  <- NULL
@@ -7401,8 +7263,6 @@ set_sigma_grid_newdata <- function(model,
   
   
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   if(is.null(idvar)) {
     idvar <- get_basic_info(model = model, 
                             dpar = dpar, 
@@ -7433,7 +7293,6 @@ set_sigma_grid_newdata <- function(model,
                                  verbose = verbose)
   }
   
-<<<<<<< HEAD
   
   if(is.null(xvar) | is.na(xvar)) {
     msg_xvar_not_in_data <-
@@ -7443,18 +7302,11 @@ set_sigma_grid_newdata <- function(model,
            "\n  ",
            "Please see the documentation and specify 'xvar' argument")
     stop(msg_xvar_not_in_data)
-=======
-  if(is.null(xvar) | is.na(xvar)) {
-    stop("'xvar' not found for 'set_sigma_grid_newdata()'")
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   }
   
   
   
-<<<<<<< HEAD
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   if(is.null(xrange)) {
     setxvarvec <- newdata[[xvar]]
   } else if(!is.null(xrange)) {
@@ -7468,11 +7320,7 @@ set_sigma_grid_newdata <- function(model,
   }
   
   if(is.null(grid_type)) {
-<<<<<<< HEAD
     grid_type <- "mean_or_mode" # grid_type <- "dataframe"
-=======
-    grid_type <- "mean_or_mode"
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   }
   
   if(!is.factor(newdata[[idvar]])) {
@@ -7483,7 +7331,6 @@ set_sigma_grid_newdata <- function(model,
     }
   }
   
-<<<<<<< HEAD
   
   
   
@@ -7638,20 +7485,6 @@ set_sigma_grid_newdata <- function(model,
   # newdata %>% names() %>% print()
   # stop()
   
-=======
-  newdata <- marginaleffects::datagrid(newdata = newdata,
-                                       xvar_temp = setxvarvec,
-                                       idvar_temp = levels(newdata[[idvar]]),
-                                       grid_type = grid_type)
-  newdata <- newdata %>% 
-    dplyr::mutate(!! as.name(xvar) := xvar_temp) %>% 
-    dplyr::mutate(!! as.name(idvar) := idvar_temp) %>% 
-    dplyr::select(-c(xvar_temp, idvar_temp))
-  
-  attr(newdata, 'xvar_for_sigma_model_basic') <- idvar
-  attr(newdata, 'idvar_for_sigma_model_basic')  <- xvar
-  
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   return(newdata)
 }
 

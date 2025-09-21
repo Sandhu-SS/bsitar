@@ -258,11 +258,8 @@ prepare_data2 <- function(data = NULL,
   xs      <- xvar
   ids     <- idvar
   # sigmaxs <- sigmaxvar
-<<<<<<< HEAD
   
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   if (nys > 1) {
     unique_xs  <- unique(xs)
@@ -328,16 +325,12 @@ prepare_data2 <- function(data = NULL,
              "\n ",
              " 'sigmax' argument is not available in the dataframe")
       }
-<<<<<<< HEAD
       if(nys > 1) {
         addsigmaxvar <- paste0(addsigmaxvar, "_", ys[j])
       } else {
         addsigmaxvar <- addsigmaxvar
       }
       # addsigmaxvar <- paste0(addsigmaxvar, "_", ys[j])
-=======
-      addsigmaxvar <- paste0(addsigmaxvar, "_", ys[j])
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
       data[[addsigmaxvar]] <- data[[tempbane]]
     }
     sigmaxs_c <- c(sigmaxs_c, addsigmaxvar)

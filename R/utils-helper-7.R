@@ -4,7 +4,6 @@
 #' An internal function to prepare Stan function Note that now all three
 #' functions nsp, nsk and rcs are set using this function This will make the
 #' 'utils-helper-6' reduntant. BUT DON'T DELTE THAT yet
-<<<<<<< HEAD
 #' 
 #' @description
 #' Imp Note: now when d parameter is part of the fixed / random effects, then X
@@ -12,14 +11,6 @@
 #' matrix as the last column, So the last column is used in d.* operation and
 #' and \code{nknots-1} columns \code{Qk[:, 1:cols(Qc)-1] Spl[:,1:cols(Spl)-1]}.
 #' 
-=======
-#'
-#' Imp Note: now when d parameter is part of the fixed / random effects, then X
-#' or Xm, depending upon the d_adjusted, is inlcuded part of the Spl or Qc
-#' matrix as the last column, So the last column is used in d.* operation and
-#' and nknots-1 columns (Qk[:, 1:cols(Qc)-1]) (Spl[:, 1:cols(Spl)-1])
-#'
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
 #' The \code{prepare_function}) constructs custom Stan function  which is passed
 #' on to the [bsitar::bsitar()] function. For univariate-by- subgroup model
 #' (\code{univariate_by}) and multivariate (\code{multivariate}) models (see
@@ -119,7 +110,6 @@ prepare_function_nsp_rcs <- function(x,
   QR_scale <- NULL;
   SbasisN <- NULL;
   sigmaxsi <- NULL;
-<<<<<<< HEAD
   smat_moi <- NULL;
   familysi <- NULL;
   dpar_function  <- NULL;
@@ -127,8 +117,6 @@ prepare_function_nsp_rcs <- function(x,
   sigmayfunsi <- NULL;
   sigmayfuntransformsi <- NULL;
   family_link_sigma <- NULL;
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
@@ -182,12 +170,7 @@ prepare_function_nsp_rcs <- function(x,
   
   
   # For QR decom, 'dparm_part_of_SplQc <- TRUE'  struggles
-<<<<<<< HEAD
   # This because of perfect singularity between first term and last terms
-=======
-  # This perhaps because it results in perfect singulaity 
-  # between first term and last
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   # So, keep it FALSE 
   
   dparm_part_of_SplQc <- FALSE
@@ -289,10 +272,7 @@ prepare_function_nsp_rcs <- function(x,
     sigmaxfuntransformsi       <- NULL
     sigmaixfuntransformsi      <- NULL
   }
-<<<<<<< HEAD
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
  
   # Make inverse iyfuntransformsi of yfuntransformsi
   iyfuntransformsi        <- list()
@@ -327,21 +307,7 @@ prepare_function_nsp_rcs <- function(x,
                                 "\\(")[[1]][1]
     yscale_set      <- strsplit(gsub_space(deparse(body(yfuntransformsi))),
                                 "\\(")[[1]][1]
-<<<<<<< HEAD
  
-=======
-    
-    
-    if(!is.null(sigmaxfuntransformsi)) {
-      sigmaxscale_set <- 
-        strsplit(gsub_space(deparse(body(sigmaxfuntransformsi))), 
-                                  "\\(")[[1]][1]
-    } else {
-      sigmaxscale_set <- ""
-    }
-    
-    
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
     
     if(xscale_set == "")      xscale_set      <- "identity"
     if(yscale_set == "")      yscale_set      <- "identity"

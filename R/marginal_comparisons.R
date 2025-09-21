@@ -265,7 +265,6 @@ marginal_comparisons.bgmfit <- function(model,
                          deriv = NULL, 
                          verbose = verbose)
   
-<<<<<<< HEAD
   # For sigma
   # Run this to get full data via modified get_data() for insight
   # See 'custom_get_data.brmsfit' in utils-helper-1
@@ -299,8 +298,6 @@ marginal_comparisons.bgmfit <- function(model,
               "'To over ride this approach, set model[['test_mode']] = TRUE")
     }
   } # if(!model$test_mode) {
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   
   if(is.null(usesavedfuns)) {
@@ -372,30 +369,6 @@ marginal_comparisons.bgmfit <- function(model,
   
  
   ########################################################
-<<<<<<< HEAD
-  
-  check_set_fun <- check_set_fun_transform(model = model, 
-                                           which = 'ixfuntransform2',
-                                           dpar = dpar, 
-                                           resp= resp, 
-                                           transform = itransform,
-                                           auto = TRUE, 
-                                           verbose = verbose)
-  
-  ifunx_ <- check_set_fun[['setfun']]
-  if(check_set_fun[['was_null']]) {
-    model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
-  }
-
-=======
-  # prepare_data2
-  # ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-  # # 02.08.2025
-  # ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
-  # ifunx_ <- model$model_info[[ifunx_]]
-  
-  ########################################################
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   
   check_set_fun <- check_set_fun_transform(model = model, 
                                            which = 'ixfuntransform2',
@@ -3001,10 +2974,7 @@ marginal_comparisons.bgmfit <- function(model,
   ##############################################################
   ##############################################################
   # prepare_data2
-<<<<<<< HEAD
   newdata_before_itransform <- newdata
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   # itransform_set <- get_itransform_call(itransform)
   itransform_set <- get_itransform_call(itransform = itransform,
                                         model = model, 
@@ -3014,7 +2984,6 @@ marginal_comparisons.bgmfit <- function(model,
                                         auto = TRUE,
                                         verbose = verbose)
   
-<<<<<<< HEAD
   itransform_set_x_for_sigma_model <- c("varpower", 
                                         "varconstpower",
                                         "varexp", 
@@ -3039,8 +3008,6 @@ marginal_comparisons.bgmfit <- function(model,
   }
   
   
-=======
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   if(any(itransform_set != "")) {
     if(!is.null(out_sf)) {
       out_sf <- prepare_transformations(data = out_sf, model = model,

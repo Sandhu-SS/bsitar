@@ -160,11 +160,7 @@ get.newdata <- function(model,
   
   if(dpar == "sigma") {
     sigma_model <- get_sigmamodel_info(model = model,
-<<<<<<< HEAD
                                        newdata = NULL, # what = 'model' ignored 
-=======
-                                       newdata = newdata, # what = 'model' ignored 
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
                                        dpar = dpar, 
                                        resp = resp, 
                                        what = 'model',
@@ -180,7 +176,6 @@ get.newdata <- function(model,
     if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
   } else {
     newdata <- newdata
-<<<<<<< HEAD
   }
   
   
@@ -195,10 +190,6 @@ get.newdata <- function(model,
   
   
   
-=======
-  }
-  
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
   # if(dpar == "mu") {
   #   if (is.null(newdata)) {
   #     if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data

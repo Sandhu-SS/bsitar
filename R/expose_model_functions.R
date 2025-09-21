@@ -135,10 +135,6 @@ expose_model_functions.bgmfit <- function(model,
       expose_sigma_basic_model_fun <- TRUE
     } else if(any(grepl("ls", sigma_model_all)) |
               any(grepl("basic", sigma_model_all))) {
-<<<<<<< HEAD
-=======
-    } else {
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
       expose_sigma_ls_model_fun <- TRUE
       expose_sigma_var_model_fun <- TRUE
     } else {
@@ -217,21 +213,13 @@ expose_model_functions.bgmfit <- function(model,
       expose_model   <- 
         utils::getFromNamespace("expose_functions", "cmdstanr")
       get_path   <- 
-<<<<<<< HEAD
         utils::getFromNamespace("cmdstan_path", "cmdstanr")
-=======
-        utils::getFromNamespace("path", "cmdstanr")
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
       get_cmdstan_default_path   <- 
         utils::getFromNamespace("cmdstan_default_path", "cmdstanr")
       get_cmdstan_default_install_path   <- 
         utils::getFromNamespace("cmdstan_default_install_path", "cmdstanr")
       set_path   <- 
-<<<<<<< HEAD
         utils::getFromNamespace("set_cmdstan_path", "cmdstanr")
-=======
-        utils::getFromNamespace("set_path", "cmdstanr")
->>>>>>> b710fdb99a03ab7d7a5b1caa3390fba0f7293e43
       
       restore_path <- get_path()
       if(is.null(path)) {
