@@ -14,8 +14,8 @@
   vectorize = FALSE,
   verbose = FALSE,
   sigmafun = FALSE,
-  backend = NULL,
-  path = NULL,
+  expose_backend = NULL,
+  cmdstan_path = NULL,
   envir = NULL,
   ...
 )
@@ -50,15 +50,15 @@ to print information collected during the setup of the object(s).}
 \item{sigmafun}{A logical (default \code{FALSE}) to indicate whether to return
 the sigma functions. This parameter is for internal use only. Ignored}
 
-\item{backend}{A character string (default \code{NULL}) to set up the
+\item{expose_backend}{A character string (default \code{NULL}) to set up the
 the \code{backend} method (\code{'rstan'} or \code{'cmdstanr'}) for
 compiling and exposing \code{stan} functions. If \code{NULL}, then the
-\code{backend} is same as the \code{backend} method used for model
-fitting. Note that when \code{backend = FALSE}, then default
+\code{expose_backend} is same as the \code{backend} method used for model
+fitting. Note that when \code{expose_backend = FALSE}, then default
 \code{backend}  will be set as \code{'rstan'}. This is particularly useful
-because \code{backend = 'cmdstanr'} will fail on \code{WSL} system.}
+because \code{expose_backend = 'cmdstanr'} will fail on \code{WSL} system.}
 
-\item{path}{A character string to set up the path of installed
+\item{cmdstan_path}{A character string to set up the path of installed
 \code{CmdStan}. If \code{NULL} (default)}
 
 \item{envir}{The environment used for function evaluation. The default is

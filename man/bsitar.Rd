@@ -18,7 +18,7 @@ bsitar(
   cstart = 0,
   xfun = NULL,
   yfun = NULL,
-  xfunxoffset = TRUE,
+  xfunxoffset = NULL,
   bound = 0.04,
   stype = nsk,
   terms_rhs = NULL,
@@ -51,7 +51,7 @@ bsitar(
   sigmacstart = 0,
   sigmaxfun = NULL,
   sigmabound = 0.04,
-  sigmaxfunxoffset = TRUE,
+  sigmaxfunxoffset = NULL,
   dpar_formula = NULL,
   autocor_formula = NULL,
   family = gaussian(),
@@ -270,11 +270,7 @@ Available options include:
 \item \code{'min'}: The minimum value of \code{x} (i.e., \code{min(x)}),
 \item \code{'apv'}: Age at peak velocity estimated from the velocity curve
 derived from a simple linear model fit to the data,
-\item Any real number (e.g., \code{xoffset = 12}). Note that the value should be
-on the original scale of the \code{x} variable because this number will be
-automatically transformed based on the \code{xfunxoffset} which is set same
-as \code{xfun} unless \code{xfunxoffset} is explicitly set as \code{FALSE}.
-See \code{xfunxoffset} for details.
+\item Any real number (e.g., \code{xoffset = 12}).
 The default is \code{xoffset = 'mean'}.
 }
 
@@ -354,14 +350,10 @@ be the same for all sub-models (typically), or different for each sub-model
 (refer to \code{x} for details on setting different arguments for
 sub-models).}
 
-\item{xfunxoffset}{Transformation applied to \code{xoffset} for \code{x}
-variable (default \code{TRUE}). See \code{xfun} for details. The default
-\code{sigmaxfunxoffset = TRUE} sets its value to same as \code{xfun}. Users
-rarely need to specify \code{xfunxoffset} themselves. One potential
-application is when a user wants to turn it off \code{xfunxoffset} by
-setting it as \code{FALSE}. Note that even when \code{xfunxoffset} is not
-\code{TRUE}, \code{xoffset} is still automatically adjusted by \code{xfun},
-as it is inferred from the transformed \code{sigmax} variable.}
+\item{xfunxoffset}{Transformation function for \code{xoffset} in the \code{x}
+structure (default \code{NULL}). See \code{xfun} for details. The
+\code{xfunxoffset} is rarely used. One potential application is when user
+internally transform the numeric \code{xoffset} value.}
 
 \item{bound}{An optional real number specifying the value by which the span
 of the predictor variable \code{x} should be extended (default is
@@ -623,234 +615,130 @@ of hierarchy. See \code{a_formula_gr_str} for details. As with
   = NULL))} For further details, please refer to the description of
 \code{sigma_formula}.}
 
-\item{sigma_formula_manual}{A custom formula for advanced modeling of the
-distributional parameter \code{sigma} using the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} and
-\code{\link[brms:brmsformula-helpers]{brms::lf()}} functions. This is an advanced and experimental feature for
-specifying complex variance structures. The \code{sigma_formula_manual} can
-be can be a character string or a list of formulas.
+\item{sigma_formula_manual}{Formula for the \code{sigma} distributional
+parameter. This should be provided as a character string or as a list that
+explicitly uses the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} and \code{\link[brms:brmsformula-helpers]{brms::lf()}} functions (default
+\code{NULL}). Note that \code{sigma_formula_manual} should be considered as
+an experimental feature and therefore should be used cautiously. Besides a
+basic, the the \code{sigma_formula_manual} is primarily used to calculates
+variance weights for modelling heteroscedasticity (where the variance of
+residuals depends on a specified co variate) as implemented in the
+\pkg{nlme} package. The variance structures supported are
+\code{\link[nlme:varPower]{nlme::varPower()}}, \code{\link[nlme:varConstPower]{nlme::varConstPower()}}, \code{\link[nlme:varExp]{nlme::varExp()}},
+\code{\link[nlme:varExp]{nlme::varExp()}} \code{fitted} as a predictor, and modeling \code{sigma} as
+a function of the mean as documented in the \pkg{nlme} package. Lastly, as
+a special case, the \code{sigma_formula_manual} can also be used to fit a
+full location- scale model where distributional parameter \code{sigma}
+(scale parameter) is modeled via an explicit function that is exact same
+the one used to model the \code{mu} (location parameter).
 
-\strong{Use Cases:} The primary use cases for \code{sigma_formula_manual}
-are:
-\enumerate{
-\item \strong{Basic variance modelling:} A simple formula for
-modelling heteroscedasticity (\code{sigma}).
-\item \strong{Advanced variance modelling:} Calculating variance weights
-where the variance of residuals depends on a specified co variate,
-replicating functionality from the \pkg{nlme} package.
-\item \strong{Location-Scale Models:} Applying a full \code{SITAR}-like model
-to the scale (\code{sigma}) parameter in addition to the location
-(\code{mu}).
-}
+\emph{Basic Usage Example:}
+\code{sigma_formula_manual = list(nlf(sigma ~ z) + lf(z ~ 1 +
+  (1 |55| gr(id, by = NULL)))})
 
-\strong{Basic variance modelling:}
-A simple example of modeling \code{sigma} directly:
-\preformatted{
-  sigma_formula_manual = list(nlf(sigma ~ z) + lf(z ~ 1 + (1 | gr(id))))
-  }
-Note that use can specify any external function in the linear predictor
-part of the formula \code{'lf()'} in order to model nonlinear trajectories.
-For example, user can include \code{\link[splines2:naturalSpline]{splines2::nsk()}} in the model as follows:
-\preformatted{
-  sigma_formula_manual = list(nlf(sigma ~ z) + 
-  lf(z ~ 1 + splines2::nsk(age) + (1 | gr(id))))
-  }
-Automatic Prior Assignment:\cr Priors for these linear predictors are
-assigned automatically for both mean and group-level random effects. The
-function uses priors specified via arguments like
-\code{'sigma_prior_beta'}, \code{'sigma_cov_prior_beta'},
-\code{'sigma_prior_sd'}, etc. These are the same arguments otherwise used
-for setting priors on parameters defined by \code{'sigma_formula'},
-\code{'sigma_formula_gr'}, and \code{'sigma_formula_gr_str'}.
+\emph{Modeling heteroscedasticity as a power variance function:}
+\code{\link[nlme:varPower]{nlme::varPower()}}
 
-\strong{Advanced variance modelling:} This approach models heteroscedasticity
-using an explicit variance function. The \pkg{'bsitar'} package provides six
-different methods for variance modeling, five of which are implemented in the
-\pkg{'nlme'} package. The variance modeling approach uses a helper function
-\code{'sigmavarfun'} that sets up the appropriate formulation for variance
-modeling within the \pkg{'bsitar'} package. The documentation below provides
-a detailed overview of the available methods and their usage.
+\emph{Modeling heteroscedasticity as constant plus a power variance function:}
+\code{\link[nlme:varConstPower]{nlme::varConstPower()}}
 
-\strong{Available Methods} (short hands in parentheses):
+\emph{Modeling heteroscedasticity as a exponential variance function:}
+\code{\link[nlme:varExp]{nlme::varExp()}}
+
+\emph{Modeling heteroscedasticity as a exponential variance function where fitted}
+\emph{values (mu) is  the predictor:}
+\code{\link[nlme:varExp]{nlme::varExp()}}
+
+\emph{Modeling heteroscedasticity as a exponential variance function where sqrt()}
 \itemize{
-\item \code{'varpower'} (\code{'vp'}):
-Implements \code{\link[nlme:varPower]{nlme::varPower()}}.
-\item \code{'varconstpower'} (\code{'cp'}):
-Implements \code{\link[nlme:varConstPower]{nlme::varConstPower()}}.
-\item \code{'varexp'} (\code{'ve'}):
-Implements \code{\link[nlme:varExp]{nlme::varExp()}} with \code{'form ~ x'} as follows:\cr
-\code{'nlme::varExp(form ~ x)'}
-\item \code{'fitted'} (\code{'fi'}):
-Implements \code{\link[nlme:varExp]{nlme::varExp()}} with \code{'form ~ fitted(.)'} as follows:\cr
-\code{'nlme::varExp(form ~ fitted(.))'}
-\item \code{'residual'} (\code{'re'}):
-Implements \code{\link[nlme:varExp]{nlme::varExp()}} with \code{'form ~ resid(.)'} as follows:\cr
-\code{'nlme::varExp(form ~ resid(.))'}
-\item \code{'mean'} (\code{'me'}): A sixth method based on an example from
-the \pkg{brms} reference manual, which models the square root of the fitted
-values as follows:\cr
-\code{'nlme::varExp(form ~ sqrt(fitted(.)))'}
+\item of fitted values is the predictor:*
+\code{\link[nlme:varExp]{nlme::varExp()}}
 }
 
-Below are examples showing how to use \code{'sigmavarfun'} to specify each of
-the six variance models.
+\emph{Modeling sigma as a function of the Mean:}
+\code{sigma_formula_manual} can be used to model \code{sigma} as a function
+of the mean (\code{sqrt(mu)}), as described in the \code{brms} user manual.
+The \code{sigma_formula_manual} is set as follows: \cr
+\code{sigma_formula_manual = nlf(sigma ~ tau *
+  sqrt(SITARFun(age, a, b, c, s1, s2, s3)), method=mean) + lf(tau ~ 1)} \cr
+Here, \code{SITARFun()} is the function that computes \code{mu}. The
+argument \code{method=mean} must be included in the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} function.
 
-\strong{1. varpower:}
-\preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 'vp') +
-  lf(param1 + param2 ~ 1)
-}
-
-\strong{2. varConstPower:}
-\preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, param3, predictor), method = cp') + 
-  lf(param1 + param2 + param3 ~ 1)
-}
-
-\strong{3. varExp:}
-\preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 've') +
-  lf(param1 + param2 ~ 1)
-}
-
-\strong{4. fitted:}
-\preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
-  lf(param1 + param2 ~ 1)
-}
-
-\strong{5. residual:}
-\preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, identity(), resp), method = 're') + 
-  lf(param1 + param2 ~ 1)
-}
-
-\strong{6. mean:}
-\preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'me') +
-  lf(param1 + param2 ~ 1)
-}
-
-\strong{Internal Predictor Transformations:}
-The function applies internal transformations based on the chosen method:
+\emph{Limitations of the above approach for modelling sigma as function of mean:}
 \itemize{
-\item For \code{'varpower'} and \code{'varConstPower'}, the predictor is
-transformed to \code{log(abs(predictor))}.
-\item For \code{'varexp'}, the predictor is not transformed.
-\item For \code{'fitted'} and \code{'residual'}, \code{identity()} is
-internally set to \code{fitted(.)}.
-\item For \code{'mean'}, \code{identity()} is internally set to
-\code{sqrt(fitted(.))}.
+\item Using \code{SITARFun()} in this way will recompute \code{mu}. This is
+computationally expensive when fitting a non linear model.
+\item For \code{multivariate} models, \code{SITARFun()} can only be used if all
+sub-models compute \code{mu} using the exact same \code{SITARFun()}
+definition for each outcome.
 }
 
-Note that the default \code{'fitted'} (see above, \code{4. fitted:})
-internally gets coded as \code{method = 'fittedexp'} (or short hand
-\code{method = 'fe'}) which sets up the variance form similar to the
-\code{varExp}. To set up the variance form similar to the \code{varpower},
-please use \code{method = 'fittedpower'} (or short hand \code{method =
-'fp'}). Another form, which models the non zero values for the
-\code{'fitted'}, can be specified as \code{method = 'fittedz'} (or short hand
-\code{method = 'fz'}).
+\emph{Experimental Approach for Direct \code{sqrt(mu)} Usage:}
+To overcome the above limitations of recomputing \code{mu} and
+\code{multivariate} model restrictions, an experimental approach allows for
+direct use of \code{mu}. This involves setting \code{sigma_formula_manual}
+as:
+\code{sigma_formula_manual = "nlf(sigma ~ tau * sqrt()) + lf(tau
+  ~ 1)"}. \cr
+Note the empty \code{sqrt()} function. The \code{sqrt()} will be replace by
+\code{sqrt(mu)} by  manually editing the \code{stancode} and refit the model
+using \code{rstan}.
 
-Similar to the \code{fitted} (please above), the default \code{method =
-'residual'} will set up the variance form similar to the \code{varExp} by
-internally coding the method argument as \code{method = 'residualexp'} (i.e.,
-\code{method = 're'}). The \code{power} form can be set as \code{method =
-'residualpower'} (or, \code{method = 'rp'}).
-
-Like \code{fitted} and \code{residual} (please above), the default
-\code{method = 'mean'} will set up the variance form similar to the
-\code{varExp} by internally coding the method argument as \code{method =
-'meanexp'} (i.e., \code{method = 'me'}). The \code{power} form can be set as
-\code{method = 'meanpower'} (or, \code{method = 'mp'}).
-
-\strong{Covariates and Random Effects:}
-The linear predictor, \code{'lf()'}, can be extended to include covariates
-and group-level random effects. For example, \code{'lf(param1 + param2 ~ 1)'}
-can be expanded as follows:
-\preformatted{
-  lf(param1 + param2 ~ 1 + covariate + (1 || gr(id, by = groupid)))
-}
-
-\strong{Automatic Prior Assignment:}
-Priors for these linear predictors are assigned automatically for both mean
-and group-level random effects. The function uses priors specified via
-arguments like \code{'sigma_prior_beta'}, \code{'sigma_cov_prior_beta'},
-\code{'sigma_prior_sd'}, etc. These are the same arguments otherwise used for
-setting priors on parameters defined by \code{'sigma_formula'},
-\code{'sigma_formula_gr'}, and \code{'sigma_formula_gr_str'}.
-
-To disable this automatic prior assignment, you can add the argument
-\code{prior = 'self'} to the \code{nlf()} function. For example:
-\preformatted{
-  nlf(..., method = 'vp', prior = 'self')
-}
-
-\strong{Note:} If user disables the automatic prior assignment, it is
-advised to first get the required prior structure by calling the \code{\link[=bsitar]{bsitar()}}
-with the \code{'get_prior = TRUE'} argument. The relevant portions of this
-structure can then be edited and added back to the model via the
-\code{'add_self_priors'} argument in \code{\link[=bsitar]{bsitar()}}.
+In this approach, priors specified via \code{sigma_prior_beta},
+\code{sigma_cov_prior_beta}, \code{sigma_prior_sd},
+\code{sigma_cov_prior_sd}, and \code{sigma_cov_prior_sd_str} will be
+automatically applied to linear predictors defined in the \code{lf()}. All
+steps including setting up the basic code, editing, prior assignment, and
+model fit are handled internally.
 
 For \code{multivariate} model, the \code{sigma_formula_manual} can be used
-set up different form and predictor variables for each outcome separately by
-using the list approach as shown below: \cr
+set up different form and predictor variables for each outcome separately
+by using the list approach as shown below: \cr
 \code{sigma_formula_manual = list(
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
-  lf(param1 + param2 ~ 1) ,
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
-  lf(param1 + param2 ~ 1)
+  nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+  (1 + age | 550 | gr(id, by = class))) ,
+  nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+  (1 + age | 550 | gr(id, by = class)))
   )}. \cr
-Note that formulation name \code{'nlf()'} should be same across all
-outcomes. The appropriate response assignment is done internally. Also,
-parameter should not contain dots or underscores.
+Note that parameter name \code{tau} (which could any string such as
+\code{sigmatau}) should be same across all outcomes. The appropriate
+response assignment is done internally. Also, parameter should not contain
+dots or underscores.
 
-\strong{Location-Scale Models:} Another important use case for
-\code{sigma_formula_manual} is modeling \code{sigma} in a location scale
-\code{SITAR} model, where the \code{SITAR} formula can be applied to the
-scale parameter (\code{sigma}) similar to the one used for modelling the
-location parameter \code{mu}. An example is:
+\emph{Modeling as a Function of the fitted value:}
+Following the exact same approach as shown above for \code{Modeling
+  sigma as a Function of the Mean}, the \code{sigma_formula_manual}
+can be used to implement modelling variance as a function of the fitted
+value as implemented in \code{\link[nlme:varExp]{nlme::varExp()}} with \code{form~fitted(.)} i.e.,
+\code{nlme::varExp(form~fitted(.))}. For this, \code{sigma_formula_manual}
+is set up as follows: \cr
+\code{sigma_formula_manual = nlf(sigma ~ 0 + sigmacons * cons + sigmacons2
+  # abs(SITARFun(age, a, b, c, s1, s2, s3)), method=fitted) + lf(sigmacons + 
+  sigmacons2 ~ 1)} \cr
+Here, \code{SITARFun()} is the function that computes \code{mu}. Note that
+here we replaced \code{sqrt} with \code{abs} and used \code{method=mean}
+instead of \code{method=mean} in the \code{\link[brms:brmsformula-helpers]{brms::nlf()}} function. The remaining
+implementation is same as described above for \code{Modeling sigma
+  as a Function of the Mean}
 
-\code{nlf(sigma ~ ls(x, sigmaa, sigmab, sigmac, sigmas1,
+\emph{Location-Scale SITAR Model Example:}
+Another common use case for \code{sigma_formula_manual} is modeling
+\code{sigma} in a location scale \code{SITAR} model, where the same
+\code{SITAR} formula can be applied to the scale parameter. An example is:
+
+\code{nlf(sigma ~ sigmaSITARFun(logage, sigmaa, sigmab, sigmac, sigmas1,
  sigmas2, sigmas3, sigmas4), loop = FALSE) +
- lf(sigmaa ~ 1+(1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
- lf(sigmab ~ 1+(1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
- lf(sigmac ~ 1+(1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
+ lf(sigmaa ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
+ lf(sigmab ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
+ lf(sigmac ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
  lf(sigmas1 + sigmas2 + sigmas3 + sigmas4 ~ 1)}.
 
-Here, \code{ls}, which is an abbreviation for location-scale, is a
-placeholder and gets replaced by the the name of actual function that is
-used for modelling the scale \code{sigma} part of the model. For example, if
-the name of the \code{mu} function is \code{sigmaSITARFun}, then the name of
-the  \code{sigma} function would be \code{sigmaSITARFun} and hence \code{ls}
-gets replaced as \code{sigmaSITARFun}. All functions and corresponding names
-are created internally.
-
-The first argument \code{x} of the function is again a placeholder for the
-actual predictor variable defined for the \code{sigma} modelling via the
-\code{sigmax} argument.In other words, the \code{x} gets replaced by the
-\code{sigmax} argument evaluated. For example, when \code{sigmax = age},
-then the \code{x} gets replaced by \code{age}. Like \code{ls}, internal
-renaming of \code{x} is handled automatically.
-
-The growth parameters \code{sigmaa}, \code{sigmab}, \code{sigmac} should
-match the input used for the \code{sigmafixed} and \code{sigmarandom}
-argument. In other words, either \code{sigmafixed} or \code{sigmarandom}
-must include the form for the corresponding growth parameter defined in the
-\code{ls} function. For example, when either or both \code{sigmafixed} and
-\code{sigmarandom} are defined as \code{a+b+c}, then all three growth
-parameters \code{sigmaa}, \code{sigmab}, \code{sigmac} should be part of the
-\code{ls} function. However, when only sunset of parameters are specified via
-the \code{sigmafixed} and \code{sigmarandom} form, say for example
-\code{a+b}, the \code{ls} function should exclude \code{sigmac} parameter.
-
-Similar, the number of spline parameters are based on the \code{sigmadf}
-argument. As an example, when \code{sigmadf = 4}, then four spline
-parameters \code{sigmas1, ..., sigmas4} are included, as shown above in the
-example.
-
-The other relevant arguments for \code{ls} function are set via the
-\code{sigmaknots}, \code{sigmaxoffset}, \code{sigmaxfun}, and
-\code{sigmabound} arguments. created by these arguments.
+Here, \code{sigmaSITARFun} (and all other required sub-functions) are
+defined through the \code{sigmax}, \code{sigmadf}, \code{sigmaknots},
+\code{sigmafixed}, \code{sigmarandom}, \code{sigmaxoffset},
+\code{sigmaxfun}, and \code{sigmabound} arguments. Ensure the
+\code{sigma_formula_manual} code matches the \code{sigmaSITARFun} function
+created by these arguments.
 
 Note that for \code{sigma_formula_manual}, priors must be set up manually
 using the \code{add_self_priors} argument. To see which priors are
@@ -897,22 +785,18 @@ See \code{xoffset} for details. Ignored if \code{sigma_formula_manual =
 \code{sigma_formula_manual = NULL}. Currently not used even when
 \code{sigma_formula_manual} is specified.}
 
-\item{sigmaxfun}{Transformation of \code{sigmax} variable for \code{sigma}
+\item{sigmaxfun}{Transformation function for \code{x} in the \code{sigma}
 structure. See \code{xfun} for details. Ignored if
 \code{sigma_formula_manual = NULL}.}
 
 \item{sigmabound}{Bounds for the \code{x} in the \code{sigma} structure. See
 \code{bound} for details. Ignored if \code{sigma_formula_manual = NULL}.}
 
-\item{sigmaxfunxoffset}{Transformation applied to \code{sigmaxoffset} for
-\code{sigmax} variable (default \code{TRUE}). See \code{sigmaxfun} for
-details. The default \code{sigmaxfunxoffset = TRUE} sets its value to same
-as \code{sigmaxfun}. Users rarely need to specify \code{sigmaxfunxoffset}
-themselves. One potential application is when a user wants to turn it off
-\code{sigmaxfunxoffset} by setting it as \code{FALSE}. Note that even when
-\code{sigmaxfunxoffset} is not \code{TRUE}, \code{sigmaxoffset} is still
-automatically adjusted for \code{sigmaxfun}, as it is inferred from the
-transformed \code{sigmax} variable.}
+\item{sigmaxfunxoffset}{Transformation function for \code{sigmaxoffset}
+in the \code{sigma} structure (default \code{NULL}). See \code{sigmaxfun}
+for details. Ignored if \code{sigma_formula_manual = NULL}. The
+\code{sigmaxfunxoffset} is rarely used. One potential application is
+when user internally transform the numeric \code{sigmaxoffset} value.}
 
 \item{dpar_formula}{Formula for the distributional fixed effect parameter,
 \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.}
@@ -1023,8 +907,8 @@ setting up the sub-models. Options are \code{'subset'} (default) and
 \item{multivariate}{Set up the multivariate model fitting (default
 \code{NULL}) using a named list with the following elements:
 \itemize{
-\item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit
-a multivariate model.
+\item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit a
+multivariate model.
 \item \code{cor} (optional, character string): Specifies the correlation
 structure for group-level random effects. Available options are:
 \itemize{
@@ -1044,19 +928,19 @@ estimated. This must be a factor variable present in the \code{data}.
 Ignored when \code{rescor = FALSE}.
 \item \code{rcorr_gr} (character string, default \code{NULL}): The grouping
 variable (typically a level 2 variable like \code{id}) for which residual
-correlations between response variables are estimated. This must be a factor
-variable present in the \code{data}. Ignored when \code{rescor = FALSE}.
+correlations between response variables are estimated. This must be a
+factor variable present in the \code{data}. Ignored when \code{rescor = FALSE}.
 \item \code{rcorr_method} (character string, default \code{NULL}): Specifies
 the method for estimating residual correlations: \code{"lkj"} (uses an LKJ
 distribution) or \code{"cde"} (uses the Cholesky decomposition of the
 covariance matrix with a uniform prior of \code{-1, 1} for each off-diagonal
 element). If \code{NULL}, \code{"lkj"} is set as the default. Ignored when
 \code{rescor = FALSE}.
-\item \code{rcorr_prior} (numeric vector, default \code{NULL}): Used to
-specify the LKJ prior for each level of \code{rcorr_by} when
-\code{rcorr_method = "lkj"}. The length of \code{rcorr_prior} should be
-either one (to use the same prior for all levels) or equal to the number of
-levels in \code{rcorr_by}. Ignored when \code{rescor = FALSE}.
+\item \code{rcorr_prior} (numeric vector, default \code{NULL}): Used to specify
+the LKJ prior for each level of \code{rcorr_by} when \code{rcorr_method = "lkj"}.
+The length of \code{rcorr_prior} should be either one (to use the same prior
+for all levels) or equal to the number of levels in \code{rcorr_by}. Ignored
+when \code{rescor = FALSE}.
 }}
 
 \item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
@@ -1165,8 +1049,8 @@ applied.
 \item{d_prior_beta}{Specify priors for the fixed effect parameter, \code{d}.
 The default prior is \code{normal(0, 1.0, autoscale = FALSE)}. For full
 details on prior specification, please refer to \code{a_prior_beta}. Note
-that to set the scale of location-scale based priors, the user can set
-scale as standard deviation \code{'xsd'} or the median absolute deviation
+that to set the scale of location-scale based priors, the user can set scale
+as standard deviation \code{'xsd'} or the median absolute deviation
 \code{'xmad'} of the predictor variable \code{'x'}.
 
 \itemize{
@@ -2055,9 +1939,7 @@ model fitting function, or used for internal purposes. Specifically, the
 \code{...} can also be used to pass arguments used for testing and
 debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
 \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
-\code{setcolb}, \code{decomp} and \code{smat}. Note that for all arguments
-(such as intercept) to correctly pass to the respective functions, use
-\code{smat} and not \code{stype} when setting up the spline arguments.
+\code{setcolb}, \code{decomp}
 
 These internal arguments are typically not used in regular model fitting but
 can be relevant for certain testing scenarios or advanced customization.

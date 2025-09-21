@@ -23,7 +23,6 @@
   digits = 2,
   numeric_cov_at = NULL,
   aux_variables = NULL,
-  grid_add = NULL,
   levels_id = NULL,
   avg_reffects = NULL,
   idata_method = NULL,
@@ -43,7 +42,6 @@
   plot = FALSE,
   showlegends = NULL,
   variables = NULL,
-  condition = NULL,
   deriv = NULL,
   model_deriv = NULL,
   method = "custom",
@@ -78,7 +76,6 @@
   clearenvfuns = NULL,
   funlist = NULL,
   xvar = NULL,
-  difx = NULL,
   idvar = NULL,
   itransform = NULL,
   newdata_fixed = NULL,
@@ -203,15 +200,6 @@ be passed to the \code{ipts} argument (see below). This is useful when
 fitting location-scale models and measurement error models. If
 post-processing functions throw an error such as \code{variable 'x' not
   found in either 'data' or 'data2'}, consider using \code{aux_variables}.}
-
-\item{grid_add}{An optional argument to specify the variable(s) that can be
-passed to the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}. This is useful when fitting
-location-scale models and measurement error models. If
-post-processing functions throw an error such as \code{variable 'x' not
-  found in either 'data' or 'data2'}, consider using \code{grid_add}.
-Note that unlike \code{aux_variables} which are passed to the internal data
-functions such as \code{'get.newdata'}, the \code{grid_add} are passed to
-the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}.}
 
 \item{levels_id}{An optional argument to specify the \code{ids} for the
 hierarchical model (default \code{NULL}). It is used only when the model is
@@ -393,19 +381,6 @@ passed to \code{variables}. In contrast, when using an alternative approach
 can be passed to the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions.}
 
-\item{condition}{Conditional slopes
-\itemize{
-\item Character vector (max length 4): Names of the predictors to display.
-\item Named list (max length 4): List names correspond to predictors. List elements can be:
-\itemize{
-\item Numeric vector
-\item Function which returns a numeric vector or a set of unique categorical values
-\item Shortcut strings for common reference values: "minmax", "quartile", "threenum"
-}
-\item 1: x-axis. 2: color/shape. 3: facet (wrap if no fourth variable, otherwise cols of grid). 4: facet (rows of grid).
-\item Numeric variables in positions 2 and 3 are summarized by Tukey's five numbers \code{?stats::fivenum}.
-}}
-
 \item{deriv}{A numeric value specifying whether to estimate parameters based
 on the differentiation of the distance curve or the model's first
 derivative. Please refer to the \code{variables} argument for more details.}
@@ -525,7 +500,7 @@ combination of the specified variables.}
 
 \item{transform}{string or function. Transformation applied to unit-level estimates and confidence intervals just before the function returns results. Functions must accept a vector and return a vector of the same length. Support string shortcuts: "exp", "ln"}
 
-\item{transform_draws}{A function applied to individual draws from the
+\item{transform_draws}{A function is applied to individual draws from the
 posterior distribution before computing summaries (default \code{NULL}).
 The argument \code{transform_draws} is derived from the
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
@@ -533,13 +508,7 @@ the \code{transform} argument from the deprecated
 \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
 the \code{transform_draws} argument takes precedence over the
-\code{transform} argument. Note that when \code{transform_draws = NULL}, an
-attempt is made to automatically set \code{transform_draws = 'exp'} for
-\code{dpar = 'sigma'}. User can set  \code{transform_draws = FALSE} to turn
-off this automatic assignment of \code{'exp'} to the
-\code{transform_draws}. It is also important to set \code{transform_draws =
-  FALSE} when computing the first derivative (velocity) for \code{dpar =
-  'sigma'}.}
+\code{transform} argument.}
 
 \item{cross}{\itemize{
 \item \code{FALSE}: Contrasts represent the change in adjusted predictions when one predictor changes and all other variables are held constant.
@@ -614,7 +583,7 @@ off this automatic assignment of \code{'exp'} to the
 \item Warning: When calling \code{predictions()} with \code{type="invlink(link)"} (the default in some models), \code{hypothesis} is tested and p values are computed on the link scale.
 }}
 
-\item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. For bayesian models, this report the proportion of posterior draws in the interval and the ROPE. See Details section below.}
+\item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. See Details section below.}
 
 \item{eps}{NULL or numeric value which determines the step size to use when
 calculating numerical derivatives: (f(x+eps)-f(x))/eps. When \code{eps} is
@@ -731,15 +700,6 @@ curve and one for the velocity curve.}
 internally. A use case is when conflicting variables exist (e.g.,
 \code{sigma_formula}) and user wants to set a specific variable as
 \code{'x'}.}
-
-\item{difx}{A character string (default \code{NULL}) specifying the
-\code{'x'} variable that should be used for manual differentiation of the
-distance curve. Internally, the \code{xvar} is set as \code{difx} if
-specified. The argument \code{difx} is evaluated only when \code{dpar =
-  'sigma'}, ignored otherwise. Note that argument \code{xvar} itself is rarely
-used because \code{xvar} is inferred internally. A use case is when
-conflicting variables exist (e.g., \code{sigma_formula}) and user wants to
-set a specific variable as \code{'x'}.}
 
 \item{idvar}{A character string (default \code{NULL}) specifying the
 \code{'id'} variable. Rarely used because \code{idvar} is inferred

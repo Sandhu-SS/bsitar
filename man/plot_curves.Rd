@@ -21,7 +21,6 @@
   re_formula = NULL,
   numeric_cov_at = NULL,
   aux_variables = NULL,
-  grid_add = NULL,
   levels_id = NULL,
   avg_reffects = NULL,
   ipts = NULL,
@@ -76,7 +75,6 @@
   clearenvfuns = NULL,
   funlist = NULL,
   xvar = NULL,
-  difx = NULL,
   idvar = NULL,
   itransform = NULL,
   newdata_fixed = NULL,
@@ -173,15 +171,6 @@ included in the model.}
 \item{aux_variables}{An optional argument to specify variables passed to the
 \code{ipts} argument, useful when fitting location-scale or measurement
 error models.}
-
-\item{grid_add}{An optional argument to specify the variable(s) that can be
-passed to the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}. This is useful when fitting
-location-scale models and measurement error models. If
-post-processing functions throw an error such as \code{variable 'x' not
-  found in either 'data' or 'data2'}, consider using \code{grid_add}.
-Note that unlike \code{aux_variables} which are passed to the internal data
-functions such as \code{'get.newdata'}, the \code{grid_add} are passed to
-the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}.}
 
 \item{levels_id}{An optional argument to specify the \code{ids} for the
 hierarchical model (default \code{NULL}). It is used only when the model is
@@ -292,7 +281,7 @@ standard deviation as the measure of variability. If \code{TRUE}, the
 median and median absolute deviation (MAD) are applied instead. Ignored if
 \code{summary} is \code{FALSE}.}
 
-\item{transform_draws}{A function applied to individual draws from the
+\item{transform_draws}{A function is applied to individual draws from the
 posterior distribution before computing summaries (default \code{NULL}).
 The argument \code{transform_draws} is derived from the
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
@@ -300,13 +289,7 @@ the \code{transform} argument from the deprecated
 \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
 the \code{transform_draws} argument takes precedence over the
-\code{transform} argument. Note that when \code{transform_draws = NULL}, an
-attempt is made to automatically set \code{transform_draws = 'exp'} for
-\code{dpar = 'sigma'}. User can set  \code{transform_draws = FALSE} to turn
-off this automatic assignment of \code{'exp'} to the
-\code{transform_draws}. It is also important to set \code{transform_draws =
-  FALSE} when computing the first derivative (velocity) for \code{dpar =
-  'sigma'}.}
+\code{transform} argument.}
 
 \item{scale}{Either \code{"response"} or \code{"linear"}.
 If \code{"response"}, results are returned on the scale
@@ -514,15 +497,6 @@ curve and one for the velocity curve.}
 internally. A use case is when conflicting variables exist (e.g.,
 \code{sigma_formula}) and user wants to set a specific variable as
 \code{'x'}.}
-
-\item{difx}{A character string (default \code{NULL}) specifying the
-\code{'x'} variable that should be used for manual differentiation of the
-distance curve. Internally, the \code{xvar} is set as \code{difx} if
-specified. The argument \code{difx} is evaluated only when \code{dpar =
-  'sigma'}, ignored otherwise. Note that argument \code{xvar} itself is rarely
-used because \code{xvar} is inferred internally. A use case is when
-conflicting variables exist (e.g., \code{sigma_formula}) and user wants to
-set a specific variable as \code{'x'}.}
 
 \item{idvar}{A character string (default \code{NULL}) specifying the
 \code{'id'} variable. Rarely used because \code{idvar} is inferred

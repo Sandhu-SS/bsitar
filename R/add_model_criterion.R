@@ -122,18 +122,11 @@ add_model_criterion.bgmfit <-
     }
     
     
-    
-    get.newdata_args <- list()
-    for (i in methods::formalArgs(get.newdata)) {
-      get.newdata_args[[i]] <- full.args[[i]]
-    }
-    
-    
     if(!is.null(model$xcall)) {
       arguments <- get_args_(as.list(match.call())[-1], model$xcall)
       newdata <- newdata
     } else {
-      newdata <- CustomDoCall(get.newdata, get.newdata_args)
+      newdata <- CustomDoCall(get.newdata, full.args)
     }
     
     if(!is.null(model$model_info$decomp)) {

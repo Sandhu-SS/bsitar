@@ -57,7 +57,6 @@ test_that("bsitar works fully with nsk settings", {
                        seed = 123)
   }))
   
-  test_fit[['test_mode']] <- TRUE
   
   true_sbetas <- c(128.06, 0.00, 0.00, 18.53, 34.30, 47.69, 49.69)
   

@@ -487,18 +487,6 @@ outliers <-
 #' are \code{'b'}, \code{'sd'} and \code{'cor'}. Default \code{NULL} indicates 
 #' that class name in infered automatically. 
 #' 
-#' @param sanitize_CustomDoCall_args A logical to indicate whether to sanitize
-#' the \code{sanitize_CustomDoCall_args}
-#' 
-#' @param check_formalArgs Argument passed to \code{sanitize_CustomDoCall_args}
-#' 
-#' @param check_formalArgs_exceptions Argument passed to
-#'  \code{sanitize_CustomDoCall_args}
-#' 
-#' @param check_trace_back Argument passed to \code{sanitize_CustomDoCall_args}
-#' 
-#' @param envir A environment passed on to the \code{sanitize_CustomDoCall_args}
-#' 
 #' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
 #'  \code{warnings} and \code{messages} during the function evaluation.
 #'
@@ -512,35 +500,15 @@ outliers <-
 evaluate_call_args <- function(cargs = NULL,
                             fargs = NULL,
                             dargs = NULL,
-                            sanitize_CustomDoCall_args = FALSE,
-                            check_formalArgs  = NULL,
-                            check_formalArgs_exceptions  = NULL,
-                            check_trace_back  = NULL,
-                            envir = NULL,
                             verbose = FALSE) {
-  
   for (fargsi in names(dargs)) {
     if(is.null(cargs[[fargsi]])) cargs[[fargsi]] <- fargs[[fargsi]]
   }
   for (fargsi in names(fargs)) {
     if(is.null(cargs[[fargsi]])) cargs[[fargsi]] <- fargs[[fargsi]]
   }
-  
-  if(is.null(envir)) {
-    envir <- parent.frame()
-  }
-  
-  if(sanitize_CustomDoCall_args) {
-    cargs <- sanitize_CustomDoCall_args(what = "CustomDoCall",
-                                        arguments = cargs,
-                                        check_formalArgs = check_formalArgs,
-                                        check_formalArgs_exceptions = 
-                                          check_formalArgs_exceptions,
-                                        check_trace_back = check_trace_back,
-                                        envir = envir)
-  }
  
-  return(cargs)
+  cargs
 }
 
 
@@ -671,6 +639,257 @@ post_processing_args_sanitize <- function(model,
   return(allargs)
 }
 
+
+
+#' An internal function to perform checks when calling post-processing functions
+#'
+#' @description The \code{post_processing_checks} perform essential checks (such
+#'   as the validity of model class, response etc.) during post-processing of
+#'   posterior draws.
+#'
+#' @param model An object of class \code{bgmfit}.
+#'
+#' @param xcall The \code{match.call()} from the post-processing function.
+#'
+#' @param resp Response variable (default \code{NULL}) specified as a character
+#'   string. This is needed when processing \code{univariate_by} and
+#'   \code{multivariate} models (see \code{bgmfit} function for details).
+#'
+#' @param deriv An integer value to specify whether to estimate distance curve
+#'   (i.e., model estimated curve(s)) or the velocity curve (first derivative of
+#'   the model estimated curve(s)). A value \code{0} (default) is for distance
+#'   curve and  \code{1} for the velocity curve.
+#'   
+#' @param all A logical (default \code{NULL}) to specify whether to return all
+#'   the exposed functions.
+#'
+#' @param envir Indicator to set the environment of function evaluation. The
+#'   default is \code{parent.frame}.
+#'   
+#' @param verbose A logical (default \code{FALSE}) to indicate whetehr to print
+#'  \code{warnings} and \code{messages} during the function evaluation.
+#'
+#' @return A string with the error captured or else a list with necessary
+#'   information needed when executing the post-processing function
+#'   
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#'
+#' @keywords internal
+#' @noRd
+#'
+post_processing_checks <- function(model, 
+                                   xcall, 
+                                   resp = NULL, 
+                                   deriv = NULL,
+                                   all = FALSE,
+                                   envir = NULL, 
+                                   verbose = FALSE, 
+                                   check_d0 = FALSE,
+                                   check_d1 = FALSE,
+                                   check_d2 = FALSE) {
+  
+  if(is.null(envir)) envir <- parent.frame()
+  if(is.null(deriv)) deriv <- 0
+  
+  if(!'bgmfit' %in% class(model)) {
+    stop("The class of model object should be 'bgmfit' ")
+  }
+  
+  excall_ <- c("plot_ppc", "loo_validation")
+
+  xcall_check_it <- paste(deparse(substitute(xcall)), collapse = "")
+  xcall_check_it <- gsub_space(xcall_check_it)
+  check_it       <- sub(" *\\(.*", "", xcall_check_it)
+ 
+  check_it_sss <- strsplit(check_it, "\\.")[[1]][1]
+  
+  # Now using checkresp_info which is also used in getmodel_info
+  checkresp_info(model, resp)
+ 
+  # if (model$model_info$nys == 1 & !is.null(resp)) {
+  #   stop(
+  #     "You have fit a univariate model",
+  #     " but set resp option as: ",
+  #     resp,
+  #     ".",
+  #     "\n ",
+  #     " For univariate model, the resp option should be NULL",
+  #     "\n ",
+  #     " (i.e., resp = NULL)"
+  #   )
+  # }
+  # if (model$model_info$nys > 1 & is.null(resp)) {
+  #   if (!is.na(model$model_info$univariate_by$by)) {
+  #     stop(
+  #       "You have fit a univariate_by model for ",
+  #       model$model_info$univariate_by$by,
+  #       "\n ",
+  #       " but did not correctly specified the 'resp' option",
+  #       " (which is NULL at present).",
+  #       "\n ",
+  #       " The response options are: ",
+  #       paste(model$model_info$ys, collapse = ", ")
+  #     )
+  #   }
+  #   if (model$model_info$multivariate$mvar) {
+  #     stop(
+  #       "You have fit a multivariate model ",
+  #       "\n ",
+  #       " but dit not set the the resp options correctly",
+  #       " (which is NULL at present).",
+  #       "\n ",
+  #       " The response options are: ",
+  #       paste(model$model_info$ys, collapse = ", ")
+  #     )
+  #   }
+  # }
+  
+  if (is.null(resp)) {
+    resp_    <- resp
+    revresp_ <- ""
+  } else if (!is.null(resp)) {
+    resp_    <- paste0(resp, "_")
+    revresp_ <- paste0("_", resp)
+  }
+  
+  # assign expose default funs 
+  if(model$model_info[['expose_method']] == 'R') {
+    assign(paste0(resp_, 
+                  model$model_info[['namesexefuns']], 
+                  '0'), 
+           model$model_info$exefuns[[paste0(resp_, 
+                                            model$model_info[['namesexefuns']], 
+                                            '0')]], envir = envir)
+
+    if(model$model_info[['select_model']] == 'sitar' |
+       model$model_info[['select_model']] == 'rcs') {
+      assign(paste0(resp_, 'getKnots'), 
+             model$model_info$exefuns[[paste0(resp_, 'getKnots')]], 
+             envir = envir)
+    }
+  }
+ 
+  if(!all) {
+    out <-
+      list(
+        paste0(resp_, model$model_info[['namesexefuns']], ''),
+        paste0(resp_, model$model_info[['namesexefuns']], deriv)
+      ) 
+  }
+  
+  if(all) {
+    out <- model$model_info[['exefuns']]
+  } 
+  
+  # 6.03.2025
+  # check_d1
+  if(check_d1) {
+    available_d0 <- available_d1 <- available_d2 <- FALSE
+    for (i in names(model$model_info$exefuns)) {
+      check_funds <- ifelse(grepl("\\d$", i), sub(".*?(\\d+)$", "\\1", i), "")
+      if(grepl("0", check_funds)) {
+        available_d0 <- TRUE
+      }
+      if(grepl("1", check_funds)) {
+        available_d1 <- TRUE
+      }
+      if(grepl("2", check_funds)) {
+        available_d2 <- TRUE
+      }
+    }
+    
+    if(verbose) { 
+      if(!available_d0) {
+        stop("No 'd0' found")
+      }
+      if(!available_d1) {
+        message("No 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
+      }
+      if(!available_d2) {
+        # message("No 'd2' found, setting 'model_deriv = FALSE', 'deriv = 0'")
+      }
+    }
+    
+    # sigma_model <- model$model_info[['sigma_model']]
+    
+    # When sigma_model == 'ls', then only sigma function is defined in stan
+    # if(!is.null(sigma_model)) {
+    #   if(sigma_model == "mu") {
+    #     available_d1 <- FALSE
+    #     available_d2 <- FALSE
+    #   }
+    # }
+    
+    sigma_model_      <- paste0('sigma_model', revresp_)
+    sigma_model_name_ <- paste0('sigmabasicfunname', revresp_)
+    sigma_model_attr_ <- paste0('sigmabasicfunattr', revresp_)
+    
+    sigma_model       <- model$model_info[[sigma_model_]]
+    sigma_model_name  <- model$model_info[[sigma_model_name_]]
+    sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
+    
+    check_namespace_for_sigma_d1 <- c('splines2', 'bsitar')
+    
+    check_namespace_for_sigma_d1_test <- 
+      setdiff(sigma_model_attr, check_namespace_for_sigma_d1)
+    
+    if(!is.null(sigma_model)) {
+      if(sigma_model == "ls") {
+        available_d1 <- available_d1
+        available_d2 <- available_d2
+      } else if(sigma_model == "basic") {
+        if(length(check_namespace_for_sigma_d1_test) == 0) {
+          available_d1 <- available_d1
+          available_d2 <- available_d2
+          if(deriv > 0) {
+            for (i in sigma_model_name) {
+              model$model_info$exefuns[[i]] <- 
+                formals(model$model_info$exefuns[[i]])[['derivs']] <- deriv
+            }
+          }
+        } else {
+          available_d1 <- FALSE
+          available_d2 <- FALSE
+        }
+      } else {
+        available_d1 <- available_d1
+        available_d2 <- available_d2
+      }
+    } else if(is.null(sigma_model)) {
+      available_d1 <- available_d1
+      available_d2 <- available_d2
+    }
+    
+    
+    
+    
+    
+    # Force available_d1 = FALSE when model_deriv = FALSE
+    if(!is.null(model$model_info[['model_deriv']])) {
+      if(!model$model_info[['model_deriv']]) {
+        available_d1 <- FALSE
+        available_d2 <- FALSE
+      }
+    }
+    
+    
+    # if(model$model_info[['dpar']] == 'sigma') {
+    #   for (i in 1:length(out)) {
+    #     out[[i]] <- ""
+    #   }
+    # }
+    
+    # print(out)
+    # stop()
+    
+    out[['available_d0']] <- available_d0
+    out[['available_d1']] <- available_d1
+    out[['available_d2']] <- available_d2
+  } # if(check_d1) {
+  
+  
+  return(out)
+}
 
 
 
@@ -2506,11 +2725,6 @@ remove_between_first_last_parnth <- function(x, splitat = NULL) {
 #' @noRd
 #'
 inverse_transform <- function (expr, verbose = FALSE, envir = NULL) {
-  # 7.9.25 - if is.function such as zzz <- function(x)x
-  # then extract body
-  if(is.function(expr)) {
-    expr <- base::body(expr)
-  }
   vars <- function(expr) {
     (av <- all.vars(expr, unique = FALSE))[grep("^pi$", av, 
                                                 invert = TRUE)]
@@ -2736,7 +2950,7 @@ check_and_rename_funs_args_to_x <- function(fun, checkname = "x") {
     return( expr )
   }
   
-  formalArgs_names_in <- methods::formalArgs(args(fun))
+  formalArgs_names_in <- formalArgs(args(fun))
   
   deparse_fun_str <- deparse(fun)
   deparse_fun_str <- gsub_space(paste(deparse_fun_str, collapse = ""))
@@ -2793,14 +3007,6 @@ check_and_rename_funs_args_to_x <- function(fun, checkname = "x") {
 #' @noRd
 #'
 assign_function_to_environment <- function(fun, funname, envir = NULL) {
-  
-  if(is.logical(fun)) {
-    if(!fun) {
-      fun <- "identity"
-    }
-  }
-  
-
   if(is.null(envir)) {
     envir <- parent.frame()
   } else {
@@ -2821,30 +3027,27 @@ assign_function_to_environment <- function(fun, funname, envir = NULL) {
   
   set_transform_draws      <- check_if_arg_set(fun)
   
-  allowedstrfun <- c("identity", "log", "sqrt")
-  
   if (!set_transform_draws) {
     fun_eval <- function(x)x
     assign(funname, fun_eval, envir = envir)
   } else if (set_transform_draws) {
-    if(fun == "identity") {
-      fun_eval <- function(x)x
-    } else if(fun == "log") {
+    if(fun == "log") {
       fun_eval <- function(x)log(x)
     } else if(fun == "sqrt") {
       fun_eval <- function(x)sqrt(x)
     } else  if(is.function(ept(fun))) {
       fun_eval <- ept(fun)
     } else {
-      stop("The 'fun' argument must must be either ", 
-           collapse_comma(allowedstrfun),
-           "\n ",
-           " or else a valid function such as function(x) x")
+      stop(paste0("The fun argument must be either a string ('log' or 'sqrt'),", 
+                  "\n  ",
+                  "or a function such as function(x)log(x)"))
     }
     assign(funname, fun_eval, envir = envir)
   }
+  
   assign(funname, check_and_rename_funs_args_to_x(fun_eval, checkname = 'x'),
          envir = envir)
+  
 }
 
 
@@ -2893,83 +3096,31 @@ extract_names_from_call <- function(model = NULL,
 #' An internal function to get the inverse transformation call 
 #'
 #' @param itransform A character string or \code{NULL}.
-#' @param dpar A character string or \code{NULL}.
-#' @param auto A logical \code{TRUE}.
-#' @param verbose A logical \code{FALSE}.
+#' @param ... Additional argumenst. Currently ignored.
 #'
 #' @return A character string.
 #'   
 #' @keywords internal
 #' @noRd
 #'
-get_itransform_call <- function(itransform,
-                                model = NULL, 
-                                newdata = NULL,
-                                dpar = NULL,
-                                resp = NULL,
-                                auto = TRUE,
-                                verbose = FALSE) {
-  if(is.null(dpar)) {
-    dpar <- "mu"
-  }
+get_itransform_call <- function(itransform, ...) {
   if(is.null(itransform)) {
     itransform_set <- "x"
-    if(dpar == "sigma") {
-      itransform_set <- c(itransform_set, 'sigma')
-    }
   } else if(!is.null(itransform)) {
     if(is.logical(itransform)) {
       if(itransform) {
-        itransform_set <- c('x', 'y') # c('x', 'y', 'sigma')
-        if(dpar == "sigma") {
-          itransform_set <- c(itransform_set, 'sigma')
-        }
+        itransform_set <- c('x', 'y', 'sigma')
       }
       if(!itransform) {
         itransform_set <- ""
       }
-    } else if(is.character(itransform)) {
-      if(itransform == "") {
-        itransform_set <- ""
-      } else {
-        itransform_set <- "x"
-        if(dpar == "sigma") {
-          itransform_set <- c(itransform_set, 'sigma')
-        }
-      }
-    } else if(is.function(itransform)) {
-      itransform_set <- "x"
-      if(dpar == "sigma") {
-        itransform_set <- c(itransform_set, 'sigma')
-      }
-      # itransform_set <- itransform
+    } else if(itransform == "") {
+      itransform_set <- ""
+    } else {
+      itransform_set <- itransform
     }
   } # if(is.null(itransform)) {
-  if(!is.character(itransform_set)) {
-    stop("'get_itransform_call()' must return a character string or a vector: ",
-         "\n  ", 
-         collapse_comma(c('x', 'y', 'sigma')))
-  }
-  
-  
-  if(!is.null(model)) {
-    sigma_model <- get_sigmamodel_info(model = model,
-                                       newdata = newdata,
-                                       dpar = dpar, 
-                                       resp = resp, 
-                                       what = 'model',
-                                       cov = NULL, 
-                                       all = FALSE, 
-                                       verbose = verbose)
-    
-    if(!is.null(sigma_model)) {
-      if(sigma_model != "ls") {
-        itransform_set <- "sigma"
-      }
-    }
-  } # if(!is.null(model)) {
-  
-  return(itransform_set)
+  itransform_set
 }
 
 
@@ -3075,7 +3226,7 @@ sanitize_CustomDoCall_args <- function(what,
   
   if(!is.null(check_formalArgs)) {
     if(is.function(check_formalArgs)) {
-      ownargs <- methods::formalArgs(check_formalArgs)
+      ownargs <- formalArgs(check_formalArgs)
     } else if(is.list(check_formalArgs)) {
       ownargs <- check_formalArgs
     } else {
@@ -3759,29 +3910,7 @@ add_default_args_to_nlf_lf <- function(str,
                        # 'dpar',
                        'resp',
                        'loop')
-          
-          getnlparformx   <- ept(split_result_ith)
-          formalnamesnlsf <- methods::formalArgs(brms::nlf)
-          formalnamesnlsf <- formalnamesnlsf[formalnamesnlsf != "..."]
-          formalnamesnlsf <- c(formalnamesnlsf, "method", "prior")
-          nlparformx_names <- names(getnlparformx)
-          nlparformx_names_extra <- nlparformx_names[nzchar(nlparformx_names)]
-          if(length(nlparformx_names_extra)>0) {
-            stop("The following argument(s) not allowed in nlf(): ", 
-                 "\n ", 
-                 collapse_comma(nlparformx_names_extra), 
-                 "\n  ", 
-                 "Allowed arguments are: ",
-                 "\n ", 
-                 collapse_comma(formalnamesnlsf),
-                 "\n  ", 
-                 "Please check the following and correct it: ",
-                 "\n  ", 
-                 split_result_ith)
-          }
-          
-          getnlpar <- getnlparformx [[1]][-2] %>% all.vars()
-          # getnlpar <- ept(split_result_ith) [[1]][-2] %>% all.vars()
+          getnlpar <- ept(split_result_ith) [[1]][-2] %>% all.vars()
           getnlpar <- setdiff(getnlpar, data_varnames)
           get_nlf_nlpars_c <- c(get_nlf_nlpars_c, getnlpar)
         } else if (grepl("^lf\\(", split_result_ith) &
@@ -3883,15 +4012,15 @@ add_default_args_to_nlf_lf <- function(str,
 #'
 extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
   if(is.null(str) | length(str) == 0) {
-    if(verbose)  message("String is NULL")
+    if(verbose)  print("String is NULL")
     return(invisible(NULL))
   } else if(!is.null(str)) {
     if(is.character(str)) {
       if(str == "NULL") return(invisible(NULL))
     }
-    if(verbose)  message("String is NULL")
+    if(verbose)  print("String is NULL")
   } else if(is.null(str)) {
-    if(verbose)  message("String is NULL")
+    if(verbose)  print("String is NULL")
     return(invisible(NULL))
   } 
   pattern <- paste0(start, "(.*?)\\", end)
@@ -3901,7 +4030,7 @@ extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
     extracted_string <- gsub("^~|\\*$", "", full_match, perl = TRUE)
     return(extracted_string)
   } else {
-    if(verbose)  message("No match found.")
+    if(verbose)  print("No match found.")
     return(invisible(NULL))
   }
 } 
@@ -4479,20 +4608,6 @@ gkn <- function(x, df, bounds) {
 
 
 
-#' An internal funtion to adjust boundary knots 
-#' @details used in bsitar
-#' 
-#' @keywords internal
-#' @noRd
-#' 
-apply_bknots_bounds <- function(bknots, bounds) {
-  c(bknots[1] - bounds * (bknots[2] - bknots[1]),
-    # quantile(x, (1:(df - 1)) / df, na.rm = TRUE), 
-    bknots[2] + bounds * (bknots[2] - bknots[1]))
-}
-
-
-
 #' Create rcs spline design matrix. 
 #' @details used in bsitar
 #' 
@@ -4504,7 +4619,8 @@ eval_xoffset_bstart_args <- function(x,
                                      knots, 
                                      data, 
                                      eval_arg, 
-                                     offsetfunsi,
+                                     xfunsi, 
+                                     arg = 'xoffset',
                                      smat,
                                      degree, 
                                      intercept, 
@@ -4513,30 +4629,9 @@ eval_xoffset_bstart_args <- function(x,
                                      normalize,
                                      preH, 
                                      sfirst, 
-                                     sparse,
-                                     arg = 'xoffset',
-                                     dpar = "mu",
-                                     verbose = FALSE) {
-  
+                                     sparse) {
   iknots <- checkgetiknotsbknots(knots, 'iknots')
   bknots <- checkgetiknotsbknots(knots, 'bknots')
-  
-  if(check_is_numeric_like(eval_arg)) {
-      zm <- as.numeric(eval_arg)
-      if(check_for_nan_inf(offsetfunsi(zm))) {
-        if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
-                            " can not be transformed to", 
-                            " match the xfun based transformation of x " ,"")
-      } else {
-        zm <- offsetfunsi(zm)
-        if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
-                            "' transformed to '",  zm ,"'")
-      }
-    out        <- as.numeric(zm)
-    out        <- round(out, 3)
-    return(out)
-  }
-  
     if (eval_arg == "mean") {
       eval_arg.o <- mean(data[[x]])
     } else if (eval_arg == "min") {
@@ -4545,6 +4640,9 @@ eval_xoffset_bstart_args <- function(x,
       eval_arg.o <- max(data[[x]])
     } else if (eval_arg == "apv") {
       if(smat == 'rcs') {
+        # mat_s <- make_spline_matrix(data[[x]], knots)
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_rcs_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4555,6 +4653,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'nsp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4565,6 +4665,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'nsk') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsk_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4575,6 +4677,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'bsp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_bsp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4585,6 +4689,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'msp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_msp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4595,6 +4701,8 @@ eval_xoffset_bstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'isp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_isp_call(x = data[[x]], knots = iknots, bknots = bknots, 
                              degree = degree,
                              intercept = intercept, 
@@ -4638,6 +4746,7 @@ eval_xoffset_cstart_args <- function(x,
                                      knots, 
                                      data, 
                                      eval_arg, 
+                                     xfunsi,
                                      smat,
                                      degree, 
                                      intercept, 
@@ -4646,36 +4755,15 @@ eval_xoffset_cstart_args <- function(x,
                                      normalize,
                                      preH, 
                                      sfirst, 
-                                     sparse,
-                                     arg = 'xoffset',
-                                     dpar = "mu",
-                                     verbose = FALSE) {
+                                     sparse) {
   iknots <- checkgetiknotsbknots(knots, 'iknots')
   bknots <- checkgetiknotsbknots(knots, 'bknots')
-
-  if(check_is_numeric_like(eval_arg)) {
-    csetfunsi <- function(x)x
-    zm <- as.numeric(eval_arg)
-    if(check_for_nan_inf(csetfunsi(zm))) {
-      if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
-                          " can not be transformed to", 
-                          " match the xfun based transformation of x " ,"")
-    } else {
-      zm <- csetfunsi(zm)
-      if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
-                          "' transformed to '",  zm ,"'")
-    }
-    out        <- as.numeric(zm)
-    out        <- round(out, 3)
-    return(out)
-  }
-  
-  if(eval_arg != "pv") {
-    stop("For cstart, only 'pv' is allowed")
-  }
-  
     if (eval_arg == "pv") {
+      # mat_s <- make_spline_matrix(data[[x]], knots)
       if(smat == 'rcs') {
+        # mat_s <- make_spline_matrix(data[[x]], knots)
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsp_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4687,6 +4775,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'nsp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsp_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4698,6 +4788,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'nsk') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsk_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4709,6 +4801,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'bsp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_bsp_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4720,6 +4814,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'msp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_msp_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,
@@ -4731,6 +4827,8 @@ eval_xoffset_cstart_args <- function(x,
                              sfirst = sfirst, 
                              sparse = sparse)
       } else if(smat == 'isp') {
+        # iknots <- knots[2:(length(knots)-1)]
+        # bknots <- c(knots[1], knots[length(knots)])
         mat_s <- GS_nsk_call(x = data[[x]], 
                              knots = iknots, bknots = bknots, 
                              degree = degree,

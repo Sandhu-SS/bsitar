@@ -162,7 +162,7 @@ update_model.bgmfit <-
     check_if_package_installed(model, xcall = NULL)
     
     formula. <- NULL
-    args <- methods::formalArgs(bsitar)
+    args <- formalArgs(bsitar)
     args <- args[!args == "..."]
     
     call_ <- model$model_info$call.full.bgmfit[-1] %>% as.list()

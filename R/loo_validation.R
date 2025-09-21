@@ -172,11 +172,7 @@ loo_validation.bgmfit <-
       newdata <- newdata
     } else {
       full.args$dpar    <- dpar
-      get.newdata_args <- list()
-      for (i in methods::formalArgs(get.newdata)) {
-        get.newdata_args[[i]] <- full.args[[i]]
-      }
-      newdata <- CustomDoCall(get.newdata, get.newdata_args)
+      newdata <- CustomDoCall(get.newdata, full.args)
     }
     
     

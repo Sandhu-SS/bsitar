@@ -101,7 +101,6 @@ plot_conditional_effects.bgmfit <-
            clearenvfuns = NULL,
            funlist = NULL,
            xvar = NULL,
-           difx = NULL,
            idvar = NULL,
            itransform = NULL,
            newdata_fixed = NULL,
@@ -114,35 +113,35 @@ plot_conditional_effects.bgmfit <-
       envir <- envir
     }
     
-    
     if(!is.null(transform) & !is.null(transform_draws)) {
       stop("Please specify either transform or transform_draws, not both")
     }
-    
-    
-    if(!is.null(dpar)) {
-      if(dpar == "sigma") {
-        stop("'plot_conditional_effects()' currently does not support dpar = 'sigma'")
-      }
-    }
-    
     
     # 20.03.2025
     assign_function_to_environment(transform_draws, 'transform_draws', 
                                    envir = NULL)
     model$model_info[['transform_draws']] <- transform_draws
     
+    # 20.03.2025
+    # Depending on dpar 'mu' or 'sigma', subset model_info
+    # This only when set_sigma_manual used to model a b c 
+    # Not when a function such as splines::ns etc used in sigma_formula
     
     if(is.null(dpar)) {
       dpar <- "mu"
     }
     
-    model <- getmodel_info(model = model, 
-                           dpar = dpar, 
-                           resp = resp, 
-                           deriv = NULL, 
-                           verbose = verbose)
+    model <- getmodel_info(model = model, dpar = dpar, resp = resp)
     
+    # 02.08.2025
+    add_prefix_to_fun <- ""
+    if(!is.null(dpar)) {
+      if(dpar == "mu") {
+        add_prefix_to_fun <- ""
+      } else if(dpar == "sigma") {
+        add_prefix_to_fun <- "sigma"
+      }
+    }
     
     
     probtitles <- probs[order(probs)] * 100
@@ -234,20 +233,11 @@ plot_conditional_effects.bgmfit <-
     
     # 6.03.2025
     ########################################################
-    
-    check_set_fun <- check_set_fun_transform(model = model, 
-                                             which = 'ixfuntransform2',
-                                             dpar = dpar, 
-                                             resp= resp, 
-                                             transform = itransform,
-                                             auto = TRUE, 
-                                             verbose = verbose)
-    
-    ifunx_ <- check_set_fun[['setfun']]
-    if(check_set_fun[['was_null']]) {
-      model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
-    }
-    
+    # prepare_data2
+    ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+    # 02.08.2025
+    ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
+    ifunx_ <- model$model_info[[ifunx_]]
     ########################################################
     
     ########################################################
@@ -316,11 +306,7 @@ plot_conditional_effects.bgmfit <-
       newdata <- newdata
     } else {
       full.args$dpar    <- dpar
-      get.newdata_args <- list()
-      for (i in methods::formalArgs(get.newdata)) {
-        get.newdata_args[[i]] <- full.args[[i]]
-      }
-      newdata <- CustomDoCall(get.newdata, get.newdata_args)
+      newdata <- CustomDoCall(get.newdata, full.args)
     }
     full.args$newdata <- newdata
     

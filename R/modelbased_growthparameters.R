@@ -203,9 +203,6 @@ modelbased_growthparameters.bgmfit <-
            ...) {
           
     
-    insight::check_if_installed('cheapr', prompt = FALSE, stop = FALSE)
-    
-    
       try(zz <- insight::check_if_installed(c("marginaleffects"), 
                                             minimum_version = 
                                               get_package_minversion(
@@ -321,24 +318,33 @@ modelbased_growthparameters.bgmfit <-
       model$model_info[['transform_draws']] <- transform_draws
       
       
-      # IMP - as nlpar can't be defined along with dpar, dpar must be NULL
       if(!is.null(dpar)) {
         stop("Cannot use 'dpar' and 'nlpar' at the same time for", 
              " posterior_epred.brmsprep().")
       }
       
-      # Don't set dpar as mu - must remain NULL
-      # if(is.null(dpar)) {
-      #   dpar <- "mu"
-      # }
       
-      model <- getmodel_info(model = model, 
-                             dpar = dpar, 
-                             resp = resp, 
-                             deriv = NULL, 
-                             verbose = verbose)
+      # 20.03.2025
+      # Depending on dpar 'mu' or 'sigma', subset model_info
+      # This only when set_sigma_manual used to model a b c 
+      # Not when a function such as splines::ns etc used in sigma_formula
       
-     
+      
+      
+      model <- getmodel_info(model = model, dpar = dpar, resp = resp)
+      
+      # 02.08.2025
+      add_prefix_to_fun <- ""
+      if(!is.null(dpar)) {
+        if(dpar == "mu") {
+          add_prefix_to_fun <- ""
+        } else if(dpar == "sigma") {
+          add_prefix_to_fun <- "sigma"
+        }
+      }
+      
+      
+      
       
       
       if(is.null(usesavedfuns)) {
@@ -470,59 +476,23 @@ modelbased_growthparameters.bgmfit <-
       
       
       # for x.adh
-      # funx_ <- paste0('xfuntransform2', resp_rev_)
-      # # 02.08.2025
-      # funx_ <- paste0(add_prefix_to_fun, funx_)
-      # funx_ <- model$model_info[[funx_]]
-      
-      
-      check_set_fun <- check_set_fun_transform(model = model, 
-                                               which = 'xfuntransform2',
-                                               dpar = dpar, 
-                                               resp= resp, 
-                                               transform = NULL,
-                                               auto = FALSE, 
-                                               verbose = verbose)
-      
-      funx_ <- check_set_fun[['setfun']]
-      if(check_set_fun[['was_null']]) {
-        model$model_info[[check_set_fun[['setfunname']]]] <- funx_
-      }
-      
-      
+      funx_ <- paste0('xfuntransform2', resp_rev_)
+      # 02.08.2025
+      funx_ <- paste0(add_prefix_to_fun, funx_)
+      funx_ <- model$model_info[[funx_]]
       
       ########################################################
-      ########################################################
-      
-      check_set_fun <- check_set_fun_transform(model = model, 
-                                               which = 'ixfuntransform2',
-                                               dpar = dpar, 
-                                               resp= resp, 
-                                               transform = itransform,
-                                               auto = TRUE, 
-                                               verbose = verbose)
-      
-      ifunx_ <- check_set_fun[['setfun']]
-      if(check_set_fun[['was_null']]) {
-        model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
-      }
-      
+      # prepare_data2
+      ifunx_ <- paste0('ixfuntransform2', resp_rev_)
+      ifunx_ <- paste0(add_prefix_to_fun, ifunx_)
+      ifunx_ <- model$model_info[[ifunx_]]
       ########################################################
       
       # Over ride 'ifunx_()' i.e, return xvar on scale used in model fit
       # This is restricted to  when using 'pdrawsp' etc. 
       # use cae ->  get_dv
       # 6.03.205
-      
-      # itransform_set <- get_itransform_call(itransform)
-      itransform_set <- get_itransform_call(itransform = itransform,
-                                            model = model, 
-                                            newdata = newdata,
-                                            dpar = dpar, 
-                                            resp = resp,
-                                            auto = FALSE,
-                                            verbose = verbose)
-      
+      itransform_set <- get_itransform_call(itransform)
       if(itransform_set == "") {
         if(!isFALSE(pdrawsp)) {
           if(!is.character(pdrawsp)) pdrawsp <- "return"
@@ -1104,13 +1074,7 @@ modelbased_growthparameters.bgmfit <-
       
       
       full.args$dpar    <- dpar
-      
-      get.newdata_args <- list()
-      for (i in methods::formalArgs(get.newdata)) {
-        get.newdata_args[[i]] <- full.args[[i]]
-      }
-      
-      full.args$newdata <- newdata <- CustomDoCall(get.newdata, get.newdata_args)
+      full.args$newdata <- newdata <- CustomDoCall(get.newdata, full.args)
 
       # Interpolation points
       if(!exists('check_fun'))    check_fun    <- FALSE
@@ -1211,9 +1175,6 @@ modelbased_growthparameters.bgmfit <-
       posterior_linpred_args[['req_vars']]              <- NULL
       # subset leads to overflow error 
       # posterior_linpred_args[['subset']]                <- subset
-      
-      # dpar must be NULL as we are using nlpar
-      posterior_linpred_args[['dpar']]                  <- NULL
       
       
       if(parameter_method == 1) {

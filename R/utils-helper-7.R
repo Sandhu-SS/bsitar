@@ -1,16 +1,15 @@
 
 
 
-#' An internal function to prepare Stan function Note that now all three
-#' functions nsp, nsk and rcs are set using this function This will make the
-#' 'utils-helper-6' reduntant. BUT DON'T DELTE THAT yet
+#' An internal function to prepare Stan function
+#' Note that now all three functions nsp, nsk and rcs are set using this function
+#' This will make the 'utils-helper-6' reduntant. BUT DON'T DELTE THAT yet
 #' 
-#' @description
-#' Imp Note: now when d parameter is part of the fixed / random effects, then X
-#' or Xm, depending upon the d_adjusted, is inlcuded part of the Spl or Qc
+#' Imp Note: now when d parameter is part of the fixed / random effects, then 
+#' X or Xm, depending upon the d_adjusted, is inlcuded part of the Spl or Qc
 #' matrix as the last column, So the last column is used in d.* operation and
-#' and \code{nknots-1} columns \code{Qk[:, 1:cols(Qc)-1] Spl[:,1:cols(Spl)-1]}.
-#' 
+#' and nknots-1 columns (Qk[:, 1:cols(Qc)-1]) (Spl[:, 1:cols(Spl)-1])
+#'  
 #' The \code{prepare_function}) constructs custom Stan function  which is passed
 #' on to the [bsitar::bsitar()] function. For univariate-by- subgroup model
 #' (\code{univariate_by}) and multivariate (\code{multivariate}) models (see
@@ -22,10 +21,10 @@
 #' @param y Response variable in the data. See [bsitar::bsitar()] for details.
 #'
 #' @param id A vector specifying a unique group identifier for each individual.
-#'   See [bsitar::bsitar()] for details.
+#' See [bsitar::bsitar()] for details.
 #'
 #' @param knots A vector of knots used for constructing the spline design
-#'   matrix. See [bsitar::bsitar()] for details.
+#' matrix. See [bsitar::bsitar()] for details.
 #'
 #' @param nknots An integer specifying the number of knots.
 #'
@@ -34,9 +33,9 @@
 #' @param internal_function_args Internal arguments passed from the
 #'   [bsitar::bsitar()] to the \code{prepare_formula}).
 #'
-#' @return An character string which later evaluated to a custom function and
-#'   inserted into the Stan's functions block.
-#'
+#' @return An character string which later evaluated to a custom function
+#'   and inserted into the Stan's functions block.
+#'   
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #'
 #' @keywords internal
@@ -61,6 +60,7 @@ prepare_function_nsp_rcs <- function(x,
   match_sitar_a_form <- NULL;
   d_adjustedsi <- NULL;
   randomsi <- NULL;
+  # getxname <- NULL;
   getknotsname <- NULL;
   spfncname <- NULL;
   xoffset <- NULL;
@@ -109,14 +109,6 @@ prepare_function_nsp_rcs <- function(x,
   QR_flip <- NULL;
   QR_scale <- NULL;
   SbasisN <- NULL;
-  sigmaxsi <- NULL;
-  smat_moi <- NULL;
-  familysi <- NULL;
-  dpar_function  <- NULL;
-  sigmaxfunsi <- NULL;
-  sigmayfunsi <- NULL;
-  sigmayfuntransformsi <- NULL;
-  family_link_sigma <- NULL;
   
   
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
@@ -134,31 +126,11 @@ prepare_function_nsp_rcs <- function(x,
     }
   }
   
-  
-  
-  if(is.null(ept('dpar_function'))) {
-    dpar_function <- "mu"
-  } else {
-    dpar_function <- ept('dpar_function')
-  }
-  
-  
-  
-  # The brms exp the sigma, but bsitar appropriately exp scale the log outcome
-  # Therefore, to avoid double exponentiation, apply log fun to _d0 function
-  convert_d0_to_log <- FALSE
-  if(dpar_function == "sigma") {
-    if(family_link_sigma == "log") {
-      convert_d0_to_log <- FALSE # TRUE
-    }
-  }
-  
-
-  
   # SbasisN = nknots-1 -> for nsp nsk and rcs
   # intercept issue - SbasisN remains same intercept T/F for splines2
   # For smat == 'rcs', intercept need additional column
   # stop()
+  
   
   if (grepl("d", fixedsi, fixed = T)) {
     dparm_set_fixed_or_random <- TRUE
@@ -170,16 +142,19 @@ prepare_function_nsp_rcs <- function(x,
   
   
   # For QR decom, 'dparm_part_of_SplQc <- TRUE'  struggles
-  # This because of perfect singularity between first term and last terms
+  # This perhaps because it results in perfect singulaity between first term and last
   # So, keep it FALSE 
-  
   dparm_part_of_SplQc <- FALSE
-  fast_nsk_int        <- as.integer(fast_nsk)
-  fast_nsk            <- FALSE
+  
+  fast_nsk_int <- as.integer(fast_nsk)
+  fast_nsk <- FALSE
+  
   add_fast <- ""
   if(fast_nsk_int != 0) {
     add_fast <- paste0("_", "fast", "_", fast_nsk_int)
   }
+  
+  
   
   # 22.07.2025
   # now knots are added within the main functions, and not via getknots()
@@ -197,6 +172,9 @@ prepare_function_nsp_rcs <- function(x,
   if(add_separte_getknots_fun) {
     include_fun_c <- c('getknots', include_fun_c)
   }
+  
+  
+  
   
   backend <- eval(brms_arguments$backend)
 
@@ -247,40 +225,28 @@ prepare_function_nsp_rcs <- function(x,
   # funsi to transform and itransform
   
   # Include xoffset in xfuntransformsi
-  # And, Make inverse ixfuntransformsi of xfuntransformsi
   bodyoffun               <- deparse(body(xfuntransformsi))
   addtobodyoffun          <- paste0("-", xoffset)
   bodyoffun2              <- paste0(bodyoffun, addtobodyoffun)
   body(xfuntransformsi)   <- str2lang(bodyoffun2)
   
+  # Include sigmaxoffset in sigmaxfuntransformsi
+  bodyoffun                  <- deparse(body(sigmaxfuntransformsi))
+  addtobodyoffun             <- paste0("-", sigmaxoffset)
+  bodyoffun2                 <- paste0(bodyoffun, addtobodyoffun)
+  body(sigmaxfuntransformsi) <- str2lang(bodyoffun2)
+  
+  # Make inverse ixfuntransformsi of xfuntransformsi
   ixfuntransformsi        <- list()
   ixfuntransformsi        <- inverse_transform(base::body(xfuntransformsi))
   
+  # Make inverse sigmaixfuntransformsi of sigmaxfuntransformsi
+  sigmaixfuntransformsi        <- list()
+  sigmaixfuntransformsi        <- inverse_transform(base::body(sigmaxfuntransformsi))
   
-  # Include sigmaxoffset in sigmaxfuntransformsi
-  # And, Make inverse sigmaixfuntransformsi of sigmaxfuntransformsi
-  if(!is.na(sigmaxsi) &  sigmaxsi != "NA") {
-    bodyoffun                  <- deparse(body(sigmaxfuntransformsi))
-    addtobodyoffun             <- paste0("-", sigmaxoffset)
-    bodyoffun2                 <- paste0(bodyoffun, addtobodyoffun)
-    body(sigmaxfuntransformsi) <- str2lang(bodyoffun2)
-    
-    sigmaixfuntransformsi      <- list()
-    sigmaixfuntransformsi      <- 
-      inverse_transform(base::body(sigmaxfuntransformsi))
-  } else {
-    sigmaxfuntransformsi       <- NULL
-    sigmaixfuntransformsi      <- NULL
-  }
-  
- 
   # Make inverse iyfuntransformsi of yfuntransformsi
   iyfuntransformsi        <- list()
   iyfuntransformsi        <- inverse_transform(base::body(yfuntransformsi))
-  
-  # sigma
-  sigmaiyfuntransformsi   <- list()
-  sigmaiyfuntransformsi   <- inverse_transform(base::body(sigmayfuntransformsi))
   
   ######################################################################
   # funsi to transform and itransform
@@ -290,6 +256,8 @@ prepare_function_nsp_rcs <- function(x,
                                     yfuntransformsi = NULL,
                                     ixfuntransformsi = NULL,
                                     iyfuntransformsi = NULL,
+                                    sigmaxfuntransformsi = NULL,
+                                    sigmaixfuntransformsi = NULL,
                                     tranformations = "identity") {
     
     scale_set_comb  <- tranformations
@@ -307,11 +275,13 @@ prepare_function_nsp_rcs <- function(x,
                                 "\\(")[[1]][1]
     yscale_set      <- strsplit(gsub_space(deparse(body(yfuntransformsi))),
                                 "\\(")[[1]][1]
- 
+    sigmaxscale_set <- strsplit(gsub_space(deparse(body(sigmaxfuntransformsi))), 
+                           "\\(")[[1]][1]
     
     if(xscale_set == "")      xscale_set      <- "identity"
     if(yscale_set == "")      yscale_set      <- "identity"
-
+    if(sigmaxscale_set == "") sigmaxscale_set <- "identity"
+    
     # sqrt is same as ^0.5
     if(grepl("\\^0.5$", xscale_set)) {
       xscale_set      <- "sqrt"
@@ -319,19 +289,12 @@ prepare_function_nsp_rcs <- function(x,
     if(grepl("\\^0.5$", yscale_set)) {
       yscale_set      <- "sqrt"
     }
-   
-    # new - the 'x' comes from the transformed function
-    if(grepl("^x", xscale_set)) {
-      xscale_set      <- "identity"
+    if(grepl("\\^0.5$", sigmaxscale_set)) {
+      sigmaxscale_set <- "sqrt"
     }
-    if(grepl("^x", yscale_set)) {
-      yscale_set      <- "identity"
-    }
-   
     
     # For some reason, even sqrt(x) is treated as (x) for d1 and d2
     # Note here ixfuntransformsi will be converted from ixfuntransformsi again
-    
     xfuntransformsi_set_out_xscaled <- xfuntransformsi
     xfuntransformsi_set_out_xscaled_deparsed <- 
       gsub_space(paste(deparse(xfuntransformsi_set_out_xscaled), collapse = ""))
@@ -349,8 +312,7 @@ prepare_function_nsp_rcs <- function(x,
         gsub("^.5", "",
              xfuntransformsi_set_out_xscaled_deparsed, fixed = T)
     } else {
-      xfuntransformsi_set_out_xscaled <- 
-        xfuntransformsi_set_out_xscaled_deparsed
+      xfuntransformsi_set_out_xscaled <- xfuntransformsi_set_out_xscaled_deparsed
     }
     
     xfuntransformsi_set_out_xscaled <- 
@@ -374,6 +336,7 @@ prepare_function_nsp_rcs <- function(x,
       xscale_factor_str_d1 <- paste0(set_out_xscaled, ";")
       xscale_factor_str_d2 <- paste0(set_out_xscaled, ";")
     }
+    
     
     if (xscale_set == "identity" & yscale_set == "identity") {
       # xscale_factor_str_d1 <- "rep_vector(1, N);"
@@ -437,7 +400,6 @@ prepare_function_nsp_rcs <- function(x,
     # print(yscale_factor_str_d1)
     # stop()
     
-    
     list(
       xscale_factor_str_d1 = xscale_factor_str_d1,
       xscale_factor_str_d2 = xscale_factor_str_d2,
@@ -465,8 +427,7 @@ prepare_function_nsp_rcs <- function(x,
       XR_inv = inverse(XR);
       "
       
-      decomp_code_qr <- gsub('forgsub_QR_Xmat', QR_Xmat, 
-                             decomp_code_qr, fixed = T)
+      decomp_code_qr <- gsub('forgsub_QR_Xmat', QR_Xmat, decomp_code_qr, fixed = T)
       
       # When using within-chain parrallel, N is reduce sum based, not total N
       if(is.null(QR_scale)) {
@@ -479,7 +440,7 @@ prepare_function_nsp_rcs <- function(x,
           QR_scale_str   <- deparse(QR_scale_str)
         } else if(is.character(QR_scale)) {
           # QR_scale_str <- QR_scale
-          # QR_scale_str <- gsub("N","length(data[[x]])",QR_scale_str,fixed = T)
+          # QR_scale_str <- gsub("N", "length(data[[x]])", QR_scale_str, fixed = T)
           # QR_scale_str <- ept(QR_scale_str)
           # QR_scale_str   <- round(QR_scale_str, 2)
           # QR_scale_str   <- deparse(QR_scale_str)
@@ -489,16 +450,13 @@ prepare_function_nsp_rcs <- function(x,
         }
       }
       
-      decomp_code_qr <- gsub('forgsub_QR_scale', QR_scale_str, 
-                             decomp_code_qr, fixed = T)
+      decomp_code_qr <- gsub('forgsub_QR_scale', QR_scale_str, decomp_code_qr, fixed = T)
       
       if(QR_center) {
         QR_center_str <- "for(i in 1:QK) Qc[, i] = Qc[, i] - mean(Qc[, i]);"
-        decomp_code_qr <- gsub('forgsub_QR_center', QR_center_str, 
-                               decomp_code_qr, fixed = T)
+        decomp_code_qr <- gsub('forgsub_QR_center', QR_center_str, decomp_code_qr, fixed = T)
       } else {
-        decomp_code_qr <- gsub('forgsub_QR_center', "", 
-                               decomp_code_qr, fixed = T)
+        decomp_code_qr <- gsub('forgsub_QR_center', "", decomp_code_qr, fixed = T)
       }
       decomp_code_qr <- gsub("XR_inv", XR_inv_name, decomp_code_qr, fixed = T)
     } # if (decomp == 'QR') {
@@ -537,12 +495,8 @@ prepare_function_nsp_rcs <- function(x,
              yfuntransformsi = NULL,
              ixfuntransformsi = NULL,
              iyfuntransformsi = NULL,
-             sigmaxfunsi = NULL,
-             sigmayfunsi = NULL,
              sigmaxfuntransformsi = NULL,
-             sigmayfuntransformsi = NULL,
-             sigmaixfuntransformsi = NULL,
-             sigmaiyfuntransformsi = NULL
+             sigmaixfuntransformsi = NULL
              ) {
       split1 <- strsplit(function_str, gsub("\\[", "\\\\[", spl_str))[[1]][-1]
       split2 <- strsplit(split1, "return")[[1]][-2]
@@ -638,28 +592,18 @@ prepare_function_nsp_rcs <- function(x,
         result <- regmatches(out, regexec(pattern, out))
         ######################################################################
         # funsi to transform and itransform
-        if(dpar_function == "mu") {
-          set_x_y_scale <- set_x_y_scale_factror(
-            xfunsi                = xfunsi,
-            yfunsi                = yfunsi,
-            xfuntransformsi       = xfuntransformsi,
-            yfuntransformsi       = yfuntransformsi,
-            ixfuntransformsi      = ixfuntransformsi,
-            iyfuntransformsi      = iyfuntransformsi,
-            tranformations        = c("identity", "log", "sqrt"))
-        }
-        if(dpar_function == "sigma") {
-          set_x_y_scale <- set_x_y_scale_factror(
-            xfunsi                = sigmaxfunsi,
-            yfunsi                = sigmayfunsi,
-            xfuntransformsi       = sigmaxfuntransformsi,
-            yfuntransformsi       = sigmayfuntransformsi,
-            ixfuntransformsi      = sigmaixfuntransformsi,
-            iyfuntransformsi      = sigmaiyfuntransformsi,
-            tranformations        = c("identity", "log", "sqrt"))
-        }
+        set_x_y_scale <- set_x_y_scale_factror(
+          xfunsi                = xfunsi,
+          yfunsi                = yfunsi,
+          xfuntransformsi       = xfuntransformsi,
+          yfuntransformsi       = yfuntransformsi,
+          ixfuntransformsi      = ixfuntransformsi,
+          iyfuntransformsi      = iyfuntransformsi,
+          sigmaxfuntransformsi  = sigmaxfuntransformsi,
+          sigmaixfuntransformsi = sigmaixfuntransformsi,
+          tranformations        = c("identity", "log", "sqrt")
+        )
         
-      
         if (grepl("d1", fnameout)) {
           xscale_factor <- set_x_y_scale[['xscale_factor_str_d1']]
           yscale_factor <- set_x_y_scale[['yscale_factor_str_d1']]
@@ -732,7 +676,7 @@ prepare_function_nsp_rcs <- function(x,
   
   
   
- 
+  
   
   ##########
   ######################################################################
@@ -755,12 +699,8 @@ prepare_function_nsp_rcs <- function(x,
              yfuntransformsi = NULL,
              ixfuntransformsi = NULL,
              iyfuntransformsi = NULL,
-             sigmaxfunsi = NULL,
-             sigmayfunsi = NULL,
              sigmaxfuntransformsi = NULL,
-             sigmayfuntransformsi = NULL,
-             sigmaixfuntransformsi = NULL,
-             sigmaiyfuntransformsi = NULL
+             sigmaixfuntransformsi = NULL
              ) {
       out <- function_str
       for_out <- gsub(fname, fnameout, out)
@@ -805,38 +745,17 @@ prepare_function_nsp_rcs <- function(x,
       } else if (grepl("d1", fnameout) | grepl("d2", fnameout)) {
         ######################################################################
         # funsi to transform and itransform
-        if(dpar_function == "mu") {
-          set_x_y_scale <- set_x_y_scale_factror(
-            xfunsi                = xfunsi,
-            yfunsi                = yfunsi,
-            xfuntransformsi       = xfuntransformsi,
-            yfuntransformsi       = yfuntransformsi,
-            ixfuntransformsi      = ixfuntransformsi,
-            iyfuntransformsi      = iyfuntransformsi,
-            tranformations        = c("identity", "log", "sqrt"))
-        }
-        if(dpar_function == "sigma") {
-          set_x_y_scale <- set_x_y_scale_factror(
-            xfunsi                = sigmaxfunsi,
-            yfunsi                = sigmayfunsi,
-            xfuntransformsi       = sigmaxfuntransformsi,
-            yfuntransformsi       = sigmayfuntransformsi,
-            ixfuntransformsi      = sigmaixfuntransformsi,
-            iyfuntransformsi      = sigmaiyfuntransformsi,
-            tranformations        = c("identity", "log", "sqrt"))
-        }
-        
-        # set_x_y_scale <- set_x_y_scale_factror(
-        #   xfunsi                = xfunsi,
-        #   yfunsi                = yfunsi,
-        #   xfuntransformsi       = xfuntransformsi,
-        #   yfuntransformsi       = yfuntransformsi,
-        #   ixfuntransformsi      = ixfuntransformsi,
-        #   iyfuntransformsi      = iyfuntransformsi,
-        #   sigmaxfuntransformsi  = sigmaxfuntransformsi,
-        #   sigmaixfuntransformsi = sigmaixfuntransformsi,
-        #   tranformations        = c("identity", "log", "sqrt")
-        # )
+        set_x_y_scale <- set_x_y_scale_factror(
+          xfunsi                = xfunsi,
+          yfunsi                = yfunsi,
+          xfuntransformsi       = xfuntransformsi,
+          yfuntransformsi       = yfuntransformsi,
+          ixfuntransformsi      = ixfuntransformsi,
+          iyfuntransformsi      = iyfuntransformsi,
+          sigmaxfuntransformsi  = sigmaxfuntransformsi,
+          sigmaixfuntransformsi = sigmaixfuntransformsi,
+          tranformations        = c("identity", "log", "sqrt")
+        )
         
         if (grepl("d1", fnameout)) {
           xscale_factor <- set_x_y_scale[['xscale_factor_str_d1']]
@@ -1035,8 +954,7 @@ prepare_function_nsp_rcs <- function(x,
       add_knotinfo_str
     )
     
-    # what_to_print <- "print(size(Xp));print(min(Xp));print(max(Xp));"
-    # add_knotinfo <- paste0(add_knotinfo, "\n", what_to_print)
+    
     
     knots_split <- 
       "vector[nknots-2] iknotsx;
@@ -1174,9 +1092,8 @@ prepare_function_nsp_rcs <- function(x,
       setMatpreH_for_functions_R = "MatpreH <- matrix(1, 1)" 
     }
     
-    setMatpreH         <- NULL
-    SplinefunxStan_str <- 
-      "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH"
+    setMatpreH <- NULL
+    SplinefunxStan_str <- "X, iknotsx, bknotsx, degree, intercept, derivs, centerval, normalize, preH"
     
     
     intercept_str_plus_str <- 
@@ -1225,6 +1142,11 @@ prepare_function_nsp_rcs <- function(x,
     } # if (!dparm_set_fixed_or_random) { else if (dparm_set_fixed_or_random) {
     
     
+    # just to check what X is pr(Xp)
+    # fun_body_str <- paste0(fun_body_str, "\nprint(X);")
+    
+    
+    
     # dparm_set_fixed_or_random <- FALSE
     if(dparm_set_fixed_or_random) {
       if(dparm_part_of_SplQc) {
@@ -1254,8 +1176,7 @@ prepare_function_nsp_rcs <- function(x,
     
     
     fun_body <- fun_body_str
-    fun_body <- paste0("\n", intercept_str, "\n", 
-                       intercept_str_plus_str, "\n", fun_body)
+    fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     
    
     
@@ -1308,7 +1229,7 @@ prepare_function_nsp_rcs <- function(x,
     
     
     
-    name50   <- paste("", name4, collapse = " ")
+    name50 <- paste("", name4, collapse = " ")
     
     nameadja <- "A"
     
@@ -1367,10 +1288,9 @@ prepare_function_nsp_rcs <- function(x,
     
     # if (!is.null(decomp)) {
     #   if (decomp == 'QR') {
-    #     nameadja <- gsub("X", paste0("XQ[,", SbasisN+1, "]"), 
-    #                      nameadja, fixed = T)
+    #     # nameadja <- gsub("X", paste0("XQ[,", SbasisN+1, "]"), nameadja, fixed = T)
     #   }
-    # }
+    # } 
     
     
     
@@ -1405,20 +1325,7 @@ prepare_function_nsp_rcs <- function(x,
     returnmu <- gsub("\\s", "", returnmu)
     returnmu <- gsub("\\." , " \\." , returnmu, fixed = FALSE)
     returnmu <- gsub("\\*" , "\\* " , returnmu, fixed = FALSE)
-    
-    
-    if(smat_moi) {
-      for (i in 1:(SbasisN)) {
-        name1.org <- paste0("s", i, sep = "")
-        name1.org_exact <- paste0("\\b", name1.org, "\\b")
-        # name1.abs <- paste0("log1p_exp(", name1.org, ")")
-        name1.abs <- paste0("abs(", name1.org, ")")
-        returnmu <- gsub(name1.org_exact, name1.abs, returnmu, fixed = F)
-      }
-    }
-    
    
-    
    
     ######################################################################
     
@@ -1481,10 +1388,11 @@ prepare_function_nsp_rcs <- function(x,
     
     ######################################################################
     
-    rcsfun <- paste(start_fun,
-                    add_knotinfo,
-                    fun_body,
-                    endof_fun)
+    rcsfun <-
+      paste(start_fun,
+            add_knotinfo,
+            fun_body,
+            endof_fun)
     
     
     if(fast_nsk) {
@@ -1498,8 +1406,7 @@ prepare_function_nsp_rcs <- function(x,
         if(nknotsxxi == 1) {
           addxx <- "yknots[1] = 0;"
         } else {
-          addxx <- paste0("  yknots[", nknotsxxi, "] = ", "s", 
-                          nknotsxxi-1, "[1];" )
+          addxx <- paste0("  yknots[", nknotsxxi, "] = ", "s", nknotsxxi-1, "[1];" )
         }
         nknotsxxi_c <- c(nknotsxxi_c, addxx)
       }
@@ -1515,7 +1422,7 @@ prepare_function_nsp_rcs <- function(x,
       //  vector[N] X2 = Xm - b;
       spl_coeffs = spline_getcoeffs( knots, yknots ) ;
       x_pos_knots = spline_findpos( knots, X, b, exp(ctemp) ) ;
-      vector[N] add_spl = spline_eval(knots, yknots, spl_coeffs, X, x_pos_knots);
+      vector[N] add_spl = spline_eval(knots, yknots, spl_coeffs, X, x_pos_knots)   ;
       vector[N] A=a;"
       
       endof_fun_fast_nsk <- "
@@ -1617,7 +1524,7 @@ prepare_function_nsp_rcs <- function(x,
                                        "\n",
                                        "int degree = ", smat_degree,  ";",
                                        "\n",
-                                       "real centerval = ", smat_centerval, ";",
+                                       "real centerval = ", smat_centerval,  ";",
                                        "\n",
                                        "int normalize = ", smat_normalize,  ";"
                                 ))
@@ -1989,17 +1896,6 @@ prepare_function_nsp_rcs <- function(x,
     }
     
     
-    # New
-    # Now NULL for all?
-    getpreH_fun_raw  <- NULL
-    
-    
-    
-    
-    
-    
-    
-    
     # 22.07.2025
     if(!add_separte_getknots_fun) {
       knots_stan_str <- paste0("[",paste(knots, collapse = ","),"]'")
@@ -2092,8 +1988,7 @@ prepare_function_nsp_rcs <- function(x,
         backend == "mock" |
         backend == "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
-      fun_body <- paste0("\n", intercept_str, "\n", 
-                         intercept_str_plus_str, "\n", fun_body)
+      fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
     
     if ((backend == "rstan" &
@@ -2101,8 +1996,7 @@ prepare_function_nsp_rcs <- function(x,
         backend == "mock" &
         backend != "cmdstanr") {
       body <- paste0(fun_body_str, "\n")
-      fun_body <- paste0("\n", intercept_str, "\n", 
-                         intercept_str_plus_str, "\n", fun_body)
+      fun_body <- paste0("\n", intercept_str, "\n", intercept_str_plus_str, "\n", fun_body)
     }
     
     
@@ -2137,12 +2031,8 @@ prepare_function_nsp_rcs <- function(x,
       yfuntransformsi       = yfuntransformsi,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
-      sigmaxfunsi           = sigmaxfunsi,
-      sigmayfunsi           = sigmayfunsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      sigmayfuntransformsi  = sigmayfuntransformsi,
-      sigmaixfuntransformsi = sigmaixfuntransformsi,
-      sigmaiyfuntransformsi = sigmaiyfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     
@@ -2162,14 +2052,7 @@ prepare_function_nsp_rcs <- function(x,
     
     intercept_str_plus_str_d1 <- paste0(intercept_str_plus_str_d1, setMatpreH)
     
-    
-    if(convert_d0_to_log) {
-      spl_d0 <- gsub("return(out_scaled)", "return(log(out_scaled))",
-                     spl_d0, fixed = TRUE)
-    }
-    # cat(spl_d0)
-    #stop()
-    
+   
     
     # Create function d1
     fnameout <- paste0(spfncname, "_", "d1")
@@ -2194,8 +2077,7 @@ prepare_function_nsp_rcs <- function(x,
     
     # add QR
     if (!is.null(decomp)) {
-      decomp_code_qr_d1 <- paste0(decomp_code_qr, 
-                                  "XQ[,1]=rep_vector(1, N);", "\n")
+      decomp_code_qr_d1 <- paste0(decomp_code_qr, "XQ[,1]=rep_vector(1, N);", "\n")
       body_d1 <- paste0(body, "\n", decomp_code_qr_d1)
     } else {
       body_d1 <- body
@@ -2224,12 +2106,8 @@ prepare_function_nsp_rcs <- function(x,
       yfuntransformsi       = yfuntransformsi,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
-      sigmaxfunsi           = sigmaxfunsi,
-      sigmayfunsi           = sigmayfunsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      sigmayfuntransformsi  = sigmayfuntransformsi,
-      sigmaixfuntransformsi = sigmaixfuntransformsi,
-      sigmaiyfuntransformsi = sigmaiyfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     
@@ -2306,22 +2184,16 @@ prepare_function_nsp_rcs <- function(x,
       yfuntransformsi       = yfuntransformsi,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
-      sigmaxfunsi           = sigmaxfunsi,
-      sigmayfunsi           = sigmayfunsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      sigmayfuntransformsi  = sigmayfuntransformsi,
-      sigmaixfuntransformsi = sigmaixfuntransformsi,
-      sigmaiyfuntransformsi = sigmaiyfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     
     
     if(dparm_set_fixed_or_random) {
       if(!dparm_part_of_SplQc) {
-        spl_d1 <- gsub(gsubby_nameadja_dparm, gsubit_nameadja_dparm_d1, 
-                       spl_d1, fixed = T)
-        spl_d2 <- gsub(gsubby_nameadja_dparm, gsubit_nameadja_dparm_d2, 
-                       spl_d2, fixed = T)
+        spl_d1 <- gsub(gsubby_nameadja_dparm, gsubit_nameadja_dparm_d1, spl_d1, fixed = T)
+        spl_d2 <- gsub(gsubby_nameadja_dparm, gsubit_nameadja_dparm_d2, spl_d2, fixed = T)
       }
     }
     
@@ -2380,8 +2252,7 @@ prepare_function_nsp_rcs <- function(x,
       if (!is.null(decomp)) {
         if (decomp == 'QR') {
           rcsfun_raw <- replace_string_part(x = rcsfun_raw, 
-                                            start = 
-                                              paste0("matrix[QK, QK] XR", ""), 
+                                            start = paste0("matrix[QK, QK] XR", ""), 
                                             end = ";", 
                                             replace = "",
                                             extract = FALSE,
@@ -2502,12 +2373,10 @@ prepare_function_nsp_rcs <- function(x,
           array[size(csr_extract_v(gsubforX))] int vX = csr_extract_v(gsubforX);
           array[size(csr_extract_u(gsubforX))] int uX = csr_extract_u(gsubforX);"
         
-        csr_matrix_str <- gsub("gsubforX", matname_subst, 
-                               csr_matrix_str, fixed = T)
+        csr_matrix_str <- gsub("gsubforX", matname_subst, csr_matrix_str, fixed = T)
         
         if(smat_check_sparsity) {
-          csr_matrix_str <- paste0(csr_matrix_str, "\n", 
-                                   sparsity_percentage_str)
+          csr_matrix_str <- paste0(csr_matrix_str, "\n", sparsity_percentage_str)
         } # if(smat_check_sparsity) {
         
         
@@ -2587,8 +2456,7 @@ prepare_function_nsp_rcs <- function(x,
                                       ")",
                                       ",", dpredictor_str, ")",
                                       ";")
-              QR_d1_sub_str <- gsub(dpredictor_str, QR_d1_dpredictor_str, 
-                                    QR_d1_sub_str, fixed = T)
+              QR_d1_sub_str <- gsub(dpredictor_str, QR_d1_dpredictor_str, QR_d1_sub_str, fixed = T)
             }
             if(!dparm_part_of_SplQc) {
               QR_d1_sub_str <- paste0("SplQRd1 = ", SplinefunxStan,"(",
@@ -2597,10 +2465,8 @@ prepare_function_nsp_rcs <- function(x,
           } # if(dparm_set_fixed_or_random) {
           
           
-          matrix_cols_str_QR_d0    <- gsub("Spl", "SplQRd0", 
-                                           matrix_cols_str, fixed = T)
-          matrix_cols_str_QR_d1    <- gsub("Spl", "SplQRd1", 
-                                           matrix_cols_str, fixed = T)
+          matrix_cols_str_QR_d0    <- gsub("Spl", "SplQRd0", matrix_cols_str, fixed = T)
+          matrix_cols_str_QR_d1    <- gsub("Spl", "SplQRd1", matrix_cols_str, fixed = T)
           matrix_cols_str_QR_d0_d1 <- paste0(matrix_cols_str_QR_d0, "\n", 
                                             matrix_cols_str_QR_d1)
 
@@ -2654,15 +2520,13 @@ prepare_function_nsp_rcs <- function(x,
        set_new_retunx <- find_ond_retunx
        for (i in 1:(SbasisN)) {
          set_new_retunx <- gsub(paste0("s", i), 
-                                paste0("sfull_betas[,", i,"]"), 
-                                set_new_retunx, fixed = T )
+                                paste0("sfull_betas[,", i,"]"), set_new_retunx, fixed = T )
        }
        set_new_retunx <- gsub("XQ", 'SplQRd1', set_new_retunx, fixed = T)
        
        set_new_retunx <- gsub("(d", '(QRdbeta', set_new_retunx, fixed = T)
        
-       rcsfun_raw   <- gsub(find_ond_retunx, set_new_retunx, 
-                            rcsfun_raw, fixed = T)
+       rcsfun_raw   <- gsub(find_ond_retunx, set_new_retunx, rcsfun_raw, fixed = T)
     
       return(rcsfun_raw)
     } # edit_spl_d1_for_smat_sfirst
@@ -3173,12 +3037,8 @@ prepare_function_nsp_rcs <- function(x,
       yfuntransformsi       = yfuntransformsi,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
-      sigmaxfunsi           = sigmaxfunsi,
-      sigmayfunsi           = sigmayfunsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      sigmayfuntransformsi  = sigmayfuntransformsi,
-      sigmaixfuntransformsi = sigmaixfuntransformsi,
-      sigmaiyfuntransformsi = sigmaiyfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     # Create function d1
@@ -3204,12 +3064,8 @@ prepare_function_nsp_rcs <- function(x,
       yfuntransformsi       = yfuntransformsi,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
-      sigmaxfunsi           = sigmaxfunsi,
-      sigmayfunsi           = sigmayfunsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      sigmayfuntransformsi  = sigmayfuntransformsi,
-      sigmaixfuntransformsi = sigmaixfuntransformsi,
-      sigmaiyfuntransformsi = sigmaiyfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     # Create function d2
@@ -3235,12 +3091,8 @@ prepare_function_nsp_rcs <- function(x,
       yfuntransformsi       = yfuntransformsi,
       ixfuntransformsi      = ixfuntransformsi,
       iyfuntransformsi      = iyfuntransformsi,
-      sigmaxfunsi           = sigmaxfunsi,
-      sigmayfunsi           = sigmayfunsi,
       sigmaxfuntransformsi  = sigmaxfuntransformsi,
-      sigmayfuntransformsi  = sigmayfuntransformsi,
-      sigmaixfuntransformsi = sigmaixfuntransformsi,
-      sigmaiyfuntransformsi = sigmaiyfuntransformsi
+      sigmaixfuntransformsi = sigmaixfuntransformsi
     )
     
     
@@ -3360,12 +3212,8 @@ prepare_function_nsp_rcs <- function(x,
       xstaring <- gsub("Spl=matrix(0,N,SbasisN);" , "", xstaring, fixed = T)
       xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
       xstaring <- gsub("Spl[,1]=rep(0.0,N);" , "", xstaring, fixed = T)
-      xstaring <- 
-        gsub("segment(knots,2,nknots-2);", "knots[2:(length(knots)-1)];", 
-             xstaring, fixed = T)
-      xstaring <- 
-        gsub("append_row(head(knots,1),tail(knots,1));", "c(knots[1], 
-             knots[length(knots)]);", xstaring, fixed = T)
+      xstaring <- gsub("segment(knots,2,nknots-2);", "knots[2:(length(knots)-1)];", xstaring, fixed = T)
+      xstaring <- gsub("append_row(head(knots,1),tail(knots,1));", "c(knots[1], knots[length(knots)]);", xstaring, fixed = T)
       xstaring <- gsub(SplinefunxStan , SplinefunxR, xstaring, fixed = T)
       xstaring <- gsub("matrix[N,nknots]Spl;" , "", xstaring, fixed = T)
       xstaring <- gsub("Spl[,1]=rep(1.0,N);" , "", xstaring, fixed = T)
@@ -3590,10 +3438,10 @@ prepare_function_nsp_rcs <- function(x,
       gsub_by <- "bknotsx=checkgetiknotsbknots(knots,'bknots')"
       xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
       
-      # # pr(Xp) - see if any print statement used
-      gsub_it <- "pr("
-      gsub_by <- "print("
-      xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
+      # # pr(Xp)
+      # gsub_it <- "pr(X)"
+      # gsub_by <- "print(X)"
+      # xstaring <- gsub(gsub_it, gsub_by, xstaring, fixed = T)
       
       xstaring
     } # extract_r_fun_from_scode
@@ -3707,10 +3555,6 @@ prepare_function_nsp_rcs <- function(x,
   set_path_str    <- paste0(smat_include_stan_path, funx_names, funx_names.stan)
   
   
-   # print(funx_names)
-  # stop()
-  
-  # funx_names <- "GS_nsk_call_stan"
   
   ###########################################################################
   # nsk
@@ -3721,22 +3565,21 @@ prepare_function_nsp_rcs <- function(x,
                                      'GS_nsp_nsk_stan_fast_2',
                                      'GS_nsp_call_stan',
                                      'GS_nsk_call_stan')
-  } else if(funx_names == "GS_nsk_call_stan_fast_1") {
+  } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  if(funx_names == "GS_nsk_call_stan_fast_2") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_tuple_stan',
                                      'GS_nsp_nsk_stan_fast_1',
                                      'GS_nsp_call_stan',
                                      'GS_nsk_call_stan')
-  } else if(funx_names == "GS_nsk_call_stan") {
+  } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  if(funx_names == "GS_nsk_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_stan',
                                      'GS_nsp_nsk_stan',
                                      'GS_nsp_call_stan',
                                      'GS_nsk_call_stan')
-  } else {
-    # stop("Something wrong in setting up the function code for: ", funx_names)
-  }
-  
+  } # if(funx_names == "GS_nsk_call_stan") {
   ###########################################################################
   # nsp
   ###########################################################################
@@ -3745,19 +3588,19 @@ prepare_function_nsp_rcs <- function(x,
                                      'GS_bsp_tuple_stan',
                                      'GS_nsp_nsk_stan_fast_2',
                                      'GS_nsp_call_stan')
-  } else if(funx_names == "GS_nsp_call_stan_fast_1") {
+  } # if(funx_names == "GS_nsk_call_stan_fast_1") {
+  if(funx_names == "GS_nsp_call_stan_fast_2") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_tuple_stan',
                                      'GS_nsp_nsk_stan_fast_1',
                                      'GS_nsp_call_stan')
-  } else if(funx_names == "GS_nsp_call_stan") {
+  } # if(funx_names == "GS_ns_call_stan_fast_1") {
+  if(funx_names == "GS_nsp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_stan',
                                      'GS_nsp_nsk_stan',
                                      'GS_nsp_call_stan')
-  } else {
-    # stop("Something wrong in setting up the function code for: ", funx_names)
-  }
+  } # if(funx_names == "GS_nsk_call_stan") {
   ###########################################################################
   # bsp
   ###########################################################################
@@ -3766,18 +3609,18 @@ prepare_function_nsp_rcs <- function(x,
                                      'GS_bsp_tuple_stan',
                                      'GS_bsp_nsk_stan_fast_2',
                                      'GS_bsp_call_stan')
-  } else if(funx_names == "GS_bsp_call_stan_fast_1") {
+  }
+  if(funx_names == "GS_bsp_call_stan_fast_1") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_tuple_stan',
                                      'GS_bsp_nsk_stan_fast_1',
                                      'GS_bsp_call_stan')
-  } else if(funx_names == "GS_bsp_call_stan") {
+  } 
+  if(funx_names == "GS_bsp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_stan',
                                      'GS_bsp_intermediate_stan',
                                      'GS_bsp_call_stan')
-  } else {
-    # stop("Something wrong in setting up the function code for: ", funx_names)
   }
   ###########################################################################
   # msp
@@ -3787,18 +3630,18 @@ prepare_function_nsp_rcs <- function(x,
                                      'GS_msp_tuple_stan',
                                      'GS_msp_nsk_stan_fast_2',
                                      'GS_msp_call_stan')
-  } else if(funx_names == "GS_msp_call_stan_fast_1") {
+  }
+  if(funx_names == "GS_msp_call_stan_fast_1") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_msp_tuple_stan',
                                      'GS_msp_nsk_stan_fast_1',
                                      'GS_msp_call_stan')
-  } else if(funx_names == "GS_msp_call_stan") {
+  } 
+  if(funx_names == "GS_msp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_stan',
                                      'GS_msp_stan',
                                      'GS_msp_call_stan')
-  } else {
-    # stop("Something wrong in setting up the function code for: ", funx_names)
   }
   ###########################################################################
   # isp
@@ -3807,26 +3650,28 @@ prepare_function_nsp_rcs <- function(x,
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_tuple_stan',
                                      'GS_isp_tuple_stan',
+                                     'GS_isp_nsk_stan_fast_2',
                                      'GS_isp_call_stan')
-  } else if(funx_names == "GS_isp_call_stan_fast_1") {
+  }
+  if(funx_names == "GS_isp_call_stan_fast_1") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_tuple_stan',
                                      'GS_isp_tuple_stan',
+                                     'GS_isp_nsk_stan_fast_1',
                                      'GS_isp_call_stan')
-  } else if(funx_names == "GS_isp_call_stan") {
+  } 
+  if(funx_names == "GS_isp_call_stan") {
     functions_to_add_stan_block <- c('GS_nsp_nsk_helper_stan',
                                      'GS_bsp_stan',
                                      'GS_isp_stan',
                                      'GS_isp_call_stan')
-  } else {
-    # stop("Something wrong in setting up the function code for: ", funx_names)
   }
   ###########################################################################
   # rcs
   ###########################################################################
   if(funx_names == "GS_rcs_call_stan") {
     functions_to_add_stan_block <- c('GS_rcs_call_stan')
-  } 
+  }
   
   ###########################################################################
   # preH -> if !smat_preH 
@@ -3865,11 +3710,10 @@ prepare_function_nsp_rcs <- function(x,
   
   include_str <- all_funs_for_stan_block_str
   
-  
   # cat(include_str)
   # stop()
   
-  
+
   
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
   # This assumes that same function is used for both mu and sigma
@@ -3899,13 +3743,10 @@ prepare_function_nsp_rcs <- function(x,
   # print(include_fun_names)
   # stop()
   
-  # data[[x]] %>% range() %>% print()
-  # data[[x]] %>% length() %>% print()
-  # stop()
   
-   # cat(rcsfun)
+   # print(cat(rcsfun))
      # outx <<- all_raw_str # %>% cat()
-    #  stop()
+     # stop()
   
   out
 }

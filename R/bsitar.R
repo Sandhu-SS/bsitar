@@ -202,11 +202,7 @@
 #'  - \code{'min'}: The minimum value of \code{x} (i.e., \code{min(x)}),
 #'  - \code{'apv'}: Age at peak velocity estimated from the velocity curve 
 #'  derived from a simple linear model fit to the data,
-#'  - Any real number (e.g., \code{xoffset = 12}). Note that the value should be
-#'  on the original scale of the \code{x} variable because this number will be
-#'  automatically transformed based on the \code{xfunxoffset} which is set same
-#'  as \code{xfun} unless \code{xfunxoffset} is explicitly set as \code{FALSE}.
-#'  See \code{xfunxoffset} for details.
+#'  - Any real number (e.g., \code{xoffset = 12}).
 #' The default is \code{xoffset = 'mean'}.
 #' 
 #' For \code{univariate_by} and \code{multivariate} models, \code{xoffset} can
@@ -277,14 +273,10 @@
 #' (refer to \code{x} for details on setting different arguments for
 #' sub-models).
 #' 
-#' @param xfunxoffset Transformation applied to \code{xoffset} for \code{x}
-#'   variable (default \code{TRUE}). See \code{xfun} for details. The default
-#'   \code{sigmaxfunxoffset = TRUE} sets its value to same as \code{xfun}. Users
-#'   rarely need to specify \code{xfunxoffset} themselves. One potential
-#'   application is when a user wants to turn it off \code{xfunxoffset} by
-#'   setting it as \code{FALSE}. Note that even when \code{xfunxoffset} is not
-#'   \code{TRUE}, \code{xoffset} is still automatically adjusted by \code{xfun},
-#'   as it is inferred from the transformed \code{sigmax} variable.
+#' @param xfunxoffset Transformation function for \code{xoffset} in the \code{x}
+#'   structure (default \code{NULL}). See \code{xfun} for details. The
+#'   \code{xfunxoffset} is rarely used. One potential application is when user
+#'   internally transform the numeric \code{xoffset} value.
 #' 
 #' @param bound An optional real number specifying the value by which the span
 #'   of the predictor variable \code{x} should be extended (default is
@@ -545,237 +537,128 @@
 #'   = NULL))} For further details, please refer to the description of
 #'   \code{sigma_formula}.
 #'  
-#' @param sigma_formula_manual A custom formula for advanced modeling of the
-#'   distributional parameter \code{sigma} using the [brms::nlf()] and
-#'   [brms::lf()] functions. This is an advanced and experimental feature for
-#'   specifying complex variance structures. The \code{sigma_formula_manual} can
-#'   be can be a character string or a list of formulas.
-#' 
-#'   \strong{Use Cases:} The primary use cases for \code{sigma_formula_manual}
-#'   are:
-#'   \enumerate{
-#'     \item \strong{Basic variance modelling:} A simple formula for
-#'     modelling heteroscedasticity (\code{sigma}).
-#'     \item \strong{Advanced variance modelling:} Calculating variance weights
-#'       where the variance of residuals depends on a specified co variate,
-#'       replicating functionality from the \pkg{nlme} package.
-#'     \item \strong{Location-Scale Models:} Applying a full `SITAR`-like model
-#'     to the scale (\code{sigma}) parameter in addition to the location
-#'     (\code{mu}).
-#'   }
-#' 
-#'  \strong{Basic variance modelling:} 
-#'  A simple example of modeling \code{sigma} directly:
-#'   \preformatted{
-#'   sigma_formula_manual = list(nlf(sigma ~ z) + lf(z ~ 1 + (1 | gr(id))))
-#'   }
-#'   Note that use can specify any external function in the linear predictor 
-#'   part of the formula \code{'lf()'} in order to model nonlinear trajectories.
-#'   For example, user can include [splines2::nsk()] in the model as follows:
-#'   \preformatted{
-#'   sigma_formula_manual = list(nlf(sigma ~ z) + 
-#'   lf(z ~ 1 + splines2::nsk(age) + (1 | gr(id))))
-#'   }
-#'   Automatic Prior Assignment:\cr Priors for these linear predictors are
-#'   assigned automatically for both mean and group-level random effects. The
-#'   function uses priors specified via arguments like
-#'   \code{'sigma_prior_beta'}, \code{'sigma_cov_prior_beta'},
-#'   \code{'sigma_prior_sd'}, etc. These are the same arguments otherwise used
-#'   for setting priors on parameters defined by \code{'sigma_formula'},
-#'   \code{'sigma_formula_gr'}, and \code{'sigma_formula_gr_str'}.
-#'   
-#'
-#' \strong{Advanced variance modelling:} This approach models heteroscedasticity
-#' using an explicit variance function. The \pkg{'bsitar'} package provides six
-#' different methods for variance modeling, five of which are implemented in the
-#' \pkg{'nlme'} package. The variance modeling approach uses a helper function
-#' \code{'sigmavarfun'} that sets up the appropriate formulation for variance
-#' modeling within the \pkg{'bsitar'} package. The documentation below provides
-#' a detailed overview of the available methods and their usage.
-#'
-#' \strong{Available Methods} (short hands in parentheses):
-#' \itemize{
-#'   \item \code{'varpower'} (\code{'vp'}): 
-#'   Implements [nlme::varPower()].
-#'   \item \code{'varconstpower'} (\code{'cp'}): 
-#'   Implements [nlme::varConstPower()].
-#'   \item \code{'varexp'} (\code{'ve'}): 
-#'   Implements [nlme::varExp()] with \code{'form ~ x'} as follows:\cr
-#'   \code{'nlme::varExp(form ~ x)'}
-#'   \item \code{'fitted'} (\code{'fi'}): 
-#'   Implements [nlme::varExp()] with \code{'form ~ fitted(.)'} as follows:\cr
-#'   \code{'nlme::varExp(form ~ fitted(.))'}
-#'   \item \code{'residual'} (\code{'re'}): 
-#'   Implements [nlme::varExp()] with \code{'form ~ resid(.)'} as follows:\cr
-#'   \code{'nlme::varExp(form ~ resid(.))'}
-#'   \item \code{'mean'} (\code{'me'}): A sixth method based on an example from
-#'   the \pkg{brms} reference manual, which models the square root of the fitted
-#'   values as follows:\cr
-#'    \code{'nlme::varExp(form ~ sqrt(fitted(.)))'}
-#' }
-#'
-#' Below are examples showing how to use \code{'sigmavarfun'} to specify each of
-#' the six variance models.
-#'
-#' \strong{1. varpower:}
-#' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 'vp') +
-#'   lf(param1 + param2 ~ 1)
-#' }
-#'
-#' \strong{2. varConstPower:}
-#' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, param3, predictor), method = cp') + 
-#'   lf(param1 + param2 + param3 ~ 1)
-#' }
-#'
-#' \strong{3. varExp:}
-#' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 've') +
-#'   lf(param1 + param2 ~ 1)
-#' }
-#'
-#' \strong{4. fitted:}
-#' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
-#'   lf(param1 + param2 ~ 1)
-#' }
-#' 
-#' \strong{5. residual:}
-#' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity(), resp), method = 're') + 
-#'   lf(param1 + param2 ~ 1)
-#' }
-#' 
-#' \strong{6. mean:}
-#' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'me') +
-#'   lf(param1 + param2 ~ 1)
-#' }
-#' 
-#' 
-#' \strong{Internal Predictor Transformations:}
-#' The function applies internal transformations based on the chosen method:
-#' \itemize{
-#'   \item For \code{'varpower'} and \code{'varConstPower'}, the predictor is
-#'     transformed to \code{log(abs(predictor))}.
-#'   \item For \code{'varexp'}, the predictor is not transformed.
-#'   \item For \code{'fitted'} and \code{'residual'}, \code{identity()} is
-#'     internally set to \code{fitted(.)}.
-#'   \item For \code{'mean'}, \code{identity()} is internally set to
-#'     \code{sqrt(fitted(.))}.
-#' }
-#' 
-#' 
-#' Note that the default \code{'fitted'} (see above, \code{4. fitted:})
-#' internally gets coded as \code{method = 'fittedexp'} (or short hand
-#' \code{method = 'fe'}) which sets up the variance form similar to the
-#' \code{varExp}. To set up the variance form similar to the \code{varpower},
-#' please use \code{method = 'fittedpower'} (or short hand \code{method =
-#' 'fp'}). Another form, which models the non zero values for the
-#' \code{'fitted'}, can be specified as \code{method = 'fittedz'} (or short hand
-#' \code{method = 'fz'}).
-#' 
-#' Similar to the \code{fitted} (please above), the default \code{method =
-#' 'residual'} will set up the variance form similar to the \code{varExp} by
-#' internally coding the method argument as \code{method = 'residualexp'} (i.e.,
-#' \code{method = 're'}). The \code{power} form can be set as \code{method =
-#' 'residualpower'} (or, \code{method = 'rp'}).
-#' 
-#' Like \code{fitted} and \code{residual} (please above), the default
-#' \code{method = 'mean'} will set up the variance form similar to the
-#' \code{varExp} by internally coding the method argument as \code{method =
-#' 'meanexp'} (i.e., \code{method = 'me'}). The \code{power} form can be set as
-#' \code{method = 'meanpower'} (or, \code{method = 'mp'}).
-#'
-#' \strong{Covariates and Random Effects:}
-#' The linear predictor, \code{'lf()'}, can be extended to include covariates
-#' and group-level random effects. For example, \code{'lf(param1 + param2 ~ 1)'}
-#' can be expanded as follows:
-#' \preformatted{
-#'   lf(param1 + param2 ~ 1 + covariate + (1 || gr(id, by = groupid)))
-#' }
-#'
-#' \strong{Automatic Prior Assignment:} 
-#' Priors for these linear predictors are assigned automatically for both mean
-#' and group-level random effects. The function uses priors specified via
-#' arguments like \code{'sigma_prior_beta'}, \code{'sigma_cov_prior_beta'},
-#' \code{'sigma_prior_sd'}, etc. These are the same arguments otherwise used for
-#' setting priors on parameters defined by \code{'sigma_formula'},
-#' \code{'sigma_formula_gr'}, and \code{'sigma_formula_gr_str'}.
-#'
-#' To disable this automatic prior assignment, you can add the argument
-#' \code{prior = 'self'} to the `nlf()` function. For example:
-#' \preformatted{
-#'   nlf(..., method = 'vp', prior = 'self')
-#' }
-#'
-#'  \strong{Note:} If user disables the automatic prior assignment, it is
-#'  advised to first get the required prior structure by calling the [bsitar()]
-#'  with the \code{'get_prior = TRUE'} argument. The relevant portions of this
-#'  structure can then be edited and added back to the model via the
-#'  \code{'add_self_priors'} argument in [bsitar()].
+#' @param sigma_formula_manual Formula for the \code{sigma} distributional
+#'   parameter. This should be provided as a character string or as a list that
+#'   explicitly uses the [brms::nlf()] and [brms::lf()] functions (default
+#'   \code{NULL}). Note that \code{sigma_formula_manual} should be considered as
+#'   an experimental feature and therefore should be used cautiously. Besides a
+#'   basic, the the \code{sigma_formula_manual} is primarily used to calculates
+#'   variance weights for modelling heteroscedasticity (where the variance of
+#'   residuals depends on a specified co variate) as implemented in the
+#'   \pkg{nlme} package. The variance structures supported are
+#'   [nlme::varPower()], [nlme::varConstPower()], [nlme::varExp()],
+#'   [nlme::varExp()] \code{fitted} as a predictor, and modeling \code{sigma} as
+#'   a function of the mean as documented in the \pkg{nlme} package. Lastly, as
+#'   a special case, the \code{sigma_formula_manual} can also be used to fit a
+#'   full location- scale model where distributional parameter \code{sigma}
+#'   (scale parameter) is modeled via an explicit function that is exact same
+#'   the one used to model the \code{mu} (location parameter).
 #'  
-#'  For \code{multivariate} model, the \code{sigma_formula_manual} can be used
-#'  set up different form and predictor variables for each outcome separately by
-#'  using the list approach as shown below: \cr
-#'   \code{sigma_formula_manual = list(
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
-#'   lf(param1 + param2 ~ 1) ,
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
-#'   lf(param1 + param2 ~ 1)
-#'   )}. \cr
-#'   Note that formulation name \code{'nlf()'} should be same across all
-#'   outcomes. The appropriate response assignment is done internally. Also,
-#'   parameter should not contain dots or underscores.
+#'   *Basic Usage Example:*
+#'   \code{sigma_formula_manual = list(nlf(sigma ~ z) + lf(z ~ 1 +
+#'   (1 |55| gr(id, by = NULL)))})
+#'  
+#'  *Modeling heteroscedasticity as a power variance function:*
+#'  [nlme::varPower()]
+#'  
+#'  *Modeling heteroscedasticity as constant plus a power variance function:*
+#'  [nlme::varConstPower()]
+#'  
+#'  *Modeling heteroscedasticity as a exponential variance function:*
+#'  [nlme::varExp()]
+#'  
+#'  *Modeling heteroscedasticity as a exponential variance function where fitted*
+#'  *values (mu) is  the predictor:*
+#'  [nlme::varExp()]
+#'  
+#'  *Modeling heteroscedasticity as a exponential variance function where sqrt()*
+#'  * of fitted values is the predictor:*
+#'  [nlme::varExp()]
 #'
-#' \strong{Location-Scale Models:} Another important use case for
-#' \code{sigma_formula_manual} is modeling \code{sigma} in a location scale
-#' \code{SITAR} model, where the \code{SITAR} formula can be applied to the
-#' scale parameter (\code{sigma}) similar to the one used for modelling the
-#' location parameter \code{mu}. An example is:
+#'   *Modeling sigma as a function of the Mean:*
+#'   \code{sigma_formula_manual} can be used to model \code{sigma} as a function
+#'    of the mean (\code{sqrt(mu)}), as described in the \code{brms} user manual.
+#'    The \code{sigma_formula_manual} is set as follows: \cr
+#'   \code{sigma_formula_manual = nlf(sigma ~ tau *
+#'   sqrt(SITARFun(age, a, b, c, s1, s2, s3)), method=mean) + lf(tau ~ 1)} \cr
+#'   Here, \code{SITARFun()} is the function that computes \code{mu}. The 
+#'   argument \code{method=mean} must be included in the [brms::nlf()] function.
 #'   
-#'  \code{nlf(sigma ~ ls(x, sigmaa, sigmab, sigmac, sigmas1,
+#'   *Limitations of the above approach for modelling sigma as function of mean:*
+#'   * Using \code{SITARFun()} in this way will recompute \code{mu}. This is
+#'   computationally expensive when fitting a non linear model.
+#'   * For \code{multivariate} models, \code{SITARFun()} can only be used if all
+#'   sub-models compute \code{mu} using the exact same \code{SITARFun()}
+#'   definition for each outcome.
+#'
+#'   *Experimental Approach for Direct \code{sqrt(mu)} Usage:*
+#'   To overcome the above limitations of recomputing \code{mu} and
+#'   \code{multivariate} model restrictions, an experimental approach allows for
+#'   direct use of \code{mu}. This involves setting \code{sigma_formula_manual}
+#'   as:
+#'   \code{sigma_formula_manual = "nlf(sigma ~ tau * sqrt()) + lf(tau
+#'   ~ 1)"}. \cr
+#'   Note the empty \code{sqrt()} function. The \code{sqrt()} will be replace by
+#'   \code{sqrt(mu)} by  manually editing the \code{stancode} and refit the model
+#'   using \code{rstan}.
+#'
+#'   In this approach, priors specified via \code{sigma_prior_beta},
+#'   \code{sigma_cov_prior_beta}, \code{sigma_prior_sd},
+#'   \code{sigma_cov_prior_sd}, and \code{sigma_cov_prior_sd_str} will be
+#'   automatically applied to linear predictors defined in the \code{lf()}. All
+#'   steps including setting up the basic code, editing, prior assignment, and
+#'   model fit are handled internally.
+#'   
+#'   For \code{multivariate} model, the \code{sigma_formula_manual} can be used
+#'   set up different form and predictor variables for each outcome separately 
+#'   by using the list approach as shown below: \cr 
+#'   \code{sigma_formula_manual = list(
+#'   nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+#'   (1 + age | 550 | gr(id, by = class))) ,
+#'   nlf(sigma ~ tau * sqrt()) + lf(tau ~ 0 + class + 
+#'   (1 + age | 550 | gr(id, by = class)))
+#'   )}. \cr
+#'   Note that parameter name \code{tau} (which could any string such as
+#'   \code{sigmatau}) should be same across all outcomes. The appropriate
+#'   response assignment is done internally. Also, parameter should not contain
+#'   dots or underscores.
+#'   
+#'   *Modeling as a Function of the fitted value:*
+#'   Following the exact same approach as shown above for \code{Modeling
+#'   sigma as a Function of the Mean}, the \code{sigma_formula_manual}
+#'   can be used to implement modelling variance as a function of the fitted
+#'   value as implemented in [nlme::varExp()] with \code{form~fitted(.)} i.e.,
+#'   \code{nlme::varExp(form~fitted(.))}. For this, \code{sigma_formula_manual}
+#'   is set up as follows: \cr
+#'   \code{sigma_formula_manual = nlf(sigma ~ 0 + sigmacons * cons + sigmacons2
+#'   # abs(SITARFun(age, a, b, c, s1, s2, s3)), method=fitted) + lf(sigmacons + 
+#'   sigmacons2 ~ 1)} \cr
+#'   Here, \code{SITARFun()} is the function that computes \code{mu}. Note that
+#'   here we replaced \code{sqrt} with \code{abs} and used \code{method=mean}
+#'   instead of \code{method=mean} in the [brms::nlf()] function. The remaining
+#'   implementation is same as described above for \code{Modeling sigma
+#'   as a Function of the Mean}
+#'   
+#'  
+#'
+#'   *Location-Scale SITAR Model Example:*
+#'   Another common use case for \code{sigma_formula_manual} is modeling
+#'   \code{sigma} in a location scale \code{SITAR} model, where the same
+#'   \code{SITAR} formula can be applied to the scale parameter. An example is:
+#'   
+#'  \code{nlf(sigma ~ sigmaSITARFun(logage, sigmaa, sigmab, sigmac, sigmas1,
 #'  sigmas2, sigmas3, sigmas4), loop = FALSE) +
-#'  lf(sigmaa ~ 1+(1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
-#'  lf(sigmab ~ 1+(1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
-#'  lf(sigmac ~ 1+(1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
+#'  lf(sigmaa ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
+#'  lf(sigmab ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
+#'  lf(sigmac ~ 1 + (1 |110| gr(id, by = NULL))+(1 |330| gr(study, by = NULL))) +
 #'  lf(sigmas1 + sigmas2 + sigmas3 + sigmas4 ~ 1)}.
 #'   
-#'  Here, \code{ls}, which is an abbreviation for location-scale, is a
-#'  placeholder and gets replaced by the the name of actual function that is
-#'  used for modelling the scale \code{sigma} part of the model. For example, if
-#'  the name of the \code{mu} function is \code{sigmaSITARFun}, then the name of
-#'  the  \code{sigma} function would be \code{sigmaSITARFun} and hence \code{ls}
-#'  gets replaced as \code{sigmaSITARFun}. All functions and corresponding names
-#'  are created internally.
-#'  
-#'  The first argument \code{x} of the function is again a placeholder for the
-#'  actual predictor variable defined for the \code{sigma} modelling via the
-#'  \code{sigmax} argument.In other words, the \code{x} gets replaced by the
-#'  \code{sigmax} argument evaluated. For example, when \code{sigmax = age},
-#'  then the \code{x} gets replaced by \code{age}. Like \code{ls}, internal 
-#'  renaming of \code{x} is handled automatically.
-#'  
-#'  The growth parameters \code{sigmaa}, \code{sigmab}, \code{sigmac} should
-#'  match the input used for the \code{sigmafixed} and \code{sigmarandom}
-#'  argument. In other words, either \code{sigmafixed} or \code{sigmarandom}
-#'  must include the form for the corresponding growth parameter defined in the
-#'  \code{ls} function. For example, when either or both \code{sigmafixed} and
-#'  \code{sigmarandom} are defined as \code{a+b+c}, then all three growth
-#'  parameters \code{sigmaa}, \code{sigmab}, \code{sigmac} should be part of the
-#'  \code{ls} function. However, when only sunset of parameters are specified via
-#'  the \code{sigmafixed} and \code{sigmarandom} form, say for example
-#'  \code{a+b}, the \code{ls} function should exclude \code{sigmac} parameter.
-#'  
-#'  Similar, the number of spline parameters are based on the \code{sigmadf}
-#'  argument. As an example, when \code{sigmadf = 4}, then four spline
-#'  parameters \code{sigmas1, ..., sigmas4} are included, as shown above in the
-#'  example.
-#'  
-#'  The other relevant arguments for \code{ls} function are set via the
-#'  \code{sigmaknots}, \code{sigmaxoffset}, \code{sigmaxfun}, and
-#'  \code{sigmabound} arguments. created by these arguments.
+#'  Here, \code{sigmaSITARFun} (and all other required sub-functions) are
+#'  defined through the \code{sigmax}, \code{sigmadf}, \code{sigmaknots},
+#'  \code{sigmafixed}, \code{sigmarandom}, \code{sigmaxoffset},
+#'  \code{sigmaxfun}, and \code{sigmabound} arguments. Ensure the
+#'  \code{sigma_formula_manual} code matches the \code{sigmaSITARFun} function
+#'  created by these arguments.
 #' 
 #'   Note that for \code{sigma_formula_manual}, priors must be set up manually
 #'   using the \code{add_self_priors} argument. To see which priors are
@@ -822,22 +705,18 @@
 #'   \code{sigma_formula_manual = NULL}. Currently not used even when
 #'   \code{sigma_formula_manual} is specified.
 #'
-#' @param sigmaxfun Transformation of \code{sigmax} variable for \code{sigma}
+#' @param sigmaxfun Transformation function for \code{x} in the \code{sigma}
 #'   structure. See \code{xfun} for details. Ignored if
 #'   \code{sigma_formula_manual = NULL}.
-#' 
+#'
 #' @param sigmabound Bounds for the \code{x} in the \code{sigma} structure. See
 #'   \code{bound} for details. Ignored if \code{sigma_formula_manual = NULL}.
-#'
-#' @param sigmaxfunxoffset Transformation applied to \code{sigmaxoffset} for
-#'   \code{sigmax} variable (default \code{TRUE}). See \code{sigmaxfun} for
-#'   details. The default \code{sigmaxfunxoffset = TRUE} sets its value to same
-#'   as \code{sigmaxfun}. Users rarely need to specify \code{sigmaxfunxoffset}
-#'   themselves. One potential application is when a user wants to turn it off
-#'   \code{sigmaxfunxoffset} by setting it as \code{FALSE}. Note that even when
-#'   \code{sigmaxfunxoffset} is not \code{TRUE}, \code{sigmaxoffset} is still
-#'   automatically adjusted for \code{sigmaxfun}, as it is inferred from the
-#'   transformed \code{sigmax} variable.
+#'   
+#' @param sigmaxfunxoffset Transformation function for \code{sigmaxoffset}
+#'   in the \code{sigma} structure (default \code{NULL}). See \code{sigmaxfun}
+#'   for details. Ignored if \code{sigma_formula_manual = NULL}. The
+#'   \code{sigmaxfunxoffset} is rarely used. One potential application is
+#'   when user internally transform the numeric \code{sigmaxoffset} value.
 #' 
 #' @param dpar_formula Formula for the distributional fixed effect parameter,
 #'   \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.
@@ -948,8 +827,8 @@
 #' @param multivariate Set up the multivariate model fitting (default
 #'  \code{NULL}) using a named list with the following elements:
 #'  \itemize{
-#'  \item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit
-#'  a multivariate model.
+#'  \item \code{mvar} (logical, default \code{FALSE}): Indicates whether to fit a
+#'  multivariate model.
 #'  \item \code{cor} (optional, character string): Specifies the correlation
 #'  structure for group-level random effects. Available options are:
 #'  \itemize{
@@ -969,19 +848,19 @@
 #'  Ignored when \code{rescor = FALSE}.
 #'  \item \code{rcorr_gr} (character string, default \code{NULL}): The grouping
 #'  variable (typically a level 2 variable like \code{id}) for which residual
-#'  correlations between response variables are estimated. This must be a factor
-#'  variable present in the \code{data}. Ignored when \code{rescor = FALSE}.
+#'  correlations between response variables are estimated. This must be a
+#'  factor variable present in the \code{data}. Ignored when \code{rescor = FALSE}.
 #'  \item \code{rcorr_method} (character string, default \code{NULL}): Specifies
 #'  the method for estimating residual correlations: \code{"lkj"} (uses an LKJ
 #'  distribution) or \code{"cde"} (uses the Cholesky decomposition of the
 #'  covariance matrix with a uniform prior of \code{-1, 1} for each off-diagonal
 #'  element). If \code{NULL}, \code{"lkj"} is set as the default. Ignored when
 #'  \code{rescor = FALSE}.
-#'  \item \code{rcorr_prior} (numeric vector, default \code{NULL}): Used to
-#'  specify the LKJ prior for each level of \code{rcorr_by} when
-#'  \code{rcorr_method = "lkj"}. The length of \code{rcorr_prior} should be
-#'  either one (to use the same prior for all levels) or equal to the number of
-#'  levels in \code{rcorr_by}. Ignored when \code{rescor = FALSE}.
+#'  \item \code{rcorr_prior} (numeric vector, default \code{NULL}): Used to specify
+#'  the LKJ prior for each level of \code{rcorr_by} when \code{rcorr_method = "lkj"}.
+#'  The length of \code{rcorr_prior} should be either one (to use the same prior
+#'  for all levels) or equal to the number of levels in \code{rcorr_by}. Ignored
+#'  when \code{rescor = FALSE}.
 #'  }
 #'   
 #' @param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
@@ -1090,8 +969,8 @@
 #' @param d_prior_beta Specify priors for the fixed effect parameter, \code{d}.
 #'   The default prior is \code{normal(0, 1.0, autoscale = FALSE)}. For full
 #'   details on prior specification, please refer to \code{a_prior_beta}. Note
-#'   that to set the scale of location-scale based priors, the user can set
-#'   scale as standard deviation \code{'xsd'} or the median absolute deviation
+#'   that to set the scale of location-scale based priors, the user can set scale
+#'   as standard deviation \code{'xsd'} or the median absolute deviation 
 #'   \code{'xmad'} of the predictor variable \code{'x'}.
 #'   
 #'   \itemize{
@@ -1964,9 +1843,7 @@
 #'   \code{...} can also be used to pass arguments used for testing and
 #'   debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
 #'   \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
-#'   \code{setcolb}, \code{decomp} and \code{smat}. Note that for all arguments 
-#'   (such as intercept) to correctly pass to the respective functions, use
-#'   \code{smat} and not \code{stype} when setting up the spline arguments.
+#'   \code{setcolb}, \code{decomp}
 #'  
 #'  These internal arguments are typically not used in regular model fitting but
 #'  can be relevant for certain testing scenarios or advanced customization.
@@ -1984,6 +1861,8 @@
 #'@export
 #'
 #'@inheritParams brms::brm
+#'
+#'@importFrom methods formalArgs
 #'
 #'@importFrom stats as.formula coef df dist filter fitted gaussian lm mad median
 #'  model.matrix predict quantile rbeta sd setNames smooth.spline rnorm runif
@@ -2117,7 +1996,7 @@ bsitar <- function(x,
                    cstart = 0,
                    xfun = NULL,
                    yfun = NULL,
-                   xfunxoffset = TRUE, 
+                   xfunxoffset = NULL, 
                    bound = 0.04,
                    stype = nsk,
                    terms_rhs = NULL,
@@ -2150,7 +2029,7 @@ bsitar <- function(x,
                    sigmacstart = 0,
                    sigmaxfun = NULL,
                    sigmabound = 0.04,
-                   sigmaxfunxoffset = TRUE,
+                   sigmaxfunxoffset = NULL,
                    dpar_formula = NULL,
                    autocor_formula = NULL,
                    family = gaussian(),
@@ -2321,56 +2200,7 @@ bsitar <- function(x,
     mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL, 
                                         exceptions = no_default_args)
   }
-  
-  # This because i want NULL to be evaluated as TRUE and not FALSE in 
-  # check_and_replace_sort_to_full()
-  if(is.null(mcall[['sigmax']])) {
-  #  mcall[['sigmax']] <- TRUE
-  }
- 
   mcall_ <- mcall
-  
-  
-  # 20.03.2025
-  # This needed for insight::get_data
-  # The insight::get_data() function, which is used by the marginaleffects
-  # functions does not get correct data if dataframe is modified using %>% or |>
-  # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
-  
-  data_name_str   <- deparse(mcall_$data)
-  data_name_split <- paste(gsub_space(data_name_str), collapse = "")
-  data_name_pipe  <- FALSE
-  if(grepl("%>%", data_name_split, fixed = T)) {
-    data_name_str_attr <- strsplit(data_name_split, "%>%", fixed = T)[[1]][1]
-    data_name_pipe  <- TRUE
-  } else if(grepl("(", data_name_split, fixed = T) &&
-            grepl(",", data_name_split, fixed = T)) {
-    data_name_str_attr <- strsplit(data_name_split, "|>", fixed = T)[[1]][1]
-    data_name_pipe  <- TRUE
-  } else {
-    data_name_pipe  <- FALSE
-    data_name_str_attr <- data_name_split
-  }
-  # Cn be assigned here, check later
-  # assign(data_name_str_attr, ept(data_name_str))
-  
-  if(data_name_pipe) {
-    stop("The dataframe used to set up the 'data' argument must be not be modified",
-         "\n  ",
-         "via pipe function such as '%>%' or '|>'",
-          "\n  ",
-         "This is because such data modification later create problems to",
-         "\n  ",
-         "reterive data via the insight::get_data()",
-         "\n  ",
-         "Please check the following argument and correct it:",
-         "\n  ",
-         data_name_str)
-  }
-  
-  
-  
-  
   
   # Check and allow setting threads as NULL or integer
   mcall_threads_ <- mcall$threads
@@ -2452,7 +2282,7 @@ bsitar <- function(x,
   rm(dots_allias)
   mcall <- mcall_ <- mcall
   
-  # Problem with rethinking occurs during 'expose_model_function()'
+  # Problem with rethinking occurs during the 'expose_model_function()'
   if("rethinking" %in% (.packages())){
     message("Package 'rethinking' detached and unloaded ato avoid conflict",
             " \nwith the rstan version ", utils::packageVersion('rstan'))
@@ -2540,7 +2370,7 @@ bsitar <- function(x,
     quote_random_as_init_arg(mcall[[what_inxc]], mcall)
  
   
-  # Initiate non methods::formalArgs()
+  # Initiate non formalArgs()
   a <- b <- c <- d <- e <- f <- g <- h <- i <- NULL;
   sitar <- NULL;
   mean <- NULL;
@@ -2720,7 +2550,6 @@ bsitar <- function(x,
   sigmarandomsi <- NULL;
   sigmaxoffsetsi <- NULL;
   sigmaxfunsi <- NULL;
-  sigmayfunsi <- NULL;
   sigmaboundsi <- NULL;
   sigmabstartsi <- NULL;
   sigmacstartsi <- NULL;
@@ -2939,7 +2768,6 @@ bsitar <- function(x,
   
   
   
-  
   # add_sigma_by_mu - add_sigma_by_ls
   # 'sigma_formula_manual' is used to set sigma by mu ('add_sigma_by_mu') and 
   # location scale mode ('add_sigma_by_ls'). For 'add_sigma_by_mu' no need to add
@@ -2957,7 +2785,7 @@ bsitar <- function(x,
   sigma_formula_manual_fun_str <- paste(gsub_space(sigma_formula_manual_fun_str),
                                         collapse = "")
   
-  count_number_nlf <- gregexpr("brms::nlf\\(|nlf\\(", sigma_formula_manual_fun_str)[[1]][1]
+  count_number_nlf <- gregexpr("nlf\\(", sigma_formula_manual_fun_str)[[1]][1]
 
   if(count_number_nlf > 1) {
     if(is.language(sigma_formula_manual_fun)) {
@@ -3012,9 +2840,9 @@ bsitar <- function(x,
   
 
   familyzzzx <- arguments$family
-  if(grepl("^c\\(", deparse_0(familyzzzx), fixed = FALSE)) {
+  if(grepl("^c\\(", deparse_0(familyzzzx), fixed = F)) {
     stop("Argument family should be a list() and not a vector 'c()'")
-  } else if(grepl("^\\(", deparse_0(familyzzzx), fixed = FALSE)) {
+  } else if(grepl("^\\(", deparse_0(familyzzzx), fixed = F)) {
     familyzzzx <- paste0("list", "", deparse_0(familyzzzx) , "")
     familyzzzx <- str2lang(familyzzzx)
   } else if(!is.list(familyzzzx) & !grepl("list", familyzzzx)[[1]]) {
@@ -3193,8 +3021,6 @@ bsitar <- function(x,
   # 24.08.2024
   # getdotslist <- list(...)
   
-  # Note that for all argumnets such as intercept to correctly pass to the 
-  # use smat and not stype
   
   # spline types supported are 'rcs', 'nsp' and 'nsk', 'bsp', 'isp', 'msp'
   # The argument . is exposed that allows setting spline type as string 
@@ -3272,9 +3098,6 @@ bsitar <- function(x,
                             'normalize', 'derivs', 'preH', 'include',
                             "sfirst", "sparse", "check_sparsity")
   
-  # Note that for all argumnets such as intercept to correctly pass to the 
-  # use smat and not stype
-  
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
     spline_type <- getdotslist[['smat']]
@@ -3302,7 +3125,6 @@ bsitar <- function(x,
     spline_type <- stype
     spline_type_via_stype <- TRUE
   } 
-  
   
   if(any(spline_type == "NULL")) {
     spline_type_via_stype <- FALSE
@@ -3407,8 +3229,6 @@ bsitar <- function(x,
         } else if(is.null(spline_type[['degree']])) {
           spline_type_list[['degree']] <- 3
         }
-        
-        
         
         
         if(!is.null(spline_type[['intercept']])) {
@@ -3561,6 +3381,7 @@ bsitar <- function(x,
   } # if(is.null(spline_type)) {
   
   
+  
   smat <- spline_type_list[['type']] 
   
 
@@ -3594,8 +3415,6 @@ bsitar <- function(x,
   Splinefunxsuf     <- '_call'
   SplinefunxR       <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
   SplinefunxStan    <- paste0(SplinefunxR, "_", 'stan')
-  
-  
   
   
   if((smat == 'nsp' | smat == 'nsk' |
@@ -3680,7 +3499,18 @@ bsitar <- function(x,
     }
   }
      
+  
+  # print(smat_intercept);
+  # print(smat_sfirst);
+  # print(smat_sparse);
+  # print(smat_check_sparsity);
+  # stop()
+    
 
+  # 'smat_include_stan' is also not working i.e., even single #include also not
+  # working in package
+  # Hence 'smat_include_stan' is set to 0 and will be pasted to .stan files
+  # i.e., over riding smat = list(smat_include_stan = 1)
   if(smat_include_stan == 1) {
     # stop("Please set smat_include_stan = 0")
     smat_include_stan <- 0
@@ -3703,52 +3533,29 @@ bsitar <- function(x,
    }
    
 
-  
-  
   # Handle fast_nsk
-  if(is.null(getdotslist[['fast_nsk']])) {
-    if(arguments$backend == "cmdstanr") {
+  if(arguments$backend == "cmdstanr") {
+    fast_nsk <- 2L
+  } else if(arguments$backend == "rstan" | 
+            eval(getOption("brms.backend", "rstan")) == "rstan"
+            ) {
+    if(utils::packageVersion('rstan') > '2.35.0') {
       fast_nsk <- 2L
-    } else if(arguments$backend == "rstan" | 
-              eval(getOption("brms.backend", "rstan")) == "rstan") {
-      if(utils::packageVersion('rstan') > '2.35.0') {
-        fast_nsk <- 2L
-      } else {
-        fast_nsk <- 0L
-      }
     } else {
       fast_nsk <- 0L
     }
-  } else if(!is.null(getdotslist[['fast_nsk']])) {
-    fast_nsk <- as.integer(getdotslist[['fast_nsk']])
-    getdotslist[['fast_nsk']] <- NULL
+  } else {
+    fast_nsk <- 0L
   }
-  
   
   # if smat != 'nsk' | 'nsp' -> set fast_nsk <- 0L
   if(smat == 'nsp') {
     fast_nsk <- fast_nsk
   } else if(smat == 'nsk') {
     fast_nsk <- fast_nsk
-  } else if(smat == 'bsp') {
-    fast_nsk <- fast_nsk
-  } else if(smat == 'isp') {
-    fast_nsk <- fast_nsk
-  } else if(smat == 'msp') {
-    fast_nsk <- fast_nsk
-  } else if(smat == 'rcs') {
-    fast_nsk <- 0L
   } else {
     fast_nsk <- 0L
   }
-  
-  
-  if(smat == 'isp') {
-    smat_moi <- TRUE
-  } else {
-    smat_moi <- FALSE
-  }
-  
   
  
 
@@ -4018,11 +3825,11 @@ bsitar <- function(x,
       majors3 <- paste0("\"", majors2, "\"")
       if (gsubs_c_counter == 1) {
         splitmvar2 <- gsub(noquote(majors2), majors3, 
-                           splitmvar, fixed = FALSE)
+                           splitmvar, fixed = F)
       } else {
         # splitmvar2 <- gsub(noquote(majors2), majors3, splitmvar2, fixed = F)
         splitmvar2 <- gsub(paste0('\\<', noquote(majors2), '\\>'), majors3, 
-                           splitmvar2, fixed = FALSE)
+                           splitmvar2, fixed = F)
       }
     }
     
@@ -4854,7 +4661,7 @@ bsitar <- function(x,
 
   getArgNames <-
     function(value)
-      methods::formalArgs(deparse_0(substitute(value)[[1]]))
+      formalArgs(deparse_0(substitute(value)[[1]]))
   
   convert_to_list <- getArgNames(bsitar())
   
@@ -5021,29 +4828,7 @@ bsitar <- function(x,
   }
   
   
-  
-  
-  check_sigmax_not_c <- arguments[['sigmax']] %>% deparse()
-  check_sigmax_not_c <- paste(gsub_space(check_sigmax_not_c), collapse = "")
-  if(grepl("c(", check_sigmax_not_c, fixed = T)) {
-    stop("Argument 'sigmax' should be a list")
-  }
-  
-  
-  if(is_emptyx(sigmaxs)) {
-    sigmaxs <- NA
-  }
-  
-  # Now if sigmax -> sigmaxs = FALSE, then no xs will be set as sigmax
-  sigmaxs <- check_and_replace_sort_to_full(str = sigmaxs,
-                                   x = c("T", "F", "FALSE", "NULL", "NA"),
-                                   # what = c("TRUE", "NA", "NA", "TRUE", "NA"), 
-                                   what = c("TRUE", "NA", "NA", "NA", "NA"), 
-                                   allowed_left = "(^|[^[:alnum:]])",
-                                   allowed_right = "($|[^[:alnum:]])"
-                                   )
-  
-
+ 
   
   # prepare_data2, when 'univariate_by', first run is to get names
   prepare_data_args <- list()
@@ -5074,6 +4859,8 @@ bsitar <- function(x,
   ids.org.in     <- ids
   sigmaxs.org.in <- sigmaxs
   
+ 
+    
   data          <- CustomDoCall(prepare_data2, prepare_data_args)
   xs            <- attr(data, "xs")
   ys            <- attr(data, "ys")
@@ -5082,8 +4869,8 @@ bsitar <- function(x,
   subindicators <- attr(data, "subindicators")
   
   check_variable_numeric_exists(data, c(xs, ys))
+
   
- 
   
   ###########################################################
   ###########################################################
@@ -5507,16 +5294,11 @@ bsitar <- function(x,
     # Add missing parameters to the sigma_formula_manual
     # This check might be needed for dpar_formual
     
-    # set_model_sigma_by_fz -> nlme::varExp( form ~ fitted(.)) - negzero
-    # set_model_sigma_by_fp -> nlme::varPower( form ~ fitted(.))
-    # set_model_sigma_by_fe -> nlme::varExp( form ~ fitted(.))
+    # set_model_sigma_by_fi -> nlme::varExp( form ~ fitted(.))
     # set_model_sigma_by_ve -> nlme::varExp()
     # set_model_sigma_by_vp -> nlme::varPower()
-    # set_model_sigma_by_mp -> mean as described in the brms manual - sqrt(varPower)
-    # set_model_sigma_by_me -> mean as described in the brms manual - sqrt(varExp)
+    # set_model_sigma_by_me -> mean as described in the brms manual - sqrt()
     # set_model_sigma_by_ls -> location scale via sigmafunction()
-    # set_model_sigma_by_rp -> nlme::varPower( form ~ fitted(.)) residual
-    # set_model_sigma_by_re -> nlme::varExp( form ~ fitted(.)) residual
     
     sigma_formula_manualsi <- paste(gsub_space(sigma_formula_manualsi), 
                                     collapse = "")
@@ -5563,37 +5345,15 @@ bsitar <- function(x,
       }
     }
     
-
-    sigma_formula_manualsi <- paste0(gsub_space(sigma_formula_manualsi), collapse = "")
-    
-    
-    # Note that brms complains of duplicate names  Hmisc::rcspline.ev... 
-    # when T/TRUE is used in the below form. 
-    # The F/FALSE does not result in the same error as T/TRUE
-    
-    # allowed_left could be "="
-    sigma_formula_manualsi <- 
-    check_and_replace_sort_to_full(str = sigma_formula_manualsi,
-                           x = c("T", "F"),
-                           what = c("TRUE", "FALSE"), 
-                           allowed_left = "(^|[^[:alnum:]])", # = 
-                           allowed_right = "($|[^[:alnum:]])"
-    )
-    
-
     
     if(!sigma_formula_manualsi_set) {
       set_model_sigma_by_ba <- FALSE
-      set_model_sigma_by_fz <- FALSE
-      set_model_sigma_by_fp <- FALSE
-      set_model_sigma_by_fe <- FALSE
+      set_model_sigma_by_fi <- FALSE
       set_model_sigma_by_ve <- FALSE
       set_model_sigma_by_vp <- FALSE
       set_model_sigma_by_cp <- FALSE
-      set_model_sigma_by_mp <- FALSE
       set_model_sigma_by_me <- FALSE
       set_model_sigma_by_ls <- FALSE
-      set_model_sigma_by_rp <- FALSE
       set_model_sigma_by_re <- FALSE
       expose_sigma_ls_fun   <- FALSE
       add_identityfun       <- FALSE
@@ -5606,20 +5366,15 @@ bsitar <- function(x,
       sigmavarspfncname <- NULL
       sigma_formula_manual_prior_via_sigma_formula <- FALSE
     }
-   
     
     if(sigma_formula_manualsi_set) {
       set_model_sigma_by_ba <- FALSE
-      set_model_sigma_by_fz <- FALSE
-      set_model_sigma_by_fp <- FALSE
-      set_model_sigma_by_fe <- FALSE
+      set_model_sigma_by_fi <- FALSE
       set_model_sigma_by_ve <- FALSE
       set_model_sigma_by_vp <- FALSE
       set_model_sigma_by_cp <- FALSE
-      set_model_sigma_by_mp <- FALSE
       set_model_sigma_by_me <- FALSE
       set_model_sigma_by_ls <- FALSE
-      set_model_sigma_by_rp <- FALSE
       set_model_sigma_by_re <- FALSE
       expose_sigma_ls_fun   <- FALSE
       add_identityfun       <- FALSE
@@ -5631,180 +5386,13 @@ bsitar <- function(x,
       sigmavarspfncname_temp_temp_stan <- NULL
       sigmavarspfncname <- NULL
       sigma_formula_manual_prior_via_sigma_formula <- FALSE
-      ##########################################################################
-      # Get sigma method and prior arg
-      # for nys > 1, get below ars once only otherwise it will lead to ""
-      # another option is to create list.. [[ii]] but we are replacing priors
-      # for sigma_formula_manualsi at once for all outcomes. Therefore it is 
-      # assumed that same behaviors is expected
-      method_nlf_custom_arg_full <- c("varpower", 
-                                      "varconstpower",
-                                      "varexp", 
-                                      "fitted",
-                                      "fittedz",
-                                      "fittedpower", 
-                                      "fittedexp", 
-                                      "mean", 
-                                      "meanpower", 
-                                      "meanexp", 
-                                      "residual",
-                                      "residualpower",
-                                      "residualexp",
-                                      "ls")
-      # fz -> fz negzero
-      # fi -> fp 
-      allowed_nlf_custom_arg_short <- c("vp", 
-                                        "cp",
-                                        "ve", 
-                                        "fz",
-                                        "fe",
-                                        "fp",
-                                        "mp",
-                                        "me",
-                                        "rp", 
-                                        "re",
-                                        "ls")
-      
-      method_nlf_custom_arg_full   <- c("basic", method_nlf_custom_arg_full)
-      allowed_nlf_custom_arg_short <- c("ba", allowed_nlf_custom_arg_short)
-      
-      method_nlf_custom_arg <- c(method_nlf_custom_arg_full, 
-                                 allowed_nlf_custom_arg_short)
-      
-      
-      prior_nlf_custom_arg  <- c("self", "auto")
-      
-      
-      get_nlf_newstr <- 
-        get_nlf_custom_arg(str = sigma_formula_manualsi,
-                           search = "method",
-                           allowed_nlf_custom_arg = method_nlf_custom_arg,
-                           clean = TRUE)
-      sigma_formula_manualsi <- get_nlf_newstr[1]
-      nlf_sigma_method_arg   <- get_nlf_newstr[2]
-      
-      
-      get_nlf_newstr <- 
-        get_nlf_custom_arg(str = sigma_formula_manualsi,
-                           search = "prior",
-                           allowed_nlf_custom_arg = prior_nlf_custom_arg,
-                           clean = TRUE)
-      sigma_formula_manualsi <- get_nlf_newstr[1]
-      nlf_sigma_prior_arg    <- get_nlf_newstr[2]
-      
-      nlf_sigma_set_check    <- TRUE
-      if(is.na(nlf_sigma_prior_arg)) {
-        nlf_sigma_prior_arg <- ""
-      } else if(!is.na(nlf_sigma_prior_arg)) {
-        if(nlf_sigma_prior_arg == "self") nlf_sigma_set_check <- FALSE
-        if(nlf_sigma_prior_arg != "self") nlf_sigma_set_check <- TRUE
-      }
-
-      ##########################################################################
-      if(grepl("identity(", sigma_formula_manualsi, fixed = TRUE)) {
-        add_identityfun <- TRUE
-      } else {
-        add_identityfun <- FALSE
-      }
-      add_identityfun_c[[ii]] <- add_identityfun
-      ##########################################################################
-  
-      # set_model_sigma_by_fi
-      # set_model_sigma_by_me
-      # set_model_sigma_by_re
-      
-      
-      if(nlf_sigma_method_arg == "basic") {
-        set_model_sigma_by_ba <- TRUE
-      } else if(nlf_sigma_method_arg == "varpower") {
-        set_model_sigma_by_vp <- TRUE
-      } else if(nlf_sigma_method_arg == "varconstpower") {
-        set_model_sigma_by_cp <- TRUE
-      } else if(nlf_sigma_method_arg == "varexp") {
-        set_model_sigma_by_ve <- TRUE
-      } else if(nlf_sigma_method_arg == "fittedz") {
-        set_model_sigma_by_fz <- TRUE
-      } else if(nlf_sigma_method_arg == "fitted" |
-                nlf_sigma_method_arg == "fittedpower") {
-        set_model_sigma_by_fp <- TRUE
-      } else if(nlf_sigma_method_arg == "fittedexp") {
-        set_model_sigma_by_fe <- TRUE
-      } else if(nlf_sigma_method_arg == "mean" |
-                nlf_sigma_method_arg == "meanpower") {
-        set_model_sigma_by_mp <- TRUE
-      } else if(nlf_sigma_method_arg == "meanexp") {
-        set_model_sigma_by_me <- TRUE
-      } else if(nlf_sigma_method_arg == "residual" |
-                nlf_sigma_method_arg == "residualpower") {
-        set_model_sigma_by_rp <- TRUE
-      } else if(nlf_sigma_method_arg == "residualexp") {
-        set_model_sigma_by_re <- TRUE
-      } else if(nlf_sigma_method_arg == "ls") {
-        set_model_sigma_by_ls <- TRUE
-      } else if(nlf_sigma_method_arg == "none") {
-        set_model_sigma_by_no <- TRUE
-      } else {
-        stop("method not found in nlf() for sigma_formula_manual")
-      }
-      
-      sigmamodelsi <- nlf_sigma_method_arg
       
       ##########################################################################
-      check_if_varname_exact(str = sigma_formula_manualsi,
-                             x = xsi,
-                             allowed_left = "._",
-                             allowed_right = "._")
-      
-      if(nlf_sigma_method_arg == "ls") {
-        if(is.na(sigmaxsi)) {
-          stop("For location scale model 'ls', the argument 'sigmax' is needed")
-        }
-      }
-      
-      ##########################################################################
-      getsetform0tilde <- 
-        replace_string_part(x = sigma_formula_manualsi,
-                            start = "nlf(sigma",
-                            end = "(",
-                            extract = TRUE, 
-                            cat_str = FALSE,
-                            exclude_start = FALSE, 
-                            exclude_end = FALSE) 
-      
-      if(set_model_sigma_by_fz |
-         set_model_sigma_by_fp |
-         set_model_sigma_by_fe |
+      if(set_model_sigma_by_fi |
          set_model_sigma_by_ve | 
          set_model_sigma_by_vp |
          set_model_sigma_by_cp |
-         set_model_sigma_by_mp |
          set_model_sigma_by_me |
-         set_model_sigma_by_rp |
-         set_model_sigma_by_re ) {
-        if(grepl("~0+", getsetform0tilde)) {
-          sigma_formula_manualsi <- sigma_formula_manualsi
-        } else {
-          sigma_formula_manualsi <- gsub("~", "~0+",
-                                         sigma_formula_manualsi, fixed = TRUE)
-        }
-      }
-      
-      
-      if(grepl("~1+", getsetform0tilde)) {
-        stop("sigma_formula_manual must not contain intercept as sigma~1+...")
-      }
-      
-      
-      ##########################################################################
-      if(set_model_sigma_by_fz |
-         set_model_sigma_by_fp |
-         set_model_sigma_by_fe |
-         set_model_sigma_by_ve | 
-         set_model_sigma_by_vp |
-         set_model_sigma_by_cp |
-         set_model_sigma_by_mp |
-         set_model_sigma_by_me |
-         set_model_sigma_by_rp |
          set_model_sigma_by_re ) {
         sigmavarspfncname_temp      <- "sigmavarfun"
         # sigmavarspfncname_temp_stan <- paste0(sigmavarspfncname_temp, "_", "stan")
@@ -5819,16 +5407,101 @@ bsitar <- function(x,
       }
       
       ##########################################################################
+      # Get sigma method and prior arg
+      # for nys > 1, get below ars once only otherwise it will lead to ""
+      # another option is to create list.. [[ii]] but we are replacing priors
+      # for sigma_formula_manualsi at once for all outcomes. Therefore it is 
+      # assumed that same behaviors is expected
+      
+      method_nlf_custom_arg_full <- c("fitted", "varexp", 
+                                 "varpower", "varconstpower",
+                                 "mean", "ls", "residual")
+      
+      allowed_nlf_custom_arg_short <- c("fi", "ve", 
+                                        "vp", "cp",
+                                        "me", "ls", "re")
+      
+      method_nlf_custom_arg_full   <- c("basic", method_nlf_custom_arg_full)
+      allowed_nlf_custom_arg_short <- c("ba", allowed_nlf_custom_arg_short)
+      
+      method_nlf_custom_arg <- c(method_nlf_custom_arg_full, 
+                                 allowed_nlf_custom_arg_short)
+      
+      
+      prior_nlf_custom_arg  <- c("self")
+      
+      #  if(ii == 1) {
+        get_nlf_newstr <- 
+          get_nlf_custom_arg(str = sigma_formula_manualsi,
+                             search = "method",
+                             allowed_nlf_custom_arg = method_nlf_custom_arg,
+                             clean = TRUE)
+        sigma_formula_manualsi <- get_nlf_newstr[1]
+        nlf_sigma_method_arg   <- get_nlf_newstr[2]
+        
+        # print(nlf_sigma_method_arg)
+        # print(sigma_formula_manualsi)
+        # stop()
+        
+        get_nlf_newstr <- 
+          get_nlf_custom_arg(str = sigma_formula_manualsi,
+                             search = "prior",
+                             allowed_nlf_custom_arg = prior_nlf_custom_arg,
+                             clean = TRUE)
+        sigma_formula_manualsi <- get_nlf_newstr[1]
+        nlf_sigma_prior_arg    <- get_nlf_newstr[2]
+        nlf_sigma_set_check    <- TRUE
+        if(is.na(nlf_sigma_prior_arg)) {
+          nlf_sigma_prior_arg <- ""
+        } else if(!is.na(nlf_sigma_prior_arg)) {
+          if(nlf_sigma_prior_arg == "self") nlf_sigma_set_check <- FALSE
+          if(nlf_sigma_prior_arg != "self") nlf_sigma_set_check <- TRUE
+        }
+      #  } # if(ii == 1) {
+        
+      ##########################################################################
+       if(grepl("identity(", sigma_formula_manualsi, fixed = TRUE)) {
+         add_identityfun <- TRUE
+       } else {
+         add_identityfun <- FALSE
+       }
+        add_identityfun_c[[ii]] <- add_identityfun
+      ##########################################################################
+      # set_model_sigma_by_fi -> nlme::varExp( form ~ fitted(.))
+      # set_model_sigma_by_ve -> nlme::varExp()
+      # set_model_sigma_by_vp -> nlme::varPower()
+      # set_model_sigma_by_me -> mean as descibed in brms manual - sqrt()
+      # set_model_sigma_by_ls -> location scale via sigmafunction()
+        
+      if(nlf_sigma_method_arg == "basic") {
+        set_model_sigma_by_ba <- TRUE
+      } else if(nlf_sigma_method_arg == "fitted") {
+        set_model_sigma_by_fi <- TRUE
+      } else if(nlf_sigma_method_arg == "varexp") {
+        set_model_sigma_by_ve <- TRUE
+      } else if(nlf_sigma_method_arg == "varpower") {
+        set_model_sigma_by_vp <- TRUE
+      } else if(nlf_sigma_method_arg == "varconstpower") {
+        set_model_sigma_by_cp <- TRUE
+      } else if(nlf_sigma_method_arg == "mean") {
+        set_model_sigma_by_me <- TRUE
+      } else if(nlf_sigma_method_arg == "ls") {
+        set_model_sigma_by_ls <- TRUE
+      } else if(nlf_sigma_method_arg == "residual") {
+        set_model_sigma_by_re <- TRUE
+      } else if(nlf_sigma_method_arg == "none") {
+        set_model_sigma_by_no <- TRUE
+      } else {
+        stop("method not found in nlf() for sigma_formula_manual")
+      }
+        sigmamodelsi <- nlf_sigma_method_arg
+      ##########################################################################
       if(set_model_sigma_by_ba |
-         set_model_sigma_by_fz |
-         set_model_sigma_by_fp |
-         set_model_sigma_by_fe |
+         set_model_sigma_by_fi |
          set_model_sigma_by_ve | 
          set_model_sigma_by_vp |
          set_model_sigma_by_cp |
-         set_model_sigma_by_mp |
          set_model_sigma_by_me |
-         set_model_sigma_by_rp |
          set_model_sigma_by_re ) {
         sigma_formula_manual_prior_via_sigma_formula <- TRUE
       }
@@ -5846,33 +5519,13 @@ bsitar <- function(x,
                                     fixed = T)
         sigmaspfncname_temp <- gsub("(", "", sigmaspfncname_temp, 
                                     fixed = T)
-        
-        
-        
         if(!grepl("^sigma", sigmaspfncname_temp)) {
           sigmaspfncname_temp.org <- sigmaspfncname_temp
-          # sigmaspfncname_temp     <- paste0("sigma", sigmaspfncname_temp.org)
-          sigmaspfncname_temp     <- paste0("sigma", spfncname)
+          sigmaspfncname_temp     <- paste0("sigma", sigmaspfncname_temp.org)
           sigma_formula_manualsi  <- gsub(sigmaspfncname_temp.org, 
                                           sigmaspfncname_temp,
                                           sigma_formula_manualsi, fixed = T)
         }
-        
-        # replace x predictor using sigmaxsi
-        placeholderx <- 
-        replace_string_part(x = sigma_formula_manualsi,
-                            start = paste0(sigmaspfncname_temp, "("),
-                            end = ",",
-                            extract = TRUE, 
-                            cat_str = FALSE,
-                            exclude_start = TRUE, 
-                            exclude_end = TRUE) 
-        
-        sigma_formula_manualsi  <- sub(placeholderx, 
-                                        sigmaxsi,
-                                        sigma_formula_manualsi, fixed = T)
-
-        
         sigmaspfncname_common  <- sigmaspfncname_temp
         sigmaspfncname_c[[ii]] <- sigmaspfncname_temp
         if(nys > 1) {
@@ -5884,14 +5537,6 @@ bsitar <- function(x,
           sigmaspfncname <- sigmaspfncname_temp
         }
       }
-      
-      ##########################################################################
-      # Now check for distinct predictor for mu and sigma
-      check_if_varname_exact(str = sigma_formula_manualsi,
-                             x = xsi,
-                             allowed_left = "._",
-                             allowed_right = "._")
-      
       ##########################################################################
       # Add missing parameters to the sigma_formula_manual
       sigma_formula_manualsi <- 
@@ -5915,151 +5560,21 @@ bsitar <- function(x,
         gsub("~", "", set_model_sigma_by_mu_fun_str_full, fixed = T)
       
       set_model_sigma_by_mu_fun_str <- set_model_sigma_by_mu_fun_str_full
-      ##########################################################################
-      
-      msg_for_setting_sigma_var_function <-
-        paste0(
-          "The sigma formulation for variance modeling must be ",
-          "specified via '", sigmavarspfncname_temp, "()'.",
-          "\n\n",
-          "The bsitar package provides six different methods for variance ",
-          "modeling, five of which are implemented in the nlme package. ",
-          "These methods are:",
-          "\n  ",
-          "'nlme::varPower()'",
-          "\n  ",
-          "'nlme::varConstPower()'",
-          "\n  ",
-          "'nlme::varExp(form ~ x)'",
-          "\n  ",
-          "'nlme::varExp(form ~ fitted(.))'",
-          "\n  ",
-          "'nlme::varExp(form ~ resid(.))'",
-          "\n\n",
-          "These are specified using the 'method' argument within 'nlf()', ",
-          "for example: nlf(..., method = 'xx') where 'xx' is the method (see below).",
-          "\n\n",
-          "The 'method' argument for each of the five nlme approaches ",
-          "is as follows (short hands in parentheses):",
-          "\n  ",
-          "'varpower' ('vp')",
-          "\n  ",
-          "'varconstpower' ('cp')",
-          "\n  ",
-          "'varexp' ('ve')",
-          "\n  ",
-          "'fitted' ('fi')",
-          "\n  ",
-          "'residual' ('re')",
-          "\n\n",
-          "In addition, bsitar provides a sixth method based on an ",
-          "example from the brms reference manual, which models the ",
-          "square root of the fitted values.",
-          "\n",
-          "This can be specified with method = 'mean' or its short hand 'me'.",
-          "\n\n",
-          "Below are examples showing how to use '", sigmavarspfncname_temp, "' ",
-          "to specify each of the six variance models:",
-          "\n\n",
-          "1. varpower:",
-          "\n  ",
-          "nlf(sigma ~ 0 + param1 + sigmavarfun(param2, predictor), method = 'vp') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "2. varConstPower:",
-          "\n  ",
-          "nlf(sigma ~ 0 + param1 + sigmavarfun(param2, param3, predictor), method = 'cp') +",
-          "\n  ",
-          "lf(param1 + param2 + param3 ~ 1)",
-          "\n\n",
-          "3. varExp:",
-          "\n  ",
-          "nlf(sigma ~ 0 + param1 + sigmavarfun(param2, predictor), method = 've') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "4. fitted:",
-          "\n  ",
-          "nlf(sigma ~ 0 + param1 + sigmavarfun(param2, identity()), method = 'fi') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "5. residual:",
-          "\n  ",
-          "nlf(sigma ~ 0 + param1 + sigmavarfun(param2, identity(), response), method = 're') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "6. mean:",
-          "\n  ",
-          "nlf(sigma ~ 0 + param1 + sigmavarfun(param2, identity()), method = 'me') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "Internal Predictor Transformations:",
-          "\n  ",
-          "- For 'varpower' and 'varConstPower', the predictor is ",
-          "transformed to log(abs(predictor)).",
-          "\n  ",
-          "- For 'varexp', the predictor is not transformed.",
-          "\n  ",
-          "- For 'fitted' and 'residual', identity() is internally ",
-          "set to fitted(.).",
-          "\n  ",
-          "- For 'mean', identity() is internally set to sqrt(fitted(.)).",
-          "\n\n",
-          "The linear predictor, lf(), can be extended to include ",
-          "covariates and group-level random effects.",
-          "\n",
-          "For example, 'lf(param1 + param2 ~ 1)' can become:",
-          "\n  ",
-          "'lf(param1 + param2 ~ 1 + covariate + (1 || gr(id, by = groupid)))'",
-          "\n\n",
-          "Automatic Prior Assignment:",
-          "\n",
-          "Priors for these linear predictors are assigned automatically. ",
-          "This applies to both mean and group-level random effects. ",
-          "The function uses priors specified via arguments like ",
-          "'sigma_prior_beta', 'sigma_cov_prior_beta', 'sigma_prior_sd', etc. ",
-          "These are the same arguments otherwise used for setting priors on ",
-          "parameters defined by 'sigma_formula', 'sigma_formula_gr', and ",
-          "'sigma_formula_gr_str'.",
-          "\n\n",
-          "To disable this automatic prior assignment, you can add ",
-          "the argument prior = 'self' to the nlf() function. ",
-          "For example:",
-          "\n  ",
-          "'nlf(..., method = 'vp', prior = 'self')'",
-          "\n\n",
-          "Note: If you disable automatic prior assignment, it is advised ",
-          "to first get the required prior structure by running 'bsitar' ",
-          "with the 'get_prior = TRUE' argument. The relevant portions ",
-          "of this structure can then be edited and added back to the ",
-          "model via the 'add_self_priors' argument in 'bsitar'. Please ",
-          "see the documentation for 'add_self_priors' for more details."
-        )
       
       
-      ##########################################################################
-      if(set_model_sigma_by_fz |
-         set_model_sigma_by_fp |
-         set_model_sigma_by_fe |
+      
+      if(set_model_sigma_by_fi |
          set_model_sigma_by_ve | 
          set_model_sigma_by_vp |
          set_model_sigma_by_cp |
-         set_model_sigma_by_mp |
          set_model_sigma_by_me |
-         set_model_sigma_by_rp |
          set_model_sigma_by_re ) {
         if(!grepl(paste0(sigmavarspfncname_temp, "("), 
                   set_model_sigma_by_mu_fun_str, fixed = TRUE)) {
-          stop(msg_for_setting_sigma_var_function)
-          # stop("The sigma formulation must be specified via ", 
-          #      "'", sigmavarspfncname_temp, "()'")
+          stop("The sigma formulation must be specified via ", 
+               "'", sigmavarspfncname_temp, "()'")
         } 
       }
-      
       
       set_model_sigma_by_mu_fun_str_c[[ii]] <- set_model_sigma_by_mu_fun_str
       
@@ -6083,26 +5598,19 @@ bsitar <- function(x,
         getouttemp <- get_function_names_code_from_string(sigma_formula_manualsi)
        
         sigma_formula_manualsi <- getouttemp[['str']]
-        
-        sigmabasicfunnamesi <- getouttemp[['name']]
-        sigmabasicfunattrsi <- getouttemp[['attr']]
-        
         # Also, assign those functions to the environment 
         package_env <- as.environment("package:bsitar")
         if(length(getouttemp[['code']] != 0)) {
-          intx <- 0
           for (funi in 1:length(getouttemp[['code']])) {
-            intx <- intx + 1
-            if(sigmabasicfunattrsi[intx] %in% allowed_namespace_for_sigma_d1()) {
-              assign(gsub("<-.*$", "", getouttemp[['code']][funi]),
-                     ept(getouttemp[['code']][funi]) , envir = package_env )
-            }
+            assign(gsub("<-.*$", "", getouttemp[['code']][funi]),
+                   ept(getouttemp[['code']][funi]) , envir = package_env )
           }
         }
+        # , envir = enverr. -> 
+        # Error in eval(call[[1L]]) : object 'splines2_nsk' not found
+        # print(splines2_nsk)
+        # stop()
       }
-      
-      
-      
       
       ##########################################################################
       if(sigma_formula_manual_prior_via_sigma_formula) {
@@ -6628,8 +6136,8 @@ bsitar <- function(x,
      }
    }
     
+   
     
- 
     if (!is.null(familysi)) {
       familysi_check <- familysi
       if(grepl('brmsfamily', familysi_check) &
@@ -6641,41 +6149,18 @@ bsitar <- function(x,
       } else if( grepl('family', familysi_check) &
                  !grepl('brms::', familysi_check)) {
         familysi_check <- paste0('brms::brmsfamily', familysi_check)
-      } else if( grepl('\\(', familysi_check) &
-                 !grepl('family', familysi_check)) {
-        familysi_check_w <- strsplit(familysi_check, "[^a-zA-Z]+")[[1]]
-        familysi_check_w <- collapse_comma(familysi_check_w)
-        familysi_check_w <- paste(familysi_check_w, collapse = ",")
-        familysi_check_w <- paste0('brms::brmsfamily', "(", familysi_check_w, ")")
-        familysi_check <- familysi_check_w
       } else if(!grepl('brmsfamily', familysi_check) & 
                 !grepl('family', familysi_check)) {
-         stop("Argument family should be specified as brmsfamily(family,...)",
-              "\n ", 
-              "where family is the name of family such as 'gaussian' and",
-              "\n ", 
-              "... are the family specific argument such as link and link_sigma",
-              "\n ", 
-              "For example, 'gaussian' family can be set explicitly as follows:",
-              "\n ", 
-              "brmsfamily('gaussian', link = 'identity', link_sigma = 'log')"
-              )
+        stop("Argument family should be specified as brmsfamily(family,...)")
       }
       familysi <- familysi_check
     }
-  
+    
     
     if (!is.null(familysi)) {
-      familysi_temp <- list_to_quoted_if_not_si(familysi)
-      if(familysi_temp == "NA" | is.na(familysi_temp)) {
-        familysi <- familysi
-      } else {
-        familysi <- familysi_temp
-      }
+      familysi <- list_to_quoted_if_not_si(familysi)
     }
     
-    familysi <- gsub_space(familysi)
-  
     
     
     
@@ -6731,8 +6216,6 @@ bsitar <- function(x,
     
    check_variable_numeric_exists(datai, c(xsi, ysi))
    
-   
-   
     if(!is.null(cortimeNlags_var)) {
       if(!is.factor(datai[[cortimeNlags_var]])) {
         datai[[cortimeNlags_var]] <- as.factor(datai[[cortimeNlags_var]])
@@ -6777,13 +6260,7 @@ bsitar <- function(x,
     }
     
     # add_sigma_by_mu
-    if(set_model_sigma_by_fz |
-       set_model_sigma_by_fp |
-       set_model_sigma_by_fe | 
-       set_model_sigma_by_mp | 
-       set_model_sigma_by_me | 
-       set_model_sigma_by_rp |
-       set_model_sigma_by_re) {
+    if(set_model_sigma_by_fi | set_model_sigma_by_me) {
       fit_edited_scode <- TRUE
     }
     
@@ -6806,25 +6283,9 @@ bsitar <- function(x,
     # Note that instead of calling log(data[[xsi]]), 'xfuntransformsi' be used 
    
     # Check if xfunsi, yfunsi and sigmaxfunsi
-    
-    # Should sigmayfunsi be the sigma_link family
-    
-    familysi_ept      <- ept(familysi)
-    family_link_sigma <- familysi_ept[['link_sigma']]
-    
-    # Leave it as identity
-    if(family_link_sigma == "log") {
-      sigmayfunsi <- NULL # 'log'
-    } else {
-      sigmayfunsi <- NULL
-    }
-    
-    
-    
     set_xfunsi      <- check_if_arg_set(xfunsi)
     set_yfunsi      <- check_if_arg_set(yfunsi)
     set_sigmaxfunsi <- check_if_arg_set(sigmaxfunsi)
-    set_sigmayfunsi <- check_if_arg_set(sigmayfunsi)
    
     if (!set_xfunsi) {
       xfuntransformsi <- function(x)x
@@ -6885,23 +6346,6 @@ bsitar <- function(x,
     
     
    
-    if (!set_sigmayfunsi) {
-      sigmayfuntransformsi <- function(x)x
-      assign('sigmayfuntransformsi', sigmayfuntransformsi, envir = enverr.)
-    } else if (set_sigmayfunsi) {
-      if(sigmayfunsi == "log") {
-        sigmayfuntransformsi <- function(x)log(x)
-      } else if(sigmayfunsi == "sqrt") {
-        sigmayfuntransformsi <- function(x)sqrt(x)
-      } else  if(is.function(ept(sigmayfunsi))) {
-        sigmayfuntransformsi <- ept(sigmayfunsi)
-      } else {
-        stop(paste0("The xfun argument must be either 'log' or 'sqrt',", 
-                    "\n  ",
-                    "or a function such as function(x)log(x)"))
-      }
-      assign('sigmayfuntransformsi', sigmayfuntransformsi, envir = enverr.)
-    }
     
     
     if (!is.null(sigmaxoffsetsi[[1]][1]) & sigmaxoffsetsi != "NULL") {
@@ -6920,26 +6364,15 @@ bsitar <- function(x,
     
     
     # Check if xfunsi, yfunsi and sigmaxfunsi
-    # These are offset specific funs - if NULL, then default xfun will be 
-    # applied to the offset - same for sigmaoffset
     set_xfunxoffsetsi      <- check_if_arg_set(xfunxoffsetsi)
     set_sigmaxfunxoffsetsi <- check_if_arg_set(sigmaxfunxoffsetsi)
-    
-     
-    # print(xfunxoffsetsi)
-    # stop()
-    
+
     
     if (!set_xfunxoffsetsi) {
       xfunxoffsettransformsi <- function(x)x
       assign('xfunxoffsettransformsi', xfunxoffsettransformsi, envir = enverr.)
-    } else if(set_xfunxoffsetsi) {
-      if(xfunxoffsetsi == "T" | xfunxoffsetsi == "TRUE") {
-        if(verbose) {
-          message("Argument 'xfunxoffset' set same as 'xfun'")
-        }
-        xfunxoffsettransformsi <- xfuntransformsi
-      } else if(xfunxoffsetsi == "log") {
+    } else if (set_xfunxoffsetsi) {
+      if(xfunxoffsetsi == "log") {
         xfunxoffsettransformsi <- function(x)log(x)
       } else if(xfunxoffsetsi == "sqrt") {
         xfunxoffsettransformsi <- function(x)sqrt(x)
@@ -6954,18 +6387,13 @@ bsitar <- function(x,
       assign('xfunxoffsettransformsi', xfunxoffsettransformsi, envir = enverr.)
     }
     
-   
+    
     if (!set_sigmaxfunxoffsetsi) {
       sigmaxfunxoffsettransformsi <- function(x)x
       assign('sigmaxfunxoffsettransformsi', sigmaxfunxoffsettransformsi, 
              envir = enverr.)
     } else if (set_sigmaxfunxoffsetsi) {
-      if(sigmaxfunxoffsetsi == "T" | sigmaxfunxoffsetsi == "TRUE") {
-        if(verbose) {
-          message("Argument 'sigmaxfunxoffset' set same as 'sigmaxfun'")
-        }
-        sigmaxfunxoffsettransformsi <- sigmaxfuntransformsi
-      } else if(sigmaxfunxoffsetsi == "log") {
+      if(sigmaxfunxoffsetsi == "log") {
         sigmaxfunxoffsettransformsi <- function(x)log(x)
       } else if(sigmaxfunxoffsetsi == "sqrt") {
         sigmaxfunxoffsettransformsi <- function(x)sqrt(x)
@@ -6983,55 +6411,51 @@ bsitar <- function(x,
    
     
     
-    # if(!is.null(set_xfunxoffsetsi)) {
-    #   if(check_is_numeric_like(xoffsetsi)) {
-    #     zm <- as.numeric(xoffsetsi)
-    #     if(check_for_nan_inf(xfunxoffsettransformsi(zm))) {
-    #       if(verbose) message("'xoffset' value '", zm, 
-    #                           "' can not be transformed to", 
-    #                           " match the xfun based transformation of x " ,"")
-    #     } else {
-    #       xoffsetsi <- round(xfunxoffsettransformsi(zm), 2)
-    #       if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
-    #                           xoffsetsi ,"'")
-    #     }
-    #     rm('zm')
-    #   }
-    # }
-    # 
-    # 
-    # if(!is.null(set_sigmaxfunxoffsetsi)) {
-    #   if(check_is_numeric_like(sigmaxoffsetsi)) {
-    #     zm <- as.numeric(sigmaxoffsetsi)
-    #     if(check_for_nan_inf(sigmaxfunxoffsettransformsi(zm))) {
-    #       if(verbose) message("'sigmaxoffset' value '", zm, 
-    #                           "' can not be transformed to", 
-    #                           " match the xfun based transformation of x" ,"")
-    #     } else {
-    #       sigmaxoffsetsi <- round(sigmaxfunxoffsettransformsi(zm), 2)
-    #       if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
-    #                           sigmaxoffsetsi ,"'")
-    #     }
-    #     rm('zm')
-    #   }
-    # }
+    if(!is.null(set_xfunxoffsetsi)) {
+      if(check_is_numeric_like(xoffsetsi)) {
+        zm <- as.numeric(xoffsetsi)
+        if(check_for_nan_inf(xfunxoffsettransformsi(zm))) {
+          if(verbose) message("'xoffset' value '", zm, 
+                              "' can not be transformed to", 
+                              " match the xfun based transformation of x " ,"")
+        } else {
+          xoffsetsi <- round(xfunxoffsettransformsi(zm), 2)
+          if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
+                              xoffsetsi ,"'")
+        }
+        rm('zm')
+      }
+    }
+    
+    
+    if(!is.null(set_sigmaxfunxoffsetsi)) {
+      if(check_is_numeric_like(sigmaxoffsetsi)) {
+        zm <- as.numeric(sigmaxoffsetsi)
+        if(check_for_nan_inf(sigmaxfunxoffsettransformsi(zm))) {
+          if(verbose) message("'sigmaxoffset' value '", zm, 
+                              "' can not be transformed to", 
+                              " match the xfun based transformation of x" ,"")
+        } else {
+          sigmaxoffsetsi <- round(sigmaxfunxoffsettransformsi(zm), 2)
+          if(verbose) message("'xoffset' value '", zm, "' transformed to '", 
+                              sigmaxoffsetsi ,"'")
+        }
+        rm('zm')
+      }
+    }
    
-    
-    
     #############################################################
     ############################################################
     # check functions 
     funs_c <- c(xfuntransformsi, 
                 yfuntransformsi,
                 sigmaxfuntransformsi,
-                sigmayfuntransformsi,
                 xfunxoffsettransformsi,
                 sigmaxfunxoffsettransformsi)
     
     names(funs_c) <- c("xfuntransformsi",
                        "yfuntransformsi",
                        "sigmaxfuntransformsi",
-                       "sigmayfuntransformsi",
                        "xfunxoffsettransformsi",
                        "sigmaxfunxoffsettransformsi")
     for (i in 1:length(funs_c)) {
@@ -7059,21 +6483,6 @@ bsitar <- function(x,
            inverse_transform(base::body(sigmaxfuntransformsi)), 
            envir = enverr.)
     
-    assign("sigmaiyfuntransformsi",  
-           inverse_transform(base::body(sigmayfuntransformsi)), 
-           envir = enverr.)
-    
-    
-    
-    if(!set_model_sigma_by_ls) {
-      if(!is.na(sigmaxsi)) {
-        datai[[sigmaxsi]] <- NULL
-        sigmaxsi          <- NA
-        sigmaxs[ii]       <- NA
-      }
-    }
-    
-
     
     #################################################################
     #################################################################
@@ -7131,9 +6540,24 @@ bsitar <- function(x,
     
     
     
+    if (is.numeric(ept(sigmaknotssi))) {
+      sigmaknots <- ept(sigmaknotssi)
+      # sigmaknotssi should take precedence over sigmadf
+      # Since sigmadf is automatically set as df, need to shut it off
+      sigmadfsi  <- "NA"
+    }
     
-    
-   
+    if (is.numeric(ept(sigmadfsi))) {
+      sigmaknots <- (unname(gkn(datai[[sigmaxsi]], 
+                                ept(sigmadfsi), ept(sigmaboundsi))))
+      # if(verbose) {
+      #   message("For '", smat, "' knots are created internally based on 'df'",
+      #           "\n (sigma)",
+      #           " Note that knots are constructed and then adjusted by xoffset",
+      #           "\n ",
+      #           " such as knots - xoffset") 
+      # }
+    }
     
     
     
@@ -7141,52 +6565,49 @@ bsitar <- function(x,
     #################################################################
     # 07.08.2025
     # How to get knots for bsp msp isp ?
-
+    
     if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-      bsp_msp_isp_args                <- list()
-      bsp_msp_isp_args[['x']]         <-  datai[[xsi]]
-      bsp_msp_isp_args[['knots']]     <-  NULL
-      bsp_msp_isp_args[['bknots']]    <-  NULL
-      bsp_msp_isp_args[['df']]        <-  ept(dfsi)
-      bsp_msp_isp_args[['degree']]    <-  smat_degree
-      bsp_msp_isp_args[['intercept']] <-  smat_intercept
-      bsp_msp_isp_args[['derivs']]    <-  smat_derivs
-      bsp_msp_isp_args[['centerval']] <-  smat_centerval
-      bsp_msp_isp_args[['normalize']] <-  smat_normalize
-      bsp_msp_isp_args[['preH']]      <-  smat_preH
-      bsp_msp_isp_args[['sfirst']]    <-  smat_sfirst
-      bsp_msp_isp_args[['sparse']]    <-  smat_sparse
-      if(smat == 'bsp') {
-        temp_mat_s <- do.call(GS_bsp_call, bsp_msp_isp_args)
-      } else if(smat == 'msp') {
-        temp_mat_s <- do.call(GS_msp_call, bsp_msp_isp_args)
-      } else if(smat == 'isp') {
-        temp_mat_s <- do.call(GS_isp_call, bsp_msp_isp_args)
-      }
+      temp_mat_s <- GS_msp_call(x = datai[[xsi]], knots = NULL, bknots = NULL, 
+                               df = ept(dfsi),
+                               degree = smat_degree,
+                               intercept = smat_intercept, 
+                               derivs = smat_derivs, 
+                               centerval = smat_centerval, 
+                               normalize = smat_normalize,
+                               preH = smat_preH,
+                               sfirst = smat_sfirst, 
+                               sparse = smat_sparse)
       
       temp_mat_s_knots <- attr(temp_mat_s, "knots") 
       if(is_emptyx(temp_mat_s_knots)) {
         temp_mat_s_knots <- NULL 
       }
-      
       temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
-      temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, ept(boundsi))
-    
       knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
       if(verbose) {
         message("For '", smat, "' knots are created internally based on 'df'",
                 "\n ",
-                " The  boundary knots are adjusted for bounds and then all",
+                " Note that no 'bounds' are applied and knots are constructed",
                 "\n ",
-                " knots are adjusted for xoffset i.e., knots - xoffset")
+                " and then adjusted by xoffset such as knots - xoffset") 
       }
     }
     
- 
-   
+
+    
+    
+    
+    
+    
+    
     #################################################################
     #################################################################
- 
+    
+    
+    
+    
+    ##################################################################
+    ##################################################################
     
     if(select_model == "sitar") {
       if (match_sitar_d_form) {
@@ -7216,12 +6637,12 @@ bsitar <- function(x,
       bstartsi <- xoffsetsi
     }
     
-    xoffset <- eval_xoffset_bstart_args(x = xsi, 
-                                        y = ysi, 
-                                        knots = knots, 
-                                        data = datai, 
-                                        eval_arg = xoffsetsi, 
-                                        offsetfunsi = xfunxoffsettransformsi, 
+    xoffset <- eval_xoffset_bstart_args(xsi, 
+                                        ysi, 
+                                        knots, datai, 
+                                        xoffsetsi, 
+                                        xfunsi, 
+                                        arg = 'xoffset',
                                         smat = smat,
                                         degree = smat_degree,
                                         intercept = smat_intercept, 
@@ -7230,18 +6651,15 @@ bsitar <- function(x,
                                         normalize = smat_normalize,
                                         preH = smat_preH,
                                         sfirst = smat_sfirst, 
-                                        sparse = smat_sparse,
-                                        arg = 'xoffset',
-                                        dpar = "mu",
-                                        verbose = verbose)
+                                        sparse = smat_sparse)
     
-    
-    bstart <- eval_xoffset_bstart_args(x = xsi, 
-                                       y = ysi, 
-                                       knots = knots, 
-                                       data = datai, 
-                                       eval_arg = bstartsi, 
-                                       offsetfunsi = xfunxoffsettransformsi, 
+    bstart <- eval_xoffset_bstart_args(xsi, 
+                                       ysi, 
+                                       knots, 
+                                       datai, 
+                                       bstartsi, 
+                                       xfunsi, 
+                                       arg = 'bstart',
                                        smat = smat,
                                        degree = smat_degree,
                                        intercept = smat_intercept, 
@@ -7250,18 +6668,16 @@ bsitar <- function(x,
                                        normalize = smat_normalize,
                                        preH = smat_preH,
                                        sfirst = smat_sfirst, 
-                                       sparse = smat_sparse,
-                                       arg = 'bstart',
-                                       dpar = "mu",
-                                       verbose = verbose)
+                                       sparse = smat_sparse)
     
     bstart <- bstart - xoffset
     
-    cstart <- eval_xoffset_cstart_args(x = xsi, 
-                                       y = ysi, 
-                                       knots = knots, 
-                                       data = datai, 
-                                       eval_arg = cstartsi, 
+    cstart <- eval_xoffset_cstart_args(xsi, 
+                                       ysi, 
+                                       knots, 
+                                       datai, 
+                                       cstartsi, 
+                                       xfunsi,
                                        smat = smat,
                                        degree = smat_degree,
                                        intercept = smat_intercept, 
@@ -7270,17 +6686,87 @@ bsitar <- function(x,
                                        normalize = smat_normalize,
                                        preH = smat_preH,
                                        sfirst = smat_sfirst, 
-                                       sparse = smat_sparse,
-                                       arg = 'cstart',
-                                       dpar = "mu",
-                                       verbose = verbose)
+                                       sparse = smat_sparse)
+    
+   
+                                 
+    
+    if(sigmabstartsi == 'sigmaxoffset') {
+      sigmabstartsi <- sigmaxoffsetsi
+    }
+    
+    if(sigmaxoffsetsi == "apv") {
+      stop("xoffset can not be apv for sigma")
+    }
+    
+    sigmaxoffset <- eval_xoffset_bstart_args(sigmaxsi, 
+                                             ysi, 
+                                             sigmaknots, 
+                                             datai, 
+                                             sigmaxoffsetsi, 
+                                             sigmaxfunsi, 
+                                             arg = 'offset',
+                                             smat = smat,
+                                             degree = smat_degree,
+                                             intercept = smat_intercept, 
+                                             derivs = smat_derivs,
+                                             centerval = smat_centerval,
+                                             normalize = smat_normalize,
+                                             preH = smat_preH,
+                                             sfirst = smat_sfirst, 
+                                             sparse = smat_sparse)
+    
+    sigmabstart <- eval_xoffset_bstart_args(sigmaxsi, 
+                                            ysi, 
+                                            sigmaknots,
+                                            datai, 
+                                            sigmabstartsi, 
+                                            sigmaxfunsi, 
+                                            arg = 'bstart',
+                                            smat = smat,
+                                            degree = smat_degree,
+                                            intercept = smat_intercept, 
+                                            derivs = smat_derivs,
+                                            centerval = smat_centerval,
+                                            normalize = smat_normalize,
+                                            preH = smat_preH,
+                                            sfirst = smat_sfirst, 
+                                            sparse = smat_sparse)
+    
+    sigmabstart <- sigmabstart - sigmaxoffset
+    
+    sigmacstart <-eval_xoffset_cstart_args(sigmaxsi, 
+                                           ysi, 
+                                           sigmaknots, 
+                                           datai, 
+                                           sigmacstartsi, 
+                                           sigmaxfunsi,
+                                           smat = smat,
+                                           degree = smat_degree,
+                                           intercept = smat_intercept, 
+                                           derivs = smat_derivs,
+                                           centerval = smat_centerval,
+                                           normalize = smat_normalize,
+                                           preH = smat_preH,
+                                           sfirst = smat_sfirst, 
+                                           sparse = smat_sparse)
+    
+    
+    
     
     
     xoffset      <- round(xoffset, 8)
+    sigmaxoffset <- round(sigmaxoffset, 8)
     
+    # IMP This is_emptyx will handle numeric(0) when xoffset was set as NULL
     if(is_emptyx(xoffset)) {
       xoffset      <- 0
     }
+    if(is_emptyx(sigmaxoffset)) {
+      sigmaxoffset      <- 0
+    }
+    
+   
     
     if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
       if(!is.null(knots)) {
@@ -7300,145 +6786,17 @@ bsitar <- function(x,
       nknots       <- length(knots)
       df           <- length(knots) - 1
     }
-   
     
-    ##########################################################################
-    ##########################################################################
-   
-    # when sigmaxsi i.e, ls model not evaluated, the sigmaxoffset remains a
-    # a string 'sigmaxoffset' as list. Therefore, set it to NULL or 0
-    # Bettwe would be assign numeric values such as 0/10 etc to 
-    # sigmaxoffsetsi and not sigmaxoffset
-    # same is true for xoffset
-    # The xoffset and sigmaxoffset are used in model_info values
-    # TODO: CORRECT THE ABOVE
+    # knots        <- knots - xoffset
+    # knots        <- round(knots, 8)
+    # nknots       <- length(knots)
+    # df           <- length(knots) - 1
     
-    if(is.na(sigmaxsi) |  sigmaxsi != "NA") {
-      sigmaxoffset <- sigmaxoffsetsi
-    }
-
-    # should be ger _ls
-    if(!is.na(sigmaxsi) &  sigmaxsi != "NA") {
-      if (is.numeric(ept(sigmaknotssi))) {
-        sigmaknots <- ept(sigmaknotssi)
-        # sigmaknotssi should take precedence over sigmadf
-        # Since sigmadf is automatically set as df, need to shut it off
-        sigmadfsi  <- "NA"
-      }
-      
-      if (is.numeric(ept(sigmadfsi))) {
-        sigmaknots <- (unname(gkn(datai[[sigmaxsi]], 
-                                  ept(sigmadfsi), ept(sigmaboundsi))))
-      }
-      
-      if(sigmabstartsi == 'sigmaxoffset') {
-        sigmabstartsi <- sigmaxoffsetsi
-      }
-      
-      if(sigmaxoffsetsi == "apv") {
-        stop("xoffset can not be 'apv' for sigma")
-      }
-      
-      sigmaxoffset <- eval_xoffset_bstart_args(x = sigmaxsi, 
-                                               y = ysi, 
-                                               knots = sigmaknots, 
-                                               data = datai, 
-                                               eval_arg = sigmaxoffsetsi, 
-                                               offsetfunsi = sigmaxfunxoffsettransformsi, 
-                                               smat = smat,
-                                               degree = smat_degree,
-                                               intercept = smat_intercept, 
-                                               derivs = smat_derivs,
-                                               centerval = smat_centerval,
-                                               normalize = smat_normalize,
-                                               preH = smat_preH,
-                                               sfirst = smat_sfirst, 
-                                               sparse = smat_sparse,
-                                               arg = 'xoffset',
-                                               dpar = "sigma",
-                                               verbose = verbose)
-      
-      #  print(xfunxoffsettransformsi)
-      #  print(sigmaxfunxoffsettransformsi)
-      # print(sigmaxoffset)
-      # stop()
-      
-      sigmabstart <- eval_xoffset_bstart_args(x = sigmaxsi, 
-                                              y = ysi, 
-                                              knots = sigmaknots, 
-                                              data = datai, 
-                                              eval_arg = sigmabstartsi, 
-                                              offsetfunsi = sigmaxfunxoffsettransformsi, 
-                                              smat = smat,
-                                              degree = smat_degree,
-                                              intercept = smat_intercept, 
-                                              derivs = smat_derivs,
-                                              centerval = smat_centerval,
-                                              normalize = smat_normalize,
-                                              preH = smat_preH,
-                                              sfirst = smat_sfirst, 
-                                              sparse = smat_sparse,
-                                              arg = 'bstart',
-                                              dpar = "sigma",
-                                              verbose = verbose)
-      
-      sigmabstart <- sigmabstart - sigmaxoffset
-      
-      sigmacstart <- eval_xoffset_cstart_args(x = sigmaxsi, 
-                                              y = ysi, 
-                                              knots = sigmaknots, 
-                                              data = datai, 
-                                              eval_arg = sigmacstartsi, 
-                                              smat = smat,
-                                              degree = smat_degree,
-                                              intercept = smat_intercept, 
-                                              derivs = smat_derivs,
-                                              centerval = smat_centerval,
-                                              normalize = smat_normalize,
-                                              preH = smat_preH,
-                                              sfirst = smat_sfirst, 
-                                              sparse = smat_sparse,
-                                              arg = 'cstart',
-                                              dpar = "sigma",
-                                              verbose = verbose)
-      
-      
-      
-      
-      sigmaxoffset <- round(sigmaxoffset, 8)
-      
-      # IMP This is_emptyx will handle numeric(0) when xoffset was set as NULL
-      
-      if(is_emptyx(sigmaxoffset)) {
-        sigmaxoffset      <- 0
-      }
-      
-      
-      if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-        if(!is.null(knots)) {
-          sigmaknots        <- sigmaknots - sigmaxoffset
-          sigmaknots        <- round(sigmaknots, 8)
-          sigmanknots       <- length(sigmaknots)
-          sigmadf           <- length(sigmaknots) - 1
-        } else if(is.null(knots)) {
-          sigmaknots        <- NULL
-          sigmaknots        <- NULL
-          sigmanknots       <- NULL
-          sigmadf           <- NULL
-        }
-      } else {
-        sigmaknots        <- sigmaknots - sigmaxoffset
-        sigmaknots        <- round(sigmaknots, 8)
-        sigmanknots       <- length(sigmaknots)
-        sigmadf           <- length(sigmaknots) - 1
-      }
-    } # if(!is.na(sigmaxsi) &  sigmaxsi != "NA") {
-    
-    
-    ##########################################################################
-    ##########################################################################
-    
-    
+    # datai[[sigmaxsi]] <- datai[[sigmaxsi]] - sigmaxoffset
+    sigmaknots   <- sigmaknots - sigmaxoffset
+    sigmaknots   <- round(sigmaknots, 8)
+    sigmanknots  <- length(sigmaknots)
+    sigmadf      <- length(sigmaknots) - 1
     
     ######################################################################
     ######################################################################
@@ -7451,20 +6809,13 @@ bsitar <- function(x,
     body(xfuntransform2si)  <- str2lang(bodyoffun2)
     ixfuntransform2si       <- inverse_transform(base::body(xfuntransform2si))
     
-    
-    if(!is.na(sigmaxsi) &  sigmaxsi != "NA") {
-      sigmaxfuntransform2si   <- sigmaxfuntransformsi
-      bodyoffun               <- deparse(body(sigmaxfuntransform2si))
-      addtobodyoffun          <- paste0("-", sigmaxoffset)
-      bodyoffun2              <- paste0(bodyoffun, addtobodyoffun)
-      body(sigmaxfuntransform2si)   <- str2lang(bodyoffun2)
-      sigmaixfuntransform2si  <- 
-        inverse_transform(base::body(sigmaxfuntransform2si))
-    } else {
-      sigmaxfuntransform2si <- NULL
-      sigmaixfuntransform2si <- NULL
-    }
-    
+    sigmaxfuntransform2si   <- sigmaxfuntransformsi
+    bodyoffun               <- deparse(body(sigmaxfuntransform2si))
+    addtobodyoffun          <- paste0("-", sigmaxoffset)
+    bodyoffun2              <- paste0(bodyoffun, addtobodyoffun)
+    body(sigmaxfuntransform2si)   <- str2lang(bodyoffun2)
+    sigmaixfuntransform2si  <- 
+      inverse_transform(base::body(sigmaxfuntransform2si))
     
     
     ######################################################################
@@ -7496,9 +6847,10 @@ bsitar <- function(x,
     
     ######################################################################
     ######################################################################
-    # Now re transform 'x' and 'sigmax' with xoffset and 'sigmaxoffset'
-    # but leave y as such 
-    # Note below that 'xoffset' and 'sigmaxoffset' are not NULL
+    # Now re transform x and sigmax with xoffset
+     # Now re transform x and sigmax with xoffset and sigmaxoffset
+     # but leave y as such 
+     # Note that xoffset and sigmaxoffset are not NULL
     
      prepare_transformations_args[['data']]         <- datai
      prepare_transformations_args[['xvar']]         <- xsi
@@ -7514,7 +6866,7 @@ bsitar <- function(x,
      prepare_transformations_args[['sigmaxoffset']] <- sigmaxoffset
      prepare_transformations_args[['transform']]    <- ""
      prepare_transformations_args[['itransform']]   <- ""
-    
+   
     datai <- CustomDoCall(prepare_transformations, prepare_transformations_args)
     
     if(check_for_validy_of_prepare_transformations) {
@@ -7523,8 +6875,7 @@ bsitar <- function(x,
     
     #################################################################
     #################################################################
-    # This below just for final checks to confirm transformations work fine 
-    
+    # This below just for final chekes
     if(check_for_validy_of_prepare_transformations) {
       prepare_transformations_args[['data']]         <- 
         check_for_validy_of_prepare_transformations_3
@@ -7536,6 +6887,7 @@ bsitar <- function(x,
       check_for_validy_of_prepare_transformations_4 <- 
         CustomDoCall(prepare_transformations, prepare_transformations_args)
       
+      
       prepare_transformations_args[['data']]         <- 
         check_for_validy_of_prepare_transformations_4
       prepare_transformations_args[['ixfun']]        <- FALSE
@@ -7546,6 +6898,7 @@ bsitar <- function(x,
       check_for_validy_of_prepare_transformations_5 <- 
         CustomDoCall(prepare_transformations, prepare_transformations_args)
       
+     
       # Ignore outcome ysi because it remains transformed
       check_for_validy_of_prepare_transformations_0 <- 
         check_for_validy_of_prepare_transformations_0 %>% 
@@ -7567,10 +6920,12 @@ bsitar <- function(x,
                     check_for_validy_of_prepare_transformations_4))) {
         stop("Something wrong with 'prepare_transformations'")
       }
+     
       if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_3,
                     check_for_validy_of_prepare_transformations_5))) {
         stop("Something wrong with 'prepare_transformations'")
       }
+      
     } # end if(check_for_validy_of_prepare_transformations) {
     
     
@@ -7597,9 +6952,39 @@ bsitar <- function(x,
     # stop()
     
     
+    # if(smat == 'nsp' | smat == 'nsk') {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    # }
+    
+   
+    
+    
+    # Use this same approach -SplineCall- for 'rcs' also
+    # This makes 'make_spline_matrix' useless ?
+    
+    # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+    #   if(length(knots) > 2) {
+    #     iknots <- knots[2:(length(knots)-1)]
+    #     bknots <- c(knots[1], knots[length(knots)])
+    #   } else if(length(knots) == 2) {
+    #     iknots <- NULL
+    #     bknots <- knots
+    #   }
+    # } else {
+    #   iknots <- knots[2:(length(knots)-1)]
+    #   bknots <- c(knots[1], knots[length(knots)])
+    # }
+    
+    
+    # Need to do this in the R functions extracted from the stan code
+    # iknots <- knots[2:(length(knots)-1)]
+    # bknots <- c(knots[1], knots[length(knots)])
+    # so using checkgetiknotsbknots()
     
     iknots <- checkgetiknotsbknots(knots, 'iknots')
     bknots <- checkgetiknotsbknots(knots, 'bknots')
+    
     
     SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
                                       knots = iknots,
@@ -7611,7 +6996,9 @@ bsitar <- function(x,
                                       normalize = smat_normalize,
                                       preH = smat_preH,
                                       sfirst = smat_sfirst,
-                                      sparse = smat_sparse))
+                                      sparse = smat_sparse)
+                             )
+    
     
     
     if(smat == 'rcs') {
@@ -7647,13 +7034,9 @@ bsitar <- function(x,
     sigmaxfunsi <- strsplit(gsub_space(deparse(body(sigmaxfuntransformsi))), 
                                 "\\(")[[1]][1]
     
-    sigmayfunsi <- strsplit(gsub_space(deparse(body(sigmayfuntransformsi))), 
-                            "\\(")[[1]][1]
-    
     if(xfunsi == "")      xfunsi      <- NULL
     if(yfunsi == "")      yfunsi      <- NULL
     if(sigmaxfunsi == "") sigmaxfunsi <- NULL
-    if(sigmayfunsi == "") sigmayfunsi <- NULL
     
     # sqrt is same as ^0.5
     if(grepl("\\^0.5$", xfunsi)) {
@@ -7665,9 +7048,6 @@ bsitar <- function(x,
     if(grepl("\\^0.5$", sigmaxfunsi)) {
       sigmaxfunsi <- "sqrt"
     }
-    if(grepl("\\^0.5$", sigmayfunsi)) {
-      sigmayfunsi <- "sqrt"
-    }
     
     xfunxoffsetsi <- 
       strsplit(gsub_space(deparse(body(xfuntransformsi))), 
@@ -7677,14 +7057,12 @@ bsitar <- function(x,
       strsplit(gsub_space(deparse(body(sigmaxfuntransformsi))), 
                             "\\(")[[1]][1]
     
-    
     if(xfunxoffsetsi == "")      xfunxoffsetsi      <- NULL
     if(sigmaxfunxoffsetsi == "") sigmaxfunxoffsetsi <- NULL
     
     xfunvalue             <- xfunsi
     yfunvalue             <- yfunsi
     sigmaxfunvalue        <- sigmaxfunsi
-    sigmayfunvalue        <- sigmayfunsi
     xfunxoffsetvalue      <- xfunxoffsetsi
     sigmaxfunxoffsetvalue <- sigmaxfunxoffsetsi
     
@@ -7715,15 +7093,21 @@ bsitar <- function(x,
     }  
     
     
-    SplineCallnamelist[[ii]]  <- SplineCall_name
-    SplineCallvaluelist[[ii]] <- SplineCall
+    SplineCallnamelist[[ii]]            <- SplineCall_name
+    SplineCallvaluelist[[ii]]           <- SplineCall
    
     
    
+    
+    
+    
     spfncname_c <- c(spfncname_c, spfncname)
     
     spfun_collect <- c(spfun_collect, 
-                       c(spfncname, paste0(spfncname, "_", c("d1", "d2")))
+                       c(spfncname, paste0(spfncname, "_", 
+                                           c("d1", "d2")
+                                           )
+                         )
                        )
     
     
@@ -7759,6 +7143,10 @@ bsitar <- function(x,
     # # print(add_rcsfunmatqrinv_genquant)
     
     
+    
+    
+    
+    
     # In function call, earlier the number of spline coef were set using
     # nknots - 1. This worked well for nsp. nsk and rcs. 
     # However, for bsp, msp and isp, it is more tricky. Instead, the 
@@ -7768,7 +7156,7 @@ bsitar <- function(x,
     # stop()
     
     SbasisN <- ncol(mat_s)
-    
+
     internal_function_args_names <-
       c(
         "fixedsi",
@@ -7802,7 +7190,6 @@ bsitar <- function(x,
         "smat_preH",
         "smat_sfirst",
         "smat_sparse",
-        "smat_moi",
         "smat_check_sparsity",
         "smat_include_stan",
         "smat_include_path",
@@ -7828,13 +7215,7 @@ bsitar <- function(x,
         "QR_complete",
         "QR_flip",
         "QR_scale",
-        "SbasisN",
-        "sigmaxsi",
-        'familysi',
-        'sigmaxfunsi',
-        'sigmayfunsi',
-        'sigmayfuntransformsi',
-        'family_link_sigma'
+        "SbasisN"
         
       )
     
@@ -7853,7 +7234,15 @@ bsitar <- function(x,
       }
     }
     
-  
+    # prepare_function_nsp -> just before adding  QR
+    # So, prepare_function_nsp in 'utils-helper-7' is the original function
+    # prepare_function_nspqr -> adding  QR - in 'utils-helper-7qr'
+    # now remover _nsp, and rename _nspqr to _nsp
+    
+    # Now common function for all splines types
+    # prepare_function_nsp_rcs
+    # prepare_function_nsp_rcs_dout
+    
     get_s_r_funs <- prepare_function_nsp_rcs(
       x = xsi,
       y = ysi,
@@ -7864,9 +7253,51 @@ bsitar <- function(x,
       internal_function_args = internal_function_args)
     
     
-    funlist[ii]     <- get_s_r_funs[['rcsfun']]
+    
+    # if(smat == 'rcs') {
+    #   get_s_r_funs <-
+    #     prepare_function_nsp_rcs(
+    #     # prepare_function(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_function_args = internal_function_args
+    #     )
+    # } else if(smat == 'nsp') {
+    #   get_s_r_funs <- 
+    #     prepare_function_nsp_rcs(
+    #     # prepare_function_nsp(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_function_args = internal_function_args
+    #     )
+    # } else if(smat == 'nsk') {
+    #   get_s_r_funs <- 
+    #     prepare_function_nsp_rcs(
+    #     # prepare_function_nsp(
+    #       x = xsi,
+    #       y = ysi,
+    #       id = idsi,
+    #       knots = knots,
+    #       nknots = nknots,
+    #       data = datai,
+    #       internal_function_args = internal_function_args
+    #     )
+    # }
+    
+    
+    
+    
+    funlist[ii] <- get_s_r_funs[['rcsfun']]
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
-    gq_funs[[ii]]   <- get_s_r_funs[['gq_funs']]
+    gq_funs[[ii]] <- get_s_r_funs[['gq_funs']]
     
     include_fun_nameslist[[ii]] <- get_s_r_funs[['include_fun_names']]
     
@@ -7880,6 +7311,7 @@ bsitar <- function(x,
     }
     
     
+    
     # Define sigma function
     if(set_model_sigma_by_ls) {
       
@@ -7887,17 +7319,19 @@ bsitar <- function(x,
       sigmagetknotsname   <- paste0("sigma", getknotsname)
       sigmagetpreHname    <- paste0("sigma", getpreHname)
       if (nys > 1) {
+        # moved up
+        # sigmaspfncname    <- paste0(ysi, "_", sigmaspfncname)
         sigmagetxname     <- paste0(ysi, "_", sigmagetxname)
         sigmagetknotsname <- paste0(ysi, "_", sigmagetknotsname)
         sigmagetpreHname  <- paste0(ysi, "_", sigmagetpreHname)
+        
       } 
 
       sigmaspfun_collect <-
         c(sigmaspfun_collect, c(sigmaspfncname, 
-                                paste0(sigmaspfncname, "_",  c("d1", "d2"))
-                                )
-          )
-      
+                                paste0(sigmaspfncname, "_", 
+                                       c("d1",
+                                         "d2"))))
       sigmadecomp_editcode <- FALSE
       if(select_model == 'rcs') {
         sigmadecomp_editcode <- FALSE
@@ -7927,7 +7361,7 @@ bsitar <- function(x,
       # Note that 'sigmayfunsi' is just placeholder
       sigmamatch_sitar_d_form          <- match_sitar_d_form
       sigmad_adjustedsi                <- d_adjustedsi
-      sigmayfunsi                      <- sigmayfunsi
+      sigmayfunsi                      <- yfunsi
       sigmabrms_arguments              <- brms_arguments
       sigmaselect_model                <- select_model
       sigmadecomp                      <- decomp
@@ -7970,10 +7404,6 @@ bsitar <- function(x,
         sigmaadd_b_Qr_genquan_s_coef
       sigmainternal_function_args[['add_rcsfunmatqrinv_genquant']] <- 
         sigmaadd_rcsfunmatqrinv_genquant
-      
-      
-      sigmainternal_function_args[['dpar_function']] <- "sigma"
-      
 
       if (verbose) {
         if (ii == 1) {
@@ -8040,15 +7470,11 @@ bsitar <- function(x,
     ############################################################################
     
     
-    if(set_model_sigma_by_fz |
-       set_model_sigma_by_fp |
-       set_model_sigma_by_fe |
+    if(set_model_sigma_by_fi |
        set_model_sigma_by_ve | 
        set_model_sigma_by_vp |
        set_model_sigma_by_cp |
-       set_model_sigma_by_mp |
        set_model_sigma_by_me |
-       set_model_sigma_by_rp |
        set_model_sigma_by_re ) {
       sigmavarget_s_r_funs <- list()
       
@@ -8077,63 +7503,38 @@ bsitar <- function(x,
         return (out);
         }"
       
-
-      if(set_model_sigma_by_fz) {
+      if(set_model_sigma_by_fi) {
         add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor) {
-          return (parameter0 + (negzero(parameter1 .* predictor)));
-        }"
-      } else if(set_model_sigma_by_fp) {
-        add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor) {
-          return (parameter0 + (parameter1 .* log(abs(predictor))));
-        }"
-      } else if(set_model_sigma_by_fe) {
-        add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor) {
-          return (parameter0 + (parameter1 .* predictor));
+        vector xxx_set_name_xxx(vector parameter1, vector predictor) {
+          return (negzero(parameter1 .* predictor));
         }"
       } else if(set_model_sigma_by_ve) {
         add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor) {
-          return (parameter0 + (parameter1 .* predictor));
+        vector xxx_set_name_xxx(vector parameter1, vector predictor) {
+          return (parameter1 .* predictor);
         }"
       } else if(set_model_sigma_by_vp) {
         add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor) {
-          return (parameter0 + (parameter1 .* log(abs(predictor))));
+        vector xxx_set_name_xxx(vector parameter1, vector predictor) {
+          return (parameter1 .* log(abs(predictor)));
         }"
       } else if(set_model_sigma_by_cp) {
         add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector parameter2, 
+        vector xxx_set_name_xxx(vector parameter1, vector parameter2, 
         vector predictor) {
-          return (parameter0 + (parameter1 .* (parameter2 + log(abs(predictor)))));
-        }"
-      } else if(set_model_sigma_by_mp) {
-        add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor) {
-          return (parameter0 + (parameter1 .* log(abs(sqrt(predictor)))));
+          return (parameter1 .* (parameter2 + log(abs(predictor))));
         }"
       } else if(set_model_sigma_by_me) {
         add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor) {
-          return (parameter0 + (parameter1 .* sqrt(predictor)));
-        }"
-      } else if(set_model_sigma_by_rp) {
-        add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor, vector y) {
-          return (parameter0 + (parameter1 .* log(abs(sqrt(y-predictor)))));
+        vector xxx_set_name_xxx(vector parameter1, vector predictor) {
+          return (parameter1 .* sqrt(predictor));
         }"
       } else if(set_model_sigma_by_re) {
         add_sigmavarfun_stan_fun_scode <- "
-        vector xxx_set_name_xxx(vector parameter0, vector parameter1, vector predictor, vector y) {
-          return (parameter0 + (parameter1 .* sqrt( abs( (y-predictor)  ) )  ));
+        vector xxx_set_name_xxx(vector parameter1, vector predictor, vector y) {
+          return (parameter1 .* predictor);
         }"
       }
-      
-      
-      
-      
       
       add_sigmavarfun_stan_fun_scode <- 
         gsub("xxx_set_name_xxx", sigmavarspfncname,
@@ -8142,7 +7543,7 @@ bsitar <- function(x,
       # set identity and negzero, which are common without ys, null if ii > 1
       if(ii > 1) {
         add_identityfun_stan_fun_scode <- NULL
-        add_absifel_stan_fun_scode     <- NULL
+        add_absifel_stan_fun_scode <- NULL
       }
       
       
@@ -8155,7 +7556,7 @@ bsitar <- function(x,
             add_identityfun_stan_fun_scode)
       }
       
-      if(set_model_sigma_by_fz) {
+      if(set_model_sigma_by_fi) {
         collect_sigmavar_stan_fun_scode_all_c <- 
           c(collect_sigmavar_stan_fun_scode_all_c,
             add_absifel_stan_fun_scode)
@@ -8228,11 +7629,11 @@ bsitar <- function(x,
       sigmavarfunlist_r[[ii]] <- sigmavarget_s_r_funs[['r_funs']]
       sigmavargq_funs[[ii]]   <- sigmavarget_s_r_funs[['gq_funs']]
       
-      # include_fun_nameslist[[ii]] <- 
-      #   c(include_fun_nameslist[[ii]], 
-      #     sigmavarget_s_r_funs[['include_fun_names']])
+      include_fun_nameslist[[ii]] <- 
+        c(include_fun_nameslist[[ii]], 
+          sigmavarget_s_r_funs[['include_fun_names']])
       
-    } # if(set_model_sigma_by_fz | ......
+    } # if(set_model_sigma_by_fi | ......
     
     
     
@@ -8259,6 +7660,9 @@ bsitar <- function(x,
       sigmabasicget_s_r_funs[['gq_funs']] <- NULL
       sigmabasicget_s_r_funs[['include_fun_names']] <- getouttemp[['name']]
       
+      sigmabasicfunnamesi <- getouttemp[['name']]
+      sigmabasicfunattrsi <- getouttemp[['attr']]
+    
       sigmabasicfunlist[ii]     <- sigmabasicget_s_r_funs[['rcsfun']]
       sigmabasicfunlist_r[[ii]] <- sigmabasicget_s_r_funs[['r_funs']]
       sigmabasicgq_funs[[ii]]   <- sigmabasicget_s_r_funs[['gq_funs']]
@@ -8369,7 +7773,6 @@ bsitar <- function(x,
         "smat_preH",
         "smat_sfirst",
         "smat_sparse",
-        "smat_moi",
         "smat_check_sparsity",
         "smat_include_stan",
         "smat_include_path",
@@ -8381,10 +7784,7 @@ bsitar <- function(x,
         "set_model_sigma_by_ls",
         "sigma_formula_manualsi_set",
         "sigma_formula_manual_prior_via_sigma_formula",
-        "SbasisN",
-        'sigmaxfunsi',
-        'sigmayfunsi',
-        'family_link_sigma'
+        "SbasisN"
       )
     
     
@@ -8474,8 +7874,6 @@ bsitar <- function(x,
     covariates_         <- covariates_
     sigmacovariates_    <- sigmacovariates_
     set_higher_levels   <- set_higher_levels
-    
-    
     
     # NA ensures that list is of same length 
     # but this later causes problems from by arg
@@ -9588,13 +8986,6 @@ bsitar <- function(x,
     
     blanketinitslist[[ii]] <- blanketinits
     
-    # datai[[xsi]] %>% range() %>% print()
-    # datai[[xsi]] %>% length() %>% print()
-    # print("mmm")
-    # stop()
-    
-    
-  
     
     #################################################################
     #################################################################
@@ -9755,7 +9146,7 @@ bsitar <- function(x,
     include_fun_nameslist_rnamelist[[ii]]  <- includefunnameslistname
     include_fun_nameslist_rvaluelist[[ii]] <- unlist(include_fun_nameslist)
     funlist_rnamelist[[ii]]                <- funlist_r_name
-    funlist_rvaluelist[[ii]]               <- unlist(funlist_r)
+    funlist_rvaluelist[[ii]]               <- funlist_r %>% unlist()
     sigmafunlist_rnamelist[[ii]]           <- sigmafunlist_r_name
     sigmafunlist_rvaluelist[[ii]]          <- unlist(sigmafunlist_r)
     
@@ -9766,9 +9157,9 @@ bsitar <- function(x,
     sigmabasicfunlist_rvaluelist[[ii]]     <- unlist(sigmabasicfunlist_r)
     
     xoffsetnamelist[[ii]]                  <- xoffset_name
-    xoffsetvaluelist[[ii]]                 <- xoffset # xoffsetsi
+    xoffsetvaluelist[[ii]]                 <- xoffset
     sigmaxoffsetnamelist[[ii]]             <- sigmaxoffset_name
-    sigmaxoffsetvaluelist[[ii]]            <- sigmaxoffset # sigmaxoffsetsi
+    sigmaxoffsetvaluelist[[ii]]            <- sigmaxoffset
     groupvarnamelist[[ii]]                 <- groupvar_name
     groupvarvaluelist[[ii]]                <- group_arg_groupvar
     sigma_groupvarnamelist[[ii]]           <- sigma_groupvar_name
@@ -9872,8 +9263,6 @@ bsitar <- function(x,
     
     # restoring original data
     # Just before leaving the loop, restore all inverse transformations
-    
-   
   
     prepare_transformations_args[['data']]         <- datai
     prepare_transformations_args[['xvar']]         <- xsi
@@ -9891,7 +9280,7 @@ bsitar <- function(x,
     prepare_transformations_args[['itransform']]   <- ""
     
     datai <- CustomDoCall(prepare_transformations, prepare_transformations_args)
-   
+    
     
     if (!(is.na(univariate_by$by) | univariate_by$by == "NA"))
       dataout <- rbind(dataout, datai)
@@ -9965,7 +9354,7 @@ bsitar <- function(x,
   sigmaixfuntransform2_names_val<- sigmaixfuntransform2valuelist %>% unlist()
   sigmaxoffset_names_val        <- sigmaxoffsetvaluelist %>% unlist()
   
- 
+  
   
   #######################################################################
   #######################################################################
@@ -10024,7 +9413,6 @@ bsitar <- function(x,
   ###################################################################
   ###################################################################
 
-  
   # assembe brmsdata and brmspriors
   
   brmsdata <- dataout
@@ -10048,15 +9436,11 @@ bsitar <- function(x,
   #######################################################################
   #######################################################################
   
-  if(set_model_sigma_by_fz |
-     set_model_sigma_by_fp |
-     set_model_sigma_by_fe |
+  if(set_model_sigma_by_fi |
      set_model_sigma_by_ve | 
      set_model_sigma_by_vp |
      set_model_sigma_by_cp |
-     set_model_sigma_by_mp |
      set_model_sigma_by_me |
-     set_model_sigma_by_rp |
      set_model_sigma_by_re ) {
   
     # check - 1
@@ -10092,20 +9476,15 @@ bsitar <- function(x,
       }
     }
   
-    
     # check - 2
     ithx <- 0
     for (outrespbames in ys) {
       ithx <- ithx + 1
       sigmatau_strsi_i <- sigmatau_strsi_c[[ithx]]
-      if(set_model_sigma_by_fz |
-         set_model_sigma_by_fp | 
-         set_model_sigma_by_fe | 
+      if(set_model_sigma_by_fi | 
          set_model_sigma_by_ve | 
          set_model_sigma_by_vp |
-         set_model_sigma_by_mp |
          set_model_sigma_by_me |
-         set_model_sigma_by_rp |
          set_model_sigma_by_re ) {
         length_of_sigma_var_nlpars <- 2
       } else if(set_model_sigma_by_cp) {
@@ -10270,7 +9649,7 @@ bsitar <- function(x,
     
     # priorobjectxx <<- priorobject
     brmspriors <- priorobject
-  } # if(set_model_sigma_by_fz |.....
+  } # if(set_model_sigma_by_fi |.....
   
   #######################################################################
   # end some checks for sigma var modelling - except _ba / _ls / _no
@@ -10960,7 +10339,7 @@ bsitar <- function(x,
     
     
     
-   
+    
     
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
@@ -11447,18 +10826,13 @@ bsitar <- function(x,
         }
       } 
       
-      # print(setarguments$stan_model_args)
-      # stop()
       
       if (eval(setarguments$backend) == "cmdstanr") {
         if (is.list(eval(setarguments$stan_model_args)) &
             eval(length(setarguments$stan_model_args)) == 0) {
           setarguments$stan_model_args <- list(
             # pedantic = FALSE,
-            
-            # Setting this leads to error or multiple --O1 stanflag
-            # stanc_options = list("O1")
-            
+            stanc_options = list("O1")
             # , cpp_options = list(#'STAN_CPP_OPTIMS=true',
             #                      # 'CXXFLAGS = -O2',
             #                      # 'STANCFLAGS+= --warn-pedantic --O0',
@@ -11549,9 +10923,6 @@ bsitar <- function(x,
       setarguments = brms_arguments,
       brmsdots = brmsdots_
     )
-  
-  
-  
   
   # 27.02.2025
   # when fitting univariate_by, the subset is found in brm_args, why?
@@ -12838,7 +12209,7 @@ bsitar <- function(x,
         init_custom <- init_custom
       }
     }
-   
+    
 
     if(brm_args$backend == "cmdstanr") {
       if(is.null(brm_args$init)) {
@@ -12956,10 +12327,6 @@ bsitar <- function(x,
     brm_args <- sanitize_algorithm_args(args = brm_args,
                                         algorithm = brm_args$algorithm,
                                         verbose = FALSE)
-    
-    # brm_args$stan_model_args <- NULL
-    # print(brm_args$stan_model_args)
-    # stop()
 
     if(brm_args$backend == "cmdstanr" |
        !is.null(pathfinder_args) | 
@@ -13166,15 +12533,11 @@ bsitar <- function(x,
     
     
     # add_sigma_by_mu or fitted(.)
-    if(set_model_sigma_by_fz |
-       set_model_sigma_by_fp |
-       set_model_sigma_by_fe |
+    if(set_model_sigma_by_fi | 
        set_model_sigma_by_ve | 
        set_model_sigma_by_vp |
        set_model_sigma_by_cp |
-       set_model_sigma_by_mp |
        set_model_sigma_by_me |
-       set_model_sigma_by_rp |
        set_model_sigma_by_re ) {
       ithx <- 0
       for (outrespbames in ys) {
@@ -13215,15 +12578,11 @@ bsitar <- function(x,
         sigmatau_strsi <- sigmatau_strsi_c[[ithx]]
         
         # best, just keep ()
-        if(set_model_sigma_by_fz |
-           set_model_sigma_by_fp |
-           set_model_sigma_by_fe |
-           set_model_sigma_by_mp |
-           set_model_sigma_by_me) {
+        if(set_model_sigma_by_fi | set_model_sigma_by_me) {
           gsub_it_end <- "()"
           if(!grepl(gsub_it_end, set_model_sigma_by_mu_fun_str, fixed = T)) {
             stop("For 'fitted' and 'mean' var function, the predictor must ",
-                 "be a set of empty paranthesis '()' or 'identity()'",
+                 "be () or identity()",
                  "\n  ", 
                  "Please check the following relevant part of the code",
                  "\n  ", 
@@ -13245,13 +12604,7 @@ bsitar <- function(x,
                                                        replace = "",
                                                        extract = T)
         
-        if(set_model_sigma_by_fz |
-           set_model_sigma_by_fp |
-           set_model_sigma_by_fe |
-           set_model_sigma_by_mp |
-           set_model_sigma_by_me |
-           set_model_sigma_by_rp |
-           set_model_sigma_by_re) {
+        if(set_model_sigma_by_fi | set_model_sigma_by_me) {
           extract_sigma_by_mean <- gsub(paste0("", 
                                                "(", ""  ,")"),
                                         paste0("", 
@@ -13267,7 +12620,7 @@ bsitar <- function(x,
                                         extract_sigma_by_mean, fixed = T)
         }
         
-        # This is because user has specified 'sigmavarfun' without ys
+        # This is because use has specified sigmavarfun without ys
         extract_sigma_by_mean <- gsub(sigmavarspfncname_temp, 
                                       sigmavarspfncname, 
                                       extract_sigma_by_mean, 
@@ -13276,7 +12629,7 @@ bsitar <- function(x,
         scode_final <- gsub(extract_sigma_by_mean_o, extract_sigma_by_mean,
                             scode_final, fixed = T)
       } # for (outrespbames in ys) {
-    } # if(set_model_sigma_by_fz | ...) {
+    } # if(set_model_sigma_by_fi | set_model_sigma_by_me) {
     
     
     # print(scode_final)
@@ -13303,10 +12656,6 @@ bsitar <- function(x,
         return(brm_args$stanvars)
       }
     } 
-    
-    
-    # brm_argsx <<- brm_args
-    # stop()
     
     
     if(fit_edited_scode) {
@@ -13350,13 +12699,7 @@ bsitar <- function(x,
     ##############################################################
     ##############################################################
     # restore sigma sqrt form
-    if(set_model_sigma_by_fz |
-       set_model_sigma_by_fp |
-       set_model_sigma_by_fe |
-       set_model_sigma_by_mp |
-       set_model_sigma_by_me |
-       set_model_sigma_by_rp |
-       set_model_sigma_by_re) {
+    if(set_model_sigma_by_fi | set_model_sigma_by_me) {
       function_restore_mu_sigam_form <- function(model, 
                                                  ys, 
                                                  set_model_sigma_by_mu_fun_str_c,
@@ -13414,7 +12757,7 @@ bsitar <- function(x,
                                        sigmavarspfncname_temp = 
                                          sigmavarspfncname_temp)
       brmsfit$formula <- function_restore_mu_sigam_form_new
-    } # if(set_model_sigma_by_fi | ...) {
+    } # if(set_model_sigma_by_fi | set_model_sigma_by_me) {
     
     
     
@@ -13570,9 +12913,7 @@ bsitar <- function(x,
       sigmavarfunlist_rvaluelist <- as.list(rep("", nys))
     }
     
-    if(!exists('sigmavarspfncname_common')) {
-      sigmavarspfncname_common <- NULL
-    }
+    if(!exists('sigmavarspfncname_common')) sigmavarspfncname_common <- NULL
     model_info[['sigmavarStanFun_name']] <- sigmavarspfncname_common 
     
     
@@ -13735,24 +13076,24 @@ bsitar <- function(x,
                                       vectorize = FALSE,
                                       verbose = TRUE,
                                       # sigmafun = expose_sigma_ls_fun,
-                                      backend = FALSE,
-                                      path = NULL,
+                                      expose_backend = FALSE,
+                                      cmdstan_path = NULL,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'S'
     } 
     
     # if (!expose_function) {
     if (!expose_function & !brm_args$empty) {
-      brmsfit <- expose_model_functions(model = brmsfit,
+      brmsfit <- expose_model_functions(model = brmsfit, 
                                       scode = fun_scode,
-                                      expose = FALSE,
+                                      expose = FALSE, 
                                       select_model = select_model,
                                       returnobj = TRUE,
                                       vectorize = FALSE,
                                       verbose = TRUE,
                                       # sigmafun = expose_sigma_ls_fun,
-                                      backend = FALSE,
-                                      path = NULL,
+                                      expose_backend = FALSE,
+                                      cmdstan_path = NULL,
                                       envir = NULL)
       brmsfit$model_info[['expose_method']] <- 'R'
     } 
@@ -13772,12 +13113,9 @@ bsitar <- function(x,
                                compress = get_file_compress)
     }
    
-    
-    
     # 20.03.2025
     # This needed for insight::get_data
-    attr(brmsfit$data, "data_name") <- data_name_str_attr
-    # attr(brmsfit$data, "data_name") <- deparse(mcall_$data)
+    attr(brmsfit$data, "data_name") <- deparse(mcall_$data)
     
     return(brmsfit)
   } # exe_model_fit

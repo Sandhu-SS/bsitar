@@ -168,24 +168,7 @@ prepare_transformations <- function(data = NULL,
   # Over ride when variable itself is NULL
   if(is.null(xvar))      ixfun      <- FALSE
   if(is.null(yvar))      iyfun      <- FALSE
-  # if(is.null(sigmaxvar)) sigmaixfun <- FALSE
-  
-  
-  for (j in 1:length(sigmaxvar)) {
-    if(is.null(sigmaxvar[j])) {
-      sigmaxvar  <- NULL
-      sigmaxfun  <- NULL
-      sigmaixfun <- FALSE
-    } else if(is.na(sigmaxvar[j]) |  sigmaxvar[j] == "NA") {
-      sigmaxvar  <- NULL
-      sigmaxfun  <- NULL
-      sigmaixfun <- FALSE
-    } else {
-      sigmaxvar[j] <- sigmaxvar[j]
-    }
-  }
-  
-  
+  if(is.null(sigmaxvar)) sigmaixfun <- FALSE
   
   
   #######################################################################

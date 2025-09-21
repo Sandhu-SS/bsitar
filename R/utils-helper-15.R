@@ -59,7 +59,12 @@ get_idata <-
            newdata_fixed = NULL,
            verbose = FALSE) {
     
-
+    # if(get.newdata.call) {
+    #   if(is.null(newdata)) {
+    #     stop("'newdata' can not be NULL when get.newdata.call = TRUE")
+    #   }
+    # }
+    
     if (is.null(newdata)) {
       newdata <- model$model_info$bgmfit.data
     } else {

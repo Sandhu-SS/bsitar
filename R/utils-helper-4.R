@@ -2526,36 +2526,23 @@ prepare_formula <- function(x,
   # sigmacovariates_ <- unique(sigmacovariates)
   
   
+  
   if(sigma_formula_manualsi_set) {
-    sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi,
-                                                  nys = nys,
-                                                  ysi = ysi,
-                                                  extract_covar = TRUE,
-                                                  extract_nlpar = FALSE,
-                                                  data_varnames = NULL,
-                                                  verbose = FALSE)
+    if(set_model_sigma_by_ls) {
+      sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi,
+                                                    nys = nys,
+                                                    ysi = ysi,
+                                                    extract_covar = TRUE,
+                                                    extract_nlpar = FALSE,
+                                                    data_varnames = NULL,
+                                                    verbose = FALSE)
+    } else {
+      sigmacovariates  <- getcovlist(sigma_formulasi)
+    }
   } else {
     sigmacovariates  <- getcovlist(sigma_formulasi)
   }
   sigmacovariates_ <- unique(sigmacovariates)
-  
-  
-  # if(sigma_formula_manualsi_set) {
-  #   if(set_model_sigma_by_ls) {
-  #     sigmacovariates <- add_default_args_to_nlf_lf(sigma_formula_manualsi,
-  #                                                   nys = nys,
-  #                                                   ysi = ysi,
-  #                                                   extract_covar = TRUE,
-  #                                                   extract_nlpar = FALSE,
-  #                                                   data_varnames = NULL,
-  #                                                   verbose = FALSE)
-  #   } else {
-  #     sigmacovariates  <- getcovlist(sigma_formulasi)
-  #   }
-  # } else {
-  #   sigmacovariates  <- getcovlist(sigma_formulasi)
-  # }
-  # sigmacovariates_ <- unique(sigmacovariates)
   
   
   
@@ -3558,10 +3545,9 @@ prepare_formula <- function(x,
     setbformula <- gsub(sigmaform_rm, "", setbformula, fixed = TRUE)
   }
  
-   # setbformulax <<- setbformula
-   # stop()
-  
+  #  setbformulax <<- setbformula
   attr(setbformula, "list_out") <- as.list(list_out)
+  # stop()
   return(setbformula)
 }
 

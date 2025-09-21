@@ -135,10 +135,26 @@ xyadj_curves.bgmfit <-
       stop("Please specify newdata")
     }
     
+    # For any call before get.newdata, should be bgmfit.data
+    # if (is.null(newdata)) {
+    #   newdata <- model$model_info$bgmfit.data
+    # } else {
+    #   newdata <- newdata
+    # }
+    # 
+    # newdata <- get.newdata(model, 
+    #                        newdata = newdata,
+    #                        resp = resp,
+    #                        numeric_cov_at = numeric_cov_at,
+    #                        aux_variables = aux_variables,
+    #                        levels_id = levels_id,
+    #                        ipts = ipts,
+    #                        xrange = xrange,
+    #                        idata_method = idata_method,
+    #                        verbose = verbose)
     
     
     # This dummy data only to get list_c and its componenrts 
-     
     newdata_dummy <- get.newdata(model,
                            newdata = newdata,
                            resp = resp,
@@ -714,9 +730,7 @@ xyunadj_curves.bgmfit <- function (model,
    o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
   
-  newdata <- get.newdata(model, 
-                         newdata = newdata, 
-                         resp = resp, 
+  newdata <- get.newdata(model, newdata = newdata, resp = resp, 
                          verbose = verbose)
   
   

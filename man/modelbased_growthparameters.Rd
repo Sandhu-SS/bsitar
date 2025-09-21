@@ -493,7 +493,7 @@ combination of the specified variables.}
 
 \item{transform}{string or function. Transformation applied to unit-level estimates and confidence intervals just before the function returns results. Functions must accept a vector and return a vector of the same length. Support string shortcuts: "exp", "ln"}
 
-\item{transform_draws}{A function applied to individual draws from the
+\item{transform_draws}{A function is applied to individual draws from the
 posterior distribution before computing summaries (default \code{NULL}).
 The argument \code{transform_draws} is derived from the
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
@@ -501,13 +501,7 @@ the \code{transform} argument from the deprecated
 \code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
 \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
 the \code{transform_draws} argument takes precedence over the
-\code{transform} argument. Note that when \code{transform_draws = NULL}, an
-attempt is made to automatically set \code{transform_draws = 'exp'} for
-\code{dpar = 'sigma'}. User can set  \code{transform_draws = FALSE} to turn
-off this automatic assignment of \code{'exp'} to the
-\code{transform_draws}. It is also important to set \code{transform_draws =
-  FALSE} when computing the first derivative (velocity) for \code{dpar =
-  'sigma'}.}
+\code{transform} argument.}
 
 \item{cross}{\itemize{
 \item \code{FALSE}: Contrasts represent the change in adjusted predictions when one predictor changes and all other variables are held constant.
@@ -582,7 +576,7 @@ off this automatic assignment of \code{'exp'} to the
 \item Warning: When calling \code{predictions()} with \code{type="invlink(link)"} (the default in some models), \code{hypothesis} is tested and p values are computed on the link scale.
 }}
 
-\item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. For bayesian models, this report the proportion of posterior draws in the interval and the ROPE. See Details section below.}
+\item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. See Details section below.}
 
 \item{eps}{NULL or numeric value which determines the step size to use when
 calculating numerical derivatives: (f(x+eps)-f(x))/eps. When \code{eps} is

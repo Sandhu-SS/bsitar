@@ -20,7 +20,7 @@
 # utils-helper-3-prepare_data2
 # utils-helper-4-prepare_formula
 # utils-helper-5-prepare_formula_sigma
-# utils-helper-6-export 'nsp' 'nsk' 'rcs' etc string for stan
+# utils-helper-6- export 'nsp' 'nsk' 'rcs' etc string for stan
 # utils-helper-7-prepare_function_nsp_rcs
 # utils-helper-8-prepare_function_sigma - not used now. instead use for bsp msp isp R_str
 # utils-helper-9-set_priors_initials
