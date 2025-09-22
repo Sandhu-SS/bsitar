@@ -748,13 +748,14 @@ prepare_formula <- function(x,
   
   if(is.null(sigma_formulasi[[1]]) | sigma_formulasi == 'NULL') {
     display_message <-  paste("Please specify the fixed effect structure 
-                              for sigma parameter ",
+                              for 'sigma' parameter ",
                               "\n ", 
-                              " (by using the sigma_formula argument) 
+                              " (by using the 'sigma_formula' argument) 
                               since you have specified the ",
                               "\n ", 
                               " random effect structure via 
-                              the sigma_formula_gr argument")
+                              the 'sigma_formula_gr' argument")
+    display_message <- clean_text_spaces(display_message)
     if(!is.null(sigma_formula_grsi)) {
       stop(display_message)
     }  
@@ -762,7 +763,7 @@ prepare_formula <- function(x,
   
   
   
-  
+
   
   if(!is.null(sigma_formulasi[[1]]) & !is.null(sigma_formula_grsi)) {
     if(!identical(substr(strsplit(sigma_formulasi, "~", 

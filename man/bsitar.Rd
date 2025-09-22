@@ -138,7 +138,7 @@ bsitar(
   autocor_init_unstr_acor = random,
   mvr_init_rescor = random,
   r_init_z = random,
-  vcov_init_0 = TRUE,
+  vcov_init_0 = FALSE,
   jitter_init_beta = NULL,
   jitter_init_sd = NULL,
   jitter_init_cor = NULL,
@@ -1660,10 +1660,15 @@ options are \code{'0'}, \code{'random'}, and \code{'prior'}.}
 parameters (default \code{'random'}). These parameters are part of the
 Non-Centered Parameterization (NCP) approach used in the \code{\link[brms:brm]{brms::brm()}}.}
 
-\item{vcov_init_0}{A logical (default \code{FALSE}) to set initial values for
-variance (standard deviation) and covariance (correlation) parameters to
-zero. This allows for setting custom initial values for the fixed effects
-parameters while keeping the variance-covariance parameters at zero.}
+\item{vcov_init_0}{A logical to set initial values for variance (standard
+deviation) and covariance (correlation) parameters to zero (when
+\code{vcov_init_0 = TRUE}). This allows for setting custom initial values
+for the fixed effects parameters while keeping the variance-covariance
+parameters at zero. When \code{vcov_init_0 = FALSE} (default), then
+variance-covariance parameters are assigned random initial values unless
+each individual parameter has it own initial values setting (e.g.,
+\code{a_init_sd = 0}). Note that \code{vcov_init_0} is ignored when global
+initial values are assigned for all parameters via \code{init} argument.}
 
 \item{jitter_init_beta}{A proportion (between 0 and 1) to perturb the initial
 values for fixed effect parameters. The default is \code{NULL}, which means

@@ -22,7 +22,9 @@ Random Effects Integration
 At higher hierarchical levels, ``sigma`` can incorporate random effects to model between-group variance heterogeneity. This is particularly valuable in multilevel growth models where different clusters exhibit varying degrees of residual scatter.
 
 Prior Specification
-Appropriate prior distributions for ``sigma`` parameters typically include half-normal, half-Cauchy, or exponential priors that respect the positive constraint while providing regularization for model stability.
+The ``bsitar`` allows full control on specifying appropriate prior distributions for ``sigma`` parameters typically include half-normal, half-Cauchy, or exponential priors for group level standard deviation parameters that respect the positive constraint while providing regularization for model stability.
+
+We've almost finished updating our ``bsitar`` to fit distributional models that include prior specifications and initial value settings. However, the post-processing support remains limited and experimental.
 
 
 ## New features/Additions

@@ -1585,10 +1585,15 @@
 #'   parameters (default \code{'random'}). These parameters are part of the
 #'   Non-Centered Parameterization (NCP) approach used in the [brms::brm()].
 #'
-#' @param vcov_init_0 A logical (default \code{FALSE}) to set initial values for
-#'   variance (standard deviation) and covariance (correlation) parameters to
-#'   zero. This allows for setting custom initial values for the fixed effects
-#'   parameters while keeping the variance-covariance parameters at zero.
+#' @param vcov_init_0 A logical to set initial values for variance (standard
+#'   deviation) and covariance (correlation) parameters to zero (when
+#'   \code{vcov_init_0 = TRUE}). This allows for setting custom initial values
+#'   for the fixed effects parameters while keeping the variance-covariance
+#'   parameters at zero. When \code{vcov_init_0 = FALSE} (default), then
+#'   variance-covariance parameters are assigned random initial values unless
+#'   each individual parameter has it own initial values setting (e.g.,
+#'   \code{a_init_sd = 0}). Note that \code{vcov_init_0} is ignored when global
+#'   initial values are assigned for all parameters via \code{init} argument.
 #' 
 #' @param jitter_init_beta A proportion (between 0 and 1) to perturb the initial
 #'   values for fixed effect parameters. The default is \code{NULL}, which means
@@ -2255,7 +2260,7 @@ bsitar <- function(x,
                    autocor_init_unstr_acor = random,
                    mvr_init_rescor = random,
                    r_init_z = random,
-                   vcov_init_0 = TRUE,
+                   vcov_init_0 = FALSE,
                    jitter_init_beta = NULL,
                    jitter_init_sd = NULL,
                    jitter_init_cor = NULL,
@@ -2321,20 +2326,12 @@ bsitar <- function(x,
     mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL, 
                                         exceptions = no_default_args)
   }
-  
-  # This because i want NULL to be evaluated as TRUE and not FALSE in 
-  # check_and_replace_sort_to_full()
-  if(is.null(mcall[['sigmax']])) {
-  #  mcall[['sigmax']] <- TRUE
-  }
- 
+
   mcall_ <- mcall
   
-  
-  # 20.03.2025
   # This needed for insight::get_data
   # The insight::get_data() function, which is used by the marginaleffects
-  # functions does not get correct data if dataframe is modified using %>% or |>
+  # package does not get correct data when dataframe is modified using %>% or |>
   # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
   
   data_name_str   <- deparse(mcall_$data)
@@ -2351,8 +2348,7 @@ bsitar <- function(x,
     data_name_pipe  <- FALSE
     data_name_str_attr <- data_name_split
   }
-  # Cn be assigned here, check later
-  # assign(data_name_str_attr, ept(data_name_str))
+  
   
   if(data_name_pipe) {
     stop("The dataframe used to set up the 'data' argument must be not be modified",
@@ -2367,9 +2363,6 @@ bsitar <- function(x,
          "\n  ",
          data_name_str)
   }
-  
-  
-  
   
   
   # Check and allow setting threads as NULL or integer

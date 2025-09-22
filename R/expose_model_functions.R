@@ -223,20 +223,19 @@ expose_model_functions.bgmfit <- function(model,
       
       restore_path <- get_path()
       if(is.null(path)) {
-        if(grepl("wsl", get_path(), fixed = TRUE)) {
+        if(grepl("wsl", restore_path, fixed = TRUE)) {
           if(!grepl("wsl", get_cmdstan_default_path(), fixed = TRUE)) {
             path <- get_cmdstan_default_path()
-            print(path)
           } else {
             stop("cmdstanr 'expose_functions' does not work for 'WSL'")
           }
+        } else if(!grepl("wsl", restore_path, fixed = TRUE)) {
+          path <- restore_path
         }
-      } else {
+      } else if(!is.null(path)) {
         path <- path
       }
-      suppressWarnings(suppressMessages({
-        set_path(path)
-      }))
+      suppressWarnings(suppressMessages({set_path(path)}))
     } # if(isTRUE(check_if_cmdstanr_available())) {
   } # if(backend == "cmdstanr") {
   

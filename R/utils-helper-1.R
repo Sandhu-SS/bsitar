@@ -11,6 +11,17 @@ is.bgmfit <- function(x) {
 }
 
 
+#' An internal function to remove excess spaces
+#'
+#' @param x A string
+#' @return A list comprised of function arguments.
+#' @keywords internal
+#' @noRd
+#'
+clean_text_spaces <- function(x) {
+  trimws(gsub("\\s+", " ", x))
+}
+
 
 #' An internal function to get arguments from the call
 #'
@@ -5851,6 +5862,7 @@ getmodel_info <- function(model,
   
   # To avoid CRAN issues, this must be run only when model$test_mode = FALSE
   # The berkeley_exfit used for CRAN has model$test_mode = TRUE
+  
   if(is.null(model$test_mode)) {
     model[['test_mode']] <- FALSE
     if(verbose) {
@@ -5890,8 +5902,6 @@ getmodel_info <- function(model,
   sigma_model_name  <- model$model_info[[sigma_model_name_]]
   sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
   
-  # here only sigma_model_is_ls is need, the remaining full code is from 
-  # post_processing_checks
   
   sigma_model_is_ls <- FALSE
   if(!is.null(sigma_model)) {
@@ -5899,8 +5909,6 @@ getmodel_info <- function(model,
       sigma_model_is_ls <- TRUE
     }
   }
-  
-  
   
   oxx <- model$model_info[['namesexefuns']]
   
@@ -5939,10 +5947,7 @@ getmodel_info <- function(model,
     model$model_info[['namesexefuns']] <- oxx
     model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
   }
-  # model$model_info[['namesexefuns']] <- oxx
-  # model$model_info[['sigma_fun_mode']] <- sigma_fun_mode
-  
-  
+ 
   # new -  remove 'cons' from covariates
   if(remove_cons_cov) {
     cov_       <- paste0('cov', revresp_)
@@ -5958,7 +5963,6 @@ getmodel_info <- function(model,
                                  strict_1 = strict_1,
                                  verbose = verbose)
   } # if(remove_cons_cov) {
-
   
   return(model)
 }
@@ -6097,17 +6101,6 @@ post_processing_checks <- function(model,
       }
     }
     
-    # sigma_model <- model$model_info[['sigma_model']]
-    
-    # When sigma_model == 'ls', then only sigma function is defined in stan
-    # if(!is.null(sigma_model)) {
-    #   if(sigma_model == "mu") {
-    #     available_d1 <- FALSE
-    #     available_d2 <- FALSE
-    #   }
-    # }
-    
-    
     
     setsigmaxvars_ <- paste0('setsigmaxvar', revresp_)
     
@@ -6118,12 +6111,7 @@ post_processing_checks <- function(model,
     sigma_model       <- model$model_info[[sigma_model_]]
     sigma_model_name  <- model$model_info[[sigma_model_name_]]
     sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
-    
-    # print(sigma_model_attr)
-    # print(allowed_namespace_for_sigma_d1())
-    
-    # here only sigma_model_is_ls is need, the remaining full code is from 
-    # post_processing_checks
+
     
     sigma_model_is_ba_set_d0_as_d1 <- FALSE
     sigma_model_is_ba_set_d0_as_d1_funs <- list()
@@ -6161,13 +6149,7 @@ post_processing_checks <- function(model,
       available_d2 <- available_d2
     }
     
-    # available_d1 <- FALSE
-    # available_d2 <- FALSE
-    
-    
-    
-    
-    
+   
     # Force available_d1 = FALSE when model_deriv = FALSE
     if(!is.null(model$model_info[['model_deriv']])) {
       if(!model$model_info[['model_deriv']]) {
@@ -6187,15 +6169,12 @@ post_processing_checks <- function(model,
       }
     }
     
-    
     out[['sigma_model']] <- sigma_model
     
     out[['available_d0']] <- available_d0
     out[['available_d1']] <- available_d1
     out[['available_d2']] <- available_d2
   } # if(check_d1) {
-  
-  
   return(out)
 }
 
@@ -6339,9 +6318,7 @@ check_and_replace_sort_to_full <- function(str,
   
   make_check_left  <- allowed_left
   make_check_right <- allowed_right
-  
-  # make_check_left  <- paste0("\\b", allowed_left, "")
-  # make_check_right <- paste0("\\b", allowed_right, "")
+
  
   if(length(str) > 1) {
     for (i in 1:length(str)) {
@@ -6795,20 +6772,7 @@ check_set_transform_draws_sigma <- function(model,
     return(xvar)
   }
   
-  
-  # set_sigma_transform_draws_if <- c("varpower", 
-  #                              "varconstpower",
-  #                              "varexp", 
-  #                              "fitted",
-  #                              "fittedz",
-  #                              "fittedpower", 
-  #                              "fittedexp", 
-  #                              "mean", 
-  #                              "meanpower", 
-  #                              "meanexp", 
-  #                              "residual",
-  #                              "residualpower",
-  #                              "residualexp")
+ 
   
   set_sigma_transform_draws_if <- c("varpower", 
                                     "varconstpower",
@@ -6886,7 +6850,6 @@ check_set_transform_draws_sigma <- function(model,
     }
   }
   
-
   return(fun_eval)
 } # check_set_transform_draws_sigma
 
@@ -7258,11 +7221,6 @@ set_sigma_grid_newdata <- function(model,
   
   
   
-  
-  
-  
-  
-  
   if(is.null(idvar)) {
     idvar <- get_basic_info(model = model, 
                             dpar = dpar, 
@@ -7332,8 +7290,6 @@ set_sigma_grid_newdata <- function(model,
   }
   
   
-  
-  
   # Run this to get full data via modified get_data() for insight
   # See 'custom_get_data.brmsfit' in utils-helper-1
   if(!model$test_mode) {
@@ -7350,11 +7306,7 @@ set_sigma_grid_newdata <- function(model,
     }
   } # if(!model$test_mode) {
   
-  # print(grid_type)
-  # newdata$sagelogabs %>% range() %>% print()
-  
- # model %>% insight::get_data() %>% names() %>% print()
-  
+ 
   grid_args <- list()
   grid_args[[xvar]]  <- setxvarvec
   grid_args[[idvar]] <- levels(newdata[[idvar]])
@@ -7362,9 +7314,7 @@ set_sigma_grid_newdata <- function(model,
   grid_args[['model']]     <- model
   grid_args[['newdata']]   <- newdata
   grid_args[['grid_type']] <- grid_type
-  
 
-   # grid_add <- "classid" 
   
   if(!is.null(grid_add)) {
     if(is.list(grid_add)) {
@@ -7410,30 +7360,6 @@ set_sigma_grid_newdata <- function(model,
   }
   
   
-  # newdata %>% nrow() %>% print()
-  # newdata %>% names() %>% print()
-  # print("mmmxxx2mmmm")
-  # stop()
-  
- 
-  
-  # newdata <- marginaleffects::datagrid(xvar_temp = setxvarvec,
-  #                                      idvar_temp = levels(newdata[[idvar]]),
-  #                                      model = model,
-  #                                      newdata = newdata,
-  #                                      grid_type = grid_type)
-  # 
-  # newdata <<- newdata %>% 
-  #   dplyr::mutate(!! as.name(xvar) := xvar_temp) %>% 
-  #   dplyr::mutate(!! as.name(idvar) := idvar_temp) %>% 
-  #   dplyr::select(-c(xvar_temp, idvar_temp))
-  
-  # newdata %>% names() %>% print()
-  # print("mmmxxx2")
-  # stop()
-  
-  
-  
   if(!is.null(difx)) {
     if(difx_asit) {
       difx_val <- difx_val
@@ -7469,22 +7395,14 @@ set_sigma_grid_newdata <- function(model,
   }
   newdata <- newdata %>% dplyr::arrange(sortxxxxzzz) %>% 
     dplyr::select(-sortxxxxzzz)
-  
-  # newdatax <<- newdata
-  # difx_range %>% print()
-  # stop()
-  
- # get_idata
+
   
   if(!is.null(difx)) {
     attr(newdata, 'difx') <- difx_name
   }
   attr(newdata, 'xvar_for_sigma_model_basic') <- idvar
   attr(newdata, 'idvar_for_sigma_model_basic')  <- xvar
-  
-  # newdata %>% names() %>% print()
-  # stop()
-  
+ 
   return(newdata)
 }
 

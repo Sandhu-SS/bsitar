@@ -35,7 +35,7 @@ Depends:
     R (>= 3.6)
 Imports:
     brms (>= 2.23.0),    
-    rstan (>= 2.32.6),
+    rstan (>= 2.32.7),
     loo (>= 2.7.0),    
     dplyr (>= 1.1.4),  
     rlang (>= 1.1.2),
