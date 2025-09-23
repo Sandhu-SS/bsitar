@@ -97,6 +97,50 @@ deparse_0 <- function(deparseobj) {
 }
 
 
+
+
+#' An internal function to check pipe in the string 
+#'
+#' @param x A symbol or string
+#' @param return_name A logical, \code{TRUE} return the string, \code{FALSE}
+#' logical
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+check_forpipe <- function(x, return = 'name') {
+  data_name_str   <- x
+  if(is.symbol(data_name_str)) {
+    data_name_str <- deparse(data_name_str)
+  }
+  # data_name_str   <- deparse(mcall_$data)
+  data_name_split <- paste(gsub_space(data_name_str), collapse = "")
+  data_name_pipe  <- FALSE
+  if(grepl("%>%", data_name_split, fixed = T)) {
+    data_name_str_attr <- strsplit(data_name_split, "%>%", fixed = T)[[1]][1]
+    data_name_pipe  <- TRUE
+  } else if(grepl("(", data_name_split, fixed = T) &&
+            grepl(",", data_name_split, fixed = T)) {
+    data_name_str_attr <- strsplit(data_name_split, "|>", fixed = T)[[1]][1]
+    data_name_pipe  <- TRUE
+  } else {
+    data_name_pipe  <- FALSE
+    data_name_str_attr <- data_name_split
+  }
+  if(return == 'name') {
+    out <- data_name_str
+  } else if(return == 'attr') {
+    out <- data_name_str_attr
+  } else if(return == 'logical') {
+    out <- data_name_pipe
+  } else {
+    stop("argument 'return' must be either 'name', 'attr', or 'logical'")
+  }
+  return(out)
+}
+
+
+
 #' An internal function to substitute and deparse a symbol argument
 #'
 #' @param deparseobj A symbol
@@ -552,12 +596,23 @@ extract_prior_str_lv <- function(tempx) {
 #' An internal function to restore parantheses in formuale objects
 #'
 #' @param strx A formual object.
+#' @param exclude_first A logical to indicate whether to exclude the fixed part
+#'   from adding opening and closing parenthesis. In NULL, then it is set to
+#'   \code{TRUE} for \code{sigma} otherwise \code{FALSE} Could be \code{TRUE}
+#'   globally but need to ' check for that.
 #' @keywords internal
-#' @return A list comprised of character strings.
+#' @return A character strings.
 #' @noRd
 #'
 
-restore_paranthese_grgr_str_form <- function(strx) {
+restore_paranthese_grgr_str_form <- function(strx, exclude_first = NULL) {
+  if(is.null(exclude_first)) {
+    if(grepl("sigma~", strx)) {
+      exclude_first <- TRUE
+    } else {
+      exclude_first <- FALSE
+    }
+  } # if(is.null(exclude_first)) {
   restore_paranthese_grgr_str <- function(strx2) {
     if(!grepl("gr", strx2, fixed = T)) {
       strx_ <- strx2
@@ -592,11 +647,21 @@ restore_paranthese_grgr_str_form <- function(strx) {
   strx <- gsub("+(", "_xxxx_", strx, fixed = T)
   abxs <- strsplit(strx, "_xxxx_", fixed = T)[[1]]
   for (abxi in 1:length(abxs)) {
-    abx_c[abxi] <- restore_paranthese_grgr_str(abxs[abxi])
-    abx_c[abxi]
+    if(exclude_first) {
+      if(abxi == 1) {
+        set_abx_c <- abxs[abxi]
+      } else {
+        set_abx_c <- restore_paranthese_grgr_str(abxs[abxi])
+      }
+    } else if(!exclude_first) {
+      set_abx_c <- restore_paranthese_grgr_str(abxs[abxi])
+    }
+    abx_c[abxi] <- set_abx_c
+    # abx_c[abxi] <- restore_paranthese_grgr_str(abxs[abxi])
+    # abx_c[abxi]
   }
   abx_c <- paste0(abx_c, collapse = "+")
-  abx_c
+  return(abx_c)
 }
 
 
@@ -3422,7 +3487,8 @@ brms_via_cmdstanr <- function(scode,
                               brms_arguments,
                               pathfinder_args = NULL,
                               pathfinder_init = FALSE,
-                              Rescor_by_levels = NULL) {
+                              Rescor_by_levels = NULL, 
+                              verbose = FALSE) {
   
   # try(zz <- insight::check_if_installed(c("cmdstanr"),
   #                                       minimum_version =
@@ -3462,7 +3528,6 @@ brms_via_cmdstanr <- function(scode,
   } else {
     stan_threads <- FALSE
   }
-  
   
   
   if(!is.null(brm_args$opencl)) {
@@ -3563,7 +3628,14 @@ brms_via_cmdstanr <- function(scode,
       pathfinder_args_final[['show_exceptions']] <- FALSE
     }
     
-    cb_pathfinder <- CustomDoCall(c_scode$pathfinder, pathfinder_args_final)
+    if(verbose) {
+      message("Running '$pathfinder()' for initial values")
+    }
+    
+    suppressWarnings(suppressMessages({
+      cb_pathfinder <- CustomDoCall(c_scode$pathfinder, pathfinder_args_final)
+    }))
+    
     
     if(pathfinder_init) {
       brm_args$init <-  cb_pathfinder
@@ -3587,6 +3659,9 @@ brms_via_cmdstanr <- function(scode,
 
   ################################
   
+  # print(brm_args$init)
+  # print("mmmm")
+  # stop()
   
   
   cb_fit <- c_scode$sample(
@@ -3605,8 +3680,7 @@ brms_via_cmdstanr <- function(scode,
     adapt_engaged = TRUE,
     fixed_param = FALSE,
     show_messages = show_messages,
-    show_exceptions = show_exceptions
-  )
+    show_exceptions = show_exceptions)
   
   cb_fit <- brms::read_csv_as_stanfit(cb_fit$output_files(), model = c_scode)
   attributes(cb_fit)$CmdStanModel <- c_scode
@@ -3645,7 +3719,8 @@ brms_via_rstan <- function(scode,
                            sdata, 
                            brm_args, 
                            brms_arguments,
-                           Rescor_by_levels = NULL) {
+                           Rescor_by_levels = NULL,
+                           verbose = FALSE) {
   if(!is.null(brm_args$threads$threads)) {
     stan_threads <- TRUE
   } else {
@@ -6271,6 +6346,54 @@ multi_gsub_exact <- function(x, patterns, replacements) {
     init = x
   )
 }
+
+
+
+#' An internal function to replace T/F with full TRUE/FALSE - string
+#' 
+#' @description
+#' Operates at at formula string level i.e., deparse(formula)
+#' 
+#' @param x A character string specifying \code{T/F} to be replaced by full.
+#' 
+#' @return A character string.
+#' @keywords internal
+#' @noRd
+#'
+replace_t_f_to_full <- function(x) {
+  x <- gsub("T,", "TRUE,"  , x, fixed = TRUE)
+  x <- gsub("T)", "TRUE)"  , x, fixed = TRUE)
+  x <- gsub("F,", "FALSE," , x, fixed = TRUE)
+  x <- gsub("F)", "FALSE)" , x, fixed = TRUE)
+  x
+}
+
+
+
+#' An internal function to replace T/F with full TRUE/FALSE - formula
+#' 
+#' @description
+#' Operates at at formula level i.e., class formula
+#' 
+#' @param x A formula object
+#' 
+#' @return A formula object
+#' @keywords internal
+#' @noRd
+#'
+replace_T_preserve_env <- function(x) {
+  formula_obj <- x
+  # Preserve the original environment
+  original_env <- environment(formula_obj)
+  formula_str <- deparse(formula_obj)
+  formula_str <- gsub("\\bT\\b", "TRUE", formula_str)
+  formula_str <- gsub("\\bF\\b", "FALSE", formula_str)
+  new_formula <- as.formula(paste(formula_str, collapse = ""))
+  # Restore original environment
+  environment(new_formula) <- original_env
+  return(new_formula)
+}
+
 
 
 
