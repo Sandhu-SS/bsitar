@@ -13,8 +13,8 @@ Description: The Super Imposition by Translation and Rotation (SITAR) model
     spline mean curve to the growth data and aligns individual-specific growth 
     curves to the underlying mean curve via a set of random effects (see Cole, 
     2010 <doi:10.1093/ije/dyq115> for details). The non-Bayesian version of the 
-    SITAR model can be fit by using the already available R package 'sitar'. While 
-    the 'sitar' package allows modelling of a single outcome only, the 'bsitar' 
+    SITAR model can be fit by using the already available R package 'sitar'. Unlike 
+    the 'sitar' package which allows modelling of a single outcome only, the 'bsitar' 
     package offers great flexibility in fitting models of varying complexities, 
     including joint modelling of multiple outcomes such as height and weight 
     (multivariate model). Additionally, the 'bsitar' package allows for the simultaneous  
