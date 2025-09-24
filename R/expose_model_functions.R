@@ -148,9 +148,6 @@ expose_model_functions.bgmfit <- function(model,
   }
   
   
-  
-  
-  # changed from expose_r_from_stan <- FALSE to TRUE for QR
   if(!expose) {
     if (is.null(model$model_info$decomp))  expose_r_from_stan <- TRUE
     if (!is.null(model$model_info$decomp)) expose_r_from_stan <- TRUE # FALSE
@@ -158,12 +155,7 @@ expose_model_functions.bgmfit <- function(model,
     expose_r_from_stan <- FALSE
   }
   
-  
-  
-  
-  # check and set exposecode for compilation 
-  # priority will be scode
-  # then if fun_scode is available from model_info, use it
+
   if(expose) {
     if (is.null(scode)) {
       if(model$model_info[['fit_edited_scode']]) {
@@ -178,9 +170,7 @@ expose_model_functions.bgmfit <- function(model,
         } else if(is.null(model$model_info$fun_scode)) {
           exposecode <- brms::stancode(model)
         }
-        # exposecode <- brms::stancode(model)
       }
-      # exposecode <- brms::stancode(model)
     } else if (!is.null(scode)) {
       exposecode <- scode
     }
@@ -241,10 +231,6 @@ expose_model_functions.bgmfit <- function(model,
   
   
   
-  
-
-  
-
   if(expose &  backend == "cmdstanr") {
     if(is.null(model$functions$fun_names)) {
       suppressWarnings(suppressMessages({
@@ -265,18 +251,12 @@ expose_model_functions.bgmfit <- function(model,
         set_path(restore_path)
       }))
     } # if(is.null(model$functions$fun_names)) {
-    
     if(!is.null(model$functions$fun_names)) {
       c_model <- attr(model$fit, 'CmdStanModel')
     }
   } # if(expose &  backend == "cmdstanr") {
   
 
-  
-  
-  
-  
-  
   
   if(expose & backend == "rstan") {
     stanc_arguments <- list()
@@ -364,26 +344,27 @@ expose_model_functions.bgmfit <- function(model,
                ept(sigmavarSplineFun_name_val[funi]), envir = envir)
       }
     } # if(!is_emptyx(sigmavarSplineFun_name_val) &
-    
-    
   } # if(expose_r_from_stan) {
   
   
   
   SplineFun_name      <- model$model_info[['StanFun_name']]
   sigmaSplineFun_name <- model$model_info[['sigmaStanFun_name']]
-  sigmavarSplineFun_name <- model$model_info[['sigmavarStanFun_name']]
   
-  if(!is.null(sigmavarSplineFun_name)) {
-    model$model_info$include_fun_names <- 
-      c( model$model_info$include_fun_names,
-         sigmavarSplineFun_name) 
-  } 
+  # Now outcome specific sigmavarfun is part of the 
+  # model$model_info$include_fun_names
+  
+  # sigmavarSplineFun_name <- model$model_info[['sigmavarStanFun_name']]
+  # 
+  # if(!is.null(sigmavarSplineFun_name)) {
+  #   model$model_info$include_fun_names <- 
+  #     c( model$model_info$include_fun_names,
+  #        sigmavarSplineFun_name) 
+  # } 
   
   spfun_collect       <- model$model_info$include_fun_names
   
-  
-  
+
   
   if(expose & backend == "rstan") {
   # if(expose) {
@@ -436,9 +417,6 @@ expose_model_functions.bgmfit <- function(model,
   
   
   
-  
-  
-  
   if(expose_r_from_stan) {
     Spl_funs <- list()
     spfun_collectic <- -1
@@ -473,15 +451,14 @@ expose_model_functions.bgmfit <- function(model,
   } else if(expose_sigma_var_model_fun) {
     allSplineFun_name <- c(allSplineFun_name, sigmavarSplineFun_name)
   } else if(expose_sigma_basic_model_fun) {
-    # This sigmabasicSplineFun_name = NULL 
     sigmabasicSplineFun_name <- model$model_info[['sigmabasicSplineFun_name']]
     allSplineFun_name <- c(allSplineFun_name, sigmabasicSplineFun_name)
   } 
   
 
   
-  # sigma_basic_model_fun are not part of the stan code but only R
-  # Therefore, we need to attach them to exposed stan functions 
+  # The 'sigma_basic_model_fun' are not part of the stan code but only R
+  # Therefore, we need to attach them back to the exposed stan functions 
   if(expose) {
     if(expose_sigma_basic_model_fun) {
       for (funi in 1:length(model$model_info$sigmabasicfunlist_r)) {
@@ -502,7 +479,6 @@ expose_model_functions.bgmfit <- function(model,
   scode_include <- brms::stancode(model)
   model$bmodel  <- scode_include
   
-  # Assign expose_method attr if NULL
   if(expose_r_from_stan) {
     if(is.null(model$model_info[['expose_method']])) {
       model$model_info[['expose_method']] <- 'R'
@@ -512,7 +488,6 @@ expose_model_functions.bgmfit <- function(model,
       model$model_info[['expose_method']] <- 'S'
     }
   }
-  
   
   if(returnobj) {
     model$model <- model$bmodel
