@@ -13377,7 +13377,7 @@ bsitar <- function(x,
     brmsfit$model_info           <- model_info
     environment(brmsfit$formula) <- enverr.
     
-    brmsfitx <<- brmsfit
+    # brmsfitx <<- brmsfit
   
     # Now message moved to the expose_model_functions()
     if (expose_function & !brm_args$empty) {
