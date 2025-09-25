@@ -589,9 +589,14 @@
 #' using an explicit variance function. The \pkg{'bsitar'} package provides six
 #' different methods for variance modeling, five of which are implemented in the
 #' \pkg{'nlme'} package. The variance modeling approach uses a helper function
-#' \code{'sigmavarfun'} that sets up the appropriate formulation for variance
-#' modeling within the \pkg{'bsitar'} package. The documentation below provides
-#' a detailed overview of the available methods and their usage.
+#' \code{'sigmavarfun'} (short hand form, \code{'vf'}) that sets up the
+#' appropriate formulation for variance modeling within the \pkg{'bsitar'}
+#' package. 
+#' 
+#' For multivariate models, the \code{'sigmavarfun'} is appropriately renamed to
+#' indicate response specific \code{'sigmavarfun'} by adding \code{'_response'}
+#' as prefix. The documentation below provides a detailed overview of the
+#' available methods and their usage.
 #'
 #' \strong{Available Methods} (short hands in parentheses):
 #' \itemize{
@@ -615,41 +620,42 @@
 #' }
 #'
 #' Below are examples showing how to use \code{'sigmavarfun'} to specify each of
-#' the six variance models.
+#' the six variance models. We encourage the use of short hand form, \code{'vf'}
+#' to avoid any errors in correctly spelling the full form \code{'sigmavarfun'}
 #'
 #' \strong{1. varpower:}
 #' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 'vp') +
+#'   nlf(sigma ~ vf(param1, param2, predictor), method = 'vp') +
 #'   lf(param1 + param2 ~ 1)
 #' }
 #'
 #' \strong{2. varConstPower:}
 #' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, param3, predictor), method = cp') + 
+#'   nlf(sigma ~ vf(param1, param2, param3, predictor), method = cp') + 
 #'   lf(param1 + param2 + param3 ~ 1)
 #' }
 #'
 #' \strong{3. varExp:}
 #' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 've') +
+#'   nlf(sigma ~ vf(param1, param2, predictor), method = 've') +
 #'   lf(param1 + param2 ~ 1)
 #' }
 #'
 #' \strong{4. fitted:}
 #' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
+#'   nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +
 #'   lf(param1 + param2 ~ 1)
 #' }
 #' 
 #' \strong{5. residual:}
 #' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity(), resp), method = 're') + 
+#'   nlf(sigma ~ vf(param1, param2, identity(), resp), method = 're') + 
 #'   lf(param1 + param2 ~ 1)
 #' }
 #' 
 #' \strong{6. mean:}
 #' \preformatted{
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'me') +
+#'   nlf(sigma ~ vf(param1, param2, identity()), method = 'me') +
 #'   lf(param1 + param2 ~ 1)
 #' }
 #' 
@@ -720,9 +726,9 @@
 #'  set up different form and predictor variables for each outcome separately by
 #'  using the list approach as shown below: \cr
 #'   \code{sigma_formula_manual = list(
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
+#'   nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +
 #'   lf(param1 + param2 ~ 1) ,
-#'   nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
+#'   nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +
 #'   lf(param1 + param2 ~ 1)
 #'   )}. \cr
 #'   Note that formulation name \code{'nlf()'} should be same across all
@@ -5584,7 +5590,6 @@ bsitar <- function(x,
       sigmabasicfunnamesi   <- NULL
       sigmabasicfunattrsi   <- NULL
       sigmavarspfncname_temp  <- NULL
-      sigmavarspfncname_temp_stan <- NULL
       sigmavarspfncname <- NULL
       sigma_formula_manual_prior_via_sigma_formula <- FALSE
     }
@@ -5610,7 +5615,6 @@ bsitar <- function(x,
       sigmabasicfunnamesi   <- NULL
       sigmabasicfunattrsi   <- NULL
       sigmavarspfncname_temp  <- NULL
-      sigmavarspfncname_temp_temp_stan <- NULL
       sigmavarspfncname <- NULL
       sigma_formula_manual_prior_via_sigma_formula <- FALSE
       ##########################################################################
@@ -5789,14 +5793,46 @@ bsitar <- function(x,
          set_model_sigma_by_me |
          set_model_sigma_by_rp |
          set_model_sigma_by_re ) {
+        
+        # replace placeholder vf with sigmavarfun
         sigmavarspfncname_temp      <- "sigmavarfun"
-        sigmavarspfncname_temp_stan <- sigmavarspfncname_temp
+        sigmavarspfncname_org <- 
+          replace_string_part(x = sigma_formula_manualsi,
+                              start = "~",
+                              end = "(",
+                              replace = "",
+                              extract = TRUE, 
+                              cat_str = FALSE,
+                              exclude_start = TRUE, 
+                              exclude_end = TRUE) 
+        
+        sigma_formula_manualsi <- gsub(sigmavarspfncname_org, 
+                                       sigmavarspfncname_temp,
+                                       sigma_formula_manualsi, fixed = T)
+        
         sigmavarspfncname_common    <- sigmavarspfncname_temp
         sigmavarspfncname           <- sigmavarspfncname_temp
         if(nys > 1) {
           sigmavarspfncname      <- paste0(ysi, "_", sigmavarspfncname_temp)
-          sigmavarspfncname_stan <- paste0(ysi, "_", sigmavarspfncname_temp_stan)
         } 
+        # new 
+        sigma_formula_manualsi <- gsub(sigmavarspfncname_temp, sigmavarspfncname,
+                                       sigma_formula_manualsi, fixed = T)
+        
+      }
+      
+      
+      ##########################################################################
+      
+      if(set_model_sigma_by_ve |
+         set_model_sigma_by_vp |
+         set_model_sigma_by_cp) {
+        if(grepl('identity()', sigma_formula_manualsi, fixed = T) |
+           grepl('()', sigma_formula_manualsi, fixed = T)) {
+          stop("Expecting predictor as the last argument for variance function:",
+               "\n  ",
+               collapse_comma(sigmavarspfncname_org))
+        }
       }
       
       ##########################################################################
@@ -5830,7 +5866,6 @@ bsitar <- function(x,
         
         if(!grepl("^sigma", sigmaspfncname_temp)) {
           sigmaspfncname_temp.org <- sigmaspfncname_temp
-          # sigmaspfncname_temp     <- paste0("sigma", sigmaspfncname_temp.org)
           sigmaspfncname_temp     <- paste0("sigma", spfncname)
           sigma_formula_manualsi  <- gsub(sigmaspfncname_temp.org, 
                                           sigmaspfncname_temp,
@@ -5862,6 +5897,7 @@ bsitar <- function(x,
           sigmaspfncname <- sigmaspfncname_temp
         }
       }
+      
       
       
       ##########################################################################
@@ -5899,7 +5935,7 @@ bsitar <- function(x,
       msg_for_setting_sigma_var_function <-
         paste0(
           "The sigma formulation for variance modeling must be ",
-          "specified via '", sigmavarspfncname_temp, "()'.",
+          "specified via '", sigmavarspfncname_common, "()'.",
           "\n\n",
           "The bsitar package provides six different methods for variance ",
           "modeling, five of which are implemented in the nlme package. ",
@@ -5937,42 +5973,42 @@ bsitar <- function(x,
           "\n",
           "This can be specified with method = 'mean' or its short hand 'me'.",
           "\n\n",
-          "Below are examples showing how to use '", sigmavarspfncname_temp, "' ",
+          "Below are examples showing how to use '", sigmavarspfncname_common, "' ",
           "to specify each of the six variance models:",
           "\n\n",
           "1. varpower:",
           "\n  ",
-          "nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 'vp') +",
+          "nlf(sigma ~ vf(param1, param2, predictor), method = 'vp') +",
           "\n  ",
           "lf(param1 + param2 ~ 1)",
           "\n\n",
           "2. varConstPower:",
           "\n  ",
-          "nlf(sigma ~ sigmavarfun(param1, param2, param3, predictor), method = 'cp') +",
+          "nlf(sigma ~ vf(param1, param2, param3, predictor), method = 'cp') +",
           "\n  ",
           "lf(param1 + param2 + param3 ~ 1)",
           "\n\n",
           "3. varExp:",
           "\n  ",
-          "nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 've') +",
+          "nlf(sigma ~ vf(param1, param2, predictor), method = 've') +",
           "\n  ",
           "lf(param1 + param2 ~ 1)",
           "\n\n",
           "4. fitted:",
           "\n  ",
-          "nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +",
+          "nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +",
           "\n  ",
           "lf(param1 + param2 ~ 1)",
           "\n\n",
           "5. residual:",
           "\n  ",
-          "nlf(sigma ~ sigmavarfun(param1, param2, identity(), response), method = 're') +",
+          "nlf(sigma ~ vf(param1, param2, identity(), response), method = 're') +",
           "\n  ",
           "lf(param1 + param2 ~ 1)",
           "\n\n",
           "6. mean:",
           "\n  ",
-          "nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'me') +",
+          "nlf(sigma ~ vf(param1, param2, identity()), method = 'me') +",
           "\n  ",
           "lf(param1 + param2 ~ 1)",
           "\n\n",
@@ -6031,7 +6067,7 @@ bsitar <- function(x,
          set_model_sigma_by_me |
          set_model_sigma_by_rp |
          set_model_sigma_by_re ) {
-        if(!grepl(paste0(sigmavarspfncname_temp, "("), 
+        if(!grepl(paste0(sigmavarspfncname_common, "("), 
                   set_model_sigma_by_mu_fun_str, fixed = TRUE)) {
           stop(msg_for_setting_sigma_var_function)
         } 
@@ -7916,7 +7952,7 @@ bsitar <- function(x,
     ############################################################################
     ############################################################################
     ############################################################################
-    # add define sigmavarspfncname_temp / sigmavarspfncname_temp_stan
+    # add define vf()
     ############################################################################
     
     if(set_model_sigma_by_fz |
@@ -8103,7 +8139,7 @@ bsitar <- function(x,
       sigmavarfunlist_r[[ii]] <- sigmavarget_s_r_funs[['r_funs']]
       sigmavargq_funs[[ii]]   <- sigmavarget_s_r_funs[['gq_funs']]
       
-      # now adding this, because it stores outcome specific sigmavarfun
+      # now adding this, because it stores outcome specific vf()
       include_fun_nameslist[[ii]] <-
         c(include_fun_nameslist[[ii]],
           sigmavarget_s_r_funs[['include_fun_names']])
@@ -8114,7 +8150,7 @@ bsitar <- function(x,
     ############################################################################
     ############################################################################
     ############################################################################
-    # end add define sigmavarspfncname / sigmavarspfncname_temp_stan
+    # end add define vf()
     ############################################################################
     
     
@@ -12950,12 +12986,6 @@ bsitar <- function(x,
                                         extract_sigma_by_mean, fixed = T)
         }
         
-        # This is because user has specified 'sigmavarfun' without ys
-        extract_sigma_by_mean <- gsub(sigmavarspfncname_temp, 
-                                      sigmavarspfncname, 
-                                      extract_sigma_by_mean, 
-                                      fixed = TRUE)
-     
         scode_final <- gsub(extract_sigma_by_mean_o, extract_sigma_by_mean,
                             scode_final, fixed = T)
       } # for (outrespbames in ys) {
@@ -13039,8 +13069,8 @@ bsitar <- function(x,
        set_model_sigma_by_re) {
       function_restore_mu_sigam_form <- function(model, 
                                                  ys, 
-                                                 set_model_sigma_by_mu_fun_str_c,
-                                                 sigmavarspfncname_temp) {
+                                                 set_model_sigma_by_mu_fun_str_c
+                                                 ) {
         ithx <- 0
         for (outrespbames in ys) {
           ithx <- ithx + 1
@@ -13066,12 +13096,6 @@ bsitar <- function(x,
                                     "(", base_mu_fun  ,")"),
                            str_edit, fixed = T)
           
-          if(nys > 1) {
-            str_edit <- gsub(sigmavarspfncname_temp, 
-                             paste0(outrespbames, "_", sigmavarspfncname_temp), 
-                             str_edit, fixed = TRUE)
-          }
-         
           sigma_forms <- str2lang(str_edit)
           attributes(sigma_forms) <- edit_attr
           if(nys == 1) {
@@ -13088,13 +13112,14 @@ bsitar <- function(x,
         function_restore_mu_sigam_form(model = brmsfit,
                                        ys = ys, 
                                        set_model_sigma_by_mu_fun_str_c = 
-                                         set_model_sigma_by_mu_fun_str_c,
-                                       sigmavarspfncname_temp = 
-                                         sigmavarspfncname_temp)
+                                         set_model_sigma_by_mu_fun_str_c)
       brmsfit$formula <- function_restore_mu_sigam_form_new
     } # if(set_model_sigma_by_fi | ...) {
     
+    # print(brmsfit$formula)
+    # stop()
     
+    # sigmavarspfncname sigmavarspfncname_stan
     
     ##############################################################
     ##############################################################
@@ -13242,10 +13267,10 @@ bsitar <- function(x,
     if(!exists('sigmavarspfncname_common')) {
       sigmavarspfncname_common <- NULL
     }
+    
     model_info[['sigmavarStanFun_name']] <- sigmavarspfncname_common 
     
-    
-    model_info[['sigmaStanFun_name']] <- sigmaspfncname_common 
+    model_info[['sigmaStanFun_name']]    <- sigmaspfncname_common 
     model_info[['sigmaxs']] <- sigmaxs
     model_info[['sigmaids']] <- sigmaids
     model_info[['sigmadfs']] <- sigmadfs
