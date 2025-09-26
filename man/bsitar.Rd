@@ -666,9 +666,14 @@ for setting priors on parameters defined by \code{'sigma_formula'},
 using an explicit variance function. The \pkg{'bsitar'} package provides six
 different methods for variance modeling, five of which are implemented in the
 \pkg{'nlme'} package. The variance modeling approach uses a helper function
-\code{'sigmavarfun'} that sets up the appropriate formulation for variance
-modeling within the \pkg{'bsitar'} package. The documentation below provides
-a detailed overview of the available methods and their usage.
+\code{'sigmavarfun'} (short hand form, \code{'vf'}) that sets up the
+appropriate formulation for variance modeling within the \pkg{'bsitar'}
+package.
+
+For multivariate models, the \code{'sigmavarfun'} is appropriately renamed to
+indicate response specific \code{'sigmavarfun'} by adding \code{'_response'}
+as prefix. The documentation below provides a detailed overview of the
+available methods and their usage.
 
 \strong{Available Methods} (short hands in parentheses):
 \itemize{
@@ -692,41 +697,42 @@ values as follows:\cr
 }
 
 Below are examples showing how to use \code{'sigmavarfun'} to specify each of
-the six variance models.
+the six variance models. We encourage the use of short hand form, \code{'vf'}
+to avoid any errors in correctly spelling the full form \code{'sigmavarfun'}
 
 \strong{1. varpower:}
 \preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 'vp') +
+  nlf(sigma ~ vf(param1, param2, predictor), method = 'vp') +
   lf(param1 + param2 ~ 1)
 }
 
 \strong{2. varConstPower:}
 \preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, param3, predictor), method = cp') + 
+  nlf(sigma ~ vf(param1, param2, param3, predictor), method = cp') + 
   lf(param1 + param2 + param3 ~ 1)
 }
 
 \strong{3. varExp:}
 \preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, predictor), method = 've') +
+  nlf(sigma ~ vf(param1, param2, predictor), method = 've') +
   lf(param1 + param2 ~ 1)
 }
 
 \strong{4. fitted:}
 \preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
+  nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +
   lf(param1 + param2 ~ 1)
 }
 
 \strong{5. residual:}
 \preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, identity(), resp), method = 're') + 
+  nlf(sigma ~ vf(param1, param2, identity(), resp), method = 're') + 
   lf(param1 + param2 ~ 1)
 }
 
 \strong{6. mean:}
 \preformatted{
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'me') +
+  nlf(sigma ~ vf(param1, param2, identity()), method = 'me') +
   lf(param1 + param2 ~ 1)
 }
 
@@ -795,9 +801,9 @@ For \code{multivariate} model, the \code{sigma_formula_manual} can be used
 set up different form and predictor variables for each outcome separately by
 using the list approach as shown below: \cr
 \code{sigma_formula_manual = list(
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
+  nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +
   lf(param1 + param2 ~ 1) ,
-  nlf(sigma ~ sigmavarfun(param1, param2, identity()), method = 'fi') +
+  nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +
   lf(param1 + param2 ~ 1)
   )}. \cr
 Note that formulation name \code{'nlf()'} should be same across all
@@ -1424,7 +1430,14 @@ parameter within a range defined by \code{init_r} (see below), or between
 \code{'prior'}: Initializes parameters based on the specified prior. \item
 \code{NULL} (default): Initial values are provided by the corresponding
 init arguments defined below.
-}}
+}
+
+Note that \code{init = NULL} assigns initials for fixed effects, and
+variance co variance parameters (\code{vcov_init_0 = FALSE}) based on the
+individual setting for each parameter. If you want to initiate all
+parameters as \code{'random'}, then you must set \code{init = 'random'}
+which will be translated to \code{init = NULL} argument for \code{init =
+ 'rstan'} and \code{init = 'cmdstanr'}.}
 
 \item{init_r}{A positive real value that defines the range for the random
 generation of initial values (default \code{NULL}). This argument is used

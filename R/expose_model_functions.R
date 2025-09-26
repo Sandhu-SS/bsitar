@@ -391,7 +391,6 @@ expose_model_functions.bgmfit <- function(model,
       spfun_collecti_name <- gsub("_d1", "1", spfun_collecti_name)
       spfun_collecti_name <- gsub("_d2", "2", spfun_collecti_name)
       getfun_ <- spfun_collect[[spfun_collecti]]
-      # if(vectorize) getfun_ <- Vectorize(getfun_, SIMPLIFY = TRUE)
       assign(spfun_collecti_name, getfun_, envir = envir)
       Spl_funs[[paste0(spfun_collecti_name, "")]] <- getfun_
       if(grepl("_d", spfun_collecti_name_org)) {
@@ -437,7 +436,7 @@ expose_model_functions.bgmfit <- function(model,
   if(expose_sigma_ls_model_fun) {
     allSplineFun_name <- c(allSplineFun_name, sigmaSplineFun_name)
   } else if(expose_sigma_var_model_fun) {
-    allSplineFun_name <- c(allSplineFun_name, sigmavarSplineFun_name)
+    # allSplineFun_name <- c(allSplineFun_name, sigmavarSplineFun_name)
   } else if(expose_sigma_basic_model_fun) {
     sigmabasicSplineFun_name <- model$model_info[['sigmabasicSplineFun_name']]
     allSplineFun_name <- c(allSplineFun_name, sigmabasicSplineFun_name)
