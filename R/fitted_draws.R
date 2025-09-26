@@ -122,7 +122,6 @@ fitted_draws.bgmfit <-
       envir <- envir
     }
     
-    # 20.03.2025
     assign_function_to_environment(transform_draws, 'transform_draws', 
                                    envir = NULL)
     
@@ -230,10 +229,7 @@ fitted_draws.bgmfit <-
     if(!plot_conditional_effects_calling) {
       if(!is.null(model$xcall)) {
         arguments <- get_args_(as.list(match.call())[-1], model$xcall)
-        
-        # This when call coming from plot_curves() or growthparameters()
-        # set_sanitize <- TRUE needed for set_sigma_grid_newdata()
-        # But now since set_sigma_grid_newdata used within the above funs
+        # This when call coming from 'plot_curves()' or 'growthparameters()'
         if(dpar == "sigma") {
           if(!is.null(model$model_info[["which_sigma_model"]])) {
             if(model$model_info[['which_sigma_model']] == "basic") {
@@ -285,15 +281,8 @@ fitted_draws.bgmfit <-
                                       check_trace_back  = NULL,
                                       envir = parent.frame(),
                                       verbose = verbose)
-      # 6.03.2025
       xcall_str           <- full.args$xcall_str
       full.args$xcall_str <- NULL
-    }
-    
-    
-    # 01.07.2025 - commented out decomp
-    if(!is.null(model$model_info$decomp)) {
-    #  if(model$model_info$decomp == "QR") model_deriv<- FALSE
     }
     
     
@@ -350,10 +339,8 @@ fitted_draws.bgmfit <-
     
     
     ############################################
-    
     # if sigma_model == "basic" and all function can be set with deriv 0 -> 1
     # out[['sigma_model_is_ba_set_d0_as_d1_val']] is zero
-    
     if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
       if(o[['sigma_model_is_ba_set_d0_as_d1']]) {
         deriv <- o[['sigma_model_is_ba_set_d0_as_d1_val']]
@@ -396,9 +383,7 @@ fitted_draws.bgmfit <-
     
 
     
-    ############################################
-   
-    # The deriv = 0/1 should also reflect in  setupfuns() 
+
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall,
                       usesavedfuns = usesavedfuns,
@@ -528,7 +513,6 @@ fitted_draws.bgmfit <-
                                  envir = parent.frame())
     
     
-    # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE
     calling.args$ipts <- ipts <- check_ipts(ipts = calling.args$ipts, 
@@ -542,7 +526,6 @@ fitted_draws.bgmfit <-
     }
     
     
-    # TODO - check - Transformation applied to draw if deriv = 0, 
     if(!check_fun) {
       if(deriv == 0) {
         if(!is.null(calling.args$model$
@@ -562,9 +545,6 @@ fitted_draws.bgmfit <-
     
     
     if(!indirectcall) {
-      # NOT FROM plot_curves() and growthparameters()
-      # for deriv > 0, imp each id to have enough data points
-      # can be also for deriv = 0, then just change to if(deriv >= 0)
       if(dpar == "sigma") {
         sigma_model <- get_sigmamodel_info(model = model,
                                            newdata = newdata,
@@ -625,8 +605,6 @@ fitted_draws.bgmfit <-
         }
         
         if(sigma_model != "ls" && need_velocity_curve) {
-          # if(sigma_model == "basic" && need_velocity_curve) {
-          # for deriv > 0, imp each id to have enough data points
           xvar <- check_set_xvar_sigma(model = model, 
                                        dpar = dpar, 
                                        xvar = xvar, 
@@ -698,11 +676,9 @@ fitted_draws.bgmfit <-
             if(verbose) {
               message(message_for_model_deriv_FALSE)
             }
-            # print("mmmm")
             calling.args_mapderivqr_args <- calling.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
-            # y0 <- calling.args$model$model_info$transform_draws(y0)
             if(!is.null(calling.args_mapderivqr_args$model$
                         model_info$transform_draws)) {
               y0 <- calling.args_mapderivqr_args$model$
@@ -749,7 +725,6 @@ fitted_draws.bgmfit <-
     
     full.args$object <- full.args$model
     
-    # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE
     full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
@@ -772,7 +747,6 @@ fitted_draws.bgmfit <-
             calling.args_mapderivqr_args <- full.args
             calling.args_mapderivqr_args[['summary']] <- FALSE
             y0 <- CustomDoCall(fitted, calling.args_mapderivqr_args)
-            # y0 <- calling.args$model$model_info$transform_draws(y0)
             if(!is.null(calling.args_mapderivqr_args$model$
                         model_info$transform_draws)) {
               y0 <- calling.args_mapderivqr_args$model$
@@ -807,7 +781,6 @@ fitted_draws.bgmfit <-
 
    
     
-    # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
    
     if(!is.null(eval(full.args$clearenvfuns))) {
@@ -829,7 +802,6 @@ fitted_draws.bgmfit <-
       }
     }
       
-    # Cleanup environment if requested
     if(setcleanup) {
       suppressWarnings({
         tempgenv <- envir
@@ -848,11 +820,9 @@ fitted_draws.bgmfit <-
     } # if(setcleanup) {
     
     
-    # fullframe
     full.args$idata_method <- idata_method
     full.args$fullframe <- eval(full.args$fullframe)
     
-    # 6.03.2025 - extract info for if(is.na(model$model_info$univariate_by$by)){
     if(!is.null(eval(full.args$fullframe))) {
       if(eval(full.args$fullframe)) {
         if (is.null(resp)) {
@@ -876,14 +846,6 @@ fitted_draws.bgmfit <-
         } else if (!is.null(idvar)) {
           idvar <- idvar
         }
-        # if (is.null(levels_id)) {
-        #   IDvar <- model$model_info[[groupvar_]]
-        #   if (!is.null(model$model_info[[hierarchical_]])) {
-        #     IDvar <- model$model_info[[hierarchical_]]
-        #   }
-        # } else if (!is.null(levels_id)) {
-        #   IDvar <- levels_id
-        # }
         xvar  <- xvar
         idvar <- idvar
         if(length(idvar) > 1) idvar <- idvar[1]
@@ -932,8 +894,6 @@ fitted_draws.bgmfit <-
           dplyr::filter(!!dplyr::sym(uvarbyresp) == 1)
         . <- cbind(., uvarbynewdata)
         
-        # 6.03.2025
-        # prepare_data2
         itransform_set <- get_itransform_call(itransform)
         if(any(itransform_set != "")) {
           . <- prepare_transformations(data = ., model = model, 
@@ -941,9 +901,8 @@ fitted_draws.bgmfit <-
         } # if(any(itransform_set != "")) {
       } # if(setfullframe) {
     } # if (!is.na(model$model_info$univariate_by$by)) {
-    # 6.03.2025
+    
     if (is.na(model$model_info$univariate_by$by)) {
-      # Fot plot_curves() and growthparameters(), . must be be combined
       if(!is.null(eval(full.args$fullframe))) {
         if(eval(full.args$fullframe)) {
           cbindtonewdata <- eval(full.args$newdata)
@@ -951,7 +910,6 @@ fitted_draws.bgmfit <-
         }
       }
       
-      # prepare_data2
       itransform_set <- get_itransform_call(itransform)
       cbindtonewdata <- eval(full.args$newdata)
       if(any(itransform_set != "")) {

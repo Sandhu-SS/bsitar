@@ -461,10 +461,7 @@ plot_curves.bgmfit <- function(model,
     arguments$idata_method <- idata_method <- 'm2'
   }
   
-  
-  # Remove argument 'deriv' if user specified it by mistake. 
-  # The 'deriv' argument is set internally based on the the 'opt' argument
-  
+ 
   arguments$deriv <- NULL
   
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -554,7 +551,6 @@ plot_curves.bgmfit <- function(model,
                                         itransform = itransform,
                                         verbose = verbose)
       
-      # Imp to assign arguments[['transform_draws']] 
       arguments[['transform_draws']] <- transform_draws
     }
     
@@ -590,8 +586,6 @@ plot_curves.bgmfit <- function(model,
     }
     
     if(sigma_model != "ls" && need_velocity_curve) {
-    # if(sigma_model == "basic" && need_velocity_curve) {
-      # for deriv > 0, imp each id to have enough data points
       xvar <- check_set_xvar_sigma(model = model, 
                                    dpar = dpar, 
                                    xvar = xvar, 
@@ -791,16 +785,7 @@ plot_curves.bgmfit <- function(model,
     
     
     if (!identical(testdata1, testdata2)) {
-      # warning(
-      #   "You have specified 'a' (adjusted curves) and/or 'u'",
-      #   "\n  (unadjusted curves) in the opt argument (i.e., opt = 'au') ",
-      #   "\n ",
-      #   " but newdata is not identical to the data fitted.",
-      #   "\n ",
-      #   " Please note that adjusted and unadjusted curves will be",
-      #   "\n ",
-      #   " plotted using the original data fitted"
-      # )
+      #
     }
   }
   
@@ -830,7 +815,6 @@ plot_curves.bgmfit <- function(model,
   arguments$draw_ids <- draw_ids
   
   
-  # 6.03.2025 - remove missing GOOD
   for (i in names(arguments)) {
     if(is.symbol(arguments[[i]])) {
       if(deparse(arguments[[i]]) == "") {
@@ -840,38 +824,6 @@ plot_curves.bgmfit <- function(model,
   }
   
 
-  
-  ########################################################
-  # 02.08.2025
-  # add_prefix_to_fun <- ""
-  # if(!is.null(dpar)) {
-  #   if(dpar == "mu") {
-  #     add_prefix_to_fun <- ""
-  #   } else if(dpar == "sigma") {
-  #     add_prefix_to_fun <- "sigma"
-  #   }
-  # } 
-  # # prepare_data2
-  # if (is.null(resp)) {
-  #   resp_rev_ <- resp
-  # } else if (!is.null(resp)) {
-  #   resp_rev_ <- paste0("_", resp)
-  # }
-  # ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-  # # 02.08.2025
-  # ifunx_ <- ifunx_name <- paste0(add_prefix_to_fun, ifunx_)
-  # ifunx_ <- model$model_info[[ifunx_]]
-  # 
-  # if(is.null(ifunx_)) {
-  #   if(!is.null(itransform)) {
-  #     if(itransform != "") {
-  #       model$model_info[[ifunx_name]] <- ifunx_ <- itransform
-  #     }
-  #   } else if(is.null(itransform)) {
-  #     #
-  #   }
-  # }
-  
   
   
   check_set_fun <- check_set_fun_transform(model = model, 
@@ -915,11 +867,8 @@ plot_curves.bgmfit <- function(model,
   
   ##############################################################
   ##############################################################
-  # prepare_data2
-  # newdata and xvar of curves are reverse transformed here 
-  # growthparameters are are reverse transformed in growthparameters - ifunx_
+ 
   newdata_before_itransform <- newdata
-  # itransform_set -> what to transform -> c('x', 'y', 'sigma')
   itransform_set <- get_itransform_call(itransform = itransform,
                                         model = model, 
                                         newdata = newdata,
@@ -951,11 +900,7 @@ plot_curves.bgmfit <- function(model,
     }
   }
   
-  
-  
-  # Keep flag itransform_set != "" here only 
-  # Decide if need to perform itransform here or returned data 
-  # return(d.out) will also be taken care off  
+
   if(any(itransform_set != "")) {
     d. <- prepare_transformations(data = d., model = model,
                                   itransform = itransform_set)
@@ -992,9 +937,6 @@ plot_curves.bgmfit <- function(model,
   
   
   name.hline <- c()
-  
-  # Don't let hline - i.e, velocity - need to work out fwd rev intercepts
-  # name.vline <- c(name.vline, name.atv, name.apv, name.acv)
 
   x_minimum <- min(newdata[[Xx]])
   x_maximum <- max(newdata[[Xx]])
@@ -1513,11 +1455,7 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
-      # data_dvx <<- data_dv
-      # print(str(data_dv))
-      # print(Xx)
-
-      
+    
       if(length( unique(round(data_dv$Estimate.y, 6))) == 1) {
         stop("The velocity estimates are identical over the entire range of x",
              "\n  ", 
@@ -1568,8 +1506,7 @@ plot_curves.bgmfit <- function(model,
       if(length(get_color_) != ngrpanels) get_color_ <- 
         rep(get_color_, ngrpanels)
       
-      # Added on 27 12 2023 - but error from somewhere else 
-      
+
       if(!exists('legendlabs_mult_line')) legendlabs_mult_line <- 'solid'
       if(!exists('legendlabs_mult_color')) legendlabs_mult_color <- 'black'
       if(!exists('legendlabs_mult_singel')) legendlabs_mult_singel <- 'solid'
@@ -1605,8 +1542,6 @@ plot_curves.bgmfit <- function(model,
             ),
             alpha = band.alpha
           )
-        # plot.o <- plot.o +
-        #   ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
       }
       
       if (grepl("v", bands, ignore.case = T)) {
@@ -1626,8 +1561,6 @@ plot_curves.bgmfit <- function(model,
       }
       
       
-      # Match band color with the line color 
-      # Needed because opt might be 'dv' and band 'd' or 'v'
       if((grepl("d", bands, ignore.case = T) & 
           !grepl("v", bands, ignore.case = T)) |
          !grepl("d", bands, ignore.case = T) & 
@@ -1778,11 +1711,7 @@ plot_curves.bgmfit <- function(model,
                                deriv = NULL, 
                                envir = envir,
                                ...) 
-      
-      # prepare_data2: 
-      # d.out is for returndata = TRUE
-      # out_a_ <- d.out <- trimline... 
-      # to out_a_ <- trimline... and then after itransform d.out - out_a_
+ 
       out_a_ <- trimlines_curves(model, 
                                  x = Xx,
                                  y = Yy,
@@ -1800,17 +1729,13 @@ plot_curves.bgmfit <- function(model,
                                  envir = envir,
                                  ...)
       
-      # Need to match out_a_ transformation because x_minimum_a_ etc.
       if(any(itransform_set != "")) {
         out_a_ <- prepare_transformations(data = out_a_, model = model,
                                           itransform = itransform_set)
       }
       
       d.out <- out_a_
-      
-      
-      # 6.03.2025
-      ##############################################################3
+
       dots <- list(...)
       set_get_dv <- FALSE
       if(!is.null(dots$get_dv)) {
@@ -1824,7 +1749,6 @@ plot_curves.bgmfit <- function(model,
         return(out_a_)
       }
       
-      # 6.03.2025
       if(!is.null(dots$xadj_tmt)) {
         if(dots$xadj_tmt) {
           return(out_a_)
@@ -1836,7 +1760,7 @@ plot_curves.bgmfit <- function(model,
           return(out_a_)
         }
       }
-      ##############################################################
+
       
       
       out_a_ <-
@@ -1905,8 +1829,6 @@ plot_curves.bgmfit <- function(model,
           ggplot2::aes(
             y = !!as.name(Yy),
             group = groupby.x # ,
-            # linetype = groupby_line.x,
-           # colour = groupby_color.x # this was causing issues in 'dvau
           ),
           linewidth = linewidth.main
         ) +
@@ -1999,10 +1921,7 @@ plot_curves.bgmfit <- function(model,
                                    envir = envir,
                                    ...)
       
-      # prepare_data2: 
-      # d.out is for returndata = TRUE
-      # out_u_ <- d.out <- trimline... 
-      # to out_u_ <- trimline... and then after itransform d.out - out_a_
+    
       out_u_ <- trimlines_curves(model, 
                                  x = Xx,
                                  y = Yy,
@@ -2020,7 +1939,6 @@ plot_curves.bgmfit <- function(model,
                                  envir = envir,
                                  ...)
       
-      # Need to match out_a_ transformation because x_minimum_a_ etc.
       if(any(itransform_set != "")) {
         out_u_ <- prepare_transformations(data = out_u_, model = model,
                                           itransform = itransform_set)
@@ -2081,13 +1999,10 @@ plot_curves.bgmfit <- function(model,
           y = !!as.name(Yy),
          # group = groupby, # this was causing duplicate aesthetic
           group = groupby.y # ,
-          # linetype = groupby_line.y,
-         # colour = groupby_color.y # this was causing pallette issues in 'dvau
         ),
         linewidth = linewidth.main
       ) +
       ggplot2::labs(x = label.x, y = label.d, color = "") +
-      # ggplot2::scale_color_manual(values = c(color.unadj)) +
       ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
       jtools::theme_apa(legend.pos = legendpos) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
@@ -2110,7 +2025,6 @@ plot_curves.bgmfit <- function(model,
       if(length(get_color_) != ngrpanels) get_color_ <- 
         rep(get_color_, ngrpanels)
       
-      # These will be carried forward for ribbon also (below)
       if(ngrpanels > 1) {
         get_line_ <- get_line_
         get_color_ <- get_color_
@@ -2371,8 +2285,6 @@ plot_curves.bgmfit <- function(model,
     attr(d.out, 'growthparameters') <- p.as.d.out_attr
     if(returndata_add_parms) {
       if(!is.null(p.as.d.out_attr)) {
-        # print(groupby_str_v)
-        # Note gpdata can be NULL because we have added attribute above
         d.out <- add_parms_to_curve_data(d.out, 
                                          gpdata = NULL,
                                          Parametername = "Parameter",
@@ -2385,6 +2297,7 @@ plot_curves.bgmfit <- function(model,
   } # else if (returndata) {
   
 } # end plot_curves
+
 
 
 

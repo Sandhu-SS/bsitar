@@ -95,13 +95,7 @@ loo_validation.bgmfit <-
     } else {
       envir <- envir
     }
-    
-   
-    
-    # 20.03.2025
-    # Depending on dpar 'mu' or 'sigma', subset model_info
-    # This only when set_sigma_manual used to model a b c 
-    # Not when a function such as splines::ns etc used in sigma_formula
+
     
     if(is.null(dpar)) {
       dpar <- "mu"

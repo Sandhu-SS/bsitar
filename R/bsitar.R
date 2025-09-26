@@ -1356,6 +1356,13 @@
 #'    \code{NULL} (default): Initial values are provided by the corresponding
 #'    init arguments defined below.
 #'  }
+#'  
+#'  Note that \code{init = NULL} assigns initials for fixed effects, and
+#'  variance co variance parameters (\code{vcov_init_0 = FALSE}) based on the
+#'  individual setting for each parameter. If you want to initiate all
+#'  parameters as \code{'random'}, then you must set \code{init = 'random'}
+#'  which will be translated to \code{init = NULL} argument for \code{init =
+#'  'rstan'} and \code{init = 'cmdstanr'}.
 #'
 #' @param init_r A positive real value that defines the range for the random
 #'   generation of initial values (default \code{NULL}). This argument is used

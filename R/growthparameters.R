@@ -468,13 +468,7 @@ growthparameters.bgmfit <- function(model,
     envir <- envir
   }
   
-  # 20.03.2025
-  # assign_function_to_environment(transform_draws, 'transform_draws', 
-  #                                envir = NULL)
-  # model$model_info[['transform_draws']] <- transform_draws
-  
-  
-  
+ 
   if(is.null(dpar)) {
     dpar <- "mu"
   }
@@ -560,38 +554,6 @@ growthparameters.bgmfit <- function(model,
            "is one i.e., all values are exact same.",
            "\n ",
            "If this is intentional, then ignore this message")
-  
-  ########################################################
-  # # 02.08.2025
-  # add_prefix_to_fun <- ""
-  # if(!is.null(dpar)) {
-  #   if(dpar == "mu") {
-  #     add_prefix_to_fun <- ""
-  #   } else if(dpar == "sigma") {
-  #     add_prefix_to_fun <- "sigma"
-  #   }
-  # }
-  # # prepare_data2
-  # if (is.null(resp)) {
-  #   resp_rev_ <- resp
-  # } else if (!is.null(resp)) {
-  #   resp_rev_ <- paste0("_", resp)
-  # }
-  # ifunx_ <- paste0('ixfuntransform2', resp_rev_)
-  # # 02.08.2025
-  # ifunx_ <- ifunx_name <- paste0(add_prefix_to_fun, ifunx_)
-  # ifunx_ <- model$model_info[[ifunx_]]
-  # 
-  # # new 
-  # if(is.null(ifunx_)) {
-  #   if(!is.null(itransform)) {
-  #     if(itransform != "") {
-  #       model$model_info[[ifunx_name]] <- ifunx_ <- itransform
-  #     }
-  #   } else if(is.null(itransform)) {
-  #     #
-  #   }
-  # }
   
   
   
@@ -737,7 +699,7 @@ growthparameters.bgmfit <- function(model,
       
       if(sigma_model != "ls" && need_velocity_curve) {
         # if(sigma_model == "basic" && need_velocity_curve) {
-        # for deriv > 0, imp each id to have enough data points
+        # for deriv > 0, each id to have enough data points
         xvar <- check_set_xvar_sigma(model = model, 
                                      dpar = dpar, 
                                      xvar = xvar, 
@@ -1777,18 +1739,7 @@ growthparameters.bgmfit <- function(model,
     return(out_summary)
   } # if (arguments$plot) {
   
-  
-  # # 6.03.2025
-  # dots <- list(...)
-  # set_get_dv <- FALSE
-  # if(!is.null(dots$get_dv)) {
-  #   if(dots$get_dv) {
-  #     if(verbose) message("executing 'get_dv'!")
-  #     set_get_dv <- TRUE
-  #   }
-  # }
-  
-  
+ 
   if (!arguments$plot) {
     if(!is.null(arguments$deriv)) {
       stop("argument 'deriv' is not allowed for 'growthparameters()'")
@@ -1941,14 +1892,7 @@ growthparameters.bgmfit <- function(model,
       # 6.03.2025
       arguments$fullframe <- NULL 
       arguments$itransform <- ""
-      
-      
-      
-      # argumentsx <<- arguments
-      # nrow(eval(arguments$newdata)) %>% print()
-      # print("mmmm")
-      # CustomDoCall(fitted_draws, argumentsx) %>% print()
-      # stop()
+
      
       if (estimation_method == 'fitted') {
         out_v_ <- CustomDoCall(fitted_draws, arguments)
@@ -1956,19 +1900,10 @@ growthparameters.bgmfit <- function(model,
         out_v_ <- CustomDoCall(predict_draws, arguments)
       }
       
-      # out_v_x <<- out_v_
-      # out_v_x %>% range()
-      # print(xvar)
-      
+     
 
      if(is.null(out_v_)) return(invisible(NULL))
-      
-      # # 6.03.2025
-      # if(set_get_dv) {
-      #   if(verbose) message("returning draws for 'get_dv'")
-      #   return(out_v_)
-      # }
-      
+
       out_v__apv_ <- out_v_
       if (!summary) {
         out_v <- call_posterior_summary((out_v_))
@@ -2079,10 +2014,7 @@ growthparameters.bgmfit <- function(model,
                              digits, ...)
     } # if(!is.null(avg_reffects)) {
     
-   
-    # 6.03.2025
-    # itransform is not doing anything, it will be ignored in prepare_transform
-    # itransform_set <- get_itransform_call(itransform)
+ 
     
     newdata_before_itransform <- newdata
     

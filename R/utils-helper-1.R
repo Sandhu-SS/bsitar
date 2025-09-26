@@ -3585,6 +3585,7 @@ brms_via_cmdstanr <- function(scode,
                             user_header = NULL,
                             compile_model_methods = FALSE,
                             compile_hessian_method = FALSE,
+                            threads = stan_threads,
                             compile_standalone = FALSE)
   
   
@@ -3603,9 +3604,9 @@ brms_via_cmdstanr <- function(scode,
       pathfinder_args_final <- list()
       pathfinder_args_final[['refresh']] <- 0
       
-      pathfinder_args_final[['save_cmdstan_config']] <- TRUE
-      pathfinder_args_final[['show_messages']] <- FALSE
-      pathfinder_args_final[['show_exceptions']] <- FALSE
+      pathfinder_args_final[['save_cmdstan_config']] <- TRUE # NULL
+      pathfinder_args_final[['show_messages']]       <- FALSE
+      pathfinder_args_final[['show_exceptions']]     <- FALSE
       
       if(!is.null(brm_args$threads$threads)) {
         pathfinder_args_final[['num_threads']] <- brm_args$threads$threads
@@ -3623,22 +3624,57 @@ brms_via_cmdstanr <- function(scode,
                                                         brm_args)
       
       pathfinder_args_final[['refresh']] <- 0
-      pathfinder_args_final[['save_cmdstan_config']] <- TRUE
-      pathfinder_args_final[['show_messages']] <- FALSE
-      pathfinder_args_final[['show_exceptions']] <- FALSE
+      pathfinder_args_final[['save_cmdstan_config']] <- TRUE # NULL
+      pathfinder_args_final[['show_messages']]       <- FALSE
+      pathfinder_args_final[['show_exceptions']]     <- FALSE
     }
     
     if(verbose) {
       message("Running '$pathfinder()' for initial values")
     }
     
-    suppressWarnings(suppressMessages({
-      cb_pathfinder <- CustomDoCall(c_scode$pathfinder, pathfinder_args_final)
-    }))
+   
     
     
+    # Sometimes, random initial i.e, init = NULL fails
+    enverr. <- environment()
+    assign('err.', FALSE, envir = enverr.)
+    tryCatch(
+      expr = {
+        cb_pathfinder <- CustomDoCall(c_scode$pathfinder, pathfinder_args_final)
+      },
+      error = function(e) {
+        assign('err.', TRUE, envir = enverr.)
+      },
+      warning = function(w) {
+       # assign('err.', TRUE, envir = enverr.)
+      }
+    )
+    err. <- get('err.', envir = enverr.)
+    if(!err.) {
+      if(!exists('cb_pathfinder')) err. <- TRUE
+    }
+    
+    if (err.) {
+      stop("Current setting of 'init' argument fails 'pathfinder()'",
+           "\n  ",
+           "Please try some other configuration of initial values",
+           "\n  ",
+           "First try 'vcov_init_0 = TRUE', if still fails, then 'init = 0'") 
+    } else {
+      cb_pathfinder <- cb_pathfinder
+    }
+    
+  
+    # suppressWarnings(suppressMessages({
+    #   cb_pathfinder <- CustomDoCall(c_scode$pathfinder, pathfinder_args_final)
+    # }))
+    
+   
+    
+    cb_pathfinder_init <- NULL
     if(pathfinder_init) {
-      brm_args$init <-  cb_pathfinder
+      brm_args$init      <-  cb_pathfinder
     } else if(!pathfinder_init) {
       cb_pathfinder <- brms::read_csv_as_stanfit(cb_pathfinder$output_files(), 
                                                  model = c_scode)
@@ -3655,14 +3691,8 @@ brms_via_cmdstanr <- function(scode,
     }
   } # if(call_pathfinder_) 
   
-  
 
   ################################
-  
-  # print(brm_args$init)
-  # print("mmmm")
-  # stop()
-  
   
   cb_fit <- c_scode$sample(
     data = sdata,

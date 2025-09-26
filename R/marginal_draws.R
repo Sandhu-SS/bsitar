@@ -199,8 +199,6 @@ marginal_draws.bgmfit <-
     if(is.null(ei_agg)) ei_agg <- "eti"
     
     
-    # 6.03.2025
-    # Also, set 'marginaleffects_lean' to FALSE for 'posterior_draws()' to work
     lean_ <- getOption("marginaleffects_lean")
     options("marginaleffects_lean" = FALSE)
     on.exit(options("marginaleffects_lean" = lean_), add = TRUE)
@@ -272,11 +270,7 @@ marginal_draws.bgmfit <-
                            resp = resp, 
                            deriv = NULL, 
                            verbose = verbose)
-    
-    
-    # For sigma
-    # Run this to get full data via modified get_data() for insight
-    # See 'custom_get_data.brmsfit' in utils-helper-1
+
     
     if(is.null(model$test_mode)) {
       model$test_mode <- FALSE
@@ -381,12 +375,7 @@ marginal_draws.bgmfit <-
     if(check_set_fun[['was_null']]) {
       model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
     }
-    
-     
-    # print(model$xcall)
-    
-    ########################################################
-    
+
     
     ########################################################
     # Define lables fun for x- axis
@@ -525,8 +514,7 @@ marginal_draws.bgmfit <-
     
     
     model$model_info[['difx']] <- difx
-    # arguments$model$model_info[['difx']] <- difx
-    
+
     if(dpar == "sigma") {
       sigma_model <- get_sigmamodel_info(model = model,
                                          newdata = newdata,
@@ -539,9 +527,6 @@ marginal_draws.bgmfit <-
       
       model$model_info[['which_sigma_model']] <- sigma_model
       
-      # arguments$model$model_info[['which_sigma_model']] <- 
-      #   model$model_info[['which_sigma_model']] <- sigma_model
-      
       if(is.null(transform_draws)) {
         transform_draws <- 
           check_set_transform_draws_sigma(model = model, 
@@ -552,9 +537,6 @@ marginal_draws.bgmfit <-
                                           transform_draws = transform_draws,
                                           itransform = itransform,
                                           verbose = verbose)
-        
-        # Imp to assign arguments[['transform_draws']] 
-        # arguments[['transform_draws']] <- transform_draws
       }
       
       
@@ -598,25 +580,7 @@ marginal_draws.bgmfit <-
                                      auto = TRUE,
                                      verbose = verbose)
         
-        # newdata <- set_sigma_grid_newdata(model = model,
-        #                                   newdata = newdata,
-        #                                   resp = resp, 
-        #                                   dpar = NULL, 
-        #                                   idvar = NULL,
-        #                                   xvar = xvar,
-        #                                   difx = difx,
-        #                                   difx_asit = FALSE,
-        #                                   auto = TRUE,
-        #                                   xrange = NULL,
-        #                                   length.out = NULL,
-        #                                   grid_add = grid_add,
-        #                                   grid_type= NULL,
-        #                                   verbose = verbose)
-        
-        
         model$model_info[['xvar_for_sigma_model_basic']] <- xvar
-        # arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
-        # arguments$newdata <- newdata
       } # if(sigma_model == "basic") {
     } # if(dpar == "sigma") {
     
@@ -637,9 +601,7 @@ marginal_draws.bgmfit <-
     assign_function_to_environment(transform_draws, 'transform_draws',
                                    envir = NULL)
     
-    # arguments$model$model_info[['transform_draws']] <-
     model$model_info[['transform_draws']] <- transform_draws
-    
     
     
     if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
@@ -1253,13 +1215,6 @@ marginal_draws.bgmfit <-
     
     predictions_arguments$by         <- set_group
     
-    # print(predictions_arguments$variables)
-    # print(predictions_arguments$by)
-    # stop()
-    
-    # For plot, if set_group has been set up as FALSE, convert it to NULL
-    # This because 'by' Must be of type 'character' (or 'NULL'), not 'logical'. 
-    
     if(plot) {
       if(is.logical(predictions_arguments$by)) {
         if(!predictions_arguments$by) {
@@ -1390,20 +1345,7 @@ marginal_draws.bgmfit <-
    
    exclude_args_con_by <- exclude_args
    
-   
-   # marginal effects will handle this error
-   # if(plot) {
-   #   if(is.null(predictions_arguments[['by']]) &
-   #      is.null(predictions_arguments[['condition']])) {
-   #     stop("Both `condition` and `by` are NULL.",
-   #          "\n ",
-   #          " If plot = TRUE, then one of them must be specified")
-   #   }
-   # }
-   
-   
-   
-   
+  
  
    if(plot) {
      if(!is.null(predictions_arguments[['condition']]))
@@ -1436,7 +1378,6 @@ marginal_draws.bgmfit <-
           collapse_comma(allowed_methods)
      )
   
-   
    
    
    
@@ -1539,10 +1480,7 @@ marginal_draws.bgmfit <-
      } # if(call_slopes) {
    } # if(method == 'pkg') {
 
-    
-  
-   # This from marginaleffects does not allow na.rm
-   # So use stats::quantile instead
+
    get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
    get_etix <- stats::quantile
    get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
@@ -1583,10 +1521,8 @@ marginal_draws.bgmfit <-
    }
    
    
-   # start method = 'custom'
    pdrawsp_est <- NULL
    pdrawsh_est <- NULL
-   # pdraws_est <- NULL
 
    if(method == 'custom') {
      predictions_arguments[['cross']] <- NULL
@@ -1596,26 +1532,18 @@ marginal_draws.bgmfit <-
      
      
      if(future_splits_exe) {
-       # Note that since predictions_arguments are passed to multisession, 
-       # evaluate each argument
        for (i in names(predictions_arguments)) {
          predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
        }
      }
      
-     # 6.03.2025
-     # comparison argument not supported for slopes
+  
      if(check_fun) {
        if(!available_d1) {
          predictions_arguments[['comparison']] <- NULL
        }
      }
-   
-     # print(deriv)
-     # print(call_slopes)
-     # print(call_predictions)
-     # print(model_deriv)
-     
+
      if(!future_splits_exe & callfuns) {
        if(call_predictions) {
          if(!plot) {
@@ -1722,8 +1650,6 @@ marginal_draws.bgmfit <-
                suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
                return(outp)
              } # else if(!force_condition_and_by_switch_plot) {
-             # outp <- CustomDoCall(marginaleffects::plot_predictions, 
-             #                     predictions_arguments)
            } # if(!check_fun) {
            
            if(check_fun) {
@@ -1763,9 +1689,8 @@ marginal_draws.bgmfit <-
                    suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
                    return(outp)
                  } # else if(!force_condition_and_by_switch_plot) {
-                 # outp <- CustomDoCall(marginaleffects::plot_predictions, 
-                 #                     predictions_arguments)
                } 
+               
                if(!available_d1) {
                  if(force_condition_and_by_switch_plot) {
                    # predictions_arguments <- predictions_arguments.org
@@ -1801,20 +1726,9 @@ marginal_draws.bgmfit <-
                    suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
                    return(outp)
                  } # else if(!force_condition_and_by_switch_plot) {
-                 # outp <- CustomDoCall(marginaleffects::plot_slopes, 
-                 #                     predictions_arguments)
                }
              } # if(deriv > 0) {
            } # if(check_fun) {
-           # outp <- out
-           # if(!force_condition_and_by_switch_plot) {
-           #   if(!showlegends) {
-           #     outp <- outp + ggplot2::theme(legend.position = 'none')
-           #   }
-           #   # 6.03.2025
-           #   suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
-           #   return(outp)
-           # } # if(!force_condition_and_by_switch_plot) {
          } # if(check_fun) {
        } # if(call_predictions) {
        
@@ -2236,7 +2150,6 @@ marginal_draws.bgmfit <-
              suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
              return(outp)
            } # else if(!force_condition_and_by_switch_plot) {
-           
          } # else if(plot) {
        } # if(call_predictions) {
        
@@ -2374,8 +2287,6 @@ marginal_draws.bgmfit <-
          onex0 <- lapply(1:length(future_splits_at), 
                          FUN = posterior_draws_function)
          onex0 <- onex0 %>% CustomDoCall(rbind, .)
-         # Note that above onex0 has 'drawid' exact same as splits
-         # but somehow, we need consecutive 'drawid' for summarising
          onex0 <- consecutive_drawid_function(onex0)
        }
      }
@@ -2428,8 +2339,6 @@ marginal_draws.bgmfit <-
      }
      
 
-     # 16.10.2024
-     # when marginals are given, then need to summarise
      if(setmarginals) {
        namesx <- c('estimate', 'conf.low', 'conf.high')
        setdrawidparm_at_ <- c(by, namesx)
@@ -2441,11 +2350,7 @@ marginal_draws.bgmfit <-
          )  %>% collapse::frename(., setdrawidparm_at_)
      } # if(setmarginals) {
      
-     
-     
-     # 4.10.2024
-     # The by is setting as set_group instead of by from the argument
-     # Therefore checking if not FALSE
+
      if(!setmarginals) {
        setdrawidparm <- by
        namesx <- c('estimate', 'conf.low', 'conf.high')
@@ -2605,7 +2510,6 @@ marginal_draws.bgmfit <-
    ##############################################################
    # prepare_data2
    newdata_before_itransform <- newdata
-   # itransform_set <- get_itransform_call(itransform)
    itransform_set <- get_itransform_call(itransform = itransform,
                                          model = model, 
                                          newdata = newdata,

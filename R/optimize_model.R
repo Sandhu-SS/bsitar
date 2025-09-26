@@ -241,14 +241,6 @@ optimize_model.bgmfit <- function(model,
   
   o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
-  # o <-
-  #   post_processing_checks(model = model,
-  #                          xcall = match.call(),
-  #                          resp = NULL,
-  #                          envir = envir,
-  #                          deriv = 0,
-  #                          all = FALSE)
-  
   call_o <- match.call()
   call_o_args <- as.list(call_o)[-1]
   
@@ -314,30 +306,13 @@ optimize_model.bgmfit <- function(model,
   }
   
   
-  # for (bayes_Ri in add_bayes_R) {
-  #   if (!bayes_Ri %in% c("bayes_R2")) {
-  #     stop("only bayes_R2 as R square measure is supported")
-  #   }
-  # }
-  
-  
-  
   need_exposed_function <- FALSE
   if(!is.null(add_fit_criteria)) {
     need_exposed_function <- TRUE
   } else if(is.list(add_fit_criteria)) {
     if(!any(is.null(add_fit_criteria[[1]]))) need_exposed_function <- TRUE
   } 
-  
-  # else if(!is.null(add_bayes_R)) {
-  #   need_exposed_function <- TRUE
-  # } else if(is.list(add_bayes_R)) {
-  #   if(!any(is.null(add_bayes_R[[1]]))) need_exposed_function <- TRUE
-  # }
-
-  
-  
-  # The 'expose_function' must be TRUE when adding fit criteria or bayes R2
+ 
   if (need_exposed_function) {
     if(is.null(expose_function)) {
       args_o$expose_function <- expose_function <- TRUE
@@ -446,11 +421,7 @@ optimize_model.bgmfit <- function(model,
     optimize_y <- remove_between_first_last_parnth(optimize_y, splitat = ",")
   }
   
-  # expand.grid(optimize_dfx, optimize_x2, optimize_yx) %>% print()
-  # stop()
-  
-  
-  
+ 
   optimize_df_x_y <-
     expand.grid(optimize_df, optimize_x, optimize_y)
   
@@ -475,10 +446,6 @@ optimize_model.bgmfit <- function(model,
       summary_of_obj <- NULL
     summary_of_obj
   }
-  
-  # resp = NULL is only used as a placeholder that too only for multivariate
-  # If NULL, then combined log likelihood used for multivariate model
-  # otherwise separate log likelihood  for each response
 
   add_citeria_fun <- function(fit,
                               add_fit_criteria = NULL,
@@ -756,9 +723,6 @@ optimize_model.bgmfit <- function(model,
         },
         error = function(e) {
           assign('err.', TRUE, envir = enverr.)
-          # message(paste("Computation of criterias failed:", add_fit_criteria))
-          # message("Below is the returned original error message:")
-          # message(conditionMessage(e))
         }
       )
       err. <- get('err.', envir = enverr.)
@@ -822,9 +786,6 @@ optimize_model.bgmfit <- function(model,
         },
         error = function(e) {
           assign('err.', TRUE, envir = enverr.)
-          # message(paste("Computation of criterias failed:", add_fit_criteria))
-          # message("Below is the returned original error message:")
-          # message(conditionMessage(e))
         }
       )
       err. <- get('err.', envir = enverr.)
@@ -889,9 +850,6 @@ optimize_model.bgmfit <- function(model,
           },
           error = function(e) {
             assign('err.', TRUE, envir = enverr.)
-            # message(paste("Computation of criterias failed:", add_fit_criteria))
-            # message("Below is the returned original error message:")
-            # message(conditionMessage(e))
           }
         )
         err. <- get('err.', envir = enverr.)
@@ -952,10 +910,6 @@ optimize_model.bgmfit <- function(model,
           },
           error = function(e) {
             assign('err.', TRUE, envir = enverr.)
-            # message(paste("Computation of criterias failed:",
-            # add_fit_criteria))
-            # message("Below is the returned original error message:")
-            # message(conditionMessage(e))
           }
         )
         err. <- get('err.', envir = enverr.)
@@ -1094,19 +1048,12 @@ optimize_model.bgmfit <- function(model,
       
       
       
-      # changed -> 21.07.2024
-      
-      # user_call_data_name <- user_call$data
-      # assign(deparse(user_call_data_name), newdata)
-      
       newargs[['data']] <- base::str2lang("newdata")
       user_call <- rlang::call_modify(user_call, !!!newargs)
       
-      # Setting it to FALSE because we are exposing it anyways below
       user_call$expose_function <- FALSE
       
-      ####
-      # Modify priors for log transformed outcome y
+     
       transform_allowed_dist <- 
         c('normal', 'student_t', 'student_nu', 'cauchy', 'lognormal')
       
@@ -1503,32 +1450,13 @@ optimize_model.bgmfit <- function(model,
       }
     
      
-      ###
+
       fit <- eval(user_call)
   
       if(!exe_model_fit) {
         return(fit)
       }
       
-      # if(!exe_model_fit) {
-      #   if(get_priors) {
-      #     return(CustomDoCall(brms::get_prior, brm_args))
-      #   } else if(get_standata) {
-      #     return(CustomDoCall(brms::make_standata, brm_args))
-      #   } else if(get_stancode) {
-      #     return(scode_final)
-      #   } else if(get_priors_eval) {
-      #     return(get_priors_eval_out)
-      #   } else if(validate_priors) {
-      #     return(CustomDoCall(brms::validate_prior, brm_args))
-      #   } else if(get_init_eval) {
-      #     return(brm_args$init)
-      #   } else if(get_formula) {
-      #     return(brm_args$formula)
-      #   } else if(get_stanvars) {
-      #     return(brm_args$stanvars)
-      #   }
-      # } 
       
       if("brmsfit" %in% class(fit) | "bgmfit" %in% class(fit)) {
         class_fit <- TRUE
@@ -1582,13 +1510,6 @@ optimize_model.bgmfit <- function(model,
       fit$model_info$optimize_df <- df_print
       fit$model_info$optimize_x <- xfun_print
       fit$model_info$optimize_y <- yfun_print
-      
-      # Add fit_criteria and bares_R to the fit
-      # Also, add summary data frames for criteria and R square
-      # 'setresp' to anything so that even multivariate will be response wise
-      # if desired, this behavior
-      # if(length(fit$model_info$yvars) == 1) setresp <- NULL
-      # if(length(fit$model_info$yvars) > 1) setresp <- 'TRUE'
       
       if (fit$model_info$multivariate$mvar) {
         if (byresp) {
@@ -1799,7 +1720,6 @@ optimize_model.bgmfit <- function(model,
     bayes_R2_fit        <-
       combine_summaries(optimize_list, 'summary_bayes_R2')
     
-    # Parameter column is not created earlier for the 'bayes_R2_fit'
     if(!is.null(bayes_R2_fit)) {
       bayes_R2_fit <- bayes_R2_fit %>% 
         dplyr::mutate(Parameter = 'bayes_R2') %>% 
@@ -1856,7 +1776,6 @@ optimize_model.bgmfit <- function(model,
     }
     
     if(exists('bayes_R2_fit')) {
-      # Somehow bayes_R2_fit throw error: mutate applied to 'NULL'
       if(!is.null(bayes_R2_fit)) {
       bayes_R2_fit <- bayes_R2_fit %>% 
         dplyr::mutate(Criterion = 'Bayes_R2') %>% 

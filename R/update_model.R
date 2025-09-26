@@ -74,10 +74,7 @@ update_model.bgmfit <-
            check_newargs = FALSE,
            envir = NULL,
            ...) {
-    # changes on 21.07.2024 for brms version ‘2.21.6’
-    # deletions/insertions -> tidy_ranef standata_basis 
-    # insertion -> bframe
-    # edited -> model$prior
+   
     if(is.null(envir)) {
       envir <- model$model_info$envir
     } else {
@@ -98,7 +95,6 @@ update_model.bgmfit <-
         }
       }
       
-      # This to evaluate T/F to TRUE/FALSE
       for (i in names(args_o)) {
         if (is.symbol(args_o[[i]])) {
           if (args_o[[i]] == "T")
@@ -118,7 +114,6 @@ update_model.bgmfit <-
       args_o_new$data <- NULL
       args_o_org$data <- NULL
       
-      # This to evaluate T/F to TRUE/FALSE
       for (i in names(args_o_org)) {
         if (is.symbol(args_o_org[[i]])) {
           if (args_o_org[[i]] == "T")
@@ -129,7 +124,6 @@ update_model.bgmfit <-
       }
       
       all_same_args_c <- all_same_args <- c()
-      # args_o_org_updated <- list()
       for (args_oi in names(args_o_new)) {
         all_same_args_c <- c(all_same_args_c, identical(args_o_org[[args_oi]],
                                                         args_o_new[[args_oi]]) 
@@ -255,8 +249,6 @@ update_model.bgmfit <-
       utils::getFromNamespace("validate_sample_prior", "brms")
     validate_save_pars     <-
       utils::getFromNamespace("validate_save_pars", "brms")
-    # standata_basis         <-
-    #   utils::getFromNamespace("standata_basis", "brms")
     getframe_basis      <-
       utils::getFromNamespace("frame_basis", "brms")
     algorithm_choices      <-
@@ -287,9 +279,7 @@ update_model.bgmfit <-
     }
     silent <- dots$silent
     model <- brms::restructure(model)
-    # if (isTRUE(model$version$brms < "2.0.0")) {
-    #   warning2("Updating models fitted with older versions of brms may fail.")
-    # }
+    
     model$file <- NULL
     
     if ("data" %in% names(dots)) {
@@ -423,9 +413,7 @@ update_model.bgmfit <-
       dots_for_scode              <- c(dots_for_scode, call_)
       dots_for_scode$get_stancode <- TRUE
       new_stancode <- suppressMessages(do.call(bsitar, dots_for_scode))
-      # new_stancode <- suppressMessages(CustomDoCall(bsitar, dots_for_scode))
-      
-      
+
       new_stancode <- sub("^[^\n]+\n", "", new_stancode)
       old_stancode <- brms::stancode(model, version = FALSE)
       recompile <- needs_recompilation(model) || !same_backend ||
@@ -465,14 +453,11 @@ update_model.bgmfit <-
       )
       model$prior <- .validate_prior(
         dots$prior,
-        # bterms = bterms,
         bframe = bframe,
-        # data = model$data,
         sample_prior = dots$sample_prior
       )
       model$family <- get_element(model$formula, "family")
       model$autocor <- get_element(model$formula, "autocor")
-      # model$ranef <- tidy_ranef(bterms, data = model$data)
       model$ranef <- getframe_re(bterms, data = model$data)
       model$stanvars <- validate_stanvars(dots$stanvars)
       model$threads <- validate_threads(dots$threads)
@@ -504,7 +489,6 @@ update_model.bgmfit <-
           dots_for_norecompile          <-
             c(dots_for_norecompile, call_)
           model <- do.call(bsitar, dots_for_norecompile)
-          # model <- CustomDoCall(bsitar, dots_for_norecompile)
         } # if(!new_init_arg) {
         if (new_init_arg) {
           # TODO

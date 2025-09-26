@@ -247,7 +247,6 @@ plot_ppc.bgmfit <-
     . <- CustomDoCall(brms::pp_check, calling.args)
     
    
-    # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     if(!is.null(eval(full.args$clearenvfuns))) {
@@ -269,7 +268,6 @@ plot_ppc.bgmfit <-
       }
     }
     
-    # Cleanup environment if requested
     if(setcleanup) {
       suppressWarnings({
         tempgenv <- envir

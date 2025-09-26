@@ -350,18 +350,6 @@ expose_model_functions.bgmfit <- function(model,
   
   SplineFun_name      <- model$model_info[['StanFun_name']]
   sigmaSplineFun_name <- model$model_info[['sigmaStanFun_name']]
-  
-  # Now outcome specific sigmavarfun is part of the 
-  # model$model_info$include_fun_names
-  
-  # sigmavarSplineFun_name <- model$model_info[['sigmavarStanFun_name']]
-  # 
-  # if(!is.null(sigmavarSplineFun_name)) {
-  #   model$model_info$include_fun_names <- 
-  #     c( model$model_info$include_fun_names,
-  #        sigmavarSplineFun_name) 
-  # } 
-  
   spfun_collect       <- model$model_info$include_fun_names
   
 

@@ -208,19 +208,12 @@ add_model_criterion.bgmfit <-
                                  check_formalArgs_exceptions = c('x'),
                                  check_trace_back = NULL,
                                  envir = parent.frame())
-    
 
-    # dplyr::sym(substitute(model)) %>% print()
-    # stop()
     
     suppressWarnings({
       . <- CustomDoCall(brms::add_criterion, calling.args)
     })
     
-    # model[['criteria']] <- .[['criteria']]
-    
-    
-    # Restore function(s)
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     if(!is.null(eval(full.args$clearenvfuns))) {

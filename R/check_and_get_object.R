@@ -42,7 +42,7 @@ getNsObject <- function(object,
     namespace <- "bsitar"
   }
   if (grepl("\"", deparse(substitute(object)), fixed = T)) {
-    stop("object must be a symbol and not a string")
+    stop("'object' must be a symbol, not a string")
   }
   object_str <- deparse(substitute(object))
   if (is.null(envir)) {
