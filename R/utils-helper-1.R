@@ -3585,7 +3585,6 @@ brms_via_cmdstanr <- function(scode,
                             user_header = NULL,
                             compile_model_methods = FALSE,
                             compile_hessian_method = FALSE,
-                            threads = stan_threads,
                             compile_standalone = FALSE)
   
   
