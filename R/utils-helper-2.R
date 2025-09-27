@@ -4493,7 +4493,645 @@ apply_bknots_bounds <- function(bknots, bounds) {
 
 
 
-#' Create rcs spline design matrix. 
+
+
+#' ensure_monotonic_yvar. 
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+ensure_monotonic_yvar <- function(data, id = "id", xvar = "age", 
+                                  yvar = "height", increment = 0.1,
+                                  return_adjustments = FALSE) {
+  
+  age <- NULL;
+  
+  insight::check_if_installed('data.table')
+  
+  # Convert to data.table for efficient processing
+  dt <- data.table::as.data.table(data)
+  original_names <- names(dt)
+  
+  # Standardize column names for processing
+  data.table::setnames(dt, old = c(id, xvar, yvar), 
+                       new = c("id", "age", "height"))
+  
+  # Validate inputs
+  if (!all(c("id", "age", "height") %in% names(dt))) {
+    stop("Specified columns not found in data")
+  }
+  
+  if (any(is.na(dt$age) | is.na(dt$height))) {
+    warning("Missing values in age or height detected. These will be preserved.")
+  }
+  
+  # Sort by individual and age
+  data.table::setorder(dt, id, age)
+  
+  # Track adjustments if requested
+  adjustments <- list()
+  
+  # Function to process each individual
+  process_individual <- function(individual_data) {
+    n <- nrow(individual_data)
+    if (n <= 1) return(individual_data)
+    
+    adjusted_heights <- individual_data$height
+    individual_adjustments <- data.frame(
+      position = integer(0),
+      original_height = numeric(0),
+      adjusted_height = numeric(0),
+      age = numeric(0)
+    )
+    
+    # Process each measurement after the first
+    for (i in 2:n) {
+      # Skip if current height is missing
+      if (is.na(adjusted_heights[i])) next
+      
+      # Find the last non-missing height before current position
+      prev_height <- NA
+      for (j in (i-1):1) {
+        if (!is.na(adjusted_heights[j])) {
+          prev_height <- adjusted_heights[j]
+          break
+        }
+      }
+      
+      # If we found a previous height and current is lower, adjust
+      if (!is.na(prev_height) && adjusted_heights[i] < prev_height) {
+        original_height <- adjusted_heights[i]
+        adjusted_heights[i] <- prev_height + increment
+        
+        # Record adjustment
+        individual_adjustments <- rbind(individual_adjustments, 
+                                        data.frame(
+                                          position = i,
+                                          original_height = original_height,
+                                          adjusted_height = adjusted_heights[i],
+                                          age = individual_data$age[i]
+                                        ))
+      }
+    }
+    
+    # Update the data
+    individual_data$height <- adjusted_heights
+    
+    # Store adjustments
+    if (nrow(individual_adjustments) > 0) {
+      individual_adjustments$id <- individual_data$id[1]
+      adjustments[[length(adjustments) + 1]] <- individual_adjustments
+    }
+    
+    return(individual_data)
+  }
+  
+  # Apply to each individual
+  result <- dt[, process_individual(.SD), by = id]
+  
+  # Restore original column names
+  data.table::setnames(result, old = c("id", "age", "height"), 
+                       new = c(id, xvar, yvar))
+  
+  # Reorder columns to match original
+  data.table::setcolorder(result, original_names, skip_absent = TRUE)
+  
+  
+  # Prepare return value
+  if (return_adjustments) {
+    all_adjustments <- if (length(adjustments) > 0) {
+      do.call(rbind, adjustments)
+    } else {
+      data.frame(id = character(0), position = integer(0), 
+                 original_height = numeric(0), adjusted_height = numeric(0),
+                 age = numeric(0))
+    }
+    
+    return(list(
+      data = as.data.frame(result),
+      adjustments = all_adjustments,
+      n_individuals_adjusted = length(adjustments),
+      n_measurements_adjusted = sum(sapply(adjustments, nrow))
+    ))
+  } else {
+    return(as.data.frame(result))
+  }
+}
+
+
+
+#' ensure_realistic_yvar. 
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+ensure_realistic_yvar <- function(data, 
+                                  id = "id", 
+                                  xvar = "age", 
+                                  yvar = "height", 
+                                  min_increment = 0.1,
+                                  max_increment = 10,
+                                  return_adjustments = FALSE) {
+  
+  age <- NULL;
+  
+  insight::check_if_installed('data.table')
+  
+  
+  # Convert to data.table for efficient processing
+  dt <- data.table::as.data.table(data)
+  original_names <- names(dt)
+  
+  # Standardize column names for processing
+  data.table::setnames(dt, old = c(id, xvar, yvar), 
+                       new = c("id", "age", "height"))
+  
+  # Validate inputs
+  if (!all(c("id", "age", "height") %in% names(dt))) {
+    stop("Specified columns not found in data")
+  }
+  
+  if (any(is.na(dt$age) | is.na(dt$height))) {
+    warning("Missing values in age or height detected. These will be preserved.")
+  }
+  
+  # Sort by individual and age
+  data.table::setorder(dt, id, age)
+  
+  # Track adjustments if requested
+  adjustments <- list()
+  
+  # Function to process each individual
+  process_individual <- function(individual_data) {
+    n <- nrow(individual_data)
+    if (n <= 1) return(individual_data)
+    
+    adjusted_heights <- individual_data$height
+    individual_adjustments <- data.frame(
+      position = integer(0),
+      original_height = numeric(0),
+      adjusted_height = numeric(0),
+      age = numeric(0),
+      reason = character(0)
+    )
+    
+    # Process each measurement after the first
+    for (i in 2:n) {
+      # Skip if current height is missing
+      if (is.na(adjusted_heights[i])) next
+      
+      # Find the last non-missing height and age before current position
+      prev_height <- NA
+      prev_age <- NA
+      for (j in (i-1):1) {
+        if (!is.na(adjusted_heights[j]) && !is.na(individual_data$age[j])) {
+          prev_height <- adjusted_heights[j]
+          prev_age <- individual_data$age[j]
+          break
+        }
+      }
+      
+      # Skip if no valid previous measurement found
+      if (is.na(prev_height) || is.na(prev_age)) next
+      
+      current_age <- individual_data$age[i]
+      current_height <- adjusted_heights[i]
+      age_gap <- current_age - prev_age
+      
+      # Check for height decrease and fix
+      if (current_height < prev_height) {
+        original_height <- current_height
+        adjusted_heights[i] <- prev_height + min_increment
+        
+        # Record adjustment
+        individual_adjustments <- rbind(individual_adjustments, 
+                                        data.frame(
+                                          position = i,
+                                          original_height = original_height,
+                                          adjusted_height = adjusted_heights[i],
+                                          age = current_age,
+                                          reason = "height_decrease"
+                                        ))
+        
+        # Update current_height for the next check
+        current_height <- adjusted_heights[i]
+      }
+      
+      # Check for excessive increase
+      if (age_gap > 0) {  # Only check if there's a positive age gap
+        max_allowed_increase <- age_gap * max_increment
+        max_allowed_height <- prev_height + max_allowed_increase
+        
+        if (current_height > max_allowed_height) {
+          original_height <- current_height
+          adjusted_heights[i] <- max_allowed_height
+          
+          # Record adjustment
+          individual_adjustments <- rbind(individual_adjustments, 
+                                          data.frame(
+                                            position = i,
+                                            original_height = original_height,
+                                            adjusted_height = adjusted_heights[i],
+                                            age = current_age,
+                                            reason = paste0("excessive_growth_", round(max_increment, 1), "cm_per_year")
+                                          ))
+        }
+      }
+    }
+    
+    # Update the data
+    individual_data$height <- adjusted_heights
+    
+    # Store adjustments
+    if (nrow(individual_adjustments) > 0) {
+      individual_adjustments$id <- individual_data$id[1]
+      adjustments[[length(adjustments) + 1]] <- individual_adjustments
+    }
+    
+    return(individual_data)
+  }
+  
+  # Apply to each individual
+  result <- dt[, process_individual(.SD), by = id]
+  
+  # Restore original column names
+  data.table::setnames(result, old = c("id", "age", "height"), 
+                       new = c(id, xvar, yvar))
+  
+  # Reorder columns to match original
+  data.table::setcolorder(result, original_names, skip_absent = TRUE)
+  
+  # Prepare return value
+  if (return_adjustments) {
+    all_adjustments <- if (length(adjustments) > 0) {
+      do.call(rbind, adjustments)
+    } else {
+      data.frame(id = character(0), position = integer(0), 
+                 original_height = numeric(0), adjusted_height = numeric(0),
+                 age = numeric(0), reason = character(0))
+    }
+    
+    return(list(
+      data = as.data.frame(result),
+      adjustments = all_adjustments,
+      n_individuals_adjusted = length(adjustments),
+      n_measurements_adjusted = sum(sapply(adjustments, nrow))
+    ))
+  } else {
+    return(as.data.frame(result))
+  }
+}
+
+
+
+
+#' shift_growth_peak_yvar
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+shift_growth_peak_yvar <- function(data, id = "id", 
+                                   xvar = "age", 
+                                   yvar = "height",
+                                   from_age_range = c(10, 12),
+                                   to_age_range = c(8, 10),
+                                   n_individuals = 6,
+                                   intensity_preservation = 0.9,
+                                   seed = NULL) {
+  
+  age <- NULL;
+  
+  insight::check_if_installed('data.table')
+  
+  if (!is.null(seed)) set.seed(seed)
+  
+  # Prepare data
+  dt <- data.table::as.data.table(data)
+  data.table::setnames(dt, old = c(id, xvar, yvar), 
+                       new = c("id", "age", "height"))
+  data.table::setorder(dt, id, age)
+  
+  # Step 1: Identify individuals with peak growth in target range
+  find_peak_candidates <- function() {
+    candidates <- c()
+    
+    for (ind_id in unique(dt$id)) {
+      ind_data <- dt[id == ind_id]
+      if (nrow(ind_data) < 4) next  # Need sufficient data
+      
+      # Calculate growth rates
+      growth_rates <- data.frame(age_mid = numeric(0), rate = numeric(0))
+      
+      for (i in 2:nrow(ind_data)) {
+        if (!is.na(ind_data$height[i]) && !is.na(ind_data$height[i-1])) {
+          age_gap <- ind_data$age[i] - ind_data$age[i-1]
+          height_gain <- ind_data$height[i] - ind_data$height[i-1]
+          
+          if (age_gap > 0) {
+            rate <- height_gain / age_gap
+            age_mid <- (ind_data$age[i] + ind_data$age[i-1]) / 2
+            growth_rates <- rbind(growth_rates, 
+                                  data.frame(age_mid = age_mid, rate = rate))
+          }
+        }
+      }
+      
+      if (nrow(growth_rates) < 2) next
+      
+      # Find peak growth period
+      max_rate_idx <- which.max(growth_rates$rate)
+      peak_age <- growth_rates$age_mid[max_rate_idx]
+      peak_rate <- growth_rates$rate[max_rate_idx]
+      
+      # Check if peak is in target range and substantial
+      if (peak_age >= from_age_range[1] && 
+          peak_age <= from_age_range[2] && 
+          peak_rate > 3) {  # At least 3 cm/year
+        candidates <- c(candidates, ind_id)
+      }
+    }
+    
+    return(candidates)
+  }
+  
+  # Step 2: Randomly select individuals to shift
+  peak_candidates <- find_peak_candidates()
+  n_to_select <- min(n_individuals, length(peak_candidates))
+  
+  if (n_to_select == 0) {
+    warning("No suitable candidates found for peak shifting")
+    return(data)
+  }
+  
+  selected_ids <- sample(peak_candidates, n_to_select, replace = FALSE)
+  
+  # Step 3: Apply the shift to selected individuals
+  shift_individual <- function(ind_data) {
+    if (nrow(ind_data) < 3) return(ind_data)
+    
+    ind_data <- ind_data[order(age)]
+    ages <- ind_data$age
+    heights <- ind_data$height
+    new_heights <- heights
+    
+    # Calculate original growth increments
+    increments <- numeric(length(heights))
+    for (i in 2:length(heights)) {
+      increments[i] <- heights[i] - heights[i-1]
+    }
+    
+    # Redistribute growth: move some from original peak to new peak
+    for (i in 2:length(ages)) {
+      age_mid <- (ages[i] + ages[i-1]) / 2
+      age_gap <- ages[i] - ages[i-1]
+      
+      if (age_gap <= 0) next
+      
+      original_increment <- increments[i]
+      new_increment <- original_increment  # Start with original
+      
+      # If we're in the new peak range - boost growth
+      if (age_mid >= to_age_range[1] && age_mid <= to_age_range[2]) {
+        # Calculate position within new peak range (0 to 1)
+        peak_position <- (age_mid - to_age_range[1]) / (to_age_range[2] - to_age_range[1])
+        # Maximum boost at center of range
+        boost_factor <- 1 + 0.8 * exp(-2 * (peak_position - 0.5)^2)
+        new_increment <- original_increment * boost_factor
+      }
+      
+      # If we're in the original peak range - reduce growth
+      else if (age_mid >= from_age_range[1] && age_mid <= from_age_range[2]) {
+        # Calculate how much to reduce
+        reduction_factor <- 0.3 + 0.5 * intensity_preservation
+        new_increment <- original_increment * reduction_factor
+      }
+      
+      # Apply the new increment
+      new_heights[i] <- new_heights[i-1] + new_increment
+    }
+    
+    # Smooth any abrupt changes
+    if (length(new_heights) >= 3) {
+      smoothed <- new_heights
+      for (i in 2:(length(new_heights)-1)) {
+        if (!is.na(new_heights[i-1]) && !is.na(new_heights[i+1])) {
+          smoothed[i] <- 0.2*new_heights[i-1] + 0.6*new_heights[i] + 0.2*new_heights[i+1]
+        }
+      }
+      new_heights <- smoothed
+    }
+    
+    ind_data$height <- new_heights
+    return(ind_data)
+  }
+  
+  # Apply shifts
+  result_dt <- dt[, {
+    if (.BY$id %in% selected_ids) {
+      shift_individual(.SD)
+    } else {
+      .SD
+    }
+  }, by = id]
+  
+  # Restore original column names
+  data.table::setnames(result_dt, old = c("id", "age", "height"), 
+                       new = c(id, xvar, yvar))
+  
+  # Add metadata
+  attr(result_dt, "shifted_ids") <- selected_ids
+  attr(result_dt, "peak_candidates") <- peak_candidates
+  attr(result_dt, "from_range") <- from_age_range
+  attr(result_dt, "to_range") <- to_age_range
+  
+  return(as.data.frame(result_dt))
+}
+
+
+#' Function to increase correlation by adding deterministic component
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+increase_correlation <- function(variable_to_adjust, target_variable, beta = 0.5, noise_sd = 0.1) {
+  
+  # Center the target variable to preserve scale
+  target_centered <- target_variable - mean(target_variable, na.rm = TRUE)
+  
+  # Add deterministic component + small noise
+  noise <- rnorm(length(variable_to_adjust), mean = 0, sd = noise_sd)
+  
+  adjusted_variable <- variable_to_adjust + beta * target_centered + noise
+  
+  # Show improvement
+  original_cor <- stats::cor(variable_to_adjust, target_variable)
+  new_cor <- stats::cor(adjusted_variable, target_variable)
+  
+  cat("Original correlation:", round(original_cor, 3), "\n")
+  cat("New correlation:", round(new_cor, 3), "\n")
+  cat("Improvement:", round(abs(new_cor) - abs(original_cor), 3), "\n")
+  
+  return(adjusted_variable)
+}
+
+
+
+#' Rank-based correlation enhancement
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+rank_based_adjustment <- function(variable_to_adjust, target_variable, strength = 0.7) {
+  
+  # Get ranks of both variables
+  target_ranks <- rank(target_variable)
+  var_ranks <- rank(variable_to_adjust)
+  
+  # Sort the variable to match target ranking
+  sorted_values <- sort(variable_to_adjust)
+  
+  # Create weighted combination of original and rank-matched values
+  rank_matched <- sorted_values[target_ranks]
+  
+  # Combine original and rank-matched (strength controls the influence)
+  adjusted_variable <- (1 - strength) * variable_to_adjust + strength * rank_matched
+  
+  # Show results
+  original_cor <- stats::cor(variable_to_adjust, target_variable)
+  new_cor <- stats::cor(adjusted_variable, target_variable)
+  
+  cat("Original correlation:", round(original_cor, 3), "\n")
+  cat("New correlation:", round(new_cor, 3), "\n")
+  
+  return(adjusted_variable)
+}
+
+
+#' Quartile-based adjustment
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+quartile_adjustment <- function(variable_to_adjust, target_variable, replacement_rate = 0.3) {
+  
+  adjusted_var <- variable_to_adjust
+  
+  # Define quartiles for target variable
+  target_q1 <- quantile(target_variable, 0.25)
+  target_q3 <- quantile(target_variable, 0.75)
+  
+  # Define quartiles for variable to adjust
+  var_q1 <- quantile(variable_to_adjust, 0.25)
+  var_q3 <- quantile(variable_to_adjust, 0.75)
+  
+  # When target is high, make variable high
+  high_target_indices <- which(target_variable >= target_q3)
+  n_replace_high <- round(length(high_target_indices) * replacement_rate)
+  replace_high_indices <- sample(high_target_indices, n_replace_high)
+  
+  # Replace with high values from the variable's distribution
+  high_values <- variable_to_adjust[variable_to_adjust >= var_q3]
+  adjusted_var[replace_high_indices] <- sample(high_values, n_replace_high, replace = TRUE)
+  
+  # When target is low, make variable low
+  low_target_indices <- which(target_variable <= target_q1)
+  n_replace_low <- round(length(low_target_indices) * replacement_rate)
+  replace_low_indices <- sample(low_target_indices, n_replace_low)
+  
+  # Replace with low values from the variable's distribution
+  low_values <- variable_to_adjust[variable_to_adjust <= var_q1]
+  adjusted_var[replace_low_indices] <- sample(low_values, n_replace_low, replace = TRUE)
+  
+  # Show results
+  original_cor <- stats::cor(variable_to_adjust, target_variable)
+  new_cor <- stats::cor(adjusted_var, target_variable)
+  
+  cat("Original correlation:", round(original_cor, 3), "\n")
+  cat("New correlation:", round(new_cor, 3), "\n")
+  cat("Values replaced:", n_replace_high + n_replace_low, "out of", length(adjusted_var), "\n")
+  
+  return(adjusted_var)
+}
+
+
+#' Percentile matching approach
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+percentile_matching <- function(variable_to_adjust, target_variable, strength = 0.6) {
+  
+  n <- length(variable_to_adjust)
+  
+  # Calculate percentiles for target variable
+  target_percentiles <- rank(target_variable) / n
+  
+  # Get corresponding values from variable_to_adjust distribution
+  matched_values <- quantile(variable_to_adjust, target_percentiles)
+  
+  # Combine with original values
+  adjusted_var <- (1 - strength) * variable_to_adjust + strength * matched_values
+  
+  # Show results
+  original_cor <- stats::cor(variable_to_adjust, target_variable)
+  new_cor <- stats::cor(adjusted_var, target_variable)
+  
+  cat("Original correlation:", round(original_cor, 3), "\n")
+  cat("New correlation:", round(new_cor, 3), "\n")
+  
+  return(adjusted_var)
+}
+
+
+#' Selective adjustment based on distance from ideal pattern
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+selective_adjustment <- function(variable_to_adjust, target_variable, 
+                                 adjustment_strength = 0.5, proportion_to_adjust = 0.3) {
+  
+  adjusted_var <- variable_to_adjust
+  
+  # Standardize both variables for comparison
+  target_std <- scale(target_variable)[,1]
+  var_std <- scale(variable_to_adjust)[,1]
+  
+  # Calculate "ideal" adjustment (where variable should be relative to target)
+  ideal_adjustment <- target_std - var_std
+  
+  # Select observations with largest discrepancies
+  n_adjust <- round(length(adjusted_var) * proportion_to_adjust)
+  adjust_indices <- order(abs(ideal_adjustment), decreasing = TRUE)[1:n_adjust]
+  
+  # Apply adjustments
+  for (i in adjust_indices) {
+    adjustment <- ideal_adjustment[i] * adjustment_strength * sd(variable_to_adjust)
+    adjusted_var[i] <- adjusted_var[i] + adjustment
+  }
+  
+  # Show results
+  original_cor <- stats::cor(variable_to_adjust, target_variable)
+  new_cor <- stats::cor(adjusted_var, target_variable)
+  
+  cat("Original correlation:", round(original_cor, 3), "\n")
+  cat("New correlation:", round(new_cor, 3), "\n")
+  cat("Observations adjusted:", n_adjust, "\n")
+  
+  return(adjusted_var)
+}
+
+
+
+#' evaluate eval_xoffset_bstart_args
 #' @details used in bsitar
 #' 
 #' @keywords internal
