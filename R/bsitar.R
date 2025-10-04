@@ -987,7 +987,9 @@
 #'  specify the LKJ prior for each level of \code{rcorr_by} when
 #'  \code{rcorr_method = "lkj"}. The length of \code{rcorr_prior} should be
 #'  either one (to use the same prior for all levels) or equal to the number of
-#'  levels in \code{rcorr_by}. Ignored when \code{rescor = FALSE}.
+#'  levels in \code{rcorr_by}. For \code{rcorr_method = 'cde'}, uniform priors
+#'  \code{-1,1} are assigned to all correlation parameters. The argument
+#'  \code{rcorr_prior} is ignored when \code{rescor = FALSE}.
 #'  }
 #'   
 #' @param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
@@ -2347,13 +2349,36 @@ bsitar <- function(x,
   # package does not get correct data when dataframe is modified using %>% or |>
   # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
   
-  data_name_str_check <- deparse(mcall_$data)
-  data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
-  data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
-  data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
+  
+ data_check_for_modifications <- FALSE 
+ if(is.null(mcall_$data)) {
+   stop("Data argument must be specified")
+ } else if(is.language(mcall_$data)) {
+   data_check_for_modifications <- TRUE
+   data_name_str_check <- deparse(mcall_$data)
+ } else if(is.symbol(mcall_$data)) {
+   data_check_for_modifications <- TRUE
+   data_name_str_check <- deparse(mcall_$data)
+ } else if(is.data.frame(mcall_$data)) {
+   data_check_for_modifications <- FALSE
+ } else if(tibble::is.tibble(mcall_$data)) {
+   data_check_for_modifications <- FALSE
+ }
+  
+ 
+ if(data_check_for_modifications) {
+   data_name_str_check <- deparse(mcall_$data)
+   data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
+   data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
+   data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
+   data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
+ } else {
+   data_name_pipe <- FALSE
+ }
+ 
   
   if(data_name_pipe) {
-    stop("The 'data' argument should must be not be modified",
+    stop("The 'data' argument should be not be modified",
          "\n  ",
          "via pipe function such as '%>%' or '|>'",
           "\n  ",
@@ -2367,9 +2392,19 @@ bsitar <- function(x,
   }
   
   
+ 
   # Check and allow setting threads as NULL or integer
   mcall_threads_ <- mcall$threads
-  if(!grepl("threading", deparse(mcall_threads_) )) {
+  
+  deparse_mcall_threads_check     <- paste(deparse(mcall_threads_), 
+                                           collapse = "")
+  deparse_sub_mcall_threads_check <- deparse(substitute(mcall_threads_))
+  
+  # if getOption, then pass it as such, else evaluate argument
+  if(grepl("getOption",  deparse_sub_mcall_threads_check)) {
+    mcall_threads_ <- mcall_threads_ 
+    # now if(!grepl("threading".... pulled here with else if
+  } else if(!grepl("threading",  deparse_mcall_threads_check)) {
     if(!is.list(mcall_threads_)) {
       temp_threads_ <- mcall_threads_
       if(is.null(temp_threads_)) {
@@ -2388,6 +2423,8 @@ bsitar <- function(x,
     } 
   }
   mcall$threads <- mcall_threads_
+  
+
   
   newcall_checks <- c('threads', 'save_pars')
   newcall <- check_brms_args(mcall, newcall_checks)
@@ -2834,16 +2871,91 @@ bsitar <- function(x,
   ##############################################################
   ##############################################################
   
+
  # Enclose primitive functions with quote "" if specified as c() or list()
   enclose_c_list_elemnts_with_quotes_these <- c("xfun",
                                                 "yfun",
                                                 "sigmaxfun",
                                                 "xfunxoffset",
                                                 "sigmaxfunxoffset")
-
+  
+ 
   mcall <- enclose_c_list_elemnts_with_quotes(mcall,
                                        enclose_c_list_elemnts_with_quotes_these)
 
+  
+  ##############################################################
+  ##############################################################
+  
+  # for terms_rhs
+  quote_elements <- function(call, element,
+                             return_call = TRUE, 
+                             strict_list = FALSE) {
+    expr <- call[[element]]
+  
+    if (is.symbol(expr)) {
+      expr <- get(as.character(expr), envir = parent.frame())
+  
+      if (!is.language(expr)) {
+        stop("Symbol must refer to a language object (e.g., quote(c(...)))")
+      }
+    }
+  
+    if(strict_list) {
+      allowed_lang <- 'list'
+    } else {
+      allowed_lang <- c("c", "list")
+    }
+    
+    quoted <- deparse(substitute(expr)) 
+    
+    if(grepl("^list\\(", quoted, fixed = F) | 
+       grepl("^c\\(", quoted, fixed = F)) {
+      if(strict_list) {
+        if(grepl("^c\\(", quoted, fixed = F)) {
+          stop("Argument ",  collapse_comma(element), " must be a list(...)")
+        } # if(grepl("^c\\(", quoted, fixed = F)) {
+      } # if(strict_list) {
+    } else {
+      quoted <- deparse(substitute(expr))
+      quoted <- gsub("\"", "", quoted)
+      return(quoted)
+    }
+  
+    
+    constructor <- expr[[1]]
+    args <- as.list(expr)[-1]
+  
+    quoted <- lapply(args, function(arg) {
+      if (is.character(arg)) {
+        # Already a string — quote it once
+        sprintf("'%s'", arg)
+      } else {
+        # Expression — deparse it into code, then quote it
+        sprintf("'%s'", paste(deparse(arg), collapse = ""))
+      }
+    })
+
+    quoted <- gsub("\'", "", quoted)
+    
+    if(return_call) {
+      # Reconstruct the call (as a call to c(...) or list(...))
+      out <- as.call(c(constructor, quoted))
+    } else {
+      out <- quoted
+    }
+    
+    return(out)
+  }
+  
+  
+  mcall$terms_rhs <- quote_elements(call = mcall, 
+                                    element = 'terms_rhs', 
+                                    return_call = TRUE, 
+                                    strict_list = TRUE)
+ 
+ 
+  
   
   ##############################################################
   ##############################################################
@@ -3739,6 +3851,8 @@ bsitar <- function(x,
     fast_nsk <- 0L
   }
   
+  # print(smat)
+  # print(smat)
   
   if(smat == 'isp') {
     smat_moi <- TRUE
@@ -8210,6 +8324,8 @@ bsitar <- function(x,
       }
     }
     
+    
+    
 
     #################################################
     internal_formula_args_names <-
@@ -10253,10 +10369,19 @@ bsitar <- function(x,
         Rescor_gr_id_integer     <- as.integer(brmsdata[[Rescor_gr_id]])
         
         Rescor_by_id   <- multivariate$rcorr_by
+        
         if(!is.factor(brmsdata[[Rescor_by_id]])) {
-          stop("'", multivariate$rcorr_by, "'",
+          stop("The variable ", "'", multivariate$rcorr_by, "'",
                " set as 'rcorr_by' must be a factor variable")
+        } else if(is.factor(brmsdata[[Rescor_by_id]])) {
+          if(nlevels(brmsdata[[Rescor_by_id]]) == 1) {
+            stop("The variable ", "'", multivariate$rcorr_by, "'",
+                 " set as 'rcorr_by' must be a factor variable",
+                 "\n  ",
+                 "with at least two levels")
+          }
         }
+        
         Rescor_by_levels <- levels(brmsdata[[Rescor_by_id]])
         Rescor_by_levels <- paste0(Rescor_by_id, Rescor_by_levels)
         
@@ -10269,8 +10394,24 @@ bsitar <- function(x,
         Rescor_by_id_integer     <- as.integer(as.factor(Rescor_by_id_integer))
         Rescor_by_id_integer_max <- max(Rescor_by_id_integer)
         
-        
         if(!is.null(multivariate$rcorr_method)) {
+          rcorr_method_choices <- c('lkj', 'cde')
+          if(!multivariate$rcorr_method %in% rcorr_method_choices) {
+            stop("The residual correletion method specified as ", "'",
+                 multivariate$rcorr_method,"'",
+                 " is invalid",
+                 "\n  ", 
+                 "The available residual correletion methods are:",
+                 "\n  ", 
+                 "'lkj': models residual correletions using LKJ prior",
+                 "\n  ", 
+                 "'cde': models residual correletions using the Cholesky",
+                 "\n   ", 
+                 "decomposition of covariance matrix. In this method, uniform",
+                 "\n   ", 
+                 "priors (-1,1) are assigned to each correlation parameter"
+                 )
+          }
           Rescor_method  <- multivariate$rcorr_method 
         } else {
           Rescor_method <- 'lkj'
@@ -10324,6 +10465,7 @@ bsitar <- function(x,
   } # if (set_rescor_by) {
   
 
+  
   # rescor_by rescor_gr rescor_method rescor_lkj   multivariate$mvar
   
   if (is.list(initialslist) & length(initialslist) == 0) {
@@ -13409,8 +13551,7 @@ bsitar <- function(x,
     brmsfit$model_info           <- model_info
     environment(brmsfit$formula) <- enverr.
     
-    # brmsfitx <<- brmsfit
-  
+
     # Now message moved to the expose_model_functions()
     if (expose_function & !brm_args$empty) {
       # if (verbose) {

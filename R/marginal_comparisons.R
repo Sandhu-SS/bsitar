@@ -457,9 +457,9 @@ marginal_comparisons.bgmfit <- function(model,
   # set_names_  <- c('Estimate', 'Est.Error', probtitles)
   set_names_  <- c('Estimate', probtitles)
   
-  if(!is.null(model$model_info$decomp)) {
-    if(model$model_info$decomp == "QR") model_deriv<- FALSE
-  }
+  # if(!is.null(model$model_info$decomp)) {
+  #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
+  # }
   
   expose_method_set <- model$model_info[['expose_method']]
   
@@ -1246,22 +1246,28 @@ marginal_comparisons.bgmfit <- function(model,
   
  
 
-  if(is.null(by)) {
-    if(is.null(cov)) {
-      set_group <- FALSE
-    } else if(!is.null(cov)) {
-      set_group <- cov
-      if (!set_group %in% cov) {
-        stop("Argument 'by' must be one of the ", cov)
-      } 
-    }
-  } else if(!is.null(by)) {
-    if (!isFALSE(by)) {
-      set_group <- by
-    } else if (isFALSE(by)) {
-      set_group <- FALSE
-    }
-  }
+  # if(is.null(by)) {
+  #   if(is.null(cov)) {
+  #     set_group <- FALSE
+  #   } else if(!is.null(cov)) {
+  #     set_group <- cov
+  #     if (!set_group %in% cov) {
+  #       stop("Argument 'by' must be one of the ", cov)
+  #     } 
+  #   }
+  # } else if(!is.null(by)) {
+  #   if (!isFALSE(by)) {
+  #     set_group <- by
+  #   } else if (isFALSE(by)) {
+  #     set_group <- FALSE
+  #   }
+  # }
+  
+  
+  
+  set_group <- setup_by_var(model = model, by = by, cov = cov, 
+                                  xvar = xvar, dpar = dpar)
+  
   
     
     comparisons_arguments$variables  <- set_variables

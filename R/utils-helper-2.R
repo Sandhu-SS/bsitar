@@ -5131,6 +5131,69 @@ selective_adjustment <- function(variable_to_adjust, target_variable,
 
 
 
+#' set_group for marginal functions and utili 22
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+setup_by_var <- function(model, 
+                         by, 
+                         cov, 
+                         xvar, 
+                         dpar,
+                         xvar_strict = TRUE) {
+  if(is.null(by)) {
+    if(is.null(cov)) {
+      set_group <- FALSE
+    } else if(!is.null(cov)) {
+      set_group <- cov
+      if (!set_group %in% cov) {
+        stop('by must be one of the ', cov)
+      } 
+    }
+  } else if(!is.null(by)) {
+    if (!isFALSE(by)) {
+      set_group <- by
+    } else if (isFALSE(by)) {
+      set_group <- FALSE
+    }
+  }
+  
+  
+  xvar_strict_msg <- 
+    paste0("Argument 'by' need to be specified correctly",
+       "\n  ", 
+       "For current call, the following predictor should be included: ",
+       # collapse_comma(model$model_info$xvars)
+       "\n  ", 
+       collapse_comma(xvar),
+       "\n  ", 
+       "Instead, the 'by' argument you have specified is as follows:",
+       "\n  ", 
+       collapse_comma(set_group),
+       "\n  ",
+       "Please correct it and re-try calling the predictions")
+  
+  
+  if(dpar == "mu") {
+    if(is.logical(set_group)) {
+      if(!set_group) set_group <- xvar
+    } else if(!is.logical(set_group)) {
+      if (!xvar %in% set_group) {
+        if(xvar_strict) {
+          stop(xvar_strict_msg)
+        } # xvar_strict
+      } # if (!xvar %in% set_group) {
+    } # if(is.logical(set_group)) { else if(!is.logical(set_group)) {
+  } # if(dpar == "mu") {
+  
+  return(set_group)
+}
+
+
+
+
 #' evaluate eval_xoffset_bstart_args
 #' @details used in bsitar
 #' 

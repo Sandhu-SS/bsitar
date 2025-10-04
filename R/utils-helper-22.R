@@ -592,9 +592,9 @@ modelbased_growthparameters_call.bgmfit <-
     probtitles <- paste("Q", probtitles, sep = "")
     set_names_  <- c('Estimate', probtitles)
     
-    if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") model_deriv<- FALSE
-    }
+    # if(!is.null(model$model_info$decomp)) {
+    #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
+    # }
     
     expose_method_set <- model$model_info[['expose_method']]
     
@@ -1267,22 +1267,27 @@ modelbased_growthparameters_call.bgmfit <-
     }
     
     
-    if(is.null(by)) {
-      if(is.null(cov)) {
-        set_group <- FALSE
-      } else if(!is.null(cov)) {
-        set_group <- cov
-        if (!set_group %in% cov) {
-          stop('by must be one of the ', cov)
-        } 
-      }
-    } else if(!is.null(by)) {
-      if (!isFALSE(by)) {
-        set_group <- by
-      } else if (isFALSE(by)) {
-        set_group <- FALSE
-      }
-    }
+    
+    # if(is.null(by)) {
+    #   if(is.null(cov)) {
+    #     set_group <- FALSE
+    #   } else if(!is.null(cov)) {
+    #     set_group <- cov
+    #     if (!set_group %in% cov) {
+    #       stop('by must be one of the ', cov)
+    #     } 
+    #   }
+    # } else if(!is.null(by)) {
+    #   if (!isFALSE(by)) {
+    #     set_group <- by
+    #   } else if (isFALSE(by)) {
+    #     set_group <- FALSE
+    #   }
+    # }
+    
+    
+    set_group <- setup_by_var(model = model, by = by, cov = cov, 
+                                    xvar = xvar, dpar = dpar)
     
     
     if (acg_velocity >= 1 | acg_velocity <= 0) {

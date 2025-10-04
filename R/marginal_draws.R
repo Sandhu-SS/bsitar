@@ -435,9 +435,9 @@ marginal_draws.bgmfit <-
     # set_names_  <- c('Estimate', 'Est.Error', probtitles)
     set_names_  <- c('Estimate', probtitles)
     
-    if(!is.null(model$model_info$decomp)) {
-      if(model$model_info$decomp == "QR") model_deriv<- FALSE
-    }
+    # if(!is.null(model$model_info$decomp)) {
+    #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
+    # }
     
     expose_method_set <- model$model_info[['expose_method']]
     
@@ -1191,22 +1191,94 @@ marginal_draws.bgmfit <-
     
     
     # Decide if set by = NULL and then here pick and replace 'by' set_group 
-    if(is.null(by)) {
-      if(is.null(cov)) {
-        set_group <- FALSE
-      } else if(!is.null(cov)) {
-        set_group <- cov
-        if (!set_group %in% cov) {
-          stop('by must be one of the ', cov)
-        } 
-      }
-    } else if(!is.null(by)) {
-      if (!isFALSE(by)) {
-        set_group <- by
-      } else if (isFALSE(by)) {
-        set_group <- FALSE
-      }
-    }
+    # if(is.null(by)) {
+    #   if(is.null(cov)) {
+    #     set_group <- FALSE
+    #   } else if(!is.null(cov)) {
+    #     set_group <- cov
+    #     if (!set_group %in% cov) {
+    #       stop('by must be one of the ', cov)
+    #     } 
+    #   }
+    # } else if(!is.null(by)) {
+    #   if (!isFALSE(by)) {
+    #     set_group <- by
+    #   } else if (isFALSE(by)) {
+    #     set_group <- FALSE
+    #   }
+    # }
+    # 
+    # 
+    # 
+    # if(dpar == "mu") {
+    #   if(is.logical(set_group)) {
+    #     if(!set_group) set_group <- xvar
+    #   } else {
+    #     if (!xvar %in% set_group) {
+    #       stop("Argument 'by' need to be specified",
+    #            "\n  ", 
+    #            "Available options are: ",
+    #            collapse_comma(model$model_info$xvars))
+    #     } 
+    #   }
+    # }
+    
+    
+    
+    
+    
+    
+    # setup_by_var <- function(model, by, cov, xvar, dpar) {
+    #   if(is.null(by)) {
+    #     if(is.null(cov)) {
+    #       set_group <- FALSE
+    #     } else if(!is.null(cov)) {
+    #       set_group <- cov
+    #       if (!set_group %in% cov) {
+    #         stop('by must be one of the ', cov)
+    #       } 
+    #     }
+    #   } else if(!is.null(by)) {
+    #     if (!isFALSE(by)) {
+    #       set_group <- by
+    #     } else if (isFALSE(by)) {
+    #       set_group <- FALSE
+    #     }
+    #   }
+    #   
+    #   if(dpar == "mu") {
+    #     if(is.logical(set_group)) {
+    #       if(!set_group) set_group <- xvar
+    #     } else {
+    #       if (!xvar %in% set_group) {
+    #         stop("Argument 'by' need to be specified correctly",
+    #              "\n  ", 
+    #              "For current call, the following predictor should be included: ",
+    #              # collapse_comma(model$model_info$xvars)
+    #              "\n  ", 
+    #              collapse_comma(xvar),
+    #              "\n  ", 
+    #              "Instead, the 'by' argument you have specified is as follows:",
+    #              "\n  ", 
+    #              collapse_comma(set_group),
+    #              "\n  ",
+    #              "Please correct it and re-try calling the predictions"
+    #              )
+    #       } 
+    #     }
+    #   }
+    #   
+    #   return(set_group)
+    # }
+    # 
+    
+    
+    set_group <- setup_by_var(model = model, by = by, cov = cov, 
+                       xvar = xvar, dpar = dpar)
+    
+    # print(set_group)
+    # print(xvar)
+    # stop()
     
     
     if(call_slopes) {
@@ -1529,6 +1601,8 @@ marginal_draws.bgmfit <-
      predictions_arguments[['method']] <- NULL
      predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
      by <- predictions_arguments[['by']] 
+     
+     
      
      
      if(future_splits_exe) {

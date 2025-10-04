@@ -413,13 +413,37 @@ optimize_model.bgmfit <- function(model,
   
   
   
+  optimize_x_temp_c <- c()
+  for (i in optimize_x) {
+    if(grepl("function(", i, fixed = T)) {
+      optimize_x_temp <- remove_between_first_last_parnth(i, splitat = ",")
+    } else {
+      optimize_x_temp <- i
+    }
+    optimize_x_temp_c <- c(optimize_x_temp_c, optimize_x_temp)
+  }
+  optimize_x <- optimize_x_temp_c
+ 
   
-  if(grepl("function(", optimize_x, fixed = T)) {
-    optimize_x <- remove_between_first_last_parnth(optimize_x, splitat = ",")
+  
+  optimize_y_temp_c <- c()
+  for (i in optimize_y) {
+    if(grepl("function(", i, fixed = T)) {
+      optimize_y_temp <- remove_between_first_last_parnth(i, splitat = ",")
+    } else {
+      optimize_y_temp <- i
+    }
+    optimize_y_temp_c <- c(optimize_y_temp_c, optimize_y_temp)
   }
-  if(grepl("function(", optimize_y, fixed = T)) {
-    optimize_y <- remove_between_first_last_parnth(optimize_y, splitat = ",")
-  }
+  optimize_y <- optimize_y_temp_c
+  
+  
+  # if(grepl("function(", optimize_x, fixed = T)) {
+  #   optimize_x <- remove_between_first_last_parnth(optimize_x, splitat = ",")
+  # }
+  # if(grepl("function(", optimize_y, fixed = T)) {
+  #   optimize_y <- remove_between_first_last_parnth(optimize_y, splitat = ",")
+  # }
   
  
   optimize_df_x_y <-
@@ -1450,7 +1474,6 @@ optimize_model.bgmfit <- function(model,
       }
     
      
-
       fit <- eval(user_call)
   
       if(!exe_model_fit) {

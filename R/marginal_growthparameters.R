@@ -931,9 +931,9 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   
-  if(!is.null(model$model_info$decomp)) {
-   # if(model$model_info$decomp == "QR") model_deriv <- FALSE
-  }
+  # if(!is.null(model$model_info$decomp)) {
+  #  if(model$model_info$decomp == "QR") model_deriv <- FALSE
+  # }
   
   
   
@@ -1657,41 +1657,66 @@ marginal_growthparameters.bgmfit <- function(model,
   }
   
   
-  if(is.null(by)) {
-    if(is.null(cov)) {
-      set_group <- FALSE
-    } else if(!is.null(cov)) {
-      set_group <- cov
-      if (!set_group %in% cov) {
-        stop('by must be one of the ', cov)
-      } 
-    }
-  } else if(!is.null(by)) {
-    if (!isFALSE(by)) {
-      set_group <- by
-    } else if (isFALSE(by)) {
-      set_group <- FALSE
-    }
-  }
+  # if(is.null(by)) {
+  #   if(is.null(cov)) {
+  #     set_group <- FALSE
+  #   } else if(!is.null(cov)) {
+  #     set_group <- cov
+  #     if (!set_group %in% cov) {
+  #       stop('by must be one of the ', cov)
+  #     } 
+  #   }
+  # } else if(!is.null(by)) {
+  #   if (!isFALSE(by)) {
+  #     set_group <- by
+  #   } else if (isFALSE(by)) {
+  #     set_group <- FALSE
+  #   }
+  # }
   
   
   # Skipping the below stop()
-  if(model$xcall == "modelbased_growthparameters") {
-    # the by could be 'id
+  # by could be 'id' only, not necessarily include xvar
+  if(model$xcall == "modelbased_growthparameters" |
+     model$xcall == "modelbased_growthparameters.bgmfit") {
+    xvar_strict <- FALSE
+  } else {
+    xvar_strict <- TRUE
   }
   
-  if(dpar == "mu") {
-    if(!is.null(by)) {
-      if(!is.logical(by)) {
-        if(!xvar %in% by) {
-          # stop("For 'dpar = mu', the 'by' argument must be either 'NULL', ",
-          #      "\n ", 
-          #      " or should include the following key variable: ",
-          #      collapse_comma(xvar))
-        }
-      } # if(!is.logical()) {
-    } # if(!is.null(by)) {
-  }
+  
+  set_group <- setup_by_var(model = model, 
+                            by = by, 
+                            cov = cov, 
+                            xvar = xvar, 
+                            dpar = dpar,
+                            xvar_strict = xvar_strict)
+  
+  
+  
+  # 
+  # # Now this is handled within the setup_by_var()
+  # # Skipping the below stop()
+  # if(model$xcall == "modelbased_growthparameters") {
+  #   # the by could be 'id
+  # }
+  # 
+  # if(dpar == "mu") {
+  #   if(!is.null(by)) {
+  #     if(!is.logical(by)) {
+  #       if(!xvar %in% by) {
+  #         # stop("For 'dpar = mu', the 'by' argument must be either 'NULL', ",
+  #         #      "\n ", 
+  #         #      " or should include the following key variable: ",
+  #         #      collapse_comma(xvar))
+  #       }
+  #     } # if(!is.logical()) {
+  #   } # if(!is.null(by)) {
+  # }
+  # 
+  
+  
+  
   
   
   

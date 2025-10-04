@@ -293,6 +293,10 @@ update_model.bgmfit <-
       data_name <- get_data_name(model$data)
     }
     
+    # Don't validate data because prepare_data2 is called with the bsitar()
+    should_validate_data <- FALSE
+    
+   
     if (missing(formula.) || is.null(formula.)) {
       dots$formula <- model$formula
       if (!is.null(dots[["family"]])) {
@@ -413,7 +417,6 @@ update_model.bgmfit <-
       dots_for_scode              <- c(dots_for_scode, call_)
       dots_for_scode$get_stancode <- TRUE
       new_stancode <- suppressMessages(do.call(bsitar, dots_for_scode))
-
       new_stancode <- sub("^[^\n]+\n", "", new_stancode)
       old_stancode <- brms::stancode(model, version = FALSE)
       recompile <- needs_recompilation(model) || !same_backend ||
@@ -444,13 +447,14 @@ update_model.bgmfit <-
       bterms <- brms::brmsterms(model$formula)
       bframe <- getbrmsframe(bterms, data = model$data)
       model$data2 <- validate_data2(dots$data2, bterms = bterms)
-      model$data <- validate_data(
-        dots$data,
-        bterms = bterms,
-        data2 = model$data2,
-        knots = dots$knots,
-        drop_unused_levels = dots$drop_unused_levels
-      )
+      if(should_validate_data) {
+        model$data <- validate_data(
+          dots$data,
+          bterms = bterms,
+          data2 = model$data2,
+          knots = dots$knots,
+          drop_unused_levels = dots$drop_unused_levels) 
+      }
       model$prior <- .validate_prior(
         dots$prior,
         bframe = bframe,
@@ -497,7 +501,7 @@ update_model.bgmfit <-
     }
     if(expose_function) model <- expose_model_functions(model, envir = envir)
     attr(model$data, "data_name") <- data_name
-    model
+    return(model)
   }
 
 

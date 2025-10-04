@@ -646,9 +646,9 @@ modelbased_growthparameters.bgmfit <-
       probtitles <- paste("Q", probtitles, sep = "")
       set_names_  <- c('Estimate', probtitles)
       
-      if(!is.null(model$model_info$decomp)) {
-        if(model$model_info$decomp == "QR") model_deriv<- FALSE
-      }
+      # if(!is.null(model$model_info$decomp)) {
+      #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
+      # }
       
       expose_method_set <- model$model_info[['expose_method']]
       

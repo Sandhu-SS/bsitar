@@ -69,10 +69,7 @@ get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
   } else {
     f_funx_arg <- f_funx_arg
   }
-  
-  # scallstatus <<- scallstatus
-  # pastexclass <<- pastexclass
-  # get_xcall_byclass <<- scallstatus
+
   
   nf_funx_arg_names <-
     intersect(names(arguments), names(f_funx_arg))
@@ -3760,10 +3757,6 @@ brms_via_rstan <- function(scode,
     rstan::rstan_options(threads_per_chain = brm_args$threads$threads)
   }
   
-  # brms_argumentsx <<- brms_arguments
-  # scodex <<- scode
-  # rstan::rstan_options(auto_write = TRUE)
-
   algorithm <- "NUTS" # c("NUTS", "HMC", "Fixed_param")
 
   cpp_options <- list(stan_threads = stan_threads)
@@ -5881,10 +5874,11 @@ plot_equivalence_test <-  function(x,
 #' @noRd
 #'
 checkresp_info <- function(model, resp) {
+  error_message <- NULL
   if (model$model_info$nys == 1 & !is.null(resp)) {
-    stop(
-      "You have fit a univariate model",
-      " but set resp option as: ",
+    error_message <-  
+    paste0("You have fit a univariate model",
+      " but set resp argument as: ",
       resp,
       ".",
       "\n ",
@@ -5895,11 +5889,11 @@ checkresp_info <- function(model, resp) {
   }
   if (model$model_info$nys > 1 & is.null(resp)) {
     if (!is.na(model$model_info$univariate_by$by)) {
-      stop(
-        "You have fit a univariate_by model for ",
+      error_message <-  
+        paste0("You have fit a univariate_by model for ",
         model$model_info$univariate_by$by,
         "\n ",
-        " but did not correctly specified the 'resp' option",
+        " but did not correctly specified the 'resp' argument",
         " (which is NULL at present).",
         "\n ",
         " The response options are: ",
@@ -5907,19 +5901,23 @@ checkresp_info <- function(model, resp) {
       )
     }
     if (model$model_info$multivariate$mvar) {
-      stop(
-        "You have fit a multivariate model ",
+      error_message <-  
+        paste0("You have fit a multivariate model but did not set the ",
         "\n ",
-        " but dit not set the the resp options correctly",
-        " (which is NULL at present).",
-        "\n ",
-        " The response options are: ",
+        "'resp' argument correctly (which is 'NULL' at present).",
+        "\n  ",
+        "The avaialble response options are: ",
         collapse_comma(model$model_info$yvars)
       )
     }
   }
+  
+  if(!is.null(error_message)) {
+    error_message <- stop(clean_text_spaces(error_message))
+  }
   return(invisible(NULL))
 }
+
 
 
 
@@ -6135,8 +6133,42 @@ post_processing_checks <- function(model,
   
   check_it_sss <- strsplit(check_it, "\\.")[[1]][1]
   
-  # Now using checkresp_info which is also used in getmodel_info
-  checkresp_info(model, resp)
+  
+  # Get xcall to decide checking of resp variable
+  if(!is.null(model$xcall)) {
+    if(grepl("marginal_draws", model$xcall)) {
+      xcall <- "marginal_draws"
+    } else if(grepl("modelbased_growthparameters", model$xcall)) {
+      xcall <- "modelbased_growthparameters"
+    } else if(grepl("marginal_growthparameters", model$xcall)) {
+      xcall <- "marginal_growthparameters"
+    }
+  } else {
+    rlang_trace_back <- rlang::trace_back()
+    check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
+    if(all(!check_trace_back.bgmfit)) {
+      # nothing
+    } else {
+      rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
+      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
+      xcall <- rlang_call_name
+    }
+  }
+  
+  
+  # Don't check  for resp variable for optimize
+  call_checkresp_info <- TRUE
+  if(xcall == "optimize_model.bgmfit" | xcall == "optimize_model") {
+    call_checkresp_info <- FALSE
+  }
+  
+  
+
+  # Now using checkresp_info() which is also used in getmodel_info
+  if(call_checkresp_info) {
+    checkresp_info(model, resp)
+  }
   
   
   if (is.null(resp)) {

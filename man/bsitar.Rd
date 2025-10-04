@@ -1062,7 +1062,9 @@ element). If \code{NULL}, \code{"lkj"} is set as the default. Ignored when
 specify the LKJ prior for each level of \code{rcorr_by} when
 \code{rcorr_method = "lkj"}. The length of \code{rcorr_prior} should be
 either one (to use the same prior for all levels) or equal to the number of
-levels in \code{rcorr_by}. Ignored when \code{rescor = FALSE}.
+levels in \code{rcorr_by}. For \code{rcorr_method = 'cde'}, uniform priors
+\code{-1,1} are assigned to all correlation parameters. The argument
+\code{rcorr_prior} is ignored when \code{rescor = FALSE}.
 }}
 
 \item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
