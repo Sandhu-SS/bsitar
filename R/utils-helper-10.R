@@ -704,7 +704,8 @@ prepare_priors <- function(prior_argument,
               allowed_parm_options <-
                 paste0(allowed_parm_options, collapse = ", ")
               allowed_parm_options <-
-                paste0(" - ", allowed_parm_options)
+                paste0("- ", allowed_parm_options)
+              const_msg <- clean_text_spaces(const_msg)
               const_msg <- paste0(allowed_parm_options, "\n", const_msg)
             }
             # enverr. <- parent.frame()
@@ -719,28 +720,37 @@ prepare_priors <- function(prior_argument,
               }
             )
             err. <- get('err.', envir = enverr.)
+            
+            if(sigma_dpar == "") {
+              add_par_info <- paste0("\nFor nlpar ", 
+                                     collapse_comma(nlpar), ", class ", 
+                                     collapse_comma(class))
+            } else if(sigma_dpar == "sigma") {
+              add_par_info <- 
+                paste0("\nFor residual standard deviation parameter ", 
+                       collapse_comma(sigma_dpar), ", class ", 
+                       collapse_comma(class))
+            }
+            
             if (err.) {
               if (class == 'b' | class == 'sd') {
                 stop(
-                  "\nFor nlpar ",
-                  nlpar,
-                  ", class ",
-                  class,
+                  add_par_info,
                   ", you have specified '",
                   eit,
                   "' as ",
                   pname_,
                   " for the ",
                   dist,
-                  " distribution",
-                  "\n" ,
-                  " But '",
+                  " distribution.",
+                  # "\n" ,
+                  " However, '",
                   eit,
                   "' is not found in the 'prior_data_internal'",
                   "\n" ,
-                  " or use-specified 'prior_data' argument",
-                  "\n ",
-                  " [see specified prior argument: ",
+                  "or use-specified 'prior_data' argument",
+                  "\n",
+                  "[see specified prior argument: ",
                   prior_argument,
                   " = ",
                   p_str_in,
@@ -765,7 +775,7 @@ prepare_priors <- function(prior_argument,
                   dist,
                   " distribution",
                   "\n" ,
-                  " But '",
+                  " However, '",
                   eit,
                   "' is not found in the 'prior_data_internal'",
                   "\n" ,
@@ -5730,11 +5740,11 @@ prepare_priors <- function(prior_argument,
           
           # scale sigma (class sd)
           if (nlpar == "" & class == "sd" & sigma_dpar == "sigma") {
-            if (x_i == paste0("vsd", empty_sufx)) {
-              eit <-  gsub("vsd", paste0("vsd", resp_), x_i)
+            if (x_i == paste0("ysd", empty_sufx)) {
+              eit <-  gsub("ysd", paste0("ysd", resp_), x_i)
               evaluated_parameter <- scale_factor * ept(eit)
-            } else if (x_i == paste0("vmad", empty_sufx)) {
-              eit <-  gsub("vmad", paste0("vmad", resp_), x_i)
+            } else if (x_i == paste0("ymad", empty_sufx)) {
+              eit <-  gsub("ymad", paste0("ymad", resp_), x_i)
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(

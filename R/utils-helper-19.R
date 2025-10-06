@@ -47,6 +47,11 @@
 #'   \code{itransform = ""} will automatically set inverse transformations to
 #'   \code{FALSE} for \code{xvar}, \code{yvar}, and \code{sigmaxvar}.
 #'   
+#' @param restore_decimal Optional logical (default \code{TRUE}) to indicate
+#'   whether to restore the decimal places for \code{xvar}, \code{yvar}, and
+#'   \code{sigmaxvar} variables after transformation. This does not make any
+#'   substantial changes but only to exact match the recovered variable values.
+#'   
 #' @param envir A logical (default \code{TRUE})
 #'
 #' @return A data frame with necessary information added a attributes.
@@ -72,7 +77,8 @@ prepare_transformations <- function(data = NULL,
                                     itransform = "",
                                     model = NULL,
                                     envir = NULL,
-                                    verbose = FALSE) {
+                                    verbose = FALSE,
+                                    restore_decimal = TRUE) {
   
   
   #######################################################################
@@ -94,7 +100,6 @@ prepare_transformations <- function(data = NULL,
   #######################################################################
   
   
-   # model <- zcode
   if(is.null(envir)) {
     enverr. <- parent.frame()
   } else {
@@ -186,6 +191,47 @@ prepare_transformations <- function(data = NULL,
   }
   
   
+  #######################################################################
+  #######################################################################
+  
+  if(restore_decimal) {
+    # xvar 
+    if(!is.null(xvar)) {
+      ndecimal_xvar <- c()
+      for (ii in 1:length(xvar)) {
+        i <- xvar[ii]
+        ndecimal_xvar <- c(ndecimal_xvar, 
+                           max(get_decimal_places(data, i))
+        )
+      }
+    } else if(is.null(xvar)) {
+      ndecimal_xvar <- rep(NA)
+    }
+    # yvar 
+    if(!is.null(yvar)) {
+      ndecimal_yvar <- c()
+      for (ii in 1:length(yvar)) {
+        i <- yvar[ii]
+        ndecimal_yvar <- c(ndecimal_yvar, 
+                           max(get_decimal_places(data, i))
+        )
+      }
+    } else if(is.null(yvar)) {
+      ndecimal_yvar <- rep(NA)
+    }
+    # sigmaxvar 
+    if(!is.null(sigmaxvar)) {
+      ndecimal_sigmaxvar <- c()
+      for (ii in 1:length(sigmaxvar)) {
+        i <- sigmaxvar[ii]
+        ndecimal_sigmaxvar <- c(ndecimal_sigmaxvar, 
+                                max(get_decimal_places(data, i))
+        )
+      }
+    } else if(is.null(sigmaxvar)) {
+      ndecimal_sigmaxvar <- rep(NA)
+    }
+  } # if(restore_decimal) {
   
   
   #######################################################################
@@ -372,7 +418,6 @@ prepare_transformations <- function(data = NULL,
     sigmaxfun <- templist
     if(is_emptyx(sigmaxfun)) sigmaxfun <- NULL
   }
-  
   
   
   #######################################################################
@@ -628,8 +673,44 @@ prepare_transformations <- function(data = NULL,
     }
   }
   
-
-
+  
+  #######################################################################
+  #######################################################################
+  
+  if(restore_decimal) {
+    # xvar
+    if(!is.null(xvar)) {
+      for (ii in 1:length(xvar)) {
+        i <- xvar[ii]
+        if(!is.na(ndecimal_xvar[i])) {
+          data[[i]] <- round(data[[i]], ndecimal_xvar[i]) 
+        }
+      }
+    }
+    # yvar
+    if(!is.null(yvar)) {
+      for (ii in 1:length(yvar)) {
+        i <- yvar[ii]
+        if(!is.na(ndecimal_yvar[i])) {
+          data[[i]] <- round(data[[i]], ndecimal_yvar[i]) 
+        }
+      }
+    }
+    # sigmaxvar
+    if(!is.null(sigmaxvar)) {
+      for (ii in 1:length(sigmaxvar)) {
+        i <- sigmaxvar[ii]
+        if(!is.na(ndecimal_sigmaxvar[i])) {
+          data[[i]] <- round(data[[i]], ndecimal_sigmaxvar[i]) 
+        }
+      }
+    }
+  } # if(restore_decimal) {
+  
+  
+  #######################################################################
+  #######################################################################
+  
   return(data)
-} # prepare_transformations
+}
 

@@ -20,6 +20,7 @@
   resp = NULL,
   cores = 1,
   model_deriv = NULL,
+  model_return = NULL,
   verbose = FALSE,
   expose_function = FALSE,
   usesavedfuns = NULL,
@@ -98,6 +99,13 @@ the velocity curve, such as \code{growthparameters()} and
 \code{plot_curves()}. Set it to \code{NULL} for functions that use the
 distance curve (i.e., fitted values), such as \code{loo_validation()} and
 \code{plot_ppc()}.}
+
+\item{model_return}{A logical (default \code{NULL}) to indicate whether to
+return the model object or just assign the criteria to the model. When
+\code{model_return = NULL}, then \code{model_return} is automatically
+assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when
+\code{test_mode = TRUE}. Note that when \code{test_mode = TRUE}, the model
+object will be returned along with the criteria.}
 
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}

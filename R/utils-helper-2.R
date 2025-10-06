@@ -5131,6 +5131,68 @@ selective_adjustment <- function(variable_to_adjust, target_variable,
 
 
 
+
+#' get number of decimal places in a vector
+#' @details used in bsitar
+#' @param frame A real number, a numeric vector, a matrix or a data frame
+#' @param var A character string
+#' @keywords internal
+#' @noRd
+#' 
+get_decimal_places <- function(frame, var = NULL) {
+  
+  if(is.null(var)) {
+    if(is.numeric(frame)) {
+      x <- frame
+    } else {
+      stop("The first argument must be a numeric value or a numeric vector")
+    }
+  } else if(!is.null(var)) {
+    if(!is.data.frame(frame) & 
+       !data.table::is.data.table(frame) &
+       !is.matrix(frame)) {
+      stop("The first argument must be a data frame or a mtrix when var != NULL")
+    }
+    if(!is.character(var)) {
+      stop("The argument 'var' must be a character string")
+    }
+    if(is.data.frame(frame) | data.table::is.data.table(frame)) {
+      if(var %in% names(frame)) {
+        x <- frame[[var]]
+      } else {
+        x <- NULL
+      }
+    } # if(is.data.frame(frame)) {
+    if(is.matrix(frame)) {
+      if(var %in% colnames(frame)) {
+        x <- frame[[var]]
+      } else {
+        x <- NULL
+      }
+    } # if(is.data.frame(frame)) {
+  } # if(is.null(var)) { else if(!is.null(var)) {
+  
+  
+  if(is.null(x)) {
+    return(NA)
+  }
+  
+  x <- as.character(x)
+  parts <- strsplit(x, "\\.")
+  get_count <- function(p) {
+    if (length(p) == 2 && !is.na(p[2])) {
+      return(nchar(p[2]))
+    } else {
+      return(0)
+    }
+  }
+  return(sapply(parts, get_count))
+}
+
+
+
+
+
 #' set_group for marginal functions and utili 22
 #' @details used in bsitar
 #' 
@@ -5159,7 +5221,6 @@ setup_by_var <- function(model,
       set_group <- FALSE
     }
   }
-  
   
   xvar_strict_msg <- 
     paste0("Argument 'by' need to be specified correctly",

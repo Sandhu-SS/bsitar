@@ -10,6 +10,13 @@
 #' 
 #' @param model An object of class \code{bgmfit} representing the model to which
 #'   the fit criteria will be added.
+#'   
+#' @param model_return A logical (default \code{NULL}) to indicate whether to
+#'   return the model object or just assign the criteria to the model. When
+#'   \code{model_return = NULL}, then \code{model_return} is automatically
+#'   assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when
+#'   \code{test_mode = TRUE}. Note that when \code{test_mode = TRUE}, the model
+#'   object will be returned along with the criteria.
 #' 
 #' @inheritParams growthparameters.bgmfit
 #' @inherit brms::add_criterion.brmsfit params description return
@@ -56,6 +63,7 @@ add_model_criterion.bgmfit <-
            resp = NULL,
            cores = 1,
            model_deriv = NULL,
+           model_return = NULL,
            verbose = FALSE,
            expose_function = FALSE,
            usesavedfuns = NULL,
@@ -101,6 +109,17 @@ add_model_criterion.bgmfit <-
     if(is.null(model_deriv)) {
       model_deriv <- TRUE
     }
+    
+    
+   check_pipe_name <- get_lhs_pipe()
+    if(is.null(check_pipe_name)) {
+      model_name_sym <- match.call()$model
+    } else {
+      model_name_sym <- check_pipe_name
+    }
+   model_name <- deparse(model_name_sym)
+   
+   
     
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                            fargs = formals(), 
@@ -214,7 +233,39 @@ add_model_criterion.bgmfit <-
       . <- CustomDoCall(brms::add_criterion, calling.args)
     })
     
+    
+
+    check_test_mode <- paste0(model_name, "[['test_mode']]")
+    
+    assign_to_model <- NULL
+    if(is.null(model_return)) {
+      if(!ept(check_test_mode)) {
+        model_return    <- FALSE
+      } else {
+        model_return    <- TRUE
+      }
+    } else if(!is.null(model_return)) {
+      if(!is.logical(model_return)) {
+        stop("Argument model_return must be logical, TRUE / FALSE")
+      }
+      if(model_return) {
+        assign_to_model <- FALSE
+      }
+    }
+    
+    
+    
+    if(!ept(check_test_mode)) {
+      if(!is.null(assign_to_model)) {
+        if(assign_to_model) {
+          assign(model_name, ., envir = parent.frame())
+        }
+      }
+    }
+    
+    
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
+    
     
     if(!is.null(eval(full.args$clearenvfuns))) {
       if(!is.logical(eval(full.args$clearenvfuns))) {
@@ -252,8 +303,14 @@ add_model_criterion.bgmfit <-
         }
       })
     } # if(setcleanup) {
-    .
+    if(model_return) {
+      return(.)
+    } else {
+      return(invisible(NULL))
+    }
+    # return(.)
   }
+
 
 
 #' @rdname add_model_criterion

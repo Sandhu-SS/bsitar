@@ -4421,7 +4421,6 @@ getEnv <- function(x, geteval = TRUE) {
 #' @return A list comprised of exposed functions.
 #' @noRd
 #'
-
 getpipedot <- function(arguments, asstr = FALSE) {
   if(deparse(arguments$model) == ".") {
     first_call <- sys.calls()[[1]] # get the first entry on the call stack
@@ -4433,6 +4432,38 @@ getpipedot <- function(arguments, asstr = FALSE) {
   if(asstr) mymodel <- deparse(mymodel)
   mymodel
 }
+
+
+#' An internal function to get the 'model' name from the arguments
+#'
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+get_lhs_pipe <- function(){
+  calls <- sys.calls()
+  #pull out the function or operator (e.g. the `%>%`)
+  call_firsts <- lapply(calls,`[[`,1) 
+  #check which ones are equal to the pipe
+  pipe_calls <- vapply(call_firsts,identical,logical(1),quote(`%>%`))
+  #if we have no pipes, then get_lhs() was called incorrectly
+  if(all(!pipe_calls)){
+    out <- NULL
+  } else {
+    #Get the most recent pipe, lowest on the 
+    pipe_calls <- which(pipe_calls)
+    pipe_calls <- pipe_calls[length(pipe_calls)]
+    #Get the second element of the pipe call
+    this_call <- calls[[c(pipe_calls,2)]]
+    #We need to dig down into the call to find the original
+    while(is.call(this_call) && identical(this_call[[1]],quote(`%>%`))){
+      this_call <- this_call[[2]]
+    }
+    out <- this_call
+  }
+  return(out)
+}
+
 
 
 
