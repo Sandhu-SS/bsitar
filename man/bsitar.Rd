@@ -356,12 +356,14 @@ sub-models).}
 
 \item{xfunxoffset}{Transformation applied to \code{xoffset} for \code{x}
 variable (default \code{TRUE}). See \code{xfun} for details. The default
-\code{sigmaxfunxoffset = TRUE} sets its value to same as \code{xfun}. Users
+\code{xfunxoffset = TRUE} sets its value to same as \code{xfun}. Users
 rarely need to specify \code{xfunxoffset} themselves. One potential
-application is when a user wants to turn it off \code{xfunxoffset} by
-setting it as \code{FALSE}. Note that even when \code{xfunxoffset} is not
+application is when a user wants to turn it off by setting
+\code{xfunxoffset = FALSE}. Note that \code{xfunxoffset} is called only
+when \code{xoffset} is a numeric values and not data based such as
+\code{xoffset = mean}. This is because even when \code{xfunxoffset} is not
 \code{TRUE}, \code{xoffset} is still automatically adjusted by \code{xfun},
-as it is inferred from the transformed \code{sigmax} variable.}
+as it is inferred from the transformed \code{x} variable.}
 
 \item{bound}{An optional real number specifying the value by which the span
 of the predictor variable \code{x} should be extended (default is
@@ -849,20 +851,18 @@ parameters \code{sigmaa}, \code{sigmab}, \code{sigmac} should be part of the
 the \code{sigmafixed} and \code{sigmarandom} form, say for example
 \code{a+b}, the \code{ls} function should exclude \code{sigmac} parameter.
 
-Similar, the number of spline parameters are based on the \code{sigmadf}
-argument. As an example, when \code{sigmadf = 4}, then four spline
-parameters \code{sigmas1, ..., sigmas4} are included, as shown above in the
-example.
+Similarly, the number of spline parameters are based on the \code{sigmadf}
+argument. For example, when \code{sigmadf = 4}, then four spline parameters
+\code{sigmas1, ..., sigmas4} are included, as shown above in the example.
 
-The other relevant arguments for \code{ls} function are set via the
-\code{sigmaknots}, \code{sigmaxoffset}, \code{sigmaxfun}, and
-\code{sigmabound} arguments. created by these arguments.
+The other relevant information that is passed to the \code{ls} function can
+be set via the \code{sigmaknots}, \code{sigmaxoffset}, \code{sigmaxfun}, and
+\code{sigmabound} arguments.
 
-Note that for \code{sigma_formula_manual}, priors must be set up manually
-using the \code{add_self_priors} argument. To see which priors are
-required, the user can run the code with \code{get_priors = TRUE}.
-Additionally, no initial values are defined, so initial values for these
-parameters should be set to either \code{0} or \code{random}.}
+Note that for the \code{location-scale} model, priors must be set up
+manually using the \code{add_self_priors} argument. To see which priors are
+required, the user can run the code with \code{get_priors = TRUE}. Also note
+that the default initial values for \code{location-scale} model are random.}
 
 \item{sigmax}{Predictor for the distributional parameter \code{sigma}. See
 \code{x} for details. Ignored if \code{sigma_formula_manual = NULL}.}
@@ -915,10 +915,12 @@ structure. See \code{xfun} for details. Ignored if
 details. The default \code{sigmaxfunxoffset = TRUE} sets its value to same
 as \code{sigmaxfun}. Users rarely need to specify \code{sigmaxfunxoffset}
 themselves. One potential application is when a user wants to turn it off
-\code{sigmaxfunxoffset} by setting it as \code{FALSE}. Note that even when
-\code{sigmaxfunxoffset} is not \code{TRUE}, \code{sigmaxoffset} is still
-automatically adjusted for \code{sigmaxfun}, as it is inferred from the
-transformed \code{sigmax} variable.}
+by setting \code{sigmaxfunxoffset = FALSE}. Note that
+\code{sigmaxfunxoffset} is called only when \code{sigmaxoffset} is a
+numeric values and not data based such as \code{sigmaxoffset = mean}. This
+is because even when \code{sigmaxfunxoffset} is not \code{TRUE},
+\code{sigmaxoffset} is still automatically adjusted by \code{sigmaxfun}, as
+it is inferred from the transformed \code{sigmax} variable.}
 
 \item{dpar_formula}{Formula for the distributional fixed effect parameter,
 \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.}
@@ -2100,12 +2102,12 @@ Super Imposition by Translation and Rotation (\emph{SITAR}) model. The
 used to summarize growth processes (such as height and weight) from early
 childhood through adulthood.
 
-The frequentist version of the \emph{SITAR} model can be fit using the
+The frequentest version of the \emph{SITAR} model can be fit using the
 already available R package, \pkg{sitar} \insertCite{R-sitar}{bsitar}.
 However, the \pkg{bsitar} package offers an enhanced Bayesian
-implementation that improves modeling capabilities. In addition to
-univariate analysis (i.e., modeling a single outcome), \pkg{bsitar} also
-supports:
+implementation that improves modeling capabilities. In addition to the
+conventional univariate analysis (i.e., modeling a single outcome),
+\pkg{bsitar} also supports:
 
 \itemize{
 \item Univariate-by-subgroup analysis: This allows for simultaneous

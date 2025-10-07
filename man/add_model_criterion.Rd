@@ -3,7 +3,7 @@
 \name{add_model_criterion.bgmfit}
 \alias{add_model_criterion.bgmfit}
 \alias{add_model_criterion}
-\title{Add Model Fit Criteria to Model}
+\title{Add fit Criteria to the model}
 \usage{
 \method{add_model_criterion}{bgmfit}(
   model,
@@ -12,7 +12,10 @@
   draw_ids = NULL,
   compare = TRUE,
   pointwise = FALSE,
-  model_names = NULL,
+  model_name = NULL,
+  overwrite = FALSE,
+  force_save = FALSE,
+  file = NULL,
   summary = TRUE,
   robust = FALSE,
   probs = c(0.025, 0.975),
@@ -20,7 +23,7 @@
   resp = NULL,
   cores = 1,
   model_deriv = NULL,
-  model_return = NULL,
+  return_model = NULL,
   verbose = FALSE,
   expose_function = FALSE,
   usesavedfuns = NULL,
@@ -58,9 +61,26 @@ The latter approach is usually considerably slower but
 requires much less working memory. Accordingly, if one runs
 into memory issues, \code{pointwise = TRUE} is the way to go.}
 
-\item{model_names}{If \code{NULL} (the default) will use model names
-derived from deparsing the call. Otherwise will use the passed
-values as model names.}
+\item{model_name}{Optional name of the model. If \code{NULL}
+(the default) the name is taken from the call to \code{x}.}
+
+\item{overwrite}{Logical; Indicates if already stored fit
+indices should be overwritten. Defaults to \code{FALSE}.
+Setting it to \code{TRUE} is useful for example when changing
+additional arguments of an already stored criterion.}
+
+\item{force_save}{Logical; only relevant if \code{file} is specified and
+ignored otherwise. If \code{TRUE}, the fitted model object will be saved
+regardless of whether new criteria were added via \code{add_criterion}.}
+
+\item{file}{Either \code{NULL} or a character string. In the latter case, the
+fitted model object including the newly added criterion values is saved via
+\code{\link{saveRDS}} in a file named after the string supplied in
+\code{file}. The \code{.rds} extension is added automatically. If \code{x}
+was already stored in a file before, the file name will be reused
+automatically (with a message) unless overwritten by \code{file}. In any
+case, \code{file} only applies if new criteria were actually added via
+\code{add_criterion} or if \code{force_save} was set to \code{TRUE}.}
 
 \item{summary}{A logical value indicating whether only the estimate should be
 computed (\code{TRUE}), or whether the estimate along with SE and CI should
@@ -100,9 +120,9 @@ the velocity curve, such as \code{growthparameters()} and
 distance curve (i.e., fitted values), such as \code{loo_validation()} and
 \code{plot_ppc()}.}
 
-\item{model_return}{A logical (default \code{NULL}) to indicate whether to
+\item{return_model}{A logical (default \code{NULL}) to indicate whether to
 return the model object or just assign the criteria to the model. When
-\code{model_return = NULL}, then \code{model_return} is automatically
+\code{return_model = NULL}, then \code{return_model} is automatically
 assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when
 \code{test_mode = TRUE}. Note that when \code{test_mode = TRUE}, the model
 object will be returned along with the criteria.}
@@ -139,18 +159,18 @@ most post-processing functions rely on \pkg{brms}, it is recommended to set
 \code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
 derivatives like velocity curves.}
 
-\item{...}{Additional arguments passed to the \code{brms::fitted.brmsfit()}
-and \code{brms::predict()} functions.}
+\item{...}{Further arguments passed on to the functions from the \pkg{brms}}
 }
 \value{
-An object of class \code{bgmfit} with the specified fit criteria added.
+An object of class \code{bgmfit} with the specified fit criteria
+added.
 }
 \description{
 The \strong{add_model_criterion()} function is a wrapper around
 \code{\link[brms:add_criterion]{brms::add_criterion()}} that allows adding fit criteria to a model. Note
 that arguments such as \code{compare} and \code{pointwise} are relevant
 only for \link[brms:add_ic]{brms::add_loo}, while \code{summary}, \code{robust}, and
-\code{probs} are ignored except for the \code{\link[brms:bayes_R2.brmsfit]{brms::bayes_R2()}}.
+\code{probs} are ignored except for the \code{\link[brms:bayes_R2.brmsfit]{brms::bayes_R2()}}
 }
 \examples{
 \donttest{
@@ -160,7 +180,7 @@ only for \link[brms:add_ic]{brms::add_loo}, while \code{summary}, \code{robust},
 # to the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 
-model <- berkeley_exfit
+model <- getNsObject(berkeley_exfit)
 
 # Add model fit criteria (e.g., WAIC)
 model <- add_model_criterion(model, criterion = c("waic"))

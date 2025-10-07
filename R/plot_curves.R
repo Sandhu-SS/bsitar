@@ -537,6 +537,11 @@ plot_curves.bgmfit <- function(model,
                                        all = FALSE, 
                                        verbose = verbose)
     
+    # When 'sigma_formula' and 'sigma_formula_gr_str' used, 
+    # sigma_model = 'conventional' returned.
+    # This needs sigma_model = 'conventional' to be worked on 
+    # For now, newdata_fixed = 1 along with xvar = 'age' plots teh distance
+    
     arguments$model$model_info[['which_sigma_model']] <- 
       model$model_info[['which_sigma_model']] <- sigma_model
     

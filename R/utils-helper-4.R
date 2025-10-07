@@ -1812,19 +1812,21 @@ prepare_formula <- function(x,
       get_n_str_length <- 0
     }
     if(get_n_str_length != 0) {
+      # 24.08.204 was ok but xxxxxx conflicted with inclx of Hmisc::rcspline.eval
+      str  <- gsub(")+(", ")ZZZZZZZZZZ(", str, fixed = T)
+      str_ <- sub("^[^ZZZZZZZZZZ]*ZZZZZZZZZZ", "", str)
+      str_ <- gsub(")ZZZZZZZZZZ(", ")+(", str_, fixed = T)
+      
       # 24.08.204
-      str <- gsub(")+(", ")xxxxxx(", str, fixed = T)
-      str_ <- sub("^[^xxxxxx]*xxxxxx", "", str)
-      str_ <- gsub(")xxxxxx(", ")+(", str_, fixed = T)
-      # str <- gsub(")+(", ")_(", str, fixed = T)
-      # str_ <- sub("^[^_]*_", "", str)
-      # str_ <- gsub(")_(", ")+(", str_, fixed = T)
+      # str <- gsub(")+(", ")xxxxxx(", str, fixed = T)
+      # str_ <- sub("^[^xxxxxx]*xxxxxx", "", str)
+      # str_ <- gsub(")xxxxxx(", ")+(", str_, fixed = T)
       form <- paste0(form, "+", str_)
     } else {
       form <- form
     }
     form <- gsub("[[:space:]]", "", form)
-    form
+    return(form)
   }
   
   

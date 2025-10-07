@@ -1,30 +1,34 @@
 
 
-#' @title Add Model Fit Criteria to Model
+#' @title Add fit Criteria to the model
 #' 
 #' @description The \strong{add_model_criterion()} function is a wrapper around
 #'   [brms::add_criterion()] that allows adding fit criteria to a model. Note
 #'   that arguments such as \code{compare} and \code{pointwise} are relevant
 #'   only for [brms::add_loo], while \code{summary}, \code{robust}, and
-#'   \code{probs} are ignored except for the [brms::bayes_R2()].
+#'   \code{probs} are ignored except for the [brms::bayes_R2()]
 #' 
 #' @param model An object of class \code{bgmfit} representing the model to which
 #'   the fit criteria will be added.
 #'   
-#' @param model_return A logical (default \code{NULL}) to indicate whether to
+#' @param return_model A logical (default \code{NULL}) to indicate whether to
 #'   return the model object or just assign the criteria to the model. When
-#'   \code{model_return = NULL}, then \code{model_return} is automatically
+#'   \code{return_model = NULL}, then \code{return_model} is automatically
 #'   assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when
 #'   \code{test_mode = TRUE}. Note that when \code{test_mode = TRUE}, the model
 #'   object will be returned along with the criteria.
+#'   
+#'  
+#' @param ... Further arguments passed on to the functions from the \pkg{brms}
 #' 
 #' @inheritParams growthparameters.bgmfit
-#' @inherit brms::add_criterion.brmsfit params description return
 #' @inheritParams brms::bayes_R2.brmsfit
+#' @inheritParams brms::add_criterion.brmsfit
 #' @inheritParams brms::waic.brmsfit
 #' @inheritParams fitted_draws.bgmfit
-#'  
-#' @return An object of class \code{bgmfit} with the specified fit criteria added.
+#' 
+#' @return An object of class \code{bgmfit} with the specified fit criteria
+#'   added.
 #' 
 #' @rdname add_model_criterion
 #' @export
@@ -42,7 +46,7 @@
 #' # to the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 #' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
-#' model <- berkeley_exfit
+#' model <- getNsObject(berkeley_exfit)
 #' 
 #' # Add model fit criteria (e.g., WAIC)
 #' model <- add_model_criterion(model, criterion = c("waic"))
@@ -55,7 +59,10 @@ add_model_criterion.bgmfit <-
            draw_ids = NULL,
            compare = TRUE,
            pointwise = FALSE,
-           model_names = NULL,
+           model_name = NULL,
+           overwrite = FALSE,
+           force_save = FALSE,
+           file = NULL,
            summary = TRUE,
            robust = FALSE,
            probs = c(0.025, 0.975),
@@ -63,7 +70,7 @@ add_model_criterion.bgmfit <-
            resp = NULL,
            cores = 1,
            model_deriv = NULL,
-           model_return = NULL,
+           return_model = NULL,
            verbose = FALSE,
            expose_function = FALSE,
            usesavedfuns = NULL,
@@ -237,33 +244,38 @@ add_model_criterion.bgmfit <-
 
     check_test_mode <- paste0(model_name, "[['test_mode']]")
     
+
     assign_to_model <- NULL
-    if(is.null(model_return)) {
-      if(!ept(check_test_mode)) {
-        model_return    <- FALSE
-      } else {
-        model_return    <- TRUE
+    if(is.null(return_model)) {
+      if(is.null(ept(check_test_mode))) {
+        return_model    <- FALSE
+        assign_to_model <- TRUE
+      } else if(!is.null(ept(check_test_mode))) {
+        if(!ept(check_test_mode)) {
+          return_model    <- FALSE
+          assign_to_model <- TRUE
+        } else if(ept(check_test_mode)) {
+          return_model    <- TRUE
+          assign_to_model <- FALSE
+        }
       }
-    } else if(!is.null(model_return)) {
-      if(!is.logical(model_return)) {
-        stop("Argument model_return must be logical, TRUE / FALSE")
+    } else if(!is.null(return_model)) {
+      if(!is.logical(return_model)) {
+        stop("Argument return_model must be logical, TRUE / FALSE")
       }
-      if(model_return) {
+      if(return_model) {
         assign_to_model <- FALSE
       }
     }
     
     
-    
-    if(!ept(check_test_mode)) {
-      if(!is.null(assign_to_model)) {
-        if(assign_to_model) {
-          assign(model_name, ., envir = parent.frame())
-        }
+    if(!is.null(assign_to_model)) {
+      if(assign_to_model) {
+        assign(model_name, ., envir = parent.frame())
       }
     }
     
-    
+   
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
     
     
@@ -303,12 +315,12 @@ add_model_criterion.bgmfit <-
         }
       })
     } # if(setcleanup) {
-    if(model_return) {
+    if(return_model) {
       return(.)
     } else {
       return(invisible(NULL))
     }
-    # return(.)
+
   }
 
 

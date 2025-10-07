@@ -999,7 +999,8 @@ get.cores <- function(cores.arg) {
 validate_response <- function(model,
                               resp = NULL) {
   if (model$model_info$nys == 1 & !is.null(resp)) {
-    stop(
+    stop_msg <- 
+      paste0(
       "You have fit a univariate model",
       " but set resp option as ",
       resp,
@@ -1007,12 +1008,13 @@ validate_response <- function(model,
       "\n ",
       " The resp option should be appropriately set to NULL",
       "\n ",
-      " (i.e., resp = NULL)"
-    )
+      " (i.e., resp = NULL)")
+    stop(clean_text_spaces(stop_msg))
   }
   if (model$model_info$nys > 1 & is.null(resp)) {
     if (!is.na(model$model_info$univariate_by$by)) {
-      stop(
+      stop_msg <- 
+        paste0(
         "You have fit a univariate-by-subset model for '",
         model$model_info$univariate_by$by, "'",
         "\n ",
@@ -1020,31 +1022,31 @@ validate_response <- function(model,
         " (which is NULL at present).",
         "\n ",
         " The response options are ",
-        collapse_comma(model$model_info$yvars)
-      )
+        collapse_comma(model$model_info$yvars))
+      stop(clean_text_spaces(stop_msg))
     }
     if (model$model_info$multivariate$mvar) {
-      stop(
-        "You have fit a multivariate model ",
+      stop_msg <- 
+        paste0("You have fit a multivariate model. However, the 'resp' option",
         "\n ",
-        " However, the 'resp' options is not set appropriately",
-        " (which is NULL at present).",
+        " is not set appropriately (which is NULL at present).",
         "\n ",
-        " The response options are ",
-        collapse_comma(model$model_info$yvars)
-      )
+        " The available response options are: ",
+        collapse_comma(model$model_info$yvars))
+      stop(clean_text_spaces(stop_msg))
     }
   }
 
   if (!is.null(resp)) {
     if (!resp %in% model$model_info[['yvars']]) {
-      stop(
+      stop_msg <- 
+        paste0(
         "Response should be one of the following: ",
         paste(model$model_info[['yvars']], collapse = " "),
         "\n ",
         " but you have specified: ",
-        resp
-      )
+        resp)
+      stop(clean_text_spaces(stop_msg))
     }
   }
 
@@ -2282,15 +2284,7 @@ mapderivqr <- function(model,
   validate_response(model, resp)
 
   list_c <- list()
-  
-  # xvar_ <- paste0('xvar', resp_rev_)
-  # if(is.null(xvar)) xvar <- model$model_info[[xvar_]]
-  # yvar_ <- paste0('yvar', resp_rev_)
-  # yvar  <- model$model_info[[yvar_]]
-  # groupvar_ <- paste0('groupvar', resp_rev_)
-  # hierarchical_ <- paste0('hierarchical', resp_rev_)
-  
-  
+ 
   # For sigma
   xvar_      <- paste0('xvar', resp_rev_)
   sigmaxvar_ <- paste0('sigma', xvar_)
@@ -6630,6 +6624,11 @@ get_sigmamodel_info <- function(model,
         sigma_model       <- model$model_info[[sigma_model_]]
         out <- sigma_model
       }
+      # This when 'sigma_formula' and 'sigma_formula_gr_str' used 
+      # This needs to be worked on 
+      if(is.null(out)) {
+        out <- 'conventional'
+      }
     } # if(what == 'model') {
     if(what == 'cov' | what == 'covariate' | what == 'covariates') {
       if(all) {
@@ -6676,6 +6675,7 @@ get_sigmamodel_info <- function(model,
         }
       }
     } # if(what == 'cov' | what == 'covariate' | what == 'covariates') {
+    
     
   } # if(dpar == "sigma") {
   return(out)

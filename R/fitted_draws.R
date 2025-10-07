@@ -27,12 +27,12 @@
 #'   its derivative (velocity curve). The default \code{deriv = 0} is for the
 #'   distance curve, while \code{deriv = 1} is for the velocity curve.
 #' 
-#' @inherit growthparameters.bgmfit params
-#' @inherit brms::fitted.brmsfit params
-#' 
 #' @param ... Additional arguments passed to the [brms::fitted.brmsfit()]
 #'   function. For details on available options, please refer to
 #'   \code{brms::fitted.brmsfit()}.
+#'   
+#' @inheritParams growthparameters.bgmfit
+#' @inheritParams brms::fitted.brmsfit
 #' 
 #' @return An array of predicted mean response values when \code{summarise =
 #'   FALSE}, or a \code{data.frame} when \code{summarise = TRUE}. For further

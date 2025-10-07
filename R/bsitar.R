@@ -9,12 +9,12 @@
 #'   used to summarize growth processes (such as height and weight) from early
 #'   childhood through adulthood.
 #'
-#'   The frequentist version of the \emph{SITAR} model can be fit using the
+#'   The frequentest version of the \emph{SITAR} model can be fit using the
 #'   already available R package, \pkg{sitar} \insertCite{R-sitar}{bsitar}.
 #'   However, the \pkg{bsitar} package offers an enhanced Bayesian
-#'   implementation that improves modeling capabilities. In addition to
-#'   univariate analysis (i.e., modeling a single outcome), \pkg{bsitar} also
-#'   supports:
+#'   implementation that improves modeling capabilities. In addition to the
+#'   conventional univariate analysis (i.e., modeling a single outcome),
+#'   \pkg{bsitar} also supports:
 #'   
 #'   \itemize{
 #'     \item Univariate-by-subgroup analysis: This allows for simultaneous
@@ -279,12 +279,14 @@
 #' 
 #' @param xfunxoffset Transformation applied to \code{xoffset} for \code{x}
 #'   variable (default \code{TRUE}). See \code{xfun} for details. The default
-#'   \code{sigmaxfunxoffset = TRUE} sets its value to same as \code{xfun}. Users
+#'   \code{xfunxoffset = TRUE} sets its value to same as \code{xfun}. Users
 #'   rarely need to specify \code{xfunxoffset} themselves. One potential
-#'   application is when a user wants to turn it off \code{xfunxoffset} by
-#'   setting it as \code{FALSE}. Note that even when \code{xfunxoffset} is not
+#'   application is when a user wants to turn it off by setting
+#'   \code{xfunxoffset = FALSE}. Note that \code{xfunxoffset} is called only
+#'   when \code{xoffset} is a numeric values and not data based such as
+#'   \code{xoffset = mean}. This is because even when \code{xfunxoffset} is not
 #'   \code{TRUE}, \code{xoffset} is still automatically adjusted by \code{xfun},
-#'   as it is inferred from the transformed \code{sigmax} variable.
+#'   as it is inferred from the transformed \code{x} variable.
 #' 
 #' @param bound An optional real number specifying the value by which the span
 #'   of the predictor variable \code{x} should be extended (default is
@@ -774,20 +776,18 @@
 #'  the \code{sigmafixed} and \code{sigmarandom} form, say for example
 #'  \code{a+b}, the \code{ls} function should exclude \code{sigmac} parameter.
 #'  
-#'  Similar, the number of spline parameters are based on the \code{sigmadf}
-#'  argument. As an example, when \code{sigmadf = 4}, then four spline
-#'  parameters \code{sigmas1, ..., sigmas4} are included, as shown above in the
-#'  example.
+#'  Similarly, the number of spline parameters are based on the \code{sigmadf}
+#'  argument. For example, when \code{sigmadf = 4}, then four spline parameters
+#'  \code{sigmas1, ..., sigmas4} are included, as shown above in the example.
 #'  
-#'  The other relevant arguments for \code{ls} function are set via the
-#'  \code{sigmaknots}, \code{sigmaxoffset}, \code{sigmaxfun}, and
-#'  \code{sigmabound} arguments. created by these arguments.
+#'  The other relevant information that is passed to the \code{ls} function can
+#'  be set via the \code{sigmaknots}, \code{sigmaxoffset}, \code{sigmaxfun}, and
+#'  \code{sigmabound} arguments.
 #' 
-#'   Note that for \code{sigma_formula_manual}, priors must be set up manually
-#'   using the \code{add_self_priors} argument. To see which priors are
-#'   required, the user can run the code with \code{get_priors = TRUE}.
-#'   Additionally, no initial values are defined, so initial values for these
-#'   parameters should be set to either \code{0} or \code{random}.
+#'  Note that for the \code{location-scale} model, priors must be set up
+#'  manually using the \code{add_self_priors} argument. To see which priors are
+#'  required, the user can run the code with \code{get_priors = TRUE}. Also note
+#'  that the default initial values for \code{location-scale} model are random.
 #'   
 #' @param sigmax Predictor for the distributional parameter \code{sigma}. See
 #'   \code{x} for details. Ignored if \code{sigma_formula_manual = NULL}.
@@ -840,10 +840,12 @@
 #'   details. The default \code{sigmaxfunxoffset = TRUE} sets its value to same
 #'   as \code{sigmaxfun}. Users rarely need to specify \code{sigmaxfunxoffset}
 #'   themselves. One potential application is when a user wants to turn it off
-#'   \code{sigmaxfunxoffset} by setting it as \code{FALSE}. Note that even when
-#'   \code{sigmaxfunxoffset} is not \code{TRUE}, \code{sigmaxoffset} is still
-#'   automatically adjusted for \code{sigmaxfun}, as it is inferred from the
-#'   transformed \code{sigmax} variable.
+#'   by setting \code{sigmaxfunxoffset = FALSE}. Note that
+#'   \code{sigmaxfunxoffset} is called only when \code{sigmaxoffset} is a
+#'   numeric values and not data based such as \code{sigmaxoffset = mean}. This
+#'   is because even when \code{sigmaxfunxoffset} is not \code{TRUE},
+#'   \code{sigmaxoffset} is still automatically adjusted by \code{sigmaxfun}, as
+#'   it is inferred from the transformed \code{sigmax} variable.
 #' 
 #' @param dpar_formula Formula for the distributional fixed effect parameter,
 #'   \code{sigma} (default \code{NULL}). See \code{sigma_formula} for details.
@@ -3851,9 +3853,7 @@ bsitar <- function(x,
     fast_nsk <- 0L
   }
   
-  # print(smat)
-  # print(smat)
-  
+
   if(smat == 'isp') {
     smat_moi <- TRUE
   } else {
@@ -6053,131 +6053,9 @@ bsitar <- function(x,
       set_model_sigma_by_mu_fun_str <- set_model_sigma_by_mu_fun_str_full
       ##########################################################################
       
-      msg_for_setting_sigma_var_function <-
-        paste0(
-          "The sigma formulation for variance modeling must be ",
-          "specified via '", sigmavarspfncname_common, "()'.",
-          "\n\n",
-          "The bsitar package provides six different methods for variance ",
-          "modeling, five of which are implemented in the nlme package. ",
-          "These methods are:",
-          "\n  ",
-          "'nlme::varPower()'",
-          "\n  ",
-          "'nlme::varConstPower()'",
-          "\n  ",
-          "'nlme::varExp(form ~ x)'",
-          "\n  ",
-          "'nlme::varExp(form ~ fitted(.))'",
-          "\n  ",
-          "'nlme::varExp(form ~ resid(.))'",
-          "\n\n",
-          "These are specified using the 'method' argument within 'nlf()', ",
-          "for example: nlf(..., method = 'xx') where 'xx' is the method (see below).",
-          "\n\n",
-          "The 'method' argument for each of the five nlme approaches ",
-          "is as follows (short hands in parentheses):",
-          "\n  ",
-          "'varpower' ('vp')",
-          "\n  ",
-          "'varconstpower' ('cp')",
-          "\n  ",
-          "'varexp' ('ve')",
-          "\n  ",
-          "'fitted' ('fi')",
-          "\n  ",
-          "'residual' ('re')",
-          "\n\n",
-          "In addition, bsitar provides a sixth method based on an ",
-          "example from the brms reference manual, which models the ",
-          "square root of the fitted values.",
-          "\n",
-          "This can be specified with method = 'mean' or its short hand 'me'.",
-          "\n\n",
-          "Below are examples showing how to use '", sigmavarspfncname_common, "' ",
-          "to specify each of the six variance models:",
-          "\n\n",
-          "1. varpower:",
-          "\n  ",
-          "nlf(sigma ~ vf(param1, param2, predictor), method = 'vp') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "2. varConstPower:",
-          "\n  ",
-          "nlf(sigma ~ vf(param1, param2, param3, predictor), method = 'cp') +",
-          "\n  ",
-          "lf(param1 + param2 + param3 ~ 1)",
-          "\n\n",
-          "3. varExp:",
-          "\n  ",
-          "nlf(sigma ~ vf(param1, param2, predictor), method = 've') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "4. fitted:",
-          "\n  ",
-          "nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "5. residual:",
-          "\n  ",
-          "nlf(sigma ~ vf(param1, param2, identity(), response), method = 're') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "6. mean:",
-          "\n  ",
-          "nlf(sigma ~ vf(param1, param2, identity()), method = 'me') +",
-          "\n  ",
-          "lf(param1 + param2 ~ 1)",
-          "\n\n",
-          "Internal Predictor Transformations:",
-          "\n  ",
-          "- For 'varpower' and 'varConstPower', the predictor is ",
-          "transformed to log(abs(predictor)).",
-          "\n  ",
-          "- For 'varexp', the predictor is not transformed.",
-          "\n  ",
-          "- For 'fitted' and 'residual', identity() is internally ",
-          "set to fitted(.).",
-          "\n  ",
-          "- For 'mean', identity() is internally set to sqrt(fitted(.)).",
-          "\n\n",
-          "The linear predictor, lf(), can be extended to include ",
-          "covariates and group-level random effects.",
-          "\n",
-          "For example, 'lf(param1 + param2 ~ 1)' can become:",
-          "\n  ",
-          "'lf(param1 + param2 ~ 1 + covariate + (1 || gr(id, by = groupid)))'",
-          "\n\n",
-          "Automatic Prior Assignment:",
-          "\n",
-          "Priors for these linear predictors are assigned automatically. ",
-          "This applies to both mean and group-level random effects. ",
-          "The function uses priors specified via arguments like ",
-          "'sigma_prior_beta', 'sigma_cov_prior_beta', 'sigma_prior_sd', etc. ",
-          "These are the same arguments otherwise used for setting priors on ",
-          "parameters defined by 'sigma_formula', 'sigma_formula_gr', and ",
-          "'sigma_formula_gr_str'.",
-          "\n\n",
-          "To disable this automatic prior assignment, you can add ",
-          "the argument prior = 'self' to the nlf() function. ",
-          "For example:",
-          "\n  ",
-          "'nlf(..., method = 'vp', prior = 'self')'",
-          "\n\n",
-          "Note: If you disable automatic prior assignment, it is advised ",
-          "to first get the required prior structure by running 'bsitar' ",
-          "with the 'get_prior = TRUE' argument. The relevant portions ",
-          "of this structure can then be edited and added back to the ",
-          "model via the 'add_self_priors' argument in 'bsitar'. Please ",
-          "see the documentation for 'add_self_priors' for more details."
-        )
-      
       
       ##########################################################################
+      # check sigmavarspfncname_common
       if(set_model_sigma_by_fz |
          set_model_sigma_by_fp |
          set_model_sigma_by_fe |
@@ -6188,15 +6066,139 @@ bsitar <- function(x,
          set_model_sigma_by_me |
          set_model_sigma_by_rp |
          set_model_sigma_by_re ) {
+        # write message 
+        msg_for_setting_sigma_var_function <-
+          paste0(
+            "The sigma formulation for variance modeling must be ",
+            "specified via '", sigmavarspfncname_common, "()'.",
+            "\n\n",
+            "The bsitar package provides six different methods for variance ",
+            "modeling, five of which are implemented in the nlme package. ",
+            "These methods are:",
+            "\n  ",
+            "'nlme::varPower()'",
+            "\n  ",
+            "'nlme::varConstPower()'",
+            "\n  ",
+            "'nlme::varExp(form ~ x)'",
+            "\n  ",
+            "'nlme::varExp(form ~ fitted(.))'",
+            "\n  ",
+            "'nlme::varExp(form ~ resid(.))'",
+            "\n\n",
+            "These are specified using the 'method' argument within 'nlf()', ",
+            "for example: nlf(..., method = 'xx') where 'xx' is the method (see below).",
+            "\n\n",
+            "The 'method' argument for each of the five nlme approaches ",
+            "is as follows (short hands in parentheses):",
+            "\n  ",
+            "'varpower' ('vp')",
+            "\n  ",
+            "'varconstpower' ('cp')",
+            "\n  ",
+            "'varexp' ('ve')",
+            "\n  ",
+            "'fitted' ('fi')",
+            "\n  ",
+            "'residual' ('re')",
+            "\n\n",
+            "In addition, bsitar provides a sixth method based on an ",
+            "example from the brms reference manual, which models the ",
+            "square root of the fitted values.",
+            "\n",
+            "This can be specified with method = 'mean' or its short hand 'me'.",
+            "\n\n",
+            "Below are examples showing how to use '", sigmavarspfncname_common, "' ",
+            "to specify each of the six variance models:",
+            "\n\n",
+            "1. varpower:",
+            "\n  ",
+            "nlf(sigma ~ vf(param1, param2, predictor), method = 'vp') +",
+            "\n  ",
+            "lf(param1 + param2 ~ 1)",
+            "\n\n",
+            "2. varConstPower:",
+            "\n  ",
+            "nlf(sigma ~ vf(param1, param2, param3, predictor), method = 'cp') +",
+            "\n  ",
+            "lf(param1 + param2 + param3 ~ 1)",
+            "\n\n",
+            "3. varExp:",
+            "\n  ",
+            "nlf(sigma ~ vf(param1, param2, predictor), method = 've') +",
+            "\n  ",
+            "lf(param1 + param2 ~ 1)",
+            "\n\n",
+            "4. fitted:",
+            "\n  ",
+            "nlf(sigma ~ vf(param1, param2, identity()), method = 'fi') +",
+            "\n  ",
+            "lf(param1 + param2 ~ 1)",
+            "\n\n",
+            "5. residual:",
+            "\n  ",
+            "nlf(sigma ~ vf(param1, param2, identity(), response), method = 're') +",
+            "\n  ",
+            "lf(param1 + param2 ~ 1)",
+            "\n\n",
+            "6. mean:",
+            "\n  ",
+            "nlf(sigma ~ vf(param1, param2, identity()), method = 'me') +",
+            "\n  ",
+            "lf(param1 + param2 ~ 1)",
+            "\n\n",
+            "Internal Predictor Transformations:",
+            "\n  ",
+            "- For 'varpower' and 'varConstPower', the predictor is ",
+            "transformed to log(abs(predictor)).",
+            "\n  ",
+            "- For 'varexp', the predictor is not transformed.",
+            "\n  ",
+            "- For 'fitted' and 'residual', identity() is internally ",
+            "set to fitted(.).",
+            "\n  ",
+            "- For 'mean', identity() is internally set to sqrt(fitted(.)).",
+            "\n\n",
+            "The linear predictor, lf(), can be extended to include ",
+            "covariates and group-level random effects.",
+            "\n",
+            "For example, 'lf(param1 + param2 ~ 1)' can become:",
+            "\n  ",
+            "'lf(param1 + param2 ~ 1 + covariate + (1 || gr(id, by = groupid)))'",
+            "\n\n",
+            "Automatic Prior Assignment:",
+            "\n",
+            "Priors for these linear predictors are assigned automatically. ",
+            "This applies to both mean and group-level random effects. ",
+            "The function uses priors specified via arguments like ",
+            "'sigma_prior_beta', 'sigma_cov_prior_beta', 'sigma_prior_sd', etc. ",
+            "These are the same arguments otherwise used for setting priors on ",
+            "parameters defined by 'sigma_formula', 'sigma_formula_gr', and ",
+            "'sigma_formula_gr_str'.",
+            "\n\n",
+            "To disable this automatic prior assignment, you can add ",
+            "the argument prior = 'self' to the nlf() function. ",
+            "For example:",
+            "\n  ",
+            "'nlf(..., method = 'vp', prior = 'self')'",
+            "\n\n",
+            "Note: If you disable automatic prior assignment, it is advised ",
+            "to first get the required prior structure by running 'bsitar' ",
+            "with the 'get_prior = TRUE' argument. The relevant portions ",
+            "of this structure can then be edited and added back to the ",
+            "model via the 'add_self_priors' argument in 'bsitar'. Please ",
+            "see the documentation for 'add_self_priors' for more details."
+          )
+        # check and display message as error
         if(!grepl(paste0(sigmavarspfncname_common, "("), 
                   set_model_sigma_by_mu_fun_str, fixed = TRUE)) {
           stop(msg_for_setting_sigma_var_function)
         } 
       }
+      # End check sigmavarspfncname_common
       
       
       set_model_sigma_by_mu_fun_str_c[[ii]] <- set_model_sigma_by_mu_fun_str
-      
       
       
       sigmatau_strsi <- 
@@ -7088,6 +7090,8 @@ bsitar <- function(x,
       assign('xfunxoffsettransformsi', xfunxoffsettransformsi, envir = enverr.)
     }
     
+    
+
    
     if (!set_sigmaxfunxoffsetsi) {
       sigmaxfunxoffsettransformsi <- function(x)x
@@ -13250,7 +13254,7 @@ bsitar <- function(x,
           if(nys == 1) {
             model[['formula']][['pforms']][['sigma']] <- sigma_forms
           } else if(nys > 1) {
-            model[['formula']][['forms']][[outrespbames]][['pforms']][['sigma']] <- 
+        model[['formula']][['forms']][[outrespbames]][['pforms']][['sigma']] <- 
               sigma_forms
           }
         } 
@@ -13265,10 +13269,7 @@ bsitar <- function(x,
       brmsfit$formula <- function_restore_mu_sigam_form_new
     } # if(set_model_sigma_by_fi | ...) {
     
-    # print(brmsfit$formula)
-    # stop()
-    
-    # sigmavarspfncname sigmavarspfncname_stan
+
     
     ##############################################################
     ##############################################################
@@ -13615,8 +13616,6 @@ bsitar <- function(x,
                                compress = get_file_compress)
     }
    
-    
-    
     # 20.03.2025
     # This needed for insight::get_data
     attr(brmsfit$data, "data_name") <- data_name_str_attr
@@ -13624,6 +13623,6 @@ bsitar <- function(x,
   } # exe_model_fit
   
   
-} # end bsitar()
+} # End bsitar()
 
 

@@ -119,6 +119,11 @@ prepare_function_nsp_rcs <- function(x,
   family_link_sigma <- NULL;
   
   
+  parm_link_log <- NULL;
+  
+  parm_link_log <- FALSE
+  
+  
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
   if(deparse(substitute(x)) == "sigmaxsi") {
     called_for_ls <- TRUE
@@ -1055,6 +1060,8 @@ prepare_function_nsp_rcs <- function(x,
     add_knotinfo <- paste0(add_knotinfo, knots_split)
     
     
+    
+    
     # add QR
     if (select_model == 'sitar') {
       if (is.null(decomp)) {
@@ -1085,6 +1092,11 @@ prepare_function_nsp_rcs <- function(x,
       vectorA <- "\n  vector[N] A=a;"
     }
     
+    
+    
+    if(parm_link_log) {
+      vectorA <- "\n  vector[N] A=exp(a);"
+    }
     
     
     
@@ -2327,6 +2339,21 @@ prepare_function_nsp_rcs <- function(x,
     
 
     
+    if(parm_link_log) {
+      spl_d0 <- gsub("-b)",  "+exp(b))", spl_d0, fixed = T)
+      spl_d0 <- gsub("(c)", "(-c)",    spl_d0, fixed = T)
+      spl_d1 <- gsub("-b)",  "+exp(b))", spl_d1, fixed = T)
+      spl_d1 <- gsub("(c)", "(-c)",    spl_d1, fixed = T)
+      spl_d2 <- gsub("-b)",  "+exp(b))", spl_d2, fixed = T)
+      spl_d2 <- gsub("(c)", "(-c)",    spl_d2, fixed = T)
+      rcsfun_raw <- gsub("-b)", "+exp(b))", rcsfun_raw, fixed = T)
+      rcsfun_raw <- gsub("(c)", "(-c)",     rcsfun_raw, fixed = T)
+      rcsfun     <- gsub("-b)", "+exp(b))", rcsfun,     fixed = T)
+      rcsfun     <- gsub("(c)", "(-c)",     rcsfun,     fixed = T)
+    }
+    
+    # cat(rcsfun)
+    # stop()
     
     # rcsfunmultadd <- NULL
     
