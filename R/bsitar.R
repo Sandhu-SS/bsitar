@@ -7244,7 +7244,7 @@ bsitar <- function(x,
     }
     
     if (is.numeric(ept(dfsi))) {
-      knots <- (unname(gkn(datai[[xsi]], ept(dfsi), ept(boundsi))))
+      knots <- unname(gkn(datai[[xsi]], ept(dfsi), ept(boundsi)))
       if(verbose) {
         message("For '", smat, "' knots are created internally based on 'df'",
                 "\n ",
@@ -7321,7 +7321,10 @@ bsitar <- function(x,
         rcspline_eval_args[['rpm']]        <-  NULL
         rcspline_eval_args[['pc']]         <-  FALSE
         rcspline_eval_args[['fractied']]   <-  0.05
+        knots_get_boundary_rcs <- knots
         knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
+        knots[1]               <- knots_get_boundary_rcs[1]
+        knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
         if(verbose) {
           message("For '",smat,"' knots are created internally based on the 'df'",
                   "\n ",
