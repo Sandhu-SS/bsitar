@@ -924,7 +924,8 @@ prepare_priors <- function(prior_argument,
             } else if (nlpar == "i") {
               allowed_parm_options <- NULL
             } else if (nlpar == "s") {
-              allowed_parm_options <- c("sdx")
+              # allowed_parm_options <- c("sdx", "sesdx", "se")
+              allowed_parm_options <- c("lm", "lm1", "lm2", "lm3")
             } else if (cov_nlpar != "") {
               allowed_parm_options <- c("lm")
             } else if (sigma_dpar == "sigma") {
@@ -4023,7 +4024,13 @@ prepare_priors <- function(prior_argument,
                    " are greater than the parameter dimensions")
           }
           
+          # For backward compatibility, lm1 = lm
           
+          # new
+          # lm1 -> sd(y) / sd(Xmt)
+          # lm2 -> lmse / sd(Xmt)
+          # lm3 -> lmse
+          # where lmse is tha SE from lm fit 
           
           # scale nlpar s (class b) - sitar
           if (nlpar == "s" & class == "b") {
@@ -4034,6 +4041,30 @@ prepare_priors <- function(prior_argument,
                 lm_gsubby <- paste0("lm", "_", 'sdx', "", "", resp_)
               }
               eit <-  gsub("lm", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm1", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_", "all", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "", "", resp_)
+              }
+              eit <-  gsub("lm1", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm2", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "_", "all", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "", "", resp_)
+              }
+              eit <-  gsub("lm2", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm3", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "_", "all", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "", "", resp_)
+              }
+              eit <-  gsub("lm3", lm_gsubby, x_i)
               evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("stau", empty_sufx)) {
               evaluated_parameter <- rep(NA, nrep_of_parms)
@@ -4536,6 +4567,7 @@ prepare_priors <- function(prior_argument,
           }
           
           
+          
           # scale nlpar s cov (class b) - sitar
           if (cov_nlpar == "s" & class == "b" & !is.null(sncov)) {
             if (x_i == paste0("lm", empty_sufx)) {
@@ -4545,6 +4577,30 @@ prepare_priors <- function(prior_argument,
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
               }
               eit <-  gsub("lm", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm1", empty_sufx)) {
+              if (!s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
+              }
+              eit <-  gsub("lm1", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm2", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "_", "cov", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "_", "cov", resp_)
+              }
+              eit <-  gsub("lm2", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm3", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "_", "cov", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "_", "cov", resp_)
+              }
+              eit <-  gsub("lm3", lm_gsubby, x_i)
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(
@@ -5162,13 +5218,45 @@ prepare_priors <- function(prior_argument,
           
           # scale nlpar s (class sd) - sitar
           if (nlpar == "s" & class == "sd" & grepl("s", randomsi)) {
+            # if (x_i == paste0("lm", empty_sufx)) {
+            #   if (s_form_0_gr) {
+            #     lm_gsubby <- paste0("lm", "_", 'sdx', "_", "all", resp_)
+            #   } else {
+            #     lm_gsubby <- paste0("lm", "_", 'sdx', "", "", resp_)
+            #   }
+            #   eit <-  gsub("lm", lm_gsubby, x_i)
+            #   evaluated_parameter <- scale_factor * ept(eit)
             if (x_i == paste0("lm", empty_sufx)) {
-              if (s_form_0_gr) {
+              if (s_form_0) {
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "all", resp_)
               } else {
                 lm_gsubby <- paste0("lm", "_", 'sdx', "", "", resp_)
               }
               eit <-  gsub("lm", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm1", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_", "all", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "", "", resp_)
+              }
+              eit <-  gsub("lm1", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm2", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "_", "all", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "", "", resp_)
+              }
+              eit <-  gsub("lm2", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm3", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "_", "all", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "", "", resp_)
+              }
+              eit <-  gsub("lm3", lm_gsubby, x_i)
               evaluated_parameter <- scale_factor * ept(eit)
             } else if (x_i == paste0("stau", empty_sufx)) {
               evaluated_parameter <- rep(NA, nrep_of_parms)
@@ -5679,13 +5767,45 @@ prepare_priors <- function(prior_argument,
           
           # scale nlpar s cov (class sd) - sitar
           if (cov_nlpar == "s" & class == "sd" & !is.null(sncov_gr)) {
+            # if (x_i == paste0("lm", empty_sufx)) {
+            #   if (!s_form_0_gr) {
+            #     lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
+            #   } else {
+            #     lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
+            #   }
+            #   eit <-  gsub("lm", lm_gsubby, x_i)
+            #   evaluated_parameter <- scale_factor * ept(eit)
             if (x_i == paste0("lm", empty_sufx)) {
-              if (!s_form_0_gr) {
+              if (!s_form_0) {
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
               } else {
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
               }
               eit <-  gsub("lm", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm1", empty_sufx)) {
+              if (!s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
+              }
+              eit <-  gsub("lm1", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm2", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "_", "cov", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 's', "_se", "_", "cov", resp_)
+              }
+              eit <-  gsub("lm2", lm_gsubby, x_i)
+              evaluated_parameter <- scale_factor * ept(eit)
+            } else if (x_i == paste0("lm3", empty_sufx)) {
+              if (s_form_0) {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "_", "cov", resp_)
+              } else {
+                lm_gsubby <- paste0("lm", "_", 'sdx', "_se", "_", "cov", resp_)
+              }
+              eit <-  gsub("lm3", lm_gsubby, x_i)
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
               check_evalation_of_numeric_pdata_obj(

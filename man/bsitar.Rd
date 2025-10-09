@@ -1214,9 +1214,26 @@ using the same \code{sethp} option. For example, \code{s_prior_beta =
 \item For \code{uniform} priors, you can use the option \code{addrange} to
 symmetrically expand the prior range.
 }
-It is observed that location-scale based prior distributions (such as
+It has been observed that location-scale based prior distributions (such as
 \code{normal}, \code{student_t}, and \code{cauchy}) typically work well for
-spline coefficients.}
+spline coefficients.
+
+Note that the scale parameter for above \code{s_prior_beta = normal(lm, lm)}
+(which is same \code{s_prior_beta = normal(lm,lm1)}) is derived from the
+standard deviation of the outcome and the spline design matrix as follows:
+\cr
+\code{sd(y)/sd(X)} where \code{y} is the outcome and \code{X} design
+matrix.
+
+\cr The other variants of scale parameters are: \cr
+
+\code{s_prior_beta = normal(lm,lm2)}) for which the scale parameter is
+defined as: \code{lm_se/sd(X)} where \code{lm_se} is the vector of standard
+error obtained from the linear model fit and \code{X} is the design matrix.
+
+\cr \code{s_prior_beta = normal(lm,lm3)}) for which the scale parameter is
+defined as \code{lm_se} where \code{lm_se} is the vector of standard error
+obtained from the linear model fit.}
 
 \item{a_cov_prior_beta}{Specify priors for the covariate(s) included in the
 fixed effect parameter, \code{a} (default \code{normal(0, 5.0, autoscale =

@@ -1139,10 +1139,27 @@
 #'   \item For \code{uniform} priors, you can use the option \code{addrange} to
 #'   symmetrically expand the prior range.
 #'   }
-#'   It is observed that location-scale based prior distributions (such as
+#'   It has been observed that location-scale based prior distributions (such as
 #'   \code{normal}, \code{student_t}, and \code{cauchy}) typically work well for
 #'   spline coefficients.
 #'   
+#'  Note that the scale parameter for above \code{s_prior_beta = normal(lm, lm)}
+#'  (which is same \code{s_prior_beta = normal(lm,lm1)}) is derived from the
+#'  standard deviation of the outcome and the spline design matrix as follows:
+#'  \cr
+#'  \code{sd(y)/sd(X)} where \code{y} is the outcome and \code{X} design
+#'  matrix. 
+#'  
+#'  \cr The other variants of scale parameters are: \cr 
+#'  
+#'  \code{s_prior_beta = normal(lm,lm2)}) for which the scale parameter is
+#'  defined as: \code{lm_se/sd(X)} where \code{lm_se} is the vector of standard
+#'  error obtained from the linear model fit and \code{X} is the design matrix. 
+#'  
+#'  \cr \code{s_prior_beta = normal(lm,lm3)}) for which the scale parameter is
+#'  defined as \code{lm_se} where \code{lm_se} is the vector of standard error
+#'  obtained from the linear model fit.
+#'
 #' @param a_cov_prior_beta Specify priors for the covariate(s) included in the
 #'   fixed effect parameter, \code{a} (default \code{normal(0, 5.0, autoscale =
 #'   FALSE)}). The approach for specifying priors is similar to
@@ -5333,10 +5350,10 @@ bsitar <- function(x,
     
     
     if (!is.numeric(ept(dfsi)) & !is.numeric(ept(knotssi))) {
-      stop("either df or knots must be specified")
+      stop("Either 'df' or 'knots' must be specified")
     }
     if (is.numeric(ept(dfsi)) & is.numeric(ept(knotssi))) {
-      # stop("both df and knots specified. Specify one of them\n")
+      # stop("Both 'df' and 'knots' are specified. Specify one of them\n")
       dfsi <- 'NULL'
       if(verbose) {
         message("The user specified knots are used, hence",
@@ -5346,10 +5363,10 @@ bsitar <- function(x,
     
     
     if (!is.numeric(ept(sigmadfsi)) & !is.numeric(ept(sigmaknotssi))) {
-      stop("either df or knots must be specified for sigma")
+      stop("Either df or knots must be specified for sigma")
     }
     if (is.numeric(ept(sigmadfsi)) & is.numeric(ept(sigmaknotssi))) {
-      # stop("both df and knots specified. Specify one of them\n")
+      # stop("Both df and knots specified. Specify one of them\n")
       dfsi <- 'NULL'
       if(verbose) {
         message("The user specified knots are used for sigma, hence",
@@ -6770,6 +6787,17 @@ bsitar <- function(x,
    if (!is.null(familysi)) {
      if(familysi == "gaussian()") {
        familysi <- "brms::brmsfamily(family = gaussian)"
+     } else {
+       if(!grepl('family(', familysi, fixed = T)) {
+         stop("The 'family' argument must be specified by explicitly using the",
+              "\n  ",
+              "family(....) or brms::brmsfamily(....) form",
+              "\n  ",
+              "For example, to specify the 'gaussian()' family, please use:",
+              "\n  ",
+              "brmsfamily(family='gaussian', link='identity', link_sigma='log')"
+              )
+       }
      }
    }
     
@@ -6785,7 +6813,9 @@ bsitar <- function(x,
         familysi_check <- paste0('brms::', familysi_check)
       } else if( grepl('family', familysi_check) &
                  !grepl('brms::', familysi_check)) {
-        familysi_check <- paste0('brms::brmsfamily', familysi_check)
+        # familysi_check <- paste0('brms::brmsfamily', familysi_check)
+        familysi_check <- gsub('family', 'brms::brmsfamily', 
+                               familysi_check, fixed = T)
       } else if( grepl('\\(', familysi_check) &
                  !grepl('family', familysi_check)) {
         familysi_check_w <- strsplit(familysi_check, "[^a-zA-Z]+")[[1]]
@@ -7228,47 +7258,96 @@ bsitar <- function(x,
     #################################################################
     #################################################################
     
-    if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-      bsp_msp_isp_args                <- list()
-      bsp_msp_isp_args[['x']]         <-  datai[[xsi]]
-      bsp_msp_isp_args[['knots']]     <-  NULL
-      bsp_msp_isp_args[['bknots']]    <-  NULL
-      bsp_msp_isp_args[['df']]        <-  ept(dfsi)
-      bsp_msp_isp_args[['degree']]    <-  smat_degree
-      bsp_msp_isp_args[['intercept']] <-  smat_intercept
-      bsp_msp_isp_args[['derivs']]    <-  smat_derivs
-      bsp_msp_isp_args[['centerval']] <-  smat_centerval
-      bsp_msp_isp_args[['normalize']] <-  smat_normalize
-      bsp_msp_isp_args[['preH']]      <-  smat_preH
-      bsp_msp_isp_args[['sfirst']]    <-  smat_sfirst
-      bsp_msp_isp_args[['sparse']]    <-  smat_sparse
-      if(smat == 'bsp') {
-        temp_mat_s <- do.call(GS_bsp_call, bsp_msp_isp_args)
-      } else if(smat == 'msp') {
-        temp_mat_s <- do.call(GS_msp_call, bsp_msp_isp_args)
-      } else if(smat == 'isp') {
-        temp_mat_s <- do.call(GS_isp_call, bsp_msp_isp_args)
-      }
-      
-      temp_mat_s_knots <- attr(temp_mat_s, "knots") 
-      if(is_emptyx(temp_mat_s_knots)) {
-        temp_mat_s_knots <- NULL 
-      }
-      
-      temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
-      temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, ept(boundsi))
     
-      knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
-      if(verbose) {
-        message("For '", smat, "' knots are created internally based on 'df'",
-                "\n ",
-                " The  boundary knots are adjusted for bounds and then all",
-                "\n ",
-                " knots are adjusted for xoffset i.e., knots - xoffset")
+    if(knotssi == "NA" | is.na(knotssi)) {
+      if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+        bsp_msp_isp_args                <- list()
+        bsp_msp_isp_args[['x']]         <-  datai[[xsi]]
+        bsp_msp_isp_args[['knots']]     <-  NULL
+        bsp_msp_isp_args[['bknots']]    <-  NULL
+        bsp_msp_isp_args[['df']]        <-  ept(dfsi)
+        bsp_msp_isp_args[['degree']]    <-  smat_degree
+        bsp_msp_isp_args[['intercept']] <-  smat_intercept
+        bsp_msp_isp_args[['derivs']]    <-  smat_derivs
+        bsp_msp_isp_args[['centerval']] <-  smat_centerval
+        bsp_msp_isp_args[['normalize']] <-  smat_normalize
+        bsp_msp_isp_args[['preH']]      <-  smat_preH
+        bsp_msp_isp_args[['sfirst']]    <-  smat_sfirst
+        bsp_msp_isp_args[['sparse']]    <-  smat_sparse
+        if(smat == 'bsp') {
+          temp_mat_s <- do.call(GS_bsp_call, bsp_msp_isp_args)
+        } else if(smat == 'msp') {
+          temp_mat_s <- do.call(GS_msp_call, bsp_msp_isp_args)
+        } else if(smat == 'isp') {
+          temp_mat_s <- do.call(GS_isp_call, bsp_msp_isp_args)
+        }
+        
+        temp_mat_s_knots <- attr(temp_mat_s, "knots") 
+        if(is_emptyx(temp_mat_s_knots)) {
+          temp_mat_s_knots <- NULL 
+        }
+        
+        temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
+        temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, ept(boundsi))
+        
+        knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
+        if(verbose) {
+          message("For '",smat,"' knots are created internally based on the 'df'",
+                  "\n ",
+                  " The boundary knots are adjusted for bounds. The full knots ",
+                  "\n ",
+                  " i.e, internal as well as the boundary knots are then ",
+                  "\n ",
+                  " adjusted for the xoffset i.e., knots - xoffset"
+          )
+        }
+      } # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+    } # if(knotssi == "NA" | is.na(knotssi)) {
+    
+    
+    
+    #################################################################
+    #################################################################
+    
+    if(knotssi == "NA" | is.na(knotssi)) {
+      if(smat == 'rcs') {
+        rcspline_eval_args                 <- list()
+        rcspline_eval_args[['x']]          <-  datai[[xsi]]
+        rcspline_eval_args[['nk']]         <-  ept(dfsi) + 1
+        rcspline_eval_args[['inclx']]      <-  TRUE
+        rcspline_eval_args[['knots.only']] <-  TRUE
+        rcspline_eval_args[['type']]       <-  "ordinary"
+        rcspline_eval_args[['norm']]       <-  2
+        rcspline_eval_args[['rpm']]        <-  NULL
+        rcspline_eval_args[['pc']]         <-  FALSE
+        rcspline_eval_args[['fractied']]   <-  0.05
+        knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
+        if(verbose) {
+          message("For '",smat,"' knots are created internally based on the 'df'",
+                  "\n ",
+                  " Hmisc::rcspline.eval() using nk = df + 1.",
+                  "\n ",
+                  " The full knots are adjusted for xoffset i.e., knots - xoffset"
+          )
+        }
+      } # if(smat == 'rcs') {
+    } # if(knotssi == "NA" | is.na(knotssi)) {
+    
+    
+    
+    #################################################################
+    #################################################################
+    
+    if(smat == 'rcs') {
+      if(length(knots) <= 2) {
+        stop("For '",smat,"' the minimum number of knots should be '3'")
+      }
+    } else {
+      if(length(knots) <= 1) {
+        # stop("For '",smat,"' the minimum number of knots should be '2'")
       }
     }
     
- 
     #################################################################
     #################################################################
  

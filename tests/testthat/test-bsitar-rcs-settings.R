@@ -59,7 +59,7 @@ test_that("bsitar works fully with nsk settings", {
   
   test_fit[['test_mode']] <- TRUE
   
-  true_sbetas <- c(128.06, 0.00, 0.00, 5.02, 4.28, -12.26, -13.25)
+  true_sbetas <- c(132.98, 0.00, 0.00, 5.24, 3.24, -6.21, -14.28)
   
   test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
   
@@ -67,8 +67,8 @@ test_that("bsitar works fully with nsk settings", {
   
   test_gparms <- marginal_growthparameters(test_fit, re_formula = NA)
   
-  expect_equal(round(test_gparms$Estimate[1], 2), 12.87, tolerance = 0.01)
-  expect_equal(round(test_gparms$Estimate[2], 2), 6.46,  tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[1], 2), 13.39, tolerance = 0.01)
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.540,  tolerance = 0.01)
   
   # marginal_draws(test_fit, re_formula = NA, deriv = 0, by = 'age', plot = T)
   # marginal_draws(test_fit, re_formula = NA, deriv = 1, by = 'age', plot = T)

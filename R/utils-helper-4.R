@@ -1799,7 +1799,6 @@ prepare_formula <- function(x,
         }
       }
       ###########
-      
     }
   }
   
@@ -1816,7 +1815,6 @@ prepare_formula <- function(x,
       str  <- gsub(")+(", ")ZZZZZZZZZZ(", str, fixed = T)
       str_ <- sub("^[^ZZZZZZZZZZ]*ZZZZZZZZZZ", "", str)
       str_ <- gsub(")ZZZZZZZZZZ(", ")+(", str_, fixed = T)
-      
       # 24.08.204
       # str <- gsub(")+(", ")xxxxxx(", str, fixed = T)
       # str_ <- sub("^[^xxxxxx]*xxxxxx", "", str)
@@ -1854,16 +1852,14 @@ prepare_formula <- function(x,
     xform_temp <- add_higher_level_str(xform_temp, x_formula_gr_strsi)
     xform_temp <- restore_paranthese_grgr_str_form(xform_temp, 
                                                    exclude_first = NULL)
-    
-    xform_gr_names        <- lapply(xform_temp, 
-                                    get_x_random2_new, 
-                                    gsubit = setparantclose)[[1]]
+    xform_gr_names <- lapply(xform_temp, 
+                             get_x_random2_new, 
+                             gsubit = setparantclose)[[1]]
     xform_gr_names_asitis <- lapply(xform_temp, get_x_random2_asitis)[[1]]
     xform <- add_higher_level_str(xform, x_formula_gr_strsi)
     xform <- restore_paranthese_grgr_str_form(xform, exclude_first = NULL)
     xform <- xform %>% gsub_space()
     xgr_varss <- add_higher_level_str_id(x_formula_gr_strsi)
-    
     list(varss = xgr_varss, gr_names = xform_gr_names,
          gr_names_asitis = xform_gr_names_asitis)
   }
@@ -2634,6 +2630,9 @@ prepare_formula <- function(x,
     lm_rsd  <- summary(lm_fit)$sigma
     
     
+    lm_coefse <- summary(lm_fit)$coefficients[, 2]
+    
+    
     # library(ggplot2)
     # ppp <<- predict(lm_fit)
     # dataset_in %>%
@@ -2736,10 +2735,17 @@ prepare_formula <- function(x,
 
     lm_s_all <- lm_coef[(ncol(acovmat) + 1):length(lm_coef)]
     
+    lm_s_se_all <- lm_coefse[(ncol(acovmat) + 1):length(lm_coefse)]
+    
+    # print(lm_s_all)
+    # print(lm_s_se_all)
+    # stop()
+    
     
     
     if (grepl("~1", a_formulasi, fixed = T)) {
-      if(match_sitar_a_form) lm_a_all[1] <- lm_a_all[1] + lm_s_all[1] * min(knots)
+      if(match_sitar_a_form) lm_a_all[1] <- 
+          lm_a_all[1] + lm_s_all[1] * min(knots)
     }
     
    
@@ -2801,20 +2807,46 @@ prepare_formula <- function(x,
     for (i in 1:ncol(mat_s_scovmat)) {
       sds_X[i] = sd(mat_s_scovmat[, i])
     }
-    lm_sdx_all <- sd(data[[y]]) / sds_X
+    lm_sdx_all    <- sd(data[[y]]) / sds_X
     
-    names(lm_s_all) <- names_mat_s_scovmat
+    lm_sdx_se_all <- lm_s_se_all / sds_X
+    
+    
+    names(lm_s_all)   <- names_mat_s_scovmat
     names(lm_sdx_all) <- names_mat_s_scovmat
+    
+    names(lm_s_se_all) <- names_mat_s_scovmat
+    names(lm_sdx_se_all) <- names_mat_s_scovmat
+    
+    
+    # print(summary(lm_fit))
+    # print(lm_s_se_all)
+    # print(lm_sdx_se_all)
+    # stop()
     
     
     lm_s   <- lm_s_all[1:(SbasisN)]
     lm_sdx <- lm_sdx_all[1:(SbasisN)]
     
+    lm_s_se   <- lm_s_se_all[1:(SbasisN)]
+    lm_sdx_se <- lm_sdx_se_all[1:(SbasisN)]
+    
+    #########################################
+    
+    
+    
+    
+    #########################################
+    
+    # zzzzzz
     
     if (!is.null(s_covariate) & length(s_covariate) > 1) {
-      lm_s_cov <- lm_s_all[nknots:length(lm_s_all)]
-      lm_sdx_cov <- lm_sdx_all[nknots:length(lm_sdx_all)]
+      lm_s_cov <- lm_s_all[SbasisN:length(lm_s_all)]
+      lm_sdx_cov <- lm_sdx_all[SbasisN:length(lm_sdx_all)]
       
+      # lm_s_cov <- lm_s_all[nknots:length(lm_s_all)]
+      # lm_sdx_cov <- lm_sdx_all[nknots:length(lm_sdx_all)]
+     
       inname_c_all <- c()
       for (inname in paste0("s", 1:df)) {
         t <- names(lm_a_all)[2:length(names(lm_a_all))]
@@ -2844,20 +2876,28 @@ prepare_formula <- function(x,
         lm_s <- lm_s_all[1:(SbasisN)]
         lm_sdx <- lm_sdx_all[1:(SbasisN)]
         if (length(lm_s_all) > (SbasisN)) {
-          lm_s_cov <- lm_s_all[nknots:length(lm_s_all)]
-          lm_sdx_cov <- lm_sdx_all[nknots:length(lm_sdx_all)]
+          lm_s_cov <- lm_s_all[SbasisN:length(lm_s_all)]
+          lm_sdx_cov <- lm_sdx_all[SbasisN:length(lm_sdx_all)]
           tnames_s <-
-            names_mat_s_scovmat[nknots:length(names_mat_s_scovmat)]
+            names_mat_s_scovmat[SbasisN:length(names_mat_s_scovmat)]
           names(lm_s_cov) <- tnames_s
           tnames_sdx <-
-            names_mat_s_scovmat[nknots:length(names_mat_s_scovmat)]
+            names_mat_s_scovmat[SbasisN:length(names_mat_s_scovmat)]
           names(lm_sdx_cov) <- tnames_sdx
+          
+          # lm_s_cov <- lm_s_all[nknots:length(lm_s_all)]
+          # lm_sdx_cov <- lm_sdx_all[nknots:length(lm_sdx_all)]
+          # tnames_s <-
+          #   names_mat_s_scovmat[nknots:length(names_mat_s_scovmat)]
+          # names(lm_s_cov) <- tnames_s
+          # tnames_sdx <-
+          #   names_mat_s_scovmat[nknots:length(names_mat_s_scovmat)]
+          # names(lm_sdx_cov) <- tnames_sdx
         } else {
           lm_s_cov <- NULL
           lm_sdx_cov <- NULL
         }
       }
-      
       
       if (grepl("~0", s_formulasi, fixed = T)) {
         lm_s_all <- lm_coef[(ncol(acovmat) + 1):length(lm_coef)]
@@ -2874,6 +2914,72 @@ prepare_formula <- function(x,
         lm_sdx_cov <- NULL
       }
     }
+    
+    ############################
+    
+    if (!is.null(s_covariate) & length(s_covariate) > 1) {
+      lm_s_se_cov <- lm_s_se_all[SbasisN:length(lm_s_se_all)]
+      lm_sdx_se_cov <- lm_sdx_se_all[SbasisN:length(lm_sdx_se_all)]
+      
+      inname_c_se_all <- c()
+      for (inname in paste0("s", 1:df)) {
+        t <- names(lm_a_all)[2:length(names(lm_a_all))]
+        inname_c_se_all <- c(inname_c_se_all, paste0(inname, "_", t))
+      }
+      lm_s_se_cov   <- lm_s_se_cov[order(factor(names(lm_s_se_cov),
+                                                levels = inname_c_se_all))]
+      lm_sdx_se_cov <- lm_sdx_se_cov[order(factor(names(lm_sdx_se_cov),
+                                                  levels = inname_c_se_all))]
+      
+      lm_s_se_all <- lm_sdx_se_all <- c()
+      for (idfi in 1:df) {
+        lm_s_se_all <- c(lm_s_se_all, c(lm_s_se[idfi],
+                                        lm_s_se_cov[grep(paste0("s", idfi, "_"),
+                                                         names(lm_s_se_cov))]))
+        lm_sdx_se_all <- c(lm_sdx_se_all, c(lm_sdx_se[idfi],
+                                            lm_sdx_se_cov[grep(paste0("s", idfi, "_"),
+                                                               names(lm_sdx_se_cov))]))
+      }
+    } else if ((!is.null(s_covariate) &
+                length(s_covariate) == 1) |
+               is.null(s_covariate)) {
+      if (!grepl("~0", s_formulasi, fixed = T)) {
+        lm_s_se_all <- lm_coefse[(ncol(acovmat) + 1):length(lm_coefse)]
+        names(lm_s_se_all) <- names_mat_s_scovmat
+        names(lm_sdx_se_all) <- names_mat_s_scovmat
+        lm_s_se <- lm_s_se_all[1:(SbasisN)]
+        lm_sdx_se <- lm_sdx_se_all[1:(SbasisN)]
+        if (length(lm_s_se_all) > (SbasisN)) {
+          lm_s_se_cov <- lm_s_se_all[SbasisN:length(lm_s_se_all)]
+          lm_sdx_se_cov <- lm_sdx_se_all[SbasisN:length(lm_sdx_se_all)]
+          tnames_s <-
+            names_mat_s_scovmat[SbasisN:length(names_mat_s_scovmat)]
+          names(lm_s_se_cov) <- tnames_s
+          tnames_sdx <-
+            names_mat_s_scovmat[SbasisN:length(names_mat_s_scovmat)]
+          names(lm_sdx_se_cov) <- tnames_sdx
+        } else {
+          lm_s_se_cov <- NULL
+          lm_sdx_se_cov <- NULL
+        }
+      }
+      
+      if (grepl("~0", s_formulasi, fixed = T)) {
+        lm_s_se_all <- lm_coefse[(ncol(acovmat) + 1):length(lm_coefse)]
+        names(lm_s_se_all) <- names_mat_s_scovmat
+        names(lm_sdx_se_all) <- names_mat_s_scovmat
+        inname_c_se_all <- c()
+        for (inname in paste0("s", 1:df)) {
+          t <- names(lm_a_all)[1:length(names(lm_a_all))]
+          inname_c_se_all <- c(inname_c_se_all, paste0(inname, "_", t))
+        }
+        lm_s_se <- NULL
+        lm_s_se_cov <- NULL
+        lm_sdx_se <- NULL
+        lm_sdx_se_cov <- NULL
+      }
+    }
+    ############################
     
     if (any(is.na(lm_coef))) {
       stop(
@@ -3113,6 +3219,13 @@ prepare_formula <- function(x,
     assign(paste0('lm_', 'sdx'), NULL)
     assign(paste0('lm_', 'sdx', '_all'), NULL)
     assign(paste0('lm_', 'sdx', '_cov'), NULL)
+  }
+  
+  
+  if(is.null(lm_s_se_all)) {
+    assign(paste0('lm_', 'sdx_se'), NULL)
+    assign(paste0('lm_', 'sdx_se', '_all'), NULL)
+    assign(paste0('lm_', 'sdx_se', '_cov'), NULL)
   }
   
   # brms removes white spaces from the coefficient names
@@ -3396,10 +3509,34 @@ prepare_formula <- function(x,
     lm_sdx = lm_sdx,
     lm_sdx_cov = lm_sdx_cov,
     lm_sdx_all = lm_sdx_all,
+    
     lm_rsd = lm_rsd,
     lme_sd_a = lme_sd_a,
-    lme_rsd = lme_rsd
-  )
+    lme_rsd = lme_rsd,
+    
+    lm_s_se = lm_s_se,
+    lm_s_se_cov = lm_s_se_cov,
+    lm_s_se_all = lm_s_se_all,
+    lm_sdx_se = lm_sdx_se,
+    lm_sdx_se_cov = lm_sdx_se_cov,
+    lm_sdx_se_all = lm_sdx_se_all
+    
+  ) # End list_out <- list(
+  
+  # print(lm_s)
+  # print(lm_s_se)
+  # print(lm_s_cov)
+  # print(lm_s_se_cov)
+  # print(lm_s_all)
+  # print(lm_s_se_all)
+  # print(lm_sdx)
+  # print(lm_sdx_se)
+  # print(lm_sdx_cov)
+  # print(lm_sdx_se_cov)
+  # print(lm_sdx_all)
+  # print(lm_sdx_se_all)
+  # stop()
+  
   
   
   

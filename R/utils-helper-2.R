@@ -5525,4 +5525,76 @@ eval_xoffset_cstart_args <- function(x,
 
 
 
+#' An internal function to split full knots into internal knots and boundary knots 
+#'
+#' @param fullknots A numeric matrix
+#' 
+#' @return A list comprised of matrix knots and matrix bknots 
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+split_fullknots_knots_bknots <- function(fullknots) {
+  nk_first <- 1
+  nk_last  <- length(fullknots)
+  knots    <- knots[2:(nk_last-1)]
+  bknots   <-  c(fullknots[nk_first], fullknots[nk_last])
+  list(knots = knots, bknots = bknots)
+}
+
+
+
+
+
+#' An internal function to split full knots into internal knots and boundary knots 
+#' 
+#' @details
+#' This needed because \code{bsp}, \code{msp}, and \code{isp} may have NULL
+#' numeric(0) internal knots Need to do this in the R functions extracted from
+#' the stan code \code{iknots = knots[2:(length(knots)-1)]} \code{bknots =
+#' c(knots[1], knots[length(knots)])}
+#' 
+#'
+#' @param knots The \code{knots} here must be fullknots
+#' @param return A character string to idicate whether to return iknots or bknots
+#' 
+#' @return A list comprised of matrix knots and matrix bknots 
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+checkgetiknotsbknots <- function(knots, 
+                                 return = NULL) {
+  
+  if(is.null(return)) {
+    stop("Argument 'return' must be specified, iknots or bknots")
+  } else if(is.symbol(return)) {
+    stop("Argument 'return' must be a character string")
+  }
+  
+  if(length(knots) > 2) {
+    iknots <- knots[2:(length(knots)-1)]
+    bknots <- c(knots[1], knots[length(knots)])
+  } else if(length(knots) == 2) {
+    iknots <- NULL
+    bknots <- knots
+  }
+  
+  if(return == 'iknots') {
+    out <- iknots
+  } else if(return == 'bknots') {
+    out <- bknots
+  } else {
+    stop("return must be either iknots or bknots")
+  }
+  return(out)
+}
+
+
+
+
 
