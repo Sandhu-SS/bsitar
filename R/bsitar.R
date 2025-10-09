@@ -7309,33 +7309,33 @@ bsitar <- function(x,
     #################################################################
     #################################################################
     
-    if(knotssi == "NA" | is.na(knotssi)) {
-      if(smat == 'rcs') {
-        rcspline_eval_args                 <- list()
-        rcspline_eval_args[['x']]          <-  datai[[xsi]]
-        rcspline_eval_args[['nk']]         <-  ept(dfsi) + 1
-        rcspline_eval_args[['inclx']]      <-  TRUE
-        rcspline_eval_args[['knots.only']] <-  TRUE
-        rcspline_eval_args[['type']]       <-  "ordinary"
-        rcspline_eval_args[['norm']]       <-  2
-        rcspline_eval_args[['rpm']]        <-  NULL
-        rcspline_eval_args[['pc']]         <-  FALSE
-        rcspline_eval_args[['fractied']]   <-  0.05
-        knots_get_boundary_rcs <- knots
-        knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
-        knots[1]               <- knots_get_boundary_rcs[1]
-        knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
-        if(verbose) {
-          message("For '",smat,"' knots are created internally based on the 'df'",
-                  "\n ",
-                  " Hmisc::rcspline.eval() using nk = df + 1.",
-                  "\n ",
-                  " The full knots are adjusted for xoffset i.e., knots - xoffset"
-          )
-        }
-      } # if(smat == 'rcs') {
-    } # if(knotssi == "NA" | is.na(knotssi)) {
-    
+    # if(knotssi == "NA" | is.na(knotssi)) {
+    #   if(smat == 'rcs') {
+    #     rcspline_eval_args                 <- list()
+    #     rcspline_eval_args[['x']]          <-  datai[[xsi]]
+    #     rcspline_eval_args[['nk']]         <-  ept(dfsi) + 1
+    #     rcspline_eval_args[['inclx']]      <-  TRUE
+    #     rcspline_eval_args[['knots.only']] <-  TRUE
+    #     rcspline_eval_args[['type']]       <-  "ordinary"
+    #     rcspline_eval_args[['norm']]       <-  2
+    #     rcspline_eval_args[['rpm']]        <-  NULL
+    #     rcspline_eval_args[['pc']]         <-  FALSE
+    #     rcspline_eval_args[['fractied']]   <-  0.05
+    #     knots_get_boundary_rcs <- knots
+    #     knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
+    #     knots[1]               <- knots_get_boundary_rcs[1]
+    #     knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
+    #     if(verbose) {
+    #       message("For '",smat,"' knots are created internally based on the 'df'",
+    #               "\n ",
+    #               " Hmisc::rcspline.eval() using nk = df + 1.",
+    #               "\n ",
+    #               " The full knots are adjusted for xoffset i.e., knots - xoffset"
+    #       )
+    #     }
+    #   } # if(smat == 'rcs') {
+    # } # if(knotssi == "NA" | is.na(knotssi)) {
+    # 
     
     
     #################################################################
