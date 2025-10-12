@@ -1593,6 +1593,83 @@ stop2 <- function(...) {
 }
 
 
+#' An internal function to customize R's stop function.
+#' 
+#' @details
+#' This a wrapper around the stop function but it cleans the message for
+#' excessive white spaces before parsing
+#' 
+#' @param ... An argument
+#' @param call. A logical indicating if the call should become part of the error
+#'   message.
+#' @keywords internal
+#' @return A string (error message) from R's warning() function.
+#' @noRd
+#'
+stop2c <- function(..., 
+                   call. = FALSE) {
+  msg <- paste0(list(...), collapse = "")
+  msg <- clean_text_spaces(msg)
+  stop(msg, 
+       call. = call.)
+}
+
+
+#' An internal function to customize R's stop function.
+#' 
+#' @details
+#' This a wrapper around the stop function but it cleans the message for
+#' excessive white spaces before parsing
+#' 
+#' @param ... An argument
+#' @param call. A logical indicating if the call should become part of the error
+#'   message.
+#' @param immediate. A logical
+#' @param noBreaks. A logical
+#' @param domain A logical
+#' @keywords internal
+#' @return A string (error message) from R's warning() function.
+#' @noRd
+#'
+warning2c <- function(..., 
+                      call = TRUE, 
+                      immediate. = FALSE, 
+                      noBreaks. = FALSE, 
+                      domain = NULL) {
+  msg <- paste0(list(...), collapse = "")
+  msg <- clean_text_spaces(msg)
+  warning(msg, 
+          call. = call, 
+          immediate. = immediate., 
+          noBreaks. = noBreaks.,
+          domain = domain)
+}
+
+
+
+#' An internal function to customize R's stop function.
+#' 
+#' @details
+#' This a wrapper around the stop function but it cleans the message for
+#' excessive white spaces before parsing
+#' 
+#' @param ... An argument
+#' @param domain A logical indicating if the call should become part of the
+#'   error message.
+#' @param appendLF A logical
+#' @keywords internal
+#' @return A string (error message) from R's warning() function.
+#' @noRd
+#'
+message2c <- function(..., 
+                      domain = NULL, 
+                      appendLF = TRUE) {
+  msg <- paste0(list(...), collapse = "")
+  msg <- clean_text_spaces(msg)
+  message(msg, domain = domain, appendLF = appendLF)
+}
+
+
 
 #' An internal function to customize R's warning function
 #' @param ... An argument
@@ -1603,6 +1680,7 @@ stop2 <- function(...) {
 warning2 <- function(...) {
   warning(..., call. = FALSE)
 }
+
 
 
 #' An internal function to collapse elements of vector separated by a comma
@@ -2444,7 +2522,7 @@ mapderivqr <- function(model,
   }
   
   if(all(is.infinite(dout))) {
-    stop("The 'mapderivqr()' resulted in all infinite values.",
+    stop2c("The 'mapderivqr()' resulted in all infinite values.",
          "\n  ", 
          "This could be because of an ncorrect xvar used.",
          "\n  ", 
@@ -2542,7 +2620,7 @@ get_d1_from_d0 <- function(y,
     # 5-point stencil for higher accuracy
     higher_order_diff <- function(x, y) {
       n <- length(x)
-      if (n < 5) stop("Need at least 5 points")
+      if (n < 5) stop2c("Need at least 5 points")
       h <- mean(diff(x))  # assumes uniform spacing
       deriv <- (-y[5:n] + 8*y[4:(n-1)] - 8*y[2:(n-3)] + y[1:(n-4)]) / (12*h)
       x_mid <- x[3:(n-2)]
@@ -2608,7 +2686,7 @@ get_d1_from_d0 <- function(y,
     out[['x']] <- temp$x
     out[['y']] <- temp$y
   } else if(method == 7) { # method == 7 -> Functional Data Analysis (FDA)
-    stop("'method' should be between 1 and 6")
+    stop2c("'method' should be between 1 and 6")
     # don't create dependency on fda package
     
     # fda_derivative <- function(x, y, df, length.out) {
@@ -2631,7 +2709,7 @@ get_d1_from_d0 <- function(y,
     # out[['y']] <- temp$y
     
   } else if(method == 8) { # method == 8 -> Smoothing Spline + Derivative
-    stop("'method' should be between 1 and 7")
+    stop2c("'method' should be between 1 and 7")
   }
   
   out_d <- data.frame(x = out$x, y = out$y)
@@ -2747,7 +2825,7 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   } else if(corr_method == 'cde') {
     via <- 'cde'
   } else {
-    stop("corr_method must be either 'lkj' or 'cde'")
+    stop2c("corr_method must be either 'lkj' or 'cde'")
   }
   
   brms_code_edited <- stan_code
@@ -2895,7 +2973,7 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   } else if(!grepl("sigma[n]", brms_code_edited, fixed = T)) {
     sigma_single_parm <- TRUE
   } else {
-    stop("something wrong with sigma rescor")
+    stop2c("Something wrong with sigma rescor")
   }
   
   ########################################

@@ -321,9 +321,9 @@ prepare_data2 <- function(data = NULL,
     } else {
       addsigmaxvar <- tempbane <- sigmaxvar[j]
       if(!addsigmaxvar %in% names(data)) {
-        stop("The variable ", collapse_comma(addsigmaxvar), " used in the ",
+        stop2c("The variable ", collapse_comma(addsigmaxvar), " used as an ",
              "\n ",
-             " 'sigmax' argument is not available in the dataframe")
+             " argument for 'sigmax' is not available in the dataframe")
       }
       if(nys > 1) {
         addsigmaxvar <- paste0(addsigmaxvar, "_", ys[j])

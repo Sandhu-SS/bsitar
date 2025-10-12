@@ -3355,6 +3355,7 @@ bsitar <- function(x,
   # 'sparse' need to be T, also chains = 1, and iter = 2. (since this is printed)
   # Again, this is helpful in case of sitar model
   # 10. degree - an integers
+  # 11. bkrange - TRUE - should rcs boundary knots set using xrange or quntile. 
   
   
   
@@ -3398,7 +3399,8 @@ bsitar <- function(x,
   
   allowed_smat_options <- c('type', 'centerval', 'intercept', 'degree',
                             'normalize', 'derivs', 'preH', 'include',
-                            "sfirst", "sparse", "check_sparsity")
+                            "sfirst", "sparse", "check_sparsity", 
+                            "bkrange")
   
   # Note that for all argumnets such as intercept to correctly pass to the 
   # use smat and not stype
@@ -3469,6 +3471,7 @@ bsitar <- function(x,
     spline_type_list[['preH']]        <- TRUE
     spline_type_list[['include']]     <- TRUE
     spline_type_list[['sfirst']]      <- FALSE
+    spline_type_list[['bkrange']]     <- TRUE
     spline_type_list[['sparse']]      <- FALSE
     spline_type_list[['check_sparsity']]      <- FALSE
   } else if(!is.null(spline_type)) {
@@ -3487,6 +3490,9 @@ bsitar <- function(x,
       } 
       if(is.null(spline_type[['check_sparsity']])) {
         spline_type[['check_sparsity']]   <- FALSE
+      } 
+      if(is.null(spline_type[['bkrange']])) {
+        spline_type[['bkrange']]   <- TRUE
       } 
       if(length(spline_type) > 0) {
         # if only type specified and unnamed, name it
@@ -3631,6 +3637,17 @@ bsitar <- function(x,
           spline_type_list[['sfirst']] <- FALSE
         }
         
+        if(!is.null(spline_type[['bkrange']])) {
+          if(!is.logical(as.logical(spline_type[['bkrange']]))) {
+            stop(paste0(spline_type[['bkrange']], 
+                        " must be logical i.e., TRUE/FALSE"))
+          } else {
+            spline_type_list[['bkrange']] <- spline_type[['bkrange']]
+          }
+        } else if(is.null(spline_type[['bkrange']])) {
+          spline_type_list[['bkrange']] <- TRUE
+        }
+        
         if(!is.null(spline_type[['sparse']])) {
           if(!is.logical(as.logical(spline_type[['sparse']]))) {
             stop(paste0(spline_type[['sparse']], 
@@ -3665,6 +3682,7 @@ bsitar <- function(x,
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
         spline_type_list[['sfirst']]      <- FALSE
+        spline_type_list[['bkrange']]     <- TRUE
         spline_type_list[['sparse']]      <- FALSE
         spline_type_list[['check_sparsity']]  <- FALSE
       } # if(length(spline_type) > 0) {
@@ -3680,6 +3698,7 @@ bsitar <- function(x,
         spline_type_list[['include']]     <- TRUE
         spline_type_list[['path']]        <- NULL
         spline_type_list[['sfirst']]      <- FALSE
+        spline_type_list[['bkrange']]     <- TRUE
         spline_type_list[['sparse']]      <- FALSE
         spline_type_list[['check_sparsity']]  <- FALSE
       } else if(!is.character(spline_type)) {
@@ -3718,6 +3737,9 @@ bsitar <- function(x,
   } 
   
   
+  
+  
+  
   SplinefunxPre     <- 'GS'
   Splinefunxsuf     <- '_call'
   SplinefunxR       <- paste0(SplinefunxPre, "_", smat, Splinefunxsuf)
@@ -3738,6 +3760,7 @@ bsitar <- function(x,
     smat_include_stan <- as.integer(spline_type_list[['include']])
     smat_include_path <- spline_type_list[['path']]
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']])
     smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'rcs') & !spline_type_via_stype) {
@@ -3750,6 +3773,7 @@ bsitar <- function(x,
     smat_include_stan <- as.integer(spline_type_list[['include']])
     smat_include_path <- spline_type_list[['path']]
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
     smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'nsp' | smat == 'nsk' |
@@ -3764,6 +3788,7 @@ bsitar <- function(x,
     smat_include_stan <- 0
     smat_include_path <- NULL
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
     smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'rcs') & spline_type_via_stype) {
@@ -3776,6 +3801,7 @@ bsitar <- function(x,
     smat_include_stan <- 0
     smat_include_path <- NULL
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
+    smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
     smat_check_sparsity <- as.integer(spline_type_list[['check_sparsity']])
   } else {
@@ -3800,7 +3826,35 @@ bsitar <- function(x,
     if(arguments$iter > 2) stop("'iter' must be set as '2' when check_sparsity = TRUE'")
   }
   
- 
+  
+ if(smat == 'rcs') {
+   smat_bkrange <- smat_bkrange
+ } else {
+   # if(as.logical(smat_bkrange)) {
+   #   stop("Argument 'bkrange' can only be used when smat is 'rcs', and not ", 
+   #        collapse_comma(smat),
+   #        "\n  ", 
+   #        "Please check the 'stype' argument and correct it")
+   # }
+   # smat_bkrange <- NULL
+ }
+  
+  
+  # over ride match_sitar_a_form to match smat_bkrange
+  if(smat == 'rcs') {
+    if(!as.logical(smat_bkrange)) {
+      temp_match_sitar_a_form <- getdotslist[['match_sitar_a_form']]
+      if(temp_match_sitar_a_form) {
+        getdotslist[['match_sitar_a_form']] <- match_sitar_a_form <- FALSE
+        if(verbose) {
+          message2c("The 'match_sitar_a_form' has been set as 'FALSE' because 
+                  'bkrange' was set FALSE")
+        }
+      }
+    }
+  }
+  
+  
   
   if(smat == 'nsp' | smat == 'nsk' | smat == 'rcs') {
     if(smat_degree != 3) {
@@ -5347,6 +5401,7 @@ bsitar <- function(x,
       
     if (is.null(sigma_group_arg$groupvar))
       sigma_group_arg$groupvar <- idsi
+    
     
     
     if (!is.numeric(ept(dfsi)) & !is.numeric(ept(knotssi))) {
@@ -7323,8 +7378,12 @@ bsitar <- function(x,
         rcspline_eval_args[['fractied']]   <-  0.05
         knots_get_boundary_rcs <- knots
         knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
-        knots[1]               <- knots_get_boundary_rcs[1]
-        knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
+        if(as.logical(smat_bkrange)) {
+          knots[1]               <- knots_get_boundary_rcs[1]
+          knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
+        } else {
+          knots <- knots
+        }
         if(verbose) {
           message("For '",smat,"' knots are created internally based on the 'df'",
                   "\n ",
@@ -7336,6 +7395,7 @@ bsitar <- function(x,
       } # if(smat == 'rcs') {
     } # if(knotssi == "NA" | is.na(knotssi)) {
 
+    
     
     
     #################################################################
@@ -7900,6 +7960,11 @@ bsitar <- function(x,
     }
     
    
+    
+    
+    
+    
+    
     
     SbasisN <- ncol(mat_s)
     

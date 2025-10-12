@@ -5598,3 +5598,27 @@ checkgetiknotsbknots <- function(knots,
 
 
 
+#' An internal function to extract samples from cmdstan object 
+#' 
+#' @details
+#' Returns a list of variables
+#'
+#' @param fit_obj A \code{'cmdstan'} object
+#' 
+#' @return A list
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+extract_samples <- function(fit_obj) {
+  vars  <- fit_obj$metadata()$stan_variables
+  draws <- posterior::as_draws_rvars(fit_obj$draws())
+  lapply(vars, function(var_name){
+    posterior::draws_of(draws[[var_name]], with_chains = FALSE)
+    }) %>% 
+    stats::setNames(vars)
+}
+
+
