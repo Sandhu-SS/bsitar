@@ -182,7 +182,55 @@
 #'   sub-models, or different for each sub-model when fitting
 #'   \code{univariate_by} and \code{multivariate} models (see \code{df} for
 #'   details).
-#' 
+#'   
+#' @param knots_selection A named list for optimizing knot placement in fitting
+#'   the model. This experimental feature searches over a larger set of knots
+#'   (typically \code{df + 4}) to find the optimal subset that minimizes the
+#'   specified information criterion. The named elements are:
+#'   \describe{
+#'   \item{\code{select}}{Selection criterion type. Currently only 
+#'   \code{'knots'} is supported, which optimizes knot locations for a given 
+#'   degrees of freedom (\code{df}).}
+#'   \item{\code{nsearch}}{Initial number of knots for the search space. 
+#'   When \code{NULL} (default), automatically set to \code{df + 4} to 
+#'   provide sufficient candidates for optimization.}
+#'   \item{\code{criteria}}{Information criterion for model selection. 
+#'   Options are \code{'AIC'} or \code{'BIC'} (default). Models with lower 
+#'   criterion values are preferred.}
+#'   \item{\code{when}}{Timing of knot optimization relative to predictor 
+#'   centering:
+#'   \itemize{
+#'     \item \code{'bc'} - Before centering (uses raw \code{x} values)
+#'     \item \code{'ac'} - After centering (uses \code{x - xoffset}, default)
+#'   }}
+#'   \item{\code{what}}{Diagnostic plots comparing original vs. optimized 
+#'   knot placements. Default \code{'none'}. Available options:
+#'   \itemize{
+#'     \item \code{'plot1'} - Data and fitted curve with original knots
+#'     \item \code{'plot2'} - Data and fitted curve with optimized knots
+#'     \item \code{'plot3'} - Data and fitted curve with both knot sets
+#'     \item \code{'plot4'} - Data, fitted curve, and confidence bands with
+#'     original knots
+#'     \item \code{'plot5'} - Data, fitted curve, and confidence bands with
+#'     optimized knots
+#'     \item \code{'plot6'} - Data, fitted curve, and confidence bands with both
+#'     knot sets
+#'     \item \code{'plot7'} - Residual plot for original knot model
+#'     \item \code{'plot8'} - Residual plot for optimized knot model
+#'     \item \code{'plot9'} - Residual plots comparing both models
+#'   }}
+#'   \item{\code{return}}{Logical indicating whether to return the diagnostic
+#'   plot object specified in \code{what}. Default \code{FALSE}.}
+#'   \item{\code{print}}{Logical indicating whether to display the diagnostic 
+#'   plot specified in \code{what}. Default \code{FALSE}.}
+#'   }
+#'   
+#'   An example: \cr
+#'   \code{bsitar(x = age, y = height, id = id, data = berkeley_exdata,
+#'   knots_selection = list(select = 'knots', nsearch = NULL, criteria = 'AIC',
+#'   when= 'ac', what = 'plot3', return = FALSE, print = TRUE),
+#'   seed = 123)}
+#'   
 #' @param fixed A character string specifying the fixed effects structure
 #'   (default \code{'a+b+c'}). For \code{univariate_by} and \code{multivariate}
 #'   models, you can specify different fixed effect structures for each
@@ -806,7 +854,13 @@
 #' 
 #' @param sigmaknots Knots for the spline function used for \code{sigma}. See
 #'   \code{knots} for details. Ignored if \code{sigma_formula_manual = NULL}.
-#'
+#'   
+#' @param sigmaknots_selection A named list for optimizing knot placement in
+#'   fitting the distributional parameter \code{'sigma'}. This experimental
+#'   feature searches over a larger set of knots (typically \code{sigmadf + 4})
+#'   to find the optimal subset that minimizes the specified information
+#'   criterion. See \code{knots_selection} for details.
+#' 
 #' @param sigmafixed Fixed effect formula for the \code{sigma} structure. See
 #'   \code{fixed} for details. Ignored if \code{sigma_formula_manual = NULL}.
 #'
@@ -2149,6 +2203,7 @@ bsitar <- function(x,
                    data,
                    df = 4,
                    knots = NA,
+                   knots_selection = NULL,
                    fixed = a + b + c,
                    random = a + b + c,
                    xoffset = mean,
@@ -2182,6 +2237,7 @@ bsitar <- function(x,
                    sigmaid  = NULL,
                    sigmadf = 4,
                    sigmaknots = NA,
+                   sigmaknots_selection = NULL,
                    sigmafixed = a + b + c,
                    sigmarandom = "",
                    sigmaxoffset = mean,
@@ -2973,9 +3029,152 @@ bsitar <- function(x,
                                     return_call = TRUE, 
                                     strict_list = TRUE)
  
+  
+  
+  
+  
+  ##############################################################
+  ##############################################################
+  
+  get_pos_val_unnamed_list_element <- function(my_list) {
+    unnamed_elements_info <- list()
+    for (i in seq_along(my_list)) {
+      if (is.null(names(my_list)[i]) || names(my_list)[i] == "") {
+        unnamed_elements_info[[length(unnamed_elements_info) + 1]] <- list(
+          position = i,
+          value = my_list[[i]]
+        )
+      }
+    }
+    collect_pos_val <- c()
+    for (i in 1:length(unnamed_elements_info)) {
+      pos <- unnamed_elements_info[[i]][[1]]
+      val <- unnamed_elements_info[[i]][[2]]
+      pos_val <- paste0("position = ", pos, "; value = ", val)
+      collect_pos_val <- c(collect_pos_val, pos_val)
+    }
+    collect_pos_val <- paste(collect_pos_val, collapse = "\n")
+    return(collect_pos_val)
+  }
+  
+  
+  remove_empty_string_from_vector <- function(x) {
+    if(is.list(x)) {
+      x <- names(x)
+    }
+    x[x!=""]
+  }
+  
+  check_each_element_of_list_named <- function(call, 
+                                               element, 
+                                               assert_names = NULL) {
+    x <- call[[element]] %>% eval()
+    
+    if(is.null(x)) {
+      return(NULL)
+    }
+    
+    if(!is.list(x)) {
+      stop("'x' must be a list")
+    }
+    
+    x_name    <- element
+    all_names <- remove_empty_string_from_vector(x)
+    out       <- length(all_names) == length(x)
+    
+    if(!is.null(assert_names)) {
+      names_mismatch <- setdiff(assert_names, all_names)
+    }
+    
+    n_missing_names <- length(x) - length(all_names) 
+    
+    if(!out) {
+      stop("Argument ", collapse_comma(x_name), " must be a named list with ",
+           "\n  ",
+           "each element having a unique name.", 
+           "\n  ",
+           "Allowed names are: ", 
+           # "\n  ",
+             collapse_comma(assert_names), 
+           "\n  ",
+           "The position and value of elements without name(s) are: ", 
+           "\n  ",
+           get_pos_val_unnamed_list_element(x))
+    }
+    
+
+    if(is.null(x[['select']]))   x[['select']]   <- 'knots'
+    if(is.null(x[['when']]))     x[['when']]     <- 'bc'
+    if(is.null(x[['criteria']])) x[['criteria']] <- 'AIC'
+    if(is.null(x[['nsearch']]))  x[['nsearch']]  <- NULL
+    
+    if(is.null(x[['what']])) {
+      x[['what']]   <- 'none'
+    } else {
+      if(isFALSE(x[['what']])) {
+        x[['what']]   <- 'none'
+      }
+    }
+    
+    if(is.null(x[['return']])) {
+      x[['return']]   <- FALSE
+    } 
+    
+    if(is.null(x[['print']])) {
+      x[['print']]   <- FALSE
+    } 
+    
+    if(out) {
+      if(!is.null(assert_names)) {
+        if(!is.character(assert_names)) {
+          stop("'assert_names' must be a character or character vector")
+        } else if(length(all_names) != length(assert_names)) {
+          #stop("Length of 'assert_names' must be same as length of list names")
+        } else {
+          # names_mismatch <- setdiff(assert_names, all_names)
+          if(!is_emptyx(names_mismatch)) {
+            stop2("mismatch in names. Following name is missing: ", 
+                  collapse_comma(names_mismatch))
+          }
+        }
+      }
+    }
+    
+    if(!grepl('stats::', x[['criteria']])) {
+      x[['criteria']] <- paste0('stats::', x[['criteria']])
+    }  
+    
+    return(x)
+  }
+  
+  
+  knots_selection_assert_names <- c('select', 
+                                   'when', 
+                                   'criteria', 
+                                   'nsearch',
+                                   'what',
+                                   'print',
+                                   'return')
  
   
+  if(!is.null(mcall[['knots_selection']])) {
+    mcall[['knots_selection']] <- 
+      check_each_element_of_list_named(call = mcall, 
+                                       element = 'knots_selection', 
+                                       assert_names = 
+                                         knots_selection_assert_names)
+  }
   
+  
+  if(!is.null(mcall[['sigmaknots_selection']])) {
+    mcall[['sigmaknots_selection']] <- 
+      check_each_element_of_list_named(call = mcall, 
+                                       element = 'sigmaknots_selection', 
+                                       assert_names = 
+                                         knots_selection_assert_names)
+  }
+  
+ 
   ##############################################################
   ##############################################################
   
@@ -3749,7 +3948,8 @@ bsitar <- function(x,
   
   
   if((smat == 'nsp' | smat == 'nsk' |
-      smat == 'bsp' | smat == 'msp' | smat == 'isp') & 
+      smat == 'bsp' | smat == 'msp' | 
+      smat == 'isp') & 
      !spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
@@ -3777,7 +3977,8 @@ bsitar <- function(x,
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
     smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'nsp' | smat == 'nsk' |
-             smat == 'bsp' | smat == 'msp' | smat == 'isp') & 
+             smat == 'bsp' | smat == 'msp' | 
+             smat == 'isp') & 
             spline_type_via_stype) {
     smat_intercept    <- 0
     smat_centerval    <- 0
@@ -7310,92 +7511,373 @@ bsitar <- function(x,
     }
     
     
+    
+    
+    
     #################################################################
     #################################################################
     
+    # 
+    # # Use get_knost_from_df() -> utilis-helper 12
+    # if(knotssi == "NA" | is.na(knotssi)) {
+    #   if(smat == 'nsp' |
+    #      smat == 'nsk' |
+    #      smat == 'bsp' |
+    #      smat == 'msp' | 
+    #      smat == 'isp') {
+    #     bsp_msp_isp_args                <- list()
+    #     bsp_msp_isp_args[['x']]         <-  datai[[xsi]]
+    #     bsp_msp_isp_args[['knots']]     <-  NULL
+    #     bsp_msp_isp_args[['bknots']]    <-  NULL
+    #     bsp_msp_isp_args[['df']]        <-  ept(dfsi)
+    #     bsp_msp_isp_args[['degree']]    <-  smat_degree
+    #     bsp_msp_isp_args[['intercept']] <-  smat_intercept
+    #     bsp_msp_isp_args[['derivs']]    <-  smat_derivs
+    #     bsp_msp_isp_args[['centerval']] <-  smat_centerval
+    #     bsp_msp_isp_args[['normalize']] <-  smat_normalize
+    #     bsp_msp_isp_args[['preH']]      <-  smat_preH
+    #     bsp_msp_isp_args[['sfirst']]    <-  smat_sfirst
+    #     bsp_msp_isp_args[['sparse']]    <-  smat_sparse
+    #     if(smat == 'nsp') {
+    #       temp_mat_s <- do.call(get_knost_from_df, bsp_msp_isp_args)
+    #       print(temp_mat_s)
+    #     } else if(smat == 'nsk') {
+    #       temp_mat_s <- do.call(get_knost_from_df, bsp_msp_isp_args)
+    #     } else if(smat == 'bsp') {
+    #       temp_mat_s <- do.call(GS_bsp_call, bsp_msp_isp_args)
+    #     } else if(smat == 'msp') {
+    #       temp_mat_s <- do.call(GS_msp_call, bsp_msp_isp_args)
+    #     } else if(smat == 'isp') {
+    #       temp_mat_s <- do.call(GS_isp_call, bsp_msp_isp_args)
+    #     }
+    #     
+    #     temp_mat_s_knots <- attr(temp_mat_s, "knots") 
+    #     if(is_emptyx(temp_mat_s_knots)) {
+    #       temp_mat_s_knots <- NULL 
+    #     }
+    #     
+    #     temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
+    #     temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, ept(boundsi))
+    #     
+    #     knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
+    #     if(verbose) {
+    #       message("For '",smat,"' knots are created internally based on the 'df'",
+    #               "\n ",
+    #               " The boundary knots are adjusted for bounds. The full knots ",
+    #               "\n ",
+    #               " i.e, internal as well as the boundary knots are then ",
+    #               "\n ",
+    #               " adjusted for the xoffset i.e., knots - xoffset"
+    #       )
+    #     }
+    #   } # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+    # } # if(knotssi == "NA" | is.na(knotssi)) {
+    # 
+    # 
+    # 
+    # #################################################################
+    # #################################################################
+    # # Use get_knost_from_df() -> utilis-helper 12
+    # if(knotssi == "NA" | is.na(knotssi)) {
+    #   if(smat == 'rcs') {
+    #     rcspline_eval_args                 <- list()
+    #     rcspline_eval_args[['x']]          <-  datai[[xsi]]
+    #     rcspline_eval_args[['nk']]         <-  ept(dfsi) + 1
+    #     rcspline_eval_args[['inclx']]      <-  TRUE
+    #     rcspline_eval_args[['knots.only']] <-  TRUE
+    #     rcspline_eval_args[['type']]       <-  "ordinary"
+    #     rcspline_eval_args[['norm']]       <-  2
+    #     rcspline_eval_args[['rpm']]        <-  NULL
+    #     rcspline_eval_args[['pc']]         <-  FALSE
+    #     rcspline_eval_args[['fractied']]   <-  0.05
+    #     knots_get_boundary_rcs <- knots
+    #     knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
+    #     if(as.logical(smat_bkrange)) {
+    #       knots[1]               <- knots_get_boundary_rcs[1]
+    #       knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
+    #     } else {
+    #       knots <- knots
+    #     }
+    #     if(verbose) {
+    #       message("For '",smat,"' knots are created internally based on the 'df'",
+    #               "\n ",
+    #               " Hmisc::rcspline.eval() using nk = df + 1.",
+    #               "\n ",
+    #               " The full knots are adjusted for xoffset i.e., knots - xoffset"
+    #       )
+    #     }
+    #   } # if(smat == 'rcs') {
+    # } # if(knotssi == "NA" | is.na(knotssi)) {
+    # 
+    # 
+    # 
+    
+    
+    #################################################################
+    #################################################################
     
     if(knotssi == "NA" | is.na(knotssi)) {
-      if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-        bsp_msp_isp_args                <- list()
-        bsp_msp_isp_args[['x']]         <-  datai[[xsi]]
-        bsp_msp_isp_args[['knots']]     <-  NULL
-        bsp_msp_isp_args[['bknots']]    <-  NULL
-        bsp_msp_isp_args[['df']]        <-  ept(dfsi)
-        bsp_msp_isp_args[['degree']]    <-  smat_degree
-        bsp_msp_isp_args[['intercept']] <-  smat_intercept
-        bsp_msp_isp_args[['derivs']]    <-  smat_derivs
-        bsp_msp_isp_args[['centerval']] <-  smat_centerval
-        bsp_msp_isp_args[['normalize']] <-  smat_normalize
-        bsp_msp_isp_args[['preH']]      <-  smat_preH
-        bsp_msp_isp_args[['sfirst']]    <-  smat_sfirst
-        bsp_msp_isp_args[['sparse']]    <-  smat_sparse
-        if(smat == 'bsp') {
-          temp_mat_s <- do.call(GS_bsp_call, bsp_msp_isp_args)
-        } else if(smat == 'msp') {
-          temp_mat_s <- do.call(GS_msp_call, bsp_msp_isp_args)
-        } else if(smat == 'isp') {
-          temp_mat_s <- do.call(GS_isp_call, bsp_msp_isp_args)
-        }
-        
-        temp_mat_s_knots <- attr(temp_mat_s, "knots") 
-        if(is_emptyx(temp_mat_s_knots)) {
-          temp_mat_s_knots <- NULL 
-        }
-        
-        temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
-        temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, ept(boundsi))
-        
-        knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
-        if(verbose) {
-          message("For '",smat,"' knots are created internally based on the 'df'",
-                  "\n ",
-                  " The boundary knots are adjusted for bounds. The full knots ",
-                  "\n ",
-                  " i.e, internal as well as the boundary knots are then ",
-                  "\n ",
-                  " adjusted for the xoffset i.e., knots - xoffset"
-          )
-        }
-      } # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
+      get_knost_from_df_arg <- list()
+      get_knost_from_df_arg[['x']]         <-  datai[[xsi]]
+      get_knost_from_df_arg[['knots']]     <-  NULL
+      get_knost_from_df_arg[['bknots']]    <-  NULL
+      get_knost_from_df_arg[['df']]        <-  ept(dfsi)
+      get_knost_from_df_arg[['degree']]    <-  smat_degree
+      get_knost_from_df_arg[['intercept']] <-  smat_intercept
+      get_knost_from_df_arg[['derivs']]    <-  smat_derivs
+      get_knost_from_df_arg[['centerval']] <-  smat_centerval
+      get_knost_from_df_arg[['normalize']] <-  smat_normalize
+      get_knost_from_df_arg[['preH']]      <-  smat_preH
+      get_knost_from_df_arg[['sfirst']]    <-  smat_sfirst
+      get_knost_from_df_arg[['sparse']]    <-  smat_sparse
+      get_knost_from_df_arg[['bound']]     <-  ept(boundsi)
+      get_knost_from_df_arg[['bkrange']]   <-  TRUE
+      get_knost_from_df_arg[['smat']]       <-  smat
+      knots <- do.call(get_knost_from_df, get_knost_from_df_arg)
+      if(verbose) {
+        message("For '",smat,"' knots are created internally based on the 'df'",
+                "\n ",
+                " The boundary knots are adjusted for bounds. The full knots ",
+                "\n ",
+                " i.e, internal as well as the boundary knots are then ",
+                "\n ",
+                " adjusted for the xoffset i.e., knots - xoffset")
+      }
     } # if(knotssi == "NA" | is.na(knotssi)) {
     
-    
-    
-    #################################################################
-    #################################################################
-    
-    if(knotssi == "NA" | is.na(knotssi)) {
-      if(smat == 'rcs') {
-        rcspline_eval_args                 <- list()
-        rcspline_eval_args[['x']]          <-  datai[[xsi]]
-        rcspline_eval_args[['nk']]         <-  ept(dfsi) + 1
-        rcspline_eval_args[['inclx']]      <-  TRUE
-        rcspline_eval_args[['knots.only']] <-  TRUE
-        rcspline_eval_args[['type']]       <-  "ordinary"
-        rcspline_eval_args[['norm']]       <-  2
-        rcspline_eval_args[['rpm']]        <-  NULL
-        rcspline_eval_args[['pc']]         <-  FALSE
-        rcspline_eval_args[['fractied']]   <-  0.05
-        knots_get_boundary_rcs <- knots
-        knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
-        if(as.logical(smat_bkrange)) {
-          knots[1]               <- knots_get_boundary_rcs[1]
-          knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
-        } else {
-          knots <- knots
-        }
-        if(verbose) {
-          message("For '",smat,"' knots are created internally based on the 'df'",
-                  "\n ",
-                  " Hmisc::rcspline.eval() using nk = df + 1.",
-                  "\n ",
-                  " The full knots are adjusted for xoffset i.e., knots - xoffset"
-          )
-        }
-      } # if(smat == 'rcs') {
-    } # if(knotssi == "NA" | is.na(knotssi)) {
 
+     
     
+    #################################################################
+    #################################################################
+    
+    
+    knots_selection      <- mcall[['knots_selection']] %>% eval()
+    sigmaknots_selection <- mcall[['knots_selection']] %>% eval()
+    
+    if(!is.null(knots_selection)) {
+      if(is.null(knots_selection[['nsearch']])) {
+        knots_selection[['nsearch']] <- length(knots) - 2 + 4
+      } else {
+        knots_selection[['nsearch']] <- knots_selection[['nsearch']]
+      }
+    }
+    
+    if(is.null(sigmaknots_selection)) {
+      sigmaknots_selection <- knots_selection
+    }
+
+    # knots_selection[['nsearch']] %>% print()
+    # knots_selection[['criteria']] %>% print()
+    # stop()
+
+    if(!is.null(knots_selection)) {
+      knots_selection_arg <- get_knost_from_df_arg
+      knots_selection_arg[['dataset']] <- datai
+      knots_selection_arg[['dependent']] <- ysi
+      knots_selection_arg[['independents']] <- xsi
+      knots_selection_arg[['target_nknots']] <- length(knots) - 2
+      knots_selection_arg[['initial_nknots']] <-knots_selection[['nsearch']]
+      knots_selection_arg[['cost_fn']]<- str2lang(knots_selection[['criteria']])
+      knots_selection_arg[['icr_fn']]<- str2lang(knots_selection[['criteria']])
+      knots_selection_arg[['all_scores']] <- FALSE
+      knots_selection_arg[['all_knots']] <- FALSE
+      
+      knots_selection_arg[['smat']]      <- smat
+      knots_selection_arg[['fix_bknots']]<- TRUE
+      knots_selection_arg[['knots']]     <-  NULL
+      knots_selection_arg[['bknots']]    <-checkgetiknotsbknots(knots, 'bknots')
+      knots_selection_arg[['bkrange']]   <- FALSE
+      knots_selection_arg[['fix_bknots']]<- TRUE
+      knots_selection_arg[['df']]        <-  df
+      knots_selection_arg[['degree']]    <-  smat_degree
+      knots_selection_arg[['intercept']] <-  smat_intercept
+      knots_selection_arg[['derivs']]    <-  smat_derivs
+      knots_selection_arg[['centerval']] <-  smat_centerval
+      knots_selection_arg[['normalize']] <-  smat_normalize
+      knots_selection_arg[['preH']]      <-  smat_preH
+      knots_selection_arg[['sfirst']]    <-  smat_sfirst
+      knots_selection_arg[['sparse']]    <-  smat_sparse
+    } # if(!is.null((mcall[['knots_selection']])) {
+   
+    
+    
+    if(!is.null(knots_selection)) {
+      if(knots_selection[['when']] == 'bc') {
+        knots_old <- knots
+        new_model <- do.call(get_suggest_splines, knots_selection_arg)
+        knots_new <- get_extract_knots(new_model)$fullknots
+        knots     <- knots_new
+        ######
+        knots_old_str <- paste(knots_old, collapse = " ")
+        knots_new_str <- paste(knots_new, collapse = " ")
+        
+        knots_old_knots_new_msg <- paste0("Default knots ", 
+                                          deparse(knots_old), " ",
+                                          "replaced by new knots ", 
+                                          deparse(knots_new))
+        knots_selection_what   <- knots_selection[['what']]
+        knots_selection_print  <- knots_selection[['print']]
+        knots_selection_return <- knots_selection[['return']]
+        
+        knots_selection_what_choices <- c('plot1', 
+                                          'plot2', 
+                                          'plot3', 
+                                          'plot4',
+                                          'plot5',
+                                          'plot6',
+                                          'plot7',
+                                          'plot8',
+                                          'plot9')
+        
+        if(!knots_selection_what %in% knots_selection_what_choices) {
+          stop("knots_selection_what must be one of the following: ",
+               "\n ",
+               collapse_comma(knots_selection_what_choices))
+        }
+        
+        knots_selection_arg_old <- knots_selection_arg
+        knots_selection_arg_new <- knots_selection_arg
+        knots_selection_arg_old[['knots']]  <-  checkgetiknotsbknots(knots_old, 
+                                                                     'iknots')
+        knots_selection_arg_old[['bknots']] <-  checkgetiknotsbknots(knots_old, 
+                                                                     'bknots')
+        knots_selection_arg_new[['knots']]  <-  checkgetiknotsbknots(knots_new, 
+                                                                     'iknots')
+        knots_selection_arg_new[['bknots']] <-  checkgetiknotsbknots(knots_new, 
+                                                                     'bknots')
+       
+        remove_these_args <- c('x', 
+                               'target_nknots', 
+                               'initial_nknots',
+                               'cost_fn', 
+                               'icr_fn', 
+                               'all_scores',
+                               'all_knots')
+        for (i in remove_these_args) {
+          knots_selection_arg_old[i] <- NULL
+        }
+        for (i in remove_these_args) {
+          knots_selection_arg_new[i] <- NULL
+        }
+        
+        model_old <- do.call(get_model_by_knots, knots_selection_arg_old)
+        model_new <- do.call(get_model_by_knots, knots_selection_arg_new)
+        
+        if(knots_selection_what == 'plot1' | 
+           knots_selection_what == 'plot2' | 
+           knots_selection_what == 'plot3') {
+          fig_old <- get_create_figure(dataset = 
+                                         knots_selection_arg_old[['dataset']], 
+                                       model = model_old, 
+                                       x = xsi, y = ysi,
+                                       title = 
+                                         paste0("Old knots: ", knots_old_str),
+                                       verbose = verbose)
+          fig_new <- get_create_figure(dataset = 
+                                         knots_selection_arg_new[['dataset']], 
+                                       model = model_new, 
+                                       x = xsi, y = ysi,
+                                       title = 
+                                         paste0("New knots: ", knots_new_str),
+                                       verbose = verbose)
+          fig_old_new <- 
+            patchwork::wrap_plots(fig_old / fig_new)
+        }
+        
+        if(knots_selection_what == 'plot4' | 
+           knots_selection_what == 'plot5' | 
+           knots_selection_what == 'plot6') {
+          fig_old_plot <- get_plot_model(dataset = 
+                                           knots_selection_arg_old[['dataset']], 
+                                         model = model_old, 
+                                         x = xsi, y = ysi,
+                                         title = 
+                                           paste0("Old knots: ", knots_old_str),
+                                         verbose = verbose)
+          fig_new_plot <- get_plot_model(dataset = 
+                                           knots_selection_arg_new[['dataset']], 
+                                         model = model_new, 
+                                         x = xsi, y = ysi,
+                                         title = 
+                                           paste0("New knots: ", knots_new_str),
+                                         verbose = verbose)
+          fig_old_new_plot <- 
+            patchwork::wrap_plots(fig_old_plot / fig_new_plot)
+        }
+        
+        if(knots_selection_what == 'plot7' | 
+           knots_selection_what == 'plot8' | 
+           knots_selection_what == 'plot9') {
+          fig_old_resid <- 
+            get_plot_rstandard(dataset = 
+                                 knots_selection_arg_old[['dataset']], 
+                               model = model_old, 
+                               x = xsi, y = ysi,
+                               title = 
+                                 paste0("Old knots: ", knots_old_str),
+                               verbose = verbose)
+          fig_new_resid <- 
+            get_plot_rstandard(dataset = 
+                                 knots_selection_arg_new[['dataset']], 
+                               model = model_new, 
+                               x = xsi, y = ysi,
+                               title = 
+                                 paste0("New knots: ", knots_new_str),
+                               verbose = verbose)
+          fig_old_new_resid <- 
+            patchwork::wrap_plots(fig_old_resid / fig_new_resid)
+        }
+        
+        if(knots_selection_what == 'plot10') {
+          
+        }
+        
+        if(knots_selection_what == 'plot11') {
+          
+        }
+        
+        
+        if(knots_selection_what == 'none') {
+          if(knots_selection_print) {
+            stop2c(knots_old_knots_new_msg)
+          } # if(!verbose) {
+        } else if(knots_selection_what == 'plot1') {
+          plot_object <- fig_old
+        } else if(knots_selection_what == 'plot2') {
+          plot_object <- fig_new
+        } else if(knots_selection_what == 'plot3') {
+          plot_object <- fig_old_new
+        } else if(knots_selection_what == 'plot4') {
+          plot_object <- fig_old_plot
+        } else if(knots_selection_what == 'plot5') {
+          plot_object <- fig_new_plot
+        } else if(knots_selection_what == 'plot6') {
+          plot_object <- fig_old_new_plot
+        } else if(knots_selection_what == 'plot7') {
+          plot_object <- fig_old_resid
+        } else if(knots_selection_what == 'plot8') {
+          plot_object <- fig_new_resid
+        } else if(knots_selection_what == 'plot9') {
+          plot_object <- fig_old_new_resid
+        } else if(knots_selection_what == 'plot10') {
+          plot_object <- NULL
+        } else if(knots_selection_what == 'plot11') {
+          plot_object <- NULL
+        } 
+      
+        if(knots_selection_print) {
+          print(plot_object)
+        } 
+        if(knots_selection_return) {
+          return(plot_object)
+        }
+        #######
+      } # if(knots_selection[['when']] == 'bc') {
+    } # if(!is.null(knots_selection)) {
+    
+
+   
     
     
     #################################################################
@@ -7661,6 +8143,14 @@ bsitar <- function(x,
     
     
     
+    
+    
+    
+    ##########################################################################
+    ##########################################################################
+    
+    
+    
     ######################################################################
     ######################################################################
     
@@ -7852,6 +8342,190 @@ bsitar <- function(x,
     set_datai_xsi   <- datai[[xsi]]
     mat_s           <- eval(SplineCall)
     SplineCall[[2]] <- quote(x)
+    
+    
+    #################################################################
+    #################################################################
+    
+    if(!is.null(knots_selection)) {
+      if(knots_selection[['when']] == 'ac') {
+        dataset_temp_knots_selection <- datai
+        dataset_temp_knots_selection[[xsi]] <- set_datai_xsi
+        knots_selection_arg[['dataset']] <- dataset_temp_knots_selection
+        knots_selection_arg[['dependent']] <- ysi
+        knots_selection_arg[['independents']] <- xsi
+        knots_selection_arg[['bknots']]    <-  checkgetiknotsbknots(knots, 'bknots')
+        knots_old <- knots
+        new_model <- do.call(get_suggest_splines, knots_selection_arg)
+        knots_new <- get_extract_knots(new_model)$fullknots
+        knots     <- knots_new
+        ######
+        knots_old_str <- paste(knots_old, collapse = " ")
+        knots_new_str <- paste(knots_new, collapse = " ")
+        
+        knots_old_knots_new_msg <- paste0("Default knots ", 
+                                          deparse(knots_old), " ",
+                                          "replaced by new knots ", 
+                                          deparse(knots_new))
+        knots_selection_what   <- knots_selection[['what']]
+        knots_selection_print  <- knots_selection[['print']]
+        knots_selection_return <- knots_selection[['return']]
+        
+        knots_selection_what_choices <- c('plot1', 
+                                          'plot2', 
+                                          'plot3', 
+                                          'plot4',
+                                          'plot5',
+                                          'plot6',
+                                          'plot7',
+                                          'plot8',
+                                          'plot9')
+        
+        if(!knots_selection_what %in% knots_selection_what_choices) {
+          stop("knots_selection_what must be one of the following: ",
+               "\n ",
+               collapse_comma(knots_selection_what_choices))
+        }
+        
+        knots_selection_arg_old <- knots_selection_arg
+        knots_selection_arg_new <- knots_selection_arg
+        knots_selection_arg_old[['knots']]  <-  checkgetiknotsbknots(knots_old, 
+                                                                     'iknots')
+        knots_selection_arg_old[['bknots']] <-  checkgetiknotsbknots(knots_old, 
+                                                                     'bknots')
+        knots_selection_arg_new[['knots']]  <-  checkgetiknotsbknots(knots_new, 
+                                                                     'iknots')
+        knots_selection_arg_new[['bknots']] <-  checkgetiknotsbknots(knots_new, 
+                                                                     'bknots')
+        
+        remove_these_args <- c('x', 
+                               'target_nknots', 
+                               'initial_nknots',
+                               'cost_fn', 
+                               'icr_fn', 
+                               'all_scores',
+                               'all_knots')
+        for (i in remove_these_args) {
+          knots_selection_arg_old[i] <- NULL
+        }
+        for (i in remove_these_args) {
+          knots_selection_arg_new[i] <- NULL
+        }
+        
+        model_old <- do.call(get_model_by_knots, knots_selection_arg_old)
+        model_new <- do.call(get_model_by_knots, knots_selection_arg_new)
+        
+        if(knots_selection_what == 'plot1' | 
+           knots_selection_what == 'plot2' | 
+           knots_selection_what == 'plot3') {
+          fig_old <- get_create_figure(dataset = 
+                                         knots_selection_arg_old[['dataset']], 
+                                       model = model_old, 
+                                       x = xsi, y = ysi,
+                                       title = 
+                                         paste0("Old knots: ", knots_old_str),
+                                       verbose = verbose)
+          fig_new <- get_create_figure(dataset = 
+                                         knots_selection_arg_new[['dataset']], 
+                                       model = model_new, 
+                                       x = xsi, y = ysi,
+                                       title = 
+                                         paste0("New knots: ", knots_new_str),
+                                       verbose = verbose)
+          fig_old_new <- 
+            patchwork::wrap_plots(fig_old / fig_new)
+        }
+        
+        if(knots_selection_what == 'plot4' | 
+           knots_selection_what == 'plot5' | 
+           knots_selection_what == 'plot6') {
+          fig_old_plot <- get_plot_model(dataset = 
+                                           knots_selection_arg_old[['dataset']], 
+                                         model = model_old, 
+                                         x = xsi, y = ysi,
+                                         title = 
+                                           paste0("Old knots: ", knots_old_str),
+                                         verbose = verbose)
+          fig_new_plot <- get_plot_model(dataset = 
+                                           knots_selection_arg_new[['dataset']], 
+                                         model = model_new, 
+                                         x = xsi, y = ysi,
+                                         title = 
+                                           paste0("New knots: ", knots_new_str),
+                                         verbose = verbose)
+          fig_old_new_plot <- 
+            patchwork::wrap_plots(fig_old_plot / fig_new_plot)
+        }
+        
+        if(knots_selection_what == 'plot7' | 
+           knots_selection_what == 'plot8' | 
+           knots_selection_what == 'plot9') {
+          fig_old_resid <- 
+            get_plot_rstandard(dataset = 
+                                 knots_selection_arg_old[['dataset']], 
+                               model = model_old, 
+                               x = xsi, y = ysi,
+                               title = 
+                                 paste0("Old knots: ", knots_old_str),
+                               verbose = verbose)
+          fig_new_resid <- 
+            get_plot_rstandard(dataset = 
+                                 knots_selection_arg_new[['dataset']], 
+                               model = model_new, 
+                               x = xsi, y = ysi,
+                               title = 
+                                 paste0("New knots: ", knots_new_str),
+                               verbose = verbose)
+          fig_old_new_resid <- 
+            patchwork::wrap_plots(fig_old_resid / fig_new_resid)
+        }
+        
+        if(knots_selection_what == 'plot10') {
+          
+        }
+        
+        if(knots_selection_what == 'plot11') {
+          
+        }
+        
+        
+        if(knots_selection_what == 'none') {
+          if(knots_selection_print) {
+            stop2c(knots_old_knots_new_msg)
+          } # if(!verbose) {
+        } else if(knots_selection_what == 'plot1') {
+          plot_object <- fig_old
+        } else if(knots_selection_what == 'plot2') {
+          plot_object <- fig_new
+        } else if(knots_selection_what == 'plot3') {
+          plot_object <- fig_old_new
+        } else if(knots_selection_what == 'plot4') {
+          plot_object <- fig_old_plot
+        } else if(knots_selection_what == 'plot5') {
+          plot_object <- fig_new_plot
+        } else if(knots_selection_what == 'plot6') {
+          plot_object <- fig_old_new_plot
+        } else if(knots_selection_what == 'plot7') {
+          plot_object <- fig_old_resid
+        } else if(knots_selection_what == 'plot8') {
+          plot_object <- fig_new_resid
+        } else if(knots_selection_what == 'plot9') {
+          plot_object <- fig_old_new_resid
+        } else if(knots_selection_what == 'plot10') {
+          plot_object <- NULL
+        } else if(knots_selection_what == 'plot11') {
+          plot_object <- NULL
+        } 
+        
+        if(knots_selection_print) {
+          print(plot_object)
+        } 
+        if(knots_selection_return) {
+          return(plot_object)
+        }
+        #######
+      } # if(knots_selection[['when']] == 'bc') {
+    } # if(!is.null(knots_selection)) {
     
    
    

@@ -11,6 +11,7 @@ bsitar(
   data,
   df = 4,
   knots = NA,
+  knots_selection = NULL,
   fixed = a + b + c,
   random = a + b + c,
   xoffset = mean,
@@ -44,6 +45,7 @@ bsitar(
   sigmaid = NULL,
   sigmadf = 4,
   sigmaknots = NA,
+  sigmaknots_selection = NULL,
   sigmafixed = a + b + c,
   sigmarandom = "",
   sigmaxoffset = mean,
@@ -249,6 +251,54 @@ specified. Like \code{df}, the \code{knots} can be the same for all
 sub-models, or different for each sub-model when fitting
 \code{univariate_by} and \code{multivariate} models (see \code{df} for
 details).}
+
+\item{knots_selection}{A named list for optimizing knot placement in fitting
+the model. This experimental feature searches over a larger set of knots
+(typically \code{df + 4}) to find the optimal subset that minimizes the
+specified information criterion. The named elements are:
+\describe{
+\item{\code{select}}{Selection criterion type. Currently only
+\code{'knots'} is supported, which optimizes knot locations for a given
+degrees of freedom (\code{df}).}
+\item{\code{nsearch}}{Initial number of knots for the search space.
+When \code{NULL} (default), automatically set to \code{df + 4} to
+provide sufficient candidates for optimization.}
+\item{\code{criteria}}{Information criterion for model selection.
+Options are \code{'AIC'} or \code{'BIC'} (default). Models with lower
+criterion values are preferred.}
+\item{\code{when}}{Timing of knot optimization relative to predictor
+centering:
+\itemize{
+\item \code{'bc'} - Before centering (uses raw \code{x} values)
+\item \code{'ac'} - After centering (uses \code{x - xoffset}, default)
+}}
+\item{\code{what}}{Diagnostic plots comparing original vs. optimized
+knot placements. Default \code{'none'}. Available options:
+\itemize{
+\item \code{'plot1'} - Data and fitted curve with original knots
+\item \code{'plot2'} - Data and fitted curve with optimized knots
+\item \code{'plot3'} - Data and fitted curve with both knot sets
+\item \code{'plot4'} - Data, fitted curve, and confidence bands with
+original knots
+\item \code{'plot5'} - Data, fitted curve, and confidence bands with
+optimized knots
+\item \code{'plot6'} - Data, fitted curve, and confidence bands with both
+knot sets
+\item \code{'plot7'} - Residual plot for original knot model
+\item \code{'plot8'} - Residual plot for optimized knot model
+\item \code{'plot9'} - Residual plots comparing both models
+}}
+\item{\code{return}}{Logical indicating whether to return the diagnostic
+plot object specified in \code{what}. Default \code{FALSE}.}
+\item{\code{print}}{Logical indicating whether to display the diagnostic
+plot specified in \code{what}. Default \code{FALSE}.}
+}
+
+An example: \cr
+\code{bsitar(x = age, y = height, id = id, data = berkeley_exdata,
+  knots_selection = list(select = 'knots', nsearch = NULL, criteria = 'AIC',
+  when= 'ac', what = 'plot3', return = FALSE, print = TRUE),
+  seed = 123)}}
 
 \item{fixed}{A character string specifying the fixed effects structure
 (default \code{'a+b+c'}). For \code{univariate_by} and \code{multivariate}
@@ -881,6 +931,12 @@ Ignored if \code{sigma_formula_manual = NULL}.}
 
 \item{sigmaknots}{Knots for the spline function used for \code{sigma}. See
 \code{knots} for details. Ignored if \code{sigma_formula_manual = NULL}.}
+
+\item{sigmaknots_selection}{A named list for optimizing knot placement in
+fitting the distributional parameter \code{'sigma'}. This experimental
+feature searches over a larger set of knots (typically \code{sigmadf + 4})
+to find the optimal subset that minimizes the specified information
+criterion. See \code{knots_selection} for details.}
 
 \item{sigmafixed}{Fixed effect formula for the \code{sigma} structure. See
 \code{fixed} for details. Ignored if \code{sigma_formula_manual = NULL}.}

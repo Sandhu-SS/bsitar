@@ -11,11 +11,10 @@
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_bsp <- function(x, 
                    knots, 
@@ -98,11 +97,10 @@ GS_bsp <- function(x,
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_nsp_nsk <- function(x, 
                        knots, 
@@ -220,11 +218,10 @@ GS_nsp_nsk <- function(x,
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_getH <- function(knots, 
                     normalize) {
@@ -296,14 +293,14 @@ GS_getH <- function(knots,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
+#' @param df An integer. The \code{df} defined only for R functions, not Stan. 
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_nsp_call <- function(x, 
                         knots, 
@@ -315,7 +312,8 @@ GS_nsp_call <- function(x,
                         normalize, 
                         preH, 
                         sfirst = FALSE, 
-                        sparse = FALSE) {
+                        sparse = FALSE,
+                        df = NULL) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -408,14 +406,14 @@ GS_nsp_call <- function(x,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
+#' @param df An integer. The \code{df} defined only for R functions, not Stan. 
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_nsk_call <- function(x, 
                         knots, 
@@ -427,7 +425,8 @@ GS_nsk_call <- function(x,
                         normalize, 
                         preH, 
                         sfirst = FALSE, 
-                        sparse = FALSE) {
+                        sparse = FALSE,
+                        df = NULL) {
   
   if(derivs > 1) {
     stop("Second and higher order derivatives are not supported yet")
@@ -526,8 +525,9 @@ GS_nsk_call <- function(x,
 #' @param preH Ignored
 #' @param sfirst Ignored
 #' @param sparse Ignored
+#' @param df An integer. It is defined as \code{nk - 1}. An integer. The
+#'   \code{df} defined only for R functions, not Stan.
 #' @param inclx A logical indicating whether to include \code{x} as first term.
-#' @param df An integer. It is defined as \code{nk - 1}
 #' @param fullknots combined internal knots and boundary knots
 #' @param fullknots.only A logical indicating whether to return knots only.
 #' @param type An integer to indicate type, \code{0} for \code{'ordinary'} and
@@ -541,7 +541,7 @@ GS_nsk_call <- function(x,
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
@@ -557,8 +557,8 @@ GS_rcs_call <- function(x,
                         preH = NULL, 
                         sfirst = FALSE, 
                         sparse = FALSE,
-                        inclx = TRUE, 
                         df = NULL, 
+                        inclx = TRUE, 
                         fullknots = NULL,
                         fullknots.only = FALSE,
                         type = 0, 
@@ -569,54 +569,38 @@ GS_rcs_call <- function(x,
                         verbose = FALSE) {
   
   
+  if(!is.null(bknots)) {
+    if(length(bknots) != 2) {
+      stop2c("The 'bknots' should be length 2")
+    }
+  }
+  
   # if everything is missing, then set df
   # next preferance should be fullknots
   if(is.null(knots) & is.null(bknots) & is.null(fullknots) & is.null(df)) {
-    if(verbose) message("'df' is set as 3 for the rcs model")
+    if(verbose) message2c("'df' is set as 3 for the rcs model")
     df <- 3
   } else if(!is.null(fullknots)) {
     if(!is.null(knots) & !is.null(bknots)) {
-      stop("When specifying 'fullknots', 'knots' and 'bknots' should be NULL")
+      stop2c("When specifying 'fullknots', both 'knots' and 'bknots' 
+           should be NULL")
     }
     fullknots <- fullknots
   } else if(is.null(fullknots)) {
     if(!is.null(knots) & !is.null(bknots)) {
-      fullknots <- c(bknots[1], knots, knots, bknots[2])
+      fullknots <- c(bknots[1], knots, bknots[2])
     } else if(is.null(knots) | is.null(bknots)) {
       if(is.null(df)) {
-        stop("please specify both knots and bknots, fullknots, or df")
+        stop2c("please specify knots and bknots, fullknots, or df")
       }
     }
   } else {
-    stop("Specify 'df' or 'knots' 
+    stop2c("Specify 'df' or 'knots' 
     Note that knots can be specified by using 'fullknots', 
     or else via 'knots' and 'bknots'")
   }
   
-  
-  # if(is.null(knots) & is.null(bknots) & is.null(fullknots) & is.null(df)) {
-  #   stop("Specify 'df' or 'knots' 
-  #   Note that knots can be specified by using 'fullknots', 
-  #   or else via 'knots' and 'bknots'")
-  # }
-  # 
-  # if(is.null(fullknots)) {
-  #   if(is.null(knots) | is.null(bknots)) {
-  #     if(is.null(df)) {
-  #       stop("please specify both knots and bknots, fullknots, or df")
-  #     }
-  #   }
-  #   if(is.null(df)) fullknots <- c(bknots[1], knots, knots, bknots[2])
-  # } else if(!is.null(fullknots)) {
-  #   fullknots <- fullknots
-  # }
-  
-  
-  
-  
-  
-  
-  
+ 
   if(is.null(intercept)) {
     intercept <- FALSE
   }
@@ -625,10 +609,10 @@ GS_rcs_call <- function(x,
   # knots <- fullknots
   
   if(is.null(df) & is.null(fullknots)) {
-    stop("please specify either df or fullknots, not both")
+    stop("please specify either df or knots, not both")
   }
   if(!is.null(df) & !is.null(fullknots)) {
-    stop("please specify either df or fullknots, not both")
+    stop("please specify either df or knots, not both")
   }
   
   if(is.null(df) & !is.null(fullknots)) {
@@ -639,9 +623,12 @@ GS_rcs_call <- function(x,
     stop()
   }
   
-  # borrow from Hmisc::rcspline.eval
-  
-  if (!length(fullknots)) {
+
+  # sourced from Hmisc::rcspline.eval
+ if (!length(fullknots)) {
+   if(is.data.frame(x) | data.table::is.data.table(x)) {
+     stop("The argument 'x' must be a numeric vector but found data frame")
+   }
     xx <- x[!is.na(x)]
     n <- length(xx)
     if (n < 6) 
@@ -729,6 +716,21 @@ GS_rcs_call <- function(x,
     }
   }
   fullknots <- sort(unique(fullknots))
+  
+  
+  ####
+  if(!is.null(bknots)) {
+    fullknots_org                <- fullknots
+    fullknots[1]                 <- bknots[1]
+    fullknots[length(fullknots)] <- bknots[2]
+    if(verbose) {
+      message2c("The 'boundary knots' replaced by the provided 'bknots'. 
+                Thus, the 'knots' used now are ", 
+                fullknots, ", instead of the ", fullknots_org)
+    }
+  }
+  #######
+  
   nk <- length(fullknots)
   if (nk < 3) {
     cat("fewer than 3 unique fullknots  Frequency table of variable:\n")
@@ -825,6 +827,9 @@ GS_rcs_call <- function(x,
       if(verbose) message("Intercept and first term (x) set to '0' for derivs = 2")
     }
   } # if(intercept) {
+  
+  attr(basis_evals, "knots") <- fullknots
+ 
   return(basis_evals)
 } # GS_rcs_call
 
@@ -838,7 +843,7 @@ GS_rcs_call <- function(x,
 #' 
 #' @return A matrix or a vector
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
@@ -888,7 +893,7 @@ prodrowsum_beta_Rinv_wide <- function(matb,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
-#' @param df An integer
+#' @param df An integer. The \code{df} defined only for R functions, not Stan. 
 #' @param Boundary.knots Ignored
 #' @param periodic Ignored
 #' @param integral Ignored
@@ -896,11 +901,10 @@ prodrowsum_beta_Rinv_wide <- function(matb,
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_bsp_call <- function(x, 
                         knots = NULL,
@@ -921,11 +925,7 @@ GS_bsp_call <- function(x,
                         warn.outside = getOption("splines2.warn.outside", TRUE)
 ) {
   
-  
-  # print(x)
-  # print(knots)
-  # print(bknots)
-  #stop()
+
   
   if(!is.null(fullknots)) {
     if(!is.null(knots)) stop("'knots' must be NULL if specified 'fullknots'")
@@ -978,7 +978,7 @@ GS_bsp_call <- function(x,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
-#' @param df An integer
+#' @param df An integer. The \code{df} defined only for R functions, not Stan. 
 #' @param Boundary.knots Ignored
 #' @param periodic Ignored
 #' @param integral Ignored
@@ -986,11 +986,10 @@ GS_bsp_call <- function(x,
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_msp_call <- function(x, 
                         knots = NULL,
@@ -1062,7 +1061,7 @@ GS_msp_call <- function(x,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
-#' @param df An integer
+#' @param df An integer. The \code{df} defined only for R functions, not Stan. 
 #' @param Boundary.knots Ignored
 #' @param periodic Ignored
 #' @param integral Ignored
@@ -1070,11 +1069,10 @@ GS_msp_call <- function(x,
 #' 
 #' @return A matrix
 #' 
-#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' @inherit berkeley author
 #' 
 #' @keywords internal
 #' @noRd
-#' 
 #' 
 GS_isp_call <- function(x, 
                         knots = NULL,
@@ -1127,4 +1125,186 @@ GS_isp_call <- function(x,
   return(out)
 }
 
+
+
+
+
+#' An internal function to construct a variant of natural cubic spline basis
+#' matrix
+#'
+#' @param x A numeric vector for which basis matrix to be constructed
+#' @param knots A vector specifying the internal knots
+#' @param bknots A vector specifying the boundary knots
+#' @param intercept An integer to indicate whether to compute complete basis
+#'   along with intercept (\code{intercept = 1}) or to exclude intercept from
+#'   the basis (\code{intercept = 0}, default).
+#' @param derivs An integer to indicate whether to compute complete basis matrix
+#'   (\code{derivs = 0}, default) or its first derivative (\code{derivs = 1})
+#' @param centerval A real number to offset the intercept.
+#' @param normalize An integer to indicate whether to normalize the basis matrix
+#'   (\code{normalize = 1}) or not (\code{normalize = 0}, default).
+#' @param preH A logical (as.integer()) indicating whether to use pre computed 
+#' H matrix
+#' @param sfirst Ignored
+#' @param sparse Ignored
+#' @param df An integer. The \code{df} defined only for R functions, not Stan. 
+#' @param Boundary.knots Ignored
+#' @param periodic Ignored
+#' @param integral Ignored
+#' @param warn.outside Ignored
+#' 
+#' @return A matrix
+#' 
+#' @inherit berkeley author
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+get_knost_from_df <- function(x, 
+                              df,
+                              smat,
+                              knots = NULL, 
+                              bknots = NULL, 
+                              degree = 3, 
+                              intercept = FALSE, 
+                              derivs = 0, 
+                              centerval = FALSE, 
+                              normalize = FALSE, 
+                              preH = FALSE, 
+                              sfirst = FALSE, 
+                              sparse = FALSE,
+                              nk = NULL,
+                              inclx = TRUE,
+                              knots.only = TRUE,
+                              type = "ordinary",
+                              norm = 2,
+                              rpm = NULL,
+                              pc = FALSE,
+                              fractied = 0.05,
+                              bkrange = FALSE,
+                              fix_bknots = TRUE,
+                              bound = NULL,
+                              userdata = NULL,
+                              verbose = FALSE) {
+  
+  
+  if(is.null(userdata)) {
+    if(is.data.frame(x) | data.table::is.data.table(x)) {
+      stop("The argument 'x' must be a numeric vector but found data frame")
+    }
+  } else if(!is.null(userdata)) {
+    if(is.character(x)) {
+      x <- userdata[[x]]
+    } else if(!is.character(x)) {
+      x <- deparse(x)
+      x <- userdata[[x]]
+    }
+  } # if(is.null(userdata)) { else if(!is.null(userdata)) {
+  
+  if(is.character(df))        df     <- str2lang(df)
+  
+  if(is.null(bound)) {
+    bound <- 0
+  } else {
+    if(is.character(bound))  bound     <- str2lang(bound)
+  }
+  
+  if(is.null(bknots)) {
+    if(as.logical(bkrange)) bknots <- range(x)
+  } else {
+    bknots <- bknots
+  }
+  bknots_org <- bknots
+  
+  if(is.null(nk)) {
+    nk <- df + 1
+  } else {
+    if(is.character(nk))  nk     <- str2lang(nk)
+  }
+  
+  
+  bsp_msp_isp_args                <- list()
+  bsp_msp_isp_args[['x']]         <-  x
+  bsp_msp_isp_args[['knots']]     <-  knots
+  bsp_msp_isp_args[['bknots']]    <-  bknots
+  bsp_msp_isp_args[['df']]        <-  df
+  bsp_msp_isp_args[['degree']]    <-  degree
+  bsp_msp_isp_args[['intercept']] <-  intercept
+  bsp_msp_isp_args[['derivs']]    <-  derivs
+  bsp_msp_isp_args[['centerval']] <-  centerval
+  bsp_msp_isp_args[['normalize']] <-  normalize
+  bsp_msp_isp_args[['preH']]      <-  preH
+  bsp_msp_isp_args[['sfirst']]    <-  sfirst
+  bsp_msp_isp_args[['sparse']]    <-  sparse
+  
+  
+  direct_call_args                        <- list()
+  direct_call_args[['x']]                 <-  x
+  direct_call_args[['knots']]             <-  knots
+  direct_call_args[['Boundary.knots']]    <-  bknots
+  direct_call_args[['df']]                <-  df
+  direct_call_args[['intercept']]         <-  intercept
+  
+  direct_call_args_nsp_nsk                <- direct_call_args
+  direct_call_args_nsp_nsk[['derivs']]    <-  derivs
+  
+  
+  direct_call_args_msp_bsp                <- direct_call_args_nsp_nsk
+  direct_call_args_msp_bsp[['degree']]    <-  degree
+  
+  
+  rcspline_eval_args                 <- list()
+  rcspline_eval_args[['x']]          <-  x
+  rcspline_eval_args[['nk']]         <-  nk
+  rcspline_eval_args[['inclx']]      <-  inclx
+  rcspline_eval_args[['knots.only']] <-  knots.only
+  rcspline_eval_args[['type']]       <-  type
+  rcspline_eval_args[['norm']]       <-  norm
+  rcspline_eval_args[['rpm']]        <-  rpm
+  rcspline_eval_args[['pc']]         <-  pc
+  rcspline_eval_args[['fractied']]   <-  fractied
+  
+  
+  if(smat == 'ns') {
+    temp_mat_s <- do.call(splines::ns, direct_call_args)
+  } else if(smat == 'nsk') {
+    temp_mat_s <- do.call(splines2::nsk, direct_call_args_nsp_nsk)
+  } else if(smat == 'nsp') {
+    temp_mat_s <- do.call(splines2::nsp, direct_call_args_nsp_nsk)
+  } else if(smat == 'bsp') {
+    temp_mat_s <- do.call(splines2::bsp, direct_call_args_msp_bsp)
+  } else if(smat == 'msp') {
+    temp_mat_s <- do.call(splines2::msp, direct_call_args_msp_bsp)
+  } else if(smat == 'isp') {
+    temp_mat_s <- do.call(splines2::isp, direct_call_args_msp_bsp)
+  } else if(smat == 'rcs') {
+    temp_mat_s <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
+  }
+ 
+  
+  if(smat == 'rcs') {
+    knots <- temp_mat_s
+    temp_mat_s_bknots <- bknots
+    temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, bound)
+    if(as.logical(fix_bknots)) {
+      knots[1]               <- temp_mat_s_bknots[1]
+      knots[length(knots)]   <- temp_mat_s_bknots[2]
+    } else {
+      knots <- knots
+    }
+  } else {
+    temp_mat_s_knots <- attr(temp_mat_s, "knots") 
+    if(is_emptyx(temp_mat_s_knots)) {
+      temp_mat_s_knots <- NULL 
+    }
+    temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
+    if(fix_bknots) {
+      temp_mat_s_bknots <- bknots_org
+    }
+    temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, bound)
+    knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
+  }
+  
+  return(knots)
+}
 

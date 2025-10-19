@@ -1,8 +1,6 @@
 
 
 #' An internal function to create data frame for post-processing
-#'
-#' @inheritParams  growthparameters.bgmfit 
 #' 
 #' @param idata_method A character string to indicate the interpolation method.
 #'   Options are \emph{method 1} (specified as  \code{'m1'}, default) and
@@ -16,9 +14,9 @@
 #'   <https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R>.
 #'   If \code{NULL} (default), method \code{'m1'} is automatically set. 
 #' 
-#' @keywords internal
-#' 
 #' @return A data frame object. 
+#' 
+#' @inheritParams  growthparameters.bgmfit 
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #' 
