@@ -979,6 +979,7 @@ get_plot_model <- function(dataset,
                            model,
                            x,
                            y,
+                           fullknots = NULL,
                            title = NULL,
                            verbose = FALSE) {
   fit_link <- NULL;
@@ -990,6 +991,15 @@ get_plot_model <- function(dataset,
   independent <- x
   if(is.character(dependent))    dependent    <- str2lang(dependent)
   if(is.character(independent)) independent <- str2lang(independent)
+  
+  
+  if(is.null(fullknots)) {
+    knots <- get_extract_knots(model)
+  } else if(!is.null(fullknots)) {
+    knots <- list()
+    knots$knots          <- checkgetiknotsbknots(fullknots, 'iknots')
+    knots$Boundary.knots <- checkgetiknotsbknots(fullknots, 'bknots')
+  }
   
   # The confidence bands has to be in the scale of the link function,
   # and we need to get it's inverse for plotting
@@ -1014,6 +1024,9 @@ get_plot_model <- function(dataset,
     ggplot2::geom_line(ggplot2::aes(y = pred),
                        color = "blue", linewidth = 1)
   
+  
+  fig <- fig + ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
+  fig <- fig + ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
   
   if(!is.null(title)) fig <- fig + ggplot2::ggtitle(title)
   
@@ -1043,17 +1056,31 @@ get_plot_rstandard <- function(dataset,
                            model,
                            x = NULL,
                            y = NULL,
+                           fullknots = NULL,
                            title = NULL,
                            verbose = FALSE) {
+  
+  
+  if(is.null(fullknots)) {
+    knots <- get_extract_knots(model)
+  } else if(!is.null(fullknots)) {
+    knots <- list()
+    knots$knots          <- checkgetiknotsbknots(fullknots, 'iknots')
+    knots$Boundary.knots <- checkgetiknotsbknots(fullknots, 'bknots')
+  }
   
   fig <- ggplot2::ggplot(dataset, ggplot2::aes(x = stats::predict(model, dataset),
                                         y = stats::rstandard(model))) +
     ggplot2::geom_point() +
     ggplot2::geom_smooth(method = "loess", formula = y ~ x)
   
+  # Don't plot xintercept because here x axis is the outcome scale
+  # fig <- fig + ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
+  # fig <- fig + ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
+  
   if(!is.null(title)) fig <- fig + ggplot2::ggtitle(title)
   
-  fig
+  return(fig)
 }
 
 
@@ -1824,6 +1851,7 @@ get_create_figure <- function(dataset,
                               model, 
                               x,
                               y,
+                              fullknots = NULL,
                               title = NULL, 
                               verbose = FALSE) {
   
@@ -1846,8 +1874,15 @@ get_create_figure <- function(dataset,
   fig <- fig + ggplot2::xlab(scales::parse_format()("'Predictor'~X"))
   fig <- fig + ggplot2::ylab(scales::parse_format()("'Response'~Y"))
   
-  knots <- get_extract_knots(mod)
- 
+  
+  if(is.null(fullknots)) {
+    knots <- get_extract_knots(mod)
+  } else if(!is.null(fullknots)) {
+    knots <- list()
+    knots$knots          <- checkgetiknotsbknots(fullknots, 'iknots')
+    knots$Boundary.knots <- checkgetiknotsbknots(fullknots, 'bknots')
+  }
+  
   fig <- fig + ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
   fig <- fig + ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
   
@@ -1859,6 +1894,281 @@ get_create_figure <- function(dataset,
   if(!is.null(title)) fig <- fig + ggplot2::ggtitle(title)
   
   return(fig)
+}
+
+
+
+##############################################################################
+# get_print_return_obj
+##############################################################################
+
+# https://github.com/jo-inge-arnes/knutar-experiments
+
+#' Title
+#'
+#' @param knots_old Internal
+#' @param model_new Internal
+#' @param knots_new Internal
+#' @param what Internal
+#' @param print Internal
+#' @param return Internal
+#' @param verbose Internal
+#'
+#' @returns A \code{ggplot} object
+#' @keywords internal
+#' @noRd
+#'
+get_model_by_knots_wrapper <- function(list_arg, knots) {
+  list_arg[['knots']]  <-  checkgetiknotsbknots(knots, 'iknots')
+  list_arg[['bknots']] <-  checkgetiknotsbknots(knots, 'bknots')
+  
+  remove_these_args <- c('x', 
+                         'target_nknots', 
+                         'initial_nknots',
+                         'cost_fn', 
+                         'icr_fn', 
+                         'all_scores',
+                         'all_knots')
+  for (i in remove_these_args) {
+    list_arg[i] <- NULL
+  }
+  
+  model <- do.call(get_model_by_knots, list_arg)
+  return(model)
+}
+
+
+##############################################################################
+# get_print_return_obj
+##############################################################################
+
+# https://github.com/jo-inge-arnes/knutar-experiments
+
+#' Title
+#'
+#' @param knots_old Internal
+#' @param model_new Internal
+#' @param knots_new Internal
+#' @param what Internal
+#' @param print Internal
+#' @param return Internal
+#' @param verbose Internal
+#'
+#' @returns A \code{ggplot} object
+#' @keywords internal
+#' @noRd
+#'
+get_print_return_obj <- function(knots = NULL, 
+                                 model = NULL,  
+                                 model_new = NULL,  
+                                 knots_new = NULL, 
+                                 xsi, 
+                                 ysi,
+                                 what,
+                                 print = FALSE, 
+                                 return = FALSE,
+                                 list_arg = NULL,
+                                 verbose = FALSE) {
+  
+
+  knots_old              <- knots
+  knots_selection_what   <- what 
+  knots_selection_print  <- print 
+  knots_selection_return <- return
+  
+  model_old     <- get_model_by_knots_wrapper(list_arg, knots_old) 
+  knots_old_str <-  paste(knots_old, collapse = " ")
+  
+  ###########################################################################
+  ###########################################################################
+  if(is.null(model_new)) {
+    # if(is_emptyx(what)) what <- 'plot1'
+    knots_selection_what_choices <- c('plot1', 
+                                      'plot2', 
+                                      'plot3')
+    
+    if(!what %in% knots_selection_what_choices) {
+      stop("knots_selection_what must be one of the following: ",
+           "\n ",
+           collapse_comma(knots_selection_what_choices))
+    }
+    
+    if(what == 'plot1') {
+      plot_object <- get_create_figure(dataset = list_arg[['dataset']], 
+                                   model = model_old, 
+                                   x = xsi, y = ysi,
+                                   fullknots = knots_old,
+                                   title = paste0("knots: ", knots_old_str),
+                                   verbose = verbose)
+    }
+    
+    if(what == 'plot2') {
+      plot_object <- get_plot_model(dataset = list_arg[['dataset']], 
+                                     model = model_old, 
+                                     x = xsi, y = ysi,
+                                     fullknots = knots_old,
+                                     title = paste0("knots: ", knots_old_str),
+                                     verbose = verbose)
+    }
+    
+    if(what == 'plot3') {
+      plot_object <- get_plot_rstandard(dataset = list_arg[['dataset']], 
+                                          model = model_old, 
+                                          x = xsi, y = ysi,
+                                          fullknots = knots_old,
+                                          title = paste0("knots: ", knots_old_str),
+                                          verbose = verbose)
+    }
+    return(plot_object)
+  } # if(is.null(model_new)) {
+  
+  ###########################################################################
+  ###########################################################################
+  
+  # if(!is.null(model_new)) ... continue below
+  
+  if(length(knots_old) > length(knots_new)) {
+    stop2c("The length of old knots is greater than the new knots. ",
+           "The difference is ", 
+           length(knots_old), ' - ', length(knots_new),
+           " = ", length(knots_old) - length(knots_new),
+           ". Either decrease the 'df', or increase the 'nsearch' ",
+           "in 'knots_selection' argument by ", 
+           length(knots_old) - length(knots_new))
+  }
+  
+  
+  model_new <- get_model_by_knots_wrapper(list_arg, knots_new) 
+  
+  ######
+  knots_new_str <-  paste(knots_new, collapse = " ")
+  
+  knots_old_knots_new_msg <- paste0("Default knots ", 
+                                    deparse(knots_old), " ",
+                                    "replaced by new knots ", 
+                                    deparse(knots_new))
+  
+  
+  knots_selection_what_choices <- c('plot1', 
+                                    'plot2', 
+                                    'plot3', 
+                                    'plot4',
+                                    'plot5',
+                                    'plot6',
+                                    'plot7',
+                                    'plot8',
+                                    'plot9')
+  
+  if(!knots_selection_what %in% knots_selection_what_choices) {
+    stop("knots_selection_what must be one of the following: ",
+         "\n ",
+         collapse_comma(knots_selection_what_choices))
+  }
+  
+  
+  
+  if(knots_selection_what == 'plot1' | 
+     knots_selection_what == 'plot2' | 
+     knots_selection_what == 'plot3') {
+    fig_old <- get_create_figure(dataset = 
+                                   list_arg[['dataset']], 
+                                 model = model_old, 
+                                 x = xsi, y = ysi,
+                                 fullknots = knots_old,
+                                 title = 
+                                   paste0("Old knots: ", knots_old_str),
+                                 verbose = verbose)
+    fig_new <- get_create_figure(dataset = 
+                                   list_arg[['dataset']], 
+                                 model = model_new, 
+                                 x = xsi, y = ysi,
+                                 fullknots = knots_new,
+                                 title = 
+                                   paste0("New knots: ", knots_new_str),
+                                 verbose = verbose)
+    fig_old_new <- 
+      patchwork::wrap_plots(fig_old / fig_new)
+  }
+  
+  if(knots_selection_what == 'plot4' | 
+     knots_selection_what == 'plot5' | 
+     knots_selection_what == 'plot6') {
+    fig_old_plot <- get_plot_model(dataset = 
+                                     list_arg[['dataset']], 
+                                   model = model_old, 
+                                   x = xsi, y = ysi,
+                                   fullknots = knots_old,
+                                   title = 
+                                     paste0("Old knots: ", knots_old_str),
+                                   verbose = verbose)
+    fig_new_plot <- get_plot_model(dataset = 
+                                     list_arg[['dataset']], 
+                                   model = model_new, 
+                                   x = xsi, y = ysi,
+                                   fullknots = knots_new,
+                                   title = 
+                                     paste0("New knots: ", knots_new_str),
+                                   verbose = verbose)
+    fig_old_new_plot <- 
+      patchwork::wrap_plots(fig_old_plot / fig_new_plot)
+  }
+  
+  if(knots_selection_what == 'plot7' | 
+     knots_selection_what == 'plot8' | 
+     knots_selection_what == 'plot9') {
+    fig_old_resid <- 
+      get_plot_rstandard(dataset = 
+                           list_arg[['dataset']], 
+                         model = model_old, 
+                         x = xsi, y = ysi,
+                         fullknots = knots_old,
+                         title = 
+                           paste0("Old knots: ", knots_old_str),
+                         verbose = verbose)
+    fig_new_resid <- 
+      get_plot_rstandard(dataset = 
+                           list_arg[['dataset']], 
+                         model = model_new, 
+                         x = xsi, y = ysi,
+                         fullknots = knots_new,
+                         title = 
+                           paste0("New knots: ", knots_new_str),
+                         verbose = verbose)
+    fig_old_new_resid <- 
+      patchwork::wrap_plots(fig_old_resid / fig_new_resid)
+  }
+  
+ 
+  
+  if(knots_selection_what == 'none') {
+    if(knots_selection_print) {
+      stop2c(knots_old_knots_new_msg)
+    } # if(!verbose) {
+  } else if(knots_selection_what == 'plot1') {
+    plot_object <- fig_old
+  } else if(knots_selection_what == 'plot2') {
+    plot_object <- fig_new
+  } else if(knots_selection_what == 'plot3') {
+    plot_object <- fig_old_new
+  } else if(knots_selection_what == 'plot4') {
+    plot_object <- fig_old_plot
+  } else if(knots_selection_what == 'plot5') {
+    plot_object <- fig_new_plot
+  } else if(knots_selection_what == 'plot6') {
+    plot_object <- fig_old_new_plot
+  } else if(knots_selection_what == 'plot7') {
+    plot_object <- fig_old_resid
+  } else if(knots_selection_what == 'plot8') {
+    plot_object <- fig_new_resid
+  } else if(knots_selection_what == 'plot9') {
+    plot_object <- fig_old_new_resid
+  } else if(knots_selection_what == 'plot10') {
+    plot_object <- NULL
+  } else if(knots_selection_what == 'plot11') {
+    plot_object <- NULL
+  } 
+
+  return(plot_object)
 }
 
 

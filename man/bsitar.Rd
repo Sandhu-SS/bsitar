@@ -267,19 +267,18 @@ provide sufficient candidates for optimization.}
 Options are \code{'AIC'} or \code{'BIC'} (default). Models with lower
 criterion values are preferred.}
 \item{\code{bkrange}}{A logical (default \code{TRUE}) to indicate whether
-to use the predictor range (\code{x}) as boundary knots or else to use
-the quantile based boundary knots obtained from \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
-The \code{'bkrange'} is evaluated only when \code{stype = 'rcs'},ignored
-otherwise. Also note that if user sets \code{'bkrange'} for later exposed
-\code{stype}, that choice will be re set as the one defined here for the
-\code{knots_selection}.}
+to use the predictor range (\code{range(x)}) as boundary knots, or else to
+use the quantile based boundary knots obtained from the
+\code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}. The \code{'bkrange'} is evaluated only when
+\code{stype = 'rcs'},ignored otherwise. Note that if user sets
+\code{'bkrange'} for later exposed \code{stype}, that choice will be re set
+as the one defined here for the \code{knots_selection}.}
 \item{\code{fix_bknots}}{A logical (default \code{TRUE}) indicating whether
 to fix the boundary knots at their original values while selecting the
-knots locations or else they also must be optimized. The \code{'bkrange'}
-is evaluated only when \code{stype = 'rcs'},ignored otherwise. Also note
-that if user sets \code{'bkrange'} for later exposed \code{stype}, that
-choice will be re set as the one defined here for the
-\code{knots_selection}.}
+knots locations or else they also must be optimized. The \code{'bkrange'} is evaluated only when
+\code{stype = 'rcs'},ignored otherwise. Note that if user sets
+\code{'bkrange'} for later exposed \code{stype}, that choice will be re set
+as the one defined here for the \code{knots_selection}.}
 \item{\code{when}}{Timing of knot optimization relative to predictor
 centering:
 \itemize{
