@@ -27,6 +27,27 @@
 }
 
 
+@ARTICLE{Arnes2023,
+  
+AUTHOR={Arnes, Jo Inge  and Hapfelmeier, Alexander  and Horsch, Alexander  and Braaten, Tonje },
+         
+TITLE={Greedy knot selection algorithm for restricted cubic spline regression},
+        
+JOURNAL={Frontiers in Epidemiology},
+        
+VOLUME={Volume 3 - 2023},
+
+YEAR={2023},
+
+URL={https://www.frontiersin.org/journals/epidemiology/articles/10.3389/fepid.2023.1283705},
+
+DOI={10.3389/fepid.2023.1283705},
+
+ISSN={2674-1199},
+
+ABSTRACT={Non-linear regression modeling is common in epidemiology for prediction purposes or estimating relationships between predictor and response variables. Restricted cubic spline (RCS) regression is one such method, for example, highly relevant to Cox proportional hazard regression model analysis. RCS regression uses third-order polynomials joined at knot points to model non-linear relationships. The standard approach is to place knots by a regular sequence of quantiles between the outer boundaries. A regression curve can easily be fitted to the sample using a relatively high number of knots. The problem is then overfitting, where a regression model has a good fit to the given sample but does not generalize well to other samples. A low knot count is thus preferred. However, the standard knot selection process can lead to underperformance in the sparser regions of the predictor variable, especially when using a low number of knots. It can also lead to overfitting in the denser regions. We present a simple greedy search algorithm using a backward method for knot selection that shows reduced prediction error and Bayesian information criterion (BIC) scores compared to the standard knot selection process in simulation experiments. We have implemented the algorithm as part of an open-source R-package, knutar.}}
+
+
 @Manual{R-splines,
     title = {R: A Language and Environment for Statistical Computing},
     author = {{R Core Team}},

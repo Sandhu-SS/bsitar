@@ -879,12 +879,18 @@ getcovlist <- function(x) {
 #' An internal function to parse and evaluate a character string.
 #'
 #' @param x A character string.
+#' @param envir An environment for call evaluation.
 #' @keywords internal
 #' @return An evaluated object.
 #' @noRd
 #'
 
-ept <- function(x) eval(parse(text = x), envir = parent.frame())
+ept <- function(x, envir = NULL) {
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  eval(parse(text = x), envir = envir)
+}
 
 
 #' An internal function to get parameter names from the stancode.

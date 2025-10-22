@@ -266,6 +266,20 @@ provide sufficient candidates for optimization.}
 \item{\code{criteria}}{Information criterion for model selection.
 Options are \code{'AIC'} or \code{'BIC'} (default). Models with lower
 criterion values are preferred.}
+\item{\code{bkrange}}{A logical (default \code{TRUE}) to indicate whether
+to use the predictor range (\code{x}) as boundary knots or else to use
+the quantile based boundary knots obtained from \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
+The \code{'bkrange'} is evaluated only when \code{stype = 'rcs'},ignored
+otherwise. Also note that if user sets \code{'bkrange'} for later exposed
+\code{stype}, that choice will be re set as the one defined here for the
+\code{knots_selection}.}
+\item{\code{fix_bknots}}{A logical (default \code{TRUE}) indicating whether
+to fix the boundary knots at their original values while selecting the
+knots locations or else they also must be optimized. The \code{'bkrange'}
+is evaluated only when \code{stype = 'rcs'},ignored otherwise. Also note
+that if user sets \code{'bkrange'} for later exposed \code{stype}, that
+choice will be re set as the one defined here for the
+\code{knots_selection}.}
 \item{\code{when}}{Timing of knot optimization relative to predictor
 centering:
 \itemize{
@@ -297,8 +311,8 @@ plot specified in \code{what}. Default \code{FALSE}.}
 An example: \cr
 \code{bsitar(x = age, y = height, id = id, data = berkeley_exdata,
   knots_selection = list(select = 'knots', nsearch = NULL, criteria = 'AIC',
-  when= 'ac', what = 'plot3', return = FALSE, print = TRUE),
-  seed = 123)}}
+  bkrange = TRUE, fix_bknots = TRUE, when= 'ac', what = 'plot3', return =
+  FALSE, print = TRUE), seed = 123)}}
 
 \item{fixed}{A character string specifying the fixed effects structure
 (default \code{'a+b+c'}). For \code{univariate_by} and \code{multivariate}
@@ -2231,7 +2245,23 @@ truncated power basis approach (see
 design matrix. While all approaches produce the same growth curves, the
 model-estimated spline coefficients differ from each other.
 
-Like the \pkg{sitar} package \insertCite{Cole2010}{bsitar}, the \pkg{bsitar}
+A key challenge in spline based regression methods is to select the number
+and location of knots. The standard approach is to place knots by a regular
+sequence of quantiles between the outer boundaries. A regression curve can
+easily be fitted to the sample using a relatively high number of knots. The
+problem is then over fitting, where a regression model has a good fit to the
+given sample but does not generalize well to other samples. A low knot count
+is thus preferred. However, the standard knot selection process can lead to
+under performance in the sparser regions of the predictor variable,
+especially when using a low number of knots. It can also lead to over fitting
+in the denser regions. The \pkg{sitar} package offers an option (see
+knots_selection argument) to use a search algorithm that implements a
+backward method for knot selection that shows reduced prediction error and
+Bayesian information criterion (BIC) scores compared to the standard knot
+selection process in simulation experiments. See
+\insertCite{Arnes2023}{bsitar} for details.
+
+Like \pkg{sitar} package \insertCite{Cole2010}{bsitar}, the \pkg{bsitar}
 package fits the \emph{SITAR} model with (usually) three random effects: size
 (parameter \code{a}), timing (parameter \code{b}), and intensity (parameter
 \code{c}). Additionally, there is a slope parameter (parameter \code{d}) that

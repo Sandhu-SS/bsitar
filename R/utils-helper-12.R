@@ -1147,12 +1147,24 @@ GS_isp_call <- function(x,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
+#' @param smat Internal
+#' @param degree Internal
+#' @param nk Internal
+#' @param inclx Internal
+#' @param knots.only Internal
+#' @param type Internal
+#' @param norm Internal
+#' @param rpm Internal
+#' @param pc Internal
+#' @param fractied Internal
+#' @param bkrange Internal
+#' @param fix_bknots Internal
+#' @param xoffset Internal
+#' @param bound Internal
+#' @param userdata Internal
+#' @param verbose Internal
 #' @param df An integer. The \code{df} defined only for R functions, not Stan. 
-#' @param Boundary.knots Ignored
-#' @param periodic Ignored
-#' @param integral Ignored
-#' @param warn.outside Ignored
-#' 
+#'
 #' @return A matrix
 #' 
 #' @inherit berkeley author
@@ -1183,6 +1195,7 @@ get_knost_from_df <- function(x,
                               fractied = 0.05,
                               bkrange = FALSE,
                               fix_bknots = TRUE,
+                              xoffset = 0,
                               bound = NULL,
                               userdata = NULL,
                               verbose = FALSE) {
@@ -1209,11 +1222,18 @@ get_knost_from_df <- function(x,
     if(is.character(bound))  bound     <- str2lang(bound)
   }
   
+  
+  apply_bound <-  TRUE
   if(is.null(bknots)) {
-    if(as.logical(bkrange)) bknots <- range(x)
+    if(as.logical(bkrange)) {
+      bknots <- range(x)
+      apply_bound <-  TRUE
+    }
   } else {
     bknots <- bknots
+    apply_bound <-  FALSE
   }
+  
   bknots_org <- bknots
   
   if(is.null(nk)) {
@@ -1223,19 +1243,19 @@ get_knost_from_df <- function(x,
   }
   
   
-  bsp_msp_isp_args                <- list()
-  bsp_msp_isp_args[['x']]         <-  x
-  bsp_msp_isp_args[['knots']]     <-  knots
-  bsp_msp_isp_args[['bknots']]    <-  bknots
-  bsp_msp_isp_args[['df']]        <-  df
-  bsp_msp_isp_args[['degree']]    <-  degree
-  bsp_msp_isp_args[['intercept']] <-  intercept
-  bsp_msp_isp_args[['derivs']]    <-  derivs
-  bsp_msp_isp_args[['centerval']] <-  centerval
-  bsp_msp_isp_args[['normalize']] <-  normalize
-  bsp_msp_isp_args[['preH']]      <-  preH
-  bsp_msp_isp_args[['sfirst']]    <-  sfirst
-  bsp_msp_isp_args[['sparse']]    <-  sparse
+  # bsp_msp_isp_args                <- list()
+  # bsp_msp_isp_args[['x']]         <-  x
+  # bsp_msp_isp_args[['knots']]     <-  knots
+  # bsp_msp_isp_args[['bknots']]    <-  bknots
+  # bsp_msp_isp_args[['df']]        <-  df
+  # bsp_msp_isp_args[['degree']]    <-  degree
+  # bsp_msp_isp_args[['intercept']] <-  intercept
+  # bsp_msp_isp_args[['derivs']]    <-  derivs
+  # bsp_msp_isp_args[['centerval']] <-  centerval
+  # bsp_msp_isp_args[['normalize']] <-  normalize
+  # bsp_msp_isp_args[['preH']]      <-  preH
+  # bsp_msp_isp_args[['sfirst']]    <-  sfirst
+  # bsp_msp_isp_args[['sparse']]    <-  sparse
   
   
   direct_call_args                        <- list()
@@ -1280,12 +1300,14 @@ get_knost_from_df <- function(x,
   } else if(smat == 'rcs') {
     temp_mat_s <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
   }
- 
+  
   
   if(smat == 'rcs') {
     knots <- temp_mat_s
     temp_mat_s_bknots <- bknots
-    temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, bound)
+    if(apply_bound) {
+      temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, bound)
+    }
     if(as.logical(fix_bknots)) {
       knots[1]               <- temp_mat_s_bknots[1]
       knots[length(knots)]   <- temp_mat_s_bknots[2]
@@ -1301,9 +1323,13 @@ get_knost_from_df <- function(x,
     if(fix_bknots) {
       temp_mat_s_bknots <- bknots_org
     }
-    temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, bound)
+    if(apply_bound) {
+      temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, bound)
+    }
     knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
   }
+  
+  knots <- knots - ept(xoffset)
   
   return(knots)
 }

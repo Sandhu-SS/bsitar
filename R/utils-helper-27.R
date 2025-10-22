@@ -1219,8 +1219,10 @@ get_model_by_count <- function(dataset,
   
   model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
   
-  ns_model <- stats::glm(model_formula, data = dataset)
+  model_formula <- ept(model_formula, envir = environment(myform))
   
+  ns_model <- stats::glm(model_formula, data = dataset)
+
   attr(ns_model$model[[2]], 'knots')          <- knots
   attr(ns_model$model[[2]], 'Boundary.knots') <- bknots
   
@@ -1298,6 +1300,9 @@ get_model_by_knots <- function(dataset,
                           bknots = bknots_str)
   
   model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
+  
+  model_formula <- ept(model_formula, envir = environment(myform))
+
   
   ns_model <- stats::glm(model_formula, data = dataset)
   
@@ -1463,10 +1468,11 @@ get_suggest_knotcount <- function(dataset,
                             knots = knots, 
                             bknots = bknots_str)
 
-    model_formula_str <- paste0(rlang::as_label(dependent), " ~ ", myform)
+    model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
     
+    # model_formula <- formula(model_formula)
     
-    model_formula <- formula(model_formula_str)
+    model_formula <- ept(model_formula, envir = environment(myform))
     
     mod_spline <- NULL
     
