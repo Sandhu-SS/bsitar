@@ -144,6 +144,8 @@ get_form <- function(x,
     SplineCall[[1]] <- quote(splines::ns)
   }
   
+  environment(SplineCall) <- as.environment(getNamespace('bsitar'))
+  
   SplineCall <- paste0(gsub_space(deparse(SplineCall)), collapse = "")
  
   return(SplineCall)
@@ -1246,9 +1248,26 @@ get_model_by_count <- function(dataset,
   
   model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
   
-  model_formula <- ept(model_formula, envir = environment(myform))
+  # model_formula <- ept(model_formula, envir = environment(myform))
+  # 
+  # ns_model <- stats::glm(model_formula, data = dataset)
   
-  ns_model <- stats::glm(model_formula, data = dataset)
+  model_formula_str <- model_formula
+  
+  model_formula <- ept(model_formula_str, envir = environment(myform))
+  
+  # Somehow, direct model fails for GS_bsp etc
+  if(is.null(environment(myform))) {
+    model_formula_str <- gsub("GS_", "bsitar:::GS_", model_formula_str)
+    ns_model_str <- paste0("stats::glm", "(", 
+                           model_formula_str, ",", 
+                           "data = dataset", 
+                           ")" 
+    )
+    ns_model <- ept(ns_model_str)
+  } else {
+    ns_model <- stats::glm(model_formula, data = dataset)
+  }
 
   attr(ns_model$model[[2]], 'knots')          <- knots
   attr(ns_model$model[[2]], 'Boundary.knots') <- bknots
@@ -1328,10 +1347,23 @@ get_model_by_knots <- function(dataset,
   
   model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
   
-  model_formula <- ept(model_formula, envir = environment(myform))
-
+  model_formula_str <- model_formula
   
-  ns_model <- stats::glm(model_formula, data = dataset)
+  model_formula <- ept(model_formula_str, envir = environment(myform))
+
+  # Somehow, direct model fails for GS_bsp etc
+  if(is.null(environment(myform))) {
+    model_formula_str <- gsub("GS_", "bsitar:::GS_", model_formula_str)
+    ns_model_str <- paste0("stats::glm", "(", 
+                           model_formula_str, ",", 
+                           "data = dataset", 
+                           ")" 
+    )
+    ns_model <- ept(ns_model_str)
+  } else {
+    ns_model <- stats::glm(model_formula, data = dataset)
+  }
+  
   
   attr(ns_model$model[[2]], 'knots')          <- knots
   attr(ns_model$model[[2]], 'Boundary.knots') <- bknots
@@ -1497,13 +1529,31 @@ get_suggest_knotcount <- function(dataset,
 
     model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
     
-    # model_formula <- formula(model_formula)
+    # model_formula <- ept(model_formula, envir = environment(myform))
+    # 
+    # mod_spline <- NULL
+    # 
+    # try(mod_spline <- stats::glm(model_formula, data = dataset))
     
-    model_formula <- ept(model_formula, envir = environment(myform))
+    model_formula_str <- model_formula
+    
+    model_formula <- ept(model_formula_str, envir = environment(myform))
     
     mod_spline <- NULL
     
-    try(mod_spline <- stats::glm(model_formula, data = dataset))
+    # Somehow, direct model fails for GS_bsp etc
+    if(is.null(environment(myform))) {
+      model_formula_str <- gsub("GS_", "bsitar:::GS_", model_formula_str)
+      ns_model_str <- paste0("stats::glm", "(", 
+                             model_formula_str, ",", 
+                             "data = dataset", 
+                             ")" 
+      )
+      try(mod_spline <-  ept(ns_model_str))
+    } else {
+      try(mod_spline <- stats::glm(model_formula, data = dataset))
+    }
+    
     
     if (!is.null(mod_spline) && mod_spline$converged) {
       consecutive_non_convergance <- 0

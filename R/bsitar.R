@@ -7817,25 +7817,47 @@ bsitar <- function(x,
     }
 
     
+    
+    # get_knost_from_df_arg used later for plot, so keep it out here
+    get_knost_from_df_arg <- list()
+    get_knost_from_df_arg[['x']]         <-  datai[[xsi]]
+    get_knost_from_df_arg[['knots']]     <-  NULL
+    get_knost_from_df_arg[['bknots']]    <-  set_bknots
+    get_knost_from_df_arg[['df']]        <-  ept(dfsi)
+    get_knost_from_df_arg[['degree']]    <-  smat_degree
+    get_knost_from_df_arg[['intercept']] <-  smat_intercept
+    get_knost_from_df_arg[['derivs']]    <-  smat_derivs
+    get_knost_from_df_arg[['centerval']] <-  smat_centerval
+    get_knost_from_df_arg[['normalize']] <-  smat_normalize
+    get_knost_from_df_arg[['preH']]      <-  smat_preH
+    get_knost_from_df_arg[['sfirst']]    <-  smat_sfirst
+    get_knost_from_df_arg[['sparse']]    <-  smat_sparse
+    get_knost_from_df_arg[['bound']]     <-  ept(boundsi)
+    get_knost_from_df_arg[['xoffset']]   <-  NULL # don't set xoffset here
+    get_knost_from_df_arg[['bkrange']]   <-  smat_bkrange
+    get_knost_from_df_arg[['fix_bknots']]<-  smat_fix_bknots
+    get_knost_from_df_arg[['smat']]      <-  smat
+    
+    
     if(knotssi == "NA" | is.na(knotssi)) {
-      get_knost_from_df_arg <- list()
-      get_knost_from_df_arg[['x']]         <-  datai[[xsi]]
-      get_knost_from_df_arg[['knots']]     <-  NULL
-      get_knost_from_df_arg[['bknots']]    <-  set_bknots
-      get_knost_from_df_arg[['df']]        <-  ept(dfsi)
-      get_knost_from_df_arg[['degree']]    <-  smat_degree
-      get_knost_from_df_arg[['intercept']] <-  smat_intercept
-      get_knost_from_df_arg[['derivs']]    <-  smat_derivs
-      get_knost_from_df_arg[['centerval']] <-  smat_centerval
-      get_knost_from_df_arg[['normalize']] <-  smat_normalize
-      get_knost_from_df_arg[['preH']]      <-  smat_preH
-      get_knost_from_df_arg[['sfirst']]    <-  smat_sfirst
-      get_knost_from_df_arg[['sparse']]    <-  smat_sparse
-      get_knost_from_df_arg[['bound']]     <-  ept(boundsi)
-      get_knost_from_df_arg[['xoffset']]   <-  NULL # don't set xoffset here
-      get_knost_from_df_arg[['bkrange']]   <-  smat_bkrange
-      get_knost_from_df_arg[['fix_bknots']]<-  smat_fix_bknots
-      get_knost_from_df_arg[['smat']]      <-  smat
+      # get_knost_from_df_arg <- list()
+      # get_knost_from_df_arg[['x']]         <-  datai[[xsi]]
+      # get_knost_from_df_arg[['knots']]     <-  NULL
+      # get_knost_from_df_arg[['bknots']]    <-  set_bknots
+      # get_knost_from_df_arg[['df']]        <-  ept(dfsi)
+      # get_knost_from_df_arg[['degree']]    <-  smat_degree
+      # get_knost_from_df_arg[['intercept']] <-  smat_intercept
+      # get_knost_from_df_arg[['derivs']]    <-  smat_derivs
+      # get_knost_from_df_arg[['centerval']] <-  smat_centerval
+      # get_knost_from_df_arg[['normalize']] <-  smat_normalize
+      # get_knost_from_df_arg[['preH']]      <-  smat_preH
+      # get_knost_from_df_arg[['sfirst']]    <-  smat_sfirst
+      # get_knost_from_df_arg[['sparse']]    <-  smat_sparse
+      # get_knost_from_df_arg[['bound']]     <-  ept(boundsi)
+      # get_knost_from_df_arg[['xoffset']]   <-  NULL # don't set xoffset here
+      # get_knost_from_df_arg[['bkrange']]   <-  smat_bkrange
+      # get_knost_from_df_arg[['fix_bknots']]<-  smat_fix_bknots
+      # get_knost_from_df_arg[['smat']]      <-  smat
       knots <- do.call(get_knost_from_df, get_knost_from_df_arg)
       if(verbose) {
         message("For '",smat,"' knots are created internally based on the 'df'",
@@ -7871,12 +7893,15 @@ bsitar <- function(x,
              paste(deparse(knots_from_new_funs), collapse = ", "))
     
     
+    # 
     if(is.null(mcall[['knots_selection']])) {
       if(!identical(knots_from_new_funs, knots_from_gkn)) {
         if(smat == 'rcs') {
           if(verbose) message(knots_from_new_funs_msg)
-        } else {
+        } else if(smat == 'nsp' | smat == 'nsk') {
           stop(knots_from_new_funs_msg)
+        } else {
+          # stop(knots_from_new_funs_msg)
         }
       } # if(!identical(knots_from_new_funs, knots_from_gkn)) {
     } # if(is.null(mcall[['knots_selection']])) {
