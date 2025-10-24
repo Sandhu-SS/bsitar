@@ -279,6 +279,11 @@ knots locations or else they also must be optimized. The \code{'bkrange'} is eva
 \code{stype = 'rcs'},ignored otherwise. Note that if user sets
 \code{'bkrange'} for later exposed \code{stype}, that choice will be re set
 as the one defined here for the \code{knots_selection}.}
+\item{\code{method}}{The method used for knot optimization:
+\itemize{
+\item \code{'bs'} - Brute force based knots selection
+\item \code{'rs'} - Residual based knots selection (default)
+}}
 \item{\code{when}}{Timing of knot optimization relative to predictor
 centering:
 \itemize{
@@ -288,6 +293,7 @@ centering:
 \item{\code{what}}{Diagnostic plots comparing original vs. optimized
 knot placements. Default \code{'none'}. Available options:
 \itemize{
+\item \code{'knots'} - selected knots and boundary knots
 \item \code{'plot1'} - Data and fitted curve with original knots
 \item \code{'plot2'} - Data and fitted curve with optimized knots
 \item \code{'plot3'} - Data and fitted curve with both knot sets
@@ -310,8 +316,8 @@ plot specified in \code{what}. Default \code{FALSE}.}
 An example: \cr
 \code{bsitar(x = age, y = height, id = id, data = berkeley_exdata,
   knots_selection = list(select = 'knots', nsearch = NULL, criteria = 'AIC',
-  bkrange = TRUE, fix_bknots = TRUE, when= 'ac', what = 'plot3', return =
-  FALSE, print = TRUE), seed = 123)}}
+  bkrange = TRUE, fix_bknots = TRUE, method= 'rs', when= 'ac', what = 'plot3', 
+  return = FALSE, print = TRUE), seed = 123)}}
 
 \item{fixed}{A character string specifying the fixed effects structure
 (default \code{'a+b+c'}). For \code{univariate_by} and \code{multivariate}

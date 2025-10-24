@@ -226,6 +226,11 @@
 #'   \code{stype = 'rcs'},ignored otherwise. Note that if user sets
 #'   \code{'bkrange'} for later exposed \code{stype}, that choice will be re set
 #'   as the one defined here for the \code{knots_selection}.}
+#'   \item{\code{method}}{The method used for knot optimization:
+#'   \itemize{
+#'     \item \code{'bs'} - Brute force based knots selection
+#'     \item \code{'rs'} - Residual based knots selection (default)
+#'   }}
 #'   \item{\code{when}}{Timing of knot optimization relative to predictor 
 #'   centering:
 #'   \itemize{
@@ -235,6 +240,7 @@
 #'   \item{\code{what}}{Diagnostic plots comparing original vs. optimized 
 #'   knot placements. Default \code{'none'}. Available options:
 #'   \itemize{
+#'     \item \code{'knots'} - selected knots and boundary knots
 #'     \item \code{'plot1'} - Data and fitted curve with original knots
 #'     \item \code{'plot2'} - Data and fitted curve with optimized knots
 #'     \item \code{'plot3'} - Data and fitted curve with both knot sets
@@ -257,8 +263,8 @@
 #'   An example: \cr
 #'   \code{bsitar(x = age, y = height, id = id, data = berkeley_exdata,
 #'   knots_selection = list(select = 'knots', nsearch = NULL, criteria = 'AIC',
-#'   bkrange = TRUE, fix_bknots = TRUE, when= 'ac', what = 'plot3', return =
-#'   FALSE, print = TRUE), seed = 123)}
+#'   bkrange = TRUE, fix_bknots = TRUE, method= 'rs', when= 'ac', what = 'plot3', 
+#'   return = FALSE, print = TRUE), seed = 123)}
 #'   
 #' @param fixed A character string specifying the fixed effects structure
 #'   (default \code{'a+b+c'}). For \code{univariate_by} and \code{multivariate}
@@ -3161,6 +3167,10 @@ bsitar <- function(x,
       x[['fix_bknots']]   <- TRUE
     } 
     
+    if(is.null(x[['method']])) {
+      x[['method']]   <- 'rs'
+    } 
+    
     if(out) {
       if(!is.null(assert_names)) {
         if(!is.character(assert_names)) {
@@ -3190,6 +3200,7 @@ bsitar <- function(x,
                                    'nsearch',
                                    'bkrange',
                                    'fix_bknots',
+                                   'method',
                                    'when', 
                                    'what',
                                    'print',
@@ -4107,8 +4118,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <- as.integer(spline_type_list[['what']])
-    smat_when         <- as.integer(spline_type_list[['when']])
+    smat_what         <- (spline_type_list[['what']])
+    smat_when         <- (spline_type_list[['when']])
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']])
@@ -4125,8 +4136,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <- as.integer(spline_type_list[['what']])
-    smat_when         <- as.integer(spline_type_list[['when']])
+    smat_what         <-  (spline_type_list[['what']])
+    smat_when         <-  (spline_type_list[['when']])
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
@@ -4146,8 +4157,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <- as.integer(spline_type_list[['what']])
-    smat_when         <- as.integer(spline_type_list[['when']])
+    smat_what         <- (spline_type_list[['what']])
+    smat_when         <- (spline_type_list[['when']])
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
@@ -4164,8 +4175,8 @@ bsitar <- function(x,
     smat_sfirst       <- as.integer(spline_type_list[['sfirst']])
     smat_bkrange      <- as.integer(spline_type_list[['bkrange']])
     smat_fix_bknots   <- as.integer(spline_type_list[['fix_bknots']])
-    smat_what         <- as.integer(spline_type_list[['what']])
-    smat_when         <- as.integer(spline_type_list[['when']])
+    smat_what         <- (spline_type_list[['what']])
+    smat_when         <- (spline_type_list[['when']])
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
@@ -7788,6 +7799,7 @@ bsitar <- function(x,
       knots_selection_fix_bknots <- mcall[['knots_selection']][['fix_bknots']]
       knots_selection_what       <- mcall[['knots_selection']][['what']]
       knots_selection_when       <- mcall[['knots_selection']][['when']]
+      knots_selection_method     <- mcall[['knots_selection']][['method']]
       knots_selection_return     <- mcall[['knots_selection']][['return']]
       knots_selection_print      <- mcall[['knots_selection']][['print']]
       knots_selection_bkrange    <- knots_selection_bkrange %>% as.logical()
@@ -7796,6 +7808,7 @@ bsitar <- function(x,
       knots_selection_print      <- knots_selection_print %>% as.logical()
       knots_selection_what       <- knots_selection_what
       knots_selection_when       <- knots_selection_when
+      knots_selection_method     <- knots_selection_method
       
       smat_bkrange               <- knots_selection_bkrange
       smat_fix_bknots            <- knots_selection_fix_bknots
@@ -7840,24 +7853,6 @@ bsitar <- function(x,
     
     
     if(knotssi == "NA" | is.na(knotssi)) {
-      # get_knost_from_df_arg <- list()
-      # get_knost_from_df_arg[['x']]         <-  datai[[xsi]]
-      # get_knost_from_df_arg[['knots']]     <-  NULL
-      # get_knost_from_df_arg[['bknots']]    <-  set_bknots
-      # get_knost_from_df_arg[['df']]        <-  ept(dfsi)
-      # get_knost_from_df_arg[['degree']]    <-  smat_degree
-      # get_knost_from_df_arg[['intercept']] <-  smat_intercept
-      # get_knost_from_df_arg[['derivs']]    <-  smat_derivs
-      # get_knost_from_df_arg[['centerval']] <-  smat_centerval
-      # get_knost_from_df_arg[['normalize']] <-  smat_normalize
-      # get_knost_from_df_arg[['preH']]      <-  smat_preH
-      # get_knost_from_df_arg[['sfirst']]    <-  smat_sfirst
-      # get_knost_from_df_arg[['sparse']]    <-  smat_sparse
-      # get_knost_from_df_arg[['bound']]     <-  ept(boundsi)
-      # get_knost_from_df_arg[['xoffset']]   <-  NULL # don't set xoffset here
-      # get_knost_from_df_arg[['bkrange']]   <-  smat_bkrange
-      # get_knost_from_df_arg[['fix_bknots']]<-  smat_fix_bknots
-      # get_knost_from_df_arg[['smat']]      <-  smat
       knots <- do.call(get_knost_from_df, get_knost_from_df_arg)
       if(verbose) {
         message("For '",smat,"' knots are created internally based on the 'df'",
@@ -7913,10 +7908,7 @@ bsitar <- function(x,
       } # if(!identical(knots_from_new_funs, knots_from_gkn)) {
     } # if(!is.null(mcall[['knots_selection']])) {
     
-    
-    # print(knots)
-    # stop()
-    
+ 
     
     #################################################################
     #################################################################
@@ -7948,7 +7940,8 @@ bsitar <- function(x,
       knots_selection_arg[['cost_fn']]<- str2lang(knots_selection[['criteria']])
       knots_selection_arg[['icr_fn']]<- str2lang(knots_selection[['criteria']])
       knots_selection_arg[['all_scores']] <- FALSE
-      knots_selection_arg[['all_knots']] <- FALSE
+      knots_selection_arg[['all_knots']]  <- FALSE
+      knots_selection_arg[['method']]     <- knots_selection_method
       
       knots_selection_arg[['smat']]      <- smat
       knots_selection_arg[['knots']]     <-  NULL
@@ -7966,7 +7959,6 @@ bsitar <- function(x,
       knots_selection_arg[['sparse']]    <-  smat_sparse
     } # if(!is.null((mcall[['knots_selection']])) {
    
-    
     
     if(!is.null(knots_selection)) {
       if(knots_selection[['when']] == 'bc') {
@@ -7993,6 +7985,11 @@ bsitar <- function(x,
           print(plot_object)
         }
         if(knots_selection_return) {
+          if(knots_selection_what == 'knots') {
+            retout <- list(knots_old = knots_old,
+                           knots_new = knots_new)
+            return(retout)
+          } 
           return(plot_object)
         }
         #######
@@ -8542,11 +8539,7 @@ bsitar <- function(x,
         knots_selection_arg[['dataset']] <- dataset_temp_knots_selection
         knots_selection_arg[['dependent']] <- ysi
         knots_selection_arg[['independents']] <- xsi
-        knots_selection_arg[['bknots']]    <-  checkgetiknotsbknots(knots, 'bknots')
-        # knots_old <- knots
-        # model_new <- do.call(get_suggest_splines, knots_selection_arg)
-        # knots_new <- get_extract_knots(model_new)$fullknots
-        # knots     <- knots_new
+        knots_selection_arg[['bknots']] <- checkgetiknotsbknots(knots, 'bknots')
         knots_old <- knots
         model_old <- NULL
         model_new <- do.call(get_suggest_splines, knots_selection_arg)
@@ -8570,10 +8563,15 @@ bsitar <- function(x,
           print(plot_object)
         }
         if(knots_selection_return) {
+          if(knots_selection_what == 'knots') {
+            retout <- list(knots_old = knots_old,
+                           knots_new = knots_new)
+            return(retout)
+          } 
           return(plot_object)
         }
         #######
-      } # if(knots_selection[['when']] == 'bc') {
+      } # if(knots_selection[['when']] == 'ac') {
     } # if(!is.null(knots_selection)) {
     
     

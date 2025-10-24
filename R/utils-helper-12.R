@@ -605,6 +605,13 @@ GS_rcs_call <- function(x,
     intercept <- FALSE
   }
   
+  
+  if(!is.null(fullknots) | !is.null(knots)) {
+    df <- NULL
+    if(verbose) stop2c("Both 'df' and 'knots' were specified, 
+                     keeping 'knots' and 'setting df = NULL'") 
+  }
+  
   # Here onward, knots = fullknots
   # knots <- fullknots
   
@@ -1147,6 +1154,7 @@ GS_isp_call <- function(x,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
+#' @param method  Internal. method 'bs'/'rs' used in knots_selection. Ignored here
 #' @param smat Internal
 #' @param degree Internal
 #' @param nk Internal
@@ -1174,6 +1182,7 @@ GS_isp_call <- function(x,
 #' 
 get_knost_from_df <- function(x, 
                               df,
+                              method = NULL,
                               smat,
                               knots = NULL, 
                               bknots = NULL, 
