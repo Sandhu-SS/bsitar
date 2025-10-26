@@ -46,7 +46,7 @@
 #' @noRd
 #'
 get_form <- function(x,
-                     method = NULL,
+                     method = 'bs',
                      smat, 
                      knots, 
                      bknots, 
@@ -155,6 +155,57 @@ get_form <- function(x,
 }
 
 
+
+##############################################################################
+# check_set_criteria
+##############################################################################
+
+#' Title
+#'
+#' @param icr_fn Internal
+#'
+#' @returns A character string a function
+#' 
+#' @keywords internal
+#' @noRd
+#'
+check_set_criteria <- function(icr_fn, add_attr = FALSE, verbose = FALSE) {
+  icr_fn_choices <- c("AIC", "BIC", "CV")
+  if (missing(icr_fn)) {
+    icr_fn <- stats::AIC
+  } else {
+    if(is.character(icr_fn)) {
+      score_type <- icr_fn
+      if(icr_fn == "AIC") {
+        icr_fn <- stats::AIC
+      } else if(icr_fn == "BIC") {
+        icr_fn <- stats::BIC
+      } else if(icr_fn == "CV") {
+        icr_fn  <- "CV"
+      } else {
+        stop2c("Argument 'icr_fn' must be either a function, or a character 
+           string from the following: ", collapse_comma(icr_fn_choices))
+      }
+    } else if(is.function(icr_fn)) {
+      icr_fn <- icr_fn
+      score_type_temp <- deparse(substitute(icr_fn))
+      score_type_temp_c <- paste0(score_type_temp, collapse = "")
+      if(grepl("AIC", score_type_temp_c)) {
+        score_type <- 'AIC'
+      } else if(grepl("BIC", score_type_temp_c)) {
+        score_type <- 'BIC'
+      } else {
+        score_type <- score_type_temp
+      }
+    } else {
+      stop2c("Argument 'icr_fn' must be either a function, or a character 
+           string from the following: ", collapse_comma(icr_fn_choices))
+    }
+  }
+  if(add_attr) attr(icr_fn, 'score_type') <- score_type
+  return(icr_fn)
+}
+
 ##############################################################################
 # get_choose_model
 # importFrom mfp fp
@@ -173,15 +224,15 @@ get_form <- function(x,
 #' @param independents The independent variables in the formula
 #'
 #' @param icr_fn The information criterion function for comparing different
-#'   models with different degress for freedom or knots (default BIC)
+#'   models with different degress for freedom or knots (default AIC)
 #'
 #' @param cost_fn The criterion used to choose which knots to remove, passed to
-#'   the function get_choose_removal. Defaults to BIC.
+#'   the function get_choose_removal. Defaults to AIC
 #'
 #' @param fp_alpha The relax factor for multivariate fractional polynomials.
 #'   Ignored
 #'
-#' @param max_nsknots The max number of inner knots for restricted cubic splines
+#' @param max_nknots The max number of inner knots for restricted cubic splines
 #'   (default 4)
 #'
 #' @param max_fp_df The max degrees of freedom for fractional polynomials
@@ -229,7 +280,7 @@ get_form <- function(x,
 #' @examples
 #'
 #' my_model <- get_choose_model(d, y, x)$model
-#' result <- get_choose_model(d, y, x, icr_fn = BIC, verbose = FALSE)
+#' result <- get_choose_model(d, y, x, icr_fn = AIC, verbose = FALSE)
 #'
 #' ret <- get_choose_model(d, y, x)
 #'
@@ -269,13 +320,15 @@ get_choose_model <- function(dataset,
                          dependent,
                          independents,
                          ...,
-                         icr_fn = stats::BIC,
-                         cost_fn = stats::BIC,
+                         icr_fn = stats::AIC,
+                         cost_fn = stats::AIC,
+                         cvk = 10, 
+                         cviter = 10,
                          all_scores = FALSE,
                          fp_alpha = NA,
-                         max_nsknots = 4,
+                         max_nknots = 4,
                          max_fp_df = 4,
-                         method = NULL,
+                         method = 'bs',
                          smat = 'ns',
                          df = NULL, 
                          knots = NULL, 
@@ -309,15 +362,25 @@ get_choose_model <- function(dataset,
   independents <- rlang::enquo(independents)
   
   score_type <- NULL
-  if (missing(icr_fn)) {
-    icr_fn <- stats::BIC
-    score_type <- "BIC"
-  } else {
-    score_type <- deparse(substitute(icr_fn))
-  }
-  if (missing(cost_fn)) cost_fn <- stats::BIC
+  # if (missing(icr_fn)) {
+  #   icr_fn <- stats::AIC
+  #   score_type <- "AIC"
+  # } else {
+  #   score_type <- deparse(substitute(icr_fn))
+  # }
+  # if (missing(cost_fn)) cost_fn <- stats::AIC
+  
+  
+  icr_fn     <- check_set_criteria(icr_fn, add_attr = TRUE, verbose = verbose)
+  score_type <- attr(icr_fn, 'score_type')
+  attr(icr_fn, 'score_type') <- NULL
+  
+  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+ 
+  
+  
   # if (missing(fp_alpha)) fp_alpha <- NA
-  if (missing(max_nsknots)) max_nsknots <- 4
+  if (missing(max_nknots)) max_nknots <- 4
   # if (missing(max_fp_df)) max_fp_df <- 4
   if (missing(verbose)) verbose <- TRUE
   if (missing(bknots)) bknots <- NA
@@ -326,16 +389,19 @@ get_choose_model <- function(dataset,
   
   
   ret_desc <- list(
+    # This commented out is for fractional polynomials
     # "mfp" = "Multivariate fractional polynomials",
     "ns_nu" = "Restricted cubic splines with freely placed knots",
     "ns" = "Restricted cubic splines with knots placed at quantiles")
   
   ret <- list(labels = ret_desc, score_fn = icr_fn, score_name = score_type)
   
-  only_positive_independents <- 
-    all(as.vector(model.matrix(independents, dataset)[, 2]) > 0)
   
+  # This commented out is for fractional polynomials
   
+  # only_positive_independents <-  all(as.vector(model.matrix(independents, 
+  #                                                           dataset)[, 2]) > 0)
+  # 
   # if (only_positive_independents) {
   #   independents_str <- sub("~", "", deparse(independents))
   #   # Multivariate fractional polynomials (move to separate func)
@@ -386,7 +452,7 @@ get_choose_model <- function(dataset,
       get_suggest_knotcount(dataset = dataset, 
                             dependent = dependent, 
                             independents = independents, 
-                            max_nknots  = max_nsknots,
+                            max_nknots  = max_nknots,
                             icr_fn = icr_fn, 
                             all_scores = all_scores,
                             method = method,
@@ -468,7 +534,7 @@ get_choose_model <- function(dataset,
     knutar_res <- get_choose_splines(dataset = dataset, 
                                      dependent = dependent, 
                                      independents = independents,
-                                     max_nsknots = max_nsknots, 
+                                     max_nknots = max_nknots, 
                                      icr_fn = icr_fn, 
                                      cost_fn = cost_fn,
                                      method = method,
@@ -510,6 +576,9 @@ get_choose_model <- function(dataset,
       get_print_knots(knutar_res$knots)
       R.utils::printf("\n")
     }
+    
+    
+    # This commented out is for fractional polynomials
     
     # if ((mfp_score <= ns_score) && (mfp_score <= knutar_res$score)) {
     #   ret <- append(ret, list(model = mfp_mod, type = "mfp", score = mfp_score))
@@ -553,7 +622,7 @@ get_choose_model <- function(dataset,
 #'
 #' @param independents The independent variables in the formula
 #'
-#' @param cost_fn The function for the selection criterion score (BIC default)
+#' @param cost_fn The function for the selection criterion score (AIC default)
 #'
 #' @inheritParams get_choose_model
 #'
@@ -571,8 +640,10 @@ get_choose_model <- function(dataset,
 get_choose_removal <- function(dataset,
                            dependent,
                            independents,
-                           cost_fn = stats::BIC,
-                           method = NULL,
+                           cost_fn = stats::AIC,
+                           cvk = 10, 
+                           cviter = 10,
+                           method = 'bs',
                            smat = 'ns',
                            df = NULL, 
                            knots = NULL, 
@@ -605,7 +676,10 @@ get_choose_removal <- function(dataset,
   independents <- rlang::enquo(independents)
   dependent <- rlang::enquo(dependent)
   
-  if (missing(cost_fn)) cost_fn <- stats::BIC
+  # if (missing(cost_fn)) cost_fn <- stats::AIC
+  
+  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+  
   
   model_scores <- lapply(seq_along(knots), function(i) {
     mod <- get_model_by_knots(dataset = dataset, 
@@ -667,10 +741,10 @@ get_choose_removal <- function(dataset,
 #' @param max_nknots The maximum number of inner knots wanted
 #'
 #' @param icr_fn The information criterion function comparing models with
-#'   different knot counts (BIC default)
+#'   different knot counts (AIC default)
 #'
 #' @param cost_fn The criterion used to choose which inner knot to remove, used
-#'   by the function 'get_choose_removal'. Default is BIC.
+#'   by the function 'get_choose_removal'. Default is AIC
 #'
 #' @param initial_nknots The initial high number inner of knots for the
 #'   algorithm (default is the value from the 'get_suggest_knotcount'-function)
@@ -692,20 +766,22 @@ get_choose_removal <- function(dataset,
 #' @examples
 #'
 #' my_model <- get_choose_splines(d, y, x, 7)
-#' my_model <- get_choose_splines(d, y, x, 7, BIC)
+#' my_model <- get_choose_splines(d, y, x, 7, AIC)
 #' 
 get_choose_splines <- function(dataset,
                            dependent,
                            independents,
                            max_nknots = 10,
                            ...,
-                           icr_fn = stats::BIC,
-                           cost_fn = stats::BIC,
+                           icr_fn = stats::AIC,
+                           cost_fn = stats::AIC,
+                           cvk = 10, 
+                           cviter = 10,
                            initial_nknots = -1,
                            diff_better = 0,
                            all_models = FALSE,
                            all_scores = FALSE,
-                           method = NULL,
+                           method = 'bs',
                            smat = 'ns',
                            df = NULL, 
                            knots = NULL, 
@@ -736,23 +812,35 @@ get_choose_splines <- function(dataset,
   if(is.character(independents)) independents <- str2lang(independents)
   
   independents <- rlang::enquo(independents)
-  dependent <- rlang::enquo(dependent)
+  dependent    <- rlang::enquo(dependent)
   
   
   if (missing(max_nknots)) max_nknots <- 10
-  if (missing(icr_fn)) icr_fn <- stats::BIC
-  if (missing(cost_fn)) cost_fn <- stats::BIC
+  
+  
+  # if (missing(icr_fn)) icr_fn <- stats::AIC
+  # if (missing(cost_fn)) cost_fn <- stats::AIC
+  
+  icr_fn     <- check_set_criteria(icr_fn, add_attr = TRUE, verbose = verbose)
+  score_type <- attr(icr_fn, 'score_type')
+  attr(icr_fn, 'score_type') <- NULL
+  
+  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+  
   if (missing(initial_nknots)) initial_nknots <- -1
   if (missing(diff_better)) diff_better <- 0
   if (missing(all_models)) all_models <- FALSE
   if (missing(bknots)) bknots <- NA
   
+  
+ 
   if (initial_nknots == -1) {
     initial_nknots <-
       get_suggest_knotcount(dataset = dataset, 
                             dependent = dependent, 
                             independents = independents, 
-                            # max_nknots  = max_nsknots,
+                            max_nknots  = max_nknots,
+                            target_nknots  = max_nknots,
                             icr_fn = icr_fn, 
                             all_scores = all_scores,
                             method = method,
@@ -782,12 +870,14 @@ get_choose_splines <- function(dataset,
                             userdata = userdata,
                             verbose = verbose)$nknots
   }
-  
+ 
   upper_model <- get_suggest_splines(dataset = dataset, 
                                      dependent = dependent, 
                                      independents = independents,
-                                     max_nknots = max_nknots,
-                                     initial_knots = initial_nknots,
+                                     max_nknots = max_nknots, 
+                                     # target_nknots is same as 
+                                     target_nknots = max_nknots,
+                                     initial_nknots = initial_nknots,
                                      cost_fn = cost_fn,
                                      method = method,
                                      smat = smat,
@@ -856,6 +946,7 @@ get_choose_splines <- function(dataset,
                              bound = bound,
                              userdata = userdata)
     
+
     cur_score <- icr_fn(chosen$model)
     if (cur_score <= (best_score + diff_better)) {
       best_model <- chosen$model
@@ -1162,7 +1253,7 @@ get_model_by_count <- function(dataset,
                            dependent, 
                            independents, 
                            nknots,
-                           method = NULL,
+                           method = 'bs',
                            smat = 'ns',
                            df = NULL, 
                            knots = NULL, 
@@ -1213,7 +1304,6 @@ get_model_by_count <- function(dataset,
   if(bkrange) {
     bknots <- range(dataset[[independents_str]])
   }
-  
   
   fullknots <- get_knost_from_df(x = dataset[[independents_str]], 
                                  df = nknots + 1, 
@@ -1317,7 +1407,7 @@ get_model_by_count <- function(dataset,
 get_model_by_knots <- function(dataset,
                            dependent,
                            independents,
-                           method = NULL,
+                           method = 'bs',
                            smat = 'ns',
                            df = NULL, 
                            knots = NULL, 
@@ -1403,7 +1493,7 @@ get_model_by_knots <- function(dataset,
 #' @param dataset The data frame
 #' @param dependent The dependent variable in the formula
 #' @param independents The independent variable(s) in the formula
-#' @param icr_fn The information criterion function. Defaults to BIC
+#' @param icr_fn The information criterion function. Defaults to AIC
 #' @param max_nknots maximum number of knots
 #' @param ... Internal
 #' @param all_scores If TRUE, all scores are returned in a list 'all_scores'
@@ -1422,10 +1512,14 @@ get_suggest_knotcount <- function(dataset,
                               dependent,
                               independents,
                               max_nknots = -1,
+                              initial_nknots = -1,
                               ...,
-                              icr_fn = stats::BIC,
+                              icr_fn = stats::AIC,
+                              cvk = 10, 
+                              cviter = 10,
                               all_scores = FALSE,
-                              method = NULL,
+                              plot_all_scores = FALSE,
+                              method = 'bs',
                               smat = 'ns',
                               df = NULL, 
                               knots = NULL, 
@@ -1463,9 +1557,17 @@ get_suggest_knotcount <- function(dataset,
     max_nknots <- min(50, nrow(dataset) %/% 2)
   }
   
-  if (missing(icr_fn)) icr_fn <- stats::BIC
+  icr_fn     <- check_set_criteria(icr_fn, add_attr = TRUE, verbose = verbose)
+  score_type <- attr(icr_fn, 'score_type')
+  attr(icr_fn, 'score_type') <- NULL
+  
+  
   if (missing(all_scores)) all_scores <- FALSE
   if (missing(bknots)) bknots <- NA
+  
+  if(!all_scores) {
+    plot_all_scores <- FALSE
+  }
   
   min_icr <- Inf
   min_ndf <- Inf
@@ -1514,12 +1616,14 @@ get_suggest_knotcount <- function(dataset,
     # with boundary knots, now moves them inside (with a warning),
     # building on PR#18442 by Ben Bolker."
     
+    
     subset_data <- dataset %>%
       dplyr::filter(
         !!independents >= bknots[[1]],
         !!independents <= bknots[[2]]
       )
     
+
     n <- i - 1
     knots <- c()
   
@@ -1539,24 +1643,18 @@ get_suggest_knotcount <- function(dataset,
       
       knots <- quantiles
     }
-    
+   
     model_formula_str <- NULL
-    
+   
     myform <- get_form(x = independents_str,
                        method = method,
                        smat = smat, 
                        df = NULL,
                        knots = knots, 
                        bknots = bknots_str)
-
+    
     model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
-    
-    # model_formula <- ept(model_formula, envir = environment(myform))
-    # 
-    # mod_spline <- NULL
-    # 
-    # try(mod_spline <- stats::glm(model_formula, data = dataset))
-    
+   
     model_formula_str <- model_formula
     
     model_formula <- ept(model_formula_str, envir = environment(myform))
@@ -1576,15 +1674,37 @@ get_suggest_knotcount <- function(dataset,
       try(mod_spline <- stats::glm(model_formula, data = dataset))
     }
     
-    
+
     if (!is.null(mod_spline) && mod_spline$converged) {
       consecutive_non_convergance <- 0
     } else {
       consecutive_non_convergance <- consecutive_non_convergance + 1
     }
-    
+   
     if (consecutive_non_convergance == 0) {
-      icr_score <- icr_fn(mod_spline)
+      
+      if(is.character(icr_fn)) {
+        if(icr_fn == "CV"){
+          tmp.stats <- NULL
+          for(j in 1:cviter){
+            mods <- list()
+            for(i in 1:1){ # for(i in 1:length(forms)){
+              # tmp <- stats::glm(forms[[i]], data=data, family=gaussian)
+              tmp       <- mod_spline
+              tmpdat    <- dataset[rownames(stats::model.frame(tmp)), ]
+              mods[[i]] <- boot::cv.glm(data = tmpdat, glmfit = tmp, 
+                                        cost=function(y,yhat) mean((y-yhat)^2), 
+                                        K = cvk)
+            }
+            tmp.stats <- rbind(tmp.stats, sapply(mods, function(x)x$delta[1]))
+          }
+          stats <- colMeans(tmp.stats)
+          icr_score <- stats
+        }
+      } else if(is.function(icr_fn)) {
+        icr_score <- icr_fn(mod_spline)
+      }
+      
       
       if (all_scores) {
         scores <- append(scores, icr_score)
@@ -1593,7 +1713,7 @@ get_suggest_knotcount <- function(dataset,
       
       if (icr_score < min_icr) {
         min_icr <- icr_score
-        min_ndf <- i
+        min_ndf <- i 
       }
     } else if (consecutive_non_convergance >= 3) {
       warning(paste(
@@ -1604,9 +1724,30 @@ get_suggest_knotcount <- function(dataset,
     }
   }
   
+  
+  
+  
+  
+  
+  if (all_scores) {
+    all_scores_df <- cbind(n_knots %>% unlist(), scores %>% unlist()) %>% 
+      data.frame() %>% setNames(c('knot', 'score'))
+  }
+  
+  
+  if(plot_all_scores) {
+    stats  <- all_scores_df$score
+    kstats <- 1:length(stats)
+    plot(kstats, stats, type="o", pch=16, col="black", 
+         xlab="Degrees of Freedom (number of full knots -1)", ylab = score_type)
+    graphics::points(kstats[which.min(stats)], min(stats), pch=16, col="red")
+  }
+  
+  
   return(list(
     nknots = min_ndf - 1, score = min_icr, 
     method = method, smat = smat,
+    all_scores_df = all_scores_df,
     all_scores = list(scores = scores, n_knots = n_knots)
   ))
   
@@ -1634,7 +1775,7 @@ get_suggest_knotcount <- function(dataset,
 #'   model
 #' @param initial_nknots The number of inner knots initially, defaults to the
 #'   result from the function 'get_suggest_knotcount'
-#' @param cost_fn The function for the selection criterion score (BIC default)
+#' @param cost_fn The function for the selection criterion score (AIC default)
 #'   used to compare which inner knot should be removed, passed to
 #'   get_choose_removal
 #' @param all_knots If TRUE, then knots for all intermediate models will be
@@ -1651,7 +1792,7 @@ get_suggest_knotcount <- function(dataset,
 #' @examples
 #'
 #' my_model <- get_suggest_splines(d, y, x, 4)
-#' my_model <- get_suggest_splines(d, y, x, 4, initial_nknots = 100, cost_fn = BIC)
+#' my_model <- get_suggest_splines(d, y, x, 4, initial_nknots = 100, cost_fn = AIC)
 #' 
 get_suggest_splines <- function(dataset,
                             dependent,
@@ -1659,11 +1800,13 @@ get_suggest_splines <- function(dataset,
                             target_nknots,
                             ...,
                             initial_nknots = -1,
-                            cost_fn = stats::BIC,
-                            icr_fn = stats::BIC,
+                            cost_fn = stats::AIC,
+                            icr_fn = stats::AIC,
+                            cvk = 10, 
+                            cviter = 10,
                             all_scores = FALSE,
                             all_knots = FALSE,
-                            method = NULL,
+                            method = 'bs',
                             smat = 'ns',
                             df = NULL, 
                             knots = NULL, 
@@ -1786,13 +1929,13 @@ get_suggest_splines <- function(dataset,
   
   
   ###########################################################
-  
+
   if (initial_nknots == -1) {
     initial_nknots <-
       get_suggest_knotcount(dataset = dataset, 
                             dependent = dependent, 
                             independents = independents, 
-                            # max_nknots  = max_nsknots,
+                            # max_nknots  = max_nknots,
                             icr_fn = icr_fn, 
                             all_scores = all_scores,
                             method = method,
@@ -1823,9 +1966,17 @@ get_suggest_splines <- function(dataset,
                             verbose = verbose)$nknots
   }
   
-
   
-  if (missing(cost_fn))   cost_fn <- stats::BIC
+  if(initial_nknots == 0) {
+    stop2c("Search for initial_nknots from get_suggest_knotcount resulted in 0
+         internal knots which must be at least 1")
+  }
+  
+  # if (missing(cost_fn))   cost_fn <- stats::AIC
+
+  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+  
+  
   if (missing(all_knots)) all_knots <- FALSE
   
   # Find the initial model with a high number of knots, and get the distinct
@@ -2345,8 +2496,8 @@ get_print_return_obj <- function(knots = NULL,
 #'   number of knots - AIC, BIC or Cross-validation. Ignored here
 #' @param cvk Number of groups for cross-validation. cross-validation ignored
 #'   here.
-#' @param cviter Number of iterations of cross-validation to average over.10
-#'   Ignored here. is the default but in real-world applications, this should be
+#' @param cviter Number of iterations of cross-validation to average over.
+#'   10 is the default but in real-world applications, this should be
 #'   somewhere around 200.
 #' @returns A plot, if \code{plot=TRUE}, otherwise a data frame with the degrees
 #'   of freedom and corresponding fit measure.
@@ -2379,14 +2530,18 @@ get_NKnots <- function(form, var, data, degree=3, min.knots=1,
                                   as.character(form)[3], "+ poly(", var,  ", 3)", sep=""))
     m <- 4
   }
+  
   df_spline <- NULL
   for(i in 1:length(k)){
     df_spline <- c(df_spline, degree+i)
     forms[[m]]<- as.formula(paste(as.character(form)[2], "~",
-                                  as.character(form)[3], "+ splines2::bsp(", var, ", df=", degree+k[i],
-                                  ", Boundary.knots=c(", min(data[[var]], na.rm=TRUE),", ", max(data[[var]], na.rm=TRUE), "))", sep=""))
+                                  as.character(form)[3], 
+                                  "+ splines2::bsp(", var, ", df=", degree+k[i],
+                                  ", Boundary.knots=c(", min(data[[var]], na.rm=TRUE),", ", max(data[[var]], 
+                                                                                                na.rm=TRUE), "))", sep=""))
     m <- m+1
   }
+  
   if(crit %in% c("AIC", "BIC")){
     mods <- lapply(forms, function(x)lm(x, data=data))
     stats <- sapply(mods, function(x)do.call(crit, list(object=x)))
@@ -2547,7 +2702,7 @@ design_sigmoid_knots <- function(dataset,
                                  y, 
                                  max_knots = 8, 
                                  min_knots = 3, 
-                                 criterion = stats::BIC,
+                                 criterion = stats::AIC,
                                  smat = 'ns', 
                                  ns_model_str = NULL,
                                  model_formula = NULL,
@@ -2709,7 +2864,7 @@ design_sigmoid_knots <- function(dataset,
 # # y <- 10 / (1 + exp(-x)) + rnorm(length(x), sd = 0.5)
 # 
 # # The returned internal fitted_knots is min_knots + 1
-# result <- design_sigmoid_knots(x, y, max_knots = 5, min_knots = 2, criterion = "BIC")
+# result <- design_sigmoid_knots(x, y, max_knots = 5, min_knots = 2, criterion = "AIC")
 # fitted_knots <- result$knots
 # fitted_bknots <- result$Boundary.knots
 # fullknots <- c(fitted_bknots[1], fitted_knots,fitted_bknots[2])
