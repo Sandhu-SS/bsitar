@@ -231,6 +231,14 @@ check_set_criteria <- function(icr_fn, add_attr = FALSE, verbose = FALSE) {
 #'
 #' @param fp_alpha The relax factor for multivariate fractional polynomials.
 #'   Ignored
+#'   
+#' @param search_nknots A logical (default \code{TRUE}) to indicate whether to
+#'   first search for the optimal number of knots \code{df} by first running the
+#'   \code{get_suggest_knotcount} function. When calling the
+#'   \code{get_choose_model} from within the \pkg{bsitar}, the
+#'   \code{search_nknots} is set to \code{FALSE}.
+#'   
+#' @param return_nknots A logical (default \code{FALSE})
 #'
 #' @param max_nknots The max number of inner knots for restricted cubic splines
 #'   (default 4)
@@ -326,6 +334,8 @@ get_choose_model <- function(dataset,
                          cviter = 10,
                          all_scores = FALSE,
                          fp_alpha = NA,
+                         search_nknots = TRUE,
+                         return_nknots = FALSE,
                          max_nknots = 4,
                          max_fp_df = 4,
                          method = 'bs',
@@ -362,15 +372,6 @@ get_choose_model <- function(dataset,
   independents <- rlang::enquo(independents)
   
   score_type <- NULL
-  # if (missing(icr_fn)) {
-  #   icr_fn <- stats::AIC
-  #   score_type <- "AIC"
-  # } else {
-  #   score_type <- deparse(substitute(icr_fn))
-  # }
-  # if (missing(cost_fn)) cost_fn <- stats::AIC
-  
-  
   icr_fn     <- check_set_criteria(icr_fn, add_attr = TRUE, verbose = verbose)
   score_type <- attr(icr_fn, 'score_type')
   attr(icr_fn, 'score_type') <- NULL
@@ -481,6 +482,22 @@ get_choose_model <- function(dataset,
                             bound = bound,
                             userdata = userdata,
                             verbose = verbose)
+    
+    if(!search_nknots) {
+      knotcnt_suggestion$nknots <- max_nknots
+    }
+    
+    if(return_nknots) {
+      return(knotcnt_suggestion$nknots)
+    }
+
+   
+    if(knotcnt_suggestion$nknots == 0) {
+      stop2c("Search for knotcnt_suggestion using 'get_suggest_knotcount()' 
+      resulted in '0' internal knots which must be at least 1.  
+             Please change the criterion (e.g., from BIC to AIC) or 
+             the model type and retry")
+    }
     
     ns_mod <- get_model_by_count(dataset = dataset, 
                              dependent = dependent, 
@@ -1732,6 +1749,17 @@ get_suggest_knotcount <- function(dataset,
   if (all_scores) {
     all_scores_df <- cbind(n_knots %>% unlist(), scores %>% unlist()) %>% 
       data.frame() %>% setNames(c('knot', 'score'))
+  } else {
+    all_scores_df <- NULL
+  }
+  
+  
+  if (!all_scores) {
+    if(plot_all_scores) {
+      plot_all_scores <- FALSE
+      if(verbose) message2c("setting 'plot_all_scores = FALSE' because of 
+                          'all_scores =  FALSE'")
+    }
   }
   
   
@@ -1968,8 +1996,10 @@ get_suggest_splines <- function(dataset,
   
   
   if(initial_nknots == 0) {
-    stop2c("Search for initial_nknots from get_suggest_knotcount resulted in 0
-         internal knots which must be at least 1")
+    stop2c("Search for initial_nknots using 'get_suggest_knotcount()' 
+      resulted in '0' internal knots which must be at least 1.  
+             Please change the criterion (e.g., from BIC to AIC) or 
+             the model type and retry")
   }
   
   # if (missing(cost_fn))   cost_fn <- stats::AIC
@@ -2208,10 +2238,22 @@ get_model_by_knots_wrapper <- function(list_arg, knots) {
   list_arg[['bknots']] <-  checkgetiknotsbknots(knots, 'bknots')
   
   remove_these_args <- c('x', 
+                         'max_nknots', 
                          'target_nknots', 
                          'initial_nknots',
+                         
+                         'print', 
+                         'return', 
+                         'select', 
+                         'return_nknots', 
+                         'search_nknots', 
+                         
                          'cost_fn', 
                          'icr_fn', 
+                         'kspace',
+                         'cvk',
+                         'cviter',
+                         'plot_all_scores',
                          'all_scores',
                          'all_knots')
   for (i in remove_these_args) {
@@ -2234,6 +2276,8 @@ get_model_by_knots_wrapper <- function(list_arg, knots) {
 #' @param knots_old Internal
 #' @param model_new Internal
 #' @param knots_new Internal
+#' @param select Internal
+#' @param kspace Internal
 #' @param what Internal
 #' @param print Internal
 #' @param return Internal
@@ -2249,6 +2293,8 @@ get_print_return_obj <- function(knots = NULL,
                                  knots_new = NULL, 
                                  xsi, 
                                  ysi,
+                                 select,
+                                 kspace,
                                  what,
                                  print = FALSE, 
                                  return = FALSE,
@@ -2313,15 +2359,21 @@ get_print_return_obj <- function(knots = NULL,
   
   # if(!is.null(model_new)) ... continue below
   
-  if(length(knots_old) > length(knots_new)) {
-    stop2c("The length of old knots is greater than the new knots. ",
-           "The difference is ", 
-           length(knots_old), ' - ', length(knots_new),
-           " = ", length(knots_old) - length(knots_new),
-           ". Either decrease the 'df', or increase the 'nsearch' ",
-           "in 'knots_selection' argument by ", 
-           length(knots_old) - length(knots_new))
-  }
+  if(select == 'knots') {
+    if(select == 'un') {
+      if(length(knots_old) > length(knots_new)) {
+        stop2c("The length of old knots is greater than the new knots. ",
+               "The difference is ", 
+               length(knots_old), ' - ', length(knots_new),
+               " = ", length(knots_old) - length(knots_new),
+               ". Either decrease the 'df', or increase the 'nsearch' ",
+               "in 'knots_selection' argument by ", 
+               length(knots_old) - length(knots_new))
+      } # if(length(knots_old) > length(knots_new)) {
+    } # if(select == 'un') {
+  } # if(select == 'knots') {
+  
+  
   
   
   model_new <- get_model_by_knots_wrapper(list_arg, knots_new) 

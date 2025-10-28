@@ -252,72 +252,99 @@ sub-models, or different for each sub-model when fitting
 \code{univariate_by} and \code{multivariate} models (see \code{df} for
 details).}
 
-\item{knots_selection}{A named list for optimizing knot placement in fitting
-the model. This experimental feature searches over a larger set of knots
-(typically \code{df + 4}) to find the optimal subset that minimizes the
-specified information criterion. The named elements are:
+\item{knots_selection}{A named list to control experimental knot optimization
+during model fitting. This feature explores a larger candidate set
+(typically \code{df + 4}) and selects an optimal subset that minimizes the
+chosen information criterion. The following elements are available:
 \describe{
-\item{\code{select}}{Selection criterion type. Currently only
-\code{'knots'} is supported, which optimizes knot locations for a given
-degrees of freedom (\code{df}).}
-\item{\code{nsearch}}{Initial number of knots for the search space.
-When \code{NULL} (default), automatically set to \code{df + 4} to
-provide sufficient candidates for optimization.}
-\item{\code{criteria}}{Information criterion for model selection.
-Options are \code{'AIC'} or \code{'BIC'} (default). Models with lower
-criterion values are preferred.}
-\item{\code{bkrange}}{A logical (default \code{TRUE}) to indicate whether
-to use the predictor range (\code{range(x)}) as boundary knots, or else to
-use the quantile based boundary knots obtained from the
-\code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}. The \code{'bkrange'} is evaluated only when
-\code{stype = 'rcs'},ignored otherwise. Note that if user sets
-\code{'bkrange'} for later exposed \code{stype}, that choice will be re set
-as the one defined here for the \code{knots_selection}.}
-\item{\code{fix_bknots}}{A logical (default \code{TRUE}) indicating whether
-to fix the boundary knots at their original values while selecting the
-knots locations or else they also must be optimized. The \code{'bkrange'} is evaluated only when
-\code{stype = 'rcs'},ignored otherwise. Note that if user sets
-\code{'bkrange'} for later exposed \code{stype}, that choice will be re set
-as the one defined here for the \code{knots_selection}.}
-\item{\code{method}}{The method used for knot optimization:
+\item{\code{select}}{Selection strategy for knots and/or degrees of
+freedom. Options are \code{"knots"}, \code{"df"}, or \code{"both"}.
+\code{"knots"} (fully integrated into the \pkg{bsitar} workflow)
+automatically optimizes knot locations for a given \code{df} and passes the
+result to internal functions. The \code{"both"} option first determines the
+optimal degree of freedom, then selects knot locations using this
+\code{df}, which may result in a different (optimized) \code{df} from the
+user's initial choice. Users should note this potential change.
+Alternatively, \code{select = "df"} can be combined with \code{return =
+  TRUE} to recover the optimal degree of freedom, which may then be reused as
+an argument in \code{\link[=bsitar]{bsitar()}}.}
+\item{\code{all_scores}}{Logical (default \code{FALSE}). When \code{TRUE}
+and \code{select = "df"}, returns the information criterion value for each
+evaluated \code{df}. Ignored for other selection types.}
+\item{\code{plot_all_scores}}{Logical (default \code{FALSE}). When
+\code{TRUE} and \code{select = "df"} with \code{all_scores = TRUE}, plots
+the criterion for each \code{df}. Ignored otherwise.}
+\item{\code{nsearch}}{Number of candidate knots in the search space. If
+\code{NULL} (default), set automatically to \code{df + 4} to provide
+sufficient coverage for optimization.}
+\item{\code{criteria}}{Model selection criterion. Options include
+\code{"AIC"}, \code{"BIC"}, and cross-validation (\code{"CV"}). Lower
+values are preferred. Defaults to \code{"AIC"}. Note: Cross-validation
+often requires considerably more computation than \code{"AIC"} or
+\code{"BIC"}.}
+\item{\code{cvk}}{Number of folds for cross-validation (default 10). Only
+used if \code{criteria = "CV"}.}
+\item{\code{cviter}}{Number of cross-validation iterations to average
+(default 100). Only used if \code{criteria = "CV"}.}
+\item{\code{bkrange}}{Logical (default \code{TRUE}). If \code{TRUE}, uses
+the full predictor range for boundary knots. Otherwise, boundary knots are
+set via quantiles (see \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}). This option is relevant
+only for \code{stype = "rcs"} and overrides any later \code{bkrange} value
+globally for \code{knots_selection}.}
+\item{\code{fix_bknots}}{Logical (default \code{TRUE}). If \code{TRUE},
+fixes boundary knots during internal optimization. If \code{FALSE},
+boundary knots are also candidates for optimization. Applies only when
+\code{stype = "rcs"}; see notes on \code{bkrange}.}
+\item{\code{kspace}}{Knot spacing approach:
 \itemize{
-\item \code{'bs'} - Brute force based knots selection
-\item \code{'rs'} - Residual based knots selection (default)
+\item \code{"un"}: Uniform quantile-based spacing (default)
+\item \code{"nu"}: Non-uniform spacing (algorithm-selected). Note: the
+actual number of knots may differ from the specified \code{df}.
 }}
-\item{\code{when}}{Timing of knot optimization relative to predictor
+\item{\code{method}}{Algorithm for knot optimization:
+\itemize{
+\item \code{"bs"}: Brute-force selection
+\item \code{"rs"}: Residual-based selection (default)
+}}
+\item{\code{when}}{Stage of knot optimization relative to predictor
 centering:
 \itemize{
-\item \code{'bc'} - Before centering (uses raw \code{x} values)
-\item \code{'ac'} - After centering (uses \code{x - xoffset}, default)
+\item \code{"bc"}: Before centering (raw \code{x} values)
+\item \code{"ac"}: After centering (i.e., \code{x - xoffset}; default)
 }}
-\item{\code{what}}{Diagnostic plots comparing original vs. optimized
-knot placements. Default \code{'none'}. Available options:
+\item{\code{what}}{Diagnostics or plotting output type.
+Default \code{"knots"}. Available options:
 \itemize{
-\item \code{'knots'} - selected knots and boundary knots
-\item \code{'plot1'} - Data and fitted curve with original knots
-\item \code{'plot2'} - Data and fitted curve with optimized knots
-\item \code{'plot3'} - Data and fitted curve with both knot sets
-\item \code{'plot4'} - Data, fitted curve, and confidence bands with
-original knots
-\item \code{'plot5'} - Data, fitted curve, and confidence bands with
-optimized knots
-\item \code{'plot6'} - Data, fitted curve, and confidence bands with both
-knot sets
-\item \code{'plot7'} - Residual plot for original knot model
-\item \code{'plot8'} - Residual plot for optimized knot model
-\item \code{'plot9'} - Residual plots comparing both models
+\item \code{"knots"}: Optimized internal and boundary knots
+\item \code{"df"}: Selected degree of freedom
+\item \code{"plot1"}: Data and curve (original knots)
+\item \code{"plot2"}: Data and curve (optimized knots)
+\item \code{"plot3"}: Data and curves for both knot sets
+\item \code{"plot4"}: Data, curve, and confidence bands (original knots)
+\item \code{"plot5"}: Data, curve, and confidence bands (optimized knots)
+\item \code{"plot6"}: Data, curve, and confidence bands (both knots)
+\item \code{"plot7"}: Residual plot (original knots)
+\item \code{"plot8"}: Residual plot (optimized knots)
+\item \code{"plot9"}: Residual plots (comparison)
 }}
-\item{\code{return}}{Logical indicating whether to return the diagnostic
-plot object specified in \code{what}. Default \code{FALSE}.}
-\item{\code{print}}{Logical indicating whether to display the diagnostic
-plot specified in \code{what}. Default \code{FALSE}.}
+\item{\code{return}}{Logical. If \code{TRUE}, returns the diagnostic plot
+object (as specified by \code{what}). Default is \code{FALSE}.}
+\item{\code{print}}{Logical. If \code{TRUE}, displays the diagnostic plot
+(as specified by \code{what}). Default is \code{FALSE}.}
 }
 
-An example: \cr
-\code{bsitar(x = age, y = height, id = id, data = berkeley_exdata,
-  knots_selection = list(select = 'knots', nsearch = NULL, criteria = 'AIC',
-  bkrange = TRUE, fix_bknots = TRUE, method= 'rs', when= 'ac', what = 'plot3', 
-  return = FALSE, print = TRUE), seed = 123)}}
+Example usage:
+\code{
+  bsitar(
+    x = age, y = height, id = id, data = berkeley_exdata,
+    knots_selection = list(
+      select = "knots", nsearch = NULL, criteria = "AIC",
+      bkrange = TRUE, fix_bknots = TRUE, method = "bs",
+      when = "bc", what = "plot3", return = FALSE, print = TRUE
+    ),
+    seed = 123
+  )
+  }}
 
 \item{fixed}{A character string specifying the fixed effects structure
 (default \code{'a+b+c'}). For \code{univariate_by} and \code{multivariate}
@@ -2260,11 +2287,16 @@ is thus preferred. However, the standard knot selection process can lead to
 under performance in the sparser regions of the predictor variable,
 especially when using a low number of knots. It can also lead to over fitting
 in the denser regions. The \pkg{sitar} package offers an option (see
-knots_selection argument) to use a search algorithm that implements a
+\code{knots_selection} argument) to use a search algorithm that implements a
 backward method for knot selection that shows reduced prediction error and
-Bayesian information criterion (BIC) scores compared to the standard knot
-selection process in simulation experiments. See
-\insertCite{Arnes2023}{bsitar} for details.
+a lower information criterion (IC) or cross-validation scores compared to the
+standard knot selection process in simulation experiments. See
+\insertCite{Arnes2023}{bsitar} for details. The approach suggested by
+\insertCite{Arnes2023}{bsitar} is implemented via option \code{method = 'bs'}
+when setting up the \code{knots_selection} argument. We strongly recommend
+that users carefully consider the placement of knots—whether using the
+approach suggested here or another method of their choice—to ensure optimal
+model performance.
 
 Like \pkg{sitar} package \insertCite{Cole2010}{bsitar}, the \pkg{bsitar}
 package fits the \emph{SITAR} model with (usually) three random effects: size
