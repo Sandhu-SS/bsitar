@@ -922,12 +922,6 @@
 #' @param sigmaknots Knots for the spline function used for \code{sigma}. See
 #'   \code{knots} for details. Ignored if \code{sigma_formula_manual = NULL}.
 #'   
-#' @param sigmaknots_selection A named list for optimizing knot placement in
-#'   fitting the distributional parameter \code{'sigma'}. This experimental
-#'   feature searches over a larger set of knots (typically \code{sigmadf + 4})
-#'   to find the optimal subset that minimizes the specified information
-#'   criterion. See \code{knots_selection} for details.
-#' 
 #' @param sigmafixed Fixed effect formula for the \code{sigma} structure. See
 #'   \code{fixed} for details. Ignored if \code{sigma_formula_manual = NULL}.
 #'
@@ -2304,7 +2298,6 @@ bsitar <- function(x,
                    sigmaid  = NULL,
                    sigmadf = 4,
                    sigmaknots = NA,
-                   sigmaknots_selection = NULL,
                    sigmafixed = a + b + c,
                    sigmarandom = "",
                    sigmaxoffset = mean,
@@ -3241,7 +3234,11 @@ bsitar <- function(x,
     }
     
     if(!grepl('stats::', x[['criteria']])) {
-      x[['criteria']] <- paste0('stats::', x[['criteria']])
+      if(x[['criteria']] == "AIC" | x[['criteria']] == "BIC") {
+        x[['criteria']] <- paste0('stats::', x[['criteria']])
+      } else if(x[['criteria']] == "CV") {
+        x[['criteria']] <- deparse(x[['criteria']])
+      }
     }  
     
     return(x)
@@ -3269,15 +3266,6 @@ bsitar <- function(x,
     mcall[['knots_selection']] <- knots_selection <- 
       check_each_element_of_list_named(call = mcall, 
                                        element = 'knots_selection', 
-                                       assert_names = 
-                                         knots_selection_assert_names)
-  }
-  
-  
-  if(!is.null(mcall[['sigmaknots_selection']])) {
-    mcall[['sigmaknots_selection']] <- sigmaknots_selection <- 
-      check_each_element_of_list_named(call = mcall, 
-                                       element = 'sigmaknots_selection', 
                                        assert_names = 
                                          knots_selection_assert_names)
   }
@@ -7747,107 +7735,6 @@ bsitar <- function(x,
     
     knots_from_gkn <- knots
     
-    
-    
-    #################################################################
-    #################################################################
-    
-    # 
-    # # Use get_knost_from_df() -> utilis-helper 12
-    # if(knotssi == "NA" | is.na(knotssi)) {
-    #   if(smat == 'nsp' |
-    #      smat == 'nsk' |
-    #      smat == 'bsp' |
-    #      smat == 'msp' | 
-    #      smat == 'isp') {
-    #     bsp_msp_isp_args                <- list()
-    #     bsp_msp_isp_args[['x']]         <-  datai[[xsi]]
-    #     bsp_msp_isp_args[['knots']]     <-  NULL
-    #     bsp_msp_isp_args[['bknots']]    <-  NULL
-    #     bsp_msp_isp_args[['df']]        <-  ept(dfsi)
-    #     bsp_msp_isp_args[['degree']]    <-  smat_degree
-    #     bsp_msp_isp_args[['intercept']] <-  smat_intercept
-    #     bsp_msp_isp_args[['derivs']]    <-  smat_derivs
-    #     bsp_msp_isp_args[['centerval']] <-  smat_centerval
-    #     bsp_msp_isp_args[['normalize']] <-  smat_normalize
-    #     bsp_msp_isp_args[['preH']]      <-  smat_preH
-    #     bsp_msp_isp_args[['sfirst']]    <-  smat_sfirst
-    #     bsp_msp_isp_args[['sparse']]    <-  smat_sparse
-    #     if(smat == 'nsp') {
-    #       temp_mat_s <- do.call(get_knost_from_df, bsp_msp_isp_args)
-    #       print(temp_mat_s)
-    #     } else if(smat == 'nsk') {
-    #       temp_mat_s <- do.call(get_knost_from_df, bsp_msp_isp_args)
-    #     } else if(smat == 'bsp') {
-    #       temp_mat_s <- do.call(GS_bsp_call, bsp_msp_isp_args)
-    #     } else if(smat == 'msp') {
-    #       temp_mat_s <- do.call(GS_msp_call, bsp_msp_isp_args)
-    #     } else if(smat == 'isp') {
-    #       temp_mat_s <- do.call(GS_isp_call, bsp_msp_isp_args)
-    #     }
-    #     
-    #     temp_mat_s_knots <- attr(temp_mat_s, "knots") 
-    #     if(is_emptyx(temp_mat_s_knots)) {
-    #       temp_mat_s_knots <- NULL 
-    #     }
-    #     
-    #     temp_mat_s_bknots <- attr(temp_mat_s, "Boundary.knots") 
-    #     temp_mat_s_bknots <- apply_bknots_bounds(temp_mat_s_bknots, ept(boundsi))
-    #     
-    #     knots <- c(temp_mat_s_bknots[1], temp_mat_s_knots, temp_mat_s_bknots[2])
-    #     if(verbose) {
-    #       message("For '",smat,"' knots are created internally based on the 'df'",
-    #               "\n ",
-    #               " The boundary knots are adjusted for bounds. The full knots ",
-    #               "\n ",
-    #               " i.e, internal as well as the boundary knots are then ",
-    #               "\n ",
-    #               " adjusted for the xoffset i.e., knots - xoffset"
-    #       )
-    #     }
-    #   } # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
-    # } # if(knotssi == "NA" | is.na(knotssi)) {
-    # 
-    # 
-    # 
-    # #################################################################
-    # #################################################################
-    # # Use get_knost_from_df() -> utilis-helper 12
-    # if(knotssi == "NA" | is.na(knotssi)) {
-    #   if(smat == 'rcs') {
-    #     rcspline_eval_args                 <- list()
-    #     rcspline_eval_args[['x']]          <-  datai[[xsi]]
-    #     rcspline_eval_args[['nk']]         <-  ept(dfsi) + 1
-    #     rcspline_eval_args[['inclx']]      <-  TRUE
-    #     rcspline_eval_args[['knots.only']] <-  TRUE
-    #     rcspline_eval_args[['type']]       <-  "ordinary"
-    #     rcspline_eval_args[['norm']]       <-  2
-    #     rcspline_eval_args[['rpm']]        <-  NULL
-    #     rcspline_eval_args[['pc']]         <-  FALSE
-    #     rcspline_eval_args[['fractied']]   <-  0.05
-    #     knots_get_boundary_rcs <- knots
-    #     knots <- do.call(Hmisc::rcspline.eval, rcspline_eval_args)
-    #     if(as.logical(smat_bkrange)) {
-    #       knots[1]               <- knots_get_boundary_rcs[1]
-    #       knots[length(knots)]   <- knots_get_boundary_rcs[length(knots)]
-    #     } else {
-    #       knots <- knots
-    #     }
-    #     if(verbose) {
-    #       message("For '",smat,"' knots are created internally based on the 'df'",
-    #               "\n ",
-    #               " Hmisc::rcspline.eval() using nk = df + 1.",
-    #               "\n ",
-    #               " The full knots are adjusted for xoffset i.e., knots - xoffset"
-    #       )
-    #     }
-    #   } # if(smat == 'rcs') {
-    # } # if(knotssi == "NA" | is.na(knotssi)) {
-    # 
-    # 
-    # 
-    
-    
     #################################################################
     #################################################################
     
@@ -7973,7 +7860,6 @@ bsitar <- function(x,
     
     
     knots_selection      <- mcall[['knots_selection']] %>% eval()
-    sigmaknots_selection <- mcall[['knots_selection']] %>% eval()
     
     if(!is.null(knots_selection)) {
       if(is.null(knots_selection[['nsearch']])) {
@@ -7983,11 +7869,7 @@ bsitar <- function(x,
       }
     } # if(!is.null(knots_selection)) {
     
-    if(is.null(sigmaknots_selection)) {
-      sigmaknots_selection <- knots_selection
-    }
-
-
+   
     if(!is.null(knots_selection)) {
       knots_selection_arg <- get_knost_from_df_arg
       knots_selection_arg[['dataset']] <- datai
@@ -8001,8 +7883,8 @@ bsitar <- function(x,
       knots_selection_arg[['return']] <- knots_selection[['return']]
       knots_selection_arg[['select']] <- knots_selection[['select']]
       knots_selection_arg[['initial_nknots']] <- knots_selection[['nsearch']]
-      knots_selection_arg[['cost_fn']]<- str2lang(knots_selection[['criteria']])
-      knots_selection_arg[['icr_fn']]<- str2lang(knots_selection[['criteria']])
+      knots_selection_arg[['cost_fn']]<- knots_selection[['criteria']]
+      knots_selection_arg[['icr_fn']] <- knots_selection[['criteria']]
       knots_selection_arg[['all_scores']] <- knots_selection[['all_scores']]
       knots_selection_arg[['all_knots']]  <- FALSE
       knots_selection_arg[['method']]     <- knots_selection_method
@@ -8014,7 +7896,7 @@ bsitar <- function(x,
       
       knots_selection_arg[['smat']]      <- smat
       knots_selection_arg[['knots']]     <-  NULL
-      knots_selection_arg[['bknots']]    <- checkgetiknotsbknots(knots, 'bknots')
+      knots_selection_arg[['bknots']]    <- checkgetiknotsbknots(knots,'bknots')
       knots_selection_arg[['bkrange']]   <- knots_selection_bkrange
       knots_selection_arg[['fix_bknots']]<- knots_selection_fix_bknots
       knots_selection_arg[['df']]        <-  df
@@ -8032,22 +7914,27 @@ bsitar <- function(x,
         if(!knots_selection_arg[['return']]) {
           stop2c("please use return = TRUE when select = 'df'")
         }
-        knots_selection_arg[['return_nknots']] <- TRUE
+        knots_selection_arg[['return_df']] <- TRUE
       } else {
-        knots_selection_arg[['return_nknots']] <- FALSE
+        knots_selection_arg[['return_df']] <- FALSE
       }
       
-      if(knots_selection_arg[['select']] == 'both') {
-        knots_selection_arg[['search_nknots']] <- TRUE
+      if(knots_selection_arg[['select']] == 'df') {
+        knots_selection_arg[['search_df']] <- TRUE
+      } else if(knots_selection_arg[['select']] == 'both') {
+        knots_selection_arg[['search_df']] <- TRUE
+      } else if(knots_selection_arg[['select']] == 'knots') {
+        knots_selection_arg[['search_df']] <- FALSE
       } else {
-        knots_selection_arg[['search_nknots']] <- FALSE
+        stop2c("For argument 'knots_selection', the option 'select' must be 
+             either 'df', 'knots', or 'both'. The current choice ", 
+             collapse_comma(knots_selection_arg[['select']]),
+             " is invalid")
       }
       # End of Some check for knots_selection_arg
       
     } # iif(!is.null(knots_selection)) {
    
-    
-    
     
 
     if(!is.null(knots_selection)) {
@@ -8055,19 +7942,15 @@ bsitar <- function(x,
         knots_old <- knots
         model_old <- NULL
         model_new <- do.call(get_choose_model, knots_selection_arg)
-        if(knots_selection_arg[['return_nknots']]) {
+        if(knots_selection_arg[['return_df']]) {
           return(model_new)
         }
-        # model_newx <<- model_new
         if(knots_selection_arg[['kspace']] == "un") {
           knots_new <- model_new$ns$knot_placements$fullknots
         } 
         if(knots_selection_arg[['kspace']] == "nu") {
           knots_new <- model_new$ns_nu$knot_placements$fullknots
         }
-        # Below will return knots, which might be non uniform from best model
-        # knots_new <- get_extract_knots(model_new$model)$fullknots
-        # knots_new <- get_extract_knots(model_new)$fullknots
         getmaxdp  <- max(get_decimal_places(knots_old))
         knots_new <- round(knots_new, getmaxdp)
         knots     <- knots_new # These knots will be passed to bsitar
@@ -8076,6 +7959,7 @@ bsitar <- function(x,
                                             model = model_old,
                                             model_new = model_new, 
                                             knots_new = knots_new, 
+                                            nys = nys,
                                             xsi = xsi, 
                                             ysi = ysi,
                                             select = 
@@ -8117,6 +8001,7 @@ bsitar <- function(x,
                                             model = NULL,
                                             model_new = NULL, 
                                             knots_new = NULL, 
+                                            nys = nys,
                                             xsi = xsi, 
                                             ysi = ysi,
                                             select = 
@@ -8169,11 +8054,6 @@ bsitar <- function(x,
     } # if(!is.null(mcall[['knots_selection']])) {
     
    
-    
-    #################################################################
-    #################################################################
-   
-    
     
     #################################################################
     #################################################################
@@ -8347,7 +8227,8 @@ bsitar <- function(x,
                                                knots = sigmaknots, 
                                                data = datai, 
                                                eval_arg = sigmaxoffsetsi, 
-                                               offsetfunsi = sigmaxfunxoffsettransformsi, 
+                                               offsetfunsi = 
+                                                 sigmaxfunxoffsettransformsi, 
                                                smat = smat,
                                                degree = smat_degree,
                                                intercept = smat_intercept, 
@@ -8368,7 +8249,8 @@ bsitar <- function(x,
                                               knots = sigmaknots, 
                                               data = datai, 
                                               eval_arg = sigmabstartsi, 
-                                              offsetfunsi = sigmaxfunxoffsettransformsi, 
+                                              offsetfunsi = 
+                                                sigmaxfunxoffsettransformsi, 
                                               smat = smat,
                                               degree = smat_degree,
                                               intercept = smat_intercept, 
@@ -8579,30 +8461,9 @@ bsitar <- function(x,
       }
     } # end if(check_for_validy_of_prepare_transformations) {
     
-    
-    
    
     ##################################################################
     ##################################################################
-    
-    # Work on to make call via substitute and then create matrix.
-    # SplineCall <- substitute(GS_nsp_call(x = datai[[xsi]],
-    #                      knots = iknots,
-    #                      bknots = bknots,
-    #                      degree = smat_degree,
-    #                      intercept = smat_intercept,
-    #                      derivs = smat_derivs,
-    #                      centerval = smat_centerval,
-    #                      normalize = smat_normalize,
-    #                      preH = smat_preH,
-    #                      sfirst = smat_sfirst,
-    #                      sparse = smat_sparse)
-    #                      )
-    # SplineCall[[2]] <- quote(x)
-    # 
-    # stop()
-    
-    
     
     iknots <- checkgetiknotsbknots(knots, 'iknots')
     bknots <- checkgetiknotsbknots(knots, 'bknots')
@@ -8653,18 +8514,15 @@ bsitar <- function(x,
         knots_old <- knots
         model_old <- NULL
         model_new <- do.call(get_choose_model, knots_selection_arg)
-        if(knots_selection_arg[['return_nknots']]) {
+        if(knots_selection_arg[['return_df']]) {
           return(model_new)
         }
-        # model_newx <<- model_new
         if(knots_selection_arg[['kspace']] == "un") {
           knots_new <- model_new$ns$knot_placements$fullknots
         } 
         if(knots_selection_arg[['kspace']] == "nu") {
           knots_new <- model_new$ns_nu$knot_placements$fullknots
         }
-        # model_new <- do.call(get_suggest_splines, knots_selection_arg)
-        # knots_new <- get_extract_knots(model_new)$fullknots
         getmaxdp  <- max(get_decimal_places(knots_old))
         knots_new <- round(knots_new, getmaxdp)
         knots     <- knots_new # These knots will be passed to bsitar
@@ -8673,6 +8531,7 @@ bsitar <- function(x,
                                             model = model_old,
                                             model_new = model_new, 
                                             knots_new = knots_new, 
+                                            nys = nys,
                                             xsi = xsi, 
                                             ysi = ysi,
                                             select = 
@@ -8715,6 +8574,7 @@ bsitar <- function(x,
                                             model = NULL,
                                             model_new = NULL, 
                                             knots_new = NULL, 
+                                            nys = nys,
                                             xsi = xsi, 
                                             ysi = ysi,
                                             what = smat_what,
@@ -8840,10 +8700,8 @@ bsitar <- function(x,
     
    
     
-    
-    
-    
-    
+    #################################################################
+    #################################################################
     
     SbasisN <- ncol(mat_s)
     
@@ -9333,15 +9191,9 @@ bsitar <- function(x,
     
     
     ############################################################################
-    ############################################################################
-    ############################################################################
     # end add define sigma basic functions
     ############################################################################
-    
-    
-    
-    
-    ################################################
+   
     # if decomp = QR
     # make mat_s as Q, so that correct lm based initials
     if(!is.null(decomp)) {
@@ -9354,8 +9206,6 @@ bsitar <- function(x,
         mat_s <- QR_decomp_R_out[['Q']]
       }
     }
-    
-    
     
 
     #################################################
@@ -9526,7 +9376,6 @@ bsitar <- function(x,
     
     loess_fit <- paste0("loess(", ysi, "~", xsi, ",", 'datai', ")")
     loess_fitx <- eval(parse(text = loess_fit))
-    
     
     ymean   <- mean(datai[[ysi]], na.rm = TRUE) %>% round(., 2)
     ymedian <- median(datai[[ysi]], na.rm = TRUE) %>% round(., 2)

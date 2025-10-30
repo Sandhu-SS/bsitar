@@ -45,7 +45,6 @@ bsitar(
   sigmaid = NULL,
   sigmadf = 4,
   sigmaknots = NA,
-  sigmaknots_selection = NULL,
   sigmafixed = a + b + c,
   sigmarandom = "",
   sigmaxoffset = mean,
@@ -977,12 +976,6 @@ Ignored if \code{sigma_formula_manual = NULL}.}
 
 \item{sigmaknots}{Knots for the spline function used for \code{sigma}. See
 \code{knots} for details. Ignored if \code{sigma_formula_manual = NULL}.}
-
-\item{sigmaknots_selection}{A named list for optimizing knot placement in
-fitting the distributional parameter \code{'sigma'}. This experimental
-feature searches over a larger set of knots (typically \code{sigmadf + 4})
-to find the optimal subset that minimizes the specified information
-criterion. See \code{knots_selection} for details.}
 
 \item{sigmafixed}{Fixed effect formula for the \code{sigma} structure. See
 \code{fixed} for details. Ignored if \code{sigma_formula_manual = NULL}.}

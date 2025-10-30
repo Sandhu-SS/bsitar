@@ -1,21 +1,5 @@
 
 
-##############################################################################
-
-# Greedy knot selection algorithm for restricted cubic spline regression
-# https://pmc.ncbi.nlm.nih.gov/articles/PMC10910934/
-# knutar
-# https://github.com/jo-inge-arnes/knutar-experiments
-
-# knutar - example
-# https://github.com/jo-inge-arnes/knutar-experiments/blob/main/mcycle-example.R
-
-##############################################################################
-
-# keywords internal
-# noRd
-# export
-# added new dependency R.utils - remove it later 
 
 ##############################################################################
 # get_form
@@ -173,38 +157,102 @@ check_set_criteria <- function(icr_fn, add_attr = FALSE, verbose = FALSE) {
   icr_fn_choices <- c("AIC", "BIC", "CV")
   if (missing(icr_fn)) {
     icr_fn <- stats::AIC
-  } else {
-    if(is.character(icr_fn)) {
-      score_type <- icr_fn
-      if(icr_fn == "AIC") {
-        icr_fn <- stats::AIC
-      } else if(icr_fn == "BIC") {
-        icr_fn <- stats::BIC
-      } else if(icr_fn == "CV") {
-        icr_fn  <- "CV"
-      } else {
-        stop2c("Argument 'icr_fn' must be either a function, or a character 
-           string from the following: ", collapse_comma(icr_fn_choices))
-      }
-    } else if(is.function(icr_fn)) {
-      icr_fn <- icr_fn
-      score_type_temp <- deparse(substitute(icr_fn))
-      score_type_temp_c <- paste0(score_type_temp, collapse = "")
-      if(grepl("AIC", score_type_temp_c)) {
-        score_type <- 'AIC'
-      } else if(grepl("BIC", score_type_temp_c)) {
-        score_type <- 'BIC'
-      } else {
-        score_type <- score_type_temp
-      }
-    } else {
-      stop2c("Argument 'icr_fn' must be either a function, or a character 
-           string from the following: ", collapse_comma(icr_fn_choices))
-    }
   }
-  if(add_attr) attr(icr_fn, 'score_type') <- score_type
+  if(is.character(icr_fn)) {
+    icr_fn <- gsub("\"", "", icr_fn)
+    score_type <- icr_fn
+    if(icr_fn == "AIC" | icr_fn == "stats::AIC") {
+      icr_fn <- stats::AIC
+    } else if(icr_fn == "BIC" | icr_fn == "stats::BIC") {
+      icr_fn <- stats::BIC
+    } else if(icr_fn == "CV") {
+      icr_fn  <- "CV"
+    } else {
+      stop2c("For argument 'knots_selection', the option 'criteria' must be 
+         one of the following: ", 
+             collapse_comma(icr_fn_choices), 
+             ". The current choice ", 
+             collapse_comma(icr_fn),
+             " is invalid")
+    }
+  } else if(is.function(icr_fn)) {
+    icr_fn <- icr_fn
+    score_type_temp <- deparse(substitute(icr_fn))
+    score_type_temp_c <- paste0(score_type_temp, collapse = "")
+    if(grepl("AIC", score_type_temp_c)) {
+      score_type <- 'AIC'
+    } else if(grepl("BIC", score_type_temp_c)) {
+      score_type <- 'BIC'
+    } else {
+      score_type <- score_type_temp
+    }
+  } else {
+    stop2c("Argument 'icr_fn' must be either a function, or a character 
+         string from the following: ", collapse_comma(icr_fn_choices))
+  }
+  if(add_attr) {
+    attr(icr_fn, 'score_type') <- score_type
+  }
   return(icr_fn)
 }
+
+
+
+##############################################################################
+# eval_icr_fn_fun
+##############################################################################
+
+#' Title
+#'
+#' @param fun Internal
+#' @param model Internal
+#' @param dataset Internal
+#' @param cvk Internal
+#' @param cviter Internal
+#' @param forms Internal
+#' @param cost Internal
+#' @param verbose Internal
+#'
+#' @returns A character string a function
+#' 
+#' @keywords internal
+#' @noRd
+#'
+eval_icr_fn_fun <- function(fun, model, dataset, cvk, cviter, forms = NULL, 
+                            cost=function(y,yhat) mean((y-yhat)^2),
+                            verbose = FALSE) {
+  tmpgetstats <- NULL
+  if(is.null(forms)) {
+    nforms <- 1 
+  } else {
+    nforms <- length(forms)
+  }
+  if(is.character(fun)) {
+    if(fun == "CV"){
+      tmpgetstats <- NULL
+      for(j in 1:cviter){
+        mods <- list()
+        for(i in 1:nforms){ # for(i in 1:length(forms)){
+          tmpdat    <- dataset[rownames(stats::model.frame(model)), ]
+          mods[[i]] <- boot::cv.glm(data = tmpdat, glmfit = model,
+                                    cost=cost,
+                                    K = cvk)
+        }
+        tmpgetstats <- rbind(tmpgetstats, sapply(mods, function(x)x$delta[1]))
+      }
+      icr_score <- colMeans(tmpgetstats)
+    } else if(fun == "AIC"){
+      icr_score <- stats::AIC(model)
+    } else if(fun == "BIC"){
+      icr_score <- stats::BIC(model)
+    }
+  } else if(is.function(fun)) {
+    icr_score <- fun(model)
+  }
+  return(icr_score)
+}
+
+
 
 ##############################################################################
 # get_choose_model
@@ -228,24 +276,19 @@ check_set_criteria <- function(icr_fn, add_attr = FALSE, verbose = FALSE) {
 #'
 #' @param cost_fn The criterion used to choose which knots to remove, passed to
 #'   the function get_choose_removal. Defaults to AIC
-#'
-#' @param fp_alpha The relax factor for multivariate fractional polynomials.
-#'   Ignored
 #'   
-#' @param search_nknots A logical (default \code{TRUE}) to indicate whether to
+#' @param search_df A logical (default \code{TRUE}) to indicate whether to
 #'   first search for the optimal number of knots \code{df} by first running the
 #'   \code{get_suggest_knotcount} function. When calling the
 #'   \code{get_choose_model} from within the \pkg{bsitar}, the
-#'   \code{search_nknots} is set to \code{FALSE}.
+#'   \code{search_df} is set to \code{FALSE}.
 #'   
-#' @param return_nknots A logical (default \code{FALSE})
+#' @param return_df A logical (default \code{FALSE}). Returns df which is the 
+#' total number of knots (internal + boundary) minus one.
 #'
 #' @param max_nknots The max number of inner knots for restricted cubic splines
 #'   (default 4)
 #'
-#' @param max_fp_df The max degrees of freedom for fractional polynomials
-#'   (default 4, i.e., which is the same as a second-degree/two-terms FP).
-#'   Ignored
 #'
 #' @param verbose Verbose output, default FALSE
 #'
@@ -332,12 +375,11 @@ get_choose_model <- function(dataset,
                          cost_fn = stats::AIC,
                          cvk = 10, 
                          cviter = 10,
-                         all_scores = FALSE,
-                         fp_alpha = NA,
-                         search_nknots = TRUE,
-                         return_nknots = FALSE,
+                         search_df = TRUE,
+                         return_df = FALSE,
                          max_nknots = 4,
-                         max_fp_df = 4,
+                         all_scores = FALSE,
+                         plot_all_scores = FALSE,
                          method = 'bs',
                          smat = 'ns',
                          df = NULL, 
@@ -370,85 +412,25 @@ get_choose_model <- function(dataset,
   
   dependent <- rlang::enquo(dependent)
   independents <- rlang::enquo(independents)
-  
   score_type <- NULL
+
   icr_fn     <- check_set_criteria(icr_fn, add_attr = TRUE, verbose = verbose)
   score_type <- attr(icr_fn, 'score_type')
   attr(icr_fn, 'score_type') <- NULL
   
-  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+  cost_fn   <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
  
-  
-  
-  # if (missing(fp_alpha)) fp_alpha <- NA
   if (missing(max_nknots)) max_nknots <- 4
-  # if (missing(max_fp_df)) max_fp_df <- 4
   if (missing(verbose)) verbose <- TRUE
   if (missing(bknots)) bknots <- NA
   
-  
-  
-  
   ret_desc <- list(
-    # This commented out is for fractional polynomials
-    # "mfp" = "Multivariate fractional polynomials",
     "ns_nu" = "Restricted cubic splines with freely placed knots",
     "ns" = "Restricted cubic splines with knots placed at quantiles")
   
   ret <- list(labels = ret_desc, score_fn = icr_fn, score_name = score_type)
   
-  
-  # This commented out is for fractional polynomials
-  
-  # only_positive_independents <-  all(as.vector(model.matrix(independents, 
-  #                                                           dataset)[, 2]) > 0)
-  # 
-  # if (only_positive_independents) {
-  #   independents_str <- sub("~", "", deparse(independents))
-  #   # Multivariate fractional polynomials (move to separate func)
-  #   fp_formula <- stats::formula(paste0(
-  #     rlang::as_name(dependent),
-  #     " ~ fp(",
-  #     independents_str,
-  #     ", df = ",
-  #     max_fp_df,
-  #     ")"
-  #   ))
-  #   mfp_res <- NA
-  #   if (is.na(fp_alpha)) {
-  #     mfp_res <-
-  #       mfp::mfp(fp_formula, data = dataset, verbose = verbose)
-  #   } else {
-  #     mfp_res <-
-  #       mfp::mfp(fp_formula,
-  #                alpha = fp_alpha, data = dataset, verbose = verbose)
-  #   }
-  #   mfp_mod <- eval(summary(mfp_res)$call)
-  #   mfp_score <- icr_fn(mfp_mod)
-  # 
-  #   ret <- append(ret, list(mfp = list(model = mfp_mod, score = mfp_score)))
-  # 
-  #   if (verbose) {
-  #     R.utils::printf("-----------------------------------------------------\n")
-  #     R.utils::printf("%s\n%s: %f\n\n",
-  #                     ret_desc[["mfp"]], score_type, mfp_score)
-  #   }
-  # } else {
-  #   if (verbose) {
-  #     R.utils::printf("-----------------------------------------------------\n")
-  #     R.utils::printf(paste("Skipped fractional polynomials because some",
-  #                           "independent values were not larger than zero.\n", sep = " "))
-  #   }
-  # 
-  #   mfp_mod <- NA
-  #   mfp_score <- Inf
-  # }
-
-
-  
   suppressWarnings({
-    # Restricted cubic splines with knots distanced by regular sequence
-    # of quantiles between the boundary knots
     knotcnt_suggestion <-
       get_suggest_knotcount(dataset = dataset, 
                             dependent = dependent, 
@@ -456,6 +438,7 @@ get_choose_model <- function(dataset,
                             max_nknots  = max_nknots,
                             icr_fn = icr_fn, 
                             all_scores = all_scores,
+                            plot_all_scores = plot_all_scores,
                             method = method,
                             smat = smat,
                             df = df, 
@@ -483,15 +466,13 @@ get_choose_model <- function(dataset,
                             userdata = userdata,
                             verbose = verbose)
     
-    if(!search_nknots) {
+    if(!search_df) {
       knotcnt_suggestion$nknots <- max_nknots
     }
-    
-    if(return_nknots) {
-      return(knotcnt_suggestion$nknots)
+    if(return_df) {
+      return(knotcnt_suggestion$df)
     }
 
-   
     if(knotcnt_suggestion$nknots == 0) {
       stop2c("Search for knotcnt_suggestion using 'get_suggest_knotcount()' 
       resulted in '0' internal knots which must be at least 1.  
@@ -529,8 +510,12 @@ get_choose_model <- function(dataset,
                              bound = bound,
                              userdata = userdata)
     
-    ns_score <- icr_fn(ns_mod)
-    
+    ns_score <- eval_icr_fn_fun(fun = icr_fn, model = ns_mod, 
+                                 dataset = dataset,
+                                 cvk = cvk, cviter = cviter, forms = NULL,
+                                 cost=function(y,yhat) mean((y-yhat)^2),
+                                 verbose = verbose)
+
     extracted_knots <- get_extract_knots(ns_mod)
     ret <-
       append(ret, list(ns =
@@ -584,7 +569,7 @@ get_choose_model <- function(dataset,
       append(ret, list(ns_nu =
                          list(model = knutar_res$model,
                               score = knutar_res$score,
-                              knot_cnt_distinct = length(knutar_res$knots$knots),
+                              knot_cnt_distinct= length(knutar_res$knots$knots),
                               knot_placements = knutar_res$knots)))
     
     if (verbose) {
@@ -594,17 +579,6 @@ get_choose_model <- function(dataset,
       R.utils::printf("\n")
     }
     
-    
-    # This commented out is for fractional polynomials
-    
-    # if ((mfp_score <= ns_score) && (mfp_score <= knutar_res$score)) {
-    #   ret <- append(ret, list(model = mfp_mod, type = "mfp", score = mfp_score))
-    # } else if (ns_score <= knutar_res$score) {
-    #   ret <- append(ret, list(model = ns_mod, type = "ns", score = ns_score))
-    # } else {
-    #   ret <- append(ret, list(model = knutar_res$model, type = "ns_nu",
-    #                           score = knutar_res$score))
-    # }
     
     if (ns_score <= knutar_res$score) {
       ret <- append(ret, list(model = ns_mod, type = "ns", score = ns_score))
@@ -616,7 +590,8 @@ get_choose_model <- function(dataset,
     if (verbose) {
       R.utils::printf("Chosen model type:\n%s\n", ret_desc[[ret$type]])
     }
-  })
+    
+  }) # end of suppressWarnings({
   
   return(ret)
 }
@@ -693,9 +668,7 @@ get_choose_removal <- function(dataset,
   independents <- rlang::enquo(independents)
   dependent <- rlang::enquo(dependent)
   
-  # if (missing(cost_fn)) cost_fn <- stats::AIC
-  
-  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+  cost_fn <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
   
   
   model_scores <- lapply(seq_along(knots), function(i) {
@@ -727,9 +700,16 @@ get_choose_removal <- function(dataset,
                           fix_bknots = fix_bknots,
                           bound = bound,
                           userdata = userdata)
-    mod_score <- cost_fn(mod)
+    
+    mod_score <- eval_icr_fn_fun(fun = cost_fn, model = mod, 
+                                 dataset = dataset,
+                                 cvk = cvk, cviter = cviter, forms = NULL,
+                                 cost=function(y,yhat) mean((y-yhat)^2),
+                                 verbose = verbose)
+    
     return(list(model = mod, score = mod_score))
-  })
+  }) # end model_scores <- lapply(seq_along(knots), function(i) {
+  
   
   scores <- unlist(lapply(model_scores, "[[", "score"))
   index <- which.min(scores)
@@ -798,6 +778,7 @@ get_choose_splines <- function(dataset,
                            diff_better = 0,
                            all_models = FALSE,
                            all_scores = FALSE,
+                           plot_all_scores = FALSE,
                            method = 'bs',
                            smat = 'ns',
                            df = NULL, 
@@ -833,24 +814,18 @@ get_choose_splines <- function(dataset,
   
   
   if (missing(max_nknots)) max_nknots <- 10
-  
-  
-  # if (missing(icr_fn)) icr_fn <- stats::AIC
-  # if (missing(cost_fn)) cost_fn <- stats::AIC
-  
+
   icr_fn     <- check_set_criteria(icr_fn, add_attr = TRUE, verbose = verbose)
   score_type <- attr(icr_fn, 'score_type')
   attr(icr_fn, 'score_type') <- NULL
   
-  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+  cost_fn   <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
   
   if (missing(initial_nknots)) initial_nknots <- -1
   if (missing(diff_better)) diff_better <- 0
   if (missing(all_models)) all_models <- FALSE
   if (missing(bknots)) bknots <- NA
   
-  
- 
   if (initial_nknots == -1) {
     initial_nknots <-
       get_suggest_knotcount(dataset = dataset, 
@@ -860,6 +835,7 @@ get_choose_splines <- function(dataset,
                             target_nknots  = max_nknots,
                             icr_fn = icr_fn, 
                             all_scores = all_scores,
+                            plot_all_scores = plot_all_scores,
                             method = method,
                             smat = smat,
                             df = df, 
@@ -896,6 +872,8 @@ get_choose_splines <- function(dataset,
                                      target_nknots = max_nknots,
                                      initial_nknots = initial_nknots,
                                      cost_fn = cost_fn,
+                                     all_scores = all_scores,
+                                     plot_all_scores = plot_all_scores,
                                      method = method,
                                      smat = smat,
                                      df = df, 
@@ -925,7 +903,13 @@ get_choose_splines <- function(dataset,
   
   cur_model <- upper_model
   best_model <- cur_model
-  cur_score <- icr_fn(best_model)
+  
+  cur_score <- eval_icr_fn_fun(fun = icr_fn, model = best_model, 
+                              dataset = dataset,
+                              cvk = cvk, cviter = cviter, forms = NULL,
+                              cost=function(y,yhat) mean((y-yhat)^2),
+                              verbose = verbose)
+
   best_score <- cur_score
   best_knots <- get_extract_knots(best_model)
   cur_nknots <- length(best_knots$knots)
@@ -963,8 +947,12 @@ get_choose_splines <- function(dataset,
                              bound = bound,
                              userdata = userdata)
     
+    cur_score <- eval_icr_fn_fun(fun = icr_fn, model = chosen$model, 
+                                 dataset = dataset,
+                                 cvk = cvk, cviter = cviter, forms = NULL,
+                                 cost=function(y,yhat) mean((y-yhat)^2),
+                                 verbose = verbose)
 
-    cur_score <- icr_fn(chosen$model)
     if (cur_score <= (best_score + diff_better)) {
       best_model <- chosen$model
       best_score <- cur_score
@@ -1106,12 +1094,15 @@ get_plot_model <- function(dataset,
                            y,
                            fullknots = NULL,
                            title = NULL,
+                           subtitle = NULL,
                            verbose = FALSE) {
   fit_link <- NULL;
   se_link  <- NULL;
   lwr      <- NULL;
   upr      <- NULL;
   pred     <- NULL;
+  if(is.symbol(x)) x <- deparse(x)
+  if(is.symbol(y)) y <- deparse(y)
   dependent <- y
   independent <- x
   if(is.character(dependent))    dependent    <- str2lang(dependent)
@@ -1142,7 +1133,8 @@ get_plot_model <- function(dataset,
                   lwr = ilink(fit_link - (2 * se_link)))
   
   fig <- ggplot2::ggplot(d,
-                         ggplot2::aes(x = {{ independent }}, y = {{ dependent }})) +
+                         ggplot2::aes(x = {{ independent }}, 
+                                      y = {{ dependent }})) +
     ggplot2::geom_point() +
     ggplot2::geom_ribbon(data = d,
                          ggplot2::aes(ymin = lwr, ymax = upr), alpha = 0.2) +
@@ -1150,10 +1142,20 @@ get_plot_model <- function(dataset,
                        color = "blue", linewidth = 1)
   
   
-  fig <- fig + ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
-  fig <- fig + ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
+  fig <- fig + 
+    ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
+  fig <- fig + 
+    ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
   
-  if(!is.null(title)) fig <- fig + ggplot2::ggtitle(title)
+  fig <- fig + ggplot2::labs(x = x, y = y)
+  
+  if(!is.null(title)) {
+    fig <- fig + ggplot2::labs(title = title)
+  }
+  
+  if(!is.null(subtitle)) {
+    fig <- fig + ggplot2::labs(subtitle = subtitle)
+  }
   
   return(fig)
 }
@@ -1183,6 +1185,7 @@ get_plot_rstandard <- function(dataset,
                            y = NULL,
                            fullknots = NULL,
                            title = NULL,
+                           subtitle = NULL,
                            verbose = FALSE) {
   
   
@@ -1194,16 +1197,27 @@ get_plot_rstandard <- function(dataset,
     knots$Boundary.knots <- checkgetiknotsbknots(fullknots, 'bknots')
   }
   
-  fig <- ggplot2::ggplot(dataset, ggplot2::aes(x = stats::predict(model, dataset),
+  fig <- ggplot2::ggplot(dataset, 
+                         ggplot2::aes(x = stats::predict(model, dataset),
                                         y = stats::rstandard(model))) +
     ggplot2::geom_point() +
     ggplot2::geom_smooth(method = "loess", formula = y ~ x)
   
-  # Don't plot xintercept because here x axis is the outcome scale
-  # fig <- fig + ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
-  # fig <- fig + ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
+  if(!is.null(x)) {
+    fig <- fig + ggplot2::labs(x = x)
+  }
   
-  if(!is.null(title)) fig <- fig + ggplot2::ggtitle(title)
+  if(!is.null(y)) {
+    fig <- fig + ggplot2::labs(y = y)
+  }
+  
+  if(!is.null(title)) {
+    fig <- fig + ggplot2::labs(title = title)
+  }
+  
+  if(!is.null(subtitle)) {
+    fig <- fig + ggplot2::labs(subtitle = subtitle)
+  }
   
   return(fig)
 }
@@ -1372,10 +1386,6 @@ get_model_by_count <- function(dataset,
                           verbose = verbose)
   
   model_formula <- paste0(rlang::as_label(dependent), " ~ ", myform)
-  
-  # model_formula <- ept(model_formula, envir = environment(myform))
-  # 
-  # ns_model <- stats::glm(model_formula, data = dataset)
   
   model_formula_str <- model_formula
   
@@ -1594,6 +1604,9 @@ get_suggest_knotcount <- function(dataset,
   
   independents_str <- sub("~", "", deparse(independents))
   
+  dependent_str <- sub("~", "", deparse(dependent))
+  
+  
   
   if(!is_emptyx(bknots)) {
     if (length(bknots) != 2) {
@@ -1610,14 +1623,7 @@ get_suggest_knotcount <- function(dataset,
     ", Boundary.knots = c(", paste0(bknots, collapse = ", "), ")"
   )
 
-    
-  # if (length(bknots) != 2) {
-  #   bknots_str <- ""
-  # } else {
-  #   bknots_str <- paste0(
-  #     ", Boundary.knots = c(", paste0(bknots, collapse = ", "), ")"
-  #   )
-  # }
+ 
   
   consecutive_non_convergance <- 0
   
@@ -1697,31 +1703,15 @@ get_suggest_knotcount <- function(dataset,
     } else {
       consecutive_non_convergance <- consecutive_non_convergance + 1
     }
+    
+    
    
     if (consecutive_non_convergance == 0) {
-      
-      if(is.character(icr_fn)) {
-        if(icr_fn == "CV"){
-          tmp.stats <- NULL
-          for(j in 1:cviter){
-            mods <- list()
-            for(i in 1:1){ # for(i in 1:length(forms)){
-              # tmp <- stats::glm(forms[[i]], data=data, family=gaussian)
-              tmp       <- mod_spline
-              tmpdat    <- dataset[rownames(stats::model.frame(tmp)), ]
-              mods[[i]] <- boot::cv.glm(data = tmpdat, glmfit = tmp, 
-                                        cost=function(y,yhat) mean((y-yhat)^2), 
-                                        K = cvk)
-            }
-            tmp.stats <- rbind(tmp.stats, sapply(mods, function(x)x$delta[1]))
-          }
-          stats <- colMeans(tmp.stats)
-          icr_score <- stats
-        }
-      } else if(is.function(icr_fn)) {
-        icr_score <- icr_fn(mod_spline)
-      }
-      
+      icr_score <- eval_icr_fn_fun(fun = icr_fn, model = mod_spline, 
+                                   dataset = dataset,
+                                   cvk = cvk, cviter = cviter, forms = NULL,
+                                   cost=function(y,yhat) mean((y-yhat)^2),
+                                   verbose = verbose)
       
       if (all_scores) {
         scores <- append(scores, icr_score)
@@ -1742,10 +1732,6 @@ get_suggest_knotcount <- function(dataset,
   }
   
   
-  
-  
-  
-  
   if (all_scores) {
     all_scores_df <- cbind(n_knots %>% unlist(), scores %>% unlist()) %>% 
       data.frame() %>% setNames(c('knot', 'score'))
@@ -1764,15 +1750,24 @@ get_suggest_knotcount <- function(dataset,
   
   
   if(plot_all_scores) {
-    stats  <- all_scores_df$score
-    kstats <- 1:length(stats)
-    plot(kstats, stats, type="o", pch=16, col="black", 
-         xlab="Degrees of Freedom (number of full knots -1)", ylab = score_type)
-    graphics::points(kstats[which.min(stats)], min(stats), pch=16, col="red")
+    ylab_str <- paste0(score_type, " ", "(", dependent_str, ")")
+    xlab_str <- paste0("Degrees of Freedom (full knots -1)",
+                       "\n",
+                       "full knots =  knots + boundary knots")
+    getallscores  <- all_scores_df$score
+    kgetallscores <- 1:length(getallscores)
+    plot(kgetallscores, getallscores, type="o", pch=16, col="black", 
+         xlab=xlab_str, 
+         main = "",
+         sub = "",
+         ylab = ylab_str)
+    graphics::points(kgetallscores[which.min(getallscores)], 
+                     min(getallscores), pch=16, col="red")
   }
   
-  
+  # nknots = internal knots
   return(list(
+    df = min_ndf,
     nknots = min_ndf - 1, score = min_icr, 
     method = method, smat = smat,
     all_scores_df = all_scores_df,
@@ -1832,8 +1827,9 @@ get_suggest_splines <- function(dataset,
                             icr_fn = stats::AIC,
                             cvk = 10, 
                             cviter = 10,
-                            all_scores = FALSE,
                             all_knots = FALSE,
+                            all_scores = FALSE,
+                            plot_all_scores = FALSE,
                             method = 'bs',
                             smat = 'ns',
                             df = NULL, 
@@ -1966,6 +1962,7 @@ get_suggest_splines <- function(dataset,
                             # max_nknots  = max_nknots,
                             icr_fn = icr_fn, 
                             all_scores = all_scores,
+                            plot_all_scores = plot_all_scores,
                             method = method,
                             smat = smat,
                             df = df, 
@@ -2002,15 +1999,11 @@ get_suggest_splines <- function(dataset,
              the model type and retry")
   }
   
-  # if (missing(cost_fn))   cost_fn <- stats::AIC
-
-  cost_fn     <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
+  cost_fn   <- check_set_criteria(cost_fn, add_attr = FALSE, verbose = verbose)
   
   
   if (missing(all_knots)) all_knots <- FALSE
-  
-  # Find the initial model with a high number of knots, and get the distinct
-  # knot placements
+
   ns_model <-
     get_model_by_count(dataset = dataset, 
                    dependent = dependent, 
@@ -2044,8 +2037,6 @@ get_suggest_splines <- function(dataset,
   
   knots <- get_extract_knots(ns_model)
   
-  
-  
   intermediate_knots <- list()
   
   # Initialize the variables that will hold the final knot placements
@@ -2060,10 +2051,6 @@ get_suggest_splines <- function(dataset,
     intermediate_knots <- append(intermediate_knots, list(final_knots))
   }
   
-  
-  # As long as there are more inner knots left than the target number, remove
-  # inner knots one by one, by always removing the knot that gives the best
-  # resulting model
   
   if (length(knots$knots) > target_nknots) {
     for (i in 1:(length(knots$knots) - target_nknots)) {
@@ -2168,10 +2155,13 @@ get_create_figure <- function(dataset,
                               y,
                               fullknots = NULL,
                               title = NULL, 
+                              subtitle = NULL,
                               verbose = FALSE) {
   
   d   <- dataset
   mod <- model
+  if(is.symbol(x)) x <- deparse(x)
+  if(is.symbol(y)) y <- deparse(y)
   if(is.character(x)) x <- str2lang(x)
   if(is.character(y)) y <- str2lang(y)
   x <- rlang::enquo(x)
@@ -2198,15 +2188,32 @@ get_create_figure <- function(dataset,
     knots$Boundary.knots <- checkgetiknotsbknots(fullknots, 'bknots')
   }
   
-  fig <- fig + ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
-  fig <- fig + ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
+  fig <- fig + 
+    ggplot2::geom_vline(xintercept = knots$knots, linetype = "dashed")
+  fig <- fig + 
+    ggplot2::geom_vline(xintercept = knots$Boundary.knots, linetype = "solid")
   
-  fig <- fig + ggplot2::geom_line(ggplot2::aes(x = mod$data[[x]], y = mod$fitted.values),
+  fig <- fig + 
+    ggplot2::geom_line(ggplot2::aes(x = mod$data[[x]], y = mod$fitted.values),
                          linetype = "solid", color = "black", linewidth = 0.5)
   
   # fig <- fig + force_panelsizes(rows = unit(3.5, "in"), cols = unit(7, "in"))
   
-  if(!is.null(title)) fig <- fig + ggplot2::ggtitle(title)
+  if(!is.null(x)) {
+    fig <- fig + ggplot2::labs(x = x)
+  }
+  
+  if(!is.null(y)) {
+    fig <- fig + ggplot2::labs(y = y)
+  }
+  
+  if(!is.null(title)) {
+    fig <- fig + ggplot2::labs(title = title)
+  }
+  
+  if(!is.null(subtitle)) {
+    fig <- fig + ggplot2::labs(subtitle = subtitle)
+  }
   
   return(fig)
 }
@@ -2241,13 +2248,11 @@ get_model_by_knots_wrapper <- function(list_arg, knots) {
                          'max_nknots', 
                          'target_nknots', 
                          'initial_nknots',
-                         
                          'print', 
                          'return', 
                          'select', 
-                         'return_nknots', 
-                         'search_nknots', 
-                         
+                         'return_df', 
+                         'search_df', 
                          'cost_fn', 
                          'icr_fn', 
                          'kspace',
@@ -2291,6 +2296,7 @@ get_print_return_obj <- function(knots = NULL,
                                  model = NULL,  
                                  model_new = NULL,  
                                  knots_new = NULL, 
+                                 nys,
                                  xsi, 
                                  ysi,
                                  select,
@@ -2309,6 +2315,15 @@ get_print_return_obj <- function(knots = NULL,
   
   model_old     <- get_model_by_knots_wrapper(list_arg, knots_old) 
   knots_old_str <-  paste(knots_old, collapse = " ")
+  
+  # y -axis is labelled by x, so no need of substile
+  if(nys > 1) {
+    # setsubtitle <- ysi
+    setsubtitle <- NULL
+  } else {
+    setsubtitle <- NULL
+  }
+  
   
   ###########################################################################
   ###########################################################################
@@ -2331,6 +2346,7 @@ get_print_return_obj <- function(knots = NULL,
                                    x = xsi, y = ysi,
                                    fullknots = knots_old,
                                    title = paste0("knots: ", knots_old_str),
+                                   subtitle = setsubtitle,
                                    verbose = verbose)
     }
     
@@ -2340,16 +2356,19 @@ get_print_return_obj <- function(knots = NULL,
                                      x = xsi, y = ysi,
                                      fullknots = knots_old,
                                      title = paste0("knots: ", knots_old_str),
+                                    subtitle = setsubtitle,
                                      verbose = verbose)
     }
     
     if(what == 'plot3') {
       plot_object <- get_plot_rstandard(dataset = list_arg[['dataset']], 
-                                          model = model_old, 
-                                          x = xsi, y = ysi,
-                                          fullknots = knots_old,
-                                          title = paste0("knots: ", knots_old_str),
-                                          verbose = verbose)
+                                        model = model_old, 
+                                        x = xsi, y = ysi,
+                                        fullknots = knots_old,
+                                        title = 
+                                          paste0("knots: ", knots_old_str),
+                                        subtitle = setsubtitle,
+                                        verbose = verbose)
     }
     return(plot_object)
   } # if(is.null(model_new)) {
@@ -2372,8 +2391,6 @@ get_print_return_obj <- function(knots = NULL,
       } # if(length(knots_old) > length(knots_new)) {
     } # if(select == 'un') {
   } # if(select == 'knots') {
-  
-  
   
   
   model_new <- get_model_by_knots_wrapper(list_arg, knots_new) 
@@ -2399,7 +2416,6 @@ get_print_return_obj <- function(knots = NULL,
   }
   
   
-  
   if(knots_selection_what == 'plot1' | 
      knots_selection_what == 'plot2' | 
      knots_selection_what == 'plot3') {
@@ -2410,6 +2426,7 @@ get_print_return_obj <- function(knots = NULL,
                                  fullknots = knots_old,
                                  title = 
                                    paste0("Old knots: ", knots_old_str),
+                                 subtitle = setsubtitle,
                                  verbose = verbose)
     fig_new <- get_create_figure(dataset = 
                                    list_arg[['dataset']], 
@@ -2418,6 +2435,7 @@ get_print_return_obj <- function(knots = NULL,
                                  fullknots = knots_new,
                                  title = 
                                    paste0("New knots: ", knots_new_str),
+                                 subtitle = setsubtitle,
                                  verbose = verbose)
     fig_old_new <- 
       patchwork::wrap_plots(fig_old / fig_new)
@@ -2433,6 +2451,7 @@ get_print_return_obj <- function(knots = NULL,
                                    fullknots = knots_old,
                                    title = 
                                      paste0("Old knots: ", knots_old_str),
+                                   subtitle = setsubtitle,
                                    verbose = verbose)
     fig_new_plot <- get_plot_model(dataset = 
                                      list_arg[['dataset']], 
@@ -2441,6 +2460,7 @@ get_print_return_obj <- function(knots = NULL,
                                    fullknots = knots_new,
                                    title = 
                                      paste0("New knots: ", knots_new_str),
+                                   subtitle = setsubtitle,
                                    verbose = verbose)
     fig_old_new_plot <- 
       patchwork::wrap_plots(fig_old_plot / fig_new_plot)
@@ -2457,6 +2477,7 @@ get_print_return_obj <- function(knots = NULL,
                          fullknots = knots_old,
                          title = 
                            paste0("Old knots: ", knots_old_str),
+                         subtitle = setsubtitle,
                          verbose = verbose)
     fig_new_resid <- 
       get_plot_rstandard(dataset = 
@@ -2466,13 +2487,13 @@ get_print_return_obj <- function(knots = NULL,
                          fullknots = knots_new,
                          title = 
                            paste0("New knots: ", knots_new_str),
+                         subtitle = setsubtitle,
                          verbose = verbose)
     fig_old_new_resid <- 
       patchwork::wrap_plots(fig_old_resid / fig_new_resid)
   }
   
  
-  
   if(knots_selection_what == 'knots') {
     knots_old_knots_new_msg <- paste0("Default knots ", 
                                       deparse(knots_old), " ",
@@ -2561,7 +2582,8 @@ get_print_return_obj <- function(knots = NULL,
 #' @examples
 #'
 #' data(Prestige, package="carData")
-#' get_NKnots(prestige ~ education + type, var="income", data=na.omit(Prestige), plot=FALSE)
+#' get_NKnots(prestige ~ education + type, var="income", 
+#' data=na.omit(Prestige), plot=FALSE)
 #' 
 get_NKnots <- function(form, var, data, degree=3, min.knots=1,
                    max.knots=10, includePoly = FALSE, plot=FALSE, 
@@ -2577,9 +2599,11 @@ get_NKnots <- function(form, var, data, degree=3, min.knots=1,
     forms[[1]]<- as.formula(paste(as.character(form)[2], "~",
                                   as.character(form)[3], " + ", var, sep=""))
     forms[[2]]<- as.formula(paste(as.character(form)[2], "~",
-                                  as.character(form)[3], "+ poly(", var,  ", 2)", sep=""))
+                                  as.character(form)[3], 
+                                  "+ poly(", var,  ", 2)", sep=""))
     forms[[3]]<- as.formula(paste(as.character(form)[2], "~",
-                                  as.character(form)[3], "+ poly(", var,  ", 3)", sep=""))
+                                  as.character(form)[3], 
+                                  "+ poly(", var,  ", 3)", sep=""))
     m <- 4
   }
   
@@ -2589,38 +2613,31 @@ get_NKnots <- function(form, var, data, degree=3, min.knots=1,
     forms[[m]]<- as.formula(paste(as.character(form)[2], "~",
                                   as.character(form)[3], 
                                   "+ splines2::bsp(", var, ", df=", degree+k[i],
-                                  ", Boundary.knots=c(", min(data[[var]], na.rm=TRUE),", ", max(data[[var]], 
-                                                                                                na.rm=TRUE), "))", sep=""))
+                                  ", Boundary.knots=c(", 
+                                  min(data[[var]], na.rm=TRUE),", ", 
+                                  max(data[[var]], 
+                                      na.rm=TRUE), "))", 
+                                  sep=""))
     m <- m+1
   }
   
   if(crit %in% c("AIC", "BIC")){
     mods <- lapply(forms, function(x)lm(x, data=data))
-    stats <- sapply(mods, function(x)do.call(crit, list(object=x)))
+    getallscores <- sapply(mods, function(x)do.call(crit, list(object=x)))
   }
   if(crit == "CV"){
     stop("criterion 'CV' not supported")
   }
-  # if(crit == "CV"){
-  #   tmp.stats <- NULL
-  #   for(j in 1:cviter){
-  #     mods <- list()
-  #     for(i in 1:length(forms)){
-  #       tmp <- stats::glm(forms[[i]], data=data, family=gaussian)
-  #       tmpdat <- data[rownames(stats::model.frame(tmp)), ]
-  #       mods[[i]] <- boot::cv.glm(tmpdat, tmp, K=cvk)
-  #     }
-  #     tmp.stats <- rbind(tmp.stats, sapply(mods, function(x)x$delta[1]))
-  #   }
-  #   stats <- colMeans(tmp.stats)
-  # }
+  
   if(plot){
-    k <- k+3
-    if(includePoly){k <- c(1:3, k)}
-    plot(k, stats, type="o", pch=16, col="black", xlab="# Degrees of Freedom", ylab = crit)
-    graphics::points(k[which.min(stats)], min(stats), pch=16, col="red")
+    kgetallscores <- k+3
+    if(includePoly){kgetallscores <- c(1:3, k)}
+    plot(kgetallscores, getallscores, type="o", pch=16, 
+         col="black", xlab="# Degrees of Freedom", ylab = crit)
+    graphics::points(kgetallscores[which.min(getallscores)], 
+                     min(getallscores), pch=16, col="red")
   }else{
-    return(data.frame(df = c(df_poly, df_spline), stat=stats))
+    return(data.frame(df = c(df_poly, df_spline), stat=getallscores))
   }
 }
 
@@ -2677,13 +2694,17 @@ get_NKnotsTest <- function(form, var, data, targetdf = 1, degree=3, min.knots=1,
   forms[[1]]<- as.formula(paste(as.character(form)[2], "~",
                                 as.character(form)[3], " + ", var, sep=""))
   forms[[2]]<- as.formula(paste(as.character(form)[2], "~",
-                                as.character(form)[3], "+ poly(", var,  ", 2)", sep=""))
+                                as.character(form)[3], 
+                                "+ poly(", var,  ", 2)", sep=""))
   forms[[3]]<- as.formula(paste(as.character(form)[2], "~",
-                                as.character(form)[3], "+ poly(", var,  ", 3)", sep=""))
+                                as.character(form)[3], 
+                                "+ poly(", var,  ", 3)", sep=""))
   m <- 4
   for(i in 1:length(k)){
     forms[[m]]<- as.formula(paste(as.character(form)[2], "~",
-                                  as.character(form)[3], "+ bs(", var, ", df=", degree+k[i], ")", sep=""))
+                                  as.character(form)[3], 
+                                  "+ bs(", var, ", df=", degree+k[i], ")", 
+                                  sep=""))
     m <- m+1
   }
   mods <- lapply(forms, function(x)lm(x, data=data))
@@ -2698,12 +2719,12 @@ get_NKnotsTest <- function(form, var, data, targetdf = 1, degree=3, min.knots=1,
   denom.df <- sapply(tests, function(x)min(x[,1]))
   Fstats <- sapply(tests, function(x)x[2,5])
   pval <- stats::p.adjust(sapply(tests, function(x)x[2,6]), method=adjust)
-  # cstats <- sapply(tests2, function(x)x$stat)
-  # cprobs <- sapply(tests2, function(x)x$stat/x$nobs)
-  # cminstat <- sapply(tests2, function(x)min(x$stat, x$nobs - x$stat))
-  # cbetter <- cp <- 2 * stats::pbinom(cminstat, sapply(tests2, function(x)x$nobs), 0.5)
-  # pref <- sapply(tests2, function(x)ifelse(x$stat > x$nobs - x$stat,  "(T)", "(C)"))
-  # pref <- ifelse(cp > .05, "", pref)
+# cstats <- sapply(tests2, function(x)x$stat)
+# cprobs <- sapply(tests2, function(x)x$stat/x$nobs)
+# cminstat <- sapply(tests2, function(x)min(x$stat, x$nobs - x$stat))
+# cbetter <-cp<-2*stats::pbinom(cminstat, sapply(tests2,function(x)x$nobs), 0.5)
+# pref<-sapply(tests2,function(x)ifelse(x$stat > x$nobs-x$stat, "(T)", "(C)"))
+# pref <- ifelse(cp > .05, "", pref)
   cstats <- NULL
   cprobs <- NULL
   pref   <- NULL
@@ -2711,9 +2732,10 @@ get_NKnotsTest <- function(form, var, data, targetdf = 1, degree=3, min.knots=1,
   
   delta.aic <- sapply(cand.mods, stats::AIC) - stats::AIC(target.mod)
   delta.bic <- sapply(cand.mods, stats::BIC) - stats::BIC(target.mod)
-  # delta.aicc <- sapply(cand.mods, AICcmodavg::AICc) - AICcmodavg::AICc(target.mod)
+# delta.aicc<-sapply(cand.mods, AICcmodavg::AICc) - AICcmodavg::AICc(target.mod)
   delta.aicc <- NULL
-  res <- cbind(Fstats, num.df, denom.df, pval, cstats, cprobs, cp, delta.aic, delta.aicc, delta.bic)
+  res <- cbind(Fstats, num.df, denom.df, pval, cstats, cprobs, 
+               cp, delta.aic, delta.aicc, delta.bic)
   sigchar <- ifelse(res[,4] < .05, "*", " ")
   sigchar2 <- ifelse(res[,7] < .05, "*", " ")
   strres <- NULL
@@ -2732,8 +2754,12 @@ get_NKnotsTest <- function(form, var, data, targetdf = 1, degree=3, min.knots=1,
     
     strres <- cbind(strres,tmp )
   }
-  colnames(strres) <- c("F", "DF1", "DF2", "p(F)", "Clarke", "Pr(Better)", "p(Clarke)", "Delta_AIC", "Delta_AICc", "Delta_BIC")
-  rownames(strres) <- paste("DF=", targetdf, " vs. DF=", mods.df[-targetdf], sep="")
+  colnames(strres) <- c("F", "DF1", "DF2", "p(F)", 
+                        "Clarke", "Pr(Better)", 
+                        "p(Clarke)", "Delta_AIC", 
+                        "Delta_AICc", "Delta_BIC")
+  rownames(strres) <- paste("DF=", targetdf, " vs. DF=", 
+                            mods.df[-targetdf], sep="")
   if(targetdf > 1){
     below <- strres[1:(targetdf-1), , drop=F]
     above <- strres[targetdf:nrow(strres),, drop=F]
@@ -2781,9 +2807,10 @@ design_sigmoid_knots <- function(dataset,
                                   
   knots <- 
     stats::quantile (x, 
-                     probs = seq(0, 1, 
-                                 length.out = min_knots_toadd))[-c(1, 
-                                                                   min_knots_toadd)]  
+                     probs = 
+                       seq(0, 1, 
+                           length.out = min_knots_toadd))[-c(1, 
+                                                             min_knots_toadd)]  
  
   
   knots  <- knots %>% unname()
@@ -2830,22 +2857,14 @@ design_sigmoid_knots <- function(dataset,
       # Fit current spline
       model_formula[[3]][['knots']]  <- knots
       model_formula[[3]][['bknots']] <- bknots
-      #  model_formula[[3]][['df']]     <- NULL
       lm_call <- bquote(stats::glm(formula = .(model_formula), data = dataset))
       fit    <- eval(lm_call)
-      # fit  <- lm(y ~ ns(x, knots = knots, Boundary.knots = bknots))
       preds  <- predict(fit)
       resids <- abs(y - preds)
-      
-      # new_knots  <- attr(fit$model$`ns(x, knots = knots, Boundary.knots = bknots)`,"knots")
-      # new_bknots <- attr(fit$model$`ns(x, knots = knots, Boundary.knots = bknots)`,"Boundary.knots")
-      # new_knots  <- unname(new_knots)
       
       # Candidate for improved knot placement: max residual
       candidate_x <- x[which.max(resids)]
       knots <- sort(unique(c(knots, candidate_x)))
-      
-      
       
       if(smat == 'rcs') {
         # if(min_knots < 2) break
@@ -2879,7 +2898,6 @@ design_sigmoid_knots <- function(dataset,
   }
   
   
-  
   best_knots_x <- best_knots
   if(smat == 'rcs') {
     best_knots     <- checkgetiknotsbknots(best_knots_x, 'iknots')
@@ -2897,8 +2915,28 @@ design_sigmoid_knots <- function(dataset,
 
 
 
-# 
-# 
+
+##############################################################################
+
+# Greedy knot selection algorithm for restricted cubic spline regression
+# https://pmc.ncbi.nlm.nih.gov/articles/PMC10910934/
+# knutar
+# https://github.com/jo-inge-arnes/knutar-experiments
+
+# knutar - example
+# https://github.com/jo-inge-arnes/knutar-experiments/blob/main/mcycle-example.R
+
+##############################################################################
+
+# keywords internal
+# noRd
+# export
+# added new dependency R.utils - remove it later 
+
+
+##############################################################################
+
+
 # # fitx$model$`ns(x, knots = knots)`
 # 
 # # setdata <- data_male_class1
