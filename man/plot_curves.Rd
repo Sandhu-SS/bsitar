@@ -50,6 +50,8 @@
   linecolor2 = NULL,
   label.x = NULL,
   label.y = NULL,
+  label.title = NULL,
+  label.subtitle = NULL,
   legendpos = NULL,
   linetype.apv = NULL,
   linewidth.main = NULL,
@@ -365,6 +367,12 @@ controlled by \code{linecolor2}. The default \code{NULL} sets
 \code{NULL} (default), the y-axis label will be taken from the plot type
 (e.g., distance, velocity). When \code{layout = 'facet'}, the label is
 removed, and the same label is used as the title.}
+
+\item{label.title}{An optional character string to label the title. Default
+\code{NULL}.}
+
+\item{label.subtitle}{An optional character string to label the title. Default
+\code{NULL}}
 
 \item{legendpos}{A character string to specify the position of the legend. If
 \code{NULL} (default), the legend position is set to 'bottom' for distance

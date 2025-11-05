@@ -35,6 +35,8 @@ Support has been added to allow the use of external functions, such as ``splines
 
 Added support for ``tag`` feature implementing parameter specific prior sensitivity analysis in ``priorsense`` package via ``brms``.
 
+An new feature that allows for optimizing the number and /or the placements of knots via the argument``knots_selection`` argument. This feature explores an extended candidate set (usually ``df + 4``) to select an optimal subset of knots minimizing a specified information criterion such as ``AIC``, ``BIC`` or the ``residual error`` from Cross-validation procedure. It supports flexible strategies via select (knots, degrees of freedom, or both), with options for returning and plotting all scores during ``df`` selection. Diagnostic outputs and plotting types can be selected, with options to return or print these results. This feature enhances model flexibility and diagnostic capability for improved spline regression performance.
+
 
 ### Minor changes/Enhancements
 
@@ -46,7 +48,7 @@ Also, the ``growthparameters_comparison()`` function has been renamed to ``margi
 
 For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
 
-The default ``stype`` set to ``nsk`` instead of ``nsp``. 
+The default ``stype`` set to ``rcs`` 
 
  
 

@@ -16,6 +16,7 @@
   categorical = FALSE,
   ordinal = FALSE,
   method = NULL,
+  allow_new_levels = FALSE,
   estimation_method = "fitted",
   transform = NULL,
   transform_draws = NULL,
@@ -36,6 +37,11 @@
   model_deriv = NULL,
   idata_method = NULL,
   verbose = FALSE,
+  label.x = NULL,
+  label.y = NULL,
+  label.title = NULL,
+  label.subtitle = NULL,
+  legendpos = NULL,
   dummy_to_factor = NULL,
   expose_function = FALSE,
   usesavedfuns = NULL,
@@ -116,6 +122,10 @@ on the y-axis. Defaults to \code{FALSE}.}
 \code{"posterior_epred"} (the default), \code{"posterior_predict"},
 or \code{"posterior_linpred"}. For more details, see the respective
 function documentations.}
+
+\item{allow_new_levels}{A flag indicating if new levels of group-level
+effects are allowed (defaults to \code{FALSE}). Only relevant if
+\code{newdata} is provided.}
 
 \item{estimation_method}{A character string specifying the estimation method
 when calculating the velocity from the posterior draws. The \code{'fitted'}
@@ -250,6 +260,26 @@ method \code{'m2'}.
 
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}
+
+\item{label.x}{An optional character string to label the x-axis. If
+\code{NULL} (default), the x-axis label will be taken from the predictor
+(e.g., age).}
+
+\item{label.y}{An optional character string to label the y-axis. If
+\code{NULL} (default), the y-axis label will be taken from the plot type
+(e.g., distance, velocity). When \code{layout = 'facet'}, the label is
+removed, and the same label is used as the title.}
+
+\item{label.title}{An optional character string to label the title. Default
+\code{NULL}.}
+
+\item{label.subtitle}{An optional character string to label the title. Default
+\code{NULL}}
+
+\item{legendpos}{A character string to specify the position of the legend. If
+\code{NULL} (default), the legend position is set to 'bottom' for distance
+and velocity curves in the \code{'single'} layout. For individual-specific
+curves, the legend position is set to \code{'none'} to suppress the legend.}
 
 \item{dummy_to_factor}{A named list (default \code{NULL}) to convert dummy
 variables into a factor variable. The list must include the following

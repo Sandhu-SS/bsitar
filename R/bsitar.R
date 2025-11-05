@@ -204,10 +204,10 @@
 #'   \code{univariate_by} and \code{multivariate} models (see \code{df} for
 #'   details).
 #'   
-#' @param knots_selection A named list to control experimental knot optimization
-#'   during model fitting. This feature explores a larger candidate set
-#'   (typically \code{df + 4}) and selects an optimal subset that minimizes the
-#'   chosen information criterion. The following elements are available:
+#' @param knots_selection A named list to control knot optimization during model
+#'   fitting. This feature explores a larger candidate set (typically \code{df +
+#'   4}) and selects an optimal subset that minimizes the chosen information
+#'   criterion. The following elements are available:
 #'   \describe{
 #'   \item{\code{select}}{Selection strategy for knots and/or degrees of
 #'   freedom. Options are \code{"knots"}, \code{"df"}, or \code{"both"}.
@@ -255,14 +255,16 @@
 #'   }}
 #'   \item{\code{method}}{Algorithm for knot optimization:
 #'   \itemize{
-#'     \item \code{"bs"}: Brute-force selection
-#'     \item \code{"rs"}: Residual-based selection (default)
+#'     \item \code{"bs"}: built-in systematic workflow for knot optimization
+#'     (default)
+#'     \item \code{"rs"}: Recursive search based on user-defined function. Not
+#'     implemented yet.
 #'   }}
 #'   \item{\code{when}}{Stage of knot optimization relative to predictor 
 #'   centering:
 #'   \itemize{
-#'     \item \code{"bc"}: Before centering (raw \code{x} values)
-#'     \item \code{"ac"}: After centering (i.e., \code{x - xoffset}; default)
+#'     \item \code{"bc"}: Before centering (raw \code{x} values; default)
+#'     \item \code{"ac"}: After centering (i.e., \code{x - xoffset})
 #'   }}
 #'   \item{\code{what}}{Diagnostics or plotting output type. 
 #'   Default \code{"knots"}. Available options:
@@ -284,6 +286,13 @@
 #'   \item{\code{print}}{Logical. If \code{TRUE}, displays the diagnostic plot
 #'   (as specified by \code{what}). Default is \code{FALSE}.}
 #'   }
+#'   
+#'   Note that when both \code{return} and \code{print} are \code{FALSE}, the
+#'   optimized knots are passed to the [bsitar::bsitar()] function for model
+#'   fitting. If \code{return = TRUE}, the knots are returned immediately, and
+#'   model fitting is not performed. When \code{return = FALSE} and \code{print
+#'   = TRUE}, the selected knots are displayed via a plot, and the model fitting
+#'   proceeds using [bsitar::bsitar()].
 #'
 #'   Example usage:
 #'   \code{
@@ -3194,7 +3203,9 @@ bsitar <- function(x,
     
     if(is.null(x[['method']])) {
       x[['method']]   <- 'bs'
-    } 
+    } else if(x[['method']] == 'rs') {
+      stop("Only 'bs' is allowed as a method for knots_selection")
+    }
     
     if(is.null(x[['all_scores']])) {
       x[['all_scores']]   <- FALSE

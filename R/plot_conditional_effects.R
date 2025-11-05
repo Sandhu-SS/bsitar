@@ -75,6 +75,7 @@ plot_conditional_effects.bgmfit <-
            categorical = FALSE,
            ordinal = FALSE,
            method = NULL,
+           allow_new_levels = FALSE,
            estimation_method = 'fitted',
            transform = NULL,
            transform_draws = NULL,
@@ -95,6 +96,11 @@ plot_conditional_effects.bgmfit <-
            model_deriv = NULL,
            idata_method = NULL,
            verbose = FALSE,
+           label.x = NULL,
+           label.y = NULL,
+           label.title = NULL,
+           label.subtitle = NULL,
+           legendpos = NULL,
            dummy_to_factor = NULL, 
            expose_function = FALSE,
            usesavedfuns = NULL,
@@ -122,7 +128,8 @@ plot_conditional_effects.bgmfit <-
     
     if(!is.null(dpar)) {
       if(dpar == "sigma") {
-        stop("'plot_conditional_effects()' currently does not support dpar = 'sigma'")
+        stop2c("'plot_conditional_effects()' currently does 
+               not support dpar = 'sigma'")
       }
     }
     
@@ -178,7 +185,8 @@ plot_conditional_effects.bgmfit <-
       # nothing
     } else {
       rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
-      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_trace_back.bgmfit <- 
+        rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
       rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
       xcall <- rlang_call_name
     }
@@ -225,9 +233,7 @@ plot_conditional_effects.bgmfit <-
     xvar  <- xvar
     idvar <- idvar
     if(length(idvar) > 1) idvar <- idvar[1]
-    yvar  <- 'yvar'
-    
-
+   
     check_set_fun <- check_set_fun_transform(model = model, 
                                              which = 'ixfuntransform2',
                                              dpar = dpar, 
@@ -263,6 +269,8 @@ plot_conditional_effects.bgmfit <-
       return(out)
     }
     
+   
+    
     labels_ggfunx_str <- 
       "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
     
@@ -283,7 +291,8 @@ plot_conditional_effects.bgmfit <-
     full.args <- 
       sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                  arguments = full.args, 
-                                 check_formalArgs = plot_conditional_effects.bgmfit,
+                                 check_formalArgs = 
+                                   plot_conditional_effects.bgmfit,
                                  check_formalArgs_exceptions = c('object'),
                                  check_trace_back = NULL,
                                  envir = parent.frame())
@@ -316,11 +325,7 @@ plot_conditional_effects.bgmfit <-
       newdata <- CustomDoCall(get.newdata, get.newdata_args)
     }
     full.args$newdata <- newdata
-    
-    # if(!is.null(model$model_info$decomp)) {
-    #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
-    # }
-    
+   
     expose_method_set <- model$model_info[['expose_method']]
     
     model$model_info[['expose_method']] <- 'NA' # Over ride method 'R'
@@ -365,7 +370,8 @@ plot_conditional_effects.bgmfit <-
         model_deriv <- FALSE
         call_slopes <- TRUE
         post_processing_checks_args[['deriv']]    <- 0
-        o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
+        o    <- CustomDoCall(post_processing_checks, 
+                             post_processing_checks_args)
       }
       check_fun <- TRUE
     }
@@ -405,7 +411,8 @@ plot_conditional_effects.bgmfit <-
         model_deriv <- FALSE
         call_slopes <- TRUE
         post_processing_checks_args[['deriv']]    <- 0
-        o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
+        o    <- CustomDoCall(post_processing_checks, 
+                             post_processing_checks_args)
       }
       check_fun <- TRUE
     }
@@ -446,8 +453,10 @@ plot_conditional_effects.bgmfit <-
     calling.args <-
       sanitize_CustomDoCall_args(what = "CustomDoCallx",
                                  arguments = calling.args,
-                                 check_formalArgs = plot_conditional_effects.bgmfit,
-                                 check_formalArgs_exceptions = c('object', 'model'),
+                                 check_formalArgs = 
+                                   plot_conditional_effects.bgmfit,
+                                 check_formalArgs_exceptions = 
+                                   c('object', 'model'),
                                  check_trace_back = NULL,
                                  envir = parent.frame())
     
@@ -477,65 +486,137 @@ plot_conditional_effects.bgmfit <-
     
     
     
+    if (is.null(legendpos)) {
+      if(is.null(calling.args$re_formula)) {
+        legendpos <- "none"
+      } else if(is.na(calling.args$re_formula)) {
+        legendpos <- "bottom"
+      }
+    } else if (!is.null(legendpos)) {
+      legendpos <- legendpos
+    }
+    
+    
+    if (is.null(label.x)) {
+      label.x     <- paste0(xvar, "")
+    }
+    
+    if (is.null(label.y)) {
+      label.y     <- paste0(yvar, "")
+    }
+    
+    if (is.null(label.title)) {
+      label.title     <- ""
+    }
+    
+    if (is.null(label.subtitle)) {
+      label.subtitle  <- ""
+    }
+    
+    
+    # Add [['effects']] here 
+    # because it is needed for if(eval(full.args$model_deriv)) {
+    
+    
+    if(!is.null(re_formula)) {
+      calling.args$re_formula <- re_formula
+    }
+    
+    if(is.null(calling.args$re_formula)) {
+      calling.args[['effects']] <- paste0(xvar, ":", idvar)
+    } else {
+      calling.args[['effects']] <- paste0(xvar, "", "")
+    }
+    
+    fitted_allow_new_levels <- calling.args$allow_new_levels
+    calling.args$allow_new_levels <- NULL
+    
 
     calling.args_ce <- calling.args_cefd <- calling.args
     calling.args_ce$newdata <- NULL
     calling.args_ce$x       <- calling.args_ce$object
     calling.args_ce$object  <- NULL
+
     if(!eval(full.args$model_deriv)) {
+      calling.args_ce_effects <- calling.args_ce
+      
+      out_effects <- CustomDoCall(brms::conditional_effects, 
+                                  calling.args_ce_effects)
+      datace_effects <- out_effects[[1]] %>% 
+        dplyr::select(dplyr::all_of(names(model$data)))
       if(is.null(calling.args_ce$re_formula)) {
+        if(!spaghetti) {
+          # stop2c("Plese set 'spaghetti = TRUE' when 'model_deriv' is 
+          #                   FALSE and 're_formula = NULL'")
+        }
         
-        calling.args_ce_effects <- calling.args_ce
-        calling.args_ce_effects[['effects']] <- paste0(xvar, ":", idvar)
-        out_effects    <- CustomDoCall(brms::conditional_effects, calling.args_ce_effects)
-        datace_effects <- out_effects[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
+        # calling.args_ce_effects <- calling.args_ce
+        # 
+        # out_effects <- CustomDoCall(brms::conditional_effects, 
+        #                                  calling.args_ce_effects)
+        # datace_effects <- out_effects[[1]] %>% 
+        #   dplyr::select(dplyr::all_of(names(model$data)))
         
-        out_    <- CustomDoCall(brms::conditional_effects, calling.args_ce)
+        out_   <- CustomDoCall(brms::conditional_effects, calling.args_ce)
         datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
         datace[[idvar]] <- unique(levels(model$data[[idvar]]))[1]
         datace <- attrstrip(datace, keep = c('row.names', 'names', 'class'))
-        
-        datace <- attrstrip(datace_effects, keep = c('row.names', 'names', 'class'))
+        datace <- attrstrip(datace_effects, keep = c('row.names', 
+                                                     'names', 'class'))
 
-        calling.args_cefd$newdata <- datace
-        calling.args_cefd$model <- model
-        calling.args_cefd$object <- NULL
-        calling.args_cefd$xcall_str <- paste(deparse(xcallz), collapse = "")
+        calling.args_cefd$newdata   <- datace
+        calling.args_cefd$model     <- model
+        calling.args_cefd$object    <- NULL
+        calling.args_cefd$xcall_str <- paste(gsub_space(deparse(xcallz)), 
+                                             collapse = "")
+        
+        calling.args_cefd$allow_new_levels <- fitted_allow_new_levels
         if (estimation_method == 'fitted') {
           outx <- CustomDoCall(fitted_draws, calling.args_cefd)
         } else if (estimation_method == 'predict') {
           outx <- CustomDoCall(predict_draws, calling.args_cefd)
         }
-        
-        if(!summary) {
-          outx <- brms::posterior_summary(outx , probs = probs, robust = robust)
-          outx <- outx %>% data.frame()
-        }
-       
+        # Why was this step needed ??
+        # if(!summary) {
+        #   outx <- brms::posterior_summary(outx , probs = probs, robust = robust)
+        #   outx <- outx %>% data.frame()
+        # }
         if(spaghetti) {
           out_ <- out_effects
           out_[[1]][['estimate__']] <- outx[, 1] 
           out_[[1]][['se__']]       <- outx[, 2]
           out_[[1]][['lower__']]    <- outx[, 3]
           out_[[1]][['upper__']]    <- outx[, 4]
-          . <- out_ <- plot(out_, plot = F)[[1]] + ggplot2::theme(legend.position = 'none')
+          attr(out_[[1]], "spaghetti")[['estimate__']] <- outx[, 1] 
+          . <- out_ <- plot(out_, plot = FALSE)[[1]] 
+          n_groups <- length(unique(ggplot2::ggplot_build(.)$data[[2]]$group))
+          . <- . + 
+            ggplot2::scale_color_manual(values = rep("black", n_groups)) +
+            ggplot2::labs(x = label.x, y = label.y, 
+                          title = label.title, subtitle = label.subtitle) +
+            jtools::theme_apa(legend.pos = legendpos)
+          
         } else if(!spaghetti) {
-          outx <-
-          datace %>% dplyr::select(dplyr::all_of(c(xvar))) %>% dplyr::bind_cols(., outx) %>%
-            dplyr::group_by_at(c(xvar)) %>%
-            dplyr::summarise(dplyr::across(dplyr::where(is.numeric),
-                                           ~ mean(.x, na.rm = TRUE))) %>%
-            dplyr::ungroup() %>% dplyr::select(-dplyr::all_of(xvar)) %>%
-            as.matrix()
+          # Why was this step needed ??
+          # outx <-
+          # datace %>% # dplyr::select(dplyr::all_of(c(idvar, xvar))) %>% 
+          #   dplyr::select(dplyr::all_of(c(xvar))) %>% 
+          #   dplyr::bind_cols(., outx) %>%
+          #   dplyr::group_by_at(c(xvar)) %>%
+          #   dplyr::summarise(dplyr::across(dplyr::where(is.numeric),
+          #                                  ~ mean(.x, na.rm = TRUE))) %>%
+          #   dplyr::ungroup() %>% dplyr::select(-dplyr::all_of(xvar)) %>%
+          #   as.matrix()
          
           out_[[1]][['estimate__']] <- outx[, 1] 
           out_[[1]][['se__']]       <- outx[, 2]
           out_[[1]][['lower__']]    <- outx[, 3]
           out_[[1]][['upper__']]    <- outx[, 4]
-          # out_ <- plot(out_xx, plot = F)[[1]] + ggplot2::theme(legend.position = 'none')
-          . <- out_
+          . <- plot(out_, plot = FALSE)[[1]] + 
+            ggplot2::labs(x = label.x, y = label.y, 
+                          title = label.title, subtitle = label.subtitle) +
+            jtools::theme_apa(legend.pos = legendpos)
         } # if(spaghetti) {
-         
         
       } else if(is.na(calling.args_ce$re_formula)) {
         out_    <- CustomDoCall(brms::conditional_effects, calling.args_ce)
@@ -550,27 +631,52 @@ plot_conditional_effects.bgmfit <-
         } else if (estimation_method == 'predict') {
           outx <- CustomDoCall(predict_draws, calling.args_cefd)
         }
+        # Why was this step needed ??
+        # if(!summary) {
+        #   outx <- brms::posterior_summary(outx , probs = probs, robust = robust)
+        #   outx <- outx %>% data.frame()
+        #   outx <- outx %>% dplyr::select(dplyr::all_of(set_names_))
+        # }
         
-        if(!summary) {
-          outx <- brms::posterior_summary(outx , probs = probs, robust = robust)
-          outx <- outx %>% data.frame()
-        }
-        outx <- outx %>% dplyr::select(dplyr::all_of(set_names_))
-        out_[[1]][['estimate__']] <- outx[, 1]
-        out_[[1]][['se__']]       <- outx[, 2]
-        out_[[1]][['lower__']]    <- outx[, 3]
-        out_[[1]][['upper__']]    <- outx[, 4]
-        . <- out_
+        if(spaghetti) {
+          out_ <- out_effects
+          out_[[1]][['estimate__']] <- outx[, 1] 
+          out_[[1]][['se__']]       <- outx[, 2]
+          out_[[1]][['lower__']]    <- outx[, 3]
+          out_[[1]][['upper__']]    <- outx[, 4]
+          attr(out_[[1]], "spaghetti")[['estimate__']] <- outx[, 1] 
+          . <- out_ <- plot(out_, plot = FALSE)[[1]] 
+          n_groups <- length(unique(ggplot2::ggplot_build(.)$data[[2]]$group))
+          . <- . + 
+            ggplot2::scale_color_manual(values = rep("black", n_groups)) +
+            ggplot2::labs(x = label.x, y = label.y, 
+                          title = label.title, subtitle = label.subtitle) +
+            jtools::theme_apa(legend.pos = legendpos)
+        } else if(!spaghetti) {
+          out_[[1]][['estimate__']] <- outx[, 1]
+          out_[[1]][['se__']]       <- outx[, 2]
+          out_[[1]][['lower__']]    <- outx[, 3]
+          out_[[1]][['upper__']]    <- outx[, 4]
+          . <- plot(out_, plot = FALSE)[[1]] + 
+            ggplot2::labs(x = label.x, y = label.y, 
+                          title = label.title, subtitle = label.subtitle) +
+            jtools::theme_apa(legend.pos = legendpos)
+        } # if(spaghetti) {
       } # else if(is.na(calling.args_ce$re_formula)) {
     } # if(!eval(full.args$model_deriv)) {
     
 
     if(eval(full.args$model_deriv)) {
+      
       calling.args_ce <- calling.args
       calling.args_ce$newdata <- NULL
       calling.args_ce$x <- calling.args_ce$object
       calling.args_ce$object <- NULL
-      .   <- CustomDoCall(brms::conditional_effects, calling.args_ce)
+      out_   <- CustomDoCall(brms::conditional_effects, calling.args_ce)
+      . <- plot(out_, plot = FALSE)[[1]] + 
+        ggplot2::labs(x = label.x, y = label.y, 
+                      title = label.title, subtitle = label.subtitle) +
+        jtools::theme_apa(legend.pos = legendpos)
     }
     
     
@@ -613,9 +719,8 @@ plot_conditional_effects.bgmfit <-
         }
       })
     } # if(setcleanup) {
-    
-    suppressMessages({. <- plot(., plot = FALSE)[[1]] + ept(labels_ggfunx_str)})
-    .
+    . <- . + ept(labels_ggfunx_str)
+    return(.)
   }
 
 

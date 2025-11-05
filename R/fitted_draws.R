@@ -254,8 +254,7 @@ fitted_draws.bgmfit <-
                                         verbose = verbose)
         full.args$object <- full.args$model
         newdata          <- full.args$newdata
-        
-        indirectcall <- TRUE
+        indirectcall     <- TRUE
       } else {
         full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                         fargs = formals(), 
@@ -267,6 +266,7 @@ fitted_draws.bgmfit <-
                                         envir = parent.frame(),
                                         verbose = verbose)
         full.args$model <- model
+        
       }
     }
     
@@ -275,7 +275,7 @@ fitted_draws.bgmfit <-
       full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                       fargs = formals(), 
                                       dargs = list(...), 
-                                      sanitize_CustomDoCall_args = FALSE,
+                                      sanitize_CustomDoCall_args = TRUE,
                                       check_formalArgs  = NULL,
                                       check_formalArgs_exceptions  = NULL,
                                       check_trace_back  = NULL,
@@ -283,6 +283,9 @@ fitted_draws.bgmfit <-
                                       verbose = verbose)
       xcall_str           <- full.args$xcall_str
       full.args$xcall_str <- NULL
+      # full.args$object <- full.args$model
+      # newdata          <- full.args$newdata
+      # full.argsx <<- full.args
     }
     
     
@@ -664,8 +667,7 @@ fitted_draws.bgmfit <-
       calling.args[['difx']] <- difx <- attr(calling.args$newdata, 'difx')
     } 
     
-    
-    
+
     if(!plot_conditional_effects_calling) {
       if(check_fun) {
         if(deriv > 0) {
@@ -732,7 +734,6 @@ fitted_draws.bgmfit <-
                                             check_fun  = check_fun, 
                                             available_d1 = available_d1, 
                                             xcall = NULL, verbose = verbose)
-    
 
     if(plot_conditional_effects_calling) {
       if(check_fun) {

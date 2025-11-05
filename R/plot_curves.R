@@ -93,6 +93,12 @@
 #'   \code{NULL} (default), the y-axis label will be taken from the plot type
 #'   (e.g., distance, velocity). When \code{layout = 'facet'}, the label is
 #'   removed, and the same label is used as the title.
+#'   
+#' @param label.title An optional character string to label the title. Default
+#'   \code{NULL}.
+#'   
+#' @param label.subtitle An optional character string to label the title. Default
+#'   \code{NULL}
 #'
 #' @param legendpos A character string to specify the position of the legend. If
 #'   \code{NULL} (default), the legend position is set to 'bottom' for distance
@@ -267,6 +273,8 @@ plot_curves.bgmfit <- function(model,
                                linecolor2 = NULL,
                                label.x = NULL,
                                label.y = NULL,
+                               label.title = NULL,
+                               label.subtitle = NULL,
                                legendpos = NULL,
                                linetype.apv = NULL,
                                linewidth.main = NULL,
@@ -1077,9 +1085,10 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
-        ggplot2::labs(title = label.d) +
-        ggplot2::xlab("") +
-        ggplot2::ylab("") +
+        # ggplot2::labs(title = label.d) +
+        # ggplot2::xlab("") +
+        # ggplot2::ylab("") +
+        ggplot2::labs(x = "", y = "", title = label.d) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
@@ -1167,9 +1176,10 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
-        ggplot2::labs(title = label.v) +
-        ggplot2::xlab("") +
-        ggplot2::ylab("") +
+        # ggplot2::labs(title = label.v) +
+        # ggplot2::xlab("") +
+        # ggplot2::ylab("") +
+        ggplot2::labs(x = "", y = "", title = label.v) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       

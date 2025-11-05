@@ -271,7 +271,7 @@ predict_draws.bgmfit <-
       full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                       fargs = formals(), 
                                       dargs = list(...), 
-                                      sanitize_CustomDoCall_args = FALSE,
+                                      sanitize_CustomDoCall_args = TRUE,
                                       check_formalArgs  = NULL,
                                       check_formalArgs_exceptions  = NULL,
                                       check_trace_back  = NULL,
