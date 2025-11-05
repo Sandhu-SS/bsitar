@@ -1,6 +1,5 @@
 
 
-
 #' @title Expose User-Defined Stan Functions for Post-Processing
 #'
 #' @description The \strong{expose_model_functions()} function is a wrapper

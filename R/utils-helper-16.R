@@ -1,8 +1,5 @@
 
 
-
-
-
 #' Title An internal function to get adjusted curves (for random effects)
 #' 
 #' @details
@@ -1394,13 +1391,4 @@ add_global_label <-
     }
     return(pwobj)
   }
-
-
-#########################################################################
-#########################################################################
-
-
-
-
-
 

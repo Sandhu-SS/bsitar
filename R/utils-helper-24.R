@@ -1,5 +1,9 @@
 
 
+#############################################################
+############### GS_gps_parms_stan_str_get ##################
+#############################################################
+
 GS_gps_parms_stan_str_get <- function() {
   
   GS_gps_parms_stan_str <- "
@@ -997,33 +1001,4 @@ support_GS_gps_parms_stan_str_get <- function() {
   
   return(support_GS_gps_parms_stan_str)
 }
-
-
-
-# GS_gps_parms_stan_str_get_function_scode <- GS_gps_parms_stan_str_get()
-# 
-# support_GS_gps_parms_stan_str_get_function_scode <- support_GS_gps_parms_stan_str_get()
-# 
-# 
-# full_GS_gps_parms_stan_str_get_function_scode <- 
-#   paste0(support_GS_gps_parms_stan_str_get_function_scode,
-#          "\n",
-#          GS_gps_parms_stan_str_get_function_scode
-#          )
-# 
-# 
-# GS_gps_parms_stan_str_get_function_scode <-
-#   paste0("functions {",
-#          "\n",
-#          full_GS_gps_parms_stan_str_get_function_scode,
-#          "\n",
-#          "} // end functions block"
-#          )
-#   
-#   
-#   
-# rmodel <- rstan::stanc(model_code = GS_gps_parms_stan_str_get_function_scode)
-# 
-# rstan::expose_stan_functions(rmodel)
-
 

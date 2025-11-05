@@ -1,10 +1,12 @@
 
+#############################################################
+############### fast_nsk_rcsfun_str_get ##################
+#############################################################
 
 fast_nsk_rcsfun_str_get <- function() {
   fast_nsk_rcsfun_str <- 
     "
   
-
   // get the vector of spacings between nodes
   vector spline_geths(vector nodes) {
     int n = size(nodes) - 1;
@@ -117,26 +119,3 @@ fast_nsk_rcsfun_str_get <- function() {
 } # fast_nsk_rcsfun_str_get
 
 
-
-
-# 
-# // find in which node interval we should place each point of the vector
-# array[] int spline_findpos(vector nodes, vector x) {
-#   int n_nodes = size(nodes);
-#   int n_dat = size(x);
-#   array[n_dat] int ret;
-#   for (i in 1:n_dat) {
-#     int success = 0;
-#     for (j in 1:n_nodes - 1) {
-#       if ((x[i] >= nodes[j]) && (x[i] < nodes[j + 1])) {
-#         ret[i] = j;
-#         success = 1;
-#         break;
-#       }
-#     }
-#     if (success == 0) {
-#       reject(\"Point outside knot\");
-#       }
-#     }
-#     return ret;
-#   }

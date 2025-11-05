@@ -1267,25 +1267,6 @@ modelbased_growthparameters_call.bgmfit <-
     }
     
     
-    
-    # if(is.null(by)) {
-    #   if(is.null(cov)) {
-    #     set_group <- FALSE
-    #   } else if(!is.null(cov)) {
-    #     set_group <- cov
-    #     if (!set_group %in% cov) {
-    #       stop('by must be one of the ', cov)
-    #     } 
-    #   }
-    # } else if(!is.null(by)) {
-    #   if (!isFALSE(by)) {
-    #     set_group <- by
-    #   } else if (isFALSE(by)) {
-    #     set_group <- FALSE
-    #   }
-    # }
-    
-    
     set_group <- setup_by_var(model = model, by = by, cov = cov, 
                                     xvar = xvar, dpar = dpar)
     

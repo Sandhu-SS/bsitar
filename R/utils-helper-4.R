@@ -3523,23 +3523,7 @@ prepare_formula <- function(x,
     
   ) # End list_out <- list(
   
-  # print(lm_s)
-  # print(lm_s_se)
-  # print(lm_s_cov)
-  # print(lm_s_se_cov)
-  # print(lm_s_all)
-  # print(lm_s_se_all)
-  # print(lm_sdx)
-  # print(lm_sdx_se)
-  # print(lm_sdx_cov)
-  # print(lm_sdx_se_cov)
-  # print(lm_sdx_all)
-  # print(lm_sdx_se_all)
-  # stop()
-  
-  
-  
-  
+ 
   # add_sigma_by_mu
   # sigmaform which is actuallu lf(sigmatau ~) that was used for prior setting
   if(sigma_formula_manual_prior_via_sigma_formula) {
@@ -3547,11 +3531,7 @@ prepare_formula <- function(x,
     sigmaform_rm <- paste0(sigmaform_rm, ",")
     setbformula <- gsub(sigmaform_rm, "", setbformula, fixed = TRUE)
   }
-  
  
-   # setbformulax <<- setbformula
-   # stop()
-  
   attr(setbformula, "list_out") <- as.list(list_out)
   return(setbformula)
 }

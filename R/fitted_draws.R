@@ -929,4 +929,3 @@ fitted_draws <- function(model, ...) {
   UseMethod("fitted_draws")
 }
 
-

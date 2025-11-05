@@ -48,7 +48,7 @@ Also, the ``growthparameters_comparison()`` function has been renamed to ``margi
 
 For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
 
-The default ``stype`` set to ``rcs`` 
+The default ``stype`` set to ``nsk`` 
 
  
 

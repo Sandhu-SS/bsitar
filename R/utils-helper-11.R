@@ -2,8 +2,9 @@
 
 #' An internal function to prepare initial values
 #' 
-#' For \code{univariate_by} and \code{multivariate} models (see [bsitar::bsitar()])
-#' each argument is automatically matched with the sub model.
+#' For \code{univariate_by} and \code{multivariate} models (see
+#' [bsitar::bsitar()]) each argument is automatically matched with the sub
+#' model.
 #'
 #' @param init_argument A list containing the prior arguments specified in  
 #' the [bsitar::bsitar()] function and then passed from the 
@@ -22,8 +23,6 @@
 #' 
 prepare_initials <- function(init_argument,
                              init_internal_args) {
-  
-  
   
   ##############################################
   # Initiate non formalArgs()
@@ -1909,7 +1908,7 @@ prepare_initials <- function(init_argument,
   if (!exists('out_list'))
     out_list <- NULL
   
-  out_list
+  return(out_list)
 }
 
 

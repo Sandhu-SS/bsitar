@@ -1,4 +1,5 @@
-#' 
+
+
 #' @title Stan Code for Bayesian models
 #'
 #' @description \code{stancode_custom} is a generic function that can be used to
@@ -711,18 +712,3 @@ normalize_stancode_custom <- function(x) {
   trimws(x)
 }
 
-# check if the currently installed Stan version requires older syntax
-# than the Stan version with which the model was initially fitted
-
-
-# remove commented out if 'cmdstanr' installed
-
-# require_old_stan_syntax <- function(object, backend, version) {
-#   stopifnot(is.bgmfit(object))
-#   isTRUE(
-#     (object$backend == "rstan" && object$version$rstan >= version ||
-#        object$backend == "cmdstanr" && object$version$cmdstan >= version) &&
-#       (backend == "rstan" && utils::packageVersion("rstan") < version ||
-#          backend == "cmdstanr" && cmdstanr::cmdstan_version() < version)
-#   )
-# }

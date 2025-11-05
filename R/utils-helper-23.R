@@ -497,11 +497,12 @@ collapse_posterior_summary <- function(.x,
               collapse::fquantile(.x, probs = probs) 
     ) 
   }
-  # out <- matrix(out, ncol =  1 )
+  
   if(setcolnames) {
     colnames(out) <- c("Estimate", "Est.Error", paste0("Q", probs * 
                                                          100))
   }
-  out
+  
+  return(out)
 } # end collapse_posterior_summary
 

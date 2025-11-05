@@ -1,29 +1,42 @@
 
+
 #' Generate Age Measurement Schedules for Individuals
 #'
-#' This function generates a list of age vectors for a given number of individuals,
-#' ensuring each individual has measurements that:
+#' This function generates a list of age vectors for a given number of
+#' individuals, ensuring each individual has measurements that:
 #' - Start at a specified minimum age
 #' - End at a specified maximum age
-#' - Include at least one measurement in a specified target age range (e.g., pubertal window)
-#' - Have a total number of measurements sampled from a defined range, with an approximate target median
-#' - Enforce minimum counts of individuals with the lowest and highest possible measurement counts
-#'
+#' - Include at least one measurement in a specified target age
+#' range (e.g., pubertal window)
+#' - Have a total number of measurements sampled from a defined range, 
+#' with an approximate target median
+#' - Enforce minimum counts of individuals with the lowest and highest 
+#' possible measurement counts
+#' 
 #' @param n Integer. Number of individuals.
-#' @param meas_range Integer vector. Range of total measurement counts per individual (e.g., `5:15`).
+#' @param meas_range Integer vector. Range of total measurement counts per
+#'   individual (e.g., `5:15`).
 #' @param min_age Numeric. Minimum age (start of measurement range, e.g., `6`).
 #' @param max_age Numeric. Maximum age (end of measurement range, e.g., `20`).
-#' @param median_target Integer. Desired median number of measurements (must be in `meas_range`).
-#' @param min_n_at_min Integer. Minimum number of individuals with the lowest measurement count (i.e., `min(meas_range)`).
-#' @param min_n_at_max Integer. Minimum number of individuals with the highest measurement count (i.e., `max(meas_range)`).
-#' @param must_include_range Numeric vector of length 2. A continuous age window (e.g., `c(11, 15)`) where each individual must have at least one measurement.
-#'
+#' @param median_target Integer. Desired median number of measurements (must be
+#'   in `meas_range`).
+#' @param min_n_at_min Integer. Minimum number of individuals with the lowest
+#'   measurement count (i.e., `min(meas_range)`).
+#' @param min_n_at_max Integer. Minimum number of individuals with the highest
+#'   measurement count (i.e., `max(meas_range)`).
+#' @param must_include_range Numeric vector of length 2. A continuous age window
+#'   (e.g., `c(11, 15)`) where each individual must have at least one
+#'   measurement.
+#' 
 #' @return A list with two elements:
 #' \describe{
-#'   \item{ages_list}{A list of numeric vectors, one per individual, containing age values sorted in ascending order. Each vector starts at `min_age`, ends at `max_age`, and includes at least one value in `must_include_range`.}
-#'   \item{num_measurements}{An integer vector of length `n`, showing the total number of measurements per individual.}
+#'   \item{ages_list}{A list of numeric vectors, one per individual, containing
+#'   age values sorted in ascending order. Each vector starts at `min_age`, ends
+#'   at `max_age`, and includes at least one value in `must_include_range`.}
+#'   \item{num_measurements}{An integer vector of length `n`, showing the total
+#'   number of measurements per individual.}
 #' }
-#'
+#' 
 #' @examples
 #' set.seed(2025)
 #' res <- generate_age_list(
@@ -226,6 +239,7 @@ generate_age_list_new <- function(n,
   
   list(ages_list = ages_list, num_measurements = num_meas_per_id)
 }
+
 
 # # ---- Test Run ----
 # result <- generate_age_list(

@@ -451,7 +451,6 @@ rename_keyvars <- function(data,
     }
   }
   
-  
   if(!is.null(to_lower)) {
     for (i in 1:length(to_lower)) {
       if(!is.character(to_lower[i])) to_lower[i] <- deparse(to_lower[i])

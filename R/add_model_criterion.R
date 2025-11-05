@@ -126,9 +126,7 @@ add_model_criterion.bgmfit <-
     }
    model_name <- deparse(model_name_sym)
    
-   
-    
-    full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
+   full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                            fargs = formals(), 
                                            dargs = list(...), 
                                            verbose = verbose)
@@ -146,7 +144,6 @@ add_model_criterion.bgmfit <-
       rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
       xcall <- rlang_call_name
     }
-    
     
     
     get.newdata_args <- list()
@@ -330,5 +327,4 @@ add_model_criterion.bgmfit <-
 add_model_criterion <- function(model, ...) {
   UseMethod("add_model_criterion")
 }
-
 

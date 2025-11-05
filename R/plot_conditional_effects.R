@@ -120,7 +120,6 @@ plot_conditional_effects.bgmfit <-
       envir <- envir
     }
     
-    
     if(!is.null(transform) & !is.null(transform_draws)) {
       stop("Please specify either transform or transform_draws, not both")
     }
@@ -730,8 +729,5 @@ plot_conditional_effects.bgmfit <-
 plot_conditional_effects <- function(model, ...) {
   UseMethod("plot_conditional_effects")
 }
-
-
-
 
 

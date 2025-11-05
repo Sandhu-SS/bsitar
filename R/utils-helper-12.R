@@ -23,8 +23,6 @@ GS_bsp <- function(x,
                    calcderiv) {
   Nobs       <- length(x)
   fullknots  <- c(rep(bknots[1], degree+1), knots, rep(bknots[2], degree+1))
-  # allknots  <- c(rep(bknots[1], 4), knots,rep(bknots[2], 4))
-  # fullknots <- allknots
   Nintervals <- length(fullknots) - 1
   
   M1         <- matrix(0, Nobs, Nintervals)

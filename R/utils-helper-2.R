@@ -5253,8 +5253,6 @@ setup_by_var <- function(model,
 }
 
 
-
-
 #' evaluate eval_xoffset_bstart_args
 #' @details used in bsitar
 #' 

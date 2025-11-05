@@ -1473,13 +1473,11 @@ optimize_model.bgmfit <- function(model,
         }
       }
     
-     
       fit <- eval(user_call)
   
       if(!exe_model_fit) {
         return(fit)
       }
-      
       
       if("brmsfit" %in% class(fit) | "bgmfit" %in% class(fit)) {
         class_fit <- TRUE

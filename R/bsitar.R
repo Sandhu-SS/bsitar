@@ -5815,7 +5815,18 @@ bsitar <- function(x,
       resp <- ys[ii]
     else
       resp <- ""
+    
     subindicatorsi <- subindicators[ii]
+    
+    # For multivariate and univariate_by models, over ride smat_preH to FALSE
+    # This ensures that appropriate function is constructed for different df
+    if(nys > 1) {
+      smat_preH <- 0
+      if(verbose) {
+        message2c("The 'smat_preH' is set as 'FLASE' for multivariate model")
+      }
+    }
+    
     
     # Define function names, moved here up now
     # 19.05.2025 -> let spfncname name be common without response, which later added
@@ -5837,8 +5848,6 @@ bsitar <- function(x,
     if (is.null(sigma_group_arg$groupvar))
       sigma_group_arg$groupvar <- idsi
     
-    
-    
     if (!is.numeric(ept(dfsi)) & !is.numeric(ept(knotssi))) {
       stop("Either 'df' or 'knots' must be specified")
     }
@@ -5850,7 +5859,6 @@ bsitar <- function(x,
                 " the df argument ignored")
       }
     }
-    
     
     if (!is.numeric(ept(sigmadfsi)) & !is.numeric(ept(sigmaknotssi))) {
       stop("Either df or knots must be specified for sigma")

@@ -1,6 +1,5 @@
 
 
-
 #' @title Estimate Growth Parameters from the Model Fit
 #'
 #' @description The \strong{growthparameters()} function estimates both

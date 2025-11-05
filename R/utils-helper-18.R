@@ -1,13 +1,16 @@
+
+
 #' @title Stan data for Bayesian models
 #'
 #' @description \code{standata_custom} is a generic function that can be used to
-#'   generate custom data for Bayesian models to be passed to Stan. Its original use is within the
-#'   \pkg{brms} package, but can be used in \pkg{bsitar} when generating 
-#'   custom code for \pkg{data} and \pkg{genqunt} blocks.
+#'   generate custom data for Bayesian models to be passed to Stan. Its original
+#'   use is within the \pkg{brms} package, but can be used in \pkg{bsitar} when
+#'   generating custom code for \pkg{data} and \pkg{genqunt} blocks.
 #'
 #' @param object A formula object whose class will determine which method will
 #'   be used. A symbolic description of the model to be fitted.
-#' @param formula Synonym of \code{object} for use in \code{make_standata_custom}.
+#' @param formula Synonym of \code{object} for use in
+#'   \code{make_standata_custom}.
 #' @param ... Further arguments passed to the specific method.
 #'
 #' @return A named list of objects containing the required data to fit a
@@ -295,3 +298,4 @@ standata_custom.brmsfit <- function(object, newdata = NULL, re_formula = NULL,
     threads = object$threads, ...
   )
 }
+

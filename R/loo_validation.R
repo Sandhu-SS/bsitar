@@ -96,14 +96,11 @@ loo_validation.bgmfit <-
       envir <- envir
     }
 
-    
     if(is.null(dpar)) {
       dpar <- "mu"
     }
     
     model <- getmodel_info(model = model, dpar = dpar, resp = resp)
-    
-
     
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {

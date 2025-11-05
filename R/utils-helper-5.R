@@ -3129,10 +3129,8 @@ prepare_formula_sigma <- function(x,
     lme_rsd = lme_rsd
   )
  
-   # setbformulax <<- setbformula
   attr(setbformula, "list_out") <- as.list(list_out)
   
   return(setbformula)
 }
-
 

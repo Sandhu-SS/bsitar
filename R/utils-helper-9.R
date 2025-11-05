@@ -3817,8 +3817,6 @@ set_priors_initials <- function(a_prior_beta,
                                      ncol = NC_dims)
   } # if(!is.null(initials[['Lcortime']])) {
   
-  
-  
   attr(evaluated_priors, 'initials') <- initials
   attr(evaluated_priors, 'scode_auxillary') <- scode_auxillary
   

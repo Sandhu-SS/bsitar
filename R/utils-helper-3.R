@@ -338,7 +338,6 @@ prepare_data2 <- function(data = NULL,
   
   sigmaxs <- sigmaxs_c
   
-  
   xvar      <- xs
   yvar      <- ys
   idvar     <- ids

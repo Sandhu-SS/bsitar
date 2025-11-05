@@ -338,6 +338,7 @@ update_model.bgmfit <-
         dots$formula <- update(formula(model), dots$formula)
       }
     }
+    
     dots$formula <- validate_formula(dots$formula, data = dots$data)
     
     if (is.null(dots$prior)) {

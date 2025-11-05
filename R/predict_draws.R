@@ -392,8 +392,6 @@ predict_draws.bgmfit <-
       return(invisible(NULL))
     }
     
-    
-    
     if(!isTRUE(
       check_pkg_version_exists('brms', 
                                minversion = get_package_minversion('brms'), 

@@ -8048,7 +8048,6 @@ get_nlf_custom_arg <- function(str,
 }
 
 
-
 #' Function to extract function names and code from a string
 #' 
 #' @details

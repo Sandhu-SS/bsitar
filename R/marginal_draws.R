@@ -1895,11 +1895,6 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
-                                                 # future.globals = 
-                                                 #   c('future_splits_at',
-                                                 #     'setplanis',
-                                                 #     'verbose',
-                                                 #     'predictions_arguments'),
                                                  future.seed = TRUE,
                                                  FUN = myzfun)
            } else if(average) {
@@ -1938,11 +1933,6 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
-                                                 # future.globals = 
-                                                 #   c('future_splits_at',
-                                                 #     'setplanis',
-                                                 #     'verbose',
-                                                 #     'predictions_arguments'),
                                                  future.seed = TRUE,
                                                  FUN = myzfun)
            }
@@ -2007,11 +1997,6 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
-                                                 # future.globals = 
-                                                 #   c('future_splits_at',
-                                                 #     'setplanis',
-                                                 #     'verbose',
-                                                 #     'predictions_arguments'),
                                                  future.seed = TRUE,
                                                  FUN = myzfun)
            } else if(average) {
@@ -2034,12 +2019,7 @@ marginal_draws.bgmfit <-
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
                                                  future.globals = TRUE,
-                                                 # future.globals = 
-                                                 # c('future_splits_at',
-                                                 #   'setplanis',
-                                                 #   'verbose',
-                                                 #   'predictions_arguments'),
-                                                 # future.seed = TRUE,
+                                                 future.seed = TRUE,
                                                  FUN = myzfun)
            }
          } else if(plot) {

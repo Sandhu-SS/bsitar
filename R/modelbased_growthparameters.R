@@ -1425,22 +1425,7 @@ modelbased_growthparameters.bgmfit <-
                                                           MoreArgs = list(
                                                             drawni = NULL,
                                                             callvia = 'future',
-                                                            return_indicator = return_indicator #, 
-                                                            # subset_data_by = subset_data_by,
-                                                            # subset_data_by_names = subset_data_by_names,
-                                                            # create_abcd_names_vector = create_abcd_names_vector,
-                                                            # create_s_names_vector = create_s_names_vector,
-                                                            # xknots = xknots,
-                                                            # degree = degree,
-                                                            # spline_subset_indicator = spline_subset_indicator,
-                                                            # spline_precomputed_indicator = spline_precomputed_indicator,
-                                                            # shift_indicator = shift_indicator,
-                                                            # set_spread = set_spread,
-                                                            # spline_eval_array = spline_eval_array,
-                                                            # xg_array = xg_array,
-                                                            # xg_curve_array = xg_curve_array,
-                                                            # call_function = call_function,
-                                                            # GS_gps_parms_assign = GS_gps_parms_assign
+                                                            return_indicator = return_indicator
                                                           ) ,
                                                           future.globals = future_globals_list,
                                                           future.seed = TRUE)

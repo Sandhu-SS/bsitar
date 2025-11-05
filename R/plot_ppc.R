@@ -1,6 +1,5 @@
 
 
-
 #' @title Perform posterior predictive distribution checks
 #' 
 #' @details The \strong{plot_ppc()} function is a wrapper around the

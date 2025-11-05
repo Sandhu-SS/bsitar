@@ -1001,8 +1001,6 @@ get.newdata <- function(model,
   }
   
   return(newdata)
-} # get.newdata
-
-
+} # End get.newdata
 
 

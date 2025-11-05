@@ -1,7 +1,5 @@
 
 
-
-
 #' Title
 #'
 #' @param model 
@@ -197,5 +195,3 @@ modelbased_growthparameters_nonS3 <- function(model,
   return(out)
 }
 
-
-  

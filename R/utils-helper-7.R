@@ -1,9 +1,7 @@
 
 
 
-#' An internal function to prepare Stan function Note that now all three
-#' functions nsp, nsk and rcs are set using this function This will make the
-#' 'utils-helper-6' reduntant. BUT DON'T DELTE THAT yet
+#' An internal function to set up the Stan function 
 #' 
 #' @description
 #' Imp Note: now when d parameter is part of the fixed / random effects, then X
@@ -101,7 +99,6 @@ prepare_function_nsp_rcs <- function(x,
   sigmaxfunxoffsettransformsi <- NULL;
   sigmaxoffset <- NULL;
   fast_nsk  <- NULL;
-  # Add QR
   decomp <- NULL;
   QR_Xmat <- NULL;
   QR_center <- NULL;
@@ -120,9 +117,7 @@ prepare_function_nsp_rcs <- function(x,
   
   
   parm_link_log <- NULL;
-  
   parm_link_log <- FALSE
-  
   
   # add_sigma_by_ls, only include main function and _d0/_d1/_d2
   if(deparse(substitute(x)) == "sigmaxsi") {
@@ -131,7 +126,6 @@ prepare_function_nsp_rcs <- function(x,
     called_for_ls <- FALSE
   }
  
-
   if (!is.null(internal_function_args)) {
     eout <- list2env(internal_function_args)
     for (eoutii in names(eout)) {
@@ -140,14 +134,11 @@ prepare_function_nsp_rcs <- function(x,
   }
   
   
-  
   if(is.null(ept('dpar_function'))) {
     dpar_function <- "mu"
   } else {
     dpar_function <- ept('dpar_function')
   }
-  
-  
   
   # The brms exp the sigma, but bsitar appropriately exp scale the log outcome
   # Therefore, to avoid double exponentiation, apply log fun to _d0 function
@@ -158,13 +149,10 @@ prepare_function_nsp_rcs <- function(x,
     }
   }
   
-
-  
   # SbasisN = nknots-1 -> for nsp nsk and rcs
   # intercept issue - SbasisN remains same intercept T/F for splines2
   # For smat == 'rcs', intercept need additional column
-  # stop()
-  
+
   if (grepl("d", fixedsi, fixed = T)) {
     dparm_set_fixed_or_random <- TRUE
   } else if (grepl("d", randomsi, fixed = T)) {
@@ -172,7 +160,6 @@ prepare_function_nsp_rcs <- function(x,
   } else {
     dparm_set_fixed_or_random <- FALSE
   }
-  
   
   # For QR decom, 'dparm_part_of_SplQc <- TRUE'  struggles
   # This because of perfect singularity between first term and last terms
@@ -239,14 +226,9 @@ prepare_function_nsp_rcs <- function(x,
   # This in generated quantity block for QR
   szxbq_vector <- paste0('v', resp_, "_", 's', 'x')
   
-  
  
   ######################################################################
   # funsi to transform and itransform
-  
-  ######################################################################
-  ######################################################################
-  ######################################################################
   ######################################################################
   # Search for 'funsi to transform and transform' for changes to new approach
   # funsi to transform and itransform
@@ -303,8 +285,6 @@ prepare_function_nsp_rcs <- function(x,
                                    Var1 != Var2), paste0(Var1, '_', Var2))
     scale_set_comb  <- c(scale_set_comb1, scale_set_comb2)
     
-    
-   
     ######################################################################
     # funsi to transform and itransform
     
@@ -437,11 +417,7 @@ prepare_function_nsp_rcs <- function(x,
       yscale_factor_str_d1 <- "rep_vector(1, N);"
       yscale_factor_str_d2 <- "rep_vector(1, N);"
     }
-    
-    # print(xscale_factor_str_d1)
-    # print(yscale_factor_str_d1)
-    # stop()
-    
+  
     
     list(
       xscale_factor_str_d1 = xscale_factor_str_d1,
@@ -469,7 +445,6 @@ prepare_function_nsp_rcs <- function(x,
       XR = qr_thin_R(Qc) / forgsub_QR_scale;
       XR_inv = inverse(XR);
       "
-      
       decomp_code_qr <- gsub('forgsub_QR_Xmat', QR_Xmat, 
                              decomp_code_qr, fixed = T)
       
@@ -627,13 +602,11 @@ prepare_function_nsp_rcs <- function(x,
         out <- gsub(result[[1]][2], "out_scaled", out, fixed = T)
         out_return <- paste0(out_unscaled, "\n", out_scaled)
         
-
         ######################################################################
         
         out_return <- paste0(vectorA,
                              "\n    ",
                              out_return)
-        
         
         out_return_p <- paste0(out_return, "\n", "    return")
         out <- gsub("return", out_return_p, out, fixed = T)
@@ -664,7 +637,6 @@ prepare_function_nsp_rcs <- function(x,
             tranformations        = c("identity", "log", "sqrt"))
         }
         
-      
         if (grepl("d1", fnameout)) {
           xscale_factor <- set_x_y_scale[['xscale_factor_str_d1']]
           yscale_factor <- set_x_y_scale[['yscale_factor_str_d1']]
@@ -703,7 +675,6 @@ prepare_function_nsp_rcs <- function(x,
                              "\n    ",
                              out_return)
         
-        
         out_return_p <- paste0(out_return, "\n", "    return")
         
         # add QR
@@ -731,15 +702,9 @@ prepare_function_nsp_rcs <- function(x,
         }
         out <- gsub("return", out_return_p, out, fixed = T)
       }
-      
       return(out)
     }
   
-  
-  
- 
-  
-  ##########
   ######################################################################
   # funsi to transform and itransform
   create_internal_function_nonsitar <-
@@ -831,18 +796,6 @@ prepare_function_nsp_rcs <- function(x,
             tranformations        = c("identity", "log", "sqrt"))
         }
         
-        # set_x_y_scale <- set_x_y_scale_factror(
-        #   xfunsi                = xfunsi,
-        #   yfunsi                = yfunsi,
-        #   xfuntransformsi       = xfuntransformsi,
-        #   yfuntransformsi       = yfuntransformsi,
-        #   ixfuntransformsi      = ixfuntransformsi,
-        #   iyfuntransformsi      = iyfuntransformsi,
-        #   sigmaxfuntransformsi  = sigmaxfuntransformsi,
-        #   sigmaixfuntransformsi = sigmaixfuntransformsi,
-        #   tranformations        = c("identity", "log", "sqrt")
-        # )
-        
         if (grepl("d1", fnameout)) {
           xscale_factor <- set_x_y_scale[['xscale_factor_str_d1']]
           yscale_factor <- set_x_y_scale[['yscale_factor_str_d1']]
@@ -926,7 +879,6 @@ prepare_function_nsp_rcs <- function(x,
       smat_sfirst_vector_str <- paste0(smat_sfirst_vector_str, "\n", 
                                        smat_sfirst_vector_c2)
     }
-    
     
     # For _d1 (and even for _d0), the full matrix is used for predictions
     if(smat_sfirst | !smat_sfirst) {
@@ -1050,17 +1002,11 @@ prepare_function_nsp_rcs <- function(x,
       bknotsx = append_row(head(knots, 1), tail(knots, 1));
     "
     
-    
-    
     if(fast_nsk) {
       add_knotinfo_without_addingknots_split <- add_knotinfo
     }
     
-    
     add_knotinfo <- paste0(add_knotinfo, knots_split)
-    
-    
-    
     
     # add QR
     if (select_model == 'sitar') {
@@ -1085,21 +1031,14 @@ prepare_function_nsp_rcs <- function(x,
       } # if(smat == 'nsk'smat == 'nsp') {
     }
     
-    
-    
-    
     if (select_model == 'rcs') {
       vectorA <- "\n  vector[N] A=a;"
     }
-    
-    
-    
+   
     if(parm_link_log) {
       vectorA <- "\n  vector[N] A=exp(a);"
     }
-    
-    
-    
+   
     if(!dparm_set_fixed_or_random) {
       if(smat_intercept == 0) {
         intercept_str <- "int intercept = 0;"
@@ -1148,10 +1087,6 @@ prepare_function_nsp_rcs <- function(x,
     } # if(!dparm_set_fixed_or_random) { else if(dparm_set_fixed_or_random) {
    
     
-    
-    
-    
-
     
     if(smat_preH) {
       bknots   <- c(knots[1], knots[length(knots)])
@@ -3859,8 +3794,11 @@ prepare_function_nsp_rcs <- function(x,
   # preH -> if !smat_preH 
   ###########################################################################
   if(!smat_preH) {
-    functions_to_add_stan_block <- c('GS_preH_stan',
-                                     functions_to_add_stan_block)
+    # Regardless of smat_preH or ! smat_preH, GS_preH_stan not needed for 'rcs'
+    if(smat != "rcs") {
+      functions_to_add_stan_block <- c('GS_preH_stan',
+                                       functions_to_add_stan_block)
+    }
   }
   ###########################################################################
   # Handling of !smat_preH & smat_preH 
@@ -3923,22 +3861,9 @@ prepare_function_nsp_rcs <- function(x,
                 include_fun_names = include_fun_names)
   }
   
-  # print(include_fun_names)
-  # stop()
-  
-  # data[[x]] %>% range() %>% print()
-  # data[[x]] %>% length() %>% print()
-  # stop()
-  
    # cat(rcsfun)
-     # outx <<- all_raw_str # %>% cat()
-    #  stop()
-  
-  out
+   
+  return(out)
 }
-
-
-
-
 
 

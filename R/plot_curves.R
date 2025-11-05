@@ -2006,7 +2006,6 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
-      
     plot.o.u <- out_u_ %>%
       ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
       ggplot2::geom_line(

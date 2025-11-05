@@ -1,4 +1,5 @@
 
+
 #' An internal function to prepare priors
 #'
 #' For \code{univariate_by} and \code{multivariate} models (see
@@ -8055,5 +8056,4 @@ prepare_priors <- function(prior_argument,
     )
   )
 }
-
 

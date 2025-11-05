@@ -30,6 +30,7 @@
 #'   dplyr::across the entire sample. Lastly, a paired numeric values can be
 #'   supplied e.g., \code{xrange = c(6, 20)} will set the range between 6 and
 #'   20.
+#'   
 #' @param keeplevels A logical in case factor variables other than \code{idvar}
 #'   present
 #'   
@@ -241,7 +242,6 @@ get_idata <-
       }
     }
     
-  
     newdata_pred[[xvar]] <- unlist(times_to_pred)
     
     if(keeplevels) {
@@ -249,6 +249,7 @@ get_idata <-
     }
     if(setasdt) newdata_pred <- data.table::as.data.table(newdata_pred)
     if(asdf) out <- as.data.frame(newdata_pred) else out <- newdata_pred 
-    # newdata_pred
+    
    return(out)
   }
+
