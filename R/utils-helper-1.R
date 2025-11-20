@@ -3205,12 +3205,6 @@ custom_get_data.brmsfit <- function (x,
     }
   }
   
-  
-  
-  
-  # out %>% head() %>% print()
-  # stop()
-  
   return(out)
 }
 
@@ -7423,26 +7417,39 @@ get_basic_info <- function(model = model,
 
 
 #' An internal function to extract basic information from the model_info
+#' 
+#' @details
+#' Called in \code{'fitted_draws'}, \code{'growthparameters'}, 
+#' \code{'plot_curves'} and \code{'plot_curves'}
+#'  check by following. Note that need to call \code{"library(NCmisc)"} before
+#' \code{"bsitar:::find_function_used_in_R_files('bsitar', 
+#' 'set_sigma_grid_newdata')"}
+#' 
 #'
 #' @param model An object of class bgmfit
+#' @param newdata A data frame
 #' @param dpar A character string 
 #' @param resp A character string 
-#' @param what A character string indicating what to extrcat. Options are
-#'   \code{'xvar'}, \code{'yvar'}, \code{'idvar'}, \code{'cov_vars'},
-#'   \code{'uvarby'}.
-#' @param component A character string indicating \code{'what'} should be for
-#'   \code{'mu'} or  \code{'sigma'}. For example if \code{'mu'}, then
-#'   \code{'xvar'} will be extracted and if \code{'sigma'}, then
-#'   \code{'sigmaxvar'} will be extracted.
-#' 
+#' @param idvar A character string 
+#' @param xvar A character string
+#' @param difx A character string
+#' @param difx_asit A character string
 #' @param auto ignored
+#' @param xrange A character string (\code{'range'} or \code{'minmax'}) or a
+#'   numeric vector of length two.
+#' @param grid_add A vector of variable names that should be added to the 
+#' grid. Note that the first row of these variables is set for the entire 
+#' variable.
+#' 
 #' @param verbose print information
+#' 
+#' @inheritParams marginaleffects::datagrid
 #' 
 #' @return A character string
 #' @keywords internal
 #' @noRd
 #'
-set_sigma_grid_newdata <- function(model, 
+set_manual_datagrid <- function(model, 
                                    newdata = NULL,
                                    resp = NULL, 
                                    dpar = NULL, 
@@ -7455,6 +7462,14 @@ set_sigma_grid_newdata <- function(model,
                                    length.out = NULL,
                                    grid_add = NULL,
                                    grid_type = NULL,
+                                   FUN = NULL,
+                                   FUN_character = NULL,
+                                   FUN_factor = NULL,
+                                   FUN_logical = NULL,
+                                   FUN_numeric = NULL,
+                                   FUN_integer = NULL,
+                                   FUN_binary = NULL,
+                                   FUN_other = NULL,
                                    verbose = FALSE) {
   
   xvar_temp <- idvar_temp <- NULL;
@@ -7473,6 +7488,21 @@ set_sigma_grid_newdata <- function(model,
     newdata <- model$model_info$bgmfit.data
   }
   
+  
+  if(is.null(xrange)) {
+    if(!is.null(length.out)) {
+      stop2c("For 'length.out' to take effect, the 'xrange' should be specified.
+             The xrange must be a character string 'range' or 'minmax', or 
+             else a numeric vector of lenght two")
+    }
+  }
+  
+  
+  if(is.null(length.out)) {
+    length.out <- 10
+    if(verbose) message2c("The default 'length.out' is set as 10")
+  }
+  
   if(is.null(difx)) {
     difx_range <- NULL
     difx_name  <- NULL
@@ -7484,7 +7514,7 @@ set_sigma_grid_newdata <- function(model,
       difx_name <- difx
       difx_val <- newdata[[difx_name]]
       if(is.null(difx_val)) {
-        stop("The 'difx' variable ", collapse_comma(difx_name),
+        stop2c("The 'difx' variable ", collapse_comma(difx_name),
              " is not available in the dataframe")
       }
       if(length(unique(difx_val)) < 2) {
@@ -7499,15 +7529,15 @@ set_sigma_grid_newdata <- function(model,
     } else if(!is.character(difx)) {
       difx_name <- 'difx' # any hypotherical names
       if(difx_asit) {
-        stop("To pass 'difx' variable as it is to the grid", 
+        stop2c("To pass 'difx' variable as it is to the grid", 
              " it must a variable in the dataframe")
       }
       if(!is.numeric(difx)) {
-        stop("The 'difx' variable", 
+        stop2c("The 'difx' variable", 
              " should be either a character, or a numeric vector of length 2")
       } else if(is.numeric(difx)) {
         if(length(difx) < 2) {
-          stop("The 'difx' variable", 
+          stop2c("The 'difx' variable", 
                " should be either a character, or a numeric vector of length 2")
         } else if(length(difx) == 2) {
           difx_range <- difx
@@ -7551,15 +7581,19 @@ set_sigma_grid_newdata <- function(model,
   }
   
   
-  if(is.null(xvar) | is.na(xvar)) {
-    msg_xvar_not_in_data <-
-    paste0("For dpar = 'sigma', the 'xvar' is required but is not",
-           "\n  ",
-           "specified i.e., xvar = NULL",
-           "\n  ",
-           "Please see the documentation and specify 'xvar' argument")
-    stop(msg_xvar_not_in_data)
+  if(dpar == "sigma") {
+    if(is.null(xvar) | is.na(xvar)) {
+      msg_xvar_not_in_data <-
+        paste0("For dpar = 'sigma', the 'xvar' is required but is not",
+               "\n  ",
+               "specified.",
+               "\n  ",
+               "Please see the documentation and specify 'xvar' argument")
+      stop2c(msg_xvar_not_in_data)
+    }
   }
+  
+  
   
   
   
@@ -7567,14 +7601,23 @@ set_sigma_grid_newdata <- function(model,
   if(is.null(xrange)) {
     setxvarvec <- newdata[[xvar]]
   } else if(!is.null(xrange)) {
-    if(length(xrange) != 2) {
-      stop("'xrange' must be a vector of lenght 2")
-    }
-    if(is.null(length.out)) {
-      length.out <- 10
+    if(is.character(xrange)) {
+      if(xrange == 'range') {
+        xrange <- range(newdata[[xvar]])
+      } else if(xrange == 'minmax') {
+        xrange <- range(newdata[[xvar]])
+      }
+    } else if(is.numeric(xrange)) {
+      if(length(xrange) != 2) {
+        stop("'xrange' must be a vector of lenght 2")
+      }
+    } else {
+      stop2c("The xrange must be a character string 'range' or 'minmax', or 
+             else must be a numeric vector of lenght two")
     }
     setxvarvec <- seq.int(xrange[1], xrange[2], length.out = length.out)
   }
+  
   
   if(is.null(grid_type)) {
     grid_type <- "mean_or_mode" # grid_type <- "dataframe"
@@ -7583,7 +7626,7 @@ set_sigma_grid_newdata <- function(model,
   if(!is.factor(newdata[[idvar]])) {
     newdata[[idvar]] <- as.factor(newdata[[idvar]])
     if(verbose) {
-      message("The ", idvar, 
+      message2c("The ", idvar, 
               " used in 'mapderivqr' has been converted to 'as.factor()'")
     }
   }
@@ -7605,15 +7648,38 @@ set_sigma_grid_newdata <- function(model,
     }
   } # if(!model$test_mode) {
   
- 
+
   grid_args <- list()
-  grid_args[[xvar]]  <- setxvarvec
-  grid_args[[idvar]] <- levels(newdata[[idvar]])
-
-  grid_args[['model']]     <- model
-  grid_args[['newdata']]   <- newdata
-  grid_args[['grid_type']] <- grid_type
-
+  if(grid_type == 'dataframe') {
+    grid_args[[xvar]]          <- NULL
+    grid_args[[idvar]]         <- NULL
+    if(is.null(FUN)) FUN       <- function(x)x
+    if(verbose) {
+      message2c("For grid_type = 'dataframe', the 'xvar' and 'idvar' arguments
+                for datagrid have been set as 'NULL', and the 'FUN' is defined
+                as 'function(x)x'. This ensures that all variables have the 
+                same lenght. Note that, user need to set mean/mode etc for each
+                varibale in the data passed as newdata argument. For 
+                grid_type = 'dataframe', the datagrid will simply combine the
+                columns and set the needed attributes for the marginaleffects")
+    }
+  } else if(grid_type != 'dataframe') {
+    grid_args[[xvar]]          <- setxvarvec
+    grid_args[[idvar]]         <- levels(newdata[[idvar]])
+    FUN                        <- FUN
+  }
+  
+  grid_args[['model']]         <- model
+  grid_args[['newdata']]       <- newdata
+  grid_args[['grid_type']]     <- grid_type
+  grid_args[['FUN']]           <- FUN 
+  grid_args[['FUN_character']] <- FUN_character
+  grid_args[['FUN_factor']]    <- FUN_factor
+  grid_args[['FUN_logical']]   <- FUN_logical
+  grid_args[['FUN_numeric']]   <- FUN_numeric
+  grid_args[['FUN_integer']]   <- FUN_integer
+  grid_args[['FUN_binary']]    <- FUN_binary
+  grid_args[['FUN_other']]     <- FUN_other
   
   if(!is.null(grid_add)) {
     if(is.list(grid_add)) {
@@ -7639,10 +7705,8 @@ set_sigma_grid_newdata <- function(model,
   
   newdata_all        <- newdata
   newdata_names_all  <- names(newdata_all)
-  
   newdata            <- do.call(marginaleffects::datagrid, grid_args)
   newdata_names_grid <- names(newdata)
-  
   missing_names_grid <- setdiff(newdata_names_all, newdata_names_grid)
   
   for (i in missing_names_grid) {
@@ -7695,7 +7759,6 @@ set_sigma_grid_newdata <- function(model,
   newdata <- newdata %>% dplyr::arrange(sortxxxxzzz) %>% 
     dplyr::select(-sortxxxxzzz)
 
-  
   if(!is.null(difx)) {
     attr(newdata, 'difx') <- difx_name
   }

@@ -74,13 +74,22 @@ get_hypothesis_x <- function(
   }
   
   # lincom: string shortcuts
-  valid <- c("pairwise", "reference", "sequential", "revpairwise", "revreference", "revsequential")
+  valid <- c("pairwise", "reference", "sequential", 
+             "revpairwise", "revreference", "revsequential")
+  
+  # Turning off the nrow(x) > 25 check
   if (isTRUE(hypothesis %in% valid)) {
-    if (nrow(x) > 25) {
-      msg <- 'The "pairwise", "reference", and "sequential" options of the `hypotheses` argument are not supported for `marginaleffects` commands which generate more than 25 rows of results. Use the `newdata`, `by`, and/or `variables` arguments to compute a smaller set of results on which to conduct hypothesis tests.'
-      insight::format_error(msg)
-    }
+    # if (nrow(x) > 25) {
+    #   msg <- 'The "pairwise", "reference", and "sequential" options of the 
+    #       `hypotheses` argument are not supported for `marginaleffects` commands
+    #        which generate more than 25 rows of results. Use the `newdata`, 
+    #        `by`, and/or `variables` arguments to compute a smaller set of 
+    #        results on which to conduct hypothesis tests.'
+    #   # insight::format_error(msg)
+    #   stop2c(msg)
+    # }
   }
+  
   if (isTRUE(hypothesis == "reference")) {
     lincom <- lincom_reference(x, by)
   } else if (isTRUE(hypothesis == "revreference")) {
@@ -475,4 +484,283 @@ rename_keyvars <- function(data,
   
   return(data)
 }
+
+
+
+
+
+##############################################################################
+##############################################################################
+##############################################################################
+##############################################################################
+
+
+
+
+
+##############################################################################
+# New hypothesis - formula based
+##############################################################################
+
+#' An internal function to compute hypothesis from estimates (formula based)
+#'
+#' @details Function adpated from \code{marginaleffects:::get_hypothesis}
+#'   available at
+#'   <https://github.com/vincentarelbundock/marginaleffects/blob/main/R/get_hypothesis.R>
+#' 
+#' This is the new implementation that is based on hypothesis formula instead 
+#' of string
+#' 
+#' @param x A data frame
+#' @param hypothesis A character vector 
+#' @param by A character or a character vector 
+#' @param newdata A character vector 
+#' @param draws A column name (a character)
+#' 
+#' @return A data frame
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+get_hypothesis_x2 <- function (x, 
+                               hypothesis, 
+                               by = NULL, 
+                               newdata = NULL, 
+                               draws = NULL) {
+  
+  hypothesis_function <- utils::getFromNamespace('hypothesis_function',
+                            'marginaleffects')
+  
+  hypothesis_matrix <- utils::getFromNamespace('hypothesis_matrix',
+                                                 'marginaleffects')
+  
+  hypothesis_string <- utils::getFromNamespace('hypothesis_string',
+                                                 'marginaleffects')
+  
+  hypothesis_function <- utils::getFromNamespace('hypothesis_function',
+                                                 'marginaleffects')
+  
+  deprecated <- c("pairwise", "revpairwise", "sequential", 
+                  "revsequential", "reference", "meandev", "meanotherdev", 
+                  "revreference")
+  if (isTRUE(checkmate::check_choice(hypothesis, deprecated))) {
+    msg <- "This string is deprecated for use in the `hypothesis` argument. Use the formula interface instead. Ex: `hypothesis=~reference`"
+    stop(msg, call. = FALSE)
+  }
+  x <- data.table::copy(x)
+  vec <- isTRUE(checkmate::check_atomic_vector(hypothesis)) && 
+    isTRUE(checkmate::check_numeric(hypothesis))
+  mat <- isTRUE(checkmate::check_matrix(hypothesis))
+  if (is.null(hypothesis)) {
+    return(x)
+  }
+  else if (isTRUE(checkmate::check_formula(hypothesis))) {
+    out <- hypothesis_formula_x2(x, newdata = newdata, hypothesis = hypothesis, 
+                                 by = by, draws = draws)
+    return(out)
+  }
+  else if (isTRUE(checkmate::check_function(hypothesis))) {
+    out <- hypothesis_function(x, newdata = newdata, hypothesis = hypothesis, 
+                               by = by)
+    return(out)
+  }
+  else if (vec || mat) {
+    out <- hypothesis_matrix(x, hypothesis = hypothesis)
+    return(out)
+  }
+  else if (is.character(hypothesis)) {
+    out <- hypothesis_string(x, hypothesis = hypothesis)
+    return(out)
+  }
+  stop("`hypothesis` is broken. Please report this bug with a reproducible example: https://github.com/vincentarelbundock/marginaleffects/issues.", 
+       call. = FALSE)
+}
+
+
+
+
+
+#' An internal function to compute hypothesis from estimates (formula based)
+#'
+#' @details This is needed for the get_hypothesis_x2
+#' 
+#' @param x A data frame
+#' @param hypothesis A character vector 
+#' @param by A character or a character vector 
+#' @param newdata A character vector 
+#' @param draws A column name (a character)
+#' 
+#' @return A data frame
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+hypothesis_formula_x2 <- function (x, 
+                                   hypothesis, 
+                                   newdata, 
+                                   by,
+                                   draws = NULL) {
+  
+  ..col_x <- NULL;
+  ..col_newdata <- NULL;
+  ..cols <- NULL;
+  ..idx <- NULL;
+  estimate  <- NULL;
+  
+  if(is.null(draws)) {
+    draws <- attr(x, "posterior_draws")
+  } else {
+    draws <- newdata[[draws]]
+    by    <- newdata[['id']]
+    # draws <- as.matrix(draws, nrow = nrow(x))
+  }
+  
+  # by <- as.data.frame(by)
+  
+  sanitize_hypothesis_formula <- 
+    utils::getFromNamespace('sanitize_hypothesis_formula',
+                            'marginaleffects')
+  
+  
+  get_labels <- 
+    utils::getFromNamespace('get_labels',
+                            'marginaleffects')
+  
+  hypothesis_formula_list <- 
+    utils::getFromNamespace('hypothesis_formula_list',
+                            'marginaleffects')
+  
+  matrix_apply_column <- 
+    utils::getFromNamespace('matrix_apply_column',
+                            'marginaleffects')
+  
+  ###############
+  # don't remove na contrats - change part out[!is.na(out)] to out
+  # Recursive function to replace specific expressions
+  replace_in_body <- function(body_expr, old_expr, new_expr) {
+    if (is.call(body_expr)) {
+      for (i in seq_along(body_expr)) {
+        if (identical(body_expr[[i]], old_expr)) {
+          body_expr[[i]] <- new_expr
+        } else if (is.call(body_expr[[i]]) || is.list(body_expr[[i]])) {
+          body_expr[[i]] <- replace_in_body(body_expr[[i]], old_expr, new_expr)
+        }
+      }
+    }
+    return(body_expr)
+  }
+  
+  form <- sanitize_hypothesis_formula(hypothesis)
+  group <- form$group
+  x <- data.table::as.data.table(x)
+  if (isTRUE(checkmate::check_character(by))) {
+    bycols <- setdiff(by, group)
+  }
+  else {
+    bycols <- by
+  }
+  labels <- get_labels(x, by = bycols, hypothesis_by = group)
+  if (isTRUE(form$lhs == "arbitrary_function")) {
+    fun_comparison <- sprintf("function(x) %s", form$rhs)
+    fun_label <- sprintf("function(x) suppressWarnings(names(%s))", 
+                         form$rhs)
+    fun_comparison <- eval(parse(text = fun_comparison))
+    fun_label <- eval(parse(text = fun_label))
+  }
+  else {
+    fun_label <- hypothesis_formula_list[[form$rhs]][[form$lhs]]$label
+    fun_comparison <- hypothesis_formula_list[[form$rhs]][[form$lhs]]$comparison
+    body(fun_comparison) <- replace_in_body(body(fun_comparison), 
+                                            quote(out[!is.na(out)]), quote(out))
+    
+  }
+  
+  
+  ##############
+  
+  args <- list(matrix(x$estimate), FUN = fun_comparison)
+  if (is.null(labels)) {
+    labels <- paste("Row", seq_len(nrow(x)))
+  }
+  if (!is.null(group)) {
+    if (!all(group %in% c(colnames(x), colnames(newdata)))) {
+      msg <- "Some `~ | groupid` variables were not found in `newdata`."
+      stop(msg, call. = FALSE)
+    }
+    col_x <- intersect(group, colnames(x))
+    col_newdata <- intersect(group, colnames(newdata))
+    groupval <- list()
+    if (length(col_x) > 0) {
+      groupval <- c(groupval, list(x[, ..col_x, drop = FALSE]))
+    }
+    else if (length(col_newdata) > 0) {
+      groupval <- c(groupval, list(newdata[, ..col_newdata, 
+                                           drop = FALSE]))
+    }
+    groupval <- do.call(cbind, Filter(is.data.frame, groupval))
+  }
+  else {
+    groupval <- NULL
+  }
+  combined <- list(x[, "estimate", drop = FALSE], groupval)
+  combined <- Filter(function(x) inherits(x, "data.frame"), 
+                     combined)
+  combined <- do.call(cbind, combined)
+  data.table::setDT(combined)
+  if (is.null(groupval)) {
+    estimates <- combined[, lapply(.SD, fun_comparison)]
+  }
+  else {
+    estimates <- combined[, lapply(.SD, fun_comparison), 
+                          keyby = groupval]
+  }
+  lab <- function(x) suppressWarnings(names(fun_comparison(x)))
+  lab <- tryCatch(combined[, lapply(.SD, lab), keyby = groupval], 
+                  error = function(e) NULL)
+  if (inherits(lab, "data.frame") && nrow(lab) == nrow(estimates)) {
+    data.table::setnames(lab, old = "estimate", "hypothesis")
+    cols <- setdiff(colnames(lab), colnames(estimates))
+    estimates <- cbind(lab[, ..cols], estimates)
+  }
+  if (!is.null(labels) && !inherits(lab, "data.frame") || nrow(lab) == 
+      0) {
+    combined[, `:=`(estimate, labels)]
+    labels <- tryCatch(combined[, lapply(.SD, fun_label), 
+                                keyby = groupval], error = function(e) NULL)
+    if (inherits(labels, "data.frame") && nrow(labels) == 
+        nrow(estimates)) {
+      data.table::setnames(labels, old = "estimate", "hypothesis")
+      cols <- setdiff(colnames(estimates), colnames(labels))
+      estimates <- cbind(labels, subset(estimates, select = cols))
+    }
+  }
+  out <- estimates
+  idx <- grep("^term$", colnames(out))
+  if (length(idx) > 1) {
+    idx <- idx[2:length(idx)]
+    out <- out[, -..idx]
+  }
+  if (!is.null(draws)) {
+    draws <- matrix_apply_column(draws, FUN = fun_comparison, 
+                                 by = groupval)
+    
+    if ("hypothesis" %in% colnames(out)) {
+      row.names(draws) <- out$hypothesis
+    }
+  }
+  attr(out, "posterior_draws") <- draws
+  attr(out, "hypothesis_function_by") <- form$group
+  return(out)
+}
+
+
+
+
+
+
+
 

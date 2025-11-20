@@ -16,6 +16,7 @@
 #' 
 #' @inheritParams growthparameters.bgmfit
 #' @inheritParams marginal_growthparameters.bgmfit
+#' @inheritParams brms::prepare_predictions
 #' @inheritParams brms::fitted.brmsfit
 #' 
 #' @param parameter A single character string or a character vector specifying
@@ -130,6 +131,7 @@ modelbased_growthparameters.bgmfit <-
            newdata = NULL,
            datagrid = NULL,
            re_formula = NA,
+           newdata2 = NULL,
            allow_new_levels = FALSE,
            sample_new_levels = "gaussian",
            parameter = NULL,

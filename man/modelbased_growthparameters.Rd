@@ -14,6 +14,7 @@
   newdata = NULL,
   datagrid = NULL,
   re_formula = NA,
+  newdata2 = NULL,
   allow_new_levels = FALSE,
   sample_new_levels = "gaussian",
   parameter = NULL,
@@ -130,6 +131,10 @@ individual-level effects are excluded, and population average growth
 parameters are computed. When \code{NULL}, individual-level effects are
 included in the computation, and the resulting growth parameters are
 individual-specific.}
+
+\item{newdata2}{A named \code{list} of objects containing new data, which
+cannot be passed via argument \code{newdata}. Required for some objects
+used in autocorrelation structures, or \code{\link[brms]{stanvars}}.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -485,9 +490,8 @@ first entry in the error message is used by default.}
 }}
 
 \item{bys}{A character string (default \code{NULL}) specifying the variables
-over which the parameters need to be summarized. If \code{bys} is not
-\code{NULL}, the summary statistics will be calculated for each unique
-combination of the specified variables.}
+over which the parameters are summarized. The summary statistics are
+computed for each unique combination of variables specified.}
 
 \item{conf_level}{numeric value between 0 and 1. Confidence level to use to build a confidence interval.}
 
@@ -605,7 +609,7 @@ evaluated only when \code{method = 'custom'} and \code{hypothesis} is not
 at which estimates and contrasts should be computed during the post-draw
 stage using the \code{hypothesis} argument. The values can be specified as
 \code{'max'}, \code{'min'}, \code{'unique'}, or \code{'range'} (e.g.,
-\code{constrats_at = list(age = 'min')}) or as numeric values or vectors
+\code{constrats_at = list(age = 'min')}) or as numeric vectors
 (e.g., \code{constrats_at = list(age = c(6, 7))}). If \code{constrats_at =
   NULL}, level-1 predictors (e.g., \code{age}) are automatically set to their
 unique values (i.e., \code{constrats_at = list(age = 'unique')}). To turn
@@ -615,13 +619,13 @@ off this behavior, use \code{constrats_at = FALSE}. Note that
 is evaluated only when \code{method = 'custom'} and \code{hypothesis} is
 not \code{NULL}.}
 
-\item{constrats_subset}{A named list (default \code{FALSE}) to filter the
-estimates at which contrasts are computed using the \code{hypothesis}
-argument. This is similar to \code{constrats_at}, except that
-\code{constrats_subset} filters based on a character vector of variable
-names (e.g., \code{constrats_subset = list(id = c('id1', 'id2'))}) rather
-than numeric values. The argument is evaluated only when \code{method =
-  'custom'} and \code{hypothesis} is not \code{NULL}.}
+\item{constrats_subset}{A named list (default \code{FALSE}) to subset draws
+for which contrasts should be computed via the \code{hypothesis} argument.
+This is similar to \code{constrats_at}, except that \code{constrats_subset}
+filters draws based on the character vector of variable names (e.g.,
+\code{constrats_subset = list(id = c('id1', 'id2'))}) rather than numeric
+values. The argument is evaluated only when \code{method = 'custom'} and
+\code{hypothesis} is not \code{NULL}.}
 
 \item{reformat}{A logical (default \code{TRUE}) indicating whether to
 reformat the output returned by \code{marginaleffects} as a data frame.

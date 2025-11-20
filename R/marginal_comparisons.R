@@ -66,6 +66,7 @@
 #' @inheritParams marginaleffects::avg_comparisons
 #' @inheritParams marginaleffects::plot_comparisons
 #' @inheritParams marginaleffects::datagrid
+#' @inheritParams brms::prepare_predictions
 #' @inheritParams brms::fitted.brmsfit
 #'
 #' @return A data frame with estimates and confidence intervals for the
@@ -115,6 +116,7 @@ marginal_comparisons.bgmfit <- function(model,
                                    newdata = NULL,
                                    datagrid = NULL,
                                    re_formula = NA,
+                                   newdata2 = NULL,
                                    allow_new_levels = FALSE,
                                    sample_new_levels = "gaussian",
                                    xrange = 1,
@@ -138,6 +140,7 @@ marginal_comparisons.bgmfit <- function(model,
                                    fullframe = FALSE,
                                    average = FALSE, 
                                    plot = FALSE, 
+                                   mapping_facet = NULL,
                                    showlegends = NULL, 
                                    variables = NULL,
                                    condition = NULL,
@@ -1123,7 +1126,8 @@ marginal_comparisons.bgmfit <- function(model,
       newdata_fixed,
       transform_draws,
       xvar,
-      difx
+      difx,
+      mapping_facet
     )
   ))[-1]
   
@@ -1299,6 +1303,10 @@ marginal_comparisons.bgmfit <- function(model,
         else
           setgrid_by <- datagrid$by
         
+        if (is.null(datagrid[['FUN']]))
+          setgrid_FUN <- NULL
+        else
+          setgrid_FUN <- datagrid$FUN
         if (is.null(datagrid[['FUN_character']]))
           setgrid_FUN_character <- NULL
         else
@@ -1337,6 +1345,7 @@ marginal_comparisons.bgmfit <- function(model,
                                    newdata = setnewdata,
                                    by = setgrid_by,
                                    grid_type = setgrid_type,
+                                   FUN = setgrid_FUN,
                                    FUN_character = setgrid_FUN_character,
                                    FUN_factor = setgrid_FUN_factor,
                                    FUN_logical = setgrid_FUN_logical,
@@ -1454,11 +1463,15 @@ marginal_comparisons.bgmfit <- function(model,
           } else if(!force_condition_and_by_switch_plot) {
             outp <- CustomDoCall(marginaleffects::plot_comparisons,
                                  comparisons_arguments)
-            if(!showlegends) {
-              outp <- outp + ggplot2::theme(legend.position = 'none')
-            }
-            # 6.03.2025
-            suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+            outp <- edit_mapping_facet(outp = outp, 
+                                       mapping_facet = mapping_facet,
+                                       which_aes = NULL, 
+                                       showlegends = showlegends,
+                                       labels_ggfunx = labels_ggfunx,
+                                       labels_ggfunx_str = labels_ggfunx_str,
+                                       envir = envir,
+                                       print = FALSE,
+                                       verbose = verbose)
             return(outp)
           } # else if(!force_condition_and_by_switch_plot) {
         } # else if(plot) {
@@ -1489,11 +1502,15 @@ marginal_comparisons.bgmfit <- function(model,
           } else if(!force_condition_and_by_switch_plot) {
             outp <- CustomDoCall(marginaleffects::plot_comparisons,
                                  comparisons_arguments)
-            if(!showlegends) {
-              outp <- outp + ggplot2::theme(legend.position = 'none')
-            }
-            # 6.03.2025
-            suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+            outp <- edit_mapping_facet(outp = outp, 
+                                       mapping_facet = mapping_facet,
+                                       which_aes = NULL, 
+                                       showlegends = showlegends,
+                                       labels_ggfunx = labels_ggfunx,
+                                       labels_ggfunx_str = labels_ggfunx_str,
+                                       envir = envir,
+                                       print = FALSE,
+                                       verbose = verbose)
             return(outp)
           } # else if(!force_condition_and_by_switch_plot) {
         } # else if(plot) {
@@ -1637,11 +1654,15 @@ marginal_comparisons.bgmfit <- function(model,
             } # if(check_fun) {
             # outp <- out
             if(!force_condition_and_by_switch_plot) {
-              if(!showlegends) {
-                outp <- outp + ggplot2::theme(legend.position = 'none')
-              }
-              # 6.03.2025
-              suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+              outp <- edit_mapping_facet(outp = outp, 
+                                         mapping_facet = mapping_facet,
+                                         which_aes = NULL, 
+                                         showlegends = showlegends,
+                                         labels_ggfunx = labels_ggfunx,
+                                         labels_ggfunx_str = labels_ggfunx_str,
+                                         envir = envir,
+                                         print = FALSE,
+                                         verbose = verbose)
               return(outp)
             } # if(!force_condition_and_by_switch_plot) {
           } # if(check_fun) {
@@ -1665,9 +1686,15 @@ marginal_comparisons.bgmfit <- function(model,
             } else if(!force_condition_and_by_switch_plot) {
               outp <- CustomDoCall(marginaleffects::plot_slopes, 
                                    predictions_arguments)
-              outp <- outp + ggplot2::theme(legend.position = 'none')
-              # 6.03.2025
-              suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+              outp <- edit_mapping_facet(outp = outp, 
+                                         mapping_facet = mapping_facet,
+                                         which_aes = NULL, 
+                                         showlegends = showlegends,
+                                         labels_ggfunx = labels_ggfunx,
+                                         labels_ggfunx_str = labels_ggfunx_str,
+                                         envir = envir,
+                                         print = FALSE,
+                                         verbose = verbose)
               return(outp)
             } # else if(!force_condition_and_by_switch_plot) {
           } # else if(plot) {
@@ -1762,14 +1789,17 @@ marginal_comparisons.bgmfit <- function(model,
                                                   FUN = myzfun)
             }
           } else if(plot) {
-            out <- CustomDoCall(marginaleffects::plot_predictions, 
+            outp <- CustomDoCall(marginaleffects::plot_predictions, 
                            predictions_arguments)
-            outp <- out
-            if(!showlegends) {
-              outp <- outp + ggplot2::theme(legend.position = 'none')
-            }
-            # 6.03.2025
-            suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+            outp <- edit_mapping_facet(outp = outp, 
+                                       mapping_facet = mapping_facet,
+                                       which_aes = NULL, 
+                                       showlegends = showlegends,
+                                       labels_ggfunx = labels_ggfunx,
+                                       labels_ggfunx_str = labels_ggfunx_str,
+                                       envir = envir,
+                                       print = FALSE,
+                                       verbose = verbose)
             return(outp)
           }
         } # if(call_predictions) {
@@ -1822,12 +1852,17 @@ marginal_comparisons.bgmfit <- function(model,
                                                   FUN = myzfun)
             }
           } else if(plot) {
-            out <- CustomDoCall(marginaleffects::plot_slopes, 
+            outp <- CustomDoCall(marginaleffects::plot_slopes, 
                                 predictions_arguments)
-            outp <- out
-            outp <- outp + ggplot2::theme(legend.position = 'none')
-            # 6.03.2025
-            suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+            outp <- edit_mapping_facet(outp = outp, 
+                                       mapping_facet = mapping_facet,
+                                       which_aes = NULL, 
+                                       showlegends = showlegends,
+                                       labels_ggfunx = labels_ggfunx,
+                                       labels_ggfunx_str = labels_ggfunx_str,
+                                       envir = envir,
+                                       print = FALSE,
+                                       verbose = verbose)
             return(outp)
           }
         } # if(call_slopes) {
@@ -1940,11 +1975,15 @@ marginal_comparisons.bgmfit <- function(model,
             } else if(!force_condition_and_by_switch_plot) {
               outp <- CustomDoCall(marginaleffects::plot_predictions, 
                                    predictions_arguments)
-              if(!showlegends) {
-                outp <- outp + ggplot2::theme(legend.position = 'none')
-              }
-              # 6.03.2025
-              suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+              outp <- edit_mapping_facet(outp = outp, 
+                                         mapping_facet = mapping_facet,
+                                         which_aes = NULL, 
+                                         showlegends = showlegends,
+                                         labels_ggfunx = labels_ggfunx,
+                                         labels_ggfunx_str = labels_ggfunx_str,
+                                         envir = envir,
+                                         print = FALSE,
+                                         verbose = verbose)
               return(outp)
             } # else if(!force_condition_and_by_switch_plot) {
           } # else if(plot) {
@@ -2016,9 +2055,15 @@ marginal_comparisons.bgmfit <- function(model,
             } else if(!force_condition_and_by_switch_plot) {
               outp <- CustomDoCall(marginaleffects::plot_slopes,
                                    predictions_arguments)
-              outp <- outp + ggplot2::theme(legend.position = 'none')
-              # 6.03.2025
-              suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+              outp <- edit_mapping_facet(outp = outp, 
+                                         mapping_facet = mapping_facet,
+                                         which_aes = NULL, 
+                                         showlegends = showlegends,
+                                         labels_ggfunx = labels_ggfunx,
+                                         labels_ggfunx_str = labels_ggfunx_str,
+                                         envir = envir,
+                                         print = FALSE,
+                                         verbose = verbose)
               return(outp)
             } # else if(!force_condition_and_by_switch_plot) {
           } # else if(plot) {

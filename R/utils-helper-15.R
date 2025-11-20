@@ -34,7 +34,7 @@
 #' @param keeplevels A logical in case factor variables other than \code{idvar}
 #'   present
 #'   
-#' @param asdf
+#' @param asdf A logical to indicate whether to return the value as data frame.
 #' 
 #' @param newdata_fixed
 #' 
@@ -61,10 +61,23 @@ get_idata <-
            verbose = FALSE) {
     
 
+    `.` <- NULL;
+    
     if (is.null(newdata)) {
       newdata <- model$model_info$bgmfit.data
     } else {
       newdata <- newdata
+    }
+    
+    
+    if(is.null(model)) {
+      if(is.null(newdata_fixed)) {
+        stop2c("The 'model' must be specified when newdata_fixed = 'NULL'")
+      } else {
+        if(newdata_fixed == 1) {
+          stop2c("The 'model' must be specified when newdata_fixed = 1")
+        }
+      }
     }
     
     
@@ -75,8 +88,7 @@ get_idata <-
     } else if(!is.null(newdata_fixed)) {
       if(newdata_fixed == 0) {
         # do nothing assuming that user has set up for 'uvarby' etc
-        # not even applied 'dummy_to_factor'
-        # only list_c elements will be added
+        # not even applied 'dummy_to_factor'. only list_c elements will be added
         newdata <- newdata 
         add_just_list_c <- TRUE
       } else if(newdata_fixed == 1) {
@@ -103,26 +115,10 @@ get_idata <-
       cnames  <- colnames(newdata)
     }
     
-    
     if(is.null(model)) {
-      if (is.null(idvar)) stop("Specify model or idvar, both can not be NULL")
-      if (is.null(xvar)) stop("Specify model or xvar, both can't be NULL")
+      if (is.null(idvar)) stop("Specify model or idvar")
+      if (is.null(xvar)) stop("Specify model or xvar")
     }
-    
-    if(!is.null(model)) {
-      if (!is.null(idvar)) stop("Specify either model or idvar, not both")
-      if (!is.null(xvar)) stop("Specify either model or xvar, not both")
-    }
-    
-    if(!is.null(model)) {
-      if(length(model$model_info$idvars) > 1) {
-        stop("Please specify newdata, idvar, and xvar manullay because 
-            currently value for these can not be infered from model with three 
-            or more levels of hierarchy")
-      }
-    }
-    
-    `.` <- NULL;
     
     if (is.null(idvar)) {
       idvar <- model$model_info$idvars
@@ -145,16 +141,13 @@ get_idata <-
     times_orig <- times_orig[!is.na(times_orig)]
     
     
-    
     if (is.null(times) || !is.numeric(times)) {
       times <-
         seq(min(times_orig), max(times_orig), length.out = length.out)
     }
     
-    # This is when no random effects and groupvar is NULL
-    # Therefore, an artificial group var created
-    # Check utils-helper function lines 60
-    
+    # This is when no random effects are specified or groupvar is NULL
+    # A dummy group var is created. Check utils-helper function lines 60
     if (nlevels(newdata[[idvar]]) == 1) {
       newdata <- newdata %>%
         dplyr::distinct(newdata[[xvar]], .keep_all = T) %>%
@@ -169,8 +162,6 @@ get_idata <-
     
     last_time  <- tapply(newdata[[xvar]], id, max)
     first_time <- tapply(newdata[[xvar]], id, min)
-    
-   
     
     newdata_nomiss <- newdata[complete.cases(newdata),]
     id_nomiss <-
@@ -200,10 +191,8 @@ get_idata <-
       fids <- factor(ids, levels = unique(ids))
       if (!is.list(Q_points))
         Q_points <- split(Q_points, row(Q_points))
-      # 1.3.2025
-      # Faced issue newdata[[xvar]] not sorted 
       if(base::is.unsorted(times)) {
-        times <- sort(times)
+        times <- sort(times) # Faced issue newdata[[xvar]] not sorted 
       }
       ind <- mapply(findInterval, Q_points, split(times, fids))
       ind[ind < 1] <- 1
@@ -212,8 +201,6 @@ get_idata <-
       data[c(ind),]
     }
     
-    
-    # 6.03.2025
     if(is.null(length.out)) {
       newdata_pred <- newdata
     } else {
@@ -226,7 +213,6 @@ get_idata <-
     }
     
     # newdata_pred <- right_rows(newdata, newdata[[xvar]], id, times_to_pred)
-    
     if(keeplevels) {
       if(length(setdiff(is.fact, idvar)) > 0) {
         newdata_pred <- newdata_pred %>% droplevels
@@ -247,8 +233,16 @@ get_idata <-
     if(keeplevels) {
       newdata_pred <- newdata_pred %>% dplyr::select(dplyr::all_of(cnames))
     }
-    if(setasdt) newdata_pred <- data.table::as.data.table(newdata_pred)
-    if(asdf) out <- as.data.frame(newdata_pred) else out <- newdata_pred 
+    
+    if(setasdt) {
+      newdata_pred <- data.table::as.data.table(newdata_pred)
+    }
+    
+    if(asdf) {
+      out <- as.data.frame(newdata_pred)  
+    } else {
+      out <- newdata_pred 
+    }
     
    return(out)
   }

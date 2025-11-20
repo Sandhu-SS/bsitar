@@ -15,6 +15,7 @@
   newdata = NULL,
   datagrid = NULL,
   re_formula = NA,
+  newdata2 = NULL,
   allow_new_levels = FALSE,
   sample_new_levels = "gaussian",
   parameter = NULL,
@@ -41,6 +42,7 @@
   fullframe = FALSE,
   average = FALSE,
   plot = FALSE,
+  mapping_facet = NULL,
   showlegends = NULL,
   variables = NULL,
   condition = NULL,
@@ -136,6 +138,10 @@ Continuous covariates are set to their means by default (see
 \code{numeric_cov_at} for details), while factor covariates remain
 unaltered, allowing for the estimation of covariate-specific population
 average and individual-specific growth parameters.}
+
+\item{newdata2}{A named \code{list} of objects containing new data, which
+cannot be passed via argument \code{newdata}. Required for some objects
+used in autocorrelation structures, or \code{\link[brms]{stanvars}}.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -367,6 +373,14 @@ the \code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparis
 are called to compute predictions (see the \code{average} argument for
 details).}
 
+\item{mapping_facet}{A named list that can be used to pass the aesthetic
+\code{mapping} and \code{facet} arguments to the \code{ggplot2} object
+(default \code{NULL}). The main use of this is to get overlay line plot
+instead of separate line plot for each \code{id} variable. An example is
+as follows:\cr
+\code{mapping_facet = list(group = 'id', colour = 'id', facet_wrap =
+  c('study'))}.}
+
 \item{showlegends}{A logical value to specify whether to show legends
 (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), the value of
 \code{showlegends} is internally set to \code{TRUE} if \code{re_formula =
@@ -517,9 +531,8 @@ first entry in the error message is used by default.}
 }}
 
 \item{bys}{A character string (default \code{NULL}) specifying the variables
-over which the parameters need to be summarized. If \code{bys} is not
-\code{NULL}, the summary statistics will be calculated for each unique
-combination of the specified variables.}
+over which the parameters are summarized. The summary statistics are
+computed for each unique combination of variables specified.}
 
 \item{conf_level}{numeric value between 0 and 1. Confidence level to use to build a confidence interval.}
 
@@ -637,7 +650,7 @@ evaluated only when \code{method = 'custom'} and \code{hypothesis} is not
 at which estimates and contrasts should be computed during the post-draw
 stage using the \code{hypothesis} argument. The values can be specified as
 \code{'max'}, \code{'min'}, \code{'unique'}, or \code{'range'} (e.g.,
-\code{constrats_at = list(age = 'min')}) or as numeric values or vectors
+\code{constrats_at = list(age = 'min')}) or as numeric vectors
 (e.g., \code{constrats_at = list(age = c(6, 7))}). If \code{constrats_at =
   NULL}, level-1 predictors (e.g., \code{age}) are automatically set to their
 unique values (i.e., \code{constrats_at = list(age = 'unique')}). To turn
@@ -647,13 +660,13 @@ off this behavior, use \code{constrats_at = FALSE}. Note that
 is evaluated only when \code{method = 'custom'} and \code{hypothesis} is
 not \code{NULL}.}
 
-\item{constrats_subset}{A named list (default \code{FALSE}) to filter the
-estimates at which contrasts are computed using the \code{hypothesis}
-argument. This is similar to \code{constrats_at}, except that
-\code{constrats_subset} filters based on a character vector of variable
-names (e.g., \code{constrats_subset = list(id = c('id1', 'id2'))}) rather
-than numeric values. The argument is evaluated only when \code{method =
-  'custom'} and \code{hypothesis} is not \code{NULL}.}
+\item{constrats_subset}{A named list (default \code{FALSE}) to subset draws
+for which contrasts should be computed via the \code{hypothesis} argument.
+This is similar to \code{constrats_at}, except that \code{constrats_subset}
+filters draws based on the character vector of variable names (e.g.,
+\code{constrats_subset = list(id = c('id1', 'id2'))}) rather than numeric
+values. The argument is evaluated only when \code{method = 'custom'} and
+\code{hypothesis} is not \code{NULL}.}
 
 \item{reformat}{A logical (default \code{TRUE}) indicating whether to
 reformat the output returned by \code{marginaleffects} as a data frame.
@@ -778,8 +791,9 @@ most post-processing functions rely on \pkg{brms}, it is recommended to set
 \code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
 derivatives like velocity curves.}
 
-\item{...}{Additional arguments passed to the \code{brms::fitted.brmsfit()}
-and \code{brms::predict()} functions.}
+\item{...}{Additional arguments passed to the \code{\link[brms:fitted.brmsfit]{brms::fitted.brmsfit()}}
+function. Please see \code{brms::fitted.brmsfit()} for details on
+various options available.}
 }
 \value{
 A data frame object with estimates and credible intervals (CIs) for

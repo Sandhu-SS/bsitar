@@ -276,9 +276,9 @@ fitted_draws.bgmfit <-
                                       fargs = formals(), 
                                       dargs = list(...), 
                                       sanitize_CustomDoCall_args = TRUE,
-                                      check_formalArgs  = NULL,
-                                      check_formalArgs_exceptions  = NULL,
-                                      check_trace_back  = NULL,
+                                      check_formalArgs = NULL,
+                                      check_formalArgs_exceptions = NULL,
+                                      check_trace_back = NULL,
                                       envir = parent.frame(),
                                       verbose = verbose)
       xcall_str           <- full.args$xcall_str
@@ -615,22 +615,28 @@ fitted_draws.bgmfit <-
                                        auto = TRUE,
                                        verbose = verbose)
           
-          newdata <- set_sigma_grid_newdata(model = model,
-                                            newdata = newdata,
-                                            resp = resp, 
-                                            dpar = NULL, 
-                                            idvar = NULL,
-                                            xvar = xvar,
-                                            difx = difx,
-                                            difx_asit = FALSE,
-                                            auto = TRUE,
-                                            xrange = NULL,
-                                            length.out = NULL,
-                                            grid_add = grid_add,
-                                            grid_type= NULL,
-                                            verbose = verbose)
-          
-          
+          newdata <- set_manual_datagrid(model = model,
+                                         newdata = newdata,
+                                         resp = resp, 
+                                         dpar = NULL, 
+                                         idvar = NULL,
+                                         xvar = xvar,
+                                         difx = difx,
+                                         difx_asit = FALSE,
+                                         auto = TRUE,
+                                         xrange = NULL,
+                                         length.out = NULL,
+                                         grid_add = grid_add,
+                                         grid_type= NULL,
+                                         FUN = NULL,
+                                         FUN_character = NULL,
+                                         FUN_factor = NULL,
+                                         FUN_logical = NULL,
+                                         FUN_numeric = NULL,
+                                         FUN_integer = NULL,
+                                         FUN_binary = NULL,
+                                         FUN_other = NULL,
+                                         verbose = verbose)
           
           calling.args$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
           calling.args[['xvar']] <- xvar

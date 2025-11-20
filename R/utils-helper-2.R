@@ -5620,3 +5620,104 @@ extract_samples <- function(fit_obj) {
 }
 
 
+
+
+
+#' An internal function to edit plot from marginal effects 
+#' 
+#' @details
+#' This is mainly used to get over layed line plot instead of separate plot
+#' for each individual 
+#'
+#' @param outp A \code{'ggplot2'} object
+#' @param mapping_facet A named list that passes the aesthetic arguments such as
+#'   \code{group}, \code{colour}, and the facet arguments \code{facet_grid} and
+#'   \code{facet_wrap}.
+#' @param which_aes A character vector to specify the aesthetic arguments that
+#' need to be modified. Default \code{NULL} will select all named elemednt 
+#' except for the facet arguments.
+#' @param showlegends A logical
+#' @param labels_ggfunx A logical
+#' @param labels_ggfunx_str A logical
+#' @param envir A logical
+#' @param print A logical
+#' @param verbose A logical
+#' 
+#' @return A \code{'ggplot2'} object
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+edit_mapping_facet <- function(outp, 
+                               mapping_facet = NULL, 
+                               which_aes = NULL, 
+                               showlegends = FALSE,
+                               labels_ggfunx = NULL,
+                               labels_ggfunx_str = NULL,
+                               envir = NULL,
+                               print = FALSE,
+                               verbose = FALSE) {
+  
+  ###########################################################################
+  # mapping_facet
+  ###########################################################################
+  
+  if(is.null(envir)) {
+    envir <- outp@plot_env
+  }
+ 
+  
+  if(is.null(mapping_facet)) {
+    mapping_facet <- list()
+  } else if(!is.null(mapping_facet)) {
+    # Importanat to set the environment for the mapping_facet
+    environment(mapping_facet) <- envir
+  }
+ 
+  p_layes <- names(outp$layers)
+  grid_wrap <- c('facet_grid', 'facet_wrap')
+  if(is.null(which_aes)) {
+    which_aes <- setdiff(names(mapping_facet), grid_wrap)
+  }
+  
+  for (i in p_layes) {
+    for (j in which_aes) {
+      if(!is.null(mapping_facet[[j]])) {
+        xx <- mapping_facet[[j]]
+        xx <- deparse(substitute(xx))
+        calept <- paste0( "quote(factor(.data[[", xx, "]]))" )
+        outp[['layers']][[i]][['mapping']][[j]] <- ept(calept, envir = envir)
+      } # if(!is.null(mapping_facet[[j]])) {
+    } # for (j in which_aes) {
+  } # for (i in p_layes) {
+  
+  
+  if(!is.null(mapping_facet$facet_grid)) {
+    outp <- outp + ggplot2::facet_grid(mapping_facet$facet_grid)
+  } else if(!is.null(mapping_facet$facet_wrap)) {
+    outp <- outp + ggplot2::facet_wrap(mapping_facet$facet_wrap)
+  } 
+  
+
+  ###########################################################################
+  # showlegends - labels_ggfunx - labels_ggfunx_str
+  ###########################################################################
+  
+  if(!is.null(labels_ggfunx_str)) {
+    suppressMessages({
+      outp <- outp + ept(labels_ggfunx_str)
+      })
+  }
+  
+  if(!showlegends) {
+    outp <- outp + ggplot2::theme(legend.position = 'none') 
+    outp <- outp + jtools::theme_apa(legend.pos = 'none')
+  }
+  
+  
+  if(print) print(outp)
+  return(outp)
+}
+

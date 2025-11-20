@@ -15,6 +15,7 @@
   newdata = NULL,
   datagrid = NULL,
   re_formula = NA,
+  newdata2 = NULL,
   allow_new_levels = FALSE,
   sample_new_levels = "gaussian",
   xrange = 1,
@@ -38,6 +39,7 @@
   fullframe = FALSE,
   average = FALSE,
   plot = FALSE,
+  mapping_facet = NULL,
   showlegends = NULL,
   variables = NULL,
   condition = NULL,
@@ -121,6 +123,10 @@ Continuous covariates are set to their means by default (see
 \code{numeric_cov_at} for details), while factor covariates remain
 unaltered, allowing for the estimation of covariate-specific population
 average and individual-specific growth parameters.}
+
+\item{newdata2}{A named \code{list} of objects containing new data, which
+cannot be passed via argument \code{newdata}. Required for some objects
+used in autocorrelation structures, or \code{\link[brms]{stanvars}}.}
 
 \item{allow_new_levels}{A flag indicating if new levels of group-level
 effects are allowed (defaults to \code{FALSE}). Only relevant if
@@ -318,6 +324,14 @@ is mainly for internal use.}
 
 \item{plot}{A logical indicating whether to plot the comparisons using
 \code{\link[marginaleffects:plot_comparisons]{marginaleffects::plot_comparisons()}}. Default is \code{FALSE}.}
+
+\item{mapping_facet}{A named list that can be used to pass the aesthetic
+\code{mapping} and \code{facet} arguments to the \code{ggplot2} object
+(default \code{NULL}). The main use of this is to get overlay line plot
+instead of separate line plot for each \code{id} variable. An example is
+as follows:\cr
+\code{mapping_facet = list(group = 'id', colour = 'id', facet_wrap =
+  c('study'))}.}
 
 \item{showlegends}{A logical value to specify whether to show legends
 (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), the value of

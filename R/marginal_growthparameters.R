@@ -170,7 +170,7 @@
 #'   at which estimates and contrasts should be computed during the post-draw
 #'   stage using the \code{hypothesis} argument. The values can be specified as
 #'   \code{'max'}, \code{'min'}, \code{'unique'}, or \code{'range'} (e.g.,
-#'   \code{constrats_at = list(age = 'min')}) or as numeric values or vectors
+#'   \code{constrats_at = list(age = 'min')}) or as numeric vectors
 #'   (e.g., \code{constrats_at = list(age = c(6, 7))}). If \code{constrats_at =
 #'   NULL}, level-1 predictors (e.g., \code{age}) are automatically set to their
 #'   unique values (i.e., \code{constrats_at = list(age = 'unique')}). To turn
@@ -180,13 +180,13 @@
 #'   is evaluated only when \code{method = 'custom'} and \code{hypothesis} is
 #'   not \code{NULL}.
 #'
-#' @param constrats_subset A named list (default \code{FALSE}) to filter the
-#'   estimates at which contrasts are computed using the \code{hypothesis}
-#'   argument. This is similar to \code{constrats_at}, except that
-#'   \code{constrats_subset} filters based on a character vector of variable
-#'   names (e.g., \code{constrats_subset = list(id = c('id1', 'id2'))}) rather
-#'   than numeric values. The argument is evaluated only when \code{method =
-#'   'custom'} and \code{hypothesis} is not \code{NULL}.
+#' @param constrats_subset A named list (default \code{FALSE}) to subset draws
+#'   for which contrasts should be computed via the \code{hypothesis} argument.
+#'   This is similar to \code{constrats_at}, except that \code{constrats_subset}
+#'   filters draws based on the character vector of variable names (e.g.,
+#'   \code{constrats_subset = list(id = c('id1', 'id2'))}) rather than numeric
+#'   values. The argument is evaluated only when \code{method = 'custom'} and
+#'   \code{hypothesis} is not \code{NULL}.
 #'
 #' @param deriv A numeric value specifying whether to estimate parameters based
 #'   on the differentiation of the distance curve or the model's first
@@ -285,9 +285,8 @@
 #'   posterior samples, and the summary of these are the contrast returned.
 #' 
 #' @param bys A character string (default \code{NULL}) specifying the variables
-#'   over which the parameters need to be summarized. If \code{bys} is not
-#'   \code{NULL}, the summary statistics will be calculated for each unique
-#'   combination of the specified variables.
+#'   over which the parameters are summarized. The summary statistics are
+#'   computed for each unique combination of variables specified.
 #'
 #' @param future_splits A list (default \code{NULL}) that can be an unnamed
 #'   numeric list, a logical value, or a numeric vector of length 1 or 2. It is
@@ -337,11 +336,13 @@
 #'   gains when using parallel processing with \code{future = TRUE}.
 #'
 #' 
+#' @inheritParams  marginal_draws.bgmfit
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
 #' @inheritParams  marginaleffects::avg_comparisons
 #' @inheritParams  marginaleffects::plot_comparisons
 #' @inheritParams  marginaleffects::datagrid
+#' @inheritParams  brms::prepare_predictions
 #' @inheritParams  brms::fitted.brmsfit
 #'
 #' @return A data frame object with estimates and credible intervals (CIs) for
@@ -392,6 +393,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                              newdata = NULL,
                                              datagrid = NULL,
                                              re_formula = NA,
+                                             newdata2 = NULL,
                                              allow_new_levels = FALSE,
                                              sample_new_levels = "gaussian",
                                              parameter = NULL,
@@ -418,6 +420,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                              fullframe = FALSE, 
                                              average = FALSE, 
                                              plot = FALSE, 
+                                             mapping_facet = NULL,
                                              showlegends = NULL, 
                                              variables = NULL,
                                              condition = NULL,
@@ -890,7 +893,7 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
+
   # 01.07.2025
   if(is.null(parameter)) {
     parm <- c('apgv', 'pgv')
@@ -900,10 +903,12 @@ marginal_growthparameters.bgmfit <- function(model,
       parm <- allowed_parms 
     } else if(length(parameter) == 1) {
       parm <- parameter
-    } 
+    } else {
+      parm <- parameter
+    }
   } # if(is.null(parameter)) { if(!is.null(parameter)) {
   
-  
+
   parm <- base::tolower(parm)
   for (parameteri in parm) {
     if(!parameteri %in% allowed_parms) {
@@ -1573,7 +1578,8 @@ marginal_growthparameters.bgmfit <- function(model,
       incl_autocor,
       internalmethod,
       xvar,
-      difx
+      difx,
+      mapping_facet
     )
   ))[-1]
   
@@ -1660,13 +1666,15 @@ marginal_growthparameters.bgmfit <- function(model,
   # Skipping the below stop()
   # by could be 'id' only, not necessarily include xvar
   if(model$xcall == "modelbased_growthparameters" |
-     model$xcall == "modelbased_growthparameters.bgmfit") {
+     model$xcall == "modelbased_growthparameters.bgmfit" |
+     model$xcall == "marginal_growthparameters" |
+     model$xcall == "marginal_growthparameters.bgmfit") {
     xvar_strict <- FALSE
   } else {
     xvar_strict <- TRUE
   }
   
-  
+ 
   set_group <- setup_by_var(model = model, 
                             by = by, 
                             cov = cov, 
@@ -1768,9 +1776,6 @@ marginal_growthparameters.bgmfit <- function(model,
     comparisons_arguments$by         <- set_group
     comparisons_arguments$comparison <- gparms_fun
     
-    
-    # comparisons_argumentsx <<- comparisons_arguments
-    
     # This is for method = 'pkg' - does't matter call_predictions/call_slopes?
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     
@@ -1807,6 +1812,10 @@ marginal_growthparameters.bgmfit <- function(model,
         else
           setgrid_by <- datagrid$by
         
+        if (is.null(datagrid[['FUN']]))
+          setgrid_FUN <- NULL
+        else
+          setgrid_FUN <- datagrid$FUN
         if (is.null(datagrid[['FUN_character']]))
           setgrid_FUN_character <- NULL
         else
@@ -1845,6 +1854,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                    newdata = setnewdata,
                                    by = setgrid_by,
                                    grid_type = setgrid_type,
+                                   FUN = setgrid_FUN,
                                    FUN_character = setgrid_FUN_character,
                                    FUN_factor = setgrid_FUN_factor,
                                    FUN_logical = setgrid_FUN_logical,
@@ -1924,11 +1934,15 @@ marginal_growthparameters.bgmfit <- function(model,
       }
       outp <- CustomDoCall(marginaleffects::plot_comparisons, 
                      comparisons_arguments)
-      if(!showlegends) {
-        outp <- outp + ggplot2::theme(legend.position = 'none')
-      }
-      # 6.03.2025
-      suppressMessages({outp <- outp + ept(labels_ggfunx_str)})
+      outp <- edit_mapping_facet(outp = outp, 
+                                 mapping_facet = mapping_facet,
+                                 which_aes = NULL, 
+                                 showlegends = showlegends,
+                                 labels_ggfunx = labels_ggfunx,
+                                 labels_ggfunx_str = labels_ggfunx_str,
+                                 envir = envir,
+                                 print = FALSE,
+                                 verbose = verbose)
       return(outp)
     } # else if(plot) {
     
@@ -2291,8 +2305,11 @@ marginal_growthparameters.bgmfit <- function(model,
       if(deriv > 0) {
         if(call_predictions) {
           if(!is.null(predictions_arguments[['variables']])) {
-            stop("argument 'variables' must be 'NULL' ",
-                 "when 'call_predictions = TRUE'")
+            # turning it off 13.11.2025
+            
+            # stop("argument 'variables' must be 'NULL' ",
+            #      "when 'call_predictions = TRUE'")
+            
           } # if(!is.null(predictions_arguments[['variables']])) {
         } # if(call_predictions) {
       } # if(deriv > 0) {
@@ -2757,14 +2774,14 @@ marginal_growthparameters.bgmfit <- function(model,
     
     if(!is.null(constrats_by)) {
       if(!is.character(constrats_by)) 
-        stop("The 'constrats_by' argument should be a character string")
+        stop2c("The 'constrats_by' argument should be a character string")
       for (axi in 1:length(constrats_by)) {
         caxi <- constrats_by[axi]
         if(!is.character(caxi)) {
-          stop("The 'constrats_by' argument '", caxi, " should be a character")
+          stop2c("The 'constrats_by' argument '", caxi, " should be a character")
         }
         if(!caxi %in% by) {
-          stop("The 'constrats_by' argument '", caxi, "' is not available in",
+          stop2c("The 'constrats_by' argument '", caxi, "' is not available in",
                " the 'by' argument.",
                "\n ", 
                " Note that '", caxi, "' must be included in the 'by' argument.",
@@ -2789,6 +2806,8 @@ marginal_growthparameters.bgmfit <- function(model,
           }
         }
         if(length(constrats_at) == 0) constrats_at <- NULL
+      } else if(!is.null(constrats_at)) {
+        if(!is.list(constrats_at)) stop2c("'constrats_at' must be a named list")
       }
     }
     
@@ -2971,7 +2990,7 @@ marginal_growthparameters.bgmfit <- function(model,
       if(length(tibble::as_tibble(onex1)) > 25) {
         # if(nrow(onex1) > 25) {
         if(is.null(constrats_at)) {
-          message("Note that the 'marginaleffects' package does not allow" ,
+          message2c("Note that the 'marginaleffects' package does not allow" ,
                   "\n",
                   "hypothesis argument when estimates rows are more than 25",
                   "\n",
@@ -3026,15 +3045,16 @@ marginal_growthparameters.bgmfit <- function(model,
                                        fixed = TRUE)) 
       } else if(usecollapse) {
         get_hypothesis_x_fx <- function(x,...) {
+          # get_hypothesis_x <- get_hypothesis_x2
+          # hypothesis = difference ~ pairwise
           get_hypothesis_x(x,
                            hypothesis = hypothesis,
                            by = by, 
                            newdata = NULL,
-                           draws = 'estimate'
-          ) %>% as.matrix()
+                           draws = 'estimate') %>% as.matrix() 
         }
         
-        
+       
         
         setdrawidh     <- c('drawid', 'parameter')
         setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
