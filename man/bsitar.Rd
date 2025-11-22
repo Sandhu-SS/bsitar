@@ -1808,28 +1808,55 @@ each individual parameter has it own initial values setting (e.g.,
 \code{a_init_sd = 0}). Note that \code{vcov_init_0} is ignored when global
 initial values are assigned for all parameters via \code{init} argument.}
 
-\item{jitter_init_beta}{A proportion (between 0 and 1) to perturb the initial
-values for fixed effect parameters. The default is \code{NULL}, which means
-that the same initial values are used across all chains. A sensible option
-might be \code{jitter_init_beta = 0.1}, which mildly perturbs the initial
-values. Note that the jitter is applied as a proportion of the specified
-initial value, not an absolute amount. For example, if the initial value is
-\code{100}, setting \code{jitter_init_beta = 0.1} means the perturbed
-initial value will be within the range \code{90} to \code{110}. Conversely,
-if the initial value is \code{10}, the perturbed value will fall within the
-range \code{9} to \code{11}.}
+\item{jitter_init_beta}{A named list or numeric value to add a small amount
+of noise to an initial value or vector of initial values for the population
+level parameters.
 
-\item{jitter_init_sd}{A proportion (between 0 and 1) to perturb the initial
-values for the standard deviation of random effect parameters. The default
-is \code{NULL}, which means the same initial values are used across all
-chains. A reasonable option might be \code{jitter_init_sd = 0.01}, which
-was found to work well during early testing.}
+When \code{jitter_init_beta} is specified as a numeric value, it is treated
+as the percentage of perturbation applied to the initials. This value must
+be between \code{0} and \code{100}. Internally, the percentage is converted
+to a proportion (\code{percentage / 100}) and passed as the \code{amount}
+argument to the \code{\link[base:jitter]{base::jitter()}} function. The \code{factor} argument is
+kept at its default value, \code{1}.
 
-\item{jitter_init_cor}{A proportion (between 0 and 1) to perturb the initial
-values for the correlation parameters of random effects. The default is
-\code{NULL}, which means the same initial values are used across all
-chains. An option of setting \code{jitter_init_cor = 0.001} was found to be
-effective during early testing.}
+The default, \code{jitter_init_beta = NULL}, means no perturbation is
+applied, so the same initial values are used for all chains. For mild
+perturbation, you might use a value such as \code{jitter_init_beta = 10}.
+
+Note that jitter is applied proportionally to the specified initial value,
+not as an absolute amount. For example, if the initial value is \code{100},
+setting \code{jitter_init_beta = 0.1} causes the perturbed value to fall
+within the range \code{90} to \code{110}. Conversely, if the initial value
+is \code{10}, the perturbed value will be within \code{9} to \code{11}.
+
+If \code{jitter_init_beta} is provided as a named list, these elements are
+passed to the \code{\link[base:jitter]{base::jitter()}} function. In addition to the \code{factor}
+and \code{amount} arguments, you may specify a \code{percent} argument,
+which is handled in the same way as a single numeric value. If both
+\code{percent} and \code{factor} are provided in the list, the effective
+perturbation is their product.
+
+To use the default behavior of \code{\link[base:jitter]{base::jitter()}}, supply an empty
+\code{list()}, which will then be populated with the defaults:
+\code{list(..., factor = 1, amount = NULL)}. Please refer to the
+\code{\link[base:jitter]{base::jitter()}} documentation for further details on how the \code{factor}
+and \code{amount} arguments affect the perturbation.}
+
+\item{jitter_init_sd}{A named list or numeric value to add a small amount of
+noise to an initial value or vector of initial values for the standard
+deviation of random effect parameters.For \code{jitter_init_sd} a
+reasonable option of setting one percent as the perturbed value
+\code{jitter_init_sd = 1} has been found to work well during early testing.
+See \code{jitter_init_beta} for details on various options available to
+perturb the initials.}
+
+\item{jitter_init_cor}{A named list or numeric value to add a small amount of
+noise to an initial value or vector of initial values for the correlations
+of random effect parameters.For \code{jitter_init_cor} a reasonable option
+of setting one percent as the perturbed value \code{jitter_init_sd = 0.1}
+has been found to work well during early testing. See
+\code{jitter_init_beta} for details on various options available to perturb
+the initials.}
 
 \item{prior_data}{An optional argument (a named list, default \code{NULL})
 that can be used to pass information to the prior arguments for each

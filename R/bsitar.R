@@ -1752,29 +1752,58 @@
 #'   each individual parameter has it own initial values setting (e.g.,
 #'   \code{a_init_sd = 0}). Note that \code{vcov_init_0} is ignored when global
 #'   initial values are assigned for all parameters via \code{init} argument.
+#'   
+#' @param jitter_init_beta A named list or numeric value to add a small amount
+#'   of noise to an initial value or vector of initial values for the population
+#'   level parameters.
+#'   
+#'   When \code{jitter_init_beta} is specified as a numeric value, it is treated
+#'   as the percentage of perturbation applied to the initials. This value must
+#'   be between \code{0} and \code{100}. Internally, the percentage is converted
+#'   to a proportion (\code{percentage / 100}) and passed as the \code{amount}
+#'   argument to the [base::jitter()] function. The \code{factor} argument is
+#'   kept at its default value, \code{1}.
+#'
+#'   The default, \code{jitter_init_beta = NULL}, means no perturbation is
+#'   applied, so the same initial values are used for all chains. For mild
+#'   perturbation, you might use a value such as \code{jitter_init_beta = 10}.
+#'
+#'   Note that jitter is applied proportionally to the specified initial value,
+#'   not as an absolute amount. For example, if the initial value is \code{100},
+#'   setting \code{jitter_init_beta = 0.1} causes the perturbed value to fall
+#'   within the range \code{90} to \code{110}. Conversely, if the initial value
+#'   is \code{10}, the perturbed value will be within \code{9} to \code{11}.
+#'
+#'   If \code{jitter_init_beta} is provided as a named list, these elements are
+#'   passed to the [base::jitter()] function. In addition to the \code{factor}
+#'   and \code{amount} arguments, you may specify a \code{percent} argument,
+#'   which is handled in the same way as a single numeric value. If both
+#'   \code{percent} and \code{factor} are provided in the list, the effective
+#'   perturbation is their product.
+#'
+#'   To use the default behavior of [base::jitter()], supply an empty
+#'   \code{list()}, which will then be populated with the defaults:
+#'   \code{list(..., factor = 1, amount = NULL)}. Please refer to the
+#'   [base::jitter()] documentation for further details on how the \code{factor}
+#'   and \code{amount} arguments affect the perturbation.
+#'   
+#'
+#' @param jitter_init_sd A named list or numeric value to add a small amount of
+#'   noise to an initial value or vector of initial values for the standard
+#'   deviation of random effect parameters.For \code{jitter_init_sd} a
+#'   reasonable option of setting one percent as the perturbed value
+#'   \code{jitter_init_sd = 1} has been found to work well during early testing.
+#'   See \code{jitter_init_beta} for details on various options available to
+#'   perturb the initials.
+#'
+#' @param jitter_init_cor A named list or numeric value to add a small amount of
+#'   noise to an initial value or vector of initial values for the correlations
+#'   of random effect parameters.For \code{jitter_init_cor} a reasonable option
+#'   of setting one percent as the perturbed value \code{jitter_init_sd = 0.1}
+#'   has been found to work well during early testing. See
+#'   \code{jitter_init_beta} for details on various options available to perturb
+#'   the initials.
 #' 
-#' @param jitter_init_beta A proportion (between 0 and 1) to perturb the initial
-#'   values for fixed effect parameters. The default is \code{NULL}, which means
-#'   that the same initial values are used across all chains. A sensible option
-#'   might be \code{jitter_init_beta = 0.1}, which mildly perturbs the initial
-#'   values. Note that the jitter is applied as a proportion of the specified
-#'   initial value, not an absolute amount. For example, if the initial value is
-#'   \code{100}, setting \code{jitter_init_beta = 0.1} means the perturbed
-#'   initial value will be within the range \code{90} to \code{110}. Conversely,
-#'   if the initial value is \code{10}, the perturbed value will fall within the
-#'   range \code{9} to \code{11}.
-#'
-#' @param jitter_init_sd A proportion (between 0 and 1) to perturb the initial
-#'   values for the standard deviation of random effect parameters. The default
-#'   is \code{NULL}, which means the same initial values are used across all
-#'   chains. A reasonable option might be \code{jitter_init_sd = 0.01}, which
-#'   was found to work well during early testing.
-#'
-#' @param jitter_init_cor A proportion (between 0 and 1) to perturb the initial
-#'   values for the correlation parameters of random effects. The default is
-#'   \code{NULL}, which means the same initial values are used across all
-#'   chains. An option of setting \code{jitter_init_cor = 0.001} was found to be
-#'   effective during early testing.
 #' 
 #' @param prior_data An optional argument (a named list, default \code{NULL})
 #'   that can be used to pass information to the prior arguments for each
@@ -11627,44 +11656,118 @@ bsitar <- function(x,
                jitter_init_sd,
                jitter_init_cor,
                digits) {
-        if (is.character(jitter_init_beta))
-          jitter_init_beta <- ept(jitter_init_beta)
-        if (is.character(jitter_init_sd))
-          jitter_init_sd <- ept(jitter_init_sd)
-        if (is.character(jitter_init_cor))
-          jitter_init_cor <- ept(jitter_init_cor)
         
-        if (!is.null(jitter_init_beta) &
-            !is.numeric(jitter_init_beta)) {
-          stop("Argument jitter_init_beta should be NULL or a numeric value")
-        }
-        if (!is.null(jitter_init_sd) &
-            !is.numeric(jitter_init_sd)) {
-          stop("Argument jitter_init_sd should be NULL or a numeric value")
-        }
-        if (!is.null(jitter_init_cor) &
-            !is.numeric(jitter_init_cor)) {
-          stop("Argument jitter_init_cor should be NULL or a numeric value")
+        #####################################################################
+        # Define get_jitter_list, jitter_x and jitter_mat Functions
+        #####################################################################
+        get_jitter_list <- function(what_to_jitter) {
+          if(is.null(what_to_jitter)) {
+            what_to_jitter      <- what_to_jitter
+            what_to_jitter_list <- NULL
+          } else if(!is.null(what_to_jitter)) {
+            if(is.list(what_to_jitter)) {
+              what_to_jitter_list <- list()
+              if(is.null(what_to_jitter[['factor']])) {
+                what_to_jitter_list[['factor']] <- 1
+              } else {
+                what_to_jitter_list[['factor']] <- what_to_jitter[['factor']]
+              }
+              if(is.null(what_to_jitter[['amount']])) {
+                what_to_jitter_list[['amount']] <- NULL
+              } else {
+                what_to_jitter_list[['amount']] <- what_to_jitter[['amount']]
+              }
+              if(is.null(what_to_jitter[['percent']])) {
+                what_to_jitter_list[['percent']] <- NULL
+              } else {
+                what_to_jitter_list[['percent']] <- what_to_jitter[['percent']]
+              }
+            } else if(!is.list(what_to_jitter)) {
+              if(is.numeric(what_to_jitter)) {
+                # This will set up jitter_amount <- abs(x[i]) * a
+                what_to_jitter_list <- list()
+                what_to_jitter_list[['factor']] <- 1
+                what_to_jitter_list[['amount']] <- NULL 
+                what_to_jitter_list[['percent']] <- what_to_jitter 
+              } else if(!is.numeric(what_to_jitter)) {
+                stop2c("The 'what_to_jitter' argument must be either NULL,  
+                         a names list, or a numeric value defining percentrage")
+              }
+            } # if(is.list(what_to_jitter)){else if(!is.list(what_to_jitter)){
+          } # if(is.null(what_to_jitter)) {else if(!is.null(what_to_jitter)) {
+          return(what_to_jitter_list)
         }
         
-        jitter_x <- function(x, a, digits) {
+        
+        jitter_x <- function(x, what_to_jitter_list, digits) {
+          set_jitter_factor  <- what_to_jitter_list[['factor']]
+          set_jitter_amount  <- what_to_jitter_list[['amount']]
+          set_jitter_percent <- what_to_jitter_list[['percent']]
+          if(!is.null(set_jitter_amount) & !is.null(set_jitter_percent)) {
+            stop("Please specify either amount or percent for jitter, not both")
+          }
+          if(is.null(set_jitter_percent)) {
+            set_jitter_prop <- NULL
+          } else if(!is.null(set_jitter_percent)) {
+            set_jitter_prop <- set_jitter_percent / 100
+          }
+          
+          if(is.null(set_jitter_factor)) {
+            jitter_factor <- 1 
+          } else if(!is.null(set_jitter_factor)) {
+            jitter_factor <- set_jitter_factor
+          }
+          
           x <- unname(x)
           col <- c()
           for (i in 1:length(x)) {
-            amount <- abs(x[i]) * a
-            col <- c(col, jitter(x[i], factor = 1, amount = amount))
+            if(!is.null(set_jitter_amount)) {
+              jitter_amount <- set_jitter_amount 
+            } else if(!is.null(set_jitter_prop)) {
+              jitter_amount <- abs(x[i]) * set_jitter_prop
+            } else {
+              jitter_amount <- NULL # default, as in base::jitter
+            }
+            col <- c(col, jitter(x[i], factor = jitter_factor, 
+                                 amount = jitter_amount))
           }
           col <- round(col, digits)
-          col
+          return(col)
         }
         
-        jitter_mat <- function(x, a, digits) {
+        
+        jitter_mat <- function(x, what_to_jitter_list, digits) {
+          set_jitter_factor  <- what_to_jitter_list[['factor']]
+          set_jitter_amount  <- what_to_jitter_list[['amount']]
+          set_jitter_percent <- what_to_jitter_list[['percent']]
+          if(!is.null(set_jitter_amount) & !is.null(set_jitter_percent)) {
+            stop("Please specify either amount or percent for jitter, not both")
+          }
+          if(is.null(set_jitter_percent)) {
+            set_jitter_prop <- NULL
+          } else if(!is.null(set_jitter_percent)) {
+            set_jitter_prop <- set_jitter_percent / 100
+          }
+          
+          if(is.null(set_jitter_factor)) {
+            jitter_factor <- 1 
+          } else if(!is.null(set_jitter_factor)) {
+            jitter_factor <- set_jitter_factor
+          }
+          
           mat_out <- x
           x <- x[lower.tri(x)]
           col <- c()
           for (i in 1:length(x)) {
-            amount <- abs(x[i]) * a
-            col <- c(col, jitter(x[i], factor = 1, amount = amount))
+            if(!is.null(set_jitter_amount)) {
+              jitter_amount <- set_jitter_amount 
+            } else if(!is.null(set_jitter_prop)) {
+              jitter_amount <- abs(x[i]) * set_jitter_prop
+            } else {
+              jitter_amount <- NULL # default, as in base::jitter
+            }
+            col <- c(col, jitter(x[i], factor = jitter_factor, 
+                                 amount = jitter_amount))
           }
           col <- round(col, digits)
           col <- ifelse(col > 1, 1, col)
@@ -11674,12 +11777,34 @@ bsitar <- function(x,
           return(mat_out)
         }
         
+        
+        #####################################################################
+        # End Define get_jitter_list, jitter_x and jitter_mat Functions
+        #####################################################################
+        
+        if (is.character(jitter_init_beta)) {
+          jitter_init_beta <- ept(jitter_init_beta)
+        }
+        if (is.character(jitter_init_sd)) {
+          jitter_init_sd <- ept(jitter_init_sd)
+        }
+        if (is.character(jitter_init_cor)) {
+          jitter_init_cor <- ept(jitter_init_cor)
+        }
+          
+        jitter_init_beta_list <- get_jitter_list(jitter_init_beta)
+        jitter_init_sd_list   <- get_jitter_list(jitter_init_sd)
+        jitter_init_cor_list  <- get_jitter_list(jitter_init_cor)
+        
+
         eval_inits <- c()
         for (i_init in names(inits)) {
           if (grepl("^b_", i_init)) {
             if (!is.null(jitter_init_beta)) {
               values_i <-
-                jitter_x(inits[[i_init]], jitter_init_beta, digits = digits)
+                jitter_x(x = inits[[i_init]], 
+                         what_to_jitter_list = jitter_init_beta_list, 
+                         digits = digits)
             } else if (is.null(jitter_init_beta)) {
               values_i <- inits[[i_init]]
               values_i <- round(values_i, digits)
@@ -11687,7 +11812,9 @@ bsitar <- function(x,
             eval_inits[[i_init]] <- values_i
           } else if (grepl("^sd_", i_init)) {
             if (!is.null(jitter_init_sd)) {
-              values_i <- jitter_x(inits[[i_init]], jitter_init_sd, digits)
+              values_i <- jitter_x(x = inits[[i_init]], 
+                                   what_to_jitter_list = jitter_init_sd_list, 
+                                   digits)
               values_i <- abs(values_i)
               values_i <-
                 ifelse(values_i <= 0, values_i + 0.01, values_i)

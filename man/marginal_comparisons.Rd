@@ -328,10 +328,14 @@ is mainly for internal use.}
 \item{mapping_facet}{A named list that can be used to pass the aesthetic
 \code{mapping} and \code{facet} arguments to the \code{ggplot2} object
 (default \code{NULL}). The main use of this is to get overlay line plot
-instead of separate line plot for each \code{id} variable. An example is
-as follows:\cr
+instead of separate line plot for each \code{id} variable. This can also be
+used to remove a layer. For example, if user wants to remove the confidence
+intervals band from the lines i.e., \code{geom_ribbon}, then include
+\code{rm_geom_ribbon = TRUE}. Note the prefix \code{'rm_'}. This is a
+general approach in which any layer name with  prefix \code{'rm_'} included
+in the \code{mapping_facet} will be removed. An example is shown below:\cr
 \code{mapping_facet = list(group = 'id', colour = 'id', facet_wrap =
-  c('study'))}.}
+  c('study'), rm_geom_ribbon = TRUE)}.}
 
 \item{showlegends}{A logical value to specify whether to show legends
 (\code{TRUE}) or not (\code{FALSE}). If \code{NULL} (default), the value of

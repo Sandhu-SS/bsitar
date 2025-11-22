@@ -5204,7 +5204,9 @@ setup_by_var <- function(model,
                          cov, 
                          xvar, 
                          dpar,
-                         xvar_strict = TRUE) {
+                         xvar_strict = TRUE,
+                         switch_plot = FALSE,
+                         verbose = FALSE) {
   if(is.null(by)) {
     if(is.null(cov)) {
       set_group <- FALSE
@@ -5248,6 +5250,22 @@ setup_by_var <- function(model,
       } # if (!xvar %in% set_group) {
     } # if(is.logical(set_group)) { else if(!is.logical(set_group)) {
   } # if(dpar == "mu") {
+  
+  
+  if(!switch_plot) {
+    if(dpar == "sigma") {
+      if(is.logical(set_group)) {
+        if(!set_group) set_group <- xvar
+      } else if(!is.logical(set_group)) {
+        if (!xvar %in% set_group) {
+          if(xvar_strict) {
+            stop(xvar_strict_msg)
+          } # xvar_strict
+        } # if (!xvar %in% set_group) {
+      } # if(is.logical(set_group)) { else if(!is.logical(set_group)) {
+    } # if(dpar == "sigma") {
+  }
+  
   
   return(set_group)
 }
@@ -5647,6 +5665,12 @@ extract_samples <- function(fit_obj) {
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
 #' 
+#' @examples
+#' \dontrun {
+#' xx <- marginal_draws(bsitar::berkeley_exfit, plot = T,  dpar = 'mu')
+#' edit_mapping_facet(xx, mapping_facet = list(rm_geom_ribbon = T)  )
+#' }
+#' 
 #' @keywords internal
 #' @noRd
 #' 
@@ -5667,7 +5691,7 @@ edit_mapping_facet <- function(outp,
   if(is.null(envir)) {
     envir <- outp@plot_env
   }
- 
+  
   
   if(is.null(mapping_facet)) {
     mapping_facet <- list()
@@ -5675,12 +5699,31 @@ edit_mapping_facet <- function(outp,
     # Importanat to set the environment for the mapping_facet
     environment(mapping_facet) <- envir
   }
- 
+  
   p_layes <- names(outp$layers)
   grid_wrap <- c('facet_grid', 'facet_wrap')
   if(is.null(which_aes)) {
     which_aes <- setdiff(names(mapping_facet), grid_wrap)
   }
+  
+  # Remove layes - such as geom_ribbon, geom_line geom_line...3
+  new_p_layes <- c()
+  new_which_aes <- c()
+  for (i in p_layes) {
+    for (j in which_aes) {
+      if(mapping_facet[[j]] ) {
+        rmj <- gsub("rm_", "", j)
+        outp[['layers']][[rmj]] <- NULL
+      } else {
+        new_p_layes <- c(new_p_layes, i)
+        new_which_aes <- c(new_which_aes, j)
+      }
+    }
+  }
+  
+  
+  p_layes <- new_p_layes
+  which_aes <- new_which_aes
   
   for (i in p_layes) {
     for (j in which_aes) {
@@ -5691,6 +5734,7 @@ edit_mapping_facet <- function(outp,
         outp[['layers']][[i]][['mapping']][[j]] <- ept(calept, envir = envir)
       } # if(!is.null(mapping_facet[[j]])) {
     } # for (j in which_aes) {
+    # if()
   } # for (i in p_layes) {
   
   
@@ -5700,7 +5744,7 @@ edit_mapping_facet <- function(outp,
     outp <- outp + ggplot2::facet_wrap(mapping_facet$facet_wrap)
   } 
   
-
+  
   ###########################################################################
   # showlegends - labels_ggfunx - labels_ggfunx_str
   ###########################################################################
@@ -5708,7 +5752,7 @@ edit_mapping_facet <- function(outp,
   if(!is.null(labels_ggfunx_str)) {
     suppressMessages({
       outp <- outp + ept(labels_ggfunx_str)
-      })
+    })
   }
   
   if(!showlegends) {
@@ -5716,8 +5760,6 @@ edit_mapping_facet <- function(outp,
     outp <- outp + jtools::theme_apa(legend.pos = 'none')
   }
   
-  
   if(print) print(outp)
   return(outp)
 }
-

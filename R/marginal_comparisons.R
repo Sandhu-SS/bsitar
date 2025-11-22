@@ -1249,7 +1249,10 @@ marginal_comparisons.bgmfit <- function(model,
   
   
   set_group <- setup_by_var(model = model, by = by, cov = cov, 
-                                  xvar = xvar, dpar = dpar)
+                            xvar = xvar, dpar = dpar,
+                            xvar_strict = TRUE,
+                            switch_plot = force_condition_and_by_switch_plot,
+                            verbose = verbose)
   
   
     

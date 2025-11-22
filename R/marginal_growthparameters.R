@@ -1680,7 +1680,9 @@ marginal_growthparameters.bgmfit <- function(model,
                             cov = cov, 
                             xvar = xvar, 
                             dpar = dpar,
-                            xvar_strict = xvar_strict)
+                            xvar_strict = xvar_strict,
+                            switch_plot = force_condition_and_by_switch_plot,
+                            verbose = verbose)
   
   
   

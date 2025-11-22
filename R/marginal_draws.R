@@ -40,10 +40,14 @@
 #' @param mapping_facet A named list that can be used to pass the aesthetic
 #'   \code{mapping} and \code{facet} arguments to the \code{ggplot2} object
 #'   (default \code{NULL}). The main use of this is to get overlay line plot
-#'   instead of separate line plot for each \code{id} variable. An example is 
-#'   as follows:\cr
+#'   instead of separate line plot for each \code{id} variable. This can also be
+#'   used to remove a layer. For example, if user wants to remove the confidence
+#'   intervals band from the lines i.e., \code{geom_ribbon}, then include
+#'   \code{rm_geom_ribbon = TRUE}. Note the prefix \code{'rm_'}. This is a
+#'   general approach in which any layer name with  prefix \code{'rm_'} included
+#'   in the \code{mapping_facet} will be removed. An example is shown below:\cr
 #'   \code{mapping_facet = list(group = 'id', colour = 'id', facet_wrap =
-#'   c('study'))}.
+#'   c('study'), rm_geom_ribbon = TRUE)}.
 #' 
 #' @param deriv An integer to indicate whether to estimate the distance curve or
 #'   its derivative (i.e., velocity curve). The \code{deriv = 0} (default) is
@@ -1285,7 +1289,10 @@ marginal_draws.bgmfit <-
     
     
     set_group <- setup_by_var(model = model, by = by, cov = cov, 
-                       xvar = xvar, dpar = dpar)
+                       xvar = xvar, dpar = dpar,
+                       xvar_strict = TRUE,
+                       switch_plot = force_condition_and_by_switch_plot,
+                       verbose = verbose)
     
     # print(set_group)
     # print(xvar)
