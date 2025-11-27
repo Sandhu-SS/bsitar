@@ -3,7 +3,7 @@
 \name{plot_curves.bgmfit}
 \alias{plot_curves.bgmfit}
 \alias{plot_curves}
-\title{Plot Growth Curves}
+\title{Plot growth curves for the Bayesian SITAR model}
 \usage{
 \method{plot_curves}{bgmfit}(
   model,

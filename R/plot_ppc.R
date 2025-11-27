@@ -1,6 +1,6 @@
 
 
-#' @title Perform posterior predictive distribution checks
+#' @title Perform posterior predictive checks for the Bayesian SITAR model
 #' 
 #' @details The \strong{plot_ppc()} function is a wrapper around the
 #'   [brms::pp_check()] function, which allows for the visualization of

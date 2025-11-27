@@ -4,7 +4,7 @@
 \alias{marginal_growthparameters.bgmfit}
 \alias{marginal_growthparameters}
 \alias{growthparameters_comparison}
-\title{Estimate and Compare Growth Parameters}
+\title{Estimate and compare growth parameters for the Bayesian SITAR model}
 \usage{
 \method{marginal_growthparameters}{bgmfit}(
   model,

@@ -1,6 +1,6 @@
 
 
-#' @title Estimate growth curves
+#' @title Estimate and plot growth curves for the Bayesian SITAR model
 #' 
 #' @description The \strong{marginal_draws()} function estimates and plots
 #'   growth curves (distance and velocity) by using the \pkg{marginaleffects}

@@ -3,7 +3,7 @@
 \name{loo_validation.bgmfit}
 \alias{loo_validation.bgmfit}
 \alias{loo_validation}
-\title{Perform leave-one-out (LOO) cross-validation}
+\title{Leave-one-out (LOO) cross-validation for the Bayesian SITAR model}
 \usage{
 \method{loo_validation}{bgmfit}(
   model,

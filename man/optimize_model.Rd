@@ -3,7 +3,7 @@
 \name{optimize_model.bgmfit}
 \alias{optimize_model.bgmfit}
 \alias{optimize_model}
-\title{Optimize SITAR Model}
+\title{Optimize Bayesian SITAR Model}
 \usage{
 \method{optimize_model}{bgmfit}(
   model,
@@ -14,8 +14,8 @@
   transform_prior_class = NULL,
   transform_beta_coef = NULL,
   transform_sd_coef = NULL,
-  exclude_default_funs = TRUE,
-  add_fit_criteria = NULL,
+  exclude_default = TRUE,
+  add_fit_criteria = c("loo"),
   byresp = FALSE,
   model_name = NULL,
   overwrite = FALSE,
@@ -25,7 +25,7 @@
   digits = 2,
   cores = 1,
   verbose = FALSE,
-  expose_function = NULL,
+  expose_function = FALSE,
   usesavedfuns = FALSE,
   clearenvfuns = NULL,
   envir = NULL,
@@ -71,14 +71,15 @@ variable (i.e., \code{y}). The approach and available options for
 \code{optimize_y} are the same as described above for \code{optimize_x}.}
 
 \item{transform_prior_class}{A character vector (default \code{NULL})
-specifying the parameter classes for which transformations of
-user-specified priors should be performed. The prior classes that can be
-transformed are \code{'beta'}, \code{'sd'}, \code{'rsd'}, \code{'sigma'},
-and \code{'dpar'}, and they can be specified as: \cr
+specifying the parameter class for which transformations of user-specified
+priors should be performed. These options are \code{'beta'}, \code{'sd'},
+\code{'rsd'}, \code{'sigma'}, and \code{'dpar'}, and they can be specified
+as follows: \cr
 \code{transform_prior_class = c('beta', 'sd', 'rsd', 'sigma', 'dpar')}.
 Note that transformations can only be applied to location-scale based
-priors (such as \code{normal()}). For example, the \code{'log'}
-transformation of a prior is performed as follows: \cr
+priors such as \code{normal()}. Currently, transformation are supported
+only for the \code{'log'} transformed \code{'x'} variable. The \code{'log'}
+transformation of prior is performed as follows: \cr
 \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr
 \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr where
 \code{location} and \code{scale} are the original parameters supplied by
@@ -111,7 +112,7 @@ for parameter \code{'a'} is based on the outcome \code{y} scale itself
 automatically. Note that \code{transform_sd_coef} is ignored when
 \code{transform_prior_class = NULL}.}
 
-\item{exclude_default_funs}{A logical indicating whether transformations for
+\item{exclude_default}{A logical indicating whether transformations for
 (\code{x} and \code{y}) variables used in the original model fit should be
 excluded. If \code{TRUE} (default), the transformations specified for the
 \code{x} and \code{y} variables in the original model fit are excluded from
@@ -120,10 +121,7 @@ is fit with \code{xvar = log} and \code{yvar = NULL}, then
 \code{optimize_x} is translated into \code{optimize_x = list(NULL, sqrt)},
 and \code{optimize_y} is reset as \code{optimize_y = list(log, sqrt)}.}
 
-\item{add_fit_criteria}{An optional argument (default \code{NULL}) to
-indicate whether to add fit criteria to the returned model fit. Available
-options are \code{'loo'}, \code{'waic'}, and \code{'bayes_R2'}. Please see
-\code{[brms::add_criterion()]} for details.}
+\item{add_fit_criteria}{a}
 
 \item{byresp}{A logical (default \code{FALSE}) indicating whether
 response-wise fit criteria should be calculated. This argument is evaluated

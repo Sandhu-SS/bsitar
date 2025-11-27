@@ -3,7 +3,7 @@
 \name{update_model.bgmfit}
 \alias{update_model.bgmfit}
 \alias{update_model}
-\title{Update model}
+\title{Update the Bayesian SITAR model}
 \usage{
 \method{update_model}{bgmfit}(
   model,

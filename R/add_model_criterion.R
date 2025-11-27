@@ -1,6 +1,6 @@
 
 
-#' @title Add fit Criteria to the model
+#' @title Add fit criteria to the Bayesian SITAR Model
 #' 
 #' @description The \strong{add_model_criterion()} function is a wrapper around
 #'   [brms::add_criterion()] that allows adding fit criteria to a model. Note

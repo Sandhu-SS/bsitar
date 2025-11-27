@@ -3,7 +3,7 @@
 \name{plot_conditional_effects.bgmfit}
 \alias{plot_conditional_effects.bgmfit}
 \alias{plot_conditional_effects}
-\title{Visualize conditional effects of predictor}
+\title{Visualize conditional effects for the Bayesian SITAR model}
 \usage{
 \method{plot_conditional_effects}{bgmfit}(
   model,

@@ -1,8 +1,7 @@
 
 
 
-
-#' @title Predicted values from the posterior predictive distribution
+#' @title Estimate predicted values for the Bayesian SITAR model
 #'
 #' @description The \strong{predict_draws()} function is a wrapper around the
 #'   [brms::predict.brmsfit()] function, which obtains predicted values (and

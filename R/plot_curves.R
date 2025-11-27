@@ -1,6 +1,6 @@
 
 
-#' @title Plot Growth Curves
+#' @title Plot growth curves for the Bayesian SITAR model
 #'
 #' @description The \strong{plot_curves()} function visualizes six different
 #'   types of growth curves using the \pkg{ggplot2} package. Additionally, it

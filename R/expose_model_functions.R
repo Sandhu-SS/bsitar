@@ -1,6 +1,6 @@
 
 
-#' @title Expose User-Defined Stan Functions for Post-Processing
+#' @title Expose user-defined Stan functions for the Bayesian SITAR model
 #'
 #' @description The \strong{expose_model_functions()} function is a wrapper
 #'   around [rstan::expose_stan_functions()] that exposes user-defined Stan

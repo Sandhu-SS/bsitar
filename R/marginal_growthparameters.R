@@ -1,6 +1,6 @@
 
 
-#' @title Estimate and Compare Growth Parameters
+#' @title Estimate and compare growth parameters for the Bayesian SITAR model
 #' 
 #' @description The \strong{marginal_growthparameters()} function estimates
 #' and compares growth parameters, such as peak growth velocity and the age at

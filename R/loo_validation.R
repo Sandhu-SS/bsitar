@@ -1,6 +1,6 @@
 
 
-#' @title Perform leave-one-out (LOO) cross-validation
+#' @title Leave-one-out (LOO) cross-validation for the Bayesian SITAR model
 #' 
 #' @description The \strong{loo_validation()} function is a wrapper around the
 #'   [brms::loo()] function to perform approximate leave-one-out cross-validation

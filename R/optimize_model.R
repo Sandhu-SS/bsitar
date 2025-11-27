@@ -1,6 +1,6 @@
 
 
-#' @title Optimize SITAR Model
+#' @title Optimize Bayesian SITAR Model
 #' 
 #' @description The optimization process for selecting the best-fitting SITAR
 #'   model involves choosing the optimal degrees of freedom (\code{df}) for the
@@ -39,14 +39,15 @@
 #'   \code{optimize_y} are the same as described above for \code{optimize_x}.
 #'   
 #' @param transform_prior_class A character vector (default \code{NULL})
-#'   specifying the parameter classes for which transformations of
-#'   user-specified priors should be performed. The prior classes that can be
-#'   transformed are \code{'beta'}, \code{'sd'}, \code{'rsd'}, \code{'sigma'},
-#'   and \code{'dpar'}, and they can be specified as: \cr
+#'   specifying the parameter class for which transformations of user-specified
+#'   priors should be performed. These options are \code{'beta'}, \code{'sd'},
+#'   \code{'rsd'}, \code{'sigma'}, and \code{'dpar'}, and they can be specified
+#'   as follows: \cr
 #'   \code{transform_prior_class = c('beta', 'sd', 'rsd', 'sigma', 'dpar')}.
 #'   Note that transformations can only be applied to location-scale based
-#'   priors (such as \code{normal()}). For example, the \code{'log'}
-#'   transformation of a prior is performed as follows: \cr
+#'   priors such as \code{normal()}. Currently, transformation are supported 
+#'   only for the \code{'log'} transformed \code{'x'} variable. The \code{'log'} 
+#'   transformation of prior is performed as follows: \cr
 #'   \code{log_location = log(location / sqrt(scale^2 / location^2 + 1))}, \cr
 #'   \code{log_scale = sqrt(log(scale^2 / location^2 + 1))}, \cr where
 #'   \code{location} and \code{scale} are the original parameters supplied by
@@ -79,7 +80,7 @@
 #'   automatically. Note that \code{transform_sd_coef} is ignored when
 #'   \code{transform_prior_class = NULL}.
 #'  
-#' @param exclude_default_funs A logical indicating whether transformations for
+#' @param exclude_default A logical indicating whether transformations for
 #'   (\code{x} and \code{y}) variables used in the original model fit should be
 #'   excluded. If \code{TRUE} (default), the transformations specified for the
 #'   \code{x} and \code{y} variables in the original model fit are excluded from
@@ -88,10 +89,7 @@
 #'   \code{optimize_x} is translated into \code{optimize_x = list(NULL, sqrt)},
 #'   and \code{optimize_y} is reset as \code{optimize_y = list(log, sqrt)}.
 #'
-#' @param add_fit_criteria An optional argument (default \code{NULL}) to
-#'   indicate whether to add fit criteria to the returned model fit. Available
-#'   options are \code{'loo'}, \code{'waic'}, and \code{'bayes_R2'}. Please see
-#'   \code{[brms::add_criterion()]} for details.
+#' @param add_fit_criteria a
 #'
 #' @param byresp A logical (default \code{FALSE}) indicating whether
 #'   response-wise fit criteria should be calculated. This argument is evaluated
@@ -174,8 +172,8 @@ optimize_model.bgmfit <- function(model,
                                   transform_prior_class = NULL,
                                   transform_beta_coef = NULL,
                                   transform_sd_coef = NULL,
-                                  exclude_default_funs = TRUE,
-                                  add_fit_criteria = NULL,
+                                  exclude_default = TRUE,
+                                  add_fit_criteria = c('loo'),
                                   byresp = FALSE,
                                   model_name = NULL,
                                   overwrite = FALSE,
@@ -185,7 +183,7 @@ optimize_model.bgmfit <- function(model,
                                   digits = 2,
                                   cores = 1,
                                   verbose = FALSE,
-                                  expose_function = NULL,
+                                  expose_function = FALSE,
                                   usesavedfuns = FALSE,
                                   clearenvfuns = NULL,
                                   envir = NULL,
@@ -212,7 +210,7 @@ optimize_model.bgmfit <- function(model,
   
   if (is.null(newdata)) {
     newdata <- model$model_info$bgmfit.data
-    if(verbose) message("data used in the original model fit set as 'newdata'")
+    # if(verbose) message("data used in the original model fit set as 'newdata'")
   } else {
     newdata <- newdata
   }
@@ -401,14 +399,41 @@ optimize_model.bgmfit <- function(model,
   optimize_x  <- get_args_opt(deparse(substitute(optimize_x)))
   optimize_y  <- get_args_opt(deparse(substitute(optimize_y)))
   
-  if (exclude_default_funs) {
-    optimize_x <- optimize_x[!optimize_x %in% model$model_info$xfuns]
-    optimize_y <-
-      optimize_y[!optimize_y %in% model$model_info$xfuns]
-    if (identical(optimize_x, character(0)))
-      optimize_x <- "NULL"
-    if (identical(optimize_y, character(0)))
-      optimize_y <- "NULL"
+  # Need to adjust 'exclude_default' for multivariate ?
+  if (exclude_default) {
+    # Need for temp_f_m.. because model$model_info$xfuns 'NULL' is 'x'
+    temp_f_m_df <- model$model_info$dfs
+    temp_f_m_df <- ept(temp_f_m_df) %>% as.factor()
+    optimize_df_<- optimize_df
+    optimize_df <- setdiff(optimize_df_, temp_f_m_df) %>% droplevels()
+    temp_f_m_x  <- model$model_info$xfuns
+    temp_f_m_x  <- gsub("x", "NULL", temp_f_m_x)
+    optimize_x  <- optimize_x[!optimize_x %in% temp_f_m_x]
+    temp_f_m_y  <- model$model_info$yfuns
+    temp_f_m_y  <- gsub("x", "NULL", temp_f_m_y)
+    optimize_y  <- optimize_y[!optimize_y %in% temp_f_m_y]
+    # optimize_x <- optimize_x[!optimize_x %in% model$model_info$xfuns]
+    # optimize_y <- optimize_y[!optimize_y %in% model$model_info$yfuns]
+    if (identical(optimize_x, character(0))) optimize_x <- "NULL"
+    if (identical(optimize_y, character(0))) optimize_y <- "NULL"
+  }
+  
+ 
+  
+  
+  if(is_emptyx(optimize_df) ) {
+    noting_to_opt_msg <- "Nothing to optimize. All three conditions i.e.,
+    optimize_df, optimize_x, and optimize_y 
+    are identical to the base model"
+    if(is_emptyx(optimize_x) & is_emptyx(optimize_y)) {
+      message2c(noting_to_opt_msg)
+      return(invisible(NULL))
+    } else if(optimize_x == "NULL" & optimize_y == "NULL") {
+      message2c(noting_to_opt_msg)
+      return(invisible(NULL))
+    } else {
+      optimize_df <- optimize_df_
+    }
   }
   
   
@@ -952,7 +977,7 @@ optimize_model.bgmfit <- function(model,
   
   
   optimize_fun <- function(.x, model, exe_model_fit) {
-    message("\nOptimizing model no. ",
+    message("\nOptimizing model: ",
             .x,
             " (total ",
             nrow(optimize_df_x_y),
@@ -1005,14 +1030,39 @@ optimize_model.bgmfit <- function(model,
              xfun_print, "; yfun = ", yfun_print)
     
     
+    # args_o$model <- model
+    # args_o$df    <- eval(parse(text = df))
+    # args_o$xfun  <- xfun
+    # args_o$yfun  <- yfun
+    # args_o$data  <- newdata %>% data.frame()
+    
+    
+    
+    
+    
+    if(!is.null(df)) {
+      args_o$df    <- eval(parse(text = df))
+    } else {
+      args_o$df <- 'NULL'
+    }
+    
+    if(!is.null(xfun)) {
+      args_o$xfun  <- xfun 
+    } else {
+      args_o$xfun <- 'NULL'
+    }
+    
+    if(!is.null(yfun)) {
+      args_o$yfun  <- yfun 
+    } else {
+      args_o$yfun <- 'NULL'
+    }
+    
+    
+    
     args_o$model <- model
-    args_o$df    <- eval(parse(text = df))
-    args_o$xfun  <- xfun
-    args_o$yfun  <- yfun
     args_o$data  <- newdata %>% data.frame()
-    
-    
-    
+    # why args_o$model here?
     args_o$model  <- NULL
     
     args_o_new <- args_o

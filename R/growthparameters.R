@@ -1,6 +1,6 @@
 
 
-#' @title Estimate Growth Parameters from the Model Fit
+#' @title Estimate growth parameters for the Bayesian SITAR model
 #'
 #' @description The \strong{growthparameters()} function estimates both
 #'   population-average and individual-specific growth parameters (e.g., age at

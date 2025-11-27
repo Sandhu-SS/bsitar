@@ -1,7 +1,7 @@
 
 
 
-#' @title Fitted (Expected) Values from the Posterior Draws
+#' @title Estimate fitted (Expected) values for the Bayesian SITAR model
 #' 
 #' @description The \strong{fitted_draws()} function is a wrapper around the
 #'   [brms::fitted.brmsfit()] function, which allows users to obtain fitted

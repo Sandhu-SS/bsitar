@@ -1,6 +1,6 @@
 
 
-#' @title Visualize conditional effects of predictor
+#' @title Visualize conditional effects for the Bayesian SITAR model
 #'
 #' @details The \strong{plot_conditional_effects()} is a wrapper around the
 #'   [brms::conditional_effects()]. The [brms::conditional_effects()] function

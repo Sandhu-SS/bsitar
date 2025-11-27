@@ -3,7 +3,7 @@
 \name{growthparameters.bgmfit}
 \alias{growthparameters.bgmfit}
 \alias{growthparameters}
-\title{Estimate Growth Parameters from the Model Fit}
+\title{Estimate growth parameters for the Bayesian SITAR model}
 \usage{
 \method{growthparameters}{bgmfit}(
   model,

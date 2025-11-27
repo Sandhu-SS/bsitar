@@ -3,7 +3,7 @@
 \name{plot_ppc.bgmfit}
 \alias{plot_ppc.bgmfit}
 \alias{plot_ppc}
-\title{Perform posterior predictive distribution checks}
+\title{Perform posterior predictive checks for the Bayesian SITAR model}
 \usage{
 \method{plot_ppc}{bgmfit}(
   model,

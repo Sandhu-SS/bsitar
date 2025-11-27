@@ -1,6 +1,6 @@
 
 
-#' @title Estimate and compare growth curves
+#' @title Estimate and compare growth curves for the Bayesian SITAR model
 #' 
 #' @description The \strong{marginal_comparisons()} function estimates and
 #'   compares growth curves such as distance and velocity. This function is a

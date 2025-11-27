@@ -3,7 +3,7 @@
 \name{predict_draws.bgmfit}
 \alias{predict_draws.bgmfit}
 \alias{predict_draws}
-\title{Predicted values from the posterior predictive distribution}
+\title{Estimate predicted values for the Bayesian SITAR model}
 \usage{
 \method{predict_draws}{bgmfit}(
   model,

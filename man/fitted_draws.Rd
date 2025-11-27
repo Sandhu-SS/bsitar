@@ -3,7 +3,7 @@
 \name{fitted_draws.bgmfit}
 \alias{fitted_draws.bgmfit}
 \alias{fitted_draws}
-\title{Fitted (Expected) Values from the Posterior Draws}
+\title{Estimate fitted (Expected) values for the Bayesian SITAR model}
 \usage{
 \method{fitted_draws}{bgmfit}(
   model,

@@ -2525,7 +2525,7 @@ bsitar <- function(x,
   
  data_check_for_modifications <- FALSE 
  if(is.null(mcall_$data)) {
-   stop("Data argument must be specified")
+   stop2c("Data argument must be specified")
  } else if(is.language(mcall_$data)) {
    data_check_for_modifications <- TRUE
    data_name_str_check <- deparse(mcall_$data)
@@ -2551,7 +2551,7 @@ bsitar <- function(x,
  
   
   if(data_name_pipe) {
-    stop("The 'data' argument should be not be modified",
+    stop2c("The 'data' argument should be not be modified",
          "\n  ",
          "via pipe function such as '%>%' or '|>'",
           "\n  ",
@@ -2587,7 +2587,7 @@ bsitar <- function(x,
       } else if(as.integer(temp_threads_)) {
         temp_threads_ <- temp_threads_
       } else {
-        stop("Argument 'threads' must be 'NULL' or an 'integer'")
+        stop2c("Argument 'threads' must be 'NULL' or an 'integer'")
       }
       mcall_threads_         <- brms::threading()
       if(!is.null(temp_threads_)) {
@@ -2665,9 +2665,11 @@ bsitar <- function(x,
   }
   
   if(utils::packageVersion('rstan') < "2.26") {
-    if(expose_function) stop("Argument 'expose_function' not allowed ",
-                             "for this rstan version ",
-                             utils::packageVersion('rstan'))
+    if(expose_function) {
+      stop2c("Argument 'expose_function' not allowed ",
+             "for this rstan version ",
+             utils::packageVersion('rstan'))
+    }
   }
   
  quote_random_as_init_arg <- function(temp_init_call_in, mcall,...) {
@@ -3070,7 +3072,7 @@ bsitar <- function(x,
       expr <- get(as.character(expr), envir = parent.frame())
   
       if (!is.language(expr)) {
-        stop("Symbol must refer to a language object (e.g., quote(c(...)))")
+        stop2c("Symbol must refer to a language object (e.g., quote(c(...)))")
       }
     }
   
@@ -3086,7 +3088,7 @@ bsitar <- function(x,
        grepl("^c\\(", quoted, fixed = F)) {
       if(strict_list) {
         if(grepl("^c\\(", quoted, fixed = F)) {
-          stop("Argument ",  collapse_comma(element), " must be a list(...)")
+          stop2c("Argument ",  collapse_comma(element), " must be a list(...)")
         } # if(grepl("^c\\(", quoted, fixed = F)) {
       } # if(strict_list) {
     } else {
@@ -3173,7 +3175,7 @@ bsitar <- function(x,
     }
     
     if(!is.list(x)) {
-      stop("'x' must be a list")
+      stop2c("'x' must be a list")
     }
     
     x_name    <- element
@@ -3187,7 +3189,7 @@ bsitar <- function(x,
     n_missing_names <- length(x) - length(all_names) 
     
     if(!out) {
-      stop("Argument ", collapse_comma(x_name), " must be a named list with ",
+      stop2c("Argument ", collapse_comma(x_name), " must be a named list with ",
            "\n  ",
            "each element having a unique name.", 
            "\n  ",
@@ -3233,7 +3235,7 @@ bsitar <- function(x,
     if(is.null(x[['method']])) {
       x[['method']]   <- 'bs'
     } else if(x[['method']] == 'rs') {
-      stop("Only 'bs' is allowed as a method for knots_selection")
+      stop2c("Only 'bs' is allowed as a method for knots_selection")
     }
     
     if(is.null(x[['all_scores']])) {
@@ -3260,7 +3262,7 @@ bsitar <- function(x,
     if(out) {
       if(!is.null(assert_names)) {
         if(!is.character(assert_names)) {
-          stop("'assert_names' must be a character or character vector")
+          stop2c("'assert_names' must be a character or character vector")
         } else if(length(all_names) != length(assert_names)) {
           #stop("Length of 'assert_names' must be same as length of list names")
         } else {
@@ -3425,7 +3427,7 @@ bsitar <- function(x,
   if(count_number_nlf > 1) {
     if(is.language(sigma_formula_manual_fun)) {
       if(!grepl("^list\\(", sigma_formula_manual_fun_str)) {
-        stop("Argument 'sigma_formula_manual' must be a list or a string")
+        stop2c("Argument 'sigma_formula_manual' must be a list or a string")
       }
     }
   }
@@ -3476,7 +3478,7 @@ bsitar <- function(x,
 
   familyzzzx <- arguments$family
   if(grepl("^c\\(", deparse_0(familyzzzx), fixed = FALSE)) {
-    stop("Argument family should be a list() and not a vector 'c()'")
+    stop2c("Argument family should be a list() and not a vector 'c()'")
   } else if(grepl("^\\(", deparse_0(familyzzzx), fixed = FALSE)) {
     familyzzzx <- paste0("list", "", deparse_0(familyzzzx) , "")
     familyzzzx <- str2lang(familyzzzx)
@@ -3588,10 +3590,10 @@ bsitar <- function(x,
       }
     } else if(!is.list(QR_decomp_args)) {
       if(!is.character(QR_decomp_args)) {
-        stop("argument 'decomp' must be a list or character")
+        stop2c("argument 'decomp' must be a list or character")
       } else {
         if(QR_decomp_args != "QR") {
-          stop("only 'QR' decomp allowed")
+          stop2c("only 'QR' decomp allowed")
         }
         decomp       <- QR_decomp_args
         QR_Xmat      <- 'Qc'
@@ -3615,7 +3617,7 @@ bsitar <- function(x,
   } else if(!is.character(arguments$select_model) |
             !is.symbol(arguments$select_model)
             ) {
-    stop("The argument 'select_model' must be a symbol or 
+    stop2c("The argument 'select_model' must be a symbol or 
          single character string")
   }
   
@@ -3773,12 +3775,12 @@ bsitar <- function(x,
   if(!is.null(getdotslist[['smat']])) {
     spline_type <- getdotslist[['smat']]
     if(!is.list(spline_type)) {
-      stop("'smat' set via '...' must be a named list")
+      stop2c("'smat' set via '...' must be a named list")
     }
     checknamessmat <- names(spline_type)
     checknamessmat <- checknamessmat[nzchar(checknamessmat)] 
     if(length(checknamessmat) != length(spline_type)) {
-      stop("Each element of 'smat' set via '...' must be named.",
+      stop2c("Each element of 'smat' set via '...' must be named.",
            "\n  ", 
            "Allowed options are:",
            "\n  ", 
@@ -3786,7 +3788,7 @@ bsitar <- function(x,
     } 
     for (checknamessmati in checknamessmat) {
       if(!checknamessmati %in% allowed_smat_options)
-        stop("Option  '", checknamessmati, "' is invalid for 'smat'",
+        stop2c("Option  '", checknamessmati, "' is invalid for 'smat'",
              "\n  ", 
              "Allowed options are:",
              "\n  ", 
@@ -3886,22 +3888,22 @@ bsitar <- function(x,
               names(spline_type) <- c('type', 'normalize')
               if(verbose) message("stype arguments named as 'type', 'normalize'")
             } else {
-              stop(allowed_spline_type_list_names_msg)
+              stop2c(allowed_spline_type_list_names_msg)
             }
           } else if(length(spline_type) == 3) {
             if(spline_type_via_stype) {
               names(spline_type) <- c('type', 'normalize', "preH")
               if(verbose) message("stype arguments named as 'type', 'normalize', 'preH'")
             } else {
-              stop(allowed_spline_type_list_names_msg)
+              stop2c(allowed_spline_type_list_names_msg)
             }
           } else {
-            stop(allowed_spline_type_list_names_msg)
+            stop2c(allowed_spline_type_list_names_msg)
           }
         }
         if(!is.null(spline_type[['type']])) {
           if(!is.character(spline_type[['type']])) {
-            stop(paste0(spline_type[['type']], " must be a character string"))
+            stop2c(paste0(spline_type[['type']], " must be a character string"))
           } else {
             spline_type_list[['type']] <- spline_type[['type']]
           }
@@ -3912,7 +3914,7 @@ bsitar <- function(x,
         # change check message same as 'centerval' for other
         if(!is.null(spline_type[['degree']])) {
           if(!is.numeric(spline_type[['degree']])) {
-            stop("Argument 'degree' must be a numeric value",
+            stop2c("Argument 'degree' must be a numeric value",
                  " but instead specified as ", 
                  "'", paste0(spline_type[['degree']], "'"))
           } else {
@@ -3927,7 +3929,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['intercept']])) {
           if(!is.logical(as.logical(spline_type[['intercept']]))) {
-            stop(paste0(spline_type[['intercept']], 
+            stop2c(paste0(spline_type[['intercept']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['intercept']] <- spline_type[['intercept']]
@@ -3938,7 +3940,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['normalize']])) {
           if(!is.logical(as.logical(spline_type[['normalize']]))) {
-            stop(paste0(spline_type[['normalize']], 
+            stop2c(paste0(spline_type[['normalize']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['normalize']] <- spline_type[['normalize']]
@@ -3951,7 +3953,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['derivs']])) {
           if(!is.integer(as.logical(spline_type[['derivs']]))) {
-            stop("Argument 'derivs' must be an integer",
+            stop2c("Argument 'derivs' must be an integer",
                  " but instead specified as ", 
                  "'", paste0(spline_type[['degree']], "'"))
           } else {
@@ -3963,7 +3965,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['preH']])) {
           if(!is.logical(as.logical(spline_type[['preH']]))) {
-            stop(paste0(spline_type[['preH']], 
+            stop2c(paste0(spline_type[['preH']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['preH']]    <-  spline_type[['preH']] 
@@ -3974,7 +3976,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['include']])) {
           if(!is.logical(as.logical(spline_type[['include']]))) {
-            stop(paste0(spline_type[['include']], 
+            stop2c(paste0(spline_type[['include']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['include']]    <-  spline_type[['include']] 
@@ -3985,7 +3987,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['path']])) {
           if(!is.character(spline_type[['path']])) {
-            stop(paste0(spline_type[['path']], " must be a character string"))
+            stop2c(paste0(spline_type[['path']], " must be a character string"))
           } else {
             spline_type_list[['path']]    <-  spline_type[['path']] 
           }
@@ -3996,7 +3998,7 @@ bsitar <- function(x,
         # change check message same as 'centerval' for other
         if(!is.null(spline_type[['centerval']])) {
           if(!is.numeric(spline_type[['centerval']])) {
-            stop("Argument 'centerval' must be a numeric value",
+            stop2c("Argument 'centerval' must be a numeric value",
                  " but instead specified as ", 
                  "'", paste0(spline_type[['centerval']], "'"))
           } else {
@@ -4009,7 +4011,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['sfirst']])) {
           if(!is.logical(as.logical(spline_type[['sfirst']]))) {
-            stop(paste0(spline_type[['sfirst']], 
+            stop2c(paste0(spline_type[['sfirst']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['sfirst']] <- spline_type[['sfirst']]
@@ -4020,7 +4022,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['bkrange']])) {
           if(!is.logical(as.logical(spline_type[['bkrange']]))) {
-            stop(paste0(spline_type[['bkrange']], 
+            stop2c(paste0(spline_type[['bkrange']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['bkrange']] <- spline_type[['bkrange']]
@@ -4031,7 +4033,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['fix_bknots']])) {
           if(!is.logical(as.logical(spline_type[['fix_bknots']]))) {
-            stop(paste0(spline_type[['fix_bknots']], 
+            stop2c(paste0(spline_type[['fix_bknots']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
             spline_type_list[['fix_bknots']] <- spline_type[['fix_bknots']]
@@ -4042,7 +4044,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['what']])) {
           if(!is.character(spline_type[['what']])) {
-            stop(paste0(spline_type[['what']], 
+            stop2c(paste0(spline_type[['what']], 
                         " must be a NULL or a character string"))
           } else {
             spline_type_list[['what']] <- spline_type[['what']]
@@ -7534,7 +7536,7 @@ bsitar <- function(x,
       } else  if(is.function(ept(xfunsi))) {
         xfuntransformsi <- ept(xfunsi)
       } else {
-        stop(paste0(
+        stop2c(paste0(
           "The xfun argument must be either a string ('log' or 'sqrt'),", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
@@ -7554,7 +7556,7 @@ bsitar <- function(x,
       } else  if(is.function(ept(yfunsi))) {
         yfuntransformsi <- ept(yfunsi)
       } else {
-        stop(paste0("The yfun argument must be a string ('log' or 'sqrt'),", 
+        stop2c(paste0("The yfun argument must be a string ('log' or 'sqrt'),", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
       }
@@ -7573,7 +7575,7 @@ bsitar <- function(x,
       } else  if(is.function(ept(sigmaxfunsi))) {
         sigmaxfuntransformsi <- ept(sigmaxfunsi)
       } else {
-        stop(paste0("The xfun argument must be either 'log' or 'sqrt',", 
+        stop2c(paste0("The xfun argument must be either 'log' or 'sqrt',", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
       }
@@ -7593,7 +7595,7 @@ bsitar <- function(x,
       } else  if(is.function(ept(sigmayfunsi))) {
         sigmayfuntransformsi <- ept(sigmayfunsi)
       } else {
-        stop(paste0("The xfun argument must be either 'log' or 'sqrt',", 
+        stop2c(paste0("The xfun argument must be either 'log' or 'sqrt',", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
       }
@@ -7639,7 +7641,7 @@ bsitar <- function(x,
       } else  if(is.function(ept(xfunxoffsetsi))) {
         xfunxoffsettransformsi <- ept(xfunxoffsetsi)
       } else {
-        stop(paste0(
+        stop2c(paste0(
           "The xfunxoffset argument must be either a string ('log' or 'sqrt'),", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
@@ -7667,7 +7669,7 @@ bsitar <- function(x,
       } else  if(is.function(ept(sigmaxfunxoffsetsi))) {
         sigmaxfunxoffsettransformsi <- ept(sigmaxfunxoffsetsi)
       } else {
-        stop(paste0("The 'sigmaxfunxoffset' must be a string ('log' / 'sqrt'),", 
+        stop2c(paste0("The 'sigmaxfunxoffset' must be a string ('log' / 'sqrt'),", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
       }
@@ -10124,7 +10126,7 @@ bsitar <- function(x,
         
         if(length(set_cov_prior_what) > 1 & 
            length(set_cov_prior_what) != n_higher_str) {
-          stop("Length of prior elements for random effect parameter ",
+          stop2c("Length of prior elements for random effect parameter ",
                "'", set_nlpar_what, "'",
                " \n",
                "  specified by using the argument ", 
@@ -10365,7 +10367,7 @@ bsitar <- function(x,
         
         if(length(set_prior_cor_what) > 1 & 
            length(set_prior_cor_what) != n_higher_str) {
-          stop("Length of prior elements for random effect parameter ",
+          stop2c("Length of prior elements for random effect parameter ",
                "'", set_prior_cor_what, "'",
                " \n",
                "  specified by using the argument ", 
@@ -10930,13 +10932,13 @@ bsitar <- function(x,
       sigma_forms_vars_not_allowed <- setdiff(all_forms_vars_,
                                               colnames(brmsdata))
       if(length(sigma_forms_vars_not_allowed) > 0) {
-        stop("You have included the following variable(s) in the formula ", 
+        stop2c("You have included the following variable(s) in the formula ", 
              "\n  ", 
              "which are are not present in the data: ",
              "\n ", 
              collapse_comma(sigma_forms_vars_not_allowed),
              "\n  ",
-             "please check the relevant part of the code shown below: ",
+             ". Please check the relevant part of the code shown below: ",
              "\n ", 
              paste0(gsub_space(deparse(sigma_forms)), collapse = ""))
       }
@@ -10962,7 +10964,7 @@ bsitar <- function(x,
         length_of_sigma_var_nlpars <- 3
       }
       if(length(sigmatau_strsi_i) != length_of_sigma_var_nlpars) {
-        stop("For sigma variance method ", collapse_comma(nlf_sigma_method_arg), 
+        stop2c("For sigma variance method ", collapse_comma(nlf_sigma_method_arg), 
              ", the number of nlpar should be ", length_of_sigma_var_nlpars,
              "\n ",
              " but the number of specified nlpar is ", length(sigmatau_strsi_i),
@@ -10976,7 +10978,7 @@ bsitar <- function(x,
     if(nys > 1) {
       # check for _ls
       if(length(unique(unlist(sigmaspfncname_c))) > 1) {
-        stop("The name of 'sigma' functions defined for modelling location-scale",
+        stop2c("The name of 'sigma' functions defined for modelling location-scale",
              "\n model should be same across all responses.",
              "\n Currently specified names are: ", 
              collapse_comma(unique(unlist(sigmaspfncname_c))),
@@ -10988,7 +10990,7 @@ bsitar <- function(x,
       }
       # check for _mu
       if(! all_inner_lengths_equal_in_list(sigmatau_strsi_c) ) {
-        stop("The number of 'nlpar' parameters defined for modelling sigma as a",
+        stop2c("The number of 'nlpar' parameters defined for modelling sigma as a",
              "\n  function of mean should be same across all responses.",
              "\n  (the response specific renaming is done internally)",
              "\n  Currently specified names are: ", 
@@ -10999,7 +11001,7 @@ bsitar <- function(x,
       if(!all_elements_identical_in_list(sigmatau_strsi_c)) {
         # if(all(sapply(sigmatau_strsi_c, identical, sigmatau_strsi_c[[1]]))) {
         # if(length(unique(unlist(sigmatau_strsi_c))) > 1) {
-        stop("The names of 'nlpar' parameters defined for modelling sigma as a",
+        stop2c("The names of 'nlpar' parameters defined for modelling sigma as a",
              "\n  function of mean should be same across all responses.",
              "\n  (the response specific renaming is done internally)",
              "\n  Currently specified names are: ", 
@@ -11299,11 +11301,11 @@ bsitar <- function(x,
         Rescor_by_id   <- multivariate$rcorr_by
         
         if(!is.factor(brmsdata[[Rescor_by_id]])) {
-          stop("The variable ", "'", multivariate$rcorr_by, "'",
+          stop2c("The variable ", "'", multivariate$rcorr_by, "'",
                " set as 'rcorr_by' must be a factor variable")
         } else if(is.factor(brmsdata[[Rescor_by_id]])) {
           if(nlevels(brmsdata[[Rescor_by_id]]) == 1) {
-            stop("The variable ", "'", multivariate$rcorr_by, "'",
+            stop2c("The variable ", "'", multivariate$rcorr_by, "'",
                  " set as 'rcorr_by' must be a factor variable",
                  "\n  ",
                  "with at least two levels")
@@ -11325,7 +11327,7 @@ bsitar <- function(x,
         if(!is.null(multivariate$rcorr_method)) {
           rcorr_method_choices <- c('lkj', 'cde')
           if(!multivariate$rcorr_method %in% rcorr_method_choices) {
-            stop("The residual correletion method specified as ", "'",
+            stop2c("The residual correletion method specified as ", "'",
                  multivariate$rcorr_method,"'",
                  " is invalid",
                  "\n  ", 
@@ -11352,7 +11354,7 @@ bsitar <- function(x,
               as.vector()
           } else {
             if(length(Rescor_prior) != Rescor_by_id_integer_max) {
-              stop("lenght of 'rcorr_prior' must be either 1 or same",
+              stop2c("lenght of 'rcorr_prior' must be either 1 or same",
                    "as levels of 'rescor_by'")
             }
           }
@@ -11447,7 +11449,7 @@ bsitar <- function(x,
         } else {
           x <- cor
           if (length(x) != nc) {
-            stop("length of correlation vector must be ",
+            stop2c("length of correlation vector must be ",
                  nc,
                  "\n, ",
                  ", but found ",
@@ -11704,7 +11706,7 @@ bsitar <- function(x,
           set_jitter_amount  <- what_to_jitter_list[['amount']]
           set_jitter_percent <- what_to_jitter_list[['percent']]
           if(!is.null(set_jitter_amount) & !is.null(set_jitter_percent)) {
-            stop("Please specify either amount or percent for jitter, not both")
+            stop2c("Please specify either amount or percent for jitter, not both")
           }
           if(is.null(set_jitter_percent)) {
             set_jitter_prop <- NULL
@@ -11741,7 +11743,7 @@ bsitar <- function(x,
           set_jitter_amount  <- what_to_jitter_list[['amount']]
           set_jitter_percent <- what_to_jitter_list[['percent']]
           if(!is.null(set_jitter_amount) & !is.null(set_jitter_percent)) {
-            stop("Please specify either amount or percent for jitter, not both")
+            stop2c("Please specify either amount or percent for jitter, not both")
           }
           if(is.null(set_jitter_percent)) {
             set_jitter_prop <- NULL
@@ -12229,7 +12231,7 @@ bsitar <- function(x,
     }
     
     if(!all(check_p_dimes==check_p_dimes[1])) {
-      stop('All parameters must have the same number of parameters')
+      stop2c('All parameters must have the same number of parameters')
     }
     
     
@@ -12248,7 +12250,7 @@ bsitar <- function(x,
     
     if(check_p_dimes[1] > 1) {
       if(any(check_p_attr1 == 0)) {
-        stop('All parameters must have the covariate form as ~0+')
+        stop2c('All parameters must have the covariate form as ~0+')
       }
     }
     
@@ -12615,7 +12617,7 @@ bsitar <- function(x,
   if(!is.null(set_self_priors) & 
      !is.null(add_self_priors) & 
      !is.null(set_replace_priors)) {
-    stop("Amongst 'set_self_priors', 
+    stop2c("Amongst 'set_self_priors', 
          'add_self_priors' and 'set_replace_priors' arguments,",
          "\n ",
          " only one can be specified at a time")
@@ -12623,7 +12625,7 @@ bsitar <- function(x,
   
   if(get_priors & get_priors_eval & validate_priors & 
      get_stancode & get_standata & get_formula & get_stanvars) {
-    stop("Amongst 'get_priors' 'get_priors_eval', 'validate_priors' ",
+    stop2c("Amongst 'get_priors' 'get_priors_eval', 'validate_priors' ",
          "\n ",
          "'get_stancode', 'get_standata', 'get_formula', 'get_stanvars' ",
          "\n ",
@@ -12940,7 +12942,7 @@ bsitar <- function(x,
                             ...)
     } else {
       # wrong type input
-      stop("type must be remove, after or before!")
+      stop2c("type must be remove, after or before!")
     }
     return(out)
   }
@@ -13071,13 +13073,13 @@ bsitar <- function(x,
       if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_0_custom,
                            check_for_validy_of_prepare_transformations_4_custom
                            ))) {
-        stop("Something wrong with 'prepare_transformations' for data_custom")
+        stop2c("Something wrong with 'prepare_transformations' for data_custom")
       }
       
       if(!isTRUE(all.equal(check_for_validy_of_prepare_transformations_3_custom,
                            check_for_validy_of_prepare_transformations_5_custom
                            ))) {
-        stop("Something wrong with 'prepare_transformations' for data_custom")
+        stop2c("Something wrong with 'prepare_transformations' for data_custom")
       }
       
     } # if(check_for_validy_of_prepare_transformations) {
@@ -13099,7 +13101,7 @@ bsitar <- function(x,
       # compare with original
       if(!isTRUE(all.equal(dataout,
                            data_custom_data))) {
-        stop("Something wrong with 'prepare_transformations' for data_custom")
+        stop2c("Something wrong with 'prepare_transformations' for data_custom")
       }
     }
     
@@ -13775,7 +13777,7 @@ bsitar <- function(x,
         init_custom <- rep(init_custom, brm_args$chains)
       } else {
         if(length(init_custom) != length(brm_args$init)) {
-          stop("Custom initials specified via 'init_custom' argument must",
+          stop2c("Custom initials specified via 'init_custom' argument must",
                "\n ", 
                " be a single named list (e.g., custom_init = list(x= 2,xx=5)) ",
                "\n ", 
@@ -14122,7 +14124,7 @@ bsitar <- function(x,
            set_model_sigma_by_me) {
           gsub_it_end <- "()"
           if(!grepl(gsub_it_end, set_model_sigma_by_mu_fun_str, fixed = T)) {
-            stop("For 'fitted' and 'mean' var function, the predictor must ",
+            stop2c("For 'fitted' and 'mean' var function, the predictor must ",
                  "be a set of empty paranthesis '()' or 'identity()'",
                  "\n  ", 
                  "Please check the following relevant part of the code",

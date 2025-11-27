@@ -3,7 +3,7 @@
 \name{add_model_criterion.bgmfit}
 \alias{add_model_criterion.bgmfit}
 \alias{add_model_criterion}
-\title{Add fit Criteria to the model}
+\title{Add fit criteria to the Bayesian SITAR Model}
 \usage{
 \method{add_model_criterion}{bgmfit}(
   model,

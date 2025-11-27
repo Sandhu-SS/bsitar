@@ -1,7 +1,7 @@
 
 
 
-#' @title Update model
+#' @title Update the Bayesian SITAR model
 #'
 #' @description The \strong{update_model()} function is a wrapper around the
 #'   \code{update()} function from the \pkg{brms} package, which refits the model

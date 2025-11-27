@@ -2446,8 +2446,12 @@ check_if_arg_set <- function(x) {
   } else if(is.character(x)) {
     if(x == "NULL") {
       set_x <- FALSE
+    } else if(x == "TRUE" | x == "T") {
+      set_x <- TRUE 
+    } else if(x == "FALSE" | x == "F") {
+      set_x <- FALSE
     } else {
-      set_x <- TRUE
+      set_x <- TRUE # added for optimize_model
     }
   } else if(is.list(x)) {
     if(length(x) == 1) {
@@ -2463,6 +2467,8 @@ check_if_arg_set <- function(x) {
         set_x <- TRUE
       }
     }
+  } else if(is.logical(x)) {
+     set_x <- x # added for optimize_model
   }
   return(set_x)
 }
@@ -5212,9 +5218,9 @@ setup_by_var <- function(model,
       set_group <- FALSE
     } else if(!is.null(cov)) {
       set_group <- cov
-      if (!set_group %in% cov) {
-        stop('by must be one of the ', cov)
-      } 
+      # if (!set_group %in% cov) {
+      #   stop("'by' must be one of the ", cov)
+      # } 
     }
   } else if(!is.null(by)) {
     if (!isFALSE(by)) {
@@ -5222,6 +5228,14 @@ setup_by_var <- function(model,
     } else if (isFALSE(by)) {
       set_group <- FALSE
     }
+  }
+  
+  # New 22.11.2025
+  if(!is.null(cov)) {
+    # if (!set_group %in% cov) {
+    #   stop("'by' must be one of the ", cov)
+    # } 
+    # set_group <- cov
   }
   
   xvar_strict_msg <- 
@@ -5254,6 +5268,7 @@ setup_by_var <- function(model,
   
   if(!switch_plot) {
     if(dpar == "sigma") {
+      xvar_strict <- FALSE
       if(is.logical(set_group)) {
         if(!set_group) set_group <- xvar
       } else if(!is.logical(set_group)) {

@@ -3,7 +3,7 @@
 \name{marginal_draws.bgmfit}
 \alias{marginal_draws.bgmfit}
 \alias{marginal_draws}
-\title{Estimate growth curves}
+\title{Estimate and plot growth curves for the Bayesian SITAR model}
 \usage{
 \method{marginal_draws}{bgmfit}(
   model,

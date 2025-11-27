@@ -1,6 +1,6 @@
 
 
-#' @title Check and Get Namespace Object If Exists
+#' @title Retrieve Bayesian SITAR model object if it exists
 #'
 #' @description
 #' This function checks if an object exists within a specified namespace and

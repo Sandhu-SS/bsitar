@@ -1,6 +1,6 @@
 
 
-#' @title Estimate model based individual growth parameters
+#' @title Estimate model-based growth parameters for the Bayesian SITAR model
 #' 
 #' @description The \strong{modelbased_growthparameters()} function estimates
 #'   individual growth parameters by mapping population average estimate of age

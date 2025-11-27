@@ -3,7 +3,7 @@
 \name{expose_model_functions.bgmfit}
 \alias{expose_model_functions.bgmfit}
 \alias{expose_model_functions}
-\title{Expose User-Defined Stan Functions for Post-Processing}
+\title{Expose user-defined Stan functions for the Bayesian SITAR model}
 \usage{
 \method{expose_model_functions}{bgmfit}(
   model,
