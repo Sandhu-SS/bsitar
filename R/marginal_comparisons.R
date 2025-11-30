@@ -817,31 +817,116 @@ marginal_comparisons.bgmfit <- function(model,
   
   
   
+  # future
   if (future) {
-    getfutureplan <- future::plan()
-    if (future_session == 'multisession') {
-      set_future_session <- future_session
-    } else if (future_session == 'multicore') {
-      set_future_session <- future_session
-    } else if (future_session == 'sequential') {
-      set_future_session <- future_session
+    if(is.null(future_session)) {
+      future_session      <- "sequential"
+      future_session_list <- list()
+    } else if(is.list(future_session)) {
+      future_session_list <- future_session
+      future_session      <- future_session_list[['future_session']]
+      if(is.null(future_session)) {
+        future_session <- "sequential"
+      }
+    } else if(!is.list(future_session)) {
+      if(is.character(future_session)) {
+        future_session_list <- list()
+        future_session <- future_session
+      } else {
+        stop("'future_session' must be a single character or a named list")
+      }
     }
     
-    setplanis <- set_future_session
-    if(set_future_session == 'sequential') {
-      future::plan(setplanis)
-    } else {
-      future::plan(setplanis, workers = setincores)
+    getfutureplan <- future::plan()
+    oldplanin     <- attr(getfutureplan, "call")
+    if(grepl("mirai_", future_session)) {
+      insight::check_if_installed('mirai')
+      if(!grepl("future.mirai::", future_session)) {
+        future_session <- paste0("future.mirai::", future_session)
+      }
+    } else if(!grepl("mirai_", future_session)) {
+      if(!grepl("future.mirai::", future_session)) {
+        future_session <- paste0("future::", future_session)
+      }
     }
+    
+    setplanis <- future_session
+    if (inherits(getfutureplan, "sequential")) {
+      if(grepl("mirai_", setplanis)) {
+        if(grepl("mirai_cluster", future_session)) {
+          mirai_daemons_args <- list()
+          if(is.null(future_session_list[['daemons']])) {
+            mirai_daemons_args[['n']] <- cores
+          } else {
+            if(!is.list(future_session_list[['daemons']])) {
+              stop("The daemons in future_session list must be a list")
+            }
+            mirai_daemons_args <- future_session_list[['daemons']]
+            mirai_daemons_args[['n']] <- cores
+          }
+          # mirai::daemons(cores)
+          do.call(mirai::daemons, mirai_daemons_args)
+          future::plan(setplanis) 
+        } else {
+          future::plan(setplanis, workers = cores)
+        } 
+      } else if(!grepl("mirai_", setplanis)) {
+        if(grepl("cluster", future_session)) {
+          future::plan(setplanis, workers = cores) #workers should ne n1, n2..
+        } else {
+          # setplanis <- ept(deparse(substitute(setplanis))) %>% ept() %>% future::plan()
+          # future::plan(setplanis, workers = cores)
+          # ept(deparse(substitute(setplanis))) %>% ept() %>% 
+          #   future::plan(., workers = cores)
+          future::plan(setplanis, workers = cores)
+        } 
+      }
+      newplanin <- future::plan()
+      if(verbose) {
+        message2c("The existing future plan: ", oldplanin, 
+                  " updated as ", setplanis)
+      }
+    } else if (!inherits(getfutureplan, "sequential")) {
+      if(verbose) {
+        message2c("Using the existing future plan: ", oldplanin)
+      }
+    }
+    # Restore 
     on.exit(future::plan(getfutureplan), add = TRUE)
-
     if (future_session == 'multicore') {
       multthreadplan <- getOption("future.fork.multithreading.enable")
       options(future.fork.multithreading.enable = TRUE)
       on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
               add = TRUE)
     }
-  }
+  } # if (future) {
+  
+  
+  # if (future) {
+  #   getfutureplan <- future::plan()
+  #   if (future_session == 'multisession') {
+  #     set_future_session <- future_session
+  #   } else if (future_session == 'multicore') {
+  #     set_future_session <- future_session
+  #   } else if (future_session == 'sequential') {
+  #     set_future_session <- future_session
+  #   }
+  #   
+  #   setplanis <- set_future_session
+  #   if(set_future_session == 'sequential') {
+  #     future::plan(setplanis)
+  #   } else {
+  #     future::plan(setplanis, workers = setincores)
+  #   }
+  #   on.exit(future::plan(getfutureplan), add = TRUE)
+  # 
+  #   if (future_session == 'multicore') {
+  #     multthreadplan <- getOption("future.fork.multithreading.enable")
+  #     options(future.fork.multithreading.enable = TRUE)
+  #     on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
+  #             add = TRUE)
+  #   }
+  # }
   
   
   

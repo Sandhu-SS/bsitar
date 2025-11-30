@@ -210,10 +210,17 @@
 #'
 #' @param future_session A character string specifying the session type when
 #'   \code{future = TRUE}. The \code{'multisession'} (default) option sets the
-#'   multisession environment, while the \code{'multicore'} option sets up a
-#'   multicore session. Note that \code{'multicore'} is not supported on Windows
-#'   systems. For more details, see [future.apply::future_sapply()].
-#'
+#'   \code{'multisession'} environment, while the \code{'multicore'} option sets
+#'   up a \code{'multicore'} session. Note that \code{'multicore'} is not
+#'   supported on Windows systems. For more details, see
+#'   [future.apply::future_sapply()]. For \code{'marginaleffect'} based
+#'   functions, user can also specify \code{'future_session'} as  a named list
+#'   where the first element is the \code{'future_session'} itself and other
+#'   named elements could be additional information passed on to the future
+#'   plan. This is particularly useful when setting up the \code{'mirai
+#'   daemons'}. For example, \code{future_session =
+#'   list(future_session = mirai_cluster, daemons = list(...))}
+#' 
 #' @param cores The number of cores to be used for parallel computations if
 #'   \code{future = TRUE}. On non-Windows systems, this argument can be set
 #'   globally via the \code{mc.cores} option. By default, \code{NULL}, the

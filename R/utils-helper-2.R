@@ -5258,6 +5258,9 @@ setup_by_var <- function(model,
       if(!set_group) set_group <- xvar
     } else if(!is.logical(set_group)) {
       if (!xvar %in% set_group) {
+        set_group <- c(xvar, set_group)
+      }
+      if (!xvar %in% set_group) {
         if(xvar_strict) {
           stop(xvar_strict_msg)
         } # xvar_strict
@@ -5266,6 +5269,7 @@ setup_by_var <- function(model,
   } # if(dpar == "mu") {
   
   
+  # See here, unlike dpar == "mu", the xvar is added if not already in set_group
   if(!switch_plot) {
     if(dpar == "sigma") {
       xvar_strict <- FALSE

@@ -265,9 +265,16 @@ draws in parallel.}
 
 \item{future_session}{A character string specifying the session type when
 \code{future = TRUE}. The \code{'multisession'} (default) option sets the
-multisession environment, while the \code{'multicore'} option sets up a
-multicore session. Note that \code{'multicore'} is not supported on Windows
-systems. For more details, see \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
+\code{'multisession'} environment, while the \code{'multicore'} option sets
+up a \code{'multicore'} session. Note that \code{'multicore'} is not
+supported on Windows systems. For more details, see
+\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}. For \code{'marginaleffect'} based
+functions, user can also specify \code{'future_session'} as  a named list
+where the first element is the \code{'future_session'} itself and other
+named elements could be additional information passed on to the future
+plan. This is particularly useful when setting up the \code{'mirai
+  daemons'}. For example, \code{future_session =
+  list(future_session = mirai_cluster, daemons = list(...))}}
 
 \item{future_splits}{A list (default \code{NULL}) that can be an unnamed
 numeric list, a logical value, or a numeric vector of length 1 or 2. It is
