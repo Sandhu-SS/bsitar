@@ -331,9 +331,11 @@ supported on Windows systems. For more details, see
 functions, user can also specify \code{'future_session'} as  a named list
 where the first element is the \code{'future_session'} itself and other
 named elements could be additional information passed on to the future
-plan. This is particularly useful when setting up the \code{'mirai
-  daemons'}. For example, \code{future_session =
-  list(future_session = mirai_cluster, daemons = list(...))}}
+plan. This is particularly useful when setting up the
+\code{\link[future.mirai:mirai_cluster]{future.mirai::mirai_cluster()}} and  \code{\link[future.mirai:mirai_multisession]{future.mirai::mirai_multisession()}}.
+For example, \code{future_session =
+  list(future_session = mirai_cluster, daemons = list(...))} where
+argument \code{'daemons'} sets up the \code{\link[mirai:daemons]{mirai::daemons()}}.}
 
 \item{cores}{The number of cores to be used for parallel computations if
 \code{future = TRUE}. On non-Windows systems, this argument can be set

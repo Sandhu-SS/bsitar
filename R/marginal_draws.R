@@ -861,39 +861,45 @@ marginal_draws.bgmfit <-
       
       setplanis <- future_session
       if (inherits(getfutureplan, "sequential")) {
+        mirai_daemons_args <- list()
+        future_plan_args <- list()
         if(grepl("mirai_", setplanis)) {
           if(grepl("mirai_cluster", future_session)) {
-            mirai_daemons_args <- list()
             if(is.null(future_session_list[['daemons']])) {
-              mirai_daemons_args[['n']] <- cores
+              #
             } else {
               if(!is.list(future_session_list[['daemons']])) {
                 stop("The daemons in future_session list must be a list")
               }
               mirai_daemons_args <- future_session_list[['daemons']]
-              mirai_daemons_args[['n']] <- cores
             }
-            # mirai::daemons(cores)
-            do.call(mirai::daemons, mirai_daemons_args)
-            future::plan(setplanis) 
+            mirai_daemons_args[['n']]      <- setincores
+            future_plan_args[['strategy']] <- setplanis
           } else {
-            future::plan(setplanis, workers = cores)
+            future_plan_args[['workers']]  <- setincores
+            future_plan_args[['strategy']] <- setplanis
           } 
         } else if(!grepl("mirai_", setplanis)) {
           if(grepl("cluster", future_session)) {
-            future::plan(setplanis, workers = cores) #workers should ne n1, n2..
+            # workers should ne n1, n2..
+            future_plan_args[['workers']]  <- setincores
+            future_plan_args[['strategy']] <- setplanis
           } else {
-            # setplanis <- ept(deparse(substitute(setplanis))) %>% ept() %>% future::plan()
-            # future::plan(setplanis, workers = cores)
-            # ept(deparse(substitute(setplanis))) %>% ept() %>% 
-            #   future::plan(., workers = cores)
-            future::plan(setplanis, workers = cores)
+            future_plan_args[['workers']]  <- setincores
+            future_plan_args[['strategy']] <- setplanis
           } 
         }
-        newplanin <- future::plan()
+        
+        if(!is_emptyx(mirai_daemons_args)) {
+          do.call(mirai::daemons, mirai_daemons_args)
+          if(verbose) {
+            message2c("Setting mirai daemons: ", mirai::status())
+          }
+        }
+        do.call(future::plan, future_plan_args)
         if(verbose) {
           message2c("The existing future plan: ", oldplanin, 
-                  " updated as ", setplanis)
+                    " updated as ", setplanis)
         }
       } else if (!inherits(getfutureplan, "sequential")) {
         if(verbose) {

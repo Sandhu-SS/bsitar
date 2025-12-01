@@ -1272,36 +1272,42 @@ marginal_growthparameters.bgmfit <- function(model,
     
     setplanis <- future_session
     if (inherits(getfutureplan, "sequential")) {
+      mirai_daemons_args <- list()
+      future_plan_args <- list()
       if(grepl("mirai_", setplanis)) {
         if(grepl("mirai_cluster", future_session)) {
-          mirai_daemons_args <- list()
           if(is.null(future_session_list[['daemons']])) {
-            mirai_daemons_args[['n']] <- cores
+            #
           } else {
             if(!is.list(future_session_list[['daemons']])) {
               stop("The daemons in future_session list must be a list")
             }
             mirai_daemons_args <- future_session_list[['daemons']]
-            mirai_daemons_args[['n']] <- cores
           }
-          # mirai::daemons(cores)
-          do.call(mirai::daemons, mirai_daemons_args)
-          future::plan(setplanis) 
+          mirai_daemons_args[['n']]      <- setincores
+          future_plan_args[['strategy']] <- setplanis
         } else {
-          future::plan(setplanis, workers = cores)
+          future_plan_args[['workers']]  <- setincores
+          future_plan_args[['strategy']] <- setplanis
         } 
       } else if(!grepl("mirai_", setplanis)) {
         if(grepl("cluster", future_session)) {
-          future::plan(setplanis, workers = cores) #workers should ne n1, n2..
+          # workers should ne n1, n2..
+          future_plan_args[['workers']]  <- setincores
+          future_plan_args[['strategy']] <- setplanis
         } else {
-          # setplanis <- ept(deparse(substitute(setplanis))) %>% ept() %>% future::plan()
-          # future::plan(setplanis, workers = cores)
-          # ept(deparse(substitute(setplanis))) %>% ept() %>% 
-          #   future::plan(., workers = cores)
-          future::plan(setplanis, workers = cores)
+          future_plan_args[['workers']]  <- setincores
+          future_plan_args[['strategy']] <- setplanis
         } 
       }
-      newplanin <- future::plan()
+      
+      if(!is_emptyx(mirai_daemons_args)) {
+        do.call(mirai::daemons, mirai_daemons_args)
+        if(verbose) {
+          message2c("Setting mirai daemons: ", mirai::status())
+        }
+      }
+      do.call(future::plan, future_plan_args)
       if(verbose) {
         message2c("The existing future plan: ", oldplanin, 
                   " updated as ", setplanis)
@@ -1321,35 +1327,8 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   } # if (future) {
   
-  
-  
-  # if (future) {
-  #   getfutureplan <- future::plan()
-  #   if (future_session == 'multisession') {
-  #     set_future_session <- future_session
-  #   } else if (future_session == 'multicore') {
-  #     set_future_session <- future_session
-  #   } else if (future_session == 'sequential') {
-  #     set_future_session <- future_session
-  #   }
-  #   
-  #   setplanis <- set_future_session
-  #   if(set_future_session == 'sequential') {
-  #     future::plan(setplanis)
-  #   } else {
-  #     future::plan(setplanis, workers = setincores)
-  #   }
-  #   on.exit(future::plan(getfutureplan), add = TRUE)
-  #   
-  #   if (future_session == 'multicore') {
-  #     multthreadplan <- getOption("future.fork.multithreading.enable")
-  #     options(future.fork.multithreading.enable = TRUE)
-  #     on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
-  #             add = TRUE)
-  #   }
-  # }
-  
-  
+
+ 
   
   
   draw_ids_org <- draw_ids
@@ -2013,7 +1992,6 @@ marginal_growthparameters.bgmfit <- function(model,
         if(callfuns) out <- CustomDoCall(marginaleffects::avg_comparisons, 
                                     comparisons_arguments)
       }
-      # print(out)
     } else if(plot) {
       if(isFALSE(set_group)) comparisons_arguments$by <- NULL
       if(is.null(comparisons_arguments[['by']]) &
