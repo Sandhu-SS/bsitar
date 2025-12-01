@@ -285,7 +285,7 @@ the method for parallel computation. Options include:
 \itemize{
 \item \code{'future'}: Uses \code{\link[future:future]{future::future()}} along with
 \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}} for parallel execution.
-\item \code{'foreach'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} with the
+\item \code{'dofuture'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} with the
 \code{'dofuture'} function from the \code{doFuture} package for parallel
 execution.
 }}

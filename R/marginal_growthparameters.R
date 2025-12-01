@@ -319,7 +319,7 @@
 #'   \itemize{
 #'     \item \code{'future'}: Uses [future::future()] along with
 #'     [future.apply::future_lapply()] for parallel execution.
-#'     \item \code{'foreach'}: Uses [foreach::foreach()] with the
+#'     \item \code{'dofuture'}: Uses [foreach::foreach()] with the
 #'     \code{'dofuture'} function from the \code{doFuture} package for parallel
 #'     execution.
 #'   }
@@ -1270,11 +1270,21 @@ marginal_growthparameters.bgmfit <- function(model,
       }
     }
     
-    setplanis <- future_session
+    # setplanis will be used to decide on re_expose 
+    if(grepl("sequential", future_session)) {
+      setplanis <- "sequential"
+    } else if(grepl("multisession", future_session)) {
+      setplanis <- "multisession"
+    } else if(grepl("multicore", future_session)) {
+      setplanis <- "multicore"
+    } else if(grepl("cluster", future_session)) {
+      setplanis <- "cluster"
+    }
+    
     if (inherits(getfutureplan, "sequential")) {
       mirai_daemons_args <- list()
       future_plan_args <- list()
-      if(grepl("mirai_", setplanis)) {
+      if(grepl("mirai_", future_session)) {
         if(grepl("mirai_cluster", future_session)) {
           if(is.null(future_session_list[['daemons']])) {
             #
@@ -1284,20 +1294,20 @@ marginal_growthparameters.bgmfit <- function(model,
             }
             mirai_daemons_args <- future_session_list[['daemons']]
           }
-          mirai_daemons_args[['n']]      <- setincores
-          future_plan_args[['strategy']] <- setplanis
-        } else {
+          future_plan_args[['strategy']] <- future_session
+        } else if(!grepl("mirai_cluster", future_session)) {
           future_plan_args[['workers']]  <- setincores
-          future_plan_args[['strategy']] <- setplanis
+          future_plan_args[['strategy']] <- future_session
         } 
-      } else if(!grepl("mirai_", setplanis)) {
+        mirai_daemons_args[['n']]      <- setincores
+      } else if(!grepl("mirai_", future_session)) {
         if(grepl("cluster", future_session)) {
           # workers should ne n1, n2..
           future_plan_args[['workers']]  <- setincores
-          future_plan_args[['strategy']] <- setplanis
+          future_plan_args[['strategy']] <- future_session
         } else {
           future_plan_args[['workers']]  <- setincores
-          future_plan_args[['strategy']] <- setplanis
+          future_plan_args[['strategy']] <- future_session
         } 
       }
       
@@ -1310,7 +1320,7 @@ marginal_growthparameters.bgmfit <- function(model,
       do.call(future::plan, future_plan_args)
       if(verbose) {
         message2c("The existing future plan: ", oldplanin, 
-                  " updated as ", setplanis)
+                  " updated as ", future_session)
       }
     } else if (!inherits(getfutureplan, "sequential")) {
       if(verbose) {
@@ -1405,6 +1415,10 @@ marginal_growthparameters.bgmfit <- function(model,
       } else if(length(future_splits) != 2) {
         stop("future_splits must be a numeric vector of lenghth 2")
       } else {
+        if(future_splits[2] > future_splits[1]) {
+          stop2c("The first element of 'future_splits' should equal to, or 
+               greater than the second element")
+        }
         future_splits_at <- parallel::splitIndices(future_splits[1], 
                                                    future_splits[2])
       }
@@ -1450,6 +1464,7 @@ marginal_growthparameters.bgmfit <- function(model,
                  deparse(model$model_info$exefuns[[1]])))) {
       need_future_re_expose_cpp <- TRUE
     }
+   
     
     if(is.null(future_re_expose)) {
       if(setplanis == "multisession") {
@@ -2428,29 +2443,34 @@ marginal_growthparameters.bgmfit <- function(model,
           }
           # Re-assign appropriate function
           setenv <- predictions_arguments[['model']]$model_info$envir
-          
           assign(
             o[[1]],
             predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
             envir = setenv
           )
           if(call_predictions) {
-            CustomDoCall(marginaleffects::predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            CustomDoCall(marginaleffects::slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
           }
-          # CustomDoCall(marginaleffects::predictions, predictions_arguments)
-        }
+          return(out)
+        } # end myzfun
         out <-  future.apply::future_lapply(future_splits_at,
                                             future.envir = parent.frame(),
                                             future.globals = TRUE,
                                             future.seed = TRUE,
+                                            future.packages = ('bsitar'),
                                             FUN = myzfun)
       } else if(average) {
         myzfun <- function(x) {
           predictions_arguments[['draw_ids']] <- x
           predictions_arguments[['ndraws']]   <- NULL
+          # print(str(predictions_arguments[['newdata']]) )
+          # usedata <- predictions_arguments[['newdata']]
+          # # predictions_arguments[['model']][['data']] <- newdata
+          # print(x)
+          # predictions_argumentsx <<- predictions_arguments
           `%>%` <- bsitar::`%>%`
           if(re_expose) {
             if(verbose) message("need to expose functions for 'multisession'")
@@ -2459,26 +2479,30 @@ marginal_growthparameters.bgmfit <- function(model,
           }
           # Re-assign appropriate function
           setenv <- predictions_arguments[['model']]$model_info$envir
-          
           assign(
             o[[1]],
             predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
             envir = setenv
           )
           if(call_predictions) {
-            CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
           }
-          # CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
-        }
+          return(out)
+        } # end myzfun
         out <-  future.apply::future_lapply(future_splits_at,
                                             future.envir = parent.frame(),
                                             future.globals = TRUE,
                                             future.seed = TRUE,
-                                            FUN = myzfun)      
-      }
+                                            FUN = myzfun)
+        # out <-  mirai::mirai_map(
+        #   future_splits_at, 
+        #   .args = list(predictions_arguments = predictions_arguments,
+        #                re_expose = re_expose),
+        #   .f = myzfun)[.flat, .progress]
+      } # if(!average) { else if(average) {
     } # if(future_splits_exe_future) {
     
     
@@ -2493,7 +2517,11 @@ marginal_growthparameters.bgmfit <- function(model,
                                 .options.future = list(seed = TRUE),
                                 .options.future =
                                   list(globals = c('future_splits_at',
-                                                   'setplanis',
+                                                   're_expose',
+                                                   'o',
+                                                   'call_predictions',
+                                                   'call_slopes',
+                                                   'CustomDoCall',
                                                    'verbose',
                                                    'predictions_arguments'))
         ) %doFuture_function% {
@@ -2515,19 +2543,23 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            CustomDoCall(marginaleffects::predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            CustomDoCall(marginaleffects::slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
           }
-          # CustomDoCall(marginaleffects::predictions, predictions_arguments)
+          return(out)
         }
       } else if(average) {
         out <- foreach::foreach(x = 1:length(future_splits_at),
                                 .options.future = list(seed = TRUE),
                                 .options.future =
                                   list(globals = c('future_splits_at',
-                                                   'setplanis',
+                                                   're_expose',
+                                                   'o',
+                                                   'call_predictions',
+                                                   'call_slopes',
+                                                   'CustomDoCall',
                                                    'verbose',
                                                    'predictions_arguments'))
         ) %doFuture_function% {
@@ -2542,19 +2574,18 @@ marginal_growthparameters.bgmfit <- function(model,
           }
           # Re-assign appropriate function
           setenv <- predictions_arguments[['model']]$model_info$envir
-          
           assign(
             o[[1]],
             predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
             envir = setenv
           )
           if(call_predictions) {
-            CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
           } 
           if(call_slopes) {
-            CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
           }
-          # CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+          return(out)
         }
       } 
     } # if(future_splits_exe_dofuture) {
@@ -2596,7 +2627,6 @@ marginal_growthparameters.bgmfit <- function(model,
         }
         zxdraws <- lapply(1:length(future_splits_at), 
                           FUN = posterior_draws_function)
-        
         zxdraws <- zxdraws %>% CustomDoCall(rbind, .)
         # Note that above zxdraws has drawid exact same as splits
         # but somehow, we need consecutive drawid for summarising

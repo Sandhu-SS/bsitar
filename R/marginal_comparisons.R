@@ -850,11 +850,21 @@ marginal_comparisons.bgmfit <- function(model,
       }
     }
     
-    setplanis <- future_session
+    # setplanis will be used to decide on re_expose 
+    if(grepl("sequential", future_session)) {
+      setplanis <- "sequential"
+    } else if(grepl("multisession", future_session)) {
+      setplanis <- "multisession"
+    } else if(grepl("multicore", future_session)) {
+      setplanis <- "multicore"
+    } else if(grepl("cluster", future_session)) {
+      setplanis <- "cluster"
+    }
+    
     if (inherits(getfutureplan, "sequential")) {
       mirai_daemons_args <- list()
       future_plan_args <- list()
-      if(grepl("mirai_", setplanis)) {
+      if(grepl("mirai_", future_session)) {
         if(grepl("mirai_cluster", future_session)) {
           if(is.null(future_session_list[['daemons']])) {
             #
@@ -864,20 +874,20 @@ marginal_comparisons.bgmfit <- function(model,
             }
             mirai_daemons_args <- future_session_list[['daemons']]
           }
-          mirai_daemons_args[['n']]      <- setincores
-          future_plan_args[['strategy']] <- setplanis
-        } else {
+          future_plan_args[['strategy']] <- future_session
+        } else if(!grepl("mirai_cluster", future_session)) {
           future_plan_args[['workers']]  <- setincores
-          future_plan_args[['strategy']] <- setplanis
+          future_plan_args[['strategy']] <- future_session
         } 
-      } else if(!grepl("mirai_", setplanis)) {
+        mirai_daemons_args[['n']]      <- setincores
+      } else if(!grepl("mirai_", future_session)) {
         if(grepl("cluster", future_session)) {
           # workers should ne n1, n2..
           future_plan_args[['workers']]  <- setincores
-          future_plan_args[['strategy']] <- setplanis
+          future_plan_args[['strategy']] <- future_session
         } else {
           future_plan_args[['workers']]  <- setincores
-          future_plan_args[['strategy']] <- setplanis
+          future_plan_args[['strategy']] <- future_session
         } 
       }
       
@@ -890,7 +900,7 @@ marginal_comparisons.bgmfit <- function(model,
       do.call(future::plan, future_plan_args)
       if(verbose) {
         message2c("The existing future plan: ", oldplanin, 
-                  " updated as ", setplanis)
+                  " updated as ", future_session)
       }
     } else if (!inherits(getfutureplan, "sequential")) {
       if(verbose) {
@@ -906,6 +916,7 @@ marginal_comparisons.bgmfit <- function(model,
               add = TRUE)
     }
   } # if (future) {
+  
   
   
   
@@ -983,6 +994,10 @@ marginal_comparisons.bgmfit <- function(model,
       } else if(length(future_splits) != 2) {
         stop("future_splits must be a numeric vector of lenghth 2")
       } else {
+        if(future_splits[2] > future_splits[1]) {
+          stop2c("The first element of 'future_splits' should equal to, or 
+               greater than the second element")
+        }
         future_splits_at <- parallel::splitIndices(future_splits[1], 
                                                    future_splits[2])
       }
@@ -1806,8 +1821,8 @@ marginal_comparisons.bgmfit <- function(model,
                     }
                   } # if(deriv > 0) {
                 } # if(check_fun) {
+                return(out)
               }
-              
               out <-  future.apply::future_lapply(future_splits_at,
                                                   future.envir = parent.frame(),
                                                   future.globals = TRUE,
@@ -1846,8 +1861,8 @@ marginal_comparisons.bgmfit <- function(model,
                     }
                   } # if(deriv > 0) {
                 } # if(check_fun) {
+                return(out)
               }
-              
               out <-  future.apply::future_lapply(future_splits_at,
                                                   future.envir = parent.frame(),
                                                   future.globals = TRUE,
@@ -1947,16 +1962,25 @@ marginal_comparisons.bgmfit <- function(model,
             if(!average) {
               out <- foreach::foreach(x = 1:length(future_splits_at),
                                       .options.future = list(seed = TRUE),
+                                      # .options.future =
+                                      #   list(globals = 
+                                      #          structure(TRUE, 
+                                      #                    add = 
+                                      #                      c('future_splits_at',
+                                      #                        # 'setplanis',
+                                      #                        'verbose',
+                                      #                        'o', 
+                                      #                        're_expose',
+                                      #                        'predictions_arguments')))
                                       .options.future =
-                                        list(globals = 
-                                               structure(TRUE, 
-                                                         add = 
-                                                           c('future_splits_at',
-                                                             'setplanis',
-                                                             'verbose',
-                                                             'o', 
-                                                             're_expose',
-                                                             'predictions_arguments')))
+                                        list(globals = c('future_splits_at',
+                                                         're_expose',
+                                                         'o',
+                                                         'call_predictions',
+                                                         'call_slopes',
+                                                         'CustomDoCall',
+                                                         'verbose',
+                                                         'predictions_arguments'))
               ) %doFuture_function% {
                 x <- future_splits_at[[x]]
                 predictions_arguments[['draw_ids']] <- x
@@ -1987,17 +2011,26 @@ marginal_comparisons.bgmfit <- function(model,
                     }
                   } # if(deriv > 0) {
                 } # if(check_fun) {
-                # CustomDoCall(marginaleffects::predictions, predictions_arguments)
+                return(out)
               }
             } else if(average) {
               out <- foreach::foreach(x = 1:length(future_splits_at),
                                       .options.future = list(seed = TRUE),
+                                      # .options.future =
+                                      #   list(globals = c('future_splits_at',
+                                      #                    # 'setplanis',
+                                      #                    'verbose',
+                                      #                    'o', 
+                                      #                    're_expose',
+                                      #                    'predictions_arguments'))
                                       .options.future =
                                         list(globals = c('future_splits_at',
-                                                         'setplanis',
-                                                         'verbose',
-                                                         'o', 
                                                          're_expose',
+                                                         'o',
+                                                         'call_predictions',
+                                                         'call_slopes',
+                                                         'CustomDoCall',
+                                                         'verbose',
                                                          'predictions_arguments'))
               ) %doFuture_function% {
                 x <- future_splits_at[[x]]
@@ -2029,7 +2062,7 @@ marginal_comparisons.bgmfit <- function(model,
                     }
                   } # if(deriv > 0) {
                 } # if(check_fun) {
-                # CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+                return(out)
               }
             }
           } else if(plot) {
@@ -2060,12 +2093,21 @@ marginal_comparisons.bgmfit <- function(model,
             if(!average) {
               out <- foreach::foreach(x = 1:length(future_splits_at),
                                       .options.future = list(seed = TRUE),
+                                      # .options.future =
+                                      #   list(globals = c('future_splits_at',
+                                      #                    # 'setplanis',
+                                      #                    'verbose',
+                                      #                    'o', 
+                                      #                    're_expose',
+                                      #                    'predictions_arguments'))
                                       .options.future =
                                         list(globals = c('future_splits_at',
-                                                         'setplanis',
-                                                         'verbose',
-                                                         'o', 
                                                          're_expose',
+                                                         'o',
+                                                         'call_predictions',
+                                                         'call_slopes',
+                                                         'CustomDoCall',
+                                                         'verbose',
                                                          'predictions_arguments'))
               ) %doFuture_function% {
                 x <- future_splits_at[[x]]
@@ -2087,12 +2129,21 @@ marginal_comparisons.bgmfit <- function(model,
             } else if(average) {
               out <- foreach::foreach(x = 1:length(future_splits_at),
                                       .options.future = list(seed = TRUE),
+                                      # .options.future =
+                                      #   list(globals = c('future_splits_at',
+                                      #                    # 'setplanis',
+                                      #                    'verbose',
+                                      #                    'o', 
+                                      #                    're_expose',
+                                      #                    'predictions_arguments'))
                                       .options.future =
                                         list(globals = c('future_splits_at',
-                                                         'setplanis',
-                                                         'verbose',
-                                                         'o', 
                                                          're_expose',
+                                                         'o',
+                                                         'call_predictions',
+                                                         'call_slopes',
+                                                         'CustomDoCall',
+                                                         'verbose',
                                                          'predictions_arguments'))
               ) %doFuture_function% {
                 x <- future_splits_at[[x]]

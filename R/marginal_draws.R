@@ -859,11 +859,21 @@ marginal_draws.bgmfit <-
         }
       }
       
-      setplanis <- future_session
+      # setplanis will be used to decide on re_expose 
+      if(grepl("sequential", future_session)) {
+        setplanis <- "sequential"
+      } else if(grepl("multisession", future_session)) {
+        setplanis <- "multisession"
+      } else if(grepl("multicore", future_session)) {
+        setplanis <- "multicore"
+      } else if(grepl("cluster", future_session)) {
+        setplanis <- "cluster"
+      }
+      
       if (inherits(getfutureplan, "sequential")) {
         mirai_daemons_args <- list()
         future_plan_args <- list()
-        if(grepl("mirai_", setplanis)) {
+        if(grepl("mirai_", future_session)) {
           if(grepl("mirai_cluster", future_session)) {
             if(is.null(future_session_list[['daemons']])) {
               #
@@ -873,20 +883,20 @@ marginal_draws.bgmfit <-
               }
               mirai_daemons_args <- future_session_list[['daemons']]
             }
-            mirai_daemons_args[['n']]      <- setincores
-            future_plan_args[['strategy']] <- setplanis
-          } else {
+            future_plan_args[['strategy']] <- future_session
+          } else if(!grepl("mirai_cluster", future_session)) {
             future_plan_args[['workers']]  <- setincores
-            future_plan_args[['strategy']] <- setplanis
+            future_plan_args[['strategy']] <- future_session
           } 
-        } else if(!grepl("mirai_", setplanis)) {
+          mirai_daemons_args[['n']]      <- setincores
+        } else if(!grepl("mirai_", future_session)) {
           if(grepl("cluster", future_session)) {
             # workers should ne n1, n2..
             future_plan_args[['workers']]  <- setincores
-            future_plan_args[['strategy']] <- setplanis
+            future_plan_args[['strategy']] <- future_session
           } else {
             future_plan_args[['workers']]  <- setincores
-            future_plan_args[['strategy']] <- setplanis
+            future_plan_args[['strategy']] <- future_session
           } 
         }
         
@@ -899,7 +909,7 @@ marginal_draws.bgmfit <-
         do.call(future::plan, future_plan_args)
         if(verbose) {
           message2c("The existing future plan: ", oldplanin, 
-                    " updated as ", setplanis)
+                    " updated as ", future_session)
         }
       } else if (!inherits(getfutureplan, "sequential")) {
         if(verbose) {
@@ -995,6 +1005,10 @@ marginal_draws.bgmfit <-
         } else if(length(future_splits) != 2) {
           stop("future_splits must be a numeric vector of lenghth 2")
         } else {
+          if(future_splits[2] > future_splits[1]) {
+            stop2c("The first element of 'future_splits' should equal to, or 
+               greater than the second element")
+          }
           future_splits_at <- parallel::splitIndices(future_splits[1], 
                                                      future_splits[2])
         }
@@ -2051,28 +2065,29 @@ marginal_draws.bgmfit <-
                  predictions_arguments[['model']] <- 
                    bsitar::expose_model_functions(predictions_arguments[['model']])
                }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-                 # 6.03.2025
-                 if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::predictions,
-                                       predictions_arguments)
-                 } # if(!check_fun) {
-                 if(check_fun) {
-                   if(deriv > 0) {
-                     if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::predictions,
-                                           predictions_arguments)
-                     } 
-                     if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::slopes, 
-                                           predictions_arguments)
-                     }
-                   } # if(deriv > 0) {
-                 } # if(check_fun) {
+               # Re-assign appropriate function
+               setenv <- predictions_arguments[['model']]$model_info$envir
+               assign(o[[1]],
+                      predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                      envir = setenv)
+               # 6.03.2025
+               if(!check_fun) {
+                 out <- CustomDoCall(marginaleffects::predictions,
+                                     predictions_arguments)
+               } # if(!check_fun) {
+               if(check_fun) {
+                 if(deriv > 0) {
+                   if(available_d1) {
+                     out <- CustomDoCall(marginaleffects::predictions,
+                                         predictions_arguments)
+                   } 
+                   if(!available_d1) {
+                     out <- CustomDoCall(marginaleffects::slopes, 
+                                         predictions_arguments)
+                   }
+                 } # if(deriv > 0) {
+               } # if(check_fun) {
+               return(out)
              }
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
@@ -2089,28 +2104,29 @@ marginal_draws.bgmfit <-
                  predictions_arguments[['model']] <- 
                    bsitar::expose_model_functions(predictions_arguments[['model']])
                }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-                 # 6.03.2025
-                 if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                       predictions_arguments)
-                 } # if(!check_fun) {
-                 if(check_fun) {
-                   if(deriv > 0) {
-                     if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                           predictions_arguments)
-                     } 
-                     if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_slopes,
-                                           predictions_arguments)
-                     }
-                   } # if(deriv > 0) {
-                 } # if(check_fun) {
+               # Re-assign appropriate function
+               setenv <- predictions_arguments[['model']]$model_info$envir
+               assign(o[[1]],
+                      predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                      envir = setenv)
+               # 6.03.2025
+               if(!check_fun) {
+                 out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                     predictions_arguments)
+               } # if(!check_fun) {
+               if(check_fun) {
+                 if(deriv > 0) {
+                   if(available_d1) {
+                     out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                         predictions_arguments)
+                   } 
+                   if(!available_d1) {
+                     out <- CustomDoCall(marginaleffects::avg_slopes,
+                                         predictions_arguments)
+                   }
+                 } # if(deriv > 0) {
+               } # if(check_fun) {
+               return(out)
              }
              out <-  future.apply::future_lapply(future_splits_at,
                                                  future.envir = parent.frame(),
@@ -2165,7 +2181,6 @@ marginal_draws.bgmfit <-
              
              return(outp)
            } # else if(!force_condition_and_by_switch_plot) {
-           
          } # else if(plot) {
        } # if(call_predictions) {
        
@@ -2283,17 +2298,26 @@ marginal_draws.bgmfit <-
            if(!average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                         .options.future = list(seed = TRUE),
-                                        .options.future =
-                                       list(globals = 
-                                              structure(TRUE, 
-                                                        add = c(
-                                                          'future_splits_at',
-                                                        'setplanis',
-                                                        'verbose',
-                                                        'o', 
+                                       #  .options.future =
+                                       # list(globals = 
+                                       #        structure(TRUE, 
+                                       #                  add = c(
+                                       #                    'future_splits_at',
+                                       #                  # 'setplanis',
+                                       #                  'verbose',
+                                       #                  'o', 
+                                       #                  're_expose',
+                                       #                  'predictions_arguments')
+                                       #                  ))
+                                     .options.future =
+                                       list(globals = c('future_splits_at',
                                                         're_expose',
-                                                        'predictions_arguments')
-                                                        ))
+                                                        'o',
+                                                        'call_predictions',
+                                                        'call_slopes',
+                                                        'CustomDoCall',
+                                                        'verbose',
+                                                        'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
                predictions_arguments[['draw_ids']] <- x
@@ -2333,12 +2357,21 @@ marginal_draws.bgmfit <-
            } else if(average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                      .options.future = list(seed = TRUE),
+                                     # .options.future =
+                                     #   list(globals = c('future_splits_at',
+                                     #                    # 'setplanis',
+                                     #                    'verbose',
+                                     #                    'o', 
+                                     #                    're_expose',
+                                     #                    'predictions_arguments'))
                                      .options.future =
                                        list(globals = c('future_splits_at',
-                                                        'setplanis',
-                                                        'verbose',
-                                                        'o', 
                                                         're_expose',
+                                                        'o',
+                                                        'call_predictions',
+                                                        'call_slopes',
+                                                        'CustomDoCall',
+                                                        'verbose',
                                                         'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
@@ -2430,12 +2463,21 @@ marginal_draws.bgmfit <-
            if(!average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                      .options.future = list(seed = TRUE),
+                                     # .options.future =
+                                     #   list(globals = c('future_splits_at',
+                                     #                    # 'setplanis',
+                                     #                    'verbose',
+                                     #                    'o', 
+                                     #                    're_expose',
+                                     #                    'predictions_arguments'))
                                      .options.future =
                                        list(globals = c('future_splits_at',
-                                                        'setplanis',
-                                                        'verbose',
-                                                        'o', 
                                                         're_expose',
+                                                        'o',
+                                                        'call_predictions',
+                                                        'call_slopes',
+                                                        'CustomDoCall',
+                                                        'verbose',
                                                         'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
@@ -2457,12 +2499,21 @@ marginal_draws.bgmfit <-
            } else if(average) {
              out <- foreach::foreach(x = 1:length(future_splits_at),
                                      .options.future = list(seed = TRUE),
+                                     # .options.future =
+                                     #   list(globals = c('future_splits_at',
+                                     #                    # 'setplanis',
+                                     #                    'verbose',
+                                     #                    'o', 
+                                     #                    're_expose',
+                                     #                    'predictions_arguments'))
                                      .options.future =
                                        list(globals = c('future_splits_at',
-                                                        'setplanis',
-                                                        'verbose',
-                                                        'o', 
                                                         're_expose',
+                                                        'o',
+                                                        'call_predictions',
+                                                        'call_slopes',
+                                                        'CustomDoCall',
+                                                        'verbose',
                                                         'predictions_arguments'))
              ) %doFuture_function% {
                x <- future_splits_at[[x]]
