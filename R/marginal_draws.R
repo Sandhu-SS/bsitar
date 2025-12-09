@@ -826,106 +826,141 @@ marginal_draws.bgmfit <-
     
     
     
-    # future
-    if (future) {
-      if(is.null(future_session)) {
-        future_session      <- "sequential"
-        future_session_list <- list()
-      } else if(is.list(future_session)) {
-        future_session_list <- future_session
-        future_session      <- future_session_list[['future_session']]
-        if(is.null(future_session)) {
-          future_session <- "sequential"
-        }
-      } else if(!is.list(future_session)) {
-        if(is.character(future_session)) {
-          future_session_list <- list()
-          future_session <- future_session
-        } else {
-          stop("'future_session' must be a single character or a named list")
-        }
-      }
-      
-      getfutureplan <- future::plan()
-      oldplanin     <- attr(getfutureplan, "call")
-      if(grepl("mirai_", future_session)) {
-        insight::check_if_installed('mirai')
-        if(!grepl("future.mirai::", future_session)) {
-          future_session <- paste0("future.mirai::", future_session)
-        }
-      } else if(!grepl("mirai_", future_session)) {
-        if(!grepl("future.mirai::", future_session)) {
-          future_session <- paste0("future::", future_session)
-        }
-      }
-      
-      # setplanis will be used to decide on re_expose 
-      if(grepl("sequential", future_session)) {
-        setplanis <- "sequential"
-      } else if(grepl("multisession", future_session)) {
-        setplanis <- "multisession"
-      } else if(grepl("multicore", future_session)) {
-        setplanis <- "multicore"
-      } else if(grepl("cluster", future_session)) {
-        setplanis <- "cluster"
-      }
-      
-      if (inherits(getfutureplan, "sequential")) {
-        mirai_daemons_args <- list()
-        future_plan_args <- list()
-        if(grepl("mirai_", future_session)) {
-          if(grepl("mirai_cluster", future_session)) {
-            if(is.null(future_session_list[['daemons']])) {
-              #
-            } else {
-              if(!is.list(future_session_list[['daemons']])) {
-                stop("The daemons in future_session list must be a list")
-              }
-              mirai_daemons_args <- future_session_list[['daemons']]
-            }
-            future_plan_args[['strategy']] <- future_session
-          } else if(!grepl("mirai_cluster", future_session)) {
-            future_plan_args[['workers']]  <- setincores
-            future_plan_args[['strategy']] <- future_session
-          } 
-          mirai_daemons_args[['n']]      <- setincores
-        } else if(!grepl("mirai_", future_session)) {
-          if(grepl("cluster", future_session)) {
-            # workers should ne n1, n2..
-            future_plan_args[['workers']]  <- setincores
-            future_plan_args[['strategy']] <- future_session
-          } else {
-            future_plan_args[['workers']]  <- setincores
-            future_plan_args[['strategy']] <- future_session
-          } 
-        }
-        
-        if(!is_emptyx(mirai_daemons_args)) {
-          do.call(mirai::daemons, mirai_daemons_args)
-          if(verbose) {
-            message2c("Setting mirai daemons: ", mirai::status())
-          }
-        }
-        do.call(future::plan, future_plan_args)
-        if(verbose) {
-          message2c("The existing future plan: ", oldplanin, 
-                    " updated as ", future_session)
-        }
-      } else if (!inherits(getfutureplan, "sequential")) {
-        if(verbose) {
-          message2c("Using the existing future plan: ", oldplanin)
-        }
-      }
-      # Restore 
-      on.exit(future::plan(getfutureplan), add = TRUE)
-      if (future_session == 'multicore') {
+    # 
+    # # future
+    # if (future) {
+    #   if(is.null(future_session)) {
+    #     future_session      <- "sequential"
+    #     future_session_list <- list()
+    #   } else if(is.list(future_session)) {
+    #     future_session_list <- future_session
+    #     future_session      <- future_session_list[['future_session']]
+    #     if(is.null(future_session)) {
+    #       future_session <- "sequential"
+    #     }
+    #   } else if(!is.list(future_session)) {
+    #     if(is.character(future_session)) {
+    #       future_session_list <- list()
+    #       future_session <- future_session
+    #     } else {
+    #       stop("'future_session' must be a single character or a named list")
+    #     }
+    #   }
+    #   
+    #   getfutureplan <- future::plan()
+    #   oldplanin     <- attr(getfutureplan, "call")
+    #   if(grepl("mirai_", future_session)) {
+    #     insight::check_if_installed('mirai')
+    #     if(!grepl("future.mirai::", future_session)) {
+    #       future_session <- paste0("future.mirai::", future_session)
+    #     }
+    #   } else if(!grepl("mirai_", future_session)) {
+    #     if(!grepl("future.mirai::", future_session)) {
+    #       future_session <- paste0("future::", future_session)
+    #     }
+    #   }
+    #   
+    #   # setplanis will be used to decide on re_expose 
+    #   if(grepl("sequential", future_session)) {
+    #     setplanis <- "sequential"
+    #   } else if(grepl("multisession", future_session)) {
+    #     setplanis <- "multisession"
+    #   } else if(grepl("multicore", future_session)) {
+    #     setplanis <- "multicore"
+    #   } else if(grepl("cluster", future_session)) {
+    #     setplanis <- "cluster"
+    #   }
+    #   
+    #   if (inherits(getfutureplan, "sequential")) {
+    #     mirai_daemons_args <- list()
+    #     future_plan_args <- list()
+    #     if(grepl("mirai_", future_session)) {
+    #       if(grepl("mirai_cluster", future_session)) {
+    #         if(is.null(future_session_list[['daemons']])) {
+    #           #
+    #         } else {
+    #           if(!is.list(future_session_list[['daemons']])) {
+    #             stop("The daemons in future_session list must be a list")
+    #           }
+    #           mirai_daemons_args <- future_session_list[['daemons']]
+    #         }
+    #         future_plan_args[['strategy']] <- future_session
+    #       } else if(!grepl("mirai_cluster", future_session)) {
+    #         future_plan_args[['workers']]  <- setincores
+    #         future_plan_args[['strategy']] <- future_session
+    #       } 
+    #       mirai_daemons_args[['n']]      <- setincores
+    #     } else if(!grepl("mirai_", future_session)) {
+    #       if(grepl("cluster", future_session)) {
+    #         # workers should ne n1, n2..
+    #         future_plan_args[['workers']]  <- setincores
+    #         future_plan_args[['strategy']] <- future_session
+    #       } else {
+    #         future_plan_args[['workers']]  <- setincores
+    #         future_plan_args[['strategy']] <- future_session
+    #       } 
+    #     }
+    #     
+    #     if(!is_emptyx(mirai_daemons_args)) {
+    #       do.call(mirai::daemons, mirai_daemons_args)
+    #       if(verbose) {
+    #         message2c("Setting mirai daemons: ", mirai::status())
+    #       }
+    #     }
+    #     do.call(future::plan, future_plan_args)
+    #     if(verbose) {
+    #       message2c("The existing future plan: ", oldplanin, 
+    #                 " updated as ", future_session)
+    #     }
+    #   } else if (!inherits(getfutureplan, "sequential")) {
+    #     if(verbose) {
+    #       message2c("Using the existing future plan: ", oldplanin)
+    #     }
+    #   }
+    #   # Restore 
+    #   on.exit(future::plan(getfutureplan), add = TRUE)
+    #   if (future_session == 'multicore') {
+    #     multthreadplan <- getOption("future.fork.multithreading.enable")
+    #     options(future.fork.multithreading.enable = TRUE)
+    #     on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
+    #             add = TRUE)
+    #   }
+    # } # if (future) {
+    # 
+    
+    get_future_args <- get_future_plan_args(future = future, 
+                                            future_session = future_session, 
+                                            oldfutureplan = future::plan(),
+                                            setincores = setincores,
+                                            verbose = FALSE)
+    if(!is.null(get_future_args)) {
+      future_plan_args <- get_future_args[['future_plan_args']]
+      setplanis        <- get_future_args[['setplanis']]
+      oldfutureplan    <- future::plan()
+      do.call(future::plan, future_plan_args)
+      on.exit(future::plan(oldfutureplan), add = TRUE)
+      # marginaleffects future options
+      getmarginaleffects_parallel <- 
+        getOption("marginaleffects_parallel")
+      getmarginaleffects_parallel_inferences <- 
+        getOption("marginaleffects_parallel_inferences")
+      options(marginaleffects_parallel = TRUE)
+      options(marginaleffects_parallel_inferences = TRUE)
+      on.exit(options("marginaleffects_parallel" = getmarginaleffects_parallel), 
+              add = TRUE)
+      on.exit(options("marginaleffects_parallel_inferences" = 
+                        getmarginaleffects_parallel_inferences), 
+              add = TRUE)
+      # multicore
+      if (inherits(future::plan(), "multicore")) {
         multthreadplan <- getOption("future.fork.multithreading.enable")
         options(future.fork.multithreading.enable = TRUE)
         on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
                 add = TRUE)
       }
-    } # if (future) {
-    
+    } else {
+      
+    } # if(!is.null(get_future_args)) { else {
     
     
    
