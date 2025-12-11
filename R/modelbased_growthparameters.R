@@ -1022,7 +1022,12 @@ modelbased_growthparameters.bgmfit <-
         get.newdata_args[[i]] <- full.args[[i]]
       }
       
-      full.args$newdata <- newdata <- CustomDoCall(get.newdata, get.newdata_args)
+      # For modelbased_growthparameters, dpar argument is not allowed.
+      # get.newdata_args$ipts <- full.args$ipts <- ipts <- 
+      #   set_for_check_ipts(ipts = ipts, nipts = 50, dpar = dpar, verbose = verbose)
+      
+      full.args$newdata <- newdata <- CustomDoCall(get.newdata, 
+                                                   get.newdata_args)
 
       # Interpolation points
       if(!exists('check_fun'))    check_fun    <- FALSE

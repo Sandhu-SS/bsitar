@@ -175,6 +175,7 @@ fitted_draws.bgmfit <-
     if (is.null(idata_method)) {
       idata_method <- 'm2'
     }
+   
     
     rlang_trace_back <- rlang::trace_back()
     
@@ -283,9 +284,6 @@ fitted_draws.bgmfit <-
                                       verbose = verbose)
       xcall_str           <- full.args$xcall_str
       full.args$xcall_str <- NULL
-      # full.args$object <- full.args$model
-      # newdata          <- full.args$newdata
-      # full.argsx <<- full.args
     }
     
     
@@ -384,9 +382,6 @@ fitted_draws.bgmfit <-
       } # if(deriv > 0) {
     } # if(dpar == "sigma") {
     
-
-    
-
     test <- setupfuns(model = model, resp = resp,
                       o = o, oall = oall,
                       usesavedfuns = usesavedfuns,
@@ -454,6 +449,9 @@ fitted_draws.bgmfit <-
       for (i in methods::formalArgs(get.newdata)) {
         get.newdata_args[[i]] <- calling.args_newdata[[i]]
       }
+      get.newdata_args$ipts <- calling.args$ipts <- 
+        set_for_check_ipts(ipts = ipts, nipts = 50, 
+                           dpar = dpar, verbose = verbose)
       newdata <- CustomDoCall(get.newdata, get.newdata_args)
       rm('calling.args_newdata')
       rm('get.newdata_args')
@@ -514,7 +512,6 @@ fitted_draws.bgmfit <-
                                  check_formalArgs_exceptions = c('object'),
                                  check_trace_back = NULL,
                                  envir = parent.frame())
-    
     
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE
@@ -713,8 +710,6 @@ fitted_draws.bgmfit <-
             mapderivqr_args[['robust']] <- calling.args[['robust']]
             mapderivqr_args[['dpar']] <- calling.args[['dpar']]
             mapderivqr_args[['verbose']] <- calling.args[['verbose']]
-              # mapderivqr_argsx <<- mapderivqr_args
-            # mapderivqr_argsx$newdata$age <- seq.int(0, 20, length.out = 770)
             . <- CustomDoCall(mapderivqr, mapderivqr_args)
           }
         } # if(deriv > 0) {

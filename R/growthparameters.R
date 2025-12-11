@@ -161,12 +161,27 @@
 #'   functions such as \code{'get.newdata'}, the \code{grid_add} are passed to
 #'   the [marginaleffects::datagrid()].
 #'
-#' @param ipts An integer to set the length of the predictor variable for
-#'   generating a smooth velocity curve. If \code{NULL}, the original values are
-#'   returned. If an integer (e.g., \code{ipts = 10}, default), the predictor is
-#'   interpolated. Note that these interpolations do not alter the range of the
-#'   predictor when calculating population averages and/or individual-specific
-#'   growth curves.
+#' @param ipts An integer specifying the number of points for interpolating the
+#'   predictor variable (e.g., age) to generate smooth curves for predictions
+#'   and plots. This value is used as the \code{length.out} argument for
+#'   [seq()], controlling the smoothness of distance and velocity curves without
+#'   altering the predictor range.
+#'   \describe{
+#'     \item{\code{NULL} (the default)}{Engages automatic behavior based on the
+#'       \code{dpar} argument: it is internally set to \code{50} for the mean
+#'       response (\code{dpar = 'mu'}), ensuring smooth curves, while for the
+#'       distributional parameters (e.g., \code{dpar = 'sigma'}), no
+#'       interpolation is performed.}
+#'     \item{An integer (e.g., \code{100})}{Explicitly sets the number of
+#'       interpolation points.}
+#'     \item{\code{FALSE}}{Disables all interpolation, forcing predictions to
+#'       be made only at the original data points of the predictor variable.}
+#'   }
+#'   
+#'   This argument affects the following post-processing functions: \cr
+#'   [fitted_draws()], [predict_draws()], [growthparameters()], [plot_curves()], 
+#'   [marginal_draws()], [marginal_comparisons()], and 
+#'   [marginal_growthparameters()].
 #'
 #' @param model_deriv A logical value specifying whether to estimate the
 #'   velocity curve from the derivative function or by differentiating the
@@ -476,7 +491,8 @@ growthparameters.bgmfit <- function(model,
     envir <- envir
   }
   
- 
+  set_ipts_null <- FALSE
+  
   if(is.null(dpar)) {
     dpar <- "mu"
   }
@@ -487,9 +503,6 @@ growthparameters.bgmfit <- function(model,
                          deriv = NULL, 
                          verbose = verbose)
   
-  
-  
-
   if(is.null(usesavedfuns)) {
     if(!is.null(model$model_info$exefuns[[1]])) {
       usesavedfuns <- TRUE
@@ -512,7 +525,6 @@ growthparameters.bgmfit <- function(model,
                                 usesavedfuns = usesavedfuns)
     }
   }
-  
   
   if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
@@ -540,7 +552,7 @@ growthparameters.bgmfit <- function(model,
   ':=' <- NULL;
   . <- NULL;
   XXi <- NULL;
-  
+  uvarby <- NULL;
   
   msg_nrow_data_1 <- 
     paste0(" Subsetting dataframe for unique length of predictor variable ", 
@@ -564,7 +576,6 @@ growthparameters.bgmfit <- function(model,
            "If this is intentional, then ignore this message")
   
   
-  
   check_set_fun <- check_set_fun_transform(model = model, 
                                            which = 'ixfuntransform2',
                                            dpar = dpar, 
@@ -579,10 +590,6 @@ growthparameters.bgmfit <- function(model,
   }
   
   
-  
-
-  ########################################################
-  # 6.03.2025
   dots <- list(...)
   set_get_dv <- FALSE
   if(!is.null(dots$get_dv)) {
@@ -592,20 +599,16 @@ growthparameters.bgmfit <- function(model,
     }
   }
   
-  # 6.03.2025 - to get parameters on model x scale 
   if(set_get_dv) {
     ifunx_ <- function(x)x
   }
   
-
   setxcall_ <- match.call()
   post_processing_checks_args <- list()
   post_processing_checks_args[['model']]    <- model
   post_processing_checks_args[['xcall']]    <- setxcall_
   post_processing_checks_args[['resp']]     <- resp
   post_processing_checks_args[['envir']]    <- envir
-  # post_processing_checks_args[['deriv']]    <- deriv
-  # post_processing_checks_args[['all']]      <- FALSE
   post_processing_checks_args[['verbose']]  <- verbose
   post_processing_checks_args[['check_d0']] <- FALSE
   post_processing_checks_args[['check_d1']] <- TRUE
@@ -624,7 +627,8 @@ growthparameters.bgmfit <- function(model,
       # nothing
     } else {
       rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
-      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_trace_back.bgmfit <- 
+        rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
       rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
       xcall <- rlang_call_name
     }
@@ -634,14 +638,10 @@ growthparameters.bgmfit <- function(model,
   
   check_if_package_installed(model, xcall = xcall)
   
-
-  arguments <- get_args_(as.list(match.call())[-1], xcall)
-  arguments$model <- model
+  arguments              <- get_args_(as.list(match.call())[-1], xcall)
+  arguments$model        <- model
   arguments$usesavedfuns <- usesavedfuns
   
-  
-  
-  # For 'plot_curves', 'check_set_xvar_sigma' has been called there itself
   if(xcall != 'plot_curves') {
     need_velocity_curve <- TRUE
     need_xvar_must      <- TRUE
@@ -669,15 +669,12 @@ growthparameters.bgmfit <- function(model,
                                           transform_draws = transform_draws,
                                           itransform = itransform,
                                           verbose = verbose)
-        
-        # Imp to assign arguments[['transform_draws']] 
         arguments[['transform_draws']] <- transform_draws
       }
       
-      
       if(sigma_model == "basic") {
         if(!is.null(ipts)) {
-          stop("For sigma_model = ",  
+          stop2c("For sigma_model = ",  
                collapse_comma(sigma_model), ", the ipts should be NULL", 
                "\n  ", 
                "Currently, you have set this argument as ipts = ", ipts)
@@ -697,7 +694,6 @@ growthparameters.bgmfit <- function(model,
       
       
       if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
-        # if(sigma_model == "basic" && !need_velocity_curve) {
         if(is.null(xvar)) {
           if(verbose) {
             message(clean_msg_sigma_model_no_xvar)
@@ -706,8 +702,6 @@ growthparameters.bgmfit <- function(model,
       }
       
       if(sigma_model != "ls" && need_velocity_curve) {
-        # if(sigma_model == "basic" && need_velocity_curve) {
-        # for deriv > 0, each id to have enough data points
         xvar <- check_set_xvar_sigma(model = model, 
                                      dpar = dpar, 
                                      xvar = xvar, 
@@ -748,7 +742,6 @@ growthparameters.bgmfit <- function(model,
     
     arguments$model$model_info[['transform_draws']] <-
       model$model_info[['transform_draws']] <- transform_draws
-    
   } # if(xcall != 'plot_curves') {
   
   
@@ -770,7 +763,7 @@ growthparameters.bgmfit <- function(model,
   .cores_ps <- get.cores_[['.cores_ps']]
   
   if (future) {
-    if(is.null(cores)) stop("Please set the number of cores for 'future' by  
+    if(is.null(cores)) stop2c("Please set the number of cores for 'future' by  
                             using the the 'cores' argument, e.g. cores = 4")
     if (arguments$future_session == 'multisession') {
       future::plan('multisession', workers = setincores)
@@ -802,7 +795,7 @@ growthparameters.bgmfit <- function(model,
     as.data.frame(.)
   }
   
-  #
+
   summarise_gp <-
     function(.x,
              probs,
@@ -833,7 +826,7 @@ growthparameters.bgmfit <- function(model,
             .x <- .x %>% dplyr::mutate(XXi := eval(parse(text = xvar))) %>% 
               dplyr::filter(XXi %in% (ullimits[1]:ullimits[2]))
             } else {
-            stop("argument xrange_search should be either 
+              stop2c("argument xrange_search should be either 
                  'range' or vector of length 2")
           }
       }
@@ -849,10 +842,7 @@ growthparameters.bgmfit <- function(model,
             sapply(Xnames, function(x)
               sitar::getPeak(.x[[xvar]], as.numeric(.x[[x]])))
         out_1 <- t(out_1)
-        ########################################################
-        # prepare_data2
         out_1[,1] <- ifunx_(out_1[,1])
-        ########################################################
         colnames(out_1) <- c("APGV", "PGV")
       } else if (!peak) {
         out_1 <- NULL
@@ -868,16 +858,11 @@ growthparameters.bgmfit <- function(model,
             sapply(Xnames, function(x)
               sitar::getTakeoff(.x[[xvar]], as.numeric(.x[[x]])))
         out_2 <- t(out_2)
-        ########################################################
-        # prepare_data2
         out_2[,1] <- ifunx_(out_2[,1])
-        ########################################################
         colnames(out_2) <- c("ATGV", "TGV")
       } else if (!takeoff) {
         out_2 <- NULL
       }
-      
-      
       
       if (trough) {
         if (future)
@@ -889,34 +874,26 @@ growthparameters.bgmfit <- function(model,
             sapply(Xnames, function(x)
               sitar::getTrough(.x[[xvar]], as.numeric(.x[[x]])))
         out_3 <- t(out_3)
-        ########################################################
-        # prepare_data2
         out_3[,1] <- ifunx_(out_3[,1])
-        ########################################################
         colnames(out_3) <- c("ACGV", "CGV")
       } else if (!trough) {
         out_3 <- NULL
       }
       
-
-      
       if (acgv) {
-        if(!is.null(acgv_asymptote)) stop("Currently acgv_asymptote not 
+        if(!is.null(acgv_asymptote)) stop2c("Currently acgv_asymptote not 
                                            supported. Please use acgv_velocity")
         if(!is.null(acgv_asymptote) & !is.null(acgv_velocity) ) {
-          stop("Specify either acgv_asymptote or acgv_velocity but not both")
+          stop2c("Specify either acgv_asymptote or acgv_velocity but not both")
         }
         if(is.null(acgv_asymptote) & is.null(acgv_velocity) ) {
-          stop("Specify either acgv_asymptote or acgv_velocity")
+          stop2c("Specify either acgv_asymptote or acgv_velocity")
         }
         
         set_get___fun <- function(x) {
           if (!peak) {
             pkkk <- sitar::getPeak(.x[[xvar]], as.numeric(.x[[x]]))
-            ########################################################
-            # prepare_data2
             pkkk[,1] <- ifunx_(pkkk[,1])
-            ########################################################
           }
           if ( peak | !is.null(apv)) { # if ( peak | apv) {
             pkkk <- out_1
@@ -956,17 +933,12 @@ growthparameters.bgmfit <- function(model,
             sapply(Xnames, function(x)
               set_get___fun(x))
          out_3 <- t(out_3)
-         ########################################################
-         # prepare_data2
          out_3[,1] <- ifunx_(out_3[,1])
-         ########################################################
          colnames(out_3) <- c("ACGV", "CGV")
       } else if (!acgv) {
         out_3 <- NULL
       }
       
-
-      # 6.03.2025
       if(set_get_dv) {
         if(peak)    return(out_1)
         if(takeoff) return(out_2)
@@ -1019,7 +991,6 @@ growthparameters.bgmfit <- function(model,
     df %>% dplyr::mutate(., !!varname := df2[[varname]])
   }
   
-  
   get_growthparameters <-
     function(out_v_,
              newdata,
@@ -1027,8 +998,6 @@ growthparameters.bgmfit <- function(model,
              summary,
              digits,
              ...) {
-      
-      # 6.03.2025
       dots <- list(...)
       set_get_dv <- FALSE
       if(!is.null(dots$get_dv)) {
@@ -1039,12 +1008,10 @@ growthparameters.bgmfit <- function(model,
       
       if(set_get_dv) {
         if(sum(c(peak, takeoff, trough, acgv), na.rm = TRUE) > 1) {
-          stop("For 'get_dv', set only one as TRUE: ",
+          stop2c("For 'get_dv', set only one as TRUE: ",
                "'peak', 'takeoff', 'trough', or 'acgv'")
         }
       }
-      
-      
       
       if (!summary) {
         out__ <- out_v_ %>%
@@ -1074,7 +1041,7 @@ growthparameters.bgmfit <- function(model,
       } else if (is.null(groupby_str)) {
         out__ <- cbind(out__, newdata)
       }
-    #  print(ifunx_)
+
       if (is.null(re_formula)) {
         if (!summary) {
           parameters <- out__ %>%
@@ -1148,17 +1115,13 @@ growthparameters.bgmfit <- function(model,
             ) 
         }
       }
-      
-      # 6.03.2025
       if(set_get_dv) {
         return(unname(parameters[,1]))
       }
-      
       parameters <- parameters %>% dplyr::ungroup()
       parameters <- parameters %>% 
         dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                   ~ round(., digits = digits)))
-      
       return(parameters)
     } # end get_growthparameters
   
@@ -1192,7 +1155,6 @@ growthparameters.bgmfit <- function(model,
                                             check_trace_back = NULL,
                                             envir = parent.frame())
     
-    # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('check_fun')) available_d1 <- FALSE
     
@@ -1202,15 +1164,11 @@ growthparameters.bgmfit <- function(model,
                                          available_d1 = available_d1, 
                                          xcall = NULL, verbose = verbose)
     
-    
-    
     out_summary <- list()
     if(!is.null(arguments$...)) {
       arguments <- c(arguments, list(arguments$...))
     }
     
-    
-
     for (argumentsi in names(arguments)) {
       if (length(arguments[[argumentsi]]) != 0) {
         if (argumentsi != "...") {
@@ -1223,7 +1181,6 @@ growthparameters.bgmfit <- function(model,
     
     list2env(arguments, envir = parent.env(new.env()))
     
-
     probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
     probtitles <- probs[order(probs)] * 100
     probtitles <- paste("Q", probtitles, sep = "")
@@ -1234,7 +1191,7 @@ growthparameters.bgmfit <- function(model,
     .cores_ps <- get.cores_[['.cores_ps']]
     
     if (future) {
-      if(is.null(cores)) stop("Please set the number of cores for 'future' by  
+      if(is.null(cores)) stop2c("Please set the number of cores for 'future' by  
                             using the the 'cores' argument, e.g. cores = 4")
       if (arguments$future_session == 'multisession') {
         future::plan('multisession', workers = setincores)
@@ -1243,11 +1200,7 @@ growthparameters.bgmfit <- function(model,
       }
     }
     
-   
     list_c <- attr(newdata, 'list_c')
-    
-    # The newdata has already been created in plot_curves() with attached list_c
-    # if list_c is not attached, then only call get.newdata() again 
     if(is.null(list_c)) {
       newdata <- get.newdata(model, 
                              newdata = newdata, 
@@ -1264,7 +1217,6 @@ growthparameters.bgmfit <- function(model,
                              dummy_to_factor = dummy_to_factor,
                              newdata_fixed = newdata_fixed,
                              verbose = verbose)
-      
       list_c <- attr(newdata, 'list_c')
     } else {
       list_c <- list_c
@@ -1283,8 +1235,6 @@ growthparameters.bgmfit <- function(model,
       if(!exists(check___)) assign(check___, NULL)
     }
     
-    
-    
     newdata___ <- newdata
     
     if(!is.null(avg_reffects)) {
@@ -1292,16 +1242,15 @@ growthparameters.bgmfit <- function(model,
         index_opt <- gregexpr("d", opt, ignore.case = T)[[1]]
         dist.. <- substr(opt, index_opt, index_opt)
         if (dist.. != "" & grepl("^[[:upper:]]+$", dist..) )
-          stop("use option 'd' (and not 'D') with avg_reffects" )
+          stop2c("use option 'd' (and not 'D') with avg_reffects" )
       }
       if (grepl("v", opt, ignore.case = T) ) {
         index_opt <- gregexpr("v", opt, ignore.case = T)[[1]]
         velc.. <- substr(opt, index_opt, index_opt)
         if (velc.. != "" & grepl("^[[:upper:]]+$", velc..) )
-          stop("use option 'v' (and not 'V') with avg_reffects" )
+          stop2c("use option 'v' (and not 'V') with avg_reffects" )
       }
     }
-    
     
     if(is.null(avg_reffects)) {
       if (grepl("d", opt, ignore.case = T)) {
@@ -1319,7 +1268,7 @@ growthparameters.bgmfit <- function(model,
       }
       
       if (apv & velc.. == "") {
-        stop("You have set apv = TRUE but your opt argument",
+        stop2c("You have set apv = TRUE but your opt argument",
              "\n ",
              "contains no 'v' or 'V' option")
       }
@@ -1345,7 +1294,6 @@ growthparameters.bgmfit <- function(model,
         } else  if (!grepl("^[[:upper:]]+$", velc..)) {
           groupby_str_v <- groupby_fstr
         }
-        # groupby_str_v <- c(avg_reffects_groupby_str_v, groupby_str_v)
         if (identical(groupby_str_v, character(0)))
           groupby_str_v <- NULL
       } else {
@@ -1366,11 +1314,16 @@ growthparameters.bgmfit <- function(model,
             groupby_fstr_xvars <- c(xvar)
           }
      
-          # Imp to keep only one unique id per group for deriv = 1 using diff y0
+          if(!is.na(uvarby)) {
+            groupby_fstr_xvars_forx <- c(uvarby, groupby_fstr_xvars)
+          } else {
+            groupby_fstr_xvars_forx <- groupby_fstr_xvars
+          }
+          
           if(dpar != "sigma") {
             tempidname <- idvar[1] 
             newdata <- newdata %>%
-              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars_forx))) %>%
               dplyr::slice(1) %>% # droplevels() %>% 
               dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
               dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
@@ -1379,7 +1332,7 @@ growthparameters.bgmfit <- function(model,
           
           if(nrow(newdata) == 1) {
             if(verbose) {
-              old     <- c('xvar', 'groupby_fstr_xvars')
+              old     <- c('xvar', 'groupby_fstr_xvars_forx')
               new     <- sapply(old, function(x) collapse_comma(ept(x)) )
               message(multi_gsub_exact(msg_nrow_data_1, old, new) )
               old <- new <- NULL
@@ -1393,18 +1346,17 @@ growthparameters.bgmfit <- function(model,
                 old <- new <- NULL
               }
           }
-          
         }
         
         
-        arguments$newdata <- newdata
-        arguments$deriv <- 0
-        arguments$ipts <- NULL 
-        arguments$probs <- probs
-        # 6.03.2025
-        arguments$fullframe <- NULL 
+        arguments$newdata    <- newdata
+        arguments$deriv      <- 0
+        arguments$probs      <- probs
+        arguments$fullframe  <- NULL 
         arguments$itransform <- ""
-        
+        if(set_ipts_null) {
+          arguments$ipts <- NULL 
+        }
         
         if (estimation_method == 'fitted') {
           out_d_ <- CustomDoCall(fitted_draws, arguments)
@@ -1448,14 +1400,18 @@ growthparameters.bgmfit <- function(model,
             groupby_fstr_xvars <- c(groupby_fstr, xvar)
           } else if (is.null(groupby_fstr)) {
             groupby_fstr_xvars <- c(xvar)
-            
           }
           
-          # Imp to keep only one unique id per group for deriv = 1 using diff y0
+          if(!is.na(uvarby)) {
+            groupby_fstr_xvars_forx <- c(uvarby, groupby_fstr_xvars)
+          } else {
+            groupby_fstr_xvars_forx <- groupby_fstr_xvars
+          }
+          
           if(dpar != "sigma") {
             tempidname <- idvar[1] 
             newdata <- newdata %>%
-              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+              dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars_forx))) %>%
               dplyr::slice(1) %>% # droplevels() %>% 
               dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
               dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
@@ -1464,7 +1420,7 @@ growthparameters.bgmfit <- function(model,
           
           if(nrow(newdata) == 1) {
             if(verbose) {
-              old     <- c('xvar', 'groupby_fstr_xvars')
+              old     <- c('xvar', 'groupby_fstr_xvars_forx')
               new     <- sapply(old, function(x) collapse_comma(ept(x)) )
               message(multi_gsub_exact(msg_nrow_data_1, old, new) )
               old <- new <- NULL
@@ -1478,18 +1434,16 @@ growthparameters.bgmfit <- function(model,
                 old <- new <- NULL
               }
           }
-          
-          
         }
         
-        arguments$newdata <- newdata
-        arguments$deriv <- 1
-        arguments$ipts <- NULL 
-        arguments$probs <- probs
-        # 6.03.2025
-        arguments$fullframe <- NULL 
+        arguments$newdata    <- newdata
+        arguments$deriv      <- 1
+        arguments$probs      <- probs
+        arguments$fullframe  <- NULL 
         arguments$itransform <- ""
-        
+        if(set_ipts_null) {
+          arguments$ipts <- NULL 
+        }
         
         if (estimation_method == 'fitted') {
           out_v_ <- CustomDoCall(fitted_draws, arguments)
@@ -1499,15 +1453,12 @@ growthparameters.bgmfit <- function(model,
         
         if(is.null(out_v_)) return(invisible(NULL))
         
-        
         out_v__apv_ <- out_v_
         if (!summary) {
           out_v <- call_posterior_summary((out_v_))
         } else if (summary) {
           out_v <- out_v_
         }
-        
-        # out_v <- out_v_
         
         if(!is.na(model$model_info$univariate_by$by)) {
           newdata <- newdata %>%
@@ -1531,7 +1482,6 @@ growthparameters.bgmfit <- function(model,
             dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
             droplevels()
         }
-        
         
         out_v__apv_ <- t(out_v__apv_)
         out_summary[['parameters']] <-
@@ -1562,12 +1512,11 @@ growthparameters.bgmfit <- function(model,
       }
       
       if (apv & velc.. == "") {
-        stop("You have set apv = TRUE but your opt argument",
+        stop2c("You have set apv = TRUE but your opt argument",
              "\n ",
              "contains no 'v' or 'V' option")
       }
       
-     
       
       if (dist.. != "") {
         groupby_str_d <- groupby_fstr
@@ -1577,7 +1526,6 @@ growthparameters.bgmfit <- function(model,
       } else {
         groupby_str_d <- NULL
       }
-      
       
       
       if (velc.. != "") {
@@ -1595,8 +1543,6 @@ growthparameters.bgmfit <- function(model,
       groupby_str_d <- c(groupby_str_d, avg_reffects[['feby']])
       groupby_str_v <- c(groupby_str_v, avg_reffects[['feby']])
       
-
-      # Don't let below arguments$re_formula override the above 'd' and 'v'
       if (dist.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", dist..)) {
@@ -1610,13 +1556,12 @@ growthparameters.bgmfit <- function(model,
         
         arguments$newdata <- newdata
         arguments$deriv <- 0
-        arguments$ipts <- NULL 
         arguments$probs <- probs
-        # 6.03.2025
         arguments$fullframe <- NULL 
         arguments$itransform <- ""
-        
-        
+        if(set_ipts_null) {
+          arguments$ipts <- NULL 
+        }
         
         if (estimation_method == 'fitted') {
           out_d_ <- CustomDoCall(fitted_draws, arguments)
@@ -1626,7 +1571,6 @@ growthparameters.bgmfit <- function(model,
         
         if(is.null(out_d_)) return(invisible(NULL))
         
-        
         arguments$summary <- summary_org
         
         if(!is.na(model$model_info$univariate_by$by)) {
@@ -1635,7 +1579,7 @@ growthparameters.bgmfit <- function(model,
             droplevels()
         }
         
-         selectby <- avg_reffects[['reby']]
+        selectby <- avg_reffects[['reby']]
         selectover <- avg_reffects[['over']]
         selectby_over <- c(selectby, selectover)
         out_d_ <- get_avg_over(out_d_, newdata = newdata, by = selectby_over,
@@ -1667,7 +1611,6 @@ growthparameters.bgmfit <- function(model,
       arguments$summary <- FALSE
       arguments$re_formula <- NULL
       
-      # Don't let below arguments$re_formula override the above 'd' and 'v'
       if (velc.. != "") {
         newdata <- newdata___
         if (grepl("^[[:upper:]]+$", velc..)) {
@@ -1682,11 +1625,12 @@ growthparameters.bgmfit <- function(model,
         
         arguments$newdata <- newdata
         arguments$deriv <- 1
-        arguments$ipts <- NULL 
         arguments$probs <- probs
-        # 6.03.2025
         arguments$fullframe <- NULL 
         arguments$itransform <- ""
+        if(set_ipts_null) {
+          arguments$ipts <- NULL 
+        }
         
         if (estimation_method == 'fitted') {
           out_v_ <- CustomDoCall(fitted_draws, arguments)
@@ -1696,10 +1640,8 @@ growthparameters.bgmfit <- function(model,
         
         if(is.null(out_v_)) return(invisible(NULL))
         
-        
         arguments$summary <- summary_org
         
-        # moved here from below for avg_reffects to work with univariate_by
         if(!is.na(model$model_info$univariate_by$by)) {
           newdata <- newdata %>%
             dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
@@ -1714,7 +1656,6 @@ growthparameters.bgmfit <- function(model,
         
         out_v <- brms::posterior_summary(out_v_, probs = probs, robust = robust)
        
-        
         newdata <- newdata %>%
           dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
                           .keep_all = TRUE) %>% 
@@ -1730,11 +1671,7 @@ growthparameters.bgmfit <- function(model,
         out_summary[['velocity']] <- NULL
       }
       
-      
       if (apv) {
-        if(!is.na(model$model_info$univariate_by$by)) {
-        }
-        
         newdata <- newdata %>%
           dplyr::distinct(., dplyr::across(dplyr::all_of(selectby_over)), 
                           .keep_all = TRUE) %>% 
@@ -1756,8 +1693,13 @@ growthparameters.bgmfit <- function(model,
  
   if (!arguments$plot) {
     if(!is.null(arguments$deriv)) {
-      stop("argument 'deriv' is not allowed for 'growthparameters()'")
+      stop2c("argument 'deriv' is not allowed for 'growthparameters()'")
     }
+    
+    
+    arguments$ipts <- ipts <- set_for_check_ipts(ipts = ipts, nipts = 50, 
+                                                 dpar = dpar, verbose = verbose)
+    
     
     arguments <- sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                             arguments = arguments, 
@@ -1765,7 +1707,6 @@ growthparameters.bgmfit <- function(model,
                                             check_trace_back = NULL,
                                             envir = parent.frame())
     
-    # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE
     arguments$ipts <- ipts <- check_ipts(ipts = arguments$ipts, 
@@ -1782,12 +1723,10 @@ growthparameters.bgmfit <- function(model,
         message("setting 'summary = FALSE' for 'get_dv'")
       }
       if(!is.null(arguments$avg_reffects)) {
-        stop("'avg_reffects' must be NULL for get_dv = TRUE")
+        stop2c("'avg_reffects' must be NULL for get_dv = TRUE")
       }
     } # if (!arguments$plot) {
     
-    
-
     newdata <- get.newdata(model, 
                            newdata = newdata, 
                            xvar = xvar,
@@ -1817,7 +1756,6 @@ growthparameters.bgmfit <- function(model,
       if(!exists(check___)) assign(check___, NULL)
     }
     
-    
     if(is.null(arguments$re_formula)) {
       opt <- 'V'
     }
@@ -1830,10 +1768,9 @@ growthparameters.bgmfit <- function(model,
         index_opt <- gregexpr("v", opt, ignore.case = T)[[1]]
         velc.. <- substr(opt, index_opt, index_opt)
         if (velc.. != "" & grepl("^[[:upper:]]+$", velc..) )
-          stop("use option 'v' (and not 'V') with avg_reffects" )
+          stop2c("use option 'v' (and not 'V') with avg_reffects" )
       }
     }
-    
     
     if(is.null(avg_reffects)) {
       if (grepl("v", opt, ignore.case = T)) {
@@ -1863,14 +1800,19 @@ growthparameters.bgmfit <- function(model,
           groupby_fstr_xvars <- c(groupby_fstr, xvar)
         } else if (is.null(groupby_fstr)) {
           groupby_fstr_xvars <- c(xvar)
-          
         }
         
-        # Imp to keep only one unique id per group for deriv = 1 using diff y0
+        
+        if(!is.na(uvarby)) {
+          groupby_fstr_xvars_forx <- c(uvarby, groupby_fstr_xvars)
+        } else {
+          groupby_fstr_xvars_forx <- groupby_fstr_xvars
+        }
+        
         if(dpar != "sigma") {
           tempidname <- idvar[1] 
           newdata <- newdata %>%
-            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars))) %>%
+            dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr_xvars_forx))) %>%
             dplyr::slice(1) %>% # droplevels() %>% 
             dplyr::group_by(dplyr::across(dplyr::all_of(groupby_fstr))) %>%
             dplyr::mutate(!! as.name(tempidname) := dplyr::first( ept(tempidname) )) %>% 
@@ -1879,7 +1821,7 @@ growthparameters.bgmfit <- function(model,
         
         if(nrow(newdata) == 1) {
           if(verbose) {
-            old     <- c('xvar', 'groupby_fstr_xvars')
+            old     <- c('xvar', 'groupby_fstr_xvars_forx')
             new     <- sapply(old, function(x) collapse_comma(ept(x)) )
             message(multi_gsub_exact(msg_nrow_data_1, old, new) )
             old <- new <- NULL
@@ -1893,29 +1835,25 @@ growthparameters.bgmfit <- function(model,
               old <- new <- NULL
             }
         }
-        
       } # else if (!grepl("^[[:upper:]]+$", velc..)) {
       
     
       arguments$newdata <- newdata
       arguments$deriv <- 1
-      arguments$ipts <- NULL 
       arguments$probs <- probs
-      
       arguments$re_formula_opt <- opt
-      # 6.03.2025
-      arguments$fullframe <- NULL 
-      arguments$itransform <- ""
+      arguments$fullframe      <- NULL 
+      arguments$itransform     <- ""
+      if(set_ipts_null) {
+        arguments$ipts <- NULL 
+      } 
 
-     
       if (estimation_method == 'fitted') {
         out_v_ <- CustomDoCall(fitted_draws, arguments)
       } else if (estimation_method == 'predict') {
         out_v_ <- CustomDoCall(predict_draws, arguments)
       }
       
-     
-
      if(is.null(out_v_)) return(invisible(NULL))
 
       out_v__apv_ <- out_v_
@@ -1930,15 +1868,11 @@ growthparameters.bgmfit <- function(model,
           dplyr::filter(eval(parse(text = subindicatorsi)) == 1) %>% 
           droplevels()
       }
-      
-      
       out_v__apv_ <- t(out_v__apv_)
       parameters <-
         get_growthparameters(out_v__apv_, newdata, groupby_str_v, summary, 
                              digits, ...)
     } # if(is.null(avg_reffects)) {
-    
-    
     
     
     if(!is.null(avg_reffects)) {
@@ -1968,13 +1902,13 @@ growthparameters.bgmfit <- function(model,
       
       arguments$newdata <- newdata
       arguments$deriv <- 1
-      arguments$ipts <- NULL 
       arguments$probs <- probs
-      
       arguments$re_formula_opt <- opt
-      # 6.03.2025
-      arguments$fullframe <- NULL 
-      arguments$itransform <- "" 
+      arguments$fullframe      <- NULL 
+      arguments$itransform     <- "" 
+      if(set_ipts_null) {
+        arguments$ipts <- NULL 
+      }
       
       if (estimation_method == 'fitted') {
         out_v_ <- CustomDoCall(fitted_draws, arguments)
@@ -2027,8 +1961,6 @@ growthparameters.bgmfit <- function(model,
         get_growthparameters(out_v_, newdata, groupby_str_v, summary, 
                              digits, ...)
     } # if(!is.null(avg_reffects)) {
-    
- 
     
     newdata_before_itransform <- newdata
     

@@ -2624,11 +2624,11 @@ prepare_formula <- function(x,
     } # if(smat == 'nsk'smat == 'nsp') {
     
     
-    lm_fit  <- lm(lmform, data = data)
-    lm_coef <- coef(lm_fit)
     
-    lm_rsd  <- summary(lm_fit)$sigma
+    lm_fit    <- lm(lmform, data = data)
+    lm_coef   <- coef(lm_fit)
     
+    lm_rsd    <- summary(lm_fit)$sigma
     
     lm_coefse <- summary(lm_fit)$coefficients[, 2]
     

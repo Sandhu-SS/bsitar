@@ -53,6 +53,7 @@ get.newdata <- function(model,
     idata_method <- 'm2'
   }
   
+ 
 
   # Initiate non formalArgs()
   `:=` <- NULL
@@ -72,6 +73,8 @@ get.newdata <- function(model,
   cov_       <- paste0('cov', resp_rev_)
   sigmacov_  <- paste0('sigma', cov_)
   uvarby     <- model$model_info$univariate_by$by
+  if(is.null(uvarby)) uvarby <- NA 
+ 
   
   if(dpar == "mu") {
     if(is.null(xvar)) {
@@ -79,35 +82,14 @@ get.newdata <- function(model,
     }
     cov    <- model$model_info[[cov_]]
   } else if(dpar == "sigma") {
-    
     if(!is.na(model$model_info[[sigmaxvar_]])) {
       xvar   <- model$model_info[[sigmaxvar_]]
     } else if(is.na(model$model_info[[sigmaxvar_]]) & 
               !is.null(model$model_info[[xvar_]])) {
       xvar   <- model$model_info[[xvar_]]
     }
-    
     cov    <- model$model_info[[sigmacov_]]
-    
   } # if(dpar == "mu") { else if(dpar == "sigma") {
-  
-  
-  
-  # # For sigma
-  # xvar_      <- paste0('xvar', resp_rev_)
-  # sigmaxvar_ <- paste0('sigma', xvar_)
-  # cov_       <- paste0('cov', resp_rev_)
-  # sigmacov_  <- paste0('sigma', cov_)
-  # uvarby     <- model$model_info$univariate_by$by
-  # if(dpar == "mu") {
-  #   if(is.null(xvar)) {
-  #     xvar   <- model$model_info[[xvar_]]
-  #   }
-  #   cov    <- model$model_info[[cov_]]
-  # }
-  
-  
-  
   
   groupvar_     <- paste0('groupvar', resp_rev_)
   yvar_         <- paste0('yvar', resp_rev_)
@@ -130,7 +112,6 @@ get.newdata <- function(model,
   
   cov_       <- paste0('cov', resp_rev_)
   sigmacov_  <- paste0('sigma', cov_)
-  uvarby     <- model$model_info$univariate_by$by
   
   # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
   if(is.null(idvar)) {
@@ -140,20 +121,6 @@ get.newdata <- function(model,
       }
     }
   }
-  
-  
-  # print(groupvar_)
-  # model$model_info[[groupvar_]] %>% print()
-  # stop()
-  
- 
-  # if (is.null(newdata)) {
-  #   if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
-  #   if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
-  # } else {
-  #   newdata <- newdata
-  # }
-  
   
   
   if(dpar == "sigma") {
@@ -304,6 +271,7 @@ get.newdata <- function(model,
   }
   
   
+  
   add_just_list_c <- FALSE
   if(is.null(newdata_fixed)) {
     newdata <- prepare_data2(data = newdata, model = model)
@@ -316,7 +284,7 @@ get.newdata <- function(model,
       # do nothing assuming that user has set up for 'uvarby' etc
       # just apply 'dummy_to_factor'
       # only list_c elements will be added
-      newdata <- newdata 
+      newdata         <- newdata 
       add_just_list_c <- TRUE
     } else if(newdata_fixed == 1) {
       newdata <- prepare_data2(data = newdata, model = model)
@@ -333,21 +301,23 @@ get.newdata <- function(model,
   newdata <- newdata[,!duplicated(colnames(newdata))]
   
   
+  
   ##################################################
   # prepare_data2 changes 
-  if (!is.na(model$model_info$univariate_by$by)) {
+  
+  if (!is.na(uvarby)) {
     subindicatorsi <- 
       model$model_info$subindicators[grep(resp,
                                           model$model_info$yvars)]
     aux_variables <- subindicatorsi
     list_c[['subindicatorsi']] <- subindicatorsi
-    list_c[['uvarby']]         <- model$model_info$univariate_by$by
+    list_c[['uvarby']]         <- uvarby
   } 
   
+
   
-  
-  
-  
+  # brms::posterior_epred(by_sex, resp = 'Male', newdata = newdatax)
+  # bsitar::fitted_draws(by_sex, resp = 'Male', newdata = newdataxx)
   
   
   cov_vars       <-  model$model_info[[cov_]]
@@ -387,7 +357,6 @@ get.newdata <- function(model,
   # check if cov is charcater but not factor 
   checks_for_chr_fact <- c(cov_vars, sigmacov_vars)
   checks_for_chr_fact <- unique(checks_for_chr_fact)
-  # print(sigmacov_vars)
   for (cov_varsi in checks_for_chr_fact) {
     if(is.character(newdata[[cov_varsi]])) {
       if(!is.factor(newdata[[cov_varsi]])) {
@@ -431,8 +400,8 @@ get.newdata <- function(model,
   cov_factor_vars  <- c(cov_factor_vars, sigmacov_factor_vars)
   cov_numeric_vars <- c(cov_numeric_vars, sigmacov_numeric_vars)
   
-  if (!is.na(model$model_info$univariate_by$by)) {
-    if(idata_method == 'm1') groupby_fstr <- c(uvarby, groupby_fstr)
+  if (!is.na(uvarby)) {
+    if(idata_method == 'm1') groupby_fstr  <- c(uvarby, groupby_fstr)
     if(idata_method == 'm1') groupby_fistr <- c(uvarby, groupby_fistr)
   }
   
@@ -450,10 +419,7 @@ get.newdata <- function(model,
     groupby_fstr     <- sigmagroupby_fstr
     groupby_fistr    <- sigmagroupby_fistr
   }
-  
-  # print(cov_vars)
-  # stop()
-  
+
   if(add_just_list_c) {
     list_c[['xvar']] <- xvar
     list_c[['yvar']] <- yvar
@@ -463,7 +429,9 @@ get.newdata <- function(model,
     list_c[['cov_numeric_vars']] <- cov_numeric_vars
     list_c[['groupby_fstr']] <- groupby_fstr
     list_c[['groupby_fistr']] <- groupby_fistr
-    
+    if(is.null(list_c[['uvarby']])) {
+      list_c[['uvarby']] <- NA
+    }
     attr(newdata, 'list_c') <- list_c
     return(newdata)
   }
@@ -608,7 +576,6 @@ get.newdata <- function(model,
         idvar <- idvar
       }
       
-      uvarby <- model$model_info$univariate_by$by
       if (!is.na(uvarby))
         cov_factor_vars <- c(uvarby, cov_factor_vars)
       
@@ -993,7 +960,9 @@ get.newdata <- function(model,
   list_c[['cov_numeric_vars']] <- cov_numeric_vars
   list_c[['groupby_fstr']] <- groupby_fstr
   list_c[['groupby_fistr']] <- groupby_fistr
-  
+  if(is.null(list_c[['uvarby']])) {
+    list_c[['uvarby']] <- NA
+  }
   attr(newdata, 'list_c') <- list_c
   
   if(newdata_was_data_table) {

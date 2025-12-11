@@ -444,6 +444,9 @@ predict_draws.bgmfit <-
       for (i in methods::formalArgs(get.newdata)) {
         get.newdata_args[[i]] <- calling.args_newdata[[i]]
       }
+      get.newdata_args$ipts <- calling.args$ipts <- 
+        set_for_check_ipts(ipts = ipts, nipts = 50, 
+                           dpar = dpar, verbose = verbose)
       newdata <- CustomDoCall(get.newdata, get.newdata_args)
       rm('calling.args_newdata')
       rm('get.newdata_args')
@@ -706,8 +709,6 @@ predict_draws.bgmfit <-
             mapderivqr_args[['robust']] <- calling.args[['robust']]
             mapderivqr_args[['dpar']] <- calling.args[['dpar']]
             mapderivqr_args[['verbose']] <- calling.args[['verbose']]
-            # mapderivqr_argsx <<- mapderivqr_args
-            # mapderivqr_argsx$newdata$age <- seq.int(0, 20, length.out = 770)
             . <- CustomDoCall(mapderivqr, mapderivqr_args)
           }
         } # if(deriv > 0) {

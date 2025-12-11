@@ -76,20 +76,14 @@ prepare_data2 <- function(data = NULL,
                           envir = NULL) {
 
   . <- NULL;
-  
-  # subset TRUE leads to no creatio of levels() specific outcomes
-  # Then why subset is here?
-  # To be safe, set subset arg as NULL and set it to false here condionally
-  
-  if(is.null(subset)) subset <- FALSE
-  
+  if(is.null(subset)) {
+    subset <- FALSE
+  }
   if(is.null(envir)) {
     enverr. <- parent.frame()
   } else {
     enverr. <- envir
   }
-  
-  
   
   if(is.null(data) & is.null(model)) {
     stop("specify at least one of the data or model")
@@ -99,20 +93,16 @@ prepare_data2 <- function(data = NULL,
     if(is.null(data)) {
        data <- model$model_info$bgmfit.data
       if(verbose) message("'data' is extracted from the 'model'")
-      # stop("data must be specified even when model is not NULL")
     } 
     if(is.null(xvar)) {
-      # xvar <- model$model_info$xvars
       xvar <- extract_names_from_call(model = model, arg = "x")
       if(verbose) message("'xvar' is extracted from the 'model'")
     } 
     if(is.null(yvar)) {
-      # yvar <- model$model_info$yvars
       yvar <- extract_names_from_call(model = model, arg = "y")
       if(verbose) message("'yvar' is extracted from the 'model'")
     } 
     if(is.null(idvar)) {
-      # idvar <- model$model_info$idvars
       idvar <- extract_names_from_call(model = model, arg = "id")
       if(verbose) message("'idvar' is extracted from the 'model'")
     } 
@@ -120,26 +110,6 @@ prepare_data2 <- function(data = NULL,
       sigmaxvar <- model$model_info$sigmaxvars
       if(verbose) message("'sigmaxvar' is extracted from the 'model'")
     } 
-    # if(is.null(xfun)) {
-    #   xfun <- model$model_info$xfuntransforms
-    #   if(verbose) message("'xfun' is extracted from the 'model'")
-    # } 
-    # if(is.null(yfun)) {
-    #   yfun <- model$model_info$yfuntransforms
-    #   if(verbose) message("'yfun' is extracted from the 'model'")
-    # } 
-    # if(is.null(sigmaxfun)) {
-    #   sigmaxfun <- model$model_info$sigmaxfuntransforms
-    #   if(verbose) message("'sigmaxfun' is extracted from the 'model'")
-    # } 
-    # if(is.null(xoffset)) {
-    #   xoffset <- model$model_info$xoffsets
-    #   if(verbose) message("'xoffset' is extracted from the 'model'")
-    # } 
-    # if(is.null(sigmaxoffset)) {
-    #   sigmaxoffset <- model$model_info$sigmaxoffsets
-    #   if(verbose) message("'sigmaxoffset' is extracted from the 'model'")
-    # } 
     if(is.null(univariate_by)) {
       univariate_by <- model$model_info$univariate_by
       if(verbose) message("'univariate_by' is extracted from the 'model'")
@@ -152,91 +122,16 @@ prepare_data2 <- function(data = NULL,
       nys <- model$model_info$nys
       if(verbose) message("'nys' is extracted from the 'model'")
     } 
-    # if(is.null(sigma_formula_manual)) {
-      # setsigmaxvars <- model$model_info$setsigmaxvars
-      # if(verbose) message("'setsigmaxvars' is extracted from the 'model'")
-    # }
   } # if... else if(!is.null(model)) {
   
-  # Note that from within bsitar() sigmaxvar always created and later dropped
-  # if(is.null(model)) {
-  #   if(is.null(nys)) {
-  #     setsigmaxvars <- rep(TRUE, length(xvar))
-  #   } else {
-  #     setsigmaxvars <- rep(TRUE, nys)
-  #   }
-  # }
-
-  
-  
-  # Note now no default that from within bsitar() sigmaxvar always created and later dropped
-  # if(is.null(model)) {
-  #   setsigmaxvars <- rep(NA, length(xvar))
-  #   for (i in 1:length(sigmaxvar)) {
-  #     if(sigmaxvar[i] == "FALSE") {
-  #       setsigmaxvars[i] <- FALSE
-  #     } else {
-  #       setsigmaxvars[i] <- TRUE
-  #     }
-  #   }
-  # }
-  
-  
-  # sigmaxvar <- gsub_space(sigmaxvar)
-  # sigmaxvar <- deparse(sigmaxvar)
-  # sigmaxvar <- gsub("\"", "", sigmaxvar, fixed = T)
-  
-  
-  # print(sigmaxvar)
-  # print(setsigmaxvars)
-  
-#  stop()
-  
-  # setsigmaxvars <- sigmaxvar
-  
-  
-  data <- data %>% droplevels()
-  
-  
-  
+  data   <- data %>% droplevels()
   uvarby <- univariate_by$by
   mvar   <- multivariate$mvar
   
-  # Not needed, but keep for now
-  
-  # if(nys > 1) {
-  #   if(length(xvar) == 1) {
-  #     xvar <- rep(xvar, nys)
-  #   } else if(length(xvar) != nys) {
-  #     stop("The length of 'xvar' must be one or same as number of outcomes")
-  #   } 
-  #   
-  #   if(length(yvar) == 1) {
-  #     yvar <- rep(yvar, nys)
-  #   } else if(length(yvar) != nys) {
-  #     stop("The length of 'yvar' must be one or same as number of outcomes")
-  #   } 
-  #   
-  #   if(length(idvar) == 1) {
-  #     idvar <- rep(idvar, nys)
-  #   } else if(length(idvar) != nys) {
-  #     stop("The length of 'idvar' must be one or same as number of outcomes")
-  #   } 
-  #     
-  # } # if(nys > 1) {
-  
-  
-  
-  
-  
-  # 24.02.2025
-  # sanitize
-  # check_variable_exists_c <- c(xvar, yvar, idvar)
-  # check_variable_exists(data, check_variable_exists_c)
-  # check_variable_numeric_exists(data, check_variable_exists_c)
-  
-  # 24.02.2025
-  # need to set ys for univariate by levels
+  if(is.null(uvarby)) {
+    uvarby <- NA
+  }
+
   if (!(is.na(uvarby) | uvarby == "NA")) {
     check_if_any_varibale_all_NA(data, factor_var = uvarby)
     ys <- c()
@@ -252,14 +147,8 @@ prepare_data2 <- function(data = NULL,
     ys      <- yvar
   }
 
-  
-
-  # 24.02.2025
   xs      <- xvar
   ids     <- idvar
-  # sigmaxs <- sigmaxvar
-  
-  
   
   if (nys > 1) {
     unique_xs  <- unique(xs)
@@ -269,25 +158,19 @@ prepare_data2 <- function(data = NULL,
       xs <- c()
       for (j in unique_ys) {
         tempname <- paste0(unique_xs, "_", j)
-        # create variable only if not already present
         if(is.null(data[[tempname]])) {
           data[[tempname]] <- data[[unique_xs]]
         }
-        # data[[tempname]] <- data[[unique_xs]]
         xs <- c(xs, tempname)
         rm('tempname')
       }
     } else if(length(unique_xs) != nys) { 
-      stop("The number of 'xvar' variables shoud be either 1 or same as the 'yvar'")
+      stop2c("The number of 'xvar' variables shoud be either 1 or 
+             same as the 'yvar'")
     } # if(length(unique_xs) == 1) { else if(length(unique_xs) == 1) {
   } # if (nys > 1) {
   
-  # data %>% names() %>% print()
-  # print(xs)
-  # stop()
-  
-  ##################################################################
-  ##################################################################
+
   
   if(!is.null(model)) {
     if (is.null(resp)) {
@@ -307,10 +190,7 @@ prepare_data2 <- function(data = NULL,
     sigma_model_attr  <- model$model_info[[sigma_model_attr_]]
   }
   
-  
-  
-  ##################################################################
-  ##################################################################
+
   sigmaxs_c <- c()
   for (j in 1:nys) {
     if(is.na(sigmaxvar[j]) |  sigmaxvar[j] == "NA") {
@@ -341,9 +221,7 @@ prepare_data2 <- function(data = NULL,
   xvar      <- xs
   yvar      <- ys
   idvar     <- ids
-  # sigmaxvar <- sigmaxs
-  
-  org.data <- data
+  org.data  <- data
   
   
   if (!is.null(outliers)) {
@@ -424,26 +302,19 @@ prepare_data2 <- function(data = NULL,
            uvarby,
            "' should be a factor variable")
     }
-    
     if(uvarby_method == 'uvarby_method1') {
       for (l in levels(data[[uvarby]])) {
         if(!subset) data[[l]] <- data[[yvar[1]]]
         if(subset) data[[l]]  <- data[[l]]
       }
-      unibyimat <-
-        model.matrix(~ 0 + eval(parse(text = uvarby)), data)
+      unibyimat <- model.matrix(~ 0 + eval(parse(text = uvarby)), data)
       subindicators <- paste0(uvarby, levels(data[[uvarby]]))
       colnames(unibyimat) <- subindicators
-      #
       unibyimat <- unibyimat %>% data.frame()
       unibyimat <- sapply(unibyimat, as.integer ) %>% data.frame()
-      # unibyimat <- sapply(unibyimat, as.logical ) %>% data.frame()
-      #
       yvar <- levels(data[[uvarby]])
       data <- as.data.frame(cbind(data, unibyimat))
-    } # if(uvarby_method == 'uvarby_method1') {
-    
-    
+    }
     if(uvarby_method == 'uvarby_method2') {
       id_colsx <- setdiff(colnames(data), c(yvar, uvarby))
       uvarbyx  <- levels(data[[uvarby]])
@@ -493,7 +364,6 @@ prepare_data2 <- function(data = NULL,
     
     
     if (!(is.na(uvarby) | uvarby == "NA")) {
-      # moved here from bsitar
       sortbylayer <- NA
       data <- data %>%
         dplyr::mutate(sortbylayer =
@@ -502,10 +372,6 @@ prepare_data2 <- function(data = NULL,
                                                !!as.name(uvarby)
                                              )))) %>%
         dplyr::arrange(sortbylayer) %>%
-        # why idsi, it was working in data but here no because not yet in loop
-        # dplyr::mutate(!!as.name(idsi) := factor(!!as.name(idsi),
-        #                                         levels = 
-        #                                           unique(!!as.name(idsi)))) %>% 
         dplyr::select(-sortbylayer)
     }
     
@@ -531,13 +397,7 @@ prepare_data2 <- function(data = NULL,
   attr(data, "ys") <- yvar
   attr(data, "ids") <- idvar
   attr(data, "sigmaxs") <- sigmaxs # sigmaxvar
-  
-  # data$age <- data$age + 13
-#  head(data) %>% print()
- # stop()
-
   return(data)
 }
 
-  # prepare_data2(data = heights, model = zcode) %>% names()
 

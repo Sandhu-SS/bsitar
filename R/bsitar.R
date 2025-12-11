@@ -8518,7 +8518,7 @@ bsitar <- function(x,
     iknots <- checkgetiknotsbknots(knots, 'iknots')
     bknots <- checkgetiknotsbknots(knots, 'bknots')
     
-    SplineCall <- substitute(TEMPNAME(x = set_datai_xsi,
+    SplineCall <- substitute(TEMPNAME(x = datai[[xsi]],
                                       knots = iknots,
                                       bknots = bknots,
                                       degree = smat_degree,
@@ -8545,18 +8545,17 @@ bsitar <- function(x,
       SplineCall[[1]] <- quote(GS_isp_call)
     }
     
-    set_datai_xsi   <- datai[[xsi]]
     mat_s           <- eval(SplineCall)
     SplineCall[[2]] <- quote(x)
     
-    
+
     #################################################################
     #################################################################
     
     if(!is.null(knots_selection)) {
       if(knots_selection[['when']] == 'ac') {
         dataset_temp_knots_selection <- datai
-        dataset_temp_knots_selection[[xsi]] <- set_datai_xsi
+        dataset_temp_knots_selection[[xsi]] <- datai[[xsi]]
         knots_selection_arg[['dataset']] <- dataset_temp_knots_selection
         knots_selection_arg[['dependent']] <- ysi
         knots_selection_arg[['independents']] <- xsi

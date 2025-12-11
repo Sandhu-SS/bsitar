@@ -1590,6 +1590,10 @@ marginal_growthparameters.bgmfit <- function(model,
     get.newdata_args[[i]] <- full.args[[i]]
   }
   
+  
+  get.newdata_args$ipts <- full.args$ipts <- ipts <- 
+    set_for_check_ipts(ipts = ipts, nipts = 50, dpar = dpar, verbose = verbose)
+  
   full.args$newdata <- newdata <- CustomDoCall(get.newdata, 
                                                get.newdata_args)
   

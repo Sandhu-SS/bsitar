@@ -103,9 +103,14 @@
 #' model <- berkeley_exfit
 #' 
 #' # Call marginal_comparisons to demonstrate the function
-#' # Note that since model has no covariate, the below example does't make sense
+#' # Note: since model has no covariate, the example is for illustration purposes
+#' # Comparisons at 1 SD of age
+#' marginal_comparisons(model, variables = list(age = "sd"), 
+#' re_formula = NA, draw_ids = 1:2)
 #' 
-#' marginal_comparisons(model, draw_ids = 1)
+#' # Comparisons between individuals
+#' marginal_comparisons(model, variables = list(id = "sequential"), 
+#' re_formula = NULL, draw_ids = 1:2)
 #' }
 #' 
 marginal_comparisons.bgmfit <- function(model,
@@ -1151,6 +1156,9 @@ marginal_comparisons.bgmfit <- function(model,
   for (i in methods::formalArgs(get.newdata)) {
     get.newdata_args[[i]] <- full.args[[i]]
   }
+  
+  get.newdata_args$ipts <- full.args$ipts <- ipts <- 
+    set_for_check_ipts(ipts = ipts, nipts = 50, dpar = dpar, verbose = verbose)
   
   full.args$newdata <- newdata <- CustomDoCall(get.newdata, 
                                                get.newdata_args)

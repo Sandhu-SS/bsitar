@@ -226,12 +226,27 @@ Note that unlike \code{aux_variables} which are passed to the internal data
 functions such as \code{'get.newdata'}, the \code{grid_add} are passed to
 the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}.}
 
-\item{ipts}{An integer to set the length of the predictor variable for
-generating a smooth velocity curve. If \code{NULL}, the original values are
-returned. If an integer (e.g., \code{ipts = 10}, default), the predictor is
-interpolated. Note that these interpolations do not alter the range of the
-predictor when calculating population averages and/or individual-specific
-growth curves.}
+\item{ipts}{An integer specifying the number of points for interpolating the
+predictor variable (e.g., age) to generate smooth curves for predictions
+and plots. This value is used as the \code{length.out} argument for
+\code{\link[=seq]{seq()}}, controlling the smoothness of distance and velocity curves without
+altering the predictor range.
+\describe{
+\item{\code{NULL} (the default)}{Engages automatic behavior based on the
+\code{dpar} argument: it is internally set to \code{50} for the mean
+response (\code{dpar = 'mu'}), ensuring smooth curves, while for the
+distributional parameters (e.g., \code{dpar = 'sigma'}), no
+interpolation is performed.}
+\item{An integer (e.g., \code{100})}{Explicitly sets the number of
+interpolation points.}
+\item{\code{FALSE}}{Disables all interpolation, forcing predictions to
+be made only at the original data points of the predictor variable.}
+}
+
+This argument affects the following post-processing functions: \cr
+\code{\link[=fitted_draws]{fitted_draws()}}, \code{\link[=predict_draws]{predict_draws()}}, \code{\link[=growthparameters]{growthparameters()}}, \code{\link[=plot_curves]{plot_curves()}},
+\code{\link[=marginal_draws]{marginal_draws()}}, \code{\link[=marginal_comparisons]{marginal_comparisons()}}, and
+\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}.}
 
 \item{model_deriv}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the

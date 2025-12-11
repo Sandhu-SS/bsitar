@@ -1116,6 +1116,8 @@ get_future_plan_args <- function(future,
 
 validate_response <- function(model,
                               resp = NULL) {
+  uvarby <- model$model_info$univariate_by$by
+  if(is.null(uvarby)) uvarby <- NA
   if (model$model_info$nys == 1 & !is.null(resp)) {
     stop_msg <- 
       paste0(
@@ -1130,11 +1132,11 @@ validate_response <- function(model,
     stop(clean_text_spaces(stop_msg))
   }
   if (model$model_info$nys > 1 & is.null(resp)) {
-    if (!is.na(model$model_info$univariate_by$by)) {
+    if (!is.na(uvarby)) {
       stop_msg <- 
         paste0(
         "You have fit a univariate-by-subset model for '",
-        model$model_info$univariate_by$by, "'",
+        uvarby, "'",
         "\n ",
         " However, the 'resp' options is not set appropriately",
         " (which is NULL at present).",
@@ -1472,6 +1474,11 @@ priors_to_textdata <- function(model,
   if (missing(model)) {
     model <- NULL
   }
+  
+  if(!is.null(model)) {
+    uvarby <- model$model_info$univariate_by$by
+    if(is.null(uvarby)) uvarby <- NA 
+  }
 
   ##############################################
   # Initiate non methods::formalArgs()
@@ -1644,7 +1651,7 @@ priors_to_textdata <- function(model,
     dplyr::arrange(match(Class, sort_class))
 
   if (!is.null(model)) {
-    if (is.na(model$model_info$univariate_by$by) &
+    if (is.na(uvarby) &
         !model$model_info$multivariate$mvar) {
       spriors <- spriors %>%  dplyr::select(-'Response')
     }
@@ -2525,7 +2532,7 @@ mapderivqr <- function(model,
   
   
   if(dpar == "sigma") {
-    
+    # 
   }
   
   if(is.null(levels_id) & is.null(idvar)) {
@@ -2544,13 +2551,9 @@ mapderivqr <- function(model,
   }
   
   
-  # check if really need to be commented out
-   # yvar  <- 'yvar'
-
-
-  if(!is.na(model$model_info$univariate_by$by)) {
+  if(!is.na(uvarby)) {
     newdata <- newdata %>% data.frame() %>%
-      dplyr::filter(!!as.symbol(model$model_info$univariate_by$by) == yvar)
+      dplyr::filter(!!as.symbol(uvarby) == yvar)
   }
   
   
@@ -3730,17 +3733,11 @@ brms_via_cmdstanr <- function(scode,
   # cpp_options <- list(stan_threads = stan_threads,
   #                     stan_opencl = stan_opencl)
   
-  # print(stan_threads)
-  # print(brm_args$threads$threads)
-  # stop()
-  
+
   cpp_options <- list(stan_threads = stan_threads)
   
   
   stanc_options <- brm_args$stan_model_args$stanc_options
-  
-  # print(stanc_options)
-  # stop()
   
   if(brm_args$silent == 0) {
     show_messages = TRUE
@@ -5155,8 +5152,7 @@ check_newdata_args <- function(model,
       newdata[[name_hypothetical_id]] <- as.factor("tempid")
     }
   }
-  #print(name_hypothetical_id)
-  newdata
+  return(newdata)
 }
 
 
@@ -6089,6 +6085,8 @@ plot_equivalence_test <-  function(x,
 #' @noRd
 #'
 checkresp_info <- function(model, resp) {
+  uvarby <- model$model_info$univariate_by$by
+  if(is.null(uvarby)) uvarby <- NA 
   error_message <- NULL
   if (model$model_info$nys == 1 & !is.null(resp)) {
     error_message <-  
@@ -6103,10 +6101,10 @@ checkresp_info <- function(model, resp) {
     )
   }
   if (model$model_info$nys > 1 & is.null(resp)) {
-    if (!is.na(model$model_info$univariate_by$by)) {
+    if (!is.na(uvarby)) {
       error_message <-  
         paste0("You have fit a univariate_by model for ",
-        model$model_info$univariate_by$by,
+               uvarby,
         "\n ",
         " but did not correctly specified the 'resp' argument",
         " (which is NULL at present).",
@@ -6128,7 +6126,7 @@ checkresp_info <- function(model, resp) {
   }
   
   if(!is.null(error_message)) {
-    error_message <- stop(clean_text_spaces(error_message))
+    error_message <- stop2c(clean_text_spaces(error_message))
   }
   return(invisible(NULL))
 }
@@ -6580,7 +6578,7 @@ check_if_varname_exact <- function(str,
   make_check_right <- paste0("($|[^[:alnum:]", allowed_right, "])")
   patxsi_not <- paste0(make_check_left, x, make_check_right)
   if(grepl(patxsi_not, str, fixed = FALSE)) {
-    stop("Predictor ", collapse_comma(x), "",
+    stop2c("Predictor ", collapse_comma(x), "",
          " has already been used for modelling the 'mu'",
          "\n  ", 
          "The same predictor can not be used for both 'mu' and 'sigma'",
@@ -7562,29 +7560,34 @@ get_basic_info <- function(model = model,
 #' @noRd
 #'
 set_manual_datagrid <- function(model, 
-                                   newdata = NULL,
-                                   resp = NULL, 
-                                   dpar = NULL, 
-                                   idvar = NULL,
-                                   xvar = NULL,
-                                   difx = NULL,
-                                   difx_asit = FALSE,
-                                   auto = TRUE,
-                                   xrange = NULL,
-                                   length.out = NULL,
-                                   grid_add = NULL,
-                                   grid_type = NULL,
-                                   FUN = NULL,
-                                   FUN_character = NULL,
-                                   FUN_factor = NULL,
-                                   FUN_logical = NULL,
-                                   FUN_numeric = NULL,
-                                   FUN_integer = NULL,
-                                   FUN_binary = NULL,
-                                   FUN_other = NULL,
-                                   verbose = FALSE) {
+                                newdata = NULL,
+                                resp = NULL, 
+                                dpar = NULL, 
+                                idvar = NULL,
+                                xvar = NULL,
+                                difx = NULL,
+                                difx_asit = FALSE,
+                                auto = TRUE,
+                                xrange = NULL,
+                                length.out = NULL,
+                                grid_add = NULL,
+                                grid_type = NULL,
+                                by = NULL,
+                                FUN = NULL,
+                                FUN_character = NULL,
+                                FUN_factor = NULL,
+                                FUN_logical = NULL,
+                                FUN_numeric = NULL,
+                                FUN_integer = NULL,
+                                FUN_binary = NULL,
+                                FUN_other = NULL,
+                                verbose = FALSE) {
   
   xvar_temp <- idvar_temp <- NULL;
+  uvarby <- model$model_info$univariate_by$by
+  if(is.null(uvarby)) {
+    uvarby <- NA
+  }
   
   if (is.null(resp)) {
     resp_rev_ <- resp
@@ -7600,7 +7603,6 @@ set_manual_datagrid <- function(model,
     newdata <- model$model_info$bgmfit.data
   }
   
-  
   if(is.null(xrange)) {
     if(!is.null(length.out)) {
       stop2c("For 'length.out' to take effect, the 'xrange' should be specified.
@@ -7608,7 +7610,6 @@ set_manual_datagrid <- function(model,
              else a numeric vector of lenght two")
     }
   }
-  
   
   if(is.null(length.out)) {
     length.out <- 10
@@ -7660,8 +7661,6 @@ set_manual_datagrid <- function(model,
     } # else if(!is.character(difx)) {
   } # if(!is.null(difx)) {
   
-  
-  
   if(is.null(idvar)) {
     idvar <- get_basic_info(model = model, 
                             dpar = dpar, 
@@ -7692,7 +7691,6 @@ set_manual_datagrid <- function(model,
                                  verbose = verbose)
   }
   
-  
   if(dpar == "sigma") {
     if(is.null(xvar) | is.na(xvar)) {
       msg_xvar_not_in_data <-
@@ -7704,11 +7702,6 @@ set_manual_datagrid <- function(model,
       stop2c(msg_xvar_not_in_data)
     }
   }
-  
-  
-  
-  
-  
   
   if(is.null(xrange)) {
     setxvarvec <- newdata[[xvar]]
@@ -7730,7 +7723,6 @@ set_manual_datagrid <- function(model,
     setxvarvec <- seq.int(xrange[1], xrange[2], length.out = length.out)
   }
   
-  
   if(is.null(grid_type)) {
     grid_type <- "mean_or_mode" # grid_type <- "dataframe"
   }
@@ -7743,14 +7735,13 @@ set_manual_datagrid <- function(model,
     }
   }
   
-  
   # Run this to get full data via modified get_data() for insight
   # See 'custom_get_data.brmsfit' in utils-helper-1
   if(!model$test_mode) {
     unlock_replace_bind(package = "insight", what = "get_data",
                         replacement = custom_get_data.brmsfit, ept_str = T)
     if(verbose) {
-      message(" As model[['test_mode']] = FLASE, the full data by the",
+      message2c(" As model[['test_mode']] = FLASE, the full data by the",
               "\n ", 
               "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
               "\n ", 
@@ -7760,7 +7751,6 @@ set_manual_datagrid <- function(model,
     }
   } # if(!model$test_mode) {
   
-
   grid_args <- list()
   if(grid_type == 'dataframe') {
     grid_args[[xvar]]          <- NULL
@@ -7793,6 +7783,12 @@ set_manual_datagrid <- function(model,
   grid_args[['FUN_binary']]    <- FUN_binary
   grid_args[['FUN_other']]     <- FUN_other
   
+  if(!is.na(uvarby)) {
+    grid_args[['by']] <- c(uvarby, by)
+  } else {
+    grid_args[['by']] <- by
+  }
+  
   if(!is.null(grid_add)) {
     if(is.list(grid_add)) {
       for (i in grid_add) {
@@ -7807,13 +7803,11 @@ set_manual_datagrid <- function(model,
         grid_args[[i]] <- newdata[[i]]
       } 
       if(verbose) {
-        message("Adding following to the grid via grid_add:\n ", 
+        message2c("Adding following to the grid via grid_add:\n ", 
                 collapse_comma(grid_add))
       }
     } # if(is.list(grid_add)) { if(!is.list(grid_add)) {
   } # if(!is.null(grid_add)) {
-  
-
   
   newdata_all        <- newdata
   newdata_names_all  <- names(newdata_all)
@@ -7834,7 +7828,6 @@ set_manual_datagrid <- function(model,
     }
   }
   
-  
   if(!is.null(difx)) {
     if(difx_asit) {
       difx_val <- difx_val
@@ -7843,7 +7836,6 @@ set_manual_datagrid <- function(model,
                 " added to the grid") 
       }
     } else if(!difx_asit) {
-      # difx_val <- seq.int(difx_range[1], difx_range[2], length.out = nrow(newdata))
       if(verbose) {
         message("The 'difx' variable ", collapse_comma(difx_name),
                 " added to the grid with the following range: ",
@@ -7853,7 +7845,6 @@ set_manual_datagrid <- function(model,
     }
   }
   
- 
   sortxxxxzzz <- NULL;
   newdata <- newdata %>% dplyr::mutate(sortxxxxzzz = dplyr::row_number()) 
   idvar_xvar <- c(idvar, xvar)
@@ -7874,13 +7865,10 @@ set_manual_datagrid <- function(model,
   if(!is.null(difx)) {
     attr(newdata, 'difx') <- difx_name
   }
-  attr(newdata, 'xvar_for_sigma_model_basic') <- idvar
-  attr(newdata, 'idvar_for_sigma_model_basic')  <- xvar
- 
+  attr(newdata, 'xvar_for_sigma_model_basic')  <- xvar # idvar
+  attr(newdata, 'idvar_for_sigma_model_basic') <- idvar # xvar
   return(newdata)
 }
-
-
 
 
 
@@ -7927,17 +7915,53 @@ attrstrip <- function(vec, keep = 'class'){
   }
   vec
 }
-
 # attrstrip(datace, keep = c('row.names', 'names', 'class'))
 
 
 
 #' An internal function to check the minimum version of the package
 #'
-#' @param pkg A character string of package names
-#' @param minver A character string of minimum version of the package
+#' @param ipts An integer
+#' @param nipts An integer specifying the default ipts
 #' @param verbose A logical (default \code{FALSE}) to check 
-#' @param ... other arguments. Currently ignored.
+#' @keywords internal
+#' @return A list comprised of exposed functions.
+#' @noRd
+#'
+set_for_check_ipts <- function(ipts, nipts = 50, dpar = 'mu', verbose = FALSE) {
+  if(is.logical(ipts)) {
+    if(!ipts) {
+      out <- NULL
+    } else if(ipts) {
+      out <- nipts
+    }
+  } else if(!is.logical(ipts)) {
+    if(!is.null(ipts)) {
+      out <- ipts
+    } else if(is.null(ipts)) {
+      if(dpar == "mu") {
+        if(verbose) {
+          message2c("Note: argument 'ipts' has been set as ipts = ", nipts)
+        }
+        out <- nipts
+      } else if(dpar == "sigma") {
+        out <- ipts
+      }
+    }
+  }
+  return(out)
+}
+
+
+
+#' An internal function to check the minimum version of the package
+#'
+#' @param ipts An integer
+#' @param nipts An integer specifying the default ipts
+#' @param check_fun A logical (default \code{FALSE})
+#' @param available_d1 A logical (default \code{FALSE})
+#' @param xcall A logical (default \code{NULL})
+#' @param verbose A logical (default \code{FALSE})
 #' @keywords internal
 #' @return A list comprised of exposed functions.
 #' @noRd
@@ -7976,7 +8000,7 @@ check_ipts <- function(ipts = NULL,
       }
     }
     if(verbose) {
-      message("Note: argument 'ipts' has been set as ipts = ", nipts,
+      message2c("Note: argument 'ipts' has been set as ipts = ", nipts,
           " (default was 'NULL')")
     }
   }
