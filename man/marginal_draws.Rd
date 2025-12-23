@@ -31,7 +31,7 @@
   seed = 123,
   future = FALSE,
   future_session = "multisession",
-  future_splits = NULL,
+  future_splits = TRUE,
   future_method = "future",
   future_re_expose = NULL,
   usedtplyr = FALSE,
@@ -46,7 +46,7 @@
   condition = NULL,
   deriv = 0,
   model_deriv = TRUE,
-  method = "custom",
+  method = "pkg",
   marginals = NULL,
   pdrawso = FALSE,
   pdrawsp = FALSE,
@@ -60,6 +60,7 @@
   wts = NULL,
   hypothesis = NULL,
   equivalence = NULL,
+  eps = NULL,
   constrats_by = NULL,
   constrats_at = NULL,
   reformat = NULL,
@@ -227,26 +228,26 @@ factor variable), and \code{reby} (typically \code{NULL}, indicating that
 parameters are integrated over the random effects). For example,
 \code{avg_reffects = list(feby = 'study', reby = NULL, over = 'age')}.}
 
-\item{idata_method}{A character string to indicate the interpolation method.
-The number of interpolation points is set by the \code{ipts} argument.
-Available options for \code{idata_method} are \emph{method 1} (specified as
-\code{'m1'}) and \emph{method 2} (specified as \code{'m2'}).
+\item{idata_method}{A character string specifying the interpolation method
+(default \code{NULL}). The number of interpolation points is controlled by
+the \code{ipts} argument.
+
+Available options:
 \itemize{
-\item \emph{Method 1} (\code{'m1'}) is adapted from the \pkg{iapvbs} package
-and is documented
-\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}.
-\item \emph{Method 2} (\code{'m2'}) is based on the \pkg{JMbayes} package
-and is documented
-\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}.
-The \code{'m1'} method works by internally constructing the data frame
-based on the model configuration, while the \code{'m2'} method uses the
-exact data frame from the model fit, accessible via \code{fit$data}. If
-\code{idata_method = NULL} (default), method \code{'m2'} is automatically
-selected. Note that method \code{'m1'} may fail in certain cases,
-especially when the model includes covariates (particularly in
-\code{univariate_by} models). In such cases, it is recommended to use
-method \code{'m2'}.
-}}
+\item \code{'m1'}: Adapted from the \pkg{iapvbs} package (documented
+\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}). This
+method internally constructs the data frame based on the model
+configuration. \emph{Note:} This method may fail if the model includes
+covariates (especially in \code{univariate_by} models).
+\item \code{'m2'}: Based on the \pkg{JMbayes} package (documented
+\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}).
+This method uses the exact data frame from the model fit
+(\code{fit$data}) and is generally more robust.
+}
+
+If \code{idata_method = NULL}, \code{'m2'} is automatically selected.
+It is recommended to use \code{'m2'} if \code{'m1'} encounters errors
+with covariate-dependent models.}
 
 \item{ipts}{An integer specifying the number of points for interpolating the
 predictor variable (e.g., age) to generate smooth curves for predictions
@@ -273,74 +274,71 @@ This argument affects the following post-processing functions: \cr
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method to ensure reproducibility.}
 
-\item{future}{A logical value (default \code{FALSE}) to specify whether or
-not to perform parallel computations. If set to \code{TRUE}, the
-\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}} function is used to summarize the posterior
-draws in parallel.}
+\item{future}{A logical value (default \code{FALSE}) indicating whether to
+perform parallel computations. If \code{TRUE}, posterior summaries are
+computed in parallel using \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
 
-\item{future_session}{A character string specifying the session type when
-\code{future = TRUE}. The \code{'multisession'} (default) option sets the
-\code{'multisession'} environment, while the \code{'multicore'} option sets
-up a \code{'multicore'} session. Note that \code{'multicore'} is not
-supported on Windows systems. For more details, see
-\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}. For \code{'marginaleffect'} based
-functions, user can also specify \code{'future_session'} as  a named list
-where the first element is the \code{'future_session'} itself and other
-named elements could be additional information passed on to the future
-plan. This is particularly useful when setting up the
-\code{\link[future.mirai:mirai_cluster]{future.mirai::mirai_cluster()}} and  \code{\link[future.mirai:mirai_multisession]{future.mirai::mirai_multisession()}}.
-For example, \code{future_session =
-  list(future_session = mirai_cluster, daemons = list(...))} where
-argument \code{'daemons'} sets up the \code{\link[mirai:daemons]{mirai::daemons()}}.}
-
-\item{future_splits}{A list (default \code{NULL}) that can be an unnamed
-numeric list, a logical value, or a numeric vector of length 1 or 2. It is
-used to split the processing of posterior draws into smaller subsets for
-parallel computation.
+\item{future_session}{A character string or a named list specifying the
+parallel plan when \code{future = TRUE}.
 \itemize{
-\item If passed as a list (e.g., \code{future_splits = list(1:6, 7:10)}),
-each sequence of
-numbers is passed to the \code{draw_ids} argument.
-\item If passed as a numeric vector (e.g., \code{future_splits = c(10, 2)}),
-the first element
-specifies the number of draws (see \code{draw_ids}) and the second element
-indicates the number of splits. The splits are created using
-\code{\link[parallel:splitIndices]{parallel::splitIndices()}}.
-\item If passed as a numeric vector of length 1, the first element is
-internally set as the
-number of draws (\code{ndraws} or \code{draw_ids}) depending on which one
-is not \code{NULL}.
-\item If \code{TRUE}, a numeric vector for \code{future_splits} is created
-based on the number
-of draws (\code{ndraws}) and the number of cores (\code{cores}).
-\item If \code{FALSE}, \code{future_splits} is ignored.
-The use case for \code{future_splits} is to save memory and improve
-performance, especially on \code{Linux} systems when \code{future::plan()}
-is set to \code{multicore}. Note: on Windows systems, R processes may not
-be freed automatically when using \code{'multisession'}. In such cases, the
-R processes can be interrupted using \code{\link[installr:kill_all_Rscript_s]{installr::kill_all_Rscript_s()}}.
+\item \strong{Character string}: Defaults to \code{"multisession"}.
+Use \code{"multicore"} for forking (not supported on Windows).
+\item \strong{Named list}: Useful for advanced plans like
+\code{\link[future.mirai:mirai_cluster]{future.mirai::mirai_cluster()}}. The list must contain:
+\itemize{
+\item \code{future_session}: The planner function (e.g.,
+\code{mirai_cluster}).
+\item Additional named arguments passed to the planner (e.g.,
+\code{daemons} for \code{\link[mirai:daemons]{mirai::daemons()}}).
+}
+Example: \code{list(future_session = mirai_cluster, daemons =
+      list(...))}.
 }}
 
-\item{future_method}{A character string (default \code{'future'}) to specify
-the method for parallel computation. Options include:
+\item{future_splits}{A list, numeric vector, or logical value (default
+\code{TRUE}). Controls how posterior draws are partitioned into smaller
+subsets for parallel computation. This helps manage memory and improve
+performance, particularly on Linux when using
+\code{future::plan("multicore")}.
+
+Input options:
 \itemize{
-\item \code{'future'}: Uses \code{\link[future:future]{future::future()}} along with
-\code{\link[future.apply:future_lapply]{future.apply::future_lapply()}} for parallel execution.
-\item \code{'dofuture'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} with the
-\code{'dofuture'} function from the \code{doFuture} package for parallel
+\item \strong{List}: (e.g., \code{list(1:6, 7:10)}). Each element is a
+sequence of numbers passed to \code{draw_ids} to process in a separate
+chunk.
+\item \strong{Numeric vector of length 2}: (e.g., \code{c(100, 4)}). The
+first element is the total number of draws, and the second is the number
+of splits. Indices are generated via \code{\link[parallel:splitIndices]{parallel::splitIndices()}}.
+\item \strong{Numeric vector of length 1}: Specifies the total number of
+draws. Splits are calculated automatically.
+\item \strong{\code{TRUE}}: Automatically creates splits based on
+\code{ndraws} and \code{cores}. If both \code{ndraws} and \code{draw_ids}
+are specified, \code{draw_ids} takes precedence. This is consistent with
+post-processing functions in the \code{bsitar} and \code{brms} packages.
+\item \strong{\code{FALSE}}: Splitting is disabled.
+}
+\strong{Note}: On Windows with \code{future::plan("multisession")},
+background R processes may not free resources automatically. If needed, use
+\code{\link[installr:kill_all_Rscript_s]{installr::kill_all_Rscript_s()}} to terminate them.}
+
+\item{future_method}{A character string (default \code{'future'}) specifying
+the parallel computation backend. Options include:
+\itemize{
+\item \code{'future'}: Uses \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}} for
 execution.
+\item \code{'dofuture'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} via the
+\code{doFuture} package.
 }}
 
-\item{future_re_expose}{A logical (default \code{NULL}) to indicate whether
-to re-expose \code{Stan} functions when \code{future = TRUE}. This is
-especially relevant when \code{\link[future:plan]{future::plan()}} is set to \code{'multisession'},
-as already exposed C++ \code{Stan} functions cannot be passed across
-multiple sessions.
+\item{future_re_expose}{A logical value (default \code{NULL}) indicating whether
+to re-expose internal \code{Stan} functions when \code{future = TRUE}.
+This is critical when \code{\link[future:plan]{future::plan()}} is set to \code{"multisession"},
+as compiled C++ functions cannot be exported across distinct R sessions.
 \itemize{
-\item When \code{future_re_expose = NULL} (the default), \code{future_re_expose}
-is automatically set to \code{TRUE} for the \code{'multisession'} plan.
-\item It is advised to explicitly set \code{future_re_expose = TRUE} for speed
-gains when using parallel processing with \code{future = TRUE}.
+\item If \code{NULL} (default), it is automatically set to \code{TRUE}
+when the plan is \code{"multisession"}.
+\item Explicitly setting this to \code{TRUE} is recommended for improved
+performance during parallel execution.
 }}
 
 \item{usedtplyr}{A logical (default \code{FALSE}) indicating whether to use
@@ -353,12 +351,14 @@ evaluated only when \code{method = 'custom'}.}
 \item{usecollapse}{A logical (default \code{FALSE}) to indicate whether to
 use the \pkg{collapse} package for summarizing the draws.}
 
-\item{cores}{The number of cores to be used for parallel computations if
-\code{future = TRUE}. On non-Windows systems, this argument can be set
-globally via the \code{mc.cores} option. By default, \code{NULL}, the
-number of cores is automatically determined using
-\code{\link[future:re-exports]{future::availableCores()}}, and it will use the maximum number of cores
-available minus one (i.e., \code{future::availableCores() - 1}).}
+\item{cores}{An integer specifying the number of cores for parallel
+execution.
+\itemize{
+\item If \code{NULL} (default), the number of cores is set to
+\code{future::availableCores() - 1}.
+\item On non-Windows systems, this can be controlled globally via the
+\code{mc.cores} option.
+}}
 
 \item{fullframe}{A logical value indicating whether to return a
 \code{fullframe} object in which \code{newdata} is bound to the summary
@@ -497,7 +497,7 @@ compute contrasts or slopes. This can differ based on the model
 type, but will typically be a string such as: "response", "link", "probs",
 or "zero". When an unsupported string is entered, the model-specific list of
 acceptable values is returned in an error message. When \code{type} is \code{NULL}, the
-first entry in the error message is used by default.}
+first entry in the error message is used by default. See the Type section in the documentation below.}
 
 \item{by}{Aggregate unit-level estimates (aka, marginalize, average over). Valid inputs:
 \itemize{
@@ -571,7 +571,7 @@ levels. See examples section.}
 \item \code{reference}: differences between the estimates in each row and the estimate in the first row.
 \item \code{sequential}: difference between an estimate and the estimate in the next row.
 \item \code{meandev}: difference between an estimate and the mean of all estimates.
-\item `meanotherdev: difference between an estimate and the mean of all other estimates, excluding the current one.
+\item \code{meanotherdev}: difference between an estimate and the mean of all other estimates, excluding the current one.
 \item \code{poly}: polynomial contrasts, as computed by the \code{stats::contr.poly()} function.
 \item \code{helmert}: Helmert contrasts, as computed by the \code{stats::contr.helmert()} function. Contrast 2nd level to the first, 3rd to the average of the first two, and so on.
 \item \code{trt_vs_ctrl}: difference between the mean of estimates (except the first) and the first estimate.
@@ -605,6 +605,13 @@ levels. See examples section.}
 }}
 
 \item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. For bayesian models, this report the proportion of posterior draws in the interval and the ROPE. See Details section below.}
+
+\item{eps}{NULL or numeric value which determines the step size to use when
+calculating numerical derivatives: (f(x+eps)-f(x))/eps. When \code{eps} is
+\code{NULL}, the step size is 0.0001 multiplied by the difference between
+the maximum and minimum values of the variable with respect to which we
+are taking the derivative. Changing \code{eps} may be necessary to avoid
+numerical problems in certain models.}
 
 \item{constrats_by}{A character vector (default \code{NULL}) specifying the
 variable(s) by which hypotheses (at the post-draw stage) should be tested.
@@ -655,15 +662,19 @@ If \code{factor.level} is provided, its length must match
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}
 
-\item{expose_function}{A logical argument (default \code{FALSE}) to indicate
-whether Stan functions should be exposed. If \code{TRUE}, any Stan
-functions exposed during the model fit using \code{expose_function = TRUE}
-in the \code{\link[=bsitar]{bsitar()}} function are saved and can be used in post-processing. By
-default, \code{expose_function = FALSE} in post-processing functions,
-except in \code{\link[=optimize_model]{optimize_model()}} where it is set to \code{NULL}. If
-\code{NULL}, the setting is inherited from the original model fit. It must
-be set to \code{TRUE} when adding \code{fit criteria} or \code{bayes_R2}
-during model optimization.}
+\item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
+Controls whether Stan functions are exposed for post-processing.
+\itemize{
+\item \code{TRUE}: Explicitly exposes Stan functions saved from the model
+fit. This is required when calculating \code{fit criteria} or
+\code{bayes_R2} during model optimization.
+\item \code{FALSE} (default): Stan functions are not exposed.
+\item \code{NULL}: The setting is inherited from the original
+\code{bsitar()} model fit configuration.
+}
+\strong{Note}: In the \code{\link[=optimize_model]{optimize_model()}} function, the default is
+\code{NULL} (inheriting behavior), whereas other post-processing functions
+default to \code{FALSE}.}
 
 \item{usesavedfuns}{A logical value (default \code{NULL}) indicating whether
 to use already exposed and saved Stan functions. This is typically set

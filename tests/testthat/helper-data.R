@@ -16,6 +16,13 @@
 #                   gender = factor(rep(c("Male", "Female"),times=c(10,10))))
 
 
+
+  ##############################################################################
+  # test_data
+  ##############################################################################
+
+  
+  
   test_data <- bsitar::berkeley %>% 
     dplyr::select(id, age, height, weight, sex) %>% 
     dplyr::relocate(height, .before = weight) %>% 
@@ -38,9 +45,182 @@
     stop("data 'bsitar::berkeley' used as test data has changed")
   }
   
+  
+  ##############################################################################
+  # test_data_male & test_data_female
+  ##############################################################################
+  
   test_data_male   <- test_data %>% dplyr::filter(sex == 'Male') %>% 
     droplevels()
+
   test_data_female <- test_data %>% dplyr::filter(sex == 'Female') %>% 
     droplevels()
+  
+  ##############################################################################
+  # models
+  ##############################################################################
 
 
+  test_univariate_fit_cov   <- TRUE
+  test_multivariate_fit_cov <- FALSE
+
+  # cat("Preparing data....")
+  # cat("\n")
+  # cat("Get model....")
+  # cat("\n")
+  # cat("Fit cov model....")
+  # cat("\n")
+  
+
+  testfile_exists <- function(filename) {
+    files <- list.files(
+      path       = testthat::test_path(),   # root of tests/testthat
+      recursive  = TRUE,
+      full.names = FALSE
+    )
+    any(basename(files) == filename)
+  }
+  
+  
+  #fit <- univariate_fit_cov
+  
+  set.seed(113)
+  draw_ids   <- 1:5
+  mvar_resp <- 'height'
+  uvar_resp <- NULL
+  
+  # bsitar::plot_curves(univariate_fit_cov, apv = T, draw_ids = draw_ids)
+  #
+  # bsitar::plot_curves(multivariate_fit_cov, resp = 'height', apv = T, draw_ids = draw_ids)
+  
+  
+  # zz <- readRDS(testthat::test_path("models", "univariate_fit_cov.rds")) 
+
+  ##############################################################################
+  # test_fit_nsk - with sample_prior = "only" and covariate
+  ##############################################################################
+
+  if(test_univariate_fit_cov & 
+     !testfile_exists("univariate_fit_cov.rds")) {
+    suppressWarnings(suppressMessages({
+      univariate_fit_cov <-
+        bsitar::bsitar(x = age, y = height, id = id, data = test_data,
+               df = 4,
+               multivariate = list(mvar = FALSE, rescore = TRUE),
+               xoffset = mean,
+               stype = list(type = 'nsk', normalize = TRUE),
+               a_formula = ~ 1 + sex,
+               b_formula = ~ 1 + sex,
+               c_formula = ~ 1 + sex,
+               random = a+b+c,
+               a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+               b_prior_beta = normal(0, 1.0, autoscale = FALSE),
+               c_prior_beta = normal(0, 0.25, autoscale = FALSE),
+               d_prior_beta = normal(0, 1, autoscale = FALSE),
+               s_prior_beta = normal(lm, 1, autoscale = 1),
+               a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+               b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+               c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+               d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+               s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+               a_prior_sd = normal(0, ysd, autoscale = FALSE),
+               b_prior_sd = normal(0, 1.0, autoscale = FALSE),
+               c_prior_sd = normal(0, 0.1, autoscale = FALSE),
+               d_prior_sd = normal(0, 1, autoscale = FALSE),
+               rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+               chains = 1,
+               cores = 1,
+               iter = 2000,
+               warmup = NULL,
+               thin = 5,
+               threads = NULL,
+               backend = "rstan",
+               sample_prior = "only",
+               init = '0',
+               vcov_init_0 = F,
+               refres = 0,
+               silent = 2,
+               seed = 123)
+      
+      saveRDS(univariate_fit_cov, 
+              testthat::test_path("models", 
+                                  "univariate_fit_cov.rds"), compress = 'xz')
+      saveRDS(univariate_fit_cov, 
+              testthat::test_path("models", 
+                                  "univariate_fit_cov_uncompressed.rds"))
+      
+    })) # suppressWarnings(suppressMessages({
+  } # if(test_univariate_fit_cov) {
+
+
+
+  ##############################################################################
+  # test_fit_nsk - with sample_prior = "only" and covariate
+  ##############################################################################
+
+  if(test_multivariate_fit_cov & 
+     !testfile_exists("multivariate_fit_cov.rds")) {
+    suppressWarnings(suppressMessages({
+      multivariate_fit_cov <-
+        bsitar::bsitar(x = age, y = list(height, weight), id = id, data = test_data,
+               df = 4,
+               multivariate = list(mvar =TRUE, rescore = TRUE),
+               xoffset = mean,
+               stype = list(type = 'nsk', normalize = TRUE),
+               a_formula = ~ 1 + sex,
+               b_formula = ~ 1 + sex,
+               c_formula = ~ 1 + sex,
+               random = a+b+c,
+               a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+               b_prior_beta = normal(0, 1.0, autoscale = FALSE),
+               c_prior_beta = normal(0, 0.25, autoscale = FALSE),
+               d_prior_beta = normal(0, 1, autoscale = FALSE),
+               s_prior_beta = normal(lm, 1, autoscale = 1),
+               a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+               b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+               c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+               d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+               s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+               a_prior_sd = normal(0, ysd, autoscale = FALSE),
+               b_prior_sd = normal(0, 1.0, autoscale = FALSE),
+               c_prior_sd = normal(0, 0.1, autoscale = FALSE),
+               d_prior_sd = normal(0, 1, autoscale = FALSE),
+               rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+               chains = 1,
+               cores = 1,
+               iter = 2000,
+               warmup = NULL,
+               thin = 5,
+               threads = NULL,
+               backend = "rstan",
+               sample_prior = "only",
+               init = '0',
+               vcov_init_0 = F,
+               refres = 0,
+               silent = 2,
+               seed = 123)
+      
+      saveRDS(multivariate_fit_cov, 
+              testthat::test_path("models", 
+                                  "multivariate_fit_cov.rds"), compress = 'xz')
+      saveRDS(multivariate_fit_cov, 
+              testthat::test_path("models", 
+                                  "multivariate_fit_cov_uncompressed.rds"))
+      
+    })) # # suppressWarnings(suppressMessages({
+  } # if(test_multivariate_fit_cov) {
+
+
+  # saveRDS(univariate_fit_cov, "univariate_fit_cov.rds")
+  # saveRDS(multivariate_fit_cov, "multivariate_fit_cov.rds")
+  
+  
+  
+ 
+  
+  
+  
+  
+
+
+ 

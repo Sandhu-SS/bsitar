@@ -288,52 +288,51 @@
 #'   over which the parameters are summarized. The summary statistics are
 #'   computed for each unique combination of variables specified.
 #'
-#' @param future_splits A list (default \code{NULL}) that can be an unnamed
-#'   numeric list, a logical value, or a numeric vector of length 1 or 2. It is
-#'   used to split the processing of posterior draws into smaller subsets for
-#'   parallel computation.
-#'   - If passed as a list (e.g., \code{future_splits = list(1:6, 7:10)}), 
-#'   each sequence of
-#'   numbers is passed to the \code{draw_ids} argument.
-#'   - If passed as a numeric vector (e.g., \code{future_splits = c(10, 2)}), 
-#'   the first element
-#'   specifies the number of draws (see \code{draw_ids}) and the second element
-#'   indicates the number of splits. The splits are created using
-#'   [parallel::splitIndices()].
-#'   - If passed as a numeric vector of length 1, the first element is 
-#'   internally set as the
-#'   number of draws (\code{ndraws} or \code{draw_ids}) depending on which one
-#'   is not \code{NULL}.
-#'   - If \code{TRUE}, a numeric vector for \code{future_splits} is created 
-#'   based on the number
-#'   of draws (\code{ndraws}) and the number of cores (\code{cores}).
-#'   - If \code{FALSE}, \code{future_splits} is ignored.
-#'   The use case for \code{future_splits} is to save memory and improve
-#'   performance, especially on \code{Linux} systems when \code{future::plan()}
-#'   is set to \code{multicore}. Note: on Windows systems, R processes may not
-#'   be freed automatically when using \code{'multisession'}. In such cases, the
-#'   R processes can be interrupted using [installr::kill_all_Rscript_s()].
+#' @param future_splits A list, numeric vector, or logical value (default
+#'   \code{TRUE}). Controls how posterior draws are partitioned into smaller
+#'   subsets for parallel computation. This helps manage memory and improve
+#'   performance, particularly on Linux when using
+#'   \code{future::plan("multicore")}.
 #'
-#' @param future_method A character string (default \code{'future'}) to specify
-#'   the method for parallel computation. Options include:
+#'   Input options:
 #'   \itemize{
-#'     \item \code{'future'}: Uses [future::future()] along with
-#'     [future.apply::future_lapply()] for parallel execution.
-#'     \item \code{'dofuture'}: Uses [foreach::foreach()] with the
-#'     \code{'dofuture'} function from the \code{doFuture} package for parallel
+#'     \item \strong{List}: (e.g., \code{list(1:6, 7:10)}). Each element is a
+#'     sequence of numbers passed to \code{draw_ids} to process in a separate
+#'     chunk.
+#'     \item \strong{Numeric vector of length 2}: (e.g., \code{c(100, 4)}). The
+#'     first element is the total number of draws, and the second is the number
+#'     of splits. Indices are generated via [parallel::splitIndices()].
+#'     \item \strong{Numeric vector of length 1}: Specifies the total number of
+#'     draws. Splits are calculated automatically.
+#'     \item \strong{\code{TRUE}}: Automatically creates splits based on
+#'     \code{ndraws} and \code{cores}. If both \code{ndraws} and \code{draw_ids}
+#'     are specified, \code{draw_ids} takes precedence. This is consistent with
+#'     post-processing functions in the \code{bsitar} and \code{brms} packages.
+#'     \item \strong{\code{FALSE}}: Splitting is disabled.
+#'   }
+#'   \strong{Note}: On Windows with \code{future::plan("multisession")},
+#'   background R processes may not free resources automatically. If needed, use
+#'   [installr::kill_all_Rscript_s()] to terminate them.
+#'
+#' @param future_method A character string (default \code{'future'}) specifying
+#'   the parallel computation backend. Options include:
+#'   \itemize{
+#'     \item \code{'future'}: Uses [future.apply::future_lapply()] for
 #'     execution.
+#'     \item \code{'dofuture'}: Uses [foreach::foreach()] via the
+#'     \code{doFuture} package.
 #'   }
 #'
-#' @param future_re_expose A logical (default \code{NULL}) to indicate whether
-#'   to re-expose \code{Stan} functions when \code{future = TRUE}. This is
-#'   especially relevant when [future::plan()] is set to \code{'multisession'},
-#'   as already exposed C++ \code{Stan} functions cannot be passed across
-#'   multiple sessions.
-#'
-#'   - When \code{future_re_expose = NULL} (the default), \code{future_re_expose} 
-#'   is automatically set to \code{TRUE} for the \code{'multisession'} plan.
-#'   - It is advised to explicitly set \code{future_re_expose = TRUE} for speed 
-#'   gains when using parallel processing with \code{future = TRUE}.
+#' @param future_re_expose A logical value (default \code{NULL}) indicating whether 
+#'   to re-expose internal \code{Stan} functions when \code{future = TRUE}. 
+#'   This is critical when [future::plan()] is set to \code{"multisession"}, 
+#'   as compiled C++ functions cannot be exported across distinct R sessions.
+#'   \itemize{
+#'     \item If \code{NULL} (default), it is automatically set to \code{TRUE} 
+#'       when the plan is \code{"multisession"}.
+#'     \item Explicitly setting this to \code{TRUE} is recommended for improved 
+#'       performance during parallel execution.
+#'   }
 #'
 #' 
 #' @inheritParams  marginal_draws.bgmfit
@@ -345,12 +344,11 @@
 #' @inheritParams  brms::prepare_predictions
 #' @inheritParams  brms::fitted.brmsfit
 #'
-#' @return A data frame object with estimates and credible intervals (CIs) for
-#'   the computed parameter(s). The returned data frame includes the parameter
-#'   estimates, along with lower and upper bounds of the credible intervals,
-#'   typically labeled as \code{Q2.5} and \code{Q97.5}, assuming a 95%
-#'   confidence level. The specific columns may vary depending on the
-#'   computation method and the parameters being estimated.
+#' @return A \code{data.frame} containing posterior estimates and credible
+#'   intervals (CIs). The output includes the parameter estimates and their
+#'   corresponding bounds (e.g., \code{Q2.5} and \code{Q97.5} for a 95%
+#'   interval). The specific column names and structure may vary depending on
+#'   the computation method.
 #' 
 #' @import data.table
 #' 
@@ -410,7 +408,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                              seed = 123,
                                              future = FALSE,
                                              future_session = 'multisession',
-                                             future_splits = NULL,
+                                             future_splits = TRUE,
                                              future_method = 'future',
                                              future_re_expose = NULL,
                                              usedtplyr = FALSE,
@@ -426,7 +424,7 @@ marginal_growthparameters.bgmfit <- function(model,
                                              condition = NULL,
                                              deriv = NULL,
                                              model_deriv = NULL,
-                                             method = 'custom',
+                                             method = 'pkg',
                                              marginals = NULL, 
                                              preparms = NULL,
                                              pdraws = FALSE, 
@@ -673,10 +671,7 @@ marginal_growthparameters.bgmfit <- function(model,
   ndraws_exe <- FALSE
   if(!is.null(ndraws)) {
     ndraws_exe <- TRUE
-    ndraws <- ndraws
-  }
-  
-  if(is.null(ndraws)) {
+  } else if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
   }
   
@@ -727,6 +722,7 @@ marginal_growthparameters.bgmfit <- function(model,
   if(check_set_fun[['was_null']]) {
     model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
   }
+  funx_ <- NULL
   
   
   ########################################################
@@ -751,31 +747,31 @@ marginal_growthparameters.bgmfit <- function(model,
   } # if(itransform_set == "") {
   
   
-  
-  ########################################################
-  # Define lables fun for x- axis
-  labels_ggfunx <- function(...) {
-    out <- ifunx_(list(...)[[1]]) 
-    out <- scales::number(
-      out,
-      accuracy = 1,
-      scale = 1,
-      prefix = "",
-      suffix = "",
-      big.mark = " ",
-      decimal.mark = ".",
-      style_positive = c("none", "plus", "space"),
-      style_negative = c("hyphen", "minus", "parens"),
-      scale_cut = NULL,
-      trim = TRUE
-    )
-    return(out)
-  }
-  
-  labels_ggfunx_str <- 
-    "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
-  
-  
+  # 
+  # ########################################################
+  # # Define lables fun for x- axis
+  # labels_ggfunx <- function(...) {
+  #   out <- ifunx_(list(...)[[1]]) 
+  #   out <- scales::number(
+  #     out,
+  #     accuracy = 1,
+  #     scale = 1,
+  #     prefix = "",
+  #     suffix = "",
+  #     big.mark = " ",
+  #     decimal.mark = ".",
+  #     style_positive = c("none", "plus", "space"),
+  #     style_negative = c("hyphen", "minus", "parens"),
+  #     scale_cut = NULL,
+  #     trim = TRUE
+  #   )
+  #   return(out)
+  # }
+  # 
+  # labels_ggfunx_str <- 
+  #   "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
+  # 
+  # 
   
   ########################################################
   
@@ -1383,7 +1379,8 @@ marginal_growthparameters.bgmfit <- function(model,
   draw_ids_exe <- FALSE
   if(!is.null(draw_ids)) {
     draw_ids_exe <- TRUE
-    draw_ids <- draw_ids
+    ndraws_exe   <- FALSE
+    draw_ids     <- draw_ids
   }
   
   
@@ -1466,11 +1463,23 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(future_splits_exe) {
     if(plot) {
-      stop("future_splits can not be used when plot = TRUE")
-    }
+      future_splits_exe <- FALSE
+      future_splits     <- NULL
+      future_splits_at  <- NULL
+      if(verbose) {
+        message2c("future_splits can not be used when plot = TRUE. 
+                  future_splits set as FALSE")
+      }
+    } # if(plot) {
     if(method == 'pkg') {
-      stop("future_splits can not be used when method = 'pkg'")
-    }
+      future_splits_exe <- FALSE
+      future_splits     <- NULL
+      future_splits_at  <- NULL
+      if(verbose) {
+        message2c("future_splits can not be used when method = 'pkg'.
+               future_splits set as FALSE")
+      }
+    } # if(method == 'pkg') {
   }
   
   
@@ -1555,9 +1564,55 @@ marginal_growthparameters.bgmfit <- function(model,
                                   dargs = list(...), 
                                   verbose = verbose)
   
-  full.args$model <- model
+  full.args$model       <- model
   full.args$model_deriv <- model_deriv
+  full.args$newdata     <- newdata
   
+  if(!is.null(full.args$hypothesis)) {
+    if(method == 'pkg') {
+      if(!is.null(full.args$by)) {
+        if(is.logical(full.args$by)) {
+          stop("Argument 'by' is required for hypothesis")
+        }
+      }
+    } else if(method == 'custom') {
+      if(!is.null(full.args$by)) {
+        if(is.logical(full.args$by)) {
+          stop("Argument 'by' is required for hypothesis")
+        }
+      } else if(is.null(full.args$by)) {
+        stop("Argument 'by' is required for hypothesis")
+      }
+    }
+  }
+  
+  
+  
+  valid_hypothesis <- c("pairwise", "reference", "sequential", 
+             "revpairwise", "revreference", "revsequential")
+  
+  new_valid_hypothesis <- c("number", 
+                            "string such as 'a = b'",
+                            "formula of the following forms: 
+                            ~ rhs, 
+                            ~ lhs ~ rhs, 
+                            lhs ~ rhs | group")
+  
+  if(!is.null(full.args$hypothesis)) {
+    if(method == 'custom') {
+      if(is.language(full.args$hypothesis)) {
+        stop("Argument 'hypothesis' must be one of the following strings: ",
+             collapse_comma(valid_hypothesis))
+      }
+    } else if(method == 'pkg') {
+      if(is.character(full.args$hypothesis)) {
+        stop2c("Argument 'hypothesis' must be one of the following form: ",
+             collapse_comma(new_valid_hypothesis))
+      }
+    }
+  }
+  
+ 
   
   if(is.null(full.args$hypothesis) & is.null(full.args$equivalence)) {
     plot <- plot
@@ -1571,7 +1626,7 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  full.args$newdata <- newdata
+  
   
   
   full.args <- 
@@ -1640,8 +1695,6 @@ marginal_growthparameters.bgmfit <- function(model,
     #####
   }
   full.args[['transform']] <- transform <- transform_draws
-  
-  
   
   
   comparisons_arguments <- full.args
@@ -1717,38 +1770,70 @@ marginal_growthparameters.bgmfit <- function(model,
   
  
   
-  if (!is.null(variables)) {
-    if (!is.list(variables)) {
-      if(is.character(variables)) {
-        if(deriv == 0) set_variables <- list(eps)
-        if(deriv > 0)  set_variables <- list(0)
-        names(set_variables) <- variables
-      }
-    } else if (is.list(variables)) {
-      set_variables <- variables
-      if(is.null(set_variables[[xvar]])) {
-        if(deriv == 0) set_variables[[xvar]] <- eps
-        if(deriv > 0)  set_variables[[xvar]] <- 0
-      } else if(!is.null(set_variables[[xvar]])) {
-        if(eval(set_variables[[xvar]]) !=0) {
-          if(verbose) {
-            message("The value of ", xvar, " is not same as used in the ",
-                    " \n", 
-                    " model fit. Please check if this is intended")
-          }
-        }
-      }
-    }
-  } else if (is.null(variables)) {
-    if(deriv == 0) set_variables <- list(eps)
-    if(deriv > 0)  set_variables <- list(0)
-    if(is.null(difx)) {
-      names(set_variables) <- xvar
-    } else if(!is.null(difx)) {
-      names(set_variables) <- difx
-    }
-    # names(set_variables) <- xvar
-  } 
+  # if (!is.null(variables)) {
+  #   if (!is.list(variables)) {
+  #     if(is.character(variables)) {
+  #       set_variables <- list()
+  #       for (i in variables) {
+  #         if(deriv == 0) {
+  #           if(i == xvar) set_variables[[i]] <- eps 
+  #         }
+  #         if(deriv > 0) {
+  #           if(i != xvar) set_variables[[i]] <- i 
+  #         }
+  #       }
+  #       # if(deriv == 0) set_variables <- list(eps)
+  #       # if(deriv > 0)  set_variables <- list(0)
+  #       # names(set_variables) <- variables
+  #     }
+  #   } else if (is.list(variables)) {
+  #     set_variables <- variables
+  #     if(is.null(set_variables[[xvar]])) {
+  #       if(deriv == 0) set_variables[[xvar]] <- eps
+  #       if(deriv > 0)  set_variables[[xvar]] <- 0
+  #     } else if(!is.null(set_variables[[xvar]])) {
+  #       if(eval(set_variables[[xvar]]) !=0) {
+  #         if(verbose) {
+  #           message("The value of ", xvar, " is not same as used in the ",
+  #                   " \n", 
+  #                   " model fit. Please check if this is intended")
+  #         }
+  #       }
+  #     }
+  #   }
+  # } else if (is.null(variables)) {
+  #   if(deriv == 0) set_variables <- list(eps)
+  #   if(deriv > 0)  set_variables <- list(0)
+  #   if(is.null(difx)) {
+  #     names(set_variables) <- xvar
+  #   } else if(!is.null(difx)) {
+  #     names(set_variables) <- difx
+  #   }
+  #   # names(set_variables) <- xvar
+  # } 
+  # # over ride when method = 'pkg'
+  # if(method == 'pkg') {
+  #   if(deriv > 0) {
+  #     set_variables[[xvar]] <- eps
+  #   }
+  # }
+  
+  
+  
+  set_variables <- setup_variables_var(model, 
+                                       variables = variables, 
+                                       xvar = xvar, 
+                                       eps = eps, 
+                                       method = method, 
+                                       deriv = deriv, 
+                                       model_deriv = model_deriv,
+                                       difx = difx, 
+                                       xcall = xcall,
+                                       cov = cov, 
+                                       dpar = dpar,
+                                       xvar_strict = TRUE, 
+                                       switch_plot = FALSE,
+                                       verbose = verbose)
   
   
   allowed_comparison <- c('difference', 'differenceavg')
@@ -1804,6 +1889,12 @@ marginal_growthparameters.bgmfit <- function(model,
                             cov = cov, 
                             xvar = xvar, 
                             dpar = dpar,
+                            method = method,
+                            plot = plot,
+                            condition = condition,
+                            deriv = deriv,
+                            difx = difx,
+                            xcall = xcall,
                             xvar_strict = xvar_strict,
                             switch_plot = force_condition_and_by_switch_plot,
                             verbose = verbose)
@@ -2033,14 +2124,25 @@ marginal_growthparameters.bgmfit <- function(model,
       if(deriv > 0) {
         if(call_predictions) {
           if(!isFALSE(comparisons_arguments[['by']])) {
-            stop("argument 'by' must be FALSE")
+            # ???
+           # stop("argument 'by' must be FALSE")
           }
         } # if(call_predictions) {
       } # if(deriv > 0) {
     } # if(method == "pkg") {
     
     #############
+   
+    comparisons_arguments$by <- setdiff(comparisons_arguments$by, xvar)
+    if(is_emptyx(comparisons_arguments$by)) {
+      comparisons_arguments$by <- NULL
+    }
+    for (i in names(comparisons_arguments$variables)) {
+      if(i != xvar) comparisons_arguments$variables[[i]] <- NULL
+    }
     
+    # comparisons_argumentsx <<- comparisons_arguments
+ 
     if(!plot) {
       if(!average) {
         if(callfuns) out <- CustomDoCall(marginaleffects::comparisons, 
@@ -2060,17 +2162,20 @@ marginal_growthparameters.bgmfit <- function(model,
       outp <- CustomDoCall(marginaleffects::plot_comparisons, 
                      comparisons_arguments)
       outp <- edit_mapping_facet(outp = outp, 
+                                 by = comparisons_arguments$by,
+                                 condition = comparisons_arguments$condition,
+                                 xcall = xcall,
+                                 method = method,
                                  mapping_facet = mapping_facet,
-                                 which_aes = NULL, 
                                  showlegends = showlegends,
-                                 labels_ggfunx = labels_ggfunx,
-                                 labels_ggfunx_str = labels_ggfunx_str,
+                                 funx_ = funx_,
+                                 ifunx_ = ifunx_,
                                  envir = envir,
+                                 which_aes = NULL, 
                                  print = FALSE,
                                  verbose = verbose)
       return(outp)
     } # else if(plot) {
-    
     return(out)
   } # call_comparison_gparms_fun
   
@@ -2136,6 +2241,7 @@ marginal_growthparameters.bgmfit <- function(model,
         }
       }
     }
+    
     return(gout)
   }
   
@@ -2173,8 +2279,7 @@ marginal_growthparameters.bgmfit <- function(model,
         parm = parm, eps = eps, 
         by = comparisons_arguments$by,
         aggregate_by = aggregate_by,
-        newdata = newdata
-      ) 
+        newdata = newdata) 
       return(out_sf)
     }
     
@@ -2212,9 +2317,9 @@ marginal_growthparameters.bgmfit <- function(model,
                                                       !!as.symbol('parameter')))
     }
   } # if(method == 'pkg') {
+ 
   
-  
-  
+ 
   ##################################################################
   
   getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
@@ -3279,6 +3384,10 @@ marginal_growthparameters.bgmfit <- function(model,
   } else if(isFALSE(by)) {
     byarrange <- NULL
   } 
+  
+  if(method == 'pkg') {
+    byarrange <- NULL
+  }
   
   if(!is.null(byarrange)) {
     if(!is.null(bys)) byarrange <- bys else byarrange <- by

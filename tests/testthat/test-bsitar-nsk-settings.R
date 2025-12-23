@@ -1,5 +1,10 @@
 
 
+# Skip test for local R CMD Check but run on GitHub
+
+# skip_if_not_ci()
+
+
 ###############################################################################
 # Test bsitar with nsk settings
 ###############################################################################
@@ -42,13 +47,13 @@ test_that("bsitar works fully with nsk settings", {
   
   
   suppressWarnings(suppressMessages({
-    test_fit <- bsitar(x = age, y = height, id = id, 
+    test_fit <- bsitar(x = age, y = height, id = id,
                        data = test_data_male,  df = 4,
                        stype = list(type = 'nsk', normalize = TRUE),
                        get_stancode = FALSE,
-                       get_standata = FALSE, 
-                       chains = 1, cores = 1, iter = 10, 
-                       backend = "rstan",  
+                       get_standata = FALSE,
+                       chains = 1, cores = 1, iter = 10,
+                       backend = "rstan",
                        sample_prior = "no",
                        threads = threading(NULL),
                        # init = '0',
@@ -57,7 +62,7 @@ test_that("bsitar works fully with nsk settings", {
                        seed = 123)
   }))
   
-  test_fit[['test_mode']] <- TRUE
+  # test_fit <- test_fit_nsk
   
   true_sbetas <- c(128.06, 0.00, 0.00, 18.53, 34.30, 47.69, 49.69)
   

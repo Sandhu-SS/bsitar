@@ -64,7 +64,7 @@ get_args_ <- function(arguments, xcall, xclass = NULL, scallstatus = NULL) {
   )
   err. <- get('err.', envir = enverr.)
   if (err.) {
-    if(is.null(scallstatus)) stop("set scallstatus via sys.status()")
+    if(is.null(scallstatus)) stop2c("set scallstatus via sys.status()")
     f_funx_arg <- get_xcall_byclass(scallstatus, pastexclass)
   } else {
     f_funx_arg <- f_funx_arg
@@ -131,7 +131,7 @@ check_forpipe <- function(x, return = 'name') {
   } else if(return == 'logical') {
     out <- data_name_pipe
   } else {
-    stop("argument 'return' must be either 'name', 'attr', or 'logical'")
+    stop2c("argument 'return' must be either 'name', 'attr', or 'logical'")
   }
   return(out)
 }
@@ -252,7 +252,7 @@ expose_optimize_fit <- function(model,
   optimize_fit_models <-  model
 
   if(!is.null(subset_list)) {
-    if(!is.numeric(subset_list)) stop("models must a numeric vector")
+    if(!is.numeric(subset_list)) stop2c("models must a numeric vector")
     optimize_fit_models <- optimize_fit_models[subset_list]
   } else {
     optimize_fit_models <- optimize_fit_models
@@ -264,7 +264,7 @@ expose_optimize_fit <- function(model,
       m_list[[il]] <- optimize_fit_models[[il]]
     } else if(!is.null(expose_function)) {
       if(expose_function) {
-        message("Exposing Stan function...", " (for model no. ", il, ")")
+        message2c("Exposing Stan function...", " (for model no. ", il, ")")
         m_list[[il]] <-
           expose_model_functions(optimize_fit_models[[il]],
                                 optimize_fit_models[[il]]$bmodel,
@@ -301,13 +301,13 @@ plot_optimize_fit <- function(model,
   dots <- list(...)
   for (i in names(dots)) {
     if(!i %in% methods::formalArgs(plot_curves.bgmfit))
-      stop("arguments must be be one of the following",
+      stop2c("arguments must be be one of the following",
            "\n ",
            methods::formalArgs(plot_curves.bgmfit))
   }
 
   if(!is.null(subset_list)) {
-    if(!is.numeric(subset_list)) stop("models must a numeric vector")
+    if(!is.numeric(subset_list)) stop2c("models must a numeric vector")
     optimize_fit_models <- optimize_fit_models[subset_list]
   } else {
     optimize_fit_models <- optimize_fit_models
@@ -319,7 +319,7 @@ plot_optimize_fit <- function(model,
       m_list[[il]] <- optimize_fit_models[[il]]
     } else if(!is.null(expose_function)) {
       if(expose_function) {
-        message("Exposing Stan function...", " (for model no. ", il, ")")
+        message2c("Exposing Stan function...", " (for model no. ", il, ")")
         m_list[[il]] <-
           expose_model_functions(model = optimize_fit_models[[il]],
                                 scode = optimize_fit_models[[il]]$bmodel,
@@ -335,7 +335,7 @@ plot_optimize_fit <- function(model,
 
   m_list <- m_list[!sapply(m_list, is.null)]
   nx <- function(.x, bx, args_) {
-    message("Working on model no. ", .x)
+    message2c("Working on model no. ", .x)
     dots$model <- bx[[.x]]
     dots$... <- NULL
     if(is.null(what)) what <- 'plot'
@@ -492,7 +492,7 @@ get_gr_str_coef_id <- function(tsx,
   } # for (i in 1:length(tsx)) {
 
   if(length(tsx_c_coef) != length(tsx_c_id))
-    stop("coef and id length should be same")
+    stop2c("coef and id length should be same")
   list(tsx_c_coef = tsx_c_coef, tsx_c_id = tsx_c_id,
        set_form_gr_it = set_form_gr_it, set_ncov_it = set_ncov_it,
        set_corr_it = set_corr_it, set_corr_true_false = set_corr_true_false)
@@ -621,7 +621,7 @@ restore_paranthese_grgr_str_form <- function(strx, exclude_first = NULL) {
         strx2_check_ <- regmatches(strx2, regexec(pattern, strx2))
         strx2_check_ <- strx2_check_[[1]][2]
         if(grepl("_", strx2_check_)) {
-          stop("Underscore '_' is not allowed in the variable name when",
+          stop2c("Underscore '_' is not allowed in the variable name when",
                "\n ",
                " defining the group identifier using the 'gr()' formulation",
                "\n ",
@@ -1023,7 +1023,7 @@ get_future_plan_args <- function(future,
       future_session_list <- list()
       future_session <- future_session
     } else {
-      stop("'future_session' must be a single character or a named list")
+      stop2c("'future_session' must be a single character or a named list")
     }
   }
   
@@ -1059,7 +1059,7 @@ get_future_plan_args <- function(future,
           #
         } else {
           if(!is.list(future_session_list[['daemons']])) {
-            stop("The daemons in future_session list must be a list")
+            stop2c("The daemons in future_session list must be a list")
           }
           mirai_daemons_args <- future_session_list[['daemons']]
         }
@@ -1097,6 +1097,10 @@ get_future_plan_args <- function(future,
     }
   }
   
+  if(setplanis == "sequential") {
+    future_plan_args[['workers']] <- NULL
+  }
+  
   out <- list(future_plan_args = future_plan_args, setplanis = setplanis)
   return(out)
 } # end setup_future_plan
@@ -1129,7 +1133,7 @@ validate_response <- function(model,
       " The resp option should be appropriately set to NULL",
       "\n ",
       " (i.e., resp = NULL)")
-    stop(clean_text_spaces(stop_msg))
+    stop2c(clean_text_spaces(stop_msg))
   }
   if (model$model_info$nys > 1 & is.null(resp)) {
     if (!is.na(uvarby)) {
@@ -1143,7 +1147,7 @@ validate_response <- function(model,
         "\n ",
         " The response options are ",
         collapse_comma(model$model_info$yvars))
-      stop(clean_text_spaces(stop_msg))
+      stop2c(clean_text_spaces(stop_msg))
     }
     if (model$model_info$multivariate$mvar) {
       stop_msg <- 
@@ -1153,7 +1157,7 @@ validate_response <- function(model,
         "\n ",
         " The available response options are: ",
         collapse_comma(model$model_info$yvars))
-      stop(clean_text_spaces(stop_msg))
+      stop2c(clean_text_spaces(stop_msg))
     }
   }
 
@@ -1166,7 +1170,7 @@ validate_response <- function(model,
         "\n ",
         " but you have specified: ",
         resp)
-      stop(clean_text_spaces(stop_msg))
+      stop2c(clean_text_spaces(stop_msg))
     }
   }
 
@@ -1499,19 +1503,19 @@ priors_to_textdata <- function(model,
 
 
   if (is.null(model) & is.null(spriors) & is.null(sdata)) {
-    stop("Supply either model or spriors and sdata arguments")
+    stop2c("Supply either model or spriors and sdata arguments")
   } else if (!is.null(model) &
              !is.null(spriors) & !is.null(sdata)) {
-    stop("Supply only model or spriors and sdata arguments")
+    stop2c("Supply only model or spriors and sdata arguments")
   } else if (!is.null(model)) {
     spriors <- brms::prior_summary(model)
     sdata <- brms::standata(model)
   } else if (is.null(model)) {
     if (is.null(spriors) & is.null(sdata)) {
-      stop("Supply spriors and sdata arguments")
+      stop2c("Supply spriors and sdata arguments")
     }
     if (is.null(spriors) & is.null(sdata)) {
-      stop("Supply spriors and sdata arguments")
+      stop2c("Supply spriors and sdata arguments")
     }
   }
 
@@ -1710,13 +1714,12 @@ splitAt2 <- function(x, pos) {
 #' An internal function to customize R's stop function
 #' @param ... An argument
 #' @keywords internal
-#' @return A string (error message) from R's warning() function.
+#' @return A string (error message) from R's warning2c() function.
 #' @noRd
 #'
 stop2 <- function(...) {
   stop(..., call. = FALSE)
 }
-
 
 #' An internal function to customize R's stop function.
 #' 
@@ -1728,22 +1731,31 @@ stop2 <- function(...) {
 #' @param call. A logical indicating if the call should become part of the error
 #'   message.
 #' @keywords internal
-#' @return A string (error message) from R's warning() function.
+#' @return A string (error message) from R's warning2c() function.
 #' @noRd
 #'
-stop2c <- function(..., 
-                   call. = FALSE) {
+stop2c <- function(..., call. = FALSE) {
   msg <- paste0(list(...), collapse = "")
   msg <- clean_text_spaces(msg)
-  stop(msg, 
-       call. = call.)
+  stop(msg, call. = call.)
 }
 
 
-#' An internal function to customize R's stop function.
+
+#' An internal function to customize R's warning function
+#' @param ... An argument
+#' @keywords internal
+#' @return A string (warning message) from R's warning2c() function.
+#' @noRd
+#'
+warning2 <- function(...) {
+  warning(..., call. = FALSE)
+}
+
+#' An internal function to customize R's warning function.
 #' 
 #' @details
-#' This a wrapper around the stop function but it cleans the message for
+#' This a wrapper around the warning function but it cleans the message for
 #' excessive white spaces before parsing
 #' 
 #' @param ... An argument
@@ -1753,11 +1765,11 @@ stop2c <- function(...,
 #' @param noBreaks. A logical
 #' @param domain A logical
 #' @keywords internal
-#' @return A string (error message) from R's warning() function.
+#' @return A string (error message) from R's warning2c() function.
 #' @noRd
 #'
 warning2c <- function(..., 
-                      call = TRUE, 
+                      call = FALSE, 
                       immediate. = FALSE, 
                       noBreaks. = FALSE, 
                       domain = NULL) {
@@ -1772,10 +1784,21 @@ warning2c <- function(...,
 
 
 
-#' An internal function to customize R's stop function.
+
+#' An internal function to customize R's message function
+#' @param ... An argument
+#' @keywords internal
+#' @return A string (warning message) from R's message() function.
+#' @noRd
+#'
+message2 <- function(...) {
+  warning(..., call. = FALSE)
+}
+
+#' An internal function to customize R's message function.
 #' 
 #' @details
-#' This a wrapper around the stop function but it cleans the message for
+#' This a wrapper around the message function but it cleans the message for
 #' excessive white spaces before parsing
 #' 
 #' @param ... An argument
@@ -1783,7 +1806,7 @@ warning2c <- function(...,
 #'   error message.
 #' @param appendLF A logical
 #' @keywords internal
-#' @return A string (error message) from R's warning() function.
+#' @return A string (error message) from R's warning2c() function.
 #' @noRd
 #'
 message2c <- function(..., 
@@ -1792,18 +1815,6 @@ message2c <- function(...,
   msg <- paste0(list(...), collapse = "")
   msg <- clean_text_spaces(msg)
   message(msg, domain = domain, appendLF = appendLF)
-}
-
-
-
-#' An internal function to customize R's warning function
-#' @param ... An argument
-#' @keywords internal
-#' @return A string (warning message) from R's warning() function.
-#' @noRd
-#'
-warning2 <- function(...) {
-  warning(..., call. = FALSE)
 }
 
 
@@ -2525,7 +2536,7 @@ mapderivqr <- function(model,
   } else if(!is.null(difx)) {
     xvar <- difx
     if(verbose) {
-      message("The 'difx' is set as 'xvar' for dpar = ",
+      message2c("The 'difx' is set as 'xvar' for dpar = ",
               collapse_comma(dpar))
     }
   }
@@ -2560,7 +2571,7 @@ mapderivqr <- function(model,
   if(!is.factor(newdata[[idvar]])) {
     newdata[[idvar]] <- as.factor(newdata[[idvar]])
     if(verbose) {
-      message("The ", idvar, 
+      message2c("The ", idvar, 
               " used in 'mapderivqr' has been converted to 'as.factor()'")
     }
   }
@@ -3185,7 +3196,7 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   } # if(!sigma_single_parm) { else if(sigma_single_parm) {
   
   # cat(out_edited_code)
-  # stop()
+  # stop2c()
   
   return(out_edited_code)
 }
@@ -3621,7 +3632,7 @@ check_if_cmdstanr_available <- function() {
   
   
   if(!isTRUE(zz)) {
-    message("Please install the latest version of the 'cmdstanr' 
+    message2c("Please install the latest version of the 'cmdstanr' 
               package",
             "\n ",
             paste0("install.packages('cmdstanr', "   ,
@@ -3684,7 +3695,7 @@ brms_via_cmdstanr <- function(scode,
   # 
   # 
   # if(!isTRUE(zz)) {
-  #   message("Please install the latest version of the 'cmdstanr'
+  #   message2c("Please install the latest version of the 'cmdstanr'
   #             package",
   #           "\n ",
   #           paste0("install.packages('cmdstanr', "   ,
@@ -3807,7 +3818,7 @@ brms_via_cmdstanr <- function(scode,
     }
     
     if(verbose) {
-      message("Running '$pathfinder()' for initial values")
+      message2c("Running '$pathfinder()' for initial values")
     }
     
    
@@ -3833,7 +3844,7 @@ brms_via_cmdstanr <- function(scode,
     }
     
     if (err.) {
-      stop("Current setting of 'init' argument fails 'pathfinder()'",
+      stop2c("Current setting of 'init' argument fails 'pathfinder()'",
            "\n  ",
            "Please try some other configuration of initial values",
            "\n  ",
@@ -3966,7 +3977,7 @@ brms_via_rstan <- function(scode,
   
  
   
-  message("Compiling Stan program...")
+  message2c("Compiling Stan program...")
   
   # c_scode_stanc_ret <- rstan::stanc(
   #   # file, 
@@ -4011,7 +4022,7 @@ brms_via_rstan <- function(scode,
  }
   
 
-  message("Start sampling")
+  message2c("Start sampling")
   cb_fit <- rstan::sampling(
     object = c_scode,
     data = sdata,
@@ -4085,7 +4096,7 @@ check_and_install_if_not_installed <- function(pkgs,
   if(!is.null(getfun)) {
     if(is.symbol(getfun)) getfun <- deparse(getfun)
     if(verbose) {
-      message('Checking required packages for ', getfun, " ",
+      message2c('Checking required packages for ', getfun, " ",
               "\n ",
               collapse_comma(pkgs))
     } # if(verbose) {
@@ -4095,7 +4106,7 @@ check_and_install_if_not_installed <- function(pkgs,
   # CRAN does not accept it, so comment it out
   
   if(installpkg) {
-    # message('Installing required packages',
+    # message2c('Installing required packages',
     #         collapse_comma(required_pkgs))
     #
     # utils::install.packages(required_pkgs,
@@ -4334,7 +4345,7 @@ check_pkg_version_exists <- function(pkg,
  
   if(!isTRUE(zz)) {
     if(verbose) {
-      message("Please install the latest version of the 'brms' package",
+      message2c("Please install the latest version of the 'brms' package",
               "\n ",
               "remotes::install_github('paul-buerkner/brms')")
     }
@@ -4366,7 +4377,7 @@ check_if_functions_exists <- function(model,
   if(is.null(envir)) envir <- globalenv()
   
   if(!checks) {
-    if(is.null(o)) stop("object 'o' must be specified")
+    if(is.null(o)) stop2c("object 'o' must be specified")
   }
   
   check_brms_v <- 
@@ -4461,11 +4472,11 @@ check_if_functions_exists <- function(model,
   if(checks) {
     if(is.null(model$model_info$exefuns[[1]])) {
       if(!is.null(usesavedfuns)) {
-        if(!usesavedfuns & latest_brms_v) message(msg1)
-        if(usesavedfuns & latest_brms_v) message(msg2)
+        if(!usesavedfuns & latest_brms_v) message2c(msg1)
+        if(usesavedfuns & latest_brms_v) message2c(msg2)
         
-        if(!usesavedfuns & !latest_brms_v) message(msg3)
-        if(usesavedfuns & !latest_brms_v) message(msg3)
+        if(!usesavedfuns & !latest_brms_v) message2c(msg3)
+        if(usesavedfuns & !latest_brms_v) message2c(msg3)
         
       }
     }
@@ -4481,7 +4492,7 @@ check_if_functions_exists <- function(model,
   
   if(verbose) {
     if(!envgtf) {
-      if(verbose) message(msg3)
+      if(verbose) message2c(msg3)
     }
   }
   
@@ -4686,7 +4697,7 @@ convert_dummy_to_factor <- function(df,
                                     factor.level = NULL,
                                     factor.name = NULL) {
 
-  if(!is.data.frame(df)) stop("df should be a data frame")
+  if(!is.data.frame(df)) stop2c("df should be a data frame")
   all.dfnames  <- colnames(df)
   # factor.dummy <- c("classClassI",  "classClassII" )
   if(is.null(factor.dummy)) {
@@ -4694,7 +4705,7 @@ convert_dummy_to_factor <- function(df,
   } else if(!is.null(factor.dummy)) {
     if(!is.null(factor.name)) {
       if(!is.character(factor.name)) {
-        stop("factor.name should be a character string")
+        stop2c("factor.name should be a character string")
       }
     } else if(is.null(factor.name)) {
       factor.variable <- "factor.var"
@@ -4706,7 +4717,7 @@ convert_dummy_to_factor <- function(df,
     colnames(dfout) <- gsub('tempvar', factor.variable, names(dfout))
     if(!is.null(factor.level)) {
       if(length(factor.dummy) != length(factor.level)) {
-        stop("Lengths of factor.dummy and factor.level must be same")
+        stop2c("Lengths of factor.dummy and factor.level must be same")
       }
       levels(dfout[[factor.variable]]) <- factor.level
     } else if(is.null(factor.level)) {
@@ -4767,10 +4778,10 @@ add_parms_to_curve_data <- function(data,
     parmcols <- c('Estimate', "Est.Error", "Q2.5", "Q97.5")
   }
   if(is.null(nonparmcols))  {
-    stop("Please specify the 'nonparmcols'")
+    stop2c("Please specify the 'nonparmcols'")
   }
   if(is.null(byjoincols)) {
-    stop("Please specify the 'byjoincols'")
+    stop2c("Please specify the 'byjoincols'")
   }
 
   parmnames <- gp %>% dplyr::select(dplyr::all_of(Parametername)) %>%
@@ -4802,7 +4813,7 @@ add_parms_to_curve_data <- function(data,
   mergebycols <- intersect(nonparmcols, byjoincols)
   setdiffcols <- setdiff(byjoincols, nonparmcols)
   if(length(setdiffcols) != 0) {
-    stop("Variable(s) ", collapse_comma(setdiffcols),
+    stop2c("Variable(s) ", collapse_comma(setdiffcols),
          " missing in nonparmcols" )
   }
 
@@ -5223,17 +5234,17 @@ refine_grid <- function(fullgrid = NULL,
                         yvar = NULL, 
                         idvar = NULL, 
                         envir = NULL) {
-  if(is.null(fullgrid)) stop("Please specify fullgrid")
-  if(is.null(all_vars)) stop("Please specify all_vars")
-  if(is.null(nested_vars)) stop("Please specify nested_vars")
+  if(is.null(fullgrid)) stop2c("Please specify fullgrid")
+  if(is.null(all_vars)) stop2c("Please specify all_vars")
+  if(is.null(nested_vars)) stop2c("Please specify nested_vars")
   if(is.null(fulldata) & is.null(varsvector)) 
-    stop("Please specify at least fulldata or varsvector")
+    stop2c("Please specify at least fulldata or varsvector")
   if(!is.null(fulldata) & !is.null(varsvector)) 
-    stop("Please specify either fulldata or varsvector, not both")
+    stop2c("Please specify either fulldata or varsvector, not both")
   
   if(!is.null(varsvector)) {
-    # if(!is.vector(varsvector)) stop("varsvector must be a vector")
-    if(!is.factor(varsvector)) stop("varsvector must be a factor vector")
+    # if(!is.vector(varsvector)) stop2c("varsvector must be a vector")
+    if(!is.factor(varsvector)) stop2c("varsvector must be a factor vector")
   }
   
   `.` <- NULL;
@@ -5580,12 +5591,12 @@ mark_value_of_yintercept <- function(plot,
 #' @noRd
 #'
 get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
-  if(!is.character(pkg)) stop('pkg must be a character')
+  if(!is.character(pkg)) stop2c('pkg must be a character')
   if(pkg == 'brms') {
     if(is.null(version)) {
       out <- '2.21.0' 
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5594,7 +5605,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '0.19.0'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5603,7 +5614,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '1.15.4'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5612,7 +5623,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '1.3.1'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5621,7 +5632,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '2.3.1'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5630,7 +5641,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '2.0.13'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5639,7 +5650,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '1.0.17'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5648,7 +5659,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '1.5.2'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5657,7 +5668,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '0.0.1' # '4.3.1'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5667,7 +5678,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
     if(is.null(version)) {
       out <- '0.7.1'
     } else {
-      if(!is.character(version)) stop('version must be a character')
+      if(!is.character(version)) stop2c('version must be a character')
       out <- version
     }
   }
@@ -5689,7 +5700,7 @@ get_package_minversion <- function(pkg, version = NULL, verbose = FALSE) {
 #' @noRd
 #'
 sanitize_algorithm_args <- function(args, algorithm, verbose = FALSE) {
-  if(!is.character(algorithm)) stop('algorithm must be a character')
+  if(!is.character(algorithm)) stop2c('algorithm must be a character')
   
   pathfinderargs <- c('save_latent_dynamics', 'output_dir',
                       'output_basename', 'sig_figs', 
@@ -5714,17 +5725,26 @@ sanitize_algorithm_args <- function(args, algorithm, verbose = FALSE) {
   #   return(args)
   # }  
   
+  # This when algorithm = "pathfinder" but pathfinder_init = FALSE
+  remove_for_brms_pathfinder <- c('adapt_delta', 'max_treedepth', 'control')
+  
   if(!'pathfinder' %in% algorithm) {
     for (i in pathfinderargs) {
       if(!is.null(args[[i]])) args[[i]] <- NULL
     }
-  } else if(!'laplace' %in% algorithm) {
+  } 
+  
+  if(!'laplace' %in% algorithm) {
     for (i in laplacerargs) {
       if(!is.null(args[[i]])) args[[i]] <- NULL
     }
-  } else {
-    args <- args
-  }
+  } 
+  
+  if('pathfinder' %in% algorithm) {
+    for (i in remove_for_brms_pathfinder) {
+      args[[i]] <- NULL
+    }
+  } 
   
   return(args)
 }
@@ -5741,12 +5761,12 @@ sanitize_algorithm_args <- function(args, algorithm, verbose = FALSE) {
 
 vel_exp_unit_convert <- function(x, to = 'unit') {
   if(to == 'unit') {
-    message("converted from exp(x) to unit/time")
+    message2c("converted from exp(x) to unit/time")
     out <-  1 - exp(x)^2
     # out <- abs(out)
   }
   if(to == 'exp') {
-    message("converted from unit/time to exp(x)")
+    message2c("converted from unit/time to exp(x)")
     out <-  log(sqrt(1-x))
   }
   out
@@ -6181,7 +6201,7 @@ getmodel_info <- function(model,
   if(is.null(model$test_mode)) {
     model[['test_mode']] <- FALSE
     if(verbose) {
-      message("'model' must have attached 'test_mode' as model[['test_mode']]",
+      message2c("'model' must have attached 'test_mode' as model[['test_mode']]",
               "\n ", 
               "that must be set as either TRUE/FALSE",
               "\n ", 
@@ -6335,7 +6355,7 @@ post_processing_checks <- function(model,
   if(is.null(deriv)) deriv <- 0
   
   if(!'bgmfit' %in% class(model)) {
-    stop("The class of model object should be 'bgmfit' ")
+    stop2c("The class of model object should be 'bgmfit' ")
   }
   
   excall_ <- c("plot_ppc", "loo_validation")
@@ -6440,13 +6460,13 @@ post_processing_checks <- function(model,
     
     if(verbose) { 
       if(!available_d0) {
-        stop("No 'd0' found")
+        stop2c("No 'd0' found")
       }
       if(!available_d1) {
-        message("No 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
+        message2c("No 'd1' found, setting 'model_deriv = FALSE', 'deriv = 0'")
       }
       if(!available_d2) {
-        # message("No 'd2' found, setting 'model_deriv = FALSE', 'deriv = 0'")
+        # message2c("No 'd2' found, setting 'model_deriv = FALSE', 'deriv = 0'")
       }
     }
     
@@ -6695,8 +6715,8 @@ check_and_replace_sort_to_full <- function(str,
                                    allowed_right = NULL) {
   
   if(!is.null(what)) {
-    if(is.null(x)) stop("'x' must be specified when 'what' is not NULL")
-    if(length(what) != length(what)) stop("lengths of 'x' and 'what' must be same")
+    if(is.null(x)) stop2c("'x' must be specified when 'what' is not NULL")
+    if(length(what) != length(what)) stop2c("lengths of 'x' and 'what' must be same")
   }
   
   if(is.null(x)) {
@@ -6951,7 +6971,7 @@ check_set_xvar_sigma <- function(model,
                    "\n ", 
                    collapse_comma(xvar),
                    "\n ")
-          message(create_msg_xvar_as_mu)
+          message2c(create_msg_xvar_as_mu)
         }
         return(xvar)
       }
@@ -7034,16 +7054,16 @@ check_set_xvar_sigma <- function(model,
       if(!is.null(sigma_model)) {
         if(sigma_model != "ls") {
           if(!auto) {
-            stop(create_msg_xvar_null)
+            stop2c(create_msg_xvar_null)
           } else if(auto) {
             if(length(sigmacov_cov_numeric_vars) > 0) {
               if(length(sigmacov_cov_numeric_vars) == 1) {
                 xvar <- sigmacov_cov_numeric_vars
                 if(verbose) {
-                  message(create_msg_xvar_not_null_and_one)
+                  message2c(create_msg_xvar_not_null_and_one)
                 }
               } else {
-                stop(create_msg_xvar_not_null_and_more_than_one)
+                stop2c(create_msg_xvar_not_null_and_more_than_one)
               }
             }
           }
@@ -7052,7 +7072,7 @@ check_set_xvar_sigma <- function(model,
     } else if(!is.null(xvar)) {
       for (i in xvar) {
         if(!i %in% sigmacov_cov_numeric_vars) {
-          if(sigma_model == "basic") stop(create_msg_xvar_used)
+          if(sigma_model == "basic") stop2c(create_msg_xvar_used)
         }
       }
     }
@@ -7118,7 +7138,7 @@ remove_cons_as_numeric_cov <- function(cov,
   
   if(length(removed_cons_vars) > 0) {
     if(verbose) {
-      message("Following covariate(s) removed because of constant values",
+      message2c("Following covariate(s) removed because of constant values",
               "\n ",
               collapse_comma(removed_cons_vars))
     }
@@ -7217,7 +7237,7 @@ check_set_transform_draws_sigma <- function(model,
                      "\n ", 
                      collapse_comma(set_transform_draws),
                      "\n ")
-            message(create_msg_transform_draws)
+            message2c(create_msg_transform_draws)
             } # if(verbose) {
         } # if(sigma_model %in% set_sigma_transform_draws_if) {
         
@@ -7243,7 +7263,7 @@ check_set_transform_draws_sigma <- function(model,
   if(!is.null(set_transform_draws)) {
     if(is.null(itransform)) {
       if(verbose) {
-        message("Note that argument 'transform_draws' has bee set as",
+        message2c("Note that argument 'transform_draws' has bee set as",
                 "\n ",
                 deparse(fun_eval), " but 'itransform' is NULL. Thegerfore, no",
                 "\n ",
@@ -7330,7 +7350,7 @@ check_set_fun_transform <- function(model,
           } else if(transform == "exp") {
             setfun <- function(x)exp(x)
           } else {
-            stop("The argument 'transform' must be either ", 
+            stop2c("The argument 'transform' must be either ", 
                  collapse_comma(allowedstrfun),
                  "\n ",
                  " or else a valid function such as function(x) x")
@@ -7351,7 +7371,7 @@ check_set_fun_transform <- function(model,
       if(auto) {
         setfun <- function(x)x
         if(verbose) {
-          message(paste0("For dpar = '", dpar, "', the ", 
+          message2c(paste0("For dpar = '", dpar, "', the ", 
                          setfunas_char, 
                          " was 'NULL', now set as function(x)x"))
         }
@@ -7631,7 +7651,7 @@ set_manual_datagrid <- function(model,
              " is not available in the dataframe")
       }
       if(length(unique(difx_val)) < 2) {
-        stop("The 'difx' variable ", collapse_comma(difx_name),
+        stop2c("The 'difx' variable ", collapse_comma(difx_name),
              "\n ",
              "should have at least of a unique length 2",
              "\n ",
@@ -7714,7 +7734,7 @@ set_manual_datagrid <- function(model,
       }
     } else if(is.numeric(xrange)) {
       if(length(xrange) != 2) {
-        stop("'xrange' must be a vector of lenght 2")
+        stop2c("'xrange' must be a vector of lenght 2")
       }
     } else {
       stop2c("The xrange must be a character string 'range' or 'minmax', or 
@@ -7795,7 +7815,7 @@ set_manual_datagrid <- function(model,
         grid_args <- c(grid_args, i)
       }
       if(verbose) {
-        message(" Adding following to the grid via grid_add:\n ", 
+        message2c(" Adding following to the grid via grid_add:\n ", 
                 collapse_comma(names(grid_add)))
       }
     } else if(!is.list(grid_add)) {
@@ -7823,7 +7843,7 @@ set_manual_datagrid <- function(model,
   
   if(length(missing_names_grid) > 0) {
     if(verbose) {
-      message("Adding following to the grid as first only only:\n ", 
+      message2c("Adding following to the grid as first only only:\n ", 
               collapse_comma(missing_names_grid))
     }
   }
@@ -7832,12 +7852,12 @@ set_manual_datagrid <- function(model,
     if(difx_asit) {
       difx_val <- difx_val
       if(verbose) {
-        message("The 'difx' variable ", collapse_comma(difx_name),
+        message2c("The 'difx' variable ", collapse_comma(difx_name),
                 " added to the grid") 
       }
     } else if(!difx_asit) {
       if(verbose) {
-        message("The 'difx' variable ", collapse_comma(difx_name),
+        message2c("The 'difx' variable ", collapse_comma(difx_name),
                 " added to the grid with the following range: ",
                 "\n ",
                 difx_range) 
@@ -8047,7 +8067,7 @@ find_function_used_in_R_files <- function(package_name,
     functions_in_file <- tryCatch({
       list.functions.in.file(file)
     }, error = function(e) {
-      message(paste("Error processing file:", file, "-", e$message))
+      message2c(paste("Error processing file:", file, "-", e$message))
       NULL
     })
     
@@ -8187,7 +8207,7 @@ get_nlf_custom_arg <- function(str,
     if(!is.null(allowed_nlf_custom_arg)) {
       if(!out %in% allowed_nlf_custom_arg) {
         if(search.o == "method") {
-          stop(paste0("The custom arg '", search.o, "' used in nlf() ",
+          stop2c(paste0("The custom arg '", search.o, "' used in nlf() ",
                       "must be one of the following:", 
                       "\n  ",
                       collapse_comma(allowed_nlf_custom_arg),
@@ -8202,7 +8222,7 @@ get_nlf_custom_arg <- function(str,
                       " ls = ls", 
                       "\n  "))
         } else if(search.o == "prior") {
-          stop(paste0("The custom arg '", search.o, "' used in nlf() ",
+          stop2c(paste0("The custom arg '", search.o, "' used in nlf() ",
                       "must be one of the following:", 
                       "\n  ",
                       collapse_comma(allowed_nlf_custom_arg),
@@ -8458,7 +8478,7 @@ condition_by_switch_fun <- function(arg,
                                     verbose = FALSE) {
   
   if(rm_by & rm_condition) {
-    stop("both 'rm_by' and 'rm_condition' can not be TRUE")
+    stop2c("both 'rm_by' and 'rm_condition' can not be TRUE")
   }
   
   condition.org <- arg[[condition]]
@@ -8469,23 +8489,23 @@ condition_by_switch_fun <- function(arg,
     if(rm_by) {
       arg[[by]]        <- NULL
       if(verbose) {
-        message("The 'by' argument set as NULL")
+        message2c("The 'by' argument set as NULL")
       }
     }
   } else if(is.null(condition.org)) {
     if(is.null(by.org)) {
-      stop("pleasae provide 'condition' argument, both 'by' and 'condition' are NULL")
+      stop2c("pleasae provide 'condition' argument, both 'by' and 'condition' are NULL")
     } else if(!is.null(by.org)) {
       if(!is.logical(by.org)) {
         arg[[condition]] <- by.org
         if(rm_by) {
           arg[[by]]        <- NULL
           if(verbose) {
-            message("The 'by' argument set as NULL")
+            message2c("The 'by' argument set as NULL")
           }
         }
         if(verbose) {
-          message("The 'condition' argument was NULL, now set same as by argument")
+          message2c("The 'condition' argument was NULL, now set same as by argument")
         }
       } # if(!is.logical(by.org)) {
     } # else if(!is.null(by.org)) {
@@ -8495,7 +8515,7 @@ condition_by_switch_fun <- function(arg,
   if(rm_condition) {
     arg[[condition]]        <- NULL
     if(verbose) {
-      message("The 'condition' argument set as NULL")
+      message2c("The 'condition' argument set as NULL")
     }
   }
   

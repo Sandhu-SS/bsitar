@@ -2573,18 +2573,20 @@ prepare_formula <- function(x,
       }
     }
     
+    
     if (grepl("^~1$", s_formulasi)) {
       if (length(a_covariate) == 1) {
-        if (grepl("~0", s_formulasi, fixed = T)) {
+        # changed 's_formulasi' to 'a_formulasi'
+        if (grepl("~0", a_formulasi, fixed = T)) { 
           lmform  <- as.formula(paste0(y, "~0+",  a_covariate, "+", "mat_s"))
-        } else if (!grepl("~0", s_formulasi, fixed = T)) {
+          # changed 's_formulasi' to 'a_formulasi'
+        } else if (!grepl("~0", a_formulasi, fixed = T)) { 
           lmform  <- as.formula(paste0(y, "~1+",  a_covariate, "+", "mat_s"))
         }
       } else if (length(a_covariate) > 1) {
-        main_cov <- a_covariate
+        main_cov      <- a_covariate
         main_inte_cov <- c(main_cov, "mat_s")
         main_inte_cov <- paste(main_inte_cov, collapse = "+")
-        # if (grepl("~0", s_formulasi, fixed = T)) {
         # here and below in else if added a_formulasi
         if (grepl("~0", s_formulasi, fixed = T) |
             grepl("~0", a_formulasi, fixed = T)
@@ -2599,8 +2601,11 @@ prepare_formula <- function(x,
     }
     
     
-    if (grepl("^~1$", s_formulasi))
+    
+    if (grepl("^~1$", s_formulasi)) {
       s_covariate <- NULL
+    }
+      
     
     
     if (grepl("^~1$", a_formulasi)) {
@@ -2632,6 +2637,10 @@ prepare_formula <- function(x,
     
     lm_coefse <- summary(lm_fit)$coefficients[, 2]
     
+    # print(lmform)
+    # print(a_formulasi)
+    # print(s_formulasi)
+    # stop()
     
     # library(ggplot2)
     # ppp <<- predict(lm_fit)

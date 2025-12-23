@@ -224,7 +224,7 @@ prepare_priors <- function(prior_argument,
       # if(!get_fun_x) get_fun_x <- FALSE 
     } else if(!exists(get_fun_x)) {
       if(assertfun) 
-        stop("Object ", get_fun_x, " defined as a function does not exists")
+        stop2c("Object ", get_fun_x, " defined as a function does not exists")
     } else if(exists(get_fun_x)) {
       enverr. <- environment()
       assign('err.', FALSE, envir = enverr.)
@@ -238,13 +238,13 @@ prepare_priors <- function(prior_argument,
       )
       err. <- get('err.', envir = enverr.)
       if (err.) {
-        stop("Object ", get_fun_x, " defined as a function can not be evaluated")
+        stop2c("Object ", get_fun_x, " defined as a function can not be evaluated")
       } else {
         if(assertfun) {
           if(is.function(eval(get_fun_x))) 
             get_fun_x <- get_ept(get_fun_x)
           if(!is.function(get_ept(get_fun_x))) 
-            stop("Object ", get_fun_x, " is not a function")
+            stop2c("Object ", get_fun_x, " is not a function")
         } # if(assertfun) {
       }
     }
@@ -309,7 +309,7 @@ prepare_priors <- function(prior_argument,
       splitmvar_w2 <-
         gsub(sethp_dist, "TRUE", splitmvar_w2)
     } else {
-      stop(
+      stop2c(
         "Hierarchial distribution (i.e,, sethp = distribution) can only",
         "\n",
         " be normal, cauchy, student_nu, student_t, exponential",
@@ -329,7 +329,7 @@ prepare_priors <- function(prior_argument,
   
   # TODO: Work on expanding dist check for all possible distributions
   if(dist == 'norm') {
-    stop("It seems you have misspelled 'normal' distribution as 'norm'")
+    stop2c("It seems you have misspelled 'normal' distribution as 'norm'")
   }
   
   
@@ -358,7 +358,7 @@ prepare_priors <- function(prior_argument,
     
     error_handle1 <- function(i, dist, testi) {
       if (!i %in% testi) {
-        stop(
+        stop2c(
           "for ",
           dist,
           " distribution,",
@@ -379,7 +379,7 @@ prepare_priors <- function(prior_argument,
         dist == "lognormal") {
       set_str_names <- c("location", "scale")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -395,7 +395,7 @@ prepare_priors <- function(prior_argument,
     if (dist == "gamma") {
       set_str_names <- c("shape", "scale")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -412,7 +412,7 @@ prepare_priors <- function(prior_argument,
     if (dist == "inv_gamma") {
       set_str_names <- c("shape", "scale")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -428,7 +428,7 @@ prepare_priors <- function(prior_argument,
     if (dist == "uniform") {
       set_str_names <- c("lower", "upper")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -444,7 +444,7 @@ prepare_priors <- function(prior_argument,
     if (dist == "exponential") {
       set_str_names <- c("rate")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -460,7 +460,7 @@ prepare_priors <- function(prior_argument,
     if (dist == "student_t") {
       set_str_names <- c("df", "location", "scale")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -476,7 +476,7 @@ prepare_priors <- function(prior_argument,
     if (dist == "student_nu") {
       set_str_names <- c("nu_shape", "nu_scale", "location", "scale")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -491,7 +491,7 @@ prepare_priors <- function(prior_argument,
     if (dist == "lkj") {
       set_str_names <- c("eta")
       if (length(splitmvar_w2) < length(set_str_names))
-        stop(
+        stop2c(
           "please sepecify minimum required ",
           length(set_str_names),
           " parameters, i.e., ",
@@ -561,7 +561,7 @@ prepare_priors <- function(prior_argument,
     if (!identical(incorrect_names, character(0))) {
       ttt_n1 <- paste(incorrect_names, collapse = ", ")
       ttt_nn2 <- paste(vacoublary_prior_parnames, collapse = ", ")
-      stop(
+      stop2c(
         "\nFollowing are incorrect / misspelled / not allowed options in prior:\n ",
         ttt_n1,
         "\n",
@@ -603,7 +603,7 @@ prepare_priors <- function(prior_argument,
                         dist != "cauchy" &
                         dist != "student_nu" &
                         dist != "student_t")) {
-        stop(
+        stop2c(
           "Hierarchical priors are supported only for normal, cauchy, student_nu",
           "\n",
           " and student_t distributins.",
@@ -638,7 +638,7 @@ prepare_priors <- function(prior_argument,
       )
       err. <- get('err.', envir = enverr.)
       if (err.) {
-        stop("scale factor set by autoscale can only be",
+        stop2c("scale factor set by autoscale can only be",
              "\n",
              " NA / TRUE / FLASE or a numeric value")
       } else {
@@ -647,7 +647,7 @@ prepare_priors <- function(prior_argument,
         if (!is.na(check_for_autoscale) &
             !is.logical(check_for_autoscale) &
             !is.numeric(check_for_autoscale)) {
-          stop("scale factor set by autoscale can only be",
+          stop2c("scale factor set by autoscale can only be",
                "\n",
                "NA / TRUE / FLASE or a numeric value")
         }
@@ -659,7 +659,7 @@ prepare_priors <- function(prior_argument,
                  !is.numeric(check_for_autoscale)) {
         scale_factor <- 2.5
         if (verbose) {
-          # if(i == 1) message("scale factor for autoscale option set to 2.5")
+          # if(i == 1) message2c("scale factor for autoscale option set to 2.5")
         }
       } else if (is.numeric(check_for_autoscale)) {
         scale_factor <- check_for_autoscale
@@ -735,7 +735,7 @@ prepare_priors <- function(prior_argument,
             
             if (err.) {
               if (class == 'b' | class == 'sd') {
-                stop(
+                stop2c(
                   add_par_info,
                   ", you have specified '",
                   eit,
@@ -764,7 +764,7 @@ prepare_priors <- function(prior_argument,
                   const_msg
                 )
               } else if (class == 'sigma') {
-                stop(
+                stop2c(
                   "\nFor residual standard deviation parameter i.e., ",
                   "class ",
                   class,
@@ -797,7 +797,7 @@ prepare_priors <- function(prior_argument,
               } else if (class == '' &
                          grepl("dpar_", prior_argument) &
                          !grepl("dpar_cov", prior_argument)) {
-                stop(
+                stop2c(
                   "\nFor for distributional Intercept parameter i.e., ",
                   "Intercept_sigma ",
                   ", you have specified '",
@@ -1097,7 +1097,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1119,7 +1119,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1136,7 +1136,7 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymax", empty_sufx)) {
@@ -1146,10 +1146,10 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("ymaxs", paste0("ymaxs", resp_), x_i)
               evaluated_parameter <- ept(eit)
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymedian as location parameter not alloweed for nlpar ",
+              stop2c("option ymedian as location parameter not alloweed for nlpar ",
                    nlpar)
             } else {
               check_evalation_of_numeric_pdata_obj(
@@ -1169,7 +1169,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1187,7 +1187,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1204,14 +1204,14 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("cstart", empty_sufx)) {
               eit <-  gsub("cstart", paste0("cstart", resp_), x_i)
@@ -1234,7 +1234,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1252,7 +1252,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1269,7 +1269,7 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymeanxmid", empty_sufx)) {
@@ -1279,10 +1279,10 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("ymeanxmid", paste0("ymeanxmid", resp_), x_i)
               evaluated_parameter <- ept(eit)
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("dstart", empty_sufx)) {
               eit <-  gsub("dstart", paste0("dstart", resp_), x_i)
@@ -1305,7 +1305,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1323,7 +1323,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1340,14 +1340,14 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar) 
             } else if (x_i == paste0("estart", empty_sufx)) {
               eit <-  gsub("estart", paste0("estart", resp_), x_i)
@@ -1370,7 +1370,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1388,7 +1388,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1405,14 +1405,14 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar) 
             } else if (x_i == paste0("estart", empty_sufx)) {
               eit <-  gsub("estart", paste0("estart", resp_), x_i)
@@ -1435,7 +1435,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1453,7 +1453,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1471,7 +1471,7 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymeanxmax", empty_sufx)) {
@@ -1485,10 +1485,10 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("ymax", paste0("ymax", resp_), x_i)
               evaluated_parameter <- ept(eit)
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar) 
             } else if (x_i == paste0("estart", empty_sufx)) {
               eit <-  gsub("estart", paste0("estart", resp_), x_i)
@@ -1511,7 +1511,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1529,7 +1529,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1547,14 +1547,14 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar) 
             } else if (x_i == paste0("estart", empty_sufx)) {
               eit <-  gsub("estart", paste0("estart", resp_), x_i)
@@ -1577,7 +1577,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1595,7 +1595,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1614,14 +1614,14 @@ prepare_priors <- function(prior_argument,
               eit <-  gsub("lm", lm_gsubby, x_i)
               evaluated_parameter <- ept(eit)
               if (verbose)
-                message("location parameter specified as lm for nlpar",
+                message2c("location parameter specified as lm for nlpar",
                         nlpar,
                         " is set as 0")
             } else if (x_i == paste0("ymean", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar)
             } else if (x_i == paste0("ymedian", empty_sufx)) {
-              stop("option ymean as location parameter not alloweed for nlpar ",
+              stop2c("option ymean as location parameter not alloweed for nlpar ",
                    nlpar) 
             } else if (x_i == paste0("estart", empty_sufx)) {
               eit <-  gsub("estart", paste0("estart", resp_), x_i)
@@ -1644,7 +1644,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1662,7 +1662,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1697,7 +1697,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1731,7 +1731,7 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop(
+                stop2c(
                   "prior elements for nlpar ",
                   nlpar, ", class ",  class,
                   " are greater than the parameter dimensions"
@@ -1769,7 +1769,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1788,7 +1788,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1822,7 +1822,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1841,7 +1841,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1875,7 +1875,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1894,7 +1894,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1928,7 +1928,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -1947,7 +1947,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -1982,7 +1982,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -2001,7 +2001,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2037,7 +2037,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -2056,7 +2056,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2091,7 +2091,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -2110,7 +2110,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2145,7 +2145,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -2164,7 +2164,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2200,7 +2200,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -2219,7 +2219,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2254,7 +2254,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -2287,18 +2287,14 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop("prior elements for nlpar ",
+                stop2c("prior elements for nlpar ",
                      nlpar, ", class ",  class,
                      " are greater than the parameter dimensions"
                 )
             }
           }
           
-          
-          
-          
           # location sigma (class b)
-          
           if (nlpar == "" & class == "b" & sigma_dpar == 'sigma') {
             if (x_i == paste0("lm", empty_sufx)) {
               if (sigma_form_0) {
@@ -2332,7 +2328,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for distributional ",
                   sigma_dpar,
                   ", class ",
@@ -2353,12 +2349,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for distributional ",
+              stop2c("prior elements for distributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # location sigma cov (class b)
           if (cov_sigma_dpar != "" & class == "b" & cov_sigma_dpar == 'sigma_cov' & 
@@ -2389,7 +2383,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for distributional ",
                   sigma_dpar,
                   ", class ",
@@ -2408,18 +2402,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for distributional ",
+              stop2c("prior elements for distributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
           
-          
-          
-          
           # location a b c d e random effects
-          
           # location nlpar a (class sd, typically 0)
-          
           if (nlpar == "a" & class == "sd" & grepl("a", randomsi)) {
             check_evalation_of_numeric_pdata_obj(
               prior_argument,
@@ -2438,7 +2427,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2456,11 +2445,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # location nlpar b (class sd, typically 0)
           if (nlpar == "b" & class == "sd" & grepl("b", randomsi)) {
@@ -2481,7 +2469,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2498,7 +2486,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2522,7 +2510,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2539,7 +2527,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2563,7 +2551,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2580,11 +2568,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # location nlpar e (class sd, typically 0)
           if (nlpar == "e" & class == "sd" & grepl("e", randomsi)) {
@@ -2605,7 +2592,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2622,12 +2609,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # location nlpar f (class sd, typically 0)
           if (nlpar == "f" & class == "sd" & grepl("f", randomsi)) {
@@ -2648,7 +2633,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2665,12 +2650,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # location nlpar g (class sd, typically 0)
           if (nlpar == "g" & class == "sd" & grepl("g", randomsi)) {
@@ -2691,7 +2674,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2708,7 +2691,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -2733,7 +2716,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2750,13 +2733,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
           
           # location nlpar i (class sd, typically 0)
           if (nlpar == "i" & class == "sd" & grepl("i", randomsi)) {
@@ -2777,7 +2757,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2794,14 +2774,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
-          
           
           # location nlpar s (class sd, typically 0)
           if (nlpar == "s" & class == "sd") {
@@ -2831,7 +2807,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -2865,16 +2841,13 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop(
+                stop2c(
                   "prior elements for nlpar ",
                   nlpar, ", class ",  class,
                   " are greater than the parameter dimensions"
                 )
             }
           }
-          
-          
-          
           
           # location nlpar a cov (class sd, typically 0)
           if (cov_nlpar == "a" & class == "sd" & !is.null(ancov_gr)) {
@@ -2895,7 +2868,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2913,11 +2886,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # location nlpar b cov (class sd, typically 0)
           if (cov_nlpar == "b" & class == "sd" & !is.null(bncov_gr)) {
@@ -2938,7 +2910,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -2956,12 +2928,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # location nlpar c cov (class sd, typically 0)
           if (cov_nlpar == "c" & class == "sd" & !is.null(cncov_gr)) {
@@ -2982,7 +2952,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3000,7 +2970,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -3025,7 +2995,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3043,7 +3013,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -3070,7 +3040,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3088,13 +3058,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
           
           # location nlpar f cov (class sd, typically 0)
           if (cov_nlpar == "f" & class == "sd" & !is.null(fncov_gr)) {
@@ -3115,7 +3082,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3133,13 +3100,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
           
           # location nlpar g cov (class sd, typically 0)
           if (cov_nlpar == "g" & class == "sd" & !is.null(gncov_gr)) {
@@ -3160,7 +3124,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3178,7 +3142,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -3204,7 +3168,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3222,11 +3186,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           
           # location nlpar i cov (class sd, typically 0)
@@ -3248,7 +3211,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3266,7 +3229,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -3303,7 +3266,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3336,15 +3299,12 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop("prior elements for nlpar ",
+                stop2c("prior elements for nlpar ",
                      nlpar, ", class ",  class,
                      " are greater than the parameter dimensions"
                 )
             }
           }
-          
-          
-          
           
           # location sigma (class sd, typically 0)
           if (nlpar == "" & class == "sd" & sigma_dpar == 'sigma') {
@@ -3365,7 +3325,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for distributional ",
                 sigma_dpar,
                 ", class ",
@@ -3383,7 +3343,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for distributional ",
+              stop2c("prior elements for distributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
@@ -3409,7 +3369,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for distributional ",
                 sigma_dpar,
                 ", class ",
@@ -3427,7 +3387,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for distributional ",
+              stop2c("prior elements for distributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
@@ -3454,7 +3414,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3472,7 +3432,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -3498,7 +3458,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "location parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -3516,20 +3476,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
         } # if(grepl("^location$", i))
         
-        
-        
-        
-        
         # set scale parameter -> for normal, log normal, cauchy, studdent_t
-        
         if (grepl("^scale$", pname_)) {
           # scale a b c d e f g h i fixed effects
           # scale nlpar a (class b)
@@ -3567,7 +3520,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3586,7 +3539,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -3621,7 +3574,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3640,11 +3593,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # scale nlpar c (class b)
           if (nlpar == "c" & class == "b" & grepl("c", fixedsi)) {
@@ -3672,7 +3624,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3690,11 +3642,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # scale nlpar d (class b)
           if (nlpar == "d" & class == "b" & grepl("d", fixedsi)) {
@@ -3740,7 +3691,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3758,11 +3709,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # scale nlpar e (class b)
           if (nlpar == "e" & class == "b" & grepl("e", fixedsi)) {
@@ -3790,7 +3740,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3808,12 +3758,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           
           # scale nlpar f (class b)
@@ -3842,7 +3790,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3860,12 +3808,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # scale nlpar g (class b)
           if (nlpar == "g" & class == "b" & grepl("g", fixedsi)) {
@@ -3900,7 +3846,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3918,12 +3864,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # scale nlpar h (class b)
           if (nlpar == "h" & class == "b" & grepl("h", fixedsi)) {
@@ -3951,7 +3895,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -3969,11 +3913,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           
           # scale nlpar i (class b)
@@ -4002,7 +3945,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4020,13 +3963,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
           
-          # For backward compatibility, lm1 = lm
           
+          # IMP For backward compatibility, lm1 = lm
           # new
           # lm1 -> sd(y) / sd(Xmt)
           # lm2 -> lmse / sd(Xmt)
@@ -4087,7 +4030,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4118,7 +4061,7 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop("prior elements for nlpar ",
+                stop2c("prior elements for nlpar ",
                      nlpar, ", class ",  class,
                      " are greater than the parameter dimensions"
                 )
@@ -4150,7 +4093,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4169,7 +4112,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -4198,7 +4141,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4217,12 +4160,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           } # if (cov_nlpar == "b" & class == "b" & !is.null(bncov)) {
-          
-          
           
           # scale nlpar c cov (class b)
           if (cov_nlpar == "c" & class == "b" & !is.null(cncov)) {
@@ -4247,7 +4188,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4266,12 +4207,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # scale nlpar d cov (class b)
           if (cov_nlpar == "d" & class == "b" & !is.null(dncov)) {
@@ -4296,7 +4235,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4315,12 +4254,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # scale nlpar e cov (class b)
           if (cov_nlpar == "e" & class == "b" & !is.null(encov)) {
@@ -4345,7 +4282,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4364,13 +4301,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
           
           # scale nlpar f cov (class b)
           if (cov_nlpar == "f" & class == "b" & !is.null(fncov)) {
@@ -4395,7 +4329,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4414,12 +4348,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           
           # scale nlpar g cov (class b)
@@ -4445,7 +4377,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4464,11 +4396,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           
           # scale nlpar h cov (class b)
@@ -4494,7 +4425,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4513,11 +4444,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           
           # scale nlpar i cov (class b)
@@ -4543,7 +4473,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4562,11 +4492,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           
           # scale nlpar s cov (class b) - sitar
@@ -4643,17 +4572,12 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop("prior elements for nlpar ",
+                stop2c("prior elements for nlpar ",
                      nlpar, ", class ",  class,
                      " are greater than the parameter dimensions"
                 )
             }
           }
-          
-          
-          
-          
-          
           
           # scale sigma (class b)
           if (nlpar == "" & class == "b" & sigma_dpar == "sigma") {
@@ -4684,7 +4608,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for distributional ",
                   sigma_dpar,
                   ", class ",
@@ -4702,7 +4626,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for distributional ",
+              stop2c("prior elements for distributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
@@ -4732,7 +4656,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for distributional ",
                   sigma_dpar,
                   ", class ",
@@ -4751,20 +4675,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements fordistributional ",
+              stop2c("prior elements fordistributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
           
           
-          
-          
-          
-          
-          
-          
           # scale a b c d e f g h i random effects
-          
           # scale a (class sd)
           if (nlpar == "a" & class == "sd" & grepl("a", randomsi)) {
             if (x_i == paste0("ysd", empty_sufx)) {
@@ -4800,7 +4717,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4819,7 +4736,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -4854,7 +4771,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4873,11 +4790,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # scale c (class sd)
           if (nlpar == "c" & class == "sd" & grepl("c", randomsi)) {
@@ -4898,7 +4814,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
-              stop(
+              stop2c(
                 "scale parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -4915,11 +4831,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # scale d (class sd)
           if (nlpar == "d" & class == "sd" & grepl("d", randomsi)) {
@@ -4957,7 +4872,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -4976,11 +4891,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           # scale e (class sd)
           if (nlpar == "e" & class == "sd" & grepl("e", randomsi)) {
@@ -5001,7 +4915,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
-              stop(
+              stop2c(
                 "scale parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -5018,13 +4932,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
           
           # scale f (class sd)
           if (nlpar == "f" & class == "sd" & grepl("f", randomsi)) {
@@ -5045,7 +4956,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
-              stop(
+              stop2c(
                 "scale parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -5062,7 +4973,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -5105,7 +5016,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5124,12 +5035,11 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
+         
           
           # scale h (class sd)
           if (nlpar == "h" & class == "sd" & grepl("h", randomsi)) {
@@ -5150,7 +5060,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
-              stop(
+              stop2c(
                 "scale parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -5167,7 +5077,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -5193,7 +5103,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- scale_factor * ept(eit)
             } else {
-              stop(
+              stop2c(
                 "scale parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -5210,23 +5120,14 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
           
           
-          
           # scale nlpar s (class sd) - sitar
           if (nlpar == "s" & class == "sd" & grepl("s", randomsi)) {
-            # if (x_i == paste0("lm", empty_sufx)) {
-            #   if (s_form_0_gr) {
-            #     lm_gsubby <- paste0("lm", "_", 'sdx', "_", "all", resp_)
-            #   } else {
-            #     lm_gsubby <- paste0("lm", "_", 'sdx', "", "", resp_)
-            #   }
-            #   eit <-  gsub("lm", lm_gsubby, x_i)
-            #   evaluated_parameter <- scale_factor * ept(eit)
             if (x_i == paste0("lm", empty_sufx)) {
               if (s_form_0) {
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "all", resp_)
@@ -5279,7 +5180,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "location parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5310,15 +5211,12 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop("prior elements for nlpar ",
+                stop2c("prior elements for nlpar ",
                      nlpar, ", class ",  class,
                      " are greater than the parameter dimensions"
                 )
             }
           }
-          
-          
-          
           
           # scale a cov (class sd)
           if (cov_nlpar == "a" & class == "sd" & !is.null(ancov_gr)) {
@@ -5343,7 +5241,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5362,7 +5260,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -5391,7 +5289,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5410,12 +5308,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # scale c cov (class sd)
           if (cov_nlpar == "c" & class == "sd" & !is.null(cncov_gr)) {
@@ -5440,7 +5336,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5459,12 +5355,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # scale d cov (class sd)
           if (cov_nlpar == "c" & class == "sd" & !is.null(dncov_gr)) {
@@ -5489,7 +5383,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5508,13 +5402,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
           
           # scale e cov (class sd)
           if (cov_nlpar == "e" & class == "sd" & !is.null(encov_gr)) {
@@ -5539,7 +5430,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5558,13 +5449,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
           
           # scale f cov (class sd)
           if (cov_nlpar == "f" & class == "sd" & !is.null(fncov_gr)) {
@@ -5589,7 +5477,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5608,11 +5496,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
           
           
           # scale g cov (class sd)
@@ -5638,7 +5525,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5657,12 +5544,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           
           # scale h cov (class sd)
@@ -5688,7 +5573,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5707,12 +5592,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           
           # scale i cov (class sd)
@@ -5738,7 +5621,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -5757,25 +5640,14 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
           
           
-          
-          
-          
           # scale nlpar s cov (class sd) - sitar
           if (cov_nlpar == "s" & class == "sd" & !is.null(sncov_gr)) {
-            # if (x_i == paste0("lm", empty_sufx)) {
-            #   if (!s_form_0_gr) {
-            #     lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
-            #   } else {
-            #     lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
-            #   }
-            #   eit <-  gsub("lm", lm_gsubby, x_i)
-            #   evaluated_parameter <- scale_factor * ept(eit)
             if (x_i == paste0("lm", empty_sufx)) {
               if (!s_form_0) {
                 lm_gsubby <- paste0("lm", "_", 'sdx', "_", "cov", resp_)
@@ -5848,15 +5720,12 @@ prepare_priors <- function(prior_argument,
               if (length(evaluated_parameter) < nrep_of_parms)
                 evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
               if (length(evaluated_parameter) > nrep_of_parms)
-                stop("prior elements for nlpar ",
+                stop2c("prior elements for nlpar ",
                      nlpar, ", class ",  class,
                      " are greater than the parameter dimensions"
                 )
             }
           }
-          
-          
-          
           
           
           # scale sigma (class sd)
@@ -5885,7 +5754,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for distributional ",
                   sigma_dpar,
                   ", class ",
@@ -5903,12 +5772,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for distributional ",
+              stop2c("prior elements for distributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
-          
-          
           
           # scale sigma cov (class sd)
           if (cov_sigma_dpar != "" & class == "sd" & sigma_dpar == "sigma" & 
@@ -5934,7 +5801,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for distributional ",
                   sigma_dpar,
                   ", class ",
@@ -5953,14 +5820,10 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements fordistributional ",
+              stop2c("prior elements fordistributional ",
                    sigma_dpar,
                    " are greater than the parameter dimensions")
           }
-          
-          
-          
-          
           
           # scale sigma (class sd)
           if (class == "sigma") {
@@ -5994,7 +5857,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -6013,7 +5876,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -6051,7 +5914,7 @@ prepare_priors <- function(prior_argument,
                 eit <- x_i
                 evaluated_parameter <- scale_factor * ept(eit)
               } else {
-                stop(
+                stop2c(
                   "scale parameter options for nlpar ",
                   nlpar,
                   ", class ",
@@ -6070,43 +5933,16 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
         }
-        
       } # end if(method_location_scale == "original" )
         
 
-        # if(method_location_scale == "via_functions") {
-        #   list_objs <- mget(ls())
-        #   if (grepl("^location$", pname_)) {
-        #     evaluated_parameterx <- get_prior_location(list_objs = list_objs, envir = NULL)
-        #   }
-        # 
-        #   if (grepl("^scale$", pname_)) {
-        #     evaluated_parameterx <- get_prior_scale(list_objs = list_objs, envir = NULL)
-        #     print(evaluated_parameterx)
-        #   }
-        # }
-        
-        
-        # if(method_location_scale == "via_functions") {
-        #   list_objs <- mget(ls())
-        #   list_objs$pname_ <- "location"
-        #   evaluated_parameter <- get_prior_location(list_objs = list_objs, envir = NULL)
-        #   print(evaluated_parameter)
-        #   list_objs$pname_ <- "scale"
-        #   evaluated_parameter <- get_prior_scale(list_objs = list_objs, envir = NULL)
-        #   print(evaluated_parameter)
-        # }
-       
-        # stop()
-        
         
         # set degree of freedom df parameters -> for student_t
-        
         if (grepl("^df$", pname_)) {
           check_evalation_of_numeric_pdata_obj(
             prior_argument,
@@ -6125,7 +5961,7 @@ prepare_priors <- function(prior_argument,
             eit <- x_i
             evaluated_parameter <- ept(eit)
           } else {
-            stop(
+            stop2c(
               "df parameter options for nlpar ",
               nlpar,
               ", class ",
@@ -6150,15 +5986,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
         }
         
-        
         # set nu_shape parameters -> for student_nu
-        
         if (grepl("^nu_shape$", pname_)) {
           check_evalation_of_numeric_pdata_obj(
             prior_argument,
@@ -6177,7 +6011,7 @@ prepare_priors <- function(prior_argument,
             eit <- x_i
             evaluated_parameter <- ept(eit)
           } else {
-            stop(
+            stop2c(
               "df parameter options for nlpar ",
               nlpar,
               ", class ",
@@ -6202,15 +6036,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
         }
         
-        
         # set nu_scale parameters -> for student_nu
-        
         if (grepl("^nu_scale$", pname_)) {
           check_evalation_of_numeric_pdata_obj(
             prior_argument,
@@ -6229,7 +6061,7 @@ prepare_priors <- function(prior_argument,
             eit <- x_i
             evaluated_parameter <- ept(eit)
           } else {
-            stop(
+            stop2c(
               "df parameter options for nlpar ",
               nlpar,
               ", class ",
@@ -6254,18 +6086,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
         }
         
-        
-        
-        
-        
         # set rate parameters -> for exponential
-        
         if (grepl("^rate$", pname_)) {
           if (x_i == paste0("ysd", empty_sufx)) {
             eit <-  gsub("ysd", paste0("ysd", resp_), x_i)
@@ -6316,16 +6143,13 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
         }
         
-        
-        
         # set shape parameter -> for gamma inv_gamma (scale already covered)
-        
         if (grepl("^shape$", pname_)) {
           check_evalation_of_numeric_pdata_obj(
             prior_argument,
@@ -6344,7 +6168,7 @@ prepare_priors <- function(prior_argument,
             eit <- x_i
             evaluated_parameter <- ept(eit)
           } else {
-            stop(
+            stop2c(
               "df parameter options for nlpar ",
               nlpar,
               ", class ",
@@ -6369,7 +6193,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -6417,7 +6241,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "lower parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -6443,7 +6267,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -6491,7 +6315,7 @@ prepare_priors <- function(prior_argument,
               eit <- x_i
               evaluated_parameter <- ept(eit)
             } else {
-              stop(
+              stop2c(
                 "upper parameter options for nlpar ",
                 nlpar,
                 ", class ",
@@ -6517,7 +6341,7 @@ prepare_priors <- function(prior_argument,
             if (length(evaluated_parameter) < nrep_of_parms)
               evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
             if (length(evaluated_parameter) > nrep_of_parms)
-              stop("prior elements for nlpar ",
+              stop2c("prior elements for nlpar ",
                    nlpar, ", class ",  class,
                    " are greater than the parameter dimensions")
           }
@@ -6526,9 +6350,7 @@ prepare_priors <- function(prior_argument,
         }
         
         
-        
         # set eta parameter -> for lkj - also for mvr rescor
-        
         if (grepl("^eta$", pname_)) {
           check_evalation_of_numeric_pdata_obj(
             prior_argument,
@@ -6547,7 +6369,7 @@ prepare_priors <- function(prior_argument,
             eit <- x_i
             evaluated_parameter <- ept(eit)
           } else {
-            stop(
+            stop2c(
               "df parameter options for nlpar ",
               nlpar,
               ", class ",
@@ -6560,14 +6382,13 @@ prepare_priors <- function(prior_argument,
           if (length(evaluated_parameter) < nrep_of_parms)
             evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
           if (length(evaluated_parameter) > nrep_of_parms)
-            stop("prior elements for nlpar ",
+            stop2c("prior elements for nlpar ",
                  nlpar, ", class ",  class,
                  " are greater than the parameter dimensions")
         }
         
         
         # set autocr parameter -> ar ma arma
-        
         if (setautocorr & class != "b") {
           check_evalation_of_numeric_pdata_obj(
             prior_argument,
@@ -6586,7 +6407,7 @@ prepare_priors <- function(prior_argument,
             eit <- x_i
             evaluated_parameter <- ept(eit)
           } else {
-            stop(
+            stop2c(
               "df parameter options for nlpar ",
               nlpar,
               ", class ",
@@ -6599,16 +6420,13 @@ prepare_priors <- function(prior_argument,
           if (length(evaluated_parameter) < nrep_of_parms)
             evaluated_parameter <- rep(evaluated_parameter, nrep_of_parms)
           if (length(evaluated_parameter) > nrep_of_parms)
-            stop("prior elements for nlpar ",
+            stop2c("prior elements for nlpar ",
                  nlpar, ", class ",  class,
                  " are greater than the parameter dimensions")
         }
         
-       
-        
         
         # make unique names
-        
         if (nlpar != "")
           prefix <- nlpar
         if (nlpar != "" &
@@ -6635,9 +6453,6 @@ prepare_priors <- function(prior_argument,
         }
         
         
-        
-        
-        
         if (setautocorr) {
           add_cla_to_name <- NULL
         } else if (class == "" |
@@ -6647,10 +6462,8 @@ prepare_priors <- function(prior_argument,
           add_cla_to_name <- paste0(sep_indicator, class)
         }
         
-       
         
         # This is required to set unique stanvar names for higher level sd 
-        
         if (class == 'sd' | class == 'cor') {
           group_arg_groupvar_paste <-  group # group_arg_groupvar
           group_arg_groupvar_paste <- gsub(":", "_", group_arg_groupvar_paste)
@@ -6660,10 +6473,8 @@ prepare_priors <- function(prior_argument,
           })
         }
         
-        
         # This is required to set unique stanvar names for sigma_prior_cor 
         # and gr_prior_cor
-        
         if (class == 'cor') {
           group_arg_groupvar_paste <-  group
           if (sigma_dpar == 'sigma') lkj_arg_cor_paste <-  'sigma'
@@ -6672,11 +6483,6 @@ prepare_priors <- function(prior_argument,
                                      lkj_arg_cor_paste)
         }
         
-        
-        
-        
-        
-        
         name_parameter <-
           paste0(prefix,
                  add_cla_to_name,
@@ -6684,9 +6490,6 @@ prepare_priors <- function(prior_argument,
                  set_str_names[i], 
                  resp_)
         
-        # name_parameter <- paste0(name_parameter, add_gr_id)
-        
-       
         assign(name_parameter, evaluated_parameter)
         
         if (change_default_data_pll_args) {
@@ -6709,28 +6512,7 @@ prepare_priors <- function(prior_argument,
           c(collect_name_parameter, name_parameter)
       }
       
-      
-      
-      
-      
-      
-      
       # assigning bounds
-      
-      # name_lb <-
-      #   paste0(prefix, 
-      #          add_cla_to_name, 
-      #          sep_indicator, 
-      #          "lb",
-      #          resp_)
-      # 
-      # name_ub <-
-      #   paste0(prefix, 
-      #          add_cla_to_name, 
-      #          sep_indicator, 
-      #          "ub", 
-      #          resp_)
-      
       if(is.null(resp_) | resp_ == "") {
         name_lb <- paste0(name_parameter, "_", 'lb')
         name_ub <- paste0(name_parameter, "_", 'ub')
@@ -6864,7 +6646,7 @@ prepare_priors <- function(prior_argument,
       
       if (cov_sigma_dpar == 'sigma_cov' & class == 'b' ) {
         if(dist %in% strict_positive_dists) {
-          if(!sigma_form_0) stop(cov_sigma_dpar_mxg)
+          if(!sigma_form_0) stop2c(cov_sigma_dpar_mxg)
         }
       }
       
@@ -6912,7 +6694,7 @@ prepare_priors <- function(prior_argument,
     
     if(is.list(fxls)) {
       if(length(fxls) != 2) 
-        stop("length of fxls must be 2")
+        stop2c("length of fxls must be 2")
       assign('fun_log_loc', fxls[[1]])
       assign('fun_log_sca', fxls[[2]])
       fxls <- TRUE
@@ -6952,7 +6734,7 @@ prepare_priors <- function(prior_argument,
       log_sd <- fun_log_sca(loc_parm, sca_parm)
       
       if(any(is.infinite(log_mu))) {
-        stop("location parameter for transformed prior is Inf",
+        stop2c("location parameter for transformed prior is Inf",
              "\n ", 
              "Perhaps you intend to log transform the prior", 
              " but location parameter for some priors is '0'",
@@ -6964,7 +6746,7 @@ prepare_priors <- function(prior_argument,
       }
       
       if(any(is.infinite(log_sd))) {
-        stop("scale parameter for transformed prior is Inf",
+        stop2c("scale parameter for transformed prior is Inf",
              "\n ", 
              "Perhaps you intend to log transform the prior", 
              " but location parameter for some priors is '0'",
@@ -7016,10 +6798,6 @@ prepare_priors <- function(prior_argument,
       
     } # if(fxls) {
 
-   
-   
-    
-    
     ########################
     
     if (dist == "uniform" ) {
@@ -7062,7 +6840,7 @@ prepare_priors <- function(prior_argument,
       
       
       if ((identical(evaluated_parameter_lower, evaluated_parameter_upper))) {
-        stop(
+        stop2c(
           "lower and upper parameters for uniform distribution are identical",
           "\n This could be because of same values used for lower and upper",
           "\n", 
@@ -7075,7 +6853,7 @@ prepare_priors <- function(prior_argument,
       
       for (i in 1:length(evaluated_parameter_lower)) {
         if (evaluated_parameter_lower[i] >= evaluated_parameter_upper[i]) {
-          stop(
+          stop2c(
             "lower parameter value at position '",
             i,
             "' ",
@@ -7086,8 +6864,6 @@ prepare_priors <- function(prior_argument,
         }
       }
     }
-    
-    
     
     # name_parameter
     if (dist != "student_nu") {
@@ -7111,7 +6887,6 @@ prepare_priors <- function(prior_argument,
                  ")")
       }
     }
-    
     
     if (dist == "student_nu") {
       collect_name_parameter_copy <- collect_name_parameter
@@ -7139,7 +6914,6 @@ prepare_priors <- function(prior_argument,
                  ")")
       }
     }
-    
     
     if (dist == "student_nu") {
       student_nu_left <-
@@ -7300,10 +7074,6 @@ prepare_priors <- function(prior_argument,
     }
     
     
-    
-    
-    
-    
     if (!is.null(stanvars_data[[name_lb]])) {
       if (nrep_of_parms == 1) {
         lowerbound <- name_lb
@@ -7327,8 +7097,6 @@ prepare_priors <- function(prior_argument,
         }
       }
     }
-    
-    
     
     
     if (ept(sethp)) {
@@ -7978,8 +7746,6 @@ prepare_priors <- function(prior_argument,
       }
       stanvars_data[[original_scale]] <- NULL
     }
-    
-    
   } # end if(dist != 'flat') 
   
 
@@ -8035,9 +7801,8 @@ prepare_priors <- function(prior_argument,
       'seed'
     )
     
-    
     init_internal_args <- mget(init_internal_args_names)
-    init_argument <- gsub("_prior_", "_init_", prior_argument)
+    init_argument      <- gsub("_prior_", "_init_", prior_argument)
     initial_out <-
       prepare_initials(init_argument = init_argument, init_internal_args)
   } else {
@@ -8052,8 +7817,6 @@ prepare_priors <- function(prior_argument,
       upperbound = upperbound,
       stanvars_data = stanvars_data,
       initial_out = initial_out,
-      tag = tag
-    )
-  )
+      tag = tag))
 }
 

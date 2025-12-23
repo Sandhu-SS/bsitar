@@ -215,13 +215,41 @@ optimize_model.bgmfit <- function(model,
     newdata <- newdata
   }
   
+  
   if(!is.null(optimize_x)) {
-    if(!is.list(optimize_x)) stop("argument 'optimize_x' must be a list")
+    if(is.list(optimize_x)) {
+      optimize_x <- optimize_x
+    } else if(is.vector(optimize_x)) {
+      optimize_x <- as.list(optimize_x)
+      if(verbose) message2c("Argument 'optimize_x' converted to list ",
+                            optimize_x)
+    } else {
+      stop("Argument 'optimize_x' must be a list")
+    }
   }
   
   if(!is.null(optimize_y)) {
-    if(!is.list(optimize_y)) stop("argument 'optimize_y' must be a list")
+    if(is.list(optimize_y)) {
+      optimize_y <- optimize_y
+    } else if(is.vector(optimize_y)) {
+      optimize_y <- as.list(optimize_y)
+      if(verbose) message2c("Argument 'optimize_y' converted to list ",
+                            optimize_y)
+    } else {
+      stop("Argument 'optimize_x' must be a list")
+    }
   }
+  
+  
+  
+  if(!all(sapply(optimize_x, typeof) == "character")) {
+    stop("All elements of argument 'optimize_x' must be character")
+  }
+  
+  if(!all(sapply(optimize_y, typeof) == "character")) {
+    stop("All elements of argument 'optimize_y' must be character")
+  }
+  
   
   
   setxcall_   <- match.call()
@@ -399,13 +427,15 @@ optimize_model.bgmfit <- function(model,
   optimize_x  <- get_args_opt(deparse(substitute(optimize_x)))
   optimize_y  <- get_args_opt(deparse(substitute(optimize_y)))
   
+  
+  
   # Need to adjust 'exclude_default' for multivariate ?
+  temp_f_m_df <- model$model_info$dfs
+  temp_f_m_df <- ept(temp_f_m_df) %>% as.factor()
+  optimize_df_<- optimize_df
   if (exclude_default) {
     # Need for temp_f_m.. because model$model_info$xfuns 'NULL' is 'x'
-    temp_f_m_df <- model$model_info$dfs
-    temp_f_m_df <- ept(temp_f_m_df) %>% as.factor()
-    optimize_df_<- optimize_df
-    optimize_df <- setdiff(optimize_df_, temp_f_m_df) %>% droplevels()
+    optimize_df <- setdiff(optimize_df, temp_f_m_df) %>% droplevels()
     temp_f_m_x  <- model$model_info$xfuns
     temp_f_m_x  <- gsub("x", "NULL", temp_f_m_x)
     optimize_x  <- optimize_x[!optimize_x %in% temp_f_m_x]
@@ -416,27 +446,55 @@ optimize_model.bgmfit <- function(model,
     # optimize_y <- optimize_y[!optimize_y %in% model$model_info$yfuns]
     if (identical(optimize_x, character(0))) optimize_x <- "NULL"
     if (identical(optimize_y, character(0))) optimize_y <- "NULL"
+  } else if (!exclude_default) {
+    optimize_df_ <- c(temp_f_m_df, optimize_df)
   }
   
  
   
   
-  if(is_emptyx(optimize_df) ) {
+  optimize_df_TF <- optimize_x_TF  <- optimize_x_TF  <- TRUE
+  if(is.factor(optimize_df)) {
+    if(nlevels(optimize_df) == 0) {
+      optimize_df <- "NULL"
+      optimize_df_TF <- FALSE
+    }
+  } else if(is_emptyx(optimize_df)) {
+    optimize_df_TF <- FALSE
+  } else if(optimize_df == "NULL") {
+    optimize_df_TF <- FALSE
+  }
+  
+  if(is.factor(optimize_x)) {
+    if(nlevels(optimize_x) == 0) optimize_x <- "NULL"
+    optimize_x_TF <- FALSE
+  } else if(is_emptyx(optimize_x)) {
+    optimize_x_TF <- FALSE
+  } else { # if(optimize_x == "NULL") {
+    optimize_x_TF <- FALSE
+  }
+  
+  if(is.factor(optimize_y)) {
+    if(nlevels(optimize_y) == 0) optimize_y <- "NULL"
+    optimize_y_TF <- FALSE
+  } else if(is_emptyx(optimize_y)) {
+    optimize_y_TF <- FALSE
+  } else { # if(optimize_y == "NULL") {
+    optimize_y_TF <- FALSE
+  }
+
+  
+  if(!optimize_df_TF & !optimize_x_TF & !optimize_y_TF) {
     noting_to_opt_msg <- "Nothing to optimize. All three conditions i.e.,
     optimize_df, optimize_x, and optimize_y 
     are identical to the base model"
-    if(is_emptyx(optimize_x) & is_emptyx(optimize_y)) {
-      message2c(noting_to_opt_msg)
-      return(invisible(NULL))
-    } else if(optimize_x == "NULL" & optimize_y == "NULL") {
-      message2c(noting_to_opt_msg)
-      return(invisible(NULL))
-    } else {
-      optimize_df <- optimize_df_
-    }
+    message2c(noting_to_opt_msg)
+    return(invisible(NULL))
+  } else {
+    optimize_df <- optimize_df_
   }
   
-  
+ 
   
   optimize_x_temp_c <- c()
   for (i in optimize_x) {

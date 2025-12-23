@@ -26,6 +26,13 @@ get_hypothesis_x <- function(
     newdata = NULL,
     draws = NULL) {
   
+  # print(x)
+  # print(hypothesis)
+  # print(by)
+  # print(newdata)
+  # print(draws)
+  # stop()
+  
   if (is.null(hypothesis)) return(x)
   
   try(zz <- insight::check_if_installed(c("data.table"), 

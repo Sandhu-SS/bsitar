@@ -105,8 +105,6 @@ prepare_initials <- function(init_argument,
     }
   }
   
-  
-  
   set.seed(seed)
   
   # For standardized group level effects as implemented in the centerized 
@@ -118,7 +116,7 @@ prepare_initials <- function(init_argument,
   }
   if (initsi == "prior") {
     if(system.file(package='extraDistr') == "") {
-      stop("For prior based initials (i.e., init = 'prior), 
+      stop2c("For prior based initials (i.e., init = 'prior), 
            package 'extraDistr' is required. Please install 'extraDistr'"
       )
     }
@@ -222,7 +220,7 @@ prepare_initials <- function(init_argument,
       if (err.) {
         if (check == 'args') {
           if (class == 'b' | class == 'sd') {
-            stop(
+            stop2c(
               "\nFor nlpar ",
               nlpar,
               ", class ",
@@ -248,7 +246,7 @@ prepare_initials <- function(init_argument,
               const_msg
             )
           } else if (class == 'sigma') {
-            stop(
+            stop2c(
               "\nFor residual standard deviation parameter i.e., ",
               "class ",
               class,
@@ -275,7 +273,7 @@ prepare_initials <- function(init_argument,
           } else if (class == '' &
                      grepl("dpar_", prior_argument) &
                      !grepl("dpar_cov", prior_argument)) {
-            stop(
+            stop2c(
               "\nFor for distributional Intercept parameter i.e., ",
               "Intercept_sigma ",
               ", you have specified '",
@@ -302,7 +300,7 @@ prepare_initials <- function(init_argument,
           
         }
         if (check == 'dist') {
-          stop(
+          stop2c(
             "For nlpar ",
             nlpar,
             ", class ",
@@ -349,7 +347,7 @@ prepare_initials <- function(init_argument,
     } else {
       x <- cor
       if (length(x) != nc)
-        stop("length of correlation vector must be ",
+        stop2c("length of correlation vector must be ",
              nc,
              ", but found ",
              length(x))
@@ -405,7 +403,7 @@ prepare_initials <- function(init_argument,
           init_str_arg_out_init <-
             gsub("\\s", "", init_str_arg_out_init)
         } else {
-          stop(
+          stop2c(
             "For ",
             dist,
             " distribution prior based initials,",
@@ -436,7 +434,7 @@ prepare_initials <- function(init_argument,
           init_str_arg_out_init <-
             gsub("\\s", "", init_str_arg_out_init)
         } else {
-          stop(
+          stop2c(
             "For ",
             dist,
             " distribution prior based initials,",
@@ -721,7 +719,7 @@ prepare_initials <- function(init_argument,
         } else if(length(out_list[[name_parm]]) == 1 & ept(nparcov) > 1) {
           out_list[[name_parm]] <- rep(out_list[[name_parm]], ept(nparcov))
         } else if(length(out_list[[name_parm]]) != ept(nparcov)) {
-          stop("length of initials for sigma does not match with the number",
+          stop2c("length of initials for sigma does not match with the number",
                " of coefficients")
         }
       } else if(!ept(check_form_0)) {
@@ -988,7 +986,7 @@ prepare_initials <- function(init_argument,
               } else if (length(ept(name_initialsi)) == NC_cor_elements) {
                 L_elements <- ept(name_initialsi)
               } else {
-                stop(
+                stop2c(
                   "length of correlation vector must be ",
                   NC_cor_elements,
                   ", but found ",
@@ -1060,7 +1058,7 @@ prepare_initials <- function(init_argument,
                 z_std <- ept(name_initialsi) %>% as.numeric()
                 if (z_std > 1 |
                     z_std < 0)
-                  stop("sd for standardized matrix must be between 0 and 1")
+                  stop2c("sd for standardized matrix must be between 0 and 1")
                 evaluated_init <-
                   matrix(rnorm(nabcrei_z * N_J_all, 0, z_std),
                          nabcrei_z,
@@ -1069,7 +1067,7 @@ prepare_initials <- function(init_argument,
                 evaluated_init <- ept(name_initialsi) %>% as.numeric()
                 if (nrow(evaluated_init) != nabcrei_z &
                     nrow(evaluated_init) != N_J_all) {
-                  stop(
+                  stop2c(
                     "standardized matrix must have ",
                     nabcrei_z,
                     " rows and ",
@@ -1078,7 +1076,7 @@ prepare_initials <- function(init_argument,
                   )
                 }
               } else {
-                stop(
+                stop2c(
                   "initails for standardized matrix must be a single",
                   "\n",
                   " value of sd between 0 and 1",
@@ -1181,7 +1179,7 @@ prepare_initials <- function(init_argument,
               } else if (length(ept(name_initialsi)) == NC_cor_elements) {
                 L_elements <- ept(name_initialsi) %>% as.numeric()
               } else {
-                stop(
+                stop2c(
                   "length of correlation vector must be ",
                   NC_cor_elements,
                   ", but found ",
@@ -1667,7 +1665,7 @@ prepare_initials <- function(init_argument,
                 evaluated_init <- ept(name_initialsi) %>% as.numeric()
                 if (evaluated_init > 1 |
                     evaluated_init < -1)
-                  stop("initials for autocorrelation must be between -1 and 1")
+                  stop2c("initials for autocorrelation must be between -1 and 1")
               }
             }
           } else if (ept(name_initialsi) == 'random') {
@@ -1686,7 +1684,7 @@ prepare_initials <- function(init_argument,
         } else if(length(tempv) == 1 & nrep_of_parms > 1) {
           tempv <- rep(tempv, nrep_of_parms)
         } else if(length(tempv) != nrep_of_parms) {
-          stop("Length of initials should be either 1 of equal to dims")
+          stop2c("Length of initials should be either 1 of equal to dims")
         }
         out_list[[name_parm]] <- tempv
       } else {
@@ -1773,7 +1771,7 @@ prepare_initials <- function(init_argument,
               } else if (length(ept(name_initialsi)) == NC_cor_elements) {
                 L_elements <- ept(name_initialsi) %>% as.numeric()
               } else {
-                stop(
+                stop2c(
                   "length of correlation vector must be ",
                   NC_cor_elements,
                   ", but found ",
@@ -1856,7 +1854,7 @@ prepare_initials <- function(init_argument,
                   z_std <- ept(name_initialsi) %>% as.numeric()
                   if (z_std > 1 |
                       z_std < 0)
-                    stop("sd for standardized matrix must be between 0 and 1")
+                    stop2c("sd for standardized matrix must be between 0 and 1")
                   evaluated_init <-
                     matrix(rnorm(nabcrei_z * N_J_all, 0, z_std),
                            nabcrei_z,
@@ -1865,7 +1863,7 @@ prepare_initials <- function(init_argument,
                   evaluated_init <- ept(name_initialsi) %>% as.numeric()
                   if (nrow(evaluated_init) != nabcrei_z &
                       nrow(evaluated_init) != N_J_all) {
-                    stop(
+                    stop2c(
                       "standardized matrix must have ",
                       nabcrei_z,
                       " rows and ",
@@ -1874,7 +1872,7 @@ prepare_initials <- function(init_argument,
                     )
                   }
                 } else {
-                  stop(
+                  stop2c(
                     "initails for standardized matrix must be a",
                     "\n",
                     " single value of sd between 0 and 1",

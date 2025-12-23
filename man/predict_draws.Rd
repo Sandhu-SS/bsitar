@@ -240,26 +240,26 @@ Alternatively, \code{findpeaks} uses the \code{findpeaks} function from the
 \code{pracma} package. This parameter is for internal use and ensures
 compatibility across internal functions.}
 
-\item{idata_method}{A character string to indicate the interpolation method.
-The number of interpolation points is set by the \code{ipts} argument.
-Available options for \code{idata_method} are \emph{method 1} (specified as
-\code{'m1'}) and \emph{method 2} (specified as \code{'m2'}).
+\item{idata_method}{A character string specifying the interpolation method
+(default \code{NULL}). The number of interpolation points is controlled by
+the \code{ipts} argument.
+
+Available options:
 \itemize{
-\item \emph{Method 1} (\code{'m1'}) is adapted from the \pkg{iapvbs} package
-and is documented
-\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}.
-\item \emph{Method 2} (\code{'m2'}) is based on the \pkg{JMbayes} package
-and is documented
-\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}.
-The \code{'m1'} method works by internally constructing the data frame
-based on the model configuration, while the \code{'m2'} method uses the
-exact data frame from the model fit, accessible via \code{fit$data}. If
-\code{idata_method = NULL} (default), method \code{'m2'} is automatically
-selected. Note that method \code{'m1'} may fail in certain cases,
-especially when the model includes covariates (particularly in
-\code{univariate_by} models). In such cases, it is recommended to use
-method \code{'m2'}.
-}}
+\item \code{'m1'}: Adapted from the \pkg{iapvbs} package (documented
+\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}). This
+method internally constructs the data frame based on the model
+configuration. \emph{Note:} This method may fail if the model includes
+covariates (especially in \code{univariate_by} models).
+\item \code{'m2'}: Based on the \pkg{JMbayes} package (documented
+\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}).
+This method uses the exact data frame from the model fit
+(\code{fit$data}) and is generally more robust.
+}
+
+If \code{idata_method = NULL}, \code{'m2'} is automatically selected.
+It is recommended to use \code{'m2'} if \code{'m1'} encounters errors
+with covariate-dependent models.}
 
 \item{verbose}{A logical argument (default \code{FALSE}) to specify whether
 to print information collected during the setup of the object(s).}
@@ -285,15 +285,19 @@ If \code{factor.level} is provided, its length must match
 \code{factor.dummy}.
 }}
 
-\item{expose_function}{A logical argument (default \code{FALSE}) to indicate
-whether Stan functions should be exposed. If \code{TRUE}, any Stan
-functions exposed during the model fit using \code{expose_function = TRUE}
-in the \code{\link[=bsitar]{bsitar()}} function are saved and can be used in post-processing. By
-default, \code{expose_function = FALSE} in post-processing functions,
-except in \code{\link[=optimize_model]{optimize_model()}} where it is set to \code{NULL}. If
-\code{NULL}, the setting is inherited from the original model fit. It must
-be set to \code{TRUE} when adding \code{fit criteria} or \code{bayes_R2}
-during model optimization.}
+\item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
+Controls whether Stan functions are exposed for post-processing.
+\itemize{
+\item \code{TRUE}: Explicitly exposes Stan functions saved from the model
+fit. This is required when calculating \code{fit criteria} or
+\code{bayes_R2} during model optimization.
+\item \code{FALSE} (default): Stan functions are not exposed.
+\item \code{NULL}: The setting is inherited from the original
+\code{bsitar()} model fit configuration.
+}
+\strong{Note}: In the \code{\link[=optimize_model]{optimize_model()}} function, the default is
+\code{NULL} (inheriting behavior), whereas other post-processing functions
+default to \code{FALSE}.}
 
 \item{usesavedfuns}{A logical value (default \code{NULL}) indicating whether
 to use already exposed and saved Stan functions. This is typically set

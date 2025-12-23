@@ -88,7 +88,7 @@ modelbased_growthparameters_call.bgmfit <-
            variables = NULL,
            deriv = NULL,
            model_deriv = NULL,
-           method = 'custom',
+           method = 'pkg',
            marginals = NULL, 
            pdraws = FALSE, 
            pdrawso = FALSE,
@@ -98,6 +98,7 @@ modelbased_growthparameters_call.bgmfit <-
            type = NULL,
            by = FALSE,
            bys = NULL,
+           condition = NULL,
            conf_level = 0.95,
            transform = NULL,
            transform_draws = NULL,
@@ -1195,6 +1196,7 @@ modelbased_growthparameters_call.bgmfit <-
     if(deriv == 1 & !model_deriv) 
       stop("If argument 'model_deriv' = FALSE, then 'deriv' should be '0'")
     
+    
     if (!is.null(variables)) {
       if (!is.list(variables)) {
         if(!model_deriv) {
@@ -1267,8 +1269,20 @@ modelbased_growthparameters_call.bgmfit <-
     }
     
     
-    set_group <- setup_by_var(model = model, by = by, cov = cov, 
-                                    xvar = xvar, dpar = dpar)
+    set_group <- setup_by_var(model = model, 
+                              by = by, 
+                              cov = cov, 
+                              xvar = xvar, 
+                              dpar = dpar,
+                              method = 'pkg',
+                              plot = plot,
+                              condition = condition,
+                              deriv = NULL,
+                              difx = NULL,
+                              xcall = xcall,
+                              xvar_strict = TRUE,
+                              switch_plot = FALSE,
+                              verbose = verbose)
     
     
     if (acg_velocity >= 1 | acg_velocity <= 0) {

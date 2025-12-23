@@ -283,57 +283,60 @@ rounding the results using the \code{\link[base:Round]{base::round()}} function.
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method to ensure reproducibility.}
 
-\item{future}{A logical value (default \code{FALSE}) to specify whether or
-not to perform parallel computations. If set to \code{TRUE}, the
-\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}} function is used to summarize the posterior
-draws in parallel.}
+\item{future}{A logical value (default \code{FALSE}) indicating whether to
+perform parallel computations. If \code{TRUE}, posterior summaries are
+computed in parallel using \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
 
-\item{future_session}{A character string specifying the session type when
-\code{future = TRUE}. The \code{'multisession'} (default) option sets the
-\code{'multisession'} environment, while the \code{'multicore'} option sets
-up a \code{'multicore'} session. Note that \code{'multicore'} is not
-supported on Windows systems. For more details, see
-\code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}. For \code{'marginaleffect'} based
-functions, user can also specify \code{'future_session'} as  a named list
-where the first element is the \code{'future_session'} itself and other
-named elements could be additional information passed on to the future
-plan. This is particularly useful when setting up the
-\code{\link[future.mirai:mirai_cluster]{future.mirai::mirai_cluster()}} and  \code{\link[future.mirai:mirai_multisession]{future.mirai::mirai_multisession()}}.
-For example, \code{future_session =
-  list(future_session = mirai_cluster, daemons = list(...))} where
-argument \code{'daemons'} sets up the \code{\link[mirai:daemons]{mirai::daemons()}}.}
+\item{future_session}{A character string or a named list specifying the
+parallel plan when \code{future = TRUE}.
+\itemize{
+\item \strong{Character string}: Defaults to \code{"multisession"}.
+Use \code{"multicore"} for forking (not supported on Windows).
+\item \strong{Named list}: Useful for advanced plans like
+\code{\link[future.mirai:mirai_cluster]{future.mirai::mirai_cluster()}}. The list must contain:
+\itemize{
+\item \code{future_session}: The planner function (e.g.,
+\code{mirai_cluster}).
+\item Additional named arguments passed to the planner (e.g.,
+\code{daemons} for \code{\link[mirai:daemons]{mirai::daemons()}}).
+}
+Example: \code{list(future_session = mirai_cluster, daemons =
+      list(...))}.
+}}
 
-\item{cores}{The number of cores to be used for parallel computations if
-\code{future = TRUE}. On non-Windows systems, this argument can be set
-globally via the \code{mc.cores} option. By default, \code{NULL}, the
-number of cores is automatically determined using
-\code{\link[future:re-exports]{future::availableCores()}}, and it will use the maximum number of cores
-available minus one (i.e., \code{future::availableCores() - 1}).}
+\item{cores}{An integer specifying the number of cores for parallel
+execution.
+\itemize{
+\item If \code{NULL} (default), the number of cores is set to
+\code{future::availableCores() - 1}.
+\item On non-Windows systems, this can be controlled globally via the
+\code{mc.cores} option.
+}}
 
 \item{parms_eval}{A logical value to specify whether or not to compute growth
 parameters on the fly. This is for internal use only and is mainly needed
 for compatibility across internal functions.}
 
-\item{idata_method}{A character string to indicate the interpolation method.
-The number of interpolation points is set by the \code{ipts} argument.
-Available options for \code{idata_method} are \emph{method 1} (specified as
-\code{'m1'}) and \emph{method 2} (specified as \code{'m2'}).
+\item{idata_method}{A character string specifying the interpolation method
+(default \code{NULL}). The number of interpolation points is controlled by
+the \code{ipts} argument.
+
+Available options:
 \itemize{
-\item \emph{Method 1} (\code{'m1'}) is adapted from the \pkg{iapvbs} package
-and is documented
-\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}.
-\item \emph{Method 2} (\code{'m2'}) is based on the \pkg{JMbayes} package
-and is documented
-\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}.
-The \code{'m1'} method works by internally constructing the data frame
-based on the model configuration, while the \code{'m2'} method uses the
-exact data frame from the model fit, accessible via \code{fit$data}. If
-\code{idata_method = NULL} (default), method \code{'m2'} is automatically
-selected. Note that method \code{'m1'} may fail in certain cases,
-especially when the model includes covariates (particularly in
-\code{univariate_by} models). In such cases, it is recommended to use
-method \code{'m2'}.
-}}
+\item \code{'m1'}: Adapted from the \pkg{iapvbs} package (documented
+\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}). This
+method internally constructs the data frame based on the model
+configuration. \emph{Note:} This method may fail if the model includes
+covariates (especially in \code{univariate_by} models).
+\item \code{'m2'}: Based on the \pkg{JMbayes} package (documented
+\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}).
+This method uses the exact data frame from the model fit
+(\code{fit$data}) and is generally more robust.
+}
+
+If \code{idata_method = NULL}, \code{'m2'} is automatically selected.
+It is recommended to use \code{'m2'} if \code{'m1'} encounters errors
+with covariate-dependent models.}
 
 \item{parms_method}{A character string specifying the method used when
 evaluating \code{parms_eval}. The default method is \code{getPeak}, which
@@ -366,15 +369,19 @@ If \code{factor.level} is provided, its length must match
 \code{factor.dummy}.
 }}
 
-\item{expose_function}{A logical argument (default \code{FALSE}) to indicate
-whether Stan functions should be exposed. If \code{TRUE}, any Stan
-functions exposed during the model fit using \code{expose_function = TRUE}
-in the \code{\link[=bsitar]{bsitar()}} function are saved and can be used in post-processing. By
-default, \code{expose_function = FALSE} in post-processing functions,
-except in \code{\link[=optimize_model]{optimize_model()}} where it is set to \code{NULL}. If
-\code{NULL}, the setting is inherited from the original model fit. It must
-be set to \code{TRUE} when adding \code{fit criteria} or \code{bayes_R2}
-during model optimization.}
+\item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
+Controls whether Stan functions are exposed for post-processing.
+\itemize{
+\item \code{TRUE}: Explicitly exposes Stan functions saved from the model
+fit. This is required when calculating \code{fit criteria} or
+\code{bayes_R2} during model optimization.
+\item \code{FALSE} (default): Stan functions are not exposed.
+\item \code{NULL}: The setting is inherited from the original
+\code{bsitar()} model fit configuration.
+}
+\strong{Note}: In the \code{\link[=optimize_model]{optimize_model()}} function, the default is
+\code{NULL} (inheriting behavior), whereas other post-processing functions
+default to \code{FALSE}.}
 
 \item{usesavedfuns}{A logical value (default \code{NULL}) indicating whether
 to use already exposed and saved Stan functions. This is typically set

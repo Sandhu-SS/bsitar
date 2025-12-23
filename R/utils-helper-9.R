@@ -3526,11 +3526,9 @@ set_priors_initials <- function(a_prior_beta,
       } # 17.02.2025
     }
     
-    
-    
     # Convert vector of 's' initials to named individual (s1, s2)
     if(select_model == "sitar" | select_model == 'rcs') {
-      # Don't let when evaluating _str higher custom order
+      # Don't evaluate it for _str higher custom order
       if("s_prior_beta" %in% custom_order_prior) {
         first_loop <- TRUE  
       } else {
@@ -3602,28 +3600,23 @@ set_priors_initials <- function(a_prior_beta,
     if(select_model != "sitar" & select_model != 'rcs') {
       initials <- combined_inits
     }
-    
   } # if (!is.null(initial_in_datazz)) {
   
   
-  
-  
-  
-  # Mean all initals random
+  # When all initals 'random', assign initials <- NULL
   if(length(combined_inits) == 0) initials <- NULL
   
   if (is.null(initial_in_datazz)) {
     initials <- NULL
   }
   
-  ###################3
+  ###################
   
   stanvar_priors_names <- names(stanvars)
   getaux <- "tau"
   stanvar_priors_names_c <- c()
   for (stanvar_priors_namesi in stanvar_priors_names) {
-    t <-
-      stanvar_priors_namesi[grep(paste0(getaux, '_scale', resp_), 
+    t <- stanvar_priors_namesi[grep(paste0(getaux, '_scale', resp_), 
                                  stanvar_priors_namesi)]
     t <- gsub(paste0('_scale', resp_), "", t, fixed = T)
     stanvar_priors_names_c <- c(stanvar_priors_names_c, t)
@@ -3709,7 +3702,7 @@ set_priors_initials <- function(a_prior_beta,
     if(length(out_listx[[ili]]) == 1) {
       out_listx[[ili]] <- out_listx[[ili]]
       # here also need array for a b c d e etc.
-      # but not for sigma when sigma ~ not used but default rsd formulation 
+      # but not for sigma when sigma form ~ not used but instead rsd formulation 
       if(nys == 1) sigma_par_name_rsd <- "sigma"
       if(nys > 1) sigma_par_name_rsd <- paste0('sigma', resp_)
       if(ili != sigma_par_name_rsd) {
@@ -3720,7 +3713,6 @@ set_priors_initials <- function(a_prior_beta,
       out_listx[[ili]] <- array(out_listx[[ili]], 
                                 dim = length(out_listx[[ili]]))
     }
-    
     if(is.na(ili)) ili <- "xxxxxxxxxxxxxx"
     # for ar and ma, it is always vector , so array
     if(ili == 'ar' | ili == 'ma') {
@@ -3731,14 +3723,11 @@ set_priors_initials <- function(a_prior_beta,
   
   initials <- out_listx
   
-  # When sigma  formula is ~1+.., then first element is Intercept_sigma and the 
-  # remaining are b_sigma
-  
-  
-  
-  
   initialsx <- out_listx
   
+  
+  # When sigma  formula is ~1+.., then first element is Intercept_sigma and the 
+  # remaining are b_sigma
   
   
   if(!sigma_form_0) {
@@ -3804,10 +3793,6 @@ set_priors_initials <- function(a_prior_beta,
   
   initials <- initialsx
   
-  
-  
-  
-  
   # Re create symmetric square Lcortime which is flattened to a vector
   # This could have been done above like L_|z_|Lrescor etc but this is same
   if(!is.null(initials[['Lcortime']])) {
@@ -3822,6 +3807,7 @@ set_priors_initials <- function(a_prior_beta,
   
   return(evaluated_priors)
 }
+
 
 
 

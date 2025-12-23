@@ -150,15 +150,19 @@ If \code{factor.level} is provided, its length must match
 \code{factor.dummy}.
 }}
 
-\item{expose_function}{A logical argument (default \code{FALSE}) to indicate
-whether Stan functions should be exposed. If \code{TRUE}, any Stan
-functions exposed during the model fit using \code{expose_function = TRUE}
-in the \code{\link[=bsitar]{bsitar()}} function are saved and can be used in post-processing. By
-default, \code{expose_function = FALSE} in post-processing functions,
-except in \code{\link[=optimize_model]{optimize_model()}} where it is set to \code{NULL}. If
-\code{NULL}, the setting is inherited from the original model fit. It must
-be set to \code{TRUE} when adding \code{fit criteria} or \code{bayes_R2}
-during model optimization.}
+\item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
+Controls whether Stan functions are exposed for post-processing.
+\itemize{
+\item \code{TRUE}: Explicitly exposes Stan functions saved from the model
+fit. This is required when calculating \code{fit criteria} or
+\code{bayes_R2} during model optimization.
+\item \code{FALSE} (default): Stan functions are not exposed.
+\item \code{NULL}: The setting is inherited from the original
+\code{bsitar()} model fit configuration.
+}
+\strong{Note}: In the \code{\link[=optimize_model]{optimize_model()}} function, the default is
+\code{NULL} (inheriting behavior), whereas other post-processing functions
+default to \code{FALSE}.}
 
 \item{usesavedfuns}{A logical value (default \code{NULL}) indicating whether
 to use already exposed and saved Stan functions. This is typically set

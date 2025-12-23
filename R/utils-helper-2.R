@@ -596,7 +596,7 @@ post_processing_args_sanitize <- function(model,
   if(is.null(deriv)) deriv <- 0
   
   if(!'bgmfit' %in% class(model)) {
-    stop("The class of model object should be 'bgmfit' ")
+    stop2c("The class of model object should be 'bgmfit' ")
   }
   
   allargs <- c(as.list(xcall), dots)
@@ -612,7 +612,7 @@ post_processing_args_sanitize <- function(model,
     if(!is.null(allargs[[checkwhat]])) {
       checkwhat_all <- c(checkwhat_all, checkwhat)
       if(verbose) {
-        message(
+        message2c(
           "\nargument 'deriv' is not allowed for the ",
           " post-processing function",  " '",
           strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
@@ -628,7 +628,7 @@ post_processing_args_sanitize <- function(model,
     if(!is.null(allargs[[checkwhat]])) {
       checkwhat_all <- c(checkwhat_all, checkwhat)
       if(verbose) {
-        message(
+        message2c(
           "\nargument 'idata_method' is not allowed for the ",
           " post-processing function",  " '",
           strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
@@ -644,7 +644,7 @@ post_processing_args_sanitize <- function(model,
     if(!is.null(allargs[[checkwhat]])) {
       checkwhat_all <- c(checkwhat_all, checkwhat)
       if(verbose) {
-        message(
+        message2c(
           "\nargument 'idata_method' is not allowed for the ",
           " post-processing function",  " '",
           strsplit(deparse((xcall[1])), "\\.")[[1]][1], "'",
@@ -724,7 +724,7 @@ setupfuns <- function(model,
     if (!is.null(as.list(xcall)[['deriv']])) {
       deriv <- ''
       if(verbose) {
-        message(
+        message2c(
           "\nargument 'deriv' is not allowed for the ",
           " post-processing function",  " '",
           check_it, "'",
@@ -2165,9 +2165,9 @@ get_pathfinder_init <- function(pthf = NULL,
                                 verbose = FALSE) {
   
   if(is.null(pthf) & is.null(model)) 
-    stop('Specify at least pthf or model')
+    stop2c('Specify at least pthf or model')
   if(!is.null(pthf) & !is.null(model)) 
-    stop('Specify either least pthf or model')
+    stop2c('Specify either least pthf or model')
   
   if(!is.null(model)) {
     mod <- attr(model$fit, "CmdStanModel")
@@ -2223,7 +2223,7 @@ get_pathfinder_init <- function(pthf = NULL,
     posterior::mutate_variables(lw = lp__ - lp_approx__)
   ndist <- dplyr::n_distinct(posterior::extract_variable(draws,"lw"))
   if (ndist < ndraws) {
-    stop(paste0("Not enough distinct draws (", ndist, ") to create inits."))
+    stop2c(paste0("Not enough distinct draws (", ndist, ") to create inits."))
   }
   if (ndist < 0.95*posterior::ndraws(draws)) {
     # Resampling has been done in Stan, compute weights for distinct draws
@@ -2349,7 +2349,7 @@ flattten_last_time <-
       inc <- rep(inc, nset)
     }
     else if (length(inc) != nset) {
-      stop("lenhth of 'inc' must be either 1 or same as the 'nset'")
+      stop2c("lenhth of 'inc' must be either 1 or same as the 'nset'")
     }
     if (is.null(timeval))
       settime <- min(.data[[time]])
@@ -2541,7 +2541,7 @@ inverse_transform <- function (expr, verbose = FALSE, envir = NULL) {
       nf <- which(vapply(fns, function(f) f[[1]] == fun[[1]] && 
                            length(f) == length(fun) && f[[x1]] == "x", TRUE))
       if (length(nf) == 0) 
-        stop(paste("unrecognised name:", deparse(fun[[1]])))
+        stop2c(paste("unrecognised name:", deparse(fun[[1]])))
       if (length(nf) > 1 && length(fun) == 3) {
         nft <- which(vapply(fns[nf], function(f) f[[5 - 
                                                       x1]] == fun[[5 - x1]], 
@@ -2580,7 +2580,7 @@ inverse_transform <- function (expr, verbose = FALSE, envir = NULL) {
   fns[[1]] <- NULL
   varname <- vars(expr)
   if (length(varname) != 1) 
-    stop("expression should contain just one instance of one name")
+    stop2c("expression should contain just one instance of one name")
   fn <- function(x) {
   }
   body(fn) <- with(fns, recur(expr, verbose = verbose))$funinv
@@ -2617,14 +2617,14 @@ check_if_any_varibale_all_NA <- function(data,
       if(is.symbol(factor_var)) {
         factor_var <- deparse(substitute(factor_var))
       } else {
-        stop("The factor_var must be a variable names")
+        stop2c("The factor_var must be a variable names")
       }
     }
     for (l in levels(data[[factor_var]])) {
       tempdata <- data %>% dplyr::filter(!! as.name(factor_var) == l)
       for (i in names(tempdata)) {
         if(all(is.na(tempdata[[i]]))) {
-          stop("The variable '", i, "' contains all NA ", 
+          stop2c("The variable '", i, "' contains all NA ", 
                "for subset '", l,  "'", 
                ". ", "Please check data")
         }
@@ -2634,7 +2634,7 @@ check_if_any_varibale_all_NA <- function(data,
     tempdata <- data
     for (i in names(tempdata)) {
       if(all(is.na(tempdata[[i]]))) {
-        stop("The variable '", i, "' contains all NA ", 
+        stop2c("The variable '", i, "' contains all NA ", 
              ". ", "Please check data")
       }
     }
@@ -2668,7 +2668,7 @@ check_variable_exists <- function(data,
                                   return = FALSE) {
   for (j in variables) {
     if(is_emptyx(data[[j]]) | is.null(data[[j]]) ) {
-      stop(paste0("variable '", j, "' not found in the data"))
+      stop2c(paste0("variable '", j, "' not found in the data"))
     } 
   }
   if(return) {
@@ -2699,7 +2699,7 @@ check_variable_numeric_exists <- function(data,
   for (j in variables) {
     if(is.numeric(data[[j]])) {
       if(length(data[[j]]) == 0) {
-        stop("The lenght of ", j, " is zero. Check your data and formual")
+        stop2c("The lenght of ", j, " is zero. Check your data and formual")
       }
     } 
   }
@@ -2723,7 +2723,7 @@ check_variable_numeric_exists <- function(data,
 #'
 check_and_rename_funs_args_to_x <- function(fun, checkname = "x") {
   if(!is.character(checkname)) {
-    stop("'checkname' must be a character")
+    stop2c("'checkname' must be a character")
   }
   # https://stackoverflow.com/questions/33850219/change-
   # argument-names-inside-a-function
@@ -2748,19 +2748,19 @@ check_and_rename_funs_args_to_x <- function(fun, checkname = "x") {
   deparse_fun_str <- gsub_space(paste(deparse_fun_str, collapse = ""))
   
   if(length(formalArgs_names_in) > 1) {
-    stop("Function '", deparse(fun) , "' must have only one argument")
+    stop2c("Function '", deparse(fun) , "' must have only one argument")
   }
   
   if(grepl("\\{", deparse_fun_str) | grepl("}", deparse_fun_str)
   ) {
-    stop("'", deparse_fun_str, "' must be a simple function without",
+    stop2c("'", deparse_fun_str, "' must be a simple function without",
          "curly braces '{}'.",
          "\n ",
          " Examples: 'function(x)x' 'function(x)log(x)' function(x)log(x+1)")
   }
   
   if(grepl("return\\(", deparse_fun_str)) {
-    stop("Function '", deparse_fun_str, "' must be a simple function without",
+    stop2c("Function '", deparse_fun_str, "' must be a simple function without",
          "'return()'.",
          "\n ",
          " Examples: 'function(x)x' 'function(x)log(x)' function(x)log(x+1)")
@@ -2819,7 +2819,7 @@ assign_function_to_environment <- function(fun, funname, envir = NULL) {
         fun <- gsub_space(paste(deparse(fun), collapse = ""))
       }
     } else if(!is.character(fun)) {
-      stop(paste0("The fun argument must be either a string ('log' or 'sqrt'),", 
+      stop2c(paste0("The fun argument must be either a string ('log' or 'sqrt'),", 
                   "\n  ",
                   "or a function such as function(x)log(x)"))
     }
@@ -2842,7 +2842,7 @@ assign_function_to_environment <- function(fun, funname, envir = NULL) {
     } else  if(is.function(ept(fun))) {
       fun_eval <- ept(fun)
     } else {
-      stop("The 'fun' argument must must be either ", 
+      stop2c("The 'fun' argument must must be either ", 
            collapse_comma(allowedstrfun),
            "\n ",
            " or else a valid function such as function(x) x")
@@ -2877,13 +2877,13 @@ extract_names_from_call <- function(model = NULL,
   if(!is.null(model)) {
     if(is.null(xcall)) xcall <- model$model_info$call.full.bgmfit
   } else if(is.null(model)) {
-    if(is.null(xcall)) stop("specify either 'model' or 'xcall'")
+    if(is.null(xcall)) stop2c("specify either 'model' or 'xcall'")
   }
   
   if(is.null(arg)) {
-    stop("specify 'arg'")
+    stop2c("specify 'arg'")
   } else if(!is.null(arg)) {
-    if(!is.character(arg)) stop("'arg' must be a single character")
+    if(!is.character(arg)) stop2c("'arg' must be a single character")
   }
   extracted <- xcall[[arg]]
   extracted <- toString(extracted)
@@ -2952,7 +2952,7 @@ get_itransform_call <- function(itransform,
     }
   } # if(is.null(itransform)) {
   if(!is.character(itransform_set)) {
-    stop("'get_itransform_call()' must return a character string or a vector: ",
+    stop2c("'get_itransform_call()' must return a character string or a vector: ",
          "\n  ", 
          collapse_comma(c('x', 'y', 'sigma')))
   }
@@ -3085,7 +3085,7 @@ sanitize_CustomDoCall_args <- function(what,
     } else if(is.list(check_formalArgs)) {
       ownargs <- check_formalArgs
     } else {
-      stop("check_formalArgs must be a function or a list")
+      stop2c("check_formalArgs must be a function or a list")
     }
     
     for (i in setdiff(names(arguments), ownargs)) {
@@ -3201,17 +3201,17 @@ replace_string_part <- function(x,
                                 exclude_end = FALSE) {
   
   if(!is.character(x))       
-    stop("Argument 'x' must be a character string")
+    stop2c("Argument 'x' must be a character string")
   if(!is.character(start))   
-    stop("Argument 'start' must be a character string")
+    stop2c("Argument 'start' must be a character string")
   if(!is.character(end))     
-    stop("Argument 'end' must be a character string")
+    stop2c("Argument 'end' must be a character string")
   if(!is.character(replace)) 
-    stop("Argument 'replace' must be a character string")
+    stop2c("Argument 'replace' must be a character string")
   if(!is.logical(extract))   
-    stop("Argument 'extract' must be a logical (TRUE/FALSE)")
+    stop2c("Argument 'extract' must be a logical (TRUE/FALSE)")
   if(!is.logical(cat_str))   
-    stop("Argument 'cat_str' must be a logical (TRUE/FALSE)")
+    stop2c("Argument 'cat_str' must be a logical (TRUE/FALSE)")
   
   original_string  <- x
   start_pattern    <- start
@@ -3654,7 +3654,7 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE,
       QR_scale_str <- gsub("N", "nrow(X)", QR_scale_str, fixed = T)
       QR_scale_str <- ept(QR_scale_str)
     } else {
-      stop("'scale' must be a numeric or string such as sqrt(N-1)")
+      stop2c("'scale' must be a numeric or string such as sqrt(N-1)")
     }
   }
   scale   <- round(QR_scale_str, 2)
@@ -3682,7 +3682,7 @@ QR_decomp_R <- function(X, center = FALSE, complete = FALSE,
   }
   
   # if(complete) {
-  #  # stop("use complete = 'FALSE' for Rinv")
+  #  # stop2c("use complete = 'FALSE' for Rinv")
   #   Rinv <- NULL
   # } else {
   #   Rinv <- solve(R)
@@ -3729,12 +3729,12 @@ add_default_args_to_nlf_lf <- function(str,
                                        verbose = FALSE) {
   
   if(extract_covar & extract_nlpar) {
-    stop("specify either 'extract_covar' or 'extract_nlpar', not both")
+    stop2c("specify either 'extract_covar' or 'extract_nlpar', not both")
   }
   
   if(length(ysi) > 1) {
     if(verbose)
-      message("The length of ysi is > 1, only the first element is used")
+      message2c("The length of ysi is > 1, only the first element is used")
   }
   str <- paste(gsub_space(str), collapse = "")
   str <- gsub("\"" , "'", str, fixed = T)
@@ -3773,7 +3773,7 @@ add_default_args_to_nlf_lf <- function(str,
           nlparformx_names <- names(getnlparformx)
           nlparformx_names_extra <- nlparformx_names[nzchar(nlparformx_names)]
           if(length(nlparformx_names_extra)>0) {
-            stop("The following argument(s) not allowed in nlf(): ", 
+            stop2c("The following argument(s) not allowed in nlf(): ", 
                  "\n ", 
                  collapse_comma(nlparformx_names_extra), 
                  "\n  ", 
@@ -3889,15 +3889,15 @@ add_default_args_to_nlf_lf <- function(str,
 #'
 extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
   if(is.null(str) | length(str) == 0) {
-    if(verbose)  message("String is NULL")
+    if(verbose)  message2c("String is NULL")
     return(invisible(NULL))
   } else if(!is.null(str)) {
     if(is.character(str)) {
       if(str == "NULL") return(invisible(NULL))
     }
-    if(verbose)  message("String is NULL")
+    if(verbose)  message2c("String is NULL")
   } else if(is.null(str)) {
-    if(verbose)  message("String is NULL")
+    if(verbose)  message2c("String is NULL")
     return(invisible(NULL))
   } 
   pattern <- paste0(start, "(.*?)\\", end)
@@ -3907,7 +3907,7 @@ extract_between_specl_chars <- function(str, start, end, verbose = FALSE) {
     extracted_string <- gsub("^~|\\*$", "", full_match, perl = TRUE)
     return(extracted_string)
   } else {
-    if(verbose)  message("No match found.")
+    if(verbose)  message2c("No match found.")
     return(invisible(NULL))
   }
 } 
@@ -4203,7 +4203,7 @@ get_clean_data <- function(data,
     L <- list(...)
     if ("x" %in% names(L) || "xout" %in% names(L)) {
       if (!missing(fromLast)) {
-        stop("fromLast not supported if x or xout is specified")
+        stop2c("fromLast not supported if x or xout is specified")
       }
       return(na.approx(object, na.rm = na.rm, maxgap = maxgap, 
                        method = "constant", rule = rule, ...))
@@ -4228,7 +4228,7 @@ get_clean_data <- function(data,
   
   ###################################################################
   
-  if (carryforward) stop("carryforward = TRUE not working yet, set it as FALSE")
+  if (carryforward) stop2c("carryforward = TRUE not working yet, set it as FALSE")
  
   if (carryforward) {
     data_cleaned <- data_with_checks %>%
@@ -4525,7 +4525,7 @@ ensure_monotonic_yvar <- function(data, id = "id", xvar = "age",
   
   # Validate inputs
   if (!all(c("id", "age", "height") %in% names(dt))) {
-    stop("Specified columns not found in data")
+    stop2c("Specified columns not found in data")
   }
   
   if (any(is.na(dt$age) | is.na(dt$height))) {
@@ -4656,7 +4656,7 @@ ensure_realistic_yvar <- function(data,
   
   # Validate inputs
   if (!all(c("id", "age", "height") %in% names(dt))) {
-    stop("Specified columns not found in data")
+    stop2c("Specified columns not found in data")
   }
   
   if (any(is.na(dt$age) | is.na(dt$height))) {
@@ -5151,16 +5151,16 @@ get_decimal_places <- function(frame, var = NULL) {
     if(is.numeric(frame)) {
       x <- frame
     } else {
-      stop("The first argument must be a numeric value or a numeric vector")
+      stop2c("The first argument must be a numeric value or a numeric vector")
     }
   } else if(!is.null(var)) {
     if(!is.data.frame(frame) & 
        !data.table::is.data.table(frame) &
        !is.matrix(frame)) {
-      stop("The first argument must be a data frame or a mtrix when var != NULL")
+      stop2c("The first argument must be a data frame or a mtrix when var != NULL")
     }
     if(!is.character(var)) {
-      stop("The argument 'var' must be a character string")
+      stop2c("The argument 'var' must be a character string")
     }
     if(is.data.frame(frame) | data.table::is.data.table(frame)) {
       if(var %in% names(frame)) {
@@ -5210,6 +5210,12 @@ setup_by_var <- function(model,
                          cov, 
                          xvar, 
                          dpar,
+                         method = 'pkg',
+                         plot = FALSE,
+                         condition = NULL,
+                         deriv = NULL,
+                         difx = NULL,
+                         xcall = NULL,
                          xvar_strict = TRUE,
                          switch_plot = FALSE,
                          verbose = FALSE) {
@@ -5218,9 +5224,6 @@ setup_by_var <- function(model,
       set_group <- FALSE
     } else if(!is.null(cov)) {
       set_group <- cov
-      # if (!set_group %in% cov) {
-      #   stop("'by' must be one of the ", cov)
-      # } 
     }
   } else if(!is.null(by)) {
     if (!isFALSE(by)) {
@@ -5233,7 +5236,7 @@ setup_by_var <- function(model,
   # New 22.11.2025
   if(!is.null(cov)) {
     # if (!set_group %in% cov) {
-    #   stop("'by' must be one of the ", cov)
+    #   stop2c("'by' must be one of the ", cov)
     # } 
     # set_group <- cov
   }
@@ -5262,7 +5265,7 @@ setup_by_var <- function(model,
       }
       if (!xvar %in% set_group) {
         if(xvar_strict) {
-          stop(xvar_strict_msg)
+          stop2c(xvar_strict_msg)
         } # xvar_strict
       } # if (!xvar %in% set_group) {
     } # if(is.logical(set_group)) { else if(!is.logical(set_group)) {
@@ -5278,16 +5281,315 @@ setup_by_var <- function(model,
       } else if(!is.logical(set_group)) {
         if (!xvar %in% set_group) {
           if(xvar_strict) {
-            stop(xvar_strict_msg)
+            stop2c(xvar_strict_msg)
           } # xvar_strict
         } # if (!xvar %in% set_group) {
       } # if(is.logical(set_group)) { else if(!is.logical(set_group)) {
     } # if(dpar == "sigma") {
   }
   
+  # print(plot)
+  # print(by)
+  # print(condition)
+  
+  
+  ######## marginal_comparisons - looks same as marginal_draws
+  if(grepl("^marginal_comparisons", xcall)) {
+    if(!is.null(condition)) {
+      if(!is.null(by)) {
+        if(is.logical(by)) {
+          if(!by) by <- NULL
+        }
+      }
+    }
+    if(method == 'pkg' | method == 'custom') {
+      if(!plot) {
+        if(!is.null(by)) {
+          if(length(by) == 1) {
+            if(by == xvar) set_group <- by
+            if(by != xvar) set_group <- by
+          } else if(length(by) > 1) {
+            set_group <- by # setdiff(by, xvar)
+          }
+        } else if(is.null(by)) {
+          set_group <- by
+        }
+        if(is_emptyx(set_group)) set_group <- NULL # FALSE
+      } else if(plot) {
+        # if(!is.null(by)) {
+        #   if(is.logical(by)) {
+        #     if(!by) by <- NULL
+        #   }
+        # }
+        if(!is.null(condition) & !is.null(by)) {
+          stop2c("One of the `condition` and `by` arguments must
+                 be supplied, but not both.")
+        } else if(is.null(condition)) {
+          set_group <- by # xvar
+        } else if(!is.null(condition)) {
+          set_group <- NULL
+        }
+      } # if(!plot) { else if(!plot) {
+    } # if(method == 'pkg') {
+  } # if(grepl("^marginal_comparisons", xcall)) {
+
+  
+  ######## marginal_draws
+  if(grepl("^marginal_draws", xcall)) {
+    if(method == 'pkg' | method == 'custom') {
+      if(!plot) {
+        if(!is.null(by)) {
+          if(length(by) == 1) {
+            if(by == xvar) set_group <- by
+            if(by != xvar) set_group <- by
+          } else if(length(by) > 1) {
+            set_group <- by # setdiff(by, xvar)
+          }
+        } else if(is.null(by)) {
+          set_group <- by
+        }
+        if(is_emptyx(set_group)) set_group <- NULL # FALSE
+      } else if(plot) {
+        # if(!is.null(by)) {
+        #   if(is.logical(by)) {
+        #     if(!by) by <- NULL
+        #   }
+        # }
+        if(!is.null(condition) & !is.null(by)) {
+          stop2c("One of the `condition` and `by` arguments must
+                 be supplied, but not both.")
+        } else if(is.null(condition)) {
+          set_group <- by # xvar
+        } else if(!is.null(condition)) {
+          set_group <- NULL
+        }
+      } # if(!plot) { else if(!plot) {
+    } # if(method == 'pkg') {
+  } # if(grepl("^marginal_draws", xcall)) {
+  
+  
+  ######## modelbased_growthparameters_call
+  if(grepl("^modelbased_growthparameters_call", xcall)) {
+    
+  }
+  
+  
   
   return(set_group)
 }
+
+
+
+#' set_variables for marginal functions and utili 22
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+setup_variables_var <- function(model, 
+                                variables, 
+                                xvar, 
+                                eps,
+                                method,
+                                deriv,
+                                model_deriv,
+                                call_predictions,
+                                call_slopes,
+                                difx,
+                                xcall,
+                                cov = NULL, 
+                                dpar = 'mu',
+                                xvar_strict = TRUE,
+                                switch_plot = FALSE,
+                                verbose = FALSE) {
+ 
+  
+  if(grepl("^marginal_growthparameters", xcall) |
+     grepl("^modelbased_growthparameters", xcall)) {
+    if (!is.null(variables)) {
+      if (!is.list(variables)) {
+        if(is.character(variables)) {
+          set_variables <- list()
+          for (i in variables) {
+            if(deriv == 0) {
+              if(i == xvar) set_variables[[i]] <- eps 
+            }
+            if(deriv > 0) {
+              if(i != xvar) set_variables[[i]] <- i 
+            }
+          }
+        }
+      } else if (is.list(variables)) {
+        set_variables <- variables
+        if(is.null(set_variables[[xvar]])) {
+          if(deriv == 0) set_variables[[xvar]] <- eps
+          if(deriv > 0)  set_variables[[xvar]] <- 0
+        } else if(!is.null(set_variables[[xvar]])) {
+          if(eval(set_variables[[xvar]]) !=0) {
+            if(verbose) {
+              message2c("The value of ", xvar, " is not same as used in the ",
+                      " \n", 
+                      " model fit. Please check if this is intended")
+            }
+          }
+        }
+      }
+    } else if (is.null(variables)) {
+      if(deriv == 0) set_variables <- list(eps)
+      if(deriv > 0)  set_variables <- list(0)
+      if(is.null(difx)) {
+        names(set_variables) <- xvar
+      } else if(!is.null(difx)) {
+        names(set_variables) <- difx
+      }
+    } 
+    if(method == 'pkg') {
+      if(deriv > 0) {
+        set_variables[[xvar]] <- eps
+      }
+    }
+  } # if(grepl("^marginal_growthparameters", xcall)) {
+  
+  
+  
+  
+  ######## marginal_comparisons
+  
+  if(grepl("^marginal_comparisons", xcall)) {
+    if(method == 'custom') {
+      if (!is.null(variables)) {
+        if (!is.list(variables)) {
+          set_variables <- variables
+        } else if (is.list(variables)) {
+          set_variables <- variables
+          if(is.null(set_variables[[xvar]])) {
+            if(deriv == 0) set_variables[[xvar]] <- eps
+            if(deriv > 0 | model_deriv)  set_variables[[xvar]] <- 0
+          } else if(!is.null(set_variables[[xvar]])) {
+            if(eval(set_variables[[xvar]]) !=0) {
+              if(verbose) {
+                message2c("The value of ", xvar, " is not same as used in the ",
+                        " \n",
+                        " model fit. Please check if this is intended")
+              }
+            }
+          }
+        }
+      } else if (is.null(variables)) {
+        if(deriv == 0) set_variables <- list(eps)
+        if(deriv > 0 | model_deriv)  set_variables <- list(0)
+        if(method == 'custom') set_variables <- NULL
+        if(!is.null(set_variables)) {
+          if(is.null(difx)) {
+            names(set_variables) <- xvar
+          } else if(!is.null(difx)) {
+            names(set_variables) <- difx
+          }
+          # names(set_variables) <- xvar
+        }
+      }
+    } # if(method == 'custom') {
+    
+    if(method == 'pkg') {
+      set_variables <- variables
+    }
+  } # if(grepl("^marginal_comparisons", xcall)) {
+  
+  
+  
+  
+  ######## marginal_draws
+  
+  if(grepl("^marginal_draws", xcall)) {
+    if (!is.null(variables)) {
+      if (!is.character(variables)) {
+        stop2c("'variables' argument must be a character string such as", 
+             "\n ",
+             " variables = ", "'", xvar, "'"
+        )
+      } else {
+        set_variables <- variables
+        if(!xvar %in% variables) {
+          if(is.null(difx)) {
+            set_variables <- xvar
+          } else if(!is.null(difx)) {
+            set_variables <- difx
+          }
+          # set_variables <- xvar
+        } else { # if(!is.null(set_variables[[xvar]])) {
+          
+        }
+      }
+    } else if (is.null(variables)) {
+      if(is.null(difx)) {
+        set_variables <- xvar
+      } else if(!is.null(difx)) {
+        set_variables <- difx
+      }
+      # set_variables <- xvar
+    } 
+    
+   
+    
+    if(method == 'custom') {
+      set_variables <- variables
+      if(deriv > 0) {
+        if(model_deriv) {
+          if(!is.null(set_variables)) {
+            if(length(set_variables) == 1) {
+              if(set_variables == xvar) {
+                set_variables <- NULL
+              } else if(set_variables != xvar) {
+                set_variables <- set_variables
+              }
+            } else if(length(set_variables) > 1) {
+              set_variables <- setdiff(set_variables, xvar)
+            }
+          } else if(is.null(set_variables)) {
+            set_variables <- set_variables
+          }
+          if(is_emptyx(set_variables)) set_variables <- NULL # FALSE
+        } # if(model_deriv) {
+      } #if(deriv > 0) {
+    } # if(method == 'custom') {
+    
+    # print(variables)
+    # print(set_variables)
+   
+    
+    if(method == 'pkg') {
+      set_variables <- variables
+      # Remove xvar as variable when model_deriv = TRUE for deriv > 0
+      if(deriv > 0) {
+        if(model_deriv) {
+          if(!is.null(set_variables)) {
+            if(length(set_variables) == 1) {
+              if(set_variables == xvar) {
+                set_variables <- NULL
+              } else if(set_variables != xvar) {
+                set_variables <- set_variables
+              }
+            } else if(length(set_variables) > 1) {
+              set_variables <- setdiff(set_variables, xvar)
+            }
+          } else if(is.null(set_variables)) {
+            set_variables <- set_variables
+          }
+          if(is_emptyx(set_variables)) set_variables <- NULL # FALSE
+        } # if(model_deriv) {
+      } #if(deriv > 0) {
+    } # if(method == 'pkg') {
+    
+    
+  } # if(grepl("^marginal_draws", xcall)) {
+  
+  
+  
+  return(set_variables)
+}
+
+
+
 
 
 #' evaluate eval_xoffset_bstart_args
@@ -5321,12 +5623,12 @@ eval_xoffset_bstart_args <- function(x,
   if(check_is_numeric_like(eval_arg)) {
       zm <- as.numeric(eval_arg)
       if(check_for_nan_inf(offsetfunsi(zm))) {
-        if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
+        if(verbose) message2c(collapse_comma(arg), " value ", collapse_comma(zm), 
                             " can not be transformed to", 
                             " match the xfun based transformation of x " ,"")
       } else {
         zm <- offsetfunsi(zm)
-        if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
+        if(verbose) message2c(collapse_comma(arg), " value ", collapse_comma(zm), 
                             "' transformed to '",  zm ,"'")
       }
     out        <- as.numeric(zm)
@@ -5409,7 +5711,7 @@ eval_xoffset_bstart_args <- function(x,
                                                          fitted(lmfit)),
                                            data[[x]], deriv = 1)$y)[1]
       if(is.na(eval_arg.o)) {
-        stop(arg, " specified as '", eval_arg, "' returned NA.",
+        stop2c(arg, " specified as '", eval_arg, "' returned NA.",
              "\n ",
              " Please change ", arg,
              " argument to 'mean' or a numeric value.")
@@ -5454,12 +5756,12 @@ eval_xoffset_cstart_args <- function(x,
     csetfunsi <- function(x)x
     zm <- as.numeric(eval_arg)
     if(check_for_nan_inf(csetfunsi(zm))) {
-      if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
+      if(verbose) message2c(collapse_comma(arg), " value ", collapse_comma(zm), 
                           " can not be transformed to", 
                           " match the xfun based transformation of x " ,"")
     } else {
       zm <- csetfunsi(zm)
-      if(verbose) message(collapse_comma(arg), " value ", collapse_comma(zm), 
+      if(verbose) message2c(collapse_comma(arg), " value ", collapse_comma(zm), 
                           "' transformed to '",  zm ,"'")
     }
     out        <- as.numeric(zm)
@@ -5468,7 +5770,7 @@ eval_xoffset_cstart_args <- function(x,
   }
   
   if(eval_arg != "pv") {
-    stop("For cstart, only 'pv' is allowed")
+    stop2c("For cstart, only 'pv' is allowed")
   }
   
     if (eval_arg == "pv") {
@@ -5546,7 +5848,7 @@ eval_xoffset_cstart_args <- function(x,
                                                          fitted(lmfit)),
                                            data[[x]], deriv = 1)$y)[2]
       if(is.na(eval_arg.o)) {
-        stop("cstart specified as '", eval_arg, "' returned NA.",
+        stop2c("cstart specified as '", eval_arg, "' returned NA.",
              "\n ",
              " Please change cstart argument to 'mean' or a numeric value.")
       }
@@ -5606,9 +5908,9 @@ checkgetiknotsbknots <- function(knots,
                                  return = NULL) {
   
   if(is.null(return)) {
-    stop("Argument 'return' must be specified, iknots or bknots")
+    stop2c("Argument 'return' must be specified, iknots or bknots")
   } else if(is.symbol(return)) {
-    stop("Argument 'return' must be a character string")
+    stop2c("Argument 'return' must be a character string")
   }
   
   if(length(knots) > 2) {
@@ -5624,7 +5926,7 @@ checkgetiknotsbknots <- function(knots,
   } else if(return == 'bknots') {
     out <- bknots
   } else {
-    stop("return must be either iknots or bknots")
+    stop2c("return must be either iknots or bknots")
   }
   return(out)
 }
@@ -5694,14 +5996,30 @@ extract_samples <- function(fit_obj) {
 #' @noRd
 #' 
 edit_mapping_facet <- function(outp, 
+                               by = NULL,
+                               condition = NULL,
+                               xcall = NULL,
+                               method = NULL,
                                mapping_facet = NULL, 
-                               which_aes = NULL, 
                                showlegends = FALSE,
-                               labels_ggfunx = NULL,
-                               labels_ggfunx_str = NULL,
+                               funx_  = NULL,
+                               ifunx_ = NULL,
                                envir = NULL,
+                               which_aes = NULL, 
                                print = FALSE,
                                verbose = FALSE) {
+  
+  if(is.null(method)) {
+    method <- 'pkg'
+  }
+  
+  if(is.null(funx_)) {
+    funx_ <- function(x)x
+  }
+  
+  if(is.null(ifunx_)) {
+    ifunx_ <- function(x)x
+  }
   
   ###########################################################################
   # mapping_facet
@@ -5765,8 +6083,69 @@ edit_mapping_facet <- function(outp,
   
   
   ###########################################################################
+  # call specific settings
+  ###########################################################################
+  
+  ######## marginal_draws
+  if(grepl("^marginal_draws", xcall)) {
+    if(method == 'pkg') {
+      if(!is.null(by)) {
+        ifunx_ <- ifunx_
+      }
+      if(!is.null(condition)) {
+        ifunx_ <- function(x)x
+      }
+    } # if(method == 'pkg') {
+  } # if(grepl("^marginal_draws", xcall)) {
+  
+  ######## marginal_comparisons
+  if(grepl("^marginal_comparisons", xcall)) {
+    if(method == 'pkg') {
+      
+    } # if(method == 'pkg') {
+  } # if(grepl("^marginal_comparisons", xcall)) {
+
+  
+  ######## marginal_comparisons
+  if(grepl("^marginal_comparisons", xcall)) {
+    if(method == 'pkg') {
+      
+    } # if(method == 'pkg') {
+  } # if(grepl("^marginal_comparisons", xcall)) {
+  
+  
+  
+  
+  ###########################################################################
+  # construct - labels_ggfunx - labels_ggfunx_str
+  ###########################################################################
+  
+  # Define lables fun for x- axis
+  labels_ggfunx <- function(...) {
+    out <- ifunx_(list(...)[[1]]) 
+    out <- scales::number(
+      out,
+      accuracy = 1,
+      scale = 1,
+      prefix = "",
+      suffix = "",
+      big.mark = " ",
+      decimal.mark = ".",
+      style_positive = c("none", "plus", "space"),
+      style_negative = c("hyphen", "minus", "parens"),
+      scale_cut = NULL,
+      trim = TRUE
+    )
+    return(out)
+  }
+  
+  labels_ggfunx_str <- "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
+  
+  
+  ###########################################################################
   # showlegends - labels_ggfunx - labels_ggfunx_str
   ###########################################################################
+  
   
   if(!is.null(labels_ggfunx_str)) {
     suppressMessages({
@@ -5782,3 +6161,1007 @@ edit_mapping_facet <- function(outp,
   if(print) print(outp)
   return(outp)
 }
+
+
+
+#' An internal function to edit plot from marginal effects 
+#' 
+#' @details
+#' This is mainly used to get over layed line plot instead of separate plot
+#' for each individual. Mentioned in marginal_comparisons but is not used there 
+#' 
+#' @return A list
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+get_pe_ci <- function(x, draw = NULL, 
+                      na.rm = TRUE, 
+                      ec_agg = "mean",
+                      ei_agg = "eti",
+                      conf,
+                      probs) {
+  get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+  get_etix <- stats::quantile
+  get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
+  if(data.table::is.data.table(x) | is.data.frame(x)) {
+    if(is.null(draw)) {
+      stop2c("please specify 'draw' argument")
+    }
+    x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
+      unlist() %>% as.numeric()
+  }
+  if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
+  if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
+  # if(ei_agg == "eti") luci = get_etix(x, credMass = conf)
+  if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
+  if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+  tibble::tibble(
+    estimate = estimate, conf.low = luci[1],conf.high = luci[2]
+  )
+}
+
+
+#' An internal function to edit plot from marginal effects 
+#' 
+#' @details
+#' This is mainly used to get over layed line plot instead of separate plot
+#' for each individual 
+#' 
+#' @return A list
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+get_pe_ci_collapse <- function(x, 
+                               ec_agg = 'mean',
+                               ei_agg = "eti",
+                               na.rm = TRUE, 
+                               nthreads,
+                               conf,
+                               probs) {
+  
+  # get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
+  # get_etix <- stats::quantile
+  
+  get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
+  
+  if(ec_agg == "mean")  {
+    estimate <- collapse::fmean(x, na.rm = na.rm, nthreads = nthreads) 
+  } else if(ec_agg == "median") {
+    estimate <- collapse::fmedian(x, na.rm = na.rm, nthreads = nthreads)
+  } else {
+    stop2c("Argument 'ec_agg' must be either 'mean' or 'median'")
+  }
+  
+  if(ei_agg == "eti") {
+    luci = collapse::fquantile(x, probs = probs, na.rm = na.rm)
+  } else if(ei_agg == "hdi") {
+    luci = get_hdix(x, credMass = conf)
+  } else {
+    stop2c("Argument 'ei_agg' must be either 'eti' or 'hdi'")
+  }
+  return( cbind(estimate, luci[1], luci[2]) )
+}
+
+
+
+#' An internal function to edit plot from marginal effects 
+#' 
+#' @details
+#' This is mainly used to get over layed line plot instead of separate plot
+#' for each individual 
+#' 
+#' @return A list
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+set_custom_comparison_method_call_d01 <- function(method,
+                                                  method_call, 
+                                                  comparison,
+                                                  check_available_d1,
+                                                  use_d1,
+                                                  model_deriv,
+                                                  deriv) {
+  
+  # print(method)
+  # print(method_call)
+  # print(comparison)
+  # print(model_deriv)
+  # print(use_d1)
+  # print(deriv)
+  # stop2c()
+  
+  if(is.null(check_available_d1)) {
+    check_available_d1 <- FALSE
+  }
+  
+  
+  if(method == "custom") {
+    if(deriv > 0) {
+      if(model_deriv) {
+        if(check_available_d1) {
+          if(use_d1) {
+            method_call     <- 'predictions'
+            comparison      <- 'difference'
+            get_model_deriv <- model_deriv
+            get_post_deriv  <- deriv
+          } else if(!use_d1) {
+            method_call     <- 'comparisons'
+            comparison      <- 'dydx'
+            get_model_deriv <- model_deriv
+            get_post_deriv  <- deriv
+          }
+        } else if(!check_available_d1) {
+          method_call     <- 'comparisons'
+          comparison      <- 'dydx'
+          get_model_deriv <- model_deriv
+          get_post_deriv  <- deriv
+        }
+      } else if(!model_deriv) {
+        method_call     <- 'comparisons'
+        comparison      <- 'dydx'
+        get_model_deriv <- model_deriv
+        get_post_deriv  <- deriv
+      }
+    } # if(deriv > 0) {
+  } # if(method == "custom") {
+  
+  
+  # print(method)
+  # print(method_call)
+  # print(comparison)
+  # print(model_deriv)
+  # print(use_d1)
+  # print(deriv)
+  # stop2c()
+  
+  
+  # Imp to correctly call slopes to marginal effects, this below is must
+  # This will assign d0 and set call_slopes = TRUE
+  if(method == "pkg") {
+    if(deriv > 0) {
+      method_call     <- 'predictions'
+      comparison      <- 'dydx'
+      get_model_deriv <- FALSE
+      get_post_deriv  <- 0
+    } else if(deriv == 0) {
+      method_call     <- method_call
+      comparison      <- comparison
+      get_model_deriv <- model_deriv
+      get_post_deriv  <- deriv
+    } # else if(deriv == 0) {
+  }
+  if(method == "custom") {
+    if(deriv > 0) {
+      if(model_deriv) {
+        if(is.null(method_call) & is.null(comparison)) {
+          method_call <- 'predictions'
+          comparison  <- 'difference'
+          get_model_deriv <- model_deriv
+          get_post_deriv  <- deriv
+        } else if(is.null(method_call) & !is.null(comparison)) {
+          if(grepl('difference', comparison)) {
+            if(use_d1) {
+              method_call <- 'predictions'  
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- deriv
+            } else {
+              method_call <- 'comparisons'
+              comparison  <- 'dydx'
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- 0
+            }
+          } else if(grepl('dydx', comparison)) {
+            method_call <- 'comparisons'
+            get_model_deriv <- FALSE
+            get_post_deriv <- 0
+          }
+        } else if(!is.null(method_call) & is.null(comparison)) {
+          if(grepl('predictions', method_call)) {
+            if(use_d1) {
+              comparison <- 'difference'
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- deriv
+            } else {
+              method_call <- 'comparisons'
+              comparison  <- 'dydx'
+              get_model_deriv <- FALSE
+              get_post_deriv  <- 0
+            }
+          } else if(grepl('comparisons', method_call)) {
+            if(use_d1) {
+              method_call     <- 'predictions'
+              comparison      <- 'difference'
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- deriv
+            } else {
+              method_call <- 'comparisons'
+              comparison  <- 'dydx'
+              get_model_deriv <- FALSE
+              get_post_deriv  <- 0
+            }
+          }
+        } else if(!is.null(method_call) & !is.null(comparison)) {
+          if(grepl('predictions', method_call) & 
+             grepl('difference', comparison)) {
+            if(use_d1) {
+              method_call     <- method_call
+              comparison      <- comparison
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- deriv
+            } else {
+              method_call <- 'comparisons'
+              comparison  <- 'dydx'
+              get_model_deriv <- FALSE
+              get_post_deriv  <- 0
+            }
+          } else if(grepl('predictions', method_call) & 
+                    grepl('dydx', comparison)) {
+            if(use_d1) {
+              method_call     <- method_call
+              comparison      <- 'difference'
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- deriv
+            } else {
+              method_call <- 'comparisons'
+              comparison  <- 'dydx'
+              get_model_deriv <- FALSE
+              get_post_deriv  <- 0
+            }
+            # get_model_deriv <- model_deriv
+            # get_post_deriv <- 0
+          } else if(grepl('comparisons', method_call) & 
+                    grepl('difference', comparison)) {
+            if(use_d1) {
+              method_call     <- 'predictions'
+              comparison      <- comparison
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- deriv
+            } else {
+              method_call <- 'comparisons'
+              comparison  <- 'dydx'
+              get_model_deriv <- FALSE
+              get_post_deriv  <- 0
+            }
+            # get_model_deriv <- model_deriv
+            # get_post_deriv <- deriv
+          } else if(grepl('comparisons', method_call) & 
+                    grepl('dydx', comparison)) {
+            if(use_d1) {
+              method_call     <- 'predictions'
+              comparison      <- 'difference'
+              get_model_deriv <- model_deriv
+              get_post_deriv  <- deriv
+            } else {
+              method_call <- method_call
+              comparison  <- comparison
+              get_model_deriv <- FALSE
+              get_post_deriv  <- 0
+            }
+            # get_model_deriv <- model_deriv
+            # get_post_deriv <- 0
+          }
+        } # else if(!is.null(method_call) & !is.null(comparison)) {
+      } else if(!model_deriv) {
+        method_call     <- 'predictions'
+        comparison      <- 'dydx'
+        get_model_deriv <- model_deriv
+        get_post_deriv  <- 0
+      }
+    } else if(deriv == 0) {
+      method_call     <- method_call
+      comparison      <- comparison
+      get_model_deriv <- model_deriv
+      get_post_deriv  <- deriv
+    } # else if(deriv == 0) {
+  } # if(method == "custom") {
+  
+  deriv <- get_post_deriv
+  model_deriv <- get_model_deriv
+  out <- list(method_call=method_call, comparison=comparison, 
+              model_deriv=model_deriv, deriv=deriv)
+  return(out)
+}
+
+
+
+#' An internal function to edit plot from marginal effects 
+#' 
+#' @details
+#' This is mainly used to get over layed line plot instead of separate plot
+#' for each individual 
+#' 
+#' @return A list
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+check_set_comparison_method_call <- function(comparison, 
+                                             deriv, 
+                                             average, 
+                                             method, 
+                                             method_call,
+                                             model_deriv,
+                                             use_d1,
+                                             correct_method_call,
+                                             correct_comparison,
+                                             hypothesis = NULL,
+                                             by = NULL,
+                                             condition = NULL,
+                                             args = NULL,
+                                             full.args = NULL,
+                                             switch_avg = FALSE,
+                                             strict = FALSE,
+                                             allowed_method_call_args = NULL,
+                                             verbose = FALSE) {
+  
+  # Note: Even when average = TRUE, marginaleffrects does't internally call
+  # differenceavg / dydxavg for predictions or slopes
+  # switch_avg = FALSE ensures this marginaleffrects behavior
+  # switch_avg = TRUE, on the other hands, matches avg with average = T/F
+  # strict = FALSE will let pass on this marginaleffrects behaviors
+  # strict = TRUE will not let pass on this marginaleffrects behavious
+  
+  if(is.null(use_d1)) {
+    use_d1 <- FALSE
+  }
+  
+  if(is.null(allowed_method_call_args)) {
+    allowed_method_call_args <- c("predictions", "comparisons")
+  }
+  
+  if(!is.null(args)) { 
+    # add_to_args <- setdiff(names(full.args), names(args))
+    add_to_args <- c('deriv', 'average', 'method', 'method_call')
+    for (i in add_to_args) {
+      args[[i]] <-  full.args[[i]] 
+    }
+  }
+  
+  if(!is.null(args)) {
+    if(missing(comparison))  comparison  <- args[['comparison']]
+    if(missing(deriv))       deriv       <- args[['deriv']]
+    if(missing(model_deriv)) model_deriv <- args[['model_deriv']]
+    if(missing(average))     average     <- args[['average']]
+    if(missing(method))      method      <- args[['method']]
+    if(missing(method_call)) method_call <- args[['method_call']]
+    if(missing(hypothesis))  hypothesis <- args[['hypothesis']]
+  } else if(is.null(args)) {
+    if(missing(comparison))  stop2c("Argument 'comparison' is missing")
+    if(missing(deriv))       stop2c("Argument 'deriv' is missing")
+    if(missing(model_deriv)) stop2c("Argument 'model_deriv' is missing")
+    if(missing(average))     stop2c("Argument 'average' is missing")
+    if(missing(method))      stop2c("Argument 'method' is missing")
+    if(missing(method_call)) stop2c("Argument 'method_call' is missing")
+  }
+  
+  comparison_org <- comparison
+  
+  msgstr_i0 <- paste0("For method = ", collapse_comma(method))
+  msgstr_i1 <- paste0(msgstr_i0, 
+                      ", deriv = ", collapse_comma(deriv), 
+                      ", comparison = ", collapse_comma(deparse(comparison)), 
+                      " and average = ", collapse_comma(average), 
+                      ", the default method_call was ", 
+                      collapse_comma(deparse(method_call)),
+                      " which has now been set as ")
+  
+  
+  if(method == 'custom') {
+    if(deriv == 0) {
+      if(model_deriv) {
+        if(is.null(comparison)) {
+          method_call <- 'comparisons'
+          msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+          if(verbose) message2c(msgstr_i1)
+        } else if(!is.null(comparison)) {
+          # 
+        }
+      } else if(!model_deriv) {
+        if(is.null(comparison)) {
+          method_call <- 'comparisons'
+          msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+          if(verbose) message2c(msgstr_i1)
+        } else if(!is.null(comparison)) {
+          # 
+        }
+      } # else if(!model_deriv) {
+    } else if(deriv > 0) {
+      if(model_deriv) {
+        if(is.null(comparison)) {
+          method_call <- 'predictions'
+          msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+          if(verbose) message2c(msgstr_i1)
+        } else if(!is.null(comparison)) {
+          method_call <- 'predictions'
+          get_comparison_method_call <- 
+            correct_comparison_method_call_fun(
+              method=method, method_call=method_call, comparison=comparison, 
+              model_deriv=model_deriv,deriv=deriv, use_d1=use_d1, 
+              correct_method_call=correct_method_call,
+              correct_comparison=correct_comparison)
+          method_call <- get_comparison_method_call[['method_call']] 
+          comparison  <- get_comparison_method_call[['comparison']] 
+          if(grepl('dydx', comparison)) {
+            msgstr_i0z <- paste0(msgstr_i0, ", model_deriv =  ", 
+                                 collapse_comma(model_deriv), 
+                                 " and deriv = ", collapse_comma(deriv), 
+                                 ", ")
+            stop2c(paste0(msgstr_i0z, " comparison should be of class ", 
+                          "'difference' and not ",collapse_comma(comparison)))
+          }
+          msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+          if(verbose) message2c(msgstr_i1)
+        }
+      } else if(!model_deriv) {
+        if(is.null(comparison)) {
+          method_call <- 'predictions'
+          msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+          if(verbose) message2c(msgstr_i1)
+        } else if(!is.null(comparison)) {
+          method_call <- 'predictions'
+          get_comparison_method_call <- 
+            correct_comparison_method_call_fun(
+              method=method, method_call=method_call, comparison=comparison, 
+              model_deriv=model_deriv,deriv=deriv, use_d1=use_d1, 
+              correct_method_call=correct_method_call,
+              correct_comparison=correct_comparison)
+          method_call <- get_comparison_method_call[['method_call']] 
+          comparison  <- get_comparison_method_call[['comparison']] 
+          if(grepl('difference', comparison)) {
+            msgstr_i0z <- paste0(msgstr_i0, ", model_deriv =  ", 
+                                 collapse_comma(model_deriv), 
+                                 " and deriv = ", collapse_comma(deriv), 
+                                 ", ")
+            stop2c(paste0(msgstr_i0z, " comparison should be of class 'dydx'"))
+          }
+          msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+          if(verbose) message2c(msgstr_i1)
+        }
+      } # if(model_deriv) { else if(!model_deriv) {
+    } # if(deriv == 0) { else if(deriv > 0) {
+  } # if(method == 'custom') {
+  
+  
+  if(method == 'pkg') {
+    if(deriv == 0) {
+      if(is.null(comparison)) {
+        method_call <- 'comparisons'
+        msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+        if(verbose) message2c(msgstr_i1)
+      } else if(!is.null(comparison)) {
+        if(grepl('difference', comparison)) method_call <- 'comparisons'
+        if(grepl('dydx', comparison)) method_call <- 'comparisons'
+        msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+        if(verbose) message2c(msgstr_i1)
+      }
+    } else if(deriv > 0) {
+      if(is.null(comparison)) {
+        method_call <- 'comparisons'
+        msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+        if(verbose) message2c(msgstr_i1)
+      } else if(!is.null(comparison)) {
+        get_comparison_method_call <- 
+          correct_comparison_method_call_fun(
+            method=method, method_call=method_call, comparison=comparison, 
+            model_deriv=model_deriv,deriv=deriv, use_d1=use_d1, 
+            correct_method_call=correct_method_call,
+            correct_comparison=correct_comparison)
+        method_call <- get_comparison_method_call[['method_call']] 
+        comparison  <- get_comparison_method_call[['comparison']] 
+        if(grepl('difference', comparison)) {
+          msgstr_i0z <- paste0(msgstr_i0, ", model_deriv =  ", 
+                               collapse_comma(model_deriv), 
+                               " and deriv = ", collapse_comma(deriv), 
+                               ", ")
+          stop2c(paste0(msgstr_i0z, " comparison should be of class 'dydx'", 
+                        " and not ", collapse_comma(comparison)))
+        }
+        msgstr_i1   <- paste0(msgstr_i1, collapse_comma(method_call))
+        if(verbose) message2c(msgstr_i1)
+      }
+    } # if(deriv == 0) { else if(deriv > 0) {
+  } # if(method == 'pkg') {
+  
+  msgstr <- paste0("For method = ", collapse_comma(method), 
+                   " and method_call = ",
+                   collapse_comma(method_call), 
+                   ", ")
+  
+  if(method == 'pkg') {
+    if(is.null(comparison)) {
+      if(deriv == 0) {
+        if(!average) comparison <- 'difference'
+        if( average) comparison <- 'differenceavg'
+      } else if(deriv > 0) {
+        if(!average) comparison <- 'dydx'
+        if( average) comparison <- 'dydxavg'
+      }
+    } else if(!is.null(comparison)) {
+      if(deriv == 0) {
+        if(grepl('dydx', comparison) |
+           grepl('dydxavg', comparison)) {
+          msgstr2x <- paste0("you have set comparison = ", 
+                             comparison, " but deriv == 0")
+          
+          msgstr2 <- paste0(msgstr, msgstr2x)
+          stop2c(msgstr2x)
+        } else {
+          if(!average) {
+            if(!strict & switch_avg) if(comparison == 'differenceavg') {
+              comparison <- 'difference'
+            }
+            if(strict & comparison != 'difference') {
+              msgstr2x <- paste0("argument comparison should be 
+                  'difference' when deriv 
+                        = ", deriv, " , and average = ", average,
+                                 " . But instead, comparison specified is ",
+                                 comparison)
+              msgstr2 <- paste0(msgstr, msgstr2x)
+              stop2c(msgstr2x)
+            }
+          } else if(average) {
+            if(!strict  & switch_avg) if(comparison == 'difference') {
+              comparison <- 'differenceavg'
+            }
+            if(strict & comparison != 'differenceavg') {
+              msgstr2x <- paste0("argument comparison should be 
+                  'difference' when deriv 
+                        = ", deriv, " , and average = ", average,
+                                 " . But instead, comparison specified is ",
+                                 comparison)
+              msgstr2 <- paste0(msgstr, msgstr2x)
+              stop2c(msgstr2x)
+            }
+          } 
+        }
+      } else if(deriv > 0) {
+        if(grepl('difference', comparison) |
+           grepl('differenceavg', comparison)) {
+          msgstr2x <- paste0("you have set comparison = ", 
+                             comparison, " but deriv == 1")
+          
+          msgstr2 <- paste0(msgstr, msgstr2x)
+          stop2c(msgstr2x)
+        } else {
+          if(!average) {
+            if(!strict  & switch_avg) if(comparison == 'dydxavg') {
+              comparison <- 'dydx'
+            }
+            if(strict & comparison != 'dydx') {
+              msgstr2x <- paste0("argument comparison should be 
+                  'difference' when deriv 
+                        = ", deriv, " , and average = ", average,
+                                 " . But instead, comparison specified is ",
+                                 comparison)
+              msgstr2 <- paste0(msgstr, msgstr2x)
+              stop2c(msgstr2x)
+            }
+          } else if(average) {
+            if(!strict  & switch_avg) if(comparison == 'dydx') {
+              comparison <- 'dydxavg'
+            }
+            if(strict & comparison != 'dydxavg') {
+              msgstr2x <- paste0("argument comparison should be 
+                  'difference' when deriv 
+                        = ", deriv, " , and average = ", average,
+                                 " . But instead, comparison specified is ",
+                                 comparison)
+              msgstr2 <- paste0(msgstr, msgstr2x)
+              stop2c(msgstr2x)
+            }
+          } 
+        }
+      }
+    }
+  } else if(method == 'custom') {
+    method_call <- "comparisons"
+    comparison  <- 'difference'
+    get_comparison_method_call <- 
+      correct_comparison_method_call_fun(
+        method=method, method_call=method_call, comparison=comparison, 
+        model_deriv=model_deriv,deriv=deriv, use_d1=use_d1, 
+        correct_method_call=correct_method_call,
+        correct_comparison=correct_comparison)
+    method_call <- get_comparison_method_call[['method_call']] 
+    comparison  <- get_comparison_method_call[['comparison']]
+    if(method_call == 'comparisons') {
+      if(is.null(comparison)) {
+        if(deriv == 0) {
+          if(!average) comparison <- 'difference'
+          if( average) comparison <- 'differenceavg'
+        } else if(deriv > 0) {
+          if(!average) comparison <- 'dydx'
+          if( average) comparison <- 'dydxavg'
+        }
+      } else if(!is.null(comparison)) {
+        if(deriv == 0) {
+          if(grepl('dydx', comparison) |
+             grepl('dydxavg', comparison)) {
+            msgstr2x <- paste0("you have set comparison = ", comparison, 
+                               " but deriv == 0")
+            msgstr2 <- paste0(msgstr, msgstr2x)
+            stop2c(msgstr2x)
+          } else {
+            if(!average) {
+              if(!strict  & switch_avg) if(comparison == 'differenceavg') {
+                comparison <- 'difference'
+              }
+              if(strict & comparison != 'difference') {
+                msgstr2x <- paste0("argument comparison should be 
+                    'difference' when deriv  = ", deriv, " , 
+                                       and average = ", average,
+                                   " . But instead, 
+                                       comparison specified is ",
+                                   comparison)
+                msgstr2 <- paste0(msgstr, msgstr2x)
+                stop2c(msgstr2x)
+              }
+            } else if(average) {
+              if(!strict  & switch_avg) if(comparison == 'difference') {
+                comparison <- 'differenceavg'
+              }
+              if(strict & comparison != 'differenceavg') {
+                msgstr2x <- paste0("argument comparison should be 
+                    'difference' when deriv 
+                        = ", deriv, " , and average = ", average,
+                                   " . But instead, 
+                                       comparison specified is " ,
+                                   comparison)
+                msgstr2 <- paste0(msgstr, msgstr2x)
+                stop2c(msgstr2x)
+              }
+            }
+          }
+        } else if(deriv > 0) {
+          if(model_deriv) {
+            if(grepl('dydx', comparison)) {
+              what_expect <- 'difference'
+              msgstr_i0z <- paste0(msgstr_i0, ", model_deriv =  ", 
+                                   collapse_comma(model_deriv), 
+                                   " and deriv = ", collapse_comma(deriv), 
+                                   ", ")
+              msgstr2x <- paste0(msgstr_i0z, " you have set comparison = ", 
+                                 collapse_comma(comparison),
+                                 " but it should be of class ",
+                                 collapse_comma(what_expect),
+                                 "")
+              stop2c(msgstr2x)
+            }
+          } else if(!model_deriv) {
+            if(grepl('difference', comparison)) {
+              what_expect <- 'dydx'
+              msgstr_i0z <- paste0(msgstr_i0, ", model_deriv =  ", 
+                                   collapse_comma(model_deriv), 
+                                   " and deriv = ", collapse_comma(deriv), 
+                                   ", ")
+              msgstr2x <- paste0(msgstr_i0z, " you have set comparison = ", 
+                                 collapse_comma(comparison),
+                                 " but it should be of class ",
+                                 collapse_comma(what_expect),
+                                 "")
+              stop2c(msgstr2x)
+            }
+          } # else if(!model_deriv) {
+        }
+      }
+    } else if(method_call == 'predictions') {
+      if(is.null(comparison)) {
+        if(deriv == 0) {
+          if(!average) comparison <- 'difference'
+          if( average) comparison <- 'differenceavg'
+        } else if(deriv > 0) {
+          if(!average) comparison <- 'dydx'
+          if( average) comparison <- 'dydxavg'
+        }
+      } else if(!is.null(comparison)) {
+        if(deriv == 0) {
+          if(grepl('dydx', comparison) |
+             grepl('dydxavg', comparison)) {
+            msgstr2x <- paste0("you have set comparison = ", 
+                               comparison, " but deriv == 0")
+            msgstr2 <- paste0(msgstr, msgstr2x)
+            stop2c(msgstr2x)
+          } else {
+            if(!average) {
+              if(!strict  & switch_avg) if(comparison == 'differenceavg') {
+                comparison <- 'difference'
+              }
+              if(strict & comparison != 'difference') {
+                msgstr2x <- paste0("argument comparison should be 
+                    'difference' when deriv 
+                        = ", deriv, " , and average = ", average,
+                                   " . But instead, 
+                                       comparison specified is " ,
+                                   comparison)
+                msgstr2 <- paste0(msgstr, msgstr2x)
+                stop2c(msgstr2x)
+              }
+            } else if(average) {
+              if(!strict  & switch_avg) if(comparison == 'difference') {
+                comparison <- 'differenceavg'
+              }
+              if(strict & comparison != 'differenceavg') {
+                msgstr2x <- paste0("argument comparison should be 
+                    'difference' when deriv 
+                        = ", deriv, " , and average = ", average,
+                                   " . But instead, 
+                                       comparison specified is " ,
+                                   comparison)
+                msgstr2 <- paste0(msgstr, msgstr2x)
+                stop2c(msgstr2x)
+              }
+            }
+          }
+        } else if(deriv > 0) {
+          if(model_deriv) {
+            if(grepl('dydx', comparison)) {
+              what_expect <- 'difference'
+              msgstr_i0z <- paste0(msgstr_i0, ", model_deriv =  ", 
+                                   collapse_comma(model_deriv), 
+                                   " and deriv = ", collapse_comma(deriv), 
+                                   ", ")
+              msgstr2x <- paste0(msgstr_i0z, " you have set comparison = ", 
+                                 collapse_comma(comparison),
+                                 " but it should be of class ",
+                                 collapse_comma(what_expect),
+                                 "")
+              stop2c(msgstr2x)
+            }
+          } else if(!model_deriv) {
+            if(grepl('difference', comparison)) {
+              what_expect <- 'dydx'
+              msgstr_i0z <- paste0(msgstr_i0, ", model_deriv =  ", 
+                                   collapse_comma(model_deriv), 
+                                   " and deriv = ", collapse_comma(deriv), 
+                                   ", ")
+              msgstr2x <- paste0(msgstr_i0z, " you have set comparison = ", 
+                                 collapse_comma(comparison),
+                                 " but it should be of class ",
+                                 collapse_comma(what_expect),
+                                 "")
+              stop2c(msgstr2x)
+            }
+          } # else if(!model_deriv) {
+        }
+      }
+    } # if(method_call=='comparisons'){else if(method_call == 'predictions'){
+  } # if(method == 'pkg') { else if(method == 'custom') {
+  
+  
+  if(verbose) {
+    msgstr_final <- paste0(msgstr, 
+                           "with deriv = ", collapse_comma(deriv), 
+                           " and average = ", collapse_comma(average), 
+                           ", the default comparison was ", 
+                           collapse_comma(deparse(comparison_org)),
+                           " which has now been set as ",
+                           collapse_comma(comparison))
+    message2c(msgstr_final)
+  }
+  
+  
+  # Check correctly set average difference / dydx for average
+  checkset_comparisons_arg <- comparison
+  if(average) {
+    if(!grepl("avg$", checkset_comparisons_arg) & switch_avg) {
+      stop2c("Note: 'average' = TRUE but the comparison you have set is not 
+             average, which is: ",
+             collapse_comma(checkset_comparisons_arg))
+    }
+  } else if(!average) {
+    if(grepl("avg$", checkset_comparisons_arg) & switch_avg) {
+      stop2c("Note: 'average' = FALSE but the comparison you have set is 
+             average, which is: ",
+             collapse_comma(checkset_comparisons_arg))
+    }
+  }
+  
+  out <- list(comparison = comparison, method_call = method_call)
+  return(out)
+} # end of check_set_comparison_method_call()
+
+
+
+
+#' An internal function to edit plot from marginal effects 
+#' 
+#' @details
+#' This is mainly used to get over layed line plot instead of separate plot
+#' for each individual 
+#' 
+#' @return A list
+#' 
+#' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
+#' 
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+correct_comparison_method_call_fun <- function(method = 'custom', 
+                                               method_call,
+                                               comparison,
+                                               model_deriv, 
+                                               deriv,
+                                               use_d1,
+                                               correct_method_call = TRUE,
+                                               correct_comparison = TRUE) {
+  
+ 
+  if(is.null(use_d1)) {
+    use_d1 <- FALSE
+  }
+  
+  if(method == 'custom') {
+    if(model_deriv) {
+      if(deriv == 0) {
+        correct_comparison <- TRUE
+        correct_method_call <- FALSE
+      } else if(deriv > 0) {
+        correct_comparison <- TRUE
+        correct_method_call <- FALSE
+      }
+    } # if(model_deriv) {
+    if(!model_deriv) {
+      if(deriv == 0) {
+        correct_comparison <- TRUE
+        correct_method_call <- FALSE
+      } else if(deriv > 0) {
+        correct_comparison <- TRUE
+        if(use_d1) {
+          correct_method_call <- TRUE
+        } else if(!use_d1) {
+          correct_method_call <- TRUE
+        } # else if(!use_d1) {
+      }
+    } # if(model_deriv) {
+  } # if(method == 'custom') {
+  
+  
+  
+  if(method == 'custom') {
+    if(model_deriv) {
+      if(deriv > 0) {
+        if(correct_method_call) {
+          if(is.null(method_call)) method_call <- 'predictions'
+          if(grepl('comparisons', method_call)) {
+            method_call <- 'predictions'
+          }
+        } # if(correct_method_call) {
+      } # if(deriv > 0) {
+    } # if(model_deriv) {
+    if(!model_deriv) {
+      if(deriv > 0) {
+        if(correct_method_call) {
+          if(is.null(method_call)) method_call <- 'comparisons'
+          if(grepl('predictions', method_call)) {
+            method_call <- 'comparisons'
+          }
+        } # if(correct_method_call) {
+      } # if(deriv > 0) {
+    } # if(model_deriv) {
+  } # if(method == 'custom') {
+  
+  
+  msgstr_i0 <- paste0("For method = ", collapse_comma(method))
+  msgstr_i1 <- paste0(msgstr_i0, 
+                      ", deriv = ", collapse_comma(deriv), 
+                      ", model_deriv = ", collapse_comma(model_deriv), 
+                      ", method_call = ", collapse_comma(method_call), 
+                      ", the comparison should be of class 'difference' ", 
+                      " and not ",
+                      collapse_comma(deparse(comparison)),
+                      ".")
+  msgstr_i2 <- paste0(msgstr_i0, 
+                      ", deriv = ", collapse_comma(deriv), 
+                      ", model_deriv = ", collapse_comma(model_deriv), 
+                      ", method_call = ", collapse_comma(method_call), 
+                      ", the comparison should be of class 'dydx' ", 
+                      " and not ",
+                      collapse_comma(deparse(comparison)),
+                      ".")
+  
+  if(method == 'custom') {
+    if(model_deriv) {
+      if(deriv == 0) {
+        if(correct_comparison) {
+          if(method_call == 'predictions') {
+            if(grepl('difference', comparison)) {
+              comparison <- comparison
+            }
+            if(grepl('dydx', comparison)) {
+              comparison <- gsub('dydx', 'difference', comparison)
+            }
+          } else if(method_call == 'comparisons') {
+            # stop2c(msgstr_i1)
+            if(grepl('difference', comparison)) {
+              comparison <- comparison
+            }
+            if(grepl('dydx', comparison)) {
+              comparison <- gsub('dydx', 'difference', comparison)
+            }
+          }
+        } # else if(correct_comparison) {
+      } # if(deriv == 0) {
+      if(deriv > 0) {
+        if(correct_comparison) {
+          if(method_call == 'predictions') {
+            if(grepl('difference', comparison)) {
+              comparison <- comparison
+            }
+            if(grepl('dydx', comparison)) {
+              comparison <- gsub('dydx', 'difference', comparison)
+            }
+          } else if(method_call == 'comparisons') {
+            if(grepl('dydx', comparison)) {
+              comparison <- gsub('dydx', 'difference', comparison)
+            }
+            if(grepl('difference', comparison)) {
+              comparison <- comparison
+            }
+          }
+        } # else if(correct_comparison) {
+      } # if(deriv > 0) {
+    } # if(model_deriv) {
+    if(!model_deriv) {
+      if(deriv == 0) {
+        if(correct_comparison) {
+          if(method_call == 'predictions') {
+            if(grepl('difference', comparison)) {
+              comparison <- comparison
+            }
+            if(grepl('dydx', comparison)) {
+              comparison <- gsub('dydx', 'difference', comparison)
+            }
+          } else if(method_call == 'comparisons') {
+            # stop2c(msgstr_i1)
+            if(grepl('difference', comparison)) {
+              comparison <- comparison
+            }
+            if(grepl('dydx', comparison)) {
+              comparison <- gsub('dydx', 'difference', comparison)
+            }
+          }
+        } # else if(correct_comparison) {
+      } # if(deriv == 0) {
+      if(deriv > 0) {
+        if(correct_comparison) {
+          if(method_call == 'predictions') {
+            # stop2c(msgstr_i2)
+            if(grepl('difference', comparison)) {
+              comparison <- gsub('difference', 'dydx', comparison)
+            }
+            if(grepl('dydx', comparison)) {
+              comparison <- comparison
+            }
+          } else if(method_call == 'comparisons') {
+            if(grepl('difference', comparison)) {
+              comparison <- gsub('difference', 'dydx', comparison)
+            }
+            if(grepl('dydx', comparison)) {
+              comparison <- comparison
+            }
+          }
+        } # if(correct_comparison) {
+      } # if(deriv > 0) {
+    } # if(!model_deriv) {
+  } # if(method == 'custom') {
+  
+  out <- list(comparison=comparison, method_call=method_call)
+  return(out)
+} # end of correct_comparison_method_call_fun()
+

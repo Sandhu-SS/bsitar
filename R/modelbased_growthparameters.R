@@ -147,7 +147,7 @@ modelbased_growthparameters.bgmfit <-
            seed = 123,
            future = FALSE,
            future_session = 'multisession',
-           future_splits = NULL,
+           future_splits = TRUE,
            future_method = 'future',
            future_re_expose = NULL,
            usedtplyr = FALSE,
@@ -206,7 +206,6 @@ modelbased_growthparameters.bgmfit <-
           
     
     insight::check_if_installed('cheapr', prompt = FALSE, stop = FALSE)
-    
     
       try(zz <- insight::check_if_installed(c("marginaleffects"), 
                                             minimum_version = 
@@ -287,6 +286,18 @@ modelbased_growthparameters.bgmfit <-
       callfuns     <- TRUE
       setmarginals <- FALSE
       setpreparms  <- FALSE
+      
+      if(is.null(method)) {
+        method <- 'custom'
+      } else {
+        if(method != 'custom') {
+          stop2c("Argument 'method' must be 'custom' for model 
+               based growth parameters")
+        }
+      }
+      
+      
+      
       
       if(!is.null(marginals) & !is.null(preparms)) {
         stop("Please specify either marginals or preparms, not both")
@@ -371,11 +382,9 @@ modelbased_growthparameters.bgmfit <-
       
       if(!is.null(draw_ids)) {
         draw_ids_exe <- TRUE
-        draw_ids <- draw_ids
         draw_ids_seq <- draw_ids
       } else if(!is.null(ndraws)) {
-        ndraws_exe <- TRUE
-        ndraws <- ndraws
+        ndraws_exe   <- TRUE
         draw_ids_seq <- seq(1, ndraws)
       } else {
         ndraws <- brms::ndraws(model)
@@ -647,11 +656,7 @@ modelbased_growthparameters.bgmfit <-
       probtitles <- probs[order(probs)] * 100
       probtitles <- paste("Q", probtitles, sep = "")
       set_names_  <- c('Estimate', probtitles)
-      
-      # if(!is.null(model$model_info$decomp)) {
-      #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
-      # }
-      
+     
       expose_method_set <- model$model_info[['expose_method']]
       
       model$model_info[['expose_method']] <- 'NA' # Over ride 'R'
@@ -706,7 +711,6 @@ modelbased_growthparameters.bgmfit <-
         model_deriv <- FALSE
         call_predictions <- FALSE
         call_slopes      <- TRUE
-        # re-get o[[2]] as _do
         post_processing_checks_args[['deriv']]    <- 0
         o    <- CustomDoCall(post_processing_checks, 
                              post_processing_checks_args)
@@ -889,13 +893,24 @@ modelbased_growthparameters.bgmfit <-
       
       if(future_splits_exe) {
         if(plot) {
-          stop("future_splits can not be used when plot = TRUE")
-        }
+          future_splits_exe <- FALSE
+          future_splits     <- NULL
+          future_splits_at  <- NULL
+          if(verbose) {
+            message2c("future_splits can not be used when plot = TRUE. 
+                  future_splits set as FALSE")
+          }
+        } # if(plot) {
         if(method == 'pkg') {
-          stop("future_splits can not be used when method = 'pkg'")
-        }
+          future_splits_exe <- FALSE
+          future_splits     <- NULL
+          future_splits_at  <- NULL
+          if(verbose) {
+            message2c("future_splits can not be used when method = 'pkg'.
+               future_splits set as FALSE")
+          }
+        } # if(method == 'pkg') {
       }
-      
       
       
       
@@ -1001,7 +1016,6 @@ modelbased_growthparameters.bgmfit <-
       full.args <- 
         sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                    arguments = full.args, 
-                                   # check_formalArgs = marginal_growthparameters.bgmfit,
                                    check_formalArgs = modelbased_growthparameters.bgmfit,
                                    check_formalArgs_exceptions = NULL,
                                    check_trace_back = NULL,
@@ -1022,14 +1036,9 @@ modelbased_growthparameters.bgmfit <-
         get.newdata_args[[i]] <- full.args[[i]]
       }
       
-      # For modelbased_growthparameters, dpar argument is not allowed.
-      # get.newdata_args$ipts <- full.args$ipts <- ipts <- 
-      #   set_for_check_ipts(ipts = ipts, nipts = 50, dpar = dpar, verbose = verbose)
-      
       full.args$newdata <- newdata <- CustomDoCall(get.newdata, 
                                                    get.newdata_args)
 
-      # Interpolation points
       if(!exists('check_fun'))    check_fun    <- FALSE
       if(!exists('available_d1')) available_d1 <- FALSE
 

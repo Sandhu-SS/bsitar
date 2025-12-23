@@ -149,7 +149,7 @@ marginal_draws.bgmfit <-
            seed = 123,
            future = FALSE,
            future_session = 'multisession',
-           future_splits = NULL,
+           future_splits = TRUE,
            future_method = 'future',
            future_re_expose = NULL,
            usedtplyr = FALSE,
@@ -164,7 +164,7 @@ marginal_draws.bgmfit <-
            condition = NULL,
            deriv = 0,
            model_deriv = TRUE,
-           method = 'custom',
+           method = 'pkg',
            marginals = NULL,
            pdrawso = FALSE, 
            pdrawsp = FALSE, 
@@ -178,6 +178,7 @@ marginal_draws.bgmfit <-
            wts = NULL,
            hypothesis = NULL,
            equivalence = NULL,
+           eps = NULL,
            constrats_by = NULL,
            constrats_at = NULL,
            reformat = NULL,
@@ -263,7 +264,7 @@ marginal_draws.bgmfit <-
     if(!is.null(marginals)) {
       setmarginals <- TRUE
       if(method == 'custom') callfuns <- FALSE
-      if(method == 'pkg') callfuns <- FALSE
+      if(method == 'pkg')    callfuns <- FALSE
     }
     
     if(is.null(envir)) {
@@ -335,10 +336,7 @@ marginal_draws.bgmfit <-
     ndraws_exe <- FALSE
     if(!is.null(ndraws)) {
       ndraws_exe <- TRUE
-      ndraws <- ndraws
-    }
-   
-    if(is.null(ndraws)) {
+    } else if(is.null(ndraws)) {
       ndraws <- brms::ndraws(model)
     }
     
@@ -390,32 +388,38 @@ marginal_draws.bgmfit <-
     if(check_set_fun[['was_null']]) {
       model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
     }
+    # just added, 
+    funx_ <- NULL
 
     
-    ########################################################
-    # Define lables fun for x- axis
-    labels_ggfunx <- function(...) {
-      out <- ifunx_(list(...)[[1]]) 
-      out <- scales::number(
-        out,
-        accuracy = 1,
-        scale = 1,
-        prefix = "",
-        suffix = "",
-        big.mark = " ",
-        decimal.mark = ".",
-        style_positive = c("none", "plus", "space"),
-        style_negative = c("hyphen", "minus", "parens"),
-        scale_cut = NULL,
-        trim = TRUE
-      )
-      return(out)
-    }
     
-    labels_ggfunx_str <- 
-      "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
+    # 
+    # ########################################################
+    # # Define lables fun for x- axis
+    # labels_ggfunx <- function(...) {
+    #   out <- ifunx_(list(...)[[1]]) 
+    #   out <- scales::number(
+    #     out,
+    #     accuracy = 1,
+    #     scale = 1,
+    #     prefix = "",
+    #     suffix = "",
+    #     big.mark = " ",
+    #     decimal.mark = ".",
+    #     style_positive = c("none", "plus", "space"),
+    #     style_negative = c("hyphen", "minus", "parens"),
+    #     scale_cut = NULL,
+    #     trim = TRUE
+    #   )
+    #   return(out)
+    # }
+    # 
+    # labels_ggfunx_str <- 
+    #   "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
+    # 
+    # ########################################################
+    # 
     
-    ########################################################
     
     if (is.null(idata_method)) {
       idata_method <- 'm2'
@@ -454,6 +458,8 @@ marginal_draws.bgmfit <-
     #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
     # }
     
+    
+    
     expose_method_set <- model$model_info[['expose_method']]
     
     model$model_info[['expose_method']] <- 'NA' # Over ride 'R'
@@ -470,6 +476,23 @@ marginal_draws.bgmfit <-
     post_processing_checks_args[['check_d0']] <- FALSE
     post_processing_checks_args[['check_d1']] <- TRUE
     post_processing_checks_args[['check_d2']] <- FALSE
+    
+    # Imp to correctly call slopes to marginal effects, this below is must
+    # This will assign d0 and set call_slopes = TRUE
+    if(method == "pkg") {
+      if(deriv > 0) {
+        model_deriv <- FALSE
+        post_processing_checks_args[['deriv']] <- 0
+      }
+    }
+    if(method == "custom") {
+      if(deriv > 0) {
+        if(!model_deriv) {
+          post_processing_checks_args[['deriv']] <- 0
+        }
+      }
+    }
+    
     
     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
@@ -676,13 +699,7 @@ marginal_draws.bgmfit <-
       }
     } # if(!model_deriv) {
     
-    
-    
-    ###################################################
-    
-    
-    # 6.03.2025
-    # see slopes will be mandatory
+   
     check_fun <- FALSE
     if(deriv > 0) {
       available_d1 <- o[['available_d1']]
@@ -739,6 +756,9 @@ marginal_draws.bgmfit <-
     }
     
   
+    
+    
+    
       
     ######################################################################
     ######################################################################
@@ -824,110 +844,6 @@ marginal_draws.bgmfit <-
     arguments$cores <- setincores <-  get.cores_[['max.cores']]
     .cores_ps <- get.cores_[['.cores_ps']]
     
-    
-    
-    # 
-    # # future
-    # if (future) {
-    #   if(is.null(future_session)) {
-    #     future_session      <- "sequential"
-    #     future_session_list <- list()
-    #   } else if(is.list(future_session)) {
-    #     future_session_list <- future_session
-    #     future_session      <- future_session_list[['future_session']]
-    #     if(is.null(future_session)) {
-    #       future_session <- "sequential"
-    #     }
-    #   } else if(!is.list(future_session)) {
-    #     if(is.character(future_session)) {
-    #       future_session_list <- list()
-    #       future_session <- future_session
-    #     } else {
-    #       stop("'future_session' must be a single character or a named list")
-    #     }
-    #   }
-    #   
-    #   getfutureplan <- future::plan()
-    #   oldplanin     <- attr(getfutureplan, "call")
-    #   if(grepl("mirai_", future_session)) {
-    #     insight::check_if_installed('mirai')
-    #     if(!grepl("future.mirai::", future_session)) {
-    #       future_session <- paste0("future.mirai::", future_session)
-    #     }
-    #   } else if(!grepl("mirai_", future_session)) {
-    #     if(!grepl("future.mirai::", future_session)) {
-    #       future_session <- paste0("future::", future_session)
-    #     }
-    #   }
-    #   
-    #   # setplanis will be used to decide on re_expose 
-    #   if(grepl("sequential", future_session)) {
-    #     setplanis <- "sequential"
-    #   } else if(grepl("multisession", future_session)) {
-    #     setplanis <- "multisession"
-    #   } else if(grepl("multicore", future_session)) {
-    #     setplanis <- "multicore"
-    #   } else if(grepl("cluster", future_session)) {
-    #     setplanis <- "cluster"
-    #   }
-    #   
-    #   if (inherits(getfutureplan, "sequential")) {
-    #     mirai_daemons_args <- list()
-    #     future_plan_args <- list()
-    #     if(grepl("mirai_", future_session)) {
-    #       if(grepl("mirai_cluster", future_session)) {
-    #         if(is.null(future_session_list[['daemons']])) {
-    #           #
-    #         } else {
-    #           if(!is.list(future_session_list[['daemons']])) {
-    #             stop("The daemons in future_session list must be a list")
-    #           }
-    #           mirai_daemons_args <- future_session_list[['daemons']]
-    #         }
-    #         future_plan_args[['strategy']] <- future_session
-    #       } else if(!grepl("mirai_cluster", future_session)) {
-    #         future_plan_args[['workers']]  <- setincores
-    #         future_plan_args[['strategy']] <- future_session
-    #       } 
-    #       mirai_daemons_args[['n']]      <- setincores
-    #     } else if(!grepl("mirai_", future_session)) {
-    #       if(grepl("cluster", future_session)) {
-    #         # workers should ne n1, n2..
-    #         future_plan_args[['workers']]  <- setincores
-    #         future_plan_args[['strategy']] <- future_session
-    #       } else {
-    #         future_plan_args[['workers']]  <- setincores
-    #         future_plan_args[['strategy']] <- future_session
-    #       } 
-    #     }
-    #     
-    #     if(!is_emptyx(mirai_daemons_args)) {
-    #       do.call(mirai::daemons, mirai_daemons_args)
-    #       if(verbose) {
-    #         message2c("Setting mirai daemons: ", mirai::status())
-    #       }
-    #     }
-    #     do.call(future::plan, future_plan_args)
-    #     if(verbose) {
-    #       message2c("The existing future plan: ", oldplanin, 
-    #                 " updated as ", future_session)
-    #     }
-    #   } else if (!inherits(getfutureplan, "sequential")) {
-    #     if(verbose) {
-    #       message2c("Using the existing future plan: ", oldplanin)
-    #     }
-    #   }
-    #   # Restore 
-    #   on.exit(future::plan(getfutureplan), add = TRUE)
-    #   if (future_session == 'multicore') {
-    #     multthreadplan <- getOption("future.fork.multithreading.enable")
-    #     options(future.fork.multithreading.enable = TRUE)
-    #     on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
-    #             add = TRUE)
-    #   }
-    # } # if (future) {
-    # 
-    
     get_future_args <- get_future_plan_args(future = future, 
                                             future_session = future_session, 
                                             oldfutureplan = future::plan(),
@@ -969,7 +885,8 @@ marginal_draws.bgmfit <-
     draw_ids_exe <- FALSE
     if(!is.null(draw_ids)) {
       draw_ids_exe <- TRUE
-      draw_ids <- draw_ids
+      ndraws_exe   <- FALSE
+      draw_ids     <- draw_ids
     }
     
     
@@ -977,7 +894,6 @@ marginal_draws.bgmfit <-
     future_splits_exe <- FALSE
     if(!is.null(future_splits)) {
       future_splits_exe <- TRUE
-      
       if(is.logical(future_splits)) {
         if(future_splits) {
           if(ndraws_exe) {
@@ -1053,12 +969,25 @@ marginal_draws.bgmfit <-
       
     if(future_splits_exe) {
       if(plot) {
-        stop("future_splits can not be used when plot = TRUE")
-      }
+        future_splits_exe <- FALSE
+        future_splits     <- NULL
+        future_splits_at  <- NULL
+        if(verbose) {
+          message2c("future_splits can not be used when plot = TRUE. 
+                  future_splits set as FALSE")
+        }
+      } # if(plot) {
       if(method == 'pkg') {
-        stop("future_splits can not be used when method = 'pkg'")
-      }
+        future_splits_exe <- FALSE
+        future_splits     <- NULL
+        future_splits_at  <- NULL
+        if(verbose) {
+          message2c("future_splits can not be used when method = 'pkg'.
+               future_splits set as FALSE")
+        }
+      } # if(method == 'pkg') {
     }
+      
       
     
     if(!future_splits_exe) {
@@ -1137,10 +1066,58 @@ marginal_draws.bgmfit <-
                                     dargs = list(...), 
                                     verbose = verbose)
     
-    full.args$model <- model
+    full.args$model       <- model
     full.args$model_deriv <- model_deriv
+    full.args$newdata     <- newdata
     
-    full.args$newdata <- newdata
+    
+    if(!is.null(full.args$hypothesis)) {
+      if(method == 'pkg') {
+        if(!is.null(full.args$by)) {
+          if(is.logical(full.args$by)) {
+            # stop("Argument 'by' is required for hypothesis")
+          }
+        }
+      } else if(method == 'custom') {
+        if(!is.null(full.args$by)) {
+          if(is.logical(full.args$by)) {
+            # stop("Argument 'by' is required for hypothesis")
+          }
+        } else if(is.null(full.args$by)) {
+          # stop("Argument 'by' is required for hypothesis")
+        }
+      }
+    }
+    
+    
+    
+    valid_hypothesis <- c("pairwise", "reference", "sequential", 
+                          "revpairwise", "revreference", "revsequential")
+    
+    new_valid_hypothesis <- c("number", 
+                              "string such as 'a = b'",
+                              "formula of the following forms: 
+                            ~ rhs, 
+                            ~ lhs ~ rhs, 
+                            lhs ~ rhs | group")
+    
+    if(!is.null(full.args$hypothesis)) {
+      if(method == 'custom') {
+        if(is.language(full.args$hypothesis)) {
+          stop("Argument 'hypothesis' must be one of the following strings: ",
+               collapse_comma(valid_hypothesis))
+        }
+      } else if(method == 'pkg') {
+        if(is.character(full.args$hypothesis)) {
+          stop2c("Argument 'hypothesis' must be one of the following form: ",
+                 collapse_comma(new_valid_hypothesis))
+        }
+      }
+    }
+    
+    
+    
+    
     
     # 6.03,2025 - > coming from get_dv
     if(call_from_modelbased_growthparameters |
@@ -1162,8 +1139,6 @@ marginal_draws.bgmfit <-
     
     
     full.args$dpar    <- dpar
-    
-    # full.argsx <<- full.args
     
     get.newdata_args <- list()
     for (i in methods::formalArgs(get.newdata)) {
@@ -1279,6 +1254,15 @@ marginal_draws.bgmfit <-
     ))[-1]
     
     
+    if(method == "pkg") {
+      if(!plot) {
+      #  exclude_args <- c(exclude_args, 'condition')
+        # if(!is.null(predictions_arguments$condition)) {
+        #   predictions_arguments$condition <- NULL
+        # }
+      }
+    }
+    
     
     if(call_slopes) {
       exclude_args <- c(exclude_args, 'transform', 'byfun')
@@ -1294,153 +1278,44 @@ marginal_draws.bgmfit <-
       predictions_arguments[[exclude_argsi]] <- NULL
     }
     
-    if(call_slopes) {
-      if (!is.null(variables)) {
-        if (!is.character(variables)) {
-          stop("'variables' argument must be a character string such as", 
-               "\n ",
-               " variables = ", "'", xvar, "'"
-          )
-        } else {
-          set_variables <- variables
-          if(!xvar %in% variables) {
-            if(is.null(difx)) {
-              set_variables <- xvar
-            } else if(!is.null(difx)) {
-              set_variables <- difx
-            }
-            # set_variables <- xvar
-          } else { # if(!is.null(set_variables[[xvar]])) {
-            
-          }
-        }
-      } else if (is.null(variables)) {
-        if(is.null(difx)) {
-          set_variables <- xvar
-        } else if(!is.null(difx)) {
-          set_variables <- difx
-        }
-        # set_variables <- xvar
-      } 
-    } # if(call_slopes) {
     
+    set_variables <- setup_variables_var(model, 
+                                         variables = variables, 
+                                         xvar = xvar, 
+                                         eps = eps, 
+                                         method = method, 
+                                         deriv = deriv, 
+                                         model_deriv = model_deriv,
+                                         call_predictions = call_predictions,
+                                         call_slopes = call_slopes,
+                                         difx = difx, 
+                                         xcall = xcall,
+                                         cov = cov, 
+                                         dpar = dpar,
+                                         xvar_strict = TRUE, 
+                                         switch_plot = FALSE,
+                                         verbose = verbose)
     
-    
-    
-    # Decide if set by = NULL and then here pick and replace 'by' set_group 
-    # if(is.null(by)) {
-    #   if(is.null(cov)) {
-    #     set_group <- FALSE
-    #   } else if(!is.null(cov)) {
-    #     set_group <- cov
-    #     if (!set_group %in% cov) {
-    #       stop('by must be one of the ', cov)
-    #     } 
-    #   }
-    # } else if(!is.null(by)) {
-    #   if (!isFALSE(by)) {
-    #     set_group <- by
-    #   } else if (isFALSE(by)) {
-    #     set_group <- FALSE
-    #   }
-    # }
-    # 
-    # 
-    # 
-    # if(dpar == "mu") {
-    #   if(is.logical(set_group)) {
-    #     if(!set_group) set_group <- xvar
-    #   } else {
-    #     if (!xvar %in% set_group) {
-    #       stop("Argument 'by' need to be specified",
-    #            "\n  ", 
-    #            "Available options are: ",
-    #            collapse_comma(model$model_info$xvars))
-    #     } 
-    #   }
-    # }
-    
-    
-    
-    
-    
-    
-    # setup_by_var <- function(model, by, cov, xvar, dpar) {
-    #   if(is.null(by)) {
-    #     if(is.null(cov)) {
-    #       set_group <- FALSE
-    #     } else if(!is.null(cov)) {
-    #       set_group <- cov
-    #       if (!set_group %in% cov) {
-    #         stop('by must be one of the ', cov)
-    #       } 
-    #     }
-    #   } else if(!is.null(by)) {
-    #     if (!isFALSE(by)) {
-    #       set_group <- by
-    #     } else if (isFALSE(by)) {
-    #       set_group <- FALSE
-    #     }
-    #   }
-    #   
-    #   if(dpar == "mu") {
-    #     if(is.logical(set_group)) {
-    #       if(!set_group) set_group <- xvar
-    #     } else {
-    #       if (!xvar %in% set_group) {
-    #         stop("Argument 'by' need to be specified correctly",
-    #              "\n  ", 
-    #              "For current call, the following predictor should be included: ",
-    #              # collapse_comma(model$model_info$xvars)
-    #              "\n  ", 
-    #              collapse_comma(xvar),
-    #              "\n  ", 
-    #              "Instead, the 'by' argument you have specified is as follows:",
-    #              "\n  ", 
-    #              collapse_comma(set_group),
-    #              "\n  ",
-    #              "Please correct it and re-try calling the predictions"
-    #              )
-    #       } 
-    #     }
-    #   }
-    #   
-    #   return(set_group)
-    # }
-    # 
-    
-    
-    set_group <- setup_by_var(model = model, by = by, cov = cov, 
-                       xvar = xvar, dpar = dpar,
-                       xvar_strict = TRUE,
-                       switch_plot = force_condition_and_by_switch_plot,
-                       verbose = verbose)
-    
-    # print(set_group)
-    # print(xvar)
-    # stop()
-    
-    
-    if(call_slopes) {
-      predictions_arguments$variables  <- set_variables
-    }
-    
+    predictions_arguments$variables <- set_variables
+  
+    set_group <- setup_by_var(model = model, 
+                              by = by, 
+                              cov = cov, 
+                              xvar = xvar, 
+                              dpar = dpar,
+                              method = method,
+                              plot = plot,
+                              condition = condition,
+                              deriv = deriv,
+                              difx = difx,
+                              xcall = xcall,
+                              xvar_strict = TRUE,
+                              switch_plot = force_condition_and_by_switch_plot,
+                              verbose = verbose)
+   
     predictions_arguments$by         <- set_group
     
-    if(plot) {
-      if(is.logical(predictions_arguments$by)) {
-        if(!predictions_arguments$by) {
-          predictions_arguments$by <- NULL
-        }
-      }
-    }
-    
-    
-    
-    if(is.null(predictions_arguments$by)) {
-      predictions_arguments$by < 'NULL'
-    }
-    
+   
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
 
@@ -1562,15 +1437,17 @@ marginal_draws.bgmfit <-
    
    exclude_args_con_by <- exclude_args
    
-  
- 
-   if(plot) {
-     if(!is.null(predictions_arguments[['condition']]))
-       predictions_arguments[['by']] <- NULL
-   } else {
-     predictions_arguments[['condition']] <- NULL
+  # new
+   if(method == "custom") {
+     if(plot) {
+       if(!is.null(predictions_arguments[['condition']])) {
+       #  predictions_arguments[['by']] <- NULL
+       }
+     } else if(!plot) {
+      # predictions_arguments[['condition']] <- NULL
+     }
    }
-   
+ 
    
    ###############################
    if(dpar == "sigma") {
@@ -1597,11 +1474,51 @@ marginal_draws.bgmfit <-
   
    
    
+   # Even for "pkg", we need following
+   return_plot_est_pkg <- FALSE
+   if(method == "pkg") {
+     if(!force_condition_and_by_switch_plot) {
+       if(!plot) {
+         if(!is.null(predictions_arguments$condition)) {
+           if(is.null(predictions_arguments$by)) {
+             return_plot_est_pkg <- TRUE
+           }
+         } else if(is.null(predictions_arguments$condition)) {
+           # return_plot_est_pkg <- TRUE
+         }
+       }
+     }
+   }
+  
+   
+   return_plot_est_custom <- FALSE
+   if(method == "custom") {
+     if(!force_condition_and_by_switch_plot) {
+       if(!plot) {
+         if(!is.null(predictions_arguments$condition)) {
+           if(is.null(predictions_arguments$by)) {
+             return_plot_est_custom <- TRUE
+           } 
+         } else if(is.null(predictions_arguments$condition)) {
+           # return_plot_est_custom <- TRUE
+         }
+       }
+     }
+   }
+   
+  
+  
    
    if(method == 'pkg') {
-     # predictions_arguments.org <- predictions_arguments
+     # predictions_arguments$by <- NULL
      if(call_predictions) {
        if(!plot) {
+         if(return_plot_est_pkg) {
+           predictions_arguments[['draw']] <- FALSE
+           out_sf <- CustomDoCall(marginaleffects::plot_predictions,
+                                  predictions_arguments)
+           return(out_sf)
+         } # if(return_plot_est_pkg) {
          if(!average) {
            out_sf <- CustomDoCall(marginaleffects::predictions, 
                              predictions_arguments)
@@ -1629,12 +1546,16 @@ marginal_draws.bgmfit <-
                                   predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -1643,14 +1564,18 @@ marginal_draws.bgmfit <-
          } else if(!force_condition_and_by_switch_plot) {
            outp <- CustomDoCall(marginaleffects::plot_predictions,
                                 predictions_arguments)
-           
+          
            outp <- edit_mapping_facet(outp = outp, 
+                                      by = predictions_arguments$by,
+                                      condition = predictions_arguments$condition,
+                                      xcall = xcall,
+                                      method = method,
                                       mapping_facet = mapping_facet,
-                                      which_aes = NULL, 
                                       showlegends = showlegends,
-                                      labels_ggfunx = labels_ggfunx,
-                                      labels_ggfunx_str = labels_ggfunx_str,
+                                      funx_ = funx_,
+                                      ifunx_ = ifunx_,
                                       envir = envir,
+                                      which_aes = NULL, 
                                       print = FALSE,
                                       verbose = verbose)
           
@@ -1659,10 +1584,16 @@ marginal_draws.bgmfit <-
        } # else if(plot) {
      } # if(call_predictions) {
      
-     
+    
      
      if(call_slopes) {
        if(!plot) {
+         if(return_plot_est_pkg) {
+           predictions_arguments[['draw']] <- FALSE
+           out_sf <- CustomDoCall(marginaleffects::plot_slopes,
+                                  predictions_arguments)
+           return(out_sf)
+         } # if(return_plot_est_pkg) {
          if(!average) {
            out_sf <- CustomDoCall(marginaleffects::slopes,
                                   predictions_arguments)
@@ -1690,12 +1621,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -1706,12 +1641,16 @@ marginal_draws.bgmfit <-
                              predictions_arguments)
            
            outp <- edit_mapping_facet(outp = outp, 
+                                      by = predictions_arguments$by,
+                                      condition = predictions_arguments$condition,
+                                      xcall = xcall,
+                                      method = method,
                                       mapping_facet = mapping_facet,
-                                      which_aes = NULL, 
                                       showlegends = showlegends,
-                                      labels_ggfunx = labels_ggfunx,
-                                      labels_ggfunx_str = labels_ggfunx_str,
+                                      funx_ = funx_,
+                                      ifunx_ = ifunx_,
                                       envir = envir,
+                                      which_aes = NULL, 
                                       print = FALSE,
                                       verbose = verbose)
            
@@ -1721,7 +1660,13 @@ marginal_draws.bgmfit <-
      } # if(call_slopes) {
    } # if(method == 'pkg') {
 
-
+   
+   if(method == 'pkg') {
+     cols_to_remove_pkg <- c("df")
+     out_sf <- out_sf %>% dplyr::select(-dplyr::any_of(cols_to_remove_pkg))
+   }
+   
+   
    get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
    get_etix <- stats::quantile
    get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
@@ -1787,14 +1732,17 @@ marginal_draws.bgmfit <-
        }
      }
 
-     
-     # predictions_argumentsx <<- predictions_arguments
-     
     
 
      if(!future_splits_exe & callfuns) {
        if(call_predictions) {
          if(!plot) {
+           if(return_plot_est_custom) {
+             predictions_arguments[['draw']] <- FALSE
+             out_sf <- CustomDoCall(marginaleffects::plot_predictions,
+                                    predictions_arguments)
+             return(out_sf)
+           } # if(return_plot_est_custom) {
            # 6.03.2025
            if(!check_fun) {
              if(!average) {
@@ -1847,12 +1795,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
                
                outp <- edit_mapping_facet(outp = outp, 
+                                          by = predictions_arguments$by,
+                                          condition = predictions_arguments$condition,
+                                          xcall = xcall,
+                                          method = method,
                                           mapping_facet = mapping_facet,
-                                          which_aes = NULL, 
                                           showlegends = showlegends,
-                                          labels_ggfunx = labels_ggfunx,
-                                          labels_ggfunx_str = labels_ggfunx_str,
+                                          funx_ = funx_,
+                                          ifunx_ = ifunx_,
                                           envir = envir,
+                                          which_aes = NULL, 
                                           print = FALSE,
                                           verbose = verbose)
                
@@ -1863,12 +1815,16 @@ marginal_draws.bgmfit <-
                                   predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -1895,12 +1851,16 @@ marginal_draws.bgmfit <-
                                       predictions_arguments)
                  
                  outp <- edit_mapping_facet(outp = outp, 
+                                            by = predictions_arguments$by,
+                                            condition = predictions_arguments$condition,
+                                            xcall = xcall,
+                                            method = method,
                                             mapping_facet = mapping_facet,
-                                            which_aes = NULL, 
                                             showlegends = showlegends,
-                                            labels_ggfunx = labels_ggfunx,
-                                            labels_ggfunx_str = labels_ggfunx_str,
+                                            funx_ = funx_,
+                                            ifunx_ = ifunx_,
                                             envir = envir,
+                                            which_aes = NULL, 
                                             print = FALSE,
                                             verbose = verbose)
                  
@@ -1911,12 +1871,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
                
                outp <- edit_mapping_facet(outp = outp, 
+                                          by = predictions_arguments$by,
+                                          condition = predictions_arguments$condition,
+                                          xcall = xcall,
+                                          method = method,
                                           mapping_facet = mapping_facet,
-                                          which_aes = NULL, 
                                           showlegends = showlegends,
-                                          labels_ggfunx = labels_ggfunx,
-                                          labels_ggfunx_str = labels_ggfunx_str,
+                                          funx_ = funx_,
+                                          ifunx_ = ifunx_,
                                           envir = envir,
+                                          which_aes = NULL, 
                                           print = FALSE,
                                           verbose = verbose)
                
@@ -1946,12 +1910,16 @@ marginal_draws.bgmfit <-
                                           predictions_arguments)
                      
                      outp <- edit_mapping_facet(outp = outp, 
+                                                by = predictions_arguments$by,
+                                                condition = predictions_arguments$condition,
+                                                xcall = xcall,
+                                                method = method,
                                                 mapping_facet = mapping_facet,
-                                                which_aes = NULL, 
                                                 showlegends = showlegends,
-                                                labels_ggfunx = labels_ggfunx,
-                                                labels_ggfunx_str = labels_ggfunx_str,
+                                                funx_ = funx_,
+                                                ifunx_ = ifunx_,
                                                 envir = envir,
+                                                which_aes = NULL, 
                                                 print = FALSE,
                                                 verbose = verbose)
                      
@@ -1962,12 +1930,16 @@ marginal_draws.bgmfit <-
                                         predictions_arguments)
                    
                    outp <- edit_mapping_facet(outp = outp, 
+                                              by = predictions_arguments$by,
+                                              condition = predictions_arguments$condition,
+                                              xcall = xcall,
+                                              method = method,
                                               mapping_facet = mapping_facet,
-                                              which_aes = NULL, 
                                               showlegends = showlegends,
-                                              labels_ggfunx = labels_ggfunx,
-                                              labels_ggfunx_str = labels_ggfunx_str,
+                                              funx_ = funx_,
+                                              ifunx_ = ifunx_,
                                               envir = envir,
+                                              which_aes = NULL, 
                                               print = FALSE,
                                               verbose = verbose)
                    
@@ -1995,12 +1967,16 @@ marginal_draws.bgmfit <-
                                           predictions_arguments)
                      
                      outp <- edit_mapping_facet(outp = outp, 
+                                                by = predictions_arguments$by,
+                                                condition = predictions_arguments$condition,
+                                                xcall = xcall,
+                                                method = method,
                                                 mapping_facet = mapping_facet,
-                                                which_aes = NULL, 
                                                 showlegends = showlegends,
-                                                labels_ggfunx = labels_ggfunx,
-                                                labels_ggfunx_str = labels_ggfunx_str,
+                                                funx_ = funx_,
+                                                ifunx_ = ifunx_,
                                                 envir = envir,
+                                                which_aes = NULL, 
                                                 print = FALSE,
                                                 verbose = verbose)
                      
@@ -2011,12 +1987,16 @@ marginal_draws.bgmfit <-
                                         predictions_arguments)
                    
                    outp <- edit_mapping_facet(outp = outp, 
+                                              by = predictions_arguments$by,
+                                              condition = predictions_arguments$condition,
+                                              xcall = xcall,
+                                              method = method,
                                               mapping_facet = mapping_facet,
-                                              which_aes = NULL, 
                                               showlegends = showlegends,
-                                              labels_ggfunx = labels_ggfunx,
-                                              labels_ggfunx_str = labels_ggfunx_str,
+                                              funx_ = funx_,
+                                              ifunx_ = ifunx_,
                                               envir = envir,
+                                              which_aes = NULL, 
                                               print = FALSE,
                                               verbose = verbose)
                    
@@ -2030,6 +2010,12 @@ marginal_draws.bgmfit <-
        
        if(call_slopes) {
          if(!plot) {
+           if(return_plot_est_custom) {
+             predictions_arguments[['draw']] <- FALSE
+             out_sf <- CustomDoCall(marginaleffects::plot_slopes,
+                                    predictions_arguments)
+             return(out_sf)
+           } # if(return_plot_est_custom) {
            if(!average) {
              out <- CustomDoCall(marginaleffects::slopes, 
                                  predictions_arguments)
@@ -2057,12 +2043,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
                
                outp <- edit_mapping_facet(outp = outp, 
+                                          by = predictions_arguments$by,
+                                          condition = predictions_arguments$condition,
+                                          xcall = xcall,
+                                          method = method,
                                           mapping_facet = mapping_facet,
-                                          which_aes = NULL, 
                                           showlegends = showlegends,
-                                          labels_ggfunx = labels_ggfunx,
-                                          labels_ggfunx_str = labels_ggfunx_str,
+                                          funx_ = funx_,
+                                          ifunx_ = ifunx_,
                                           envir = envir,
+                                          which_aes = NULL, 
                                           print = FALSE,
                                           verbose = verbose)
                
@@ -2073,12 +2063,16 @@ marginal_draws.bgmfit <-
                                   predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -2192,12 +2186,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
                
                outp <- edit_mapping_facet(outp = outp, 
+                                          by = predictions_arguments$by,
+                                          condition = predictions_arguments$condition,
+                                          xcall = xcall,
+                                          method = method,
                                           mapping_facet = mapping_facet,
-                                          which_aes = NULL, 
                                           showlegends = showlegends,
-                                          labels_ggfunx = labels_ggfunx,
-                                          labels_ggfunx_str = labels_ggfunx_str,
+                                          funx_ = funx_,
+                                          ifunx_ = ifunx_,
                                           envir = envir,
+                                          which_aes = NULL, 
                                           print = FALSE,
                                           verbose = verbose)
                
@@ -2208,12 +2206,16 @@ marginal_draws.bgmfit <-
                                   predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -2289,12 +2291,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
                
                outp <- edit_mapping_facet(outp = outp, 
+                                          by = predictions_arguments$by,
+                                          condition = predictions_arguments$condition,
+                                          xcall = xcall,
+                                          method = method,
                                           mapping_facet = mapping_facet,
-                                          which_aes = NULL, 
                                           showlegends = showlegends,
-                                          labels_ggfunx = labels_ggfunx,
-                                          labels_ggfunx_str = labels_ggfunx_str,
+                                          funx_ = funx_,
+                                          ifunx_ = ifunx_,
                                           envir = envir,
+                                          which_aes = NULL, 
                                           print = FALSE,
                                           verbose = verbose)
                
@@ -2305,12 +2311,16 @@ marginal_draws.bgmfit <-
                                   predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -2466,12 +2476,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
                
                outp <- edit_mapping_facet(outp = outp, 
+                                          by = predictions_arguments$by,
+                                          condition = predictions_arguments$condition,
+                                          xcall = xcall,
+                                          method = method,
                                           mapping_facet = mapping_facet,
-                                          which_aes = NULL, 
                                           showlegends = showlegends,
-                                          labels_ggfunx = labels_ggfunx,
-                                          labels_ggfunx_str = labels_ggfunx_str,
+                                          funx_ = funx_,
+                                          ifunx_ = ifunx_,
                                           envir = envir,
+                                          which_aes = NULL, 
                                           print = FALSE,
                                           verbose = verbose)
                
@@ -2482,12 +2496,16 @@ marginal_draws.bgmfit <-
                                   predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -2591,12 +2609,16 @@ marginal_draws.bgmfit <-
                                     predictions_arguments)
                
                outp <- edit_mapping_facet(outp = outp, 
+                                          by = predictions_arguments$by,
+                                          condition = predictions_arguments$condition,
+                                          xcall = xcall,
+                                          method = method,
                                           mapping_facet = mapping_facet,
-                                          which_aes = NULL, 
                                           showlegends = showlegends,
-                                          labels_ggfunx = labels_ggfunx,
-                                          labels_ggfunx_str = labels_ggfunx_str,
+                                          funx_ = funx_,
+                                          ifunx_ = ifunx_,
                                           envir = envir,
+                                          which_aes = NULL, 
                                           print = FALSE,
                                           verbose = verbose)
                
@@ -2607,12 +2629,16 @@ marginal_draws.bgmfit <-
                                   predictions_arguments)
              
              outp <- edit_mapping_facet(outp = outp, 
+                                        by = predictions_arguments$by,
+                                        condition = predictions_arguments$condition,
+                                        xcall = xcall,
+                                        method = method,
                                         mapping_facet = mapping_facet,
-                                        which_aes = NULL, 
                                         showlegends = showlegends,
-                                        labels_ggfunx = labels_ggfunx,
-                                        labels_ggfunx_str = labels_ggfunx_str,
+                                        funx_ = funx_,
+                                        ifunx_ = ifunx_,
                                         envir = envir,
+                                        which_aes = NULL, 
                                         print = FALSE,
                                         verbose = verbose)
              
@@ -2965,6 +2991,8 @@ marginal_draws.bgmfit <-
                          'predicted_hi', 'predicted', 'rowid')
      }
      
+    
+    
      
      out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
      row.names(out_sf) <- NULL
@@ -3001,7 +3029,6 @@ marginal_draws.bgmfit <-
          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
          data.frame()
      } # if(!is.null(pdrawsh_est)) {
-     
    } # if (reformat) {
    
    
