@@ -2,7 +2,7 @@
 
 # Skip test for local R CMD Check but run on GitHub
 
-# skip_if_not_ci()
+ skip_if_not_ci()
 
 
 ###############################################################################

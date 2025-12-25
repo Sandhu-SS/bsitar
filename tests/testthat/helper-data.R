@@ -64,14 +64,6 @@
   test_univariate_fit_cov   <- TRUE
   test_multivariate_fit_cov <- FALSE
 
-  # cat("Preparing data....")
-  # cat("\n")
-  # cat("Get model....")
-  # cat("\n")
-  # cat("Fit cov model....")
-  # cat("\n")
-  
-
   testfile_exists <- function(filename) {
     files <- list.files(
       path       = testthat::test_path(),   # root of tests/testthat
@@ -82,7 +74,26 @@
   }
   
   
-  #fit <- univariate_fit_cov
+  informative_expect_equal <- function(object, expected, ...) {
+    obj_quo   <- rlang::enquo(object)
+    exp_label <- quasi_label(rlang::enquo(expected))
+    dots <- list(...)
+    if(!is.null(dots)) {
+      for (i in names(dots)) {
+        assign(i, dots[[i]])
+      }
+    }
+    message("Testing: ", info)
+    expect_equal(object, expected, ...)
+    # if (expect_equal(object, expected, ...)) {
+    #   print("mmmm")
+    #   message("✗ ", "Failed")
+    #   # return(FALSE)
+    # }
+    message("✓ ", "Success")
+    return(invisible(NULL))
+  }
+  
   
   set.seed(113)
   draw_ids   <- 1:5
@@ -94,7 +105,7 @@
   # bsitar::plot_curves(multivariate_fit_cov, resp = 'height', apv = T, draw_ids = draw_ids)
   
   
-  # zz <- readRDS(testthat::test_path("models", "univariate_fit_cov.rds")) 
+  # model <- readRDS(testthat::test_path("models", "univariate_fit_cov.rds")) 
 
   ##############################################################################
   # test_fit_nsk - with sample_prior = "only" and covariate

@@ -956,7 +956,7 @@ get_par_names_from_stancode <- function(code,
 #' @noRd
 #'
 get.cores <- function(cores.arg) {
-  cores_ <- eval(cores.arg)
+  cores_ <- eval(cores.arg, envir = parent.frame())
   if (!is.null(cores_)) {
     if (cores_ == "maximise") {
       max.cores <-
@@ -985,7 +985,7 @@ get.cores <- function(cores.arg) {
     .cores_ps <- 1
   }
 
-  list(max.cores = max.cores, .cores_ps = .cores_ps)
+  return(list(max.cores = max.cores, .cores_ps = .cores_ps))
 }
 
 

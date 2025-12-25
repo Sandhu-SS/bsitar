@@ -2996,7 +2996,11 @@ get_itransform_call <- function(itransform,
 #' @return A object default of class inheretited from \code{what}
 #' @noRd
 #'
-CustomDoCall <- function(what, args, quote = FALSE, envir = NULL){
+CustomDoCall <- function(what, 
+                         args, 
+                         quote = 
+                           FALSE, 
+                         envir = NULL) {
   
   if(is.null(envir))
     envir <-   parent.frame()
@@ -3007,20 +3011,14 @@ CustomDoCall <- function(what, args, quote = FALSE, envir = NULL){
   if (is.null(names(args))){
     argn <- args
     args <- list()
-  }else{
-    # Add all the named arguments
+  } else {
     argn <- lapply(names(args)[names(args) != ""], as.name)
     names(argn) <- names(args)[names(args) != ""]
-    # Add the unnamed arguments
     argn <- c(argn, args[names(args) == ""])
     args <- args[names(args) != ""]
   }
-  
-  
-   get_class_what <- class(what)
-  
-  # if(is.character(class(what))) {
-   if (get_class_what == "character"){
+  get_class_what <- class(what)
+  if (get_class_what == "character"){
     if(is.character(what)){
       fn <- strsplit(what, "[:]{2,3}")[[1]]
       what <- if(length(fn)==1) {
@@ -3030,22 +3028,19 @@ CustomDoCall <- function(what, args, quote = FALSE, envir = NULL){
       }
     }
     call <- as.call(c(list(what), argn))
-  # } else if(is.function(class(what))) { 
   } else if (get_class_what == "function"){ 
     f_name <- deparse(substitute(what))
     call <- as.call(c(list(as.name(f_name)), argn))
     args[[f_name]] <- what
-  # } else if(is.name(class(what))) { 
   } else if (get_class_what == "name"){
     call <- as.call(c(list(what, argn)))
   }
-   
   args$verbose <- eval(args$verbose)
-  
-  eval(call, envir = args, enclos = envir)
+  return(eval(call, envir = args, enclos = envir))
 }
 
-# using with CustomDoCall()
+
+
 
 #' An internal function to work with CustomDoCall()
 #' 
@@ -3085,7 +3080,7 @@ sanitize_CustomDoCall_args <- function(what,
     } else if(is.list(check_formalArgs)) {
       ownargs <- check_formalArgs
     } else {
-      stop2c("check_formalArgs must be a function or a list")
+      stop2c("'check_formalArgs' must be a function or a list")
     }
     
     for (i in setdiff(names(arguments), ownargs)) {
@@ -3097,14 +3092,12 @@ sanitize_CustomDoCall_args <- function(what,
         arguments[[i]] <- NULL
       }
     } # for (i in setdiff(names(arguments), ownargs)) {
-    
   } # if(!is.null(check_formalArgs)) {
   
   eval_CustomDoCall <- FALSE
   if(any(grepl(what, set_trace_back))) {
     eval_CustomDoCall <- TRUE
   }
-  
   
   # remove empty argument 
   if(eval_CustomDoCall) {
@@ -3121,7 +3114,6 @@ sanitize_CustomDoCall_args <- function(what,
         arguments[[i]] <- eval(arguments[[i]], envir = envir)
       }
     }
-    
   } # if(eval_CustomDoCall) {
   
   return(arguments)

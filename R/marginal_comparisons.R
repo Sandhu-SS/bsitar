@@ -834,7 +834,6 @@ marginal_comparisons.bgmfit <- function(model,
   arguments$model <- model
   arguments$usesavedfuns <- usesavedfuns
   
-  
   get.cores_ <- get.cores(arguments$cores)
   
   # 28.09.2024
@@ -1681,28 +1680,37 @@ marginal_comparisons.bgmfit <- function(model,
     # }
     
     
-    testthat_mode <- testthat_mode
-    # comparisons_argumentsx <<- comparisons_arguments
-   # stop()
+    
+    ############################################################################
+    # method == 'custom'
+    ############################################################################
 
+    testthat_mode <- testthat_mode
+    
     pdrawsp_est <- NULL
     pdrawsh_est <- NULL
   
     if(method == 'custom') {
-      hypothesis_method_custom <- comparisons_arguments[['hypothesis']]
-      predictions_arguments    <- comparisons_arguments
+      if(grepl("marginal_comparisons", xcall)) {
+        predictions_arguments    <- comparisons_arguments
+      }
       by                       <- predictions_arguments[['by']] 
+      hypothesis_method_custom <- predictions_arguments[['hypothesis']]
       
       custom_method_call       <- full.args[['method_call']]
 
-      if(is.null(hypothesis_method_custom)) {
-       if(is.null(custom_method_call))  custom_method_call <- 'comparisons'
-      } else {
-        if(is.null(custom_method_call)) custom_method_call <- 'predictions'
+      if(grepl("marginal_draws", xcall)) {
+        predictions_arguments[['hypothesis']] <- NULL # evaluated later
       }
       
-      # print(comparisons_arguments$comparison)
-      # custom_method_call  %>% print()
+      
+      if(grepl("marginal_comparisons", xcall)) {
+        if(is.null(hypothesis_method_custom)) {
+          if(is.null(custom_method_call))  custom_method_call <- 'comparisons'
+        } else {
+          if(is.null(custom_method_call)) custom_method_call <- 'predictions'
+        }
+      }
       
       
       if(custom_method_call == 'predictions') {
@@ -1716,17 +1724,76 @@ marginal_comparisons.bgmfit <- function(model,
       }
       
       
-      if(future_splits_exe) {
-        for (i in names(predictions_arguments)) {
-          predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
+      if(custom_method_call == 'predictions') {
+        if(future_splits_exe) {
+          for (i in names(predictions_arguments)) {
+            predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
+          }
         }
       }
       
-      if(future_splits_exe) {
-        for (i in names(comparisons_arguments)) {
-          comparisons_arguments[[i]] <- eval(comparisons_arguments[[i]])
+      if(custom_method_call == 'comparisons') {
+        if(future_splits_exe) {
+          for (i in names(comparisons_arguments)) {
+            comparisons_arguments[[i]] <- eval(comparisons_arguments[[i]])
+          }
         }
       }
+      
+      
+      # if(future_splits_exe) {
+      #   for (i in names(predictions_arguments)) {
+      #     predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
+      #   }
+      # }
+      # 
+      # if(future_splits_exe) {
+      #   for (i in names(comparisons_arguments)) {
+      #     comparisons_arguments[[i]] <- eval(comparisons_arguments[[i]])
+      #   }
+      # }
+      
+      
+      
+      if(plot) {
+        if(!force_condition_and_by_switch_plot) {
+          if(custom_method_call == 'predictions') {
+            if(!is.null(predictions_arguments[['by']])) {
+              if(is.logical(predictions_arguments[['by']])) {
+                if(!predictions_arguments[['by']]) {
+                  predictions_arguments[['by']] <- NULL
+                }
+              }
+            }
+          } else if(custom_method_call == 'comparisons') {
+            comparisons_arguments <- comparisons_arguments
+          }
+        } else if(force_condition_and_by_switch_plot) {
+          if(custom_method_call == 'predictions') {
+            predictions_arguments <- predictions_arguments
+          } else if(custom_method_call == 'comparisons') {
+            comparisons_arguments <- comparisons_arguments
+          }
+        } # if(!force_condition_and_by_switch_plot) { else
+        
+        if(custom_method_call == 'predictions') {
+          if(is.null(predictions_arguments[['by']]) & 
+             is.null(predictions_arguments[['condition']])) {
+            stop2c("One of the `condition` and `by` arguments must 
+              be supplied. Currentlu both 'by' and 'both' are NULL")
+          } # if(is.null(predictions_arguments[['by']]) & 
+        }
+        
+        if(custom_method_call == 'comparisons') {
+          if(is.null(comparisons_arguments[['by']]) & 
+             is.null(comparisons_arguments[['condition']])) {
+            stop2c("One of the `condition` and `by` arguments must 
+              be supplied. Currentlu both 'by' and 'both' are NULL")
+          } # if(is.null(comparisons_arguments[['by']]) & 
+        }
+        
+      } # if(plot) {
+      
       
 
       

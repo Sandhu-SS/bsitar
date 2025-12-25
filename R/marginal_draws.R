@@ -493,6 +493,12 @@ marginal_draws.bgmfit <-
       }
     }
     
+    #
+    method_call <- 'predictions'
+    comparison  <- NULL
+    model_deriv <- model_deriv
+    deriv       <- deriv
+    #
     
     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
@@ -1190,6 +1196,23 @@ marginal_draws.bgmfit <-
     full.args[['transform']] <- transform <- transform_draws
 
     
+    ########################################################################
+    
+    full.args$comparison  <- comparison
+    full.args$model_deriv <- model_deriv
+    # correct_comparison <- TRUE
+    # correct_method_call <- TRUE 
+    
+    allowed_method_call_args <- c("predictions")
+    
+    # full.args[['comparison']]  <- set_comparisons_method_call_arg[['comparison']]
+    # full.args[['method_call']] <- set_comparisons_method_call_arg[['method_call']]
+    
+    full.args[['comparison']]  <-  comparison
+    full.args[['method_call']]  <-  method_call
+    
+    ########################################################################
+    
 
     predictions_arguments <- full.args
     
@@ -1249,7 +1272,8 @@ marginal_draws.bgmfit <-
         transform_draws,
         xvar,
         difx,
-        mapping_facet
+        mapping_facet,
+        method_call
       )
     ))[-1]
     
@@ -1667,668 +1691,385 @@ marginal_draws.bgmfit <-
    }
    
    
-   get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
-   get_etix <- stats::quantile
-   get_hdix <- utils::getFromNamespace("get_hdi", "marginaleffects")
-   get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
-     if(data.table::is.data.table(x) | is.data.frame(x)) {
-       if(is.null(draw)) {
-         stop("please specify the 'draw' argument")
-       }
-       x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
-         unlist() %>% as.numeric()
-     }
-     if(ec_agg == "mean") estimate <- mean(x, na.rm = na.rm)
-     if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
-     if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
-     if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-     tibble::tibble(
-       estimate = estimate, conf.low = luci[1],conf.high = luci[2]
-     )
-   }
    
    
    
-   get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-     if(ec_agg == "mean")  estimate <- 
-         collapse::fmean(x, 
-                         na.rm = na.rm, 
-                         nthreads = arguments$cores) 
-     
-     if(ec_agg == "median") estimate <- 
-         collapse::fmedian(x, 
-                           na.rm = na.rm, 
-                           nthreads = arguments$cores)
-     
-     if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-                                                    na.rm = na.rm)
-     if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-     cbind(estimate, luci[1], luci[2]) 
-   }
-   
+   ############################################################################
+   # method == 'custom' -  
+   # below code exact same for marginal_draws & marginal_comparisons
+   ############################################################################
+   testthat_mode  <- FALSE
+   testthat_mode <- testthat_mode
    
    pdrawsp_est <- NULL
    pdrawsh_est <- NULL
-
+   
    if(method == 'custom') {
-     predictions_arguments[['cross']] <- NULL
-     predictions_arguments[['method']] <- NULL
-     predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
-     by <- predictions_arguments[['by']] 
+     if(grepl("marginal_comparisons", xcall)) {
+       predictions_arguments    <- comparisons_arguments
+     }
+     by                       <- predictions_arguments[['by']] 
+     hypothesis_method_custom <- predictions_arguments[['hypothesis']]
      
+     custom_method_call       <- full.args[['method_call']]
      
+     if(grepl("marginal_draws", xcall)) {
+       predictions_arguments[['hypothesis']] <- NULL # evaluated later
+     }
      
-     
-     if(future_splits_exe) {
-       for (i in names(predictions_arguments)) {
-         predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
+     if(grepl("marginal_comparisons", xcall)) {
+       if(is.null(hypothesis_method_custom)) {
+         if(is.null(custom_method_call))  custom_method_call <- 'comparisons'
+       } else {
+         if(is.null(custom_method_call)) custom_method_call <- 'predictions'
        }
      }
      
-  
-     if(check_fun) {
-       if(!available_d1) {
-         predictions_arguments[['comparison']] <- NULL
-       }
+      
+     if(custom_method_call == 'predictions') {
+       predictions_arguments[['cross']]      <- NULL
+       predictions_arguments[['method']]     <- NULL
+       predictions_arguments[['hypothesis']] <- NULL # evaluated later
      }
+     
+     if(custom_method_call == 'comparisons') {
+       comparisons_arguments[['transform']]     <- NULL
+     }
+     
+      
+      if(custom_method_call == 'predictions') {
+        if(future_splits_exe) {
+          for (i in names(predictions_arguments)) {
+            predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
+          }
+        }
+      }
 
-    
-
-     if(!future_splits_exe & callfuns) {
-       if(call_predictions) {
-         if(!plot) {
-           if(return_plot_est_custom) {
-             predictions_arguments[['draw']] <- FALSE
-             out_sf <- CustomDoCall(marginaleffects::plot_predictions,
-                                    predictions_arguments)
-             return(out_sf)
-           } # if(return_plot_est_custom) {
-           # 6.03.2025
-           if(!check_fun) {
-             if(!average) {
-               out <- CustomDoCall(marginaleffects::predictions, 
-                                   predictions_arguments)
-             } else if(average) {
-               out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                   predictions_arguments)
+      if(custom_method_call == 'comparisons') {
+        if(future_splits_exe) {
+          for (i in names(comparisons_arguments)) {
+            comparisons_arguments[[i]] <- eval(comparisons_arguments[[i]])
+          }
+        }
+      }
+      
+     
+     
+     
+     if(plot) {
+       if(!force_condition_and_by_switch_plot) {
+         if(custom_method_call == 'predictions') {
+           if(!is.null(predictions_arguments[['by']])) {
+             if(is.logical(predictions_arguments[['by']])) {
+               if(!predictions_arguments[['by']]) {
+                 predictions_arguments[['by']] <- NULL
+               }
              }
-           } # if(!check_fun) {
-           if(check_fun) {
-             if(deriv > 0) {
-               if(available_d1) {
-                 if(!average) {
-                   out <- CustomDoCall(marginaleffects::predictions, 
-                                       predictions_arguments)
-                 } else if(average) {
-                   out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                       predictions_arguments)
-                 }
-               } 
-               if(!available_d1) {
-                 if(!average) {
-                   out <- CustomDoCall(marginaleffects::slopes, 
-                                       predictions_arguments)
-                 } else if(average) {
-                   out <- CustomDoCall(marginaleffects::avg_slopes, 
-                                       predictions_arguments)
-                 }
-               }
-             } # if(deriv > 0) {
-           } # if(check_fun) {
-         } else if(plot) {
-           if(force_condition_and_by_switch_plot) {
-             # predictions_arguments <- predictions_arguments.org
-             predictions_arguments <- 
-               condition_by_switch_fun(arg = predictions_arguments, 
-                                       condition = 'condition', by = 'by',
-                                       rm_by = TRUE, rm_condition = FALSE,
-                                       verbose = verbose)
-             if(!return_plot) {
-               predictions_arguments[['draw']] <- FALSE
-               out_sf <- CustomDoCall(marginaleffects::plot_predictions,
-                                      predictions_arguments)
-               if(return_plot_est) return(out_sf)
-             } # if(!return_plot) {
-             if(return_plot) {
-               # predictions_arguments[['draw']] <- FALSE
-               outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                    predictions_arguments)
-               
-               outp <- edit_mapping_facet(outp = outp, 
-                                          by = predictions_arguments$by,
-                                          condition = predictions_arguments$condition,
-                                          xcall = xcall,
-                                          method = method,
-                                          mapping_facet = mapping_facet,
-                                          showlegends = showlegends,
-                                          funx_ = funx_,
-                                          ifunx_ = ifunx_,
-                                          envir = envir,
-                                          which_aes = NULL, 
-                                          print = FALSE,
-                                          verbose = verbose)
-               
-               return(outp)
-             } # if(!return_plot) {
-           } else if(!force_condition_and_by_switch_plot) {
-             outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                  predictions_arguments)
-             
-             outp <- edit_mapping_facet(outp = outp, 
-                                        by = predictions_arguments$by,
-                                        condition = predictions_arguments$condition,
-                                        xcall = xcall,
-                                        method = method,
-                                        mapping_facet = mapping_facet,
-                                        showlegends = showlegends,
-                                        funx_ = funx_,
-                                        ifunx_ = ifunx_,
-                                        envir = envir,
-                                        which_aes = NULL, 
-                                        print = FALSE,
-                                        verbose = verbose)
-             
-             return(outp)
-           } # else if(!force_condition_and_by_switch_plot) {
-           # 6.03.2025
-           if(!check_fun) {
-             if(force_condition_and_by_switch_plot) {
-               # predictions_arguments <- predictions_arguments.org
-               predictions_arguments <- 
-                 condition_by_switch_fun(arg = predictions_arguments, 
-                                         condition = 'condition', by = 'by',
-                                         rm_by = TRUE, rm_condition = FALSE,
-                                         verbose = verbose)
-               if(!return_plot) {
-                 predictions_arguments[['draw']] <- FALSE
-                 out_sf <- CustomDoCall(marginaleffects::plot_predictions,
-                                        predictions_arguments)
-                 if(return_plot_est) return(out_sf)
-               } # if(!return_plot) {
-               if(return_plot) {
-                 # predictions_arguments[['draw']] <- FALSE
-                 outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                      predictions_arguments)
-                 
-                 outp <- edit_mapping_facet(outp = outp, 
-                                            by = predictions_arguments$by,
-                                            condition = predictions_arguments$condition,
-                                            xcall = xcall,
-                                            method = method,
-                                            mapping_facet = mapping_facet,
-                                            showlegends = showlegends,
-                                            funx_ = funx_,
-                                            ifunx_ = ifunx_,
-                                            envir = envir,
-                                            which_aes = NULL, 
-                                            print = FALSE,
-                                            verbose = verbose)
-                 
-                 return(outp)
-               } # if(!return_plot) {
-             } else if(!force_condition_and_by_switch_plot) {
-               outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                    predictions_arguments)
-               
-               outp <- edit_mapping_facet(outp = outp, 
-                                          by = predictions_arguments$by,
-                                          condition = predictions_arguments$condition,
-                                          xcall = xcall,
-                                          method = method,
-                                          mapping_facet = mapping_facet,
-                                          showlegends = showlegends,
-                                          funx_ = funx_,
-                                          ifunx_ = ifunx_,
-                                          envir = envir,
-                                          which_aes = NULL, 
-                                          print = FALSE,
-                                          verbose = verbose)
-               
-               return(outp)
-             } # else if(!force_condition_and_by_switch_plot) {
-           } # if(!check_fun) {
-           
-           if(check_fun) {
-             if(deriv > 0) {
-               if(available_d1) {
-                 if(force_condition_and_by_switch_plot) {
-                   # predictions_arguments <- predictions_arguments.org
-                   predictions_arguments <- 
-                     condition_by_switch_fun(arg = predictions_arguments, 
-                                             condition = 'condition', by = 'by',
-                                             rm_by = TRUE, rm_condition = FALSE,
-                                             verbose = verbose)
-                   if(!return_plot) {
-                     predictions_arguments[['draw']] <- FALSE
-                     out_sf <- CustomDoCall(marginaleffects::plot_predictions,
-                                            predictions_arguments)
-                     if(return_plot_est) return(out_sf)
-                   } # if(!return_plot) {
-                   if(return_plot) {
-                     # predictions_arguments[['draw']] <- FALSE
-                     outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                          predictions_arguments)
-                     
-                     outp <- edit_mapping_facet(outp = outp, 
-                                                by = predictions_arguments$by,
-                                                condition = predictions_arguments$condition,
-                                                xcall = xcall,
-                                                method = method,
-                                                mapping_facet = mapping_facet,
-                                                showlegends = showlegends,
-                                                funx_ = funx_,
-                                                ifunx_ = ifunx_,
-                                                envir = envir,
-                                                which_aes = NULL, 
-                                                print = FALSE,
-                                                verbose = verbose)
-                     
-                     return(outp)
-                   } # if(!return_plot) {
-                 } else if(!force_condition_and_by_switch_plot) {
-                   outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                        predictions_arguments)
-                   
-                   outp <- edit_mapping_facet(outp = outp, 
-                                              by = predictions_arguments$by,
-                                              condition = predictions_arguments$condition,
-                                              xcall = xcall,
-                                              method = method,
-                                              mapping_facet = mapping_facet,
-                                              showlegends = showlegends,
-                                              funx_ = funx_,
-                                              ifunx_ = ifunx_,
-                                              envir = envir,
-                                              which_aes = NULL, 
-                                              print = FALSE,
-                                              verbose = verbose)
-                   
-                   return(outp)
-                 } # else if(!force_condition_and_by_switch_plot) {
-               } 
-               
-               if(!available_d1) {
-                 if(force_condition_and_by_switch_plot) {
-                   # predictions_arguments <- predictions_arguments.org
-                   predictions_arguments <- 
-                     condition_by_switch_fun(arg = predictions_arguments, 
-                                             condition = 'condition', by = 'by',
-                                             rm_by = TRUE, rm_condition = FALSE,
-                                             verbose = verbose)
-                   if(!return_plot) {
-                     predictions_arguments[['draw']] <- FALSE
-                     out_sf <- CustomDoCall(marginaleffects::plot_slopes,
-                                            predictions_arguments)
-                     if(return_plot_est) return(out_sf)
-                   } # if(!return_plot) {
-                   if(return_plot) {
-                     # predictions_arguments[['draw']] <- FALSE
-                     outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                          predictions_arguments)
-                     
-                     outp <- edit_mapping_facet(outp = outp, 
-                                                by = predictions_arguments$by,
-                                                condition = predictions_arguments$condition,
-                                                xcall = xcall,
-                                                method = method,
-                                                mapping_facet = mapping_facet,
-                                                showlegends = showlegends,
-                                                funx_ = funx_,
-                                                ifunx_ = ifunx_,
-                                                envir = envir,
-                                                which_aes = NULL, 
-                                                print = FALSE,
-                                                verbose = verbose)
-                     
-                     return(outp)
-                   } # if(!return_plot) {
-                 } else if(!force_condition_and_by_switch_plot) {
-                   outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                        predictions_arguments)
-                   
-                   outp <- edit_mapping_facet(outp = outp, 
-                                              by = predictions_arguments$by,
-                                              condition = predictions_arguments$condition,
-                                              xcall = xcall,
-                                              method = method,
-                                              mapping_facet = mapping_facet,
-                                              showlegends = showlegends,
-                                              funx_ = funx_,
-                                              ifunx_ = ifunx_,
-                                              envir = envir,
-                                              which_aes = NULL, 
-                                              print = FALSE,
-                                              verbose = verbose)
-                   
-                   return(outp)
-                 } # else if(!force_condition_and_by_switch_plot) {
-               }
-             } # if(deriv > 0) {
-           } # if(check_fun) {
-         } # if(check_fun) {
-       } # if(call_predictions) {
-       
-       if(call_slopes) {
-         if(!plot) {
-           if(return_plot_est_custom) {
-             predictions_arguments[['draw']] <- FALSE
-             out_sf <- CustomDoCall(marginaleffects::plot_slopes,
-                                    predictions_arguments)
-             return(out_sf)
-           } # if(return_plot_est_custom) {
-           if(!average) {
-             out <- CustomDoCall(marginaleffects::slopes, 
-                                 predictions_arguments)
-           } else if(average) {
-             out <- CustomDoCall(marginaleffects::avg_slopes,
-                                 predictions_arguments)
            }
-         } else if(plot) {
-           if(force_condition_and_by_switch_plot) {
-             # predictions_arguments <- predictions_arguments.org
-             predictions_arguments <- 
-               condition_by_switch_fun(arg = predictions_arguments, 
-                                       condition = 'condition', by = 'by',
-                                       rm_by = TRUE, rm_condition = FALSE,
-                                       verbose = verbose)
-             if(!return_plot) {
-               predictions_arguments[['draw']] <- FALSE
-               out_sf <- CustomDoCall(marginaleffects::plot_slopes,
-                                      predictions_arguments)
-               if(return_plot_est) return(out_sf)
-             } # if(!return_plot) {
-             if(return_plot) {
-               # predictions_arguments[['draw']] <- FALSE
-               outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                    predictions_arguments)
-               
-               outp <- edit_mapping_facet(outp = outp, 
-                                          by = predictions_arguments$by,
-                                          condition = predictions_arguments$condition,
-                                          xcall = xcall,
-                                          method = method,
-                                          mapping_facet = mapping_facet,
-                                          showlegends = showlegends,
-                                          funx_ = funx_,
-                                          ifunx_ = ifunx_,
-                                          envir = envir,
-                                          which_aes = NULL, 
-                                          print = FALSE,
-                                          verbose = verbose)
-               
-               return(outp)
-             } # if(!return_plot) {
-           } else if(!force_condition_and_by_switch_plot) {
-             outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                  predictions_arguments)
-             
-             outp <- edit_mapping_facet(outp = outp, 
-                                        by = predictions_arguments$by,
-                                        condition = predictions_arguments$condition,
-                                        xcall = xcall,
-                                        method = method,
-                                        mapping_facet = mapping_facet,
-                                        showlegends = showlegends,
-                                        funx_ = funx_,
-                                        ifunx_ = ifunx_,
-                                        envir = envir,
-                                        which_aes = NULL, 
-                                        print = FALSE,
-                                        verbose = verbose)
-             
-             return(outp)
-           } # else if(!force_condition_and_by_switch_plot) {
-         } # else if(plot) {
-       } # if(call_slopes) {
+         } else if(custom_method_call == 'comparisons') {
+           comparisons_arguments <- comparisons_arguments
+         }
+       } else if(force_condition_and_by_switch_plot) {
+         if(custom_method_call == 'predictions') {
+           predictions_arguments <- predictions_arguments
+         } else if(custom_method_call == 'comparisons') {
+           comparisons_arguments <- comparisons_arguments
+         }
+       } # if(!force_condition_and_by_switch_plot) { else
+       
+       if(custom_method_call == 'predictions') {
+         if(is.null(predictions_arguments[['by']]) & 
+            is.null(predictions_arguments[['condition']])) {
+           stop2c("One of the `condition` and `by` arguments must 
+              be supplied. Currentlu both 'by' and 'both' are NULL")
+         } # if(is.null(predictions_arguments[['by']]) & 
+       }
+       
+       if(custom_method_call == 'comparisons') {
+         if(is.null(comparisons_arguments[['by']]) & 
+            is.null(comparisons_arguments[['condition']])) {
+           stop2c("One of the `condition` and `by` arguments must 
+              be supplied. Currentlu both 'by' and 'both' are NULL")
+         } # if(is.null(comparisons_arguments[['by']]) & 
+       }
+       
+     } # if(plot) {
+     
+     
+     
+     # Set up calls
+     if(callfuns) {
+       if(future_splits_exe_future | 
+          future_splits_exe_dofuture |
+          !future_splits_exe) {
+         # call_predictions
+         if(call_predictions) {
+           if(!plot) {
+             if(!return_plot_est_custom) {
+               if(!check_fun) {
+                 if(custom_method_call == 'predictions') {
+                   if(!average) funcall <- marginaleffects::predictions
+                   if( average) funcall <- marginaleffects::avg_predictions
+                   funcallargs          <- predictions_arguments
+                 } else if(custom_method_call == 'comparisons') {
+                   if(!average) funcall <- marginaleffects::comparisons
+                   if( average) funcall <- marginaleffects::avg_comparisons
+                   funcallargs          <- comparisons_arguments
+                 }
+               } 
+               if(check_fun) {
+                 if(deriv > 0) {
+                   if(available_d1) {
+                     if(custom_method_call == 'predictions') {
+                       if(!average) funcall <- marginaleffects::predictions
+                       if( average) funcall <- marginaleffects::avg_predictions
+                       funcallargs          <- predictions_arguments
+                     } else if(custom_method_call == 'comparisons') {
+                       if(!average) funcall <- marginaleffects::comparisons
+                       if( average) funcall <- marginaleffects::avg_comparisons
+                       funcallargs          <- comparisons_arguments
+                     }
+                   } 
+                   if(!available_d1) {
+                     if(custom_method_call == 'predictions') {
+                       if(!average) funcall <- marginaleffects::slopes
+                       if( average) funcall <- marginaleffects::avg_slopes
+                       funcallargs          <- predictions_arguments
+                     } else if(custom_method_call == 'comparisons') {
+                       if(!average) funcall <- marginaleffects::comparisons
+                       if( average) funcall <- marginaleffects::avg_comparisons
+                       funcallargs          <- comparisons_arguments
+                     }
+                   }
+                 } # if(deriv > 0) {
+               } # if(check_fun) {
+             } else if(return_plot_est_custom) {
+               if(!check_fun) {
+                 if(custom_method_call == 'predictions') {
+                   if(!average) funcall <- marginaleffects::plot_predictions
+                   if( average) funcall <- marginaleffects::plot_predictions
+                   funcallargs          <- predictions_arguments
+                 } else if(custom_method_call == 'comparisons') {
+                   if(!average) funcall <- marginaleffects::plot_comparisons
+                   if( average) funcall <- marginaleffects::plot_comparisons
+                   funcallargs          <- comparisons_arguments
+                 }
+               } 
+               if(check_fun) {
+                 if(deriv > 0) {
+                   if(available_d1) {
+                     if(custom_method_call == 'predictions') {
+                       if(!average) funcall <- marginaleffects::plot_predictions
+                       if( average) funcall <- marginaleffects::plot_predictions
+                       funcallargs          <- predictions_arguments
+                     } else if(custom_method_call == 'comparisons') {
+                       if(!average) funcall <- marginaleffects::plot_comparisons
+                       if( average) funcall <- marginaleffects::plot_comparisons
+                       funcallargs          <- comparisons_arguments
+                     }
+                   } 
+                   if(!available_d1) {
+                     if(custom_method_call == 'predictions') {
+                       if(!average) funcall <- marginaleffects::plot_slopes
+                       if( average) funcall <- marginaleffects::plot_slopes
+                       funcallargs          <- predictions_arguments
+                     } else if(custom_method_call == 'comparisons') {
+                       if(!average) funcall <- marginaleffects::plot_comparisons
+                       if( average) funcall <- marginaleffects::plot_comparisons
+                       funcallargs          <- comparisons_arguments
+                     }
+                   }
+                 } # if(deriv > 0) {
+               } # if(check_fun) {
+             } # if(!return_plot_est_custom) { else if(return_plot_est_custom) {
+           } else if(plot) {
+             if(force_condition_and_by_switch_plot & !return_plot) {
+               if(custom_method_call == 'predictions') {
+                 if(!average) funcall <- marginaleffects::plot_predictions
+                 if( average) funcall <- marginaleffects::plot_predictions
+                 funcallargs          <- predictions_arguments
+               } else if(custom_method_call == 'comparisons') {
+                 if(!average) funcall <- marginaleffects::plot_comparisons
+                 if( average) funcall <- marginaleffects::plot_comparisons
+                 funcallargs          <- comparisons_arguments
+               }
+               funcallargs[['draw']] <- FALSE
+             } else if(!force_condition_and_by_switch_plot) {
+               if(custom_method_call == 'predictions') {
+                 if(!average) funcall <- marginaleffects::plot_predictions
+                 if( average) funcall <- marginaleffects::plot_predictions
+                 funcallargs          <- predictions_arguments
+               } else if(custom_method_call == 'comparisons') {
+                 if(!average) funcall <- marginaleffects::plot_comparisons
+                 if( average) funcall <- marginaleffects::plot_comparisons
+                 funcallargs          <- comparisons_arguments
+               }
+             } # else if(!force_condition_and_by_switch_plot) {
+           } # if(!plot) { else if(plot) {
+         } # if(call_predictions) {
+         
+         
+         
+         # call_slopes
+         if(call_slopes) {
+           if(!plot) {
+             if(!return_plot_est_custom) {
+               if(custom_method_call == 'predictions') {
+                 if(!average) funcall <- marginaleffects::slopes
+                 if( average) funcall <- marginaleffects::avg_slopes
+                 funcallargs          <- predictions_arguments
+               } else if(custom_method_call == 'comparisons') {
+                 if(!average) funcall <- marginaleffects::comparisons
+                 if( average) funcall <- marginaleffects::avg_comparisons
+                 funcallargs          <- comparisons_arguments
+               }
+             } else if(return_plot_est_custom) {
+               if(custom_method_call == 'predictions') {
+                 if(!average) funcall <- marginaleffects::plot_slopes
+                 if( average) funcall <- marginaleffects::plot_slopes
+                 funcallargs          <- predictions_arguments
+               } else if(custom_method_call == 'comparisons') {
+                 if(!average) funcall <- marginaleffects::plot_comparisons
+                 if( average) funcall <- marginaleffects::plot_comparisons
+                 funcallargs          <- comparisons_arguments
+               }
+             } # if(!return_plot_est_custom) {else if(return_plot_est_custom) {
+           } else if(plot) {
+             if(force_condition_and_by_switch_plot & !return_plot) {
+               if(custom_method_call == 'predictions') {
+                 if(!average) funcall <- marginaleffects::plot_slopes
+                 if( average) funcall <- marginaleffects::plot_slopes
+                 funcallargs          <- predictions_arguments
+               } else if(custom_method_call == 'comparisons') {
+                 if(!average) funcall <- marginaleffects::plot_comparisons
+                 if( average) funcall <- marginaleffects::plot_comparisons
+                 funcallargs          <- comparisons_arguments
+               }
+               funcallargs[['draw']] <- FALSE
+             } else if(!force_condition_and_by_switch_plot) {
+               if(custom_method_call == 'predictions') {
+                 if(!average) funcall <- marginaleffects::plot_slopes
+                 if( average) funcall <- marginaleffects::plot_slopes
+                 funcallargs          <- predictions_arguments
+               } else if(custom_method_call == 'comparisons') {
+                 if(!average) funcall <- marginaleffects::plot_comparisons
+                 if( average) funcall <- marginaleffects::plot_comparisons
+                 funcallargs          <- comparisons_arguments
+               }
+             } # else if(!force_condition_and_by_switch_plot) {
+           } # if(!plot) { else if(plot) {
+         } # if(call_slopes) {
+         
+       } # if(future_splits_exe_future | future_splits_exe_dofuture) {
+     } # if(callfuns) {
+     
+     
+     # funcallx <<- funcall
+     # funcallargsx <<- funcallargs
+     
+     # 6.03.2025
+     if(!future_splits_exe & callfuns) {
+       if(!plot) {
+         if(return_plot_est_custom) {
+           funcallargs[['draw']] <- FALSE
+           out_sf <- CustomDoCall(funcall, funcallargs)
+           return(out_sf)
+         } # if(return_plot_est_custom) {
+         out <-  CustomDoCall(funcall, funcallargs)
+       } else if(plot) {
+         if(force_condition_and_by_switch_plot & !return_plot) {
+           out <-  CustomDoCall(funcall, funcallargs)
+         } else if(!force_condition_and_by_switch_plot) {
+           outp <- CustomDoCall(funcall, funcallargs)
+           outp <- edit_mapping_facet(outp = outp, 
+                                      by = predictions_arguments$by,
+                                      condition = predictions_arguments$condition,
+                                      xcall = xcall,
+                                      method = method,
+                                      mapping_facet = mapping_facet,
+                                      showlegends = showlegends,
+                                      funx_ = funx_,
+                                      ifunx_ = ifunx_,
+                                      envir = envir,
+                                      which_aes = NULL, 
+                                      print = FALSE,
+                                      verbose = verbose)
+           return(outp)
+         } # else if(!force_condition_and_by_switch_plot) {
+       } # if(!plot) { else if(plot) {
      } # if(!future_splits_exe) {
      
      
      
+     
+     
      if(future_splits_exe_future & callfuns) {
-       if(call_predictions) {
-         if(!plot) {
-           if(!average) {
-             myzfun <- function(x) {
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) message("need to expose functions for 'multisession'")
-                 predictions_arguments[['model']] <- 
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
-               }
-               # Re-assign appropriate function
-               setenv <- predictions_arguments[['model']]$model_info$envir
-               assign(o[[1]],
-                      predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                      envir = setenv)
-               # 6.03.2025
-               if(!check_fun) {
-                 out <- CustomDoCall(marginaleffects::predictions,
-                                     predictions_arguments)
-               } # if(!check_fun) {
-               if(check_fun) {
-                 if(deriv > 0) {
-                   if(available_d1) {
-                     out <- CustomDoCall(marginaleffects::predictions,
-                                         predictions_arguments)
-                   } 
-                   if(!available_d1) {
-                     out <- CustomDoCall(marginaleffects::slopes, 
-                                         predictions_arguments)
-                   }
-                 } # if(deriv > 0) {
-               } # if(check_fun) {
-               return(out)
-             }
-             out <-  future.apply::future_lapply(future_splits_at,
-                                                 future.envir = parent.frame(),
-                                                 future.globals = TRUE,
-                                                 future.seed = TRUE,
-                                                 FUN = myzfun)
-           } else if(average) {
-             myzfun <- function(x) {
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) message("need to expose functions for 'multisession'")
-                 predictions_arguments[['model']] <- 
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
-               }
-               # Re-assign appropriate function
-               setenv <- predictions_arguments[['model']]$model_info$envir
-               assign(o[[1]],
-                      predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                      envir = setenv)
-               # 6.03.2025
-               if(!check_fun) {
-                 out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                     predictions_arguments)
-               } # if(!check_fun) {
-               if(check_fun) {
-                 if(deriv > 0) {
-                   if(available_d1) {
-                     out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                         predictions_arguments)
-                   } 
-                   if(!available_d1) {
-                     out <- CustomDoCall(marginaleffects::avg_slopes,
-                                         predictions_arguments)
-                   }
-                 } # if(deriv > 0) {
-               } # if(check_fun) {
-               return(out)
-             }
-             out <-  future.apply::future_lapply(future_splits_at,
-                                                 future.envir = parent.frame(),
-                                                 future.globals = TRUE,
-                                                 future.seed = TRUE,
-                                                 FUN = myzfun)
+       myzfun <- function(x, funcall, funcallargs) {
+         funcallargs[['draw_ids']] <- x
+         funcallargs[['ndraws']] <- NULL
+         `%>%` <- bsitar::`%>%`
+         if(re_expose) {
+           if(verbose) {
+             message2c("need to expose functions for 'multisession'")
            }
-         } else if(plot) {
-           if(force_condition_and_by_switch_plot) {
-             # predictions_arguments <- predictions_arguments.org
-             predictions_arguments <- 
-               condition_by_switch_fun(arg = predictions_arguments, 
-                                       condition = 'condition', by = 'by',
-                                       rm_by = TRUE, rm_condition = FALSE,
-                                       verbose = verbose)
-             if(!return_plot) {
-               predictions_arguments[['draw']] <- FALSE
-               out_sf <- CustomDoCall(marginaleffects::plot_predictions,
-                                      predictions_arguments)
-               if(return_plot_est) return(out_sf)
-             } # if(!return_plot) {
-             if(return_plot) {
-               # predictions_arguments[['draw']] <- FALSE
-               outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                    predictions_arguments)
-               
-               outp <- edit_mapping_facet(outp = outp, 
-                                          by = predictions_arguments$by,
-                                          condition = predictions_arguments$condition,
-                                          xcall = xcall,
-                                          method = method,
-                                          mapping_facet = mapping_facet,
-                                          showlegends = showlegends,
-                                          funx_ = funx_,
-                                          ifunx_ = ifunx_,
-                                          envir = envir,
-                                          which_aes = NULL, 
-                                          print = FALSE,
-                                          verbose = verbose)
-               
-               return(outp)
-             } # if(!return_plot) {
-           } else if(!force_condition_and_by_switch_plot) {
-             outp <- CustomDoCall(marginaleffects::plot_predictions,
-                                  predictions_arguments)
-             
-             outp <- edit_mapping_facet(outp = outp, 
-                                        by = predictions_arguments$by,
-                                        condition = predictions_arguments$condition,
-                                        xcall = xcall,
-                                        method = method,
-                                        mapping_facet = mapping_facet,
-                                        showlegends = showlegends,
-                                        funx_ = funx_,
-                                        ifunx_ = ifunx_,
-                                        envir = envir,
-                                        which_aes = NULL, 
-                                        print = FALSE,
-                                        verbose = verbose)
-             
-             return(outp)
-           } # else if(!force_condition_and_by_switch_plot) {
-         } # else if(plot) {
-       } # if(call_predictions) {
-       
-       if(call_slopes) {
-         if(!plot) {
-           if(!average) {
-             myzfun <- function(x) {
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) message("need to expose functions for 'multisession'")
-                 predictions_arguments[['model']] <- 
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
-               }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-               CustomDoCall(marginaleffects::slopes, predictions_arguments)
-             }
-             out <-  future.apply::future_lapply(future_splits_at,
-                                                 future.envir = parent.frame(),
-                                                 future.globals = TRUE,
-                                                 future.seed = TRUE,
-                                                 FUN = myzfun)
-           } else if(average) {
-             myzfun <- function(x) {
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) message("need to expose functions for 'multisession'")
-                 predictions_arguments[['model']] <- 
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
-               }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-               CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
-             }
-             out <-  future.apply::future_lapply(future_splits_at,
-                                                 future.envir = parent.frame(),
-                                                 future.globals = TRUE,
-                                                 future.seed = TRUE,
-                                                 FUN = myzfun)
-           }
-         } else if(plot) {
-           if(force_condition_and_by_switch_plot) {
-             # predictions_arguments <- predictions_arguments.org
-             predictions_arguments <- 
-               condition_by_switch_fun(arg = predictions_arguments, 
-                                       condition = 'condition', by = 'by',
-                                       rm_by = TRUE, rm_condition = FALSE,
-                                       verbose = verbose)
-             if(!return_plot) {
-               predictions_arguments[['draw']] <- FALSE
-               out_sf <- CustomDoCall(marginaleffects::plot_slopes,
-                                      predictions_arguments)
-               if(return_plot_est) return(out_sf)
-             } # if(!return_plot) {
-             if(return_plot) {
-               # predictions_arguments[['draw']] <- FALSE
-               outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                    predictions_arguments)
-               
-               outp <- edit_mapping_facet(outp = outp, 
-                                          by = predictions_arguments$by,
-                                          condition = predictions_arguments$condition,
-                                          xcall = xcall,
-                                          method = method,
-                                          mapping_facet = mapping_facet,
-                                          showlegends = showlegends,
-                                          funx_ = funx_,
-                                          ifunx_ = ifunx_,
-                                          envir = envir,
-                                          which_aes = NULL, 
-                                          print = FALSE,
-                                          verbose = verbose)
-               
-               return(outp)
-             } # if(!return_plot) {
-           } else if(!force_condition_and_by_switch_plot) {
-             outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                  predictions_arguments)
-             
-             outp <- edit_mapping_facet(outp = outp, 
-                                        by = predictions_arguments$by,
-                                        condition = predictions_arguments$condition,
-                                        xcall = xcall,
-                                        method = method,
-                                        mapping_facet = mapping_facet,
-                                        showlegends = showlegends,
-                                        funx_ = funx_,
-                                        ifunx_ = ifunx_,
-                                        envir = envir,
-                                        which_aes = NULL, 
-                                        print = FALSE,
-                                        verbose = verbose)
-             
-             return(outp)
-           } # else if(!force_condition_and_by_switch_plot) {
-           
-         } # else if(plot) {
-       } # if(call_slopes) {
+           funcallargs[['model']] <- 
+             bsitar::expose_model_functions(funcallargs[['model']])
+         }
+         setenv <- funcallargs[['model']]$model_info$envir
+         assign(o[[1]],
+                funcallargs[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                envir = setenv)
+         return(CustomDoCall(funcall, funcallargs))
+       }
+       if(!plot) {
+         if(return_plot_est_custom | !return_plot_est_custom) {
+           funcallargs[['draw']] <- FALSE
+           out <- future.apply::future_lapply(future_splits_at, 
+                                              FUN = myzfun,
+                                              funcall = funcall,
+                                              funcallargs = funcallargs,
+                                              future.envir = parent.frame(),
+                                              future.globals = TRUE,
+                                              future.seed = TRUE)
+         } # if(return_plot_est_custom) {
+         if(!return_plot_est_custom) {
+           # stop("Future not supported for this call...")
+         }
+         # stop("Future not supported for this call...")
+         # out <-  future.apply::future_lapply(future_splits_at, 
+         #                                     FUN = myzfun,
+         #                                     funcall = funcall,
+         #                                     funcallargs = funcallargs,
+         #                                     future.envir = parent.frame(),
+         #                                     future.globals = TRUE,
+         #                                     future.seed = TRUE)
+       } else if(plot) {
+         if(force_condition_and_by_switch_plot & !return_plot) {
+           out <-  future.apply::future_lapply(future_splits_at, 
+                                               FUN = myzfun,
+                                               funcall = funcall,
+                                               funcallargs = funcallargs,
+                                               future.envir = parent.frame(),
+                                               future.globals = TRUE,
+                                               future.seed = TRUE)
+         } else if(!force_condition_and_by_switch_plot) {
+           outp <- CustomDoCall(funcall, funcallargs)
+           outp <- edit_mapping_facet(outp = outp, 
+                                      by = predictions_arguments$by,
+                                      condition = predictions_arguments$condition,
+                                      xcall = xcall,
+                                      method = method,
+                                      mapping_facet = mapping_facet,
+                                      showlegends = showlegends,
+                                      funx_ = funx_,
+                                      ifunx_ = ifunx_,
+                                      envir = envir,
+                                      which_aes = NULL, 
+                                      print = FALSE,
+                                      verbose = verbose)
+           return(outp)
+         } # else if(!force_condition_and_by_switch_plot) {
+       } # if(!plot) { else if(plot) {
      } # if(future_splits_exe_future) {
      
      
@@ -2336,318 +2077,102 @@ marginal_draws.bgmfit <-
      
      if(future_splits_exe_dofuture & callfuns) {
        `%doFuture_function%` <- doFuture::`%dofuture%`
-       # Somehow .options.future = list(seed = TRUE) not working, so set below
+       # somehow .options.future = list(seed = TRUE) not working, so set below
        dofutureplan <- getOption("doFuture.rng.onMisuse")
        options(doFuture.rng.onMisuse = "ignore")
        on.exit(options("doFuture.rng.onMisuse" = dofutureplan), add = TRUE)
        
-       if(call_predictions) {
-         if(!plot) {
-           if(!average) {
-             out <- foreach::foreach(x = 1:length(future_splits_at),
-                                        .options.future = list(seed = TRUE),
-                                       #  .options.future =
-                                       # list(globals = 
-                                       #        structure(TRUE, 
-                                       #                  add = c(
-                                       #                    'future_splits_at',
-                                       #                  # 'setplanis',
-                                       #                  'verbose',
-                                       #                  'o', 
-                                       #                  're_expose',
-                                       #                  'predictions_arguments')
-                                       #                  ))
-                                     .options.future =
-                                       list(globals = c('future_splits_at',
-                                                        're_expose',
-                                                        'o',
-                                                        'call_predictions',
-                                                        'call_slopes',
-                                                        'CustomDoCall',
-                                                        'verbose',
-                                                        'predictions_arguments'))
-             ) %doFuture_function% {
-               x <- future_splits_at[[x]]
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) {
-                   message("need to expose functions for 'multisession'")
-                 }
-                 predictions_arguments[['model']] <-
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
+       if(!plot) {
+         if(return_plot_est_custom | !return_plot_est_custom) {
+           funcallargs[['draw']] <- FALSE
+           out <- foreach::foreach(x = 1:length(future_splits_at),
+                                   .options.future = list(seed = TRUE),
+                                   .options.future =
+                                     list(globals = c('future_splits_at',
+                                                      're_expose',
+                                                      'o',
+                                                      'call_predictions',
+                                                      'call_slopes',
+                                                      'CustomDoCall',
+                                                      'funcallargs',
+                                                      'funcall',
+                                                      'verbose'))
+           ) %doFuture_function% {
+             x <- future_splits_at[[x]]
+             funcallargs[['draw_ids']] <- x
+             funcallargs[['ndraws']] <- NULL
+             `%>%` <- bsitar::`%>%`
+             if(re_expose) {
+               if(verbose) {
+                 message2c("need to expose functions for 'multisession'")
                }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-                 # 6.03.2025
-                 if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::predictions, 
-                                       predictions_arguments)
-                 } # if(!check_fun) {
-                 if(check_fun) {
-                   if(deriv > 0) {
-                     if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::predictions, 
-                                           predictions_arguments)
-                     } 
-                     if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::slopes, 
-                                           predictions_arguments)
-                     }
-                   } # if(deriv > 0) {
-                 } # if(check_fun) {
-              # CustomDoCall(marginaleffects::predictions, predictions_arguments)
+               funcallargs[['model']] <- bsitar::expose_model_functions(funcallargs[['model']])
              }
-           } else if(average) {
-             out <- foreach::foreach(x = 1:length(future_splits_at),
-                                     .options.future = list(seed = TRUE),
-                                     # .options.future =
-                                     #   list(globals = c('future_splits_at',
-                                     #                    # 'setplanis',
-                                     #                    'verbose',
-                                     #                    'o', 
-                                     #                    're_expose',
-                                     #                    'predictions_arguments'))
-                                     .options.future =
-                                       list(globals = c('future_splits_at',
-                                                        're_expose',
-                                                        'o',
-                                                        'call_predictions',
-                                                        'call_slopes',
-                                                        'CustomDoCall',
-                                                        'verbose',
-                                                        'predictions_arguments'))
-             ) %doFuture_function% {
-               x <- future_splits_at[[x]]
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) message("need to expose functions for 'multisession'")
-                 predictions_arguments[['model']] <- 
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
+             setenv <- funcallargs[['model']]$model_info$envir
+             assign(o[[1]],
+                    funcallargs[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                    envir = setenv)
+             return(CustomDoCall(funcall, funcallargs))
+           } # %doFuture_function% {
+         } # if(return_plot_est_custom) {
+         if(!return_plot_est_custom) {
+           # stop("Future not supported for this call...")
+         }
+       } else if(plot) {
+         if(force_condition_and_by_switch_plot & !return_plot) {
+           out <- foreach::foreach(x = 1:length(future_splits_at),
+                                   .options.future = list(seed = TRUE),
+                                   .options.future =
+                                     list(globals = c('future_splits_at',
+                                                      're_expose',
+                                                      'o',
+                                                      'call_predictions',
+                                                      'call_slopes',
+                                                      'CustomDoCall',
+                                                      'funcallargs',
+                                                      'funcall',
+                                                      'verbose'))
+           ) %doFuture_function% {
+             x <- future_splits_at[[x]]
+             funcallargs[['draw_ids']] <- x
+             funcallargs[['ndraws']] <- NULL
+             `%>%` <- bsitar::`%>%`
+             if(re_expose) {
+               if(verbose) {
+                 message2c("need to expose functions for 'multisession'")
                }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-                 # 6.03.2025
-                 if(!check_fun) {
-                   out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                       predictions_arguments)
-                 } # if(!check_fun) {
-                 if(check_fun) {
-                   if(deriv > 0) {
-                     if(available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_predictions, 
-                                           predictions_arguments)
-                     } 
-                     if(!available_d1) {
-                       out <- CustomDoCall(marginaleffects::avg_slopes, 
-                                           predictions_arguments)
-                     }
-                   } # if(deriv > 0) {
-                 } # if(check_fun) {
-               # CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+               funcallargs[['model']] <- bsitar::expose_model_functions(funcallargs[['model']])
              }
-           }
-         } else if(plot) {
-           if(force_condition_and_by_switch_plot) {
-             # predictions_arguments <- predictions_arguments.org
-             predictions_arguments <- 
-               condition_by_switch_fun(arg = predictions_arguments, 
-                                       condition = 'condition', by = 'by',
-                                       rm_by = TRUE, rm_condition = FALSE,
-                                       verbose = verbose)
-             if(!return_plot) {
-               predictions_arguments[['draw']] <- FALSE
-               out_sf <- CustomDoCall(marginaleffects::plot_slopes,
-                                      predictions_arguments)
-               if(return_plot_est) return(out_sf)
-             } # if(!return_plot) {
-             if(return_plot) {
-               # predictions_arguments[['draw']] <- FALSE
-               outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                    predictions_arguments)
-               
-               outp <- edit_mapping_facet(outp = outp, 
-                                          by = predictions_arguments$by,
-                                          condition = predictions_arguments$condition,
-                                          xcall = xcall,
-                                          method = method,
-                                          mapping_facet = mapping_facet,
-                                          showlegends = showlegends,
-                                          funx_ = funx_,
-                                          ifunx_ = ifunx_,
-                                          envir = envir,
-                                          which_aes = NULL, 
-                                          print = FALSE,
-                                          verbose = verbose)
-               
-               return(outp)
-             } # if(!return_plot) {
-           } else if(!force_condition_and_by_switch_plot) {
-             outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                  predictions_arguments)
-             
-             outp <- edit_mapping_facet(outp = outp, 
-                                        by = predictions_arguments$by,
-                                        condition = predictions_arguments$condition,
-                                        xcall = xcall,
-                                        method = method,
-                                        mapping_facet = mapping_facet,
-                                        showlegends = showlegends,
-                                        funx_ = funx_,
-                                        ifunx_ = ifunx_,
-                                        envir = envir,
-                                        which_aes = NULL, 
-                                        print = FALSE,
-                                        verbose = verbose)
-             
-             return(outp)
-           } # else if(!force_condition_and_by_switch_plot) {
-         } # else if(plot) {
-       } # if(call_predictions) {
-       
-       if(call_slopes) {
-         if(!plot) {
-           if(!average) {
-             out <- foreach::foreach(x = 1:length(future_splits_at),
-                                     .options.future = list(seed = TRUE),
-                                     # .options.future =
-                                     #   list(globals = c('future_splits_at',
-                                     #                    # 'setplanis',
-                                     #                    'verbose',
-                                     #                    'o', 
-                                     #                    're_expose',
-                                     #                    'predictions_arguments'))
-                                     .options.future =
-                                       list(globals = c('future_splits_at',
-                                                        're_expose',
-                                                        'o',
-                                                        'call_predictions',
-                                                        'call_slopes',
-                                                        'CustomDoCall',
-                                                        'verbose',
-                                                        'predictions_arguments'))
-             ) %doFuture_function% {
-               x <- future_splits_at[[x]]
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) message("need to expose functions for 'multisession'")
-                 predictions_arguments[['model']] <- 
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
-               }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-               CustomDoCall(marginaleffects::slopes, predictions_arguments)
-             }
-           } else if(average) {
-             out <- foreach::foreach(x = 1:length(future_splits_at),
-                                     .options.future = list(seed = TRUE),
-                                     # .options.future =
-                                     #   list(globals = c('future_splits_at',
-                                     #                    # 'setplanis',
-                                     #                    'verbose',
-                                     #                    'o', 
-                                     #                    're_expose',
-                                     #                    'predictions_arguments'))
-                                     .options.future =
-                                       list(globals = c('future_splits_at',
-                                                        're_expose',
-                                                        'o',
-                                                        'call_predictions',
-                                                        'call_slopes',
-                                                        'CustomDoCall',
-                                                        'verbose',
-                                                        'predictions_arguments'))
-             ) %doFuture_function% {
-               x <- future_splits_at[[x]]
-               predictions_arguments[['draw_ids']] <- x
-               predictions_arguments[['ndraws']] <- NULL
-               `%>%` <- bsitar::`%>%`
-               if(re_expose) {
-                 if(verbose) message("need to expose functions for 'multisession'")
-                 predictions_arguments[['model']] <- 
-                   bsitar::expose_model_functions(predictions_arguments[['model']])
-               }
-                 # Re-assign appropriate function
-                 setenv <- predictions_arguments[['model']]$model_info$envir
-                 assign(o[[1]],
-                        predictions_arguments[['model']]$model_info[['exefuns']][[o[[2]]]], 
-                        envir = setenv)
-               CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
-             }
-           }
-         } else if(plot) {
-           if(force_condition_and_by_switch_plot) {
-             # predictions_arguments <- predictions_arguments.org
-             predictions_arguments <- 
-               condition_by_switch_fun(arg = predictions_arguments, 
-                                       condition = 'condition', by = 'by',
-                                       rm_by = TRUE, rm_condition = FALSE,
-                                       verbose = verbose)
-             if(!return_plot) {
-               predictions_arguments[['draw']] <- FALSE
-               out_sf <- CustomDoCall(marginaleffects::plot_slopes,
-                                      predictions_arguments)
-               if(return_plot_est) return(out_sf)
-             } # if(!return_plot) {
-             if(return_plot) {
-               # predictions_arguments[['draw']] <- FALSE
-               outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                    predictions_arguments)
-               
-               outp <- edit_mapping_facet(outp = outp, 
-                                          by = predictions_arguments$by,
-                                          condition = predictions_arguments$condition,
-                                          xcall = xcall,
-                                          method = method,
-                                          mapping_facet = mapping_facet,
-                                          showlegends = showlegends,
-                                          funx_ = funx_,
-                                          ifunx_ = ifunx_,
-                                          envir = envir,
-                                          which_aes = NULL, 
-                                          print = FALSE,
-                                          verbose = verbose)
-               
-               return(outp)
-             } # if(!return_plot) {
-           } else if(!force_condition_and_by_switch_plot) {
-             outp <- CustomDoCall(marginaleffects::plot_slopes,
-                                  predictions_arguments)
-             
-             outp <- edit_mapping_facet(outp = outp, 
-                                        by = predictions_arguments$by,
-                                        condition = predictions_arguments$condition,
-                                        xcall = xcall,
-                                        method = method,
-                                        mapping_facet = mapping_facet,
-                                        showlegends = showlegends,
-                                        funx_ = funx_,
-                                        ifunx_ = ifunx_,
-                                        envir = envir,
-                                        which_aes = NULL, 
-                                        print = FALSE,
-                                        verbose = verbose)
-             
-             return(outp)
-           } # else if(!force_condition_and_by_switch_plot) {
-          
-         } # else if(plot) {
-       } # if(call_slopes) {
-     } # if(future_splits_exe_dofuture) {
+             setenv <- funcallargs[['model']]$model_info$envir
+             assign(o[[1]],
+                    funcallargs[['model']]$model_info[['exefuns']][[o[[2]]]], 
+                    envir = setenv)
+             return(CustomDoCall(funcall, funcallargs))
+           } # %doFuture_function% {
+         } else if(!force_condition_and_by_switch_plot) {
+           # already not supported
+           # outp <- CustomDoCall(funcall, funcallargs)
+           # outp <- edit_mapping_facet(outp = outp, 
+           #                            by = predictions_arguments$by,
+           #                            condition = predictions_arguments$condition,
+           #                            xcall = xcall,
+           #                            method = method,
+           #                            mapping_facet = mapping_facet,
+           #                            showlegends = showlegends,
+           #                            funx_ = funx_,
+           #                            ifunx_ = ifunx_,
+           #                            envir = envir,
+           #                            which_aes = NULL, 
+           #                            print = FALSE,
+           #                            verbose = verbose)
+           # return(outp)
+         } # else if(!force_condition_and_by_switch_plot) {
+       } # if(!plot) { else if(plot) {
+     } # if(future_splits_exe_dofuture & callfuns) {
+     
+     
+     
+     
      
      
      
@@ -2671,6 +2196,23 @@ marginal_draws.bgmfit <-
      }
      
      
+     posterior_draws_dt <- function(i) {
+       dt <- as.data.table(marginaleffects::posterior_draws(out[[i]], 
+                                                            shape = "long"))
+       dt[, drawid := as.factor(future_splits_at[[i]][as.numeric(drawid)])]
+       data.table::setcolorder(dt, "drawid")
+       return(dt)
+     }
+     
+     posterior_draws_collapse <- function(i) {
+       dt <- collapse::qDT(marginaleffects::posterior_draws(out[[i]], 
+                                                            shape = "long"))
+       draw_idx <- as.numeric(dt$drawid)
+       dt[, drawid := as.factor(future_splits_at[[i]][draw_idx])]
+       return(dt)
+     }
+     
+     
      # somehow this need consequence number
      if(!future_splits_exe) {
        if(callfuns) {
@@ -2683,14 +2225,24 @@ marginal_draws.bgmfit <-
            out <- out %>% CustomDoCall(rbind, .)
            return(out)
          }
-         onex0 <- lapply(1:length(future_splits_at), 
-                         FUN = posterior_draws_function)
-         onex0 <- onex0 %>% CustomDoCall(rbind, .)
-         onex0 <- consecutive_drawid_function(onex0)
+         # dplyr
+         # onex0 <- lapply(1:length(future_splits_at), 
+         #                 FUN = posterior_draws_function)
+         # onex0 <- onex0 %>% CustomDoCall(rbind, .)
+         # onex0 <- consecutive_drawid_functionx(onex0)
+         # dplyr data.table
+         # onex0 <- data.table::rbindlist(lapply(seq_along(out), 
+         #                                       posterior_draws_dt))
+         # onex0[, drawid := as.factor(.GRP), by = drawid]
+         # dplyr collapse
+         onex0 <- collapse::unlist2d(future.apply::future_lapply(
+           seq_along(out), posterior_draws_collapse), 
+           idcols = FALSE, DT = TRUE)
+         onex0[, drawid := as.factor(collapse::groupid(drawid))] 
        }
      }
      
-
+     
      
      marginals_list_consecutive_drawid_function <- function(x, ...) {
        if(x == 1) {
@@ -2701,25 +2253,23 @@ marginal_draws.bgmfit <-
          oux <- out[[x]]
          oux$drawid <- as.numeric(oux$drawid) + maxpre * x
        }
-       oux
+       return(oux)
      }
+     
+     
      
      
      if(setmarginals) {
        if(inherits(marginals, 'list')) {
          onex0 <-
-           {. <- lapply(1:length(marginals), 
-                        marginals_list_consecutive_drawid_function)
-           list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), 
-                          function(i)
+           {. <- lapply(1:length(marginals), marginals_list_consecutive_drawid_function)
+           list2DF(lapply(setNames(seq_along(.[[1]]), names(.[[1]])), function(i)
              unlist(lapply(., `[[`, i), FALSE, FALSE)))}
          onex0$drawid <- cheapr::factor_(onex0$drawid)
        } else {
          onex0 <- marginals
        }
      }
-     
-     
      
      
      
@@ -2733,11 +2283,14 @@ marginal_draws.bgmfit <-
        } else if(pdrawsp == 'add') {
          pdrawsp_est <- onex0
        } else {
-         
+         # nothing
        }
      }
      
-
+     
+     
+     # 16.10.2024
+     # when marginals are given, then need to summarise
      if(setmarginals) {
        namesx <- c('estimate', 'conf.low', 'conf.high')
        setdrawidparm_at_ <- c(by, namesx)
@@ -2745,24 +2298,80 @@ marginal_draws.bgmfit <-
          onex0 %>%
          collapse::fgroup_by(by) %>%
          collapse::fsummarise(collapse::mctl(
-           get_pe_ci_collapse(.data[['draw']]))
+           get_pe_ci_collapse(.data[['draw']], ec_agg = ec_agg, 
+                              ei_agg = ei_agg, na.rm = TRUE, 
+                              nthreads = arguments$cores, 
+                              conf = conf, probs = probs))
          )  %>% collapse::frename(., setdrawidparm_at_)
      } # if(setmarginals) {
      
-
+     
+     
      if(!setmarginals) {
        setdrawidparm <- by
        namesx <- c('estimate', 'conf.low', 'conf.high')
        if(!isFALSE(setdrawidparm)) setdrawidparm_ <- c(setdrawidparm, namesx)
        if( isFALSE(setdrawidparm)) setdrawidparm_ <- c(namesx)
-       
-       out_sf <- onex0 %>% collapse::fsubset(., drawid == 1) %>%
+       out_sf <- onex0 %>% 
+         collapse::fsubset(., drawid == 1) %>% 
          collapse::fselect(., setdrawidparm_)
      }
      
      
-    
-
+     
+     # onex0x <<- onex0
+     
+     ######## new 
+     if(is.null(hypothesis)) {
+       constrats_by <- by
+       if(is.null(constrats_by)) {
+         constrats_by <- constrats_by
+       } else if(!is.null(constrats_by)) {
+         if(is.logical(constrats_by)) {
+           if(!constrats_by) {
+             constrats_by <- NULL
+           }
+         } else if(!is.logical(constrats_by)) {
+           if(is.character(constrats_by)) {
+             constrats_by <- constrats_by
+           } else {
+             stop2c("constrats_by must be character")
+           }
+         }
+       } 
+       constrats_by      <- constrats_by
+       check_names_onex0 <- c('rowid', 'term', 'contrast')
+       set_constrats_mfx <- c()
+       for (i in names(onex0)) {
+         if(i %in% check_names_onex0) {
+           set_constrats_mfx <- c(set_constrats_mfx, i)
+         }
+       }
+       # set_constrats_mfx  <- c('rowid', 'term', 'contrast')
+       set_constrats_by  <- c(constrats_by, set_constrats_mfx)
+       namesx            <- c('estimate', 'conf.low', 'conf.high')
+       setdrawidparm_at_ <- c(set_constrats_by, namesx)
+       
+       out_sf <- onex0 %>%
+         collapse::fgroup_by(set_constrats_by) %>%
+         collapse::fsummarise(collapse::mctl(
+           get_pe_ci_collapse(.data[['draw']], ec_agg = ec_agg, 
+                              ei_agg = ei_agg, na.rm = TRUE, 
+                              nthreads = arguments$cores, 
+                              conf = conf, probs = probs))
+         ) %>%
+         collapse::frename(., setdrawidparm_at_) %>% 
+         # collapse::roworder('term') %>% 
+         # collapse::roworderv(set_constrats_by) %>% 
+         setcolorder(., set_constrats_mfx)
+       
+       if("term" %in% set_constrats_by) {
+         out_sf <- collapse::roworder(out_sf, 'term')
+       }
+     } # if(is.null(hypothesis)) {
+     
+     
+     
      
      if(!is.null(hypothesis)) {
        # For hypothesis
@@ -2770,16 +2379,16 @@ marginal_draws.bgmfit <-
        groupvarshyp2 <- c('term')
        if(!is.null(constrats_at)) {
          if(!is.character(constrats_at)) 
-           stop("'constrats_at' must be a character vector")
+           stop2c("'constrats_at' must be a character vector")
          for (caxi in constrats_at) {
            if(!caxi %in% names(onex0)) {
-             stop("Variable '", caxi, ". specified in 'constrats_at' is not in",
-                  "\n ", 
-                  " the estimates. Note that ", caxi, " should also be included",
-                  "\n ", 
-                  " in the 'by' argument. The current 'by' argument includes:", 
-                  "\n ",
-                  collapse_comma(by)
+             stop2c("Variable '", caxi, ". specified in 'constrats_at' is not in",
+                    "\n ", 
+                    " the estimates. Note that ", caxi, " should also be included",
+                    "\n ", 
+                    " in the 'by' argument. The current 'by' argument includes:", 
+                    "\n ",
+                    collapse_comma(by)
              )
            }
            groupvarshyp1 <- c(caxi, groupvarshyp1)
@@ -2789,49 +2398,38 @@ marginal_draws.bgmfit <-
        
        
        if(is.null(constrats_by)) {
-         stop("Please specify 'constrats_by' argument when testing 'hypothesis'",
-              "\n ",
-              " The available options are: ",
-              collapse_comma(by)
-         )
+         stop2c("Please specify 'constrats_by' argument when testing 'hypothesis'",
+                "\n ",
+                " The available options are: ",
+                collapse_comma(by))
        }
        
        if(!is.null(constrats_by)) {
          if(!is.character(constrats_by)) 
-           stop("'constrats_by' must be a character vector")
+           stop2c("'constrats_by' must be a character vector")
          for (caxi in constrats_by) {
            if(!caxi %in% names(onex0)) {
-             stop("Variable '", caxi, ". specified in 'constrats_by' is not in",
-                  "\n ", 
-                  " the estimates. Note that ", caxi, " should also be included",
-                  "\n ", 
-                  " in the 'by' argument. The current 'by' argument includes:", 
-                  "\n ",
-                  collapse_comma(by)
+             stop2c("Variable '", caxi, ". specified in 'constrats_by' is not in",
+                    "\n ", 
+                    " the estimates. Note that ", caxi, " should also be included",
+                    "\n ", 
+                    " in the 'by' argument. The current 'by' argument includes:", 
+                    "\n ",
+                    collapse_comma(by)
              )
            }
          } # for (caxi in names(constrats_by)) {
        } # if(!is.null(constrats_by)) {
        
        
-       if(nrow(out_sf) > 25) {
-         if(is.null(constrats_at)) {
-           cat(" Note that the 'marginaleffects' package does not allow" ,
-               "\n",
-               "'hypothesis' argument when estimates rows are more than 25",
-               "\n",
-               "To avoid this issue, you can use 'constrats_at' argument",
-               "\n"
-           )
-         }
-       }
        
-     
+       
        set_constrats_by <- c(constrats_by, 'draw')
        namesx <- c('estimate', 'conf.low', 'conf.high')
        
        setdrawidparm_at <- c(constrats_at, 'term')
        setdrawidparm_at_ <- c(setdrawidparm_at, namesx)
+       
        
        
        temhyy <-
@@ -2846,10 +2444,13 @@ marginal_draws.bgmfit <-
                             draws = 'estimate'))) 
        
        out_sf_hy <- 
-       temhyy %>%
+         temhyy %>%
          collapse::fgroup_by(groupvarshyp2) %>%
          collapse::fsummarise(collapse::mctl(
-           get_pe_ci_collapse(.data[['estimate']]))
+           get_pe_ci_collapse(.data[['estimate']], ec_agg = ec_agg, 
+                              ei_agg = ei_agg, na.rm = TRUE, 
+                              nthreads = arguments$cores, 
+                              conf = conf, probs = probs))
          ) %>%
          collapse::frename(., setdrawidparm_at_)
        
@@ -2861,10 +2462,8 @@ marginal_draws.bgmfit <-
            return(temhyy)
          } else if(pdrawsh == 'add') {
            pdrawsh_est <- temhyy
-         } else {
-           
-         }
-       }
+         } 
+       } # if(!isFALSE(pdrawsh)) {
      } # if(!is.null(hypothesis)) {
    } # if(method == 'custom') {
    
@@ -2874,7 +2473,6 @@ marginal_draws.bgmfit <-
      dplyr::mutate(dplyr::across(dplyr::where(is.numeric),
                                  ~ round(., digits = digits))) %>%
      data.frame()
-   
    
    
    if(!is.null(pdrawsh_est)) {
@@ -2904,7 +2502,6 @@ marginal_draws.bgmfit <-
    }
    
    
-  
    ##############################################################
    ##############################################################
    # prepare_data2
@@ -2916,7 +2513,7 @@ marginal_draws.bgmfit <-
                                          resp = resp,
                                          auto = TRUE,
                                          verbose = verbose)
-
+   
    itransform_set_x_for_sigma_model <- c("varpower", 
                                          "varconstpower",
                                          "varexp", 
@@ -2941,7 +2538,6 @@ marginal_draws.bgmfit <-
    }
    
    
-
    if(any(itransform_set != "")) {
      if(!is.null(out_sf)) {
        out_sf <- prepare_transformations(data = out_sf, model = model,
@@ -2949,20 +2545,21 @@ marginal_draws.bgmfit <-
      }
      if(!is.null(out_sf_hy)) {
        out_sf_hy <- prepare_transformations(data = out_sf_hy, model = model,
-                                         itransform = itransform_set)
+                                            itransform = itransform_set)
      }
      if(!is.null(pdrawsp_est)) {
        pdrawsp_est <- prepare_transformations(data = pdrawsp_est, model = model,
-                                         itransform = itransform_set)
+                                              itransform = itransform_set)
      }
      if(!is.null(pdrawsh_est)) {
        pdrawsh_est <- prepare_transformations(data = pdrawsh_est, model = model,
-                                         itransform = itransform_set)
+                                              itransform = itransform_set)
      }
    } # if(any(itransform_set != "")) {
    
    ##############################################################
    ##############################################################
+   
    
    
    if(is.null(reformat)) {
@@ -2991,8 +2588,6 @@ marginal_draws.bgmfit <-
                          'predicted_hi', 'predicted', 'rowid')
      }
      
-    
-    
      
      out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
      row.names(out_sf) <- NULL
@@ -3013,7 +2608,6 @@ marginal_draws.bgmfit <-
          data.frame()
      } # if(!is.null(out_sf_hy)) {
      
-     
      if(!is.null(pdrawsp_est)) {
        pdrawsp_est <- pdrawsp_est %>% 
          dplyr::rename(!!as.symbol(set_names_[1]) := 
@@ -3022,6 +2616,7 @@ marginal_draws.bgmfit <-
          data.frame()
      } # if(!is.null(pdrawsp_est)) {
      
+     
      if(!is.null(pdrawsh_est)) {
        pdrawsh_est <- pdrawsh_est %>% 
          dplyr::rename(!!as.symbol(set_names_[1]) := 
@@ -3029,6 +2624,7 @@ marginal_draws.bgmfit <-
          dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
          data.frame()
      } # if(!is.null(pdrawsh_est)) {
+     
    } # if (reformat) {
    
    
@@ -3056,7 +2652,6 @@ marginal_draws.bgmfit <-
    ###########################################
    
    
-   
    out <- list()
    if(!is.null(out_sf)) {
      out[['estimate']] <- out_sf %>% dplyr::ungroup()
@@ -3078,7 +2673,6 @@ marginal_draws.bgmfit <-
    
    return(out)
   }
-
 
 
 

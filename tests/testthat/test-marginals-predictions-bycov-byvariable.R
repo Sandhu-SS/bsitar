@@ -2,7 +2,7 @@
 
 # Skip test for local R CMD Check but run on GitHub
 
-# skip_if_not_ci()
+ skip_if_not_ci()
 
 
 ###############################################################################
@@ -20,13 +20,13 @@ test_that("test-marginals-predictions-bycov-byvariable", {
     fit               = readRDS(testthat::test_path("models", 
                                                     "univariate_fit_cov.rds")) 
     resp              = uvar_resp
-  } else if(test_univariate_fit_cov) {
+  } else if(test_multivariate_fit_cov) {
     fit               = readRDS(testthat::test_path("models", 
                                                     "multivariate_fit_cov.rds"))  
     resp              = mvar_resp
   } else {
     skip(message = 
-           "Both test_univariate_fit_cov and test_univariate_fit_cov FALSE")
+           "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
   }
   
   # Need to re-assign functions to this local test environment
