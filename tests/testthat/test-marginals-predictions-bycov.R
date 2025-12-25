@@ -1,8 +1,9 @@
 
-
 # Skip test for local R CMD Check but run on GitHub
 
- skip_if_not_ci()
+if(skip_test_local_rcmd_check) {
+  skip_local_run_ci()
+}
 
 
 ###############################################################################
@@ -14,7 +15,36 @@ test_that("test-marginals-predictions-bycov", {
   
   # skip_if(!exists('fit_cov'), message = "Model 'fit_cov' not found")
   
-  # devtools::load_all()
+  ##############################################################################
+  # set options
+  ##############################################################################
+  
+  # For current settings (model and draw_ids) min size should be at least 980MB
+  oopts <- options(future.globals.maxSize = 2.0 * 1e9)  ## 2.0 GB
+  on.exit(options(oopts), add = TRUE)
+  
+  estimate_center   <- "mean"
+  estimate_interval <- "eti"
+  ec_ <- getOption("marginaleffects_posterior_center")
+  options("marginaleffects_posterior_center" = estimate_center)
+  on.exit(options("marginaleffects_posterior_center" = ec_), add = TRUE)
+  
+  ei_ <- getOption("marginaleffects_posterior_interval")
+  options("marginaleffects_posterior_interval" = estimate_interval)
+  on.exit(options("marginaleffects_posterior_interval" = ei_), add = TRUE)
+  
+  ec_agg <- getOption("marginaleffects_posterior_center")
+  ei_agg <- getOption("marginaleffects_posterior_interval")
+  
+  if(is.null(ec_agg)) ec_agg <- "mean"
+  if(is.null(ei_agg)) ei_agg <- "eti"
+  
+  
+  ##############################################################################
+  # set model
+  ##############################################################################
+  
+  test_tolerance <- 0.01
   
   if(test_univariate_fit_cov) {
     fit               = readRDS(testthat::test_path("models", 

@@ -1,8 +1,9 @@
 
-
 # Skip test for local R CMD Check but run on GitHub
 
-# skip_if_not_ci()
+if(skip_test_local_rcmd_check) {
+  skip_local_run_ci()
+}
 
 
 ###############################################################################

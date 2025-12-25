@@ -56,13 +56,24 @@
   test_data_female <- test_data %>% dplyr::filter(sex == 'Female') %>% 
     droplevels()
   
+  
   ##############################################################################
-  # models
+  # Set global settings
   ##############################################################################
-
-
+  
   test_univariate_fit_cov   <- TRUE
   test_multivariate_fit_cov <- FALSE
+  
+  skip_test_local_rcmd_check <- FALSE
+  
+  set.seed(113)
+  draw_ids   <- 1:5
+  mvar_resp <- 'height'
+  uvar_resp <- NULL
+  
+  ##############################################################################
+  # check if model files exists
+  ##############################################################################
 
   testfile_exists <- function(filename) {
     files <- list.files(
@@ -74,6 +85,10 @@
   }
   
   
+  ##############################################################################
+  # Wraper for testthat::expect_equal()
+  ##############################################################################
+  
   informative_expect_equal <- function(object, expected, ...) {
     obj_quo   <- rlang::enquo(object)
     exp_label <- quasi_label(rlang::enquo(expected))
@@ -84,7 +99,7 @@
       }
     }
     message("Testing: ", info)
-    expect_equal(object, expected, ...)
+    testthat::expect_equal(object, expected, ...)
     # if (expect_equal(object, expected, ...)) {
     #   print("mmmm")
     #   message("✗ ", "Failed")
@@ -95,18 +110,29 @@
   }
   
   
-  set.seed(113)
-  draw_ids   <- 1:5
-  mvar_resp <- 'height'
-  uvar_resp <- NULL
+  ##############################################################################
+  # custom skip helper that runs tests only on CI and not on local R CMD Checks
+  ##############################################################################
   
-  # bsitar::plot_curves(univariate_fit_cov, apv = T, draw_ids = draw_ids)
-  #
-  # bsitar::plot_curves(multivariate_fit_cov, resp = 'height', apv = T, draw_ids = draw_ids)
-  
-  
-  # model <- readRDS(testthat::test_path("models", "univariate_fit_cov.rds")) 
+  skip_local_run_ci <- function() {
+    ci <- Sys.getenv("CI")
+    if (identical(ci, "") || identical(ci, "false") || identical(ci, "0")) {
+      testthat::skip("Skipping: not on CI")
+    }
+  }
 
+  # Usage
+  # skip_local_run_ci()
+  #
+  # test_that("big model behaviour", {
+  #   # heavy fits / large objects tested here
+  # })
+  
+  
+  ##############################################################################
+  # Model files
+  ##############################################################################
+  
   ##############################################################################
   # test_fit_nsk - with sample_prior = "only" and covariate
   ##############################################################################
@@ -226,6 +252,13 @@
   # saveRDS(multivariate_fit_cov, "multivariate_fit_cov.rds")
   
   
+  
+  # bsitar::plot_curves(univariate_fit_cov, apv = T, draw_ids = draw_ids)
+  #
+  # bsitar::plot_curves(multivariate_fit_cov, resp = 'height', apv = T, draw_ids = draw_ids)
+  
+  
+  # model <- readRDS(testthat::test_path("models", "univariate_fit_cov.rds")) 
   
  
   
