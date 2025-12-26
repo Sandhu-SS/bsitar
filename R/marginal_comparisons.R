@@ -344,6 +344,7 @@ marginal_comparisons.bgmfit <- function(model,
     ndraws_exe <- TRUE
   } else if(is.null(ndraws)) {
     ndraws     <- brms::ndraws(model)
+    ndraws_exe <- TRUE
   }
   
   
@@ -1741,20 +1742,6 @@ marginal_comparisons.bgmfit <- function(model,
       }
       
       
-      # if(future_splits_exe) {
-      #   for (i in names(predictions_arguments)) {
-      #     predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
-      #   }
-      # }
-      # 
-      # if(future_splits_exe) {
-      #   for (i in names(comparisons_arguments)) {
-      #     comparisons_arguments[[i]] <- eval(comparisons_arguments[[i]])
-      #   }
-      # }
-      
-      
-      
       if(plot) {
         if(!force_condition_and_by_switch_plot) {
           if(custom_method_call == 'predictions') {
@@ -1791,7 +1778,6 @@ marginal_comparisons.bgmfit <- function(model,
               be supplied. Currentlu both 'by' and 'both' are NULL")
           } # if(is.null(comparisons_arguments[['by']]) & 
         }
-        
       } # if(plot) {
       
       
@@ -2177,32 +2163,32 @@ marginal_comparisons.bgmfit <- function(model,
       
       
       
-      posterior_draws_function <- function(x, ...) {
-        out[[x]] %>% 
-          marginaleffects:: posterior_draws(shape = "long") %>% 
-          dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-          dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
-          dplyr::mutate(drawid = as.factor(drawid)) %>% 
-          dplyr::relocate(drawid, .before = 'draw')
-      }
-      
-      
-      consecutive_drawid_function <- function(x, ...) {
-        x %>% 
-          dplyr::group_by(drawid) %>% 
-          dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
-          dplyr::mutate(drawid = as.factor(drawid)) %>% 
-          dplyr::ungroup()
-      }
-      
-      
-      posterior_draws_dt <- function(i) {
-        dt <- as.data.table(marginaleffects::posterior_draws(out[[i]], 
-                                                             shape = "long"))
-        dt[, drawid := as.factor(future_splits_at[[i]][as.numeric(drawid)])]
-        data.table::setcolorder(dt, "drawid")
-        return(dt)
-      }
+      # posterior_draws_function <- function(x, ...) {
+      #   out[[x]] %>% 
+      #     marginaleffects:: posterior_draws(shape = "long") %>% 
+      #     dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+      #     dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
+      #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
+      #     dplyr::relocate(drawid, .before = 'draw')
+      # }
+      # 
+      # 
+      # consecutive_drawid_function <- function(x, ...) {
+      #   x %>% 
+      #     dplyr::group_by(drawid) %>% 
+      #     dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
+      #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
+      #     dplyr::ungroup()
+      # }
+      # 
+      # 
+      # posterior_draws_dt <- function(i) {
+      #   dt <- as.data.table(marginaleffects::posterior_draws(out[[i]], 
+      #                                                        shape = "long"))
+      #   dt[, drawid := as.factor(future_splits_at[[i]][as.numeric(drawid)])]
+      #   data.table::setcolorder(dt, "drawid")
+      #   return(dt)
+      # }
       
       posterior_draws_collapse <- function(i) {
         dt <- collapse::qDT(marginaleffects::posterior_draws(out[[i]], 

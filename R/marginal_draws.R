@@ -338,6 +338,7 @@ marginal_draws.bgmfit <-
       ndraws_exe <- TRUE
     } else if(is.null(ndraws)) {
       ndraws <- brms::ndraws(model)
+      ndraws_exe <- TRUE
     }
     
     
@@ -2177,32 +2178,32 @@ marginal_draws.bgmfit <-
      
      
      
-     posterior_draws_function <- function(x, ...) {
-       out[[x]] %>% 
-         marginaleffects:: posterior_draws(shape = "long") %>% 
-         dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-         dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
-         dplyr::mutate(drawid = as.factor(drawid)) %>% 
-         dplyr::relocate(drawid, .before = 'draw')
-     }
-     
-     
-     consecutive_drawid_function <- function(x, ...) {
-       x %>% 
-         dplyr::group_by(drawid) %>% 
-         dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
-         dplyr::mutate(drawid = as.factor(drawid)) %>% 
-         dplyr::ungroup()
-     }
-     
-     
-     posterior_draws_dt <- function(i) {
-       dt <- as.data.table(marginaleffects::posterior_draws(out[[i]], 
-                                                            shape = "long"))
-       dt[, drawid := as.factor(future_splits_at[[i]][as.numeric(drawid)])]
-       data.table::setcolorder(dt, "drawid")
-       return(dt)
-     }
+     # posterior_draws_function <- function(x, ...) {
+     #   out[[x]] %>% 
+     #     marginaleffects:: posterior_draws(shape = "long") %>% 
+     #     dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+     #     dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
+     #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
+     #     dplyr::relocate(drawid, .before = 'draw')
+     # }
+     # 
+     # 
+     # consecutive_drawid_function <- function(x, ...) {
+     #   x %>% 
+     #     dplyr::group_by(drawid) %>% 
+     #     dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
+     #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
+     #     dplyr::ungroup()
+     # }
+     # 
+     # 
+     # posterior_draws_dt <- function(i) {
+     #   dt <- as.data.table(marginaleffects::posterior_draws(out[[i]], 
+     #                                                        shape = "long"))
+     #   dt[, drawid := as.factor(future_splits_at[[i]][as.numeric(drawid)])]
+     #   data.table::setcolorder(dt, "drawid")
+     #   return(dt)
+     # }
      
      posterior_draws_collapse <- function(i) {
        dt <- collapse::qDT(marginaleffects::posterior_draws(out[[i]], 

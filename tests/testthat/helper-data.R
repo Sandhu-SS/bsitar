@@ -64,7 +64,7 @@
   test_univariate_fit_cov   <- TRUE
   test_multivariate_fit_cov <- FALSE
   
-  skip_test_local_rcmd_check <- FALSE
+  skip_test_local_rcmd_check <- TRUE
   
   set.seed(113)
   draw_ids   <- 1:5

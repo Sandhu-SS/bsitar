@@ -495,7 +495,8 @@ marginal_growthparameters.bgmfit <- function(model,
                                         stop = FALSE))
   
   if(!isTRUE(zz)) {
-    message("Please install the latest version of the 'marginaleffects' package",
+    message2c("Please install the latest version of the 
+              'marginaleffects' package",
             "\n ",
             "remotes::install_github('vincentarelbundock/marginaleffects')")
     return(invisible(NULL))
@@ -504,7 +505,7 @@ marginal_growthparameters.bgmfit <- function(model,
   if(usecollapse) {
     usedtplyrcheck <- usedtplyr
     usedtplyr <- FALSE
-    if(verbose & usedtplyrcheck) message("Setting usedtplyr = FALSE because ",
+    if(verbose & usedtplyrcheck) message2c("Setting usedtplyr = FALSE because ",
                                          "usecollapse = TRUE")
   } else {
     usedtplyr <- usedtplyr
@@ -567,7 +568,7 @@ marginal_growthparameters.bgmfit <- function(model,
   setpreparms  <- FALSE
   
   if(!is.null(marginals) & !is.null(preparms)) {
-    stop("Please specify either marginals or preparms, not both")
+    stop2c("Please specify either marginals or preparms, not both")
   }
   
   if(!is.null(marginals)) {
@@ -591,7 +592,7 @@ marginal_growthparameters.bgmfit <- function(model,
   }
   
   if(!is.null(transform) & !is.null(transform_draws)) {
-    stop("Please specify either transform or transform_draws, not both")
+    stop2c("Please specify either transform or transform_draws, not both")
   }
   
   
@@ -613,7 +614,7 @@ marginal_growthparameters.bgmfit <- function(model,
     unlock_replace_bind(package = "insight", what = "get_data",
                         replacement = custom_get_data.brmsfit, ept_str = T)
     if(verbose) {
-      message(" As model[['test_mode']] = FLASE, the full data by the",
+      message2c(" As model[['test_mode']] = FLASE, the full data by the",
               "\n ", 
               "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
               "\n ", 
@@ -630,7 +631,7 @@ marginal_growthparameters.bgmfit <- function(model,
     unlock_replace_bind(package = "insight", what = "get_data",
                         replacement = custom_get_data.brmsfit, ept_str = T)
     if(verbose) {
-      message(" As model[['test_mode']] = FLASE, the full data by the",
+      message2c(" As model[['test_mode']] = FLASE, the full data by the",
               "\n ", 
               "insight::get_data() is extracted via 'custom_get_data.brmsfit'",
               "\n ", 
@@ -673,6 +674,7 @@ marginal_growthparameters.bgmfit <- function(model,
     ndraws_exe <- TRUE
   } else if(is.null(ndraws)) {
     ndraws <- brms::ndraws(model)
+    ndraws_exe <- TRUE
   }
   
   
@@ -781,7 +783,7 @@ marginal_growthparameters.bgmfit <- function(model,
   } else {
     if(deriv == 0) {
       if(dpar == "sigma") {
-        stop("Please set 'deriv = 1', or 'NULL'")
+        stop2c("Please set 'deriv = 1', or 'NULL'")
       }
     }
   }
@@ -820,7 +822,7 @@ marginal_growthparameters.bgmfit <- function(model,
   # 15 06 2025
   allowed_methods <- c('pkg', 'custom')
   if(!method %in% allowed_methods) 
-    stop("Argument 'method' should be one of the following:",
+    stop2c("Argument 'method' should be one of the following:",
          "\n ", 
          collapse_comma(allowed_methods)
     )
@@ -832,7 +834,7 @@ marginal_growthparameters.bgmfit <- function(model,
     model_deriv <- TRUE
     if(verbose) {
       if(!setpreparms) {
-        message(" For method = 'custom', deriv is set to TRUE.\n")
+        message2c(" For method = 'custom', deriv is set to TRUE.\n")
       }
     }
   }
@@ -844,7 +846,7 @@ marginal_growthparameters.bgmfit <- function(model,
   }
   
   if(idata_method == 'm1') {
-    stop("For marginaleffects based functions, the " ,
+    stop2c("For marginaleffects based functions, the " ,
          " \n",
          " 'idata_method' argument must be either NULL or 'm2'" )
   }
@@ -882,9 +884,9 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(verbose) {
     if(setpreparms) {
-      message(" For 'preparms', the argument 'parameter' is ignored.",
-              "\n All levels of parameter variable are summarised.",
-              "\n To get summary of a single variable (such as 'apgv'), you can",
+      message2c(" For 'preparms', the argument 'parameter' is ignored.",
+              "\n All levels of parameter variable are summarised. To get ",
+              "\n summary of a single variable (such as 'apgv'), you can",
               "\n subset the parameter variable before calling the function\n")
     }
   }
@@ -909,7 +911,7 @@ marginal_growthparameters.bgmfit <- function(model,
   for (parameteri in parm) {
     if(!parameteri %in% allowed_parms) {
       allowed_parms_err <- c(allowed_parms, 'all')
-      stop("parameter '", parameteri, "' ", "not allowed",
+      stop2c("parameter '", parameteri, "' ", "not allowed",
            "\n  ",
            "Allowed parameter options are: ", 
            paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
@@ -920,7 +922,7 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   if(length(parm) > 1) {
-    if(plot) stop("Please specify only one parameter when plot = TRUE")
+    if(plot) stop2c("Please specify only one parameter when plot = TRUE")
   }
   
   
@@ -929,13 +931,6 @@ marginal_growthparameters.bgmfit <- function(model,
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', probtitles)
-  
-  
-  
-  # if(!is.null(model$model_info$decomp)) {
-  #  if(model$model_info$decomp == "QR") model_deriv <- FALSE
-  # }
-  
   
   
   expose_method_set <- model$model_info[['expose_method']]
@@ -966,7 +961,7 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(!is.null(funlist)) {
     if(!is.list(funlist)) {
-      stop("funlist must be a list")
+      stop2c("'funlist' must be a list")
     } else {
       o <- funlist
     }
@@ -1038,7 +1033,7 @@ marginal_growthparameters.bgmfit <- function(model,
             available_d1 <- FALSE
             model_deriv  <- FALSE
             call_slopes  <- TRUE # FALSE # TRUE
-          } # if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) else if(is.null
+          } # if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) else if(
         } # if(o[['sigma_model']] == "ls") { else if(o[['sigma_model']] ...
       } # if(!is.null(o[['sigma_model']])) {
     } # if(deriv > 0) {
@@ -1077,7 +1072,7 @@ marginal_growthparameters.bgmfit <- function(model,
     
     if(sigma_model == "basic") {
       if(!is.null(ipts)) {
-        stop("For sigma_model = ",  
+        stop2c("For sigma_model = ",  
              collapse_comma(sigma_model), ", the ipts should be NULL", 
              "\n  ", 
              "Currently, you have set this argument as ipts = ", ipts)
@@ -1100,7 +1095,7 @@ marginal_growthparameters.bgmfit <- function(model,
       # if(sigma_model == "basic" && !need_velocity_curve) {
       if(is.null(xvar)) {
         if(verbose) {
-          message(clean_msg_sigma_model_no_xvar)
+          message2c(clean_msg_sigma_model_no_xvar)
         }
       }
     }
@@ -1147,7 +1142,7 @@ marginal_growthparameters.bgmfit <- function(model,
           force_condition_and_by_switch_plot <- TRUE
           if(is.null(difx)) {
             if(verbose) {
-              message("The difx has been set same as variables i.e.," , 
+              message2c("The difx has been set same as variables i.e.," , 
                       "\n ",
                       collapse_comma(variables),
                       "\n ")
@@ -1161,7 +1156,8 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(force_condition_and_by_switch_plot) {
     if(is.null(variables) & is.null(difx)) {
-      stop("For dpar = 'sigma', please specify 'variables' or 'difx' argument")
+      stop2c("For dpar = 'sigma', please specify 'variables' 
+             or 'difx' argument")
     }
   }
   
@@ -1196,7 +1192,8 @@ marginal_growthparameters.bgmfit <- function(model,
       # nothing
     } else {
       rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
-      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_trace_back.bgmfit <- 
+        rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
       rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
       xcall <- rlang_call_name
     }
@@ -1231,110 +1228,6 @@ marginal_growthparameters.bgmfit <- function(model,
   arguments$cores <- setincores <-  get.cores_[['max.cores']]
   .cores_ps <- get.cores_[['.cores_ps']]
   
-  
-  
-  
-  # 
-  # # future
-  # if (future) {
-  #   if(is.null(future_session)) {
-  #     future_session      <- "sequential"
-  #     future_session_list <- list()
-  #   } else if(is.list(future_session)) {
-  #     future_session_list <- future_session
-  #     future_session      <- future_session_list[['future_session']]
-  #     if(is.null(future_session)) {
-  #       future_session <- "sequential"
-  #     }
-  #   } else if(!is.list(future_session)) {
-  #     if(is.character(future_session)) {
-  #       future_session_list <- list()
-  #       future_session <- future_session
-  #     } else {
-  #       stop("'future_session' must be a single character or a named list")
-  #     }
-  #   }
-  #   
-  #   getfutureplan <- future::plan()
-  #   oldplanin     <- attr(getfutureplan, "call")
-  #   if(grepl("mirai_", future_session)) {
-  #     insight::check_if_installed('mirai')
-  #     if(!grepl("future.mirai::", future_session)) {
-  #       future_session <- paste0("future.mirai::", future_session)
-  #     }
-  #   } else if(!grepl("mirai_", future_session)) {
-  #     if(!grepl("future.mirai::", future_session)) {
-  #       future_session <- paste0("future::", future_session)
-  #     }
-  #   }
-  #   
-  #   # setplanis will be used to decide on re_expose 
-  #   if(grepl("sequential", future_session)) {
-  #     setplanis <- "sequential"
-  #   } else if(grepl("multisession", future_session)) {
-  #     setplanis <- "multisession"
-  #   } else if(grepl("multicore", future_session)) {
-  #     setplanis <- "multicore"
-  #   } else if(grepl("cluster", future_session)) {
-  #     setplanis <- "cluster"
-  #   }
-  #   
-  #   if (inherits(getfutureplan, "sequential")) {
-  #     mirai_daemons_args <- list()
-  #     future_plan_args <- list()
-  #     if(grepl("mirai_", future_session)) {
-  #       if(grepl("mirai_cluster", future_session)) {
-  #         if(is.null(future_session_list[['daemons']])) {
-  #           #
-  #         } else {
-  #           if(!is.list(future_session_list[['daemons']])) {
-  #             stop("The daemons in future_session list must be a list")
-  #           }
-  #           mirai_daemons_args <- future_session_list[['daemons']]
-  #         }
-  #         future_plan_args[['strategy']] <- future_session
-  #       } else if(!grepl("mirai_cluster", future_session)) {
-  #         future_plan_args[['workers']]  <- setincores
-  #         future_plan_args[['strategy']] <- future_session
-  #       } 
-  #       mirai_daemons_args[['n']]      <- setincores
-  #     } else if(!grepl("mirai_", future_session)) {
-  #       if(grepl("cluster", future_session)) {
-  #         # workers should ne n1, n2..
-  #         future_plan_args[['workers']]  <- setincores
-  #         future_plan_args[['strategy']] <- future_session
-  #       } else {
-  #         future_plan_args[['workers']]  <- setincores
-  #         future_plan_args[['strategy']] <- future_session
-  #       } 
-  #     }
-  #     
-  #     if(!is_emptyx(mirai_daemons_args)) {
-  #       do.call(mirai::daemons, mirai_daemons_args)
-  #       if(verbose) {
-  #         message2c("Setting mirai daemons: ", mirai::status())
-  #       }
-  #     }
-  #     do.call(future::plan, future_plan_args)
-  #     if(verbose) {
-  #       message2c("The existing future plan: ", oldplanin, 
-  #                 " updated as ", future_session)
-  #     }
-  #   } else if (!inherits(getfutureplan, "sequential")) {
-  #     if(verbose) {
-  #       message2c("Using the existing future plan: ", oldplanin)
-  #     }
-  #   }
-  #   # Restore 
-  #   on.exit(future::plan(getfutureplan), add = TRUE)
-  #   if (future_session == 'multicore') {
-  #     multthreadplan <- getOption("future.fork.multithreading.enable")
-  #     options(future.fork.multithreading.enable = TRUE)
-  #     on.exit(options("future.fork.multithreading.enable" = multthreadplan), 
-  #             add = TRUE)
-  #   }
-  # } # if (future) {
-  # 
 
   get_future_args <- get_future_plan_args(future = future, 
                                            future_session = future_session, 
@@ -1373,8 +1266,7 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
  
-  
-  
+
   draw_ids_org <- draw_ids
   draw_ids_exe <- FALSE
   if(!is.null(draw_ids)) {
@@ -1382,6 +1274,7 @@ marginal_growthparameters.bgmfit <- function(model,
     ndraws_exe   <- FALSE
     draw_ids     <- draw_ids
   }
+ 
   
   
   future_splits_exe <- FALSE
@@ -1415,7 +1308,7 @@ marginal_growthparameters.bgmfit <- function(model,
       
     } else if(is.vector(future_splits)) {
       if(!is.numeric(future_splits)) {
-        stop("future_splits must be a numeric vector of lenghth 2")
+        stop2c("future_splits must be a numeric vector of lenghth 2")
       } else if(length(future_splits) == 1) {
         if(draw_ids_exe) ndraws_exe <- FALSE
         if(ndraws_exe) {
@@ -1448,7 +1341,7 @@ marginal_growthparameters.bgmfit <- function(model,
           future_splits_at <- unname(future_splits_at)
         }
       } else if(length(future_splits) != 2) {
-        stop("future_splits must be a numeric vector of lenghth 2")
+        stop2c("future_splits must be a numeric vector of lenghth 2")
       } else {
         if(future_splits[2] > future_splits[1]) {
           stop2c("The first element of 'future_splits' should equal to, or 
@@ -1459,6 +1352,7 @@ marginal_growthparameters.bgmfit <- function(model,
       }
     }
   }
+  
   
   
   if(future_splits_exe) {
@@ -1518,11 +1412,13 @@ marginal_growthparameters.bgmfit <- function(model,
         if(need_future_re_expose_cpp) {
           re_expose <- TRUE
           if(verbose) {
-            message("For multisession plan, argument 'future_re_expose' has been set as TRUE")
+            message2c("For multisession plan, argument 'future_re_expose' 
+                      has been set as TRUE")
           }
         } else if(!need_future_re_expose_cpp) {
           if(verbose) {
-            message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
+            message2c("To speed up the calulations, it is advised to 
+                      set future_re_expose = TRUE")
           }
         }
       }
@@ -1533,13 +1429,12 @@ marginal_growthparameters.bgmfit <- function(model,
         if(!need_future_re_expose_cpp) {
           # if(expose_method_set == "R") {
           if(verbose) {
-            message("To speed up the calulations, it is advised ",
+            message2c("To speed up the calulations, it is advised ",
                     "to set 'future_re_expose = TRUE'")
           }
         } 
         if(need_future_re_expose_cpp & setplanis == "multisession") {
-          # if(expose_method_set != "R") {
-          stop("For plan 'multisession', the functions need to be ",
+          stop2c("For plan 'multisession', the functions need to be ",
                "\n ",
                "re_exposed by setting 'future_re_expose = TRUE'")
         }
@@ -1572,16 +1467,16 @@ marginal_growthparameters.bgmfit <- function(model,
     if(method == 'pkg') {
       if(!is.null(full.args$by)) {
         if(is.logical(full.args$by)) {
-          stop("Argument 'by' is required for hypothesis")
+          stop2c("Argument 'by' is required for hypothesis")
         }
       }
     } else if(method == 'custom') {
       if(!is.null(full.args$by)) {
         if(is.logical(full.args$by)) {
-          stop("Argument 'by' is required for hypothesis")
+          stop2c("Argument 'by' is required for hypothesis")
         }
       } else if(is.null(full.args$by)) {
-        stop("Argument 'by' is required for hypothesis")
+        stop2c("Argument 'by' is required for hypothesis")
       }
     }
   }
@@ -1601,7 +1496,7 @@ marginal_growthparameters.bgmfit <- function(model,
   if(!is.null(full.args$hypothesis)) {
     if(method == 'custom') {
       if(is.language(full.args$hypothesis)) {
-        stop("Argument 'hypothesis' must be one of the following strings: ",
+        stop2c("Argument 'hypothesis' must be one of the following strings: ",
              collapse_comma(valid_hypothesis))
       }
     } else if(method == 'pkg') {
@@ -1619,7 +1514,7 @@ marginal_growthparameters.bgmfit <- function(model,
   } else {
     plot <- FALSE
     if(verbose & plot) {
-      message("Argument plot = TRUE is not allowed when either hypothesis ", 
+      message2c("Argument plot = TRUE is not allowed when either hypothesis ", 
               "or equivalence is not NULL",
               "\n ",
               "Therefor, setting 'plot = FALSE'") 
@@ -1632,7 +1527,8 @@ marginal_growthparameters.bgmfit <- function(model,
   full.args <- 
     sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                arguments = full.args, 
-                               check_formalArgs = marginal_growthparameters.bgmfit,
+                               check_formalArgs = 
+                                 marginal_growthparameters.bgmfit,
                                check_formalArgs_exceptions = NULL,
                                check_trace_back = NULL,
                                envir = parent.frame())
@@ -1687,10 +1583,10 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(!is.null(full.args[['transform_draws']])) {
     full.args[['transform']] <- transform <- full.args[['transform_draws']]
-    if(verbose) message("'transform' set based on 'transform_draws'")
+    if(verbose) message2c("'transform' set based on 'transform_draws'")
   } else if(!is.null(transform_draws)) {
     full.args[['transform']] <- transform <- transform_draws
-    if(verbose) message("'transform' set based on 'transform_draws'")
+    if(verbose) message2c("'transform' set based on 'transform_draws'")
   } else {
     #####
   }
@@ -1768,57 +1664,6 @@ marginal_growthparameters.bgmfit <- function(model,
     comparisons_arguments[[exclude_argsi]] <- NULL
   }
   
- 
-  
-  # if (!is.null(variables)) {
-  #   if (!is.list(variables)) {
-  #     if(is.character(variables)) {
-  #       set_variables <- list()
-  #       for (i in variables) {
-  #         if(deriv == 0) {
-  #           if(i == xvar) set_variables[[i]] <- eps 
-  #         }
-  #         if(deriv > 0) {
-  #           if(i != xvar) set_variables[[i]] <- i 
-  #         }
-  #       }
-  #       # if(deriv == 0) set_variables <- list(eps)
-  #       # if(deriv > 0)  set_variables <- list(0)
-  #       # names(set_variables) <- variables
-  #     }
-  #   } else if (is.list(variables)) {
-  #     set_variables <- variables
-  #     if(is.null(set_variables[[xvar]])) {
-  #       if(deriv == 0) set_variables[[xvar]] <- eps
-  #       if(deriv > 0)  set_variables[[xvar]] <- 0
-  #     } else if(!is.null(set_variables[[xvar]])) {
-  #       if(eval(set_variables[[xvar]]) !=0) {
-  #         if(verbose) {
-  #           message("The value of ", xvar, " is not same as used in the ",
-  #                   " \n", 
-  #                   " model fit. Please check if this is intended")
-  #         }
-  #       }
-  #     }
-  #   }
-  # } else if (is.null(variables)) {
-  #   if(deriv == 0) set_variables <- list(eps)
-  #   if(deriv > 0)  set_variables <- list(0)
-  #   if(is.null(difx)) {
-  #     names(set_variables) <- xvar
-  #   } else if(!is.null(difx)) {
-  #     names(set_variables) <- difx
-  #   }
-  #   # names(set_variables) <- xvar
-  # } 
-  # # over ride when method = 'pkg'
-  # if(method == 'pkg') {
-  #   if(deriv > 0) {
-  #     set_variables[[xvar]] <- eps
-  #   }
-  # }
-  
-  
   
   set_variables <- setup_variables_var(model, 
                                        variables = variables, 
@@ -1839,7 +1684,7 @@ marginal_growthparameters.bgmfit <- function(model,
   allowed_comparison <- c('difference', 'differenceavg')
   
   if(!comparison %in% allowed_comparison) {
-    stop("Allowed comparison options are ", 
+    stop2c("Allowed comparison options are ", 
          paste(paste0("'", allowed_comparison, "'"), collapse = ", ")
     )
   }
@@ -1847,11 +1692,11 @@ marginal_growthparameters.bgmfit <- function(model,
   
   if(comparison == 'differenceavg') {
     if(!average) {
-      stop("For comparison = 'differenceavg' ", 
+      stop2c("For comparison = 'differenceavg' ", 
            ", the argument 'average' should be TRUE")
     }
     if(is.null(hypothesis)) {
-      stop("For comparison = 'differenceavg' ", 
+      stop2c("For comparison = 'differenceavg' ", 
            ", the argument 'hypothesis' is required.",
            " \n",
            "An example of Non-linear hypothesis testing via hypothesis",
@@ -1901,248 +1746,190 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   
-  # 
-  # # Now this is handled within the setup_by_var()
-  # # Skipping the below stop()
-  # if(model$xcall == "modelbased_growthparameters") {
-  #   # the by could be 'id
-  # }
-  # 
-  # if(dpar == "mu") {
-  #   if(!is.null(by)) {
-  #     if(!is.logical(by)) {
-  #       if(!xvar %in% by) {
-  #         # stop("For 'dpar = mu', the 'by' argument must be either 'NULL', ",
-  #         #      "\n ", 
-  #         #      " or should include the following key variable: ",
-  #         #      collapse_comma(xvar))
-  #       }
-  #     } # if(!is.logical()) {
-  #   } # if(!is.null(by)) {
-  # }
-  # 
-  
-  
-  
-  
   
   
   if (acg_velocity >= 1 | acg_velocity <= 0) {
-    stop("The acg_velocity should be set between 0.01 and 0.99")
+    stop2c("The 'acg_velocity' should be set between 0.01 and 0.99")
   }
+  
+  
+  
+  if(!is.null(datagrid)) {
+    if(is.data.frame(datagrid)) {
+      set_datagrid <- datagrid
+      comparisons_arguments$newdata <- set_datagrid
+    } else if(is.list(datagrid)) {
+      if(is.null(datagrid[['model']]))
+        setmodel <- model
+      else
+        setmodel <- datagrid$model
+      if (is.null(datagrid[['newdata']]))
+        setnewdata <- newdata
+      else
+        setnewdata <- datagrid$newdata
+      if (is.null(datagrid[['grid_type']]))
+        setgrid_type <- "mean_or_mode"
+      else
+        setgrid_type <- datagrid$grid_type
+      if (is.null(datagrid[['by']]))
+        setgrid_by <- NULL
+      else
+        setgrid_by <- datagrid$by
+      
+      if (is.null(datagrid[['FUN']]))
+        setgrid_FUN <- NULL
+      else
+        setgrid_FUN <- datagrid$FUN
+      if (is.null(datagrid[['FUN_character']]))
+        setgrid_FUN_character <- NULL
+      else
+        setgrid_FUN_character <- datagrid$FUN_character
+      if (is.null(datagrid[['FUN_factor']]))
+        setgrid_FUN_factor <- NULL
+      else
+        setgrid_FUN_factor <- datagrid$FUN_factor
+      if (is.null(datagrid[['FUN_logical']]))
+        setgrid_FUN_logical <- NULL
+      else
+        setgrid_FUN_logical <- datagrid$FUN_logical
+      if (is.null(datagrid[['FUN_numeric']]))
+        setgrid_FUN_numeric <- NULL
+      else
+        setgrid_FUN_numeric <- datagrid$FUN_numeric
+      if (is.null(datagrid[['FUN_integer']]))
+        setgrid_FUN_integer <- NULL
+      else
+        setgrid_FUN_integer <- datagrid$FUN_integer
+      if (is.null(datagrid[['FUN_binary']]))
+        setgrid_FUN_binary <- NULL
+      else
+        setgrid_FUN_binary <- datagrid$FUN_binary
+      if (is.null(datagrid[['FUN_other']]))
+        setgrid_FUN_other <- NULL
+      else
+        setgrid_FUN_other <- datagrid$FUN_other
+      
+      if(is.null(datagrid[[xvar]])) 
+        setxvar <- newdata[[xvar]] 
+      else 
+        setxvar <- datagrid$newdata[[xvar]]
+      
+      datagrid_arguments <- list(model = setmodel,
+                                 newdata = setnewdata,
+                                 by = setgrid_by,
+                                 grid_type = setgrid_type,
+                                 FUN = setgrid_FUN,
+                                 FUN_character = setgrid_FUN_character,
+                                 FUN_factor = setgrid_FUN_factor,
+                                 FUN_logical = setgrid_FUN_logical,
+                                 FUN_numeric = setgrid_FUN_numeric,
+                                 FUN_integer = setgrid_FUN_integer,
+                                 FUN_binary = setgrid_FUN_binary,
+                                 FUN_other = setgrid_FUN_other
+      )
+      datagrid_arguments[[xvar]] <- setxvar
+      if(setgrid_type == "mean_or_mode") {
+        if(!isFALSE(set_group)) datagrid_arguments[['by']] <- set_group
+      } else if(setgrid_type == "balanced") {
+        if(!isFALSE(set_group)) datagrid_arguments[['by']] <- NULL
+        comparisons_arguments[['by']] <- NULL
+      }
+      set_datagrid <- CustomDoCall(marginaleffects::datagrid, 
+                                   datagrid_arguments)
+      comparisons_arguments$newdata <- set_datagrid
+    } else {
+      stop2c("'datagrid' should be a data frame or named list")
+    }
+  } else if(is.null(datagrid)) {
+    comparisons_arguments$newdata <- comparisons_arguments$newdata
+  }
+  
+  comparisons_arguments[['datagrid']] <- NULL
+  
+  # Somehow draw_ids not passed correctly if not specified explicitly as arg
+  get_draw_ids <- comparisons_arguments[['draw_ids']]
+  if(is.null(eval(get_draw_ids))) {
+    set_draw_ids <- NULL
+  } else if(is.numeric(eval(get_draw_ids))) {
+    set_draw_ids <- get_draw_ids
+  } else if(!eval(get_draw_ids)) {
+    set_draw_ids <- NULL
+  }
+  comparisons_arguments[['draw_ids']] <- set_draw_ids
+  
+  
+ 
+  
+  
+  gparms_fun = function(hi, lo, x, deriv, parm, by, ec_agg, ei_agg) {
+    if(deriv == 0) y <- (hi - lo) / eps
+    if(deriv > 0)  y <- (hi + lo) / 2
+    # Here need to aggregate based on by argument
+    if(aggregate_by) {
+      try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
+                                      prompt = FALSE))
+      xy_list <- grDevices::xy.coords(x, y)[1:2]
+      tempxy <- collapse::qDF(xy_list)
+      tempxy <- collapse::roworder(collapse::funique(tempxy), x)
+      if (!isFALSE(by)) {
+        if (ec_agg %in% c("mean", "median")) {
+          agg_fun <- if(ec_agg == "mean") collapse::fmean else collapse::fmedian
+          tempxy <- collapse::collap(collapse::na_omit(tempxy), ~ x, 
+                                     FUN = agg_fun)
+        }
+      }
+      x <- tempxy$x
+      y <- tempxy$y
+    } # if(aggregate_by) {
+    parm_out <- list()
+    tempout_p_exists <- FALSE
+    for (i in parm) {
+      if(i == 'apgv' | i == 'pgv') {
+        tempout_p <- sitar::getPeak(x = x, y = y)
+        if(i == 'apgv') parm_out[[i]] <- ifunx_(tempout_p[1])
+        if(i ==  'pgv') parm_out[[i]] <- tempout_p[2]
+        tempout_p_exists <- TRUE
+      }
+      if(i == 'atgv' | i == 'tgv') {
+        tempout_t <- sitar::getTakeoff(x = x, y = y)
+        if(i == 'atgv') parm_out[[i]] <- ifunx_(tempout_t[1])
+        if(i ==  'tgv') parm_out[[i]] <- tempout_t[2]
+      }
+      if(i == 'acgv' | i == 'cgv') {
+        if( tempout_p_exists) tempout_c <- tempout_p[2]
+        if(!tempout_p_exists) tempout_c <- sitar::getPeak(x = x, y = y)[2]
+        cgv  <- acg_velocity * tempout_c
+        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+        if(i == 'acgv') parm_out[[i]] <- ifunx_(x[vcgi])
+        if(i ==  'cgv') parm_out[[i]] <- y[vcgi]
+      }
+    } # for (i in parm) {
+    if(length(parm) == 1) parm_out <- parm_out[[1]] 
+    return(parm_out)
+  } # gparms_fun
+  
+  
+  
+  
+  
   
   call_comparison_gparms_fun <- function(parm, 
                                          eps, 
-                                         by, 
+                                         comparisons_arguments, 
                                          aggregate_by, 
-                                         newdata, ...) {
-    gparms_fun = function(hi, lo, x, ...) {
-      if(deriv == 0) y <- (hi - lo) / eps
-      if(deriv > 0)  y <- (hi + lo) / 2
-      # Here need to aggregate based on by argument
-      if(aggregate_by) {
-        try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
-                                        prompt = FALSE))
-        xy <- grDevices::xy.coords(x, y)
-        xy <- unique(as.data.frame(xy[1:2])[order(xy$x), ])
-        if(!isFALSE(by)) {
-          if(ec_agg == "mean")   xy <- stats::aggregate(.~x, data=xy, 
-                                                        mean, 
-                                                        na.action = na.omit,
-                                                        drop = TRUE)
-          if(ec_agg == "median") xy <- stats::aggregate(.~x, data=xy, 
-                                                        median, 
-                                                        na.action = na.omit,
-                                                        drop = TRUE)
-        }
-        x <- xy$x
-        y <- xy$y
-      } # if(aggregate_by) {
-      
-      
-      
-      if (parm == 'apgv') {
-        out <- sitar::getPeak(x = x, y = y)[1]
-        out <- ifunx_(out) # prepare_data2
-      } else if (parm == 'pgv') {
-        out <- sitar::getPeak(x = x, y = y)[2]
-      } else if (parm == 'atgv') {
-        out <- sitar::getTakeoff(x = x, y = y)[1]
-        out <- ifunx_(out) # prepare_data2
-      } else if (parm == 'tgv') {
-        out <- sitar::getTakeoff(x = x, y = y)[2]
-      } else if (parm == 'acgv') {
-        cgv  <- acg_velocity * sitar::getPeak(x = x, y = y)[2]
-        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-        out <-  x[vcgi]
-        out <- ifunx_(out) # prepare_data2
-      } else if (parm == 'cgv') {
-        cgv  <- acg_velocity * sitar::getPeak(x = x, y = y)[2]
-        vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
-        out <-  y[vcgi]
-      } else if (parm == 'xxxx') {
-        
-      } else {
-        stop('parm not valid')
-      }
-      out <- round(out, digits = digits)
-      out
-    } # gparms_fun
-    
-    comparisons_arguments$variables  <- set_variables
-    comparisons_arguments$by         <- set_group
-    comparisons_arguments$comparison <- gparms_fun
-    
-    # This is for method = 'pkg' - does't matter call_predictions/call_slopes?
-    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    
-    
-    if(is.null(showlegends)) {
-      if(is.null(comparisons_arguments$re_formula)) {
-        showlegends <- FALSE
-      } else {
-        showlegends <- TRUE
-      }
-    }
-    
-    
-
-    if(!is.null(datagrid)) {
-      if(is.data.frame(datagrid)) {
-        set_datagrid <- datagrid
-        comparisons_arguments$newdata <- set_datagrid
-      } else if(is.list(datagrid)) {
-        if(is.null(datagrid[['model']]))
-          setmodel <- model
-        else
-          setmodel <- datagrid$model
-        if (is.null(datagrid[['newdata']]))
-          setnewdata <- newdata
-        else
-          setnewdata <- datagrid$newdata
-        if (is.null(datagrid[['grid_type']]))
-          setgrid_type <- "mean_or_mode"
-        else
-          setgrid_type <- datagrid$grid_type
-        if (is.null(datagrid[['by']]))
-          setgrid_by <- NULL
-        else
-          setgrid_by <- datagrid$by
-        
-        if (is.null(datagrid[['FUN']]))
-          setgrid_FUN <- NULL
-        else
-          setgrid_FUN <- datagrid$FUN
-        if (is.null(datagrid[['FUN_character']]))
-          setgrid_FUN_character <- NULL
-        else
-          setgrid_FUN_character <- datagrid$FUN_character
-        if (is.null(datagrid[['FUN_factor']]))
-          setgrid_FUN_factor <- NULL
-        else
-          setgrid_FUN_factor <- datagrid$FUN_factor
-        if (is.null(datagrid[['FUN_logical']]))
-          setgrid_FUN_logical <- NULL
-        else
-          setgrid_FUN_logical <- datagrid$FUN_logical
-        if (is.null(datagrid[['FUN_numeric']]))
-          setgrid_FUN_numeric <- NULL
-        else
-          setgrid_FUN_numeric <- datagrid$FUN_numeric
-        if (is.null(datagrid[['FUN_integer']]))
-          setgrid_FUN_integer <- NULL
-        else
-          setgrid_FUN_integer <- datagrid$FUN_integer
-        if (is.null(datagrid[['FUN_binary']]))
-          setgrid_FUN_binary <- NULL
-        else
-          setgrid_FUN_binary <- datagrid$FUN_binary
-        if (is.null(datagrid[['FUN_other']]))
-          setgrid_FUN_other <- NULL
-        else
-          setgrid_FUN_other <- datagrid$FUN_other
-        
-        if(is.null(datagrid[[xvar]])) 
-          setxvar <- newdata[[xvar]] 
-        else 
-          setxvar <- datagrid$newdata[[xvar]]
-        
-        datagrid_arguments <- list(model = setmodel,
-                                   newdata = setnewdata,
-                                   by = setgrid_by,
-                                   grid_type = setgrid_type,
-                                   FUN = setgrid_FUN,
-                                   FUN_character = setgrid_FUN_character,
-                                   FUN_factor = setgrid_FUN_factor,
-                                   FUN_logical = setgrid_FUN_logical,
-                                   FUN_numeric = setgrid_FUN_numeric,
-                                   FUN_integer = setgrid_FUN_integer,
-                                   FUN_binary = setgrid_FUN_binary,
-                                   FUN_other = setgrid_FUN_other
-        )
-        datagrid_arguments[[xvar]] <- setxvar
-        if(setgrid_type == "mean_or_mode") {
-          if(!isFALSE(set_group)) datagrid_arguments[['by']] <- set_group
-        } else if(setgrid_type == "balanced") {
-          if(!isFALSE(set_group)) datagrid_arguments[['by']] <- NULL
-          comparisons_arguments[['by']] <- NULL
-        }
-        set_datagrid <- CustomDoCall(marginaleffects::datagrid, datagrid_arguments)
-        comparisons_arguments$newdata <- set_datagrid
-      } else {
-        stop("datagrid should be a data frame or named list")
-      }
-    } else if(is.null(datagrid)) {
-      comparisons_arguments$newdata <- comparisons_arguments$newdata
-    }
-    
-    comparisons_arguments[['datagrid']] <- NULL
-    
-    # Somehow draw_ids not passed correctly if not specified explicitly as arg
-    get_draw_ids <- comparisons_arguments[['draw_ids']]
-    if(is.null(eval(get_draw_ids))) {
-      set_draw_ids <- NULL
-    } else if(is.numeric(eval(get_draw_ids))) {
-      set_draw_ids <- get_draw_ids
-    } else if(!eval(get_draw_ids)) {
-      set_draw_ids <- NULL
-    }
-    comparisons_arguments[['draw_ids']] <- set_draw_ids
-    
-    exclude_args_con_by <- exclude_args
-    
-    if(plot) {
-      if(!is.null(comparisons_arguments[['condition']]))
-        comparisons_arguments[['by']] <- NULL
-    } else {
-      comparisons_arguments[['condition']] <- NULL
-    }
-   
-    ##############
-    # new
-    if(method == "pkg") {
-      if(deriv > 0) {
-        if(call_predictions) {
-          if(!isFALSE(comparisons_arguments[['by']])) {
-            # ???
-           # stop("argument 'by' must be FALSE")
-          }
-        } # if(call_predictions) {
-      } # if(deriv > 0) {
-    } # if(method == "pkg") {
-    
-    #############
-   
-    comparisons_arguments$by <- setdiff(comparisons_arguments$by, xvar)
-    if(is_emptyx(comparisons_arguments$by)) {
-      comparisons_arguments$by <- NULL
-    }
-    for (i in names(comparisons_arguments$variables)) {
-      if(i != xvar) comparisons_arguments$variables[[i]] <- NULL
-    }
-    
-    # comparisons_argumentsx <<- comparisons_arguments
- 
+                                         newdata,
+                                         ec_agg,
+                                         ei_agg,
+                                         enverr.) {
+    formals(comparisons_arguments$comparison)[['by']] <- 
+      comparisons_arguments[['by']]
+    formals(comparisons_arguments$comparison)[['deriv']] <- deriv
+    formals(comparisons_arguments$comparison)[['parm']] <- parm
+    formals(comparisons_arguments$comparison)[['ec_agg']] <- ec_agg
+    formals(comparisons_arguments$comparison)[['ei_agg']] <- ei_agg
+    # For multisession, need to set all options()
+    options("marginaleffects_posterior_center" = ec_agg)
+    options("marginaleffects_posterior_interval" = ei_agg)
     if(!plot) {
       if(!average) {
         if(callfuns) out <- CustomDoCall(marginaleffects::comparisons, 
@@ -2155,27 +1942,13 @@ marginal_growthparameters.bgmfit <- function(model,
       if(isFALSE(set_group)) comparisons_arguments$by <- NULL
       if(is.null(comparisons_arguments[['by']]) &
          is.null(comparisons_arguments[['condition']])) {
-        stop("'plot = TRUE' is not yet supported for ",
-             "'marginal_growthparameters()'"
-        )
+        stop2c("For 'plot = TRUE', the 'by' argument should be specified")
       }
       outp <- CustomDoCall(marginaleffects::plot_comparisons, 
                      comparisons_arguments)
-      outp <- edit_mapping_facet(outp = outp, 
-                                 by = comparisons_arguments$by,
-                                 condition = comparisons_arguments$condition,
-                                 xcall = xcall,
-                                 method = method,
-                                 mapping_facet = mapping_facet,
-                                 showlegends = showlegends,
-                                 funx_ = funx_,
-                                 ifunx_ = ifunx_,
-                                 envir = envir,
-                                 which_aes = NULL, 
-                                 print = FALSE,
-                                 verbose = verbose)
+      # outp <- edit_mapping_facet() -> not relevenat here
       return(outp)
-    } # else if(plot) {
+    } # if(!plot) { else if(plot) {
     return(out)
   } # call_comparison_gparms_fun
   
@@ -2185,20 +1958,24 @@ marginal_growthparameters.bgmfit <- function(model,
   enverr. <- environment()
   outer_call_comparison_gparms_fun <- function(parm, 
                                                eps,
-                                               by,
+                                               comparisons_arguments,
                                                aggregate_by,
                                                newdata,
-                                               ...) {
-    
+                                               ec_agg,
+                                               ei_agg,
+                                               enverr.) {
     assign('err.', FALSE, envir = enverr.)
-    
+    # tryCatch needed when NA in one factor for hypothesis
     tryCatch(
       expr = {
-        # 13 03 2024
         gout <- call_comparison_gparms_fun(parm = parm, eps = eps,
-                                           by = by,
+                                           comparisons_arguments = 
+                                             comparisons_arguments,
                                            aggregate_by = aggregate_by,
-                                           newdata = newdata)
+                                           newdata = newdata,
+                                           ec_agg = ec_agg,
+                                           ei_agg = ei_agg,
+                                           enverr. = enverr.)
       },
       error = function(e) {
         assign('err.', TRUE, envir = enverr.)
@@ -2206,45 +1983,30 @@ marginal_growthparameters.bgmfit <- function(model,
       }
     )
     err. <- get('err.', envir = enverr.)
-    
-    # This happen when NA in one factor for hypothesis
     if(!exists('gout')) return(invisible(NULL))
-    
     if(length(gout) == 0) err. <- TRUE
-    
-    if (err.) {
-      gout <- NULL
-    } else if (!err.) {
-      gout <- gout
-    }
-    
-    
-    if(plot) {
-      return(gout)
-    }
-    
+    if (err.) gout <- NULL
+    if(plot) return(gout)
     # If results not available for all factor, theN add NA it
+    by <- comparisons_arguments$by
+    if(is.null(by)) by <- FALSE
     if(!is.null(gout)) {
       if(!isFALSE(by)) {
         if(is.null(hypothesis) && is.null(equivalence)) {
           goutnames <- names(gout)
           groupvars <-  eval(by)
-          newdatajoin <- newdata %>% dplyr::group_by_at(groupvars) %>%
-            dplyr::filter(dplyr::row_number() == 1) %>% dplyr::ungroup()
-          gout <- newdatajoin %>% dplyr::left_join(., gout, by = groupvars) %>%
-            dplyr::select(dplyr::all_of(goutnames)) %>%
-            dplyr::select(-dplyr::any_of(c('predicted_lo', 'predicted_hi',
-                                           'predicted', 'tmp_idx'))) %>%
-            dplyr::mutate(!! as.name('parameter') := parm) %>%
-            dplyr::relocate(dplyr::all_of('parameter')) %>%
-            data.frame()
+          newdatajoin <- collapse::funique(newdata, cols = groupvars)
+          gout_joined <- collapse::join(newdatajoin, gout, on = groupvars, 
+                                        how = "left", verbose = FALSE)
+          cols_to_keep <- setdiff(goutnames, c('predicted_lo', 'predicted_hi', 
+                                               'predicted', 'tmp_idx'))
+          gout <- gout_joined %>%  collapse::get_vars(cols_to_keep) %>% 
+            collapse::ftransform(parameter = parm) %>% collapse::qDF()  
         }
       }
     }
-    
     return(gout)
-  }
-  
+  } # outer_call_comparison_gparms_fun
   
   
   
@@ -2256,69 +2018,105 @@ marginal_growthparameters.bgmfit <- function(model,
   } else if(is.na(eval_re_formula)) {
     aggregate_by <- FALSE
   }
-  
-  
-  
-  
- 
-  
-  
+  if(is.null(showlegends)) {
+    if(is.null(comparisons_arguments$re_formula)) {
+      showlegends <- FALSE
+    } else {
+      showlegends <- TRUE
+    }
+  }
   out_sf_hy <- NULL
   allowed_methods <- c('pkg', 'custom')
-  if(!method %in% allowed_methods) 
-    stop("Argument 'method' should be one of the following:",
+  if(!method %in% allowed_methods) {
+    stop2c("Argument 'method' should be one of the following:",
          "\n ", 
-         collapse_comma(allowed_methods)
-    )
+         collapse_comma(allowed_methods))
+  }
   
- 
+  
+  
   
   if(method == 'pkg') {
+    comparisons_arguments$variables  <- set_variables
+    comparisons_arguments$by         <- set_group
+    comparisons_arguments$comparison <- gparms_fun
+    # For method = 'pkg' - doesn't matter call_predictions/call_slopes?
+    assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    comparisons_arguments$by <- setdiff(comparisons_arguments$by, xvar)
+    if(is_emptyx(comparisons_arguments$by)) {
+      comparisons_arguments$by <- NULL
+    }
+    for (i in names(comparisons_arguments$variables)) {
+      if(i != xvar) comparisons_arguments$variables[[i]] <- NULL
+    }
+    
     if(plot) {
       out_sf <- outer_call_comparison_gparms_fun(
         parm = parm, eps = eps, 
-        by = comparisons_arguments$by,
+        comparisons_arguments = comparisons_arguments,
         aggregate_by = aggregate_by,
-        newdata = newdata) 
+        newdata = newdata,
+        ec_agg = ec_agg,
+        ei_agg = ei_agg,
+        enverr. = enverr.) 
       return(out_sf)
-    }
-    
-    
-    if (length(parm) == 1) {
-      out_sf <- outer_call_comparison_gparms_fun(
-        parm = parm, eps = eps, 
-        by = comparisons_arguments$by,
-        aggregate_by = aggregate_by,
-        newdata = newdata) 
-      if(is.null(out_sf)) {
-        return(invisible(NULL))
-      }
-      if(!"parameter" %in% colnames(out_sf)) {
-        out_sf <- out_sf %>% dplyr::mutate(!!as.symbol('parameter') := parm) %>%
-          dplyr::relocate(!!as.symbol('parameter')) %>% data.frame() 
-      }
-    } else if (length(parm) > 1) {
-      list_cout <- list()
-      for (allowed_parmsi in parm) {
-        list_cout[[allowed_parmsi]] <- outer_call_comparison_gparms_fun(
-          parm = allowed_parmsi, eps = eps, 
-          by = comparisons_arguments$by,
+    } else if(!plot) {
+      # 1. Define a worker function
+      run_comparison_worker <- function(p) {
+        # Run the external function
+        res <- outer_call_comparison_gparms_fun(
+          parm = p, 
+          eps = eps, 
+          comparisons_arguments = comparisons_arguments,
           aggregate_by = aggregate_by,
-          newdata = newdata
-        )
+          newdata = newdata,
+          ec_agg = ec_agg,
+          ei_agg = ei_agg,
+          enverr. = enverr.)
+        # Handle NULL results immediately
+        if (is.null(res)) return(NULL)
+        if (!"parameter" %in% names(res)) {
+          res <- collapse::ftransform(res, 'parameter' = p)
+          res <- collapse::colorder(res, parameter)
+        }
+        return(res)
       }
       
-      out_sf <- CustomDoCall(rbind, list_cout) %>% data.frame() 
-      if(!"parameter" %in% colnames(out_sf)) {
-        out_sf <- out_sf %>% tibble::rownames_to_column(., "parameter")
-      }
-      out_sf <- out_sf %>% 
-        dplyr::mutate(!!as.symbol('parameter') := sub("*\\.[0-9]", "", 
-                                                      !!as.symbol('parameter')))
-    }
+      # 2. Execution Logic
+      if (length(parm) == 1) {
+        out_sf <- run_comparison_worker(parm)
+        if (is.null(out_sf)) return(NA)
+        out_sf <- collapse::qDF(out_sf) 
+      } else { # Multiple parameter case
+        if (isTRUE(future)) {
+          list_cout <- future.apply::future_lapply(parm, 
+                                                   run_comparison_worker,
+                                                   future.envir = enverr.,
+                                                   future.stdout = TRUE,
+                                                   future.globals = TRUE,
+                                                   future.packages = NULL,
+                                                   future.scheduling = 1.0,
+                                                   future.chunk.size = Inf,
+                                                   future.seed = FALSE)
+        } else {
+          list_cout <- lapply(parm, run_comparison_worker)
+        }
+        out_sf <- data.table::rbindlist(list_cout, fill = TRUE)
+        if (nrow(out_sf) == 0) {
+          out_sf <- NA 
+        } else {
+          out_sf <- collapse::qDF(out_sf)
+        }
+      } # if (length(parm) == 1) { else { # Multiple parameter case
+      remove_it_pkg <- c('term', 'contrast')
+      cols_to_keep <- setdiff(names(out_sf), remove_it_pkg)
+      out_sf <- collapse::get_vars(out_sf, cols_to_keep)
+      row.names(out_sf) <- NULL
+    } # if(plot) { else if(!plot) {
   } # if(method == 'pkg') {
- 
   
+  
+ 
  
   ##################################################################
   
@@ -2327,10 +2125,10 @@ marginal_growthparameters.bgmfit <- function(model,
     
     if(data.table::is.data.table(x) | is.data.frame(x)) {
       if(is.null(xvar)) {
-        stop("please specify the 'xvar' argument")
+        stop2c("Please specify the 'xvar' argument")
       }
       if(is.null(xvar)) {
-        stop("please specify the 'draw' argument")
+        stop2c("Please specify the 'draw' argument")
       }
       temx <- x
       x <- temx[[xvar]] %>% unlist() %>% as.numeric()
@@ -2356,35 +2154,33 @@ marginal_growthparameters.bgmfit <- function(model,
       x <- xy$x
       y <- xy$y
     } # if(aggregate_by) {
-    
-    parm_c <- list()
-    pgvx <- NULL
-    for (parmi in parm) {
-      if('apgv' %in% parmi) {
-        # prepare_data2
-        parm_c[[parmi]] <- sitar::getPeak(x, y)[1] %>% ifunx_() 
+    parm_out <- list()
+    tempout_p_exists <- FALSE
+    for (i in parm) {
+      if(i == 'apgv' | i == 'pgv') {
+        tempout_p <- sitar::getPeak(x = x, y = y)
+        if(i == 'apgv') parm_out[[i]] <- ifunx_(tempout_p[1])
+        if(i ==  'pgv') parm_out[[i]] <- tempout_p[2]
+        tempout_p_exists <- TRUE
       }
-      if('pgv' %in% parmi) {
-        parm_c[[parmi]] <- pgvx <- sitar::getPeak(x, y)[2]
+      if(i == 'atgv' | i == 'tgv') {
+        tempout_t <- sitar::getTakeoff(x = x, y = y)
+        if(i == 'atgv') parm_out[[i]] <- ifunx_(tempout_t[1])
+        if(i ==  'tgv') parm_out[[i]] <- tempout_t[2]
       }
-      if('atgv' %in% parmi) {
-        # prepare_data2
-        parm_c[[parmi]] <- sitar::getTakeoff(x, y)[1] %>% ifunx_()
-      }
-      if('tgv' %in% parmi) {
-        parm_c[[parmi]] <- sitar::getTakeoff(x, y)[2]
-      }
-      if('acgv' %in% parmi | 'acgv' %in% parmi) {
-        if(is.null(pgvx)) pgvx <- sitar::getPeak(x, y)[2]
-        cgv  <- acg_velocity * pgvx
+      if(i == 'acgv' | i == 'cgv') {
+        if( tempout_p_exists) tempout_c <- tempout_p[2]
+        if(!tempout_p_exists) tempout_c <- sitar::getPeak(x = x, y = y)[2]
+        cgv  <- acg_velocity * tempout_c
         vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
+        if(i == 'acgv') parm_out[[i]] <- ifunx_(x[vcgi])
+        if(i ==  'cgv') parm_out[[i]] <- y[vcgi]
       }
-      # prepare_data2
-      if('acgv' %in% parmi) parm_c[[parmi]] <- x[vcgi] %>% ifunx_()
-      if('cgv' %in% parmi)  parm_c[[parmi]] <- y[vcgi]
-    }
-    out <- parm_c %>% CustomDoCall(cbind, .) %>% data.frame()
-    out
+    } # for (i in parm) {
+    # if(length(parm) == 1) parm_out <- parm_out[[1]] 
+    # return(parm_out)
+    out <- parm_out %>% CustomDoCall(cbind, .) %>% data.frame()
+    return(out)
   } # getparmsx <- function
   
   ##################################################################
@@ -2395,12 +2191,9 @@ marginal_growthparameters.bgmfit <- function(model,
   if(force_condition_and_by_switch_plot) {
     if(method == 'custom') {
       force_condition_and_by_switch_plot_arg <- comparisons_arguments
-      force_condition_and_by_switch_plot_arg$difx <- 
-        full.args$difx
-      force_condition_and_by_switch_plot_arg$variables <- 
-        full.args$variables
-      force_condition_and_by_switch_plot_arg$by <- 
-        full.args$by
+      force_condition_and_by_switch_plot_arg$difx <- full.args$difx
+      force_condition_and_by_switch_plot_arg$variables <- full.args$variables
+      force_condition_and_by_switch_plot_arg$by <- full.args$by
       
       force_condition_and_by_switch_plot_arg$transform <- FALSE
       force_condition_and_by_switch_plot_arg$pdrawso   <- TRUE
@@ -2425,7 +2218,6 @@ marginal_growthparameters.bgmfit <- function(model,
   pdrawsp_est <- NULL
   pdrawsh_est <- NULL
   pdraws_est <- NULL
-  
 
   if(method == 'custom') {
     predictions_arguments                 <- comparisons_arguments
@@ -2446,7 +2238,7 @@ marginal_growthparameters.bgmfit <- function(model,
       if(call_slopes) {
         if (!is.null(variables)) {
           if (!is.character(variables)) {
-            stop("'variables' argument must be a character string such as", 
+            stop2c("'variables' argument must be a character string such as", 
                  "\n ",
                  " variables = ", "'", summarise_over_x, "'"
             )
@@ -2472,8 +2264,6 @@ marginal_growthparameters.bgmfit <- function(model,
         } 
       } # if(call_slopes) {
       
-      
-
       # Decide if set by = NULL and then here pick and replace 'by' set_group 
       if(is.null(by)) {
         if(is.null(cov)) {
@@ -2481,7 +2271,7 @@ marginal_growthparameters.bgmfit <- function(model,
         } else if(!is.null(cov)) {
           set_group <- cov
           if (!set_group %in% cov) {
-            stop('by must be one of the ', cov)
+            stop2c('by must be one of the ', cov)
           } 
         }
       } else if(!is.null(by)) {
@@ -2493,28 +2283,17 @@ marginal_growthparameters.bgmfit <- function(model,
       }
       
       
-      if(call_slopes) {
-        predictions_arguments$variables  <- set_variables
-      }
-      predictions_arguments$by            <- set_group
-      
-      
+      predictions_arguments$variables  <- set_variables
+      predictions_arguments$by         <- set_group
       if(is.null(predictions_arguments$by)) {
         predictions_arguments$by < 'NULL'
       }
-      
       assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
-    } # end if(call_slopes)  borrowed from marginal_draws
+    } # end if(call_slopes)
     
     ########################################################################
     
-    if(!is.null(predictions_arguments[['variables']])) {
-      if(!is.list(eval(predictions_arguments[['variables']]))) {
-        # 21.09.2024
-        # In fact list does not work, variables = c('class') works
-        # stop("Argument 'variables' must be a named list")
-      }
-    }
+    
     
     # Imp, add xvar to 'by' if missing
     by <- predictions_arguments[['by']]
@@ -2528,24 +2307,6 @@ marginal_growthparameters.bgmfit <- function(model,
     by <- eval(by)
     predictions_arguments[['by']] <- by 
     
-  
-    
-    # new
-    if(method == "custom") {
-      if(deriv > 0) {
-        if(call_predictions) {
-          if(!is.null(predictions_arguments[['variables']])) {
-            # turning it off 13.11.2025
-            
-            # stop("argument 'variables' must be 'NULL' ",
-            #      "when 'call_predictions = TRUE'")
-            
-          } # if(!is.null(predictions_arguments[['variables']])) {
-        } # if(call_predictions) {
-      } # if(deriv > 0) {
-    } # if(method == "pkg") {
-    
-    
     if(future_splits_exe) {
       # Note that since predictions_arguments are passed to multisession, 
       # evaluate each argument
@@ -2558,17 +2319,20 @@ marginal_growthparameters.bgmfit <- function(model,
     if(!future_splits_exe & callfuns) {
       if(!average) {
         if(call_predictions) {
-          out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+          out <- CustomDoCall(marginaleffects::predictions, 
+                              predictions_arguments)
         } 
         if(call_slopes) {
           out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
         }
       } else if(average) {
         if(call_predictions) {
-          out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+          out <- CustomDoCall(marginaleffects::avg_predictions, 
+                              predictions_arguments)
         } 
         if(call_slopes) {
-          out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+          out <- CustomDoCall(marginaleffects::avg_slopes, 
+                              predictions_arguments)
         }
       }
     } # if(!future_splits_exe) {
@@ -2580,7 +2344,7 @@ marginal_growthparameters.bgmfit <- function(model,
           predictions_arguments[['ndraws']]   <- NULL
           `%>%` <- bsitar::`%>%`
           if(re_expose) {
-            if(verbose) message("need to expose functions for 'multisession'")
+            if(verbose) message2c("need to expose functions for 'multisession'")
             predictions_arguments[['model']] <- 
               bsitar::expose_model_functions(predictions_arguments[['model']])
           }
@@ -2592,10 +2356,12 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::predictions, 
+                                predictions_arguments)
           } 
           if(call_slopes) {
-            out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::slopes, 
+                                predictions_arguments)
           }
           return(out)
         } # end myzfun
@@ -2612,7 +2378,7 @@ marginal_growthparameters.bgmfit <- function(model,
           # model <- predictions_arguments[['model']] 
           `%>%` <- bsitar::`%>%`
           if(re_expose) {
-            if(verbose) message("need to expose functions for 'multisession'")
+            if(verbose) message2c("need to expose functions for 'multisession'")
             predictions_arguments[['model']] <- 
               bsitar::expose_model_functions(predictions_arguments[['model']])
           }
@@ -2625,36 +2391,20 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_predictions,
+                                predictions_arguments)
           } 
           if(call_slopes) {
-            out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_slopes, 
+                                predictions_arguments)
           }
           return(out)
         } # end myzfun
         out <-  future.apply::future_lapply(future_splits_at,
                                             future.envir = parent.frame(),
-                                            # future.globals = c('future_splits_at',
-                                            #                    're_expose',
-                                            #                    'o',
-                                            #                    'call_predictions',
-                                            #                    'call_slopes',
-                                            #                    'CustomDoCall',
-                                            #                    'verbose',
-                                            #                    'predictions_arguments'),
                                             future.globals = TRUE,
                                             future.seed = TRUE,
-                                            # future.packages = c('bsitar',
-                                            #                     'insight',
-                                            #                     'marginaleffects'),
                                             FUN = myzfun)
-        
-
-        # out <-  mirai::mirai_map(
-        #   future_splits_at, 
-        #   .args = list(predictions_arguments = predictions_arguments,
-        #                re_expose = re_expose),
-        #   .f = myzfun)[.flat, .progress]
       } # if(!average) { else if(average) {
     } # if(future_splits_exe_future) {
     
@@ -2683,7 +2433,7 @@ marginal_growthparameters.bgmfit <- function(model,
           predictions_arguments[['ndraws']] <- NULL
           `%>%` <- bsitar::`%>%`
           if(re_expose) {
-            if(verbose) message("need to expose functions for 'multisession'")
+            if(verbose) message2c("need to expose functions for 'multisession'")
             predictions_arguments[['model']] <- 
               bsitar::expose_model_functions(predictions_arguments[['model']])
           }
@@ -2696,10 +2446,12 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            out <- CustomDoCall(marginaleffects::predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::predictions, 
+                                predictions_arguments)
           } 
           if(call_slopes) {
-            out <- CustomDoCall(marginaleffects::slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::slopes, 
+                                predictions_arguments)
           }
           return(out)
         }
@@ -2721,7 +2473,7 @@ marginal_growthparameters.bgmfit <- function(model,
           predictions_arguments[['ndraws']] <- NULL
           `%>%` <- bsitar::`%>%`
           if(re_expose) {
-            if(verbose) message("need to expose functions for 'multisession'")
+            if(verbose) message2c("need to expose functions for 'multisession'")
             predictions_arguments[['model']] <- 
               bsitar::expose_model_functions(predictions_arguments[['model']])
           }
@@ -2733,10 +2485,12 @@ marginal_growthparameters.bgmfit <- function(model,
             envir = setenv
           )
           if(call_predictions) {
-            out <- CustomDoCall(marginaleffects::avg_predictions, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_predictions, 
+                                predictions_arguments)
           } 
           if(call_slopes) {
-            out <- CustomDoCall(marginaleffects::avg_slopes, predictions_arguments)
+            out <- CustomDoCall(marginaleffects::avg_slopes, 
+                                predictions_arguments)
           }
           return(out)
         }
@@ -2746,24 +2500,40 @@ marginal_growthparameters.bgmfit <- function(model,
     
     
     
-    posterior_draws_function <- function(x, ...) {
-      out[[x]] %>% 
-        marginaleffects:: posterior_draws(shape = "long") %>% 
-        dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-        dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
-        dplyr::mutate(drawid = as.factor(drawid)) %>% 
-        dplyr::relocate(drawid, .before = 'draw')
+    # posterior_draws_function <- function(x, ...) {
+    #   out[[x]] %>% 
+    #     marginaleffects:: posterior_draws(shape = "long") %>% 
+    #     dplyr::mutate(drawid = as.numeric(drawid)) %>% 
+    #     dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
+    #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
+    #     dplyr::relocate(drawid, .before = 'draw')
+    # }
+    # 
+    # 
+    # consecutive_drawid_function <- function(x, ...) {
+    #   x %>% 
+    #     dplyr::group_by(drawid) %>% 
+    #     dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
+    #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
+    #     dplyr::ungroup()
+    # }
+    
+    
+    # posterior_draws_dt <- function(i) {
+    #   dt <- as.data.table(marginaleffects::posterior_draws(out[[i]], 
+    #                                                        shape = "long"))
+    #   dt[, drawid := as.factor(future_splits_at[[i]][as.numeric(drawid)])]
+    #   data.table::setcolorder(dt, "drawid")
+    #   return(dt)
+    # }
+    
+    posterior_draws_collapse <- function(i) {
+      dt <- collapse::qDT(marginaleffects::posterior_draws(out[[i]], 
+                                                           shape = "long"))
+      draw_idx <- as.numeric(dt$drawid)
+      dt[, drawid := as.factor(future_splits_at[[i]][draw_idx])]
+      return(dt)
     }
-    
-    
-    consecutive_drawid_function <- function(x, ...) {
-      x %>% 
-        dplyr::group_by(drawid) %>% 
-        dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
-        dplyr::mutate(drawid = as.factor(drawid)) %>% 
-        dplyr::ungroup()
-    }
-    
     
     
     # somehow this need consequence number
@@ -2778,12 +2548,18 @@ marginal_growthparameters.bgmfit <- function(model,
           out <- out %>% CustomDoCall(rbind, .)
           return(out)
         }
-        zxdraws <- lapply(1:length(future_splits_at), 
-                          FUN = posterior_draws_function)
-        zxdraws <- zxdraws %>% CustomDoCall(rbind, .)
-        # Note that above zxdraws has drawid exact same as splits
-        # but somehow, we need consecutive drawid for summarising
-        zxdraws <- consecutive_drawid_function(zxdraws)
+        # zxdraws <- lapply(1:length(future_splits_at), 
+        #                   FUN = posterior_draws_function)
+        # zxdraws <- zxdraws %>% CustomDoCall(rbind, .)
+        # # Note that above zxdraws has drawid exact same as splits
+        # # but somehow, we need consecutive drawid for summarising
+        # zxdraws <- consecutive_drawid_function(zxdraws)
+        
+        zxdraws <- collapse::unlist2d(future.apply::future_lapply(
+          seq_along(out), posterior_draws_collapse), 
+          idcols = FALSE, DT = TRUE)
+        zxdraws[, drawid := as.factor(collapse::groupid(drawid))] 
+        
       }
     }
     
@@ -2857,9 +2633,9 @@ marginal_growthparameters.bgmfit <- function(model,
         drawidby_ <- c(drawidby, 'parameter', 'estimate')
         parmest   <- 'draw'
         
-        if(any(c('apgv', 'pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
-        if(any(c('atgv', 'tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
-        if(any(c('acgv', 'cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
+        if(any(c('apgv','pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
+        if(any(c('atgv','tgv') %in% parm)) gettest <- TRUE else gettest <- FALSE
+        if(any(c('acgv','cgv') %in% parm)) getcest <- TRUE else getcest <- FALSE
         
         if(getpest) namesp <- cbind('apgv', 'pgv') else namesp <- NULL
         if(gettest) namest <- cbind('atgv', 'tgv') else namest <- NULL
@@ -2874,6 +2650,8 @@ marginal_growthparameters.bgmfit <- function(model,
           vcgi <- which(abs(y - cgv) == min(abs(y - cgv)))[1]
           return(c(x = x[vcgi], y = y[vcgi]))
         }
+        
+        
         
         funx <- function(x,...) {
           if(getpest) {
@@ -2899,9 +2677,10 @@ marginal_growthparameters.bgmfit <- function(model,
         
         onex0 <- zxdraws %>% 
           collapse::fgroup_by(drawidby) %>% 
-          collapse::fsummarise(collapse::mctl(funx(cbind(.data[[summarise_over_x]], 
-                                                         .data[[parmest]])), 
-                                              names = F)) %>% 
+          collapse::fsummarise(collapse::mctl(
+            funx(cbind(.data[[summarise_over_x]], 
+                       .data[[parmest]])), 
+            names = F)) %>% 
           collapse::ftransformv(., 'V2', as.numeric) %>% 
           collapse::frename(., drawidby_) %>% 
           collapse::fsubset(., parameter %in% parm)
@@ -2909,9 +2688,11 @@ marginal_growthparameters.bgmfit <- function(model,
       } else {
         drawid_c <- list()
         for (drawidi in 1:nlevels(zxdraws$drawid)) {
-          drawid_c[[drawidi]] <-  zxdraws %>% dplyr::filter(drawid == drawidi) %>%
+          drawid_c[[drawidi]] <-  zxdraws %>% 
+            dplyr::filter(drawid == drawidi) %>%
             dplyr::group_by_at(by) %>%
-            dplyr::group_modify(., ~ getparmsx(.x[[summarise_over_x]] , .x$draw, parm = parm),
+            dplyr::group_modify(., ~ getparmsx(.x[[summarise_over_x]] , 
+                                               .x$draw, parm = parm),
                                 .keep = TRUE) %>%
             dplyr::mutate(drawid = drawidi)
         }
@@ -2931,7 +2712,7 @@ marginal_growthparameters.bgmfit <- function(model,
     get_pe_ci <- function(x, draw = NULL, na.rm = TRUE, ...) {
       if(data.table::is.data.table(x) | is.data.frame(x)) {
         if(is.null(draw)) {
-          stop("Please specify the 'draw' argument")
+          stop2c("Please specify the 'draw' argument")
         }
         x <- x %>% dplyr::select(dplyr::all_of(draw)) %>% 
           unlist() %>% as.numeric()
@@ -2945,25 +2726,7 @@ marginal_growthparameters.bgmfit <- function(model,
       )
     }
     
-    
-    get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-      if(ec_agg == "mean")  estimate <- 
-          collapse::fmean(x, 
-                          na.rm = na.rm, 
-                          nthreads = arguments$cores) 
-      
-      if(ec_agg == "median") estimate <- 
-          collapse::fmedian(x, 
-                            na.rm = na.rm, 
-                            nthreads = arguments$cores)
-      
-      if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-                                                     na.rm = na.rm)
-      if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-      cbind(estimate, luci[1], luci[2]) 
-    }
-    
-    
+   
     
     if(!isFALSE(pdrawsp)) {
       if(!is.character(pdrawsp)) pdrawsp <- "return"
@@ -3029,7 +2792,7 @@ marginal_growthparameters.bgmfit <- function(model,
       for (axi in 1:length(constrats_by)) {
         caxi <- constrats_by[axi]
         if(!is.character(caxi)) {
-          stop2c("The 'constrats_by' argument '", caxi, " should be a character")
+          stop2c("The 'constrats_by' argument '", caxi," should be a character")
         }
         if(!caxi %in% by) {
           stop2c("The 'constrats_by' argument '", caxi, "' is not available in",
@@ -3062,13 +2825,14 @@ marginal_growthparameters.bgmfit <- function(model,
       }
     }
     
+
     # For hypothesis
     groupvarshyp1 <- c('drawid')
     groupvarshyp2 <- c('term')
     if(!is.null(constrats_at)) {
       for (caxi in names(constrats_at)) {
         if(!caxi %in% names(onex0)) {
-          stop("Variable '", caxi, ". specified in 'constrats_at' is not in",
+          stop2c("Variable '", caxi, ". specified in 'constrats_at' is not in",
                "\n ", 
                " the 'by' arg. Note that ", caxi, " should also be included",
                "\n ", 
@@ -3080,14 +2844,14 @@ marginal_growthparameters.bgmfit <- function(model,
         allowed_char_constrats_at <- c('max', 'min', 'unique', 'range')
         if(is.character(constrats_at[[caxi]])) {
           if(length(constrats_at[[caxi]]) > 1) {
-            stop(caxi, " specified in 'constrats_at' as character should be a 
+            stop2c(caxi, " specified in 'constrats_at' as character should be a 
                  single character:",
                  "\n ", 
                  collapse_comma(allowed_char_constrats_at)
             )
           }
           if(!constrats_at[[caxi]] %in% allowed_char_constrats_at) {
-            stop(constrats_at[[caxi]], " specified in 'constrats_at' as 
+            stop2c(constrats_at[[caxi]], " specified in 'constrats_at' as 
                  character should be one of",
                  "\n ", 
                  collapse_comma(allowed_char_constrats_at)
@@ -3109,7 +2873,7 @@ marginal_growthparameters.bgmfit <- function(model,
       for (caxi in names(constrats_at)) {
         onex1 <- base::subset(onex0, onex0[[caxi]] %in% constrats_at[[caxi]])
         if(nrow(onex1) == 0) {
-          stop(caxi, " specified in 'constrats_at' has resulted in zero rows",
+          stop2c(caxi, " specified in 'constrats_at' has resulted in zero rows",
                "\n ", 
                ""
           )
@@ -3122,6 +2886,7 @@ marginal_growthparameters.bgmfit <- function(model,
       onex1 <- onex0
     }
     
+    
 
     #########################33
     if(isFALSE(constrats_subset)) {
@@ -3132,8 +2897,8 @@ marginal_growthparameters.bgmfit <- function(model,
     if(!is.null(constrats_subset)) {
       for (caxi in names(constrats_subset)) {
         if(!caxi %in% names(onex0)) {
-          stop("Variable '", caxi, ". specified in 'constrats_subset' is not ",
-               " avaialble in the 'by' argument.",
+          stop2c("Variable '", caxi, ". specified in 'constrats_subset' is ",
+               " not avaialble in the 'by' argument.",
                "\n ", 
                " Please include ", caxi, " in the 'by' argument.",
                "\n ", 
@@ -3153,7 +2918,7 @@ marginal_growthparameters.bgmfit <- function(model,
         onex1 <- 
           base::subset(onex1, onex1[[caxi]] %in% constrats_subset[[caxi]])
         if(nrow(onex1) == 0) {
-          stop(caxi, " specified in 'constrats_subset' resulted in zero rows",
+          stop2c(caxi, " specified in 'constrats_subset' resulted in zero rows",
                "\n ", 
                ""
           )
@@ -3173,15 +2938,12 @@ marginal_growthparameters.bgmfit <- function(model,
       names(hypothesisargs)[2] <- '...'
       formals(get_pe_ci2) <- hypothesisargs
       parmi_estimate <- 'estimate'
-      
       setdrawid     <- c('drawid', by)
       setdrawidparm <- c(by, 'parameter')
-      
       out_sf_and_later_hy <-
         onex1 %>% dtplyr::lazy_dt() %>% 
         tidyr::pivot_longer(!dplyr::all_of(setdrawid), names_to = 'parameter', 
                             values_to = "draw")
-      
       out_sf <- out_sf_and_later_hy %>% 
         dplyr::select(-dplyr::all_of('drawid')) %>% 
         dplyr::group_by_at(setdrawidparm) %>% 
@@ -3197,22 +2959,21 @@ marginal_growthparameters.bgmfit <- function(model,
         setdrawid     <- c('drawid', bys)
         setdrawidparm <- c(bys, 'parameter')
       }
-      
-      
       namesx <- c('estimate', 'conf.low', 'conf.high')
       setdrawidparm_ <- c(setdrawidparm, namesx)
-      
       out3 <-
         onex1 %>% collapse::fgroup_by(setdrawidparm) %>% 
         collapse::fsummarise(collapse::mctl(
-          get_pe_ci_collapse(.data[['estimate']]))
+          get_pe_ci_collapse(.data[['estimate']],
+                             ec_agg = ec_agg, 
+                             ei_agg = ei_agg, na.rm = TRUE, 
+                             nthreads = arguments$cores, 
+                             conf = conf, probs = probs))
         ) %>% 
         collapse::ftransformv(., 'V2', as.numeric) %>% 
         collapse::frename(., setdrawidparm_) 
-      
       row.names(out3) <- NULL
       out_sf <- out3
-      
     } else {
       summary_c <- list()
       for (parmi in parm) {
@@ -3231,7 +2992,7 @@ marginal_growthparameters.bgmfit <- function(model,
       out_sf <- out3
     }
     
-    
+
     # Hypothesis
     if(!is.null(hypothesis)) {
       get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
@@ -3305,8 +3066,6 @@ marginal_growthparameters.bgmfit <- function(model,
                            draws = 'estimate') %>% as.matrix() 
         }
         
-       
-        
         setdrawidh     <- c('drawid', 'parameter')
         setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
         temhyy <- 
@@ -3314,8 +3073,6 @@ marginal_growthparameters.bgmfit <- function(model,
           collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>% 
           collapse::ftransformv(., 'V2', as.numeric) %>% 
           collapse::frename(., setdrawidh_)
-        
-        
         if(!isFALSE(pdrawsh)) {
           selectchoicesr <- c("return", 'add') 
           checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
@@ -3327,22 +3084,20 @@ marginal_growthparameters.bgmfit <- function(model,
             
           }
         }
-        
-        
-        
         setdrawidparmh <- c('term', 'parameter')
         namesx <- c('estimate', 'conf.low', 'conf.high')
         setdrawidparm_ <- c(setdrawidparmh, namesx)
-        
         out_sf_hy <-
           temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
           collapse::fsummarise(collapse::mctl(
-            get_pe_ci_collapse(.data[['estimate']]))
+            get_pe_ci_collapse(.data[['estimate']],
+                               ec_agg = ec_agg, 
+                               ei_agg = ei_agg, na.rm = TRUE, 
+                               nthreads = arguments$cores, 
+                               conf = conf, probs = probs))
           ) %>% 
           collapse::frename(., setdrawidparm_) 
-        
         row.names(out_sf_hy) <- NULL
-        
       } else {
         parmi_ci_c <- list()
         for (parmi in parm) {
@@ -3412,8 +3167,7 @@ marginal_growthparameters.bgmfit <- function(model,
       data.frame()
   }
   
-  
-  
+
   if(!is.null(out_sf_hy)) {
     if(usecollapse) {
       out_sf_hy <- out_sf_hy %>% data.frame() %>% 
@@ -3638,6 +3392,8 @@ marginal_growthparameters.bgmfit <- function(model,
     pdrawsh_est <- as_factor_as_character_factor_df(pdrawsh_est)
   }
   ###########################################
+  
+  
   
   
   out <- list()
