@@ -111,16 +111,16 @@
 #' model <- berkeley_exfit
 #' 
 #' # Population average distance curve
-#' marginal_draws(model, deriv = 0, re_formula = NA)
+#' marginal_draws(model, deriv = 0, re_formula = NA, draw_ids = 1:2)
 #' 
 #' # Individual-specific distance curves
-#' marginal_draws(model, deriv = 0, re_formula = NULL)
+#' marginal_draws(model, deriv = 0, re_formula = NULL, draw_ids = 1:2)
 #' 
 #' # Population average velocity curve
-#' marginal_draws(model, deriv = 1, re_formula = NA)
+#' marginal_draws(model, deriv = 1, re_formula = NA, draw_ids = 1:2)
 #' 
 #' # Individual-specific velocity curves
-#' marginal_draws(model, deriv = 1, re_formula = NULL)
+#' marginal_draws(model, deriv = 1, re_formula = NULL, draw_ids = 1:2)
 #' }
 #' 
 marginal_draws.bgmfit <-

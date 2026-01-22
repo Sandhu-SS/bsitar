@@ -113,6 +113,7 @@ check_forpipe <- function(x, return = 'name') {
   # data_name_str   <- deparse(mcall_$data)
   data_name_split <- paste(gsub_space(data_name_str), collapse = "")
   data_name_pipe  <- FALSE
+  # data_name_str_attr <- FALSE
   if(grepl("%>%", data_name_split, fixed = T)) {
     data_name_str_attr <- strsplit(data_name_split, "%>%", fixed = T)[[1]][1]
     data_name_pipe  <- TRUE
@@ -1049,7 +1050,7 @@ get_future_plan_args <- function(future,
   } else if(grepl("cluster", future_session)) {
     setplanis <- "cluster"
   }
-  
+ 
   if (inherits(getfutureplan, "sequential")) {
     mirai_daemons_args <- list()
     future_plan_args <- list()
@@ -1092,6 +1093,7 @@ get_future_plan_args <- function(future,
                 " updated as ", future_session)
     }
   } else if (!inherits(getfutureplan, "sequential")) {
+    future_plan_args <- NULL
     if(verbose) {
       message2c("Using the existing future plan: ", oldplanin)
     }
@@ -3350,7 +3352,8 @@ custom_get_data.brmsfit <- function (x,
 # Lock it back (optional)
 # lockBinding("get_data", getNamespace("insight"))
 
-##################################################################
+
+
 
 
 #' unlock_replace_bind for for \code{insight get_data}

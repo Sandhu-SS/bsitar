@@ -5395,9 +5395,15 @@ setup_variables_var <- function(model,
                                 switch_plot = FALSE,
                                 verbose = FALSE) {
  
+  # When setup_variables_var called from marginal_* via hypothesis_test()
+  # Then same setup_variables_var executed as marginal_growthparameters()
   
-  if(grepl("^marginal_growthparameters", xcall) |
+  if(grepl("^marginal_growthparameters", xcall) | 
+     grepl("^hypothesis_test", xcall) |
      grepl("^modelbased_growthparameters", xcall)) {
+    
+  # if(grepl("^marginal_growthparameters", xcall) |
+  #    grepl("^modelbased_growthparameters", xcall)) {
     if (!is.null(variables)) {
       if (!is.list(variables)) {
         if(is.character(variables)) {
@@ -6217,8 +6223,9 @@ get_pe_ci_collapse <- function(x,
                                na.rm = TRUE, 
                                nthreads,
                                conf,
-                               probs) {
-  
+                               probs,
+                               digits = NULL) {
+ 
   # get_etix <- utils::getFromNamespace("get_eti", "marginaleffects")
   # get_etix <- stats::quantile
   
@@ -6239,7 +6246,8 @@ get_pe_ci_collapse <- function(x,
   } else {
     stop2c("Argument 'ei_agg' must be either 'eti' or 'hdi'")
   }
-  return( cbind(estimate, luci[1], luci[2]) )
+  if(is.null(digits)) return( cbind(estimate, luci[1], luci[2]) )
+  if(!is.null(digits)) return(round(cbind(estimate, luci[1], luci[2]),digits))
 }
 
 

@@ -198,7 +198,70 @@
 #'   estimating parameters using [sitar::getPeak()], [sitar::getTakeoff()], and
 #'   [sitar::getTrough()] functions. These options are restructured according to
 #'   the user-specified \code{hypothesis} argument.
-#'
+#'   
+#' @param equivalence_test A named arguments list (default \code{NULL}) passed
+#'   to [bayestestR::equivalence_test()] for ROPE-based hypothesis testing. Core
+#'   arguments:
+#'   \itemize{
+#'     \item \code{range = "default"}: ROPE bounds (numeric vector or
+#'     \code{"default"}). Defaults values that are automatically set up for
+#'     \code{range} are: \code{c(-1, 1)} for age parameters (\code{apgv},
+#'     \code{atgv}, \code{acgv}); \code{c(-0.5, 0.5)} for velocity parameters
+#'     (\code{pgv}, \code{tgv}, \code{cgv}). \item \code{ci}: Credible interval
+#'     level. Default \code{0.95}. \item \code{rvar_col}: Random variable column
+#'     name for long-format data. Default \code{NULL}. \item \code{verbose}:
+#'     Print progress messages if \code{TRUE}. Default \code{FALSE}.
+#'   }
+#'   
+#'   Additional package-specific controls:
+#'   \itemize{
+#'     \item \code{format}: If \code{TRUE}, merge
+#'     \code{ROPE_low}/\code{ROPE_high} into \code{ROPE_range} and
+#'     \code{HDI_low}/\code{HDI_high} into \code{HDI_range}. \item
+#'     \code{reformat}: If \code{TRUE}, standardize
+#'     [marginaleffects::comparisons()] output (\code{conf.low} → \code{Q2.5},
+#'     \code{conf.high} → \code{Q97.5}) and drop reporting columns (\code{term},
+#'     \code{contrast}, etc.).
+#'     \item \code{get_range_null_form}: If \code{TRUE}, return expected
+#'     \code{range} and \code{null} structure for manual specification via
+#'     \code{comparison_range_null} and \code{hypothesis_range_null}.
+#'     \item \code{digits}: Number of digits to use when printing numeric
+#'     results. Default \code{2}.
+#'     \item \code{as_percent}: Logical indicating whether to return ROPE 
+#'     results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}). 
+#'     Only evaluated when \code{model} is class \code{"bsitar"} and
+#'     \code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+#'     \item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
+#'     \item \code{inline}: Internal use only; executes custom equivalence
+#'     function (not for users).
+#'   }
+#' 
+#' @param p_direction A named arguments list (default \code{NULL}) passed to
+#'   [bayestestR::p_direction()] for Probability of Direction (\code{pd})
+#'   computation. Commonly used elements:
+#'   \itemize{
+#'     \item \code{method}: Computation method. Default \code{"direct"}. \item
+#'     \code{null}: Null value (default \code{0} for all growth parameters).
+#'     \item \code{as_p}: Return p-value-like scale. Default \code{FALSE}. \item
+#'     \code{remove_na}: Remove missing values. Default \code{TRUE}.
+#'   }
+#'   
+#'   Additional package-specific controls:
+#'   \itemize{
+#'     \item \code{get_range_null_form}: If \code{TRUE}, return expected
+#'     \code{range} and \code{null} structure for manual specification via
+#'     \code{comparison_range_null} and \code{hypothesis_range_null}.
+#'     \item \code{digits}: Number of digits to use when printing numeric
+#'     results. Default \code{2}.
+#'     \item \code{as_percent}: Logical indicating whether to return PD 
+#'     results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
+#'     Only evaluated when \code{model} is class \code{"bsitar"} and
+#'     \code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+#'     \item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
+#'     \item \code{inline}: Internal use only; executes custom equivalence
+#'     function (not for users).
+#'   }
+#'   
 #' @param reformat A logical (default \code{TRUE}) indicating whether to
 #'   reformat the output returned by \code{marginaleffects} as a data frame.
 #'   Column names are redefined as \code{conf.low} to \code{Q2.5} and
@@ -442,6 +505,8 @@ marginal_growthparameters.bgmfit <- function(model,
                                              wts = NULL,
                                              hypothesis = NULL,
                                              equivalence = NULL,
+                                             equivalence_test = NULL,
+                                             p_direction = NULL,
                                              eps = NULL,
                                              constrats_by = FALSE,
                                              constrats_at = FALSE,
@@ -612,7 +677,8 @@ marginal_growthparameters.bgmfit <- function(model,
   # See 'custom_get_data.brmsfit' in utils-helper-1
   if(!model$test_mode) {
     unlock_replace_bind(package = "insight", what = "get_data",
-                        replacement = custom_get_data.brmsfit, ept_str = T)
+                        replacement = custom_get_data.brmsfit, 
+                        ept_str = T)
     if(verbose) {
       message2c(" As model[['test_mode']] = FLASE, the full data by the",
               "\n ", 
@@ -622,8 +688,12 @@ marginal_growthparameters.bgmfit <- function(model,
               "\n ", 
               "'To over ride this approach, set model[['test_mode']] = TRUE")
     }
+    # unlock_replace_bind(package = "marginaleffects", what = "equivalence",
+    #                     replacement = custom_marginaleffects_equivalence, 
+    #                     ept_str = T)
   } # if(!model$test_mode) {
   
+ 
   
   # Run this to get full data via modified get_data() for insight
   # See 'custom_get_data.brmsfit' in utils-helper-1
@@ -1228,12 +1298,15 @@ marginal_growthparameters.bgmfit <- function(model,
   arguments$cores <- setincores <-  get.cores_[['max.cores']]
   .cores_ps <- get.cores_[['.cores_ps']]
   
+  
 
   get_future_args <- get_future_plan_args(future = future, 
                                            future_session = future_session, 
                                            oldfutureplan = future::plan(),
                                            setincores = setincores,
                                            verbose = FALSE)
+  
+  if(is.null(get_future_args)) get_future_args <- NULL
   if(!is.null(get_future_args)) {
     future_plan_args <- get_future_args[['future_plan_args']]
     setplanis        <- get_future_args[['setplanis']]
@@ -1454,6 +1527,7 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   
+  
   full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                   fargs = arguments, 
                                   dargs = list(...), 
@@ -1594,6 +1668,24 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   comparisons_arguments <- full.args
+  
+  eqpdargs <- set_up_equivalence_test_p_direction_args(
+    inbound_arguments = comparisons_arguments, 
+    checking_inline = TRUE,
+    xcall = xcall,
+    verbose = FALSE)
+  
+  comparisons_arguments <- eqpdargs[['inbound_arguments']]
+  check_equivalence_test_full.args <- eqpdargs[['check_equivalence_test_full.args']]
+  check_p_direction_full.args <- eqpdargs[['check_p_direction_full.args']]
+  evaluate_equivalence <- eqpdargs[['evaluate_equivalence']]
+  evaluate_pdirection <- eqpdargs[['evaluate_pdirection']]
+  get_range_null_form <- eqpdargs[['get_range_null_form']]
+  get_range_null_value <- eqpdargs[['get_range_null_value']]
+  
+  format <- eqpdargs[['format']]
+  
+  
   
   # Drop that not required for marginaleffects::
   exclude_args <- as.character(quote(
@@ -1904,6 +1996,7 @@ marginal_growthparameters.bgmfit <- function(model,
         if(i ==  'cgv') parm_out[[i]] <- y[vcgi]
       }
     } # for (i in parm) {
+   
     if(length(parm) == 1) parm_out <- parm_out[[1]] 
     return(parm_out)
   } # gparms_fun
@@ -1930,22 +2023,39 @@ marginal_growthparameters.bgmfit <- function(model,
     # For multisession, need to set all options()
     options("marginaleffects_posterior_center" = ec_agg)
     options("marginaleffects_posterior_interval" = ei_agg)
-    if(!plot) {
-      if(!average) {
-        if(callfuns) out <- CustomDoCall(marginaleffects::comparisons, 
-                                    comparisons_arguments)
-      } else if(average) {
-        if(callfuns) out <- CustomDoCall(marginaleffects::avg_comparisons, 
-                                    comparisons_arguments)
+    
+    suppresswar_args <-
+    suppresswar_equivalence_test_p_direction_args(
+      inbound_arguments = comparisons_arguments, parm = parm, verbose = FALSE)
+
+    comparisons_arguments <- suppresswar_args[['inbound_arguments']]
+    suppresswar           <- suppresswar_args[['suppresswar']]
+
+
+    call_funcall <- function(funcall, args, suppresswar) {
+      if(suppresswar) {
+        suppressWarnings({return(CustomDoCall(funcall, args))})
+      } else {
+        return(CustomDoCall(funcall, args))
       }
+    } # call_funcall
+    
+    
+    
+    if(!plot) {
+      if(callfuns) {
+        if(!average) setfuncall <- marginaleffects::comparisons
+        if( average) setfuncall <- marginaleffects::avg_comparisons
+      }
+      out <- call_funcall(setfuncall, comparisons_arguments, suppresswar)
     } else if(plot) {
       if(isFALSE(set_group)) comparisons_arguments$by <- NULL
       if(is.null(comparisons_arguments[['by']]) &
          is.null(comparisons_arguments[['condition']])) {
         stop2c("For 'plot = TRUE', the 'by' argument should be specified")
       }
-      outp <- CustomDoCall(marginaleffects::plot_comparisons, 
-                     comparisons_arguments)
+      setfuncall <- marginaleffects::plot_comparisons
+      outp <- call_funcall(setfuncall, comparisons_arguments, suppresswar)
       # outp <- edit_mapping_facet() -> not relevenat here
       return(outp)
     } # if(!plot) { else if(plot) {
@@ -1963,6 +2073,8 @@ marginal_growthparameters.bgmfit <- function(model,
                                                newdata,
                                                ec_agg,
                                                ei_agg,
+                                               keep_mfx_draws,
+                                               attr_mfx_draws,
                                                enverr.) {
     assign('err.', FALSE, envir = enverr.)
     # tryCatch needed when NA in one factor for hypothesis
@@ -1987,7 +2099,19 @@ marginal_growthparameters.bgmfit <- function(model,
     if(length(gout) == 0) err. <- TRUE
     if (err.) gout <- NULL
     if(plot) return(gout)
-    # If results not available for all factor, theN add NA it
+    
+    # Create attr item here because next step deforms the mfx@draws 
+    attr_gout_mfx <- attr_gout_mfx_draws <- NULL
+    if(attr_mfx_draws) {
+      if(keep_mfx_draws == 'mfx') {
+        attr_gout_mfx <- gout
+      } else if(keep_mfx_draws == 'mfx_draws') {
+        attr_gout_mfx_draws <- marginaleffects::get_draws(gout)
+      }
+    }
+
+    # If results not available for all factor, then add NA it
+    # But this will deform the mfx@draws 
     by <- comparisons_arguments$by
     if(is.null(by)) by <- FALSE
     if(!is.null(gout)) {
@@ -2001,9 +2125,15 @@ marginal_growthparameters.bgmfit <- function(model,
           cols_to_keep <- setdiff(goutnames, c('predicted_lo', 'predicted_hi', 
                                                'predicted', 'tmp_idx'))
           gout <- gout_joined %>%  collapse::get_vars(cols_to_keep) %>% 
-            collapse::ftransform(parameter = parm) %>% collapse::qDF()  
+            collapse::ftransform(parameter = parm) # %>% collapse::qDF()  
         }
       }
+    }
+
+    if(!is.null(attr_gout_mfx)) {
+      attr(gout, 'mfx') <- attr_gout_mfx
+    } else if(!is.null(attr_gout_mfx_draws)) {
+      attr(gout, 'mfx_draws') <- attr_gout_mfx_draws
     }
     return(gout)
   } # outer_call_comparison_gparms_fun
@@ -2050,6 +2180,28 @@ marginal_growthparameters.bgmfit <- function(model,
       if(i != xvar) comparisons_arguments$variables[[i]] <- NULL
     }
     
+    
+    
+    if(!is.null(comparisons_arguments[['equivalence_test']])) {
+      comparisons_arguments[['equivalence_test']][['by']] <- 
+        comparisons_arguments[['by']]
+      comparisons_arguments[['equivalence_test']][['hypothesis']] <- 
+        comparisons_arguments[['hypothesis']]
+      comparisons_arguments[['equivalence_test']][['equivalence']] <- 
+        comparisons_arguments[['equivalence']]
+    }
+    
+    if(!is.null(comparisons_arguments[['p_direction']])) {
+      comparisons_arguments[['p_direction']][['by']] <- 
+        comparisons_arguments[['by']]
+    }
+   
+    
+    # if gout is altered by adding NA, then attr_mfx_draws will allows attr
+    list_mfx_draws <- TRUE # keep mfx_draws for post processing
+    keep_mfx_draws <- 'mfx_draws' # If mfx 'gout', if mfx_draws -> get_draws()
+    attr_mfx_draws <- list_mfx_draws
+    
     if(plot) {
       out_sf <- outer_call_comparison_gparms_fun(
         parm = parm, eps = eps, 
@@ -2058,6 +2210,8 @@ marginal_growthparameters.bgmfit <- function(model,
         newdata = newdata,
         ec_agg = ec_agg,
         ei_agg = ei_agg,
+        keep_mfx_draws = keep_mfx_draws,
+        attr_mfx_draws = attr_mfx_draws,
         enverr. = enverr.) 
       return(out_sf)
     } else if(!plot) {
@@ -2072,6 +2226,8 @@ marginal_growthparameters.bgmfit <- function(model,
           newdata = newdata,
           ec_agg = ec_agg,
           ei_agg = ei_agg,
+          keep_mfx_draws = keep_mfx_draws,
+          attr_mfx_draws = attr_mfx_draws,
           enverr. = enverr.)
         # Handle NULL results immediately
         if (is.null(res)) return(NULL)
@@ -2082,9 +2238,47 @@ marginal_growthparameters.bgmfit <- function(model,
         return(res)
       }
       
+      
+     
+      # make method = 'pkg' also future ready
+      if(future_splits_exe_future & callfuns) {
+        
+      }
+      
+      # out <-  future.apply::future_lapply(future_splits_at,
+      #                                     future.envir = parent.frame(),
+      #                                     future.globals = TRUE,
+      #                                     future.seed = TRUE,
+      #                                     FUN = myzfun)
+      
+
+      
+      get_mfx_draws_fun <- function(x, list_cout, parm, keep_mfx_draws) {
+        parmi <- parm[x]
+        if(keep_mfx_draws == "mfx_draws") {
+          out <- attr(list_cout[[x]], "mfx_draws")
+          attr(out, 'class') <- c(attr(out, 'class'), "mfx_draws")
+        } else if(keep_mfx_draws == "mfx") {
+          out <- marginaleffects::get_draws(attr(list_cout[[x]], "mfx"))
+          attr(out, 'class') <- c(attr(out, 'class'), "mfx")
+        }
+        attr(out, 'class') <- c(attr(out, 'class'), "bgmfit")
+        return(out)
+      }
+      
       # 2. Execution Logic
       if (length(parm) == 1) {
         out_sf <- run_comparison_worker(parm)
+        if(list_mfx_draws) {
+          draws_list <- lapply(1:length(parm), get_mfx_draws_fun, list(out_sf), 
+                               parm, keep_mfx_draws)
+          names(draws_list) <- parm
+        } # if(list_mfx_draws) {
+        draws_list_dt <- data.table::rbindlist(draws_list, 
+                                               idcol = "parameter")[, 
+                                                                    parameter := factor(parameter)]
+        attr(draws_list_dt, 'class') <- c(attr(draws_list_dt, 'class'), 
+                                          c("bgmfit", 'mfx_draws'))
         if (is.null(out_sf)) return(NA)
         out_sf <- collapse::qDF(out_sf) 
       } else { # Multiple parameter case
@@ -2101,6 +2295,21 @@ marginal_growthparameters.bgmfit <- function(model,
         } else {
           list_cout <- lapply(parm, run_comparison_worker)
         }
+        
+        if(list_mfx_draws) {
+          draws_list <- lapply(1:length(parm), get_mfx_draws_fun, list_cout, 
+                               parm, keep_mfx_draws)
+          names(draws_list) <- parm
+          draws_list_dt <- 
+            data.table::rbindlist(draws_list, 
+                                  idcol = "parameter")[, 
+                                                       parameter := 
+                                                         factor(parameter)]
+          
+          attr(draws_list_dt, 'class') <- c(attr(draws_list_dt, 'class'), 
+                                            c("bgmfit", 'mfx_draws'))
+        }
+        
         out_sf <- data.table::rbindlist(list_cout, fill = TRUE)
         if (nrow(out_sf) == 0) {
           out_sf <- NA 
@@ -2116,8 +2325,74 @@ marginal_growthparameters.bgmfit <- function(model,
   } # if(method == 'pkg') {
   
   
- 
- 
+  
+  # pdrawsp can be used in get_comparison_hypothesis()
+  if(method == 'pkg') {
+    if(!isFALSE(pdrawsp)) {
+      if(!is.character(pdrawsp)) pdrawsp <- "return"
+      selectchoicesr <- c("return", 'add') 
+      checkmate::assert_choice(pdrawsp, choices = selectchoicesr)
+      if(pdrawsp == 'return') {
+        full.args_by <- full.args$by
+        if(!is.null(full.args_by)) {
+          if(is.logical(full.args_by)) {
+            if(!full.args_by) full.args_by <- NULL
+          }
+        }
+        selectcols_custom <- c('parameter', 'drawid', 'draw', full.args_by)
+        draws_list_dt <- draws_list_dt[, mget(selectcols_custom)]
+        return(draws_list_dt)
+      } else if(pdrawsp == 'add') {
+        pdrawsp_est <- onex0
+      } else {
+        
+      }
+    }
+  } # if(method == 'pkg') {
+  
+
+  
+  if(check_equivalence_test_full.args | check_p_direction_full.args) {
+    if(is.null(full.args$by)) {
+      selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
+    } else if(is.logical(full.args$by)) {
+      if(!full.args$by) {
+        selectcols_custom <- c('parameter', 'drawid', 'draw')
+      } else if(full.args$by) {
+        selectcols_custom <- c('parameter', 'drawid', 'draw')
+      }
+    } else if(!is.logical(full.args$by)) {
+      checkmate::assert_character(full.args$by)
+      selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
+    }
+    # selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
+    draws_list_dt     <- draws_list_dt[, mget(selectcols_custom)]
+    out_eqpt <- get_comparison_hypothesis(data = draws_list_dt, 
+                                full.args = full.args, 
+                                by = full.args$by,
+                                evaluate_comparison = TRUE,
+                                evaluate_hypothesis = TRUE,
+                                evaluate_equivalence = evaluate_equivalence,
+                                evaluate_pdirection = evaluate_pdirection,
+                                get_range_null_form = get_range_null_form, 
+                                get_range_null_value = get_range_null_value,
+                                format = format,
+                                verbose = FALSE)
+    out_eqpt <- DT_to_data_frames(out_eqpt)
+    return(out_eqpt)
+  }
+  
+  
+  
+
+  
+  ##################################################################
+  ##################################################################
+  ##################################################################
+  
+
+  ##################################################################
+  ##################################################################
   ##################################################################
   
   getparmsx <- function(x, y, parm = NULL, xvar = NULL, draw = NULL,
@@ -2234,7 +2509,6 @@ marginal_growthparameters.bgmfit <- function(model,
     ########################################################################
     if(call_slopes) {
       predictions_arguments[['comparison']]     <- NULL
-      
       if(call_slopes) {
         if (!is.null(variables)) {
           if (!is.character(variables)) {
@@ -3057,8 +3331,8 @@ marginal_growthparameters.bgmfit <- function(model,
                                        fixed = TRUE)) 
       } else if(usecollapse) {
         get_hypothesis_x_fx <- function(x,...) {
-          # get_hypothesis_x <- get_hypothesis_x2
-          # hypothesis = difference ~ pairwise
+          get_hypothesis_x <- get_hypothesis_x2
+          hypothesis = difference ~ pairwise
           get_hypothesis_x(x,
                            hypothesis = hypothesis,
                            by = by, 
@@ -3068,9 +3342,10 @@ marginal_growthparameters.bgmfit <- function(model,
         
         setdrawidh     <- c('drawid', 'parameter')
         setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
+        # onex1x <<- onex1
         temhyy <- 
           onex1 %>% collapse::fgroup_by( setdrawidh ) %>% 
-          collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>% 
+          collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>%
           collapse::ftransformv(., 'V2', as.numeric) %>% 
           collapse::frename(., setdrawidh_)
         if(!isFALSE(pdrawsh)) {

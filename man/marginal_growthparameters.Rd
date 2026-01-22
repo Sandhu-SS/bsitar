@@ -66,6 +66,8 @@
   wts = NULL,
   hypothesis = NULL,
   equivalence = NULL,
+  equivalence_test = NULL,
+  p_direction = NULL,
   eps = NULL,
   constrats_by = FALSE,
   constrats_at = FALSE,
@@ -653,6 +655,69 @@ off this automatic assignment of \code{'exp'} to the
 }}
 
 \item{equivalence}{Numeric vector of length 2: bounds used for the two-one-sided test (TOST) of equivalence, and for the non-inferiority and non-superiority tests. For bayesian models, this report the proportion of posterior draws in the interval and the ROPE. See Details section below.}
+
+\item{equivalence_test}{A named arguments list (default \code{NULL}) passed
+to \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} for ROPE-based hypothesis testing. Core
+arguments:
+\itemize{
+\item \code{range = "default"}: ROPE bounds (numeric vector or
+\code{"default"}). Defaults values that are automatically set up for
+\code{range} are: \code{c(-1, 1)} for age parameters (\code{apgv},
+\code{atgv}, \code{acgv}); \code{c(-0.5, 0.5)} for velocity parameters
+(\code{pgv}, \code{tgv}, \code{cgv}). \item \code{ci}: Credible interval
+level. Default \code{0.95}. \item \code{rvar_col}: Random variable column
+name for long-format data. Default \code{NULL}. \item \code{verbose}:
+Print progress messages if \code{TRUE}. Default \code{FALSE}.
+}
+
+Additional package-specific controls:
+\itemize{
+\item \code{format}: If \code{TRUE}, merge
+\code{ROPE_low}/\code{ROPE_high} into \code{ROPE_range} and
+\code{HDI_low}/\code{HDI_high} into \code{HDI_range}. \item
+\code{reformat}: If \code{TRUE}, standardize
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} output (\code{conf.low} → \code{Q2.5},
+\code{conf.high} → \code{Q97.5}) and drop reporting columns (\code{term},
+\code{contrast}, etc.).
+\item \code{get_range_null_form}: If \code{TRUE}, return expected
+\code{range} and \code{null} structure for manual specification via
+\code{comparison_range_null} and \code{hypothesis_range_null}.
+\item \code{digits}: Number of digits to use when printing numeric
+results. Default \code{2}.
+\item \code{as_percent}: Logical indicating whether to return ROPE
+results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
+Only evaluated when \code{model} is class \code{"bsitar"} and
+\code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+\item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
+\item \code{inline}: Internal use only; executes custom equivalence
+function (not for users).
+}}
+
+\item{p_direction}{A named arguments list (default \code{NULL}) passed to
+\code{\link[bayestestR:p_direction]{bayestestR::p_direction()}} for Probability of Direction (\code{pd})
+computation. Commonly used elements:
+\itemize{
+\item \code{method}: Computation method. Default \code{"direct"}. \item
+\code{null}: Null value (default \code{0} for all growth parameters).
+\item \code{as_p}: Return p-value-like scale. Default \code{FALSE}. \item
+\code{remove_na}: Remove missing values. Default \code{TRUE}.
+}
+
+Additional package-specific controls:
+\itemize{
+\item \code{get_range_null_form}: If \code{TRUE}, return expected
+\code{range} and \code{null} structure for manual specification via
+\code{comparison_range_null} and \code{hypothesis_range_null}.
+\item \code{digits}: Number of digits to use when printing numeric
+results. Default \code{2}.
+\item \code{as_percent}: Logical indicating whether to return PD
+results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
+Only evaluated when \code{model} is class \code{"bsitar"} and
+\code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+\item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
+\item \code{inline}: Internal use only; executes custom equivalence
+function (not for users).
+}}
 
 \item{eps}{NULL or numeric value which determines the step size to use when
 calculating numerical derivatives: (f(x+eps)-f(x))/eps. When \code{eps} is

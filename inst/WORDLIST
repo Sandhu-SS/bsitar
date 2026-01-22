@@ -7,9 +7,11 @@ CGV
 CMD
 Dvau
 GCMs
+HDI
 HMC
 Helmert
 IC
+IRR
 Ij
 Kurowicka
 LKJ
@@ -19,6 +21,7 @@ NCP
 OpenBUGS
 OpenCL
 PGV
+ROPE's
 Rtools
 SEs
 Spl
@@ -65,12 +68,10 @@ magrittr
 marglik
 mathbf
 mdata
-meanotherdev
 mfit
 minmax
 modelbased
 modelling
-multisession
 nd
 newpage
 operatorname
