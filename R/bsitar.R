@@ -7431,9 +7431,10 @@ bsitar <- function(x,
     }
    
     # 28 01 2024
-    datai <- datai %>% tidyr::drop_na()
+    drop_na_vars <- c(xsi, ysi, idsi)
+    datai <- datai %>% tidyr::drop_na(., dplyr::any_of(drop_na_vars))
     
-   check_variable_numeric_exists(datai, c(xsi, ysi))
+    check_variable_numeric_exists(datai, c(xsi, ysi))
    
    
     if(!is.null(cortimeNlags_var)) {
