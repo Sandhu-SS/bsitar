@@ -185,7 +185,8 @@ get_idata <-
           times[times > t])
     }
     
-    id_pred <- rep(seq_len(n), sapply(times_to_pred, length))
+    # Why this id_pred here??
+    # id_pred <- rep(seq_len(n), sapply(times_to_pred, length))
     
     right_rows <- function (data, times, ids, Q_points) {
       fids <- factor(ids, levels = unique(ids))
