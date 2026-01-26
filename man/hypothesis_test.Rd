@@ -3,7 +3,7 @@
 \name{hypothesis_test.bgmfit}
 \alias{hypothesis_test.bgmfit}
 \alias{hypothesis_test}
-\title{Comprehensive hypothesis testing framework for the Bayesian SITAR}
+\title{Comprehensive hypothesis testing framework for the Bayesian SITAR model}
 \usage{
 \method{hypothesis_test}{bgmfit}(
   model,
@@ -42,7 +42,7 @@
   rope_as_percent = TRUE,
   pd_as_percent = TRUE,
   format = NULL,
-  reformat = NULL,
+  reformat = TRUE,
   estimate_center = NULL,
   estimate_interval = NULL,
   na.rm = TRUE,
@@ -550,11 +550,11 @@ hyp_ex11 <- hypothesis_test(model,
 set_parameters <- c("b_a_Intercept", "b_b_Intercept")
 set_range <- list(b_a_Intercept = c(100, 150), b_b_Intercept = c(-2, 2))
 
-# bayestestR reference
-hyp_ex1 <- bayestestR::equivalence_test(model, 
-                                       parameters = set_parameters, 
-                                       range = set_range,
-                                       draw_ids = draw_ids)
+# bayestestR reference - If you installed bayestestR package
+# hyp_ex1 <- bayestestR::equivalence_test(model, 
+#                                      parameters = set_parameters, 
+#                                      range = set_range,
+#                                      draw_ids = draw_ids)
 
 # hypothesis_test (auto-detects bayestestR engine)
 # If see package is installed (install.packages("see")), then you can plot 
@@ -576,11 +576,11 @@ print(hyp_ex11)
 set_parameters <- c("b_a_Intercept", "b_b_Intercept")
 set_null <- list(b_a_Intercept = 0, b_b_Intercept = 0)
 
-# bayestestR reference
-hyp_ex1 <- bayestestR::p_direction(model, 
-                                  parameters = set_parameters,
-                                  null = set_null,
-                                  draw_ids = draw_ids)
+# bayestestR reference - If you installed bayestestR package
+# hyp_ex1 <- bayestestR::p_direction(model, 
+#                                 parameters = set_parameters,
+#                                 null = set_null,
+#                                 draw_ids = draw_ids)
 
 # hypothesis_test (auto-detects bayestestR engine)
 # If see package is installed (install.packages("see")), then you can plot 

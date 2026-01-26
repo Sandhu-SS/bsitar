@@ -299,13 +299,7 @@ get_comparison_hypothesis <- function(data,
                                     comparison_args = NULL,
                                     hypothesis_args = NULL,
                                     what = NULL) {
-    
-    # if(is.null(range_null)) {
-    #   return(range_null)
-    # } else if(is.character(range_null)) {
-    #   if(range_null == "default") {
-    #   #  return(range_null)
-    #   }
+
     
     if(is.list(range_null)) {
       range_null <- range_null
@@ -3686,4 +3680,28 @@ DT_to_data_frames <- function(x) {
     return(as.data.frame(x))
   }
   stop("Input must be a data.table or list of data.tables")
+}
+
+
+#' marginalstyle_reformat
+#'
+#' @param out A data.frame or a data.table
+#' @param set_names_ Additional arguments
+#' @return A data.frame 
+#' @keywords internal
+#' @noRd
+#'
+marginalstyle_reformat <- function(out, set_names_) {
+  . <- NULL;
+  out <- out %>% 
+    dplyr::mutate(dplyr::across(dplyr::all_of('parameter'), toupper)) %>% 
+    dplyr::rename(!!as.symbol(set_names_[1]) := 
+                    dplyr::all_of('estimate')) %>% 
+    dplyr::rename(!!as.symbol(set_names_[2]) := 
+                    dplyr::all_of('conf.low')) %>% 
+    dplyr::rename(!!as.symbol(set_names_[3]) := 
+                    dplyr::all_of('conf.high')) %>% 
+    dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
+    data.frame()
+  return(out)
 }

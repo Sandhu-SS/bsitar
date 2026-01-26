@@ -1,5 +1,63 @@
 
 
+#' Evaluate Global Arguments in a Call Object
+#' 
+#' Modifies a call object (typically from [match.call()]) by evaluating and
+#' replacing argument expressions that resolve successfully in the specified
+#' environment (typically global). Skips arguments listed in \code{exceptions}.
+#' 
+#' @param mcall A call object, usually obtained from
+#'   \code{match.call(expand.dots = FALSE)}. Arguments will be selectively
+#'   evaluated and replaced with their values.
+#' 
+#' @param envir An environment in which to evaluate argument expressions.
+#'   Defaults to [globalenv()]. Only expressions that evaluate without error in
+#'   this environment (with no parent lookup via [emptyenv()]) are replaced.
+#' 
+#' @param exceptions [NULL] (default) or a \code{character} vector of argument
+#'   names to skip. These arguments retain their original unevaluated
+#'   expressions.
+#' 
+#' @return The modified \code{mcall} object with selected arguments replaced by
+#'   their evaluated values (e.g., symbols become actual objects, lists/data
+#'   frames are materialized). Suitable for subsequent \code{eval(mcall,
+#'   parent.frame())}.
+#' 
+#' @examples
+#' age <- 1:5
+#' df <- data.frame(age = 1:10)
+#' 
+#' myfun <- function(x, data, y) {
+#'   mcall <- match.call(expand.dots = FALSE)
+#'   mcall <- eval_globals_in_mcall(mcall, exceptions = "data")
+#'   eval(mcall, parent.frame())
+#' }
+#' 
+#' myfun(x = age, data = df, y = df$age)
+#' # Returns: list(x = 1:5, data = df, y = 1:10)
+#' 
+#' @seealso [match.call()], [eval()], [globalenv()]
+#' 
+#' @keywords internal
+#' @noRd
+#'
+eval_globals_in_mcall <- function(mcall, envir = globalenv(), 
+                                  exceptions = NULL) {
+  # assume mcall is already match.call() with expand.dots = FALSE
+  arg_names <- names(mcall)[-1]  # skip function name
+  arg_names <- setdiff(arg_names, exceptions)
+  for (nm in arg_names) {
+    expr <- mcall[[nm]]
+    val <- try(eval(expr, envir = envir, enclos = emptyenv()), silent = TRUE)
+    if (!inherits(val, "try-error")) {
+      mcall[[nm]] <- val  # replace expression with evaluated value!
+    }
+  }
+  return(mcall)
+}
+
+
+
 
 #' Checks if argument is a \code{bgmfit} object
 #'

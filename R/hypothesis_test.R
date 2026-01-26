@@ -1,6 +1,6 @@
 
 
-#' @title Comprehensive hypothesis testing framework for the Bayesian SITAR
+#' @title Comprehensive hypothesis testing framework for the Bayesian SITAR model
 #'
 #' @description
 #' Performs non-linear hypothesis testing via [brms::hypothesis()], Test for
@@ -435,7 +435,7 @@ hypothesis_test.bgmfit <- function(model,
                                    rope_as_percent = TRUE,
                                    pd_as_percent = TRUE,
                                    format = NULL,
-                                   reformat = NULL,
+                                   reformat = TRUE,
                                    estimate_center = NULL,
                                    estimate_interval = NULL,
                                    na.rm = TRUE,
@@ -483,6 +483,11 @@ hypothesis_test.bgmfit <- function(model,
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', probtitles)
+  
+  ##########################################
+  # marginalstyle_reformat
+  
+  
   
   ##########################################
   
@@ -1034,7 +1039,7 @@ hypothesis_test.bgmfit <- function(model,
   # Get and collect arguments
   ##############################################################################
 
-  if(obj_model | obj_model_pseudo) {
+  if(obj_model | obj_model_pseudo ) {
     if(!is.null(model$xcall)) {
       if(grepl("marginal_growthparameters", model$xcall)) {
         xcall <- "marginal_growthparameters"
@@ -1054,6 +1059,12 @@ hypothesis_test.bgmfit <- function(model,
         xcall <- rlang_call_name
       }
     }
+    
+    # Imp - when model_marginaleffects, xcall must be 'marginal_growthparameters
+    if(obj_model_marginaleffects | obj_model_mbcombo ) {
+      xcall <- 'marginal_growthparameters'
+    }
+    
     
     check_if_package_installed(model, xcall = xcall)
     # model$xcall <- xcall
@@ -1304,7 +1315,6 @@ hypothesis_test.bgmfit <- function(model,
     data_draws <- CustomDoCall(marginal_growthparameters, 
                                marginal_growthparameters_bgmfit_args)
     
-    
     if(obj_model_marginaleffects_direct_only) {
     } 
       
@@ -1457,6 +1467,7 @@ hypothesis_test.bgmfit <- function(model,
     get_comparison_hypothesis_args[['pd_as_percent']] <- 
       pd_as_percent
     
+
     get_comparison_hypothesis_args[['format']] <- format
     get_comparison_hypothesis_args[['verbose']] <- verbose
     
@@ -1470,12 +1481,24 @@ hypothesis_test.bgmfit <- function(model,
     out <- CustomDoCall(get_comparison_hypothesis, 
                              get_comparison_hypothesis_args)
     
+    
+    
+    # data.table::setnames(., old = "draw", new = "estimate")
+    
     out <- DT_to_data_frames(out)
-     
+    
+    if(is.null(reformat)) {
+      out <- marginalstyle_reformat(out = out, 
+                                    set_names_= set_names_)
+    } else if(!is.null(reformat)) {
+      if(reformat) out <- marginalstyle_reformat(out = out, 
+                                                 set_names_= set_names_)
+    }
+    
+  
   } # if(obj_mfx_marginaleffects | obj_mfx_bayestestR | obj_mfx_mbcombo) {
   
 
-  
   ##############################################################################
   # Evaluate obj_model_brms
   ##############################################################################

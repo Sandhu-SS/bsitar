@@ -2379,6 +2379,15 @@ marginal_growthparameters.bgmfit <- function(model,
                                 format = format,
                                 verbose = FALSE)
     out_eqpt <- DT_to_data_frames(out_eqpt)
+    
+    if(is.null(reformat)) {
+      out_eqpt <- marginalstyle_reformat(out = out_eqpt, 
+                                         set_names_ = set_names_)
+    } else if(!is.null(reformat)) {
+      if(reformat) out_eqpt <- marginalstyle_reformat(out = out_eqpt, 
+                                                      set_names_ = set_names_)
+    }
+    
     return(out_eqpt)
   }
   

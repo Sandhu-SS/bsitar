@@ -2514,56 +2514,89 @@ bsitar <- function(x,
     mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL, 
                                         exceptions = no_default_args)
   }
+  # 25.01.2026
+  mcall <- eval_globals_in_mcall(mcall, exceptions = "data") 
 
+  
   mcall_ <- mcall
+  
+  
+  
+  data_check_for_modifications <- FALSE 
+  if(is.null(mcall_$data)) {
+    stop2c("Data argument must be specified")
+  } else if(is.language(mcall_$data)) {
+    data_check_for_modifications <- TRUE
+  } else if(is.symbol(mcall_$data)) {
+    data_check_for_modifications <- TRUE
+  } else if(is.data.frame(mcall_$data)) {
+    data_check_for_modifications <- FALSE
+  } else if(tibble::is.tibble(mcall_$data)) {
+    data_check_for_modifications <- FALSE
+  }
+  
+  if(data_check_for_modifications) {
+    data_name_str_attr <- check_forpipe(deparse(mcall_$data), return = 'attr')
+    assign(data_name_str_attr, eval(mcall_$data), envir = parent.frame() )
+  } else {
+    data_name_str_attr <- deparse(mcall_$data)
+  }
+  
+  
+  # print(data_name_str_attr)
+  # stop()
+  
+  
+
+  # Now not done, the pipe is evaluated and modified data assigned to parent.frame
+  # See above 
   
   # This needed for insight::get_data
   # The insight::get_data() function, which is used by the marginaleffects
   # package does not get correct data when dataframe is modified using %>% or |>
   # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
   
-  
- data_check_for_modifications <- FALSE 
- if(is.null(mcall_$data)) {
-   stop2c("Data argument must be specified")
- } else if(is.language(mcall_$data)) {
-   data_check_for_modifications <- TRUE
-   data_name_str_check <- deparse(mcall_$data)
- } else if(is.symbol(mcall_$data)) {
-   data_check_for_modifications <- TRUE
-   data_name_str_check <- deparse(mcall_$data)
- } else if(is.data.frame(mcall_$data)) {
-   data_check_for_modifications <- FALSE
- } else if(tibble::is.tibble(mcall_$data)) {
-   data_check_for_modifications <- FALSE
- }
-  
- 
- if(data_check_for_modifications) {
-   data_name_str_check <- deparse(mcall_$data)
-   data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
-   data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
-   data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
-   data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
- } else {
-   data_name_pipe <- FALSE
- }
- 
-  
-  if(data_name_pipe) {
-    stop2c("The 'data' argument should be not be modified",
-         "\n  ",
-         "via pipe function such as '%>%' or '|>'",
-          "\n  ",
-         "This is because such data modification later create problems to",
-         "\n  ",
-         "reterive data via the insight::get_data()",
-         "\n  ",
-         "Please check the following argument and correct it:",
-         "\n  ",
-         data_name_str)
-  }
-  
+ # data_check_for_modifications <- FALSE 
+ # if(is.null(mcall_$data)) {
+ #   stop2c("Data argument must be specified")
+ # } else if(is.language(mcall_$data)) {
+ #   data_check_for_modifications <- TRUE
+ #   data_name_str_check <- deparse(mcall_$data)
+ # } else if(is.symbol(mcall_$data)) {
+ #   data_check_for_modifications <- TRUE
+ #   data_name_str_check <- deparse(mcall_$data)
+ # } else if(is.data.frame(mcall_$data)) {
+ #   data_check_for_modifications <- FALSE
+ # } else if(tibble::is.tibble(mcall_$data)) {
+ #   data_check_for_modifications <- FALSE
+ # }
+ #  
+ # 
+ # if(data_check_for_modifications) {
+ #   data_name_str_check <- deparse(mcall_$data)
+ #   data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
+ #   data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
+ #   data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
+ #   data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
+ # } else {
+ #   data_name_pipe <- FALSE
+ # }
+ # 
+ #  
+ #  if(data_name_pipe) {
+ #    stop2c("The 'data' argument should be not be modified",
+ #         "\n  ",
+ #         "via pipe function such as '%>%' or '|>'",
+ #          "\n  ",
+ #         "This is because such data modification later create problems to",
+ #         "\n  ",
+ #         "reterive data via the insight::get_data()",
+ #         "\n  ",
+ #         "Please check the following argument and correct it:",
+ #         "\n  ",
+ #         data_name_str)
+ #  }
+ #  
   
  
   # Check and allow setting threads as NULL or integer
@@ -2572,6 +2605,9 @@ bsitar <- function(x,
   deparse_mcall_threads_check     <- paste(deparse(mcall_threads_), 
                                            collapse = "")
   deparse_sub_mcall_threads_check <- deparse(substitute(mcall_threads_))
+  deparse_sub_mcall_threads_check <- paste(deparse_sub_mcall_threads_check, 
+                                           collapse = "")
+  deparse_sub_mcall_threads_check <- gsub_space(deparse_sub_mcall_threads_check)
   
   # if getOption, then pass it as such, else evaluate argument
   if(grepl("getOption",  deparse_sub_mcall_threads_check)) {
