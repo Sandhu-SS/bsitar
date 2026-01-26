@@ -2537,7 +2537,8 @@ bsitar <- function(x,
   
   if(data_check_for_modifications) {
     data_name_str_attr <- check_forpipe(deparse(mcall_$data), return = 'attr')
-    assign(data_name_str_attr, eval(mcall_$data), envir = parent.frame() )
+    mcall__data_env <-  environment(mcall_$data) # parent.frame()
+    assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
   } else {
     data_name_str_attr <- deparse(mcall_$data)
   }
