@@ -2528,7 +2528,7 @@ bsitar <- function(x,
   } else if(is.language(mcall_$data)) {
     data_check_for_modifications <- TRUE
   } else if(is.symbol(mcall_$data)) {
-    data_check_for_modifications <- TRUE
+    data_check_for_modifications <- FALSE
   } else if(is.data.frame(mcall_$data)) {
     data_check_for_modifications <- FALSE
   } else if(tibble::is.tibble(mcall_$data)) {

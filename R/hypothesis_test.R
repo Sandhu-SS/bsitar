@@ -322,7 +322,7 @@
 #'                            range = set_range,
 #'                            plot = FALSE)
 #'
-#' print(hyp_ex1)
+#' # print(hyp_ex1)
 #' print(hyp_ex11)
 #' 
 #' # Note: bayestestR often ignores parameters/effects for nonlinear bsitar models.
@@ -350,7 +350,7 @@
 #'                            equivalence_test = FALSE,
 #'                            p_direction = TRUE)
 #'
-#' print(hyp_ex1)
+#' # print(hyp_ex1)
 #' print(hyp_ex11)
 #' 
 #' ## Example 4: Growth parameter hypothesis testing (marginaleffects)
