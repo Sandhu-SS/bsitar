@@ -2515,8 +2515,12 @@ bsitar <- function(x,
                                         exceptions = no_default_args)
   }
   # 25.01.2026
-  mcall <- eval_globals_in_mcall(mcall, exceptions = "data") 
-
+  if(called_via_CustomDoCall() | called_via_do_call()) {
+    # nothing
+  } else {
+    mcall <- eval_globals_in_mcall(mcall, exceptions = c("data", "...")) 
+  }
+  
   
   mcall_ <- mcall
   
@@ -2591,6 +2595,7 @@ bsitar <- function(x,
    # mcall__data_env <- parent.frame()
    # assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
    assign(data_name_str_attr, eval(mcall_$data) )
+   mcall_$data <- as.symbol(data_name_str_attr)
  }
 
   # if(data_name_pipe) {

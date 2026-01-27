@@ -58,6 +58,34 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
 
 
 
+#' An internal function to check called_via_do_call
+#'
+#' @param x A string
+#' @return A list comprised of function arguments.
+#' @keywords internal
+#' @noRd
+#'
+called_via_do_call <- function() {
+  calls <- sys.calls()
+  any(vapply(calls, function(cl) identical(cl[[1L]], quote(do.call)), 
+             logical(1)))
+}
+
+
+#' An internal function to check called_via_CustomDoCall
+#'
+#' @param x A string
+#' @return A list comprised of function arguments.
+#' @keywords internal
+#' @noRd
+#'
+called_via_CustomDoCall <- function() {
+  calls <- sys.calls()
+  any(vapply(calls, function(cl) identical(cl[[1L]], quote(CustomDoCall)), 
+             logical(1)))
+}
+
+
 
 #' Checks if argument is a \code{bgmfit} object
 #'
