@@ -2522,28 +2522,30 @@ bsitar <- function(x,
   
   
   
-  data_check_for_modifications <- FALSE 
-  if(is.null(mcall_$data)) {
-    stop2c("Data argument must be specified")
-  } else if(is.language(mcall_$data)) {
-    data_check_for_modifications <- TRUE
-  } else if(is.symbol(mcall_$data)) {
-    data_check_for_modifications <- FALSE
-  } else if(is.data.frame(mcall_$data)) {
-    data_check_for_modifications <- FALSE
-  } else if(tibble::is.tibble(mcall_$data)) {
-    data_check_for_modifications <- FALSE
-  }
-  
-  if(data_check_for_modifications) {
-    data_name_str_attr <- check_forpipe(deparse(mcall_$data), return = 'attr')
-    mcall__data_env <- parent.frame() # environment(mcall_$data) # parent.frame()
-    if(exists(data_name_str_attr, envir = mcall__data_env)) {
-      assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
-    }
-  } else {
-    data_name_str_attr <- deparse(mcall_$data)
-  }
+  # data_check_for_modifications <- FALSE 
+  # if(is.null(mcall_$data)) {
+  #   stop2c("Data argument must be specified")
+  # } else if(is.language(mcall_$data)) {
+  #   data_check_for_modifications <- TRUE
+  # } else if(is.symbol(mcall_$data)) {
+  #   data_check_for_modifications <- FALSE
+  # } else if(is.data.frame(mcall_$data)) {
+  #   data_check_for_modifications <- FALSE
+  # } else if(tibble::is.tibble(mcall_$data)) {
+  #   data_check_for_modifications <- FALSE
+  # }
+  # 
+  # print(mcall_$data)
+  # 
+  # if(data_check_for_modifications) {
+  #   data_name_str_attr <- check_forpipe(deparse(mcall_$data), return = 'attr')
+  #   mcall__data_env <- parent.frame() # environment(mcall_$data) # parent.frame()
+  #   if(exists(data_name_str_attr, envir = mcall__data_env)) {
+  #     assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
+  #   }
+  # } else {
+  #   data_name_str_attr <- deparse(mcall_$data)
+  # }
   
   
   # print(data_name_str_attr)
@@ -2559,47 +2561,52 @@ bsitar <- function(x,
   # package does not get correct data when dataframe is modified using %>% or |>
   # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
   
- # data_check_for_modifications <- FALSE 
- # if(is.null(mcall_$data)) {
- #   stop2c("Data argument must be specified")
- # } else if(is.language(mcall_$data)) {
- #   data_check_for_modifications <- TRUE
- #   data_name_str_check <- deparse(mcall_$data)
- # } else if(is.symbol(mcall_$data)) {
- #   data_check_for_modifications <- TRUE
- #   data_name_str_check <- deparse(mcall_$data)
- # } else if(is.data.frame(mcall_$data)) {
- #   data_check_for_modifications <- FALSE
- # } else if(tibble::is.tibble(mcall_$data)) {
- #   data_check_for_modifications <- FALSE
- # }
- #  
- # 
- # if(data_check_for_modifications) {
- #   data_name_str_check <- deparse(mcall_$data)
- #   data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
- #   data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
- #   data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
- #   data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
- # } else {
- #   data_name_pipe <- FALSE
- # }
- # 
- #  
- #  if(data_name_pipe) {
- #    stop2c("The 'data' argument should be not be modified",
- #         "\n  ",
- #         "via pipe function such as '%>%' or '|>'",
- #          "\n  ",
- #         "This is because such data modification later create problems to",
- #         "\n  ",
- #         "reterive data via the insight::get_data()",
- #         "\n  ",
- #         "Please check the following argument and correct it:",
- #         "\n  ",
- #         data_name_str)
- #  }
- #  
+ data_check_for_modifications <- FALSE
+ if(is.null(mcall_$data)) {
+   stop2c("Data argument must be specified")
+ } else if(is.language(mcall_$data)) {
+   data_check_for_modifications <- TRUE
+   data_name_str_check <- deparse(mcall_$data)
+ } else if(is.symbol(mcall_$data)) {
+   data_check_for_modifications <- TRUE
+   data_name_str_check <- deparse(mcall_$data)
+ } else if(is.data.frame(mcall_$data)) {
+   data_check_for_modifications <- FALSE
+ } else if(tibble::is.tibble(mcall_$data)) {
+   data_check_for_modifications <- FALSE
+ }
+
+
+ if(data_check_for_modifications) {
+   data_name_str_check <- deparse(mcall_$data)
+   data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
+   data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
+   data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
+   data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
+ } else {
+   data_name_pipe <- FALSE
+ }
+
+ if(data_name_pipe) {
+   # mcall__data_env <- parent.frame()
+   # assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
+   assign(data_name_str_attr, eval(mcall_$data) )
+ }
+
+  # if(data_name_pipe) {
+  #   stop2c("The 'data' argument should be not be modified",
+  #        "\n  ",
+  #        "via pipe function such as '%>%' or '|>'",
+  #         "\n  ",
+  #        "This is because such data modification later create problems to",
+  #        "\n  ",
+  #        "reterive data via the insight::get_data()",
+  #        "\n  ",
+  #        "Please check the following argument and correct it:",
+  #        "\n  ",
+  #        data_name_str)
+  # }
+
   
  
   # Check and allow setting threads as NULL or integer
