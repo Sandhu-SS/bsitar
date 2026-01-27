@@ -2514,15 +2514,29 @@ bsitar <- function(x,
     mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL, 
                                         exceptions = no_default_args)
   }
+  
+  
+
   # 25.01.2026
-  if(called_via_CustomDoCall() | called_via_do_call()) {
+  if(called_via_do_call()) {
     # nothing
+  } else if(called_via_CustomDoCall()) {
+    stop("use 'do.call', not the 'CustomDoCall' for bsitar()")
+    # mcall <- sanitize_CustomDoCall_args(what = "CustomDoCall",
+    #                                     arguments = as.list(mcall),
+    #                                     #  check_formalArgs = bsitar,
+    #                                     check_formalArgs_exceptions = NULL,
+    #                                     check_trace_back = NULL,
+    #                                     envir = parent.frame())
+    # mcall <- as.call(mcall)
   } else {
     mcall <- eval_globals_in_mcall(mcall, exceptions = c("data", "...")) 
   }
-  
+ 
+
   
   mcall_ <- mcall
+  
   
   
   
@@ -2564,7 +2578,7 @@ bsitar <- function(x,
   # The insight::get_data() function, which is used by the marginaleffects
   # package does not get correct data when dataframe is modified using %>% or |>
   # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
-  
+ 
  data_check_for_modifications <- FALSE
  if(is.null(mcall_$data)) {
    stop2c("Data argument must be specified")

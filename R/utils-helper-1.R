@@ -50,9 +50,16 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
     expr <- mcall[[nm]]
     val <- try(eval(expr, envir = envir, enclos = emptyenv()), silent = TRUE)
     if (!inherits(val, "try-error")) {
-      mcall[[nm]] <- val  # replace expression with evaluated value!
-    }
-  }
+      if(!is.null(val)) {
+        if(is.function(val)) {
+          mcall[[nm]] <- expr
+        } else {
+          mcall[[nm]] <- val
+        }
+      } # if(!is.null(val)) {
+      # mcall[[nm]] <- val  # replace expression with evaluated value!
+    } # if (!inherits(val, "try-error")) {
+  } # for (nm in arg_names) {
   return(mcall)
 }
 
