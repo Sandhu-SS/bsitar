@@ -27,11 +27,11 @@
 #' inside the \code{ROPE} (the closer to zero the better). See
 #' [bayestestR::equivalence_test()] for further details.
 #' 
-#' Probability of Direction (\code{pd}, also known as the Maximum Probability of
+#' Probability of Direction (\code{PD}, also known as the Maximum Probability of
 #' Effect \code{MPE}) is the probability that a parameter (described by its
 #' posterior distribution) is strictly positive or negative (whichever is the
 #' most probable). Although differently expressed, this index is fairly similar
-#' (i.e., is strongly correlated) to the frequentist p-value (see details). See
+#' (i.e., is strongly correlated) to the frequentest p-value (see details). See
 #' [bayestestR::p_direction()] for further details.
 #' 
 #' @details
@@ -85,22 +85,23 @@
 #'   argument for the [brms::hypothesis()]. This renaming is done to avoid
 #'   conflicts with the \code{hypothesis} argument for the
 #'   [marginaleffects::comparisons()].
-#' 
-#' @param equivalence_test Logical; if \code{TRUE}, run ROPE-based practical
-#'   equivalence testing via [bayestestR::equivalence_test()].
 #'   
-#' @param p_direction Logical; if \code{TRUE}, compute probability of direction
-#'   via [bayestestR::p_direction()].
-#'   
-#' @param evaluate_equivalence Logical; if \code{TRUE}, run ROPE-based practical
+#' @param rope_test Logical; if \code{TRUE}, run ROPE-based practical
 #'   equivalence testing via [bayestestR::equivalence_test()]. This is rarely
-#'   used because appropriate setting \code{TRUE/FALSE} is assigned automatically
-#'   depending on the \code{equivalence_test}.
+#'   used because appropriate setting \code{TRUE/FALSE} is assigned
+#'   automatically depending on the \code{equivalence_test}. Note that when
+#'   \code{equivalence_test} is used to set up the \code{rope_test}, then all
+#'   missing arguments to the \code{equivalence_test} list are assigned from the
+#'   default or user defined arguments included in the [hypothesis_test()] call.
+#'   See \code{equivalence_test} for details.
 #'   
-#' @param evaluate_pdirection Logical; if \code{TRUE}, compute probability of
-#'   direction via [bayestestR::p_direction()]. This is rarely
-#'   used because appropriate setting \code{TRUE/FALSE} is assigned automatically
-#'   depending on the \code{p_direction}.
+#' @param pd_test Logical; if \code{TRUE}, compute probability of direction via
+#'   [bayestestR::p_direction()]. This is rarely used because appropriate
+#'   setting \code{TRUE/FALSE} is assigned automatically depending on the
+#'   \code{p_direction}. Note that when \code{p_direction} is used to set up the
+#'   \code{pd_test}, then all missing arguments to the \code{p_direction} list
+#'   are assigned from the default or user defined arguments included in the
+#'   [hypothesis_test()] call. See \code{p_direction} for details.
 #' 
 #' @param digits Number of digits to use when printing numeric results. Default
 #'   \code{2}.
@@ -412,8 +413,8 @@ hypothesis_test.bgmfit <- function(model,
                                    seed = NULL,
                                    equivalence_test = NULL,
                                    p_direction = NULL,
-                                   evaluate_equivalence = NULL,
-                                   evaluate_pdirection = NULL,
+                                   rope_test = NULL,
+                                   pd_test = NULL,
                                    range = "default",
                                    method = "direct",
                                    null = NULL,
@@ -574,21 +575,52 @@ hypothesis_test.bgmfit <- function(model,
       if(!is.null(null))  p_direction <- list(null = null)
     }
   }
+
+  # Note:
+  # The missing arguments for equivalence_test will be later updated from the
+  # hypothesis_test() arguments via bayestestR_equivalence_test_df_args - 1301
+  # The missing arguments for p_direction will be later updated from the
+  # hypothesis_test() arguments via bayestestR_p_direction_df_args - 1301
   
-  if(is.null(equivalence_test) & is.null(p_direction)) {
+  
+  if(is.null(rope_test)) {
+    if(!is.null(equivalence_test)) {
+      if(is.logical(equivalence_test)) {
+        rope_test <- equivalence_test
+      } else if(is.list(equivalence_test)) {
+        rope_test <- TRUE
+      }
+    }
+  }
+  
+  
+  if(is.null(pd_test)) {
+    if(!is.null(p_direction)) {
+      if(is.logical(p_direction)) {
+        pd_test <- p_direction
+      } else if(is.list(p_direction)) {
+        pd_test <- TRUE
+      }
+    }
+  }
+  
+  
+  
+  if(is.null(rope_test) & is.null(pd_test)) {
     if(obj_model) {
       if(!is.null(parameters)) {
-        equivalence_test <- TRUE
-        p_direction <- FALSE
+        rope_test  <- TRUE
+        pd_test <- FALSE
         if(verbose) {
           stop2c("For the model object, argument 'parameters' is specified but  
-                 both 'equivalence_test' and 'p_direction' are NULL. The  
+                 both 'rope_test' and 'pd_test' are NULL. The  
                  expected engine appears to be 'bayestestR', so the default for 
-                 'equivalence_test' changes from NULL to TRUE")
+                 'rope_test' changes from NULL to TRUE")
         }
       }
     }
   }
+  
   
   # Extract draws from the obj_marginaleffects
   if(obj_marginaleffects) {
@@ -617,9 +649,9 @@ hypothesis_test.bgmfit <- function(model,
       obj_mfx <- TRUE
       obj_model <- obj_df <- obj_mfx_matrix <- obj_model_pseudo <- FALSE
       obj_marginaleffects <- FALSE
-      if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
+      if(!NullFALSE(rope_test) & !NullFALSE(pd_test)) {
         engine <- 'marginaleffects' 
-      } else if(NullFALSE(equivalence_test) | NullFALSE(p_direction)) {
+      } else if(NullFALSE(rope_test) | NullFALSE(pd_test)) {
         engine <- 'mbcombo' 
       }
     }
@@ -650,8 +682,8 @@ hypothesis_test.bgmfit <- function(model,
          # if(!is.null(by)) hypothesis <- ~ pairwise
         if(!is.null(by)) hypothesis <- as.formula(~ pairwise)
       }
-      equivalence_test <- FALSE
-      p_direction <- FALSE
+      if(is.null(rope_test)) rope_test <- FALSE
+      if(is.null(pd_test)) pd_test <- FALSE
     }
   }
   
@@ -774,6 +806,7 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
+  
   # obj_model -> Check and set up engine and hypothesis_str/parameters/parameter
   obj_model_brms <- obj_model_bayestestR <- FALSE
   obj_model_marginaleffects <- obj_model_mbcombo <- FALSE
@@ -796,10 +829,10 @@ hypothesis_test.bgmfit <- function(model,
         engine <- 'bayestestR'
         obj_model_bayestestR <- TRUE
       } else if(!is.null(parameter)) {
-        if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
+        if(!rope_test & !pd_test) {
           engine <- 'marginaleffects'
           obj_model_marginaleffects <- TRUE
-        } else if(NullFALSE(equivalence_test) | NullFALSE(p_direction)) {
+        } else if(rope_test | pd_test) {
           engine <- 'mbcombo'
           obj_model_mbcombo <- TRUE
         }
@@ -831,9 +864,9 @@ hypothesis_test.bgmfit <- function(model,
         }
         parameters <- NULL
         hypothesis_str <- NULL
-        if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
+        if(!rope_test & !pd_test) {
           obj_model_marginaleffects <- TRUE
-        } else if(NullFALSE(equivalence_test) | NullFALSE(p_direction)) {
+        } else if(rope_test | pd_test) {
           obj_model_mbcombo <- TRUE
         }
       } # else if(engine == 'marginaleffects' | engine == 'mbcombo') {
@@ -898,10 +931,10 @@ hypothesis_test.bgmfit <- function(model,
       } else if(is.null(parameter)) {
         stop2c("For mfx object, 'parameter must be specified")
       } else if(!is.null(parameter)) {
-        if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
+        if(!rope_test & !pd_test) {
           engine <- 'marginaleffects'
           obj_mfx_marginaleffects <- TRUE
-        } else if(NullFALSE(equivalence_test) | NullFALSE(p_direction)) {
+        } else if(rope_test | pd_test) {
           engine <- 'mbcombo'
           obj_mfx_mbcombo <- TRUE
         }
@@ -918,9 +951,9 @@ hypothesis_test.bgmfit <- function(model,
         }
         parameters <- NULL
         hypothesis_str <- NULL
-        if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
+        if(!rope_test & !pd_test) {
           obj_mfx_marginaleffects <- TRUE
-        } else if(NullFALSE(equivalence_test) | NullFALSE(p_direction)) {
+        } else if(rope_test | pd_test) {
           obj_mfx_mbcombo <- TRUE
         }
       } # else if(engine == 'marginaleffects' | engine == 'mbcombo') {
@@ -1028,6 +1061,14 @@ hypothesis_test.bgmfit <- function(model,
     arguments[['ec_agg']] <- ec_agg
     arguments[['ei_agg']] <- ei_agg
     arguments[['nthreads']] <- arguments$cores 
+    
+    if(is.null(arguments$pd_test)) {
+      arguments$pd_test <- pd_test
+    }
+    if(is.null(arguments$rope_test)) {
+      arguments$rope_test <- rope_test
+    }
+    
     
     if(is.null(arguments$p_direction)) {
       arguments$p_direction <- p_direction
@@ -1147,15 +1188,23 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
- 
-  if(!NullFALSE(equivalence_test)) {
+  if(is.null(rope_test)) {
+    rope_test <- FALSE 
+  }
+  if(is.null(pd_test)) {
+    pd_test <- FALSE 
+  }
+  
+  
+  
+  if(!rope_test) {
     bayestestR_equivalence_test_df_args <- NULL
   }
-  if(!NullFALSE(p_direction)) {
+  
+  if(!pd_test) {
     bayestestR_p_direction_df_args <- NULL
   }
-  
-  
+ 
   
   ##############################################################################
   ##############################################################################
@@ -1177,7 +1226,7 @@ hypothesis_test.bgmfit <- function(model,
   
   # If there is no need for *_mbcombo but user requests evaluate_comparison
   # Then pass on to the get_comparison_hypothesis()
-  if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
+  if(!rope_test & !pd_test) {
     if(!is.null(hypothesis)) {
       if(NullFALSE(evaluate_comparison)) {
         obj_model_marginaleffects_direct_only <- FALSE
@@ -1304,16 +1353,16 @@ hypothesis_test.bgmfit <- function(model,
     }
     
     if(is.null(equivalence_test)) {
-      evaluate_equivalence <- eqpdargs[['evaluate_equivalence']]
+      rope_test <- eqpdargs[['rope_test']]
     } else {
-      evaluate_equivalence <- equivalence_test
+      rope_test <- rope_test
     }
-
+    
     
     if(is.null(p_direction)) {
-      evaluate_pdirection <- eqpdargs[['evaluate_pdirection']]
+      pd_test <- eqpdargs[['pd_test']]
     } else {
-      evaluate_pdirection <- p_direction
+      pd_test <- pd_test
     }
     
     if(is.null(get_range_null_form)) {
@@ -1364,10 +1413,10 @@ hypothesis_test.bgmfit <- function(model,
       evaluate_comparison
     get_comparison_hypothesis_args[['evaluate_hypothesis']] <- 
       evaluate_hypothesis
-    get_comparison_hypothesis_args[['evaluate_equivalence']] <- 
-      evaluate_equivalence
-    get_comparison_hypothesis_args[['evaluate_pdirection']] <- 
-      evaluate_pdirection
+    
+    get_comparison_hypothesis_args[['rope_test']] <- rope_test
+    get_comparison_hypothesis_args[['pd_test']] <- pd_test
+    
     get_comparison_hypothesis_args[['get_range_null_form']] <- 
       get_range_null_form
     get_comparison_hypothesis_args[['get_range_null_value']] <- 
@@ -1397,21 +1446,10 @@ hypothesis_test.bgmfit <- function(model,
 
     get_comparison_hypothesis_args[['format']] <- format
     get_comparison_hypothesis_args[['verbose']] <- verbose
-    
-    get_comparison_hypothesis_args[['evaluate_equivalence']] <-
-      NullFALSE(get_comparison_hypothesis_args[['evaluate_equivalence']])
-    
-    get_comparison_hypothesis_args[['evaluate_pdirection']] <-
-      NullFALSE(get_comparison_hypothesis_args[['evaluate_pdirection']])
-
 
     out <- CustomDoCall(get_comparison_hypothesis, 
                              get_comparison_hypothesis_args)
-    
-    
-    
-    # data.table::setnames(., old = "draw", new = "estimate")
-    
+
     out <- DT_to_data_frames(out)
     
     if(is.null(reformat)) {
@@ -1461,18 +1499,18 @@ hypothesis_test.bgmfit <- function(model,
     bayestestR_equivalence_test_model_args[['x']] <- model
     bayestestR_p_direction_model_args[['x']]      <- model
     
-    if(equivalence_test & p_direction) {
+    if(rope_test & pd_test) {
       stop2("For engine = 'bayestestR', specify either 
-            'equivalence_test' or 'p_direction', not both")
-    } else if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
-      stop2("For engine = 'bayestestR', either 'equivalence_test'
-            or 'p_direction' must be TRUE")
-    } else if(equivalence_test) {
+            'rope_test' or 'pd_test', not both")
+    } else if(!rope_test & !pd_test) {
+      stop2("For engine = 'bayestestR', either 'rope_test'
+            or 'pd_test' must be TRUE")
+    } else if(rope_test) {
       param_names_bayestestR <-bayestestR_equivalence_test_model_args$parameters
       effects_names_bayestestR <- bayestestR_equivalence_test_model_args$effects
       out <- do.call(bayestestR::equivalence_test, 
                      bayestestR_equivalence_test_model_args)
-    } else if(p_direction) {
+    } else if(pd_test) {
       param_names_bayestestR <- bayestestR_p_direction_model_args$parameters
       effects_names_bayestestR <- bayestestR_p_direction_model_args$effects
       out <- do.call(bayestestR::p_direction, 
@@ -1519,16 +1557,16 @@ hypothesis_test.bgmfit <- function(model,
     bayestestR_equivalence_test_df_args[['x']] <- model
     bayestestR_p_direction_df_args[['x']]      <- model
     
-    if(equivalence_test & p_direction) {
+    if(rope_test & pd_test) {
       stop2("For engine = 'bayestestR', specify either 
-            'equivalence_test' or 'p_direction', not both")
-    } else if(!NullFALSE(equivalence_test) & !NullFALSE(p_direction)) {
-      stop2("For engine = 'bayestestR', either 'equivalence_test'
-            or 'p_direction' must be TRUE")
-    } else if(equivalence_test) {
+            'rope_test' or 'pd_test', not both")
+    } else if(!rope_test & !pd_test) {
+      stop2("For engine = 'bayestestR', either 'rope_test'
+            or 'pd_test' must be TRUE")
+    } else if(rope_test) {
       out <- do.call(bayestestR::equivalence_test, 
                      bayestestR_equivalence_test_df_args)
-    } else if(p_direction) {
+    } else if(pd_test) {
       out <- do.call(bayestestR::p_direction, 
                      bayestestR_p_direction_df_args)
     } 

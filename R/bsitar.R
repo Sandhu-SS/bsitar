@@ -2518,18 +2518,13 @@ bsitar <- function(x,
   
 
   # 25.01.2026
+  set_eval_globals_in_mcall <- FALSE
   if(called_via_do_call()) {
     # nothing
   } else if(called_via_CustomDoCall()) {
     stop("use 'do.call', not the 'CustomDoCall' for bsitar()")
-    # mcall <- sanitize_CustomDoCall_args(what = "CustomDoCall",
-    #                                     arguments = as.list(mcall),
-    #                                     #  check_formalArgs = bsitar,
-    #                                     check_formalArgs_exceptions = NULL,
-    #                                     check_trace_back = NULL,
-    #                                     envir = parent.frame())
-    # mcall <- as.call(mcall)
   } else {
+    set_eval_globals_in_mcall <- TRUE
     mcall <- eval_globals_in_mcall(mcall, exceptions = c("data", "...")) 
   }
  
@@ -2631,6 +2626,8 @@ bsitar <- function(x,
   # Check and allow setting threads as NULL or integer
   mcall_threads_ <- mcall$threads
   
+  
+  
   deparse_mcall_threads_check     <- paste(deparse(mcall_threads_), 
                                            collapse = "")
   deparse_sub_mcall_threads_check <- deparse(substitute(mcall_threads_))
@@ -2660,13 +2657,22 @@ bsitar <- function(x,
       }
     } 
   }
+ 
   mcall$threads <- mcall_threads_
   
-
   
-  newcall_checks <- c('threads', 'save_pars')
+  newcall_checks <- c('save_pars')
+  if(!is.null(mcall$threads)) {
+    if(is.list(mcall$threads)) {
+      newcall_checks <- newcall_checks
+    } else {
+      newcall_checks <- c(newcall_checks, 'threads')
+    }
+  }
+  
   newcall <- check_brms_args(mcall, newcall_checks)
   mcall <- mcall_ <- newcall
+
   
   # Check and set Alias argument for a b c ... formula
   dots_allias <- list(...)
@@ -3439,6 +3445,13 @@ bsitar <- function(x,
   }
   
   call.full <- match.call.defaults()
+  # 25.01.2026
+  if(set_eval_globals_in_mcall) {
+    call.full <- eval_globals_in_mcall(call.full, exceptions = c("data", "...")) 
+  }
+  
+  
+  # call.full <- match.call.defaults()
   call.full <- call.full[-length(call.full)]
  
   for (call.fulli in names(call.full)) {
@@ -14448,7 +14461,6 @@ bsitar <- function(x,
     model_info[['yfuns_user']] <- yfuns_user
     model_info[['outliers']] <- outliers
     model_info[['bgmfit.data']] <- data.org.in
-    model_info[['call.full.bgmfit']] <- call.full
     model_info[['select_model']] <- select_model
     model_info[['decomp']] <- decomp
     model_info[['fun_scode']] <- fun_scode
@@ -14457,6 +14469,8 @@ bsitar <- function(x,
     # The brms_arguments_list required in update_model()
     model_info[['brms_arguments_list']] <- brms_arguments_list
     
+    # Full call constructed
+    model_info[['call.full.bgmfit']] <- call.full
     # The call by user
     model_info[['call.bgmfit']] <- mcall_
     

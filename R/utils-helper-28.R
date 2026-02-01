@@ -23,9 +23,9 @@
 #'   [marginal_growthparameters()] for details.
 #' @param evaluate_hypothesis See [hypothesis_test()] and
 #'   [marginal_growthparameters()] for details.
-#' @param evaluate_equivalence See [hypothesis_test()] and
+#' @param rope_test See [hypothesis_test()] and
 #'   [marginal_growthparameters()] for details.
-#' @param evaluate_pdirection See [hypothesis_test()] and
+#' @param pd_test See [hypothesis_test()] and
 #'   [marginal_growthparameters()] for details.
 #' @param comparison_range_null See [hypothesis_test()] and
 #'   [marginal_growthparameters()] for details.
@@ -93,8 +93,8 @@ get_comparison_hypothesis <- function(data,
                                       hypothesis_by = NULL,
                                       evaluate_comparison = TRUE,
                                       evaluate_hypothesis = TRUE,
-                                      evaluate_equivalence = TRUE,
-                                      evaluate_pdirection = TRUE,
+                                      rope_test = TRUE,
+                                      pd_test = TRUE,
                                       comparison_range_null = NULL,
                                       hypothesis_range_null = NULL,
                                       comparison_range = NULL,
@@ -512,12 +512,12 @@ get_comparison_hypothesis <- function(data,
     create_range_lists_pair_args[['evaluate_comparison']] <- evaluate_comparison
     create_range_lists_pair_args[['hypothesis_args']]     <- NULL
     create_range_lists_pair_args[['evaluate_hypothesis']] <- FALSE
-    if(evaluate_pdirection) {
+    if(pd_test) {
       create_range_lists_pair_args[['what']] <- 'null'
       comparison_test_null <- do.call(get_test_range_null, 
                                       create_range_lists_pair_args)
     }
-    if(NullFALSE(evaluate_equivalence)) {
+    if(NullFALSE(rope_test)) {
       create_range_lists_pair_args[['what']] <- 'range'
       comparison_test_range <- do.call(get_test_range_null, 
                                        create_range_lists_pair_args)
@@ -533,13 +533,13 @@ get_comparison_hypothesis <- function(data,
     create_range_lists_pair_args[['evaluate_comparison']] <- FALSE
     create_range_lists_pair_args[['hypothesis_args']]     <- hypothesis_args
     create_range_lists_pair_args[['evaluate_hypothesis']] <- evaluate_hypothesis
-    if(evaluate_pdirection) {
+    if(pd_test) {
       create_range_lists_pair_args[['what']] <- 'null'
       hypothesis_test_null <- do.call(get_test_range_null, 
                                       create_range_lists_pair_args)
     }
 
-    if(NullFALSE(evaluate_equivalence)) {
+    if(NullFALSE(rope_test)) {
       create_range_lists_pair_args[['what']] <- 'range'
       hypothesis_test_range <- do.call(get_test_range_null, 
                                        create_range_lists_pair_args)
@@ -619,15 +619,15 @@ get_comparison_hypothesis <- function(data,
                                       range, 
                                       null, 
                                       set_range_null,
-                                      evaluate_equivalence,
-                                      evaluate_pdirection) {
+                                      rope_test,
+                                      pd_test) {
     check_names_null <- c('null')
     check_names_range <- c('range')
-    if(NullFALSE(evaluate_equivalence) & NullFALSE(evaluate_pdirection)) {
+    if(NullFALSE(rope_test) & NullFALSE(pd_test)) {
       check_names_range_null <- c('range', 'null')
-    } else if(NullFALSE(evaluate_equivalence)) {
+    } else if(NullFALSE(rope_test)) {
       check_names_range_null <- c('range')
-    } else if(NullFALSE(evaluate_pdirection)) {
+    } else if(NullFALSE(pd_test)) {
       check_names_range_null <- c('null')
     }
     
@@ -660,8 +660,8 @@ get_comparison_hypothesis <- function(data,
                               range = comparison_range, 
                               null = comparison_null, 
                               set_range_null = comparison_test_null_range,
-                              evaluate_equivalence = evaluate_equivalence,
-                              evaluate_pdirection = evaluate_pdirection)
+                              rope_test = rope_test,
+                              pd_test = pd_test)
   } # if(!is_emptyx(comparison_range_null)) {
   
   
@@ -671,8 +671,8 @@ get_comparison_hypothesis <- function(data,
                               range = hypothesis_range, 
                               null = hypothesis_null, 
                               set_range_null = hypothesis_test_null_range,
-                              evaluate_equivalence = evaluate_equivalence,
-                              evaluate_pdirection = evaluate_pdirection)
+                              rope_test = rope_test,
+                              pd_test = pd_test)
   } # if(!is_emptyx(hypothesis_test_null_range)) {
   
   
@@ -704,10 +704,10 @@ get_comparison_hypothesis <- function(data,
   call_equivalence_test_p_direction_args[['comparison_args']] <- 
     comparison_args
   
-  call_equivalence_test_p_direction_args[['evaluate_equivalence']] <- 
-    evaluate_equivalence
-  call_equivalence_test_p_direction_args[['evaluate_pdirection']] <- 
-    evaluate_pdirection
+  call_equivalence_test_p_direction_args[['rope_test']] <- 
+    rope_test
+  call_equivalence_test_p_direction_args[['pd_test']] <- 
+    pd_test
   
   
   call_equivalence_test_p_direction_args[['conf_level']] <- conf_level
@@ -2861,8 +2861,8 @@ call_equivalence_test_p_direction <- function(data,
                                                hypothesis_args = NULL,
                                                evaluate_comparison = NULL,
                                                evaluate_hypothesis = NULL,
-                                              evaluate_equivalence = NULL,
-                                              evaluate_pdirection = NULL,
+                                              rope_test = NULL,
+                                              pd_test = NULL,
                                                by = NULL,
                                               conf_level = NULL,
                                               probs = c(0.025, 0.975),
@@ -3057,15 +3057,15 @@ call_equivalence_test_p_direction <- function(data,
   }
   
   
-  # override above setting when evaluate_equivalence and evaluate_pdirection
+  # override above setting when rope_test and pd_test
   # evaluate_hypothesis_equivalence_test & evaluate_hypothesis_p_direction
-  if(!is.null(evaluate_equivalence)) {
-    evaluate_hypothesis_equivalence_test <- NullFALSE(evaluate_equivalence)
-    evaluate_comparison_equivalence_test <- NullFALSE(evaluate_equivalence)
+  if(!is.null(rope_test)) {
+    evaluate_hypothesis_equivalence_test <- NullFALSE(rope_test)
+    evaluate_comparison_equivalence_test <- NullFALSE(rope_test)
   }
-  if(!is.null(evaluate_pdirection)) {
-    evaluate_hypothesis_p_direction <- evaluate_pdirection
-    evaluate_comparison_p_direction <- evaluate_pdirection
+  if(!is.null(pd_test)) {
+    evaluate_hypothesis_p_direction <- pd_test
+    evaluate_comparison_p_direction <- pd_test
   }
   
   
@@ -3490,7 +3490,7 @@ set_up_equivalence_test_p_direction_args <- function(inbound_arguments,
     format_eq <- format_pd <- NULL
     get_eq_form <- get_pd_form <- NULL
     get_eq_value <- get_pd_value <- NULL
-    evaluate_equivalence <- evaluate_pdirection <- FALSE
+    rope_test <- pd_test <- FALSE
   }
  
   
@@ -3500,23 +3500,23 @@ set_up_equivalence_test_p_direction_args <- function(inbound_arguments,
     format_eq <- inbound_arguments$equivalence_test[['format']]
     get_eq_form  <- inbound_arguments$equivalence_test[['get_form']]
     get_eq_value <- inbound_arguments$equivalence_test[['get_value']]
-    evaluate_equivalence <- TRUE
+    rope_test <- TRUE
   } else {
     format_eq <- NULL
     get_eq_form <- NULL
     get_eq_value <- NULL
-    evaluate_equivalence <- FALSE
+    rope_test <- FALSE
   }
   if(!is.null(inbound_arguments$p_direction)) {
     format_pd <- inbound_arguments$p_direction[['format']]
     get_pd_form <- inbound_arguments$p_direction[['get_form']]
     get_pd_value <- inbound_arguments$p_direction[['get_value']]
-    evaluate_pdirection  <- TRUE
+    pd_test  <- TRUE
   } else {
     format_pd <- NULL
     get_pd_form <- NULL
     get_pd_value <- NULL
-    evaluate_pdirection  <- FALSE
+    pd_test  <- FALSE
   }
   
   format <- c(format_eq, format_pd)
@@ -3602,8 +3602,8 @@ set_up_equivalence_test_p_direction_args <- function(inbound_arguments,
               check_equivalence_test_full.args = check_equivalence_test_full.args,
               check_p_direction_full.args = check_p_direction_full.args,
               inbound_arguments = inbound_arguments,
-              evaluate_equivalence = evaluate_equivalence,
-              evaluate_pdirection = evaluate_pdirection)
+              rope_test = rope_test,
+              pd_test = pd_test)
   
   
   return(out)

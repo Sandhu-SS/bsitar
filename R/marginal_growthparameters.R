@@ -1678,8 +1678,8 @@ marginal_growthparameters.bgmfit <- function(model,
   comparisons_arguments <- eqpdargs[['inbound_arguments']]
   check_equivalence_test_full.args <- eqpdargs[['check_equivalence_test_full.args']]
   check_p_direction_full.args <- eqpdargs[['check_p_direction_full.args']]
-  evaluate_equivalence <- eqpdargs[['evaluate_equivalence']]
-  evaluate_pdirection <- eqpdargs[['evaluate_pdirection']]
+  rope_test <- eqpdargs[['rope_test']]
+  pd_test <- eqpdargs[['pd_test']]
   get_range_null_form <- eqpdargs[['get_range_null_form']]
   get_range_null_value <- eqpdargs[['get_range_null_value']]
   
@@ -2372,12 +2372,13 @@ marginal_growthparameters.bgmfit <- function(model,
                                 by = full.args$by,
                                 evaluate_comparison = TRUE,
                                 evaluate_hypothesis = TRUE,
-                                evaluate_equivalence = evaluate_equivalence,
-                                evaluate_pdirection = evaluate_pdirection,
+                                rope_test = rope_test,
+                                pd_test = pd_test,
                                 get_range_null_form = get_range_null_form, 
                                 get_range_null_value = get_range_null_value,
                                 format = format,
                                 verbose = FALSE)
+    
     out_eqpt <- DT_to_data_frames(out_eqpt)
     
     if(is.null(reformat)) {
@@ -2387,17 +2388,8 @@ marginal_growthparameters.bgmfit <- function(model,
       if(reformat) out_eqpt <- marginalstyle_reformat(out = out_eqpt, 
                                                       set_names_ = set_names_)
     }
-    
     return(out_eqpt)
   }
-  
-  
-  
-
-  
-  ##################################################################
-  ##################################################################
-  ##################################################################
   
 
   ##################################################################
@@ -2819,7 +2811,7 @@ marginal_growthparameters.bgmfit <- function(model,
     }
     
     
-    # somehow this need consequence number
+    # somehow this need consecutive number
     if(!future_splits_exe) {
       if(callfuns) {
         if(pdrawso) return(out)

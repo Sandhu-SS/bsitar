@@ -19,8 +19,8 @@
   seed = NULL,
   equivalence_test = NULL,
   p_direction = NULL,
-  evaluate_equivalence = NULL,
-  evaluate_pdirection = NULL,
+  rope_test = NULL,
+  pd_test = NULL,
   range = "default",
   method = "direct",
   null = NULL,
@@ -181,21 +181,85 @@ median absolute deviation (MAD) are applied instead.}
 to make results reproducible. This is currently only relevant for point
 hypotheses that scope over at least two parameters (see Details).}
 
-\item{equivalence_test}{Logical; if \code{TRUE}, run ROPE-based practical
-equivalence testing via \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}}.}
+\item{equivalence_test}{A named arguments list (default \code{NULL}) passed
+to \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} for ROPE-based hypothesis testing. Core
+arguments:
+\itemize{
+\item \code{range = "default"}: ROPE bounds (numeric vector or
+\code{"default"}). Defaults values that are automatically set up for
+\code{range} are: \code{c(-1, 1)} for age parameters (\code{apgv},
+\code{atgv}, \code{acgv}); \code{c(-0.5, 0.5)} for velocity parameters
+(\code{pgv}, \code{tgv}, \code{cgv}). \item \code{ci}: Credible interval
+level. Default \code{0.95}. \item \code{rvar_col}: Random variable column
+name for long-format data. Default \code{NULL}. \item \code{verbose}:
+Print progress messages if \code{TRUE}. Default \code{FALSE}.
+}
 
-\item{p_direction}{Logical; if \code{TRUE}, compute probability of direction
-via \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}}.}
+Additional package-specific controls:
+\itemize{
+\item \code{format}: If \code{TRUE}, merge
+\code{ROPE_low}/\code{ROPE_high} into \code{ROPE_range} and
+\code{HDI_low}/\code{HDI_high} into \code{HDI_range}. \item
+\code{reformat}: If \code{TRUE}, standardize
+\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} output (\code{conf.low} → \code{Q2.5},
+\code{conf.high} → \code{Q97.5}) and drop reporting columns (\code{term},
+\code{contrast}, etc.).
+\item \code{get_range_null_form}: If \code{TRUE}, return expected
+\code{range} and \code{null} structure for manual specification via
+\code{comparison_range_null} and \code{hypothesis_range_null}.
+\item \code{digits}: Number of digits to use when printing numeric
+results. Default \code{2}.
+\item \code{as_percent}: Logical indicating whether to return ROPE
+results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
+Only evaluated when \code{model} is class \code{"bsitar"} and
+\code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+\item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
+\item \code{inline}: Internal use only; executes custom equivalence
+function (not for users).
+}}
 
-\item{evaluate_equivalence}{Logical; if \code{TRUE}, run ROPE-based practical
+\item{p_direction}{A named arguments list (default \code{NULL}) passed to
+\code{\link[bayestestR:p_direction]{bayestestR::p_direction()}} for Probability of Direction (\code{pd})
+computation. Commonly used elements:
+\itemize{
+\item \code{method}: Computation method. Default \code{"direct"}. \item
+\code{null}: Null value (default \code{0} for all growth parameters).
+\item \code{as_p}: Return p-value-like scale. Default \code{FALSE}. \item
+\code{remove_na}: Remove missing values. Default \code{TRUE}.
+}
+
+Additional package-specific controls:
+\itemize{
+\item \code{get_range_null_form}: If \code{TRUE}, return expected
+\code{range} and \code{null} structure for manual specification via
+\code{comparison_range_null} and \code{hypothesis_range_null}.
+\item \code{digits}: Number of digits to use when printing numeric
+results. Default \code{2}.
+\item \code{as_percent}: Logical indicating whether to return PD
+results as percentages (\code{TRUE}, default) or fractions (\code{FALSE}).
+Only evaluated when \code{model} is class \code{"bsitar"} and
+\code{engine} is \code{"bayestestR"} or \code{"mbcombo"}.
+\item \code{na.rm}: If \code{TRUE} (default), remove \code{NA} values.
+\item \code{inline}: Internal use only; executes custom equivalence
+function (not for users).
+}}
+
+\item{rope_test}{Logical; if \code{TRUE}, run ROPE-based practical
 equivalence testing via \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}}. This is rarely
-used because appropriate setting \code{TRUE/FALSE} is assigned automatically
-depending on the \code{equivalence_test}.}
+used because appropriate setting \code{TRUE/FALSE} is assigned
+automatically depending on the \code{equivalence_test}. Note that when
+\code{equivalence_test} is used to set up the \code{rope_test}, then all
+missing arguments to the \code{equivalence_test} list are assigned from the
+default or user defined arguments included in the \code{\link[=hypothesis_test]{hypothesis_test()}} call.
+See \code{equivalence_test} for details.}
 
-\item{evaluate_pdirection}{Logical; if \code{TRUE}, compute probability of
-direction via \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}}. This is rarely
-used because appropriate setting \code{TRUE/FALSE} is assigned automatically
-depending on the \code{p_direction}.}
+\item{pd_test}{Logical; if \code{TRUE}, compute probability of direction via
+\code{\link[bayestestR:p_direction]{bayestestR::p_direction()}}. This is rarely used because appropriate
+setting \code{TRUE/FALSE} is assigned automatically depending on the
+\code{p_direction}. Note that when \code{p_direction} is used to set up the
+\code{pd_test}, then all missing arguments to the \code{p_direction} list
+are assigned from the default or user defined arguments included in the
+\code{\link[=hypothesis_test]{hypothesis_test()}} call. See \code{p_direction} for details.}
 
 \item{range}{ROPE's lower and higher bounds. Should be \code{"default"} or
 depending on the number of outcome variables a vector or a list. For models
@@ -467,11 +531,11 @@ if the percentage of the posterior within the \code{ROPE} is smaller than to
 inside the \code{ROPE} (the closer to zero the better). See
 \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} for further details.
 
-Probability of Direction (\code{pd}, also known as the Maximum Probability of
+Probability of Direction (\code{PD}, also known as the Maximum Probability of
 Effect \code{MPE}) is the probability that a parameter (described by its
 posterior distribution) is strictly positive or negative (whichever is the
 most probable). Although differently expressed, this index is fairly similar
-(i.e., is strongly correlated) to the frequentist p-value (see details). See
+(i.e., is strongly correlated) to the frequentest p-value (see details). See
 \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}} for further details.
 }
 \details{
