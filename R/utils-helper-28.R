@@ -1343,7 +1343,9 @@ get_test_range_null <- function(parameter = NULL,
       }
       for (i in names(parameter_grid_value)) {
         if(!i %in% allowed_parameter_grid_value_names) {
-          stop2c(i, " is not a valid parameter name")
+          stop2c(i, " is not a valid parameter name.
+                 Allowed parameter names are: ", 
+                 collapse_comma(allowed_parameter_grid_value_names))
         }
       }
       for (i in names(parameter)) {

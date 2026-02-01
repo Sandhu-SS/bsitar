@@ -575,7 +575,7 @@ hypothesis_test.bgmfit <- function(model,
       if(!is.null(null))  p_direction <- list(null = null)
     }
   }
-
+  
   # Note:
   # The missing arguments for equivalence_test will be later updated from the
   # hypothesis_test() arguments via bayestestR_equivalence_test_df_args - 1301
@@ -606,6 +606,7 @@ hypothesis_test.bgmfit <- function(model,
   
   
   
+  
   if(is.null(rope_test) & is.null(pd_test)) {
     if(obj_model) {
       if(!is.null(parameters)) {
@@ -620,6 +621,46 @@ hypothesis_test.bgmfit <- function(model,
       }
     }
   }
+  
+  
+  if(is.null(rope_test)) {
+    rope_test <- FALSE 
+  }
+  if(is.null(pd_test)) {
+    pd_test <- FALSE 
+  }
+  
+  
+  
+  if(pd_test) {
+    if(is.null(p_direction)) {
+      if(is.null(null)) {
+        if(verbose) {
+          message2c("For 'pd_test = TRUE', the default 'null' for 'pd test' 
+                  changed to '0'")
+        }
+        p_direction <- list(null = 0)
+      } else if(!is.null(null)) {
+        p_direction <- list(null = null)
+      }
+    }
+  }
+  
+  if(rope_test) {
+    if(is.null(equivalence_test)) {
+      if(is.null(range)) {
+        if(verbose) {
+          message2c("For 'rope_test = TRUE', the default 'range' for 'rope test' 
+                  changed to 'default'")
+        }
+        equivalence_test <- list(range = 'default')
+      } else if(!is.null(range)) {
+        equivalence_test <- list(range = range)
+      }
+    }
+  }
+  
+  
   
   
   # Extract draws from the obj_marginaleffects
@@ -649,9 +690,9 @@ hypothesis_test.bgmfit <- function(model,
       obj_mfx <- TRUE
       obj_model <- obj_df <- obj_mfx_matrix <- obj_model_pseudo <- FALSE
       obj_marginaleffects <- FALSE
-      if(!NullFALSE(rope_test) & !NullFALSE(pd_test)) {
+      if(!rope_test & !pd_test) {
         engine <- 'marginaleffects' 
-      } else if(NullFALSE(rope_test) | NullFALSE(pd_test)) {
+      } else if(rope_test | pd_test) {
         engine <- 'mbcombo' 
       }
     }
@@ -1095,7 +1136,7 @@ hypothesis_test.bgmfit <- function(model,
     
   } # if(obj_model | obj_model_pseudo) {
   
-
+ 
   
   ##############################################################################
   # Build arguments
@@ -1188,12 +1229,7 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
-  if(is.null(rope_test)) {
-    rope_test <- FALSE 
-  }
-  if(is.null(pd_test)) {
-    pd_test <- FALSE 
-  }
+  
   
   
   
