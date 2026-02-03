@@ -507,17 +507,16 @@ predictions.
 }
 }
 \description{
-Performs non-linear hypothesis testing via \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}, Test for
-Practical Equivalence via \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}}, probability of
-direction via \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}}, and pairwise and contrast-style
-comparisons via \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}, using a unified interface.
+Performs non-linear hypothesis testing via \code{\link[brms:hypothesis.brmsfit]{brms::hypothesis()}}, Region of
+Practical Equivalence (\code{ROPE}) via \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}},
+probability of direction (\code{pd}) via \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}}, and
+pairwise and contrast-style comparisons via \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}},
+using a unified interface.
 
-Test for Practical Equivalence, which is based on the Region of Practical
-Equivalence (\code{ROPE}) and posterior credible intervals such as the High
-Density Intervals (\code{HDI}), check whether parameter values should be
-accepted or rejected against an explicitly formulated "null hypothesis"
-(i.e., a \code{ROPE}). In other words, it checks the percentage of the
-\code{HDI} such as 95\\%⁠ that is the null region (the \code{ROPE}). If this
+The \code{ROPE} evaluates whether the parameter values should be accepted or
+rejected against an explicitly formulated "null hypothesis". It checks the
+percentage of the posterior credible intervals such as the High Density
+Intervals (\code{HDI})  defined as the null region (the \code{ROPE}). If this
 percentage is sufficiently low, the null hypothesis is rejected. If this
 percentage is sufficiently high, the null hypothesis is accepted.  If the HDI
 is completely outside the \code{ROPE}, the "null hypothesis" for this
@@ -531,11 +530,11 @@ if the percentage of the posterior within the \code{ROPE} is smaller than to
 inside the \code{ROPE} (the closer to zero the better). See
 \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} for further details.
 
-Probability of Direction (\code{PD}, also known as the Maximum Probability of
-Effect \code{MPE}) is the probability that a parameter (described by its
-posterior distribution) is strictly positive or negative (whichever is the
-most probable). Although differently expressed, this index is fairly similar
-(i.e., is strongly correlated) to the frequentest p-value (see details). See
+The \code{PD}, also known as the Maximum Probability of Effect (\code{MPE})
+is the probability that a parameter (described by its posterior distribution)
+is strictly positive or negative (whichever is the most probable). Although
+differently expressed, this index is fairly similar (i.e., is strongly
+correlated) to the frequentest p-value (see details). See
 \code{\link[bayestestR:p_direction]{bayestestR::p_direction()}} for further details.
 }
 \details{

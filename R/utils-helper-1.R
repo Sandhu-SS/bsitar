@@ -46,6 +46,8 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
   arg_names <- names(mcall)[-1]
   arg_names <- setdiff(arg_names, exceptions)
   
+  arg_names <- arg_names[arg_names != '...']
+  
   # This does't work for bare formula object ~1 i.e., mot enclosed in list()
   arg_names_formula_names <- c()
   for (i in arg_names) {
@@ -54,13 +56,13 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
     }
   }
   
- # print(arg_names_formula_names)
+  
   
   exceptions <- c(exceptions, arg_names_formula_names)
   
   arg_names <- setdiff(arg_names, exceptions)
   
-  # mcall0 <<- mcall
+   # mcall0 <<- mcall
   
   # 
   # # Convert list[['name']] call to list$name syntax
@@ -88,14 +90,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
   # }
   
  
-  dollar_to_double_bracket <- function(expr) {
-    obj_expr <- expr[[2]]
-    idx_expr <- expr[[3]]
-    zz <- deparse(idx_expr)
-    zx <- deparse(obj_expr)
-    expr <- str2lang(paste0(zx, '[[', "'", zz, "'", ']]'))
-    return(expr)
-  }
+  
   
   
   for (nm in arg_names) {
@@ -115,6 +110,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       if (!inherits(obj_val, "try-error") && !inherits(idx_val, "try-error") &&
           (is.list(obj_val) || is.vector(obj_val)) && 
           !is.null(tmp <- obj_val[[idx_val]]) && !is.function(tmp)) {
+        if(check_is_numeric_like(tmp)) tmp <- eval(tmp)
         mcall[[nm]] <- tmp  # Single extracted value
         next
       }
@@ -142,6 +138,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       if (!inherits(obj_val, "try-error") && !inherits(idx_val, "try-error") &&
           (is.list(obj_val) || is.vector(obj_val)) && 
           !is.null(tmp <- obj_val[[idx_val]]) && !is.function(tmp)) {
+        if(check_is_numeric_like(tmp)) tmp <- eval(tmp)
         mcall[[nm]] <- tmp  # Single extracted value
         next
       }
@@ -161,11 +158,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       is_wrapped <- TRUE
     }
     
-    # print(expr)
-    # print((inner_expr))
-    # stop()
-    
-   # if(is.na(inner_expr) | inner_expr == "NA") print("mmmmmmm")
+   
     
     inner_exprde_e <- deparse_0(inner_expr)
     if(grepl("\\+", inner_exprde_e) & !is_wrapped) {
@@ -191,11 +184,12 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
           e
         } else {
           de_e <- deparse_0(e)
-          if(grepl("_prior_", nm)) {
-            #  de_e <- deparse_0(de_e)
+          if(grepl("+", de_e)) {
+            val <- de_e
+          } else {
+            val <- val
           }
-          de_e <- gsub("\"", "", de_e)
-          if(grepl("+", de_e)) val <- de_e else val <- val
+          if(check_is_numeric_like(val)) val <- eval(val)
           val
         }
       })
@@ -216,18 +210,32 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       # PRIORITY 4: Single expressions
       val <- try(eval(expr, envir = envir, enclos = emptyenv()), silent = TRUE)
       if (!inherits(val, "try-error") && !is.null(val) && !is.function(val)) {
-        de_e <- deparse_0(val)
-        if(grepl("_prior_", nm)) {
-        #  de_e <- deparse_0(de_e)
-        }
-        de_e <- gsub("\"", "", de_e)
-        if(grepl("+", de_e)) val <- de_e else val <- val
-        # val
-        mcall[[nm]] <- val
+        if(is.null(expr)) {
+          mcall[[nm]] <- expr
+        } else if(!is.null(expr)) { 
+          if(is.logical(expr)) mcall[[nm]] <- expr
+        } else if(!is.null(expr) & rlang::is_bare_numeric(expr)) {
+          mcall[[nm]] <- expr
+        } else if(!is.null(expr) & !rlang::is_bare_numeric(expr)) {
+          de_e <- deparse_0(val)
+          de_e <- gsub("\"", "", de_e)
+          if(grepl("+", de_e)) {
+            val <- de_e
+          } else {
+            val <- val
+          }
+          if(check_is_numeric_like(val)) val <- eval(val)
+          mcall[[nm]] <- val
+        } # if(is.null(expr)) { else ...
+        
       }
     }
   }
-  # mcallx <<- mcall
+  
+#  print(mcall)
+   # mcallx <<- mcall
+   # stop()
+   
   return(mcall)
 }
 
@@ -259,6 +267,40 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
 #   return(mcall)
 # }
 
+
+
+
+
+#' An internal function to check called_via_do_call
+#'
+#' @param expr An exprression such as \code{'list$name'}
+#' @return A list comprised of function arguments.
+#' @keywords internal
+#' @noRd
+#'
+dollar_to_double_bracket <- function(expr) {
+  obj_expr <- expr[[2]]
+  idx_expr <- expr[[3]]
+  zz <- deparse(idx_expr)
+  zx <- deparse(obj_expr)
+  expr <- str2lang(paste0(zx, '[[', "'", zz, "'", ']]'))
+  return(expr)
+}
+
+
+#' An internal function to check called_via_do_call
+#'
+#' @param x A string
+#' @return A list comprised of function arguments.
+#' @keywords internal
+#' @noRd
+#'
+remove_empty_string_from_vector <- function(x) {
+  if(is.list(x)) {
+    x <- names(x)
+  }
+  x[x!=""]
+}
 
 
 #' An internal function to check called_via_do_call

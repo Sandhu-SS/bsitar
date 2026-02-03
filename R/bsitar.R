@@ -2527,6 +2527,7 @@ bsitar <- function(x,
   }
   
   
+  
   if(!global_args) {
     call_eval_globals_in_mcall <- TRUE
   } else {
@@ -3133,7 +3134,6 @@ bsitar <- function(x,
   
   ##############################################################
   ##############################################################
-  
 
  # Enclose primitive functions with quote "" if specified as c() or list()
   enclose_c_list_elemnts_with_quotes_these <- c("xfun",
@@ -3246,12 +3246,7 @@ bsitar <- function(x,
   }
   
   
-  remove_empty_string_from_vector <- function(x) {
-    if(is.list(x)) {
-      x <- names(x)
-    }
-    x[x!=""]
-  }
+  
   
   check_each_element_of_list_named <- function(call, 
                                                element, 
@@ -3400,7 +3395,7 @@ bsitar <- function(x,
                                          knots_selection_assert_names)
   }
   
- 
+
   ##############################################################
   ##############################################################
   
@@ -3464,8 +3459,9 @@ bsitar <- function(x,
   call.full <- match.call.defaults()
   # 25.01.2026
   if(set_eval_globals_in_mcall) {
-    set_eval_globals_in_mcall_names
-    set_exceptions<- setdiff(names(call.full), set_eval_globals_in_mcall_names)
+    set_eval_globals_in_mcall_names <- 
+      remove_empty_string_from_vector(set_eval_globals_in_mcall_names)
+    set_exceptions <- setdiff(names(call.full), set_eval_globals_in_mcall_names)
     set_exceptions <- c(set_exceptions, "data", "...")
     call.full <- eval_globals_in_mcall(call.full, exceptions = set_exceptions) 
   }
