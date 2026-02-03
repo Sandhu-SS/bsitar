@@ -43,25 +43,221 @@
 #'
 eval_globals_in_mcall <- function(mcall, envir = globalenv(), 
                                   exceptions = NULL) {
-  # assume mcall is already match.call() with expand.dots = FALSE
-  arg_names <- names(mcall)[-1]  # skip function name
+  arg_names <- names(mcall)[-1]
   arg_names <- setdiff(arg_names, exceptions)
+  
+  # This does't work for bare formula object ~1 i.e., mot enclosed in list()
+  arg_names_formula_names <- c()
+  for (i in arg_names) {
+    if(rlang::is_formula(mcall[[i]])) {
+      arg_names_formula_names <- c(arg_names_formula_names, i)
+    }
+  }
+  
+ # print(arg_names_formula_names)
+  
+  exceptions <- c(exceptions, arg_names_formula_names)
+  
+  arg_names <- setdiff(arg_names, exceptions)
+  
+  # mcall0 <<- mcall
+  
+  # 
+  # # Convert list[['name']] call to list$name syntax
+  # to_dollar <- function(expr) {
+  #   if (is.recursive(expr) && length(expr) == 3 && identical(expr[[1]], quote(`[[`))) {
+  #     as.call(list(expr[[2]], expr[[3]]))  # list$name
+  #   } else {
+  #     expr
+  #   }
+  # }
+  # 
+  # # Usage
+  # expr <- quote(mylist[['name']])
+  # new_expr <- to_dollar(expr)
+  # new_expr  # mylist$name
+  
+  
+  # Convert list$name to list[['name']]
+  # to_double_bracket <- function(expr) {
+  #   if (is.recursive(expr) && length(expr) == 2 && identical(expr[[1]], as.name("$"))) {
+  #     as.call(list(quote(`[[`), expr[[2]], expr[[3]]))
+  #   } else {
+  #     expr
+  #   }
+  # }
+  
+ 
+  dollar_to_double_bracket <- function(expr) {
+    obj_expr <- expr[[2]]
+    idx_expr <- expr[[3]]
+    zz <- deparse(idx_expr)
+    zx <- deparse(obj_expr)
+    expr <- str2lang(paste0(zx, '[[', "'", zz, "'", ']]'))
+    return(expr)
+  }
+  
+  
   for (nm in arg_names) {
     expr <- mcall[[nm]]
-    val <- try(eval(expr, envir = envir, enclos = emptyenv()), silent = TRUE)
-    if (!inherits(val, "try-error")) {
-      if(!is.null(val)) {
-        if(is.function(val)) {
-          mcall[[nm]] <- expr
+    
+    # PRIORITY 1: Direct [['index']] extraction (e.g. mcmc_args[['chains']])
+    if (is.recursive(expr) && length(expr) == 3 && identical(expr[[1]], 
+                                                             quote(`[[`))) {
+      obj_expr <- expr[[2]]
+      idx_expr <- expr[[3]]
+      
+      obj_val <- try(eval(obj_expr, envir = envir, enclos = emptyenv()), 
+                     silent = TRUE)
+      idx_val <- try(eval(idx_expr, envir = envir, enclos = emptyenv()), 
+                     silent = TRUE)
+      
+      if (!inherits(obj_val, "try-error") && !inherits(idx_val, "try-error") &&
+          (is.list(obj_val) || is.vector(obj_val)) && 
+          !is.null(tmp <- obj_val[[idx_val]]) && !is.function(tmp)) {
+        mcall[[nm]] <- tmp  # Single extracted value
+        next
+      }
+    }
+    
+    
+
+    
+    # PRIORITY 1.2: Convert dollar to double bracket and then Direct [['index']] 
+    # mcmc_args$chains to mcmc_args[['chains']] and then extraction
+    if (is.recursive(expr) && length(expr) == 3 && identical(expr[[1]], 
+                                                             quote(`$`))) {
+      
+     
+      expr <- dollar_to_double_bracket(expr)
+      
+      obj_expr <- expr[[2]]
+      idx_expr <- expr[[3]]
+      
+      obj_val <- try(eval(obj_expr, envir = envir, enclos = emptyenv()), 
+                     silent = TRUE)
+      idx_val <- try(eval(idx_expr, envir = envir, enclos = emptyenv()), 
+                     silent = TRUE)
+
+      if (!inherits(obj_val, "try-error") && !inherits(idx_val, "try-error") &&
+          (is.list(obj_val) || is.vector(obj_val)) && 
+          !is.null(tmp <- obj_val[[idx_val]]) && !is.function(tmp)) {
+        mcall[[nm]] <- tmp  # Single extracted value
+        next
+      }
+    }
+    
+    
+    
+    # PRIORITY 2: list()/c() wrappers
+    is_wrapped <- FALSE
+    wrapper <- NULL
+    inner_expr <- expr
+    if (is.recursive(expr) && length(expr) >= 2 && 
+        (identical(expr[[1]], quote(`list`)) || identical(expr[[1]], 
+                                                          quote(`c`)))) {
+      wrapper <- expr[[1]]
+      inner_expr <- expr[-1]
+      is_wrapped <- TRUE
+    }
+    
+    # print(expr)
+    # print((inner_expr))
+    # stop()
+    
+   # if(is.na(inner_expr) | inner_expr == "NA") print("mmmmmmm")
+    
+    inner_exprde_e <- deparse_0(inner_expr)
+    if(grepl("\\+", inner_exprde_e) & !is_wrapped) {
+      inner_exprde_e <- gsub("\"", "", inner_exprde_e)
+      inner_expr <- inner_exprde_e
+      
+    }
+    
+    
+    if(grepl("_prior_", nm)) {
+      if(!is.list(inner_expr)) {
+        inner_expr <- deparse_0(inner_expr)
+      }
+    }
+    
+    # PRIORITY 3: Recursive lists/vectors
+    if (is.recursive(inner_expr)) {
+      evaled_elements <- lapply(inner_expr, function(e) {
+        val <- try(eval(e, envir = envir, enclos = emptyenv()), 
+                   silent = TRUE)
+        
+        if (inherits(val, "try-error") || is.null(val) || is.function(val)) {
+          e
         } else {
-          mcall[[nm]] <- val
+          de_e <- deparse_0(e)
+          if(grepl("_prior_", nm)) {
+            #  de_e <- deparse_0(de_e)
+          }
+          de_e <- gsub("\"", "", de_e)
+          if(grepl("+", de_e)) val <- de_e else val <- val
+          val
         }
-      } # if(!is.null(val)) {
-      # mcall[[nm]] <- val  # replace expression with evaluated value!
-    } # if (!inherits(val, "try-error")) {
-  } # for (nm in arg_names) {
+      })
+      
+       
+      
+      if (is_wrapped) {
+        mcall[[nm]] <- as.call(c(wrapper, evaled_elements))
+      } else if (is.vector(inner_expr) && !is.list(inner_expr)) {
+        mcall[[nm]] <- unname(as.vector(evaled_elements, mode = typeof(expr)))
+      } else {
+        names(evaled_elements) <- names(inner_expr)
+        mcall[[nm]] <- evaled_elements
+      }
+      
+    } else {
+      
+      # PRIORITY 4: Single expressions
+      val <- try(eval(expr, envir = envir, enclos = emptyenv()), silent = TRUE)
+      if (!inherits(val, "try-error") && !is.null(val) && !is.function(val)) {
+        de_e <- deparse_0(val)
+        if(grepl("_prior_", nm)) {
+        #  de_e <- deparse_0(de_e)
+        }
+        de_e <- gsub("\"", "", de_e)
+        if(grepl("+", de_e)) val <- de_e else val <- val
+        # val
+        mcall[[nm]] <- val
+      }
+    }
+  }
+  # mcallx <<- mcall
   return(mcall)
 }
+
+
+
+
+
+# eval_globals_in_mcall <- function(mcall, envir = globalenv(), 
+#                                   exceptions = NULL) {
+#   # assume mcall is already match.call() with expand.dots = FALSE
+#   arg_names <- names(mcall)[-1]  # skip function name
+#   arg_names <- setdiff(arg_names, exceptions)
+#   for (nm in arg_names) {
+#     expr <- mcall[[nm]]
+#     print(expr)
+#     val <- try(eval(expr, envir = envir, enclos = emptyenv()), silent = TRUE)
+#     print(val)
+#     if (!inherits(val, "try-error")) {
+#       if(!is.null(val)) {
+#         if(is.function(val)) {
+#           mcall[[nm]] <- expr
+#         } else {
+#           mcall[[nm]] <- val
+#         }
+#       } # if(!is.null(val)) {
+#       # mcall[[nm]] <- val  # replace expression with evaluated value!
+#     } # if (!inherits(val, "try-error")) {
+#   } # for (nm in arg_names) {
+#   return(mcall)
+# }
 
 
 

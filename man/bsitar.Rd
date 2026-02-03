@@ -194,7 +194,7 @@ bsitar(
   file_refit = getOption("brms.file_refit", "never"),
   future = getOption("future", FALSE),
   sum_zero = FALSE,
-  global_args = FALSE,
+  global_args = NULL,
   parameterization = "ncp",
   ...
 )

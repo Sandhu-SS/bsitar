@@ -2503,37 +2503,54 @@ bsitar <- function(x,
                    file_refit = getOption("brms.file_refit", "never"),
                    future = getOption("future", FALSE),
                    sum_zero = FALSE,
-                   global_args = FALSE,
+                   global_args = NULL,
                    parameterization = 'ncp',
                    ...) {
   
   
   mcall <- match.call()
   no_default_args <- c("x", "y", "id", "data", "...")
+  
+  if(is.null(global_args)) {
+    global_args <- FALSE
+  } else if(!is.null(global_args)) {
+    if(is.logical(global_args)) {
+      global_args <- global_args
+    } else {
+      stop2c("'global_args' must be either NULL or a logical")
+    }
+  }
+  
   if(global_args) {
     mcall <- mcall_dictionary(mcall, envir = NULL, xenvir = NULL, 
                                         exceptions = no_default_args)
   }
   
   
+  if(!global_args) {
+    call_eval_globals_in_mcall <- TRUE
+  } else {
+    call_eval_globals_in_mcall <- FALSE
+  }
 
   # 25.01.2026
   set_eval_globals_in_mcall <- FALSE
-  if(called_via_do_call()) {
-    # nothing
-  } else if(called_via_CustomDoCall()) {
-    stop("use 'do.call', not the 'CustomDoCall' for bsitar()")
-  } else {
-    set_eval_globals_in_mcall <- TRUE
-    mcall <- eval_globals_in_mcall(mcall, exceptions = c("data", "...")) 
-  }
- 
-
+  if(call_eval_globals_in_mcall) {
+    if(called_via_do_call()) {
+      # nothing
+    } else if(called_via_CustomDoCall()) {
+      stop("use 'do.call', not the 'CustomDoCall' for bsitar()")
+    } else {
+      set_eval_globals_in_mcall <- TRUE
+      set_eval_globals_in_mcall_names <- names(mcall)
+      mcall <- eval_globals_in_mcall(mcall, exceptions = c("data", "...")) 
+    }
+  } # if(call_eval_globals_in_mcall) {
+  
   
   mcall_ <- mcall
   
-  
-  
+
   
   # data_check_for_modifications <- FALSE 
   # if(is.null(mcall_$data)) {
@@ -3447,7 +3464,10 @@ bsitar <- function(x,
   call.full <- match.call.defaults()
   # 25.01.2026
   if(set_eval_globals_in_mcall) {
-    call.full <- eval_globals_in_mcall(call.full, exceptions = c("data", "...")) 
+    set_eval_globals_in_mcall_names
+    set_exceptions<- setdiff(names(call.full), set_eval_globals_in_mcall_names)
+    set_exceptions <- c(set_exceptions, "data", "...")
+    call.full <- eval_globals_in_mcall(call.full, exceptions = set_exceptions) 
   }
   
   
@@ -5957,7 +5977,8 @@ bsitar <- function(x,
       
     if (is.null(sigma_group_arg$groupvar))
       sigma_group_arg$groupvar <- idsi
-    
+    # print(ept(dfsi))
+    # print(ept(knotssi))
     if (!is.numeric(ept(dfsi)) & !is.numeric(ept(knotssi))) {
       stop2c("Either 'df' or 'knots' must be specified")
     }
