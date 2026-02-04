@@ -118,7 +118,12 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' modelbased_growthparameters(model, ndraws = 10)
+#' modelbased_growthparameters(model, ndraws = 2, parameter_method = 1)
+#' 
+#' modelbased_growthparameters(model, ndraws = 2, parameter_method = 2)
+#' 
+#' modelbased_growthparameters(model, ndraws = 2, parameter_method = 2, 
+#' add_xtm = TRUE)
 #' 
 #' }
 #' 
@@ -161,7 +166,7 @@ modelbased_growthparameters.bgmfit <-
            variables = NULL,
            deriv = NULL,
            model_deriv = NULL,
-           method = 'custom',
+           method = 'pkg',
            marginals = NULL, 
            preparms = NULL,
            pdraws = FALSE, 
@@ -204,6 +209,14 @@ modelbased_growthparameters.bgmfit <-
            envir = NULL, 
            ...) {
           
+    
+    if(is.null(reformat)) {
+      reformat <- FALSE
+    }
+    
+    if(add_xtm) {
+      re_formula <- NULL
+    }
     
     insight::check_if_installed('cheapr', prompt = FALSE, stop = FALSE)
     
@@ -291,8 +304,8 @@ modelbased_growthparameters.bgmfit <-
         method <- 'custom'
       } else {
         if(method != 'custom') {
-          stop2c("Argument 'method' must be 'custom' for model 
-               based growth parameters")
+          # stop2c("Argument 'method' must be 'custom' for model 
+          #      based growth parameters")
         }
       }
       
@@ -526,18 +539,11 @@ modelbased_growthparameters.bgmfit <-
         }
       }
       
-      
-      
-      
       # 15 06 2025
       allowed_methods <- c('pkg', 'custom')
       if(!method %in% allowed_methods) 
         stop("Argument 'method' should be one of the following:",
-             "\n ", 
-             collapse_comma(allowed_methods)
-        )
-      
-      
+             "\n ", collapse_comma(allowed_methods))
       
       if(method == 'custom') {
         deriv <- 1
@@ -548,8 +554,6 @@ modelbased_growthparameters.bgmfit <-
           }
         }
       }
-      
-      
       
       if (is.null(idata_method)) {
         idata_method <- 'm2'
@@ -582,8 +586,6 @@ modelbased_growthparameters.bgmfit <-
       draw <- NULL;
       j <- NULL;
       i <- NULL;
-      
-      
       peak <- NULL;
       d1 <- NULL;
       d0 <- NULL;
@@ -593,7 +595,6 @@ modelbased_growthparameters.bgmfit <-
       xtm <- NULL;
       ytm <- NULL;
       x <- NULL;
-      
       xid <- NULL;
       
       
@@ -627,7 +628,7 @@ modelbased_growthparameters.bgmfit <-
       if (is.null(parameter)) {
         parm <- 'apgv' 
       } else if(length(parameter) == 1 && parameter == 'all') {
-        parm <- allowed_parms 
+        parm <- 'all' # allowed_parms 
       } else if(length(parameter) == 1) {
         parm <- parameter
       } else if(length(parameter) > 1) {
@@ -1133,9 +1134,9 @@ modelbased_growthparameters.bgmfit <-
       if(parameter_method == 1) {
       ##############################################################
         
-        if(add_xtm) {
-          stop("For add_xtm = TRUE, please use parameter_method = 1")
-        }
+      if(add_xtm) {
+        stop("For add_xtm = TRUE, please use parameter_method = 2")
+      }
         
       nlpar_fixed <- array(NA, dim = c(length(eval(draw_ids_seq)),
                                        nrow(newdata),
@@ -1185,8 +1186,6 @@ modelbased_growthparameters.bgmfit <-
       } else if(!is.null(posterior_linpred_args[['re_formula']])) {
         set_frame <- nlpar_fixed
       }
-      
-       # print(str(set_frame))
       
       splinenames         <- create_s_names_vector
       get_dims            <- dim(set_frame)
@@ -1486,7 +1485,10 @@ modelbased_growthparameters.bgmfit <-
       peak_indices    <- peak_takeoff_data_draw[, .I[peak == 1 & d1 == max(d1) ], by = c('drawid', 'rowdf', 'piece')]$V1
       peak_data_draw  <- collapse::fsubset(peak_takeoff_data_draw, peak_indices)
       
-      if(nrow(peak_data_draw) > 0) {
+      
+      if(nrow(peak_data_draw) == 0) {
+        peak_parameters <- NULL
+      } else if(nrow(peak_data_draw) > 0) {
         apgv_draw    <- peak_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
           collapse::fmutate(estimate = x) %>% 
@@ -1499,6 +1501,8 @@ modelbased_growthparameters.bgmfit <-
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
           collapse::fmutate(estimate = d0) %>% 
           collapse::fmutate(parameter = 'spgv') 
+        
+        
         
         apgv_draw <- set_dataf_m_collapse %>% collapse::join(apgv_draw, on = 'rowdf', 
                                                              how = "right", 
@@ -1513,9 +1517,23 @@ modelbased_growthparameters.bgmfit <-
         all_peak_data_draw <- collapse::rowbind(apgv_draw, pgv_draw, spgv_draw) 
         
        
+        
+        # all_peak_data_draw_for_htest <- data.table::setDT(all_peak_data_draw)
+        # all_peak_data_draw_for_htest <- all_peak_data_draw_for_htest %>% 
+        #   data.table::setnames(., 'estimate', 'draw')
+        # key_cols <- c("parameter","drawid","draw")
+        # all_peak_data_draw_for_htest <- all_peak_data_draw_for_htest[, 
+        #                                                              mget(key_cols)]
+        #   
+          
+    
+       
         marginal_growthparameters_args <- modelbased_arguments
         marginal_growthparameters_args[['preparms']] <- all_peak_data_draw
         marginal_growthparameters_args[['by']] <- idvar
+        # For preparms, method must be 'custom'
+        marginal_growthparameters_args[['method']] <- 'custom'
+        marginal_growthparameters_args[['reformat']] <- FALSE
         
         peak_parameters <- CustomDoCall(marginal_growthparameters, 
                                         marginal_growthparameters_args)
@@ -1535,7 +1553,10 @@ modelbased_growthparameters.bgmfit <-
         collapse::fslice(n = 1, how = "last") %>%
         collapse::fungroup()                           # 2nd fungroup
       
-      if(nrow(takeoff_data_draw) > 0) {
+      
+      if(nrow(takeoff_data_draw) == 0) {
+        takeoff_parameters <- NULL
+      } else if(nrow(takeoff_data_draw) > 0) {
         atgv_draw    <- takeoff_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
           collapse::fmutate(estimate = x) %>% 
@@ -1565,6 +1586,8 @@ modelbased_growthparameters.bgmfit <-
         marginal_growthparameters_args[['preparms']] <- all_takeoff_data_draw
         marginal_growthparameters_args[['by']] <- idvar
         
+        marginal_growthparameters_args[['reformat']] <- FALSE
+        
         takeoff_parameters <- CustomDoCall(marginal_growthparameters, 
                                            marginal_growthparameters_args)
         
@@ -1572,10 +1595,21 @@ modelbased_growthparameters.bgmfit <-
       
       if(parm == 'apgv') {
         out <- peak_parameters
+      } else if(parm == 'atgv') {
+        out <- takeoff_parameters
+      } else if(parm == 'all') {
+        out <- peak_parameters %>% dplyr::bind_rows(takeoff_parameters)
       }
       
-      if(parm == 'atgv') {
-        out <- takeoff_parameters
+      if(is.null(out)) return(out)
+  
+      if(!is.null(re_formula)) {
+        out <- out %>% dplyr::select(-dplyr::any_of(idvar))
+      }
+      
+
+      if(!reformat) {
+        return(out)
       }
       
       peak_names.ors__2 <- base::tolower(colnames(out))
@@ -1587,6 +1621,10 @@ modelbased_growthparameters.bgmfit <-
       peak_names.ors__2 <- c(lower_case__2, upper_case__2)
       
       out <- data.table::setnames(out, peak_names.ors__2)
+      
+      if(!is.null(re_formula)) {
+        out <- out %>% dplyr::select(-dplyr::any_of(idvar))
+      }
       
       return(out)
       
@@ -1684,6 +1722,7 @@ modelbased_growthparameters.bgmfit <-
       set_dataf_m_collapse <- set_dataf_m %>% 
         collapse::roworderv(c(idvar, xvar), decreasing = F)
 
+     
       
       if(is.null(re_formula)) {
         set_pdrawsp <- 'return'
@@ -1693,7 +1732,16 @@ modelbased_growthparameters.bgmfit <-
         set_pdraws  <- 'adds'
       }
       
+      if(method == 'pkg') {
+        if(add_xtm) {
+          set_pdrawsp <- TRUE
+          set_pdraws  <- pdraws
+        }
+      }
+      
+      
       marginal_growthparameters_args <- modelbased_arguments
+      # This NA because we want to plugin the population average apgv
       marginal_growthparameters_args[['re_formula']] <- NA
       marginal_growthparameters_args[['pdrawsp']]    <- set_pdrawsp
       marginal_growthparameters_args[['pdraws']]     <- set_pdraws
@@ -1703,16 +1751,16 @@ modelbased_growthparameters.bgmfit <-
       marginal_growthparameters_args[['by']]         <- by
       
       marginal_growthparameters_args[['newdata_fixed']] <- NULL
+      marginal_growthparameters_args[['reformat']] <- FALSE
       
       onex0 <- CustomDoCall(marginal_growthparameters, 
                             marginal_growthparameters_args)
-      
-
+    
       if(!is.null(re_formula)) {
         if(add_xtm) { 
-          stop("Please set 're_formula = NULL' for 'add_xtm = TRUE'")
+          stop("For 'add_xtm = TRUE', the re_formula should be 'NULL'")
         }
-        onex0             <- onex0[['estimate']]
+        if(method == 'custom') onex0 <- onex0[['estimate']]
         peak_names.ors__2 <- base::tolower(colnames(onex0))
         colnames(onex0)   <- peak_names.ors__2
         set0_newdata                 <- newdata
@@ -1723,47 +1771,61 @@ modelbased_growthparameters.bgmfit <-
         set0_newdata[[xvar]]         <- NULL
         
         # below using newdata_fixed = 0, so apply fun here 
-        
-        set0_newdata[[xvar]]         <- funx_(set0_newdata[['estimate']])
+        if(method == 'pkg') {
+          if(set_pdrawsp) set0_newdata[[xvar]] <- funx_(set0_newdata[['draw']])
+          if(!set_pdrawsp) set0_newdata[[xvar]] <- funx_(set0_newdata[['estimate']])
+        } else if(method == 'custom') {
+          set0_newdata[[xvar]] <- funx_(set0_newdata[['estimate']])
+        }
         
         marginal_draws_args <- modelbased_arguments
         marginal_draws_args[['newdata']]       <- set0_newdata
         marginal_draws_args[['newdata_fixed']] <- 0
-         marginal_draws_args[['by']]           <- by
+        marginal_draws_args[['by']]           <- by
         
+        marginal_draws_args[['reformat']] <- FALSE
+         
         marginal_draws_args[['deriv']] <- 0
-        get_size <- CustomDoCall(marginal_draws, 
-                                 marginal_draws_args)
-        
-        marginal_draws_args[['deriv']] <- 1
-        get_velc <- CustomDoCall(marginal_draws, 
-                                 marginal_draws_args)
+        get_size <- CustomDoCall(marginal_draws, marginal_draws_args)
        
-        
+        marginal_draws_args[['deriv']] <- 1
+        get_velc <- CustomDoCall(marginal_draws, marginal_draws_args)
+    
         colnames(get_size) <- base::tolower(colnames(get_size))
         colnames(get_velc) <- base::tolower(colnames(get_velc))
+
+        for_joining <- set0_newdata %>% 
+          dplyr::select(dplyr::all_of(c("parameter", by)))
         
-        get_velc <- cbind.data.frame(set0_newdata[, c("parameter", by)], 
-                                     get_velc)
+        get_velc <- for_joining %>% 
+          dplyr::left_join(., get_velc, by = by, relationship = "many-to-many")
+        
+        # get_velc <- cbind.data.frame(set0_newdata[, c("parameter", by)], 
+        #                              get_velc)
+        
         get_velc[["parameter"]] <- 'PGV'
         get_velc <- get_velc %>% 
           dplyr::distinct(!! as.name(dplyr::all_of(by)), .keep_all = T)
         
-        get_size <- cbind.data.frame(set0_newdata[, c("parameter", by)], 
-                                     get_size)
+        get_size <- for_joining %>% 
+          dplyr::left_join(., get_size, by = by, relationship = "many-to-many")
+        
+        # get_size <- cbind.data.frame(set0_newdata[, c("parameter", by)], 
+        #                              get_size)
+        
         get_size[["parameter"]] <- 'SPGV'
         
         get_size <- get_size %>% 
           dplyr::distinct(!! as.name(dplyr::all_of(by)), .keep_all = T)
         
+
+        get_velc <- get_velc %>% dplyr::select(dplyr::all_of(colnames(onex0)))
+        get_size <- get_size %>% dplyr::select(dplyr::all_of(colnames(onex0)))
+
         
         onex0 <- dplyr::bind_rows(onex0, get_velc, get_size)
         
-        marginal_draws(model, newdata = set0_newdata, 
-                       newdata_fixed = 0,
-                       deriv = 1) %>% nrow()
-        
-        
+
         if(!is.null(subset_data_by)) {
           group_by_indices <- "parameter"
           if(subset_data_by == "one-row") {
@@ -1774,6 +1836,21 @@ modelbased_growthparameters.bgmfit <-
           onex0 <- onex0 %>% data.table::as.data.table()
           onex0 <- onex0[onex0[, .I[1:1], by = group_by_indices]$V1]
           onex0 <- onex0 %>% data.frame()
+        }
+        
+        if(!add_xtm) {
+          if(!is.null(re_formula)) {
+            onex0 <- onex0 %>% 
+              dplyr::distinct_at(c("parameter"), .keep_all = T)
+          }
+        }
+        
+        if(!is.null(re_formula)) {
+          onex0 <- onex0 %>% dplyr::select(-dplyr::any_of(by))
+        }
+        
+        if(!reformat) {
+          return(onex0)
         }
        
         peak_names.ors__2 <- base::tolower(colnames(onex0))
@@ -1869,6 +1946,8 @@ modelbased_growthparameters.bgmfit <-
                                               verbose = FALSE)
       
       onex00 <- data.table::as.data.table(onex00)
+      
+      
 
       array_dim     <- set_nrows_n
       pieces_dim    <- 1
@@ -1886,13 +1965,24 @@ modelbased_growthparameters.bgmfit <-
                                               by = xid_by_onex00]$xid
       
       
+      
+      
       which_dim                  <- 3
       nlpar_fixed_names_dim3     <- attr(nlpar_fixed, "dimnames")[[which_dim]]
       nlpar_fixed_names_dim3_add <- c('Xestimate', 'fomerge', 'xid')
+      
+      
+      if(method == 'pkg') {
+        extend_array <- cbind(onex00[['draw']], 
+                              onex00[['fomerge']], 
+                              onex00[['xid']])
+      } else if(method == 'custom') {
+        extend_array <- cbind(onex00[['estimate']], 
+                              onex00[['fomerge']], 
+                              onex00[['xid']])
+      }
 
-      extend_array <- cbind(onex00[['estimate']], 
-                            onex00[['fomerge']], 
-                            onex00[['xid']])
+      
       
       if(add_xtm) {
         xvar_ <- model$model_info$xvar
@@ -1906,11 +1996,11 @@ modelbased_growthparameters.bgmfit <-
       Sliced <- aperm(`dim<-`(t(extend_array), 
                               c(ncol(extend_array), 
                                 dim(nlpar_fixed)[2], 
-                                dim(nlpar_fixed)[1])), 
-                      c(3, 2, 1))
+                                dim(nlpar_fixed)[1])), c(3, 2, 1))
+      
       
       nlpar_fixed <- abind::abind(nlpar_fixed, Sliced, along = 3)
-      
+     
       attr(nlpar_fixed, "dimnames")[[which_dim]] <- c(nlpar_fixed_names_dim3, 
                                                       nlpar_fixed_names_dim3_add)
       
@@ -1959,18 +2049,17 @@ modelbased_growthparameters.bgmfit <-
       }
       names_parm_temp <- c(names_parm, "fomerge", "xid")
       
-
       bind_draws_parm <- collect_draws_parm %>% collapse::rowbind() %>%
         collapse::setrename(names_parm_temp)
       
-
       if(future) {
         which_cols <- 4
         if(add_xtm) {
           which_cols <- which_cols + 2
         }
         bind_draws_parm <- assign_new_sequence(mat = bind_draws_parm %>% 
-                                                 as.matrix(), col = which_cols) %>% 
+                                                 as.matrix(), 
+                                               col = which_cols) %>% 
           data.table::as.data.table()
       }
       
@@ -2023,6 +2112,12 @@ modelbased_growthparameters.bgmfit <-
         marginal_growthparameters_args <- modelbased_arguments
         marginal_growthparameters_args[['preparms']] <- all_peak_data_draw
         marginal_growthparameters_args[['by']] <- c(by, 'xid')
+        # For preparms, method must be custom
+        marginal_growthparameters_args[['method']] <- 'custom'
+        if(add_xtm) {
+          marginal_growthparameters_args[['pdrawsp']] <- TRUE
+        }
+        marginal_growthparameters_args[['reformat']] <- FALSE
         
         peak_parameters <- CustomDoCall(marginal_growthparameters,
                                         marginal_growthparameters_args)
@@ -2052,6 +2147,12 @@ modelbased_growthparameters.bgmfit <-
           marginal_growthparameters_args[['preparms']] <- all_tm_data_draw
           marginal_growthparameters_args[['by']] <- c(by, 'xid')
           
+          marginal_growthparameters_args[['method']] <- 'custom'
+          if(add_xtm) {
+            marginal_growthparameters_args[['pdrawsp']] <- TRUE
+          }
+          marginal_growthparameters_args[['reformat']] <- FALSE
+          
           tm_parameters <- CustomDoCall(marginal_growthparameters,
                                           marginal_growthparameters_args)
  
@@ -2065,6 +2166,16 @@ modelbased_growthparameters.bgmfit <-
           
         } # if(add_xtm) {
       } # if(nrow(peak_data_draw) > 0) {
+     
+     # if(parm == 'apgv') {
+     #   out <- peak_parameters
+     # } else if(parm == 'atgv') {
+     #   out <- takeoff_parameters
+     # } else if(parm == 'all') {
+     #   out <- peak_parameters %>% dplyr::bind_rows(takeoff_parameters)
+     # }
+     
+     if(is.null(peak_parameters)) return(peak_parameters)
       
      peak_parameters   <- peak_parameters %>% collapse::fselect(-xid)
      
@@ -2079,6 +2190,8 @@ modelbased_growthparameters.bgmfit <-
 
      peak_parameters <- data.table::setnames(peak_parameters, peak_names.ors__2)
      
+     peak_parameters <- DT_to_data_frames(peak_parameters)
+    
       return(peak_parameters) 
       ##############################################################
     } # if(parameter_method == 1) { else if(parameter_method == 2) {

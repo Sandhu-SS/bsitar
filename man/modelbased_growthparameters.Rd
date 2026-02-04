@@ -44,7 +44,7 @@
   variables = NULL,
   deriv = NULL,
   model_deriv = NULL,
-  method = "custom",
+  method = "pkg",
   marginals = NULL,
   preparms = NULL,
   pdraws = FALSE,
@@ -866,7 +866,12 @@ berkeley_exfit <- getNsObject(berkeley_exfit)
 
 model <- berkeley_exfit
 
-modelbased_growthparameters(model, ndraws = 10)
+modelbased_growthparameters(model, ndraws = 2, parameter_method = 1)
+
+modelbased_growthparameters(model, ndraws = 2, parameter_method = 2)
+
+modelbased_growthparameters(model, ndraws = 2, parameter_method = 2, 
+add_xtm = TRUE)
 
 }
 

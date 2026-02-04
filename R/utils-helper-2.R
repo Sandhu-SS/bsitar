@@ -5582,6 +5582,19 @@ setup_variables_var <- function(model,
   } # if(grepl("^marginal_draws", xcall)) {
   
   
+  if(grepl("^modelbased_growthparameters", xcall)) {
+    if(method == 'pkg') {
+      if(is.null(set_variables[[xvar]])) {
+        set_variables <- NULL
+      }
+    }
+  }
+  
+  # print(deriv)
+  # print(xcall)
+  # print(method)
+  # print(variables)
+  # print(set_variables)
   
   return(set_variables)
 }

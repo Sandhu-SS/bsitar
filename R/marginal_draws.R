@@ -1304,6 +1304,7 @@ marginal_draws.bgmfit <-
     }
     
     
+    
     set_variables <- setup_variables_var(model, 
                                          variables = variables, 
                                          xvar = xvar, 
@@ -1320,6 +1321,7 @@ marginal_draws.bgmfit <-
                                          xvar_strict = TRUE, 
                                          switch_plot = FALSE,
                                          verbose = verbose)
+    
     
     predictions_arguments$variables <- set_variables
   
@@ -1340,7 +1342,6 @@ marginal_draws.bgmfit <-
    
     predictions_arguments$by         <- set_group
     
-   
     
     assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
 
@@ -1610,7 +1611,6 @@ marginal_draws.bgmfit <-
      } # if(call_predictions) {
      
     
-     
      if(call_slopes) {
        if(!plot) {
          if(return_plot_est_pkg) {
@@ -1963,10 +1963,7 @@ marginal_draws.bgmfit <-
          
        } # if(future_splits_exe_future | future_splits_exe_dofuture) {
      } # if(callfuns) {
-     
-     
-     # funcallx <<- funcall
-     # funcallargsx <<- funcallargs
+
      
      # 6.03.2025
      if(!future_splits_exe & callfuns) {
@@ -2318,9 +2315,6 @@ marginal_draws.bgmfit <-
          collapse::fselect(., setdrawidparm_)
      }
      
-     
-     
-     # onex0x <<- onex0
      
      ######## new 
      if(is.null(hypothesis)) {
