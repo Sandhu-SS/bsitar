@@ -2068,7 +2068,6 @@ prepare_formula <- function(x,
       # 24.08.2024
       # sigmaform_gr_names and sigmaform_gr_names_asitis is collected as follow
       # The "_________" does not allow split at ( or )
-      # sigma_formula_gr_strsix <<- sigma_formula_gr_strsi
       sigmaform <- sigmaform %>% gsub_space()
       sigmaform_temp <- sigmaform
       setparantopen <- "######"
@@ -2637,13 +2636,8 @@ prepare_formula <- function(x,
     
     lm_coefse <- summary(lm_fit)$coefficients[, 2]
     
-    # print(lmform)
-    # print(a_formulasi)
-    # print(s_formulasi)
-    # stop()
     
     # library(ggplot2)
-    # ppp <<- predict(lm_fit)
     # dataset_in %>%
     #   ggplot(., aes(x = age)) + geom_line(aes(y = ppp, group = class))
     
@@ -2746,10 +2740,6 @@ prepare_formula <- function(x,
     
     lm_s_se_all <- lm_coefse[(ncol(acovmat) + 1):length(lm_coefse)]
     
-    # print(lm_s_all)
-    # print(lm_s_se_all)
-    # stop()
-    
     
     
     if (grepl("~1", a_formulasi, fixed = T)) {
@@ -2826,12 +2816,7 @@ prepare_formula <- function(x,
     
     names(lm_s_se_all) <- names_mat_s_scovmat
     names(lm_sdx_se_all) <- names_mat_s_scovmat
-    
-    
-    # print(summary(lm_fit))
-    # print(lm_s_se_all)
-    # print(lm_sdx_se_all)
-    # stop()
+
     
     
     lm_s   <- lm_s_all[1:(SbasisN)]
@@ -3243,7 +3228,6 @@ prepare_formula <- function(x,
   
   
   gsubitbt <- ""
-  
   gsubitbt_fun <- function(x, gsubitbt) {
     gsubitbtx <- function(x, gsubitbt) gsub("[[:space:]]", gsubitbt, x)
     if(is.list(x)) out <- lapply(x, gsubitbtx, gsubitbt)
@@ -3339,6 +3323,105 @@ prepare_formula <- function(x,
     assign(set_vector_for_gsub_names[set_vector_for_gsub_names_i], setnamesxx)
   }
   
+  
+#  mysr <- "(1|11|gr(id,by=classid))+(1|33|gr(study,by=NULL))"
+  
+  
+  
+  #####################################
+  
+  # get_all_grby_vars_names <- function(elements = NULL, envir = NULL) {
+  #   if(is.null(elements)) {
+  #     elements <- letters[1:12]
+  #     elements <- c(elements, 'sigma')
+  #   }
+  #   if(is.null(envir)) {
+  #     envir <- parent.frame()
+  #   }
+  #   
+  #   abc_grby_vars_grsi_c <- abc_grby_vars_gr_strsi_c <- c()
+  #   sigma_grby_vars_grsi_c <- sigma_grby_vars_gr_strsi_c <- c()
+  #   
+  #   for (i in elements) {
+  #     
+  #     if(i != 'sigma') {
+  #       
+  #       if(exists(paste0(i, "_formula_grsi"), envir = envir)) {
+  #         mysr <- get(paste0(i, "_formula_grsi"), envir = envir)
+  #         if(is.null(mysr)) {
+  #           # 
+  #         } else if(!is.null(mysr)) {
+  #           mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+  #                                              mysr, perl = TRUE))[[1]]
+  #           mysri <- mysri[mysri != "NULL"]
+  #           abc_grby_vars_grsi_c <- c(abc_grby_vars_grsi_c, mysri)
+  #         } # if(is.null(mysr)) {
+  #       } # if(exists(paste0(i, "_formula_grsi"))) {
+  #       
+  #       if(exists(paste0(i, "_formula_gr_strsi"), envir = envir)) {
+  #         mysr <- get(paste0(i, "_formula_gr_strsi"), envir = envir)
+  #         if(is.null(mysr)) {
+  #           # 
+  #         } else if(!is.null(mysr)) {
+  #           mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+  #                                              mysr, perl = TRUE))[[1]]
+  #           mysri <- mysri[mysri != "NULL"]
+  #           abc_grby_vars_gr_strsi_c <- c(abc_grby_vars_gr_strsi_c, mysri)
+  #         } # if(is.null(mysr)) {
+  #       } # if(exists(paste0(i, "_formula_gr_strsi"))) {
+  #       
+  #     } else if(i == 'sigma') {
+  #       if(exists(paste0(i, "_formula_grsi"), envir = envir)) {
+  #         mysr <- get(paste0(i, "_formula_grsi"), envir = envir)
+  #         if(is.null(mysr)) {
+  #           # 
+  #         } else if(!is.null(mysr)) {
+  #           mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+  #                                              mysr, perl = TRUE))[[1]]
+  #           mysri <- mysri[mysri != "NULL"]
+  #           sigma_grby_vars_grsi_c <- c(sigma_grby_vars_grsi_c, mysri)
+  #         } # if(is.null(mysr)) {
+  #       } # if(exists(paste0(i, "_formula_grsi"))) {
+  #       
+  #       if(exists(paste0(i, "_formula_gr_strsi"), envir = envir)) {
+  #         mysr <- get(paste0(i, "_formula_gr_strsi"), envir = envir)
+  #         if(is.null(mysr)) {
+  #           # 
+  #         } else if(!is.null(mysr)) {
+  #           mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+  #                                              mysr, perl = TRUE))[[1]]
+  #           mysri <- mysri[mysri != "NULL"]
+  #           sigma_grby_vars_gr_strsi_c <- c(sigma_grby_vars_gr_strsi_c, mysri)
+  #         } # if(is.null(mysr)) {
+  #       } # if(exists(paste0(i, "_formula_gr_strsi"))) {
+  #       
+  #     } # if(i != 'sigma') { else if(i == 'sigma') {
+  #     
+  #     
+  #   } # for (i in elements) {
+  #   
+  #   
+  #   out <- list()
+  #   # out[['abc_grsi']] <- abc_grby_vars_grsi_c
+  #   # out[['abc_gr_strsi']] <- abc_grby_vars_gr_strsi_c
+  #   # out[['sigma_grsi']] <- sigma_grby_vars_grsi_c
+  #   # out[['sigma_gr_strsi']] <- sigma_grby_vars_gr_strsi_c
+  #   
+  #   abc_grby <- unique(abc_grby_vars_grsi_c, abc_grby_vars_gr_strsi_c)
+  #   sigma_grby <- unique(sigma_grby_vars_grsi_c, sigma_grby_vars_gr_strsi_c)
+  #   out[['abc_grby']] <- abc_grby_vars_grsi_c
+  #   out[['sigma_grby']] <- abc_grby_vars_gr_strsi_c
+  #   return(out)
+  # }
+  
+  
+  abc_grby_sigma_grby <- get_all_grby_vars_names(elements = NULL, envir = NULL)
+  abc_grby   <- abc_grby_sigma_grby[['abc_grby']]
+  sigma_grby <- abc_grby_sigma_grby[['sigma_grby']]
+
+ 
+  
+  #####################################
 
   
   list_out <- list(
@@ -3528,7 +3611,10 @@ prepare_formula <- function(x,
     lm_s_se_all = lm_s_se_all,
     lm_sdx_se = lm_sdx_se,
     lm_sdx_se_cov = lm_sdx_se_cov,
-    lm_sdx_se_all = lm_sdx_se_all
+    lm_sdx_se_all = lm_sdx_se_all,
+    
+    abc_grby = abc_grby,
+    sigma_grby = sigma_grby
     
   ) # End list_out <- list(
   

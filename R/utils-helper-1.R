@@ -3555,9 +3555,6 @@ custom_get_data.brmsfit <- function (x,
                                      verbose = FALSE, 
                                      ...) {
   
-  
-  
-  
   .get_data_from_environment <-  .all_elements <-  find_variables <- 
     .is_multi_membership <- .return_combined_data <- 
     .prepare_get_data <- is_multivariate <- 
@@ -3580,7 +3577,7 @@ custom_get_data.brmsfit <- function (x,
   }
   
   return_option <- 3
-  clean.x       <- TRUE
+  clean.x       <- F
   
   
   # if(!is.null(x$model_info[['which_sigma_model']])) {
@@ -3607,19 +3604,20 @@ custom_get_data.brmsfit <- function (x,
   
   
   data_name <- attr(x$data, "data_name")
+  assign(data_name, x$data)
+  x$data <- get(data_name)
   model_data <- .get_data_from_environment(x, effects = effects, 
                                            component = component, 
                                            source = source, verbose = verbose, 
                                            data_name = data_name, ...)
   
-  # if (!is.null(model_data)) {
-  #   return(model_data)
-  # }
-  
+ 
   # option 1
   if(return_option == 1) {
     if (!is.null(model_data)) {
       out <- model_data
+    } else if (is.null(model_data)) {
+      out <- x$data
     }
   }
   
@@ -3682,6 +3680,139 @@ custom_get_data.brmsfit <- function (x,
 
 # Lock it back (optional)
 # lockBinding("get_data", getNamespace("insight"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#' custom_get_predictors.brmsfit for for \code{insight get_predictors}
+#'
+#' @param x A brms objects
+#' @param effects levels of group levels - see [insight::get_data()]
+#' @param component levels of group levels - see [insight::get_data()]
+#' @param source levels of group levels - see [insight::get_data()]
+#' @param verbose levels of group levels - see [insight::get_data()]
+#' @param ... Other arguments
+#' 
+#' @return A list
+#' @keywords internal
+#' @noRd
+#'
+custom_find_predictors.brmsfit <- function (x, 
+                                           effects = "fixed", 
+                                           component = "all", 
+                                           flatten = FALSE, 
+                                           verbose = TRUE, ...) {
+  
+  
+  .get_data_from_environment <-  .all_elements <-  find_variables <- 
+    .is_multi_membership <- .return_combined_data <- 
+    .prepare_get_data <- is_multivariate <- 
+    .clean_brms_mm <- find_random_slopes <- is_empty_object <- NULL;
+  
+  validate_argument <- find_formula <- .get_elements <- NULL;
+  find_auxiliary <- .brms_elements <- .prepare_predictors_brms <- NULL;
+  .return_vars <- compact_list <- NULL;
+  
+  getfrom_ <- c('.get_data_from_environment', 'validate_argument',
+                '.all_elements', 'find_formula',
+                'find_variables', '.get_elements',
+                '.is_multi_membership', 'find_auxiliary',
+                '.return_combined_data', '.brms_elements',
+                '.prepare_get_data', '.prepare_predictors_brms',
+                'is_multivariate', '.return_vars',
+                '.clean_brms_mm', "compact_list",
+                'find_random_slopes',
+                'is_empty_object')
+  
+  for (i in getfrom_) {
+    assign(i, utils::getFromNamespace(i, 'insight'))
+  }
+  
+  return_option <- 3
+  clean.x       <- F
+  
+  
+  if(!is.null(x$model_info$call.bgmfit$sigma_formula_manual)) {
+    return_option <- 4
+  }
+  
+  
+  effects <- validate_argument(effects, c("fixed", "random", 
+                                          "all"))
+  component <- validate_argument(component, c("all", "conditional", 
+                                              "zi", "zero_inflated", "dispersion", "instruments", "correlation", 
+                                              "smooth_terms", "location", "auxiliary", "distributional"))
+  f <- find_formula(x, verbose = verbose)
+  is_mv <- is_multivariate(f)
+  elements <- .get_elements(effects, component, model = x)
+  dpars <- find_auxiliary(x)
+  elements <- .brms_elements(effects, component, dpars)
+  if (is_mv) {
+    f <- lapply(f, function(.x) .prepare_predictors_brms(x, 
+                                                         .x, elements))
+  }
+  else {
+    f <- .prepare_predictors_brms(x, f, elements)
+  }
+  if (is_mv) {
+    l <- lapply(f, .return_vars, x = x)
+  }
+  else {
+    l <- .return_vars(f, x)
+  }
+  if (is_empty_object(l) || is_empty_object(compact_list(l))) {
+    return(NULL)
+  }
+  if (any(endsWith(names(l), "random")) && effects == "all") {
+    random_slope <- unlist(find_random_slopes(x), use.names = FALSE)
+    all_predictors <- unlist(unique(l), use.names = FALSE)
+    rs_not_in_pred <- unique(setdiff(random_slope, all_predictors))
+    if (length(rs_not_in_pred)) 
+      l$random <- c(rs_not_in_pred, l$random)
+  }
+  
+   # l$nonlinear <- c(l$nonlinear, 'classid')
+  
+  if (flatten) {
+    out <- unique(unlist(l, use.names = FALSE))
+  }
+  else {
+    out <- compact_list(l)
+  }
+  
+  # print(out)
+  
+  return(out)
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

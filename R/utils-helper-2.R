@@ -5279,11 +5279,7 @@ setup_by_var <- function(model,
       } # if(is.logical(set_group)) { else if(!is.logical(set_group)) {
     } # if(dpar == "sigma") {
   }
-  
-  # print(plot)
-  # print(by)
-  # print(condition)
-  
+
   
   ######## marginal_comparisons - looks same as marginal_draws
   if(grepl("^marginal_comparisons", xcall)) {
@@ -5550,10 +5546,7 @@ setup_variables_var <- function(model,
         } # if(model_deriv) {
       } #if(deriv > 0) {
     } # if(method == 'custom') {
-    
-    # print(variables)
-    # print(set_variables)
-   
+
     
     if(method == 'pkg') {
       set_variables <- variables
@@ -5589,12 +5582,6 @@ setup_variables_var <- function(model,
       }
     }
   }
-  
-  # print(deriv)
-  # print(xcall)
-  # print(method)
-  # print(variables)
-  # print(set_variables)
   
   return(set_variables)
 }
@@ -6287,19 +6274,9 @@ set_custom_comparison_method_call_d01 <- function(method,
                                                   model_deriv,
                                                   deriv) {
   
-  # print(method)
-  # print(method_call)
-  # print(comparison)
-  # print(model_deriv)
-  # print(use_d1)
-  # print(deriv)
-  # stop2c()
-  
   if(is.null(check_available_d1)) {
     check_available_d1 <- FALSE
   }
-  
-  
   if(method == "custom") {
     if(deriv > 0) {
       if(model_deriv) {
@@ -6329,16 +6306,7 @@ set_custom_comparison_method_call_d01 <- function(method,
       }
     } # if(deriv > 0) {
   } # if(method == "custom") {
-  
-  
-  # print(method)
-  # print(method_call)
-  # print(comparison)
-  # print(model_deriv)
-  # print(use_d1)
-  # print(deriv)
-  # stop2c()
-  
+
   
   # Imp to correctly call slopes to marginal effects, this below is must
   # This will assign d0 and set call_slopes = TRUE
@@ -7178,3 +7146,80 @@ correct_comparison_method_call_fun <- function(method = 'custom',
   return(out)
 } # end of correct_comparison_method_call_fun()
 
+
+
+
+
+get_all_grby_vars_names <- function(elements = NULL, envir = NULL) {
+  if(is.null(elements)) {
+    elements <- letters[1:12]
+    elements <- c(elements, 'sigma')
+  }
+  if(is.null(envir)) {
+    envir <- parent.frame()
+  }
+  
+  abc_grby_vars_grsi_c <- abc_grby_vars_gr_strsi_c <- c()
+  sigma_grby_vars_grsi_c <- sigma_grby_vars_gr_strsi_c <- c()
+  
+  for (i in elements) {
+    if(i != 'sigma') {
+      if(exists(paste0(i, "_formula_grsi"), envir = envir)) {
+        mysr <- get(paste0(i, "_formula_grsi"), envir = envir)
+        if(is.null(mysr)) {
+          # 
+        } else if(!is.null(mysr)) {
+          mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+                                             mysr, perl = TRUE))[[1]]
+          mysri <- mysri[mysri != "NULL"]
+          abc_grby_vars_grsi_c <- c(abc_grby_vars_grsi_c, mysri)
+        } # if(is.null(mysr)) {
+      } # if(exists(paste0(i, "_formula_grsi"))) {
+      
+      if(exists(paste0(i, "_formula_gr_strsi"), envir = envir)) {
+        mysr <- get(paste0(i, "_formula_gr_strsi"), envir = envir)
+        if(is.null(mysr)) {
+          # 
+        } else if(!is.null(mysr)) {
+          mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+                                             mysr, perl = TRUE))[[1]]
+          mysri <- mysri[mysri != "NULL"]
+          abc_grby_vars_gr_strsi_c <- c(abc_grby_vars_gr_strsi_c, mysri)
+        } # if(is.null(mysr)) {
+      } # if(exists(paste0(i, "_formula_gr_strsi"))) {
+      
+    } else if(i == 'sigma') {
+      if(exists(paste0(i, "_formula_grsi"), envir = envir)) {
+        mysr <- get(paste0(i, "_formula_grsi"), envir = envir)
+        if(is.null(mysr)) {
+          # 
+        } else if(!is.null(mysr)) {
+          mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+                                             mysr, perl = TRUE))[[1]]
+          mysri <- mysri[mysri != "NULL"]
+          sigma_grby_vars_grsi_c <- c(sigma_grby_vars_grsi_c, mysri)
+        } # if(is.null(mysr)) {
+      } # if(exists(paste0(i, "_formula_grsi"))) {
+      
+      if(exists(paste0(i, "_formula_gr_strsi"), envir = envir)) {
+        mysr <- get(paste0(i, "_formula_gr_strsi"), envir = envir)
+        if(is.null(mysr)) {
+          # 
+        } else if(!is.null(mysr)) {
+          mysri <- regmatches(mysr, gregexpr("(?<=by=)[^,)]+", 
+                                             mysr, perl = TRUE))[[1]]
+          mysri <- mysri[mysri != "NULL"]
+          sigma_grby_vars_gr_strsi_c <- c(sigma_grby_vars_gr_strsi_c, mysri)
+        } # if(is.null(mysr)) {
+      } # if(exists(paste0(i, "_formula_gr_strsi"))) {
+    } # if(i != 'sigma') { else if(i == 'sigma') {
+  } # for (i in elements) {
+  
+  
+  out <- list()
+  abc_grby   <- unique(abc_grby_vars_grsi_c, abc_grby_vars_gr_strsi_c)
+  sigma_grby <- unique(sigma_grby_vars_grsi_c, sigma_grby_vars_gr_strsi_c)
+  out[['abc_grby']]   <- abc_grby
+  out[['sigma_grby']] <- sigma_grby
+  return(out)
+}

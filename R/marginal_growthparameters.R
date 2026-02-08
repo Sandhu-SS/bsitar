@@ -860,13 +860,16 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   deriv.org       <- deriv
-  model_deriv.org <- model_deriv
+  if(is.null(model_deriv)) {
+    model_deriv.org <- model_deriv <- TRUE
+  } else {
+    model_deriv.org <- model_deriv
+  }
   # For growthparameetrs, always needed - i.e., need_velocity_curve = TRUE
   need_velocity_curve <- TRUE
   need_xvar_must      <- TRUE
  
   ########################################################
-  
   
   if(is.null(model_deriv)) {
     if(is.null(deriv)) {
@@ -886,18 +889,12 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
-  
-  
   # 15 06 2025
   allowed_methods <- c('pkg', 'custom')
   if(!method %in% allowed_methods) 
     stop2c("Argument 'method' should be one of the following:",
          "\n ", 
-         collapse_comma(allowed_methods)
-    )
-  
-  
+         collapse_comma(allowed_methods))
   
   if(method == 'custom') {
     deriv <- 1
@@ -909,8 +906,6 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
-  
   if (is.null(idata_method)) {
     idata_method <- 'm2'
   }
@@ -921,9 +916,7 @@ marginal_growthparameters.bgmfit <- function(model,
          " 'idata_method' argument must be either NULL or 'm2'" )
   }
   
-  
   if (is.null(eps)) eps <- 1e-6
-  
   
   # Initiate non formalArgs()
   term <- NULL;
@@ -938,7 +931,6 @@ marginal_growthparameters.bgmfit <- function(model,
   `:=` <- NULL;
   `.` <- NULL;
   drawid <- NULL;
-  
   draw <- NULL;
   j <- NULL;
   i <- NULL;
@@ -1021,6 +1013,10 @@ marginal_growthparameters.bgmfit <- function(model,
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
   
+  if(!model_deriv.org) {
+    post_processing_checks_args[['deriv']]    <- 0
+  }
+  
   o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
   post_processing_checks_args[['all']]      <- TRUE
@@ -1062,6 +1058,13 @@ marginal_growthparameters.bgmfit <- function(model,
     o    <- CustomDoCall(post_processing_checks, 
                          post_processing_checks_args)
   }
+  
+  
+  if(!model_deriv.org) {
+    call_slopes      <- TRUE
+  }
+  
+  
   
   post_processing_checks_args[['deriv']]    <- deriv
   
@@ -1109,7 +1112,7 @@ marginal_growthparameters.bgmfit <- function(model,
     } # if(deriv > 0) {
   } # if(dpar == "sigma") {
   
-
+  
   ######################################################
   
   model$model_info[['difx']] <- difx
@@ -1570,8 +1573,8 @@ marginal_growthparameters.bgmfit <- function(model,
   if(!is.null(full.args$hypothesis)) {
     if(method == 'custom') {
       if(is.language(full.args$hypothesis)) {
-        stop2c("Argument 'hypothesis' must be one of the following strings: ",
-             collapse_comma(valid_hypothesis))
+        # stop2c("Argument 'hypothesis' must be one of the following strings: ",
+        #      collapse_comma(valid_hypothesis))
       }
     } else if(method == 'pkg') {
       if(is.character(full.args$hypothesis)) {
@@ -1954,8 +1957,10 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   gparms_fun = function(hi, lo, x, deriv, parm, by, ec_agg, ei_agg) {
-    if(deriv == 0) y <- (hi - lo) / eps
-    if(deriv > 0)  y <- (hi + lo) / 2
+    # if(deriv == 0) y <- (hi - lo) / eps
+    # if(deriv > 0)  y <- (hi + lo) / 2
+    if(!model_deriv) y <- (hi - lo) / eps
+    if( model_deriv) y <- (hi + lo) / 2
     # Here need to aggregate based on by argument
     if(aggregate_by) {
       try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
@@ -1970,9 +1975,10 @@ marginal_growthparameters.bgmfit <- function(model,
                                      FUN = agg_fun)
         }
       }
-      x <- tempxy$x
-      y <- tempxy$y
+      x <- tempxy$x %>% sort()
+      y <- tempxy$y %>% sort()
     } # if(aggregate_by) {
+   
     parm_out <- list()
     tempout_p_exists <- FALSE
     for (i in parm) {
@@ -2521,13 +2527,12 @@ marginal_growthparameters.bgmfit <- function(model,
             set_variables <- variables
             if(!summarise_over_x %in% variables) {
               if(is.null(difx)) {
-                set_variables <- summarise_over_x
+                # set_variables <- summarise_over_x
               } else if(!is.null(difx)) {
                 set_variables <- difx
               }
-              # set_variables <- summarise_over_x
             } else  {
-              # if(!is.null(set_variables[[summarise_over_x]]))
+              # 
             }
           }
         } else if (is.null(variables)) {
@@ -2563,8 +2568,16 @@ marginal_growthparameters.bgmfit <- function(model,
       if(is.null(predictions_arguments$by)) {
         predictions_arguments$by < 'NULL'
       }
-      assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+       assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
     } # end if(call_slopes)
+    
+    
+    # if(call_slopes) {
+    #   assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    # }
+    # if(call_predictions) {
+    #   assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
+    # }
     
     ########################################################################
     
@@ -2589,7 +2602,8 @@ marginal_growthparameters.bgmfit <- function(model,
         predictions_arguments[[i]] <- eval(predictions_arguments[[i]])
       }
     }
-    
+   
+    # predictions_argumentsx <<- predictions_arguments 
    
     if(!future_splits_exe & callfuns) {
       if(!average) {
@@ -2772,36 +2786,6 @@ marginal_growthparameters.bgmfit <- function(model,
       } 
     } # if(future_splits_exe_dofuture) {
 
-    
-    
-    
-    # posterior_draws_function <- function(x, ...) {
-    #   out[[x]] %>% 
-    #     marginaleffects:: posterior_draws(shape = "long") %>% 
-    #     dplyr::mutate(drawid = as.numeric(drawid)) %>% 
-    #     dplyr::mutate(drawid = future_splits_at[[x]] [.data[['drawid']]]) %>% 
-    #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
-    #     dplyr::relocate(drawid, .before = 'draw')
-    # }
-    # 
-    # 
-    # consecutive_drawid_function <- function(x, ...) {
-    #   x %>% 
-    #     dplyr::group_by(drawid) %>% 
-    #     dplyr::mutate(drawid = dplyr::cur_group_id()) %>% 
-    #     dplyr::mutate(drawid = as.factor(drawid)) %>% 
-    #     dplyr::ungroup()
-    # }
-    
-    
-    # posterior_draws_dt <- function(i) {
-    #   dt <- as.data.table(marginaleffects::posterior_draws(out[[i]], 
-    #                                                        shape = "long"))
-    #   dt[, drawid := as.factor(future_splits_at[[i]][as.numeric(drawid)])]
-    #   data.table::setcolorder(dt, "drawid")
-    #   return(dt)
-    # }
-    
     posterior_draws_collapse <- function(i) {
       dt <- collapse::qDT(marginaleffects::posterior_draws(out[[i]], 
                                                            shape = "long"))
@@ -2811,11 +2795,17 @@ marginal_growthparameters.bgmfit <- function(model,
     }
     
     
+   
+    
     # somehow this need consecutive number
     if(!future_splits_exe) {
       if(callfuns) {
         if(pdrawso) return(out)
         zxdraws <- out %>% marginaleffects::posterior_draws()
+        if(call_slopes) {
+          zxdraws <- zxdraws %>% collapse::fsubset(term == xvar)
+          out <- out %>% collapse::fsubset(contrast == "dY/dX")
+        }
       }
     } else if(future_splits_exe) {
       if(callfuns) {
@@ -2823,22 +2813,20 @@ marginal_growthparameters.bgmfit <- function(model,
           out <- out %>% CustomDoCall(rbind, .)
           return(out)
         }
-        # zxdraws <- lapply(1:length(future_splits_at), 
-        #                   FUN = posterior_draws_function)
-        # zxdraws <- zxdraws %>% CustomDoCall(rbind, .)
-        # # Note that above zxdraws has drawid exact same as splits
-        # # but somehow, we need consecutive drawid for summarising
-        # zxdraws <- consecutive_drawid_function(zxdraws)
         
         zxdraws <- collapse::unlist2d(future.apply::future_lapply(
           seq_along(out), posterior_draws_collapse), 
           idcols = FALSE, DT = TRUE)
         zxdraws[, drawid := as.factor(collapse::groupid(drawid))] 
         
+        if(call_slopes) {
+          zxdraws <- zxdraws %>% collapse::fsubset(term == xvar)
+          out <- out %>% collapse::fsubset(contrast == "dY/dX")
+        }
+        
       }
     }
-    
-    
+   
     
     marginals_list_consecutive_drawid_function <- function(x, ...) {
       if(x == 1) {
@@ -2880,6 +2868,7 @@ marginal_growthparameters.bgmfit <- function(model,
         zxdraws <- preparms
       }
     }
+    
     
     
     by_pdraws <- by
@@ -2927,8 +2916,33 @@ marginal_growthparameters.bgmfit <- function(model,
         }
         
         
+        funx_DT <- function(x,y) {
+          if(getpest) {
+            dfp <- sitar::getPeak(x=x, y=y) 
+            dfp[1] <- ifunx_(dfp[1]) # prepare_data2
+          } else {
+            dfp <- NULL
+          }
+          if(gettest) {
+            dft <- sitar::getTakeoff(x=x, y=y) 
+            dft[1] <- ifunx_(dft[1]) # prepare_data2
+          } else {
+            dft <- NULL
+          }
+          if(getcest) {
+            dfc <- getcgvfunc(x=x, y=y) 
+            dfc[1] <- ifunx_(dfc[1]) # prepare_data2
+          } else {
+            dfc <- NULL
+          }
+          cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
+        }
+        
         
         funx <- function(x,...) {
+          # XZ <<- x
+           x[,1] <- sort(x[,1])
+           x[,2] <- sort(x[,2])
           if(getpest) {
             dfp <- sitar::getPeak(x[,1], x[,2]) 
             dfp[1] <- ifunx_(dfp[1]) # prepare_data2
@@ -2950,16 +2964,22 @@ marginal_growthparameters.bgmfit <- function(model,
           cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
         }
         
+        # zxdraws <- zxdraws %>% dplyr::arrange("drawid", "class", 'id', 'age')
+       
+        
+        # zxdraws2 <- data.table::as.data.table(zxdraws2)
+        # zxdraws2[, sitar::getPeak(age, draw), by = .(drawid, class)]
+        
         onex0 <- zxdraws %>% 
           collapse::fgroup_by(drawidby) %>% 
           collapse::fsummarise(collapse::mctl(
             funx(cbind(.data[[summarise_over_x]], 
                        .data[[parmest]])), 
-            names = F)) %>% 
-          collapse::ftransformv(., 'V2', as.numeric) %>% 
-          collapse::frename(., drawidby_) %>% 
+            names = F)) %>%
+          collapse::ftransformv(., 'V2', as.numeric) %>%
+          collapse::frename(., drawidby_) %>%
           collapse::fsubset(., parameter %in% parm)
-        
+       
       } else {
         drawid_c <- list()
         for (drawidi in 1:nlevels(zxdraws$drawid)) {
@@ -2977,6 +2997,9 @@ marginal_growthparameters.bgmfit <- function(model,
       onex0 <- zxdraws
     } # if(!setpreparms) {
     
+    # print(onex0)
+    # print(zxdraws)
+    # stop()
     
     
     #######################################################
@@ -2996,9 +3019,7 @@ marginal_growthparameters.bgmfit <- function(model,
       if(ec_agg == "median") estimate <- median(x, na.rm = na.rm)
       if(ei_agg == "eti") luci = get_etix(x, probs = probs, na.rm = na.rm)
       if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-      tibble::tibble(
-        estimate = estimate, conf.low = luci[1],conf.high = luci[2]
-      )
+      tibble::tibble(estimate=estimate, conf.low = luci[1],conf.high = luci[2])
     }
     
    
@@ -3012,7 +3033,7 @@ marginal_growthparameters.bgmfit <- function(model,
       } else if(pdrawsp == 'add') {
         pdrawsp_est <- onex0
       } else {
-        
+        #
       }
     }
     
@@ -3022,6 +3043,7 @@ marginal_growthparameters.bgmfit <- function(model,
     if(!isFALSE(pdraws)) {
       selectchoicesr <- c("return", "add", "returns", "adds") 
       checkmate::assert_choice(pdraws, choices = selectchoicesr)
+      zxdraws <- zxdraws %>% dplyr::select(-dplyr::any_of('df'))
       if(pdraws == 'return') {
         return(zxdraws)
       } else if(pdraws == 'add') {
@@ -3252,7 +3274,7 @@ marginal_growthparameters.bgmfit <- function(model,
     } else {
       summary_c <- list()
       for (parmi in parm) {
-        summary_c[[parmi]] <- onex1 %>% # out2 %>%
+        summary_c[[parmi]] <- onex1 %>% 
           dplyr::reframe(
             dplyr::across(c(dplyr::all_of(parmi)), get_pe_ci, 
                           .unpack = TRUE),
@@ -3333,23 +3355,35 @@ marginal_growthparameters.bgmfit <- function(model,
       } else if(usecollapse) {
         get_hypothesis_x_fx <- function(x,...) {
           get_hypothesis_x <- get_hypothesis_x2
-          hypothesis = difference ~ pairwise
+          if(is.character(hypothesis)) {
+            hypothesis <- as.formula(paste0("~", hypothesis))
+          }
+          # hypothesis = difference ~ pairwise
           get_hypothesis_x(x,
                            hypothesis = hypothesis,
                            by = by, 
                            newdata = NULL,
                            draws = 'estimate') %>% as.matrix() 
         }
+        setdrawidh   <- c('drawid', 'parameter')
+        # setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
+        if('term' %in% colnames(onex1)) {
+          setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
+          setdrawidparmh <- c('term', 'parameter')
+        } else {
+          setdrawidh_  <- c(setdrawidh, 'estimate')
+          setdrawidparmh <- c('parameter')
+        }
         
-        setdrawidh     <- c('drawid', 'parameter')
-        setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
-        # onex1x <<- onex1
+        
+        if(!isFALSE(pdrawsh)) {
         temhyy <- 
           onex1 %>% collapse::fgroup_by( setdrawidh ) %>% 
           collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>%
-          collapse::ftransformv(., 'V2', as.numeric) %>% 
+          collapse::ftransformv(., 'V1', as.numeric) %>% 
           collapse::frename(., setdrawidh_)
-        if(!isFALSE(pdrawsh)) {
+        
+        # if(!isFALSE(pdrawsh)) {
           selectchoicesr <- c("return", 'add') 
           checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
           if(pdrawsh == 'return') {
@@ -3359,21 +3393,51 @@ marginal_growthparameters.bgmfit <- function(model,
           } else {
             
           }
+        } # if(!isFALSE(pdrawsh)) {
+        
+        
+        # setdrawidparmh <- c('term', 'parameter')
+        # namesx <- c('estimate', 'conf.low', 'conf.high')
+        # setdrawidparm_ <- c(setdrawidparmh, namesx)
+        # out_sf_hy <-
+        #   temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
+        #   collapse::fsummarise(collapse::mctl(
+        #     get_pe_ci_collapse(.data[['estimate']],
+        #                        ec_agg = ec_agg, 
+        #                        ei_agg = ei_agg, na.rm = TRUE, 
+        #                        nthreads = arguments$cores, 
+        #                        conf = conf, probs = probs))
+        #   ) %>% 
+        #   collapse::frename(., setdrawidparm_) 
+        # row.names(out_sf_hy) <- NULL
+        
+        
+        if(!data.table::is.data.table(onex1)) {
+          onex1 <- data.table::as.data.table(onex1) 
         }
-        setdrawidparmh <- c('term', 'parameter')
-        namesx <- c('estimate', 'conf.low', 'conf.high')
-        setdrawidparm_ <- c(setdrawidparmh, namesx)
-        out_sf_hy <-
-          temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
-          collapse::fsummarise(collapse::mctl(
-            get_pe_ci_collapse(.data[['estimate']],
-                               ec_agg = ec_agg, 
-                               ei_agg = ei_agg, na.rm = TRUE, 
-                               nthreads = arguments$cores, 
-                               conf = conf, probs = probs))
-          ) %>% 
-          collapse::frename(., setdrawidparm_) 
-        row.names(out_sf_hy) <- NULL
+        if (!("draw" %in% names(onex1)) && ("estimate" %in% names(onex1))) {
+          onex1 <- data.table::setnames(onex1, "estimate", "draw")
+        }
+        if(!is.null(constrats_by)) {
+          hypothesis_by_what <- constrats_by
+        } else {
+          hypothesis_by_what <- full.args$by
+        }
+       
+        # Here we can set evaluate_comparison = TRUE, that will ne estimate
+        out_sf_hy <- get_comparison_hypothesis(data = onex1, 
+                                               full.args = full.args, 
+                                               by = hypothesis_by_what,
+                                               evaluate_comparison = FALSE,
+                                               evaluate_hypothesis = TRUE,
+                                               rope_test = FALSE,
+                                               pd_test = FALSE,
+                                               get_range_null_form = FALSE,
+                                               get_range_null_value = FALSE,
+                                               format = FALSE,
+                                               verbose = FALSE)
+        out_sf_hy <- data.table::setnames(out_sf_hy, "hypothesis", "term")
+
       } else {
         parmi_ci_c <- list()
         for (parmi in parm) {
@@ -3424,7 +3488,6 @@ marginal_growthparameters.bgmfit <- function(model,
     if(!is.null(bys)) byarrange <- bys else byarrange <- by
   }
   
-
   if(length(byarrange) != 0) {
     out_sf <- out_sf %>% data.frame() %>% 
       dplyr::relocate(dplyr::all_of('parameter')) %>% 
@@ -3443,7 +3506,6 @@ marginal_growthparameters.bgmfit <- function(model,
       data.frame()
   }
   
-
   if(!is.null(out_sf_hy)) {
     if(usecollapse) {
       out_sf_hy <- out_sf_hy %>% data.frame() %>% 
@@ -3460,8 +3522,6 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
-  
   if(!is.null(pdraws_est)) {
     if(usecollapse) {
       pdraws_est <- pdraws_est %>% data.frame() %>% 
@@ -3473,7 +3533,6 @@ marginal_growthparameters.bgmfit <- function(model,
                                     ~ round(., digits = digits)))
     }
   }
-  
   
   if(!is.null(pdrawsp_est)) {
     if(usecollapse) {
@@ -3487,8 +3546,6 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
-  
   if(!is.null(pdrawsh_est)) {
     if(usecollapse) {
       pdrawsh_est <- pdrawsh_est %>% data.frame() %>% 
@@ -3500,12 +3557,10 @@ marginal_growthparameters.bgmfit <- function(model,
                                     ~ round(., digits = digits)))
     }
   }
-  
-  
+
   ##############################################################
   ##############################################################
   # prepare_data2
-  
   newdata_before_itransform <- newdata
   
   itransform_set <- get_itransform_call(itransform = itransform,
@@ -3539,7 +3594,6 @@ marginal_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
   if(any(itransform_set != "")) {
     if(!is.null(out_sf)) {
       out_sf <- prepare_transformations(data = out_sf, model = model,
@@ -3566,8 +3620,6 @@ marginal_growthparameters.bgmfit <- function(model,
   
   ##############################################################
   ##############################################################
-  
-  
   
   if(is.null(reformat)) {
     if(is.null(hypothesis) && is.null(equivalence)) {
@@ -3667,36 +3719,27 @@ marginal_growthparameters.bgmfit <- function(model,
   if(!is.null(pdrawsh_est)) {
     pdrawsh_est <- as_factor_as_character_factor_df(pdrawsh_est)
   }
+  
   ###########################################
-  
-  
-  
   
   out <- list()
   if(!is.null(out_sf)) {
     out[['estimate']] <- out_sf %>% dplyr::ungroup()
   }
-  
   if(!is.null(out_sf_hy)) {
     out[['contrast']] <- out_sf_hy %>% dplyr::ungroup()
   }
-  
   if(!is.null(pdraws_est)) {
     out[['pdraws_est']] <- pdraws_est %>% dplyr::ungroup()
   }
-  
   if(!is.null(pdrawsp_est)) {
     out[['pdrawsp_est']] <- pdrawsp_est %>% dplyr::ungroup()
   }
-  
   if(!is.null(pdrawsh_est)) {
     out[['pdrawsh_est']] <- pdrawsh_est %>% dplyr::ungroup()
   }
-  
   if(length(out) == 1) out <- out[[1]]
-  
   return(out)
-  
 }
 
 

@@ -1,6 +1,76 @@
 
 
 
+#' Remove groups with missing values
+#'
+#' @description
+#' 
+#' Removes all rows for groups where any of the selected columns contain missing
+#' values, and optionally issues a warning listing the affected groups.
+#' 
+#' @param DT A data.table or data.frame. Data to be filtered.
+#' @param variable Character vector of column names to check for missing values.
+#'   If `NULL`, all columns in `DT` are checked.
+#' @param group Character scalar giving the grouping variable name
+#'   (e.g. `"drawid"`). Groups are removed if any of the `variable`
+#'   columns are missing within that group.
+#' @param verbose Logical; if `TRUE`, a warning is emitted listing the
+#'   group values removed and the columns that were checked.
+#'
+#' @return An object of the same class as `DT` (data.table or data.frame)
+#'   containing only groups for which the selected columns have no
+#'   missing values. 
+#'
+#' @examples
+#' clean_draws(DT, variable = "draw", group = "drawid")
+#'
+#' @keywords internal
+#' @noRd
+#' 
+clean_draws <- function(DT, 
+                        variable = NULL, 
+                        group = "drawid", 
+                        verbose = TRUE) {
+  
+  is_dt <- data.table::is.data.table(DT)
+  
+  if (!is_dt) {
+    DT <- data.table::as.data.table(DT)
+  }
+  
+  if (is.null(variable)) {
+    variable <- base::names(DT)
+  }
+  has_na <- NULL;
+  bad_ids <- DT[
+    ,
+    .(has_na = base::any(base::sapply(.SD, base::anyNA))),
+    by = group,
+    .SDcols = variable
+  ][has_na == TRUE, base::get(group)]
+  
+  out <- DT[!(base::get(group) %in% bad_ids)]
+  
+  if (verbose && base::length(bad_ids)) {
+    base::warning(
+      "Removed ", group, " value(s) due to NA in: ",
+      base::paste(variable, collapse = ", "),
+      " | ", group, "s. removed group ids are: ",
+      base::paste(bad_ids, collapse = ", ")
+    )
+  }
+  
+  # convert back to data.frame if original was not data.table
+  if (!is_dt) {
+    out <- base::as.data.frame(out)
+  }
+  
+  return(out)
+}
+
+
+
+
 #' The main function get_comparison_hypothesis for hypothesis test
 #'
 #' @param data A fitted model object of class \code{bgmfit}, or a posterior data
@@ -121,7 +191,8 @@ get_comparison_hypothesis <- function(data,
                                       format = FALSE,
                                       verbose = FALSE) {
   
-  
+  data <- clean_draws(data,variable = "draw", group = "drawid", T)
+
   if(is.null(full.args)) {
     if(evaluate_comparison) {
       if(is.null(comparison_args)) {
@@ -631,6 +702,12 @@ get_comparison_hypothesis <- function(data,
       check_names_range_null <- c('null')
     }
     
+    # if(is_emptyx(range_null)) range_null <- NULL
+    # 
+    # if(is.null(range_null) & is.null(range) & is.null(null)) {
+    #   return(NULL)
+    # }
+    
     if(!is.null(range_null)) {
       check_names_exits(range_null, check_names_range_null)
       out_range_null <- range_null
@@ -735,6 +812,18 @@ get_comparison_hypothesis <- function(data,
   }
   if(is_emptyx(comparison_hypothesis_results$hypothesis)) {
     comparison_hypothesis_results$hypothesis <- NULL
+  } 
+  
+  # Remove paranthesis () from the hypothesis terms
+  if(!is.null(comparison_hypothesis_results$hypothesis)) {
+    comparison_hypothesis_results$hypothesis <- 
+      comparison_hypothesis_results$hypothesis[, 
+                                               hypothesis := 
+                                                 gsub("\\(|\\)", "", 
+                                                      hypothesis)][,
+                                                          hypothesis := 
+                                                          trimws(gsub("\\(|\\)", 
+                                                          "", hypothesis))]
   }
   
   
@@ -1751,8 +1840,6 @@ join_df_or_lists <- function(..., join_on = NULL, remove_duplicate = "both") {
   input_args <- list(...)
   
   input_args <- input_args[!sapply(input_args, is.null)]
-  
-  # print((input_args))
   
   standardized_lists <- lapply(input_args, function(arg) {
     if (is.data.frame(arg)) {
@@ -2774,7 +2861,9 @@ evaluate_hypothesis_fun <- function(data,
                                                               'marginaleffects')
   }
 
-    hypothesis_data <- data[, mget(drawid_parameter_draw_by)] %>% 
+    hypothesis_data <- data[, mget(drawid_parameter_draw_by)] 
+    
+    hypothesis_data <- hypothesis_data %>%
       data.table::setnames(., old = "draw", new = "estimate")
   
 
@@ -3153,7 +3242,7 @@ call_equivalence_test_p_direction <- function(data,
       set_data_dt <- reorder_num_last(set_data_dt)
     } # if(is.null(comparison_range_null)) { else if
     
-    set_data_dt <- na.omit(set_data_dt, cols = 'estimate')
+    set_data_dt <- stats::na.omit(set_data_dt, cols = 'estimate')
     
     comparison_eqpd_results <- set_data_dt[
       ,
@@ -3264,7 +3353,7 @@ call_equivalence_test_p_direction <- function(data,
       set_data_dt <- reorder_num_last(set_data_dt)
     } # if(is.null(hypothesis_range_null)) { else if
     
-    set_data_dt <- na.omit(set_data_dt, cols = 'estimate')
+    set_data_dt <- stats::na.omit(set_data_dt, cols = 'estimate')
     
     hypothesis_eqpd_results <- set_data_dt[
       ,

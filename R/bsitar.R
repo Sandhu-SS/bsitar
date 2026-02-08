@@ -2578,10 +2578,7 @@ bsitar <- function(x,
   #   data_name_str_attr <- deparse(mcall_$data)
   # }
   
-  
-  # print(data_name_str_attr)
-  # stop()
-  
+
   
 
   # Now not done, the pipe is evaluated and modified data assigned to parent.frame
@@ -5973,8 +5970,6 @@ bsitar <- function(x,
       
     if (is.null(sigma_group_arg$groupvar))
       sigma_group_arg$groupvar <- idsi
-    # print(ept(dfsi))
-    # print(ept(knotssi))
     if (!is.numeric(ept(dfsi)) & !is.numeric(ept(knotssi))) {
       stop2c("Either 'df' or 'knots' must be specified")
     }
@@ -9479,7 +9474,6 @@ bsitar <- function(x,
    
     attributes(formula_bf) <- NULL
     
-    
     eout <- list2env(list_out)
     for (eoutii in names(eout)) {
       assign(eoutii, eout[[eoutii]])
@@ -9491,6 +9485,30 @@ bsitar <- function(x,
     covariates_         <- covariates_
     sigmacovariates_    <- sigmacovariates_
     set_higher_levels   <- set_higher_levels
+    
+    # Check covariate and gr(..., by) are distinct
+    abc_grby    <- list_out[['abc_grby']]
+    sigma_grby  <- list_out[['sigma_grby']]
+    abc_check_grby_covariates_ <- intersect(abc_grby, covariates_)
+    sigma_check_grby_covariates_ <- intersect(sigma_grby, sigmacovariates_)
+    abc_check_grby_covariates_msg <- 
+    paste0("The names of covariate(s) and the 'by' variable in ",
+    "gr(..., by=) for '%s' must not be same. The variables can ",
+    "be exactly same but have different names. For example, if ",
+    "covariate(s) in the fixed effects '%s' are 'covname', then ",
+    " make a copy of this variables such as 'covnameid' in the data ",
+    "frame and then use it as a by variable gr(..., by=covnameid)")
+    
+    if(!is_emptyx(abc_check_grby_covariates_)) {
+      stop2(sprintf(
+        paste0(abc_check_grby_covariates_msg), 'a, b, c', 'a, b, c'))
+    }
+    if(!is_emptyx(sigma_check_grby_covariates_)) {
+      stop2(sprintf(
+          paste0(abc_check_grby_covariates_msg),'sigma', 'sigma'))
+    }
+    # End Check covariate and gr(..., by) are distinct
+   
     
     sigma_set_higher_levels  <- sigma_set_higher_levels
     sigma_group_arg$groupvar <- sigma_arg_groupvar
@@ -10583,6 +10601,8 @@ bsitar <- function(x,
     initialslist[[ii]]   <- initials
     initialslist_s[[ii]] <- initsi
     
+    
+   
     
     #################################################################
     #################################################################

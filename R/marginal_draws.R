@@ -295,6 +295,11 @@ marginal_draws.bgmfit <-
     if(!model$test_mode) {
       unlock_replace_bind(package = "insight", what = "get_data",
                       replacement = custom_get_data.brmsfit, ept_str = T)
+      
+      # unlock_replace_bind(package = "insight", what = "find_predictors",
+      #                     replacement = custom_find_predictors.brmsfit,
+      #                     ept_str = T)
+      
       if(verbose) {
         message(" As model[['test_mode']] = FLASE, the full data by the",
                 "\n ", 
@@ -1111,8 +1116,8 @@ marginal_draws.bgmfit <-
     if(!is.null(full.args$hypothesis)) {
       if(method == 'custom') {
         if(is.language(full.args$hypothesis)) {
-          stop("Argument 'hypothesis' must be one of the following strings: ",
-               collapse_comma(valid_hypothesis))
+          # stop("Argument 'hypothesis' must be one of the following strings: ",
+          #      collapse_comma(valid_hypothesis))
         }
       } else if(method == 'pkg') {
         if(is.character(full.args$hypothesis)) {
@@ -1963,7 +1968,12 @@ marginal_draws.bgmfit <-
          
        } # if(future_splits_exe_future | future_splits_exe_dofuture) {
      } # if(callfuns) {
+     
+     # funcallx <<- funcall
+     # funcallargsx <<- funcallargs
 
+     # funcallargsx$variables <- funcallargsx$by
+     # do.call(funcallx, funcallargsx)
      
      # 6.03.2025
      if(!future_splits_exe & callfuns) {
@@ -2391,13 +2401,14 @@ marginal_draws.bgmfit <-
          } # for (caxi in names(constrats_at)) {
        } # if(!is.null(constrats_at)) {
        
-       
-       if(is.null(constrats_by)) {
-         stop2c("Please specify 'constrats_by' argument when testing 'hypothesis'",
-                "\n ",
-                " The available options are: ",
-                collapse_comma(by))
-       }
+       # Not needed with new hypothesis 
+       # if(is.null(constrats_by)) {
+       #   stop2c("Please specify 'constrats_by' argument when testing 
+       #          'hypothesis'",
+       #          "\n ",
+       #          " The available options are: ",
+       #          collapse_comma(by))
+       # }
        
        if(!is.null(constrats_by)) {
          if(!is.character(constrats_by)) 
@@ -2426,39 +2437,71 @@ marginal_draws.bgmfit <-
        setdrawidparm_at_ <- c(setdrawidparm_at, namesx)
        
        
+       # temhyy <-
+       #   onex0 %>% 
+       #   collapse::fgroup_by(groupvarshyp1) %>%
+       #   collapse::fselect(set_constrats_by) %>% 
+       #   collapse::frename('estimate' = 'draw') %>% 
+       #   collapse::fsummarise(collapse::qDF(
+       #     get_hypothesis_x(.data,
+       #                      by = constrats_by,
+       #                      hypothesis = hypothesis,
+       #                      draws = 'estimate'))) 
+       # 
+       # out_sf_hy <- 
+       #   temhyy %>%
+       #   collapse::fgroup_by(groupvarshyp2) %>%
+       #   collapse::fsummarise(collapse::mctl(
+       #     get_pe_ci_collapse(.data[['estimate']], ec_agg = ec_agg, 
+       #                        ei_agg = ei_agg, na.rm = TRUE, 
+       #                        nthreads = arguments$cores, 
+       #                        conf = conf, probs = probs))
+       #   ) %>%
+       #   collapse::frename(., setdrawidparm_at_)
        
-       temhyy <-
-         onex0 %>% 
-         collapse::fgroup_by(groupvarshyp1) %>%
-         collapse::fselect(set_constrats_by) %>% 
-         collapse::frename('estimate' = 'draw') %>% 
-         collapse::fsummarise(collapse::qDF(
-           get_hypothesis_x(.data,
-                            by = constrats_by,
-                            hypothesis = hypothesis,
-                            draws = 'estimate'))) 
-       
-       out_sf_hy <- 
-         temhyy %>%
-         collapse::fgroup_by(groupvarshyp2) %>%
-         collapse::fsummarise(collapse::mctl(
-           get_pe_ci_collapse(.data[['estimate']], ec_agg = ec_agg, 
-                              ei_agg = ei_agg, na.rm = TRUE, 
-                              nthreads = arguments$cores, 
-                              conf = conf, probs = probs))
-         ) %>%
-         collapse::frename(., setdrawidparm_at_)
        
        
-       if(!isFALSE(pdrawsh)) {
-         selectchoicesr <- c("return", 'add') 
-         checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
-         if(pdrawsh == 'return') {
-           return(temhyy)
-         } else if(pdrawsh == 'add') {
-           pdrawsh_est <- temhyy
-         } 
-       } # if(!isFALSE(pdrawsh)) {
+       # parameter is just a placeholder
+       onex0 <- data.table::setDT(onex0)[, 'parameter' := "apgv"]
+       if(!is.null(constrats_by)) {
+         hypothesis_by_what <- constrats_by
+       } else {
+         hypothesis_by_what <- full.args$by
+       }
+       out_sf_hy <- get_comparison_hypothesis(data = onex0, 
+                                              full.args = full.args, 
+                                              by = hypothesis_by_what,
+                                              evaluate_comparison = FALSE,
+                                              evaluate_hypothesis = TRUE,
+                                              rope_test = FALSE,
+                                              pd_test = FALSE,
+                                              get_range_null_form = FALSE,
+                                              get_range_null_value = FALSE,
+                                              format = FALSE,
+                                              verbose = FALSE)
+       out_sf_hy <- out_sf_hy[, 'parameter' := NULL]
+       out_sf_hy <- data.table::setnames(out_sf_hy, "hypothesis", "term")
+       
+       # if(!isFALSE(pdrawsh)) {
+       #   temhyy <-
+       #     onex0 %>%
+       #     collapse::fgroup_by(groupvarshyp1) %>%
+       #     collapse::fselect(set_constrats_by) %>%
+       #     collapse::frename('estimate' = 'draw') %>%
+       #     collapse::fsummarise(collapse::qDF(
+       #       get_hypothesis_x(.data,
+       #                        by = constrats_by,
+       #                        hypothesis = hypothesis,
+       #                        draws = 'estimate')))
+       #   selectchoicesr <- c("return", 'add') 
+       #   checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
+       #   if(pdrawsh == 'return') {
+       #     return(temhyy)
+       #   } else if(pdrawsh == 'add') {
+       #     pdrawsh_est <- temhyy
+       #   } 
+       # } # if(!isFALSE(pdrawsh)) {
+       
      } # if(!is.null(hypothesis)) {
    } # if(method == 'custom') {
    
