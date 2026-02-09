@@ -7,7 +7,7 @@
 #'   [brms::fitted.brmsfit()] function, which allows users to obtain fitted
 #'   values (and their summaries) from the posterior draws. For more details,
 #'   refer to the documentation for [brms::fitted.brmsfit()]. An alternative
-#'   approach is to [marginal_draws()] function which is based on the
+#'   approach is to [get_predictions()] function which is based on the
 #'   \pkg{marginaleffects}.
 #' 
 #' @details The \strong{fitted_draws()} function computes the fitted values from
@@ -498,7 +498,7 @@ fitted_draws.bgmfit <-
            any(grepl("predict_draws", rlang_trace_back[[1]]))) {
           message_for_model_deriv_FALSE <- 
             paste0(message_for_model_deriv_FALSE, "\n",
-                   "A better approach would be use 'marginal_draws()' ",
+                   "A better approach would be use 'get_predictions()' ",
                    "instead")
         } # if(grepl("fitted_draws", rlang_trace_back[[1]]) |
       } # if(!available_d1) {

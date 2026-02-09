@@ -223,8 +223,8 @@ be made only at the original data points of the predictor variable.}
 
 This argument affects the following post-processing functions: \cr
 \code{\link[=fitted_draws]{fitted_draws()}}, \code{\link[=predict_draws]{predict_draws()}}, \code{\link[=growthparameters]{growthparameters()}}, \code{\link[=plot_curves]{plot_curves()}},
-\code{\link[=marginal_draws]{marginal_draws()}}, \code{\link[=marginal_comparisons]{marginal_comparisons()}}, and
-\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}.}
+\code{\link[=get_predictions]{get_predictions()}}, \code{\link[=get_comparisons]{get_comparisons()}}, and
+\code{\link[=get_growthparameters]{get_growthparameters()}}.}
 
 \item{model_deriv}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the
@@ -611,7 +611,7 @@ A plot object (default) or a \code{data.frame} when \code{returndata
 The \strong{plot_curves()} function visualizes six different
 types of growth curves using the \pkg{ggplot2} package. Additionally, it
 allows users to create customized plots from the data returned as a
-\code{data.frame}. For an alternative approach, the \code{\link[=marginal_draws]{marginal_draws()}}
+\code{data.frame}. For an alternative approach, the \code{\link[=get_predictions]{get_predictions()}}
 function can be used, which not only estimates adjusted curves but also
 enables comparison across groups using the \code{hypotheses} argument.
 }

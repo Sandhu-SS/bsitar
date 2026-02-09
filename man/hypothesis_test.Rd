@@ -331,7 +331,7 @@ parameters) are returned.
 
 \item{evaluate_comparison}{Logical indicating whether to compute and return
 comparisons from \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} via the
-\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}. Defaults to \code{NULL}, in which case it is
+\code{\link[=get_growthparameters]{get_growthparameters()}}. Defaults to \code{NULL}, in which case it is
 automatically determined from other arguments. Only
 evaluated when \code{model} is class \code{"bsitar"} and \code{engine =
   "marginaleffects" or "mbcombo"}.}
@@ -355,7 +355,7 @@ in which case \code{range} and \code{null} values are set automatically.}
 
 \item{evaluate_hypothesis}{Logical indicating whether to compute and return
 hypothesis from \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} via the
-\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}. Defaults to \code{NULL}, in which case it is
+\code{\link[=get_growthparameters]{get_growthparameters()}}. Defaults to \code{NULL}, in which case it is
 automatically determined from other arguments. Only
 evaluated when \code{model} is class \code{"bsitar"} and \code{engine =
   "marginaleffects" or "mbcombo"}.}
@@ -492,7 +492,7 @@ most post-processing functions rely on \pkg{brms}, it is recommended to set
 \code{envir = globalenv()} or \code{envir = .GlobalEnv}, especially for
 derivatives like velocity curves.}
 
-\item{...}{Additional arguments forwarded to \code{\link[=marginal_growthparameters]{marginal_growthparameters()}}}
+\item{...}{Additional arguments forwarded to \code{\link[=get_growthparameters]{get_growthparameters()}}}
 }
 \value{
 An object (typically a list) containing some or all of the following
@@ -563,7 +563,7 @@ for ROPE-based practical equivalence decisions.
 probability of direction based practical decisions.
 \item Additional arguments in \code{...} are forwarded to
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}
-via \code{marginal_growthparameters} to compute contrasts between
+via \code{get_growthparameters} to compute contrasts between
 predictions under different predictor values.
 }
 
@@ -665,8 +665,8 @@ set_parameter <- c("apgv", "pgv")
 set_range <- list(apgv = 1, pgv = c(0, 0.5))
 set_null <- list(apgv = 1, pgv = 0)
 
-# Directly using marginal_growthparameters()
-hyp_ex1 <- marginal_growthparameters(model, 
+# Directly using get_growthparameters()
+hyp_ex1 <- get_growthparameters(model, 
                                     parameter = set_parameter,
                                     draw_ids = draw_ids)
 # Uncomment for ROPE/p-direction tests:
@@ -681,10 +681,10 @@ hyp_ex1 <- hypothesis_test(model,
                           p_direction = list(null = set_null),
                           draw_ids = draw_ids)
 
-## Example 6: Pass posterior draws from marginal_growthparameters()
+## Example 6: Pass posterior draws from get_growthparameters()
 
 # pdrawsp = TRUE returns draws for downstream hypothesis testing
-hyp_draws <- marginal_growthparameters(model,
+hyp_draws <- get_growthparameters(model,
                                       parameter = set_parameter,
                                       pdrawsp = TRUE,
                                       equivalence_test = list(range = set_range),

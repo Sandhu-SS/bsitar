@@ -2,7 +2,7 @@
 
 #' @title Estimate and compare growth curves for the Bayesian SITAR model
 #' 
-#' @description The \strong{marginal_comparisons()} function estimates and
+#' @description The \strong{get_comparisons()} function estimates and
 #'   compares growth curves such as distance and velocity. This function is a
 #'   wrapper around [marginaleffects::comparisons()] and
 #'   [marginaleffects::avg_comparisons()]. The [marginaleffects::comparisons()]
@@ -68,8 +68,8 @@
 #'   limit testing to fewer rows.
 #'
 #' @inheritParams growthparameters.bgmfit
-#' @inheritParams marginal_growthparameters.bgmfit
-#' @inheritParams marginal_draws.bgmfit
+#' @inheritParams get_growthparameters.bgmfit
+#' @inheritParams get_predictions.bgmfit
 #' @inheritParams marginaleffects::comparisons
 #' @inheritParams marginaleffects::avg_comparisons
 #' @inheritParams marginaleffects::plot_comparisons
@@ -81,7 +81,7 @@
 #'   specified parameters, or a list when \code{method = 'custom'} and
 #'   \code{hypothesis} is not \code{NULL}.
 #'
-#' @rdname marginal_comparisons
+#' @rdname get_comparisons
 #' @export
 #'
 #' @seealso 
@@ -101,7 +101,7 @@
 #' # the 'berkeley_exdata' has been saved as an example fit ('berkeley_exfit').
 #' # See 'bsitar' function for details on 'berkeley_exdata' and 'berkeley_exfit'.
 #' 
-#' # Note: Since no covariates are included, the 'marginal_comparisons' 
+#' # Note: Since no covariates are included, the 'get_comparisons' 
 #' # function is being shown here as a dummy example. In practice, comparisons  
 #' # may not make sense without relevant covariates. 
 #' 
@@ -110,18 +110,18 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' # Call marginal_comparisons to demonstrate the function
+#' # Call get_comparisons to demonstrate the function
 #' # Note: since model has no covariate, the example is for illustration purposes
 #' # Comparisons at 1 SD of age
-#' marginal_comparisons(model, variables = list(age = "sd"), 
+#' get_comparisons(model, variables = list(age = "sd"), 
 #' re_formula = NA, draw_ids = 1:2)
 #' 
 #' # Comparisons between individuals
-#' marginal_comparisons(model, variables = list(id = "sequential"), 
+#' get_comparisons(model, variables = list(id = "sequential"), 
 #' re_formula = NULL, draw_ids = 1:2)
 #' }
 #' 
-marginal_comparisons.bgmfit <- function(model,
+get_comparisons.bgmfit <- function(model,
                                    resp = NULL,
                                    dpar = NULL,
                                    ndraws = NULL,
@@ -707,10 +707,8 @@ marginal_comparisons.bgmfit <- function(model,
     } # if(deriv > 0) {
   } # if(dpar == "sigma") {
   
-  
-  
+
   ########################################################
-  
   
   # If default marginal effects 'dydx', then 
   call_predictions <- TRUE
@@ -805,8 +803,8 @@ marginal_comparisons.bgmfit <- function(model,
   
  
   if(!is.null(model$xcall)) {
-    if(grepl("marginal_comparisons", model$xcall)) {
-      xcall <- "marginal_comparisons"
+    if(grepl("get_comparisons", model$xcall)) {
+      xcall <- "get_comparisons"
     } else if(grepl("modelbased_growthparameters", model$xcall)) {
       xcall <- "modelbased_growthparameters"
     }
@@ -1142,7 +1140,7 @@ marginal_comparisons.bgmfit <- function(model,
   full.args <- 
     sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                arguments = full.args, 
-                               check_formalArgs = marginal_comparisons.bgmfit,
+                               check_formalArgs = get_comparisons.bgmfit,
                                check_formalArgs_exceptions = NULL,
                                check_trace_back = NULL,
                                envir = parent.frame())
@@ -1692,7 +1690,7 @@ marginal_comparisons.bgmfit <- function(model,
     pdrawsh_est <- NULL
   
     if(method == 'custom') {
-      if(grepl("marginal_comparisons", xcall)) {
+      if(grepl("get_comparisons", xcall)) {
         predictions_arguments    <- comparisons_arguments
       }
       by                       <- predictions_arguments[['by']] 
@@ -1700,12 +1698,12 @@ marginal_comparisons.bgmfit <- function(model,
       
       custom_method_call       <- full.args[['method_call']]
 
-      if(grepl("marginal_draws", xcall)) {
+      if(grepl("get_predictions", xcall)) {
         predictions_arguments[['hypothesis']] <- NULL # evaluated later
       }
       
       
-      if(grepl("marginal_comparisons", xcall)) {
+      if(grepl("get_comparisons", xcall)) {
         if(is.null(hypothesis_method_custom)) {
           if(is.null(custom_method_call))  custom_method_call <- 'comparisons'
         } else {
@@ -2696,18 +2694,36 @@ marginal_comparisons.bgmfit <- function(model,
 
 
 
-#' @rdname marginal_comparisons
+#' @rdname get_comparisons
 #' @export
-marginal_comparisons <- function(model, ...) {
-  UseMethod("marginal_comparisons")
+get_comparisons <- function(model, ...) {
+  UseMethod("get_comparisons")
 }
 
 
-#' An alias of marginal_comparisons()
-#' @rdname marginal_comparisons
+#' An alias of get_comparisons()
+#' @rdname get_comparisons
 #' @export
 marginal_comparison <- function(model, ...) {
-  .Deprecated("marginal_comparisons")
-   UseMethod("marginal_comparisons")
+  stop2c(
+    "The function `marginal_comparisons()` has been renamed to 
+    `get_comparisons()`.\n",
+    "Please update your code to use `get_comparisons()` instead.",
+    call. = FALSE
+  )
+  # .Deprecated("get_comparisons")
+  #  UseMethod("get_comparisons")
 }
 
+
+#' An alias of get_comparisons()
+#' @rdname get_comparisons
+#' @export
+marginal_comparisons <- function(model, ...) {
+  stop2c(
+    "The function `marginal_comparisons()` has been renamed to 
+    `get_comparisons()`.\n",
+    "Please update your code to use `marginal_comparisons()` instead.",
+    call. = FALSE
+  )
+}

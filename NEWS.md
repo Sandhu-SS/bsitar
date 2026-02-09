@@ -2,6 +2,10 @@
 
 ### Breaking changes
 
+The functions \code{marginal_draws()}, \code{marginal_comparison()}, and \code{growthparameters_comparison()} have been renamed to \code{get_predictions()}, \code{get_comparisons()}, and \code{get_growthparameters()}, respectively, to better reflect their roles and to harmonise the naming scheme across the package. In particular, the earlier names with the \code{marginal_} prefix unintentionally suggested that these functions are used only for marginal inference, whereas they in fact support both marginal and conditional inferences.
+
+## Major changes
+
 A major refactoring of the internal code to streamline the integration of modelling the distributional parameter sigma, aligning it more closely with the location parameter mu. This update marks the first step in a series of improvements aimed at enabling robust modelling of location-scale models. Additionally, the core functions are significantly rewritten to enhance the speed and efficiency of model fitting. Note: This release should be considered experimental. Future versions may introduce further significant changes. Additionally, documentation has not yet been fully updated to reflect these modifications.
 
 Due to the above changes, previously saved model objects will need to be refitted for post-processing to work correctly.
@@ -41,12 +45,6 @@ An new feature that allows for optimizing the number and /or the placements of k
 ### Minor changes/Enhancements
 
 The efficiency of the post-processing function has been improved (average improvement in speed ~ 2x).
-
-The ``marginal_comparison()`` function has been renamed as ``marginal_comparisons()`` to better reflect the wide range of comparisons offered. Hence, the name has been changed from **marginal_comparison** to **marginal_comparisons** (plural).
-
-Also, the ``growthparameters_comparison()`` function has been renamed to ``marginal_growthparameters()`` making it clear that this function, like ``marginal_comparisons()`` and ``marginal_draws()``, is also based on the ``marginaleffects`` package.
-
-For backward compatibility, the old functions ``marginal_comparison()`` and ``growthparameters_comparison()`` will be included as aliases for the new function names, i.e., ``marginal_comparisons()`` and ``marginal_growthparameters()``.
 
 The default ``stype`` is ``nsk`` 
 

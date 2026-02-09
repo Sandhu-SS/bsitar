@@ -15,7 +15,7 @@
 #' the expected turning point.
 #' 
 #' @inheritParams growthparameters.bgmfit
-#' @inheritParams marginal_growthparameters.bgmfit
+#' @inheritParams get_growthparameters.bgmfit
 #' @inheritParams brms::prepare_predictions
 #' @inheritParams brms::fitted.brmsfit
 #' 
@@ -751,8 +751,8 @@ modelbased_growthparameters.bgmfit <-
       
       
       if(!is.null(model$xcall)) {
-        if(grepl("marginal_growthparameters", model$xcall)) {
-          xcall <- "marginal_growthparameters"
+        if(grepl("get_growthparameters", model$xcall)) {
+          xcall <- "get_growthparameters"
         }
       } else {
         rlang_trace_back <- rlang::trace_back()
@@ -1528,15 +1528,15 @@ modelbased_growthparameters.bgmfit <-
           
     
        
-        marginal_growthparameters_args <- modelbased_arguments
-        marginal_growthparameters_args[['preparms']] <- all_peak_data_draw
-        marginal_growthparameters_args[['by']] <- idvar
+        get_growthparameters_args <- modelbased_arguments
+        get_growthparameters_args[['preparms']] <- all_peak_data_draw
+        get_growthparameters_args[['by']] <- idvar
         # For preparms, method must be 'custom'
-        marginal_growthparameters_args[['method']] <- 'custom'
-        marginal_growthparameters_args[['reformat']] <- FALSE
+        get_growthparameters_args[['method']] <- 'custom'
+        get_growthparameters_args[['reformat']] <- FALSE
         
-        peak_parameters <- CustomDoCall(marginal_growthparameters, 
-                                        marginal_growthparameters_args)
+        peak_parameters <- CustomDoCall(get_growthparameters, 
+                                        get_growthparameters_args)
 
       } # if(nrow(peak_data_draw) > 0) {
       
@@ -1582,14 +1582,14 @@ modelbased_growthparameters.bgmfit <-
         
         all_takeoff_data_draw <- collapse::rowbind(atgv_draw, tgv_draw, stgv_draw)
         
-        marginal_growthparameters_args <- modelbased_arguments
-        marginal_growthparameters_args[['preparms']] <- all_takeoff_data_draw
-        marginal_growthparameters_args[['by']] <- idvar
+        get_growthparameters_args <- modelbased_arguments
+        get_growthparameters_args[['preparms']] <- all_takeoff_data_draw
+        get_growthparameters_args[['by']] <- idvar
         
-        marginal_growthparameters_args[['reformat']] <- FALSE
+        get_growthparameters_args[['reformat']] <- FALSE
         
-        takeoff_parameters <- CustomDoCall(marginal_growthparameters, 
-                                           marginal_growthparameters_args)
+        takeoff_parameters <- CustomDoCall(get_growthparameters, 
+                                           get_growthparameters_args)
         
       } # if(nrow(takeoff_data_draw) > 0) {
       
@@ -1740,21 +1740,21 @@ modelbased_growthparameters.bgmfit <-
       }
       
       
-      marginal_growthparameters_args <- modelbased_arguments
+      get_growthparameters_args <- modelbased_arguments
       # This NA because we want to plugin the population average apgv
-      marginal_growthparameters_args[['re_formula']] <- NA
-      marginal_growthparameters_args[['pdrawsp']]    <- set_pdrawsp
-      marginal_growthparameters_args[['pdraws']]     <- set_pdraws
-      marginal_growthparameters_args[['parameter']]  <- parm
-      marginal_growthparameters_args[['newdata']]    <- newdata
-      marginal_growthparameters_args[['draw_ids']]   <- draw_ids_seq
-      marginal_growthparameters_args[['by']]         <- by
+      get_growthparameters_args[['re_formula']] <- NA
+      get_growthparameters_args[['pdrawsp']]    <- set_pdrawsp
+      get_growthparameters_args[['pdraws']]     <- set_pdraws
+      get_growthparameters_args[['parameter']]  <- parm
+      get_growthparameters_args[['newdata']]    <- newdata
+      get_growthparameters_args[['draw_ids']]   <- draw_ids_seq
+      get_growthparameters_args[['by']]         <- by
       
-      marginal_growthparameters_args[['newdata_fixed']] <- NULL
-      marginal_growthparameters_args[['reformat']] <- FALSE
+      get_growthparameters_args[['newdata_fixed']] <- NULL
+      get_growthparameters_args[['reformat']] <- FALSE
       
-      onex0 <- CustomDoCall(marginal_growthparameters, 
-                            marginal_growthparameters_args)
+      onex0 <- CustomDoCall(get_growthparameters, 
+                            get_growthparameters_args)
     
       if(!is.null(re_formula)) {
         if(add_xtm) { 
@@ -1778,18 +1778,18 @@ modelbased_growthparameters.bgmfit <-
           set0_newdata[[xvar]] <- funx_(set0_newdata[['estimate']])
         }
         
-        marginal_draws_args <- modelbased_arguments
-        marginal_draws_args[['newdata']]       <- set0_newdata
-        marginal_draws_args[['newdata_fixed']] <- 0
-        marginal_draws_args[['by']]           <- by
+        get_predictions_args <- modelbased_arguments
+        get_predictions_args[['newdata']]       <- set0_newdata
+        get_predictions_args[['newdata_fixed']] <- 0
+        get_predictions_args[['by']]           <- by
         
-        marginal_draws_args[['reformat']] <- FALSE
+        get_predictions_args[['reformat']] <- FALSE
          
-        marginal_draws_args[['deriv']] <- 0
-        get_size <- CustomDoCall(marginal_draws, marginal_draws_args)
+        get_predictions_args[['deriv']] <- 0
+        get_size <- CustomDoCall(get_predictions, get_predictions_args)
        
-        marginal_draws_args[['deriv']] <- 1
-        get_velc <- CustomDoCall(marginal_draws, marginal_draws_args)
+        get_predictions_args[['deriv']] <- 1
+        get_velc <- CustomDoCall(get_predictions, get_predictions_args)
     
         colnames(get_size) <- base::tolower(colnames(get_size))
         colnames(get_velc) <- base::tolower(colnames(get_velc))
@@ -2109,18 +2109,18 @@ modelbased_growthparameters.bgmfit <-
                                             xid_by)[, .(xid=seq_len(.N)), 
                                                     by = xid_by]$xid
         
-        marginal_growthparameters_args <- modelbased_arguments
-        marginal_growthparameters_args[['preparms']] <- all_peak_data_draw
-        marginal_growthparameters_args[['by']] <- c(by, 'xid')
+        get_growthparameters_args <- modelbased_arguments
+        get_growthparameters_args[['preparms']] <- all_peak_data_draw
+        get_growthparameters_args[['by']] <- c(by, 'xid')
         # For preparms, method must be custom
-        marginal_growthparameters_args[['method']] <- 'custom'
+        get_growthparameters_args[['method']] <- 'custom'
         if(add_xtm) {
-          marginal_growthparameters_args[['pdrawsp']] <- TRUE
+          get_growthparameters_args[['pdrawsp']] <- TRUE
         }
-        marginal_growthparameters_args[['reformat']] <- FALSE
+        get_growthparameters_args[['reformat']] <- FALSE
         
-        peak_parameters <- CustomDoCall(marginal_growthparameters,
-                                        marginal_growthparameters_args)
+        peak_parameters <- CustomDoCall(get_growthparameters,
+                                        get_growthparameters_args)
       
         
         peak_names.ors__ <- colnames(peak_parameters)
@@ -2143,18 +2143,18 @@ modelbased_growthparameters.bgmfit <-
                                               xid_by)[, .(xid=seq_len(.N)),
                                                       by = xid_by]$xid
           
-          marginal_growthparameters_args <- modelbased_arguments
-          marginal_growthparameters_args[['preparms']] <- all_tm_data_draw
-          marginal_growthparameters_args[['by']] <- c(by, 'xid')
+          get_growthparameters_args <- modelbased_arguments
+          get_growthparameters_args[['preparms']] <- all_tm_data_draw
+          get_growthparameters_args[['by']] <- c(by, 'xid')
           
-          marginal_growthparameters_args[['method']] <- 'custom'
+          get_growthparameters_args[['method']] <- 'custom'
           if(add_xtm) {
-            marginal_growthparameters_args[['pdrawsp']] <- TRUE
+            get_growthparameters_args[['pdrawsp']] <- TRUE
           }
-          marginal_growthparameters_args[['reformat']] <- FALSE
+          get_growthparameters_args[['reformat']] <- FALSE
           
-          tm_parameters <- CustomDoCall(marginal_growthparameters,
-                                          marginal_growthparameters_args)
+          tm_parameters <- CustomDoCall(get_growthparameters,
+                                          get_growthparameters_args)
  
           tm_names.ors__ <- colnames(tm_parameters)
           data.table::setnames(tm_parameters, tolower(names(tm_parameters)))

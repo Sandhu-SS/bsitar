@@ -138,7 +138,7 @@ test_that("test-marginals-draws-comparisons-parameters-default-d1", {
   ###############################################################################
   ###############################################################################
   
-  # marginaleffects::predictions vs marginal_comparisons
+  # marginaleffects::predictions vs get_comparisons
   
   what_test <- 'predictions'
   
@@ -226,12 +226,12 @@ test_that("test-marginals-draws-comparisons-parameters-default-d1", {
   
   ###############################################################################
   ###############################################################################
-  # marginaleffects::predictions vs marginal_comparisons - average = FALSE
+  # marginaleffects::predictions vs get_comparisons - average = FALSE
   ###############################################################################
   ###############################################################################
   
   test_str_cat <- 
-    "marginaleffects::predictions vs marginal_comparisons -> average = FALSE"
+    "marginaleffects::predictions vs get_comparisons -> average = FALSE"
   
   
   if(deriv == 0) {
@@ -254,7 +254,7 @@ test_that("test-marginals-draws-comparisons-parameters-default-d1", {
     }
   }
   
-  marginal_funcall        <- marginal_draws
+  marginal_funcall        <- get_predictions
   
   what_test               <- paste0(what_test, "_", "avgF")
   
@@ -421,7 +421,7 @@ test_that("test-marginals-draws-comparisons-parameters-default-d1", {
   
   
   # devtools::load_all()
-  # marginal_funcall        <- marginal_comparisons
+  # marginal_funcall        <- get_comparisons
   # CustomDoCall(marginal_funcall, 
   #              marginal_args) %>% data.frame()
   
@@ -706,7 +706,7 @@ test_that("test-marginals-draws-comparisons-parameters-default-d1", {
   
   
   # devtools::load_all()
-  # marginal_funcall        <- marginal_draws
+  # marginal_funcall        <- get_predictions
   marginal_plot <- CustomDoCall(marginal_funcall, marginal_args) 
   
   informative_expect_equal(mean( marginal_plot$data$estimate), set_expect_plot_by, 
@@ -746,7 +746,7 @@ test_that("test-marginals-draws-comparisons-parameters-default-d1", {
   
   
   # devtools::load_all()
-  # marginal_funcall        <- marginal_draws
+  # marginal_funcall        <- get_predictions
   # marginal_out <- CustomDoCall(marginal_funcall,
   #              marginal_args) %>% data.frame()
   

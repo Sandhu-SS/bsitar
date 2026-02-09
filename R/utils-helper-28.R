@@ -31,7 +31,8 @@ clean_draws <- function(DT,
                         variable = NULL, 
                         group = "drawid", 
                         verbose = TRUE) {
-  
+  has_na <- NULL;
+  . <- NULL;
   is_dt <- data.table::is.data.table(DT)
   
   if (!is_dt) {
@@ -41,7 +42,7 @@ clean_draws <- function(DT,
   if (is.null(variable)) {
     variable <- base::names(DT)
   }
-  has_na <- NULL;
+  
   bad_ids <- DT[
     ,
     .(has_na = base::any(base::sapply(.SD, base::anyNA))),
@@ -75,77 +76,77 @@ clean_draws <- function(DT,
 #'
 #' @param data A fitted model object of class \code{bgmfit}, or a posterior data
 #'   frame. See Details for engine-specific support.
-#' @param full.args See [hypothesis_test()] and [marginal_growthparameters()]
+#' @param full.args See [hypothesis_test()] and [get_growthparameters()]
 #'   for details.
-#' @param parameter See [hypothesis_test()] and [marginal_growthparameters()]
+#' @param parameter See [hypothesis_test()] and [get_growthparameters()]
 #'   for details.
-#' @param by See [hypothesis_test()] and [marginal_growthparameters()] for
+#' @param by See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
 #' @param comparison_args See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param hypothesis_args See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param comparison_by See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param hypothesis_by See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param evaluate_comparison See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param evaluate_hypothesis See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param rope_test See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param pd_test See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param comparison_range_null See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param hypothesis_range_null See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param comparison_range See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param hypothesis_range See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param comparison_null See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param hypothesis_null See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
-#' @param method See [hypothesis_test()] and [marginal_growthparameters()] for
+#'   [get_growthparameters()] for details.
+#' @param method See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
-#' @param as_p See [hypothesis_test()] and [marginal_growthparameters()] for
+#' @param as_p See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
-#' @param remove_na See [hypothesis_test()] and [marginal_growthparameters()]
+#' @param remove_na See [hypothesis_test()] and [get_growthparameters()]
 #'   for details.
-#' @param rvar_col See [hypothesis_test()] and [marginal_growthparameters()] for
+#' @param rvar_col See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
-#' @param conf_level See [hypothesis_test()] and [marginal_growthparameters()]
+#' @param conf_level See [hypothesis_test()] and [get_growthparameters()]
 #'   for details.
-#' @param probs See [hypothesis_test()] and [marginal_growthparameters()] for
+#' @param probs See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
 #' @param pd_as_percent See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param rope_as_percent See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
-#' @param nthreads See [hypothesis_test()] and [marginal_growthparameters()] for
+#'   [get_growthparameters()] for details.
+#' @param nthreads See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
 #' @param estimate_center See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param estimate_interval See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
-#' @param na.rm See [hypothesis_test()] and [marginal_growthparameters()] for
+#'   [get_growthparameters()] for details.
+#' @param na.rm See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
-#' @param full_frame See [hypothesis_test()] and [marginal_growthparameters()]
+#' @param full_frame See [hypothesis_test()] and [get_growthparameters()]
 #'   for details.
-#' @param return_draws See [hypothesis_test()] and [marginal_growthparameters()]
+#' @param return_draws See [hypothesis_test()] and [get_growthparameters()]
 #'   for details.
 #' @param get_range_null_form See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
+#'   [get_growthparameters()] for details.
 #' @param get_range_null_value See [hypothesis_test()] and
-#'   [marginal_growthparameters()] for details.
-#' @param digits See [hypothesis_test()] and [marginal_growthparameters()] for
+#'   [get_growthparameters()] for details.
+#' @param digits See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
-#' @param format See [hypothesis_test()] and [marginal_growthparameters()] for
+#' @param format See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
-#' @param verbose See [hypothesis_test()] and [marginal_growthparameters()] for
+#' @param verbose See [hypothesis_test()] and [get_growthparameters()] for
 #'   details.
 #'
 #' @returns A data frame

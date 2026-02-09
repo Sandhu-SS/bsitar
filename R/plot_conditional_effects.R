@@ -15,7 +15,7 @@
 #'   ([brms::conditional_effects] and \strong{plot_conditional_effects()}) work
 #'   in the same manner. In other words, the user can specify all the arguments
 #'   which are available in the [brms::conditional_effects()]. An alternative
-#'   approach is to [marginal_draws()] function (with \code{plot = TRUE}) which
+#'   approach is to [get_predictions()] function (with \code{plot = TRUE}) which
 #'   is based on the \pkg{marginaleffects}.
 #' 
 #' @inherit brms::conditional_effects params description

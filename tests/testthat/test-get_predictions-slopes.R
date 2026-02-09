@@ -10,10 +10,9 @@ if(skip_test_local_rcmd_check) {
 # Test marginals vs marginaleffects
 ###############################################################################
 
-test_that("test-marginals-slopes-bycov", {
+test_that("test-marginals-slopes", {
   skip_on_cran()
   
-  # skip_if(!exists('fit_cov'), message = "Model 'fit_cov' not found")
   
   
   ##############################################################################
@@ -69,20 +68,19 @@ test_that("test-marginals-slopes-bycov", {
   ndraws = NULL
   re_formula = NA
   xvar <- 'age'
-  cov  <- 'sex'
   newdata <- bsitar:::get.newdata(model)
   
   marginal_deriv_args <- 1
   
   ###############################################################################
-  # marginaleffects::slopes vs marginal_draws - average = FALSE
+  # marginaleffects::slopes vs get_predictions - average = FALSE
   ###############################################################################
   
   variables = xvar # note variables set as xvar for slope
   vcov = TRUE
   conf_level = 0.95
   type = NULL
-  by = cov
+  by = FALSE
   byfun = NULL
   wts = FALSE
   transform = NULL
@@ -118,28 +116,29 @@ test_that("test-marginals-slopes-bycov", {
     data.frame()
   
   
-  marginal_draws_args <- marginaleffects_slopes_args
+  get_predictions_args <- marginaleffects_slopes_args
   
-  marginal_draws_args[['method']]        <- 'pkg'
-  marginal_draws_args[['reformat']]      <- FALSE
-  marginal_draws_args[['average']]       <- FALSE
-  marginal_draws_args[['newdata_fixed']] <- 0
-  marginal_draws_args[['deriv']]         <- marginal_deriv_args
+  get_predictions_args[['method']]        <- 'pkg'
+  get_predictions_args[['reformat']]      <- FALSE
+  get_predictions_args[['average']]       <- FALSE
+  get_predictions_args[['newdata_fixed']] <- 0
+  get_predictions_args[['deriv']]         <- marginal_deriv_args
   
-  marginal_out <- do.call(marginal_draws, 
-                          marginal_draws_args) %>% data.frame()
-  
-  
-  marginal_draws_args_custom                  <- marginal_draws_args
-  marginal_draws_args_custom[['method']]      <- 'custom'
-  marginal_draws_args_custom[['model_deriv']] <- T
-  marginal_out_custom_mdT <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
+  marginal_out <- do.call(get_predictions, 
+                          get_predictions_args) %>% data.frame()
   
   
-  marginal_draws_args_custom[['model_deriv']] <- F
-  marginal_out_custom_mdF <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
+  
+  get_predictions_args_custom                  <- get_predictions_args
+  get_predictions_args_custom[['method']]      <- 'custom'
+  get_predictions_args_custom[['model_deriv']] <- T
+  marginal_out_custom_mdT <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
+  
+  
+  get_predictions_args_custom[['model_deriv']] <- F
+  marginal_out_custom_mdF <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
   
   out_mdT <- round(marginal_out_custom_mdT$estimate, 2)
   out_mdF <- round(marginal_out_custom_mdF$estimate, 2)
@@ -167,8 +166,9 @@ test_that("test-marginals-slopes-bycov", {
   # }
   
   
+  
   ###############################################################################
-  # marginaleffects::avg_slopes vs marginal_draws - average = TRUE
+  # marginaleffects::avg_slopes vs get_predictions - average = TRUE
   ###############################################################################
   # check if any new argument needed for avg_slopes than slopes
   setdiff(methods::formalArgs(marginaleffects::slopes),
@@ -182,29 +182,29 @@ test_that("test-marginals-slopes-bycov", {
     data.frame()
   
   
-  marginal_draws_args <- marginaleffects_avg_slopes_args
+  get_predictions_args <- marginaleffects_avg_slopes_args
   
-  marginal_draws_args[['method']]        <- 'pkg'
-  marginal_draws_args[['reformat']]      <- FALSE
-  marginal_draws_args[['average']]       <- TRUE
-  marginal_draws_args[['newdata_fixed']] <- 0
-  marginal_draws_args[['deriv']]         <- marginal_deriv_args
+  get_predictions_args[['method']]        <- 'pkg'
+  get_predictions_args[['reformat']]      <- FALSE
+  get_predictions_args[['average']]       <- TRUE
+  get_predictions_args[['newdata_fixed']] <- 0
+  get_predictions_args[['deriv']]         <- marginal_deriv_args
   
-  marginal_out <- do.call(marginal_draws,
-                          marginal_draws_args) %>% data.frame()
-  
-  
-  
-  marginal_draws_args_custom                  <- marginal_draws_args
-  marginal_draws_args_custom[['method']]      <- 'custom'
-  marginal_draws_args_custom[['model_deriv']] <- T
-  marginal_out_custom_mdT <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
+  marginal_out <- do.call(get_predictions,
+                          get_predictions_args) %>% data.frame()
   
   
-  marginal_draws_args_custom[['model_deriv']] <- F
-  marginal_out_custom_mdF <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
+  
+  get_predictions_args_custom                  <- get_predictions_args
+  get_predictions_args_custom[['method']]      <- 'custom'
+  get_predictions_args_custom[['model_deriv']] <- T
+  marginal_out_custom_mdT <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
+  
+  
+  get_predictions_args_custom[['model_deriv']] <- F
+  marginal_out_custom_mdF <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
   
   out_mdT <- round(marginal_out_custom_mdT$estimate, 2)
   out_mdF <- round(marginal_out_custom_mdF$estimate, 2)
@@ -234,7 +234,7 @@ test_that("test-marginals-slopes-bycov", {
   
   
   ###############################################################################
-  # marginaleffects::plot_slopes vs marginal_draws - average = FALSE
+  # marginaleffects::plot_slopes vs get_predictions - average = FALSE
   # with by 
   ###############################################################################
   
@@ -260,7 +260,7 @@ test_that("test-marginals-slopes-bycov", {
   marginaleffects_plot_slopes_args[['gray']] <- FALSE
   marginaleffects_plot_slopes_args[['draw']] <- TRUE
   # need to change by
-  marginaleffects_plot_slopes_args[['by']] <- c(xvar, cov)
+  marginaleffects_plot_slopes_args[['by']] <- xvar
   marginaleffects_plot_slopes_args[['condition']] <- NULL
   
   
@@ -273,36 +273,36 @@ test_that("test-marginals-slopes-bycov", {
     data.frame()
   
   
-  marginal_draws_args <- marginaleffects_plot_slopes_args
+  get_predictions_args <- marginaleffects_plot_slopes_args
   
-  marginal_draws_args[['method']]        <- 'pkg'
-  marginal_draws_args[['reformat']]      <- FALSE
-  marginal_draws_args[['average']]       <- TRUE
-  marginal_draws_args[['newdata_fixed']] <- 0
-  marginal_draws_args[['plot']]          <- TRUE
-  marginal_draws_args[['deriv']]         <- marginal_deriv_args
-  
-  
-  marginal_plot <- do.call(marginal_draws, 
-                           marginal_draws_args)
-  
-  marginal_draws_args[['plot']]          <- FALSE
-  marginal_out <- do.call(marginal_draws, 
-                          marginal_draws_args) %>% data.frame()
+  get_predictions_args[['method']]        <- 'pkg'
+  get_predictions_args[['reformat']]      <- FALSE
+  get_predictions_args[['average']]       <- TRUE
+  get_predictions_args[['newdata_fixed']] <- 0
+  get_predictions_args[['plot']]          <- TRUE
+  get_predictions_args[['deriv']]         <- marginal_deriv_args
   
   
- 
+  marginal_plot <- do.call(get_predictions, 
+                           get_predictions_args)
   
-  marginal_draws_args_custom                  <- marginal_draws_args
-  marginal_draws_args_custom[['method']]      <- 'custom'
-  marginal_draws_args_custom[['model_deriv']] <- T
-  marginal_out_custom_mdT <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
+  get_predictions_args[['plot']]          <- FALSE
+  marginal_out <- do.call(get_predictions, 
+                          get_predictions_args) %>% data.frame()
   
   
-  marginal_draws_args_custom[['model_deriv']] <- F
-  marginal_out_custom_mdF <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
+  
+  
+  get_predictions_args_custom                  <- get_predictions_args
+  get_predictions_args_custom[['method']]      <- 'custom'
+  get_predictions_args_custom[['model_deriv']] <- T
+  marginal_out_custom_mdT <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
+  
+  
+  get_predictions_args_custom[['model_deriv']] <- F
+  marginal_out_custom_mdF <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
   
   out_mdT <- round(marginal_out_custom_mdT$estimate, 2)
   out_mdF <- round(marginal_out_custom_mdF$estimate, 2)
@@ -334,7 +334,7 @@ test_that("test-marginals-slopes-bycov", {
   
   
   ###############################################################################
-  # marginaleffects::plot_slopes vs marginal_draws - average = FALSE
+  # marginaleffects::plot_slopes vs get_predictions - average = FALSE
   # with condition 
   ###############################################################################
   
@@ -361,7 +361,7 @@ test_that("test-marginals-slopes-bycov", {
   marginaleffects_plot_slopes_args[['draw']] <- TRUE
   # need to change by
   marginaleffects_plot_slopes_args[['by']] <- NULL
-  marginaleffects_plot_slopes_args[['condition']] <- c(xvar, cov)
+  marginaleffects_plot_slopes_args[['condition']] <- xvar
   
   marginaleffects_plot <- do.call(marginaleffects::plot_slopes, 
                                   marginaleffects_plot_slopes_args)
@@ -371,43 +371,44 @@ test_that("test-marginals-slopes-bycov", {
                                  marginaleffects_plot_slopes_args) %>% 
     data.frame()
   
-  marginal_draws_args <- marginaleffects_plot_slopes_args
+  get_predictions_args <- marginaleffects_plot_slopes_args
   
-  marginal_draws_args[['method']]        <- 'pkg'
-  marginal_draws_args[['reformat']]      <- FALSE
-  marginal_draws_args[['average']]       <- TRUE
-  marginal_draws_args[['newdata_fixed']] <- 0
-  marginal_draws_args[['plot']]          <- TRUE
-  marginal_draws_args[['deriv']]         <- marginal_deriv_args
-  
-  
-  
-  marginal_plot <- do.call(marginal_draws, 
-                           marginal_draws_args)
-  
-  marginal_draws_args[['plot']]          <- FALSE
-  
-  marginal_out <- do.call(marginal_draws, 
-                          marginal_draws_args) %>% data.frame()
+  get_predictions_args[['method']]        <- 'pkg'
+  get_predictions_args[['reformat']]      <- FALSE
+  get_predictions_args[['average']]       <- TRUE
+  get_predictions_args[['newdata_fixed']] <- 0
+  get_predictions_args[['plot']]          <- TRUE
+  get_predictions_args[['deriv']]         <- marginal_deriv_args
   
   
   
+  marginal_plot <- do.call(get_predictions, 
+                           get_predictions_args)
   
-  marginal_draws_args_custom                  <- marginal_draws_args
-  marginal_draws_args_custom[['method']]      <- 'custom'
-  marginal_draws_args_custom[['model_deriv']] <- T
-  marginal_out_custom_mdT <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
+  get_predictions_args[['plot']]          <- FALSE
+  
+  marginal_out <- do.call(get_predictions, 
+                          get_predictions_args) %>% data.frame()
   
   
-  marginal_draws_args_custom[['model_deriv']] <- F
-  marginal_out_custom_mdF <- do.call(marginal_draws, 
-                                     marginal_draws_args_custom) %>% data.frame()
   
-  marginal_draws_args_custom_plot <- marginal_draws_args_custom
-  marginal_draws_args_custom_plot[['plot']] <- TRUE
-  do.call(marginal_draws, 
-          marginal_draws_args_custom_plot)
+  
+  
+  get_predictions_args_custom                  <- get_predictions_args
+  get_predictions_args_custom[['method']]      <- 'custom'
+  get_predictions_args_custom[['model_deriv']] <- T
+  marginal_out_custom_mdT <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
+  
+  
+  get_predictions_args_custom[['model_deriv']] <- F
+  marginal_out_custom_mdF <- do.call(get_predictions, 
+                                     get_predictions_args_custom) %>% data.frame()
+  
+  get_predictions_args_custom_plot <- get_predictions_args_custom
+  get_predictions_args_custom_plot[['plot']] <- TRUE
+  do.call(get_predictions, 
+          get_predictions_args_custom_plot)
   
   out_mdT <- round(marginal_out_custom_mdT$estimate, 2)
   out_mdF <- round(marginal_out_custom_mdF$estimate, 2)
@@ -436,6 +437,10 @@ test_that("test-marginals-slopes-bycov", {
   # if(!identical(out_2, out_3)) {
   #   stop()
   # }
+  
+  
+  
+  
   
   
   

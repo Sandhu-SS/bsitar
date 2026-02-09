@@ -245,8 +245,8 @@ be made only at the original data points of the predictor variable.}
 
 This argument affects the following post-processing functions: \cr
 \code{\link[=fitted_draws]{fitted_draws()}}, \code{\link[=predict_draws]{predict_draws()}}, \code{\link[=growthparameters]{growthparameters()}}, \code{\link[=plot_curves]{plot_curves()}},
-\code{\link[=marginal_draws]{marginal_draws()}}, \code{\link[=marginal_comparisons]{marginal_comparisons()}}, and
-\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}.}
+\code{\link[=get_predictions]{get_predictions()}}, \code{\link[=get_comparisons]{get_comparisons()}}, and
+\code{\link[=get_growthparameters]{get_growthparameters()}}.}
 
 \item{model_deriv}{A logical value specifying whether to estimate the
 velocity curve from the derivative function or by differentiating the
@@ -478,9 +478,9 @@ The \strong{growthparameters()} function estimates both
 population-average and individual-specific growth parameters (e.g., age at
 peak growth velocity). It also provides measures of uncertainty, including
 standard errors (SE) and credible intervals (CIs). For a more advanced
-analysis, consider using the \code{\link[=marginal_growthparameters]{marginal_growthparameters()}} function,
+analysis, consider using the \code{\link[=get_growthparameters]{get_growthparameters()}} function,
 which not only estimates adjusted parameters but also enables comparisons
-of these parameters across different groups.The \code{\link[=marginal_growthparameters]{marginal_growthparameters()}} function
+of these parameters across different groups.The \code{\link[=get_growthparameters]{get_growthparameters()}} function
 is based on the \pkg{marginaleffects} package.
 }
 \details{

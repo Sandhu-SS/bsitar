@@ -6,9 +6,9 @@
 #'   population-average and individual-specific growth parameters (e.g., age at
 #'   peak growth velocity). It also provides measures of uncertainty, including
 #'   standard errors (SE) and credible intervals (CIs). For a more advanced
-#'   analysis, consider using the [marginal_growthparameters()] function,
+#'   analysis, consider using the [get_growthparameters()] function,
 #'   which not only estimates adjusted parameters but also enables comparisons
-#'   of these parameters across different groups.The [marginal_growthparameters()] function
+#'   of these parameters across different groups.The [get_growthparameters()] function
 #'   is based on the \pkg{marginaleffects} package. 
 #'
 #' @details The \strong{growthparameters()} function internally calls either the
@@ -180,8 +180,8 @@
 #'   
 #'   This argument affects the following post-processing functions: \cr
 #'   [fitted_draws()], [predict_draws()], [growthparameters()], [plot_curves()], 
-#'   [marginal_draws()], [marginal_comparisons()], and 
-#'   [marginal_growthparameters()].
+#'   [get_predictions()], [get_comparisons()], and 
+#'   [get_growthparameters()].
 #'
 #' @param model_deriv A logical value specifying whether to estimate the
 #'   velocity curve from the derivative function or by differentiating the

@@ -166,9 +166,9 @@ test_that("test-hypothesis_test", {
   set_range <- list(apgv = 1, pgv = c(0.5, 0.5))
   set_null <- list(apgv = 0, pgv = 0)
   
-  # Directly using marginal_growthparameters()
+  # Directly using get_growthparameters()
   marginal_model_out <- 
-    marginal_growthparameters(model, parameter = set_parameter,
+    get_growthparameters(model, parameter = set_parameter,
                               re_formula = NA,
                               draw_ids = draw_ids)
   # Uncomment for ROPE/p-direction tests:
@@ -190,9 +190,9 @@ test_that("test-hypothesis_test", {
   set_range <- list(apgv = 1, pgv = c(0.5, 0.5))
   set_null <- list(apgv = 0, pgv = 0)
   
-  # Directly using marginal_growthparameters()
+  # Directly using get_growthparameters()
   marginal_model_eqpd_out <- 
-    marginal_growthparameters(model, parameter = set_parameter,
+    get_growthparameters(model, parameter = set_parameter,
                               re_formula = NA,
                               equivalence_test = list(range = set_range),
                               p_direction = list(null = set_null),
@@ -217,7 +217,7 @@ test_that("test-hypothesis_test", {
   ##############################################################################
   
   marginal_model_viadraws_input <- 
-    marginal_growthparameters(model, parameter = set_parameter,
+    get_growthparameters(model, parameter = set_parameter,
                               pdrawsp = TRUE,
                               equivalence_test = list(range = set_range),
                               p_direction = list(null = set_null),
@@ -243,7 +243,7 @@ test_that("test-hypothesis_test", {
   ##############################################################################
   
   marginal_model_viadraws_eqpd_input <- 
-    marginal_growthparameters(model, parameter = set_parameter,
+    get_growthparameters(model, parameter = set_parameter,
                               pdrawsp = TRUE,
                               equivalence_test = list(range = set_range),
                               p_direction = list(null = set_null),

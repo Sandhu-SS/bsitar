@@ -68,31 +68,31 @@ modelbased_growthparameters_nonS3 <- function(model,
   fitted_draws_args_d1[['deriv']] <- 1
   
   
-  marginal_growthparameters_args <- list()
-  marginal_growthparameters_args[['model']] <- model
-  marginal_growthparameters_args[['newdata']] <- newdata
-  marginal_growthparameters_args[['ndraws']] <- ndraws
-  marginal_growthparameters_args[['draw_ids']] <- draw_ids
-  marginal_growthparameters_args[['pdrawsp']] <- 'return'
-  marginal_growthparameters_args[['parameter']] <- 'apgv'
-  marginal_growthparameters_args[['itransform']] <- ''
+  get_growthparameters_args <- list()
+  get_growthparameters_args[['model']] <- model
+  get_growthparameters_args[['newdata']] <- newdata
+  get_growthparameters_args[['ndraws']] <- ndraws
+  get_growthparameters_args[['draw_ids']] <- draw_ids
+  get_growthparameters_args[['pdrawsp']] <- 'return'
+  get_growthparameters_args[['parameter']] <- 'apgv'
+  get_growthparameters_args[['itransform']] <- ''
   
-  marginal_draws_args <- marginal_growthparameters_args
-  marginal_draws_args[['re_formula']] <- NULL
-  marginal_draws_args[['peak']] <- NULL
-  marginal_draws_args[['takeoff']] <- NULL
-  marginal_draws_args[['trough']] <- NULL
-  marginal_draws_args[['acgv']] <- NULL
-  marginal_draws_args[['newdata_fixed']] <- TRUE
+  get_predictions_args <- get_growthparameters_args
+  get_predictions_args[['re_formula']] <- NULL
+  get_predictions_args[['peak']] <- NULL
+  get_predictions_args[['takeoff']] <- NULL
+  get_predictions_args[['trough']] <- NULL
+  get_predictions_args[['acgv']] <- NULL
+  get_predictions_args[['newdata_fixed']] <- TRUE
   
-  marginal_draws_args_d0 <- marginal_draws_args
-  marginal_draws_args_d1 <- marginal_draws_args
-  marginal_draws_args_d0[['deriv']] <- 0
-  marginal_draws_args_d1[['deriv']] <- 1
+  get_predictions_args_d0 <- get_predictions_args
+  get_predictions_args_d1 <- get_predictions_args
+  get_predictions_args_d0[['deriv']] <- 0
+  get_predictions_args_d1[['deriv']] <- 1
  
   
-  ApvX0 <- CustomDoCall(marginal_growthparameters, 
-                        marginal_growthparameters_args)
+  ApvX0 <- CustomDoCall(get_growthparameters, 
+                        get_growthparameters_args)
   
 
   xyadj_curves_args <- list()
@@ -148,13 +148,13 @@ modelbased_growthparameters_nonS3 <- function(model,
     fitted_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv %>% t()
     fitted_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv %>% t()
     
-    marginal_draws_args_d0[['draw_ids']] <- data[['drawid']] [1]
-    marginal_draws_args_d1[['draw_ids']] <- data[['drawid']] [1]
-    marginal_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv %>% t()
-    marginal_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv %>% t()
+    get_predictions_args_d0[['draw_ids']] <- data[['drawid']] [1]
+    get_predictions_args_d1[['draw_ids']] <- data[['drawid']] [1]
+    get_predictions_args_d0[['newdata']] [['age']]  <- xyadj_dv %>% t()
+    get_predictions_args_d1[['newdata']] [['age']]  <- xyadj_dv %>% t()
 
-    yyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d0)
-    vyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d1)
+    yyadj_dv <- CustomDoCall(get_predictions, get_predictions_args_d0)
+    vyadj_dv <- CustomDoCall(get_predictions, get_predictions_args_d1)
     
     yyadj_dv <- yyadj_dv[["estimate"]]
     vyadj_dv <- vyadj_dv[["estimate"]]

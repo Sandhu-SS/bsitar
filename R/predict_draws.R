@@ -7,7 +7,7 @@
 #'   [brms::predict.brmsfit()] function, which obtains predicted values (and
 #'   their summary) from the posterior distribution. See
 #'   [brms::predict.brmsfit()] for details. An alternative approach is to
-#'   [marginal_draws()] function which is based on the \pkg{marginaleffects}.
+#'   [get_predictions()] function which is based on the \pkg{marginaleffects}.
 #'
 #' @details The \strong{predict_draws()} function computes the expected values
 #'   from the posterior distribution. The [brms::predict.brmsfit()] function
@@ -493,7 +493,7 @@ predict_draws.bgmfit <-
            any(grepl("predict_draws", rlang_trace_back[[1]]))) {
           message_for_model_deriv_FALSE <- 
             paste0(message_for_model_deriv_FALSE, "\n",
-                   "A better approach would be use 'marginal_draws()' ",
+                   "A better approach would be use 'get_predictions()' ",
                    "instead")
         } # if(grepl("fitted_draws", rlang_trace_back[[1]]) |
       } # if(!available_d1) {

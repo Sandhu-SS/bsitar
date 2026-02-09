@@ -5011,7 +5011,7 @@ check_if_package_installed <- function(model,
       package <- c('ggplot2', 'jtools')
     } else if(calname.fun == "growthparameters_comparison") {
       package <- c('tidyr', 'collapse')
-    } else if(calname.fun == "marginal_draws") {
+    } else if(calname.fun == "get_predictions") {
       package <- c('tidyr', 'collapse')
     } else  {
       return(invisible(NULL))
@@ -6834,12 +6834,12 @@ post_processing_checks <- function(model,
   
   # Get xcall to decide checking of resp variable
   if(!is.null(model$xcall)) {
-    if(grepl("marginal_draws", model$xcall)) {
-      xcall <- "marginal_draws"
+    if(grepl("get_predictions", model$xcall)) {
+      xcall <- "get_predictions"
     } else if(grepl("modelbased_growthparameters", model$xcall)) {
       xcall <- "modelbased_growthparameters"
-    } else if(grepl("marginal_growthparameters", model$xcall)) {
-      xcall <- "marginal_growthparameters"
+    } else if(grepl("get_growthparameters", model$xcall)) {
+      xcall <- "get_growthparameters"
     }
   } else {
     rlang_trace_back <- rlang::trace_back()
@@ -8562,6 +8562,184 @@ find_function_used_in_R_files <- function(package_name,
 
 
 
+#' Find R files containing a specific pattern
+#'
+#' @description
+#' Searches for a given text pattern across all `.R` files in a package
+#' directory (including tests and subdirectories). Returns file paths of matches
+#' and prints basenames for convenience.
+#'
+#' @param path Character string. Path to package root directory. Defaults to
+#'   `"."` (current directory). If `NULL`, also set to `"."`.
+#' @param folder Character string or `NULL`. Specific subdirectory to search
+#'   (e.g., `"R"`, `"tests"`). If `NULL` (default), searches all `.R` files
+#'   recursively across entire path.
+#' @param pattern Character string. Exact text string to search for in R files.
+#'
+#' @return Character vector of full paths to matching `.R` files (invisibly).
+#'   Prints basenames of matches or informative message if no matches found.
+#'
+#' @details 
+#' Uses `list.files(recursive = TRUE)` to find all `.R` files, then
+#' [readLines()] and `grepl(fixed = TRUE)` for efficient exact string matching.
+#' `warn = FALSE` in `readLines()` suppresses warnings for encoding/large files.
+#'
+#' @examples
+#' # Search current package for "abcbd" across all folders
+#' find_r_files_with_pattern(pattern = "abcbd")
+#'
+#' # Search only R/ directory
+#' find_r_files_with_pattern(folder = "R", pattern = "abcbd")
+#'
+#' # Search tests/ in specific package path
+#' find_r_files_with_pattern(
+#'   path = "/path/to/my-package", 
+#'   folder = "tests", 
+#'   pattern = "test_that"
+#' )
+#'
+#' @keywords internal
+#' @noRd
+#' 
+find_r_files_with_pattern <- function(path = ".", folder = NULL, pattern) {
+  if (is.null(path)) path <- "."
+  
+  search_path <- if (is.null(folder)) {
+    path
+  } else {
+    file.path(path, folder)
+  }
+  
+  r_files <- list.files(
+    path = search_path,
+    pattern = "\\.R$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  matching_files <- r_files[vapply(r_files, function(file) {
+    lines <- readLines(file, warn = FALSE)
+    any(grepl(pattern, lines, fixed = TRUE))
+  }, logical(1))]
+  
+  if (length(matching_files) > 0) {
+    cat("Files containing '", pattern, "' in ", 
+        if (is.null(folder)) "all folders" else folder, ":\n", sep = "")
+    print(basename(matching_files))
+  } else {
+    cat("No .R files contain '", pattern, "'.\n", sep = "")
+  }
+  
+  invisible(matching_files)
+}
+
+
+
+#' Find (and optionally replace) patterns in R files
+#'
+#' Searches for a text pattern across \code{.R} files in a package directory, 
+#' optionally replaces matches with new text. Handles symbols, quoted strings 
+#' (\code{"abcd"}, \code{'abcd'}).
+#'
+#' @param path Character. Package root path (default \code{"."}). 
+#'   \code{NULL} sets to \code{"."}.
+#' @param old_pattern Character. Pattern/symbol to find (e.g., \code{"abcbd"}, 
+#'   \code{myfun}).
+#' @param new_pattern Character. Replacement text (required if \code{replace =
+#'   TRUE}).
+#' @param folder Character or \code{NULL}. Subdirectory (e.g., \code{"R"}, 
+#'   \code{"tests"}). \code{NULL} searches all folders.
+#' @param replace Logical. If \code{TRUE}, replace matches in files (creates 
+#'   \code{.bak} backups).
+#' @param verbose Logical. If \code{TRUE}, print number of replacements in files
+#'
+#' @return Character vector of affected full paths (invisibly).
+#'
+#' @details 
+#' - Find mode (\code{replace = FALSE}): Uses \code{grepl(fixed = TRUE)} 
+#'   for exact search.
+#' - Replace mode: Parses lines with \code{parse(text = ...)} for symbols; 
+#'   uses \code{gsub(fixed = TRUE)} for strings. Creates backups.
+#' - Backups saved as \code{filename.R.bak}.
+#' - Test with \code{replace = FALSE} before replacing.
+#'
+#' @examples
+#' # Find only
+#' # get_predictions -> get_predictions
+#' # get_comparisons -> get_comparisons
+#' # get_growthparameters -> get_growthparameters
+#' 
+#' find_replace_r_files_with_pattern("abcbd")
+#' 
+#' # Replace in R/ folder
+#' find_replace_r_files_with_pattern(
+#'   folder = "R", 
+#'   old_pattern = "abcbd", 
+#'   new_pattern = "newfun", 
+#'   replace = TRUE
+#' )
+#'
+#' @keywords internal
+#' @noRd
+#' 
+find_replace_r_files_with_pattern <- function(path = ".", 
+                                              old_pattern,
+                                              new_pattern = NULL,
+                                              folder = NULL,
+                                              replace = FALSE,
+                                              verbose = TRUE) {
+  if (is.null(path)) path <- "."
+  if (replace && is.null(new_pattern)) {
+    stop("new_pattern required for replace = TRUE")
+  }
+  
+  search_path <- if (is.null(folder)) path else file.path(path, folder)
+  
+  r_files <- list.files(
+    path = search_path,
+    pattern = "\\.R$",
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  
+  matching_files <- character(0)
+  
+  for (file in r_files) {
+    lines <- readLines(file, warn = FALSE)
+    
+    has_match <- any(grepl(old_pattern, lines, fixed = TRUE))
+    if (!has_match) next
+    
+    matching_files <- c(matching_files, file)
+    
+    if (replace) {
+      file_bak <- paste0(file, ".bak")
+      file.copy(file, file_bak, overwrite = TRUE)
+      
+      new_lines <- gsub(old_pattern, new_pattern, lines, fixed = TRUE)
+      
+      # Simple diagnostic: number of replacements in this file
+      n_old <- sum(grepl(old_pattern, lines, fixed = TRUE))
+      n_new <- sum(grepl(old_pattern, new_lines, fixed = TRUE))
+      cat(basename(file), ": replaced ", n_old - n_new,
+          " occurrences (may be 0 if patterns overlap).\n", sep = "")
+      
+      writeLines(new_lines, file)
+    }
+  }
+  
+  if (length(matching_files) > 0) {
+    cat("Files with '", old_pattern, "':\n", sep = "")
+    print(basename(matching_files))
+  } else {
+    cat("No matches for '", old_pattern, "'.\n", sep = "")
+  }
+  
+  return(invisible(matching_files))
+}
+
+
+
 
 #' Function to check if a string contains only letters
 #' 
@@ -8921,7 +9099,7 @@ get_function_names_code_from_string <- function(str,
 #' Function to switch condition and by arguments for marginaleffect based draws
 #' 
 #' @details
-#' Used in marginal_draws and marginal_comparisons
+#' Used in get_predictions and get_comparisons
 #' 
 #' @param arg  A list
 #' @param condition A string

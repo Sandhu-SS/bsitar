@@ -143,7 +143,7 @@ test_that("test-marginals-comparisons-d1", {
   ###############################################################################
   ###############################################################################
   
-  # marginaleffects::comparisons vs marginal_comparisons
+  # marginaleffects::comparisons vs get_comparisons
   
   what_test <- 'comparison'
   
@@ -202,16 +202,16 @@ test_that("test-marginals-comparisons-d1", {
   
   ###############################################################################
   ###############################################################################
-  # marginaleffects::comparisons vs marginal_comparisons - average = FALSE
+  # marginaleffects::comparisons vs get_comparisons - average = FALSE
   ###############################################################################
   ###############################################################################
   
   test_str_cat <- 
-    "marginaleffects::comparisons vs marginal_comparisons -> average = FALSE"
+    "marginaleffects::comparisons vs get_comparisons -> average = FALSE"
   
   
   marginaleffects_funcall <- marginaleffects::comparisons
-  marginal_funcall        <- marginal_comparisons
+  marginal_funcall        <- get_comparisons
   marginal_args_average   <- FALSE
   
   what_test               <- paste0(what_test, "_", "avgF")
@@ -307,7 +307,7 @@ test_that("test-marginals-comparisons-d1", {
   }
   
   # devtools::load_all()
-  # marginal_funcall <- marginal_comparisons
+  # marginal_funcall <- get_comparisons
   marginal_out_custom_mdT <- do.call(marginal_funcall, 
                                      marginal_args) %>% data.frame()
   
@@ -322,7 +322,7 @@ test_that("test-marginals-comparisons-d1", {
   marginal_args[['future']]      <- F
   
   # devtools::load_all()
-  # marginal_funcall <- marginal_comparisons
+  # marginal_funcall <- get_comparisons
   marginal_out_custom_mdF <- do.call(marginal_funcall, 
                                      marginal_args) %>% data.frame()
   
@@ -488,15 +488,15 @@ test_that("test-marginals-comparisons-d1", {
   
   ###############################################################################
   ###############################################################################
-  # marginaleffects::comparisons vs marginal_comparisons - average = TRUE
+  # marginaleffects::comparisons vs get_comparisons - average = TRUE
   ###############################################################################
   ###############################################################################
   
   test_str_cat <- 
-    "marginaleffects::comparisons vs marginal_comparisons -> average = TRUE"
+    "marginaleffects::comparisons vs get_comparisons -> average = TRUE"
   
   marginaleffects_funcall <- marginaleffects::avg_comparisons
-  marginal_funcall        <- marginal_comparisons
+  marginal_funcall        <- get_comparisons
   marginal_args_average   <- TRUE
   
   what_test               <- paste0(what_test, "_", "avgT")
@@ -571,7 +571,7 @@ test_that("test-marginals-comparisons-d1", {
   
   
   # devtools::load_all()
-  # marginal_funcall <- marginal_comparisons
+  # marginal_funcall <- get_comparisons
   marginal_out <- do.call(marginal_funcall, 
                           marginal_args) %>% data.frame()
   
@@ -589,7 +589,7 @@ test_that("test-marginals-comparisons-d1", {
   }
   
   # devtools::load_all()
-  # marginal_funcall <- marginal_comparisons
+  # marginal_funcall <- get_comparisons
   marginal_out_custom_mdT <- do.call(marginal_funcall, 
                                      marginal_args) %>% data.frame()
   
@@ -755,15 +755,15 @@ test_that("test-marginals-comparisons-d1", {
   
   ###############################################################################
   ###############################################################################
-  # marginaleffects::plot_comparisons vs marginal_comparisons -> by 
+  # marginaleffects::plot_comparisons vs get_comparisons -> by 
   ###############################################################################
   ###############################################################################
   
   test_str_cat <- 
-    "marginaleffects::plot_comparisons vs marginal_comparisons -> by"
+    "marginaleffects::plot_comparisons vs get_comparisons -> by"
   
   marginaleffects_funcall <- marginaleffects::plot_comparisons
-  marginal_funcall        <- marginal_comparisons
+  marginal_funcall        <- get_comparisons
   marginal_args_average   <- TRUE
   
   what_test               <- paste0(what_test, "_", "plotby")
@@ -1032,16 +1032,16 @@ test_that("test-marginals-comparisons-d1", {
   
   ###############################################################################
   ###############################################################################
-  # marginaleffects::plot_comparisons vs marginal_comparisons -> condition 
+  # marginaleffects::plot_comparisons vs get_comparisons -> condition 
   ###############################################################################
   ###############################################################################
   
   test_str_cat <- 
-    "marginaleffects::plot_comparisons vs marginal_comparisons -> condition"
+    "marginaleffects::plot_comparisons vs get_comparisons -> condition"
   
   
   marginaleffects_funcall <- marginaleffects::plot_comparisons
-  marginal_funcall        <- marginal_comparisons
+  marginal_funcall        <- get_comparisons
   marginal_args_average   <- TRUE
   
   what_test               <- paste0(what_test, "_", "plotcondition")

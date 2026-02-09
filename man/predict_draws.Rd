@@ -168,8 +168,8 @@ be made only at the original data points of the predictor variable.}
 
 This argument affects the following post-processing functions: \cr
 \code{\link[=fitted_draws]{fitted_draws()}}, \code{\link[=predict_draws]{predict_draws()}}, \code{\link[=growthparameters]{growthparameters()}}, \code{\link[=plot_curves]{plot_curves()}},
-\code{\link[=marginal_draws]{marginal_draws()}}, \code{\link[=marginal_comparisons]{marginal_comparisons()}}, and
-\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}.}
+\code{\link[=get_predictions]{get_predictions()}}, \code{\link[=get_comparisons]{get_comparisons()}}, and
+\code{\link[=get_growthparameters]{get_growthparameters()}}.}
 
 \item{deriv}{An integer indicating whether to estimate the distance curve or
 its derivative (velocity curve). The default \code{deriv = 0} is for the
@@ -387,7 +387,7 @@ The \strong{predict_draws()} function is a wrapper around the
 \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} function, which obtains predicted values (and
 their summary) from the posterior distribution. See
 \code{\link[brms:predict.brmsfit]{brms::predict.brmsfit()}} for details. An alternative approach is to
-\code{\link[=marginal_draws]{marginal_draws()}} function which is based on the \pkg{marginaleffects}.
+\code{\link[=get_predictions]{get_predictions()}} function which is based on the \pkg{marginaleffects}.
 }
 \details{
 The \strong{predict_draws()} function computes the expected values

@@ -2,7 +2,7 @@
 
 #' @title Estimate and compare growth parameters for the Bayesian SITAR model
 #' 
-#' @description The \strong{marginal_growthparameters()} function estimates
+#' @description The \strong{get_growthparameters()} function estimates
 #' and compares growth parameters, such as peak growth velocity and the age at
 #' peak growth velocity. This function serves as a wrapper around
 #' [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
@@ -21,7 +21,7 @@
 #' \pkg{marginaleffects} package is rapidly evolving, results obtained from the
 #' current implementation should be considered experimental.
 #'
-#' @details The \code{marginal_growthparameters} function estimates and
+#' @details The \code{get_growthparameters} function estimates and
 #' returns the following growth parameters:
 #' \itemize{
 #'   \item \code{pgv} - peak growth velocity
@@ -398,7 +398,7 @@
 #'   }
 #'
 #' 
-#' @inheritParams  marginal_draws.bgmfit
+#' @inheritParams  get_predictions.bgmfit
 #' @inheritParams  growthparameters.bgmfit
 #' @inheritParams  marginaleffects::comparisons
 #' @inheritParams  marginaleffects::avg_comparisons
@@ -415,7 +415,7 @@
 #' 
 #' @import data.table
 #' 
-#' @rdname marginal_growthparameters
+#' @rdname get_growthparameters
 #' @export
 #' 
 #' @seealso [marginaleffects::comparisons()]
@@ -443,10 +443,10 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' marginal_growthparameters(model, parameter = 'apgv', ndraws = 10)
+#' get_growthparameters(model, parameter = 'apgv', ndraws = 10)
 #' }
 #' 
-marginal_growthparameters.bgmfit <- function(model,
+get_growthparameters.bgmfit <- function(model,
                                              resp = NULL,
                                              dpar = NULL,
                                              ndraws = NULL,
@@ -1250,8 +1250,8 @@ marginal_growthparameters.bgmfit <- function(model,
   
   
   if(!is.null(model$xcall)) {
-    if(grepl("marginal_growthparameters", model$xcall)) {
-      xcall <- "marginal_growthparameters"
+    if(grepl("get_growthparameters", model$xcall)) {
+      xcall <- "get_growthparameters"
     } else if(grepl("modelbased_growthparameters", model$xcall)) {
       xcall <- "modelbased_growthparameters"
     }
@@ -1602,7 +1602,7 @@ marginal_growthparameters.bgmfit <- function(model,
     sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                arguments = full.args, 
                                check_formalArgs = 
-                                 marginal_growthparameters.bgmfit,
+                                 get_growthparameters.bgmfit,
                                check_formalArgs_exceptions = NULL,
                                check_trace_back = NULL,
                                envir = parent.frame())
@@ -1813,8 +1813,8 @@ marginal_growthparameters.bgmfit <- function(model,
   # by could be 'id' only, not necessarily include xvar
   if(model$xcall == "modelbased_growthparameters" |
      model$xcall == "modelbased_growthparameters.bgmfit" |
-     model$xcall == "marginal_growthparameters" |
-     model$xcall == "marginal_growthparameters.bgmfit") {
+     model$xcall == "get_growthparameters" |
+     model$xcall == "get_growthparameters.bgmfit") {
     xvar_strict <- FALSE
   } else {
     xvar_strict <- TRUE
@@ -2473,7 +2473,7 @@ marginal_growthparameters.bgmfit <- function(model,
       
       force_condition_and_by_switch_plot_arg$transform <- FALSE
       force_condition_and_by_switch_plot_arg$pdrawso   <- TRUE
-      marginals <- CustomDoCall(marginal_draws, 
+      marginals <- CustomDoCall(get_predictions, 
                                 force_condition_and_by_switch_plot_arg)
       marginals <- marginals %>% marginaleffects::posterior_draws()
       setmarginals <- TRUE
@@ -2500,7 +2500,7 @@ marginal_growthparameters.bgmfit <- function(model,
     predictions_arguments[['cross']]      <- NULL
     predictions_arguments[['method']]     <- NULL
     predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
-    # From marginal_draws
+    # From get_predictions
     #################################################
     if(call_slopes) {
       predictions_arguments[['transform']]      <- NULL
@@ -3604,7 +3604,7 @@ marginal_growthparameters.bgmfit <- function(model,
       pdrawsh_est <- prepare_transformations(data = pdrawsh_est, model = model,
                                              itransform = itransform_set)
     }
-    # 'pdraws_est' is not threre for marginal_draws and marginal_comparisons
+    # 'pdraws_est' is not threre for get_predictions and get_comparisons
     if(!is.null(pdraws_est)) {
       pdraws_est <- prepare_transformations(data = pdraws_est, model = model,
                                             itransform = itransform_set)
@@ -3743,17 +3743,36 @@ marginal_growthparameters.bgmfit <- function(model,
 
 
 
-#' @rdname marginal_growthparameters
+#' @rdname get_growthparameters
 #' @export
-marginal_growthparameters <- function(model, ...) {
-  UseMethod("marginal_growthparameters")
+get_growthparameters <- function(model, ...) {
+  UseMethod("get_growthparameters")
 }
 
-#' An alias of 'marginal_growthparameters()'
-#' @rdname marginal_growthparameters
+#' An alias of 'get_growthparameters()'
+#' @rdname get_growthparameters
 #' @export
 growthparameters_comparison <- function(model, ...) {
-  .Deprecated("marginal_growthparameters")
-  UseMethod("marginal_growthparameters")
+  stop2c(
+    "The function `growthparameters_comparison()` has been renamed to 
+    `get_growthparameters()`.\n",
+    "Please update your code to use `get_growthparameters()` instead.",
+    call. = FALSE
+  )
+  # .Deprecated("get_growthparameters")
+  # UseMethod("get_growthparameters")
 }
 
+
+
+#' An alias of get_comparisons()
+#' @rdname get_comparisons
+#' @export
+marginal_growthparameters <- function(model, ...) {
+  stop2c(
+    "The function `marginal_growthparameters()` has been renamed to 
+    `get_growthparameters()`.\n",
+    "Please update your code to use `get_growthparameters()` instead.",
+    call. = FALSE
+  )
+}

@@ -5281,8 +5281,8 @@ setup_by_var <- function(model,
   }
 
   
-  ######## marginal_comparisons - looks same as marginal_draws
-  if(grepl("^marginal_comparisons", xcall)) {
+  ######## get_comparisons - looks same as get_predictions
+  if(grepl("^get_comparisons", xcall)) {
     if(!is.null(condition)) {
       if(!is.null(by)) {
         if(is.logical(by)) {
@@ -5319,11 +5319,11 @@ setup_by_var <- function(model,
         }
       } # if(!plot) { else if(!plot) {
     } # if(method == 'pkg') {
-  } # if(grepl("^marginal_comparisons", xcall)) {
+  } # if(grepl("^get_comparisons", xcall)) {
 
   
-  ######## marginal_draws
-  if(grepl("^marginal_draws", xcall)) {
+  ######## get_predictions
+  if(grepl("^get_predictions", xcall)) {
     if(method == 'pkg' | method == 'custom') {
       if(!plot) {
         if(!is.null(by)) {
@@ -5353,7 +5353,7 @@ setup_by_var <- function(model,
         }
       } # if(!plot) { else if(!plot) {
     } # if(method == 'pkg') {
-  } # if(grepl("^marginal_draws", xcall)) {
+  } # if(grepl("^get_predictions", xcall)) {
   
   
   ######## modelbased_growthparameters_call
@@ -5392,13 +5392,13 @@ setup_variables_var <- function(model,
                                 verbose = FALSE) {
  
   # When setup_variables_var called from marginal_* via hypothesis_test()
-  # Then same setup_variables_var executed as marginal_growthparameters()
+  # Then same setup_variables_var executed as get_growthparameters()
   
-  if(grepl("^marginal_growthparameters", xcall) | 
+  if(grepl("^get_growthparameters", xcall) | 
      grepl("^hypothesis_test", xcall) |
      grepl("^modelbased_growthparameters", xcall)) {
     
-  # if(grepl("^marginal_growthparameters", xcall) |
+  # if(grepl("^get_growthparameters", xcall) |
   #    grepl("^modelbased_growthparameters", xcall)) {
     if (!is.null(variables)) {
       if (!is.list(variables)) {
@@ -5442,14 +5442,14 @@ setup_variables_var <- function(model,
         set_variables[[xvar]] <- eps
       }
     }
-  } # if(grepl("^marginal_growthparameters", xcall)) {
+  } # if(grepl("^get_growthparameters", xcall)) {
   
   
   
   
-  ######## marginal_comparisons
+  ######## get_comparisons
   
-  if(grepl("^marginal_comparisons", xcall)) {
+  if(grepl("^get_comparisons", xcall)) {
     if(method == 'custom') {
       if (!is.null(variables)) {
         if (!is.list(variables)) {
@@ -5487,14 +5487,14 @@ setup_variables_var <- function(model,
     if(method == 'pkg') {
       set_variables <- variables
     }
-  } # if(grepl("^marginal_comparisons", xcall)) {
+  } # if(grepl("^get_comparisons", xcall)) {
   
   
   
   
-  ######## marginal_draws
+  ######## get_predictions
   
-  if(grepl("^marginal_draws", xcall)) {
+  if(grepl("^get_predictions", xcall)) {
     if (!is.null(variables)) {
       if (!is.character(variables)) {
         stop2c("'variables' argument must be a character string such as", 
@@ -5572,7 +5572,7 @@ setup_variables_var <- function(model,
     } # if(method == 'pkg') {
     
     
-  } # if(grepl("^marginal_draws", xcall)) {
+  } # if(grepl("^get_predictions", xcall)) {
   
   
   if(grepl("^modelbased_growthparameters", xcall)) {
@@ -5986,7 +5986,7 @@ extract_samples <- function(fit_obj) {
 #' 
 #' @examples
 #' \dontrun {
-#' xx <- marginal_draws(bsitar::berkeley_exfit, plot = T,  dpar = 'mu')
+#' xx <- get_predictions(bsitar::berkeley_exfit, plot = T,  dpar = 'mu')
 #' edit_mapping_facet(xx, mapping_facet = list(rm_geom_ribbon = T)  )
 #' }
 #' 
@@ -6084,8 +6084,8 @@ edit_mapping_facet <- function(outp,
   # call specific settings
   ###########################################################################
   
-  ######## marginal_draws
-  if(grepl("^marginal_draws", xcall)) {
+  ######## get_predictions
+  if(grepl("^get_predictions", xcall)) {
     if(method == 'pkg') {
       if(!is.null(by)) {
         ifunx_ <- ifunx_
@@ -6094,22 +6094,22 @@ edit_mapping_facet <- function(outp,
         ifunx_ <- function(x)x
       }
     } # if(method == 'pkg') {
-  } # if(grepl("^marginal_draws", xcall)) {
+  } # if(grepl("^get_predictions", xcall)) {
   
-  ######## marginal_comparisons
-  if(grepl("^marginal_comparisons", xcall)) {
+  ######## get_comparisons
+  if(grepl("^get_comparisons", xcall)) {
     if(method == 'pkg') {
       
     } # if(method == 'pkg') {
-  } # if(grepl("^marginal_comparisons", xcall)) {
+  } # if(grepl("^get_comparisons", xcall)) {
 
   
-  ######## marginal_comparisons
-  if(grepl("^marginal_comparisons", xcall)) {
+  ######## get_comparisons
+  if(grepl("^get_comparisons", xcall)) {
     if(method == 'pkg') {
       
     } # if(method == 'pkg') {
-  } # if(grepl("^marginal_comparisons", xcall)) {
+  } # if(grepl("^get_comparisons", xcall)) {
   
   
   
@@ -6166,7 +6166,7 @@ edit_mapping_facet <- function(outp,
 #' 
 #' @details
 #' This is mainly used to get over layed line plot instead of separate plot
-#' for each individual. Mentioned in marginal_comparisons but is not used there 
+#' for each individual. Mentioned in get_comparisons but is not used there 
 #' 
 #' @return A list
 #' 

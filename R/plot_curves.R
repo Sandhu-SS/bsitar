@@ -5,7 +5,7 @@
 #' @description The \strong{plot_curves()} function visualizes six different
 #'   types of growth curves using the \pkg{ggplot2} package. Additionally, it
 #'   allows users to create customized plots from the data returned as a
-#'   \code{data.frame}. For an alternative approach, the [marginal_draws()]
+#'   \code{data.frame}. For an alternative approach, the [get_predictions()]
 #'   function can be used, which not only estimates adjusted curves but also
 #'   enables comparison across groups using the \code{hypotheses} argument.
 #'

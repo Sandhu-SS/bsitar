@@ -15,8 +15,8 @@
 #' the expected turning point.
 #' 
 #' @inheritParams growthparameters.bgmfit
-#' @inheritParams marginal_growthparameters.bgmfit
-#' @inheritParams marginal_comparisons.bgmfit
+#' @inheritParams get_growthparameters.bgmfit
+#' @inheritParams get_comparisons.bgmfit
 #' @inheritParams marginaleffects::predictions
 #' @inheritParams marginaleffects::plot_predictions
 #' @inheritParams brms::fitted.brmsfit
@@ -701,7 +701,7 @@ modelbased_growthparameters_call.bgmfit <-
     
     # Below deriv/model_deriv will be over riddent for both 'pkg' and 'custom'
     
-    # This borrowed from marginal_draws
+    # This borrowed from get_predictions
     call_predictions <- TRUE
     call_slopes      <- FALSE
     
@@ -1466,7 +1466,7 @@ modelbased_growthparameters_call.bgmfit <-
       
       
       # 19.09.2024
-      # For marginal_draws(...,  plot = T), either condition or by allowed
+      # For get_predictions(...,  plot = T), either condition or by allowed
       # Therefore, when plot = T, condition is kept and by dropped, 
       # otherwise by is kept and condition dropped
       
@@ -1663,7 +1663,7 @@ modelbased_growthparameters_call.bgmfit <-
       predictions_arguments[['cross']]      <- NULL
       predictions_arguments[['method']]     <- NULL
       predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
-      # From marginal_draws
+      # From get_predictions
       #################################################
       if(call_slopes) {
         predictions_arguments[['transform']]      <- NULL
@@ -1681,7 +1681,7 @@ modelbased_growthparameters_call.bgmfit <-
         ########################################################################
         ########################################################################
         ########################################################################
-        # This if(call_slopes) { borrowed from marginal_draws
+        # This if(call_slopes) { borrowed from get_predictions
         # needed when no d1 and slopes function used to get deriv from distance
         if(call_slopes) {
           predictions_arguments[['comparison']]     <- NULL
@@ -1732,7 +1732,7 @@ modelbased_growthparameters_call.bgmfit <-
           
           assign(o[[1]], model$model_info[['exefuns']][[o[[2]]]], envir = envir)
           
-        } # end if(call_slopes)  borrowed from marginal_draws
+        } # end if(call_slopes)  borrowed from get_predictions
         
         ########################################################################
         ########################################################################
@@ -2234,10 +2234,10 @@ modelbased_growthparameters_call.bgmfit <-
       #################################################################
       #################################################################
       
-      # "marginaleffects"  "marginal_draws" "fitted_draws"
+      # "marginaleffects"  "get_predictions" "fitted_draws"
       # Using "marginaleffects" because it gives consiatent result future T/F
       
-      call_marginaleffects_marginal_draws <- "marginaleffects" 
+      call_marginaleffects_get_predictions <- "marginaleffects" 
       
       
       # progressr::handlers(global = TRUE)
@@ -2302,52 +2302,52 @@ modelbased_growthparameters_call.bgmfit <-
         fitted_draws_args_d1[['deriv']] <- 1
         
         
-        marginal_draws_args <- predictions_arguments
-        marginal_draws_args[['re_formula']] <- NULL
-        marginal_draws_args[['peak']] <- NULL
-        marginal_draws_args[['takeoff']] <- NULL
-        marginal_draws_args[['trough']] <- NULL
-        marginal_draws_args[['acgv']] <- NULL
-        marginal_draws_args[['newdata_fixed']] <- 0
-        marginal_draws_args[['pdrawsp']] <-  "return"
-        marginal_draws_args[['newdata']] <- newdata 
+        get_predictions_args <- predictions_arguments
+        get_predictions_args[['re_formula']] <- NULL
+        get_predictions_args[['peak']] <- NULL
+        get_predictions_args[['takeoff']] <- NULL
+        get_predictions_args[['trough']] <- NULL
+        get_predictions_args[['acgv']] <- NULL
+        get_predictions_args[['newdata_fixed']] <- 0
+        get_predictions_args[['pdrawsp']] <-  "return"
+        get_predictions_args[['newdata']] <- newdata 
         
-        marginal_draws_args[['comparison']] <- NULL
+        get_predictions_args[['comparison']] <- NULL
         
-        if(call_marginaleffects_marginal_draws == "marginaleffects") {
-          marginal_draws_args[['by']] <- xvar
-          marginal_draws_args[['newdata_fixed']] <- NULL
-          marginal_draws_args[['pdrawsp']] <- NULL
-          marginal_draws_args[['deriv']] <- NULL
-        } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
+        if(call_marginaleffects_get_predictions == "marginaleffects") {
+          get_predictions_args[['by']] <- xvar
+          get_predictions_args[['newdata_fixed']] <- NULL
+          get_predictions_args[['pdrawsp']] <- NULL
+          get_predictions_args[['deriv']] <- NULL
+        } # if(call_marginaleffects_get_predictions == "marginaleffects") {
         
         
-        if(call_marginaleffects_marginal_draws == "fitted_draws") {
-          marginal_draws_args[['summary']] <- FALSE
+        if(call_marginaleffects_get_predictions == "fitted_draws") {
+          get_predictions_args[['summary']] <- FALSE
         }
         
-        marginal_draws_args_d0 <- marginal_draws_args
-        marginal_draws_args_d1 <- marginal_draws_args
-        marginal_draws_args_d0[['deriv']] <- 0
-        marginal_draws_args_d1[['deriv']] <- 1
+        get_predictions_args_d0 <- get_predictions_args
+        get_predictions_args_d1 <- get_predictions_args
+        get_predictions_args_d0[['deriv']] <- 0
+        get_predictions_args_d1[['deriv']] <- 1
         
         
-        if(call_marginaleffects_marginal_draws == "marginaleffects") {
-          marginal_draws_args_d0[['deriv']] <- NULL
-          marginal_draws_args_d1[['deriv']] <- NULL 
-          marginal_draws_args_d0[['by']] <- NULL
-          marginal_draws_args_d0[['variables']] <- NULL
+        if(call_marginaleffects_get_predictions == "marginaleffects") {
+          get_predictions_args_d0[['deriv']] <- NULL
+          get_predictions_args_d1[['deriv']] <- NULL 
+          get_predictions_args_d0[['by']] <- NULL
+          get_predictions_args_d0[['variables']] <- NULL
         }
         
-        if(call_marginaleffects_marginal_draws == "marginal_draws") {
-          marginal_draws_args_d0[['by']] <- NULL
-          marginal_draws_args_d0[['variables']] <- NULL
-          marginal_draws_args_d1[['by']] <- NULL
-        } # if(call_marginaleffects_marginal_draws == "marginal_draws") {
+        if(call_marginaleffects_get_predictions == "get_predictions") {
+          get_predictions_args_d0[['by']] <- NULL
+          get_predictions_args_d0[['variables']] <- NULL
+          get_predictions_args_d1[['by']] <- NULL
+        } # if(call_marginaleffects_get_predictions == "get_predictions") {
         
         
-        if(call_marginaleffects_marginal_draws == "marginaleffects" |
-           call_marginaleffects_marginal_draws == "marginal_draws") {
+        if(call_marginaleffects_get_predictions == "marginaleffects" |
+           call_marginaleffects_get_predictions == "get_predictions") {
           call_predictions2 <- TRUE
           call_slopes2      <- FALSE
           if(available_d1) {
@@ -2366,7 +2366,7 @@ modelbased_growthparameters_call.bgmfit <-
             o.2 <- o.2.0 <- do.call(post_processing_checks, 
                                     post_processing_checks_args)
           }
-        } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
+        } # if(call_marginaleffects_get_predictions == "marginaleffects") {
         
         
         
@@ -2387,116 +2387,116 @@ modelbased_growthparameters_call.bgmfit <-
           fitted_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv 
           fitted_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv 
           
-          marginal_draws_args_d0[['draw_ids']] <- data[['drawid']] [1]
-          marginal_draws_args_d1[['draw_ids']] <- data[['drawid']] [1]
-          marginal_draws_args_d0[['newdata']] [['age']]  <- xyadj_dv 
-          marginal_draws_args_d1[['newdata']] [['age']]  <- xyadj_dv 
+          get_predictions_args_d0[['draw_ids']] <- data[['drawid']] [1]
+          get_predictions_args_d1[['draw_ids']] <- data[['drawid']] [1]
+          get_predictions_args_d0[['newdata']] [['age']]  <- xyadj_dv 
+          get_predictions_args_d1[['newdata']] [['age']]  <- xyadj_dv 
           
           
-          if(call_marginaleffects_marginal_draws == "marginaleffects") {
+          if(call_marginaleffects_get_predictions == "marginaleffects") {
             if(!average) {
               if(call_predictions2) {
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                        envir = envir)
                 yyadj_dv <- do.call(marginaleffects::predictions, 
-                                    marginal_draws_args_d0)
+                                    get_predictions_args_d0)
                 
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], 
                        envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::predictions, 
-                                    marginal_draws_args_d1)
+                                    get_predictions_args_d1)
               }
               if(call_slopes2) {
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                        envir = envir)
                 
                 yyadj_dv <- do.call(marginaleffects::predictions, 
-                                    marginal_draws_args_d0)
+                                    get_predictions_args_d0)
                 
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                        envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::slopes, 
-                                    marginal_draws_args_d1)
+                                    get_predictions_args_d1)
               }
             } else if(average) {
               if(call_predictions2) {
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                        envir = envir)
                 yyadj_dv <- do.call(marginaleffects::avg_predictions, 
-                                    marginal_draws_args_d0)
+                                    get_predictions_args_d0)
                 
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], 
                        envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::avg_predictions, 
-                                    marginal_draws_args_d1)
+                                    get_predictions_args_d1)
               }
               if(call_slopes2) {
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                        envir = envir)
                 
                 yyadj_dv <- do.call(marginaleffects::avg_predictions, 
-                                    marginal_draws_args_d0)
+                                    get_predictions_args_d0)
                 
                 assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                        envir = envir)
                 
                 vyadj_dv <- do.call(marginaleffects::avg_slopes, 
-                                    marginal_draws_args_d1)
+                                    get_predictions_args_d1)
               }
             }
-          } # if(call_marginaleffects_marginal_draws == "marginaleffects") {
+          } # if(call_marginaleffects_get_predictions == "marginaleffects") {
           
           
           
           
           
-          if(call_marginaleffects_marginal_draws == "marginal_draws") {
+          if(call_marginaleffects_get_predictions == "get_predictions") {
             if(call_predictions2) {
               assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                      envir = envir)
-              yyadj_dv <- do.call(marginal_draws, 
-                                  marginal_draws_args_d0)
+              yyadj_dv <- do.call(get_predictions, 
+                                  get_predictions_args_d0)
               
               assign(o[[1]], model$model_info[['exefuns']][[o.2.1[[2]]]], 
                      envir = envir)
               
-              vyadj_dv <- do.call(marginal_draws, 
-                                  marginal_draws_args_d1)
+              vyadj_dv <- do.call(get_predictions, 
+                                  get_predictions_args_d1)
             }
             if(call_slopes2) {
               assign(o[[1]], model$model_info[['exefuns']][[o.2.0[[2]]]], 
                      envir = envir)
               
-              yyadj_dv <- do.call(marginal_draws, 
-                                  marginal_draws_args_d0)
+              yyadj_dv <- do.call(get_predictions, 
+                                  get_predictions_args_d0)
               
-              vyadj_dv <- do.call(marginal_draws, 
-                                  marginal_draws_args_d1)
+              vyadj_dv <- do.call(get_predictions, 
+                                  get_predictions_args_d1)
             }
-          } # if(call_marginaleffects_marginal_draws == "marginal_draws") {
+          } # if(call_marginaleffects_get_predictions == "get_predictions") {
           
           
           
-          # if(call_marginaleffects_marginal_draws == "marginal_draws") {
-          #   yyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d0)
-          #   vyadj_dv <- CustomDoCall(marginal_draws, marginal_draws_args_d1)
-          # } # if(call_marginaleffects_marginal_draws == "marginal_draws") {
+          # if(call_marginaleffects_get_predictions == "get_predictions") {
+          #   yyadj_dv <- CustomDoCall(get_predictions, get_predictions_args_d0)
+          #   vyadj_dv <- CustomDoCall(get_predictions, get_predictions_args_d1)
+          # } # if(call_marginaleffects_get_predictions == "get_predictions") {
           # 
           
-          if(call_marginaleffects_marginal_draws == "fitted_draws") {
-            yyadj_dv <- CustomDoCall(fitted_draws, marginal_draws_args_d0)
-            vyadj_dv <- CustomDoCall(fitted_draws, marginal_draws_args_d1)
+          if(call_marginaleffects_get_predictions == "fitted_draws") {
+            yyadj_dv <- CustomDoCall(fitted_draws, get_predictions_args_d0)
+            vyadj_dv <- CustomDoCall(fitted_draws, get_predictions_args_d1)
           }
           
           
-          if(call_marginaleffects_marginal_draws == "marginaleffects") {
+          if(call_marginaleffects_get_predictions == "marginaleffects") {
             yyadj_dv <- yyadj_dv[["estimate"]]
             vyadj_dv <- vyadj_dv[["estimate"]]
           }
-          if(call_marginaleffects_marginal_draws == "marginal_draws") {
+          if(call_marginaleffects_get_predictions == "get_predictions") {
             yyadj_dv <- yyadj_dv[["estimate"]]
             vyadj_dv <- vyadj_dv[["estimate"]]
           }
@@ -3164,7 +3164,7 @@ modelbased_growthparameters_call.bgmfit <-
         pdrawsh_est <- prepare_transformations(data = pdrawsh_est, model = model,
                                                itransform = itransform_set)
       }
-      # 'pdraws_est' is not threre for marginal_draws and marginal_comparisons
+      # 'pdraws_est' is not threre for get_predictions and get_comparisons
       if(!is.null(pdraws_est)) {
         pdraws_est <- prepare_transformations(data = pdraws_est, model = model,
                                               itransform = itransform_set)

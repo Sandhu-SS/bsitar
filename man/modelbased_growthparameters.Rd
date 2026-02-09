@@ -256,8 +256,8 @@ be made only at the original data points of the predictor variable.}
 
 This argument affects the following post-processing functions: \cr
 \code{\link[=fitted_draws]{fitted_draws()}}, \code{\link[=predict_draws]{predict_draws()}}, \code{\link[=growthparameters]{growthparameters()}}, \code{\link[=plot_curves]{plot_curves()}},
-\code{\link[=marginal_draws]{marginal_draws()}}, \code{\link[=marginal_comparisons]{marginal_comparisons()}}, and
-\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}.}
+\code{\link[=get_predictions]{get_predictions()}}, \code{\link[=get_comparisons]{get_comparisons()}}, and
+\code{\link[=get_growthparameters]{get_growthparameters()}}.}
 
 \item{seed}{An integer (default \code{123}) that is passed to the estimation
 method to ensure reproducibility.}

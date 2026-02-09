@@ -59,7 +59,7 @@
 #'   probability of direction based practical decisions.
 #'   \item Additional arguments in \code{...} are forwarded to
 #'   [marginaleffects::comparisons()]
-#'   via \code{marginal_growthparameters} to compute contrasts between
+#'   via \code{get_growthparameters} to compute contrasts between
 #'   predictions under different predictor values.
 #' }
 #'
@@ -145,7 +145,7 @@
 #'
 #' @param evaluate_comparison Logical indicating whether to compute and return
 #'   comparisons from [marginaleffects::comparisons()] via the
-#'   [marginal_growthparameters()]. Defaults to \code{NULL}, in which case it is
+#'   [get_growthparameters()]. Defaults to \code{NULL}, in which case it is
 #'   automatically determined from other arguments. Only
 #'   evaluated when \code{model} is class \code{"bsitar"} and \code{engine =
 #'   "marginaleffects" or "mbcombo"}.
@@ -169,7 +169,7 @@
 #'   
 #' @param evaluate_hypothesis Logical indicating whether to compute and return
 #'   hypothesis from [marginaleffects::comparisons()] via the
-#'   [marginal_growthparameters()]. Defaults to \code{NULL}, in which case it is
+#'   [get_growthparameters()]. Defaults to \code{NULL}, in which case it is
 #'   automatically determined from other arguments. Only
 #'   evaluated when \code{model} is class \code{"bsitar"} and \code{engine =
 #'   "marginaleffects" or "mbcombo"}.
@@ -237,7 +237,7 @@
 #'   Note that only [brms::hypothesis()] and [bayestestR::equivalence_test()]
 #'   support plotting.
 #' 
-#' @param ... Additional arguments forwarded to [marginal_growthparameters()]
+#' @param ... Additional arguments forwarded to [get_growthparameters()]
 #' 
 #' 
 #' @inheritParams marginaleffects::comparisons
@@ -245,7 +245,7 @@
 #' @inheritParams marginaleffects::hypotheses
 #' @inheritParams bayestestR::equivalence_test
 #' @inheritParams bayestestR::p_direction
-#' @inheritParams marginal_growthparameters.bgmfit
+#' @inheritParams get_growthparameters.bgmfit
 #' 
 #' @inherit brms::hypothesis.brmsfit return description details 
 #' seealso sections references note format
@@ -359,8 +359,8 @@
 #' set_range <- list(apgv = 1, pgv = c(0, 0.5))
 #' set_null <- list(apgv = 1, pgv = 0)
 #'
-#' # Directly using marginal_growthparameters()
-#' hyp_ex1 <- marginal_growthparameters(model, 
+#' # Directly using get_growthparameters()
+#' hyp_ex1 <- get_growthparameters(model, 
 #'                                     parameter = set_parameter,
 #'                                     draw_ids = draw_ids)
 #' # Uncomment for ROPE/p-direction tests:
@@ -375,10 +375,10 @@
 #'                           p_direction = list(null = set_null),
 #'                           draw_ids = draw_ids)
 #' 
-#' ## Example 6: Pass posterior draws from marginal_growthparameters()
+#' ## Example 6: Pass posterior draws from get_growthparameters()
 #'
 #' # pdrawsp = TRUE returns draws for downstream hypothesis testing
-#' hyp_draws <- marginal_growthparameters(model,
+#' hyp_draws <- get_growthparameters(model,
 #'                                       parameter = set_parameter,
 #'                                       pdrawsp = TRUE,
 #'                                       equivalence_test = list(range = set_range),
@@ -709,7 +709,7 @@ hypothesis_test.bgmfit <- function(model,
       hypothesis_str. (see ?bayestestR::equivalence_test) ",
       
       "The 'parameter', on the other hand, refers to the specific growth
-       parameter such as apgv and pgv  (see ?marginal_growthparameters for
+       parameter such as apgv and pgv  (see ?get_growthparameters for
       details)")
   
   # Set default
@@ -1046,8 +1046,8 @@ hypothesis_test.bgmfit <- function(model,
 
   if(obj_model | obj_model_pseudo ) {
     if(!is.null(model$xcall)) {
-      if(grepl("marginal_growthparameters", model$xcall)) {
-        xcall <- "marginal_growthparameters"
+      if(grepl("get_growthparameters", model$xcall)) {
+        xcall <- "get_growthparameters"
       } else if(grepl("modelbased_growthparameters", model$xcall)) {
         xcall <- "modelbased_growthparameters"
       } 
@@ -1065,9 +1065,9 @@ hypothesis_test.bgmfit <- function(model,
       }
     }
     
-    # Imp - when model_marginaleffects, xcall must be 'marginal_growthparameters
+    # Imp - when model_marginaleffects, xcall must be 'get_growthparameters
     if(obj_model_marginaleffects | obj_model_mbcombo ) {
-      xcall <- 'marginal_growthparameters'
+      xcall <- 'get_growthparameters'
     }
     
     
@@ -1273,35 +1273,35 @@ hypothesis_test.bgmfit <- function(model,
   if(obj_model_marginaleffects | obj_model_mbcombo) {
     dots <- list(...)
     arguments_dots <- c(arguments, list(...))
-    marginal_growthparameters_bgmfit_names <- 
-      methods::formalArgs(marginal_growthparameters.bgmfit)
-    marginal_growthparameters_bgmfit_args <- list()
-    for (i in marginal_growthparameters_bgmfit_names) {
+    get_growthparameters_bgmfit_names <- 
+      methods::formalArgs(get_growthparameters.bgmfit)
+    get_growthparameters_bgmfit_args <- list()
+    for (i in get_growthparameters_bgmfit_names) {
       if(i != "...") {
-        marginal_growthparameters_bgmfit_args[[i]] <- arguments_dots[[i]]
+        get_growthparameters_bgmfit_args[[i]] <- arguments_dots[[i]]
       }
     }
     
-    marginal_growthparameters_bgmfit_args_in <- 
-      marginal_growthparameters_bgmfit_args
+    get_growthparameters_bgmfit_args_in <- 
+      get_growthparameters_bgmfit_args
    
-    marginal_growthparameters_bgmfit_args[['method']] <- 'pkg'
-    marginal_growthparameters_bgmfit_args[['equivalence_test']] <- NULL
-    marginal_growthparameters_bgmfit_args[['p_direction']] <- NULL
+    get_growthparameters_bgmfit_args[['method']] <- 'pkg'
+    get_growthparameters_bgmfit_args[['equivalence_test']] <- NULL
+    get_growthparameters_bgmfit_args[['p_direction']] <- NULL
     
     if(obj_model_marginaleffects_direct_only & !obj_model_mbcombo) {
-      marginal_growthparameters_bgmfit_args[['pdrawsp']] <- FALSE
-      marginal_growthparameters_bgmfit_args[['hypothesis']] <- hypothesis
+      get_growthparameters_bgmfit_args[['pdrawsp']] <- FALSE
+      get_growthparameters_bgmfit_args[['hypothesis']] <- hypothesis
     } else if(!obj_model_marginaleffects_direct_only & obj_model_mbcombo) {
-      marginal_growthparameters_bgmfit_args[['pdrawsp']] <- TRUE
-      # marginal_growthparameters_bgmfit_args_in <- 
-      #   marginal_growthparameters_bgmfit_args[['hypothesis']]
-      marginal_growthparameters_bgmfit_args[['hypothesis']] <- NULL
+      get_growthparameters_bgmfit_args[['pdrawsp']] <- TRUE
+      # get_growthparameters_bgmfit_args_in <- 
+      #   get_growthparameters_bgmfit_args[['hypothesis']]
+      get_growthparameters_bgmfit_args[['hypothesis']] <- NULL
     } 
     
     
-    for (i in marginal_growthparameters_bgmfit_names) {
-      assign(i, marginal_growthparameters_bgmfit_args[[i]])
+    for (i in get_growthparameters_bgmfit_names) {
+      assign(i, get_growthparameters_bgmfit_args[[i]])
     }
     
     if(exists('resp')) {
@@ -1322,12 +1322,12 @@ hypothesis_test.bgmfit <- function(model,
                            deriv = NULL, 
                            verbose = FALSE)
     
-    marginal_growthparameters_bgmfit_args$model <- model
-    marginal_growthparameters_bgmfit_args$usesavedfuns <- TRUE
-    marginal_growthparameters_bgmfit_args$verbose <- FALSE
+    get_growthparameters_bgmfit_args$model <- model
+    get_growthparameters_bgmfit_args$usesavedfuns <- TRUE
+    get_growthparameters_bgmfit_args$verbose <- FALSE
     
-    data_draws <- CustomDoCall(marginal_growthparameters, 
-                               marginal_growthparameters_bgmfit_args)
+    data_draws <- CustomDoCall(get_growthparameters, 
+                               get_growthparameters_bgmfit_args)
     
     if(obj_model_marginaleffects_direct_only) {
     } 
@@ -1335,8 +1335,8 @@ hypothesis_test.bgmfit <- function(model,
     if(obj_model_marginaleffects_direct_only & !obj_model_mbcombo) {
       return(data_draws)
     } else if(!obj_model_marginaleffects_direct_only & obj_model_mbcombo) {
-      marginal_growthparameters_bgmfit_args[['hypothesis']] <-
-      marginal_growthparameters_bgmfit_args_in[['hypothesis']]
+      get_growthparameters_bgmfit_args[['hypothesis']] <-
+      get_growthparameters_bgmfit_args_in[['hypothesis']]
     } 
 
     if(!data.table::is.data.table(data_draws)) {
@@ -1381,10 +1381,10 @@ hypothesis_test.bgmfit <- function(model,
       eqpdargs[['check_equivalence_test_full.args']]
     check_p_direction_full.args <- eqpdargs[['check_p_direction_full.args']]
     
-    if(exists('marginal_growthparameters_bgmfit_args_in')) {
-      p_direction <- marginal_growthparameters_bgmfit_args_in[['p_direction']]
+    if(exists('get_growthparameters_bgmfit_args_in')) {
+      p_direction <- get_growthparameters_bgmfit_args_in[['p_direction']]
       equivalence_test <- 
-        marginal_growthparameters_bgmfit_args_in[['equivalence_test']]
+        get_growthparameters_bgmfit_args_in[['equivalence_test']]
     }
     
     if(is.null(equivalence_test)) {
@@ -1412,8 +1412,8 @@ hypothesis_test.bgmfit <- function(model,
    
    
     if(is.null(evaluate_hypothesis)) {
-      if(exists('marginal_growthparameters_bgmfit_args')) {
-        hypothesis <- marginal_growthparameters_bgmfit_args[['hypothesis']]
+      if(exists('get_growthparameters_bgmfit_args')) {
+        hypothesis <- get_growthparameters_bgmfit_args[['hypothesis']]
       }
       if(is.null(hypothesis)) {
         evaluate_hypothesis <- FALSE

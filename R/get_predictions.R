@@ -2,7 +2,7 @@
 
 #' @title Estimate and plot growth curves for the Bayesian SITAR model
 #' 
-#' @description The \strong{marginal_draws()} function estimates and plots
+#' @description The \strong{get_predictions()} function estimates and plots
 #'   growth curves (distance and velocity) by using the \pkg{marginaleffects}
 #'   package as a back-end. This function can compute growth curves (via
 #'   [marginaleffects::predictions()]), average growth curves (via
@@ -15,7 +15,7 @@
 #'   results obtained from the current implementation should be considered
 #'   experimental.
 #'
-#' @details The \strong{marginal_draws()} function estimates fitted values (via
+#' @details The \strong{get_predictions()} function estimates fitted values (via
 #'   [brms::fitted.brmsfit()]) or the posterior draws from the posterior
 #'   distribution (via [brms::predict.brmsfit()]) depending on the \code{type}
 #'   argument.
@@ -34,7 +34,7 @@
 #'   [marginaleffects::plot_predictions()] allows either \code{condition} or
 #'   \code{by} arguments, but not both. Therefore, when the \code{condition}
 #'   argument is not \code{NULL}, the \code{by} argument is set to \code{NULL}.
-#'   This step is required because \strong{marginal_draws()} automatically
+#'   This step is required because \strong{get_predictions()} automatically
 #'   assigns the \code{by} argument when the model includes a covariate.
 #'   
 #' @param mapping_facet A named list that can be used to pass the aesthetic
@@ -74,8 +74,8 @@
 #'   testing when the number of rows exceeds 25.
 #'  
 #' @inheritParams growthparameters.bgmfit
-#' @inheritParams marginal_growthparameters.bgmfit
-#' @inheritParams marginal_comparisons.bgmfit
+#' @inheritParams get_growthparameters.bgmfit
+#' @inheritParams get_comparisons.bgmfit
 #' @inheritParams marginaleffects::predictions
 #' @inheritParams marginaleffects::plot_predictions
 #' @inheritParams brms::prepare_predictions
@@ -88,7 +88,7 @@
 #' @return An array of predicted mean response values. See
 #'   [brms::fitted.brmsfit] for details.
 #' 
-#' @rdname marginal_draws
+#' @rdname get_predictions
 #' @export
 #' 
 #' @seealso [marginaleffects::predictions()]
@@ -111,19 +111,19 @@
 #' model <- berkeley_exfit
 #' 
 #' # Population average distance curve
-#' marginal_draws(model, deriv = 0, re_formula = NA, draw_ids = 1:2)
+#' get_predictions(model, deriv = 0, re_formula = NA, draw_ids = 1:2)
 #' 
 #' # Individual-specific distance curves
-#' marginal_draws(model, deriv = 0, re_formula = NULL, draw_ids = 1:2)
+#' get_predictions(model, deriv = 0, re_formula = NULL, draw_ids = 1:2)
 #' 
 #' # Population average velocity curve
-#' marginal_draws(model, deriv = 1, re_formula = NA, draw_ids = 1:2)
+#' get_predictions(model, deriv = 1, re_formula = NA, draw_ids = 1:2)
 #' 
 #' # Individual-specific velocity curves
-#' marginal_draws(model, deriv = 1, re_formula = NULL, draw_ids = 1:2)
+#' get_predictions(model, deriv = 1, re_formula = NULL, draw_ids = 1:2)
 #' }
 #' 
-marginal_draws.bgmfit <-
+get_predictions.bgmfit <-
   function(model,
            resp = NULL,
            dpar = NULL,
@@ -792,12 +792,12 @@ marginal_draws.bgmfit <-
    
     
     if(!is.null(model$xcall)) {
-      if(grepl("marginal_draws", model$xcall)) {
-        xcall <- "marginal_draws"
+      if(grepl("get_predictions", model$xcall)) {
+        xcall <- "get_predictions"
       } else if(grepl("modelbased_growthparameters", model$xcall)) {
         xcall <- "modelbased_growthparameters"
-      } else if(grepl("marginal_growthparameters", model$xcall)) {
-        xcall <- "marginal_growthparameters"
+      } else if(grepl("get_growthparameters", model$xcall)) {
+        xcall <- "get_growthparameters"
       }
     } else {
       rlang_trace_back <- rlang::trace_back()
@@ -1101,7 +1101,7 @@ marginal_draws.bgmfit <-
       }
     }
     
-    
+   
     
     valid_hypothesis <- c("pairwise", "reference", "sequential", 
                           "revpairwise", "revreference", "revsequential")
@@ -1144,7 +1144,7 @@ marginal_draws.bgmfit <-
     full.args <- 
       sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                  arguments = full.args, 
-                                 check_formalArgs = marginal_draws.bgmfit,
+                                 check_formalArgs = get_predictions.bgmfit,
                                  check_formalArgs_exceptions = NULL,
                                  check_trace_back = NULL,
                                  envir = parent.frame())
@@ -1481,6 +1481,15 @@ marginal_draws.bgmfit <-
  
    
    ###############################
+   if(method == 'pkg') {
+     remove_cols_ <- c('tmp_idx', 'predicted_lo', 
+                       'predicted_hi', 'predicted', 'rowid')
+   } else if(method == 'custom') {
+     remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
+                       'predicted_hi', 'predicted', 'rowid')
+   }
+   
+   ###############################
    if(dpar == "sigma") {
      if(deriv.org == 0) {
        if(!is.null(variables)) {
@@ -1702,7 +1711,7 @@ marginal_draws.bgmfit <-
    
    ############################################################################
    # method == 'custom' -  
-   # below code exact same for marginal_draws & marginal_comparisons
+   # below code exact same for get_predictions & get_comparisons
    ############################################################################
    testthat_mode  <- FALSE
    testthat_mode <- testthat_mode
@@ -1711,7 +1720,7 @@ marginal_draws.bgmfit <-
    pdrawsh_est <- NULL
    
    if(method == 'custom') {
-     if(grepl("marginal_comparisons", xcall)) {
+     if(grepl("get_comparisons", xcall)) {
        predictions_arguments    <- comparisons_arguments
      }
      by                       <- predictions_arguments[['by']] 
@@ -1719,11 +1728,11 @@ marginal_draws.bgmfit <-
      
      custom_method_call       <- full.args[['method_call']]
      
-     if(grepl("marginal_draws", xcall)) {
+     if(grepl("get_predictions", xcall)) {
        predictions_arguments[['hypothesis']] <- NULL # evaluated later
      }
      
-     if(grepl("marginal_comparisons", xcall)) {
+     if(grepl("get_comparisons", xcall)) {
        if(is.null(hypothesis_method_custom)) {
          if(is.null(custom_method_call))  custom_method_call <- 'comparisons'
        } else {
@@ -1968,19 +1977,17 @@ marginal_draws.bgmfit <-
          
        } # if(future_splits_exe_future | future_splits_exe_dofuture) {
      } # if(callfuns) {
-     
-     # funcallx <<- funcall
-     # funcallargsx <<- funcallargs
 
-     # funcallargsx$variables <- funcallargsx$by
-     # do.call(funcallx, funcallargsx)
-     
+    
+    
      # 6.03.2025
      if(!future_splits_exe & callfuns) {
        if(!plot) {
          if(return_plot_est_custom) {
            funcallargs[['draw']] <- FALSE
            out_sf <- CustomDoCall(funcall, funcallargs)
+           out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
+           attr(out_sf$estimate, "label") <- NULL
            return(out_sf)
          } # if(return_plot_est_custom) {
          out <-  CustomDoCall(funcall, funcallargs)
@@ -2008,7 +2015,8 @@ marginal_draws.bgmfit <-
      } # if(!future_splits_exe) {
      
      
-     
+     # stop()
+     # print(call_slopes)
      
      
      if(future_splits_exe_future & callfuns) {
@@ -2625,10 +2633,12 @@ marginal_draws.bgmfit <-
        remove_cols_ <- c('term', 'contrast', 'tmp_idx', 'predicted_lo', 
                          'predicted_hi', 'predicted', 'rowid')
      }
-     
+    
+    
      
      out_sf <- out_sf[,!names(out_sf) %in% remove_cols_]
      row.names(out_sf) <- NULL
+   
      
      
      
@@ -2714,10 +2724,22 @@ marginal_draws.bgmfit <-
 
 
 
-#' @rdname marginal_draws
+#' @rdname get_predictions
 #' @export
-marginal_draws <- function(model, ...) {
-  UseMethod("marginal_draws")
+get_predictions <- function(model, ...) {
+  UseMethod("get_predictions")
 }
 
 
+
+#' An alias of get_predictions()
+#' @rdname get_predictions
+#' @export
+marginal_draws <- function(model, ...) {
+  stop2c(
+    "The function `marginal_draws()` has been renamed to 
+    `get_predictions()`.\n",
+    "Please update your code to use `get_predictions()` instead.",
+    call. = FALSE
+  )
+}

@@ -149,7 +149,7 @@ test_that("test-marginals-growthparameters", {
   ###############################################################################
   ###############################################################################
   
-  # marginaleffects::comparisons vs marginal_comparisons
+  # marginaleffects::comparisons vs get_comparisons
   
   what_test <- 'comparison'
   
@@ -208,16 +208,16 @@ test_that("test-marginals-growthparameters", {
   
   ###############################################################################
   ###############################################################################
-  # marginaleffects::comparisons vs marginal_comparisons - average = FALSE
+  # marginaleffects::comparisons vs get_comparisons - average = FALSE
   ###############################################################################
   ###############################################################################
   
   test_str_cat <- 
-    "marginaleffects::comparisons vs marginal_comparisons -> average = FALSE"
+    "marginaleffects::comparisons vs get_comparisons -> average = FALSE"
   
   
   marginaleffects_funcall <- marginaleffects::comparisons
-  marginal_funcall        <- marginal_growthparameters
+  marginal_funcall        <- get_growthparameters
   marginal_args_average   <- FALSE
   
   what_test               <- paste0(what_test, "_", "avgF")
@@ -298,7 +298,7 @@ test_that("test-marginals-growthparameters", {
   marginal_args[['parameter']]     <- c('all')
   
   # devtools::load_all()
-  # marginal_funcall        <- marginal_growthparameters
+  # marginal_funcall        <- get_growthparameters
   marginal_out_FF <- do.call(marginal_funcall, 
                              marginal_args) # %>% data.frame()
   

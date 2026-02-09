@@ -231,8 +231,8 @@ be made only at the original data points of the predictor variable.}
 
 This argument affects the following post-processing functions: \cr
 \code{\link[=fitted_draws]{fitted_draws()}}, \code{\link[=predict_draws]{predict_draws()}}, \code{\link[=growthparameters]{growthparameters()}}, \code{\link[=plot_curves]{plot_curves()}},
-\code{\link[=marginal_draws]{marginal_draws()}}, \code{\link[=marginal_comparisons]{marginal_comparisons()}}, and
-\code{\link[=marginal_growthparameters]{marginal_growthparameters()}}.}
+\code{\link[=get_predictions]{get_predictions()}}, \code{\link[=get_comparisons]{get_comparisons()}}, and
+\code{\link[=get_growthparameters]{get_growthparameters()}}.}
 
 \item{deriv}{An integer indicating whether to estimate the distance curve or
 its derivative (velocity curve). The default \code{deriv = 0} is for the
@@ -426,7 +426,7 @@ back-transformation. Apart from these differences, both these functions
 (\link[brms:conditional_effects.brmsfit]{brms::conditional_effects} and \strong{plot_conditional_effects()}) work
 in the same manner. In other words, the user can specify all the arguments
 which are available in the \code{\link[brms:conditional_effects.brmsfit]{brms::conditional_effects()}}. An alternative
-approach is to \code{\link[=marginal_draws]{marginal_draws()}} function (with \code{plot = TRUE}) which
+approach is to \code{\link[=get_predictions]{get_predictions()}} function (with \code{plot = TRUE}) which
 is based on the \pkg{marginaleffects}.
 }
 \examples{
