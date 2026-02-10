@@ -111,10 +111,12 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
           (is.list(obj_val) || is.vector(obj_val)) && 
           !is.null(tmp <- obj_val[[idx_val]]) && !is.function(tmp)) {
         if(!is.list(tmp)) {
-          for (i in 1:length(tmp)) {
-            if(check_is_numeric_like(tmp[i])) tmp <- eval(tmp[i])
-          }
+          # for (i in 1:length(tmp)) {
+          #   if(check_is_numeric_like(tmp[i])) tmp[i] <- eval(tmp[i])
+          # }
+          if(check_is_numeric_like(tmp)) tmp <- eval(tmp)
         }
+        # if(check_is_numeric_like(tmp)) tmp <- eval(tmp)
         mcall[[nm]] <- tmp  # Single extracted value
         next
       }
@@ -162,15 +164,12 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       is_wrapped <- TRUE
     }
     
-   
-    
     inner_exprde_e <- deparse_0(inner_expr)
     if(grepl("\\+", inner_exprde_e) & !is_wrapped) {
       inner_exprde_e <- gsub("\"", "", inner_exprde_e)
       inner_expr <- inner_exprde_e
       
     }
-    
     
     if(grepl("_prior_", nm)) {
       if(!is.list(inner_expr)) {
@@ -188,6 +187,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
           e
         } else {
           de_e <- deparse_0(e)
+          de_e <- gsub("\"", "", de_e)
           if(grepl("+", de_e)) {
             val <- de_e
           } else {
@@ -198,7 +198,6 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
         }
       })
       
-       
       
       if (is_wrapped) {
         mcall[[nm]] <- as.call(c(wrapper, evaled_elements))
@@ -236,9 +235,9 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
     }
   }
   
-#  print(mcall)
-   # mcallx <<- mcall
-   # stop()
+  # print(mcall)
+  # mcallx <<- mcall
+  # stop()
    
   return(mcall)
 }
@@ -2952,7 +2951,8 @@ mapderivqr <- function(model,
     
     dydx <- lapply(split(.data, as.numeric(.data$.id)),
                    function(x) {x$.v <- .dydx(x$.x, x$.y); x } )
-    dydx <- CustomDoCall(rbind, dydx) %>% data.frame() %>% dplyr::arrange(sorder)
+    dydx <- CustomDoCall(rbind, dydx) %>% data.frame() %>%
+      dplyr::arrange(sorder)
     return(round(dydx[[".v"]], ndigit))
   }
 
@@ -3085,7 +3085,7 @@ get_d1_from_d0 <- function(y,
     temp <- centered_diff(x_data, y_data)
     out[['x']] <- temp$x
     out[['y']] <- temp$y
-  } else if(method == 4) { # method == 4 -> Higher-Order (4th) Finite Differences
+  } else if(method == 4) { #method == 4 -> Higher-Order (4th) Finite Differences
     # 5-point stencil for higher accuracy
     higher_order_diff <- function(x, y) {
       n <- length(x)
@@ -3308,7 +3308,6 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   }
   brms_code_edited <- gsub(gsub_it, gsub_by, brms_code_edited, fixed = T)
   
-  
   gsub_it <- "corr_matrix[nresp] Rescor = multiply_lower_tri_self_transpose(Lrescor);"
   gsub_by <- "array[Rescor_Nby] corr_matrix[nresp] Rescor;
         for (c in 1:Rescor_Nby) Rescor[c] = multiply_lower_tri_self_transpose(Lrescor[c]);"
@@ -3391,7 +3390,6 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   
   
   # thread specific changes for both 'lkj' and 'cde'
-  
   # int current_id = Rescor_gr_id[nn] ;
   # int Index_Rescor = Rescor_by_id[current_id] ;
   #  Rescor_by_id[Rescor_gr_id[nn]] -> thread !=NULL
@@ -3434,8 +3432,6 @@ edit_stancode_for_multivariate_rescor_by <- function(stan_code,
   # loop similar to the Mu[n]
   
   ########################################
-  
-  
   
   if(grepl("sigma[n]", brms_code_edited, fixed = T)) {
     sigma_single_parm <- FALSE
@@ -3628,11 +3624,9 @@ custom_get_data.brmsfit <- function (x,
   effects <- match.arg(effects, choices = c("all", "fixed", 
                                             "random"))
   component <- match.arg(component, choices = c("all", .all_elements()))
-  
-  
+
   model.terms <- find_variables(x, effects = "all", component = "all", 
                                 flatten = FALSE)
-  
   
   mf <- stats::model.frame(x)
   
@@ -3646,9 +3640,14 @@ custom_get_data.brmsfit <- function (x,
   
   # option 2
   if(return_option == 2) {
-    outmf <- .return_combined_data(x, .prepare_get_data(x, mf, effects = effects, 
-                                                        verbose = verbose), effects, component, model.terms, 
-                                   is_mv = is_multivariate(x), verbose = verbose) 
+    outmf <- .return_combined_data(x, 
+                                   .prepare_get_data(x, 
+                                                     mf, 
+                                                     effects = effects, 
+                                                     verbose = verbose), 
+                                   effects, component, model.terms, 
+                                   is_mv = is_multivariate(x), 
+                                   verbose = verbose) 
     
     new_cols             <- setdiff(names(outmf), names(model_data))
     model_data[new_cols] <- outmf[new_cols]
@@ -3684,25 +3683,6 @@ custom_get_data.brmsfit <- function (x,
 
 # Lock it back (optional)
 # lockBinding("get_data", getNamespace("insight"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3763,8 +3743,11 @@ custom_find_predictors.brmsfit <- function (x,
   effects <- validate_argument(effects, c("fixed", "random", 
                                           "all"))
   component <- validate_argument(component, c("all", "conditional", 
-                                              "zi", "zero_inflated", "dispersion", "instruments", "correlation", 
-                                              "smooth_terms", "location", "auxiliary", "distributional"))
+                                              "zi", "zero_inflated",
+                                              "dispersion", "instruments", 
+                                              "correlation", 
+                                              "smooth_terms", "location", 
+                                              "auxiliary", "distributional"))
   f <- find_formula(x, verbose = verbose)
   is_mv <- is_multivariate(f)
   elements <- .get_elements(effects, component, model = x)
@@ -3802,22 +3785,8 @@ custom_find_predictors.brmsfit <- function (x,
   else {
     out <- compact_list(l)
   }
-  
-  # print(out)
-  
   return(out)
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -3958,8 +3927,10 @@ custom_rename_pars <- function (x, Rescor_by_levels = NULL, ...) {
         if(!is.null(Rescor_by_levels)) {
           rescor_names_Rescor_by_levels <- c()
           for (i in Rescor_by_levels) {
-            tx_i <- gsub("rescor", paste0("rescor", "_", i), rescor_names, fixed = T )
-            rescor_names_Rescor_by_levels <- c(rescor_names_Rescor_by_levels, tx_i)
+            tx_i <- gsub("rescor", paste0("rescor", "_", i), rescor_names, 
+                         fixed = T )
+            rescor_names_Rescor_by_levels <- c(rescor_names_Rescor_by_levels, 
+                                               tx_i)
           }
           rescor_names <- rescor_names_Rescor_by_levels
         }
@@ -3975,7 +3946,8 @@ custom_rename_pars <- function (x, Rescor_by_levels = NULL, ...) {
   to_rename <- c(rename_predictor(bframe, pars = pars, prior = x$prior, 
                                   Rescor_by_levels = Rescor_by_levels,
                                   rescor_names = NULL),  
-                 rename_re(bframe, pars = pars), rename_Xme(bframe, pars = pars))
+                 rename_re(bframe, pars = pars), rename_Xme(bframe, 
+                                                            pars = pars))
   x <- save_old_par_order(x)
   x <- do_renaming(x, to_rename)
   x$fit <- repair_stanfit(x$fit)
@@ -4116,9 +4088,11 @@ check_if_cmdstanr_available <- function() {
     cmdstan_model   <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
     expose_model   <- utils::getFromNamespace("expose_functions", "cmdstanr")
     get_cmdstan_path   <- utils::getFromNamespace("cmdstan_path", "cmdstanr")
-    get_cmdstan_default_path   <- utils::getFromNamespace("cmdstan_default_path", "cmdstanr")
-    get_cmdstan_default_install_path   <- utils::getFromNamespace("cmdstan_default_install_path", "cmdstanr")
-    set_cmdstan_path   <- utils::getFromNamespace("set_cmdstan_path", "cmdstanr")
+    get_cmdstan_default_path  <- 
+      utils::getFromNamespace("cmdstan_default_path", "cmdstanr")
+    get_cmdstan_default_install_path  <- 
+      utils::getFromNamespace("cmdstan_default_install_path", "cmdstanr")
+    set_cmdstan_path  <- utils::getFromNamespace("set_cmdstan_path", "cmdstanr")
 
   }
   
@@ -4134,8 +4108,8 @@ check_if_cmdstanr_available <- function() {
 #' @param scode A character string of model code
 #' @param sdata A list of data objects
 #' @param brm_args A list of argument passes to the [[brms::brm()]]
-#' @param brms_arguments A list of argument passes to the [[brms::brm()]] especially
-#' when passing include_paths
+#' @param brms_arguments A list of argument passes to the [[brms::brm()]]
+#'   especially when passing include_paths
 #' @param pathfinder_args A list of argument allowed for pathfinder
 #' @param pathfinder_init A logical to indicate whether to use pathfinder
 #'   initials.
@@ -4154,38 +4128,10 @@ brms_via_cmdstanr <- function(scode,
                               Rescor_by_levels = NULL, 
                               verbose = FALSE) {
   
-  # try(zz <- insight::check_if_installed(c("cmdstanr"),
-  #                                       minimum_version =
-  #                                         get_package_minversion(
-  #                                           'cmdstanr'
-  #                                         ),
-  #                                       prompt = FALSE,
-  #                                       stop = FALSE))
-  # 
-  # 
-  # if(!isTRUE(zz)) {
-  #   message2c("Please install the latest version of the 'cmdstanr'
-  #             package",
-  #           "\n ",
-  #           paste0("install.packages('cmdstanr', "   ,
-  #                  "repos = c('https://mc-stan.org/r-packages/', "   ,
-  #                  "getOption('repos')))")
-  #   )
-  #   return(invisible(NULL))
-  # }
-  # 
-  # if(isTRUE(zz)) {
-  #   write_stan_file <- utils::getFromNamespace("write_stan_file", "cmdstanr")
-  #   cmdstan_model   <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
-  # }
-  
-  
-  
   if(isTRUE(check_if_cmdstanr_available())) {
     write_stan_file <- utils::getFromNamespace("write_stan_file", "cmdstanr")
     cmdstan_model   <- utils::getFromNamespace("cmdstan_model", "cmdstanr")
   }
-  
   
   if(!is.null(brm_args$threads$threads)) {
     stan_threads <- TRUE

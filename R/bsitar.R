@@ -2589,6 +2589,7 @@ bsitar <- function(x,
   # package does not get correct data when dataframe is modified using %>% or |>
   # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
  
+  
  data_check_for_modifications <- FALSE
  if(is.null(mcall_$data)) {
    stop2c("Data argument must be specified")
@@ -2615,32 +2616,27 @@ bsitar <- function(x,
    data_name_pipe <- FALSE
  }
 
+
+ 
  if(data_name_pipe) {
    # mcall__data_env <- parent.frame()
    # assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
    assign(data_name_str_attr, eval(mcall_$data) )
    mcall_$data <- as.symbol(data_name_str_attr)
  }
-
-  # if(data_name_pipe) {
-  #   stop2c("The 'data' argument should be not be modified",
-  #        "\n  ",
-  #        "via pipe function such as '%>%' or '|>'",
-  #         "\n  ",
-  #        "This is because such data modification later create problems to",
-  #        "\n  ",
-  #        "reterive data via the insight::get_data()",
-  #        "\n  ",
-  #        "Please check the following argument and correct it:",
-  #        "\n  ",
-  #        data_name_str)
-  # }
-
-  
+ 
+ # This when data argument is a data frame. E.g., during update_model()
+ if(is.data.frame(mcall_$data) | tibble::is_tibble(mcall_$data)) {
+   # mcall__data_env <- parent.frame()
+   # assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
+   data_name_str_attr <- 'data'
+   assign(data_name_str_attr, mcall_$data)
+   mcall_$data <- as.symbol(data_name_str_attr)
+ }
+ 
  
   # Check and allow setting threads as NULL or integer
   mcall_threads_ <- mcall$threads
-  
   
   
   deparse_mcall_threads_check     <- paste(deparse(mcall_threads_), 
@@ -3533,18 +3529,7 @@ bsitar <- function(x,
     setdepar0sgub <- c(setdepar0sgub, "sigma_formula_manual")
   }
   
-  
-  # # why this setdepar0sgub? it did't let pass resp specific 
-  # # ..si for sigma_formula_manual
-  # # Check whether it isntrully needed for sigma_formula and sigma_formula_gr
-  # setdepar0sgub <- c("sigma_formula", 
-  #                    "sigma_formula_gr")
-  # 
-  # # setdepar0sgub <- c("sigma_formula", 
-  # #                    "sigma_formula_gr", 
-  # #                    "sigma_formula_manual")
-  
-  
+ 
   
   for (argumentsnamesi in names(arguments)) {
     if(argumentsnamesi %in% setdepar0sgub) {
@@ -3608,22 +3593,9 @@ bsitar <- function(x,
   if(override_select_model) arguments$select_model <- select_model <- 'sitar'
   
   
-  
-  
-  # # Override when restricting to rcs
-  # if(select_model != 'rcs') decomp <- NULL
-  # 
-  # if(!is.null(decomp)) {
-  #   if(select_model != 'rcs') 
-  #     stop2c("Decomposition (decomp = 'QR') is allowed only for the RCS model")
-  # }
-  
-  
-  
+
   # 01.07/2025
   getdotslist <- list(...)
-  
-  
   
   # getdotslist decomp
   # QR_Xmat -> not important. Internally set as Qc

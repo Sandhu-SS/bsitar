@@ -2,7 +2,7 @@
 
 ### Breaking changes
 
-The functions ``marginal_draws()``, ``marginal_comparison()``, and ``growthparameters_comparison()`` have been renamed to ``get_predictions()``, ``get_comparisons()``, and ``get_growthparameters()``, respectively, to better reflect their roles and to harmonise the naming scheme across the package. In particular, the earlier names with the ``marginal_`` prefix unintentionally suggested that these functions are used only for marginal inference, whereas they in fact support both marginal and conditional inferences.
+The functions ``marginal_draws()``, ``marginal_comparison()``, and ``growthparameters_comparison()`` have been renamed to ``get_predictions()``, ``get_comparisons()``, and ``get_growthparameters()``, respectively, to better reflect their roles and to harmonise the naming scheme across the package. In particular, the earlier names with the ``marginal_`` prefix unintentionally suggested that these functions are used only for marginal inference, whereas they in fact support both marginal and conditional inferences. The functions with the ``marginal_*`` prefix  are now soft-deprecated and will be removed in the next release. Therefore, it is recommended that users update their code to use the corresponding``get_*`` prefix  functions instead.
 
 ## Major changes
 

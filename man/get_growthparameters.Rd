@@ -4,6 +4,7 @@
 \alias{get_growthparameters.bgmfit}
 \alias{get_growthparameters}
 \alias{growthparameters_comparison}
+\alias{marginal_growthparameters}
 \title{Estimate and compare growth parameters for the Bayesian SITAR model}
 \usage{
 \method{get_growthparameters}{bgmfit}(
@@ -93,6 +94,8 @@
 get_growthparameters(model, ...)
 
 growthparameters_comparison(model, ...)
+
+marginal_growthparameters(model, ...)
 }
 \arguments{
 \item{model}{An object of class \code{bgmfit}.}

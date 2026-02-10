@@ -2705,14 +2705,21 @@ get_comparisons <- function(model, ...) {
 #' @rdname get_comparisons
 #' @export
 marginal_comparison <- function(model, ...) {
-  stop2c(
-    "The function `marginal_comparisons()` has been renamed to 
+  warning2c(
+    "The function `marginal_comparison()` has been renamed to 
     `get_comparisons()`.\n",
-    "Please update your code to use `get_comparisons()` instead.",
+    "Please update your code to use `get_comparisons()` instead",
+    " of the old function with ``marginal_`` prefix which will be removed in  
+    the next release ",
+    "The new name better reflect the role of this function and to harmonise the
+    naming scheme across the package. In particular, the earlier name with 
+    the ``marginal_`` prefix unintentionally suggested that this function
+    is used only for marginal inference, whereas they in fact 
+    support both marginal and conditional inferences.",
     call. = FALSE
   )
   # .Deprecated("get_comparisons")
-  #  UseMethod("get_comparisons")
+   UseMethod("get_comparisons")
 }
 
 
@@ -2720,10 +2727,19 @@ marginal_comparison <- function(model, ...) {
 #' @rdname get_comparisons
 #' @export
 marginal_comparisons <- function(model, ...) {
-  stop2c(
+  warning2c(
     "The function `marginal_comparisons()` has been renamed to 
     `get_comparisons()`.\n",
-    "Please update your code to use `marginal_comparisons()` instead.",
+    "Please update your code to use `get_comparisons()` instead",
+    " of the old function with ``marginal_`` prefix which will be removed in  
+    the next release ",
+    "The new name better reflect the role of this function and to harmonise the
+    naming scheme across the package. In particular, the earlier name with 
+    the ``marginal_`` prefix unintentionally suggested that this function
+    is used only for marginal inference, whereas they in fact 
+    support both marginal and conditional inferences.",
     call. = FALSE
   )
+  # .Deprecated("get_comparisons")
+  UseMethod("get_comparisons")
 }

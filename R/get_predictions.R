@@ -2647,10 +2647,19 @@ get_predictions <- function(model, ...) {
 #' @rdname get_predictions
 #' @export
 marginal_draws <- function(model, ...) {
-  stop2c(
+  warning2c(
     "The function `marginal_draws()` has been renamed to 
     `get_predictions()`.\n",
-    "Please update your code to use `get_predictions()` instead.",
+    "Please update your code to use `get_predictions()` instead",
+    " of the old function with ``marginal_`` prefix which will be removed in  
+    the next release ",
+    "The new name better reflect the role of this function and to harmonise the
+    naming scheme across the package. In particular, the earlier name with 
+    the ``marginal_`` prefix unintentionally suggested that this function
+    is used only for marginal inference, whereas they in fact 
+    support both marginal and conditional inferences.",
     call. = FALSE
   )
+  # .Deprecated("get_predictions")
+  UseMethod("get_predictions")
 }

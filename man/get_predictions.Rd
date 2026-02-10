@@ -765,16 +765,17 @@ An array of predicted mean response values. See
 \description{
 The \strong{get_predictions()} function estimates and plots
 growth curves (distance and velocity) by using the \pkg{marginaleffects}
-package as a back-end. This function can compute growth curves (via
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}), average growth curves (via
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}), or plot growth curves (via
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}}). Please see
+package as a back-end. This function computes growth curves
+(\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}}), average growth curves
+(\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}}), and plots growth them via the
+\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}}. See
 \href{https://marginaleffects.com/}{here} for details. Note that the
-\pkg{marginaleffects} package is highly flexible, and therefore, it
-is expected that the user has a strong understanding of its workings.
-Furthermore, since \pkg{marginaleffects} is rapidly evolving, the
-results obtained from the current implementation should be considered
-experimental.
+\pkg{marginaleffects} package is highly flexible, and therefore, it is
+expected that the user has a strong understanding of its workings.
+Furthermore, since \pkg{marginaleffects} is rapidly evolving, the results
+obtained from the current implementation should be considered experimental.
+Also note that unlike \code{\link[=get_predictions]{get_predictions()}}, the \code{\link[=fitted_draws]{fitted_draws()}} and
+\code{\link[=predict_draws]{predict_draws()}} uses the \pkg{brms} package as a back-end.
 }
 \details{
 The \strong{get_predictions()} function estimates fitted values (via

@@ -3753,26 +3753,37 @@ get_growthparameters <- function(model, ...) {
 #' @rdname get_growthparameters
 #' @export
 growthparameters_comparison <- function(model, ...) {
-  stop2c(
+  warning2c(
     "The function `growthparameters_comparison()` has been renamed to 
     `get_growthparameters()`.\n",
-    "Please update your code to use `get_growthparameters()` instead.",
+    "Please update your code to use `get_growthparameters()` instead",
+    " of the old function with which will be removed in  
+    the next release ",
     call. = FALSE
   )
-  # .Deprecated("get_growthparameters")
-  # UseMethod("get_growthparameters")
+  # .Deprecated("growthparameters_comparison")
+  UseMethod("get_growthparameters")
 }
 
 
 
-#' An alias of get_comparisons()
-#' @rdname get_comparisons
+#' An alias of get_growthparameters()
+#' @rdname get_growthparameters
 #' @export
 marginal_growthparameters <- function(model, ...) {
-  stop2c(
+  warning2c(
     "The function `marginal_growthparameters()` has been renamed to 
     `get_growthparameters()`.\n",
-    "Please update your code to use `get_growthparameters()` instead.",
+    "Please update your code to use `get_growthparameters()` instead",
+    " of the old function with ``marginal_`` prefix which will be removed in  
+    the next release ",
+    "The new name better reflect the role of this function and to harmonise the
+    naming scheme across the package. In particular, the earlier name with 
+    the ``marginal_`` prefix unintentionally suggested that this function
+    is used only for marginal inference, whereas they in fact 
+    support both marginal and conditional inferences.",
     call. = FALSE
   )
+  # .Deprecated("get_growthparameters")
+  UseMethod("get_growthparameters")
 }
