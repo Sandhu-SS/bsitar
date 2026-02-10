@@ -4,16 +4,17 @@
 #' 
 #' @description The \strong{get_predictions()} function estimates and plots
 #'   growth curves (distance and velocity) by using the \pkg{marginaleffects}
-#'   package as a back-end. This function can compute growth curves (via
-#'   [marginaleffects::predictions()]), average growth curves (via
-#'   [marginaleffects::avg_predictions()]), or plot growth curves (via
-#'   [marginaleffects::plot_predictions()]). Please see
+#'   package as a back-end. This function computes growth curves
+#'   ([marginaleffects::predictions()]), average growth curves
+#'   ([marginaleffects::avg_predictions()]), and plots growth them via the
+#'   [marginaleffects::plot_predictions()]. See
 #'   [here](https://marginaleffects.com/) for details. Note that the
-#'   \pkg{marginaleffects} package is highly flexible, and therefore, it
-#'   is expected that the user has a strong understanding of its workings.
-#'   Furthermore, since \pkg{marginaleffects} is rapidly evolving, the
-#'   results obtained from the current implementation should be considered
-#'   experimental.
+#'   \pkg{marginaleffects} package is highly flexible, and therefore, it is
+#'   expected that the user has a strong understanding of its workings.
+#'   Furthermore, since \pkg{marginaleffects} is rapidly evolving, the results
+#'   obtained from the current implementation should be considered experimental.
+#'   Also note that unlike [get_predictions()], the [fitted_draws()] and
+#'   [predict_draws()] uses the \pkg{brms} package as a back-end.
 #'
 #' @details The \strong{get_predictions()} function estimates fitted values (via
 #'   [brms::fitted.brmsfit()]) or the posterior draws from the posterior
@@ -198,7 +199,6 @@ get_predictions.bgmfit <-
            envir = NULL,
            ...) {
     
-    
     if(!is.null(estimate_center)) {
       ec_ <- getOption("marginaleffects_posterior_center")
       options("marginaleffects_posterior_center" = estimate_center)
@@ -214,13 +214,11 @@ get_predictions.bgmfit <-
     if(is.null(ec_agg)) ec_agg <- "mean"
     if(is.null(ei_agg)) ei_agg <- "eti"
     
-    
     lean_ <- getOption("marginaleffects_lean")
     options("marginaleffects_lean" = FALSE)
     on.exit(options("marginaleffects_lean" = lean_), add = TRUE)
     
     insight::check_if_installed('cheapr', prompt = FALSE, stop = FALSE)
-    
     
     try(zz <- insight::check_if_installed(c("marginaleffects"), 
                                           minimum_version = 
@@ -239,7 +237,6 @@ get_predictions.bgmfit <-
       return(invisible(NULL))
     }
     
-    
     if(usedtplyr) {
       try(zz <- insight::check_if_installed(c("dtplyr"), 
                                             minimum_version =
@@ -257,7 +254,6 @@ get_predictions.bgmfit <-
                                             prompt = FALSE,
                                             stop = FALSE))
     }
-    
     
     callfuns <- TRUE
     setmarginals <- FALSE
@@ -295,11 +291,6 @@ get_predictions.bgmfit <-
     if(!model$test_mode) {
       unlock_replace_bind(package = "insight", what = "get_data",
                       replacement = custom_get_data.brmsfit, ept_str = T)
-      
-      # unlock_replace_bind(package = "insight", what = "find_predictors",
-      #                     replacement = custom_find_predictors.brmsfit,
-      #                     ept_str = T)
-      
       if(verbose) {
         message(" As model[['test_mode']] = FLASE, the full data by the",
                 "\n ", 
@@ -309,10 +300,8 @@ get_predictions.bgmfit <-
                 "\n ", 
                 "'To over ride this approach, set model[['test_mode']] = TRUE")
       }
-    } # if(!model$test_mode) {
+    }
     
-    
-
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE
@@ -336,7 +325,6 @@ get_predictions.bgmfit <-
       }
     }
     
-    
     ndraws_org <- ndraws
     ndraws_exe <- FALSE
     if(!is.null(ndraws)) {
@@ -345,7 +333,6 @@ get_predictions.bgmfit <-
       ndraws <- brms::ndraws(model)
       ndraws_exe <- TRUE
     }
-    
     
     if (is.null(resp)) {
       resp_rev_ <- resp
@@ -366,21 +353,14 @@ get_predictions.bgmfit <-
       }
       cov    <- model$model_info[[cov_]]
     } else if(dpar == "sigma") {
-      
       if(!is.na(model$model_info[[sigmaxvar_]])) {
         xvar   <- model$model_info[[sigmaxvar_]]
       } else if(is.na(model$model_info[[sigmaxvar_]]) & 
                 !is.null(model$model_info[[xvar_]])) {
         xvar   <- model$model_info[[xvar_]]
       }
-      
       cov    <- model$model_info[[sigmacov_]]
-      
-    } # if(dpar == "mu") { else if(dpar == "sigma") {
-    
-   
-    
-    ########################################################
+    }
     
     check_set_fun <- check_set_fun_transform(model = model, 
                                              which = 'ixfuntransform2',
@@ -397,36 +377,6 @@ get_predictions.bgmfit <-
     # just added, 
     funx_ <- NULL
 
-    
-    
-    # 
-    # ########################################################
-    # # Define lables fun for x- axis
-    # labels_ggfunx <- function(...) {
-    #   out <- ifunx_(list(...)[[1]]) 
-    #   out <- scales::number(
-    #     out,
-    #     accuracy = 1,
-    #     scale = 1,
-    #     prefix = "",
-    #     suffix = "",
-    #     big.mark = " ",
-    #     decimal.mark = ".",
-    #     style_positive = c("none", "plus", "space"),
-    #     style_negative = c("hyphen", "minus", "parens"),
-    #     scale_cut = NULL,
-    #     trim = TRUE
-    #   )
-    #   return(out)
-    # }
-    # 
-    # labels_ggfunx_str <- 
-    #   "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
-    # 
-    # ########################################################
-    # 
-    
-    
     if (is.null(idata_method)) {
       idata_method <- 'm2'
     }
@@ -436,7 +386,6 @@ get_predictions.bgmfit <-
            " \n",
            " 'idata_method' argument must be either NULL or 'm2'" )
     }
-    
     
     # Initiate non formalArgs()
     term <- NULL;
@@ -452,20 +401,13 @@ get_predictions.bgmfit <-
     `.` <- NULL;
     drawid <- NULL;
     
-    
     conf <- conf_level
     probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
     probtitles <- probs[order(probs)] * 100
     probtitles <- paste("Q", probtitles, sep = "")
     # set_names_  <- c('Estimate', 'Est.Error', probtitles)
     set_names_  <- c('Estimate', probtitles)
-    
-    # if(!is.null(model$model_info$decomp)) {
-    #   if(model$model_info$decomp == "QR") model_deriv<- FALSE
-    # }
-    
-    
-    
+  
     expose_method_set <- model$model_info[['expose_method']]
     
     model$model_info[['expose_method']] <- 'NA' # Over ride 'R'
@@ -483,7 +425,7 @@ get_predictions.bgmfit <-
     post_processing_checks_args[['check_d1']] <- TRUE
     post_processing_checks_args[['check_d2']] <- FALSE
     
-    # Imp to correctly call slopes to marginal effects, this below is must
+    # Imp to correctly call slopes to marginal effects
     # This will assign d0 and set call_slopes = TRUE
     if(method == "pkg") {
       if(deriv > 0) {
@@ -499,20 +441,16 @@ get_predictions.bgmfit <-
       }
     }
     
-    #
     method_call <- 'predictions'
     comparison  <- NULL
     model_deriv <- model_deriv
     deriv       <- deriv
-    #
     
     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
     post_processing_checks_args[['all']]      <- TRUE
     oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
-    
-    
     
     if(!is.null(funlist)) {
       if(!is.list(funlist)) {
@@ -530,8 +468,6 @@ get_predictions.bgmfit <-
                       ...)
     
     if(is.null(test)) return(invisible(NULL))
-    
-    
     
     ######################################################################
     ######################################################################
@@ -562,7 +498,6 @@ get_predictions.bgmfit <-
       need_xvar_must <- TRUE
     }
     
-    
     model$model_info[['difx']] <- difx
 
     if(dpar == "sigma") {
@@ -589,7 +524,6 @@ get_predictions.bgmfit <-
                                           verbose = verbose)
       }
       
-      
       if(sigma_model == "basic") {
         if(!is.null(ipts)) {
           stop("For sigma_model = ",  
@@ -612,7 +546,6 @@ get_predictions.bgmfit <-
       
       
       if(sigma_model != "ls" && !need_xvar_must && !need_velocity_curve) {
-        # if(sigma_model == "basic" && !need_velocity_curve) {
         if(is.null(xvar)) {
           if(verbose) {
             message(clean_msg_sigma_model_no_xvar)
@@ -621,8 +554,6 @@ get_predictions.bgmfit <-
       }
       
       if(sigma_model != "ls" && need_velocity_curve) {
-        # if(sigma_model == "basic" && need_velocity_curve) {
-        # for deriv > 0, imp each id to have enough data points
         xvar <- check_set_xvar_sigma(model = model, 
                                      dpar = dpar, 
                                      xvar = xvar, 
@@ -645,8 +576,6 @@ get_predictions.bgmfit <-
         }
       }
     }
-    
-    
     
     assign_function_to_environment(transform_draws, 'transform_draws',
                                    envir = NULL)
@@ -719,17 +648,15 @@ get_predictions.bgmfit <-
         model_deriv <- FALSE
         call_slopes <- TRUE
         post_processing_checks_args[['deriv']]    <- 0
-        o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
+        o <- CustomDoCall(post_processing_checks, post_processing_checks_args)
       }
       check_fun <- TRUE
     }
     post_processing_checks_args[['deriv']]    <- deriv
     
     
-    
     ######################################################
     # somehow, condition, not by gives correct result result for slope 
-    
     force_condition_and_by_switch_plot <- FALSE
     if(dpar == "sigma") {
       if(deriv.org > 0) {
@@ -767,14 +694,8 @@ get_predictions.bgmfit <-
       return_plot      <- plot
     }
     
-  
-    
-    
-    
-      
     ######################################################################
     ######################################################################
-      
     
     if(!isTRUE(
       check_pkg_version_exists('brms', 
@@ -788,8 +709,6 @@ get_predictions.bgmfit <-
       }
     }
     
-    
-   
     
     if(!is.null(model$xcall)) {
       if(grepl("get_predictions", model$xcall)) {
@@ -825,7 +744,6 @@ get_predictions.bgmfit <-
       call_from_modelbased_growthparameters <- TRUE
     }
     
-    
   
     scallstatus <- sys.status()
     
@@ -839,8 +757,6 @@ get_predictions.bgmfit <-
       arguments <- get_args_(as.list(match.call())[-1], xcall, xclass = NULL, 
                              scallstatus = scallstatus)
     }
-    
- 
     
     arguments$model        <- model
     arguments$usesavedfuns <- usesavedfuns
@@ -2013,12 +1929,7 @@ get_predictions.bgmfit <-
          } # else if(!force_condition_and_by_switch_plot) {
        } # if(!plot) { else if(plot) {
      } # if(!future_splits_exe) {
-     
-     
-     # stop()
-     # print(call_slopes)
-     
-     
+    
      if(future_splits_exe_future & callfuns) {
        myzfun <- function(x, funcall, funcallargs) {
          funcallargs[['draw_ids']] <- x

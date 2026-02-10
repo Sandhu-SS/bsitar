@@ -110,7 +110,11 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       if (!inherits(obj_val, "try-error") && !inherits(idx_val, "try-error") &&
           (is.list(obj_val) || is.vector(obj_val)) && 
           !is.null(tmp <- obj_val[[idx_val]]) && !is.function(tmp)) {
-        if(check_is_numeric_like(tmp)) tmp <- eval(tmp)
+        if(!is.list(tmp)) {
+          for (i in 1:length(tmp)) {
+            if(check_is_numeric_like(tmp[i])) tmp <- eval(tmp[i])
+          }
+        }
         mcall[[nm]] <- tmp  # Single extracted value
         next
       }
