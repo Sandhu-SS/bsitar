@@ -1480,6 +1480,11 @@ get_comparisons.bgmfit <- function(model,
     
     # Somehow draw_ids not passed correctly if not specified explicitly as arg
     get_draw_ids <- comparisons_arguments[['draw_ids']]
+    if(!is.null(get_draw_ids)) {
+      if(any(check_is_numeric_like(get_draw_ids))) {
+        get_draw_ids <- ept(get_draw_ids)
+      }
+    }
     if(is.null(eval(get_draw_ids))) {
       set_draw_ids <- NULL
     } else if(is.numeric(eval(get_draw_ids))) {

@@ -819,33 +819,6 @@ get_growthparameters.bgmfit <- function(model,
   } # if(itransform_set == "") {
   
   
-  # 
-  # ########################################################
-  # # Define lables fun for x- axis
-  # labels_ggfunx <- function(...) {
-  #   out <- ifunx_(list(...)[[1]]) 
-  #   out <- scales::number(
-  #     out,
-  #     accuracy = 1,
-  #     scale = 1,
-  #     prefix = "",
-  #     suffix = "",
-  #     big.mark = " ",
-  #     decimal.mark = ".",
-  #     style_positive = c("none", "plus", "space"),
-  #     style_negative = c("hyphen", "minus", "parens"),
-  #     scale_cut = NULL,
-  #     trim = TRUE
-  #   )
-  #   return(out)
-  # }
-  # 
-  # labels_ggfunx_str <- 
-  #   "ggplot2::scale_x_continuous(labels = labels_ggfunx)"
-  # 
-  # 
-  
-  ########################################################
   
   # For sigma
   if(is.null(deriv)) {
@@ -951,6 +924,9 @@ get_growthparameters.bgmfit <- function(model,
     'acgv',
     'cgv'
   )
+  
+  allowed_parms <- c(allowed_parms, 'spgv', 'stgv', 'scgv')
+  
   
   if(verbose) {
     if(setpreparms) {
@@ -1940,6 +1916,11 @@ get_growthparameters.bgmfit <- function(model,
   
   # Somehow draw_ids not passed correctly if not specified explicitly as arg
   get_draw_ids <- comparisons_arguments[['draw_ids']]
+  if(!is.null(get_draw_ids)) {
+    if(any(check_is_numeric_like(get_draw_ids))) {
+      get_draw_ids <- ept(get_draw_ids)
+    }
+  }
   if(is.null(eval(get_draw_ids))) {
     set_draw_ids <- NULL
   } else if(is.numeric(eval(get_draw_ids))) {
@@ -2269,6 +2250,7 @@ get_growthparameters.bgmfit <- function(model,
       # 2. Execution Logic
       if (length(parm) == 1) {
         out_sf <- run_comparison_worker(parm)
+        # out_sfx <<- out_sf
         if(list_mfx_draws) {
           draws_list <- lapply(1:length(parm), get_mfx_draws_fun, list(out_sf), 
                                parm, keep_mfx_draws)

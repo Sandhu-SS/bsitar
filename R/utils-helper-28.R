@@ -1,6 +1,61 @@
 
 
 
+
+#' Select rows by parameter values
+#'
+#' Filters a data.frame or data.table to rows where a specified column matches
+#' given values. Supports optional case-insensitive matching.
+#'
+#' @param dt A \code{data.frame} or \code{data.table} to filter.
+#' @param values Character vector of values to match (e.g., \code{c("apgv", "pgv")}).
+#' @param ignore_case \code{TRUE} (default) for case-insensitive matching using
+#'   \code{toupper()}; \code{FALSE} for exact match.
+#' @param col Character name of column to filter on (default: \code{"parameter"}).
+#'
+#' @return A \code{data.frame} or \code{data.table} (same class as input) with
+#'   matching rows.
+#'
+#' @examples
+#' DT <- data.frame(
+#'   parameter = c("APGV", "apgv", "PGV", "pgv", "other"),
+#'   sex = rep(c("Male", "Female"), 3)[1:5],
+#'   estimate = 1:5
+#' )
+#'
+#' # Case-insensitive (default)
+#' get_selected_rows(DT)
+#'
+#' # Case-sensitive
+#' get_selected_rows(DT, ignore_case = FALSE)
+#'
+#' @keywords internal
+#' @noRd
+#' 
+get_selected_rows <- function(dt, 
+                              values = c("apgv", "pgv"), 
+                              ignore_case = TRUE, 
+                              col = "parameter") {
+  if (data.table::is.data.table(dt)) {
+    param_col <- dt[[col]]
+    if (ignore_case) {
+      param_col <- toupper(param_col)
+      values <- toupper(values)
+    }
+    return(dt[param_col %in% values, ])
+  } else {
+    param_col <- dt[[col]]
+    if (ignore_case) {
+      param_col <- toupper(param_col)
+      values <- toupper(values)
+    }
+    return(dt[param_col %in% values, ])
+  }
+}
+
+
+
+
 #' Remove groups with missing values
 #'
 #' @description

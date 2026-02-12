@@ -1369,6 +1369,8 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
+      
+      
       if(!is.na(uvarby)) {
         if(is.null(cov_factor_vars)) {
           legendlabs_mult_singel <- c('Distance', 'Velocity')
@@ -1378,6 +1380,7 @@ plot_curves.bgmfit <- function(model,
           data_dv$groupby_color.x <- legendlabs_mult_singel[1]
           data_dv$groupby_line.y <- legendlabs_mult_singel[2]
           data_dv$groupby_color.y <- legendlabs_mult_singel[2]
+          legendlabs_mult_mult <- NULL # unique(data_dv[['groupby.x']])
         } else {
           data_dv$groupby_line.x <- data_dv$groupby.x
           data_dv$groupby_color.x <- data_dv$groupby.x
@@ -1439,6 +1442,9 @@ plot_curves.bgmfit <- function(model,
       if(!exists('legendlabs_mult_line')) legendlabs_mult_line <- 'solid'
       if(!exists('legendlabs_mult_color')) legendlabs_mult_color <- 'black'
       if(!exists('legendlabs_mult_singel')) legendlabs_mult_singel <- 'solid'
+      
+      
+      
       
       if(ngrpanels > 1) {
         get_line_ <- get_line_
