@@ -766,26 +766,25 @@ Defaults to \code{TRUE}.}
 \item{parameter_method}{An integer (default = \code{1}) that specifies the
 method used to compute individual-level growth parameters from fitted
 spline models.
-
 Two methods are available:
-
 \describe{
 \item{\code{1} (Model-based differentiation)}{
-This method estimates growth parameters by directly leveraging the structure
-of the fitted spline model. The spline curve is segmented into pieces of
-cubic polynomials. Each segment is then analytically differentiated to obtain
-first and second derivatives, which represent the growth velocity and
-acceleration, respectively. This approach is more faithful to the underlying
-model and is recommended when the goal is to derive precise, model-consistent
-growth characteristics.
+This method estimates growth parameters by directly leveraging the
+structure of the fitted spline model. The spline curve is segmented
+into pieces of cubic polynomials. Each segment is then analytically
+differentiated to obtain first and second derivatives, which represent
+the growth velocity and acceleration, respectively. This approach is
+more faithful to the underlying model and is recommended when the goal
+is to derive precise, model-consistent growth characteristics.
 }
 \item{\code{2} (Plug-in adjustment using random effects)}{
-This method takes a two-step approach. First, it calculates the population-level
-average estimate of the age or time point of interest. Then, it adjusts this
-estimate for individual subjects by incorporating random effects from the model.
-This approach is computationally simpler and may be preferable when derivative
-estimation from the spline model is not feasible or when interpretation in terms
-of deviations from the population norm is of primary interest.
+This method takes a two-step approach. First, it calculates the
+population-level average estimate of the age or time point of interest.
+Then, it adjusts this estimate for individual subjects by incorporating
+random effects from the model. This approach is computationally simpler
+and may be preferable when derivative estimation from the spline model
+is not feasible or when interpretation in terms of deviations from the
+population norm is of primary interest.
 }
 }}
 
@@ -818,8 +817,8 @@ function exposed from \code{Stan}. Valid options are \code{"R"} and
 \code{parameter_method == 2}.
 
 Though \code{"Stan"} is much faster than \code{R}, The native \code{R}
-implementation (\code{call_function = "R"}, default) is recommended when the
-number of posterior draws is small. This is because the \code{Stan}
+implementation (\code{call_function = "R"}, default) is recommended when
+the number of posterior draws is small. This is because the \code{Stan}
 function needs compilation which takes time. The future plan is to allow
 integration with \code{Stan}-based computational back ends which then be
 exposed along with other functions from \code{Stan} function block.}
@@ -880,12 +879,8 @@ berkeley_exfit <- getNsObject(berkeley_exfit)
 
 model <- berkeley_exfit
 
-modelbased_growthparameters(model, ndraws = 2, parameter_method = 1)
+modelbased_growthparameters(model, ndraws = 2, parameter = 'apgv')
 
-modelbased_growthparameters(model, ndraws = 2, parameter_method = 2)
-
-modelbased_growthparameters(model, ndraws = 2, parameter_method = 2, 
-add_xtm = TRUE)
 
 }
 

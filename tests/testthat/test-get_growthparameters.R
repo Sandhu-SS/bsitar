@@ -16,7 +16,7 @@ if(skip_test_local_rcmd_check) {
 # }
 
 
-test_that("test-marginals-growthparameters", {
+test_that("test-get_growthparameters", {
   skip_on_cran()
   
   

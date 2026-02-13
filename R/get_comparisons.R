@@ -1482,7 +1482,9 @@ get_comparisons.bgmfit <- function(model,
     get_draw_ids <- comparisons_arguments[['draw_ids']]
     if(!is.null(get_draw_ids)) {
       if(any(check_is_numeric_like(get_draw_ids))) {
-        get_draw_ids <- ept(get_draw_ids)
+        if(is.character(get_draw_ids)) {
+          get_draw_ids <- ept(get_draw_ids)
+        }
       }
     }
     if(is.null(eval(get_draw_ids))) {

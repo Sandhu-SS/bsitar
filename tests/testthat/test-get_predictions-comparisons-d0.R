@@ -20,7 +20,7 @@ if(skip_test_local_rcmd_check) {
 # devtools::load_all()
 
 
-test_that("test-marginals-comparisons-d0", {
+test_that("test-get_predictions-comparisons-d0", {
   skip_on_cran()
   
   

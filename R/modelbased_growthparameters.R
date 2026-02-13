@@ -129,7 +129,7 @@
 #' 
 #' model <- berkeley_exfit
 #' 
-#' modelbased_growthparameters(model, ndraws = 2)
+#' modelbased_growthparameters(model, ndraws = 2, parameter = 'apgv')
 #' 
 #' 
 #' }

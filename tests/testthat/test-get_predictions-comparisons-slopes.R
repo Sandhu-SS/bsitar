@@ -10,7 +10,7 @@ if(skip_test_local_rcmd_check) {
 # Test marginals vs marginaleffects
 ###############################################################################
 
-test_that("test-marginals-slopes", {
+test_that("test-get_predictions-comparisons-slopes", {
   skip_on_cran()
   
   

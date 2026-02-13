@@ -20,7 +20,7 @@ if(skip_test_local_rcmd_check) {
 # devtools::load_all()
 
 
-test_that("test-marginals-draws-comparisons-parameters-default-d1", {
+test_that("test-get_predictions-comparisons-parameters-default-d1", {
   skip_on_cran()
   
   

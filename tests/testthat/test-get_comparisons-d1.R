@@ -16,7 +16,7 @@ if(skip_test_local_rcmd_check) {
 # }
 
 
-test_that("test-marginals-comparisons-d1", {
+test_that("test-get_comparisons-d1", {
   skip_on_cran()
   
   ##############################################################################

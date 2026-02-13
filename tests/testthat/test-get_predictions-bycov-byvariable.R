@@ -10,7 +10,7 @@ if(skip_test_local_rcmd_check) {
 # Test marginals vs marginaleffects
 ###############################################################################
 
-test_that("test-marginals-predictions-bycov-byvariable", {
+test_that("test-get_predictions-bycov-byvariable", {
   skip_on_cran()
   
   # skip_if(!exists('fit_cov'), message = "Model 'fit_cov' not found")
