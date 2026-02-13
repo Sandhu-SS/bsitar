@@ -397,6 +397,17 @@
 #'       performance during parallel execution.
 #'   }
 #'
+#' @param sat A single numeric value of predictor \code{xvar} at which the size
+#'   parameter should be computed. Default is \code{NULL} indicating the size is
+#'   computed ate the corresponding age parameter such as the \code{'apgv'},
+#'   \code{'atgv'} or the \code{'acgv'}. Note that argument \code{sat} is
+#'   ignored when \code{parameter_method == 1}.
+#'   
+#' @param vat A single numeric value of predictor \code{xvar} at which the
+#'   velocity parameter should be computed. Default is \code{NULL} indicating
+#'   the velocity is computed ate the corresponding age parameter such as the
+#'   \code{'apgv'}, \code{'atgv'} or the \code{'acgv'}. Note that argument
+#'   \code{sat} is ignored when \code{parameter_method == 1}.
 #' 
 #' @inheritParams  get_predictions.bgmfit
 #' @inheritParams  growthparameters.bgmfit
@@ -520,6 +531,8 @@ get_growthparameters.bgmfit <- function(model,
                                              usesavedfuns = NULL,
                                              clearenvfuns = NULL,
                                              funlist = NULL,
+                                        sat = NULL,
+                                        vat = NULL,
                                              xvar = NULL,
                                              difx = NULL,
                                              idvar = NULL,
@@ -925,8 +938,7 @@ get_growthparameters.bgmfit <- function(model,
     'cgv'
   )
   
-  allowed_parms <- c(allowed_parms, 'spgv', 'stgv', 'scgv')
-  
+  allowed_parms_size <- c('spgv', 'stgv', 'scgv')
   
   if(verbose) {
     if(setpreparms) {
@@ -937,6 +949,9 @@ get_growthparameters.bgmfit <- function(model,
     }
   }
   
+  parameter_arg <- parameter
+  parameter <- setdiff(parameter, allowed_parms_size)
+  if(is_emptyx(parameter)) parameter <- NULL
 
   # 01.07.2025
   if(is.null(parameter)) {
@@ -952,6 +967,7 @@ get_growthparameters.bgmfit <- function(model,
     }
   } # if(is.null(parameter)) { if(!is.null(parameter)) {
   
+ 
 
   parm <- base::tolower(parm)
   for (parameteri in parm) {
@@ -965,12 +981,21 @@ get_growthparameters.bgmfit <- function(model,
     }
   }
   
-  
+ 
   
   if(length(parm) > 1) {
     if(plot) stop2c("Please specify only one parameter when plot = TRUE")
   }
   
+ 
+  
+  get_parms_size <- intersect(allowed_parms_size, parameter_arg) 
+  if(is_emptyx(get_parms_size)) get_parms_size <- NULL
+ 
+  
+  # print(get_parms_size)
+  # print(parm)
+  # stop()
   
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -1932,7 +1957,8 @@ get_growthparameters.bgmfit <- function(model,
   }
   comparisons_arguments[['draw_ids']] <- set_draw_ids
   
-  
+  # print(draw_ids)
+  # stop()
  
   
   
@@ -1979,6 +2005,7 @@ get_growthparameters.bgmfit <- function(model,
         if(i ==  'cgv') parm_out[[i]] <- y[vcgi]
       }
     } # for (i in parm) {
+    # for spgv, 
    
     if(length(parm) == 1) parm_out <- parm_out[[1]] 
     return(parm_out)
@@ -2147,7 +2174,9 @@ get_growthparameters.bgmfit <- function(model,
   }
   
   
-  
+  #############################################################################
+  # method == 'pkg'
+  #############################################################################
   
   if(method == 'pkg') {
     comparisons_arguments$variables  <- set_variables
@@ -2235,6 +2264,9 @@ get_growthparameters.bgmfit <- function(model,
       #                                     FUN = myzfun)
       
 
+      # comparisons_arguments[['draw_ids']] %>% print()
+      # draw_ids %>% print()
+      # stop()
       
       get_mfx_draws_fun <- function(x, list_cout, parm, keep_mfx_draws) {
         parmi <- parm[x]
@@ -2252,7 +2284,6 @@ get_growthparameters.bgmfit <- function(model,
       # 2. Execution Logic
       if (length(parm) == 1) {
         out_sf <- run_comparison_worker(parm)
-        # out_sfx <<- out_sf
         if(list_mfx_draws) {
           draws_list <- lapply(1:length(parm), get_mfx_draws_fun, list(out_sf), 
                                parm, keep_mfx_draws)
@@ -2284,6 +2315,7 @@ get_growthparameters.bgmfit <- function(model,
           draws_list <- lapply(1:length(parm), get_mfx_draws_fun, list_cout, 
                                parm, keep_mfx_draws)
           names(draws_list) <- parm
+          
           draws_list_dt <- 
             data.table::rbindlist(draws_list, 
                                   idcol = "parameter")[, 
@@ -2307,7 +2339,35 @@ get_growthparameters.bgmfit <- function(model,
       row.names(out_sf) <- NULL
     } # if(plot) { else if(!plot) {
   } # if(method == 'pkg') {
+ 
+   # draws_list_dtx <<- draws_list_dt
+  if(method == 'pkg') {
+  draws_list_dt <- 
+    get_size_from_age_draws (age_draws_dt = draws_list_dt,
+                             model = model,
+                             xvar = xvar,
+                             by = comparisons_arguments[['by']],
+                             draw_ids = comparisons_arguments[['draw_ids']],
+                             sat = sat,
+                             vat = vat,
+                             re_formula = NA,
+                             parameter = get_parms_size,
+                             parameter_name = 'parameter',
+                             draw_name = 'draw',
+                             drawid_name = 'drawid',
+                             drawindex_name = 'drawindex',
+                             before = NULL,
+                             after = NULL,
+                             first = FALSE,
+                             last = TRUE,
+                             skip_absent=FALSE)
   
+  # If size is estimated, then trigger check_equivalence_test_full.args
+   if(!is.null(get_parms_size)) {
+     parm <- unique(draws_list_dt[['parameter']])
+     check_equivalence_test_full.args <- TRUE
+   }
+  } # if(method == 'pkg') {
   
   
   # pdrawsp can be used in get_comparison_hypothesis()
@@ -2335,7 +2395,7 @@ get_growthparameters.bgmfit <- function(model,
   } # if(method == 'pkg') {
   
 
-  
+
   if(check_equivalence_test_full.args | check_p_direction_full.args) {
     if(is.null(full.args$by)) {
       selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
@@ -2375,7 +2435,15 @@ get_growthparameters.bgmfit <- function(model,
     return(out_eqpt)
   }
   
+  
+  
+  #############################################################################
+  # End method == 'pkg'
+  #############################################################################
 
+  
+  
+  
   ##################################################################
   ##################################################################
   ##################################################################

@@ -82,6 +82,8 @@
   usesavedfuns = NULL,
   clearenvfuns = NULL,
   funlist = NULL,
+  sat = NULL,
+  vat = NULL,
   xvar = NULL,
   difx = NULL,
   idvar = NULL,
@@ -835,6 +837,18 @@ function names defined in the \code{globalenv()}. For functions needing
 both distance and velocity curves (e.g., \code{plot_curves(..., opt =
   'dv')}), \code{funlist} must include two functions: one for the distance
 curve and one for the velocity curve.}
+
+\item{sat}{A single numeric value of predictor \code{xvar} at which the size
+parameter should be computed. Default is \code{NULL} indicating the size is
+computed ate the corresponding age parameter such as the \code{'apgv'},
+\code{'atgv'} or the \code{'acgv'}. Note that argument \code{sat} is
+ignored when \code{parameter_method == 1}.}
+
+\item{vat}{A single numeric value of predictor \code{xvar} at which the
+velocity parameter should be computed. Default is \code{NULL} indicating
+the velocity is computed ate the corresponding age parameter such as the
+\code{'apgv'}, \code{'atgv'} or the \code{'acgv'}. Note that argument
+\code{sat} is ignored when \code{parameter_method == 1}.}
 
 \item{xvar}{A character string (default \code{NULL}) specifying the
 \code{'x'} variable. Rarely used because \code{xvar} is inferred

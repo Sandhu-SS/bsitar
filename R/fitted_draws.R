@@ -430,12 +430,14 @@ fitted_draws.bgmfit <-
 
     
     if(growthparameters_calling) {
-      if(calling.args$re_formula_opt == "V") {
-        calling.args$re_formula <- NULL
-      } else if(calling.args$re_formula_opt == "v") {
-        calling.args$re_formula <- NA
-      }
-    }
+      if(!is.null(calling.args$re_formula_opt)) {
+        if(calling.args$re_formula_opt == "V") {
+          calling.args$re_formula <- NULL
+        } else if(calling.args$re_formula_opt == "v") {
+          calling.args$re_formula <- NA
+        }
+      } # if(!is.null(calling.args$re_formula_opt)) {
+    } # if(growthparameters_calling) {
     
     
     

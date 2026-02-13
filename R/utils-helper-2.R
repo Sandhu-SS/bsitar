@@ -7223,3 +7223,348 @@ get_all_grby_vars_names <- function(elements = NULL, envir = NULL) {
   out[['sigma_grby']] <- sigma_grby
   return(out)
 }
+
+
+
+
+
+#' make_drawindex_df_dt
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+make_drawindex_df_dt <- function(dt, 
+                                 draw_ids = NULL,
+                                 drawid_name = 'drawid', 
+                                 drawindex_name = 'drawindex', 
+                                 before = NULL,
+                                 after = NULL,
+                                 first = FALSE,
+                                 last = FALSE,
+                                 skip_absent=FALSE) {
+  
+  was_df <- FALSE
+  if(!data.table::is.data.table(dt)) {
+    if(is.data.frame(dt)) {
+      dt <- data.table::setDT(dt)
+      was_df <- TRUE
+    } else {
+      stop2c("must be data table or data frame")
+    }
+  }
+  
+  
+  if(is.null(draw_ids)) {
+    data.table::alloc.col(dt, 1L)
+    dt[, (drawindex_name) := get(drawid_name)]
+    return(dt)
+  }
+  before_pos <- after_pos <- NULL
+  if(!is.null(before) & !is.null(after)) {
+    stop2c("specify either before or after, not both")
+  } else if(!is.null(before)) {
+    if(is.character(before)) before_pos <- match(before, names(dt))
+  } else if(!is.null(after)) {
+    if(is.character(after)) after_pos <- match(after, names(dt))
+  } else if(is.null(before) & is.null(after)) {
+    after_pos <- match(drawid_name, names(dt))
+  }
+  
+  if(first) {
+    before_pos <- 1
+    after_pos <- NULL
+  }
+  if(last) {
+    after_pos <- ncol(dt)
+    before_pos <- NULL
+  }
+  
+  unique_drawid_name <- unique(sort(dt[[drawid_name]]))
+  unique_draw_ids <- unique(sort(draw_ids))
+  
+  if(is.factor(unique_drawid_name)) {
+    unique_drawid_name <- levels(unique_drawid_name)
+    if(is.character(unique_drawid_name)) {
+      unique_drawid_name <- as.numeric(unique_drawid_name)
+    }
+  }
+  
+ 
+  
+  if(length(unique_drawid_name) != length(unique_draw_ids)) {
+    stop2c("lengths of unique 'drawid' and new 'draw_ids' must be the same")
+  }
+  
+  if(identical(unique_drawid_name, unique_draw_ids)) {
+    data.table::alloc.col(dt, 1L)
+    dt[, (drawindex_name) := get(drawid_name)]
+    return(dt)
+  }
+  
+  data.table::alloc.col(dt, 1L)
+  dt[, (drawindex_name) := draw_ids[as.integer(get(drawid_name))] ]
+  data.table::setcolorder(dt, (drawindex_name) , before = before_pos,
+                          after = after_pos, skip_absent = skip_absent)
+  
+  if(was_df) {
+    dt <- DT_to_data_frames(dt)
+  }
+  
+  return(dt)
+} # make_drawindex_df_dt
+
+
+# make_drawindex_df_dt(out_sfx, draw_ids = actual_indices, last = T)
+
+
+
+
+
+
+#' get_size_from_age_draws
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+get_size_from_age_draws <- function(age_draws_dt,
+                                    model,
+                                    xvar,
+                                    by,
+                                    draw_ids = NULL,
+                                    sat = NULL,
+                                    vat = NULL,
+                                    sat_name = NULL,
+                                    vat_name = NULL,
+                                    re_formula = NA,
+                                    parameter = NULL,
+                                    future  = FALSE,
+                                    verbose  = FALSE,
+                                    parameter_name = 'parameter',
+                                    draw_name = 'draw', 
+                                    drawid_name = 'drawid', 
+                                    drawindex_name = 'drawindex', 
+                                    before = NULL,
+                                    after = NULL,
+                                    first = FALSE,
+                                    last = TRUE,
+                                    rbindsize = TRUE,
+                                    skip_absent=FALSE) {
+  
+  sat_only <- FALSE
+  if(is.null(parameter)) {
+    if(is.null(sat)) {
+      return(age_draws_dt)
+    } else {
+      sat_only <- TRUE
+    }
+  }
+  
+  
+  if(!is.null(parameter)) {
+    parameter <- sub("^s", "a", parameter)
+  }
+  
+  if(rbindsize) age_draws_dt_in <- age_draws_dt
+  
+  
+  
+  age_draws_dt <- clean_draws(age_draws_dt, 
+                              variable = NULL, 
+                              group = 'parameter',
+                              verbose = FALSE)
+  
+  if(!is.null(parameter)) {
+    if(parameter == 'all_size' | parameter == 'all') {
+      parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
+    } else {
+      if(is.factor(parameter)) {
+        parameter_loop_levels <- unique(levels(parameter))
+      } else {
+        parameter_loop_levels <- parameter
+      }
+      age_draws_dt <- age_draws_dt[age_draws_dt[[parameter_name]] 
+                                   %in% parameter_loop_levels]
+    }
+  } # if(!is.null(parameter)) {
+  
+  
+  
+  
+  sat_name <- vat_name <- NULL
+  if(!is.null(sat)) {
+    if(!rlang::is_bare_numeric(sat)) stop2c('sat must be a single numeric')
+    if(length(sat) != 1) stop2c('sat must be a single numeric')
+    if(is.null(sat_name)) sat_name <- 'asat'
+    sat_draws_dt <- age_draws_dt[age_draws_dt[[parameter_name]] 
+                                 %in% parameter_loop_levels[1]]
+    sat_draws_dt <- sat_draws_dt[, (parameter_name) := sat_name]
+    sat_draws_dt <- sat_draws_dt[, (draw_name) := sat]
+    age_draws_dt <- collapse::rowbind(age_draws_dt, sat_draws_dt)
+    parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
+  }
+  
+  
+  if(!is.null(vat)) {
+    if(!rlang::is_bare_numeric(vat)) stop2c('vat must be a single numeric')
+    if(length(vat) != 1) stop2c('vat must be a single numeric')
+    if(is.null(vat_name)) vat_name <- 'avat'
+    vat_draws_dt <- age_draws_dt[age_draws_dt[[parameter_name]] 
+                                 %in% parameter_loop_levels[1]]
+    vat_draws_dt <- vat_draws_dt[, (parameter_name) := vat_name]
+    vat_draws_dt <- vat_draws_dt[, (draw_name) := vat]
+    age_draws_dt <- collapse::rowbind(age_draws_dt, vat_draws_dt)
+    parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
+  }
+  
+  
+  core_varibales_name <- c(parameter_name, drawid_name, draw_name)
+  core_varibales_name <- c(core_varibales_name, by)
+  core_varibales_name_drawindex <- c(core_varibales_name, drawindex_name)
+  
+  
+  age_draws_dt <- age_draws_dt[age_draws_dt[[parameter_name]]
+                               %in% c('apgv', 'atgv', 'acgv', sat_name)]
+  
+  parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
+  
+  
+  if(sat_only) {
+    parameter_loop_levels <- sat_name
+    age_draws_dt <- age_draws_dt[parameter == sat_name ] %>% droplevels()
+  }
+  
+  age_draws_dt <- make_drawindex_df_dt(age_draws_dt,
+                                       draw_ids = draw_ids,
+                                       drawid_name = drawid_name,
+                                       drawindex_name = drawindex_name,
+                                       before = NULL,
+                                       after = NULL,
+                                       first = FALSE,
+                                       last = TRUE,
+                                       skip_absent=FALSE)
+  
+  age_draws_dt <- age_draws_dt[, mget(core_varibales_name_drawindex)]
+  draw_name_pos <- match(draw_name, names(age_draws_dt))
+  age_draws_dt <- data.table::setnames(age_draws_dt, draw_name, xvar)
+  
+  
+  get_size_draws_fun <- function(x, 
+                                 model, 
+                                 data, 
+                                 re_formula,
+                                 drawindex_name,
+                                 draw_ids = NULL,
+                                 future  = FALSE,
+                                 verbose  = FALSE) {
+    DT_apgv <- data[parameter == x ]
+    if(is.null(draw_ids)) {
+      draw_ids <- unique(data[[drawindex_name]])
+    }
+    
+    get_size_draws_fun_draw_ids <- function(x, 
+                                            model, 
+                                            data, 
+                                            re_formula,
+                                            drawindex_name,
+                                            future,
+                                            verbose) {
+      fitted_draws(model, 
+                   newdata = data[drawindex_name == x ], 
+                   newdata_fixed = 0,
+                   draw_ids = x, 
+                   summary = FALSE,
+                   re_formula = re_formula)
+    } # get_size_draws_fun_draw_ids <- function(x, 
+    
+    if(future) {
+      set_lapply <- future.apply::future_lapply 
+    } else {
+      set_lapply <- lapply
+    }
+    
+    set_lapply(draw_ids, 
+               get_size_draws_fun_draw_ids,
+               model = model, 
+               data = DT_apgv, 
+               re_formula = re_formula,
+               drawindex_name = drawindex_name,
+               future = future,
+               verbose = verbose)
+  } # get_size_draws_fun <- function(x, 
+  
+  
+  if(future) {
+    set_lapply <- future.apply::future_lapply 
+  } else {
+    set_lapply <- lapply
+  }
+  
+  
+  age_draws_dt[[draw_name]] <- unlist(set_lapply(parameter_loop_levels, 
+                                                 get_size_draws_fun, 
+                                                 model = model,
+                                                 data = age_draws_dt, 
+                                                 re_formula = NA,
+                                                 drawindex_name = drawindex_name,
+                                                 draw_ids = NULL,
+                                                 future = future,
+                                                 verbose = verbose))
+  
+  
+  
+  age_draws_dt[, parameter := data.table::fcase(
+    parameter == 'apgv', 'spgv',
+    parameter == 'atgv', 'stgv',
+    parameter == 'acgv', 'scgv',
+    parameter == sat_name, 'sat',
+    parameter == vat_name, 'vat',
+    default = parameter  # Unchanged if neither
+  )]
+  
+  
+  
+  
+  age_draws_dt <- age_draws_dt[, (xvar) := NULL]
+  
+  
+  
+  age_draws_dt <- data.table::setcolorder(age_draws_dt, (draw_name) , 
+                                          after = drawid_name,
+                                          skip_absent = skip_absent)
+  
+  
+  if(rbindsize) {
+    age_draws_dt_in <- age_draws_dt_in[, mget(core_varibales_name)]
+    age_draws_dt <- age_draws_dt[, mget(core_varibales_name)]
+    age_draws_dt <- collapse::rowbind(age_draws_dt_in, age_draws_dt)
+  }
+  
+  # Remove asat
+  age_draws_dt <- age_draws_dt[!age_draws_dt[[parameter_name]] %in% sat_name]
+  
+  return(age_draws_dt)
+}
+
+
+
+# xxx <-
+#   get_size_from_age_draws (age_draws_dt = draws_list_dtx,
+#                            model = fit,
+#                            xvar = 'age',
+#                            by = 'sex',
+#                            draw_ids = NULL, # comparisons_arguments[['draw_ids']]
+#                            sat = 15,
+#                            re_formula = NA,
+#                            parameter = 'spgv',
+#                            parameter_name = 'parameter',
+#                            draw_name = 'draw',
+#                            drawid_name = 'drawid',
+#                            drawindex_name = 'drawindex',
+#                            before = NULL,
+#                            after = NULL,
+#                            first = FALSE,
+#                            last = TRUE,
+#                            skip_absent=FALSE)
+

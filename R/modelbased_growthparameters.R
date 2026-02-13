@@ -92,18 +92,6 @@
 #'   integration with \code{Stan}-based computational back ends which then be
 #'   exposed along with other functions from \code{Stan} function block.
 #' 
-#' @param sat A single numeric value of predictor \code{xvar} at which the size
-#'   parameter should be computed. Default is \code{NULL} indicating the size is
-#'   computed ate the corresponding age parameter such as the \code{'apgv'},
-#'   \code{'atgv'} or the \code{'acgv'}. Note that argument \code{sat} is
-#'   ignored when \code{parameter_method == 1}.
-#'   
-#' @param vat A single numeric value of predictor \code{xvar} at which the
-#'   velocity parameter should be computed. Default is \code{NULL} indicating
-#'   the velocity is computed ate the corresponding age parameter such as the
-#'   \code{'apgv'}, \code{'atgv'} or the \code{'acgv'}. Note that argument
-#'   \code{sat} is ignored when \code{parameter_method == 1}.
-#' 
 #' @param ... Additional arguments passed to the function. 
 #' 
 #' @return A data frame comprising growth parameter estimates for \strong{age},
