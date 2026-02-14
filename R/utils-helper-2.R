@@ -7228,6 +7228,144 @@ get_all_grby_vars_names <- function(elements = NULL, envir = NULL) {
 
 
 
+#' get_size_from_age_draws
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+check_set_parm <- function(parameter,
+                           allowed_parms = NULL,
+                           allowed_parms_size = NULL,
+                           default_parms = NULL,
+                           setpreparms = FALSE,
+                           plot = FALSE,
+                           verbose = FALSE) {
+  
+  if(is.null(allowed_parms)) {
+    allowed_parms <- c('apgv', 'pgv', 'atgv', 'tgv', 'acgv', 'cgv')
+  }
+  if(is.null(allowed_parms_size)) {
+    allowed_parms_size <- c('spgv', 'stgv', 'scgv')
+  }
+  if(is.null(default_parms)) {
+    default_parms <- c('apgv', 'pgv')
+  }
+  
+  if(verbose) {
+    if(setpreparms) {
+      message2c(" For 'preparms', the argument 'parameter' is ignored.",
+                "\n All levels of parameter variable are summarised. To get ",
+                "\n summary of a single variable (such as 'apgv'), you can",
+                "\n subset the parameter variable before calling the function\n")
+    }
+  }
+  
+  allowed_parms_allowed_parms_size <- c(allowed_parms, allowed_parms_size)
+  
+  parameter_arg <- parameter
+  parameter     <- setdiff(parameter, allowed_parms_size)
+  parameter_sat <- setdiff(parameter,c(allowed_parms_allowed_parms_size, 'all'))
+  parameter     <- parameter[parameter != parameter_sat]
+  if(is_emptyx(parameter)) {
+    parameter <- NULL
+  }
+  if(is_emptyx(parameter_arg)) {
+    parameter_arg <- NULL
+  }
+  if(is_emptyx(parameter)) {
+    parameter <- NULL
+  }
+  
+  
+  
+  if(!is_emptyx(parameter_sat)) {
+    if(length(parameter_sat) > 1) {
+      stop2c("parameter 'sat' must be of length one")
+    }
+    string_sat <- sub("^([a-zA-Z]+).*", "\\1", parameter_sat)
+    numeric_sat <- sub("^[a-zA-Z]+", "", parameter_sat) 
+    numeric_sat <- as.numeric(numeric_sat)
+    if(string_sat != 'sat') stop2c("parameter 'sat' string part must be 'sat'")
+    string_numeric_sat <- paste0(string_sat, deparse(numeric_sat))
+  } else if(is_emptyx(parameter_sat)) {
+    parameter_sat <- string_sat <- numeric_sat <- string_numeric_sat <- NULL
+  }
+  
+  
+  
+  # 01.07.2025
+  if(is.null(parameter)) {
+    parm <- default_parms
+  } else if(!is.null(parameter)) {
+    parameter <- base::tolower(parameter)
+    if(length(parameter) == 1 && parameter == 'all') {
+      parm <- allowed_parms 
+    } else if(length(parameter) == 1) {
+      parm <- parameter
+    } else {
+      parm <- parameter
+    }
+  } # if(is.null(parameter)) { if(!is.null(parameter)) {
+  
+  parm <- base::tolower(parm)
+  for (parameteri in parm) {
+    if(!parameteri %in% allowed_parms) {
+      allowed_parms_err <- c(allowed_parms, 'all')
+      stop2c("parameter '", parameteri, "' ", "not allowed",
+             "\n  ",
+             "Allowed parameter options are: ", 
+             paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
+      )
+    }
+  }
+  
+  if(length(parm) > 1) {
+    if(plot) stop2c("Please specify only one parameter when plot = TRUE")
+  }
+  
+  sat_ptc <- intersect(allowed_parms_size, parameter_arg) 
+  if(is_emptyx(sat_ptc)) sat_ptc <- NULL
+  
+  out <- 
+  list(parm = parm, sat_ptc = sat_ptc,
+       parameter = parameter, parameter_arg = parameter_arg,
+       parameter_sat = parameter_sat, string_sat = string_sat,
+       numeric_sat = numeric_sat, string_numeric_sat = string_numeric_sat)
+  
+ return(out)
+}
+
+
+
+#' make_drawindex_df_dt
+#' @details used in bsitar
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+rename_vector_in_column_dt <- function(dt, column, it, by) {
+  was_df <- FALSE
+  if(!data.table::is.data.table(dt)) {
+    if(is.data.frame(dt)) {
+      dt <- data.table::setDT(dt)
+      was_df <- TRUE
+    } else {
+      stop2c("must be data table or data frame")
+    }
+  }
+  
+  dt[get(column) == it, (column) := by]
+  if(was_df) {
+    dt <- DT_to_data_frames(dt)
+  }
+  
+  return(dt)
+}
+
+# rename_vector_in_column_dt(out_sfx, 'parameter', 'spgv', 'spgvxxxx')
+
+
 #' make_drawindex_df_dt
 #' @details used in bsitar
 #' 
@@ -7352,6 +7490,16 @@ get_size_from_age_draws <- function(age_draws_dt,
                                     rbindsize = TRUE,
                                     skip_absent=FALSE) {
   
+  if(!data.table::is.data.table(age_draws_dt)) {
+    if(is.data.frame(age_draws_dt)) {
+      age_draws_dt <- data.table::setDT(age_draws_dt)
+    } else {
+      stop2c("'age_draws_dt' must be a data table or data frame")
+    }
+  }
+  
+  age_draws_dt[, (parameter_name) := as.factor(get(parameter_name))]
+  
   sat_only <- FALSE
   if(is.null(parameter)) {
     if(is.null(sat)) {
@@ -7375,6 +7523,7 @@ get_size_from_age_draws <- function(age_draws_dt,
                               group = 'parameter',
                               verbose = FALSE)
   
+  # This for apgv.......
   if(!is.null(parameter)) {
     if(parameter == 'all_size' | parameter == 'all') {
       parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
@@ -7390,7 +7539,11 @@ get_size_from_age_draws <- function(age_draws_dt,
   } # if(!is.null(parameter)) {
   
   
+  if(is.null(parameter)) {
+    parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
+  }
   
+  # parameter_loop_levels <- 'apgv'
   
   sat_name <- vat_name <- NULL
   if(!is.null(sat)) {
@@ -7418,7 +7571,7 @@ get_size_from_age_draws <- function(age_draws_dt,
     parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
   }
   
-  
+
   core_varibales_name <- c(parameter_name, drawid_name, draw_name)
   core_varibales_name <- c(core_varibales_name, by)
   core_varibales_name_drawindex <- c(core_varibales_name, drawindex_name)
@@ -7467,11 +7620,11 @@ get_size_from_age_draws <- function(age_draws_dt,
                                             model, 
                                             data, 
                                             re_formula,
-                                            drawindex_name,
                                             future,
+                                            drawindex_name,
                                             verbose) {
       fitted_draws(model, 
-                   newdata = data[drawindex_name == x ], 
+                   newdata = data[get(drawindex_name) == x, with = TRUE], 
                    newdata_fixed = 0,
                    draw_ids = x, 
                    summary = FALSE,
@@ -7489,8 +7642,8 @@ get_size_from_age_draws <- function(age_draws_dt,
                model = model, 
                data = DT_apgv, 
                re_formula = re_formula,
-               drawindex_name = drawindex_name,
                future = future,
+               drawindex_name = drawindex_name,
                verbose = verbose)
   } # get_size_draws_fun <- function(x, 
   
@@ -7546,7 +7699,6 @@ get_size_from_age_draws <- function(age_draws_dt,
   
   return(age_draws_dt)
 }
-
 
 
 # xxx <-

@@ -59,16 +59,42 @@
 #' and any covariates included in the model (e.g., gender) are automatically
 #' inferred from the \code{model} object.
 #' 
-#' @param parameter A single character string or a character vector specifying
-#'  the growth parameter(s) to be estimated. Options include \code{'tgv'}
-#'  (takeoff growth velocity), \code{'atgv'} (age at takeoff growth velocity),
-#'  \code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
-#'  velocity), \code{'cgv'} (cessation growth velocity), \code{'acgv'} (age at
-#'  cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
-#'  (default), age at peak growth velocity (\code{'apgv'}) is estimated. When
-#'  \code{parameter = 'all'}, all six parameters are estimated. Note that the
-#'  \code{'all'} option cannot be used when the \code{by} argument is set to
-#'  \code{TRUE}.
+#' @param parameter A single character string or character vector specifying the
+#'   growth parameter(s) to estimate. Must be one of the following options,
+#'   ordered by growth curve progression:
+#'   
+#'   \itemize{
+#'     \item \code{'apgv'}: Age at peak growth velocity - age corresponding to
+#'     the peak growth rate (i.e. maximum growth velocity) during adolescent
+#'     growth spurt (default when \code{NULL})
+#'     \item \code{'pgv'}: Peak growth velocity - maximum growth rate during 
+#'       adolescent growth spurt
+#'     \item \code{'atgv'}: Age at takeoff growth velocity - age where initial 
+#'       rapid growth begins accelerating toward peak
+#'     \item \code{'tgv'}: Takeoff growth velocity - initial high growth rate 
+#'       at curve start
+#'     \item \code{'acgv'}: Age at cessation growth velocity - age where growth 
+#'       rate approaches near zero and growth effectively stops
+#'     \item \code{'cgv'}: Cessation growth velocity - final low growth rate 
+#'       approaching maturity
+#'     
+#'     \item \code{'spgv'}: Size (length/height) at peak growth velocity age,
+#'     \code{'apgv'}
+#'     \item \code{'stgv'}: Size at takeoff growth velocity age, \code{'atgv'}
+#'     \item \code{'scgv'}: Size at cessation growth velocity age, \code{'acgv'}
+#'     
+#'     \item \code{'satXX'}: Size at specific age XX years of predictor
+#'     \code{xvar} (e.g., \code{'sat15'} = size at 15 years, \code{'sat12.5'} =
+#'     size at 12.5 years)
+#'     
+#'     \item \code{'all'}: All six primary velocity/age parameters
+#'     (\code{'apgv','pgv','atgv','tgv','acgv','cgv'}). Cannot be used when
+#'     \code{by = TRUE}.
+#'   }
+#'
+#'   Multiple parameters can be requested simultaneously as a vector, e.g.,
+#'   \code{c('apgv', 'pgv', 'spgv')}. Custom \code{'satXX'} format requires no
+#'   spaces between \code{'sat'} prefix and numeric age.
 #'
 #' @param acg_velocity A real number specifying the percentage of peak growth
 #'   velocity to be used as the cessation velocity when estimating the
@@ -396,18 +422,6 @@
 #'     \item Explicitly setting this to \code{TRUE} is recommended for improved 
 #'       performance during parallel execution.
 #'   }
-#'
-#' @param sat A single numeric value of predictor \code{xvar} at which the size
-#'   parameter should be computed. Default is \code{NULL} indicating the size is
-#'   computed ate the corresponding age parameter such as the \code{'apgv'},
-#'   \code{'atgv'} or the \code{'acgv'}. Note that argument \code{sat} is
-#'   ignored when \code{parameter_method == 1}.
-#'   
-#' @param vat A single numeric value of predictor \code{xvar} at which the
-#'   velocity parameter should be computed. Default is \code{NULL} indicating
-#'   the velocity is computed ate the corresponding age parameter such as the
-#'   \code{'apgv'}, \code{'atgv'} or the \code{'acgv'}. Note that argument
-#'   \code{sat} is ignored when \code{parameter_method == 1}.
 #' 
 #' @inheritParams  get_predictions.bgmfit
 #' @inheritParams  growthparameters.bgmfit
@@ -531,8 +545,6 @@ get_growthparameters.bgmfit <- function(model,
                                              usesavedfuns = NULL,
                                              clearenvfuns = NULL,
                                              funlist = NULL,
-                                        sat = NULL,
-                                        vat = NULL,
                                              xvar = NULL,
                                              difx = NULL,
                                              idvar = NULL,
@@ -924,78 +936,57 @@ get_growthparameters.bgmfit <- function(model,
   `:=` <- NULL;
   `.` <- NULL;
   drawid <- NULL;
-  
   draw <- NULL;
   j <- NULL;
   i <- NULL;
   
-  allowed_parms <- c(
-    'apgv',
-    'pgv',
-    'atgv',
-    'tgv',
-    'acgv',
-    'cgv'
-  )
-  
+  # sat_ptc will be size at apgv/atgv/acgv whereas numeric_sat at 12, 13 etc 
+  allowed_parms      <- c('apgv', 'pgv', 'atgv', 'tgv', 'acgv', 'cgv')
   allowed_parms_size <- c('spgv', 'stgv', 'scgv')
-  
-  if(verbose) {
-    if(setpreparms) {
-      message2c(" For 'preparms', the argument 'parameter' is ignored.",
-              "\n All levels of parameter variable are summarised. To get ",
-              "\n summary of a single variable (such as 'apgv'), you can",
-              "\n subset the parameter variable before calling the function\n")
-    }
+  check_set_parm_out <- check_set_parm(parameter = parameter,
+                                       allowed_parms = allowed_parms,
+                                       allowed_parms_size = allowed_parms_size,
+                                       default_parms = c('apgv', 'pgv'),
+                                       setpreparms = setpreparms,
+                                       plot = plot,
+                                       verbose = FALSE)
+  eout_check_set_parm_out <- list2env(check_set_parm_out)
+  for (eoutii in names(eout_check_set_parm_out)) {
+    # if(!is.null(eout_check_set_parm_out[[eoutii]])) {
+    #   assign(eoutii, eout_check_set_parm_out[[eoutii]])
+    # }
+    assign(eoutii, eout_check_set_parm_out[[eoutii]])
   }
+  if(!exists('parm'))               parm <- NULL
+  if(!exists('sat_ptc'))            sat_ptc <- NULL
+  if(!exists('parameter'))          parameter <- NULL
+  if(!exists('parameter_arg'))      parameter_arg <- NULL
+  if(!exists('parameter_sat'))      parameter_sat <- NULL
+  if(!exists('string_sat'))         string_sat <- NULL
+  if(!exists('numeric_sat'))        numeric_sat <- NULL
+  if(!exists('string_numeric_sat')) string_numeric_sat <- NULL
+  # For get_comparison_hypothesis
+  parms_sat_elements <- list()
+  parms_sat_elements[['sat_ptc']]            <- sat_ptc
+  parms_sat_elements[['parameter_sat']]      <- parameter_sat
+  parms_sat_elements[['string_sat']]         <- string_sat
+  parms_sat_elements[['numeric_sat']]        <- numeric_sat
+  parms_sat_elements[['string_numeric_sat']] <- string_numeric_sat
   
-  parameter_arg <- parameter
-  parameter <- setdiff(parameter, allowed_parms_size)
-  if(is_emptyx(parameter)) parameter <- NULL
-
-  # 01.07.2025
-  if(is.null(parameter)) {
-    parm <- c('apgv', 'pgv')
-  } else if(!is.null(parameter)) {
-    parameter <- base::tolower(parameter)
-    if(length(parameter) == 1 && parameter == 'all') {
-      parm <- allowed_parms 
-    } else if(length(parameter) == 1) {
-      parm <- parameter
-    } else {
-      parm <- parameter
-    }
-  } # if(is.null(parameter)) { if(!is.null(parameter)) {
   
- 
-
-  parm <- base::tolower(parm)
-  for (parameteri in parm) {
-    if(!parameteri %in% allowed_parms) {
-      allowed_parms_err <- c(allowed_parms, 'all')
-      stop2c("parameter '", parameteri, "' ", "not allowed",
-           "\n  ",
-           "Allowed parameter options are: ", 
-           paste(paste0("'", allowed_parms_err, "'"), collapse = ", ")
-      )
-    }
-  }
-  
- 
-  
-  if(length(parm) > 1) {
-    if(plot) stop2c("Please specify only one parameter when plot = TRUE")
-  }
-  
- 
-  
-  get_parms_size <- intersect(allowed_parms_size, parameter_arg) 
-  if(is_emptyx(get_parms_size)) get_parms_size <- NULL
- 
-  
-  # print(get_parms_size)
+  # print(sat_ptc)
+  # print(parameter)
   # print(parm)
   # stop()
+  
+  # print(parm)
+  # print(sat_ptc)
+  # print(parameter_sat)
+  # print(string_sat)
+  # print(numeric_sat)
+  # print(string_numeric_sat)
+  # stop()
+  
   
   conf <- conf_level
   probs <- c((1 - conf) / 2, 1 - (1 - conf) / 2)
@@ -2339,8 +2330,11 @@ get_growthparameters.bgmfit <- function(model,
       row.names(out_sf) <- NULL
     } # if(plot) { else if(!plot) {
   } # if(method == 'pkg') {
- 
-   # draws_list_dtx <<- draws_list_dt
+
+    # draws_list_dtx <<- draws_list_dt
+    # comparisons_argumentsx <<- comparisons_arguments
+  
+  
   if(method == 'pkg') {
   draws_list_dt <- 
     get_size_from_age_draws (age_draws_dt = draws_list_dt,
@@ -2348,10 +2342,11 @@ get_growthparameters.bgmfit <- function(model,
                              xvar = xvar,
                              by = comparisons_arguments[['by']],
                              draw_ids = comparisons_arguments[['draw_ids']],
-                             sat = sat,
-                             vat = vat,
-                             re_formula = NA,
-                             parameter = get_parms_size,
+                             sat = numeric_sat,
+                             sat_name = string_sat,
+                             parameter = sat_ptc,
+                             vat = NULL,
+                             re_formula = re_formula,
                              parameter_name = 'parameter',
                              draw_name = 'draw',
                              drawid_name = 'drawid',
@@ -2363,7 +2358,7 @@ get_growthparameters.bgmfit <- function(model,
                              skip_absent=FALSE)
   
   # If size is estimated, then trigger check_equivalence_test_full.args
-   if(!is.null(get_parms_size)) {
+   if(!is.null(sat_ptc) | !is.null(numeric_sat)) {
      parm <- unique(draws_list_dt[['parameter']])
      check_equivalence_test_full.args <- TRUE
    }
@@ -2394,48 +2389,53 @@ get_growthparameters.bgmfit <- function(model,
     }
   } # if(method == 'pkg') {
   
-
-
-  if(check_equivalence_test_full.args | check_p_direction_full.args) {
-    if(is.null(full.args$by)) {
-      selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
-    } else if(is.logical(full.args$by)) {
-      if(!full.args$by) {
-        selectcols_custom <- c('parameter', 'drawid', 'draw')
-      } else if(full.args$by) {
-        selectcols_custom <- c('parameter', 'drawid', 'draw')
+  
+  if(method == 'pkg') {
+    if(check_equivalence_test_full.args | check_p_direction_full.args) {
+      if(is.null(full.args$by)) {
+        selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
+      } else if(is.logical(full.args$by)) {
+        if(!full.args$by) {
+          selectcols_custom <- c('parameter', 'drawid', 'draw')
+        } else if(full.args$by) {
+          selectcols_custom <- c('parameter', 'drawid', 'draw')
+        }
+      } else if(!is.logical(full.args$by)) {
+        checkmate::assert_character(full.args$by)
+        selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
       }
-    } else if(!is.logical(full.args$by)) {
-      checkmate::assert_character(full.args$by)
-      selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
+      draws_list_dt     <- draws_list_dt[, mget(selectcols_custom)]
+      out_eqpt <- get_comparison_hypothesis(data = draws_list_dt, 
+                                            full.args = full.args, 
+                                            by = full.args$by,
+                                            evaluate_comparison = TRUE,
+                                            evaluate_hypothesis = TRUE,
+                                            rope_test = rope_test,
+                                            pd_test = pd_test,
+                                            get_range_null_form = get_range_null_form, 
+                                            get_range_null_value = get_range_null_value,
+                                            parms_sat_elements = parms_sat_elements,
+                                            format = format,
+                                            verbose = FALSE)
+      
+      if(!is.null(string_sat)) {
+        out_eqpt <- out_eqpt[parameter == string_sat, 
+                             parameter := string_numeric_sat]
+      }
+      
+      out_eqpt <- DT_to_data_frames(out_eqpt)
+      
+      if(is.null(reformat)) {
+        out_eqpt <- marginalstyle_reformat(out = out_eqpt, 
+                                           set_names_ = set_names_)
+      } else if(!is.null(reformat)) {
+        if(reformat) out_eqpt <- marginalstyle_reformat(out = out_eqpt, 
+                                                        set_names_ = set_names_)
+      }
+      return(out_eqpt)
     }
-    # selectcols_custom <- c('parameter', 'drawid', 'draw',  full.args$by)
-    draws_list_dt     <- draws_list_dt[, mget(selectcols_custom)]
-    out_eqpt <- get_comparison_hypothesis(data = draws_list_dt, 
-                                full.args = full.args, 
-                                by = full.args$by,
-                                evaluate_comparison = TRUE,
-                                evaluate_hypothesis = TRUE,
-                                rope_test = rope_test,
-                                pd_test = pd_test,
-                                get_range_null_form = get_range_null_form, 
-                                get_range_null_value = get_range_null_value,
-                                format = format,
-                                verbose = FALSE)
-    
-    out_eqpt <- DT_to_data_frames(out_eqpt)
-    
-    if(is.null(reformat)) {
-      out_eqpt <- marginalstyle_reformat(out = out_eqpt, 
-                                         set_names_ = set_names_)
-    } else if(!is.null(reformat)) {
-      if(reformat) out_eqpt <- marginalstyle_reformat(out = out_eqpt, 
-                                                      set_names_ = set_names_)
-    }
-    return(out_eqpt)
-  }
-  
-  
+  } # if(method == 'pkg') {
+
   
   #############################################################################
   # End method == 'pkg'
@@ -2875,12 +2875,6 @@ get_growthparameters.bgmfit <- function(model,
           out <- out %>% CustomDoCall(rbind, .)
           return(out)
         }
-        # zxdraws <- lapply(1:length(future_splits_at), 
-        #                   FUN = posterior_draws_function)
-        # zxdraws <- zxdraws %>% CustomDoCall(rbind, .)
-        # # Note that above zxdraws has drawid exact same as splits
-        # # but somehow, we need consecutive drawid for summarising
-        # zxdraws <- consecutive_drawid_function(zxdraws)
         
         zxdraws <- collapse::unlist2d(future.apply::future_lapply(
           seq_along(out), posterior_draws_collapse), 
@@ -2938,7 +2932,7 @@ get_growthparameters.bgmfit <- function(model,
     
     # Imp, remove xvar from the by
     by <- base::setdiff(eval(by), eval(summarise_over_x)) 
-  
+    
     
     # For pre computed parameters, the below is not required
     if(!setpreparms) {
@@ -2957,7 +2951,8 @@ get_growthparameters.bgmfit <- function(model,
         
       } else if(usecollapse) {
         drawidby  <- c('drawid', by)
-        drawidby_ <- c(drawidby, 'parameter', 'estimate')
+        # drawidby_ <- c(drawidby, 'parameter', 'estimate')
+        drawidby_ <- c(drawidby, 'parameter', 'draw')
         parmest   <- 'draw'
         
         if(any(c('apgv','pgv') %in% parm)) getpest <- TRUE else getpest <- FALSE
@@ -3029,7 +3024,7 @@ get_growthparameters.bgmfit <- function(model,
       onex0 <- zxdraws
     } # if(!setpreparms) {
     
-    
+
     
     #######################################################
     
@@ -3053,7 +3048,40 @@ get_growthparameters.bgmfit <- function(model,
       )
     }
     
-   
+    
+    # comparisons_argumentsx <<- comparisons_arguments
+    # 
+    # onex0$draw <- onex0$estimate
+    # onex0$estimate <- NULL
+    # onex0x <<- onex0
+    onex0 <- 
+      get_size_from_age_draws (age_draws_dt = onex0,
+                               model = model,
+                               xvar = xvar,
+                               by = comparisons_arguments[['by']],
+                               draw_ids = comparisons_arguments[['draw_ids']],
+                               sat = numeric_sat,
+                               sat_name = string_sat,
+                               parameter = sat_ptc,
+                               vat = NULL,
+                               re_formula = re_formula,
+                               parameter_name = 'parameter',
+                               draw_name = 'draw',
+                               drawid_name = 'drawid',
+                               drawindex_name = 'drawindex',
+                               before = NULL,
+                               after = NULL,
+                               first = FALSE,
+                               last = TRUE,
+                               skip_absent=FALSE)
+    
+    # If size is estimated, then trigger check_equivalence_test_full.args
+    if(!is.null(sat_ptc) | !is.null(numeric_sat)) {
+      parm <- unique(onex0[['parameter']])
+      check_equivalence_test_full.args <- TRUE
+    }
+
+
     
     if(!isFALSE(pdrawsp)) {
       if(!is.character(pdrawsp)) pdrawsp <- "return"
@@ -3264,7 +3292,8 @@ get_growthparameters.bgmfit <- function(model,
                                      after = 1)
       names(hypothesisargs)[2] <- '...'
       formals(get_pe_ci2) <- hypothesisargs
-      parmi_estimate <- 'estimate'
+      # parmi_estimate <- 'estimate'
+      parmi_estimate <- 'draw'
       setdrawid     <- c('drawid', by)
       setdrawidparm <- c(by, 'parameter')
       out_sf_and_later_hy <-
@@ -3288,10 +3317,12 @@ get_growthparameters.bgmfit <- function(model,
       }
       namesx <- c('estimate', 'conf.low', 'conf.high')
       setdrawidparm_ <- c(setdrawidparm, namesx)
+     
       out3 <-
         onex1 %>% collapse::fgroup_by(setdrawidparm) %>% 
         collapse::fsummarise(collapse::mctl(
-          get_pe_ci_collapse(.data[['estimate']],
+          get_pe_ci_collapse(.data[['draw']],
+          # get_pe_ci_collapse(.data[['estimate']],
                              ec_agg = ec_agg, 
                              ei_agg = ei_agg, na.rm = TRUE, 
                              nthreads = arguments$cores, 
@@ -3319,9 +3350,12 @@ get_growthparameters.bgmfit <- function(model,
       out_sf <- out3
     }
     
+   
+    # check_equivalence_test_full.args | check_p_direction_full.args
 
     # Hypothesis
-    if(!is.null(hypothesis)) {
+    if(!is.null(hypothesis) | check_equivalence_test_full.args) {
+    # if(!is.null(hypothesis)) {
       get_hypothesis_x_modify <- function(.x, hypothesis, by, draws, ...) {
         get_hypothesis_x(x = .x, hypothesis = hypothesis, by = by, 
                          draws = draws)
@@ -3342,7 +3376,8 @@ get_growthparameters.bgmfit <- function(model,
       
       
       if(usedtplyr) {
-        parmi_estimate <- 'estimate'
+        # parmi_estimate <- 'estimate'
+        parmi_estimate <- 'draw'
         get_hypothesis_x_modifyx2 <- get_hypothesis_x
         hypothesisargs <- formals(get_hypothesis_x_modifyx2)
         hypothesisargs[['x']]          <- as.name('x')
@@ -3410,10 +3445,12 @@ get_growthparameters.bgmfit <- function(model,
         if(!data.table::is.data.table(onex1)) {
           onex1 <- data.table::as.data.table(onex1) 
         }
-        if (!("draw" %in% names(onex1)) && ("estimate" %in% names(onex1))) {
-          onex1 <- data.table::setnames(onex1, "estimate", "draw")
-          onex1 <- clean_draws(onex1, variable = 'draw', group = 'parameter', verbose = F)
-        }
+        # if (!("draw" %in% names(onex1)) && ("estimate" %in% names(onex1))) {
+        #   onex1 <- data.table::setnames(onex1, "estimate", "draw")
+        #   onex1 <- clean_draws(onex1, variable = 'draw', group = 'parameter', verbose = F)
+        # }
+        onex1 <- clean_draws(onex1, variable = 'draw', group = 'parameter', verbose = F)
+        
         if(!is.null(constrats_by)) {
           hypothesis_by_what <- constrats_by
         } else {
@@ -3422,17 +3459,30 @@ get_growthparameters.bgmfit <- function(model,
        
         # Here we can set evaluate_comparison = TRUE, that will ne estimate
         out_sf_hy <- get_comparison_hypothesis(data = onex1, 
-                                               full.args = full.args, 
-                                               by = hypothesis_by_what,
-                                               evaluate_comparison = FALSE,
-                                               evaluate_hypothesis = TRUE,
-                                               rope_test = FALSE,
-                                               pd_test = FALSE,
-                                               get_range_null_form = FALSE,
-                                               get_range_null_value = FALSE,
-                                               format = FALSE,
-                                               verbose = FALSE)
-        out_sf_hy <- data.table::setnames(out_sf_hy, "hypothesis", "term")
+                                  full.args = full.args, 
+                                  by = full.args$by,
+                                  evaluate_comparison = TRUE,
+                                  evaluate_hypothesis = TRUE,
+                                  rope_test = rope_test,
+                                  pd_test = pd_test,
+                                  get_range_null_form = get_range_null_form, 
+                                  get_range_null_value = get_range_null_value,
+                                  parms_sat_elements = parms_sat_elements,
+                                  format = format,
+                                  verbose = FALSE)
+        # out_sf_hy <- get_comparison_hypothesis(data = onex1, 
+        #                                        full.args = full.args, 
+        #                                        by = hypothesis_by_what,
+        #                                        evaluate_comparison = FALSE,
+        #                                        evaluate_hypothesis = TRUE,
+        #                                        rope_test = FALSE,
+        #                                        pd_test = FALSE,
+        #                                        get_range_null_form = FALSE,
+        #                                        get_range_null_value = FALSE,
+        #                                        format = FALSE,
+        #                                        verbose = FALSE)
+       
+        # out_sf_hy <- data.table::setnames(out_sf_hy, "hypothesis", "term")
         out_sf_hy <- DT_to_data_frames(out_sf_hy)
         row.names(out_sf_hy) <- NULL
         
@@ -3485,7 +3535,8 @@ get_growthparameters.bgmfit <- function(model,
       } else {
         parmi_ci_c <- list()
         for (parmi in parm) {
-          parmi_estimate <- 'estimate'
+          # parmi_estimate <- 'estimate'
+          parmi_estimate <- 'draw'
           measurevar <- parmi
           parmi_ci_c[[parmi]] <-
             onex1 %>% dplyr::group_by_at(groupvarshyp1) %>% 
@@ -3495,7 +3546,8 @@ get_growthparameters.bgmfit <- function(model,
                                                             hypothesis = 
                                                               hypothesis, 
                                                             by = constrats_by, 
-                                                            draws = estimate
+                                                            draws = draw
+                                                            # draws = estimate
             ), .keep = F) %>% 
             dplyr::ungroup() %>% 
             dplyr::reframe(
@@ -3528,6 +3580,47 @@ get_growthparameters.bgmfit <- function(model,
   if(!is.null(byarrange)) {
     if(!is.null(bys)) byarrange <- bys else byarrange <- by
   }
+  
+
+  ##############################################################
+  ##############################################################
+  
+  if(!is.null(string_sat)) {
+    if(!is.null(out_sf)) {
+      out_sf <- rename_vector_in_column_dt(out_sf, 
+                                           column = 'parameter', 
+                                           it = string_sat,
+                                           by = string_numeric_sat)
+    }
+    if(!is.null(out_sf_hy)) {
+      out_sf_hy <- rename_vector_in_column_dt(out_sf_hy, 
+                                              column = 'parameter', 
+                                              it = string_sat,
+                                              by = string_numeric_sat)
+    }
+    if(!is.null(pdraws_est)) {
+      pdraws_est <- rename_vector_in_column_dt(pdraws_est,
+                                               column = 'parameter', 
+                                               it = string_sat,
+                                               by = string_numeric_sat)
+    }
+    if(!is.null(pdrawsp_est)) {
+      pdrawsp_est <- rename_vector_in_column_dt(pdrawsp_est, 
+                                                column = 'parameter', 
+                                                it = string_sat,
+                                                by = string_numeric_sat)
+    }
+    if(!is.null(pdrawsh_est)) {
+      pdrawsh_est <- rename_vector_in_column_dt(pdrawsh_est, 
+                                                column = 'parameter', 
+                                                it = string_sat,
+                                                by = string_numeric_sat)
+    }
+  } # if(!is.null(string_sat)) {
+  
+  
+  ##############################################################
+  ##############################################################
   
 
   if(length(byarrange) != 0) {
@@ -3663,6 +3756,9 @@ get_growthparameters.bgmfit <- function(model,
     }
   } # if(any(itransform_set != "")) {
   
+  
+ 
+  
   ##############################################################
   ##############################################################
   
@@ -3773,6 +3869,7 @@ get_growthparameters.bgmfit <- function(model,
   
   if(!is.null(out_sf_hy)) {
     out[['contrast']] <- out_sf_hy %>% dplyr::ungroup()
+    out[['estimate']] <- NULL
   }
   
   if(!is.null(pdraws_est)) {

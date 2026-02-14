@@ -192,8 +192,6 @@ modelbased_growthparameters.bgmfit <-
            usesavedfuns = NULL,
            clearenvfuns = NULL,
            funlist = NULL,
-           sat = NULL,
-           vat = NULL,
            xvar = NULL,
            idvar = NULL,
            itransform = NULL,
@@ -682,14 +680,16 @@ modelbased_growthparameters.bgmfit <-
       }
     }
     
-    if(parameter_method == 1) {
-      if(!is.null(sat)) {
-        stop2c("For sat paremeter, please use parameter_method = 2")
-      }
-      if(!is.null(vat)) {
-        stop2c("For vat paremeter, please use parameter_method = 2")
-      }
-    }
+    
+    
+    # if(parameter_method == 1) {
+    #   if(!is.null(sat)) {
+    #     stop2c("For sat paremeter, please use parameter_method = 2")
+    #   }
+    #   if(!is.null(vat)) {
+    #     stop2c("For vat paremeter, please use parameter_method = 2")
+    #   }
+    # }
     
     
     
@@ -1547,15 +1547,15 @@ modelbased_growthparameters.bgmfit <-
       } else if(nrow(peak_data_draw) > 0) {
         apgv_draw    <- peak_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
-          collapse::fmutate(estimate = x) %>% 
+          collapse::fmutate(draw = x) %>% 
           collapse::fmutate(parameter = 'apgv') 
         pgv_draw    <- peak_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
-          collapse::fmutate(estimate = d1) %>% 
+          collapse::fmutate(draw = d1) %>% 
           collapse::fmutate(parameter = 'pgv') 
         spgv_draw    <- peak_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
-          collapse::fmutate(estimate = d0) %>% 
+          collapse::fmutate(draw = d0) %>% 
           collapse::fmutate(parameter = 'spgv') 
         
 
@@ -1628,15 +1628,15 @@ modelbased_growthparameters.bgmfit <-
       } else if(nrow(takeoff_data_draw) > 0) {
         atgv_draw    <- takeoff_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
-          collapse::fmutate(estimate = x) %>% 
+          collapse::fmutate(draw = x) %>% 
           collapse::fmutate(parameter = 'atgv') 
         tgv_draw    <- takeoff_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
-          collapse::fmutate(estimate = d1) %>% 
+          collapse::fmutate(draw = d1) %>% 
           collapse::fmutate(parameter = 'tgv') 
         stgv_draw    <- takeoff_data_draw %>% 
           collapse::fmutate(rowdf = as.integer(rowdf)) %>% 
-          collapse::fmutate(estimate = d0) %>% 
+          collapse::fmutate(draw = d0) %>% 
           collapse::fmutate(parameter = 'stgv') 
         
         atgv_draw <- set_dataf_m_collapse %>% collapse::join(atgv_draw, 
@@ -1839,7 +1839,8 @@ modelbased_growthparameters.bgmfit <-
         if(add_xtm) { 
           stop("For 'add_xtm = TRUE', the re_formula should be 'NULL'")
         }
-        if(method == 'custom') onex0 <- onex0[['estimate']]
+        # if(method == 'custom') onex0 <- onex0[['estimate']]
+        if(method == 'custom') onex0 <- onex0[['draw']]
         peak_names.ors__2 <- base::tolower(colnames(onex0))
         colnames(onex0)   <- peak_names.ors__2
         set0_newdata                 <- newdata
@@ -1850,12 +1851,13 @@ modelbased_growthparameters.bgmfit <-
         set0_newdata[[xvar]]         <- NULL
         
         # below using newdata_fixed = 0, so apply fun here 
-        if(method == 'pkg') {
-          if(set_pdrawsp) set0_newdata[[xvar]] <- funx_(set0_newdata[['draw']])
-          if(!set_pdrawsp) set0_newdata[[xvar]] <- funx_(set0_newdata[['estimate']])
-        } else if(method == 'custom') {
-          set0_newdata[[xvar]] <- funx_(set0_newdata[['estimate']])
-        }
+        # if(method == 'pkg') {
+        #   if(set_pdrawsp) set0_newdata[[xvar]] <- funx_(set0_newdata[['draw']])
+        #   if(!set_pdrawsp) set0_newdata[[xvar]] <- funx_(set0_newdata[['estimate']])
+        # } else if(method == 'custom') {
+        #   set0_newdata[[xvar]] <- funx_(set0_newdata[['estimate']])
+        # }
+        set0_newdata[[xvar]] <- funx_(set0_newdata[['draw']])
         
         get_predictions_args <- modelbased_arguments
         get_predictions_args[['newdata']]       <- set0_newdata
@@ -2056,17 +2058,19 @@ modelbased_growthparameters.bgmfit <-
       nlpar_fixed_names_dim3_add <- c('Xestimate', 'fomerge', 'xid')
       
       
-      if(method == 'pkg') {
-        extend_array <- cbind(onex00[['draw']], 
-                              onex00[['fomerge']], 
-                              onex00[['xid']])
-      } else if(method == 'custom') {
-        extend_array <- cbind(onex00[['estimate']], 
-                              onex00[['fomerge']], 
-                              onex00[['xid']])
-      }
+      # if(method == 'pkg') {
+      #   extend_array <- cbind(onex00[['draw']], 
+      #                         onex00[['fomerge']], 
+      #                         onex00[['xid']])
+      # } else if(method == 'custom') {
+      #   extend_array <- cbind(onex00[['estimate']], 
+      #                         onex00[['fomerge']], 
+      #                         onex00[['xid']])
+      # }
       
-      
+      extend_array <- cbind(onex00[['draw']], 
+                            onex00[['fomerge']], 
+                            onex00[['xid']])
       
       if(add_xtm) {
         xvar_ <- model$model_info$xvar
@@ -2076,6 +2080,7 @@ modelbased_growthparameters.bgmfit <-
         parm_mat_dim <- parm_mat_dim + 2
       }
       
+      # extend_arrayx <<- extend_array
       
       Sliced <- aperm(`dim<-`(t(extend_array), 
                               c(ncol(extend_array), 
@@ -2178,13 +2183,13 @@ modelbased_growthparameters.bgmfit <-
       
       if(nrow(peak_data_draw) > 0) {
         apgv_draw    <- peak_data_draw %>% 
-          collapse::fmutate(estimate = x) %>% 
+          collapse::fmutate(draw = x) %>% 
           collapse::fmutate(parameter = parameter_names_vec[1]) 
         pgv_draw    <- peak_data_draw %>% 
-          collapse::fmutate(estimate = d1) %>% 
+          collapse::fmutate(draw = d1) %>% 
           collapse::fmutate(parameter = parameter_names_vec[2]) 
         spgv_draw    <- peak_data_draw %>% 
-          collapse::fmutate(estimate = d0) %>% 
+          collapse::fmutate(draw = d0) %>% 
           collapse::fmutate(parameter = parameter_names_vec[3])
         
         all_peak_data_draw <- collapse::rowbind(apgv_draw, pgv_draw, spgv_draw)
@@ -2215,11 +2220,18 @@ modelbased_growthparameters.bgmfit <-
         peak_parameters <- collapse::roworderv(peak_parameters, peak_roworderv_vars)
         
         if(add_xtm) {
+          # xtm_draw    <- xtm_data_draw %>% 
+          #   collapse::fmutate(estimate = xtm) %>% 
+          #   collapse::fmutate(parameter = 'xtm') 
+          # ytm_draw    <- xtm_data_draw %>% 
+          #   collapse::fmutate(estimate = ytm) %>% 
+          #   collapse::fmutate(parameter = 'ytm') 
+          # all_tm_data_draw <- collapse::rowbind(xtm_draw, ytm_draw)
           xtm_draw    <- xtm_data_draw %>% 
-            collapse::fmutate(estimate = xtm) %>% 
+            collapse::fmutate(draw = xtm) %>% 
             collapse::fmutate(parameter = 'xtm') 
           ytm_draw    <- xtm_data_draw %>% 
-            collapse::fmutate(estimate = ytm) %>% 
+            collapse::fmutate(draw = ytm) %>% 
             collapse::fmutate(parameter = 'ytm') 
           all_tm_data_draw <- collapse::rowbind(xtm_draw, ytm_draw)
           

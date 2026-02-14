@@ -23,6 +23,7 @@
   pd_test = NULL,
   range = "default",
   method = "direct",
+  method_call = "pkg",
   null = NULL,
   as_p = FALSE,
   remove_na = TRUE,
@@ -143,16 +144,44 @@ filtered by default, so only parameters that typically appear in the
 \code{summary()} are returned. Use \code{parameters} to select specific parameters
 for the output.}
 
-\item{parameter}{A single character string or a character vector specifying
-the growth parameter(s) to be estimated. Options include \code{'tgv'}
-(takeoff growth velocity), \code{'atgv'} (age at takeoff growth velocity),
-\code{'pgv'} (peak growth velocity), \code{'apgv'} (age at peak growth
-velocity), \code{'cgv'} (cessation growth velocity), \code{'acgv'} (age at
-cessation growth velocity), and \code{'all'}. If \code{parameter = NULL}
-(default), age at peak growth velocity (\code{'apgv'}) is estimated. When
-\code{parameter = 'all'}, all six parameters are estimated. Note that the
-\code{'all'} option cannot be used when the \code{by} argument is set to
-\code{TRUE}.}
+\item{parameter}{A single character string or character vector specifying the
+growth parameter(s) to estimate. Must be one of the following options,
+ordered by growth curve progression:
+
+\itemize{
+\item \code{'apgv'}: Age at peak growth velocity - age corresponding to
+the peak growth rate (i.e. maximum growth velocity) during adolescent
+growth spurt (default when \code{NULL})
+\item \code{'pgv'}: Peak growth velocity - maximum growth rate during
+adolescent growth spurt
+\item \code{'atgv'}: Age at takeoff growth velocity - age where initial
+rapid growth begins accelerating toward peak
+\item \code{'tgv'}: Takeoff growth velocity - initial high growth rate
+at curve start
+\item \code{'acgv'}: Age at cessation growth velocity - age where growth
+rate approaches near zero and growth effectively stops
+\item \code{'cgv'}: Cessation growth velocity - final low growth rate
+approaching maturity
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{\\item \code{'spgv'}: Size (length/height) at peak growth velocity age,
+\code{'apgv'}
+\\item \code{'stgv'}: Size at takeoff growth velocity age, \code{'atgv'}
+\\item \code{'scgv'}: Size at cessation growth velocity age, \code{'acgv'}
+
+\\item \code{'satXX'}: Size at specific age XX years of predictor
+\code{xvar} (e.g., \code{'sat15'} = size at 15 years, \code{'sat12.5'} =
+size at 12.5 years)
+
+\\item \code{'all'}: All six primary velocity/age parameters
+(\code{'apgv','pgv','atgv','tgv','acgv','cgv'}). Cannot be used when
+\code{by = TRUE}.
+}\if{html}{\out{</div>}}
+
+}
+
+Multiple parameters can be requested simultaneously as a vector, e.g.,
+\code{c('apgv', 'pgv', 'spgv')}. Custom \code{'satXX'} format requires no
+spaces between \code{'sat'} prefix and numeric age.}
 
 \item{class}{A string specifying the class of parameters being tested.
 Default is "b" for population-level effects.
@@ -281,6 +310,9 @@ range is set to \code{c(-0.1, 0.1)}. If \code{"default"} and input is a Bayesian
 
 \item{method}{Can be \code{"direct"} or one of methods of \code{\link[bayestestR:estimate_density]{estimate_density()}},
 such as \code{"kernel"}, \code{"logspline"} or \code{"KernSmooth"}. See details.}
+
+\item{method_call}{A character string to pass \code{'method'} argument to
+the \code{'get_growthparameters'} function. Default \code{'pkg'}.}
 
 \item{null}{The value considered as a "null" effect. Traditionally 0, but
 could also be 1 in the case of ratios of change (OR, IRR, ...).}

@@ -228,6 +228,9 @@
 #'   ([bayestestR::p_direction()]) values that are used to set up the
 #'   \code{range} and \code{null} values for [bayestestR::equivalence_test()]
 #'   and [bayestestR::equivalence_test()].
+#'   
+#' @param method_call A character string to pass \code{'method'} argument to 
+#' the \code{'get_growthparameters'} function. Default \code{'pkg'}. 
 #' 
 #' @param na.rm Logical; if \code{TRUE} (default), then remove \code{NA} values.
 #'  
@@ -416,6 +419,7 @@ hypothesis_test.bgmfit <- function(model,
                                    pd_test = NULL,
                                    range = "default",
                                    method = "direct",
+                                   method_call = "pkg",
                                    null = NULL,
                                    as_p = FALSE,
                                    remove_na = TRUE,
@@ -466,7 +470,7 @@ hypothesis_test.bgmfit <- function(model,
       stop("Argument 'by' must be a character string or a character vector")
     }
   }
-
+  
   if(is.null(probs) & is.null(conf_level)) {
     stop2c("Please specify either 'probs' or 'conf_level'")
   } else if(!is.null(conf_level)) {
@@ -483,7 +487,7 @@ hypothesis_test.bgmfit <- function(model,
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', probtitles)
   
-
+  
   if(!is.null(estimate_center)) {
     ec_ <- getOption("marginaleffects_posterior_center")
     options("marginaleffects_posterior_center" = estimate_center)
@@ -498,7 +502,7 @@ hypothesis_test.bgmfit <- function(model,
   ei_agg <- getOption("marginaleffects_posterior_interval")
   if(is.null(ec_agg)) ec_agg <- "mean"
   if(is.null(ei_agg)) ei_agg <- "eti"
-
+  
   ##########################################
   
   allowed_engine <- c('brms', 'marginaleffects', 'bayestestR', 'mbcombo')
@@ -557,6 +561,47 @@ hypothesis_test.bgmfit <- function(model,
       obj_marginaleffects <- TRUE
     }
   }
+  
+  
+  ##############################################################################
+  if(!is.null(parameter)) {
+    allowed_parms      <- c('apgv', 'pgv', 'atgv', 'tgv', 'acgv', 'cgv')
+    allowed_parms_size <- c('spgv', 'stgv', 'scgv')
+    check_set_parm_out <- check_set_parm(parameter = parameter,
+                                         allowed_parms = allowed_parms,
+                                         allowed_parms_size = allowed_parms_size,
+                                         default_parms = c('apgv'),
+                                         setpreparms = FALSE,
+                                         plot = plot,
+                                         verbose = FALSE)
+    
+    eout_check_set_parm_out <- list2env(check_set_parm_out)
+    for (eoutii in names(eout_check_set_parm_out)) {
+      if(!is.null(eout_check_set_parm_out[[eoutii]])) {
+        assign(eoutii, eout_check_set_parm_out[[eoutii]])
+      }
+    }
+    if(!exists('parm'))               parm <- NULL
+    if(!exists('sat_ptc'))            sat_ptc <- NULL
+    if(!exists('parameter'))          parameter <- NULL
+    if(!exists('parameter_arg'))      parameter_arg <- NULL
+    if(!exists('parameter_sat'))      parameter_sat <- NULL
+    if(!exists('string_sat'))         string_sat <- NULL
+    if(!exists('numeric_sat'))        numeric_sat <- NULL
+    if(!exists('string_numeric_sat')) string_numeric_sat <- NULL
+    # For get_comparison_hypothesis
+    parms_sat_elements <- list()
+    parms_sat_elements[['sat_ptc']]            <- sat_ptc
+    parms_sat_elements[['parameter_sat']]      <- parameter_sat
+    parms_sat_elements[['string_sat']]         <- string_sat
+    parms_sat_elements[['numeric_sat']]        <- numeric_sat
+    parms_sat_elements[['string_numeric_sat']] <- string_numeric_sat
+  } else if(is.null(parameter)) {
+    parms_sat_elements <- NULL
+  }
+  
+  
+  ##############################################################################
   
   # Override if user sets range null not as equivalence_test and p_direction
   # lists but as open arguments
@@ -704,7 +749,7 @@ hypothesis_test.bgmfit <- function(model,
       
       "The argument 'hypothesis_str' (used by brms) refers to the hypothesis
       components (See ?brms::hypothesis_str) ",
-
+      
       " whereas 'parameters' (used by bayestestR) is synonymous with  
       hypothesis_str. (see ?bayestestR::equivalence_test) ",
       
@@ -719,7 +764,7 @@ hypothesis_test.bgmfit <- function(model,
       parameter <- c('apgv', 'pgv')
       engine <- 'marginaleffects'
       if(is.null(hypothesis)) {
-         # if(!is.null(by)) hypothesis <- ~ pairwise
+        # if(!is.null(by)) hypothesis <- ~ pairwise
         if(!is.null(by)) hypothesis <- as.formula(~ pairwise)
       }
       if(is.null(rope_test)) rope_test <- FALSE
@@ -813,7 +858,7 @@ hypothesis_test.bgmfit <- function(model,
                                            obj_mfx_matrix,
                                            obj_model_pseudo,
                                            obj_marginaleffects
-                                           )
+  )
   get_engine_obj_args_names <- as.character(get_engine_obj_args_names)
   
   get_engine_obj_args_all_c      <- c()
@@ -1000,7 +1045,7 @@ hypothesis_test.bgmfit <- function(model,
     } # if(is.null(engine)) { else if(!is.null(engine)) {
   } # if(obj_mfx) {
   
- # Available choices and executions
+  # Available choices and executions
   set_engine_obj_args_names  <- expression(obj_model_brms,
                                            obj_model_bayestestR,
                                            obj_model_marginaleffects,
@@ -1043,7 +1088,7 @@ hypothesis_test.bgmfit <- function(model,
   ##############################################################################
   # Get and collect arguments
   ##############################################################################
-
+  
   if(obj_model | obj_model_pseudo ) {
     if(!is.null(model$xcall)) {
       if(grepl("get_growthparameters", model$xcall)) {
@@ -1082,7 +1127,7 @@ hypothesis_test.bgmfit <- function(model,
                                             check_formalArgs = NULL,
                                             check_trace_back = NULL,
                                             envir = parent.frame())
-
+    
     get.cores_ <- get.cores(arguments$cores)
     # 28.09.2024
     if(is.null(get.cores_[['max.cores']])) {
@@ -1116,7 +1161,7 @@ hypothesis_test.bgmfit <- function(model,
     if(is.null(arguments$equivalence_test)) {
       arguments$equivalence_test <- equivalence_test
     }
-   
+    
     if(NullFALSE(arguments$p_direction)) {
       if(is.list(arguments$p_direction)) {
         arguments$null <- arguments$p_direction$null
@@ -1129,13 +1174,15 @@ hypothesis_test.bgmfit <- function(model,
       }
     }
     
+    arguments$parms_sat_elements <- parms_sat_elements
+    
     if(obj_model_pseudo) {
       attr(model, 'class') <- model_attr_orig
     }
     
   } # if(obj_model | obj_model_pseudo) {
   
- 
+  
   
   ##############################################################################
   # Build arguments
@@ -1239,7 +1286,7 @@ hypothesis_test.bgmfit <- function(model,
   if(!pd_test) {
     bayestestR_p_direction_df_args <- NULL
   }
- 
+  
   
   ##############################################################################
   ##############################################################################
@@ -1284,8 +1331,8 @@ hypothesis_test.bgmfit <- function(model,
     
     get_growthparameters_bgmfit_args_in <- 
       get_growthparameters_bgmfit_args
-   
-    get_growthparameters_bgmfit_args[['method']] <- 'pkg'
+    
+    get_growthparameters_bgmfit_args[['method']] <- method_call
     get_growthparameters_bgmfit_args[['equivalence_test']] <- NULL
     get_growthparameters_bgmfit_args[['p_direction']] <- NULL
     
@@ -1315,7 +1362,7 @@ hypothesis_test.bgmfit <- function(model,
     if(is.null(dpar)) {
       dpar <- "mu"
     }
-   
+    
     model <- getmodel_info(model = model, 
                            dpar = dpar, 
                            resp = resp, 
@@ -1331,14 +1378,14 @@ hypothesis_test.bgmfit <- function(model,
     
     if(obj_model_marginaleffects_direct_only) {
     } 
-      
+    
     if(obj_model_marginaleffects_direct_only & !obj_model_mbcombo) {
       return(data_draws)
     } else if(!obj_model_marginaleffects_direct_only & obj_model_mbcombo) {
       get_growthparameters_bgmfit_args[['hypothesis']] <-
-      get_growthparameters_bgmfit_args_in[['hypothesis']]
+        get_growthparameters_bgmfit_args_in[['hypothesis']]
     } 
-
+    
     if(!data.table::is.data.table(data_draws)) {
       data_draws <- data.table::as.data.table(data_draws) 
     }
@@ -1409,8 +1456,8 @@ hypothesis_test.bgmfit <- function(model,
     if(is.null(format)) {
       format <- eqpdargs[['format']]
     }
-   
-   
+    
+    
     if(is.null(evaluate_hypothesis)) {
       if(exists('get_growthparameters_bgmfit_args')) {
         hypothesis <- get_growthparameters_bgmfit_args[['hypothesis']]
@@ -1435,7 +1482,7 @@ hypothesis_test.bgmfit <- function(model,
         evaluate_comparison <- TRUE
       }
     }
-
+    
     full.args[['evaluate_hypothesis']] <- evaluate_hypothesis
     full.args[['evaluate_comparison']] <- evaluate_comparison
     
@@ -1456,7 +1503,7 @@ hypothesis_test.bgmfit <- function(model,
       get_range_null_form
     get_comparison_hypothesis_args[['get_range_null_value']] <- 
       get_range_null_value
-
+    
     get_comparison_hypothesis_args[['comparison_by']] <- 
       comparison_by
     get_comparison_hypothesis_args[['comparison_range_null']] <- 
@@ -1478,13 +1525,15 @@ hypothesis_test.bgmfit <- function(model,
     get_comparison_hypothesis_args[['pd_as_percent']] <- 
       pd_as_percent
     
-
     get_comparison_hypothesis_args[['format']] <- format
     get_comparison_hypothesis_args[['verbose']] <- verbose
-
+    
+    get_comparison_hypothesis_args[['parms_sat_elements']] <- parms_sat_elements
+    
+    
     out <- CustomDoCall(get_comparison_hypothesis, 
-                             get_comparison_hypothesis_args)
-
+                        get_comparison_hypothesis_args)
+    
     out <- DT_to_data_frames(out)
     
     if(is.null(reformat)) {
@@ -1495,10 +1544,10 @@ hypothesis_test.bgmfit <- function(model,
                                                  set_names_= set_names_)
     }
     
-  
+    
   } # if(obj_mfx_marginaleffects | obj_mfx_bayestestR | obj_mfx_mbcombo) {
   
-
+  
   ##############################################################################
   # Evaluate obj_model_brms
   ##############################################################################
@@ -1560,7 +1609,7 @@ hypothesis_test.bgmfit <- function(model,
     }
     
     param_names_bayestestR_cd_msg <- 
-    paste0("The bayestestR output for the specified parameters %s is NULL. 
+      paste0("The bayestestR output for the specified parameters %s is NULL. 
            Parameters must use full names with 'b_' prefix for fixed effects 
            (e.g., 'b_a_Intercept'). Run `brms::variables(model)` on your 
            fitted bsitar model to list all valid names.")
@@ -1606,7 +1655,7 @@ hypothesis_test.bgmfit <- function(model,
                      bayestestR_p_direction_df_args)
     } 
   } # if(obj_df_bayestestR) {
- 
+  
   
   ##############################################################################
   # plot - supported for model based brms and bayestestR
@@ -1615,7 +1664,7 @@ hypothesis_test.bgmfit <- function(model,
   # patchwork::wrap_plots(plots, ncol = 2)  
   # cowplot::plot_grid(plotlist = plots, ncol = 2)
   # do.call(gridExtra::grid.arrange, c(plots, ncol = 2))
-
+  
   if(isTRUE(plot) | plot == "return") {
     if(!is.null(param_names_bayestestR)) {
       nplots <- length(param_names_bayestestR)
@@ -1644,8 +1693,8 @@ hypothesis_test.bgmfit <- function(model,
   } else {
     if(plot == 'return') return(plot_out)
   }
- 
- 
+  
+  
   
   return(out)
 }

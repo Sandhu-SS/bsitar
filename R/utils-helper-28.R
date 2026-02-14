@@ -85,7 +85,7 @@ get_selected_rows <- function(dt,
 clean_draws <- function(DT, 
                         variable = NULL, 
                         group = "drawid", 
-                        verbose = TRUE) {
+                        verbose = FALSE) {
   has_na <- NULL;
   . <- NULL;
   is_dt <- data.table::is.data.table(DT)
@@ -244,8 +244,19 @@ get_comparison_hypothesis <- function(data,
                                       get_range_null_form = FALSE,
                                       get_range_null_value = FALSE,
                                       digits = 2,
+                                      parms_sat_elements = NULL,
                                       format = FALSE,
                                       verbose = FALSE) {
+  
+  string_sat <- 'sat'
+  if(!is_emptyx(parms_sat_elements)) {
+    get_parms_size     <- parms_sat_elements[['get_parms_size']]    
+    parameter_sat      <- parms_sat_elements[['parameter_sat']]
+    string_sat         <- parms_sat_elements[['string_sat']] 
+    numeric_sat        <- parms_sat_elements[['numeric_sat']]       
+    string_numeric_sat <- parms_sat_elements[['string_numeric_sat']] 
+  }
+ 
   
   data <- clean_draws(data,variable = "draw", group = "drawid", T)
 
@@ -456,6 +467,7 @@ get_comparison_hypothesis <- function(data,
     create_range_lists_pair_args[['evaluate_hypothesis']] <- evaluate_hypothesis
     create_range_lists_pair_args[['comparison_args']] <- comparison_args
     create_range_lists_pair_args[['hypothesis_args']] <- hypothesis_args
+    create_range_lists_pair_args[['parms_sat_elements']] <- parms_sat_elements
     if(!is.null(what)) {
       if(!is.null(range_null)) {
         create_range_lists_pair_args[['what']] <- what
@@ -639,6 +651,7 @@ get_comparison_hypothesis <- function(data,
     create_range_lists_pair_args[['evaluate_comparison']] <- evaluate_comparison
     create_range_lists_pair_args[['hypothesis_args']]     <- NULL
     create_range_lists_pair_args[['evaluate_hypothesis']] <- FALSE
+    create_range_lists_pair_args[['parms_sat_elements']] <- parms_sat_elements
     if(pd_test) {
       create_range_lists_pair_args[['what']] <- 'null'
       comparison_test_null <- do.call(get_test_range_null, 
@@ -869,6 +882,26 @@ get_comparison_hypothesis <- function(data,
   if(is_emptyx(comparison_hypothesis_results$hypothesis)) {
     comparison_hypothesis_results$hypothesis <- NULL
   } 
+  
+  
+  if(!is.null(string_sat)) {
+    if(!is.null(comparison_hypothesis_results$comparison)) {
+      comparison_hypothesis_results$comparison <- 
+        rename_vector_in_column_dt(comparison_hypothesis_results$comparison, 
+                                           column = 'parameter', 
+                                           it = string_sat,
+                                           by = string_numeric_sat)
+    }
+    if(!is.null(comparison_hypothesis_results$hypothesis)) {
+      comparison_hypothesis_results$hypothesis <- 
+        rename_vector_in_column_dt(comparison_hypothesis_results$hypothesis, 
+                                   column = 'parameter', 
+                                   it = string_sat,
+                                   by = string_numeric_sat)
+    }
+  } # if(!is.null(string_sat)) {
+  
+  
   
   # Remove paranthesis () from the hypothesis terms
   if(!is.null(comparison_hypothesis_results$hypothesis)) {
@@ -1142,7 +1175,19 @@ get_test_range_null <- function(parameter = NULL,
                                 return = 'df',
                                 parameter_grid_value = NULL, 
                                 full_frame = NULL,
+                                parms_sat_elements = NULL, 
                                 verbose = FALSE) {
+  
+  # Default, will get updated by parms_sat_elements[['string_sat']] 
+  string_sat <- 'sat'
+  if(!is_emptyx(parms_sat_elements)) {
+    get_parms_size     <- parms_sat_elements[['get_parms_size']]    
+    parameter_sat      <- parms_sat_elements[['parameter_sat']]
+    string_sat         <- parms_sat_elements[['string_sat']] 
+    numeric_sat        <- parms_sat_elements[['numeric_sat']]       
+    string_numeric_sat <- parms_sat_elements[['string_numeric_sat']] 
+  } 
+  
   
   if(!is.null(by)) {
     if(is.logical(by)) by <- NULL
@@ -1439,6 +1484,7 @@ get_test_range_null <- function(parameter = NULL,
     defaut_parameter_grid_value[['acgv']] <- 1.0
     defaut_parameter_grid_value[['cgv']]  <- 0.5
     defaut_parameter_grid_value[['scgv']] <- 5.0
+    defaut_parameter_grid_value[[string_sat]]  <- 5.0
   }
   if(null) {
     defaut_parameter_grid_value[['apgv']] <- 0.0
@@ -1450,6 +1496,7 @@ get_test_range_null <- function(parameter = NULL,
     defaut_parameter_grid_value[['acgv']] <- 0.0
     defaut_parameter_grid_value[['cgv']]  <- 0.0
     defaut_parameter_grid_value[['scgv']] <- 0.0
+    defaut_parameter_grid_value[[string_sat]]  <- 0.0
   }
   
   
@@ -2230,7 +2277,8 @@ custom_marginaleffects_equivalence <- function (x,
   
   if(!is.null(equivalence_test_args_range)) { # equivalence_test_args
     hypothesis  <- equivalence_test_args[['hypothesis']]
-    hypothesis_group <- get_hypothesis_group_fun(equivalence_test_args[['hypothesis']])
+    hypothesis_group <- 
+      get_hypothesis_group_fun(equivalence_test_args[['hypothesis']])
     df_filtered <- data.table::as.data.table(equivalence_test_args_range)
     if(is.null(x$hypothesis)) {
       if(!is.null(equivalence_test_args_by)) {
@@ -2517,7 +2565,9 @@ call_bayestest_eq <- function(x,
       } else {
         for (i in 1:length(equivalence_test_args$range)) {
           if(length(equivalence_test_args$range[[i]]) == 1) {
-            equivalence_test_args$range[[i]] <- c(-equivalence_test_args$range[[i]], equivalence_test_args$range[[i]])
+            equivalence_test_args$range[[i]] <- 
+              c(-equivalence_test_args$range[[i]], 
+                equivalence_test_args$range[[i]])
           } else if(length(equivalence_test_args$range[[i]]) == 2) {
             equivalence_test_args$range[[i]] <- equivalence_test_args$range[[i]]
           } else {
@@ -3852,3 +3902,5 @@ marginalstyle_reformat <- function(out, set_names_) {
     data.frame()
   return(out)
 }
+
+
