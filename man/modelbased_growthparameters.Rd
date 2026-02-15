@@ -77,6 +77,7 @@
   funlist = NULL,
   xvar = NULL,
   idvar = NULL,
+  difx = NULL,
   itransform = NULL,
   incl_autocor = TRUE,
   parameter_method = 1,
@@ -734,6 +735,15 @@ internally. A use case is when conflicting variables exist (e.g.,
 \item{idvar}{A character string (default \code{NULL}) specifying the
 \code{'id'} variable. Rarely used because \code{idvar} is inferred
 internally.}
+
+\item{difx}{A character string (default \code{NULL}) specifying the
+\code{'x'} variable that should be used for manual differentiation of the
+distance curve. Internally, the \code{xvar} is set as \code{difx} if
+specified. The argument \code{difx} is evaluated only when \code{dpar =
+  'sigma'}, ignored otherwise. Note that argument \code{xvar} itself is rarely
+used because \code{xvar} is inferred internally. A use case is when
+conflicting variables exist (e.g., \code{sigma_formula}) and user wants to
+set a specific variable as \code{'x'}.}
 
 \item{itransform}{A character string (default \code{NULL}) indicating the
 variables names that are reverse transformed. Options are  \code{c("x",

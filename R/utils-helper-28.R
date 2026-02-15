@@ -3875,6 +3875,8 @@ DT_to_data_frames <- function(x) {
     return(lapply(x, as.data.frame))
   } else if (inherits(x, "data.table")) {
     return(as.data.frame(x))
+  } else if (inherits(x, "data.frame")) { # new layes
+    return(x)
   }
   stop("Input must be a data.table or list of data.tables")
 }

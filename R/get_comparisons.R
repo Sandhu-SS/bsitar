@@ -649,16 +649,28 @@ get_comparisons.bgmfit <- function(model,
   } # if(dpar == "sigma") {
   
   
+  # if(!is.null(transform)) {
+  #   if(is.logical(transform)) {
+  #     if(!transform) transform_draws <- 'identity'
+  #   } else if(!is.logical(transform)) {
+  #     if(is.character(transform)) {
+  #       if(transform == "exp") transform_draws <- 'exp'
+  #       if(transform == "ln") transform_draws <- 'log'
+  #     }
+  #   }
+  # }
+  
   if(!is.null(transform)) {
-    if(is.logical(transform)) {
-      if(!transform) transform_draws <- 'identity'
-    } else if(!is.logical(transform)) {
-      if(is.character(transform)) {
+    # new check added if(!is.function(transform)) {
+    if(!is.function(transform)) {
+      if(is.logical(transform)) {
+        if(!transform) transform_draws <- 'identity'
+      } else if(!is.logical(transform)) {
         if(transform == "exp") transform_draws <- 'exp'
         if(transform == "ln") transform_draws <- 'log'
       }
-    }
-  }
+    } # if(!is.function(transform)) {
+  } # if(!is.null(transform)) {
   
   
   assign_function_to_environment(transform_draws, 'transform_draws',

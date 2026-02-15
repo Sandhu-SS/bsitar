@@ -779,12 +779,15 @@ get_growthparameters.bgmfit <- function(model,
     resp_rev_ <- paste0("_", resp)
   }
   
+  # This below for utilit heper 14 which is alos used in modelbased_
   # For sigma
   xvar_      <- paste0('xvar', resp_rev_)
   sigmaxvar_ <- paste0('sigma', xvar_)
   cov_       <- paste0('cov', resp_rev_)
   sigmacov_  <- paste0('sigma', cov_)
   uvarby     <- model$model_info$univariate_by$by
+  if(is.null(uvarby)) uvarby <- NA 
+  
   
   if(dpar == "mu") {
     if(is.null(xvar)) {
@@ -792,17 +795,72 @@ get_growthparameters.bgmfit <- function(model,
     }
     cov    <- model$model_info[[cov_]]
   } else if(dpar == "sigma") {
-    
     if(!is.na(model$model_info[[sigmaxvar_]])) {
       xvar   <- model$model_info[[sigmaxvar_]]
     } else if(is.na(model$model_info[[sigmaxvar_]]) & 
               !is.null(model$model_info[[xvar_]])) {
       xvar   <- model$model_info[[xvar_]]
     }
-    
     cov    <- model$model_info[[sigmacov_]]
   } # if(dpar == "mu") { else if(dpar == "sigma") {
   
+  groupvar_     <- paste0('groupvar', resp_rev_)
+  yvar_         <- paste0('yvar', resp_rev_)
+  yvar          <- model$model_info[[yvar_]]
+  hierarchical_ <- paste0('hierarchical', resp_rev_)
+  
+  
+  if(is.null(levels_id) & is.null(idvar)) {
+    idvar <- model$model_info[[groupvar_]]
+    if (!is.null(model$model_info[[hierarchical_]])) {
+      idvar <- model$model_info[[hierarchical_]]
+    }
+    # 29.08.2025 - re assign idvar to groupvar_ if hierarchical_
+    model$model_info[[groupvar_]] <- idvar # idvar[1]
+  } else if (!is.null(levels_id)) {
+    idvar <- levels_id
+  } else if (!is.null(idvar)) {
+    idvar <- idvar
+  }
+  
+  cov_       <- paste0('cov', resp_rev_)
+  sigmacov_  <- paste0('sigma', cov_)
+  
+  # When no random effects and hierarchical, IDvar <- NULL problem 02 03 2024
+  if(is.null(idvar)) {
+    if(is.null(idvar)) {
+      if(!is.null(model$model_info[['idvars']])) {
+        idvar <- model$model_info[['idvars']]
+      }
+    }
+  }
+  
+  
+  
+  # # For sigma
+  # xvar_      <- paste0('xvar', resp_rev_)
+  # sigmaxvar_ <- paste0('sigma', xvar_)
+  # cov_       <- paste0('cov', resp_rev_)
+  # sigmacov_  <- paste0('sigma', cov_)
+  # uvarby     <- model$model_info$univariate_by$by
+  # 
+  # if(dpar == "mu") {
+  #   if(is.null(xvar)) {
+  #     xvar   <- model$model_info[[xvar_]]
+  #   }
+  #   cov    <- model$model_info[[cov_]]
+  # } else if(dpar == "sigma") {
+  #   
+  #   if(!is.na(model$model_info[[sigmaxvar_]])) {
+  #     xvar   <- model$model_info[[sigmaxvar_]]
+  #   } else if(is.na(model$model_info[[sigmaxvar_]]) & 
+  #             !is.null(model$model_info[[xvar_]])) {
+  #     xvar   <- model$model_info[[xvar_]]
+  #   }
+  #   
+  #   cov    <- model$model_info[[sigmacov_]]
+  # } # if(dpar == "mu") { else if(dpar == "sigma") {
+  # 
  
   ########################################################
   ########################################################
@@ -940,6 +998,8 @@ get_growthparameters.bgmfit <- function(model,
   j <- NULL;
   i <- NULL;
   
+  
+  
   # sat_ptc will be size at apgv/atgv/acgv whereas numeric_sat at 12, 13 etc 
   allowed_parms      <- c('apgv', 'pgv', 'atgv', 'tgv', 'acgv', 'cgv')
   allowed_parms_size <- c('spgv', 'stgv', 'scgv')
@@ -986,6 +1046,21 @@ get_growthparameters.bgmfit <- function(model,
   # print(numeric_sat)
   # print(string_numeric_sat)
   # stop()
+  
+  
+  peak_parm_TF <- takeoff_parm_TF <- cessation_parm_TF <- sat_parm_TF <- FALSE
+  if('apgv' %in% parm | 'pgv' %in% parm | 'spgv' %in% parm) {
+    peak_parm_TF <- TRUE
+  }
+  if('atgv' %in% parm | 'tgv' %in% parm | 'stgv' %in% parm) {
+    takeoff_parm_TF <- TRUE
+  }
+  if('acgv' %in% parm | 'cgv' %in% parm | 'scgv' %in% parm) {
+    cessation_parm_TF <- TRUE
+  }
+  if(!is.null(parameter_sat)) {
+    sat_parm_TF <- TRUE
+  }
   
   
   conf <- conf_level
@@ -1178,13 +1253,17 @@ get_growthparameters.bgmfit <- function(model,
   
   
   if(!is.null(transform)) {
-    if(is.logical(transform)) {
-      if(!transform) transform_draws <- 'identity'
-    } else if(!is.logical(transform)) {
-      if(transform == "exp") transform_draws <- 'exp'
-      if(transform == "ln") transform_draws <- 'log'
-    }
-  }
+    # new check added if(!is.function(transform)) {
+    if(!is.function(transform)) {
+      if(is.logical(transform)) {
+        if(!transform) transform_draws <- 'identity'
+      } else if(!is.logical(transform)) {
+        if(transform == "exp") transform_draws <- 'exp'
+        if(transform == "ln") transform_draws <- 'log'
+      }
+    } # if(!is.function(transform)) {
+  } # if(!is.null(transform)) {
+  
   
   assign_function_to_environment(transform_draws, 'transform_draws',
                                  envir = NULL)
@@ -2994,6 +3073,7 @@ get_growthparameters.bgmfit <- function(model,
           } else {
             dfc <- NULL
           }
+          # if(is.null(dfp) & is.null(dft) & is.null(dfc)) return(x)
           cbind(c(namesp, namest, namesc), matrix(c(dfp, dft, dfc)))
         }
         
@@ -3332,6 +3412,7 @@ get_growthparameters.bgmfit <- function(model,
         collapse::frename(., setdrawidparm_) 
       row.names(out3) <- NULL
       out_sf <- out3
+      
     } else {
       summary_c <- list()
       for (parmi in parm) {

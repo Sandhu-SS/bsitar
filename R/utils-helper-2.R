@@ -7266,16 +7266,17 @@ check_set_parm <- function(parameter,
   parameter_arg <- parameter
   parameter     <- setdiff(parameter, allowed_parms_size)
   parameter_sat <- setdiff(parameter,c(allowed_parms_allowed_parms_size, 'all'))
-  parameter     <- parameter[parameter != parameter_sat]
+  if(!is_emptyx(parameter_sat)) {
+    parameter     <- parameter[parameter != parameter_sat]
+  }
+  # parameter     <- parameter[parameter != parameter_sat]
   if(is_emptyx(parameter)) {
     parameter <- NULL
   }
   if(is_emptyx(parameter_arg)) {
     parameter_arg <- NULL
   }
-  if(is_emptyx(parameter)) {
-    parameter <- NULL
-  }
+  
   
   
   
@@ -7292,6 +7293,51 @@ check_set_parm <- function(parameter,
     parameter_sat <- string_sat <- numeric_sat <- string_numeric_sat <- NULL
   }
   
+  
+  numeric_sat_check_msg <- 
+    "The size at parameter 'sat' must have a numeric part such as 'sat12'"
+  
+  if(!is.null(string_sat)) {
+    if(is.null(numeric_sat)) {
+      stop2c(numeric_sat_check_msg)
+    } else if(is.na(numeric_sat)) {
+      stop2c(numeric_sat_check_msg)
+    }
+  } 
+  
+  if(!is.null(string_sat)) {
+    if(!is.na(string_sat)) {
+      if(is.null(numeric_sat)) {
+        stop2c(numeric_sat_check_msg)
+      } else if(is.na(numeric_sat)) {
+        stop2c(numeric_sat_check_msg)
+      }
+    }
+  }
+  
+  
+  sat_ptc <- intersect(allowed_parms_size, parameter_arg) 
+  if(is_emptyx(sat_ptc)) sat_ptc <- NULL
+  
+  
+  # Not possible, need at least one core parm
+  # Allow only sat paramete
+  # if(is.null(parameter)) {
+  #   if(!is.null(parameter_sat)) {
+  #     out <- list(parm = NULL, sat_ptc = sat_ptc,
+  #                 parameter = parameter, parameter_arg = parameter_arg,
+  #                 parameter_sat = parameter_sat, string_sat = string_sat,
+  #                 numeric_sat = numeric_sat, string_numeric_sat = string_numeric_sat)
+  #     
+  #     return(out)
+  #   }
+  # }
+  
+  
+  # print(parameter)
+  # print(parameter_arg)
+  # print(parameter_sat)
+  # stop()
   
   
   # 01.07.2025
@@ -7324,11 +7370,10 @@ check_set_parm <- function(parameter,
     if(plot) stop2c("Please specify only one parameter when plot = TRUE")
   }
   
-  sat_ptc <- intersect(allowed_parms_size, parameter_arg) 
-  if(is_emptyx(sat_ptc)) sat_ptc <- NULL
   
-  out <- 
-  list(parm = parm, sat_ptc = sat_ptc,
+
+  
+  out <- list(parm = parm, sat_ptc = sat_ptc,
        parameter = parameter, parameter_arg = parameter_arg,
        parameter_sat = parameter_sat, string_sat = string_sat,
        numeric_sat = numeric_sat, string_numeric_sat = string_numeric_sat)
@@ -7490,6 +7535,12 @@ get_size_from_age_draws <- function(age_draws_dt,
                                     rbindsize = TRUE,
                                     skip_absent=FALSE) {
   
+  if(!is.null(by)) {
+    if(is.logical(by)) {
+      if(!by) by <- NULL
+    }
+  }
+  
   if(!data.table::is.data.table(age_draws_dt)) {
     if(is.data.frame(age_draws_dt)) {
       age_draws_dt <- data.table::setDT(age_draws_dt)
@@ -7601,7 +7652,7 @@ get_size_from_age_draws <- function(age_draws_dt,
   age_draws_dt <- age_draws_dt[, mget(core_varibales_name_drawindex)]
   draw_name_pos <- match(draw_name, names(age_draws_dt))
   age_draws_dt <- data.table::setnames(age_draws_dt, draw_name, xvar)
-  
+
   
   get_size_draws_fun <- function(x, 
                                  model, 
@@ -7623,12 +7674,25 @@ get_size_from_age_draws <- function(age_draws_dt,
                                             future,
                                             drawindex_name,
                                             verbose) {
-      fitted_draws(model, 
-                   newdata = data[get(drawindex_name) == x, with = TRUE], 
-                   newdata_fixed = 0,
-                   draw_ids = x, 
-                   summary = FALSE,
-                   re_formula = re_formula)
+      # brms::posterior_epred / fitted_draws does't work with one row data
+      # Error in `predictor.bprepnl()`:
+      # ! Error in cbind(1, basis) %*% solve(cbind(1, kbasis)) :
+      newdata <- data[get(drawindex_name) == x, with = TRUE]
+      if(nrow(newdata) == 1) {
+        fitted_draws(model, 
+                     newdata = collapse::rowbind(newdata, newdata),
+                     newdata_fixed = 0,
+                     draw_ids = x, 
+                     summary = FALSE,
+                     re_formula = re_formula)[,1]
+      } else {
+        fitted_draws(model, 
+                     newdata = newdata,
+                     newdata_fixed = 0,
+                     draw_ids = x, 
+                     summary = FALSE,
+                     re_formula = re_formula)
+      }
     } # get_size_draws_fun_draw_ids <- function(x, 
     
     if(future) {
@@ -7677,11 +7741,7 @@ get_size_from_age_draws <- function(age_draws_dt,
   )]
   
   
-  
-  
   age_draws_dt <- age_draws_dt[, (xvar) := NULL]
-  
-  
   
   age_draws_dt <- data.table::setcolorder(age_draws_dt, (draw_name) , 
                                           after = drawid_name,
