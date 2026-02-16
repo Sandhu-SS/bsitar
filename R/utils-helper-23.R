@@ -926,9 +926,10 @@ parameter_method_loop_over_parm <- function(parm,
   } # if(nrow(peak_data_draw) > 0) {
   
   
+  
   if(add_xtm) {
     tm_parameters[['xtm']] <- ifunx_(tm_parameters[['xtm']])
-    setdrawidparm <- c(by)
+    setdrawidparm <- c(by, 'xid')
     namesx <- c('estimate', 'conf.low', 'conf.high')
     namesx <- paste0("x", ".", namesx)
     setdrawidparm_ <- c(setdrawidparm, namesx)
@@ -961,6 +962,8 @@ parameter_method_loop_over_parm <- function(parm,
                                           how = "left",
                                           multiple = TRUE,
                                           verbose = FALSE)
+    
+    tm_parameters_xtm_ytm   <- tm_parameters_xtm_ytm %>% collapse::fselect(-xid)
     
   } # if(add_xtm) {
   

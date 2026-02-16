@@ -7576,7 +7576,9 @@ get_size_from_age_draws <- function(age_draws_dt,
   
   # This for apgv.......
   if(!is.null(parameter)) {
-    if(parameter == 'all_size' | parameter == 'all') {
+    parameter_allowed <- c("spgv", "stgv", "scgv", "all_size", "all")
+    if(any(parameter %in% parameter_allowed)) {
+    # if(parameter == 'all_size' | parameter == 'all') {
       parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
     } else {
       if(is.factor(parameter)) {

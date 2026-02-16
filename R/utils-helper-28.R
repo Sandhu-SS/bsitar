@@ -86,6 +86,7 @@ clean_draws <- function(DT,
                         variable = NULL, 
                         group = "drawid", 
                         verbose = FALSE) {
+  
   has_na <- NULL;
   . <- NULL;
   is_dt <- data.table::is.data.table(DT)
@@ -258,7 +259,10 @@ get_comparison_hypothesis <- function(data,
   }
  
   
-  data <- clean_draws(data,variable = "draw", group = "drawid", T)
+  data <- clean_draws(data,
+                      variable = "draw", 
+                      group = "drawid", 
+                      verbose = verbose)
 
   if(is.null(full.args)) {
     if(evaluate_comparison) {

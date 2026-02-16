@@ -274,7 +274,20 @@ test_that("test-modelbased_growthparameters", {
   }
   
   
-  marginaleffects_args[['parameter_method']] <- 1
+  parameter_method <- 1
+  
+  marginaleffects_args[['parameter_method']] <- parameter_method
+  
+  # parameter_method does not allow cessation parameter
+  if(parameter_method == 1) {
+    marginaleffects_args[['parameter']] <- c('apgv', 'pgv', 'spgv',
+                                             'atgv', 'tgv', 'stgv')
+  }
+  if(parameter_method == 2) {
+    marginaleffects_args[['parameter']]     <- c('all')
+  }
+  
+  
   
   
   
@@ -300,8 +313,6 @@ test_that("test-modelbased_growthparameters", {
   marginal_args[['variables']]  <- 'sex'
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
-  
-  marginal_args[['parameter']]     <- c('all')
   
   # devtools::load_all()
   # marginal_funcall        <- modelbased_growthparameters
@@ -345,9 +356,6 @@ test_that("test-modelbased_growthparameters", {
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
-  marginal_args[['parameter']]     <- c('all')
-  
-  
   marginal_out_custom_mdT_FF <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()
   
@@ -377,9 +385,6 @@ test_that("test-modelbased_growthparameters", {
   marginal_args[['variables']]  <- 'sex'
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
-  
-  marginal_args[['parameter']]     <- c('all')
-  
   
   marginal_out_custom_mdT_FT <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()
@@ -411,9 +416,6 @@ test_that("test-modelbased_growthparameters", {
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
-  marginal_args[['parameter']]     <- c('all')
-  
-  
   marginal_out_custom_mdF_FF <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()
   
@@ -443,9 +445,6 @@ test_that("test-modelbased_growthparameters", {
   marginal_args[['variables']]  <- 'sex'
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
-  
-  marginal_args[['parameter']]     <- c('all')
-  
   
   marginal_out_custom_mdF_FT <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()

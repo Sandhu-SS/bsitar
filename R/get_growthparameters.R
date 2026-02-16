@@ -3530,7 +3530,10 @@ get_growthparameters.bgmfit <- function(model,
         #   onex1 <- data.table::setnames(onex1, "estimate", "draw")
         #   onex1 <- clean_draws(onex1, variable = 'draw', group = 'parameter', verbose = F)
         # }
-        onex1 <- clean_draws(onex1, variable = 'draw', group = 'parameter', verbose = F)
+        onex1 <- clean_draws(onex1, 
+                             variable = 'draw', 
+                             group = 'parameter', 
+                             verbose = FALSE)
         
         if(!is.null(constrats_by)) {
           hypothesis_by_what <- constrats_by
