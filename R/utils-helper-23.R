@@ -407,8 +407,8 @@ wraper_for_drawni <- function(setdat_mat,
   if(callvia == 'base') {
     drawniid <- drawni
   } else if(callvia == 'future') {
-    # When plan multisession, my_counter will generate sequ per session
-    # to get unique sequnce later assign_new_sequence
+    # When plan multisession, my_counter will generate seq per session
+    # to get unique sequence later assign_new_sequence
     drawniid <- my_counter$next_value() 
     pid <- Sys.getpid()
     time_us <- as.numeric(Sys.time()) * 1e6
@@ -501,14 +501,16 @@ wraper_for_drawni_2 <- function(drawni,
   } # end else if(all(is.na(setx0))) {
   
   if(add_xtm) {
-    setxx.adj_xtm <- funx_(setdat_mat_fixed[, 'xvar'])
-    x.adj_xtm <- 
-      (setxx.adj_xtm - setdat_mat_random[,"b"]) * exp(setdat_mat_random[,"c"])
-    x.adj_xtm <- ifunx_(x.adj_xtm)
+    setxx.adj_xtm <- (setdat_mat_fixed[, 'xvar'])
+    # setxx.adj_xtm <- funx_(setdat_mat_fixed[, 'xvar'])
+    x.adj_xtm <- (setxx.adj_xtm - setdat_mat_random[,"b"]) * 
+      exp(setdat_mat_random[,"c"])
     
     y.adj_xtm <- setdat_mat_fixed[, 'yvar'] - 
       setdat_mat_random[,"a"] - 
       setdat_mat_random[,"d"] * setxx.adj_xtm
+    
+    x.adj_xtm <- ifunx_(x.adj_xtm)
   }
   
   mat.adj[, 1] <- x.adj
@@ -683,7 +685,6 @@ parameter_method_loop_over_parm <- function(parm,
   
   onex00 <- data.table::as.data.table(onex00)
   
-  
   array_dim     <- set_nrows_n
   pieces_dim    <- 1
   parm_mat_dim  <- 6
@@ -698,9 +699,6 @@ parameter_method_loop_over_parm <- function(parm,
   
   onex00$xid <- setorderv(onex00, xid_by_onex00)[, .(xid=seq_len(.N)), 
                                                  by = xid_by_onex00]$xid
-  
-  
-  
   
   which_dim                  <- 3
   nlpar_fixed_names_dim3     <- attr(nlpar_fixed, "dimnames")[[which_dim]]
@@ -718,13 +716,10 @@ parameter_method_loop_over_parm <- function(parm,
     parm_mat_dim <- parm_mat_dim + 2
   }
   
-  
-  
   Sliced <- aperm(`dim<-`(t(extend_array), 
                           c(ncol(extend_array), 
                             dim(nlpar_fixed)[2], 
                             dim(nlpar_fixed)[1])), c(3, 2, 1))
-  
   
   nlpar_fixed <- abind::abind(nlpar_fixed, Sliced, along = 3)
   
@@ -732,7 +727,7 @@ parameter_method_loop_over_parm <- function(parm,
                                                   nlpar_fixed_names_dim3_add)
   
   mat.adj            <- matrix(NA_real_, nrow = array_dim, ncol = parm_mat_dim)
-  # set as data.table for rowbind()
+  
   mat.adj            <- data.table::as.data.table(mat.adj)
   if(!future) {
     collect_draws_parm <- list()
@@ -748,7 +743,7 @@ parameter_method_loop_over_parm <- function(parm,
                             mat.adj = mat.adj,
                             funx_ = funx_,
                             ifunx_ = ifunx_,
-                            callvia = 'base')
+                            callvia = callvia)
     } # for (drawni in 1:set_draws_n) {
   } # if(!future) {
   
@@ -864,7 +859,6 @@ parameter_method_loop_over_parm <- function(parm,
     # apply ifunx_
     all_peak_data_draw[['draw']] <- ifunx_(all_peak_data_draw[['draw']])
     
-    
     get_growthparameters_args <- modelbased_arguments
     get_growthparameters_args[['preparms']] <- all_peak_data_draw
     get_growthparameters_args[['by']] <- c(by, 'xid')
@@ -886,8 +880,6 @@ parameter_method_loop_over_parm <- function(parm,
     peak_roworderv_vars <- c(peak_roworderv_vars, by, 'xid')
     peak_parameters <- collapse::roworderv(peak_parameters, peak_roworderv_vars)
     
-    
-
     if(add_xtm) {
       xtm_draw    <- xtm_data_draw %>% 
         collapse::fmutate(draw = xtm) %>% 
@@ -921,11 +913,8 @@ parameter_method_loop_over_parm <- function(parm,
       tm_parameters <- collapse::roworderv(tm_parameters, tm_roworderv_vars)
       tm_parameters <- data.table::setnames(tm_parameters, tm_names.ors__)
       # peak_parameters <- collapse::rowbind(peak_parameters, tm_parameters)
-      
     } # if(add_xtm) {
   } # if(nrow(peak_data_draw) > 0) {
-  
-  
   
   if(add_xtm) {
     tm_parameters[['xtm']] <- ifunx_(tm_parameters[['xtm']])
@@ -964,13 +953,11 @@ parameter_method_loop_over_parm <- function(parm,
                                           verbose = FALSE)
     
     tm_parameters_xtm_ytm   <- tm_parameters_xtm_ytm %>% collapse::fselect(-xid)
-    
   } # if(add_xtm) {
   
   if(nrow(peak_data_draw) == 0) {
     peak_parameters <- NULL
   }
-  
   
   if(is.null(peak_parameters)) return(peak_parameters)
   
@@ -988,7 +975,7 @@ parameter_method_loop_over_parm <- function(parm,
   peak_names.ors__2 <- c(lower_case__2, upper_case__2)
   
   peak_parameters <- data.table::setnames(peak_parameters, peak_names.ors__2)
-  
+
   peak_parameters <- DT_to_data_frames(peak_parameters)
   
   if(add_xtm) {
@@ -997,3 +984,6 @@ parameter_method_loop_over_parm <- function(parm,
   
   return(peak_parameters)
 } # parameter_method_loop_over_parm
+
+
+

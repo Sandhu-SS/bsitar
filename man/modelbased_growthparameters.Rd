@@ -26,7 +26,7 @@
   levels_id = NULL,
   avg_reffects = NULL,
   idata_method = NULL,
-  ipts = NULL,
+  ipts = FALSE,
   seed = 123,
   future = FALSE,
   future_session = "multisession",

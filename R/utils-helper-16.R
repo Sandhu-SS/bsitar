@@ -472,14 +472,14 @@ xyadj_curves.bgmfit <-
       # 6.03.2025
       ##############################################################
       if(set_get_dv) {
-        if(tomean) stop("'tomean' must for FALSE when 'get_dv = TRUE'")
+        if(tomean) stop("'tomean' must be FALSE when 'get_dv = TRUE'")
         if(!tomean) return(xadj_tmf)
         if(tomean)  return(xadj_tmt)
       }
       
       if(!is.null(dots$xadj_tmt)) {
         if(dots$xadj_tmt) {
-          if(verbose) message("returning xadj tomean = TRUE")
+          if(verbose) message("returning 'xadj' tomean = TRUE")
           return(xadj_tmt)
         }
       }
@@ -707,8 +707,7 @@ xyunadj_curves.bgmfit <- function (model,
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
   
-  # o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
-   o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
+  o <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
   
   newdata <- get.newdata(model, 
@@ -770,16 +769,6 @@ xyunadj_curves.bgmfit <- function (model,
     idvar <- idvar[1]
     id <- newdata[[idvar]][1]
   }
-  
-  
-  
-  # if (missing(x))
-  #   x <- newdata[[Xx]]
-  # if (missing(y))
-  #   y <- newdata[[Yy]]
-  # if (missing(id))
-  #   id <- newdata[[idvar]]
-  
   
   out <- as.data.frame(as.factor(newdata[[idvar]]))
   out <- cbind(x, y, out)
@@ -891,8 +880,7 @@ trimlines_curves.bgmfit <-
     post_processing_checks_args[['check_d1']] <- TRUE
     post_processing_checks_args[['check_d2']] <- FALSE
     
-    # o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
-     o    <- CustomDoCall(post_processing_checks, post_processing_checks_args)
+    o <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     
   
     uvarby <- model$model_info$univariate_by$by  
@@ -997,10 +985,8 @@ trimlines_curves.bgmfit <-
     estimation_method_args[['envir']]      <- envir
     
     if (estimation_method == 'fitted') {
-      # extra$ey <- CustomDoCall(fitted_draws, estimation_method_args)
        extra$ey <- CustomDoCall(fitted_draws, estimation_method_args)
     } else if (estimation_method == 'predict') {
-      # extra$ey <- CustomDoCall(predict_draws, estimation_method_args)
        extra$ey <- CustomDoCall(predict_draws, estimation_method_args)
     }
     
@@ -1019,8 +1005,7 @@ trimlines_curves.bgmfit <-
     # 6.03.2025
     newdata <- newdata %>% dplyr::select(dplyr::all_of(colnames(extra)))
     newdata <- rbind(newdata, extra)
-    newdata <-
-      with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
+    newdata <- with(newdata, newdata[order(newdata[[.id]], newdata[[.x]]), ])
     
     if(!is.na(uvarby)) {
       tempotnames <- c(idvar, Xx, Yy)
