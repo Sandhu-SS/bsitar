@@ -78,7 +78,9 @@ generate_age_list <- function(n,
   # Triangular distribution centered at median
   x <- meas_range
   center <- which(x == median_target)
-  probs <- sapply(1:length(x), function(i) 1 - abs(i - center) / max(center - 1, length(x) - center))
+  probs <- sapply(1:length(x), function(i) 1 - abs(i - center) / max(center - 1,
+                                                                     length(x) - 
+                                                                       center))
   probs <- probs / sum(probs)
   
   # Forced assignments
@@ -86,15 +88,18 @@ generate_age_list <- function(n,
   max_val <- max(meas_range)
   fixed_values <- c(rep(min_val, min_n_at_min), rep(max_val, min_n_at_max))
   remaining_n <- n - length(fixed_values)
-  remaining_vals <- sample(meas_range, remaining_n, replace = TRUE, prob = probs)
+  remaining_vals <- sample(meas_range, remaining_n, replace = TRUE, 
+                           prob = probs)
   num_meas_per_id <- sample(c(fixed_values, remaining_vals))  # shuffle
   
   # Function to generate individual age vector
   generate_ages <- function(k) {
-    if (k < 3) stop("Need at least 3 measurements to satisfy constraints (start, middle, end)")
+    if (k < 3) stop2c("Need at least 3 measurements to satisfy 
+                      constraints (start, middle, end)")
     
     # Always include start, middle (in must_include_range), and end
-    middle_age <- runif(1, min = must_include_range[1], max = must_include_range[2])
+    middle_age <- runif(1, min = must_include_range[1], 
+                        max = must_include_range[2])
     
     remaining_k <- k - 3
     other_ages <- if (remaining_k > 0) {
@@ -207,7 +212,8 @@ generate_age_list_new <- function(n,
   max_val <- max(meas_range)
   fixed_values <- c(rep(min_val, min_n_at_min), rep(max_val, min_n_at_max))
   remaining_n <- n - length(fixed_values)
-  remaining_vals <- sample(meas_range, remaining_n, replace = TRUE, prob = probs)
+  remaining_vals <- sample(meas_range, remaining_n, replace = TRUE, 
+                           prob = probs)
   num_meas_per_id <- sample(c(fixed_values, remaining_vals))
   
   ages_list <- vector("list", length = n)
@@ -230,8 +236,9 @@ generate_age_list_new <- function(n,
     }
     
     if (is.null(age_vec)) {
-      warning(sprintf("Individual %d: Failed to generate age vector. Relax gap constraints or age range.", i))
-      stop("Could not generate valid age vector even after fallback.")
+      warning2c(sprintf("Individual %d: Failed to generate age
+                        vector. Relax gap constraints or age range.", i))
+      stop2c("Could not generate valid age vector even after fallback.")
     }
     
     ages_list[[i]] <- age_vec
@@ -239,6 +246,8 @@ generate_age_list_new <- function(n,
   
   list(ages_list = ages_list, num_measurements = num_meas_per_id)
 }
+
+
 
 
 # # ---- Test Run ----

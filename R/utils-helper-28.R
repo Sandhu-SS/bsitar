@@ -54,8 +54,6 @@ get_selected_rows <- function(dt,
 }
 
 
-
-
 #' Remove groups with missing values
 #'
 #' @description
@@ -344,9 +342,6 @@ get_comparison_hypothesis <- function(data,
   
   data.table::setDTthreads(threads = parallel::detectCores() - 1) 
   
-  # collapse::get_collapse()
-  # data.table::getDTthreads()  
-  
   ##########################################
   
   if(is.null(probs) & is.null(conf_level)) {
@@ -410,17 +405,13 @@ get_comparison_hypothesis <- function(data,
   hypothesis_p_direction_arg <- comparison_p_direction_arg
   
   ##########################################
-  
 
-  
   # If somehow hypothesis_args are set by hypothesis itself is NULL
   if(!is.null(hypothesis_args)) {
     if(is.null(hypothesis_args[['hypothesis']])) {
       evaluate_hypothesis  <- FALSE
     }
   }
-  
-  
   
   get_depth <- function(x) {
     if (is.list(x) && length(x) > 0) {
@@ -429,8 +420,6 @@ get_comparison_hypothesis <- function(data,
       0
     }
   }
-  
-
   
   list_range_null_to_df <- function(range_null, 
                                     parameter,
@@ -503,8 +492,6 @@ get_comparison_hypothesis <- function(data,
     
   } # End of list_range_null_to_df
   
-  
-  
   list_comparison_range <- list_comparison_null <- NULL
   list_hypothesis_range <- list_hypothesis_null <- NULL
   
@@ -525,8 +512,6 @@ get_comparison_hypothesis <- function(data,
       }
     } # if(!is.null(comparison_args) & !is.null(comparison_args$range)) { else .
   }# if(NullFALSE(evaluate_comparison)) {
-   
- 
   
   if(NullFALSE(evaluate_hypothesis)) {
     if(!is.null(hypothesis_args) & !is.null(hypothesis_args$range)) {
@@ -548,17 +533,17 @@ get_comparison_hypothesis <- function(data,
     } # if(!is.null(hypothesis_args) & !is.null(hypothesis_args$range)) { else .
   } # if(NullFALSE(evaluate_hypothesis)) {
   
-  
-
   if(is.null(comparison_range)) {
     if(!is.null(list_comparison_range)) {
       comparison_range <- list_range_null_to_df(list_comparison_range,
                                                 parameter = parameter,
                                                 data = as.data.frame(data),
                                                 by = comparison_args[['by']],
-                                                evaluate_comparison = evaluate_comparison,
+                                                evaluate_comparison = 
+                                                  evaluate_comparison,
                                                 evaluate_hypothesis = FALSE,
-                                                comparison_args = comparison_args,
+                                                comparison_args = 
+                                                  comparison_args,
                                                 hypothesis_args = NULL,
                                                 what = 'range')
     } else {
@@ -571,9 +556,11 @@ get_comparison_hypothesis <- function(data,
                                                parameter = parameter,
                                                data = as.data.frame(data),
                                                by = comparison_args[['by']],
-                                               evaluate_comparison = evaluate_comparison,
+                                               evaluate_comparison = 
+                                                 evaluate_comparison,
                                                evaluate_hypothesis = FALSE,
-                                               comparison_args = comparison_args,
+                                               comparison_args = 
+                                                 comparison_args,
                                                hypothesis_args = NULL,
                                                what = 'null')
     } else {
@@ -590,9 +577,11 @@ get_comparison_hypothesis <- function(data,
                                                 data = as.data.frame(data),
                                                 by = hypothesis_args[['by']],
                                                 evaluate_comparison = FALSE,
-                                                evaluate_hypothesis = evaluate_hypothesis,
+                                                evaluate_hypothesis = 
+                                                  evaluate_hypothesis,
                                                 comparison_args = NULL,
-                                                hypothesis_args = hypothesis_args,
+                                                hypothesis_args = 
+                                                  hypothesis_args,
                                                 what = 'range')
     } else {
       hypothesis_range <- NULL
@@ -605,9 +594,11 @@ get_comparison_hypothesis <- function(data,
                                                data = as.data.frame(data),
                                                by = hypothesis_args[['by']],
                                                evaluate_comparison = FALSE,
-                                               evaluate_hypothesis = evaluate_hypothesis,
+                                               evaluate_hypothesis = 
+                                                 evaluate_hypothesis,
                                                comparison_args = NULL,
-                                               hypothesis_args = hypothesis_args,
+                                               hypothesis_args = 
+                                                 hypothesis_args,
                                                what = 'null')
     } else {
       hypothesis_null <- NULL
@@ -1145,7 +1136,7 @@ get_hypothesis_group_fun <- function(hypothesis) {
 #' )
 #' print(the_grid)
 #' 
-#' # 5b. Use the generated grid_str structure to initialize a new call (set_grid)
+#' # Use the generated grid_str structure to initialize a new call (set_grid)
 #' # This creates the structure defined in 'the_grid' (as list) 
 #' # and allows populating it via '...'.
 #' 
@@ -1270,7 +1261,8 @@ get_test_range_null <- function(parameter = NULL,
     if(get_grid | set_grid) {
       if(is.null(data)) stop2c("'data' required when get_grid = TRUE")
     } else if(!get_grid & !set_grid) {
-      if(is.null(parameter)) stop2c("'parameter' required when get_grid = FALSE")
+      if(is.null(parameter)) stop2c("'parameter' 
+                                    required when get_grid = FALSE")
     }
     
     
@@ -1416,7 +1408,8 @@ get_test_range_null <- function(parameter = NULL,
         grid_str_comparison <-  evaluate_comparison_fun(data = grid_str, 
                                              comparison_args = comparison_args,
                                              set_grid = FALSE,
-                                             get_range_null_form = get_range_null_form)
+                                             get_range_null_form = 
+                                               get_range_null_form)
         grid_str_comparison <- get_eqpd_form_rename(grid_str_comparison, 
                                                     setpair)
         grid_str_list[['comparison']] <- grid_str_comparison
@@ -1425,13 +1418,12 @@ get_test_range_null <- function(parameter = NULL,
         grid_str_hypothesis <-  evaluate_hypothesis_fun(data = grid_str, 
                                              hypothesis_args = hypothesis_args,
                                              set_grid = FALSE,
-                                             get_range_null_form = get_range_null_form)
+                                             get_range_null_form = 
+                                               get_range_null_form)
         grid_str_hypothesis <- get_eqpd_form_rename(grid_str_hypothesis, 
                                                     setpair)
         grid_str_list[['hypothesis']] <- grid_str_hypothesis
       }
-      # grid_str_list_out <- data.table::rbindlist(grid_str_list, fill=T)
-      # return(grid_str_list_out)
       return(grid_str_list)
     } # if(get_range_null_form) {
     if(!data.table::is.data.table(grid_str)) {
@@ -1688,13 +1680,6 @@ get_test_range_null <- function(parameter = NULL,
             
             val_content <- raw_val[[param_key]]
             pair <- transform_to_pair(val_content, item_name, setpair)
-            
-            # Find rows that match THIS item AND THIS parameter
-            # We assume the first level is ALWAYS the parameter level 
-            # (label = processed_levels[[1]]$label)
-            # This is a strong assumption but matches the "parameter" 
-            # argument design.
-            
             param_label <- processed_levels[[1]]$label
             
             specific_indices <- 
@@ -2909,32 +2894,8 @@ evaluate_hypothesis_fun <- function(data,
   } # if(get_range_null_form) {
   
   
-  
-
-  # sanitize_hypothesis_formula <- get_labels <- NULL;
-  # getfrom_ <- c('sanitize_hypothesis_formula', 'get_labels')
-  # for (i in getfrom_) assign(i, utils::getFromNamespace(i, 'marginaleffects'))
-  # hypothesis_group <- NULL
-  # if(!is.null(hypothesis_args[['hypothesis']])) {
-  #   if(rlang::is_formula(hypothesis_args[['hypothesis']])) {
-  #     form <- sanitize_hypothesis_formula(hypothesis_args[['hypothesis']])
-  #     hypothesis_group <- form$group
-  #     if(is_emptyx(hypothesis_group)) hypothesis_group <- NULL
-  #   }
-  # }
-  
   hypothesis_group <- get_hypothesis_group_fun(hypothesis_args[['hypothesis']])
-  
-  
- 
-  # hypothesis_by <- hypothesis_args[['by']]
-  # hypothesis_groupby       <- c('hypothesis', hypothesis_group)
-  # # When getting get_grid_form = TRUE, 'hypothesis' is not available 
-  # hypothesis_groupby   <- intersect(hypothesis_groupby, names(data))
-  # drawid_parameter         <- c('drawid', 'parameter')
-  # drawid_parameter_draw_by <- c(drawid_parameter, 'draw', hypothesis_groupby)
-  
-  
+
   hypothesis_by <- hypothesis_args[['by']]
   
   hypothesis_groupby       <- c('hypothesis', hypothesis_group)
@@ -2944,11 +2905,8 @@ evaluate_hypothesis_fun <- function(data,
   
   drawid_parameter         <- c('drawid', 'parameter')
   drawid_parameter_draw_by <- c(drawid_parameter, 'draw')
-  
-  
-  # if(set_grid) 
     
-    drawid_parameter_draw_by <- c(drawid_parameter_draw_by, hypothesis_by)
+  drawid_parameter_draw_by <- c(drawid_parameter_draw_by, hypothesis_by)
   
   
   if(!all(drawid_parameter_draw_by %chin% names(data))) {
@@ -2994,7 +2952,7 @@ evaluate_hypothesis_fun <- function(data,
   }
   
   if(get_range_null_form) {
-    setdrawidh_draw_estimate <- setdiff(c(drawid_parameter_draw_by, "hypothesis",
+    setdrawidh_draw_estimate <-setdiff(c(drawid_parameter_draw_by, "hypothesis",
                                           "estimate"), 
                                         c('draw', 'drawid', 
                                           hypothesis_by))
@@ -3800,7 +3758,8 @@ set_up_equivalence_test_p_direction_args <- function(inbound_arguments,
   
   out <- list(format = format, get_range_null_form = get_range_null_form,
               get_range_null_value = get_range_null_value,
-              check_equivalence_test_full.args = check_equivalence_test_full.args,
+              check_equivalence_test_full.args = 
+                check_equivalence_test_full.args,
               check_p_direction_full.args = check_p_direction_full.args,
               inbound_arguments = inbound_arguments,
               rope_test = rope_test,
@@ -3908,5 +3867,7 @@ marginalstyle_reformat <- function(out, set_names_) {
     data.frame()
   return(out)
 }
+
+
 
 

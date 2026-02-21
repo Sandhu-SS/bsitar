@@ -1,9 +1,5 @@
 
 
-#############################################################
-############### knots_selection helpers ##################
-#############################################################
-
 ##############################################################################
 # get_form
 ##############################################################################
@@ -84,9 +80,7 @@ get_form <- function(x,
   if(is.character(df))     df     <- str2lang(df)
   if(is.character(knots)) knots <- str2lang(knots)
   if(is.character(bknots)) bknots <- str2lang(bknots)
-
   
-
   degree = degree
   intercept = intercept
   derivs = derivs
@@ -140,8 +134,6 @@ get_form <- function(x,
  
   return(SplineCall)
 }
-
-
 
 ##############################################################################
 # check_set_criteria
@@ -1818,7 +1810,7 @@ get_suggest_knotcount <- function(dataset,
 #' @examples
 #'
 #' my_model <- get_suggest_splines(d, y, x, 4)
-#' my_model <- get_suggest_splines(d, y, x, 4, initial_nknots = 100, cost_fn = AIC)
+#' my_model <- get_suggest_splines(d, y, x, 4,initial_nknots=100, cost_fn = AIC)
 #' 
 get_suggest_splines <- function(dataset,
                             dependent,
@@ -2915,67 +2907,6 @@ design_sigmoid_knots <- function(dataset,
   # returned is the best_knots
   list(model = best_model, knots = best_knots, Boundary.knots = Boundary.knots)
 }
-
-
-
-
-##############################################################################
-
-# Greedy knot selection algorithm for restricted cubic spline regression
-# https://pmc.ncbi.nlm.nih.gov/articles/PMC10910934/
-# knutar
-# https://github.com/jo-inge-arnes/knutar-experiments
-
-# knutar - example
-# https://github.com/jo-inge-arnes/knutar-experiments/blob/main/mcycle-example.R
-
-##############################################################################
-
-# keywords internal
-# noRd
-# export
-# added new dependency R.utils - remove it later 
-
-
-##############################################################################
-
-
-# # fitx$model$`ns(x, knots = knots)`
-# 
-# # setdata <- data_male_class1
-# 
-# setdata <- bsitar::berkeley_exdata
-# 
-# 
-# x <- setdata$age 
-# y <- setdata$height   
-# 
-# 
-# # Generate simulated sigmoid data
-# # set.seed(111)
-# # x <- seq(-6, 6, length.out = 200)
-# # y <- 10 / (1 + exp(-x)) + rnorm(length(x), sd = 0.5)
-# 
-# # The returned internal fitted_knots is min_knots + 1
-# result <- design_sigmoid_knots(x, y, max_knots = 5, min_knots = 2, criterion = "AIC")
-# fitted_knots <- result$knots
-# fitted_bknots <- result$Boundary.knots
-# fullknots <- c(fitted_bknots[1], fitted_knots,fitted_bknots[2])
-# 
-# plot(x, y)
-# lines(x, predict(result$model), col = 'blue', lwd = 2)
-# points(fitted_knots, rep(mean(y), length(fitted_knots)), pch = 19, col = 'red')
-# 
-# setmodel <- result$model
-# setmodel$data <- setdata
-# setmodel$fitted.values <- predict(setmodel)
-# 
-# bsitar:::get_create_figure(dataset = setdata, 
-#                            model = setmodel,
-#                            fullknots = fullknots,
-#                            x='age', y='height')
-# 
-
 
 
 

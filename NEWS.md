@@ -6,14 +6,14 @@ The functions ``marginal_draws()``, ``marginal_comparison()``, and ``growthparam
 
 ## Major changes
 
-A major refactoring of the internal code to streamline the integration of modelling the distributional parameter sigma, aligning it more closely with the location parameter mu. This update marks the first step in a series of improvements aimed at enabling robust modelling of location-scale models. Additionally, the core functions are significantly rewritten to enhance the speed and efficiency of model fitting. Note: This release should be considered experimental. Future versions may introduce further significant changes. Additionally, documentation has not yet been fully updated to reflect these modifications.
+- A major refactoring of the internal code to streamline the integration of modelling the distributional parameter sigma, aligning it more closely with the location parameter mu. This update marks the first step in a series of improvements aimed at enabling robust modelling of location-scale models. Additionally, the core functions are significantly rewritten to enhance the speed and efficiency of model fitting. Note: This release should be considered experimental. Future versions may introduce further significant changes. Additionally, documentation has not yet been fully updated to reflect these modifications.
 
 Due to the above changes, previously saved model objects will need to be refitted for post-processing to work correctly.
 No other changes are required from the user’s perspective—only that the model should be re-run.
 
-Update documentation to provide comprehensive details on modeling the distributional parameter ``sigma``, which represents the residual standard deviation in Bayesian hierarchical models. 
+- Support for explicit modelling of scale parameter, ``sigma`` (distributional model)
 
-The sigma parameter controls the residual variance structure and can be modeled as either a constant or a function of covariates to accommodate heteroskedasticity. This flexibility allows researchers to specify complex variance relationships that better reflect the underlying data-generating process.
+Like location parameter ``mu``, the scale parameter ``sigma``, which models the residual variance structure, can be estimated as a function of covariates to accommodate heteroskedasticity. This flexibility allows researchers to specify complex variance relationships that better reflect the underlying data-generating process. 
 
 Modeling Approaches
 Constant Variance: By default, ``sigma`` is treated as a constant parameter across all observations, assuming homoskedastic residuals.
@@ -28,18 +28,22 @@ At higher hierarchical levels, ``sigma`` can incorporate random effects to model
 Prior Specification
 The ``bsitar`` allows full control on specifying appropriate prior distributions for ``sigma`` parameters typically include half-normal, half-Cauchy, or exponential priors for group level standard deviation parameters that respect the positive constraint while providing regularization for model stability.
 
-We've almost finished updating our ``bsitar`` to fit distributional models that include prior specifications and initial value settings. However, the post-processing support remains limited and experimental.
+We've almost finished updating the ``bsitar`` to fit distributional models that include prior specifications and initial value settings. However, the post-processing support remains limited and experimental.
+
+Update documentation to provide comprehensive details on modeling the distributional parameter ``sigma``. 
 
 
 ## New features/Additions
 
-Added experimental support for estimating model-based individual growth parameters, such as age at peak growth velocity (APGV), as well as distance and velocity at APGV. For details, refer to the function ``modelbased_growthparameters()``. Note that the function name and its arguments may change in future releases.
+- Added support for estimating model-based individual growth parameters, such as age at peak growth velocity (APGV), peak growth velocity (PGV) and size at peak growth velocity (SPGV). For details, refer to the function ``modelbased_growthparameters()``. Note multivariate models are not supported yet.
 
-Support has been added to allow the use of external functions, such as ``splines::ns()``, for modeling the distributional parameter ``sigma``. Users can now specify functions for both the fixed ``sigma_formula`` and random ``sigma_formula_gr`` effects. Further, different functions can be used in the fixed and random effects formulas. For example. For example. ``sigma_formula = ~ 1 + splines::ns(age, df = 3)``, and ``sigma_formula_gr = ~ 1 + stats::poly(age, degree = 2)``
+- Support has been added to allow the use of external functions, such as ``splines::ns()``, for modeling the distributional parameter ``sigma``. Users can now specify functions for both the fixed ``sigma_formula`` and random ``sigma_formula_gr`` effects. Further, different functions can be used in the fixed and random effects formulas. For example. For example. ``sigma_formula = ~ 1 + splines::ns(age, df = 3)``, and ``sigma_formula_gr = ~ 1 + stats::poly(age, degree = 2)``
 
-Added support for ``tag`` feature implementing parameter specific prior sensitivity analysis in ``priorsense`` package via ``brms``.
+- Added support for ``tag`` feature implementing parameter specific prior sensitivity analysis in ``priorsense`` package via ``brms``.
 
-An new feature that allows for optimizing the number and /or the placements of knots via the argument``knots_selection`` argument. This feature explores an extended candidate set (usually ``df + 4``) to select an optimal subset of knots minimizing a specified information criterion such as ``AIC``, ``BIC`` or the ``residual error`` from Cross-validation procedure. It supports flexible strategies via select (knots, degrees of freedom, or both), with options for returning and plotting all scores during ``df`` selection. Diagnostic outputs and plotting types can be selected, with options to return or print these results. This feature enhances model flexibility and diagnostic capability for improved spline regression performance.
+- An new feature that allows for optimizing the number and /or the placements of knots via the argument``knots_selection`` argument. This feature explores an extended candidate set (usually ``df + 4``) to select an optimal subset of knots minimizing a specified information criterion such as ``AIC``, ``BIC`` or the ``residual error`` from Cross-validation procedure. It supports flexible strategies via select (knots, degrees of freedom, or both), with options for returning and plotting all scores during ``df`` selection. Diagnostic outputs and plotting types can be selected, with options to return or print these results. This feature enhances model flexibility and diagnostic capability for improved spline regression performance.
+
+- Added ``hypothesis_test()`` that provides comprehensive hypothesis testing framework for the Bayesian SITAR models. The ``hypothesis_test()`` not only estimates the contrasts but also support testing for the ROPE (Region of Practical Equivalence) and pd (probability of direction) results in a unified interface.
 
 
 ### Minor changes/Enhancements

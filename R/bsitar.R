@@ -2551,93 +2551,46 @@ bsitar <- function(x,
   
   mcall_ <- mcall
   
-
-  
-  # data_check_for_modifications <- FALSE 
-  # if(is.null(mcall_$data)) {
-  #   stop2c("Data argument must be specified")
-  # } else if(is.language(mcall_$data)) {
-  #   data_check_for_modifications <- TRUE
-  # } else if(is.symbol(mcall_$data)) {
-  #   data_check_for_modifications <- FALSE
-  # } else if(is.data.frame(mcall_$data)) {
-  #   data_check_for_modifications <- FALSE
-  # } else if(tibble::is.tibble(mcall_$data)) {
-  #   data_check_for_modifications <- FALSE
-  # }
-  # 
-  # print(mcall_$data)
-  # 
-  # if(data_check_for_modifications) {
-  #   data_name_str_attr <- check_forpipe(deparse(mcall_$data), return = 'attr')
-  #   mcall__data_env <- parent.frame() # environment(mcall_$data) # parent.frame()
-  #   if(exists(data_name_str_attr, envir = mcall__data_env)) {
-  #     assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
-  #   }
-  # } else {
-  #   data_name_str_attr <- deparse(mcall_$data)
-  # }
-  
-
-  
-
-  # Now not done, the pipe is evaluated and modified data assigned to parent.frame
-  # See above 
-  
-  # This needed for insight::get_data
-  # The insight::get_data() function, which is used by the marginaleffects
-  # package does not get correct data when dataframe is modified using %>% or |>
-  # Note that |> is translated as example "mutate(dataset_in, zz = 1)"
- 
-  
- data_check_for_modifications <- FALSE
- if(is.null(mcall_$data)) {
-   stop2c("Data argument must be specified")
- } else if(is.language(mcall_$data)) {
-   data_check_for_modifications <- TRUE
-   data_name_str_check <- deparse(mcall_$data)
- } else if(is.symbol(mcall_$data)) {
-   data_check_for_modifications <- TRUE
-   data_name_str_check <- deparse(mcall_$data)
- } else if(is.data.frame(mcall_$data)) {
    data_check_for_modifications <- FALSE
- } else if(tibble::is.tibble(mcall_$data)) {
-   data_check_for_modifications <- FALSE
- }
+   if(is.null(mcall_$data)) {
+     stop2c("Data argument must be specified")
+   } else if(is.language(mcall_$data)) {
+     data_check_for_modifications <- TRUE
+     data_name_str_check <- deparse(mcall_$data)
+   } else if(is.symbol(mcall_$data)) {
+     data_check_for_modifications <- TRUE
+     data_name_str_check <- deparse(mcall_$data)
+   } else if(is.data.frame(mcall_$data)) {
+     data_check_for_modifications <- FALSE
+   } else if(tibble::is.tibble(mcall_$data)) {
+     data_check_for_modifications <- FALSE
+   }
 
 
- if(data_check_for_modifications) {
-   data_name_str_check <- deparse(mcall_$data)
-   data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
-   data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
-   data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
-   data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
- } else {
-   data_name_pipe <- FALSE
- }
+   if(data_check_for_modifications) {
+     data_name_str_check <- deparse(mcall_$data)
+     data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
+     data_name_str       <- check_forpipe(data_name_str_check, return = 'name')
+     data_name_pipe      <- check_forpipe(data_name_str_check, return = 'logical')
+     data_name_str_attr  <- check_forpipe(data_name_str_check, return = 'attr')
+   } else {
+     data_name_pipe <- FALSE
+   }
 
-
- 
- if(data_name_pipe) {
-   # mcall__data_env <- parent.frame()
-   # assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
-   assign(data_name_str_attr, eval(mcall_$data) )
-   mcall_$data <- as.symbol(data_name_str_attr)
- }
- 
- # This when data argument is a data frame. E.g., during update_model()
- if(is.data.frame(mcall_$data) | tibble::is_tibble(mcall_$data)) {
-   # mcall__data_env <- parent.frame()
-   # assign(data_name_str_attr, eval(mcall_$data), envir = mcall__data_env )
-   data_name_str_attr <- 'data'
-   assign(data_name_str_attr, mcall_$data)
-   mcall_$data <- as.symbol(data_name_str_attr)
- }
- 
+   if(data_name_pipe) {
+     assign(data_name_str_attr, eval(mcall_$data) )
+     mcall_$data <- as.symbol(data_name_str_attr)
+   }
+   
+   # This when data argument is a data frame. e.g., during update_model()
+   if(is.data.frame(mcall_$data) | tibble::is_tibble(mcall_$data)) {
+     data_name_str_attr <- 'data'
+     assign(data_name_str_attr, mcall_$data)
+     mcall_$data <- as.symbol(data_name_str_attr)
+   }
  
   # Check and allow setting threads as NULL or integer
   mcall_threads_ <- mcall$threads
-  
   
   deparse_mcall_threads_check     <- paste(deparse(mcall_threads_), 
                                            collapse = "")
@@ -2646,10 +2599,8 @@ bsitar <- function(x,
                                            collapse = "")
   deparse_sub_mcall_threads_check <- gsub_space(deparse_sub_mcall_threads_check)
   
-  # if getOption, then pass it as such, else evaluate argument
   if(grepl("getOption",  deparse_sub_mcall_threads_check)) {
     mcall_threads_ <- mcall_threads_ 
-    # now if(!grepl("threading".... pulled here with else if
   } else if(!grepl("threading",  deparse_mcall_threads_check)) {
     if(!is.list(mcall_threads_)) {
       temp_threads_ <- mcall_threads_
@@ -2671,7 +2622,6 @@ bsitar <- function(x,
  
   mcall$threads <- mcall_threads_
   
-  
   newcall_checks <- c('save_pars')
   if(!is.null(mcall$threads)) {
     if(is.list(mcall$threads)) {
@@ -2684,7 +2634,6 @@ bsitar <- function(x,
   newcall <- check_brms_args(mcall, newcall_checks)
   mcall <- mcall_ <- newcall
 
-  
   # Check and set Alias argument for a b c ... formula
   dots_allias <- list(...)
   collect_dot_names <- c()
@@ -2801,11 +2750,7 @@ bsitar <- function(x,
    temp_init_call_c
  }
   
- 
   mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
-  
-  
- 
   
   for (inxc in letters[1:26]) {
     what_inxc <- paste0(inxc, "_", "init", "_", "beta", "")
@@ -2830,7 +2775,6 @@ bsitar <- function(x,
   if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
     quote_random_as_init_arg(mcall[[what_inxc]], mcall)
  
-  
   # Initiate non methods::formalArgs()
   a <- b <- c <- d <- e <- f <- g <- h <- i <- NULL;
   sitar <- NULL;
@@ -3024,11 +2968,9 @@ bsitar <- function(x,
   nsp <- NULL;
   nsk <- NULL;
   rcs <- NULL;
-  
   sigma_formulasi <- NULL;
   sigma_formula_grsi <- NULL;
   sigma_formula_gr_strsi <- NULL;
-  
   dpar <- NULL;
   nlpar <- NULL;
   sigma_formula_manual_prior_via_sigma_formula <- NULL;
@@ -3067,7 +3009,6 @@ bsitar <- function(x,
       xcall_x <- paste0(xcall_x, collapse = " ")
       xcall_x <- gsub_space(xcall_x)
       xcall_x <- gsub("\"", "", xcall_x)
-      
       str_c       <- FALSE
       str_list    <- FALSE
       if(grepl("c\\(", xcall_x, fixed = F)) {
@@ -3079,7 +3020,6 @@ bsitar <- function(x,
       } else {
         # stop2c(x ," must be a list or a vector")
       }
-      
       if(str_c | str_list) {
         xcall_x_str_get <- xcall_x
         if(grepl("\\(", xcall_x_str_get)) {
@@ -3091,9 +3031,7 @@ bsitar <- function(x,
       } else if(!str_c & !str_list) {
         xcall_x_str_get <- xcall_x
       }
-      
       xcall_x_str_get <- strsplit(xcall_x_str_get, ",")[[1]]
-      
       xcall_x_i_str_c <- list()
       xcall_x_i_str_i_get <- list()
       for (i in 1:length(xcall_x_str_get)) {
@@ -3178,7 +3116,6 @@ bsitar <- function(x,
       return(quoted)
     }
   
-    
     constructor <- expr[[1]]
     args <- as.list(expr)[-1]
   
@@ -3191,16 +3128,13 @@ bsitar <- function(x,
         sprintf("'%s'", paste(deparse(arg), collapse = ""))
       }
     })
-
     quoted <- gsub("\'", "", quoted)
-    
     if(return_call) {
       # Reconstruct the call (as a call to c(...) or list(...))
       out <- as.call(c(constructor, quoted))
     } else {
       out <- quoted
     }
-    
     return(out)
   }
   
@@ -3210,10 +3144,6 @@ bsitar <- function(x,
                                     return_call = TRUE, 
                                     strict_list = TRUE)
  
-  
-  
-  
-  
   ##############################################################
   ##############################################################
   
@@ -3237,9 +3167,6 @@ bsitar <- function(x,
     collect_pos_val <- paste(collect_pos_val, collapse = "\n")
     return(collect_pos_val)
   }
-  
-  
-  
   
   check_each_element_of_list_named <- function(call, 
                                                element, 
@@ -3278,7 +3205,6 @@ bsitar <- function(x,
            get_pos_val_unnamed_list_element(x))
     }
     
-
     if(is.null(x[['select']]))   x[['select']]   <- 'knots'
     if(is.null(x[['when']]))     x[['when']]     <- 'bc'
     if(is.null(x[['criteria']])) x[['criteria']] <- 'AIC'
@@ -3326,7 +3252,6 @@ bsitar <- function(x,
       x[['kspace']]   <- 'un'
     } 
     
-    
     if(is.null(x[['cvk']])) {
       x[['cvk']]   <- 10
     } 
@@ -3340,7 +3265,7 @@ bsitar <- function(x,
         if(!is.character(assert_names)) {
           stop2c("'assert_names' must be a character or character vector")
         } else if(length(all_names) != length(assert_names)) {
-          #stop2c("Length of 'assert_names' must be same as length of list names")
+          # 
         } else {
           # names_mismatch <- setdiff(assert_names, all_names)
           if(!is_emptyx(names_mismatch)) {
@@ -3454,9 +3379,11 @@ bsitar <- function(x,
   if(set_eval_globals_in_mcall) {
     set_eval_globals_in_mcall_names <- 
       remove_empty_string_from_vector(set_eval_globals_in_mcall_names)
-    set_exceptions <- setdiff(names(call.full), set_eval_globals_in_mcall_names)
+    set_exceptions <- setdiff(names(call.full), 
+                              set_eval_globals_in_mcall_names)
     set_exceptions <- c(set_exceptions, "data", "...")
-    call.full <- eval_globals_in_mcall(call.full, exceptions = set_exceptions) 
+    call.full <- eval_globals_in_mcall(call.full,
+                                       exceptions = set_exceptions) 
   }
   
   
@@ -3506,10 +3433,11 @@ bsitar <- function(x,
 
   sigma_formula_manual_fun     <- substitute(sigma_formula_manual)
   sigma_formula_manual_fun_str <- deparse(sigma_formula_manual_fun)
-  sigma_formula_manual_fun_str <- paste(gsub_space(sigma_formula_manual_fun_str),
+  sigma_formula_manual_fun_str <-paste(gsub_space(sigma_formula_manual_fun_str),
                                         collapse = "")
   
-  count_number_nlf <- gregexpr("brms::nlf\\(|nlf\\(", sigma_formula_manual_fun_str)[[1]][1]
+  count_number_nlf <- gregexpr("brms::nlf\\(|nlf\\(", 
+                               sigma_formula_manual_fun_str)[[1]][1]
 
   if(count_number_nlf > 1) {
     if(is.language(sigma_formula_manual_fun)) {
@@ -3597,13 +3525,13 @@ bsitar <- function(x,
   # 01.07/2025
   getdotslist <- list(...)
   
-  # getdotslist decomp
-  # QR_Xmat -> not important. Internally set as Qc
-  # QR_center -> center spl matrix before applying QR decom
-  # QR_complete -> whether to get complete QR matrix. Don't change, must be FALSE
-  # QR_flip -> flip negative to positive of Q R matrices. This matches R with Stan
-  # QR_scale -> scaling, default sqrt(N-1) when QR_scale = NULL
-  # qr_gq -> controls wheter to add v_sx vectors to gen quant
+# getdotslist decomp
+# QR_Xmat -> not important. Internally set as Qc
+# QR_center -> center spl matrix before applying QR decom
+# QR_complete -> whether to get complete QR matrix. Don't change, must be FALSE
+# QR_flip -> flip negative to positive of Q R matrices. This matches R with Stan
+# QR_scale -> scaling, default sqrt(N-1) when QR_scale = NULL
+# qr_gq -> controls wheter to add v_sx vectors to gen quant
   
   QR_decomp_args <- getdotslist[['decomp']]
   if(is.null(QR_decomp_args)) {
@@ -3710,12 +3638,10 @@ bsitar <- function(x,
     select_model <- 'rcs'
   }
   
-  
   # For ns() based SITAR, a intercept is matched if rcs based s1 is adjusted as
   # A=a-(s1*min(knots))
   # We keeping same form for mu (match_sitar_a_form = TRUE) but not for sigma
   # Note below that these can be controlled via ... dots
-  
   
   # 01.07/2025 -> getdotslist moved up to allow passing decomp 
   # 24.08.2024
@@ -3781,12 +3707,7 @@ bsitar <- function(x,
                 collapse =", ")
     )
   
-  
-  
-  
   # 5.06.2025 -> this needed for CustomDoCall in update_model
-  # stype <- eval(stype)
-  
   quote_allowed_spline_type <- function(aaax, allowed_spline_type) {
     for (ix in allowed_spline_type) {
       gsub_it <- ix
@@ -3812,7 +3733,6 @@ bsitar <- function(x,
     stype <- gsub("\"", "", stype)
   }
   
-  
   allowed_smat_options <- c('type', 
                             'centerval',
                             'intercept',
@@ -3833,7 +3753,6 @@ bsitar <- function(x,
   
   # Note that to pass all arguments correctly, use 'smat' and not 'stype'
   # later, after testing, the 'smat' will be inferred from 'stype'
-
   spline_type_via_stype <- FALSE
   if(!is.null(getdotslist[['smat']])) {
     spline_type <- getdotslist[['smat']]
@@ -3862,7 +3781,6 @@ bsitar <- function(x,
     spline_type_via_stype <- TRUE
   } 
   
-  
   if(any(spline_type == "NULL")) {
     spline_type_via_stype <- FALSE
   }
@@ -3872,7 +3790,6 @@ bsitar <- function(x,
     # if(verbose) message2c("'rcs' set as default spline type")
   }
     
-  
   # While testing, expose only type and normalize from the 'stype' 
   allowed_spline_type_list_names_c <- c('type', 
                                         'normalize')
@@ -3883,7 +3800,6 @@ bsitar <- function(x,
                       collapse =", "), 
                 collapse =", ")
     )
-    
     
   spline_type_list <- list()
   if(is.null(spline_type)) {
@@ -3949,14 +3865,19 @@ bsitar <- function(x,
             # This is only when spline type set via stype argument and not ...
             if(spline_type_via_stype) {
               names(spline_type) <- c('type', 'normalize')
-              if(verbose) message2c("stype arguments named as 'type', 'normalize'")
+              if(verbose) {
+                message2c("stype arguments named as 'type', 'normalize'")
+              }
             } else {
               stop2c(allowed_spline_type_list_names_msg)
             }
           } else if(length(spline_type) == 3) {
             if(spline_type_via_stype) {
               names(spline_type) <- c('type', 'normalize', "preH")
-              if(verbose) message2c("stype arguments named as 'type', 'normalize', 'preH'")
+              if(verbose) {
+                message2c("stype arguments named as 'type', 
+                          'normalize', 'preH'")
+              }
             } else {
               stop2c(allowed_spline_type_list_names_msg)
             }
@@ -3966,7 +3887,8 @@ bsitar <- function(x,
         }
         if(!is.null(spline_type[['type']])) {
           if(!is.character(spline_type[['type']])) {
-            stop2c(paste0(spline_type[['type']], " must be a character string"))
+            stop2c(paste0(spline_type[['type']], 
+                          " must be a character string"))
           } else {
             spline_type_list[['type']] <- spline_type[['type']]
           }
@@ -4050,7 +3972,7 @@ bsitar <- function(x,
         
         if(!is.null(spline_type[['path']])) {
           if(!is.character(spline_type[['path']])) {
-            stop2c(paste0(spline_type[['path']], " must be a character string"))
+            stop2c(paste0(spline_type[['path']]," must be a character string"))
           } else {
             spline_type_list[['path']]    <-  spline_type[['path']] 
           }
@@ -4165,7 +4087,8 @@ bsitar <- function(x,
             stop2c(paste0(spline_type[['check_sparsity']], 
                         " must be logical i.e., TRUE/FALSE"))
           } else {
-            spline_type_list[['check_sparsity']] <- spline_type[['check_sparsity']]
+            spline_type_list[['check_sparsity']] <- 
+              spline_type[['check_sparsity']]
           }
         } else if(is.null(spline_type[['check_sparsity']])) {
           spline_type_list[['check_sparsity']] <- FALSE
@@ -4212,7 +4135,8 @@ bsitar <- function(x,
         spline_type_list[['sparse']]      <- FALSE
         spline_type_list[['check_sparsity']]  <- FALSE
       } else if(!is.character(spline_type)) {
-        stop2c('augument spline_type must be a character string or a named list')
+        stop2c('augument spline_type must be a 
+               character string or a named list')
       } # if(is.character(spline_type)) {
     } # else if(!is.null(spline_type)) {
   } # if(is.null(spline_type)) {
@@ -4274,7 +4198,7 @@ bsitar <- function(x,
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']])
-    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
+    smat_check_sparsity <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'rcs') & !spline_type_via_stype) {
     smat_intercept    <- as.integer(spline_type_list[['intercept']])
     smat_centerval    <- as.numeric(spline_type_list[['centerval']])
@@ -4292,7 +4216,7 @@ bsitar <- function(x,
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
-    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
+    smat_check_sparsity <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'nsp' | smat == 'nsk' |
              smat == 'bsp' | smat == 'msp' | 
              smat == 'isp') & 
@@ -4313,7 +4237,7 @@ bsitar <- function(x,
     smat_return       <- as.integer(spline_type_list[['return']])
     smat_print        <- as.integer(spline_type_list[['print']])
     smat_sparse       <- as.integer(spline_type_list[['sparse']]) 
-    smat_check_sparsity       <- as.integer(spline_type_list[['check_sparsity']])
+    smat_check_sparsity <- as.integer(spline_type_list[['check_sparsity']])
   } else if((smat == 'rcs') & spline_type_via_stype) {
     smat_intercept    <- 0
     smat_centerval    <- 0
@@ -4348,11 +4272,14 @@ bsitar <- function(x,
 
   if(smat_check_sparsity) {
     if(!smat_sfirst | !smat_sparse) {
-      stop2c("If 'check_sparsity = TRUE', then both 'smat_sfirst' and 'smat_sparse'
+      stop2c("If 'check_sparsity = TRUE', then both
+      'smat_sfirst' and 'smat_sparse'
            must also be set as 'TRUE'")
     }
-    if(arguments$chains > 1) stop2c("'chains' must be set as '1' when check_sparsity = TRUE'")
-    if(arguments$iter > 2) stop2c("'iter' must be set as '2' when check_sparsity = TRUE'")
+    if(arguments$chains > 1) stop2c("'chains' must be 
+                                    set as '1' when check_sparsity = TRUE'")
+    if(arguments$iter > 2) stop2c("'iter' must be set as
+                                  '2' when check_sparsity = TRUE'")
   }
   
   
@@ -4524,7 +4451,8 @@ bsitar <- function(x,
       match_sitar_d_form <- getdotslist[['match_sitar_d_form']]
     } else {
       if(getdotslist[['match_sitar_d_form']])
-        stop2c("match_sitar_d_form = TRUE only allowed for sitar model 'sitar4r'")
+        stop2c("match_sitar_d_form = TRUE only allowed for 
+               sitar model 'sitar4r'")
     }
   }
   
@@ -5415,8 +5343,6 @@ bsitar <- function(x,
       univariate_by$cor <- "un"
   }
   
-  
-  
   if (is.na(univariate_by$by)) {
     if (is.null(univariate_by$terms))
       univariate_by$terms <- "subset"
@@ -5425,8 +5351,6 @@ bsitar <- function(x,
     if (is.null(univariate_by$terms))
       univariate_by$terms <- "subset"
   }
-  
-  
   
   if (is.null(group_arg$groupvar))
     group_arg$groupvar <- NULL
@@ -5467,7 +5391,8 @@ bsitar <- function(x,
       )
     }
     if (!is.factor(data[[temp_]])) {
-      stop2c("The 'univariate_by' variable '",  temp_, "' should be a factor variable")
+      stop2c("The 'univariate_by' variable '", 
+             temp_, "' should be a factor variable")
     }
     nlevtemp_ <- nlevels(data[[temp_]])
     nys <- nlevtemp_
@@ -5648,8 +5573,6 @@ bsitar <- function(x,
     "data2"
   )
   
-  
-  
   for (i in convert_to_list) {
     if (!i %in% single_args) {
       to_list_if_not(i, nys, arguments)
@@ -5663,7 +5586,6 @@ bsitar <- function(x,
       # eval_c_list_args(i, nys, arguments)
     }
   }
-  
   
   # Create list for later use in data_custom -> return_args  = TRUE
   # 24.02.2025
@@ -5858,7 +5780,7 @@ bsitar <- function(x,
   sigmafunlist_r <- funlist_r
   sigmagq_funs <- gq_funs
   sigmafixedvaluelist <- sigmafixednamelist <- funlist
-  sigmarandomvaluelist <- sigmarandomnamelist <- sigmagroupvarvaluelist <- funlist
+  sigmarandomvaluelist <-sigmarandomnamelist <-sigmagroupvarvaluelist <-funlist
   sigmad_adjustedvaluelist <- sigmad_adjustednamelist <- funlist
   
   sigmavarspfncname_c <- list()
@@ -5869,18 +5791,16 @@ bsitar <- function(x,
   
   
   sigmabasicfunlist_rnamelist <- sigmabasicfunlist_rvaluelist <- list()
+  sigmabasicgq_funs <- gq_funs
+  
   sigmabasicfunlist <- funlist
   sigmabasicfunlist_r <- funlist_r
-  sigmabasicgq_funs <- gq_funs
-
   
   sigmabasicfunnamevaluelist    <- sigmabasicfunnamenamelist <- funlist
   sigmabasicfunattrvaluelist    <- sigmabasicfunattrnamelist <- funlist
   
   sigmamodelnamevaluelist    <- sigmamodelnamenamelist <- funlist
   
-  
-
   xfunvaluelist      <- xfunnamelist      <- funlist
   yfunvaluelist      <- yfunnamelist      <- funlist
   sigmaxfunvaluelist <- sigmaxfunnamelist <- funlist
@@ -5922,9 +5842,8 @@ bsitar <- function(x,
       }
     }
     
-    
     # Define function names, moved here up now
-    # 19.05.2025 -> let spfncname name be common without response, which later added
+    # Let spfncname name be common without response, which later added
     spfncname        <- paste0(toupper(select_model), "", 'Fun')
     spfncname_common <- spfncname
     
@@ -5983,8 +5902,6 @@ bsitar <- function(x,
         assign(paste0(agsxi, "_", "cov_init_sd",    "si") , NULL)
       }
     }
-    
-    
     
     validate_fixed_random_parms <- function(fixedsi, 
                                             randomsi, 
@@ -6131,7 +6048,6 @@ bsitar <- function(x,
       }
     }
     
-  
     # Model specific number of fixed and random parameters
     allowed_parm_letters <- NULL
     if(select_model == 'sitar') allowed_parm_letters <- letters[1:sitar_nparms]
@@ -6174,8 +6090,7 @@ bsitar <- function(x,
           )
         }
       }
-      
-      
+
       if (match_sitar_d_form) {
         if ((grepl("d", fixedsi, fixed = T) |
              grepl("d", randomsi, fixed = T)) &
@@ -6196,12 +6111,9 @@ bsitar <- function(x,
       }
     } # if(select_model == 'sitar') {
     
-    
-
     if(select_model == 'sitar') {
       if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
     }
-    
     
     if(select_model == 'rcs') {
       if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
@@ -6216,8 +6128,6 @@ bsitar <- function(x,
              "Please check your 'select_model' and 'random' arguments")
       }
     }
-    
-   
     
     ###########################################################################
     # sigma_formula_manual
@@ -6235,8 +6145,8 @@ bsitar <- function(x,
     # set_model_sigma_by_fe -> nlme::varExp( form ~ fitted(.))
     # set_model_sigma_by_ve -> nlme::varExp()
     # set_model_sigma_by_vp -> nlme::varPower()
-    # set_model_sigma_by_mp -> mean as described in the brms manual - sqrt(varPower)
-    # set_model_sigma_by_me -> mean as described in the brms manual - sqrt(varExp)
+    # set_model_sigma_by_mp -> mean described in brms manual - sqrt(varPower)
+    # set_model_sigma_by_me -> mean described in brms manual - sqrt(varExp)
     # set_model_sigma_by_ls -> location scale via sigmafunction()
     # set_model_sigma_by_rp -> nlme::varPower( form ~ fitted(.)) residual
     # set_model_sigma_by_re -> nlme::varExp( form ~ fitted(.)) residual
@@ -6247,10 +6157,7 @@ bsitar <- function(x,
                                    sigma_formula_manualsi, fixed = T)
     
    
-    add_arg_to_sigma_formula_manual <- function(x,
-                                                arg,
-                                                what) {
-      
+    add_arg_to_sigma_formula_manual <- function(x, arg, what) {
       gsub_it <- replace_string_part(x = x, 
                                      start = "nlf(", 
                                      end = ")",  replace = "",
@@ -6259,7 +6166,7 @@ bsitar <- function(x,
                                      exclude_end = T)
       gsub_by <- paste0(gsub_it, ",", paste0(arg, "=", what), "")
       out <- gsub(gsub_it, gsub_by, x, fixed = T)
-      out
+      return(out)
     }
     
     
@@ -6284,13 +6191,13 @@ bsitar <- function(x,
     }
     
 
-    sigma_formula_manualsi <- paste0(gsub_space(sigma_formula_manualsi), collapse = "")
+    sigma_formula_manualsi <- paste0(gsub_space(sigma_formula_manualsi), 
+                                     collapse = "")
     
     
     # Note that brms complains of duplicate names  Hmisc::rcspline.ev... 
     # when T/TRUE is used in the below form. 
     # The F/FALSE does not result in the same error as T/TRUE
-    
     # allowed_left could be "="
     sigma_formula_manualsi <- 
     check_and_replace_sort_to_full(str = sigma_formula_manualsi,
@@ -6367,8 +6274,7 @@ bsitar <- function(x,
                                       "residualpower",
                                       "residualexp",
                                       "ls")
-      # fz -> fz negzero
-      # fi -> fp 
+
       allowed_nlf_custom_arg_short <- c("vp", 
                                         "cp",
                                         "ve", 
@@ -6425,11 +6331,6 @@ bsitar <- function(x,
       add_identityfun_c[[ii]] <- add_identityfun
       ##########################################################################
   
-      # set_model_sigma_by_fi
-      # set_model_sigma_by_me
-      # set_model_sigma_by_re
-      
-      
       if(nlf_sigma_method_arg == "basic") {
         set_model_sigma_by_ba <- TRUE
       } else if(nlf_sigma_method_arg == "varpower") {
@@ -6473,7 +6374,8 @@ bsitar <- function(x,
       
       if(nlf_sigma_method_arg == "ls") {
         if(is.na(sigmaxsi)) {
-          stop2c("For location scale model 'ls', the argument 'sigmax' is needed")
+          stop2c("For location scale model 'ls', the argument 
+                 'sigmax' is needed")
         }
       }
       
@@ -6490,28 +6392,6 @@ bsitar <- function(x,
         stop2c("sigma_formula_manual must not contain intercept as sigma~1+...")
       }
       
-      
-      
-      # if(set_model_sigma_by_fz |
-      #    set_model_sigma_by_fp |
-      #    set_model_sigma_by_fe |
-      #    set_model_sigma_by_ve | 
-      #    set_model_sigma_by_vp |
-      #    set_model_sigma_by_cp |
-      #    set_model_sigma_by_mp |
-      #    set_model_sigma_by_me |
-      #    set_model_sigma_by_rp |
-      #    set_model_sigma_by_re ) {
-      #   # Why was this needed ? to padd "~0+"
-      #   # if(grepl("~0+", getsetform0tilde)) {
-      #   #   sigma_formula_manualsi <- sigma_formula_manualsi
-      #   # } else {
-      #   #   sigma_formula_manualsi <- gsub("~", "~0+",
-      #   #                                  sigma_formula_manualsi, fixed = TRUE)
-      #   # }
-      # }
-      
-     
       ##########################################################################
       if(set_model_sigma_by_fz |
          set_model_sigma_by_fp |
@@ -6546,7 +6426,8 @@ bsitar <- function(x,
           sigmavarspfncname      <- paste0(ysi, "_", sigmavarspfncname_temp)
         } 
         # new 
-        sigma_formula_manualsi <- gsub(sigmavarspfncname_temp, sigmavarspfncname,
+        sigma_formula_manualsi <- gsub(sigmavarspfncname_temp, 
+                                       sigmavarspfncname,
                                        sigma_formula_manualsi, fixed = T)
         
       }
@@ -6825,12 +6706,10 @@ bsitar <- function(x,
       
       if(set_model_sigma_by_ba) {
         # replace functions with :: / ::: with _ in 'sigma_formula_manualsi'
-        getouttemp <- get_function_names_code_from_string(sigma_formula_manualsi)
-       
+        getouttemp<- get_function_names_code_from_string(sigma_formula_manualsi)
         sigma_formula_manualsi <- getouttemp[['str']]
         sigmabasicfunnamesi    <- getouttemp[['name']]
         sigmabasicfunattrsi    <- getouttemp[['attr']]
-        
         # Also, assign those functions to the environment 
         package_env <- as.environment("package:bsitar")
         if(length(getouttemp[['code']] != 0)) {
@@ -6844,8 +6723,6 @@ bsitar <- function(x,
           }
         }
       }
-      
-      
       
       ##########################################################################
       if(sigma_formula_manual_prior_via_sigma_formula) {
@@ -6892,7 +6769,6 @@ bsitar <- function(x,
     ###########################################################################
     # end of sigma_formula_manual - # add_sigma_by_mu
     ###########################################################################
-    
     # see if above function can be used
     # Add missing parameters to the dpar_formula
     if (!is.null(dpar_formulasi)) {
@@ -6985,9 +6861,6 @@ bsitar <- function(x,
       out
     } # f_checks_gr_gr_str
     
-    
-   
-    
     test_gr_sr_str_function <- function(x_grsi, x_gr_strsi) {
       if(!is.null(x_grsi)) {
         if(x_gr_strsi != 'NULL') {
@@ -7014,7 +6887,7 @@ bsitar <- function(x,
       if(is.null(x_grsi)) {
         out <- NULL
       }
-      out
+      return(out)
     } 
     
     
@@ -7248,10 +7121,7 @@ bsitar <- function(x,
       sigma_set_higher_levels <- FALSE
     }
     
-    
-    
-    check_formuals <-
-      c(
+    check_formuals <- c(
         "a_formulasi",
         "b_formulasi",
         "c_formulasi",
@@ -7273,8 +7143,7 @@ bsitar <- function(x,
         "i_formula_grsi",
         "s_formula_grsi",
         "sigma_formulasi",
-        "sigma_formula_grsi"
-      )
+        "sigma_formula_grsi")
     
     
     check_formuals_t_f <- c(check_formuals, 
@@ -7308,8 +7177,6 @@ bsitar <- function(x,
       }
     } 
     
-
-    
     if (is.null(sigma_formula_gr_strsi[[1]][1]) |
         sigma_formula_gr_strsi == "NULL") {
       sigma_formula_gr_strsi <- NULL
@@ -7320,7 +7187,6 @@ bsitar <- function(x,
       sigma_formula_grsi <- NULL
     }
     
-
     if (is.null(dpar_formulasi[[1]][1]) |
         dpar_formulasi == "NULL") {
       dpar_formulasi <- NULL
@@ -7341,7 +7207,6 @@ bsitar <- function(x,
       autocor_formi <- autocor_formulasi
     } 
     
-
     if(!is.null(autocor_formi)) {
       tempunstx <- autocor_formi # '~unstr(time=visit, patient)'
       tempunstx <- gsub("[[:space:]]", "", tempunstx)
@@ -7367,13 +7232,10 @@ bsitar <- function(x,
       cortimeNlags_var <- NULL
     }
     
-  
-    
     if (is.null(familysi[[1]][1]) |
         familysi == "NULL") {
       familysi <- NULL
     }
-   
    
   # For backward compatibility if model fit using family = gaussian()
    if (!is.null(familysi)) {
@@ -7393,8 +7255,6 @@ bsitar <- function(x,
      }
    }
     
-    
- 
     if (!is.null(familysi)) {
       familysi_check <- familysi
       if(grepl('brmsfamily', familysi_check) &
@@ -7529,8 +7389,6 @@ bsitar <- function(x,
       }
     }
     
-   
-    
     fit_edited_scode <- FALSE
     if(select_model == 'logistic1e' |
        select_model == 'logistic2e' |
@@ -7570,13 +7428,11 @@ bsitar <- function(x,
     # Refactor to use function() for transformations
     # This will allow using optimize_x = list(function(x) log(x + 3/4))
     # Note that instead of calling log(data[[xsi]]), 'xfuntransformsi' be used 
-   
     # Check if xfunsi, yfunsi and sigmaxfunsi
     # Should sigmayfunsi be the sigma_link family
     
     familysi_ept      <- ept(familysi)
     family_link_sigma <- familysi_ept[['link_sigma']]
-    
     # Leave it as identity
     if(family_link_sigma == "log") {
       sigmayfunsi <- NULL # 'log'
@@ -7733,7 +7589,8 @@ bsitar <- function(x,
       } else  if(is.function(ept(sigmaxfunxoffsetsi))) {
         sigmaxfunxoffsettransformsi <- ept(sigmaxfunxoffsetsi)
       } else {
-        stop2c(paste0("The 'sigmaxfunxoffset' must be a string ('log' / 'sqrt'),", 
+        stop2c(paste0("The 'sigmaxfunxoffset' must be a
+                      string ('log' / 'sqrt'),", 
                     "\n  ",
                     "or a function such as function(x)log(x)"))
       }
@@ -7820,7 +7677,6 @@ bsitar <- function(x,
     
     # Here need to transform x, y, and sigmax 
     # x y must because accordingly xoffset and lm matrix etc created
-    
     if(check_for_validy_of_prepare_transformations) {
       check_for_validy_of_prepare_transformations_0 <- datai
     }
@@ -7888,8 +7744,6 @@ bsitar <- function(x,
       if(is_emptyx(smat_when)) smat_when <- 'bc'
     }
 
-    
-    
     # get_knost_from_df_arg used later for plot, so keep it out here
     get_knost_from_df_arg <- list()
     get_knost_from_df_arg[['x']]         <-  datai[[xsi]]
@@ -7946,8 +7800,6 @@ bsitar <- function(x,
              "Now:     ",
              paste(deparse(knots_from_new_funs), collapse = ", "))
     
-    
-    # 
     if(is.null(mcall[['knots_selection']])) {
       if(!identical(knots_from_new_funs, knots_from_gkn)) {
         if(smat == 'rcs') {
@@ -7967,11 +7819,8 @@ bsitar <- function(x,
       } # if(!identical(knots_from_new_funs, knots_from_gkn)) {
     } # if(!is.null(mcall[['knots_selection']])) {
     
- 
-    
     #################################################################
     #################################################################
-    
     
     knots_selection      <- mcall[['knots_selection']] %>% eval()
     
@@ -8794,8 +8643,7 @@ bsitar <- function(x,
                        c(spfncname, paste0(spfncname, "_", c("d1", "d2")))
                        )
     
-    # QR, also decomp_editcode = TRUE conflicts with init != random
-    
+    # QR, also 'decomp_editcode' = TRUE conflicts with init != random
     decomp_editcode <- FALSE
     if(select_model == 'rcs') {
       decomp_editcode <- FALSE
@@ -8810,8 +8658,6 @@ bsitar <- function(x,
     } else {
       add_b_Qr_genquan_s_coef <- FALSE
     }
-    
-   
     
     #################################################################
     #################################################################
@@ -8901,8 +8747,6 @@ bsitar <- function(x,
       }
     }
     
-    
-   
     get_s_r_funs <- prepare_function_nsp_rcs(
       x = xsi,
       y = ysi,
@@ -8911,7 +8755,6 @@ bsitar <- function(x,
       nknots = nknots,
       data = datai,
       internal_function_args = internal_function_args)
-    
     
     funlist[ii]     <- get_s_r_funs[['rcsfun']]
     funlist_r[[ii]] <- get_s_r_funs[['r_funs']]
@@ -8942,8 +8785,7 @@ bsitar <- function(x,
       sigmaspfun_collect <-
         c(sigmaspfun_collect, c(sigmaspfncname, 
                                 paste0(sigmaspfncname, "_",  c("d1", "d2"))
-                                )
-          )
+                                ))
       
       sigmadecomp_editcode <- FALSE
       if(select_model == 'rcs') {
@@ -8980,7 +8822,6 @@ bsitar <- function(x,
       sigmacheckscovsi                 <- checkscovsi
       sigmaadd_b_Qr_genquan_s_coef     <- add_b_Qr_genquan_s_coef
       sigmaadd_rcsfunmatqrinv_genquant <- add_rcsfunmatqrinv_genquant
-      
       sigmainternal_function_args[['fixedsi']] <- sigmafixedsi
       sigmainternal_function_args[['randomsi']] <- sigmarandomsi
       sigmainternal_function_args[['spfncname']] <- sigmaspfncname
@@ -9015,10 +8856,8 @@ bsitar <- function(x,
       sigmainternal_function_args[['add_rcsfunmatqrinv_genquant']] <- 
         sigmaadd_rcsfunmatqrinv_genquant
       
-      
       sigmainternal_function_args[['dpar_function']] <- "sigma"
       
-
       if (verbose) {
         if (ii == 1) {
           setmsgtxt <- paste0("\n Preparing function for sigma")
@@ -9031,19 +8870,16 @@ bsitar <- function(x,
         }
       }
       
-     
       if (is.null(sigmaidsi[[1]][1]) |
           sigmaidsi == "NULL") {
         sigmaidsi <- idsi
       }
 
-      
       # These are copied from the mu part
       # Note that idsi is not used and ysi is placeholder
       sigmaysi   <- ysi
       sigmadatai <- datai
       sigmaxsi   <- sigmaxsi
- 
       
       sigmaget_s_r_funs <-
         prepare_function_nsp_rcs(
@@ -9069,11 +8905,6 @@ bsitar <- function(x,
     # prepare sigma function - end
     ##########################################################################  
     
-    
-    
-    
-    ############################################################################
-    ############################################################################
     ############################################################################
     # add define vf()
     ############################################################################
@@ -9269,16 +9100,11 @@ bsitar <- function(x,
       
     } # if(set_model_sigma_by_fz | ......
     
-    
-    ############################################################################
-    ############################################################################
     ############################################################################
     # end add define vf()
     ############################################################################
     
     
-    ############################################################################
-    ############################################################################
     ############################################################################
     # end add define sigma basic functions
     ############################################################################
@@ -9292,11 +9118,9 @@ bsitar <- function(x,
       sigmabasicget_s_r_funs[['r_funs']] <-  getouttemp[['code']]
       sigmabasicget_s_r_funs[['gq_funs']] <- NULL
       sigmabasicget_s_r_funs[['include_fun_names']] <- getouttemp[['name']]
-      
       sigmabasicfunlist[ii]     <- sigmabasicget_s_r_funs[['rcsfun']]
       sigmabasicfunlist_r[[ii]] <- sigmabasicget_s_r_funs[['r_funs']]
       sigmabasicgq_funs[[ii]]   <- sigmabasicget_s_r_funs[['gq_funs']]
-      
       include_fun_nameslist[[ii]] <- 
         c(include_fun_nameslist[[ii]], 
           sigmabasicget_s_r_funs[['include_fun_names']])
@@ -9410,8 +9234,7 @@ bsitar <- function(x,
         'sigmayfunsi',
         'family_link_sigma'
       )
-    
-    
+
     internal_formula_args <- list()
     internal_formula_args <- mget(internal_formula_args_names)
     
@@ -9426,8 +9249,6 @@ bsitar <- function(x,
         }
       }
     }
-    
-    
     
     formula_bf <-
       prepare_formula(
@@ -9700,7 +9521,6 @@ bsitar <- function(x,
         } # for (j in c('beta', 'sd')) {
       } # for (i in letters[1:20]) {
     } # if(nys > 1) {
-    
     
     
     prior_data_internal_names <-
