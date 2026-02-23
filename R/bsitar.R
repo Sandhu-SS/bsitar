@@ -1004,6 +1004,15 @@
 #'   Default is \code{NULL}. For details, see [brms::custom_family()]. Note that
 #'   user-defined Stan functions must be exposed by setting
 #'   \code{expose_functions = TRUE}.
+#'   
+#' @param custom_formula Specifies custom formula. Default is \code{NULL}. For
+#'   details, see [brms::brmsformula()]. Currently ignored.
+#'
+#' @param custom_prior Specifies custom prior Default is \code{NULL}. For
+#'   details, see [brms::prior()]. Currently ignored. It is primarily designed
+#'   to support setting custom prior for \code{custom_formula}. Note that
+#'   \code{custom_prior} is different from the \code{set_self_priors} which
+#'   evaluated throughout the call.
 #' 
 #' @param custom_stanvars Allows the preparation and passing of user-defined
 #'   variables to be added to Stan's program blocks (default \code{NULL}). This
@@ -2348,6 +2357,8 @@ bsitar <- function(x,
                    autocor_formula = NULL,
                    family = gaussian(),
                    custom_family = NULL,
+                   custom_formula = NULL,
+                   custom_prior = NULL,
                    custom_stanvars  = NULL,
                    group_arg = list(
                      groupvar = NULL,
@@ -2534,6 +2545,7 @@ bsitar <- function(x,
     call_eval_globals_in_mcall <- FALSE
   }
 
+ 
   # 25.01.2026
   set_eval_globals_in_mcall <- FALSE
   if(call_eval_globals_in_mcall) {
@@ -2544,11 +2556,13 @@ bsitar <- function(x,
     } else {
       set_eval_globals_in_mcall <- TRUE
       set_eval_globals_in_mcall_names <- names(mcall)
-      mcall <- eval_globals_in_mcall(mcall, exceptions = c("data", "...")) 
+      set_exceptions <- c("data", "...")
+      set_exceptions <- c(set_exceptions, 'family')
+      mcall <- eval_globals_in_mcall(mcall, exceptions = set_exceptions) 
     }
   } # if(call_eval_globals_in_mcall) {
   
-  
+
   mcall_ <- mcall
   
    data_check_for_modifications <- FALSE
@@ -2589,6 +2603,33 @@ bsitar <- function(x,
      mcall_$data <- as.symbol(data_name_str_attr)
    }
  
+   
+   threads_char <- function(threads_, chains = 1) {
+     if(is_emptyx(chains)) chains <- 1
+     if(!is.character(threads_)) {
+       stop2c("threads_ must be a string of length 1")
+     }
+     if(length(threads_) > 1) {
+       stop2c("threads_ must be a string of length 1")
+     }
+     allowed_temp_threads_char <- c('optimize', 'maximise')
+     if(!threads_ %in% allowed_temp_threads_char) {
+       stop2c("Allowed string options for 'threads' are: ",
+              collapse_comma(allowed_temp_threads_char))
+     }
+     if( is.character(threads_) & threads_ == "maximise") {
+       max.threads <- 
+         as.numeric(future::availableCores(methods = "system", omit = 0))
+       if(max.threads < 1) max.threads <- 1
+     } else if( is.character(threads_) & threads_ == "optimize") {
+       max.threads <- 
+         as.numeric(future::availableCores(methods = "system", omit = 1))
+       if(max.threads < 1) max.threads <- 1
+       max.threads <- floor(max.threads /  chains)
+     }
+     return(max.threads)
+   }
+   
   # Check and allow setting threads as NULL or integer
   mcall_threads_ <- mcall$threads
   
@@ -2608,19 +2649,27 @@ bsitar <- function(x,
         temp_threads_ <- temp_threads_
       } else if(is.numeric(temp_threads_)) {
         temp_threads_ <- as.integer(temp_threads_)
-      } else if(as.integer(temp_threads_)) {
+      } else if(is.integer(temp_threads_)) {
         temp_threads_ <- temp_threads_
+      } else if(is.character(temp_threads_)) {
+        temp_threads_ <- threads_char(temp_threads_, 
+                                      chains = eval(mcall$chains))
       } else {
-        stop2c("Argument 'threads' must be 'NULL' or an 'integer'")
-      }
-      mcall_threads_         <- brms::threading()
+        stop2c("Argument 'threads' must be 'NULL', a string, or an 'integer'")
+      } # if(is.null(temp_threads_)) { else if else if....
+      mcall_threads_  <- brms::threading()
       if(!is.null(temp_threads_)) {
         mcall_threads_$threads <- temp_threads_
       }
-    } 
-  }
+    } # if(!is.list(mcall_threads_)) {
+  } # if(grepl("getOption",  deparse_sub_mcall_threads_check)) { else 
+  
+  
  
   mcall$threads <- mcall_threads_
+  
+  # print( mcall$threads)
+  # stop()
   
   newcall_checks <- c('save_pars')
   if(!is.null(mcall$threads)) {
@@ -3720,9 +3769,20 @@ bsitar <- function(x,
     return(aaax)
   }
   
+  
   stype_temp_str <- deparse(substitute(stype))
   stype_temp_str <- paste0(gsub_space(stype_temp_str), collapse = " ")
   
+  # Handle list[[stype]]
+  if(grepl("\\[\\[", stype_temp_str)) {
+    stype_temp_str <- stype
+  } else if(grepl("\\$", stype_temp_str)) {
+    stype_temp_str <- stype
+  } else {
+    stype_temp_str <- stype_temp_str
+  }
+  
+
   if(grepl("^list\\(", stype_temp_str)) {
     stype_temp_str <-  quote_allowed_spline_type(stype_temp_str, 
                                                  allowed_spline_type)
@@ -4143,14 +4203,11 @@ bsitar <- function(x,
   
   
   smat <- spline_type_list[['type']] 
-  
 
-   # This to check spline type set using the ... smat
-   if(!smat %in% allowed_spline_type)
-     stop2c(paste0("The spline type must be a character string.", 
-                 "\n  ",
-                 allowed_spline_type_exception_msg)
-     )
+  # This to check spline type set using the ... smat
+  if(!smat %in% allowed_spline_type)
+   stop2c(paste0("The spline type must be a character string.", 
+               "\n  ", allowed_spline_type_exception_msg))
 
   
   # Except for rcs, match_sitar_a_form should be FALSE
@@ -5561,6 +5618,8 @@ bsitar <- function(x,
     "decomp",
     "parameterization",
     "custom_family",
+    "custom_formula",
+    "custom_prior",
     "custom_stanvars",
     'pathfinder_args',
     'pathfinder_init',
@@ -7237,24 +7296,26 @@ bsitar <- function(x,
       familysi <- NULL
     }
    
+    
+    
   # For backward compatibility if model fit using family = gaussian()
    if (!is.null(familysi)) {
      if(familysi == "gaussian()") {
        familysi <- "brms::brmsfamily(family = gaussian)"
      } else {
        if(!grepl('family(', familysi, fixed = T)) {
-         stop2c("The 'family' argument must be specified by explicitly using the",
-              "\n  ",
-              "family(....) or brms::brmsfamily(....) form",
-              "\n  ",
-              "For example, to specify the 'gaussian()' family, please use:",
-              "\n  ",
-              "brmsfamily(family='gaussian', link='identity', link_sigma='log')"
-              )
+         # stop2c("The 'family' argument must be specified by explicitly using the",
+         #      "\n  ",
+         #      "family(....) or brms::brmsfamily(....) form",
+         #      "\n  ",
+         #      "For example, to specify the 'gaussian()' family, please use:",
+         #      "\n  ",
+         #      "brmsfamily(family='gaussian', link='identity', link_sigma='log')"
+         #      )
        }
      }
    }
-    
+   
     if (!is.null(familysi)) {
       familysi_check <- familysi
       if(grepl('brmsfamily', familysi_check) &
@@ -7277,20 +7338,24 @@ bsitar <- function(x,
         familysi_check <- familysi_check_w
       } else if(!grepl('brmsfamily', familysi_check) & 
                 !grepl('family', familysi_check)) {
-         stop2c("Argument family should be specified as brmsfamily(family,...)",
-              "\n ", 
-              "where family is the name of family such as 'gaussian' and",
-              "\n ", 
-              "... are the family specific argument such as link and link_sigma",
-              "\n ", 
-              "For example, 'gaussian' family can be set explicitly as follows:",
-              "\n ", 
-              "brmsfamily('gaussian', link = 'identity', link_sigma = 'log')"
-              )
+         # stop2c("Argument family should be specified as brmsfamily(family,...)",
+         #      "\n ", 
+         #      "where family is the name of family such as 'gaussian' and",
+         #      "\n ", 
+         #      "... are the family specific argument such as link and link_sigma",
+         #      "\n ", 
+         #      "For example, 'gaussian' family can be set explicitly as follows:",
+         #      "\n ", 
+         #      "brmsfamily('gaussian', link = 'identity', link_sigma = 'log')"
+         #      )
+        familysi_check <- paste0("brms::brmsfamily(", "'", 
+                                 familysi_check, 
+                                 "'", ")")
       }
       familysi <- familysi_check
-    }
+    } # if (!is.null(familysi)) {
   
+   
     
     if (!is.null(familysi)) {
       familysi_temp <- list_to_quoted_if_not_si(familysi)
@@ -7433,12 +7498,23 @@ bsitar <- function(x,
     
     familysi_ept      <- ept(familysi)
     family_link_sigma <- familysi_ept[['link_sigma']]
-    # Leave it as identity
-    if(family_link_sigma == "log") {
-      sigmayfunsi <- NULL # 'log'
-    } else {
-      sigmayfunsi <- NULL
+    
+    remove_sigma_parameter <- FALSE
+    if(is.null(family_link_sigma)) {
+      remove_sigma_parameter <- TRUE
     }
+    
+    # If there is no sigma parameter such as family gamma
+    if(!remove_sigma_parameter) {
+      # Leave it as identity
+      if(family_link_sigma == "log") {
+        sigmayfunsi <- NULL # 'log'
+      } else {
+        sigmayfunsi <- NULL
+      }
+    }
+    
+    
     
     set_xfunsi      <- check_if_arg_set(xfunsi)
     set_yfunsi      <- check_if_arg_set(yfunsi)
@@ -11756,6 +11832,7 @@ bsitar <- function(x,
     } else if(!is.null(set_self_priors)) {
       temp_prior <- set_self_priors
     }
+    
 
     # 20.03.2025 - moved to 'final_scode'
     # but added support for returning tempriorstr if get_priors == "default"
@@ -11836,6 +11913,11 @@ bsitar <- function(x,
     } # if(sigma_formula_manual_prior_via_sigma_formula
     
     
+    if(remove_sigma_parameter) {
+      temp_prior <- temp_prior %>% dplyr::filter(class != 'sigma')
+    }
+      
+   
     temp_stancode2 <- brms::make_stancode(formula = bformula,
                                     stanvars = bstanvars,
                                     prior = temp_prior,
@@ -12281,14 +12363,18 @@ bsitar <- function(x,
             threads_ <- deparse(threads_)
           }
           if( is.character(threads_) & threads_ == "maximise") {
-            max.threads <- 
-              as.numeric(future::availableCores(methods = "system", omit = 0))
-            if(max.threads < 1) max.threads <- 1
+            # max.threads <- 
+            #   as.numeric(future::availableCores(methods = "system", omit = 0))
+            # if(max.threads < 1) max.threads <- 1
+            max.threads <- threads_char(threads_, 
+                                        chains = eval(setarguments$chains))
           } else if( is.character(threads_) & threads_ == "optimize") {
-            max.threads <- 
-              as.numeric(future::availableCores(methods = "system", omit = 1))
-            if(max.threads < 1) max.threads <- 1
-            max.threads <- floor(max.threads /  eval(setarguments$chains))
+            # max.threads <- 
+            #   as.numeric(future::availableCores(methods = "system", omit = 1))
+            # if(max.threads < 1) max.threads <- 1
+            # max.threads <- floor(max.threads /  eval(setarguments$chains))
+            max.threads <- threads_char(threads_, 
+                                        chains = eval(setarguments$chains))
           } else if(!is.null(getOption('brms.threads')) &
                     (is.character(threads_) & threads_ != "maximise") &
                     (is.character(threads_) & threads_ != "optimize")) {
@@ -13499,6 +13585,11 @@ bsitar <- function(x,
     return(tempriorstr)
   }
 
+  
+  if(remove_sigma_parameter) {
+    brm_args[['prior']] <- brm_args[['prior']] %>% 
+      dplyr::filter(class != 'sigma')
+  }
 
   scode_final  <- CustomDoCall(brms::make_stancode, brm_args)
   sdata        <- CustomDoCall(brms::make_standata, brm_args)
@@ -14043,7 +14134,42 @@ bsitar <- function(x,
       } # for (outrespbames in ys) {
     } # if(set_model_sigma_by_fz | ...) {
     
+    
 
+    if(!is.null(custom_formula)) {
+      if(!brms::is.brmsformula(custom_formula)) {
+        stop2c("The 'custom_formula' must be of class 'brmsformula'")
+      }
+      brm_args[['formula']] <- custom_formula
+    }
+    
+    if(!is.null(custom_prior)) {
+      if(!brms::is.brmsprior(custom_prior)) {
+        stop2c("The 'custom_prior' must be of class 'brmsprior'")
+      }
+      brm_args[['prior']] <- custom_prior
+    }
+    
+   
+    # brm_argsxx <<- brm_args
+    # stop()
+    # do.call(brms::make_stancode, brm_args)
+
+    # fit_edited_scode <- TRUE
+    # replace_it <- "ptarget += normal_lpdf(Y[start:end] | mu, sigma)"
+    # replace_by <-
+    #   "ptarget += normal_lpdf(Y[start:end] | mu, sigma) +
+    #   normal_lccdf(10 | mu, sigma) +
+    # normal_lcdf(300 | mu, sigma);"
+    # 
+    #  scode_final <- bsitar:::replace_string_part(scode_final, replace_it, ";", replace_by)
+    # 
+    # print(scode_final)
+    # 
+    # do.call(brms::make_stancode, brm_argsxx) 
+    
+    # This to add to model_infor
+    brm_args_prior <- brm_args$prior
     
     if(!fit_edited_scode_exe_model_fit & fit_edited_scode) {
       if(get_priors) {
@@ -14065,6 +14191,8 @@ bsitar <- function(x,
       }
     } 
    
+    
+    
     
     
     
@@ -14375,7 +14503,6 @@ bsitar <- function(x,
         sigmaixfuntransform2valuelist[[i]]
     }
     
-    
     for (i in 1:length(sigmaxoffsetnamelist)) {
       model_info[[sigmaxoffsetnamelist[[i]]]] <- 
         sigmaxoffsetvaluelist[[i]]
@@ -14385,7 +14512,6 @@ bsitar <- function(x,
       model_info[[setsigmaxvarnamelist[[i]]]] <-
         setsigmaxvarvaluelist[[i]]
     }
-        
     
     for (i in 1:length(sigmamodelnamenamelist)) {
       model_info[[sigmamodelnamenamelist[[i]]]] <-
@@ -14409,9 +14535,6 @@ bsitar <- function(x,
       }
     } # if(set_model_sigma_by_ba) {
     
-    
-    
-   
     ##############################################################
     ##############################################################
     # these paste0(..., 's') will be combined across ys
@@ -14444,7 +14567,8 @@ bsitar <- function(x,
     model_info[[setsigmaxvar_names]]        <- setsigmaxvar_names_val
     model_info[['genquant_xyadj']]          <- genquant_xyadj
     
-    
+    model_info[['prior']]                   <- brm_args_prior
+   
     
     ##############################################################
     ##############################################################

@@ -56,42 +56,9 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
     }
   }
   
-  
-  
   exceptions <- c(exceptions, arg_names_formula_names)
   
   arg_names <- setdiff(arg_names, exceptions)
-  
-   # mcall0 <<- mcall
-  
-  # 
-  # # Convert list[['name']] call to list$name syntax
-  # to_dollar <- function(expr) {
-  #   if (is.recursive(expr) && length(expr) == 3 && identical(expr[[1]], quote(`[[`))) {
-  #     as.call(list(expr[[2]], expr[[3]]))  # list$name
-  #   } else {
-  #     expr
-  #   }
-  # }
-  # 
-  # # Usage
-  # expr <- quote(mylist[['name']])
-  # new_expr <- to_dollar(expr)
-  # new_expr  # mylist$name
-  
-  
-  # Convert list$name to list[['name']]
-  # to_double_bracket <- function(expr) {
-  #   if (is.recursive(expr) && length(expr) == 2 && identical(expr[[1]], as.name("$"))) {
-  #     as.call(list(quote(`[[`), expr[[2]], expr[[3]]))
-  #   } else {
-  #     expr
-  #   }
-  # }
-  
- 
-  
-  
   
   for (nm in arg_names) {
     expr <- mcall[[nm]]
@@ -107,6 +74,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       idx_val <- try(eval(idx_expr, envir = envir, enclos = emptyenv()), 
                      silent = TRUE)
       
+     
       if (!inherits(obj_val, "try-error") && !inherits(idx_val, "try-error") &&
           (is.list(obj_val) || is.vector(obj_val)) && 
           !is.null(tmp <- obj_val[[idx_val]]) && !is.function(tmp)) {
@@ -123,14 +91,11 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
     }
     
     
-
-    
     # PRIORITY 1.2: Convert dollar to double bracket and then Direct [['index']] 
     # mcmc_args$chains to mcmc_args[['chains']] and then extraction
     if (is.recursive(expr) && length(expr) == 3 && identical(expr[[1]], 
                                                              quote(`$`))) {
       
-     
       expr <- dollar_to_double_bracket(expr)
       
       obj_expr <- expr[[2]]
@@ -150,8 +115,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       }
     }
     
-    
-    
+  
     # PRIORITY 2: list()/c() wrappers
     is_wrapped <- FALSE
     wrapper <- NULL
@@ -163,6 +127,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
       inner_expr <- expr[-1]
       is_wrapped <- TRUE
     }
+    
     
     inner_exprde_e <- deparse_0(inner_expr)
     if(grepl("\\+", inner_exprde_e) & !is_wrapped) {
@@ -178,7 +143,9 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
     }
     
     # PRIORITY 3: Recursive lists/vectors
-    if (is.recursive(inner_expr)) {
+    if (is.recursive(inner_expr) & !is.null(wrapper)) { # added for NULL
+    # if (is.recursive(inner_expr)) {
+      
       evaled_elements <- lapply(inner_expr, function(e) {
         val <- try(eval(e, envir = envir, enclos = emptyenv()), 
                    silent = TRUE)
@@ -208,10 +175,14 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
         mcall[[nm]] <- evaled_elements
       }
       
+    } else if (is.recursive(inner_expr) & is.null(wrapper)) { # added for NULL
+      mcall[[nm]] <- NULL # added for NULL
+      
     } else {
       
       # PRIORITY 4: Single expressions
       val <- try(eval(expr, envir = envir, enclos = emptyenv()), silent = TRUE)
+ 
       if (!inherits(val, "try-error") && !is.null(val) && !is.function(val)) {
         if(is.null(expr)) {
           mcall[[nm]] <- expr
@@ -236,6 +207,7 @@ eval_globals_in_mcall <- function(mcall, envir = globalenv(),
   }
   
   # print(mcall)
+  # print("mmmmmmmm")
   # mcallx <<- mcall
   # stop()
    
