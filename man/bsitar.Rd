@@ -57,6 +57,8 @@ bsitar(
   autocor_formula = NULL,
   family = gaussian(),
   custom_family = NULL,
+  custom_formula = NULL,
+  custom_prior = NULL,
   custom_stanvars = NULL,
   group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist = gaussian),
   sigma_group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist =
@@ -1059,6 +1061,15 @@ sub-model and \code{student_t} distribution for the second. Note that the
 Default is \code{NULL}. For details, see \code{\link[brms:custom_family]{brms::custom_family()}}. Note that
 user-defined Stan functions must be exposed by setting
 \code{expose_functions = TRUE}.}
+
+\item{custom_formula}{Specifies custom formula. Default is \code{NULL}. For
+details, see \code{\link[brms:brmsformula]{brms::brmsformula()}}. Currently ignored.}
+
+\item{custom_prior}{Specifies custom prior Default is \code{NULL}. For
+details, see \code{\link[brms:set_prior]{brms::prior()}}. Currently ignored. It is primarily designed
+to support setting custom prior for \code{custom_formula}. Note that
+\code{custom_prior} is different from the \code{set_self_priors} which
+evaluated throughout the call.}
 
 \item{custom_stanvars}{Allows the preparation and passing of user-defined
 variables to be added to Stan's program blocks (default \code{NULL}). This
