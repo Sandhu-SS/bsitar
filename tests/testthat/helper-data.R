@@ -1,28 +1,17 @@
 
 
-###############################################################################
-# Create test data
-# he data will allow testing all three forms of models
-#   univariate model
-#   univariate_by model
-#   multivariate model
-###############################################################################
-
-# set.seed(123)
-# test_data <- data.frame(x = rep(1:5, 4),
-#                   y = rep(seq(100, 150, length.out = 5), 2)+rnorm(20, 0, 0.5),
-#                   y2 = rep(seq(100, 150, length.out = 5), 2)+rnorm(20, 0, 0.25),
-#                   id = factor(rep(c("1", "2", "3", "4"),times=c(5,5,5,5))),
-#                   gender = factor(rep(c("Male", "Female"),times=c(10,10))))
-
+  ##############################################################################
+  # Create test data
+  # The data will allow testing univariate and multivariate bsitar models
+  #   - univariate model
+  #   - multivariate model
+  ##############################################################################
 
 
   ##############################################################################
   # test_data
   ##############################################################################
 
-  
-  
   test_data <- bsitar::berkeley %>% 
     dplyr::select(id, age, height, weight, sex) %>% 
     dplyr::relocate(height, .before = weight) %>% 
@@ -100,11 +89,6 @@
     }
     message("Testing: ", info)
     testthat::expect_equal(object, expected, ...)
-    # if (expect_equal(object, expected, ...)) {
-    #   print("mmmm")
-    #   message("✗ ", "Failed")
-    #   # return(FALSE)
-    # }
     message("✓ ", "Success")
     return(invisible(NULL))
   }
@@ -121,16 +105,9 @@
     }
   }
 
-  # Usage
-  # skip_local_run_ci()
-  #
-  # test_that("big model behaviour", {
-  #   # heavy fits / large objects tested here
-  # })
-  
   
   ##############################################################################
-  # Model files
+  ################################ Model files #################################
   ##############################################################################
   
   ##############################################################################
@@ -165,6 +142,7 @@
                c_prior_sd = normal(0, 0.1, autoscale = FALSE),
                d_prior_sd = normal(0, 1, autoscale = FALSE),
                rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+               control = list(adapt_delta = 0.8, max_treedepth = 15),
                chains = 1,
                cores = 1,
                iter = 2000,
@@ -223,6 +201,7 @@
                c_prior_sd = normal(0, 0.1, autoscale = FALSE),
                d_prior_sd = normal(0, 1, autoscale = FALSE),
                rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+               control = list(adapt_delta = 0.8, max_treedepth = 15),
                chains = 1,
                cores = 1,
                iter = 2000,
@@ -248,23 +227,5 @@
   } # if(test_multivariate_fit_cov) {
 
 
-  # saveRDS(univariate_fit_cov, "univariate_fit_cov.rds")
-  # saveRDS(multivariate_fit_cov, "multivariate_fit_cov.rds")
   
   
-  
-  # bsitar::plot_curves(univariate_fit_cov, apv = T, draw_ids = draw_ids)
-  #
-  # bsitar::plot_curves(multivariate_fit_cov, resp = 'height', apv = T, draw_ids = draw_ids)
-  
-  
-  # model <- readRDS(testthat::test_path("models", "univariate_fit_cov.rds")) 
-  
- 
-  
-  
-  
-  
-
-
- 

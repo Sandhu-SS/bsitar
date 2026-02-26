@@ -2,7 +2,7 @@
 % Please edit documentation in R/bsitar.R
 \name{bsitar}
 \alias{bsitar}
-\title{Fit Bayesian SITAR Growth Curve Model}
+\title{Fit Bayesian SITAR Model}
 \usage{
 bsitar(
   x,
@@ -21,7 +21,7 @@ bsitar(
   yfun = NULL,
   xfunxoffset = TRUE,
   bound = 0.04,
-  stype = nsk,
+  stype = "nsk",
   terms_rhs = NULL,
   a_formula = ~1,
   b_formula = ~1,
@@ -109,7 +109,7 @@ bsitar(
   sigma_prior_cor_str = lkj(1),
   mvr_prior_rescor = lkj(1),
   init = NULL,
-  init_r = NULL,
+  init_r = 0.5,
   a_init_beta = lm,
   b_init_beta = 0,
   c_init_beta = 0,
@@ -148,7 +148,6 @@ bsitar(
   prior_data = NULL,
   init_data = NULL,
   init_custom = NULL,
-  verbose = FALSE,
   expose_function = FALSE,
   get_stancode = FALSE,
   get_standata = FALSE,
@@ -174,7 +173,7 @@ bsitar(
   opencl = getOption("brms.opencl", NULL),
   normalize = getOption("brms.normalize", TRUE),
   algorithm = getOption("brms.algorithm", "sampling"),
-  control = list(adapt_delta = 0.8, max_treedepth = 15),
+  control = list(adapt_delta = 0.9, max_treedepth = 15),
   empty = FALSE,
   rename = TRUE,
   pathfinder_args = NULL,
@@ -198,6 +197,7 @@ bsitar(
   sum_zero = FALSE,
   global_args = NULL,
   parameterization = "ncp",
+  verbose = FALSE,
   ...
 )
 }
@@ -1575,9 +1575,11 @@ parameters as \code{'random'}, then you must set \code{init = 'random'}
 which will be translated to \code{init = NULL} argument for \code{init =
  'rstan'} and \code{init = 'cmdstanr'}.}
 
-\item{init_r}{A positive real value that defines the range for the random
-generation of initial values (default \code{NULL}). This argument is used
-only when \code{init = 'random'}.}
+\item{init_r}{A positive real value specifying the range for random initial
+values (default \code{0.5}. This argument is used only when \code{init =
+  'random'}. Note that the default setting for \code{Stan} is \code{2.0} to
+assign random initials between a range \code{-2.0, 2.0} on the
+unconstrained parameter space.}
 
 \item{a_init_beta}{Initial values for the fixed effect parameter, \code{a}
 (default \code{'random'}). Available options include:
@@ -1903,14 +1905,6 @@ initialized values. To override this behavior and use all of
 \code{init_custom} values regardless of parameter-specific initials, set
 \code{init = 'custom'}.}
 
-\item{verbose}{An optional argument (logical, default \code{FALSE}) to
-indicate whether to print information collected during setting up the model
-formula priors, and initials. As an example, the user might be interested in
-knowing the response variables created for the sub model when fitting a
-univariate-by-subgroup model. This information can then be used in setting
-the desired order of options passed to each such model such as \code{df},
-\code{prior}, \code{initials} etc.}
-
 \item{expose_function}{An optional argument (logical, default \code{FALSE})
 to indicate whether to expose the Stan function used in model fitting.}
 
@@ -2230,6 +2224,14 @@ using \code{\link[rstan:rstan]{rstan::rstan()}} or \code{"cmdstanr"}, depending 
 and may fail if the structure of the generated \code{stancode} changes in
 future versions of \code{\link[brms:brm]{brms::brm()}}.}
 
+\item{verbose}{An optional argument (logical, default \code{FALSE}) to
+indicate whether to print information collected during setting up the model
+formula priors, and initials. As an example, the user might be interested in
+knowing the response variables created for the sub model when fitting a
+univariate-by-subgroup model. This information can then be used in setting
+the desired order of options passed to each such model such as \code{df},
+\code{prior}, \code{initials} etc.}
+
 \item{...}{Further arguments passed to \code{\link[brms:brm]{brms::brm()}}. This may include
 additional arguments that are either passed directly to the underlying
 model fitting function, or used for internal purposes. Specifically, the
@@ -2369,7 +2371,7 @@ such as size and timing (\code{fixed = 'a+b'}) or size and intensity
 \code{d} is included in the \code{fixed} and/or \code{random} arguments.
 }
 
-The \pkg{sitar} package internally depends on the \pkg{brms}
+The \pkg{bsitar} package internally depends on the \pkg{brms}
 package \insertCite{@see @R-brms; @brms2021}{bsitar}, which fits a wide
 range of hierarchical linear and nonlinear regression models, including
 multivariate models. The \pkg{brms} package itself depends on \strong{Stan} for

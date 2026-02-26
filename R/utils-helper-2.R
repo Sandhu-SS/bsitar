@@ -3036,6 +3036,11 @@ CustomDoCall <- function(what,
     call <- as.call(c(list(what, argn)))
   }
   args$verbose <- eval(args$verbose)
+  # print(multivariate)
+  # print(args$multivariate)
+  # multivariate <- args$multivariate
+  # args$multivariate <- eval(args$multivariate)
+  # args$univariate_by <- eval(args$univariate_by)
   return(eval(call, envir = args, enclos = envir))
 }
 

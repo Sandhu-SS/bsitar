@@ -472,6 +472,20 @@ gsub_space <- function(deparseobj) {
 }
 
 
+
+#' An internal function to remove spaces from the string
+#'
+#' @param deparseobj A character string
+#' @keywords internal
+#' @return A character string.
+#' @noRd
+#'
+gsub_quote1 <- function(deparseobj) {
+  gsub("\"", "", deparseobj)
+}
+
+
+
 #' An internal function to get arguments from the global environments
 #'
 #' @param mcallarg A \code{mcall()} argument
@@ -9113,6 +9127,47 @@ user_prompt <- function() {
   # We check if the user selected the first option.
   return(choice == 1)
 }
+
+
+
+#' A function that check if model object already exists in results
+#' 
+#' @details
+#' A helper
+#'
+#' @return NULL
+#'
+#' @keywords internal
+#' @noRd
+#' 
+check_model_file_exists <- function(model_str, 
+                                    set_getwd, 
+                                    results_folder, 
+                                    force_refit = FALSE, 
+                                    assign_model = TRUE,
+                                    invisible_TF = TRUE,
+                                    envir = NULL) {
+  if(is.null(envir)) envir <- parent.frame()
+  model_str_rds <- paste0(model_str, ".", 'RDS')
+  if(grepl(results_folder, set_getwd)) {
+    set_file.path <- file.path(set_getwd, model_str_rds)
+  } else {
+    set_file.path <- file.path(set_getwd, results_folder, model_str_rds)
+  }
+  if(force_refit) {
+    if(invisible_TF) return(invisible(FALSE)) else return(FALSE)
+  }
+  if(!force_refit) {
+    file_exists_TF <- file.exists(set_file.path)
+    if(file_exists_TF) {
+      if(assign_model) assign(model_str, readRDS(set_file.path), envir = envir)
+      if(invisible_TF)  return(invisible(TRUE)) else return(TRUE)
+    } else if(!file_exists_TF) {
+      if(invisible_TF)  return(invisible(FALSE)) else return(FALSE)
+    }
+  } # if(!force_refit) {
+  
+} 
 
 
 
