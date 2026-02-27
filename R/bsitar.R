@@ -2802,7 +2802,11 @@ bsitar <- function(x,
    temp_init_call_c
  }
   
-  mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
+
+ mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
+ if(is.null(mcall$init)) mcall$init <- "NULL"
+
+  
   
   for (inxc in letters[1:26]) {
     what_inxc <- paste0(inxc, "_", "init", "_", "beta", "")
@@ -11552,9 +11556,12 @@ bsitar <- function(x,
   
   
   
-  # new
-  check_set_init_r <- FALSE
-  if (is.null(ept(initialslist_s)[[1]][1]) | ept(initialslist_s) == "NULL") {
+  
+  check_set_init_r <- FALSE # new
+  if(initialslist_s[[1]][1] == "NULL") { # new
+    brmsinits <- brmsinits
+  } else if (is.null(ept(initialslist_s)[[1]][1]) | # new else if
+             ept(initialslist_s) == "NULL") {
     brmsinits <- brmsinits
   } else {
     if(all(brmsinits != "random")) {
@@ -11580,7 +11587,9 @@ bsitar <- function(x,
     }
   } # if(check_set_init_r) {
   
-  
+  # print(brmsinits)
+  # print(brmsinits_r)
+  # stop()
 
   for (inm in names(brmsinits)) {
     if (is.matrix(brmsinits[[inm]])) {
@@ -11667,7 +11676,6 @@ bsitar <- function(x,
           } else if(!is.null(set_jitter_factor)) {
             jitter_factor <- set_jitter_factor
           }
-          
           x <- unname(x)
           col <- c()
           for (i in 1:length(x)) {
@@ -11684,7 +11692,6 @@ bsitar <- function(x,
           col <- round(col, digits)
           return(col)
         }
-        
         
         jitter_mat <- function(x, what_to_jitter_list, digits) {
           set_jitter_factor  <- what_to_jitter_list[['factor']]
@@ -11796,7 +11803,6 @@ bsitar <- function(x,
       temp_prior <- set_self_priors
     }
     
-
     # 20.03.2025 - moved to 'final_scode'
     # but added support for returning tempriorstr if get_priors == "default"
     if(!is.logical(get_priors)) {
@@ -11809,7 +11815,6 @@ bsitar <- function(x,
       }
     } # if(!is.logical(get_priors)) {
     
-   
     ################################################################
     
     for (j in 1:length(setsigmaxvar_names_val)) {
@@ -11819,7 +11824,8 @@ bsitar <- function(x,
     }
     
     # add_sigma_by_mu
-    if(sigma_formula_manual_prior_via_sigma_formula & !is.null(sigmatau_strsi)) {
+    if(sigma_formula_manual_prior_via_sigma_formula & 
+       !is.null(sigmatau_strsi)) {
       set_user_prompt <- FALSE # already prompted at level of brmsprior
       if(length(sigmatau_strsi) > 1) {
         if(set_user_prompt) {

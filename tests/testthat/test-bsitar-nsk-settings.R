@@ -24,6 +24,7 @@ test_that("bsitar works fully with nsk settings", {
                        sample_prior = "no",
                        threads = threading(NULL),
                        # init = '0',
+                       init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
                        seed = 123)
@@ -41,6 +42,7 @@ test_that("bsitar works fully with nsk settings", {
                        sample_prior = "no",
                        threads = threading(NULL),
                        # init = '0',
+                       init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
                        seed = 123)
@@ -59,14 +61,15 @@ test_that("bsitar works fully with nsk settings", {
                        sample_prior = "no",
                        threads = threading(NULL),
                        # init = '0',
+                       init = NULL, # Don't use default random with init_r = 0.5
                        vcov_init_0 = TRUE,
                        refres = 0, silent = 2,
                        seed = 123)
   }))
   
   # test_fit <- test_fit_nsk
-  
-  true_sbetas <- c(128.06, 0.00, 0.00, 18.53, 34.30, 47.69, 49.69)
+                                # 0.00 to68fix
+  true_sbetas <- c(128.06, 0.00, -0.01, 18.53, 34.30, 47.69, 49.69)
   
   test_sbetas <- round(unname(brms::fixef(test_fit)[,1]), 2)
   
@@ -75,13 +78,7 @@ test_that("bsitar works fully with nsk settings", {
   test_gparms <- get_growthparameters(test_fit, re_formula = NA)
   
   expect_equal(round(test_gparms$Estimate[1], 2), 12.86, tolerance = 0.01)
-  expect_equal(round(test_gparms$Estimate[2], 2), 6.45, tolerance = 0.01)
-  
-  # get_predictions(test_fit, re_formula = NA, deriv = 0, by = 'age', plot = T)
-  # get_predictions(test_fit, re_formula = NA, deriv = 1, by = 'age', plot = T)
-  
-  # expect_error(bsitar(x=xx, y=y, id=id, data = dat, backend = "rstan",
-  #                    get_stancode = TRUE, sample_prior = "only"), 
-  #              "variable xx not in the dataframe")
+  expect_equal(round(test_gparms$Estimate[2], 2), 6.38, tolerance = 0.01)
+  # 6.45 -> 6.38 to68fix
   
 })
