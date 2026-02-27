@@ -66,19 +66,19 @@ bsitar(
   univariate_by = list(by = NA, cor = un, terms = subset),
   multivariate = list(mvar = FALSE, cor = un, rescor = TRUE, rcorr_by = NULL, rcorr_gr =
     NULL, rcorr_method = NULL, rcorr_prior = NULL),
-  a_prior_beta = normal(lm, ysd, autoscale = TRUE),
-  b_prior_beta = normal(0, 1.5, autoscale = FALSE),
-  c_prior_beta = normal(0, 0.5, autoscale = FALSE),
+  a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+  b_prior_beta = normal(0, 2, autoscale = FALSE),
+  c_prior_beta = normal(0, 1, autoscale = FALSE),
   d_prior_beta = normal(0, 1, autoscale = FALSE),
-  s_prior_beta = normal(lm, lm, autoscale = TRUE),
+  s_prior_beta = normal(lm, lm, autoscale = FALSE),
   a_cov_prior_beta = normal(0, 5, autoscale = FALSE),
   b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
   c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
   d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-  s_cov_prior_beta = normal(lm, lm, autoscale = TRUE),
+  s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
   a_prior_sd = normal(0, ysd, autoscale = FALSE),
-  b_prior_sd = normal(0, 1, autoscale = FALSE),
-  c_prior_sd = normal(0, 0.25, autoscale = FALSE),
+  b_prior_sd = normal(0, 2, autoscale = FALSE),
+  c_prior_sd = normal(0, 1, autoscale = FALSE),
   d_prior_sd = normal(0, 1, autoscale = FALSE),
   a_cov_prior_sd = normal(0, 5, autoscale = FALSE),
   b_cov_prior_sd = normal(0, 1, autoscale = FALSE),
@@ -108,7 +108,7 @@ bsitar(
   sigma_prior_cor = lkj(1),
   sigma_prior_cor_str = lkj(1),
   mvr_prior_rescor = lkj(1),
-  init = NULL,
+  init = "random",
   init_r = 0.5,
   a_init_beta = lm,
   b_init_beta = 0,
@@ -1185,7 +1185,7 @@ levels in \code{rcorr_by}. For \code{rcorr_method = 'cde'}, uniform priors
 }}
 
 \item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
-(default \code{normal(lm, ysd, autoscale = TRUE)}). The following key
+(default \code{normal(lm, ysd, autoscale = FALSE)}). The following key
 points are applicable for all prior specifications. For full details, see
 \code{\link[brms:set_prior]{brms::prior()}}:
 \itemize{
@@ -1305,8 +1305,8 @@ customization, similar to \code{a_prior_beta}, these options are available.
 }}
 
 \item{s_prior_beta}{Specify priors for the fixed effect parameter, \code{s}
-(i.e., spline coefficients). The default prior is \code{normal(0, 'lm',
-  autoscale = TRUE)}. The general approach is similar to the one described
+(i.e., spline coefficients). The default prior is \code{normal('lm', 'lm',
+  autoscale = FALSE)}. The general approach is similar to the one described
 for other fixed effect parameters (see \code{a_prior_beta} for details).
 Key points to note:
 \itemize{
@@ -1314,14 +1314,15 @@ Key points to note:
 \code{s_prior_beta = normal(lm, 'lm')}), the location parameter is set from
 the spline coefficients obtained from the simple linear model fit, and the
 scale parameter is based on the standard deviation of the spline design
-matrix. The location parameter is typically set to 0 (default), and
-\code{autoscale} is set to \code{TRUE}. \item For location-scale based
-priors, the option \code{sethp} (logical, default \code{FALSE}) is
-available to define hierarchical priors. Setting \code{sethp = TRUE} alters
-the prior setup to use hierarchical priors: \code{s ~ normal(0, 'lm')}
-becomes \code{s ~ normal(0, 'hp')}, where \code{'hp'} is defined as
-\code{hp ~ normal(0, 'lm')}. The scale for the hierarchical prior is
-automatically taken from the \code{s} parameter, and it can also be defined
+matrix. The location and scale parameters are typically set to \code{lm}
+(default), and \code{autoscale} is set to \code{FALSE}. \item For
+location-scale based priors, the option \code{sethp} (logical, default
+\code{FALSE}) is available to define hierarchical priors. Setting
+\code{sethp = TRUE} alters the prior setup to use hierarchical priors:
+\code{s ~ normal(0, 'lm')} becomes \code{s ~ normal(0, 'hp')}, where
+\code{'hp'} is defined as \code{hp ~ normal(0, 'lm')}. The scale for the
+hierarchical prior is automatically taken from the \code{s} parameter, and
+it can also be defined
 using the same \code{sethp} option. For example, \code{s_prior_beta =
   normal(0, 'lm', sethp = cauchy)} will result in \code{s ~ normal(0, 'lm')},
 \code{hp ~ cauchy(0, 'lm')
@@ -1559,13 +1560,13 @@ distribution is \code{lkj} (see \code{gr_prior_cor} for details).}
 
 \item{init}{Initial values for the sampler. Options include:
 \itemize{
-\item \code{'0'}: All parameters are initialized to zero. \item
-\code{'random'}: \strong{Stan} randomly generates initial values for each
-parameter within a range defined by \code{init_r} (see below), or between
--2 and 2 in unconstrained space if \code{init_r = NULL}. \item
-\code{'prior'}: Initializes parameters based on the specified prior. \item
-\code{NULL} (default): Initial values are provided by the corresponding
-init arguments defined below.
+\item \code{'random'} (default): \strong{Stan} randomly generates initial
+values for each parameter within a range defined by \code{init_r} (see
+below), or between -2 and 2 in unconstrained space if \code{init_r = NULL}.
+\item \code{'0'}: All parameters are initialized to zero.
+\item \code{'prior'}: Initializes parameters based on the specified prior.
+\item \code{NULL}: Initial values are provided by the corresponding init
+arguments defined below.
 }
 
 Note that \code{init = NULL} assigns initials for fixed effects, and
@@ -2452,9 +2453,10 @@ model_ml <- sitar::sitar(x = age, y = height, id = id,
 # been saved as an example fit ('berkeley_exfit'). This model was fit using 
 # 2 chains (2000 iterations per chain) with thinning set to 5 for memory  
 # efficiency. Users are encouraged to refit the model using default settings 
-# (4 chains, 2000 iterations per chain, thin = 1) as suggested by the Stan team.
-# Note that with thinning set to 5 (thin = 5), only one fifth of total draws 
-# will be saved and hence the effective sample size is expected to be small.
+# (4 chains, 2000 iterations per chain, thin = 1) as suggested by the Stan
+# team. Note that with thinning set to 6 (thin = 6), only one sixth of total  
+# draws will be saved and hence the effective sample size is expected to be 
+# small.
 
 # Check if the pre-saved model 'berkeley_exfit' exists
 # berkeley_exfit <- bsitar:::berkeley_exfit

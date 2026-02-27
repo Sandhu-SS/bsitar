@@ -6,11 +6,11 @@
 
 berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         df = 3, 
-                         stype = list('nsk', normalize = T),
+                       #  stype = list('nsk', normalize = T),
                         
                        # stype = list('nsp', normalize = FALSE),
                         
-                        chains = 2, cores = 2, iter = 1000, thin = 5,
+                        chains = 2, cores = 2, iter = 1000, thin = 6,
                         # a_prior_beta = normal(lm, ysd, autoscale = 2.5),
                         # b_prior_beta = normal(0, 1.5),
                         # c_prior_beta = normal(0, 0.5),
@@ -28,6 +28,35 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                         # c_init_beta = 0,
                         # s_init_beta = lm,
                         # backend = "cmdstanr", 
+                       
+                       ######################################
+                       # MCMC Setting - See SECTION 1: SETUP
+                       ######################################
+                       
+                       a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                       b_prior_beta = normal(0, 2, autoscale = FALSE),
+                       c_prior_beta = normal(0, 1, autoscale = FALSE),
+                       
+                       s_prior_beta = normal(lm, lm, autoscale = FALSE),
+                       
+                       # a_cov_prior_beta = normal(0, .10, autoscale = FALSE),
+                       # b_cov_prior_beta = normal(0, .2, autoscale = FALSE),
+                       # c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                       
+                       a_prior_sd = normal(0, ysd, autoscale = FALSE),
+                       b_prior_sd = normal(0, 2, autoscale = FALSE),
+                       c_prior_sd = normal(0, 1, autoscale = FALSE),
+                       
+                       rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                       
+                       # cp -> multi_normal_cholesky multi_normal, default cp is multi_normal_cholesky
+                       parameterization = "ncp",        # Suppress verbose output,
+                       stype = "rcs",        # Suppress verbose output,
+                       init = 0.5,
+                       
+                       ######################################
+                       
+                       
                         sample_prior = "no",
                         normalize = FALSE, 
                         genquant_xyadj = FALSE,
@@ -36,6 +65,9 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
 
 
  berkeley_exfit$test_mode <- TRUE
+ 
+#  object.size(berkeley_exfit)
+# 1563920 bytes
 
 # load("C:/Users/drsat/OneDrive/Documents/GitHub/bsitar/data/berkeley_exfit.rda")
 
