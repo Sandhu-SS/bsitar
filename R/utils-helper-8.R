@@ -17,9 +17,6 @@
 # GS_msp_call_stan
 
 
-
-
-
 ################################################################################
 # GS_bsp_tuple_intermediate_stan_R_str
 ################################################################################
@@ -618,5 +615,7 @@ GS_msp_call_stan_R_str <- function() {
 "
   return(set_stan_str)
 } # GS_msp_call_stan_R_str
+
+
 
 

@@ -3,6 +3,7 @@
 \name{get_growthparameters.bgmfit}
 \alias{get_growthparameters.bgmfit}
 \alias{get_growthparameters}
+\alias{get_gp}
 \alias{growthparameters_comparison}
 \alias{marginal_growthparameters}
 \title{Estimate and compare growth parameters for the Bayesian SITAR model}
@@ -92,6 +93,8 @@
 )
 
 get_growthparameters(model, ...)
+
+get_gp(model, ...)
 
 growthparameters_comparison(model, ...)
 
@@ -928,24 +931,24 @@ interval). The specific column names and structure may vary depending on
 the computation method.
 }
 \description{
-The \strong{get_growthparameters()} function estimates
-and compares growth parameters, such as peak growth velocity and the age at
+The \strong{get_growthparameters()} function estimates and
+compares growth parameters, such as peak growth velocity and the age at
 peak growth velocity. This function serves as a wrapper around
 \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}.
 The \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} function computes unit-level
 (conditional) estimates, whereas \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}}
 returns average (marginal) estimates. A detailed explanation is available
 \href{https://marginaleffects.com}{here}. Note that for the current use case—
-estimating and comparing growth parameters—the arguments \code{variables} and
-\code{comparison} in \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
-\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} are modified (see below).
-Furthermore, comparisons of growth parameters are performed via the
-\code{hypothesis} argument of both the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
+estimating and comparing growth parameters—the arguments \code{variables}
+and \code{comparison} in \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
+\code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} are modified (see below). Furthermore,
+comparisons of growth parameters are performed via the \code{hypothesis}
+argument of both the \code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} and
 \code{\link[marginaleffects:comparisons]{marginaleffects::avg_comparisons()}} functions. Please note that the
 \pkg{marginaleffects} package is highly flexible, and users are expected to
 have a strong understanding of its workings. Additionally, since the
-\pkg{marginaleffects} package is rapidly evolving, results obtained from the
-current implementation should be considered experimental.
+\pkg{marginaleffects} package is rapidly evolving, results obtained from
+the current implementation should be considered experimental.
 }
 \details{
 The \code{get_growthparameters} function estimates and

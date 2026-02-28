@@ -301,7 +301,6 @@ plot_conditional_effects.bgmfit <-
       if(verbose) message("'transform' set based on 'transform_draws'")
     }
     
-    
     # Interpolation points
     if(!exists('check_fun')) check_fun <- FALSE
     if(!exists('available_d1')) available_d1 <- FALSE
@@ -349,8 +348,7 @@ plot_conditional_effects.bgmfit <-
     oall <- CustomDoCall(post_processing_checks, post_processing_checks_args)
     post_processing_checks_args[['all']]      <- FALSE
     
-   
-    
+  
     if(!is.null(funlist)) {
       if(!is.list(funlist)) {
         stop("funlist must be a list")
@@ -390,7 +388,6 @@ plot_conditional_effects.bgmfit <-
         }
       }
     }
-    
     
     
     test <- setupfuns(model = model, resp = resp,
@@ -483,8 +480,7 @@ plot_conditional_effects.bgmfit <-
       }
     }
     
-    
-    
+  
     if (is.null(legendpos)) {
       if(is.null(calling.args$re_formula)) {
         legendpos <- "none"
@@ -548,13 +544,6 @@ plot_conditional_effects.bgmfit <-
           # stop2c("Plese set 'spaghetti = TRUE' when 'model_deriv' is 
           #                   FALSE and 're_formula = NULL'")
         }
-        
-        # calling.args_ce_effects <- calling.args_ce
-        # 
-        # out_effects <- CustomDoCall(brms::conditional_effects, 
-        #                                  calling.args_ce_effects)
-        # datace_effects <- out_effects[[1]] %>% 
-        #   dplyr::select(dplyr::all_of(names(model$data)))
         
         out_   <- CustomDoCall(brms::conditional_effects, calling.args_ce)
         datace <- out_[[1]] %>% dplyr::select(dplyr::all_of(names(model$data)))
@@ -632,7 +621,7 @@ plot_conditional_effects.bgmfit <-
         }
         # Why was this step needed ??
         # if(!summary) {
-        #   outx <- brms::posterior_summary(outx , probs = probs, robust = robust)
+        #   outx <- brms::posterior_summary(outx, probs=probs, robust = robust)
         #   outx <- outx %>% data.frame()
         #   outx <- outx %>% dplyr::select(dplyr::all_of(set_names_))
         # }
@@ -729,5 +718,7 @@ plot_conditional_effects.bgmfit <-
 plot_conditional_effects <- function(model, ...) {
   UseMethod("plot_conditional_effects")
 }
+
+
 
 

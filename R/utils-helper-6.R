@@ -1,19 +1,12 @@
 
 
-
-###############################################################################
-########################## NSP & NSK FUNCTIONS ################################
-###############################################################################
-
-################################################################################
-# GS_nsp_nsk_helper_stan_R_str
-################################################################################
-
 #' An internal function to prepare export rcs string for Stan, and auxiliary 
 #' R function
 #' 
-#' Note that now all three functions nsp, nsk and rcs are set using 'utils-helper-7'
-#' This makes 'utils-helper-6' reduntant. BUT DON'T DELTE it yet
+#' @description
+#' Note that now all three functions nsp, nsk and rcs are set using
+#' 'utils-helper-7' This makes 'utils-helper-6' reduntant. BUT DON'T DELTE it
+#' yet
 #'
 #'
 #' @return An character string which later evaluated to a custom function

@@ -378,7 +378,6 @@ counter_function <- function() {
 }
 my_counter <- counter_function()
 
-
 #############################################################
 # -------- wraper_for_drawni function for w/t future ------ #
 #############################################################

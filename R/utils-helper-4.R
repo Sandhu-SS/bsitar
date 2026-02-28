@@ -40,8 +40,7 @@ prepare_formula <- function(x,
                             nknots,
                             data,
                             internal_formula_args) {
-  
-  
+
   # Initiate non formalArgs()
   randomsi <- NULL;
   sigma_formula_gr_strsi <- NULL;

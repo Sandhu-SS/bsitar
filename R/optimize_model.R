@@ -428,7 +428,6 @@ optimize_model.bgmfit <- function(model,
   optimize_y  <- get_args_opt(deparse(substitute(optimize_y)))
   
   
-  
   # Need to adjust 'exclude_default' for multivariate ?
   temp_f_m_df <- model$model_info$dfs
   temp_f_m_df <- ept(temp_f_m_df) %>% as.factor()
@@ -1950,3 +1949,5 @@ optimize_model.bgmfit <- function(model,
 optimize_model <- function(model, ...) {
   UseMethod("optimize_model")
 }
+
+

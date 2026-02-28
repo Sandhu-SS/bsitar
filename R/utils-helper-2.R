@@ -7572,8 +7572,6 @@ get_size_from_age_draws <- function(age_draws_dt,
   
   if(rbindsize) age_draws_dt_in <- age_draws_dt
   
-  
-  
   age_draws_dt <- clean_draws(age_draws_dt, 
                               variable = NULL, 
                               group = 'parameter',

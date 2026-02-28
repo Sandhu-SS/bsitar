@@ -72,7 +72,6 @@ get_form <- function(x,
   knots <- sub('.*=', '', knots)
   bknots <- sub('.*=', '', bknots)
   
-  
   if(is_emptyx(df))     df     <- NULL
   if(is_emptyx(knots))  knots  <- NULL
   if(is_emptyx(bknots)) bknots <- NULL
@@ -190,7 +189,6 @@ check_set_criteria <- function(icr_fn, add_attr = FALSE, verbose = FALSE) {
   }
   return(icr_fn)
 }
-
 
 
 ##############################################################################

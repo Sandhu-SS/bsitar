@@ -133,7 +133,6 @@ prepare_function_nsp_rcs <- function(x,
     }
   }
   
-  
   if(is.null(ept('dpar_function'))) {
     dpar_function <- "mu"
   } else {
@@ -3849,8 +3848,6 @@ prepare_function_nsp_rcs <- function(x,
     rcsfun <- paste0(include_str, "\n", rcsfun)
   }
  
- 
-  
   if (!add_rcsfunmatqrinv_genquant) {
     out <- list(rcsfun = rcsfun, r_funs = all_raw_str, 
                 include_fun_names = include_fun_names)

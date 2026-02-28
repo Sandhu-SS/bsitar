@@ -60,7 +60,6 @@ get_idata <-
            newdata_fixed = NULL,
            verbose = FALSE) {
     
-
     `.` <- NULL;
     
     if (is.null(newdata)) {
@@ -79,7 +78,6 @@ get_idata <-
         }
       }
     }
-    
     
     add_just_list_c <- FALSE
     if(is.null(newdata_fixed)) {
@@ -247,4 +245,6 @@ get_idata <-
     
    return(out)
   }
+
+
 

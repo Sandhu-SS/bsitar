@@ -562,7 +562,6 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
-  
   ##############################################################################
   if(!is.null(parameter)) {
     allowed_parms      <- c('apgv', 'pgv', 'atgv', 'tgv', 'acgv', 'cgv')
@@ -625,8 +624,6 @@ hypothesis_test.bgmfit <- function(model,
   # hypothesis_test() arguments via bayestestR_equivalence_test_df_args - 1301
   # The missing arguments for p_direction will be later updated from the
   # hypothesis_test() arguments via bayestestR_p_direction_df_args - 1301
-  
-  
   if(is.null(rope_test)) {
     if(!is.null(equivalence_test)) {
       if(is.logical(equivalence_test)) {
@@ -637,7 +634,6 @@ hypothesis_test.bgmfit <- function(model,
     }
   }
   
-  
   if(is.null(pd_test)) {
     if(!is.null(p_direction)) {
       if(is.logical(p_direction)) {
@@ -647,9 +643,6 @@ hypothesis_test.bgmfit <- function(model,
       }
     }
   }
-  
-  
-  
   
   if(is.null(rope_test) & is.null(pd_test)) {
     if(obj_model) {
@@ -674,8 +667,7 @@ hypothesis_test.bgmfit <- function(model,
     pd_test <- FALSE 
   }
   
-  
-  
+
   if(pd_test) {
     if(is.null(p_direction)) {
       if(is.null(null)) {
@@ -703,9 +695,6 @@ hypothesis_test.bgmfit <- function(model,
       }
     }
   }
-  
-  
-  
   
   # Extract draws from the obj_marginaleffects
   if(obj_marginaleffects) {
@@ -1707,7 +1696,6 @@ hypothesis_test.bgmfit <- function(model,
 hypothesis_test <- function(model, ...) {
   UseMethod("hypothesis_test")
 }
-
 
 
 #' @noRd

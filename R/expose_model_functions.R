@@ -108,8 +108,6 @@ expose_model_functions.bgmfit <- function(model,
     select_model <- model$model_info$select_model
   }
   
-  
-  
   if(expose) {
     if (verbose) {
       setmsgtxt <-
@@ -118,11 +116,8 @@ expose_model_functions.bgmfit <- function(model,
     }
   }
   
-  
   sigma_model_all_      <- paste0('sigmamodel_all', "")
   sigma_model_all       <- model$model_info[[sigma_model_all_]]
-  
-  
   
   expose_sigma_ls_model_fun <- FALSE
   expose_sigma_var_model_fun <- FALSE
@@ -175,8 +170,7 @@ expose_model_functions.bgmfit <- function(model,
     }
   }
   
-  
-  
+
   if(is.null(backend)) {
     backend <- model$backend
   } else if(!is.null(backend)) {
@@ -229,7 +223,6 @@ expose_model_functions.bgmfit <- function(model,
   } # if(backend == "cmdstanr") {
   
   
-  
   if(expose &  backend == "cmdstanr") {
     if(is.null(model$functions$fun_names)) {
       suppressWarnings(suppressMessages({
@@ -256,7 +249,6 @@ expose_model_functions.bgmfit <- function(model,
   } # if(expose &  backend == "cmdstanr") {
   
 
-  
   if(expose & backend == "rstan") {
     stanc_arguments <- list()
     stanc_arguments[['model_code']] <- exposecode
@@ -299,7 +291,6 @@ expose_model_functions.bgmfit <- function(model,
     # do.call(rstan::expose_stan_functions, compiled_code_args)
     CustomDoCall(rstan::expose_stan_functions, compiled_code_args)
   }
-  
   
   
   if(expose_r_from_stan) {
@@ -346,15 +337,12 @@ expose_model_functions.bgmfit <- function(model,
   } # if(expose_r_from_stan) {
   
   
-  
   SplineFun_name      <- model$model_info[['StanFun_name']]
   sigmaSplineFun_name <- model$model_info[['sigmaStanFun_name']]
   spfun_collect       <- model$model_info$include_fun_names
-  
 
   
   if(expose & backend == "rstan") {
-  # if(expose) {
     Spl_funs <- list()
     spfun_collectic <- -1
     for (spfun_collecti in spfun_collect) {
@@ -378,8 +366,6 @@ expose_model_functions.bgmfit <- function(model,
   } 
   
   
-
-  
   if(expose & backend == "cmdstanr") {
     spfun_collect      <- c_model$functions
     Spl_funs <- list()
@@ -399,8 +385,6 @@ expose_model_functions.bgmfit <- function(model,
       }
     }
   }
-  
-  
   
   
   if(expose_r_from_stan) {
@@ -441,7 +425,6 @@ expose_model_functions.bgmfit <- function(model,
     allSplineFun_name <- c(allSplineFun_name, sigmabasicSplineFun_name)
   } 
   
-
   
   # The 'sigma_basic_model_fun' are not part of the stan code but only R
   # Therefore, we need to attach them back to the exposed stan functions 

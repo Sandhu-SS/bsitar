@@ -1152,7 +1152,8 @@ GS_isp_call <- function(x,
 #' H matrix
 #' @param sfirst Ignored
 #' @param sparse Ignored
-#' @param method  Internal. method 'bs'/'rs' used in knots_selection. Ignored here
+#' @param method  Internal. method 'bs'/'rs' used in knots_selection. Ignored
+#'   here
 #' @param smat Internal
 #' @param degree Internal
 #' @param nk Internal
@@ -1340,4 +1341,6 @@ get_knost_from_df <- function(x,
   
   return(knots)
 }
+
+
 

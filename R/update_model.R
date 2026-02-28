@@ -202,8 +202,6 @@ update_model.bgmfit <-
     dots$data <- NULL
     
     
-    
-    
     as_one_logical <- is_equal <- NULL
     needs_recompilation <- substitute_name <- NULL
     
@@ -512,3 +510,5 @@ update_model.bgmfit <-
 update_model <- function(model, ...) {
   UseMethod("update_model")
 }
+
+

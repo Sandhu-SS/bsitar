@@ -130,11 +130,6 @@ modelbased_growthparameters_nonS3 <- function(model,
       fastplyr::f_select(-'tempjoinby')
   }
   
-  
-  # xyadj_list_c <- matrix(NA, nrow(ApvX0), ncol = nrow(newdata))
-  # yyadj_list_c <- matrix(NA, nrow(ApvX0), ncol = nrow(newdata))
-  # vyadj_list_c <- matrix(NA, nrow(ApvX0), ncol = nrow(newdata))
-
   # my_array  <- array(NA, dim = c(2, nrow(newdata), 3))
   
   my_matrix <- matrix(NA, nrow = 3, ncol = nrow(newdata))

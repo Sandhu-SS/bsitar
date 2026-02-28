@@ -187,7 +187,6 @@ fitted_draws.bgmfit <-
       plot_conditional_effects_calling <- TRUE 
     }
     
-    
     check_trace_back.bgmfit <- grepl("growthparameters", 
                                      rlang_trace_back[[1]])
     if(all(!check_trace_back.bgmfit)) {
@@ -395,7 +394,6 @@ fitted_draws.bgmfit <-
     }
     
     
-    
     if(!isTRUE(
       check_pkg_version_exists('brms', 
                                minversion = get_package_minversion('brms'), 
@@ -544,8 +542,6 @@ fitted_draws.bgmfit <-
       } # if(deriv = 0) {
     } # if(!check_fun) {
     
-    
-    
     if(!indirectcall) {
       if(dpar == "sigma") {
         sigma_model <- get_sigmamodel_info(model = model,
@@ -646,7 +642,6 @@ fitted_draws.bgmfit <-
     } # if(!indirectcall) {
     
     
-    
     if(indirectcall) {
       # plot_curves() and growthparameters()
       if(dpar == "sigma") {
@@ -666,13 +661,10 @@ fitted_draws.bgmfit <-
       
     } # if(indirectcall) {
   
-    
-    
     if(!is.null(attr(calling.args$newdata, 'difx'))) {
       calling.args[['difx']] <- difx <- attr(calling.args$newdata, 'difx')
     } 
     
-
     if(!plot_conditional_effects_calling) {
       if(check_fun) {
         if(deriv > 0) {
@@ -717,8 +709,6 @@ fitted_draws.bgmfit <-
         } # if(deriv > 0) {
       } # if(check_fun) {
     } # if(!plot_conditional_effects_calling) {
-    
-   
     
     full.args <-
       sanitize_CustomDoCall_args(what = "CustomDoCall",
@@ -784,7 +774,6 @@ fitted_draws.bgmfit <-
     } # if(plot_conditional_effects_calling) {
 
    
-    
     assign(o[[1]], model$model_info[['exefuns']][[o[[1]]]], envir = envir)
    
     if(!is.null(eval(full.args$clearenvfuns))) {

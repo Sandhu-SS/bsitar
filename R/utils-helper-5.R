@@ -138,9 +138,7 @@ prepare_formula_sigma <- function(x,
   sigmacovcoefnames_gr_str_id <- NULL;
   sigmacovcoefnames_gr_str_form <- NULL;
   brms_arguments <- NULL;
-  
   d_adjustedsi <- NULL;
-  
   
   
   if (!is.null(internal_formula_args)) {

@@ -198,7 +198,6 @@ predict_draws.bgmfit <-
       growthparameters_calling <- FALSE 
     }
     
-    
     ########################################################
     
     # For sigma
@@ -923,6 +922,7 @@ predict_draws.bgmfit <-
     } # if (is.na(model$model_info$univariate_by$by)) {
     . 
   } # end predict_draws
+
 
 
 

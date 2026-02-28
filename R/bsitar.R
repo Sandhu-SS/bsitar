@@ -85,15 +85,15 @@
 #' approach suggested here or another method of their choice—to ensure optimal
 #' model performance.
 #' 
-#' Like \pkg{sitar} package \insertCite{Cole2010}{bsitar}, the \pkg{bsitar}
-#' package fits the \emph{SITAR} model with (usually) three random effects: size
+#' Like \pkg{sitar}, the \insertCite{Cole2010}{bsitar}, the \pkg{bsitar} package
+#' fits the \emph{SITAR} model with (usually) three random effects: size
 #' (parameter \code{a}), timing (parameter \code{b}), and intensity (parameter
 #' \code{c}). Additionally, there is a slope parameter (parameter \code{d}) that
 #' models the variability in the adult slope of the growth curve (see
 #' [sitar::sitar()] for details).
 #' 
-#' Note that the author of the \pkg{sitar} package \insertCite{Cole2010}{bsitar}
-#' enforces the inclusion of the \code{d} parameter as a random effect only,
+#' Note that author of the \pkg{sitar} package \insertCite{Cole2010}{bsitar}
+#' enforces the inclusion of \code{d} parameter as a random effect only,
 #' excluding it from the fixed structure of the model. However, the \pkg{bsitar}
 #' package allows inclusion of the \code{d} parameter in both the fixed and/or
 #' random effects structures of the \emph{SITAR} model.
@@ -303,8 +303,7 @@
 #'       bkrange = TRUE, fix_bknots = TRUE, method = "bs",
 #'       when = "bc", what = "plot3", return = FALSE, print = TRUE
 #'     ),
-#'     seed = 123
-#'   )
+#'     seed = 123)
 #'   }
 #'   
 #' @param fixed A character string specifying the fixed effects structure
@@ -442,7 +441,6 @@
 #' For more details, see [Hmisc::rcspline.eval()], [splines2::nsk()], and
 #' [splines2::nsp()].
 #' 
-#'
 #'@param terms_rhs An optional character string (default \code{NULL}) specifying
 #'  terms on the right-hand side of the response variable, but before the
 #'  formula tilde sign \code{~}. The \code{terms_rhs} is used when fitting a
@@ -530,8 +528,8 @@
 #' 
 #' \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr = ~1}, 
 #' 
-#' and use \code{group_by} as \cr
-#'  \code{group_by = list(groupvar = id, cor = un)}, \cr
+#' and use \code{group_by} as \cr 
+#' \code{group_by = list(groupvar = id, cor = un)}, \cr
 #' where \code{id} specifies the group identifier and \code{un} sets the
 #' unstructured correlation structure. See the \code{group_by} argument for more
 #' details.
@@ -710,7 +708,6 @@
 #'   for setting priors on parameters defined by \code{'sigma_formula'},
 #'   \code{'sigma_formula_gr'}, and \code{'sigma_formula_gr_str'}.
 #'   
-#'
 #' \strong{Advanced variance modelling:} This approach models heteroscedasticity
 #' using an explicit variance function. The \pkg{'bsitar'} package provides six
 #' different methods for variance modeling, five of which are implemented in the
@@ -785,7 +782,6 @@
 #'   lf(param1 + param2 ~ 1)
 #' }
 #' 
-#' 
 #' \strong{Internal Predictor Transformations:}
 #' The function applies internal transformations based on the chosen method:
 #' \itemize{
@@ -797,7 +793,6 @@
 #'   \item For \code{'mean'}, \code{identity()} is internally set to
 #'     \code{sqrt(fitted(.))}.
 #' }
-#' 
 #' 
 #' Note that the default \code{'fitted'} (see above, \code{4. fitted:})
 #' internally gets coded as \code{method = 'fittedexp'} (or short hand
@@ -1285,11 +1280,9 @@
 #'  matrix. 
 #'  
 #'  \cr The other variants of scale parameters are: \cr 
-#'  
 #'  \code{s_prior_beta = normal(lm,lm2)}) for which the scale parameter is
 #'  defined as: \code{lm_se/sd(X)} where \code{lm_se} is the vector of standard
 #'  error obtained from the linear model fit and \code{X} is the design matrix. 
-#'  
 #'  \cr \code{s_prior_beta = normal(lm,lm3)}) for which the scale parameter is
 #'  defined as \code{lm_se} where \code{lm_se} is the vector of standard error
 #'  obtained from the linear model fit.
@@ -1851,14 +1844,6 @@
 #'   \code{init_custom} values regardless of parameter-specific initials, set
 #'   \code{init = 'custom'}.
 #'
-#'@param verbose An optional argument (logical, default \code{FALSE}) to
-#'  indicate whether to print information collected during setting up the model
-#'  formula priors, and initials. As an example, the user might be interested in
-#'  knowing the response variables created for the sub model when fitting a
-#'  univariate-by-subgroup model. This information can then be used in setting
-#'  the desired order of options passed to each such model such as \code{df},
-#'  \code{prior}, \code{initials} etc.
-#'
 #' @param expose_function An optional argument (logical, default \code{FALSE})
 #'   to indicate whether to expose the Stan function used in model fitting.
 #'
@@ -2161,6 +2146,14 @@
 #'  \code{backend}. Therefore, CP parameterization is considered experimental
 #'  and may fail if the structure of the generated \code{stancode} changes in
 #'  future versions of [brms::brm()].
+#'  
+#' @param verbose An optional argument (logical, default \code{FALSE}) to
+#'   indicate whether to print information collected during setting up the model
+#'   formula priors, and initials. As an example, the user might be interested
+#'   in knowing the response variables created for the sub model when fitting a
+#'   univariate-by-subgroup model. This information can then be used in setting
+#'   the desired order of options passed to each such model such as \code{df},
+#'   \code{prior}, \code{initials} etc.
 #'   
 #' @param ... Further arguments passed to [brms::brm()]. This may include
 #'   additional arguments that are either passed directly to the underlying
@@ -2250,7 +2243,7 @@
 #' 
 #' # To avoid time-consuming model estimation, the Bayesian SITAR model fit has 
 #' # been saved as an example fit ('berkeley_exfit'). This model was fit using 
-#' # 2 chains (2000 iterations per chain) with thinning set to 5 for memory  
+#' # 2 chains (2000 iterations per chain) with thinning set to 6 for memory  
 #' # efficiency. Users are encouraged to refit the model using default settings 
 #' # (4 chains, 2000 iterations per chain, thin = 1) as suggested by the Stan
 #' # team. Note that with thinning set to 6 (thin = 6), only one sixth of total  
@@ -2277,7 +2270,7 @@
 #'                   b_formula = ~1, 
 #'                   c_formula = ~1, 
 #'                   threads = brms::threading(NULL),
-#'                   chains = 2, cores = 2, iter = 2000, thin = 5)
+#'                   chains = 2, cores = 2, iter = 1000, thin = 6)
 #'                   
 #' }
 #' 
@@ -2525,6 +2518,15 @@ bsitar <- function(x,
   
   mcall <- match.call()
   no_default_args <- c("x", "y", "id", "data", "...")
+  
+  
+  if(!'init' %in% names(mcall)) {
+    mcall$init <- init
+  }
+  if(!'init_r' %in% names(mcall)) {
+    mcall$init_r <- init_r
+  }
+  
   
   if(is.null(global_args)) {
     global_args <- FALSE
@@ -2802,10 +2804,16 @@ bsitar <- function(x,
    temp_init_call_c
  }
   
-
- mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
- if(is.null(mcall$init)) mcall$init <- "NULL"
-
+ # print(mcall$init)
+ 
+ if(!is.null(mcall$init)) {
+   mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
+ } else if(is.null(mcall$init)) {
+   mcall$init <- "NULL"
+ }
+ 
+ # print(mcall$init)
+ # stop()
   
   
   for (inxc in letters[1:26]) {
@@ -9575,8 +9583,7 @@ bsitar <- function(x,
         "estart"
         )
     
-    
-    
+  
     prior_args_internal_names <-
       c(
         lm_val_list_not,
@@ -10919,8 +10926,10 @@ bsitar <- function(x,
         length_of_sigma_var_nlpars <- 3
       }
       if(length(sigmatau_strsi_i) != length_of_sigma_var_nlpars) {
-        stop2c("For sigma variance method ", collapse_comma(nlf_sigma_method_arg), 
-             ", the number of nlpar should be ", length_of_sigma_var_nlpars,
+        stop2c("For sigma variance method ", 
+               collapse_comma(nlf_sigma_method_arg), 
+             ", the number of nlpar should be ", 
+             length_of_sigma_var_nlpars,
              "\n ",
              " but the number of specified nlpar is ", length(sigmatau_strsi_i),
              "\n ",
@@ -10933,11 +10942,12 @@ bsitar <- function(x,
     if(nys > 1) {
       # check for _ls
       if(length(unique(unlist(sigmaspfncname_c))) > 1) {
-        stop2c("The name of 'sigma' functions defined for modelling location-scale",
+        stop2c("The name of 'sigma' functions defined for 
+               modelling location-scale",
              "\n model should be same across all responses.",
              "\n Currently specified names are: ", 
              collapse_comma(unique(unlist(sigmaspfncname_c))),
-             "\n Also note that the function name should have 'sigma' as prefix",
+             "\n Also note that function name should have 'sigma' as prefix",
              "\n without any underscore such as 'sigmafun'. In case prefix",
              "\n 'sigma' is missing, this will be added internally i.e., if ",
              "\n function name is 'fun', then it will be renamed as 'sigmafun'"
@@ -10945,7 +10955,8 @@ bsitar <- function(x,
       }
       # check for _mu
       if(! all_inner_lengths_equal_in_list(sigmatau_strsi_c) ) {
-        stop2c("The number of 'nlpar' parameters defined for modelling sigma as a",
+        stop2c("The number of 'nlpar' parameters defined for 
+               modelling sigma as a",
              "\n  function of mean should be same across all responses.",
              "\n  (the response specific renaming is done internally)",
              "\n  Currently specified names are: ", 
@@ -10966,7 +10977,8 @@ bsitar <- function(x,
     
     
     # check - 4 - checks and update brmsprior 
-    if(sigma_formula_manual_prior_via_sigma_formula & !is.null(sigmatau_strsi)) {
+    if(sigma_formula_manual_prior_via_sigma_formula & 
+       !is.null(sigmatau_strsi)) {
       warn_sigma_self_prior_msg <- 
         paste0(" There are custom nlpar parameters for the distributional",
                "\n  ",
@@ -10985,15 +10997,15 @@ bsitar <- function(x,
                "\n  ",
                "from the nlf(). In that case, same priors will be set for each",
                "\n  ",
-               "nlpar parameter across all outcomes, Note that in case you stick",
+               "nlpar parameter across all outcomes, In case you stick",
                "\n  ",
                "to use the  nlf(..., prior=self), then you can supply custom",
                "\n  ",
                "priors that will be added to the prior object",
                "\n  ",
-               "These priors can be set using 'add_self_priors = xx' in bsitar()",
+               "These priors can be set using 'add_self_priors = x'",
                "\n  ",
-               "call where xx is the prior object with your custom priors")
+               "call where x is the prior object with your custom priors")
       
       user_prompt_msg <- 
         paste0(" There are more than one nlpar parameters for the  ",
@@ -11019,7 +11031,8 @@ bsitar <- function(x,
     check_prompt <- FALSE
     check_verbose <- verbose
     # add_sigma_by_mu
-    if(sigma_formula_manual_prior_via_sigma_formula & !is.null(sigmatau_strsi)) {
+    if(sigma_formula_manual_prior_via_sigma_formula & 
+       !is.null(sigmatau_strsi)) {
       set_user_prompt <- check_prompt
       if(length(sigmatau_strsi) > 1) {
         if(set_user_prompt) {
@@ -11041,7 +11054,7 @@ bsitar <- function(x,
           if(nlf_sigma_method_arg == "fitted") {
             if(counter_sigmatau_strsi == length(sigmatau_strsi)) {
               # wanted but 
-              # Prior argument 'coef' may not be specified when using boundaries.
+              #Prior argument 'coef' may not be specified when using boundaries.
               # set_lb = "0"
               set_lb = ""
             } else {
@@ -11470,9 +11483,8 @@ bsitar <- function(x,
     
     
 
-    if ((multivariate$mvar &
-         multivariate$cor == "diagonal") |
-        (!is.na(univariate_by$by) &
+    if ((multivariate$mvar & multivariate$cor == "diagonal") |
+        (!is.na(univariate_by$by) & 
          univariate_by$cor == "diagonal") |
         group_arg$cor == "diagonal" |
         sigma_group_arg$cor == "diagonal") {
@@ -11554,8 +11566,10 @@ bsitar <- function(x,
     brmsinits_ <- ""
   }
   
-  
-  
+  # print(initsi)
+  # print(brmsinits)
+  # print(initialslist_s[[1]][1])
+  # stop()
   
   check_set_init_r <- FALSE # new
   if(initialslist_s[[1]][1] == "NULL") { # new
@@ -11573,7 +11587,7 @@ bsitar <- function(x,
     brmsinits_ <- NULL
   }
   
- # New to set init_r for 'cmdstanr' and 'rstan' when init = random
+  # New to set init_r for 'cmdstanr' and 'rstan' when init = random
   if(check_set_init_r) {
     if(is.character(init_rsi)) {
       brmsinits_r <- ept(init_rsi)
@@ -11663,7 +11677,8 @@ bsitar <- function(x,
           set_jitter_amount  <- what_to_jitter_list[['amount']]
           set_jitter_percent <- what_to_jitter_list[['percent']]
           if(!is.null(set_jitter_amount) & !is.null(set_jitter_percent)) {
-            stop2c("Please specify either amount or percent for jitter, not both")
+            stop2c("Please specify either amount or percent for jitter, 
+                   not both")
           }
           if(is.null(set_jitter_percent)) {
             set_jitter_prop <- NULL
@@ -11698,7 +11713,8 @@ bsitar <- function(x,
           set_jitter_amount  <- what_to_jitter_list[['amount']]
           set_jitter_percent <- what_to_jitter_list[['percent']]
           if(!is.null(set_jitter_amount) & !is.null(set_jitter_percent)) {
-            stop2c("Please specify either amount or percent for jitter, not both")
+            stop2c("Please specify either amount or percent for jitter,
+                   not both")
           }
           if(is.null(set_jitter_percent)) {
             set_jitter_prop <- NULL
@@ -11711,7 +11727,6 @@ bsitar <- function(x,
           } else if(!is.null(set_jitter_factor)) {
             jitter_factor <- set_jitter_factor
           }
-          
           mat_out <- x
           x <- x[lower.tri(x)]
           col <- c()

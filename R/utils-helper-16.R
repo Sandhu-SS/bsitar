@@ -709,7 +709,6 @@ xyunadj_curves.bgmfit <- function (model,
   
   o <- CustomDoCall(post_processing_checks, post_processing_checks_args)
   
-  
   newdata <- get.newdata(model, 
                          newdata = newdata, 
                          resp = resp, 

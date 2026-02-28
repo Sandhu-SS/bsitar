@@ -566,17 +566,6 @@ get_predictions.bgmfit <-
     } # if(dpar == "sigma") {
     
     
-    # if(!is.null(transform)) {
-    #   if(is.logical(transform)) {
-    #     if(!transform) transform_draws <- 'identity'
-    #   } else if(!is.logical(transform)) {
-    #     if(is.character(transform)) {
-    #       if(transform == "exp") transform_draws <- 'exp'
-    #       if(transform == "ln") transform_draws <- 'log'
-    #     }
-    #   }
-    # }
-    
     if(!is.null(transform)) {
       # new check added if(!is.function(transform)) {
       if(!is.function(transform)) {

@@ -119,3 +119,6 @@ fast_nsk_rcsfun_str_get <- function() {
 } # fast_nsk_rcsfun_str_get
 
 
+
+
+

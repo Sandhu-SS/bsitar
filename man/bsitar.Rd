@@ -352,8 +352,7 @@ Example usage:
       bkrange = TRUE, fix_bknots = TRUE, method = "bs",
       when = "bc", what = "plot3", return = FALSE, print = TRUE
     ),
-    seed = 123
-  )
+    seed = 123)
   }}
 
 \item{fixed}{A character string specifying the fixed effects structure
@@ -1342,11 +1341,9 @@ standard deviation of the outcome and the spline design matrix as follows:
 matrix.
 
 \cr The other variants of scale parameters are: \cr
-
 \code{s_prior_beta = normal(lm,lm2)}) for which the scale parameter is
 defined as: \code{lm_se/sd(X)} where \code{lm_se} is the vector of standard
 error obtained from the linear model fit and \code{X} is the design matrix.
-
 \cr \code{s_prior_beta = normal(lm,lm3)}) for which the scale parameter is
 defined as \code{lm_se} where \code{lm_se} is the vector of standard error
 obtained from the linear model fit.}
@@ -2227,8 +2224,8 @@ future versions of \code{\link[brms:brm]{brms::brm()}}.}
 
 \item{verbose}{An optional argument (logical, default \code{FALSE}) to
 indicate whether to print information collected during setting up the model
-formula priors, and initials. As an example, the user might be interested in
-knowing the response variables created for the sub model when fitting a
+formula priors, and initials. As an example, the user might be interested
+in knowing the response variables created for the sub model when fitting a
 univariate-by-subgroup model. This information can then be used in setting
 the desired order of options passed to each such model such as \code{df},
 \code{prior}, \code{initials} etc.}
@@ -2341,15 +2338,15 @@ that users carefully consider the placement of knots—whether using the
 approach suggested here or another method of their choice—to ensure optimal
 model performance.
 
-Like \pkg{sitar} package \insertCite{Cole2010}{bsitar}, the \pkg{bsitar}
-package fits the \emph{SITAR} model with (usually) three random effects: size
+Like \pkg{sitar}, the \insertCite{Cole2010}{bsitar}, the \pkg{bsitar} package
+fits the \emph{SITAR} model with (usually) three random effects: size
 (parameter \code{a}), timing (parameter \code{b}), and intensity (parameter
 \code{c}). Additionally, there is a slope parameter (parameter \code{d}) that
 models the variability in the adult slope of the growth curve (see
 \code{\link[sitar:sitar]{sitar::sitar()}} for details).
 
-Note that the author of the \pkg{sitar} package \insertCite{Cole2010}{bsitar}
-enforces the inclusion of the \code{d} parameter as a random effect only,
+Note that author of the \pkg{sitar} package \insertCite{Cole2010}{bsitar}
+enforces the inclusion of \code{d} parameter as a random effect only,
 excluding it from the fixed structure of the model. However, the \pkg{bsitar}
 package allows inclusion of the \code{d} parameter in both the fixed and/or
 random effects structures of the \emph{SITAR} model.
@@ -2451,7 +2448,7 @@ model_ml <- sitar::sitar(x = age, y = height, id = id,
 
 # To avoid time-consuming model estimation, the Bayesian SITAR model fit has 
 # been saved as an example fit ('berkeley_exfit'). This model was fit using 
-# 2 chains (2000 iterations per chain) with thinning set to 5 for memory  
+# 2 chains (2000 iterations per chain) with thinning set to 6 for memory  
 # efficiency. Users are encouraged to refit the model using default settings 
 # (4 chains, 2000 iterations per chain, thin = 1) as suggested by the Stan
 # team. Note that with thinning set to 6 (thin = 6), only one sixth of total  
@@ -2478,7 +2475,7 @@ if(exists('berkeley_exfit')) {
                   b_formula = ~1, 
                   c_formula = ~1, 
                   threads = brms::threading(NULL),
-                  chains = 2, cores = 2, iter = 2000, thin = 5)
+                  chains = 2, cores = 2, iter = 1000, thin = 6)
                   
 }
 

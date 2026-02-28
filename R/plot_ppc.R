@@ -288,6 +288,7 @@ plot_ppc.bgmfit <-
   }
 
 
+
 #' @rdname plot_ppc
 #' @export
 plot_ppc <- function(model, ...) {

@@ -135,7 +135,6 @@ prepare_initials <- function(init_argument,
   abcrandomelements <-
     strsplit(gsub("\\+", " ", randomsi), " ")[[1]]
   
-  
   if (!is.null(init_data[[1]])) {
     eout <- list2env(init_data)
     for (eoutii in names(eout)) {
@@ -143,9 +142,7 @@ prepare_initials <- function(init_argument,
     }
   }
   
-  
-  
-  
+
   abcrandomelements_c <- c()
   count_ <- 0
   for (abcrandomelements_i in abcrandomelements) {

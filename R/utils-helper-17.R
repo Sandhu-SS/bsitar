@@ -96,9 +96,6 @@ stancode_custom.default <- function(object, data, family = gaussian(),
   `str_add<-` <- NULL;
   `str_add<-` <- utils::getFromNamespace("str_add<-", "brms")
   
-  
-  
-
   object <- validate_formula(
     object, data = data, family = family,
     autocor = autocor, sparse = sparse,

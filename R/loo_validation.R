@@ -139,7 +139,6 @@ loo_validation.bgmfit <-
       model_deriv <- TRUE
     }
     
-    
     full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                     fargs = formals(), 
                                     dargs = list(...), 

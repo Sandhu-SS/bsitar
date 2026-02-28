@@ -53,15 +53,12 @@ get.newdata <- function(model,
     idata_method <- 'm2'
   }
   
- 
 
   # Initiate non formalArgs()
   `:=` <- NULL
   . <- NULL;
   
-  
-  
-  
+
   validate_response(model, resp)
   
   list_c <- list()
@@ -236,13 +233,7 @@ get.newdata <- function(model,
   #   }
   # }
   
-  
-  
-  
   newdata <- check_newdata_args(model, newdata, idvar, resp, verbose = verbose)
-  
-  
-  
   
   if(dpar == "sigma") {
     if(is.null(newdata_fixed)) {
@@ -314,20 +305,12 @@ get.newdata <- function(model,
     list_c[['uvarby']]         <- uvarby
   } 
   
-
-  
-  # brms::posterior_epred(by_sex, resp = 'Male', newdata = newdatax)
-  # bsitar::fitted_draws(by_sex, resp = 'Male', newdata = newdataxx)
-  
-  
   cov_vars       <-  model$model_info[[cov_]]
   sigmacov_vars  <-  model$model_info[[sigmacov_]]
   
   # Now instead of NULL, bsitar loop ii return NA when no covar
   cov_vars      <- cov_vars[!is.na(cov_vars)]
   sigmacov_vars <- sigmacov_vars[!is.na(sigmacov_vars)]
-  
-  
   
   if(length(cov_vars) == 0) cov_vars <- NULL
   if(length(sigmacov_vars) == 0) sigmacov_vars <- NULL
@@ -437,12 +420,6 @@ get.newdata <- function(model,
   }
   
   
-  
-  
-  
-  
-  
-  
   set_numeric_cov_at <- function(x, numeric_cov_at) {
     name_ <- deparse(substitute(x))
     if (is.null((numeric_cov_at[[name_]]))) {
@@ -538,8 +515,7 @@ get.newdata <- function(model,
   
   ########
   
-  
-  
+
   i_data <-
     function(model,
              newdata,
@@ -971,5 +947,7 @@ get.newdata <- function(model,
   
   return(newdata)
 } # End get.newdata
+
+
 
 

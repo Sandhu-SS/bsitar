@@ -265,8 +265,6 @@ modelbased_growthparameters_call.bgmfit <-
    
     model <- getmodel_info(model = model, dpar = dpar)
     
-    
-    
     if(is.null(usesavedfuns)) {
       if(!is.null(model$model_info$exefuns[[1]])) {
         usesavedfuns <- TRUE

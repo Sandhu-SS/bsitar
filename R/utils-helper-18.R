@@ -97,7 +97,6 @@ standata_custom.default <- function(object, data, family = gaussian(), prior = N
   # validate_stanvars <- utils::getFromNamespace("validate_stanvars", "brms")
   # validate_threads <- utils::getFromNamespace("validate_threads", "brms")
   
-  
   object <- validate_formula(
     object, data = data, family = family,
     autocor = autocor, cov_ranef = cov_ranef

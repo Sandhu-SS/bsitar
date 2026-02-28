@@ -2,24 +2,24 @@
 
 #' @title Estimate and compare growth parameters for the Bayesian SITAR model
 #' 
-#' @description The \strong{get_growthparameters()} function estimates
-#' and compares growth parameters, such as peak growth velocity and the age at
-#' peak growth velocity. This function serves as a wrapper around
-#' [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
-#' The [marginaleffects::comparisons()] function computes unit-level
-#' (conditional) estimates, whereas [marginaleffects::avg_comparisons()]
-#' returns average (marginal) estimates. A detailed explanation is available
-#' [here](https://marginaleffects.com). Note that for the current use case—
-#' estimating and comparing growth parameters—the arguments \code{variables} and
-#' \code{comparison} in [marginaleffects::comparisons()] and
-#' [marginaleffects::avg_comparisons()] are modified (see below).
-#' Furthermore, comparisons of growth parameters are performed via the
-#' \code{hypothesis} argument of both the [marginaleffects::comparisons()] and
-#' [marginaleffects::avg_comparisons()] functions. Please note that the
-#' \pkg{marginaleffects} package is highly flexible, and users are expected to
-#' have a strong understanding of its workings. Additionally, since the
-#' \pkg{marginaleffects} package is rapidly evolving, results obtained from the
-#' current implementation should be considered experimental.
+#' @description The \strong{get_growthparameters()} function estimates and
+#'   compares growth parameters, such as peak growth velocity and the age at
+#'   peak growth velocity. This function serves as a wrapper around
+#'   [marginaleffects::comparisons()] and [marginaleffects::avg_comparisons()].
+#'   The [marginaleffects::comparisons()] function computes unit-level
+#'   (conditional) estimates, whereas [marginaleffects::avg_comparisons()]
+#'   returns average (marginal) estimates. A detailed explanation is available
+#'   [here](https://marginaleffects.com). Note that for the current use case—
+#'   estimating and comparing growth parameters—the arguments \code{variables}
+#'   and \code{comparison} in [marginaleffects::comparisons()] and
+#'   [marginaleffects::avg_comparisons()] are modified (see below). Furthermore,
+#'   comparisons of growth parameters are performed via the \code{hypothesis}
+#'   argument of both the [marginaleffects::comparisons()] and
+#'   [marginaleffects::avg_comparisons()] functions. Please note that the
+#'   \pkg{marginaleffects} package is highly flexible, and users are expected to
+#'   have a strong understanding of its workings. Additionally, since the
+#'   \pkg{marginaleffects} package is rapidly evolving, results obtained from
+#'   the current implementation should be considered experimental.
 #'
 #' @details The \code{get_growthparameters} function estimates and
 #' returns the following growth parameters:
@@ -3526,10 +3526,7 @@ get_growthparameters.bgmfit <- function(model,
         if(!data.table::is.data.table(onex1)) {
           onex1 <- data.table::as.data.table(onex1) 
         }
-        # if (!("draw" %in% names(onex1)) && ("estimate" %in% names(onex1))) {
-        #   onex1 <- data.table::setnames(onex1, "estimate", "draw")
-        #   onex1 <- clean_draws(onex1, variable = 'draw', group = 'parameter', verbose = F)
-        # }
+        
         onex1 <- clean_draws(onex1, 
                              variable = 'draw', 
                              group = 'parameter', 
@@ -3981,6 +3978,15 @@ get_growthparameters.bgmfit <- function(model,
 get_growthparameters <- function(model, ...) {
   UseMethod("get_growthparameters")
 }
+
+#' An alias of 'get_growthparameters()'
+#' @rdname get_growthparameters
+#' @export
+#' 
+get_gp <- function(model, ...) {
+  UseMethod("get_growthparameters")
+}
+
 
 #' An alias of 'get_growthparameters()'
 #' @rdname get_growthparameters

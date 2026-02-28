@@ -6,10 +6,10 @@
 #'   population-average and individual-specific growth parameters (e.g., age at
 #'   peak growth velocity). It also provides measures of uncertainty, including
 #'   standard errors (SE) and credible intervals (CIs). For a more advanced
-#'   analysis, consider using the [get_growthparameters()] function,
-#'   which not only estimates adjusted parameters but also enables comparisons
-#'   of these parameters across different groups.The [get_growthparameters()] function
-#'   is based on the \pkg{marginaleffects} package. 
+#'   analysis, consider using the [get_growthparameters()] function, which not
+#'   only estimates adjusted parameters but also enables comparisons of these
+#'   parameters across different groups.The [get_growthparameters()] function is
+#'   based on the \pkg{marginaleffects} package.
 #'
 #' @details The \strong{growthparameters()} function internally calls either the
 #'   [fitted_draws()] or the [predict_draws()] function to estimate
@@ -2012,8 +2012,6 @@ growthparameters.bgmfit <- function(model,
   } # if (!arguments$plot) {
   
 } # end growthparameters
-
-
 
 
 

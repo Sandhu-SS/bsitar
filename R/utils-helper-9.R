@@ -355,7 +355,6 @@ set_priors_initials <- function(a_prior_beta,
   
   df <- SbasisN
   
-  
   # Depending on brms version, adjust for tag option
   brms_prior_string <- utils::getFromNamespace('prior_string', 'brms')
   
@@ -367,7 +366,6 @@ set_priors_initials <- function(a_prior_beta,
     formals(brms_prior_string)    <- brms_prior_string_add_arg
   }
   
-
   # Depending on select_model, assign null values to all not part of the model
   for (set_randomsi_higher_levsli in c(letters[1:20])) {
     set_nlpar_what <- set_randomsi_higher_levsli
@@ -3807,7 +3805,6 @@ set_priors_initials <- function(a_prior_beta,
   
   return(evaluated_priors)
 }
-
 
 
 

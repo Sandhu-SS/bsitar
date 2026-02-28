@@ -478,10 +478,10 @@ The \strong{growthparameters()} function estimates both
 population-average and individual-specific growth parameters (e.g., age at
 peak growth velocity). It also provides measures of uncertainty, including
 standard errors (SE) and credible intervals (CIs). For a more advanced
-analysis, consider using the \code{\link[=get_growthparameters]{get_growthparameters()}} function,
-which not only estimates adjusted parameters but also enables comparisons
-of these parameters across different groups.The \code{\link[=get_growthparameters]{get_growthparameters()}} function
-is based on the \pkg{marginaleffects} package.
+analysis, consider using the \code{\link[=get_growthparameters]{get_growthparameters()}} function, which not
+only estimates adjusted parameters but also enables comparisons of these
+parameters across different groups.The \code{\link[=get_growthparameters]{get_growthparameters()}} function is
+based on the \pkg{marginaleffects} package.
 }
 \details{
 The \strong{growthparameters()} function internally calls either the
