@@ -2719,22 +2719,24 @@ prepare_formula <- function(x,
     }
     
 
-    # if (!is.null(dfixed)) {
-    if (!is.null(dfixed) & !is.null(dcovmat)) {
-      # mat_dparm     <- dcovmat
+
+    if (!is.null(dfixed)) {
       lmform_dparm  <- as.formula(paste0(y, "~0+", "dcovmat", ":", x))
       # lmform_dparm  <- as.formula(paste0(y, "~0+", "", x))
-      
       lm_fit_dparm  <- lm(lmform_dparm, data = data)
       lm_dparm_coef <- coef(lm_fit_dparm)
-      
       # belwo if as.formula(paste0(y, "~0+", "dcovmat", "+", x))
       # lm_d_all      <- lm_dparm_coef[2:(ncol(dcovmat)+1)] # note 2: ...+1 
-      
       # belwo if as.formula(paste0(y, "~0+", "dcovmat", ":", x))
       lm_d_all      <- lm_dparm_coef[1:ncol(dcovmat)]
 
     } # if (!is.null(dfixed)) {
+    
+    
+    if (is.null(dfixed)) {
+      lm_d_all <- NULL
+    }
+    
     
    
     if(d_as_random_only) {
@@ -2781,8 +2783,7 @@ prepare_formula <- function(x,
     names(lm_c_all) <- ccovcoefnames
     names(lm_d_all) <- dcovcoefnames
     
-    # print(lm_d_all)
-    
+
     lm_a <- lm_a_all[1]
     lm_b <- lm_b_all[1]
     lm_c <- lm_c_all[1]
