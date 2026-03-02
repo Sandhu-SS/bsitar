@@ -482,18 +482,17 @@ sub-models).}
 \item{stype}{A character string or a named list specifying the spline type to
 be used. The available options are:
 \itemize{
-\item \code{'rcs'}: Constructs the spline design matrix using the truncated
+\item \code{'rcs'} (default): Constructs the spline design matrix using the truncated
 power basis (Harrell's method), implemented in \code{\link[Hmisc:rcspline.eval]{Hmisc::rcspline.eval()}}.
-\item \code{'nks'}: Implements a B-spline based natural cubic spline method,
+\item \code{'nsk'}: Implements a B-spline based natural cubic spline method,
 similar to \code{\link[splines2:naturalSpline]{splines2::nsk()}}.
 \item \code{'nsp'}: Implements a B-spline based natural cubic spline method,
 similar to \code{\link[splines2:naturalSpline]{splines2::nsp()}}.
-The default is \code{'nsp'}.
 }
 
-The \code{'rcs'} method uses a truncated power basis, whereas \code{'nks'}
+The \code{'rcs'} method uses a truncated power basis, whereas \code{'nsk'}
 and \code{'nsp'} are B-spline-based methods. Unlike \code{\link[splines2:naturalSpline]{splines2::nsp()}} and
-\code{\link[splines2:naturalSpline]{splines2::nsk()}}, which normalize the spline basis by default, \code{'nks'}
+\code{\link[splines2:naturalSpline]{splines2::nsk()}}, which normalize the spline basis by default, \code{'nsk'}
 and \code{'nsp'} return the non-normalized version of the spline. If
 normalization is desired, the user can specify \code{normalize = TRUE} in a
 list. For example, to use a normalized \code{'nsp'}, one can specify
@@ -517,7 +516,8 @@ error variable. For instance, the \code{terms_rhs} can be specified as a
 list: \code{terms_rhs = list(mi(sdy1), mi(sdy2))}.
 
 Note that \code{\link[brms:brmsformula]{brms::brmsformula()}} does not allow combining \code{mi()} with
-the \code{subset()} formulation used in fitting \code{univariate_by} models.}
+the \code{subset()} formulation which used in fitting \code{univariate_by}
+models.}
 
 \item{a_formula}{Formula for the fixed effect parameter, \code{a} (default
 \code{~ 1}). Users can specify different formulas when fitting
@@ -589,9 +589,8 @@ formula part as:
 
 \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr = ~1},
 
-and use \code{group_by} as \cr
-\code{group_by = list(groupvar = id, cor = un)}, \cr
-where \code{id} specifies the group identifier and \code{un} sets the
+and use \code{group_by} as \code{group_by = list(groupvar = id, cor = un)},
+\cr where \code{id} specifies the group identifier and \code{un} sets the
 unstructured correlation structure. See the \code{group_by} argument for more
 details.}
 
@@ -712,8 +711,8 @@ Users can specify an external function, such as \code{poly},
 \code{sigma_formula = poly(age)}. Additional arguments are specified
 externally. For example, to set the degree of the polynomial to 3, a copy
 of the \code{poly} function can be created and  modified as follows: \cr
-\code{mypoly = poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}. \cr
-An advantage of this approach is that spline coefficient names are small.\cr
+\code{mypoly = poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}. \cr An
+advantage of this approach is that spline coefficient names are small. \cr
 }}
 
 \item{sigma_formula_gr}{Formula for the random effect parameter, \code{sigma}
@@ -1334,8 +1333,8 @@ It has been observed that location-scale based prior distributions (such as
 spline coefficients.
 
 Note that the scale parameter for above \code{s_prior_beta = normal(lm, lm)}
-(which is same \code{s_prior_beta = normal(lm,lm1)}) is derived from the
-standard deviation of the outcome and the spline design matrix as follows:
+(which is same as \code{s_prior_beta = normal(lm,lm1)}) is derived from the
+standard deviation of the outcome and the spline design matrix as
 \cr
 \code{sd(y)/sd(X)} where \code{y} is the outcome and \code{X} design
 matrix.
@@ -2234,7 +2233,7 @@ the desired order of options passed to each such model such as \code{df},
 additional arguments that are either passed directly to the underlying
 model fitting function, or used for internal purposes. Specifically, the
 \code{...} can also be used to pass arguments used for testing and
-debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
+debugging, such as: \code{match_sitar_a_form},
 \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
 \code{setcolb}, \code{decomp} and \code{smat}. Note that for all arguments
 (such as intercept) to correctly pass to the respective functions, use

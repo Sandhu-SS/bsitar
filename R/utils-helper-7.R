@@ -845,8 +845,10 @@ prepare_function_nsp_rcs <- function(x,
     }
   
   ##########
-  
-  
+  # covers all sitar models
+  # if(grepl("^sitar", select_model)) {
+  #   select_model <- 'sitar'
+  # }
   
   if (select_model == 'sitar' | select_model == 'rcs') {
     abcnames <-

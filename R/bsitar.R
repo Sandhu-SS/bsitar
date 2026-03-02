@@ -422,17 +422,16 @@
 #' 
 #' @param stype A character string or a named list specifying the spline type to
 #'   be used. The available options are:
-#'  - \code{'rcs'}: Constructs the spline design matrix using the truncated 
-#'  power basis (Harrell's method), implemented in [Hmisc::rcspline.eval()].
-#'  - \code{'nks'}: Implements a B-spline based natural cubic spline method, 
-#'  similar to [splines2::nsk()].
-#'  - \code{'nsp'}: Implements a B-spline based natural cubic spline method, 
-#'  similar to [splines2::nsp()].
-#' The default is \code{'nsp'}.
+#'  - \code{'rcs'} (default): Constructs the spline design matrix using the truncated
+#'   power basis (Harrell's method), implemented in [Hmisc::rcspline.eval()].
+#'  - \code{'nsk'}: Implements a B-spline based natural cubic spline method,
+#'   similar to [splines2::nsk()].
+#'  - \code{'nsp'}: Implements a B-spline based natural cubic spline method,
+#'   similar to [splines2::nsp()].
 #' 
-#' The \code{'rcs'} method uses a truncated power basis, whereas \code{'nks'}
+#' The \code{'rcs'} method uses a truncated power basis, whereas \code{'nsk'}
 #' and \code{'nsp'} are B-spline-based methods. Unlike [splines2::nsp()] and
-#' [splines2::nsk()], which normalize the spline basis by default, \code{'nks'}
+#' [splines2::nsk()], which normalize the spline basis by default, \code{'nsk'}
 #' and \code{'nsp'} return the non-normalized version of the spline. If
 #' normalization is desired, the user can specify \code{normalize = TRUE} in a
 #' list. For example, to use a normalized \code{'nsp'}, one can specify
@@ -456,8 +455,9 @@
 #'  list: \code{terms_rhs = list(mi(sdy1), mi(sdy2))}.
 #'
 #'  Note that [brms::brmsformula()] does not allow combining \code{mi()} with
-#'  the \code{subset()} formulation used in fitting \code{univariate_by} models.
-#'
+#'  the \code{subset()} formulation which used in fitting \code{univariate_by}
+#'  models.
+#'  
 #'@param a_formula Formula for the fixed effect parameter, \code{a} (default
 #'  \code{~ 1}). Users can specify different formulas when fitting
 #'  \code{univariate_by} and \code{multivariate} models.
@@ -528,9 +528,8 @@
 #' 
 #' \code{a_formula_gr = ~1}, \code{b_formula_gr = ~1}, \code{c_formula_gr = ~1}, 
 #' 
-#' and use \code{group_by} as \cr 
-#' \code{group_by = list(groupvar = id, cor = un)}, \cr
-#' where \code{id} specifies the group identifier and \code{un} sets the
+#' and use \code{group_by} as \code{group_by = list(groupvar = id, cor = un)},
+#' \cr where \code{id} specifies the group identifier and \code{un} sets the
 #' unstructured correlation structure. See the \code{group_by} argument for more
 #' details.
 #'
@@ -645,14 +644,14 @@
 #'   \code{splines::ns} etc. There are two ways to use external function. \cr 
 #'   
 #'  \itemize{
-#'   \item A conventional approach of using routine function such as \cr 
+#'   \item A conventional approach of using routine function such as \cr
 #'   \code{sigma_formula = ~ 1 + splines::ns(age, df = 3)} \cr
 #'   \item An external function with a single argument (the predictor), e.g.,
-#'   \code{sigma_formula = poly(age)}. Additional arguments are specified 
-#'   externally. For example, to set the degree of the polynomial to 3, a copy 
+#'   \code{sigma_formula = poly(age)}. Additional arguments are specified
+#'   externally. For example, to set the degree of the polynomial to 3, a copy
 #'   of the \code{poly} function can be created and  modified as follows: \cr
-#'   \code{mypoly = poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}. \cr
-#'   An advantage of this approach is that spline coefficient names are small.\cr
+#'   \code{mypoly = poly; formals(mypoly)[['degree']] <- 3; mypoly(age)}. \cr An
+#'   advantage of this approach is that spline coefficient names are small. \cr
 #'  }
 #'  
 #' @param sigma_formula_gr Formula for the random effect parameter, \code{sigma}
@@ -1273,8 +1272,8 @@
 #'   spline coefficients.
 #'   
 #'  Note that the scale parameter for above \code{s_prior_beta = normal(lm, lm)}
-#'  (which is same \code{s_prior_beta = normal(lm,lm1)}) is derived from the
-#'  standard deviation of the outcome and the spline design matrix as follows:
+#'  (which is same as \code{s_prior_beta = normal(lm,lm1)}) is derived from the
+#'  standard deviation of the outcome and the spline design matrix as
 #'  \cr
 #'  \code{sd(y)/sd(X)} where \code{y} is the outcome and \code{X} design
 #'  matrix. 
@@ -2159,9 +2158,9 @@
 #'   additional arguments that are either passed directly to the underlying
 #'   model fitting function, or used for internal purposes. Specifically, the
 #'   \code{...} can also be used to pass arguments used for testing and
-#'   debugging, such as: \code{match_sitar_a_form}, \code{match_sitar_d_form},
+#'   debugging, such as: \code{match_sitar_a_form},
 #'   \code{sigmamatch_sitar_a_form}, \code{displayit}, \code{setcolh},
-#'   \code{setcolb}, \code{decomp} and \code{smat}. Note that for all arguments 
+#'   \code{setcolb}, \code{decomp} and \code{smat}. Note that for all arguments
 #'   (such as intercept) to correctly pass to the respective functions, use
 #'   \code{smat} and not \code{stype} when setting up the spline arguments.
 #'  
@@ -4513,6 +4512,23 @@ bsitar <- function(x,
     sigmad_adjusted <- getdotslist[['sigmad_adjusted']]
   }
   
+  
+  # New
+  # Now fixed/random form will decide d form, so setting universally FALSE
+  getdotslist[['match_sitar_d_form']] <- NULL
+  if(!is.null(getdotslist[['match_sitar_d_form']])) {
+    match_sitar_d_form <- getdotslist[['match_sitar_d_form']] 
+  }
+  
+  if(!is.null(getdotslist[['match_sitar_d_form']])) {
+    if(getdotslist[['match_sitar_d_form']]) {
+      # arguments$select_model <- select_model <- 'sitar4r'
+    }
+  }
+  
+ # print(match_sitar_d_form)
+ #  print(getdotslist[['match_sitar_d_form']])
+  
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_d_form']])) { 
     match_sitar_d_form <- FALSE
@@ -4534,11 +4550,13 @@ bsitar <- function(x,
     if(select_model == 'sitar4r')  {
       match_sitar_d_form <- getdotslist[['match_sitar_d_form']]
     } else {
-      if(getdotslist[['match_sitar_d_form']])
-        stop2c("match_sitar_d_form = TRUE only allowed for 
-               sitar model 'sitar4r'")
+      if(getdotslist[['match_sitar_d_form']]) {
+        # stop2c("match_sitar_d_form = TRUE only allowed for 
+        #        sitar model 'sitar4r'")
+      }
     }
   }
+  
   
   
  
@@ -6096,22 +6114,26 @@ bsitar <- function(x,
     if(override_select_model) {
       if(grepl("d", fixedsi) & grepl("d", randomsi)) {
         sitar_nparms <- 4
-        match_sitar_d_form <- FALSE
+        # match_sitar_d_form <- FALSE
       } else if(grepl("d", fixedsi) & !grepl("d", randomsi)) {
         sitar_nparms <- 4
-        match_sitar_d_form <- FALSE
+        # match_sitar_d_form <- FALSE
       } else if(!grepl("d", fixedsi) & grepl("d", randomsi)) {
         sitar_nparms <- 4
         match_sitar_d_form <- TRUE
       } else if(!grepl("d", fixedsi) & !grepl("d", randomsi)) {
         sitar_nparms <- 3
-        match_sitar_d_form <- FALSE
+        # match_sitar_d_form <- FALSE
       }
     }
     
     # Model specific number of fixed and random parameters
     allowed_parm_letters <- NULL
-    if(select_model == 'sitar') allowed_parm_letters <- letters[1:sitar_nparms]
+    # covers all sitar models
+    if(grepl("^sitar", select_model)) {
+      allowed_parm_letters <- letters[1:sitar_nparms]
+    }
+    # if(select_model == 'sitar') allowed_parm_letters <- letters[1:sitar_nparms]
     if(select_model == 'pb1')   allowed_parm_letters <- letters[1:5]
     if(select_model == 'pb2')   allowed_parm_letters <- letters[1:6]
     if(select_model == 'pb3')   allowed_parm_letters <- letters[1:6]
@@ -6151,30 +6173,76 @@ bsitar <- function(x,
           )
         }
       }
+      
+      # New d as random cov
+      d_as_random_only_cov <- FALSE
+      if ((grepl("d", fixedsi, fixed = T) |
+           grepl("d", randomsi, fixed = T)) &
+          (!grepl("^~1$", d_formulasi) |
+           !grepl("^~1$", d_formula_grsi))) {
+        d_as_random_only_cov <- TRUE
+      }
 
       if (match_sitar_d_form) {
         if ((grepl("d", fixedsi, fixed = T) |
              grepl("d", randomsi, fixed = T)) &
             (!grepl("^~1$", d_formulasi) |
-             !grepl("^~1$", d_formula_grsi))) {
-          stop2c(
-            "Parameter 'd' is missing in the fixed effects part of the model ",
-            "\n ",
-            " but specified in the random effects part of the model ",
-            "\n ",
-            " (This is to match with the 'sitar' package's formulation)",
-            "\n ",
-            " For this formulation (i.e., 'd' is missing in the fixed effects)",
-            "\n ",
-            " covariate(s) are not allowed"
-          )
+             !grepl("^~1$", d_formula_grsi) |
+             !grepl("^~1$", d_formula_gr_strsi))) {
+          # stop2c(
+          #   "Parameter 'd' is missing in the fixed effects part of the model ",
+          #   "\n ",
+          #   " but specified in the random effects part of the model ",
+          #   "\n ",
+          #   " (This is to match with the 'sitar' package's formulation)",
+          #   "\n ",
+          #   " For this current formulation ",
+          #   "\n ",
+          #   " covariate(s) are not allowed")
         }
-      }
+      } # if (match_sitar_d_form) {
     } # if(select_model == 'sitar') {
     
     if(select_model == 'sitar') {
       if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
     }
+    
+    # New
+    d_as_random_only <- FALSE
+    if(select_model == 'sitar') {
+      if(!grepl("d", fixedsi, fixed = T) & 
+         grepl("d", randomsi, fixed = T)) {
+        d_as_random_only <- TRUE
+      }
+      
+      if(d_as_random_only) {
+        if(d_as_random_only) d_formulasi <- "~0"
+        match_sitar_d_form <- TRUE
+      }
+      
+      # Set all _gr to NULL if parameter is not random
+      for (i in letters[1:26]) {
+        if(!grepl(i, randomsi, fixed = T)) {
+          assign(paste0(i, '_formula_grsi'), NULL)
+          assign(paste0(i, 'formula_gr_strsi'), NULL)
+        }
+      }
+      
+    } # if(select_model == 'sitar') {
+    
+    
+    
+    # for (i in letters[1:26]) {
+    #   if(!grepl(i, randomsi, fixed = T)) {
+    #     assign(paste0(i, '_formula_grsi'), NULL)
+    #     assign(paste0(i, 'formula_gr_strsi'), NULL)
+    #   }
+    # }
+    
+   
+    
+    
+    
     
     if(select_model == 'rcs') {
       if(!any(grepl('s', fixedsi))) fixedsi <- paste0(fixedsi, "+", "s")
@@ -8706,6 +8774,7 @@ bsitar <- function(x,
         "getpreHname",
         "match_sitar_a_form",
         'match_sitar_d_form',
+        'd_as_random_only',
         "d_adjustedsi",
         'xfunsi',
         'yfunsi',
@@ -9224,6 +9293,7 @@ bsitar <- function(x,
         'xoffset',
         'match_sitar_a_form',
         'match_sitar_d_form',
+        'd_as_random_only',
         "a_formula_gr_strsi",
         "b_formula_gr_strsi",
         "c_formula_gr_strsi",
@@ -9881,6 +9951,8 @@ bsitar <- function(x,
     set_priors_initials_agrs $ init_data_internal       <- init_data_internal
     set_priors_initials_agrs $ init_args_internal       <- init_args_internal
     set_priors_initials_agrs $ custom_order_prior_str   <- ""
+    
+    set_priors_initials_agrs $ d_as_random_only         <- d_as_random_only
   
     bpriors <- CustomDoCall(set_priors_initials, set_priors_initials_agrs)
     

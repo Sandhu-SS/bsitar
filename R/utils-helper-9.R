@@ -227,6 +227,7 @@ set_priors_initials <- function(a_prior_beta,
                                 autocor_prior_acor,
                                 autocor_prior_unstr_acor,
                                 mvr_prior_rescor,
+                                d_as_random_only       = NULL,
                                 prior_data             = NULL,
                                 prior_data_internal    = NULL,
                                 prior_args_internal    = NULL,
@@ -337,6 +338,7 @@ set_priors_initials <- function(a_prior_beta,
   . <- NULL;
   d_adjustedsi <- NULL;
   SbasisN <- NULL;
+  # d_as_random_only <- NULL;
   
   
   eout <- list2env(prior_data_internal)
@@ -349,6 +351,7 @@ set_priors_initials <- function(a_prior_beta,
     assign(eoutii, eout[[eoutii]])
   }
   
+
   # avoid this condition, set for df = SbasisN for all splines
   # if(smat == 'bsp' |  smat == 'msp' |  smat == 'isp') {
   # }
@@ -461,7 +464,9 @@ set_priors_initials <- function(a_prior_beta,
   
   
   
-  
+  if(d_as_random_only) {
+    d_prior_beta <- NULL
+  }
   
   
   

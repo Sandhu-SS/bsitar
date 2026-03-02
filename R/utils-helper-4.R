@@ -147,7 +147,6 @@ prepare_formula <- function(x,
   hcovcoefnames_gr_str <- NULL;
   icovcoefnames_gr_str <- NULL;
   scovcoefnames_gr_str <- NULL;
-  
   smat <- NULL;
   smat_intercept <- NULL;
   set_model_sigma_by_ba <- NULL;
@@ -159,6 +158,8 @@ prepare_formula <- function(x,
   ysi <- NULL;
   SbasisN <- NULL;
   sigma_formula_manualsi_set <- NULL;
+  d_as_random_only <- NULL;
+  
   
   # SbasisN = nknots - 1 for nsp nsk and rcs
   
@@ -242,13 +243,13 @@ prepare_formula <- function(x,
     if(ept(paste0(set_nlpar_what, '_formula_gr_strsi_present'))) {
       in_gr_strsi <- paste0(set_nlpar_what, '_formula_gr_strsi')
       if(!grepl("|" , ept(in_gr_strsi), fixed = T)) {
-        stop("For '_str' approach of setting the random effects,",
+        stop2c("For '_str' approach of setting the random effects,",
              "\n ", 
-             " only the vertical bar '|' approach is aloowed.",
+             " only the vertical bar '||' approach is allowed.",
              "\n ", 
              " Please check and correct the '", in_gr_strsi, "' argument ",
              "\n ", 
-             " which currently specified as ", ept(in_gr_strsi)
+             " which is currently specified as ", ept(in_gr_strsi)
         )
       }
       
@@ -482,6 +483,12 @@ prepare_formula <- function(x,
   }
   
   
+  ##########
+  # covers all sitar models
+  # if(grepl("^sitar", select_model)) {
+  #   select_model <- 'sitar'
+  # }
+  
   if(select_model == "sitar") {
     ###########
     # For some reasons, 'sitar' (Tim Cole) allows random only 'd' parameter
@@ -494,7 +501,7 @@ prepare_formula <- function(x,
     }
     ###########
   }
-  
+
   
   if(select_model == "sitar" | select_model == "rcs") {
     if(select_model == "sitar") {
@@ -979,6 +986,7 @@ prepare_formula <- function(x,
   }
   
   if (!is.null(dfixed)) {
+  # if (!is.null(dfixed)) {
     dcovmat <- eval(parse(text = paste0(
       "model.matrix(",
       dfixed, ",data = data)"
@@ -993,6 +1001,12 @@ prepare_formula <- function(x,
     dncov <- dcovcoefnames <- NULL
   }
   
+
+  # New
+  if(d_as_random_only) {
+    dcovmat <- NULL
+    dncov <- dcovcoefnames <- NULL
+  }
   
   
   if (!is.null(efixed)) {
@@ -1313,7 +1327,15 @@ prepare_formula <- function(x,
   } else {
     dform <- NULL
   }
+ 
   
+  # New
+  if(!is.null(drandom)) {
+    if(d_as_random_only) {
+      dform <- "d~0"
+    }
+  }
+
   if (!is.null(efixed)) {
     eform <- paste0("e", efixed)
   } else {
@@ -1394,6 +1416,7 @@ prepare_formula <- function(x,
   } else {
     eform_gr <- NULL
   }
+  
   
   
   if (!is.null(frandom)) {
@@ -1600,14 +1623,15 @@ prepare_formula <- function(x,
       # In fact for df > 1, it forces 'd' to be random parameter only
       # allow random effect for 'd' even corresponding fixed effect is missing
       # only allowing for 'd'
+      
       if(select_model == "sitar") {
         if (match_sitar_d_form) {
           if (is.null(dform) & grepl("d", randomsi, fixed = T)) {
             if(!drandom_wb_) {
-              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , 
+              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" ,
                               gr__args, ")")
             } else if(drandom_wb_) {
-              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" , 
+              dform <- paste0(dform, "d ~ 0 + (1|", coridv , "|" ,
                               gr__args, ")")
             }
           }
@@ -1617,7 +1641,7 @@ prepare_formula <- function(x,
       
     }
     
-    
+  
     
     
     
@@ -2694,9 +2718,10 @@ prepare_formula <- function(x,
       lm_coef <- c(intercept_, spls_)
     }
     
-    
-    if (!is.null(dfixed)) {
-      mat_dparm     <- dcovmat
+
+    # if (!is.null(dfixed)) {
+    if (!is.null(dfixed) & !is.null(dcovmat)) {
+      # mat_dparm     <- dcovmat
       lmform_dparm  <- as.formula(paste0(y, "~0+", "dcovmat", ":", x))
       # lmform_dparm  <- as.formula(paste0(y, "~0+", "", x))
       
@@ -2711,10 +2736,12 @@ prepare_formula <- function(x,
 
     } # if (!is.null(dfixed)) {
     
+   
+    if(d_as_random_only) {
+      lm_d_all <- NULL
+    }
     
-    
-    
-    
+  
     
     lm_a_all <- lm_coef[1:ncol(acovmat)]
     
@@ -2728,7 +2755,8 @@ prepare_formula <- function(x,
     } else {
       lm_c_all <- NULL
     }
-    if (!is.null(dfixed)) {
+    
+    if (!is.null(dfixed) & !is.null(lm_d_all)) {
       lm_d_all <- lm_d_all # rep(0, ncol(dcovmat))
     } else {
       lm_d_all <- NULL
@@ -2752,6 +2780,8 @@ prepare_formula <- function(x,
     names(lm_b_all) <- bcovcoefnames
     names(lm_c_all) <- ccovcoefnames
     names(lm_d_all) <- dcovcoefnames
+    
+    # print(lm_d_all)
     
     lm_a <- lm_a_all[1]
     lm_b <- lm_b_all[1]
@@ -3626,6 +3656,7 @@ prepare_formula <- function(x,
     setbformula <- gsub(sigmaform_rm, "", setbformula, fixed = TRUE)
   }
  
+
   attr(setbformula, "list_out") <- as.list(list_out)
   return(setbformula)
 }
