@@ -7766,6 +7766,33 @@ get_size_from_age_draws <- function(age_draws_dt,
 }
 
 
+
+
+# 
+# # Check for location of U+2060 when error runnin -> system("R CMD Rd2pdf --no-clean .")
+# 
+# getwd()  # Should be package root (DESCRIPTION nearby)
+# dir("man", pattern = "\\.Rd$")  # List actual .Rd files
+# 
+# 
+# rd_files <- list.files("man", pattern = "\\.Rd$", full.names = TRUE, recursive = FALSE)
+# if(length(rd_files) == 0) {
+#   cat("No .Rd files found in man/ – nothing to scan.\n")
+# } else {
+#   invisible(lapply(rd_files, function(f) {
+#     txt <- readLines(f, encoding = "UTF-8", warn = FALSE)
+#     hits <- grepl("\u2060", txt)
+#     if (any(hits)) {
+#       cat("Found in:", basename(f), "\n")
+#       cat(txt[hits], sep = "\n")
+#       cat("\n")
+#     }
+#   }))
+# }
+# 
+
+
+
 # xxx <-
 #   get_size_from_age_draws (age_draws_dt = draws_list_dtx,
 #                            model = fit,

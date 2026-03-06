@@ -555,12 +555,8 @@ is completely outside the \code{ROPE}, the "null hypothesis" for this
 parameter is "rejected". If the \code{ROPE} completely covers the HDI, i.e.,
 all most credible values of a parameter are inside the region of practical
 equivalence, the null hypothesis is accepted. Else, it is undecided whether
-to accept or reject the null hypothesis. If the full \code{ROPE} is used
-(i.e., ⁠100\%⁠ of the HDI), then the null hypothesis is rejected or accepted
-if the percentage of the posterior within the \code{ROPE} is smaller than to
-⁠2.\5\%⁠ or greater than ⁠97.\5\%⁠. Desirable results are low proportions
-inside the \code{ROPE} (the closer to zero the better). See
-\code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}} for further details.
+to accept or reject the null hypothesis. See \code{\link[bayestestR:equivalence_test]{bayestestR::equivalence_test()}}
+for further details.
 
 The \code{PD}, also known as the Maximum Probability of Effect (\code{MPE})
 is the probability that a parameter (described by its posterior distribution)
