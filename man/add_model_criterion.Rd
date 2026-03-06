@@ -23,7 +23,7 @@
   resp = NULL,
   cores = 1,
   model_deriv = NULL,
-  return_model = NULL,
+  return_model = TRUE,
   verbose = FALSE,
   expose_function = FALSE,
   usesavedfuns = NULL,
@@ -122,7 +122,7 @@ the velocity curve, such as \code{growthparameters()} and
 distance curve (i.e., fitted values), such as \code{loo_validation()} and
 \code{plot_ppc()}.}
 
-\item{return_model}{A logical (default \code{NULL}) to indicate whether to
+\item{return_model}{A logical (default \code{TRUE}) to indicate whether to
 return the model object or just assign the criteria to the model. When
 \code{return_model = NULL}, then \code{return_model} is automatically
 assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when

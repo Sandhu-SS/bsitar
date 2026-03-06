@@ -504,6 +504,13 @@ modelbased_growthparameters.bgmfit <- function(model,
     }
   }
   
+  
+  xoffset_      <- paste0('xoffset', resp_rev_)
+  
+  d_adjusted <- model$model_info[['d_adjusted']]
+  xoffset    <- model$model_info[[xoffset_]]
+   
+  
   ########################################################
   ########################################################
   
@@ -2058,6 +2065,8 @@ modelbased_growthparameters.bgmfit <- function(model,
                                         modelbased_arguments = 
                                           modelbased_arguments,
                                         by = by,
+                                        xoffset = xoffset,
+                                        d_adjusted = d_adjusted,
                                         subset_data_by = subset_data_by,
                                         set_pdrawsp = set_pdrawsp,
                                         set_pdraws = set_pdraws,

@@ -455,6 +455,8 @@ wraper_for_drawni_2 <- function(drawni,
                                 nlpar_random,
                                 create_s_names_vector,
                                 add_xtm,
+                                xoffset,
+                                d_adjusted,
                                 SplineCall_d0,
                                 SplineCall_d1,
                                 mat.adj,
@@ -475,6 +477,15 @@ wraper_for_drawni_2 <- function(drawni,
   setdat_mat_random <- nlpar_random[drawni, ,]
   spmat             <- setdat_mat_fixed[, create_s_names_vector]
   setx0             <- setdat_mat_fixed[, 'Xestimate']
+  
+  
+  # if(all(setdat_mat_fixedx[, 'd'] == 0)) {
+  #   d_parmTF <- FALSE
+  # } else {
+  #   d_parmTF <- TRUE
+  # }
+  
+  
   
   # atgv might be Na
   if(all(is.na(setx0))) {
@@ -505,9 +516,12 @@ wraper_for_drawni_2 <- function(drawni,
     x.adj_xtm <- (setxx.adj_xtm - setdat_mat_random[,"b"]) * 
       exp(setdat_mat_random[,"c"])
     
+    if( d_adjusted) dmultiplier <- x.adj_xtm
+    if(!d_adjusted) dmultiplier <- setxx.adj_xtm
+    
     y.adj_xtm <- setdat_mat_fixed[, 'yvar'] - 
       setdat_mat_random[,"a"] - 
-      setdat_mat_random[,"d"] * setxx.adj_xtm
+      setdat_mat_random[,"d"] * dmultiplier # setxx.adj_xtm
     
     x.adj_xtm <- ifunx_(x.adj_xtm)
   }
@@ -612,6 +626,8 @@ parameter_method_loop_over_parm <- function(parm,
                                             set_loop_over_parm_last,
                                             modelbased_arguments,
                                             by,
+                                            xoffset,
+                                            d_adjusted,
                                             subset_data_by,
                                             set_pdrawsp,
                                             set_pdraws,
@@ -737,6 +753,8 @@ parameter_method_loop_over_parm <- function(parm,
                             nlpar_random = nlpar_random,
                             create_s_names_vector = create_s_names_vector,
                             add_xtm = add_xtm,
+                            xoffset = xoffset,
+                            d_adjusted = d_adjusted,
                             SplineCall_d0 = SplineCall_d0,
                             SplineCall_d1 = SplineCall_d1,
                             mat.adj = mat.adj,
@@ -764,6 +782,8 @@ parameter_method_loop_over_parm <- function(parm,
                             nlpar_random = nlpar_random,
                             create_s_names_vector = create_s_names_vector,
                             add_xtm = add_xtm,
+                            xoffset = xoffset,
+                            d_adjusted = d_adjusted,
                             SplineCall_d0 = SplineCall_d0,
                             SplineCall_d1 = SplineCall_d1,
                             mat.adj = mat.adj,
@@ -916,7 +936,7 @@ parameter_method_loop_over_parm <- function(parm,
   } # if(nrow(peak_data_draw) > 0) {
   
   if(add_xtm) {
-    tm_parameters[['xtm']] <- ifunx_(tm_parameters[['xtm']])
+    # tm_parameters[['xtm']] <- ifunx_(tm_parameters[['xtm']])
     setdrawidparm <- c(by, 'xid')
     namesx <- c('estimate', 'conf.low', 'conf.high')
     namesx <- paste0("x", ".", namesx)

@@ -11,14 +11,13 @@
 #' @param model An object of class \code{bgmfit} representing the model to which
 #'   the fit criteria will be added.
 #'   
-#' @param return_model A logical (default \code{NULL}) to indicate whether to
+#' @param return_model A logical (default \code{TRUE}) to indicate whether to
 #'   return the model object or just assign the criteria to the model. When
 #'   \code{return_model = NULL}, then \code{return_model} is automatically
 #'   assigned \code{FALSE} if \code{test_mode = FALSE}, and \code{TRUE} when
 #'   \code{test_mode = TRUE}. Note that when \code{test_mode = TRUE}, the model
 #'   object will be returned along with the criteria.
 #'   
-#'  
 #' @param ... Further arguments passed on to the functions from the \pkg{brms}
 #' 
 #' @inheritParams growthparameters.bgmfit
@@ -69,7 +68,7 @@ add_model_criterion.bgmfit <- function(model,
                                        resp = NULL,
                                        cores = 1,
                                        model_deriv = NULL,
-                                       return_model = NULL,
+                                       return_model = TRUE,
                                        verbose = FALSE,
                                        expose_function = FALSE,
                                        usesavedfuns = NULL,

@@ -2308,9 +2308,9 @@ bsitar <- function(x,
                    df = 4,
                    knots = NA,
                    knots_selection = NULL,
-                   fixed = a + b + c,
-                   random = a + b + c,
-                   xoffset = mean,
+                   fixed = 'a + b + c',
+                   random = 'a + b + c',
+                   xoffset = 'mean',
                    bstart = xoffset,
                    cstart = 0,
                    xfun = NULL,
@@ -2341,10 +2341,10 @@ bsitar <- function(x,
                    sigmaid  = NULL,
                    sigmadf = 4,
                    sigmaknots = NA,
-                   sigmafixed = a + b + c,
+                   sigmafixed = NULL,
                    sigmarandom = "",
-                   sigmaxoffset = mean,
-                   sigmabstart = sigmaxoffset,
+                   sigmaxoffset = 'mean',
+                   sigmabstart = 'sigmaxoffset',
                    sigmacstart = 0,
                    sigmaxfun = NULL,
                    sigmabound = 0.04,
@@ -2371,16 +2371,16 @@ bsitar <- function(x,
                      dist = gaussian
                    ),
                    univariate_by = list(by = NA, 
-                                        cor = un, 
-                                        terms = subset),
+                                        cor = 'un', 
+                                        terms = 'subset'),
                    multivariate = list(mvar = FALSE,
-                                       cor = un,
+                                       cor = 'un',
                                        rescor = TRUE,
                                        rcorr_by = NULL,
                                        rcorr_gr = NULL,
                                        rcorr_method = NULL,
                                        rcorr_prior = NULL),
-                   a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                   a_prior_beta = normal(ymean, ysd, autoscale = FALSE),
                    b_prior_beta = normal(0, 2, autoscale = FALSE),
                    c_prior_beta = normal(0, 1, autoscale = FALSE),
                    d_prior_beta = normal(0, 1.0, autoscale = FALSE),
@@ -2422,39 +2422,39 @@ bsitar <- function(x,
                    sigma_prior_cor = lkj(1),
                    sigma_prior_cor_str = lkj(1),
                    mvr_prior_rescor = lkj(1),
-                   init = 'random',
+                   init = NULL,
                    init_r = 0.5,
-                   a_init_beta = lm,
+                   a_init_beta = 'lm',
                    b_init_beta = 0,
                    c_init_beta = 0,
                    d_init_beta = 0,
-                   s_init_beta = lm,
+                   s_init_beta = 'lm',
                    a_cov_init_beta = 0,
                    b_cov_init_beta = 0,
                    c_cov_init_beta = 0,
                    d_cov_init_beta = 0,
                    s_cov_init_beta = 0,
-                   a_init_sd = random,
-                   b_init_sd = random,
-                   c_init_sd = random,
-                   d_init_sd = random,
-                   a_cov_init_sd = random,
-                   b_cov_init_sd = random,
-                   c_cov_init_sd = random,
-                   d_cov_init_sd = random,
-                   sigma_init_beta = random,
-                   sigma_cov_init_beta = random,
-                   sigma_init_sd = random,
-                   sigma_cov_init_sd = random,
-                   gr_init_cor = random,
-                   sigma_init_cor = random,
-                   rsd_init_sigma = random,
-                   dpar_init_sigma = random,
-                   dpar_cov_init_sigma = random,
-                   autocor_init_acor = random,
-                   autocor_init_unstr_acor = random,
-                   mvr_init_rescor = random,
-                   r_init_z = random,
+                   a_init_sd = 'random',
+                   b_init_sd = 'random',
+                   c_init_sd = 'random',
+                   d_init_sd = 'random',
+                   a_cov_init_sd = 'random',
+                   b_cov_init_sd = 'random',
+                   c_cov_init_sd = 'random',
+                   d_cov_init_sd = 'random',
+                   sigma_init_beta = 'random',
+                   sigma_cov_init_beta = 'random',
+                   sigma_init_sd = 'random',
+                   sigma_cov_init_sd = 'random',
+                   gr_init_cor = 'random',
+                   sigma_init_cor = 'random',
+                   rsd_init_sigma = 'random',
+                   dpar_init_sigma = 'random',
+                   dpar_cov_init_sigma = 'random',
+                   autocor_init_acor = 'random',
+                   autocor_init_unstr_acor = 'random',
+                   mvr_init_rescor = 'random',
+                   r_init_z = 'random',
                    vcov_init_0 = FALSE,
                    jitter_init_beta = NULL,
                    jitter_init_sd = NULL,
@@ -2495,7 +2495,7 @@ bsitar <- function(x,
                    data2 = NULL,
                    data_custom = NULL,
                    genquant_xyadj  = FALSE,
-                   sample_prior = "no",
+                   sample_prior = 'no',
                    save_pars = NULL,
                    drop_unused_levels = TRUE,
                    stan_model_args = list(),
@@ -2517,15 +2517,12 @@ bsitar <- function(x,
   
   mcall <- match.call()
   no_default_args <- c("x", "y", "id", "data", "...")
-  
-  
   if(!'init' %in% names(mcall)) {
     mcall$init <- init
   }
   if(!'init_r' %in% names(mcall)) {
     mcall$init_r <- init_r
   }
-  
   
   if(is.null(global_args)) {
     global_args <- FALSE
@@ -2581,7 +2578,6 @@ bsitar <- function(x,
      data_check_for_modifications <- FALSE
    }
 
-
    if(data_check_for_modifications) {
      data_name_str_check <- deparse(mcall_$data)
      data_name_str_check <- gsub("\"", "", data_name_str_check, fixed = T)
@@ -2604,7 +2600,6 @@ bsitar <- function(x,
      mcall_$data <- as.symbol(data_name_str_attr)
    }
  
-
    threads_char <- function(threads_, chains = 1) {
      if(is_emptyx(chains)) chains <- 1
      if(!is.character(threads_)) {
@@ -2631,14 +2626,11 @@ bsitar <- function(x,
      return(max.threads)
    }
    
-   # print(eval(mcall$threads))
+   
    
   # Check and allow setting threads as NULL or integer
    mcall_threads_ <- eval(mcall$threads) # For CustomDoCall
-  # mcall_threads_ <- mcall$threads
-  
-  deparse_mcall_threads_check     <- paste(deparse(mcall_threads_), 
-                                           collapse = "")
+  deparse_mcall_threads_check <- paste(deparse(mcall_threads_), collapse = "")
   deparse_sub_mcall_threads_check <- deparse(substitute(mcall_threads_))
   deparse_sub_mcall_threads_check <- paste(deparse_sub_mcall_threads_check, 
                                            collapse = "")
@@ -2670,11 +2662,8 @@ bsitar <- function(x,
     } # if(!is.list(mcall_threads_)) {
   } # if(grepl("getOption",  deparse_sub_mcall_threads_check)) { else 
   
-  
- 
   mcall$threads <- mcall_threads_
   
-
   newcall_checks <- c('save_pars')
   if(!is.null(mcall$threads)) {
     if(is.list(mcall$threads)) {
@@ -2711,7 +2700,6 @@ bsitar <- function(x,
     if(!is.null(mcall[[collect_dot_namesi]])) 
       mcall[[collect_dot_namesi]] <- NULL
   }
-  
   
   # Check and set Alias argument for d_adjusted (SITAR)
   collect_dot_names <- c()
@@ -2803,18 +2791,12 @@ bsitar <- function(x,
    temp_init_call_c
  }
   
- # print(mcall$init)
- 
  if(!is.null(mcall$init)) {
    mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
  } else if(is.null(mcall$init)) {
    mcall$init <- "NULL"
  }
  
- # print(mcall$init)
- # stop()
-  
-  
   for (inxc in letters[1:26]) {
     what_inxc <- paste0(inxc, "_", "init", "_", "beta", "")
     if(!is.null(mcall[[what_inxc]])) mcall[[what_inxc]] <- 
@@ -3791,14 +3773,12 @@ bsitar <- function(x,
   if(!is.null(stype)) {
      if(is.symbol(stype)) stype <- deparse(stype)
   }
-  # print(stype)
-  
+
   stype_temp_str <- deparse(substitute(stype))
   stype_temp_str <- paste0(gsub_space(stype_temp_str), collapse = " ")
   
   stype_temp_str <- gsub_quote1(stype_temp_str)
   
-
   # Handle list[[stype]]
   if(grepl("\\[\\[", stype_temp_str)) {
     stype_temp_str <- stype
@@ -3808,7 +3788,6 @@ bsitar <- function(x,
     stype_temp_str <- stype_temp_str
   }
   
-
   if(grepl("^list\\(", stype_temp_str)) {
     stype_temp_str <-  quote_allowed_spline_type(stype_temp_str, 
                                                  allowed_spline_type)
@@ -4525,10 +4504,7 @@ bsitar <- function(x,
       # arguments$select_model <- select_model <- 'sitar4r'
     }
   }
-  
- # print(match_sitar_d_form)
- #  print(getdotslist[['match_sitar_d_form']])
-  
+
   # 24.08.2024
   if(is.null(getdotslist[['match_sitar_d_form']])) { 
     match_sitar_d_form <- FALSE
@@ -11637,12 +11613,7 @@ bsitar <- function(x,
     brmsinits_r <- NULL
     brmsinits_ <- ""
   }
-  
-  # print(initsi)
-  # print(brmsinits)
-  # print(initialslist_s[[1]][1])
-  # stop()
-  
+ 
   check_set_init_r <- FALSE # new
   if(initialslist_s[[1]][1] == "NULL") { # new
     brmsinits <- brmsinits
@@ -11672,11 +11643,7 @@ bsitar <- function(x,
       }
     }
   } # if(check_set_init_r) {
-  
-  # print(brmsinits)
-  # print(brmsinits_r)
-  # stop()
-
+ 
   for (inm in names(brmsinits)) {
     if (is.matrix(brmsinits[[inm]])) {
       colnames(brmsinits[[inm]]) <- rownames(brmsinits[[inm]]) <- NULL
@@ -14207,10 +14174,8 @@ bsitar <- function(x,
     }
     
    
-    # brm_argsxx <<- brm_args
     # stop()
     # do.call(brms::make_stancode, brm_args)
-
     # fit_edited_scode <- TRUE
     # replace_it <- "ptarget += normal_lpdf(Y[start:end] | mu, sigma)"
     # replace_by <-
@@ -14224,7 +14189,8 @@ bsitar <- function(x,
     # 
     # do.call(brms::make_stancode, brm_argsxx) 
     
-    # This to add to model_infor
+    
+    # This for model_infor
     brm_args_prior <- brm_args$prior
     
     if(!fit_edited_scode_exe_model_fit & fit_edited_scode) {
@@ -14247,10 +14213,6 @@ bsitar <- function(x,
       }
     } 
    
-    
-    
-    
-    
     
     if(fit_edited_scode) {
       if(verbose) message2c("Fitting model via edited stancode...")
@@ -14281,17 +14243,12 @@ bsitar <- function(x,
       }
     } # if(fit_edited_scode) {
     
-    
-    
-    
     if(brm_args$backend == "mock") {
       brmsfit <- CustomDoCall(brms::brm, brm_args)
     }
     
-
     # Add class attributes and the model info for post-processing
     attr(brmsfit, 'class') <- c(attr(brmsfit, 'class'), 'bgmfit')
-    
     
     ##############################################################
     ##############################################################
@@ -14445,7 +14402,6 @@ bsitar <- function(x,
     for (i in 1:length(yfuntransformnamelist)) {
       model_info[[yfuntransformnamelist[[i]]]] <- yfuntransformvaluelist[[i]]
     }
-    
     
     # Inverse funs are created internally
     for (i in 1:length(ixfuntransformnamelist)) {

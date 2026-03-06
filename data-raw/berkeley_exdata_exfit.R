@@ -36,19 +36,19 @@ berkeley_exfit <- bsitar(x = age, y = height, id = id, data = berkeley_exdata,
                        a_prior_beta = normal(lm, ysd, autoscale = FALSE),
                        b_prior_beta = normal(0, 2, autoscale = FALSE),
                        c_prior_beta = normal(0, 1, autoscale = FALSE),
-                       
+
                        s_prior_beta = normal(lm, lm, autoscale = FALSE),
-                       
+
                        # a_cov_prior_beta = normal(0, .10, autoscale = FALSE),
                        # b_cov_prior_beta = normal(0, .2, autoscale = FALSE),
                        # c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
-                       
+
                        a_prior_sd = normal(0, ysd, autoscale = FALSE),
                        b_prior_sd = normal(0, 2, autoscale = FALSE),
                        c_prior_sd = normal(0, 1, autoscale = FALSE),
-                       
+
                        rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
-                       
+
                        # cp -> multi_normal_cholesky multi_normal, default cp is multi_normal_cholesky
                        parameterization = "ncp",        # Suppress verbose output,
                        stype = "rcs",        # Suppress verbose output,
