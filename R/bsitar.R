@@ -2355,16 +2355,16 @@ bsitar <- function(x,
                    group_arg = list(
                      groupvar = NULL,
                      by = NULL,
-                     cor = un,
+                     cor = 'un',
                      cov = NULL,
-                     dist = gaussian
+                     dist = 'gaussian'
                    ),
                    sigma_group_arg = list(
                      groupvar = NULL,
                      by = NULL,
                      cor = un,
                      cov = NULL,
-                     dist = gaussian
+                     dist = 'gaussian'
                    ),
                    univariate_by = list(by = NA, 
                                         cor = 'un', 
@@ -12354,44 +12354,47 @@ bsitar <- function(x,
         cores_   <- eval(setarguments$cores)
         threads_ <- eval(setarguments$threads)
         
-        if(cores_ == "maximise") {
-          max.cores <- 
-            as.numeric(future::availableCores(methods = "system", omit = 0))
-          if(max.cores < 1) max.cores <- 1
-        } else if(cores_ == "optimize") {
-          max.cores <- 
-            as.numeric(future::availableCores(methods = "system", omit = 1))
-          if(max.cores < 1) max.cores <- 1
-          if(max.cores > eval(setarguments$chains)) {
-            max.cores <- eval(setarguments$chains)
-          }
-        } else if(!is.null(getOption('mc.cores')) &
-                  cores_ != "maximise" &
-                  cores_ != "optimize") {
-          max.cores <- getOption('mc.cores')
-        } else {
-          max.cores <- eval(setarguments$cores)
-        }
-        setarguments$cores <-  max.cores
         
+        if(!is.null(getOption('mc.cores'))) {
+          # cores_ <- NULL
+        }
+        
+       if(!is.null(cores_)) {
+         if(cores_ == "maximise") {
+           max.cores <- 
+             as.numeric(future::availableCores(methods = "system", omit = 0))
+           if(max.cores < 1) max.cores <- 1
+         } else if(cores_ == "optimize") {
+           max.cores <- 
+             as.numeric(future::availableCores(methods = "system", omit = 1))
+           if(max.cores < 1) max.cores <- 1
+           if(max.cores > eval(setarguments$chains)) {
+             max.cores <- eval(setarguments$chains)
+           }
+         }
+       } else if(!is.null(getOption('mc.cores'))) {
+         if(is.null(cores_)) {
+           max.cores <- getOption('mc.cores')
+         } else if(!is.null(cores_)) {
+           if(cores_ != "maximise" & cores_ != "optimize") {
+             max.cores <- getOption('mc.cores')
+           }
+         }
+         # max.cores <- getOption('mc.cores')
+       } else {
+         max.cores <- eval(setarguments$cores)
+       }
+       setarguments$cores <-  max.cores
         
         
         if(!is.list(threads_)) {
-          # NULL -> 'NULL
           if(is.null(threads_)) {
             threads_ <- deparse(threads_)
           }
           if( is.character(threads_) & threads_ == "maximise") {
-            # max.threads <- 
-            #   as.numeric(future::availableCores(methods = "system", omit = 0))
-            # if(max.threads < 1) max.threads <- 1
             max.threads <- threads_char(threads_, 
                                         chains = eval(setarguments$chains))
           } else if( is.character(threads_) & threads_ == "optimize") {
-            # max.threads <- 
-            #   as.numeric(future::availableCores(methods = "system", omit = 1))
-            # if(max.threads < 1) max.threads <- 1
-            # max.threads <- floor(max.threads /  eval(setarguments$chains))
             max.threads <- threads_char(threads_, 
                                         chains = eval(setarguments$chains))
           } else if(!is.null(getOption('brms.threads')) &
@@ -12408,8 +12411,6 @@ bsitar <- function(x,
           setarguments$threads <-  brms::threading(max.threads)
         }
       } 
-      
-     
       
       if (eval(setarguments$backend) == "cmdstanr") {
         if (is.list(eval(setarguments$stan_model_args)) &
