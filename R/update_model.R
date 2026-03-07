@@ -192,6 +192,11 @@ update_model.bgmfit <-
     else
       new_init_arg <- FALSE
     
+    if ("init_r" %in% dot_and_call_intersect)
+      new_init_r_arg <- TRUE
+    else
+      new_init_r_arg <- FALSE
+    
    
     
     for (ix in  exclude_args_names) {
@@ -411,8 +416,8 @@ update_model.bgmfit <-
       dots_for_scode$prior        <- NULL
       dots_for_scode$stanvars     <- NULL
       dots_for_scode$formula      <- NULL
-      if (!new_init_arg)
-        dots_for_scode$init         <- NULL
+      if (!new_init_arg)   dots_for_scode$init <- NULL
+      if (!new_init_r_arg) dots_for_scode$init_r <- NULL
       dots_for_scode              <- c(dots_for_scode, call_)
       dots_for_scode$get_stancode <- TRUE
       new_stancode <- suppressMessages(do.call(bsitar, dots_for_scode))
@@ -421,7 +426,7 @@ update_model.bgmfit <-
       recompile <- needs_recompilation(model) || !same_backend ||
         !is_equal(new_stancode, old_stancode)
       if (recompile && silent < 2) {
-        message("The desired updates require recompiling")
+        message("The desired update requires recompiling")
       }
     }
     recompile <- as_one_logical(recompile)
@@ -432,8 +437,10 @@ update_model.bgmfit <-
         dots_for_recompile$prior    <- NULL
         dots_for_recompile$stanvars <- NULL
         dots_for_recompile$formula  <- NULL
-        if (!new_init_arg)
-          dots_for_recompile$init     <- NULL
+        if (!new_init_arg)   dots_for_recompile$init <- NULL
+        if (!new_init_r_arg) dots_for_recompile$init_r <- NULL
+        # if (!new_init_arg)
+        #   dots_for_recompile$init     <- NULL
         dots_for_recompile          <- c(dots_for_recompile, call_)
         model <- do.call(bsitar, dots_for_recompile)
         # model <- CustomDoCall(bsitar, dots_for_recompile)
@@ -489,8 +496,8 @@ update_model.bgmfit <-
         dots_for_norecompile$formula  <- NULL
         if (!new_init_arg | new_init_arg) {
           dots_for_norecompile$init     <- NULL
-          dots_for_norecompile          <-
-            c(dots_for_norecompile, call_)
+          dots_for_norecompile$init_r   <- NULL
+          dots_for_norecompile          <- c(dots_for_norecompile, call_)
           model <- do.call(bsitar, dots_for_norecompile)
         } # if(!new_init_arg) {
         if (new_init_arg) {

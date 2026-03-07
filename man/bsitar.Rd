@@ -60,9 +60,9 @@ bsitar(
   custom_formula = NULL,
   custom_prior = NULL,
   custom_stanvars = NULL,
-  group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist = gaussian),
+  group_arg = list(groupvar = NULL, by = NULL, cor = "un", cov = NULL, dist = "gaussian"),
   sigma_group_arg = list(groupvar = NULL, by = NULL, cor = un, cov = NULL, dist =
-    gaussian),
+    "gaussian"),
   univariate_by = list(by = NA, cor = "un", terms = "subset"),
   multivariate = list(mvar = FALSE, cor = "un", rescor = TRUE, rcorr_by = NULL, rcorr_gr
     = NULL, rcorr_method = NULL, rcorr_prior = NULL),

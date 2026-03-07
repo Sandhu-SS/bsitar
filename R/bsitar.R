@@ -2513,12 +2513,6 @@ bsitar <- function(x,
   
   mcall <- match.call()
   no_default_args <- c("x", "y", "id", "data", "...")
-  if(!'init' %in% names(mcall)) {
-    mcall$init <- init
-  }
-  if(!'init_r' %in% names(mcall)) {
-    mcall$init_r <- init_r
-  }
   
   if(is.null(global_args)) {
     global_args <- FALSE
@@ -2556,6 +2550,15 @@ bsitar <- function(x,
       mcall <- eval_globals_in_mcall(mcall, exceptions = set_exceptions) 
     }
   } # if(call_eval_globals_in_mcall) {
+  
+  
+  if(!'init' %in% names(mcall)) {
+    mcall <-rlang::call_modify(mcall, init = init)
+  }
+  if(!'init_r' %in% names(mcall)) {
+    mcall <-rlang::call_modify(mcall, init_r = init_r)
+  }
+  
   
   mcall_ <- mcall
   
@@ -2671,7 +2674,7 @@ bsitar <- function(x,
   
   newcall <- check_brms_args(mcall, newcall_checks)
   mcall <- mcall_ <- newcall
-
+  
   # Check and set Alias argument for a b c ... formula
   dots_allias <- list(...)
   collect_dot_names <- c()
@@ -2787,6 +2790,7 @@ bsitar <- function(x,
    temp_init_call_c
  }
   
+ 
  if(!is.null(mcall$init)) {
    mcall$init <- quote_random_as_init_arg(mcall$init, mcall)
  } else if(is.null(mcall$init)) {
@@ -3460,6 +3464,9 @@ bsitar <- function(x,
   arguments <-
     c(arguments, f_funx_arg[names(f_funx_arg) %!in% nf_funx_arg_names])
   
+  # New -> don't get default when user specified init/init_r
+  arguments$init <- mcall$init
+  arguments$init_r <- mcall$init_r
   
   
   
@@ -10468,8 +10475,7 @@ bsitar <- function(x,
     initialslist[[ii]]   <- initials
     initialslist_s[[ii]] <- initsi
     
-    
-   
+
     
     #################################################################
     #################################################################
@@ -11596,20 +11602,26 @@ bsitar <- function(x,
     }
   }
   
+  
   if (all(sapply("random", grepl, initialslist_s))) {
     brmsinits <- "random"
     brmsinits_r <- ept(init_rsi)
     brmsinits_ <- NULL
-  } else if (all(sapply("0", grepl, initialslist_s))) {
-    brmsinits <- "0"
-    brmsinits_r <- ept(init_rsi)
-    brmsinits_ <- NULL
+  } else if (!all(sapply(NULL, grepl, ept(initialslist_s)  ))) {
+    # } else if (all(sapply("0", grepl, initialslist_s))) {
+    if (all(sapply(0, grepl, ept(initialslist_s)  ))) {
+      brmsinits_r <- ept(init_rsi)
+      brmsinits <- "0"
+      brmsinits_ <- NULL
+    }
   } else {
     brmsinits <- brmsinits
-    brmsinits_r <- NULL
+    brmsinits_r <- ept(init_rsi) # NULL
     brmsinits_ <- ""
   }
- 
+  
+
+
   check_set_init_r <- FALSE # new
   if(initialslist_s[[1]][1] == "NULL") { # new
     brmsinits <- brmsinits
@@ -11626,6 +11638,9 @@ bsitar <- function(x,
     brmsinits_ <- NULL
   }
   
+ 
+  
+  
   # New to set init_r for 'cmdstanr' and 'rstan' when init = random
   if(check_set_init_r) {
     if(is.character(init_rsi)) {
@@ -11639,6 +11654,19 @@ bsitar <- function(x,
       }
     }
   } # if(check_set_init_r) {
+
+  
+  if(!is.null(brmsinits)) {
+    if(!is.list(brmsinits)) {
+      if(brmsinits == 0) brmsinits <- '0'
+    }
+  }
+  
+  
+  # print(brmsinits)
+  # print(brmsinits_r)
+  # stop()
+ 
  
   for (inm in names(brmsinits)) {
     if (is.matrix(brmsinits[[inm]])) {
@@ -12359,6 +12387,10 @@ bsitar <- function(x,
           # cores_ <- NULL
         }
         
+      if(is.null(cores_) & is.null(getOption('mc.cores'))) {
+        max.cores <- 1 # getOption("mc.cores", 1) -> from ?brms::brm
+      }
+        
        if(!is.null(cores_)) {
          if(cores_ == "maximise") {
            max.cores <- 
@@ -12371,6 +12403,11 @@ bsitar <- function(x,
            if(max.cores > eval(setarguments$chains)) {
              max.cores <- eval(setarguments$chains)
            }
+         } else if(check_is_numeric_like(cores_)) {
+           max.cores <- eval(cores_)
+         } else {
+           stop2c("Argument cores must be either an integer or a character
+                  'maximise' or 'optimize'")
          }
        } else if(!is.null(getOption('mc.cores'))) {
          if(is.null(cores_)) {
@@ -12378,12 +12415,13 @@ bsitar <- function(x,
          } else if(!is.null(cores_)) {
            if(cores_ != "maximise" & cores_ != "optimize") {
              max.cores <- getOption('mc.cores')
+           } else if(!check_is_numeric_like(cores_)) {
+             max.cores <- getOption('mc.cores')
            }
-         }
+         } # if(is.null(cores_)) { else if(!is.null(cores_)) {
          # max.cores <- getOption('mc.cores')
-       } else {
-         max.cores <- eval(setarguments$cores)
-       }
+       } # if(!is.null(cores_)) { else if(!is.null(getOption('mc.cores'))) {
+        
        setarguments$cores <-  max.cores
         
         
