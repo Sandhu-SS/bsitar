@@ -55,7 +55,7 @@
 
   save_and_use_models        <- FALSE
   
-  skip_test_local_rcmd_check <- TRUE
+  skip_test_local_rcmd_check <- FALSE
  
   
   set.seed(113)
