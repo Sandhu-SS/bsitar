@@ -41,26 +41,54 @@ test_that("test-get_predictions-bycov", {
   
   
   ##############################################################################
-  # set model
+  # set model -> save_and_use_models = TRUE
+  ##############################################################################
+  
+  if(save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "univariate_fit_cov.rds")) 
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "multivariate_fit_cov.rds"))  
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(save_and_use_models) {
+  
+  
+  ##############################################################################
+  # set model -> save_and_use_models = FALSE
+  ##############################################################################
+  
+  if(!save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = univariate_fit_cov
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = multivariate_fit_cov
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(!save_and_use_models) {
+  
+  
+  
+  ##############################################################################
+  # set options
   ##############################################################################
   
   test_tolerance <- 0.01
   
-  if(test_univariate_fit_cov) {
-    fit               = readRDS(testthat::test_path("models", 
-                                                    "univariate_fit_cov.rds")) 
-    resp              = uvar_resp
-  } else if(test_multivariate_fit_cov) {
-    fit               = readRDS(testthat::test_path("models", 
-                                                    "multivariate_fit_cov.rds"))  
-    resp              = mvar_resp
-  } else {
-    skip(message = 
-           "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
-  }
-  
   # Need to re-assign functions to this local test environment
   fit <- bsitar::expose_model_functions(fit, expose = F)
+  
+  # brms 
   
   
   model = fit

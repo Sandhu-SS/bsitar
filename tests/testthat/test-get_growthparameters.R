@@ -2,7 +2,7 @@
 # Skip test for local R CMD Check but run on GitHub
 
 if(skip_test_local_rcmd_check) {
-  skip_local_run_ci()
+   skip_local_run_ci()
 }
 
 
@@ -49,32 +49,52 @@ test_that("test-get_growthparameters", {
   
   
   ##############################################################################
-  # set options
+  # set model -> save_and_use_models = TRUE
   ##############################################################################
   
-  # draw_ids <- 1:50
+  if(save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "univariate_fit_cov.rds")) 
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "multivariate_fit_cov.rds"))  
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(save_and_use_models) {
+  
+  
+  ##############################################################################
+  # set model -> save_and_use_models = FALSE
+  ##############################################################################
+  
+  if(!save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = univariate_fit_cov
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = multivariate_fit_cov
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(!save_and_use_models) {
+  
+  
+  
+  ##############################################################################
+  # set options
+  ##############################################################################
   
   test_tolerance <- 0.01
   
-  if(test_univariate_fit_cov) {
-    fit               = readRDS(testthat::test_path("models", 
-                                                    "univariate_fit_cov.rds")) 
-    resp              = uvar_resp
-  } else if(test_multivariate_fit_cov) {
-    fit               = readRDS(testthat::test_path("models", 
-                                                    "multivariate_fit_cov.rds"))  
-    resp              = mvar_resp
-  } else {
-    skip(message = 
-           "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
-  }
-  
   # Need to re-assign functions to this local test environment
   fit <- bsitar::expose_model_functions(fit, expose = F)
-  
-  ##############################################################################
-  # set options
-  ##############################################################################
   
   # brms 
   draw_ids          = draw_ids
@@ -273,6 +293,12 @@ test_that("test-get_growthparameters", {
   
   
   ###############################################################################
+  # set parameters
+  ###############################################################################
+  
+  marginaleffects_args[['parameter']] <- c('apgv', 'pgv')
+  
+  ###############################################################################
   # marginal - method = pkg future = F
   ###############################################################################
   
@@ -295,7 +321,7 @@ test_that("test-get_growthparameters", {
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
-  marginal_args[['parameter']]     <- c('all')
+  # marginal_args[['parameter']]     <- c('all')
   
   # devtools::load_all()
   # marginal_funcall        <- get_growthparameters
@@ -339,7 +365,7 @@ test_that("test-get_growthparameters", {
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
-  marginal_args[['parameter']]     <- c('all')
+  # marginal_args[['parameter']]     <- c('all')
   
   
   marginal_out_custom_mdT_FF <- do.call(marginal_funcall, 
@@ -372,7 +398,7 @@ test_that("test-get_growthparameters", {
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
-  marginal_args[['parameter']]     <- c('all')
+  # marginal_args[['parameter']]     <- c('all')
   
   
   marginal_out_custom_mdT_FT <- do.call(marginal_funcall, 
@@ -405,7 +431,7 @@ test_that("test-get_growthparameters", {
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
-  marginal_args[['parameter']]     <- c('all')
+  # marginal_args[['parameter']]     <- c('all')
   
   
   marginal_out_custom_mdF_FF <- do.call(marginal_funcall, 
@@ -438,7 +464,7 @@ test_that("test-get_growthparameters", {
   marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
-  marginal_args[['parameter']]     <- c('all')
+  # marginal_args[['parameter']]     <- c('all')
   
   
   marginal_out_custom_mdF_FT <- do.call(marginal_funcall, 

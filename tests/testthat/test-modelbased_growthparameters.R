@@ -51,32 +51,52 @@ test_that("test-modelbased_growthparameters", {
   
   
   ##############################################################################
-  # set options
+  # set model -> save_and_use_models = TRUE
   ##############################################################################
   
-  # draw_ids <- 1:50
+  if(save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "univariate_fit_cov.rds")) 
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = readRDS(testthat::test_path("models", 
+                                                      "multivariate_fit_cov.rds"))  
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(save_and_use_models) {
+  
+  
+  ##############################################################################
+  # set model -> save_and_use_models = FALSE
+  ##############################################################################
+  
+  if(!save_and_use_models) {
+    if(test_univariate_fit_cov) {
+      fit               = univariate_fit_cov
+      resp              = uvar_resp
+    } else if(test_multivariate_fit_cov) {
+      fit               = multivariate_fit_cov
+      resp              = mvar_resp
+    } else {
+      skip(message = 
+             "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
+    }
+  } # if(!save_and_use_models) {
+  
+  
+  
+  ##############################################################################
+  # set options
+  ##############################################################################
   
   test_tolerance <- 0.01
   
-  if(test_univariate_fit_cov) {
-    fit               = readRDS(testthat::test_path("models", 
-                                                    "univariate_fit_cov.rds")) 
-    resp              = uvar_resp
-  } else if(test_multivariate_fit_cov) {
-    fit               = readRDS(testthat::test_path("models", 
-                                                    "multivariate_fit_cov.rds"))  
-    resp              = mvar_resp
-  } else {
-    skip(message = 
-           "Both test_univariate_fit_cov and test_multivariate_fit_cov FALSE")
-  }
-  
   # Need to re-assign functions to this local test environment
   fit <- bsitar::expose_model_functions(fit, expose = F)
-  
-  ##############################################################################
-  # set options
-  ##############################################################################
   
   # brms 
   draw_ids          = draw_ids
@@ -319,7 +339,11 @@ test_that("test-modelbased_growthparameters", {
   marginal_out_FF <- do.call(marginal_funcall, 
                              marginal_args) # %>% data.frame()
   
-  
+  marginal_args_hy <- marginal_args
+  marginal_args_hy[['hypothesis']]  <- ~ pairwise | 'parameter'
+  marginal_out_FF_hy <- do.call(marginal_funcall, 
+                             marginal_args_hy) # %>% data.frame()
+  rm('marginal_args_hy')
   
   ###############################################################################
   # marginal - method = pkg future = T
@@ -330,6 +354,11 @@ test_that("test-modelbased_growthparameters", {
   marginal_out_FT <- do.call(marginal_funcall, 
                              marginal_args) # %>% data.frame()
   
+  marginal_args_hy <- marginal_args
+  marginal_args_hy[['hypothesis']]  <- ~ pairwise | 'parameter'
+  marginal_out_FT_hy <- do.call(marginal_funcall, 
+                                marginal_args_hy) # %>% data.frame()
+  rm('marginal_args_hy')
   
   ###############################################################################
   # marginal - method = custom, model_deriv = T, future = F
@@ -359,7 +388,11 @@ test_that("test-modelbased_growthparameters", {
   marginal_out_custom_mdT_FF <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()
   
-  
+  marginal_args_hy <- marginal_args
+  marginal_args_hy[['hypothesis']]  <- ~ pairwise | 'parameter'
+  marginal_out_custom_mdT_FF_hy <- do.call(marginal_funcall, 
+                                marginal_args_hy) # %>% data.frame()
+  rm('marginal_args_hy')
   
   ###############################################################################
   # marginal - method = custom, model_deriv = T, future = T
@@ -389,7 +422,11 @@ test_that("test-modelbased_growthparameters", {
   marginal_out_custom_mdT_FT <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()
   
-  
+  marginal_args_hy <- marginal_args
+  marginal_args_hy[['hypothesis']]  <- ~ pairwise | 'parameter'
+  marginal_out_custom_mdT_FT_hy <- do.call(marginal_funcall, 
+                                           marginal_args_hy) # %>% data.frame()
+  rm('marginal_args_hy')
   
   ###############################################################################
   # marginal - method = custom, model_deriv = T, future = F
@@ -419,7 +456,11 @@ test_that("test-modelbased_growthparameters", {
   marginal_out_custom_mdF_FF <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()
   
-  
+  marginal_args_hy <- marginal_args
+  marginal_args_hy[['hypothesis']]  <- ~ pairwise | 'parameter'
+  marginal_out_custom_mdF_FF_hy <- do.call(marginal_funcall, 
+                                           marginal_args_hy) # %>% data.frame()
+  rm('marginal_args_hy')
   
   ###############################################################################
   # marginal - method = custom, model_deriv = T, future = T
@@ -449,7 +490,11 @@ test_that("test-modelbased_growthparameters", {
   marginal_out_custom_mdF_FT <- do.call(marginal_funcall, 
                                         marginal_args) %>% data.frame()
   
-  
+  marginal_args_hy <- marginal_args
+  marginal_args_hy[['hypothesis']]  <- ~ pairwise | 'parameter'
+  marginal_out_custom_mdF_FT_hy <- do.call(marginal_funcall, 
+                                           marginal_args_hy) # %>% data.frame()
+  rm('marginal_args_hy')
   
   
   expect_equal(marginal_out_FF, marginal_out_FT, 
@@ -463,6 +508,18 @@ test_that("test-modelbased_growthparameters", {
   expect_equal(marginal_out_FF, marginal_out_custom_mdF_FT, 
                tolerance = test_tolerance)
   
+  
+  # hy 
+  expect_equal(marginal_out_FF_hy, marginal_out_FT_hy, 
+               tolerance = test_tolerance)
+  expect_equal(marginal_out_FF_hy, marginal_out_custom_mdT_FF_hy,
+               tolerance = test_tolerance)
+  expect_equal(marginal_out_FF_hy, marginal_out_custom_mdT_FT_hy, 
+               tolerance = test_tolerance)
+  expect_equal(marginal_out_FF_hy, marginal_out_custom_mdF_FF_hy,
+               tolerance = test_tolerance)
+  expect_equal(marginal_out_FF_hy, marginal_out_custom_mdF_FT_hy, 
+               tolerance = test_tolerance)
   
   
 })

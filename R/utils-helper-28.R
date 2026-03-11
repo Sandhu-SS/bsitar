@@ -85,6 +85,14 @@ clean_draws <- function(DT,
                         group = "drawid", 
                         verbose = FALSE) {
   
+  if(!is.null(DT)) {
+    if(nrow(DT) == 0) {
+      return(DT)
+    }
+  } else if(is.null(DT)) {
+    return(DT)
+  }
+  
   has_na <- NULL;
   . <- NULL;
   is_dt <- data.table::is.data.table(DT)
@@ -1941,6 +1949,7 @@ join_df_or_lists <- function(..., join_on = NULL, remove_duplicate = "both") {
       return(arg)
     } else {
       stop("All arguments must be data.frames or lists of data.frames")
+      # return(arg)
     }
   })
   
@@ -2786,19 +2795,36 @@ evaluate_comparison_fun <- function(data,
     return(comparison_draws)
   }
   
-  comparison_results <- 
-    comparison_draws[,
-                    as.list(get_pe_ci_collapse(estimate, 
-                                               ec_agg= ec_agg,
-                                               ei_agg = ei_agg,
-                                               na.rm =na.rm,                 
-                                               nthreads = nthreads, 
-                                               probs = probs)),
-                    by = parameter_by
-    ][,
-      setnames(.SD, c("V1", "V2", "V3"),
-               c("estimate", "conf.low", "conf.high"))
-    ]
+  # New
+  comparison_results <- comparison_draws[,
+                          as.list(get_pe_ci_collapse(estimate, 
+                                                     ec_agg= ec_agg,
+                                                     ei_agg = ei_agg,
+                                                     na.rm =na.rm,                 
+                                                     nthreads = nthreads, 
+                                                     probs = probs)),
+                          by = parameter_by]
+  
+  if(is_emptyx(comparison_results)) return(NA)
+  
+  comparison_results <- comparison_results[,
+                                           setnames(.SD, c("V1", "V2", "V3"),
+                                                    c("estimate", "conf.low", 
+                                                      "conf.high"))]
+  
+  # comparison_results <-
+  #   comparison_draws[,
+  #                   as.list(get_pe_ci_collapse(estimate,
+  #                                              ec_agg= ec_agg,
+  #                                              ei_agg = ei_agg,
+  #                                              na.rm =na.rm,
+  #                                              nthreads = nthreads,
+  #                                              probs = probs)),
+  #                   by = parameter_by
+  #   ][,
+  #     setnames(.SD, c("V1", "V2", "V3"),
+  #              c("estimate", "conf.low", "conf.high"))
+  #   ]
   
   if(!is.null(digits)) {
     comparison_results <- comparison_results[,
@@ -2962,6 +2988,9 @@ evaluate_hypothesis_fun <- function(data,
   }
   
   if(return_draws) return(hypothes_draws)
+  
+  
+  # New
   hypothesis_results <- 
     hypothes_draws[,
                    as.list(get_pe_ci_collapse(estimate, 
@@ -2970,11 +2999,28 @@ evaluate_hypothesis_fun <- function(data,
                                               na.rm =na.rm,                 
                                               nthreads = nthreads, 
                                               probs = probs)),
-                   by = parameter_hypothesis
-    ][,
-      setnames(.SD, c("V1", "V2", "V3"),
-               c("estimate", "conf.low", "conf.high"))
-    ]
+                   by = parameter_hypothesis]
+  
+  if(is_emptyx(hypothesis_results)) return(NA)
+  
+  hypothesis_results <- hypothesis_results[,
+                                           setnames(.SD, c("V1", "V2", "V3"),
+                                                    c("estimate", "conf.low", 
+                                                      "conf.high"))]
+  
+  # hypothesis_results <- 
+  #   hypothes_draws[,
+  #                  as.list(get_pe_ci_collapse(estimate, 
+  #                                             ec_agg= ec_agg,
+  #                                             ei_agg = ei_agg,
+  #                                             na.rm =na.rm,                 
+  #                                             nthreads = nthreads, 
+  #                                             probs = probs)),
+  #                  by = parameter_hypothesis
+  #   ][,
+  #     setnames(.SD, c("V1", "V2", "V3"),
+  #              c("estimate", "conf.low", "conf.high"))
+  #   ]
   
   
   if(!is.null(digits)) {
@@ -3866,6 +3912,161 @@ marginalstyle_reformat <- function(out, set_names_) {
     dplyr::rename_with(., ~ sub("(.)", "\\U\\1", .x, perl = TRUE)) %>% 
     data.frame()
   return(out)
+}
+
+
+
+
+#' Populate NA elements in list with template
+#' \code{data.frame}/\code{data.table}
+#'
+#' Finds the first non-NA \code{data.frame} or \code{data.table} in the list as
+#' a template. Populates scalar \code{NA} elements by copying the template and
+#' setting specified columns to \code{NA}. Preserves input class:
+#' \code{data.frame} inputs yield \code{data.frame} outputs; \code{data.table}
+#' inputs yield \code{data.table} outputs.
+#'
+#' @param lst A named list containing \code{data.frame}s, \code{data.table}s,
+#'   and/or scalar \code{NA}s.
+#' @param col_names Character vector of column names to set to \code{NA}.
+#'   Defaults to \code{"draw"}.
+#'
+#' @return Modified list matching input class.
+
+#' @examples
+#' lst <- list(pgv = data.frame(a = 1:2), atgv = NA)
+#' populate_na_elements(lst, "a")
+#' 
+#' @keywords internal
+#' @noRd
+#' 
+populate_na_elements <- function(lst, col_names = "draw") {
+  stopifnot(is.list(lst))
+  
+  for (i in 1:length(lst)) {
+    if(is_emptyx(lst[[i]])) lst[[i]] <- NA
+  }
+  
+  template <- NULL
+  class_template <- NULL
+  
+  # Find first data.frame or data.table
+  for (el in lst) {
+    if (is.data.frame(el) || methods::is(el, "data.table")) {
+      template <- el
+      class_template <- class(el)
+      break
+    }
+  }
+  if (is.null(template)) {
+    # stop("No data.frame or data.table found in list")
+    return(template)
+  }
+  
+  # Populate scalar NA elements only
+  for (i in seq_along(lst)) {
+    el <- lst[[i]]
+    if (length(el) == 1 && is.na(el)) {
+      new_obj <- template
+      for (col in col_names) {
+        if (col %in% names(new_obj)) {
+          new_obj[[col]] <- NA
+        }
+      }
+      class(new_obj) <- class_template
+      lst[[i]] <- new_obj
+    }
+  }
+  return(lst)
+}
+
+
+
+#' Replace NA with integer
+#' 
+#' @description
+#' Useful in \code{marginaleffects method = 'pkg'} \code{get_growthparameters}
+#' as NA are not allowedNot used anywhere till \code{10/03/2026}
+#' 
+#'
+#' @param x numeric value
+#' @param val integer
+#' @param verbose logical
+#' @return A data.frame 
+#' @keywords internal
+#' @noRd
+#'
+NAtoint <- function(x, val = 999999L, verbose = FALSE) {
+  if(is.null(val)) val <- 999999L
+  if(!is.integer(val)) stop2c("'val' must be an integer")
+  if(is.na(x)) {
+    if(verbose) {
+      msg <- sprintf("All '%s' values replaced with integer '%s'", NA, val)
+      message2c(msg)
+    }
+    return(as.integer(val))
+  } else if (x == val) {
+    if(verbose) {
+      msg <- sprintf("All '%s' values replaced with '%s'", val, NA)
+      message2c(msg)
+    }
+    return(NA)
+  } else {
+    return(x)
+  }
+} # NAtoint
+
+
+
+#' replace_int_with_na Replace integer with NA
+#' 
+#' @description
+#' Useful in \code{marginaleffects method = 'pkg'} \code{get_growthparameters}
+#' as NA are not allowedNot used anywhere till \code{10/03/2026}
+#'
+#' @param x numeric value
+#' @param val integer
+#' @param int_type integer
+#' @param verbose logical
+#' @return A data.frame 
+#' @keywords internal
+#' @noRd
+#'
+replace_int_with_na <- function(x, val = 999999L, int_type = NA_integer_,
+                                verbose = FALSE) {
+  if(is.null(val)) val <- 999999L
+  if(!is.integer(val)) stop2c("'val' must be an integer")
+  
+  if(is.null(int_type)) int_type <- NA_integer_
+  
+  if (inherits(x, "data.table")) {
+    for (j in seq_along(x)) {
+      col <- x[[j]]
+      if (is.integer(col)) {
+        idx <- which(col == val)
+        if (length(idx)) {
+          data.table::set(x, i = idx, j = j, value = int_type)
+        }
+      }
+    }
+    return(x)
+  }
+  
+  if (inherits(x, "data.frame")) {
+    x[] <- lapply(x, function(col) {
+      if (is.integer(col)) {
+        col[col == val] <- int_type
+      }
+      col
+    })
+    return(x)
+  }
+  
+  if(inherits(x, "numeric")) {
+    return(int_type)
+  }
+  
+  stop("x must be a data.frame, tibble, or data.table")
 }
 
 

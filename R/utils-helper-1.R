@@ -3776,6 +3776,127 @@ custom_find_predictors.brmsfit <- function (x,
 
 
 
+#' custom_get_ci_draws 
+#' 
+#' @description
+#' Useful in \code{marginaleffects method = 'pkg'} \code{get_growthparameters}
+#' as NA are not allowed
+#'
+#' @param x See \code{marginaleffects:::get_ci_draws}
+#' @param conf_level See \code{marginaleffects:::get_ci_draws}
+#' @param draws See \code{marginaleffects:::get_ci_draws}
+#' @param model See \code{marginaleffects:::get_ci_draws}
+#' 
+#' @return A list
+#' @keywords internal
+#' @noRd
+#'
+custom_get_ci_draws <- function (x, conf_level, draws, model = NULL) {
+  get_eti <- get_hdi <- NULL;
+  getfrom_ <- c('get_eti', 'get_hdi')
+  for (i in getfrom_) {
+    assign(i, utils::getFromNamespace(i, 'marginaleffects'))
+  }
+  checkmate::check_number(conf_level, lower = 1e-10, upper = 1 - 1e-10)
+  critical <- (1 - conf_level)/2
+  if (inherits(model, "inferences_simulation")) {
+    insight::check_if_installed("collapse", minimum_version = "1.9.0")
+    CIs <- collapse::dapply(draws, MARGIN = 1, FUN = collapse::fquantile, 
+                            probs = c(critical, 1 - critical))
+    x$std.error <- collapse::dapply(draws, MARGIN = 1, FUN = collapse::fsd)
+    x$conf.low <- CIs[, 1]
+    x$conf.high <- CIs[, 2]
+    return(x)
+  }
+  else if (identical("eti", getOption("marginaleffects_posterior_interval", 
+                                      default = "eti")) && 
+           identical("median", getOption("marginaleffects_posterior_center", 
+                                                                                         default = "median"))) {
+    insight::check_if_installed("collapse", minimum_version = "1.9.0")
+    
+    if(!is_emptyx(draws)) {
+      if (nrow(draws) > 0) {
+        CIs <- collapse::dapply(draws, MARGIN = 1, FUN = collapse::fquantile, 
+                                probs = c(critical, 0.5, 1 - critical))
+        x$estimate <- CIs[, 2]
+        x$conf.low <- CIs[, 1]
+        x$conf.high <- CIs[, 3]
+      }
+    } else {
+        x$estimate <- NA
+        x$conf.low <- NA
+        x$conf.high <- NA
+    }
+    
+    # if (nrow(draws) > 0) {
+    #   CIs <- collapse::dapply(draws, MARGIN = 1, FUN = collapse::fquantile, 
+    #                           probs = c(critical, 0.5, 1 - critical))
+    #   x$estimate <- CIs[, 2]
+    #   x$conf.low <- CIs[, 1]
+    #   x$conf.high <- CIs[, 3]
+    # }
+    
+    return(x)
+  }
+  if (identical("eti", getOption("marginaleffects_posterior_interval", 
+                                 default = "eti")) && 
+      identical("mean", getOption("marginaleffects_posterior_center", 
+                                                                                  default = "median"))) {
+    insight::check_if_installed("collapse", minimum_version = "1.9.0")
+    if(!is_emptyx(draws)) {
+      Bs <- collapse::dapply(draws, MARGIN = 1, FUN = collapse::fmean)
+      CIs <- collapse::dapply(draws, MARGIN = 1, FUN = collapse::fquantile,
+                              probs = c(critical, 1 - critical))
+      x$estimate <- Bs
+      x$conf.low <- CIs[, 1]
+      x$conf.high <- CIs[, 2]
+    } else {
+      x$estimate <- NA
+      x$conf.low <- NA
+      x$conf.high <- NA
+    }
+    return(x)
+  }
+  FUN_INTERVAL <- getOption("marginaleffects_posterior_interval")
+  if (is.null(FUN_INTERVAL)) {
+    FUN_INTERVAL <- getOption("marginaleffects_credible_interval", 
+                              default = "eti")
+  }
+  checkmate::assert_choice(FUN_INTERVAL, choices = c("eti", 
+                                                     "hdi"))
+  if (FUN_INTERVAL == "hdi") {
+    FUN_INTERVAL <- get_hdi
+  }
+  else {
+    FUN_INTERVAL <- get_eti
+  }
+  FUN_CENTER <- getOption("marginaleffects_posterior_center", 
+                          default = stats::median)
+  checkmate::assert(checkmate::check_choice(FUN_CENTER, 
+                                            choices = c("mean", "median")), 
+                    checkmate::check_function(FUN_CENTER))
+  if (identical(FUN_CENTER, "mean")) {
+    FUN_CENTER <- mean
+  }
+  else if (identical(FUN_CENTER, "median")) {
+    FUN_CENTER <- stats::median
+  }
+  
+  colnames(draws) <- row.names(draws) <- NULL
+  CIs <- t(apply(draws, 1, FUN_INTERVAL, credMass = conf_level))
+  Bs <- apply(draws, 1, FUN_CENTER)
+  if (nrow(x) < nrow(CIs)) {
+    CIs <- unique(CIs)
+    Bs <- unique(Bs)
+  }
+  x[["estimate"]] <- Bs
+  x[["conf.low"]] <- CIs[, "lower"]
+  x[["conf.high"]] <- CIs[, "upper"]
+  return(x)
+}
+
+
+
 
 #' unlock_replace_bind for for \code{insight get_data}
 #'

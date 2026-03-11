@@ -3036,11 +3036,6 @@ CustomDoCall <- function(what,
     call <- as.call(c(list(what, argn)))
   }
   args$verbose <- eval(args$verbose)
-  # print(multivariate)
-  # print(args$multivariate)
-  # multivariate <- args$multivariate
-  # args$multivariate <- eval(args$multivariate)
-  # args$univariate_by <- eval(args$univariate_by)
   return(eval(call, envir = args, enclos = envir))
 }
 
@@ -7233,7 +7228,7 @@ get_all_grby_vars_names <- function(elements = NULL, envir = NULL) {
 
 
 
-#' get_size_from_age_draws
+#' check_set_parm for get_size_from_age_draws
 #' @details used in bsitar
 #' 
 #' @keywords internal
@@ -7324,7 +7319,6 @@ check_set_parm <- function(parameter,
   sat_ptc <- intersect(allowed_parms_size, parameter_arg) 
   if(is_emptyx(sat_ptc)) sat_ptc <- NULL
   
-  
   # Not possible, need at least one core parm
   # Allow only sat paramete
   # if(is.null(parameter)) {
@@ -7338,13 +7332,7 @@ check_set_parm <- function(parameter,
   #   }
   # }
   
-  
-  # print(parameter)
-  # print(parameter_arg)
-  # print(parameter_sat)
-  # stop()
-  
-  
+
   # 01.07.2025
   if(is.null(parameter)) {
     parm <- default_parms
@@ -7478,10 +7466,9 @@ make_drawindex_df_dt <- function(dt,
     }
   }
   
- 
   
   if(length(unique_drawid_name) != length(unique_draw_ids)) {
-    stop2c("lengths of unique 'drawid' and new 'draw_ids' must be the same")
+    # stop2c("lengths of unique 'drawid' and new 'draw_ids' must be the same")
   }
   
   if(identical(unique_drawid_name, unique_draw_ids)) {
@@ -7565,6 +7552,12 @@ get_size_from_age_draws <- function(age_draws_dt,
     }
   }
   
+
+  # select only those size at for which age parameter available
+  # pull_age_p   <- unique(age_draws_dt[[parameter_name]])
+  # pull_age_p_s <- sub("^a", "s", pull_age_p)
+  # parameter <- intersect(parameter, pull_age_p_s)
+
   
   if(!is.null(parameter)) {
     parameter <- sub("^s", "a", parameter)
@@ -7598,6 +7591,9 @@ get_size_from_age_draws <- function(age_draws_dt,
   if(is.null(parameter)) {
     parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
   }
+  
+  
+  
   
   # parameter_loop_levels <- 'apgv'
   
@@ -7638,12 +7634,12 @@ get_size_from_age_draws <- function(age_draws_dt,
   
   parameter_loop_levels <- unique(droplevels(age_draws_dt[[parameter_name]]))
   
-  
+
   if(sat_only) {
     parameter_loop_levels <- sat_name
     age_draws_dt <- age_draws_dt[parameter == sat_name ] %>% droplevels()
   }
-  
+ 
   age_draws_dt <- make_drawindex_df_dt(age_draws_dt,
                                        draw_ids = draw_ids,
                                        drawid_name = drawid_name,
@@ -7747,6 +7743,9 @@ get_size_from_age_draws <- function(age_draws_dt,
   
   
   age_draws_dt <- age_draws_dt[, (xvar) := NULL]
+  
+  # New
+  if(is_emptyx(age_draws_dt)) return(age_draws_dt)
   
   age_draws_dt <- data.table::setcolorder(age_draws_dt, (draw_name) , 
                                           after = drawid_name,

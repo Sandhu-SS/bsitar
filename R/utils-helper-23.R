@@ -49,7 +49,6 @@ GS_gps_parms_R <- function(nlp_a,
     parm_array  <- array(NA, dim = c(pieces_dim, parm_mat_dim, n_rowni))
   }
   
-  
   if(2 %in%  return_indicator) {
     deriv_array_dim_1 <- pieces_dim * degree_dim * set_spread
     deriv_array_dim_2 <- (length(curve_deriv) + 1+1+1)
@@ -147,15 +146,9 @@ GS_gps_parms_R <- function(nlp_a,
       coef_array[,,rowni]   <- PiecePolyCoef
     }
     
-    
-    
-    #  [[-3.688,inf,inf,inf,-0.728897,inf,1.12573,2.53888,4.602]] 
-    #  NA -2.585848 -1.888408 -1.616958 -0.3704589   NA   NA   NA   NA
-    #  [[inf,-2.58603,-1.88834,-1.61689,-0.370454,inf,inf,inf,4.67975]] 
     ############################################################
     # End - coefficients and roots
     ############################################################
-    
     
     
     ############################################################
@@ -186,6 +179,42 @@ GS_gps_parms_R <- function(nlp_a,
     parm_mat           <- matrix(NA, parm_mat_dim_nrows, parm_mat_dim)
     
     i <- 1L
+    
+  
+    # Otherwise error object 'collectd_mat_i' not found when ann NA matrix
+    if(n_pieces == 0) {
+      n_piecesTF <- FALSE 
+      mark_peak  <- FALSE
+    } else {
+      n_piecesTF <- TRUE
+    }
+    
+    # No need, even return(NULL) sufficient when n_piecesTF = FALSE
+    if(!n_piecesTF) {
+      out <- list()
+      parm_mat[1, ncol(parm_mat)-3] <- 1
+      parm_mat[, ncol(parm_mat)-2]  <- 1:nrow(parm_mat)
+      parm_mat[, ncol(parm_mat)-1]  <- n_pieces
+      parm_mat[, ncol(parm_mat)]    <- drawni
+      parm_array[ , ,] <- parm_mat
+      if(0 %in%  return_indicator) {
+        out[['coef']]    <- coef_array
+      }
+      if(1 %in% return_indicator) {
+        out[['parm']]   <- parm_array
+      }
+      if(2 %in% return_indicator) {
+        out[['deriv']]    <- deriv_array
+      }
+      if(length(out) > 1) {
+        return(out)
+      } else if(length(out) == 1) {
+        return(out[[1]])
+      }
+    } # if(!n_piecesTF) {
+    
+    
+   
     while (i <= n_pieces) {
       ii      <- unique_piece_id[i]
       xg_newx <- newx[ind[[i]]]
@@ -215,6 +244,7 @@ GS_gps_parms_R <- function(nlp_a,
       i <- i + 1L
     } # while (i <= n_pieces) {
     add_incre_1 <- 0
+    
     if(mark_peak) {
       ya_sitar <- parm_mat[, length(parm_deriv)+1] %>% as.vector()
       ya_sitar[is.na(ya_sitar)] <- 0
@@ -229,24 +259,21 @@ GS_gps_parms_R <- function(nlp_a,
       parm_mat[nrow(parm_mat), collectd_mat_i+1+1] <- NA
       add_incre_1 <- 1
     }
+    
     parm_mat[, collectd_mat_i+1+1+add_incre_1]   <- seq(1, parm_mat_dim_nrows)
     parm_mat[, collectd_mat_i+1+1+1+add_incre_1] <- rowni
     if(!is.null(drawni)) {
       parm_mat[, collectd_mat_i+1+1+1+1+add_incre_1] <- drawni
     }
-    
+
     if(1 %in%  return_indicator) {
       parm_array[,,rowni] <- parm_mat
     }
     
     
-    
     ############################################################
     # End - parameters
     ############################################################
-    
-    
-    
     
     ############################################################
     # Start - derivatives
@@ -292,6 +319,7 @@ GS_gps_parms_R <- function(nlp_a,
         if(dxi == 0) {
           collectd_matx <- collectd_matx + par_a
         }
+        
         collectd_mat_x[, 1]                    <- xg_curve
         collectd_mat_x[, collectd_mat_i+1]     <- collectd_matx
         collectd_mat_x[, collectd_mat_i+1+1]   <- i
@@ -317,30 +345,26 @@ GS_gps_parms_R <- function(nlp_a,
   ############################################################
   
   out <- list()
-  
   if(0 %in%  return_indicator) {
     out[['coef']]    <- coef_array
   }
-  
   if(1 %in% return_indicator) {
     out[['parm']]   <- parm_array
   }
-  
   if(2 %in% return_indicator) {
     out[['deriv']]    <- deriv_array
   }
-  
   if(length(out) > 1) {
     return(out)
   } else if(length(out) == 1) {
     return(out[[1]])
   }
   
-} # end GS_gps_parms_R
+} # End GS_gps_parms_R
 
 
 #############################################################
-############ -------- my_counter -------- ##########
+############ -------- seq_fun_R -------- ##########
 #############################################################
 
 
@@ -424,6 +448,7 @@ wraper_for_drawni <- function(setdat_mat,
   set_frame_abcd <- setdat_mat[, create_abcd_names_vector, drop = FALSE]
   set_frame_smat <- setdat_mat[, create_s_names_vector,    drop = FALSE]
  
+
   mat_parm <-  GS_gps_parms_assign(
     nlp_a = set_frame_abcd[, 'a'],
     nlp_b = set_frame_abcd[, 'b'],
@@ -478,16 +503,13 @@ wraper_for_drawni_2 <- function(drawni,
   spmat             <- setdat_mat_fixed[, create_s_names_vector]
   setx0             <- setdat_mat_fixed[, 'Xestimate']
   
-  
   # if(all(setdat_mat_fixedx[, 'd'] == 0)) {
   #   d_parmTF <- FALSE
   # } else {
   #   d_parmTF <- TRUE
   # }
   
-  
-  
-  # atgv might be Na
+  # atgv might have Na
   if(all(is.na(setx0))) {
     x.adj <- NA_real_
     y.adj <- NA_real_
@@ -658,8 +680,6 @@ parameter_method_loop_over_parm <- function(parm,
                                             probs,
                                             na.rm = TRUE,
                                             verbose = FALSE) {
-  
-  
   . <- NULL;
   d0 <- NULL;
   d1 <- NULL;
@@ -690,7 +710,6 @@ parameter_method_loop_over_parm <- function(parm,
  
   onex0 <- CustomDoCall(get_growthparameters, get_growthparameters_args)
 
-  
   onex00 <- onex0
   onex00[['draw']] <- funx_(onex00[['draw']])
   onex00 <- set_dataf_m_collapse %>% collapse::join(onex00, on = by,
@@ -764,8 +783,6 @@ parameter_method_loop_over_parm <- function(parm,
     } # for (drawni in 1:set_draws_n) {
   } # if(!future) {
   
-  
-  
   if(future) {
     # setup future
     environment(wraper_for_drawni_2) <- environment()
@@ -802,7 +819,6 @@ parameter_method_loop_over_parm <- function(parm,
   }
   names_parm_temp <- c(names_parm, "fomerge", "xid")
   
-
   bind_draws_parm <- collect_draws_parm %>% collapse::rowbind() %>%
     collapse::setrename(names_parm_temp)
   
@@ -817,7 +833,6 @@ parameter_method_loop_over_parm <- function(parm,
       data.table::as.data.table()
   }
   
-
   peak_data_draw <- bind_draws_parm %>% 
     collapse::join(onex00, on = c("drawid", 'fomerge', "xid"),
                    how = "right",

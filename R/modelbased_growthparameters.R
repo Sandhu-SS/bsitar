@@ -205,13 +205,9 @@ modelbased_growthparameters.bgmfit <- function(model,
     
     
   setcall <- match.call()[-1]
-  
-  if(!is.null(re_formula)) {
-    if(!is.na(re_formula)) {
-      re_formula <- setcall[['re_formula']]
-    }
-  }
-  
+ 
+  re_formula <- setcall[['re_formula']]
+
   if(is.null(reformat)) {
     reformat <- FALSE
   }
@@ -674,7 +670,7 @@ modelbased_growthparameters.bgmfit <- function(model,
   parms_sat_elements[['string_numeric_sat']] <- string_numeric_sat
   
   parm_sat_ptc_parameter_sat <- c(parm, sat_ptc, parameter_sat)
- 
+
   
   peak_parm_TF <- takeoff_parm_TF <- cessation_parm_TF <- sat_parm_TF <- FALSE
   if('apgv' %in% parm | 'pgv' %in% parm | 'spgv' %in% parm) {
@@ -1717,6 +1713,7 @@ modelbased_growthparameters.bgmfit <- function(model,
                                     future.seed = TRUE)
     } # end else if(future) {
     
+    
     organize_draws_parm <- 
       array(unlist(collect_draws_parm), dim = c(pieces_dim, 
                                                 parm_mat_dim, 
@@ -1729,6 +1726,8 @@ modelbased_growthparameters.bgmfit <- function(model,
       bind_draws_parm <- assign_new_sequence(mat = bind_draws_parm, col = 7)
     }
     
+    
+    
     names_parm <- c("x", "d0", "d1", "peak", "piece", "rowdf")
     names_parm <- c(names_parm, "drawid")
     
@@ -1738,6 +1737,9 @@ modelbased_growthparameters.bgmfit <- function(model,
     
     dt <- data.table::as.data.table(bind_draws_parm)
     dimnames(dt)[[2]] <- names_parm
+    
+    
+    
     
     # Sort rows
     dt <- dt[order(dt[, .SD, .SDcols = parm_sort_keys], na.last = FALSE)]
@@ -1749,14 +1751,27 @@ modelbased_growthparameters.bgmfit <- function(model,
     dt[, 'x']         <- model$model_info$ixfuntransform2(dt[, 'x'])
     
     peak_takeoff_data_draw     <- dt
-    peak_takeoff_data_draw     <- na.omit(peak_takeoff_data_draw, 
+    
+    # == 0 indicates that some draws have NAa
+    # if(min(peak_takeoff_data_draw$rowdf) == 0) {
+    #   peak_takeoff_data_draw     <- na.omit(peak_takeoff_data_draw, 
+    #                                         cols='peak', invert=FALSE)
+    # } else {
+    #   peak_takeoff_data_draw     <- na.omit(peak_takeoff_data_draw, 
+    #                                       cols=parm_is.na_keys, invert=FALSE)
+    # }
+    
+    peak_takeoff_data_draw     <- na.omit(peak_takeoff_data_draw,
                                           cols=parm_is.na_keys, invert=FALSE)
+
     
     peak_indices  <- peak_takeoff_data_draw[, .I[peak == 1 & d1 == max(d1) ], 
                                             by = c('drawid', 
                                                    'rowdf', 
                                                    'piece')]$V1
+ 
     peak_data_draw  <- collapse::fsubset(peak_takeoff_data_draw, peak_indices)
+   
     
     if(nrow(peak_data_draw) == 0) {
       peak_parameters <- NULL
@@ -1787,16 +1802,25 @@ modelbased_growthparameters.bgmfit <- function(model,
                                                            how = "right", 
                                                            verbose = FALSE)
       
+     
+      
       all_peak_data_draw <- collapse::rowbind(apgv_draw, pgv_draw, spgv_draw) 
+      
+     
+      
       
       if(!is.null(by)) {
         if(is.logical(by)) {
-          if(!by)  by <- c(idvar)
+          # if(!by)  by <- c(idvar)
+          if(!by)  by <- NULL
         } else if(is.character(by)) {
-          by <- c(by, idvar)
+          # by <- c(by, idvar)
+          by <- by
         }
       }
     
+      
+     
       if(!is.null(re_formula)) {
         get_growthparameters_args_by <- by
       } else if(is.null(re_formula)) {
@@ -1809,15 +1833,19 @@ modelbased_growthparameters.bgmfit <- function(model,
       
       get_growthparameters_args <- modelbased_arguments
       get_growthparameters_args[['preparms']] <- all_peak_data_draw
-      get_growthparameters_args[['by']] <- get_growthparameters_args_by #idvar
+      get_growthparameters_args[['by']] <- get_growthparameters_args_by
       # For preparms, method must be 'custom'
       get_growthparameters_args[['method']] <- 'custom'
       get_growthparameters_args[['reformat']] <- FALSE
+      # This won't let get_size_from_age_draws() to run in get_growthparameters
+      get_growthparameters_args[['parameter']] <- NULL
       
       peak_parameters <- CustomDoCall(get_growthparameters, 
                                       get_growthparameters_args)
       
     } # if(nrow(peak_data_draw) > 0) {
+    
+    
     
     takeoff_data_draw <- peak_takeoff_data_draw %>%
       collapse::fgroup_by(drawid, rowdf) %>%  # 1st fgroup_by
@@ -1866,18 +1894,24 @@ modelbased_growthparameters.bgmfit <- function(model,
       
       get_growthparameters_args <- modelbased_arguments
       get_growthparameters_args[['preparms']] <- all_takeoff_data_draw
-      get_growthparameters_args[['by']] <- idvar
-      
+      get_growthparameters_args[['by']] <- get_growthparameters_args_by
+      # get_growthparameters_args[['by']] <- idvar
+      # For preparms, method must be 'custom'
+      get_growthparameters_args[['method']] <- 'custom'
       get_growthparameters_args[['reformat']] <- FALSE
       
+      # This won't let get_size_from_age_draws() to run in get_growthparameters
+      get_growthparameters_args[['parameter']] <- NULL
       takeoff_parameters <- CustomDoCall(get_growthparameters, 
                                          get_growthparameters_args)
       
     } # if(nrow(takeoff_data_draw) > 0) {
     
     out <- dplyr::bind_rows(peak_parameters, takeoff_parameters)
-    out <- get_selected_rows(out, values = parm, 
+    out <- get_selected_rows(out, values = parm_sat_ptc_parameter_sat, 
                              ignore_case = TRUE, col = "parameter")
+    
+    
     
     if(is.null(out)) return(out)
     

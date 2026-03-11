@@ -50,10 +50,13 @@
   # Set global settings
   ##############################################################################
   
-  test_univariate_fit_cov   <- TRUE
-  test_multivariate_fit_cov <- FALSE
+  test_univariate_fit_cov    <- TRUE
+  test_multivariate_fit_cov  <- FALSE
+
+  save_and_use_models        <- FALSE
   
   skip_test_local_rcmd_check <- TRUE
+ 
   
   set.seed(113)
   draw_ids   <- 1:5
@@ -104,128 +107,259 @@
       testthat::skip("Skipping: not on CI")
     }
   }
-
+  
+  
   
   ##############################################################################
   ################################ Model files #################################
+  ################### Skip Test Model Fit during load_all = TRUE ###############
   ##############################################################################
   
+  # Note that now all tests will be run when skip_test_local_rcmd_check = FALSE
+  
+  
   ##############################################################################
-  # test_fit_nsk - with sample_prior = "only" and covariate
+  ################################ Model files #################################
+  ########################## save_and_use_models = TRUE ########################
   ##############################################################################
-
-  if(test_univariate_fit_cov & 
-     !testfile_exists("univariate_fit_cov.rds")) {
-    suppressWarnings(suppressMessages({
-      univariate_fit_cov <-
-        bsitar::bsitar(x = age, y = height, id = id, data = test_data,
-               df = 4,
-               multivariate = list(mvar = FALSE, rescore = TRUE),
-               xoffset = mean,
-               stype = list(type = 'nsk', normalize = TRUE),
-               a_formula = ~ 1 + sex,
-               b_formula = ~ 1 + sex,
-               c_formula = ~ 1 + sex,
-               random = a+b+c,
-               a_prior_beta = normal(lm, ysd, autoscale = FALSE),
-               b_prior_beta = normal(0, 1.0, autoscale = FALSE),
-               c_prior_beta = normal(0, 0.25, autoscale = FALSE),
-               d_prior_beta = normal(0, 1, autoscale = FALSE),
-               s_prior_beta = normal(lm, 1, autoscale = 1),
-               a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-               b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-               c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
-               d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-               s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
-               a_prior_sd = normal(0, ysd, autoscale = FALSE),
-               b_prior_sd = normal(0, 1.0, autoscale = FALSE),
-               c_prior_sd = normal(0, 0.1, autoscale = FALSE),
-               d_prior_sd = normal(0, 1, autoscale = FALSE),
-               rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
-               control = list(adapt_delta = 0.8, max_treedepth = 15),
-               chains = 1,
-               cores = 1,
-               iter = 2000,
-               warmup = NULL,
-               thin = 5,
-               threads = NULL,
-               backend = "rstan",
-               sample_prior = "only",
-               init = '0',
-               vcov_init_0 = F,
-               refres = 0,
-               silent = 2,
-               seed = 123)
-      
-      saveRDS(univariate_fit_cov, 
-              testthat::test_path("models", 
-                                  "univariate_fit_cov.rds"), compress = 'xz')
-      saveRDS(univariate_fit_cov, 
-              testthat::test_path("models", 
-                                  "univariate_fit_cov_uncompressed.rds"))
-      
-    })) # suppressWarnings(suppressMessages({
-  } # if(test_univariate_fit_cov) {
-
+  
+  if(save_and_use_models & !skip_test_local_rcmd_check) {
+    ############################################################################
+    # test_fit_nsk - with sample_prior = "only" and covariate
+    ############################################################################
+    
+    if(test_univariate_fit_cov & 
+       !testfile_exists("univariate_fit_cov.rds")) {
+      suppressWarnings(suppressMessages({
+        univariate_fit_cov <-
+          bsitar::bsitar(x = age, y = height, id = id, data = test_data,
+                         df = 4,
+                         a_formula = ~ 1 + sex,
+                         b_formula = ~ 1 + sex,
+                         c_formula = ~ 1 + sex,
+                         multivariate = list(mvar = FALSE, rescore = TRUE),
+                         univariate_by = FALSE,
+                         # stype = list(type = 'nsk', normalize = TRUE),
+                         # xoffset = mean,
+                         # random = a+b+c,
+                         # a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                         # b_prior_beta = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_beta = normal(0, 0.25, autoscale = FALSE),
+                         # d_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_prior_beta = normal(lm, 1, autoscale = 1),
+                         # a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+                         # b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                         # d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+                         # a_prior_sd = normal(0, ysd, autoscale = FALSE),
+                         # b_prior_sd = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_sd = normal(0, 0.1, autoscale = FALSE),
+                         # d_prior_sd = normal(0, 1, autoscale = FALSE),
+                         # rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                         # control = list(adapt_delta = 0.8, max_treedepth = 15),
+                         # warmup = NULL,
+                         # thin = 5,
+                         chains = 1,
+                         cores = 1,
+                         iter = 2000,
+                         threads = NULL,
+                         backend = "rstan",
+                         sample_prior = "only",
+                         init = NULL,
+                         vcov_init_0 = TRUE,
+                         refres = 0,
+                         silent = 2,
+                         seed = 123)
+        
+        saveRDS(univariate_fit_cov, 
+                testthat::test_path("models", 
+                                    "univariate_fit_cov.rds"), compress = 'xz')
+        saveRDS(univariate_fit_cov, 
+                testthat::test_path("models", 
+                                    "univariate_fit_cov_uncompressed.rds"))
+        
+      })) # suppressWarnings(suppressMessages({
+    } # if(test_univariate_fit_cov) {
+    
+    
+    
+    ############################################################################
+    # test_fit_nsk - with sample_prior = "only" and covariate
+    ############################################################################
+    
+    if(test_multivariate_fit_cov & 
+       !testfile_exists("multivariate_fit_cov.rds")) {
+      suppressWarnings(suppressMessages({
+        multivariate_fit_cov <-
+          bsitar::bsitar(x = age, y = list(height, weight), id = id, 
+                         data = test_data,
+                         df = 4,
+                         a_formula = ~ 1 + sex,
+                         b_formula = ~ 1 + sex,
+                         c_formula = ~ 1 + sex,
+                         multivariate = list(mvar =TRUE, rescore = TRUE),
+                         univariate_by = FALSE,
+                         # stype = list(type = 'nsk', normalize = TRUE),
+                         # xoffset = mean,
+                         # random = a+b+c,
+                         # a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                         # b_prior_beta = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_beta = normal(0, 0.25, autoscale = FALSE),
+                         # d_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_prior_beta = normal(lm, 1, autoscale = 1),
+                         # a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+                         # b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                         # d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+                         # a_prior_sd = normal(0, ysd, autoscale = FALSE),
+                         # b_prior_sd = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_sd = normal(0, 0.1, autoscale = FALSE),
+                         # d_prior_sd = normal(0, 1, autoscale = FALSE),
+                         # rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                         # control = list(adapt_delta = 0.8, max_treedepth = 15),
+                         # warmup = NULL,
+                         # thin = 5,
+                         chains = 1,
+                         cores = 1,
+                         iter = 2000,
+                         threads = NULL,
+                         backend = "rstan",
+                         sample_prior = "only",
+                         init = NULL,
+                         vcov_init_0 = TRUE,
+                         refres = 0,
+                         silent = 2,
+                         seed = 123)
+        
+        saveRDS(multivariate_fit_cov, 
+                testthat::test_path("models", 
+                                    "multivariate_fit_cov.rds"), compress = 'xz')
+        saveRDS(multivariate_fit_cov, 
+                testthat::test_path("models", 
+                                    "multivariate_fit_cov_uncompressed.rds"))
+        
+      })) # # suppressWarnings(suppressMessages({
+    } # if(test_multivariate_fit_cov) {
+    
+  } # if(save_and_use_models & !skip_test_local_rcmd_check) {
+  
+  
 
 
   ##############################################################################
-  # test_fit_nsk - with sample_prior = "only" and covariate
+  ################################ Model files #################################
+  ########################## save_and_use_models = FALSE ########################
   ##############################################################################
-
-  if(test_multivariate_fit_cov & 
-     !testfile_exists("multivariate_fit_cov.rds")) {
-    suppressWarnings(suppressMessages({
-      multivariate_fit_cov <-
-        bsitar::bsitar(x = age, y = list(height, weight), id = id, data = test_data,
-               df = 4,
-               multivariate = list(mvar =TRUE, rescore = TRUE),
-               xoffset = mean,
-               stype = list(type = 'nsk', normalize = TRUE),
-               a_formula = ~ 1 + sex,
-               b_formula = ~ 1 + sex,
-               c_formula = ~ 1 + sex,
-               random = a+b+c,
-               a_prior_beta = normal(lm, ysd, autoscale = FALSE),
-               b_prior_beta = normal(0, 1.0, autoscale = FALSE),
-               c_prior_beta = normal(0, 0.25, autoscale = FALSE),
-               d_prior_beta = normal(0, 1, autoscale = FALSE),
-               s_prior_beta = normal(lm, 1, autoscale = 1),
-               a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
-               b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-               c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
-               d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
-               s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
-               a_prior_sd = normal(0, ysd, autoscale = FALSE),
-               b_prior_sd = normal(0, 1.0, autoscale = FALSE),
-               c_prior_sd = normal(0, 0.1, autoscale = FALSE),
-               d_prior_sd = normal(0, 1, autoscale = FALSE),
-               rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
-               control = list(adapt_delta = 0.8, max_treedepth = 15),
-               chains = 1,
-               cores = 1,
-               iter = 2000,
-               warmup = NULL,
-               thin = 5,
-               threads = NULL,
-               backend = "rstan",
-               sample_prior = "only",
-               init = '0',
-               vcov_init_0 = F,
-               refres = 0,
-               silent = 2,
-               seed = 123)
+  
+  if(!save_and_use_models & !skip_test_local_rcmd_check) {
+    ############################################################################
+    # test_fit_nsk - with sample_prior = "only" and covariate
+    ############################################################################
+    
+    if(test_univariate_fit_cov) {
+      suppressWarnings(suppressMessages({
+        univariate_fit_cov <-
+          bsitar::bsitar(x = age, y = height, id = id, data = test_data,
+                         df = 4,
+                         a_formula = ~ 1 + sex,
+                         b_formula = ~ 1 + sex,
+                         c_formula = ~ 1 + sex,
+                         multivariate = list(mvar = FALSE, rescore = TRUE),
+                         univariate_by = FALSE,
+                         # stype = list(type = 'nsk', normalize = TRUE),
+                         # xoffset = mean,
+                         # random = a+b+c,
+                         # a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                         # b_prior_beta = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_beta = normal(0, 0.25, autoscale = FALSE),
+                         # d_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_prior_beta = normal(lm, 1, autoscale = 1),
+                         # a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+                         # b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                         # d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+                         # a_prior_sd = normal(0, ysd, autoscale = FALSE),
+                         # b_prior_sd = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_sd = normal(0, 0.1, autoscale = FALSE),
+                         # d_prior_sd = normal(0, 1, autoscale = FALSE),
+                         # rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                         # control = list(adapt_delta = 0.8, max_treedepth = 15),
+                         # warmup = NULL,
+                         # thin = 5,
+                         chains = 1,
+                         cores = 1,
+                         iter = 2000,
+                         threads = NULL,
+                         backend = "rstan",
+                         sample_prior = "only",
+                         init = NULL,
+                         vcov_init_0 = TRUE,
+                         refres = 0,
+                         silent = 2,
+                         seed = 123)
       
-      saveRDS(multivariate_fit_cov, 
-              testthat::test_path("models", 
-                                  "multivariate_fit_cov.rds"), compress = 'xz')
-      saveRDS(multivariate_fit_cov, 
-              testthat::test_path("models", 
-                                  "multivariate_fit_cov_uncompressed.rds"))
-      
-    })) # # suppressWarnings(suppressMessages({
-  } # if(test_multivariate_fit_cov) {
-
-
+      })) # suppressWarnings(suppressMessages({
+    } # if(test_univariate_fit_cov) {
+    
+    
+    
+    ############################################################################
+    # test_fit_nsk - with sample_prior = "only" and covariate
+    ############################################################################
+    
+    if(test_multivariate_fit_cov) {
+      suppressWarnings(suppressMessages({
+        multivariate_fit_cov <-
+          bsitar::bsitar(x = age, y = list(height, weight), id = id, 
+                         data = test_data,
+                         df = 4,
+                         a_formula = ~ 1 + sex,
+                         b_formula = ~ 1 + sex,
+                         c_formula = ~ 1 + sex,
+                         multivariate = list(mvar =TRUE, rescore = TRUE),
+                         univariate_by = FALSE,
+                         # stype = list(type = 'nsk', normalize = TRUE),
+                         # xoffset = mean,
+                         # random = a+b+c,
+                         # a_prior_beta = normal(lm, ysd, autoscale = FALSE),
+                         # b_prior_beta = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_beta = normal(0, 0.25, autoscale = FALSE),
+                         # d_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_prior_beta = normal(lm, 1, autoscale = 1),
+                         # a_cov_prior_beta = normal(0, 10, autoscale = FALSE),
+                         # b_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # c_cov_prior_beta = normal(0, 0.1, autoscale = FALSE),
+                         # d_cov_prior_beta = normal(0, 1, autoscale = FALSE),
+                         # s_cov_prior_beta = normal(lm, lm, autoscale = FALSE),
+                         # a_prior_sd = normal(0, ysd, autoscale = FALSE),
+                         # b_prior_sd = normal(0, 1.0, autoscale = FALSE),
+                         # c_prior_sd = normal(0, 0.1, autoscale = FALSE),
+                         # d_prior_sd = normal(0, 1, autoscale = FALSE),
+                         # rsd_prior_sigma = normal(0, ysd, autoscale = FALSE),
+                         # control = list(adapt_delta = 0.8, max_treedepth = 15),
+                         # warmup = NULL,
+                         # thin = 5,
+                         chains = 1,
+                         cores = 1,
+                         iter = 2000,
+                         threads = NULL,
+                         backend = "rstan",
+                         sample_prior = "only",
+                         init = NULL,
+                         vcov_init_0 = TRUE,
+                         refres = 0,
+                         silent = 2,
+                         seed = 123)
+        
+        
+      })) # # suppressWarnings(suppressMessages({
+    } # if(test_multivariate_fit_cov) {
+    
+  } # if(!save_and_use_models & !skip_test_local_rcmd_check) {
+  
+  
   
   
