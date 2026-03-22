@@ -5583,6 +5583,21 @@ setup_variables_var <- function(model,
     }
   }
   
+  
+  
+  if(grepl("^get_growthparameters", xcall)) {
+    if(method == 'pkg') {
+      if(deriv == 0) {
+        if(is_emptyx(set_variables)) {
+          set_variables <- list() 
+          set_variables[[xvar]] <- eps
+        }
+      }
+    }
+  }
+  
+  
+  
   return(set_variables)
 }
 

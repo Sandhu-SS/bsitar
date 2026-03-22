@@ -74,7 +74,7 @@ test_that("test-get_growthparameters", {
   
   if(!save_and_use_models) {
     if(test_univariate_fit_cov) {
-      fit               = univariate_fit_cov
+      fit               = berkeley_exfit # univariate_fit_cov
       resp              = uvar_resp
     } else if(test_multivariate_fit_cov) {
       fit               = multivariate_fit_cov
@@ -298,6 +298,11 @@ test_that("test-get_growthparameters", {
   
   marginaleffects_args[['parameter']] <- c('apgv', 'pgv')
   
+  
+  # marginaleffects_args[['variables']]  <- 'sex'
+  # marginaleffects_args[['by']]         <- 'sex'
+  
+  
   ###############################################################################
   # marginal - method = pkg future = F
   ###############################################################################
@@ -317,8 +322,8 @@ test_that("test-get_growthparameters", {
   marginal_args[['future_splits']]  <- set_future_splits
   
   
-  marginal_args[['variables']]  <- 'sex'
-  marginal_args[['by']]         <- 'sex'
+  # marginal_args[['variables']]  <- 'sex'
+  # marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
   # marginal_args[['parameter']]     <- c('all')
@@ -361,8 +366,8 @@ test_that("test-get_growthparameters", {
   marginal_args[['future_splits']]  <- set_future_splits
   
   
-  marginal_args[['variables']]  <- 'sex'
-  marginal_args[['by']]         <- 'sex'
+  # marginal_args[['variables']]  <- 'sex'
+  # marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
   # marginal_args[['parameter']]     <- c('all')
@@ -394,8 +399,8 @@ test_that("test-get_growthparameters", {
   marginal_args[['future_splits']]  <- set_future_splits
   
   
-  marginal_args[['variables']]  <- 'sex'
-  marginal_args[['by']]         <- 'sex'
+  # marginal_args[['variables']]  <- 'sex'
+  # marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
   # marginal_args[['parameter']]     <- c('all')
@@ -427,8 +432,8 @@ test_that("test-get_growthparameters", {
   marginal_args[['future_splits']]  <- set_future_splits
   
   
-  marginal_args[['variables']]  <- 'sex'
-  marginal_args[['by']]         <- 'sex'
+  # marginal_args[['variables']]  <- 'sex'
+  # marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
   # marginal_args[['parameter']]     <- c('all')
@@ -460,8 +465,8 @@ test_that("test-get_growthparameters", {
   marginal_args[['future_splits']]  <- set_future_splits
   
   
-  marginal_args[['variables']]  <- 'sex'
-  marginal_args[['by']]         <- 'sex'
+  # marginal_args[['variables']]  <- 'sex'
+  # marginal_args[['by']]         <- 'sex'
   marginal_args[['hypothesis']]  <- NULL # ~ pairwise | 'parameter'
   
   # marginal_args[['parameter']]     <- c('all')

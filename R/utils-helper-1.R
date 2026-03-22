@@ -3797,6 +3797,7 @@ custom_get_ci_draws <- function (x, conf_level, draws, model = NULL) {
   for (i in getfrom_) {
     assign(i, utils::getFromNamespace(i, 'marginaleffects'))
   }
+  
   checkmate::check_number(conf_level, lower = 1e-10, upper = 1 - 1e-10)
   critical <- (1 - conf_level)/2
   if (inherits(model, "inferences_simulation")) {
@@ -3811,7 +3812,8 @@ custom_get_ci_draws <- function (x, conf_level, draws, model = NULL) {
   else if (identical("eti", getOption("marginaleffects_posterior_interval", 
                                       default = "eti")) && 
            identical("median", getOption("marginaleffects_posterior_center", 
-                                                                                         default = "median"))) {
+                                         default = "median"))) {
+    
     insight::check_if_installed("collapse", minimum_version = "1.9.0")
     
     if(!is_emptyx(draws)) {
@@ -3841,7 +3843,8 @@ custom_get_ci_draws <- function (x, conf_level, draws, model = NULL) {
   if (identical("eti", getOption("marginaleffects_posterior_interval", 
                                  default = "eti")) && 
       identical("mean", getOption("marginaleffects_posterior_center", 
-                                                                                  default = "median"))) {
+                                  default = "median"))) {
+    
     insight::check_if_installed("collapse", minimum_version = "1.9.0")
     if(!is_emptyx(draws)) {
       Bs <- collapse::dapply(draws, MARGIN = 1, FUN = collapse::fmean)
@@ -3857,6 +3860,7 @@ custom_get_ci_draws <- function (x, conf_level, draws, model = NULL) {
     }
     return(x)
   }
+  
   FUN_INTERVAL <- getOption("marginaleffects_posterior_interval")
   if (is.null(FUN_INTERVAL)) {
     FUN_INTERVAL <- getOption("marginaleffects_credible_interval", 

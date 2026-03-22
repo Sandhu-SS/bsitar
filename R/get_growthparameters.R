@@ -1037,21 +1037,7 @@ get_growthparameters.bgmfit <- function(model,
   parms_sat_elements[['string_sat']]         <- string_sat
   parms_sat_elements[['numeric_sat']]        <- numeric_sat
   parms_sat_elements[['string_numeric_sat']] <- string_numeric_sat
-  
-  
-  # print(sat_ptc)
-  # print(parameter)
-  # print(parm)
-  # stop()
-  
-  # print(parm)
-  # print(sat_ptc)
-  # print(parameter_sat)
-  # print(string_sat)
-  # print(numeric_sat)
-  # print(string_numeric_sat)
-  # stop()
-  
+ 
   
   peak_parm_TF <- takeoff_parm_TF <- cessation_parm_TF <- sat_parm_TF <- FALSE
   if('apgv' %in% parm | 'pgv' %in% parm | 'spgv' %in% parm) {
@@ -1751,9 +1737,12 @@ get_growthparameters.bgmfit <- function(model,
     xcall = xcall,
     verbose = FALSE)
   
-  comparisons_arguments <- eqpdargs[['inbound_arguments']]
-  check_equivalence_test_full.args <- eqpdargs[['check_equivalence_test_full.args']]
-  check_p_direction_full.args <- eqpdargs[['check_p_direction_full.args']]
+  comparisons_arguments <- 
+    eqpdargs[['inbound_arguments']]
+  check_equivalence_test_full.args <- 
+    eqpdargs[['check_equivalence_test_full.args']]
+  check_p_direction_full.args <- 
+    eqpdargs[['check_p_direction_full.args']]
   rope_test <- eqpdargs[['rope_test']]
   pd_test <- eqpdargs[['pd_test']]
   get_range_null_form <- eqpdargs[['get_range_null_form']]
@@ -2032,10 +2021,10 @@ get_growthparameters.bgmfit <- function(model,
   }
   comparisons_arguments[['draw_ids']] <- set_draw_ids
 
-  
   gparms_fun = function(hi, lo, x, deriv, parm, by, ec_agg, ei_agg) {
     if(deriv == 0) y <- (hi - lo) / eps
     if(deriv > 0)  y <- (hi + lo) / 2
+    
     # Here need to aggregate based on by argument
     if(aggregate_by) {
       try(insight::check_if_installed(c("grDevices", "stats"), stop = FALSE, 
@@ -2097,13 +2086,14 @@ get_growthparameters.bgmfit <- function(model,
                                          verbose) {
     formals(comparisons_arguments$comparison)[['by']] <- 
       comparisons_arguments[['by']]
-    formals(comparisons_arguments$comparison)[['deriv']] <- deriv
-    formals(comparisons_arguments$comparison)[['parm']] <- parm
+    formals(comparisons_arguments$comparison)[['deriv']]  <- deriv
+    formals(comparisons_arguments$comparison)[['parm']]   <- parm
     formals(comparisons_arguments$comparison)[['ec_agg']] <- ec_agg
     formals(comparisons_arguments$comparison)[['ei_agg']] <- ei_agg
     # For multisession, need to set all options()
     options("marginaleffects_posterior_center" = ec_agg)
     options("marginaleffects_posterior_interval" = ei_agg)
+    
     
     suppresswar_args <-
       suppresswar_equivalence_test_p_direction_args(
@@ -2120,8 +2110,6 @@ get_growthparameters.bgmfit <- function(model,
         return(CustomDoCall(funcall, args))
       }
     } # call_funcall
-    
-    
     
     if(!plot) {
       if(callfuns) {
@@ -2374,9 +2362,11 @@ get_growthparameters.bgmfit <- function(model,
                                parm, keep_mfx_draws, verbose)
           names(draws_list) <- parm
         } # if(list_mfx_draws) {
-        draws_list_dt <- data.table::rbindlist(draws_list, 
-                                               idcol = "parameter")[, 
-                                                                    parameter := factor(parameter)]
+        draws_list_dt <- data.table::rbindlist(
+          draws_list, 
+          idcol = "parameter")[, 
+                               parameter := factor(parameter)]
+        
         attr(draws_list_dt, 'class') <- c(attr(draws_list_dt, 'class'), 
                                           c("bgmfit", 'mfx_draws'))
         
@@ -2425,8 +2415,8 @@ get_growthparameters.bgmfit <- function(model,
             message2c("All draws are NA for the specified parameter: ",
                       collapse_comma(parm))
           }
-          # return(NA)
-          out_sf <- NA
+          return(NA)
+          # out_sf <- NA
         } else {
           out_sf <- collapse::qDF(out_sf)
         }
@@ -2517,9 +2507,12 @@ get_growthparameters.bgmfit <- function(model,
                                             evaluate_hypothesis = TRUE,
                                             rope_test = rope_test,
                                             pd_test = pd_test,
-                                            get_range_null_form = get_range_null_form, 
-                                            get_range_null_value = get_range_null_value,
-                                            parms_sat_elements = parms_sat_elements,
+                                            get_range_null_form = 
+                                              get_range_null_form, 
+                                            get_range_null_value = 
+                                              get_range_null_value,
+                                            parms_sat_elements = 
+                                              parms_sat_elements,
                                             format = format,
                                             verbose = FALSE)
       
@@ -3257,7 +3250,7 @@ get_growthparameters.bgmfit <- function(model,
           stop2c("The 'constrats_by' argument '", caxi, "' is not available in",
                  " the 'by' argument.",
                  "\n ", 
-                 " Note that '", caxi, "' must be included in the 'by' argument.",
+                 " Note that '", caxi, "' must be included in 'by' argument.",
                  "\n ",
                  " The current 'by' argument includes:",
                  "\n ",
@@ -3421,7 +3414,7 @@ get_growthparameters.bgmfit <- function(model,
       }
       namesx <- c('estimate', 'conf.low', 'conf.high')
       setdrawidparm_ <- c(setdrawidparm, namesx)
-      
+     
       out3 <-
         onex1 %>% collapse::fgroup_by(setdrawidparm) %>% 
         collapse::fsummarise(collapse::mctl(
@@ -3530,7 +3523,7 @@ get_growthparameters.bgmfit <- function(model,
         #   get_hypothesis_x_fx <- NULL
         #   temhyy <- 
         #     onex1 %>% collapse::fgroup_by( setdrawidh ) %>% 
-        #     collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>%
+        #   collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>%
         #     collapse::ftransformv(., 'V1', as.numeric) %>% 
         #     collapse::frename(., setdrawidh_)
         #   
@@ -3567,80 +3560,25 @@ get_growthparameters.bgmfit <- function(model,
         # Here we can set evaluate_comparison = TRUE, that will be estimate
         out_sf_hy <- get_comparison_hypothesis(data = onex1, 
                                                full.args = full.args, 
-                                               by = hypothesis_by_what, #full.args$by,
+                                               by = hypothesis_by_what,
                                                evaluate_comparison = TRUE,
                                                evaluate_hypothesis = TRUE,
                                                rope_test = rope_test,
                                                pd_test = pd_test,
-                                               get_range_null_form = get_range_null_form, 
-                                               get_range_null_value = get_range_null_value,
-                                               parms_sat_elements = parms_sat_elements,
+                                               get_range_null_form = 
+                                                 get_range_null_form, 
+                                               get_range_null_value = 
+                                                 get_range_null_value,
+                                               parms_sat_elements = 
+                                                 parms_sat_elements,
                                                format = format,
                                                verbose = FALSE)
         
         out_sf_hy <- out_sf_hy[['hypothesis']]
-        
-        # out_sf_hy <- get_comparison_hypothesis(data = onex1, 
-        #                                        full.args = full.args, 
-        #                                        by = hypothesis_by_what,
-        #                                        evaluate_comparison = FALSE,
-        #                                        evaluate_hypothesis = TRUE,
-        #                                        rope_test = FALSE,
-        #                                        pd_test = FALSE,
-        #                                        get_range_null_form = FALSE,
-        #                                        get_range_null_value = FALSE,
-        #                                        format = FALSE,
-        #                                        verbose = FALSE)
-        
+       
         # out_sf_hy <- data.table::setnames(out_sf_hy, "hypothesis", "term")
         out_sf_hy <- DT_to_data_frames(out_sf_hy)
         row.names(out_sf_hy) <- NULL
-        
-        # get_hypothesis_x_fx <- function(x,...) {
-        #   get_hypothesis_x <- get_hypothesis_x2
-        #   hypothesis = difference ~ pairwise
-        #   get_hypothesis_x(x,
-        #                    hypothesis = hypothesis,
-        #                    by = by, 
-        #                    newdata = NULL,
-        #                    draws = 'estimate') %>% as.matrix() 
-        # }
-        # 
-        # setdrawidh     <- c('drawid', 'parameter')
-        # setdrawidh_  <- c(setdrawidh, 'term', 'estimate')
-        # # onex1x <<- onex1
-        # temhyy <- 
-        #   onex1 %>% collapse::fgroup_by( setdrawidh ) %>% 
-        #   collapse::fsummarise(collapse::mctl(get_hypothesis_x_fx(.data))) %>%
-        #   collapse::ftransformv(., 'V2', as.numeric) %>% 
-        #   collapse::frename(., setdrawidh_)
-        # if(!isFALSE(pdrawsh)) {
-        #   selectchoicesr <- c("return", 'add') 
-        #   checkmate::assert_choice(pdrawsh, choices = selectchoicesr)
-        #   if(pdrawsh == 'return') {
-        #     return(temhyy)
-        #   } else if(pdrawsh == 'add') {
-        #     pdrawsh_est <- temhyy
-        #   } else {
-        #     
-        #   }
-        # }
-        # setdrawidparmh <- c('term', 'parameter')
-        # namesx <- c('estimate', 'conf.low', 'conf.high')
-        # setdrawidparm_ <- c(setdrawidparmh, namesx)
-        # out_sf_hy <-
-        #   temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
-        #   collapse::fsummarise(collapse::mctl(
-        #     get_pe_ci_collapse(.data[['estimate']],
-        #                        ec_agg = ec_agg, 
-        #                        ei_agg = ei_agg, na.rm = TRUE, 
-        #                        nthreads = arguments$cores, 
-        #                        conf = conf, probs = probs))
-        #   ) %>% 
-        #   collapse::frename(., setdrawidparm_) 
-        # row.names(out_sf_hy) <- NULL
-        
-        
       } else {
         parmi_ci_c <- list()
         for (parmi in parm) {
