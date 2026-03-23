@@ -5,6 +5,11 @@ if(skip_test_local_rcmd_check) {
   skip_local_run_ci()
 }
 
+if(set_skip_run_ci) {
+  skip_run_ci()
+}
+
+
 
 ###############################################################################
 # Test marginals vs marginaleffects

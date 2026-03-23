@@ -1,13 +1,14 @@
 
-
 # Skip test for local R CMD Check but run on GitHub
 
 if(skip_test_local_rcmd_check) {
     skip_local_run_ci()
 }
 
+if(set_skip_run_ci) {
+  skip_run_ci()
+}
 
-    # devtools::load_all()
 
 ###############################################################################
 # Test marginals vs marginaleffects

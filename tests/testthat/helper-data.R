@@ -109,6 +109,18 @@
   }
   
   
+  ##############################################################################
+  # custom skip helper that runs tests only on CI and not on local R CMD Checks
+  ##############################################################################
+  
+  skip_run_ci <- function() {
+    # ci <- Sys.getenv("CI")
+    # if (identical(ci, "") || identical(ci, "false") || identical(ci, "0")) {
+    #   testthat::skip("Skipping: not on CI")
+    # }
+    testthat::skip("Skipping: model does not exits")
+  }
+  
   
   ##############################################################################
   ################################ Model files #################################
@@ -360,6 +372,18 @@
     
   } # if(!save_and_use_models & !skip_test_local_rcmd_check) {
   
+  
+  
+  
+  set_skip_run_ci <- FALSE
+  if(!save_and_use_models) {
+    if(test_univariate_fit_cov) {
+     if(!exists('univariate_fit_cov')) set_skip_run_ci <- TRUE
+    }
+    if(test_multivariate_fit_cov) {
+      if(!exists('multivariate_fit_cov')) set_skip_run_ci <- TRUE
+    }
+  }
   
   
   
