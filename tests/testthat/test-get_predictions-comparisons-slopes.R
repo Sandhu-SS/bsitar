@@ -25,7 +25,7 @@ test_that("test-get_predictions-comparisons-slopes", {
   ##############################################################################
   
   # For current settings (model and draw_ids) min size should be at least 980MB
-  oopts <- options(future.globals.maxSize = 2.0 * 1e9)  ## 2.0 GB
+  oopts <- options(future.globals.maxSize = set_future_globals_maxSize) 
   on.exit(options(oopts), add = TRUE)
   
   estimate_center   <- "mean"
