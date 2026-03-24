@@ -46,7 +46,7 @@
   condition = NULL,
   deriv = 0,
   model_deriv = TRUE,
-  method = "pkg",
+  method = "custom",
   method_call = NULL,
   marginals = NULL,
   pdrawso = FALSE,

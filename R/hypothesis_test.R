@@ -536,7 +536,15 @@ hypothesis_test.bgmfit <- function(model,
     }
   } else if(!inherits(model, 'bgmfit')) {
     if(inherits(model, 'data.frame') | inherits(model, 'data.table')) {
-      if(inherits(model, 'mfx_draws') | inherits(model, 'mfx')) {
+      # New layes added 
+      # key_names_mfx <- c("drawid",  "parameter", "draw")
+      # if(all(key_names_mfx %in% attr(model, 'names'))) {
+      #   obj_mfx <- TRUE
+      # } else 
+      key_names_mfx <- c("drawid",  "parameter", "draw")
+      if(all(key_names_mfx %in% attr(model, 'names'))) {
+        obj_mfx <- TRUE
+      } else if(inherits(model, 'mfx_draws') | inherits(model, 'mfx')) {
         obj_mfx <- TRUE
       } else {
         obj_df <- TRUE
@@ -557,7 +565,7 @@ hypothesis_test.bgmfit <- function(model,
       obj_marginaleffects <- TRUE
     }
   }
-  
+ 
   ##############################################################################
   if(!is.null(parameter)) {
     allowed_parms      <- c('apgv', 'pgv', 'atgv', 'tgv', 'acgv', 'cgv')
@@ -942,6 +950,8 @@ hypothesis_test.bgmfit <- function(model,
       } # else if(engine == 'marginaleffects' | engine == 'mbcombo') {
     } # if(is.null(engine)) { else if(!is.null(engine)) {
   } # if(obj_df) {
+  
+ 
   
   # obj_df & obj_mfx_matrix
   # -> Check and set up engine and hypothesis_str / parameters / parameter

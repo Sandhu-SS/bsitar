@@ -1183,7 +1183,7 @@ levels in \code{rcorr_by}. For \code{rcorr_method = 'cde'}, uniform priors
 }}
 
 \item{a_prior_beta}{Specify priors for the fixed effect parameter, \code{a}.
-(default \code{normal(lm, ysd, autoscale = FALSE)}). The following key
+(default \code{normal(ymean, ysd, autoscale = FALSE)}). The following key
 points are applicable for all prior specifications. For full details, see
 \code{\link[brms:set_prior]{brms::prior()}}:
 \itemize{
@@ -1256,7 +1256,7 @@ parameter \code{a}, not for other parameters like \code{b}, \code{c}, or
 }}
 
 \item{b_prior_beta}{Specify priors for the fixed effect parameter, \code{b}.
-The default prior is \code{normal(0, 1.5, autoscale = FALSE)}. For full
+The default prior is \code{normal(0, 2.0, autoscale = FALSE)}. For full
 details on prior specification, please refer to \code{a_prior_beta}.
 
 \itemize{
@@ -1271,7 +1271,7 @@ specification.
 }}
 
 \item{c_prior_beta}{Specify priors for the fixed effect parameter, \code{c}.
-The default prior is \code{normal(0, 0.5, autoscale = FALSE)}. For full
+The default prior is \code{normal(0, 1.0, autoscale = FALSE)}. For full
 details on prior specification, please refer to \code{a_prior_beta}.
 
 \itemize{
@@ -1391,11 +1391,11 @@ lower bound is automatically set to \code{0} by \code{brms::brm()}. For
 or different for each submodel (see \code{a_prior_beta}).}
 
 \item{b_prior_sd}{Specify priors for the random effect parameter, \code{b}.
-(default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
+(default \code{normal(0, 2.0, autoscale = FALSE)}). See \code{a_prior_sd}
 for details.}
 
 \item{c_prior_sd}{Specify priors for the random effect parameter, \code{c}.
-(default \code{normal(0, 0.25, autoscale = FALSE)}). See \code{a_prior_sd}
+(default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
 for details.}
 
 \item{d_prior_sd}{Specify priors for the random effect parameter, \code{d}.

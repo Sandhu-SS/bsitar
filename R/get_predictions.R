@@ -165,7 +165,7 @@ get_predictions.bgmfit <-
            condition = NULL,
            deriv = 0,
            model_deriv = TRUE,
-           method = 'pkg',
+           method = 'custom',
            marginals = NULL,
            pdrawso = FALSE, 
            pdrawsp = FALSE, 

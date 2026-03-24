@@ -50,7 +50,7 @@
   condition = NULL,
   deriv = NULL,
   model_deriv = NULL,
-  method = "pkg",
+  method = "custom",
   marginals = NULL,
   preparms = NULL,
   pdraws = FALSE,

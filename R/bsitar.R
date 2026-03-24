@@ -1122,7 +1122,7 @@
 #'  }
 #'   
 #' @param a_prior_beta Specify priors for the fixed effect parameter, \code{a}.
-#'   (default \code{normal(lm, ysd, autoscale = FALSE)}). The following key
+#'   (default \code{normal(ymean, ysd, autoscale = FALSE)}). The following key
 #'   points are applicable for all prior specifications. For full details, see
 #'   [brms::prior()]:
 #'   \itemize{
@@ -1195,7 +1195,7 @@
 #'   }
 #'   
 #' @param b_prior_beta Specify priors for the fixed effect parameter, \code{b}.
-#'   The default prior is \code{normal(0, 1.5, autoscale = FALSE)}. For full
+#'   The default prior is \code{normal(0, 2.0, autoscale = FALSE)}. For full
 #'   details on prior specification, please refer to \code{a_prior_beta}.
 #'   
 #'   \itemize{
@@ -1210,7 +1210,7 @@
 #'   }
 #'   
 #' @param c_prior_beta Specify priors for the fixed effect parameter, \code{c}.
-#'   The default prior is \code{normal(0, 0.5, autoscale = FALSE)}. For full
+#'   The default prior is \code{normal(0, 1.0, autoscale = FALSE)}. For full
 #'   details on prior specification, please refer to \code{a_prior_beta}.
 #'   
 #'   \itemize{
@@ -1330,11 +1330,11 @@
 #'   or different for each submodel (see \code{a_prior_beta}).
 #'
 #' @param b_prior_sd Specify priors for the random effect parameter, \code{b}.
-#'   (default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
+#'   (default \code{normal(0, 2.0, autoscale = FALSE)}). See \code{a_prior_sd}
 #'   for details.
 #' 
 #' @param c_prior_sd Specify priors for the random effect parameter, \code{c}.
-#'   (default \code{normal(0, 0.25, autoscale = FALSE)}). See \code{a_prior_sd}
+#'   (default \code{normal(0, 1.0, autoscale = FALSE)}). See \code{a_prior_sd}
 #'   for details.
 #' 
 #' @param d_prior_sd Specify priors for the random effect parameter, \code{d}.
