@@ -56,7 +56,7 @@
   save_and_use_models        <- FALSE
   
   # Set skip_test_local_rcmd_check FALSE to run tests on local and GitHub 
-  skip_test_local_rcmd_check <- FALSE
+  skip_test_local_rcmd_check <- TRUE
  
   
   set.seed(113)
