@@ -166,7 +166,13 @@ compare_model <- function(model, ...) {
 }
 
 
-
+#' An alias of 'compare_model()'
+#' @rdname compare_model
+#' @export
+#' 
+compare_models <- function(model, ...) {
+  UseMethod("get_growthparameters")
+}
 
 
 
