@@ -184,6 +184,17 @@ See [brms](https://rdrr.io/cran/brms/man/set_prior.html) for more details.
 
 
 \newline
+##### Initials
+
+The default initial values follow Stan’s randomly generated initial values drawn
+uniformly from −0.5,0.5 on the unconstrained scale. Users should note that this
+behavior is different from Stan in terms of the range, which is -2.0 to 2.0 in
+Stan but −0.5,0.5 in bsitar. Furthermore, the bsitar package allows full control
+in specifying custom initial values for each of the fixed effects as well as the
+random effects (variance covariance parameters as well as the residual variance)
+via dedicated argument.
+
+\newline
 ## Bayesian SITAR model - Multivariate formulation
 The [univariate][Bayesian SITAR model - Univariate formulation] described earlier can be easily extended to analyze two or more outcomes simultaneously. Consider two outcomes $Y1$ and $Y2$ (e.g., height and weight) measured repeatedly on $j$ individuals (`j = 1,..,j`) where individual $j$ provides $n_j$ measurements ($i = 1,.., n_j$) of $y_{ij}^\text{Y1}$ (outcome $Y1$) and $y_{ij}^\text{Y2}$ (outcome $Y2$) recorded at age, $x_{ij}$. A multivariate model is then written as follows:
 
@@ -240,7 +251,7 @@ The [univariate][Bayesian SITAR model - Univariate formulation] described earlie
 \zeta_0^\text{Y2} & \sim \operatorname{normal}(\ 0, 2.0) \\
 \gamma_0^\text{Y1} & \sim \operatorname{normal}(\ 0, 1.0) \\
 \gamma_0^\text{Y2} & \sim \operatorname{normal}(\ 0, 1.0) \\
-\beta_1^\text{Y1} \text{,..,} \beta_r^\text{Y1} & \sim \operatorname{normal}(\ \mathbf {\beta^\text{Y2}_{lm}}, \ \mathbf {X^\text{Y1}_{Spl}}) \\
+\beta_1^\text{Y1} \text{,..,} \beta_r^\text{Y1} & \sim \operatorname{normal}(\ \mathbf {\beta^\text{Y1}_{lm}}, \ \mathbf {X^\text{Y1}_{Spl}}) \\
 \beta_1^\text{Y2} \text{,..,} \beta_r^\text{Y2} & \sim \operatorname{normal}(\ \mathbf {\beta^\text{Y2}_{lm}}, \ \mathbf {X^\text{Y2}_{Spl}}) \\
 \alpha_j^\text{Y1}   & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y1}_{sd}}) \\
 \alpha_j^\text{Y2}   & \sim \operatorname{normal_{Half}}(\ {0},\  {y^\text{Y2}_{sd}}) \\

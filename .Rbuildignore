@@ -29,3 +29,5 @@
 ^berkeley.rda$
 ^berkeley_exdata.rda$
 ^berkeley_exfit.rda$
+^\.positai$
+^\.claude$
