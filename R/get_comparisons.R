@@ -2293,7 +2293,8 @@ get_comparisons.bgmfit <- function(model,
             get_pe_ci_collapse(.data[['draw']], ec_agg = ec_agg, 
                                ei_agg = ei_agg, na.rm = TRUE, 
                                nthreads = arguments$cores, 
-                               conf = conf, probs = probs))
+                               conf = conf, digits = NULL,
+                               probs = probs))
           )  %>% collapse::frename(., setdrawidparm_at_)
       } # if(setmarginals) {
       
@@ -2350,7 +2351,8 @@ get_comparisons.bgmfit <- function(model,
             get_pe_ci_collapse(.data[['draw']], ec_agg = ec_agg, 
                                ei_agg = ei_agg, na.rm = TRUE, 
                                nthreads = arguments$cores, 
-                               conf = conf, probs = probs))
+                               conf = conf, digits = NULL,
+                               probs = probs))
           ) %>%
           collapse::frename(., setdrawidparm_at_) %>% 
           # collapse::roworder('term') %>% 
@@ -2422,31 +2424,6 @@ get_comparisons.bgmfit <- function(model,
         
         setdrawidparm_at <- c(constrats_at, 'term')
         setdrawidparm_at_ <- c(setdrawidparm_at, namesx)
-        
-       
-        
-        # temhyy <-
-        #   onex0 %>% 
-        #   collapse::fgroup_by(groupvarshyp1) %>%
-        #   collapse::fselect(set_constrats_by) %>% 
-        #   collapse::frename('estimate' = 'draw') %>% 
-        #   collapse::fsummarise(collapse::qDF(
-        #     get_hypothesis_x(.data,
-        #                      by = constrats_by,
-        #                      hypothesis = hypothesis,
-        #                      draws = 'estimate'))) 
-        # 
-        # out_sf_hy <- 
-        #   temhyy %>%
-        #   collapse::fgroup_by(groupvarshyp2) %>%
-        #   collapse::fsummarise(collapse::mctl(
-        #     get_pe_ci_collapse(.data[['estimate']], ec_agg = ec_agg, 
-        #                        ei_agg = ei_agg, na.rm = TRUE, 
-        #                        nthreads = arguments$cores, 
-        #                        conf = conf, probs = probs))
-        #   ) %>%
-        #   collapse::frename(., setdrawidparm_at_)
-        
         
         # parameter is just a placeholder
         onex0 <- data.table::setDT(onex0)[, 'parameter' := "apgv"]

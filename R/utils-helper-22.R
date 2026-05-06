@@ -759,61 +759,16 @@ modelbased_growthparameters_call.bgmfit <-
       }
     }
     
-    
-    
-    # xcall <- strsplit(deparse(sys.calls()[[1]]), "\\(")[[1]][1]
-    # scall <- sys.calls()
-    # 
-    # get_xcall <- function(xcall, scall) {
-    #   scall <- scall[[length(scall)]]
-    #   if(any(grepl("modelbased_growthparameters_call", scall, fixed = T)) |
-    #      any(grepl("modelbased_growthparameters_call.bgmfit", scall, fixed = T))) {
-    #     xcall <- "modelbased_growthparameters_call"
-    #   } else {
-    #     xcall <- xcall
-    #   }
-    # }
-    # 
-    # 
-    # 
-    # if(xcall == "do.call" | xcall == "CustomDoCall") {
-    #   zzz <- gsub_space(paste(deparse(sys.calls()[[1]]), collapse = ""))
-    #   zzz <- regmatches(zzz, gregexpr("(?<=\\().*?(?=\\))", zzz, perl=T))[[1]]
-    #   zzz <- strsplit(zzz, ",")[[1]][1]
-    #   xcall <- strsplit(zzz, "\\.")[[1]][1]
-    # } else {
-    #   if(!is.null(model$xcall)) {
-    #     if(model$xcall == "modelbased_growthparameters_call") {
-    #       xcall <- "modelbased_growthparameters_call"
-    #     }
-    #   } else {
-    #     scall <- sys.calls()
-    #     xcall <- get_xcall(xcall, scall)
-    #   }
-    # }
-    
-    
-    # if(!is.null(model$xcall)) {
-    #   if(model$xcall == "modelbased_growthparameters_call") {
-    #     xcall <- "modelbased_growthparameters_call"
-    #   }
-    # } else {
-    #   scall <- sys.calls()
-    #   xcall <- get_xcall(xcall, scall)
-    # }
-    
-    
-    # xcall <- xcall
-    
     # for first TRUE, use min(which(lv == TRUE))
-    
     rlang_trace_back <- rlang::trace_back()
     check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
     if(all(!check_trace_back.bgmfit)) {
       # nothing
     } else {
-      rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
-      rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
+      rlang_trace_back.bgmfit_i <- 
+        min(which(check_trace_back.bgmfit == TRUE))
+      rlang_trace_back.bgmfit <- 
+        rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
       rlang_call_name <- rlang::call_name(rlang_trace_back.bgmfit)
       xcall <- rlang_call_name
     }
@@ -1002,11 +957,13 @@ modelbased_growthparameters_call.bgmfit <-
           if(need_future_re_expose_cpp) {
             re_expose <- TRUE
             if(verbose) {
-              message("For multisession plan, argument 'future_re_expose' has been set as TRUE")
+              message2c("For multisession plan, argument 'future_re_expose' 
+                        has been set as TRUE")
             }
           } else if(!need_future_re_expose_cpp) {
             if(verbose) {
-              message("To speed up the calulations, it is advised to set future_re_expose = TRUE")
+              message2c("To speed up the calulations, it is advised 
+                        to set future_re_expose = TRUE")
             }
           }
         }
@@ -1558,7 +1515,8 @@ modelbased_growthparameters_call.bgmfit <-
             groupvars <-  eval(by)
             newdatajoin <- newdata %>% dplyr::group_by_at(groupvars) %>%
               dplyr::filter(dplyr::row_number() == 1) %>% dplyr::ungroup()
-            gout <- newdatajoin %>% dplyr::left_join(., gout, by = groupvars) %>%
+            gout <- newdatajoin %>% 
+              dplyr::left_join(., gout, by = groupvars) %>%
               dplyr::select(dplyr::all_of(goutnames)) %>%
               dplyr::select(-dplyr::any_of(c('predicted_lo', 'predicted_hi',
                                              'predicted', 'tmp_idx'))) %>%
@@ -1592,19 +1550,8 @@ modelbased_growthparameters_call.bgmfit <-
            "\n ", 
            collapse_comma(allowed_methods)
       )
-    
-    # if(!is.null(comparisons_arguments[['by']])) {
-    #   checbyx <- comparisons_arguments[['by']]
-    #   if(all(checbyx == "")) method <- 'pkg'
-    #   if(is.logical(checbyx)) {
-    #     if(!checbyx) method <- 'pkg'
-    #   }
-    # }
-    
-    
-    
+  
     if(method == 'pkg') {
-      
       if(plot) {
         out_sf <- outer_call_comparison_gparms_fun(
           parm = parm, eps = eps, 
@@ -1625,7 +1572,8 @@ modelbased_growthparameters_call.bgmfit <-
         ) 
         if(is.null(out_sf)) return(invisible(NULL))
         if(!"parameter" %in% colnames(out_sf)) {
-          out_sf <- out_sf %>% dplyr::mutate(!!as.symbol('parameter') := parm) %>%
+          out_sf <- out_sf %>% 
+            dplyr::mutate(!!as.symbol('parameter') := parm) %>%
             dplyr::relocate(!!as.symbol('parameter')) %>% data.frame() 
         }
       } else if (length(parm) > 1) {
@@ -1645,7 +1593,7 @@ modelbased_growthparameters_call.bgmfit <-
         }
         out_sf <- out_sf %>% 
           dplyr::mutate(!!as.symbol('parameter') := sub("*\\.[0-9]", "", 
-                                                        !!as.symbol('parameter')))
+                                                    !!as.symbol('parameter')))
       }
     } # if(method == 'pkg') {
     
@@ -1660,7 +1608,7 @@ modelbased_growthparameters_call.bgmfit <-
       predictions_arguments                 <- comparisons_arguments
       predictions_arguments[['cross']]      <- NULL
       predictions_arguments[['method']]     <- NULL
-      predictions_arguments[['hypothesis']] <- NULL # hypothesis evaluated later
+      predictions_arguments[['hypothesis']] <- NULL #hypothesis evaluated later
       # From get_predictions
       #################################################
       if(call_slopes) {
@@ -1772,17 +1720,21 @@ modelbased_growthparameters_call.bgmfit <-
         if(!future_splits_exe & callfuns) {
           if(!average) {
             if(call_predictions) {
-              out <- do.call(marginaleffects::predictions, predictions_arguments)
+              out <- do.call(marginaleffects::predictions, 
+                             predictions_arguments)
             } 
             if(call_slopes) {
-              out <- do.call(marginaleffects::slopes, predictions_arguments)
+              out <- do.call(marginaleffects::slopes, 
+                             predictions_arguments)
             }
           } else if(average) {
             if(call_predictions) {
-              out <- do.call(marginaleffects::avg_predictions, predictions_arguments)
+              out <- do.call(marginaleffects::avg_predictions, 
+                             predictions_arguments)
             } 
             if(call_slopes) {
-              out <- do.call(marginaleffects::avg_slopes, predictions_arguments)
+              out <- do.call(marginaleffects::avg_slopes, 
+                             predictions_arguments)
             }
           }
           
@@ -1797,7 +1749,9 @@ modelbased_growthparameters_call.bgmfit <-
               predictions_arguments[['ndraws']]   <- NULL
               `%>%` <- bsitar::`%>%`
               if(re_expose) {
-                if(verbose) message("need to expose functions for 'multisession'")
+                if(verbose) {
+                  message("need to expose functions for 'multisession'")
+                }
                 predictions_arguments[['model']] <- 
                   bsitar::expose_model_functions(predictions_arguments[['model']])
               }
@@ -2201,25 +2155,25 @@ modelbased_growthparameters_call.bgmfit <-
         }
         
         
-        get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
-          if(ec_agg == "mean")  estimate <- 
-              collapse::fmean(x, 
-                              na.rm = na.rm, 
-                              nthreads = arguments$cores) 
-          
-          if(ec_agg == "median") estimate <- 
-              collapse::fmedian(x, 
-                                na.rm = na.rm, 
-                                nthreads = arguments$cores)
-          
-          if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
-                                                         na.rm = na.rm)
-          if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
-          cbind(estimate, luci[1], luci[2]) 
-        }
-        
+        # x_get_pe_ci_collapse <- function(x, na.rm = TRUE,...) {
+        #   if(ec_agg == "mean")  estimate <- 
+        #       collapse::fmean(x, 
+        #                       na.rm = na.rm, 
+        #                       nthreads = arguments$cores) 
+        #   
+        #   if(ec_agg == "median") estimate <- 
+        #       collapse::fmedian(x, 
+        #                         na.rm = na.rm, 
+        #                         nthreads = arguments$cores)
+        #   
+        #   if(ei_agg == "eti") luci = collapse::fquantile(x, probs = probs, 
+        #                                                  na.rm = na.rm)
+        #   if(ei_agg == "hdi") luci = get_hdix(x, credMass = conf)
+        #   cbind(estimate, luci[1], luci[2]) 
+        # }
         
       } # end if(!parameter_numeric) {
+      
       ##########################################################
       # end new layer of parameter_numeric
       ##########################################################
@@ -2646,24 +2600,6 @@ modelbased_growthparameters_call.bgmfit <-
           setdrawidparm <- c(by_pdraws)
           namesx <- c('estimate', 'conf.low', 'conf.high')
           setdrawidparm_ <- c(setdrawidparm, namesx)
-          # No need to summarise again because estimate already is summary
-          # if(usecollapse) {
-          #   what_summary <- 'draw' # 'estimate' 'draw'
-          #   setdrawidparm <- c(by_pdraws)
-          #   namesx <- c('estimate', 'conf.low', 'conf.high')
-          #   setdrawidparm_ <- c(setdrawidparm, namesx)
-          # 
-          #   zxdraws_summary <-
-          #     zxdraws %>% collapse::fgroup_by(setdrawidparm) %>%
-          #     collapse::fsummarise(collapse::mctl(
-          #       get_pe_ci_collapse(.data[[what_summary]]))
-          #     ) %>%
-          #     collapse::ftransformv(., 'V2', as.numeric) %>%
-          #     collapse::frename(., setdrawidparm_)
-          # 
-          #   row.names(zxdraws_summary) <- NULL
-          # }
-          
           if(usedtplyr) {
             zxdraws_summary <- zxdraws %>% dplyr::filter(., drawid == 1) %>%
               dplyr::select(., dplyr::all_of(setdrawidparm_))
@@ -2876,8 +2812,16 @@ modelbased_growthparameters_call.bgmfit <-
         out3 <-
           onex1 %>% collapse::fgroup_by(setdrawidparm) %>% 
           collapse::fsummarise(collapse::mctl(
-            get_pe_ci_collapse(.data[['estimate']]))
+            get_pe_ci_collapse(.data[['estimate']],
+                               ec_agg = ec_agg, 
+                               ei_agg = ei_agg, na.rm = TRUE, 
+                               nthreads = arguments$cores, 
+                               conf = conf, digits = NULL,  
+                               probs = probs))
           ) %>% 
+          # collapse::fsummarise(collapse::mctl(
+          #   x_get_pe_ci_collapse(.data[['estimate']]))
+          # ) %>% 
           collapse::ftransformv(., 'V2', as.numeric) %>% 
           collapse::frename(., setdrawidparm_) 
         
@@ -3007,8 +2951,16 @@ modelbased_growthparameters_call.bgmfit <-
           out_sf_hy <-
             temhyy %>% collapse::fgroup_by(setdrawidparmh) %>% 
             collapse::fsummarise(collapse::mctl(
-              get_pe_ci_collapse(.data[['estimate']]))
+              get_pe_ci_collapse(.data[['estimate']],
+                                 ec_agg = ec_agg, 
+                                 ei_agg = ei_agg, na.rm = TRUE, 
+                                 nthreads = arguments$cores, 
+                                 conf = conf, digits = NULL,  
+                                 probs = probs))
             ) %>% 
+            # collapse::fsummarise(collapse::mctl(
+            #   x_get_pe_ci_collapse(.data[['estimate']]))
+            # ) %>% 
             collapse::frename(., setdrawidparm_) 
           
           row.names(out_sf_hy) <- NULL

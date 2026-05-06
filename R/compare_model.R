@@ -171,7 +171,7 @@ compare_model <- function(model, ...) {
 #' @export
 #' 
 compare_models <- function(model, ...) {
-  UseMethod("get_growthparameters")
+  UseMethod("compare_model")
 }
 
 

@@ -235,6 +235,14 @@
 #'   = "return"} to return the plot object itself instead of the data frame.
 #'   Note that only [brms::hypothesis()] and [bayestestR::equivalence_test()]
 #'   support plotting.
+#'   
+#' @param drop_probtitles A logical indicating whether to drop the \code{CI}
+#'   columns (such as \code{'Q2.5'} and \code{'Q97.5'}) from the output. The
+#'   default is \code{NULL} which sets \code{drop_probtitles = TRUE} if output
+#'   includes \code{HDI_range} variable from the \code{'equivalence_test'}. when
+#'   \code{drop_probtitles = TRUE}, the column \code{'HDI_range'} is relocated
+#'   next to the \code{'Estimate'} column. Also, the column indicating the
+#'   confidence level such as \code{0.95} is also removed.
 #' 
 #' @param ... Additional arguments forwarded to [get_growthparameters()]
 #' 
@@ -449,6 +457,7 @@ hypothesis_test.bgmfit <- function(model,
                                    digits = 2,
                                    engine = NULL,
                                    usesavedfuns = FALSE,
+                                   drop_probtitles = NULL,
                                    verbose = FALSE,
                                    envir = NULL,
                                    ...) {
@@ -1690,6 +1699,24 @@ hypothesis_test.bgmfit <- function(model,
   }
   
   
+  if(is.null(drop_probtitles)) {
+    if('HDI_range' %in% names(out)) set_drop_probtitles <- TRUE
+  } else if(!is.null(drop_probtitles)) {
+    set_drop_probtitles <- drop_probtitles
+  } else {
+    set_drop_probtitles <- FALSE
+  }
+  
+  if(!exists('set_drop_probtitles')) set_drop_probtitles <- FALSE
+  
+  
+  if(set_drop_probtitles) {
+    rm_ci <- c("CI", "Ci", "ci")
+    out <- out %>% 
+      dplyr::relocate('HDI_range', .before = probtitles[1]) %>% 
+      dplyr::select(-dplyr::any_of(rm_ci)) %>% 
+      dplyr::select(-dplyr::any_of(probtitles))
+  }
   
   return(out)
 }

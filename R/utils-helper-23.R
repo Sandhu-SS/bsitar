@@ -963,8 +963,10 @@ parameter_method_loop_over_parm <- function(parm,
                            ec_agg = ec_agg, 
                            ei_agg = ei_agg, na.rm = TRUE, 
                            nthreads = nthreads, 
-                           conf = conf, probs = probs))
-      ) %>% collapse::frename(., setdrawidparm_) 
+                           conf = conf, digits = NULL,  
+                           probs = probs))
+      ) %>% 
+      collapse::frename(., setdrawidparm_) 
     
     namesx <- c('estimate', 'conf.low', 'conf.high')
     namesx <- paste0("y", ".", namesx)
@@ -976,7 +978,8 @@ parameter_method_loop_over_parm <- function(parm,
                            ec_agg = ec_agg, 
                            ei_agg = ei_agg, na.rm = TRUE, 
                            nthreads = nthreads, 
-                           conf = conf, probs = probs))
+                           conf = conf, digits = NULL, 
+                           probs = probs))
       ) %>% collapse::frename(., setdrawidparm_) 
     
     tm_parameters_xtm_ytm <- 

@@ -2802,6 +2802,8 @@ evaluate_comparison_fun <- function(data,
                                                      ei_agg = ei_agg,
                                                      na.rm =na.rm,                 
                                                      nthreads = nthreads, 
+                                                     conf = conf,
+                                                     digits = NULL,
                                                      probs = probs)),
                           by = parameter_by]
   
@@ -2811,20 +2813,6 @@ evaluate_comparison_fun <- function(data,
                                            setnames(.SD, c("V1", "V2", "V3"),
                                                     c("estimate", "conf.low", 
                                                       "conf.high"))]
-  
-  # comparison_results <-
-  #   comparison_draws[,
-  #                   as.list(get_pe_ci_collapse(estimate,
-  #                                              ec_agg= ec_agg,
-  #                                              ei_agg = ei_agg,
-  #                                              na.rm =na.rm,
-  #                                              nthreads = nthreads,
-  #                                              probs = probs)),
-  #                   by = parameter_by
-  #   ][,
-  #     setnames(.SD, c("V1", "V2", "V3"),
-  #              c("estimate", "conf.low", "conf.high"))
-  #   ]
   
   if(!is.null(digits)) {
     comparison_results <- comparison_results[,
@@ -2998,6 +2986,8 @@ evaluate_hypothesis_fun <- function(data,
                                               ei_agg = ei_agg,
                                               na.rm =na.rm,                 
                                               nthreads = nthreads, 
+                                              conf = conf,
+                                              digits = NULL,
                                               probs = probs)),
                    by = parameter_hypothesis]
   
@@ -3007,21 +2997,6 @@ evaluate_hypothesis_fun <- function(data,
                                            setnames(.SD, c("V1", "V2", "V3"),
                                                     c("estimate", "conf.low", 
                                                       "conf.high"))]
-  
-  # hypothesis_results <- 
-  #   hypothes_draws[,
-  #                  as.list(get_pe_ci_collapse(estimate, 
-  #                                             ec_agg= ec_agg,
-  #                                             ei_agg = ei_agg,
-  #                                             na.rm =na.rm,                 
-  #                                             nthreads = nthreads, 
-  #                                             probs = probs)),
-  #                  by = parameter_hypothesis
-  #   ][,
-  #     setnames(.SD, c("V1", "V2", "V3"),
-  #              c("estimate", "conf.low", "conf.high"))
-  #   ]
-  
   
   if(!is.null(digits)) {
     hypothesis_results <- hypothesis_results[,

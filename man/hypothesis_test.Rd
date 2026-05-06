@@ -57,6 +57,7 @@
   digits = 2,
   engine = NULL,
   usesavedfuns = FALSE,
+  drop_probtitles = NULL,
   verbose = FALSE,
   envir = NULL,
   ...
@@ -515,6 +516,14 @@ automatically based on the \code{expose_functions} argument from the
 \code{\link[=bsitar]{bsitar()}} call. Manual specification of \code{usesavedfuns} is rarely
 needed and is intended for internal testing, as improper use can lead to
 unreliable estimates.}
+
+\item{drop_probtitles}{A logical indicating whether to drop the \code{CI}
+columns (such as \code{'Q2.5'} and \code{'Q97.5'}) from the output. The
+default is \code{NULL} which sets \code{drop_probtitles = TRUE} if output
+includes \code{HDI_range} variable from the \code{'equivalence_test'}. when
+\code{drop_probtitles = TRUE}, the column \code{'HDI_range'} is relocated
+next to the \code{'Estimate'} column. Also, the column indicating the
+confidence level such as \code{0.95} is also removed.}
 
 \item{verbose}{Toggle off warnings.}
 

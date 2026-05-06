@@ -3419,11 +3419,11 @@ get_growthparameters.bgmfit <- function(model,
         onex1 %>% collapse::fgroup_by(setdrawidparm) %>% 
         collapse::fsummarise(collapse::mctl(
           get_pe_ci_collapse(.data[['draw']],
-                             # get_pe_ci_collapse(.data[['estimate']],
                              ec_agg = ec_agg, 
                              ei_agg = ei_agg, na.rm = TRUE, 
                              nthreads = arguments$cores, 
-                             conf = conf, probs = probs))
+                             conf = conf, digits = NULL, 
+                             probs = probs))
         ) %>% 
         collapse::ftransformv(., 'V2', as.numeric) %>% 
         collapse::frename(., setdrawidparm_) 
