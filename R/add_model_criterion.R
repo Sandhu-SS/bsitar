@@ -95,7 +95,7 @@ add_model_criterion.bgmfit <- function(model,
         usesavedfuns <- FALSE
       }
     }
-  } else { # if(!is.null(usesavedfuns)) {
+  } else {
     if(!usesavedfuns) {
       if(expose_function) {
         model <- expose_model_functions(model, envir = envir)
@@ -297,13 +297,15 @@ add_model_criterion.bgmfit <- function(model,
         }
       }
     })
-  } # if(setcleanup) {
+  }
+  
   if(return_model) {
     return(.)
   } else {
     return(invisible(NULL))
   }
 
+  
 }
 
 

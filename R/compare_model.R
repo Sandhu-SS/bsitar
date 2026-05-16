@@ -22,8 +22,10 @@
 #' @param verbose A logical (default \code{FALSE}) to print some useful
 #'   information.
 #'   
+#' 
 #' @inheritParams brms::loo_compare
 #' @inherit brms::loo_compare return
+#' @inheritParams add_model_criterion
 #'
 #'
 #' @rdname compare_model
@@ -58,6 +60,7 @@ compare_model.bgmfit <- function(model,
                                  model_names = NULL,
                                  check_criterion = TRUE,
                                  add_criterion_args = list(),
+                                 expose_function = FALSE,
                                  verbose = FALSE) {
   
   if(!is.list(add_criterion_args)) {
@@ -124,12 +127,26 @@ compare_model.bgmfit <- function(model,
              " 'add_criterion_args' which must be a named list")
       }
     })
-  } # if(!check_criterion) {
+  } 
   
   
   if(check_criterion) {
     models <- lapply(models, function(fit) {
       if (!has_criterion(fit, criterion)) {
+        fit <- do.call(
+          expose_model_functions,
+          c(list(model = fit, expose = expose_function) ))
+      }
+      fit
+    })
+  } 
+  
+  if(check_criterion) {
+    models <- lapply(models, function(fit) {
+      if (!has_criterion(fit, criterion)) {
+        fit <- do.call(
+          expose_model_functions,
+          c(list(model = fit, expose = expose_function), add_criterion_args))
         suppressWarnings({
         fit <- do.call(
           brms::add_criterion,
@@ -138,7 +155,7 @@ compare_model.bgmfit <- function(model,
       }
       fit
     })
-  } # if(check_criterion) {
+  }
   
   
   if (length(model_names) != length(models)) {

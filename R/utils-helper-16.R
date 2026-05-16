@@ -1213,6 +1213,95 @@ set_lines_colors <- function(plot, ngroups,
 } # set_lines_colors
 
 
+
+
+#########################################################################
+#########################################################################
+
+# set_lines_colors_2 <- function(plot, ngroups,
+#                              linetype.groupby = NULL,
+#                              color.groupby = NULL,
+#                              group_levels = NULL) {
+#   
+#   nrepvals <- ngroups
+#   
+#   ggplotColors <- function(g) {
+#     if (g <= 1) return("black")
+#     g1 <- g - 1
+#     d <- 360 / g1
+#     h <- cumsum(c(15, rep(d, g1 - 1)))
+#     cols <- grDevices::hcl(h = h, c = 100, l = 65)
+#     c("black", cols)[1:g]
+#   }
+#   
+#   ggplotlines <- function(g) {
+#     lineTypes1 <- c("solid", "22", "42", "44", "13", "1343", "73", "2262")
+#     lineTypes2 <- apply(expand.grid(1:3, 1:3, 1:3, 1:3), 1, paste0, collapse = "")
+#     lineTypes3 <- apply(expand.grid(1:2, 1:2, 1:2, 1:2), 1, paste0, collapse = "")
+#     lineTypes <- c(lineTypes1, lineTypes2, lineTypes3)
+#     rep(lineTypes, length.out = g)
+#   }
+#   
+#   is_mapping_spec <- function(x) {
+#     is.character(x) && length(x) == 1
+#   }
+#   
+#   expand_values <- function(x, n, default_fun = NULL, default_single = NULL) {
+#     if (is.null(x)) {
+#       if (!is.null(default_fun)) return(default_fun(n))
+#       return(rep(default_single, length.out = n))
+#     }
+#     rep(x, length.out = n)
+#   }
+#   
+#   default.line.groupby <- "solid"
+#   default.color.groupby <- "black"
+#   
+#   line.values <- expand_values(
+#     linetype.groupby,
+#     nrepvals,
+#     default_fun = ggplotlines,
+#     default_single = default.line.groupby
+#   )
+#   
+#   color.values <- expand_values(
+#     color.groupby,
+#     nrepvals,
+#     default_fun = ggplotColors,
+#     default_single = default.color.groupby
+#   )
+#   
+#   if (nrepvals == 1) {
+#     line.values <- line.values[1]
+#     color.values <- color.values[1]
+#   }
+#   
+#   if (!is.null(group_levels)) {
+#     if (length(line.values) == length(group_levels)) {
+#       names(line.values) <- group_levels
+#     }
+#     if (length(color.values) == length(group_levels)) {
+#       names(color.values) <- group_levels
+#     }
+#   }
+#   
+#   if (is_mapping_spec(linetype.groupby)) {
+#     plot <- plot + ggplot2::aes(linetype = .data[[linetype.groupby]])
+#     plot <- plot + ggplot2::scale_linetype_manual(values = line.values, guide = "legend")
+#   } else {
+#     plot <- plot + ggplot2::scale_linetype_manual(values = line.values, guide = "none")
+#   }
+#   
+#   if (is_mapping_spec(color.groupby)) {
+#     plot <- plot + ggplot2::aes(colour = .data[[color.groupby]])
+#     plot <- plot + ggplot2::scale_colour_manual(values = color.values, guide = "legend")
+#   } else {
+#     plot <- plot + ggplot2::scale_colour_manual(values = color.values, guide = "none")
+#   }
+#   
+#   plot
+# }
+
 #########################################################################
 #########################################################################
 

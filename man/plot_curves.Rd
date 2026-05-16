@@ -59,12 +59,14 @@
   linetype.groupby = NA,
   color.groupby = NA,
   band.alpha = NULL,
+  band.legends = FALSE,
   show_age_takeoff = TRUE,
   show_age_peak = TRUE,
   show_age_cessation = TRUE,
   show_vel_takeoff = FALSE,
   show_vel_peak = FALSE,
   show_vel_cessation = FALSE,
+  print = TRUE,
   returndata = FALSE,
   returndata_add_parms = FALSE,
   parms_eval = FALSE,
@@ -423,11 +425,15 @@ sets the line type to 'solid' and suppresses legends.}
 
 \item{color.groupby}{A character string specifying the line color for
 distance and velocity curves when drawing plots for a model with factor
-covariates or individual-specific curves. The default is \code{NA}, which
-suppresses legends.}
+\code{covariates} or individual-specific curves. The default is \code{NA},
+which suppresses legends.}
 
 \item{band.alpha}{A numeric value to specify the transparency of the CI bands
 around the curves. The default \code{NULL} sets the transparency to 0.4.}
+
+\item{band.legends}{A logical value (default \code{FALSE}) to indicate
+whether to display the \code{legends} for the \code{CI bands}. It sets
+\code{ggplot2::guides(fill = 'none')}}
 
 \item{show_age_takeoff}{A logical value (default \code{TRUE}) to indicate
 whether to display the ATGV line(s) on the plot.}
@@ -446,6 +452,9 @@ whether to display the PGV line(s) on the plot.}
 
 \item{show_vel_cessation}{A logical value (default \code{FALSE}) to indicate
 whether to display the CGV line(s) on the plot.}
+
+\item{print}{A logical value (default \code{TRUE}) to indicate whether
+to print the plot object before returning it.}
 
 \item{returndata}{A logical value (default \code{FALSE}) to indicate whether
 to plot the data or return it as a \code{data.frame}.}

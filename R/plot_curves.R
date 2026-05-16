@@ -122,11 +122,15 @@
 #'
 #' @param color.groupby A character string specifying the line color for
 #'   distance and velocity curves when drawing plots for a model with factor
-#'   covariates or individual-specific curves. The default is \code{NA}, which
-#'   suppresses legends.
+#'   \code{covariates} or individual-specific curves. The default is \code{NA},
+#'   which suppresses legends.
 #'
 #' @param band.alpha A numeric value to specify the transparency of the CI bands
 #'   around the curves. The default \code{NULL} sets the transparency to 0.4.
+#'   
+#' @param band.legends A logical value (default \code{FALSE}) to indicate
+#'   whether to display the \code{legends} for the \code{CI bands}. It sets
+#'   \code{ggplot2::guides(fill = 'none')}
 #'
 #' @param show_age_takeoff A logical value (default \code{TRUE}) to indicate
 #'   whether to display the ATGV line(s) on the plot.
@@ -145,6 +149,9 @@
 #'
 #' @param show_vel_cessation A logical value (default \code{FALSE}) to indicate
 #'   whether to display the CGV line(s) on the plot.
+#'   
+#' @param print A logical value (default \code{TRUE}) to indicate whether
+#'   to print the plot object before returning it.
 #'
 #' @param returndata A logical value (default \code{FALSE}) to indicate whether
 #'   to plot the data or return it as a \code{data.frame}.
@@ -282,12 +289,14 @@ plot_curves.bgmfit <- function(model,
                                linetype.groupby = NA,
                                color.groupby = NA,
                                band.alpha = NULL,
+                               band.legends = FALSE,
                                show_age_takeoff = TRUE,
                                show_age_peak = TRUE,
                                show_age_cessation = TRUE,
                                show_vel_takeoff = FALSE,
                                show_vel_peak = FALSE,
                                show_vel_cessation = FALSE,
+                               print = TRUE,
                                returndata = FALSE,
                                returndata_add_parms = FALSE,
                                parms_eval = FALSE,
@@ -733,7 +742,6 @@ plot_curves.bgmfit <- function(model,
     )
   }
   
-  
   if (grepl("a", bands, ignore.case = T) & summary) {
     stop2c(
       "To construct bands (e.g., 95%) around the adjusted curve estimates, ",
@@ -741,7 +749,6 @@ plot_curves.bgmfit <- function(model,
       " the summary option must be set to FALSE"
     )
   }
-  
   
   if (grepl("a", opt, ignore.case = F) |
       grepl("u", opt, ignore.case = F)) {
@@ -896,9 +903,8 @@ plot_curves.bgmfit <- function(model,
   if(show_vel_peak)      name.hline <- c(name.hline, name.pv)
   if(show_vel_cessation) name.hline <- c(name.hline, name.cv)
   
-  
   name.hline <- c()
-
+  
   x_minimum <- min(newdata[[Xx]])
   x_maximum <- max(newdata[[Xx]])
   x_minimum <- floor(x_minimum)
@@ -937,7 +943,6 @@ plot_curves.bgmfit <- function(model,
     label.x     <- paste0(Xx, "")
     # label.x     <- paste0(firstup(Xx), "")
   }
-  
   
   if (is.null(legendpos)) {
     if (grepl("D", opt, ignore.case = F) |
@@ -1007,10 +1012,10 @@ plot_curves.bgmfit <- function(model,
       }
       
       if(is.na(d.[['groupby']][1])) {
-        d.$groupby_line <- 'solid'
+        d.$groupby_line  <- 'solid'
         d.$groupby_color <- 'black'
       } else {
-        d.$groupby_line <- d.$groupby
+        d.$groupby_line  <- d.$groupby
         d.$groupby_color <- d.$groupby
       }
       
@@ -1030,10 +1035,11 @@ plot_curves.bgmfit <- function(model,
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
-      plot.o.d <- set_lines_colors(plot.o.d, length(unique(d.[['groupby']])), 
-                                   linetype.groupby = linetype.groupby, 
+      plot.o.d <- set_lines_colors(plot.o.d, length(unique(d.[['groupby']])),
+                                   linetype.groupby = linetype.groupby,
                                    color.groupby = color.groupby)
-    
+
+
       if (grepl("d", bands, ignore.case = T)) {
         plot.o.d <- plot.o.d +
           ggplot2::geom_ribbon(
@@ -1046,9 +1052,10 @@ plot_curves.bgmfit <- function(model,
               color = groupby_color,
               fill = groupby_color
             ),
-            alpha = band.alpha
+            alpha = band.alpha # , show.legend = band.legends
           )
         plot.o.d <- set_lines_colors_ribbon(plot.o.d, guideby = 'color')
+        if(!band.legends) plot.o.d <- plot.o.d + ggplot2::guides(fill = "none")
       }
       
       d. <- d.o
@@ -1102,9 +1109,6 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
-        # ggplot2::labs(title = label.v) +
-        # ggplot2::xlab("") +
-        # ggplot2::ylab("") +
         ggplot2::labs(x = "", y = "", title = label.v) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -1126,9 +1130,10 @@ plot_curves.bgmfit <- function(model,
               color = groupby_color,
               fill = groupby_color
             ),
-            alpha = band.alpha
+            alpha = band.alpha # , show.legend = band.legends
           )
         plot.o.v <- set_lines_colors_ribbon(plot.o.v, guideby = 'color')
+        if(!band.legends) plot.o.v <- plot.o.v + ggplot2::guides(fill = "none")
       }
       
       if (pv) {
@@ -1242,7 +1247,6 @@ plot_curves.bgmfit <- function(model,
                          legend.direction = 'horizontal')
       }
     }
-    
     
     if (length(curves) > 1 & layout == 'single') {
       data_d <- subset(d., curve == "distance")
@@ -1369,8 +1373,6 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
-      
-      
       if(!is.na(uvarby)) {
         if(is.null(cov_factor_vars)) {
           legendlabs_mult_singel <- c('Distance', 'Velocity')
@@ -1443,9 +1445,6 @@ plot_curves.bgmfit <- function(model,
       if(!exists('legendlabs_mult_color')) legendlabs_mult_color <- 'black'
       if(!exists('legendlabs_mult_singel')) legendlabs_mult_singel <- 'solid'
       
-      
-      
-      
       if(ngrpanels > 1) {
         get_line_ <- get_line_
         get_color_ <- get_color_
@@ -1473,8 +1472,9 @@ plot_curves.bgmfit <- function(model,
               # color = groupby_color.x,
               fill = groupby_color.x,
             ),
-            alpha = band.alpha
+            alpha = band.alpha # , show.legend = band.legends
           )
+        if(!band.legends) plot.o <- plot.o + ggplot2::guides(fill = "none")
       }
       
       if (grepl("v", bands, ignore.case = T)) {
@@ -1489,8 +1489,9 @@ plot_curves.bgmfit <- function(model,
               # color = groupby_color.y,
               fill = groupby_color.y,
             ),
-            alpha = band.alpha
+            alpha = band.alpha # , show.legend = band.legends
           )
+        if(!band.legends) plot.o <- plot.o + ggplot2::guides(fill = "none")
       }
       
       
@@ -1724,7 +1725,6 @@ plot_curves.bgmfit <- function(model,
         }
       }
       
-      
       if(!is.na(uvarby)) {
         if(is.null(cov_factor_vars)) {
           legendlabs_mult_singel <- c('Distance', 'Velocity')
@@ -1803,10 +1803,10 @@ plot_curves.bgmfit <- function(model,
               # color = groupby_color.x,
               fill = groupby_color.x,
             ),
-            alpha = band.alpha
+            alpha = band.alpha # , show.legend = band.legends
           )
+        if(!band.legends) plot.o.a <- plot.o.a + ggplot2::guides(fill = "none")
       }
-      
       
       if (nchar(opt) == 1) {
         plot.o.a <- plot.o.a +
@@ -1822,7 +1822,6 @@ plot_curves.bgmfit <- function(model,
     } else if (!grepl("a", opt, ignore.case = T)) {
       plot.o.a <- NULL
     }
-    
     
     if (grepl("u", opt, ignore.case = T)) {
       xyunadj_ed <- xyunadj_curves(model, 
@@ -1995,7 +1994,6 @@ plot_curves.bgmfit <- function(model,
         
         out_a_u_ <- out_a_u_ %>% dplyr::mutate(groupby.x = groupby, 
                                                groupby.y = groupby.x)
-        
         
         if(is.na(uvarby)) {
           if(is.na(out_a_u_[['groupby']][1])) {
@@ -2171,12 +2169,15 @@ plot_curves.bgmfit <- function(model,
         Ygap = 0.04)
     plot.o <- plot.o +  patchwork::plot_layout(guides = "collect")
   }
- 
+  
+
   if (!returndata) {
-    print(plot.o)
+    if(print) print(plot.o)
     if (grepl("d", opt, ignore.case = F) |
         grepl("v", opt, ignore.case = F)) {
-      if(apv | takeoff | trough | acgv)  print(p.)
+      if(apv | takeoff | trough | acgv)  {
+        if(print) print(p.)
+      }
     }
     if(!is.null(p.as.d.out_attr)) {
       plot.o[['growthparameters']] <- p.as.d.out_attr
@@ -2192,10 +2193,11 @@ plot_curves.bgmfit <- function(model,
                                          parmcols = set_names_,
                                          nonparmcols = groupby_str_v,
                                          byjoincols = groupby_str_v)
-      } # if(!is.null(p.as.d.out_attr)) {
-    } # if(returndata_add_parms) {
+      } 
+    } 
     return(d.out)
-  } # else if (returndata) {
+  }
+  
   
 } # end plot_curves
 

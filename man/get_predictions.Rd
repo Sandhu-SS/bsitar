@@ -175,21 +175,16 @@ at curve start
 rate approaches near zero and growth effectively stops
 \item \code{'cgv'}: Cessation growth velocity - final low growth rate
 approaching maturity
-
-\if{html}{\out{<div class="sourceCode">}}\preformatted{\\item \code{'spgv'}: Size (length/height) at peak growth velocity age,
+\item \code{'spgv'}: Size (length/height) at peak growth velocity age,
 \code{'apgv'}
-\\item \code{'stgv'}: Size at takeoff growth velocity age, \code{'atgv'}
-\\item \code{'scgv'}: Size at cessation growth velocity age, \code{'acgv'}
-
-\\item \code{'satXX'}: Size at specific age XX years of predictor
+\item \code{'stgv'}: Size at takeoff growth velocity age, \code{'atgv'}
+\item \code{'scgv'}: Size at cessation growth velocity age, \code{'acgv'}
+\item \code{'satXX'}: Size at specific age XX years of predictor
 \code{xvar} (e.g., \code{'sat15'} = size at 15 years, \code{'sat12.5'} =
 size at 12.5 years)
-
-\\item \code{'all'}: All six primary velocity/age parameters
+\item \code{'all'}: All six primary velocity/age parameters
 (\code{'apgv','pgv','atgv','tgv','acgv','cgv'}). Cannot be used when
 \code{by = TRUE}.
-}\if{html}{\out{</div>}}
-
 }
 
 Multiple parameters can be requested simultaneously as a vector, e.g.,

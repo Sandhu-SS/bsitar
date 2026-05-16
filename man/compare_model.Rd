@@ -13,6 +13,7 @@
   model_names = NULL,
   check_criterion = TRUE,
   add_criterion_args = list(),
+  expose_function = FALSE,
   verbose = FALSE
 )
 
@@ -38,6 +39,20 @@ check and add fit criterion if not already added to model objects}
 \item{add_criterion_args}{A named list to set up the arguments for the
 \code{\link[=add_model_criterion]{add_model_criterion()}} function. Ignored when \code{check_criterion =
   FALSE} or when each model objects has precomputed fit criteria.}
+
+\item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
+Controls whether Stan functions are exposed for post-processing.
+\itemize{
+\item \code{TRUE}: Explicitly exposes Stan functions saved from the model
+fit. This is required when calculating \code{fit criteria} or
+\code{bayes_R2} during model optimization.
+\item \code{FALSE} (default): Stan functions are not exposed.
+\item \code{NULL}: The setting is inherited from the original
+\code{bsitar()} model fit configuration.
+}
+\strong{Note}: In the \code{\link[=optimize_model]{optimize_model()}} function, the default is
+\code{NULL} (inheriting behavior), whereas other post-processing functions
+default to \code{FALSE}.}
 
 \item{verbose}{A logical (default \code{FALSE}) to print some useful
 information.}
