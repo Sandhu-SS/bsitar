@@ -2,7 +2,7 @@ Type: Package
 Package: bsitar
 Title: Bayesian Super Imposition by Translation and Rotation Growth Curve
     Analysis
-Version: 0.3.3.3
+Version: 0.3.3.4
 Authors@R:
     person("Satpal", "Sandhu", , "satpal.sandhu@bristol.ac.uk", 
            role = c("aut", "cre", "cph"),
@@ -41,7 +41,7 @@ Imports:
     rlang (>= 1.1.2),
     Rdpack (>= 2.6.6),
     insight (>= 1.4.6),
-    data.table (>= 1.18.2.1),
+    data.table (>= 1.18.4),
     collapse (>= 2.1.6), 
     marginaleffects (>= 0.32.0),
     sitar (>= 1.5.0),
@@ -50,6 +50,7 @@ Imports:
     utils    
 Suggests: 
     ggplot2 (>= 4.0.2),
+    tidybayes (>= 3.0.7),
     bayesplot (>= 1.15.0),
     posterior (>= 1.6.1),
     testthat (>= 3.3.2),

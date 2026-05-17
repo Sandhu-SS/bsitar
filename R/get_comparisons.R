@@ -511,11 +511,6 @@ get_comparisons.bgmfit <- function(model,
   comparison  <- get_custom_comparison_method_call_d01[['comparison']]
   model_deriv <- get_custom_comparison_method_call_d01[['model_deriv']]
   deriv       <- get_custom_comparison_method_call_d01[['deriv']]
-  # print(method_call)
-  # print(comparison)
-  # print(model_deriv)
-  # print(deriv)
- # stop()
   
   post_processing_checks_args[['deriv']] <- deriv
   

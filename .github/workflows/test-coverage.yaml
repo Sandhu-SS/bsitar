@@ -73,6 +73,14 @@ jobs:
             spelling
             Hmisc
 
+      # Some issues with processx package, so install it
+      - name: Install dependencies
+        run: |
+          install.packages(c("remotes", "processx"))
+          remotes::install_deps(dependencies = TRUE)
+        shell: Rscript {0}
+      
+      # Build Cmdstan
       - name: Build Cmdstan
         run: |
           cmdstanr::check_cmdstan_toolchain(fix = TRUE)

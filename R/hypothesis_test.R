@@ -545,11 +545,6 @@ hypothesis_test.bgmfit <- function(model,
     }
   } else if(!inherits(model, 'bgmfit')) {
     if(inherits(model, 'data.frame') | inherits(model, 'data.table')) {
-      # New layes added 
-      # key_names_mfx <- c("drawid",  "parameter", "draw")
-      # if(all(key_names_mfx %in% attr(model, 'names'))) {
-      #   obj_mfx <- TRUE
-      # } else 
       key_names_mfx <- c("drawid",  "parameter", "draw")
       if(all(key_names_mfx %in% attr(model, 'names'))) {
         obj_mfx <- TRUE
@@ -559,11 +554,9 @@ hypothesis_test.bgmfit <- function(model,
         obj_df <- TRUE
       }
       model_attr_orig <- attr(model, 'class') 
-      # attr(model, 'class') <- c(model_attr_orig, 'bgmfit')
       xcall <- 'hypothesis_test.bgmfit'
       obj_model_pseudo <- TRUE
     } else if(inherits(model, 'matrix')) {
-      # get_draws(shape = "DxP")
       obj_mfx_matrix <- TRUE
     }
   } else if(!inherits(model, 'bgmfit')) {
