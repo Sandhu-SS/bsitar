@@ -8,19 +8,13 @@
 \method{model_diagnostics}{bgmfit}(
   model,
   newdata = NULL,
-  plots = c("rvf", "qq", "acf", "trace", "dens_overlay", "rhat", "neff",
+  plots = c("rvf", "rvp", "qq", "pairs", "acf", "trace", "dens_overlay", "rhat", "neff",
     "ppc_dens_overlay", "ppc_hist", "ppc_scatter_avg", "ppc_stat"),
-  category = ".category",
   set_draws = "epred",
   resp = NULL,
   ndraws = 10,
   draw_ids = NULL,
   seed = 123,
-  future = FALSE,
-  future_session = "multisession",
-  future_splits = TRUE,
-  future_method = "future",
-  future_re_expose = NULL,
   re_formula = NULL,
   dpar = NULL,
   pars = NULL,
@@ -33,26 +27,36 @@
   smooth_method = "loess",
   ppc_stat = "mean",
   rank_overlay = FALSE,
-  transform = NULL,
-  transform_draws = NULL,
-  verbose = FALSE,
-  model_deriv = NULL,
-  dummy_to_factor = NULL,
+  add_plot_df = FALSE,
   expose_function = FALSE,
   usesavedfuns = NULL,
   clearenvfuns = NULL,
+  category = ".category",
+  wrap_title = FALSE,
+  title_size = 12,
+  patch_plot.margin = ggplot2::margin(10, 0, 10, 0),
   funlist = NULL,
+  future = FALSE,
+  future_session = "multisession",
+  future_splits = TRUE,
+  future_method = "future",
+  future_re_expose = NULL,
+  transform = NULL,
+  transform_draws = NULL,
+  itransform = NULL,
+  model_deriv = NULL,
+  dummy_to_factor = NULL,
   xvar = NULL,
   difx = NULL,
   idvar = NULL,
-  itransform = NULL,
-  idata_method = NULL,
   conf_level = 0.95,
   deriv = 0,
   plot = FALSE,
-  ipts = FALSE,
   method = "pkg",
+  ipts = FALSE,
+  idata_method = NULL,
   newdata_fixed = NULL,
+  verbose = FALSE,
   envir = NULL,
   ...
 )
@@ -72,39 +76,31 @@ Supported values are:
 \describe{
 \item{\code{"rvf"}}{residual vs fitted plot showing residuals plotted against
 fitted values derived from posterior draws.}
+\item{\code{"rvp"}}{residual vs predictor (such as age) plot showing
+residuals plotted against predictor values derived from posterior draws.}
 \item{\code{"qq"}}{Normal Q-Q plot based on summarized posterior residuals.}
+\item{\code{"pairs"}}{Pair plots for MCMC draws via
+\code{\link[bayesplot:MCMC-scatterplots]{bayesplot::mcmc_pairs()}}.}
 \item{\code{"acf"}}{Autocorrelation plots for MCMC draws via
-\code{brms::mcmc_plot(type = "acf")}.}
+\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "acf"}.}
 \item{\code{"trace"}}{Trace plots for selected parameters via
-\code{brms::mcmc_plot(type = "trace")}.}
+\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "trace"}.}
 \item{\code{"dens_overlay"}}{Density overlays for selected parameters via
-\code{brms::mcmc_plot(type = "dens_overlay")}.}
+\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "dens_overlay"}.}
 \item{\code{"rhat"}}{Potential scale reduction diagnostics via
-\code{brms::mcmc_plot(type = "rhat")}.}
+\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "rhat"}.}
 \item{\code{"neff"}}{Effective sample size diagnostics via
-\code{brms::mcmc_plot(type = "neff")}.}
+\code{\link[brms:mcmc_plot.brmsfit]{brms::mcmc_plot()}} with \code{type = "neff"}.}
 \item{\code{"ppc_dens_overlay"}}{Posterior predictive density overlay via
-\code{brms::pp_check(type = "dens_overlay")}.}
+\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "dens_overlay"}.}
 \item{\code{"ppc_hist"}}{Posterior predictive histogram via
-\code{brms::pp_check(type = "hist")}.}
+\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "hist"}.}
 \item{\code{"ppc_scatter_avg"}}{Posterior predictive observed-versus-replicated
-average scatter plot via \code{brms::pp_check(type = "scatter_avg")}.}
+average scatter plot via \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type =
+    "scatter_avg"}.}
 \item{\code{"ppc_stat"}}{Posterior predictive check for a summary statistic via
-\code{brms::pp_check(type = "stat")}.}
+\code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} with \code{type = "stat"}.}
 }}
-
-\item{category}{For \emph{some} ordinal, multinomial, and multivariate models (notably, \code{\link[brms:brm]{brms::brm()}} models but
-\emph{not} \code{\link[rstanarm:stan_polr]{rstanarm::stan_polr()}} models), multiple sets of rows will be returned per input row for
-\code{epred_draws()} or \code{predicted_draws()}, depending on the model type. For ordinal/multinomial models,
-these rows correspond to different categories of the response variable. For multivariate models, these correspond to
-different response variables. The \code{category} argument specifies the name of the column
-to put the category names (or variable names) into in the resulting data frame. The default name of this column
-(\code{".category"}) reflects the fact that this functionality was originally used only for ordinal models and
-has been re-used for multivariate models. The fact that multiple rows per response are returned only for some
-model types reflects the fact that tidybayes takes the approach of tidying whatever output is given to us, and
-the output from different modeling functions differs on this point.
-See \code{vignette("tidy-brms")} and \code{vignette("tidy-rstanarm")} for examples of dealing with output
-from ordinal models using both approaches.}
 
 \item{set_draws}{Character scalar indicating which fitted-value draw type to
 use for the residual-versus-fitted plot. Must be one of:
@@ -133,73 +129,6 @@ use in residual-based diagnostics and posterior predictive checks.}
 in estimation (default \code{NULL}).}
 
 \item{seed}{Optional random seed used when subsampling posterior draws.}
-
-\item{future}{A logical value (default \code{FALSE}) indicating whether to
-perform parallel computations. If \code{TRUE}, posterior summaries are
-computed in parallel using \code{\link[future.apply:future_lapply]{future.apply::future_sapply()}}.}
-
-\item{future_session}{A character string or a named list specifying the
-parallel plan when \code{future = TRUE}.
-\itemize{
-\item \strong{Character string}: Defaults to \code{"multisession"}.
-Use \code{"multicore"} for forking (not supported on Windows).
-\item \strong{Named list}: Useful for advanced plans like
-\code{\link[future.mirai:mirai_cluster]{future.mirai::mirai_cluster()}}. The list must contain:
-\itemize{
-\item \code{future_session}: The planner function (e.g.,
-\code{mirai_cluster}).
-\item Additional named arguments passed to the planner (e.g.,
-\code{daemons} for \code{\link[mirai:daemons]{mirai::daemons()}}).
-}
-Example: \code{list(future_session = mirai_cluster, daemons =
-      list(...))}.
-}}
-
-\item{future_splits}{A list, numeric vector, or logical value (default
-\code{TRUE}). Controls how posterior draws are partitioned into smaller
-subsets for parallel computation. This helps manage memory and improve
-performance, particularly on Linux when using
-\code{future::plan("multicore")}.
-
-Input options:
-\itemize{
-\item \strong{List}: (e.g., \code{list(1:6, 7:10)}). Each element is a
-sequence of numbers passed to \code{draw_ids} to process in a separate
-chunk.
-\item \strong{Numeric vector of length 2}: (e.g., \code{c(100, 4)}). The
-first element is the total number of draws, and the second is the number
-of splits. Indices are generated via \code{\link[parallel:splitIndices]{parallel::splitIndices()}}.
-\item \strong{Numeric vector of length 1}: Specifies the total number of
-draws. Splits are calculated automatically.
-\item \strong{\code{TRUE}}: Automatically creates splits based on
-\code{ndraws} and \code{cores}. If both \code{ndraws} and \code{draw_ids}
-are specified, \code{draw_ids} takes precedence. This is consistent with
-post-processing functions in the \code{bsitar} and \code{brms} packages.
-\item \strong{\code{FALSE}}: Splitting is disabled.
-}
-\strong{Note}: On Windows with \code{future::plan("multisession")},
-background R processes may not free resources automatically. If needed, use
-\code{\link[installr:kill_all_Rscript_s]{installr::kill_all_Rscript_s()}} to terminate them.}
-
-\item{future_method}{A character string (default \code{'future'}) specifying
-the parallel computation backend. Options include:
-\itemize{
-\item \code{'future'}: Uses \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}} for
-execution.
-\item \code{'dofuture'}: Uses \code{\link[foreach:foreach]{foreach::foreach()}} via the
-\code{doFuture} package.
-}}
-
-\item{future_re_expose}{A logical value (default \code{NULL}) indicating whether
-to re-expose internal \code{Stan} functions when \code{future = TRUE}.
-This is critical when \code{\link[future:plan]{future::plan()}} is set to \code{"multisession"},
-as compiled C++ functions cannot be exported across distinct R sessions.
-\itemize{
-\item If \code{NULL} (default), it is automatically set to \code{TRUE}
-when the plan is \code{"multisession"}.
-\item Explicitly setting this to \code{TRUE} is recommended for improved
-performance during parallel execution.
-}}
 
 \item{re_formula}{Optional formula passed to prediction
 methods to control whether group-level effects are included.}
@@ -243,48 +172,8 @@ scheme to \code{"blue"}. This does not itself create a rank-overlay plot,
 but allows a simple style customization for compatible \pkg{bayesplot}-based
 outputs.}
 
-\item{transform}{string or function. Transformation applied to unit-level estimates and confidence intervals just before the function returns results. Functions must accept a vector and return a vector of the same length. Support string shortcuts: "exp", "ln"}
-
-\item{transform_draws}{A function applied to individual draws from the
-posterior distribution before computing summaries (default \code{NULL}).
-The argument \code{transform_draws} is derived from the
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} function and should not be confused with
-the \code{transform} argument from the deprecated
-\code{\link[brms:posterior_predict.brmsfit]{brms::posterior_predict()}} function. It's important to note that for both
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} and \code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}},
-the \code{transform_draws} argument takes precedence over the
-\code{transform} argument. Note that when \code{transform_draws = NULL}, an
-attempt is made to automatically set \code{transform_draws = 'exp'} for
-\code{dpar = 'sigma'}. User can set  \code{transform_draws = FALSE} to turn
-off this automatic assignment of \code{'exp'} to the
-\code{transform_draws}. It is also important to set \code{transform_draws =
-  FALSE} when computing the first derivative (velocity) for \code{dpar =
-  'sigma'}.}
-
-\item{verbose}{A logical argument (default \code{FALSE}) to specify whether
-to print information collected during the setup of the object(s).}
-
-\item{model_deriv}{A logical value specifying whether to estimate the
-velocity curve from the derivative function or by differentiating the
-distance curve. Set \code{model_deriv = TRUE} for functions that require
-the velocity curve, such as \code{growthparameters()} and
-\code{plot_curves()}. Set it to \code{NULL} for functions that use the
-distance curve (i.e., fitted values), such as \code{loo_validation()} and
-\code{plot_ppc()}.}
-
-\item{dummy_to_factor}{A named list (default \code{NULL}) to convert dummy
-variables into a factor variable. The list must include the following
-elements:
-\itemize{
-\item \code{factor.dummy}: A character vector of dummy variables to be
-converted to factors.
-\item \code{factor.name}: The name for the newly created factor variable
-(default is \code{'factor.var'} if \code{NULL}).
-\item \code{factor.level}: A vector specifying the factor levels.
-If \code{NULL}, levels are taken from \code{factor.dummy}.
-If \code{factor.level} is provided, its length must match
-\code{factor.dummy}.
-}}
+\item{add_plot_df}{Optional logical (default \code{FALSE}) indicating whether
+to add \code{plot_df} to the returned value.}
 
 \item{expose_function}{A logical value or \code{NULL} (default \code{FALSE}).
 Controls whether Stan functions are exposed for post-processing.
@@ -313,130 +202,72 @@ Stan functions from the environment (\code{TRUE}) or not (\code{FALSE}). If
 \code{usesavedfuns}: \code{TRUE} if \code{usesavedfuns = TRUE}, or
 \code{FALSE} if \code{usesavedfuns = FALSE}.}
 
-\item{funlist}{A list (default \code{NULL}) specifying function names. This
-is rarely needed, as required functions are typically retrieved
-automatically. A use case for \code{funlist} is when \code{sigma_formula},
-\code{sigma_formula_gr}, or \code{sigma_formula_gr_str} use an external
-function (e.g., \code{poly(age)}). The \code{funlist} should include
-function names defined in the \code{globalenv()}. For functions needing
-both distance and velocity curves (e.g., \code{plot_curves(..., opt =
-  'dv')}), \code{funlist} must include two functions: one for the distance
-curve and one for the velocity curve.}
+\item{category}{For \emph{some} ordinal, multinomial, and multivariate models (notably, \code{\link[brms:brm]{brms::brm()}} models but
+\emph{not} \code{\link[rstanarm:stan_polr]{rstanarm::stan_polr()}} models), multiple sets of rows will be returned per input row for
+\code{epred_draws()} or \code{predicted_draws()}, depending on the model type. For ordinal/multinomial models,
+these rows correspond to different categories of the response variable. For multivariate models, these correspond to
+different response variables. The \code{category} argument specifies the name of the column
+to put the category names (or variable names) into in the resulting data frame. The default name of this column
+(\code{".category"}) reflects the fact that this functionality was originally used only for ordinal models and
+has been re-used for multivariate models. The fact that multiple rows per response are returned only for some
+model types reflects the fact that tidybayes takes the approach of tidying whatever output is given to us, and
+the output from different modeling functions differs on this point.
+See \code{vignette("tidy-brms")} and \code{vignette("tidy-rstanarm")} for examples of dealing with output
+from ordinal models using both approaches.}
 
-\item{xvar}{A character string (default \code{NULL}) specifying the
-\code{'x'} variable. Rarely used because \code{xvar} is inferred
-internally. A use case is when conflicting variables exist (e.g.,
-\code{sigma_formula}) and user wants to set a specific variable as
-\code{'x'}.}
+\item{wrap_title}{Optional logical (default \code{TRUE}) indicating whether
+to wrap plot title.}
 
-\item{difx}{A character string (default \code{NULL}) specifying the
-\code{'x'} variable that should be used for manual differentiation of the
-distance curve. Internally, the \code{xvar} is set as \code{difx} if
-specified. The argument \code{difx} is evaluated only when \code{dpar =
-  'sigma'}, ignored otherwise. Note that argument \code{xvar} itself is rarely
-used because \code{xvar} is inferred internally. A use case is when
-conflicting variables exist (e.g., \code{sigma_formula}) and user wants to
-set a specific variable as \code{'x'}.}
+\item{title_size}{Text size of plot title.}
 
-\item{idvar}{A character string (default \code{NULL}) specifying the
-\code{'id'} variable. Rarely used because \code{idvar} is inferred
-internally.}
+\item{patch_plot.margin}{Optional setting the margins for the
+\pkg{patchwork}.}
 
-\item{itransform}{A character string (default \code{NULL}) indicating the
-variables names that are reverse transformed. Options are  \code{c("x",
-  "y", "sigma")}. The \code{itransform} is primarily used to get the
-\code{xvar} variable at original scale i.e., \code{itransform = 'x'}. To
-turn of all transformations, use \code{itransform = ""}. when
-\code{itransform = NULL}, the appropriate transformation for \code{xvar} is
-selected automatically. Note that when no match for \code{xvar} is found in
-the \code{data,frame}, the \code{itransform} will be ignored within the
-calling function, \code{'prepare_transformations()'}.}
+\item{funlist}{Currently ignored and serves as a placeholder. It will be
+implemented in future updates.}
 
-\item{idata_method}{A character string specifying the interpolation method
-(default \code{NULL}). The number of interpolation points is controlled by
-the \code{ipts} argument.
+\item{future}{Currently ignored and serves as a placeholder.}
 
-Available options:
-\itemize{
-\item \code{'m1'}: Adapted from the \pkg{iapvbs} package (documented
-\href{https://rdrr.io/github/Zhiqiangcao/iapvbs/src/R/exdata.R}{here}). This
-method internally constructs the data frame based on the model
-configuration. \emph{Note:} This method may fail if the model includes
-covariates (especially in \code{univariate_by} models).
-\item \code{'m2'}: Based on the \pkg{JMbayes} package (documented
-\href{https://github.com/drizopoulos/JMbayes/blob/master/R/dynPred_lme.R}{here}).
-This method uses the exact data frame from the model fit
-(\code{fit$data}) and is generally more robust.
-}
+\item{future_session}{Currently ignored and serves as a placeholder.}
 
-If \code{idata_method = NULL}, \code{'m2'} is automatically selected.
-It is recommended to use \code{'m2'} if \code{'m1'} encounters errors
-with covariate-dependent models.}
+\item{future_splits}{Currently ignored and serves as a placeholder.}
 
-\item{conf_level}{numeric value between 0 and 1. Confidence level to use to build a confidence interval.}
+\item{future_method}{Currently ignored and serves as a placeholder.}
 
-\item{deriv}{An integer to indicate whether to estimate the distance curve or
-its derivative (i.e., velocity curve). The \code{deriv = 0} (default) is
-for the distance curve, whereas \code{deriv = 1} is for the velocity curve.}
+\item{future_re_expose}{Currently ignored and serves as a placeholder.}
 
-\item{plot}{A logical specifying whether to plot predictions by calling
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} (\code{TRUE}) or not (\code{FALSE}).
-If \code{FALSE} (default), \code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} or
-\code{\link[marginaleffects:predictions]{marginaleffects::avg_predictions()}} are called to compute predictions (see
-\code{average} for details). Note that
-\code{\link[marginaleffects:plot_predictions]{marginaleffects::plot_predictions()}} allows either \code{condition} or
-\code{by} arguments, but not both. Therefore, when the \code{condition}
-argument is not \code{NULL}, the \code{by} argument is set to \code{NULL}.
-This step is required because \strong{get_predictions()} automatically
-assigns the \code{by} argument when the model includes a covariate.}
+\item{transform}{Currently ignored and serves as a placeholder.}
 
-\item{ipts}{An integer specifying the number of points for interpolating the
-predictor variable (e.g., age) to generate smooth curves for predictions
-and plots. This value is used as the \code{length.out} argument for
-\code{\link[=seq]{seq()}}, controlling the smoothness of distance and velocity curves without
-altering the predictor range.
-\describe{
-\item{\code{NULL} (the default)}{Engages automatic behavior based on the
-\code{dpar} argument: it is internally set to \code{50} for the mean
-response (\code{dpar = 'mu'}), ensuring smooth curves, while for the
-distributional parameters (e.g., \code{dpar = 'sigma'}), no
-interpolation is performed.}
-\item{An integer (e.g., \code{100})}{Explicitly sets the number of
-interpolation points.}
-\item{\code{FALSE}}{Disables all interpolation, forcing predictions to
-be made only at the original data points of the predictor variable.}
-}
+\item{transform_draws}{Currently ignored and serves as a placeholder.}
 
-This argument affects the following post-processing functions: \cr
-\code{\link[=fitted_draws]{fitted_draws()}}, \code{\link[=predict_draws]{predict_draws()}}, \code{\link[=growthparameters]{growthparameters()}}, \code{\link[=plot_curves]{plot_curves()}},
-\code{\link[=get_predictions]{get_predictions()}}, \code{\link[=get_comparisons]{get_comparisons()}}, and
-\code{\link[=get_growthparameters]{get_growthparameters()}}.}
+\item{itransform}{Currently ignored and serves as a placeholder.}
 
-\item{method}{A character string specifying the computation method: whether
-to use the \pkg{marginaleffects} machinery at the post-draw stage, i.e.,
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}} (\code{method = 'pkg'}) or to use custom
-functions for efficiency and speed (\code{method = 'custom'}, default).
-Note that \code{method = 'custom'} is particularly useful when testing
-hypotheses. Also, when \code{method = 'custom'},
-\code{\link[marginaleffects:predictions]{marginaleffects::predictions()}} is used internally instead of
-\code{\link[marginaleffects:comparisons]{marginaleffects::comparisons()}}.}
+\item{model_deriv}{Currently ignored and serves as a placeholder.}
 
-\item{newdata_fixed}{An indicator to specify whether to check data
-format and structure for the user provided \code{newdata}, and apply needed
-\code{prepare_data2} and \code{prepare_transformations}
-(\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
-(\code{newdata = TRUE}) as it is without checking for the data format or
-applying \code{prepare_data2} and \code{prepare_transformations}
-(\code{newdata_fixed = 0}), check for the data format and if needed,
-prepare data format using \code{prepare_data2} (\code{newdata_fixed = 1}),
-or apply \code{prepare_transformations} only assuming that data format is
-correct (\code{newdata_fixed = 2}). It is strongly recommended that user
-either leave the \code{newdata = NULL} and \code{newdata_fixed = NULL} in
-which case data used in the model fitting is automatically retrieved and
-checked for the required data format and transformations, and if needed,
-\code{prepare_data2} and \code{prepare_transformations} are applied
-internally. The other flags provided for  \code{newdata_fixed = 0, 1, 2}
-are mainly for the internal use during post-processing.}
+\item{dummy_to_factor}{Currently ignored and serves as a placeholder.}
+
+\item{xvar}{Currently ignored and serves as a placeholder.}
+
+\item{difx}{Currently ignored and serves as a placeholder.}
+
+\item{idvar}{Currently ignored and serves as a placeholder.}
+
+\item{conf_level}{Currently ignored and serves as a placeholder.}
+
+\item{deriv}{Currently ignored and serves as a placeholder.}
+
+\item{plot}{Currently ignored and serves as a placeholder.}
+
+\item{method}{Currently ignored and serves as a placeholder.}
+
+\item{ipts}{Currently ignored and serves as a placeholder.}
+
+\item{idata_method}{Currently ignored and serves as a placeholder.}
+
+\item{newdata_fixed}{Currently ignored and serves as a placeholder.}
+
+\item{verbose}{A logical argument (default \code{FALSE}) to specify whether
+to print information collected during the setup of the object(s).}
 
 \item{envir}{The environment used for function evaluation. The default is
 \code{NULL}, which sets the environment to \code{parent.frame()}. Since
@@ -455,7 +286,8 @@ plot objects.}
 \item{If \code{combine = TRUE} and multiple compatible plots are requested}{A
 list with components:
 \describe{
-\item{\code{combined}}{A patchwork object combining all \code{patchable} plots.}
+\item{\code{combined}}{A patchwork object combining all \code{patchable}
+plots.}
 \item{\code{plots}}{A named list containing all individual plot objects.}
 \item{\code{plot_df}}{The joined residual/fitted draws data frame used for
 residual-based plots, or \code{NULL} if no residual-based plots were
@@ -465,7 +297,7 @@ requested.}
 }
 }
 \description{
-This function generate one or more model diagnostic plots including
+This function generate various model diagnostic plots including
 residual-based diagnostics, MCMC convergence diagnostics, and posterior
 predictive checks. When multiple plots are requested, patch-able plots are
 combined into a single display using \pkg{patchwork}.
@@ -495,8 +327,8 @@ autocorrelation plots, density overlays, R-hat, and effective sample size
 summaries.
 
 Posterior predictive checks are delegated to \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}}, which
-exposes \pkg{bayesplot} \code{PPC} types such as density overlays, histograms, average
-scatter checks, and statistic-based checks.
+exposes \pkg{bayesplot} \code{PPC} types such as density overlays,
+histograms, average scatter checks, and statistic-based checks.
 }
 \section{Interpretation}{
 

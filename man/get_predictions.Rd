@@ -754,22 +754,29 @@ selected automatically. Note that when no match for \code{xvar} is found in
 the \code{data,frame}, the \code{itransform} will be ignored within the
 calling function, \code{'prepare_transformations()'}.}
 
-\item{newdata_fixed}{An indicator to specify whether to check data
-format and structure for the user provided \code{newdata}, and apply needed
-\code{prepare_data2} and \code{prepare_transformations}
-(\code{newdata_fixed = NULL}, default), return user provided \code{newdata}
-(\code{newdata = TRUE}) as it is without checking for the data format or
-applying \code{prepare_data2} and \code{prepare_transformations}
-(\code{newdata_fixed = 0}), check for the data format and if needed,
-prepare data format using \code{prepare_data2} (\code{newdata_fixed = 1}),
-or apply \code{prepare_transformations} only assuming that data format is
-correct (\code{newdata_fixed = 2}). It is strongly recommended that user
-either leave the \code{newdata = NULL} and \code{newdata_fixed = NULL} in
-which case data used in the model fitting is automatically retrieved and
-checked for the required data format and transformations, and if needed,
-\code{prepare_data2} and \code{prepare_transformations} are applied
-internally. The other flags provided for  \code{newdata_fixed = 0, 1, 2}
-are mainly for the internal use during post-processing.}
+\item{newdata_fixed}{An indicator specifying how to handle the format and
+structure of the user-provided \code{newdata} before use. The available
+options are:
+\itemize{
+\item \code{NULL} (default): Checks the data format and structure of
+\code{newdata}, and applies \code{prepare_data2} and
+\code{prepare_transformations} as needed.
+\item \code{TRUE}: Returns \code{newdata} as-is, without any format
+checking or transformation.
+\item \code{0}: Same as \code{TRUE} — returns \code{newdata} without
+checking the data format or applying \code{prepare_data2} and
+\code{prepare_transformations}.
+\item \code{1}: Checks the data format and, if needed, prepares it using
+\code{prepare_data2}, but does not apply \code{prepare_transformations}.
+\item \code{2}: Applies \code{prepare_transformations} only, assuming the
+data format is already correct.
+}
+It is strongly recommended to leave both \code{newdata = NULL} and
+\code{newdata_fixed = NULL} (the defaults). In this case, the data used
+during model fitting is automatically retrieved, checked for the required
+format, and transformed as needed via \code{prepare_data2} and
+\code{prepare_transformations}. The flags \code{newdata_fixed = 0},
+\code{1}, and \code{2} are intended primarily for internal use.}
 
 \item{envir}{The environment used for function evaluation. The default is
 \code{NULL}, which sets the environment to \code{parent.frame()}. Since

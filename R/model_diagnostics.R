@@ -4,7 +4,7 @@
 #' Diagnostic plots for Bayesian SITAR models
 #'
 #' @description
-#' This function generate one or more model diagnostic plots including
+#' This function generate various model diagnostic plots including
 #' residual-based diagnostics, MCMC convergence diagnostics, and posterior
 #' predictive checks. When multiple plots are requested, patch-able plots are
 #' combined into a single display using \pkg{patchwork}.
@@ -21,25 +21,30 @@
 #'   \describe{
 #'     \item{`"rvf"`}{residual vs fitted plot showing residuals plotted against 
 #'     fitted values derived from posterior draws.}
+#'      \item{`"rvp"`}{residual vs predictor (such as age) plot showing 
+#'     residuals plotted against predictor values derived from posterior draws.}
 #'     \item{`"qq"`}{Normal Q-Q plot based on summarized posterior residuals.}
+#'     \item{`"pairs"`}{Pair plots for MCMC draws via
+#'     [bayesplot::mcmc_pairs()].}
 #'     \item{`"acf"`}{Autocorrelation plots for MCMC draws via
-#'     `brms::mcmc_plot(type = "acf")`.}
+#'     [brms::mcmc_plot()] with \code{type = "acf"}.}
 #'     \item{`"trace"`}{Trace plots for selected parameters via
-#'     `brms::mcmc_plot(type = "trace")`.}
+#'     [brms::mcmc_plot()] with \code{type = "trace"}.}
 #'     \item{`"dens_overlay"`}{Density overlays for selected parameters via
-#'     `brms::mcmc_plot(type = "dens_overlay")`.}
+#'     [brms::mcmc_plot()] with \code{type = "dens_overlay"}.}
 #'     \item{`"rhat"`}{Potential scale reduction diagnostics via
-#'     `brms::mcmc_plot(type = "rhat")`.}
+#'     [brms::mcmc_plot()] with \code{type = "rhat"}.}
 #'     \item{`"neff"`}{Effective sample size diagnostics via
-#'     `brms::mcmc_plot(type = "neff")`.}
+#'     [brms::mcmc_plot()] with \code{type = "neff"}.}
 #'     \item{`"ppc_dens_overlay"`}{Posterior predictive density overlay via
-#'     `brms::pp_check(type = "dens_overlay")`.}
+#'     [brms::pp_check()] with \code{type = "dens_overlay"}.}
 #'     \item{`"ppc_hist"`}{Posterior predictive histogram via
-#'     `brms::pp_check(type = "hist")`.}
+#'     [brms::pp_check()] with \code{type = "hist"}.}
 #'     \item{`"ppc_scatter_avg"`}{Posterior predictive observed-versus-replicated
-#'     average scatter plot via `brms::pp_check(type = "scatter_avg")`.}
+#'     average scatter plot via [brms::pp_check()] with \code{type =
+#'     "scatter_avg"}.}
 #'     \item{`"ppc_stat"`}{Posterior predictive check for a summary statistic via
-#'     `brms::pp_check(type = "stat")`.}
+#'     [brms::pp_check()] with \code{type = "stat"}.}
 #'   }
 #'
 #' @param set_draws Character scalar indicating which fitted-value draw type to
@@ -106,6 +111,40 @@
 #'   but allows a simple style customization for compatible \pkg{bayesplot}-based
 #'   outputs.
 #'   
+#' @param add_plot_df Optional logical (default \code{FALSE}) indicating whether
+#'   to add \code{plot_df} to the returned value.
+#'   
+#' @param wrap_title Optional logical (default \code{TRUE}) indicating whether
+#'   to wrap plot title.
+#'   
+#' @param title_size Text size of plot title.
+#'   
+#' @param patch_plot.margin Optional setting the margins for the
+#'   \pkg{patchwork}.
+#'   
+#' @param funlist Currently ignored and serves as a placeholder. It will be
+#'   implemented in future updates.
+#' @param future Currently ignored and serves as a placeholder.
+#' @param future_session Currently ignored and serves as a placeholder.
+#' @param future_splits Currently ignored and serves as a placeholder.
+#' @param future_method Currently ignored and serves as a placeholder.
+#' @param future_re_expose Currently ignored and serves as a placeholder.
+#' @param transform Currently ignored and serves as a placeholder.
+#' @param transform_draws Currently ignored and serves as a placeholder.
+#' @param itransform Currently ignored and serves as a placeholder.
+#' @param model_deriv Currently ignored and serves as a placeholder.
+#' @param dummy_to_factor Currently ignored and serves as a placeholder.
+#' @param xvar Currently ignored and serves as a placeholder.
+#' @param difx Currently ignored and serves as a placeholder.
+#' @param idvar Currently ignored and serves as a placeholder.
+#' @param conf_level Currently ignored and serves as a placeholder.
+#' @param plot Currently ignored and serves as a placeholder.
+#' @param method Currently ignored and serves as a placeholder.
+#' @param deriv Currently ignored and serves as a placeholder.
+#' @param idata_method Currently ignored and serves as a placeholder.
+#' @param ipts Currently ignored and serves as a placeholder.
+#' @param newdata_fixed Currently ignored and serves as a placeholder.
+#'   
 #' @inheritParams add_model_criterion
 #' @inheritParams get_predictions
 #' @inheritParams brms::mcmc_plot
@@ -120,7 +159,8 @@
 #'   \item{If `combine = TRUE` and multiple compatible plots are requested}{A
 #'   list with components:
 #'     \describe{
-#'       \item{`combined`}{A patchwork object combining all \code{patchable} plots.}
+#'       \item{`combined`}{A patchwork object combining all \code{patchable}
+#'       plots.}
 #'       \item{`plots`}{A named list containing all individual plot objects.}
 #'       \item{`plot_df`}{The joined residual/fitted draws data frame used for
 #'       residual-based plots, or \code{NULL} if no residual-based plots were
@@ -155,8 +195,8 @@
 #' summaries. 
 #'
 #' Posterior predictive checks are delegated to [brms::pp_check()], which
-#' exposes \pkg{bayesplot} \code{PPC} types such as density overlays, histograms, average
-#' scatter checks, and statistic-based checks. 
+#' exposes \pkg{bayesplot} \code{PPC} types such as density overlays,
+#' histograms, average scatter checks, and statistic-based checks.
 #'
 #' @section Interpretation:
 #' - For Gaussian models, residual-versus-fitted plots and Q-Q
@@ -223,7 +263,9 @@ model_diagnostics.bgmfit <- function(
     newdata = NULL,
     plots = c(
       "rvf",
+      "rvp",
       "qq",
+      "pairs",
       "acf",
       "trace",
       "dens_overlay",
@@ -234,17 +276,11 @@ model_diagnostics.bgmfit <- function(
       "ppc_scatter_avg",
       "ppc_stat"
     ),
-    category = ".category",
     set_draws = "epred",
     resp = NULL,
     ndraws = 10,
     draw_ids = NULL,
     seed = 123,
-    future = FALSE,
-    future_session = 'multisession',
-    future_splits = TRUE,
-    future_method = 'future',
-    future_re_expose = NULL,
     re_formula = NULL,
     dpar = NULL,
     pars = NULL,
@@ -257,26 +293,36 @@ model_diagnostics.bgmfit <- function(
     smooth_method = "loess",
     ppc_stat = "mean",
     rank_overlay = FALSE,
-    transform = NULL,
-    transform_draws = NULL,
-    verbose = FALSE,
-    model_deriv = NULL,
-    dummy_to_factor = NULL, 
+    add_plot_df = FALSE,
     expose_function = FALSE,
     usesavedfuns = NULL,
     clearenvfuns = NULL,
+    category = ".category",
+    wrap_title = FALSE,
+    title_size = 12,
+    patch_plot.margin = ggplot2::margin(10, 0, 10, 0), # Top, Right, Bottom, Left
     funlist = NULL,
+    future = FALSE,
+    future_session = 'multisession',
+    future_splits = TRUE,
+    future_method = 'future',
+    future_re_expose = NULL,
+    transform = NULL,
+    transform_draws = NULL,
+    itransform = NULL,
+    model_deriv = NULL,
+    dummy_to_factor = NULL, 
     xvar = NULL,
     difx = NULL,
     idvar = NULL,
-    itransform = NULL,
-    idata_method = NULL,
     conf_level = 0.95,
     deriv = 0,
     plot = FALSE,
-    ipts = FALSE,
     method = 'pkg',
+    ipts = FALSE,
+    idata_method = NULL,
     newdata_fixed = NULL,
+    verbose = FALSE,
     envir = NULL,
     ...) {
   
@@ -357,7 +403,6 @@ model_diagnostics.bgmfit <- function(
     resp_rev_ <- paste0("_", resp)
   }
   
-  # For sigma
   xvar_      <- paste0('xvar', resp_rev_)
   sigmaxvar_ <- paste0('sigma', xvar_)
   cov_       <- paste0('cov', resp_rev_)
@@ -391,7 +436,6 @@ model_diagnostics.bgmfit <- function(
   if(check_set_fun[['was_null']]) {
     model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
   }
-  # just added, 
   funx_ <- NULL
   
   if (is.null(idata_method)) {
@@ -404,10 +448,10 @@ model_diagnostics.bgmfit <- function(
          " 'idata_method' argument must be either NULL or 'm2'" )
   }
   
-  # Initiate non formalArgs()
   .draw <- NULL;
   .fitted_value <- NULL;
   .residual <- NULL;
+  mean_residual <- NULL;
   term <- NULL;
   contrast <- NULL;
   tmp_idx <- NULL;
@@ -472,11 +516,7 @@ model_diagnostics.bgmfit <- function(
                     ...)
   
   if(is.null(test)) return(invisible(NULL))
-  
-  ######################################################################
-  ######################################################################
-  
-  # For sigma
+ 
   deriv.org       <- deriv
   model_deriv.org <- model_deriv
   if (deriv > 0) {
@@ -495,7 +535,6 @@ model_diagnostics.bgmfit <- function(
     need_xvar_must <- FALSE
   }
   
-  # if plot, need xvar
   if(!plot) {
     need_xvar_must <- need_xvar_must
   } else {
@@ -566,12 +605,11 @@ model_diagnostics.bgmfit <- function(
                                    verbose = verbose)
       
       model$model_info[['xvar_for_sigma_model_basic']] <- xvar
-    } # if(sigma_model == "basic") {
-  } # if(dpar == "sigma") {
+    } 
+  } 
   
   
   if(!is.null(transform)) {
-    # new check added if(!is.function(transform)) {
     if(!is.function(transform)) {
       if(is.logical(transform)) {
         if(!transform) transform_draws <- 'identity'
@@ -579,14 +617,13 @@ model_diagnostics.bgmfit <- function(
         if(transform == "exp") transform_draws <- 'exp'
         if(transform == "ln") transform_draws <- 'log'
       }
-    } # if(!is.function(transform)) {
-  } # if(!is.null(transform)) {
+    } 
+  } 
   
   assign_function_to_environment(transform_draws, 'transform_draws',
                                  envir = NULL)
   
   model$model_info[['transform_draws']] <- transform_draws
-  
   
   if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
     if(o[['sigma_model_is_ba_set_d0_as_d1']]) {
@@ -600,11 +637,9 @@ model_diagnostics.bgmfit <- function(
           sigma_model_is_ba_set_d0_as_d1_funs[[i]]
       }
       check_fun <- FALSE
-    } # o[['sigma_model_is_ba_set_d0_as_d1']]
-  } # if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) {
-  
-  
-  
+    }
+  }
+
   if(dpar == "sigma") {
     if(deriv.org > 0) {
       if(!is.null(o[['sigma_model']])) {
@@ -623,18 +658,12 @@ model_diagnostics.bgmfit <- function(
             available_d1 <- FALSE
             model_deriv  <- FALSE
             call_slopes  <- TRUE # FALSE # TRUE
-          } # if(!is.null(o[['sigma_model_is_ba_set_d0_as_d1']])) else if(is.null
-        } # if(o[['sigma_model']] == "ls") { else if(o[['sigma_model']] ...
-      } # if(!is.null(o[['sigma_model']])) {
-    } # if(deriv > 0) {
-  } # if(dpar == "sigma") {
+          } 
+        } 
+      } 
+    } 
+  } 
   
-  
-  
-  ########################################################
-  
-  
-  # If default marginal effects 'dydx', then 
   call_predictions <- TRUE
   call_slopes      <- FALSE
   if(!model_deriv) {
@@ -643,8 +672,7 @@ model_diagnostics.bgmfit <- function(
       call_predictions <- FALSE
       call_slopes      <- TRUE
     }
-  } # if(!model_deriv) {
-  
+  } 
   
   check_fun <- FALSE
   if(deriv > 0) {
@@ -658,10 +686,7 @@ model_diagnostics.bgmfit <- function(
     check_fun <- TRUE
   }
   post_processing_checks_args[['deriv']]    <- deriv
-  
-  
-  ######################################################
-  # somehow, condition, not by gives correct result result for slope 
+ 
   force_condition_and_by_switch_plot <- FALSE
   if(dpar == "sigma") {
     if(deriv.org > 0) {
@@ -680,10 +705,9 @@ model_diagnostics.bgmfit <- function(
             difx <- variables
           }
         }
-      } # if(!is.null(o[['sigma_model']])) {
-    } # if(deriv.org > 0) {
-  } # if(dpar == "sigma") {
-  
+      } 
+    } 
+  } 
   
   if(force_condition_and_by_switch_plot) {
     if(is.null(variables) & is.null(difx)) {
@@ -698,10 +722,7 @@ model_diagnostics.bgmfit <- function(
   } else {
     return_plot      <- plot
   }
-  
-  ######################################################################
-  ######################################################################
-  
+
   if(!isTRUE(
     check_pkg_version_exists('brms', 
                              minimum_version = get_package_minversion('brms'), 
@@ -741,7 +762,6 @@ model_diagnostics.bgmfit <- function(
   
   model$xcall <- xcall
   
-  
   call_from_modelbased_growthparameters <- FALSE
   call_from_modelbased_growthparameters_nonS3 <- FALSE
   if(xcall == "modelbased_growthparameters.bgmfit" |
@@ -749,10 +769,8 @@ model_diagnostics.bgmfit <- function(
     call_from_modelbased_growthparameters <- TRUE
   }
   
-  
   scallstatus <- sys.status()
-  
-  
+
   if(xcall == "modelbased_growthparameters_nonS3" |
      xcall == "CustomDoCall") {
     arguments <- get_args_(as.list(match.call())[-1], xcall, xclass = "", 
@@ -767,8 +785,7 @@ model_diagnostics.bgmfit <- function(
   arguments$usesavedfuns <- usesavedfuns
   
   get.cores_             <- get.cores(arguments$cores)
-  
-  # 28.09.2024
+
   if(is.null(get.cores_[['max.cores']])) {
     if(is.null(arguments$cores)) 
       get.cores_[['max.cores']] <- future::availableCores() - 1
@@ -788,7 +805,6 @@ model_diagnostics.bgmfit <- function(
     oldfutureplan    <- future::plan()
     do.call(future::plan, future_plan_args)
     on.exit(future::plan(oldfutureplan), add = TRUE)
-    # marginaleffects future options
     getmarginaleffects_parallel <- 
       getOption("marginaleffects_parallel")
     getmarginaleffects_parallel_inferences <- 
@@ -800,7 +816,6 @@ model_diagnostics.bgmfit <- function(
     on.exit(options("marginaleffects_parallel_inferences" = 
                       getmarginaleffects_parallel_inferences), 
             add = TRUE)
-    # multicore
     if (inherits(future::plan(), "multicore")) {
       multthreadplan <- getOption("future.fork.multithreading.enable")
       options(future.fork.multithreading.enable = TRUE)
@@ -821,8 +836,7 @@ model_diagnostics.bgmfit <- function(
     draw_ids     <- draw_ids
   }
   
-  
-  
+
   future_splits_exe <- FALSE
   if(!is.null(future_splits)) {
     future_splits_exe <- TRUE
@@ -919,9 +933,7 @@ model_diagnostics.bgmfit <- function(
       }
     } # if(method == 'pkg') {
   }
-  
-  
-  
+
   if(!future_splits_exe) {
     future_splits_exe_future <- FALSE
     future_splits_exe_dofuture <- FALSE
@@ -935,9 +947,7 @@ model_diagnostics.bgmfit <- function(
       future_splits_exe_dofuture <- TRUE
     }
   }
-  
-  
-  
+
   re_expose <- FALSE
   if (future) {
     need_future_re_expose_cpp <- FALSE
@@ -945,8 +955,7 @@ model_diagnostics.bgmfit <- function(
                  deparse(model$model_info$exefuns[[1]])))) {
       need_future_re_expose_cpp <- TRUE
     }
-    
-    
+
     if(is.null(future_re_expose)) {
       if(setplanis == "multisession") {
         if(need_future_re_expose_cpp) {
@@ -981,22 +990,13 @@ model_diagnostics.bgmfit <- function(
       }
     }
   } # if (future) {
-  
-  
-  
+
   if (!future) {
     future_splits_at <- NULL
     future_splits_exe <- FALSE
     future_splits_exe_future <- FALSE
     future_splits_exe_dofuture <- FALSE
   }
-  
-  
-  # full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
-  #                                 fargs = formals(),
-  #                                 # fargs = arguments, 
-  #                                 dargs = list(...), 
-  #                                 verbose = verbose)
   
   full.args <- evaluate_call_args(cargs = as.list(match.call())[-1], 
                                   # fargs = arguments,
@@ -1009,39 +1009,10 @@ model_diagnostics.bgmfit <- function(
                                   envir = envir,
                                   verbose = verbose)
 
-  
-  
   full.args$model       <- model
   full.args$model_deriv <- model_deriv
   full.args$newdata     <- newdata
-  
-  
-  
-  
-  if(!is.null(full.args$hypothesis)) {
-    if(method == 'pkg') {
-      if(!is.null(full.args$by)) {
-        if(is.logical(full.args$by)) {
-          # stop("Argument 'by' is required for hypothesis")
-        }
-      }
-    } else if(method == 'custom') {
-      if(!is.null(full.args$by)) {
-        if(is.logical(full.args$by)) {
-          # stop("Argument 'by' is required for hypothesis")
-        }
-      } else if(is.null(full.args$by)) {
-        # stop("Argument 'by' is required for hypothesis")
-      }
-    }
-  }
-  
-  
-  
- 
-  
-  
-  
+
   full.args <- 
     sanitize_CustomDoCall_args(what = "CustomDoCall", 
                                arguments = full.args, 
@@ -1058,15 +1029,13 @@ model_diagnostics.bgmfit <- function(
     get.newdata_args[[i]] <- full.args[[i]]
   }
   
-  
+
   get.newdata_args$ipts <- full.args$ipts <- ipts <- 
     set_for_check_ipts(ipts = ipts, nipts = 50, dpar = dpar, verbose = verbose)
   
   full.args$newdata <- newdata <- CustomDoCall(get.newdata, 
                                                get.newdata_args)
-  
-  
-  # Interpolation points
+
   if(!exists('check_fun')) check_fun <- FALSE
   if(!exists('available_d1')) available_d1 <- FALSE
   full.args$ipts <- ipts <- check_ipts(ipts = full.args$ipts, 
@@ -1078,13 +1047,6 @@ model_diagnostics.bgmfit <- function(
   if(!is.na(uvarby)) {
     uvarby_ind <- paste0(uvarby, resp)
     varne <- paste0(uvarby, resp)
-    # if(usedtplyr) {
-    #   newdata <- newdata %>% dtplyr::lazy_dt() %>% 
-    #     dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
-    # } else if(!usedtplyr) {
-    #   newdata <- newdata %>% 
-    #     dplyr::mutate(!! uvarby_ind := 1) %>% droplevels()
-    # }
   }
   
   full.args$newdata <- newdata
@@ -1102,15 +1064,10 @@ model_diagnostics.bgmfit <- function(
   }
   full.args[['transform']] <- transform <- transform_draws
   
-  
   full.args$model_deriv <- model_deriv
-  
-  
-  
+
   ########################################################################
-  
-  
-  ###
+
   
   allowed_set_draws <- c("epred", "linpred", "prediction")
   if (length(set_draws) != 1 || !set_draws %in% allowed_set_draws) {
@@ -1127,7 +1084,7 @@ model_diagnostics.bgmfit <- function(
          paste(missing_pkgs, collapse = ", "))
   }
   
-  needs_tidybayes <- any(c("rvf", "qq") %in% plots)
+  needs_tidybayes <- any(c("rvf", "rvp", "qq") %in% plots)
   if (needs_tidybayes && !requireNamespace("tidybayes", quietly = TRUE)) {
     stop("Please install `tidybayes` for residual-based plots.")
   }
@@ -1136,7 +1093,7 @@ model_diagnostics.bgmfit <- function(
   plots <- unique(plots)
   
   valid_plots <- c(
-    "rvf", "qq", "acf", "trace", "dens_overlay",
+    "rvf", "rvp", "qq", "pairs", "acf", "trace", "dens_overlay",
     "rhat", "neff", "ppc_dens_overlay", "ppc_hist",
     "ppc_scatter_avg", "ppc_stat"
   )
@@ -1146,9 +1103,11 @@ model_diagnostics.bgmfit <- function(
     stop("Unknown plot type(s): ", paste(bad, collapse = ", "))
   }
   
+  
+  
   out <- list()
   
-  if (any(c("rvf", "qq") %in% plots)) {
+  if (any(c("rvf", "rvp", "qq") %in% plots)) {
     
     draw_fun <- switch(
       set_draws,
@@ -1161,7 +1120,6 @@ model_diagnostics.bgmfit <- function(
     
     draw_col <- paste0(".", set_draws)
     
-    
     full.args[['newdata']] <- full.args[['newdata']] %>% 
       dplyr::mutate(.row = dplyr::row_number())
     
@@ -1169,14 +1127,11 @@ model_diagnostics.bgmfit <- function(
     full.args[['object']] <- full.args[['model']]
     
     draw_fun_args <- resi_fun_args <- list()
-    
     resi_fun_args_names <- c('object', 'newdata', 'resp', 'ndraws',
                              'draw_ids', 'seed', 're_formula', 'category')
-    
     draw_fun_args_names <- c('object', 'newdata', 'resp', 'ndraws',
                              'draw_ids', 'seed', 're_formula', 'category', 
                              'dpar')
-    
     for (draw_fun_args_namesi in draw_fun_args_names) {
       draw_fun_args[[draw_fun_args_namesi]] <- full.args[[draw_fun_args_namesi]] 
     }
@@ -1184,11 +1139,9 @@ model_diagnostics.bgmfit <- function(
       resi_fun_args[[resi_fun_args_namesi]] <- full.args[[resi_fun_args_namesi]] 
     }
     
-    
     resi_fun_args[['value']]   <- ".residual"
     draw_fun_args[['value']] <- draw_col
     
-
     fitted_df <- CustomDoCall(draw_fun, draw_fun_args) %>% 
       dplyr::ungroup() %>% 
       dplyr::select(.row, .draw, dplyr::all_of(draw_col)) %>%
@@ -1206,25 +1159,25 @@ model_diagnostics.bgmfit <- function(
       xlab_txt <- switch(
         set_draws,
         epred = "Expected predicted values",
-        linpred = "Linear predictor",
+        linpred = "Linear predicted values",
         prediction = "Posterior predicted values"
       )
       
       out$rvf <- plot_df %>%
         ggplot2::ggplot(ggplot2::aes(x = .fitted_value, y = .residual)) +
         ggplot2::geom_point(alpha = point_alpha, color = "gray40") +
+        ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
         ggplot2::geom_smooth(
           method = smooth_method,
           formula = y ~ x,
           se = smooth_se,
           color = "blue"
         ) +
-        ggplot2::geom_hline(yintercept = 0, linetype = "dashed") +
         ggplot2::theme_minimal() +
         ggplot2::labs(
           x = xlab_txt,
           y = "Residuals",
-          title = "Residuals vs Fitted Values"
+          title = "Residuals vs Fitted"
         )
     }
     
@@ -1237,9 +1190,45 @@ model_diagnostics.bgmfit <- function(
         ggplot2::geom_qq() +
         ggplot2::geom_qq_line() +
         ggplot2::theme_minimal() +
-        ggplot2::labs(title = "Normal Q-Q Plot of Residuals")
+        ggplot2::labs(title = "Normal Q-Q Plot of Residuals") +
+        ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
     }
+    
+  } # if (any(c("rvf", "rvp", "qq") %in% plots)) {
+  
+  
+  if (any(c( "rvp") %in% plots)) {
+    resid_df_mean <- resid_df %>% 
+      dplyr::group_by(.row) %>%
+      dplyr::summarise(
+        mean_residual = mean(.residual),
+        .groups = "drop"
+      ) %>%
+      dplyr::bind_cols(full.args[['newdata']] %>% 
+                         dplyr::select(dplyr::all_of(xvar))) 
+    
+    resid_df_mean[[xvar]] <- ifunx_(resid_df_mean[[xvar]])
+    
+    
+    out$rvp <- resid_df_mean %>% 
+      ggplot2::ggplot(ggplot2::aes(x = .data[['age']], y = mean_residual)) +
+      ggplot2::geom_point(alpha = point_alpha, color = "gray40") +
+      ggplot2::geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+      ggplot2::geom_smooth(
+        method = smooth_method,
+        formula = y ~ x,
+        se = smooth_se,
+        color = "blue"
+        ) +
+      ggplot2::labs(
+        title = "Residuals vs. Predictor",
+        x = xvar,
+        y = "Average Residuals"
+      ) +
+      ggplot2::theme_minimal()
   }
+  
+  # theme(plot.margin = margin(35, 10, 35, 10)) # Top, Right, Bottom, Left
   
   # No divergences to plot.
   suppressMessages({
@@ -1247,6 +1236,8 @@ model_diagnostics.bgmfit <- function(
       out$trace <- brms::mcmc_plot(
         model, type = "trace", variable = pars, regex = regex 
       )
+      out$trace <- out$trace + 
+      ggplot2::labs(title = "Trace plot") 
     }
   })
   
@@ -1255,26 +1246,54 @@ model_diagnostics.bgmfit <- function(
     out$dens_overlay <- brms::mcmc_plot(
       model, type = "dens_overlay", variable = pars, regex = regex 
     )
+    out$dens_overlay <- out$dens_overlay + 
+      ggplot2::labs(title = "Density overlay plot") 
   }
   
+  
+  # brms_pairs_brmsfit <- NULL
+  # getfrom_ <- c('brms_pairs_brmsfit')
+  # for (i in getfrom_) assign(i, utils::getFromNamespace(i, 'brms'))
+  
+  if ("pairs" %in% plots) {
+    insight::check_if_installed('ggpubr')
+    brms_pairs_brmsfit <- utils::getFromNamespace('pairs.brmsfit', 'brms')
+    out$pairs <- brms_pairs_brmsfit(
+      x = model, variable = pars, regex = regex 
+    )
+    out$pairs <- ept("ggpubr::as_ggplot(out$pairs)")
+    out$pairs <- out$pairs +
+      ggplot2::labs(title = "Pairs plot")
+  }
+
   if ("acf" %in% plots) {
     out$acf <- brms::mcmc_plot(
       model, type = "acf", variable = pars, regex = regex 
     )
+    out$acf <- out$acf + 
+      ggplot2::labs(title = "Autocorrelation plot") 
   }
   
   if ("rhat" %in% plots) {
     out$rhat <- brms::mcmc_plot(model, type = "rhat")
+    out$rhat <- out$rhat + 
+      ggplot2::labs(title = "Rhat plot") 
   }
   
   if ("neff" %in% plots) {
     out$neff <- brms::mcmc_plot(model, type = "neff")
+    out$neff <- out$neff + 
+      ggplot2::labs(title = "Effective sample size plot") 
   }
   
   if ("ppc_dens_overlay" %in% plots) {
     out$ppc_dens_overlay <- brms::pp_check(
       model, type = "dens_overlay", ndraws = ndraws
-    ) +
+    ) + 
+      ggplot2::theme(
+        legend.position = "inside",
+        legend.position.inside = c(0.15, 0.9)
+      ) + 
       ggplot2::labs(title = "Posterior Predictive Check: Density Overlay")
   }
   
@@ -1303,6 +1322,34 @@ model_diagnostics.bgmfit <- function(
   })
   
   
+ 
+  for (namespi in names(out)) {
+    out[[namespi]] <-  out[[namespi]] +
+      ggplot2::theme(plot.title = ggplot2::element_text(size = title_size))
+  }
+  
+  
+  if(!wrap_title) {
+    for (namespi in names(out)) {
+      out[[namespi]] <-  out[[namespi]] +
+        ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
+    }
+  } else if(wrap_title) {
+    insight::check_if_installed('ggtext')
+    for (namespi in names(out)) {
+      out[[namespi]] <-  out[[namespi]] +
+        ept("ggplot2::theme(plot.title = ggtext::element_textbox_simple(hjust = 0,
+                                                                   vjust = 0,
+                                                                   margin = ggplot2::margin(b = 10),
+                                                                   halign = 0.5,
+                                                                   valign = 0.5))")
+    }
+  }
+  
+  
+  
+  
+
   if (isTRUE(rank_overlay) && requireNamespace("bayesplot", quietly = TRUE)) {
     bayesplot::color_scheme_set("blue")
   }
@@ -1312,6 +1359,7 @@ model_diagnostics.bgmfit <- function(
     if(length(out) == 1) return(out[[1]]) else return(out) 
   }
   
+
   is_patchable <- vapply(
     out,
     function(x) inherits(x, c("gg", "ggplot")),
@@ -1328,7 +1376,18 @@ model_diagnostics.bgmfit <- function(
     ncol <- if (length(patchable_plots) <= 2) length(patchable_plots) else 2
   }
   
-  combined <- patchwork::wrap_plots(patchable_plots, ncol = ncol)
+
+  # sort plots by order specified by user
+  patchable_plots <- patchable_plots[plots]
+  
+  if(is.null(patch_plot.margin)) {
+    combined <- patchwork::wrap_plots(patchable_plots, ncol = ncol)
+  } else if(!is.null(patch_plot.margin)) {
+    combined <- patchwork::wrap_plots(patchable_plots, ncol = ncol) &
+      ggplot2::theme(plot.margin = patch_plot.margin) 
+  }
+  
+
   
   ####
   
@@ -1371,13 +1430,10 @@ model_diagnostics.bgmfit <- function(
   }
   
   ###
-  
-  out <- list(
-    combined = combined,
-    plots = out,
-    plot_df = if (exists("plot_df")) plot_df else NULL
-  )
-
+  out <- list(combined = combined, plots = out)
+  if(add_plot_df) {
+    out[['plot_df']] = if (exists("plot_df")) plot_df else NULL
+  }
   return(out)
 }
 
@@ -1388,11 +1444,5 @@ model_diagnostics.bgmfit <- function(
 model_diagnostics <- function(model, ...) {
   UseMethod("model_diagnostics")
 }
-
-
-
-# model_diagnostics(model=model_uni_by, ndraws = 10, resp = 'Male',
-#                   plots = "rvf")
-
 
 

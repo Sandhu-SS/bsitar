@@ -53,18 +53,12 @@ get.newdata <- function(model,
     idata_method <- 'm2'
   }
   
-
-  # Initiate non formalArgs()
   `:=` <- NULL
   . <- NULL;
   
-
   validate_response(model, resp)
   
   list_c <- list()
-  
-  
-  # For sigma
   xvar_      <- paste0('xvar', resp_rev_)
   sigmaxvar_ <- paste0('sigma', xvar_)
   cov_       <- paste0('cov', resp_rev_)
@@ -72,7 +66,6 @@ get.newdata <- function(model,
   uvarby     <- model$model_info$univariate_by$by
   if(is.null(uvarby)) uvarby <- NA 
  
-  
   if(dpar == "mu") {
     if(is.null(xvar)) {
       xvar   <- model$model_info[[xvar_]]
@@ -86,7 +79,7 @@ get.newdata <- function(model,
       xvar   <- model$model_info[[xvar_]]
     }
     cov    <- model$model_info[[sigmacov_]]
-  } # if(dpar == "mu") { else if(dpar == "sigma") {
+  } 
   
   groupvar_     <- paste0('groupvar', resp_rev_)
   yvar_         <- paste0('yvar', resp_rev_)
@@ -119,7 +112,6 @@ get.newdata <- function(model,
     }
   }
   
-  
   if(dpar == "sigma") {
     sigma_model <- get_sigmamodel_info(model = model,
                                        newdata = NULL, # what = 'model' ignored 
@@ -131,15 +123,12 @@ get.newdata <- function(model,
                                        verbose = verbose)
     }
   
-  
-  
   if (is.null(newdata)) {
     if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
     if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
   } else {
     newdata <- newdata
   }
-  
   
   if(data.table::is.data.table(newdata)) {
     newdata <- newdata %>% data.frame()
@@ -149,37 +138,8 @@ get.newdata <- function(model,
     newdata_was_data_table <- FALSE
   }
   
-  
-  
-  
-  # if(dpar == "mu") {
-  #   if (is.null(newdata)) {
-  #     if(idata_method == 'm1') newdata <- model$model_info$bgmfit.data
-  #     if(idata_method == 'm2') newdata <- model$model_info$bgmfit.data
-  #   } else {
-  #     newdata <- newdata
-  #   }
-  # } else if(dpar == "sigma") {
-  #   if(is.null(newdata)) {
-  #     if(!is.null(sigma_model)) {
-  #       if(sigma_model != "ls") {
-  #         # newdata <- model$model_info$bgmfit.data
-  #         newdata <- newdata
-  #         if(verbose) {
-  #           message("For dpar = 'sigma', the data used for model fitting is used")
-  #         }
-  #       }
-  #     }
-  #   }
-  # }
-  
   newdata.in <- newdata
-  
-  
-  
-  
-  
-  
+
   if(!is.null(dummy_to_factor)) {
     if(!is.list(dummy_to_factor)) {
       stop("dummy_to_factor must be a named list as follows:",
@@ -212,27 +172,6 @@ get.newdata <- function(model,
   }
   
   
-  # This is when no random effects and this groupvar is NULL
-  # Therefore, an artificial group var created
-  # see also changes made to the get_idata function lines 17
-  
-  # if (is.null(model$model_info$groupvar)) {
-  #   name_hypothetical_id <- paste0("id", resp_rev_)
-  #   model$model_info$groupvar <- name_hypothetical_id
-  #   newdata[[name_hypothetical_id]] <- as.factor("tempid")
-  # } else if (!is.null(model$model_info$groupvar)) {
-  #   if(length(newdata[[model$model_info$groupvar]]) == 0) {
-  #     # name_hypothetical_id <- paste0("hy_id", resp_rev_)
-  #     if(length(IDvar) > 1) {
-  #       name_hypothetical_id <- IDvar[1] 
-  #     } else {
-  #       name_hypothetical_id <- IDvar
-  #     }
-  #     model$model_info$groupvar <- name_hypothetical_id
-  #     newdata[[name_hypothetical_id]] <- as.factor("tempid")
-  #   }
-  # }
-  
   newdata <- check_newdata_args(model, newdata, idvar, resp, verbose = verbose)
   
   if(dpar == "sigma") {
@@ -249,10 +188,7 @@ get.newdata <- function(model,
     }
   }
   
-  
 
-  # prepare_data2 with model = model will get all the necessary info
-  
   if(dpar == "mu") {
     itransform_set <- 'x'
     transform_set  <- 'x'
@@ -260,9 +196,7 @@ get.newdata <- function(model,
     itransform_set <- 'sigma'
     transform_set  <- 'sigma'
   }
-  
-  
-  
+
   add_just_list_c <- FALSE
   if(is.null(newdata_fixed)) {
     newdata <- prepare_data2(data = newdata, model = model)
@@ -290,11 +224,7 @@ get.newdata <- function(model,
   
   
   newdata <- newdata[,!duplicated(colnames(newdata))]
-  
-  
-  
-  ##################################################
-  # prepare_data2 changes 
+
   
   if (!is.na(uvarby)) {
     subindicatorsi <- 
@@ -439,9 +369,7 @@ get.newdata <- function(model,
     }
     round(., 3)
   }
-  
-  
-  
+
   get.data.grid <- function(data,
                             xvar,
                             yvar,
@@ -513,8 +441,7 @@ get.newdata <- function(model,
       data.frame()
   }
   
-  ########
-  
+
 
   i_data <-
     function(model,
@@ -846,9 +773,7 @@ get.newdata <- function(model,
         }
         
       } # end if(idata_method == 'm2') {
-      
-      
-      
+
       if (is.null(ipts)) {
         newdata <- newdata
       }

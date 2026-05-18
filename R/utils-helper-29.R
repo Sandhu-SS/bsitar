@@ -727,9 +727,7 @@ summary_table <-
         } # for (i in gof_map) {
         set_metrics <- gof_map_c
       } # if (length(gof_map) == 1) { else if (length(gof_map) > 1) {
-      
-      
-      
+
       if(!is.null(set_metrics)) {
         set_metrics   <- unique(set_metrics)
         gof_custom_df <- glance_custom(model, metrics = set_metrics)
@@ -738,10 +736,7 @@ summary_table <-
       } else {
         return(NULL)
       }
-      
-      
-      
-      
+
       if (!is.null(gof_custom_df) && is.data.frame(gof)) {
         for (n in colnames(gof_custom_df)) {
           if (is.null(vcov_type) || n != "vcov.type") {
@@ -749,7 +744,6 @@ summary_table <-
           }
         }
       }
-      # gofx <<- gof
       if (is.function(gof_function)) {
         if (!"model" %in% names(formals(gof_function))) {
           msg <- "`gof_function` must accept an argument named 'model'."
@@ -768,19 +762,16 @@ summary_table <-
           }
         }
       }
-      # gofxx <<- gof
       for (i in rev(seq_along(gof))) {
         if (isTRUE(is.na(gof[[i]]))) {
           gof[[i]] <- NULL
         }
       }
-      # gofxx <<- gof
       for (col in colnames(gof)) {
         if (inherits(gof[[col]], "logLik")) {
           gof[[col]] <- as.numeric(gof[[col]])
         }
       }
-      # gofxxx <<- gof
       if (inherits(gof, "data.frame")) {
         return(gof)
       }

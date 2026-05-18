@@ -36,10 +36,8 @@
 #'   
 #' @param asdf A logical to indicate whether to return the value as data frame.
 #' 
-#' @param newdata_fixed
+#' @inheritParams growthparameters
 #' 
-#' @param verbose
-#'   
 #' @return A data frame.
 #' 
 #' @author Satpal Sandhu  \email{satpal.sandhu@bristol.ac.uk}
