@@ -328,8 +328,7 @@ plot_curves.bgmfit <- function(model,
   if(is.null(dpar)) {
     dpar <- "mu"
   }
-  
-  
+
   model <- getmodel_info(model = model, 
                          dpar = dpar, 
                          resp = resp, 
@@ -361,22 +360,16 @@ plot_curves.bgmfit <- function(model,
                                 usesavedfuns = usesavedfuns)
     }
   }
-  
-  
+
   try(insight::check_if_installed(c("jtools", "ggplot2"), stop = FALSE, 
                                   prompt = FALSE))
-  
-  
-  # Initiate non formalArgs()
+
   yvar <- NULL;
-  # IDvar <- NULL;
   groupbytest <- NULL;
-  # IDvar <- NULL;
   subindicatorsi <- NULL;
   dy <- NULL;
   yvar <- NULL;
   subindicatorsi <- NULL;
-  # IDvar <- NULL;
   Estimate <- NULL;
   groupby <- NULL;
   groupby_line <- NULL;
@@ -396,8 +389,7 @@ plot_curves.bgmfit <- function(model,
   ':=' <- NULL;
   . <- NULL;
   uvarby <- NULL;
-  
- 
+
   xcall <- match.call()
   match.call.list.in <- as.list(match.call())[-1]
   
@@ -412,17 +404,13 @@ plot_curves.bgmfit <- function(model,
       warning("both 'apv =' and 'peak =' found, ignoring 'peak='")
     }
   }
-  
-  
+
   setxcall_ <- match.call()
   post_processing_checks_args <- list()
   post_processing_checks_args[['model']]    <- model
   post_processing_checks_args[['xcall']]    <- setxcall_
   post_processing_checks_args[['resp']]     <- resp
   post_processing_checks_args[['envir']]    <- envir
-  # post_processing_checks_args[['deriv']]    <- deriv
-  # post_processing_checks_args[['all']]      <- FALSE
-  # post_processing_checks_args[['verbose']]  <- verbose
   post_processing_checks_args[['check_d0']] <- FALSE
   post_processing_checks_args[['check_d1']] <- TRUE
   post_processing_checks_args[['check_d2']] <- FALSE
@@ -432,7 +420,7 @@ plot_curves.bgmfit <- function(model,
   rlang_trace_back <- rlang::trace_back()
   check_trace_back.bgmfit <- grepl(".bgmfit", rlang_trace_back[[1]])
   if(all(!check_trace_back.bgmfit)) {
-    # nothing
+    # 
   } else {
     rlang_trace_back.bgmfit_i <- min(which(check_trace_back.bgmfit == TRUE))
     rlang_trace_back.bgmfit <- rlang_trace_back[[1]][[rlang_trace_back.bgmfit_i]]
@@ -488,14 +476,12 @@ plot_curves.bgmfit <- function(model,
       future::plan('multicore', workers = cores)
     }
   }
-  
 
   if (is.null(newdata)) {
     newdata <- model$model_info$bgmfit.data
   } else {
     newdata <- newdata
   } 
-  
   
   if (opt == 'd' | opt == 'D') {
     only_distance_curve <- TRUE
@@ -551,7 +537,6 @@ plot_curves.bgmfit <- function(model,
                                         transform_draws = transform_draws,
                                         itransform = itransform,
                                         verbose = verbose)
-      
       arguments[['transform_draws']] <- transform_draws
     }
     
@@ -614,13 +599,11 @@ plot_curves.bgmfit <- function(model,
                                      FUN_binary = NULL,
                                      FUN_other = NULL,
                                      verbose = verbose)
-      
-      
-      
+
       arguments$model$model_info[['xvar_for_sigma_model_basic']] <- xvar
       arguments$newdata <- newdata
-    } # if(sigma_model == "basic") {
-  } # if(dpar == "sigma") {
+    } 
+  } 
   
   assign_function_to_environment(transform_draws, 'transform_draws',
                                  envir = NULL)
@@ -665,13 +648,11 @@ plot_curves.bgmfit <- function(model,
   
   Xx <- xvar
   Yy <- yvar
-  
   if (is.null(resp)) {
     resp_rev_ <- resp
   } else if (!is.null(resp)) {
     resp_rev_ <- paste0("_", resp)
   }
-  
   if (is.null(bands)) {
     bands <- ''
   }
@@ -805,7 +786,25 @@ plot_curves.bgmfit <- function(model,
       }
     }
   }
-  
+
+  line_color_key <- function(data, colorkey = NULL) {
+    if(!is.null(colorkey)) {
+      if(length(colorkey) == 1) {
+        if(is.na(colorkey)) colorkey <- NULL
+      }
+    }
+    if (is.null(colorkey)) {
+      out <- NULL
+    } else if (length(colorkey) == 1) {
+      out <- data[[colorkey]]
+    } else {
+      cols_df <- data.frame(lapply(colorkey, function(name) data[[name]]))
+      names(cols_df) <- colorkey
+      out <- interaction(cols_df, drop = TRUE)
+    }
+    return(out)
+  }
+
   check_set_fun <- check_set_fun_transform(model = model, 
                                            which = 'ixfuntransform2',
                                            dpar = dpar, 
@@ -819,18 +818,13 @@ plot_curves.bgmfit <- function(model,
     model$model_info[[check_set_fun[['setfunname']]]] <- ifunx_
   }
   
-
   d. <- CustomDoCall(growthparameters, arguments)
-  
   if(is.null(d.)) return(invisible(NULL))
-  
   p.                    <- d.[['parameters']]
   probtitles            <- d.[['probtitles']]
   groupby_str_d         <- d.[['groupby_str_d']]
   groupby_str_v         <- d.[['groupby_str_v']]
-  
   p.as.d.out_attr       <- p.
-  
   d.[['parameters']]    <- NULL
   d.[['probtitles']]    <- NULL
   d.[['groupby_str_d']] <- NULL
@@ -870,7 +864,6 @@ plot_curves.bgmfit <- function(model,
       }
     }
   }
-  
 
   if(any(itransform_set != "")) {
     d. <- prepare_transformations(data = d., model = model,
@@ -880,19 +873,14 @@ plot_curves.bgmfit <- function(model,
                                   itransform = itransform_set)
   }
  
-
   curve.d <- 'distance'
   curve.v <- 'velocity'
-  
   name.apv <- "APGV"
   name.pv <- "PGV"
-  
   name.atv <- "ATGV"
   name.tv <- "TGV"
-  
   name.acv <- "ACGV"
   name.cv <- "CGV"
-  
   name.vline <- c()
   if(show_age_takeoff)   name.vline <- c(name.vline, name.atv)
   if(show_age_peak)      name.vline <- c(name.vline, name.apv)
@@ -941,7 +929,6 @@ plot_curves.bgmfit <- function(model,
   
   if (is.null(label.x)) {
     label.x     <- paste0(Xx, "")
-    # label.x     <- paste0(firstup(Xx), "")
   }
   
   if (is.null(legendpos)) {
@@ -1018,15 +1005,15 @@ plot_curves.bgmfit <- function(model,
         d.$groupby_line  <- d.$groupby
         d.$groupby_color <- d.$groupby
       }
-      
+
       plot.o.d <- d. %>% dplyr::filter(curve == curve.d) %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
         ggplot2::geom_line(
           ggplot2::aes(
             y = Estimate,
             group = groupby,
-            linetype = groupby_line,
-            color = groupby_color
+            linetype = line_color_key(.data, linetype.groupby),
+            color = line_color_key(.data, color.groupby)
           ),
           linewidth = linewidth.main
         ) +
@@ -1034,11 +1021,6 @@ plot_curves.bgmfit <- function(model,
         ggplot2::labs(x = "", y = "", title = label.d) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
-      
-      plot.o.d <- set_lines_colors(plot.o.d, length(unique(d.[['groupby']])),
-                                   linetype.groupby = linetype.groupby,
-                                   color.groupby = color.groupby)
-
 
       if (grepl("d", bands, ignore.case = T)) {
         plot.o.d <- plot.o.d +
@@ -1048,13 +1030,12 @@ plot_curves.bgmfit <- function(model,
               ymin = .data[[paste0(probtitles[1], '')]],
               ymax = .data[[paste0(probtitles[2], '')]],
               group = groupby,
-              linetype = groupby_line,
-              color = groupby_color,
-              fill = groupby_color
+              linetype = line_color_key(.data, linetype.groupby),
+              color = line_color_key(.data, color.groupby),
+              fill = line_color_key(.data, color.groupby)
             ),
             alpha = band.alpha # , show.legend = band.legends
           )
-        plot.o.d <- set_lines_colors_ribbon(plot.o.d, guideby = 'color')
         if(!band.legends) plot.o.d <- plot.o.d + ggplot2::guides(fill = "none")
       }
       
@@ -1103,8 +1084,8 @@ plot_curves.bgmfit <- function(model,
           ggplot2::aes(
             y = Estimate,
             group = groupby,
-            linetype = groupby_line,
-            color = groupby_color
+            linetype = line_color_key(.data, linetype.groupby),
+            color = line_color_key(.data, color.groupby)
           ),
           linewidth = linewidth.main
         ) +
@@ -1112,12 +1093,7 @@ plot_curves.bgmfit <- function(model,
         ggplot2::labs(x = "", y = "", title = label.v) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
-      
-      
-      plot.o.v <- set_lines_colors(plot.o.v, length(unique(d.[['groupby']])), 
-                                   linetype.groupby = linetype.groupby, 
-                                   color.groupby = color.groupby)
-      
+
       if (grepl("v", bands, ignore.case = T)) {
         plot.o.v <- plot.o.v +
           ggplot2::geom_ribbon(
@@ -1126,13 +1102,12 @@ plot_curves.bgmfit <- function(model,
               ymin = .data[[paste0(probtitles[1], '')]],
               ymax = .data[[paste0(probtitles[2], '')]],
               group = groupby,
-              linetype = groupby_line,
-              color = groupby_color,
-              fill = groupby_color
+              linetype = line_color_key(.data, linetype.groupby),
+              color = line_color_key(.data, color.groupby),
+              fill = line_color_key(.data, color.groupby)
             ),
             alpha = band.alpha # , show.legend = band.legends
           )
-        plot.o.v <- set_lines_colors_ribbon(plot.o.v, guideby = 'color')
         if(!band.legends) plot.o.v <- plot.o.v + ggplot2::guides(fill = "none")
       }
       
@@ -1181,7 +1156,8 @@ plot_curves.bgmfit <- function(model,
               alpha = band.alpha
             )
         }
-      } #  if (!is.null(name.vline) & !is.null(p.) ) {
+      } 
+      
       
       if (!is.null(name.hline) & !is.null(p.) ) {
         data_hline <- 
@@ -1205,7 +1181,7 @@ plot_curves.bgmfit <- function(model,
               alpha = band.alpha
             )
         }
-      } #  if (!is.null(name.hline)) {
+      } 
       
       d. <- d.o
       if ('curve' %in% names(d.)) {
@@ -1404,8 +1380,8 @@ plot_curves.bgmfit <- function(model,
           ggplot2::aes(
             y = Estimate.x,
             group = groupby.x,
-            linetype = groupby_line.x,
-            colour = groupby_color.x
+            linetype = line_color_key(.data, linetype.groupby),
+            color = line_color_key(.data, color.groupby)
           ),
           linewidth = linewidth.main
         ) +
@@ -1413,8 +1389,8 @@ plot_curves.bgmfit <- function(model,
           ggplot2::aes(
             y = t.s.axis$fwd(Estimate.y),
             group = groupby.y,
-            linetype = groupby_line.y,
-            colour = groupby_color.y
+            linetype = line_color_key(.data, linetype.groupby),
+            color = line_color_key(.data, color.groupby)
           ),
           linewidth = linewidth.main
         ) +
@@ -1426,8 +1402,7 @@ plot_curves.bgmfit <- function(model,
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90))
-      
-      
+
       getbuiltingg <- ggplot2::ggplot_build(plot.o)
       get_line_  <- getbuiltingg$data[[1]]["linetype"]
       get_color_ <- getbuiltingg$data[[1]]["colour"]
@@ -1454,11 +1429,10 @@ plot_curves.bgmfit <- function(model,
         get_color_ <- legendlabs_mult_color
         legendlabs_ <- legendlabs_mult_singel
       }
-      
+
       plot.o <- plot.o + 
         ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
         ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
-      
       
       if (grepl("d", bands, ignore.case = T)) {
         plot.o <- plot.o +
@@ -1468,11 +1442,11 @@ plot_curves.bgmfit <- function(model,
               ymin = .data[[paste0(probtitles[1], '.x')]],
               ymax = .data[[paste0(probtitles[2], '.x')]],
               group = groupby.x,
-              linetype = groupby_line.x,
-              # color = groupby_color.x,
-              fill = groupby_color.x,
+              linetype = line_color_key(.data, linetype.groupby),
+              color = line_color_key(.data, color.groupby),
+              fill = line_color_key(.data, color.groupby)
             ),
-            alpha = band.alpha # , show.legend = band.legends
+            alpha = band.alpha
           )
         if(!band.legends) plot.o <- plot.o + ggplot2::guides(fill = "none")
       }
@@ -1485,15 +1459,14 @@ plot_curves.bgmfit <- function(model,
               ymin = t.s.axis$fwd(.data[[paste0(probtitles[1], '.y')]]),
               ymax = t.s.axis$fwd(.data[[paste0(probtitles[2], '.y')]]),
               group = groupby.y,
-              linetype = groupby_line.y,
-              # color = groupby_color.y,
-              fill = groupby_color.y,
+              linetype = line_color_key(.data, linetype.groupby),
+              color = line_color_key(.data, color.groupby),
+              fill = line_color_key(.data, color.groupby)
             ),
-            alpha = band.alpha # , show.legend = band.legends
+            alpha = band.alpha
           )
         if(!band.legends) plot.o <- plot.o + ggplot2::guides(fill = "none")
       }
-      
       
       if((grepl("d", bands, ignore.case = T) & 
           !grepl("v", bands, ignore.case = T)) |
@@ -1521,8 +1494,8 @@ plot_curves.bgmfit <- function(model,
       }
       
       if(!one_band & ngrpanels == 1) {
-        plot.o <- plot.o +
-          ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
+        # plot.o <- plot.o +
+        #   ggplot2::scale_fill_manual(values=get_color_, guide = 'none')
       }
       
       if (pv) {
@@ -1571,7 +1544,7 @@ plot_curves.bgmfit <- function(model,
               alpha = band.alpha
             )
         }
-      } # if (!is.null(name.vline) & !is.null(p.) ) {
+      }
       
       if (!is.null(name.hline) & !is.null(p.) ) {
         data_hline <- dplyr::filter(p., grepl(paste(name.hline, 
@@ -1596,7 +1569,7 @@ plot_curves.bgmfit <- function(model,
               alpha = band.alpha
             )
         }
-      } # if (!is.null(name.hline)) {
+      } 
       
       data_dv <- data_dv.o
       if ('curve' %in% names(data_dv)) {
@@ -1611,10 +1584,6 @@ plot_curves.bgmfit <- function(model,
   
   if (grepl("a", opt, ignore.case = T) |
       grepl("u", opt, ignore.case = T)) {
-    if (!is.null(cov_vars)) {
-     # stop("Adjusted curves not yet supported for model with covariate(s)")
-    }
-    
     if (grepl("a", opt, ignore.case = T)) {
       xyadj_ed <- xyadj_curves(model, 
                                x = NULL,
@@ -1689,17 +1658,15 @@ plot_curves.bgmfit <- function(model,
           return(out_a_)
         }
       }
-
+      
       out_a_ <-
         out_a_ %>%
         dplyr::mutate(
           groupby = interaction(dplyr::across(dplyr::all_of(groupby_str_au)))
           )
-      
-      # x_minimum_a_ <- floor(min(out_a_[[Xx]]))
-      # x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
-      x_minimum_a_ <- x_minimum
-      x_maximum_a_ <- x_maximum
+  
+      x_minimum_a_ <- x_minimum # floor(min(out_a_[[Xx]]))
+      x_maximum_a_ <- x_maximum # ceiling(max(out_a_[[Xx]]))
       
       out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum_a_ & 
                          out_a_[[Xx]] <= x_maximum_a_, ]
@@ -1748,6 +1715,8 @@ plot_curves.bgmfit <- function(model,
         ggplot2::geom_line(
           ggplot2::aes(
             y = !!as.name(Yy),
+            linetype = line_color_key(.data, linetype.groupby),
+            color = line_color_key(.data, color.groupby),
             group = groupby.x # ,
           ),
           linewidth = linewidth.main
@@ -1762,7 +1731,6 @@ plot_curves.bgmfit <- function(model,
         ggplot2::labs(title = label.adj) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
       
-      
       getbuiltingg <- ggplot2::ggplot_build(plot.o.a)
       get_line_  <- getbuiltingg$data[[1]]["linetype"]
       get_color_ <- getbuiltingg$data[[1]]["colour"]
@@ -1776,7 +1744,6 @@ plot_curves.bgmfit <- function(model,
       if(length(get_color_) != ngrpanels) get_color_ <- 
         rep(get_color_, ngrpanels)
       
-      # These will be carried forward for ribbon also (below)
       if(ngrpanels > 1) {
         get_line_ <- get_line_
         get_color_ <- get_color_
@@ -1786,11 +1753,7 @@ plot_curves.bgmfit <- function(model,
         get_color_ <- 'black' # legendlabs_mult_color
         legendlabs_ <- NULL # legendlabs_mult_singel
       }
-      
-      plot.o.a <- plot.o.a +
-        ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
-        ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
-      
+
       if (grepl("a", bands, ignore.case = T)) {
         plot.o.a <- plot.o.a +
           ggplot2::geom_ribbon(
@@ -1860,6 +1823,16 @@ plot_curves.bgmfit <- function(model,
                                           itransform = itransform_set)
       }
       d.out <- out_u_
+      groupby_cov <- setdiff(groupby_str_au, idvar)
+      out_u_x_unique <- out_u_ %>% 
+        dplyr:: distinct(!!as.name(idvar), .keep_all = F)
+      zzz_unique     <- model$data %>% 
+        dplyr::select(dplyr::all_of(c(idvar, groupby_cov))) %>% 
+        dplyr:: distinct(!!as.name(idvar), .keep_all = TRUE)
+      out_u_x_unique <- out_u_x_unique %>% 
+        dplyr:: left_join(zzz_unique, by = idvar, keep = F)
+      out_u_ <- dplyr::left_join(out_u_, out_u_x_unique %>% 
+                         dplyr::select(dplyr::all_of(c(idvar, groupby_cov))), by = idvar, keep = F)
       
       out_u_ <-
         out_u_ %>%
@@ -1911,6 +1884,8 @@ plot_curves.bgmfit <- function(model,
       ggplot2::geom_line(
         ggplot2::aes(
           y = !!as.name(Yy),
+          linetype = line_color_key(.data, linetype.groupby),
+          color = line_color_key(.data, color.groupby),
           group = groupby.y
         ),
         linewidth = linewidth.main
@@ -1947,12 +1922,7 @@ plot_curves.bgmfit <- function(model,
         get_color_ <- 'black' # legendlabs_mult_color
         legendlabs_ <- NULL # legendlabs_mult_singel
       }
-      
-      plot.o.u <- plot.o.u +
-        ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
-        ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
-      
-      
+
       if (!grepl("a", opt, ignore.case = T)) {
         suppressMessages({
         })
@@ -1983,11 +1953,9 @@ plot_curves.bgmfit <- function(model,
           dplyr::bind_rows(., out_u_ %>%
                              dplyr::mutate(curve = 'Unadjusted')) %>%
           data.frame()
-        
-        # x_minimum_a_ <- floor(min(out_a_[[Xx]]))
-        # x_maximum_a_ <- ceiling(max(out_a_[[Xx]]))
-        x_minimum_a_ <- x_minimum
-        x_maximum_a_ <- x_maximum
+    
+        x_minimum_a_ <- x_minimum # floor(min(out_a_[[Xx]]))
+        x_maximum_a_ <- x_maximum # ceiling(max(out_a_[[Xx]]))
         
         out_a_u_ <- out_a_u_[out_a_u_[[Xx]] >= x_minimum_a_ & 
                                out_a_u_[[Xx]] <= x_maximum_a_, ]
@@ -2078,7 +2046,7 @@ plot_curves.bgmfit <- function(model,
           get_color_ <- 'black' # legendlabs_mult_color
           legendlabs_ <- NULL   # legendlabs_mult_singel
         }
-        
+
         plot.o <- plot.o +
           ggplot2::scale_linetype_manual(values=get_line_, guide = 'none') +
           ggplot2::scale_color_manual(breaks=legendlabs_, values=get_color_)
@@ -2103,7 +2071,6 @@ plot_curves.bgmfit <- function(model,
             ggplot2::aes(
               y = !!as.name(Yy),
               group = groupby,
-              # linetype = linetype.groupby, # This does not plot lines TODO
               colour = label.adj
             ),
             linewidth = linewidth.main
@@ -2159,6 +2126,13 @@ plot_curves.bgmfit <- function(model,
     plot.list <- list(plot.o.d, plot.o.v, plot.o.a, plot.o.u)
     plot.list <- plot.list[lengths(plot.list) != 0]
     
+    ######################################
+    # Add manual linetype.groupby and color.groupby
+    for (plot.listi in names(plot.list)) {
+      # plot.list[[plot.listi]] <- 
+    }
+    ######################################
+    
     plot.o <- patchwork::wrap_plots(plot.list,
                                     ncol = 2, nrow = NULL) %>%
       add_global_label(
@@ -2169,7 +2143,6 @@ plot_curves.bgmfit <- function(model,
         Ygap = 0.04)
     plot.o <- plot.o +  patchwork::plot_layout(guides = "collect")
   }
-  
 
   if (!returndata) {
     if(print) print(plot.o)
