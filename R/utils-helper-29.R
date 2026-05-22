@@ -567,6 +567,25 @@ summary_table <-
                                    call_custom = FALSE,
                                    add_suffix = F)
       
+      
+      # ########## residual : ########## 
+      custom_rename_map[[1]] <- paste0("", ":")
+      custom_rename_map[[2]] <- c(" x ")
+      
+      # if(!is.null(gsub_fixed)) custom_rename_map[[2]] <- gsub_fixed
+      
+      params <- replace_terms_base(df = params,
+                                   gsub_it = custom_rename_map[[1]],
+                                   gsub_by = custom_rename_map[[2]],
+                                   select_col = 'Parameter',
+                                   group = NULL,
+                                   corsub = NULL,
+                                   fixed = FALSE,
+                                   call_custom = FALSE,
+                                   add_suffix = F)
+      
+      
+      
       # ########## gr_by ##########  
       custom_rename_map[[1]] <- paste0("", gr_by)
       custom_rename_map[[2]] <- c("")

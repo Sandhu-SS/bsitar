@@ -123,11 +123,9 @@ clean_draws <- function(DT,
     )
   }
   
-  # convert back to data.frame if original was not data.table
   if (!is_dt) {
     out <- base::as.data.frame(out)
   }
-  
   return(out)
 }
 
@@ -254,7 +252,8 @@ get_comparison_hypothesis <- function(data,
                                       parms_sat_elements = NULL,
                                       format = FALSE,
                                       verbose = FALSE) {
-  
+  insight::check_if_installed("bayestestR", 
+                              minimum_version  = "0.18.0", prompt = F)
   string_sat <- 'sat'
   if(!is_emptyx(parms_sat_elements)) {
     get_parms_size     <- parms_sat_elements[['get_parms_size']]    
@@ -263,8 +262,6 @@ get_comparison_hypothesis <- function(data,
     numeric_sat        <- parms_sat_elements[['numeric_sat']]       
     string_numeric_sat <- parms_sat_elements[['string_numeric_sat']] 
   }
- 
-  
   data <- clean_draws(data,
                       variable = "draw", 
                       group = "drawid", 
@@ -304,7 +301,8 @@ get_comparison_hypothesis <- function(data,
           comparison_args[['by']] <- by
         }
       }
-    } # if(is.null(comparison_args)) { else if(!is.null(comparison_args)) {
+    } 
+    
     if(is.null(hypothesis_args)) {
       if(is.null(full.args[['hypothesis_by']])) {
         full.args[['hypothesis_by']] <- by
@@ -324,9 +322,8 @@ get_comparison_hypothesis <- function(data,
       } else if(!is.null(by)) {
         hypothesis_args[['by']] <- by
       }
-    } # if(is.null(hypothesis_args)) { else if(is.null(hypothesis_args)) {
-  } # if(is.null(full.args)) { else if(!is.null(full.args)) {
-  
+    } 
+  } 
 
   if(!is.null(comparison_args)) {
     if(!is.null(comparison_args[['comparison_by']])) {
@@ -345,13 +342,9 @@ get_comparison_hypothesis <- function(data,
     } 
   }
   
-  
   collapse::set_collapse(nthreads = parallel::detectCores() - 1)
-  
   data.table::setDTthreads(threads = parallel::detectCores() - 1) 
-  
-  ##########################################
-  
+
   if(is.null(probs) & is.null(conf_level)) {
     stop2c("Please specify either 'probs' or 'conf_level'")
   } else if(!is.null(conf_level)) {
@@ -365,10 +358,7 @@ get_comparison_hypothesis <- function(data,
   probtitles <- probs[order(probs)] * 100
   probtitles <- paste("Q", probtitles, sep = "")
   set_names_  <- c('Estimate', probtitles)
-  
-  
-  ##########################################
-  
+
   if(!is.null(estimate_center)) {
     ec_ <- getOption("marginaleffects_posterior_center")
     options("marginaleffects_posterior_center" = estimate_center)
@@ -383,9 +373,7 @@ get_comparison_hypothesis <- function(data,
   ei_agg <- getOption("marginaleffects_posterior_interval")
   if(is.null(ec_agg)) ec_agg <- "mean"
   if(is.null(ei_agg)) ei_agg <- "eti"
-  
-  ##########################################
-  
+
   if(get_range_null_form & get_range_null_value) {
     stop2c(
       "Specify either 'get_range_null_form' or 'get_range_null_value', not both. 
@@ -393,9 +381,7 @@ get_comparison_hypothesis <- function(data,
      range and the null for p_direction, the 'get_range_null_value' return the  
      actuall values that will be used for comparison and hypothesis testing")
   }
-  
-  ##########################################
-  
+
   comparison_equivalence_test_arg <- list()
   comparison_equivalence_test_arg[['ci']] <- ci
   comparison_equivalence_test_arg[['rvar_col']] <- rvar_col
@@ -406,15 +392,10 @@ get_comparison_hypothesis <- function(data,
   comparison_p_direction_arg[['as_p']] <- FALSE
   comparison_p_direction_arg[['remove_na']] <- TRUE
   comparison_p_direction_arg[['rvar_col']] <- NULL
-  
-  ##########################################
-  
+
   hypothesis_equivalence_test_arg <- comparison_equivalence_test_arg
   hypothesis_p_direction_arg <- comparison_p_direction_arg
-  
-  ##########################################
 
-  # If somehow hypothesis_args are set by hypothesis itself is NULL
   if(!is.null(hypothesis_args)) {
     if(is.null(hypothesis_args[['hypothesis']])) {
       evaluate_hypothesis  <- FALSE
@@ -439,7 +420,6 @@ get_comparison_hypothesis <- function(data,
                                     hypothesis_args = NULL,
                                     what = NULL) {
 
-    
     if(is.list(range_null)) {
       range_null <- range_null
     } else if(is.numeric(range_null)) {
@@ -451,8 +431,7 @@ get_comparison_hypothesis <- function(data,
     } else if(is.null(range_null)) {
       range_null <- "default"
     }
-    
-  
+
     if(get_depth(range_null) > 1) {
       range_null <- range_null
     } else {
@@ -497,7 +476,6 @@ get_comparison_hypothesis <- function(data,
                                           remove_duplicate = "both")
       return(test_null_range)
     } # if(!is.null(what)) { else if(is.null(what)) {
-    
   } # End of list_range_null_to_df
   
   list_comparison_range <- list_comparison_null <- NULL
@@ -518,8 +496,8 @@ get_comparison_hypothesis <- function(data,
       } else {
         list_comparison_null <- NULL
       }
-    } # if(!is.null(comparison_args) & !is.null(comparison_args$range)) { else .
-  }# if(NullFALSE(evaluate_comparison)) {
+    } 
+  }
   
   if(NullFALSE(evaluate_hypothesis)) {
     if(!is.null(hypothesis_args) & !is.null(hypothesis_args$range)) {
@@ -536,10 +514,8 @@ get_comparison_hypothesis <- function(data,
       } else {
         list_hypothesis_null <- NULL
       }
-      # list_hypothesis_range <- full.args$equivalence_test$range
-      # list_hypothesis_null <- full.args$p_direction$null
-    } # if(!is.null(hypothesis_args) & !is.null(hypothesis_args$range)) { else .
-  } # if(NullFALSE(evaluate_hypothesis)) {
+    }
+  }
   
   if(is.null(comparison_range)) {
     if(!is.null(list_comparison_range)) {
@@ -575,9 +551,7 @@ get_comparison_hypothesis <- function(data,
       comparison_null <- NULL
     }
   }
-  
-  
-  
+
   if(is.null(hypothesis_range)) {
     if(!is.null(list_hypothesis_range)) {
       hypothesis_range <- list_range_null_to_df(list_hypothesis_range,
@@ -612,7 +586,6 @@ get_comparison_hypothesis <- function(data,
       hypothesis_null <- NULL
     }
   }
-  
 
   comparison_range_null <- join_df_or_lists(comparison_null, 
                                             comparison_range, 
@@ -624,13 +597,9 @@ get_comparison_hypothesis <- function(data,
                                             hypothesis_range, 
                                             join_on = NULL, 
                                             remove_duplicate = "both")
- 
 
-  
   full.args_equivalence_test_range <- full.args$equivalence_test$range
 
-  # get_test_range_null_wrapper_docall_ars_as_list
-  
   ####################################################
   # Initiate  create_range_lists_pair_args
   ####################################################
@@ -666,9 +635,6 @@ get_comparison_hypothesis <- function(data,
                                        create_range_lists_pair_args)
     }
   } # if(evaluate_comparison) {
-  
-  
-
 
   if(evaluate_hypothesis) {
     create_range_lists_pair_args[['by']] <- hypothesis_args[['by']]
@@ -687,11 +653,8 @@ get_comparison_hypothesis <- function(data,
       hypothesis_test_range <- do.call(get_test_range_null, 
                                        create_range_lists_pair_args)
     }
-  } # if(evaluate_hypothesis) {
-  
-  
+  }
 
-  
   comparison_test_null_range <- hypothesis_test_null_range <- NULL
   comparison_hypothesis_test_null <- list()
   if(!is.null(comparison_test_null) | !is.null(comparison_test_range)) {
@@ -715,9 +678,6 @@ get_comparison_hypothesis <- function(data,
     return(comparison_hypothesis_test_null)
   }
   
-  
-  #############################################################################
-  
   check_names_exits <- function(data, names) {
     if(is.null(data)) return(invisible(NULL)) # This when no hypothesis 
     `%chin%` <- data.table::`%chin%`
@@ -736,9 +696,7 @@ get_comparison_hypothesis <- function(data,
     }
     return(invisible(NULL))
   }
-  
-  
-  # Function that triggers the error
+
   check_range_null_structure_rows <- function(out_range_null, set_range_null) {
     
     if(is.null(set_range_null)) return(invisible(NULL))
@@ -755,8 +713,7 @@ get_comparison_hypothesis <- function(data,
            "\n\n",
            formatted_df, call. = FALSE)
     }
-  } # check_range_null_structure_rows
-  
+  } 
   
   set_test_null_range_fun <- function(range_null, 
                                       range, 
@@ -773,12 +730,6 @@ get_comparison_hypothesis <- function(data,
     } else if(NullFALSE(pd_test)) {
       check_names_range_null <- c('null')
     }
-    
-    # if(is_emptyx(range_null)) range_null <- NULL
-    # 
-    # if(is.null(range_null) & is.null(range) & is.null(null)) {
-    #   return(NULL)
-    # }
     
     if(!is.null(range_null)) {
       check_names_exits(range_null, check_names_range_null)
@@ -797,12 +748,8 @@ get_comparison_hypothesis <- function(data,
     }
     check_range_null_structure_rows(out_range_null, set_range_null)
     return(out_range_null)
-  } # set_test_null_range_fun
-  
-  
+  } 
 
-  
-  # Update comparison_test_null_range with user specified range_null/range/null
   if(!is_emptyx(comparison_range_null)) {
     comparison_test_null_range <- 
       set_test_null_range_fun(range_null = comparison_range_null, 
@@ -811,8 +758,7 @@ get_comparison_hypothesis <- function(data,
                               set_range_null = comparison_test_null_range,
                               rope_test = rope_test,
                               pd_test = pd_test)
-  } # if(!is_emptyx(comparison_range_null)) {
-  
+  } 
   
   if(!is_emptyx(hypothesis_test_null_range)) {
     hypothesis_test_null_range <- 
@@ -822,11 +768,7 @@ get_comparison_hypothesis <- function(data,
                               set_range_null = hypothesis_test_null_range,
                               rope_test = rope_test,
                               pd_test = pd_test)
-  } # if(!is_emptyx(hypothesis_test_null_range)) {
-  
-  
-  
-  
+  } 
   
   ####################################################
   # Check - Set comparison -> range
@@ -835,12 +777,9 @@ get_comparison_hypothesis <- function(data,
   comparison_args[['equivalence_test']] <- comparison_equivalence_test_arg
   comparison_args[['p_direction']]      <- comparison_p_direction_arg
   comparison_args[['range_null']]       <- comparison_test_null_range
-  
   hypothesis_args[['equivalence_test']] <- hypothesis_equivalence_test_arg
   hypothesis_args[['p_direction']]      <- hypothesis_p_direction_arg
   hypothesis_args[['range_null']]       <- hypothesis_test_null_range
-  
-  
   call_equivalence_test_p_direction_args <- list()
   call_equivalence_test_p_direction_args[['data']] <- data
   call_equivalence_test_p_direction_args[['by']] <- by
@@ -857,7 +796,6 @@ get_comparison_hypothesis <- function(data,
     rope_test
   call_equivalence_test_p_direction_args[['pd_test']] <- 
     pd_test
-  
   
   call_equivalence_test_p_direction_args[['conf_level']] <- conf_level
   call_equivalence_test_p_direction_args[['probs']] <- probs
@@ -886,7 +824,6 @@ get_comparison_hypothesis <- function(data,
     comparison_hypothesis_results$hypothesis <- NULL
   } 
   
-  
   if(!is.null(string_sat)) {
     if(!is.null(comparison_hypothesis_results$comparison)) {
       comparison_hypothesis_results$comparison <- 
@@ -902,11 +839,8 @@ get_comparison_hypothesis <- function(data,
                                    it = string_sat,
                                    by = string_numeric_sat)
     }
-  } # if(!is.null(string_sat)) {
+  } 
   
-  
-  
-  # Remove paranthesis () from the hypothesis terms
   if(!is.null(comparison_hypothesis_results$hypothesis)) {
     comparison_hypothesis_results$hypothesis <- 
       comparison_hypothesis_results$hypothesis[, 
@@ -928,16 +862,13 @@ get_comparison_hypothesis <- function(data,
     merge_ranges_eqpd_args[['verbose']] <- FALSE
     comparison_hypothesis_results <- do.call(merge_ranges_eqpd, 
                                              merge_ranges_eqpd_args)
-  } # if(format) {
-  
-  ##########################################
+  }
   
   if(!is.null(comparison_hypothesis_results)) {
     if(length(comparison_hypothesis_results) == 1) {
       comparison_hypothesis_results <- comparison_hypothesis_results[[1]]
     }
   }
-  
   return(comparison_hypothesis_results)
 }
 
@@ -2468,6 +2399,8 @@ call_bayestest_eq <- function(x,
   equivalence_test_args_run_marginals <- function(x,
                                                   set_args,
                                                   reformat_args) {
+    insight::check_if_installed("bayestestR", 
+                                minimum_version  = "0.18.0", prompt = F)
     dimx1           <- dim(x)[1]
     verbose         <- set_args[['verbose']]
     set_args[['x']] <- x
@@ -2498,6 +2431,8 @@ call_bayestest_eq <- function(x,
   p_direction_args_run_marginals <- function(x,
                                              set_args,
                                              reformat_args) {
+    insight::check_if_installed("bayestestR", 
+                                minimum_version  = "0.18.0", prompt = F)
     dimx1           <- dim(x)[1]
     verbose         <- set_args[['verbose']]
     set_args[['x']] <- x

@@ -21,6 +21,7 @@
   re_formula = NULL,
   numeric_cov_at = NULL,
   aux_variables = NULL,
+  plot_cov = NULL,
   grid_add = NULL,
   levels_id = NULL,
   avg_reffects = NULL,
@@ -39,6 +40,7 @@
   incl_autocor = TRUE,
   robust = FALSE,
   transform_draws = NULL,
+  xaxis_breaks_fun = NULL,
   scale = c("response", "linear"),
   future = FALSE,
   future_session = "multisession",
@@ -58,6 +60,7 @@
   linewidth.apv = NULL,
   linetype.groupby = NA,
   color.groupby = NA,
+  fill.groupby = NULL,
   band.alpha = NULL,
   band.legends = FALSE,
   show_age_takeoff = TRUE,
@@ -177,6 +180,9 @@ included in the model.}
 \item{aux_variables}{An optional argument to specify variables passed to the
 \code{ipts} argument, useful when fitting location-scale or measurement
 error models.}
+
+\item{plot_cov}{An optional character string to specify the \code{covariate}
+passed to the plot argument (default  \code{NULL}). Rarely used.}
 
 \item{grid_add}{An optional argument to specify the variable(s) that can be
 passed to the \code{\link[marginaleffects:datagrid]{marginaleffects::datagrid()}}. This is useful when fitting
@@ -327,6 +333,10 @@ off this automatic assignment of \code{'exp'} to the
   FALSE} when computing the first derivative (velocity) for \code{dpar =
   'sigma'}.}
 
+\item{xaxis_breaks_fun}{A function (default \code{NULL}) applied to the
+\code{x-axis} breaks. The default \code{NULL} is same as
+\code{function(x)x}}
+
 \item{scale}{Either \code{"response"} or \code{"linear"}.
 If \code{"response"}, results are returned on the scale
 of the response variable. If \code{"linear"},
@@ -428,11 +438,16 @@ distance and velocity curves when drawing plots for a model with factor
 \code{covariates} or individual-specific curves. The default is \code{NA},
 which suppresses legends.}
 
+\item{fill.groupby}{A character string specifying the fill color for distance
+and velocity curve bands when drawing plots for a model with factor
+\code{covariates} or individual-specific curves. The default is \code{NA},
+which suppresses legends.}
+
 \item{band.alpha}{A numeric value to specify the transparency of the CI bands
 around the curves. The default \code{NULL} sets the transparency to 0.4.}
 
 \item{band.legends}{A logical value (default \code{FALSE}) to indicate
-whether to display the \code{legends} for the \code{CI bands}. It sets
+whether to show \code{legends} for \code{CI bands}. It sets
 \code{ggplot2::guides(fill = 'none')}}
 
 \item{show_age_takeoff}{A logical value (default \code{TRUE}) to indicate

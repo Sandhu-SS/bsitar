@@ -60,6 +60,10 @@
 #' @param conf A numeric value (default \code{0.95}) specifying the confidence
 #'   interval (CI) level for the bands. See [bsitar::growthparameters()] for
 #'   more details.
+#'   
+#' @param xaxis_breaks_fun A function (default \code{NULL}) applied to the
+#'   \code{x-axis} breaks. The default \code{NULL} is same as
+#'   \code{function(x)x}
 #'
 #' @param trim A numeric value (default \code{0}) indicating the number of long
 #'   line segments to be excluded from the plot when the option 'u' or 'a' is
@@ -124,14 +128,19 @@
 #'   distance and velocity curves when drawing plots for a model with factor
 #'   \code{covariates} or individual-specific curves. The default is \code{NA},
 #'   which suppresses legends.
+#'   
+#' @param fill.groupby A character string specifying the fill color for distance
+#'   and velocity curve bands when drawing plots for a model with factor
+#'   \code{covariates} or individual-specific curves. The default is \code{NA},
+#'   which suppresses legends.
 #'
 #' @param band.alpha A numeric value to specify the transparency of the CI bands
 #'   around the curves. The default \code{NULL} sets the transparency to 0.4.
 #'   
 #' @param band.legends A logical value (default \code{FALSE}) to indicate
-#'   whether to display the \code{legends} for the \code{CI bands}. It sets
+#'   whether to show \code{legends} for \code{CI bands}. It sets
 #'   \code{ggplot2::guides(fill = 'none')}
-#'
+#' 
 #' @param show_age_takeoff A logical value (default \code{TRUE}) to indicate
 #'   whether to display the ATGV line(s) on the plot.
 #'
@@ -164,6 +173,9 @@
 #' @param aux_variables An optional argument to specify variables passed to the
 #'   \code{ipts} argument, useful when fitting location-scale or measurement
 #'   error models.
+#'   
+#' @param plot_cov An optional character string to specify the \code{covariate}
+#'   passed to the plot argument (default  \code{NULL}). Rarely used.
 #'
 #' @inheritParams growthparameters.bgmfit
 #' @inherit brms::fitted.brmsfit params
@@ -251,6 +263,7 @@ plot_curves.bgmfit <- function(model,
                                re_formula = NULL,
                                numeric_cov_at = NULL,
                                aux_variables = NULL,
+                               plot_cov = NULL,
                                grid_add = NULL,
                                levels_id = NULL,
                                avg_reffects = NULL,
@@ -269,6 +282,7 @@ plot_curves.bgmfit <- function(model,
                                incl_autocor = TRUE,
                                robust = FALSE,
                                transform_draws = NULL,
+                               xaxis_breaks_fun = NULL,
                                scale = c("response", "linear"),
                                future = FALSE,
                                future_session = 'multisession',
@@ -288,6 +302,7 @@ plot_curves.bgmfit <- function(model,
                                linewidth.apv = NULL,
                                linetype.groupby = NA,
                                color.groupby = NA,
+                               fill.groupby = NULL,
                                band.alpha = NULL,
                                band.legends = FALSE,
                                show_age_takeoff = TRUE,
@@ -610,7 +625,7 @@ plot_curves.bgmfit <- function(model,
 
   arguments$model$model_info[['transform_draws']] <-
   model$model_info[['transform_draws']] <- transform_draws
-  
+ 
   get.newdata_args <- list()
   get.newdata_args[['model']]          <- model
   get.newdata_args[['newdata']]        <- newdata
@@ -646,6 +661,7 @@ plot_curves.bgmfit <- function(model,
     if(!exists(check___)) assign(check___, NULL)
   }
   
+ 
   Xx <- xvar
   Yy <- yvar
   if (is.null(resp)) {
@@ -830,6 +846,11 @@ plot_curves.bgmfit <- function(model,
   d.[['groupby_str_d']] <- NULL
   d.[['groupby_str_v']] <- NULL
   
+  
+  groupby_str_d <- unique(c(groupby_str_d, plot_cov))
+  groupby_str_v <- unique(c(groupby_str_v, plot_cov))
+ 
+  
   d. <- d. %>% CustomDoCall(rbind, .) %>% data.frame()
   row.names(d.) <- NULL
   
@@ -965,6 +986,77 @@ plot_curves.bgmfit <- function(model,
     band.alpha <- 0.25
   }
   
+  if(is.null(fill.groupby)) {
+    fill.groupby <- color.groupby
+  } else if(!is.null(fill.groupby)) {
+    if(isFALSE(fill.groupby)) fill.groupby <- NA
+  }
+  
+  # Define a custom transformation:
+  # - transform: apply log to original age (to match your data)
+  # - inverse: apply exp to log-age (to show age on axis)
+  log_age_trans <- scales::trans_new(
+    name    = "log_age",
+    transform = exp,             # original -> log (for breaks computation)
+    inverse = log # ,               # log -> original (for labels)
+    # breaks  = scales::extended_breaks(n = 13)  # default nice breaks on un-transformed scale
+  )
+  
+  # Function to count max decimal places in breaks
+  max_decimals <- function(x) {
+    parts <- strsplit(as.character(x), "\\.")
+    decimals <- sapply(parts, function(p) if (length(p) == 2) nchar(p[2]) else 0L)
+    max(decimals)
+  }
+  
+  scale_x_continuous_fun <- function(x_minimum, x_maximum, by = 1, fun) {
+    xseq <- seq(x_minimum, x_maximum, by)
+    dec <- max_decimals(xseq)
+    accuracy <- 10^-dec
+    label_fun <- scales::label_number(accuracy = accuracy)
+    body(fun) <- call("(", body(fun))
+    ggplot2::scale_x_continuous(breaks = xseq, labels = fun(xseq) %>% label_fun())
+  }
+  
+  if(is.null(xaxis_breaks_fun)) {
+    xaxis_bk_call <- function(x)x
+  } else if(is.character(xaxis_breaks_fun)) {
+      if(xaxis_breaks_fun == "identity") xaxis_bk_call <- function(x)x
+      if(xaxis_breaks_fun == "log") xaxis_bk_call <- function(x)log(x)
+      if(xaxis_breaks_fun == "exp") xaxis_bk_call <- function(x)exp(x)
+      if(xaxis_breaks_fun == "sqrt") xaxis_bk_call <- function(x)sqrt(x)
+      if(xaxis_breaks_fun == "square") xaxis_bk_call <- function(x)x^2
+  } else if(is.function(xaxis_breaks_fun)) {
+    xaxis_bk_call <- xaxis_breaks_fun
+  }
+  
+  build_scale_x_continuous_str <- function(x_minimum, x_maximum, by = 1,
+                                           xaxis_bk_call) {
+    scale_x_continuous_str <- 
+      "scale_x_continuous_fun(x_minimum_str, x_maximum_str, by=, fun=)"
+    scale_x_continuous_str <- gsub("x_minimum_str", paste0("", 
+                                                           x_minimum), 
+                                   scale_x_continuous_str, fixed = T)
+    scale_x_continuous_str <- gsub("x_maximum_str", paste0("", 
+                                                           x_maximum), 
+                                   scale_x_continuous_str, fixed = T)
+    scale_x_continuous_str <- gsub("by=", paste0("by=", 
+                                                 by), 
+                                   scale_x_continuous_str, fixed = T)
+    scale_x_continuous_str <- gsub("fun=", paste0("fun=", 
+                                                  deparse_0(xaxis_bk_call)), 
+                                   scale_x_continuous_str, fixed = T)
+    return(scale_x_continuous_str)
+  }
+  
+  # scale_x_continuous_str <- 
+  #   "ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1))" 
+  
+  scale_x_continuous_str <- build_scale_x_continuous_str(x_minimum, 
+                                                         x_maximum, 
+                                                         by = 1, xaxis_bk_call)
+  
+
   if (grepl("d", opt, ignore.case = T) |
       grepl("v", opt, ignore.case = T)) {
     curves <- unique(d.$curve)
@@ -1005,7 +1097,7 @@ plot_curves.bgmfit <- function(model,
         d.$groupby_line  <- d.$groupby
         d.$groupby_color <- d.$groupby
       }
-
+      
       plot.o.d <- d. %>% dplyr::filter(curve == curve.d) %>%
         ggplot2::ggplot(., ggplot2::aes(!!as.name(Xx))) +
         ggplot2::geom_line(
@@ -1017,11 +1109,11 @@ plot_curves.bgmfit <- function(model,
           ),
           linewidth = linewidth.main
         ) +
-        ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
+        ept(scale_x_continuous_str) +
         ggplot2::labs(x = "", y = "", title = label.d) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
-
+      
       if (grepl("d", bands, ignore.case = T)) {
         plot.o.d <- plot.o.d +
           ggplot2::geom_ribbon(
@@ -1032,9 +1124,9 @@ plot_curves.bgmfit <- function(model,
               group = groupby,
               linetype = line_color_key(.data, linetype.groupby),
               color = line_color_key(.data, color.groupby),
-              fill = line_color_key(.data, color.groupby)
+              fill = line_color_key(.data, fill.groupby)
             ),
-            alpha = band.alpha # , show.legend = band.legends
+            alpha = band.alpha, show.legend = band.legends
           )
         if(!band.legends) plot.o.d <- plot.o.d + ggplot2::guides(fill = "none")
       }
@@ -1089,7 +1181,7 @@ plot_curves.bgmfit <- function(model,
           ),
           linewidth = linewidth.main
         ) +
-        ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
+        ept(scale_x_continuous_str) +
         ggplot2::labs(x = "", y = "", title = label.v) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5))
@@ -1104,9 +1196,9 @@ plot_curves.bgmfit <- function(model,
               group = groupby,
               linetype = line_color_key(.data, linetype.groupby),
               color = line_color_key(.data, color.groupby),
-              fill = line_color_key(.data, color.groupby)
+              fill = line_color_key(.data, fill.groupby)
             ),
-            alpha = band.alpha # , show.legend = band.legends
+            alpha = band.alpha, show.legend = band.legends
           )
         if(!band.legends) plot.o.v <- plot.o.v + ggplot2::guides(fill = "none")
       }
@@ -1398,7 +1490,7 @@ plot_curves.bgmfit <- function(model,
                                       ggplot2::sec_axis(~ t.s.axis$rev(.),
                                                         name = label.v)) +
         ggplot2::labs(x = label.x, y = label.d, color = "") +
-        ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
+        ept(scale_x_continuous_str) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
         ggplot2::theme(axis.title.y.right = ggplot2::element_text(angle = 90))
@@ -1444,9 +1536,9 @@ plot_curves.bgmfit <- function(model,
               group = groupby.x,
               linetype = line_color_key(.data, linetype.groupby),
               color = line_color_key(.data, color.groupby),
-              fill = line_color_key(.data, color.groupby)
+              fill = line_color_key(.data, fill.groupby)
             ),
-            alpha = band.alpha
+            alpha = band.alpha, show.legend = band.legends
           )
         if(!band.legends) plot.o <- plot.o + ggplot2::guides(fill = "none")
       }
@@ -1461,9 +1553,9 @@ plot_curves.bgmfit <- function(model,
               group = groupby.y,
               linetype = line_color_key(.data, linetype.groupby),
               color = line_color_key(.data, color.groupby),
-              fill = line_color_key(.data, color.groupby)
+              fill = line_color_key(.data, fill.groupby)
             ),
-            alpha = band.alpha
+            alpha = band.alpha, show.legend = band.legends
           )
         if(!band.legends) plot.o <- plot.o + ggplot2::guides(fill = "none")
       }
@@ -1667,6 +1759,11 @@ plot_curves.bgmfit <- function(model,
   
       x_minimum_a_ <- x_minimum # floor(min(out_a_[[Xx]]))
       x_maximum_a_ <- x_maximum # ceiling(max(out_a_[[Xx]]))
+   
+      scale_x_continuous_a_str <- build_scale_x_continuous_str(x_minimum_a_, 
+                                                               x_maximum_a_, 
+                                                               by = 1, 
+                                                               xaxis_bk_call)
       
       out_a_ <- out_a_[out_a_[[Xx]] >= x_minimum_a_ & 
                          out_a_[[Xx]] <= x_maximum_a_, ]
@@ -1722,8 +1819,7 @@ plot_curves.bgmfit <- function(model,
           linewidth = linewidth.main
         ) +
         ggplot2::labs(x = label.x, y = label.d, color = "") +
-        ggplot2::scale_x_continuous(breaks =
-                                      seq(x_minimum_a_, x_maximum_a_, 1)) +
+        ept(scale_x_continuous_a_str) +
         jtools::theme_apa(legend.pos = legendpos) +
         ggplot2::theme(legend.position = "none") +
         ggplot2::labs(y = paste0("Adjusted ", "individual curves")) +
@@ -1766,7 +1862,7 @@ plot_curves.bgmfit <- function(model,
               # color = groupby_color.x,
               fill = groupby_color.x,
             ),
-            alpha = band.alpha # , show.legend = band.legends
+            alpha = band.alpha, show.legend = band.legends
           )
         if(!band.legends) plot.o.a <- plot.o.a + ggplot2::guides(fill = "none")
       }
@@ -1842,6 +1938,14 @@ plot_curves.bgmfit <- function(model,
       
       out_u_ <- out_u_ %>% dplyr::mutate(groupby.x = groupby, 
                                          groupby.y = groupby.x)
+      
+      x_minimum_u_ <- x_minimum # floor(min(out_a_[[Xx]]))
+      x_maximum_u_ <- x_maximum # ceiling(max(out_a_[[Xx]]))
+      
+      scale_x_continuous_u_str <- build_scale_x_continuous_str(x_minimum_u_, 
+                                                                x_maximum_u_, 
+                                                                by = 1, 
+                                                                xaxis_bk_call)
     
       if(is.na(uvarby)) { 
         if(is.na(out_u_[['groupby']][1])) {
@@ -1891,7 +1995,7 @@ plot_curves.bgmfit <- function(model,
         linewidth = linewidth.main
       ) +
       ggplot2::labs(x = label.x, y = label.d, color = "") +
-      ggplot2::scale_x_continuous(breaks = seq(x_minimum, x_maximum, 1)) +
+      ept(scale_x_continuous_u_str) +
       jtools::theme_apa(legend.pos = legendpos) +
       ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
       ggplot2::theme(legend.position = "none") +
@@ -1954,8 +2058,13 @@ plot_curves.bgmfit <- function(model,
                              dplyr::mutate(curve = 'Unadjusted')) %>%
           data.frame()
     
-        x_minimum_a_ <- x_minimum # floor(min(out_a_[[Xx]]))
-        x_maximum_a_ <- x_maximum # ceiling(max(out_a_[[Xx]]))
+        x_minimum_au_ <- x_minimum # floor(min(out_a_[[Xx]]))
+        x_maximum_au_ <- x_maximum # ceiling(max(out_a_[[Xx]]))
+
+        scale_x_continuous_au_str <- build_scale_x_continuous_str(x_minimum_au_, 
+                                                                 x_maximum_au_, 
+                                                                 by = 1, 
+                                                                 xaxis_bk_call)
         
         out_a_u_ <- out_a_u_[out_a_u_[[Xx]] >= x_minimum_a_ & 
                                out_a_u_[[Xx]] <= x_maximum_a_, ]
@@ -2005,16 +2114,17 @@ plot_curves.bgmfit <- function(model,
             ggplot2::aes(
               y = !!as.name(Yy),
               group = groupby.x,
-              linetype = groupby_line.x,
-              colour = groupby_color.x
+              linetype = line_color_key(.data, linetype.groupby),
+              color = line_color_key(.data, color.groupby),
+              # linetype = groupby_line.x,
+              # colour = groupby_color.x
             ),
             linewidth = linewidth.main
           ) +
           ggplot2::labs(x = label.x,
                         y = label.d,
                         color = "") +
-          ggplot2::scale_x_continuous(breaks =
-                                        seq(x_minimum_a_, x_maximum_a_, 1)) +
+          ept(scale_x_continuous_au_str) +
           jtools::theme_apa(legend.pos = legendpos) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
           ggplot2::theme(axis.title.y.right =
@@ -2079,8 +2189,7 @@ plot_curves.bgmfit <- function(model,
                         y = label.d,
                         color = "") +
           ggplot2::scale_color_manual(values = single_plot_pair_color_dv_au) +
-          ggplot2::scale_x_continuous(breaks =
-                                        seq(x_minimum_a_, x_maximum_a_, 1)) +
+          ept(scale_x_continuous_a_str) +
           jtools::theme_apa(legend.pos = legendpos.adj.unadj) +
           ggplot2::theme(plot.title = ggplot2::element_text(hjust = 0.5)) +
           ggplot2::labs(y = paste0("Individual curves")) +
