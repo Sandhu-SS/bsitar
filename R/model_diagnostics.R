@@ -21,9 +21,11 @@
 #'   \describe{
 #'     \item{`"rvf"`}{residual vs fitted plot showing residuals plotted against 
 #'     fitted values derived from posterior draws.}
-#'      \item{`"rvp"`}{residual vs predictor (such as age) plot showing 
+#'     \item{`"rvp"`}{residual vs predictor (such as age) plot showing 
 #'     residuals plotted against predictor values derived from posterior draws.}
-#'     \item{`"qq"`}{Normal Q-Q plot based on summarized posterior residuals.}
+#'     \item{`"qqn"`}{Normal Q-Q plot based on summarized posterior residuals.}
+#'     \item{`"qqp"`}{Pearson Q-Q plot based on standardized posterior residuals.}
+#'     \item{`"qq"`}{Same as \code{"qqp"}.}
 #'     \item{`"pairs"`}{Pair plots for MCMC draws via
 #'     [bayesplot::mcmc_pairs()].}
 #'     \item{`"acf"`}{Autocorrelation plots for MCMC draws via
@@ -100,7 +102,7 @@
 #'   standard-error ribbon.
 #'
 #' @param smooth_method Smoother passed to [ggplot2::geom_smooth()] for the
-#'   residual-versus-fitted plot. The default is \code{"loess"}.
+#'   residual-versus-fitted plot. The default is \code{"lm"}.
 #'
 #' @param ppc_stat Summary statistic to use when \code{plots} includes
 #'   \code{"ppc_stat"}. This value is passed to [brms::pp_check()] as \code{type
@@ -118,6 +120,11 @@
 #'   to wrap plot title.
 #'   
 #' @param title_size Text size of plot title.
+#' 
+#' @param qq_plot_args A named list of arguments passed on to the
+#'   \code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
+#'   \code{plots = `"qq"`}. Note that \code{plots = `"qq"`} is internally
+#'   evalauted as \code{plots = `"qqp"`}.
 #'   
 #' @param patch_plot.margin Optional setting the margins for the
 #'   \pkg{patchwork}.
@@ -265,6 +272,8 @@ model_diagnostics.bgmfit <- function(
       "rvf",
       "rvp",
       "qq",
+      "qqn",
+      "qqp",
       "pairs",
       "acf",
       "trace",
@@ -290,7 +299,7 @@ model_diagnostics.bgmfit <- function(
     bins = 30,
     regex = FALSE,
     smooth_se = FALSE,
-    smooth_method = "loess",
+    smooth_method = "lm",
     ppc_stat = "mean",
     rank_overlay = FALSE,
     add_plot_df = FALSE,
@@ -300,6 +309,11 @@ model_diagnostics.bgmfit <- function(
     category = ".category",
     wrap_title = FALSE,
     title_size = 12,
+    qq_plot_args = list(draw_ids = 1:10, 
+                        draw_ids_select = 1, 
+                        summary = "robust", 
+                        qq_type = 'qq',
+                        seed = 123),
     patch_plot.margin = ggplot2::margin(10, 0, 10, 0), # Top, Right, Bottom, Left
     funlist = NULL,
     future = FALSE,
@@ -1084,7 +1098,7 @@ model_diagnostics.bgmfit <- function(
          paste(missing_pkgs, collapse = ", "))
   }
   
-  needs_tidybayes <- any(c("rvf", "rvp", "qq") %in% plots)
+  needs_tidybayes <- any(c("rvf", "rvp", "qq", "qqn", "qqp") %in% plots)
   if (needs_tidybayes && !requireNamespace("tidybayes", quietly = TRUE)) {
     stop("Please install `tidybayes` for residual-based plots.")
   }
@@ -1093,7 +1107,7 @@ model_diagnostics.bgmfit <- function(
   plots <- unique(plots)
   
   valid_plots <- c(
-    "rvf", "rvp", "qq", "pairs", "acf", "trace", "dens_overlay",
+    "rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "trace", "dens_overlay",
     "rhat", "neff", "ppc_dens_overlay", "ppc_hist",
     "ppc_scatter_avg", "ppc_stat"
   )
@@ -1104,10 +1118,15 @@ model_diagnostics.bgmfit <- function(
   }
   
   
+  if ("qq" %in% plots) {
+    plots <- gsub("^qq$", "qqp", plots, fixed = F)
+    plots <- unique(plots)
+  }
+  
   
   out <- list()
   
-  if (any(c("rvf", "rvp", "qq") %in% plots)) {
+  if (any(c("rvf", "rvp", "qqn", "qqp") %in% plots)) {
     
     draw_fun <- switch(
       set_draws,
@@ -1181,20 +1200,29 @@ model_diagnostics.bgmfit <- function(
         )
     }
     
-    if ("qq" %in% plots) {
+    if ("qqn" %in% plots) {
       qq_df <- plot_df %>%
         tidybayes::median_qi(.residual)
       
-      out$qq <- qq_df %>%
+      out$qqn <- qq_df %>%
         ggplot2::ggplot(ggplot2::aes(sample = .residual)) +
         ggplot2::geom_qq() +
         ggplot2::geom_qq_line() +
         ggplot2::theme_minimal() +
-        ggplot2::labs(title = "Normal Q-Q Plot of Residuals") +
-        ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
+        # ggplot2::labs(title = "Normal Q-Q Plot of Residuals") +
+        ggplot2::labs(title = "Q-Q Plot of Residuals") +
+        # ggplot2::labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
+        ggplot2::labs(x = "Theoretical Quantiles", y = "Residuals")
     }
     
-  } # if (any(c("rvf", "rvp", "qq") %in% plots)) {
+    if ("qqp" %in% plots) {
+      qq_plot_args[['model']]        <- model
+      qq_plot_args[['data']]         <- full.args[['newdata']]
+      qq_plot_args[['resid_draws']]  <- resid_df
+      out$qqp <- do.call(qq_plot_pearson, qq_plot_args)
+    }
+    
+  } # if (any(c("rvf", "rvp", "qqn", "qqp") %in% plots)) {
   
   
   if (any(c( "rvp") %in% plots)) {

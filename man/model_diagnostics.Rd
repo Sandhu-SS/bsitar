@@ -8,8 +8,8 @@
 \method{model_diagnostics}{bgmfit}(
   model,
   newdata = NULL,
-  plots = c("rvf", "rvp", "qq", "pairs", "acf", "trace", "dens_overlay", "rhat", "neff",
-    "ppc_dens_overlay", "ppc_hist", "ppc_scatter_avg", "ppc_stat"),
+  plots = c("rvf", "rvp", "qq", "qqn", "qqp", "pairs", "acf", "trace", "dens_overlay",
+    "rhat", "neff", "ppc_dens_overlay", "ppc_hist", "ppc_scatter_avg", "ppc_stat"),
   set_draws = "epred",
   resp = NULL,
   ndraws = 10,
@@ -24,7 +24,7 @@
   bins = 30,
   regex = FALSE,
   smooth_se = FALSE,
-  smooth_method = "loess",
+  smooth_method = "lm",
   ppc_stat = "mean",
   rank_overlay = FALSE,
   add_plot_df = FALSE,
@@ -34,6 +34,8 @@
   category = ".category",
   wrap_title = FALSE,
   title_size = 12,
+  qq_plot_args = list(draw_ids = 1:10, draw_ids_select = 1, summary = "robust", qq_type =
+    "qq", seed = 123),
   patch_plot.margin = ggplot2::margin(10, 0, 10, 0),
   funlist = NULL,
   future = FALSE,
@@ -78,7 +80,9 @@ Supported values are:
 fitted values derived from posterior draws.}
 \item{\code{"rvp"}}{residual vs predictor (such as age) plot showing
 residuals plotted against predictor values derived from posterior draws.}
-\item{\code{"qq"}}{Normal Q-Q plot based on summarized posterior residuals.}
+\item{\code{"qqn"}}{Normal Q-Q plot based on summarized posterior residuals.}
+\item{\code{"qqp"}}{Pearson Q-Q plot based on standardized posterior residuals.}
+\item{\code{"qq"}}{Same as \code{"qqp"}.}
 \item{\code{"pairs"}}{Pair plots for MCMC draws via
 \code{\link[bayesplot:MCMC-scatterplots]{bayesplot::mcmc_pairs()}}.}
 \item{\code{"acf"}}{Autocorrelation plots for MCMC draws via
@@ -161,7 +165,7 @@ be treated as regular expressions. Defaults to \code{FALSE}.}
 standard-error ribbon.}
 
 \item{smooth_method}{Smoother passed to \code{\link[ggplot2:geom_smooth]{ggplot2::geom_smooth()}} for the
-residual-versus-fitted plot. The default is \code{"loess"}.}
+residual-versus-fitted plot. The default is \code{"lm"}.}
 
 \item{ppc_stat}{Summary statistic to use when \code{plots} includes
 \code{"ppc_stat"}. This value is passed to \code{\link[brms:pp_check.brmsfit]{brms::pp_check()}} as \code{type
@@ -219,6 +223,11 @@ from ordinal models using both approaches.}
 to wrap plot title.}
 
 \item{title_size}{Text size of plot title.}
+
+\item{qq_plot_args}{A named list of arguments passed on to the
+\code{`"qq_plot_pearson"`}. Ignored except when \code{plots = `"qqp"`} or
+\code{plots = `"qq"`}. Note that \code{plots = `"qq"`} is internally
+evalauted as \code{plots = `"qqp"`}.}
 
 \item{patch_plot.margin}{Optional setting the margins for the
 \pkg{patchwork}.}
